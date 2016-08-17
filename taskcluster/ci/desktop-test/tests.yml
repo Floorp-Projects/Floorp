@@ -292,6 +292,7 @@ mochitest-webgl:
     description: "Mochitest webgl run"
     suite: mochitest/mochitest-gl
     treeherder-symbol: tc-M(gl)
+    chunks: 3
     loopback-video: true
     mozharness:
         script: mozharness/scripts/desktop_unittest.py
@@ -338,6 +339,7 @@ web-platform-tests:
     chunks: 12
     max-run-time: 7200
     instance-size: xlarge
+    docker-image: {"in-tree": "desktop1604-test"}
     mozharness:
         script: mozharness/scripts/web_platform_tests.py
         no-read-buildbot-config: true
@@ -353,6 +355,7 @@ web-platform-tests-reftests:
     treeherder-symbol: tc-W(Wr)
     max-run-time: 5400
     instance-size: xlarge
+    docker-image: {"in-tree": "desktop1604-test"}
     mozharness:
         script: mozharness/scripts/web_platform_tests.py
         no-read-buildbot-config: true

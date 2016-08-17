@@ -560,7 +560,7 @@ var snapshotFormatters = {
   },
 
   sandbox: function sandbox(data) {
-    if (AppConstants.platform != "linux" || !AppConstants.MOZ_SANDBOX)
+    if (!AppConstants.MOZ_SANDBOX)
       return;
 
     let strings = stringBundle();

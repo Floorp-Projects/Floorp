@@ -5,11 +5,11 @@
 TESTADDONS = source/test/addons
 ADDONSRC = $(srcdir)/$(TESTADDONS)
 
-sinclude $(topsrcdir)/config/rules.mk
+include $(topsrcdir)/config/rules.mk
 
 # This can switch to just zipping the files when native jetpacks land
-$(TESTADDONS)/%.xpi: FORCE $(call mkdir_deps,$(CURDIR)/$(TESTADDONS)) $(ADDONSRC)/%
-	$(PYTHON) $(srcdir)/source/bin/cfx xpi --no-strip-xpi --pkgdir=$(lastword $^) --output-file=$@
+%.xpi: FORCE
+	$(PYTHON) $(srcdir)/source/bin/cfx xpi --no-strip-xpi --pkgdir=$(ADDONSRC)/$* --output-file=$@
 
 TEST_FILES = \
   $(srcdir)/source/app-extension \

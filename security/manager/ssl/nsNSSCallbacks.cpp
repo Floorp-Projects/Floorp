@@ -1133,9 +1133,7 @@ void HandshakeCallback(PRFileDesc* fd, void* client_data) {
           : Telemetry::SSL_KEY_EXCHANGE_ALGORITHM_RESUMED,
         cipherInfo.keaType);
 
-      DebugOnly<int16_t> KEAUsed;
-      MOZ_ASSERT(NS_SUCCEEDED(infoObject->GetKEAUsed(&KEAUsed)) &&
-                 (KEAUsed == cipherInfo.keaType));
+      MOZ_ASSERT(infoObject->GetKEAUsed() == cipherInfo.keaType);
 
       if (infoObject->IsFullHandshake()) {
         switch (cipherInfo.keaType) {

@@ -31,8 +31,6 @@ struct FileMimeNameData
 
 FileMimeNameData kFileMimeNameMap[] = {
   { kFileMime, "GenericFileName" },
-  { kJPEGImageMime, "GenericImageNameJPEG" },
-  { kGIFImageMime, "GenericImageNameGIF" },
   { kPNGImageMime, "GenericImageNamePNG" },
 };
 

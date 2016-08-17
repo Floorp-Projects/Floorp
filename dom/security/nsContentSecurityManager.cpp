@@ -430,8 +430,7 @@ nsContentSecurityManager::doContentSecurityCheck(nsIChannel* aChannel,
   // please note that some implementations of ::AsyncOpen2 might already
   // have set that flag to true (e.g. nsViewSourceChannel) in which case
   // we just set the flag again.
-  rv = loadInfo->SetEnforceSecurity(true);
-  NS_ENSURE_SUCCESS(rv, rv);
+  loadInfo->SetEnforceSecurity(true);
 
   if (loadInfo->GetSecurityMode() == nsILoadInfo::SEC_REQUIRE_CORS_DATA_INHERITS) {
     rv = DoCORSChecks(aChannel, loadInfo, aInAndOutListener);
@@ -446,8 +445,7 @@ nsContentSecurityManager::doContentSecurityCheck(nsIChannel* aChannel,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // now lets set the initalSecurityFlag for subsequent calls
-  rv = loadInfo->SetInitialSecurityCheckDone(true);
-  NS_ENSURE_SUCCESS(rv, rv);
+  loadInfo->SetInitialSecurityCheckDone(true);
 
   // all security checks passed - lets allow the load
   return NS_OK;

@@ -20,7 +20,7 @@
 #include "nsPresContext.h"
 #include "nsStyleStruct.h"
 
-class nsCSSPropertySet;
+class nsCSSPropertyIDSet;
 class nsCSSValue;
 class nsIStyleRule;
 class nsStyleContext;
@@ -861,7 +861,7 @@ public:
                            nsStyleContext* aContext,
                            bool aComputeData);
 
-  void GetDiscretelyAnimatedCSSValue(nsCSSProperty aProperty,
+  void GetDiscretelyAnimatedCSSValue(nsCSSPropertyID aProperty,
                                      nsCSSValue* aValue);
 
   // See comments in GetStyleData for an explanation of what the
@@ -963,9 +963,9 @@ public:
    */
   static void
   ComputePropertiesOverridingAnimation(
-                              const nsTArray<nsCSSProperty>& aProperties,
+                              const nsTArray<nsCSSPropertyID>& aProperties,
                               nsStyleContext* aStyleContext,
-                              nsCSSPropertySet& aPropertiesOverridden);
+                              nsCSSPropertyIDSet& aPropertiesOverridden);
 
   // Expose this so media queries can use it
   static nscoord CalcLengthWithInitialFont(nsPresContext* aPresContext,

@@ -82,7 +82,7 @@ Clock
 
 Times are relative to either elapsed realtime (an arbitrary monotonically increasing clock that continues to tick when the device is asleep), or elapsed uptime (which doesn't tick when the device is in deep sleep). We default to elapsed realtime.
 
-See the documentation in `the source <http://mxr.mozilla.org/mozilla-central/source/mobile/android/base/Telemetry.java>`_ for more details.
+See the documentation in `the source <http://dxr.mozilla.org/mozilla-central/source/mobile/android/base/Telemetry.java>`_ for more details.
 
 Dictionary
 ==========

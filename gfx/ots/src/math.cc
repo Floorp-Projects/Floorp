@@ -448,6 +448,11 @@ bool ParseMathGlyphConstructionSequence(const ots::Font *font,
                                         uint16_t offset_coverage,
                                         uint16_t glyph_count,
                                         const unsigned sequence_end) {
+  // Zero glyph count, nothing to parse.
+  if (!glyph_count) {
+    return true;
+  }
+
   // Check coverage table.
   if (offset_coverage < sequence_end || offset_coverage >= length) {
     return OTS_FAILURE();

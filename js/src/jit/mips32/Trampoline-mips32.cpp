@@ -796,6 +796,9 @@ JitRuntime::generateVMWrapper(JSContext* cx, const VMFunction& f)
     masm.reserveStack(outParamOffset);
     masm.movePtr(StackPointer, doubleArgs);
 
+    if (!generateTLEnterVM(cx, masm, f))
+        return nullptr;
+
     masm.setupAlignedABICall();
     masm.passABIArg(cxreg);
 
@@ -844,6 +847,9 @@ JitRuntime::generateVMWrapper(JSContext* cx, const VMFunction& f)
     }
 
     masm.callWithABI(f.wrapped);
+
+    if (!generateTLExitVM(cx, masm, f))
+        return nullptr;
 
     // Test for failure.
     switch (f.failType()) {
@@ -962,7 +968,8 @@ JitRuntime::generatePreBarrier(JSContext* cx, MIRType type)
 }
 
 typedef bool (*HandleDebugTrapFn)(JSContext*, BaselineFrame*, uint8_t*, bool*);
-static const VMFunction HandleDebugTrapInfo = FunctionInfo<HandleDebugTrapFn>(HandleDebugTrap);
+static const VMFunction HandleDebugTrapInfo =
+    FunctionInfo<HandleDebugTrapFn>(HandleDebugTrap, "HandleDebugTrap");
 
 JitCode*
 JitRuntime::generateDebugTrapHandler(JSContext* cx)

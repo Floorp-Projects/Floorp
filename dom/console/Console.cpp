@@ -340,7 +340,8 @@ public:
     }
 
     if (NS_WARN_IF(!WorkerProxyToMainThreadRunnable::Dispatch())) {
-      RunBackOnWorkerThread();
+      // RunBackOnWorkerThread() will be called by
+      // WorkerProxyToMainThreadRunnable::Dispatch().
       return false;
     }
 

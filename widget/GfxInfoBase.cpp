@@ -733,6 +733,9 @@ GfxInfoBase::FindBlocklistedDeviceInList(const nsTArray<GfxDriverInfo>& info,
     case DRIVER_LESS_THAN:
       match = driverVersion < info[i].mDriverVersion;
       break;
+    case DRIVER_BUILD_ID_LESS_THAN:
+      match = (driverVersion & 0xFFFF) < info[i].mDriverVersion;
+      break;
     case DRIVER_LESS_THAN_OR_EQUAL:
       match = driverVersion <= info[i].mDriverVersion;
       break;

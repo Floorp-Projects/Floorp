@@ -18,8 +18,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1073563
     var target = undefined;
     var listener = undefined;
     var test_target = false;
+    var test_move = false;
     var test_listener = false;
-    var async_counter = 0;
+    var receive_lostpointercapture = false;
 
     function TargetDownHandler(event) {
       logger("Target receive event: " + event.type);
@@ -34,10 +35,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1073563
         logger("Send releasePointerCapture from listener");
         listener.releasePointerCapture(event.pointerId);
       } else if(event.type == "lostpointercapture") {
-        if(++async_counter < 100) {
-          logger("Send setPointerCapture to listener: " + async_counter);
+        // Set/release pointer capture in the event listeners of got/lostpointercapture won't take effect immediately
+        parent.is(receive_lostpointercapture, false, "Part 6: listener should receive only one lostpointercapture");
+        if (!receive_lostpointercapture) {
+          receive_lostpointercapture = true;
+          logger("Send setPointerCapture to listener");
           listener.setPointerCapture(event.pointerId);
         }
+      } else if(event.type == "pointermove") {
+        test_move = true;
       } else {
         test_listener = true;
       }
@@ -72,8 +78,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1073563
     }
     function finishTest() {
       parent.is(test_target,    true,   "Part 6: pointerdown event should be received by target");
-      parent.is(test_listener,  false,  "Part 6: listener should not receive any sync events");
-      parent.is(async_counter,  100,    "Part 6: listener should receive many async events");
+      // PE level 2 defines that the pending pointer capture is processed when firing next pointer events.
+      // In this test case, pointer capture release is processed when firing pointermove
+      parent.is(test_move,      true,   "Part 6: gotpointercapture should be triggered by pointermove");
+      parent.is(test_listener,  false,  "Part 6: no other pointerevents should be fired before gotpointercapture");
       logger("finishTest");
       parent.finishTest();
     }

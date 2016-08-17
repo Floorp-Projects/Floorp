@@ -1,5 +1,3 @@
-ac_add_options --with-google-oauth-api-keyfile=/builds/google-oauth-api.key
-
 # We still need to build with debug symbols
 ac_add_options --disable-debug
 ac_add_options --enable-optimize="-O2 -g"

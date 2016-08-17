@@ -693,7 +693,7 @@ public:
                                                  nsDisplayListBuilder* aBuilder,
                                                  nsDisplayItem* aItem,
                                                  nsIFrame* aFrame,
-                                                 nsCSSProperty aProperty);
+                                                 nsCSSPropertyID aProperty);
 
   /**
    * A helper class to temporarily set the value of

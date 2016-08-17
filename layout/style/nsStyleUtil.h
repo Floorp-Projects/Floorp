@@ -6,7 +6,7 @@
 #define nsStyleUtil_h___
 
 #include "nsCoord.h"
-#include "nsCSSProperty.h"
+#include "nsCSSPropertyID.h"
 #include "nsString.h"
 #include "nsTArrayForwardDeclare.h"
 #include "gfxFontFamilyList.h"
@@ -53,7 +53,7 @@ public:
                                  nsAString& aResult);
 
   // Append a bitmask-valued property's value(s) (space-separated) to aResult.
-  static void AppendBitmaskCSSValue(nsCSSProperty aProperty,
+  static void AppendBitmaskCSSValue(nsCSSPropertyID aProperty,
                                     int32_t aMaskedValue,
                                     int32_t aFirstMask,
                                     int32_t aLastMask,

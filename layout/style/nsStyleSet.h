@@ -52,7 +52,7 @@ public:
   NS_DECL_ISUPPORTS
   virtual void MapRuleInfoInto(nsRuleData* aRuleData) override;
   virtual bool MightMapInheritedStyleData() override;
-  virtual bool GetDiscretelyAnimatedCSSValue(nsCSSProperty aProperty,
+  virtual bool GetDiscretelyAnimatedCSSValue(nsCSSPropertyID aProperty,
                                              nsCSSValue* aValue) override;
 #ifdef DEBUG
   virtual void List(FILE* out = stdout, int32_t aIndent = 0) const override;
@@ -68,7 +68,7 @@ public:
   NS_DECL_ISUPPORTS
   virtual void MapRuleInfoInto(nsRuleData* aRuleData) override;
   virtual bool MightMapInheritedStyleData() override;
-  virtual bool GetDiscretelyAnimatedCSSValue(nsCSSProperty aProperty,
+  virtual bool GetDiscretelyAnimatedCSSValue(nsCSSPropertyID aProperty,
                                              nsCSSValue* aValue) override;
 #ifdef DEBUG
   virtual void List(FILE* out = stdout, int32_t aIndent = 0) const override;
@@ -84,7 +84,7 @@ public:
   NS_DECL_ISUPPORTS
   virtual void MapRuleInfoInto(nsRuleData* aRuleData) override;
   virtual bool MightMapInheritedStyleData() override;
-  virtual bool GetDiscretelyAnimatedCSSValue(nsCSSProperty aProperty,
+  virtual bool GetDiscretelyAnimatedCSSValue(nsCSSPropertyID aProperty,
                                              nsCSSValue* aValue) override;
 #ifdef DEBUG
   virtual void List(FILE* out = stdout, int32_t aIndent = 0) const override;

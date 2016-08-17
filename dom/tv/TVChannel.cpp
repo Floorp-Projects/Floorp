@@ -64,8 +64,8 @@ TVChannel::Init(nsITVChannelData* aData)
   aData->GetServiceId(mServiceId);
   aData->GetName(mName);
   aData->GetNumber(mNumber);
-  aData->GetIsEmergency(&mIsEmergency);
-  aData->GetIsFree(&mIsFree);
+  mIsEmergency = aData->GetIsEmergency();
+  mIsFree = aData->GetIsFree();
 
   mTVService = TVServiceFactory::AutoCreateTVService();
   NS_ENSURE_TRUE(mTVService, false);

@@ -1,0 +1,299 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1272239 - Test gethash.</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="classifierHelper.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+
+<script class="testbody" type="text/javascript">
+
+const MALWARE_LIST = "test-malware-simple";
+const MALWARE_HOST1 = "malware.example.com/";
+const MALWARE_HOST2 = "test1.example.com/";
+
+const UNWANTED_LIST = "test-unwanted-simple";
+const UNWANTED_HOST1 = "unwanted.example.com/";
+const UNWANTED_HOST2 = "test2.example.com/";
+
+
+const UNUSED_MALWARE_HOST = "unused.malware.com/";
+const UNUSED_UNWANTED_HOST = "unused.unwanted.com/";
+
+const GETHASH_URL =
+  "http://mochi.test:8888/tests/toolkit/components/url-classifier/tests/mochitest/gethash.sjs";
+
+var gPreGethashCounter = 0;
+var gCurGethashCounter = 0;
+
+var expectLoad = false;
+
+function loadTestFrame() {
+  return new Promise(function(resolve, reject) {
+    var iframe = document.createElement("iframe");
+    iframe.setAttribute("src", "gethashFrame.html");
+    document.body.appendChild(iframe);
+
+    iframe.onload = function() {
+      document.body.removeChild(iframe);
+      resolve();
+    };
+  }).then(getGethashCounter);
+}
+
+function getGethashCounter() {
+  return new Promise(function(resolve, reject) {
+    var xhr = new XMLHttpRequest;
+    xhr.open("PUT", GETHASH_URL + "?gethashcount");
+    xhr.setRequestHeader("Content-Type", "text/plain");
+    xhr.onreadystatechange = function() {
+      if (this.readyState == this.DONE) {
+        gPreGethashCounter = gCurGethashCounter;
+        gCurGethashCounter = parseInt(xhr.response);
+        resolve();
+      }
+    };
+    xhr.send();
+  });
+}
+
+// calculate the fullhash and send it to gethash server
+function addCompletionToServer(list, url) {
+  return new Promise(function(resolve, reject) {
+    var listParam = "list=" + list;
+    var fullhashParam = "fullhash=" + hash(url);
+
+    var xhr = new XMLHttpRequest;
+    xhr.open("PUT", GETHASH_URL + "?" + listParam + "&" + fullhashParam, true);
+    xhr.setRequestHeader("Content-Type", "text/plain");
+    xhr.onreadystatechange = function() {
+      if (this.readyState == this.DONE) {
+        resolve();
+      }
+    };
+    xhr.send();
+  });
+}
+
+function hash(str) {
+  function bytesFromString(str) {
+    var converter =
+      SpecialPowers.Cc["@mozilla.org/intl/scriptableunicodeconverter"]
+                       .createInstance(SpecialPowers.Ci.nsIScriptableUnicodeConverter);
+    converter.charset = "UTF-8";
+    return converter.convertToByteArray(str);
+  }
+
+  var hasher = SpecialPowers.Cc["@mozilla.org/security/hash;1"]
+                               .createInstance(SpecialPowers.Ci.nsICryptoHash);
+
+  var data = bytesFromString(str);
+  hasher.init(hasher.SHA256);
+  hasher.update(data, data.length);
+
+  return hasher.finish(true);
+}
+
+// setup function allows classifier send gethash request for test database
+// also it calculate to fullhash for url and store those hashes in gethash sjs.
+function setup() {
+  classifierHelper.allowCompletion([MALWARE_LIST, UNWANTED_LIST], GETHASH_URL);
+
+  return Promise.all([
+    addCompletionToServer(MALWARE_LIST, MALWARE_HOST1),
+    addCompletionToServer(MALWARE_LIST, MALWARE_HOST2),
+    addCompletionToServer(UNWANTED_LIST, UNWANTED_HOST1),
+    addCompletionToServer(UNWANTED_LIST, UNWANTED_HOST2),
+  ]);
+}
+
+// Reset function in helper try to simulate the behavior we restart firefox
+function reset() {
+  return classifierHelper.resetDB()
+    .catch(err => {
+      ok(false, "Couldn't update classifier. Error code: " + errorCode);
+      // Abort test.
+      SimpleTest.finish();
+    });
+}
+
+function updateUnusedUrl() {
+  var testData  = [
+    { url: UNUSED_MALWARE_HOST,  db: MALWARE_LIST },
+    { url: UNUSED_UNWANTED_HOST, db: UNWANTED_LIST }
+  ];
+
+  return classifierHelper.addUrlToDB(testData)
+    .catch(err => {
+      ok(false, "Couldn't update classifier. Error code: " + err);
+      // Abort test.
+      SimpleTest.finish();
+    });
+}
+
+function addPrefixToDB() {
+  return update(true);
+}
+
+function addCompletionToDB() {
+  return update(false);
+}
+
+function update(prefix = false) {
+  var length = prefix ? 4 : 32;
+  var testData  = [
+    { url: MALWARE_HOST1,  db: MALWARE_LIST,  len: length },
+    { url: MALWARE_HOST2,  db: MALWARE_LIST,  len: length },
+    { url: UNWANTED_HOST1, db: UNWANTED_LIST, len: length },
+    { url: UNWANTED_HOST2, db: UNWANTED_LIST, len: length }
+  ];
+
+  return classifierHelper.addUrlToDB(testData)
+    .catch(err => {
+      ok(false, "Couldn't update classifier. Error code: " + errorCode);
+      // Abort test.
+      SimpleTest.finish();
+    });
+}
+
+// This testcase is to make sure gethash works:
+// 1. Add prefixes to DB.
+// 2. Load test frame contains malware & unwanted url, those urls should be blocked.
+// 3. The second step should also trigger a gethash request since completions is not in
+//    either cache or DB.
+// 4. Load test frame again, since completions is stored in cache now, no gethash
+//    request should be triggered.
+function testGethash() {
+  return Promise.resolve()
+    .then(addPrefixToDB)
+    .then(loadTestFrame)
+    .then(() => {
+       ok(gCurGethashCounter > gPreGethashCounter, "Gethash request is triggered."); })
+    .then(loadTestFrame)
+    .then(() => {
+      ok(gCurGethashCounter == gPreGethashCounter, "Gethash request is not triggered."); })
+    .then(reset);
+}
+
+// This testcase is to make sure an update request will clear completion cache:
+// 1. Add prefixes to DB.
+// 2. Load test frame, this should trigger a gethash request
+// 3. Trigger an update, completion cache should be cleared now.
+// 4. Load test frame again, since cache is cleared now, gethash request should be triggered.
+function testUpdateClearCache() {
+  return Promise.resolve()
+    .then(addPrefixToDB)
+    .then(loadTestFrame)
+    .then(() => {
+      ok(gCurGethashCounter > gPreGethashCounter, "Gethash request is triggered."); })
+    .then(updateUnusedUrl)
+    .then(loadTestFrame)
+    .then(() => {
+      ok(gCurGethashCounter > gPreGethashCounter, "Gethash request is triggered."); })
+    .then(reset);
+}
+
+// This testcae is to make sure completions in update works:
+// 1. Add completions to DB.
+// 2. Load test frame, since completions is stored in DB, gethash request should
+//    not be triggered.
+function testUpdate() {
+  return Promise.resolve()
+    .then(addCompletionToDB)
+    .then(loadTestFrame)
+    .then(() => {
+      ok(gCurGethashCounter == gPreGethashCounter, "Gethash request is not triggered."); })
+    .then(reset);
+}
+
+// This testcase is to make sure an update request will not clear completions in DB:
+// 1. Add completions to DB.
+// 2. Load test frame to make sure completions is stored in database, in this case, gethash
+//    should not be triggered.
+// 3. Trigger an update, cache is cleared, but completions in DB should still remain.
+// 4. Load test frame again, since completions is in DB, gethash request should not be triggered.
+function testUpdateNotClearCompletions() {
+  return Promise.resolve()
+    .then(addCompletionToDB)
+    .then(loadTestFrame)
+    .then(() => {
+      ok(gCurGethashCounter == gPreGethashCounter, "Gethash request is not triggered."); })
+    .then(updateUnusedUrl)
+    .then(loadTestFrame)
+    .then(() => {
+      ok(gCurGethashCounter == gPreGethashCounter, "Gethash request is not triggered."); })
+    .then(reset);
+}
+
+// This testcase is to make sure completion store in DB will properly load after restarting.
+// 1. Add completions to DB.
+// 2. Simulate firefox restart by calling reloadDatabase.
+// 3. Load test frame, since completions should be loaded from DB, no gethash request should
+//    be triggered.
+function testUpdateCompletionsAfterReload() {
+  return Promise.resolve()
+    .then(addCompletionToDB)
+    .then(classifierHelper.reloadDatabase)
+    .then(loadTestFrame)
+    .then(() => {
+      ok(gCurGethashCounter == gPreGethashCounter, "Gethash request is not triggered."); })
+    .then(reset);
+}
+
+// This testcase is to make sure cache will be cleared after restarting
+// 1. Add prefixes to DB.
+// 2. Load test frame, this should trigger a gethash request and completions will be stored in
+//    cache.
+// 3. Load test frame again, no gethash should be triggered because of cache.
+// 4. Simulate firefox restart by calling reloadDatabase.
+// 5. Load test frame again, since cache is cleared, gethash request should be triggered.
+function testGethashCompletionsAfterReload() {
+  return Promise.resolve()
+    .then(addPrefixToDB)
+    .then(loadTestFrame)
+    .then(() => {
+       ok(gCurGethashCounter > gPreGethashCounter, "Gethash request is triggered."); })
+    .then(loadTestFrame)
+    .then(() => {
+      ok(gCurGethashCounter == gPreGethashCounter, "Gethash request is not triggered."); })
+    .then(classifierHelper.reloadDatabase)
+    .then(loadTestFrame)
+    .then(() => {
+       ok(gCurGethashCounter > gPreGethashCounter, "Gethash request is triggered."); })
+    .then(reset);
+}
+
+function runTest() {
+  Promise.resolve()
+    .then(classifierHelper.waitForInit)
+    .then(setup)
+    .then(testGethash)
+    .then(testUpdateClearCache)
+    .then(testUpdate)
+    .then(testUpdateNotClearCompletions)
+    .then(testUpdateCompletionsAfterReload)
+    .then(testGethashCompletionsAfterReload)
+    .then(function() {
+      SimpleTest.finish();
+    }).catch(function(e) {
+      ok(false, "Some test failed with error " + e);
+      SimpleTest.finish();
+    });
+}
+
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv({"set": [
+  ["browser.safebrowsing.malware.enabled", true]
+]}, runTest);
+
+</script>
+</pre>
+</body>
+</html>

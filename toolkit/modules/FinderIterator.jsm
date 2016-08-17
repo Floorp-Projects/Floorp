@@ -48,21 +48,24 @@ this.FinderIterator = {
    * The returned promise is resolved when 1) the limit is reached, 2) when all
    * the ranges have been found or 3) when `stop()` is called whilst iterating.
    *
-   * @param {Finder}   options.finder      Currently active Finder instance
-   * @param {Number}   [options.limit]     Limit the amount of results to be
-   *                                       passed back. Optional, defaults to no
-   *                                       limit.
-   * @param {Boolean}  [options.linksOnly] Only yield ranges that are inside a
-   *                                       hyperlink (used by QuickFind).
-   *                                       Optional, defaults to `false`.
-   * @param {Function} options.onRange     Callback invoked when a range is found
-   * @param {Boolean}  [options.useCache]  Whether to allow results already
-   *                                       present in the cache or demand fresh.
-   *                                       Optional, defaults to `false`.
-   * @param {String}   options.word        Word to search for
+   * @param {Boolean}  options.caseSensitive Whether to search in case sensitive
+   *                                         mode
+   * @param {Boolean}  options.entireWord    Whether to search in entire-word mode
+   * @param {Finder}   options.finder        Currently active Finder instance
+   * @param {Number}   [options.limit]       Limit the amount of results to be
+   *                                         passed back. Optional, defaults to no
+   *                                         limit.
+   * @param {Boolean}  [options.linksOnly]   Only yield ranges that are inside a
+   *                                         hyperlink (used by QuickFind).
+   *                                         Optional, defaults to `false`.
+   * @param {Function} options.onRange       Callback invoked when a range is found
+   * @param {Boolean}  [options.useCache]    Whether to allow results already
+   *                                         present in the cache or demand fresh.
+   *                                         Optional, defaults to `false`.
+   * @param {String}   options.word          Word to search for
    * @return {Promise}
    */
-  start({ finder, limit, linksOnly, onRange, useCache, word }) {
+  start({ caseSensitive, entireWord, finder, limit, linksOnly, onRange, useCache, word }) {
     // Take care of default values for non-required options.
     if (typeof limit != "number")
       limit = -1;
@@ -72,6 +75,10 @@ this.FinderIterator = {
       useCache = false;
 
     // Validate the options.
+    if (typeof caseSensitive != "boolean")
+      throw new Error("Missing required option 'caseSensitive'");
+    if (typeof entireWord != "boolean")
+      throw new Error("Missing required option 'entireWord'");
     if (!finder)
       throw new Error("Missing required option 'finder'");
     if (!word)
@@ -86,7 +93,7 @@ this.FinderIterator = {
     let window = finder._getWindow();
     let resolver;
     let promise = new Promise(resolve => resolver = resolve);
-    let iterParams = { linksOnly, useCache, word };
+    let iterParams = { caseSensitive, entireWord, linksOnly, useCache, word };
 
     this._listeners.set(onRange, { limit, onEnd: resolver });
 
@@ -168,13 +175,18 @@ this.FinderIterator = {
    * passed through the arguments. When `true`, we can keep it running as-is and
    * the consumer should stop the iterator when `false`.
    *
-   * @param  {Boolean} options.linksOnly Whether to search for the word to be
-   *                                     present in links only
-   * @param  {String}  options.word      The word being searched for
+   * @param {Boolean}  options.caseSensitive Whether to search in case sensitive
+   *                                         mode
+   * @param {Boolean}  options.entireWord    Whether to search in entire-word mode
+   * @param  {Boolean} options.linksOnly     Whether to search for the word to be
+   *                                         present in links only
+   * @param  {String}  options.word          The word being searched for
    * @return {Boolean}
    */
-  continueRunning({ linksOnly, word }) {
+  continueRunning({ caseSensitive, entireWord, linksOnly, word }) {
     return (this.running &&
+      this._currentParams.caseSensitive === caseSensitive &&
+      this._currentParams.entireWord === entireWord &&
       this._currentParams.linksOnly === linksOnly &&
       this._currentParams.word == word);
   },
@@ -183,16 +195,19 @@ this.FinderIterator = {
    * Internal; check if an iteration request is available in the previous result
    * that we cached.
    *
-   * @param  {Boolean} options.linksOnly Whether to search for the word to be
-   *                                     present in links only
-   * @param  {Boolean} options.useCache  Whether the consumer wants to use the
-   *                                     cached previous result at all
-   * @param  {String}  options.word      The word being searched for
+   * @param {Boolean}  options.caseSensitive Whether to search in case sensitive
+   *                                         mode
+   * @param {Boolean}  options.entireWord    Whether to search in entire-word mode
+   * @param  {Boolean} options.linksOnly     Whether to search for the word to be
+   *                                         present in links only
+   * @param  {Boolean} options.useCache      Whether the consumer wants to use the
+   *                                         cached previous result at all
+   * @param  {String}  options.word          The word being searched for
    * @return {Boolean}
    */
-  _previousResultAvailable({ linksOnly, useCache, word }) {
+  _previousResultAvailable({ caseSensitive, entireWord, linksOnly, useCache, word }) {
     return !!(useCache &&
-      this._areParamsEqual(this._previousParams, { word, linksOnly }) &&
+      this._areParamsEqual(this._previousParams, { caseSensitive, entireWord, linksOnly, word }) &&
       this._previousRanges.length);
   },
 
@@ -205,6 +220,8 @@ this.FinderIterator = {
    */
   _areParamsEqual(paramSet1, paramSet2) {
     return (!!paramSet1 && !!paramSet2 &&
+      paramSet1.caseSensitive === paramSet2.caseSensitive &&
+      paramSet1.entireWord === paramSet2.entireWord &&
       paramSet1.linksOnly === paramSet2.linksOnly &&
       paramSet1.word == paramSet2.word);
   },
@@ -318,7 +335,7 @@ this.FinderIterator = {
     let { linksOnly, word } = this._currentParams;
     let iterCount = 0;
     for (let frame of frames) {
-      for (let range of this._iterateDocument(word, frame, finder)) {
+      for (let range of this._iterateDocument(this._currentParams, frame)) {
         // Between iterations, for example after a sleep of one cycle, we could
         // have gotten the signal to stop iterating. Make sure we do here.
         if (!this.running || spawnId !== this._spawnId)
@@ -367,12 +384,15 @@ this.FinderIterator = {
    * Internal; basic wrapper around nsIFind that provides a generator yielding
    * a range each time an occurence of `word` string is found.
    *
-   * @param {String}       word   The word to search for
-   * @param {nsIDOMWindow} window The window to search in
-   * @param {Finder}       finder The Finder instance
+   * @param {Boolean}      options.caseSensitive Whether to search in case
+   *                                             sensitive mode
+   * @param {Boolean}      options.entireWord    Whether to search in entire-word
+   *                                             mode
+   * @param {String}       options.word          The word to search for
+   * @param {nsIDOMWindow} window                The window to search in
    * @yield {nsIDOMRange}
    */
-  _iterateDocument: function* (word, window, finder) {
+  _iterateDocument: function* ({ caseSensitive, entireWord, word }, window) {
     let doc = window.document;
     let body = (doc instanceof Ci.nsIDOMHTMLDocument && doc.body) ?
                doc.body : doc.documentElement;
@@ -394,8 +414,8 @@ this.FinderIterator = {
     let nsIFind = Cc["@mozilla.org/embedcomp/rangefind;1"]
                     .createInstance()
                     .QueryInterface(Ci.nsIFind);
-    nsIFind.caseSensitive = finder._fastFind.caseSensitive;
-    nsIFind.entireWord = finder._fastFind.entireWord;
+    nsIFind.caseSensitive = caseSensitive;
+    nsIFind.entireWord = entireWord;
 
     while ((retRange = nsIFind.Find(word, searchRange, startPt, endPt))) {
       yield retRange;

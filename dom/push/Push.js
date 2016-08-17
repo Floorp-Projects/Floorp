@@ -242,12 +242,14 @@ PushSubscriptionCallback.prototype = {
 
   _getKey: function(subscription, name) {
     let outKeyLen = {};
-    let rawKey = subscription.getKey(name, outKeyLen);
+    let rawKey = Cu.cloneInto(subscription.getKey(name, outKeyLen),
+                              this.pushManager._window);
     if (!outKeyLen.value) {
       return null;
     }
-    let key = new ArrayBuffer(outKeyLen.value);
-    let keyView = new Uint8Array(key);
+
+    let key = new this.pushManager._window.ArrayBuffer(outKeyLen.value);
+    let keyView = new this.pushManager._window.Uint8Array(key);
     keyView.set(rawKey);
     return key;
   },

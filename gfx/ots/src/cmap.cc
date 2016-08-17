@@ -282,7 +282,7 @@ bool Parse31012(ots::Font *font,
   if (!subtable.ReadU32(&num_groups)) {
     return OTS_FAILURE_MSG("can't read number of format 12 subtable groups");
   }
-  if (num_groups == 0 || subtable.remaining() < num_groups * 12) {
+  if (num_groups == 0 || subtable.remaining() / 12 < num_groups) {
     return OTS_FAILURE_MSG("Bad format 12 subtable group count %d", num_groups);
   }
 
@@ -356,7 +356,7 @@ bool Parse31013(ots::Font *font,
 
   // We limit the number of groups in the same way as in 3.10.12 tables. See
   // the comment there in
-  if (num_groups == 0 || subtable.remaining() < num_groups * 12) {
+  if (num_groups == 0 || subtable.remaining() / 12 < num_groups) {
     return OTS_FAILURE_MSG("Bad format 13 subtable group count %d", num_groups);
   }
 
@@ -464,7 +464,7 @@ bool Parse0514(ots::Font *font,
       if (!subtable.ReadU32(&num_ranges)) {
         return OTS_FAILURE_MSG("Can't read number of ranges in record %d", i);
       }
-      if (num_ranges == 0 || subtable.remaining() < num_ranges * 4) {
+      if (num_ranges == 0 || subtable.remaining() / 4 < num_ranges) {
         return OTS_FAILURE_MSG("Bad number of ranges (%d) in record %d", num_ranges, i);
       }
 
@@ -498,7 +498,7 @@ bool Parse0514(ots::Font *font,
       if (!subtable.ReadU32(&num_mappings)) {
         return OTS_FAILURE_MSG("Can't read number of mappings in variation selector record %d", i);
       }
-      if (num_mappings == 0 || subtable.remaining() < num_mappings * 5) {
+      if (num_mappings == 0 || subtable.remaining() / 5 < num_mappings) {
         return OTS_FAILURE_MSG("Bad number of mappings (%d) in variation selector record %d", num_mappings, i);
       }
 
@@ -658,20 +658,21 @@ bool ots_cmap_parse(Font *font, const uint8_t *data, size_t length) {
   }
 
   // check if the table is sorted first by platform ID, then by encoding ID.
-  uint32_t last_id = 0;
-  for (unsigned i = 0; i < num_tables; ++i) {
-    uint32_t current_id
-        = (subtable_headers[i].platform << 24)
-        + (subtable_headers[i].encoding << 16)
-        + subtable_headers[i].language;
-    if ((i != 0) && (last_id >= current_id)) {
+  for (unsigned i = 1; i < num_tables; ++i) {
+    if (subtable_headers[i - 1].platform > subtable_headers[i].platform ||
+        (subtable_headers[i - 1].platform == subtable_headers[i].platform &&
+         (subtable_headers[i - 1].encoding > subtable_headers[i].encoding ||
+          (subtable_headers[i - 1].encoding == subtable_headers[i].encoding &&
+           subtable_headers[i - 1].language > subtable_headers[i].language))))
       OTS_WARNING("subtable %d with platform ID %d, encoding ID %d, language ID %d "
                   "following subtable with platform ID %d, encoding ID %d, language ID %d",
                   i,
-                  (uint8_t)(current_id >> 24), (uint8_t)(current_id >> 16), (uint8_t)(current_id),
-                  (uint8_t)(last_id >> 24), (uint8_t)(last_id >> 16), (uint8_t)(last_id));
-    }
-    last_id = current_id;
+                  subtable_headers[i].platform,
+                  subtable_headers[i].encoding,
+                  subtable_headers[i].language,
+                  subtable_headers[i - 1].platform,
+                  subtable_headers[i - 1].encoding,
+                  subtable_headers[i - 1].language);
   }
 
   // Now, verify that all the lengths are sane
