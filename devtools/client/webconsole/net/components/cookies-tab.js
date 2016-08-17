@@ -26,19 +26,25 @@ var CookiesTab = React.createClass({
 
   displayName: "CookiesTab",
 
-  render() {
-    let actions = this.props.actions;
-    let file = this.props.data;
+  componentDidMount() {
+    let { actions, data } = this.props;
+    let requestCookies = data.request.cookies;
+    let responseCookies = data.response.cookies;
 
-    let cookies = file.request.cookies;
-    if (!cookies || !cookies.length) {
-      // TODO: use async action objects as soon as Redux is in place
+    // TODO: use async action objects as soon as Redux is in place
+    if (!requestCookies || !requestCookies.length) {
       actions.requestData("requestCookies");
-
-      return (
-        Spinner()
-      );
     }
+
+    if (!responseCookies || !responseCookies.length) {
+      actions.requestData("responseCookies");
+    }
+  },
+
+  render() {
+    let { actions, data: file } = this.props;
+    let requestCookies = file.request.cookies;
+    let responseCookies = file.response.cookies;
 
     // The cookie panel displays two groups of cookies:
     // 1) Response Cookies
@@ -46,11 +52,11 @@ var CookiesTab = React.createClass({
     let groups = [{
       key: "responseCookies",
       name: Locale.$STR("responseCookies"),
-      params: file.response.cookies
+      params: responseCookies
     }, {
       key: "requestCookies",
       name: Locale.$STR("requestCookies"),
-      params: file.request.cookies
+      params: requestCookies
     }];
 
     return (
