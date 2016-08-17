@@ -599,6 +599,7 @@ static const char* sObserverTopics[] = {
   "profiler-subprocess",
 #endif
   "gmp-changed",
+  "cacheservice:empty-cache",
 };
 
 #ifdef MOZ_NUWA_PROCESS
@@ -3216,6 +3217,9 @@ ContentParent::Observe(nsISupports* aSubject,
 #endif
   else if (!strcmp(aTopic, "gmp-changed")) {
     Unused << SendNotifyGMPsChanged();
+  }
+  else if (!strcmp(aTopic, "cacheservice:empty-cache")) {
+    Unused << SendNotifyEmptyHTTPCache();
   }
   return NS_OK;
 }
