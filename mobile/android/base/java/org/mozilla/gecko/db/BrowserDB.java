@@ -13,7 +13,7 @@ import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.db.BrowserContract.ExpirePriority;
 import org.mozilla.gecko.distribution.Distribution;
-import org.mozilla.gecko.favicons.decoders.LoadFaviconResult;
+import org.mozilla.gecko.icons.decoders.LoadFaviconResult;
 
 import android.content.ContentProviderOperation;
 import android.content.ContentResolver;

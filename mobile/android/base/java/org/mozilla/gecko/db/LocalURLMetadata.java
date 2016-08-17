@@ -18,7 +18,7 @@ import java.util.Set;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.mozilla.gecko.GeckoAppShell;
-import org.mozilla.gecko.favicons.decoders.LoadFaviconResult;
+import org.mozilla.gecko.icons.decoders.LoadFaviconResult;
 import org.mozilla.gecko.util.ThreadUtils;
 
 import android.content.ContentResolver;
