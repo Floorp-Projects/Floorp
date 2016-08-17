@@ -219,17 +219,7 @@ MappableExtractFile::Create(const char *name, Zip *zip, Zip::Stream *stream)
   }
 
   validator.CacheChecksum();
-  return new MappableExtractFile(fd.forget(), Move(file));
-}
-
-MappableExtractFile::~MappableExtractFile()
-{
-  /* When destroying from a forked process, we don't want the file to be
-   * removed, as the main process is still using the file. Although it
-   * doesn't really matter, it helps e.g. valgrind that the file is there.
-   * The string still needs to be delete[]d, though */
-  if (pid != getpid())
-    delete [] path.release();
+  return new MappableExtractFile(fd.forget(), file.release());
 }
 
 /**
