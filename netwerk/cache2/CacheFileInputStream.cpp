@@ -42,19 +42,26 @@ NS_INTERFACE_MAP_BEGIN(CacheFileInputStream)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIInputStream)
 NS_INTERFACE_MAP_END_THREADSAFE
 
-CacheFileInputStream::CacheFileInputStream(CacheFile *aFile, nsISupports *aEntry)
+CacheFileInputStream::CacheFileInputStream(CacheFile *aFile,
+                                           nsISupports *aEntry,
+                                           bool aAlternativeData)
   : mFile(aFile)
   , mPos(0)
   , mStatus(NS_OK)
   , mClosed(false)
   , mInReadSegments(false)
   , mWaitingForUpdate(false)
+  , mAlternativeData(aAlternativeData)
   , mListeningForChunk(-1)
   , mCallbackFlags(0)
   , mCacheEntryHandle(aEntry)
 {
   LOG(("CacheFileInputStream::CacheFileInputStream() [this=%p]", this));
   MOZ_COUNT_CTOR(CacheFileInputStream);
+
+  if (mAlternativeData) {
+    mPos = mFile->mAltDataOffset;
+  }
 }
 
 CacheFileInputStream::~CacheFileInputStream()
@@ -84,25 +91,30 @@ CacheFileInputStream::Available(uint64_t *_retval)
   }
 
   EnsureCorrectChunk(false);
-  if (NS_FAILED(mStatus))
+  if (NS_FAILED(mStatus)) {
+    LOG(("CacheFileInputStream::Available() - EnsureCorrectChunk failed. "
+         "[this=%p, status=0x%08x]", this, mStatus));
     return mStatus;
+  }
 
+  nsresult rv = NS_OK;
   *_retval = 0;
 
   if (mChunk) {
-    int64_t canRead = mFile->BytesFromChunk(mChunk->Index());
+    int64_t canRead = mFile->BytesFromChunk(mChunk->Index(), mAlternativeData);
     canRead -= (mPos % kChunkSize);
 
-    if (canRead > 0)
+    if (canRead > 0) {
       *_retval = canRead;
-    else if (canRead == 0 && !mFile->mOutput)
-      return NS_BASE_STREAM_CLOSED;
+    } else if (canRead == 0 && !mFile->OutputStreamExists(mAlternativeData)) {
+      rv = NS_BASE_STREAM_CLOSED;
+    }
   }
 
-  LOG(("CacheFileInputStream::Available() [this=%p, retval=%lld]",
-       this, *_retval));
+  LOG(("CacheFileInputStream::Available() [this=%p, retval=%lld, rv=0x%08x]",
+       this, *_retval, rv));
 
-  return NS_OK;
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -209,7 +221,7 @@ CacheFileInputStream::ReadSegments(nsWriteSegmentFun aWriter, void *aClosure,
 
       rv = NS_OK;
     } else {
-      if (mFile->mOutput) {
+      if (mFile->OutputStreamExists(mAlternativeData)) {
         rv = NS_BASE_STREAM_WOULD_BLOCK;
       } else {
         rv = NS_OK;
@@ -354,12 +366,19 @@ CacheFileInputStream::Seek(int32_t whence, int64_t offset)
   int64_t newPos = offset;
   switch (whence) {
     case NS_SEEK_SET:
+      if (mAlternativeData) {
+        newPos += mFile->mAltDataOffset;
+      }
       break;
     case NS_SEEK_CUR:
       newPos += mPos;
       break;
     case NS_SEEK_END:
-      newPos += mFile->mDataSize;
+      if (mAlternativeData) {
+        newPos += mFile->mDataSize;
+      } else {
+        newPos += mFile->mAltDataOffset;
+      }
       break;
     default:
       NS_ERROR("invalid whence");
@@ -383,6 +402,10 @@ CacheFileInputStream::Tell(int64_t *_retval)
   }
 
   *_retval = mPos;
+
+  if (mAlternativeData) {
+    *_retval -= mFile->mAltDataOffset;
+  }
 
   LOG(("CacheFileInputStream::Tell() [this=%p, retval=%lld]", this, *_retval));
   return NS_OK;
@@ -668,7 +691,7 @@ CacheFileInputStream::MaybeNotifyListener()
       NotifyListener();
   }
   else if (canRead == 0) {
-    if (!mFile->mOutput) {
+    if (!mFile->OutputStreamExists(mAlternativeData)) {
       // EOF
       NotifyListener();
     }

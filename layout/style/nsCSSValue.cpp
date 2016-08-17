@@ -2638,6 +2638,16 @@ css::URLValueData::operator==(const URLValueData& aOther) const
 }
 
 bool
+css::URLValueData::MaybeUnresolvedURIEquals(const URLValueData& aOther) const
+{
+  if (!mURIResolved || !aOther.mURIResolved) {
+    return false;
+  }
+
+  return URIEquals(aOther);
+}
+
+bool
 css::URLValueData::URIEquals(const URLValueData& aOther) const
 {
   MOZ_ASSERT(mURIResolved && aOther.mURIResolved,

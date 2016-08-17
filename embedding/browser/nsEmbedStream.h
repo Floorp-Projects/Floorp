@@ -18,11 +18,11 @@ public:
   nsEmbedStream();
 
   void InitOwner(nsIWebBrowser* aOwner);
-  NS_METHOD Init(void);
+  nsresult Init(void);
 
-  NS_METHOD OpenStream(nsIURI* aBaseURI, const nsACString& aContentType);
-  NS_METHOD AppendToStream(const uint8_t* aData, uint32_t aLen);
-  NS_METHOD CloseStream(void);
+  nsresult OpenStream(nsIURI* aBaseURI, const nsACString& aContentType);
+  nsresult AppendToStream(const uint8_t* aData, uint32_t aLen);
+  nsresult CloseStream(void);
 
   NS_DECL_ISUPPORTS
 
