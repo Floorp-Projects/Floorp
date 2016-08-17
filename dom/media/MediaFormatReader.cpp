@@ -1962,7 +1962,7 @@ MediaFormatReader::UpdateBufferedWithPromise() {
   return BufferedUpdatePromise::CreateAndResolve(true, __func__);
 }
 
-void MediaFormatReader::ReleaseMediaResources()
+void MediaFormatReader::ReleaseResources()
 {
   // Before freeing a video codec, all video buffers needed to be released
   // even from graphics pipeline.

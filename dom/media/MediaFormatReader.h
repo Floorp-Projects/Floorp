@@ -62,7 +62,7 @@ public:
   bool ForceZeroStartTime() const override;
 
   // For Media Resource Management
-  void ReleaseMediaResources() override;
+  void ReleaseResources() override;
 
   nsresult ResetDecode(TrackSet aTracks) override;
 
@@ -214,7 +214,7 @@ private:
       mReader->DrainComplete(mType);
     }
     void ReleaseMediaResources() override {
-      mReader->ReleaseMediaResources();
+      mReader->ReleaseResources();
     }
     bool OnReaderTaskQueue() override {
       return mReader->OnTaskQueue();
