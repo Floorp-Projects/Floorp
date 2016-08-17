@@ -1,23 +1,23 @@
 var AddonManager = Cu.import("resource://gre/modules/AddonManager.jsm", {}).AddonManager;
-var SocialService = Cu.import("resource:///modules/SocialService.jsm", {}).SocialService;
+var SocialService = Cu.import("resource://gre/modules/SocialService.jsm", {}).SocialService;
 
 var manifest = {
   name: "provider 1",
   origin: "https://example.com",
-  shareURL: "https://example.com/browser/browser/base/content/test/social/social_share.html",
+  sidebarURL: "https://example.com/browser/browser/base/content/test/social/social_sidebar_empty.html",
   iconURL: "https://example.com/browser/browser/base/content/test/general/moz.png"
 };
 var manifest2 = { // used for testing install
   name: "provider 2",
   origin: "https://test1.example.com",
-  shareURL: "https://test1.example.com/browser/browser/base/content/test/social/social_share.html",
+  sidebarURL: "https://test1.example.com/browser/browser/base/content/test/social/social_sidebar_empty.html",
   iconURL: "https://test1.example.com/browser/browser/base/content/test/general/moz.png",
   version: "1.0"
 };
 var manifestUpgrade = { // used for testing install
   name: "provider 3",
   origin: "https://test2.example.com",
-  shareURL: "https://test2.example.com/browser/browser/base/content/test/social/social_share.html",
+  sidebarURL: "https://test2.example.com/browser/browser/base/content/test/social/social_sidebar.html",
   iconURL: "https://test2.example.com/browser/browser/base/content/test/general/moz.png",
   version: "1.0"
 };

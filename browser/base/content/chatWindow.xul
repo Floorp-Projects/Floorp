@@ -1,0 +1,170 @@
+#filter substitution
+<?xml version="1.0"?>
+
+# -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+<?xml-stylesheet href="chrome://browser/content/browser.css" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/skin/" type="text/css"?>
+<?xul-overlay href="chrome://browser/content/baseMenuOverlay.xul"?>
+<?xul-overlay href="chrome://global/content/editMenuOverlay.xul"?>
+<?xul-overlay href="chrome://browser/content/places/placesOverlay.xul"?>
+
+#include browser-doctype.inc
+
+<window id="chat-window"
+        windowtype="Social:Chat"
+        xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="&mainWindow.title;"
+        onload="gChatWindow.onLoad();"
+        onunload="gChatWindow.onUnload();"
+        macanimationtype="document"
+        fullscreenbutton="true"
+# width and height are also used in socialchat.xml: chatbar dragend handler
+        width="400px"
+        height="420px"
+        persist="screenX screenY width height sizemode">
+
+  <script type="application/javascript" src="chrome://global/content/globalOverlay.js"/>
+  <script type="application/javascript" src="chrome://global/content/contentAreaUtils.js"/>
+  <script type="application/javascript" src="chrome://browser/content/nsContextMenu.js"/>
+
+#include global-scripts.inc
+
+<script type="application/javascript">
+
+var gChatWindow = {
+  // cargo-culted from browser.js for nonBrowserStartup, but we're slightly
+  // different what what we need to leave enabled
+  onLoad: function() {
+    // Disable inappropriate commands / submenus
+    var disabledItems = ['Browser:SavePage', 'Browser:OpenFile',
+                         'Browser:SendLink', 'cmd_pageSetup', 'cmd_print',
+                         'cmd_find', 'cmd_findAgain', 'cmd_findPrevious',
+                         'cmd_fullZoomReduce', 'cmd_fullZoomEnlarge', 'cmd_fullZoomReset',
+#ifdef XP_MACOSX
+                         'viewToolbarsMenu', 'viewSidebarMenuMenu',
+                         'viewFullZoomMenu', 'pageStyleMenu', 'charsetMenu',
+#else
+                         'Browser:OpenLocation', 'Tools:Search',
+#endif
+                         'Tools:Sanitize', 'Tools:DevToolbox',
+                         'key_selectTab1', 'key_selectTab2', 'key_selectTab3',
+                         'key_selectTab4', 'key_selectTab5', 'key_selectTab6',
+                         'key_selectTab7', 'key_selectTab8', 'key_selectLastTab',
+                         'viewHistorySidebar', 'viewBookmarksSidebar',
+                         'Browser:AddBookmarkAs', 'Browser:BookmarkAllTabs'];
+
+    for (let disabledItem of disabledItems) {
+      document.getElementById(disabledItem).setAttribute("disabled", "true");
+    }
+
+    window.QueryInterface(Ci.nsIDOMChromeWindow).browserDOMWindow =
+      new chatBrowserAccess();
+
+    // initialise the offline listener
+    BrowserOffline.init();
+  },
+
+  onUnload: function() {
+    BrowserOffline.uninit();
+  }
+}
+
+// define a popupnotifications handler for this window.  we don't use
+// an iconbox here, and only support the browser frame for chat.
+XPCOMUtils.defineLazyGetter(this, "PopupNotifications", function () {
+  let tmp = {};
+  Cu.import("resource://gre/modules/PopupNotifications.jsm", tmp);
+  try {
+    return new tmp.PopupNotifications(document.getElementById("chatter").content,
+                                      document.getElementById("notification-popup"),
+                                      null);
+  } catch (ex) {
+    console.error(ex);
+    return null;
+  }
+});
+
+XPCOMUtils.defineLazyModuleGetter(this, "RecentWindow",
+                                  "resource:///modules/RecentWindow.jsm");
+
+function chatBrowserAccess() { }
+
+chatBrowserAccess.prototype = {
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIBrowserDOMWindow, Ci.nsISupports]),
+
+  _openURIInNewTab: function(aURI, aWhere) {
+    if (aWhere != Ci.nsIBrowserDOMWindow.OPEN_NEWTAB)
+      return null;
+
+    let win = RecentWindow.getMostRecentBrowserWindow();
+    if (!win) {
+      // We couldn't find a suitable window, a new one needs to be opened.
+      return null;
+    }
+
+    let loadInBackground =
+      Services.prefs.getBoolPref("browser.tabs.loadDivertedInBackground");
+    let tab = win.gBrowser.loadOneTab(aURI ? aURI.spec : "about:blank",
+                                      {inBackground: loadInBackground});
+    let browser = win.gBrowser.getBrowserForTab(tab);
+    win.focus();
+
+    return browser;
+  },
+
+  openURI: function (aURI, aOpener, aWhere, aContext) {
+    let browser = this._openURIInNewTab(aURI, aWhere);
+    return browser ? browser.contentWindow : null;
+  },
+
+  openURIInFrame: function browser_openURIInFrame(aURI, aParams, aWhere, aContext) {
+    let browser = this._openURIInNewTab(aURI, aWhere);
+    return browser ? browser.QueryInterface(Ci.nsIFrameLoaderOwner) : null;
+  },
+
+  isTabContentWindow: function (aWindow) {
+    return this.contentWindow == aWindow;
+  },
+
+  canClose() {
+    let {BrowserUtils} = Cu.import("resource://gre/modules/BrowserUtils.jsm", {});
+    return BrowserUtils.canCloseWindow(window);
+  },
+};
+
+</script>
+
+#include browser-sets.inc
+
+#ifdef XP_MACOSX
+#include browser-menubar.inc
+#endif
+
+  <popupset id="mainPopupSet">
+    <tooltip id="aHTMLTooltip" page="true"/>
+    <menupopup id="contentAreaContextMenu" pagemenu="start"
+               onpopupshowing="if (event.target != this)
+                                 return true;
+                               gContextMenu = new nsContextMenu(this, event.shiftKey);
+                               if (gContextMenu.shouldDisplay)
+                                 document.popupNode = this.triggerNode;
+                               return gContextMenu.shouldDisplay;"
+               onpopuphiding="if (event.target != this)
+                                return;
+                              gContextMenu.hiding();
+                              gContextMenu = null;">
+#include browser-context.inc
+    </menupopup>
+
+#include popup-notifications.inc
+
+  </popupset>
+
+  <commandset id="editMenuCommands"/>
+  <chatbox id="chatter" flex="1"/>
+</window>
