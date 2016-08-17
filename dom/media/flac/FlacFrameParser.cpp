@@ -29,20 +29,8 @@ public:
 
 #define OGG_FLAC_METADATA_TYPE_STREAMINFO 0x7F
 #define FLAC_STREAMINFO_SIZE   34
-#define FLAC_MAX_CHANNELS       8
-#define FLAC_MIN_BLOCKSIZE     16
-#define FLAC_MAX_BLOCKSIZE  65535
-#define FLAC_MIN_FRAME_SIZE    11
 
 #define BITMASK(x) ((1ULL << x)-1)
-
-enum
-{
-  FLAC_CHMODE_INDEPENDENT = 0,
-  FLAC_CHMODE_LEFT_SIDE,
-  FLAC_CHMODE_RIGHT_SIDE,
-  FLAC_CHMODE_MID_SIDE,
-};
 
 enum
 {
@@ -67,10 +55,22 @@ FlacFrameParser::FlacFrameParser()
 {
 }
 
+uint32_t
+FlacFrameParser::HeaderBlockLength(const uint8_t* aPacket) const
+{
+  uint32_t extra = 4;
+  if (aPacket[0] == 'f') {
+    // This must be the first block read, which contains the fLaC signature.
+    aPacket += 4;
+    extra += 4;
+  }
+  return (BigEndian::readUint32(aPacket) & BITMASK(24)) + extra;
+}
+
 bool
 FlacFrameParser::DecodeHeaderBlock(const uint8_t* aPacket, size_t aLength)
 {
-  if (!aLength || aPacket[0] == 0xff) {
+  if (aLength < 4 || aPacket[0] == 0xff) {
     // Not a header block.
     return false;
   }
@@ -78,10 +78,20 @@ FlacFrameParser::DecodeHeaderBlock(const uint8_t* aPacket, size_t aLength)
 
   mPacketCount++;
 
+  if (aPacket[0] == 'f') {
+    if (mPacketCount != 1 || memcmp(br.Read(4), "fLaC", 4) ||
+        br.Remaining() != FLAC_STREAMINFO_SIZE + 4) {
+      return false;
+    }
+    aPacket += 4;
+    aLength -= 4;
+  }
+  uint8_t blockHeader = br.ReadU8();
   // blockType is a misnomer as it could indicate here either a packet type
   // should it points to the start of a Flac in Ogg metadata, or an actual
   // block type as per the flac specification.
-  uint32_t blockType = br.ReadU8() & 0x7f;
+  uint32_t blockType = blockHeader & 0x7f;
+  bool lastBlock = blockHeader & 0x80;
 
   if (blockType == OGG_FLAC_METADATA_TYPE_STREAMINFO) {
     if (mPacketCount != 1 || memcmp(br.Read(4), "FLAC", 4) ||
@@ -114,7 +124,9 @@ FlacFrameParser::DecodeHeaderBlock(const uint8_t* aPacket, size_t aLength)
   switch (blockType) {
     case FLAC_METADATA_TYPE_STREAMINFO:
     {
-      if (blockDataSize != FLAC_STREAMINFO_SIZE) {
+      if (mPacketCount != 1 || blockDataSize != FLAC_STREAMINFO_SIZE) {
+        // STREAMINFO must be the first metadata block found, and its size
+        // is constant.
         return false;
       }
 
@@ -172,7 +184,7 @@ FlacFrameParser::DecodeHeaderBlock(const uint8_t* aPacket, size_t aLength)
     return false;
   }
 
-  if (mNumHeaders && mNumHeaders.ref() + 1 == mPacketCount) {
+  if (lastBlock || (mNumHeaders && mNumHeaders.ref() + 1 == mPacketCount)) {
     mFullMetadata = true;
   }
 
@@ -196,7 +208,36 @@ FlacFrameParser::BlockDuration(const uint8_t* aPacket, size_t aLength) const
 bool
 FlacFrameParser::IsHeaderBlock(const uint8_t* aPacket, size_t aLength) const
 {
-  return aLength && aPacket[0] != 0xff;
+  // Ogg Flac header
+  // The one-byte packet type 0x7F
+  // The four-byte ASCII signature "FLAC", i.e. 0x46, 0x4C, 0x41, 0x43
+
+  // Flac header:
+  // "fLaC", the FLAC stream marker in ASCII, meaning byte 0 of the stream is 0x66, followed by 0x4C 0x61 0x43
+
+  // If we detect either a ogg or plain flac header, then it must be valid.
+  if (aLength < 4 || aPacket[0] == 0xff) {
+    // A header is at least 4 bytes.
+    return false;
+  }
+  if (aPacket[0] == 0x7f) {
+    // Ogg packet
+    AutoByteReader br(aPacket + 1, aLength - 1);
+    const uint8_t* signature = br.Read(4);
+    return signature && !memcmp(signature, "FLAC", 4);
+  }
+  AutoByteReader br(aPacket, aLength - 1);
+  const uint8_t* signature = br.Read(4);
+  if (signature && !memcmp(signature, "fLaC", 4)) {
+    // Flac start header, must have STREAMINFO as first metadata block;
+    if (!br.CanRead8()) {
+      return false;
+    }
+    uint32_t blockType = br.ReadU8() & 0x7f;
+    return blockType == FLAC_METADATA_TYPE_STREAMINFO;
+  }
+  char type = aPacket[0] & 0x7f;
+  return type >= 1 && type <= 6;
 }
 
 MetadataTags*
