@@ -357,7 +357,8 @@ nsPluginArray::EnsurePlugins()
       if (pluginTag->IsClicktoplay()) {
         nsCString name;
         pluginTag->GetName(name);
-        if (NS_LITERAL_CSTRING("Shockwave Flash").Equals(name)) {
+        if (name.EqualsLiteral("Shockwave Flash") &&
+            Preferences::GetBool("plugins.navigator_hide_disabled_flash", false)) {
           RefPtr<nsPluginHost> pluginHost = nsPluginHost::GetInst();
           nsCString permString;
           nsresult rv = pluginHost->GetPermissionStringForTag(pluginTag, 0, permString);
