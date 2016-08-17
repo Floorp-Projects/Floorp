@@ -34,18 +34,18 @@ interface nsIGZFileWriter : nsISupports
    * init() will return an error if called twice.  It's an error to call any
    * other method on this interface without first calling init().
    */
-  void init(in nsIFile file);
+  [must_use] void init(in nsIFile file);
 
   /**
    * Alternate version of init() for use when the file is already opened;
    * e.g., with a FileDescriptor passed over IPC.
    */
-  [noscript] void initANSIFileDesc(in FILE file);
+  [noscript, must_use] void initANSIFileDesc(in FILE file);
 
   /**
    * Write the given string to the file.
    */
-  void write(in AUTF8String str);
+  [must_use] void write(in AUTF8String str);
 
   /*
    * The following two overloads of Write() are C++ because we can't overload
@@ -56,7 +56,7 @@ interface nsIGZFileWriter : nsISupports
   /**
    * Write the given char* to the file (not including the null-terminator).
    */
-  nsresult Write(const char* str)
+  MOZ_MUST_USE nsresult Write(const char* str)
   {
     return Write(str, strlen(str));
   }
@@ -64,7 +64,7 @@ interface nsIGZFileWriter : nsISupports
   /**
    * Write |length| bytes of |str| to the file.
    */
-  nsresult Write(const char* str, uint32_t len)
+  MOZ_MUST_USE nsresult Write(const char* str, uint32_t len)
   {
     return Write(nsDependentCString(str, len));
   }
