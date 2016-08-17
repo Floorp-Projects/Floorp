@@ -123,10 +123,12 @@ LINTER = {
     'description': "Python linter",
     'include': [
         'python/mozlint',
-        'tools/lint',
         'taskcluster',
+        'testing/firefox-ui',
         'testing/marionette/client',
+        'testing/puppeteer',
         'testing/talos/',
+        'tools/lint',
     ],
     'exclude': [],
     'type': 'external',

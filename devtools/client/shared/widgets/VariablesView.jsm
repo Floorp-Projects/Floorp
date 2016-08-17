@@ -1257,7 +1257,7 @@ function Scope(aView, aName, aFlags = {}) {
   this.contextMenuId = aView.contextMenuId;
   this.separatorStr = aView.separatorStr;
 
-  this._init(aName.trim(), aFlags);
+  this._init(aName, aFlags);
 }
 
 Scope.prototype = {
@@ -1822,7 +1822,7 @@ Scope.prototype = {
 
     let name = this._name = document.createElement("label");
     name.className = "plain name";
-    name.setAttribute("value", aName);
+    name.setAttribute("value", aName.trim());
     name.setAttribute("crop", "end");
 
     let title = this._title = document.createElement("hbox");

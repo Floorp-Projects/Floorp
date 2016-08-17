@@ -284,6 +284,17 @@ NS_IMPL_CYCLE_COLLECTION(nsTransitionManager, mEventDispatcher)
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(nsTransitionManager, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(nsTransitionManager, Release)
 
+static inline bool
+ExtractNonDiscreteComputedValue(nsCSSPropertyID aProperty,
+                                nsStyleContext* aStyleContext,
+                                StyleAnimationValue& aComputedValue)
+{
+  return (nsCSSProps::kAnimTypeTable[aProperty] != eStyleAnimType_Discrete ||
+          aProperty == eCSSProperty_visibility) &&
+         StyleAnimationValue::ExtractComputedValue(aProperty, aStyleContext,
+                                                   aComputedValue);
+}
+
 void
 nsTransitionManager::StyleContextChanged(dom::Element *aElement,
                                          nsStyleContext *aOldStyleContext,
@@ -553,9 +564,8 @@ nsTransitionManager::UpdateTransitions(
           // duration are both zero, or because the new value is not
           // interpolable); a new transition would have anim->ToValue()
           // matching currentValue
-          !StyleAnimationValue::ExtractComputedValue(anim->TransitionProperty(),
-                                                     aNewStyleContext,
-                                                     currentValue) ||
+          !ExtractNonDiscreteComputedValue(anim->TransitionProperty(),
+                                           aNewStyleContext, currentValue) ||
           currentValue != anim->ToValue()) {
         // stop the transition
         if (anim->HasCurrentEffect()) {
@@ -620,12 +630,8 @@ nsTransitionManager::ConsiderStartingTransition(
 
   StyleAnimationValue startValue, endValue, dummyValue;
   bool haveValues =
-    StyleAnimationValue::ExtractComputedValue(aProperty,
-                                              aOldStyleContext,
-                                              startValue) &&
-    StyleAnimationValue::ExtractComputedValue(aProperty,
-                                              aNewStyleContext,
-                                              endValue);
+    ExtractNonDiscreteComputedValue(aProperty, aOldStyleContext, startValue) &&
+    ExtractNonDiscreteComputedValue(aProperty, aNewStyleContext, endValue);
 
   bool haveChange = startValue != endValue;
 
@@ -930,9 +936,8 @@ nsTransitionManager::PruneCompletedTransitions(mozilla::dom::Element* aElement,
     // Since effect is a finished transition, we know it didn't
     // influence style.
     StyleAnimationValue currentValue;
-    if (!StyleAnimationValue::ExtractComputedValue(anim->TransitionProperty(),
-                                                   aNewStyleContext,
-                                                   currentValue) ||
+    if (!ExtractNonDiscreteComputedValue(anim->TransitionProperty(),
+                                         aNewStyleContext, currentValue) ||
         currentValue != anim->ToValue()) {
       anim->CancelFromStyle();
       animations.RemoveElementAt(i);

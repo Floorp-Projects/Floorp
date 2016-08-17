@@ -27,6 +27,7 @@ const ANNOS_TO_TRACK = [BookmarkAnnos.DESCRIPTION_ANNO, BookmarkAnnos.SIDEBAR_AN
 
 const SERVICE_NOT_SUPPORTED = "Service not supported on this platform";
 const FOLDER_SORTINDEX = 1000000;
+const { SOURCE_SYNC } = Ci.nsINavBookmarksService;
 
 // Maps Sync record property names to `PlacesSyncUtils` bookmark properties.
 const RECORD_PROPS_TO_BOOKMARK_PROPS = {
@@ -414,7 +415,9 @@ BookmarksEngine.prototype = {
     }
     let mapped = this._mapDupe(item);
     this._log.debug(item.id + " mapped to " + mapped);
-    return mapped;
+    // We must return a string, not an object, and the entries in the GUIDMap
+    // are created via "new String()" making them an object.
+    return mapped ? mapped.toString() : mapped;
   }
 };
 
@@ -1056,19 +1059,19 @@ BookmarksTracker.prototype = {
     // Don't add OR remove the mobile bookmarks if there's nothing.
     if (PlacesUtils.bookmarks.getIdForItemAt(BookmarkSpecialIds.mobile, 0) == -1) {
       if (mobile.length != 0)
-        PlacesUtils.bookmarks.removeItem(mobile[0]);
+        PlacesUtils.bookmarks.removeItem(mobile[0], SOURCE_SYNC);
     }
     // Add the mobile bookmarks query if it doesn't exist
     else if (mobile.length == 0) {
-      let query = PlacesUtils.bookmarks.insertBookmark(all[0], queryURI, -1, title);
+      let query = PlacesUtils.bookmarks.insertBookmark(all[0], queryURI, -1, title, /* guid */ null, SOURCE_SYNC);
       PlacesUtils.annotations.setItemAnnotation(query, BookmarkAnnos.ORGANIZERQUERY_ANNO, BookmarkAnnos.MOBILE_ANNO, 0,
-                                  PlacesUtils.annotations.EXPIRE_NEVER);
+                                  PlacesUtils.annotations.EXPIRE_NEVER, SOURCE_SYNC);
       PlacesUtils.annotations.setItemAnnotation(query, BookmarkAnnos.EXCLUDEBACKUP_ANNO, 1, 0,
-                                  PlacesUtils.annotations.EXPIRE_NEVER);
+                                  PlacesUtils.annotations.EXPIRE_NEVER, SOURCE_SYNC);
     }
     // Make sure the existing title is correct
     else if (PlacesUtils.bookmarks.getItemTitle(mobile[0]) != title) {
-      PlacesUtils.bookmarks.setItemTitle(mobile[0], title);
+      PlacesUtils.bookmarks.setItemTitle(mobile[0], title, SOURCE_SYNC);
     }
 
     this.ignoreAll = false;
@@ -1115,7 +1118,7 @@ BookmarksTracker.prototype = {
     }
 
     // Remove any position annotations now that the user moved the item
-    PlacesUtils.annotations.removeItemAnnotation(itemId, BookmarkAnnos.PARENT_ANNO);
+    PlacesUtils.annotations.removeItemAnnotation(itemId, BookmarkAnnos.PARENT_ANNO, SOURCE_SYNC);
   },
 
   onBeginUpdateBatch: function () {

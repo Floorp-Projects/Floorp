@@ -193,7 +193,7 @@ function newElement(aNamespaceURI, aLocalName, aAttributes)
 {
   var e = document.createElementNS(aNamespaceURI, aLocalName);
   if (aAttributes) {
-    for (let [name, value] in Iterator(aAttributes)) {
+    for (let [name, value] of Object.entries(aAttributes)) {
       e.setAttribute(name, value);
     }
   }
@@ -272,7 +272,7 @@ function run()
 
     // Add subtests for each combination of prefix and suffix, and additive
     // or not.
-    for (let [typePair, suffixEntry] in Iterator(gSuffixes)) {
+    for (let [typePair, suffixEntry] of Object.entries(gSuffixes)) {
       let fromType = typePair[0],
           toType = typePair[1],
           fromArguments = suffixEntry[0],

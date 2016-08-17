@@ -1,0 +1,192 @@
+<!doctype html>
+<meta charset=utf-8>
+<script src="../testcommon.js"></script>
+<body>
+<script>
+"use strict";
+
+// Tests that we correctly extract the underlying value when the animation
+// type is 'discrete'.
+const discreteTests = [
+  {
+    stylesheet: {
+      "@keyframes keyframes":
+      "from { align-content: flex-start; } to { align-content: flex-end; } "
+    },
+    expectedKeyframes: [
+      { computedOffset: 0, alignContent: "flex-start" },
+      { computedOffset: 1, alignContent: "flex-end" }
+    ],
+    explanation: "Test for fully-specified keyframes"
+  },
+  {
+    stylesheet: {
+      "@keyframes keyframes": "from { align-content: flex-start; }"
+    },
+    // The value of 100% should be 'stretch',
+    // but we are not supporting underlying value.
+    // https://bugzilla.mozilla.org/show_bug.cgi?id=1295401
+    expectedKeyframes: [
+      { computedOffset: 0, alignContent: "flex-start" },
+      { computedOffset: 1, alignContent: "unset" }
+    ],
+    explanation: "Test for 0% keyframe only"
+  },
+  {
+    stylesheet: {
+      "@keyframes keyframes": "to { align-content: flex-end; }"
+    },
+    // The value of 0% should be 'stretch',
+    // but we are not supporting underlying value.
+    // https://bugzilla.mozilla.org/show_bug.cgi?id=1295401
+    expectedKeyframes: [
+      { computedOffset: 0, alignContent: "unset" },
+      { computedOffset: 1, alignContent: "flex-end" }
+    ],
+    explanation: "Test for 100% keyframe only"
+  },
+  {
+    stylesheet: {
+      "@keyframes keyframes": "50% { align-content: center; }",
+      "#target": "align-content: space-between;"
+    },
+    expectedKeyframes: [
+      { computedOffset: 0, alignContent: "space-between" },
+      { computedOffset: 0.5, alignContent: "center" },
+      { computedOffset: 1, alignContent: "space-between" }
+    ],
+    explanation: "Test for no 0%/100% keyframes " +
+                 "and specified style on target element"
+  },
+  {
+    stylesheet: {
+      "@keyframes keyframes": "50% { align-content: center; }"
+    },
+    attributes: {
+      style: "align-content: space-between"
+    },
+    expectedKeyframes: [
+      { computedOffset: 0, alignContent: "space-between" },
+      { computedOffset: 0.5, alignContent: "center" },
+      { computedOffset: 1, alignContent: "space-between" }
+    ],
+    explanation: "Test for no 0%/100% keyframes " +
+                 "and specified style on target element using style attribute"
+  },
+  {
+    stylesheet: {
+      "@keyframes keyframes": "50% { align-content: center; }",
+      "#target": "align-content: inherit;"
+    },
+    // The value of 0%/100% should be 'stretch',
+    // but we are not supporting underlying value.
+    // https://bugzilla.mozilla.org/show_bug.cgi?id=1295401
+    expectedKeyframes: [
+      { computedOffset: 0, alignContent: "inherit" },
+      { computedOffset: 0.5, alignContent: "center" },
+      { computedOffset: 1, alignContent: "inherit" }
+    ],
+    explanation: "Test for no 0%/100% keyframes " +
+                 "and 'inherit' specified on target element"
+  },
+  {
+    stylesheet: {
+      "@keyframes keyframes": "50% { align-content: center; }",
+      ".target": "align-content: space-between;"
+    },
+    attributes: {
+      class: "target"
+    },
+    expectedKeyframes: [
+      { computedOffset: 0, alignContent: "space-between" },
+      { computedOffset: 0.5, alignContent: "center" },
+      { computedOffset: 1, alignContent: "space-between" }
+    ],
+    explanation: "Test for no 0%/100% keyframes " +
+                 "and specified style on target element using class selector"
+  },
+  {
+    stylesheet: {
+      "@keyframes keyframes": "50% { align-content: center; }",
+      "div": "align-content: space-between;"
+    },
+    expectedKeyframes: [
+      { computedOffset: 0, alignContent: "space-between" },
+      { computedOffset: 0.5, alignContent: "center" },
+      { computedOffset: 1, alignContent: "space-between" }
+    ],
+    explanation: "Test for no 0%/100% keyframes " +
+                 "and specified style on target element using type selector"
+  },
+  {
+    stylesheet: {
+      "@keyframes keyframes": "50% { align-content: center; }",
+      "div": "align-content: space-between;",
+      ".target": "align-content: flex-start;",
+      "#target": "align-content: flex-end;"
+    },
+    attributes: {
+      class: "target"
+    },
+    expectedKeyframes: [
+      { computedOffset: 0, alignContent: "flex-end" },
+      { computedOffset: 0.5, alignContent: "center" },
+      { computedOffset: 1, alignContent: "flex-end" }
+    ],
+    explanation: "Test for no 0%/100% keyframes " +
+                 "and specified style on target element " +
+                 "using ID selector that overrides class selector"
+  },
+  {
+    stylesheet: {
+      "@keyframes keyframes": "50% { align-content: center; }",
+      "div": "align-content: space-between !important;",
+      ".target": "align-content: flex-start;",
+      "#target": "align-content: flex-end;"
+    },
+    attributes: {
+      class: "target"
+    },
+    expectedKeyframes: [
+      { computedOffset: 0, alignContent: "space-between" },
+      { computedOffset: 0.5, alignContent: "center" },
+      { computedOffset: 1, alignContent: "space-between" }
+    ],
+    explanation: "Test for no 0%/100% keyframes " +
+                 "and specified style on target element " +
+                 "using important type selector that overrides other rules"
+  },
+];
+
+discreteTests.forEach(testcase => {
+  test(t => {
+    addStyle(t, testcase.stylesheet);
+
+    const div = addDiv(t, { "id": "target" });
+    if (testcase.attributes) {
+      for (let attributeName in testcase.attributes) {
+        div.setAttribute(attributeName, testcase.attributes[attributeName]);
+      }
+    }
+    div.style.animation = "keyframes 100s";
+
+    const keyframes = div.getAnimations()[0].effect.getKeyframes();
+    const expectedKeyframes = testcase.expectedKeyframes;
+    assert_equals(keyframes.length, expectedKeyframes.length,
+                  `keyframes.length should be ${ expectedKeyframes.length }`);
+
+    keyframes.forEach((keyframe, index) => {
+      const expectedKeyframe = expectedKeyframes[index];
+      assert_equals(keyframe.computedOffset, expectedKeyframe.computedOffset,
+                    `computedOffset of keyframes[${ index }] should be ` +
+                    `${ expectedKeyframe.computedOffset }`);
+      assert_equals(keyframe.alignContent, expectedKeyframe.alignContent,
+                    `alignContent of keyframes[${ index }] should be ` +
+                    `${ expectedKeyframe.alignContent }`);
+    });
+  }, testcase.explanation);
+});
+
+done();
+</script>
+</body>

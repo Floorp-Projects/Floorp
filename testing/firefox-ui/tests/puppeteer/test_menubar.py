@@ -13,8 +13,6 @@ class TestMenuBar(FirefoxTestCase):
         FirefoxTestCase.setUp(self)
 
     def test_click_item_in_menubar(self):
-        num_tabs = len(self.browser.tabbar.tabs)
-
         def opener(_):
             self.browser.menubar.select_by_id('file-menu',
                                               'menu_newNavigatorTab')

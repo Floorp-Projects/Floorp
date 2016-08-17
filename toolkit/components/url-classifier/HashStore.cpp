@@ -165,6 +165,7 @@ HashStore::HashStore(const nsACString& aTableName, nsIFile* aStoreDir)
   : mTableName(aTableName)
   , mStoreDirectory(aStoreDir)
   , mInUpdate(false)
+  , mFileSize(0)
 {
 }
 
@@ -187,13 +188,18 @@ HashStore::Reset()
   rv = storeFile->Remove(false);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  mFileSize = 0;
+
   return NS_OK;
 }
 
 nsresult
-HashStore::CheckChecksum(nsIFile* aStoreFile,
-                         uint32_t aFileSize)
+HashStore::CheckChecksum(uint32_t aFileSize)
 {
+  if (!mInputStream) {
+    return NS_OK;
+  }
+
   // Check for file corruption by
   // comparing the stored checksum to actual checksum of data
   nsAutoCString hash;
@@ -255,19 +261,13 @@ HashStore::Open()
     return NS_ERROR_FAILURE;
   }
 
-  uint32_t fileSize32 = static_cast<uint32_t>(fileSize);
-  mInputStream = NS_BufferInputStream(origStream, fileSize32);
-
-  rv = CheckChecksum(storeFile, fileSize32);
-  SUCCESS_OR_RESET(rv);
+  mFileSize = static_cast<uint32_t>(fileSize);
+  mInputStream = NS_BufferInputStream(origStream, mFileSize);
 
   rv = ReadHeader();
   SUCCESS_OR_RESET(rv);
 
   rv = SanityCheck();
-  SUCCESS_OR_RESET(rv);
-
-  rv = ReadChunkNumbers();
   SUCCESS_OR_RESET(rv);
 
   return NS_OK;
@@ -363,7 +363,9 @@ HashStore::UpdateHeader()
 nsresult
 HashStore::ReadChunkNumbers()
 {
-  NS_ENSURE_STATE(mInputStream);
+  if (!mInputStream || AlreadyReadChunkNumbers()) {
+    return NS_OK;
+  }
 
   nsCOMPtr<nsISeekableStream> seekable = do_QueryInterface(mInputStream);
   nsresult rv = seekable->Seek(nsISeekableStream::NS_SEEK_SET,
@@ -403,6 +405,45 @@ HashStore::ReadHashes()
   rv = ReadSubPrefixes();
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // If completions was read before, then we are done here.
+  if (AlreadyReadCompletions()) {
+    return NS_OK;
+  }
+
+  rv = ReadTArray(mInputStream, &mAddCompletes, mHeader.numAddCompletes);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = ReadTArray(mInputStream, &mSubCompletes, mHeader.numSubCompletes);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+
+nsresult
+HashStore::ReadCompletions()
+{
+  if (!mInputStream || AlreadyReadCompletions()) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIFile> storeFile;
+  nsresult rv = mStoreDirectory->Clone(getter_AddRefs(storeFile));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = storeFile->AppendNative(mTableName + NS_LITERAL_CSTRING(STORE_SUFFIX));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  uint32_t offset = mFileSize -
+                    sizeof(struct AddComplete) * mHeader.numAddCompletes -
+                    sizeof(struct SubComplete) * mHeader.numSubCompletes -
+                    nsCheckSummedOutputStream::CHECKSUM_SIZE;
+
+  nsCOMPtr<nsISeekableStream> seekable = do_QueryInterface(mInputStream);
+
+  rv = seekable->Seek(nsISeekableStream::NS_SEEK_SET, offset);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   rv = ReadTArray(mInputStream, &mAddCompletes, mHeader.numAddCompletes);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -413,11 +454,27 @@ HashStore::ReadHashes()
 }
 
 nsresult
+HashStore::PrepareForUpdate()
+{
+  nsresult rv = CheckChecksum(mFileSize);
+  SUCCESS_OR_RESET(rv);
+
+  rv = ReadChunkNumbers();
+  SUCCESS_OR_RESET(rv);
+
+  rv = ReadHashes();
+  SUCCESS_OR_RESET(rv);
+
+  return NS_OK;
+}
+
+nsresult
 HashStore::BeginUpdate()
 {
-  // Read the rest of the store in memory.
-  nsresult rv = ReadHashes();
-  SUCCESS_OR_RESET(rv);
+  // Check wether the file is corrupted and read the rest of the store
+  // in memory.
+  nsresult rv = PrepareForUpdate();
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // Close input stream, won't be needed any more and
   // we will rewrite ourselves.
@@ -1064,6 +1121,62 @@ HashStore::AugmentAdds(const nsTArray<uint32_t>& aPrefixes)
     mAddPrefixes[i].prefix.FromUint32(aPrefixes[i]);
   }
   return NS_OK;
+}
+
+ChunkSet&
+HashStore::AddChunks()
+{
+  ReadChunkNumbers();
+
+  return mAddChunks;
+}
+
+ChunkSet&
+HashStore::SubChunks()
+{
+  ReadChunkNumbers();
+
+  return mSubChunks;
+}
+
+AddCompleteArray&
+HashStore::AddCompletes()
+{
+  ReadCompletions();
+
+  return mAddCompletes;
+}
+
+SubCompleteArray&
+HashStore::SubCompletes()
+{
+  ReadCompletions();
+
+  return mSubCompletes;
+}
+
+bool
+HashStore::AlreadyReadChunkNumbers()
+{
+  // If there are chunks but chunk set not yet contains any data
+  // Then we haven't read chunk numbers.
+  if ((mHeader.numAddChunks != 0 && mAddChunks.Length() == 0) ||
+      (mHeader.numSubChunks != 0 && mSubChunks.Length() == 0)) {
+    return false;
+  }
+  return true;
+}
+
+bool
+HashStore::AlreadyReadCompletions()
+{
+  // If there are completions but completion set not yet contains any data
+  // Then we haven't read completions.
+  if ((mHeader.numAddCompletes != 0 && mAddCompletes.Length() == 0) ||
+      (mHeader.numSubCompletes != 0 && mSubCompletes.Length() == 0)) {
+    return false;
+  }
+  return true;
 }
 
 } // namespace safebrowsing

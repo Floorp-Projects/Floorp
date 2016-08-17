@@ -33,10 +33,6 @@
 #include "nsIPrincipal.h"
 #include "mozilla/dom/HTMLMediaElement.h"
 #endif
-#ifdef NECKO_PROTOCOL_rtsp
-#include "RtspOmxDecoder.h"
-#include "RtspOmxReader.h"
-#endif
 #ifdef MOZ_DIRECTSHOW
 #include "DirectShowDecoder.h"
 #include "DirectShowReader.h"
@@ -272,29 +268,6 @@ static char const *const gOMXWebMCodecs[] = {
 #endif //MOZ_OMX_WEBM_DECODER
 
 #endif
-
-#ifdef NECKO_PROTOCOL_rtsp
-static const char* const gRtspTypes[2] = {
-    "RTSP",
-    nullptr
-};
-
-static bool
-IsRtspSupportedType(const nsACString& aMimeType)
-{
-  return MediaDecoder::IsRtspEnabled() &&
-    CodecListContains(gRtspTypes, aMimeType);
-}
-#endif
-
-/* static */
-bool DecoderTraits::DecoderWaitsForOnConnected(const nsACString& aMimeType) {
-#ifdef NECKO_PROTOCOL_rtsp
-  return CodecListContains(gRtspTypes, aMimeType);
-#else
-  return false;
-#endif
-}
 
 #ifdef MOZ_ANDROID_OMX
 static bool
@@ -548,11 +521,6 @@ DecoderTraits::CanHandleMediaType(const char* aMIMEType,
     return CANPLAY_MAYBE;
   }
 #endif
-#ifdef NECKO_PROTOCOL_rtsp
-  if (IsRtspSupportedType(nsDependentCString(aMIMEType))) {
-    return CANPLAY_MAYBE;
-  }
-#endif
   return CANPLAY_NO;
 }
 
@@ -612,12 +580,6 @@ InstantiateDecoder(const nsACString& aType,
       }
     }
     decoder = new MediaOmxDecoder(aOwner);
-    return decoder.forget();
-  }
-#endif
-#ifdef NECKO_PROTOCOL_rtsp
-  if (IsRtspSupportedType(aType)) {
-    decoder = new RtspOmxDecoder(aOwner);
     return decoder.forget();
   }
 #endif
@@ -753,9 +715,6 @@ bool DecoderTraits::IsSupportedInVideoDocument(const nsACString& aType)
     IsAACSupportedType(aType) ||
 #ifdef MOZ_DIRECTSHOW
     IsDirectShowSupportedType(aType) ||
-#endif
-#ifdef NECKO_PROTOCOL_rtsp
-    IsRtspSupportedType(aType) ||
 #endif
     false;
 }

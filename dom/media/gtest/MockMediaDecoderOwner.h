@@ -48,7 +48,6 @@ public:
   {
     return nullptr;
   }
-  void ResetConnectionState() override {}
   void SetAudibleState(bool aAudible) override {}
   void NotifyXPCOMShutdown() override {}
 };

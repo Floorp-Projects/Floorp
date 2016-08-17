@@ -37,15 +37,6 @@ public:
   // Notify if seeking is supported by this MediaResource.
   virtual void SetMediaSeekable(bool aMediaSeekable) {}
 
-  // Notify that server connection is closed.
-  virtual void ResetConnectionState() {}
-
-  // Used by RtspMediaResource which has an unusual sequence
-  // to setup the decoder.
-  virtual nsresult FinishDecoderSetup(MediaResource* aResource) {
-    return NS_OK;
-  }
-
   // Notify that a network error is encountered.
   virtual void NotifyNetworkError() {}
 

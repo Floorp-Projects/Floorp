@@ -131,7 +131,7 @@ id ConnectToUpdateServer()
       }
     }
   } @catch (NSException* e) {
-    // Ignore exceptions.
+    NSLog(@"%@: %@", e.name, e.reason);
     return nil;
   }
   return updateServer;

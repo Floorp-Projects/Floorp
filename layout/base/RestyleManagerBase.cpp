@@ -153,8 +153,10 @@ RestyleManagerBase::ChangeHintToString(nsChangeHint aHint)
     "BorderStyleNoneChange", "UpdateTextPath", "SchedulePaint",
     "NeutralChange", "InvalidateRenderingObservers",
     "ReflowChangesSizeOrPosition", "UpdateComputedBSize",
-    "UpdateUsesOpacity"
+    "UpdateUsesOpacity", "UpdateBackgroundPosition"
   };
+  static_assert(nsChangeHint_AllHints == (1 << ArrayLength(names)) - 1,
+                "Name list doesn't match change hints.");
   uint32_t hint = aHint & ((1 << ArrayLength(names)) - 1);
   uint32_t rest = aHint & ~((1 << ArrayLength(names)) - 1);
   if (hint == nsChangeHint_Hints_NotHandledForDescendants) {

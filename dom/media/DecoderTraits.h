@@ -71,10 +71,6 @@ public:
   // vice versa.
   static bool IsSupportedInVideoDocument(const nsACString& aType);
 
-  // Returns true if we should not start decoder until we receive
-  // OnConnected signal. (currently RTSP only)
-  static bool DecoderWaitsForOnConnected(const nsACString& aType);
-
   static bool IsWebMTypeAndEnabled(const nsACString& aType);
   static bool IsWebMAudioType(const nsACString& aType);
   static bool IsMP4TypeAndEnabled(const nsACString& aType,

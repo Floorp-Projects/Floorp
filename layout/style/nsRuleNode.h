@@ -861,6 +861,8 @@ public:
                            nsStyleContext* aContext,
                            bool aComputeData);
 
+  void GetDiscretelyAnimatedCSSValue(nsCSSPropertyID aProperty,
+                                     nsCSSValue* aValue);
 
   // See comments in GetStyleData for an explanation of what the
   // code below does.

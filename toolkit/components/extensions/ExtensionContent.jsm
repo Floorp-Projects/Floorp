@@ -614,13 +614,10 @@ DocumentManager = {
 
       return Promise.reject({message: `No window matching ${JSON.stringify(details)}`});
     }
-    if (options.all_frames) {
-      return Promise.all(promises);
-    }
-    if (promises.length > 1) {
+    if (!options.all_frames && promises.length > 1) {
       return Promise.reject({message: `Internal error: Script matched multiple windows`});
     }
-    return promises[0];
+    return Promise.all(promises);
   },
 
   enumerateWindows: function* (docShell) {

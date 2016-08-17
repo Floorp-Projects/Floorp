@@ -56,6 +56,14 @@ AnimValuesStyleRule::MightMapInheritedStyleData()
   return mStyleBits & NS_STYLE_INHERITED_STRUCT_MASK;
 }
 
+bool
+AnimValuesStyleRule::GetDiscretelyAnimatedCSSValue(nsCSSPropertyID aProperty,
+                                                   nsCSSValue* aValue)
+{
+  MOZ_ASSERT(false, "GetDiscretelyAnimatedCSSValue is not implemented yet");
+  return false;
+}
+
 #ifdef DEBUG
 void
 AnimValuesStyleRule::List(FILE* out, int32_t aIndent) const

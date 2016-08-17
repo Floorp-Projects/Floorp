@@ -97,7 +97,8 @@ add_task(function* test_addBookmarkAndKeyword() {
                      arguments: [ itemId, "keyword", false, "keyword",
                                   bookmark.lastModified, bookmark.type,
                                   (yield PlacesUtils.promiseItemId(bookmark.parentGuid)),
-                                  bookmark.guid, bookmark.parentGuid, "" ] }
+                                  bookmark.guid, bookmark.parentGuid, "",
+                                  Ci.nsINavBookmarksService.SOURCE_DEFAULT ] }
                  ]);
   yield PlacesTestUtils.promiseAsyncUpdates();
 
@@ -148,12 +149,14 @@ add_task(function* test_sameKeywordDifferentURI() {
                                   "keyword", false, "",
                                   bookmark1.lastModified, bookmark1.type,
                                   (yield PlacesUtils.promiseItemId(bookmark1.parentGuid)),
-                                  bookmark1.guid, bookmark1.parentGuid, "" ] },
+                                  bookmark1.guid, bookmark1.parentGuid, "",
+                                  Ci.nsINavBookmarksService.SOURCE_DEFAULT ] },
                     { name: "onItemChanged",
                      arguments: [ itemId, "keyword", false, "keyword",
                                   bookmark2.lastModified, bookmark2.type,
                                   (yield PlacesUtils.promiseItemId(bookmark2.parentGuid)),
-                                  bookmark2.guid, bookmark2.parentGuid, "" ] }
+                                  bookmark2.guid, bookmark2.parentGuid, "",
+                                  Ci.nsINavBookmarksService.SOURCE_DEFAULT ] }
                  ]);
   yield PlacesTestUtils.promiseAsyncUpdates();
 
@@ -187,13 +190,15 @@ add_task(function* test_sameURIDifferentKeyword() {
                                   "keyword", false, "keyword2",
                                   bookmarks[0].lastModified, bookmarks[0].type,
                                   (yield PlacesUtils.promiseItemId(bookmarks[0].parentGuid)),
-                                  bookmarks[0].guid, bookmarks[0].parentGuid, "" ] },
+                                  bookmarks[0].guid, bookmarks[0].parentGuid, "",
+                                  Ci.nsINavBookmarksService.SOURCE_DEFAULT ] },
                     { name: "onItemChanged",
                      arguments: [ (yield PlacesUtils.promiseItemId(bookmarks[1].guid)),
                                   "keyword", false, "keyword2",
                                   bookmarks[1].lastModified, bookmarks[1].type,
                                   (yield PlacesUtils.promiseItemId(bookmarks[1].parentGuid)),
-                                  bookmarks[1].guid, bookmarks[1].parentGuid, "" ] }
+                                  bookmarks[1].guid, bookmarks[1].parentGuid, "",
+                                  Ci.nsINavBookmarksService.SOURCE_DEFAULT ] }
                  ]);
   yield PlacesTestUtils.promiseAsyncUpdates();
 
@@ -243,19 +248,22 @@ add_task(function* test_unsetKeyword() {
                                   "keyword", false, "",
                                   bookmarks[0].lastModified, bookmarks[0].type,
                                   (yield PlacesUtils.promiseItemId(bookmarks[0].parentGuid)),
-                                  bookmarks[0].guid, bookmarks[0].parentGuid, "" ] },
+                                  bookmarks[0].guid, bookmarks[0].parentGuid, "",
+                                  Ci.nsINavBookmarksService.SOURCE_DEFAULT ] },
                     { name: "onItemChanged",
                      arguments: [ (yield PlacesUtils.promiseItemId(bookmarks[1].guid)),
                                   "keyword", false, "",
                                   bookmarks[1].lastModified, bookmarks[1].type,
                                   (yield PlacesUtils.promiseItemId(bookmarks[1].parentGuid)),
-                                  bookmarks[1].guid, bookmarks[1].parentGuid, "" ] },
+                                  bookmarks[1].guid, bookmarks[1].parentGuid, "",
+                                  Ci.nsINavBookmarksService.SOURCE_DEFAULT ] },
                     { name: "onItemChanged",
                      arguments: [ (yield PlacesUtils.promiseItemId(bookmarks[2].guid)),
                                   "keyword", false, "",
                                   bookmarks[2].lastModified, bookmarks[2].type,
                                   (yield PlacesUtils.promiseItemId(bookmarks[2].parentGuid)),
-                                  bookmarks[2].guid, bookmarks[2].parentGuid, "" ] }
+                                  bookmarks[2].guid, bookmarks[2].parentGuid, "",
+                                  Ci.nsINavBookmarksService.SOURCE_DEFAULT ] }
                  ]);
 
   check_keyword(URI1, null);
@@ -286,7 +294,8 @@ add_task(function* test_addRemoveBookmark() {
                                   "keyword", false, "keyword",
                                   bookmark.lastModified, bookmark.type,
                                   parentId,
-                                  bookmark.guid, bookmark.parentGuid, "" ] }
+                                  bookmark.guid, bookmark.parentGuid, "",
+                                  Ci.nsINavBookmarksService.SOURCE_DEFAULT ] }
                  ]);
 
   check_keyword(URI3, null);
