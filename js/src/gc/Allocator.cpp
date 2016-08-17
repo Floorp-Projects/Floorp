@@ -542,6 +542,8 @@ GCRuntime::pickChunk(const AutoLockGC& lock,
         return availableChunks(lock).head();
 
     Chunk* chunk = getOrAllocChunk(lock, maybeStartBackgroundAllocation);
+    if (!chunk)
+        return nullptr;
 
     chunk->init(rt);
     MOZ_ASSERT(chunk->info.numArenasFreeCommitted == 0);
