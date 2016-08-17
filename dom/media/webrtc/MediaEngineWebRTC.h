@@ -395,6 +395,7 @@ public:
   }
   virtual void DeviceChanged() override
   {
+    MutexAutoLock lock(mMutex);
     if (mAudioSource) {
       mAudioSource->DeviceChanged();
     }
