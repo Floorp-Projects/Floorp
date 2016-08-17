@@ -8,14 +8,11 @@ import android.graphics.Bitmap;
 import android.util.Log;
 import android.util.SparseArray;
 
-import org.mozilla.gecko.favicons.Favicons;
-
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Class representing the result of loading a favicon.
@@ -95,7 +92,7 @@ public class LoadFaviconResult {
             }
         }
 
-        int bestSize = Favicons.selectBestSizeFromList(sizes, targetWidthAndHeight);
+        int bestSize = selectBestSizeFromList(sizes, targetWidthAndHeight);
 
         if (bestSize == -1) {
             // No icons found: this could occur if we weren't able to process any of the
@@ -104,5 +101,31 @@ public class LoadFaviconResult {
         }
 
         return iconMap.get(bestSize);
+    }
+
+    /**
+     * Select the closest icon size from a list of icon sizes.
+     * We just find the first icon that is larger than the preferred size if available, or otherwise select the
+     * largest icon (if all icons are smaller than the preferred size).
+     *
+     * @return The closest icon size, or -1 if no sizes are supplied.
+     */
+    public static int selectBestSizeFromList(final List<Integer> sizes, final int preferredSize) {
+        if (sizes.isEmpty()) {
+            // This isn't ideal, however current code assumes this as an error value for now.
+            return -1;
+        }
+
+        Collections.sort(sizes);
+
+        for (int size : sizes) {
+            if (size >= preferredSize) {
+                return size;
+            }
+        }
+
+        // If all icons are smaller than the preferred size then we don't have an icon
+        // selected yet, therefore just take the largest (last) icon.
+        return sizes.get(sizes.size() - 1);
     }
 }

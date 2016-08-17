@@ -278,16 +278,12 @@ public class StubBrowserDB implements BrowserDB {
     public void updateBookmark(ContentResolver cr, int id, String uri, String title, String keyword) {
     }
 
-    public LoadFaviconResult getFaviconForUrl(ContentResolver cr, String faviconURL) {
+    public LoadFaviconResult getFaviconForUrl(Context context, ContentResolver cr, String faviconURL) {
         return null;
     }
 
     public String getFaviconURLFromPageURL(ContentResolver cr, String uri) {
         return null;
-    }
-
-    public void updateFaviconForUrl(ContentResolver cr, String pageUri,
-                                    byte[] encodedFavicon, String faviconUri) {
     }
 
     public boolean hideSuggestedSite(String url) {
@@ -323,12 +319,6 @@ public class StubBrowserDB implements BrowserDB {
                                       long parent, long added,
                                       long modified, long position,
                                       String keyword, int type) {
-    }
-
-    public void updateFaviconInBatch(ContentResolver cr,
-                                     Collection<ContentProviderOperation> operations,
-                                     String url, String faviconUrl,
-                                     String faviconGuid, byte[] data) {
     }
 
     public void pinSite(ContentResolver cr, String url, String title, int position) {

@@ -64,24 +64,6 @@ public class FaviconGenerator {
     }
 
     /**
-     * Asynchronously generate default favicon for the given page URL.
-     */
-    public static void generate(final Context context, final String pageURL, final OnFaviconLoadedListener listener) {
-        ThreadUtils.postToBackgroundThread(new Runnable() {
-            @Override
-            public void run() {
-                final Bitmap bitmap = generate(context, pageURL).bitmap;
-                ThreadUtils.postToUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        listener.onFaviconLoaded(pageURL, null, bitmap);
-                    }
-                });
-            }
-        });
-    }
-
-    /**
      * Generate default favicon for the given page URL.
      */
     public static IconWithColor generate(Context context, String pageURL) {

@@ -3,6 +3,8 @@
 
 package org.mozilla.gecko.icons.loader;
 
+import android.content.Context;
+
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -16,6 +18,7 @@ import org.robolectric.RuntimeEnvironment;
 
 import java.net.HttpURLConnection;
 
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -44,7 +47,7 @@ public class TestIconDownloader {
 
         Assert.assertNull(response);
 
-        verify(downloader, never()).downloadAndDecodeImage(anyString());
+        verify(downloader, never()).downloadAndDecodeImage(any(Context.class), anyString());
         verify(downloader, never()).connectTo(anyString());
     }
 

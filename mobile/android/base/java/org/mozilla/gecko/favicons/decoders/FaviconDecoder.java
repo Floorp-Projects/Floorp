@@ -4,6 +4,7 @@
 
 package org.mozilla.gecko.favicons.decoders;
 
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.util.Base64;
 import android.util.Log;
@@ -85,7 +86,7 @@ public class FaviconDecoder {
      * @return The decoded version of the bitmap in the described region, or null if none can be
      *         decoded.
      */
-    public static LoadFaviconResult decodeFavicon(byte[] buffer, int offset, int length) {
+    public static LoadFaviconResult decodeFavicon(Context context, byte[] buffer, int offset, int length) {
         LoadFaviconResult result;
         if (isDecodableByAndroid(buffer, offset)) {
             result = new LoadFaviconResult();
@@ -108,7 +109,7 @@ public class FaviconDecoder {
         }
 
         // If it's not decodable by Android, it might be an ICO. Let's try.
-        ICODecoder decoder = new ICODecoder(buffer, offset, length);
+        ICODecoder decoder = new ICODecoder(context, buffer, offset, length);
 
         result = decoder.decode();
 
@@ -119,7 +120,7 @@ public class FaviconDecoder {
         return result;
     }
 
-    public static LoadFaviconResult decodeDataURI(String uri) {
+    public static LoadFaviconResult decodeDataURI(Context context, String uri) {
         if (uri == null) {
             Log.w(LOG_TAG, "Can't decode null data: URI.");
             return null;
@@ -140,15 +141,15 @@ public class FaviconDecoder {
         try {
             String base64 = uri.substring(offset);
             byte[] raw = Base64.decode(base64, Base64.DEFAULT);
-            return decodeFavicon(raw);
+            return decodeFavicon(context, raw);
         } catch (Exception e) {
             Log.w(LOG_TAG, "Couldn't decode data: URI.", e);
             return null;
         }
     }
 
-    public static LoadFaviconResult decodeFavicon(byte[] buffer) {
-        return decodeFavicon(buffer, 0, buffer.length);
+    public static LoadFaviconResult decodeFavicon(Context context, byte[] buffer) {
+        return decodeFavicon(context, buffer, 0, buffer.length);
     }
 
     /**
