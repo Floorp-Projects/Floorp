@@ -144,7 +144,7 @@ struct AnimatedGeometryRoot
   nsIFrame* operator ->() const { return mFrame; }
 
   void* operator new(size_t aSize,
-                     nsDisplayListBuilder* aBuilder) CPP_THROW_NEW;
+                     nsDisplayListBuilder* aBuilder);
 
   nsIFrame* mFrame;
   AnimatedGeometryRoot* mParentAGR;
@@ -1357,7 +1357,7 @@ public:
   virtual ~nsDisplayItem() {}
 
   void* operator new(size_t aSize,
-                     nsDisplayListBuilder* aBuilder) CPP_THROW_NEW {
+                     nsDisplayListBuilder* aBuilder) {
     return aBuilder->Allocate(aSize);
   }
 
