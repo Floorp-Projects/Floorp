@@ -303,7 +303,7 @@ const PanelUI = {
    * @param aAnchor the element that spawned the subview.
    * @param aPlacementArea the CustomizableUI area that aAnchor is in.
    */
-  showSubView: function(aViewId, aAnchor, aPlacementArea) {
+  showSubView: Task.async(function*(aViewId, aAnchor, aPlacementArea) {
     this._ensureEventListenersAdded();
     let viewNode = document.getElementById(aViewId);
     if (!viewNode) {
@@ -322,10 +322,28 @@ const PanelUI = {
       aAnchor.open = true;
       // Emit the ViewShowing event so that the widget definition has a chance
       // to lazily populate the subview with things.
-      let evt = document.createEvent("CustomEvent");
-      evt.initCustomEvent("ViewShowing", true, true, viewNode);
+      let detail = {
+        blockers: new Set(),
+        addBlocker(aPromise) {
+          this.blockers.add(aPromise);
+        },
+      };
+
+      let evt = new CustomEvent("ViewShowing", { bubbles: true, cancelable: true, detail });
       viewNode.dispatchEvent(evt);
-      if (evt.defaultPrevented) {
+
+      let cancel = evt.defaultPrevented;
+      if (detail.blockers.size) {
+        try {
+          let results = yield Promise.all(detail.blockers);
+          cancel = cancel || results.some(val => val === false);
+        } catch (e) {
+          Components.utils.reportError(e);
+          cancel = true;
+        }
+      }
+
+      if (cancel) {
         aAnchor.open = false;
         return;
       }
@@ -375,7 +393,7 @@ const PanelUI = {
       }
       tempPanel.openPopup(iconAnchor || aAnchor, "bottomcenter topright");
     }
-  },
+  }),
 
   /**
    * NB: The enable- and disableSingleSubviewPanelAnimations methods only
