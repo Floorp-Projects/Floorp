@@ -504,6 +504,10 @@ GPUProcessManager::AllocateLayerTreeId()
 void
 GPUProcessManager::DeallocateLayerTreeId(uint64_t aLayersId)
 {
+  if (mGPUChild) {
+    mGPUChild->SendDeallocateLayerTreeId(aLayersId);
+    return;
+  }
   CompositorBridgeParent::DeallocateLayerTreeId(aLayersId);
 }
 
