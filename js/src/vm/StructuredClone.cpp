@@ -306,6 +306,8 @@ struct JSStructuredCloneWriter {
         return out.extractBuffer(datap, sizep);
     }
 
+    JS::StructuredCloneScope cloneScope() const { return scope; }
+
   private:
     JSStructuredCloneWriter() = delete;
     JSStructuredCloneWriter(const JSStructuredCloneWriter&) = delete;
@@ -454,6 +456,10 @@ DiscardTransferables(uint64_t* buffer, size_t nbytes,
 
     uint32_t tag, data;
     SCInput::getPair(point++, &tag, &data);
+
+    if (tag == SCTAG_HEADER)
+        SCInput::getPair(point++, &tag, &data);
+
     if (tag != SCTAG_TRANSFER_MAP_HEADER)
         return;
 
@@ -2522,4 +2528,10 @@ JS_ObjectNotWritten(JSStructuredCloneWriter* w, HandleObject obj)
     w->memory.remove(w->memory.lookup(obj));
 
     return true;
+}
+
+JS_PUBLIC_API(JS::StructuredCloneScope)
+JS_GetStructuredCloneScope(JSStructuredCloneWriter* w)
+{
+    return w->cloneScope();
 }

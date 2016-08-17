@@ -290,4 +290,7 @@ JS_WriteTypedArray(JSStructuredCloneWriter* w, JS::HandleValue v);
 JS_PUBLIC_API(bool)
 JS_ObjectNotWritten(JSStructuredCloneWriter* w, JS::HandleObject obj);
 
+JS_PUBLIC_API(JS::StructuredCloneScope)
+JS_GetStructuredCloneScope(JSStructuredCloneWriter* w);
+
 #endif  /* js_StructuredClone_h */
