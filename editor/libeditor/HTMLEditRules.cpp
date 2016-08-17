@@ -4824,24 +4824,26 @@ HTMLEditRules::CheckForEmptyBlock(nsINode* aStartNode,
       }
     } else {
       if (aAction == nsIEditor::eNext) {
-        // Adjust selection to be right after it.
-        res = aSelection->Collapse(blockParent, offset + 1);
-        NS_ENSURE_SUCCESS(res, res);
-
-        // Move to the start of the next node if it's a text.
+        // Move to the start of the next node, if any
         nsCOMPtr<nsIContent> nextNode = mHTMLEditor->GetNextNode(blockParent,
                                                                  offset + 1, true);
-        if (nextNode && mHTMLEditor->IsTextNode(nextNode)) {
-          res = aSelection->Collapse(nextNode, 0);
+        if (nextNode) {
+          EditorDOMPoint pt = GetGoodSelPointForNode(*nextNode, aAction);
+          res = aSelection->Collapse(pt.node, pt.offset);
+          NS_ENSURE_SUCCESS(res, res);
+        } else {
+          // Adjust selection to be right after it.
+          res = aSelection->Collapse(blockParent, offset + 1);
           NS_ENSURE_SUCCESS(res, res);
         }
       } else {
-        // Move to the end of the previous node if it's a text.
+        // Move to the end of the previous node
         nsCOMPtr<nsIContent> priorNode = mHTMLEditor->GetPriorNode(blockParent,
                                                                    offset,
                                                                    true);
-        if (priorNode && mHTMLEditor->IsTextNode(priorNode)) {
-          res = aSelection->Collapse(priorNode, priorNode->TextLength());
+        if (priorNode) {
+          EditorDOMPoint pt = GetGoodSelPointForNode(*priorNode, aAction);
+          res = aSelection->Collapse(pt.node, pt.offset);
           NS_ENSURE_SUCCESS(res, res);
         } else {
           res = aSelection->Collapse(blockParent, offset + 1);
