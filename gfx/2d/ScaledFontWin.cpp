@@ -7,6 +7,7 @@
 
 #include "AutoHelpersWin.h"
 #include "Logging.h"
+#include "nsString.h"
 #include "SFNTData.h"
 
 #ifdef USE_SKIA
@@ -68,7 +69,8 @@ ScaledFontWin::GetFontFileData(FontFileDataOutput aDataCallback, void *aBaton)
           reinterpret_cast<char16_t*>(mLogFont.lfFaceName), &index, LF_FACESIZE - 1)) {
       gfxWarning() << "Failed to get index for face name.";
       gfxDevCrash(LogReason::GetFontFileDataFailed) <<
-        "Failed to get index for face name |" << mLogFont.lfFaceName << "|.";
+        "Failed to get index for face name |" <<
+        NS_ConvertUTF16toUTF8(mLogFont.lfFaceName).get() << "|.";
       return false;
     }
   }
