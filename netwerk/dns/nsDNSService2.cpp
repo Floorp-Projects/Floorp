@@ -568,13 +568,11 @@ nsDNSService::Init()
         // If a manual proxy is in use, disable prefetch implicitly
         prefs->GetIntPref("network.proxy.type", &proxyType);
         prefs->GetBoolPref(kPrefDnsNotifyResolution, &notifyResolution);
-    }
 
-    if (mFirstTime) {
-        mFirstTime = false;
+        if (mFirstTime) {
+            mFirstTime = false;
 
-        // register as prefs observer
-        if (prefs) {
+            // register as prefs observer
             prefs->AddObserver(kPrefDnsCacheEntries, this, false);
             prefs->AddObserver(kPrefDnsCacheExpiration, this, false);
             prefs->AddObserver(kPrefDnsCacheGrace, this, false);
@@ -590,14 +588,13 @@ nsDNSService::Init()
             // If a manual proxy is in use, disable prefetch implicitly
             prefs->AddObserver("network.proxy.type", this, false);
         }
+    }
 
-        nsCOMPtr<nsIObserverService> observerService =
-            mozilla::services::GetObserverService();
-        if (observerService) {
-            observerService->AddObserver(this, "last-pb-context-exited", false);
-            observerService->AddObserver(this, NS_NETWORK_LINK_TOPIC, false);
-        }
-
+    nsCOMPtr<nsIObserverService> observerService =
+        mozilla::services::GetObserverService();
+    if (observerService) {
+        observerService->AddObserver(this, "last-pb-context-exited", false);
+        observerService->AddObserver(this, NS_NETWORK_LINK_TOPIC, false);
     }
 
     nsDNSPrefetch::Initialize(this);
