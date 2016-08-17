@@ -2056,9 +2056,11 @@ fi
 
 AC_HAVE_FUNCS(localeconv)
 
-MOZ_CHECK_ALLOCATOR
-
 fi # ! SKIP_COMPILER_CHECKS
+
+if test -n "${COMPILE_ENVIRONMENT}"; then
+  MOZ_CHECK_ALLOCATOR
+fi
 
 TARGET_XPCOM_ABI=
 if test -n "${CPU_ARCH}" -a -n "${TARGET_COMPILER_ABI}"; then
