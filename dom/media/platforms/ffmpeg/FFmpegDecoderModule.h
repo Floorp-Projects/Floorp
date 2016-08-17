@@ -82,9 +82,9 @@ public:
     if (aConfig.IsVideo() &&
         (aConfig.mMimeType.EqualsLiteral("video/avc") ||
          aConfig.mMimeType.EqualsLiteral("video/mp4"))) {
-      return PlatformDecoderModule::kNeedAVCC;
+      return ConversionRequired::kNeedAVCC;
     } else {
-      return kNeedNone;
+      return ConversionRequired::kNeedNone;
     }
   }
 
