@@ -22,11 +22,8 @@ function run_test() {
             "mar download interrupted recovery");
 
   Services.prefs.setBoolPref(PREF_APP_UPDATE_STAGING_ENABLED, false);
-  // The HTTP server is only used for the mar file downloads since it is slow
   start_httpserver();
-  setUpdateURLOverride(gURLData + "update.xml");
-  // The mock XMLHttpRequest is MUCH faster
-  overrideXHR(callHandleEvent);
+  setUpdateURLOverride(gURLData + gHTTPHandlerPath);
   standardInit();
   do_execute_soon(run_test_pt1);
 }
@@ -34,21 +31,6 @@ function run_test() {
 // The HttpServer must be stopped before calling do_test_finished
 function finish_test() {
   stop_httpserver(doTestFinish);
-}
-
-// Callback function used by the custom XMLHttpRequest implementation to
-// call the nsIDOMEventListener's handleEvent method for onload.
-function callHandleEvent(aXHR) {
-  aXHR.status = 400;
-  aXHR.responseText = gResponseBody;
-  try {
-    let parser = Cc["@mozilla.org/xmlextras/domparser;1"].
-                 createInstance(Ci.nsIDOMParser);
-    aXHR.responseXML = parser.parseFromString(gResponseBody, "application/xml");
-  } catch (e) {
-  }
-  let e = { target: aXHR };
-  aXHR.onload(e);
 }
 
 // Helper function for testing mar downloads that have the correct size
