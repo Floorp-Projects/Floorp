@@ -6,23 +6,18 @@
 package org.mozilla.gecko.widget;
 
 import org.mozilla.gecko.R;
-import org.mozilla.gecko.favicons.FaviconGenerator;
 import org.mozilla.gecko.icons.IconCallback;
 import org.mozilla.gecko.icons.IconResponse;
-import org.mozilla.gecko.util.ThreadUtils;
 
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.RectF;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
-import android.util.Log;
 import android.util.TypedValue;
-import android.view.View;
 import android.widget.ImageView;
 
 import java.lang.ref.WeakReference;
