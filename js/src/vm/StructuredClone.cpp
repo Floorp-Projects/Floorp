@@ -457,8 +457,12 @@ DiscardTransferables(uint64_t* buffer, size_t nbytes,
     uint32_t tag, data;
     SCInput::getPair(point++, &tag, &data);
 
-    if (tag == SCTAG_HEADER)
+    if (tag == SCTAG_HEADER) {
+        if (point == end)
+            return;
+
         SCInput::getPair(point++, &tag, &data);
+    }
 
     if (tag != SCTAG_TRANSFER_MAP_HEADER)
         return;
