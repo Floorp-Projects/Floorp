@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 import pytest
-from mock import patch, Mock, DEFAULT, mock_open, MagicMock
+from mock import patch, Mock, DEFAULT, mock_open, MagicMock, sentinel
 
 from marionette.runtests import (
     MarionetteTestRunner,
@@ -241,6 +241,25 @@ def test_call_harness_with_no_args_yields_num_failures(runner_class):
         failed_or_crashed = MarionetteHarness(runner_class).run()
         assert parse_args.call_count == 1
     assert failed_or_crashed == 0
+
+
+def test_args_passed_to_runner_class(mach_parsed_kwargs, runner_class):
+    arg_list = mach_parsed_kwargs.keys()
+    arg_list.remove('tests')
+    mach_parsed_kwargs.update([(a, getattr(sentinel, a)) for a in arg_list])
+    harness = MarionetteHarness(runner_class, args=mach_parsed_kwargs)
+    harness.process_args = Mock()
+    harness.run()
+    for arg in arg_list:
+        assert harness._runner_class.call_args[1][arg] is getattr(sentinel, arg)
+
+
+def test_args_passed_to_driverclass(mock_runner):
+    built_kwargs = {'arg1': 'value1', 'arg2': 'value2'}
+    mock_runner._build_kwargs = Mock(return_value=built_kwargs)
+    with pytest.raises(IOError):
+        mock_runner.run_tests(['fake_tests.ini'])
+    assert mock_runner.driverclass.call_args[1] == built_kwargs
 
 
 def test_harness_sets_up_default_test_handlers(mach_parsed_kwargs):
