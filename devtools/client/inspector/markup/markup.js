@@ -50,7 +50,7 @@ const Heritage = require("sdk/core/heritage");
 const {parseAttribute} =
       require("devtools/client/shared/node-attribute-parser");
 const {Task} = require("devtools/shared/task");
-const {scrollIntoViewIfNeeded} = require("devtools/shared/layout/utils");
+const {scrollIntoViewIfNeeded} = require("devtools/client/shared/scroll");
 const {PrefObserver} = require("devtools/client/styleeditor/utils");
 const {KeyShortcuts} = require("devtools/client/shared/key-shortcuts");
 const {template} = require("devtools/shared/gcli/templater");
