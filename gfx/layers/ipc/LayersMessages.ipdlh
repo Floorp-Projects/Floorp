@@ -28,7 +28,7 @@ using struct nsPoint from "nsPoint.h";
 using class mozilla::TimeDuration from "mozilla/TimeStamp.h";
 using class mozilla::TimeStamp from "mozilla/TimeStamp.h";
 using mozilla::ScreenRotation from "mozilla/WidgetUtils.h";
-using nsCSSProperty from "nsCSSProperty.h";
+using nsCSSPropertyID from "nsCSSPropertyID.h";
 using mozilla::dom::ScreenOrientationInternal from "mozilla/dom/ScreenOrientation.h";
 using struct mozilla::layers::TextureInfo from "mozilla/layers/CompositorTypes.h";
 using mozilla::LayerMargin from "Units.h";
@@ -199,7 +199,7 @@ struct Animation {
   float iterationStart;
   // This uses the NS_STYLE_ANIMATION_DIRECTION_* constants.
   int32_t direction;
-  nsCSSProperty property;
+  nsCSSPropertyID property;
   AnimationData data;
   float playbackRate;
   // This is used in the transformed progress calculation.

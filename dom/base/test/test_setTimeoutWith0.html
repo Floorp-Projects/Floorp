@@ -1,0 +1,22 @@
+<html>
+<head>
+  <title>Test for setTimeout and strings containing 0</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<script>
+
+var x = 0;
+setTimeout("x++; '\x00'; x++;");
+setTimeout(function() {
+  is(x, 2, "We want to see 2 here");
+  SimpleTest.finish();
+});
+
+SimpleTest.waitForExplicitFinish();
+</script>
+</body>
+</html>
+
+

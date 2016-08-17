@@ -668,17 +668,9 @@ js::Nursery::collect(JSRuntime* rt, JS::gcreason::Reason reason)
     maybeEndProfile(ProfileKey::CheckHashTables);
 
     // Resize the nursery.
-    static const double GrowThreshold   = 0.05;
-    static const double ShrinkThreshold = 0.01;
     maybeStartProfile(ProfileKey::Resize);
     double promotionRate = mover.tenuredSize / double(initialUsedSpace);
-    if (initialUsedSpace > NurseryChunkUsableSize / 2) {
-        if (reason == JS::gcreason::OUT_OF_NURSERY && promotionRate > GrowThreshold)
-            growAllocableSpace();
-        else if (promotionRate < ShrinkThreshold && previousPromotionRate_ < ShrinkThreshold)
-            shrinkAllocableSpace();
-        previousPromotionRate_ = promotionRate;
-    }
+    maybeResizeNursery(reason, initialUsedSpace, promotionRate);
     maybeEndProfile(ProfileKey::Resize);
 
     // If we are promoting the nursery, or exhausted the store buffer with
@@ -858,6 +850,32 @@ js::Nursery::setStartPosition()
 {
     currentStartChunk_ = currentChunk_;
     currentStartPosition_ = position();
+}
+
+void
+js::Nursery::maybeResizeNursery(JS::gcreason::Reason reason, size_t usedSpace, double promotionRate)
+{
+    static const double GrowThreshold   = 0.05;
+    static const double ShrinkThreshold = 0.01;
+
+    // Shrink the nursery to its minimum size of we ran out of memory or
+    // received a memory pressure event.
+    if (gc::IsOOMReason(reason)) {
+        updateNumChunks(1);
+        return;
+    }
+
+    // Don't use promotion rate unless we have enough data to belive it is
+    // accurate.
+    if (usedSpace < NurseryChunkUsableSize / 2)
+        return;
+
+    if (reason == JS::gcreason::OUT_OF_NURSERY && promotionRate > GrowThreshold)
+        growAllocableSpace();
+    else if (promotionRate < ShrinkThreshold && previousPromotionRate_ < ShrinkThreshold)
+        shrinkAllocableSpace();
+
+    previousPromotionRate_ = promotionRate;
 }
 
 void

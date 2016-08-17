@@ -1046,9 +1046,7 @@ nsJARChannel::OnDownloadComplete(MemoryDownloader* aDownloader,
         } else {
             nsCOMPtr<nsIJARChannel> innerJARChannel(do_QueryInterface(channel));
             if (innerJARChannel) {
-                bool unsafe;
-                innerJARChannel->GetIsUnsafe(&unsafe);
-                mIsUnsafe = unsafe;
+                mIsUnsafe = innerJARChannel->GetIsUnsafe();
             }
         }
 

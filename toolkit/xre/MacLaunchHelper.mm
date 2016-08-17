@@ -169,7 +169,7 @@ void AbortElevatedUpdate()
       currTry++;
     }
   } @catch (NSException* e) {
-    // Ignore exceptions.
+    NSLog(@"%@: %@", e.name, e.reason);
   }
   NSLog(@"Unable to clean up updater.");
 }

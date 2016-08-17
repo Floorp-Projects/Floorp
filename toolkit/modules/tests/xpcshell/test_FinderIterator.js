@@ -42,6 +42,8 @@ add_task(function* test_start() {
 
   let count = 0;
   yield FinderIterator.start({
+    caseSensitive: false,
+    entireWord: false,
     finder: gMockFinder,
     onRange: range => {
       ++count;
@@ -63,6 +65,8 @@ add_task(function* test_valid_arguments() {
   let count = 0;
 
   yield FinderIterator.start({
+    caseSensitive: false,
+    entireWord: false,
     finder: gMockFinder,
     onRange: range => ++count,
     word: findText
@@ -75,18 +79,38 @@ add_task(function* test_valid_arguments() {
 
   count = 0;
   Assert.throws(() => FinderIterator.start({
+    entireWord: false,
+    onRange: range => ++count,
+    word: findText
+  }), /Missing required option 'caseSensitive'/, "Should throw when missing an argument");
+  FinderIterator.reset();
+
+  Assert.throws(() => FinderIterator.start({
+    caseSensitive: false,
+    onRange: range => ++count,
+    word: findText
+  }), /Missing required option 'entireWord'/, "Should throw when missing an argument");
+  FinderIterator.reset();
+
+  Assert.throws(() => FinderIterator.start({
+    caseSensitive: false,
+    entireWord: false,
     onRange: range => ++count,
     word: findText
   }), /Missing required option 'finder'/, "Should throw when missing an argument");
   FinderIterator.reset();
 
   Assert.throws(() => FinderIterator.start({
+    caseSensitive: true,
+    entireWord: false,
     finder: gMockFinder,
     word: findText
   }), /Missing valid, required option 'onRange'/, "Should throw when missing an argument");
   FinderIterator.reset();
 
   Assert.throws(() => FinderIterator.start({
+    caseSensitive: false,
+    entireWord: true,
     finder: gMockFinder,
     onRange: range => ++count
   }), /Missing required option 'word'/, "Should throw when missing an argument");
@@ -102,6 +126,8 @@ add_task(function* test_stop() {
 
   let count = 0;
   let whenDone = FinderIterator.start({
+    caseSensitive: false,
+    entireWord: false,
     finder: gMockFinder,
     onRange: range => ++count,
     word: findText
@@ -121,6 +147,8 @@ add_task(function* test_reset() {
 
   let count = 0;
   let whenDone = FinderIterator.start({
+    caseSensitive: false,
+    entireWord: false,
     finder: gMockFinder,
     onRange: range => ++count,
     word: findText
@@ -150,6 +178,8 @@ add_task(function* test_parallel_starts() {
   // Start off the iterator.
   let count = 0;
   let whenDone = FinderIterator.start({
+    caseSensitive: false,
+    entireWord: false,
     finder: gMockFinder,
     onRange: range => ++count,
     word: findText
@@ -161,6 +191,8 @@ add_task(function* test_parallel_starts() {
 
   let count2 = 0;
   let whenDone2 = FinderIterator.start({
+    caseSensitive: false,
+    entireWord: false,
     finder: gMockFinder,
     onRange: range => ++count2,
     word: findText

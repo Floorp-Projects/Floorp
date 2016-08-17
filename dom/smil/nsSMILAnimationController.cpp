@@ -693,7 +693,7 @@ nsSMILAnimationController::GetTargetIdentifierForAnimation(
           attributeName == nsGkAtoms::height) {
         isCSS = targetElem->GetNameSpaceID() != kNameSpaceID_SVG;
       } else {
-        nsCSSProperty prop =
+        nsCSSPropertyID prop =
           nsCSSProps::LookupProperty(nsDependentAtomString(attributeName),
                                      CSSEnabledState::eForAllContent);
         isCSS = nsSMILCSSProperty::IsPropertyAnimatable(prop);

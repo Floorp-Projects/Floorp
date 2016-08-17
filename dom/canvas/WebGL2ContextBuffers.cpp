@@ -140,12 +140,9 @@ WebGL2Context::CopyBufferSubData(GLenum readTarget, GLenum writeTarget,
     }
 }
 
-// BufferT may be one of
-// const dom::ArrayBuffer&
-// const dom::SharedArrayBuffer&
-template<typename BufferT>
 void
-WebGL2Context::GetBufferSubDataT(GLenum target, GLintptr offset, const BufferT& data)
+WebGL2Context::GetBufferSubData(GLenum target, GLintptr offset,
+                                const dom::ArrayBufferView& data)
 {
     const char funcName[] = "getBufferSubData";
     if (IsContextLost())
@@ -233,28 +230,6 @@ WebGL2Context::GetBufferSubDataT(GLenum target, GLintptr offset, const BufferT& 
     if (target == LOCAL_GL_TRANSFORM_FEEDBACK_BUFFER && currentTF) {
         BindTransformFeedback(LOCAL_GL_TRANSFORM_FEEDBACK, currentTF);
     }
-}
-
-void
-WebGL2Context::GetBufferSubData(GLenum target, GLintptr offset,
-                                const dom::Nullable<dom::ArrayBuffer>& maybeData)
-{
-    // If returnedData is null then an INVALID_VALUE error is
-    // generated.
-    if (maybeData.IsNull()) {
-        ErrorInvalidValue("getBufferSubData: returnedData is null");
-        return;
-    }
-
-    const dom::ArrayBuffer& data = maybeData.Value();
-    GetBufferSubDataT(target, offset, data);
-}
-
-void
-WebGL2Context::GetBufferSubData(GLenum target, GLintptr offset,
-                                const dom::SharedArrayBuffer& data)
-{
-    GetBufferSubDataT(target, offset, data);
 }
 
 } // namespace mozilla

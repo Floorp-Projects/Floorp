@@ -453,6 +453,8 @@ nsIOService::AsyncOnChannelRedirect(nsIChannel* oldChan, nsIChannel* newChan,
 nsresult
 nsIOService::CacheProtocolHandler(const char *scheme, nsIProtocolHandler *handler)
 {
+    MOZ_ASSERT(NS_IsMainThread());
+
     for (unsigned int i=0; i<NS_N(gScheme); i++)
     {
         if (!nsCRT::strcasecmp(scheme, gScheme[i]))
@@ -480,6 +482,8 @@ nsIOService::CacheProtocolHandler(const char *scheme, nsIProtocolHandler *handle
 nsresult
 nsIOService::GetCachedProtocolHandler(const char *scheme, nsIProtocolHandler **result, uint32_t start, uint32_t end)
 {
+    MOZ_ASSERT(NS_IsMainThread());
+
     uint32_t len = end - start - 1;
     for (unsigned int i=0; i<NS_N(gScheme); i++)
     {

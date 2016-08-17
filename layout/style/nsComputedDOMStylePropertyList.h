@@ -19,7 +19,7 @@
   The COMPUTED_STYLE_PROP macro is defined for each such property.
   Its arguments are:
 
-  -. 'id' the nsCSSProperty ID, without the leading "nsCSSProperty_".
+  -. 'id' the nsCSSPropertyID ID, without the leading "nsCSSProperty_".
 
   -. 'method' the nsComputedDOMStyle method name that returns the
   CSSValue representing that property's computed value, without the leading

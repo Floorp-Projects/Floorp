@@ -17,7 +17,7 @@
 #include "nsRefreshDriver.h"
 #include "nsRuleProcessorData.h"
 #include "nsRuleWalker.h"
-#include "nsCSSPropertySet.h"
+#include "nsCSSPropertyIDSet.h"
 #include "mozilla/EffectCompositor.h"
 #include "mozilla/EffectSet.h"
 #include "mozilla/EventDispatcher.h"
@@ -141,7 +141,7 @@ CSSTransition::GetTransitionProperty(nsString& aRetVal) const
   // now we can just query the effect.
   MOZ_ASSERT(mEffect && mEffect->AsTransition(),
              "Transitions should have a transition effect");
-  nsCSSProperty prop = mEffect->AsTransition()->TransitionProperty();
+  nsCSSPropertyID prop = mEffect->AsTransition()->TransitionProperty();
   aRetVal = NS_ConvertUTF8toUTF16(nsCSSProps::GetStringValue(prop));
 }
 
@@ -209,7 +209,7 @@ CSSTransition::Tick()
   QueueEvents();
 }
 
-nsCSSProperty
+nsCSSPropertyID
 CSSTransition::TransitionProperty() const
 {
   // FIXME: Once we support replacing/removing the effect (bug 1049975)
@@ -284,7 +284,7 @@ NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(nsTransitionManager, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(nsTransitionManager, Release)
 
 static inline bool
-ExtractNonDiscreteComputedValue(nsCSSProperty aProperty,
+ExtractNonDiscreteComputedValue(nsCSSPropertyID aProperty,
                                 nsStyleContext* aStyleContext,
                                 StyleAnimationValue& aComputedValue)
 {
@@ -468,7 +468,7 @@ nsTransitionManager::UpdateTransitions(
   // 'transition-property' on down, and later ones will override earlier
   // ones (tracked using |whichStarted|).
   bool startedAny = false;
-  nsCSSPropertySet whichStarted;
+  nsCSSPropertyIDSet whichStarted;
   for (uint32_t i = aDisp->mTransitionPropertyCount; i-- != 0; ) {
     const StyleTransition& t = aDisp->mTransitions[i];
     // Check the combined duration (combination of delay and duration)
@@ -479,15 +479,15 @@ nsTransitionManager::UpdateTransitions(
       // properties in question changed and are animatable.
       // FIXME: Would be good to find a way to share code between this
       // interpretation of transition-property and the one below.
-      nsCSSProperty property = t.GetProperty();
+      nsCSSPropertyID property = t.GetProperty();
       if (property == eCSSPropertyExtra_no_properties ||
           property == eCSSPropertyExtra_variable ||
           property == eCSSProperty_UNKNOWN) {
         // Nothing to do, but need to exclude this from cases below.
       } else if (property == eCSSPropertyExtra_all_properties) {
-        for (nsCSSProperty p = nsCSSProperty(0);
+        for (nsCSSPropertyID p = nsCSSPropertyID(0);
              p < eCSSProperty_COUNT_no_shorthands;
-             p = nsCSSProperty(p + 1)) {
+             p = nsCSSPropertyID(p + 1)) {
           ConsiderStartingTransition(p, t, aElement, aElementTransitions,
                                      aOldStyleContext, aNewStyleContext,
                                      &startedAny, &whichStarted);
@@ -520,21 +520,21 @@ nsTransitionManager::UpdateTransitions(
   if (aElementTransitions) {
     bool checkProperties =
       aDisp->mTransitions[0].GetProperty() != eCSSPropertyExtra_all_properties;
-    nsCSSPropertySet allTransitionProperties;
+    nsCSSPropertyIDSet allTransitionProperties;
     if (checkProperties) {
       for (uint32_t i = aDisp->mTransitionPropertyCount; i-- != 0; ) {
         const StyleTransition& t = aDisp->mTransitions[i];
         // FIXME: Would be good to find a way to share code between this
         // interpretation of transition-property and the one above.
-        nsCSSProperty property = t.GetProperty();
+        nsCSSPropertyID property = t.GetProperty();
         if (property == eCSSPropertyExtra_no_properties ||
             property == eCSSPropertyExtra_variable ||
             property == eCSSProperty_UNKNOWN) {
           // Nothing to do, but need to exclude this from cases below.
         } else if (property == eCSSPropertyExtra_all_properties) {
-          for (nsCSSProperty p = nsCSSProperty(0);
+          for (nsCSSPropertyID p = nsCSSPropertyID(0);
                p < eCSSProperty_COUNT_no_shorthands;
-               p = nsCSSProperty(p + 1)) {
+               p = nsCSSPropertyID(p + 1)) {
             allTransitionProperties.AddProperty(p);
           }
         } else if (nsCSSProps::IsShorthand(property)) {
@@ -591,14 +591,14 @@ nsTransitionManager::UpdateTransitions(
 
 void
 nsTransitionManager::ConsiderStartingTransition(
-  nsCSSProperty aProperty,
+  nsCSSPropertyID aProperty,
   const StyleTransition& aTransition,
   dom::Element* aElement,
   CSSTransitionCollection*& aElementTransitions,
   nsStyleContext* aOldStyleContext,
   nsStyleContext* aNewStyleContext,
   bool* aStartedAny,
-  nsCSSPropertySet* aWhichStarted)
+  nsCSSPropertyIDSet* aWhichStarted)
 {
   // IsShorthand itself will assert if aProperty is not a property.
   MOZ_ASSERT(!nsCSSProps::IsShorthand(aProperty),
@@ -868,7 +868,7 @@ nsTransitionManager::ConsiderStartingTransition(
 }
 
 static Keyframe&
-AppendKeyframe(double aOffset, nsCSSProperty aProperty,
+AppendKeyframe(double aOffset, nsCSSPropertyID aProperty,
                StyleAnimationValue&& aValue, nsTArray<Keyframe>& aKeyframes)
 {
   Keyframe& frame = *aKeyframes.AppendElement();
@@ -885,7 +885,7 @@ AppendKeyframe(double aOffset, nsCSSProperty aProperty,
 nsTArray<Keyframe>
 nsTransitionManager::GetTransitionKeyframes(
     nsStyleContext* aStyleContext,
-    nsCSSProperty aProperty,
+    nsCSSPropertyID aProperty,
     StyleAnimationValue&& aStartValue,
     StyleAnimationValue&& aEndValue,
     const nsTimingFunction& aTimingFunction)

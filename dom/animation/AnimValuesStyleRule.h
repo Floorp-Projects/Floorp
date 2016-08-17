@@ -8,8 +8,8 @@
 #define mozilla_AnimValuesStyleRule_h
 
 #include "mozilla/StyleAnimationValue.h"
-#include "nsCSSProperty.h"
-#include "nsCSSPropertySet.h"
+#include "nsCSSPropertyID.h"
+#include "nsCSSPropertyIDSet.h"
 #include "nsIStyleRule.h"
 #include "nsISupportsImpl.h" // For NS_DECL_ISUPPORTS
 #include "nsRuleNode.h" // For nsCachedStyleData
@@ -32,13 +32,13 @@ public:
   // nsIStyleRule implementation
   void MapRuleInfoInto(nsRuleData* aRuleData) override;
   bool MightMapInheritedStyleData() override;
-  bool GetDiscretelyAnimatedCSSValue(nsCSSProperty aProperty,
+  bool GetDiscretelyAnimatedCSSValue(nsCSSPropertyID aProperty,
                                      nsCSSValue* aValue) override;
 #ifdef DEBUG
   void List(FILE* out = stdout, int32_t aIndent = 0) const override;
 #endif
 
-  void AddValue(nsCSSProperty aProperty, const StyleAnimationValue &aStartValue)
+  void AddValue(nsCSSPropertyID aProperty, const StyleAnimationValue &aStartValue)
   {
     PropertyStyleAnimationValuePair pair = { aProperty, aStartValue };
     mPropertyValuePairs.AppendElement(pair);
@@ -46,7 +46,7 @@ public:
       nsCachedStyleData::GetBitForSID(nsCSSProps::kSIDTable[aProperty]);
   }
 
-  void AddValue(nsCSSProperty aProperty, StyleAnimationValue&& aStartValue)
+  void AddValue(nsCSSPropertyID aProperty, StyleAnimationValue&& aStartValue)
   {
     PropertyStyleAnimationValuePair* pair = mPropertyValuePairs.AppendElement();
     pair->mProperty = aProperty;

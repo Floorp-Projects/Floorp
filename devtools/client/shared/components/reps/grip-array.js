@@ -56,6 +56,10 @@ define(function (require, exports, module) {
       }
 
       let delim;
+      // number of grip.preview.items is limited to 10, but we may have more
+      // items in grip-array
+      let delimMax = grip.preview.length > array.length ?
+        array.length : array.length - 1;
       let provider = this.props.provider;
 
       for (let i = 0; i < array.length && i < max; i++) {
@@ -63,7 +67,7 @@ define(function (require, exports, module) {
           let itemGrip = array[i];
           let value = provider ? provider.getValue(itemGrip) : itemGrip;
 
-          delim = (i == array.length - 1 ? "" : ", ");
+          delim = (i == delimMax ? "" : ", ");
 
           if (value === array) {
             items.push(Reference({
@@ -86,14 +90,15 @@ define(function (require, exports, module) {
           )));
         }
       }
-
-      if (array.length > max) {
+      if (array.length > max || grip.preview.length > array.length) {
         let objectLink = this.props.objectLink || span;
+        let leftItemNum = grip.preview.length - max > 0 ?
+          grip.preview.length - max : grip.preview.length - array.length;
         items.push(Caption({
           key: "more",
           object: objectLink({
             object: this.props.object
-          }, (grip.preview.length - max) + " more…")
+          }, leftItemNum + " more…")
         }));
       }
 

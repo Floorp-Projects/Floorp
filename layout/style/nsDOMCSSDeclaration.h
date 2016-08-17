@@ -156,13 +156,13 @@ protected:
   static void GetCSSParsingEnvironmentForRule(mozilla::css::Rule* aRule,
                                               CSSParsingEnvironment& aCSSParseEnv);
 
-  nsresult ParsePropertyValue(const nsCSSProperty aPropID,
+  nsresult ParsePropertyValue(const nsCSSPropertyID aPropID,
                               const nsAString& aPropValue,
                               bool aIsImportant);
 
   // Prop-id based version of RemoveProperty.  Note that this does not
   // return the old value; it just does a straight removal.
-  nsresult RemoveProperty(const nsCSSProperty aPropID);
+  nsresult RemoveProperty(const nsCSSPropertyID aPropID);
 
   void GetCustomPropertyValue(const nsAString& aPropertyName, nsAString& aValue);
   nsresult RemoveCustomProperty(const nsAString& aPropertyName);

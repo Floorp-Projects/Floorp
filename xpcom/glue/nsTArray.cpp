@@ -18,3 +18,19 @@ IsTwiceTheRequiredBytesRepresentableAsUint32(size_t aCapacity, size_t aElemSize)
   using mozilla::CheckedUint32;
   return ((CheckedUint32(aCapacity) * aElemSize) * 2).isValid();
 }
+
+MOZ_NORETURN MOZ_COLD void
+InvalidArrayIndex_CRASH(size_t aIndex, size_t aLength)
+{
+  const size_t CAPACITY = 512;
+  // Leak the buffer on the heap to make sure that it lives long enough, as
+  // MOZ_CRASH_ANNOTATE expects the pointer passed to it to live to the end of
+  // the program.
+  char* buffer = new char[CAPACITY];
+  snprintf(buffer, CAPACITY,
+           "ElementAt(aIndex = %llu, aLength = %llu)",
+           (long long unsigned) aIndex,
+           (long long unsigned) aLength);
+  MOZ_CRASH_ANNOTATE(buffer);
+  MOZ_REALLY_CRASH();
+}

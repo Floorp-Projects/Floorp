@@ -357,6 +357,9 @@ struct nsTArray_SafeElementAtHelper<mozilla::OwningNonNull<E>, Derived>
 
 extern "C" void Gecko_EnsureTArrayCapacity(void* aArray, size_t aCapacity, size_t aElemSize);
 
+MOZ_NORETURN MOZ_COLD void
+InvalidArrayIndex_CRASH(size_t aIndex, size_t aLength);
+
 //
 // This class serves as a base class for nsTArray.  It shouldn't be used
 // directly.  It holds common implementation code that does not depend on the
@@ -1017,7 +1020,9 @@ public:
   // @return A reference to the i'th element of the array.
   elem_type& ElementAt(index_type aIndex)
   {
-    MOZ_ASSERT(aIndex < Length(), "invalid array index");
+    if (MOZ_UNLIKELY(aIndex >= Length())) {
+      InvalidArrayIndex_CRASH(aIndex, Length());
+    }
     return Elements()[aIndex];
   }
 
@@ -1027,7 +1032,9 @@ public:
   // @return A const reference to the i'th element of the array.
   const elem_type& ElementAt(index_type aIndex) const
   {
-    MOZ_ASSERT(aIndex < Length(), "invalid array index");
+    if (MOZ_UNLIKELY(aIndex >= Length())) {
+      InvalidArrayIndex_CRASH(aIndex, Length());
+    }
     return Elements()[aIndex];
   }
 

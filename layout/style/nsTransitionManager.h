@@ -19,7 +19,7 @@
 class nsIGlobalObject;
 class nsStyleContext;
 class nsPresContext;
-class nsCSSPropertySet;
+class nsCSSPropertyIDSet;
 
 namespace mozilla {
 enum class CSSPseudoElementType : uint8_t;
@@ -52,7 +52,7 @@ struct ElementPropertyTransition : public dom::KeyframeEffectReadOnly
     return this;
   }
 
-  nsCSSProperty TransitionProperty() const {
+  nsCSSPropertyID TransitionProperty() const {
     MOZ_ASSERT(mKeyframes.Length() == 2,
                "Transitions should have exactly two animation keyframes. "
                "Perhaps we are using an un-initialized transition?");
@@ -170,7 +170,7 @@ public:
 
   void Tick() override;
 
-  nsCSSProperty TransitionProperty() const;
+  nsCSSPropertyID TransitionProperty() const;
   StyleAnimationValue ToValue() const;
 
   bool HasLowerCompositeOrderThan(const CSSTransition& aOther) const;
@@ -276,7 +276,7 @@ struct TransitionEventInfo {
 
   TransitionEventInfo(dom::Element* aElement,
                       CSSPseudoElementType aPseudoType,
-                      nsCSSProperty aProperty,
+                      nsCSSPropertyID aProperty,
                       StickyTimeDuration aDuration,
                       const TimeStamp& aTimeStamp,
                       dom::Animation* aAnimation)
@@ -399,18 +399,18 @@ protected:
                     nsStyleContext* aNewStyleContext);
 
   void
-  ConsiderStartingTransition(nsCSSProperty aProperty,
+  ConsiderStartingTransition(nsCSSPropertyID aProperty,
                              const mozilla::StyleTransition& aTransition,
                              mozilla::dom::Element* aElement,
                              CSSTransitionCollection*& aElementTransitions,
                              nsStyleContext* aOldStyleContext,
                              nsStyleContext* aNewStyleContext,
                              bool* aStartedAny,
-                             nsCSSPropertySet* aWhichStarted);
+                             nsCSSPropertyIDSet* aWhichStarted);
 
   nsTArray<mozilla::Keyframe> GetTransitionKeyframes(
     nsStyleContext* aStyleContext,
-    nsCSSProperty aProperty,
+    nsCSSPropertyID aProperty,
     mozilla::StyleAnimationValue&& aStartValue,
     mozilla::StyleAnimationValue&& aEndValue,
     const nsTimingFunction& aTimingFunction);

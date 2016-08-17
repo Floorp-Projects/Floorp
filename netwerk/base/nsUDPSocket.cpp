@@ -596,15 +596,9 @@ nsUDPSocket::InitWithAddress(const NetAddr *aAddr, nsIPrincipal *aPrincipal,
   }
 
   if (aPrincipal) {
-    nsresult rv = aPrincipal->GetAppId(&mAppId);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-
-    rv = aPrincipal->GetIsInIsolatedMozBrowserElement(&mIsInIsolatedMozBrowserElement);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
+    mAppId = aPrincipal->GetAppId();
+    mIsInIsolatedMozBrowserElement =
+      aPrincipal->GetIsInIsolatedMozBrowserElement();
   }
 
 #ifdef MOZ_WIDGET_GONK

@@ -115,7 +115,7 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout {
     private int mSecurityImageLevel;
 
     // Security level constants, which map to the icons / levels defined in:
-    // http://mxr.mozilla.org/mozilla-central/source/mobile/android/base/java/org/mozilla/gecko/resources/drawable/site_security_level.xml
+    // http://dxr.mozilla.org/mozilla-central/source/mobile/android/base/java/org/mozilla/gecko/resources/drawable/site_security_level.xml
     // Default level (unverified pages) - globe icon:
     private static final int LEVEL_DEFAULT_GLOBE = 0;
     // Levels for displaying Mixed Content state icons.

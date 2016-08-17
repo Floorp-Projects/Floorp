@@ -20,7 +20,7 @@ def get_properties(preprocessorHeader):
 
     # Sort the list so that longhand and logical properties are intermingled
     # first, shorthand properties follow, then aliases appear last.  This matches
-    # the order of the nsCSSProperty enum.
+    # the order of the nsCSSPropertyID enum.
 
     def property_compare(x, y):
         property_order = {"longhand": 0, "logical": 0, "shorthand": 1, "alias": 2}
@@ -61,7 +61,7 @@ def generate_assertions(properties):
         else:
             return "eCSSProperty_%s" % p["id"]
     msg = ('static_assert(%s == %d, "GenerateCSSPropsGenerated.py did not list '
-           'properties in nsCSSProperty order");')
+           'properties in nsCSSPropertyID order");')
     return "\n".join(map(lambda p: msg % (enum(p), p["index"]), properties))
 
 def generate_idl_name_positions(properties):
@@ -74,7 +74,7 @@ def generate_idl_name_positions(properties):
     # Annotate entries with the sorted position.
     ps = [(p, position) for position, p in enumerate(ps)]
 
-    # Sort back to nsCSSProperty order.
+    # Sort back to nsCSSPropertyID order.
     ps = sorted(ps, key=lambda (p, position): p["index"])
 
     return ",\n".join(map(lambda (p, position): "  %d" % position, ps))

@@ -2166,9 +2166,7 @@ nsFrameLoader::MaybeCreateDocShell()
       mOwnerContent->HasAttr(kNameSpaceID_None, nsGkAtoms::mozallowfullscreen));
     bool isPrivate = mOwnerContent->HasAttr(kNameSpaceID_None, nsGkAtoms::mozprivatebrowsing);
     if (isPrivate) {
-      bool nonBlank;
-      mDocShell->GetHasLoadedNonBlankURI(&nonBlank);
-      if (nonBlank) {
+      if (mDocShell->GetHasLoadedNonBlankURI()) {
         nsContentUtils::ReportToConsoleNonLocalized(
           NS_LITERAL_STRING("We should not switch to Private Browsing after loading a document."),
           nsIScriptError::warningFlag,

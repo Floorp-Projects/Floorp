@@ -219,6 +219,8 @@ FinderHighlighter.prototype = {
 
     if (highlight) {
       yield this.iterator.start({
+        caseSensitive: this.finder._fastFind.caseSensitive,
+        entireWord: this.finder._fastFind.entireWord,
         linksOnly, word,
         finder: this.finder,
         onRange: range => {
@@ -227,6 +229,8 @@ FinderHighlighter.prototype = {
         },
         useCache: true
       });
+      if (found)
+        this.finder._outlineLink(true);
     } else {
       this.hide(window);
       this.clear();
@@ -360,10 +364,15 @@ FinderHighlighter.prototype = {
     let foundRange = this.finder._fastFind.getFoundRange();
     if (!this._modal) {
       if (this._highlightAll) {
-        this.hide(window, foundRange);
         let params = this.iterator.params;
+        if (this._lastIteratorParams &&
+            this.iterator._areParamsEqual(params, this._lastIteratorParams)) {
+          return;
+        }
+        this.hide(window, foundRange);
         if (params.word)
           this.highlight(true, params.word, params.linksOnly);
+        this._lastIteratorParams = params;
       }
       return;
     }
@@ -489,18 +498,16 @@ FinderHighlighter.prototype = {
    * controller. Optionally skips a specific range.
    *
    * @param  {nsISelectionController} controller
-   * @param  {nsIDOMRange}            skipRange
+   * @param  {nsIDOMRange}            restoreRange
    */
-  _clearSelection(controller, skipRange = null) {
+  _clearSelection(controller, restoreRange = null) {
     let sel = controller.getSelection(Ci.nsISelectionController.SELECTION_FIND);
-    if (!skipRange) {
-      sel.removeAllRanges();
-    } else {
-      for (let i = sel.rangeCount - 1; i >= 0; --i) {
-        let range = sel.getRangeAt(i);
-        if (range !== skipRange)
-          sel.removeRange(range);
-      }
+    sel.removeAllRanges();
+    if (restoreRange) {
+      sel = controller.getSelection(Ci.nsISelectionController.SELECTION_NORMAL);
+      sel.addRange(restoreRange);
+      controller.setDisplaySelection(Ci.nsISelectionController.SELECTION_ATTENTION);
+      controller.repaintSelection(Ci.nsISelectionController.SELECTION_NORMAL);
     }
   },
 

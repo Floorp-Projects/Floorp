@@ -1353,11 +1353,6 @@ CodeGeneratorShared::callVM(const VMFunction& fun, LInstruction* ins, const Regi
     }
 #endif
 
-#ifdef JS_TRACE_LOGGING
-    emitTracelogStartEvent(TraceLogger_VM);
-    emitTracelogStartEvent(fun.name(), TraceLogger_VMSpecific);
-#endif
-
     // Stack is:
     //    ... frame ...
     //    [args]
@@ -1404,11 +1399,6 @@ CodeGeneratorShared::callVM(const VMFunction& fun, LInstruction* ins, const Regi
     masm.implicitPop(fun.explicitStackSlots() * sizeof(void*) + framePop);
     // Stack is:
     //    ... frame ...
-
-#ifdef JS_TRACE_LOGGING
-    emitTracelogStopEvent(TraceLogger_VM);
-    emitTracelogStopEvent(fun.name(), TraceLogger_VMSpecific);
-#endif
 }
 
 class OutOfLineTruncateSlow : public OutOfLineCodeBase<CodeGeneratorShared>

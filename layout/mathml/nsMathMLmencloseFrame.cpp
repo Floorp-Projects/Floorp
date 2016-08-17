@@ -779,7 +779,7 @@ void nsDisplayNotation::Paint(nsDisplayListBuilder* aBuilder,
                            presContext->AppUnitsPerDevPixel());
   rect.Deflate(strokeWidth / 2.f);
 
-  nsCSSProperty colorProp = mFrame->StyleContext()->GetTextFillColorProp();
+  nsCSSPropertyID colorProp = mFrame->StyleContext()->GetTextFillColorProp();
   ColorPattern color(ToDeviceColor(
                                  mFrame->GetVisitedDependentColor(colorProp)));
 

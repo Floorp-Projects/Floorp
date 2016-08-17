@@ -35,6 +35,7 @@ public:
     eFloat = 0x10,
     eDate = 0x20,
     eString = 0x30,
+    eBinary = 0x40,
     eArray = 0x50,
     eMaxType = eArray
   };
@@ -142,6 +143,12 @@ public:
   IsString() const
   {
     return !IsUnset() && *BufferStart() == eString;
+  }
+
+  bool
+  IsBinary() const
+  {
+    return !IsUnset() && *BufferStart() == eBinary;
   }
 
   bool
@@ -287,6 +294,10 @@ private:
   void
   EncodeString(const T* aStart, const T* aEnd, uint8_t aTypeOffset);
 
+  template <typename T>
+  void
+  EncodeAsString(const T* aStart, const T* aEnd, uint8_t aType);
+
 #ifdef ENABLE_INTL_API
   nsresult
   EncodeLocaleString(const nsDependentString& aString, uint8_t aTypeOffset,
@@ -295,6 +306,9 @@ private:
 
   void
   EncodeNumber(double aFloat, uint8_t aType);
+
+  void
+  EncodeBinary(JSObject* aObject, bool aIsViewObject, uint8_t aTypeOffset);
 
   // Decoding functions. aPos points into mBuffer and is adjusted to point
   // past the consumed value.
@@ -311,6 +325,11 @@ private:
 
   static double
   DecodeNumber(const unsigned char*& aPos, const unsigned char* aEnd);
+
+  static JSObject*
+  DecodeBinary(const unsigned char*& aPos,
+               const unsigned char* aEnd,
+               JSContext* aCx);
 
   nsresult
   EncodeJSValInternal(JSContext* aCx,
