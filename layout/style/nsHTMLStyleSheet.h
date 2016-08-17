@@ -84,7 +84,7 @@ private:
     // nsIStyleRule interface
     virtual void MapRuleInfoInto(nsRuleData* aRuleData) override;
     virtual bool MightMapInheritedStyleData() override;
-    virtual bool GetDiscretelyAnimatedCSSValue(nsCSSProperty aProperty,
+    virtual bool GetDiscretelyAnimatedCSSValue(nsCSSPropertyID aProperty,
                                                nsCSSValue* aValue) override;
   #ifdef DEBUG
     virtual void List(FILE* out = stdout, int32_t aIndent = 0) const override;
@@ -109,7 +109,7 @@ private:
     // nsIStyleRule interface
     virtual void MapRuleInfoInto(nsRuleData* aRuleData) override = 0;
     virtual bool MightMapInheritedStyleData() override = 0;
-    virtual bool GetDiscretelyAnimatedCSSValue(nsCSSProperty aProperty,
+    virtual bool GetDiscretelyAnimatedCSSValue(nsCSSPropertyID aProperty,
                                                nsCSSValue* aValue) override = 0;
   #ifdef DEBUG
     virtual void List(FILE* out = stdout, int32_t aIndent = 0) const override;
@@ -125,7 +125,7 @@ private:
 
     virtual void MapRuleInfoInto(nsRuleData* aRuleData) override;
     virtual bool MightMapInheritedStyleData() override;
-    virtual bool GetDiscretelyAnimatedCSSValue(nsCSSProperty aProperty,
+    virtual bool GetDiscretelyAnimatedCSSValue(nsCSSPropertyID aProperty,
                                                nsCSSValue* aValue) override;
   };
 
@@ -136,7 +136,7 @@ private:
 
     virtual void MapRuleInfoInto(nsRuleData* aRuleData) override;
     virtual bool MightMapInheritedStyleData() override;
-    virtual bool GetDiscretelyAnimatedCSSValue(nsCSSProperty aProperty,
+    virtual bool GetDiscretelyAnimatedCSSValue(nsCSSPropertyID aProperty,
                                                nsCSSValue* aValue) override;
   };
 
@@ -157,7 +157,7 @@ public: // for mLangRuleTable structures only
     // nsIStyleRule interface
     virtual void MapRuleInfoInto(nsRuleData* aRuleData) override;
     virtual bool MightMapInheritedStyleData() override;
-    virtual bool GetDiscretelyAnimatedCSSValue(nsCSSProperty aProperty,
+    virtual bool GetDiscretelyAnimatedCSSValue(nsCSSPropertyID aProperty,
                                                nsCSSValue* aValue) override;
   #ifdef DEBUG
     virtual void List(FILE* out = stdout, int32_t aIndent = 0) const override;

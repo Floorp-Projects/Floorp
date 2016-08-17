@@ -10,7 +10,7 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/PodOperations.h"
 
-#include "nsCSSProperty.h"
+#include "nsCSSPropertyID.h"
 #include <limits.h> // for CHAR_BIT
 
 /**
@@ -23,7 +23,7 @@ public:
     nsCSSPropertySet() { Empty(); }
     // auto-generated copy-constructor OK
 
-    void AssertInSetRange(nsCSSProperty aProperty) const {
+    void AssertInSetRange(nsCSSPropertyID aProperty) const {
         NS_ASSERTION(0 <= aProperty &&
                      aProperty < eCSSProperty_COUNT_no_shorthands,
                      "out of bounds");
@@ -32,21 +32,21 @@ public:
     // Conversion of aProperty to |size_t| after AssertInSetRange
     // lets the compiler generate significantly tighter code.
 
-    void AddProperty(nsCSSProperty aProperty) {
+    void AddProperty(nsCSSPropertyID aProperty) {
         AssertInSetRange(aProperty);
         size_t p = aProperty;
         mProperties[p / kBitsInChunk] |=
           property_set_type(1) << (p % kBitsInChunk);
     }
 
-    void RemoveProperty(nsCSSProperty aProperty) {
+    void RemoveProperty(nsCSSPropertyID aProperty) {
         AssertInSetRange(aProperty);
         size_t p = aProperty;
         mProperties[p / kBitsInChunk] &=
             ~(property_set_type(1) << (p % kBitsInChunk));
     }
 
-    bool HasProperty(nsCSSProperty aProperty) const {
+    bool HasProperty(nsCSSPropertyID aProperty) const {
         AssertInSetRange(aProperty);
         size_t p = aProperty;
         return (mProperties[p / kBitsInChunk] &
@@ -87,8 +87,8 @@ public:
     bool HasPropertyAt(size_t aChunk, size_t aBit) const {
         return (mProperties[aChunk] & (property_set_type(1) << aBit)) != 0;
     }
-    static nsCSSProperty CSSPropertyAt(size_t aChunk, size_t aBit) {
-        return nsCSSProperty(aChunk * kBitsInChunk + aBit);
+    static nsCSSPropertyID CSSPropertyAt(size_t aChunk, size_t aBit) {
+        return nsCSSPropertyID(aChunk * kBitsInChunk + aBit);
     }
 
 private:

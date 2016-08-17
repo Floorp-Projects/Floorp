@@ -10,7 +10,7 @@
 #define NS_SMILCSSVALUETYPE_H_
 
 #include "nsISMILType.h"
-#include "nsCSSProperty.h"
+#include "nsCSSPropertyID.h"
 #include "mozilla/Attributes.h"
 
 class nsAString;
@@ -78,7 +78,7 @@ public:
    * @pre  aValue.IsNull()
    * @post aValue.IsNull() || aValue.mType == nsSMILCSSValueType::sSingleton
    */
-  static void ValueFromString(nsCSSProperty aPropID,
+  static void ValueFromString(nsCSSPropertyID aPropID,
                               Element* aTargetElement,
                               const nsAString& aString,
                               nsSMILValue& aValue,
@@ -102,11 +102,11 @@ public:
    * Return the CSS property animated by the specified value.
    *
    * @param   aValue   The nsSMILValue to examine.
-   * @return           The nsCSSProperty enum value of the property animated
+   * @return           The nsCSSPropertyID enum value of the property animated
    *                   by |aValue|, or eCSSProperty_UNKNOWN if the type of
    *                   |aValue| is not nsSMILCSSValueType.
    */
-  static nsCSSProperty PropertyFromValue(const nsSMILValue& aValue);
+  static nsCSSPropertyID PropertyFromValue(const nsSMILValue& aValue);
 
 private:
   // Private constructor: prevent instances beyond my singleton.

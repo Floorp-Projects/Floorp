@@ -2403,8 +2403,8 @@ CanvasRenderingContext2D::SetShadowColor(const nsAString& aShadowColor)
 
 static already_AddRefed<Declaration>
 CreateDeclaration(nsINode* aNode,
-  const nsCSSProperty aProp1, const nsAString& aValue1, bool* aChanged1,
-  const nsCSSProperty aProp2, const nsAString& aValue2, bool* aChanged2)
+  const nsCSSPropertyID aProp1, const nsAString& aValue1, bool* aChanged1,
+  const nsCSSPropertyID aProp2, const nsAString& aValue2, bool* aChanged2)
 {
   nsIPrincipal* principal = aNode->NodePrincipal();
   nsIDocument* document = aNode->OwnerDoc();
@@ -2489,7 +2489,7 @@ GetFontParentStyleContext(Element* aElement, nsIPresShell* aPresShell,
 }
 
 static bool
-PropertyIsInheritOrInitial(Declaration* aDeclaration, const nsCSSProperty aProperty)
+PropertyIsInheritOrInitial(Declaration* aDeclaration, const nsCSSPropertyID aProperty)
 {
   // We know the declaration is not !important, so we can use
   // GetNormalBlock().
