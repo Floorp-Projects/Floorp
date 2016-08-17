@@ -891,7 +891,7 @@ ExtensionData.prototype = {
       };
 
       if (this.localeData) {
-        context.preprocessors.localize = this.localize.bind(this);
+        context.preprocessors.localize = (value, context) => this.localize(value);
       }
 
       let normalized = Schemas.normalize(this.manifest, "manifest.WebExtensionManifest", context);
@@ -1503,6 +1503,6 @@ Extension.prototype = extend(Object.create(ExtensionData.prototype), {
   },
 
   get name() {
-    return this.localize(this.manifest.name);
+    return this.manifest.name;
   },
 });
