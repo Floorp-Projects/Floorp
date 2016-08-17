@@ -14,13 +14,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=613019
 <div id="content">
   <input type="text" maxlength="2" style="width:200px" value="Test">
   <textarea maxlength="2" style="width:200px">Test</textarea>
+  <input type="text" minlength="6" style="width:200px" value="Test">
+  <textarea minlength="6" style="width:200px">Test</textarea>
 </div>
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
 /** Test for Bug 613019 **/
 
-function testInteractivityOfValidityStates(elem) {
+function testInteractivityOfMaxLength(elem) {
   // verify that user interactivity is necessary for validity state to apply.
   is(elem.value, "Test", "Element has incorrect starting value.");
   is(elem.validity.tooLong, false, "Element should not be tooLong.");
@@ -40,10 +42,32 @@ function testInteractivityOfValidityStates(elem) {
      "Element should not be tooLong after non-interactive value change.");
 }
 
+function testInteractivityOfMinLength(elem) {
+  // verify that user interactivity is necessary for validity state to apply.
+  is(elem.value, "Test", "Element has incorrect starting value.");
+  is(elem.validity.tooLong, false, "Element should not be tooShort.");
+
+  elem.focus();
+
+  synthesizeKey("e", {});
+  is(elem.value, "Teste", "Element value was not changed correctly.");
+  is(elem.validity.tooShort, true, "Element should still be tooShort.");
+
+  synthesizeKey("d", {});
+  is(elem.value, "Tested", "Element value was not changed correctly.");
+  is(elem.validity.tooShort, false, "Element should no longer be tooShort.");
+
+  elem.value = "Test";
+  is(elem.validity.tooShort, false,
+     "Element should not be tooShort after non-interactive value change.");
+}
+
 function test() {
   window.getSelection().removeAllRanges();
-  testInteractivityOfValidityStates(document.querySelector("input[type=text]"));
-  testInteractivityOfValidityStates(document.querySelector("textarea"));
+  testInteractivityOfMaxLength(document.querySelector("input[type=text][maxlength]"));
+  testInteractivityOfMaxLength(document.querySelector("textarea[maxlength]"));
+  testInteractivityOfMinLength(document.querySelector("input[type=text][minlength]"));
+  testInteractivityOfMinLength(document.querySelector("textarea[minlength]"));
   SimpleTest.finish();
 }
 
