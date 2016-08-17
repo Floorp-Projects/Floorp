@@ -2486,7 +2486,8 @@ HTMLEditRules::InsertBRIfNeeded(Selection* aSelection)
 
 /**
  * GetGoodSelPointForNode() finds where at a node you would want to set the
- * selection if you were trying to have a caret next to it.
+ * selection if you were trying to have a caret next to it.  Always returns a
+ * valid value (unless mHTMLEditor has gone away).
  *
  * @param aNode         The node
  * @param aAction       Which edge to find: eNext indicates beginning,
@@ -2497,7 +2498,8 @@ HTMLEditRules::GetGoodSelPointForNode(nsINode& aNode,
                                       nsIEditor::EDirection aAction)
 {
   NS_ENSURE_TRUE(mHTMLEditor, EditorDOMPoint());
-  if (aNode.GetAsText() || mHTMLEditor->IsContainer(&aNode)) {
+  if (aNode.GetAsText() || mHTMLEditor->IsContainer(&aNode) ||
+      NS_WARN_IF(!aNode.GetParentNode())) {
     return EditorDOMPoint(&aNode,
                           aAction == nsIEditor::ePrevious ? aNode.Length() : 0);
   }
@@ -7358,26 +7360,15 @@ HTMLEditRules::AdjustSelection(Selection* aSelection,
   NS_ENSURE_SUCCESS(res, res);
   nearNode = do_QueryInterface(nearNodeDOM);
 
-  if (nearNode)
-  {
-    // is the nearnode a text node?
-    textNode = do_QueryInterface(nearNode);
-    if (textNode)
-    {
-      int32_t offset = 0;
-      // put selection in right place:
-      if (aAction == nsIEditor::ePrevious)
-        textNode->GetLength((uint32_t*)&offset);
-      res = aSelection->Collapse(nearNode,offset);
-    }
-    else  // must be break or image
-    {
-      selNode = EditorBase::GetNodeLocation(nearNode, &selOffset);
-      if (aAction == nsIEditor::ePrevious) selOffset++;  // want to be beyond it if we backed up to it
-      res = aSelection->Collapse(selNode, selOffset);
-    }
+  if (!nearNode) {
+    return NS_OK;
   }
-  return res;
+  EditorDOMPoint pt = GetGoodSelPointForNode(*nearNode, aAction);
+  res = aSelection->Collapse(pt.node, pt.offset);
+  if (NS_WARN_IF(NS_FAILED(res))) {
+    return res;
+  }
+  return NS_OK;
 }
 
 

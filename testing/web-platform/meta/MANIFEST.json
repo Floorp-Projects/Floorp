@@ -37644,6 +37644,12 @@
         ]
       },
       "testharness": {
+        "XMLHttpRequest/event-error.html": [
+          {
+            "path": "XMLHttpRequest/event-error.html",
+            "url": "/XMLHttpRequest/event-error.html"
+          }
+        ],
         "css-shapes/basic-shape-circle-ellipse-serialization.html": [
           {
             "path": "css-shapes/basic-shape-circle-ellipse-serialization.html",
@@ -37654,6 +37660,12 @@
           {
             "path": "domparsing/style_attribute_html.html",
             "url": "/domparsing/style_attribute_html.html"
+          }
+        ],
+        "editing/other/delete.html": [
+          {
+            "path": "editing/other/delete.html",
+            "url": "/editing/other/delete.html"
           }
         ],
         "html/semantics/forms/the-form-element/form-submission-sandbox.html": [
