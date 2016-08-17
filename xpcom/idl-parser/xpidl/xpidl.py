@@ -712,6 +712,7 @@ class Attribute(object):
     readonly = False
     implicit_jscontext = False
     nostdcall = False
+    must_use = False
     binaryname = None
     null = None
     undefined = None
@@ -767,6 +768,8 @@ class Attribute(object):
                     self.deprecated = True
                 elif name == 'nostdcall':
                     self.nostdcall = True
+                elif name == 'must_use':
+                    self.must_use = True
                 elif name == 'infallible':
                     self.infallible = True
                 else:
@@ -817,6 +820,7 @@ class Method(object):
     binaryname = None
     implicit_jscontext = False
     nostdcall = False
+    must_use = False
     optional_argc = False
     deprecated = False
 
@@ -853,6 +857,8 @@ class Method(object):
                 self.deprecated = True
             elif name == 'nostdcall':
                 self.nostdcall = True
+            elif name == 'must_use':
+                self.must_use = True
             else:
                 raise IDLError("Unexpected attribute '%s'" % name, aloc)
 
