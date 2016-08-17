@@ -739,7 +739,7 @@ class Marionette(object):
         crashed = False
         if self.instance:
             if self.instance.runner.check_for_crashes(
-                    test_name=self.test_name):
+                    test_name=self.test_name or os.path.basename(__file__)):
                 crashed = True
         if returncode is not None:
             print ('PROCESS-CRASH | %s | abnormal termination with exit code %d' %
