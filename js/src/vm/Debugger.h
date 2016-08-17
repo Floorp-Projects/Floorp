@@ -548,7 +548,8 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
      *         return handleUncaughtException(ac, vp, callHook).
      */
     JSTrapStatus parseResumptionValue(mozilla::Maybe<AutoCompartment>& ac, bool OK, const Value& rv,
-                                      AbstractFramePtr frame, jsbytecode* pc, MutableHandleValue vp);
+                                      AbstractFramePtr frame, jsbytecode* pc, MutableHandleValue vp,
+                                      bool callHook = true);
 
     /*
      * When we run the onEnterFrame hook, the |this| slot hasn't been fully
@@ -559,11 +560,11 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
      */
     JSTrapStatus parseResumptionValue(mozilla::Maybe<AutoCompartment>& ac, bool OK, const Value& rv,
                                       const Value& thisVForCheck, AbstractFramePtr frame,
-                                      MutableHandleValue vp);
+                                      MutableHandleValue vp, bool callHook = true);
 
     JSTrapStatus parseResumptionValueHelper(mozilla::Maybe<AutoCompartment>& ac, bool ok, const Value& rv,
                                             const mozilla::Maybe<HandleValue>& thisVForCheck, AbstractFramePtr frame,
-                                            MutableHandleValue vp);
+                                            MutableHandleValue vp, bool callHook);
 
     bool processResumptionValue(mozilla::Maybe<AutoCompartment>& ac, AbstractFramePtr frame,
                                 const mozilla::Maybe<HandleValue>& maybeThis, HandleValue rval,
