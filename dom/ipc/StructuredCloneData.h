@@ -24,43 +24,54 @@ namespace ipc {
 class SharedJSAllocatedData final
 {
 public:
-  explicit SharedJSAllocatedData(JSStructuredCloneData&& aData)
-    : mData(Move(aData))
-  { }
+  SharedJSAllocatedData(uint64_t* aData, size_t aDataLength)
+  : mData(aData), mDataLength(aDataLength)
+  {
+    MOZ_ASSERT(mData);
+  }
 
   static already_AddRefed<SharedJSAllocatedData>
-  CreateFromExternalData(const char* aData, size_t aDataLength)
+  AllocateForExternalData(size_t aDataLength)
   {
-    JSStructuredCloneData buf;
-    buf.WriteBytes(aData, aDataLength);
+    uint64_t* data = Allocate64bitSafely(aDataLength);
+    if (!data) {
+      return nullptr;
+    }
+
     RefPtr<SharedJSAllocatedData> sharedData =
-      new SharedJSAllocatedData(Move(buf));
+      new SharedJSAllocatedData(data, aDataLength);
     return sharedData.forget();
   }
 
   static already_AddRefed<SharedJSAllocatedData>
-  CreateFromExternalData(const JSStructuredCloneData& aData)
+  CreateFromExternalData(const void* aData, size_t aDataLength)
   {
-    JSStructuredCloneData buf;
-    auto iter = aData.Iter();
-    while (!iter.Done()) {
-      buf.WriteBytes(iter.Data(), iter.RemainingInSegment());
-      iter.Advance(aData, iter.RemainingInSegment());
-    }
     RefPtr<SharedJSAllocatedData> sharedData =
-      new SharedJSAllocatedData(Move(buf));
+      AllocateForExternalData(aDataLength);
+    memcpy(sharedData->Data(), aData, aDataLength);
     return sharedData.forget();
   }
 
   NS_INLINE_DECL_REFCOUNTING(SharedJSAllocatedData)
 
-  JSStructuredCloneData& Data() { return mData; }
-  size_t DataLength() const { return mData.Size(); }
+  uint64_t* Data() const { return mData; }
+  size_t DataLength() const { return mDataLength; }
 
 private:
-  ~SharedJSAllocatedData() { }
+  ~SharedJSAllocatedData()
+  {
+    js_free(mData);
+  }
 
-  JSStructuredCloneData mData;
+  static uint64_t*
+  Allocate64bitSafely(size_t aSize)
+  {
+    // Structured cloning requires 64-bit aligment.
+    return static_cast<uint64_t*>(js_malloc(std::max(sizeof(uint64_t), aSize)));
+  }
+
+  uint64_t* mData;
+  size_t mDataLength;
 };
 
 class StructuredCloneData : public StructuredCloneHolder
@@ -70,21 +81,19 @@ public:
     : StructuredCloneHolder(StructuredCloneHolder::CloningSupported,
                             StructuredCloneHolder::TransferringSupported,
                             StructuredCloneHolder::DifferentProcess)
-    , mInitialized(false)
+    , mExternalData(nullptr)
+    , mExternalDataLength(0)
   {}
 
   StructuredCloneData(const StructuredCloneData&) = delete;
 
-  StructuredCloneData(StructuredCloneData&& aOther) = default;
-
   ~StructuredCloneData()
-  {}
+  {
+    MOZ_ASSERT(!(mExternalData && mSharedData));
+  }
 
   StructuredCloneData&
   operator=(const StructuredCloneData& aOther) = delete;
-
-  StructuredCloneData&
-  operator=(StructuredCloneData&& aOther) = default;
 
   const nsTArray<RefPtr<BlobImpl>>& BlobImpls() const
   {
@@ -111,31 +120,23 @@ public:
              JS::Handle<JS::Value> aTransfers,
              ErrorResult &aRv);
 
-  bool UseExternalData(const JSStructuredCloneData& aData)
+  void UseExternalData(uint64_t* aData, size_t aDataLength)
   {
-    auto iter = aData.Iter();
-    bool success = false;
-    mExternalData =
-      aData.Borrow<js::SystemAllocPolicy>(iter, aData.Size(), &success);
-    mInitialized = true;
-    return success;
+    MOZ_ASSERT(!Data());
+    mExternalData = aData;
+    mExternalDataLength = aDataLength;
   }
 
-  bool CopyExternalData(const char* aData, size_t aDataLength);
+  bool CopyExternalData(const void* aData, size_t aDataLength);
 
-  JSStructuredCloneData& Data()
-  {
-    return mSharedData ? mSharedData->Data() : mExternalData;
-  }
-
-  const JSStructuredCloneData& Data() const
+  uint64_t* Data() const
   {
     return mSharedData ? mSharedData->Data() : mExternalData;
   }
 
   size_t DataLength() const
   {
-    return mSharedData ? mSharedData->DataLength() : mExternalData.Size();
+    return mSharedData ? mSharedData->DataLength() : mExternalDataLength;
   }
 
   SharedJSAllocatedData* SharedData() const
@@ -148,9 +149,10 @@ public:
   bool ReadIPCParams(const IPC::Message* aMessage, PickleIterator* aIter);
 
 private:
-  JSStructuredCloneData mExternalData;
+  uint64_t* MOZ_NON_OWNING_REF mExternalData;
+  size_t mExternalDataLength;
+
   RefPtr<SharedJSAllocatedData> mSharedData;
-  bool mInitialized;
 };
 
 } // namespace ipc

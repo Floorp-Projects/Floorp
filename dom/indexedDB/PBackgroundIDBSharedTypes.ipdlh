@@ -30,9 +30,6 @@ using class mozilla::dom::indexedDB::KeyPath
 using mozilla::dom::quota::PersistenceType
   from "mozilla/dom/quota/PersistenceType.h";
 
-using mozilla::SerializedStructuredCloneBuffer
-  from "ipc/IPCMessageUtils.h";
-
 namespace mozilla {
 namespace dom {
 namespace indexedDB {
@@ -60,13 +57,13 @@ union BlobOrMutableFile
 
 struct SerializedStructuredCloneReadInfo
 {
-  SerializedStructuredCloneBuffer data;
+  uint8_t[] data;
   BlobOrMutableFile[] blobs;
 };
 
 struct SerializedStructuredCloneWriteInfo
 {
-  SerializedStructuredCloneBuffer data;
+  uint8_t[] data;
   uint64_t offsetToKeyProp;
 };
 

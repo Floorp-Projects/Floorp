@@ -133,9 +133,7 @@ StructuredCloneCallbacksError(JSContext* aCx,
   NS_WARNING("Failed to clone data.");
 }
 
-} // anonymous namespace
-
-const JSStructuredCloneCallbacks StructuredCloneHolder::sCallbacks = {
+const JSStructuredCloneCallbacks gCallbacks = {
   StructuredCloneCallbacksRead,
   StructuredCloneCallbacksWrite,
   StructuredCloneCallbacksError,
@@ -143,6 +141,8 @@ const JSStructuredCloneCallbacks StructuredCloneHolder::sCallbacks = {
   StructuredCloneCallbacksWriteTransfer,
   StructuredCloneCallbacksFreeTransfer
 };
+
+} // anonymous namespace
 
 // StructuredCloneHolderBase class
 
@@ -184,9 +184,9 @@ StructuredCloneHolderBase::Write(JSContext* aCx,
   MOZ_ASSERT(!mBuffer, "Double Write is not allowed");
   MOZ_ASSERT(!mClearCalled, "This method cannot be called after Clear.");
 
-  mBuffer = MakeUnique<JSAutoStructuredCloneBuffer>(&StructuredCloneHolder::sCallbacks, this);
+  mBuffer = new JSAutoStructuredCloneBuffer(&gCallbacks, this);
 
-  if (!mBuffer->write(aCx, aValue, aTransfer, &StructuredCloneHolder::sCallbacks, this)) {
+  if (!mBuffer->write(aCx, aValue, aTransfer, &gCallbacks, this)) {
     mBuffer = nullptr;
     return false;
   }
@@ -201,7 +201,7 @@ StructuredCloneHolderBase::Read(JSContext* aCx,
   MOZ_ASSERT(mBuffer, "Read() without Write() is not allowed.");
   MOZ_ASSERT(!mClearCalled, "This method cannot be called after Clear.");
 
-  bool ok = mBuffer->read(aCx, aValue, &StructuredCloneHolder::sCallbacks, this);
+  bool ok = mBuffer->read(aCx, aValue, &gCallbacks, this);
   return ok;
 }
 
@@ -319,18 +319,20 @@ StructuredCloneHolder::Read(nsISupports* aParent,
 void
 StructuredCloneHolder::ReadFromBuffer(nsISupports* aParent,
                                       JSContext* aCx,
-                                      JSStructuredCloneData& aBuffer,
+                                      uint64_t* aBuffer,
+                                      size_t aBufferLength,
                                       JS::MutableHandle<JS::Value> aValue,
                                       ErrorResult& aRv)
 {
-  ReadFromBuffer(aParent, aCx, aBuffer,
+  ReadFromBuffer(aParent, aCx, aBuffer, aBufferLength,
                  JS_STRUCTURED_CLONE_VERSION, aValue, aRv);
 }
 
 void
 StructuredCloneHolder::ReadFromBuffer(nsISupports* aParent,
                                       JSContext* aCx,
-                                      JSStructuredCloneData& aBuffer,
+                                      uint64_t* aBuffer,
+                                      size_t aBufferLength,
                                       uint32_t aAlgorithmVersion,
                                       JS::MutableHandle<JS::Value> aValue,
                                       ErrorResult& aRv)
@@ -339,15 +341,50 @@ StructuredCloneHolder::ReadFromBuffer(nsISupports* aParent,
                 mCreationThread == NS_GetCurrentThread());
 
   MOZ_ASSERT(!mBuffer, "ReadFromBuffer() must be called without a Write().");
+  MOZ_ASSERT(aBuffer);
 
   mozilla::AutoRestore<nsISupports*> guard(mParent);
   mParent = aParent;
 
-  if (!JS_ReadStructuredClone(aCx, aBuffer, aAlgorithmVersion,
-                              aValue, &sCallbacks, this)) {
+  if (!JS_ReadStructuredClone(aCx, aBuffer, aBufferLength, aAlgorithmVersion,
+                              aValue, &gCallbacks, this)) {
     JS_ClearPendingException(aCx);
     aRv.Throw(NS_ERROR_DOM_DATA_CLONE_ERR);
   }
+}
+
+void
+StructuredCloneHolder::MoveBufferDataToArray(FallibleTArray<uint8_t>& aArray,
+                                             ErrorResult& aRv)
+{
+  MOZ_ASSERT_IF(mSupportedContext == SameProcessSameThread,
+                mCreationThread == NS_GetCurrentThread());
+
+  MOZ_ASSERT(mBuffer, "MoveBuffer() cannot be called without a Write().");
+
+  if (NS_WARN_IF(!aArray.SetLength(BufferSize(), mozilla::fallible))) {
+    aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+    return;
+  }
+
+  uint64_t* buffer;
+  size_t size;
+  mBuffer->steal(&buffer, &size);
+  mBuffer = nullptr;
+
+  memcpy(aArray.Elements(), buffer, size);
+  js_free(buffer);
+}
+
+void
+StructuredCloneHolder::FreeBuffer(uint64_t* aBuffer,
+                                  size_t aBufferLength)
+{
+  MOZ_ASSERT(!mBuffer, "FreeBuffer() must be called without a Write().");
+  MOZ_ASSERT(aBuffer);
+  MOZ_ASSERT(aBufferLength);
+
+  JS_ClearStructuredClone(aBuffer, aBufferLength, &gCallbacks, this, false);
 }
 
 /* static */ JSObject*
