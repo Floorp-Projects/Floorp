@@ -548,6 +548,7 @@ pref("media.mediasource.webm.audio.enabled", true);
 
 // Use new MediaFormatReader architecture for plain ogg.
 pref("media.format-reader.ogg", true);
+pref("media.flac.enabled", true);
 
 pref("media.benchmark.vp9.threshold", 150);
 pref("media.benchmark.frames", 300);

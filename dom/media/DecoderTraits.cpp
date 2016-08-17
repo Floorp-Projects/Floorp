@@ -53,6 +53,9 @@
 #include "ADTSDecoder.h"
 #include "ADTSDemuxer.h"
 
+#include "FlacDecoder.h"
+#include "FlacDemuxer.h"
+
 #include "nsPluginHost.h"
 #include "MediaPrefs.h"
 
@@ -320,6 +323,13 @@ IsWAVSupportedType(const nsACString& aType,
   return WaveDecoder::CanHandleMediaType(aType, aCodecs);
 }
 
+static bool
+IsFlacSupportedType(const nsACString& aType,
+                   const nsAString& aCodecs = EmptyString())
+{
+  return FlacDecoder::CanHandleMediaType(aType, aCodecs);
+}
+
 /* static */
 bool DecoderTraits::ShouldHandleMediaType(const char* aMIMEType,
                                           DecoderDoctorDiagnostics* aDiagnostics)
@@ -398,6 +408,9 @@ DecoderTraits::CanHandleCodecsType(const char* aMIMEType,
     return CANPLAY_YES;
   }
   if (IsAACSupportedType(nsDependentCString(aMIMEType), aRequestedCodecs)) {
+    return CANPLAY_YES;
+  }
+  if (IsFlacSupportedType(nsDependentCString(aMIMEType), aRequestedCodecs)) {
     return CANPLAY_YES;
   }
 #ifdef MOZ_OMX_DECODER
@@ -493,6 +506,9 @@ DecoderTraits::CanHandleMediaType(const char* aMIMEType,
   if (IsAACSupportedType(nsDependentCString(aMIMEType))) {
     return CANPLAY_MAYBE;
   }
+  if (IsFlacSupportedType(nsDependentCString(aMIMEType))) {
+    return CANPLAY_MAYBE;
+  }
 #ifdef MOZ_OMX_DECODER
   if (IsOmxSupportedType(nsDependentCString(aMIMEType))) {
     return CANPLAY_MAYBE;
@@ -548,6 +564,10 @@ InstantiateDecoder(const nsACString& aType,
   }
   if (IsWaveType(aType)) {
     decoder = new WaveDecoder(aOwner);
+    return decoder.forget();
+  }
+  if (IsFlacSupportedType(aType)) {
+    decoder = new FlacDecoder(aOwner);
     return decoder.forget();
   }
 #ifdef MOZ_OMX_DECODER
@@ -634,6 +654,9 @@ MediaDecoderReader* DecoderTraits::CreateReader(const nsACString& aType, Abstrac
   if (IsWAVSupportedType(aType)) {
     decoderReader = new MediaFormatReader(aDecoder, new WAVDemuxer(aDecoder->GetResource()));
   } else
+  if (IsFlacSupportedType(aType)) {
+    decoderReader = new MediaFormatReader(aDecoder, new FlacDemuxer(aDecoder->GetResource()));
+  } else
 #ifdef MOZ_RAW
   if (IsRawType(aType)) {
     decoderReader = new RawReader(aDecoder);
@@ -701,6 +724,7 @@ bool DecoderTraits::IsSupportedInVideoDocument(const nsACString& aType)
 #endif
     IsMP3SupportedType(aType) ||
     IsAACSupportedType(aType) ||
+    IsFlacSupportedType(aType) ||
 #ifdef MOZ_DIRECTSHOW
     IsDirectShowSupportedType(aType) ||
 #endif
