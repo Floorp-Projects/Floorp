@@ -160,17 +160,6 @@
   <script type="application/javascript;version=1.7" src="/tests/dom/base/test/referrer_helper.js"></script>
 </head>
 <body onload="tests.next();">
-  <script type="application/javascript;version=1.7">
-    /**
-     * Listen for notifications that pretching finishes.
-     * XXX Bug 1268962 - Fire load/error events on <link rel="prefetch">
-     * Because there's no onload/onerror event fired, we catch prefetch-load-completed
-     * to test
-     * Simply remove this after bug 1268962 is fixed
-     */
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-    SpecialPowers.Services.obs.addObserver(function() { tests.next(); }, "prefetch-load-completed", false);
-  </script>
   <iframe id="testframe"></iframe>
 </body>
 </html>

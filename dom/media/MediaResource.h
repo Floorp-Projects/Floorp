@@ -140,8 +140,6 @@ private:
 typedef media::Interval<int64_t> MediaByteRange;
 typedef media::IntervalSet<int64_t> MediaByteRangeSet;
 
-class RtspMediaResource;
-
 /**
  * Provides a thread-safe, seek/read interface to resources
  * loaded from a URI. Uses MediaCache to cache data received over
@@ -343,12 +341,6 @@ public:
   // nsIChannel when the MediaResource is created. Safe to call from
   // any thread.
   virtual const nsCString& GetContentType() const = 0;
-
-  // Get the RtspMediaResource pointer if this MediaResource really is a
-  // RtspMediaResource. For calling Rtsp specific functions.
-  virtual RtspMediaResource* GetRtspPointer() {
-    return nullptr;
-  }
 
   // Return true if the stream is a live stream
   virtual bool IsRealTime() {

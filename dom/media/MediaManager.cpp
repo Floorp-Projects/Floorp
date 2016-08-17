@@ -1925,11 +1925,9 @@ MediaManager::NotifyRecordingStatusChange(nsPIDOMWindowInner* aWindow,
   nsString requestURL;
 
   if (nsCOMPtr<nsIDocShell> docShell = aWindow->GetDocShell()) {
-    nsresult rv = docShell->GetIsApp(&isApp);
-    NS_ENSURE_SUCCESS(rv, rv);
-
+    isApp = docShell->GetIsApp();
     if (isApp) {
-      rv = docShell->GetAppManifestURL(requestURL);
+      nsresult rv = docShell->GetAppManifestURL(requestURL);
       NS_ENSURE_SUCCESS(rv, rv);
     }
   }

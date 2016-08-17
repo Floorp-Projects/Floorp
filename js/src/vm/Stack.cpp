@@ -558,6 +558,7 @@ FrameIter::settleOnActivation()
                 continue;
             }
 
+            data_.pc_ = (jsbytecode*)data_.wasmFrames_.pc();
             data_.state_ = WASM;
             return;
         }
@@ -690,6 +691,7 @@ FrameIter::popWasmFrame()
     MOZ_ASSERT(data_.state_ == WASM);
 
     ++data_.wasmFrames_;
+    data_.pc_ = (jsbytecode*)data_.wasmFrames_.pc();
     if (data_.wasmFrames_.done())
         popActivation();
 }
@@ -757,12 +759,13 @@ FrameIter::rawFramePtr() const
 {
     switch (data_.state_) {
       case DONE:
-      case WASM:
         return nullptr;
       case JIT:
         return data_.jitFrames_.fp();
       case INTERP:
         return interpFrame();
+      case WASM:
+        return data_.wasmFrames_.fp();
     }
     MOZ_CRASH("Unexpected state");
 }
@@ -994,7 +997,6 @@ FrameIter::updatePcQuadratic()
 {
     switch (data_.state_) {
       case DONE:
-      case WASM:
         break;
       case INTERP: {
         InterpreterFrame* frame = interpFrame();
@@ -1031,6 +1033,10 @@ FrameIter::updatePcQuadratic()
             data_.jitFrames_.baselineScriptAndPc(nullptr, &data_.pc_);
             return;
         }
+        break;
+      case WASM:
+        // Update the pc.
+        data_.pc_ = (jsbytecode*)data_.wasmFrames_.pc();
         break;
     }
     MOZ_CRASH("Unexpected state");

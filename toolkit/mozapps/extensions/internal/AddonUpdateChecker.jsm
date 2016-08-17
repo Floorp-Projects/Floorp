@@ -505,8 +505,10 @@ function parseJSONManifest(aId, aUpdateKey, aRequest, aManifestData) {
 
     // "gecko" is currently the only supported application entry. If
     // it's missing, skip this update.
-    if (!("gecko" in applications))
+    if (!("gecko" in applications)) {
+      logger.debug("gecko not in application entry, skipping update of ${addon}")
       continue;
+    }
 
     let app = getProperty(applications, "gecko", "object");
 

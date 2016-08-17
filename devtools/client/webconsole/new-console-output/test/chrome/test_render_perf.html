@@ -58,7 +58,7 @@ function timeit(cb) {
 
 window.onload = Task.async(function* () {
   const { configureStore } = browserRequire("devtools/client/webconsole/new-console-output/store");
-  const { messagesSearch, filtersClear } = browserRequire("devtools/client/webconsole/new-console-output/actions/messages");
+  const { filterTextSet, filtersClear } = browserRequire("devtools/client/webconsole/new-console-output/actions/filters");
   const NewConsoleOutputWrapper = browserRequire("devtools/client/webconsole/new-console-output/new-console-output-wrapper");
   const wrapper = new NewConsoleOutputWrapper(document.querySelector("#output"), {});
 
@@ -72,7 +72,7 @@ window.onload = Task.async(function* () {
   info("took " + time + " seconds to render messages");
 
   time = yield timeit(() => {
-    store.dispatch(messagesSearch("Odd text"));
+    store.dispatch(filterTextSet("Odd text"));
   });
   info("took " + time + " seconds to search filter half the messages");
 

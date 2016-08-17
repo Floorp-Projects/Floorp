@@ -195,6 +195,8 @@
 
 #include "nsIBidiKeyboard.h"
 
+#include "nsLayoutStylesheetCache.h"
+
 #ifdef MOZ_WEBRTC
 #include "signaling/src/peerconnection/WebrtcGlobalParent.h"
 #endif
@@ -1129,9 +1131,7 @@ ContentParent::CreateBrowserOrApp(const TabContext& aContext,
       if (loadContext && loadContext->UsePrivateBrowsing()) {
         chromeFlags |= nsIWebBrowserChrome::CHROME_PRIVATE_WINDOW;
       }
-      bool affectLifetime;
-      docShell->GetAffectPrivateSessionLifetime(&affectLifetime);
-      if (affectLifetime) {
+      if (docShell->GetAffectPrivateSessionLifetime()) {
         chromeFlags |= nsIWebBrowserChrome::CHROME_PRIVATE_LIFETIME;
       }
 
@@ -2977,7 +2977,8 @@ ContentParent::RecvGetXPCOMProcessAttributes(bool* aIsOffline,
                                              InfallibleTArray<nsString>* dictionaries,
                                              ClipboardCapabilities* clipboardCaps,
                                              DomainPolicyClone* domainPolicy,
-                                             StructuredCloneData* aInitialData)
+                                             StructuredCloneData* aInitialData,
+                                             OptionalURIParams* aUserContentCSSURL)
 {
   nsCOMPtr<nsIIOService> io(do_GetIOService());
   MOZ_ASSERT(io, "No IO service?");
@@ -3032,6 +3033,16 @@ ContentParent::RecvGetXPCOMProcessAttributes(bool* aIsOffline,
       rv.SuppressException();
       return false;
     }
+  }
+
+  // XXX bug 1046166
+  // Content processes have no permission to read profile, so we send the
+  // file URL instead.
+  StyleSheetHandle::RefPtr ucs = nsLayoutStylesheetCache::For(StyleBackendType::Gecko)->UserContentSheet();
+  if (ucs) {
+    SerializeURI(ucs->GetSheetURI(), *aUserContentCSSURL);
+  } else {
+    SerializeURI(nullptr, *aUserContentCSSURL);
   }
 
   return true;

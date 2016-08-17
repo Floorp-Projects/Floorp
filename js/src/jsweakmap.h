@@ -179,8 +179,10 @@ class WeakMap : public HashMap<Key, Value, HashPolicy, RuntimeAllocPolicy>,
     {
         MOZ_ASSERT(marked);
 
-        gc::Cell* l = origKey.asCell();
-        Ptr p = Base::lookup(reinterpret_cast<Lookup&>(l));
+        // If this cast fails, then you're instantiating the WeakMap with a
+        // Lookup that can't be constructed from a Cell*. The WeakKeyTable
+        // mechanism is indexed with a GCCellPtr, so that won't work.
+        Ptr p = Base::lookup(static_cast<Lookup>(origKey.asCell()));
         MOZ_ASSERT(p.found());
 
         Key key(p->key());

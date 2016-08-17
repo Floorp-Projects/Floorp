@@ -92,7 +92,7 @@ this.XPathGenerator = {
    */
   get restorableFormNodes() {
     // for a comprehensive list of all available <INPUT> types see
-    // http://mxr.mozilla.org/mozilla-central/search?string=kInputTypeTable
+    // https://dxr.mozilla.org/mozilla-central/search?q=kInputTypeTable&redirect=false
     let ignoreInputs = new Map([
       ["type", ["password", "hidden", "button", "image", "submit", "reset"]],
       ["autocomplete", ["off"]]

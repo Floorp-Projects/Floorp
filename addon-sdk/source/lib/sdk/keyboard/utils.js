@@ -33,7 +33,7 @@ const MODIFIERS = exports.MODIFIERS = {
 
 // Hash of key:code pairs for all the chars supported by `nsIDOMKeyEvent`.
 // This is just a copy of the `nsIDOMKeyEvent` hash with normalized names.
-// @See: http://mxr.mozilla.org/mozilla-central/source/dom/interfaces/events/nsIDOMKeyEvent.idl
+// @See: http://dxr.mozilla.org/mozilla-central/source/dom/interfaces/events/nsIDOMKeyEvent.idl
 const CODES = exports.CODES = new function Codes() {
   let nsIDOMKeyEvent = Ci.nsIDOMKeyEvent;
   // Names that will be substituted with a shorter analogs.

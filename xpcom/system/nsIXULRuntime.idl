@@ -87,6 +87,11 @@ interface nsIXULRuntime : nsISupports
   readonly attribute unsigned long processID;
 
   /**
+   * A globally unique and non-recycled ID of the caller's process.
+   */
+  readonly attribute uint64_t uniqueProcessID;
+
+  /**
    * If true, browser tabs may be opened by default in a different process
    * from the main browser UI.
    */

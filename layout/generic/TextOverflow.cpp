@@ -214,7 +214,7 @@ void
 nsDisplayTextOverflowMarker::Paint(nsDisplayListBuilder* aBuilder,
                                    nsRenderingContext*   aCtx)
 {
-  nsCSSProperty colorProp = mFrame->StyleContext()->GetTextFillColorProp();
+  nsCSSPropertyID colorProp = mFrame->StyleContext()->GetTextFillColorProp();
   nscolor foregroundColor = nsLayoutUtils::GetColor(mFrame, colorProp);
 
   // Paint the text-shadows for the overflow marker

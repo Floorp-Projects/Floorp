@@ -76,7 +76,7 @@ ServoRestyleManager::RecreateStyleContexts(nsIContent* aContent,
 
   if (aContent->IsDirtyForServo()) {
     RefPtr<ServoComputedValues> computedValues =
-      dont_AddRef(Servo_GetComputedValues(aContent));
+      Servo_GetComputedValues(aContent).Consume();
     MOZ_ASSERT(computedValues);
 
     // NB: Change hint processing only applies to elements, at least until we

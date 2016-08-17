@@ -6,6 +6,7 @@
 #ifndef nsNSSCertificateFakeTransport_h
 #define nsNSSCertificateFakeTransport_h
 
+#include "ScopedNSSTypes.h"
 #include "mozilla/Vector.h"
 #include "nsCOMPtr.h"
 #include "nsIClassInfo.h"
@@ -30,7 +31,7 @@ protected:
   virtual ~nsNSSCertificateFakeTransport();
 
 private:
-  SECItem* mCertSerialization;
+  mozilla::UniqueSECItem mCertSerialization;
 };
 
 class nsNSSCertListFakeTransport : public nsIX509CertList,

@@ -2618,20 +2618,6 @@ HTMLMediaElement::NotifyXPCOMShutdown()
 }
 
 void
-HTMLMediaElement::ResetConnectionState()
-{
-  SetCurrentTime(0);
-  FireTimeUpdate(false);
-  DispatchAsyncEvent(NS_LITERAL_STRING("ended"));
-  ChangeNetworkState(nsIDOMHTMLMediaElement::NETWORK_EMPTY);
-  ChangeDelayLoadStatus(false);
-  ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_NOTHING);
-  if (mDecoder) {
-    ShutdownDecoder();
-  }
-}
-
-void
 HTMLMediaElement::Play(ErrorResult& aRv)
 {
   nsresult rv = PlayInternal(nsContentUtils::IsCallerChrome());
@@ -3378,19 +3364,7 @@ nsresult HTMLMediaElement::InitializeDecoderForChannel(nsIChannel* aChannel,
     mChannelLoader = nullptr;
   }
 
-  // We postpone the |FinishDecoderSetup| function call until we get
-  // |OnConnected| signal from MediaStreamController which is held by
-  // RtspMediaResource.
-  if (DecoderTraits::DecoderWaitsForOnConnected(mimeType)) {
-    decoder->SetResource(resource);
-    SetDecoder(decoder);
-    if (aListener) {
-      *aListener = nullptr;
-    }
-    return NS_OK;
-  } else {
-    return FinishDecoderSetup(decoder, resource, aListener);
-  }
+  return FinishDecoderSetup(decoder, resource, aListener);
 }
 
 nsresult HTMLMediaElement::FinishDecoderSetup(MediaDecoder* aDecoder,

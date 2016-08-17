@@ -475,9 +475,7 @@ TabParent::IsVisible() const
     return false;
   }
 
-  bool visible = false;
-  frameLoader->GetVisible(&visible);
-  return visible;
+  return frameLoader->GetVisible();
 }
 
 void

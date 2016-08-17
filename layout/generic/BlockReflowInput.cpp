@@ -44,7 +44,6 @@ BlockReflowInput::BlockReflowInput(const ReflowInput& aReflowInput,
     mBorderPadding(mReflowInput.ComputedLogicalBorderPadding()),
     mPrevBEndMargin(),
     mLineNumber(0),
-    mFlags(0),
     mFloatBreakType(NS_STYLE_CLEAR_NONE),
     mConsumedBSize(aConsumedBSize)
 {
@@ -53,11 +52,11 @@ BlockReflowInput::BlockReflowInput(const ReflowInput& aReflowInput,
     Preferences::AddBoolVarCache(&sFloatFragmentsInsideColumnEnabled,
                                  "layout.float-fragments-inside-column.enabled");
   }
-  SetFlag(BRS_FLOAT_FRAGMENTS_INSIDE_COLUMN_ENABLED, sFloatFragmentsInsideColumnEnabled);
-  
+  mFlags.mFloatFragmentsInsideColumnEnabled = sFloatFragmentsInsideColumnEnabled;
+
   WritingMode wm = aReflowInput.GetWritingMode();
-  SetFlag(BRS_ISFIRSTINFLOW, aFrame->GetPrevInFlow() == nullptr);
-  SetFlag(BRS_ISOVERFLOWCONTAINER, IS_TRUE_OVERFLOW_CONTAINER(aFrame));
+  mFlags.mIsFirstInflow = !aFrame->GetPrevInFlow();
+  mFlags.mIsOverflowContainer = IS_TRUE_OVERFLOW_CONTAINER(aFrame);
 
   nsIFrame::LogicalSides logicalSkipSides =
     aFrame->GetLogicalSkipSides(&aReflowInput);
@@ -87,17 +86,17 @@ BlockReflowInput::BlockReflowInput(const ReflowInput& aReflowInput,
 
   if ((aBStartMarginRoot && !logicalSkipSides.BStart()) ||
       0 != mBorderPadding.BStart(wm)) {
-    SetFlag(BRS_ISBSTARTMARGINROOT, true);
-    SetFlag(BRS_APPLYBSTARTMARGIN, true);
+    mFlags.mIsBStartMarginRoot = true;
+    mFlags.mShouldApplyBStartMargin = true;
   }
   if ((aBEndMarginRoot && !logicalSkipSides.BEnd()) ||
       0 != mBorderPadding.BEnd(wm)) {
-    SetFlag(BRS_ISBENDMARGINROOT, true);
+    mFlags.mIsBEndMarginRoot = true;
   }
   if (aBlockNeedsFloatManager) {
-    SetFlag(BRS_FLOAT_MGR, true);
+    mFlags.mBlockNeedsFloatManager = true;
   }
-  
+
   mFloatManager = aReflowInput.mFloatManager;
 
   NS_ASSERTION(mFloatManager,
@@ -133,8 +132,8 @@ BlockReflowInput::BlockReflowInput(const ReflowInput& aReflowInput,
   }
   else {
     // When we are not in a paginated situation then we always use
-    // an constrained height.
-    SetFlag(BRS_UNCONSTRAINEDBSIZE, true);
+    // a constrained height.
+    mFlags.mHasUnconstrainedBSize = true;
     mContentArea.BSize(wm) = mBEndEdge = NS_UNCONSTRAINEDSIZE;
   }
   mContentArea.IStart(wm) = mBorderPadding.IStart(wm);
@@ -234,7 +233,7 @@ BlockReflowInput::ComputeBlockAvailSpace(nsIFrame* aFrame,
 #endif
   WritingMode wm = mReflowInput.GetWritingMode();
   aResult.BStart(wm) = mBCoord;
-  aResult.BSize(wm) = GetFlag(BRS_UNCONSTRAINEDBSIZE)
+  aResult.BSize(wm) = mFlags.mHasUnconstrainedBSize
     ? NS_UNCONSTRAINEDSIZE
     : mReflowInput.AvailableBSize() - mBCoord
       - GetBEndMarginClone(aFrame, mReflowInput.mRenderingContext, mContentArea, wm);
@@ -431,7 +430,7 @@ BlockReflowInput::ReconstructMarginBefore(nsLineList::iterator aLine)
     if (aLine == firstLine) {
       // If the top margin was carried out (and thus already applied),
       // set it to zero.  Either way, we're done.
-      if (!GetFlag(BRS_ISBSTARTMARGINROOT)) {
+      if (!mFlags.mIsBStartMarginRoot) {
         mPrevBEndMargin.Zero();
       }
       break;
@@ -442,9 +441,9 @@ BlockReflowInput::ReconstructMarginBefore(nsLineList::iterator aLine)
 void
 BlockReflowInput::SetupPushedFloatList()
 {
-  MOZ_ASSERT(!GetFlag(BRS_PROPTABLE_FLOATCLIST) == !mPushedFloats,
+  MOZ_ASSERT(!mFlags.mIsFloatListInBlockPropertyTable == !mPushedFloats,
              "flag mismatch");
-  if (!GetFlag(BRS_PROPTABLE_FLOATCLIST)) {
+  if (!mFlags.mIsFloatListInBlockPropertyTable) {
     // If we're being re-Reflow'd without our next-in-flow having been
     // reflowed, some pushed floats from our previous reflow might
     // still be on our pushed floats list.  However, that's
@@ -453,7 +452,7 @@ BlockReflowInput::SetupPushedFloatList()
     // (nsBlockFrame::ReflowDirtyLines ensures that any lines with
     // pushed floats are reflowed.)
     mPushedFloats = mBlock->EnsurePushedFloats();
-    SetFlag(BRS_PROPTABLE_FLOATCLIST, true);
+    mFlags.mIsFloatListInBlockPropertyTable = true;
   }
 }
 
@@ -918,7 +917,7 @@ BlockReflowInput::FlowAndPlaceFloat(nsIFrame* aFloat)
   // its entirety to the next page (NS_FRAME_IS_TRUNCATED or
   // NS_INLINE_IS_BREAK_BEFORE), we need to do the same.
   if ((ContentBSize() != NS_UNCONSTRAINEDSIZE &&
-       !GetFlag(BRS_FLOAT_FRAGMENTS_INSIDE_COLUMN_ENABLED) &&
+       !mFlags.mFloatFragmentsInsideColumnEnabled &&
        adjustedAvailableSpace.BSize(wm) == NS_UNCONSTRAINEDSIZE &&
        !mustPlaceFloat &&
        aFloat->BSize(wm) + floatMargin.BStartEnd(wm) >

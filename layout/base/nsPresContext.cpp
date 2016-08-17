@@ -37,7 +37,7 @@
 #include "mozilla/RestyleManager.h"
 #include "mozilla/RestyleManagerHandle.h"
 #include "mozilla/RestyleManagerHandleInlines.h"
-#include "SurfaceCache.h"
+#include "SurfaceCacheUtils.h"
 #include "nsCSSRuleProcessor.h"
 #include "nsRuleNode.h"
 #include "gfxPlatform.h"
@@ -1631,7 +1631,7 @@ nsPresContext::ThemeChangedInternal()
     // Vector images (SVG) may be using theme colors so we discard all cached
     // surfaces. (We could add a vector image only version of DiscardAll, but
     // in bug 940625 we decided theme changes are rare enough not to bother.)
-    mozilla::image::SurfaceCache::DiscardAll();
+    image::SurfaceCacheUtils::DiscardAll();
   }
 
   // This will force the system metrics to be generated the next time they're used

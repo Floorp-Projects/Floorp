@@ -25,9 +25,7 @@ nsNSSCertificateFakeTransport::nsNSSCertificateFakeTransport()
 
 nsNSSCertificateFakeTransport::~nsNSSCertificateFakeTransport()
 {
-  if (mCertSerialization) {
-    SECITEM_FreeItem(mCertSerialization, true);
-  }
+  mCertSerialization = nullptr;
 }
 
 NS_IMETHODIMP
@@ -263,10 +261,11 @@ nsNSSCertificateFakeTransport::Read(nsIObjectInputStream* aStream)
   // On a non-chrome process we cannot instatiate mCert because we lack
   // nsNSSComponent. nsNSSCertificateFakeTransport object is used only to
   // carry the certificate serialization.
-
-  mCertSerialization = SECITEM_AllocItem(nullptr, nullptr, len);
-  if (!mCertSerialization)
-      return NS_ERROR_OUT_OF_MEMORY;
+  mCertSerialization =
+    mozilla::UniqueSECItem(SECITEM_AllocItem(nullptr, nullptr, len));
+  if (!mCertSerialization) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
   PORT_Memcpy(mCertSerialization->data, str.Data(), len);
 
   return NS_OK;

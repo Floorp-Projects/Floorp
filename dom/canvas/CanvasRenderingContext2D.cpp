@@ -1880,21 +1880,33 @@ CanvasRenderingContext2D::SetContextOptions(JSContext* aCx,
 UniquePtr<uint8_t[]>
 CanvasRenderingContext2D::GetImageBuffer(int32_t* aFormat)
 {
+  UniquePtr<uint8_t[]> ret;
+
   *aFormat = 0;
 
-  EnsureTarget();
-  RefPtr<SourceSurface> snapshot = mTarget->Snapshot();
-  if (!snapshot) {
-    return nullptr;
+  RefPtr<SourceSurface> snapshot;
+  if (mTarget) {
+    snapshot = mTarget->Snapshot();
+  } else if (mBufferProvider) {
+    snapshot = mBufferProvider->BorrowSnapshot();
+  } else {
+    EnsureTarget();
+    snapshot = mTarget->Snapshot();
   }
 
-  RefPtr<DataSourceSurface> data = snapshot->GetDataSurface();
-  if (!data || data->GetSize() != IntSize(mWidth, mHeight)) {
-    return nullptr;
+  if (snapshot) {
+    RefPtr<DataSourceSurface> data = snapshot->GetDataSurface();
+    if (data && data->GetSize() == IntSize(mWidth, mHeight)) {
+      *aFormat = imgIEncoder::INPUT_FORMAT_HOSTARGB;
+      ret = SurfaceToPackedBGRA(data);
+    }
   }
 
-  *aFormat = imgIEncoder::INPUT_FORMAT_HOSTARGB;
-  return SurfaceToPackedBGRA(data);
+  if (!mTarget && mBufferProvider) {
+    mBufferProvider->ReturnSnapshot(snapshot.forget());
+  }
+
+  return ret;
 }
 
 nsString CanvasRenderingContext2D::GetHitRegion(const mozilla::gfx::Point& aPoint)
@@ -2391,8 +2403,8 @@ CanvasRenderingContext2D::SetShadowColor(const nsAString& aShadowColor)
 
 static already_AddRefed<Declaration>
 CreateDeclaration(nsINode* aNode,
-  const nsCSSProperty aProp1, const nsAString& aValue1, bool* aChanged1,
-  const nsCSSProperty aProp2, const nsAString& aValue2, bool* aChanged2)
+  const nsCSSPropertyID aProp1, const nsAString& aValue1, bool* aChanged1,
+  const nsCSSPropertyID aProp2, const nsAString& aValue2, bool* aChanged2)
 {
   nsIPrincipal* principal = aNode->NodePrincipal();
   nsIDocument* document = aNode->OwnerDoc();
@@ -2477,7 +2489,7 @@ GetFontParentStyleContext(Element* aElement, nsIPresShell* aPresShell,
 }
 
 static bool
-PropertyIsInheritOrInitial(Declaration* aDeclaration, const nsCSSProperty aProperty)
+PropertyIsInheritOrInitial(Declaration* aDeclaration, const nsCSSPropertyID aProperty)
 {
   // We know the declaration is not !important, so we can use
   // GetNormalBlock().
@@ -5117,10 +5129,12 @@ CanvasRenderingContext2D::DrawWindow(nsGlobalWindow& aWindow, double aX,
   }
 
   nsCOMPtr<nsIPresShell> shell = presContext->PresShell();
+
   Unused << shell->RenderDocument(r, renderDocFlags, backgroundColor, thebes);
   // If this canvas was contained in the drawn window, the pre-transaction callback
   // may have returned its DT. If so, we must reacquire it here.
   EnsureTarget();
+
   if (drawDT) {
     RefPtr<SourceSurface> snapshot = drawDT->Snapshot();
     if (NS_WARN_IF(!snapshot)) {
@@ -5636,7 +5650,6 @@ CanvasRenderingContext2D::PutImageData_explicit(int32_t aX, int32_t aY, uint32_t
     srcLine += aW * 4;
   }
 
-  EnsureTarget();
   if (!IsTargetValid()) {
     return NS_ERROR_FAILURE;
   }

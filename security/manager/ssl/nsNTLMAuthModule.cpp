@@ -1118,7 +1118,8 @@ des_encrypt(const uint8_t *key, const uint8_t *src, uint8_t *hash)
   CK_MECHANISM_TYPE cipherMech = CKM_DES_ECB;
   PK11SymKey *symkey = nullptr;
   PK11Context *ctxt = nullptr;
-  SECItem keyItem, *param = nullptr;
+  SECItem keyItem;
+  mozilla::UniqueSECItem param;
   SECStatus rv;
   unsigned int n;
 
@@ -1129,7 +1130,7 @@ des_encrypt(const uint8_t *key, const uint8_t *src, uint8_t *hash)
     goto done;
   }
 
-  keyItem.data = (uint8_t *) key;
+  keyItem.data = const_cast<uint8_t*>(key);
   keyItem.len = 8;
   symkey = PK11_ImportSymKey(slot.get(), cipherMech,
                              PK11_OriginUnwrap, CKA_ENCRYPT,
@@ -1141,7 +1142,7 @@ des_encrypt(const uint8_t *key, const uint8_t *src, uint8_t *hash)
   }
 
   // no initialization vector required
-  param = PK11_ParamFromIV(cipherMech, nullptr);
+  param = mozilla::UniqueSECItem(PK11_ParamFromIV(cipherMech, nullptr));
   if (!param)
   {
     NS_ERROR("no param");
@@ -1149,7 +1150,7 @@ des_encrypt(const uint8_t *key, const uint8_t *src, uint8_t *hash)
   }
 
   ctxt = PK11_CreateContextBySymKey(cipherMech, CKA_ENCRYPT,
-                                    symkey, param);
+                                    symkey, param.get());
   if (!ctxt) {
     NS_ERROR("no context");
     goto done;
@@ -1172,6 +1173,4 @@ done:
     PK11_DestroyContext(ctxt, true);
   if (symkey)
     PK11_FreeSymKey(symkey);
-  if (param)
-    SECITEM_FreeItem(param, true);
 }

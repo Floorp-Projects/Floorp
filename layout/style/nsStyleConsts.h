@@ -85,6 +85,12 @@ enum class StyleClipPathGeometryBox : uint8_t {
   View,
 };
 
+// fill-rule
+enum class StyleFillRule : uint8_t {
+  NonZero,
+  EvenOdd,
+};
+
 // float
 // https://developer.mozilla.org/en-US/docs/Web/CSS/float
 enum class StyleFloat : uint8_t {
@@ -1066,10 +1072,6 @@ enum class FillMode : uint32_t;
 #define NS_STYLE_DOMINANT_BASELINE_MIDDLE            9
 #define NS_STYLE_DOMINANT_BASELINE_TEXT_AFTER_EDGE  10
 #define NS_STYLE_DOMINANT_BASELINE_TEXT_BEFORE_EDGE 11
-
-// fill-rule
-#define NS_STYLE_FILL_RULE_NONZERO              0
-#define NS_STYLE_FILL_RULE_EVENODD              1
 
 // image-rendering
 #define NS_STYLE_IMAGE_RENDERING_AUTO             0

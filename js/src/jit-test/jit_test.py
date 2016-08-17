@@ -95,6 +95,8 @@ def main(argv):
     op.add_option('-w', '--write-failures', dest='write_failures',
                   metavar='FILE',
                   help='Write a list of failed tests to [FILE]')
+    op.add_option('-C', '--check-output', action='store_true', dest='check_output',
+                  help='Run tests to check output for different jit-flags')
     op.add_option('-r', '--read-tests', dest='read_tests', metavar='FILE',
                   help='Run test files listed in [FILE]')
     op.add_option('-R', '--retest', dest='retest', metavar='FILE',

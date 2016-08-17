@@ -99,6 +99,17 @@ var Bookmarks = Object.freeze({
   DEFAULT_INDEX: -1,
 
   /**
+   * Bookmark change source constants, passed as optional properties and
+   * forwarded to observers. See nsINavBookmarksService.idl for an explanation.
+   */
+  SOURCES: {
+    DEFAULT: Ci.nsINavBookmarksService.SOURCE_DEFAULT,
+    SYNC: Ci.nsINavBookmarksService.SOURCE_SYNC,
+    IMPORT: Ci.nsINavBookmarksService.SOURCE_IMPORT,
+    IMPORT_REPLACE: Ci.nsINavBookmarksService.SOURCE_IMPORT_REPLACE,
+  },
+
+  /**
    * Special GUIDs associated with bookmark roots.
    * It's guaranteed that the roots will always have these guids.
    */
@@ -154,6 +165,7 @@ var Bookmarks = Object.freeze({
       , lastModified: { defaultValue: time,
                         validIf: b => (!b.dateAdded && b.lastModified >= time) ||
                                       (b.dateAdded && b.lastModified >= b.dateAdded) }
+      , source: { defaultValue: this.SOURCES.DEFAULT }
       });
 
     return Task.spawn(function* () {
@@ -179,7 +191,7 @@ var Bookmarks = Object.freeze({
       notify(observers, "onItemAdded", [ itemId, parent._id, item.index,
                                          item.type, uri, item.title || null,
                                          PlacesUtils.toPRTime(item.dateAdded), item.guid,
-                                         item.parentGuid ]);
+                                         item.parentGuid, item.source ]);
 
       // If it's a tag, notify OnItemChanged to all bookmarks for this URL.
       let isTagging = parent._parentId == PlacesUtils.tagsFolderId;
@@ -189,11 +201,12 @@ var Bookmarks = Object.freeze({
                                                PlacesUtils.toPRTime(entry.lastModified),
                                                entry.type, entry._parentId,
                                                entry.guid, entry.parentGuid,
-                                               "" ]);
+                                               "", item.source ]);
         }
       }
 
       // Remove non-enumerable properties.
+      delete item.source;
       return Object.assign({}, item);
     }.bind(this));
   },
@@ -225,10 +238,11 @@ var Bookmarks = Object.freeze({
       { guid: { required: true }
       , index: { requiredIf: b => b.hasOwnProperty("parentGuid")
                , validIf: b => b.index >= 0 || b.index == this.DEFAULT_INDEX }
+      , source: { defaultValue: this.SOURCES.DEFAULT }
       });
 
-    // There should be at last one more property in addition to guid.
-    if (Object.keys(updateInfo).length < 2)
+    // There should be at last one more property in addition to guid and source.
+    if (Object.keys(updateInfo).length < 3)
       throw new Error("Not enough properties to update");
 
     return Task.spawn(function* () {
@@ -245,7 +259,7 @@ var Bookmarks = Object.freeze({
       // Remove any property that will stay the same.
       removeSameValueProperties(updateInfo, item);
       // Check if anything should still be updated.
-      if (Object.keys(updateInfo).length < 2) {
+      if (Object.keys(updateInfo).length < 3) {
         // Remove non-enumerable properties.
         return Object.assign({}, item);
       }
@@ -326,7 +340,8 @@ var Bookmarks = Object.freeze({
                                                updatedItem.type,
                                                updatedItem._parentId,
                                                updatedItem.guid,
-                                               updatedItem.parentGuid, "" ]);
+                                               updatedItem.parentGuid, "",
+                                               updatedItem.source ]);
         }
         if (updateInfo.hasOwnProperty("title")) {
           notify(observers, "onItemChanged", [ updatedItem._id, "title",
@@ -335,7 +350,8 @@ var Bookmarks = Object.freeze({
                                                updatedItem.type,
                                                updatedItem._parentId,
                                                updatedItem.guid,
-                                               updatedItem.parentGuid, "" ]);
+                                               updatedItem.parentGuid, "",
+                                               updatedItem.source ]);
         }
         if (updateInfo.hasOwnProperty("url")) {
           notify(observers, "onItemChanged", [ updatedItem._id, "uri",
@@ -345,7 +361,8 @@ var Bookmarks = Object.freeze({
                                                updatedItem._parentId,
                                                updatedItem.guid,
                                                updatedItem.parentGuid,
-                                               item.url.href ]);
+                                               item.url.href,
+                                               updatedItem.source ]);
         }
         // If the item was moved, notify onItemMoved.
         if (item.parentGuid != updatedItem.parentGuid ||
@@ -354,10 +371,12 @@ var Bookmarks = Object.freeze({
                                              item.index, updatedItem._parentId,
                                              updatedItem.index, updatedItem.type,
                                              updatedItem.guid, item.parentGuid,
-                                             updatedItem.parentGuid ]);
+                                             updatedItem.parentGuid,
+                                             updatedItem.source ]);
         }
 
         // Remove non-enumerable properties.
+        delete updatedItem.source;
         return Object.assign({}, updatedItem);
       }.bind(this)));
     }.bind(this));
@@ -371,9 +390,11 @@ var Bookmarks = Object.freeze({
    *        object representing it, as defined above.
    * @param {Object} [options={}]
    *        Additional options that can be passed to the function.
-   *        Currently supports preventRemovalOfNonEmptyFolders which
-   *        will cause an exception to be thrown if attempting to remove
-   *        a folder that is not empty.
+   *        Currently supports the following properties:
+   *         - preventRemovalOfNonEmptyFolders: Causes an exception to be
+   *           thrown when attempting to remove a folder that is not empty.
+   *         - source: The change source, forwarded to all bookmark observers.
+   *           Defaults to nsINavBookmarksService::SOURCE_DEFAULT.
    *
    * @return {Promise} resolved when the removal is complete.
    * @resolves to an object representing the removed bookmark.
@@ -409,7 +430,8 @@ var Bookmarks = Object.freeze({
       let uri = item.hasOwnProperty("url") ? PlacesUtils.toURI(item.url) : null;
       notify(observers, "onItemRemoved", [ item._id, item._parentId, item.index,
                                            item.type, uri, item.guid,
-                                           item.parentGuid ]);
+                                           item.parentGuid,
+                                           removeInfo.source ]);
 
       let isUntagging = item._grandParentId == PlacesUtils.tagsFolderId;
       if (isUntagging) {
@@ -418,7 +440,7 @@ var Bookmarks = Object.freeze({
                                                PlacesUtils.toPRTime(entry.lastModified),
                                                entry.type, entry._parentId,
                                                entry.guid, entry.parentGuid,
-                                               "" ]);
+                                               "", removeInfo.source ]);
         }
       }
 
@@ -432,14 +454,19 @@ var Bookmarks = Object.freeze({
    *
    * Note that roots are preserved, only their children will be removed.
    *
+   * @param {Object} [options={}]
+   *        Additional options. Currently supports the following properties:
+   *         - source: The change source, forwarded to all bookmark observers.
+   *           Defaults to nsINavBookmarksService::SOURCE_DEFAULT.
+   *
    * @return {Promise} resolved when the removal is complete.
    * @resolves once the removal is complete.
    */
-  eraseEverything: function() {
+  eraseEverything: function(options={}) {
     return PlacesUtils.withConnectionWrapper("Bookmarks.jsm: eraseEverything",
       db => db.executeTransaction(function* () {
         const folderGuids = [this.toolbarGuid, this.menuGuid, this.unfiledGuid];
-        yield removeFoldersContents(db, folderGuids);
+        yield removeFoldersContents(db, folderGuids, options);
         const time = PlacesUtils.toPRTime(new Date());
         for (let folderGuid of folderGuids) {
           yield db.executeCached(
@@ -648,13 +675,17 @@ var Bookmarks = Object.freeze({
    *        Ordered array of the children's GUIDs.  If this list contains
    *        non-existing entries they will be ignored.  If the list is
    *        incomplete, missing entries will be appended.
+   * @param {Object} [options={}]
+   *        Additional options. Currently supports the following properties:
+   *         - source: The change source, forwarded to all bookmark observers.
+   *           Defaults to nsINavBookmarksService::SOURCE_DEFAULT.
    *
    * @return {Promise} resolved when reordering is complete.
    * @rejects if an error happens while reordering.
    * @throws if the arguments are invalid.
    */
-  reorder(parentGuid, orderedChildrenGuids) {
-    let info = { guid: parentGuid };
+  reorder(parentGuid, orderedChildrenGuids, options={}) {
+    let info = { guid: parentGuid, source: this.SOURCES.DEFAULT };
     info = validateBookmarkObject(info, { guid: { required: true } });
 
     if (!Array.isArray(orderedChildrenGuids) || !orderedChildrenGuids.length)
@@ -672,6 +703,7 @@ var Bookmarks = Object.freeze({
 
       let sortedChildren = yield reorderChildren(parent, orderedChildrenGuids);
 
+      let { source = Ci.nsINavBookmarksService.SOURCE_DEFAULT } = options;
       let observers = PlacesUtils.bookmarks.getObservers();
       // Note that child.index is the old index.
       for (let i = 0; i < sortedChildren.length; ++i) {
@@ -680,7 +712,8 @@ var Bookmarks = Object.freeze({
                                            child.index, child._parentId,
                                            i, child.type,
                                            child.guid, child.parentGuid,
-                                           child.parentGuid ]);
+                                           child.parentGuid,
+                                           source ]);
       }
     }.bind(this));
   },
@@ -1070,7 +1103,7 @@ function fetchBookmarksByParent(info) {
 // Remove implementation.
 
 function removeBookmark(item, options) {
-  return PlacesUtils.withConnectionWrapper("Bookmarks.jsm: updateBookmark",
+  return PlacesUtils.withConnectionWrapper("Bookmarks.jsm: removeBookmark",
     Task.async(function*(db) {
 
     let isUntagging = item._grandParentId == PlacesUtils.tagsFolderId;
@@ -1081,7 +1114,7 @@ function removeBookmark(item, options) {
         if (options.preventRemovalOfNonEmptyFolders && item._childCount > 0) {
           throw new Error("Cannot remove a non-empty folder.");
         }
-        yield removeFoldersContents(db, [item.guid]);
+        yield removeFoldersContents(db, [item.guid], options);
       }
 
       // Remove annotations first.  If it's a tag, we can avoid paying that cost.
@@ -1384,7 +1417,7 @@ var setAncestorsLastModified = Task.async(function* (db, folderGuid, time) {
  *        array of folder guids.
  */
 var removeFoldersContents =
-Task.async(function* (db, folderGuids) {
+Task.async(function* (db, folderGuids, options) {
   let itemsRemoved = [];
   for (let folderGuid of folderGuids) {
     let rows = yield db.executeCached(
@@ -1435,12 +1468,14 @@ Task.async(function* (db, folderGuids) {
   // bookmark.
 
   // Notify listeners in reverse order to serve children before parents.
+  let { source = Ci.nsINavBookmarksService.SOURCE_DEFAULT } = options;
   let observers = PlacesUtils.bookmarks.getObservers();
   for (let item of itemsRemoved.reverse()) {
     let uri = item.hasOwnProperty("url") ? PlacesUtils.toURI(item.url) : null;
     notify(observers, "onItemRemoved", [ item._id, item._parentId,
                                          item.index, item.type, uri,
-                                         item.guid, item.parentGuid ]);
+                                         item.guid, item.parentGuid,
+                                         source ]);
 
     let isUntagging = item._grandParentId == PlacesUtils.tagsFolderId;
     if (isUntagging) {
@@ -1449,7 +1484,7 @@ Task.async(function* (db, folderGuids) {
                                              PlacesUtils.toPRTime(entry.lastModified),
                                              entry.type, entry._parentId,
                                              entry.guid, entry.parentGuid,
-                                             "" ]);
+                                             "", source ]);
       }
     }
   }
