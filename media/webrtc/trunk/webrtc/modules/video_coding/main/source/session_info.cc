@@ -178,16 +178,31 @@ size_t VCMSessionInfo::InsertBuffer(uint8_t* frame_buffer,
       packet.codecSpecificHeader.codecHeader.H264.stap_a) {
     size_t required_length = 0;
     const uint8_t* nalu_ptr = packet_buffer + kH264NALHeaderLengthInBytes;
-    while (nalu_ptr < packet_buffer + packet.sizeBytes) {
+    // Must check that incoming data length doesn't extend past end of buffer.
+    // We allow for 100 bytes of expansion due to startcodes being longer than
+    // length fields.
+    while (nalu_ptr + kLengthFieldLength <= packet_buffer + packet.sizeBytes) {
       size_t length = BufferToUWord16(nalu_ptr);
-      required_length +=
+      if (nalu_ptr + kLengthFieldLength + length <= packet_buffer + packet.sizeBytes) {
+        required_length +=
           length + (packet.insertStartCode ? kH264StartCodeLengthBytes : 0);
-      nalu_ptr += kLengthFieldLength + length;
+        nalu_ptr += kLengthFieldLength + length;
+      } else {
+        // Something is very wrong!
+        LOG(LS_ERROR) << "Failed to insert packet due to corrupt H264 STAP-A";
+        return 0;
+      }
     }
+    if (required_length > packet.sizeBytes + kBufferSafetyMargin) {
+      LOG(LS_ERROR) << "Failed to insert packet due to too many NALs in a STAP-A";
+      return 0;
+    }
+
     ShiftSubsequentPackets(packet_it, required_length);
     nalu_ptr = packet_buffer + kH264NALHeaderLengthInBytes;
     uint8_t* frame_buffer_ptr = frame_buffer + offset;
-    while (nalu_ptr < packet_buffer + packet.sizeBytes) {
+    // we already know we won't go past end-of-buffer
+    while (nalu_ptr + kLengthFieldLength <= packet_buffer + packet.sizeBytes) {
       size_t length = BufferToUWord16(nalu_ptr);
       nalu_ptr += kLengthFieldLength;
       frame_buffer_ptr += Insert(nalu_ptr,
