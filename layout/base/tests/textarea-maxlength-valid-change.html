@@ -1,0 +1,28 @@
+<!DOCTYPE HTML>
+<html>
+  <!-- Test: textarea with maxlength is valid if the user edits and it's not too long -->
+  <head>
+    <style>
+      :valid { background-color:green; }
+      :invalid { background-color:red; }
+      * { background-color:white; }
+    </style>
+    <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+    <script>
+      function runTest() {
+        var textarea = document.getElementById('textarea');
+        textarea.focus();
+        synthesizeKey('VK_BACK_SPACE', {}); // so that it becomes invalid first
+        textarea.blur();
+        textarea.focus();
+        synthesizeKey('VK_BACK_SPACE', {});
+        textarea.blur(); // to hide the caret
+        document.documentElement.className='';
+      }
+    </script>
+  </head>
+  <body onload="runTest()">
+    <textarea id="textarea" maxlength="3">foooo</textarea>
+  </body>
+</html>
+

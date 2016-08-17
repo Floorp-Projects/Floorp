@@ -7,6 +7,8 @@
 
   <script type="application/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
 
   <script type="application/javascript"
           src="../common.js"></script>
@@ -73,33 +75,44 @@
 
     ////////////////////////////////////////////////////////////////////////////
     // 'invalid' state
-
-    // XXX: maxlength doesn't make the element invalid until bug 613016 and
-    // bug 613019 are fixed. Commenting out related lines and adding a todo to
-    // make sure it will be uncommented as soon as possible.
-    var todoInput = document.createElement("input");
-    todoInput.maxLength = '2';
-    todoInput.value = 'foo';
-    todo(!todoInput.validity.valid,
-         "input should be invalid because of maxlength");
-
-    // invalid/valid state
-    //var invalid = ["maxlength","pattern","email","url"];
-    //document.getElementById("maxlength").value = "i am too long";
     var invalid = ["pattern","email","url"];
     for (i in invalid) {
       testStates(invalid[i], STATE_INVALID);
       testStates(invalid[i] + "2", 0, 0, STATE_INVALID);
     }
 
-    // invalid/valid state
-    //var invalid = ["maxlength","pattern","email","url"];
-    //document.getElementById("maxlength").value = "i am too long";
-    var invalid = ["pattern","email","url"];
-    for (i in invalid) {
-      testStates(invalid[i], STATE_INVALID);
-      testStates(invalid[i] + "2", 0, 0, STATE_INVALID);
+    ////////////////////////////////////////////////////////////////////////////
+    // not 'invalid' state
+    // (per spec, min/maxlength are always valid until interactively edited)
+    var validInput = document.createElement("input");
+    validInput.maxLength = '0';
+    validInput.value = 'a';
+    ok(validInput.validity.valid,
+       "input should be valid despite maxlength (no interactive edits)");
+
+    var validInput2 = document.createElement("input");
+    validInput2.minLength = '1';
+    validInput2.value = '';
+    ok(validInput2.validity.valid,
+       "input should be valid despite minlength (no interactive edits)");
+
+    var valid = ["minlength","maxlength"];
+    for (i in valid) {
+      testStates(valid[i], 0, 0, STATE_INVALID);
+      testStates(valid[i] + "2", 0, 0, STATE_INVALID);
     }
+
+    ////////////////////////////////////////////////////////////////////////////
+    // 'invalid' state
+    // (per spec, min/maxlength validity is affected by interactive edits)
+    var mininp = document.getElementById("minlength");
+    mininp.focus();
+    synthesizeKey("VK_BACK_SPACE", {});
+    ok(!mininp.validity.valid,
+       "input should be invalid after interactive edits");
+    testStates(mininp, STATE_INVALID);
+    // inputs currently cannot be made longer than maxlength interactively,
+    // so we're not testing that case.
 
     ////////////////////////////////////////////////////////////////////////////
     // autocomplete states
@@ -214,18 +227,10 @@
   <input id="file" type="file" required disabled>
 
   <!-- invalid/valid -->
-  <input id="maxlength" maxlength="1">
+  <input id="maxlength" maxlength="1" value="f">
   <input id="maxlength2" maxlength="100" value="foo">
-  <input id="pattern" pattern="bar" value="foo">
-  <input id="pattern2" pattern="bar" value="bar">
-  <input id="email" type="email" value="foo">
-  <input id="email2" type="email" value="foo@bar.com">
-  <input id="url" type="url" value="foo">
-  <input id="url2" type="url" value="http://mozilla.org/">
-
-  <!-- invalid/valid -->
-  <input id="maxlength" maxlength="1">
-  <input id="maxlength2" maxlength="100" value="foo">
+  <input id="minlength" minlength="2" value="fo">
+  <input id="minlength2" minlength="1" value="foo">
   <input id="pattern" pattern="bar" value="foo">
   <input id="pattern2" pattern="bar" value="bar">
   <input id="email" type="email" value="foo">

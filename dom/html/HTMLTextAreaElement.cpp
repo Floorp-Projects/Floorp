@@ -193,6 +193,7 @@ NS_IMPL_BOOL_ATTR(HTMLTextAreaElement, Autofocus, autofocus)
 NS_IMPL_UINT_ATTR_NON_ZERO_DEFAULT_VALUE(HTMLTextAreaElement, Cols, cols, DEFAULT_COLS)
 NS_IMPL_BOOL_ATTR(HTMLTextAreaElement, Disabled, disabled)
 NS_IMPL_NON_NEGATIVE_INT_ATTR(HTMLTextAreaElement, MaxLength, maxlength)
+NS_IMPL_NON_NEGATIVE_INT_ATTR(HTMLTextAreaElement, MinLength, minlength)
 NS_IMPL_STRING_ATTR(HTMLTextAreaElement, Name, name)
 NS_IMPL_BOOL_ATTR(HTMLTextAreaElement, ReadOnly, readonly)
 NS_IMPL_BOOL_ATTR(HTMLTextAreaElement, Required, required)
@@ -398,7 +399,8 @@ HTMLTextAreaElement::ParseAttribute(int32_t aNamespaceID,
                                     nsAttrValue& aResult)
 {
   if (aNamespaceID == kNameSpaceID_None) {
-    if (aAttribute == nsGkAtoms::maxlength) {
+    if (aAttribute == nsGkAtoms::maxlength ||
+        aAttribute == nsGkAtoms::minlength) {
       return aResult.ParseNonNegativeIntValue(aValue);
     } else if (aAttribute == nsGkAtoms::cols ||
                aAttribute == nsGkAtoms::rows) {
@@ -1317,6 +1319,8 @@ HTMLTextAreaElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
       }
     } else if (aName == nsGkAtoms::maxlength) {
       UpdateTooLongValidityState();
+    } else if (aName == nsGkAtoms::minlength) {
+      UpdateTooShortValidityState();
     }
 
     UpdateState(aNotify);
@@ -1391,6 +1395,29 @@ HTMLTextAreaElement::IsTooLong()
 }
 
 bool
+HTMLTextAreaElement::IsTooShort()
+{
+  if (!mValueChanged ||
+      !mLastValueChangeWasInteractive ||
+      !HasAttr(kNameSpaceID_None, nsGkAtoms::minlength)) {
+    return false;
+  }
+
+  int32_t minLength = -1;
+  GetMinLength(&minLength);
+
+  // Minlength of -1 means parsing error.
+  if (minLength == -1) {
+    return false;
+  }
+
+  int32_t textLength = -1;
+  GetTextLength(&textLength);
+
+  return textLength && textLength < minLength;
+}
+
+bool
 HTMLTextAreaElement::IsValueMissing() const
 {
   if (!HasAttr(kNameSpaceID_None, nsGkAtoms::required) || !IsMutable()) {
@@ -1404,6 +1431,12 @@ void
 HTMLTextAreaElement::UpdateTooLongValidityState()
 {
   SetValidityState(VALIDITY_STATE_TOO_LONG, IsTooLong());
+}
+
+void
+HTMLTextAreaElement::UpdateTooShortValidityState()
+{
+  SetValidityState(VALIDITY_STATE_TOO_SHORT, IsTooShort());
 }
 
 void
@@ -1445,6 +1478,27 @@ HTMLTextAreaElement::GetValidationMessage(nsAString& aValidationMessage,
         const char16_t* params[] = { strMaxLength.get(), strTextLength.get() };
         rv = nsContentUtils::FormatLocalizedString(nsContentUtils::eDOM_PROPERTIES,
                                                    "FormValidationTextTooLong",
+                                                   params, message);
+        aValidationMessage = message;
+      }
+      break;
+    case VALIDITY_STATE_TOO_SHORT:
+      {
+        nsXPIDLString message;
+        int32_t minLength = -1;
+        int32_t textLength = -1;
+        nsAutoString strMinLength;
+        nsAutoString strTextLength;
+
+        GetMinLength(&minLength);
+        GetTextLength(&textLength);
+
+        strMinLength.AppendInt(minLength);
+        strTextLength.AppendInt(textLength);
+
+        const char16_t* params[] = { strMinLength.get(), strTextLength.get() };
+        rv = nsContentUtils::FormatLocalizedString(nsContentUtils::eDOM_PROPERTIES,
+                                                   "FormValidationTextTooShort",
                                                    params, message);
         aValidationMessage = message;
       }
@@ -1557,6 +1611,7 @@ HTMLTextAreaElement::OnValueChanged(bool aNotify, bool aWasInteractiveUserChange
   // Update the validity state
   bool validBefore = IsValid();
   UpdateTooLongValidityState();
+  UpdateTooShortValidityState();
   UpdateValueMissingValidityState();
 
   if (validBefore != IsValid()) {

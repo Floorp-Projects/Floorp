@@ -7,9 +7,6 @@ fuzzy-if(skiaContent,1,3) == input-readonly.html input-ref.html
 fuzzy-if(skiaContent,1,3) == input-dyn-readonly.html input-ref.html
 fuzzy-if(skiaContent,1,3) == input-dyn-not-readonly-not-changed.html input-ref.html
 fuzzy-if(skiaContent,1,3) == input-dyn-not-readonly-changed.html input-ref.html
-fuzzy-if(skiaContent,1,3) == input-maxlength-valid.html input-ref.html
-== input-maxlength-invalid-changed.html input-withtext-ref.html
-== input-maxlength-invalid-default.html input-withtext-ref.html
 == input-required-valid.html input-withtext-ref.html
 fuzzy-if(skiaContent,1,3) == input-required-invalid-default.html input-ref.html
 fuzzy-if(skiaContent,1,3) == input-required-invalid-changed.html input-ref.html
