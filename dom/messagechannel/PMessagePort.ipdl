@@ -7,18 +7,14 @@ include protocol PBlob;
 
 include DOMTypes;
 
-using struct mozilla::SerializedStructuredCloneBuffer
-  from "ipc/IPCMessageUtils.h";
-
 namespace mozilla {
 namespace dom {
 
-
 struct MessagePortMessage
 {
-  SerializedStructuredCloneBuffer data;
-  PBlob[] blobs;
   MessagePortIdentifier[] transferredPorts;
+  uint8_t[] data;
+  PBlob[] blobs;
 };
 
 // This protocol is used for the MessageChannel/MessagePort API
