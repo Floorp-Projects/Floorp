@@ -86,6 +86,8 @@ void
 MediaStreamAudioSourceNode::AttachToTrack(const RefPtr<MediaStreamTrack>& aTrack)
 {
   MOZ_ASSERT(!mInputTrack);
+  MOZ_ASSERT(aTrack->AsAudioStreamTrack());
+
   if (!mStream) {
     return;
   }
@@ -131,6 +133,10 @@ void
 MediaStreamAudioSourceNode::NotifyTrackAdded(const RefPtr<MediaStreamTrack>& aTrack)
 {
   if (mInputTrack) {
+    return;
+  }
+
+  if (!aTrack->AsAudioStreamTrack()) {
     return;
   }
 
