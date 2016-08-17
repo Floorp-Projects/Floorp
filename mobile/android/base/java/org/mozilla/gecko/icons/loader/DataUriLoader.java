@@ -25,7 +25,7 @@ public class DataUriLoader implements IconLoader {
             return null;
         }
 
-        LoadFaviconResult loadFaviconResult = FaviconDecoder.decodeDataURI(iconUrl);
+        LoadFaviconResult loadFaviconResult = FaviconDecoder.decodeDataURI(request.getContext(), iconUrl);
         if (loadFaviconResult == null) {
             return null;
         }
