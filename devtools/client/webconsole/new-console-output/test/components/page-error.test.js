@@ -6,7 +6,6 @@ const { stubConsoleMessages } = require("devtools/client/webconsole/new-console-
 
 const { PageError } = require("devtools/client/webconsole/new-console-output/components/message-types/page-error");
 
-const jsdom = require("mocha-jsdom");
 const expect = require("expect");
 
 const {
@@ -14,7 +13,6 @@ const {
 } = require("devtools/client/webconsole/new-console-output/test/helpers");
 
 describe("PageError component:", () => {
-  jsdom();
   it("renders a page error", () => {
     const message = stubConsoleMessages.get("ReferenceError");
     const rendered = renderComponent(PageError, {message});

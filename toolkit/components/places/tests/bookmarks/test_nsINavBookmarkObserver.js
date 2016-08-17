@@ -76,6 +76,7 @@ add_test(function onItemAdded_bookmark() {
         { name: "dateAdded", check: v => typeof(v) == "number" && v > 0 },
         { name: "guid", check: v => typeof(v) == "string" && /^[a-zA-Z0-9\-_]{12}$/.test(v) },
         { name: "parentGuid", check: v => typeof(v) == "string" && /^[a-zA-Z0-9\-_]{12}$/.test(v) },
+        { name: "source", check: v => Object.values(PlacesUtils.bookmarks.SOURCES).includes(v) },
       ] },
   ];
   PlacesUtils.bookmarks.insertBookmark(PlacesUtils.unfiledBookmarksFolderId,
@@ -96,6 +97,7 @@ add_test(function onItemAdded_separator() {
         { name: "dateAdded", check: v => typeof(v) == "number" && v > 0 },
         { name: "guid", check: v => typeof(v) == "string" && /^[a-zA-Z0-9\-_]{12}$/.test(v) },
         { name: "parentGuid", check: v => typeof(v) == "string" && /^[a-zA-Z0-9\-_]{12}$/.test(v) },
+        { name: "source", check: v => Object.values(PlacesUtils.bookmarks.SOURCES).includes(v) },
       ] },
   ];
   PlacesUtils.bookmarks.insertSeparator(PlacesUtils.unfiledBookmarksFolderId,
@@ -116,6 +118,7 @@ add_test(function onItemAdded_folder() {
         { name: "dateAdded", check: v => typeof(v) == "number" && v > 0 },
         { name: "guid", check: v => typeof(v) == "string" && /^[a-zA-Z0-9\-_]{12}$/.test(v) },
         { name: "parentGuid", check: v => typeof(v) == "string" && /^[a-zA-Z0-9\-_]{12}$/.test(v) },
+        { name: "source", check: v => Object.values(PlacesUtils.bookmarks.SOURCES).includes(v) },
       ] },
   ];
   PlacesUtils.bookmarks.createFolder(PlacesUtils.unfiledBookmarksFolderId,
@@ -140,6 +143,7 @@ add_test(function onItemChanged_title_bookmark() {
         { name: "guid", check: v => typeof(v) == "string" && /^[a-zA-Z0-9\-_]{12}$/.test(v) },
         { name: "parentGuid", check: v => typeof(v) == "string" && /^[a-zA-Z0-9\-_]{12}$/.test(v) },
         { name: "oldValue", check: v => typeof(v) == "string" },
+        { name: "source", check: v => Object.values(PlacesUtils.bookmarks.SOURCES).includes(v) },
       ] },
   ];
   PlacesUtils.bookmarks.setItemTitle(id, TITLE);
@@ -162,6 +166,7 @@ add_test(function onItemChanged_tags_bookmark() {
         { name: "dateAdded", check: v => typeof(v) == "number" && v > 0 },
         { name: "guid", check: v => typeof(v) == "string" && /^[a-zA-Z0-9\-_]{12}$/.test(v) },
         { name: "parentGuid", check: v => typeof(v) == "string" && /^[a-zA-Z0-9\-_]{12}$/.test(v) },
+        { name: "source", check: v => Object.values(PlacesUtils.bookmarks.SOURCES).includes(v) },
       ] },
     { name: "onItemAdded", // This is the tag.
       args: [
@@ -174,6 +179,7 @@ add_test(function onItemChanged_tags_bookmark() {
         { name: "dateAdded", check: v => typeof(v) == "number" && v > 0 },
         { name: "guid", check: v => typeof(v) == "string" && /^[a-zA-Z0-9\-_]{12}$/.test(v) },
         { name: "parentGuid", check: v => typeof(v) == "string" && /^[a-zA-Z0-9\-_]{12}$/.test(v) },
+        { name: "source", check: v => Object.values(PlacesUtils.bookmarks.SOURCES).includes(v) },
       ] },
     { name: "onItemChanged",
       args: [
@@ -187,6 +193,7 @@ add_test(function onItemChanged_tags_bookmark() {
         { name: "guid", check: v => typeof(v) == "string" && /^[a-zA-Z0-9\-_]{12}$/.test(v) },
         { name: "parentGuid", check: v => typeof(v) == "string" && /^[a-zA-Z0-9\-_]{12}$/.test(v) },
         { name: "oldValue", check: v => typeof(v) == "string" },
+        { name: "source", check: v => Object.values(PlacesUtils.bookmarks.SOURCES).includes(v) },
       ] },
     { name: "onItemRemoved", // This is the tag.
       args: [
@@ -197,6 +204,7 @@ add_test(function onItemChanged_tags_bookmark() {
         { name: "uri", check: v => v instanceof Ci.nsIURI && v.equals(uri) },
         { name: "guid", check: v => typeof(v) == "string" && /^[a-zA-Z0-9\-_]{12}$/.test(v) },
         { name: "parentGuid", check: v => typeof(v) == "string" && /^[a-zA-Z0-9\-_]{12}$/.test(v) },
+        { name: "source", check: v => Object.values(PlacesUtils.bookmarks.SOURCES).includes(v) },
       ] },
     { name: "onItemRemoved", // This is the tag folder.
       args: [
@@ -207,6 +215,7 @@ add_test(function onItemChanged_tags_bookmark() {
         { name: "uri", check: v => v === null },
         { name: "guid", check: v => typeof(v) == "string" && /^[a-zA-Z0-9\-_]{12}$/.test(v) },
         { name: "parentGuid", check: v => typeof(v) == "string" && /^[a-zA-Z0-9\-_]{12}$/.test(v) },
+        { name: "source", check: v => Object.values(PlacesUtils.bookmarks.SOURCES).includes(v) },
       ] },
     { name: "onItemChanged",
       args: [
@@ -220,6 +229,7 @@ add_test(function onItemChanged_tags_bookmark() {
         { name: "guid", check: v => typeof(v) == "string" && /^[a-zA-Z0-9\-_]{12}$/.test(v) },
         { name: "parentGuid", check: v => typeof(v) == "string" && /^[a-zA-Z0-9\-_]{12}$/.test(v) },
         { name: "oldValue", check: v => typeof(v) == "string" },
+        { name: "source", check: v => Object.values(PlacesUtils.bookmarks.SOURCES).includes(v) },
       ] },
   ];
   PlacesUtils.tagging.tagURI(uri, [TAG]);
@@ -241,6 +251,7 @@ add_test(function onItemMoved_bookmark() {
         { name: "guid", check: v => typeof(v) == "string" && /^[a-zA-Z0-9\-_]{12}$/.test(v) },
         { name: "oldParentGuid", check: v => typeof(v) == "string" && /^[a-zA-Z0-9\-_]{12}$/.test(v) },
         { name: "newParentGuid", check: v => typeof(v) == "string" && /^[a-zA-Z0-9\-_]{12}$/.test(v) },
+        { name: "source", check: v => Object.values(PlacesUtils.bookmarks.SOURCES).includes(v) },
       ] },
     { name: "onItemMoved",
       args: [
@@ -253,6 +264,7 @@ add_test(function onItemMoved_bookmark() {
         { name: "guid", check: v => typeof(v) == "string" && /^[a-zA-Z0-9\-_]{12}$/.test(v) },
         { name: "oldParentGuid", check: v => typeof(v) == "string" && /^[a-zA-Z0-9\-_]{12}$/.test(v) },
         { name: "newParentGuid", check: v => typeof(v) == "string" && /^[a-zA-Z0-9\-_]{12}$/.test(v) },
+        { name: "source", check: v => Object.values(PlacesUtils.bookmarks.SOURCES).includes(v) },
       ] },
   ];
   PlacesUtils.bookmarks.moveItem(id, PlacesUtils.toolbarFolderId, 0);
@@ -294,6 +306,7 @@ add_test(function onItemRemoved_bookmark() {
         { name: "guid", check: v => typeof(v) == "string" && /^[a-zA-Z0-9\-_]{12}$/.test(v) },
         { name: "parentGuid", check: v => typeof(v) == "string" && /^[a-zA-Z0-9\-_]{12}$/.test(v) },
         { name: "oldValue", check: v => typeof(v) == "string" },
+        { name: "source", check: v => Object.values(PlacesUtils.bookmarks.SOURCES).includes(v) },
       ] },
     { name: "onItemRemoved",
       args: [
@@ -304,6 +317,7 @@ add_test(function onItemRemoved_bookmark() {
         { name: "uri", check: v => v instanceof Ci.nsIURI && v.equals(uri) },
         { name: "guid", check: v => typeof(v) == "string" && /^[a-zA-Z0-9\-_]{12}$/.test(v) },
         { name: "parentGuid", check: v => typeof(v) == "string" && /^[a-zA-Z0-9\-_]{12}$/.test(v) },
+        { name: "source", check: v => Object.values(PlacesUtils.bookmarks.SOURCES).includes(v) },
       ] },
   ];
   PlacesUtils.bookmarks.removeItem(id);
@@ -324,6 +338,7 @@ add_test(function onItemRemoved_separator() {
         { name: "guid", check: v => typeof(v) == "string" && /^[a-zA-Z0-9\-_]{12}$/.test(v) },
         { name: "parentGuid", check: v => typeof(v) == "string" && /^[a-zA-Z0-9\-_]{12}$/.test(v) },
         { name: "oldValue", check: v => typeof(v) == "string" },
+        { name: "source", check: v => Object.values(PlacesUtils.bookmarks.SOURCES).includes(v) },
       ] },
     { name: "onItemRemoved",
       args: [
@@ -334,6 +349,7 @@ add_test(function onItemRemoved_separator() {
         { name: "uri", check: v => v === null },
         { name: "guid", check: v => typeof(v) == "string" && /^[a-zA-Z0-9\-_]{12}$/.test(v) },
         { name: "parentGuid", check: v => typeof(v) == "string" && /^[a-zA-Z0-9\-_]{12}$/.test(v) },
+        { name: "source", check: v => Object.values(PlacesUtils.bookmarks.SOURCES).includes(v) },
       ] },
   ];
   PlacesUtils.bookmarks.removeItem(id);
@@ -355,6 +371,7 @@ add_test(function onItemRemoved_folder() {
         { name: "guid", check: v => typeof(v) == "string" && /^[a-zA-Z0-9\-_]{12}$/.test(v) },
         { name: "parentGuid", check: v => typeof(v) == "string" && /^[a-zA-Z0-9\-_]{12}$/.test(v) },
         { name: "oldValue", check: v => typeof(v) == "string" },
+        { name: "source", check: v => Object.values(PlacesUtils.bookmarks.SOURCES).includes(v) },
       ] },
     { name: "onItemRemoved",
       args: [
@@ -365,6 +382,7 @@ add_test(function onItemRemoved_folder() {
         { name: "uri", check: v => v === null },
         { name: "guid", check: v => typeof(v) == "string" && /^[a-zA-Z0-9\-_]{12}$/.test(v) },
         { name: "parentGuid", check: v => typeof(v) == "string" && /^[a-zA-Z0-9\-_]{12}$/.test(v) },
+        { name: "source", check: v => Object.values(PlacesUtils.bookmarks.SOURCES).includes(v) },
       ] },
   ];
   PlacesUtils.bookmarks.removeItem(id);

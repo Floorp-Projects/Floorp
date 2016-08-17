@@ -222,7 +222,7 @@ nsCSSClipPathInstance::CreateClipPathPolygon(DrawTarget* aDrawTarget,
   MOZ_ASSERT(coords.Length() % 2 == 0 &&
              coords.Length() >= 2, "wrong number of arguments");
 
-  FillRule fillRule = basicShape->GetFillRule() == NS_STYLE_FILL_RULE_NONZERO ?
+  FillRule fillRule = basicShape->GetFillRule() == StyleFillRule::NonZero ?
                         FillRule::FILL_WINDING : FillRule::FILL_EVEN_ODD;
   RefPtr<PathBuilder> builder = aDrawTarget->CreatePathBuilder(fillRule);
 

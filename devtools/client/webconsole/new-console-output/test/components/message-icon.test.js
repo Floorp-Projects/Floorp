@@ -7,7 +7,6 @@ const {
 } = require("devtools/client/webconsole/new-console-output/constants");
 const { MessageIcon } = require("devtools/client/webconsole/new-console-output/components/message-icon");
 
-const jsdom = require("mocha-jsdom");
 const expect = require("expect");
 
 const {
@@ -15,8 +14,6 @@ const {
 } = require("devtools/client/webconsole/new-console-output/test/helpers");
 
 describe("MessageIcon component:", () => {
-  jsdom();
-
   it("renders icon based on severity", () => {
     const rendered = renderComponent(MessageIcon, { severity: SEVERITY_ERROR });
 

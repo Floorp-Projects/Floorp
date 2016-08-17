@@ -442,7 +442,7 @@ public final class GeckoProfile {
      * this code to fail. There are tests in TestGeckoProfile to verify the file format but be
      * warned: THIS IS NOT FOOLPROOF.
      *
-     * [1]: https://mxr.mozilla.org/mozilla-central/source/toolkit/modules/ClientID.jsm
+     * [1]: https://dxr.mozilla.org/mozilla-central/source/toolkit/modules/ClientID.jsm
      *
      * @throws IOException if the client ID could not be retrieved.
      */

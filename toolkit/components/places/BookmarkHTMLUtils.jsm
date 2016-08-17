@@ -314,6 +314,10 @@ function Frame(aFrameId) {
 
 function BookmarkImporter(aInitialImport) {
   this._isImportDefaults = aInitialImport;
+  // The bookmark change source, used to determine the sync status and change
+  // counter.
+  this._source = aInitialImport ? PlacesUtils.bookmarks.SOURCE_IMPORT_REPLACE :
+                                  PlacesUtils.bookmarks.SOURCE_IMPORT;
   this._frames = new Array();
   this._frames.push(new Frame(PlacesUtils.bookmarksMenuFolderId));
 }
@@ -349,7 +353,8 @@ BookmarkImporter.prototype = {
         containerId =
           PlacesUtils.bookmarks.createFolder(frame.containerId,
                                              containerTitle,
-                                             PlacesUtils.bookmarks.DEFAULT_INDEX);
+                                             PlacesUtils.bookmarks.DEFAULT_INDEX,
+                                             /* aGuid */ null, this._source);
         break;
       case Container_Places:
         containerId = PlacesUtils.placesRootId;
@@ -370,14 +375,14 @@ BookmarkImporter.prototype = {
 
     if (frame.previousDateAdded > 0) {
       try {
-        PlacesUtils.bookmarks.setItemDateAdded(containerId, frame.previousDateAdded);
+        PlacesUtils.bookmarks.setItemDateAdded(containerId, frame.previousDateAdded, this._source);
       } catch (e) {
       }
       frame.previousDateAdded = 0;
     }
     if (frame.previousLastModifiedDate > 0) {
       try {
-        PlacesUtils.bookmarks.setItemLastModified(containerId, frame.previousLastModifiedDate);
+        PlacesUtils.bookmarks.setItemLastModified(containerId, frame.previousLastModifiedDate, this._source);
       } catch (e) {
       }
       // don't clear last-modified, in case there's a description
@@ -401,7 +406,9 @@ BookmarkImporter.prototype = {
     try {
       frame.previousId =
         PlacesUtils.bookmarks.insertSeparator(frame.containerId,
-                                              PlacesUtils.bookmarks.DEFAULT_INDEX);
+                                              PlacesUtils.bookmarks.DEFAULT_INDEX,
+                                              /* aGuid */ null,
+                                              this._source);
     } catch (e) {}
   },
 
@@ -564,7 +571,9 @@ BookmarkImporter.prototype = {
         PlacesUtils.bookmarks.insertBookmark(frame.containerId,
                                              frame.previousLink,
                                              PlacesUtils.bookmarks.DEFAULT_INDEX,
-                                             "");
+                                             /* aTitle */ "",
+                                             /* aGuid */ null,
+                                             this._source);
     } catch (e) {
       return;
     }
@@ -573,7 +582,7 @@ BookmarkImporter.prototype = {
     if (dateAdded) {
       try {
         PlacesUtils.bookmarks.setItemDateAdded(frame.previousId,
-          this._convertImportedDateToInternalDate(dateAdded));
+          this._convertImportedDateToInternalDate(dateAdded), this._source);
       } catch (e) {
       }
     }
@@ -582,7 +591,7 @@ BookmarkImporter.prototype = {
     if (tags) {
       try {
         let tagsArray = tags.split(",");
-        PlacesUtils.tagging.tagURI(frame.previousLink, tagsArray);
+        PlacesUtils.tagging.tagURI(frame.previousLink, tagsArray, this._source);
       } catch (e) {
       }
     }
@@ -606,7 +615,8 @@ BookmarkImporter.prototype = {
     if (keyword) {
       let kwPromise = PlacesUtils.keywords.insert({ keyword,
                                                     url: frame.previousLink.spec,
-                                                    postData });
+                                                    postData,
+                                                    source: this._source });
       this._importPromises.push(kwPromise);
     }
 
@@ -617,14 +627,15 @@ BookmarkImporter.prototype = {
                                                   LOAD_IN_SIDEBAR_ANNO,
                                                   1,
                                                   0,
-                                                  PlacesUtils.annotations.EXPIRE_NEVER);
+                                                  PlacesUtils.annotations.EXPIRE_NEVER,
+                                                  this._source);
       } catch (e) {
       }
     }
 
     // Import last charset.
     if (lastCharset) {
-      let chPromise = PlacesUtils.setCharsetForURI(frame.previousLink, lastCharset);
+      let chPromise = PlacesUtils.setCharsetForURI(frame.previousLink, lastCharset, this._source);
       this._importPromises.push(chPromise);
     }
   },
@@ -648,7 +659,8 @@ BookmarkImporter.prototype = {
       let prevFrame = this._previousFrame;
       if (prevFrame.previousLastModifiedDate > 0) {
         PlacesUtils.bookmarks.setItemLastModified(frame.containerId,
-                                                  prevFrame.previousLastModifiedDate);
+                                                  prevFrame.previousLastModifiedDate,
+                                                  this._source);
       }
       this._frames.pop();
     }
@@ -680,12 +692,14 @@ BookmarkImporter.prototype = {
           "index": PlacesUtils.bookmarks.DEFAULT_INDEX,
           "feedURI": frame.previousFeed,
           "siteURI": frame.previousLink,
+          "source": this._source,
         });
         this._importPromises.push(lmPromise);
       } else if (frame.previousLink) {
         // This is a common bookmark.
         PlacesUtils.bookmarks.setItemTitle(frame.previousId,
-                                           frame.previousText);
+                                           frame.previousText,
+                                           this._source);
       }
     } catch (e) {
     }
@@ -695,7 +709,8 @@ BookmarkImporter.prototype = {
     if (frame.previousId > 0 && frame.previousLastModifiedDate > 0) {
       try {
         PlacesUtils.bookmarks.setItemLastModified(frame.previousId,
-                                                  frame.previousLastModifiedDate);
+                                                  frame.previousLastModifiedDate,
+                                                  this._source);
       } catch (e) {
       }
       // Note: don't clear previousLastModifiedDate, because if this item has a
@@ -758,7 +773,8 @@ BookmarkImporter.prototype = {
                                                       DESCRIPTION_ANNO,
                                                       frame.previousText,
                                                       0,
-                                                      PlacesUtils.annotations.EXPIRE_NEVER);
+                                                      PlacesUtils.annotations.EXPIRE_NEVER,
+                                                      this._source);
           }
         } catch (e) {
         }
@@ -783,7 +799,8 @@ BookmarkImporter.prototype = {
         }
 
         if (itemId > 0 && lastModified > 0) {
-          PlacesUtils.bookmarks.setItemLastModified(itemId, lastModified);
+          PlacesUtils.bookmarks.setItemLastModified(itemId, lastModified,
+                                                    this._source);
         }
       }
       frame.inDescription = false;
@@ -894,9 +911,9 @@ BookmarkImporter.prototype = {
     }
 
     if (this._isImportDefaults) {
-      PlacesUtils.bookmarks.removeFolderChildren(PlacesUtils.bookmarksMenuFolderId);
-      PlacesUtils.bookmarks.removeFolderChildren(PlacesUtils.toolbarFolderId);
-      PlacesUtils.bookmarks.removeFolderChildren(PlacesUtils.unfiledBookmarksFolderId);
+      PlacesUtils.bookmarks.removeFolderChildren(PlacesUtils.bookmarksMenuFolderId, this._source);
+      PlacesUtils.bookmarks.removeFolderChildren(PlacesUtils.toolbarFolderId, this._source);
+      PlacesUtils.bookmarks.removeFolderChildren(PlacesUtils.unfiledBookmarksFolderId, this._source);
     }
 
     let current = aDoc;

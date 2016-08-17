@@ -2,17 +2,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import firefox_puppeteer.errors as errors
-
 from marionette_driver import By, Wait
-from marionette_driver.errors import (
-    NoSuchElementException,
-    NoSuchWindowException)
-from marionette_driver.keys import Keys
-
-from firefox_puppeteer.api.l10n import L10n
-from firefox_puppeteer.api.prefs import Preferences
-from firefox_puppeteer.decorators import use_class_as_property
+from marionette_driver.errors import NoSuchElementException
 from firefox_puppeteer.ui.about_window.window import AboutWindow
 from firefox_puppeteer.ui.browser.notifications import (
     AddOnInstallBlockedNotification,
@@ -25,7 +16,6 @@ from firefox_puppeteer.ui.browser.tabbar import TabBar
 from firefox_puppeteer.ui.browser.toolbars import NavBar
 from firefox_puppeteer.ui.pageinfo.window import PageInfoWindow
 from firefox_puppeteer.ui.windows import BaseWindow, Windows
-import firefox_puppeteer.errors as errors
 
 
 class BrowserWindow(BaseWindow):

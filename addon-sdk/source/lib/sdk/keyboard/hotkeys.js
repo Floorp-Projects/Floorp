@@ -84,7 +84,7 @@ keyboardObserver.on("keydown", function onKeypress(event, window) {
 
   // If it's not a printable character then we fall back to a human readable
   // equivalent of one of the following constants.
-  // http://mxr.mozilla.org/mozilla-central/source/dom/interfaces/events/nsIDOMKeyEvent.idl
+  // http://dxr.mozilla.org/mozilla-central/source/dom/interfaces/events/nsIDOMKeyEvent.idl
   key = getKeyForCode(keyCode);
 
   // If only non-function (f1 - f24) key or only modifiers are pressed we don't

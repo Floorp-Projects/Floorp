@@ -125,7 +125,6 @@ class TestRestoreWindowsAfterRestart(FirefoxTestCase):
             win.switch_to()
             self.open_tabs(win, urls)
 
-
     def open_tabs(self, win, urls):
         """ Opens a set of URLs inside a window in new tabs.
 

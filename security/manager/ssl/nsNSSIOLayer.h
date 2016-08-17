@@ -113,14 +113,6 @@ public:
 
   void SetMACAlgorithmUsed(int16_t mac) { mMACAlgorithmUsed = mac; }
 
-  inline bool GetBypassAuthentication()
-  {
-    bool result = false;
-    mozilla::DebugOnly<nsresult> rv = GetBypassAuthentication(&result);
-    MOZ_ASSERT(NS_SUCCEEDED(rv));
-    return result;
-  }
-
 protected:
   virtual ~nsNSSSocketInfo();
 

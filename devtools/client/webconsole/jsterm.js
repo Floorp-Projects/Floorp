@@ -447,8 +447,6 @@ JSTerm.prototype = {
       const { ConsoleCommand } = require("devtools/client/webconsole/new-console-output/types");
       let message = new ConsoleCommand({
         messageText: executeString,
-        source: "javascript",
-        type: "command",
         // @TODO remove category and severity
         category: "input",
         severity: "log",

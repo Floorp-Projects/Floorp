@@ -71,7 +71,26 @@
 #  define VARIABLE_ARRAY(type, name, count) type name[(count)]
 #endif
 
-MOZ_MEMORY_API size_t
+#if defined(MOZ_MEMORY_DARWIN) && !defined(MOZ_REPLACE_MALLOC)
+#  define MAYBE_MEMORY_API static inline
+#else
+#  define MAYBE_MEMORY_API MOZ_MEMORY_API
+#endif
+
+MAYBE_MEMORY_API void
+malloc_protect_impl(void *ptr, uint32_t *id)
+{
+  if (ptr)
+    *id = 1;
+}
+
+MAYBE_MEMORY_API void
+malloc_unprotect_impl(void *ptr, uint32_t *id)
+{
+  *id = 0;
+}
+
+MAYBE_MEMORY_API size_t
 malloc_good_size_impl(size_t size)
 {
   /* je_nallocx crashes when given a size of 0. As

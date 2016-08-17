@@ -298,8 +298,9 @@ var input = document.getElementById('i');
 // and |invalidTypes| are the ones which do not accept it.
 var validTypes = Array('text', 'password', 'search', 'tel', 'email', 'url');
 var barredTypes = Array('hidden', 'reset', 'button');
-var invalidTypes = Array('checkbox', 'radio', 'file', 'number', 'range', 'date', 'time', 'color', 'submit', 'image', 'month');
-// TODO: 'datetime', 'week', and 'datetime-local'
+var invalidTypes = Array('checkbox', 'radio', 'file', 'number', 'range', 'date',
+                         'time', 'color', 'submit', 'image', 'month', 'week');
+// TODO: 'datetime' and 'datetime-local'
 //       do not accept the @pattern too but are not implemented yet.
 
 for (type of validTypes) {

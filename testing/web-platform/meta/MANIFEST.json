@@ -11386,6 +11386,10 @@
         "url": "/IndexedDB/cursor-overloads.htm"
       },
       {
+        "path": "IndexedDB/idb_binary_key_conversion.htm",
+        "url": "/IndexedDB/idb_binary_key_conversion.htm"
+      },
+      {
         "path": "IndexedDB/idb_webworkers.htm",
         "url": "/IndexedDB/idb_webworkers.htm"
       },
@@ -11784,6 +11788,14 @@
       {
         "path": "IndexedDB/idbfactory_cmp2.htm",
         "url": "/IndexedDB/idbfactory_cmp2.htm"
+      },
+      {
+        "path": "IndexedDB/idbfactory_cmp3.htm",
+        "url": "/IndexedDB/idbfactory_cmp3.htm"
+      },
+      {
+        "path": "IndexedDB/idbfactory_cmp4.htm",
+        "url": "/IndexedDB/idbfactory_cmp4.htm"
       },
       {
         "path": "IndexedDB/idbfactory_deleteDatabase.htm",
@@ -30312,6 +30324,10 @@
       {
         "path": "web-animations/animation-model/animation-types/discrete-animation.html",
         "url": "/web-animations/animation-model/animation-types/discrete-animation.html"
+      },
+      {
+        "path": "web-animations/animation-model/animation-types/type-per-property.html",
+        "url": "/web-animations/animation-model/animation-types/type-per-property.html"
       },
       {
         "path": "web-animations/animation-model/keyframe-effects/effect-value-context.html",

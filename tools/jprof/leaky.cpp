@@ -639,7 +639,7 @@ void leaky::generateReportHTML(FILE *fp, int *countArray, int count, int thread)
   // this loop.  Later we can get callers and callees into it like gprof
   // does
   fprintf(fp,
-          "<h2><A NAME=hier_%d></A><center><a href=\"http://mxr.mozilla.org/mozilla-central/source/tools/jprof/README.html#hier\">Hierarchical Profile</a></center></h2><hr>\n",
+          "<h2><A NAME=hier_%d></A><center><a href=\"http://dxr.mozilla.org/mozilla-central/source/tools/jprof/README.html#hier\">Hierarchical Profile</a></center></h2><hr>\n",
           thread);
   fprintf(fp, "<pre>\n");
   fprintf(fp, "%6s %6s         %4s      %s\n",
@@ -702,7 +702,7 @@ void leaky::generateReportHTML(FILE *fp, int *countArray, int count, int thread)
     fprintf(stderr,"Hit count mismatch: count=%d; totalTimerHits=%d",
             count,totalTimerHits);
 
-  fprintf(fp,"<h2><A NAME=flat_%d></A><center><a href=\"http://mxr.mozilla.org/mozilla-central/source/tools/jprof/README.html#flat\">Flat Profile</a></center></h2><br>\n",
+  fprintf(fp,"<h2><A NAME=flat_%d></A><center><a href=\"http://dxr.mozilla.org/mozilla-central/source/tools/jprof/README.html#flat\">Flat Profile</a></center></h2><br>\n",
           thread);
   fprintf(fp, "<pre>\n");
 

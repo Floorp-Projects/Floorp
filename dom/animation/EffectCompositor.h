@@ -12,13 +12,13 @@
 #include "mozilla/OwningNonNull.h"
 #include "mozilla/PseudoElementHashEntry.h"
 #include "mozilla/RefPtr.h"
-#include "nsCSSProperty.h"
+#include "nsCSSPropertyID.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsDataHashtable.h"
 #include "nsIStyleRuleProcessor.h"
 #include "nsTArray.h"
 
-class nsCSSPropertySet;
+class nsCSSPropertyIDSet;
 class nsIFrame;
 class nsIStyleRule;
 class nsPresContext;
@@ -162,14 +162,14 @@ public:
   }
 
   static bool HasAnimationsForCompositor(const nsIFrame* aFrame,
-                                         nsCSSProperty aProperty);
+                                         nsCSSPropertyID aProperty);
 
   static nsTArray<RefPtr<dom::Animation>>
   GetAnimationsForCompositor(const nsIFrame* aFrame,
-                             nsCSSProperty aProperty);
+                             nsCSSPropertyID aProperty);
 
   static void ClearIsRunningOnCompositor(const nsIFrame* aFrame,
-                                         nsCSSProperty aProperty);
+                                         nsCSSPropertyID aProperty);
 
   // Update animation cascade results for the specified (pseudo-)element
   // but only if we have marked the cascade as needing an update due a
@@ -212,7 +212,7 @@ public:
   // |aProperty|.
   static void SetPerformanceWarning(
     const nsIFrame* aFrame,
-    nsCSSProperty aProperty,
+    nsCSSPropertyID aProperty,
     const AnimationPerformanceWarning& aWarning);
 
 private:
@@ -235,7 +235,7 @@ private:
   static void
   GetOverriddenProperties(nsStyleContext* aStyleContext,
                           EffectSet& aEffectSet,
-                          nsCSSPropertySet& aPropertiesOverridden);
+                          nsCSSPropertyIDSet& aPropertiesOverridden);
 
   static void
   UpdateCascadeResults(EffectSet& aEffectSet,

@@ -236,3 +236,54 @@ add_task(function* testTabEventsSize() {
   yield extension.unload();
   SpecialPowers.clearUserPref(RESOLUTION_PREF);
 });
+
+add_task(function* testTabRemovalEvent() {
+  function background() {
+    let removalTabId;
+
+    function awaitLoad(tabId) {
+      return new Promise(resolve => {
+        browser.tabs.onUpdated.addListener(function listener(tabId_, changed, tab) {
+          if (tabId == tabId_ && changed.status == "complete") {
+            browser.tabs.onUpdated.removeListener(listener);
+            resolve();
+          }
+        });
+      });
+    }
+
+    chrome.tabs.onRemoved.addListener((tabId, info) => {
+      browser.test.log("Make sure the removed tab is not available in the tabs.query callback.");
+      chrome.tabs.query({}, tabs => {
+        for (let tab of tabs) {
+          browser.test.assertTrue(tab.id != tabId, "Tab query should not include removed tabId");
+        }
+        browser.test.notifyPass("tabs-events");
+      });
+    });
+
+    let url = "http://example.com/browser/browser/components/extensions/test/browser/context.html";
+    browser.tabs.create({url: url})
+    .then(tab => {
+      removalTabId = tab.id;
+      return awaitLoad(tab.id);
+    }).then(() => {
+      return browser.tabs.remove(removalTabId);
+    }).catch(e => {
+      browser.test.fail(`${e} :: ${e.stack}`);
+      browser.test.notifyFail("tabs-events");
+    });
+  }
+
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      "permissions": ["tabs"],
+    },
+
+    background,
+  });
+
+  yield extension.startup();
+  yield extension.awaitFinish("tabs-events");
+  yield extension.unload();
+});

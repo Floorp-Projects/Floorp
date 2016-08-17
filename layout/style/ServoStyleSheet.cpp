@@ -86,11 +86,11 @@ ServoStyleSheet::ParseSheet(const nsAString& aInput,
   aBaseURI->GetSpec(baseString);
 
   NS_ConvertUTF16toUTF8 input(aInput);
-  mSheet = already_AddRefed<RawServoStyleSheet>(Servo_StylesheetFromUTF8Bytes(
+  mSheet = Servo_StylesheetFromUTF8Bytes(
       reinterpret_cast<const uint8_t*>(input.get()), input.Length(),
       mParsingMode,
       reinterpret_cast<const uint8_t*>(baseString.get()), baseString.Length(),
-      base, referrer, principal));
+      base, referrer, principal).Consume();
 }
 
 void

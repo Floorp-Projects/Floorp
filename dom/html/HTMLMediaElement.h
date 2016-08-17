@@ -439,10 +439,6 @@ public:
     return mNetworkState;
   }
 
-  // Called by the media decoder object, on the main thread,
-  // when the connection between Rtsp server and client gets lost.
-  virtual void ResetConnectionState() final override;
-
   void NotifyXPCOMShutdown() final override;
 
   // Called by media decoder when the audible state changed or when input is
@@ -718,13 +714,6 @@ public:
 
   // A method to check whether we are currently playing.
   bool IsCurrentlyPlaying() const;
-
-  /**
-   * A public wrapper for FinishDecoderSetup()
-   */
-  nsresult FinishDecoderSetup(MediaDecoder* aDecoder, MediaResource* aStream) {
-    return FinishDecoderSetup(aDecoder, aStream, nullptr);
-  }
 
   // Returns true if the media element is being destroyed. Used in
   // dormancy checks to prevent dormant processing for an element

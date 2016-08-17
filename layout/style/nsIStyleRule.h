@@ -13,8 +13,10 @@
 
 #include <stdio.h>
 
+#include "nsCSSPropertyID.h"
 #include "nsISupports.h"
 
+class nsCSSValue;
 struct nsRuleData;
 
 // IID for the nsIStyleRule interface {f75f3f70-435d-43a6-a01b-65970489ca26}
@@ -76,6 +78,13 @@ public:
    * properties.
    */
   virtual bool MightMapInheritedStyleData() = 0;
+
+  /**
+   * Gets and sets given aProperty's value to aValue.
+   * Returns true, if aValue is filled in this rule.
+   */
+  virtual bool GetDiscretelyAnimatedCSSValue(nsCSSPropertyID aProperty,
+                                             nsCSSValue* aValue) = 0;
 
 #ifdef DEBUG
   virtual void List(FILE* out = stdout, int32_t aIndent = 0) const = 0;

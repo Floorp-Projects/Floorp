@@ -25,10 +25,10 @@ using mozilla::StyleAnimationValue;
 /*static*/ nsSMILCSSValueType nsSMILCSSValueType::sSingleton;
 
 struct ValueWrapper {
-  ValueWrapper(nsCSSProperty aPropID, const StyleAnimationValue& aValue) :
+  ValueWrapper(nsCSSPropertyID aPropID, const StyleAnimationValue& aValue) :
     mPropID(aPropID), mCSSValue(aValue) {}
 
-  nsCSSProperty mPropID;
+  nsCSSPropertyID mPropID;
   StyleAnimationValue mCSSValue;
 };
 
@@ -223,7 +223,7 @@ nsSMILCSSValueType::Add(nsSMILValue& aDest, const nsSMILValue& aValueToAdd,
   MOZ_ASSERT(destWrapper || valueToAddWrapper,
              "need at least one fully-initialized value");
 
-  nsCSSProperty property = (valueToAddWrapper ? valueToAddWrapper->mPropID :
+  nsCSSPropertyID property = (valueToAddWrapper ? valueToAddWrapper->mPropID :
                             destWrapper->mPropID);
   // Special case: font-size-adjust and stroke-dasharray are explicitly
   // non-additive (even though StyleAnimationValue *could* support adding them)
@@ -335,7 +335,7 @@ GetPresContextForElement(Element* aElem)
 
 // Helper function to parse a string into a StyleAnimationValue
 static bool
-ValueFromStringHelper(nsCSSProperty aPropID,
+ValueFromStringHelper(nsCSSPropertyID aPropID,
                       Element* aTargetElement,
                       nsPresContext* aPresContext,
                       const nsAString& aString,
@@ -387,7 +387,7 @@ ValueFromStringHelper(nsCSSProperty aPropID,
 
 // static
 void
-nsSMILCSSValueType::ValueFromString(nsCSSProperty aPropID,
+nsSMILCSSValueType::ValueFromString(nsCSSPropertyID aPropID,
                                     Element* aTargetElement,
                                     const nsAString& aString,
                                     nsSMILValue& aValue,
@@ -430,7 +430,7 @@ nsSMILCSSValueType::ValueToString(const nsSMILValue& aValue,
 }
 
 // static
-nsCSSProperty
+nsCSSPropertyID
 nsSMILCSSValueType::PropertyFromValue(const nsSMILValue& aValue)
 {
   if (aValue.mType != &nsSMILCSSValueType::sSingleton) {

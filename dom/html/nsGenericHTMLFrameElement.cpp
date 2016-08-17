@@ -196,19 +196,15 @@ nsGenericHTMLFrameElement::GetParentApplication(mozIApplication** aApplication)
 
   *aApplication = nullptr;
 
-  uint32_t appId;
   nsIPrincipal *principal = NodePrincipal();
-  nsresult rv = principal->GetAppId(&appId);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  uint32_t appId = principal->GetAppId();
 
   nsCOMPtr<nsIAppsService> appsService = do_GetService(APPS_SERVICE_CONTRACTID);
   if (NS_WARN_IF(!appsService)) {
     return NS_ERROR_FAILURE;
   }
 
-  rv = appsService->GetAppByLocalId(appId, aApplication);
+  nsresult rv = appsService->GetAppByLocalId(appId, aApplication);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }

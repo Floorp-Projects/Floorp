@@ -147,9 +147,9 @@ private:
     bool isNullPrincipal = false;
     bool isSystemPrincipal = false;
     if (principal) {
-      principal->GetIsNullPrincipal(&isNullPrincipal);
+      isNullPrincipal = principal->GetIsNullPrincipal();
       MOZ_ASSERT(!isNullPrincipal);
-      principal->GetIsSystemPrincipal(&isSystemPrincipal);
+      isSystemPrincipal = principal->GetIsSystemPrincipal();
       MOZ_ASSERT(!isSystemPrincipal);
     }
 
