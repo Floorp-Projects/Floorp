@@ -101,3 +101,10 @@ if CONFIG['MOZ_VALGRIND']:
         'valgrind/i386-redhat-linux-gnu.sup',
         'valgrind/x86_64-redhat-linux-gnu.sup',
     ]
+
+if CONFIG['MOZ_ARTIFACT_BUILDS']:
+    # Ensure a pre-built interfaces.xpt installed to the objdir by the artifact
+    # code is included by the top-level chrome.manifest.
+    EXTRA_COMPONENTS += [
+        'prebuilt-interfaces.manifest',
+    ]

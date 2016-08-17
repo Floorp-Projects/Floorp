@@ -45,6 +45,10 @@ ifdef MOZ_ANDROID_GCM
 DEFINES += -DMOZ_ANDROID_GCM=1
 endif
 
+ifdef MOZ_ARTIFACT_BUILDS
+DEFINES += -DMOZ_ARTIFACT_BUILDS=1
+endif
+
 MOZ_PACKAGER_MINIFY=1
 
 include $(topsrcdir)/toolkit/mozapps/installer/packager.mk
