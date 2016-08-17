@@ -12,11 +12,9 @@
     "TextEncoder": false,
     // Specific to WebExtensions:
     "Extension": true,
-    "ExtensionContext": true,
     "ExtensionManagement": true,
     "extensions": true,
     "global": true,
-    "GlobalManager": true,
     "NetUtil": true,
     "openOptionsPage": true,
     "require": false,
