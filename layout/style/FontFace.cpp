@@ -597,7 +597,7 @@ FontFace::GetDesc(nsCSSFontDesc aDescID, nsCSSValue& aResult) const
 
 void
 FontFace::GetDesc(nsCSSFontDesc aDescID,
-                  nsCSSPropertyID aPropID,
+                  nsCSSProperty aPropID,
                   nsString& aResult) const
 {
   MOZ_ASSERT(aDescID == eCSSFontDesc_UnicodeRange ||

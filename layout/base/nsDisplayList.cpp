@@ -458,7 +458,7 @@ AddAnimationForProperty(nsIFrame* aFrame, const AnimationProperty& aProperty,
 }
 
 static void
-AddAnimationsForProperty(nsIFrame* aFrame, nsCSSPropertyID aProperty,
+AddAnimationsForProperty(nsIFrame* aFrame, nsCSSProperty aProperty,
                          nsTArray<RefPtr<dom::Animation>>& aAnimations,
                          Layer* aLayer, AnimationData& aData,
                          bool aPending)
@@ -599,7 +599,7 @@ nsDisplayListBuilder::AddAnimationsAndTransitionsToLayer(Layer* aLayer,
                                                          nsDisplayListBuilder* aBuilder,
                                                          nsDisplayItem* aItem,
                                                          nsIFrame* aFrame,
-                                                         nsCSSPropertyID aProperty)
+                                                         nsCSSProperty aProperty)
 {
   MOZ_ASSERT(nsCSSProps::PropHasFlags(aProperty,
                                       CSS_PROPERTY_CAN_ANIMATE_ON_COMPOSITOR),
@@ -4436,7 +4436,7 @@ IsItemTooSmallForActiveLayer(nsIFrame* aFrame)
 
 static void
 SetAnimationPerformanceWarningForTooSmallItem(nsIFrame* aFrame,
-                                              nsCSSPropertyID aProperty)
+                                              nsCSSProperty aProperty)
 {
   // We use ToNearestPixels() here since ToOutsidePixels causes some sort of
   // errors. See https://bugzilla.mozilla.org/show_bug.cgi?id=1258904#c19

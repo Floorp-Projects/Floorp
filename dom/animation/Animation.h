@@ -18,7 +18,7 @@
 #include "mozilla/DOMEventTargetHelper.h" // for DOMEventTargetHelper
 #include "mozilla/dom/KeyframeEffect.h" // for KeyframeEffectReadOnly
 #include "mozilla/dom/Promise.h" // for Promise
-#include "nsCSSPropertyID.h" // for nsCSSPropertyID
+#include "nsCSSProperty.h" // for nsCSSProperty
 #include "nsIGlobalObject.h"
 
 // X11 has a #define for CurrentTime.
@@ -33,7 +33,7 @@
 #endif
 
 struct JSContext;
-class nsCSSPropertyIDSet;
+class nsCSSPropertySet;
 class nsIDocument;
 class nsPresContext;
 
@@ -313,7 +313,7 @@ public:
    * properties that are changed are added to |aSetProperties|.
    */
   void ComposeStyle(RefPtr<AnimValuesStyleRule>& aStyleRule,
-                    nsCSSPropertyIDSet& aSetProperties);
+                    nsCSSPropertySet& aSetProperties);
 
   void NotifyEffectTimingUpdated();
 

@@ -106,7 +106,7 @@ ConsumeIdentToken(RangedPtr<const char16_t>& aIter,
 /* static */ void
 KeyframeEffectParams::ParseSpacing(const nsAString& aSpacing,
                                    SpacingMode& aSpacingMode,
-                                   nsCSSPropertyID& aPacedProperty,
+                                   nsCSSProperty& aPacedProperty,
                                    nsAString& aInvalidPacedProperty,
                                    ErrorResult& aRv)
 {

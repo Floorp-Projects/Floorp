@@ -8,7 +8,7 @@
 #define mozilla_dom_KeyframeEffect_h
 
 #include "nsChangeHint.h"
-#include "nsCSSPropertyID.h"
+#include "nsCSSProperty.h"
 #include "nsCSSValue.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsTArray.h"
@@ -32,7 +32,7 @@
 #include "mozilla/dom/Nullable.h"
 
 struct JSContext;
-class nsCSSPropertyIDSet;
+class nsCSSPropertySet;
 class nsIContent;
 class nsIDocument;
 class nsIFrame;
@@ -59,7 +59,7 @@ struct AnimationPropertyDetails;
  */
 struct PropertyValuePair
 {
-  nsCSSPropertyID mProperty;
+  nsCSSProperty mProperty;
   // The specified value for the property. For shorthand properties or invalid
   // property values, we store the specified property value as a token stream
   // (string).
@@ -134,7 +134,7 @@ struct AnimationPropertySegment
 
 struct AnimationProperty
 {
-  nsCSSPropertyID mProperty = eCSSProperty_UNKNOWN;
+  nsCSSProperty mProperty = eCSSProperty_UNKNOWN;
 
   // Does this property win in the CSS Cascade?
   //
@@ -290,8 +290,8 @@ public:
   void SetKeyframes(nsTArray<Keyframe>&& aKeyframes,
                     nsStyleContext* aStyleContext);
   const AnimationProperty*
-  GetAnimationOfProperty(nsCSSPropertyID aProperty) const;
-  bool HasAnimationOfProperty(nsCSSPropertyID aProperty) const {
+  GetAnimationOfProperty(nsCSSProperty aProperty) const;
+  bool HasAnimationOfProperty(nsCSSProperty aProperty) const {
     return GetAnimationOfProperty(aProperty) != nullptr;
   }
   const InfallibleTArray<AnimationProperty>& Properties() const {
@@ -310,10 +310,10 @@ public:
   // contained in |aSetProperties|.
   // Any updated properties are added to |aSetProperties|.
   void ComposeStyle(RefPtr<AnimValuesStyleRule>& aStyleRule,
-                    nsCSSPropertyIDSet& aSetProperties);
+                    nsCSSPropertySet& aSetProperties);
   // Returns true if at least one property is being animated on compositor.
   bool IsRunningOnCompositor() const;
-  void SetIsRunningOnCompositor(nsCSSPropertyID aProperty, bool aIsRunning);
+  void SetIsRunningOnCompositor(nsCSSProperty aProperty, bool aIsRunning);
   void ResetIsRunningOnCompositor();
 
   // Returns true if this effect, applied to |aFrame|, contains properties
@@ -338,7 +338,7 @@ public:
   // compositor. |aParams| and |aParamsLength| are optional parameters which
   // will be used to generate a localized message for devtools.
   void SetPerformanceWarning(
-    nsCSSPropertyID aProperty,
+    nsCSSProperty aProperty,
     const AnimationPerformanceWarning& aWarning);
 
   // Cumulative change hint on each segment for each property.
@@ -434,7 +434,7 @@ private:
   static bool CanAnimateTransformOnCompositor(
     const nsIFrame* aFrame,
     AnimationPerformanceWarning::Type& aPerformanceWarning);
-  static bool IsGeometricProperty(const nsCSSPropertyID aProperty);
+  static bool IsGeometricProperty(const nsCSSProperty aProperty);
 
   static const TimeDuration OverflowRegionRefreshInterval();
 };
