@@ -38,9 +38,9 @@ var PostTab = React.createClass({
   displayName: "PostTab",
 
   isJson(file) {
-    let postData = file.request.postData;
+    let text = file.request.postData.text;
     let value = NetUtils.getHeaderValue(file.request.headers, "content-type");
-    return Json.isJSON(value, postData);
+    return Json.isJSON(value, text);
   },
 
   parseJson(file) {
@@ -202,9 +202,17 @@ var PostTab = React.createClass({
     return group;
   },
 
+  componentDidMount() {
+    let { actions, data: file } = this.props;
+
+    if (!file.request.postData) {
+      // TODO: use async action objects as soon as Redux is in place
+      actions.requestData("requestPostData");
+    }
+  },
+
   render() {
-    let actions = this.props.actions;
-    let file = this.props.data;
+    let { actions, data: file } = this.props;
 
     if (file.discardRequestBody) {
       return DOM.span({className: "netInfoBodiesDiscarded"},
@@ -212,10 +220,7 @@ var PostTab = React.createClass({
       );
     }
 
-    let postData = file.request.postData;
-    if (!postData) {
-      // TODO: use async action objects as soon as Redux is in place
-      actions.requestData("requestPostData");
+    if (!file.request.postData) {
       return (
         Spinner()
       );

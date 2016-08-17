@@ -45,7 +45,7 @@ var NetInfoBody = React.createClass({
 
   getDefaultProps() {
     return {
-      tabActive: 1
+      tabActive: 0
     };
   },
 
@@ -65,8 +65,9 @@ var NetInfoBody = React.createClass({
 
   hasCookies() {
     let {request, response} = this.state.data;
-    return NetUtils.getHeaderValue(request.headers, "Cookie") ||
-      NetUtils.getHeaderValue(response.headers, "Cookie");
+    return this.state.hasCookies ||
+      NetUtils.getHeaderValue(request.headers, "Cookie") ||
+      NetUtils.getHeaderValue(response.headers, "Set-Cookie");
   },
 
   hasStackTrace() {
