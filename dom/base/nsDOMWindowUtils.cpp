@@ -2415,7 +2415,7 @@ nsDOMWindowUtils::BeginTabSwitch()
 }
 
 static bool
-ComputeAnimationValue(nsCSSProperty aProperty,
+ComputeAnimationValue(nsCSSPropertyID aProperty,
                       Element* aElement,
                       const nsAString& aInput,
                       StyleAnimationValue& aOutput)
@@ -2675,7 +2675,7 @@ nsDOMWindowUtils::ComputeAnimationDistance(nsIDOMElement* aElement,
   nsCOMPtr<nsIContent> content = do_QueryInterface(aElement, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCSSProperty property =
+  nsCSSPropertyID property =
     nsCSSProps::LookupProperty(aProperty, CSSEnabledState::eIgnoreEnabledState);
   if (property != eCSSProperty_UNKNOWN && nsCSSProps::IsShorthand(property)) {
     property = eCSSProperty_UNKNOWN;

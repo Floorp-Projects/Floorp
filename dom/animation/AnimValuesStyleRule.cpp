@@ -57,7 +57,7 @@ AnimValuesStyleRule::MightMapInheritedStyleData()
 }
 
 bool
-AnimValuesStyleRule::GetDiscretelyAnimatedCSSValue(nsCSSProperty aProperty,
+AnimValuesStyleRule::GetDiscretelyAnimatedCSSValue(nsCSSPropertyID aProperty,
                                                    nsCSSValue* aValue)
 {
   MOZ_ASSERT(false, "GetDiscretelyAnimatedCSSValue is not implemented yet");

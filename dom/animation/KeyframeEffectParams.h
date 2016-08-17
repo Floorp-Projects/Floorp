@@ -45,14 +45,14 @@ struct KeyframeEffectParams
    */
   static void ParseSpacing(const nsAString& aSpacing,
                            SpacingMode& aSpacingMode,
-                           nsCSSProperty& aPacedProperty,
+                           nsCSSPropertyID& aPacedProperty,
                            nsAString& aInvalidPacedProperty,
                            ErrorResult& aRv);
 
   // FIXME: Bug 1216843: Add IterationCompositeOperations and
   //        Bug 1216844: Add CompositeOperation
   SpacingMode mSpacingMode = SpacingMode::distribute;
-  nsCSSProperty mPacedProperty = eCSSProperty_UNKNOWN;
+  nsCSSPropertyID mPacedProperty = eCSSProperty_UNKNOWN;
 };
 
 } // namespace mozilla

@@ -175,7 +175,7 @@ BodyRule::MightMapInheritedStyleData()
 }
 
 /* virtual */ bool
-BodyRule::GetDiscretelyAnimatedCSSValue(nsCSSProperty aProperty,
+BodyRule::GetDiscretelyAnimatedCSSValue(nsCSSPropertyID aProperty,
                                         nsCSSValue* aValue)
 {
   MOZ_ASSERT(false, "GetDiscretelyAnimatedCSSValue is not implemented yet");
