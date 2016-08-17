@@ -492,6 +492,7 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'home/TopSitesPanel.java',
     'home/TopSitesThumbnailView.java',
     'home/TwoLinePageRow.java',
+    'home/UpdateViewFaviconLoadedListener.java',
     'IntentHelper.java',
     'javaaddons/JavaAddonManager.java',
     'javaaddons/JavaAddonManagerV1.java',
