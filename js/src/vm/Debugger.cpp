@@ -1520,6 +1520,28 @@ ParseResumptionValue(JSContext* cx, HandleValue rval, JSTrapStatus* statusp, Mut
     return ParseResumptionValueAsObject(cx, rval, statusp, vp);
 }
 
+static bool
+CheckResumptionValue(JSContext* cx, AbstractFramePtr frame, const Maybe<HandleValue>& maybeThisv,
+                     JSTrapStatus status, MutableHandleValue vp)
+{
+    if (maybeThisv.isSome()) {
+        const HandleValue& thisv = maybeThisv.ref();
+        if (status == JSTRAP_RETURN && vp.isPrimitive()) {
+            if (vp.isUndefined()) {
+                if (thisv.isMagic(JS_UNINITIALIZED_LEXICAL)) {
+                    return ThrowUninitializedThis(cx, frame);
+                }
+
+                vp.set(thisv);
+            } else {
+                ReportValueError(cx, JSMSG_BAD_DERIVED_RETURN, JSDVG_IGNORE_STACK, vp, nullptr);
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
 JSTrapStatus
 Debugger::parseResumptionValueHelper(Maybe<AutoCompartment>& ac, bool ok, const Value& rv,
                                      const Maybe<HandleValue>& thisVForCheck, AbstractFramePtr frame,
@@ -1533,23 +1555,10 @@ Debugger::parseResumptionValueHelper(Maybe<AutoCompartment>& ac, bool ok, const 
     JSTrapStatus status = JSTRAP_CONTINUE;
     RootedValue v(cx);
     if (!ParseResumptionValue(cx, rvRoot, &status, &v) ||
-        !unwrapDebuggeeValue(cx, &v))
+        !unwrapDebuggeeValue(cx, &v) ||
+        !CheckResumptionValue(cx, frame, thisVForCheck, status, &v))
     {
         return handleUncaughtException(ac, vp, callHook, thisVForCheck, frame);
-    }
-
-    if (status == JSTRAP_RETURN && thisVForCheck.isSome() && v.isPrimitive()) {
-        if (v.isUndefined()) {
-            if (thisVForCheck.ref().isMagic(JS_UNINITIALIZED_LEXICAL)) {
-                MOZ_ALWAYS_FALSE(ThrowUninitializedThis(cx, frame));
-                return handleUncaughtException(ac, vp, callHook, thisVForCheck, frame);
-            }
-
-            v = thisVForCheck.ref();
-        } else {
-            ReportValueError(cx, JSMSG_BAD_DERIVED_RETURN, JSDVG_IGNORE_STACK, v, nullptr);
-            return handleUncaughtException(ac, vp, callHook, thisVForCheck, frame);
-        }
     }
 
     ac.reset();
