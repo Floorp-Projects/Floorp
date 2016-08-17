@@ -21,6 +21,7 @@
 #include "nsIScriptError.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptSecurityManager.h"
+#include "nsIScriptTimeoutHandler.h"
 #include "nsITabChild.h"
 #include "nsITextToSubURI.h"
 #include "nsIThreadInternal.h"
@@ -42,6 +43,7 @@
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/Likely.h"
 #include "mozilla/LoadContext.h"
+#include "mozilla/Move.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/Console.h"
 #include "mozilla/dom/ErrorEvent.h"
@@ -2128,8 +2130,7 @@ NS_IMPL_QUERY_INTERFACE(WorkerLoadInfo::InterfaceRequestor, nsIInterfaceRequesto
 struct WorkerPrivate::TimeoutInfo
 {
   TimeoutInfo()
-  : mTimeoutCallable(JS::UndefinedValue()), mLineNumber(0), mId(0),
-    mIsInterval(false), mCanceled(false)
+  : mId(0), mIsInterval(false), mCanceled(false)
   {
     MOZ_COUNT_CTOR(mozilla::dom::workers::WorkerPrivate::TimeoutInfo);
   }
@@ -2149,13 +2150,9 @@ struct WorkerPrivate::TimeoutInfo
     return mTargetTime < aOther.mTargetTime;
   }
 
-  JS::Heap<JS::Value> mTimeoutCallable;
-  nsString mTimeoutString;
-  nsTArray<JS::Heap<JS::Value> > mExtraArgVals;
+  nsCOMPtr<nsIScriptTimeoutHandler> mHandler;
   mozilla::TimeStamp mTargetTime;
   mozilla::TimeDuration mInterval;
-  nsCString mFilename;
-  uint32_t mLineNumber;
   int32_t mId;
   bool mIsInterval;
   bool mCanceled;
@@ -4196,6 +4193,18 @@ WorkerPrivate::Constructor(JSContext* aCx,
     new WorkerPrivate(parent, aScriptURL, aIsChromeWorker,
                       aWorkerType, aWorkerName, *aLoadInfo);
 
+  // Gecko contexts always have an explicitly-set default locale (set by
+  // XPJSRuntime::Initialize for the main thread, set by
+  // WorkerThreadPrimaryRunnable::Run for workers just before running worker
+  // code), so this is never SpiderMonkey's builtin default locale.
+  JS::UniqueChars defaultLocale = JS_GetDefaultLocale(aCx);
+  if (NS_WARN_IF(!defaultLocale)) {
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return nullptr;
+  }
+
+  worker->mDefaultLocale = Move(defaultLocale);
+
   if (!runtimeService->RegisterWorker(worker)) {
     aRv.Throw(NS_ERROR_UNEXPECTED);
     return nullptr;
@@ -5176,23 +5185,18 @@ WorkerPrivate::ThawInternal()
 }
 
 void
-WorkerPrivate::TraceTimeouts(const TraceCallbacks& aCallbacks,
-                             void* aClosure) const
+WorkerPrivate::TraverseTimeouts(nsCycleCollectionTraversalCallback& cb)
 {
-  AssertIsOnWorkerThread();
-
-  for (uint32_t index = 0; index < mTimeouts.Length(); index++) {
-    TimeoutInfo* info = mTimeouts[index];
-
-    if (info->mTimeoutCallable.isUndefined()) {
-      continue;
-    }
-
-    aCallbacks.Trace(&info->mTimeoutCallable, "mTimeoutCallable", aClosure);
-    for (uint32_t index2 = 0; index2 < info->mExtraArgVals.Length(); index2++) {
-      aCallbacks.Trace(&info->mExtraArgVals[index2], "mExtraArgVals[i]", aClosure);
-    }
+  for (uint32_t i = 0; i < mTimeouts.Length(); ++i) {
+    TimeoutInfo* tmp = mTimeouts[i];
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mHandler)
   }
+}
+
+void
+WorkerPrivate::UnlinkTimeouts()
+{
+  mTimeouts.Clear();
 }
 
 bool
@@ -5981,14 +5985,12 @@ WorkerPrivate::ReportErrorToConsole(const char* aMessage)
 
 int32_t
 WorkerPrivate::SetTimeout(JSContext* aCx,
-                          dom::Function* aHandler,
-                          const nsAString& aStringHandler,
-                          int32_t aTimeout,
-                          const Sequence<JS::Value>& aArguments,
-                          bool aIsInterval,
+                          nsIScriptTimeoutHandler* aHandler,
+                          int32_t aTimeout, bool aIsInterval,
                           ErrorResult& aRv)
 {
   AssertIsOnWorkerThread();
+  MOZ_ASSERT(aHandler);
 
   const int32_t timerId = mNextTimeoutId++;
 
@@ -6021,41 +6023,13 @@ WorkerPrivate::SetTimeout(JSContext* aCx,
     mNextTimeoutId = 1;
   }
 
-  // Take care of the main argument.
-  if (aHandler) {
-    newInfo->mTimeoutCallable = JS::ObjectValue(*aHandler->Callable());
-  }
-  else if (!aStringHandler.IsEmpty()) {
-    newInfo->mTimeoutString = aStringHandler;
-  }
-  else {
-    NS_NAMED_LITERAL_STRING(kSetInterval, "setInterval");
-    NS_NAMED_LITERAL_STRING(kSetTimeout, "setTimeout");
-    aRv.ThrowTypeError<MSG_USELESS_SETTIMEOUT>(aIsInterval ? kSetInterval
-                                                           : kSetTimeout);
-    return 0;
-  }
+  newInfo->mHandler = aHandler;
 
   // See if any of the optional arguments were passed.
   aTimeout = std::max(0, aTimeout);
   newInfo->mInterval = TimeDuration::FromMilliseconds(aTimeout);
 
-  uint32_t argc = aArguments.Length();
-  if (argc && !newInfo->mTimeoutCallable.isUndefined()) {
-    nsTArray<JS::Heap<JS::Value>> extraArgVals(argc);
-    for (uint32_t index = 0; index < argc; index++) {
-      extraArgVals.AppendElement(aArguments[index]);
-    }
-    newInfo->mExtraArgVals.SwapElements(extraArgVals);
-  }
-
   newInfo->mTargetTime = TimeStamp::Now() + newInfo->mInterval;
-
-  if (!newInfo->mTimeoutString.IsEmpty()) {
-    if (!nsJSUtils::GetCallingLocation(aCx, newInfo->mFilename, &newInfo->mLineNumber)) {
-      NS_WARNING("Failed to get calling location!");
-    }
-  }
 
   nsAutoPtr<TimeoutInfo>* insertedInfo =
     mTimeouts.InsertElementSorted(newInfo.forget(), GetAutoPtrComparator(mTimeouts));
@@ -6176,41 +6150,43 @@ WorkerPrivate::RunExpiredTimeouts(JSContext* aCx)
       reason = "setTimeout handler";
     }
 
-    { // scope for the AutoEntryScript, so it comes off the stack before we do
+    RefPtr<Function> callback = info->mHandler->GetCallback();
+    if (!callback) {
+      // scope for the AutoEntryScript, so it comes off the stack before we do
       // Promise::PerformMicroTaskCheckpoint.
       AutoEntryScript aes(global, reason, false);
-      if (!info->mTimeoutCallable.isUndefined()) {
-        JS::ExposeValueToActiveJS(info->mTimeoutCallable);
-        for (uint32_t i = 0; i < info->mExtraArgVals.Length(); ++i) {
-          JS::ExposeValueToActiveJS(info->mExtraArgVals[i]);
-        }
-        JS::Rooted<JS::Value> rval(aCx);
-        JS::HandleValueArray args =
-          JS::HandleValueArray::fromMarkedLocation(info->mExtraArgVals.Length(),
-                                                   info->mExtraArgVals.Elements()->address());
-        JS::Rooted<JS::Value> callable(aCx, info->mTimeoutCallable);
-        if (!JS_CallFunctionValue(aCx, global, callable, args, &rval) &&
-            !JS_IsExceptionPending(aCx)) {
-          retval = false;
-          break;
-        }
-      }
-      else {
-        nsString expression = info->mTimeoutString;
 
-        JS::CompileOptions options(aCx);
-        options.setFileAndLine(info->mFilename.get(), info->mLineNumber)
-               .setNoScriptRval(true);
+      // Evaluate the timeout expression.
+      nsAutoString script;
+      info->mHandler->GetHandlerText(script);
 
-        JS::Rooted<JS::Value> unused(aCx);
-        if (!expression.IsEmpty() &&
-            !JS::Evaluate(aCx, options,
-                          expression.get(), expression.Length(), &unused) &&
-            !JS_IsExceptionPending(aCx)) {
-          retval = false;
-          break;
-        }
+      const char* filename = nullptr;
+      uint32_t lineNo = 0, dummyColumn = 0;
+      info->mHandler->GetLocation(&filename, &lineNo, &dummyColumn);
+
+      JS::CompileOptions options(aes.cx());
+      options.setFileAndLine(filename, lineNo).setNoScriptRval(true);
+
+      JS::Rooted<JS::Value> unused(aes.cx());
+
+      if (!JS::Evaluate(aes.cx(), options, script.get(),
+                        script.Length(), &unused) &&
+          !JS_IsExceptionPending(aCx)) {
+        retval = false;
+        break;
       }
+    } else {
+      ErrorResult rv;
+      JS::Rooted<JS::Value> ignoredVal(aCx);
+      callback->Call(GlobalScope(), info->mHandler->GetArgs(), &ignoredVal, rv,
+                     reason);
+      if (rv.IsUncatchableException()) {
+        rv.SuppressException();
+        retval = false;
+        break;
+      }
+
+      rv.SuppressException();
     }
 
     // Since we might be processing more timeouts, go ahead and flush

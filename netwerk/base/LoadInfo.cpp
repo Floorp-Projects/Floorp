@@ -140,7 +140,7 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
     if (channel) {
       nsCOMPtr<nsILoadInfo> loadInfo = channel->GetLoadInfo();
       if (loadInfo) {
-        loadInfo->GetVerifySignedContent(&mEnforceSRI);
+        mEnforceSRI = loadInfo->GetVerifySignedContent();
       }
     }
   }

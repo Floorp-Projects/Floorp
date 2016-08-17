@@ -1488,9 +1488,7 @@ TabChild::ApplyShowInfo(const ShowInfo& aInfo)
       nsCOMPtr<nsILoadContext> context = do_GetInterface(docShell);
       // No need to re-set private browsing mode.
       if (!context->UsePrivateBrowsing()) {
-        bool nonBlank;
-        docShell->GetHasLoadedNonBlankURI(&nonBlank);
-        if (nonBlank) {
+        if (docShell->GetHasLoadedNonBlankURI()) {
           nsContentUtils::ReportToConsoleNonLocalized(
             NS_LITERAL_STRING("We should not switch to Private Browsing after loading a document."),
             nsIScriptError::warningFlag,

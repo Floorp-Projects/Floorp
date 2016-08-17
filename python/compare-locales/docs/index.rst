@@ -188,4 +188,4 @@ repositories are on https://hg.mozilla.org/l10n-central/.
 
 You can search inside our localized files on
 `Transvision <https://transvision.mozfr.org/>`_ and
-http://mxr.mozilla.org/l10n-mozilla-aurora/.
+http://dxr.mozilla.org/l10n-mozilla-aurora/.

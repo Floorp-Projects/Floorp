@@ -375,10 +375,8 @@ private:
   // on legacy box properties (-webkit-box-orient, -webkit-box-direction) or
   // modern flexbox properties (flex-direction, flex-wrap) depending on whether
   // the flex container is a "legacy box" (as determined by IsLegacyBox).
-  void InitAxesFromLegacyProps(const nsFlexContainerFrame* aFlexContainer,
-                               const WritingMode& aWM);
-  void InitAxesFromModernProps(const nsFlexContainerFrame* aFlexContainer,
-                               const WritingMode& aWM);
+  void InitAxesFromLegacyProps(const nsFlexContainerFrame* aFlexContainer);
+  void InitAxesFromModernProps(const nsFlexContainerFrame* aFlexContainer);
 
   // XXXdholbert [BEGIN DEPRECATED]
   AxisOrientationType mMainAxis;
@@ -3219,9 +3217,9 @@ FlexboxAxisTracker::FlexboxAxisTracker(
 {
   if (IsLegacyBox(aFlexContainer->StyleDisplay(),
                   aFlexContainer->StyleContext())) {
-    InitAxesFromLegacyProps(aFlexContainer, aWM);
+    InitAxesFromLegacyProps(aFlexContainer);
   } else {
-    InitAxesFromModernProps(aFlexContainer, aWM);
+    InitAxesFromModernProps(aFlexContainer);
   }
 
   // Master switch to enable/disable bug 983427's code for reversing our axes
@@ -3245,14 +3243,13 @@ FlexboxAxisTracker::FlexboxAxisTracker(
 
 void
 FlexboxAxisTracker::InitAxesFromLegacyProps(
-  const nsFlexContainerFrame* aFlexContainer,
-  const WritingMode& aWM)
+  const nsFlexContainerFrame* aFlexContainer)
 {
   const nsStyleXUL* styleXUL = aFlexContainer->StyleXUL();
 
   const bool boxOrientIsVertical = (styleXUL->mBoxOrient ==
                                     NS_STYLE_BOX_ORIENT_VERTICAL);
-  const bool wmIsVertical = aWM.IsVertical();
+  const bool wmIsVertical = mWM.IsVertical();
 
   // If box-orient agrees with our writing-mode, then we're "row-oriented"
   // (i.e. the flexbox main axis is the same as our writing mode's inline
@@ -3271,8 +3268,8 @@ FlexboxAxisTracker::InitAxesFromLegacyProps(
   // "direction: rtl" reverses the writing-mode's inline axis.
   // So, we need to reverse the corresponding flex axis to match.
   // (Note this we don't toggle "mIsMainAxisReversed" for this condition,
-  // because the main axis will still match aWM's inline direction.)
-  if (!aWM.IsBidiLTR()) {
+  // because the main axis will still match mWM's inline direction.)
+  if (!mWM.IsBidiLTR()) {
     AxisOrientationType& axisToFlip = mIsRowOriented ? mMainAxis : mCrossAxis;
     axisToFlip = GetReverseAxis(axisToFlip);
   }
@@ -3294,8 +3291,7 @@ FlexboxAxisTracker::InitAxesFromLegacyProps(
 
 void
 FlexboxAxisTracker::InitAxesFromModernProps(
-  const nsFlexContainerFrame* aFlexContainer,
-  const WritingMode& aWM)
+  const nsFlexContainerFrame* aFlexContainer)
 {
   const nsStylePosition* stylePos = aFlexContainer->StylePosition();
   uint32_t flexDirection = stylePos->mFlexDirection;

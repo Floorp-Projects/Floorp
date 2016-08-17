@@ -142,7 +142,7 @@ public:
   TiledLayerBuffer()
     : mTiles(0, 0, 0, 0)
     , mResolution(1)
-    , mTileSize(gfxVars::TileSize())
+    , mTileSize(mozilla::gfx::gfxVars::TileSize())
   {}
 
   ~TiledLayerBuffer() {}

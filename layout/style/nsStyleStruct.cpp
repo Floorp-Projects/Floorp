@@ -2335,7 +2335,7 @@ nsStyleImage::PurgeCacheForViewportChange(
 // nsStyleImageLayers
 //
 
-const nsCSSProperty nsStyleImageLayers::kBackgroundLayerTable[] = {
+const nsCSSPropertyID nsStyleImageLayers::kBackgroundLayerTable[] = {
   eCSSProperty_background,                // shorthand
   eCSSProperty_background_color,          // color
   eCSSProperty_background_image,          // image
@@ -2351,7 +2351,7 @@ const nsCSSProperty nsStyleImageLayers::kBackgroundLayerTable[] = {
 };
 
 #ifdef MOZ_ENABLE_MASK_AS_SHORTHAND
-const nsCSSProperty nsStyleImageLayers::kMaskLayerTable[] = {
+const nsCSSPropertyID nsStyleImageLayers::kMaskLayerTable[] = {
   eCSSProperty_mask,                      // shorthand
   eCSSProperty_UNKNOWN,                   // color
   eCSSProperty_mask_image,                // image
@@ -2917,7 +2917,7 @@ StyleTransition::SetInitialValues()
 }
 
 void
-StyleTransition::SetUnknownProperty(nsCSSProperty aProperty,
+StyleTransition::SetUnknownProperty(nsCSSPropertyID aProperty,
                                              const nsAString& aPropertyString)
 {
   MOZ_ASSERT(nsCSSProps::LookupProperty(aPropertyString,
@@ -3698,7 +3698,10 @@ nsStyleTextReset::CalcDifference(const nsStyleTextReset& aNewData) const
   }
 
   // Repaint for decoration color changes
-  nscolor decColor, otherDecColor;
+  // Dummy initialisations to keep Valgrind/Memcheck happy.
+  // See bug 1289098 comment 1.
+  nscolor decColor = NS_RGBA(0, 0, 0, 0);
+  nscolor otherDecColor = NS_RGBA(0, 0, 0, 0);
   bool isFG, otherIsFG;
   GetDecorationColor(decColor, isFG);
   aNewData.GetDecorationColor(otherDecColor, otherIsFG);
