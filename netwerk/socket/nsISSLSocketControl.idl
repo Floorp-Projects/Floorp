@@ -44,6 +44,22 @@ interface nsISSLSocketControl : nsISupports {
      */
     readonly attribute ACString negotiatedNPN;
 
+    /* For 0RTT we need to know the alpn protocol selected for the last tls
+     * session. This function will return a value if applicable or an error
+     * NS_ERROR_NOT_AVAILABLE.
+     */
+    ACString getAlpnEarlySelection();
+
+    /* If 0RTT handshake was applied and some data has been sent, as soon as
+     * the handshake finishes this attribute will be set to appropriate value.
+     */
+    readonly attribute bool earlyDataAccepted;
+
+    /* When 0RTT is performed, PR_Write will not drive the handshake forward.
+     * It must be forced by calling this function.
+     */
+    void driveHandshake();
+
     /* Determine if a potential SSL connection to hostname:port with
      * a desired NPN negotiated protocol of npnProtocol can use the socket
      * associated with this object instead of making a new one.
