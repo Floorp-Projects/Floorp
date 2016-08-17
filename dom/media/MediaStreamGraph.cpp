@@ -1159,7 +1159,7 @@ MediaStreamGraphImpl::OpenAudioInput(int aID,
   if (!NS_IsMainThread()) {
     NS_DispatchToMainThread(WrapRunnable(this,
                                          &MediaStreamGraphImpl::OpenAudioInput,
-                                         aID, aListener));
+                                         aID, RefPtr<AudioDataListener>(aListener)));
     return NS_OK;
   }
   class Message : public ControlMessage {
@@ -1228,7 +1228,7 @@ MediaStreamGraphImpl::CloseAudioInput(AudioDataListener *aListener)
   if (!NS_IsMainThread()) {
     NS_DispatchToMainThread(WrapRunnable(this,
                                          &MediaStreamGraphImpl::CloseAudioInput,
-                                         aListener));
+                                         RefPtr<AudioDataListener>(aListener)));
     return;
   }
   class Message : public ControlMessage {
