@@ -328,8 +328,9 @@ CacheFileChunk::CacheFileChunk(CacheFile *aFile, uint32_t aIndex,
   , mIndex(aIndex)
   , mState(INITIAL)
   , mStatus(NS_OK)
-  , mIsDirty(false)
   , mActiveChunk(false)
+  , mIsDirty(false)
+  , mDiscardedChunk(false)
   , mBuffersSize(0)
   , mLimitAllocation(!aFile->mOpenAsMemoryOnly && aInitByWriter)
   , mIsPriority(aFile->mPriority)
@@ -615,6 +616,13 @@ CacheFileChunk::UpdateDataSize(uint32_t aOffset, uint32_t aLen)
 
   mValidityMap.AddPair(aOffset, aLen);
   mValidityMap.Log();
+}
+
+nsresult
+CacheFileChunk::Truncate(uint32_t aOffset)
+{
+  mBuf->SetDataSize(aOffset);
+  return NS_OK;
 }
 
 nsresult
