@@ -1464,7 +1464,7 @@ nsCSSFontFaceStyleDecl::GetParentRule(nsIDOMCSSRule** aParentRule)
 }
 
 NS_IMETHODIMP
-nsCSSFontFaceStyleDecl::GetPropertyValue(const nsCSSPropertyID aPropID,
+nsCSSFontFaceStyleDecl::GetPropertyValue(const nsCSSProperty aPropID,
                                          nsAString& aValue)
 {
   return
@@ -1473,7 +1473,7 @@ nsCSSFontFaceStyleDecl::GetPropertyValue(const nsCSSPropertyID aPropID,
 }
 
 NS_IMETHODIMP
-nsCSSFontFaceStyleDecl::SetPropertyValue(const nsCSSPropertyID aPropID,
+nsCSSFontFaceStyleDecl::SetPropertyValue(const nsCSSProperty aPropID,
                                          const nsAString& aValue)
 {
   return SetProperty(NS_ConvertUTF8toUTF16(nsCSSProps::GetStringValue(aPropID)),

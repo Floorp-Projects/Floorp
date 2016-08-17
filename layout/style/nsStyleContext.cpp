@@ -1399,7 +1399,7 @@ nsStyleContext::Arena()
 }
 
 static inline void
-ExtractAnimationValue(nsCSSPropertyID aProperty,
+ExtractAnimationValue(nsCSSProperty aProperty,
                       nsStyleContext* aStyleContext,
                       StyleAnimationValue& aResult)
 {
@@ -1411,7 +1411,7 @@ ExtractAnimationValue(nsCSSPropertyID aProperty,
 }
 
 static nscolor
-ExtractColor(nsCSSPropertyID aProperty,
+ExtractColor(nsCSSProperty aProperty,
              nsStyleContext *aStyleContext)
 {
   StyleAnimationValue val;
@@ -1421,7 +1421,7 @@ ExtractColor(nsCSSPropertyID aProperty,
 }
 
 static nscolor
-ExtractColorLenient(nsCSSPropertyID aProperty,
+ExtractColorLenient(nsCSSProperty aProperty,
                     nsStyleContext *aStyleContext)
 {
   StyleAnimationValue val;
@@ -1441,7 +1441,7 @@ struct ColorIndexSet {
 static const ColorIndexSet gVisitedIndices[2] = { { 0, 0 }, { 1, 0 } };
 
 nscolor
-nsStyleContext::GetVisitedDependentColor(nsCSSPropertyID aProperty)
+nsStyleContext::GetVisitedDependentColor(nsCSSProperty aProperty)
 {
   NS_ASSERTION(aProperty == eCSSProperty_color ||
                aProperty == eCSSProperty_background_color ||

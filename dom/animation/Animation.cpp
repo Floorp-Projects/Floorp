@@ -769,7 +769,7 @@ Animation::HasLowerCompositeOrderThan(const Animation& aOther) const
 
 void
 Animation::ComposeStyle(RefPtr<AnimValuesStyleRule>& aStyleRule,
-                        nsCSSPropertyIDSet& aSetProperties)
+                        nsCSSPropertySet& aSetProperties)
 {
   if (!mEffect) {
     return;

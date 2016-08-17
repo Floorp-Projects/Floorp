@@ -30,9 +30,9 @@ LayerAnimationInfo::Initialize()
 
   // Check that every property with the flag for animating on the
   // compositor has an entry in LayerAnimationInfo::sRecords.
-  for (nsCSSPropertyID prop = nsCSSPropertyID(0);
+  for (nsCSSProperty prop = nsCSSProperty(0);
        prop < eCSSProperty_COUNT;
-       prop = nsCSSPropertyID(prop + 1)) {
+       prop = nsCSSProperty(prop + 1)) {
     if (nsCSSProps::PropHasFlags(prop,
                                  CSS_PROPERTY_CAN_ANIMATE_ON_COMPOSITOR)) {
       bool found = false;

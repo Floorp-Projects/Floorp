@@ -53,7 +53,7 @@ public:
    * @param aCount      The number of times to add aValueToAdd.
    * @return true on success, false on failure.
    */
-  static bool Add(nsCSSPropertyID aProperty, StyleAnimationValue& aDest,
+  static bool Add(nsCSSProperty aProperty, StyleAnimationValue& aDest,
                   const StyleAnimationValue& aValueToAdd, uint32_t aCount) {
     return AddWeighted(aProperty, 1.0, aDest, aCount, aValueToAdd, aDest);
   }
@@ -76,7 +76,7 @@ public:
    * @param aDistance   The result of the calculation.
    * @return true on success, false on failure.
    */
-  static bool ComputeDistance(nsCSSPropertyID aProperty,
+  static bool ComputeDistance(nsCSSProperty aProperty,
                               const StyleAnimationValue& aStartValue,
                               const StyleAnimationValue& aEndValue,
                               double& aDistance);
@@ -97,7 +97,7 @@ public:
    * @param [out] aResultValue The resulting interpolated value.
    * @return true on success, false on failure.
    */
-  static bool Interpolate(nsCSSPropertyID aProperty,
+  static bool Interpolate(nsCSSProperty aProperty,
                           const StyleAnimationValue& aStartValue,
                           const StyleAnimationValue& aEndValue,
                           double aPortion,
@@ -120,7 +120,7 @@ public:
    * difficulty, we might change this to restrict them to being
    * positive.
    */
-  static bool AddWeighted(nsCSSPropertyID aProperty,
+  static bool AddWeighted(nsCSSProperty aProperty,
                           double aCoeff1, const StyleAnimationValue& aValue1,
                           double aCoeff2, const StyleAnimationValue& aValue2,
                           StyleAnimationValue& aResultValue);
@@ -157,7 +157,7 @@ public:
    *                        nullptr.
    * @return true on success, false on failure.
    */
-  static bool ComputeValue(nsCSSPropertyID aProperty,
+  static bool ComputeValue(nsCSSProperty aProperty,
                            mozilla::dom::Element* aTargetElement,
                            nsStyleContext* aStyleContext,
                            const nsAString& aSpecifiedValue,
@@ -175,7 +175,7 @@ public:
    * to aResult.  On failure, aResult might still have partial results
    * in it.
    */
-  static bool ComputeValues(nsCSSPropertyID aProperty,
+  static bool ComputeValues(nsCSSProperty aProperty,
                             mozilla::CSSEnabledState aEnabledState,
                             mozilla::dom::Element* aTargetElement,
                             nsStyleContext* aStyleContext,
@@ -187,7 +187,7 @@ public:
    * A variant on ComputeValues that takes an nsCSSValue as the specified
    * value. Only longhand properties are supported.
    */
-  static bool ComputeValues(nsCSSPropertyID aProperty,
+  static bool ComputeValues(nsCSSProperty aProperty,
                             mozilla::CSSEnabledState aEnabledState,
                             mozilla::dom::Element* aTargetElement,
                             nsStyleContext* aStyleContext,
@@ -212,13 +212,13 @@ public:
    * @param [out] aSpecifiedValue The resulting specified value.
    * @return true on success, false on failure.
    */
-  static bool UncomputeValue(nsCSSPropertyID aProperty,
+  static bool UncomputeValue(nsCSSProperty aProperty,
                              const StyleAnimationValue& aComputedValue,
                              nsCSSValue& aSpecifiedValue);
-  static bool UncomputeValue(nsCSSPropertyID aProperty,
+  static bool UncomputeValue(nsCSSProperty aProperty,
                              StyleAnimationValue&& aComputedValue,
                              nsCSSValue& aSpecifiedValue);
-  static bool UncomputeValue(nsCSSPropertyID aProperty,
+  static bool UncomputeValue(nsCSSProperty aProperty,
                              const StyleAnimationValue& aComputedValue,
                              nsAString& aSpecifiedValue);
 
@@ -236,7 +236,7 @@ public:
    * @param [out] aComputedValue The resulting computed value.
    * @return true on success, false on failure.
    */
-  static bool ExtractComputedValue(nsCSSPropertyID aProperty,
+  static bool ExtractComputedValue(nsCSSProperty aProperty,
                                    nsStyleContext* aStyleContext,
                                    StyleAnimationValue& aComputedValue);
 
@@ -511,7 +511,7 @@ private:
 
 struct PropertyStyleAnimationValuePair
 {
-  nsCSSPropertyID mProperty;
+  nsCSSProperty mProperty;
   StyleAnimationValue mValue;
 };
 

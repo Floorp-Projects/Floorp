@@ -12,7 +12,7 @@
 #include "mozilla/Attributes.h"
 #include "nsISMILAttr.h"
 #include "nsIAtom.h"
-#include "nsCSSPropertyID.h"
+#include "nsCSSProperty.h"
 #include "nsCSSValue.h"
 
 namespace mozilla {
@@ -34,7 +34,7 @@ public:
    * @param  aPropID   The CSS property we're interested in animating.
    * @param  aElement  The element whose CSS property is being animated.
    */
-  nsSMILCSSProperty(nsCSSPropertyID aPropID, mozilla::dom::Element* aElement);
+  nsSMILCSSProperty(nsCSSProperty aPropID, mozilla::dom::Element* aElement);
 
   // nsISMILAttr methods
   virtual nsresult ValueFromString(const nsAString& aStr,
@@ -53,10 +53,10 @@ public:
    * @return  true if the given property is supported for SMIL animation, or
    *          false otherwise
    */
-  static bool IsPropertyAnimatable(nsCSSPropertyID aPropID);
+  static bool IsPropertyAnimatable(nsCSSProperty aPropID);
 
 protected:
-  nsCSSPropertyID mPropID;
+  nsCSSProperty mPropID;
   // Using non-refcounted pointer for mElement -- we know mElement will stay
   // alive for my lifetime because a nsISMILAttr (like me) only lives as long
   // as the Compositing step, and DOM elements don't get a chance to die during

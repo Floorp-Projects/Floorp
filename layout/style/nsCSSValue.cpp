@@ -846,7 +846,7 @@ nsCSSValue::BufferFromString(const nsString& aValue)
 namespace {
 
 struct CSSValueSerializeCalcOps {
-  CSSValueSerializeCalcOps(nsCSSPropertyID aProperty, nsAString& aResult,
+  CSSValueSerializeCalcOps(nsCSSProperty aProperty, nsAString& aResult,
                            nsCSSValue::Serialization aSerialization)
     : mProperty(aProperty),
       mResult(aResult),
@@ -882,7 +882,7 @@ struct CSSValueSerializeCalcOps {
   }
 
 private:
-  nsCSSPropertyID mProperty;
+  nsCSSProperty mProperty;
   nsAString &mResult;
   nsCSSValue::Serialization mValueSerialization;
 };
@@ -890,7 +890,7 @@ private:
 } // namespace
 
 void
-nsCSSValue::AppendPolygonToString(nsCSSPropertyID aProperty, nsAString& aResult,
+nsCSSValue::AppendPolygonToString(nsCSSProperty aProperty, nsAString& aResult,
                                   Serialization aSerialization) const
 {
   const nsCSSValue::Array* array = GetArrayValue();
@@ -917,7 +917,7 @@ nsCSSValue::AppendPolygonToString(nsCSSPropertyID aProperty, nsAString& aResult,
 
 inline void
 nsCSSValue::AppendPositionCoordinateToString(
-                const nsCSSValue& aValue, nsCSSPropertyID aProperty,
+                const nsCSSValue& aValue, nsCSSProperty aProperty,
                 nsAString& aResult, Serialization aSerialization) const
 {
   if (aValue.GetUnit() == eCSSUnit_Enumerated) {
@@ -931,7 +931,7 @@ nsCSSValue::AppendPositionCoordinateToString(
 
 void
 nsCSSValue::AppendCircleOrEllipseToString(nsCSSKeyword aFunctionId,
-                                          nsCSSPropertyID aProperty,
+                                          nsCSSProperty aProperty,
                                           nsAString& aResult,
                                           Serialization aSerialization) const
 {
@@ -1027,7 +1027,7 @@ nsCSSValue::AppendBasicShapePositionToString(nsAString& aResult,
 // Helper to append |aString| with the shorthand sides notation used in e.g.
 // 'padding'. |aProperties| and |aValues| are expected to have 4 elements.
 /*static*/ void
-nsCSSValue::AppendSidesShorthandToString(const nsCSSPropertyID aProperties[],
+nsCSSValue::AppendSidesShorthandToString(const nsCSSProperty aProperties[],
                                          const nsCSSValue* aValues[],
                                          nsAString& aString,
                                          nsCSSValue::Serialization
@@ -1058,7 +1058,7 @@ nsCSSValue::AppendSidesShorthandToString(const nsCSSPropertyID aProperties[],
 }
 
 /*static*/ void
-nsCSSValue::AppendBasicShapeRadiusToString(const nsCSSPropertyID aProperties[],
+nsCSSValue::AppendBasicShapeRadiusToString(const nsCSSProperty aProperties[],
                                            const nsCSSValue* aValues[],
                                            nsAString& aResult,
                                            Serialization aSerialization)
@@ -1084,7 +1084,7 @@ nsCSSValue::AppendBasicShapeRadiusToString(const nsCSSPropertyID aProperties[],
 }
 
 void
-nsCSSValue::AppendInsetToString(nsCSSPropertyID aProperty, nsAString& aResult,
+nsCSSValue::AppendInsetToString(nsCSSProperty aProperty, nsAString& aResult,
                                 Serialization aSerialization) const
 {
   const nsCSSValue::Array* array = GetArrayValue();
@@ -1107,7 +1107,7 @@ nsCSSValue::AppendInsetToString(nsCSSPropertyID aProperty, nsAString& aResult,
   }
 
   if (array->Item(5).GetUnit() == eCSSUnit_Array) {
-    const nsCSSPropertyID* subprops =
+    const nsCSSProperty* subprops =
       nsCSSProps::SubpropertyEntryFor(eCSSProperty_border_radius);
     const nsCSSValue::Array* radius = array->Item(5).GetArrayValue();
     MOZ_ASSERT(radius->Count() == 4, "expected 4 radii values");
@@ -1157,7 +1157,7 @@ nsCSSValue::AppendAlignJustifyValueToString(int32_t aValue, nsAString& aResult)
 }
 
 void
-nsCSSValue::AppendToString(nsCSSPropertyID aProperty, nsAString& aResult,
+nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult,
                            Serialization aSerialization) const
 {
   // eCSSProperty_UNKNOWN gets used for some recursive calls below.
@@ -1230,7 +1230,7 @@ nsCSSValue::AppendToString(nsCSSPropertyID aProperty, nsAString& aResult,
         }
         continue;
       }
-      nsCSSPropertyID prop =
+      nsCSSProperty prop =
         ((eCSSUnit_Counter <= unit && unit <= eCSSUnit_Counters) &&
          i == array->Count() - 1)
         ? eCSSProperty_list_style_type : aProperty;
@@ -1743,7 +1743,7 @@ nsCSSValue::AppendToString(nsCSSPropertyID aProperty, nsAString& aResult,
 
     aResult.Append(')');
   } else if (eCSSUnit_TokenStream == unit) {
-    nsCSSPropertyID shorthand = mValue.mTokenStream->mShorthandPropertyID;
+    nsCSSProperty shorthand = mValue.mTokenStream->mShorthandPropertyID;
     if (shorthand == eCSSProperty_UNKNOWN ||
         nsCSSProps::PropHasFlags(shorthand, CSS_PROPERTY_IS_ALIAS) ||
         aProperty == eCSSProperty__x_system_font) {
@@ -2119,7 +2119,7 @@ nsCSSValueList::CloneInto(nsCSSValueList* aList) const
 
 static void
 AppendValueListToString(const nsCSSValueList* val,
-                        nsCSSPropertyID aProperty, nsAString& aResult,
+                        nsCSSProperty aProperty, nsAString& aResult,
                         nsCSSValue::Serialization aSerialization)
 {
   for (;;) {
@@ -2137,7 +2137,7 @@ AppendValueListToString(const nsCSSValueList* val,
 
 static void
 AppendGridTemplateToString(const nsCSSValueList* val,
-                           nsCSSPropertyID aProperty, nsAString& aResult,
+                           nsCSSProperty aProperty, nsAString& aResult,
                            nsCSSValue::Serialization aSerialization)
 {
   // This is called for the "list" that's the top-level value of the property.
@@ -2230,7 +2230,7 @@ AppendGridTemplateToString(const nsCSSValueList* val,
 }
 
 void
-nsCSSValueList::AppendToString(nsCSSPropertyID aProperty, nsAString& aResult,
+nsCSSValueList::AppendToString(nsCSSProperty aProperty, nsAString& aResult,
                                nsCSSValue::Serialization aSerialization) const
 {
   if (aProperty == eCSSProperty_grid_template_columns ||
@@ -2295,7 +2295,7 @@ nsCSSValueSharedList::~nsCSSValueSharedList()
 }
 
 void
-nsCSSValueSharedList::AppendToString(nsCSSPropertyID aProperty, nsAString& aResult,
+nsCSSValueSharedList::AppendToString(nsCSSProperty aProperty, nsAString& aResult,
                                      nsCSSValue::Serialization aSerialization) const
 {
   if (mHead) {
@@ -2343,7 +2343,7 @@ nsCSSRect::~nsCSSRect()
 }
 
 void
-nsCSSRect::AppendToString(nsCSSPropertyID aProperty, nsAString& aResult,
+nsCSSRect::AppendToString(nsCSSProperty aProperty, nsAString& aResult,
                           nsCSSValue::Serialization aSerialization) const
 {
   MOZ_ASSERT(mTop.GetUnit() != eCSSUnit_Null &&
@@ -2416,7 +2416,7 @@ static_assert(NS_SIDE_TOP == 0 && NS_SIDE_RIGHT == 1 &&
 // --- nsCSSValuePair -----------------
 
 void
-nsCSSValuePair::AppendToString(nsCSSPropertyID aProperty,
+nsCSSValuePair::AppendToString(nsCSSProperty aProperty,
                                nsAString& aResult,
                                nsCSSValue::Serialization aSerialization) const
 {
@@ -2452,7 +2452,7 @@ nsCSSValuePair_heap::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) co
 // --- nsCSSValueTriplet -----------------
 
 void
-nsCSSValueTriplet::AppendToString(nsCSSPropertyID aProperty,
+nsCSSValueTriplet::AppendToString(nsCSSProperty aProperty,
                                   nsAString& aResult,
                                   nsCSSValue::Serialization aSerialization) const
 {
@@ -2506,7 +2506,7 @@ nsCSSValuePairList::Clone() const
 }
 
 void
-nsCSSValuePairList::AppendToString(nsCSSPropertyID aProperty,
+nsCSSValuePairList::AppendToString(nsCSSProperty aProperty,
                                    nsAString& aResult,
                                    nsCSSValue::Serialization aSerialization) const
 {

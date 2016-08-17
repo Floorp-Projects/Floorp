@@ -173,7 +173,7 @@ public:
                      nsIPrincipal*           aSheetPrincipal,
                      css::Rule**             aResult);
 
-  void ParseProperty(const nsCSSPropertyID aPropID,
+  void ParseProperty(const nsCSSProperty aPropID,
                      const nsAString& aPropValue,
                      nsIURI* aSheetURL,
                      nsIURI* aBaseURL,
@@ -182,7 +182,7 @@ public:
                      bool* aChanged,
                      bool aIsImportant,
                      bool aIsSVGMode);
-  void ParseLonghandProperty(const nsCSSPropertyID aPropID,
+  void ParseLonghandProperty(const nsCSSProperty aPropID,
                              const nsAString& aPropValue,
                              nsIURI* aSheetURL,
                              nsIURI* aBaseURL,
@@ -270,7 +270,7 @@ public:
                                nsIPrincipal* aSheetPrincipal,
                                nsCSSValue& aValue);
 
-  bool IsValueValidForProperty(const nsCSSPropertyID aPropID,
+  bool IsValueValidForProperty(const nsCSSProperty aPropID,
                                const nsAString& aPropValue);
 
   typedef nsCSSParser::VariableEnumFunc VariableEnumFunc;
@@ -334,8 +334,8 @@ public:
    * @param aRuleData The rule data object into which parsed property value for
    *   aPropertyID will be stored.
    */
-  void ParsePropertyWithVariableReferences(nsCSSPropertyID aPropertyID,
-                                           nsCSSPropertyID aShorthandPropertyID,
+  void ParsePropertyWithVariableReferences(nsCSSProperty aPropertyID,
+                                           nsCSSProperty aShorthandPropertyID,
                                            const nsAString& aValue,
                                            const CSSVariableValues* aVariables,
                                            nsRuleData* aRuleData,
@@ -371,7 +371,7 @@ public:
     return enabledState;
   }
 
-  nsCSSPropertyID LookupEnabledProperty(const nsAString& aProperty) {
+  nsCSSProperty LookupEnabledProperty(const nsAString& aProperty) {
     return nsCSSProps::LookupProperty(aProperty, EnabledState());
   }
 
@@ -829,12 +829,12 @@ protected:
   bool ParseWebkitPrefixedGradientWithService(nsAString& aPrefixedFuncName,
                                               nsCSSValue& aValue);
 
-  bool ParseProperty(nsCSSPropertyID aPropID);
-  bool ParsePropertyByFunction(nsCSSPropertyID aPropID);
+  bool ParseProperty(nsCSSProperty aPropID);
+  bool ParsePropertyByFunction(nsCSSProperty aPropID);
   CSSParseResult ParseSingleValueProperty(nsCSSValue& aValue,
-                                          nsCSSPropertyID aPropID);
+                                          nsCSSProperty aPropID);
   bool ParseSingleValuePropertyByFunction(nsCSSValue& aValue,
-                                          nsCSSPropertyID aPropID);
+                                          nsCSSProperty aPropID);
 
   // This is similar to ParseSingleValueProperty but only works for
   // properties that are parsed with ParseBoxProperties or
@@ -843,7 +843,7 @@ protected:
   // Only works with variants with the following flags:
   // A, C, H, K, L, N, P, CALC.
   CSSParseResult ParseBoxProperty(nsCSSValue& aValue,
-                                  nsCSSPropertyID aPropID);
+                                  nsCSSProperty aPropID);
 
   enum PriorityParsingStatus {
     ePriority_None,
@@ -857,7 +857,7 @@ protected:
 #endif
 
   // Property specific parsing routines
-  bool ParseImageLayers(const nsCSSPropertyID aTable[]);
+  bool ParseImageLayers(const nsCSSProperty aTable[]);
 
   struct ImageLayersShorthandParseState {
     nsCSSValue&  mColor;
@@ -887,13 +887,13 @@ protected:
 
   bool IsFunctionTokenValidForImageLayerImage(const nsCSSToken& aToken) const;
   bool ParseImageLayersItem(ImageLayersShorthandParseState& aState,
-                            const nsCSSPropertyID aTable[]);
+                            const nsCSSProperty aTable[]);
 
-  bool ParseValueList(nsCSSPropertyID aPropID); // a single value prop-id
-  bool ParseImageLayerRepeat(nsCSSPropertyID aPropID);
+  bool ParseValueList(nsCSSProperty aPropID); // a single value prop-id
+  bool ParseImageLayerRepeat(nsCSSProperty aPropID);
   bool ParseImageLayerRepeatValues(nsCSSValuePair& aValue);
-  bool ParseImageLayerPosition(const nsCSSPropertyID aTable[]);
-  bool ParseImageLayerPositionCoord(nsCSSPropertyID aPropID, bool aIsHorizontal);
+  bool ParseImageLayerPosition(const nsCSSProperty aTable[]);
+  bool ParseImageLayerPositionCoord(nsCSSProperty aPropID, bool aIsHorizontal);
 
   // ParseBoxPositionValues parses the CSS 2.1 background-position syntax,
   // which is still used by some properties. See ParsePositionValue
@@ -907,10 +907,10 @@ protected:
   bool ParsePositionValueSeparateCoords(nsCSSValue& aOutX, nsCSSValue& aOutY);
 
   bool ParseImageLayerPositionCoordItem(nsCSSValue& aOut, bool aIsHorizontal);
-  bool ParseImageLayerSize(nsCSSPropertyID aPropID);
+  bool ParseImageLayerSize(nsCSSProperty aPropID);
   bool ParseImageLayerSizeValues(nsCSSValuePair& aOut);
   bool ParseBorderColor();
-  bool ParseBorderColors(nsCSSPropertyID aProperty);
+  bool ParseBorderColors(nsCSSProperty aProperty);
   void SetBorderImageInitialValues();
   bool ParseBorderImageRepeat(bool aAcceptsInherit);
   // If ParseBorderImageSlice returns false, aConsumedTokens indicates
@@ -922,7 +922,7 @@ protected:
   bool ParseBorderImageOutset(bool aAcceptsInherit);
   bool ParseBorderImage();
   bool ParseBorderSpacing();
-  bool ParseBorderSide(const nsCSSPropertyID aPropIDs[],
+  bool ParseBorderSide(const nsCSSProperty aPropIDs[],
                          bool aSetAllSides);
   bool ParseBorderStyle();
   bool ParseBorderWidth();
@@ -963,7 +963,7 @@ protected:
   CSSParseResult ParseGridTrackSize(nsCSSValue& aValue,
     GridTrackSizeFlags aFlags = GridTrackSizeFlags::eDefaultTrackSize);
 
-  bool ParseGridAutoColumnsRows(nsCSSPropertyID aPropID);
+  bool ParseGridAutoColumnsRows(nsCSSProperty aPropID);
   bool ParseGridTrackListRepeat(nsCSSValueList** aTailPtr);
   bool ParseGridTrackRepeatIntro(bool            aForSubgrid,
                                  int32_t*        aRepetitions,
@@ -983,8 +983,8 @@ protected:
   bool ParseGridTrackListWithFirstLineNames(nsCSSValue& aValue,
                                             const nsCSSValue& aFirstLineNames);
 
-  bool ParseGridTrackList(nsCSSPropertyID aPropID);
-  bool ParseGridTemplateColumnsRows(nsCSSPropertyID aPropID);
+  bool ParseGridTrackList(nsCSSProperty aPropID);
+  bool ParseGridTemplateColumnsRows(nsCSSProperty aPropID);
 
   // |aAreaIndices| is a lookup table to help us parse faster,
   // mapping area names to indices in |aResult.mNamedAreas|.
@@ -997,9 +997,9 @@ protected:
   bool ParseGrid();
   bool ParseGridShorthandAutoProps();
   bool ParseGridLine(nsCSSValue& aValue);
-  bool ParseGridColumnRowStartEnd(nsCSSPropertyID aPropID);
-  bool ParseGridColumnRow(nsCSSPropertyID aStartPropID,
-                          nsCSSPropertyID aEndPropID);
+  bool ParseGridColumnRowStartEnd(nsCSSProperty aPropID);
+  bool ParseGridColumnRow(nsCSSProperty aStartPropID,
+                          nsCSSProperty aEndPropID);
   bool ParseGridArea();
   bool ParseGridGap();
 
@@ -1010,16 +1010,16 @@ protected:
                                  const KTableEntry aTable[]);
   bool ParseJustifyItems();
   bool ParseAlignItems();
-  bool ParseAlignJustifySelf(nsCSSPropertyID aPropID);
+  bool ParseAlignJustifySelf(nsCSSProperty aPropID);
   // parsing 'align/justify-content' from the css-align spec
-  bool ParseAlignJustifyContent(nsCSSPropertyID aPropID);
+  bool ParseAlignJustifyContent(nsCSSProperty aPropID);
 
   // for 'clip' and '-moz-image-region'
-  bool ParseRect(nsCSSPropertyID aPropID);
+  bool ParseRect(nsCSSProperty aPropID);
   bool ParseColumns();
   bool ParseContain(nsCSSValue& aValue);
   bool ParseContent();
-  bool ParseCounterData(nsCSSPropertyID aPropID);
+  bool ParseCounterData(nsCSSProperty aPropID);
   bool ParseCursor();
   bool ParseFont();
   bool ParseFontSynthesis(nsCSSValue& aValue);
@@ -1065,7 +1065,7 @@ protected:
   bool ParseTouchAction(nsCSSValue& aValue);
 
   bool ParseShadowItem(nsCSSValue& aValue, bool aIsBoxShadow);
-  bool ParseShadowList(nsCSSPropertyID aProperty);
+  bool ParseShadowList(nsCSSProperty aProperty);
   bool ParseShapeOutside(nsCSSValue& aValue);
   bool ParseTransitionProperty();
   bool ParseTransitionTimingFunctionValues(nsCSSValue& aValue);
@@ -1079,7 +1079,7 @@ protected:
     eParseAnimationOrTransitionShorthand_Error
   };
   ParseAnimationOrTransitionShorthandResult
-    ParseAnimationOrTransitionShorthand(const nsCSSPropertyID* aProperties,
+    ParseAnimationOrTransitionShorthand(const nsCSSProperty* aProperties,
                                         const nsCSSValue* aInitialValues,
                                         nsCSSValue* aValues,
                                         size_t aNumProperties);
@@ -1087,13 +1087,13 @@ protected:
   bool ParseAnimation();
   bool ParseWillChange();
 
-  bool ParsePaint(nsCSSPropertyID aPropID);
+  bool ParsePaint(nsCSSProperty aPropID);
   bool ParseDasharray();
   bool ParseMarker();
   bool ParsePaintOrder();
   bool ParseAll();
   bool ParseScrollSnapType();
-  bool ParseScrollSnapPoints(nsCSSValue& aValue, nsCSSPropertyID aPropID);
+  bool ParseScrollSnapPoints(nsCSSValue& aValue, nsCSSProperty aPropID);
   bool ParseScrollSnapDestination(nsCSSValue& aValue);
   bool ParseScrollSnapCoordinate(nsCSSValue& aValue);
   bool ParseWebkitTextStroke();
@@ -1146,16 +1146,16 @@ protected:
   void AppendImpliedEOFCharacters(nsAString& aResult);
 
   // Reused utility parsing routines
-  void AppendValue(nsCSSPropertyID aPropID, const nsCSSValue& aValue);
-  bool ParseBoxProperties(const nsCSSPropertyID aPropIDs[]);
+  void AppendValue(nsCSSProperty aPropID, const nsCSSValue& aValue);
+  bool ParseBoxProperties(const nsCSSProperty aPropIDs[]);
   bool ParseGroupedBoxProperty(int32_t aVariantMask,
                                nsCSSValue& aValue);
-  bool ParseBoxCornerRadius(const nsCSSPropertyID aPropID);
+  bool ParseBoxCornerRadius(const nsCSSProperty aPropID);
   bool ParseBoxCornerRadiiInternals(nsCSSValue array[]);
-  bool ParseBoxCornerRadii(const nsCSSPropertyID aPropIDs[]);
+  bool ParseBoxCornerRadii(const nsCSSProperty aPropIDs[]);
 
   int32_t ParseChoice(nsCSSValue aValues[],
-                      const nsCSSPropertyID aPropIDs[], int32_t aNumIDs);
+                      const nsCSSProperty aPropIDs[], int32_t aNumIDs);
   CSSParseResult ParseColor(nsCSSValue& aValue);
   bool ParseNumberColorComponent(uint8_t& aComponent, char aStop);
   bool ParsePercentageColorComponent(float& aComponent, char aStop);
@@ -1871,7 +1871,7 @@ CSSParserImpl::ParseRule(const nsAString&        aRule,
 }
 
 void
-CSSParserImpl::ParseLonghandProperty(const nsCSSPropertyID aPropID,
+CSSParserImpl::ParseLonghandProperty(const nsCSSProperty aPropID,
                                      const nsAString& aPropValue,
                                      nsIURI* aSheetURL,
                                      nsIURI* aBaseURL,
@@ -1940,7 +1940,7 @@ CSSParserImpl::ParseTransformProperty(const nsAString& aPropValue,
 }
 
 void
-CSSParserImpl::ParseProperty(const nsCSSPropertyID aPropID,
+CSSParserImpl::ParseProperty(const nsCSSProperty aPropID,
                              const nsAString& aPropValue,
                              nsIURI* aSheetURI,
                              nsIURI* aBaseURI,
@@ -2340,7 +2340,7 @@ CSSParserImpl::EvaluateSupportsDeclaration(const nsAString& aProperty,
                                            nsIURI* aBaseURL,
                                            nsIPrincipal* aDocPrincipal)
 {
-  nsCSSPropertyID propID = LookupEnabledProperty(aProperty);
+  nsCSSProperty propID = LookupEnabledProperty(aProperty);
   if (propID == eCSSProperty_UNKNOWN) {
     return false;
   }
@@ -2919,8 +2919,8 @@ CSSParserImpl::ResolveVariableValue(const nsAString& aPropertyValue,
 
 void
 CSSParserImpl::ParsePropertyWithVariableReferences(
-                                            nsCSSPropertyID aPropertyID,
-                                            nsCSSPropertyID aShorthandPropertyID,
+                                            nsCSSProperty aPropertyID,
+                                            nsCSSProperty aShorthandPropertyID,
                                             const nsAString& aValue,
                                             const CSSVariableValues* aVariables,
                                             nsRuleData* aRuleData,
@@ -2959,7 +2959,7 @@ CSSParserImpl::ParsePropertyWithVariableReferences(
     ReleaseScanner();
   }
 
-  nsCSSPropertyID propertyToParse =
+  nsCSSProperty propertyToParse =
     aShorthandPropertyID != eCSSProperty_UNKNOWN ? aShorthandPropertyID :
                                                    aPropertyID;
 
@@ -4662,7 +4662,7 @@ CSSParserImpl::ParseSupportsConditionInParensInsideParens(bool& aConditionMet)
         return false;
       }
 
-      nsCSSPropertyID propID = LookupEnabledProperty(propertyName);
+      nsCSSProperty propID = LookupEnabledProperty(propertyName);
       if (propID == eCSSProperty_UNKNOWN) {
         if (ExpectSymbol(')', true)) {
           UngetToken();
@@ -7285,7 +7285,7 @@ CSSParserImpl::ParseDeclaration(css::Declaration* aDeclaration,
   nsAutoSuppressErrors suppressErrors(this, mInFailingSupportsRule);
 
   // Information about a parsed non-custom property.
-  nsCSSPropertyID propID;
+  nsCSSProperty propID;
 
   // Information about a parsed custom property.
   CSSVariableDeclarations::Type variableType;
@@ -7402,47 +7402,47 @@ CSSParserImpl::ParseDeclaration(css::Declaration* aDeclaration,
   return true;
 }
 
-static const nsCSSPropertyID kBorderTopIDs[] = {
+static const nsCSSProperty kBorderTopIDs[] = {
   eCSSProperty_border_top_width,
   eCSSProperty_border_top_style,
   eCSSProperty_border_top_color
 };
-static const nsCSSPropertyID kBorderRightIDs[] = {
+static const nsCSSProperty kBorderRightIDs[] = {
   eCSSProperty_border_right_width,
   eCSSProperty_border_right_style,
   eCSSProperty_border_right_color
 };
-static const nsCSSPropertyID kBorderBottomIDs[] = {
+static const nsCSSProperty kBorderBottomIDs[] = {
   eCSSProperty_border_bottom_width,
   eCSSProperty_border_bottom_style,
   eCSSProperty_border_bottom_color
 };
-static const nsCSSPropertyID kBorderLeftIDs[] = {
+static const nsCSSProperty kBorderLeftIDs[] = {
   eCSSProperty_border_left_width,
   eCSSProperty_border_left_style,
   eCSSProperty_border_left_color
 };
-static const nsCSSPropertyID kBorderInlineStartIDs[] = {
+static const nsCSSProperty kBorderInlineStartIDs[] = {
   eCSSProperty_border_inline_start_width,
   eCSSProperty_border_inline_start_style,
   eCSSProperty_border_inline_start_color
 };
-static const nsCSSPropertyID kBorderInlineEndIDs[] = {
+static const nsCSSProperty kBorderInlineEndIDs[] = {
   eCSSProperty_border_inline_end_width,
   eCSSProperty_border_inline_end_style,
   eCSSProperty_border_inline_end_color
 };
-static const nsCSSPropertyID kBorderBlockStartIDs[] = {
+static const nsCSSProperty kBorderBlockStartIDs[] = {
   eCSSProperty_border_block_start_width,
   eCSSProperty_border_block_start_style,
   eCSSProperty_border_block_start_color
 };
-static const nsCSSPropertyID kBorderBlockEndIDs[] = {
+static const nsCSSProperty kBorderBlockEndIDs[] = {
   eCSSProperty_border_block_end_width,
   eCSSProperty_border_block_end_style,
   eCSSProperty_border_block_end_color
 };
-static const nsCSSPropertyID kColumnRuleIDs[] = {
+static const nsCSSProperty kColumnRuleIDs[] = {
   eCSSProperty__moz_column_rule_width,
   eCSSProperty__moz_column_rule_style,
   eCSSProperty__moz_column_rule_color
@@ -8487,7 +8487,7 @@ CSSParserImpl::ParseFlex()
 bool
 CSSParserImpl::ParseFlexFlow()
 {
-  static const nsCSSPropertyID kFlexFlowSubprops[] = {
+  static const nsCSSProperty kFlexFlowSubprops[] = {
     eCSSProperty_flex_direction,
     eCSSProperty_flex_wrap
   };
@@ -8779,7 +8779,7 @@ CSSParserImpl::ParseGridTrackSize(nsCSSValue& aValue,
 }
 
 bool
-CSSParserImpl::ParseGridAutoColumnsRows(nsCSSPropertyID aPropID)
+CSSParserImpl::ParseGridAutoColumnsRows(nsCSSProperty aPropID)
 {
   nsCSSValue value;
   if (ParseSingleTokenVariant(value, VARIANT_INHERIT, nullptr) ||
@@ -9155,7 +9155,7 @@ CSSParserImpl::ParseGridTrackListRepeat(nsCSSValueList** aTailPtr)
 }
 
 bool
-CSSParserImpl::ParseGridTrackList(nsCSSPropertyID aPropID)
+CSSParserImpl::ParseGridTrackList(nsCSSProperty aPropID)
 {
   nsCSSValue value;
   nsCSSValue firstLineNames;
@@ -9168,7 +9168,7 @@ CSSParserImpl::ParseGridTrackList(nsCSSPropertyID aPropID)
 }
 
 bool
-CSSParserImpl::ParseGridTemplateColumnsRows(nsCSSPropertyID aPropID)
+CSSParserImpl::ParseGridTemplateColumnsRows(nsCSSProperty aPropID)
 {
   nsCSSValue value;
   if (ParseSingleTokenVariant(value, VARIANT_INHERIT | VARIANT_NONE, nullptr)) {
@@ -9487,7 +9487,7 @@ CSSParserImpl::ParseGrid()
 {
   nsCSSValue value;
   if (ParseSingleTokenVariant(value, VARIANT_INHERIT, nullptr)) {
-    for (const nsCSSPropertyID* subprops =
+    for (const nsCSSProperty* subprops =
            nsCSSProps::SubpropertyEntryFor(eCSSProperty_grid);
          *subprops != eCSSProperty_UNKNOWN; ++subprops) {
       AppendValue(*subprops, value);
@@ -9661,7 +9661,7 @@ CSSParserImpl::ParseGridLine(nsCSSValue& aValue)
 }
 
 bool
-CSSParserImpl::ParseGridColumnRowStartEnd(nsCSSPropertyID aPropID)
+CSSParserImpl::ParseGridColumnRowStartEnd(nsCSSProperty aPropID)
 {
   nsCSSValue value;
   if (ParseSingleTokenVariant(value, VARIANT_INHERIT, nullptr) ||
@@ -9688,8 +9688,8 @@ HandleGridLineFallback(const nsCSSValue& aFallback, nsCSSValue& aValue)
 }
 
 bool
-CSSParserImpl::ParseGridColumnRow(nsCSSPropertyID aStartPropID,
-                                  nsCSSPropertyID aEndPropID)
+CSSParserImpl::ParseGridColumnRow(nsCSSProperty aStartPropID,
+                                  nsCSSProperty aEndPropID)
 {
   nsCSSValue value;
   nsCSSValue secondValue;
@@ -9905,7 +9905,7 @@ CSSParserImpl::ParseAlignItems()
 // auto | normal | stretch | <baseline-position> |
 // [ <overflow-position>? && <self-position> ]
 bool
-CSSParserImpl::ParseAlignJustifySelf(nsCSSPropertyID aPropID)
+CSSParserImpl::ParseAlignJustifySelf(nsCSSProperty aPropID)
 {
   nsCSSValue value;
   if (!ParseSingleTokenVariant(value, VARIANT_INHERIT, nullptr)) {
@@ -9924,7 +9924,7 @@ CSSParserImpl::ParseAlignJustifySelf(nsCSSPropertyID aPropID)
 //   [ <overflow-position>? && <content-position> ] ]
 // (the part after the || is called <*-position> below)
 bool
-CSSParserImpl::ParseAlignJustifyContent(nsCSSPropertyID aPropID)
+CSSParserImpl::ParseAlignJustifyContent(nsCSSProperty aPropID)
 {
   nsCSSValue value;
   if (!ParseSingleTokenVariant(value, VARIANT_INHERIT, nullptr)) {
@@ -10867,7 +10867,7 @@ CSSParserImpl::ParseWebkitGradient(nsCSSValue& aValue)
 bool
 CSSParserImpl::ParseWebkitTextStroke()
 {
-  static const nsCSSPropertyID kWebkitTextStrokeIDs[] = {
+  static const nsCSSProperty kWebkitTextStrokeIDs[] = {
     eCSSProperty__webkit_text_stroke_width,
     eCSSProperty__webkit_text_stroke_color
   };
@@ -10897,7 +10897,7 @@ CSSParserImpl::ParseWebkitTextStroke()
 
   int32_t
 CSSParserImpl::ParseChoice(nsCSSValue aValues[],
-                           const nsCSSPropertyID aPropIDs[], int32_t aNumIDs)
+                           const nsCSSProperty aPropIDs[], int32_t aNumIDs)
 {
   int32_t found = 0;
   nsAutoParseCompoundProperty compound(this);
@@ -10970,7 +10970,7 @@ CSSParserImpl::ParseChoice(nsCSSValue aValues[],
 }
 
 void
-CSSParserImpl::AppendValue(nsCSSPropertyID aPropID, const nsCSSValue& aValue)
+CSSParserImpl::AppendValue(nsCSSProperty aPropID, const nsCSSValue& aValue)
 {
   mTempData.AddLonghandProperty(aPropID, aValue);
 }
@@ -10981,7 +10981,7 @@ CSSParserImpl::AppendValue(nsCSSPropertyID aPropID, const nsCSSValue& aValue)
  * existing values.
  */
 bool
-CSSParserImpl::ParseBoxProperties(const nsCSSPropertyID aPropIDs[])
+CSSParserImpl::ParseBoxProperties(const nsCSSProperty aPropIDs[])
 {
   // Get up to four values for the property
   int32_t count = 0;
@@ -11073,7 +11073,7 @@ CSSParserImpl::ParseGroupedBoxProperty(int32_t aVariantMask,
 }
 
 bool
-CSSParserImpl::ParseBoxCornerRadius(nsCSSPropertyID aPropID)
+CSSParserImpl::ParseBoxCornerRadius(nsCSSProperty aPropID)
 {
   nsCSSValue dimenX, dimenY;
   // required first value
@@ -11197,7 +11197,7 @@ CSSParserImpl::ParseBoxCornerRadiiInternals(nsCSSValue array[])
 }
 
 bool
-CSSParserImpl::ParseBoxCornerRadii(const nsCSSPropertyID aPropIDs[])
+CSSParserImpl::ParseBoxCornerRadii(const nsCSSProperty aPropIDs[])
 {
   nsCSSValue value[4];
   if (!ParseBoxCornerRadiiInternals(value)) {
@@ -11211,31 +11211,31 @@ CSSParserImpl::ParseBoxCornerRadii(const nsCSSPropertyID aPropIDs[])
 }
 
 // These must be in CSS order (top,right,bottom,left) for indexing to work
-static const nsCSSPropertyID kBorderStyleIDs[] = {
+static const nsCSSProperty kBorderStyleIDs[] = {
   eCSSProperty_border_top_style,
   eCSSProperty_border_right_style,
   eCSSProperty_border_bottom_style,
   eCSSProperty_border_left_style
 };
-static const nsCSSPropertyID kBorderWidthIDs[] = {
+static const nsCSSProperty kBorderWidthIDs[] = {
   eCSSProperty_border_top_width,
   eCSSProperty_border_right_width,
   eCSSProperty_border_bottom_width,
   eCSSProperty_border_left_width
 };
-static const nsCSSPropertyID kBorderColorIDs[] = {
+static const nsCSSProperty kBorderColorIDs[] = {
   eCSSProperty_border_top_color,
   eCSSProperty_border_right_color,
   eCSSProperty_border_bottom_color,
   eCSSProperty_border_left_color
 };
-static const nsCSSPropertyID kBorderRadiusIDs[] = {
+static const nsCSSProperty kBorderRadiusIDs[] = {
   eCSSProperty_border_top_left_radius,
   eCSSProperty_border_top_right_radius,
   eCSSProperty_border_bottom_right_radius,
   eCSSProperty_border_bottom_left_radius
 };
-static const nsCSSPropertyID kOutlineRadiusIDs[] = {
+static const nsCSSProperty kOutlineRadiusIDs[] = {
   eCSSProperty__moz_outline_radius_topLeft,
   eCSSProperty__moz_outline_radius_topRight,
   eCSSProperty__moz_outline_radius_bottomRight,
@@ -11259,7 +11259,7 @@ CSSParserImpl::RestoreSavedInputState(const CSSParserInputState& aState)
 }
 
 bool
-CSSParserImpl::ParseProperty(nsCSSPropertyID aPropID)
+CSSParserImpl::ParseProperty(nsCSSProperty aPropID)
 {
   // Can't use AutoRestore<bool> because it's a bitfield.
   MOZ_ASSERT(!mHashlessColorQuirk,
@@ -11473,7 +11473,7 @@ CSSParserImpl::ParseProperty(nsCSSPropertyID aPropID)
 }
 
 bool
-CSSParserImpl::ParsePropertyByFunction(nsCSSPropertyID aPropID)
+CSSParserImpl::ParsePropertyByFunction(nsCSSProperty aPropID)
 {
   switch (aPropID) {  // handle shorthand or multiple properties
   case eCSSProperty_background:
@@ -11698,7 +11698,7 @@ CSSParserImpl::ParsePropertyByFunction(nsCSSPropertyID aPropID)
 
 CSSParseResult
 CSSParserImpl::ParseBoxProperty(nsCSSValue& aValue,
-                                nsCSSPropertyID aPropID)
+                                nsCSSProperty aPropID)
 {
   if (aPropID < 0 || aPropID >= eCSSProperty_COUNT_no_shorthands) {
     MOZ_ASSERT(false, "must only be called for longhand properties");
@@ -11729,7 +11729,7 @@ CSSParserImpl::ParseBoxProperty(nsCSSValue& aValue,
 
 bool
 CSSParserImpl::ParseSingleValuePropertyByFunction(nsCSSValue& aValue,
-                                                  nsCSSPropertyID aPropID)
+                                                  nsCSSProperty aPropID)
 {
   switch (aPropID) {
     case eCSSProperty_font_family:
@@ -11788,7 +11788,7 @@ CSSParserImpl::ParseSingleValuePropertyByFunction(nsCSSValue& aValue,
 
 CSSParseResult
 CSSParserImpl::ParseSingleValueProperty(nsCSSValue& aValue,
-                                        nsCSSPropertyID aPropID)
+                                        nsCSSProperty aPropID)
 {
   if (aPropID == eCSSPropertyExtra_x_none_value) {
     return ParseVariant(aValue, VARIANT_NONE | VARIANT_INHERIT, nullptr);
@@ -11936,7 +11936,7 @@ BoxPositionMaskToCSSValue(int32_t aMask, bool isX)
 }
 
 bool
-CSSParserImpl::ParseImageLayers(const nsCSSPropertyID aTable[])
+CSSParserImpl::ParseImageLayers(const nsCSSProperty aTable[])
 {
   nsAutoParseCompoundProperty compound(this);
 
@@ -11946,7 +11946,7 @@ CSSParserImpl::ParseImageLayers(const nsCSSPropertyID aTable[])
   // Check first for inherit/initial/unset.
   if (ParseSingleTokenVariant(color, VARIANT_INHERIT, nullptr)) {
     // must be alone
-    for (const nsCSSPropertyID* subprops =
+    for (const nsCSSProperty* subprops =
            nsCSSProps::SubpropertyEntryFor(aTable[nsStyleImageLayers::shorthand]);
          *subprops != eCSSProperty_UNKNOWN; ++subprops) {
       AppendValue(*subprops, color);
@@ -12071,7 +12071,7 @@ CSSParserImpl::IsFunctionTokenValidForImageLayerImage(
 bool
 CSSParserImpl::ParseImageLayersItem(
   CSSParserImpl::ImageLayersShorthandParseState& aState,
-  const nsCSSPropertyID aTable[])
+  const nsCSSProperty aTable[])
 {
   // Fill in the values that the shorthand will set if we don't find
   // other values.
@@ -12330,7 +12330,7 @@ CSSParserImpl::ParseImageLayersItem(
 // This function is very similar to ParseScrollSnapCoordinate,
 // ParseImageLayerPosition, and ParseImageLayersSize.
 bool
-CSSParserImpl::ParseValueList(nsCSSPropertyID aPropID)
+CSSParserImpl::ParseValueList(nsCSSProperty aPropID)
 {
   // aPropID is a single value prop-id
   nsCSSValue value;
@@ -12354,7 +12354,7 @@ CSSParserImpl::ParseValueList(nsCSSPropertyID aPropID)
 }
 
 bool
-CSSParserImpl::ParseImageLayerRepeat(nsCSSPropertyID aPropID)
+CSSParserImpl::ParseImageLayerRepeat(nsCSSProperty aPropID)
 {
   nsCSSValue value;
   // 'initial', 'inherit' and 'unset' stand alone, no list permitted.
@@ -12405,7 +12405,7 @@ CSSParserImpl::ParseImageLayerRepeatValues(nsCSSValuePair& aValue)
 }
 
 bool
-CSSParserImpl::ParseImageLayerPosition(const nsCSSPropertyID aTable[])
+CSSParserImpl::ParseImageLayerPosition(const nsCSSProperty aTable[])
 {
   // 'initial', 'inherit' and 'unset' stand alone, no list permitted.
   nsCSSValue position;
@@ -12445,7 +12445,7 @@ CSSParserImpl::ParseImageLayerPosition(const nsCSSPropertyID aTable[])
 }
 
 bool
-CSSParserImpl::ParseImageLayerPositionCoord(nsCSSPropertyID aPropID, bool aIsHorizontal)
+CSSParserImpl::ParseImageLayerPositionCoord(nsCSSProperty aPropID, bool aIsHorizontal)
 {
   nsCSSValue value;
   // 'initial', 'inherit' and 'unset' stand alone, no list permitted.
@@ -12914,7 +12914,7 @@ CSSParserImpl::ParseImageLayerPositionCoordItem(nsCSSValue& aOut, bool aIsHorizo
 // This function is very similar to ParseScrollSnapCoordinate,
 // ParseImageLayers, and ParseImageLayerPosition.
 bool
-CSSParserImpl::ParseImageLayerSize(nsCSSPropertyID aPropID)
+CSSParserImpl::ParseImageLayerSize(nsCSSProperty aPropID)
 {
   nsCSSValue value;
   // 'initial', 'inherit' and 'unset' stand alone, no list permitted.
@@ -13288,7 +13288,7 @@ CSSParserImpl::ParseBorderSpacing()
 }
 
 bool
-CSSParserImpl::ParseBorderSide(const nsCSSPropertyID aPropIDs[],
+CSSParserImpl::ParseBorderSide(const nsCSSProperty aPropIDs[],
                                bool aSetAllSides)
 {
   const int32_t numProps = 3;
@@ -13318,7 +13318,7 @@ CSSParserImpl::ParseBorderSide(const nsCSSPropertyID aPropIDs[],
       AppendValue(kBorderColorIDs[index], values[2]);
     }
 
-    static const nsCSSPropertyID kBorderColorsProps[] = {
+    static const nsCSSProperty kBorderColorsProps[] = {
       eCSSProperty_border_top_colors,
       eCSSProperty_border_right_colors,
       eCSSProperty_border_bottom_colors,
@@ -13371,7 +13371,7 @@ CSSParserImpl::ParseBorderWidth()
 }
 
 bool
-CSSParserImpl::ParseBorderColors(nsCSSPropertyID aProperty)
+CSSParserImpl::ParseBorderColors(nsCSSProperty aProperty)
 {
   nsCSSValue value;
   // 'inherit', 'initial', 'unset' and 'none' are only allowed on their own
@@ -13659,7 +13659,7 @@ CSSParserImpl::RequireWhitespace()
 }
 
 bool
-CSSParserImpl::ParseRect(nsCSSPropertyID aPropID)
+CSSParserImpl::ParseRect(nsCSSProperty aPropID)
 {
   nsCSSValue val;
   if (ParseSingleTokenVariant(val, VARIANT_INHERIT | VARIANT_AUTO, nullptr)) {
@@ -13710,7 +13710,7 @@ CSSParserImpl::ParseColumns()
   // If the fake "auto" value is found, and one of the real values isn't,
   // that means the fake auto value is meant for the real value we didn't
   // find.
-  static const nsCSSPropertyID columnIDs[] = {
+  static const nsCSSProperty columnIDs[] = {
     eCSSPropertyExtra_x_auto_value,
     eCSSProperty__moz_column_count,
     eCSSProperty__moz_column_width
@@ -13798,7 +13798,7 @@ CSSParserImpl::ParseContent()
 }
 
 bool
-CSSParserImpl::ParseCounterData(nsCSSPropertyID aPropID)
+CSSParserImpl::ParseCounterData(nsCSSProperty aPropID)
 {
   static const nsCSSKeyword kCounterDataKTable[] = {
     eCSSKeyword_none,
@@ -13946,7 +13946,7 @@ CSSParserImpl::ParseFont()
 
   // The order of the initializers here must match the order of the indexes
   // defined above!
-  static const nsCSSPropertyID fontIDs[] = {
+  static const nsCSSProperty fontIDs[] = {
     eCSSProperty_font_style,
     eCSSProperty_font_variant_caps,
     eCSSProperty_font_weight,
@@ -14995,7 +14995,7 @@ CSSParserImpl::ParseListStyle()
   // allocated to a dummy property instead. Since parse function for
   // 'list-style-type' could accept values for 'list-style-position',
   // we put position in front of type.
-  static const nsCSSPropertyID listStyleIDs[] = {
+  static const nsCSSProperty listStyleIDs[] = {
     eCSSPropertyExtra_x_none_value,
     eCSSProperty_list_style_position,
     eCSSProperty_list_style_type,
@@ -15061,7 +15061,7 @@ CSSParserImpl::ParseListStyleType(nsCSSValue& aValue)
 bool
 CSSParserImpl::ParseMargin()
 {
-  static const nsCSSPropertyID kMarginSideIDs[] = {
+  static const nsCSSProperty kMarginSideIDs[] = {
     eCSSProperty_margin_top,
     eCSSProperty_margin_right,
     eCSSProperty_margin_bottom,
@@ -15087,7 +15087,7 @@ bool
 CSSParserImpl::ParseOutline()
 {
   const int32_t numProps = 3;
-  static const nsCSSPropertyID kOutlineIDs[] = {
+  static const nsCSSProperty kOutlineIDs[] = {
     eCSSProperty_outline_color,
     eCSSProperty_outline_style,
     eCSSProperty_outline_width
@@ -15147,7 +15147,7 @@ CSSParserImpl::ParseOverflow()
 bool
 CSSParserImpl::ParsePadding()
 {
-  static const nsCSSPropertyID kPaddingSideIDs[] = {
+  static const nsCSSProperty kPaddingSideIDs[] = {
     eCSSProperty_padding_top,
     eCSSProperty_padding_right,
     eCSSProperty_padding_bottom,
@@ -15188,7 +15188,7 @@ CSSParserImpl::ParseQuotes()
 bool
 CSSParserImpl::ParseTextDecoration()
 {
-  static const nsCSSPropertyID kTextDecorationIDs[] = {
+  static const nsCSSProperty kTextDecorationIDs[] = {
     eCSSProperty_text_decoration_line,
     eCSSProperty_text_decoration_style,
     eCSSProperty_text_decoration_color
@@ -15224,7 +15224,7 @@ CSSParserImpl::ParseTextDecoration()
 bool
 CSSParserImpl::ParseTextEmphasis()
 {
-  static constexpr nsCSSPropertyID kTextEmphasisIDs[] = {
+  static constexpr nsCSSProperty kTextEmphasisIDs[] = {
     eCSSProperty_text_emphasis_style,
     eCSSProperty_text_emphasis_color
   };
@@ -16260,7 +16260,7 @@ bool CSSParserImpl::ParseTransformOrigin(bool aPerspective)
   if (!ParseBoxPositionValues(position, true))
     return false;
 
-  nsCSSPropertyID prop = eCSSProperty_transform_origin;
+  nsCSSProperty prop = eCSSProperty_transform_origin;
   if (aPerspective) {
     prop = eCSSProperty_perspective_origin;
   }
@@ -16635,7 +16635,7 @@ AppendValueToList(nsCSSValue& aContainer,
 
 CSSParserImpl::ParseAnimationOrTransitionShorthandResult
 CSSParserImpl::ParseAnimationOrTransitionShorthand(
-                 const nsCSSPropertyID* aProperties,
+                 const nsCSSProperty* aProperties,
                  const nsCSSValue* aInitialValues,
                  nsCSSValue* aValues,
                  size_t aNumProperties)
@@ -16731,7 +16731,7 @@ CSSParserImpl::ParseAnimationOrTransitionShorthand(
 bool
 CSSParserImpl::ParseTransition()
 {
-  static const nsCSSPropertyID kTransitionProperties[] = {
+  static const nsCSSProperty kTransitionProperties[] = {
     eCSSProperty_transition_duration,
     eCSSProperty_transition_timing_function,
     // Must check 'transition-delay' after 'transition-duration', since
@@ -16808,7 +16808,7 @@ CSSParserImpl::ParseTransition()
 bool
 CSSParserImpl::ParseAnimation()
 {
-  static const nsCSSPropertyID kAnimationProperties[] = {
+  static const nsCSSProperty kAnimationProperties[] = {
     eCSSProperty_animation_duration,
     eCSSProperty_animation_timing_function,
     // Must check 'animation-delay' after 'animation-duration', since
@@ -16954,7 +16954,7 @@ CSSParserImpl::ParseShadowItem(nsCSSValue& aValue, bool aIsBoxShadow)
 }
 
 bool
-CSSParserImpl::ParseShadowList(nsCSSPropertyID aProperty)
+CSSParserImpl::ParseShadowList(nsCSSProperty aProperty)
 {
   nsAutoParseCompoundProperty compound(this);
   bool isBoxShadow = aProperty == eCSSProperty_box_shadow;
@@ -17010,7 +17010,7 @@ CSSParserImpl::SetDefaultNamespaceOnSelector(nsCSSSelector& aSelector)
 }
 
 bool
-CSSParserImpl::ParsePaint(nsCSSPropertyID aPropID)
+CSSParserImpl::ParsePaint(nsCSSProperty aPropID)
 {
   nsCSSValue x, y;
 
@@ -17273,7 +17273,7 @@ CSSParserImpl::ParseScrollSnapType()
 }
 
 bool
-CSSParserImpl::ParseScrollSnapPoints(nsCSSValue& aValue, nsCSSPropertyID aPropID)
+CSSParserImpl::ParseScrollSnapPoints(nsCSSValue& aValue, nsCSSProperty aPropID)
 {
   if (ParseSingleTokenVariant(aValue, VARIANT_INHERIT | VARIANT_NONE,
                               nullptr)) {
@@ -17577,7 +17577,7 @@ CSSParserImpl::ParseValueWithVariables(CSSVariableDeclarations::Type* aType,
 }
 
 bool
-CSSParserImpl::IsValueValidForProperty(const nsCSSPropertyID aPropID,
+CSSParserImpl::IsValueValidForProperty(const nsCSSProperty aPropID,
                                        const nsAString& aPropValue)
 {
   mData.AssertInitialState();
@@ -17747,7 +17747,7 @@ nsCSSParser::ParseRule(const nsAString&        aRule,
 }
 
 void
-nsCSSParser::ParseProperty(const nsCSSPropertyID aPropID,
+nsCSSParser::ParseProperty(const nsCSSProperty aPropID,
                            const nsAString&    aPropValue,
                            nsIURI*             aSheetURI,
                            nsIURI*             aBaseURI,
@@ -17764,7 +17764,7 @@ nsCSSParser::ParseProperty(const nsCSSPropertyID aPropID,
 }
 
 void
-nsCSSParser::ParseLonghandProperty(const nsCSSPropertyID aPropID,
+nsCSSParser::ParseLonghandProperty(const nsCSSProperty aPropID,
                                    const nsAString&    aPropValue,
                                    nsIURI*             aSheetURI,
                                    nsIURI*             aBaseURI,
@@ -17920,8 +17920,8 @@ nsCSSParser::ResolveVariableValue(const nsAString& aPropertyValue,
 
 void
 nsCSSParser::ParsePropertyWithVariableReferences(
-                                            nsCSSPropertyID aPropertyID,
-                                            nsCSSPropertyID aShorthandPropertyID,
+                                            nsCSSProperty aPropertyID,
+                                            nsCSSProperty aShorthandPropertyID,
                                             const nsAString& aValue,
                                             const CSSVariableValues* aVariables,
                                             nsRuleData* aRuleData,
@@ -17975,7 +17975,7 @@ nsCSSParser::ParseFontFaceDescriptor(nsCSSFontDesc aDescID,
 }
 
 bool
-nsCSSParser::IsValueValidForProperty(const nsCSSPropertyID aPropID,
+nsCSSParser::IsValueValidForProperty(const nsCSSProperty aPropID,
                                      const nsAString&    aPropValue)
 {
   return static_cast<CSSParserImpl*>(mImpl)->
