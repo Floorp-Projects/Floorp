@@ -130,8 +130,11 @@ NS_IMPL_ISUPPORTS(WindowDestroyObserver, nsIObserver);
 HTMLTrackElement::HTMLTrackElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo)
   , mLoadResourceDispatched(false)
-  , mWindowDestroyObserver(nullptr)
 {
+  nsISupports* parentObject = OwnerDoc()->GetParentObject();
+  NS_ENSURE_TRUE_VOID(parentObject);
+  nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(parentObject);
+  mWindowDestroyObserver = new WindowDestroyObserver(this, window->WindowID());
 }
 
 HTMLTrackElement::~HTMLTrackElement()
@@ -321,10 +324,6 @@ HTMLTrackElement::LoadResource()
   NS_ENSURE_TRUE_VOID(NS_SUCCEEDED(rv));
 
   mChannel = channel;
-  nsISupports* parentObject = OwnerDoc()->GetParentObject();
-  NS_ENSURE_TRUE_VOID(parentObject);
-  nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(parentObject);
-  mWindowDestroyObserver = new WindowDestroyObserver(this, window->WindowID());
 }
 
 nsresult
