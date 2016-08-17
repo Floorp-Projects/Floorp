@@ -4,7 +4,7 @@
 
 Components.utils.import("resource://gre/modules/Promise.jsm", this);
 
-var {AddonTestUtils} = Components.utils.import("resource://testing-common/AddonManagerTesting.jsm", {});
+var {AddonManagerTesting} = Components.utils.import("resource://testing-common/AddonManagerTesting.jsm", {});
 var {HttpServer} = Components.utils.import("resource://testing-common/httpd.js", {});
 
 var gManagerWindow;
@@ -254,7 +254,7 @@ add_task(function* testButtonPresence() {
 
 // Remove the add-on we've been testing with.
 add_task(function* testCleanup() {
-  yield AddonTestUtils.uninstallAddonByID("test-experiment1@experiments.mozilla.org");
+  yield AddonManagerTesting.uninstallAddonByID("test-experiment1@experiments.mozilla.org");
   // Verify some conditions, just in case.
   let addons = yield getExperimentAddons();
   Assert.equal(addons.length, 0, "No experiment add-ons are installed.");
