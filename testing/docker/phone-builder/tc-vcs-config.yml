@@ -13,10 +13,10 @@ repoCache:
   # Name/prefixed used as part of the base url.
   cacheName: sources/{{name}}.tar.gz
   # Command used to upload the tarball
-  uploadTar: "curl --header 'Content-Type: application/x-tar' --header 'Content-Encoding: gzip' -X PUT --data-binary @'{{source}}' '{{url}}'"
+  uploadTar: "curl --retry 5 --fail --header 'Content-Type: application/x-tar' --header 'Content-Encoding: gzip' -X PUT --data-binary @'{{source}}' '{{url}}'"
   # Large http get requests are often slower using nodes built in http layer so
   # we utilize a subprocess which is responsible for fetching...
-  get: curl --connect-timeout 30 --speed-limit 500000 -L -o {{dest}} {{url}}
+  get: curl --retry 5 --fail -L -o {{dest}} {{url}}
   # Used to create clone tarball
   compress: tar -czf {{dest}} {{source}}
   # All cache urls use tar + gz this is the command used to extract those files
@@ -27,10 +27,10 @@ cloneCache:
   # The root where all downloaded cache files are stored on the local machine...
   cacheDir: '{{env.HOME}}/.tc-vcs/'
   # Command used to upload the tarball
-  uploadTar: "curl --header 'Content-Type: application/x-tar' --header 'Content-Encoding: gzip' -X PUT --data-binary @'{{source}}' '{{url}}'"
+  uploadTar: "curl --retry 5 --fail --header 'Content-Type: application/x-tar' --header 'Content-Encoding: gzip' -X PUT --data-binary @'{{source}}' '{{url}}'"
   # Large http get requests are often slower using nodes built in http layer so
   # we utilize a subprocess which is responsible for fetching...
-  get: curl --connect-timeout 30 --speed-limit 500000 -L -o {{dest}} {{url}}
+  get: curl --retry 5 --fail -L -o {{dest}} {{url}}
   # Used to create clone tarball
   compress: tar -czf {{dest}} {{source}}
   # All cache urls use tar + gz this is the command used to extract those files
