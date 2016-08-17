@@ -1192,9 +1192,49 @@ Resolve(JSContext* cx, Module& module, Handle<PromiseObject*> promise)
     return promise->resolve(cx, resolutionValue);
 }
 
+struct CompileTask : JS::AsyncTask
+{
+    PersistentRooted<PromiseObject*> promise;
+    MutableBytes                     bytecode;
+    CompileArgs                      compileArgs;
+    UniqueChars                      error;
+    SharedModule                     module;
+
+    CompileTask(JSContext* cx, Handle<PromiseObject*> promise)
+      : promise(cx, promise)
+    {}
+
+    ~CompileTask() {
+        MOZ_ASSERT(CurrentThreadCanAccessZone(promise->zone()));
+    }
+
+    void finish(JSContext* cx) override {
+        // We can't leave a pending exception when returning to the caller so do
+        // the same thing as Gecko, which is to ignore the error. This should
+        // only happen due to OOM or interruption.
+        if (module) {
+            if (!Resolve(cx, *module, promise))
+                cx->clearPendingException();
+        } else {
+            if (!Reject(cx, compileArgs, Move(error), promise))
+                cx->clearPendingException();
+        }
+        js_delete(this);
+    }
+
+    void cancel(JSContext* cx) override {
+        js_delete(this);
+    }
+};
+
 static bool
 WebAssembly_compile(JSContext* cx, unsigned argc, Value* vp)
 {
+    if (!cx->startAsyncTaskCallback || !cx->finishAsyncTaskCallback) {
+        JS_ReportError(cx, "WebAssembly.compile not supported in this runtime.");
+        return false;
+    }
+
     CallArgs callArgs = CallArgsFromVp(argc, vp);
 
     RootedFunction nopFun(cx, NewNativeFunction(cx, Nop, 0, nullptr));
@@ -1205,9 +1245,11 @@ WebAssembly_compile(JSContext* cx, unsigned argc, Value* vp)
     if (!promise)
         return false;
 
-    MutableBytes bytecode;
-    CompileArgs compileArgs;
-    if (!GetCompileArgs(cx, callArgs, "WebAssembly.compile", &bytecode, &compileArgs)) {
+    UniquePtr<CompileTask> task = cx->make_unique<CompileTask>(cx, promise);
+    if (!task)
+        return false;
+
+    if (!GetCompileArgs(cx, callArgs, "WebAssembly.compile", &task->bytecode, &task->compileArgs)) {
         if (!cx->isExceptionPending())
             return false;
 
@@ -1222,14 +1264,22 @@ WebAssembly_compile(JSContext* cx, unsigned argc, Value* vp)
         return true;
     }
 
-    UniqueChars error;
-    if (SharedModule module = Compile(*bytecode, compileArgs, &error)) {
-        if (!Resolve(cx, *module, promise))
-            return false;
-    } else {
-        if (!Reject(cx, compileArgs, Move(error), promise))
-            return false;
+    // Per interface contract, after startAsyncTaskCallback succeeds,
+    // finishAsyncTaskCallback *must* be called on all paths.
+
+    if (!cx->startAsyncTaskCallback(cx, task.get())) {
+        ReportOutOfMemory(cx);
+        return false;
     }
+
+    task->module = Compile(*task->bytecode, task->compileArgs, &task->error);
+
+    if (!cx->finishAsyncTaskCallback(task.get())) {
+        ReportOutOfMemory(cx);
+        return false;
+    }
+
+    Unused << task.release();
 
     callArgs.rval().setObject(*promise);
     return true;
