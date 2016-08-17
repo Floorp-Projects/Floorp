@@ -6,6 +6,7 @@
 
 #include "PresentationRequest.h"
 
+#include "AvailabilityCollection.h"
 #include "ControllerConnectionCollection.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/dom/PresentationRequestBinding.h"
@@ -340,19 +341,50 @@ PresentationRequest::GetAvailability(ErrorResult& aRv)
     return promise.forget();
   }
 
-  // TODO
-  // Search the set of availability object and resolve
-  // promise with the one had same presentation URLs.
-
-  RefPtr<PresentationAvailability> availability =
-    PresentationAvailability::Create(GetOwner(), promise);
-
-  if (!availability) {
-    promise->MaybeReject(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
-    return promise.forget();
-  }
+  FindOrCreatePresentationAvailability(promise);
 
   return promise.forget();
+}
+
+void
+PresentationRequest::FindOrCreatePresentationAvailability(RefPtr<Promise>& aPromise)
+{
+  MOZ_ASSERT(aPromise);
+
+  if (NS_WARN_IF(!GetOwner())) {
+    aPromise->MaybeReject(NS_ERROR_DOM_OPERATION_ERR);
+    return;
+  }
+
+  AvailabilityCollection* collection = AvailabilityCollection::GetSingleton();
+  if (NS_WARN_IF(!collection)) {
+    aPromise->MaybeReject(NS_ERROR_DOM_OPERATION_ERR);
+    return;
+  }
+
+  RefPtr<PresentationAvailability> availability =
+    collection->Find(GetOwner()->WindowID(), mUrl);
+
+  if (!availability) {
+    availability = PresentationAvailability::Create(GetOwner(), mUrl, aPromise);
+  } else {
+    PRES_DEBUG(">resolve with same object:id[%s]\n",
+               NS_ConvertUTF16toUTF8(mUrl).get());
+
+    // Fetching cached available devices is asynchronous in our implementation,
+    // we need to ensure the promise is resolved in order.
+    if (availability->IsCachedValueReady()) {
+      aPromise->MaybeResolve(availability);
+      return;
+    }
+
+    availability->EnqueuePromise(aPromise);
+  }
+
+  if (!availability) {
+    aPromise->MaybeReject(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+    return;
+  }
 }
 
 nsresult

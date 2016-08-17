@@ -61,6 +61,16 @@ function testInitialAvailable() {
   });
 }
 
+function testSameObject() {
+  let sameUrlRequest = new PresentationRequest("https://example.com");
+  return sameUrlRequest.getAvailability().then(function(aAvailability) {
+    is(aAvailability, availability, "Should get same availability object for same request URL");
+  }).catch(function(aError) {
+    ok(false, "Error occurred when getting availability: " + aError);
+    teardown();
+  });
+}
+
 function testOnChangeEvent() {
   return new Promise(function(aResolve, aReject) {
     availability.onchange = function() {
@@ -100,6 +110,7 @@ function runTests() {
   ok(navigator.presentation, "navigator.presentation should be available.");
   testSetup().then(testInitialUnavailable)
              .then(testInitialAvailable)
+             .then(testSameObject)
              .then(testOnChangeEvent)
              .then(testConsecutiveGetAvailability)
              .then(teardown);
