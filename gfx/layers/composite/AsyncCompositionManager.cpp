@@ -652,8 +652,7 @@ SampleAnimations(Layer* aLayer, TimeStamp aPoint)
 
           ComputedTiming computedTiming =
             dom::KeyframeEffectReadOnly::GetComputedTimingAt(
-              Nullable<TimeDuration>(elapsedDuration), timing,
-              animation.playbackRate());
+              Nullable<TimeDuration>(elapsedDuration), timing);
 
           MOZ_ASSERT(!computedTiming.mProgress.IsNull(),
                      "iteration progress should not be null");
