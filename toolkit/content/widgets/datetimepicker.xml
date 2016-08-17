@@ -482,7 +482,7 @@
 
             var numberOrder = /^(\D*)\s*(\d+)(\D*)(\d+)(\D*)(\d+)\s*(\D*)$/;
 
-            var pmTime = new Date(2000,0,1,16,7,9).toLocaleFormat("%X");
+            var pmTime = new Date(2000, 0, 1, 16, 7, 9).toLocaleFormat("%X");
             var numberFields = pmTime.match(numberOrder);
             if (numberFields) {
               this._separatorFirst.value = numberFields[3];
@@ -493,7 +493,7 @@
                 this.pmIndicator = numberFields[1] || numberFields[7];
             }
 
-            var amTime = new Date(2000,0,1,1,7,9).toLocaleFormat("%X");
+            var amTime = new Date(2000, 0, 1, 1, 7, 9).toLocaleFormat("%X");
             numberFields = amTime.match(numberOrder);
             if (numberFields) {
               this.hourLeadingZero = (numberFields[2].length > 1);
@@ -770,7 +770,7 @@
 
             var numberOrder = /^(\D*)\s*(\d+)(\D*)(\d+)(\D*)(\d+)\s*(\D*)$/;
 
-            var dt = new Date(2002,9,4).toLocaleFormat("%x");
+            var dt = new Date(2002, 9, 4).toLocaleFormat("%x");
             var numberFields = dt.match(numberOrder);
             if (numberFields) {
               this._separatorFirst.value = numberFields[3];

@@ -30,7 +30,7 @@ add_task(function* () {
       yield waitForCondition(function* () {
         entry = yield PlacesUtils.keywords.fetch("kw");
         return !!entry;
-      },"Unable to find the expected keyword");
+      }, "Unable to find the expected keyword");
       is(entry.keyword, "kw", "keyword is correct");
       is(entry.url.href, TEST_URL, "URL is correct");
       is(entry.postData, "accenti%3D%E0%E8%EC%F2%F9&search%3D%25s", "POST data is correct");

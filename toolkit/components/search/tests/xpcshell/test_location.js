@@ -17,7 +17,7 @@ function run_test() {
                      "SEARCH_SERVICE_COUNTRY_FETCH_CAUSED_SYNC_INIT"]) {
       let histogram = Services.telemetry.getHistogramById(hid);
       let snapshot = histogram.snapshot();
-      deepEqual(snapshot.counts, [1,0,0]); // boolean probe so 3 buckets, expect 1 result for |0|.
+      deepEqual(snapshot.counts, [1, 0, 0]); // boolean probe so 3 buckets, expect 1 result for |0|.
 
     }
 
@@ -47,12 +47,12 @@ function run_test() {
       // probeUSMismatched with true (ie, a mismatch)
       if (countryCode == "US") {
         hid = probeUSMismatched;
-        expectedResult = [0,1,0]; // boolean probe so 3 buckets, expect 1 result for |1|.
+        expectedResult = [0, 1, 0]; // boolean probe so 3 buckets, expect 1 result for |1|.
       } else {
         // We are expecting probeNonUSMismatched with false if the platform
         // says AU (not a mismatch) and true otherwise.
         hid = probeNonUSMismatched;
-        expectedResult = countryCode == "AU" ? [1,0,0] : [0,1,0];
+        expectedResult = countryCode == "AU" ? [1, 0, 0] : [0, 1, 0];
       }
 
       let histogram = Services.telemetry.getHistogramById(hid);

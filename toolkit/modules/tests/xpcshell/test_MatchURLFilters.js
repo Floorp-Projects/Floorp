@@ -41,7 +41,7 @@ add_task(function* test_match_url_filters() {
   var testCases = [
     // Empty, undefined and null filters.
     {shouldThrow, exceptionMessageContains: "filters array should not be empty",
-     filters: [], url: "http://mozilla.org",},
+     filters: [], url: "http://mozilla.org", },
     {shouldThrow, exceptionMessageContains: "filters should be an array",
      filters: undefined, url: "http://mozilla.org"},
     {shouldThrow, exceptionMessageContains: "filters should be an array",
