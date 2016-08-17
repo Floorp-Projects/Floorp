@@ -2,7 +2,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-var SocialService = Cu.import("resource:///modules/SocialService.jsm", {}).SocialService;
+var SocialService = Cu.import("resource://gre/modules/SocialService.jsm", {}).SocialService;
 
 XPCOMUtils.defineLazyModuleGetter(this, "Task",
   "resource://gre/modules/Task.jsm");
@@ -17,7 +17,7 @@ var snippet =
 '         "iconURL": "chrome://branding/content/icon16.png",' +
 '         "icon32URL": "chrome://branding/content/icon32.png",' +
 '         "icon64URL": "chrome://branding/content/icon64.png",' +
-'         "shareURL": "https://example.com/browser/browser/base/content/test/social/social_share.html",' +
+'         "sidebarURL": "https://example.com/browser/browser/base/content/test/social/social_sidebar_empty.html",' +
 '         "postActivationURL": "https://example.com/browser/browser/base/content/test/social/social_postActivation.html",' +
 '       };' +
 '       function activateProvider(node) {' +
@@ -39,7 +39,7 @@ var snippet2 =
 '         "iconURL": "chrome://branding/content/icon16.png",' +
 '         "icon32URL": "chrome://branding/content/icon32.png",' +
 '         "icon64URL": "chrome://branding/content/icon64.png",' +
-'         "shareURL": "https://example.com/browser/browser/base/content/test/social/social_share.html",' +
+'         "sidebarURL": "https://example.com/browser/browser/base/content/test/social/social_sidebar_empty.html",' +
 '         "postActivationURL": "https://example.com/browser/browser/base/content/test/social/social_postActivation.html",' +
 '         "oneclick": true' +
 '       };' +
@@ -101,8 +101,10 @@ function test()
 
       yield new Promise(resolve => {
         activateProvider(tab, test.panel).then(() => {
+          ok(SocialSidebar.provider, "provider activated");
           checkSocialUI();
-          SocialService.uninstallProvider("https://example.com", function () {
+          is(gBrowser.currentURI.spec, SocialSidebar.provider.manifest.postActivationURL, "postActivationURL was loaded");
+          SocialService.uninstallProvider(SocialSidebar.provider.origin, function () {
             info("provider uninstalled");
             resolve();
           });
@@ -208,12 +210,14 @@ function sendActivationEvent(tab) {
 function activateProvider(tab, expectPanel, aCallback) {
   return new Promise(resolve => {
     if (expectPanel) {
-      BrowserTestUtils.waitForEvent(PopupNotifications.panel, "popupshown").then(() => {
+      ensureEventFired(PopupNotifications.panel, "popupshown").then(() => {
         let panel = document.getElementById("servicesInstall-notification");
         panel.button.click();
       });
     }
     waitForProviderLoad().then(() => {
+      ok(SocialSidebar.provider, "new provider is active");
+      ok(SocialSidebar.opened, "sidebar is open");
       checkSocialUI();
       resolve();
     });
@@ -225,5 +229,6 @@ function waitForProviderLoad(cb) {
   return Promise.all([
     promiseObserverNotified("social:provider-enabled"),
     ensureFrameLoaded(gBrowser, "https://example.com/browser/browser/base/content/test/social/social_postActivation.html"),
+    ensureFrameLoaded(SocialSidebar.browser)
   ]);
 }

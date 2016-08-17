@@ -44,6 +44,15 @@ addEventListener("DOMTitleChanged", function(e) {
   gDOMTitleChangedByUs = false;
 });
 
+addEventListener("Social:Notification", function(event) {
+  let frame = docShell.chromeEventHandler;
+  let origin = frame.getAttribute("origin");
+  sendAsyncMessage("Social:Notification", {
+    "origin": origin,
+    "detail": JSON.parse(event.detail)
+  });
+});
+
 addMessageListener("Social:OpenGraphData", (message) => {
   let ev = new content.CustomEvent("OpenGraphData", { detail: JSON.stringify(message.data) });
   content.dispatchEvent(ev);
