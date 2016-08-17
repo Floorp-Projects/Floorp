@@ -1186,12 +1186,12 @@ MediaDecoderStateMachine::SetDormant(bool aDormant)
     Reset();
 
     // Note that we do not wait for the decode task queue to go idle before
-    // queuing the ReleaseMediaResources task - instead, we disconnect promises,
+    // queuing the ReleaseResources task - instead, we disconnect promises,
     // reset state, and put a ResetDecode in the decode task queue. Any tasks
     // that run after ResetDecode are supposed to run with a clean slate. We
     // rely on that in other places (i.e. seeking), so it seems reasonable to
     // rely on it here as well.
-    mReader->ReleaseMediaResources();
+    mReader->ReleaseResources();
 
     return;
   }

@@ -163,7 +163,7 @@ private:
     }
     aReader->SetIsSuspended(true);
 
-    aReader->ReleaseMediaResources();
+    aReader->ReleaseResources();
   }
 
   static void DispatchResume(MediaDecoderReader* aReader)
@@ -520,7 +520,7 @@ MediaDecoderReader::Shutdown()
 
   mDataArrivedListener.DisconnectIfExists();
 
-  ReleaseMediaResources();
+  ReleaseResources();
   mDuration.DisconnectIfConnected();
   mBuffered.DisconnectAll();
   mIsSuspended.DisconnectAll();
