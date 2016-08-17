@@ -948,7 +948,7 @@ tests.push(
     }, null);
 
     do_print("Setting wait for second promise");
-    return promise2.catch(error => {return 3;})
+    return promise2.catch(error => { return 3; })
     .then(
       count => {
         shouldExitNestedEventLoop = true;
@@ -1074,7 +1074,7 @@ make_promise_test(function test_caught_is_not_reported() {
   let promise = wait_for_uncaught([salt], 500);
   (function() {
     let uncaught = Promise.reject("This error, on the other hand, is caught " + salt);
-    uncaught.catch(function() { /* ignore rejection */});
+    uncaught.catch(function() { /* ignore rejection */ });
     uncaught = null;
   })();
   // Isolate this in a function to increase likelihood that the gc will

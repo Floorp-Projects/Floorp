@@ -131,7 +131,7 @@ function captureAndCheckColor(aRed, aGreen, aBlue, aMessage) {
   // Capture the screenshot.
   PageThumbs.captureAndStore(browser, function () {
     retrieveImageDataForURL(browser.currentURI.spec, function ([r, g, b]) {
-      is("" + [r,g,b], "" + [aRed, aGreen, aBlue], aMessage);
+      is("" + [r, g, b], "" + [aRed, aGreen, aBlue], aMessage);
       next();
     });
   });
