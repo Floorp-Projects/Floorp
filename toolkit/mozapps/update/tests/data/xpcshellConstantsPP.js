@@ -53,9 +53,9 @@ const IS_TOOLKIT_GONK = false;
 #endif
 
 #ifdef MOZ_VERIFY_MAR_SIGNATURE
-const IS_MAR_CHECKS_ENABLED = true;
+const MOZ_VERIFY_MAR_SIGNATURE = true;
 #else
-const IS_MAR_CHECKS_ENABLED = false;
+const MOZ_VERIFY_MAR_SIGNATURE = false;
 #endif
 
 #ifdef DISABLE_UPDATER_AUTHENTICODE_CHECK
