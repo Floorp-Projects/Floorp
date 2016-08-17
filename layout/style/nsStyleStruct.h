@@ -2615,8 +2615,11 @@ private:
 
   // mCoordinates has coordinates for polygon or radii for
   // ellipse and circle.
+  // (top, right, bottom, left) for inset
   nsTArray<nsStyleCoord> mCoordinates;
+  // position of center for ellipse or circle
   Position mPosition;
+  // corner radii for inset (0 if not set)
   nsStyleCorners mRadius;
 };
 
