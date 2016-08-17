@@ -26,10 +26,10 @@ var HeadersTab = React.createClass({
 
   displayName: "HeadersTab",
 
-  render() {
-    let {data, actions} = this.props;
-    let responseHeaders = data.response.headers;
+  componentDidMount() {
+    let { actions, data } = this.props;
     let requestHeaders = data.request.headers;
+    let responseHeaders = data.response.headers;
 
     // Request headers if they are not available yet.
     // TODO: use async action objects as soon as Redux is in place
@@ -40,6 +40,12 @@ var HeadersTab = React.createClass({
     if (!responseHeaders) {
       actions.requestData("responseHeaders");
     }
+  },
+
+  render() {
+    let { data } = this.props;
+    let requestHeaders = data.request.headers;
+    let responseHeaders = data.response.headers;
 
     // TODO: Another groups to implement:
     // 1) Cached Headers

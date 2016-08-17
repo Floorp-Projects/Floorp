@@ -14,3 +14,6 @@ DevToolsModules(
     'net-request.css',
     'net-request.js',
 )
+
+XPCSHELL_TESTS_MANIFESTS += ['test/unit/xpcshell.ini']
+BROWSER_CHROME_MANIFESTS += ['test/mochitest/browser.ini']
