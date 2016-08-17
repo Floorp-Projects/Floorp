@@ -7,11 +7,13 @@
 #include "vm/HelperThreads.h"
 
 #include "mozilla/DebugOnly.h"
+#include "mozilla/unused.h"
 
 #include "jsnativestack.h"
 #include "jsnum.h" // For FIX_FPU()
 
 #include "asmjs/WasmIonCompile.h"
+#include "builtin/Promise.h"
 #include "frontend/BytecodeCompiler.h"
 #include "gc/GCInternals.h"
 #include "jit/IonBuilder.h"
@@ -29,6 +31,7 @@ using namespace js;
 
 using mozilla::ArrayLength;
 using mozilla::DebugOnly;
+using mozilla::Unused;
 using mozilla::TimeDuration;
 
 namespace js {
@@ -833,6 +836,12 @@ GlobalHelperThreadState::canStartWasmCompile(const AutoLockHelperThreadState& lo
     return true;
 }
 
+bool
+GlobalHelperThreadState::canStartPromiseTask(const AutoLockHelperThreadState& lock)
+{
+    return !promiseTasks(lock).empty();
+}
+
 static bool
 IonBuilderHasHigherPriority(jit::IonBuilder* first, jit::IonBuilder* second)
 {
@@ -1339,6 +1348,35 @@ HelperThread::handleWasmWorkload(AutoLockHelperThreadState& locked)
 }
 
 void
+HelperThread::handlePromiseTaskWorkload(AutoLockHelperThreadState& locked)
+{
+    MOZ_ASSERT(HelperThreadState().canStartPromiseTask(locked));
+    MOZ_ASSERT(idle());
+
+    PromiseTask* task = HelperThreadState().promiseTasks(locked).popCopy();
+    currentTask.emplace(task);
+
+    {
+        AutoUnlockHelperThreadState unlock(locked);
+
+        task->execute();
+
+        if (!task->runtime()->finishAsyncTaskCallback(task)) {
+            // We cannot simply delete the task now because the PromiseTask must
+            // be destroyed on its runtime's thread. Add it to a list of tasks
+            // to delete before the next GC.
+            AutoEnterOOMUnsafeRegion oomUnsafe;
+            if (!task->runtime()->promiseTasksToDestroy.lock()->append(task))
+                oomUnsafe.crash("handlePromiseTaskWorkload");
+        }
+    }
+
+    // Notify the main thread in case it's waiting.
+    HelperThreadState().notifyAll(GlobalHelperThreadState::CONSUMER, locked);
+    currentTask.reset();
+}
+
+void
 HelperThread::handleIonWorkload(AutoLockHelperThreadState& locked)
 {
     MOZ_ASSERT(HelperThreadState().canStartIonCompile(locked));
@@ -1558,6 +1596,31 @@ js::StartOffThreadCompression(ExclusiveContext* cx, SourceCompressionTask* task)
 }
 
 bool
+js::StartPromiseTask(JSContext* cx, UniquePtr<PromiseTask> task)
+{
+    // Per interface contract, after startAsyncTaskCallback succeeds,
+    // finishAsyncTaskCallback *must* be called on all paths.
+
+    if (!cx->startAsyncTaskCallback(cx, task.get())) {
+        ReportOutOfMemory(cx);
+        return false;
+    }
+
+    AutoLockHelperThreadState lock;
+
+    if (!HelperThreadState().promiseTasks(lock).append(task.get())) {
+        Unused << cx->finishAsyncTaskCallback(task.get());
+        ReportOutOfMemory(cx);
+        return false;
+    }
+
+    Unused << task.release();
+
+    HelperThreadState().notifyOne(GlobalHelperThreadState::PRODUCER, lock);
+    return true;
+}
+
+bool
 GlobalHelperThreadState::compressionInProgress(SourceCompressionTask* task,
                                                const AutoLockHelperThreadState& lock)
 {
@@ -1661,8 +1724,9 @@ HelperThread::threadLoop()
         while (true) {
             if (terminate)
                 return;
-            if (HelperThreadState().canStartWasmCompile(lock) ||
-                (ionCompile = HelperThreadState().pendingIonCompileHasSufficientPriority(lock)) ||
+            if ((ionCompile = HelperThreadState().pendingIonCompileHasSufficientPriority(lock)) ||
+                HelperThreadState().canStartWasmCompile(lock) ||
+                HelperThreadState().canStartPromiseTask(lock) ||
                 HelperThreadState().canStartParseTask(lock) ||
                 HelperThreadState().canStartCompressionTask(lock) ||
                 HelperThreadState().canStartGCHelperTask(lock) ||
@@ -1673,13 +1737,15 @@ HelperThread::threadLoop()
             HelperThreadState().wait(lock, GlobalHelperThreadState::PRODUCER);
         }
 
-        // Dispatch tasks, prioritizing wasm work.
-        if (HelperThreadState().canStartWasmCompile(lock)) {
-            js::oom::SetThreadType(js::oom::THREAD_TYPE_ASMJS);
-            handleWasmWorkload(lock);
-        } else if (ionCompile) {
+        if (ionCompile) {
             js::oom::SetThreadType(js::oom::THREAD_TYPE_ION);
             handleIonWorkload(lock);
+        } else if (HelperThreadState().canStartWasmCompile(lock)) {
+            js::oom::SetThreadType(js::oom::THREAD_TYPE_ASMJS);
+            handleWasmWorkload(lock);
+        } else if (HelperThreadState().canStartPromiseTask(lock)) {
+            js::oom::SetThreadType(js::oom::THREAD_TYPE_PROMISE_TASK);
+            handlePromiseTaskWorkload(lock);
         } else if (HelperThreadState().canStartParseTask(lock)) {
             js::oom::SetThreadType(js::oom::THREAD_TYPE_PARSE);
             handleParseWorkload(lock, stackLimit);
