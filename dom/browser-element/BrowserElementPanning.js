@@ -6,7 +6,12 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 "use strict";
-dump("############################### browserElementPanning.js loaded\n");
+
+function debug(msg) {
+  // dump("BrowserElementPanning - " + msg + "\n");
+}
+
+debug("loaded");
 
 var { classes: Cc, interfaces: Ci, results: Cr, utils: Cu }  = Components;
 Cu.import("resource://gre/modules/Services.jsm");
@@ -151,7 +156,7 @@ const ContentPanning = {
 
   _isRectZoomedIn: function(aRect, aViewport) {
     // This function checks to see if the area of the rect visible in the
-    // viewport (i.e. the "overlapArea" variable below) is approximately 
+    // viewport (i.e. the "overlapArea" variable below) is approximately
     // the max area of the rect we can show.
     let vRect = new Rect(aViewport.x, aViewport.y, aViewport.width, aViewport.height);
     let overlap = vRect.intersect(aRect);
@@ -161,7 +166,7 @@ const ContentPanning = {
     let ratioW = (aRect.width / vRect.width);
     let ratioH = (aRect.height / vRect.height);
 
-    return (showing > 0.9 && (ratioW > 0.9 || ratioH > 0.9)); 
+    return (showing > 0.9 && (ratioW > 0.9 || ratioH > 0.9));
   },
 
   _unloadHandler: function() {

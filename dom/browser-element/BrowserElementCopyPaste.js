@@ -6,7 +6,11 @@
 
 "use strict";
 
-dump("###################################### BrowserElementCopyPaste.js loaded\n");
+function debug(msg) {
+  // dump("BrowserElementCopyPaste - " + msg + "\n");
+}
+
+debug("loaded");
 
 var { classes: Cc, interfaces: Ci, results: Cr, utils: Cu }  = Components;
 
