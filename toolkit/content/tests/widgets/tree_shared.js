@@ -244,7 +244,7 @@ function testtag_tree_TreeSelection(tree, testid, multiple)
   // selectAll has no effect on single selection trees
   selection.currentIndex = 1;
   selection.selectAll();
-  testtag_tree_TreeSelection_State(tree, testid + "selectAll 1", 1, multiple ? [0, 1, 2, 3, 4, 5, 6 , 7] : []);
+  testtag_tree_TreeSelection_State(tree, testid + "selectAll 1", 1, multiple ? [0, 1, 2, 3, 4, 5, 6, 7] : []);
   selection.toggleSelect(2);
   testtag_tree_TreeSelection_State(tree, testid + "toggleSelect after selectAll", 2,
                                    multiple ? [0, 1, 3, 4, 5, 6, 7] : [2]);

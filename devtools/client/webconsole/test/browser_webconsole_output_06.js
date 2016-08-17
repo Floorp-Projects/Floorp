@@ -156,6 +156,15 @@ var inputTests = [
     inspectable: true,
     variablesViewLabel: "Object",
   },
+
+  // 17
+  {
+    input: '({" ": "a"})',
+    output: 'Object {  : "a" }',
+    printOutput: "[object Object]",
+    inspectable: true,
+    variablesViewLabel: "Object",
+  },
 ];
 
 function test() {

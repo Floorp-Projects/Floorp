@@ -93,11 +93,11 @@ function go_back(aManager) {
 }
 
 function go_back_backspace(aManager) {
-    EventUtils.synthesizeKey("VK_BACK_SPACE",{});
+    EventUtils.synthesizeKey("VK_BACK_SPACE", {});
 }
 
 function go_forward_backspace(aManager) {
-    EventUtils.synthesizeKey("VK_BACK_SPACE",{shiftKey: true});
+    EventUtils.synthesizeKey("VK_BACK_SPACE", {shiftKey: true});
 }
 
 function go_forward(aManager) {

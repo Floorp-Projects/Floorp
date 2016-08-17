@@ -19,7 +19,7 @@ var testData = [
     uri: "http://foo.com/changeme1.html",
     isBookmark: true,
     isTag: true,
-    tagArray: ["moz","bugzilla"] },
+    tagArray: ["moz", "bugzilla"] },
 
   { isInQuery: false,
     isDetails: true,

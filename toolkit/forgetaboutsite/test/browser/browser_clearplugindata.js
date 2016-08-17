@@ -63,13 +63,13 @@ add_task(function* () {
     content.wrappedJSObject.testSteps();
   });
 
-  ok(stored(["192.168.1.1","foo.com","nonexistent.foo.com","bar.com","localhost"]),
+  ok(stored(["192.168.1.1", "foo.com", "nonexistent.foo.com", "bar.com", "localhost"]),
     "Data stored for sites");
 
   // Clear data for "foo.com" and its subdomains.
   yield ForgetAboutSite.removeDataFromDomain("foo.com");
 
-  ok(stored(["bar.com","192.168.1.1","localhost"]), "Data stored for sites");
+  ok(stored(["bar.com", "192.168.1.1", "localhost"]), "Data stored for sites");
   ok(!stored(["foo.com"]), "Data cleared for foo.com");
   ok(!stored(["bar.foo.com"]), "Data cleared for subdomains of foo.com");
 

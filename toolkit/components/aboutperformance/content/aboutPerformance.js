@@ -130,7 +130,7 @@ let tabFinder = {
 function wait(ms = 0) {
   try {
     let resolve;
-    let p = new Promise(resolve_ => {resolve = resolve_});
+    let p = new Promise(resolve_ => { resolve = resolve_ });
     setTimeout(resolve, ms);
     return p;
   } catch (e) {

@@ -51,7 +51,7 @@ var gPermissionManager = {
     cycleHeader: function(column) {},
     getRowProperties: function(row) { return ""; },
     getColumnProperties: function(column) { return ""; },
-    getCellProperties: function(row,column) {
+    getCellProperties: function(row, column) {
       if (column.element.getAttribute("id") == "siteCol")
         return "ltr";
 

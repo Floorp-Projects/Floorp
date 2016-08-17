@@ -18,15 +18,15 @@ var originalCount1, originalCount2;
 function run_test() {
   let histogram = Telemetry.getHistogramById(HIST_NAME);
   let snapshot = histogram.snapshot();
-  originalCount1 = snapshot.counts.reduce((a,b) => a += b);
+  originalCount1 = snapshot.counts.reduce((a, b) => a += b);
 
   histogram = Telemetry.getHistogramById(HIST_NAME2);
   snapshot = histogram.snapshot();
-  originalCount2 = snapshot.counts.reduce((a,b) => a += b);
+  originalCount2 = snapshot.counts.reduce((a, b) => a += b);
 
   histogram = Telemetry.getKeyedHistogramById(KEYED_HIST.id);
   snapshot = histogram.snapshot(KEYED_HIST.key);
-  originalCount3 = snapshot.counts.reduce((a,b) => a += b);
+  originalCount3 = snapshot.counts.reduce((a, b) => a += b);
 
   do_check_false(TelemetryStopwatch.start(3));
   do_check_false(TelemetryStopwatch.start({}));
@@ -140,19 +140,19 @@ function run_test() {
 function finishTest() {
   let histogram = Telemetry.getHistogramById(HIST_NAME);
   let snapshot = histogram.snapshot();
-  let newCount = snapshot.counts.reduce((a,b) => a += b);
+  let newCount = snapshot.counts.reduce((a, b) => a += b);
 
   do_check_eq(newCount - originalCount1, 5, "The correct number of histograms were added for histogram 1.");
 
   histogram = Telemetry.getHistogramById(HIST_NAME2);
   snapshot = histogram.snapshot();
-  newCount = snapshot.counts.reduce((a,b) => a += b);
+  newCount = snapshot.counts.reduce((a, b) => a += b);
 
   do_check_eq(newCount - originalCount2, 3, "The correct number of histograms were added for histogram 2.");
 
   histogram = Telemetry.getKeyedHistogramById(KEYED_HIST.id);
   snapshot = histogram.snapshot(KEYED_HIST.key);
-  newCount = snapshot.counts.reduce((a,b) => a += b);
+  newCount = snapshot.counts.reduce((a, b) => a += b);
 
   do_check_eq(newCount - originalCount3, 2, "The correct number of histograms were added for histogram 3.");
 }

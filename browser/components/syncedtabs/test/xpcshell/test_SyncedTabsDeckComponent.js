@@ -17,7 +17,7 @@ add_task(function* testInitUninit() {
   let view = {render: sinon.spy(), destroy: sinon.spy(), container: {}};
   ViewMock.returns(view);
 
-  sinon.stub(SyncedTabs, "syncTabs", ()=> Promise.resolve());
+  sinon.stub(SyncedTabs, "syncTabs", () => Promise.resolve());
 
   sinon.spy(deckStore, "on");
   sinon.stub(deckStore, "setPanels");
@@ -86,7 +86,7 @@ add_task(function* testObserver() {
   let view = {render: sinon.spy(), destroy: sinon.spy(), container: {}};
   ViewMock.returns(view);
 
-  sinon.stub(SyncedTabs, "syncTabs", ()=> Promise.resolve());
+  sinon.stub(SyncedTabs, "syncTabs", () => Promise.resolve());
 
   sinon.spy(deckStore, "on");
   sinon.stub(deckStore, "setPanels");
@@ -146,7 +146,7 @@ add_task(function* testPanelStatus() {
   });
 
   let isAuthed = false;
-  sinon.stub(fxAccounts, "accountStatus", ()=> Promise.resolve(isAuthed));
+  sinon.stub(fxAccounts, "accountStatus", () => Promise.resolve(isAuthed));
   let result = yield component.getPanelStatus();
   Assert.equal(result, component.PANELS.NOT_AUTHED_INFO);
 
@@ -165,7 +165,7 @@ add_task(function* testPanelStatus() {
   SyncedTabsMock.hasSyncedThisSession = true;
 
   let clients = [];
-  sinon.stub(SyncedTabsMock, "getTabClients", ()=> Promise.resolve(clients));
+  sinon.stub(SyncedTabsMock, "getTabClients", () => Promise.resolve(clients));
   result = yield component.getPanelStatus();
   Assert.equal(result, component.PANELS.SINGLE_DEVICE_INFO);
 
@@ -174,11 +174,11 @@ add_task(function* testPanelStatus() {
   Assert.equal(result, component.PANELS.TABS_CONTAINER);
 
   fxAccounts.accountStatus.restore();
-  sinon.stub(fxAccounts, "accountStatus", ()=> Promise.reject("err"));
+  sinon.stub(fxAccounts, "accountStatus", () => Promise.reject("err"));
   result = yield component.getPanelStatus();
   Assert.equal(result, component.PANELS.NOT_AUTHED_INFO);
 
-  sinon.stub(component, "getPanelStatus", ()=> Promise.resolve("mock-panelId"));
+  sinon.stub(component, "getPanelStatus", () => Promise.resolve("mock-panelId"));
   sinon.spy(deckStore, "selectPanel");
   yield component.updatePanel();
   Assert.ok(deckStore.selectPanel.calledWith("mock-panelId"));
