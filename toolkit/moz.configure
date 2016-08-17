@@ -453,7 +453,8 @@ option('--enable-gpsd', env='MOZ_GPSD',
 def gpsd(value):
     return bool(value)
 
-system_gpsd = pkg_check_modules('MOZ_GPSD', 'libgps >= 3.11', gpsd)
+system_gpsd = pkg_check_modules('MOZ_GPSD', 'libgps >= 3.11',
+                                when=gpsd)
 
 set_config('MOZ_GPSD', system_gpsd)
 

@@ -247,7 +247,7 @@ def check_for_hunspell(value, compile_env):
     return value and compile_env
 
 system_hunspell = pkg_check_modules('MOZ_HUNSPELL', 'hunspell',
-                                    check_for_hunspell)
+                                    when=check_for_hunspell)
 
 set_config('MOZ_SYSTEM_HUNSPELL', system_hunspell)
 
