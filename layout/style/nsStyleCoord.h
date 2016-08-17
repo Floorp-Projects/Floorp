@@ -338,7 +338,7 @@ protected:
 };
 
 /**
- * Class that represents a set of top-left/top-right/bottom-left/bottom-right
+ * Class that represents a set of top-left/top-right/bottom-right/bottom-left
  * nsStyleCoord pairs.  This is used to hold the dimensions of the
  * corners of a box (for, e.g., border-radius and outline-radius).
  */
@@ -367,6 +367,11 @@ public:
   inline void Set(uint8_t aHalfCorner, const nsStyleCoord& aCoord);
 
 protected:
+  // Stored as:
+  // top-left.x, top-left.y,
+  // top-right.x, top-right.y,
+  // bottom-right.x, bottom-right.y,
+  // bottom-left.x, bottom-left.y
   nsStyleUnit   mUnits[8];
   nsStyleUnion  mValues[8];
 };
