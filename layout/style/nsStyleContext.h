@@ -81,7 +81,7 @@ public:
                  already_AddRefed<ServoComputedValues> aComputedValues,
                  bool aSkipParentDisplayBasedStyleFixup);
 
-  void* operator new(size_t sz, nsPresContext* aPresContext) CPP_THROW_NEW;
+  void* operator new(size_t sz, nsPresContext* aPresContext);
   void Destroy();
 
   // These two methods are for use by ArenaRefPtr.
