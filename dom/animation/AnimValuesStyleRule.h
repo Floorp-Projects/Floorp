@@ -9,7 +9,7 @@
 
 #include "mozilla/StyleAnimationValue.h"
 #include "nsCSSPropertyID.h"
-#include "nsCSSPropertySet.h"
+#include "nsCSSPropertyIDSet.h"
 #include "nsIStyleRule.h"
 #include "nsISupportsImpl.h" // For NS_DECL_ISUPPORTS
 #include "nsRuleNode.h" // For nsCachedStyleData

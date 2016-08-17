@@ -19,7 +19,7 @@
 class nsIGlobalObject;
 class nsStyleContext;
 class nsPresContext;
-class nsCSSPropertySet;
+class nsCSSPropertyIDSet;
 
 namespace mozilla {
 enum class CSSPseudoElementType : uint8_t;
@@ -406,7 +406,7 @@ protected:
                              nsStyleContext* aOldStyleContext,
                              nsStyleContext* aNewStyleContext,
                              bool* aStartedAny,
-                             nsCSSPropertySet* aWhichStarted);
+                             nsCSSPropertyIDSet* aWhichStarted);
 
   nsTArray<mozilla::Keyframe> GetTransitionKeyframes(
     nsStyleContext* aStyleContext,
