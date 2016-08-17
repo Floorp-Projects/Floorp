@@ -66,7 +66,7 @@ struct nsRuleData
    * This function must only be called if the given property is in
    * mSIDs.
    */
-  nsCSSValue* ValueFor(nsCSSPropertyID aProperty)
+  nsCSSValue* ValueFor(nsCSSProperty aProperty)
   {
     MOZ_ASSERT(aProperty < eCSSProperty_COUNT_no_shorthands,
                "invalid or shorthand property");
@@ -84,7 +84,7 @@ struct nsRuleData
     return mValueStorage + mValueOffsets[sid] + indexInStruct;
   }
 
-  const nsCSSValue* ValueFor(nsCSSPropertyID aProperty) const {
+  const nsCSSValue* ValueFor(nsCSSProperty aProperty) const {
     return const_cast<nsRuleData*>(this)->ValueFor(aProperty);
   }
 

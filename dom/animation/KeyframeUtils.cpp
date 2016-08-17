@@ -39,7 +39,7 @@ const double kNotPaceable = -1.0;
 enum class ListAllowance { eDisallow, eAllow };
 
 /**
- * A comparator to sort nsCSSPropertyID values such that longhands are sorted
+ * A comparator to sort nsCSSProperty values such that longhands are sorted
  * before shorthands, and shorthands with fewer components are sorted before
  * shorthands with more components.
  *
@@ -61,13 +61,13 @@ public:
   PropertyPriorityComparator()
     : mSubpropertyCountInitialized(false) {}
 
-  bool Equals(nsCSSPropertyID aLhs, nsCSSPropertyID aRhs) const
+  bool Equals(nsCSSProperty aLhs, nsCSSProperty aRhs) const
   {
     return aLhs == aRhs;
   }
 
-  bool LessThan(nsCSSPropertyID aLhs,
-                nsCSSPropertyID aRhs) const
+  bool LessThan(nsCSSProperty aLhs,
+                nsCSSProperty aRhs) const
   {
     bool isShorthandLhs = nsCSSProps::IsShorthand(aLhs);
     bool isShorthandRhs = nsCSSProps::IsShorthand(aRhs);
@@ -97,7 +97,7 @@ public:
            nsCSSProps::PropertyIDLNameSortPosition(aRhs);
   }
 
-  uint32_t SubpropertyCount(nsCSSPropertyID aProperty) const
+  uint32_t SubpropertyCount(nsCSSProperty aProperty) const
   {
     if (!mSubpropertyCountInitialized) {
       PodZero(&mSubpropertyCount);
@@ -205,7 +205,7 @@ public:
 private:
   struct PropertyAndIndex
   {
-    nsCSSPropertyID mProperty;
+    nsCSSProperty mProperty;
     size_t mIndex; // Index of mProperty within mProperties
 
     typedef TPropertyPriorityComparator<PropertyAndIndex> Comparator;
@@ -225,7 +225,7 @@ private:
  */
 struct PropertyValuesPair
 {
-  nsCSSPropertyID mProperty;
+  nsCSSProperty mProperty;
   nsTArray<nsString> mValues;
 
   typedef TPropertyPriorityComparator<PropertyValuesPair> Comparator;
@@ -237,7 +237,7 @@ struct PropertyValuesPair
  */
 struct AdditionalProperty
 {
-  nsCSSPropertyID mProperty;
+  nsCSSProperty mProperty;
   size_t mJsidIndex;        // Index into |ids| in GetPropertyValuesPairs.
 
   struct PropertyComparator
@@ -265,7 +265,7 @@ struct AdditionalProperty
  */
 struct KeyframeValueEntry
 {
-  nsCSSPropertyID mProperty;
+  nsCSSProperty mProperty;
   StyleAnimationValue mValue;
   float mOffset;
   Maybe<ComputedTimingFunction> mTimingFunction;
@@ -370,7 +370,7 @@ AppendValueAsString(JSContext* aCx,
                     JS::Handle<JS::Value> aValue);
 
 static PropertyValuePair
-MakePropertyValuePair(nsCSSPropertyID aProperty, const nsAString& aStringValue,
+MakePropertyValuePair(nsCSSProperty aProperty, const nsAString& aStringValue,
                       nsCSSParser& aParser, nsIDocument* aDocument);
 
 static bool
@@ -411,7 +411,7 @@ PaceRange(const Range<Keyframe>& aKeyframes,
 
 static nsTArray<double>
 GetCumulativeDistances(const nsTArray<ComputedKeyframeValues>& aValues,
-                       nsCSSPropertyID aProperty);
+                       nsCSSProperty aProperty);
 
 // ------------------------------------------------------------------
 //
@@ -474,7 +474,7 @@ KeyframeUtils::GetKeyframesFromObject(JSContext* aCx,
 /* static */ void
 KeyframeUtils::ApplySpacing(nsTArray<Keyframe>& aKeyframes,
                             SpacingMode aSpacingMode,
-                            nsCSSPropertyID aProperty,
+                            nsCSSProperty aProperty,
                             nsTArray<ComputedKeyframeValues>& aComputedValues)
 {
   if (aKeyframes.IsEmpty()) {
@@ -592,7 +592,7 @@ KeyframeUtils::GetComputedKeyframeValues(const nsTArray<Keyframe>& aKeyframes,
   nsTArray<ComputedKeyframeValues> result(len);
 
   for (const Keyframe& frame : aKeyframes) {
-    nsCSSPropertyIDSet propertiesOnThisKeyframe;
+    nsCSSPropertySet propertiesOnThisKeyframe;
     ComputedKeyframeValues* computedValues = result.AppendElement();
     for (const PropertyValuePair& pair :
            PropertyPriorityIterator(frame.mPropertyValues)) {
@@ -672,7 +672,7 @@ KeyframeUtils::GetAnimationPropertiesFromKeyframes(
 }
 
 /* static */ bool
-KeyframeUtils::IsAnimatableProperty(nsCSSPropertyID aProperty)
+KeyframeUtils::IsAnimatableProperty(nsCSSProperty aProperty)
 {
   if (aProperty == eCSSProperty_UNKNOWN) {
     return false;
@@ -863,7 +863,7 @@ GetPropertyValuesPairs(JSContext* aCx,
     if (!propName.init(aCx, ids[i])) {
       return false;
     }
-    nsCSSPropertyID property =
+    nsCSSProperty property =
       nsCSSProps::LookupPropertyByIDLName(propName,
                                           CSSEnabledState::eForAllContent);
     if (KeyframeUtils::IsAnimatableProperty(property)) {
@@ -964,7 +964,7 @@ AppendValueAsString(JSContext* aCx,
  * @return The constructed PropertyValuePair object.
  */
 static PropertyValuePair
-MakePropertyValuePair(nsCSSPropertyID aProperty, const nsAString& aStringValue,
+MakePropertyValuePair(nsCSSProperty aProperty, const nsAString& aStringValue,
                       nsCSSParser& aParser, nsIDocument* aDocument)
 {
   MOZ_ASSERT(aDocument);
@@ -1116,7 +1116,7 @@ BuildSegmentsFromValueEntries(nsStyleContext* aStyleContext,
   // following loop takes care to identify properties that lack a value at
   // offset 0.0/1.0 and drops those properties from |aResult|.
 
-  nsCSSPropertyID lastProperty = eCSSProperty_UNKNOWN;
+  nsCSSProperty lastProperty = eCSSProperty_UNKNOWN;
   AnimationProperty* animationProperty = nullptr;
 
   size_t i = 0, n = aEntries.Length();
@@ -1331,11 +1331,11 @@ RequiresAdditiveAnimation(const nsTArray<Keyframe>& aKeyframes,
   // So as long as this check catches most cases, and we don't do anything
   // horrible in one of the cases we can't detect, it should be sufficient.
 
-  nsCSSPropertyIDSet properties;              // All properties encountered.
-  nsCSSPropertyIDSet propertiesWithFromValue; // Those with a defined 0% value.
-  nsCSSPropertyIDSet propertiesWithToValue;   // Those with a defined 100% value.
+  nsCSSPropertySet properties;              // All properties encountered.
+  nsCSSPropertySet propertiesWithFromValue; // Those with a defined 0% value.
+  nsCSSPropertySet propertiesWithToValue;   // Those with a defined 100% value.
 
-  auto addToPropertySets = [&](nsCSSPropertyID aProperty, double aOffset) {
+  auto addToPropertySets = [&](nsCSSProperty aProperty, double aOffset) {
     properties.AddProperty(aProperty);
     if (aOffset == 0.0) {
       propertiesWithFromValue.AddProperty(aProperty);
@@ -1500,12 +1500,12 @@ PaceRange(const Range<Keyframe>& aKeyframes,
  */
 static nsTArray<double>
 GetCumulativeDistances(const nsTArray<ComputedKeyframeValues>& aValues,
-                       nsCSSPropertyID aPacedProperty)
+                       nsCSSProperty aPacedProperty)
 {
   // a) If aPacedProperty is a shorthand property, get its components.
   //    Otherwise, just add the longhand property into the set.
   size_t pacedPropertyCount = 0;
-  nsCSSPropertyIDSet pacedPropertySet;
+  nsCSSPropertySet pacedPropertySet;
   bool isShorthand = nsCSSProps::IsShorthand(aPacedProperty);
   if (isShorthand) {
     CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(p, aPacedProperty,
@@ -1552,7 +1552,7 @@ GetCumulativeDistances(const nsTArray<ComputedKeyframeValues>& aValues,
         // Apply the distance by the square root of the sum of squares of
         // longhand component distances.
         for (size_t propIdx = 0; propIdx < pacedPropertyCount; ++propIdx) {
-          nsCSSPropertyID prop = prevPacedValues[propIdx].mProperty;
+          nsCSSProperty prop = prevPacedValues[propIdx].mProperty;
           MOZ_ASSERT(pacedValues[propIdx].mProperty == prop,
                      "Property mismatch");
 

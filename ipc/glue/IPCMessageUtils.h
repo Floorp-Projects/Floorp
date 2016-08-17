@@ -34,7 +34,7 @@
 #include "nsString.h"
 #include "nsTArray.h"
 #include "js/StructuredClone.h"
-#include "nsCSSPropertyID.h"
+#include "nsCSSProperty.h"
 
 #ifdef _MSC_VER
 #pragma warning( disable : 4800 )
@@ -540,8 +540,8 @@ struct ParamTraits<float>
 };
 
 template <>
-struct ParamTraits<nsCSSPropertyID>
-  : public ContiguousEnumSerializer<nsCSSPropertyID,
+struct ParamTraits<nsCSSProperty>
+  : public ContiguousEnumSerializer<nsCSSProperty,
                                     eCSSProperty_UNKNOWN,
                                     eCSSProperty_COUNT>
 {};

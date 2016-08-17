@@ -33,7 +33,7 @@ protected:
   nsCOMPtr<inISearchObserver> mObserver;
   nsCOMPtr<nsIDOMDocument> mDocument;
   nsTArray<nsAutoString *>* mResults;
-  nsCSSPropertyID* mProperties;
+  nsCSSProperty* mProperties;
   nsString mLastResult;
   nsString mBaseURL;
   nsString mTextCriteria;

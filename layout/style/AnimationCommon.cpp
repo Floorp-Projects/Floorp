@@ -9,7 +9,7 @@
 
 #include "ActiveLayerTracker.h"
 #include "gfxPlatform.h"
-#include "nsCSSPropertyIDSet.h"
+#include "nsCSSPropertySet.h"
 #include "nsCSSValue.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsStyleContext.h"

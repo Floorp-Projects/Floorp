@@ -36,7 +36,7 @@ public:
 
   virtual nsINode* GetParentObject() override;
 
-  NS_IMETHOD SetPropertyValue(const nsCSSPropertyID aPropID,
+  NS_IMETHOD SetPropertyValue(const nsCSSProperty aPropID,
                               const nsAString& aValue) override;
 
 protected:
