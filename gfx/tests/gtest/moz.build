@@ -8,6 +8,7 @@ UNIFIED_SOURCES += [
     'gfxSurfaceRefCountTest.cpp',
     'TestArena.cpp',
     'TestArrayView.cpp',
+    'TestBSPTree.cpp',
     'TestBufferRotation.cpp',
     'TestColorNames.cpp',
     'TestCompositor.cpp',

@@ -34,7 +34,7 @@ namespace mozilla {
 // cause some functions to fail. So be careful when using Win32 APIs on a
 // SharedThreadPool, and avoid sharing objects if at all possible.
 //
-// [1] http://mxr.mozilla.org/mozilla-central/search?string=coinitialize
+// [1] https://dxr.mozilla.org/mozilla-central/search?q=coinitialize&redirect=false
 class SharedThreadPool : public nsIThreadPool
 {
 public:

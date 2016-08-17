@@ -587,8 +587,9 @@ ExtensionTabManager.prototype = {
 
     if (this.hasTabPermission(tab)) {
       result.url = browser.currentURI.spec;
-      if (browser.contentTitle) {
-        result.title = browser.contentTitle;
+      let title = browser.contentTitle || tab.label;
+      if (title) {
+        result.title = title;
       }
       let icon = window.gBrowser.getIcon(tab);
       if (icon) {
@@ -600,7 +601,9 @@ ExtensionTabManager.prototype = {
   },
 
   getTabs(window) {
-    return Array.from(window.gBrowser.tabs, tab => this.convert(tab));
+    return Array.from(window.gBrowser.tabs)
+                .filter(tab => !tab.closing)
+                .map(tab => this.convert(tab));
   },
 };
 

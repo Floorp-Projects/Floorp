@@ -10,7 +10,10 @@ import sys
 import textwrap
 import unittest
 
-from mozunit import main
+from mozunit import (
+    main,
+    MockedOpen,
+)
 
 from mozbuild.configure import (
     ConfigureError,
@@ -804,6 +807,97 @@ class TestChecksConfigure(unittest.TestCase):
             checking for pkg-config version... 0.8.10
             ERROR: *** Your version of pkg-config is too old. You need version 0.9.0 or newer.
         ''' % mock_pkg_config_path))
+
+    def test_simple_keyfile(self):
+        includes = ('util.configure', 'checks.configure', 'keyfiles.configure')
+
+        config, output, status = self.get_result(
+            "simple_keyfile('Mozilla API')", includes=includes)
+        self.assertEqual(status, 0)
+        self.assertEqual(output, textwrap.dedent('''\
+            checking for the Mozilla API key... no
+        '''))
+        self.assertEqual(config, {
+            'MOZ_MOZILLA_API_KEY': 'no-mozilla-api-key',
+        })
+
+        config, output, status = self.get_result(
+            "simple_keyfile('Mozilla API')",
+            args=['--with-mozilla-api-keyfile=/foo/bar/does/not/exist'],
+            includes=includes)
+        self.assertEqual(status, 0)
+        self.assertEqual(output, textwrap.dedent('''\
+            checking for the Mozilla API key... no
+        '''))
+        self.assertEqual(config, {
+            'MOZ_MOZILLA_API_KEY': 'no-mozilla-api-key',
+        })
+
+        with MockedOpen({'key': 'fake-key\n'}):
+            config, output, status = self.get_result(
+                "simple_keyfile('Mozilla API')",
+                args=['--with-mozilla-api-keyfile=key'],
+                includes=includes)
+            self.assertEqual(status, 0)
+            self.assertEqual(output, textwrap.dedent('''\
+                checking for the Mozilla API key... yes
+            '''))
+            self.assertEqual(config, {
+                'MOZ_MOZILLA_API_KEY': 'fake-key',
+            })
+
+    def test_id_and_secret_keyfile(self):
+        includes = ('util.configure', 'checks.configure', 'keyfiles.configure')
+
+        config, output, status = self.get_result(
+            "id_and_secret_keyfile('Bing API')", includes=includes)
+        self.assertEqual(status, 0)
+        self.assertEqual(output, textwrap.dedent('''\
+            checking for the Bing API key... no
+        '''))
+        self.assertEqual(config, {
+            'MOZ_BING_API_CLIENTID': 'no-bing-api-clientid',
+            'MOZ_BING_API_KEY': 'no-bing-api-key',
+        })
+
+        config, output, status = self.get_result(
+            "id_and_secret_keyfile('Bing API')",
+            args=['--with-bing-api-keyfile=/foo/bar/does/not/exist'],
+            includes=includes)
+        self.assertEqual(status, 0)
+        self.assertEqual(output, textwrap.dedent('''\
+            checking for the Bing API key... no
+        '''))
+        self.assertEqual(config, {
+            'MOZ_BING_API_CLIENTID': 'no-bing-api-clientid',
+            'MOZ_BING_API_KEY': 'no-bing-api-key',
+        })
+
+        with MockedOpen({'key': 'fake-id fake-key\n'}):
+            config, output, status = self.get_result(
+                "id_and_secret_keyfile('Bing API')",
+                args=['--with-bing-api-keyfile=key'],
+                includes=includes)
+            self.assertEqual(status, 0)
+            self.assertEqual(output, textwrap.dedent('''\
+                checking for the Bing API key... yes
+            '''))
+            self.assertEqual(config, {
+                'MOZ_BING_API_CLIENTID': 'fake-id',
+                'MOZ_BING_API_KEY': 'fake-key',
+            })
+
+        with MockedOpen({'key': 'fake-key\n'}):
+            config, output, status = self.get_result(
+                "id_and_secret_keyfile('Bing API')",
+                args=['--with-bing-api-keyfile=key'],
+                includes=includes)
+            self.assertEqual(status, 1)
+            self.assertEqual(output, textwrap.dedent('''\
+                checking for the Bing API key... no
+                ERROR: Bing API key file has an invalid format.
+            '''))
+            self.assertEqual(config, {})
 
 
 if __name__ == '__main__':

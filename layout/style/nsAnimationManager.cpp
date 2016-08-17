@@ -549,19 +549,19 @@ private:
   nsTArray<PropertyValuePair> GetKeyframePropertyValues(
     nsPresContext* aPresContext,
     nsCSSKeyframeRule* aKeyframeRule,
-    nsCSSPropertySet& aAnimatedProperties);
+    nsCSSPropertyIDSet& aAnimatedProperties);
   void FillInMissingKeyframeValues(
     nsPresContext* aPresContext,
-    nsCSSPropertySet aAnimatedProperties,
-    nsCSSPropertySet aPropertiesSetAtStart,
-    nsCSSPropertySet aPropertiesSetAtEnd,
+    nsCSSPropertyIDSet aAnimatedProperties,
+    nsCSSPropertyIDSet aPropertiesSetAtStart,
+    nsCSSPropertyIDSet aPropertiesSetAtEnd,
     const Maybe<ComputedTimingFunction>& aInheritedTimingFunction,
     nsTArray<Keyframe>& aKeyframes);
   void AppendProperty(nsPresContext* aPresContext,
-                      nsCSSProperty aProperty,
+                      nsCSSPropertyID aProperty,
                       nsTArray<PropertyValuePair>& aPropertyValues);
   nsCSSValue GetComputedValue(nsPresContext* aPresContext,
-                              nsCSSProperty aProperty);
+                              nsCSSPropertyID aProperty);
 
   static TimingParams TimingParamsFrom(
     const StyleAnimation& aStyleAnimation)
@@ -717,7 +717,7 @@ CSSAnimationBuilder::BuildAnimationFrames(nsPresContext* aPresContext,
 
   // First, make up Keyframe objects for each rule
   nsTArray<Keyframe> keyframes;
-  nsCSSPropertySet animatedProperties;
+  nsCSSPropertyIDSet animatedProperties;
 
   for (auto ruleIdx = 0, ruleEnd = aRule->StyleRuleCount();
        ruleIdx != ruleEnd; ++ruleIdx) {
@@ -754,9 +754,9 @@ CSSAnimationBuilder::BuildAnimationFrames(nsPresContext* aPresContext,
                    });
 
   // Then walk backwards through the keyframes and drop overridden properties.
-  nsCSSPropertySet propertiesSetAtCurrentOffset;
-  nsCSSPropertySet propertiesSetAtStart;
-  nsCSSPropertySet propertiesSetAtEnd;
+  nsCSSPropertyIDSet propertiesSetAtCurrentOffset;
+  nsCSSPropertyIDSet propertiesSetAtStart;
+  nsCSSPropertyIDSet propertiesSetAtEnd;
   double currentOffset = -1.0;
   for (size_t keyframeIdx = keyframes.Length();
        keyframeIdx > 0;
@@ -874,16 +874,16 @@ nsTArray<PropertyValuePair>
 CSSAnimationBuilder::GetKeyframePropertyValues(
     nsPresContext* aPresContext,
     nsCSSKeyframeRule* aKeyframeRule,
-    nsCSSPropertySet& aAnimatedProperties)
+    nsCSSPropertyIDSet& aAnimatedProperties)
 {
   nsTArray<PropertyValuePair> result;
   RefPtr<nsStyleContext> styleContext =
     mResolvedStyles.Get(aPresContext, mStyleContext,
                         aKeyframeRule->Declaration());
 
-  for (nsCSSProperty prop = nsCSSProperty(0);
+  for (nsCSSPropertyID prop = nsCSSPropertyID(0);
        prop < eCSSProperty_COUNT_no_shorthands;
-       prop = nsCSSProperty(prop + 1)) {
+       prop = nsCSSPropertyID(prop + 1)) {
     if (nsCSSProps::kAnimTypeTable[prop] == eStyleAnimType_None ||
         !aKeyframeRule->Declaration()->HasNonImportantValueFor(prop)) {
       continue;
@@ -949,9 +949,9 @@ FindMatchingKeyframe(
 void
 CSSAnimationBuilder::FillInMissingKeyframeValues(
     nsPresContext* aPresContext,
-    nsCSSPropertySet aAnimatedProperties,
-    nsCSSPropertySet aPropertiesSetAtStart,
-    nsCSSPropertySet aPropertiesSetAtEnd,
+    nsCSSPropertyIDSet aAnimatedProperties,
+    nsCSSPropertyIDSet aPropertiesSetAtStart,
+    nsCSSPropertyIDSet aPropertiesSetAtEnd,
     const Maybe<ComputedTimingFunction>& aInheritedTimingFunction,
     nsTArray<Keyframe>& aKeyframes)
 {
@@ -997,9 +997,9 @@ CSSAnimationBuilder::FillInMissingKeyframeValues(
                             ? nullptr : &aKeyframes[endKeyframeIndex];
 
   // Iterate through all properties and fill-in missing values
-  for (nsCSSProperty prop = nsCSSProperty(0);
+  for (nsCSSPropertyID prop = nsCSSPropertyID(0);
        prop < eCSSProperty_COUNT_no_shorthands;
-       prop = nsCSSProperty(prop + 1)) {
+       prop = nsCSSPropertyID(prop + 1)) {
     if (!aAnimatedProperties.HasProperty(prop)) {
       continue;
     }
@@ -1016,7 +1016,7 @@ CSSAnimationBuilder::FillInMissingKeyframeValues(
 void
 CSSAnimationBuilder::AppendProperty(
     nsPresContext* aPresContext,
-    nsCSSProperty aProperty,
+    nsCSSPropertyID aProperty,
     nsTArray<PropertyValuePair>& aPropertyValues)
 {
   PropertyValuePair propertyValue;
@@ -1028,7 +1028,7 @@ CSSAnimationBuilder::AppendProperty(
 
 nsCSSValue
 CSSAnimationBuilder::GetComputedValue(nsPresContext* aPresContext,
-                                      nsCSSProperty aProperty)
+                                      nsCSSPropertyID aProperty)
 {
   nsCSSValue result;
   StyleAnimationValue computedValue;

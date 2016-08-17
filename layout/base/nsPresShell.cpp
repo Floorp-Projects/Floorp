@@ -6692,22 +6692,6 @@ nsIPresShell::SetCapturingContent(nsIContent* aContent, uint8_t aFlags)
   }
 }
 
-class AsyncCheckPointerCaptureStateCaller : public Runnable
-{
-public:
-  explicit AsyncCheckPointerCaptureStateCaller(int32_t aPointerId)
-    : mPointerId(aPointerId) {}
-
-  NS_IMETHOD Run() override
-  {
-    nsIPresShell::CheckPointerCaptureState(mPointerId);
-    return NS_OK;
-  }
-
-private:
-  int32_t mPointerId;
-};
-
 /* static */ void
 nsIPresShell::SetPointerCapturingContent(uint32_t aPointerId, nsIContent* aContent)
 {
@@ -6722,6 +6706,7 @@ nsIPresShell::SetPointerCapturingContent(uint32_t aPointerId, nsIContent* aConte
 
   if (pointerCaptureInfo) {
     pointerCaptureInfo->mPendingContent = aContent;
+    pointerCaptureInfo->mReleaseContent = false;
   } else {
     gPointerCaptureList->Put(aPointerId,
                              new PointerCaptureInfo(aContent, GetPointerPrimaryState(aPointerId)));
@@ -6739,9 +6724,6 @@ nsIPresShell::ReleasePointerCapturingContent(uint32_t aPointerId)
   if (gPointerCaptureList->Get(aPointerId, &pointerCaptureInfo) && pointerCaptureInfo) {
     // Set flag to asyncronously release capture for given pointer.
     pointerCaptureInfo->mReleaseContent = true;
-    RefPtr<AsyncCheckPointerCaptureStateCaller> asyncCaller =
-      new AsyncCheckPointerCaptureStateCaller(aPointerId);
-    NS_DispatchToCurrentThread(asyncCaller);
   }
 }
 
@@ -6756,7 +6738,8 @@ nsIPresShell::GetPointerCapturingContent(uint32_t aPointerId)
 }
 
 /* static */ bool
-nsIPresShell::CheckPointerCaptureState(uint32_t aPointerId)
+nsIPresShell::CheckPointerCaptureState(uint32_t aPointerId,
+                                       uint16_t aPointerType, bool aIsPrimary)
 {
   bool didDispatchEvent = false;
   PointerCaptureInfo* pointerCaptureInfo = nullptr;
@@ -6765,8 +6748,6 @@ nsIPresShell::CheckPointerCaptureState(uint32_t aPointerId)
     // we should dispatch lostpointercapture event to overrideContent if it exist
     if (pointerCaptureInfo->mPendingContent || pointerCaptureInfo->mReleaseContent) {
       if (pointerCaptureInfo->mOverrideContent) {
-        uint16_t pointerType = GetPointerType(aPointerId);
-        bool isPrimary = pointerCaptureInfo->mPrimaryState;
         nsCOMPtr<nsIContent> content;
         pointerCaptureInfo->mOverrideContent.swap(content);
         if (pointerCaptureInfo->mReleaseContent) {
@@ -6775,7 +6756,8 @@ nsIPresShell::CheckPointerCaptureState(uint32_t aPointerId)
         if (pointerCaptureInfo->Empty()) {
           gPointerCaptureList->Remove(aPointerId);
         }
-        DispatchGotOrLostPointerCaptureEvent(false, aPointerId, pointerType, isPrimary, content);
+        DispatchGotOrLostPointerCaptureEvent(false, aPointerId, aPointerType,
+                                             aIsPrimary, content);
         didDispatchEvent = true;
       } else if (pointerCaptureInfo->mPendingContent && pointerCaptureInfo->mReleaseContent) {
         // If anybody calls element.releasePointerCapture
@@ -6791,9 +6773,8 @@ nsIPresShell::CheckPointerCaptureState(uint32_t aPointerId)
       pointerCaptureInfo->mOverrideContent = pointerCaptureInfo->mPendingContent;
       pointerCaptureInfo->mPendingContent = nullptr;
       pointerCaptureInfo->mReleaseContent = false;
-      DispatchGotOrLostPointerCaptureEvent(true, aPointerId,
-                                           GetPointerType(aPointerId),
-                                           pointerCaptureInfo->mPrimaryState,
+      DispatchGotOrLostPointerCaptureEvent(true, aPointerId, aPointerType,
+                                           aIsPrimary,
                                            pointerCaptureInfo->mOverrideContent);
       didDispatchEvent = true;
     }
@@ -7237,6 +7218,8 @@ class ReleasePointerCaptureCaller
 public:
   ReleasePointerCaptureCaller() :
     mPointerId(0),
+    mPointerType(nsIDOMMouseEvent::MOZ_SOURCE_UNKNOWN),
+    mIsPrimary(false),
     mIsSet(false)
   {
   }
@@ -7244,16 +7227,22 @@ public:
   {
     if (mIsSet) {
       nsIPresShell::ReleasePointerCapturingContent(mPointerId);
+      nsIPresShell::CheckPointerCaptureState(mPointerId, mPointerType,
+                                             mIsPrimary);
     }
   }
-  void SetTarget(uint32_t aPointerId)
+  void SetTarget(uint32_t aPointerId, uint16_t aPointerType, bool aIsPrimary)
   {
     mPointerId = aPointerId;
+    mPointerType = aPointerType;
+    mIsPrimary = aIsPrimary;
     mIsSet = true;
   }
 
 private:
   int32_t mPointerId;
+  uint16_t mPointerType;
+  bool mIsPrimary;
   bool mIsSet;
 };
 
@@ -7975,11 +7964,11 @@ PresShell::HandleEvent(nsIFrame* aFrame,
         // Try to keep frame for following check, because
         // frame can be damaged during CheckPointerCaptureState.
         nsWeakFrame frameKeeper(frame);
-        // Before any pointer events, we should check state of pointer capture,
-        // Thus got/lostpointercapture events emulate asynchronous behavior.
-        // Handlers of got/lostpointercapture events can change capturing state,
-        // That's why we should re-check pointer capture state until stable state.
-        while(CheckPointerCaptureState(pointerEvent->pointerId));
+        // Handle pending pointer capture before any pointer events except
+        // gotpointercapture / lostpointercapture.
+        CheckPointerCaptureState(pointerEvent->pointerId,
+                                 pointerEvent->inputSource,
+                                 pointerEvent->mIsPrimary);
         // Prevent application crashes, in case damaged frame.
         if (!frameKeeper.IsAlive()) {
           frame = nullptr;
@@ -8008,7 +7997,9 @@ PresShell::HandleEvent(nsIFrame* aFrame,
             // Implicitly releasing capture for given pointer.
             // ePointerLostCapture should be send after ePointerUp or
             // ePointerCancel.
-            releasePointerCaptureCaller.SetTarget(pointerId);
+            releasePointerCaptureCaller.SetTarget(pointerId,
+                                                  pointerEvent->inputSource,
+                                                  pointerEvent->mIsPrimary);
           }
         }
       }

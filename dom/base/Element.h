@@ -757,6 +757,21 @@ public:
       }
     }
   }
+  bool HasPointerCapture(long aPointerId)
+  {
+    bool activeState = false;
+    if (!nsIPresShell::GetPointerInfo(aPointerId, activeState)) {
+      return false;
+    }
+    nsIPresShell::PointerCaptureInfo* pointerCaptureInfo = nullptr;
+    if (nsIPresShell::gPointerCaptureList->Get(aPointerId, &pointerCaptureInfo) &&
+        pointerCaptureInfo && !pointerCaptureInfo->mReleaseContent &&
+        (pointerCaptureInfo->mOverrideContent == this ||
+         pointerCaptureInfo->mPendingContent == this)) {
+      return true;
+    }
+    return false;
+  }
   void SetCapture(bool aRetargetToElement)
   {
     // If there is already an active capture, ignore this request. This would

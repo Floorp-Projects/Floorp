@@ -941,9 +941,7 @@ SheetLoadData::OnStreamComplete(nsIUnicharStreamLoader* aLoader,
   mSheet->GetIntegrity(sriMetadata);
   if (sriMetadata.IsEmpty()) {
     nsCOMPtr<nsILoadInfo> loadInfo = channel->GetLoadInfo();
-    bool enforceSRI = false;
-    loadInfo->GetEnforceSRI(&enforceSRI);
-    if (enforceSRI) {
+    if (loadInfo->GetEnforceSRI()) {
       LOG(("  Load was blocked by SRI"));
       MOZ_LOG(gSriPRLog, mozilla::LogLevel::Debug,
               ("css::Loader::OnStreamComplete, required SRI not found"));
