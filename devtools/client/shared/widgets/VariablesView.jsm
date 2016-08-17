@@ -117,7 +117,7 @@ VariablesView.prototype = {
   set rawObject(aObject) {
     this.empty();
     this.addScope()
-        .addItem("", { enumerable: true })
+        .addItem(undefined, { enumerable: true })
         .populate(aObject, { sorted: true });
   },
 
@@ -1325,7 +1325,7 @@ Scope.prototype = {
    * @return Variable
    *         The newly created Variable instance, null if it already exists.
    */
-  addItem: function (aName = "", aDescriptor = {}, aOptions = {}) {
+  addItem: function (aName, aDescriptor = {}, aOptions = {}) {
     let {relaxed} = aOptions;
     if (this._store.has(aName) && !relaxed) {
       return this._store.get(aName);
@@ -1335,7 +1335,7 @@ Scope.prototype = {
     this._store.set(aName, child);
     this._variablesView._itemsByElement.set(child._target, child);
     this._variablesView._currHierarchy.set(child.absoluteName, child);
-    child.header = !!aName;
+    child.header = typeof aName === 'string';
 
     return child;
   },
@@ -2449,7 +2449,7 @@ Variable.prototype = Heritage.extend(Scope.prototype, {
   setGrip: function (aGrip) {
     // Don't allow displaying grip information if there's no name available
     // or the grip is malformed.
-    if (!this._nameString || aGrip === undefined || aGrip === null) {
+    if (typeof this._nameString !== "string" || aGrip === undefined || aGrip === null) {
       return;
     }
     // Getters and setters should display grip information in sub-properties.
@@ -2535,7 +2535,9 @@ Variable.prototype = Heritage.extend(Scope.prototype, {
    *        The variable's descriptor.
    */
   _init: function (aName, aDescriptor) {
-    this._idString = generateId(this._nameString = aName);
+    this._nameString = aName;
+    aName = String(aName);
+    this._idString = generateId(aName);
     this._displayScope(aName, this.targetClassName);
     this._displayVariable();
     this._customizeVariable();
