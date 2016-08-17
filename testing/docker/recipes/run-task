@@ -156,6 +156,13 @@ def main(args):
     parser = argparse.ArgumentParser()
     parser.add_argument('--user', default='worker', help='user to run as')
     parser.add_argument('--group', default='worker', help='group to run as')
+    # We allow paths to be chowned by the --user:--group before permissions are
+    # dropped. This is often necessary for caches/volumes, since they default
+    # to root:root ownership.
+    parser.add_argument('--chown', action='append',
+                        help='Directory to chown to --user:--group')
+    parser.add_argument('--chown-recursive', action='append',
+                        help='Directory to recursively chown to --user:--group')
     parser.add_argument('--vcs-checkout',
                         help='Directory where Gecko checkout should be created')
 
@@ -179,6 +186,23 @@ def main(args):
 
     # Find all groups to which this user is a member.
     gids = [g.gr_gid for g in grp.getgrall() if args.group in g.gr_mem]
+
+    # Change ownership of requested paths.
+    # FUTURE: parse argument values for user/group if we don't want to
+    # use --user/--group.
+    for path in args.chown or []:
+        print_line(b'chown', b'changing ownership of %s to %s:%s\n' % (
+                   path, user.pw_name, group.gr_name))
+        os.chown(path, uid, gid)
+
+    for path in args.chown_recursive or []:
+        print_line(b'chown', b'recursively changing ownership of %s to %s:%s\n' %
+                   (path, user.pw_name, group.gr_name))
+        for root, dirs, files in os.walk(path):
+            for d in dirs:
+                os.chown(os.path.join(root, d), uid, gid)
+            for f in files:
+                os.chown(os.path.join(root, f), uid, gid)
 
     checkout = args.vcs_checkout
     if checkout:
