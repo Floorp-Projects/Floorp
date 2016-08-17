@@ -217,6 +217,8 @@ class Nursery
     using SweepThunk = void (*)(void *data);
     void queueSweepAction(SweepThunk thunk, void* data);
 
+    MOZ_MUST_USE bool queueDictionaryModeObjectToSweep(NativeObject* obj);
+
     size_t sizeOfHeapCommitted() const {
         return numChunks() * gc::ChunkSize;
     }
@@ -353,6 +355,9 @@ class Nursery
     struct SweepAction;
     SweepAction* sweepActions_;
 
+    using NativeObjectVector = Vector<NativeObject*, 0, SystemAllocPolicy>;
+    NativeObjectVector dictionaryModeObjects_;
+
 #ifdef JS_GC_ZEAL
     struct Canary;
     Canary* lastCanary_;
@@ -419,6 +424,7 @@ class Nursery
     void sweep();
 
     void runSweepActions();
+    void sweepDictionaryModeObjects();
 
     /* Change the allocable space provided by the nursery. */
     void maybeResizeNursery(JS::gcreason::Reason reason, size_t usedSpace, double promotionRate);
