@@ -14,7 +14,7 @@
 
 #include "mozilla/MemoryReporting.h"
 #include "nsCSSProps.h"
-#include "nsCSSPropertySet.h"
+#include "nsCSSPropertyIDSet.h"
 #include "nsCSSValue.h"
 #include "nsStyleStruct.h"
 #include "imgRequestProxy.h"
@@ -316,11 +316,11 @@ private:
    * properties (the norm) and to allow quickly checking whether a
    * property is set in this block.
    */
-  nsCSSPropertySet mPropertiesSet;
+  nsCSSPropertyIDSet mPropertiesSet;
   /*
    * mPropertiesImportant indicates which properties are '!important'.
    */
-  nsCSSPropertySet mPropertiesImportant;
+  nsCSSPropertyIDSet mPropertiesImportant;
 
   /*
    * Return the storage location within |this| of the value of the

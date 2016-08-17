@@ -592,7 +592,7 @@ KeyframeUtils::GetComputedKeyframeValues(const nsTArray<Keyframe>& aKeyframes,
   nsTArray<ComputedKeyframeValues> result(len);
 
   for (const Keyframe& frame : aKeyframes) {
-    nsCSSPropertySet propertiesOnThisKeyframe;
+    nsCSSPropertyIDSet propertiesOnThisKeyframe;
     ComputedKeyframeValues* computedValues = result.AppendElement();
     for (const PropertyValuePair& pair :
            PropertyPriorityIterator(frame.mPropertyValues)) {
@@ -1331,9 +1331,9 @@ RequiresAdditiveAnimation(const nsTArray<Keyframe>& aKeyframes,
   // So as long as this check catches most cases, and we don't do anything
   // horrible in one of the cases we can't detect, it should be sufficient.
 
-  nsCSSPropertySet properties;              // All properties encountered.
-  nsCSSPropertySet propertiesWithFromValue; // Those with a defined 0% value.
-  nsCSSPropertySet propertiesWithToValue;   // Those with a defined 100% value.
+  nsCSSPropertyIDSet properties;              // All properties encountered.
+  nsCSSPropertyIDSet propertiesWithFromValue; // Those with a defined 0% value.
+  nsCSSPropertyIDSet propertiesWithToValue;   // Those with a defined 100% value.
 
   auto addToPropertySets = [&](nsCSSPropertyID aProperty, double aOffset) {
     properties.AddProperty(aProperty);
@@ -1505,7 +1505,7 @@ GetCumulativeDistances(const nsTArray<ComputedKeyframeValues>& aValues,
   // a) If aPacedProperty is a shorthand property, get its components.
   //    Otherwise, just add the longhand property into the set.
   size_t pacedPropertyCount = 0;
-  nsCSSPropertySet pacedPropertySet;
+  nsCSSPropertyIDSet pacedPropertySet;
   bool isShorthand = nsCSSProps::IsShorthand(aPacedProperty);
   if (isShorthand) {
     CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(p, aPacedProperty,

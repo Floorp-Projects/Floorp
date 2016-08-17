@@ -549,12 +549,12 @@ private:
   nsTArray<PropertyValuePair> GetKeyframePropertyValues(
     nsPresContext* aPresContext,
     nsCSSKeyframeRule* aKeyframeRule,
-    nsCSSPropertySet& aAnimatedProperties);
+    nsCSSPropertyIDSet& aAnimatedProperties);
   void FillInMissingKeyframeValues(
     nsPresContext* aPresContext,
-    nsCSSPropertySet aAnimatedProperties,
-    nsCSSPropertySet aPropertiesSetAtStart,
-    nsCSSPropertySet aPropertiesSetAtEnd,
+    nsCSSPropertyIDSet aAnimatedProperties,
+    nsCSSPropertyIDSet aPropertiesSetAtStart,
+    nsCSSPropertyIDSet aPropertiesSetAtEnd,
     const Maybe<ComputedTimingFunction>& aInheritedTimingFunction,
     nsTArray<Keyframe>& aKeyframes);
   void AppendProperty(nsPresContext* aPresContext,
@@ -717,7 +717,7 @@ CSSAnimationBuilder::BuildAnimationFrames(nsPresContext* aPresContext,
 
   // First, make up Keyframe objects for each rule
   nsTArray<Keyframe> keyframes;
-  nsCSSPropertySet animatedProperties;
+  nsCSSPropertyIDSet animatedProperties;
 
   for (auto ruleIdx = 0, ruleEnd = aRule->StyleRuleCount();
        ruleIdx != ruleEnd; ++ruleIdx) {
@@ -754,9 +754,9 @@ CSSAnimationBuilder::BuildAnimationFrames(nsPresContext* aPresContext,
                    });
 
   // Then walk backwards through the keyframes and drop overridden properties.
-  nsCSSPropertySet propertiesSetAtCurrentOffset;
-  nsCSSPropertySet propertiesSetAtStart;
-  nsCSSPropertySet propertiesSetAtEnd;
+  nsCSSPropertyIDSet propertiesSetAtCurrentOffset;
+  nsCSSPropertyIDSet propertiesSetAtStart;
+  nsCSSPropertyIDSet propertiesSetAtEnd;
   double currentOffset = -1.0;
   for (size_t keyframeIdx = keyframes.Length();
        keyframeIdx > 0;
@@ -874,7 +874,7 @@ nsTArray<PropertyValuePair>
 CSSAnimationBuilder::GetKeyframePropertyValues(
     nsPresContext* aPresContext,
     nsCSSKeyframeRule* aKeyframeRule,
-    nsCSSPropertySet& aAnimatedProperties)
+    nsCSSPropertyIDSet& aAnimatedProperties)
 {
   nsTArray<PropertyValuePair> result;
   RefPtr<nsStyleContext> styleContext =
@@ -949,9 +949,9 @@ FindMatchingKeyframe(
 void
 CSSAnimationBuilder::FillInMissingKeyframeValues(
     nsPresContext* aPresContext,
-    nsCSSPropertySet aAnimatedProperties,
-    nsCSSPropertySet aPropertiesSetAtStart,
-    nsCSSPropertySet aPropertiesSetAtEnd,
+    nsCSSPropertyIDSet aAnimatedProperties,
+    nsCSSPropertyIDSet aPropertiesSetAtStart,
+    nsCSSPropertyIDSet aPropertiesSetAtEnd,
     const Maybe<ComputedTimingFunction>& aInheritedTimingFunction,
     nsTArray<Keyframe>& aKeyframes)
 {

@@ -16,7 +16,7 @@
 #include "Layers.h" // For Layer
 #include "nsComputedDOMStyle.h" // nsComputedDOMStyle::GetStyleContextForElement
 #include "nsContentUtils.h"  // nsContentUtils::ReportToConsole
-#include "nsCSSPropertySet.h"
+#include "nsCSSPropertyIDSet.h"
 #include "nsCSSProps.h" // For nsCSSProps::PropHasFlags
 #include "nsCSSPseudoElements.h" // For CSSPseudoElementType
 #include "nsDOMMutationObserver.h" // For nsAutoAnimationMutationBatch
@@ -575,8 +575,8 @@ KeyframeEffectReadOnly::UpdateProperties(nsStyleContext* aStyleContext)
   }
 
   // Preserve the state of mWinsInCascade and mIsRunningOnCompositor flags.
-  nsCSSPropertySet winningInCascadeProperties;
-  nsCSSPropertySet runningOnCompositorProperties;
+  nsCSSPropertyIDSet winningInCascadeProperties;
+  nsCSSPropertyIDSet runningOnCompositorProperties;
 
   for (const AnimationProperty& property : mProperties) {
     if (property.mWinsInCascade) {
@@ -611,7 +611,7 @@ KeyframeEffectReadOnly::UpdateProperties(nsStyleContext* aStyleContext)
 
 void
 KeyframeEffectReadOnly::ComposeStyle(RefPtr<AnimValuesStyleRule>& aStyleRule,
-                                     nsCSSPropertySet& aSetProperties)
+                                     nsCSSPropertyIDSet& aSetProperties)
 {
   ComputedTiming computedTiming = GetComputedTiming();
   mProgressOnLastCompose = computedTiming.mProgress;
