@@ -653,15 +653,18 @@ Classifier::UpdateHashStore(nsTArray<TableUpdate*>* aUpdates,
 
     applied++;
 
-    LOG(("Applied update to table %s:", store.TableName().get()));
-    LOG(("  %d add chunks", update->AddChunks().Length()));
-    LOG(("  %d add prefixes", update->AddPrefixes().Length()));
-    LOG(("  %d add completions", update->AddCompletes().Length()));
-    LOG(("  %d sub chunks", update->SubChunks().Length()));
-    LOG(("  %d sub prefixes", update->SubPrefixes().Length()));
-    LOG(("  %d sub completions", update->SubCompletes().Length()));
-    LOG(("  %d add expirations", update->AddExpirations().Length()));
-    LOG(("  %d sub expirations", update->SubExpirations().Length()));
+    auto updateV2 = TableUpdate::Cast<TableUpdateV2>(update);
+    if (updateV2) {
+      LOG(("Applied update to table %s:", store.TableName().get()));
+      LOG(("  %d add chunks", updateV2->AddChunks().Length()));
+      LOG(("  %d add prefixes", updateV2->AddPrefixes().Length()));
+      LOG(("  %d add completions", updateV2->AddCompletes().Length()));
+      LOG(("  %d sub chunks", updateV2->SubChunks().Length()));
+      LOG(("  %d sub prefixes", updateV2->SubPrefixes().Length()));
+      LOG(("  %d sub completions", updateV2->SubCompletes().Length()));
+      LOG(("  %d add expirations", updateV2->AddExpirations().Length()));
+      LOG(("  %d sub expirations", updateV2->SubExpirations().Length()));
+    }
 
     aUpdates->ElementAt(i) = nullptr;
     delete update;
@@ -714,7 +717,8 @@ Classifier::UpdateCache(TableUpdate* aUpdate)
   LookupCache *lookupCache = GetLookupCache(table);
   NS_ENSURE_TRUE(lookupCache, NS_ERROR_FAILURE);
 
-  lookupCache->AddCompletionsToCache(aUpdate->AddCompletes());
+  auto updateV2 = TableUpdate::Cast<TableUpdateV2>(aUpdate);
+  lookupCache->AddCompletionsToCache(updateV2->AddCompletes());
 
 #if defined(DEBUG)
   lookupCache->DumpCache();

@@ -84,6 +84,7 @@ static NS_DEFINE_CID(kFrameTraversalCID, NS_FRAMETRAVERSAL_CID);
 
 #include "nsIEditor.h"
 #include "nsIHTMLEditor.h"
+#include "nsFocusManager.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -549,16 +550,22 @@ nsFrameSelection::nsFrameSelection()
   mSelectingTableCellMode = 0;
   mSelectedCellIndex = 0;
 
+  nsAutoCopyListener *autoCopy = nullptr;
+  // On macOS, cache the current selection to send to osx service menu.
+#ifdef XP_MACOSX
+  autoCopy = nsAutoCopyListener::GetInstance(nsIClipboard::kSelectionCache);
+#endif
+
   // Check to see if the autocopy pref is enabled
   //   and add the autocopy listener if it is
   if (Preferences::GetBool("clipboard.autocopy")) {
-    nsAutoCopyListener *autoCopy = nsAutoCopyListener::GetInstance();
+    autoCopy = nsAutoCopyListener::GetInstance(nsIClipboard::kSelectionClipboard);
+  }
 
-    if (autoCopy) {
-      int8_t index = GetIndexFromSelectionType(SelectionType::eNormal);
-      if (mDomSelections[index]) {
-        autoCopy->Listen(mDomSelections[index]);
-      }
+  if (autoCopy) {
+    int8_t index = GetIndexFromSelectionType(SelectionType::eNormal);
+    if (mDomSelections[index]) {
+      autoCopy->Listen(mDomSelections[index]);
     }
   }
 
@@ -1958,7 +1965,7 @@ nsFrameSelection::ScrollSelectionIntoView(SelectionType aSelectionType,
 }
 
 nsresult
-nsFrameSelection::RepaintSelection(SelectionType aSelectionType) const
+nsFrameSelection::RepaintSelection(SelectionType aSelectionType)
 {
   int8_t index = GetIndexFromSelectionType(aSelectionType);
   if (index < 0)
@@ -1966,6 +1973,17 @@ nsFrameSelection::RepaintSelection(SelectionType aSelectionType) const
   if (!mDomSelections[index])
     return NS_ERROR_NULL_POINTER;
   NS_ENSURE_STATE(mShell);
+
+// On macOS, update the selection cache to the new active selection
+// aka the current selection.
+#ifdef XP_MACOSX
+  nsFocusManager* fm = nsFocusManager::GetFocusManager();
+  // Check an active window exists otherwise there cannot be a current selection
+  // and that it's a normal selection.
+  if (fm->GetActiveWindow() && aSelectionType == SelectionType::eNormal) {
+    UpdateSelectionCacheOnRepaintSelection(mDomSelections[index]);
+  }
+#endif
   return mDomSelections[index]->Repaint(mShell->GetPresContext());
 }
  
@@ -6467,12 +6485,26 @@ NS_IMPL_ISUPPORTS(nsAutoCopyListener, nsISelectionListener)
  *   selections?
  * - maybe we should just never clear the X clipboard?  That would make this 
  *   problem just go away, which is very tempting.
+ *
+ * On macOS,
+ * nsIClipboard::kSelectionCache is the flag for current selection cache.
+ * Set the current selection cache on the parent process in
+ * widget cocoa nsClipboard whenever selection changes.
  */
 
 NS_IMETHODIMP
 nsAutoCopyListener::NotifySelectionChanged(nsIDOMDocument *aDoc,
                                            nsISelection *aSel, int16_t aReason)
 {
+  if (mCachedClipboard == nsIClipboard::kSelectionCache) {
+    nsFocusManager* fm = nsFocusManager::GetFocusManager();
+    // If no active window, do nothing because a current selection changed
+    // cannot occur unless it is in the active window.
+    if (!fm->GetActiveWindow()) {
+      return NS_OK;
+    }
+  }
+
   if (!(aReason & nsISelectionListener::MOUSEUP_REASON   || 
         aReason & nsISelectionListener::SELECTALL_REASON ||
         aReason & nsISelectionListener::KEYPRESS_REASON))
@@ -6484,6 +6516,11 @@ nsAutoCopyListener::NotifySelectionChanged(nsIDOMDocument *aDoc,
 #ifdef DEBUG_CLIPBOARD
     fprintf(stderr, "CLIPBOARD: no selection/collapsed selection\n");
 #endif
+    // If on macOS, clear the current selection transferable cached
+    // on the parent process (nsClipboard) when the selection is empty.
+    if (mCachedClipboard == nsIClipboard::kSelectionCache) {
+      return nsCopySupport::ClearSelectionCache();
+    }
     /* clear X clipboard? */
     return NS_OK;
   }
@@ -6493,7 +6530,45 @@ nsAutoCopyListener::NotifySelectionChanged(nsIDOMDocument *aDoc,
 
   // call the copy code
   return nsCopySupport::HTMLCopy(aSel, doc,
-                                 nsIClipboard::kSelectionClipboard, false);
+                                 mCachedClipboard, false);
+}
+
+/**
+ * See Bug 1288453.
+ *
+ * Update the selection cache on repaint to handle when a pre-existing
+ * selection becomes active aka the current selection.
+ *
+ * 1. Change the current selection by click n dragging another selection.
+ *   - Make a selection on content page. Make a selection in a text editor.
+ *   - You can click n drag the content selection to make it active again.
+ * 2. Change the current selection when switching to a tab with a selection.
+ *   - Make selection in tab.
+ *   - Switching tabs will make its respective selection active.
+ *
+ * Therefore, we only update the selection cache on a repaint
+ * if the current selection being repainted is not an empty selection.
+ *
+ * If the current selection is empty. The current selection cache
+ * would be cleared by nsAutoCopyListener::NotifySelectionChanged.
+ */
+nsresult
+nsFrameSelection::UpdateSelectionCacheOnRepaintSelection(Selection* aSel)
+{
+  nsIPresShell* ps = aSel->GetPresShell();
+  if (!ps) {
+    return NS_OK;
+  }
+  nsCOMPtr<nsIDocument> aDoc = ps->GetDocument();
+
+  bool collapsed;
+  if (aDoc && aSel &&
+      NS_SUCCEEDED(aSel->GetIsCollapsed(&collapsed)) && !collapsed) {
+    return nsCopySupport::HTMLCopy(aSel, aDoc,
+                                   nsIClipboard::kSelectionCache, false);
+  }
+
+  return NS_OK;
 }
 
 // SelectionChangeListener

@@ -509,11 +509,9 @@ var gInfoLeakTests = [
 ];
 
 // These are files that must fire an error during load or playback, and do not
-// cause a crash.  Put files of the same type together in this list so if
-// something crashes we have some idea of which backend is responsible.  Used
-// by test_playback_errors, which expects one error event and no ended event.
-// Put files of the same type together in this list so if something crashes
-// we have some idea of which backend is responsible.
+// cause a crash. Used by test_playback_errors, which expects one error event
+// and no ended event. Put files of the same type together in this list so if
+// something crashes we have some idea of which backend is responsible.
 var gErrorTests = [
   { name:"bogus.wav", type:"audio/x-wav" },
   { name:"bogus.ogv", type:"video/ogg" },

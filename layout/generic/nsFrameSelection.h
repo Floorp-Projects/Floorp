@@ -373,7 +373,7 @@ public:
    *  specified by aSelectionType.
    * @param aSelectionType The selection type what you want to repaint.
    */
-  nsresult RepaintSelection(mozilla::SelectionType aSelectionType) const;
+  nsresult RepaintSelection(mozilla::SelectionType aSelectionType);
 
   /** GetFrameForNodeOffset given a node and its child offset, return the nsIFrame and
    *  the offset into that frame. 
@@ -681,6 +681,10 @@ private:
   // nsFrameSelection may get deleted when calling this,
   // so remember to use nsCOMPtr when needed.
   nsresult     NotifySelectionListeners(mozilla::SelectionType aSelectionType);
+  // Update the selection cache on repaint when the
+  // selection being repainted is not empty.
+  nsresult     UpdateSelectionCacheOnRepaintSelection(mozilla::dom::
+                                                      Selection* aSel);
 
   RefPtr<mozilla::dom::Selection>
     mDomSelections[mozilla::kPresentSelectionTypeCount];

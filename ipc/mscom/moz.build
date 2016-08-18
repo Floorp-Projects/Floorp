@@ -7,6 +7,7 @@
 EXPORTS.mozilla.mscom += [
     'COMApartmentRegion.h',
     'COMPtrHolder.h',
+    'DispatchForwarder.h',
     'EnsureMTA.h',
     'Interceptor.h',
     'InterceptorLog.h',
@@ -28,6 +29,7 @@ SOURCES += [
 ]
 
 UNIFIED_SOURCES += [
+    'DispatchForwarder.cpp',
     'EnsureMTA.cpp',
     'InterceptorLog.cpp',
     'MainThreadHandoff.cpp',

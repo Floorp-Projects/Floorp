@@ -145,7 +145,8 @@ FFmpegVideoDecoder<LIBAV_VER>::InitCodecContext()
     decode_threads = 2;
   }
 
-  decode_threads = std::min(decode_threads, PR_GetNumberOfProcessors());
+  decode_threads = std::min(decode_threads, PR_GetNumberOfProcessors() - 1);
+  decode_threads = std::max(decode_threads, 1);
   mCodecContext->thread_count = decode_threads;
   if (decode_threads > 1) {
     mCodecContext->thread_type = FF_THREAD_SLICE | FF_THREAD_FRAME;

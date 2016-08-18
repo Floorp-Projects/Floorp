@@ -1956,6 +1956,9 @@ GK_ATOM(ondevicelight, "ondevicelight")
 GK_ATOM(onmozinterruptbegin, "onmozinterruptbegin")
 GK_ATOM(onmozinterruptend, "onmozinterruptend")
 
+// MediaDevices device change event
+GK_ATOM(ondevicechange, "ondevicechange")
+
 //---------------------------------------------------------------------------
 // Special atoms
 //---------------------------------------------------------------------------

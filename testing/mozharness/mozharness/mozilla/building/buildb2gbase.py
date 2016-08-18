@@ -104,7 +104,7 @@ class B2GBuildBaseScript(BuildbotMixin, MockMixin,
             'vcs_share_base': os.environ.get('HG_SHARE_BASE_DIR'),
             'buildbot_json_path': os.environ.get('PROPERTIES_FILE'),
             'tools_repo': 'https://hg.mozilla.org/build/tools',
-            'repo_repo': "https://git.mozilla.org/external/google/gerrit/git-repo.git",
+            'repo_repo': 'https://gerrit.googlesource.com/git-repo.git',
             'repo_rev': 'stable',
             'hgurl': 'https://hg.mozilla.org/',
         }
@@ -401,7 +401,7 @@ class B2GBuildBaseScript(BuildbotMixin, MockMixin,
                 b2g_manifest_branch = gecko_config.get('b2g_manifest_branch', 'master')
                 repos.append(
                     {'vcs': 'gittool',
-                     'repo': 'https://git.mozilla.org/b2g/b2g-manifest.git',
+                     'repo': 'https://github.com/mozilla-b2g/b2g-manifest',
                      'dest': os.path.join(dirs['work_dir'], 'b2g-manifest'),
                      'branch': b2g_manifest_branch},
                 )

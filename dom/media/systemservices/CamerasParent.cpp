@@ -39,6 +39,24 @@ namespace camera {
 //   called "VideoCapture". On Windows this is a thread with an event loop
 //   suitable for UI access.
 
+void InputObserver::DeviceChange() {
+  LOG((__PRETTY_FUNCTION__));
+  MOZ_ASSERT(mParent);
+
+  RefPtr<nsIRunnable> ipc_runnable =
+    media::NewRunnableFrom([this]() -> nsresult {
+      if (mParent->IsShuttingDown()) {
+        return NS_ERROR_FAILURE;
+      }
+      Unused << mParent->SendDeviceChange();
+      return NS_OK;
+    });
+
+  nsIThread* thread = mParent->GetBackgroundThread();
+  MOZ_ASSERT(thread != nullptr);
+  thread->Dispatch(ipc_runnable, NS_DISPATCH_NORMAL);
+};
+
 class FrameSizeChangeRunnable : public Runnable {
 public:
   FrameSizeChangeRunnable(CamerasParent *aParent, CaptureEngine capEngine,
@@ -399,6 +417,15 @@ CamerasParent::SetupEngine(CaptureEngine aCapEngine)
     return false;
   }
 
+  InputObserver** observer = mObservers.AppendElement(
+          new InputObserver(this));
+
+#ifdef DEBUG
+  MOZ_ASSERT(0 == helper->mPtrViECapture->RegisterInputObserver(*observer));
+#else
+  helper->mPtrViECapture->RegisterInputObserver(*observer);
+#endif
+
   helper->mPtrViERender = webrtc::ViERender::GetInterface(helper->mEngine);
   if (!helper->mPtrViERender) {
     LOG(("ViERender::GetInterface failed"));
@@ -435,6 +462,12 @@ CamerasParent::CloseEngines()
       mEngines[i].mPtrViERender = nullptr;
     }
     if (mEngines[i].mPtrViECapture) {
+#ifdef DEBUG
+      MOZ_ASSERT(0 == mEngines[i].mPtrViECapture->DeregisterInputObserver());
+#else
+      mEngines[i].mPtrViECapture->DeregisterInputObserver();
+#endif
+
       mEngines[i].mPtrViECapture->Release();
         mEngines[i].mPtrViECapture = nullptr;
     }
@@ -448,6 +481,11 @@ CamerasParent::CloseEngines()
       mEngines[i].mEngine = nullptr;
     }
   }
+
+  for (InputObserver* observer : mObservers) {
+    delete observer;
+  }
+  mObservers.Clear();
 
   mWebRTCAlive = false;
 }

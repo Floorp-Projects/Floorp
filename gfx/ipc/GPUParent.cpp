@@ -144,6 +144,13 @@ GPUParent::RecvNewContentVRManager(Endpoint<PVRManagerParent>&& aEndpoint)
   return VRManagerParent::CreateForContent(Move(aEndpoint));
 }
 
+bool
+GPUParent::RecvDeallocateLayerTreeId(const uint64_t& aLayersId)
+{
+  CompositorBridgeParent::DeallocateLayerTreeId(aLayersId);
+  return true;
+}
+
 void
 GPUParent::ActorDestroy(ActorDestroyReason aWhy)
 {

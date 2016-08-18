@@ -571,6 +571,8 @@ class MediaEngineWebRTC : public MediaEngine
 public:
   explicit MediaEngineWebRTC(MediaEnginePrefs& aPrefs);
 
+  virtual void SetFakeDeviceChangeEvents() override;
+
   // Clients should ensure to clean-up sources video/audio sources
   // before invoking Shutdown on this class.
   void Shutdown() override;
