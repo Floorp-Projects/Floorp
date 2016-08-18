@@ -7,9 +7,10 @@
 #include "nsWrapperCache.h"
 
 #include "mozilla/dom/Element.h"
-#include "mozilla/dom/VRDisplayBinding.h"
 #include "mozilla/dom/ElementBinding.h"
+#include "mozilla/dom/Promise.h"
 #include "mozilla/dom/VRDisplay.h"
+#include "mozilla/dom/VRDisplayBinding.h"
 #include "Navigator.h"
 #include "gfxVR.h"
 #include "VRDisplayClient.h"
