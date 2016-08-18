@@ -17,6 +17,12 @@ import org.mozilla.gecko.icons.IconResponse;
 public class ResizingProcessor implements Processor {
     @Override
     public void process(IconRequest request, IconResponse response) {
+        if (response.isFromMemory()) {
+            // This bitmap has been loaded from memory, so it has already gone through the resizing
+            // process. We do not want to resize the image every time we hit the memory cache.
+            return;
+        }
+
         final Bitmap originalBitmap = response.getBitmap();
         final int size = originalBitmap.getWidth();
 
