@@ -8,7 +8,6 @@ callback interface BlobCallback {
     void handleEvent(Blob? blob);
 };
 
-[NoInterfaceObject]
 interface FileSystemFileEntry : FileSystemEntry {
     // the successCallback should be a FileWriteCallback but this method is not
     // implemented. ErrorCallback will be called with
