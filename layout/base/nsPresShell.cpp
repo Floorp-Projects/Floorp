@@ -7119,16 +7119,16 @@ DispatchPointerFromMouseOrTouch(PresShell* aShell,
     int16_t button = mouseEvent->button;
     switch (mouseEvent->mMessage) {
     case eMouseMove:
-      if (mouseEvent->buttons == 0) {
-        button = -1;
-      }
+      button = -1;
       pointerMessage = ePointerMove;
       break;
     case eMouseUp:
-      pointerMessage = ePointerUp;
+      pointerMessage = mouseEvent->buttons ? ePointerMove : ePointerUp;
       break;
     case eMouseDown:
-      pointerMessage = ePointerDown;
+      pointerMessage =
+        mouseEvent->buttons & ~nsContentUtils::GetButtonsFlagForButton(button) ?
+        ePointerMove : ePointerDown;
       break;
     default:
       return NS_OK;
@@ -7137,6 +7137,7 @@ DispatchPointerFromMouseOrTouch(PresShell* aShell,
     WidgetPointerEvent event(*mouseEvent);
     event.mMessage = pointerMessage;
     event.button = button;
+    event.buttons = mouseEvent->buttons;
     event.pressure = event.buttons ?
                      mouseEvent->pressure ? mouseEvent->pressure : 0.5f :
                      0.0f;
