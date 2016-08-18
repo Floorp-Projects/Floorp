@@ -24,7 +24,7 @@ public:
                                                    const Sequence<RefPtr<FileSystemEntry>>& aEntries);
 
   virtual void
-  ReadEntries(EntriesCallback& aSuccessCallback,
+  ReadEntries(FileSystemEntriesCallback& aSuccessCallback,
               const Optional<OwningNonNull<ErrorCallback>>& aErrorCallback,
               ErrorResult& aRv) override;
 

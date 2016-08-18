@@ -18,12 +18,19 @@ interface FileSystemEntry {
     readonly attribute FileSystem filesystem;
 
 /** Not implemented:
- *  void getMetadata(MetadataCallback successCallback, optional ErrorCallback errorCallback);
- *  void moveTo(FileSystemDirectoryEntry parent, optional DOMString? name, optional EntryCallback successCallback, optional ErrorCallback errorCallback);
- *  void copyTo(FileSystemDirectoryEntry parent, optional DOMString? name, optional EntryCallback successCallback, optional ErrorCallback errorCallback);
+ *  void getMetadata(MetadataCallback successCallback,
+ *                   optional ErrorCallback errorCallback);
+ *  void moveTo(FileSystemDirectoryEntry parent, optional DOMString? name,
+ *              optional FileSystemEntryCallback successCallback,
+ *              optional ErrorCallback errorCallback);
+ *  void copyTo(FileSystemDirectoryEntry parent, optional DOMString? name,
+ *              optional FileSystemEntryCallback successCallback,
+ *              optional ErrorCallback errorCallback);
  *  DOMString toURL();
- *  void remove(VoidCallback successCallback, optional ErrorCallback errorCallback);
- *  void getParent(optional EntryCallback successCallback, optional ErrorCallback errorCallback);
+ *  void remove(VoidCallback successCallback,
+ *              optional ErrorCallback errorCallback);
+ *  void getParent(optional FileSystemEntryCallback successCallback,
+ *                 optional ErrorCallback errorCallback);
  */
 };
 
@@ -32,7 +39,7 @@ dictionary FileSystemFlags {
     boolean exclusive = false;
 };
 
-callback interface EntryCallback {
+callback interface FileSystemEntryCallback {
     void handleEvent(FileSystemEntry entry);
 };
 
@@ -44,16 +51,23 @@ callback interface VoidCallback {
 interface FileSystemDirectoryEntry : FileSystemEntry {
     FileSystemDirectoryReader createReader();
 
-    void getFile(DOMString? path, optional FileSystemFlags options, optional EntryCallback successCallback, optional ErrorCallback errorCallback);
+    void getFile(DOMString? path,
+                 optional FileSystemFlags options,
+                 optional FileSystemEntryCallback successCallback,
+                 optional ErrorCallback errorCallback);
 
-    void getDirectory(DOMString? path, optional FileSystemFlags options, optional EntryCallback successCallback, optional ErrorCallback errorCallback);
+    void getDirectory(DOMString? path,
+                      optional FileSystemFlags options,
+                      optional FileSystemEntryCallback successCallback,
+                      optional ErrorCallback errorCallback);
 
-    // This method is not implemented. ErrorCallback will be called with
-    // NS_ERROR_DOM_NOT_SUPPORTED_ERR.
-    void removeRecursively(VoidCallback successCallback, optional ErrorCallback errorCallback);
+    // This method is not implemented. ErrorCallback will be called
+    // with NS_ERROR_DOM_NOT_SUPPORTED_ERR.
+    void removeRecursively(VoidCallback successCallback,
+                           optional ErrorCallback errorCallback);
 };
 
-callback interface EntriesCallback {
+callback interface FileSystemEntriesCallback {
     void handleEvent(sequence<FileSystemEntry> entries);
 };
 
@@ -68,7 +82,8 @@ interface FileSystemDirectoryReader {
     // readEntries can be called just once. The second time it returns no data.
 
     [Throws]
-    void readEntries (EntriesCallback successCallback, optional ErrorCallback errorCallback);
+    void readEntries(FileSystemEntriesCallback successCallback,
+                     optional ErrorCallback errorCallback);
 };
 
 callback interface BlobCallback {
@@ -80,10 +95,12 @@ interface FileSystemFileEntry : FileSystemEntry {
     // the successCallback should be a FileWriteCallback but this method is not
     // implemented. ErrorCallback will be called with
     // NS_ERROR_DOM_NOT_SUPPORTED_ERR.
-    void createWriter (VoidCallback successCallback, optional ErrorCallback errorCallback);
+    void createWriter (VoidCallback successCallback,
+                       optional ErrorCallback errorCallback);
 
     [BinaryName="GetFile"]
-    void file (BlobCallback successCallback, optional ErrorCallback errorCallback);
+    void file (BlobCallback successCallback,
+               optional ErrorCallback errorCallback);
 };
 
 [NoInterfaceObject]

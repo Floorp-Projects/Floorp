@@ -17,7 +17,7 @@
 namespace mozilla {
 namespace dom {
 
-EntryCallbackRunnable::EntryCallbackRunnable(EntryCallback* aCallback,
+EntryCallbackRunnable::EntryCallbackRunnable(FileSystemEntryCallback* aCallback,
                                              FileSystemEntry* aEntry)
   : mCallback(aCallback)
   , mEntry(aEntry)
@@ -58,7 +58,7 @@ ErrorCallbackRunnable::Run()
   return NS_OK;
 }
 
-EmptyEntriesCallbackRunnable::EmptyEntriesCallbackRunnable(EntriesCallback* aCallback)
+EmptyEntriesCallbackRunnable::EmptyEntriesCallbackRunnable(FileSystemEntriesCallback* aCallback)
   : mCallback(aCallback)
 {
   MOZ_ASSERT(aCallback);
@@ -74,7 +74,7 @@ EmptyEntriesCallbackRunnable::Run()
 
 GetEntryHelper::GetEntryHelper(nsIGlobalObject* aGlobalObject,
                                FileSystem* aFileSystem,
-                               EntryCallback* aSuccessCallback,
+                               FileSystemEntryCallback* aSuccessCallback,
                                ErrorCallback* aErrorCallback,
                                FileSystemDirectoryEntry::GetInternalType aType)
   : mGlobal(aGlobalObject)
