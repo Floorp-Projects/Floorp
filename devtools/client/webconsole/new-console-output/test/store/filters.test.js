@@ -14,14 +14,19 @@ const { setupStore } = require("devtools/client/webconsole/new-console-output/te
 const { MESSAGE_LEVEL } = require("devtools/client/webconsole/new-console-output/constants");
 
 describe("Filtering", () => {
-  const numMessages = 5;
+  const numMessages = 7;
   const store = setupStore([
+    // Console API
     "console.log('foobar', 'test')",
     "console.warn('danger, will robinson!')",
     "console.log(undefined)",
+    "console.count('bar')",
+    // Evaluation Result
+    "new Date(0)",
+    // PageError
     "ReferenceError"
   ]);
-  // Add a console command as well
+  // Console Command
   store.dispatch(messageAdd(new ConsoleCommand({ messageText: `console.warn("x")` })));
 
   beforeEach(() => {
@@ -33,8 +38,14 @@ describe("Filtering", () => {
       store.dispatch(actions.filterToggle(MESSAGE_LEVEL.LOG));
 
       let messages = getAllMessages(store.getState());
-      // @TODO It currently filters console command. This should be -2, not -3.
-      expect(messages.size).toEqual(numMessages - 3);
+      expect(messages.size).toEqual(numMessages - 2);
+    });
+
+    it("filters debug messages", () => {
+      store.dispatch(actions.filterToggle(MESSAGE_LEVEL.DEBUG));
+
+      let messages = getAllMessages(store.getState());
+      expect(messages.size).toEqual(numMessages - 1);
     });
 
     // @TODO add info stub
@@ -61,8 +72,8 @@ describe("Filtering", () => {
 
       let messages = getAllMessages(store.getState());
       // @TODO figure out what this should filter
-      // This does not filter out PageErrors or console commands
-      expect(messages.size).toEqual(3);
+      // This does not filter out PageErrors, Evaluation Results or console commands
+      expect(messages.size).toEqual(5);
     });
   });
 
@@ -81,6 +92,7 @@ describe("Clear filters", () => {
     store.dispatch(actions.filterTextSet("foobar"));
     let filters = getAllFilters(store.getState());
     expect(filters.toJS()).toEqual({
+      "debug": true,
       "error": false,
       "info": true,
       "log": true,
@@ -92,6 +104,7 @@ describe("Clear filters", () => {
 
     filters = getAllFilters(store.getState());
     expect(filters.toJS()).toEqual({
+      "debug": true,
       "error": true,
       "info": true,
       "log": true,
