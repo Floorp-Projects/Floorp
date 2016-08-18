@@ -64,18 +64,7 @@ this.AUSTLMY = {
   CHK_DISABLED_FOR_SESSION: 16,
   // Unable to perform a background check while offline (no notification)
   CHK_OFFLINE: 17,
-  // No update found certificate check failed and threshold reached
-  // (possible mitm attack notification)
-  CHK_CERT_ATTR_NO_UPDATE_PROMPT: 18,
-  // No update found certificate check failed and threshold not reached
-  // (no notification)
-  CHK_CERT_ATTR_NO_UPDATE_SILENT: 19,
-  // Update found certificate check failed and threshold reached
-  // (possible mitm attack notification)
-  CHK_CERT_ATTR_WITH_UPDATE_PROMPT: 20,
-  // Update found certificate check failed and threshold not reached
-  // (no notification)
-  CHK_CERT_ATTR_WITH_UPDATE_SILENT: 21,
+  // Note: codes 18 - 21 were removed along with the certificate checking code.
   // General update check failure and threshold reached
   // (check failure notification)
   CHK_GENERAL_ERROR_PROMPT: 22,
