@@ -107,8 +107,13 @@
 
 namespace js {
 
-typedef HashMap<JSScript*, const char*, DefaultHasher<JSScript*>, SystemAllocPolicy>
-        ProfileStringMap;
+// The `ProfileStringMap` weakly holds its `JSScript*` keys and owns its string
+// values. Entries are removed when the `JSScript` is finalized; see
+// `SPSProfiler::onScriptFinalized`.
+using ProfileStringMap = HashMap<JSScript*,
+                                 UniqueChars,
+                                 DefaultHasher<JSScript*>,
+                                 SystemAllocPolicy>;
 
 class AutoSPSEntry;
 class SPSEntryMarker;
@@ -129,14 +134,13 @@ class SPSProfiler
     uint32_t             enabled_;
     void                (*eventMarker_)(const char*);
 
-    const char* allocProfileString(JSScript* script, JSFunction* function);
+    UniqueChars allocProfileString(JSScript* script, JSFunction* function);
     void push(const char* string, void* sp, JSScript* script, jsbytecode* pc, bool copy,
               ProfileEntry::Category category = ProfileEntry::Category::JS);
     void pop();
 
   public:
     explicit SPSProfiler(JSRuntime* rt);
-    ~SPSProfiler();
 
     bool init();
 

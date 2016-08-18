@@ -45,15 +45,6 @@ SPSProfiler::init()
     return true;
 }
 
-SPSProfiler::~SPSProfiler()
-{
-    auto locked = strings.lock();
-    if (locked->initialized()) {
-        for (ProfileStringMap::Enum e(locked.get()); !e.empty(); e.popFront())
-            js_free(const_cast<char*>(e.front().value()));
-    }
-}
-
 void
 SPSProfiler::setProfilingStack(ProfileEntry* stack, uint32_t* size, uint32_t max)
 {
@@ -141,17 +132,16 @@ SPSProfiler::profileString(JSScript* script, JSFunction* maybeFun)
 {
     auto locked = strings.lock();
     MOZ_ASSERT(locked->initialized());
+
     ProfileStringMap::AddPtr s = locked->lookupForAdd(script);
-    if (s)
-        return s->value();
-    const char* str = allocProfileString(script, maybeFun);
-    if (str == nullptr)
-        return nullptr;
-    if (!locked->add(s, script, str)) {
-        js_free(const_cast<char*>(str));
-        return nullptr;
+
+    if (!s) {
+        auto str = allocProfileString(script, maybeFun);
+        if (!str || !locked->add(s, script, mozilla::Move(str)))
+            return nullptr;
     }
-    return str;
+
+    return s->value().get();
 }
 
 void
@@ -167,11 +157,8 @@ SPSProfiler::onScriptFinalized(JSScript* script)
     auto locked = strings.lock();
     if (!locked->initialized())
         return;
-    if (ProfileStringMap::Ptr entry = locked->lookup(script)) {
-        const char* tofree = entry->value();
+    if (ProfileStringMap::Ptr entry = locked->lookup(script))
         locked->remove(entry);
-        js_free(const_cast<char*>(tofree));
-    }
 }
 
 void
@@ -309,7 +296,7 @@ SPSProfiler::pop()
  * some scripts, resize the hash table of profile strings, and invalidate the
  * AddPtr held while invoking allocProfileString.
  */
-const char*
+UniqueChars
 SPSProfiler::allocProfileString(JSScript* script, JSFunction* maybeFun)
 {
     // Note: this profiler string is regexp-matched by
@@ -336,21 +323,20 @@ SPSProfiler::allocProfileString(JSScript* script, JSFunction* maybeFun)
     }
 
     // Allocate the buffer.
-    char* cstr = js_pod_malloc<char>(len + 1);
-    if (cstr == nullptr)
+    UniqueChars cstr(js_pod_malloc<char>(len + 1));
+    if (!cstr)
         return nullptr;
 
     // Construct the descriptive string.
     DebugOnly<size_t> ret;
     if (atom) {
         UniqueChars atomStr = StringToNewUTF8CharsZ(nullptr, *atom);
-        if (!atomStr) {
-            js_free(cstr);
+        if (!atomStr)
             return nullptr;
-        }
-        ret = snprintf(cstr, len + 1, "%s (%s:%" PRIu64 ")", atomStr.get(), filename, lineno);
+
+        ret = snprintf(cstr.get(), len + 1, "%s (%s:%" PRIu64 ")", atomStr.get(), filename, lineno);
     } else {
-        ret = snprintf(cstr, len + 1, "%s:%" PRIu64, filename, lineno);
+        ret = snprintf(cstr.get(), len + 1, "%s:%" PRIu64, filename, lineno);
     }
 
     MOZ_ASSERT(ret == len, "Computed length should match actual length!");
