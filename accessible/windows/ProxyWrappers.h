@@ -15,7 +15,7 @@ namespace a11y {
 
 class ProxyAccessibleWrap : public AccessibleWrap
 {
-  public:
+public:
   ProxyAccessibleWrap(ProxyAccessible* aProxy) :
     AccessibleWrap(nullptr, nullptr)
   {
@@ -27,6 +27,11 @@ class ProxyAccessibleWrap : public AccessibleWrap
   {
     mBits.proxy = nullptr;
     mStateFlags |= eIsDefunct;
+  }
+
+  virtual void GetNativeInterface(void** aOutAccessible) override
+  {
+    mBits.proxy->GetCOMInterface(aOutAccessible);
   }
 };
 
@@ -43,7 +48,12 @@ public:
   virtual void Shutdown() override
   {
     mBits.proxy = nullptr;
- mStateFlags |= eIsDefunct;
+    mStateFlags |= eIsDefunct;
+  }
+
+  virtual void GetNativeInterface(void** aOutAccessible) override
+  {
+    mBits.proxy->GetCOMInterface(aOutAccessible);
   }
 };
 
