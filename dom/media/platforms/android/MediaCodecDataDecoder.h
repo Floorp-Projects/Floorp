@@ -43,7 +43,7 @@ public:
   }
 
 protected:
-  enum ModuleState {
+  enum class ModuleState : uint8_t {
     kDecoding = 0,
     kFlushing,
     kDrainQueue,
@@ -91,9 +91,8 @@ protected:
   nsresult ProcessOutput(java::sdk::BufferInfo::Param aInfo,
                          java::sdk::MediaFormat::Param aFormat,
                          int32_t aStatus);
-  ModuleState State() const;
   // Sets decoder state and returns whether the new state has become effective.
-  bool State(ModuleState aState);
+  bool SetState(ModuleState aState);
   void DecoderLoop();
 
   virtual void ClearQueue();
