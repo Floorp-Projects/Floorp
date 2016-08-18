@@ -37,13 +37,11 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["Curl", "CurlUtils"];
-
-Components.utils.import("resource://gre/modules/Services.jsm");
+const Services = require("Services");
 
 const DEFAULT_HTTP_VERSION = "HTTP/1.1";
 
-this.Curl = {
+const Curl = {
   /**
    * Generates a cURL command string which can be used from the command line etc.
    *
@@ -138,10 +136,12 @@ this.Curl = {
   }
 };
 
+exports.Curl = Curl;
+
 /**
  * Utility functions for the Curl command generator.
  */
-this.CurlUtils = {
+const CurlUtils = {
   /**
    * Check if the request is an URL encoded request.
    *
@@ -398,3 +398,5 @@ this.CurlUtils = {
                      .replace(/[\r\n]+/g, "\"^$&\"") + "\"";
   }
 };
+
+exports.CurlUtils = CurlUtils;
