@@ -53,6 +53,8 @@ parent:
   async NewContentCompositorBridge(Endpoint<PCompositorBridgeParent> endpoint);
   async NewContentImageBridge(Endpoint<PImageBridgeParent> endpoint);
   async NewContentVRManager(Endpoint<PVRManagerParent> endpoint);
+
+  async DeallocateLayerTreeId(uint64_t layersId);
 };
 
 } // namespace gfx

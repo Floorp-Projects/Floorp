@@ -13,20 +13,51 @@
 #include "nsIFile.h"
 #include "nsIFileStreams.h"
 #include "nsCOMPtr.h"
+#include "nsClassHashtable.h"
+#include "safebrowsing.pb.h"
+#include <string>
 
 namespace mozilla {
 namespace safebrowsing {
 
+// The abstract class of TableUpdateV2 and TableUpdateV4. This
+// is convenient for passing the TableUpdate* around associated
+// with v2 and v4 instance.
+class TableUpdate {
+public:
+  TableUpdate(const nsACString& aTable)
+    : mTable(aTable)
+  {
+  }
+
+  virtual ~TableUpdate() {}
+
+  // To be overriden.
+  virtual bool Empty() const = 0;
+
+  // Common interfaces.
+  const nsCString& TableName() const { return mTable; }
+
+  template<typename T>
+  static T* Cast(TableUpdate* aThat) {
+    return (T::TAG == aThat->Tag() ? reinterpret_cast<T*>(aThat) : nullptr);
+  }
+
+private:
+  virtual int Tag() const = 0;
+
+  nsCString mTable;
+};
+
 // A table update is built from a single update chunk from the server. As the
 // protocol parser processes each chunk, it constructs a table update with the
 // new hashes.
-class TableUpdate {
+class TableUpdateV2 : public TableUpdate {
 public:
-  explicit TableUpdate(const nsACString& aTable)
-      : mTable(aTable) {}
-  const nsCString& TableName() const { return mTable; }
+  explicit TableUpdateV2(const nsACString& aTable)
+    : TableUpdate(aTable) {}
 
-  bool Empty() const {
+  bool Empty() const override {
     return mAddChunks.Length() == 0 &&
       mSubChunks.Length() == 0 &&
       mAddExpirations.Length() == 0 &&
@@ -74,8 +105,10 @@ public:
   AddCompleteArray& AddCompletes() { return mAddCompletes; }
   SubCompleteArray& SubCompletes() { return mSubCompletes; }
 
+  // For downcasting.
+  static const int TAG = 2;
+
 private:
-  nsCString mTable;
 
   // The list of chunk numbers that we have for each of the type of chunks.
   ChunkSet mAddChunks;
@@ -90,6 +123,58 @@ private:
   // 32-byte hashes.
   AddCompleteArray mAddCompletes;
   SubCompleteArray mSubCompletes;
+
+  virtual int Tag() const override { return TAG; }
+};
+
+// Structure for DBService/HashStore/Classifiers to update.
+// It would contain the prefixes (both fixed and variable length)
+// for addition and indices to removal. See Bug 1283009.
+class TableUpdateV4 : public TableUpdate {
+public:
+  struct PrefixString {
+  private:
+    std::string mStorage;
+    nsDependentCSubstring mString;
+
+  public:
+    explicit PrefixString(std::string& aString)
+    {
+      aString.swap(mStorage);
+      mString.Rebind(mStorage.data(), mStorage.size());
+    };
+
+    const nsACString& GetPrefixString() const { return mString; };
+  };
+
+  typedef nsClassHashtable<nsUint32HashKey, PrefixString> PrefixesStringMap;
+  typedef nsTArray<int32_t> RemovalIndiceArray;
+
+public:
+  explicit TableUpdateV4(const nsACString& aTable)
+    : TableUpdate(aTable)
+  {
+  }
+
+  bool Empty() const override
+  {
+    return mPrefixesMap.IsEmpty() && mRemovalIndiceArray.IsEmpty();
+  }
+
+  PrefixesStringMap& Prefixes() { return mPrefixesMap; }
+  RemovalIndiceArray& RemovalIndices() { return mRemovalIndiceArray; }
+
+  // For downcasting.
+  static const int TAG = 4;
+
+  void NewPrefixes(int32_t aSize, std::string& aPrefixes);
+  void NewRemovalIndices(const uint32_t* aIndices, size_t aNumOfIndices);
+
+private:
+  virtual int Tag() const override { return TAG; }
+
+  PrefixesStringMap mPrefixesMap;
+  RemovalIndiceArray mRemovalIndiceArray;
 };
 
 // There is one hash store per table.

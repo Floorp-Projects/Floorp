@@ -373,6 +373,14 @@ int ViECaptureImpl::RegisterObserver(const int capture_id,
   return 0;
 }
 
+int ViECaptureImpl::RegisterInputObserver(ViEInputObserver* observer) {
+  if (shared_data_->input_manager()->RegisterObserver(observer) != 0) {
+    shared_data_->SetLastError(kViECaptureDeviceUnknownError);
+    return -1;
+  }
+  return 0;
+}
+
 int ViECaptureImpl::DeregisterObserver(const int capture_id) {
   ViEInputManagerScoped is(*(shared_data_->input_manager()));
   ViECapturer* vie_capture = is.Capture(capture_id);
@@ -386,6 +394,14 @@ int ViECaptureImpl::DeregisterObserver(const int capture_id) {
   }
 
   if (vie_capture->DeRegisterObserver() != 0) {
+    shared_data_->SetLastError(kViECaptureDeviceUnknownError);
+    return -1;
+  }
+  return 0;
+}
+
+int ViECaptureImpl::DeregisterInputObserver() {
+  if (shared_data_->input_manager()->DeRegisterObserver() != 0) {
     shared_data_->SetLastError(kViECaptureDeviceUnknownError);
     return -1;
   }

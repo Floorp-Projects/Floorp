@@ -783,6 +783,15 @@ interface nsIDOMWindowUtils : nsISupports {
   void forceUpdateNativeMenuAt(in AString indexString);
 
   /**
+   * Returns the current selection as plaintext. Note that the result may be
+   * different from the result of sendQueryContentEvent(QUERY_SELECTED_TEXT).
+   * This result is computed by native API with transferable data. In other
+   * words, when the OS treats the selection as plaintext, it treats current
+   * selection as this result.
+   */
+  AString GetSelectionAsPlaintext();
+
+  /**
    * Focus the element aElement. The element should be in the same document
    * that the window is displaying. Pass null to blur the element, if any,
    * that currently has focus, and focus the document.

@@ -124,8 +124,6 @@ class FirefoxUITests(TestingMixin, VCSToolsScript):
         self.test_packages_url = self.config.get('test_packages_url')
         self.test_url = self.config.get('test_url')
 
-        self.reports = {'html': 'report.html', 'xunit': 'report.xml'}
-
         if not self.test_url and not self.test_packages_url:
             self.fatal(
                 'You must use --test-url, or --test-packages-url')
@@ -137,14 +135,6 @@ class FirefoxUITests(TestingMixin, VCSToolsScript):
         requirements = os.path.join(dirs['abs_test_install_dir'],
                                     'config', 'firefox_ui_requirements.txt')
         self.register_virtualenv_module(requirements=[requirements], two_pass=True)
-
-    def clobber(self):
-        """Delete the working directory"""
-        super(FirefoxUITests, self).clobber()
-
-        # Also ensure to delete the reports directory to get rid of old files
-        dirs = self.query_abs_dirs()
-        self.rmtree(dirs['abs_reports_dir'], error_level=FATAL)
 
     def download_and_extract(self):
         """Overriding method from TestingMixin for more specific behavior.
@@ -171,7 +161,6 @@ class FirefoxUITests(TestingMixin, VCSToolsScript):
 
         dirs = {
             'abs_blob_upload_dir': os.path.join(abs_dirs['abs_work_dir'], 'blobber_upload_dir'),
-            'abs_reports_dir': os.path.join(abs_dirs['base_work_dir'], 'reports'),
             'abs_test_install_dir': abs_tests_install_dir,
             'abs_fxui_dir': os.path.join(abs_tests_install_dir, 'firefox-ui'),
         }
@@ -203,23 +192,6 @@ class FirefoxUITests(TestingMixin, VCSToolsScript):
 
         return args
 
-    @PostScriptRun
-    def copy_logs_to_upload_dir(self):
-        """Overwrite this method so we also upload the other (e.g. report) files"""
-        # Copy logs and report files to the upload folder
-        super(FirefoxUITests, self).copy_logs_to_upload_dir()
-
-        dirs = self.query_abs_dirs()
-        self.info("Copying reports to upload dir...")
-        for report in self.reports:
-            self.copy_to_upload_dir(os.path.join(dirs['abs_reports_dir'], self.reports[report]),
-                                    dest=os.path.join('reports', self.reports[report]),
-                                    short_desc='%s log' % self.reports[report],
-                                    long_desc='%s log' % self.reports[report],
-                                    max_backups=self.config.get("log_max_rotate", 0),
-                                    error_level=WARNING,
-                                    )
-
     def run_test(self, binary_path, env=None, marionette_port=2828):
         """All required steps for running the tests against an installer."""
         dirs = self.query_abs_dirs()
@@ -245,8 +217,8 @@ class FirefoxUITests(TestingMixin, VCSToolsScript):
             '--log-raw=-',  # structured log for output parser redirected to stdout
 
             # additional reports helpful for Jenkins and inpection via Treeherder
-            '--log-html', os.path.join(dirs["abs_reports_dir"], self.reports['html']),
-            '--log-xunit', os.path.join(dirs["abs_reports_dir"], self.reports['xunit']),
+            '--log-html', os.path.join(dirs['abs_blob_upload_dir'], 'report.html'),
+            '--log-xunit', os.path.join(dirs['abs_blob_upload_dir'], 'report.xml'),
         ]
 
         # Collect all pass-through harness options to the script

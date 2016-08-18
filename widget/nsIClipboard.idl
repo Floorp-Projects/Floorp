@@ -17,6 +17,8 @@ interface nsIClipboard : nsISupports
     const long kSelectionClipboard = 0;
     const long kGlobalClipboard = 1;
     const long kFindClipboard = 2;
+    // Used to cache current selection on (nsClipboard) for macOS service menu.
+    const long kSelectionCache = 3;
     
    /**
     * Given a transferable, set the data on the native clipboard

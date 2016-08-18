@@ -97,10 +97,6 @@ def lint(files, **lintargs):
                     '"column":%(col)s,"rule":"%(code)s","message":"%(text)s"}',
     ]
 
-    exclude = lintargs.get('exclude')
-    if exclude:
-        cmdargs += ['--exclude', ','.join(lintargs['exclude'])]
-
     # Run any paths with a .flake8 file in the directory separately so
     # it gets picked up. This means only .flake8 files that live in
     # directories that are explicitly included will be considered.
@@ -111,6 +107,14 @@ def lint(files, **lintargs):
             no_config.append(f)
             continue
         run_process(cmdargs+[f])
+
+    # XXX For some reason passing in --exclude results in flake8 not using
+    # the local .flake8 file. So for now only pass in --exclude if there
+    # is no local config.
+    exclude = lintargs.get('exclude')
+    if exclude:
+        cmdargs += ['--exclude', ','.join(lintargs['exclude'])]
+
 
     if no_config:
         run_process(cmdargs+no_config)

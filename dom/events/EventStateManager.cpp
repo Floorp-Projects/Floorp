@@ -5101,6 +5101,7 @@ nsIContent*
 EventStateManager::GetFocusedContent()
 {
   nsIFocusManager* fm = nsFocusManager::GetFocusManager();
+  EnsureDocument(mPresContext);
   if (!fm || !mDocument)
     return nullptr;
 

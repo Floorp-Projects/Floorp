@@ -24,11 +24,13 @@ VideoCaptureMacAVFoundationInfo::VideoCaptureMacAVFoundationInfo(const int32_t i
 {
     nsAutoreleasePool localPool;
     _captureInfo = [[VideoCaptureMacAVFoundationInfoObjC alloc] init];
+    [_captureInfo registerOwner:this];
 }
 
 VideoCaptureMacAVFoundationInfo::~VideoCaptureMacAVFoundationInfo()
 {
     nsAutoreleasePool localPool;
+    [_captureInfo registerOwner:nil];
     [_captureInfo release];
 }
 

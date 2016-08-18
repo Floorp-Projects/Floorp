@@ -56,6 +56,7 @@ if (!t) {
       info("Error occured by the time we got |load| - checking directly.");
       check();
     } else {
+      //TODO: Fix this todo in Bug 1295923.
       todo(false, "Error hasn't occurred yet - adding |error| event listener. This shouldn't happen, see bug 608634.");
       documentVideo().addEventListener("error", check);
     }

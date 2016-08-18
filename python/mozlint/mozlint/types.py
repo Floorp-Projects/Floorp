@@ -25,17 +25,11 @@ class BaseType(object):
                          the definition, but passed in by a consumer.
         :returns: A list of :class:`~result.ResultContainer` objects.
         """
-        exclude = lintargs.get('exclude', [])
-        exclude.extend(linter.get('exclude', []))
-
-        if lintargs.get('use_filters', True):
-            paths, exclude = filterpaths(paths, linter.get('include'), exclude)
-
+        paths = filterpaths(paths, linter, **lintargs)
         if not paths:
             print("{}: no files to lint in specified paths".format(linter['name']))
             return
 
-        lintargs['exclude'] = exclude
         if self.batch:
             return self._lint(paths, linter, **lintargs)
 

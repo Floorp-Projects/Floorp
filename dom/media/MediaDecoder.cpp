@@ -832,7 +832,7 @@ MediaDecoder::AsyncRejectSeekDOMPromiseIfExists()
   if (mSeekDOMPromise) {
     RefPtr<dom::Promise> promise = mSeekDOMPromise;
     nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction([=] () {
-      promise->MaybeRejectWithUndefined();
+      promise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
     });
     AbstractThread::MainThread()->Dispatch(r.forget());
     mSeekDOMPromise = nullptr;

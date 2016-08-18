@@ -1247,6 +1247,18 @@ nsDOMWindowUtils::ForceUpdateNativeMenuAt(const nsAString& indexString)
   return widget->ForceUpdateNativeMenuAt(indexString);
 }
 
+NS_IMETHODIMP
+nsDOMWindowUtils::GetSelectionAsPlaintext(nsAString& aResult)
+{
+  // Get the widget to send the event to.
+  nsCOMPtr<nsIWidget> widget = GetWidget();
+  if (!widget) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return widget->GetSelectionAsPlaintext(aResult);
+}
+
 nsIWidget*
 nsDOMWindowUtils::GetWidget(nsPoint* aOffset)
 {

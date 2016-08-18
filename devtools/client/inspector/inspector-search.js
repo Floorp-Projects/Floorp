@@ -42,8 +42,12 @@ function InspectorSearch(inspector, input, clearBtn) {
   this._onKeyDown = this._onKeyDown.bind(this);
   this._onInput = this._onInput.bind(this);
   this._onClearSearch = this._onClearSearch.bind(this);
+  this._onFilterTextboxContextMenu =
+    this._onFilterTextboxContextMenu.bind(this);
   this.searchBox.addEventListener("keydown", this._onKeyDown, true);
   this.searchBox.addEventListener("input", this._onInput, true);
+  this.searchBox.addEventListener("contextmenu",
+    this._onFilterTextboxContextMenu);
   this.searchClearButton.addEventListener("click", this._onClearSearch);
 
   // For testing, we need to be able to wait for the most recent node request
@@ -64,6 +68,8 @@ InspectorSearch.prototype = {
   destroy: function () {
     this.searchBox.removeEventListener("keydown", this._onKeyDown, true);
     this.searchBox.removeEventListener("input", this._onInput, true);
+    this.searchBox.removeEventListener("contextmenu",
+      this._onFilterTextboxContextMenu);
     this.searchClearButton.removeEventListener("click", this._onClearSearch);
     this.searchBox = null;
     this.searchClearButton = null;
@@ -129,6 +135,18 @@ InspectorSearch.prototype = {
     if (event.keyCode === KeyCodes.DOM_VK_G && modifierKey) {
       this._onSearch(event.shiftKey);
       event.preventDefault();
+    }
+  },
+
+  /**
+   * Context menu handler for filter search box.
+   */
+  _onFilterTextboxContextMenu: function (event) {
+    try {
+      let contextmenu = this.inspector.toolbox.textboxContextMenuPopup;
+      contextmenu.openPopupAtScreen(event.screenX, event.screenY, true);
+    } catch (e) {
+      console.error(e);
     }
   },
 
