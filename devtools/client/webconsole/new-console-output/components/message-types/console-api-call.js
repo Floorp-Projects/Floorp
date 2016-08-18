@@ -12,6 +12,7 @@ const {
   DOM: dom,
   PropTypes
 } = require("devtools/client/shared/vendor/react");
+const StackTrace = createFactory(require("devtools/client/shared/components/stack-trace"));
 const GripMessageBody = createFactory(require("devtools/client/webconsole/new-console-output/components/grip-message-body").GripMessageBody);
 const MessageRepeat = createFactory(require("devtools/client/webconsole/new-console-output/components/message-repeat").MessageRepeat);
 const MessageIcon = createFactory(require("devtools/client/webconsole/new-console-output/components/message-icon").MessageIcon);
@@ -20,18 +21,39 @@ ConsoleApiCall.displayName = "ConsoleApiCall";
 
 ConsoleApiCall.propTypes = {
   message: PropTypes.object.isRequired,
+  onViewSourceInDebugger: PropTypes.func.isRequired,
 };
 
 function ConsoleApiCall(props) {
-  const { message } = props;
-  const {category, severity} = message;
+  const { message, onViewSourceInDebugger } = props;
+  const {category, severity, stacktrace, type} = message;
 
-  const messageBody = message.parameters ?
-    message.parameters.map((grip) => GripMessageBody({grip})) :
-    message.messageText;
+  let messageBody;
+  if (type === "trace") {
+    messageBody = [
+      dom.span({className: "cm-variable"}, "console"),
+      ".",
+      dom.span({className: "cm-property"}, "trace"),
+      "():"
+    ];
+  } else if (message.parameters) {
+    messageBody = message.parameters.map((grip) => GripMessageBody({grip}));
+  } else {
+    messageBody = message.messageText;
+  }
 
   const icon = MessageIcon({severity: severity});
   const repeat = MessageRepeat({repeat: message.repeat});
+
+  let attachment = "";
+  if (stacktrace) {
+    attachment = dom.div({className: "stacktrace devtools-monospace"},
+      StackTrace({
+        stacktrace: stacktrace,
+        onViewSourceInDebugger: onViewSourceInDebugger
+      })
+    );
+  }
 
   const classes = ["message", "cm-s-mozilla"];
 
@@ -41,6 +63,10 @@ function ConsoleApiCall(props) {
 
   if (severity) {
     classes.push(severity);
+  }
+
+  if (type === "trace") {
+    classes.push("open");
   }
 
   return dom.div({
@@ -56,7 +82,8 @@ function ConsoleApiCall(props) {
             messageBody
           ),
           repeat
-        )
+        ),
+        attachment
       )
     )
   );

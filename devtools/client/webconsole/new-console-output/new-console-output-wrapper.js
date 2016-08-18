@@ -16,8 +16,15 @@ const FilterBar = React.createFactory(require("devtools/client/webconsole/new-co
 
 const store = configureStore();
 
-function NewConsoleOutputWrapper(parentNode, jsterm) {
-  let childComponent = ConsoleOutput({ jsterm });
+function NewConsoleOutputWrapper(parentNode, jsterm, toolbox) {
+  let childComponent = ConsoleOutput({
+    jsterm,
+    onViewSourceInDebugger: frame => toolbox.viewSourceInDebugger.call(
+      toolbox,
+      frame.url,
+      frame.line
+    )
+  });
   let filterBar = FilterBar({});
   let provider = React.createElement(
     Provider,
