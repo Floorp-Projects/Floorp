@@ -4,7 +4,6 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-import codecs
 import copy
 import logging
 import os
@@ -162,5 +161,5 @@ class TestTask(base.Task):
 def load_yaml(path, name):
     """Convenience method to load a YAML file in the kind directory"""
     filename = os.path.join(path, name)
-    with codecs.open(filename, 'rb', 'utf-8') as f:
+    with open(filename, "rb") as f:
         return yaml.load(f)
