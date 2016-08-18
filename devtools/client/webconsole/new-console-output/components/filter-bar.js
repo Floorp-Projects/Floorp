@@ -97,6 +97,12 @@ const FilterBar = createClass({
             label: "Info",
             filterKey: MESSAGE_LEVEL.INFO,
             dispatch
+          }),
+          FilterButton({
+            active: filter.debug,
+            label: "Debug",
+            filterKey: MESSAGE_LEVEL.DEBUG,
+            dispatch
           })
         )
       );
