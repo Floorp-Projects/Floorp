@@ -40,9 +40,9 @@ PlatformDecoderModule::ConversionRequired
 GonkDecoderModule::DecoderNeedsConversion(const TrackInfo& aConfig) const
 {
   if (aConfig.IsVideo()) {
-    return kNeedAnnexB;
+    return ConversionRequired::kNeedAnnexB;
   } else {
-    return kNeedNone;
+    return ConversionRequired::kNeedNone;
   }
 }
 
