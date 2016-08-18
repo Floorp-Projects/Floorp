@@ -13,18 +13,18 @@
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(DirectoryEntry, Entry, mDirectory)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(DirectoryEntry, FileSystemEntry, mDirectory)
 
-NS_IMPL_ADDREF_INHERITED(DirectoryEntry, Entry)
-NS_IMPL_RELEASE_INHERITED(DirectoryEntry, Entry)
+NS_IMPL_ADDREF_INHERITED(DirectoryEntry, FileSystemEntry)
+NS_IMPL_RELEASE_INHERITED(DirectoryEntry, FileSystemEntry)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(DirectoryEntry)
-NS_INTERFACE_MAP_END_INHERITING(Entry)
+NS_INTERFACE_MAP_END_INHERITING(FileSystemEntry)
 
 DirectoryEntry::DirectoryEntry(nsIGlobalObject* aGlobal,
                                Directory* aDirectory,
                                FileSystem* aFileSystem)
-  : Entry(aGlobal, aFileSystem)
+  : FileSystemEntry(aGlobal, aFileSystem)
   , mDirectory(aDirectory)
 {
   MOZ_ASSERT(aGlobal);

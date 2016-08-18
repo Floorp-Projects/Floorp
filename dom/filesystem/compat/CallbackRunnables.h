@@ -20,14 +20,14 @@ class EntryCallbackRunnable final : public Runnable
 {
 public:
   EntryCallbackRunnable(EntryCallback* aCallback,
-                        Entry* aEntry);
+                        FileSystemEntry* aEntry);
 
   NS_IMETHOD
   Run() override;
 
 private:
   RefPtr<EntryCallback> mCallback;
-  RefPtr<Entry> mEntry;
+  RefPtr<FileSystemEntry> mEntry;
 };
 
 class ErrorCallbackRunnable final : public Runnable

@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "Entry.h"
+#include "FileSystemEntry.h"
 #include "DirectoryEntry.h"
 #include "FileEntry.h"
 #include "mozilla/dom/UnionTypes.h"
@@ -12,25 +12,25 @@
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(Entry, mParent, mFileSystem)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(FileSystemEntry, mParent, mFileSystem)
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF(Entry)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(Entry)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(FileSystemEntry)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(FileSystemEntry)
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(Entry)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(FileSystemEntry)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-/* static */ already_AddRefed<Entry>
-Entry::Create(nsIGlobalObject* aGlobalObject,
-              const OwningFileOrDirectory& aFileOrDirectory,
-              FileSystem* aFileSystem)
+/* static */ already_AddRefed<FileSystemEntry>
+FileSystemEntry::Create(nsIGlobalObject* aGlobalObject,
+                        const OwningFileOrDirectory& aFileOrDirectory,
+                        FileSystem* aFileSystem)
 {
   MOZ_ASSERT(aGlobalObject);
   MOZ_ASSERT(aFileSystem);
 
-  RefPtr<Entry> entry;
+  RefPtr<FileSystemEntry> entry;
   if (aFileOrDirectory.IsFile()) {
     entry = new FileEntry(aGlobalObject,
                           aFileOrDirectory.GetAsFile(),
@@ -45,7 +45,8 @@ Entry::Create(nsIGlobalObject* aGlobalObject,
   return entry.forget();
 }
 
-Entry::Entry(nsIGlobalObject* aGlobal, FileSystem* aFileSystem)
+FileSystemEntry::FileSystemEntry(nsIGlobalObject* aGlobal,
+                                 FileSystem* aFileSystem)
   : mParent(aGlobal)
   , mFileSystem(aFileSystem)
 {
@@ -53,13 +54,13 @@ Entry::Entry(nsIGlobalObject* aGlobal, FileSystem* aFileSystem)
   MOZ_ASSERT(aFileSystem);
 }
 
-Entry::~Entry()
+FileSystemEntry::~FileSystemEntry()
 {}
 
 JSObject*
-Entry::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
+FileSystemEntry::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return EntryBinding::Wrap(aCx, this, aGivenProto);
+  return FileSystemEntryBinding::Wrap(aCx, this, aGivenProto);
 }
 
 } // dom namespace

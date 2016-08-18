@@ -14,7 +14,7 @@
 namespace mozilla {
 namespace dom {
 
-class Entry;
+class FileSystemEntry;
 class FunctionStringCallback;
 
 class DataTransferItem final : public nsISupports
@@ -75,7 +75,7 @@ public:
 
   already_AddRefed<File> GetAsFile(ErrorResult& aRv);
 
-  already_AddRefed<Entry> GetAsEntry(ErrorResult& aRv);
+  already_AddRefed<FileSystemEntry> GetAsEntry(ErrorResult& aRv);
 
   DataTransferItemList* GetParentObject() const
   {

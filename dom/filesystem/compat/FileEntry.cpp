@@ -38,18 +38,18 @@ private:
 
 } // anonymous namespace
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(FileEntry, Entry, mFile)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(FileEntry, FileSystemEntry, mFile)
 
-NS_IMPL_ADDREF_INHERITED(FileEntry, Entry)
-NS_IMPL_RELEASE_INHERITED(FileEntry, Entry)
+NS_IMPL_ADDREF_INHERITED(FileEntry, FileSystemEntry)
+NS_IMPL_RELEASE_INHERITED(FileEntry, FileSystemEntry)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(FileEntry)
-NS_INTERFACE_MAP_END_INHERITING(Entry)
+NS_INTERFACE_MAP_END_INHERITING(FileSystemEntry)
 
 FileEntry::FileEntry(nsIGlobalObject* aGlobal,
                      File* aFile,
                      FileSystem* aFileSystem)
-  : Entry(aGlobal, aFileSystem)
+  : FileSystemEntry(aGlobal, aFileSystem)
   , mFile(aFile)
 {
   MOZ_ASSERT(aGlobal);
