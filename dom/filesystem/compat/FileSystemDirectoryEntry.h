@@ -14,6 +14,7 @@ namespace mozilla {
 namespace dom {
 
 class Directory;
+class FileSystemDirectoryReader;
 
 class FileSystemDirectoryEntry : public FileSystemEntry
 {

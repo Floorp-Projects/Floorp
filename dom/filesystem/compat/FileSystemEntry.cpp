@@ -7,6 +7,7 @@
 #include "FileSystemEntry.h"
 #include "FileSystemDirectoryEntry.h"
 #include "FileSystemFileEntry.h"
+#include "mozilla/dom/FileSystemEntryBinding.h"
 #include "mozilla/dom/UnionTypes.h"
 
 namespace mozilla {

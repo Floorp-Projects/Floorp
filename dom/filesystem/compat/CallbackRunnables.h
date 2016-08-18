@@ -16,6 +16,8 @@ class nsIGlobalObject;
 namespace mozilla {
 namespace dom {
 
+class FileSystemEntriesCallback;
+
 class EntryCallbackRunnable final : public Runnable
 {
 public:

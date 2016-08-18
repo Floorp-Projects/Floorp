@@ -8,6 +8,7 @@
 #include "CallbackRunnables.h"
 #include "FileSystemDirectoryReader.h"
 #include "mozilla/dom/Directory.h"
+#include "mozilla/dom/FileSystemDirectoryEntryBinding.h"
 #include "mozilla/dom/FileSystemUtils.h"
 
 namespace mozilla {
