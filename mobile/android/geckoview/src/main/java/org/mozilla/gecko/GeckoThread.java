@@ -110,6 +110,17 @@ public class GeckoThread extends Thread {
     private static final int QUEUED_CALLS_COUNT = 16;
     private static final ArrayList<QueuedCall> QUEUED_CALLS = new ArrayList<>(QUEUED_CALLS_COUNT);
 
+    private static final Runnable UI_THREAD_CALLBACK = new Runnable() {
+        @Override
+        public void run() {
+            ThreadUtils.assertOnUiThread();
+            long nextDelay = runUiThreadCallback();
+            if (nextDelay >= 0) {
+                ThreadUtils.getUiHandler().postDelayed(this, nextDelay);
+            }
+        }
+    };
+
     private static GeckoThread sGeckoThread;
 
     @WrapForJNI
@@ -664,4 +675,12 @@ public class GeckoThread extends Thread {
 
     // Implemented in mozglue/android/APKOpen.cpp.
     /* package */ static native void registerUiThread();
+
+    @WrapForJNI(calledFrom = "ui")
+    /* package */ static native long runUiThreadCallback();
+
+    @WrapForJNI
+    private static void requestUiThreadCallback(long delay) {
+        ThreadUtils.getUiHandler().postDelayed(UI_THREAD_CALLBACK, delay);
+    }
 }

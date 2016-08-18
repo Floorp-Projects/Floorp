@@ -1764,26 +1764,6 @@ public:
 
     static auto RemoveFullScreenPluginView(mozilla::jni::Object::Param) -> void;
 
-    struct RequestUiThreadCallback_t {
-        typedef GeckoAppShell Owner;
-        typedef void ReturnType;
-        typedef void SetterType;
-        typedef mozilla::jni::Args<
-                int64_t> Args;
-        static constexpr char name[] = "requestUiThreadCallback";
-        static constexpr char signature[] =
-                "(J)V";
-        static const bool isStatic = true;
-        static const mozilla::jni::ExceptionMode exceptionMode =
-                mozilla::jni::ExceptionMode::ABORT;
-        static const mozilla::jni::CallingThread callingThread =
-                mozilla::jni::CallingThread::ANY;
-        static const mozilla::jni::DispatchTarget dispatchTarget =
-                mozilla::jni::DispatchTarget::CURRENT;
-    };
-
-    static auto RequestUiThreadCallback(int64_t) -> void;
-
     struct ScheduleRestart_t {
         typedef GeckoAppShell Owner;
         typedef void ReturnType;
@@ -3108,6 +3088,43 @@ public:
     };
 
     static auto PumpMessageLoop(mozilla::jni::Object::Param) -> bool;
+
+    struct RequestUiThreadCallback_t {
+        typedef GeckoThread Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<
+                int64_t> Args;
+        static constexpr char name[] = "requestUiThreadCallback";
+        static constexpr char signature[] =
+                "(J)V";
+        static const bool isStatic = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+        static const mozilla::jni::CallingThread callingThread =
+                mozilla::jni::CallingThread::ANY;
+        static const mozilla::jni::DispatchTarget dispatchTarget =
+                mozilla::jni::DispatchTarget::CURRENT;
+    };
+
+    static auto RequestUiThreadCallback(int64_t) -> void;
+
+    struct RunUiThreadCallback_t {
+        typedef GeckoThread Owner;
+        typedef int64_t ReturnType;
+        typedef int64_t SetterType;
+        typedef mozilla::jni::Args<> Args;
+        static constexpr char name[] = "runUiThreadCallback";
+        static constexpr char signature[] =
+                "()J";
+        static const bool isStatic = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+        static const mozilla::jni::CallingThread callingThread =
+                mozilla::jni::CallingThread::UI;
+        static const mozilla::jni::DispatchTarget dispatchTarget =
+                mozilla::jni::DispatchTarget::CURRENT;
+    };
 
     struct SetState_t {
         typedef GeckoThread Owner;
