@@ -226,6 +226,7 @@
 #include "vm/Debugger.h"
 #include "vm/ProxyObject.h"
 #include "vm/Shape.h"
+#include "vm/SPSProfiler.h"
 #include "vm/String.h"
 #include "vm/Symbol.h"
 #include "vm/Time.h"
@@ -5475,6 +5476,12 @@ GCRuntime::compactPhase(JS::gcreason::Reason reason, SliceBudget& sliceBudget,
     MOZ_ASSERT(startedCompacting);
 
     gcstats::AutoPhase ap(stats, gcstats::PHASE_COMPACT);
+
+    // TODO: JSScripts can move. If the sampler interrupts the GC in the
+    // middle of relocating an arena, invalid JSScript pointers may be
+    // accessed. Suppress all sampling until a finer-grained solution can be
+    // found. See bug 1295775.
+    AutoSuppressProfilerSampling suppressSampling(rt);
 
     while (!zonesToMaybeCompact.isEmpty()) {
         Zone* zone = zonesToMaybeCompact.front();
