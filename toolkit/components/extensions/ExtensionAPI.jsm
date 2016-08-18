@@ -48,7 +48,7 @@ var ExtensionAPIs = {
 
     let {script, schema} = api;
 
-    let addonId = `${api}@experiments.addons.mozilla.org`;
+    let addonId = `${apiName}@experiments.addons.mozilla.org`;
     api.sandbox = Cu.Sandbox(global, {
       wantXrays: false,
       sandboxName: script,
