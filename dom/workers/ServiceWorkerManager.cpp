@@ -1304,9 +1304,16 @@ ServiceWorkerManager::WorkerIsIdle(ServiceWorkerInfo* aWorker)
     return;
   }
 
-  if (reg->GetActive() == aWorker) {
-    reg->TryToActivateAsync();
+  if (reg->GetActive() != aWorker) {
+    return;
   }
+
+  if (!reg->IsControllingDocuments() && reg->mPendingUninstall) {
+    RemoveRegistration(reg);
+    return;
+  }
+
+  reg->TryToActivateAsync();
 }
 
 already_AddRefed<ServiceWorkerJobQueue>
@@ -2001,7 +2008,7 @@ void
 ServiceWorkerManager::StopControllingADocument(ServiceWorkerRegistrationInfo* aRegistration)
 {
   aRegistration->StopControllingADocument();
-  if (aRegistration->IsControllingDocuments()) {
+  if (aRegistration->IsControllingDocuments() || !aRegistration->IsIdle()) {
     return;
   }
 
