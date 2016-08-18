@@ -3,6 +3,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from __future__ import absolute_import, print_function, unicode_literals
+
+import codecs
 import logging
 import os
 import yaml
@@ -141,7 +143,7 @@ class TaskGraphGenerator(object):
             logger.debug("loading kind `{}` from `{}`".format(kind_name, path))
 
             kind_yml = os.path.join(path, 'kind.yml')
-            with open(kind_yml) as f:
+            with codecs.open(kind_yml, 'rb', 'utf-8') as f:
                 config = yaml.load(f)
 
             yield Kind(kind_name, path, config)
