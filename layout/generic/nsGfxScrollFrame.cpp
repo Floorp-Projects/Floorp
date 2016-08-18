@@ -2744,7 +2744,18 @@ ScrollFrameHelper::ScrollToImpl(nsPoint aPt, const nsRect& aRange, nsIAtom* aOri
   if (mOuter->ChildrenHavePerspective()) {
     // The overflow areas of descendants may depend on the scroll position,
     // so ensure they get updated.
+
+    // First we recompute the overflow areas of the transformed children
+    // that use the perspective. FinishAndStoreOverflow only calls this
+    // if the size changes, so we need to do it manually.
     mOuter->RecomputePerspectiveChildrenOverflow(mOuter);
+
+    // Update the overflow for the scrolled frame to take any changes from the
+    // children into account.
+    mScrolledFrame->UpdateOverflow();
+
+    // Update the overflow for the outer so that we recompute scrollbars.
+    mOuter->UpdateOverflow();
   }
 
   ScheduleSyntheticMouseMove();
