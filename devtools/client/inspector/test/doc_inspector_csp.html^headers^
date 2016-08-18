@@ -1,0 +1,2 @@
+Content-Type: text/html; charset=UTF-8
+content-security-policy: default-src 'self'; connect-src 'self'; script-src 'self'; style-src 'self';
