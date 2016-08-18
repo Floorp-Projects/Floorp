@@ -24,7 +24,7 @@ CacheWorkerHolder::Create(WorkerPrivate* aWorkerPrivate)
   MOZ_ASSERT(aWorkerPrivate);
 
   RefPtr<CacheWorkerHolder> workerHolder = new CacheWorkerHolder();
-  if (NS_WARN_IF(!workerHolder->HoldWorker(aWorkerPrivate))) {
+  if (NS_WARN_IF(!workerHolder->HoldWorker(aWorkerPrivate, Terminating))) {
     return nullptr;
   }
 
