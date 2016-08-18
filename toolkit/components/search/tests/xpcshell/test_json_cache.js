@@ -144,7 +144,7 @@ add_test(function test_cache_write() {
     };
     Services.obs.addObserver(cacheWriteObserver, "browser-search-service", false);
 
-    Services.search.QueryInterface(Ci.nsIObserver).observe(null, "browser-search-engine-modified" , "engine-removed");
+    Services.search.QueryInterface(Ci.nsIObserver).observe(null, "browser-search-engine-modified", "engine-removed");
   });
 });
 

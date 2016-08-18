@@ -363,7 +363,7 @@ Settings.prototype = {
     // Final string is sorted by quality (q=) param.
     function parseAcceptLanguageList(v) {
       return v.match(/([a-z]{1,8}(-[a-z]{1,8})?)\s*(;\s*q\s*=\s*(1|0\.[0-9]+))?/gi)
-              .sort(function (a , b) {
+              .sort(function (a, b) {
                 let qA = parseFloat(a.split(";q=")[1]) || 1.0;
                 let qB = parseFloat(b.split(";q=")[1]) || 1.0;
                 return qB - qA;

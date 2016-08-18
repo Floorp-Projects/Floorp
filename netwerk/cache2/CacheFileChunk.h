@@ -190,6 +190,7 @@ private:
   void AssertOwnsLock() const;
 
   void UpdateDataSize(uint32_t aOffset, uint32_t aLen);
+  nsresult Truncate(uint32_t aOffset);
 
   bool CanAllocate(uint32_t aSize) const;
   void BuffersAllocationChanged(uint32_t aFreed, uint32_t aAllocated);
@@ -206,11 +207,13 @@ private:
   uint32_t mIndex;
   EState   mState;
   nsresult mStatus;
-  bool     mIsDirty;
-  bool     mActiveChunk; // Is true iff the chunk is in CacheFile::mChunks.
-                         // Adding/removing chunk to/from mChunks as well as
-                         // changing this member happens under the CacheFile's
-                         // lock.
+
+  Atomic<bool> mActiveChunk; // Is true iff the chunk is in CacheFile::mChunks.
+                             // Adding/removing chunk to/from mChunks as well as
+                             // changing this member happens under the
+                             // CacheFile's lock.
+  bool mIsDirty : 1;
+  bool mDiscardedChunk : 1;
 
   uint32_t   mBuffersSize;
   bool const mLimitAllocation : 1; // Whether this chunk respects limit for disk

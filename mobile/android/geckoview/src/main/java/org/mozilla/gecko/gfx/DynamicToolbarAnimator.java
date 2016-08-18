@@ -112,11 +112,6 @@ public class DynamicToolbarAnimator {
             }
         };
         PrefsHelper.addObserver(new String[] { PREF_SCROLL_TOOLBAR_THRESHOLD }, mPrefObserver);
-
-        // JPZ doesn't notify when scrolling root content. This maintains existing behaviour.
-        if (!AppConstants.MOZ_ANDROID_APZ) {
-            mScrollingRootContent = true;
-        }
     }
 
     public void destroy() {

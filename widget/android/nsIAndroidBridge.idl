@@ -32,38 +32,11 @@ interface nsIAndroidBrowserApp : nsISupports {
   nsIUITelemetryObserver getUITelemetryObserver();
 };
 
-[scriptable, uuid(92ae801d-da9c-4a24-b2b6-344c4af7008b)]
-interface nsIAndroidViewport : nsISupports {
-  readonly attribute float x;
-  readonly attribute float y;
-  readonly attribute int32_t width;
-  readonly attribute int32_t height;
-  readonly attribute float pageLeft;
-  readonly attribute float pageTop;
-  readonly attribute float pageRight;
-  readonly attribute float pageBottom;
-  readonly attribute float cssPageLeft;
-  readonly attribute float cssPageTop;
-  readonly attribute float cssPageRight;
-  readonly attribute float cssPageBottom;
-  readonly attribute float zoom;
-};
-
-[scriptable, uuid(e1bfbc07-dbae-409d-a5b5-ef57522c1f15)]
-interface nsIAndroidDisplayport : nsISupports {
-  attribute float left;
-  attribute float top;
-  attribute float right;
-  attribute float bottom;
-  attribute float resolution;
-};
-
 [scriptable, uuid(1beb70d3-70f3-4742-98cc-a3d301b26c0c)]
 interface nsIAndroidBridge : nsISupports
 {
   [implicit_jscontext] void handleGeckoMessage(in jsval message);
   attribute nsIAndroidBrowserApp browserApp;
-  nsIAndroidDisplayport getDisplayPort(in boolean aPageSizeUpdate, in boolean isBrowserContentDisplayed, in int32_t tabId, in nsIAndroidViewport metrics);
   void contentDocumentChanged();
   boolean isContentDocumentDisplayed();
 };

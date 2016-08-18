@@ -9,7 +9,6 @@ import java.util.List;
 
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoApplication;
-import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.R;
 
 import android.content.Context;

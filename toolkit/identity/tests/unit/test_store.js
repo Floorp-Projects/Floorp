@@ -55,7 +55,7 @@ function test_id_store() {
   run_next_test();
 }
 
-var TESTS = [test_id_store,];
+var TESTS = [test_id_store, ];
 
 TESTS.forEach(add_test);
 

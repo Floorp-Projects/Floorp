@@ -86,12 +86,12 @@ auto DownloadsIntegration::ScanMedia(mozilla::jni::String::Param a0, mozilla::jn
 const char GeckoAppShell::name[] =
         "org/mozilla/gecko/GeckoAppShell";
 
-constexpr char GeckoAppShell::AddPluginView_t::name[];
-constexpr char GeckoAppShell::AddPluginView_t::signature[];
+constexpr char GeckoAppShell::AddFullScreenPluginView_t::name[];
+constexpr char GeckoAppShell::AddFullScreenPluginView_t::signature[];
 
-auto GeckoAppShell::AddPluginView(mozilla::jni::Object::Param a0, float a1, float a2, float a3, float a4, bool a5) -> void
+auto GeckoAppShell::AddFullScreenPluginView(mozilla::jni::Object::Param a0) -> void
 {
-    return mozilla::jni::Method<AddPluginView_t>::Call(GeckoAppShell::Context(), nullptr, a0, a1, a2, a3, a4, a5);
+    return mozilla::jni::Method<AddFullScreenPluginView_t>::Call(GeckoAppShell::Context(), nullptr, a0);
 }
 
 constexpr char GeckoAppShell::CancelVibrate_t::name[];
@@ -637,12 +637,12 @@ auto GeckoAppShell::RegisterSurfaceTextureFrameListener(mozilla::jni::Object::Pa
     return mozilla::jni::Method<RegisterSurfaceTextureFrameListener_t>::Call(GeckoAppShell::Context(), nullptr, a0, a1);
 }
 
-constexpr char GeckoAppShell::RemovePluginView_t::name[];
-constexpr char GeckoAppShell::RemovePluginView_t::signature[];
+constexpr char GeckoAppShell::RemoveFullScreenPluginView_t::name[];
+constexpr char GeckoAppShell::RemoveFullScreenPluginView_t::signature[];
 
-auto GeckoAppShell::RemovePluginView(mozilla::jni::Object::Param a0, bool a1) -> void
+auto GeckoAppShell::RemoveFullScreenPluginView(mozilla::jni::Object::Param a0) -> void
 {
-    return mozilla::jni::Method<RemovePluginView_t>::Call(GeckoAppShell::Context(), nullptr, a0, a1);
+    return mozilla::jni::Method<RemoveFullScreenPluginView_t>::Call(GeckoAppShell::Context(), nullptr, a0);
 }
 
 constexpr char GeckoAppShell::RequestUiThreadCallback_t::name[];
@@ -1245,14 +1245,6 @@ auto DisplayPortMetrics::Resolution() const -> float
 const char GeckoLayerClient::name[] =
         "org/mozilla/gecko/gfx/GeckoLayerClient";
 
-constexpr char GeckoLayerClient::ActivateProgram_t::name[];
-constexpr char GeckoLayerClient::ActivateProgram_t::signature[];
-
-auto GeckoLayerClient::ActivateProgram() const -> void
-{
-    return mozilla::jni::Method<ActivateProgram_t>::Call(GeckoLayerClient::mCtx, nullptr);
-}
-
 constexpr char GeckoLayerClient::ContentDocumentChanged_t::name[];
 constexpr char GeckoLayerClient::ContentDocumentChanged_t::signature[];
 
@@ -1267,22 +1259,6 @@ constexpr char GeckoLayerClient::CreateFrame_t::signature[];
 auto GeckoLayerClient::CreateFrame() const -> mozilla::jni::Object::LocalRef
 {
     return mozilla::jni::Method<CreateFrame_t>::Call(GeckoLayerClient::mCtx, nullptr);
-}
-
-constexpr char GeckoLayerClient::DeactivateProgramAndRestoreState_t::name[];
-constexpr char GeckoLayerClient::DeactivateProgramAndRestoreState_t::signature[];
-
-auto GeckoLayerClient::DeactivateProgramAndRestoreState(bool a0, int32_t a1, int32_t a2, int32_t a3, int32_t a4) const -> void
-{
-    return mozilla::jni::Method<DeactivateProgramAndRestoreState_t>::Call(GeckoLayerClient::mCtx, nullptr, a0, a1, a2, a3, a4);
-}
-
-constexpr char GeckoLayerClient::GetDisplayPort_t::name[];
-constexpr char GeckoLayerClient::GetDisplayPort_t::signature[];
-
-auto GeckoLayerClient::GetDisplayPort(bool a0, bool a1, int32_t a2, mozilla::jni::Object::Param a3) const -> mozilla::jni::Object::LocalRef
-{
-    return mozilla::jni::Method<GetDisplayPort_t>::Call(GeckoLayerClient::mCtx, nullptr, a0, a1, a2, a3);
 }
 
 constexpr char GeckoLayerClient::IsContentDocumentDisplayed_t::name[];
@@ -1380,22 +1356,6 @@ constexpr char LayerRenderer::Frame::BeginDrawing_t::signature[];
 auto LayerRenderer::Frame::BeginDrawing() const -> void
 {
     return mozilla::jni::Method<BeginDrawing_t>::Call(Frame::mCtx, nullptr);
-}
-
-constexpr char LayerRenderer::Frame::DrawBackground_t::name[];
-constexpr char LayerRenderer::Frame::DrawBackground_t::signature[];
-
-auto LayerRenderer::Frame::DrawBackground() const -> void
-{
-    return mozilla::jni::Method<DrawBackground_t>::Call(Frame::mCtx, nullptr);
-}
-
-constexpr char LayerRenderer::Frame::DrawForeground_t::name[];
-constexpr char LayerRenderer::Frame::DrawForeground_t::signature[];
-
-auto LayerRenderer::Frame::DrawForeground() const -> void
-{
-    return mozilla::jni::Method<DrawForeground_t>::Call(Frame::mCtx, nullptr);
 }
 
 constexpr char LayerRenderer::Frame::EndDrawing_t::name[];
@@ -1498,14 +1458,6 @@ constexpr char NativePanZoomController::OnSelectionDragState_t::signature[];
 auto NativePanZoomController::OnSelectionDragState(bool a0) const -> void
 {
     return mozilla::jni::Method<OnSelectionDragState_t>::Call(NativePanZoomController::mCtx, nullptr, a0);
-}
-
-constexpr char NativePanZoomController::RequestContentRepaint_t::name[];
-constexpr char NativePanZoomController::RequestContentRepaint_t::signature[];
-
-auto NativePanZoomController::RequestContentRepaint(float a0, float a1, float a2, float a3, float a4) const -> void
-{
-    return mozilla::jni::Method<RequestContentRepaint_t>::Call(NativePanZoomController::mCtx, nullptr, a0, a1, a2, a3, a4);
 }
 
 constexpr char NativePanZoomController::SetScrollingRootContent_t::name[];

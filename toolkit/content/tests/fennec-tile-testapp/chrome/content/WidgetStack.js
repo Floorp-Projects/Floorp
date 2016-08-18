@@ -1305,7 +1305,7 @@ WidgetStack.prototype = {
   },
 
   _widgetBounds: function () {
-    let r = new wsRect(0,0,0,0);
+    let r = new wsRect(0, 0, 0, 0);
 
     for (let wid in this._widgetState) {
       let state = this._widgetState[wid];

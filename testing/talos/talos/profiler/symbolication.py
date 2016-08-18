@@ -16,6 +16,16 @@ from symFileManager import SymFileManager
 from symbolicationRequest import SymbolicationRequest
 from symLogging import LogMessage
 
+"""
+Symbolication is broken when using type 'str' in python 2.7, so we use 'basestring'.
+But for python 3.0 compatibility, 'basestring' isn't defined, but the 'str' type works.
+So we force 'basestring' to 'str'.
+"""
+try:
+    basestring
+except NameError:
+    basestring = str
+
 
 class SymbolError(Exception):
     pass
@@ -266,7 +276,7 @@ class ProfileSymbolicator:
             delta_time = profile_start_time - self.main_start_time
 
         for i, thread in enumerate(profile_json["threads"]):
-            if isinstance(thread, str):
+            if isinstance(thread, basestring):
                 thread_json = json.loads(thread)
                 self.symbolicate_profile(thread_json)
                 profile_json["threads"][i] = json.dumps(thread_json)
@@ -297,7 +307,7 @@ class ProfileSymbolicator:
     def _find_addresses_v3(self, profile_json):
         addresses = set()
         for thread in profile_json["threads"]:
-            if isinstance(thread, str):
+            if isinstance(thread, basestring):
                 continue
             for s in thread["stringTable"]:
                 if s[0:2] == "0x":
@@ -306,7 +316,7 @@ class ProfileSymbolicator:
 
     def _substitute_symbols_v3(self, profile_json, symbolication_table):
         for thread in profile_json["threads"]:
-            if isinstance(thread, str):
+            if isinstance(thread, basestring):
                 continue
             for i, s in enumerate(thread["stringTable"]):
                 thread["stringTable"][i] = symbolication_table.get(s, s)

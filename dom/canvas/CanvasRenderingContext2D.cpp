@@ -161,6 +161,8 @@ namespace dom {
 // Cap sigma to avoid overly large temp surfaces.
 const Float SIGMA_MAX = 100;
 
+const size_t MAX_STYLE_STACK_SIZE = 1024;
+
 /* Memory reporter stuff */
 static int64_t gCanvasAzureMemoryUsed = 0;
 
@@ -1960,6 +1962,12 @@ CanvasRenderingContext2D::Save()
   mStyleStack[mStyleStack.Length() - 1].transform = mTarget->GetTransform();
   mStyleStack.SetCapacity(mStyleStack.Length() + 1);
   mStyleStack.AppendElement(CurrentState());
+
+  if (mStyleStack.Length() > MAX_STYLE_STACK_SIZE) {
+    // This is not fast, but is better than OOMing and shouldn't be hit by
+    // reasonable code.
+    mStyleStack.RemoveElementAt(0);
+  }
 }
 
 void

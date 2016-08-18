@@ -20,7 +20,7 @@ this.Buttons = {
 
   configurations: {
     navBarButtons: {
-      applyConfig: Task.async(() =>{
+      applyConfig: Task.async(() => {
         let browserWindow = Services.wm.getMostRecentWindow("navigator:browser");
         CustomizableUI.addWidgetToArea("screenshot-widget", CustomizableUI.AREA_NAVBAR);
       }),

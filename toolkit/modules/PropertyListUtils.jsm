@@ -238,7 +238,7 @@ this.PropertyListUtils = Object.freeze({
 function BinaryPropertyListReader(aBuffer) {
   this._dataView = new DataView(aBuffer);
 
-  const JS_MAX_INT = Math.pow(2,53);
+  const JS_MAX_INT = Math.pow(2, 53);
   this._JS_MAX_INT_SIGNED = ctypes.Int64(JS_MAX_INT);
   this._JS_MAX_INT_UNSIGNED = ctypes.UInt64(JS_MAX_INT);
   this._JS_MIN_INT = ctypes.Int64(-JS_MAX_INT);

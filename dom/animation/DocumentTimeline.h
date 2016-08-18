@@ -83,6 +83,7 @@ public:
 protected:
   TimeStamp GetCurrentTimeStamp() const;
   nsRefreshDriver* GetRefreshDriver() const;
+  void UnregisterFromRefreshDriver();
 
   nsCOMPtr<nsIDocument> mDocument;
 
