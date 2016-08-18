@@ -80,7 +80,7 @@ function check_test_pt1() {
   let state = gAUS.downloadUpdate(gActiveUpdate, true);
   Assert.equal(state, STATE_NONE,
                "the update state" + MSG_SHOULD_EQUAL);
-  Assert.equal(gActiveUpdate.errorCode >>> 0 , Cr.NS_ERROR_FILE_TOO_BIG,
+  Assert.equal(gActiveUpdate.errorCode >>> 0, Cr.NS_ERROR_FILE_TOO_BIG,
                "the update error code" + MSG_SHOULD_EQUAL);
 
   doTestFinish();

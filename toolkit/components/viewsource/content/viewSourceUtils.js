@@ -491,10 +491,10 @@ var gViewSourceUtils = {
       }
     },
 
-    onLocationChange: function() {return 0;},
-    onProgressChange: function() {return 0;},
-    onStatusChange: function() {return 0;},
-    onSecurityChange: function() {return 0;},
+    onLocationChange: function() { return 0; },
+    onProgressChange: function() { return 0; },
+    onStatusChange: function() { return 0; },
+    onSecurityChange: function() { return 0; },
 
     webShell: null,
     editor: null,

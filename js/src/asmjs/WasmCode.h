@@ -419,9 +419,10 @@ class MetadataCacheablePod
     uint32_t              minMemoryLength;
     uint32_t              maxMemoryLength;
 
-    MetadataCacheablePod() {
+    explicit MetadataCacheablePod(ModuleKind kind) {
         mozilla::PodZero(this);
         startFuncIndex_ = NO_START_FUNCTION;
+        this->kind = kind;
     }
 
     bool hasStartFunction() const {
@@ -440,6 +441,7 @@ class MetadataCacheablePod
 
 struct Metadata : ShareableBase<Metadata>, MetadataCacheablePod
 {
+    explicit Metadata(ModuleKind kind = ModuleKind::Wasm) : MetadataCacheablePod(kind) {}
     virtual ~Metadata() {}
 
     MetadataCacheablePod& pod() { return *this; }

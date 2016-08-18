@@ -114,7 +114,7 @@
             this.ui.button2.addEventListener("command", this.onButtonClick.bind(this, 2), false);
             this.ui.button3.addEventListener("command", this.onButtonClick.bind(this, 3), false);
             // Anonymous wrapper used here because |Dialog| doesn't exist until init() is called!
-            this.ui.checkbox.addEventListener("command", function() { self.Dialog.onCheckbox(); } , false);
+            this.ui.checkbox.addEventListener("command", function() { self.Dialog.onCheckbox(); }, false);
             this.isLive = false;
         ]]>
         </constructor>

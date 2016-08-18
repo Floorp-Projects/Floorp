@@ -1206,7 +1206,7 @@ var DirectoryLinksProvider = {
    */
   _removeTileClick: function DirectoryLinksProvider_removeTileClick(url = "") {
     // remove trailing slash, to accomodate Places sending site urls ending with '/'
-    let noTrailingSlashUrl = url.replace(/\/$/,"");
+    let noTrailingSlashUrl = url.replace(/\/$/, "");
     let capObject = this._frequencyCaps[url] || this._frequencyCaps[noTrailingSlashUrl];
     // return resolved promise if capObject is not found
     if (!capObject) {

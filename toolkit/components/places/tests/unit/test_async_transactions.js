@@ -1298,9 +1298,9 @@ add_task(function* test_sort_folder_by_name() {
   let folder_info = createTestFolderInfo();
 
   let url = NetUtil.newURI("http://sort.by.name/");
-  let preSep =  ["3","2","1"].map(i => ({ title: i, url }));
+  let preSep =  ["3", "2", "1"].map(i => ({ title: i, url }));
   let sep = {};
-  let postSep = ["c","b","a"].map(l => ({ title: l, url }));
+  let postSep = ["c", "b", "a"].map(l => ({ title: l, url }));
   let originalOrder = [...preSep, sep, ...postSep];
   let sortedOrder = [...preSep.slice(0).reverse(),
                      sep,

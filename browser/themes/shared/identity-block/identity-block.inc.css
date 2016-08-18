@@ -24,11 +24,13 @@
   transition: padding-left, padding-right;
 }
 
-#urlbar[pageproxystate="valid"] > #identity-box.verifiedIdentity {
+#urlbar[pageproxystate="valid"] > #identity-box.verifiedIdentity > #connection-icon,
+#urlbar[pageproxystate="valid"] > #identity-box.verifiedIdentity > #identity-icon-labels {
   color: var(--identity-box-verified-color);
 }
 
-#urlbar[pageproxystate="valid"] > #identity-box.chromeUI {
+#urlbar[pageproxystate="valid"] > #identity-box.chromeUI > #connection-icon,
+#urlbar[pageproxystate="valid"] > #identity-box.chromeUI > #identity-icon-labels {
   color: var(--identity-box-chrome-color);
 }
 
@@ -48,7 +50,7 @@
   /* Forward button hiding is delayed when hovered, so we should use the same
      delay for the identity box. We handle both horizontal paddings (for LTR and
      RTL), the latter two delays here are for padding-left and padding-right. */
-  transition-delay: 0s, 100s, 100s;
+  transition-delay: 100s, 100s;
 }
 
 @conditionalForwardWithUrlbar@:not(:hover) > #forward-button[disabled] + #urlbar > #identity-box {

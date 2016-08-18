@@ -263,7 +263,7 @@ AudioEventTimeline::GetValuesAtTimeHelperInternal(TimeType aTime,
                                aPrevious->mTimeConstant, aTime);
   }
 
-  // SetValueCurve events can be handled no mattar what their next node is
+  // SetValueCurve events can be handled no matter what their next node is
   // (if they have one)
   if (aPrevious->mType == AudioTimelineEvent::SetValueCurve) {
     return ExtractValueFromCurve(TimeOf(aPrevious),

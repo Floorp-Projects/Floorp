@@ -26,7 +26,7 @@
 // and allow the use of the functions without a _impl suffix.
 #define MALLOC_DECL(name, return_type, ...) \
   extern "C" MOZ_MEMORY_API return_type name ## _impl(__VA_ARGS__);
-#define MALLOC_FUNS MALLOC_FUNCS_MALLOC
+#define MALLOC_FUNCS MALLOC_FUNCS_MALLOC
 #include "malloc_decls.h"
 
 // Warning: C4273: 'HeapAlloc': inconsistent dll linkage

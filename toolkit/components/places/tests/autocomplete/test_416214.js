@@ -34,5 +34,5 @@ addPageBook(1, 0, 0, [1]);
 // pages that should match; optional function to be run before the test
 var gTests = [
   ["0: Make sure tag matches return the right url as well as '+' remain escaped",
-   theTag, [0,1]],
+   theTag, [0, 1]],
 ];

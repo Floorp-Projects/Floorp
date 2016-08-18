@@ -6,6 +6,7 @@
 #include "gfxMacFont.h"
 
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/Sprintf.h"
 
 #include "gfxCoreTextShaper.h"
 #include <algorithm>
@@ -49,8 +50,9 @@ gfxMacFont::gfxMacFont(MacOSFontEntry *aFontEntry, const gfxFontStyle *aFontStyl
         mIsValid = false;
 #ifdef DEBUG
         char warnBuf[1024];
-        sprintf(warnBuf, "Failed to create Cairo font face: %s status: %d",
-                NS_ConvertUTF16toUTF8(GetName()).get(), cairoerr);
+        SprintfLiteral(warnBuf,
+                       "Failed to create Cairo font face: %s status: %d",
+                       NS_ConvertUTF16toUTF8(GetName()).get(), cairoerr);
         NS_WARNING(warnBuf);
 #endif
         return;
@@ -99,8 +101,8 @@ gfxMacFont::gfxMacFont(MacOSFontEntry *aFontEntry, const gfxFontStyle *aFontStyl
         mIsValid = false;
 #ifdef DEBUG
         char warnBuf[1024];
-        sprintf(warnBuf, "Failed to create scaled font: %s status: %d",
-                NS_ConvertUTF16toUTF8(GetName()).get(), cairoerr);
+        SprintfLiteral(warnBuf, "Failed to create scaled font: %s status: %d",
+                       NS_ConvertUTF16toUTF8(GetName()).get(), cairoerr);
         NS_WARNING(warnBuf);
 #endif
     }
@@ -219,8 +221,9 @@ gfxMacFont::InitMetrics()
         // See http://www.microsoft.com/typography/otspec/head.htm
 #ifdef DEBUG
         char warnBuf[1024];
-        sprintf(warnBuf, "Bad font metrics for: %s (invalid unitsPerEm value)",
-                NS_ConvertUTF16toUTF8(mFontEntry->Name()).get());
+        SprintfLiteral(warnBuf,
+                       "Bad font metrics for: %s (invalid unitsPerEm value)",
+                       NS_ConvertUTF16toUTF8(mFontEntry->Name()).get());
         NS_WARNING(warnBuf);
 #endif
         return;

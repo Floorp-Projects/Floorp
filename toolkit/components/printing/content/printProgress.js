@@ -180,14 +180,14 @@ function getString( stringId ) {
            elem.childNodes[0]
            &&
            elem.childNodes[0].nodeValue ) {
-         dialog.strings[ stringId ] = elem.childNodes[0].nodeValue;
+         dialog.strings[stringId] = elem.childNodes[0].nodeValue;
         } else {
           // If unable to fetch string, use an empty string.
-          dialog.strings[ stringId ] = "";
+          dialog.strings[stringId] = "";
         }
-      } catch (e) { dialog.strings[ stringId ] = ""; }
+      } catch (e) { dialog.strings[stringId] = ""; }
    }
-   return dialog.strings[ stringId ];
+   return dialog.strings[stringId];
 }
 
 function loadDialog()
@@ -244,7 +244,7 @@ function onLoad() {
 
     // Set up dialog button callbacks.
     var object = this;
-    doSetOKCancel("", function () { return object.onCancel();});
+    doSetOKCancel("", function () { return object.onCancel(); });
 
     // Fill dialog.
     loadDialog();
@@ -278,7 +278,7 @@ function onCancel ()
    {
      printProgress.processCanceledByUser = true;
    }
-   catch ( exception ) {return true;}
+   catch ( exception ) { return true; }
 
   // don't Close up dialog by returning false, the backend will close the dialog when everything will be aborted.
   return false;
