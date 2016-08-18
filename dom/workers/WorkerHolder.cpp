@@ -22,13 +22,13 @@ WorkerHolder::~WorkerHolder()
 }
 
 bool
-WorkerHolder::HoldWorker(WorkerPrivate* aWorkerPrivate)
+WorkerHolder::HoldWorker(WorkerPrivate* aWorkerPrivate, Status aFailStatus)
 {
   NS_ASSERT_OWNINGTHREAD(WorkerHolder);
   MOZ_ASSERT(aWorkerPrivate);
   aWorkerPrivate->AssertIsOnWorkerThread();
 
-  if (!aWorkerPrivate->AddHolder(this)) {
+  if (!aWorkerPrivate->AddHolder(this, aFailStatus)) {
     return false;
   }
 
