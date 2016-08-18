@@ -104,7 +104,7 @@ add_task(function* () {
 
   info("started");
 
-  let {WindowManager} = Cu.import("resource://gre/modules/Extension.jsm", {});
+  let {WindowManager} = Cu.import("resource://gre/modules/ExtensionGlobalScope.jsm", {}).getGlobalForTesting("chrome");
 
   let winId1 = WindowManager.getId(win1);
   let winId2 = WindowManager.getId(win2);
