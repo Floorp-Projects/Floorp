@@ -68,6 +68,12 @@ media_test_config_options = [
     [['--browsermob-port'],
      {'help': 'port to run the browsermob proxy on',
      }],
+    [["--allow-software-gl-layers"],
+     {"action": "store_true",
+      "dest": "allow_software_gl_layers",
+      "default": False,
+      "help": "Permits a software GL implementation (such as LLVMPipe) to use the GL compositor."
+      }],
 ] + (copy.deepcopy(testing_config_options))
 
 class JobResultParser(TestSummaryOutputParserHelper):
@@ -269,6 +275,9 @@ class FirefoxMediaTestsBase(TestingMixin, VCSToolsScript):
         env = self.query_env()
         if self.query_minidump_stackwalk():
             env['MINIDUMP_STACKWALK'] = self.minidump_stackwalk_path
+
+        if self.config['allow_software_gl_layers']:
+            env['MOZ_LAYERS_ALLOW_SOFTWARE_GL'] = '1'
 
         return_code = self.run_command(
             cmd,
