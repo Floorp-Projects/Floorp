@@ -1722,7 +1722,7 @@ HTMLMediaElement::Seek(double aTime,
 
   if (mSrcStream) {
     // do nothing since media streams have an empty Seekable range.
-    promise->MaybeRejectWithUndefined();
+    promise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR);
     return promise.forget();
   }
 
@@ -1740,14 +1740,14 @@ HTMLMediaElement::Seek(double aTime,
 
   if (mReadyState == nsIDOMHTMLMediaElement::HAVE_NOTHING) {
     mDefaultPlaybackStartPosition = aTime;
-    promise->MaybeRejectWithUndefined();
+    promise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR);
     return promise.forget();
   }
 
   if (!mDecoder) {
     // mDecoder must always be set in order to reach this point.
     NS_ASSERTION(mDecoder, "SetCurrentTime failed: no decoder");
-    promise->MaybeRejectWithUndefined();
+    promise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR);
     return promise.forget();
   }
 
@@ -1762,7 +1762,7 @@ HTMLMediaElement::Seek(double aTime,
   uint32_t length = 0;
   seekable->GetLength(&length);
   if (!length) {
-    promise->MaybeRejectWithUndefined();
+    promise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR);
     return promise.forget();
   }
 

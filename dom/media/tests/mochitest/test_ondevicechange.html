@@ -1,0 +1,80 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1041393
+-->
+<head>
+  <meta charset="utf-8">
+  <title>onndevicechange tests</title>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1152383">ondevicechange tests</a>
+<script type="application/javascript">
+
+const RESPONSE_WAIT_TIME_MS = 10000;
+
+function wait(time, message) {
+  return new Promise(r => setTimeout(() => r(message), time));
+}
+
+function OnDeviceChangeEvent() {
+  return new Promise(resolve => navigator.mediaDevices.ondevicechange = resolve);
+}
+
+function OnDeviceChangeEventReceived() {
+  return Promise.race([
+    OnDeviceChangeEvent(),
+    wait(RESPONSE_WAIT_TIME_MS).then(() => Promise.reject("Timed out while waiting for devicechange event"))
+  ]);
+}
+
+function OnDeviceChangeEventNotReceived() {
+  return Promise.race([
+    OnDeviceChangeEvent().then(() => Promise.reject("ondevicechange event is fired unexpectedly.")),
+    wait(RESPONSE_WAIT_TIME_MS)
+  ]);
+}
+
+var pushPrefs = (...p) => new Promise(r => SpecialPowers.pushPrefEnv({set: p}, r));
+
+var videoTracks;
+
+SimpleTest.requestCompleteLog();
+SimpleTest.waitForExplicitFinish();
+SimpleTest.requestFlakyTimeout("Fake devicechange event is fired periodically, \
+so we need to wait a while to make sure the event is fired or not as we expect.");
+
+var videoTracks;
+
+function wait(time, message) {
+  return new Promise(r => setTimeout(() => r(message), time));
+}
+
+pushPrefs(["media.ondevicechange.fakeDeviceChangeEvent.enabled", true])
+.then(() => pushPrefs(["media.navigator.permission.disabled", false]))
+.then(() => pushPrefs(["media.ondevicechange.enabled", true]))
+.then(() => info("assure devicechange event is NOT fired when gUM is NOT in use and permanent permission is NOT granted"))
+.then(() => OnDeviceChangeEventNotReceived())
+.then(() => ok(true, "devicechange event is NOT fired when gUM is NOT in use and permanent permission is NOT granted"))
+.then(() => pushPrefs(['media.navigator.permission.disabled', true]))
+.then(() => info("assure devicechange event is fired when gUM is NOT in use and permanent permission is granted"))
+.then(() => OnDeviceChangeEventReceived())
+.then(() => ok(true, "devicechange event is fired when gUM is NOT in use and permanent permission is granted"))
+.then(() => navigator.mediaDevices.getUserMedia({video: true, fake: true}))
+.then(st => {videoTracks = st.getVideoTracks();})
+.then(() => info("assure devicechange event is fired when gUM is in use"))
+.then(() => OnDeviceChangeEventReceived())
+.then(() => ok(true, "devicechange event is fired when gUM is in use"))
+.catch(e => ok(false, "Error: " + e))
+.then(() => {
+  if(videoTracks)
+    videoTracks.forEach(track => track.stop());
+})
+.then(() => SimpleTest.finish());
+
+</script>
+</pre>
+</body>
+</html>

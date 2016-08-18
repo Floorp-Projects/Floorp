@@ -13,6 +13,7 @@ Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/Timer.jsm");
 Cu.import("resource://testing-common/BrowserTestUtils.jsm");
 Cu.import("resource:///modules/SitePermissions.jsm");
+Cu.import("resource://gre/modules/NetUtil.jsm");
 
 let {UrlClassifierTestUtils} = Cu.import("resource://testing-common/UrlClassifierTestUtils.jsm", {});
 
@@ -39,11 +40,15 @@ this.ControlCenter = {
 
     localFile: {
       applyConfig: Task.async(function* () {
-        let filePath = "file:///";
-        if (Services.appinfo.OS === "WINNT") {
-          filePath += "C:/";
-        }
-        yield loadPage(filePath);
+        let channel = NetUtil.newChannel({
+            uri: "chrome://mozscreenshots/content/lib/mozscreenshots.html",
+            loadUsingSystemPrincipal: true
+        });
+        channel = channel.QueryInterface(Ci.nsIFileChannel);
+        let browserWindow = Services.wm.getMostRecentWindow("navigator:browser");
+        let gBrowser = browserWindow.gBrowser;
+        BrowserTestUtils.loadURI(gBrowser.selectedBrowser, channel.file.path);
+        yield BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
         yield openIdentityPopup();
       }),
     },

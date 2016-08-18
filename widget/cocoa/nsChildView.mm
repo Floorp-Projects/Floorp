@@ -5908,13 +5908,11 @@ PanGestureTypeForEvent(NSEvent* aEvent)
       // Keep the ChildView alive during this operation.
       nsAutoRetainCocoaObject kungFuDeathGrip(self);
 
-      // Determine if there is a selection (if sending to the service).
       if (sendType) {
-        WidgetQueryContentEvent event(true, eQueryContentState, mGeckoChild);
-        // This might destroy our widget (and null out mGeckoChild).
-        mGeckoChild->DispatchWindowEvent(event);
-        if (!mGeckoChild || !event.mSucceeded || !event.mReply.mHasSelection)
+        // Determine if there is a current selection (chrome/content).
+        if (!nsClipboard::sSelectionCache) {
           result = nil;
+        }
       }
 
       // Determine if we can paste (if receiving data from the service).
@@ -5957,15 +5955,12 @@ PanGestureTypeForEvent(NSEvent* aEvent)
   if (!mGeckoChild)
     return NO;
 
-  // Obtain the current selection.
-  WidgetQueryContentEvent event(true, eQuerySelectionAsTransferable,
-                                mGeckoChild);
-  mGeckoChild->DispatchWindowEvent(event);
-  if (!event.mSucceeded || !event.mReply.mTransferable)
-    return NO;
-
   // Transform the transferable to an NSDictionary.
-  NSDictionary* pasteboardOutputDict = nsClipboard::PasteboardDictFromTransferable(event.mReply.mTransferable);
+  NSDictionary* pasteboardOutputDict = nullptr;
+
+  pasteboardOutputDict = nsClipboard::
+      PasteboardDictFromTransferable(nsClipboard::sSelectionCache);
+
   if (!pasteboardOutputDict)
     return NO;
 
@@ -6024,6 +6019,39 @@ PanGestureTypeForEvent(NSEvent* aEvent)
   mGeckoChild->DispatchWindowEvent(command);
 
   return command.mSucceeded && command.mIsEnabled;
+}
+
+NS_IMETHODIMP
+nsChildView::GetSelectionAsPlaintext(nsAString& aResult)
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
+  if (!nsClipboard::sSelectionCache) {
+    MOZ_ASSERT(aResult.IsEmpty());
+    return NS_OK;
+  }
+
+  // Get the current chrome or content selection.
+  NSDictionary* pasteboardOutputDict = nullptr;
+  pasteboardOutputDict = nsClipboard::
+    PasteboardDictFromTransferable(nsClipboard::sSelectionCache);
+
+  if (NS_WARN_IF(!pasteboardOutputDict)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  // Declare the pasteboard types.
+  unsigned int typeCount = [pasteboardOutputDict count];
+  NSMutableArray* declaredTypes = [NSMutableArray arrayWithCapacity:typeCount];
+  [declaredTypes addObjectsFromArray:[pasteboardOutputDict allKeys]];
+  NSString* currentKey = [declaredTypes objectAtIndex:0];
+  NSString* currentValue = [pasteboardOutputDict valueForKey:currentKey];
+  const char* textSelection = [currentValue UTF8String];
+  aResult = NS_ConvertUTF8toUTF16(textSelection);
+
+  return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 #pragma mark -
