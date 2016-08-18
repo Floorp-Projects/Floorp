@@ -7,8 +7,7 @@ var {
   detectLanguage,
 } = ExtensionUtils;
 
-extensions.registerSchemaAPI("i18n", context => {
-  let {extension} = context;
+extensions.registerSchemaAPI("i18n", (extension, context) => {
   return {
     i18n: {
       getMessage: function(messageName, substitutions) {
