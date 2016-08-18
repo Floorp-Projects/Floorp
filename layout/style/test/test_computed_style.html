@@ -340,6 +340,39 @@ var noframe_container = document.getElementById("content");
   p.parentNode.removeChild(p);
 })();
 
+(function test_bug_1293164() {
+
+  var p = document.createElement("p");
+  var cs = getComputedStyle(p, "");
+  frame_container.appendChild(p);
+
+  var docPath = document.URL.substring(0, document.URL.lastIndexOf("/") + 1);
+
+  var localURL = "url(\"#foo\")";
+  var nonLocalURL = "url(\"foo.svg#foo\")";
+  var resolvedNonLocalURL = "url(\"" + docPath + "foo.svg#foo\")";
+
+  var testStyles = {
+    "mask" : "",
+    "markerStart" : "",
+    "markerMid" : "",
+    "markerEnd" : "",
+    "clipPath" : "",
+    "filter" : "",
+    "fill" : " transparent",
+    "stroke" : " transparent",
+  };
+
+  for (var prop in testStyles) {
+    p.style[prop] = localURL;
+    is(cs[prop], localURL + testStyles[prop], "computed value of " + prop);
+    p.style[prop] = nonLocalURL;
+    is(cs[prop], resolvedNonLocalURL + testStyles[prop], "computed value of " + prop);
+  }
+
+  p.parentNode.removeChild(p);
+})();
+
 </script>
 </pre>
 </body>
