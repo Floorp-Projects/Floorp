@@ -598,6 +598,8 @@ Event::InitEvent(const nsAString& aEventTypeArg,
   mEvent->mFlags.mDefaultPrevented = false;
   mEvent->mFlags.mDefaultPreventedByContent = false;
   mEvent->mFlags.mDefaultPreventedByChrome = false;
+  mEvent->mFlags.mPropagationStopped = false;
+  mEvent->mFlags.mImmediatePropagationStopped = false;
 
   // Clearing the old targets, so that the event is targeted correctly when
   // re-dispatching it.
