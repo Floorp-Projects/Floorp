@@ -25,7 +25,7 @@ define(function (require, exports, module) {
     },
 
     render: function () {
-      // Use `Object.assign` to keep `this.props` without changes becuase:
+      // Use `Object.assign` to keep `this.props` without changes because:
       // 1. JSON.stringify/JSON.parse is slow.
       // 2. Immutable.js is planned for the future.
       let props = Object.assign({}, this.props);
@@ -35,8 +35,32 @@ define(function (require, exports, module) {
       delete props.object.preview.properties;
       props.object.ownPropertyLength =
         Object.keys(props.object.preview.ownProperties).length;
+
+      switch (props.object.class) {
+        case "MouseEvent":
+          props.isInterestingProp = (type, value, name) => {
+            return (name == "clientX" ||
+                    name == "clientY" ||
+                    name == "layerX" ||
+                    name == "layerY");
+          };
+          break;
+        case "KeyboardEvent":
+          props.isInterestingProp = (type, value, name) => {
+            return (name == "key" ||
+                    name == "charCode" ||
+                    name == "keyCode");
+          };
+          break;
+        case "MessageEvent":
+          props.isInterestingProp = (type, value, name) => {
+            return (name == "isTrusted" ||
+                    name == "data");
+          };
+          break;
+      }
       return rep(props);
-    },
+    }
   });
 
   // Registration
