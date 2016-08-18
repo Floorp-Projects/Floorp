@@ -33,4 +33,5 @@ exports.ConsoleMessage = Immutable.Record({
   repeat: 1,
   repeatId: null,
   stacktrace: null,
+  frame: null,
 });

@@ -17,8 +17,10 @@ const FilterBar = React.createFactory(require("devtools/client/webconsole/new-co
 const store = configureStore();
 
 function NewConsoleOutputWrapper(parentNode, jsterm, toolbox) {
+  const sourceMapService = toolbox ? toolbox._sourceMapService : null;
   let childComponent = ConsoleOutput({
     jsterm,
+    sourceMapService,
     onViewSourceInDebugger: frame => toolbox.viewSourceInDebugger.call(
       toolbox,
       frame.url,
