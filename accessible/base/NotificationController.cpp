@@ -420,6 +420,10 @@ NotificationController::WillRefresh(mozilla::TimeStamp aTime)
       if (tabChild) {
         static_cast<TabChild*>(tabChild.get())->
           SendPDocAccessibleConstructor(ipcDoc, parentIPCDoc, id);
+#if defined(XP_WIN)
+        IAccessibleHolder holder(CreateHolderFromAccessible(childDoc));
+        ipcDoc->SendCOMProxy(holder);
+#endif
       }
     }
   }
