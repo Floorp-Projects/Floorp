@@ -6,7 +6,6 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-import codecs
 import json
 import yaml
 from mozbuild.util import ReadOnlyDict
@@ -28,7 +27,7 @@ def load_parameters_file(options):
     filename = options['parameters']
     if not filename:
         return Parameters()
-    with codecs.open(filename, 'rb', 'utf-8') as f:
+    with open(filename) as f:
         if filename.endswith('.yml'):
             return Parameters(**yaml.safe_load(f))
         elif filename.endswith('.json'):
