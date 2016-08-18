@@ -330,7 +330,8 @@ function run_test_1() {
       do_check_false(t2.appDisabled);
       do_check_eq(t2.pendingOperations, AddonManager.PENDING_NONE);
 
-      restartManager();
+      Assert.throws(shutdownManager);
+      startupManager(false);
 
       AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
                                    "addon2@tests.mozilla.org",
@@ -395,6 +396,8 @@ function run_test_1() {
         do_check_false(t2.userDisabled);
         do_check_false(t2.appDisabled);
         do_check_eq(t2.pendingOperations, AddonManager.PENDING_NONE);
+
+        Assert.throws(shutdownManager);
 
         end_test();
       }));
