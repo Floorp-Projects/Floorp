@@ -62,6 +62,12 @@ function transformPacket(packet) {
           break;
       }
 
+      const frame = {
+        source: message.filename || null,
+        line: message.lineNumber || null,
+        column: message.columnNumber || null
+      };
+
       return new ConsoleMessage({
         source: MESSAGE_SOURCE.CONSOLE_API,
         type,
@@ -69,6 +75,7 @@ function transformPacket(packet) {
         parameters,
         messageText,
         stacktrace: message.stacktrace,
+        frame
       });
     }
 
