@@ -128,8 +128,8 @@ function getRepeatId(message) {
 }
 
 function convertCachedPacket(packet) {
-  // The devtools server provides cached message packets in a different shape
-  // from those of consoleApiCalls, so we prepare them for preparation here.
+  // The devtools server provides cached message packets in a different shape, so we
+  // transform them here.
   let convertPacket = {};
   if (packet._type === "ConsoleAPI") {
     convertPacket.message = packet;
@@ -137,6 +137,9 @@ function convertCachedPacket(packet) {
   } else if (packet._type === "PageError") {
     convertPacket.pageError = packet;
     convertPacket.type = "pageError";
+  } else if ("_navPayload" in packet) {
+    convertPacket.type = "navigationMessage";
+    convertPacket.message = packet;
   } else {
     throw new Error("Unexpected packet type");
   }
