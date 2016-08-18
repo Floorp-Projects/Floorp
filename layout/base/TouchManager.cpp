@@ -7,7 +7,6 @@
 
 #include "TouchManager.h"
 
-#include "mozilla/TouchEvents.h"
 #include "mozilla/dom/EventTarget.h"
 #include "nsIFrame.h"
 #include "nsPresShell.h"
@@ -47,9 +46,9 @@ TouchManager::Destroy()
   mPresShell = nullptr;
 }
 
-static void
-EvictTouchPoint(RefPtr<dom::Touch>& aTouch,
-                nsIDocument* aLimitToDocument = nullptr)
+/*static*/ void
+TouchManager::EvictTouchPoint(RefPtr<dom::Touch>& aTouch,
+                              nsIDocument* aLimitToDocument)
 {
   nsCOMPtr<nsINode> node(do_QueryInterface(aTouch->mTarget));
   if (node) {
@@ -73,14 +72,14 @@ EvictTouchPoint(RefPtr<dom::Touch>& aTouch,
     }
   }
   if (!node || !aLimitToDocument || node->OwnerDoc() == aLimitToDocument) {
-    TouchManager::gCaptureTouchList->Remove(aTouch->Identifier());
+    gCaptureTouchList->Remove(aTouch->Identifier());
   }
 }
 
-static void
-AppendToTouchList(WidgetTouchEvent::TouchArray* aTouchList)
+/*static*/ void
+TouchManager::AppendToTouchList(WidgetTouchEvent::TouchArray* aTouchList)
 {
-  for (auto iter = TouchManager::gCaptureTouchList->Iter();
+  for (auto iter = gCaptureTouchList->Iter();
        !iter.Done();
        iter.Next()) {
     RefPtr<dom::Touch>& touch = iter.Data();
@@ -228,6 +227,39 @@ TouchManager::PreHandleEvent(WidgetEvent* aEvent,
       break;
   }
   return true;
+}
+
+/*static*/ already_AddRefed<nsIContent>
+TouchManager::GetAnyCapturedTouchTarget()
+{
+  nsCOMPtr<nsIContent> result = nullptr;
+  if (gCaptureTouchList->Count() == 0) {
+    return result.forget();
+  }
+  for (auto iter = gCaptureTouchList->Iter(); !iter.Done(); iter.Next()) {
+    RefPtr<dom::Touch>& touch = iter.Data();
+    if (touch) {
+      dom::EventTarget* target = touch->GetTarget();
+      if (target) {
+        result = do_QueryInterface(target);
+        break;
+      }
+    }
+  }
+  return result.forget();
+}
+
+/*static*/ bool
+TouchManager::HasCapturedTouch(int32_t aId)
+{
+  return gCaptureTouchList->Contains(aId);
+}
+
+/*static*/ already_AddRefed<dom::Touch>
+TouchManager::GetCapturedTouch(int32_t aId)
+{
+  RefPtr<dom::Touch> touch = gCaptureTouchList->GetWeak(aId);
+  return touch.forget();
 }
 
 } // namespace mozilla
