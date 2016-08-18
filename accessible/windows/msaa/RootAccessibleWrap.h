@@ -9,6 +9,12 @@
 #include "RootAccessible.h"
 
 namespace mozilla {
+namespace mscom {
+
+struct IWeakReference;
+
+} // namespace mscom
+
 namespace a11y {
 
 class RootAccessibleWrap : public RootAccessible
@@ -17,8 +23,14 @@ public:
   RootAccessibleWrap(nsIDocument* aDocument, nsIPresShell* aPresShell);
   virtual ~RootAccessibleWrap();
 
+  // Accessible
+  virtual void GetNativeInterface(void** aOutAccessible) override;
+
   // RootAccessible
   virtual void DocumentActivated(DocAccessible* aDocument);
+
+private:
+  RefPtr<mscom::IWeakReference> mInterceptor;
 };
 
 } // namespace a11y
