@@ -78,7 +78,7 @@ public class LayerView extends ScrollView implements Tabs.OnTabsChangedListener 
     private volatile boolean mCompositorCreated;
 
 
-    protected class Compositor extends JNIObject {
+    private class Compositor extends JNIObject {
         public Compositor() {
         }
 
@@ -488,7 +488,7 @@ public class LayerView extends ScrollView implements Tabs.OnTabsChangedListener 
         }
     }
 
-    protected Compositor getCompositor() {
+    protected Object getCompositor() {
         return mCompositor;
     }
 
