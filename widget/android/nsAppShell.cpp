@@ -58,6 +58,7 @@
 #include "GeckoBatteryManager.h"
 #include "GeckoNetworkManager.h"
 #include "GeckoScreenOrientation.h"
+#include "MemoryMonitor.h"
 #include "PrefsHelper.h"
 #include "Telemetry.h"
 #include "ThumbnailHelper.h"
@@ -347,6 +348,7 @@ nsAppShell::nsAppShell()
         mozilla::GeckoBatteryManager::Init();
         mozilla::GeckoNetworkManager::Init();
         mozilla::GeckoScreenOrientation::Init();
+        mozilla::MemoryMonitor::Init();
         mozilla::PrefsHelper::Init();
         mozilla::widget::Telemetry::Init();
         mozilla::ThumbnailHelper::Init();

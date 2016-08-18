@@ -36,7 +36,6 @@
 #include "mozilla/layers/APZCTreeManager.h"
 #include "nsPluginInstanceOwner.h"
 #include "AndroidSurfaceTexture.h"
-#include "nsMemoryPressure.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -123,12 +122,6 @@ Java_org_mozilla_gecko_GeckoAppShell_onSurfaceTextureFrameAvailable(JNIEnv* jenv
   }
 
   st->NotifyFrameAvailable();
-}
-
-NS_EXPORT void JNICALL
-Java_org_mozilla_gecko_GeckoAppShell_dispatchMemoryPressure(JNIEnv* jenv, jclass)
-{
-    NS_DispatchMemoryPressure(MemPressure_New);
 }
 
 }
