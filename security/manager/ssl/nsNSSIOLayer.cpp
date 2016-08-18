@@ -58,8 +58,6 @@ using namespace mozilla::psm;
 
 namespace {
 
-#define MAX_ALPN_LENGTH 255
-
 void
 getSiteKey(const nsACString& hostName, uint16_t port,
            /*out*/ nsCSubstring& key)
@@ -89,7 +87,6 @@ nsNSSSocketInfo::nsNSSSocketInfo(SharedSSLState& aState, uint32_t providerFlags)
     mRememberClientAuthCertificate(false),
     mPreliminaryHandshakeDone(false),
     mNPNCompleted(false),
-    mEarlyDataAccepted(false),
     mFalseStartCallbackCalled(false),
     mFalseStarted(false),
     mIsFullHandshake(false),
@@ -307,71 +304,6 @@ nsNSSSocketInfo::GetNegotiatedNPN(nsACString& aNegotiatedNPN)
     return NS_ERROR_NOT_CONNECTED;
 
   aNegotiatedNPN = mNegotiatedNPN;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsNSSSocketInfo::GetAlpnEarlySelection(nsACString& aAlpnSelected)
-{
-  nsNSSShutDownPreventionLock locker;
-  if (isAlreadyShutDown()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-  SSLNextProtoState alpnState;
-  unsigned char chosenAlpn[MAX_ALPN_LENGTH];
-  unsigned int chosenAlpnLen;
-  SECStatus rv = SSL_GetNextProto(mFd, &alpnState, chosenAlpn, &chosenAlpnLen,
-                                  AssertedCast<unsigned int>(ArrayLength(chosenAlpn)));
-
-  if (rv != SECSuccess || alpnState != SSL_NEXT_PROTO_EARLY_VALUE ||
-      chosenAlpnLen == 0) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
-  aAlpnSelected.Assign(BitwiseCast<char*, unsigned char*>(chosenAlpn),
-                       chosenAlpnLen);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsNSSSocketInfo::GetEarlyDataAccepted(bool* aAccepted)
-{
-  *aAccepted = mEarlyDataAccepted;
-  return NS_OK;
-}
-
-void
-nsNSSSocketInfo::SetEarlyDataAccepted(bool aAccepted)
-{
-  mEarlyDataAccepted = aAccepted;
-}
-
-NS_IMETHODIMP
-nsNSSSocketInfo::DriveHandshake()
-{
-  nsNSSShutDownPreventionLock locker;
-  if (isAlreadyShutDown()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-  if (!mFd) {
-    return NS_ERROR_FAILURE;
-  }
-  PRErrorCode errorCode = GetErrorCode();
-  if (errorCode) {
-    return GetXPCOMFromNSSError(errorCode);
-  }
-
-  SECStatus rv = SSL_ForceHandshake(mFd);
-
-  if (rv != SECSuccess) {
-    errorCode = PR_GetError();
-    if (errorCode == PR_WOULD_BLOCK_ERROR) {
-      return NS_BASE_STREAM_WOULD_BLOCK;
-    }
-
-    SetCanceled(errorCode, PlainErrorMessage);
-    return GetXPCOMFromNSSError(errorCode);
-  }
   return NS_OK;
 }
 
