@@ -38,8 +38,7 @@ add_task(function* test_fill() {
     yield promiseAnchorShown;
 
     let promiseShown = BrowserTestUtils.waitForEvent(PopupNotifications.panel,
-                                                     "popupshown");
-
+                                                     "Shown");
     anchor.click();
     yield promiseShown;
 
@@ -48,14 +47,9 @@ add_task(function* test_fill() {
                  "list.childNodes.length === 1");
 
     // The button will be focused after the "transitionend" event.
-    let details = document.getElementById("login-fill-details");
-    let promiseListFocus = BrowserTestUtils.waitForEvent(list, "focus");
-    let promiseSubviewHidden = BrowserTestUtils.waitForEvent(details,
-                                                             "transitionend",
-                                                             true,
-                                                             e => e.target == details);
     list.focus();
-    yield Promise.all([promiseListFocus, promiseSubviewHidden]);
+    yield new Promise(resolve => executeSoon(resolve));
+    let details = document.getElementById("login-fill-details");
     let promiseSubview = BrowserTestUtils.waitForEvent(details,
                                                        "transitionend", true,
                                                        e => e.target == details);
