@@ -33,6 +33,9 @@ float AccessibleCaret::sHeight = 0.0f;
 float AccessibleCaret::sMarginLeft = 0.0f;
 float AccessibleCaret::sBarWidth = 0.0f;
 
+NS_NAMED_LITERAL_STRING(AccessibleCaret::sCaretImageElementId, "image");
+NS_NAMED_LITERAL_STRING(AccessibleCaret::sSelectionBarElementId, "bar");
+
 #define AC_PROCESS_ENUM_TO_STREAM(e) case(e): aStream << #e; break;
 std::ostream&
 operator<<(std::ostream& aStream, const AccessibleCaret::Appearance& aAppearance)
@@ -220,8 +223,8 @@ AccessibleCaret::CreateCaretElement(nsIDocument* aDocument) const
 {
   // Content structure of AccessibleCaret
   // <div class="moz-accessiblecaret">  <- CaretElement()
-  //   <div class="image">              <- CaretImageElement()
-  //   <div class="bar">                <- SelectionBarElement()
+  //   <div id="image">                 <- CaretImageElement()
+  //   <div id="bar">                   <- SelectionBarElement()
 
   ErrorResult rv;
   nsCOMPtr<Element> parent = aDocument->CreateHTMLElement(nsGkAtoms::div);
@@ -229,13 +232,16 @@ AccessibleCaret::CreateCaretElement(nsIDocument* aDocument) const
   parent->ClassList()->Add(NS_LITERAL_STRING("none"), rv);
   parent->ClassList()->Add(NS_LITERAL_STRING("no-bar"), rv);
 
-  nsCOMPtr<Element> image = aDocument->CreateHTMLElement(nsGkAtoms::div);
-  image->ClassList()->Add(NS_LITERAL_STRING("image"), rv);
-  parent->AppendChildTo(image, false);
+  auto CreateAndAppendChildElement = [aDocument, &parent](
+    const nsLiteralString& aElementId)
+  {
+    nsCOMPtr<Element> child = aDocument->CreateHTMLElement(nsGkAtoms::div);
+    child->SetAttr(kNameSpaceID_None, nsGkAtoms::id, aElementId, true);
+    parent->AppendChildTo(child, false);
+  };
 
-  nsCOMPtr<Element> bar = aDocument->CreateHTMLElement(nsGkAtoms::div);
-  bar->ClassList()->Add(NS_LITERAL_STRING("bar"), rv);
-  parent->AppendChildTo(bar, false);
+  CreateAndAppendChildElement(sCaretImageElementId);
+  CreateAndAppendChildElement(sSelectionBarElementId);
 
   return parent.forget();
 }
