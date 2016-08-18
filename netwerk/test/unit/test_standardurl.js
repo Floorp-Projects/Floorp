@@ -305,6 +305,18 @@ add_test(function test_filterWhitespace()
 {
   var url = stringToURL(" \r\n\th\nt\rt\tp://ex\r\n\tample.com/path\r\n\t/\r\n\tto the/fil\r\n\te.e\r\n\txt?que\r\n\try#ha\r\n\tsh \r\n\t ");
   do_check_eq(url.spec, "http://example.com/path/to%20the/file.ext?query#hash");
+
+  // These setters should escape \r\n\t, not filter them.
+  var url = stringToURL("http://test.com/path?query#hash");
+  url.filePath = "pa\r\n\tth";
+  do_check_eq(url.spec, "http://test.com/pa%0D%0A%09th?query#hash");
+  url.query = "qu\r\n\tery";
+  do_check_eq(url.spec, "http://test.com/pa%0D%0A%09th?qu%0D%0A%09ery#hash");
+  url.ref = "ha\r\n\tsh";
+  do_check_eq(url.spec, "http://test.com/pa%0D%0A%09th?qu%0D%0A%09ery#ha%0D%0A%09sh");
+  url.fileName = "fi\r\n\tle.name";
+  do_check_eq(url.spec, "http://test.com/fi%0D%0A%09le.name?qu%0D%0A%09ery#ha%0D%0A%09sh");
+
   run_next_test();
 });
 
