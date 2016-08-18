@@ -54,7 +54,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(RootDirectoryReader)
 NS_INTERFACE_MAP_END_INHERITING(DirectoryReader)
 
 RootDirectoryReader::RootDirectoryReader(nsIGlobalObject* aGlobal,
-                                         DOMFileSystem* aFileSystem,
+                                         FileSystem* aFileSystem,
                                          const Sequence<RefPtr<Entry>>& aEntries)
   : DirectoryReader(aGlobal, aFileSystem, nullptr)
   , mEntries(aEntries)

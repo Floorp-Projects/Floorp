@@ -4,26 +4,26 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "DOMFileSystem.h"
+#include "FileSystem.h"
 #include "RootDirectoryEntry.h"
-#include "mozilla/dom/DOMFileSystemBinding.h"
+#include "mozilla/dom/FileSystemBinding.h"
 #include "nsContentUtils.h"
 
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(DOMFileSystem, mParent, mRoot)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(FileSystem, mParent, mRoot)
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF(DOMFileSystem)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(DOMFileSystem)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(FileSystem)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(FileSystem)
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DOMFileSystem)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(FileSystem)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-/* static */ already_AddRefed<DOMFileSystem>
-DOMFileSystem::Create(nsIGlobalObject* aGlobalObject)
+/* static */ already_AddRefed<FileSystem>
+FileSystem::Create(nsIGlobalObject* aGlobalObject)
 
 {
   MOZ_ASSERT(aGlobalObject);
@@ -42,31 +42,30 @@ DOMFileSystem::Create(nsIGlobalObject* aGlobalObject)
   // UUID in this format '{' + UUID + '}'. We remove them with these +1 and -2.
   nsAutoCString name(Substring(chars + 1, chars + NSID_LENGTH - 2));
 
-  RefPtr<DOMFileSystem> fs =
-    new DOMFileSystem(aGlobalObject, NS_ConvertUTF8toUTF16(name));
+  RefPtr<FileSystem> fs =
+    new FileSystem(aGlobalObject, NS_ConvertUTF8toUTF16(name));
 
   return fs.forget();
 }
 
-DOMFileSystem::DOMFileSystem(nsIGlobalObject* aGlobal,
-                             const nsAString& aName)
+FileSystem::FileSystem(nsIGlobalObject* aGlobal, const nsAString& aName)
   : mParent(aGlobal)
   , mName(aName)
 {
   MOZ_ASSERT(aGlobal);
 }
 
-DOMFileSystem::~DOMFileSystem()
+FileSystem::~FileSystem()
 {}
 
 JSObject*
-DOMFileSystem::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
+FileSystem::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return DOMFileSystemBinding::Wrap(aCx, this, aGivenProto);
+  return FileSystemBinding::Wrap(aCx, this, aGivenProto);
 }
 
 void
-DOMFileSystem::CreateRoot(const Sequence<RefPtr<Entry>>& aEntries)
+FileSystem::CreateRoot(const Sequence<RefPtr<Entry>>& aEntries)
 {
   MOZ_ASSERT(!mRoot);
   mRoot = new RootDirectoryEntry(mParent, aEntries, this);

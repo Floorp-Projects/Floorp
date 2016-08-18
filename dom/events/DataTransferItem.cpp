@@ -11,9 +11,9 @@
 #include "mozilla/dom/DataTransferItemBinding.h"
 #include "mozilla/dom/Directory.h"
 #include "mozilla/dom/DirectoryEntry.h"
-#include "mozilla/dom/DOMFileSystem.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/FileEntry.h"
+#include "mozilla/dom/FileSystem.h"
 #include "nsIClipboard.h"
 #include "nsISupportsPrimitives.h"
 #include "nsNetUtil.h"
@@ -308,7 +308,7 @@ DataTransferItem::GetAsEntry(ErrorResult& aRv)
     return nullptr;
   }
 
-  RefPtr<DOMFileSystem> fs = DOMFileSystem::Create(global);
+  RefPtr<FileSystem> fs = FileSystem::Create(global);
   RefPtr<Entry> entry;
   BlobImpl* impl = file->Impl();
   MOZ_ASSERT(impl);

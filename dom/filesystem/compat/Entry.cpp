@@ -25,7 +25,7 @@ NS_INTERFACE_MAP_END
 /* static */ already_AddRefed<Entry>
 Entry::Create(nsIGlobalObject* aGlobalObject,
               const OwningFileOrDirectory& aFileOrDirectory,
-              DOMFileSystem* aFileSystem)
+              FileSystem* aFileSystem)
 {
   MOZ_ASSERT(aGlobalObject);
   MOZ_ASSERT(aFileSystem);
@@ -45,7 +45,7 @@ Entry::Create(nsIGlobalObject* aGlobalObject,
   return entry.forget();
 }
 
-Entry::Entry(nsIGlobalObject* aGlobal, DOMFileSystem* aFileSystem)
+Entry::Entry(nsIGlobalObject* aGlobal, FileSystem* aFileSystem)
   : mParent(aGlobal)
   , mFileSystem(aFileSystem)
 {

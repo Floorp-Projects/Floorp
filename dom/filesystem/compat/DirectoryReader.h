@@ -19,7 +19,7 @@ namespace mozilla {
 namespace dom {
 
 class Directory;
-class DOMFileSystem;
+class FileSystem;
 
 class DirectoryReader
   : public nsISupports
@@ -30,7 +30,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(DirectoryReader)
 
   explicit DirectoryReader(nsIGlobalObject* aGlobalObject,
-                           DOMFileSystem* aFileSystem,
+                           FileSystem* aFileSystem,
                            Directory* aDirectory);
 
   nsIGlobalObject*
@@ -52,7 +52,7 @@ protected:
 
 private:
   nsCOMPtr<nsIGlobalObject> mParent;
-  RefPtr<DOMFileSystem> mFileSystem;
+  RefPtr<FileSystem> mFileSystem;
   RefPtr<Directory> mDirectory;
 
   bool mAlreadyRead;

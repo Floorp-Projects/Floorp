@@ -64,7 +64,7 @@ public:
   NS_DECL_ISUPPORTS
 
   GetEntryHelper(nsIGlobalObject* aGlobalObject,
-                 DOMFileSystem* aFileSystem,
+                 FileSystem* aFileSystem,
                  EntryCallback* aSuccessCallback,
                  ErrorCallback* aErrorCallback,
                  DirectoryEntry::GetInternalType aType);
@@ -82,7 +82,7 @@ private:
   Error(nsresult aError);
 
   nsCOMPtr<nsIGlobalObject> mGlobal;
-  RefPtr<DOMFileSystem> mFileSystem;
+  RefPtr<FileSystem> mFileSystem;
   RefPtr<EntryCallback> mSuccessCallback;
   RefPtr<ErrorCallback> mErrorCallback;
   DirectoryEntry::GetInternalType mType;

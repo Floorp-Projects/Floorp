@@ -15,7 +15,7 @@ interface Entry {
     [GetterThrows]
     readonly attribute DOMString fullPath;
 
-    readonly attribute DOMFileSystem filesystem;
+    readonly attribute FileSystem filesystem;
 
 /** Not implemented:
  *  void getMetadata(MetadataCallback successCallback, optional ErrorCallback errorCallback);
@@ -87,7 +87,7 @@ interface FileEntry : Entry {
 };
 
 [NoInterfaceObject]
-interface DOMFileSystem {
+interface FileSystem {
     readonly    attribute DOMString      name;
     readonly    attribute DirectoryEntry root;
 };
