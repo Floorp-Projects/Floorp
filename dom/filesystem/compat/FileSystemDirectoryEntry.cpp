@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "DirectoryEntry.h"
+#include "FileSystemDirectoryEntry.h"
 #include "CallbackRunnables.h"
 #include "DirectoryReader.h"
 #include "mozilla/dom/Directory.h"
@@ -13,48 +13,50 @@
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(DirectoryEntry, FileSystemEntry, mDirectory)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(FileSystemDirectoryEntry, FileSystemEntry,
+                                   mDirectory)
 
-NS_IMPL_ADDREF_INHERITED(DirectoryEntry, FileSystemEntry)
-NS_IMPL_RELEASE_INHERITED(DirectoryEntry, FileSystemEntry)
+NS_IMPL_ADDREF_INHERITED(FileSystemDirectoryEntry, FileSystemEntry)
+NS_IMPL_RELEASE_INHERITED(FileSystemDirectoryEntry, FileSystemEntry)
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(DirectoryEntry)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(FileSystemDirectoryEntry)
 NS_INTERFACE_MAP_END_INHERITING(FileSystemEntry)
 
-DirectoryEntry::DirectoryEntry(nsIGlobalObject* aGlobal,
-                               Directory* aDirectory,
-                               FileSystem* aFileSystem)
+FileSystemDirectoryEntry::FileSystemDirectoryEntry(nsIGlobalObject* aGlobal,
+                                                   Directory* aDirectory,
+                                                   FileSystem* aFileSystem)
   : FileSystemEntry(aGlobal, aFileSystem)
   , mDirectory(aDirectory)
 {
   MOZ_ASSERT(aGlobal);
 }
 
-DirectoryEntry::~DirectoryEntry()
+FileSystemDirectoryEntry::~FileSystemDirectoryEntry()
 {}
 
 JSObject*
-DirectoryEntry::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
+FileSystemDirectoryEntry::WrapObject(JSContext* aCx,
+                                     JS::Handle<JSObject*> aGivenProto)
 {
-  return DirectoryEntryBinding::Wrap(aCx, this, aGivenProto);
+  return FileSystemDirectoryEntryBinding::Wrap(aCx, this, aGivenProto);
 }
 
 void
-DirectoryEntry::GetName(nsAString& aName, ErrorResult& aRv) const
+FileSystemDirectoryEntry::GetName(nsAString& aName, ErrorResult& aRv) const
 {
   MOZ_ASSERT(mDirectory);
   mDirectory->GetName(aName, aRv);
 }
 
 void
-DirectoryEntry::GetFullPath(nsAString& aPath, ErrorResult& aRv) const
+FileSystemDirectoryEntry::GetFullPath(nsAString& aPath, ErrorResult& aRv) const
 {
   MOZ_ASSERT(mDirectory);
   mDirectory->GetPath(aPath, aRv);
 }
 
 already_AddRefed<DirectoryReader>
-DirectoryEntry::CreateReader() const
+FileSystemDirectoryEntry::CreateReader() const
 {
   MOZ_ASSERT(mDirectory);
 
@@ -64,10 +66,11 @@ DirectoryEntry::CreateReader() const
 }
 
 void
-DirectoryEntry::GetInternal(const nsAString& aPath, const FileSystemFlags& aFlag,
-                            const Optional<OwningNonNull<EntryCallback>>& aSuccessCallback,
-                            const Optional<OwningNonNull<ErrorCallback>>& aErrorCallback,
-                            GetInternalType aType) const
+FileSystemDirectoryEntry::GetInternal(const nsAString& aPath,
+                                      const FileSystemFlags& aFlag,
+                                      const Optional<OwningNonNull<EntryCallback>>& aSuccessCallback,
+                                      const Optional<OwningNonNull<ErrorCallback>>& aErrorCallback,
+                                      GetInternalType aType) const
 {
   MOZ_ASSERT(mDirectory);
 
@@ -107,8 +110,8 @@ DirectoryEntry::GetInternal(const nsAString& aPath, const FileSystemFlags& aFlag
 }
 
 void
-DirectoryEntry::RemoveRecursively(VoidCallback& aSuccessCallback,
-                                  const Optional<OwningNonNull<ErrorCallback>>& aErrorCallback) const
+FileSystemDirectoryEntry::RemoveRecursively(VoidCallback& aSuccessCallback,
+                                            const Optional<OwningNonNull<ErrorCallback>>& aErrorCallback) const
 {
   ErrorCallbackHelper::Call(GetParentObject(), aErrorCallback,
                             NS_ERROR_DOM_SECURITY_ERR);

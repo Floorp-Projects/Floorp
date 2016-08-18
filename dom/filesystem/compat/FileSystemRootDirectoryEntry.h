@@ -4,23 +4,23 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_RootDirectoryEntry_h
-#define mozilla_dom_RootDirectoryEntry_h
+#ifndef mozilla_dom_FileSystemRootDirectoryEntry_h
+#define mozilla_dom_FileSystemRootDirectoryEntry_h
 
-#include "mozilla/dom/DirectoryEntry.h"
+#include "mozilla/dom/FileSystemDirectoryEntry.h"
 
 namespace mozilla {
 namespace dom {
 
-class RootDirectoryEntry final : public DirectoryEntry
+class FileSystemRootDirectoryEntry final : public FileSystemDirectoryEntry
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(RootDirectoryEntry, DirectoryEntry)
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(FileSystemRootDirectoryEntry, FileSystemDirectoryEntry)
 
-  RootDirectoryEntry(nsIGlobalObject* aGlobalObject,
-                     const Sequence<RefPtr<FileSystemEntry>>& aEntries,
-                     FileSystem* aFileSystem);
+  FileSystemRootDirectoryEntry(nsIGlobalObject* aGlobalObject,
+                               const Sequence<RefPtr<FileSystemEntry>>& aEntries,
+                               FileSystem* aFileSystem);
 
   virtual void
   GetName(nsAString& aName, ErrorResult& aRv) const override;
@@ -32,7 +32,7 @@ public:
   CreateReader() const override;
 
 private:
-  ~RootDirectoryEntry();
+  ~FileSystemRootDirectoryEntry();
 
   virtual void
   GetInternal(const nsAString& aPath, const FileSystemFlags& aFlag,
@@ -50,4 +50,4 @@ private:
 } // namespace dom
 } // namespace mozilla
 
-#endif // mozilla_dom_RootDirectoryEntry_h
+#endif // mozilla_dom_FileSystemRootDirectoryEntry_h

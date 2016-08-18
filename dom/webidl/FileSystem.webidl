@@ -19,8 +19,8 @@ interface FileSystemEntry {
 
 /** Not implemented:
  *  void getMetadata(MetadataCallback successCallback, optional ErrorCallback errorCallback);
- *  void moveTo(DirectoryEntry parent, optional DOMString? name, optional EntryCallback successCallback, optional ErrorCallback errorCallback);
- *  void copyTo(DirectoryEntry parent, optional DOMString? name, optional EntryCallback successCallback, optional ErrorCallback errorCallback);
+ *  void moveTo(FileSystemDirectoryEntry parent, optional DOMString? name, optional EntryCallback successCallback, optional ErrorCallback errorCallback);
+ *  void copyTo(FileSystemDirectoryEntry parent, optional DOMString? name, optional EntryCallback successCallback, optional ErrorCallback errorCallback);
  *  DOMString toURL();
  *  void remove(VoidCallback successCallback, optional ErrorCallback errorCallback);
  *  void getParent(optional EntryCallback successCallback, optional ErrorCallback errorCallback);
@@ -41,7 +41,7 @@ callback interface VoidCallback {
 };
 
 [NoInterfaceObject]
-interface DirectoryEntry : FileSystemEntry {
+interface FileSystemDirectoryEntry : FileSystemEntry {
     DirectoryReader createReader();
 
     void getFile(DOMString? path, optional FileSystemFlags options, optional EntryCallback successCallback, optional ErrorCallback errorCallback);
@@ -88,6 +88,6 @@ interface FileSystemFileEntry : FileSystemEntry {
 
 [NoInterfaceObject]
 interface FileSystem {
-    readonly    attribute DOMString      name;
-    readonly    attribute DirectoryEntry root;
+    readonly    attribute DOMString name;
+    readonly    attribute FileSystemDirectoryEntry root;
 };

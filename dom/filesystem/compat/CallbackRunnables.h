@@ -7,7 +7,7 @@
 #ifndef mozilla_dom_ErrorCallbackRunnable_h
 #define mozilla_dom_ErrorCallbackRunnable_h
 
-#include "DirectoryEntry.h"
+#include "FileSystemDirectoryEntry.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/PromiseNativeHandler.h"
 
@@ -67,7 +67,7 @@ public:
                  FileSystem* aFileSystem,
                  EntryCallback* aSuccessCallback,
                  ErrorCallback* aErrorCallback,
-                 DirectoryEntry::GetInternalType aType);
+                 FileSystemDirectoryEntry::GetInternalType aType);
 
   virtual void
   ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override;
@@ -85,7 +85,7 @@ private:
   RefPtr<FileSystem> mFileSystem;
   RefPtr<EntryCallback> mSuccessCallback;
   RefPtr<ErrorCallback> mErrorCallback;
-  DirectoryEntry::GetInternalType mType;
+  FileSystemDirectoryEntry::GetInternalType mType;
 };
 
 class ErrorCallbackHelper

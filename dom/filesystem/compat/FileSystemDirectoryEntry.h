@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_DirectoryEntry_h
-#define mozilla_dom_DirectoryEntry_h
+#ifndef mozilla_dom_FileSystemDirectoryEntry_h
+#define mozilla_dom_FileSystemDirectoryEntry_h
 
 #include "mozilla/dom/FileSystemBinding.h"
 #include "mozilla/dom/FileSystemEntry.h"
@@ -15,14 +15,16 @@ namespace dom {
 
 class Directory;
 
-class DirectoryEntry : public FileSystemEntry
+class FileSystemDirectoryEntry : public FileSystemEntry
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(DirectoryEntry, FileSystemEntry)
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(FileSystemDirectoryEntry,
+                                           FileSystemEntry)
 
-  DirectoryEntry(nsIGlobalObject* aGlobalObject, Directory* aDirectory,
-                 FileSystem* aFileSystem);
+  FileSystemDirectoryEntry(nsIGlobalObject* aGlobalObject,
+                          Directory* aDirectory,
+                          FileSystem* aFileSystem);
 
   virtual JSObject*
   WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
@@ -71,7 +73,7 @@ public:
               GetInternalType aType) const;
 
 protected:
-  virtual ~DirectoryEntry();
+  virtual ~FileSystemDirectoryEntry();
 
 private:
   RefPtr<Directory> mDirectory;
@@ -80,4 +82,4 @@ private:
 } // namespace dom
 } // namespace mozilla
 
-#endif // mozilla_dom_DirectoryEntry_h
+#endif // mozilla_dom_FileSystemDirectoryEntry_h

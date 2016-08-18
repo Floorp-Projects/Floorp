@@ -18,7 +18,7 @@ class nsIGlobalObject;
 namespace mozilla {
 namespace dom {
 
-class DirectoryEntry;
+class FileSystemDirectoryEntry;
 class FileSystemEntry;
 class OwningFileOrDirectory;
 
@@ -48,7 +48,7 @@ public:
     aName = mName;
   }
 
-  DirectoryEntry*
+  FileSystemDirectoryEntry*
   Root() const
   {
     return mRoot;
@@ -63,7 +63,7 @@ private:
   ~FileSystem();
 
   nsCOMPtr<nsIGlobalObject> mParent;
-  RefPtr<DirectoryEntry> mRoot;
+  RefPtr<FileSystemDirectoryEntry> mRoot;
   nsString mName;
 };
 

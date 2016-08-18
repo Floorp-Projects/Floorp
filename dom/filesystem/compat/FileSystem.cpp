@@ -5,7 +5,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "FileSystem.h"
-#include "RootDirectoryEntry.h"
+#include "FileSystemRootDirectoryEntry.h"
 #include "mozilla/dom/FileSystemBinding.h"
 #include "nsContentUtils.h"
 
@@ -68,7 +68,7 @@ void
 FileSystem::CreateRoot(const Sequence<RefPtr<FileSystemEntry>>& aEntries)
 {
   MOZ_ASSERT(!mRoot);
-  mRoot = new RootDirectoryEntry(mParent, aEntries, this);
+  mRoot = new FileSystemRootDirectoryEntry(mParent, aEntries, this);
 }
 
 } // dom namespace
