@@ -16,7 +16,7 @@ namespace {
 class EntriesCallbackRunnable final : public Runnable
 {
 public:
-  EntriesCallbackRunnable(EntriesCallback* aCallback,
+  EntriesCallbackRunnable(FileSystemEntriesCallback* aCallback,
                           const Sequence<RefPtr<FileSystemEntry>>& aEntries)
     : mCallback(aCallback)
     , mEntries(aEntries)
@@ -39,7 +39,7 @@ public:
   }
 
 private:
-  RefPtr<EntriesCallback> mCallback;
+  RefPtr<FileSystemEntriesCallback> mCallback;
   Sequence<RefPtr<FileSystemEntry>> mEntries;
 };
 
@@ -71,7 +71,7 @@ FileSystemRootDirectoryReader::~FileSystemRootDirectoryReader()
 {}
 
 void
-FileSystemRootDirectoryReader::ReadEntries(EntriesCallback& aSuccessCallback,
+FileSystemRootDirectoryReader::ReadEntries(FileSystemEntriesCallback& aSuccessCallback,
                                            const Optional<OwningNonNull<ErrorCallback>>& aErrorCallback,
                                            ErrorResult& aRv)
 {

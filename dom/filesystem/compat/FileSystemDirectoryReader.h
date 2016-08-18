@@ -43,7 +43,7 @@ public:
   WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   virtual void
-  ReadEntries(EntriesCallback& aSuccessCallback,
+  ReadEntries(FileSystemEntriesCallback& aSuccessCallback,
               const Optional<OwningNonNull<ErrorCallback>>& aErrorCallback,
               ErrorResult& aRv);
 

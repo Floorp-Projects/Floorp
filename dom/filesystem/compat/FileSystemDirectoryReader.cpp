@@ -26,7 +26,7 @@ public:
 
   PromiseHandler(nsIGlobalObject* aGlobalObject,
                  FileSystem* aFileSystem,
-                 EntriesCallback* aSuccessCallback,
+                 FileSystemEntriesCallback* aSuccessCallback,
                  ErrorCallback* aErrorCallback)
     : mGlobal(aGlobalObject)
     , mFileSystem(aFileSystem)
@@ -108,7 +108,7 @@ private:
 
   nsCOMPtr<nsIGlobalObject> mGlobal;
   RefPtr<FileSystem> mFileSystem;
-  RefPtr<EntriesCallback> mSuccessCallback;
+  RefPtr<FileSystemEntriesCallback> mSuccessCallback;
   RefPtr<ErrorCallback> mErrorCallback;
 };
 
@@ -150,7 +150,7 @@ FileSystemDirectoryReader::WrapObject(JSContext* aCx,
 }
 
 void
-FileSystemDirectoryReader::ReadEntries(EntriesCallback& aSuccessCallback,
+FileSystemDirectoryReader::ReadEntries(FileSystemEntriesCallback& aSuccessCallback,
                                        const Optional<OwningNonNull<ErrorCallback>>& aErrorCallback,
                                        ErrorResult& aRv)
 {

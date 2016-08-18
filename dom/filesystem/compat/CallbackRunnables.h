@@ -19,14 +19,14 @@ namespace dom {
 class EntryCallbackRunnable final : public Runnable
 {
 public:
-  EntryCallbackRunnable(EntryCallback* aCallback,
+  EntryCallbackRunnable(FileSystemEntryCallback* aCallback,
                         FileSystemEntry* aEntry);
 
   NS_IMETHOD
   Run() override;
 
 private:
-  RefPtr<EntryCallback> mCallback;
+  RefPtr<FileSystemEntryCallback> mCallback;
   RefPtr<FileSystemEntry> mEntry;
 };
 
@@ -49,13 +49,13 @@ private:
 class EmptyEntriesCallbackRunnable final : public Runnable
 {
 public:
-  explicit EmptyEntriesCallbackRunnable(EntriesCallback* aCallback);
+  explicit EmptyEntriesCallbackRunnable(FileSystemEntriesCallback* aCallback);
 
   NS_IMETHOD
   Run() override;
 
 private:
-  RefPtr<EntriesCallback> mCallback;
+  RefPtr<FileSystemEntriesCallback> mCallback;
 };
 
 class GetEntryHelper final : public PromiseNativeHandler
@@ -65,7 +65,7 @@ public:
 
   GetEntryHelper(nsIGlobalObject* aGlobalObject,
                  FileSystem* aFileSystem,
-                 EntryCallback* aSuccessCallback,
+                 FileSystemEntryCallback* aSuccessCallback,
                  ErrorCallback* aErrorCallback,
                  FileSystemDirectoryEntry::GetInternalType aType);
 
@@ -83,7 +83,7 @@ private:
 
   nsCOMPtr<nsIGlobalObject> mGlobal;
   RefPtr<FileSystem> mFileSystem;
-  RefPtr<EntryCallback> mSuccessCallback;
+  RefPtr<FileSystemEntryCallback> mSuccessCallback;
   RefPtr<ErrorCallback> mErrorCallback;
   FileSystemDirectoryEntry::GetInternalType mType;
 };
