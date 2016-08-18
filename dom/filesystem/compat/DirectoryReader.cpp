@@ -6,7 +6,7 @@
 
 #include "DirectoryReader.h"
 #include "CallbackRunnables.h"
-#include "FileEntry.h"
+#include "FileSystemFileEntry.h"
 #include "mozilla/dom/FileBinding.h"
 #include "mozilla/dom/Directory.h"
 #include "mozilla/dom/DirectoryBinding.h"
@@ -71,7 +71,8 @@ public:
 
       RefPtr<File> file;
       if (NS_SUCCEEDED(UNWRAP_OBJECT(File, valueObj, file))) {
-        RefPtr<FileEntry> entry = new FileEntry(mGlobal, file, mFileSystem);
+        RefPtr<FileSystemFileEntry> entry =
+          new FileSystemFileEntry(mGlobal, file, mFileSystem);
         sequence[i] = entry;
         continue;
       }

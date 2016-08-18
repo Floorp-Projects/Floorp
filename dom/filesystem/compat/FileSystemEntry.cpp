@@ -6,7 +6,7 @@
 
 #include "FileSystemEntry.h"
 #include "DirectoryEntry.h"
-#include "FileEntry.h"
+#include "FileSystemFileEntry.h"
 #include "mozilla/dom/UnionTypes.h"
 
 namespace mozilla {
@@ -32,9 +32,9 @@ FileSystemEntry::Create(nsIGlobalObject* aGlobalObject,
 
   RefPtr<FileSystemEntry> entry;
   if (aFileOrDirectory.IsFile()) {
-    entry = new FileEntry(aGlobalObject,
-                          aFileOrDirectory.GetAsFile(),
-                          aFileSystem);
+    entry = new FileSystemFileEntry(aGlobalObject,
+                                    aFileOrDirectory.GetAsFile(),
+                                    aFileSystem);
   } else {
     MOZ_ASSERT(aFileOrDirectory.IsDirectory());
     entry = new DirectoryEntry(aGlobalObject,

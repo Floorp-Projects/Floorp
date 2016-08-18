@@ -9,18 +9,18 @@ TEST_DIRS += ['tests']
 EXPORTS.mozilla.dom += [
     'DirectoryEntry.h',
     'DirectoryReader.h',
-    'FileEntry.h',
     'FileSystem.h',
     'FileSystemEntry.h',
+    'FileSystemFileEntry.h',
 ]
 
 UNIFIED_SOURCES += [
     'CallbackRunnables.cpp',
     'DirectoryEntry.cpp',
     'DirectoryReader.cpp',
-    'FileEntry.cpp',
     'FileSystem.cpp',
     'FileSystemEntry.cpp',
+    'FileSystemFileEntry.cpp',
     'RootDirectoryEntry.cpp',
     'RootDirectoryReader.cpp',
 ]
