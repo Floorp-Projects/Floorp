@@ -23,7 +23,12 @@ exports.stubConsoleMessages = new Map([
       parameters: ["foobar", "test"],
       repeat: 1,
       repeatId: null,
-      stacktrace: undefined
+      stacktrace: undefined,
+      frame: {
+        source: "file:///test.html",
+        line: 1,
+        column: 1
+      }
     })
   ],
   [

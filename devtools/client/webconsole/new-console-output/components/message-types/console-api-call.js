@@ -12,6 +12,7 @@ const {
   DOM: dom,
   PropTypes
 } = require("devtools/client/shared/vendor/react");
+const FrameView = createFactory(require("devtools/client/shared/components/frame"));
 const StackTrace = createFactory(require("devtools/client/shared/components/stack-trace"));
 const GripMessageBody = createFactory(require("devtools/client/webconsole/new-console-output/components/grip-message-body").GripMessageBody);
 const MessageRepeat = createFactory(require("devtools/client/webconsole/new-console-output/components/message-repeat").MessageRepeat);
@@ -21,13 +22,13 @@ ConsoleApiCall.displayName = "ConsoleApiCall";
 
 ConsoleApiCall.propTypes = {
   message: PropTypes.object.isRequired,
+  sourceMapService: PropTypes.object,
   onViewSourceInDebugger: PropTypes.func.isRequired,
 };
 
 function ConsoleApiCall(props) {
-  const { message, onViewSourceInDebugger } = props;
-  const {source, level, stacktrace, type} = message;
-
+  const { message, sourceMapService, onViewSourceInDebugger } = props;
+  const { source, level, stacktrace, type, frame } = message;
   let messageBody;
   if (type === "trace") {
     messageBody = dom.span({className: "cm-variable"}, "console.trace()");
@@ -64,6 +65,7 @@ function ConsoleApiCall(props) {
     classes.push("open");
   }
 
+  const shouldRenderFrame = frame && frame.source !== "debugger eval code";
   return dom.div({
     className: classes.join(" ")
   },
@@ -76,7 +78,15 @@ function ConsoleApiCall(props) {
           dom.span({className: "message-body devtools-monospace"},
             messageBody
           ),
-          repeat
+          repeat,
+          dom.span({ className: "message-location devtools-monospace" },
+            shouldRenderFrame ? FrameView({
+              frame,
+              onClick: onViewSourceInDebugger,
+              showEmptyPathAsHost: true,
+              sourceMapService
+            }) : null
+          )
         ),
         attachment
       )

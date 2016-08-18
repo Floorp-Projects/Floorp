@@ -31,6 +31,7 @@ const MessageContainer = createClass({
 
   propTypes: {
     message: PropTypes.object.isRequired,
+    sourceMapService: PropTypes.object,
     onViewSourceInDebugger: PropTypes.func.isRequired,
   },
 
@@ -39,9 +40,9 @@ const MessageContainer = createClass({
   },
 
   render() {
-    const { message, onViewSourceInDebugger } = this.props;
+    const { message, sourceMapService, onViewSourceInDebugger } = this.props;
     let MessageComponent = createFactory(getMessageComponent(message));
-    return MessageComponent({ message, onViewSourceInDebugger });
+    return MessageComponent({ message, sourceMapService, onViewSourceInDebugger });
   }
 });
 
