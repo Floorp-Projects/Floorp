@@ -61,14 +61,17 @@ OggWriter::WriteEncodedTrack(const EncodedFrameContainer& aData,
   PROFILER_LABEL("OggWriter", "WriteEncodedTrack",
     js::ProfileEntry::Category::OTHER);
 
-  for (uint32_t i = 0; i < aData.GetEncodedFrames().Length(); i++) {
+  uint32_t len = aData.GetEncodedFrames().Length();
+  for (uint32_t i = 0; i < len; i++) {
     if (aData.GetEncodedFrames()[i]->GetFrameType() != EncodedFrame::OPUS_AUDIO_FRAME) {
       LOG("[OggWriter] wrong encoded data type!");
       return NS_ERROR_FAILURE;
     }
 
+    // only pass END_OF_STREAM on the last frame!
     nsresult rv = WriteEncodedData(aData.GetEncodedFrames()[i]->GetFrameData(),
                                    aData.GetEncodedFrames()[i]->GetDuration(),
+                                   i < len-1 ? (aFlags & ~ContainerWriter::END_OF_STREAM) :
                                    aFlags);
     if (NS_FAILED(rv)) {
       LOG("%p Failed to WriteEncodedTrack!", this);
