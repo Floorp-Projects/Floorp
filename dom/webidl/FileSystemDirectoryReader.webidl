@@ -8,7 +8,6 @@ callback interface FileSystemEntriesCallback {
     void handleEvent(sequence<FileSystemEntry> entries);
 };
 
-[NoInterfaceObject]
 interface FileSystemDirectoryReader {
 
     // readEntries can be called just once. The second time it returns no data.

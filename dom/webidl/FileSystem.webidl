@@ -23,7 +23,6 @@ callback interface ErrorCallback {
     void handleEvent(DOMError error);
 };
 
-[NoInterfaceObject]
 interface FileSystem {
     readonly    attribute DOMString name;
     readonly    attribute FileSystemDirectoryEntry root;
