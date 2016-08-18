@@ -41,11 +41,7 @@ add_task(function* shift_left_click_test() {
 
   // Wait for the initial browser to load.
   let browser = win.gBrowser.selectedBrowser;
-  let destinationURL = "http://" + TEST_VALUE + "/";
-  yield Promise.all([
-    BrowserTestUtils.browserLoaded(browser),
-    BrowserTestUtils.waitForLocationChange(win.gBrowser, destinationURL)
-  ]);
+  yield BrowserTestUtils.browserLoaded(browser);
 
   info("URL should be loaded in a new window");
   is(gURLBar.value, "", "Urlbar reverted to original value");
