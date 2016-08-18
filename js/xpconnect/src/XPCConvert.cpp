@@ -820,8 +820,9 @@ XPCConvert::NativeInterface2JSObject(MutableHandleValue d,
     }
 
     // Go ahead and create an XPCWrappedNative for this object.
-    RefPtr<XPCNativeInterface> iface =
-        XPCNativeInterface::GetNewOrUsed(iid);
+    AutoMarkingNativeInterfacePtr iface(cx);
+
+    iface = XPCNativeInterface::GetNewOrUsed(iid);
     if (!iface)
         return false;
 

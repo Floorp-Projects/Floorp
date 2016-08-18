@@ -222,7 +222,7 @@ DefinePropertyIfFound(XPCCallContext& ccx,
                       HandleObject obj,
                       HandleId idArg,
                       XPCNativeSet* set,
-                      XPCNativeInterface* ifaceArg,
+                      XPCNativeInterface* iface,
                       XPCNativeMember* member,
                       XPCWrappedNativeScope* scope,
                       bool reflectToStringAndToSource,
@@ -233,7 +233,6 @@ DefinePropertyIfFound(XPCCallContext& ccx,
                       bool* resolved)
 {
     RootedId id(ccx, idArg);
-    RefPtr<XPCNativeInterface> iface = ifaceArg;
     XPCJSRuntime* rt = ccx.GetRuntime();
     bool found;
     const char* name;
@@ -306,7 +305,7 @@ DefinePropertyIfFound(XPCCallContext& ccx,
 
         if (wrapperToReflectInterfaceNames) {
             JSAutoByteString name;
-            RefPtr<XPCNativeInterface> iface2;
+            AutoMarkingNativeInterfacePtr iface2(ccx);
             XPCWrappedNativeTearOff* to;
             RootedObject jso(ccx);
             nsresult rv = NS_OK;
@@ -835,7 +834,7 @@ XPC_WN_Helper_Resolve(JSContext* cx, HandleObject obj, HandleId id, bool* resolv
         XPCNativeSet* protoSet = wrapper->HasProto() ?
                                     wrapper->GetProto()->GetSet() : nullptr;
         XPCNativeMember* member;
-        RefPtr<XPCNativeInterface> iface;
+        XPCNativeInterface* iface;
         bool IsLocal;
 
         if (set->FindMember(id, &member, &iface, protoSet, &IsLocal) &&
@@ -1133,7 +1132,7 @@ XPC_WN_CallMethod(JSContext* cx, unsigned argc, Value* vp)
     XPCWrappedNative* wrapper = ccx.GetWrapper();
     THROW_AND_RETURN_IF_BAD_WRAPPER(cx, wrapper);
 
-    RefPtr<XPCNativeInterface> iface;
+    XPCNativeInterface* iface;
     XPCNativeMember*    member;
 
     if (!XPCNativeMember::GetCallInfo(funobj, &iface, &member))
@@ -1159,7 +1158,7 @@ XPC_WN_GetterSetter(JSContext* cx, unsigned argc, Value* vp)
     XPCWrappedNative* wrapper = ccx.GetWrapper();
     THROW_AND_RETURN_IF_BAD_WRAPPER(cx, wrapper);
 
-    RefPtr<XPCNativeInterface> iface;
+    XPCNativeInterface* iface;
     XPCNativeMember*    member;
 
     if (!XPCNativeMember::GetCallInfo(funobj, &iface, &member))
