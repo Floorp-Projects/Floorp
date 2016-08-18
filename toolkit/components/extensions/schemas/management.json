@@ -198,7 +198,6 @@
       {
         "name": "getSelf",
         "type": "function",
-        "unsupported": true,
         "description": "Returns information about the calling extension. Note: This function can be used without requesting the 'management' permission in the manifest.",
         "async": "callback",
         "parameters": [
