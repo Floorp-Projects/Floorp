@@ -272,7 +272,7 @@ template<class Impl>
 class GeckoThread::Natives : public mozilla::jni::NativeImpl<GeckoThread, Impl>
 {
 public:
-    static const JNINativeMethod methods[5];
+    static const JNINativeMethod methods[6];
 };
 
 template<class Impl>
@@ -289,6 +289,10 @@ const JNINativeMethod GeckoThread::Natives<Impl>::methods[] = {
     mozilla::jni::MakeNativeMethod<GeckoThread::OnResume_t>(
             mozilla::jni::NativeStub<GeckoThread::OnResume_t, Impl>
             ::template Wrap<&Impl::OnResume>),
+
+    mozilla::jni::MakeNativeMethod<GeckoThread::RunUiThreadCallback_t>(
+            mozilla::jni::NativeStub<GeckoThread::RunUiThreadCallback_t, Impl>
+            ::template Wrap<&Impl::RunUiThreadCallback>),
 
     mozilla::jni::MakeNativeMethod<GeckoThread::SpeculativeConnect_t>(
             mozilla::jni::NativeStub<GeckoThread::SpeculativeConnect_t, Impl>
