@@ -208,7 +208,6 @@ def old_configure_options(*options):
     '--enable-oom-breakpoint',
     '--enable-optimize',
     '--enable-parental-controls',
-    '--enable-permissions',
     '--enable-pie',
     '--enable-png-arm-neon-support',
     '--enable-posix-nspr-emulation',

@@ -2344,7 +2344,6 @@ VPX_X86_ASM=
 VPX_ARM_ASM=
 LIBJPEG_TURBO_AS=
 LIBJPEG_TURBO_ASFLAGS=
-MOZ_PERMISSIONS=1
 MOZ_PREF_EXTENSIONS=1
 MOZ_REFLOW_PERF=
 MOZ_SAFE_BROWSING=
@@ -3335,20 +3334,6 @@ if test -n "$MOZ_PULSEAUDIO"; then
 fi
 
 AC_SUBST(MOZ_PULSEAUDIO)
-
-dnl ========================================================
-dnl Permissions System
-dnl ========================================================
-MOZ_ARG_DISABLE_BOOL(permissions,
-[  --disable-permissions   Disable permissions (popup and cookie blocking)],
-    MOZ_PERMISSIONS=,
-    MOZ_PERMISSIONS=1
-)
-
-AC_SUBST(MOZ_PERMISSIONS)
-if test -n "$MOZ_PERMISSIONS"; then
-    AC_DEFINE(MOZ_PERMISSIONS)
-fi
 
 dnl ========================================================
 dnl NegotiateAuth
