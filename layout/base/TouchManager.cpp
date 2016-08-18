@@ -173,6 +173,10 @@ TouchManager::PreHandleEvent(WidgetEvent* aEvent,
           touches.RemoveElementAt(i);
           continue;
         }
+        nsCOMPtr<nsINode> targetNode(do_QueryInterface(targetPtr));
+        if (!targetNode->IsInComposedDoc()) {
+          targetPtr = do_QueryInterface(info.mNonAnonymousTarget);
+        }
         touch->SetTarget(targetPtr);
 
         info.mTouch = touch;
@@ -228,6 +232,10 @@ TouchManager::PreHandleEvent(WidgetEvent* aEvent,
           continue;
         }
         nsCOMPtr<EventTarget> targetPtr = info.mTouch->mTarget;
+        nsCOMPtr<nsINode> targetNode(do_QueryInterface(targetPtr));
+        if (!targetNode->IsInComposedDoc()) {
+          targetPtr = do_QueryInterface(info.mNonAnonymousTarget);
+        }
 
         aCurrentEventContent = do_QueryInterface(targetPtr);
         touch->SetTarget(targetPtr);

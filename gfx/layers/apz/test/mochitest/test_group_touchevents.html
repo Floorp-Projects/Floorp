@@ -50,6 +50,11 @@ var subtests = [
   {'file': 'helper_scrollto_tap.html?true', 'prefs': [["apz.paint_skipping.enabled", true]], 'dp_suppression': false},
   {'file': 'helper_scrollto_tap.html?false', 'prefs': [["apz.paint_skipping.enabled", false]], 'dp_suppression': false},
 
+  // Taps on media elements to make sure the touchend event is delivered
+  // properly. We increase the long-tap timeout to ensure it doesn't get trip
+  // during the tap.
+  {'file': 'helper_bug1162771.html', 'prefs': [["ui.click_hold_context_menus.delay", 10000]]},
+
   // For the long-tap test, reduce the content response timeout because the touchstart
   // event doesn't get processed (because of the event listener) until this expires.
   // Once we support passive event listeners, we can use that instead and stop mucking
