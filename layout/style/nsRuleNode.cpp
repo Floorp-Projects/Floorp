@@ -1302,9 +1302,9 @@ static void SetStyleImage(nsStyleContext* aStyleContext,
         imageURI->EqualsExceptRef(docURI, &isEqualExceptRef);
       }
 
-      NS_ASSERTION(aStyleContext->IsStyleIfVisited() || isEqualExceptRef ||
-                   isLocalRef,
-                   "unexpected unit; maybe nsCSSValue::Image::Image() failed?");
+      MOZ_ASSERT(aStyleContext->IsStyleIfVisited() || isEqualExceptRef ||
+                 isLocalRef,
+                 "unexpected unit; maybe nsCSSValue::Image::Image() failed?");
 #endif
 
       break;
