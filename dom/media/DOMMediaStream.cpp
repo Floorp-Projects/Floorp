@@ -203,13 +203,13 @@ public:
   {
     if (aTrackEvents & TrackEventCommand::TRACK_EVENT_CREATED) {
       nsCOMPtr<nsIRunnable> runnable =
-        NewRunnableMethod<TrackID, MediaSegment::Type, MediaStream*, TrackID>(
+        NewRunnableMethod<TrackID, MediaSegment::Type, RefPtr<MediaStream>, TrackID>(
           this, &OwnedStreamListener::DoNotifyTrackCreated,
           aID, aQueuedMedia.GetType(), aInputStream, aInputTrackID);
       aGraph->DispatchToMainThreadAfterStreamStateUpdate(runnable.forget());
     } else if (aTrackEvents & TrackEventCommand::TRACK_EVENT_ENDED) {
       nsCOMPtr<nsIRunnable> runnable =
-        NewRunnableMethod<MediaStream*, TrackID, TrackID>(
+        NewRunnableMethod<RefPtr<MediaStream>, TrackID, TrackID>(
           this, &OwnedStreamListener::DoNotifyTrackEnded,
           aInputStream, aInputTrackID, aID);
       aGraph->DispatchToMainThreadAfterStreamStateUpdate(runnable.forget());
@@ -297,7 +297,7 @@ public:
   {
     if (aTrackEvents & TrackEventCommand::TRACK_EVENT_ENDED) {
       nsCOMPtr<nsIRunnable> runnable =
-        NewRunnableMethod<StorensRefPtrPassByPtr<MediaStream>, TrackID>(
+        NewRunnableMethod<RefPtr<MediaStream>, TrackID>(
           this, &PlaybackStreamListener::DoNotifyTrackEnded, aInputStream, aInputTrackID);
       aGraph->DispatchToMainThreadAfterStreamStateUpdate(runnable.forget());
     }
