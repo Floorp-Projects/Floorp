@@ -36,6 +36,7 @@ var gSmallTests = [
   { name:"vp9.webm", type:"video/webm", width:320, height:240, duration:4 },
   { name:"detodos.opus", type:"audio/ogg; codecs=opus", duration:2.9135 },
   { name:"gizmo.mp4", type:"video/mp4", width:560, height:320, duration:5.56 },
+  { name:"flac-s24.flac", type:"audio/flac", duration:4.04 },
   { name:"bogus.duh", type:"bogus/duh" }
 ];
 
@@ -86,7 +87,7 @@ var gPlayedTests = [
   // Disable vbr.mp3 to see if it reduces the error of AUDCLNT_E_CPUUSAGE_EXCEEDED.
   // See bug 1110922 comment 26.
   //{ name:"vbr.mp3", type:"audio/mpeg", duration:10.0 },
-  { name:"bug495794.ogg", type:"audio/ogg", duration:0.3 }
+  { name:"bug495794.ogg", type:"audio/ogg", duration:0.3 },
 ];
 
 // Used by test_mozLoadFrom.  Need one test file per decoder backend, plus
@@ -119,6 +120,7 @@ var gTrackTests = [
   { name:"320x240.ogv", type:"video/ogg", width:320, height:240, duration:0.266, size:28942, hasAudio:false, hasVideo:true },
   { name:"short-video.ogv", type:"video/ogg", duration:1.081, hasAudio:true, hasVideo:true },
   { name:"seek.webm", type:"video/webm", duration:3.966, size:215529, hasAudio:false, hasVideo:true },
+  { name:"flac-s24.flac", type:"audio/flac", duration:4.04, hasAudio:true, hasVideo:false },
   { name:"bogus.duh", type:"bogus/duh" }
 ];
 
@@ -271,6 +273,13 @@ var gPlayTests = [
   // there is really only one second worth of data. We want MP3FrameParser to
   // trust the header, so this should be reported as 10 seconds.
   { name:"vbr-head.mp3", type:"audio/mpeg", duration:10.00 },
+
+  // A flac file where the STREAMINFO block was removed.
+  // It is necessary to parse the file to find an audio frame instead.
+  { name:"flac-noheader-s16.flac", type:"audio/flac", duration:4.0 },
+  { name:"flac-s24.flac", type:"audio/flac", duration:4.04 },
+  // Ogg with theora video and flac audio.
+  { name:"A4.ogv", type:"video/ogg", width:320, height:240, duration:3.13 },
 
   // Invalid file
   { name:"bogus.duh", type:"bogus/duh", duration:Number.NaN },
