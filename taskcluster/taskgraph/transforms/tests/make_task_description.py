@@ -125,9 +125,10 @@ def docker_worker_setup(config, test, taskdesc):
                                          'public/build/mozharness.zip')
 
     taskdesc['worker-type'] = {
-        'default': 'aws-provisioner-v1/desktop-test',
+        'default': 'aws-provisioner-v1/desktop-test-large',
         'large': 'aws-provisioner-v1/desktop-test-large',
         'xlarge': 'aws-provisioner-v1/desktop-test-xlarge',
+        'legacy': 'aws-provisioner-v1/desktop-test',
     }[test['instance-size']]
 
     worker = taskdesc['worker'] = {}

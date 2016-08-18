@@ -44,7 +44,6 @@ task:
     treeherder:
         machine:
             platform: lint
-        groupSymbol: tc
         symbol: MH
     treeherderEnv:
         - production

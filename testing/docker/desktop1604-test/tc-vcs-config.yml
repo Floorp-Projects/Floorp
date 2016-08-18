@@ -5,7 +5,7 @@ hg: hg
 
 repoCache:
   # Repo url to clone when running repo init..
-  repoUrl: https://git.mozilla.org/external/google/gerrit/git-repo.git
+  repoUrl: https://gerrit.googlesource.com/git-repo.git
   # Version of repo to utilize...
   repoRevision: master
   # The root where all downloaded cache files are stored on the local machine...

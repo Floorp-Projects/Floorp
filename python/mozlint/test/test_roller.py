@@ -63,7 +63,7 @@ class TestLintRoller(TestCase):
         sys.stderr = old_stderr
 
     def test_roll_with_excluded_path(self):
-        self.lint.lintargs = {'exclude': ['**/foobar.js']}
+        self.lint.lintargs.update({'exclude': ['**/foobar.js']})
 
         self.lint.read(self.linters)
         result = self.lint.roll(self.files)
