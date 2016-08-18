@@ -46,7 +46,7 @@ public:
 
   void
   GetFile(const nsAString& aPath, const FileSystemFlags& aFlag,
-          const Optional<OwningNonNull<EntryCallback>>& aSuccessCallback,
+          const Optional<OwningNonNull<FileSystemEntryCallback>>& aSuccessCallback,
           const Optional<OwningNonNull<ErrorCallback>>& aErrorCallback) const
   {
     GetInternal(aPath, aFlag, aSuccessCallback, aErrorCallback, eGetFile);
@@ -54,7 +54,7 @@ public:
 
   void
   GetDirectory(const nsAString& aPath, const FileSystemFlags& aFlag,
-               const Optional<OwningNonNull<EntryCallback>>& aSuccessCallback,
+               const Optional<OwningNonNull<FileSystemEntryCallback>>& aSuccessCallback,
                const Optional<OwningNonNull<ErrorCallback>>& aErrorCallback) const
   {
     GetInternal(aPath, aFlag, aSuccessCallback, aErrorCallback, eGetDirectory);
@@ -68,7 +68,7 @@ public:
 
   virtual void
   GetInternal(const nsAString& aPath, const FileSystemFlags& aFlag,
-              const Optional<OwningNonNull<EntryCallback>>& aSuccessCallback,
+              const Optional<OwningNonNull<FileSystemEntryCallback>>& aSuccessCallback,
               const Optional<OwningNonNull<ErrorCallback>>& aErrorCallback,
               GetInternalType aType) const;
 

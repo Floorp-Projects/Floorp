@@ -56,7 +56,7 @@ FileSystemRootDirectoryEntry::CreateReader() const
 void
 FileSystemRootDirectoryEntry::GetInternal(const nsAString& aPath,
                                           const FileSystemFlags& aFlag,
-                                          const Optional<OwningNonNull<EntryCallback>>& aSuccessCallback,
+                                          const Optional<OwningNonNull<FileSystemEntryCallback>>& aSuccessCallback,
                                           const Optional<OwningNonNull<ErrorCallback>>& aErrorCallback,
                                           GetInternalType aType) const
 {
