@@ -385,6 +385,12 @@ nsJARURI::SetHostPort(const nsACString &aHostPort)
 }
 
 NS_IMETHODIMP
+nsJARURI::SetHostAndPort(const nsACString &aHostPort)
+{
+    return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
 nsJARURI::GetHost(nsACString &aHost)
 {
     return NS_ERROR_FAILURE;

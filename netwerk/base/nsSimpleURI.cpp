@@ -316,6 +316,14 @@ nsSimpleURI::SetHostPort(const nsACString &result)
 }
 
 NS_IMETHODIMP
+nsSimpleURI::SetHostAndPort(const nsACString &result)
+{
+    NS_ENSURE_STATE(mMutable);
+
+    return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
 nsSimpleURI::GetHost(nsACString &result)
 {
     // Note: Audit all callers before changing this to return an empty

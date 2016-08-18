@@ -127,6 +127,12 @@ nsNullPrincipalURI::SetHostPort(const nsACString &aHost)
 }
 
 NS_IMETHODIMP
+nsNullPrincipalURI::SetHostAndPort(const nsACString &aHost)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 nsNullPrincipalURI::GetOriginCharset(nsACString &_charset)
 {
   _charset.Truncate();
