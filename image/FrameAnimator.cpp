@@ -301,7 +301,8 @@ FrameAnimator::GetCompositedFrame(uint32_t aFrameNum)
 
   // If we have a composited version of this frame, return that.
   if (mLastCompositedFrameIndex == int32_t(aFrameNum)) {
-    return LookupResult(mCompositingFrame->DrawableRef(), MatchType::EXACT);
+    return LookupResult(DrawableSurface(mCompositingFrame->DrawableRef()),
+                        MatchType::EXACT);
   }
 
   // Otherwise return the raw frame. DoBlend is required to ensure that we only
@@ -311,7 +312,7 @@ FrameAnimator::GetCompositedFrame(uint32_t aFrameNum)
                          RasterSurfaceKey(mSize,
                                           DefaultSurfaceFlags(),
                                           aFrameNum));
-  MOZ_ASSERT(!result || !result.DrawableRef()->GetIsPaletted(),
+  MOZ_ASSERT(!result || !result.Surface()->GetIsPaletted(),
              "About to return a paletted frame");
   return result;
 }
@@ -381,7 +382,7 @@ FrameAnimator::GetRawFrame(uint32_t aFrameNum) const
                          RasterSurfaceKey(mSize,
                                           DefaultSurfaceFlags(),
                                           aFrameNum));
-  return result ? result.DrawableRef()->RawAccessRef()
+  return result ? result.Surface()->RawAccessRef()
                 : RawAccessFrameRef();
 }
 
