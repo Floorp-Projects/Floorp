@@ -181,13 +181,13 @@ EyeDropper.prototype = {
   },
 
   prepareImageCapture() {
-    // Get the page as an image.
+    // Get the image data from the content window.
     let imageData = getWindowAsImageData(this.win);
-    let image = new this.win.Image();
-    image.src = imageData;
 
-    // Wait for screenshot to load
-    image.onload = () => {
+    // We need to transform imageData to something drawWindow will consume. An ImageBitmap
+    // works well. We could have used an Image, but doing so results in errors if the page
+    // defines CSP headers.
+    this.win.createImageBitmap(imageData).then(image => {
       this.pageImage = image;
       // We likely haven't drawn anything yet (no mousemove events yet), so start now.
       this.draw();
@@ -195,7 +195,7 @@ EyeDropper.prototype = {
       // Set an attribute on the root element to be able to run tests after the first draw
       // was done.
       this.getElement("root").setAttribute("drawn", "true");
-    };
+    });
   },
 
   /**
@@ -456,9 +456,9 @@ EyeDropper.prototype = {
 exports.EyeDropper = EyeDropper;
 
 /**
- * Get a content window as image data-url.
+ * Draw the visible portion of the window on a canvas and get the resulting ImageData.
  * @param {Window} win
- * @return {String} The data-url
+ * @return {ImageData} The image data for the window.
  */
 function getWindowAsImageData(win) {
   let canvas = win.document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
@@ -474,7 +474,7 @@ function getWindowAsImageData(win) {
   ctx.scale(scale, scale);
   ctx.drawWindow(win, win.scrollX, win.scrollY, width, height, "#fff");
 
-  return canvas.toDataURL();
+  return ctx.getImageData(0, 0, canvas.width, canvas.height);
 }
 
 /**
