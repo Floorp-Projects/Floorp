@@ -21,6 +21,7 @@ static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 
 ScreenProxy::ScreenProxy(nsScreenManagerProxy* aScreenManager, ScreenDetails aDetails)
   : mContentsScaleFactor(0)
+  , mDefaultCSSScaleFactor(0)
   , mScreenManager(aScreenManager)
   , mId(0)
   , mPixelDepth(0)
@@ -128,6 +129,28 @@ ScreenProxy::GetColorDepth(int32_t *aColorDepth)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+ScreenProxy::GetContentsScaleFactor(double* aContentsScaleFactor)
+{
+  if (!EnsureCacheIsValid()) {
+    return NS_ERROR_FAILURE;
+  }
+
+  *aContentsScaleFactor = mContentsScaleFactor;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+ScreenProxy::GetDefaultCSSScaleFactor(double* aScaleFactor)
+{
+  if (!EnsureCacheIsValid()) {
+    return NS_ERROR_FAILURE;
+  }
+
+  *aScaleFactor = mDefaultCSSScaleFactor;
+  return NS_OK;
+}
+
 void
 ScreenProxy::PopulateByDetails(ScreenDetails aDetails)
 {
@@ -139,6 +162,7 @@ ScreenProxy::PopulateByDetails(ScreenDetails aDetails)
   mPixelDepth = aDetails.pixelDepth();
   mColorDepth = aDetails.colorDepth();
   mContentsScaleFactor = aDetails.contentsScaleFactor();
+  mDefaultCSSScaleFactor = aDetails.defaultCSSScaleFactor();
 }
 
 bool
