@@ -765,7 +765,7 @@ WorkerProxyToMainThreadRunnable::HoldWorker()
   };
 
   UniquePtr<WorkerHolder> workerHolder(new SimpleWorkerHolder());
-  if (NS_WARN_IF(!workerHolder->HoldWorker(mWorkerPrivate))) {
+  if (NS_WARN_IF(!workerHolder->HoldWorker(mWorkerPrivate, Canceling))) {
     return false;
   }
 
