@@ -47,3 +47,7 @@ default-preferences pref(layout.css.clip-path-shapes.enabled,true)
 == clip-path-ellipse-006.html clip-path-ellipse-001-ref.html
 == clip-path-ellipse-007.html clip-path-ellipse-001-ref.html
 == clip-path-ellipse-008.html clip-path-ellipse-001-ref.html
+
+== clip-path-inset-001a.html clip-path-inset-001-ref.html
+== clip-path-inset-001b.html clip-path-inset-001-ref.html
+== clip-path-inset-001c.html clip-path-inset-001-ref.html
