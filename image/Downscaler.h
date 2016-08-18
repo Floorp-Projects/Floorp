@@ -93,6 +93,9 @@ public:
     return mRowBuffer.get() + mFrameRect.x * sizeof(uint32_t);
   }
 
+  /// Clears the remaining unset rows.
+  void ClearRemainingRows();
+
   /// Clears the current row buffer.
   void ClearRow() { ClearRestOfRow(0); }
 
@@ -139,6 +142,7 @@ private:
   int32_t mPrevInvalidatedLine;
   int32_t mCurrentOutLine;
   int32_t mCurrentInLine;
+  uint8_t mClearValue;
 
   bool mHasAlpha : 1;
   bool mFlipVertically : 1;

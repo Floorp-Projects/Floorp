@@ -31,6 +31,7 @@ Downscaler::Downscaler(const nsIntSize& aTargetSize)
   , mXFilter(MakeUnique<skia::ConvolutionFilter1D>())
   , mYFilter(MakeUnique<skia::ConvolutionFilter1D>())
   , mWindowCapacity(0)
+  , mClearValue(0)
   , mHasAlpha(true)
   , mFlipVertically(false)
 {
@@ -99,6 +100,7 @@ Downscaler::BeginFrame(const nsIntSize& aOriginalSize,
   mScale = gfxSize(double(mOriginalSize.width) / mTargetSize.width,
                    double(mOriginalSize.height) / mTargetSize.height);
   mOutputBuffer = aOutputBuffer;
+  mClearValue = aHasAlpha ? 0 : 0xFF;
   mHasAlpha = aHasAlpha;
   mFlipVertically = aFlipVertically;
 
@@ -207,13 +209,22 @@ GetFilterOffsetAndLength(UniquePtr<skia::ConvolutionFilter1D>& aFilter,
 }
 
 void
+Downscaler::ClearRemainingRows()
+{
+  while (!IsFrameComplete()) {
+    ClearRow();
+    CommitRow();
+  }
+}
+
+void
 Downscaler::ClearRestOfRow(uint32_t aStartingAtCol)
 {
   MOZ_ASSERT(int64_t(aStartingAtCol) <= int64_t(mOriginalSize.width));
   uint32_t bytesToClear = (mOriginalSize.width - aStartingAtCol)
                         * sizeof(uint32_t);
   memset(mRowBuffer.get() + (aStartingAtCol * sizeof(uint32_t)),
-         0, bytesToClear);
+         mClearValue, bytesToClear);
 }
 
 void
