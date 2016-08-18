@@ -28,7 +28,7 @@ public:
   virtual void
   GetFullPath(nsAString& aFullPath, ErrorResult& aRv) const override;
 
-  virtual already_AddRefed<DirectoryReader>
+  virtual already_AddRefed<FileSystemDirectoryReader>
   CreateReader() const override;
 
 private:

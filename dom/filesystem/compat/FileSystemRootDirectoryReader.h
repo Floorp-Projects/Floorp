@@ -4,23 +4,24 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_RootDirectoryReader_h
-#define mozilla_dom_RootDirectoryReader_h
+#ifndef mozilla_dom_FileSystemRootDirectoryReader_h
+#define mozilla_dom_FileSystemRootDirectoryReader_h
 
-#include "DirectoryReader.h"
+#include "FileSystemDirectoryReader.h"
 
 namespace mozilla {
 namespace dom {
 
-class RootDirectoryReader final : public DirectoryReader
+class FileSystemRootDirectoryReader final : public FileSystemDirectoryReader
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(RootDirectoryReader, DirectoryReader)
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(FileSystemRootDirectoryReader,
+                                           FileSystemDirectoryReader)
 
-  explicit RootDirectoryReader(nsIGlobalObject* aGlobalObject,
-                               FileSystem* aFileSystem,
-                               const Sequence<RefPtr<FileSystemEntry>>& aEntries);
+  explicit FileSystemRootDirectoryReader(nsIGlobalObject* aGlobalObject,
+                                                   FileSystem* aFileSystem,
+                                                   const Sequence<RefPtr<FileSystemEntry>>& aEntries);
 
   virtual void
   ReadEntries(EntriesCallback& aSuccessCallback,
@@ -28,7 +29,7 @@ public:
               ErrorResult& aRv) override;
 
 private:
-  ~RootDirectoryReader();
+  ~FileSystemRootDirectoryReader();
 
   Sequence<RefPtr<FileSystemEntry>> mEntries;
   bool mAlreadyRead;
@@ -37,4 +38,4 @@ private:
 } // namespace dom
 } // namespace mozilla
 
-#endif // mozilla_dom_RootDirectoryReader_h
+#endif // mozilla_dom_FileSystemRootDirectoryReader_h

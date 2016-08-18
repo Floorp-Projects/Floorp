@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "DirectoryReader.h"
+#include "FileSystemDirectoryReader.h"
 #include "CallbackRunnables.h"
 #include "FileSystemFileEntry.h"
 #include "mozilla/dom/FileBinding.h"
@@ -116,20 +116,20 @@ NS_IMPL_ISUPPORTS0(PromiseHandler);
 
 } // anonymous namespace
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(DirectoryReader, mParent, mDirectory,
-                                      mFileSystem)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(FileSystemDirectoryReader, mParent,
+                                      mDirectory, mFileSystem)
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF(DirectoryReader)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(DirectoryReader)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(FileSystemDirectoryReader)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(FileSystemDirectoryReader)
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DirectoryReader)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(FileSystemDirectoryReader)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-DirectoryReader::DirectoryReader(nsIGlobalObject* aGlobal,
-                                 FileSystem* aFileSystem,
-                                 Directory* aDirectory)
+FileSystemDirectoryReader::FileSystemDirectoryReader(nsIGlobalObject* aGlobal,
+                                                     FileSystem* aFileSystem,
+                                                     Directory* aDirectory)
   : mParent(aGlobal)
   , mFileSystem(aFileSystem)
   , mDirectory(aDirectory)
@@ -139,19 +139,20 @@ DirectoryReader::DirectoryReader(nsIGlobalObject* aGlobal,
   MOZ_ASSERT(aFileSystem);
 }
 
-DirectoryReader::~DirectoryReader()
+FileSystemDirectoryReader::~FileSystemDirectoryReader()
 {}
 
 JSObject*
-DirectoryReader::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
+FileSystemDirectoryReader::WrapObject(JSContext* aCx,
+                                      JS::Handle<JSObject*> aGivenProto)
 {
-  return DirectoryReaderBinding::Wrap(aCx, this, aGivenProto);
+  return FileSystemDirectoryReaderBinding::Wrap(aCx, this, aGivenProto);
 }
 
 void
-DirectoryReader::ReadEntries(EntriesCallback& aSuccessCallback,
-                             const Optional<OwningNonNull<ErrorCallback>>& aErrorCallback,
-                             ErrorResult& aRv)
+FileSystemDirectoryReader::ReadEntries(EntriesCallback& aSuccessCallback,
+                                       const Optional<OwningNonNull<ErrorCallback>>& aErrorCallback,
+                                       ErrorResult& aRv)
 {
   MOZ_ASSERT(mDirectory);
 

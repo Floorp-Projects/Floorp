@@ -42,7 +42,7 @@ callback interface VoidCallback {
 
 [NoInterfaceObject]
 interface FileSystemDirectoryEntry : FileSystemEntry {
-    DirectoryReader createReader();
+    FileSystemDirectoryReader createReader();
 
     void getFile(DOMString? path, optional FileSystemFlags options, optional EntryCallback successCallback, optional ErrorCallback errorCallback);
 
@@ -63,7 +63,7 @@ callback interface ErrorCallback {
 };
 
 [NoInterfaceObject]
-interface DirectoryReader {
+interface FileSystemDirectoryReader {
 
     // readEntries can be called just once. The second time it returns no data.
 
