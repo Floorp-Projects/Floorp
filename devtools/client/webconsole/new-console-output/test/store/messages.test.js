@@ -8,7 +8,7 @@ const {
   setupActions,
   setupStore
 } = require("devtools/client/webconsole/new-console-output/test/helpers");
-const { stubConsoleMessages } = require("devtools/client/webconsole/new-console-output/test/fixtures/stubs");
+const stubConsoleMessages = require("devtools/client/webconsole/new-console-output/test/fixtures/stubs/index");
 
 const expect = require("expect");
 
