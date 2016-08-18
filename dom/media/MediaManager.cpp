@@ -44,6 +44,7 @@
 #include "mozilla/dom/MediaStreamTrackBinding.h"
 #include "mozilla/dom/GetUserMediaRequestBinding.h"
 #include "mozilla/dom/Promise.h"
+#include "mozilla/dom/MediaDevices.h"
 #include "mozilla/Base64.h"
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/media/MediaChild.h"
@@ -1708,6 +1709,7 @@ MediaManager::MediaManager()
   mPrefs.mNoiseOn      = false;
   mPrefs.mExtendedFilter = true;
   mPrefs.mDelayAgnostic = true;
+  mPrefs.mFakeDeviceChangeEventOn = false;
 #ifdef MOZ_WEBRTC
   mPrefs.mAec          = webrtc::kEcUnchanged;
   mPrefs.mAgc          = webrtc::kAgcUnchanged;
@@ -1806,6 +1808,7 @@ MediaManager::Get() {
       prefs->AddObserver("media.getusermedia.noise_enabled", sSingleton, false);
       prefs->AddObserver("media.getusermedia.noise", sSingleton, false);
       prefs->AddObserver("media.getusermedia.playout_delay", sSingleton, false);
+      prefs->AddObserver("media.ondevicechange.fakeDeviceChangeEvent.enabled", sSingleton, false);
 #endif
     }
 
@@ -1994,6 +1997,28 @@ bool MediaManager::IsPrivateBrowsing(nsPIDOMWindowInner* window)
   nsCOMPtr<nsIDocument> doc = window->GetDoc();
   nsCOMPtr<nsILoadContext> loadContext = doc->GetLoadContext();
   return loadContext && loadContext->UsePrivateBrowsing();
+}
+
+int MediaManager::AddDeviceChangeCallback(DeviceChangeCallback* aCallback)
+{
+  bool fakeDeviceChangeEventOn = mPrefs.mFakeDeviceChangeEventOn;
+  MediaManager::PostTask(NewTaskFrom([fakeDeviceChangeEventOn]() {
+    RefPtr<MediaManager> manager = MediaManager_GetInstance();
+    manager->GetBackend(0)->AddDeviceChangeCallback(manager);
+    if (fakeDeviceChangeEventOn)
+      manager->GetBackend(0)->SetFakeDeviceChangeEvents();
+  }));
+
+  return DeviceChangeCallback::AddDeviceChangeCallback(aCallback);
+}
+
+void MediaManager::OnDeviceChange() {
+  RefPtr<MediaManager> self(this);
+  NS_DispatchToMainThread(media::NewRunnableFrom([self,this]() mutable {
+    MOZ_ASSERT(NS_IsMainThread());
+    DeviceChangeCallback::OnDeviceChange();
+    return NS_OK;
+  }));
 }
 
 nsresult MediaManager::GenerateUUID(nsAString& aResult)
@@ -2725,6 +2750,25 @@ MediaManager::OnNavigation(uint64_t aWindowID)
   } else {
     RemoveWindowID(aWindowID);
   }
+
+  RemoveMediaDevicesCallback(aWindowID);
+}
+
+void
+MediaManager::RemoveMediaDevicesCallback(uint64_t aWindowID)
+{
+  for (DeviceChangeCallback* observer : mDeviceChangeCallbackList)
+  {
+    dom::MediaDevices* mediadevices = static_cast<dom::MediaDevices *>(observer);
+    MOZ_ASSERT(mediadevices);
+    if (mediadevices) {
+      nsPIDOMWindowInner* window = mediadevices->GetOwner();
+      MOZ_ASSERT(window);
+      if (window && window->WindowID() == aWindowID)
+        DeviceChangeCallback::RemoveDeviceChangeCallback(observer);
+        return;
+    }
+  }
 }
 
 StreamListeners*
@@ -2836,6 +2880,7 @@ MediaManager::GetPrefs(nsIPrefBranch *aBranch, const char *aData)
   GetPref(aBranch, "media.getusermedia.playout_delay", aData, &mPrefs.mPlayoutDelay);
   GetPrefBool(aBranch, "media.getusermedia.aec_extended_filter", aData, &mPrefs.mExtendedFilter);
   GetPrefBool(aBranch, "media.getusermedia.aec_aec_delay_agnostic", aData, &mPrefs.mDelayAgnostic);
+  GetPrefBool(aBranch, "media.ondevicechange.fakeDeviceChangeEvent.enabled", aData, &mPrefs.mFakeDeviceChangeEventOn);
 #endif
   GetPrefBool(aBranch, "media.navigator.audio.full_duplex", aData, &mPrefs.mFullDuplex);
 }
@@ -2872,6 +2917,7 @@ MediaManager::Shutdown()
     prefs->RemoveObserver("media.getusermedia.noise_enabled", this);
     prefs->RemoveObserver("media.getusermedia.noise", this);
     prefs->RemoveObserver("media.getusermedia.playout_delay", this);
+    prefs->RemoveObserver("media.ondevicechange.fakeDeviceChangeEvent.enabled", this);
 #endif
     prefs->RemoveObserver("media.navigator.audio.full_duplex", this);
   }
@@ -2904,6 +2950,7 @@ MediaManager::Shutdown()
       {
         if (mManager->mBackend) {
           mManager->mBackend->Shutdown(); // ok to invoke multiple times
+          mManager->mBackend->RemoveDeviceChangeCallback(mManager);
         }
       }
       mozilla::ipc::BackgroundChild::CloseForCurrentThread();

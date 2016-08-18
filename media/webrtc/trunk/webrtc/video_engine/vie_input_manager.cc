@@ -32,6 +32,8 @@ ViEInputManager::ViEInputManager(const int engine_id, const Config& config)
       engine_id_(engine_id),
       map_cs_(CriticalSectionWrapper::CreateCriticalSection()),
       device_info_cs_(CriticalSectionWrapper::CreateCriticalSection()),
+      observer_cs_(CriticalSectionWrapper::CreateCriticalSection()),
+      observer_(NULL),
       vie_frame_provider_map_(),
       capture_device_info_(NULL),
       module_process_thread_(NULL) {
@@ -334,6 +336,13 @@ ViECapturer* ViEInputManager::ViECapturePtr(int capture_id) const {
   return static_cast<ViECapturer*>(ViEFrameProvider(capture_id));
 }
 
+void ViEInputManager::OnDeviceChange() {
+  CriticalSectionScoped cs(observer_cs_.get());
+  if (observer_) {
+    observer_->DeviceChange();
+  }
+}
+
 // Create different DeviceInfo by _config;
 VideoCaptureModule::DeviceInfo* ViEInputManager::GetDeviceInfo() {
   CaptureDeviceType type = config_.Get<CaptureDeviceInfo>().type;
@@ -361,6 +370,35 @@ VideoCaptureModule::DeviceInfo* ViEInputManager::GetDeviceInfo() {
   }
   return capture_device_info_;
 }
+
+int32_t ViEInputManager::RegisterObserver(ViEInputObserver* observer) {
+  {
+    CriticalSectionScoped cs(observer_cs_.get());
+    if (observer_) {
+      LOG_F(LS_ERROR) << "Observer already registered.";
+      return -1;
+    }
+    observer_ = observer;
+  }
+
+  if (!GetDeviceInfo())
+    return -1;
+
+  if (capture_device_info_ != NULL)
+    capture_device_info_->RegisterVideoInputFeedBack(*this);
+
+  return 0;
+}
+
+int32_t ViEInputManager::DeRegisterObserver() {
+  if (capture_device_info_ != NULL)
+    capture_device_info_->DeRegisterVideoInputFeedBack();
+
+  CriticalSectionScoped cs(observer_cs_.get());
+  observer_ = NULL;
+  return 0;
+}
+
 ViEInputManagerScoped::ViEInputManagerScoped(
     const ViEInputManager& vie_input_manager)
     : ViEManagerScopedBase(vie_input_manager) {

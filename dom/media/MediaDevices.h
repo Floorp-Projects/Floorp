@@ -10,6 +10,7 @@
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "nsPIDOMWindow.h"
+#include "DeviceChangeCallback.h"
 
 namespace mozilla {
 namespace dom {
@@ -23,6 +24,7 @@ struct MediaTrackSupportedConstraints;
  { 0x9a, 0x36, 0x74, 0xa4, 0xd6, 0x71, 0xa6, 0xc8 } }
 
 class MediaDevices final : public DOMEventTargetHelper
+                          ,public DeviceChangeCallback
 {
 public:
   explicit MediaDevices(nsPIDOMWindowInner* aWindow) :
@@ -41,6 +43,23 @@ public:
 
   already_AddRefed<Promise>
   EnumerateDevices(ErrorResult &aRv);
+
+  virtual void OnDeviceChange() override;
+
+  mozilla::dom::EventHandlerNonNull* GetOndevicechange();
+
+  void SetOndevicechange(mozilla::dom::EventHandlerNonNull* aCallback);
+
+  NS_IMETHOD AddEventListener(const nsAString& aType,
+    nsIDOMEventListener* aListener,
+    bool aUseCapture, bool aWantsUntrusted,
+    uint8_t optional_argc) override;
+
+  virtual void AddEventListener(const nsAString& aType,
+                                dom::EventListener* aListener,
+                                const dom::AddEventListenerOptionsOrBoolean& aOptions,
+                                const dom::Nullable<bool>& aWantsUntrusted,
+                                ErrorResult& aRv) override;
 
 private:
   class GumResolver;

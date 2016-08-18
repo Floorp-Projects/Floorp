@@ -26,6 +26,9 @@
     bool                                _OSSupportedInfo;
     NSArray*                            _captureDevicesInfo;
     int                                    _captureDeviceCountInfo;
+    NSArray*                            _observers;
+    NSLock*                             _lock;
+    webrtc::videocapturemodule::VideoCaptureMacAVFoundationInfo* _owner;
 
 }
 
@@ -45,6 +48,8 @@
  *   The following functions are considered to be public and called by VideoCaptureMacAVFoundationInfo class
  *
  ***************************************************************************/
+
+- (void)registerOwner:(webrtc::videocapturemodule::VideoCaptureMacAVFoundationInfo*)owner;
 
 - (NSNumber*)getCaptureDeviceCount;
 

@@ -41,7 +41,6 @@ task:
     treeherder:
         machine:
             platform: lint
-        groupSymbol: tc
         symbol: ES
     treeherderEnv:
         - production

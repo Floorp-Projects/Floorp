@@ -32,7 +32,8 @@ class ViECapturer;
 class ViEExternalCapture;
 class VoiceEngine;
 
-class ViEInputManager : private ViEManagerBase {
+class ViEInputManager : private ViEManagerBase,
+                        protected VideoInputFeedBack {
   friend class ViEInputManagerScoped;
  public:
   ViEInputManager(int engine_id, const Config& config);
@@ -78,8 +79,12 @@ class ViEInputManager : private ViEManagerBase {
   int CreateExternalCaptureDevice(ViEExternalCapture*& external_capture,
                                   int& capture_id);
   int DestroyCaptureDevice(int capture_id);
+  int32_t RegisterObserver(ViEInputObserver* observer);
+  int32_t DeRegisterObserver();
  protected:
   VideoCaptureModule::DeviceInfo* GetDeviceInfo();
+  // Implements VideoInputFeedBack.
+  virtual void OnDeviceChange();
  private:
   // Gets and allocates a free capture device id. Assumed protected by caller.
   bool GetFreeCaptureId(int* freecapture_id);
@@ -101,6 +106,8 @@ class ViEInputManager : private ViEManagerBase {
   int engine_id_;
   rtc::scoped_ptr<CriticalSectionWrapper> map_cs_;
   rtc::scoped_ptr<CriticalSectionWrapper> device_info_cs_;
+  rtc::scoped_ptr<CriticalSectionWrapper> observer_cs_;
+  ViEInputObserver* observer_ GUARDED_BY(observer_cs_.get());
 
   typedef std::map<int, ViEFrameProviderBase*> FrameProviderMap;
   FrameProviderMap vie_frame_provider_map_;
