@@ -804,6 +804,11 @@ XPCJSRuntime::FinalizeCallback(JSFreeOp* fop,
                         if (set)
                             set->Mark();
                     }
+                    if (ccxp->CanGetInterface()) {
+                        XPCNativeInterface* iface = ccxp->GetInterface();
+                        if (iface)
+                            iface->Mark();
+                    }
                     ccxp = ccxp->GetPrevCallContext();
                 }
             }
@@ -836,6 +841,17 @@ XPCJSRuntime::FinalizeCallback(JSFreeOp* fop,
                     set->Unmark();
                 } else if (doSweep) {
                     XPCNativeSet::DestroyInstance(set);
+                    i.Remove();
+                }
+            }
+
+            for (auto i = self->mIID2NativeInterfaceMap->Iter(); !i.Done(); i.Next()) {
+                auto entry = static_cast<IID2NativeInterfaceMap::Entry*>(i.Get());
+                XPCNativeInterface* iface = entry->value;
+                if (iface->IsMarked()) {
+                    iface->Unmark();
+                } else if (doSweep) {
+                    XPCNativeInterface::DestroyInstance(iface);
                     i.Remove();
                 }
             }

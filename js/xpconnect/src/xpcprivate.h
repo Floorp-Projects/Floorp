@@ -785,7 +785,7 @@ private:
     XPCNativeScriptableInfo*        mScriptableInfo;
 
     XPCNativeSet*                   mSet;
-    RefPtr<XPCNativeInterface>      mInterface;
+    XPCNativeInterface*             mInterface;
     XPCNativeMember*                mMember;
 
     JS::RootedId                    mName;
@@ -1118,8 +1118,8 @@ class XPCNativeMember final
 {
 public:
     static bool GetCallInfo(JSObject* funobj,
-                            RefPtr<XPCNativeInterface>* pInterface,
-                            XPCNativeMember** pMember);
+                            XPCNativeInterface** pInterface,
+                            XPCNativeMember**    pMember);
 
     jsid   GetName() const {return mName;}
 
@@ -1214,13 +1214,10 @@ private:
 class XPCNativeInterface final
 {
   public:
-    NS_INLINE_DECL_REFCOUNTING_WITH_DESTROY(XPCNativeInterface,
-                                            DestroyInstance(this))
-
-    static already_AddRefed<XPCNativeInterface> GetNewOrUsed(const nsIID* iid);
-    static already_AddRefed<XPCNativeInterface> GetNewOrUsed(nsIInterfaceInfo* info);
-    static already_AddRefed<XPCNativeInterface> GetNewOrUsed(const char* name);
-    static already_AddRefed<XPCNativeInterface> GetISupports();
+    static XPCNativeInterface* GetNewOrUsed(const nsIID* iid);
+    static XPCNativeInterface* GetNewOrUsed(nsIInterfaceInfo* info);
+    static XPCNativeInterface* GetNewOrUsed(const char* name);
+    static XPCNativeInterface* GetISupports();
 
     inline nsIInterfaceInfo* GetInterfaceInfo() const {return mInfo.get();}
     inline jsid              GetName()          const {return mName;}
@@ -1242,28 +1239,49 @@ class XPCNativeInterface final
 
     void DebugDump(int16_t depth);
 
+    void Mark() {
+        mMarked = 1;
+    }
+
+    void Unmark() {
+        mMarked = 0;
+    }
+
+    bool IsMarked() const {
+        return mMarked != 0;
+    }
+
+    // NOP. This is just here to make the AutoMarkingPtr code compile.
+    inline void TraceJS(JSTracer* trc) {}
+    inline void AutoTrace(JSTracer* trc) {}
+
+    static void DestroyInstance(XPCNativeInterface* inst);
+
     size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf);
 
   protected:
-    static already_AddRefed<XPCNativeInterface> NewInstance(nsIInterfaceInfo* aInfo);
+    static XPCNativeInterface* NewInstance(nsIInterfaceInfo* aInfo);
 
     XPCNativeInterface() = delete;
     XPCNativeInterface(nsIInterfaceInfo* aInfo, jsid aName)
-      : mInfo(aInfo), mName(aName), mMemberCount(0)
-    {}
-    ~XPCNativeInterface();
+      : mInfo(aInfo), mName(aName), mMemberCount(0), mMarked(0)
+    {
+        MOZ_COUNT_CTOR(XPCNativeInterface);
+    }
+    ~XPCNativeInterface() {
+        MOZ_COUNT_DTOR(XPCNativeInterface);
+    }
 
     void* operator new(size_t, void* p) CPP_THROW_NEW {return p;}
 
     XPCNativeInterface(const XPCNativeInterface& r) = delete;
     XPCNativeInterface& operator= (const XPCNativeInterface& r) = delete;
 
-    static void DestroyInstance(XPCNativeInterface* inst);
-
 private:
     nsCOMPtr<nsIInterfaceInfo> mInfo;
     jsid                       mName;
-    uint16_t                   mMemberCount;
+    uint16_t                   mMemberCount : 15;
+    uint16_t                   mMarked : 1;
     XPCNativeMember            mMembers[1]; // always last - object sized for array
 };
 
@@ -1319,16 +1337,16 @@ class XPCNativeSet final
     static void ClearCacheEntryForClassInfo(nsIClassInfo* classInfo);
 
     inline bool FindMember(jsid name, XPCNativeMember** pMember,
-                           uint16_t* pInterfaceIndex) const;
+                             uint16_t* pInterfaceIndex) const;
 
     inline bool FindMember(jsid name, XPCNativeMember** pMember,
-                           RefPtr<XPCNativeInterface>* pInterface) const;
+                             XPCNativeInterface** pInterface) const;
 
     inline bool FindMember(jsid name,
-                           XPCNativeMember** pMember,
-                           RefPtr<XPCNativeInterface>* pInterface,
-                           XPCNativeSet* protoSet,
-                           bool* pIsLocal) const;
+                             XPCNativeMember** pMember,
+                             XPCNativeInterface** pInterface,
+                             XPCNativeSet* protoSet,
+                             bool* pIsLocal) const;
 
     inline bool HasInterface(XPCNativeInterface* aInterface) const;
     inline bool HasInterfaceWithAncestor(XPCNativeInterface* aInterface) const;
@@ -1360,6 +1378,11 @@ class XPCNativeSet final
     inline void TraceJS(JSTracer* trc) {}
     inline void AutoTrace(JSTracer* trc) {}
 
+  private:
+    void MarkSelfOnly() {
+        mMarked = 1;
+    }
+
   public:
     void Unmark() {
         mMarked = 0;
@@ -1379,7 +1402,7 @@ class XPCNativeSet final
     size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf);
 
   protected:
-    static XPCNativeSet* NewInstance(nsTArray<RefPtr<XPCNativeInterface>>&& array);
+    static XPCNativeSet* NewInstance(nsTArray<XPCNativeInterface*>&& array);
     static XPCNativeSet* NewInstanceMutate(XPCNativeSet*       otherSet,
                                            XPCNativeInterface* newInterface,
                                            uint16_t            position);
@@ -1389,9 +1412,6 @@ class XPCNativeSet final
         MOZ_COUNT_CTOR(XPCNativeSet);
     }
     ~XPCNativeSet() {
-        for (int i = 0; i < mInterfaceCount; i++) {
-            NS_RELEASE(mInterfaces[i]);
-        }
         MOZ_COUNT_DTOR(XPCNativeSet);
     }
     void* operator new(size_t, void* p) CPP_THROW_NEW {return p;}
@@ -1400,9 +1420,7 @@ class XPCNativeSet final
     uint16_t                mMemberCount;
     uint16_t                mInterfaceCount : 15;
     uint16_t                mMarked : 1;
-    // Always last - object sized for array.
-    // These are strong references.
-    XPCNativeInterface*     mInterfaces[1];
+    XPCNativeInterface*     mInterfaces[1];  // always last - object sized for array
 };
 
 /***************************************************************************/
@@ -2860,10 +2878,44 @@ class TypedAutoMarkingPtr : public AutoMarkingPtr
     T* mPtr;
 };
 
+typedef TypedAutoMarkingPtr<XPCNativeInterface> AutoMarkingNativeInterfacePtr;
 typedef TypedAutoMarkingPtr<XPCNativeSet> AutoMarkingNativeSetPtr;
 typedef TypedAutoMarkingPtr<XPCWrappedNative> AutoMarkingWrappedNativePtr;
 typedef TypedAutoMarkingPtr<XPCWrappedNativeTearOff> AutoMarkingWrappedNativeTearOffPtr;
 typedef TypedAutoMarkingPtr<XPCWrappedNativeProto> AutoMarkingWrappedNativeProtoPtr;
+
+template<class T>
+class ArrayAutoMarkingPtr : public AutoMarkingPtr
+{
+  public:
+    ArrayAutoMarkingPtr(JSContext* cx, nsTArray<T*>& ptr)
+      : AutoMarkingPtr(cx), mPtr(ptr)
+    {}
+
+  protected:
+    virtual void TraceJS(JSTracer* trc)
+    {
+        for (uint32_t i = 0; i < mPtr.Length(); i++) {
+            if (mPtr[i]) {
+                mPtr[i]->TraceJS(trc);
+                mPtr[i]->AutoTrace(trc);
+            }
+        }
+    }
+
+    virtual void MarkAfterJSFinalize()
+    {
+        for (uint32_t i = 0; i < mPtr.Length(); i++) {
+            if (mPtr[i])
+                mPtr[i]->Mark();
+        }
+    }
+
+  private:
+    nsTArray<T*>& mPtr;
+};
+
+typedef ArrayAutoMarkingPtr<XPCNativeInterface> AutoMarkingNativeInterfacePtrArrayPtr;
 
 /***************************************************************************/
 namespace xpc {

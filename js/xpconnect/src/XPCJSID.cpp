@@ -386,8 +386,9 @@ nsJSIID::Resolve(nsIXPConnectWrappedNative* wrapper,
     RootedId id(cx, idArg);
     XPCCallContext ccx(cx);
 
-    RefPtr<XPCNativeInterface> iface =
-        XPCNativeInterface::GetNewOrUsed(mInfo);
+    AutoMarkingNativeInterfacePtr iface(ccx);
+
+    iface = XPCNativeInterface::GetNewOrUsed(mInfo);
 
     if (!iface)
         return NS_OK;
@@ -416,8 +417,9 @@ nsJSIID::Enumerate(nsIXPConnectWrappedNative* wrapper,
     RootedObject obj(cx, objArg);
     XPCCallContext ccx(cx);
 
-    RefPtr<XPCNativeInterface> iface =
-        XPCNativeInterface::GetNewOrUsed(mInfo);
+    AutoMarkingNativeInterfacePtr iface(ccx);
+
+    iface = XPCNativeInterface::GetNewOrUsed(mInfo);
 
     if (!iface)
         return NS_OK;
