@@ -30,6 +30,9 @@ public:
     TrackInfo::TrackType aType, uint32_t aTrackNumber) override;
   bool IsSeekable() const override;
 
+  // Return true if a valid flac frame header could be found.
+  static bool FlacSniffer(const uint8_t* aData, const uint32_t aLength);
+
 private:
   bool InitInternal();
 
