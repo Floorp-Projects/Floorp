@@ -66,7 +66,9 @@ class ViECaptureImpl
   virtual int EnableBrightnessAlarm(const int capture_id, const bool enable);
   virtual int RegisterObserver(const int capture_id,
                                ViECaptureObserver& observer);
+  virtual int RegisterInputObserver(ViEInputObserver* observer);
   virtual int DeregisterObserver(const int capture_id);
+  virtual int DeregisterInputObserver();
 
  protected:
   explicit ViECaptureImpl(ViESharedData* shared_data);

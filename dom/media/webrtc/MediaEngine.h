@@ -11,6 +11,7 @@
 #include "MediaTrackConstraints.h"
 #include "mozilla/dom/MediaStreamTrackBinding.h"
 #include "mozilla/dom/VideoStreamTrack.h"
+#include "DeviceChangeCallback.h"
 
 namespace mozilla {
 
@@ -41,7 +42,7 @@ enum MediaEngineState {
   kReleased
 };
 
-class MediaEngine
+class MediaEngine : public DeviceChangeCallback
 {
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaEngine)
@@ -75,6 +76,8 @@ public:
 
   virtual void Shutdown() = 0;
 
+  virtual void SetFakeDeviceChangeEvents() {}
+
 protected:
   virtual ~MediaEngine() {}
 };
@@ -100,6 +103,7 @@ public:
     , mFullDuplex(false)
     , mExtendedFilter(false)
     , mDelayAgnostic(false)
+    , mFakeDeviceChangeEventOn(false)
   {}
 
   int32_t mWidth;
@@ -117,6 +121,7 @@ public:
   bool mFullDuplex;
   bool mExtendedFilter;
   bool mDelayAgnostic;
+  bool mFakeDeviceChangeEventOn;
 
   // mWidth and/or mHeight may be zero (=adaptive default), so use functions.
 

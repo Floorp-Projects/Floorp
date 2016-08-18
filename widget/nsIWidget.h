@@ -1720,6 +1720,18 @@ public:
     virtual nsresult ForceUpdateNativeMenuAt(const nsAString& indexString) = 0;
 
     /**
+     * This is used for testing macOS service menu code.
+     *
+     * @param aResult - the current text selection. Is empty if no selection.
+     * @return nsresult - whether or not aResult was assigned the selected text.
+     */
+    NS_IMETHOD
+    GetSelectionAsPlaintext(nsAString& aResult)
+    {
+      return NS_ERROR_NOT_IMPLEMENTED;
+    }
+
+    /**
      * Notify IME of the specified notification.
      *
      * @return If the notification is mouse button event and it's consumed by

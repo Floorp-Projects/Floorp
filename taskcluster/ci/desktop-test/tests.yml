@@ -166,6 +166,8 @@ mochitest:
                     - mozharness/configs/remove_executables.py
         extra-options:
             - --mochitest-suite=plain-chunked
+    # Bug 1281241: migrating to m3.large instances
+    instance-size: legacy
 
 mochitest-a11y:
     description: "Mochitest a11y run"
@@ -205,6 +207,8 @@ mochitest-browser-chrome:
                     - mozharness/configs/remove_executables.py
         extra-options:
             - --mochitest-suite=browser-chrome-chunked
+    # Bug 1281241: migrating to m3.large instances
+    instance-size: legacy
 
 mochitest-chrome:
     description: "Mochitest chrome run"
@@ -264,6 +268,11 @@ mochitest-devtools-chrome:
                     - mozharness/configs/remove_executables.py
         extra-options:
             - --mochitest-suite=mochitest-devtools-chrome-chunked
+    instance-size:
+        by-test-platform:
+            # Bug 1281241: migrating to m3.large instances
+            linux64-asan/opt: legacy
+            default: default
 
 mochitest-gpu:
     description: "Mochitest GPU run"
@@ -424,3 +433,5 @@ xpcshell:
                     - mozharness/configs/remove_executables.py
         extra-options:
             - --xpcshell-suite=xpcshell
+    # Bug 1281241: migrating to m3.large instances
+    instance-size: legacy

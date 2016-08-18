@@ -33,7 +33,6 @@ task:
     treeherder:
       machine:
         platform: lint
-      groupSymbol: tc
       symbol: W
       tier: 2
     treeherderEnv:

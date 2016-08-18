@@ -21,6 +21,14 @@
 
 namespace webrtc {
 
+class VideoInputFeedBack
+{
+public:
+    virtual void OnDeviceChange() = 0;
+protected:
+    virtual ~VideoInputFeedBack(){}
+};
+
 #if defined(ANDROID) && !defined(WEBRTC_CHROMIUM_BUILD) && !defined(WEBRTC_GONK)
   int32_t SetCaptureAndroidVM(JavaVM* javaVM);
 #endif
@@ -32,6 +40,16 @@ class VideoCaptureModule: public RefCountedModule {
    public:
     virtual uint32_t NumberOfDevices() = 0;
     virtual int32_t Refresh() = 0;
+    virtual void DeviceChange() {
+     if (_inputCallBack)
+      _inputCallBack->OnDeviceChange();
+    }
+    virtual void RegisterVideoInputFeedBack(VideoInputFeedBack& callBack) {
+     _inputCallBack = &callBack;
+    }
+    virtual void DeRegisterVideoInputFeedBack() {
+     _inputCallBack = NULL;
+    }
 
     // Returns the available capture devices.
     // deviceNumber   - Index of capture device.
@@ -82,6 +100,8 @@ class VideoCaptureModule: public RefCountedModule {
         uint32_t positionY) = 0;
 
     virtual ~DeviceInfo() {}
+   private:
+    VideoInputFeedBack* _inputCallBack = NULL;
   };
 
   class VideoCaptureEncodeInterface {

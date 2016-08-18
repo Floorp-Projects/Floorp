@@ -2,20 +2,9 @@
   <!--
     Remotes
     -->
-  <!--original fetch url was https://android.googlesource.com/-->
-  <remote fetch="https://git.mozilla.org/external/aosp" name="aosp"/>
-  <!--original fetch url was git://github.com/apitrace/-->
-  <remote fetch="https://git.mozilla.org/external/apitrace" name="apitrace"/>
+  <remote fetch="git://github.com/apitrace/" name="apitrace"/>
   <remote fetch="git://github.com/mozilla-b2g/" name="b2g"/>
-  <!--original fetch url was https://git.mozilla.org/b2g-->
-  <remote fetch="https://git.mozilla.org/b2g" name="b2gmozilla"/>
-  <!--original fetch url was git://codeaurora.org/-->
-  <remote fetch="https://git.mozilla.org/external/caf" name="caf"/>
-  <!--original fetch url was http://android.git.linaro.org/git-ro/-->
-  <remote fetch="https://git.mozilla.org/external/linaro" name="linaro"/>
-  <remote fetch="git://github.com/mozilla/" name="mozilla"/>
-  <!--original fetch url was https://git.mozilla.org/releases-->
-  <remote fetch="https://git.mozilla.org/releases" name="mozillaorg"/>
+  <remote fetch="git://codeaurora.org/" name="caf"/>
   <!--
     B2G repositories for all targets
     -->

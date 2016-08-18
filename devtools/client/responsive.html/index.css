@@ -245,6 +245,11 @@ html, body {
 .browser {
   display: block;
   border: 0;
+  -moz-user-select: none;
+}
+
+.browser:-moz-focusring {
+  outline: none;
 }
 
 /**
