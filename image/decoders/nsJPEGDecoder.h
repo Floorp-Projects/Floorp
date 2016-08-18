@@ -80,6 +80,7 @@ private:
 
   LexerTransition<State> ReadJPEGData(const char* aData, size_t aLength);
   LexerTransition<State> FinishedJPEGData();
+  void ClearRemainingRows();
 
   StreamingLexer<State> mLexer;
 
