@@ -1481,6 +1481,21 @@ GCRuntime::setNurseryCollectionCallback(JS::GCNurseryCollectionCallback callback
     return stats.setNurseryCollectionCallback(callback);
 }
 
+JS::DoCycleCollectionCallback
+GCRuntime::setDoCycleCollectionCallback(JS::DoCycleCollectionCallback callback)
+{
+    auto prior = gcDoCycleCollectionCallback;
+    gcDoCycleCollectionCallback = Callback<JS::DoCycleCollectionCallback>(callback, nullptr);
+    return prior.op;
+}
+
+void
+GCRuntime::callDoCycleCollectionCallback(JSContext* cx)
+{
+    if (gcDoCycleCollectionCallback.op)
+        gcDoCycleCollectionCallback.op(cx);
+}
+
 bool
 GCRuntime::addRoot(Value* vp, const char* name)
 {
@@ -6171,6 +6186,31 @@ GCRuntime::scanZonesBeforeGC()
     return zoneStats;
 }
 
+// The GC can only clean up scheduledForDestruction compartments that were
+// marked live by a barrier (e.g. by RemapWrappers from a navigation event).
+// It is also common to have compartments held live because they are part of a
+// cycle in gecko, e.g. involving the HTMLDocument wrapper. In this case, we
+// need to run the CycleCollector in order to remove these edges before the
+// compartment can be freed.
+void
+GCRuntime::maybeDoCycleCollection()
+{
+    const static double ExcessiveGrayCompartments = 0.8;
+    const static size_t LimitGrayCompartments = 200;
+
+    size_t compartmentsTotal = 0;
+    size_t compartmentsGray = 0;
+    for (CompartmentsIter c(rt, SkipAtoms); !c.done(); c.next()) {
+        ++compartmentsTotal;
+        GlobalObject* global = c->unsafeUnbarrieredMaybeGlobal();
+        if (global && global->asTenured().isMarked(GRAY))
+            ++compartmentsGray;
+    }
+    double grayFraction = double(compartmentsGray) / double(compartmentsTotal);
+    if (grayFraction > ExcessiveGrayCompartments || compartmentsGray > LimitGrayCompartments)
+        callDoCycleCollectionCallback(rt->contextFromMainThread());
+}
+
 void
 GCRuntime::checkCanCallAPI()
 {
@@ -6250,6 +6290,9 @@ GCRuntime::collect(bool nonincrementalByAPI, SliceBudget budget, JS::gcreason::R
          */
         repeat = (poked && cleanUpEverything) || wasReset || repeatForDeadZone;
     } while (repeat);
+
+    if (reason == JS::gcreason::COMPARTMENT_REVIVED)
+        maybeDoCycleCollection();
 
 #ifdef JS_GC_ZEAL
     if (shouldCompact() && rt->hasZealMode(ZealMode::CheckHeapOnMovingGC)) {
@@ -7167,6 +7210,12 @@ JS_PUBLIC_API(JS::GCSliceCallback)
 JS::SetGCSliceCallback(JSContext* cx, GCSliceCallback callback)
 {
     return cx->gc.setSliceCallback(callback);
+}
+
+JS_PUBLIC_API(JS::DoCycleCollectionCallback)
+JS::SetDoCycleCollectionCallback(JSContext* cx, JS::DoCycleCollectionCallback callback)
+{
+    return cx->gc.setDoCycleCollectionCallback(callback);
 }
 
 JS_PUBLIC_API(JS::GCNurseryCollectionCallback)
