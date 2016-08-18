@@ -25,6 +25,7 @@ namespace mscom {
 Interceptor::Create(STAUniquePtr<IUnknown>& aTarget, IInterceptorSink* aSink,
                     REFIID aIid, void** aOutput)
 {
+  MOZ_ASSERT(aOutput && aTarget && aSink);
   if (!aOutput) {
     return E_INVALIDARG;
   }
@@ -141,6 +142,13 @@ Interceptor::GetInterceptorForIID(REFIID aIid, void** aOutInterceptor)
 {
   if (!aOutInterceptor) {
     return E_INVALIDARG;
+  }
+
+  if (aIid == IID_IUnknown) {
+    // Special case: When we see IUnknown, we just provide a reference to this
+    *aOutInterceptor = static_cast<IInterceptor*>(this);
+    AddRef();
+    return S_OK;
   }
 
   RefPtr<IUnknown> unkInterceptor;
