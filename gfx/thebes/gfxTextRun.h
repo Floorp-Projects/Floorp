@@ -901,6 +901,14 @@ public:
     // This will call UpdateUserFonts() if the user font set is changed.
     void SetUserFontSet(gfxUserFontSet *aUserFontSet);
 
+    void ClearCachedData()
+    {
+        mUnderlineOffset = UNDERLINE_OFFSET_NOT_SET;
+        mSkipDrawing = false;
+        mHyphenWidth = -1;
+        mCachedEllipsisTextRun = nullptr;
+    }
+
     // If there is a user font set, check to see whether the font list or any
     // caches need updating.
     virtual void UpdateUserFonts();
