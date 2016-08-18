@@ -48,6 +48,7 @@ task:
         platform: lint
       groupSymbol: tc
       symbol: 'Doc'
+      tier: 1
     treeherderEnv:
       - production
       - staging
