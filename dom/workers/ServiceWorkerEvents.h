@@ -214,7 +214,7 @@ private:
   nsString mDecodedText;
   ~PushMessageData();
 
-  NS_METHOD EnsureDecodedText();
+  nsresult EnsureDecodedText();
   uint8_t* GetContentsCopy();
 };
 

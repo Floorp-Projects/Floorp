@@ -1187,21 +1187,6 @@ ClientMultiTiledLayerBuffer::ComputeProgressiveUpdateRegion(const nsIntRegion& a
   // first, and see if we should just abort this paint. Aborting is usually
   // caused by there being an incoming, more relevant paint.
   AsyncTransform viewTransform;
-#if defined(MOZ_WIDGET_ANDROID) && !defined(MOZ_ANDROID_APZ)
-  FrameMetrics contentMetrics = scrollAncestor.Metrics();
-  bool abortPaint = false;
-  // On Android, only the primary scrollable layer is async-scrolled, and the only one
-  // that the Java-side code can provide details about. If we're tiling some other layer
-  // then we already have all the information we need about it.
-  if (contentMetrics.GetScrollId() == mManager->GetRootScrollableLayerId()) {
-    FrameMetrics compositorMetrics = contentMetrics;
-    // The ProgressiveUpdateCallback updates the compositorMetrics
-    abortPaint = mManager->ProgressiveUpdateCallback(!staleRegion.Contains(aInvalidRegion),
-                                                     compositorMetrics,
-                                                     !drawingLowPrecision);
-    viewTransform = ComputeViewTransform(contentMetrics, compositorMetrics);
-  }
-#else
   MOZ_ASSERT(mSharedFrameMetricsHelper);
 
   bool abortPaint =
@@ -1210,7 +1195,6 @@ ClientMultiTiledLayerBuffer::ComputeProgressiveUpdateRegion(const nsIntRegion& a
       !staleRegion.Contains(aInvalidRegion),
       drawingLowPrecision,
       viewTransform);
-#endif
 
   TILING_LOG("TILING %p: Progressive update view transform %s zoom %f abort %d\n",
       mPaintedLayer, ToString(viewTransform.mTranslation).c_str(), viewTransform.mScale.scale, abortPaint);

@@ -13,9 +13,7 @@ import org.mozilla.gecko.favicons.Favicons;
 import org.mozilla.gecko.favicons.OnFaviconLoadedListener;
 import org.mozilla.gecko.gfx.BitmapUtils;
 import org.mozilla.gecko.gfx.FullScreenState;
-import org.mozilla.gecko.gfx.Layer;
 import org.mozilla.gecko.gfx.LayerView;
-import org.mozilla.gecko.gfx.PluginLayer;
 import org.mozilla.gecko.health.HealthRecorder;
 import org.mozilla.gecko.health.SessionInformation;
 import org.mozilla.gecko.health.StubbedHealthRecorder;
@@ -357,7 +355,6 @@ public abstract class GeckoApp
         // When a tab is unselected, another tab is always selected first.
         switch (msg) {
             case UNSELECTED:
-                hidePlugins(tab);
                 break;
 
             case LOCATION_CHANGE:
@@ -917,30 +914,18 @@ public abstract class GeckoApp
     }
 
     @Override
-    public void addPluginView(final View view, final RectF rect, final boolean isFullScreen) {
-        ThreadUtils.postToUiThread(new Runnable() {
-            @Override
-            public void run() {
-                Tabs tabs = Tabs.getInstance();
-                Tab tab = tabs.getSelectedTab();
+    public void addPluginView(final View view) {
 
-                if (isFullScreen) {
+        if (ThreadUtils.isOnUiThread()) {
+            addFullScreenPluginView(view);
+        } else {
+            ThreadUtils.postToUiThread(new Runnable() {
+                @Override
+                public void run() {
                     addFullScreenPluginView(view);
-                    return;
                 }
-
-                PluginLayer layer = (PluginLayer) tab.getPluginLayer(view);
-                if (layer == null) {
-                    layer = new PluginLayer(view, rect, mLayerView.getRenderer().getMaxTextureSize());
-                    tab.addPluginLayer(view, layer);
-                } else {
-                    layer.reset(rect);
-                    layer.setVisible(true);
-                }
-
-                mLayerView.addLayer(layer);
-            }
-        });
+            });
+        }
     }
 
     /* package */ void removeFullScreenPluginView(View view) {
@@ -975,24 +960,17 @@ public abstract class GeckoApp
     }
 
     @Override
-    public void removePluginView(final View view, final boolean isFullScreen) {
-        ThreadUtils.postToUiThread(new Runnable() {
-            @Override
-            public void run() {
-                Tabs tabs = Tabs.getInstance();
-                Tab tab = tabs.getSelectedTab();
-
-                if (isFullScreen) {
+    public void removePluginView(final View view) {
+        if (ThreadUtils.isOnUiThread()) {
+            removePluginView(view);
+        } else {
+            ThreadUtils.postToUiThread(new Runnable() {
+                @Override
+                public void run() {
                     removeFullScreenPluginView(view);
-                    return;
                 }
-
-                PluginLayer layer = (PluginLayer) tab.removePluginLayer(view);
-                if (layer != null) {
-                    layer.destroy();
-                }
-            }
-        });
+            });
+        }
     }
 
     // This method starts downloading an image synchronously and displays the Chooser activity to set the image as wallpaper.
@@ -1096,51 +1074,8 @@ public abstract class GeckoApp
         return inSampleSize;
     }
 
-    private void hidePluginLayer(Layer layer) {
-        LayerView layerView = mLayerView;
-        layerView.removeLayer(layer);
-        layerView.requestRender();
-    }
-
-    private void showPluginLayer(Layer layer) {
-        LayerView layerView = mLayerView;
-        layerView.addLayer(layer);
-        layerView.requestRender();
-    }
-
     public void requestRender() {
         mLayerView.requestRender();
-    }
-
-    public void hidePlugins(Tab tab) {
-        for (Layer layer : tab.getPluginLayers()) {
-            if (layer instanceof PluginLayer) {
-                ((PluginLayer) layer).setVisible(false);
-            }
-
-            hidePluginLayer(layer);
-        }
-
-        requestRender();
-    }
-
-    public void showPlugins() {
-        Tabs tabs = Tabs.getInstance();
-        Tab tab = tabs.getSelectedTab();
-
-        showPlugins(tab);
-    }
-
-    public void showPlugins(Tab tab) {
-        for (Layer layer : tab.getPluginLayers()) {
-            showPluginLayer(layer);
-
-            if (layer instanceof PluginLayer) {
-                ((PluginLayer) layer).setVisible(true);
-            }
-        }
-
-        requestRender();
     }
 
     @Override
@@ -1347,9 +1282,7 @@ public abstract class GeckoApp
 
         if (Versions.preMarshmallow) {
             mTextSelection = new ActionBarTextSelection(
-                    (TextSelectionHandle) findViewById(R.id.anchor_handle),
-                    (TextSelectionHandle) findViewById(R.id.caret_handle),
-                    (TextSelectionHandle) findViewById(R.id.focus_handle));
+                    (TextSelectionHandle) findViewById(R.id.anchor_handle));
         } else {
             mTextSelection = new FloatingToolbarTextSelection(this, mLayerView);
         }
@@ -1377,6 +1310,7 @@ public abstract class GeckoApp
                 // If we are doing a restore, read the session data so we can send it to Gecko later.
                 String restoreMessage = null;
                 if (!mIsRestoringActivity && mShouldRestore) {
+                    final boolean isExternalURL = invokedWithExternalURL(getIntentURI(new SafeIntent(getIntent())));
                     try {
                         // restoreSessionTabs() will create simple tab stubs with the
                         // URL and title for each page, but we also need to restore
@@ -1384,23 +1318,37 @@ public abstract class GeckoApp
                         // of the tab stubs into the JSON data (which holds the session
                         // history). This JSON data is then sent to Gecko so session
                         // history can be restored for each tab.
-                        final SafeIntent intent = new SafeIntent(getIntent());
-                        restoreMessage = restoreSessionTabs(invokedWithExternalURL(getIntentURI(intent)));
+                        restoreMessage = restoreSessionTabs(isExternalURL, false);
                     } catch (SessionRestoreException e) {
-                        // If restore failed, do a normal startup
-                        Log.e(LOGTAG, "An error occurred during restore", e);
-                        // If mShouldRestore was already set to false in restoreSessionTabs(),
-                        // this means that we intentionally skipped all tabs read from the
-                        // session file, so we don't have to report this exception in telemetry
-                        // and can ignore the following bit.
-                        if (mShouldRestore && getProfile().sessionFileExistsAndNotEmptyWindow()) {
-                            // If we got a SessionRestoreException even though the file exists and its
-                            // length doesn't match the known length of an intentionally empty file,
-                            // it's very likely we've encountered a damaged/corrupt session store file.
-                            Log.d(LOGTAG, "Suspecting a damaged session store file.");
-                            Telemetry.addToHistogram("FENNEC_SESSIONSTORE_DAMAGED_SESSION_FILE", 1);
+                        // If mShouldRestore was set to false in restoreSessionTabs(), this means
+                        // either that we intentionally skipped all tabs read from the session file,
+                        // or else that the file was syntactically valid, but didn't contain any
+                        // tabs (e.g. because the user cleared history), therefore we don't need
+                        // to switch to the backup copy.
+                        if (mShouldRestore) {
+                            Log.e(LOGTAG, "An error occurred during restore, switching to backup file", e);
+                            // To be on the safe side, we will always attempt to restore from the backup
+                            // copy if we end up here.
+                            // Since we will also hit this situation regularly during first run though,
+                            // we'll only report it in telemetry if we failed to restore despite the
+                            // file existing, which means it's very probably damaged.
+                            if (getProfile().sessionFileExists()) {
+                                Telemetry.addToHistogram("FENNEC_SESSIONSTORE_DAMAGED_SESSION_FILE", 1);
+                            }
+                            try {
+                                restoreMessage = restoreSessionTabs(isExternalURL, true);
+                                Telemetry.addToHistogram("FENNEC_SESSIONSTORE_RESTORING_FROM_BACKUP", 1);
+                            } catch (SessionRestoreException ex) {
+                                if (!mShouldRestore) {
+                                    // Restoring only "failed" because the backup copy was deliberately empty, too.
+                                    Telemetry.addToHistogram("FENNEC_SESSIONSTORE_RESTORING_FROM_BACKUP", 1);
+                                } else {
+                                    // Restoring the backup failed, too, so do a normal startup.
+                                    Log.e(LOGTAG, "An error occurred during restore", ex);
+                                    mShouldRestore = false;
+                                }
+                            }
                         }
-                        mShouldRestore = false;
                     }
                 }
 
@@ -1414,7 +1362,7 @@ public abstract class GeckoApp
                     GeckoAppShell.notifyObservers("Session:Restore", restoreMessage);
                 }
 
-                // Make sure sessionstore.bak is either updated or deleted as necessary.
+                // Make sure sessionstore.old is either updated or deleted as necessary.
                 getProfile().updateSessionFile(mShouldRestore);
             }
         });
@@ -1779,9 +1727,9 @@ public abstract class GeckoApp
     }
 
     @WorkerThread
-    private String restoreSessionTabs(final boolean isExternalURL) throws SessionRestoreException {
+    private String restoreSessionTabs(final boolean isExternalURL, boolean useBackup) throws SessionRestoreException {
         try {
-            String sessionString = getProfile().readSessionFile(false);
+            String sessionString = getProfile().readSessionFile(useBackup);
             if (sessionString == null) {
                 throw new SessionRestoreException("Could not read from session file");
             }
@@ -1792,23 +1740,26 @@ public abstract class GeckoApp
             if (mShouldRestore) {
                 final JSONArray tabs = new JSONArray();
                 final JSONObject windowObject = new JSONObject();
+                final boolean sessionDataValid;
 
                 LastSessionParser parser = new LastSessionParser(tabs, windowObject, isExternalURL);
 
                 if (mPrivateBrowsingSession == null) {
-                    parser.parse(sessionString);
+                    sessionDataValid = parser.parse(sessionString);
                 } else {
-                    parser.parse(sessionString, mPrivateBrowsingSession);
+                    sessionDataValid = parser.parse(sessionString, mPrivateBrowsingSession);
                 }
 
                 if (tabs.length() > 0) {
                     windowObject.put("tabs", tabs);
                     sessionString = new JSONObject().put("windows", new JSONArray().put(windowObject)).toString();
                 } else {
-                    if (parser.allTabsSkipped()) {
+                    if (parser.allTabsSkipped() || sessionDataValid) {
                         // If we intentionally skipped all tabs we've read from the session file, we
                         // set mShouldRestore back to false at this point already, so the calling code
                         // can infer that the exception wasn't due to a damaged session store file.
+                        // The same applies if the session file was syntactically valid and
+                        // simply didn't contain any tabs.
                         mShouldRestore = false;
                     }
                     throw new SessionRestoreException("No tabs could be read from session file");

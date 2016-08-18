@@ -102,9 +102,10 @@ public:
   // on failure.
   virtual nsresult Init() { return NS_OK; }
 
-  // Release media resources they should be released in dormant state
-  // The reader can be made usable again by calling ReadMetadata().
-  virtual void ReleaseMediaResources() {}
+  // Called by MDSM in dormant state to release resources allocated by this
+  // reader. The reader can resume decoding by calling Seek() to a specific
+  // position.
+  virtual void ReleaseResources() {}
 
   // Destroys the decoding state. The reader cannot be made usable again.
   // This is different from ReleaseMediaResources() as it is irreversable,

@@ -3,13 +3,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-
-
 #include "nsUCSupport.h"
 #include "nsUCConstructors.h"
 
 template<class T>
-inline NS_METHOD StabilizedQueryInterface(T* aNewObject,
+inline nsresult StabilizedQueryInterface(T* aNewObject,
                                          REFNSIID aIID,
                                          void **aResult)
 {
@@ -19,8 +17,8 @@ inline NS_METHOD StabilizedQueryInterface(T* aNewObject,
     return rv;
 }
 
-NS_METHOD
-CreateMultiTableDecoder(int32_t aTableCount, const uRange * aRangeArray, 
+nsresult
+CreateMultiTableDecoder(int32_t aTableCount, const uRange * aRangeArray,
                         uScanClassID * aScanClassArray,
                         uMappingTable ** aMappingTable,
                         uint32_t aMaxLengthFactor,
@@ -31,7 +29,7 @@ CreateMultiTableDecoder(int32_t aTableCount, const uRange * aRangeArray,
 
   if (aOuter)
     return NS_ERROR_NO_AGGREGATION;
-  
+
   nsMultiTableDecoderSupport* decoder =
     new nsMultiTableDecoderSupport(aTableCount, aRangeArray,
                                    aScanClassArray, aMappingTable,
@@ -42,7 +40,7 @@ CreateMultiTableDecoder(int32_t aTableCount, const uRange * aRangeArray,
   return StabilizedQueryInterface(decoder, aIID, aResult);
 }
 
-NS_METHOD
+nsresult
 CreateMultiTableEncoder(int32_t aTableCount,
                         uScanClassID * aScanClassArray,
                         uShiftOutTable ** aShiftOutTable,
@@ -55,7 +53,7 @@ CreateMultiTableEncoder(int32_t aTableCount,
 
   if (aOuter)
     return NS_ERROR_NO_AGGREGATION;
-  
+
   nsMultiTableEncoderSupport* encoder =
     new nsMultiTableEncoderSupport(aTableCount,
                                    aScanClassArray,
@@ -68,7 +66,7 @@ CreateMultiTableEncoder(int32_t aTableCount,
   return StabilizedQueryInterface(encoder, aIID, aResult);
 }
 
-NS_METHOD
+nsresult
 CreateMultiTableEncoder(int32_t aTableCount,
                         uScanClassID * aScanClassArray,
                         uMappingTable ** aMappingTable,
@@ -83,7 +81,7 @@ CreateMultiTableEncoder(int32_t aTableCount,
                                  aOuter, aIID, aResult);
 }
 
-NS_METHOD
+nsresult
 CreateTableEncoder(uScanClassID aScanClass,
                    uShiftOutTable * aShiftOutTable,
                    uMappingTable  * aMappingTable,
@@ -94,7 +92,7 @@ CreateTableEncoder(uScanClassID aScanClass,
 {
   if (aOuter)
     return NS_ERROR_NO_AGGREGATION;
-  
+
   nsTableEncoderSupport* encoder =
       new nsTableEncoderSupport(aScanClass,
                                 aShiftOutTable,  aMappingTable,
@@ -105,7 +103,7 @@ CreateTableEncoder(uScanClassID aScanClass,
   return StabilizedQueryInterface(encoder, aIID, aResult);
 }
 
-NS_METHOD
+nsresult
 CreateTableEncoder(uScanClassID aScanClass,
                    uMappingTable  * aMappingTable,
                    uint32_t aMaxLengthFactor,
@@ -118,20 +116,19 @@ CreateTableEncoder(uScanClassID aScanClass,
                               aOuter, aIID, aResult);
 }
 
-NS_METHOD
+nsresult
 CreateOneByteDecoder(uMappingTable * aMappingTable,
-                     
                      nsISupports* aOuter,
                      REFNSIID aIID,
                      void** aResult)
 {
     if (aOuter) return NS_ERROR_NO_AGGREGATION;
-    
+
     nsOneByteDecoderSupport* decoder =
         new nsOneByteDecoderSupport(aMappingTable);
 
     if (!decoder)
         return NS_ERROR_OUT_OF_MEMORY;
-    
+
     return StabilizedQueryInterface(decoder, aIID, aResult);
 }

@@ -208,7 +208,7 @@ private:
   
   // Infallible overloaded new operator. Uses an arena (which comes from the
   // presShell) to perform the allocation.
-  void* operator new(size_t sz, nsIPresShell* aPresShell) CPP_THROW_NEW;
+  void* operator new(size_t sz, nsIPresShell* aPresShell);
   void operator delete(void* aPtr, size_t sz) = delete;
 
 public:

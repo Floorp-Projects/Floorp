@@ -26,6 +26,7 @@
 const {Ci, Cc} = require("chrome");
 const Services = require("Services");
 const focusManager = Services.focus;
+const {KeyCodes} = require("devtools/client/shared/keycodes");
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 const CONTENT_TYPES = {
@@ -48,7 +49,7 @@ const { findMostRelevantCssPropertyIndex } = require("./suggestion-picker");
 
 /**
  * Helper to check if the provided key matches one of the expected keys.
- * Keys will be prefixed with DOM_VK_ and should match a key in nsIDOMKeyEvent.
+ * Keys will be prefixed with DOM_VK_ and should match a key in KeyCodes.
  *
  * @param {String} key
  *        the key to check (can be a keyCode).
@@ -58,7 +59,7 @@ const { findMostRelevantCssPropertyIndex } = require("./suggestion-picker");
  */
 function isKeyIn(key, ...keys) {
   return keys.some(expectedKey => {
-    return key === Ci.nsIDOMKeyEvent["DOM_VK_" + expectedKey];
+    return key === KeyCodes["DOM_VK_" + expectedKey];
   });
 }
 

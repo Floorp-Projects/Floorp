@@ -559,7 +559,7 @@ exports.createEmptyNodeList = function(doc) {
  * Keyboard handling is a mess. http://unixpapa.com/js/key.html
  * It would be good to use DOM L3 Keyboard events,
  * http://www.w3.org/TR/2010/WD-DOM-Level-3-Events-20100907/#events-keyboardevents
- * however only Webkit supports them, and there isn't a shim on Monernizr:
+ * however only Webkit supports them, and there isn't a shim on Modernizr:
  * https://github.com/Modernizr/Modernizr/wiki/HTML5-Cross-browser-Polyfills
  * and when the code that uses this KeyEvent was written, nothing was clear,
  * so instead, we're using this unmodern shim:

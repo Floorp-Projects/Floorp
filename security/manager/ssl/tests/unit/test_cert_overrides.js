@@ -49,6 +49,8 @@ function check_telemetry() {
         "Actual and expected MOZILLA_PKIX_ERROR_NOT_YET_VALID_ISSUER_CERTIFICATE counts should match");
   equal(histogram.counts[16], 2,
         "Actual and expected SEC_ERROR_INVALID_TIME counts should match");
+  equal(histogram.counts[17], 1,
+        "Actual and expected MOZILLA_PKIX_ERROR_EMPTY_ISSUER_NAME counts should match");
 
   let keySizeHistogram = Cc["@mozilla.org/base/telemetry;1"]
                            .getService(Ci.nsITelemetry)
@@ -60,7 +62,7 @@ function check_telemetry() {
         "Actual and expected successful verifications of 2048-bit keys should match");
   equal(keySizeHistogram.counts[2], 0,
         "Actual and expected successful verifications of 1024-bit keys should match");
-  equal(keySizeHistogram.counts[3], 56,
+  equal(keySizeHistogram.counts[3], 58,
         "Actual and expected verification failures unrelated to key size should match");
 
   run_next_test();
@@ -149,6 +151,9 @@ function add_simple_tests() {
   add_cert_override_test("md5signature.example.com",
                          Ci.nsICertOverrideService.ERROR_UNTRUSTED,
                          SEC_ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED);
+  add_cert_override_test("emptyissuername.example.com",
+                         Ci.nsICertOverrideService.ERROR_UNTRUSTED,
+                         MOZILLA_PKIX_ERROR_EMPTY_ISSUER_NAME);
   // This has name information in the subject alternative names extension,
   // but not the subject common name.
   add_cert_override_test("mismatch.example.com",

@@ -14,12 +14,6 @@ var connection;
 var receiverIframe;
 
 function setup() {
-  SpecialPowers.addPermission("presentation",
-                              true, { url: receiverUrl,
-                                      originAttributes: {
-                                        appId: SpecialPowers.Ci.nsIScriptSecurityManager.NO_APP_ID,
-                                        inIsolatedMozBrowser: true }});
-
   gScript.addMessageListener('device-prompt', function devicePromptHandler() {
     debug('Got message: device-prompt');
     gScript.removeMessageListener('device-prompt', devicePromptHandler);
@@ -154,11 +148,6 @@ function teardown() {
     SimpleTest.finish();
   });
 
-  SpecialPowers.removePermission("presentation",
-                                 { url: receiverUrl,
-                                   originAttributes: {
-                                     appId: SpecialPowers.Ci.nsIScriptSecurityManager.NO_APP_ID,
-                                     inIsolatedMozBrowser: true }});
   gScript.sendAsyncMessage('teardown');
 }
 
@@ -171,10 +160,11 @@ function runTests() {
 
 SpecialPowers.pushPermissions([
   {type: 'presentation-device-manage', allow: false, context: document},
-  {type: 'presentation', allow: true, context: document},
   {type: "browser", allow: true, context: document},
 ], () => {
   SpecialPowers.pushPrefEnv({ 'set': [["dom.presentation.enabled", true],
+                                      ["dom.presentation.controller.enabled", true],
+                                      ["dom.presentation.receiver.enabled", true],
                                       ["dom.presentation.test.enabled", true],
                                       ["dom.mozBrowserFramesEnabled", true],
                                       ["dom.ipc.tabs.disabled", false],

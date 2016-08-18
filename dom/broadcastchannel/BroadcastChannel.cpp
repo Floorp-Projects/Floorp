@@ -40,7 +40,7 @@ public:
 
   BroadcastChannelMessage()
     : StructuredCloneHolder(CloningSupported, TransferringNotSupported,
-                            DifferentProcess)
+                            StructuredCloneScope::DifferentProcess)
   {}
 
 private:

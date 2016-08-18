@@ -124,6 +124,25 @@ CheckSignatureAlgorithm(TrustDomain& trustDomain,
   return Success;
 }
 
+// 4.1.2.4 Issuer
+
+Result
+CheckIssuer(Input encodedIssuer)
+{
+  // "The issuer field MUST contain a non-empty distinguished name (DN)."
+  Reader issuer(encodedIssuer);
+  Input encodedRDNs;
+  ExpectTagAndGetValue(issuer, der::SEQUENCE, encodedRDNs);
+  Reader rdns(encodedRDNs);
+  // Check that the issuer name contains at least one RDN
+  // (Note: this does not check related grammar rules, such as there being one
+  // or more AVAs in each RDN, or the values in AVAs not being empty strings)
+  if (rdns.AtEnd()) {
+    return Result::ERROR_EMPTY_ISSUER_NAME;
+  }
+  return Success;
+}
+
 // 4.1.2.5 Validity
 
 Result
@@ -984,6 +1003,12 @@ CheckIssuerIndependentProperties(TrustDomain& trustDomain,
   // certificates with keys weaker than RSA 2048.
   rv = CheckSubjectPublicKeyInfo(cert.GetSubjectPublicKeyInfo(), trustDomain,
                                  endEntityOrCA);
+  if (rv != Success) {
+    return rv;
+  }
+
+  // 4.1.2.4. Issuer
+  rv = CheckIssuer(cert.GetIssuer());
   if (rv != Success) {
     return rv;
   }

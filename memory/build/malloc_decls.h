@@ -25,13 +25,16 @@ typedef MALLOC_USABLE_SIZE_CONST_PTR void * usable_ptr_t;
 #  define MALLOC_FUNCS_JEMALLOC 2
 #  define MALLOC_FUNCS_INIT 4
 #  define MALLOC_FUNCS_BRIDGE 8
+#  define MALLOC_FUNCS_EXTRA 16
 #  define MALLOC_FUNCS_ALL (MALLOC_FUNCS_INIT | MALLOC_FUNCS_BRIDGE | \
-                            MALLOC_FUNCS_MALLOC | MALLOC_FUNCS_JEMALLOC)
+                            MALLOC_FUNCS_MALLOC | MALLOC_FUNCS_JEMALLOC | \
+                            MALLOC_FUNCS_EXTRA)
 
 #endif /* malloc_decls_h */
 
 #ifndef MALLOC_FUNCS
-#  define MALLOC_FUNCS (MALLOC_FUNCS_MALLOC | MALLOC_FUNCS_JEMALLOC)
+#  define MALLOC_FUNCS (MALLOC_FUNCS_MALLOC | MALLOC_FUNCS_JEMALLOC | \
+                        MALLOC_FUNCS_EXTRA)
 #endif
 
 #ifdef MALLOC_DECL
@@ -54,10 +57,12 @@ MALLOC_DECL(realloc, void *, void *, size_t)
 MALLOC_DECL_VOID(free, void *)
 MALLOC_DECL(memalign, void *, size_t, size_t)
 MALLOC_DECL(valloc, void *, size_t)
-MALLOC_DECL_VOID(malloc_protect, void *, uint32_t *)
-MALLOC_DECL_VOID(malloc_unprotect, void *, uint32_t *)
 MALLOC_DECL(malloc_usable_size, size_t, usable_ptr_t)
 MALLOC_DECL(malloc_good_size, size_t, size_t)
+#  endif
+#  if MALLOC_FUNCS & MALLOC_FUNCS_EXTRA
+MALLOC_DECL_VOID(malloc_protect, void *, uint32_t *)
+MALLOC_DECL_VOID(malloc_unprotect, void *, uint32_t *)
 #  endif
 #  if MALLOC_FUNCS & MALLOC_FUNCS_JEMALLOC
 MALLOC_DECL_VOID(jemalloc_stats, jemalloc_stats_t *)

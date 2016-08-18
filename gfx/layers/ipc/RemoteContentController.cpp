@@ -90,7 +90,7 @@ RemoteContentController::HandleTap(TapType aTapType,
 void
 RemoteContentController::PostDelayedTask(already_AddRefed<Runnable> aTask, int aDelayMs)
 {
-#ifdef MOZ_ANDROID_APZ
+#ifdef MOZ_WIDGET_ANDROID
   AndroidBridge::Bridge()->PostTaskToUiThread(Move(aTask), aDelayMs);
 #else
   (MessageLoop::current() ? MessageLoop::current() : mUILoop)->

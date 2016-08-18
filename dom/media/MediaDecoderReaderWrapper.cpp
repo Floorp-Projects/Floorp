@@ -328,11 +328,11 @@ MediaDecoderReaderWrapper::UpdateBufferedWithPromise()
 }
 
 void
-MediaDecoderReaderWrapper::ReleaseMediaResources()
+MediaDecoderReaderWrapper::ReleaseResources()
 {
   MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
   nsCOMPtr<nsIRunnable> r =
-    NewRunnableMethod(mReader, &MediaDecoderReader::ReleaseMediaResources);
+    NewRunnableMethod(mReader, &MediaDecoderReader::ReleaseResources);
   mReader->OwnerThread()->Dispatch(r.forget());
 }
 

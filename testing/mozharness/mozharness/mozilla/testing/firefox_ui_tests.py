@@ -256,14 +256,8 @@ class FirefoxUITests(TestingMixin, VCSToolsScript):
         if not self.config.get('e10s'):
             cmd.append('--disable-e10s')
 
-        # Set further environment settings
-        env = env or self.query_env()
-
         if self.symbols_url:
             cmd.extend(['--symbols-path', self.symbols_url])
-
-        if self.query_minidump_stackwalk():
-            env['MINIDUMP_STACKWALK'] = self.minidump_stackwalk_path
 
         if self.config.get('tag'):
             cmd.extend(['--tag', self.config['tag']])
@@ -275,6 +269,12 @@ class FirefoxUITests(TestingMixin, VCSToolsScript):
         # Add the default tests to run
         tests = [os.path.join(dirs['abs_fxui_dir'], 'tests', test) for test in self.default_tests]
         cmd.extend(tests)
+
+        # Set further environment settings
+        env = env or self.query_env()
+        env.update({'MINIDUMP_SAVE_PATH': dirs['abs_blob_upload_dir']})
+        if self.query_minidump_stackwalk():
+            env.update({'MINIDUMP_STACKWALK': self.minidump_stackwalk_path})
 
         return_code = self.run_command(cmd,
                                        cwd=dirs['abs_work_dir'],

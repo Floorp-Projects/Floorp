@@ -6,6 +6,7 @@
 #include "gfxGDIFont.h"
 
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/Sprintf.h"
 #include "mozilla/WindowsVersion.h"
 
 #include <algorithm>
@@ -403,9 +404,9 @@ gfxGDIFont::Initialize()
         cairo_scaled_font_status(mScaledFont) != CAIRO_STATUS_SUCCESS) {
 #ifdef DEBUG
         char warnBuf[1024];
-        sprintf(warnBuf, "Failed to create scaled font: %s status: %d",
-                NS_ConvertUTF16toUTF8(mFontEntry->Name()).get(),
-                mScaledFont ? cairo_scaled_font_status(mScaledFont) : 0);
+        SprintfLiteral(warnBuf, "Failed to create scaled font: %s status: %d",
+                       NS_ConvertUTF16toUTF8(mFontEntry->Name()).get(),
+                       mScaledFont ? cairo_scaled_font_status(mScaledFont) : 0);
         NS_WARNING(warnBuf);
 #endif
         mIsValid = false;
