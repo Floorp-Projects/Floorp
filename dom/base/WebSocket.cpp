@@ -2270,7 +2270,7 @@ WebSocketImpl::RegisterWorkerHolder()
   MOZ_ASSERT(!mWorkerHolder);
   mWorkerHolder = new WebSocketWorkerHolder(this);
 
-  if (NS_WARN_IF(!mWorkerHolder->HoldWorker(mWorkerPrivate))) {
+  if (NS_WARN_IF(!mWorkerHolder->HoldWorker(mWorkerPrivate, Canceling))) {
     mWorkerHolder = nullptr;
     return false;
   }
