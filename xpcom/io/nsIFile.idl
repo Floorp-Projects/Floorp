@@ -93,7 +93,7 @@ interface nsIFile : nsISupports
      *       be ignored on systems that do not need to do
      *       permissions.
      */
-    void create(in unsigned long type, in unsigned long permissions);
+    [must_use] void create(in unsigned long type, in unsigned long permissions);
 
     /**
      *  Accessor to the leaf name of the file itself.      
@@ -291,6 +291,7 @@ interface nsIFile : nsISupports
      *       be ignored on systems that do not need to do
      *       permissions.
      */
+    [must_use]
     void createUnique(in unsigned long type, in unsigned long permissions);
 
     /**

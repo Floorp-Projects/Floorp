@@ -448,7 +448,11 @@ SwitchToUpdatedApp(nsIFile *greDir, nsIFile *updateDir,
   // in MozUpdater in case a previous attempt locked the directory or files.
   mozUpdaterDir->Append(NS_LITERAL_STRING("MozUpdater"));
   mozUpdaterDir->Append(NS_LITERAL_STRING("bgupdate"));
-  mozUpdaterDir->CreateUnique(nsIFile::DIRECTORY_TYPE, 0755);
+  rv = mozUpdaterDir->CreateUnique(nsIFile::DIRECTORY_TYPE, 0755);
+  if (NS_FAILED(rv)) {
+    LOG(("failed creating unique dir\n"));
+    return;
+  }
 
   nsCOMPtr<nsIFile> updater;
   if (!CopyUpdaterIntoUpdateDir(greDir, appDir, mozUpdaterDir, updater)) {
