@@ -872,7 +872,7 @@ VectorImage::Draw(gfxContext* aContext,
 
   // Draw.
   if (result) {
-    RefPtr<SourceSurface> sourceSurface = result.Surface()->GetSurface();
+    RefPtr<SourceSurface> sourceSurface = result.Surface()->GetSourceSurface();
     if (sourceSurface) {
       RefPtr<gfxDrawable> svgDrawable =
         new gfxSurfaceDrawable(sourceSurface, result.Surface()->GetSize());
@@ -939,7 +939,7 @@ VectorImage::CreateSurfaceAndShow(const SVGDrawingParameters& aParams)
 
   // Take a strong reference to the frame's surface and make sure it hasn't
   // already been purged by the operating system.
-  RefPtr<SourceSurface> surface = frame->GetSurface();
+  RefPtr<SourceSurface> surface = frame->GetSourceSurface();
   if (!surface) {
     return Show(svgDrawable, aParams);
   }
