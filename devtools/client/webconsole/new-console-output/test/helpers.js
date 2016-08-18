@@ -10,7 +10,7 @@ var TestUtils = React.addons.TestUtils;
 const actions = require("devtools/client/webconsole/new-console-output/actions/messages");
 const { configureStore } = require("devtools/client/webconsole/new-console-output/store");
 const { IdGenerator } = require("devtools/client/webconsole/new-console-output/utils/id-generator");
-const { stubConsoleMessages } = require("devtools/client/webconsole/new-console-output/test/fixtures/stubs");
+const stubConsoleMessages = require("devtools/client/webconsole/new-console-output/test/fixtures/stubs/index");
 
 /**
  * Prepare actions for use in testing.
