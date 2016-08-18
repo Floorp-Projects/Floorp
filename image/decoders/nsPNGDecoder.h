@@ -29,6 +29,7 @@ protected:
   nsresult InitInternal() override;
   LexerResult DoDecode(SourceBufferIterator& aIterator,
                        IResumable* aOnResume) override;
+  nsresult FinishInternal() override;
 
   Maybe<Telemetry::ID> SpeedHistogram() const override;
 

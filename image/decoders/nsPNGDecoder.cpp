@@ -255,6 +255,7 @@ nsPNGDecoder::EndImageFrame()
     return;
   }
 
+  mPipe.ZeroOutRestOfSurface();
   mNumFrames++;
 
   Opacity opacity = mFormat == SurfaceFormat::B8G8R8X8
@@ -357,6 +358,13 @@ nsPNGDecoder::InitInternal()
                               nsPNGDecoder::row_callback,
                               nsPNGDecoder::end_callback);
 
+  return NS_OK;
+}
+
+nsresult
+nsPNGDecoder::FinishInternal()
+{
+  mPipe.ZeroOutRestOfSurface();
   return NS_OK;
 }
 

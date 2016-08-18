@@ -113,7 +113,9 @@ public:
     }
 
     // Clear the buffer to avoid writing uninitialized memory to the output.
-    memset(mBuffer.get(), 0, bufferSize);
+    uint8_t clear = 0;
+    GetClearValue(clear);
+    memset(mBuffer.get(), clear, bufferSize);
 
     ConfigureFilter(outputSize, sizeof(PixelType));
     return NS_OK;
@@ -129,7 +131,19 @@ public:
     return mNext.TakeInvalidRect();
   }
 
+  bool GetClearValue(uint8_t& aValue) const override
+  {
+    return mNext.GetClearValue(aValue);
+  }
+
 protected:
+  void DoZeroOutRestOfSurface() override
+  {
+    mNext.ZeroOutRestOfSurface();
+    mInputRow = InputSize().height;
+    mPass = 4;
+  }
+
   uint8_t* DoResetToFirstRow() override
   {
     mNext.ResetToFirstRow();
@@ -402,7 +416,9 @@ public:
         return NS_ERROR_OUT_OF_MEMORY;
       }
 
-      memset(mBuffer.get(), 0, mUnclampedFrameRect.width * sizeof(uint32_t));
+      uint8_t clear = 0;
+      GetClearValue(clear);
+      memset(mBuffer.get(), clear, mUnclampedFrameRect.width * sizeof(uint32_t));
     }
 
     ConfigureFilter(mUnclampedFrameRect.Size(), sizeof(uint32_t));
@@ -414,7 +430,18 @@ public:
     return mNext.TakeInvalidRect();
   }
 
+  bool GetClearValue(uint8_t& aValue) const override
+  {
+    return mNext.GetClearValue(aValue);
+  }
+
 protected:
+  void DoZeroOutRestOfSurface() override
+  {
+    mNext.ZeroOutRestOfSurface();
+    mRow = mFrameRect.YMost();
+  }
+
   uint8_t* DoResetToFirstRow() override
   {
     uint8_t* rowPtr = mNext.ResetToFirstRow();
@@ -468,7 +495,7 @@ protected:
       return nullptr;
     }
 
-    // If we had to buffer, copy the data. Otherwise, just advance the row.
+    // If we had to buffer, copy the data.
     if (mBuffer) {
       // We write from the beginning of the buffer unless |mUnclampedFrameRect.x|
       // is negative; if that's the case, we have to skip the portion of the
@@ -485,6 +512,21 @@ protected:
       rowPtr = state == WriteState::NEED_MORE_DATA ? mBuffer.get()
                                                    : nullptr;
     } else {
+      // We need to manually clear the pixels that are not written to before we
+      // advance the row.
+      uint8_t* currentRowPtr = CurrentRowPointer();
+      if (currentRowPtr) {
+        uint8_t clear = 0;
+        if (GetClearValue(clear)) {
+          gfx::IntSize outputSize = mNext.InputSize();
+          const size_t pixelSize = sizeof(uint32_t);
+          const size_t prefixOffset = mFrameRect.x * pixelSize;
+          const size_t postfixOffset = mFrameRect.width * pixelSize;
+          const size_t postfixLength = (outputSize.width - mFrameRect.XMost()) * pixelSize;
+          memset(currentRowPtr - prefixOffset, clear, prefixOffset);
+          memset(currentRowPtr + postfixOffset, clear, postfixLength);
+        }
+      }
       rowPtr = mNext.AdvanceRow();
     }
 
@@ -616,8 +658,10 @@ public:
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    memset(mPreviousRow.get(), 0, inputWidthInBytes);
-    memset(mCurrentRow.get(), 0, inputWidthInBytes);
+    uint8_t clear = 0;
+    GetClearValue(clear);
+    memset(mPreviousRow.get(), clear, inputWidthInBytes);
+    memset(mCurrentRow.get(), clear, inputWidthInBytes);
 
     ConfigureFilter(mNext.InputSize(), sizeof(uint32_t));
     return NS_OK;
@@ -628,7 +672,19 @@ public:
     return mNext.TakeInvalidRect();
   }
 
+  bool GetClearValue(uint8_t& aValue) const override
+  {
+    return mNext.GetClearValue(aValue);
+  }
+
 protected:
+  void DoZeroOutRestOfSurface() override
+  {
+    mNext.ZeroOutRestOfSurface();
+    mRow = InputSize().height;
+    mPass = 7;
+  }
+
   uint8_t* DoResetToFirstRow() override
   {
     mRow = 0;
