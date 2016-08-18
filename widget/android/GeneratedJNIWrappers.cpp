@@ -752,6 +752,12 @@ auto GeckoAppShell::Vibrate(mozilla::jni::LongArray::Param a0, int32_t a1) -> vo
     return mozilla::jni::Method<Vibrate2_t>::Call(GeckoAppShell::Context(), nullptr, a0, a1);
 }
 
+const char GeckoBatteryManager::name[] =
+        "org/mozilla/gecko/GeckoBatteryManager";
+
+constexpr char GeckoBatteryManager::OnBatteryChange_t::name[];
+constexpr char GeckoBatteryManager::OnBatteryChange_t::signature[];
+
 const char GeckoEditable::name[] =
         "org/mozilla/gecko/GeckoEditable";
 
