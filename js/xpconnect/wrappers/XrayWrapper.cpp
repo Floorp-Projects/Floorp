@@ -2283,6 +2283,13 @@ XrayWrapper<Base, Traits>::construct(JSContext* cx, HandleObject wrapper, const 
 }
 
 template <typename Base, typename Traits>
+bool
+XrayWrapper<Base, Traits>::getBuiltinClass(JSContext* cx, JS::HandleObject wrapper, js::ESClass* cls) const
+{
+    return Traits::getBuiltinClass(cx, wrapper, Base::singleton, cls);
+}
+
+template <typename Base, typename Traits>
 const char*
 XrayWrapper<Base, Traits>::className(JSContext* cx, HandleObject wrapper) const
 {
