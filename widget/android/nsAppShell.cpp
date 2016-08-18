@@ -53,6 +53,11 @@
 #include "mozilla/Logging.h"
 #endif
 
+#ifdef MOZ_CRASHREPORTER
+#include "nsICrashReporter.h"
+#include "nsExceptionHandler.h"
+#endif
+
 #include "AndroidAlerts.h"
 #include "ANRReporter.h"
 #include "GeckoBatteryManager.h"
@@ -218,6 +223,21 @@ class GeckoAppShellSupport final
     : public java::GeckoAppShell::Natives<GeckoAppShellSupport>
 {
 public:
+    static void ReportJavaCrash(jni::String::Param aStackTrace)
+    {
+#ifdef MOZ_CRASHREPORTER
+        if (NS_WARN_IF(NS_FAILED(CrashReporter::AnnotateCrashReport(
+                NS_LITERAL_CSTRING("JavaStackTrace"),
+                aStackTrace->ToCString())))) {
+            // Only crash below if crash reporter is initialized and annotation
+            // succeeded. Otherwise try other means of reporting the crash in
+            // Java.
+            return;
+        }
+#endif // MOZ_CRASHREPORTER
+        MOZ_CRASH("Uncaught Java exception");
+    }
+
     static void SyncNotifyObservers(jni::String::Param aTopic,
                                     jni::String::Param aData)
     {

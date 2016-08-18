@@ -1782,6 +1782,24 @@ public:
 
     static auto RemoveFullScreenPluginView(mozilla::jni::Object::Param) -> void;
 
+    struct ReportJavaCrash_t {
+        typedef GeckoAppShell Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<
+                mozilla::jni::String::Param> Args;
+        static constexpr char name[] = "reportJavaCrash";
+        static constexpr char signature[] =
+                "(Ljava/lang/String;)V";
+        static const bool isStatic = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+        static const mozilla::jni::CallingThread callingThread =
+                mozilla::jni::CallingThread::ANY;
+        static const mozilla::jni::DispatchTarget dispatchTarget =
+                mozilla::jni::DispatchTarget::CURRENT;
+    };
+
     struct ScheduleRestart_t {
         typedef GeckoAppShell Owner;
         typedef void ReturnType;
