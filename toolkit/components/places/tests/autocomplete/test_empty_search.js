@@ -31,23 +31,23 @@ addPageBook(4, 0, 0); // bookmark
 addPageBook(5, 0, 0); // bookmark typed
 
 // Set some pages as typed
-markTyped([2,3,5], 0);
+markTyped([2, 3, 5], 0);
 // Remove pages from history to treat them as unvisited
-removePages([4,5]);
+removePages([4, 5]);
 
 // Provide for each test: description; search terms; array of gPages indices of
 // pages that should match; optional function to be run before the test
 var gTests = [
   ["0: Match everything",
-   "foo", [0,1,2,3,4,5]],
+   "foo", [0, 1, 2, 3, 4, 5]],
   ["1: Match only typed history",
-   "foo ^ ~", [2,3]],
+   "foo ^ ~", [2, 3]],
   ["2: Drop-down empty search matches only typed history",
-   "", [2,3]],
+   "", [2, 3]],
   ["3: Drop-down empty search matches only bookmarks",
-   "", [2,3], matchBookmarks],
+   "", [2, 3], matchBookmarks],
   ["4: Drop-down empty search matches only typed",
-   "", [2,3], matchTyped],
+   "", [2, 3], matchTyped],
 ];
 
 function matchBookmarks() {

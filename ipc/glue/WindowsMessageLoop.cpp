@@ -1096,6 +1096,12 @@ MessageChannel::WaitForSyncNotifyWithA11yReentry()
     if (hr == S_OK) {
       if (waitResult == 0) {
         // mEvent is signaled
+        BOOL success = ::ResetEvent(mEvent);
+        if (!success) {
+          gfxDevCrash(mozilla::gfx::LogReason::MessageChannelInvalidHandle) <<
+                      "WindowsMessageChannel::WaitForSyncNotifyWithA11yReentry failed to reset event. GetLastError: " <<
+                      GetLastError();
+        }
         break;
       }
       if (waitResult == WAIT_IO_COMPLETION) {
@@ -1103,7 +1109,8 @@ MessageChannel::WaitForSyncNotifyWithA11yReentry()
         continue;
       }
     }
-    NS_WARN_IF_FALSE(SUCCEEDED(hr), "CoWaitForMultipleHandles failed");
+    NS_ERROR("CoWaitForMultipleHandles failed");
+    break;
   }
 
   return WaitResponse(timedOut);
@@ -1119,6 +1126,7 @@ MessageChannel::WaitForSyncNotify(bool aHandleWindowsMessages)
 
 #if defined(ACCESSIBILITY)
   if (IsVistaOrLater() && (mFlags & REQUIRE_A11Y_REENTRY)) {
+    MOZ_ASSERT(!(mFlags & REQUIRE_DEFERRED_MESSAGE_PROTECTION));
     return WaitForSyncNotifyWithA11yReentry();
   }
 #endif

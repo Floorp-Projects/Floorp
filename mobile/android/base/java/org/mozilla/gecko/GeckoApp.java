@@ -13,9 +13,7 @@ import org.mozilla.gecko.favicons.Favicons;
 import org.mozilla.gecko.favicons.OnFaviconLoadedListener;
 import org.mozilla.gecko.gfx.BitmapUtils;
 import org.mozilla.gecko.gfx.FullScreenState;
-import org.mozilla.gecko.gfx.Layer;
 import org.mozilla.gecko.gfx.LayerView;
-import org.mozilla.gecko.gfx.PluginLayer;
 import org.mozilla.gecko.health.HealthRecorder;
 import org.mozilla.gecko.health.SessionInformation;
 import org.mozilla.gecko.health.StubbedHealthRecorder;
@@ -357,7 +355,6 @@ public abstract class GeckoApp
         // When a tab is unselected, another tab is always selected first.
         switch (msg) {
             case UNSELECTED:
-                hidePlugins(tab);
                 break;
 
             case LOCATION_CHANGE:
@@ -917,30 +914,18 @@ public abstract class GeckoApp
     }
 
     @Override
-    public void addPluginView(final View view, final RectF rect, final boolean isFullScreen) {
-        ThreadUtils.postToUiThread(new Runnable() {
-            @Override
-            public void run() {
-                Tabs tabs = Tabs.getInstance();
-                Tab tab = tabs.getSelectedTab();
+    public void addPluginView(final View view) {
 
-                if (isFullScreen) {
+        if (ThreadUtils.isOnUiThread()) {
+            addFullScreenPluginView(view);
+        } else {
+            ThreadUtils.postToUiThread(new Runnable() {
+                @Override
+                public void run() {
                     addFullScreenPluginView(view);
-                    return;
                 }
-
-                PluginLayer layer = (PluginLayer) tab.getPluginLayer(view);
-                if (layer == null) {
-                    layer = new PluginLayer(view, rect, mLayerView.getRenderer().getMaxTextureSize());
-                    tab.addPluginLayer(view, layer);
-                } else {
-                    layer.reset(rect);
-                    layer.setVisible(true);
-                }
-
-                mLayerView.addLayer(layer);
-            }
-        });
+            });
+        }
     }
 
     /* package */ void removeFullScreenPluginView(View view) {
@@ -975,24 +960,17 @@ public abstract class GeckoApp
     }
 
     @Override
-    public void removePluginView(final View view, final boolean isFullScreen) {
-        ThreadUtils.postToUiThread(new Runnable() {
-            @Override
-            public void run() {
-                Tabs tabs = Tabs.getInstance();
-                Tab tab = tabs.getSelectedTab();
-
-                if (isFullScreen) {
+    public void removePluginView(final View view) {
+        if (ThreadUtils.isOnUiThread()) {
+            removePluginView(view);
+        } else {
+            ThreadUtils.postToUiThread(new Runnable() {
+                @Override
+                public void run() {
                     removeFullScreenPluginView(view);
-                    return;
                 }
-
-                PluginLayer layer = (PluginLayer) tab.removePluginLayer(view);
-                if (layer != null) {
-                    layer.destroy();
-                }
-            }
-        });
+            });
+        }
     }
 
     // This method starts downloading an image synchronously and displays the Chooser activity to set the image as wallpaper.
@@ -1096,51 +1074,8 @@ public abstract class GeckoApp
         return inSampleSize;
     }
 
-    private void hidePluginLayer(Layer layer) {
-        LayerView layerView = mLayerView;
-        layerView.removeLayer(layer);
-        layerView.requestRender();
-    }
-
-    private void showPluginLayer(Layer layer) {
-        LayerView layerView = mLayerView;
-        layerView.addLayer(layer);
-        layerView.requestRender();
-    }
-
     public void requestRender() {
         mLayerView.requestRender();
-    }
-
-    public void hidePlugins(Tab tab) {
-        for (Layer layer : tab.getPluginLayers()) {
-            if (layer instanceof PluginLayer) {
-                ((PluginLayer) layer).setVisible(false);
-            }
-
-            hidePluginLayer(layer);
-        }
-
-        requestRender();
-    }
-
-    public void showPlugins() {
-        Tabs tabs = Tabs.getInstance();
-        Tab tab = tabs.getSelectedTab();
-
-        showPlugins(tab);
-    }
-
-    public void showPlugins(Tab tab) {
-        for (Layer layer : tab.getPluginLayers()) {
-            showPluginLayer(layer);
-
-            if (layer instanceof PluginLayer) {
-                ((PluginLayer) layer).setVisible(true);
-            }
-        }
-
-        requestRender();
     }
 
     @Override
@@ -1347,9 +1282,7 @@ public abstract class GeckoApp
 
         if (Versions.preMarshmallow) {
             mTextSelection = new ActionBarTextSelection(
-                    (TextSelectionHandle) findViewById(R.id.anchor_handle),
-                    (TextSelectionHandle) findViewById(R.id.caret_handle),
-                    (TextSelectionHandle) findViewById(R.id.focus_handle));
+                    (TextSelectionHandle) findViewById(R.id.anchor_handle));
         } else {
             mTextSelection = new FloatingToolbarTextSelection(this, mLayerView);
         }

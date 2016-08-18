@@ -106,12 +106,18 @@ JSObject::finalize(js::FreeOp* fop)
         }
     }
 
+    nobj->sweepDictionaryListPointer();
+}
+
+MOZ_ALWAYS_INLINE void
+js::NativeObject::sweepDictionaryListPointer()
+{
     // For dictionary objects (which must be native), it's possible that
-    // unreachable shapes may be marked whose listp points into this object.
-    // In case this happens, null out the shape's pointer here so that a moving
-    // GC will not try to access the dead object.
-    if (nobj->shape_->listp == &nobj->shape_)
-        nobj->shape_->listp = nullptr;
+    // unreachable shapes may be marked whose listp points into this object.  In
+    // case this happens, null out the shape's pointer so that a moving GC will
+    // not try to access the dead object.
+    if (shape_->listp == &shape_)
+        shape_->listp = nullptr;
 }
 
 /* static */ inline bool

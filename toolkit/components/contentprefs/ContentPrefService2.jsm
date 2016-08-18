@@ -349,7 +349,7 @@ ContentPrefService2.prototype = {
     this._remove(group, name, true, context, callback);
   },
 
-  removeGlobal: function CPS2_removeGlobal(name, context,callback) {
+  removeGlobal: function CPS2_removeGlobal(name, context, callback) {
     this._remove(null, name, false, context, callback);
   },
 

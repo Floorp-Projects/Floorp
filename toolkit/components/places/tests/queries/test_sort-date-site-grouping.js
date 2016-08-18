@@ -68,10 +68,10 @@ var testData = [
 var domainsInRange = [2, 3];
 var leveledTestData = [// Today
                        [[0],    // Today, local files
-                        [1,2]], // Today, example.com
+                        [1, 2]], // Today, example.com
                        // Older than six months
                        [[3],    // Older than six months, local files
-                        [4,5],  // Older than six months, example.com
+                        [4, 5],  // Older than six months, example.com
                         [6]     // Older than six months, example.net
                         ]];
 
@@ -84,7 +84,7 @@ var testDataAddedLater = [
     lastVisit: olderthansixmonths,
     title: "test visit",
     isInQuery: true,
-    levels: [1,1]
+    levels: [1, 1]
   },
   {
     isVisit: true,
@@ -92,7 +92,7 @@ var testDataAddedLater = [
     lastVisit: olderthansixmonths,
     title: "test visit",
     isInQuery: true,
-    levels: [1,1]
+    levels: [1, 1]
   },
   {
     isVisit: true,
@@ -100,7 +100,7 @@ var testDataAddedLater = [
     lastVisit: today,
     title: "test visit",
     isInQuery: true,
-    levels: [0,1]
+    levels: [0, 1]
   },
   {
     isVisit: true,
@@ -108,7 +108,7 @@ var testDataAddedLater = [
     lastVisit: today,
     title: "test visit",
     isInQuery: true,
-    levels: [0,0]
+    levels: [0, 0]
   }
 ];
 

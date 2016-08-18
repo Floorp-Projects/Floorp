@@ -276,7 +276,7 @@ nsStorageStream::GetWriteInProgress(bool* aWriteInProgress)
   return NS_OK;
 }
 
-NS_METHOD
+nsresult
 nsStorageStream::Seek(int32_t aPosition)
 {
   if (NS_WARN_IF(!mSegmentedBuffer)) {
@@ -355,7 +355,7 @@ private:
   }
 
 protected:
-  NS_METHOD Seek(uint32_t aPosition);
+  nsresult Seek(uint32_t aPosition);
 
   friend class nsStorageStream;
 
@@ -550,7 +550,7 @@ nsStorageInputStream::SetEOF()
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_METHOD
+nsresult
 nsStorageInputStream::Seek(uint32_t aPosition)
 {
   uint32_t length = mStorageStream->mLogicalLength;

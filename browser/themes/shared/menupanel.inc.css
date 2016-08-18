@@ -314,6 +314,11 @@
     -moz-image-region: rect(0, 1664px, 64px, 1600px);
   }
 
+  #add-share-provider {
+    list-style-image: url(chrome://browser/skin/menuPanel-small@2x.png);
+    -moz-image-region: rect(0px, 192px, 32px, 160px);
+  }
+
   /* Footer and wide panel control icons */
   #edit-controls@inAnyPanel@ > toolbarbutton,
   #zoom-controls@inAnyPanel@ > toolbarbutton,

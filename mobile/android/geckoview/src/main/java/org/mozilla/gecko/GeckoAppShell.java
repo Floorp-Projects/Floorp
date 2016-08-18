@@ -271,44 +271,11 @@ public class GeckoAppShell
     }
 
     /**
-     * If the Gecko thread is running, immediately dispatches the event to
-     * Gecko.
-     *
-     * If the Gecko thread is not running, queues the event. If the queue is
-     * full, throws {@link IllegalStateException}.
-     *
-     * Queued events will be dispatched in order of arrival when the Gecko
-     * thread becomes live.
-     *
-     * This method can be called from any thread.
-     *
-     * @param e
-     *            the event to dispatch. Cannot be null.
-     */
-    @RobocopTarget
-    public static void sendEventToGecko(GeckoEvent e) {
-        if (e == null) {
-            throw new IllegalArgumentException("e cannot be null.");
-        }
-
-        if (GeckoThread.isRunning()) {
-            notifyGeckoOfEvent(e);
-            // Gecko will copy the event data into a normal C++ object.
-            // We can recycle the event now.
-            e.recycle();
-            return;
-        }
-
-        GeckoThread.addPendingEvent(e);
-    }
-
-    /**
      * Sends an asynchronous request to Gecko.
      *
      * The response data will be passed to {@link GeckoRequest#onResponse(NativeJSObject)} if the
      * request succeeds; otherwise, {@link GeckoRequest#onError()} will fire.
      *
-     * This method follows the same queuing conditions as {@link #sendEventToGecko(GeckoEvent)}.
      * It can be called from any thread. The GeckoRequest callbacks will be executed on the Gecko thread.
      *
      * @param request The request to dispatch. Cannot be null.
@@ -331,9 +298,6 @@ public class GeckoAppShell
 
         notifyObservers(request.getName(), request.getData());
     }
-
-    // Tell the Gecko event loop that an event is available.
-    public static native void notifyGeckoOfEvent(GeckoEvent event);
 
     // Synchronously notify a Gecko observer; must be called from Gecko thread.
     @WrapForJNI(calledFrom = "gecko")
@@ -1547,18 +1511,15 @@ public class GeckoAppShell
     }
 
     @WrapForJNI(calledFrom = "gecko")
-    public static void addPluginView(View view,
-                                     float x, float y,
-                                     float w, float h,
-                                     boolean isFullScreen) {
+    public static void addFullScreenPluginView(View view) {
         if (getGeckoInterface() != null)
-             getGeckoInterface().addPluginView(view, new RectF(x, y, x + w, y + h), isFullScreen);
+             getGeckoInterface().addPluginView(view);
     }
 
     @WrapForJNI(calledFrom = "gecko")
-    public static void removePluginView(View view, boolean isFullScreen) {
+    public static void removeFullScreenPluginView(View view) {
         if (getGeckoInterface() != null)
-            getGeckoInterface().removePluginView(view, isFullScreen);
+            getGeckoInterface().removePluginView(view);
     }
 
     /**
@@ -1827,8 +1788,8 @@ public class GeckoAppShell
         public String getDefaultUAString();
         public void doRestart();
         public void setFullScreen(boolean fullscreen);
-        public void addPluginView(View view, final RectF rect, final boolean isFullScreen);
-        public void removePluginView(final View view, final boolean isFullScreen);
+        public void addPluginView(View view);
+        public void removePluginView(final View view);
         public void enableCameraView();
         public void disableCameraView();
         public void addAppStateListener(AppStateListener listener);

@@ -245,7 +245,7 @@ add_task(function* test_times() {
       {startTime: nowSec -  5 * SEC_IN_ONE_DAY,
          endTime: nowSec + 10 * SEC_IN_ONE_DAY}],
     [true,  null, now,
-      {startTime: nowSec ,
+      {startTime: nowSec,
          endTime: nowSec + 10 * SEC_IN_ONE_DAY}],
     [false,  "startTime", now,
       {startTime: nowSec +  5 * SEC_IN_ONE_DAY,

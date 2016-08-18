@@ -3501,9 +3501,7 @@ public:
     // having one.
     NS_DECL_ISUPPORTS_INHERITED
     NS_DECL_NSIXPCSCRIPTABLE
-    // This is NS_METHOD because NS_CALLBACK requires the referent to be
-    // declared __stdcall on Windows, and NS_METHOD does that.
-    static NS_METHOD Get(nsIXPCScriptable** helper)
+    static nsresult Get(nsIXPCScriptable** helper)
     {
         *helper = &singleton;
         return NS_OK;

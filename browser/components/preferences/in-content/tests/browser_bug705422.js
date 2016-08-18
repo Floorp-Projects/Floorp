@@ -18,13 +18,13 @@ function initTest() {
     cm.removeAll();
 
     // data for cookies
-    var vals = [[searchTerm+".com", dummyTerm, dummyTerm],          // match
-                [searchTerm+".org", dummyTerm, dummyTerm],          // match
-                [dummyTerm+".com", searchTerm, dummyTerm],          // match
-                [dummyTerm+".edu", searchTerm+dummyTerm, dummyTerm],// match
-                [dummyTerm+".net", dummyTerm, searchTerm],          // match
-                [dummyTerm+".org", dummyTerm, searchTerm+dummyTerm],// match
-                [dummyTerm+".int", dummyTerm, dummyTerm]];          // no match
+    var vals = [[searchTerm+".com", dummyTerm, dummyTerm],           // match
+                [searchTerm+".org", dummyTerm, dummyTerm],           // match
+                [dummyTerm+".com", searchTerm, dummyTerm],           // match
+                [dummyTerm+".edu", searchTerm+dummyTerm, dummyTerm], // match
+                [dummyTerm+".net", dummyTerm, searchTerm],           // match
+                [dummyTerm+".org", dummyTerm, searchTerm+dummyTerm], // match
+                [dummyTerm+".int", dummyTerm, dummyTerm]];           // no match
 
     // matches must correspond to above data
     const matches = 6;
@@ -46,7 +46,7 @@ function initTest() {
                                 "Browser:Cookies", "", {});
 
     // when it has loaded, run actual tests
-    cmd.addEventListener("load", function() {executeSoon(function() {runTest(cmd, searchTerm, vals.length, matches);});}, false);
+    cmd.addEventListener("load", function() { executeSoon(function() { runTest(cmd, searchTerm, vals.length, matches); }); }, false);
 }
 
 function isDisabled(win, expectation) {

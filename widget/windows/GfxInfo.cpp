@@ -49,7 +49,17 @@ GfxInfo::GfxInfo()
 nsresult
 GfxInfo::GetD2DEnabled(bool *aEnabled)
 {
-  *aEnabled = gfxWindowsPlatform::GetPlatform()->IsDirect2DBackend();
+  // Telemetry queries this during XPCOM initialization, and there's no
+  // gfxPlatform by then. Just bail out if gfxPlatform isn't initialized.
+  if (!gfxPlatform::Initialized()) {
+    *aEnabled = false;
+    return NS_OK;
+  }
+
+  // We check gfxConfig rather than the actual render mode, since the UI
+  // process does not use Direct2D if the GPU process is enabled. However,
+  // content processes can still use Direct2D.
+  *aEnabled = gfx::gfxConfig::IsEnabled(gfx::Feature::DIRECT2D);
   return NS_OK;
 }
 

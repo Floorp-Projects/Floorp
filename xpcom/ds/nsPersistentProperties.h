@@ -54,7 +54,7 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPROPERTYELEMENT
 
-  static NS_METHOD Create(nsISupports* aOuter, REFNSIID aIID, void** aResult);
+  static nsresult Create(nsISupports* aOuter, REFNSIID aIID, void** aResult);
 
 private:
   ~nsPropertyElement() {}

@@ -228,7 +228,7 @@ ContentPrefService.prototype = {
       if (this._privModeStorage.has(group, aName)) {
         let value = this._privModeStorage.get(group, aName);
         if (aCallback) {
-          this._scheduleCallback(function() {aCallback.onResult(value);});
+          this._scheduleCallback(function() { aCallback.onResult(value); });
           return undefined;
         }
         return value;
@@ -597,7 +597,7 @@ ContentPrefService.prototype = {
     if (this._cache.has(aGroup, aSetting)) {
       value = this._cache.get(aGroup, aSetting);
       if (aCallback) {
-        this._scheduleCallback(function() {aCallback.onResult(value);});
+        this._scheduleCallback(function() { aCallback.onResult(value); });
         return undefined;
       }
       return value;
@@ -647,7 +647,7 @@ ContentPrefService.prototype = {
     if (this._cache.has(null, aName)) {
       value = this._cache.get(null, aName);
       if (aCallback) {
-        this._scheduleCallback(function() {aCallback.onResult(value);});
+        this._scheduleCallback(function() { aCallback.onResult(value); });
         return undefined;
       }
       return value;

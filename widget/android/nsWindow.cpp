@@ -1033,14 +1033,12 @@ public:
             }
         }
 
-#ifdef MOZ_ANDROID_APZ
         MOZ_ASSERT(aNPZC);
         auto npzc = NativePanZoomController::LocalRef(
                 jni::GetGeckoThreadEnv(),
                 NativePanZoomController::Ref::From(aNPZC));
         NPZCSupport::AttachNative(
                 npzc, mozilla::MakeUnique<NPZCSupport>(&window, npzc));
-#endif
 
         layerClient->OnGeckoReady();
     }
@@ -1839,55 +1837,6 @@ nsWindow::CreateLayerManager(int aCompositorWidth, int aCompositorHeight)
 }
 
 void
-nsWindow::OnGlobalAndroidEvent(AndroidGeckoEvent *ae)
-{
-    nsWindow *win = TopWindow();
-    if (!win)
-        return;
-
-    switch (ae->Type()) {
-        case AndroidGeckoEvent::APZ_INPUT_EVENT: {
-            win->UserActivity();
-
-            WidgetTouchEvent touchEvent = ae->MakeTouchEvent(win);
-            win->ProcessUntransformedAPZEvent(&touchEvent, ae->ApzGuid(), ae->ApzInputBlockId(), ae->ApzEventStatus());
-            win->DispatchHitTest(touchEvent);
-            break;
-        }
-        case AndroidGeckoEvent::MOTION_EVENT: {
-            win->UserActivity();
-            bool preventDefaultActions = win->OnMultitouchEvent(ae);
-            if (!preventDefaultActions && ae->Count() < 2) {
-                win->OnMouseEvent(ae);
-            }
-            break;
-        }
-
-        // LongPress events mostly trigger contextmenu options, but can also lead to
-        // textSelection processing.
-        case AndroidGeckoEvent::LONG_PRESS: {
-            win->UserActivity();
-
-            nsCOMPtr<nsIObserverService> obsServ = mozilla::services::GetObserverService();
-            obsServ->NotifyObservers(nullptr, "before-build-contextmenu", nullptr);
-
-            // Send the contextmenu event to Gecko.
-            if (!win->OnContextmenuEvent(ae)) {
-                // If not consumed, continue as a LongTap, possibly trigger
-                // Gecko Text Selection Carets.
-                win->OnLongTapEvent(ae);
-            }
-            break;
-        }
-
-        case AndroidGeckoEvent::NATIVE_GESTURE_EVENT: {
-            win->OnNativeGestureEvent(ae);
-            break;
-        }
-    }
-}
-
-void
 nsWindow::OnSizeChanged(const gfx::IntSize& aSize)
 {
     ALOG("nsWindow: %p OnSizeChanged [%d %d]", (void*)this, aSize.width, aSize.height);
@@ -1982,80 +1931,6 @@ nsWindow::GetNativeData(uint32_t aDataType)
 }
 
 void
-nsWindow::OnMouseEvent(AndroidGeckoEvent *ae)
-{
-    RefPtr<nsWindow> kungFuDeathGrip(this);
-
-    WidgetMouseEvent event = ae->MakeMouseEvent(this);
-    if (event.mMessage == eVoidEvent) {
-        // invalid event type, abort
-        return;
-    }
-
-    DispatchEvent(&event);
-}
-
-bool
-nsWindow::OnContextmenuEvent(AndroidGeckoEvent *ae)
-{
-    RefPtr<nsWindow> kungFuDeathGrip(this);
-
-    CSSPoint pt;
-    const nsTArray<nsIntPoint>& points = ae->Points();
-    if (points.Length() > 0) {
-        pt = CSSPoint(points[0].x, points[0].y);
-    }
-
-    // Send the contextmenu event.
-    WidgetMouseEvent contextMenuEvent(true, eContextMenu, this,
-                                      WidgetMouseEvent::eReal, WidgetMouseEvent::eNormal);
-    contextMenuEvent.mRefPoint =
-        RoundedToInt(pt * GetDefaultScale()) - WidgetToScreenOffset();
-    contextMenuEvent.mIgnoreRootScrollFrame = true;
-    contextMenuEvent.inputSource = nsIDOMMouseEvent::MOZ_SOURCE_TOUCH;
-
-    nsEventStatus contextMenuStatus;
-    DispatchEvent(&contextMenuEvent, contextMenuStatus);
-
-    // If the contextmenu event was consumed (preventDefault issued), we follow with a
-    // touchcancel event. This avoids followup touchend events passsing through and
-    // triggering further element behaviour such as link-clicks.
-    if (contextMenuStatus == nsEventStatus_eConsumeNoDefault) {
-        WidgetTouchEvent canceltouchEvent = ae->MakeTouchEvent(this);
-        canceltouchEvent.mMessage = eTouchCancel;
-        DispatchEvent(&canceltouchEvent);
-        return true;
-    }
-
-    return false;
-}
-
-void
-nsWindow::OnLongTapEvent(AndroidGeckoEvent *ae)
-{
-    RefPtr<nsWindow> kungFuDeathGrip(this);
-
-    CSSPoint pt;
-    const nsTArray<nsIntPoint>& points = ae->Points();
-    if (points.Length() > 0) {
-        pt = CSSPoint(points[0].x, points[0].y);
-    }
-
-    // Send the LongTap event to Gecko.
-    WidgetMouseEvent event(true, eMouseLongTap, this,
-        WidgetMouseEvent::eReal, WidgetMouseEvent::eNormal);
-    event.button = WidgetMouseEvent::eLeftButton;
-    event.mRefPoint =
-        RoundedToInt(pt * GetDefaultScale()) - WidgetToScreenOffset();
-    event.mClickCount = 1;
-    event.mTime = ae->Time();
-    event.inputSource = nsIDOMMouseEvent::MOZ_SOURCE_TOUCH;
-    event.mIgnoreRootScrollFrame = true;
-
-    DispatchEvent(&event);
-}
-
-void
 nsWindow::DispatchHitTest(const WidgetTouchEvent& aEvent)
 {
     if (aEvent.mMessage == eTouchStart && aEvent.mTouches.Length() == 1) {
@@ -2076,120 +1951,6 @@ nsWindow::DispatchHitTest(const WidgetTouchEvent& aEvent)
         }
     }
 }
-
-bool nsWindow::OnMultitouchEvent(AndroidGeckoEvent *ae)
-{
-    RefPtr<nsWindow> kungFuDeathGrip(this);
-
-    // End any composition in progress in case the touch event listener
-    // modifies the input field value (see bug 856155)
-    RemoveIMEComposition();
-
-    // This is set to true once we have called SetPreventPanning() exactly
-    // once for a given sequence of touch events. It is reset on the start
-    // of the next sequence.
-    static bool sDefaultPreventedNotified = false;
-    static bool sLastWasDownEvent = false;
-
-    bool preventDefaultActions = false;
-    bool isDownEvent = false;
-
-    WidgetTouchEvent event = ae->MakeTouchEvent(this);
-    if (event.mMessage != eVoidEvent) {
-        nsEventStatus status;
-        DispatchEvent(&event, status);
-        // We check mMultipleActionsPrevented because that's what <input type=range>
-        // sets when someone starts dragging the thumb. It doesn't set the status
-        // because it doesn't want to prevent the code that gives the input focus
-        // from running.
-        preventDefaultActions = (status == nsEventStatus_eConsumeNoDefault ||
-                                event.mFlags.mMultipleActionsPrevented);
-        isDownEvent = (event.mMessage == eTouchStart);
-    }
-
-    DispatchHitTest(event);
-
-    // if the last event we got was a down event, then by now we know for sure whether
-    // this block has been default-prevented or not. if we haven't already sent the
-    // notification for this block, do so now.
-    if (sLastWasDownEvent && !sDefaultPreventedNotified) {
-        // if this event is a down event, that means it's the start of a new block, and the
-        // previous block should not be default-prevented
-        bool defaultPrevented = isDownEvent ? false : preventDefaultActions;
-        if (ae->Type() == AndroidGeckoEvent::APZ_INPUT_EVENT) {
-            if (mAPZC) {
-                AndroidContentController::NotifyDefaultPrevented(
-                        mAPZC, ae->ApzInputBlockId(), defaultPrevented);
-            }
-        } else {
-            GeckoAppShell::NotifyDefaultPrevented(defaultPrevented);
-        }
-        sDefaultPreventedNotified = true;
-    }
-
-    // now, if this event is a down event, then we might already know that it has been
-    // default-prevented. if so, we send the notification right away; otherwise we wait
-    // for the next event.
-    if (isDownEvent) {
-        if (preventDefaultActions) {
-            if (ae->Type() == AndroidGeckoEvent::APZ_INPUT_EVENT) {
-                if (mAPZC) {
-                    AndroidContentController::NotifyDefaultPrevented(
-                            mAPZC, ae->ApzInputBlockId(), true);
-                }
-            } else {
-                GeckoAppShell::NotifyDefaultPrevented(true);
-            }
-            sDefaultPreventedNotified = true;
-        } else {
-            sDefaultPreventedNotified = false;
-        }
-    }
-    sLastWasDownEvent = isDownEvent;
-
-    return preventDefaultActions;
-}
-
-void
-nsWindow::OnNativeGestureEvent(AndroidGeckoEvent *ae)
-{
-    LayoutDeviceIntPoint pt(ae->Points()[0].x,
-                            ae->Points()[0].y);
-    double delta = ae->X();
-    EventMessage msg = eVoidEvent;
-
-    switch (ae->Action()) {
-        case AndroidMotionEvent::ACTION_MAGNIFY_START:
-            msg = eMagnifyGestureStart;
-            mStartDist = delta;
-            mLastDist = delta;
-            break;
-        case AndroidMotionEvent::ACTION_MAGNIFY:
-            msg = eMagnifyGestureUpdate;
-            delta -= mLastDist;
-            mLastDist += delta;
-            break;
-        case AndroidMotionEvent::ACTION_MAGNIFY_END:
-            msg = eMagnifyGesture;
-            delta -= mStartDist;
-            break;
-        default:
-            return;
-    }
-
-    RefPtr<nsWindow> kungFuDeathGrip(this);
-
-    WidgetSimpleGestureEvent event(true, msg, this);
-
-    event.mDirection = 0;
-    event.mDelta = delta;
-    event.mModifiers = 0;
-    event.mTime = ae->Time();
-    event.mRefPoint = pt;
-
-    DispatchEvent(&event);
-}
-
 
 static unsigned int ConvertAndroidKeyCodeToDOMKeyCode(int androidKeyCode)
 {
@@ -3556,18 +3317,7 @@ nsWindow::DrawWindowUnderlay(LayerManagerComposite* aManager,
         return;
     }
 
-    CompositorOGL *compositor = static_cast<CompositorOGL*>(aManager->GetCompositor());
-    compositor->ResetProgram();
-    gl::GLContext* gl = compositor->gl();
-    bool scissorEnabled = gl->fIsEnabled(LOCAL_GL_SCISSOR_TEST);
-    GLint scissorRect[4];
-    gl->fGetIntegerv(LOCAL_GL_SCISSOR_BOX, scissorRect);
-
-    client->ActivateProgram();
     frame->BeginDrawing();
-    frame->DrawBackground();
-    client->DeactivateProgramAndRestoreState(scissorEnabled,
-        scissorRect[0], scissorRect[1], scissorRect[2], scissorRect[3]);
 }
 
 void
@@ -3581,21 +3331,7 @@ nsWindow::DrawWindowOverlay(LayerManagerComposite* aManager,
         return;
     }
 
-    CompositorOGL *compositor = static_cast<CompositorOGL*>(aManager->GetCompositor());
-    compositor->ResetProgram();
-    gl::GLContext* gl = compositor->gl();
-    bool scissorEnabled = gl->fIsEnabled(LOCAL_GL_SCISSOR_TEST);
-    GLint scissorRect[4];
-    gl->fGetIntegerv(LOCAL_GL_SCISSOR_BOX, scissorRect);
-
-    MOZ_ASSERT(mLayerViewSupport);
-    GeckoLayerClient::LocalRef client = mLayerViewSupport->GetLayerClient();
-
-    client->ActivateProgram();
-    mLayerRendererFrame->DrawForeground();
     mLayerRendererFrame->EndDrawing();
-    client->DeactivateProgramAndRestoreState(scissorEnabled,
-        scissorRect[0], scissorRect[1], scissorRect[2], scissorRect[3]);
     mLayerRendererFrame = nullptr;
 }
 
@@ -3686,30 +3422,7 @@ nsWindow::UpdateZoomConstraints(const uint32_t& aPresShellId,
                                 const FrameMetrics::ViewID& aViewId,
                                 const mozilla::Maybe<ZoomConstraints>& aConstraints)
 {
-#ifdef MOZ_ANDROID_APZ
     nsBaseWidget::UpdateZoomConstraints(aPresShellId, aViewId, aConstraints);
-#else
-    if (!aConstraints) {
-        // This is intended to "clear" previously stored constraints but in our
-        // case we don't need to bother since they'll get GC'd from browser.js
-        return;
-    }
-    nsIContent* content = nsLayoutUtils::FindContentFor(aViewId);
-    nsIDocument* doc = content ? content->GetComposedDoc() : nullptr;
-    if (!doc) {
-        return;
-    }
-    nsCOMPtr<nsIObserverService> obsServ = mozilla::services::GetObserverService();
-    nsPrintfCString json("{ \"allowZoom\": %s,"
-                         "  \"allowDoubleTapZoom\": %s,"
-                         "  \"minZoom\": %f,"
-                         "  \"maxZoom\": %f }",
-        aConstraints->mAllowZoom ? "true" : "false",
-        aConstraints->mAllowDoubleTapZoom ? "true" : "false",
-        aConstraints->mMinZoom.scale, aConstraints->mMaxZoom.scale);
-    obsServ->NotifyObservers(doc, "zoom-constraints-updated",
-        NS_ConvertASCIItoUTF16(json.get()).get());
-#endif
 }
 
 CompositorBridgeParent*

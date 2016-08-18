@@ -25,10 +25,6 @@ function inlinefunction() {
          return 42;
 }
 
-// 1 assertion in debug builds because bug 821726 added the ignoreCache switch and
-// we now write to the cache more than once for the same entry
-SimpleTest.expectAssertions(1);
-
 var src;
 src = inlinefunction.toSource();
 isnot(src.indexOf("return 42"), -1, "inline XUL script should have source");
