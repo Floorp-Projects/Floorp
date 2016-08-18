@@ -7,14 +7,22 @@
 #include "DocAccessibleChild.h"
 
 #include "Accessible-inl.h"
+#include "mozilla/a11y/PlatformChild.h"
+#include "mozilla/ClearOnShutdown.h"
 
 namespace mozilla {
 namespace a11y {
+
+static StaticAutoPtr<PlatformChild> sPlatformChild;
 
 DocAccessibleChild::DocAccessibleChild(DocAccessible* aDoc)
   : DocAccessibleChildBase(aDoc)
 {
   MOZ_COUNT_CTOR_INHERITED(DocAccessibleChild, DocAccessibleChildBase);
+  if (!sPlatformChild) {
+    sPlatformChild = new PlatformChild();
+    ClearOnShutdown(&sPlatformChild, ShutdownPhase::Shutdown);
+  }
 }
 
 DocAccessibleChild::~DocAccessibleChild()
@@ -28,7 +36,6 @@ DocAccessibleChild::SendCOMProxy(const IAccessibleHolder& aProxy)
   IAccessibleHolder parentProxy;
   PDocAccessibleChild::SendCOMProxy(aProxy, &parentProxy);
   mParentProxy.reset(parentProxy.Release());
-  MOZ_ASSERT(mParentProxy);
 }
 
 } // namespace a11y
