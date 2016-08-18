@@ -11,7 +11,6 @@ interface nsIDOMWindow;
 interface nsIRequest;
 interface nsIRequestObserver;
 interface nsISimpleEnumerator;
-interface nsIXMLHttpRequest;
 interface nsIFile;
 
 /**
@@ -281,25 +280,25 @@ interface nsIUpdateCheckListener : nsISupports
   /**
    * The update check was completed.
    * @param   request
-   *          The nsIXMLHttpRequest handling the update check.
+   *          The XMLHttpRequest handling the update check.
    * @param   updates
    *          An array of nsIUpdate objects listing available updates.
    * @param   updateCount
    *          The size of the |updates| array.
    */
-  void onCheckComplete(in nsIXMLHttpRequest request,
+  void onCheckComplete(in jsval request,
                        [array, size_is(updateCount)] in nsIUpdate updates,
                        in unsigned long updateCount);
 
   /**
    * An error occurred while loading the remote update service file.
    * @param   request
-   *          The nsIXMLHttpRequest handling the update check.
+   *          The XMLHttpRequest handling the update check.
    * @param   update
    *          A nsIUpdate object that contains details about the
    *          error in its |statusText| property.
    */
-  void onError(in nsIXMLHttpRequest request,
+  void onError(in jsval request,
                in nsIUpdate update);
 };
 
