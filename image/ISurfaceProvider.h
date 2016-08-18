@@ -64,8 +64,10 @@ protected:
 
   virtual ~ISurfaceProvider() { }
 
-  /// @return an eagerly computed drawable reference to a surface.
-  virtual DrawableFrameRef DrawableRef() = 0;
+  /// @return an eagerly computed drawable reference to a surface. For
+  /// dynamically generated animation surfaces, @aFrame specifies the 0-based
+  /// index of the desired frame.
+  virtual DrawableFrameRef DrawableRef(size_t aFrame) = 0;
 
   /// @return true if this ISurfaceProvider is locked. (@see SetLocked())
   /// Should only be called from SurfaceCache code as it relies on SurfaceCache
@@ -128,6 +130,32 @@ public:
     return *this;
   }
 
+  /**
+   * If this DrawableSurface is dynamically generated from an animation, attempt
+   * to seek to frame @aFrame, where @aFrame is a 0-based index into the frames
+   * of the animation. Otherwise, nothing will blow up at runtime, but we assert
+   * in debug builds, since calling this in an unexpected situation probably
+   * indicates a bug.
+   *
+   * @return a successful result if we could obtain frame @aFrame. Note that
+   * |mHaveSurface| being true means that we're guaranteed to have *some* frame,
+   * so the caller can dereference this DrawableSurface even if Seek() fails,
+   * but while nothing will blow up, the frame won't be the one they expect.
+   */
+  nsresult Seek(size_t aFrame)
+  {
+    MOZ_ASSERT(mHaveSurface, "Trying to seek an empty DrawableSurface?");
+
+    if (!mProvider) {
+      MOZ_ASSERT_UNREACHABLE("Trying to seek a static DrawableSurface?");
+      return NS_ERROR_FAILURE;
+    }
+
+    mDrawableRef = mProvider->DrawableRef(aFrame);
+
+    return mDrawableRef ? NS_OK : NS_ERROR_FAILURE;
+  }
+
   explicit operator bool() const { return mHaveSurface; }
   imgFrame* operator->() { return DrawableRef().get(); }
 
@@ -140,10 +168,12 @@ private:
     MOZ_ASSERT(mHaveSurface);
 
     // If we weren't created with a DrawableFrameRef directly, we should've been
-    // created with an ISurfaceProvider which can give us one.
+    // created with an ISurfaceProvider which can give us one. Note that if
+    // Seek() has been called, we'll already have a DrawableFrameRef, so we
+    // won't need to get one here.
     if (!mDrawableRef) {
       MOZ_ASSERT(mProvider);
-      mDrawableRef = mProvider->DrawableRef();
+      mDrawableRef = mProvider->DrawableRef(/* aFrame = */ 0);
     }
 
     MOZ_ASSERT(mDrawableRef);
@@ -156,11 +186,13 @@ private:
 };
 
 
-// Surface() is implemented here so that DrawableSurface's definition is visible.
+// Surface() is implemented here so that DrawableSurface's definition is
+// visible. This default implementation eagerly obtains a DrawableFrameRef for
+// the first frame and is intended for static ISurfaceProviders.
 inline DrawableSurface
 ISurfaceProvider::Surface()
 {
-  return DrawableSurface(DrawableRef());
+  return DrawableSurface(DrawableRef(/* aFrame = */ 0));
 }
 
 
@@ -186,7 +218,13 @@ public:
   }
 
 protected:
-  DrawableFrameRef DrawableRef() override { return mSurface->DrawableRef(); }
+  DrawableFrameRef DrawableRef(size_t aFrame) override
+  {
+    MOZ_ASSERT(aFrame == 0,
+               "Requesting an animation frame from a SimpleSurfaceProvider?");
+    return mSurface->DrawableRef();
+  }
+
   bool IsLocked() const override { return bool(mLockRef); }
 
   void SetLocked(bool aLocked) override
