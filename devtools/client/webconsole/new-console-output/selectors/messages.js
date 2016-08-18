@@ -12,7 +12,7 @@ const {
 } = require("devtools/client/webconsole/new-console-output/constants");
 
 function getAllMessages(state) {
-  let messages = state.messages;
+  let messages = state.messages.messagesById;
   let logLimit = getLogLimit(state);
   let filters = getAllFilters(state);
 
@@ -23,6 +23,10 @@ function getAllMessages(state) {
     ),
     logLimit
   );
+}
+
+function getAllMessagesUiById(state) {
+  return state.messages.messagesUiById;
 }
 
 function filterLevel(messages, filters) {
@@ -59,3 +63,4 @@ function prune(messages, logLimit) {
 }
 
 exports.getAllMessages = getAllMessages;
+exports.getAllMessagesUiById = getAllMessagesUiById;

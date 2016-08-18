@@ -17,6 +17,9 @@ const StackTrace = createFactory(require("devtools/client/shared/components/stac
 const GripMessageBody = createFactory(require("devtools/client/webconsole/new-console-output/components/grip-message-body").GripMessageBody);
 const MessageRepeat = createFactory(require("devtools/client/webconsole/new-console-output/components/message-repeat").MessageRepeat);
 const MessageIcon = createFactory(require("devtools/client/webconsole/new-console-output/components/message-icon").MessageIcon);
+const CollapseButton = createFactory(require("devtools/client/webconsole/new-console-output/components/collapse-button").CollapseButton);
+const {l10n} = require("devtools/client/webconsole/new-console-output/utils/messages");
+const actions = require("devtools/client/webconsole/new-console-output/actions/messages");
 
 ConsoleApiCall.displayName = "ConsoleApiCall";
 
@@ -24,11 +27,13 @@ ConsoleApiCall.propTypes = {
   message: PropTypes.object.isRequired,
   sourceMapService: PropTypes.object,
   onViewSourceInDebugger: PropTypes.func.isRequired,
+  open: PropTypes.bool.isRequired,
 };
 
 function ConsoleApiCall(props) {
-  const { message, sourceMapService, onViewSourceInDebugger } = props;
-  const { source, level, stacktrace, type, frame } = message;
+  const { dispatch, message, sourceMapService, onViewSourceInDebugger, open } = props;
+  const {source, level, stacktrace, type, frame } = message;
+
   let messageBody;
   if (type === "trace") {
     messageBody = dom.span({className: "cm-variable"}, "console.trace()");
@@ -41,6 +46,7 @@ function ConsoleApiCall(props) {
   const icon = MessageIcon({level});
   const repeat = MessageRepeat({repeat: message.repeat});
 
+  let collapse = "";
   let attachment = "";
   if (stacktrace) {
     attachment = dom.div({className: "stacktrace devtools-monospace"},
@@ -49,6 +55,18 @@ function ConsoleApiCall(props) {
         onViewSourceInDebugger: onViewSourceInDebugger
       })
     );
+
+    collapse = CollapseButton({
+      open: open,
+      title: l10n.getStr("messageToggleDetails"),
+      onClick: function () {
+        if (open) {
+          dispatch(actions.messageClose(message.id));
+        } else {
+          dispatch(actions.messageOpen(message.id));
+        }
+      },
+    });
   }
 
   const classes = ["message", "cm-s-mozilla"];
@@ -61,7 +79,7 @@ function ConsoleApiCall(props) {
     classes.push(level);
   }
 
-  if (type === "trace") {
+  if (open === true) {
     classes.push("open");
   }
 
@@ -72,6 +90,7 @@ function ConsoleApiCall(props) {
     // @TODO add timestamp
     // @TODO add indent if necessary
     icon,
+    collapse,
     dom.span({className: "message-body-wrapper"},
       dom.span({},
         dom.span({className: "message-flex-body"},
