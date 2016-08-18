@@ -26,7 +26,7 @@ ConsoleApiCall.propTypes = {
 
 function ConsoleApiCall(props) {
   const { message, onViewSourceInDebugger } = props;
-  const {category, severity, stacktrace, type} = message;
+  const {source, level, stacktrace, type} = message;
 
   let messageBody;
   if (type === "trace") {
@@ -42,7 +42,7 @@ function ConsoleApiCall(props) {
     messageBody = message.messageText;
   }
 
-  const icon = MessageIcon({severity: severity});
+  const icon = MessageIcon({level});
   const repeat = MessageRepeat({repeat: message.repeat});
 
   let attachment = "";
@@ -57,12 +57,12 @@ function ConsoleApiCall(props) {
 
   const classes = ["message", "cm-s-mozilla"];
 
-  if (category) {
-    classes.push(category);
+  if (source) {
+    classes.push(source);
   }
 
-  if (severity) {
-    classes.push(severity);
+  if (level) {
+    classes.push(level);
   }
 
   if (type === "trace") {

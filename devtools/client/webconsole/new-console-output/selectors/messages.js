@@ -18,14 +18,14 @@ function getAllMessages(state) {
 
   return prune(
     search(
-      filterSeverity(messages, filters),
+      filterLevel(messages, filters),
       filters.text
     ),
     logLimit
   );
 }
 
-function filterSeverity(messages, filters) {
+function filterLevel(messages, filters) {
   return messages.filter((message) => {
     return filters[message.level] === true
       || [MESSAGE_TYPE.COMMAND, MESSAGE_TYPE.RESULT].includes(message.type);
