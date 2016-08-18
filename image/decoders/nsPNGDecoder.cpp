@@ -113,7 +113,7 @@ nsPNGDecoder::nsPNGDecoder(RasterImage* aImage)
  , interlacebuf(nullptr)
  , mInProfile(nullptr)
  , mTransform(nullptr)
- , format(gfx::SurfaceFormat::UNKNOWN)
+ , mFormat(SurfaceFormat::UNKNOWN)
  , mCMSMode(0)
  , mChannels(0)
  , mPass(0)
@@ -144,11 +144,10 @@ nsPNGDecoder::~nsPNGDecoder()
 }
 
 nsPNGDecoder::TransparencyType
-nsPNGDecoder::GetTransparencyType(SurfaceFormat aFormat,
-                                  const IntRect& aFrameRect)
+nsPNGDecoder::GetTransparencyType(const IntRect& aFrameRect)
 {
   // Check if the image has a transparent color in its palette.
-  if (aFormat == SurfaceFormat::B8G8R8A8) {
+  if (HasAlphaChannel()) {
     return TransparencyType::eAlpha;
   }
   if (!aFrameRect.IsEqualEdges(FullFrame())) {
@@ -190,12 +189,11 @@ nsPNGDecoder::CreateFrame(const FrameInfo& aFrameInfo)
   MOZ_ASSERT(!IsMetadataDecode());
 
   // Check if we have transparency, and send notifications if needed.
-  auto transparency = GetTransparencyType(aFrameInfo.mFormat,
-                                          aFrameInfo.mFrameRect);
+  auto transparency = GetTransparencyType(aFrameInfo.mFrameRect);
   PostHasTransparencyIfNeeded(transparency);
-  SurfaceFormat format = transparency == TransparencyType::eNone
-                       ? SurfaceFormat::B8G8R8X8
-                       : SurfaceFormat::B8G8R8A8;
+  mFormat = transparency == TransparencyType::eNone
+          ? SurfaceFormat::B8G8R8X8
+          : SurfaceFormat::B8G8R8A8;
 
   // Make sure there's no animation or padding if we're downscaling.
   MOZ_ASSERT_IF(Size() != OutputSize(), mNumFrames == 0);
@@ -217,7 +215,7 @@ nsPNGDecoder::CreateFrame(const FrameInfo& aFrameInfo)
   Maybe<SurfacePipe> pipe =
     SurfacePipeFactory::CreateSurfacePipe(this, mNumFrames, Size(),
                                           OutputSize(), aFrameInfo.mFrameRect,
-                                          format, pipeFlags);
+                                          mFormat, pipeFlags);
 
   if (!pipe) {
     mPipe = SurfacePipe();
@@ -259,10 +257,9 @@ nsPNGDecoder::EndImageFrame()
 
   mNumFrames++;
 
-  Opacity opacity = Opacity::SOME_TRANSPARENCY;
-  if (format == gfx::SurfaceFormat::B8G8R8X8) {
-    opacity = Opacity::FULLY_OPAQUE;
-  }
+  Opacity opacity = mFormat == SurfaceFormat::B8G8R8X8
+                  ? Opacity::FULLY_OPAQUE
+                  : Opacity::SOME_TRANSPARENCY;
 
   PostFrameStop(opacity, mAnimInfo.mDispose,
                 FrameTimeout::FromRawMilliseconds(mAnimInfo.mTimeout),
@@ -671,11 +668,7 @@ nsPNGDecoder::info_callback(png_structp png_ptr, png_infop info_ptr)
   // copy PNG info into imagelib structs (formerly png_set_dims()) //
   //---------------------------------------------------------------//
 
-  if (channels == 1 || channels == 3) {
-    decoder->format = gfx::SurfaceFormat::B8G8R8X8;
-  } else if (channels == 2 || channels == 4) {
-    decoder->format = gfx::SurfaceFormat::B8G8R8A8;
-  } else {
+  if (channels < 1 || channels > 4) {
     png_error(decoder->mPNG, "Invalid number of channels");
   }
 
@@ -702,8 +695,7 @@ nsPNGDecoder::info_callback(png_structp png_ptr, png_infop info_ptr)
     // PostHasTransparency in the metadata decode if we need to. So it's
     // okay to pass IntRect(0, 0, width, height) here for animated images;
     // they will call with the proper first frame rect in the full decode.
-    auto transparency = decoder->GetTransparencyType(decoder->format,
-                                                     frameRect);
+    auto transparency = decoder->GetTransparencyType(frameRect);
     decoder->PostHasTransparencyIfNeeded(transparency);
 
     // We have the metadata we're looking for, so stop here, before we allocate
@@ -721,8 +713,7 @@ nsPNGDecoder::info_callback(png_structp png_ptr, png_infop info_ptr)
     decoder->mFrameIsHidden = true;
   } else {
 #endif
-    nsresult rv = decoder->CreateFrame(FrameInfo{ decoder->format,
-                                                  frameRect,
+    nsresult rv = decoder->CreateFrame(FrameInfo{ frameRect,
                                                   isInterlaced });
     if (NS_FAILED(rv)) {
       png_error(decoder->mPNG, "CreateFrame failed");
@@ -885,7 +876,7 @@ nsPNGDecoder::WriteRow(uint8_t* aRow)
       qcms_transform_data(mTransform, rowToWrite, mCMSLine, width);
 
       // Copy alpha over.
-      if (mChannels == 2 || mChannels == 4) {
+      if (HasAlphaChannel()) {
         for (uint32_t i = 0; i < width; ++i) {
           mCMSLine[4 * i + 3] = rowToWrite[mChannels * i + mChannels - 1];
         }
@@ -898,28 +889,21 @@ nsPNGDecoder::WriteRow(uint8_t* aRow)
   }
 
   // Write this row to the SurfacePipe.
-  DebugOnly<WriteState> result = WriteState::FAILURE;
-  switch (format) {
-    case SurfaceFormat::B8G8R8X8:
+  DebugOnly<WriteState> result;
+  if (HasAlphaChannel()) {
+    if (mDisablePremultipliedAlpha) {
       result = mPipe.WritePixelsToRow<uint32_t>([&]{
-        return PackRGBPixelAndAdvance(rowToWrite);
+        return PackUnpremultipliedRGBAPixelAndAdvance(rowToWrite);
       });
-      break;
-
-    case SurfaceFormat::B8G8R8A8:
-      if (mDisablePremultipliedAlpha) {
-        result = mPipe.WritePixelsToRow<uint32_t>([&]{
-          return PackUnpremultipliedRGBAPixelAndAdvance(rowToWrite);
-        });
-      } else {
-        result = mPipe.WritePixelsToRow<uint32_t>([&]{
-          return PackRGBAPixelAndAdvance(rowToWrite);
-        });
-      }
-      break;
-
-    default:
-      png_error(mPNG, "Invalid SurfaceFormat");
+    } else {
+      result = mPipe.WritePixelsToRow<uint32_t>([&]{
+        return PackRGBAPixelAndAdvance(rowToWrite);
+      });
+    }
+  } else {
+    result = mPipe.WritePixelsToRow<uint32_t>([&]{
+      return PackRGBPixelAndAdvance(rowToWrite);
+    });
   }
 
   MOZ_ASSERT(WriteState(result) != WriteState::FAILURE);
@@ -1000,7 +984,7 @@ nsPNGDecoder::frame_info_callback(png_structp png_ptr, png_uint_32 frame_num)
   }
 #endif
 
-  const FrameInfo info { decoder->format, frameRect, isInterlaced };
+  const FrameInfo info { frameRect, isInterlaced };
 
   // If the previous frame was hidden, skip the yield (which will mislead the
   // caller, who will think the previous frame was real) and just allocate the
