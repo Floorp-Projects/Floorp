@@ -18,7 +18,7 @@ namespace mozilla {
 namespace dom {
 
 EntryCallbackRunnable::EntryCallbackRunnable(EntryCallback* aCallback,
-                                             Entry* aEntry)
+                                             FileSystemEntry* aEntry)
   : mCallback(aCallback)
   , mEntry(aEntry)
 {
@@ -67,7 +67,7 @@ EmptyEntriesCallbackRunnable::EmptyEntriesCallbackRunnable(EntriesCallback* aCal
 NS_IMETHODIMP
 EmptyEntriesCallbackRunnable::Run()
 {
-  Sequence<OwningNonNull<Entry>> sequence;
+  Sequence<OwningNonNull<FileSystemEntry>> sequence;
   mCallback->HandleEvent(sequence);
   return NS_OK;
 }

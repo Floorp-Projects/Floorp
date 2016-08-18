@@ -271,7 +271,7 @@ DataTransferItem::GetAsFile(ErrorResult& aRv)
   return file.forget();
 }
 
-already_AddRefed<Entry>
+already_AddRefed<FileSystemEntry>
 DataTransferItem::GetAsEntry(ErrorResult& aRv)
 {
   RefPtr<File> file = GetAsFile(aRv);
@@ -309,7 +309,7 @@ DataTransferItem::GetAsEntry(ErrorResult& aRv)
   }
 
   RefPtr<FileSystem> fs = FileSystem::Create(global);
-  RefPtr<Entry> entry;
+  RefPtr<FileSystemEntry> entry;
   BlobImpl* impl = file->Impl();
   MOZ_ASSERT(impl);
 
@@ -334,7 +334,7 @@ DataTransferItem::GetAsEntry(ErrorResult& aRv)
     entry = new FileEntry(global, file, fs);
   }
 
-  Sequence<RefPtr<Entry>> entries;
+  Sequence<RefPtr<FileSystemEntry>> entries;
   if (!entries.AppendElement(entry, fallible)) {
     return nullptr;
   }

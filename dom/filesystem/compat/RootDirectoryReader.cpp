@@ -17,7 +17,7 @@ class EntriesCallbackRunnable final : public Runnable
 {
 public:
   EntriesCallbackRunnable(EntriesCallback* aCallback,
-                          const Sequence<RefPtr<Entry>>& aEntries)
+                          const Sequence<RefPtr<FileSystemEntry>>& aEntries)
     : mCallback(aCallback)
     , mEntries(aEntries)
   {
@@ -27,7 +27,7 @@ public:
   NS_IMETHOD
   Run() override
   {
-    Sequence<OwningNonNull<Entry>> entries;
+    Sequence<OwningNonNull<FileSystemEntry>> entries;
     for (uint32_t i = 0; i < mEntries.Length(); ++i) {
       if (!entries.AppendElement(mEntries[i].forget(), fallible)) {
         return NS_ERROR_OUT_OF_MEMORY;
@@ -40,7 +40,7 @@ public:
 
 private:
   RefPtr<EntriesCallback> mCallback;
-  Sequence<RefPtr<Entry>> mEntries;
+  Sequence<RefPtr<FileSystemEntry>> mEntries;
 };
 
 } // anonymous namespace
@@ -55,7 +55,7 @@ NS_INTERFACE_MAP_END_INHERITING(DirectoryReader)
 
 RootDirectoryReader::RootDirectoryReader(nsIGlobalObject* aGlobal,
                                          FileSystem* aFileSystem,
-                                         const Sequence<RefPtr<Entry>>& aEntries)
+                                         const Sequence<RefPtr<FileSystemEntry>>& aEntries)
   : DirectoryReader(aGlobal, aFileSystem, nullptr)
   , mEntries(aEntries)
   , mAlreadyRead(false)

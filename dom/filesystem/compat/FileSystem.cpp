@@ -65,7 +65,7 @@ FileSystem::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 }
 
 void
-FileSystem::CreateRoot(const Sequence<RefPtr<Entry>>& aEntries)
+FileSystem::CreateRoot(const Sequence<RefPtr<FileSystemEntry>>& aEntries)
 {
   MOZ_ASSERT(!mRoot);
   mRoot = new RootDirectoryEntry(mParent, aEntries, this);

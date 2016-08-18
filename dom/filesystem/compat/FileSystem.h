@@ -19,7 +19,7 @@ namespace mozilla {
 namespace dom {
 
 class DirectoryEntry;
-class Entry;
+class FileSystemEntry;
 class OwningFileOrDirectory;
 
 class FileSystem final
@@ -55,7 +55,7 @@ public:
   }
 
   void
-  CreateRoot(const Sequence<RefPtr<Entry>>& aEntries);
+  CreateRoot(const Sequence<RefPtr<FileSystemEntry>>& aEntries);
 
 private:
   explicit FileSystem(nsIGlobalObject* aGlobalObject,

@@ -20,7 +20,7 @@ public:
 
   explicit RootDirectoryReader(nsIGlobalObject* aGlobalObject,
                                FileSystem* aFileSystem,
-                               const Sequence<RefPtr<Entry>>& aEntries);
+                               const Sequence<RefPtr<FileSystemEntry>>& aEntries);
 
   virtual void
   ReadEntries(EntriesCallback& aSuccessCallback,
@@ -30,7 +30,7 @@ public:
 private:
   ~RootDirectoryReader();
 
-  Sequence<RefPtr<Entry>> mEntries;
+  Sequence<RefPtr<FileSystemEntry>> mEntries;
   bool mAlreadyRead;
 };
 

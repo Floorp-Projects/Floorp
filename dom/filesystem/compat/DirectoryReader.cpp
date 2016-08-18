@@ -52,7 +52,7 @@ public:
       return;
     }
 
-    Sequence<OwningNonNull<Entry>> sequence;
+    Sequence<OwningNonNull<FileSystemEntry>> sequence;
     if (NS_WARN_IF(!sequence.SetLength(length, fallible))) {
       return;
     }
