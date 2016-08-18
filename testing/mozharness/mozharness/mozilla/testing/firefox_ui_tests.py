@@ -51,6 +51,12 @@ firefox_ui_tests_config_options = [
         'dest': 'tag',
         'help': 'Subset of tests to run (local, remote).',
     }],
+    [["--allow-software-gl-layers"], {
+        "action": "store_true",
+        "dest": "allow_software_gl_layers",
+        "default": False,
+        "help": "Permits a software GL implementation (such as LLVMPipe) to use the GL compositor.",
+    }],
 ] + copy.deepcopy(testing_config_options)
 
 # Command line arguments for update tests
@@ -247,6 +253,9 @@ class FirefoxUITests(TestingMixin, VCSToolsScript):
         env.update({'MINIDUMP_SAVE_PATH': dirs['abs_blob_upload_dir']})
         if self.query_minidump_stackwalk():
             env.update({'MINIDUMP_STACKWALK': self.minidump_stackwalk_path})
+
+        if self.config['allow_software_gl_layers']:
+            env['MOZ_LAYERS_ALLOW_SOFTWARE_GL'] = '1'
 
         return_code = self.run_command(cmd,
                                        cwd=dirs['abs_work_dir'],
