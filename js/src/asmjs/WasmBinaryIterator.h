@@ -793,7 +793,7 @@ ExprIter<Policy>::readElse(ExprType* thenType, Value* thenValue)
 {
     MOZ_ASSERT(Classify(expr_) == ExprKind::Else);
 
-    ExprType type;
+    ExprType type = ExprType::Limit;
     LabelKind kind;
     if (!popControl(&kind, &type, thenValue))
         return false;
@@ -826,7 +826,7 @@ ExprIter<Policy>::readEnd(LabelKind* kind, ExprType* type, Value* value)
 {
     MOZ_ASSERT(Classify(expr_) == ExprKind::End);
 
-    LabelKind validateKind;
+    LabelKind validateKind = static_cast<LabelKind>(-1);
     ExprType validateType;
     if (!popControl(&validateKind, &validateType, value))
         return false;
