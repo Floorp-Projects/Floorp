@@ -30,14 +30,9 @@ function ConsoleApiCall(props) {
 
   let messageBody;
   if (type === "trace") {
-    messageBody = [
-      dom.span({className: "cm-variable"}, "console"),
-      ".",
-      dom.span({className: "cm-property"}, "trace"),
-      "():"
-    ];
+    messageBody = dom.span({className: "cm-variable"}, "console.trace()");
   } else if (message.parameters) {
-    messageBody = message.parameters.map((grip) => GripMessageBody({grip}));
+    messageBody = message.parameters.map((grip, key) => GripMessageBody({grip, key}));
   } else {
     messageBody = message.messageText;
   }

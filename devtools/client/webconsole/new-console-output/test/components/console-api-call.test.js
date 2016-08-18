@@ -2,19 +2,22 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
-const { stubConsoleMessages } = require("devtools/client/webconsole/new-console-output/test/fixtures/stubs");
-const { ConsoleApiCall } = require("devtools/client/webconsole/new-console-output/components/message-types/console-api-call");
+// Test utils.
 const expect = require("expect");
+const { renderComponent } = require("devtools/client/webconsole/new-console-output/test/helpers");
 
-const {
-  renderComponent
-} = require("devtools/client/webconsole/new-console-output/test/helpers");
+// Components under test.
+const { ConsoleApiCall } = require("devtools/client/webconsole/new-console-output/components/message-types/console-api-call");
+
+// Test fakes.
+const { stubConsoleMessages } = require("devtools/client/webconsole/new-console-output/test/fixtures/stubs");
+const onViewSourceInDebugger = () => {};
 
 describe("ConsoleAPICall component:", () => {
   describe("console.log", () => {
     it("renders string grips", () => {
       const message = stubConsoleMessages.get("console.log('foobar', 'test')");
-      const rendered = renderComponent(ConsoleApiCall, {message});
+      const rendered = renderComponent(ConsoleApiCall, {message, onViewSourceInDebugger});
 
       const messageBody = getMessageBody(rendered);
       // @TODO should output: foobar test
@@ -27,7 +30,7 @@ describe("ConsoleAPICall component:", () => {
       const message =
         stubConsoleMessages.get("console.log('foobar', 'test')")
         .set("repeat", 107);
-      const rendered = renderComponent(ConsoleApiCall, {message});
+      const rendered = renderComponent(ConsoleApiCall, {message, onViewSourceInDebugger});
 
       const repeatNode = getRepeatNode(rendered);
       expect(repeatNode[0].textContent).toBe("107");
@@ -37,7 +40,7 @@ describe("ConsoleAPICall component:", () => {
   describe("console.count", () => {
     it("renders", () => {
       const message = stubConsoleMessages.get("console.count('bar')");
-      const rendered = renderComponent(ConsoleApiCall, {message});
+      const rendered = renderComponent(ConsoleApiCall, {message, onViewSourceInDebugger});
 
       const messageBody = getMessageBody(rendered);
       expect(messageBody.textContent).toBe(message.messageText);

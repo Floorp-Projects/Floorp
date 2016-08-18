@@ -127,7 +127,7 @@ const FilterBar = createClass({
 
     return (
       dom.div({className: "webconsole-filteringbar-wrapper"},
-        children
+        ...children
       )
     );
   }
