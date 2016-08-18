@@ -1,0 +1,70 @@
+<!DOCTYPE HTML>
+<html>
+<meta charset="utf-8">
+<head>
+  <title>Test MediaElementAudioSourceNode before "loadedmetadata"</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+SimpleTest.waitForExplicitFinish();
+
+var video = document.createElement("video");
+function test() {
+  video.src = "audiovideo.mp4";
+
+  var context = new AudioContext();
+  var complete = false;
+
+  video.onended = () => {
+    if (complete) {
+      return;
+    }
+
+    complete = true;
+    ok(false, "Video ended without any samples seen");
+    SimpleTest.finish();
+  };
+
+  video.ontimeupdate = () => {
+    info("Timeupdate: " + video.currentTime);
+  };
+
+  var node = context.createMediaElementSource(video);
+  var sp = context.createScriptProcessor(2048, 1);
+  node.connect(sp);
+
+  // This test ensures we receive some nonzero samples when we capture to
+  // WebAudio before "loadedmetadata".
+  sp.onaudioprocess = e => {
+    if (complete) {
+      return;
+    }
+
+    var buf = e.inputBuffer.getChannelData(0);
+    for (var i = 0; i < buf.length; ++i) {
+      if (buf[i] != 0) {
+        complete = true;
+        ok(true, "Got non-zero samples");
+        SimpleTest.finish();
+        return;
+      }
+    }
+  };
+
+  video.play();
+}
+
+if (video.canPlayType("video/mp4")) {
+  test();
+} else {
+  ok(true, "MP4 not supported. Skipping.");
+  SimpleTest.finish();
+}
+
+</script>
+</pre>
+</body>
+</html>
