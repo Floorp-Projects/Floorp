@@ -475,11 +475,7 @@ nsSocketInputStream::AsyncWait(nsIInputStreamCallback *callback,
     bool hasError = false;
     {
         MutexAutoLock lock(mTransport->mLock);
-        if (mTransport->mState != nsSocketTransport::STATE_TRANSFERRING && NS_FAILED(mCondition)) {
-            SOCKET_LOG(("nsSocketInputStream::AsyncWait [this=%p] "
-                        "Not Transferring %X.\n", mTransport, mCondition));
-            return NS_OK;
-        }
+
         if (callback && target) {
             //
             // build event proxy
@@ -713,12 +709,7 @@ nsSocketOutputStream::AsyncWait(nsIOutputStreamCallback *callback,
 
     {
         MutexAutoLock lock(mTransport->mLock);
-        if (mTransport->mState != nsSocketTransport::STATE_TRANSFERRING && NS_FAILED(mCondition)) {
-            // do not take the callback reference if we will not call onOutputReady
-            SOCKET_LOG(("nsSocketOutputStream::AsyncWait [this=%p] mTransport=%p "
-                        "Not Transferring %X.\n",this, mTransport, mCondition));
-            return NS_OK;
-        }
+
         if (callback && target) {
             //
             // build event proxy
