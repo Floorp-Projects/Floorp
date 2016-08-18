@@ -79,16 +79,19 @@ h3 {
   line-height: 1.66em;
 }
 
-a {
+a:link {
   text-decoration: underline;
   font-weight: normal;
 }
 
-a,
-a:visited,
-a:hover,
-a:active {
+a:link,
+a:link:hover,
+a:link:active {
   color: #0095dd;
+}
+
+a:visited {
+  color: #c2e;
 }
 
 * {
