@@ -360,7 +360,7 @@ MessagePort::Initialize(const nsID& aUUID,
     MOZ_ASSERT(!mWorkerHolder);
 
     nsAutoPtr<WorkerHolder> workerHolder(new MessagePortWorkerHolder(this));
-    if (NS_WARN_IF(!workerHolder->HoldWorker(workerPrivate))) {
+    if (NS_WARN_IF(!workerHolder->HoldWorker(workerPrivate, Closing))) {
       aRv.Throw(NS_ERROR_FAILURE);
       return;
     }

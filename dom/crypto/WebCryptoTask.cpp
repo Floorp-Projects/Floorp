@@ -40,6 +40,7 @@ const SEC_ASN1Template SGN_DigestInfoTemplate[] = {
 namespace mozilla {
 namespace dom {
 
+using mozilla::dom::workers::Canceling;
 using mozilla::dom::workers::GetCurrentThreadWorkerPrivate;
 using mozilla::dom::workers::Status;
 using mozilla::dom::workers::WorkerHolder;
@@ -161,7 +162,7 @@ public:
     WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
     MOZ_ASSERT(workerPrivate);
     RefPtr<InternalWorkerHolder> ref = new InternalWorkerHolder();
-    if (NS_WARN_IF(!ref->HoldWorker(workerPrivate))) {
+    if (NS_WARN_IF(!ref->HoldWorker(workerPrivate, Canceling))) {
       return nullptr;
     }
     return ref.forget();
