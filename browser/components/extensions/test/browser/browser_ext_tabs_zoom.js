@@ -201,7 +201,7 @@ add_task(function* () {
   });
 
   extension.onMessage("msg", (id, msg, ...args) => {
-    let {TabManager} = Cu.import("resource://gre/modules/Extension.jsm", {});
+    let {TabManager} = Cu.import("resource://gre/modules/ExtensionGlobalScope.jsm", {}).getGlobalForTesting("chrome");
 
     let resp;
     if (msg == "get-zoom") {
