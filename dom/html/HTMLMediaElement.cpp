@@ -1695,6 +1695,7 @@ void HTMLMediaElement::NoSupportedMediaSourceError(const nsACString& aErrorDetai
   mErrorSink->SetError(MEDIA_ERR_SRC_NOT_SUPPORTED, aErrorDetails);
   ChangeDelayLoadStatus(false);
   UpdateAudioChannelPlayingState();
+  RejectPromises(TakePendingPlayPromises(), NS_ERROR_DOM_MEDIA_NOT_SUPPORTED_ERR);
 }
 
 typedef void (HTMLMediaElement::*SyncSectionFn)();

@@ -956,6 +956,7 @@ protected:
   void AbortExistingLoads();
 
   /**
+   * This is the dedicated media source failure steps.
    * Called when all potential resources are exhausted. Changes network
    * state to NETWORK_NO_SOURCE, and sends error event with code
    * MEDIA_ERR_SRC_NOT_SUPPORTED.
