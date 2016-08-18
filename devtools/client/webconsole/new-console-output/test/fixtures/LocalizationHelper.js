@@ -3,12 +3,8 @@
 
 "use strict";
 
-const L10n = require("devtools/client/webconsole/new-console-output/test/fixtures/L10n");
-
-const Utils = {
-  L10n
-};
+const LocalizationHelper = require("devtools/client/webconsole/new-console-output/test/fixtures/L10n");
 
 module.exports = {
-  Utils
+  LocalizationHelper
 };
