@@ -2478,7 +2478,7 @@ ExtractSimdValue(ModuleValidator& m, ParseNode* pn)
 {
     MOZ_ASSERT(IsSimdLiteral(m, pn));
 
-    SimdType type;
+    SimdType type = SimdType::Count;
     JS_ALWAYS_TRUE(IsSimdTuple(m, pn, &type));
     MOZ_ASSERT(CallArgListLength(pn) == GetSimdLanes(type));
 

@@ -3205,7 +3205,7 @@ class BaseCompiler
 # if defined(JS_CODEGEN_X64)
         Operand dstAddr(HeapReg, ptr.reg, TimesOne, access.offset());
 
-        Register intReg;
+        Register intReg = Register::Invalid();
         if (src.tag == AnyReg::I32)
             intReg = src.i32().reg;
         else if (src.tag == AnyReg::I64)
