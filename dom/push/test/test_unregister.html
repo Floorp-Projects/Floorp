@@ -36,7 +36,6 @@ http://creativecommons.org/licenses/publicdomain/
 
     registration = yield navigator.serviceWorker.register(
       generateURL(), {scope: "."});
-    yield waitForActive(registration);
   });
 
   var pushSubscription;
@@ -64,7 +63,6 @@ http://creativecommons.org/licenses/publicdomain/
 
     registration = yield navigator.serviceWorker.register(
       generateURL(), {scope: "."});
-    yield waitForActive(registration);
     var pushSubscription = yield registration.pushManager.getSubscription();
     ok(!pushSubscription,
       "Unregistering a service worker should drop its subscription");
