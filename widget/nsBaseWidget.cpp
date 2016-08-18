@@ -891,7 +891,8 @@ nsBaseWidget::PerformFullscreenTransition(FullscreenTransitionStage aStage,
 // Put the window into full-screen mode
 //
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsBaseWidget::MakeFullScreen(bool aFullScreen, nsIScreen* aScreen)
+void
+nsBaseWidget::InfallibleMakeFullScreen(bool aFullScreen, nsIScreen* aScreen)
 {
   HideWindowChrome(aFullScreen);
 
@@ -921,7 +922,12 @@ NS_IMETHODIMP nsBaseWidget::MakeFullScreen(bool aFullScreen, nsIScreen* aScreen)
              mOriginalBounds->height, true);
     }
   }
+}
 
+nsresult
+nsBaseWidget::MakeFullScreen(bool aFullScreen, nsIScreen* aScreen)
+{
+  InfallibleMakeFullScreen(aFullScreen, aScreen);
   return NS_OK;
 }
 

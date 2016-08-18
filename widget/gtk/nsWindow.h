@@ -162,7 +162,7 @@ public:
                                              uint16_t aDuration,
                                              nsISupports* aData,
                                              nsIRunnable* aCallback) override;
-    NS_IMETHOD         MakeFullScreen(bool aFullScreen,
+    virtual nsresult   MakeFullScreen(bool aFullScreen,
                                       nsIScreen* aTargetScreen = nullptr) override;
     NS_IMETHOD         HideWindowChrome(bool aShouldHide) override;
 
