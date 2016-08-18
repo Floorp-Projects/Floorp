@@ -1449,7 +1449,7 @@ private:
   ShutdownGCTimers();
 
   bool
-  AddHolder(WorkerHolder* aHolder);
+  AddHolder(WorkerHolder* aHolder, Status aFailStatus);
 
   void
   RemoveHolder(WorkerHolder* aHolder);
