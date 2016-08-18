@@ -3225,6 +3225,21 @@ HTMLMediaElement::ReportTelemetry()
                               max_ms);
         LOG(LogLevel::Debug, ("%p VIDEO_INTER_KEYFRAME_MAX_MS = %u, keys: '%s' and 'All'",
                               this, max_ms, key.get()));
+      } else {
+        // Here, we have played *some* of the video, but didn't get more than 1
+        // keyframe. Report '0' if we have played for longer than the video-
+        // decode-suspend delay (showing recovery would be difficult).
+        uint32_t suspendDelay_ms = MediaPrefs::MDSMSuspendBackgroundVideoDelay();
+        if (uint32_t(playTime * 1000.0) > suspendDelay_ms) {
+          Telemetry::Accumulate(Telemetry::VIDEO_INTER_KEYFRAME_MAX_MS,
+                                key,
+                                0);
+          Telemetry::Accumulate(Telemetry::VIDEO_INTER_KEYFRAME_MAX_MS,
+                                NS_LITERAL_CSTRING("All"),
+                                0);
+          LOG(LogLevel::Debug, ("%p VIDEO_INTER_KEYFRAME_MAX_MS = 0 (only 1 keyframe), keys: '%s' and 'All'",
+                                this, key.get()));
+        }
       }
     }
   }
