@@ -584,7 +584,7 @@ protected:
    * from a non-main thread, it will redispatch itself to the main thread, and
    * use the latest metrics during the redispatch.
    */
-  void RequestContentRepaint();
+  void RequestContentRepaint(bool aUserAction = true);
 
   /**
    * Send the provided metrics to Gecko to trigger a repaint. This function
