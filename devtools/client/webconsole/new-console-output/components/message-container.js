@@ -33,16 +33,31 @@ const MessageContainer = createClass({
     message: PropTypes.object.isRequired,
     sourceMapService: PropTypes.object,
     onViewSourceInDebugger: PropTypes.func.isRequired,
+    open: PropTypes.bool.isRequired,
   },
 
   shouldComponentUpdate(nextProps, nextState) {
-    return this.props.message.repeat !== nextProps.message.repeat;
+    return this.props.message.repeat !== nextProps.message.repeat
+      || this.props.open !== nextProps.open;
   },
 
   render() {
-    const { message, sourceMapService, onViewSourceInDebugger } = this.props;
+    const {
+      dispatch,
+      message,
+      sourceMapService,
+      onViewSourceInDebugger,
+      open
+    } = this.props;
+
     let MessageComponent = createFactory(getMessageComponent(message));
-    return MessageComponent({ message, sourceMapService, onViewSourceInDebugger });
+    return MessageComponent({
+      dispatch,
+      message,
+      sourceMapService,
+      onViewSourceInDebugger,
+      open
+    });
   }
 });
 

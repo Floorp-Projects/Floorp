@@ -12,7 +12,7 @@ const {
 const ReactDOM = require("devtools/client/shared/vendor/react-dom");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 
-const { getAllMessages } = require("devtools/client/webconsole/new-console-output/selectors/messages");
+const { getAllMessages, getAllMessagesUiById } = require("devtools/client/webconsole/new-console-output/selectors/messages");
 const MessageContainer = createFactory(require("devtools/client/webconsole/new-console-output/components/message-container").MessageContainer);
 
 const ConsoleOutput = createClass({
@@ -41,11 +41,24 @@ const ConsoleOutput = createClass({
   },
 
   render() {
-    let {messages, sourceMapService, onViewSourceInDebugger} = this.props;
+    let {
+      dispatch,
+      messages,
+      messagesUi,
+      sourceMapService,
+      onViewSourceInDebugger
+    } = this.props;
+
     let messageNodes = messages.map(function (message) {
       return (
-        MessageContainer({ message, key: message.id,
-          sourceMapService, onViewSourceInDebugger })
+        MessageContainer({
+          dispatch,
+          message,
+          key: message.id,
+          sourceMapService,
+          onViewSourceInDebugger,
+          open: messagesUi.includes(message.id)
+        })
       );
     });
     return (
@@ -63,7 +76,8 @@ function isScrolledToBottom(outputNode, scrollNode) {
 
 function mapStateToProps(state) {
   return {
-    messages: getAllMessages(state)
+    messages: getAllMessages(state),
+    messagesUi: getAllMessagesUiById(state)
   };
 }
 
