@@ -55,12 +55,14 @@ ia2AccessibleValue::get_currentValue(VARIANT* aCurrentValue)
 
   AccessibleWrap* valueAcc = static_cast<AccessibleWrap*>(this);
   double currentValue;
-  MOZ_ASSERT(!valueAcc->IsProxy());
-  if (valueAcc->IsDefunct()) {
-    return CO_E_OBJNOTCONNECTED;
-  }
+  if (valueAcc->IsProxy()) {
+    currentValue = valueAcc->Proxy()->CurValue();
+  } else {
+    if (valueAcc->IsDefunct())
+      return CO_E_OBJNOTCONNECTED;
 
-  currentValue = valueAcc->CurValue();
+    currentValue = valueAcc->CurValue();
+  }
 
   if (IsNaN(currentValue))
     return S_FALSE;
@@ -81,7 +83,8 @@ ia2AccessibleValue::setCurrentValue(VARIANT aValue)
     return E_INVALIDARG;
 
   AccessibleWrap* valueAcc = static_cast<AccessibleWrap*>(this);
-  MOZ_ASSERT(!valueAcc->IsProxy());
+  if (valueAcc->IsProxy())
+    return valueAcc->Proxy()->SetCurValue(aValue.dblVal) ? S_OK : E_FAIL;
 
   if (valueAcc->IsDefunct())
     return CO_E_OBJNOTCONNECTED;
@@ -103,12 +106,14 @@ ia2AccessibleValue::get_maximumValue(VARIANT* aMaximumValue)
 
   AccessibleWrap* valueAcc = static_cast<AccessibleWrap*>(this);
   double maximumValue;
-  MOZ_ASSERT(!valueAcc->IsProxy());
-  if (valueAcc->IsDefunct()) {
-    return CO_E_OBJNOTCONNECTED;
-  }
+  if (valueAcc->IsProxy()) {
+    maximumValue = valueAcc->Proxy()->MaxValue();
+  } else {
+    if (valueAcc->IsDefunct())
+      return CO_E_OBJNOTCONNECTED;
 
-  maximumValue = valueAcc->MaxValue();
+    maximumValue = valueAcc->MaxValue();
+  }
 
   if (IsNaN(maximumValue))
     return S_FALSE;
@@ -132,12 +137,14 @@ ia2AccessibleValue::get_minimumValue(VARIANT* aMinimumValue)
 
   AccessibleWrap* valueAcc = static_cast<AccessibleWrap*>(this);
   double minimumValue;
-  MOZ_ASSERT(!valueAcc->IsProxy());
-  if (valueAcc->IsDefunct()) {
-    return CO_E_OBJNOTCONNECTED;
-  }
+  if (valueAcc->IsProxy()) {
+    minimumValue = valueAcc->Proxy()->MinValue();
+  } else {
+    if (valueAcc->IsDefunct())
+      return CO_E_OBJNOTCONNECTED;
 
-  minimumValue = valueAcc->MinValue();
+    minimumValue = valueAcc->MinValue();
+  }
 
   if (IsNaN(minimumValue))
     return S_FALSE;

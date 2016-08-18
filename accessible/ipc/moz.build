@@ -4,21 +4,37 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-if CONFIG['OS_ARCH'] == 'WINNT':
-    DIRS += ['win']
-    LOCAL_INCLUDES += [
-        '/accessible/ipc/win',
-        '/accessible/windows/ia2',
-        '/accessible/windows/msaa',
+IPDL_SOURCES += ['PDocAccessible.ipdl']
+
+# with --disable-accessibility we need to compile PDocAccessible.ipdl, but not
+# the C++.
+if CONFIG['ACCESSIBILITY']:
+    EXPORTS.mozilla.a11y += [
+        'DocAccessibleChild.h',
+        'DocAccessibleParent.h',
+        'ProxyAccessible.h'
     ]
-else:
-    DIRS += ['other']
-    LOCAL_INCLUDES += [
-        '/accessible/ipc/other',
+
+    SOURCES += [
+        'DocAccessibleChild.cpp',
+        'DocAccessibleParent.cpp',
+        'ProxyAccessible.cpp'
     ]
+
+    LOCAL_INCLUDES += [
+        '../base',
+        '../generic',
+        '../xpcom',
+    ]
+
     if 'gtk' in CONFIG['MOZ_WIDGET_TOOLKIT']:
         LOCAL_INCLUDES += [
             '/accessible/atk',
+        ]
+    elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
+        LOCAL_INCLUDES += [
+            '/accessible/windows/ia2',
+            '/accessible/windows/msaa',
         ]
     elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
         LOCAL_INCLUDES += [
@@ -29,30 +45,9 @@ else:
             '/accessible/other',
         ]
 
-if CONFIG['GNU_CXX']:
-    CXXFLAGS += ['-Wno-error=shadow']
-
-# with --disable-accessibility we need to compile PDocAccessible.ipdl, but not
-# the C++.
-if CONFIG['ACCESSIBILITY']:
-    EXPORTS.mozilla.a11y += [
-        'DocAccessibleChildBase.h',
-        'DocAccessibleParent.h',
-        'ProxyAccessibleBase.h',
-    ]
-
-    UNIFIED_SOURCES += [
-        'DocAccessibleChildBase.cpp',
-        'DocAccessibleParent.cpp',
-        'ProxyAccessibleBase.cpp',
-    ]
-
-    LOCAL_INCLUDES += [
-        '/accessible/base',
-        '/accessible/generic',
-        '/accessible/xpcom',
-    ]
+    FINAL_LIBRARY = 'xul'
 
 include('/ipc/chromium/chromium-config.mozbuild')
 
-FINAL_LIBRARY = 'xul'
+if CONFIG['GNU_CXX']:
+    CXXFLAGS += ['-Wno-error=shadow']
