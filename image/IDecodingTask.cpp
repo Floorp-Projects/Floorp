@@ -158,7 +158,8 @@ AnimationDecodingTask::ShouldPreferSyncRun() const
 ///////////////////////////////////////////////////////////////////////////////
 
 MetadataDecodingTask::MetadataDecodingTask(NotNull<Decoder*> aDecoder)
-  : mDecoder(aDecoder)
+  : mMutex("mozilla::image::MetadataDecodingTask")
+  , mDecoder(aDecoder)
 {
   MOZ_ASSERT(mDecoder->IsMetadataDecode(),
              "Use DecodingTask for non-metadata decodes");
@@ -167,6 +168,8 @@ MetadataDecodingTask::MetadataDecodingTask(NotNull<Decoder*> aDecoder)
 void
 MetadataDecodingTask::Run()
 {
+  MutexAutoLock lock(mMutex);
+
   LexerResult result = mDecoder->Decode(WrapNotNull(this));
 
   if (result.is<TerminalState>()) {
