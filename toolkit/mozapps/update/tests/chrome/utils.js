@@ -649,11 +649,9 @@ function checkPrefHasUserValue(aPrefHasValue) {
 }
 
 /**
- * Checks whether the link is hidden (general background update check error or
- * a certificate attribute check error with an update) or not (certificate
- * attribute check error without an update) on the errorextra page and that the
- * app.update.cert.errors and app.update.backgroundErrors preferences do not
- & have a user value.
+ * Checks whether the link is hidden for a general background update check error
+ * or not on the errorextra page and that the app.update.backgroundErrors
+ * preference does not have a user value.
  *
  * @param  aShouldBeHidden (optional)
  *         The expected value for the label's hidden attribute for the link. If
@@ -669,10 +667,6 @@ function checkErrorExtraPage(aShouldBeHidden) {
 
   is(gWin.document.getElementById(gTest.displayedTextElem).hidden, false,
      "Checking " + gTest.displayedTextElem + " should not be hidden");
-
-  ok(!Services.prefs.prefHasUserValue(PREF_APP_UPDATE_CERT_ERRORS),
-     "Preference " + PREF_APP_UPDATE_CERT_ERRORS + " should not have a " +
-     "user value");
 
   ok(!Services.prefs.prefHasUserValue(PREF_APP_UPDATE_BACKGROUNDERRORS),
      "Preference " + PREF_APP_UPDATE_BACKGROUNDERRORS + " should not have a " +
@@ -993,14 +987,6 @@ function resetPrefs() {
     Services.prefs.clearUserPref(PREF_APP_UPDATE_SILENT);
   }
 
-  if (Services.prefs.prefHasUserValue(PREF_APP_UPDATE_CERT_ERRORS)) {
-    Services.prefs.clearUserPref(PREF_APP_UPDATE_CERT_ERRORS);
-  }
-
-  if (Services.prefs.prefHasUserValue(PREF_APP_UPDATE_CERT_MAXERRORS)) {
-    Services.prefs.clearUserPref(PREF_APP_UPDATE_CERT_MAXERRORS);
-  }
-
   if (Services.prefs.prefHasUserValue(PREF_APP_UPDATE_BACKGROUNDERRORS)) {
     Services.prefs.clearUserPref(PREF_APP_UPDATE_BACKGROUNDERRORS);
   }
@@ -1009,25 +995,8 @@ function resetPrefs() {
     Services.prefs.clearUserPref(PREF_APP_UPDATE_BACKGROUNDMAXERRORS);
   }
 
-  if (Services.prefs.prefHasUserValue(PREF_APP_UPDATE_CERT_INVALID_ATTR_NAME)) {
-    Services.prefs.clearUserPref(PREF_APP_UPDATE_CERT_INVALID_ATTR_NAME);
-  }
-
   if (Services.prefs.prefHasUserValue(PREF_APP_UPDATE_CERT_REQUIREBUILTIN)) {
     Services.prefs.clearUserPref(PREF_APP_UPDATE_CERT_REQUIREBUILTIN);
-  }
-
-  if (Services.prefs.prefHasUserValue(PREF_APP_UPDATE_CERT_CHECKATTRIBUTES)) {
-    Services.prefs.clearUserPref(PREF_APP_UPDATE_CERT_CHECKATTRIBUTES);
-  }
-
-  try {
-    CERT_ATTRS.forEach(function(aCertAttrName) {
-      Services.prefs.clearUserPref(PREFBRANCH_APP_UPDATE_CERTS + "1." +
-                                   aCertAttrName);
-    });
-  }
-  catch (e) {
   }
 
   try {
@@ -1093,7 +1062,7 @@ const errorsPrefObserver = {
    * @param  aMaxErrorPref
    *         The maximum errors preference.
    * @param  aMaxErrorCount
-   *         The value to set the app.update.cert.maxErrors preference to.
+   *         The value to set the maximum errors preference to.
    */
   init: function(aObservePref, aMaxErrorPref, aMaxErrorCount) {
     this.observedPref = aObservePref;
