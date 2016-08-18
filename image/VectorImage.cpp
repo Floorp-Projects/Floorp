@@ -880,11 +880,15 @@ VectorImage::LookupCachedSurface(const SVGDrawingParameters& aParams)
     return nullptr;
   }
 
+  // We don't do any caching if we have animation, so don't bother with a lookup
+  // in this case either.
+  if (mHaveAnimations) {
+    return nullptr;
+  }
+
   LookupResult result =
     SurfaceCache::Lookup(ImageKey(this),
-                         VectorSurfaceKey(aParams.size,
-                                          aParams.svgContext,
-                                          aParams.animationTime));
+                         VectorSurfaceKey(aParams.size, aParams.svgContext));
   if (!result) {
     return nullptr;  // No matching surface, or the OS freed the volatile buffer.
   }
@@ -961,9 +965,7 @@ VectorImage::CreateSurfaceAndShow(const SVGDrawingParameters& aParams)
   NotNull<RefPtr<ISurfaceProvider>> provider =
     WrapNotNull(new SimpleSurfaceProvider(frame));
   SurfaceCache::Insert(provider, ImageKey(this),
-                       VectorSurfaceKey(aParams.size,
-                                        aParams.svgContext,
-                                        aParams.animationTime));
+                       VectorSurfaceKey(aParams.size, aParams.svgContext));
 
   // Draw.
   RefPtr<gfxDrawable> drawable =

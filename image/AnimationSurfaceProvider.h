@@ -45,6 +45,9 @@ public:
 
   bool IsFinished() const override;
   size_t LogicalSizeInBytes() const override;
+  void AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
+                              size_t& aHeapSizeOut,
+                              size_t& aNonHeapSizeOut) override;
 
 protected:
   DrawableFrameRef DrawableRef(size_t aFrame) override;
