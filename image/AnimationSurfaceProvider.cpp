@@ -116,6 +116,21 @@ AnimationSurfaceProvider::LogicalSizeInBytes() const
 }
 
 void
+AnimationSurfaceProvider::AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
+                                                 size_t& aHeapSizeOut,
+                                                 size_t& aNonHeapSizeOut)
+{
+  // Note that the surface cache lock is already held here, and then we acquire
+  // mFramesMutex. For this method, this ordering is unavoidable, which means
+  // that we must be careful to always use the same ordering elsewhere.
+  MutexAutoLock lock(mFramesMutex);
+
+  for (const RawAccessFrameRef& frame : mFrames) {
+    frame->AddSizeOfExcludingThis(aMallocSizeOf, aHeapSizeOut, aNonHeapSizeOut);
+  }
+}
+
+void
 AnimationSurfaceProvider::Run()
 {
   MutexAutoLock lock(mDecodingMutex);
@@ -233,7 +248,11 @@ AnimationSurfaceProvider::AnnounceSurfaceAvailable()
   mFramesMutex.AssertNotCurrentThreadOwns();
   MOZ_ASSERT(mImage);
 
-  // We just got the first frame; let the surface cache know.
+  // We just got the first frame; let the surface cache know. We deliberately do
+  // this outside of mFramesMutex to avoid a potential deadlock with
+  // AddSizeOfExcludingThis(), since otherwise we'd be acquiring mFramesMutex
+  // and then the surface cache lock, while the memory reporting code would
+  // acquire the surface cache lock and then mFramesMutex.
   SurfaceCache::SurfaceAvailable(WrapNotNull(this),
                                  ImageKey(mImage.get()),
                                  mSurfaceKey);
