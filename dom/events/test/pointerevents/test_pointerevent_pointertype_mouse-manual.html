@@ -18,8 +18,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1000870
         iframe.src = "pointerevent_pointertype_mouse-manual.html";
       }
       function executeTest(int_win) {
-        sendMouseEvent(int_win, "target0", "mousedown");
-        sendMouseEvent(int_win, "target0", "mouseup");
+        sendMouseEvent(int_win, "target0", "mousedown", {button:0});
+        sendMouseEvent(int_win, "target0", "mouseup", {button:0});
       }
     </script>
   </head>
