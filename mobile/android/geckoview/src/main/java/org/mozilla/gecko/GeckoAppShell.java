@@ -239,7 +239,6 @@ public class GeckoAppShell
 
     // helper methods
     public static native void onSurfaceTextureFrameAvailable(Object surfaceTexture, int id);
-    public static native void dispatchMemoryPressure();
 
     private static native void reportJavaCrash(String stackTrace);
 
