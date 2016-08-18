@@ -28,6 +28,14 @@
   --row-hover-background-color: rgba(76,158,217,0.2);
 }
 
+/*
+ * DE-XUL: Set a sidebar width because inline XUL components will cause the flex
+ * to overflow if dynamically sized.
+ */
+.performance-tool {
+  --sidebar-width: 185px;
+}
+
 /**
  * A generic class to hide elements, replacing the `element.hidden` attribute
  * that we use to hide elements that can later be active
@@ -84,12 +92,16 @@
 
 /* Recording buttons */
 
-#main-record-button {
-  list-style-image: url(images/profiler-stopwatch.svg);
+#clear-button::before {
+  background-image: var(--clear-icon-url);
 }
 
-#import-button {
-  list-style-image: url(images/import.svg);
+#main-record-button::before {
+  background-image: url(images/profiler-stopwatch.svg);
+}
+
+#import-button::before {
+  background-image: url(images/import.svg);
 }
 
 #main-record-button .button-icon, #import-button .button-icon {
@@ -119,6 +131,22 @@
 
 #recordings-pane {
   border-inline-end: 1px solid var(--theme-splitter-color);
+  width: var(--sidebar-width);
+}
+
+#recording-controls-mount {
+  width: var(--sidebar-width);
+}
+
+#recording-controls-mount > div {
+  width: var(--sidebar-width);
+}
+
+/*
+ * DE-XUL: The height of the toolbar is not correct without tweaking the line-height.
+ */
+#recordings-pane .devtools-toolbar {
+  line-height: 0;
 }
 
 #recordings-list {

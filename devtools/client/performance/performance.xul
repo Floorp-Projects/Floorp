@@ -13,7 +13,8 @@
   %performanceDTD;
 ]>
 
-<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml">
   <script src="chrome://devtools/content/shared/theme-switching.js"/>
   <script type="application/javascript" src="performance-controller.js"/>
   <script type="application/javascript" src="performance-view.js"/>
@@ -76,25 +77,13 @@
     </menupopup>
   </popupset>
 
-  <hbox id="body" class="theme-body" flex="1">
+  <hbox id="body" class="theme-body performance-tool" flex="1">
 
     <!-- Sidebar: controls and recording list -->
     <vbox id="recordings-pane">
-      <toolbar id="recordings-toolbar"
-               class="devtools-toolbar">
-        <hbox id="recordings-controls"
-              class="devtools-toolbarbutton-group">
-          <toolbarbutton id="clear-button"
-                         class="devtools-toolbarbutton devtools-clear-icon"
-                         tooltiptext="&performanceUI.clearButton;"/>
-          <toolbarbutton id="main-record-button"
-                         class="devtools-toolbarbutton record-button"
-                         tooltiptext="&performanceUI.recordButton.tooltip;"/>
-          <toolbarbutton id="import-button"
-                         class="devtools-toolbarbutton"
-                         tooltiptext="&performanceUI.importButton;"/>
-        </hbox>
-      </toolbar>
+      <hbox id="recordings-controls">
+        <html:div id='recording-controls-mount'/>
+      </hbox>
       <vbox id="recordings-list" class="theme-sidebar" flex="1"/>
     </vbox>
 
@@ -170,11 +159,8 @@
               align="center"
               pack="center"
               flex="1">
-          <hbox class="devtools-toolbarbutton-group"
-                pack="center">
-            <toolbarbutton class="devtools-toolbarbutton record-button"
-                           label="&performanceUI.startRecording;"
-                           standalone="true"/>
+          <hbox pack="center">
+            <html:div class='recording-button-mount'/>
           </hbox>
           <description class="tool-disabled-message">
             &performanceUI.unavailableNoticePB;
@@ -187,11 +173,8 @@
               align="center"
               pack="center"
               flex="1">
-          <hbox class="devtools-toolbarbutton-group"
-                pack="center">
-            <toolbarbutton class="devtools-toolbarbutton record-button"
-                           label="&performanceUI.startRecording;"
-                           standalone="true"/>
+          <hbox pack="center">
+            <html:div class='recording-button-mount'/>
           </hbox>
         </hbox>
 
@@ -223,11 +206,8 @@
                   align="center"
                   pack="center"
                   flex="1">
-              <hbox class="devtools-toolbarbutton-group"
-                    pack="center">
-                <toolbarbutton class="devtools-toolbarbutton record-button"
-                               label="&performanceUI.stopRecording;"
-                               standalone="true"/>
+              <hbox pack="center">
+                <html:div class='recording-button-mount'/>
               </hbox>
               <label class="realtime-disabled-message"
                      value="&performanceUI.disabledRealTime.nonE10SBuild;"/>
