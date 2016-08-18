@@ -27,7 +27,7 @@ DecodedSurfaceProvider::DecodedSurfaceProvider(NotNull<RasterImage*> aImage,
   MOZ_ASSERT(!mDecoder->IsMetadataDecode(),
              "Use MetadataDecodingTask for metadata decodes");
   MOZ_ASSERT(mDecoder->IsFirstFrameDecode(),
-             "Use AnimationDecodingTask for animation decodes");
+             "Use AnimationSurfaceProvider for animation decodes");
 }
 
 DecodedSurfaceProvider::~DecodedSurfaceProvider()

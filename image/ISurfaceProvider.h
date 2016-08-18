@@ -13,6 +13,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/MemoryReporting.h"
 #include "mozilla/NotNull.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Variant.h"
@@ -49,6 +50,21 @@ public:
   /// require. Optimizations may result in lower real memory usage. Trivial
   /// overhead is ignored.
   virtual size_t LogicalSizeInBytes() const = 0;
+
+  /// @return the actual number of bytes of memory this ISurfaceProvider is
+  /// using. May vary over the lifetime of the ISurfaceProvider. The default
+  /// implementation is appropriate for static ISurfaceProviders.
+  virtual void AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
+                                      size_t& aHeapSizeOut,
+                                      size_t& aNonHeapSizeOut)
+  {
+    DrawableFrameRef ref = DrawableRef(/* aFrame = */ 0);
+    if (!ref) {
+      return;
+    }
+
+    ref->AddSizeOfExcludingThis(aMallocSizeOf, aHeapSizeOut, aNonHeapSizeOut);
+  }
 
   /// @return the availability state of this ISurfaceProvider, which indicates
   /// whether DrawableRef() could successfully return a surface. Should only be

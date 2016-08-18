@@ -198,17 +198,20 @@ public:
       SurfaceMemoryCounter counter(aCachedSurface->GetSurfaceKey(),
                                    aCachedSurface->IsLocked());
 
-      if (!aCachedSurface->IsPlaceholder()) {
-        DrawableSurface drawableSurface = aCachedSurface->GetDrawableSurface();
-        if (drawableSurface) {
-          counter.SubframeSize() = Some(drawableSurface->GetSize());
-
-          size_t heap = 0, nonHeap = 0;
-          drawableSurface->AddSizeOfExcludingThis(mMallocSizeOf, heap, nonHeap);
-          counter.Values().SetDecodedHeap(heap);
-          counter.Values().SetDecodedNonHeap(nonHeap);
-        }
+      if (aCachedSurface->IsPlaceholder()) {
+        return;
       }
+
+      // Record the memory used by the ISurfaceProvider. This may not have a
+      // straightforward relationship to the size of the surface that
+      // DrawableRef() returns if the surface is generated dynamically. (i.e.,
+      // for surfaces with PlaybackType::eAnimated.)
+      size_t heap = 0;
+      size_t nonHeap = 0;
+      aCachedSurface->mProvider
+        ->AddSizeOfExcludingThis(mMallocSizeOf, heap, nonHeap);
+      counter.Values().SetDecodedHeap(heap);
+      counter.Values().SetDecodedNonHeap(nonHeap);
 
       mCounters.AppendElement(counter);
     }
@@ -298,8 +301,8 @@ public:
       if (current->IsPlaceholder()) {
         continue;
       }
-      // Matching the animation time and SVG context is required.
-      if (currentKey.AnimationTime() != aIdealKey.AnimationTime() ||
+      // Matching the playback type and SVG context is required.
+      if (currentKey.Playback() != aIdealKey.Playback() ||
           currentKey.SVGContext() != aIdealKey.SVGContext()) {
         continue;
       }
@@ -655,7 +658,7 @@ public:
     MOZ_ASSERT_IF(matchType == MatchType::SUBSTITUTE_BECAUSE_NOT_FOUND ||
                   matchType == MatchType::SUBSTITUTE_BECAUSE_PENDING,
       surface->GetSurfaceKey().SVGContext() == aSurfaceKey.SVGContext() &&
-      surface->GetSurfaceKey().AnimationTime() == aSurfaceKey.AnimationTime() &&
+      surface->GetSurfaceKey().Playback() == aSurfaceKey.Playback() &&
       surface->GetSurfaceKey().Flags() == aSurfaceKey.Flags());
 
     if (matchType == MatchType::EXACT) {
