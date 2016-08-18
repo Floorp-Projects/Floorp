@@ -1185,7 +1185,9 @@ nsWebBrowser::Create()
                                mInitInfo->cx, mInitInfo->cy);
 
     mInternalWidget->SetWidgetListener(this);
-    mInternalWidget->Create(nullptr, mParentNativeWindow, bounds, &widgetInit);
+    rv = mInternalWidget->Create(nullptr, mParentNativeWindow, bounds,
+                                 &widgetInit);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   nsCOMPtr<nsIDocShell> docShell(
