@@ -4661,8 +4661,8 @@
               return [];
             },
             // Also support adding event listeners (forward to the tab container)
-            addEventListener: function (a,b,c) { this.self.tabContainer.addEventListener(a,b,c); },
-            removeEventListener: function (a,b,c) { this.self.tabContainer.removeEventListener(a,b,c); }
+            addEventListener: function (a, b, c) { this.self.tabContainer.addEventListener(a, b, c); },
+            removeEventListener: function (a, b, c) { this.self.tabContainer.removeEventListener(a, b, c); }
           });
         ]]>
         </getter>

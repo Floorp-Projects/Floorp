@@ -12,7 +12,7 @@ add_task(function* test_searchEngine_autoFill() {
   let uri = NetUtil.newURI("http://www.example.com/my/");
   let visits = [];
   for (let i = 0; i < 100; ++i) {
-    visits.push({ uri , title: "Terms - SearchEngine Search" });
+    visits.push({ uri, title: "Terms - SearchEngine Search" });
   }
   yield PlacesTestUtils.addVisits(visits);
   yield addBookmark({ uri: uri, title: "Example bookmark" });

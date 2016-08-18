@@ -711,13 +711,13 @@ add_task(function* test_tagURI_untagURI() {
   let tagTxn = new PlacesTagURITransaction(tagURI, [TAG_1, TAG_2]);
 
   tagTxn.doTransaction();
-  do_check_eq(JSON.stringify(tagssvc.getTagsForURI(tagURI)), JSON.stringify([TAG_1,TAG_2]));
+  do_check_eq(JSON.stringify(tagssvc.getTagsForURI(tagURI)), JSON.stringify([TAG_1, TAG_2]));
 
   tagTxn.undoTransaction();
   do_check_eq(tagssvc.getTagsForURI(tagURI).length, 0);
 
   tagTxn.redoTransaction();
-  do_check_eq(JSON.stringify(tagssvc.getTagsForURI(tagURI)), JSON.stringify([TAG_1,TAG_2]));
+  do_check_eq(JSON.stringify(tagssvc.getTagsForURI(tagURI)), JSON.stringify([TAG_1, TAG_2]));
 
   // Test untagURI
   let untagTxn = new PlacesUntagURITransaction(tagURI, [TAG_1]);
@@ -726,7 +726,7 @@ add_task(function* test_tagURI_untagURI() {
   do_check_eq(JSON.stringify(tagssvc.getTagsForURI(tagURI)), JSON.stringify([TAG_2]));
 
   untagTxn.undoTransaction();
-  do_check_eq(JSON.stringify(tagssvc.getTagsForURI(tagURI)), JSON.stringify([TAG_1,TAG_2]));
+  do_check_eq(JSON.stringify(tagssvc.getTagsForURI(tagURI)), JSON.stringify([TAG_1, TAG_2]));
 
   untagTxn.redoTransaction();
   do_check_eq(JSON.stringify(tagssvc.getTagsForURI(tagURI)), JSON.stringify([TAG_2]));

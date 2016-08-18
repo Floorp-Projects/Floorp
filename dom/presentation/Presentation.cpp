@@ -14,6 +14,9 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsIDocShell.h"
 #include "nsIPresentationService.h"
+#include "nsIScriptSecurityManager.h"
+#include "nsJSUtils.h"
+#include "nsNetUtil.h"
 #include "nsSandboxFlags.h"
 #include "nsServiceManagerUtils.h"
 #include "PresentationReceiver.h"
@@ -35,6 +38,53 @@ Presentation::Create(nsPIDOMWindowInner* aWindow)
 {
   RefPtr<Presentation> presentation = new Presentation(aWindow);
   return presentation.forget();
+}
+
+/* static */ bool
+Presentation::HasReceiverSupport(JSContext* aCx, JSObject* aGlobal)
+{
+  JS::Rooted<JSObject*> global(aCx, aGlobal);
+
+  nsCOMPtr<nsPIDOMWindowInner> inner =
+    do_QueryInterface(nsJSUtils::GetStaticScriptGlobal(global));
+  if (NS_WARN_IF(!inner)) {
+    return false;
+  }
+
+  // Grant access to browser receiving pages and their same-origin iframes. (App
+  // pages should be controlled by "presentation" permission in app manifests.)
+  nsCOMPtr<nsIDocShell> docshell = inner->GetDocShell();
+  if (!docshell) {
+    return false;
+  }
+
+  if (!docshell->GetIsInMozBrowserOrApp()) {
+    return false;
+  }
+
+  nsAutoString presentationURL;
+  nsContentUtils::GetPresentationURL(docshell, presentationURL);
+
+  if (presentationURL.IsEmpty()) {
+    return false;
+  }
+
+  nsCOMPtr<nsIScriptSecurityManager> securityManager =
+    nsContentUtils::GetSecurityManager();
+  if (!securityManager) {
+    return false;
+  }
+
+  nsCOMPtr<nsIURI> presentationURI;
+  nsresult rv = NS_NewURI(getter_AddRefs(presentationURI), presentationURL);
+  if (NS_FAILED(rv)) {
+    return false;
+  }
+
+  nsCOMPtr<nsIURI> docURI = inner->GetDocumentURI();
+  return NS_SUCCEEDED(securityManager->CheckSameOriginURI(presentationURI,
+                                                          docURI,
+                                                          false));
 }
 
 Presentation::Presentation(nsPIDOMWindowInner* aWindow)

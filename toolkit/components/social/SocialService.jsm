@@ -77,7 +77,7 @@ var SocialServiceInternal = {
       }
     }
     let originUri = Services.io.newURI(origin, null, null);
-    return originUri.hostPort.replace('.','-');
+    return originUri.hostPort.replace('.', '-');
   },
   orderedProviders: function(aCallback) {
     if (SocialServiceInternal.providerArray.length < 2) {

@@ -153,6 +153,7 @@ this.makeIdentityConfig = function(overrides) {
         duration: 300,
         id: "id",
         key: "key",
+        hashed_fxa_uid: "f".repeat(32), // used during telemetry validation
         // uid will be set to the username.
       }
     },

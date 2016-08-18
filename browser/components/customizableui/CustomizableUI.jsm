@@ -1074,7 +1074,7 @@ var CustomizableUIInternal = {
       }
     }
 
-    for (let [,widget] of gPalette) {
+    for (let [, widget] of gPalette) {
       widget.instances.delete(document);
       this.notifyListeners("onWidgetInstanceRemoved", widget.id, document);
     }
@@ -2545,7 +2545,7 @@ var CustomizableUIInternal = {
     // Clear the saved state to ensure that defaults will be used.
     gSavedState = null;
     // Restore the state for each area to its defaults
-    for (let [areaId,] of gAreas) {
+    for (let [areaId, ] of gAreas) {
       this.restoreStateForArea(areaId);
     }
   },
@@ -2665,7 +2665,7 @@ var CustomizableUIInternal = {
 
       if (!widgetNode) {
         // Pick any of the build windows to look at.
-        let [window,] = [...gBuildWindows][0];
+        let [window, ] = [...gBuildWindows][0];
         [, widgetNode] = this.getWidgetNode(widgetId, window);
       }
       // If we don't have a node, we assume it's removable. This can happen because
@@ -2899,7 +2899,7 @@ this.CustomizableUI = {
    */
   windows: {
     *[Symbol.iterator]() {
-      for (let [window,] of gBuildWindows)
+      for (let [window, ] of gBuildWindows)
         yield window;
     }
   },
@@ -3771,7 +3771,7 @@ function WidgetGroupWrapper(aWidget) {
   this.__defineSetter__("disabled", function(aValue) {
     aValue = !!aValue;
     aWidget.disabled = aValue;
-    for (let [,instance] of aWidget.instances) {
+    for (let [, instance] of aWidget.instances) {
       instance.disabled = aValue;
     }
   });

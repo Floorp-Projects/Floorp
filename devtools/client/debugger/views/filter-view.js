@@ -9,7 +9,6 @@
 /* globals document, window */
 "use strict";
 
-
 /**
  * Functions handling the filtering UI.
  */
@@ -321,15 +320,15 @@ FilterView.prototype = {
     // Return, enter, down and up keys focus next or previous matches, while
     // the escape key switches focus from the search container.
     else switch (e.keyCode) {
-      case e.DOM_VK_RETURN:
+      case KeyCodes.DOM_VK_RETURN:
         var isReturnKey = true;
         // If the shift key is pressed, focus on the previous result
         actionToPerform = e.shiftKey ? "selectPrev" : "selectNext";
         break;
-      case e.DOM_VK_DOWN:
+      case KeyCodes.DOM_VK_DOWN:
         actionToPerform = "selectNext";
         break;
-      case e.DOM_VK_UP:
+      case KeyCodes.DOM_VK_UP:
         actionToPerform = "selectPrev";
         break;
     }

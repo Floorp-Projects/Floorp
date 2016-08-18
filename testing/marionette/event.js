@@ -58,8 +58,8 @@ event.Modifiers = {
  *
  * @param {nsIDOMMouseEvent} mouseEvent
  *     Event to send.
- * @param {(Element|string)} target
- *     Target of event.  Can either be an Element or the ID of an element.
+ * @param {(DOMElement|string)} target
+ *     Target of event.  Can either be an element or the ID of an element.
  * @param {Window=} window
  *     Window object.  Defaults to the current window.
  *
@@ -67,12 +67,18 @@ event.Modifiers = {
  *     If the event is unsupported.
  */
 event.sendMouseEvent = function(mouseEvent, target, window = undefined) {
-  if (event.MouseEvents.hasOwnProperty(mouseEvent.type)) {
+  if (!event.MouseEvents.hasOwnProperty(mouseEvent.type)) {
     throw new TypeError("Unsupported event type: " + mouseEvent.type);
   }
 
-  if (!(target instanceof Element)) {
+  if (!target.nodeType && typeof target != "string") {
+    throw new TypeError("Target can only be a DOM element or a string: " + target);
+  }
+
+  if (!target.nodeType) {
     target = window.document.getElementById(target);
+  } else {
+    window = window || target.ownerDocument.defaultView;
   }
 
   let ev = window.document.createEvent("MouseEvent");
@@ -162,21 +168,21 @@ event.sendKey = function(key, window = undefined) {
 
 // TODO(ato): Unexpose this when action.Chain#emitMouseEvent
 // no longer emits its own events
-event.parseModifiers_ = function(event) {
+event.parseModifiers_ = function(modifiers) {
   let mval = 0;
-  if (event.shiftKey) {
+  if (modifiers.shiftKey) {
     mval |= Ci.nsIDOMNSEvent.SHIFT_MASK;
   }
-  if (event.ctrlKey) {
+  if (modifiers.ctrlKey) {
     mval |= Ci.nsIDOMNSEvent.CONTROL_MASK;
   }
-  if (event.altKey) {
+  if (modifiers.altKey) {
     mval |= Ci.nsIDOMNSEvent.ALT_MASK;
   }
-  if (event.metaKey) {
+  if (modifiers.metaKey) {
     mval |= Ci.nsIDOMNSEvent.META_MASK;
   }
-  if (event.accelKey) {
+  if (modifiers.accelKey) {
     if (navigator.platform.indexOf("Mac") >= 0) {
       mval |= Ci.nsIDOMNSEvent.META_MASK;
     } else {
@@ -238,13 +244,13 @@ event.synthesizeMouseAtPoint = function(
 
   let domutils = getDOMWindowUtils(window);
 
-  let button = event.button || 0;
-  let clickCount = event.clickCount || 1;
-  let modifiers = event.parseModifiers_(event);
+  let button = opts.button || 0;
+  let clickCount = opts.clickCount || 1;
+  let modifiers = event.parseModifiers_(opts);
 
-  if (("type" in event) && event.type) {
+  if (("type" in event) && opts.type) {
     domutils.sendMouseEvent(
-        event.type, left, top, button, clickCount, modifiers);
+        opts.type, left, top, button, clickCount, modifiers);
   } else {
     domutils.sendMouseEvent(
         "mousedown", left, top, button, clickCount, modifiers);
@@ -1272,4 +1278,57 @@ event.sendKeysToElement = function(
   } else {
     throw new ElementNotVisibleError("Element is not visible");
   }
+};
+
+event.sendEvent = function(eventType, el, modifiers = {}, opts = {}) {
+  opts.canBubble = opts.canBubble || true;
+
+  let doc = el.ownerDocument || el.document;
+  let ev = doc.createEvent("Event");
+
+  ev.shiftKey = modifiers["shift"];
+  ev.metaKey = modifiers["meta"];
+  ev.altKey = modifiers["alt"];
+  ev.ctrlKey = modifiers["ctrl"];
+
+  ev.initEvent(eventType, opts.canBubble, true);
+  el.dispatchEvent(ev);
+};
+
+event.focus = function(el, opts = {}) {
+  opts.canBubble = opts.canBubble || true;
+  let doc = el.ownerDocument || el.document;
+  let win = doc.defaultView;
+
+  let ev = new win.FocusEvent(el);
+  ev.initEvent("focus", opts.canBubble, true);
+  el.dispatchEvent(ev);
+};
+
+event.mouseover = function(el, modifiers = {}, opts = {}) {
+  return event.sendEvent({type: "mouseover"}, el, modifiers, opts);
+};
+
+event.mousemove = function(el, modifiers = {}, opts = {}) {
+  return event.sendEvent({type: "mousemove"}, el, modifiers, opts);
+};
+
+event.mousedown = function(el, modifiers = {}, opts = {}) {
+  return event.sendEvent({type: "mousedown"}, el, modifiers, opts);
+};
+
+event.mouseup = function(el, modifiers = {}, opts = {}) {
+  return event.sendEvent({type: "mouseup"}, el, modifiers, opts);
+};
+
+event.click = function(el, modifiers = {}, opts = {}) {
+  return event.sendEvent({type: "click"}, el, modifiers, opts);
+};
+
+event.change = function(el, modifiers = {}, opts = {}) {
+  return event.sendEvent({type: "change"}, el, modifiers, opts);
+};
+
+event.input = function(el, modifiers = {}, opts = {}) {
+  return event.sendEvent({type: "input"}, el, modifiers, opts);
 };

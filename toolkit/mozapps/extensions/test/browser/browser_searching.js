@@ -212,21 +212,21 @@ function get_expected_results(aSortBy, aLocalExpected) {
   var expectedOrder = null, unknownOrder = null;
   switch (aSortBy) {
     case "relevancescore":
-      expectedOrder = [ "addon2"  , "remote1", "install2", "addon1",
-                        "install1", "remote2", "remote3" , "remote4" ];
+      expectedOrder = [ "addon2", "remote1", "install2", "addon1",
+                        "install1", "remote2", "remote3", "remote4" ];
       unknownOrder = [];
       break;
     case "name":
       // Defaults to ascending order
-      expectedOrder = [ "install1", "remote1",  "addon2" , "remote2",
-                        "remote3" , "addon1" , "install2", "remote4" ];
+      expectedOrder = [ "install1", "remote1",  "addon2", "remote2",
+                        "remote3", "addon1", "install2", "remote4" ];
       unknownOrder = [];
       break;
     case "dateUpdated":
       expectedOrder = [ "addon1", "addon2" ];
       // Updated date not available for installs and remote add-ons
       unknownOrder = [ "install1", "install2", "remote1",
-                       "remote2" , "remote3" , "remote4" ];
+                       "remote2", "remote3", "remote4" ];
       break;
     default:
       ok(false, "Should recognize sortBy when checking the order of items");

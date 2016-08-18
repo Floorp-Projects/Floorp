@@ -643,7 +643,7 @@ function openURL(target)
   window.open(url, "_blank", "chrome");
 }
 
-function onBeginLinkDrag(event,urlField,descField)
+function onBeginLinkDrag(event, urlField, descField)
 {
   if (event.originalTarget.localName != "treechildren")
     return;

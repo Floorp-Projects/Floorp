@@ -1795,13 +1795,18 @@ DebuggerServer.ObjectActorPreviewers.Object = [
   function PseudoArray({obj, hooks}, grip, rawObj) {
     let length = 0;
 
-    // Making sure all keys are numbers from 0 to length-1
     let keys = obj.getOwnPropertyNames();
     if (keys.length == 0) {
       return false;
     }
+
+    // Making sure that all keys are array indices, that is:
+    // `ToString(ToUint32(key)) === key  &&  key !== "4294967295"`.
+    // Also ensuring that the keys are consecutive and start at "0",
+    // this implies checking `key !== "4294967295"` is not necessary.
     for (let key of keys) {
-      if (isNaN(key) || key != length++) {
+      let numKey = key >>> 0; // ToUint32(key)
+      if (numKey + '' != key || numKey != length++) {
         return false;
       }
     }

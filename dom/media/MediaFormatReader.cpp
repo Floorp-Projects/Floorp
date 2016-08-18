@@ -103,7 +103,6 @@ MediaFormatReader::Shutdown()
     if (mAudio.HasPromise()) {
       mAudio.RejectPromise(CANCELED, __func__);
     }
-    mAudio.mInitPromise.DisconnectIfExists();
     mAudio.ShutdownDecoder();
   }
   if (mAudio.mTrackDemuxer) {
@@ -123,7 +122,6 @@ MediaFormatReader::Shutdown()
     if (mVideo.HasPromise()) {
       mVideo.RejectPromise(CANCELED, __func__);
     }
-    mVideo.mInitPromise.DisconnectIfExists();
     mVideo.ShutdownDecoder();
   }
   if (mVideo.mTrackDemuxer) {
@@ -1964,17 +1962,14 @@ MediaFormatReader::UpdateBufferedWithPromise() {
   return BufferedUpdatePromise::CreateAndResolve(true, __func__);
 }
 
-void MediaFormatReader::ReleaseMediaResources()
+void MediaFormatReader::ReleaseResources()
 {
   // Before freeing a video codec, all video buffers needed to be released
   // even from graphics pipeline.
   if (mVideoFrameContainer) {
     mVideoFrameContainer->ClearCurrentFrame();
   }
-  mVideo.mInitPromise.DisconnectIfExists();
   mVideo.ShutdownDecoder();
-
-  mAudio.mInitPromise.DisconnectIfExists();
   mAudio.ShutdownDecoder();
 }
 

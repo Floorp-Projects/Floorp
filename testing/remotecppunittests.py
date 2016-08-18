@@ -76,7 +76,7 @@ class RemoteCPPUnitTests(cppunittests.CPPUnitTests):
                         if szip:
                             try:
                                 out = subprocess.check_output([szip, '-d', local_file], stderr=subprocess.STDOUT)
-                            except CalledProcessError:
+                            except subprocess.CalledProcessError:
                                 print >> sys.stderr, "Error calling %s on %s.." % (szip, local_file)
                                 if out:
                                     print >> sys.stderr, out
@@ -91,7 +91,7 @@ class RemoteCPPUnitTests(cppunittests.CPPUnitTests):
                     if szip:
                         try:
                             out = subprocess.check_output([szip, '-d', local_file], stderr=subprocess.STDOUT)
-                        except CalledProcessError:
+                        except subprocess.CalledProcessError:
                             print >> sys.stderr, "Error calling %s on %s.." % (szip, local_file)
                             if out:
                                 print >> sys.stderr, out
@@ -109,7 +109,7 @@ class RemoteCPPUnitTests(cppunittests.CPPUnitTests):
                                 if szip:
                                     try:
                                         out = subprocess.check_output([szip, '-d', local_file], stderr=subprocess.STDOUT)
-                                    except CalledProcessError:
+                                    except subprocess.CalledProcessError:
                                         print >> sys.stderr, "Error calling %s on %s.." % (szip, local_file)
                                         if out:
                                             print >> sys.stderr, out

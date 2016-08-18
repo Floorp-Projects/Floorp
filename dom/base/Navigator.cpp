@@ -2333,58 +2333,6 @@ Navigator::HasMobileIdSupport(JSContext* aCx, JSObject* aGlobal)
 
 /* static */
 bool
-Navigator::HasPresentationSupport(JSContext* aCx, JSObject* aGlobal)
-{
-  JS::Rooted<JSObject*> global(aCx, aGlobal);
-
-  nsCOMPtr<nsPIDOMWindowInner> inner = GetWindowFromGlobal(global);
-  if (NS_WARN_IF(!inner)) {
-    return false;
-  }
-
-  // Grant access if it has the permission.
-  if (CheckPermission(inner, "presentation")) {
-    return true;
-  }
-
-  // Grant access to browser receiving pages and their same-origin iframes. (App
-  // pages should be controlled by "presentation" permission in app manifests.)
-  nsCOMPtr<nsIDocShell> docshell = inner->GetDocShell();
-  if (!docshell) {
-    return false;
-  }
-
-  if (!docshell->GetIsInMozBrowserOrApp()) {
-    return false;
-  }
-
-  nsAutoString presentationURL;
-  nsContentUtils::GetPresentationURL(docshell, presentationURL);
-
-  if (presentationURL.IsEmpty()) {
-    return false;
-  }
-
-  nsCOMPtr<nsIScriptSecurityManager> securityManager =
-    do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID);
-  if (!securityManager) {
-    return false;
-  }
-
-  nsCOMPtr<nsIURI> presentationURI;
-  nsresult rv = NS_NewURI(getter_AddRefs(presentationURI), presentationURL);
-  if (NS_FAILED(rv)) {
-    return false;
-  }
-
-  nsCOMPtr<nsIURI> docURI = inner->GetDocumentURI();
-  return NS_SUCCEEDED(securityManager->CheckSameOriginURI(presentationURI,
-                                                          docURI,
-                                                          false));
-}
-
-/* static */
-bool
 Navigator::IsE10sEnabled(JSContext* aCx, JSObject* aGlobal)
 {
   return XRE_IsContentProcess();

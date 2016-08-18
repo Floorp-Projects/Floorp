@@ -614,7 +614,7 @@ GlobalManager = {
 
   init(extension) {
     if (this.extensionMap.size == 0) {
-      Services.obs.addObserver(this, "content-document-global-created", false);
+      Services.obs.addObserver(this, "document-element-inserted", false);
       UninstallObserver.init();
       this.initialized = true;
     }
@@ -626,7 +626,7 @@ GlobalManager = {
     this.extensionMap.delete(extension.id);
 
     if (this.extensionMap.size == 0 && this.initialized) {
-      Services.obs.removeObserver(this, "content-document-global-created");
+      Services.obs.removeObserver(this, "document-element-inserted");
       this.initialized = false;
     }
   },
@@ -712,7 +712,12 @@ GlobalManager = {
     Schemas.inject(dest, schemaWrapper);
   },
 
-  observe(contentWindow, topic, data) {
+  observe(document, topic, data) {
+    let contentWindow = document.defaultView;
+    if (!contentWindow) {
+      return;
+    }
+
     let inject = (extension, context) => {
       // We create two separate sets of bindings, one for the `chrome`
       // global, and one for the `browser` global. The latter returns
@@ -741,7 +746,6 @@ GlobalManager = {
       return;
     }
 
-
     let docShell = contentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
                                 .getInterface(Ci.nsIDocShell);
 
@@ -765,9 +769,8 @@ GlobalManager = {
       type = "popup";
     }
 
-
     let extension = this.extensionMap.get(id);
-    let uri = contentWindow.document.documentURIObject;
+    let uri = document.documentURIObject;
     let incognito = PrivateBrowsingUtils.isContentWindowPrivate(contentWindow);
 
     let context = new ExtensionContext(extension, {type, contentWindow, uri, docShell, incognito});
@@ -776,15 +779,17 @@ GlobalManager = {
       this._initializeBackgroundPage(contentWindow);
     }
 
-    let eventHandler = docShell.chromeEventHandler;
-    let listener = event => {
-      if (event.target != docShell.contentViewer.DOMDocument) {
-        return;
+    let innerWindowID = contentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+      .getInterface(Ci.nsIDOMWindowUtils).currentInnerWindowID;
+
+    let onUnload = subject => {
+      let windowId = subject.QueryInterface(Ci.nsISupportsPRUint64).data;
+      if (windowId == innerWindowID) {
+        Services.obs.removeObserver(onUnload, "inner-window-destroyed");
+        context.unload();
       }
-      eventHandler.removeEventListener("unload", listener, true);
-      context.unload();
     };
-    eventHandler.addEventListener("unload", listener, true);
+    Services.obs.addObserver(onUnload, "inner-window-destroyed", false);
   },
 
   _initializeBackgroundPage(contentWindow) {

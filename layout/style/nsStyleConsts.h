@@ -87,8 +87,8 @@ enum class StyleClipPathGeometryBox : uint8_t {
 
 // fill-rule
 enum class StyleFillRule : uint8_t {
-  NonZero,
-  EvenOdd,
+  Nonzero,
+  Evenodd,
 };
 
 // float
