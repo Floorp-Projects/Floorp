@@ -3223,6 +3223,21 @@ WebConsoleConnectionProxy.prototype = {
   },
 
   /**
+   * Dispatch a message add on the new frontend and emit an event for tests.
+   */
+  dispatchMessageAdd: function(packet) {
+    this.webConsoleFrame.newConsoleOutput.dispatchMessageAdd(packet);
+
+    // Return the last message in the DOM as the message that was just dispatched. This may not
+    // always be true in the case of filtered messages, but it's close enough for our tests.
+    let messageNodes = this.webConsoleFrame.experimentalOutputNode.querySelectorAll(".message");
+    this.webConsoleFrame.emit("new-messages", {
+      response: packet,
+      node: messageNodes[messageNodes.length - 1],
+    });
+  },
+
+  /**
    * The "cachedMessages" response handler.
    *
    * @private
@@ -3249,7 +3264,7 @@ WebConsoleConnectionProxy.prototype = {
 
     if (this.webConsoleFrame.NEW_CONSOLE_OUTPUT_ENABLED) {
       for (let packet of messages) {
-        this.webConsoleFrame.newConsoleOutput.dispatchMessageAdd(packet);
+        this.dispatchMessageAdd(packet);
       }
     } else {
       this.webConsoleFrame.displayCachedMessages(messages);
@@ -3275,7 +3290,7 @@ WebConsoleConnectionProxy.prototype = {
   _onPageError: function (type, packet) {
     if (this.webConsoleFrame && packet.from == this._consoleActor) {
       if (this.webConsoleFrame.NEW_CONSOLE_OUTPUT_ENABLED) {
-        this.webConsoleFrame.newConsoleOutput.dispatchMessageAdd(packet);
+        this.dispatchMessageAdd(packet);
         return;
       }
       this.webConsoleFrame.handlePageError(packet.pageError);
@@ -3311,7 +3326,7 @@ WebConsoleConnectionProxy.prototype = {
   _onConsoleAPICall: function (type, packet) {
     if (this.webConsoleFrame && packet.from == this._consoleActor) {
       if (this.webConsoleFrame.NEW_CONSOLE_OUTPUT_ENABLED) {
-        this.webConsoleFrame.newConsoleOutput.dispatchMessageAdd(packet);
+        this.dispatchMessageAdd(packet);
       } else {
         this.webConsoleFrame.handleConsoleAPICall(packet.message);
       }
