@@ -8,16 +8,16 @@ with Files('*'):
     BUG_COMPONENT = ('Toolkit', 'Download Manager')
 
 with Files('ApplicationReputation.*'):
-    BUG_COMPONENT = ('Core', 'DOM: Security')
+    BUG_COMPONENT = ('Toolkit', 'Safe Browsing')
 
-with Files('csd.pb.*'):
-    BUG_COMPONENT = ('Core', 'DOM: Security')
+with Files('chromium/*'):
+    BUG_COMPONENT = ('Toolkit', 'Safe Browsing')
 
 with Files('generate_csd.sh'):
-    BUG_COMPONENT = ('Core', 'DOM: Security')
+    BUG_COMPONENT = ('Toolkit', 'Safe Browsing')
 
 with Files('nsIApplicationReputation.idl'):
-    BUG_COMPONENT = ('Core', 'DOM: Security')
+    BUG_COMPONENT = ('Toolkit', 'Safe Browsing')
 
 XPCSHELL_TESTS_MANIFESTS += ['test/unit/xpcshell.ini']
 
