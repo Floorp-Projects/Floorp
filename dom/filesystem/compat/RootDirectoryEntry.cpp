@@ -20,7 +20,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(RootDirectoryEntry)
 NS_INTERFACE_MAP_END_INHERITING(DirectoryEntry)
 
 RootDirectoryEntry::RootDirectoryEntry(nsIGlobalObject* aGlobal,
-                                       const Sequence<RefPtr<Entry>>& aEntries,
+                                       const Sequence<RefPtr<FileSystemEntry>>& aEntries,
                                        FileSystem* aFileSystem)
   : DirectoryEntry(aGlobal, nullptr, aFileSystem)
   , mEntries(aEntries)
@@ -76,7 +76,7 @@ RootDirectoryEntry::GetInternal(const nsAString& aPath, const FileSystemFlags& a
 
   MOZ_ASSERT(!parts.IsEmpty());
 
-  RefPtr<Entry> entry;
+  RefPtr<FileSystemEntry> entry;
   for (uint32_t i = 0; i < mEntries.Length(); ++i) {
     ErrorResult rv;
     nsAutoString name;

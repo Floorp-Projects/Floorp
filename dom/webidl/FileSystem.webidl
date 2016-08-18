@@ -5,7 +5,7 @@
  */
 
 [NoInterfaceObject]
-interface Entry {
+interface FileSystemEntry {
     readonly attribute boolean isFile;
     readonly attribute boolean isDirectory;
 
@@ -33,7 +33,7 @@ dictionary FileSystemFlags {
 };
 
 callback interface EntryCallback {
-    void handleEvent(Entry entry);
+    void handleEvent(FileSystemEntry entry);
 };
 
 callback interface VoidCallback {
@@ -41,7 +41,7 @@ callback interface VoidCallback {
 };
 
 [NoInterfaceObject]
-interface DirectoryEntry : Entry {
+interface DirectoryEntry : FileSystemEntry {
     DirectoryReader createReader();
 
     void getFile(DOMString? path, optional FileSystemFlags options, optional EntryCallback successCallback, optional ErrorCallback errorCallback);
@@ -54,7 +54,7 @@ interface DirectoryEntry : Entry {
 };
 
 callback interface EntriesCallback {
-    void handleEvent(sequence<Entry> entries);
+    void handleEvent(sequence<FileSystemEntry> entries);
 };
 
 callback interface ErrorCallback {
@@ -76,7 +76,7 @@ callback interface BlobCallback {
 };
 
 [NoInterfaceObject]
-interface FileEntry : Entry {
+interface FileEntry : FileSystemEntry {
     // the successCallback should be a FileWriteCallback but this method is not
     // implemented. ErrorCallback will be called with
     // NS_ERROR_DOM_NOT_SUPPORTED_ERR.

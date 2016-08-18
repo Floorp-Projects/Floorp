@@ -7,19 +7,19 @@
 #ifndef mozilla_dom_DirectoryEntry_h
 #define mozilla_dom_DirectoryEntry_h
 
-#include "mozilla/dom/Entry.h"
 #include "mozilla/dom/FileSystemBinding.h"
+#include "mozilla/dom/FileSystemEntry.h"
 
 namespace mozilla {
 namespace dom {
 
 class Directory;
 
-class DirectoryEntry : public Entry
+class DirectoryEntry : public FileSystemEntry
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(DirectoryEntry, Entry)
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(DirectoryEntry, FileSystemEntry)
 
   DirectoryEntry(nsIGlobalObject* aGlobalObject, Directory* aDirectory,
                  FileSystem* aFileSystem);

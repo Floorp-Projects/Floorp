@@ -19,7 +19,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(RootDirectoryEntry, DirectoryEntry)
 
   RootDirectoryEntry(nsIGlobalObject* aGlobalObject,
-                     const Sequence<RefPtr<Entry>>& aEntries,
+                     const Sequence<RefPtr<FileSystemEntry>>& aEntries,
                      FileSystem* aFileSystem);
 
   virtual void
@@ -44,7 +44,7 @@ private:
   Error(const Optional<OwningNonNull<ErrorCallback>>& aErrorCallback,
         nsresult aError) const;
 
-  Sequence<RefPtr<Entry>> mEntries;
+  Sequence<RefPtr<FileSystemEntry>> mEntries;
 };
 
 } // namespace dom
