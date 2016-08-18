@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_FileEntry_h
-#define mozilla_dom_FileEntry_h
+#ifndef mozilla_dom_FileSystemFileEntry_h
+#define mozilla_dom_FileSystemFileEntry_h
 
 #include "mozilla/dom/FileSystemEntry.h"
 
@@ -14,14 +14,14 @@ namespace dom {
 
 class File;
 
-class FileEntry final : public FileSystemEntry
+class FileSystemFileEntry final : public FileSystemEntry
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(FileEntry, FileSystemEntry)
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(FileSystemFileEntry, FileSystemEntry)
 
-  FileEntry(nsIGlobalObject* aGlobalObject, File* aFile,
-            FileSystem* aFileSystem);
+  FileSystemFileEntry(nsIGlobalObject* aGlobalObject, File* aFile,
+                      FileSystem* aFileSystem);
 
   virtual JSObject*
   WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
@@ -47,7 +47,7 @@ public:
           const Optional<OwningNonNull<ErrorCallback>>& aErrorCallback) const;
 
 private:
-  ~FileEntry();
+  ~FileSystemFileEntry();
 
   RefPtr<File> mFile;
 };
@@ -55,4 +55,4 @@ private:
 } // namespace dom
 } // namespace mozilla
 
-#endif // mozilla_dom_FileEntry_h
+#endif // mozilla_dom_FileSystemFileEntry_h
