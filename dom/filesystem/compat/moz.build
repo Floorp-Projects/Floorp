@@ -7,22 +7,22 @@
 TEST_DIRS += ['tests']
 
 EXPORTS.mozilla.dom += [
-    'DirectoryReader.h',
     'FileSystem.h',
     'FileSystemDirectoryEntry.h',
+    'FileSystemDirectoryReader.h',
     'FileSystemEntry.h',
     'FileSystemFileEntry.h',
 ]
 
 UNIFIED_SOURCES += [
     'CallbackRunnables.cpp',
-    'DirectoryReader.cpp',
     'FileSystem.cpp',
     'FileSystemDirectoryEntry.cpp',
+    'FileSystemDirectoryReader.cpp',
     'FileSystemEntry.cpp',
     'FileSystemFileEntry.cpp',
     'FileSystemRootDirectoryEntry.cpp',
-    'RootDirectoryReader.cpp',
+    'FileSystemRootDirectoryReader.cpp',
 ]
 
 FINAL_LIBRARY = 'xul'

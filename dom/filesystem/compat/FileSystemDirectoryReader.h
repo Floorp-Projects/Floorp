@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_DirectoryReader_h
-#define mozilla_dom_DirectoryReader_h
+#ifndef mozilla_dom_FileSystemDirectoryReader_h
+#define mozilla_dom_FileSystemDirectoryReader_h
 
 #include "mozilla/Attributes.h"
 #include "mozilla/ErrorResult.h"
@@ -21,17 +21,17 @@ namespace dom {
 class Directory;
 class FileSystem;
 
-class DirectoryReader
+class FileSystemDirectoryReader
   : public nsISupports
   , public nsWrapperCache
 {
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(DirectoryReader)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(FileSystemDirectoryReader)
 
-  explicit DirectoryReader(nsIGlobalObject* aGlobalObject,
-                           FileSystem* aFileSystem,
-                           Directory* aDirectory);
+  explicit FileSystemDirectoryReader(nsIGlobalObject* aGlobalObject,
+                                     FileSystem* aFileSystem,
+                                     Directory* aDirectory);
 
   nsIGlobalObject*
   GetParentObject() const
@@ -48,7 +48,7 @@ public:
               ErrorResult& aRv);
 
 protected:
-  virtual ~DirectoryReader();
+  virtual ~FileSystemDirectoryReader();
 
 private:
   nsCOMPtr<nsIGlobalObject> mParent;
@@ -61,4 +61,4 @@ private:
 } // namespace dom
 } // namespace mozilla
 
-#endif // mozilla_dom_DirectoryReader_h
+#endif // mozilla_dom_FileSystemDirectoryReader_h

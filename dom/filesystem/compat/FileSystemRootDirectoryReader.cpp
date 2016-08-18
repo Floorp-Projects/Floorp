@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "RootDirectoryReader.h"
+#include "FileSystemRootDirectoryReader.h"
 #include "CallbackRunnables.h"
 #include "nsIGlobalObject.h"
 
@@ -45,18 +45,21 @@ private:
 
 } // anonymous namespace
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(RootDirectoryReader, DirectoryReader, mEntries)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(FileSystemRootDirectoryReader,
+                                   FileSystemDirectoryReader, mEntries)
 
-NS_IMPL_ADDREF_INHERITED(RootDirectoryReader, DirectoryReader)
-NS_IMPL_RELEASE_INHERITED(RootDirectoryReader, DirectoryReader)
+NS_IMPL_ADDREF_INHERITED(FileSystemRootDirectoryReader,
+                         FileSystemDirectoryReader)
+NS_IMPL_RELEASE_INHERITED(FileSystemRootDirectoryReader,
+                          FileSystemDirectoryReader)
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(RootDirectoryReader)
-NS_INTERFACE_MAP_END_INHERITING(DirectoryReader)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(FileSystemRootDirectoryReader)
+NS_INTERFACE_MAP_END_INHERITING(FileSystemDirectoryReader)
 
-RootDirectoryReader::RootDirectoryReader(nsIGlobalObject* aGlobal,
-                                         FileSystem* aFileSystem,
-                                         const Sequence<RefPtr<FileSystemEntry>>& aEntries)
-  : DirectoryReader(aGlobal, aFileSystem, nullptr)
+FileSystemRootDirectoryReader::FileSystemRootDirectoryReader(nsIGlobalObject* aGlobal,
+                                                             FileSystem* aFileSystem,
+                                                             const Sequence<RefPtr<FileSystemEntry>>& aEntries)
+  : FileSystemDirectoryReader(aGlobal, aFileSystem, nullptr)
   , mEntries(aEntries)
   , mAlreadyRead(false)
 {
@@ -64,13 +67,13 @@ RootDirectoryReader::RootDirectoryReader(nsIGlobalObject* aGlobal,
   MOZ_ASSERT(aFileSystem);
 }
 
-RootDirectoryReader::~RootDirectoryReader()
+FileSystemRootDirectoryReader::~FileSystemRootDirectoryReader()
 {}
 
 void
-RootDirectoryReader::ReadEntries(EntriesCallback& aSuccessCallback,
-                                 const Optional<OwningNonNull<ErrorCallback>>& aErrorCallback,
-                                 ErrorResult& aRv)
+FileSystemRootDirectoryReader::ReadEntries(EntriesCallback& aSuccessCallback,
+                                           const Optional<OwningNonNull<ErrorCallback>>& aErrorCallback,
+                                           ErrorResult& aRv)
 {
   if (mAlreadyRead) {
     RefPtr<EmptyEntriesCallbackRunnable> runnable =
