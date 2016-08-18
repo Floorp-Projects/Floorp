@@ -215,7 +215,9 @@ public class CombinedHistoryAdapter extends RecyclerView.Adapter<CombinedHistory
                 // We might have multiple section headers, so we try get unique IDs for them.
                 return position * PRIME_SECTION_HEADERS;
             case HISTORY:
-                if (!historyCursor.moveToPosition(position)) {
+                final int historyPosition = transformAdapterPositionForDataStructure(
+                        CombinedHistoryItem.ItemType.HISTORY, position);
+                if (!historyCursor.moveToPosition(historyPosition)) {
                     return RecyclerView.NO_ID;
                 }
 
