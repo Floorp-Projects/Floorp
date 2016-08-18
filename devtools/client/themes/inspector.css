@@ -124,7 +124,7 @@
   is fixed and the all-tabs-menu is available again. */
 #inspector-sidebar-container {
   overflow: hidden;
-  min-width: 450px;
+  min-width: 300px;
   position: relative;
 }
 
