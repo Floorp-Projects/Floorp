@@ -19,9 +19,7 @@ const ConsoleOutput = createClass({
 
   propTypes: {
     jsterm: PropTypes.object.isRequired,
-    // This function is created in mergeProps
-    openVariablesView: PropTypes.func.isRequired,
-    messages: PropTypes.array.isRequired
+    messages: PropTypes.object.isRequired
   },
 
   displayName: "ConsoleOutput",
