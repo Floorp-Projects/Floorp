@@ -20,7 +20,7 @@ public:
 
   RootDirectoryEntry(nsIGlobalObject* aGlobalObject,
                      const Sequence<RefPtr<Entry>>& aEntries,
-                     DOMFileSystem* aFileSystem);
+                     FileSystem* aFileSystem);
 
   virtual void
   GetName(nsAString& aName, ErrorResult& aRv) const override;

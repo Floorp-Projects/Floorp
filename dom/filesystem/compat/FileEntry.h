@@ -21,7 +21,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(FileEntry, Entry)
 
   FileEntry(nsIGlobalObject* aGlobalObject, File* aFile,
-            DOMFileSystem* aFileSystem);
+            FileSystem* aFileSystem);
 
   virtual JSObject*
   WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;

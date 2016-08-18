@@ -23,7 +23,7 @@ NS_INTERFACE_MAP_END_INHERITING(Entry)
 
 DirectoryEntry::DirectoryEntry(nsIGlobalObject* aGlobal,
                                Directory* aDirectory,
-                               DOMFileSystem* aFileSystem)
+                               FileSystem* aFileSystem)
   : Entry(aGlobal, aFileSystem)
   , mDirectory(aDirectory)
 {

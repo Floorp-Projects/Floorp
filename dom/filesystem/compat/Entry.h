@@ -17,7 +17,7 @@
 namespace mozilla {
 namespace dom {
 
-class DOMFileSystem;
+class FileSystem;
 class OwningFileOrDirectory;
 
 class Entry
@@ -31,7 +31,7 @@ public:
   static already_AddRefed<Entry>
   Create(nsIGlobalObject* aGlobalObject,
          const OwningFileOrDirectory& aFileOrDirectory,
-         DOMFileSystem* aFileSystem);
+         FileSystem* aFileSystem);
 
   nsIGlobalObject*
   GetParentObject() const
@@ -60,7 +60,7 @@ public:
   virtual void
   GetFullPath(nsAString& aFullPath, ErrorResult& aRv) const = 0;
 
-  DOMFileSystem*
+  FileSystem*
   Filesystem() const
   {
     return mFileSystem;
@@ -68,12 +68,12 @@ public:
 
 protected:
   Entry(nsIGlobalObject* aGlobalObject,
-        DOMFileSystem* aFileSystem);
+        FileSystem* aFileSystem);
   virtual ~Entry();
 
 private:
   nsCOMPtr<nsIGlobalObject> mParent;
-  RefPtr<DOMFileSystem> mFileSystem;
+  RefPtr<FileSystem> mFileSystem;
 };
 
 } // namespace dom

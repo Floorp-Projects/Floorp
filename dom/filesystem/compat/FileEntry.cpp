@@ -48,7 +48,7 @@ NS_INTERFACE_MAP_END_INHERITING(Entry)
 
 FileEntry::FileEntry(nsIGlobalObject* aGlobal,
                      File* aFile,
-                     DOMFileSystem* aFileSystem)
+                     FileSystem* aFileSystem)
   : Entry(aGlobal, aFileSystem)
   , mFile(aFile)
 {
