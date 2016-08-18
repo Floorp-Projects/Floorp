@@ -50,7 +50,12 @@ private:
   RefPtr<PresShell>   mPresShell;
   nsCOMPtr<nsIDocument> mDocument;
 
-  static nsRefPtrHashtable<nsUint32HashKey, mozilla::dom::Touch>* sCaptureTouchList;
+  struct TouchInfo
+  {
+    RefPtr<mozilla::dom::Touch> mTouch;
+    nsCOMPtr<nsIContent> mNonAnonymousTarget;
+  };
+  static nsDataHashtable<nsUint32HashKey, TouchInfo>* sCaptureTouchList;
 };
 
 } // namespace mozilla
