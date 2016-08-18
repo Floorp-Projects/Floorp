@@ -14,6 +14,7 @@
 #include "nsIDOMEventListener.h"
 #include "nsISupportsBase.h"
 #include "nsISupportsImpl.h"
+#include "nsLiteralString.h"
 #include "nsRect.h"
 #include "mozilla/RefPtr.h"
 #include "nsString.h"
@@ -152,13 +153,13 @@ protected:
   // Element which contains the caret image for 'Contains' test.
   dom::Element* CaretImageElement() const
   {
-    return CaretElement()->GetFirstElementChild();
+    return mCaretElementHolder->GetElementById(sCaretImageElementId);
   }
 
   // Element which represents the text selection bar.
   dom::Element* SelectionBarElement() const
   {
-    return CaretElement()->GetLastElementChild();
+    return mCaretElementHolder->GetElementById(sSelectionBarElementId);
   }
 
   nsIFrame* RootFrame() const
@@ -227,6 +228,8 @@ protected:
   static float sHeight;
   static float sMarginLeft;
   static float sBarWidth;
+  static const nsLiteralString sCaretImageElementId;
+  static const nsLiteralString sSelectionBarElementId;
 
 }; // class AccessibleCaret
 
