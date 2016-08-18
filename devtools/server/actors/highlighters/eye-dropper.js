@@ -338,7 +338,25 @@ EyeDropper.prototype = {
   },
 
   moveTo(x, y) {
-    this.getElement("root").setAttribute("style", `top:${y}px;left:${x}px;`);
+    let root = this.getElement("root");
+    root.setAttribute("style", `top:${y}px;left:${x}px;`);
+
+    // Move the label container to the top if the magnifier is close to the bottom edge.
+    if (y >= this.win.innerHeight - MAGNIFIER_HEIGHT) {
+      root.setAttribute("top", "");
+    } else {
+      root.removeAttribute("top");
+    }
+
+    // Also offset the label container to the right or left if the magnifier is close to
+    // the edge.
+    root.removeAttribute("left");
+    root.removeAttribute("right");
+    if (x <= MAGNIFIER_WIDTH) {
+      root.setAttribute("right", "");
+    } else if (x >= this.win.innerWidth - MAGNIFIER_WIDTH) {
+      root.setAttribute("left", "");
+    }
   },
 
   /**

@@ -136,7 +136,8 @@ exports.getFrameElement = getFrameElement;
 function getFrameOffsets(boundaryWindow, node) {
   let xOffset = 0;
   let yOffset = 0;
-  let frameWin = node.ownerDocument.defaultView;
+
+  let frameWin = getWindowFor(node);
   let scale = getCurrentZoom(node);
 
   if (boundaryWindow === null) {
@@ -661,13 +662,7 @@ exports.isShadowAnonymous = isShadowAnonymous;
  * @return {Number}
  */
 function getCurrentZoom(node) {
-  let win = null;
-
-  if (node instanceof Ci.nsIDOMNode) {
-    win = node.ownerDocument.defaultView;
-  } else if (node instanceof Ci.nsIDOMWindow) {
-    win = node;
-  }
+  let win = getWindowFor(node);
 
   if (!win) {
     throw new Error("Unable to get the zoom from the given argument.");
@@ -676,3 +671,23 @@ function getCurrentZoom(node) {
   return utilsFor(win).fullZoom;
 }
 exports.getCurrentZoom = getCurrentZoom;
+
+/**
+ * Return the default view for a given node, where node can be:
+ * - a DOM node
+ * - the document node
+ * - the window itself
+ * @param {DOMNode|DOMWindow|DOMDocument} node The node to get the window for.
+ * @return {DOMWindow}
+ */
+function getWindowFor(node) {
+  if (node instanceof Ci.nsIDOMNode) {
+    if (node.nodeType === node.DOCUMENT_NODE) {
+      return node.defaultView;
+    }
+    return node.ownerDocument.defaultView;
+  } else if (node instanceof Ci.nsIDOMWindow) {
+    return node;
+  }
+  return null;
+}
