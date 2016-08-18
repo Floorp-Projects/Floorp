@@ -5,17 +5,19 @@
 from __future__ import print_function, unicode_literals
 
 import codecs
-import json
 import os
 import subprocess
 import sys
-
-from collections import Iterable
+import textwrap
 
 
 base_dir = os.path.abspath(os.path.dirname(__file__))
 sys.path.insert(0, os.path.join(base_dir, 'python', 'mozbuild'))
 from mozbuild.configure import ConfigureSandbox
+from mozbuild.util import (
+    indented_repr,
+    encode,
+)
 
 
 def main(argv):
@@ -60,49 +62,27 @@ def config_status(config):
     print("Creating config.status", file=sys.stderr)
     encoding = 'mbcs' if sys.platform == 'win32' else 'utf-8'
     with codecs.open('config.status', 'w', encoding) as fh:
-        fh.write('#!%s\n' % config['PYTHON'])
-        fh.write('# coding=%s\n' % encoding)
-        # Because we're serializing as JSON but reading as python, the values
-        # for True, False and None are true, false and null, which don't exist.
-        # Define them.
-        fh.write('true, false, null = True, False, None\n')
+        fh.write(textwrap.dedent('''\
+            #!%(python)s
+            # coding=%(encoding)s
+            from __future__ import unicode_literals
+            from mozbuild.util import encode
+            encoding = '%(encoding)s'
+        ''') % {'python': config['PYTHON'], 'encoding': encoding})
+        # A lot of the build backend code is currently expecting byte
+        # strings and breaks in subtle ways with unicode strings. (bug 1296508)
         for k, v in sanitized_config.iteritems():
-            fh.write('%s = ' % k)
-            json.dump(v, fh, sort_keys=True, indent=4, ensure_ascii=False)
-            fh.write('\n')
+            fh.write('%s = encode(%s, encoding)\n' % (k, indented_repr(v)))
         fh.write("__all__ = ['topobjdir', 'topsrcdir', 'defines', "
                  "'non_global_defines', 'substs', 'mozconfig']")
 
         if config.get('MOZ_BUILD_APP') != 'js' or config.get('JS_STANDALONE'):
-            fh.write('''
-if __name__ == '__main__':
-    args = dict([(name, globals()[name]) for name in __all__])
-    from mozbuild.config_status import config_status
-    config_status(**args)
-''')
-
-    # Running config.status standalone uses byte literals for all the config,
-    # instead of the unicode literals we have in sanitized_config right now.
-    # Some values in sanitized_config also have more complex types, such as
-    # EnumString, which using when calling config_status would currently break
-    # the build, as well as making it inconsistent with re-running
-    # config.status. Fortunately, EnumString derives from unicode, so it's
-    # covered by converting unicode strings.
-    # Moreover, a lot of the build backend code is currently expecting byte
-    # strings and breaks in subtle ways with unicode strings.
-    def encode(v):
-        if isinstance(v, dict):
-            return {
-                encode(k): encode(val)
-                for k, val in v.iteritems()
-            }
-        if isinstance(v, str):
-            return v
-        if isinstance(v, unicode):
-            return v.encode(encoding)
-        if isinstance(v, Iterable):
-            return [encode(i) for i in v]
-        return v
+            fh.write(textwrap.dedent('''
+                if __name__ == '__main__':
+                    from mozbuild.config_status import config_status
+                    args = dict([(name, globals()[name]) for name in __all__])
+                    config_status(**args)
+            '''))
 
     # Other things than us are going to run this file, so we need to give it
     # executable permissions.
@@ -110,7 +90,16 @@ if __name__ == '__main__':
     if config.get('MOZ_BUILD_APP') != 'js' or config.get('JS_STANDALONE'):
         os.environ[b'WRITE_MOZINFO'] = b'1'
         from mozbuild.config_status import config_status
-        return config_status(args=[], **encode(sanitized_config))
+
+        # Some values in sanitized_config also have more complex types, such as
+        # EnumString, which using when calling config_status would currently
+        # break the build, as well as making it inconsistent with re-running
+        # config.status. Fortunately, EnumString derives from unicode, so it's
+        # covered by converting unicode strings.
+
+        # A lot of the build backend code is currently expecting byte strings
+        # and breaks in subtle ways with unicode strings.
+        return config_status(args=[], **encode(sanitized_config, encoding))
     return 0
 
 
