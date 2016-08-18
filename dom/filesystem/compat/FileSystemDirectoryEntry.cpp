@@ -6,7 +6,7 @@
 
 #include "FileSystemDirectoryEntry.h"
 #include "CallbackRunnables.h"
-#include "DirectoryReader.h"
+#include "FileSystemDirectoryReader.h"
 #include "mozilla/dom/Directory.h"
 #include "mozilla/dom/FileSystemUtils.h"
 
@@ -55,13 +55,13 @@ FileSystemDirectoryEntry::GetFullPath(nsAString& aPath, ErrorResult& aRv) const
   mDirectory->GetPath(aPath, aRv);
 }
 
-already_AddRefed<DirectoryReader>
+already_AddRefed<FileSystemDirectoryReader>
 FileSystemDirectoryEntry::CreateReader() const
 {
   MOZ_ASSERT(mDirectory);
 
-  RefPtr<DirectoryReader> reader =
-    new DirectoryReader(GetParentObject(), Filesystem(), mDirectory);
+  RefPtr<FileSystemDirectoryReader> reader =
+    new FileSystemDirectoryReader(GetParentObject(), Filesystem(), mDirectory);
   return reader.forget();
 }
 
