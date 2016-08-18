@@ -17,4 +17,5 @@ DevToolsModules(
     'marker-dom-utils.js',
     'marker-formatters.js',
     'markers.js',
+    'utils.js',
 )
