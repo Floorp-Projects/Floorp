@@ -4,12 +4,14 @@
 "use strict";
 
 // @TODO Load the actual strings from webconsole.properties instead.
-module.exports = {
-  getStr: str => {
+class L10n {
+  getStr(str) {
     switch (str) {
       case "severity.error":
         return "Error";
     }
     return str;
   }
-};
+}
+
+module.exports = L10n;

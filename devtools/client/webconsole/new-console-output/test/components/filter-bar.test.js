@@ -2,8 +2,8 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
-// Require helper is necessary to load certain modules.
-require("devtools/client/webconsole/new-console-output/test/requireHelper")();
+const expect = require("expect");
+const sinon = require("sinon");
 const { render, mount } = require("enzyme");
 
 const { createFactory } = require("devtools/client/shared/vendor/react");
@@ -18,9 +18,6 @@ const {
 } = require("devtools/client/webconsole/new-console-output/constants");
 
 const { setupStore } = require("devtools/client/webconsole/new-console-output/test/helpers");
-
-const expect = require("expect");
-const sinon = require("sinon");
 
 describe("FilterBar component:", () => {
   it("initial render", () => {
