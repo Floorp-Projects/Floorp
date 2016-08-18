@@ -271,6 +271,8 @@ class BasePopup {
     this.browser = document.createElementNS(XUL_NS, "browser");
     this.browser.setAttribute("type", "content");
     this.browser.setAttribute("disableglobalhistory", "true");
+    this.browser.setAttribute("class", "webextension-popup-browser");
+    this.browser.setAttribute("transparent", "true");
 
     // Note: When using noautohide panels, the popup manager will add width and
     // height attributes to the panel, breaking our resize code, if the browser
