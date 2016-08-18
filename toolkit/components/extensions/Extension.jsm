@@ -59,9 +59,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "Schemas",
 XPCOMUtils.defineLazyModuleGetter(this, "Task",
                                   "resource://gre/modules/Task.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "loadExtScriptInScope",
-                                  "resource://gre/modules/ExtensionGlobalScope.jsm");
-
 XPCOMUtils.defineLazyGetter(this, "require", () => {
   let obj = {};
   Cu.import("resource://devtools/shared/Loader.jsm", obj);
@@ -89,6 +86,7 @@ Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 var {
   BaseContext,
   EventEmitter,
+  SchemaAPIManager,
   LocaleData,
   Messenger,
   instanceOf,
@@ -115,16 +113,11 @@ const COMMENT_REGEXP = new RegExp(String.raw`
 var ExtensionContext, GlobalManager;
 
 // This object loads the ext-*.js scripts that define the extension API.
-var Management = {
-  initialized: null,
-  scopes: [],
-  schemaApis: {
-    addon_parent: [],
-    addon_child: [],
-    content_parent: [],
-    content_child: [],
-  },
-  emitter: new EventEmitter(),
+var Management = new class extends SchemaAPIManager {
+  constructor() {
+    super("main");
+    this.initialized = null;
+  }
 
   // Loads all the ext-*.js scripts currently registered.
   lazyInit() {
@@ -146,89 +139,25 @@ var Management = {
     });
 
     for (let [/* name */, value] of XPCOMUtils.enumerateCategoryEntries(CATEGORY_EXTENSION_SCRIPTS)) {
-      loadExtScriptInScope(value, this);
+      this.loadScript(value);
     }
 
     this.initialized = promise;
     return this.initialized;
-  },
+  }
 
-  /**
-   * Called by an ext-*.js script to register an API.
-   *
-   * @param {string} namespace The API namespace.
-   *     Intended to match the namespace of the generated API, but not used at
-   *     the moment - see bugzil.la/1295774.
-   * @param {string} envType Restricts the API to contexts that run in the
-   *    given environment. Must be one of the following:
-   *     - "addon_parent" - addon APIs that runs in the main process.
-   *     - "addon_child" - addon APIs that runs in an addon process.
-   *     - "content_parent" - content script APIs that runs in the main process.
-   *     - "content_child" - content script APIs that runs in a content process.
-   * @param {function(BaseContext)} getAPI A function that returns an object
-   *     that will be merged with |chrome| and |browser|. The next example adds
-   *     the create, update and remove methods to the tabs API.
-   *
-   *     registerSchemaAPI("tabs", "addon_parent", (context) => ({
-   *       tabs: { create, update },
-   *     }));
-   *     registerSchemaAPI("tabs", "addon_parent", (context) => ({
-   *       tabs: { remove },
-   *     }));
-   */
   registerSchemaAPI(namespace, envType, getAPI) {
-    this.schemaApis[envType].push({namespace, getAPI});
+    if (envType == "addon_parent" || envType == "content_parent") {
+      super.registerSchemaAPI(namespace, envType, getAPI);
+    }
     if (envType === "addon_child") {
       // TODO(robwu): Remove this. It is a temporary hack to ease the transition
       // from ext-*.js running in the parent to APIs running in a child process.
       // This can be removed once there is a dedicated ExtensionContext with type
       // "addon_child".
-      this.schemaApis.addon_parent.push({namespace, getAPI});
+      super.registerSchemaAPI(namespace, "addon_parent", getAPI);
     }
-  },
-
-  // Mash together all the APIs from apis into obj.
-  generateAPIs(context, apis, obj) {
-    // Recursively copy properties from source to dest.
-    function copy(dest, source) {
-      for (let prop in source) {
-        let desc = Object.getOwnPropertyDescriptor(source, prop);
-        if (typeof(desc.value) == "object") {
-          if (!(prop in dest)) {
-            dest[prop] = {};
-          }
-          copy(dest[prop], source[prop]);
-        } else {
-          Object.defineProperty(dest, prop, desc);
-        }
-      }
-    }
-
-    for (let api of apis) {
-      if (api.permission) {
-        if (!context.extension.hasPermission(api.permission)) {
-          continue;
-        }
-      }
-
-      api = api.getAPI(context);
-      copy(obj, api);
-    }
-  },
-
-  // The ext-*.js scripts can ask to be notified for certain hooks.
-  on(hook, callback) {
-    this.emitter.on(hook, callback);
-  },
-
-  // Ask to run all the callbacks that are registered for a given hook.
-  emit(hook, ...args) {
-    return this.emitter.emit(hook, ...args);
-  },
-
-  off(hook, callback) {
-    this.emitter.off(hook, callback);
-  },
+  }
 };
 
 // An extension page is an execution context for any extension content
@@ -633,8 +562,8 @@ GlobalManager = {
     let apis = {
       extensionTypes: {},
     };
-    Management.generateAPIs(context, Management.schemaApis[context.envType], apis);
-    Management.generateAPIs(context, context.extension.apis, apis);
+    Management.generateAPIs(context, apis);
+    SchemaAPIManager.generateAPIs(context, context.extension.apis, apis);
 
     let schemaWrapper = {
       get principal() {

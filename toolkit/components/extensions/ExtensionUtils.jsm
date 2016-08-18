@@ -33,6 +33,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "Preferences",
 XPCOMUtils.defineLazyModuleGetter(this, "PromiseUtils",
                                   "resource://gre/modules/PromiseUtils.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "loadExtScriptInScope",
+                                  "resource://gre/modules/ExtensionGlobalScope.jsm");
+
 function getConsole() {
   return new ConsoleAPI({
     maxLogLevelPref: "extensions.webextensions.log.level",
@@ -1565,6 +1568,108 @@ class ChildAPIManager {
 }
 
 /**
+ * This object loads the ext-*.js scripts that define the extension API.
+ *
+ * This class instance is shared with the scripts that it loads, so that the
+ * ext-*.js scripts and the instantiator can communicate with each other.
+ */
+class SchemaAPIManager extends EventEmitter {
+  /**
+   * @param {string} processType
+   *     "main" - The main, one and only chrome browser process.
+   *     "addon" - An addon process.
+   *     "content" - A content process.
+   */
+  constructor(processType) {
+    super();
+    this.processType = processType;
+    this._schemaApis = {
+      addon_parent: [],
+      addon_child: [],
+      content_parent: [],
+      content_child: [],
+    };
+  }
+
+  loadScript(scriptUrl) {
+    loadExtScriptInScope(scriptUrl, this);
+  }
+
+  /**
+   * Called by an ext-*.js script to register an API.
+   *
+   * @param {string} namespace The API namespace.
+   *     Intended to match the namespace of the generated API, but not used at
+   *     the moment - see bugzil.la/1295774.
+   * @param {string} envType Restricts the API to contexts that run in the
+   *    given environment. Must be one of the following:
+   *     - "addon_parent" - addon APIs that runs in the main process.
+   *     - "addon_child" - addon APIs that runs in an addon process.
+   *     - "content_parent" - content script APIs that runs in the main process.
+   *     - "content_child" - content script APIs that runs in a content process.
+   * @param {function(BaseContext)} getAPI A function that returns an object
+   *     that will be merged with |chrome| and |browser|. The next example adds
+   *     the create, update and remove methods to the tabs API.
+   *
+   *     registerSchemaAPI("tabs", "addon_parent", (context) => ({
+   *       tabs: { create, update },
+   *     }));
+   *     registerSchemaAPI("tabs", "addon_parent", (context) => ({
+   *       tabs: { remove },
+   *     }));
+   */
+  registerSchemaAPI(namespace, envType, getAPI) {
+    this._schemaApis[envType].push({namespace, getAPI});
+  }
+
+  /**
+   * Exports all registered scripts to `obj`.
+   *
+   * @param {BaseContext} context The context for which the API bindings are
+   *     generated.
+   * @param {object} obj The destination of the API.
+   */
+  generateAPIs(context, obj) {
+    let apis = this._schemaApis[context.envType];
+    if (!apis) {
+      Cu.reportError(`No APIs have been registered for ${context.envType}`);
+      return;
+    }
+    SchemaAPIManager.generateAPIs(context, apis, obj);
+  }
+
+  /**
+   * Mash together all the APIs from `apis` into `obj`.
+   *
+   * @param {BaseContext} context The context for which the API bindings are
+   *     generated.
+   * @param {Array} apis A list of objects, see `registerSchemaAPI`.
+   * @param {object} obj The destination of the API.
+   */
+  static generateAPIs(context, apis, obj) {
+    // Recursively copy properties from source to dest.
+    function copy(dest, source) {
+      for (let prop in source) {
+        let desc = Object.getOwnPropertyDescriptor(source, prop);
+        if (typeof(desc.value) == "object") {
+          if (!(prop in dest)) {
+            dest[prop] = {};
+          }
+          copy(dest[prop], source[prop]);
+        } else {
+          Object.defineProperty(dest, prop, desc);
+        }
+      }
+    }
+
+    for (let api of apis) {
+      api = api.getAPI(context);
+      copy(obj, api);
+    }
+  }
+}
+
+/**
  * Convert any of several different representations of a date/time to a Date object.
  * Accepts several formats:
  * a Date object, an ISO8601 string, or a number of milliseconds since the epoch as
@@ -1610,4 +1715,5 @@ this.ExtensionUtils = {
   SingletonEventManager,
   SpreadArgs,
   ChildAPIManager,
+  SchemaAPIManager,
 };
