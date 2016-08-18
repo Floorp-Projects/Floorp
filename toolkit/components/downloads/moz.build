@@ -43,7 +43,7 @@ SOURCES += [
 if CONFIG['MOZ_URL_CLASSIFIER']:
     UNIFIED_SOURCES += [
         'ApplicationReputation.cpp',
-        'csd.pb.cc'
+        'chromium/chrome/common/safe_browsing/csd.pb.cc'
     ]
 
 if CONFIG['OS_ARCH'] == 'WINNT':
@@ -65,7 +65,8 @@ FINAL_LIBRARY = 'xul'
 
 LOCAL_INCLUDES += [
     '../protobuf',
-    '/ipc/chromium/src'
+    '/ipc/chromium/src',
+    'chromium'
 ]
 
 DEFINES['GOOGLE_PROTOBUF_NO_RTTI'] = True
