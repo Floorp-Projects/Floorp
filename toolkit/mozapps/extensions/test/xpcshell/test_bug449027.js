@@ -392,7 +392,7 @@ function check_test_pt1() {
         do_throw("Addon " + (i + 1) + " did not get installed correctly");
     }
 
-    do_execute_soon(function checkstate1() {check_state("start", null, run_test_pt2);});
+    do_execute_soon(function checkstate1() { check_state("start", null, run_test_pt2); });
   });
 }
 

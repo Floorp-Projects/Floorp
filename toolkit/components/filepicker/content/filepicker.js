@@ -811,7 +811,7 @@ function processPathEntry(path, fileArray)
     file.initWithPath(filePath);
   else if ((filePath.indexOf("/../") > 0) ||
            (filePath.substr(-3) == "/..") ||
-           (filePath.substr(0,3) == "../") ||
+           (filePath.substr(0, 3) == "../") ||
            (filePath == "..")) {
     /* appendRelativePath doesn't allow .. */
     try {

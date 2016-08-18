@@ -4,8 +4,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-[Pref="dom.presentation.enabled",
- Func="Navigator::HasPresentationSupport"]
+[Pref="dom.presentation.receiver.enabled"]
 interface PresentationConnectionList : EventTarget {
   /*
    * Return the non-terminated set of presentation connections in the

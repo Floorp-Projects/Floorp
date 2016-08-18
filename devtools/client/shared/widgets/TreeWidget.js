@@ -8,6 +8,7 @@
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 
 const EventEmitter = require("devtools/shared/event-emitter");
+const {KeyCodes} = require("devtools/client/shared/keycodes");
 
 /**
  * A tree widget with keyboard navigation and collapsable structure.
@@ -345,15 +346,15 @@ TreeWidget.prototype = {
    */
   onKeypress: function (event) {
     switch (event.keyCode) {
-      case event.DOM_VK_UP:
+      case KeyCodes.DOM_VK_UP:
         this.selectPreviousItem();
         break;
 
-      case event.DOM_VK_DOWN:
+      case KeyCodes.DOM_VK_DOWN:
         this.selectNextItem();
         break;
 
-      case event.DOM_VK_RIGHT:
+      case KeyCodes.DOM_VK_RIGHT:
         if (this._selectedLabel.hasAttribute("expanded")) {
           this.selectNextItem();
         } else {
@@ -361,7 +362,7 @@ TreeWidget.prototype = {
         }
         break;
 
-      case event.DOM_VK_LEFT:
+      case KeyCodes.DOM_VK_LEFT:
         if (this._selectedLabel.hasAttribute("expanded") &&
             !this._selectedLabel.hasAttribute("empty")) {
           this._selectedLabel.removeAttribute("expanded");

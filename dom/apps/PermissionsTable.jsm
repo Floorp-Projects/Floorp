@@ -482,11 +482,6 @@ this.PermissionsTable =  { geolocation: {
                              privileged: DENY_ACTION,
                              certified: ALLOW_ACTION
                            },
-                           "presentation": {
-                             app: DENY_ACTION,
-                             privileged: ALLOW_ACTION,
-                             certified: ALLOW_ACTION
-                           },
                            "open-hidden-window": {
                              app: DENY_ACTION,
                              privileged: DENY_ACTION,

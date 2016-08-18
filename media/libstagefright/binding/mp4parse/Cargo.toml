@@ -20,3 +20,6 @@ exclude = [
 # Somewhat heavy-handed, but we want at least -Z force-overflow-checks=on.
 [profile.release]
 debug-assertions = true
+
+[dependencies]
+byteorder = { path = "../byteorder" }

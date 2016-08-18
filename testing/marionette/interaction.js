@@ -79,53 +79,171 @@ this.interaction = {};
 /**
  * Interact with an element by clicking it.
  *
+ * The element is scrolled into view before visibility- or interactability
+ * checks are performed.
+ *
+ * Selenium-style visibility checks will be performed if |specCompat|
+ * is false (default).  Otherwise pointer-interactability checks will be
+ * performed.  If either of these fail an {@code ElementNotVisibleError}
+ * is returned.
+ *
+ * If |strict| is enabled (defaults to disabled), further accessibility
+ * checks will be performed, and these may result in an {@code
+ * ElementNotAccessibleError} being returned.
+ *
+ * When |el| is not enabled, an {@code InvalidElementStateError}
+ * is returned.
+ *
  * @param {DOMElement|XULElement} el
  *     Element to click.
  * @param {boolean=} strict
  *     Enforce strict accessibility tests.
  * @param {boolean=} specCompat
  *     Use WebDriver specification compatible interactability definition.
+ *
+ * @throws {ElementNotVisibleError}
+ *     If either Selenium-style visibility check or
+ *     pointer-interactability check fails.
+ * @throws {ElementNotAccessibleError}
+ *     If |strict| is true and element is not accessible.
+ * @throws {InvalidElementStateError}
+ *     If |el| is not enabled.
  */
-interaction.clickElement = function(el, strict = false, specCompat = false) {
+interaction.clickElement = function*(el, strict = false, specCompat = false) {
   let win = getWindow(el);
+  let a11y = accessibility.get(strict);
 
-  let visible = false;
+  let visibilityCheckEl  = el;
+  if (el.localName == "option") {
+    visibilityCheckEl = interaction.getSelectForOptionElement(el);
+  }
+
+  let interactable = false;
   if (specCompat) {
-    visible = element.isInteractable(el);
-    if (visible) {
+    if (!element.isInteractable(visibilityCheckEl)) {
       el.scrollIntoView(false);
     }
+    interactable = element.isInteractable(visibilityCheckEl);
   } else {
-    visible = element.isVisible(el);
+    interactable = element.isVisible(visibilityCheckEl);
+  }
+  if (!interactable) {
+    throw new ElementNotVisibleError();
   }
 
-  if (!visible) {
-    throw new ElementNotVisibleError("Element is not visible");
+  if (!atom.isElementEnabled(el)) {
+    throw new InvalidElementStateError("Element is not enabled");
   }
 
-  let a11y = accessibility.get(strict);
-  return a11y.getAccessible(el, true).then(acc => {
-    a11y.checkVisible(acc, el, visible);
-
-    if (atom.isElementEnabled(el)) {
-      a11y.checkEnabled(acc, el, true);
-      a11y.checkActionable(acc, el);
-
-      if (element.isXULElement(el)) {
-        el.click();
-      } else {
-        let rects = el.getClientRects();
-        event.synthesizeMouseAtPoint(
-            rects[0].left + rects[0].width / 2,
-            rects[0].top + rects[0].height / 2,
-            {} /* opts */,
-            win);
-      }
-
-    } else {
-      throw new InvalidElementStateError("Element is not enabled");
-    }
+  yield a11y.getAccessible(el, true).then(acc => {
+    a11y.assertVisible(acc, el, interactable);
+    a11y.assertEnabled(acc, el, true);
+    a11y.assertActionable(acc, el);
   });
+
+  // chrome elements
+  if (element.isXULElement(el)) {
+    if (el.localName == "option") {
+      interaction.selectOption(el);
+    } else {
+      el.click();
+    }
+
+  // content elements
+  } else {
+    if (el.localName == "option") {
+      interaction.selectOption(el);
+    } else {
+      let centre = interaction.calculateCentreCoords(el);
+      let opts = {};
+      event.synthesizeMouseAtPoint(centre.x, centre.y, opts, win);
+    }
+  }
+};
+
+/**
+ * Calculate the in-view centre point, that is the centre point of the
+ * area of the first DOM client rectangle that is inside the viewport.
+ *
+ * @param {DOMElement} el
+ *     Element to calculate the visible centre point of.
+ *
+ * @return {Object.<string, number>}
+ *     X- and Y-position.
+ */
+interaction.calculateCentreCoords = function(el) {
+  let rects = el.getClientRects();
+  return {
+    x: rects[0].left + rects[0].width / 2.0,
+    y: rects[0].top + rects[0].height / 2.0,
+  };
+};
+
+/**
+ * Select <option> element in a <select> list.
+ *
+ * Because the dropdown list of select elements are implemented using
+ * native widget technology, our trusted synthesised events are not able
+ * to reach them.  Dropdowns are instead handled mimicking DOM events,
+ * which for obvious reasons is not ideal, but at the current point in
+ * time considered to be good enough.
+ *
+ * @param {HTMLOptionElement} option
+ *     Option element to select.
+ *
+ * @throws TypeError
+ *     If |el| is a XUL element or not an <option> element.
+ * @throws Error
+ *     If unable to find |el|'s parent <select> element.
+ */
+interaction.selectOption = function(el) {
+  if (element.isXULElement(el)) {
+    throw new Error("XUL dropdowns not supported");
+  }
+  if (el.localName != "option") {
+    throw new TypeError("Invalid elements");
+  }
+
+  let win = getWindow(el);
+  let parent = interaction.getSelectForOptionElement(el);
+
+  event.mouseover(parent);
+  event.mousemove(parent);
+  event.mousedown(parent);
+  event.focus(parent);
+  event.input(parent);
+
+  // toggle selectedness the way holding down control works
+  el.selected = !el.selected;
+
+  event.change(parent);
+  event.mouseup(parent);
+  event.click(parent);
+};
+
+/**
+ * Locate the <select> element that encapsulate an <option> element.
+ *
+ * @param {HTMLOptionElement} optionEl
+ *     Option element.
+ *
+ * @return {HTMLSelectElement}
+ *     Select element wrapping |optionEl|.
+ *
+ * @throws {Error}
+ *     If unable to find the <select> element.
+ */
+interaction.getSelectForOptionElement = function(optionEl) {
+  let parent = optionEl;
+  while (parent.parentNode && parent.localName != "select") {
+    parent = parent.parentNode;
+  }
+
+  if (parent.localName != "select") {
+    throw new Error("Unable to find parent of <option> element");
+  }
+
+  return parent;
 };
 
 /**
@@ -144,7 +262,7 @@ interaction.sendKeysToElement = function(el, value, ignoreVisibility, strict = f
   let win = getWindow(el);
   let a11y = accessibility.get(strict);
   return a11y.getAccessible(el, true).then(acc => {
-    a11y.checkActionable(acc, el);
+    a11y.assertActionable(acc, el);
     event.sendKeysToElement(value, el, {ignoreVisibility: false}, win);
   });
 };
@@ -166,7 +284,7 @@ interaction.isElementDisplayed = function(el, strict = false) {
 
   let a11y = accessibility.get(strict);
   return a11y.getAccessible(el).then(acc => {
-    a11y.checkVisible(acc, el, displayed);
+    a11y.assertVisible(acc, el, displayed);
     return displayed;
   });
 };
@@ -198,7 +316,7 @@ interaction.isElementEnabled = function(el, strict = false) {
 
   let a11y = accessibility.get(strict);
   return a11y.getAccessible(el).then(acc => {
-    a11y.checkEnabled(acc, el, enabled);
+    a11y.assertEnabled(acc, el, enabled);
     return enabled;
   });
 };
@@ -235,7 +353,7 @@ interaction.isElementSelected = function(el, strict = false) {
 
   let a11y = accessibility.get(strict);
   return a11y.getAccessible(el).then(acc => {
-    a11y.checkSelected(acc, el, selected);
+    a11y.assertSelected(acc, el, selected);
     return selected;
   });
 };

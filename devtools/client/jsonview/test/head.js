@@ -136,12 +136,6 @@ function waitForTime(delay) {
   return deferred.promise;
 }
 
-function waitForClipboardPromise(setup, expected) {
-  return new Promise((resolve, reject) => {
-    SimpleTest.waitForClipboard(expected, setup, resolve, reject);
-  });
-}
-
 function waitForFilter() {
   return executeInContent("Test:JsonView:WaitForFilter");
 }

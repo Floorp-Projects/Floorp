@@ -89,8 +89,8 @@ Graph Generation
 Graph generation, as run via ``mach taskgraph decision``, proceeds as follows:
 
 #. For all kinds, generate all tasks.  The result is the "full task set"
-#. Create links between tasks using kind-specific mechanisms.  The result is
-   the "full task graph".
+#. Create dependency links between tasks using kind-specific mechanisms.  The
+   result is the "full task graph".
 #. Select the target tasks (based on try syntax or a tree-specific
    specification).  The result is the "target task set".
 #. Based on the full task graph, calculate the transitive closure of the target
@@ -100,6 +100,28 @@ Graph generation, as run via ``mach taskgraph decision``, proceeds as follows:
    The result is the "optimized task graph" with fewer nodes than the target
    task graph.
 #. Create tasks for all tasks in the optimized task graph.
+
+Transitive Closure
+..................
+
+Transitive closure is a fancy name for this sort of operation:
+
+ * start with a set of tasks
+ * add all tasks on which any of those tasks depend
+ * repeat until nothing changes
+
+The effect is this: imagine you start with a linux32 test job and a linux64 test job.
+In the first round, each test task depends on the test docker image task, so add that image task.
+Each test also depends on a build, so add the linux32 and linux64 build tasks.
+
+Then repeat: the test docker image task is already present, as are the build
+tasks, but those build tasks depend on the build docker image task.  So add
+that build docker image task.  Repeat again: this time, none of the tasks in
+the set depend on a task not in the set, so nothing changes and the process is
+complete.
+
+And as you can see, the graph we've built now includes everything we wanted
+(the test jobs) plus everything required to do that (docker images, builds).
 
 Optimization
 ------------

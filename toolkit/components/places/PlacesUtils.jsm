@@ -928,7 +928,7 @@ this.PlacesUtils = {
           // note:  this._uri() will throw if uriString is not a valid URI
           if (this._uri(uriString)) {
             nodes.push({ uri: uriString,
-                         title: titleString ? titleString : uriString ,
+                         title: titleString ? titleString : uriString,
                          type: this.TYPE_X_MOZ_URL });
           }
         }

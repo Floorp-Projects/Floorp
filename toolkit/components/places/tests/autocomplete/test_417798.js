@@ -28,7 +28,7 @@ var gTests = [
   ["1: Match non-javascript: with almost javascript:",
    "javascript", [0]],
   ["2: Match javascript:",
-   "javascript:", [0,1]],
+   "javascript:", [0, 1]],
   ["3: Match nothing with non-first javascript:",
    "5 javascript:", []],
   ["4: Match javascript: with multi-word search",

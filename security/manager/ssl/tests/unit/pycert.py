@@ -65,7 +65,8 @@ Issuer and subject distinguished name specifications are of the form
 (organizational unit name), CN (common name) and emailAddress (email
 address) are currently supported. The optional stringEncoding field may
 be 'utf8String' or 'printableString'. If the given string does not
-contain a '/', it is assumed to represent a common name.
+contain a '/', it is assumed to represent a common name. If an empty
+string is provided, then an empty distinguished name is returned.
 DirectoryNames also use this format. When specifying a directoryName in
 a nameConstraints extension, the implicit form may not be used.
 
@@ -248,7 +249,7 @@ def stringToDN(string, tag=None):
     for the issuer and subject fields for more details. Takes an
     optional implicit tag in cases where the Name needs to be tagged
     differently."""
-    if '/' not in string:
+    if string and '/' not in string:
         string = '/CN=%s' % string
     rdns = rfc2459.RDNSequence()
     pattern = '/(C|ST|L|O|OU|CN|emailAddress)='

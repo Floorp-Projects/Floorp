@@ -549,7 +549,7 @@ function checkCountryResultTelemetry(aExpectedValue) {
   let histogram = Services.telemetry.getHistogramById("SEARCH_SERVICE_COUNTRY_FETCH_RESULT");
   let snapshot = histogram.snapshot();
   // The probe is declared with 8 values, but we get 9 back from .counts
-  let expectedCounts = [0,0,0,0,0,0,0,0,0];
+  let expectedCounts = [0, 0, 0, 0, 0, 0, 0, 0, 0];
   if (aExpectedValue != null) {
     expectedCounts[aExpectedValue] = 1;
   }

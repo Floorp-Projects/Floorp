@@ -139,7 +139,7 @@ function test() {
                                       // at = (bug 512853)
                                       'Foo': 'ABC=XYZ'
                                      }));
-  crashes.sort((a,b) => b.date - a.date);
+  crashes.sort((a, b) => b.date - a.date);
 
   // set this pref so we can link to our test server
   Services.prefs.setCharPref("breakpad.reportURL",

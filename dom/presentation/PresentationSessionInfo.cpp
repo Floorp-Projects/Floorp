@@ -222,6 +222,9 @@ PresentationSessionInfo::Init(nsIPresentationControlChannel* aControlChannel)
 /* virtual */ void
 PresentationSessionInfo::Shutdown(nsresult aReason)
 {
+  PRES_DEBUG("%s:id[%s], reason[%x], role[%d]\n", __func__,
+             NS_ConvertUTF16toUTF8(mSessionId).get(), aReason, mRole);
+
   NS_WARN_IF(NS_FAILED(aReason));
 
   // Close the control channel if any.
@@ -400,6 +403,9 @@ PresentationSessionInfo::ContinueTermination()
 NS_IMETHODIMP
 PresentationSessionInfo::NotifyTransportReady()
 {
+  PRES_DEBUG("%s:id[%s], role[%d]\n", __func__,
+             NS_ConvertUTF16toUTF8(mSessionId).get(), mRole);
+
   MOZ_ASSERT(NS_IsMainThread());
 
   mIsTransportReady = true;
@@ -423,6 +429,9 @@ PresentationSessionInfo::NotifyTransportReady()
 NS_IMETHODIMP
 PresentationSessionInfo::NotifyTransportClosed(nsresult aReason)
 {
+  PRES_DEBUG("%s:id[%s], reason[%x], role[%d]\n", __func__,
+             NS_ConvertUTF16toUTF8(mSessionId).get(), aReason, mRole);
+
   MOZ_ASSERT(NS_IsMainThread());
 
   // Nullify |mTransport| here so it won't try to re-close |mTransport| in
@@ -473,6 +482,9 @@ PresentationSessionInfo::NotifyData(const nsACString& aData)
 NS_IMETHODIMP
 PresentationSessionInfo::OnSessionTransport(nsIPresentationSessionTransport* transport)
 {
+  PRES_DEBUG("%s:id[%s], role[%d]\n", __func__,
+             NS_ConvertUTF16toUTF8(mSessionId).get(), mRole);
+
   SetBuilder(nullptr);
 
   // The session transport is managed by content process
@@ -495,10 +507,13 @@ PresentationSessionInfo::OnSessionTransport(nsIPresentationSessionTransport* tra
 }
 
 NS_IMETHODIMP
-PresentationSessionInfo::OnError(nsresult reason)
+PresentationSessionInfo::OnError(nsresult aReason)
 {
+  PRES_DEBUG("%s:id[%s], reason[%x], role[%d]\n", __func__,
+             NS_ConvertUTF16toUTF8(mSessionId).get(), aReason, mRole);
+
   SetBuilder(nullptr);
-  return ReplyError(reason);
+  return ReplyError(aReason);
 }
 
 NS_IMETHODIMP
@@ -747,6 +762,9 @@ PresentationControllingInfo::OnAnswer(nsIPresentationChannelDescription* aDescri
 NS_IMETHODIMP
 PresentationControllingInfo::NotifyConnected()
 {
+  PRES_DEBUG("%s:id[%s], role[%d]\n", __func__,
+             NS_ConvertUTF16toUTF8(mSessionId).get(), mRole);
+
   MOZ_ASSERT(NS_IsMainThread());
 
   switch (mState) {
@@ -776,6 +794,9 @@ PresentationControllingInfo::NotifyConnected()
 NS_IMETHODIMP
 PresentationControllingInfo::NotifyReconnected()
 {
+  PRES_DEBUG("%s:id[%s], role[%d]\n", __func__,
+             NS_ConvertUTF16toUTF8(mSessionId).get(), mRole);
+
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mReconnectCallback);
 
@@ -847,6 +868,9 @@ PresentationControllingInfo::BuildTransport()
 NS_IMETHODIMP
 PresentationControllingInfo::NotifyDisconnected(nsresult aReason)
 {
+  PRES_DEBUG("%s:id[%s], reason[%x], role[%d]\n", __func__,
+             NS_ConvertUTF16toUTF8(mSessionId).get(), aReason, mRole);
+
   MOZ_ASSERT(NS_IsMainThread());
 
   if (mTransportType == nsIPresentationChannelDescription::TYPE_DATACHANNEL) {
@@ -903,6 +927,8 @@ NS_IMETHODIMP
 PresentationControllingInfo::OnStopListening(nsIServerSocket* aServerSocket,
                                            nsresult aStatus)
 {
+  PRES_DEBUG("controller %s:status[%x]\n",__func__, aStatus);
+
   MOZ_ASSERT(NS_IsMainThread());
 
   if (aStatus == NS_BINDING_ABORTED) { // The server socket was manually closed.
@@ -1280,6 +1306,9 @@ PresentationPresentingInfo::IsAccessible(base::ProcessId aProcessId)
 nsresult
 PresentationPresentingInfo::NotifyResponderReady()
 {
+  PRES_DEBUG("%s:id[%s], role[%d]\n", __func__,
+             NS_ConvertUTF16toUTF8(mSessionId).get(), mRole);
+
   if (mTimer) {
     mTimer->Cancel();
     mTimer = nullptr;
@@ -1302,6 +1331,9 @@ PresentationPresentingInfo::NotifyResponderReady()
 nsresult
 PresentationPresentingInfo::NotifyResponderFailure()
 {
+  PRES_DEBUG("%s:id[%s], role[%d]\n", __func__,
+             NS_ConvertUTF16toUTF8(mSessionId).get(), mRole);
+
   if (mTimer) {
     mTimer->Cancel();
     mTimer = nullptr;
@@ -1364,6 +1396,9 @@ PresentationPresentingInfo::OnIceCandidate(const nsAString& aCandidate)
 NS_IMETHODIMP
 PresentationPresentingInfo::NotifyConnected()
 {
+  PRES_DEBUG("%s:id[%s], role[%d]\n", __func__,
+             NS_ConvertUTF16toUTF8(mSessionId).get(), mRole);
+
   if (nsIPresentationSessionListener::STATE_TERMINATED == mState) {
     ContinueTermination();
   }
@@ -1381,6 +1416,9 @@ PresentationPresentingInfo::NotifyReconnected()
 NS_IMETHODIMP
 PresentationPresentingInfo::NotifyDisconnected(nsresult aReason)
 {
+  PRES_DEBUG("%s:id[%s], reason[%x], role[%d]\n", __func__,
+             NS_ConvertUTF16toUTF8(mSessionId).get(), aReason, mRole);
+
   MOZ_ASSERT(NS_IsMainThread());
 
   if (mTransportType == nsIPresentationChannelDescription::TYPE_DATACHANNEL) {

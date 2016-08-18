@@ -35,6 +35,7 @@ DevToolsModules(
     'inplace-editor.js',
     'Jsbeautify.jsm',
     'key-shortcuts.js',
+    'keycodes.js',
     'l10n.js',
     'node-attribute-parser.js',
     'options-view.js',

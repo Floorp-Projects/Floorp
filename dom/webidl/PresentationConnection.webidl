@@ -20,8 +20,7 @@ enum PresentationConnectionState
   "terminated"
 };
 
-[Pref="dom.presentation.enabled",
- Func="Navigator::HasPresentationSupport"]
+[Pref="dom.presentation.enabled"]
 interface PresentationConnection : EventTarget {
   /*
    * Unique id for all existing connections.

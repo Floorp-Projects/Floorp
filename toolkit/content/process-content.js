@@ -21,12 +21,44 @@ Services.cpmm.addMessageListener("gmp-plugin-crash", msg => {
   gmpservice.RunPluginCrashCallbacks(msg.data.pluginID, msg.data.pluginName);
 });
 
-// Forward inner-window-destroyed notifications with the inner window ID,
-// so that code in the parent that should do something when content
-// windows go away can do it
 if (gInContentProcess) {
-  Services.obs.addObserver((subject, topic, data) => {
-    let innerWindowID = subject.QueryInterface(Ci.nsISupportsPRUint64).data;
-    Services.cpmm.sendAsyncMessage("Toolkit:inner-window-destroyed", innerWindowID);
-  }, "inner-window-destroyed", false);
+  let ProcessObserver = {
+    TOPICS: [
+      "inner-window-destroyed",
+      "xpcom-shutdown",
+    ],
+
+    init() {
+      for (let topic of this.TOPICS) {
+        Services.obs.addObserver(this, topic, false);
+      }
+    },
+
+    uninit() {
+      for (let topic of this.TOPICS) {
+        Services.obs.removeObserver(this, topic);
+      }
+    },
+
+    observe(subject, topic, data) {
+      switch (topic) {
+        case "inner-window-destroyed": {
+          // Forward inner-window-destroyed notifications with the
+          // inner window ID, so that code in the parent that should
+          // do something when content windows go away can do it
+          let innerWindowID =
+            subject.QueryInterface(Ci.nsISupportsPRUint64).data;
+          Services.cpmm.sendAsyncMessage("Toolkit:inner-window-destroyed",
+                                         innerWindowID);
+          break;
+        }
+        case "xpcom-shutdown": {
+          this.uninit();
+          break;
+        }
+      }
+    },
+  };
+
+  ProcessObserver.init();
 }

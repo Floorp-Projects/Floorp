@@ -23,7 +23,7 @@ function run_test() {
   }, "bootstrap-request-globals", false);
 
   Services.obs.addObserver(function({ wrappedJSObject: seenGlobals }) {
-    for (let [name,] of EXPECTED_GLOBALS)
+    for (let [name, ] of EXPECTED_GLOBALS)
       do_check_true(seenGlobals.has(name));
 
     sawGlobals = true;
