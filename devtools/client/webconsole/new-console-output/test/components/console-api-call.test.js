@@ -10,7 +10,7 @@ const { renderComponent } = require("devtools/client/webconsole/new-console-outp
 const { ConsoleApiCall } = require("devtools/client/webconsole/new-console-output/components/message-types/console-api-call");
 
 // Test fakes.
-const { stubConsoleMessages } = require("devtools/client/webconsole/new-console-output/test/fixtures/stubs");
+const stubConsoleMessages = require("devtools/client/webconsole/new-console-output/test/fixtures/stubs/index");
 const onViewSourceInDebugger = () => {};
 
 describe("ConsoleAPICall component:", () => {

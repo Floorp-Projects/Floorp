@@ -3,7 +3,7 @@
 "use strict";
 
 const { getRepeatId } = require("devtools/client/webconsole/new-console-output/utils/messages");
-const { stubConsoleMessages } = require("devtools/client/webconsole/new-console-output/test/fixtures/stubs");
+const stubConsoleMessages = require("devtools/client/webconsole/new-console-output/test/fixtures/stubs/index");
 const { setupActions } = require("devtools/client/webconsole/new-console-output/test/helpers");
 const constants = require("devtools/client/webconsole/new-console-output/constants");
 
