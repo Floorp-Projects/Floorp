@@ -24,7 +24,6 @@ import org.mozilla.gecko.favicons.LoadFaviconTask;
 import org.mozilla.gecko.favicons.OnFaviconLoadedListener;
 import org.mozilla.gecko.favicons.RemoteFavicon;
 import org.mozilla.gecko.gfx.BitmapUtils;
-import org.mozilla.gecko.gfx.Layer;
 import org.mozilla.gecko.reader.ReaderModeUtils;
 import org.mozilla.gecko.reader.ReadingListHelper;
 import org.mozilla.gecko.toolbar.BrowserToolbar.TabEditingState;
@@ -75,7 +74,6 @@ public class Tab {
     private ZoomConstraints mZoomConstraints;
     private boolean mIsRTL;
     private final ArrayList<View> mPluginViews;
-    private final HashMap<Object, Layer> mPluginLayers;
     private int mBackgroundColor;
     private int mState;
     private Bitmap mThumbnailBitmap;
@@ -142,7 +140,6 @@ public class Tab {
         mContentType = "";
         mZoomConstraints = new ZoomConstraints(false);
         mPluginViews = new ArrayList<View>();
-        mPluginLayers = new HashMap<Object, Layer>();
         mState = shouldShowProgress(url) ? STATE_LOADING : STATE_SUCCESS;
         mLoadProgress = LOAD_PROGRESS_INIT;
 
@@ -804,30 +801,6 @@ public class Tab {
 
     public View[] getPluginViews() {
         return mPluginViews.toArray(new View[mPluginViews.size()]);
-    }
-
-    public void addPluginLayer(Object surfaceOrView, Layer layer) {
-        synchronized (mPluginLayers) {
-            mPluginLayers.put(surfaceOrView, layer);
-        }
-    }
-
-    public Layer getPluginLayer(Object surfaceOrView) {
-        synchronized (mPluginLayers) {
-            return mPluginLayers.get(surfaceOrView);
-        }
-    }
-
-    public Collection<Layer> getPluginLayers() {
-        synchronized (mPluginLayers) {
-            return new ArrayList<Layer>(mPluginLayers.values());
-        }
-    }
-
-    public Layer removePluginLayer(Object surfaceOrView) {
-        synchronized (mPluginLayers) {
-            return mPluginLayers.remove(surfaceOrView);
-        }
     }
 
     public int getBackgroundColor() {

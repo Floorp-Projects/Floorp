@@ -27,6 +27,7 @@ var { attachThread, detachThread } = require("./attach-thread");
 var Menu = require("devtools/client/framework/menu");
 var MenuItem = require("devtools/client/framework/menu-item");
 var { DOMHelpers } = require("resource://devtools/client/shared/DOMHelpers.jsm");
+const { KeyCodes } = require("devtools/client/shared/keycodes");
 
 const { BrowserLoader } =
   Cu.import("resource://devtools/client/shared/browser-loader.js", {});
@@ -549,7 +550,7 @@ Toolbox.prototype = {
   },
 
   _splitConsoleOnKeypress: function (e) {
-    if (e.keyCode === e.DOM_VK_ESCAPE) {
+    if (e.keyCode === KeyCodes.DOM_VK_ESCAPE) {
       this.toggleSplitConsole();
       // If the debugger is paused, don't let the ESC key stop any pending
       // navigation.

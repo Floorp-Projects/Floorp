@@ -195,6 +195,7 @@ MediaEngineWebRTCMicrophoneSource::MediaEngineWebRTCMicrophoneSource(
   , mMonitor("WebRTCMic.Monitor")
   , mCapIndex(aIndex)
   , mChannel(-1)
+  , mTrackID(TRACK_NONE)
   , mStarted(false)
   , mSampleFrequency(MediaEngine::DEFAULT_SAMPLE_RATE)
   , mPlayoutDelay(0)

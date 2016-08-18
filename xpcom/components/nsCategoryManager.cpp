@@ -219,7 +219,7 @@ CategoryNode::operator new(size_t aSize, PLArenaPool* aArena)
   return p;
 }
 
-NS_METHOD
+nsresult
 CategoryNode::GetLeaf(const char* aEntryName,
                       char** aResult)
 {
@@ -237,7 +237,7 @@ CategoryNode::GetLeaf(const char* aEntryName,
   return rv;
 }
 
-NS_METHOD
+nsresult
 CategoryNode::AddLeaf(const char* aEntryName,
                       const char* aValue,
                       bool aReplace,
@@ -294,7 +294,7 @@ CategoryNode::DeleteLeaf(const char* aEntryName)
   mTable.RemoveEntry(aEntryName);
 }
 
-NS_METHOD
+nsresult
 CategoryNode::Enumerate(nsISimpleEnumerator** aResult)
 {
   if (NS_WARN_IF(!aResult)) {
@@ -749,7 +749,7 @@ struct writecat_struct
   bool        success;
 };
 
-NS_METHOD
+nsresult
 nsCategoryManager::SuppressNotifications(bool aSuppress)
 {
   mSuppressNotifications = aSuppress;

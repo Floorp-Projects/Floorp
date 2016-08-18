@@ -279,12 +279,13 @@ SimpleTest.waitForExplicitFinish();
 SimpleTest.requestFlakyTimeout('Test for guarantee not firing async event');
 SpecialPowers.pushPermissions([
   {type: 'presentation-device-manage', allow: false, context: document},
-  {type: 'presentation', allow: true, context: document},
   {type: "browser", allow: true, context: document},
 ], () => {
   SpecialPowers.pushPrefEnv({ 'set': [["dom.presentation.enabled", true],
                                       /* Mocked TCP session transport builder in the test */
                                       ["dom.presentation.session_transport.data_channel.enable", false],
+                                      ["dom.presentation.controller.enabled", true],
+                                      ["dom.presentation.receiver.enabled", true],
                                       ["dom.presentation.test.enabled", true],
                                       ["dom.presentation.test.stage", 0],
                                       ["dom.mozBrowserFramesEnabled", true]]},

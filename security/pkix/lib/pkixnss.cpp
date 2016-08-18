@@ -208,6 +208,9 @@ RegisterErrorTable()
       "The server presented a certificate that contains an invalid encoding of "
       "an integer. Common causes include negative serial numbers, negative RSA "
       "moduli, and encodings that are longer than necessary." },
+    { "MOZILLA_PKIX_ERROR_EMPTY_ISSUER_NAME",
+      "The server presented a certificate with an empty issuer distinguished "
+      "name." },
   };
   // Note that these error strings are not localizable.
   // When these strings change, update the localization information too.

@@ -19,7 +19,7 @@ Structure:
         version: 1,
         when: <integer milliseconds since epoch>,
         took: <integer duration in milliseconds>,
-        uid: <string>, // FxA unique ID, or empty string.
+        uid: <string>, // Hashed FxA unique ID, or string of 32 zeros.
         didLogin: <bool>, // Optional, is this the first sync after login? Excluded if we don't know.
         why: <string>, // Optional, why the sync occured, excluded if we don't know.
 
@@ -88,7 +88,7 @@ These values should be monotonic.  If we can't get a monotonic timestamp, -1 wil
 uid
 ~~~
 
-This property containing the FxA account identifier, which is provided by the FxA auth server APIs: `<https://github.com/mozilla/fxa-auth-server/blob/master/docs/api.md>`_. It may be an empty string in the case that we are unable to authenticate with FxA, and have never authenticated in the past.  If present, it should be a 32 character hexidecimal string.
+This property containing a hash of the FxA account identifier, which is a 32 character hexidecimal string.  In the case that we are unable to authenticate with FxA and have never authenticated in the past, it will be a placeholder string consisting of 32 repeated ``0`` characters.
 
 why
 ~~~

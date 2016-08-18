@@ -19,6 +19,8 @@ namespace mozilla {
 namespace net {
 namespace CacheFileUtils {
 
+extern const char *kAltDataKey;
+
 already_AddRefed<nsILoadContextInfo>
 ParseKey(const nsCSubstring &aKey,
          nsCSubstring *aIdEnhance = nullptr,
@@ -148,6 +150,12 @@ private:
 
 void
 FreeBuffer(void *aBuf);
+
+nsresult
+ParseAlternativeDataInfo(const char *aInfo, int64_t *_offset, nsACString *_type);
+
+void
+BuildAlternativeDataInfo(const char *aInfo, int64_t aOffset, nsACString &_retval);
 
 } // namespace CacheFileUtils
 } // namespace net

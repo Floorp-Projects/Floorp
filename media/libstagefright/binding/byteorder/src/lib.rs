@@ -36,17 +36,24 @@ assert_eq!(wtr, vec![5, 2, 0, 3]);
 ```
 */
 
+#![crate_name = "byteorder"]
 #![doc(html_root_url = "http://burntsushi.net/rustdoc/byteorder")]
+
+#![cfg_attr(not(feature = "std"), no_std)]
 
 #![deny(missing_docs)]
 
-use std::mem::transmute;
-use std::ptr::copy_nonoverlapping;
+#[cfg(feature = "std")]
+extern crate core;
 
-pub use byteorder::new::{ReadBytesExt, WriteBytesExt};
+use core::mem::transmute;
+use core::ptr::copy_nonoverlapping;
 
-// Re-export new so gecko can build us as a mod instead of a crate.
-pub mod new;
+#[cfg(feature = "std")]
+pub use new::{ReadBytesExt, WriteBytesExt};
+
+#[cfg(feature = "std")]
+mod new;
 
 #[inline]
 fn extend_sign(val: u64, nbytes: usize) -> i64 {
@@ -293,7 +300,7 @@ pub type NativeEndian = BigEndian;
 
 macro_rules! read_num_bytes {
     ($ty:ty, $size:expr, $src:expr, $which:ident) => ({
-        assert!($size == ::std::mem::size_of::<$ty>());
+        assert!($size == ::core::mem::size_of::<$ty>());
         assert!($size <= $src.len());
         let mut data: $ty = 0;
         unsafe {

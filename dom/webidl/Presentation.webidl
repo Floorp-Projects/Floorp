@@ -4,8 +4,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-[Pref="dom.presentation.enabled",
- Func="Navigator::HasPresentationSupport"]
+[Pref="dom.presentation.enabled"]
 interface Presentation : EventTarget {
  /*
   * This should be used by the UA as the default presentation request for the
@@ -15,12 +14,15 @@ interface Presentation : EventTarget {
   *
   * Only used by controlling browsing context (senders).
   */
+  [Pref="dom.presentation.controller.enabled"]
   attribute PresentationRequest? defaultRequest;
 
   /*
    * This should be available on the receiving browsing context in order to
    * access the controlling browsing context and communicate with them.
    */
-  [SameObject]
+  [SameObject,
+   Pref="dom.presentation.receiver.enabled",
+   Func="Presentation::HasReceiverSupport"]
   readonly attribute PresentationReceiver? receiver;
 };

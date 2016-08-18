@@ -230,7 +230,7 @@ class TelemetryRecord {
     }
 
     try {
-      this.uid = Weave.Service.identity.userUID();
+      this.uid = Weave.Service.identity.hashedUID();
     } catch (e) {
       this.uid = "0".repeat(32);
     }

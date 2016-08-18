@@ -7,6 +7,7 @@
 #include "QuartzSupport.h"
 #include "nsDebug.h"
 #include "MacIOSurface.h"
+#include "mozilla/Sprintf.h"
 
 #import <QuartzCore/QuartzCore.h>
 #import <AppKit/NSOpenGL.h>
@@ -595,8 +596,7 @@ void nsCARenderer::SaveToDisk(MacIOSurface *surf) {
   }
 
   char cstr[1000];
-
-  sprintf(cstr, "file:///Users/benoitgirard/debug/iosurface_%i.png", ++sSaveToDiskSequence);
+  SprintfLiteral(cstr, "file:///Users/benoitgirard/debug/iosurface_%i.png", ++sSaveToDiskSequence);
 
   CFStringRef cfStr = ::CFStringCreateWithCString(kCFAllocatorDefault, cstr, kCFStringEncodingMacRoman);
 

@@ -273,9 +273,6 @@
 @RESPATH@/components/necko_websocket.xpt
 @RESPATH@/components/necko_wifi.xpt
 @RESPATH@/components/necko_wyciwyg.xpt
-#ifdef MOZ_RTSP
-@RESPATH@/components/necko_rtsp.xpt
-#endif
 @RESPATH@/components/necko.xpt
 @RESPATH@/components/loginmgr.xpt
 @RESPATH@/components/parentalcontrols.xpt

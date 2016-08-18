@@ -239,7 +239,7 @@ static void EnsureClassObjectsInitialized()
     }
 }
 
-NS_METHOD GetSharedScriptableHelperForJSIID(nsIXPCScriptable** helper)
+static nsresult GetSharedScriptableHelperForJSIID(nsIXPCScriptable** helper)
 {
     EnsureClassObjectsInitialized();
     nsCOMPtr<nsIXPCScriptable> temp = gSharedScriptableHelperForJSIID.get();

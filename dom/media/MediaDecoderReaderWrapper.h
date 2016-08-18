@@ -76,7 +76,7 @@ public:
   RefPtr<BufferedUpdatePromise> UpdateBufferedWithPromise();
   RefPtr<ShutdownPromise> Shutdown();
 
-  void ReleaseMediaResources();
+  void ReleaseResources();
   void SetIdle();
   void ResetDecode(TrackSet aTracks);
 
