@@ -383,7 +383,8 @@ interface nsIFile : nsISupports
 
     /**
      * Return the result of PR_Open on the file.  The caller is
-     * responsible for calling PR_Close on the result.
+     * responsible for calling PR_Close on the result.  On success, the
+     * returned PRFileDescr must be non-null.
      *
      * @param flags the PR_Open flags from prio.h, plus optionally
      * OS_READAHEAD or DELETE_ON_CLOSE. OS_READAHEAD is a hint to the
@@ -392,13 +393,15 @@ interface nsIFile : nsISupports
      * Instead use NS_OpenAnonymousTemporaryFile() to create a temporary
      * file which will be deleted upon close.
      */
-    [noscript] PRFileDescStar openNSPRFileDesc(in long flags, in long mode);
+    [noscript, must_use] PRFileDescStar openNSPRFileDesc(in long flags,
+                                                         in long mode);
 
     /**
      * Return the result of fopen on the file.  The caller is
-     * responsible for calling fclose on the result.
+     * responsible for calling fclose on the result.  On success, the
+     * returned FILE pointer must be non-null.
      */
-    [noscript] FILE           openANSIFileDesc(in string mode);
+    [noscript, must_use] FILE openANSIFileDesc(in string mode);
 
     /**
      * Return the result of PR_LoadLibrary on the file.  The caller is
