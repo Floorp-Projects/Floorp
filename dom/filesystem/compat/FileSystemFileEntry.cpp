@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "FileEntry.h"
+#include "FileSystemFileEntry.h"
 #include "CallbackRunnables.h"
 #include "mozilla/dom/File.h"
 
@@ -38,17 +38,17 @@ private:
 
 } // anonymous namespace
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(FileEntry, FileSystemEntry, mFile)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(FileSystemFileEntry, FileSystemEntry, mFile)
 
-NS_IMPL_ADDREF_INHERITED(FileEntry, FileSystemEntry)
-NS_IMPL_RELEASE_INHERITED(FileEntry, FileSystemEntry)
+NS_IMPL_ADDREF_INHERITED(FileSystemFileEntry, FileSystemEntry)
+NS_IMPL_RELEASE_INHERITED(FileSystemFileEntry, FileSystemEntry)
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(FileEntry)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(FileSystemFileEntry)
 NS_INTERFACE_MAP_END_INHERITING(FileSystemEntry)
 
-FileEntry::FileEntry(nsIGlobalObject* aGlobal,
-                     File* aFile,
-                     FileSystem* aFileSystem)
+FileSystemFileEntry::FileSystemFileEntry(nsIGlobalObject* aGlobal,
+                                         File* aFile,
+                                         FileSystem* aFileSystem)
   : FileSystemEntry(aGlobal, aFileSystem)
   , mFile(aFile)
 {
@@ -56,23 +56,24 @@ FileEntry::FileEntry(nsIGlobalObject* aGlobal,
   MOZ_ASSERT(mFile);
 }
 
-FileEntry::~FileEntry()
+FileSystemFileEntry::~FileSystemFileEntry()
 {}
 
 JSObject*
-FileEntry::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
+FileSystemFileEntry::WrapObject(JSContext* aCx,
+                                JS::Handle<JSObject*> aGivenProto)
 {
-  return FileEntryBinding::Wrap(aCx, this, aGivenProto);
+  return FileSystemFileEntryBinding::Wrap(aCx, this, aGivenProto);
 }
 
 void
-FileEntry::GetName(nsAString& aName, ErrorResult& aRv) const
+FileSystemFileEntry::GetName(nsAString& aName, ErrorResult& aRv) const
 {
   mFile->GetName(aName);
 }
 
 void
-FileEntry::GetFullPath(nsAString& aPath, ErrorResult& aRv) const
+FileSystemFileEntry::GetFullPath(nsAString& aPath, ErrorResult& aRv) const
 {
   mFile->GetPath(aPath);
   if (aPath.IsEmpty()) {
@@ -88,16 +89,16 @@ FileEntry::GetFullPath(nsAString& aPath, ErrorResult& aRv) const
 }
 
 void
-FileEntry::CreateWriter(VoidCallback& aSuccessCallback,
-                        const Optional<OwningNonNull<ErrorCallback>>& aErrorCallback) const
+FileSystemFileEntry::CreateWriter(VoidCallback& aSuccessCallback,
+                                  const Optional<OwningNonNull<ErrorCallback>>& aErrorCallback) const
 {
   ErrorCallbackHelper::Call(GetParentObject(), aErrorCallback,
                             NS_ERROR_DOM_SECURITY_ERR);
 }
 
 void
-FileEntry::GetFile(BlobCallback& aSuccessCallback,
-                   const Optional<OwningNonNull<ErrorCallback>>& aErrorCallback) const
+FileSystemFileEntry::GetFile(BlobCallback& aSuccessCallback,
+                             const Optional<OwningNonNull<ErrorCallback>>& aErrorCallback) const
 {
   RefPtr<BlobCallbackRunnable> runnable =
     new BlobCallbackRunnable(&aSuccessCallback, mFile);

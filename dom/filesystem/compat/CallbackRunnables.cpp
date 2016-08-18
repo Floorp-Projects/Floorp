@@ -9,7 +9,7 @@
 #include "mozilla/dom/DOMError.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/FileBinding.h"
-#include "mozilla/dom/FileEntry.h"
+#include "mozilla/dom/FileSystemFileEntry.h"
 #include "mozilla/dom/Promise.h"
 #include "nsIGlobalObject.h"
 #include "nsPIDOMWindow.h"
@@ -107,7 +107,8 @@ GetEntryHelper::ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue)
       return;
     }
 
-    RefPtr<FileEntry> entry = new FileEntry(mGlobal, file, mFileSystem);
+    RefPtr<FileSystemFileEntry> entry =
+      new FileSystemFileEntry(mGlobal, file, mFileSystem);
     mSuccessCallback->HandleEvent(*entry);
     return;
   }

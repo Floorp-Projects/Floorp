@@ -76,7 +76,7 @@ callback interface BlobCallback {
 };
 
 [NoInterfaceObject]
-interface FileEntry : FileSystemEntry {
+interface FileSystemFileEntry : FileSystemEntry {
     // the successCallback should be a FileWriteCallback but this method is not
     // implemented. ErrorCallback will be called with
     // NS_ERROR_DOM_NOT_SUPPORTED_ERR.

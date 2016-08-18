@@ -12,8 +12,8 @@
 #include "mozilla/dom/Directory.h"
 #include "mozilla/dom/DirectoryEntry.h"
 #include "mozilla/dom/Event.h"
-#include "mozilla/dom/FileEntry.h"
 #include "mozilla/dom/FileSystem.h"
+#include "mozilla/dom/FileSystemFileEntry.h"
 #include "nsIClipboard.h"
 #include "nsISupportsPrimitives.h"
 #include "nsNetUtil.h"
@@ -331,7 +331,7 @@ DataTransferItem::GetAsEntry(ErrorResult& aRv)
     RefPtr<Directory> directory = Directory::Create(global, directoryFile);
     entry = new DirectoryEntry(global, directory, fs);
   } else {
-    entry = new FileEntry(global, file, fs);
+    entry = new FileSystemFileEntry(global, file, fs);
   }
 
   Sequence<RefPtr<FileSystemEntry>> entries;
