@@ -659,6 +659,13 @@ imgFrame::GetImageData() const
 }
 
 bool
+imgFrame::OnHeap() const
+{
+  MonitorAutoLock lock(mMonitor);
+  return mRawSurface ? mRawSurface->OnHeap() : true;
+}
+
+bool
 imgFrame::GetIsPaletted() const
 {
   return mPalettedImageData != nullptr;
