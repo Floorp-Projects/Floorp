@@ -727,12 +727,12 @@ BrowserGlue.prototype = {
 
       let buildID = Services.appinfo.appBuildID;
       let today = new Date().getTime();
-      let buildDate = new Date(buildID.slice(0,4),     // year
-                               buildID.slice(4,6) - 1, // months are zero-based.
-                               buildID.slice(6,8),     // day
-                               buildID.slice(8,10),    // hour
-                               buildID.slice(10,12),   // min
-                               buildID.slice(12,14))   // ms
+      let buildDate = new Date(buildID.slice(0, 4),     // year
+                               buildID.slice(4, 6) - 1, // months are zero-based.
+                               buildID.slice(6, 8),     // day
+                               buildID.slice(8, 10),    // hour
+                               buildID.slice(10, 12),   // min
+                               buildID.slice(12, 14))   // ms
       .getTime();
 
       const millisecondsIn24Hours = 86400000;

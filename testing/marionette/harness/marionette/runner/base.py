@@ -715,6 +715,7 @@ class BaseMarionetteTestRunner(object):
                 'avd_home': self.extra_kwargs.get('avd_home'),
                 'adb_path': self.extra_kwargs.get('adb_path'),
                 'emulator_binary': self.extra_kwargs.get('emulator_bin'),
+                'avd': self.extra_kwargs.get('avd'),
             })
 
         if self.address:
@@ -808,7 +809,7 @@ setReq.onerror = function() {
             self.marionette = self.driverclass(**self._build_kwargs())
             # if we're working against a desktop version, we usually don't need
             # an external ip
-            if self.appName != 'Fennec':
+            if self.appName != 'fennec':
                 need_external_ip = False
         self.logger.info('Initial Profile Destination is '
                          '"{}"'.format(self.marionette.profile_path))

@@ -62,18 +62,18 @@ addPageBook(9, 0);
 var gTests = [
   // Tests after this one will match only on word boundaries
   ["0: Match 'match' at the beginning or after / or on a CamelCase",
-   "match", [0,2,4,9],
+   "match", [0, 2, 4, 9],
    () => setBehavior(2)],
   ["1: Match 'dont' at the beginning or after /",
-   "dont", [1,3,5]],
+   "dont", [1, 3, 5]],
   ["2: Match '2' after the slash and after a word (in tags too)",
-   "2", [2,3,4,5]],
+   "2", [2, 3, 4, 5]],
   ["3: Match 't' at the beginning or after /",
-   "t", [0,1,2,3,4,5,9]],
+   "t", [0, 1, 2, 3, 4, 5, 9]],
   ["4: Match 'word' after many consecutive word boundaries",
    "word", [6]],
   ["5: Match a word boundary '/' for everything",
-   "/", [0,1,2,3,4,5,6,7,8,9]],
+   "/", [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]],
   ["6: Match word boundaries '()_+' that are among word boundaries",
    "()_+", [6]],
 
@@ -96,7 +96,7 @@ var gTests = [
 
   // Tests after this one will match against word boundaries and anywhere
   ["14: Match on word boundaries as well as anywhere (bug 429531)",
-   "tch", [0,1,2,3,4,5,9],
+   "tch", [0, 1, 2, 3, 4, 5, 9],
    () => setBehavior(1)],
 ];
 

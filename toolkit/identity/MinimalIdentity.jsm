@@ -108,7 +108,7 @@ IDService.prototype = {
 
     let options = makeMessageObject(aRpCaller);
     log("sending identity-controller-watch:", options);
-    Services.obs.notifyObservers({wrappedJSObject: options},"identity-controller-watch", null);
+    Services.obs.notifyObservers({wrappedJSObject: options}, "identity-controller-watch", null);
   },
 
   /*

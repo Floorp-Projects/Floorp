@@ -6,12 +6,10 @@
 
 "use strict";
 
-/* eslint-disable mozilla/reject-some-requires */
-const {Ci} = require("chrome");
-/* eslint-enable mozilla/reject-some-requires */
 const {parseDeclarations} = require("devtools/shared/css-parsing-utils");
 const promise = require("promise");
 const {getCSSLexer} = require("devtools/shared/css-lexer");
+const {KeyCodes} = require("devtools/client/shared/keycodes");
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 
@@ -75,7 +73,7 @@ exports.appendText = appendText;
  */
 function advanceValidate(keyCode, value, insertionPoint) {
   // Only ";" has special handling here.
-  if (keyCode !== Ci.nsIDOMKeyEvent.DOM_VK_SEMICOLON) {
+  if (keyCode !== KeyCodes.DOM_VK_SEMICOLON) {
     return false;
   }
 

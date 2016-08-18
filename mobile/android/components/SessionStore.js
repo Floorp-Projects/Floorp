@@ -66,11 +66,18 @@ SessionStore.prototype = {
 
   _windows: {},
   _lastSaveTime: 0,
+  _lastBackupTime: 0,
   _interval: 10000,
+  _backupInterval: 120000, // 2 minutes
   _minSaveDelay: MINIMUM_SAVE_DELAY,
   _maxTabsUndo: 5,
   _pendingWrite: 0,
   _scrollSavePending: null,
+  _writeInProgress: false,
+
+  // We only want to start doing backups if we've successfully
+  // written the session data at least once.
+  _sessionDataIsGood: false,
 
   // The index where the most recently closed tab was in the tabs array
   // when it was closed.
@@ -85,15 +92,18 @@ SessionStore.prototype = {
     // Get file references
     this._sessionFile = Services.dirsvc.get("ProfD", Ci.nsILocalFile);
     this._sessionFileBackup = this._sessionFile.clone();
+    this._sessionFilePrevious = this._sessionFile.clone();
     this._sessionFileTemp = this._sessionFile.clone();
-    this._sessionFile.append("sessionstore.js");
-    this._sessionFileBackup.append("sessionstore.bak");
-    this._sessionFileTemp.append(this._sessionFile.leafName + ".tmp");
+    this._sessionFile.append("sessionstore.js"); // The main session store save file.
+    this._sessionFileBackup.append("sessionstore.bak"); // A backup copy to guard against interrupted writes.
+    this._sessionFilePrevious.append("sessionstore.old"); // The previous session's file, used for what used to be the "Tabs from last time".
+    this._sessionFileTemp.append(this._sessionFile.leafName + ".tmp"); // Temporary file for writing changes to disk.
 
     this._loadState = STATE_STOPPED;
     this._startupRestoreFinished = false;
 
     this._interval = Services.prefs.getIntPref("browser.sessionstore.interval");
+    this._backupInterval = Services.prefs.getIntPref("browser.sessionstore.backupInterval");
     this._maxTabsUndo = Services.prefs.getIntPref("browser.sessionstore.max_tabs_undo");
 
     // Copy changes in Gecko settings to their Java counterparts,
@@ -109,8 +119,11 @@ SessionStore.prototype = {
   },
 
   _clearDisk: function ss_clearDisk() {
+    this._sessionDataIsGood = false;
+
     OS.File.remove(this._sessionFile.path);
     OS.File.remove(this._sessionFileBackup.path);
+    OS.File.remove(this._sessionFilePrevious.path);
     OS.File.remove(this._sessionFileTemp.path);
   },
 
@@ -842,6 +855,18 @@ SessionStore.prototype = {
       log("_saveState() killed queued timer");
     }
 
+    // Periodically save a "known good" copy of the session store data.
+    if (!this._writeInProgress && Date.now() - this._lastBackupTime > this._backupInterval &&
+         this._sessionDataIsGood && this._sessionFile.exists()) {
+      if (this._sessionFileBackup.exists()) {
+        this._sessionFileBackup.remove(false);
+      }
+
+      log("_saveState() backing up session data");
+      this._sessionFile.copyTo(null, this._sessionFileBackup.leafName);
+      this._lastBackupTime = Date.now();
+    }
+
     let data = this._getCurrentState();
     let normalData = { windows: [] };
     let privateData = { windows: [] };
@@ -982,6 +1007,7 @@ SessionStore.prototype = {
     let startWriteMs = Cu.now();
 
     log("_writeFile(aAsync = " + aAsync + "), _pendingWrite = " + this._pendingWrite);
+    this._writeInProgress = true;
     let pendingWrite = this._pendingWrite;
     this._write(aFile, aFileTemp, buffer, aAsync).then(() => {
       let stopWriteMs = Cu.now();
@@ -991,6 +1017,7 @@ SessionStore.prototype = {
       // is pending, so we shouldn't reset this._pendingWrite yet.
       if (pendingWrite === this._pendingWrite) {
         this._pendingWrite = 0;
+        this._writeInProgress = false;
       }
 
       log("_writeFile() _write() returned, _pendingWrite = " + this._pendingWrite);
@@ -999,6 +1026,7 @@ SessionStore.prototype = {
       // a single timer per histogram.
       Services.telemetry.getHistogramById("FX_SESSION_RESTORE_WRITE_FILE_MS").add(Math.round(stopWriteMs - startWriteMs));
       Services.obs.notifyObservers(null, "sessionstore-state-write-complete", "");
+      this._sessionDataIsGood = true;
     });
   },
 

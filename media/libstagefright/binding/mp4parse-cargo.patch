@@ -1,6 +1,6 @@
 --- a/media/libstagefright/binding/mp4parse/Cargo.toml
 +++ b/media/libstagefright/binding/mp4parse/Cargo.toml
-@@ -17,23 +17,6 @@ exclude = [
+@@ -17,23 +17,9 @@ exclude = [
    "*.mp4",
  ]
  
@@ -24,3 +24,6 @@
  # Somewhat heavy-handed, but we want at least -Z force-overflow-checks=on.
  [profile.release]
  debug-assertions = true
++
++[dependencies]
++byteorder = { path = "../byteorder" }

@@ -110,14 +110,14 @@ var view = {
   },
   selectionChanged : function() {},
   cycleCell: function(row, col) {},
-  isEditable: function(row, col) {return false; },
-  isSelectable: function(row, col) {return false; },
+  isEditable: function(row, col) { return false; },
+  isSelectable: function(row, col) { return false; },
   setCellValue: function(row, col, value) {},
   setCellText: function(row, col, value) {},
   performAction: function(action) {},
   performActionOnRow: function(action, row) {},
   performActionOnCell: function(action, row, col) {},
-  isSeparator: function(index) {return false; }
+  isSeparator: function(index) { return false; }
 };
 
 // find the index in gPrefView of a pref object

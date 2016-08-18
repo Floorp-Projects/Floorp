@@ -12,6 +12,7 @@
 const {AnimationsTimeline} = require("devtools/client/animationinspector/components/animation-timeline");
 const {RateSelector} = require("devtools/client/animationinspector/components/rate-selector");
 const {formatStopwatchTime} = require("devtools/client/animationinspector/utils");
+const {KeyCodes} = require("devtools/client/shared/keycodes");
 
 var $ = (selector, target = document) => target.querySelector(selector);
 
@@ -162,12 +163,10 @@ var AnimationsPanel = {
   },
 
   onKeyDown: function (event) {
-    let keyEvent = Ci.nsIDOMKeyEvent;
-
     // If the space key is pressed, it should toggle the play state of
     // the animations displayed in the panel, or of all the animations on
     // the page if the selected node does not have any animation on it.
-    if (event.keyCode === keyEvent.DOM_VK_SPACE) {
+    if (event.keyCode === KeyCodes.DOM_VK_SPACE) {
       if (AnimationsController.animationPlayers.length > 0) {
         this.playPauseTimeline().catch(ex => console.error(ex));
       } else {

@@ -26,9 +26,9 @@ var rejectsTreeView = {
     }
     return rv;
   },
-  isSeparator : function(index) {return false;},
+  isSeparator : function(index) { return false; },
   isSorted: function() { return false; },
-  isContainer : function(index) {return false;},
+  isContainer : function(index) { return false; },
   cycleHeader : function(column) {},
   getRowProperties : function(row) { return ""; },
   getColumnProperties : function(column) { return ""; },

@@ -110,7 +110,8 @@ MediaEngineWebRTC::MediaEngineWebRTC(MediaEnginePrefs &aPrefs)
     mAudioInput(nullptr),
     mFullDuplex(aPrefs.mFullDuplex),
     mExtendedFilter(aPrefs.mExtendedFilter),
-    mDelayAgnostic(aPrefs.mDelayAgnostic)
+    mDelayAgnostic(aPrefs.mDelayAgnostic),
+    mHasTabVideoSource(false)
 {
 #ifndef MOZ_B2G_CAMERA
   nsCOMPtr<nsIComponentRegistrar> compMgr;

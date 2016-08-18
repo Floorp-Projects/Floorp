@@ -14,6 +14,7 @@
 #include "nsThreadUtils.h"
 #include "PresentationConnection.h"
 #include "PresentationConnectionList.h"
+#include "PresentationLog.h"
 
 namespace mozilla {
 namespace dom {
@@ -66,6 +67,8 @@ PresentationReceiver::Init()
 
 void PresentationReceiver::Shutdown()
 {
+  PRES_DEBUG("receiver shutdown:windowId[%d]\n", mWindowId);
+
   // Unregister listener for incoming sessions.
   nsCOMPtr<nsIPresentationService> service =
     do_GetService(PRESENTATION_SERVICE_CONTRACTID);
@@ -88,6 +91,9 @@ NS_IMETHODIMP
 PresentationReceiver::NotifySessionConnect(uint64_t aWindowId,
                                            const nsAString& aSessionId)
 {
+  PRES_DEBUG("receiver session connect:id[%s], windowId[%x]\n",
+             NS_ConvertUTF16toUTF8(aSessionId).get(), aWindowId);
+
   if (NS_WARN_IF(!mOwner)) {
     return NS_ERROR_FAILURE;
   }

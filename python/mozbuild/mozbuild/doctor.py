@@ -26,13 +26,6 @@ FREESPACE_THRESHOLD = 10
 # Latest MozillaBuild version
 LATEST_MOZILLABUILD_VERSION = '1.11.0'
 
-DISABLE_8DOT3_WIN = '''
-Disable 8.3 filename creation systemwide?
-This increases performance but some legacy applications may not be able to find
-files and directories that have long file names.
-https://support.microsoft.com/kb/121007
-'''
-
 DISABLE_LASTACCESS_WIN = '''
 Disable the last access time feature?
 This improves the speed of file and
@@ -59,7 +52,6 @@ class Doctor(object):
             'cpu',
             'memory',
             'storage_freespace',
-            'fs_8dot3',
             'fs_lastaccess',
             'mozillabuild'
         ]
@@ -189,83 +181,6 @@ class Doctor(object):
                 desc += 'path invalid'
             results.append({'status': status, 'desc': desc})
         return results
-
-    @property
-    def fs_8dot3(self):
-        if self.platform != 'win':
-            return {'status': 'SKIPPED'}
-        results = []
-        fixable = False
-        denied = False
-        # See 'fsutil behavior':
-        # https://technet.microsoft.com/en-us/library/cc785435.aspx
-        try:
-            command = 'fsutil behavior query disable8dot3'.split(' ')
-            fsutil_output = subprocess.check_output(command)
-            system8dot3 = int(fsutil_output.partition(':')[2][1])
-        except subprocess.CalledProcessError:
-            return {'status': 'UNSURE',
-                    'desc': 'unable to check 8dot3 behavior'}
-        if system8dot3 == 1:
-            return {'status': 'GOOD',
-                    'desc': '8dot3 disabled systemwide'}
-        elif system8dot3 == 0:
-            if False: # if self.fix:
-                choice = self.prompt_bool(DISABLE_8DOT3_WIN)
-                if not choice:
-                    return {'status': 'BAD, NOT FIXED',
-                            'desc': '8dot3 enabled systemwide'}
-                try:
-                    command = 'fsutil behavior set disable8dot3 1'.split(' ')
-                    fsutil_output = subprocess.check_output(command)
-                    status = 'GOOD, FIXED'
-                    desc = '8dot3 disabled systemwide'
-                except subprocess.CalledProcessError, e:
-                    desc = '8dot3 enabled systemwide'
-                    if e.output.find('denied') != -1:
-                        status = 'BAD, FIX DENIED'
-                        denied = True
-                    else:
-                        status = 'BAD, NOT FIXED'
-            else:
-                status = 'BAD, FIXABLE'
-                desc = '8dot3 enabled systemwide'
-                fixable = True
-            return {'status': status, 'desc': desc, 'fixable': fixable,
-                    'denied': denied}
-        # See 'fsutil 8dot3':
-        # https://technet.microsoft.com/en-us/library/ff621566.aspx
-        elif system8dot3 == 2 or system8dot3 == 3:
-            # 2 = Individual disk behavior respected.
-            # 3 = 8dot3 disabled on all except system disk.
-            # Neither is a default value; assume that it's meant to be that
-            # way and don't try to fix it.
-            common_mountpoint = self.srcdir_mount == self.objdir_mount
-            for (purpose, path, mount) in self.path_mounts:
-                results.append(self.check_disk_8dot3(mount))
-                if common_mountpoint:
-                    break
-        return results
-
-    def check_disk_8dot3(self, path, disk):
-        disk = disk.replace('/', '')
-        try:
-            command = ('fsutil behavior query disable8dot3 ' + disk).split(' ')
-            fsutil_output = subprocess.check_output(command)
-            (volumeLine, systemLine, emptyLine, effectLine, emptyLine2) = fsutil_output.split('\r\n')
-            volume8dot3 = int(volumeLine.partition(':')[2][1])
-            effective8dot3 = int(effectLine.find('disabled') != -1)
-            if volume8dot3 == 1:
-                # Current disk has 8dot3 disabled.
-                status = 'GOOD'
-                desc = '%s has 8dot3 disabled' % disk
-            else:
-                status = 'BAD'
-                desc = '%s has 8dot3 disabled' % disk
-        except subprocess.CalledProcessError:
-            status = 'UNSURE'
-            desc = '%s 8dot3 behavior unknown' % disk
-        return {'status': status, 'desc': desc}
 
     @property
     def fs_lastaccess(self):

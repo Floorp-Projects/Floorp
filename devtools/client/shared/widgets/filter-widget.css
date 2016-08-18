@@ -42,10 +42,6 @@
   border-left: 1px solid var(--theme-splitter-color);
 }
 
-.presets-list .add {
-  margin-top: 4px;
-}
-
 #filter-container:not(.show-presets) .presets-list {
   width: 0;
   border-left: none;
@@ -73,6 +69,7 @@
 .footer {
   display: flex;
   margin: 10px 3px;
+  align-items: center;
 }
 
 .footer :not(button) {

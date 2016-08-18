@@ -45,6 +45,8 @@ Result CheckNameConstraints(Input encodedNameConstraints,
                             const BackCert& firstChild,
                             KeyPurposeId requiredEKUIfPresent);
 
+Result CheckIssuer(Input encodedIssuer);
+
 // ParseValidity and CheckValidity are usually used together.  First you parse
 // the dates from the DER Validity sequence, then you compare them to the time
 // at which you are validating.  They are separate so that the notBefore and

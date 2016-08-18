@@ -150,7 +150,7 @@ var healthReportWrapper = {
   initRemotePage: function () {
     let iframe = document.getElementById("remote-report").contentDocument;
     iframe.addEventListener("RemoteHealthReportCommand",
-                            function onCommand(e) {healthReportWrapper.handleRemoteCommand(e);},
+                            function onCommand(e) { healthReportWrapper.handleRemoteCommand(e); },
                             false);
     healthReportWrapper.updatePrefState();
   },

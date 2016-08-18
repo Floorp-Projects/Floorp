@@ -501,6 +501,37 @@ const JNINativeMethod NativePanZoomController::Natives<Impl>::methods[] = {
 };
 
 template<class Impl>
+class CodecProxy::NativeCallbacks::Natives : public mozilla::jni::NativeImpl<NativeCallbacks, Impl>
+{
+public:
+    static const JNINativeMethod methods[5];
+};
+
+template<class Impl>
+const JNINativeMethod CodecProxy::NativeCallbacks::Natives<Impl>::methods[] = {
+
+    mozilla::jni::MakeNativeMethod<CodecProxy::NativeCallbacks::DisposeNative_t>(
+            mozilla::jni::NativeStub<CodecProxy::NativeCallbacks::DisposeNative_t, Impl>
+            ::template Wrap<&Impl::DisposeNative>),
+
+    mozilla::jni::MakeNativeMethod<CodecProxy::NativeCallbacks::OnError_t>(
+            mozilla::jni::NativeStub<CodecProxy::NativeCallbacks::OnError_t, Impl>
+            ::template Wrap<&Impl::OnError>),
+
+    mozilla::jni::MakeNativeMethod<CodecProxy::NativeCallbacks::OnInputExhausted_t>(
+            mozilla::jni::NativeStub<CodecProxy::NativeCallbacks::OnInputExhausted_t, Impl>
+            ::template Wrap<&Impl::OnInputExhausted>),
+
+    mozilla::jni::MakeNativeMethod<CodecProxy::NativeCallbacks::OnOutput_t>(
+            mozilla::jni::NativeStub<CodecProxy::NativeCallbacks::OnOutput_t, Impl>
+            ::template Wrap<&Impl::OnOutput>),
+
+    mozilla::jni::MakeNativeMethod<CodecProxy::NativeCallbacks::OnOutputFormatChanged_t>(
+            mozilla::jni::NativeStub<CodecProxy::NativeCallbacks::OnOutputFormatChanged_t, Impl>
+            ::template Wrap<&Impl::OnOutputFormatChanged>)
+};
+
+template<class Impl>
 class NativeJSContainer::Natives : public mozilla::jni::NativeImpl<NativeJSContainer, Impl>
 {
 public:

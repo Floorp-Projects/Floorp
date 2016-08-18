@@ -23,9 +23,9 @@ var kTitles = [
 
 // Add pages with varying number of tags
 addPageBook(0, 0, 0, [0]);
-addPageBook(1, 0, 0, [0,1]);
-addPageBook(2, 0, 0, [0,2]);
-addPageBook(3, 0, 0, [0,1,2]);
+addPageBook(1, 0, 0, [0, 1]);
+addPageBook(2, 0, 0, [0, 2]);
+addPageBook(3, 0, 0, [0, 1, 2]);
 
 // Provide for each test: description; search terms; array of gPages indices of
 // pages that should match; optional function to be run before the test
@@ -39,5 +39,5 @@ var gTests = [
   ["3: Multiple tags come in commas for page4",
    "page4", [3]],
   ["4: Extra test just to make sure we match the title",
-   "tag2", [1,3]],
+   "tag2", [1, 3]],
 ];

@@ -30,7 +30,7 @@ add_task(function* invalid_input_throws() {
                 /Invalid GUID found in the sorted children array/);
   Assert.throws(() => PlacesUtils.bookmarks.reorder("123456789012", [ {} ]),
                 /Invalid GUID found in the sorted children array/);
-  Assert.throws(() => PlacesUtils.bookmarks.reorder("123456789012", [ "012345678901" , null ]),
+  Assert.throws(() => PlacesUtils.bookmarks.reorder("123456789012", [ "012345678901", null ]),
                 /Invalid GUID found in the sorted children array/);
 });
 

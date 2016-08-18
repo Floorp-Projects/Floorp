@@ -19,6 +19,7 @@
 #include "nsServiceManagerUtils.h"
 #include "nsStringStream.h"
 #include "PresentationConnectionList.h"
+#include "PresentationLog.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -114,6 +115,9 @@ PresentationConnection::Init()
 void
 PresentationConnection::Shutdown()
 {
+  PRES_DEBUG("connection shutdown:id[%s], role[%d]\n",
+             NS_ConvertUTF16toUTF8(mId).get(), mRole);
+
   nsCOMPtr<nsIPresentationService> service =
     do_GetService(PRESENTATION_SERVICE_CONTRACTID);
   if (NS_WARN_IF(!service)) {
@@ -241,6 +245,10 @@ PresentationConnection::NotifyStateChange(const nsAString& aSessionId,
                                           uint16_t aState,
                                           nsresult aReason)
 {
+  PRES_DEBUG("connection state change:id[%s], state[%x], reason[%x], role[%d]\n",
+             NS_ConvertUTF16toUTF8(aSessionId).get(), aState,
+             aReason, mRole);
+
   if (!aSessionId.Equals(mId)) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -344,6 +352,10 @@ NS_IMETHODIMP
 PresentationConnection::NotifyMessage(const nsAString& aSessionId,
                                       const nsACString& aData)
 {
+  PRES_DEBUG("connection %s:id[%s], data[%s], role[%d]\n", __func__,
+             NS_ConvertUTF16toUTF8(aSessionId).get(),
+             nsPromiseFlatCString(aData).get(), mRole);
+
   if (!aSessionId.Equals(mId)) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -371,6 +383,9 @@ PresentationConnection::NotifyMessage(const nsAString& aSessionId,
 NS_IMETHODIMP
 PresentationConnection::NotifyReplaced()
 {
+  PRES_DEBUG("connection %s:id[%s], role[%d]\n", __func__,
+             NS_ConvertUTF16toUTF8(mId).get(), mRole);
+
   return NotifyStateChange(mId,
                            nsIPresentationSessionListener::STATE_CLOSED,
                            NS_OK);

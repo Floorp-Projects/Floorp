@@ -172,7 +172,7 @@ MediaOmxReader::Shutdown()
   return p;
 }
 
-void MediaOmxReader::ReleaseMediaResources()
+void MediaOmxReader::ReleaseResources()
 {
   mMediaResourceRequest.DisconnectIfExists();
   mMetadataPromise.RejectIfExists(ReadMetadataFailureReason::METADATA_ERROR, __func__);

@@ -43,11 +43,11 @@ function burnCPOW() {
 let gBurnCPOW = null;
 
 function burnContentCPU() {
-  setTimeout(() => {try {
+  setTimeout(() => { try {
     gBurnContentCPU()
   } catch (ex) {
     dump(`test-addon error: ${ex}\n`);
-  }}, 0);
+  } }, 0);
 }
 let gBurnContentCPU = null;
 

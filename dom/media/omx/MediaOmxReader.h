@@ -86,7 +86,7 @@ public:
   bool DecodeAudioData() override;
   bool DecodeVideoFrame(bool &aKeyframeSkip, int64_t aTimeThreshold) override;
 
-  void ReleaseMediaResources() override;
+  void ReleaseResources() override;
 
   RefPtr<MediaDecoderReader::MetadataPromise> AsyncReadMetadata() override;
 

@@ -442,12 +442,6 @@ function waitForClientEvents(aPanel, aEventName, aEventRepeat = 1) {
   return deferred.promise;
 }
 
-function waitForClipboardPromise(setup, expected) {
-  return new Promise((resolve, reject) => {
-    SimpleTest.waitForClipboard(expected, setup, resolve, reject);
-  });
-}
-
 function ensureThreadClientState(aPanel, aState) {
   let thread = aPanel.panelWin.gThreadClient;
   let state = thread.state;

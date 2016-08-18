@@ -363,7 +363,7 @@ Preference.prototype = {
   },
 
   set locked(aValue) {
-    this.branch._prefs[ aValue ? "lockPref" : "unlockPref" ](this.name);
+    this.branch._prefs[aValue ? "lockPref" : "unlockPref"](this.name);
   },
 
   get modified() {

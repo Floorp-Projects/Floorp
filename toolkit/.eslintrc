@@ -6,22 +6,22 @@
     // "arrow-body-style": [2, "as-needed"],
 
     // Require spacing around =>
-    // "arrow-spacing": 2,
+    "arrow-spacing": 2,
 
     // Always require spacing around a single line block
-    // "block-spacing": 1,
+    "block-spacing": 2,
 
     // No newline before open brace for a block
     // "brace-style": 2,
 
     // No space before always a space after a comma
-    // "comma-spacing": [2, {"before": false, "after": true}],
+    "comma-spacing": [2, {"before": false, "after": true}],
 
     // Commas at the end of the line not the start
     // "comma-style": 2,
 
     // Don't require spaces around computed properties
-    // "computed-property-spacing": [2, "never"],
+    "computed-property-spacing": [2, "never"],
 
     // Functions must always return something or nothing
     "consistent-return": 2,

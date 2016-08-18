@@ -141,6 +141,7 @@ pref("browser.sessionhistory.bfcacheIgnoreMemoryPressure", false);
 pref("browser.sessionstore.resume_session_once", false);
 pref("browser.sessionstore.resume_from_crash", true);
 pref("browser.sessionstore.interval", 10000); // milliseconds
+pref("browser.sessionstore.backupInterval", 120000); // milliseconds -> 2 minutes
 pref("browser.sessionstore.max_tabs_undo", 10);
 pref("browser.sessionstore.max_resumed_crashes", 1);
 pref("browser.sessionstore.privacy_level", 0); // saving data: 0 = all, 1 = unencrypted sites, 2 = never
@@ -619,6 +620,8 @@ pref("media.video-queue.default-size", 3);
 // Enable the MediaCodec PlatformDecoderModule by default.
 pref("media.android-media-codec.enabled", true);
 pref("media.android-media-codec.preferred", true);
+// Run decoder in seperate process.
+pref("media.android-remote-codec.enabled", false);
 
 // Enable MSE
 pref("media.mediasource.enabled", true);
@@ -908,7 +911,7 @@ pref("identity.fxaccounts.remote.oauth.uri", "https://oauth.accounts.firefox.com
 pref("identity.sync.tokenserver.uri", "https://token.services.mozilla.com/1.0/sync/1.5");
 
 // Enable Presentation API
-pref("dom.presentation.enabled", true);
+pref("dom.presentation.enabled", false);
 pref("dom.presentation.discovery.enabled", true);
 pref("dom.presentation.discovery.legacy.enabled", true); // for TV 2.5 backward capability
 

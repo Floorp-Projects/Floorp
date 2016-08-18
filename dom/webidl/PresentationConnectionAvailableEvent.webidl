@@ -6,8 +6,7 @@
 
 [Constructor(DOMString type,
              PresentationConnectionAvailableEventInit eventInitDict),
- Pref="dom.presentation.enabled",
- Func="Navigator::HasPresentationSupport"]
+ Pref="dom.presentation.enabled"]
 interface PresentationConnectionAvailableEvent : Event
 {
   [SameObject]

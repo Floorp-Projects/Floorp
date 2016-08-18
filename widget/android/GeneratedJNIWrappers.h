@@ -5749,6 +5749,222 @@ public:
 
 };
 
+class CodecProxy : public mozilla::jni::ObjectBase<CodecProxy>
+{
+public:
+    static const char name[];
+
+    explicit CodecProxy(const Context& ctx) : ObjectBase<CodecProxy>(ctx) {}
+
+    class NativeCallbacks;
+
+    struct Create_t {
+        typedef CodecProxy Owner;
+        typedef CodecProxy::LocalRef ReturnType;
+        typedef CodecProxy::Param SetterType;
+        typedef mozilla::jni::Args<
+                mozilla::jni::Object::Param,
+                mozilla::jni::Object::Param,
+                mozilla::jni::Object::Param> Args;
+        static constexpr char name[] = "create";
+        static constexpr char signature[] =
+                "(Landroid/media/MediaFormat;Landroid/view/Surface;Lorg/mozilla/gecko/media/CodecProxy$Callbacks;)Lorg/mozilla/gecko/media/CodecProxy;";
+        static const bool isStatic = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+        static const mozilla::jni::CallingThread callingThread =
+                mozilla::jni::CallingThread::ANY;
+        static const mozilla::jni::DispatchTarget dispatchTarget =
+                mozilla::jni::DispatchTarget::CURRENT;
+    };
+
+    static auto Create(mozilla::jni::Object::Param, mozilla::jni::Object::Param, mozilla::jni::Object::Param) -> CodecProxy::LocalRef;
+
+    struct Flush_t {
+        typedef CodecProxy Owner;
+        typedef bool ReturnType;
+        typedef bool SetterType;
+        typedef mozilla::jni::Args<> Args;
+        static constexpr char name[] = "flush";
+        static constexpr char signature[] =
+                "()Z";
+        static const bool isStatic = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+        static const mozilla::jni::CallingThread callingThread =
+                mozilla::jni::CallingThread::ANY;
+        static const mozilla::jni::DispatchTarget dispatchTarget =
+                mozilla::jni::DispatchTarget::CURRENT;
+    };
+
+    auto Flush() const -> bool;
+
+    struct Input_t {
+        typedef CodecProxy Owner;
+        typedef bool ReturnType;
+        typedef bool SetterType;
+        typedef mozilla::jni::Args<
+                mozilla::jni::ByteArray::Param,
+                mozilla::jni::Object::Param> Args;
+        static constexpr char name[] = "input";
+        static constexpr char signature[] =
+                "([BLandroid/media/MediaCodec$BufferInfo;)Z";
+        static const bool isStatic = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+        static const mozilla::jni::CallingThread callingThread =
+                mozilla::jni::CallingThread::ANY;
+        static const mozilla::jni::DispatchTarget dispatchTarget =
+                mozilla::jni::DispatchTarget::CURRENT;
+    };
+
+    auto Input(mozilla::jni::ByteArray::Param, mozilla::jni::Object::Param) const -> bool;
+
+    struct Release_t {
+        typedef CodecProxy Owner;
+        typedef bool ReturnType;
+        typedef bool SetterType;
+        typedef mozilla::jni::Args<> Args;
+        static constexpr char name[] = "release";
+        static constexpr char signature[] =
+                "()Z";
+        static const bool isStatic = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+        static const mozilla::jni::CallingThread callingThread =
+                mozilla::jni::CallingThread::ANY;
+        static const mozilla::jni::DispatchTarget dispatchTarget =
+                mozilla::jni::DispatchTarget::CURRENT;
+    };
+
+    auto Release() const -> bool;
+
+    static const mozilla::jni::CallingThread callingThread =
+            mozilla::jni::CallingThread::ANY;
+
+};
+
+class CodecProxy::NativeCallbacks : public mozilla::jni::ObjectBase<NativeCallbacks>
+{
+public:
+    static const char name[];
+
+    explicit NativeCallbacks(const Context& ctx) : ObjectBase<NativeCallbacks>(ctx) {}
+
+    struct New_t {
+        typedef NativeCallbacks Owner;
+        typedef NativeCallbacks::LocalRef ReturnType;
+        typedef NativeCallbacks::Param SetterType;
+        typedef mozilla::jni::Args<> Args;
+        static constexpr char name[] = "<init>";
+        static constexpr char signature[] =
+                "()V";
+        static const bool isStatic = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+        static const mozilla::jni::CallingThread callingThread =
+                mozilla::jni::CallingThread::ANY;
+        static const mozilla::jni::DispatchTarget dispatchTarget =
+                mozilla::jni::DispatchTarget::CURRENT;
+    };
+
+    static auto New() -> NativeCallbacks::LocalRef;
+
+    struct DisposeNative_t {
+        typedef NativeCallbacks Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<> Args;
+        static constexpr char name[] = "disposeNative";
+        static constexpr char signature[] =
+                "()V";
+        static const bool isStatic = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+        static const mozilla::jni::CallingThread callingThread =
+                mozilla::jni::CallingThread::ANY;
+        static const mozilla::jni::DispatchTarget dispatchTarget =
+                mozilla::jni::DispatchTarget::CURRENT;
+    };
+
+    struct OnError_t {
+        typedef NativeCallbacks Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<
+                bool> Args;
+        static constexpr char name[] = "onError";
+        static constexpr char signature[] =
+                "(Z)V";
+        static const bool isStatic = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+        static const mozilla::jni::CallingThread callingThread =
+                mozilla::jni::CallingThread::ANY;
+        static const mozilla::jni::DispatchTarget dispatchTarget =
+                mozilla::jni::DispatchTarget::CURRENT;
+    };
+
+    struct OnInputExhausted_t {
+        typedef NativeCallbacks Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<> Args;
+        static constexpr char name[] = "onInputExhausted";
+        static constexpr char signature[] =
+                "()V";
+        static const bool isStatic = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+        static const mozilla::jni::CallingThread callingThread =
+                mozilla::jni::CallingThread::ANY;
+        static const mozilla::jni::DispatchTarget dispatchTarget =
+                mozilla::jni::DispatchTarget::CURRENT;
+    };
+
+    struct OnOutput_t {
+        typedef NativeCallbacks Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<
+                mozilla::jni::ByteArray::Param,
+                mozilla::jni::Object::Param> Args;
+        static constexpr char name[] = "onOutput";
+        static constexpr char signature[] =
+                "([BLandroid/media/MediaCodec$BufferInfo;)V";
+        static const bool isStatic = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+        static const mozilla::jni::CallingThread callingThread =
+                mozilla::jni::CallingThread::ANY;
+        static const mozilla::jni::DispatchTarget dispatchTarget =
+                mozilla::jni::DispatchTarget::CURRENT;
+    };
+
+    struct OnOutputFormatChanged_t {
+        typedef NativeCallbacks Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<
+                mozilla::jni::Object::Param> Args;
+        static constexpr char name[] = "onOutputFormatChanged";
+        static constexpr char signature[] =
+                "(Landroid/media/MediaFormat;)V";
+        static const bool isStatic = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+        static const mozilla::jni::CallingThread callingThread =
+                mozilla::jni::CallingThread::ANY;
+        static const mozilla::jni::DispatchTarget dispatchTarget =
+                mozilla::jni::DispatchTarget::CURRENT;
+    };
+
+    static const mozilla::jni::CallingThread callingThread =
+            mozilla::jni::CallingThread::ANY;
+
+    template<class Impl> class Natives;
+};
+
 class Restrictions : public mozilla::jni::ObjectBase<Restrictions>
 {
 public:

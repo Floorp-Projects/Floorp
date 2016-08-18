@@ -420,5 +420,13 @@
 #include GcmAndroidManifest_services.xml.in
 #endif
 
+        <service
+            android:name="org.mozilla.gecko.media.CodecManager"
+            android:enabled="true"
+            android:exported="false"
+            android:process=":media"
+            android:isolatedProcess="false">
+        </service>
+
     </application>
 </manifest>
