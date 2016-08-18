@@ -312,12 +312,14 @@ var ExtensionManager;
 // Cu.Sandbox to run the code. There is a separate scope for each
 // frame.
 class ExtensionContext extends BaseContext {
-  constructor(extension, contentWindow, contextOptions = {}) {
-    super(extension);
+  constructor(extensionId, contentWindow, contextOptions = {}) {
+    super(extensionId);
 
     let {isExtensionPage} = contextOptions;
 
     this.isExtensionPage = isExtensionPage;
+    this.extension = ExtensionManager.get(extensionId);
+    this.extensionId = extensionId;
 
     this.setContentWindow(contentWindow);
 
@@ -336,7 +338,7 @@ class ExtensionContext extends BaseContext {
     // copy origin attributes from the content window origin attributes to
     // preserve the user context id. overwrite the addonId.
     let attrs = contentPrincipal.originAttributes;
-    attrs.addonId = this.extensionId;
+    attrs.addonId = extensionId;
     let extensionPrincipal = ssm.createCodebasePrincipal(this.extension.baseURI, attrs);
     Object.defineProperty(this, "principal",
                           {value: extensionPrincipal, enumerable: true, configurable: true});
@@ -350,7 +352,7 @@ class ExtensionContext extends BaseContext {
     }
 
     if (isExtensionPage) {
-      if (ExtensionManagement.getAddonIdForWindow(this.contentWindow) != this.extensionId) {
+      if (ExtensionManagement.getAddonIdForWindow(this.contentWindow) != extensionId) {
         throw new Error("Invalid target window for this extension context");
       }
       // This is an iframe with content script API enabled and its principal should be the
@@ -398,7 +400,7 @@ class ExtensionContext extends BaseContext {
     let sender = {id: this.extension.uuid, frameId, url};
     // Properties in |filter| must match those in the |recipient|
     // parameter of sendMessage.
-    let filter = {extensionId: this.extensionId, frameId};
+    let filter = {extensionId, frameId};
     this.messenger = new Messenger(this, [mm], sender, filter, delegate);
 
     this.chromeObj = Cu.createObjectIn(this.sandbox, {defineAs: "browser"});
@@ -530,11 +532,9 @@ DocumentManager = {
       const {CONTENTSCRIPT_PRIVILEGES} = ExtensionManagement.API_LEVELS;
       let extensionId = ExtensionManagement.getAddonIdForWindow(window);
 
-      if (ExtensionManagement.getAPILevelForWindow(window, extensionId) == CONTENTSCRIPT_PRIVILEGES) {
-        let extension = ExtensionManager.get(extensionId);
-        if (extension) {
-          DocumentManager.getExtensionPageContext(extension, window);
-        }
+      if (ExtensionManagement.getAPILevelForWindow(window, extensionId) == CONTENTSCRIPT_PRIVILEGES &&
+          ExtensionManager.get(extensionId)) {
+        DocumentManager.getExtensionPageContext(extensionId, window);
       }
 
       this.trigger("document_start", window);
@@ -594,7 +594,7 @@ DocumentManager = {
       let script = new Script(extension, options, deferred);
 
       if (script.matches(window)) {
-        let context = this.getContentScriptContext(extension, window);
+        let context = this.getContentScriptContext(extensionId, window);
         context.addScript(script);
         return deferred.promise;
       }
@@ -642,27 +642,27 @@ DocumentManager = {
     return [];
   },
 
-  getContentScriptContext(extension, window) {
+  getContentScriptContext(extensionId, window) {
     let winId = getInnerWindowID(window);
     if (!this.contentScriptWindows.has(winId)) {
       this.contentScriptWindows.set(winId, new Map());
     }
 
     let extensions = this.contentScriptWindows.get(winId);
-    if (!extensions.has(extension.id)) {
-      let context = new ExtensionContext(extension, window);
-      extensions.set(extension.id, context);
+    if (!extensions.has(extensionId)) {
+      let context = new ExtensionContext(extensionId, window);
+      extensions.set(extensionId, context);
     }
 
-    return extensions.get(extension.id);
+    return extensions.get(extensionId);
   },
 
-  getExtensionPageContext(extension, window) {
+  getExtensionPageContext(extensionId, window) {
     let winId = getInnerWindowID(window);
 
     let context = this.extensionPageWindows.get(winId);
     if (!context) {
-      let context = new ExtensionContext(extension, window, {isExtensionPage: true});
+      let context = new ExtensionContext(extensionId, window, {isExtensionPage: true});
       this.extensionPageWindows.set(winId, context);
     }
 
@@ -683,7 +683,7 @@ DocumentManager = {
       for (let window of this.enumerateWindows(global.docShell)) {
         for (let script of extension.scripts) {
           if (script.matches(window)) {
-            let context = this.getContentScriptContext(extension, window);
+            let context = this.getContentScriptContext(extensionId, window);
             context.addScript(script);
           }
         }
@@ -721,10 +721,10 @@ DocumentManager = {
     let state = this.getWindowState(window);
 
     if (state == "document_start") {
-      for (let extension of ExtensionManager.extensions.values()) {
+      for (let [extensionId, extension] of ExtensionManager.extensions) {
         for (let script of extension.scripts) {
           if (script.matches(window)) {
-            let context = this.getContentScriptContext(extension, window);
+            let context = this.getContentScriptContext(extensionId, window);
             context.addScript(script);
           }
         }

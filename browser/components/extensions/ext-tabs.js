@@ -264,8 +264,7 @@ let tabListener = {
   },
 };
 
-extensions.registerSchemaAPI("tabs", context => {
-  let {extension} = context;
+extensions.registerSchemaAPI("tabs", (extension, context) => {
   let self = {
     tabs: {
       onActivated: new WindowEventManager(context, "tabs.onActivated", "TabSelect", (fire, event) => {

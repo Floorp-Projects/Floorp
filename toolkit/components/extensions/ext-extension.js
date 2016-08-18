@@ -1,7 +1,6 @@
 "use strict";
 
-extensions.registerSchemaAPI("extension", context => {
-  let {extension} = context;
+extensions.registerSchemaAPI("extension", (extension, context) => {
   return {
     extension: {
       getURL: function(url) {

@@ -485,8 +485,7 @@ extensions.on("shutdown", (type, extension) => {
 });
 /* eslint-enable mozilla/balanced-listeners */
 
-extensions.registerSchemaAPI("contextMenus", context => {
-  let {extension} = context;
+extensions.registerSchemaAPI("contextMenus", (extension, context) => {
   return {
     contextMenus: {
       create: function(createProperties, callback) {

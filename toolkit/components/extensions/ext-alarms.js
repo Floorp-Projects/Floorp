@@ -93,8 +93,7 @@ extensions.on("shutdown", (type, extension) => {
 });
 /* eslint-enable mozilla/balanced-listeners */
 
-extensions.registerSchemaAPI("alarms", context => {
-  let {extension} = context;
+extensions.registerSchemaAPI("alarms", (extension, context) => {
   return {
     alarms: {
       create: function(name, alarmInfo) {

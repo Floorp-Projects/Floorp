@@ -217,8 +217,7 @@ PageAction.for = extension => {
 
 global.pageActionFor = PageAction.for;
 
-extensions.registerSchemaAPI("pageAction", context => {
-  let {extension} = context;
+extensions.registerSchemaAPI("pageAction", (extension, context) => {
   return {
     pageAction: {
       onClicked: new EventManager(context, "pageAction.onClicked", fire => {

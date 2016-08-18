@@ -187,7 +187,7 @@ var Management = {
 
   // Mash together into a single object all the APIs registered by the
   // functions above. Return the merged object.
-  generateAPIs(context, apis, namespaces = null) {
+  generateAPIs(extension, context, apis, namespaces = null) {
     let obj = {};
 
     // Recursively copy properties from source to dest.
@@ -210,16 +210,16 @@ var Management = {
         continue;
       }
       if (api.permission) {
-        if (!context.extension.hasPermission(api.permission)) {
+        if (!extension.hasPermission(api.permission)) {
           continue;
         }
       }
 
-      api = api.api(context);
+      api = api.api(extension, context);
       copy(obj, api);
     }
 
-    for (let api of context.extension.apis) {
+    for (let api of extension.apis) {
       copy(obj, api.getAPI(context));
     }
 
@@ -254,9 +254,10 @@ var Management = {
 // |incognito| is the content running in a private context (default: false).
 ExtensionContext = class extends BaseContext {
   constructor(extension, params) {
-    super(extension);
+    super(extension.id);
 
     let {type, uri} = params;
+    this.extension = extension;
     this.type = type;
     this.uri = uri || extension.baseURI;
     this.incognito = params.incognito || false;
@@ -334,7 +335,7 @@ class ProxyContext extends ExtensionContext {
     this.principal_ = principal;
 
     this.apiObj = {};
-    GlobalManager.injectInObject(this, null, this.apiObj, ["storage", "test"]);
+    GlobalManager.injectInObject(extension, this, null, this.apiObj, ["storage", "test"]);
 
     this.listenerProxies = new Map();
 
@@ -634,11 +635,11 @@ GlobalManager = {
     return this.extensionMap.get(extensionId);
   },
 
-  injectInObject(context, defaultCallback, dest, namespaces = null) {
-    let api = Management.generateAPIs(context, Management.apis, namespaces);
+  injectInObject(extension, context, defaultCallback, dest, namespaces = null) {
+    let api = Management.generateAPIs(extension, context, Management.apis, namespaces);
     injectAPI(api, dest);
 
-    let schemaApi = Management.generateAPIs(context, Management.schemaApis, namespaces);
+    let schemaApi = Management.generateAPIs(extension, context, Management.schemaApis, namespaces);
 
     // Add in any extra API namespaces which do not have implementations
     // outside of their schema file.
@@ -654,7 +655,7 @@ GlobalManager = {
       },
 
       hasPermission(permission) {
-        return context.extension.hasPermission(permission);
+        return extension.hasPermission(permission);
       },
 
       callFunction(path, name, args) {
@@ -717,14 +718,14 @@ GlobalManager = {
       return;
     }
 
-    let inject = context => {
+    let inject = (extension, context) => {
       // We create two separate sets of bindings, one for the `chrome`
       // global, and one for the `browser` global. The latter returns
       // Promise objects if a callback is not passed, while the former
       // does not.
       let injectObject = (name, defaultCallback) => {
         let browserObj = Cu.createObjectIn(contentWindow, {defineAs: name});
-        this.injectInObject(context, defaultCallback, browserObj);
+        this.injectInObject(extension, context, defaultCallback, browserObj);
       };
 
       injectObject("browser", null);
@@ -773,7 +774,7 @@ GlobalManager = {
     let incognito = PrivateBrowsingUtils.isContentWindowPrivate(contentWindow);
 
     let context = new ExtensionContext(extension, {type, contentWindow, uri, docShell, incognito});
-    inject(context);
+    inject(extension, context);
     if (type == "background") {
       this._initializeBackgroundPage(contentWindow);
     }
