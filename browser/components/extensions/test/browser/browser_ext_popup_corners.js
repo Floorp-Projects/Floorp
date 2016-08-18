@@ -7,6 +7,10 @@ function* awaitPanel(extension, win = window) {
     return event.target.location && event.target.location.href.endsWith("popup.html");
   });
 
+  // Wait for the browser resize code, which is triggered asynchronously by the
+  // load event, to run.
+  yield new Promise(resolve => setTimeout(resolve, 10));
+
   return target.defaultView
                .QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDocShell)
                .chromeEventHandler;
