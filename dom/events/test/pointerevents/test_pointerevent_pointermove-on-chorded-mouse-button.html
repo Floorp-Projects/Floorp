@@ -17,9 +17,19 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1000870
         var iframe = document.getElementById("testFrame");
         iframe.src = "pointerevent_pointermove-on-chorded-mouse-button.html";
       }
+
       function executeTest(int_win) {
-        sendMouseEvent(int_win, "target0", "mousedown");
-        sendMouseEvent(int_win, "target0", "mouseup");
+        var utils = _getDOMWindowUtils(int_win);
+        sendMouseEvent(int_win, "target0", "mousemove", {button:0, buttons:utils.MOUSE_BUTTONS_NO_BUTTON});
+        sendMouseEvent(int_win, "target0", "mousedown", {button:0, buttons:utils.MOUSE_BUTTONS_LEFT_BUTTON});
+        sendMouseEvent(int_win, "target0", "mousemove", {button:0, buttons:utils.MOUSE_BUTTONS_LEFT_BUTTON});
+        sendMouseEvent(int_win, "target0", "mousedown", {button:1, buttons:utils.MOUSE_BUTTONS_LEFT_BUTTON |
+                                                                           utils.MOUSE_BUTTONS_MIDDLE_BUTTON});
+        sendMouseEvent(int_win, "target0", "mousemove", {button:1, buttons:utils.MOUSE_BUTTONS_LEFT_BUTTON |
+                                                                           utils.MOUSE_BUTTONS_MIDDLE_BUTTON});
+        sendMouseEvent(int_win, "target0", "mouseup", {button:1, buttons:utils.MOUSE_BUTTONS_LEFT_BUTTON});
+        sendMouseEvent(int_win, "target0", "mousemove", {button:1, buttons:utils.MOUSE_BUTTONS_LEFT_BUTTON});
+        sendMouseEvent(int_win, "target0", "mouseup", {button:0, buttons:utils.MOUSE_BUTTONS_NO_BUTTON});
       }
     </script>
   </head>
