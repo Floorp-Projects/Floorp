@@ -13,6 +13,8 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "ReaderMode",
   "resource://gre/modules/ReaderMode.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "BrowserUtils",
+  "resource://gre/modules/BrowserUtils.jsm");
 
 var global = this;
 
@@ -772,7 +774,6 @@ var FindBar = {
    * the current content state.
    */
   _canAndShouldFastFind() {
-    let {BrowserUtils} = Cu.import("resource://gre/modules/BrowserUtils.jsm", {});
     let should = false;
     let can = BrowserUtils.canFastFind(content);
     if (can) {
@@ -1430,7 +1431,9 @@ let AutoCompletePopup = {
 
   get input () { return this._input; },
   get overrideValue () { return null; },
-  set selectedIndex (index) { },
+  set selectedIndex (index) {
+    sendAsyncMessage("FormAutoComplete:SetSelectedIndex", { index });
+  },
   get selectedIndex () {
     // selectedIndex getter must be synchronous because we need the
     // correct value when the controller is in controller::HandleEnter.
@@ -1445,12 +1448,17 @@ let AutoCompletePopup = {
   },
 
   openAutocompletePopup: function (input, element) {
-    if (!this._popupOpen) {
-      // The search itself normally opens the popup itself, but in some cases,
-      // nsAutoCompleteController tries to use cached results so notify our
-      // popup to reuse the last results.
-      sendAsyncMessage("FormAutoComplete:MaybeOpenPopup", {});
+    if (this._popupOpen || !input) {
+      return;
     }
+
+    let rect = BrowserUtils.getElementBoundingScreenRect(element);
+    let window = element.ownerDocument.defaultView;
+    let dir = window.getComputedStyle(element).direction;
+    let results = this.getResultsFromController(input);
+
+    sendAsyncMessage("FormAutoComplete:MaybeOpenPopup",
+                     { results, rect, dir });
     this._input = input;
     this._popupOpen = true;
   },
@@ -1461,6 +1469,10 @@ let AutoCompletePopup = {
   },
 
   invalidate: function () {
+    if (this._popupOpen) {
+      let results = this.getResultsFromController(this._input);
+      sendAsyncMessage("FormAutoComplete:Invalidate", { results });
+    }
   },
 
   selectBy: function(reverse, page) {
@@ -1468,6 +1480,31 @@ let AutoCompletePopup = {
       reverse: reverse,
       page: page
     });
+  },
+
+  getResultsFromController(inputField) {
+    let results = [];
+
+    if (!inputField) {
+      return results;
+    }
+
+    let controller = inputField.controller;
+    if (!(controller instanceof Ci.nsIAutoCompleteController)) {
+      return results;
+    }
+
+    for (let i = 0; i < controller.matchCount; ++i) {
+      let result = {};
+      result.value = controller.getValueAt(i);
+      result.label = controller.getLabelAt(i);
+      result.comment = controller.getCommentAt(i);
+      result.style = controller.getStyleAt(i);
+      result.image = controller.getImageAt(i);
+      results.push(result);
+    }
+
+    return results;
   }
 }
 
