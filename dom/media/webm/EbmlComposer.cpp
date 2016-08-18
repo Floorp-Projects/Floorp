@@ -10,7 +10,6 @@
 #include "libmkv/EbmlWriter.h"
 #include "libmkv/WebMElement.h"
 #include "prtime.h"
-#include "limits.h"
 
 namespace mozilla {
 
@@ -125,47 +124,33 @@ EbmlComposer::WriteSimpleBlock(EncodedFrame* aFrame)
   ebml.offset = 0;
 
   auto frameType = aFrame->GetFrameType();
-  bool flush = false;
   bool isVP8IFrame = (frameType == EncodedFrame::FrameType::VP8_I_FRAME);
   if (isVP8IFrame) {
     FinishCluster();
-    flush = true;
-  } else {
-    // Force it to calculate timecode using signed math via cast
-    int64_t timeCode = (aFrame->GetTimeStamp() / ((int) PR_USEC_PER_MSEC) - mClusterTimecode) +
-                       (mCodecDelay / PR_NSEC_PER_MSEC);
-    if (timeCode < SHRT_MIN || timeCode > SHRT_MAX ) {
-      // We're probably going to overflow (or underflow) the timeCode value later!
-      FinishCluster();
-      flush = true;
-    }
   }
 
   auto block = mClusterBuffs.AppendElement();
   block->SetLength(aFrame->GetFrameData().Length() + DEFAULT_HEADER_SIZE);
   ebml.buf = block->Elements();
 
-  if (flush) {
+  if (isVP8IFrame) {
     EbmlLoc ebmlLoc;
     Ebml_StartSubElement(&ebml, &ebmlLoc, Cluster);
     MOZ_ASSERT(mClusterBuffs.Length() > 0);
     // current cluster header array index
     mClusterHeaderIndex = mClusterBuffs.Length() - 1;
     mClusterLengthLoc = ebmlLoc.offset;
-    // if timeCode didn't under/overflow before, it shouldn't after this
     mClusterTimecode = aFrame->GetTimeStamp() / PR_USEC_PER_MSEC;
     Ebml_SerializeUnsigned(&ebml, Timecode, mClusterTimecode);
     mFlushState |= FLUSH_CLUSTER;
   }
 
   bool isOpus = (frameType == EncodedFrame::FrameType::OPUS_AUDIO_FRAME);
-  // Can't underflow/overflow now
-  int64_t timeCode = aFrame->GetTimeStamp() / ((int) PR_USEC_PER_MSEC) - mClusterTimecode;
+  short timeCode = aFrame->GetTimeStamp() / PR_USEC_PER_MSEC - mClusterTimecode;
   if (isOpus) {
     timeCode += mCodecDelay / PR_NSEC_PER_MSEC;
   }
-  MOZ_ASSERT(timeCode >= SHRT_MIN && timeCode <= SHRT_MAX);
-  writeSimpleBlock(&ebml, isOpus ? 0x2 : 0x1, static_cast<short>(timeCode), isVP8IFrame,
+  writeSimpleBlock(&ebml, isOpus ? 0x2 : 0x1, timeCode, isVP8IFrame,
                    0, 0, (unsigned char*)aFrame->GetFrameData().Elements(),
                    aFrame->GetFrameData().Length());
   MOZ_ASSERT(ebml.offset <= DEFAULT_HEADER_SIZE +
