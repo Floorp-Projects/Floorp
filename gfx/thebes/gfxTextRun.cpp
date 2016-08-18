@@ -3077,16 +3077,12 @@ gfxFontGroup::UpdateUserFonts()
     if (mCurrGeneration < GetRebuildGeneration()) {
         // fonts in userfont set changed, need to redo the fontlist
         mFonts.Clear();
-        mUnderlineOffset = UNDERLINE_OFFSET_NOT_SET;
-        mSkipDrawing = false;
+        ClearCachedData();
         BuildFontList();
         mCurrGeneration = GetGeneration();
-        mCachedEllipsisTextRun = nullptr;
     } else if (mCurrGeneration != GetGeneration()) {
         // load state change occurred, verify load state and validity of fonts
-        mSkipDrawing = false;
-        mUnderlineOffset = UNDERLINE_OFFSET_NOT_SET;
-        mCachedEllipsisTextRun = nullptr;
+        ClearCachedData();
 
         uint32_t len = mFonts.Length();
         for (uint32_t i = 0; i < len; i++) {
