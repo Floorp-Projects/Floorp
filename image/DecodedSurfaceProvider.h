@@ -42,7 +42,7 @@ public:
   size_t LogicalSizeInBytes() const override;
 
 protected:
-  DrawableFrameRef DrawableRef() override;
+  DrawableFrameRef DrawableRef(size_t aFrame) override;
   bool IsLocked() const override { return bool(mLockRef); }
   void SetLocked(bool aLocked) override;
 
