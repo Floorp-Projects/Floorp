@@ -240,7 +240,7 @@ IDBTransaction::Create(JSContext* aCx, IDBDatabase* aDatabase,
     workerPrivate->AssertIsOnWorkerThread();
 
     transaction->mWorkerHolder = new WorkerHolder(workerPrivate, transaction);
-    MOZ_ALWAYS_TRUE(transaction->mWorkerHolder->HoldWorker(workerPrivate, Canceling));
+    MOZ_ALWAYS_TRUE(transaction->mWorkerHolder->HoldWorker(workerPrivate));
   }
 
   return transaction.forget();

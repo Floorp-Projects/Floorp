@@ -2098,7 +2098,7 @@ LoadAllScripts(WorkerPrivate* aWorkerPrivate,
 
   ScriptLoaderHolder workerHolder(loader);
 
-  if (NS_WARN_IF(!workerHolder.HoldWorker(aWorkerPrivate, Terminating))) {
+  if (NS_WARN_IF(!workerHolder.HoldWorker(aWorkerPrivate))) {
     aRv.Throw(NS_ERROR_FAILURE);
     return;
   }

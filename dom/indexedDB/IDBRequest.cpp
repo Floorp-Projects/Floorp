@@ -575,7 +575,7 @@ IDBOpenDBRequest::CreateForJS(JSContext* aCx,
     workerPrivate->AssertIsOnWorkerThread();
 
     nsAutoPtr<WorkerHolder> workerHolder(new WorkerHolder(workerPrivate));
-    if (NS_WARN_IF(!workerHolder->HoldWorker(workerPrivate, Canceling))) {
+    if (NS_WARN_IF(!workerHolder->HoldWorker(workerPrivate))) {
       workerHolder->NoteAddWorkerHolderFailed();
       return nullptr;
     }

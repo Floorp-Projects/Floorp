@@ -223,7 +223,7 @@ ServiceWorkerRegistrationInfo::TryToActivate()
   AssertIsOnMainThread();
   bool controlling = IsControllingDocuments();
   bool skipWaiting = mWaitingWorker && mWaitingWorker->SkipWaitingFlag();
-  bool idle = IsIdle();
+  bool idle = !mActiveWorker || mActiveWorker->WorkerPrivate()->IsIdle();
   if (idle && (!controlling || skipWaiting)) {
     Activate();
   }
@@ -517,12 +517,6 @@ ServiceWorkerRegistrationInfo::TransitionWaitingToActive()
   mActiveWorker->UpdateState(ServiceWorkerState::Activating);
   NotifyListenersOnChange(WhichServiceWorker::WAITING_WORKER |
                           WhichServiceWorker::ACTIVE_WORKER);
-}
-
-bool
-ServiceWorkerRegistrationInfo::IsIdle() const
-{
-  return !mActiveWorker || mActiveWorker->WorkerPrivate()->IsIdle();
 }
 
 END_WORKERS_NAMESPACE

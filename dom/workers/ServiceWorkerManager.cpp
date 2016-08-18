@@ -696,12 +696,6 @@ public:
     }
 
     for (uint32_t i = 0; i < data->mOrderedScopes.Length(); ++i) {
-      RefPtr<ServiceWorkerRegistrationInfo> info =
-        data->mInfos.GetWeak(data->mOrderedScopes[i]);
-      if (info->mPendingUninstall) {
-        continue;
-      }
-
       NS_ConvertUTF8toUTF16 scope(data->mOrderedScopes[i]);
 
       nsCOMPtr<nsIURI> scopeURI;
@@ -1310,16 +1304,9 @@ ServiceWorkerManager::WorkerIsIdle(ServiceWorkerInfo* aWorker)
     return;
   }
 
-  if (reg->GetActive() != aWorker) {
-    return;
+  if (reg->GetActive() == aWorker) {
+    reg->TryToActivateAsync();
   }
-
-  if (!reg->IsControllingDocuments() && reg->mPendingUninstall) {
-    RemoveRegistration(reg);
-    return;
-  }
-
-  reg->TryToActivateAsync();
 }
 
 already_AddRefed<ServiceWorkerJobQueue>
@@ -2014,20 +2001,17 @@ void
 ServiceWorkerManager::StopControllingADocument(ServiceWorkerRegistrationInfo* aRegistration)
 {
   aRegistration->StopControllingADocument();
-  if (aRegistration->IsControllingDocuments() || !aRegistration->IsIdle()) {
-    return;
+  if (!aRegistration->IsControllingDocuments()) {
+    if (aRegistration->mPendingUninstall) {
+      RemoveRegistration(aRegistration);
+    } else {
+      // We use to aggressively terminate the worker at this point, but it
+      // caused problems.  There are more uses for a service worker than actively
+      // controlled documents.  We need to let the worker naturally terminate
+      // in case its handling push events, message events, etc.
+      aRegistration->TryToActivateAsync();
+    }
   }
-
-  if (aRegistration->mPendingUninstall) {
-    RemoveRegistration(aRegistration);
-    return;
-  }
-
-  // We use to aggressively terminate the worker at this point, but it
-  // caused problems.  There are more uses for a service worker than actively
-  // controlled documents.  We need to let the worker naturally terminate
-  // in case its handling push events, message events, etc.
-  aRegistration->TryToActivateAsync();
 }
 
 NS_IMETHODIMP

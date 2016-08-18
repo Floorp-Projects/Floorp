@@ -171,10 +171,6 @@ public:
   // worker is updated to the Activating state.
   void
   TransitionWaitingToActive();
-
-  // Determine if the registration is actively performing work.
-  bool
-  IsIdle() const;
 };
 
 } // namespace workers

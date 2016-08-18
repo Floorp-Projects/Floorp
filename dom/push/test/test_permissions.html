@@ -36,7 +36,6 @@ http://creativecommons.org/licenses/publicdomain/
 
     var url = "worker.js" + "?" + Math.random();
     registration = yield navigator.serviceWorker.register(url, {scope: "."});
-    yield waitForActive(registration);
   });
 
   add_task(function* denySubscribe() {

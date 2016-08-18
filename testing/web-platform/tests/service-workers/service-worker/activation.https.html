@@ -145,35 +145,4 @@ promise_test(t => {
           assert_equals(registration.active, new_worker);
         });
   }, 'skipWaiting bypasses no controllee requirement');
-
-// This test is not really about activation, but otherwise is very
-// similar to the other tests here.
-promise_test(t => {
-    var scope = 'resources/unregister';
-    var worker_url = 'resources/mint-new-worker.py';
-    var registration;
-    var iframe;
-    var new_worker;
-    return setup_activation_test(t, scope, worker_url)
-      .then(result => {
-          registration = result.registration;
-          iframe = result.iframe;
-          // Remove the iframe.
-          iframe.remove();
-          return registration.unregister();
-        })
-      .then(() => {
-          // The unregister operation should wait for the active worker to
-          // finish processing its events before clearing the registration.
-          new_worker = registration.waiting;
-          var reached_redundant = wait_for_state(t, new_worker, 'redundant');
-          registration.active.postMessage('go');
-          return reached_redundant;
-        })
-      .then(() => {
-          assert_equals(registration.installing, null);
-          assert_equals(registration.waiting, null);
-          assert_equals(registration.active, null);
-        });
-  }, 'finishing a request triggers unregister');
 </script>
