@@ -210,25 +210,6 @@ Java_org_mozilla_gecko_GeckoAppShell_nativeNotifyObservers(JNIEnv * arg0, jclass
 
 #ifdef JNI_STUBS
 
-typedef jlong (*Java_org_mozilla_gecko_GeckoAppShell_runUiThreadCallback_t)(JNIEnv *, jclass);
-static Java_org_mozilla_gecko_GeckoAppShell_runUiThreadCallback_t f_Java_org_mozilla_gecko_GeckoAppShell_runUiThreadCallback;
-extern "C" NS_EXPORT jlong MOZ_JNICALL
-Java_org_mozilla_gecko_GeckoAppShell_runUiThreadCallback(JNIEnv * arg0, jclass arg1) {
-    if (!f_Java_org_mozilla_gecko_GeckoAppShell_runUiThreadCallback) {
-        arg0->ThrowNew(arg0->FindClass("java/lang/UnsupportedOperationException"),
-                       "JNI Function called before it was loaded");
-        return 0;
-    }
-    return f_Java_org_mozilla_gecko_GeckoAppShell_runUiThreadCallback(arg0, arg1);
-}
-#endif
-
-#ifdef JNI_BINDINGS
-  xul_dlsym("Java_org_mozilla_gecko_GeckoAppShell_runUiThreadCallback", &f_Java_org_mozilla_gecko_GeckoAppShell_runUiThreadCallback);
-#endif
-
-#ifdef JNI_STUBS
-
 typedef void (*Java_org_mozilla_gecko_GeckoAppShell_onSensorChanged_t)(JNIEnv *, jclass, jint, jfloat, jfloat, jfloat, jfloat, jint, jlong);
 static Java_org_mozilla_gecko_GeckoAppShell_onSensorChanged_t f_Java_org_mozilla_gecko_GeckoAppShell_onSensorChanged;
 extern "C" NS_EXPORT void MOZ_JNICALL

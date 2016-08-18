@@ -49,16 +49,6 @@ extern "C" {
 /*
  * Incoming JNI methods
  */
-NS_EXPORT jlong JNICALL
-Java_org_mozilla_gecko_GeckoAppShell_runUiThreadCallback(JNIEnv* env, jclass)
-{
-    if (!AndroidBridge::Bridge()) {
-        return -1;
-    }
-
-    return AndroidBridge::Bridge()->RunDelayedUiThreadTasks();
-}
-
 NS_EXPORT void JNICALL
 Java_org_mozilla_gecko_GeckoAppShell_reportJavaCrash(JNIEnv *jenv, jclass, jstring jStackTrace)
 {

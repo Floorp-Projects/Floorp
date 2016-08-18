@@ -198,6 +198,15 @@ public:
                 category.get(),
                 aData ? aData->ToString().get() : nullptr);
     }
+
+    static int64_t RunUiThreadCallback()
+    {
+        if (!AndroidBridge::Bridge()) {
+            return -1;
+        }
+
+        return AndroidBridge::Bridge()->RunDelayedUiThreadTasks();
+    }
 };
 
 uint32_t GeckoThreadSupport::sPauseCount;
