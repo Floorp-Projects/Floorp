@@ -26,9 +26,6 @@ const PREF_APP_UPDATE_BACKGROUNDMAXERRORS  = "app.update.backgroundMaxErrors";
 const PREF_APP_UPDATE_CANCELATIONS         = "app.update.cancelations";
 const PREF_APP_UPDATE_CANCELATIONS_OSX     = "app.update.cancelations.osx";
 const PREF_APP_UPDATE_CANCELATIONS_OSX_MAX = "app.update.cancelations.osx.max";
-const PREF_APP_UPDATE_CERT_CHECKATTRIBUTES = "app.update.cert.checkAttributes";
-const PREF_APP_UPDATE_CERT_ERRORS          = "app.update.cert.errors";
-const PREF_APP_UPDATE_CERT_MAXERRORS       = "app.update.cert.maxErrors";
 const PREF_APP_UPDATE_CERT_REQUIREBUILTIN  = "app.update.cert.requireBuiltIn";
 const PREF_APP_UPDATE_ELEVATE_NEVER        = "app.update.elevate.never";
 const PREF_APP_UPDATE_ELEVATE_VERSION      = "app.update.elevate.version";
@@ -50,7 +47,6 @@ const PREF_APP_UPDATE_URL                  = "app.update.url";
 const PREF_APP_UPDATE_URL_DETAILS          = "app.update.url.details";
 const PREF_APP_UPDATE_URL_OVERRIDE         = "app.update.url.override";
 
-const PREFBRANCH_APP_UPDATE_CERTS = "app.update.certs.";
 const PREFBRANCH_APP_UPDATE_NEVER = "app.update.never.";
 
 const URI_BRAND_PROPERTIES      = "chrome://branding/locale/brand.properties";
@@ -163,8 +159,6 @@ const INVALID_UPDATER_STATE_CODE           = 98;
 const INVALID_UPDATER_STATUS_CODE          = 99;
 
 // Custom update error codes
-const CERT_ATTR_CHECK_FAILED_NO_UPDATE  = 100;
-const CERT_ATTR_CHECK_FAILED_HAS_UPDATE = 101;
 const BACKGROUNDCHECK_MULTIPLE_FAILURES = 110;
 const NETWORK_ERROR_OFFLINE             = 111;
 
@@ -2237,8 +2231,6 @@ UpdateService.prototype = {
     LOG("UpdateService:onError - error during background update. error code: " +
         update.errorCode + ", status text: " + update.statusText);
 
-    var maxErrors;
-    var errCount;
     if (update.errorCode == NETWORK_ERROR_OFFLINE) {
       // Register an online observer to try again
       this._registerOnlineObserver();
@@ -2248,52 +2240,23 @@ UpdateService.prototype = {
       return;
     }
 
-    if (update.errorCode == CERT_ATTR_CHECK_FAILED_NO_UPDATE ||
-        update.errorCode == CERT_ATTR_CHECK_FAILED_HAS_UPDATE) {
-      errCount = getPref("getIntPref", PREF_APP_UPDATE_CERT_ERRORS, 0);
-      errCount++;
-      Services.prefs.setIntPref(PREF_APP_UPDATE_CERT_ERRORS, errCount);
-      maxErrors = getPref("getIntPref", PREF_APP_UPDATE_CERT_MAXERRORS, 5);
-    } else {
-      // Send the actual error code to telemetry
-      AUSTLMY.pingCheckExError(this._pingSuffix, update.errorCode);
-      update.errorCode = BACKGROUNDCHECK_MULTIPLE_FAILURES;
-      errCount = getPref("getIntPref", PREF_APP_UPDATE_BACKGROUNDERRORS, 0);
-      errCount++;
-      Services.prefs.setIntPref(PREF_APP_UPDATE_BACKGROUNDERRORS, errCount);
-      maxErrors = getPref("getIntPref", PREF_APP_UPDATE_BACKGROUNDMAXERRORS,
-                          10);
-    }
+    // Send the error code to telemetry
+    AUSTLMY.pingCheckExError(this._pingSuffix, update.errorCode);
+    update.errorCode = BACKGROUNDCHECK_MULTIPLE_FAILURES;
+    let errCount = getPref("getIntPref", PREF_APP_UPDATE_BACKGROUNDERRORS, 0);
+    errCount++;
+    Services.prefs.setIntPref(PREF_APP_UPDATE_BACKGROUNDERRORS, errCount);
+    let maxErrors = getPref("getIntPref", PREF_APP_UPDATE_BACKGROUNDMAXERRORS,
+                            10);
 
-    let checkCode;
     if (errCount >= maxErrors) {
       let prompter = Cc["@mozilla.org/updates/update-prompt;1"].
                      createInstance(Ci.nsIUpdatePrompt);
       prompter.showUpdateError(update);
-
-      switch (update.errorCode) {
-        case CERT_ATTR_CHECK_FAILED_NO_UPDATE:
-          checkCode = AUSTLMY.CHK_CERT_ATTR_NO_UPDATE_PROMPT;
-          break;
-        case CERT_ATTR_CHECK_FAILED_HAS_UPDATE:
-          checkCode = AUSTLMY.CHK_CERT_ATTR_WITH_UPDATE_PROMPT;
-          break;
-        default:
-          checkCode = AUSTLMY.CHK_GENERAL_ERROR_PROMPT;
-      }
+      AUSTLMY.pingCheckCode(this._pingSuffix, AUSTLMY.CHK_GENERAL_ERROR_PROMPT);
     } else {
-      switch (update.errorCode) {
-        case CERT_ATTR_CHECK_FAILED_NO_UPDATE:
-          checkCode = AUSTLMY.CHK_CERT_ATTR_NO_UPDATE_SILENT;
-          break;
-        case CERT_ATTR_CHECK_FAILED_HAS_UPDATE:
-          checkCode = AUSTLMY.CHK_CERT_ATTR_WITH_UPDATE_SILENT;
-          break;
-        default:
-          checkCode = AUSTLMY.CHK_GENERAL_ERROR_SILENT;
-      }
+      AUSTLMY.pingCheckCode(this._pingSuffix, AUSTLMY.CHK_GENERAL_ERROR_SILENT);
     }
-    AUSTLMY.pingCheckCode(this._pingSuffix, checkCode);
   },
 
   /**
@@ -3497,31 +3460,18 @@ Checker.prototype = {
   onLoad: function UC_onLoad(event) {
     LOG("Checker:onLoad - request completed downloading document");
 
-    var prefs = Services.prefs;
-    var certs = null;
-    if (!getPref("getCharPref", PREF_APP_UPDATE_URL_OVERRIDE, null) &&
-        getPref("getBoolPref", PREF_APP_UPDATE_CERT_CHECKATTRIBUTES, true)) {
-      certs = gCertUtils.readCertPrefs(PREFBRANCH_APP_UPDATE_CERTS);
-    }
-
     try {
       // Analyze the resulting DOM and determine the set of updates.
       var updates = this._updates;
       LOG("Checker:onLoad - number of updates available: " + updates.length);
-      var allowNonBuiltIn = !getPref("getBoolPref",
-                                     PREF_APP_UPDATE_CERT_REQUIREBUILTIN, true);
-      gCertUtils.checkCert(this._request.channel, allowNonBuiltIn, certs);
 
-      if (Services.prefs.prefHasUserValue(PREF_APP_UPDATE_CERT_ERRORS))
-        Services.prefs.clearUserPref(PREF_APP_UPDATE_CERT_ERRORS);
-
-      if (Services.prefs.prefHasUserValue(PREF_APP_UPDATE_BACKGROUNDERRORS))
+      if (Services.prefs.prefHasUserValue(PREF_APP_UPDATE_BACKGROUNDERRORS)) {
         Services.prefs.clearUserPref(PREF_APP_UPDATE_BACKGROUNDERRORS);
+      }
 
       // Tell the callback about the updates
       this._callback.onCheckComplete(event.target, updates, updates.length);
-    }
-    catch (e) {
+    } catch (e) {
       LOG("Checker:onLoad - there was a problem checking for updates. " +
           "Exception: " + e);
       var request = event.target;
@@ -3533,10 +3483,6 @@ Checker.prototype = {
 
       if (this._isHttpStatusCode(status)) {
         update.errorCode = HTTP_ERROR_OFFSET + status;
-      }
-      if (e.result && e.result == Cr.NS_ERROR_ILLEGAL_VALUE) {
-        update.errorCode = updates[0] ? CERT_ATTR_CHECK_FAILED_HAS_UPDATE
-                                      : CERT_ATTR_CHECK_FAILED_NO_UPDATE;
       }
 
       this._callback.onError(request, update);
@@ -4492,9 +4438,7 @@ UpdatePrompt.prototype = {
       return;
     }
 
-    if (update.errorCode == CERT_ATTR_CHECK_FAILED_NO_UPDATE ||
-        update.errorCode == CERT_ATTR_CHECK_FAILED_HAS_UPDATE ||
-        update.errorCode == BACKGROUNDCHECK_MULTIPLE_FAILURES) {
+    if (update.errorCode == BACKGROUNDCHECK_MULTIPLE_FAILURES) {
       this._showUIWhenIdle(null, URI_UPDATE_PROMPT_DIALOG, null,
                            UPDATE_WINDOW_NAME, null, update);
       return;
