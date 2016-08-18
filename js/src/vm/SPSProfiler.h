@@ -15,7 +15,7 @@
 #include "jsscript.h"
 
 #include "js/ProfilingStack.h"
-#include "threading/LockGuard.h"
+#include "threading/ExclusiveData.h"
 #include "threading/Mutex.h"
 
 /*
@@ -121,13 +121,12 @@ class SPSProfiler
     friend class SPSBaselineOSRMarker;
 
     JSRuntime*           rt;
-    ProfileStringMap     strings;
+    ExclusiveData<ProfileStringMap> strings;
     ProfileEntry*        stack_;
     uint32_t*            size_;
     uint32_t             max_;
     bool                 slowAssertions;
     uint32_t             enabled_;
-    js::Mutex            lock_;
     void                (*eventMarker_)(const char*);
 
     const char* allocProfileString(JSScript* script, JSFunction* function);
@@ -233,15 +232,13 @@ class MOZ_RAII AutoSuppressProfilerSampling
 inline size_t
 SPSProfiler::stringsCount()
 {
-    LockGuard<Mutex> lock(lock_);
-    return strings.count();
+    return strings.lock()->count();
 }
 
 inline void
 SPSProfiler::stringsReset()
 {
-    LockGuard<Mutex> lock(lock_);
-    strings.clear();
+    strings.lock()->clear();
 }
 
 /*
