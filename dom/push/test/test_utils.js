@@ -227,3 +227,19 @@ function sendRequestToWorker(request) {
     });
   });
 }
+
+function waitForActive(swr) {
+  let sw = swr.installing || swr.waiting || swr.active;
+  return new Promise(resolve => {
+    if (sw.state === 'activated') {
+      resolve(swr);
+      return;
+    }
+    sw.addEventListener('statechange', function onStateChange(evt) {
+      if (sw.state === 'activated') {
+        sw.removeEventListener('statechange', onStateChange);
+        resolve(swr);
+      }
+    });
+  });
+}
