@@ -119,6 +119,12 @@ XPCCallContext::GetSet() const
     return mSet;
 }
 
+inline bool
+XPCCallContext::CanGetInterface() const
+{
+    return mState >= HAVE_NAME;
+}
+
 inline XPCNativeInterface*
 XPCCallContext::GetInterface() const
 {
@@ -315,7 +321,7 @@ XPCNativeSet::FindMember(jsid name, XPCNativeMember** pMember,
 
 inline bool
 XPCNativeSet::FindMember(jsid name, XPCNativeMember** pMember,
-                         RefPtr<XPCNativeInterface>* pInterface) const
+                         XPCNativeInterface** pInterface) const
 {
     uint16_t index;
     if (!FindMember(name, pMember, &index))
@@ -327,18 +333,19 @@ XPCNativeSet::FindMember(jsid name, XPCNativeMember** pMember,
 inline bool
 XPCNativeSet::FindMember(jsid name,
                          XPCNativeMember** pMember,
-                         RefPtr<XPCNativeInterface>* pInterface,
+                         XPCNativeInterface** pInterface,
                          XPCNativeSet* protoSet,
                          bool* pIsLocal) const
 {
     XPCNativeMember* Member;
-    RefPtr<XPCNativeInterface> Interface;
+    XPCNativeInterface* Interface;
     XPCNativeMember* protoMember;
 
     if (!FindMember(name, &Member, &Interface))
         return false;
 
     *pMember = Member;
+    *pInterface = Interface;
 
     *pIsLocal =
         !Member ||
@@ -347,8 +354,6 @@ XPCNativeSet::FindMember(jsid name,
          !protoSet->MatchesSetUpToInterface(this, Interface) &&
          (!protoSet->FindMember(name, &protoMember, (uint16_t*)nullptr) ||
           protoMember != Member));
-
-    *pInterface = Interface.forget();
 
     return true;
 }
@@ -436,13 +441,26 @@ XPCNativeSet::MatchesSetUpToInterface(const XPCNativeSet* other,
 
 inline void XPCNativeSet::Mark()
 {
-    mMarked = 1;
+    if (IsMarked())
+        return;
+
+    XPCNativeInterface* const * pp = mInterfaces;
+
+    for (int i = (int) mInterfaceCount; i > 0; i--, pp++)
+        (*pp)->Mark();
+
+    MarkSelfOnly();
 }
 
 #ifdef DEBUG
 inline void XPCNativeSet::ASSERT_NotMarked()
 {
     MOZ_ASSERT(!IsMarked(), "bad");
+
+    XPCNativeInterface* const * pp = mInterfaces;
+
+    for (int i = (int) mInterfaceCount; i > 0; i--, pp++)
+        MOZ_ASSERT(!(*pp)->IsMarked(), "bad");
 }
 #endif
 
