@@ -286,6 +286,11 @@ MainThreadHandoff::OnWalkInterface(REFIID aIid, PVOID* aInterface,
   STAUniquePtr<IUnknown> origInterface(static_cast<IUnknown*>(*aInterface));
   *aInterface = nullptr;
 
+  if (!origInterface) {
+    // Nothing to wrap.
+    return S_OK;
+  }
+
   // First make sure that aInterface isn't a proxy - we don't want to wrap
   // those.
   if (IsProxy(origInterface.get())) {
@@ -296,6 +301,7 @@ MainThreadHandoff::OnWalkInterface(REFIID aIid, PVOID* aInterface,
   RefPtr<IInterceptor> interceptor;
   HRESULT hr = mInterceptor->Resolve(IID_IInterceptor,
                                      (void**) getter_AddRefs(interceptor));
+  MOZ_ASSERT(SUCCEEDED(hr));
   if (FAILED(hr)) {
     return hr;
   }
@@ -329,6 +335,7 @@ MainThreadHandoff::OnWalkInterface(REFIID aIid, PVOID* aInterface,
       // target object. Let's just use the existing one.
       void* intercepted = nullptr;
       hr = interceptor->GetInterceptorForIID(aIid, &intercepted);
+      MOZ_ASSERT(SUCCEEDED(hr));
       if (FAILED(hr)) {
         return hr;
       }
@@ -340,12 +347,14 @@ MainThreadHandoff::OnWalkInterface(REFIID aIid, PVOID* aInterface,
   // Now create a new MainThreadHandoff wrapper...
   RefPtr<IInterceptorSink> handoff;
   hr = MainThreadHandoff::Create(getter_AddRefs(handoff));
+  MOZ_ASSERT(SUCCEEDED(hr));
   if (FAILED(hr)) {
     return hr;
   }
 
   RefPtr<IUnknown> wrapped;
   hr = Interceptor::Create(origInterface, handoff, aIid, getter_AddRefs(wrapped));
+  MOZ_ASSERT(SUCCEEDED(hr));
   if (FAILED(hr)) {
     return hr;
   }
