@@ -1930,8 +1930,14 @@ WebConsoleFrame.prototype = {
   handleTabNavigated: function (event, packet) {
     if (event == "will-navigate") {
       if (this.persistLog) {
-        let marker = new Messages.NavigationMarker(packet, Date.now());
-        this.output.addMessage(marker);
+        if (this.NEW_CONSOLE_OUTPUT_ENABLED) {
+          // Add a _type to hit convertCachedPacket.
+          packet._type = true;
+          this.newConsoleOutput.dispatchMessageAdd(packet);
+        } else {
+          let marker = new Messages.NavigationMarker(packet, Date.now());
+          this.output.addMessage(marker);
+        }
       } else {
         this.jsterm.clearOutput();
       }
