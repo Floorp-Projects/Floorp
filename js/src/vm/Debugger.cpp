@@ -4845,7 +4845,7 @@ Debugger::setupTraceLogger(JSContext* cx, unsigned argc, Value* vp)
 
         uint32_t textId = TLStringToTextId(linear);
 
-        if (!TLTextIdIsToggable(textId)) {
+        if (!TLTextIdIsTogglable(textId)) {
             args.rval().setBoolean(false);
             return true;
         }
