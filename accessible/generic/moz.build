@@ -28,21 +28,13 @@ UNIFIED_SOURCES += [
 LOCAL_INCLUDES += [
     '/accessible/base',
     '/accessible/html',
+    '/accessible/ipc',
     '/accessible/xpcom',
     '/accessible/xul',
     '/dom/base',
     '/layout/generic',
     '/layout/xul',
 ]
-
-if CONFIG['OS_ARCH'] == 'WINNT':
-    LOCAL_INCLUDES += [
-        '/accessible/ipc/win',
-    ]
-else:
-    LOCAL_INCLUDES += [
-        '/accessible/ipc/other',
-    ]
 
 if 'gtk' in CONFIG['MOZ_WIDGET_TOOLKIT']:
     LOCAL_INCLUDES += [

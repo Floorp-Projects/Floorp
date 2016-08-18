@@ -7,7 +7,6 @@
 #include "DocAccessibleWrap.h"
 
 #include "Compatibility.h"
-#include "DocAccessibleChild.h"
 #include "nsWinUtils.h"
 #include "mozilla/dom/TabChild.h"
 #include "Role.h"
@@ -43,31 +42,6 @@ IMPL_IUNKNOWN_QUERY_HEAD(DocAccessibleWrap)
     return S_OK;
   }
 IMPL_IUNKNOWN_QUERY_TAIL_INHERITED(HyperTextAccessibleWrap)
-
-STDMETHODIMP
-DocAccessibleWrap::get_accParent(
-      /* [retval][out] */ IDispatch __RPC_FAR *__RPC_FAR *ppdispParent)
-{
-  HRESULT hr = DocAccessible::get_accParent(ppdispParent);
-  if (*ppdispParent) {
-    return hr;
-  }
-
-  // We might be a top-level document in a content process.
-  DocAccessibleChild* ipcDoc = IPCDoc();
-  if (!ipcDoc) {
-    return S_FALSE;
-  }
-  IAccessible* dispParent = ipcDoc->GetParentIAccessible();
-  MOZ_ASSERT(dispParent);
-  if (!dispParent) {
-    return E_UNEXPECTED;
-  }
-
-  dispParent->AddRef();
-  *ppdispParent = static_cast<IDispatch*>(dispParent);
-  return S_OK;
-}
 
 STDMETHODIMP
 DocAccessibleWrap::get_accValue(VARIANT aVarChild, BSTR __RPC_FAR* aValue)

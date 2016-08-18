@@ -63,18 +63,6 @@ LOCAL_INCLUDES += [
     '/accessible/generic',
     '/accessible/html',
     '/accessible/ipc',
-]
-
-if CONFIG['OS_ARCH'] == 'WINNT':
-    LOCAL_INCLUDES += [
-        '/accessible/ipc/win',
-    ]
-else:
-    LOCAL_INCLUDES += [
-        '/accessible/ipc/other',
-    ]
-
-LOCAL_INCLUDES += [
     '/accessible/xpcom',
     '/accessible/xul',
     '/dom/base',
