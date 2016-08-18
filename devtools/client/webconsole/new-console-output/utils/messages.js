@@ -79,6 +79,16 @@ function transformPacket(packet) {
       });
     }
 
+    case "navigationMessage": {
+      let { message } = packet;
+      return new ConsoleMessage({
+        source: MESSAGE_SOURCE.CONSOLE_API,
+        type: MESSAGE_TYPE.LOG,
+        level: MESSAGE_LEVEL.LOG,
+        messageText: "Navigated to " + message.url,
+      });
+    }
+
     case "pageError": {
       let { pageError } = packet;
       let level = MESSAGE_LEVEL.ERROR;
