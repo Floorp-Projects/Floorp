@@ -12,6 +12,7 @@
 #include "base/message_loop.h"          // for MessageLoop
 #include "base/task.h"                  // for NewRunnableMethod, etc
 #include "gfxPrefs.h"
+#include "mozilla/layers/ImageBridgeChild.h"
 #include "mozilla/layers/LayerTransactionChild.h"
 #include "mozilla/layers/PLayerTransactionChild.h"
 #include "mozilla/layers/TextureClient.h"// for TextureClient
@@ -30,7 +31,6 @@
 #include "mozilla/unused.h"
 #include "mozilla/DebugOnly.h"
 #if defined(XP_WIN)
-#include "mozilla/layers/ImageBridgeChild.h"
 #include "WinUtils.h"
 #endif
 #include "mozilla/widget/CompositorWidget.h"
