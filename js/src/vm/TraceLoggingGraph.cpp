@@ -14,6 +14,7 @@
 #endif
 
 #include "mozilla/EndianUtils.h"
+#include "mozilla/ScopeExit.h"
 
 #include "jsstr.h"
 
@@ -28,9 +29,12 @@
 # endif
 #endif
 
+using mozilla::MakeScopeExit;
 using mozilla::NativeEndian;
 
 TraceLoggerGraphState* traceLoggerGraphState = nullptr;
+
+#define MAX_LOGGERS 999
 
 bool
 TraceLoggerGraphState::init()
@@ -78,8 +82,8 @@ TraceLoggerGraphState::nextLoggerId()
 
     MOZ_ASSERT(initialized);
 
-    if (numLoggers > 999) {
-        fprintf(stderr, "TraceLogging: Can't create more than 999 different loggers.");
+    if (numLoggers > MAX_LOGGERS) {
+        fprintf(stderr, "TraceLogging: Can't create more than %d different loggers.", MAX_LOGGERS);
         return uint32_t(-1);
     }
 
@@ -132,57 +136,42 @@ js::DestroyTraceLoggerGraphState()
 bool
 TraceLoggerGraph::init(uint64_t startTimestamp)
 {
-    if (!tree.init()) {
-        failed = true;
-        return false;
-    }
-    if (!stack.init()) {
-        failed = true;
-        return false;
-    }
+    auto fail = MakeScopeExit([&] { failed = true; });
 
-    if (!EnsureTraceLoggerGraphState()) {
-        failed = true;
+    if (!tree.init())
         return false;
-    }
+    if (!stack.init())
+        return false;
+
+    if (!EnsureTraceLoggerGraphState())
+        return false;
 
     uint32_t loggerId = traceLoggerGraphState->nextLoggerId();
-    if (loggerId == uint32_t(-1)) {
-        failed = true;
+    if (loggerId == uint32_t(-1))
         return false;
-    }
 
     uint32_t pid = traceLoggerGraphState->pid();
 
     char dictFilename[sizeof TRACE_LOG_DIR "tl-dict.4294967295.100.json"];
     sprintf(dictFilename, TRACE_LOG_DIR "tl-dict.%u.%d.json", pid, loggerId);
     dictFile = fopen(dictFilename, "w");
-    if (!dictFile) {
-        failed = true;
+    if (!dictFile)
         return false;
-    }
+    auto cleanupDict = MakeScopeExit([&] { fclose(dictFile); dictFile = nullptr; });
 
     char treeFilename[sizeof TRACE_LOG_DIR "tl-tree.4294967295.100.tl"];
     sprintf(treeFilename, TRACE_LOG_DIR "tl-tree.%u.%d.tl", pid, loggerId);
     treeFile = fopen(treeFilename, "w+b");
-    if (!treeFile) {
-        fclose(dictFile);
-        dictFile = nullptr;
-        failed = true;
+    if (!treeFile)
         return false;
-    }
+    auto cleanupTree = MakeScopeExit([&] { fclose(treeFile); treeFile = nullptr; });
 
     char eventFilename[sizeof TRACE_LOG_DIR "tl-event.4294967295.100.tl"];
     sprintf(eventFilename, TRACE_LOG_DIR "tl-event.%u.%d.tl", pid, loggerId);
     eventFile = fopen(eventFilename, "wb");
-    if (!eventFile) {
-        fclose(dictFile);
-        fclose(treeFile);
-        dictFile = nullptr;
-        treeFile = nullptr;
-        failed = true;
+    if (!eventFile)
         return false;
-    }
+    auto cleanupEvent = MakeScopeExit([&] { fclose(eventFile); eventFile = nullptr; });
 
     // Create the top tree node and corresponding first stack item.
     TreeEntry& treeEntry = tree.pushUninitialized();
@@ -197,18 +186,15 @@ TraceLoggerGraph::init(uint64_t startTimestamp)
     stackEntry.setLastChildId(0);
     stackEntry.setActive(true);
 
-    int written = fprintf(dictFile, "[");
-    if (written < 0) {
+    if (fprintf(dictFile, "[") < 0) {
         fprintf(stderr, "TraceLogging: Error while writing.\n");
-        fclose(dictFile);
-        fclose(treeFile);
-        fclose(eventFile);
-        dictFile = nullptr;
-        treeFile = nullptr;
-        eventFile = nullptr;
-        failed = true;
         return false;
     }
+
+    fail.release();
+    cleanupDict.release();
+    cleanupTree.release();
+    cleanupEvent.release();
 
     return true;
 }
@@ -227,8 +213,8 @@ TraceLoggerGraph::~TraceLoggerGraph()
 
     if (!failed && treeFile) {
         // Make sure every start entry has a corresponding stop value.
-        // We temporary enable logging for this. Stop doesn't need any extra data,
-        // so is safe to do, even when we encountered OOM.
+        // We temporarily enable logging for this. Stop doesn't need any extra data,
+        // so is safe to do even when we have encountered OOM.
         enabled = 1;
         while (stack.size() > 1)
             stopEvent(0);
