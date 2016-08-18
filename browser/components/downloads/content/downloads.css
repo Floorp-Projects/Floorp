@@ -24,9 +24,21 @@ richlistitem[type="download"].download-state[state="1"]:not([exists]) .downloadS
 
 #downloadsSummary:not([inprogress]) > vbox > #downloadsSummaryProgress,
 #downloadsSummary:not([inprogress]) > vbox > #downloadsSummaryDetails,
-#downloadsFooter[showingsummary] > #downloadsFooterButtons,
-#downloadsFooter:not([showingsummary]) > #downloadsSummary {
+#downloadsFooter:not([showingsummary]) #downloadsSummary {
   display: none;
+}
+
+#downloadsFooter[showingdropdown] > stack > #downloadsSummary,
+#downloadsFooter[showingsummary] > stack:hover > #downloadsSummary,
+#downloadsFooter[showingsummary]:not([showingdropdown]) > stack:not(:hover) > #downloadsFooterButtons {
+  /* If we used "visibility: hidden;" then the mouseenter event of
+     #downloadsHistory wouldn't be triggered immediately, and the hover styling
+     of the button would not apply until the mouse is moved again.
+
+     "-moz-user-focus: ignore;" prevents the elements with "opacity: 0;" from
+     being focused with the keyboard. */
+  opacity: 0;
+  -moz-user-focus: ignore;
 }
 
 /*** Downloads View ***/
