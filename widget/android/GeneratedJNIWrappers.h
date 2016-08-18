@@ -3486,7 +3486,7 @@ public:
                 int32_t> Args;
         static constexpr char name[] = "open";
         static constexpr char signature[] =
-                "(Lorg/mozilla/gecko/GeckoView$Window;Lorg/mozilla/gecko/GeckoView;Lorg/mozilla/gecko/gfx/LayerView$Compositor;Ljava/lang/String;II)V";
+                "(Lorg/mozilla/gecko/GeckoView$Window;Lorg/mozilla/gecko/GeckoView;Ljava/lang/Object;Ljava/lang/String;II)V";
         static const bool isStatic = true;
         static const mozilla::jni::ExceptionMode exceptionMode =
                 mozilla::jni::ExceptionMode::ABORT;
@@ -3505,7 +3505,7 @@ public:
                 mozilla::jni::Object::Param> Args;
         static constexpr char name[] = "reattach";
         static constexpr char signature[] =
-                "(Lorg/mozilla/gecko/GeckoView;Lorg/mozilla/gecko/gfx/LayerView$Compositor;)V";
+                "(Lorg/mozilla/gecko/GeckoView;Ljava/lang/Object;)V";
         static const bool isStatic = false;
         static const mozilla::jni::ExceptionMode exceptionMode =
                 mozilla::jni::ExceptionMode::ABORT;
@@ -4634,7 +4634,7 @@ public:
         static const mozilla::jni::CallingThread callingThread =
                 mozilla::jni::CallingThread::UI;
         static const mozilla::jni::DispatchTarget dispatchTarget =
-                mozilla::jni::DispatchTarget::CURRENT;
+                mozilla::jni::DispatchTarget::GECKO;
     };
 
     struct HandleMotionEvent_t {
