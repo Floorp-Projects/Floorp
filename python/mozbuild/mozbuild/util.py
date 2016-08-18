@@ -24,6 +24,7 @@ import types
 
 from collections import (
     defaultdict,
+    Iterable,
     OrderedDict,
 )
 from io import (
@@ -1244,3 +1245,19 @@ def indented_repr(o, indent=4):
         else:
             yield repr(o)
     return ''.join(recurse_indented_repr(o, 0))
+
+
+def encode(obj, encoding='utf-8'):
+    '''Recursively encode unicode strings with the given encoding.'''
+    if isinstance(obj, dict):
+        return {
+            encode(k, encoding): encode(v, encoding)
+            for k, v in obj.iteritems()
+        }
+    if isinstance(obj, bytes):
+        return obj
+    if isinstance(obj, unicode):
+        return obj.encode(encoding)
+    if isinstance(obj, Iterable):
+        return [encode(i, encoding) for i in obj]
+    return obj
