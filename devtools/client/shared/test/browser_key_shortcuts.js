@@ -10,6 +10,7 @@ add_task(function* () {
   yield testSimple(shortcuts);
   yield testNonLetterCharacter(shortcuts);
   yield testPlusCharacter(shortcuts);
+  yield testFunctionKey(shortcuts);
   yield testMixup(shortcuts);
   yield testLooseDigits(shortcuts);
   yield testExactModifiers(shortcuts);
@@ -63,6 +64,17 @@ function testNonLetterCharacter(shortcuts) {
   });
 
   EventUtils.synthesizeKey("[", {}, window);
+  yield onKey;
+}
+
+function testFunctionKey(shortcuts) {
+  info("Test function key shortcuts");
+
+  let onKey = once(shortcuts, "F12", (key, event) => {
+    is(event.key, "F12");
+  });
+
+  EventUtils.synthesizeKey("F12", { keyCode: 123 }, window);
   yield onKey;
 }
 
