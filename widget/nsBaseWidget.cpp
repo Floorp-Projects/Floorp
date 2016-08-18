@@ -1591,12 +1591,6 @@ nsBaseWidget::GetClientOffset()
 }
 
 NS_IMETHODIMP
-nsBaseWidget::GetNonClientMargins(LayoutDeviceIntMargin &margins)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
 nsBaseWidget::SetNonClientMargins(LayoutDeviceIntMargin &margins)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
