@@ -21,6 +21,7 @@ namespace mozilla {
 namespace ipc {
 
 using mozilla::dom::PContentChild;
+using mozilla::dom::workers::Canceling;
 using mozilla::dom::workers::GetCurrentThreadWorkerPrivate;
 using mozilla::dom::workers::Status;
 using mozilla::dom::workers::WorkerHolder;
@@ -184,7 +185,7 @@ SendStreamChildImpl::AddAsWorkerHolder(WorkerPrivate* aWorkerPrivate)
 {
   NS_ASSERT_OWNINGTHREAD(SendStreamChild);
   MOZ_ASSERT(aWorkerPrivate);
-  bool result = HoldWorker(aWorkerPrivate);
+  bool result = HoldWorker(aWorkerPrivate, Canceling);
   if (result) {
     mWorkerPrivate = aWorkerPrivate;
   }
