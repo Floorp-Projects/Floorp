@@ -22,13 +22,13 @@
 #include "imgIContainer.h"
 #include "nsIProperties.h"
 #include "nsTArray.h"
-#include "imgFrame.h"
 #include "LookupResult.h"
 #include "nsThreadUtils.h"
 #include "DecodePool.h"
 #include "DecoderFactory.h"
 #include "FrameAnimator.h"
 #include "ImageMetadata.h"
+#include "ISurfaceProvider.h"
 #include "Orientation.h"
 #include "nsIObserver.h"
 #include "mozilla/Attributes.h"
@@ -273,7 +273,7 @@ public:
 private:
   nsresult Init(const char* aMimeType, uint32_t aFlags);
 
-  DrawResult DrawInternal(DrawableFrameRef&& aFrameRef,
+  DrawResult DrawInternal(DrawableSurface&& aSurface,
                           gfxContext* aContext,
                           const nsIntSize& aSize,
                           const ImageRegion& aRegion,
@@ -288,9 +288,9 @@ private:
   LookupResult LookupFrameInternal(uint32_t aFrameNum,
                                    const gfx::IntSize& aSize,
                                    uint32_t aFlags);
-  DrawableFrameRef LookupFrame(uint32_t aFrameNum,
-                               const nsIntSize& aSize,
-                               uint32_t aFlags);
+  DrawableSurface LookupFrame(uint32_t aFrameNum,
+                              const nsIntSize& aSize,
+                              uint32_t aFlags);
   uint32_t GetCurrentFrameIndex() const;
   uint32_t GetRequestedFrameIndex(uint32_t aWhichFrame) const;
 

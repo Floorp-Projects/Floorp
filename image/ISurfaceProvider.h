@@ -11,6 +11,7 @@
 #ifndef mozilla_image_ISurfaceProvider_h
 #define mozilla_image_ISurfaceProvider_h
 
+#include "mozilla/Attributes.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/NotNull.h"
 #include "mozilla/TimeStamp.h"
@@ -24,6 +25,7 @@ namespace mozilla {
 namespace image {
 
 class CachedSurface;
+class DrawableSurface;
 
 /**
  * An interface for objects which can either store a surface or dynamically
@@ -37,8 +39,8 @@ public:
   NS_IMETHOD_(MozExternalRefCountType) AddRef() = 0;
   NS_IMETHOD_(MozExternalRefCountType) Release() = 0;
 
-  /// @return a drawable reference to a surface.
-  virtual DrawableFrameRef DrawableRef() = 0;
+  /// @return a (potentially lazily computed) drawable reference to a surface.
+  virtual DrawableSurface Surface();
 
   /// @return true if DrawableRef() will return a completely decoded surface.
   virtual bool IsFinished() const = 0;
@@ -62,6 +64,9 @@ protected:
 
   virtual ~ISurfaceProvider() { }
 
+  /// @return an eagerly computed drawable reference to a surface.
+  virtual DrawableFrameRef DrawableRef() = 0;
+
   /// @return true if this ISurfaceProvider is locked. (@see SetLocked())
   /// Should only be called from SurfaceCache code as it relies on SurfaceCache
   /// for synchronization.
@@ -74,9 +79,90 @@ protected:
 
 private:
   friend class CachedSurface;
+  friend class DrawableSurface;
 
   AvailabilityState mAvailability;
 };
+
+
+/**
+ * A reference to a surface (stored in an imgFrame) that holds the surface in
+ * memory, guaranteeing that it can be drawn. If you have a DrawableSurface
+ * |surf| and |if (surf)| returns true, then calls to |surf->Draw()| and
+ * |surf->GetSurface()| are guaranteed to succeed.
+ *
+ * Note that the surface may be computed lazily, so a DrawableSurface should not
+ * be dereferenced (i.e., operator->() should not be called) until you're
+ * sure that you want to draw it.
+ */
+class MOZ_STACK_CLASS DrawableSurface final
+{
+public:
+  DrawableSurface() : mHaveSurface(false) { }
+
+  explicit DrawableSurface(DrawableFrameRef&& aDrawableRef)
+    : mDrawableRef(Move(aDrawableRef))
+    , mHaveSurface(bool(mDrawableRef))
+  { }
+
+  explicit DrawableSurface(NotNull<ISurfaceProvider*> aProvider)
+    : mProvider(aProvider)
+    , mHaveSurface(true)
+  { }
+
+  DrawableSurface(DrawableSurface&& aOther)
+    : mDrawableRef(Move(aOther.mDrawableRef))
+    , mProvider(Move(aOther.mProvider))
+    , mHaveSurface(aOther.mHaveSurface)
+  {
+    aOther.mHaveSurface = false;
+  }
+
+  DrawableSurface& operator=(DrawableSurface&& aOther)
+  {
+    MOZ_ASSERT(this != &aOther, "Self-moves are prohibited");
+    mDrawableRef = Move(aOther.mDrawableRef);
+    mProvider = Move(aOther.mProvider);
+    mHaveSurface = aOther.mHaveSurface;
+    aOther.mHaveSurface = false;
+    return *this;
+  }
+
+  explicit operator bool() const { return mHaveSurface; }
+  imgFrame* operator->() { return DrawableRef().get(); }
+
+private:
+  DrawableSurface(const DrawableSurface& aOther) = delete;
+  DrawableSurface& operator=(const DrawableSurface& aOther) = delete;
+
+  DrawableFrameRef& DrawableRef()
+  {
+    MOZ_ASSERT(mHaveSurface);
+
+    // If we weren't created with a DrawableFrameRef directly, we should've been
+    // created with an ISurfaceProvider which can give us one.
+    if (!mDrawableRef) {
+      MOZ_ASSERT(mProvider);
+      mDrawableRef = mProvider->DrawableRef();
+    }
+
+    MOZ_ASSERT(mDrawableRef);
+    return mDrawableRef;
+  }
+
+  DrawableFrameRef mDrawableRef;
+  RefPtr<ISurfaceProvider> mProvider;
+  bool mHaveSurface;
+};
+
+
+// Surface() is implemented here so that DrawableSurface's definition is visible.
+inline DrawableSurface
+ISurfaceProvider::Surface()
+{
+  return DrawableSurface(DrawableRef());
+}
+
 
 /**
  * An ISurfaceProvider that stores a single surface.
@@ -91,7 +177,6 @@ public:
     , mSurface(aSurface)
   { }
 
-  DrawableFrameRef DrawableRef() override { return mSurface->DrawableRef(); }
   bool IsFinished() const override { return mSurface->IsFinished(); }
 
   size_t LogicalSizeInBytes() const override
@@ -101,6 +186,7 @@ public:
   }
 
 protected:
+  DrawableFrameRef DrawableRef() override { return mSurface->DrawableRef(); }
   bool IsLocked() const override { return bool(mLockRef); }
 
   void SetLocked(bool aLocked) override
