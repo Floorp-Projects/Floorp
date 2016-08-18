@@ -38,7 +38,8 @@ SPSProfiler::SPSProfiler(JSRuntime* rt)
 bool
 SPSProfiler::init()
 {
-    if (!strings.init())
+    auto locked = strings.lock();
+    if (!locked->init())
         return false;
 
     return true;
@@ -46,8 +47,9 @@ SPSProfiler::init()
 
 SPSProfiler::~SPSProfiler()
 {
-    if (strings.initialized()) {
-        for (ProfileStringMap::Enum e(strings); !e.empty(); e.popFront())
+    auto locked = strings.lock();
+    if (locked->initialized()) {
+        for (ProfileStringMap::Enum e(locked.get()); !e.empty(); e.popFront())
             js_free(const_cast<char*>(e.front().value()));
     }
 }
@@ -55,9 +57,8 @@ SPSProfiler::~SPSProfiler()
 void
 SPSProfiler::setProfilingStack(ProfileEntry* stack, uint32_t* size, uint32_t max)
 {
-    LockGuard<Mutex> lock(lock_);
     MOZ_ASSERT_IF(size_ && *size_ != 0, !enabled());
-    MOZ_ASSERT(strings.initialized());
+    MOZ_ASSERT(strings.lock()->initialized());
 
     stack_ = stack;
     size_  = size;
@@ -138,15 +139,15 @@ SPSProfiler::enable(bool enabled)
 const char*
 SPSProfiler::profileString(JSScript* script, JSFunction* maybeFun)
 {
-    LockGuard<Mutex> lock(lock_);
-    MOZ_ASSERT(strings.initialized());
-    ProfileStringMap::AddPtr s = strings.lookupForAdd(script);
+    auto locked = strings.lock();
+    MOZ_ASSERT(locked->initialized());
+    ProfileStringMap::AddPtr s = locked->lookupForAdd(script);
     if (s)
         return s->value();
     const char* str = allocProfileString(script, maybeFun);
     if (str == nullptr)
         return nullptr;
-    if (!strings.add(s, script, str)) {
+    if (!locked->add(s, script, str)) {
         js_free(const_cast<char*>(str));
         return nullptr;
     }
@@ -163,12 +164,12 @@ SPSProfiler::onScriptFinalized(JSScript* script)
      * off, we still want to remove the string, so no check of enabled() is
      * done.
      */
-    LockGuard<Mutex> lock(lock_);
-    if (!strings.initialized())
+    auto locked = strings.lock();
+    if (!locked->initialized())
         return;
-    if (ProfileStringMap::Ptr entry = strings.lookup(script)) {
+    if (ProfileStringMap::Ptr entry = locked->lookup(script)) {
         const char* tofree = entry->value();
-        strings.remove(entry);
+        locked->remove(entry);
         js_free(const_cast<char*>(tofree));
     }
 }
@@ -370,10 +371,11 @@ SPSProfiler::trace(JSTracer* trc)
 void
 SPSProfiler::fixupStringsMapAfterMovingGC()
 {
-    if (!strings.initialized())
+    auto locked = strings.lock();
+    if (!locked->initialized())
         return;
 
-    for (ProfileStringMap::Enum e(strings); !e.empty(); e.popFront()) {
+    for (ProfileStringMap::Enum e(locked.get()); !e.empty(); e.popFront()) {
         JSScript* script = e.front().key();
         if (IsForwarded(script)) {
             script = Forwarded(script);
@@ -386,13 +388,14 @@ SPSProfiler::fixupStringsMapAfterMovingGC()
 void
 SPSProfiler::checkStringsMapAfterMovingGC()
 {
-    if (!strings.initialized())
+    auto locked = strings.lock();
+    if (!locked->initialized())
         return;
 
-    for (auto r = strings.all(); !r.empty(); r.popFront()) {
+    for (auto r = locked->all(); !r.empty(); r.popFront()) {
         JSScript* script = r.front().key();
         CheckGCThingAfterMovingGC(script);
-        auto ptr = strings.lookup(script);
+        auto ptr = locked->lookup(script);
         MOZ_RELEASE_ASSERT(ptr.found() && &*ptr == &r.front());
     }
 }
