@@ -14,12 +14,6 @@ const {
   MESSAGE_SOURCE,
   MESSAGE_TYPE,
   MESSAGE_LEVEL,
-  // Legacy
-  CATEGORY_JS,
-  CATEGORY_OUTPUT,
-  CATEGORY_WEBDEV,
-  LEVELS,
-  SEVERITY_LOG,
 } = require("../constants");
 const { ConsoleMessage } = require("../types");
 
@@ -49,7 +43,7 @@ function transformPacket(packet) {
 
       let parameters = message.arguments;
       let type = message.level;
-      let level = LEVELS[type] || MESSAGE_TYPE.LOG;
+      let level = getLevelFromType(type);
       let messageText = null;
 
       // Special per-type conversion.
@@ -61,7 +55,6 @@ function transformPacket(packet) {
         case "count":
           // Chrome RDP doesn't have a special type for count.
           type = MESSAGE_TYPE.LOG;
-          level = MESSAGE_LEVEL.DEBUG;
           let {counter} = message;
           let label = counter.label ? counter.label : l10n.getStr("noCounterLabel");
           messageText = `${label}: ${counter.count}`;
@@ -75,8 +68,6 @@ function transformPacket(packet) {
         level,
         parameters,
         messageText,
-        category: CATEGORY_WEBDEV,
-        severity: level,
         stacktrace: message.stacktrace,
       });
     }
@@ -93,9 +84,8 @@ function transformPacket(packet) {
       return new ConsoleMessage({
         source: MESSAGE_SOURCE.JAVASCRIPT,
         type: MESSAGE_TYPE.LOG,
+        level,
         messageText: pageError.errorMessage,
-        category: CATEGORY_JS,
-        severity: level,
       });
     }
 
@@ -108,8 +98,6 @@ function transformPacket(packet) {
         type: MESSAGE_TYPE.RESULT,
         level: MESSAGE_LEVEL.LOG,
         parameters: result,
-        category: CATEGORY_OUTPUT,
-        severity: SEVERITY_LOG,
       });
     }
   }
@@ -136,6 +124,43 @@ function convertCachedPacket(packet) {
     throw new Error("Unexpected packet type");
   }
   return convertPacket;
+}
+
+/**
+ * Maps a Firefox RDP type to its corresponding level.
+ */
+function getLevelFromType(type) {
+  const levels = {
+    LEVEL_ERROR: "error",
+    LEVEL_WARNING: "warn",
+    LEVEL_INFO: "info",
+    LEVEL_LOG: "log",
+    LEVEL_DEBUG: "debug",
+  };
+
+  // A mapping from the console API log event levels to the Web Console levels.
+  const levelMap = {
+    error: levels.LEVEL_ERROR,
+    exception: levels.LEVEL_ERROR,
+    assert: levels.LEVEL_ERROR,
+    warn: levels.LEVEL_WARNING,
+    info: levels.LEVEL_INFO,
+    log: levels.LEVEL_LOG,
+    clear: levels.LEVEL_LOG,
+    trace: levels.LEVEL_LOG,
+    table: levels.LEVEL_LOG,
+    debug: levels.LEVEL_LOG,
+    dir: levels.LEVEL_LOG,
+    dirxml: levels.LEVEL_LOG,
+    group: levels.LEVEL_LOG,
+    groupCollapsed: levels.LEVEL_LOG,
+    groupEnd: levels.LEVEL_LOG,
+    time: levels.LEVEL_LOG,
+    timeEnd: levels.LEVEL_LOG,
+    count: levels.LEVEL_DEBUG,
+  };
+
+  return levelMap[type] || MESSAGE_TYPE.LOG;
 }
 
 exports.prepareMessage = prepareMessage;

@@ -33,7 +33,7 @@ describe("Filtering", () => {
     store.dispatch(actions.filtersClear());
   });
 
-  describe("Severity filter", () => {
+  describe("Level filter", () => {
     it("filters log messages", () => {
       store.dispatch(actions.filterToggle(MESSAGE_LEVEL.LOG));
 

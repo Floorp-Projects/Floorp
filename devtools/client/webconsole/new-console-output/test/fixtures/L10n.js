@@ -7,7 +7,7 @@
 class L10n {
   getStr(str) {
     switch (str) {
-      case "severity.error":
+      case "level.error":
         return "Error";
     }
     return str;
