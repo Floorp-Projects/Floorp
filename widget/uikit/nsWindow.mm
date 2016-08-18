@@ -278,8 +278,7 @@ private:
 
   mWaitingForPaint = NO;
 
-  LayoutDeviceIntRect geckoBounds;
-  mGeckoChild->GetBounds(geckoBounds);
+  LayoutDeviceIntRect geckoBounds = mGeckoChild->GetBounds();
   LayoutDeviceIntRegion region(geckoBounds);
 
   mGeckoChild->PaintWindow(region);
@@ -305,8 +304,7 @@ private:
 - (void)drawRect:(CGRect)aRect inContext:(CGContextRef)aContext
 {
 #ifdef DEBUG_UPDATE
-  LayoutDeviceIntRect geckoBounds;
-  mGeckoChild->GetBounds(geckoBounds);
+  LayoutDeviceIntRect geckoBounds = mGeckoChild->GetBounds();
 
   fprintf (stderr, "---- Update[%p][%p] [%f %f %f %f] cgc: %p\n  gecko bounds: [%d %d %d %d]\n",
            self, mGeckoChild,
@@ -774,23 +772,15 @@ void nsWindow::ReportSizeModeEvent(nsSizeMode aMode)
 void nsWindow::ReportSizeEvent()
 {
     if (mWidgetListener) {
-        LayoutDeviceIntRect innerBounds;
-        GetClientBounds(innerBounds);
+        LayoutDeviceIntRect innerBounds = GetClientBounds();
         mWidgetListener->WindowResized(this, innerBounds.width, innerBounds.height);
     }
 }
 
-NS_IMETHODIMP
-nsWindow::GetScreenBounds(LayoutDeviceIntRect& aRect)
+LayoutDeviceIntRect
+nsWindow::GetScreenBounds()
 {
-    LayoutDeviceIntPoint p = WidgetToScreenOffset();
-
-    aRect.x = p.x;
-    aRect.y = p.y;
-    aRect.width = mBounds.width;
-    aRect.height = mBounds.height;
-
-    return NS_OK;
+    return LayoutDeviceIntRect(WidgetToScreenOffset(), mBounds.Size());
 }
 
 LayoutDeviceIntPoint nsWindow::WidgetToScreenOffset()

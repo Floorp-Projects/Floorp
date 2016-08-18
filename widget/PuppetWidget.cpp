@@ -251,8 +251,7 @@ PuppetWidget::ConfigureChildren(const nsTArray<Configuration>& aConfigurations)
     NS_ASSERTION(w->GetParent() == this,
                  "Configured widget is not a child");
     w->SetWindowClipRegion(configuration.mClipRegion, true);
-    LayoutDeviceIntRect bounds;
-    w->GetBounds(bounds);
+    LayoutDeviceIntRect bounds = w->GetBounds();
     if (bounds.Size() != configuration.mBounds.Size()) {
       w->Resize(configuration.mBounds.x, configuration.mBounds.y,
                 configuration.mBounds.width, configuration.mBounds.height,
@@ -1241,11 +1240,10 @@ PuppetWidget::GetWindowPosition()
   return nsIntPoint(winX, winY) + GetOwningTabChild()->GetClientOffset().ToUnknownPoint();
 }
 
-NS_IMETHODIMP
-PuppetWidget::GetScreenBounds(LayoutDeviceIntRect& aRect) {
-  aRect.MoveTo(WidgetToScreenOffset());
-  aRect.SizeTo(mBounds.Size());
-  return NS_OK;
+LayoutDeviceIntRect
+PuppetWidget::GetScreenBounds()
+{
+  return LayoutDeviceIntRect(WidgetToScreenOffset(), mBounds.Size());
 }
 
 uint32_t PuppetWidget::GetMaxTouchPoints() const

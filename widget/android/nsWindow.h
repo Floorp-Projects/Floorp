@@ -161,7 +161,7 @@ public:
     virtual bool IsEnabled() const override;
     NS_IMETHOD Invalidate(const LayoutDeviceIntRect& aRect) override;
     NS_IMETHOD SetFocus(bool aRaise = false) override;
-    NS_IMETHOD GetScreenBounds(LayoutDeviceIntRect& aRect) override;
+    virtual LayoutDeviceIntRect GetScreenBounds() override;
     virtual LayoutDeviceIntPoint WidgetToScreenOffset() override;
     NS_IMETHOD DispatchEvent(mozilla::WidgetGUIEvent* aEvent,
                              nsEventStatus& aStatus) override;

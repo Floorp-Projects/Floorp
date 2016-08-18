@@ -1864,17 +1864,10 @@ nsWindow::BringToFront()
     RedrawAll();
 }
 
-NS_IMETHODIMP
-nsWindow::GetScreenBounds(LayoutDeviceIntRect& aRect)
+LayoutDeviceIntRect
+nsWindow::GetScreenBounds()
 {
-    LayoutDeviceIntPoint p = WidgetToScreenOffset();
-
-    aRect.x = p.x;
-    aRect.y = p.y;
-    aRect.width = mBounds.width;
-    aRect.height = mBounds.height;
-
-    return NS_OK;
+    return LayoutDeviceIntRect(WidgetToScreenOffset(), mBounds.Size());
 }
 
 LayoutDeviceIntPoint

@@ -304,8 +304,7 @@ void nsView::DoResetWidgetBounds(bool aMoveOnly,
 
   nsWindowType type = widget->WindowType();
 
-  LayoutDeviceIntRect curBounds;
-  widget->GetClientBounds(curBounds);
+  LayoutDeviceIntRect curBounds = widget->GetClientBounds();
   bool invisiblePopup = type == eWindowType_popup &&
                         ((curBounds.IsEmpty() && mDimBounds.IsEmpty()) ||
                          mVis == nsViewVisibility_kHide);
@@ -780,10 +779,9 @@ void nsView::List(FILE* out, int32_t aIndent) const
   fprintf(out, "%p ", (void*)this);
   if (nullptr != mWindow) {
     nscoord p2a = mViewManager->AppUnitsPerDevPixel();
-    LayoutDeviceIntRect rect;
-    mWindow->GetClientBounds(rect);
+    LayoutDeviceIntRect rect = mWindow->GetClientBounds();
     nsRect windowBounds = LayoutDeviceIntRect::ToAppUnits(rect, p2a);
-    mWindow->GetBounds(rect);
+    rect = mWindow->GetBounds();
     nsRect nonclientBounds = LayoutDeviceIntRect::ToAppUnits(rect, p2a);
     nsrefcnt widgetRefCnt = mWindow.get()->AddRef() - 1;
     mWindow.get()->Release();

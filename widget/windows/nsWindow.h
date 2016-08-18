@@ -133,10 +133,10 @@ public:
   NS_IMETHOD              Enable(bool aState) override;
   virtual bool            IsEnabled() const override;
   NS_IMETHOD              SetFocus(bool aRaise) override;
-  NS_IMETHOD              GetBounds(LayoutDeviceIntRect& aRect) override;
-  NS_IMETHOD              GetScreenBounds(LayoutDeviceIntRect& aRect) override;
-  NS_IMETHOD              GetRestoredBounds(LayoutDeviceIntRect& aRect) override;
-  NS_IMETHOD              GetClientBounds(LayoutDeviceIntRect& aRect) override;
+  virtual LayoutDeviceIntRect GetBounds() override;
+  virtual LayoutDeviceIntRect GetScreenBounds() override;
+  virtual MOZ_MUST_USE nsresult GetRestoredBounds(LayoutDeviceIntRect& aRect) override;
+  virtual LayoutDeviceIntRect GetClientBounds() override;
   virtual LayoutDeviceIntPoint GetClientOffset() override;
   void                    SetBackgroundColor(const nscolor& aColor) override;
   NS_IMETHOD              SetCursor(imgIContainer* aCursor,

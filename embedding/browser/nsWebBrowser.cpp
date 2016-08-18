@@ -1406,8 +1406,7 @@ nsWebBrowser::GetPositionAndSize(int32_t* aX, int32_t* aY,
       *aCY = mInitInfo->cy;
     }
   } else if (mInternalWidget) {
-    LayoutDeviceIntRect bounds;
-    NS_ENSURE_SUCCESS(mInternalWidget->GetBounds(bounds), NS_ERROR_FAILURE);
+    LayoutDeviceIntRect bounds = mInternalWidget->GetBounds();
 
     if (aX) {
       *aX = bounds.x;

@@ -214,10 +214,10 @@ public:
   NS_IMETHOD              MoveClient(double aX, double aY) override;
   NS_IMETHOD              ResizeClient(double aWidth, double aHeight, bool aRepaint) override;
   NS_IMETHOD              ResizeClient(double aX, double aY, double aWidth, double aHeight, bool aRepaint) override;
-  NS_IMETHOD              GetBounds(LayoutDeviceIntRect& aRect) override;
-  NS_IMETHOD              GetClientBounds(LayoutDeviceIntRect& aRect) override;
-  NS_IMETHOD              GetScreenBounds(LayoutDeviceIntRect& aRect) override;
-  NS_IMETHOD              GetRestoredBounds(LayoutDeviceIntRect& aRect) override;
+  virtual LayoutDeviceIntRect GetBounds() override;
+  virtual LayoutDeviceIntRect GetClientBounds() override;
+  virtual LayoutDeviceIntRect GetScreenBounds() override;
+  virtual MOZ_MUST_USE nsresult GetRestoredBounds(LayoutDeviceIntRect& aRect) override;
   NS_IMETHOD              GetNonClientMargins(LayoutDeviceIntMargin& aMargins) override;
   NS_IMETHOD              SetNonClientMargins(LayoutDeviceIntMargin& aMargins) override;
   virtual LayoutDeviceIntPoint GetClientOffset() override;

@@ -2432,8 +2432,7 @@ IMMHandler::SetIMERelatedWindowsPosOnPlugin(nsWindow* aWindow,
   nsWindow* toplevelWindow = aWindow->GetTopLevelWindow(false);
   LayoutDeviceIntRect pluginRectInScreen =
     editorRectEvent.mReply.mRect + toplevelWindow->WidgetToScreenOffset();
-  LayoutDeviceIntRect winRectInScreen;
-  aWindow->GetClientBounds(winRectInScreen);
+  LayoutDeviceIntRect winRectInScreen = aWindow->GetClientBounds();
   // composition window cannot be positioned on the edge of client area.
   winRectInScreen.width--;
   winRectInScreen.height--;

@@ -2041,9 +2041,7 @@ nsDOMWindowUtils::SendQueryContentEvent(uint32_t aType,
     nsIFrame* popupFrame =
       nsLayoutUtils::GetPopupFrameForEventCoordinates(presContext->GetRootPresContext(), &dummyEvent);
 
-    LayoutDeviceIntRect widgetBounds;
-    nsresult rv = widget->GetClientBounds(widgetBounds);
-    NS_ENSURE_SUCCESS(rv, rv);
+    LayoutDeviceIntRect widgetBounds = widget->GetClientBounds();
     widgetBounds.MoveTo(0, 0);
 
     // There is no popup frame at the point and the point isn't in our widget,
