@@ -17,6 +17,7 @@
 #include "gfxRect.h"                    // for gfxRect
 #include "gfxTypes.h"                   // for gfxFloat
 #include "mozilla/gfx/BasePoint3D.h"    // for BasePoint3D
+#include "mozilla/Sprintf.h"            // for SprintfLiteral
 #include "nsRegion.h"                   // for nsIntRegion
 #include "nsTArray.h"                   // for nsTArray, etc
 #include "limits.h"
@@ -183,9 +184,9 @@ static void SetTextColor(uint32_t aColor)
   char command[13];
 
   /* Command is the control command to the terminal */
-  sprintf(command, "%c[%d;%d;%dm", 0x1B, RESET,
-          aColor + XTERM_FOREGROUND_COLOR_OFFSET,
-          BLACK + XTERM_BACKGROUND_COLOR_OFFSET);
+  SprintfLiteral(command, "%c[%d;%d;%dm", 0x1B, RESET,
+                 aColor + XTERM_FOREGROUND_COLOR_OFFSET,
+                 BLACK + XTERM_BACKGROUND_COLOR_OFFSET);
   printf("%s", command);
 }
 

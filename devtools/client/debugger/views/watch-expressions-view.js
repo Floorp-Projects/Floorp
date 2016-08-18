@@ -9,6 +9,8 @@
 /* globals document */
 "use strict";
 
+const {KeyCodes} = require("devtools/client/shared/keycodes");
+
 /**
  * Functions handling the watch expressions UI.
  */
@@ -289,8 +291,8 @@ WatchExpressionsView.prototype = Heritage.extend(WidgetMethods, {
    */
   _onKeyPress: function (e) {
     switch (e.keyCode) {
-      case e.DOM_VK_RETURN:
-      case e.DOM_VK_ESCAPE:
+      case KeyCodes.DOM_VK_RETURN:
+      case KeyCodes.DOM_VK_ESCAPE:
         e.stopPropagation();
         this.DebuggerView.editor.focus();
     }

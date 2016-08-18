@@ -1339,8 +1339,13 @@ Debugger::handleUncaughtExceptionHelper(Maybe<AutoCompartment>& ac,
             RootedValue fval(cx, ObjectValue(*uncaughtExceptionHook));
             RootedValue rv(cx);
             if (js::Call(cx, fval, object, exc, &rv)) {
-                return vp ? parseResumptionValueHelper(ac, true, rv, thisVForCheck, frame, *vp, false)
-                          : JSTRAP_CONTINUE;
+                if (vp) {
+                    JSTrapStatus status = JSTRAP_CONTINUE;
+                    if (processResumptionValue(ac, frame, thisVForCheck, rv, &status, *vp))
+                        return status;
+                } else {
+                    return JSTRAP_CONTINUE;
+                }
             }
         }
 
@@ -1504,62 +1509,88 @@ ParseResumptionValueAsObject(JSContext* cx, HandleValue rv, JSTrapStatus* status
     return true;
 }
 
-JSTrapStatus
-Debugger::parseResumptionValueHelper(Maybe<AutoCompartment>& ac, bool ok, const Value& rv,
-                                     const Maybe<HandleValue>& thisVForCheck, AbstractFramePtr frame,
-                                     MutableHandleValue vp, bool callHook)
+static bool
+ParseResumptionValue(JSContext* cx, HandleValue rval, JSTrapStatus* statusp, MutableHandleValue vp)
 {
-    vp.setUndefined();
-    if (!ok)
-        return handleUncaughtException(ac, vp, callHook, thisVForCheck, frame);
-    if (rv.isUndefined()) {
-        ac.reset();
-        return JSTRAP_CONTINUE;
+    if (rval.isUndefined()) {
+        *statusp = JSTRAP_CONTINUE;
+        vp.setUndefined();
+        return true;
     }
-    if (rv.isNull()) {
-        ac.reset();
-        return JSTRAP_ERROR;
+    if (rval.isNull()) {
+        *statusp = JSTRAP_ERROR;
+        vp.setUndefined();
+        return true;
     }
+    return ParseResumptionValueAsObject(cx, rval, statusp, vp);
+}
 
-    JSContext* cx = ac->context()->asJSContext();
-    JSTrapStatus status = JSTRAP_CONTINUE;
-    RootedValue v(cx);
-    RootedValue rvRoot(cx, rv);
+static bool
+CheckResumptionValue(JSContext* cx, AbstractFramePtr frame, const Maybe<HandleValue>& maybeThisv,
+                     JSTrapStatus status, MutableHandleValue vp)
+{
+    if (maybeThisv.isSome()) {
+        const HandleValue& thisv = maybeThisv.ref();
+        if (status == JSTRAP_RETURN && vp.isPrimitive()) {
+            if (vp.isUndefined()) {
+                if (thisv.isMagic(JS_UNINITIALIZED_LEXICAL)) {
+                    return ThrowUninitializedThis(cx, frame);
+                }
 
-    if (!ParseResumptionValueAsObject(cx, rvRoot, &status, &v) ||
-        !unwrapDebuggeeValue(cx, &v))
-    {
-        return handleUncaughtException(ac, vp, callHook, thisVForCheck, frame);
-    }
-
-    if (status == JSTRAP_RETURN && thisVForCheck.isSome() && v.isPrimitive()) {
-        if (v.isUndefined()) {
-            if (thisVForCheck.ref().isMagic(JS_UNINITIALIZED_LEXICAL)) {
-                MOZ_ALWAYS_FALSE(ThrowUninitializedThis(cx, frame));
-                return handleUncaughtException(ac, vp, callHook, thisVForCheck, frame);
+                vp.set(thisv);
+            } else {
+                ReportValueError(cx, JSMSG_BAD_DERIVED_RETURN, JSDVG_IGNORE_STACK, vp, nullptr);
+                return false;
             }
-
-            v = thisVForCheck.ref();
-        } else {
-            ReportValueError(cx, JSMSG_BAD_DERIVED_RETURN, JSDVG_IGNORE_STACK, v, nullptr);
-            return handleUncaughtException(ac, vp, callHook, thisVForCheck, frame);
         }
+    }
+    return true;
+}
+
+bool
+Debugger::processResumptionValue(Maybe<AutoCompartment>& ac, AbstractFramePtr frame,
+                                 const Maybe<HandleValue>& maybeThisv, HandleValue rval,
+                                 JSTrapStatus* statusp, MutableHandleValue vp)
+{
+    JSContext* cx = ac->context()->asJSContext();
+
+    if (!ParseResumptionValue(cx, rval, statusp, vp) ||
+        !unwrapDebuggeeValue(cx, vp) ||
+        !CheckResumptionValue(cx, frame, maybeThisv, *statusp, vp))
+    {
+        return false;
     }
 
     ac.reset();
-    if (!cx->compartment()->wrap(cx, &v)) {
+    if (!cx->compartment()->wrap(cx, vp)) {
+        *statusp = JSTRAP_ERROR;
         vp.setUndefined();
-        return JSTRAP_ERROR;
     }
-    vp.set(v);
 
+    return true;
+}
+
+JSTrapStatus
+Debugger::parseResumptionValueHelper(Maybe<AutoCompartment>& ac, bool ok, const Value& rv,
+                                     const Maybe<HandleValue>& thisVForCheck, AbstractFramePtr frame,
+                                     MutableHandleValue vp)
+{
+    if (!ok)
+        return handleUncaughtException(ac, vp, true, thisVForCheck, frame);
+
+    JSContext* cx = ac->context()->asJSContext();
+    RootedValue rvRoot(cx, rv);
+    JSTrapStatus status = JSTRAP_CONTINUE;
+    RootedValue v(cx);
+    if (!processResumptionValue(ac, frame, thisVForCheck, rvRoot, &status, &v))
+        return handleUncaughtException(ac, vp, true, thisVForCheck, frame);
+    vp.set(v);
     return status;
 }
 
 JSTrapStatus
 Debugger::parseResumptionValue(Maybe<AutoCompartment>& ac, bool ok, const Value& rv,
-                               AbstractFramePtr frame, jsbytecode* pc, MutableHandleValue vp,
-                               bool callHook)
+                               AbstractFramePtr frame, jsbytecode* pc, MutableHandleValue vp)
 {
     JSContext* cx = ac->context()->asJSContext();
     RootedValue rootThis(cx);
@@ -1577,13 +1608,12 @@ Debugger::parseResumptionValue(Maybe<AutoCompartment>& ac, bool ok, const Value&
         MOZ_ASSERT_IF(rootThis.isMagic(), rootThis.isMagic(JS_UNINITIALIZED_LEXICAL));
         thisArg.emplace(HandleValue(rootThis));
     }
-    return parseResumptionValueHelper(ac, ok, rv, thisArg, frame, vp, callHook);
+    return parseResumptionValueHelper(ac, ok, rv, thisArg, frame, vp);
 }
 
 JSTrapStatus
 Debugger::parseResumptionValue(Maybe<AutoCompartment>& ac, bool ok, const Value& rv,
-                               const Value& thisV, AbstractFramePtr frame, MutableHandleValue vp,
-                               bool callHook)
+                               const Value& thisV, AbstractFramePtr frame, MutableHandleValue vp)
 {
     JSContext* cx = ac->context()->asJSContext();
     RootedValue rootThis(cx, thisV);
@@ -1591,7 +1621,7 @@ Debugger::parseResumptionValue(Maybe<AutoCompartment>& ac, bool ok, const Value&
     if (frame.debuggerNeedsCheckPrimitiveReturn())
         thisArg.emplace(rootThis);
 
-    return parseResumptionValueHelper(ac, ok, rv, thisArg, frame, vp, callHook);
+    return parseResumptionValueHelper(ac, ok, rv, thisArg, frame, vp);
 }
 
 static bool
@@ -1876,7 +1906,7 @@ Debugger::onTrap(JSContext* cx, MutableHandleValue vp)
             Rooted<JSObject*> handler(cx, bp->handler);
             bool ok = CallMethodIfPresent(cx, handler, "hit", 1, scriptFrame.address(), &rv);
             JSTrapStatus st = dbg->parseResumptionValue(ac, ok, rv,  iter.abstractFramePtr(),
-                                                        iter.pc(), vp, true);
+                                                        iter.pc(), vp);
             if (st != JSTRAP_CONTINUE)
                 return st;
 

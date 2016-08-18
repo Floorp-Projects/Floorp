@@ -110,17 +110,17 @@ nsSVGPathGeometryElement::GetOrBuildPathForMeasuring()
 FillRule
 nsSVGPathGeometryElement::GetFillRule()
 {
-  FillRule fillRule = FillRule::FILL_WINDING; // Equivalent to StyleFillRule::NonZero
+  FillRule fillRule = FillRule::FILL_WINDING; // Equivalent to StyleFillRule::Nonzero
 
   RefPtr<nsStyleContext> styleContext =
     nsComputedDOMStyle::GetStyleContextForElementNoFlush(this, nullptr,
                                                          nullptr);
   
   if (styleContext) {
-    MOZ_ASSERT(styleContext->StyleSVG()->mFillRule == StyleFillRule::NonZero ||
-               styleContext->StyleSVG()->mFillRule == StyleFillRule::EvenOdd);
+    MOZ_ASSERT(styleContext->StyleSVG()->mFillRule == StyleFillRule::Nonzero ||
+               styleContext->StyleSVG()->mFillRule == StyleFillRule::Evenodd);
 
-    if (styleContext->StyleSVG()->mFillRule == StyleFillRule::EvenOdd) {
+    if (styleContext->StyleSVG()->mFillRule == StyleFillRule::Evenodd) {
       fillRule = FillRule::FILL_EVEN_ODD;
     }
   } else {

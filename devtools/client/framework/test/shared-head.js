@@ -460,6 +460,15 @@ function waitForContextMenu(popup, button, onShown, onHidden) {
 }
 
 /**
+ * Promise wrapper around SimpleTest.waitForClipboard
+ */
+function waitForClipboardPromise(setup, expected) {
+  return new Promise((resolve, reject) => {
+    SimpleTest.waitForClipboard(expected, setup, resolve, reject);
+  });
+}
+
+/**
  * Simple helper to push a temporary preference. Wrapper on SpecialPowers
  * pushPrefEnv that returns a promise resolving when the preferences have been
  * updated.

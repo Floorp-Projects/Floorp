@@ -111,12 +111,10 @@ if test -n "$gonkdir"; then
         MOZ_B2G_CAMERA=1
         MOZ_OMX_DECODER=1
         AC_SUBST(MOZ_OMX_DECODER)
-        MOZ_RTSP=1
         MOZ_SECUREELEMENT=1
         ;;
     17|18)
         CPPFLAGS="-I$gonkdir/frameworks/native/include -I$gonkdir/frameworks/av/include -I$gonkdir/frameworks/av/include/media -I$gonkdir/frameworks/av/include/camera -I$gonkdir/frameworks/native/include/media/openmax -I$gonkdir/frameworks/av/media/libstagefright/include $CPPFLAGS"
-        MOZ_RTSP=1
         MOZ_NFC=1
         MOZ_B2G_CAMERA=1
         MOZ_OMX_DECODER=1
@@ -130,7 +128,6 @@ if test -n "$gonkdir"; then
         CPPFLAGS="-I$gonkdir/frameworks/native/include -I$gonkdir/frameworks/av/include -I$gonkdir/frameworks/av/include/media -I$gonkdir/frameworks/av/include/camera -I$gonkdir/frameworks/native/include/media/openmax -I$gonkdir/frameworks/av/media/libstagefright/include $CPPFLAGS"
         MOZ_B2G_CAMERA=1
         MOZ_NFC=1
-        MOZ_RTSP=1
         MOZ_OMX_DECODER=1
         MOZ_OMX_ENCODER=1
         AC_DEFINE(MOZ_OMX_ENCODER)
@@ -149,7 +146,6 @@ if test -n "$gonkdir"; then
         AC_DEFINE(MOZ_AUDIO_OFFLOAD)
         MOZ_B2G_CAMERA=1
         MOZ_NFC=1
-        MOZ_RTSP=1
         ;;
     *)
         AC_MSG_ERROR([Unsupported platform version: $android_version])
@@ -796,24 +792,6 @@ if test "$MOZ_PROFILING" -a -z "$STRIP_FLAGS"; then
         STRIP_FLAGS="--strip-debug"
         ;;
     esac
-fi
-
-dnl ========================================================
-dnl = Enable Gecko integrated IPC fuzzer
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(ipc-fuzzer,
-[  --enable-ipc-fuzzer       Enable IPC fuzzer (default=no)],
-    MOZ_FAULTY=1,
-    MOZ_FAULTY= )
-AC_SUBST(MOZ_FAULTY)
-
-if test -n "$MOZ_FAULTY" && test "$OS_ARCH" = "WINNT"; then
-    AC_MSG_ERROR([--enable-ipc-fuzzer is not supported on this platform.])
-fi
-
-if test -n "$MOZ_FAULTY"; then
-    MOZ_FAULTY=1
-    AC_DEFINE(MOZ_FAULTY)
 fi
 
 dnl ========================================================
@@ -2352,10 +2330,6 @@ MOZ_SCTP=
 MOZ_ANDROID_OMX=
 MOZ_OMX_PLUGIN=
 MOZ_VPX_ERROR_CONCEALMENT=
-MOZ_WEBSPEECH=1
-MOZ_WEBSPEECH_MODELS=
-MOZ_WEBSPEECH_POCKETSPHINX=
-MOZ_WEBSPEECH_TEST_BACKEND=1
 VPX_USE_YASM=
 VPX_ASFLAGS=
 VPX_AS_CONVERSION=
@@ -2374,20 +2348,11 @@ MOZ_UNIVERSALCHARDET=1
 MOZ_URL_CLASSIFIER=
 MOZ_XUL=1
 MOZ_ZIPWRITER=1
-NS_PRINTING=1
-if test "$MOZ_IOS"; then
-   NS_PRINTING=
-fi
 MOZ_NO_SMART_CARDS=
-NSS_DISABLE_DBM=
 NECKO_COOKIES=1
 NECKO_PROTOCOLS_DEFAULT="about data file ftp http res viewsource websocket wyciwyg device"
-if test -n "$MOZ_RTSP"; then
-  NECKO_PROTOCOLS_DEFAULT="$NECKO_PROTOCOLS_DEFAULT rtsp"
-fi
 BUILD_CTYPES=1
 MOZ_USE_NATIVE_POPUP_WINDOWS=
-MOZ_WEBSMS_BACKEND=
 MOZ_EXCLUDE_HYPHENATION_DICTIONARIES=
 MOZ_INSTALL_TRACKING=
 ACCESSIBILITY=1
@@ -2410,7 +2375,6 @@ esac
 
 case "${target}" in
     *-android*|*-linuxandroid*)
-        NSS_DISABLE_DBM=1
         MOZ_THEME_FASTSTRIPE=1
         MOZ_TREE_FREETYPE=1
         MOZ_RAW=1
@@ -2651,23 +2615,6 @@ then
 fi
 AC_SUBST(MOZ_ENABLE_STARTUP_NOTIFICATION)
 
-dnl ========================================================
-dnl Disable printing
-dnl ========================================================
-MOZ_ARG_DISABLE_BOOL(printing,
-[  --disable-printing      Disable printing support],
-    NS_PRINTING=,
-    NS_PRINTING=1)
-
-if test -n "$MOZ_IOS" -a -n "$NS_PRINTING"; then
-   AC_MSG_ERROR([Printing is not supported on iOS.])
-fi
-
-if test "$NS_PRINTING"; then
-    AC_DEFINE(NS_PRINTING)
-    AC_DEFINE(NS_PRINT_PREVIEW)
-fi
-
 AC_SUBST_LIST(TK_CFLAGS)
 AC_SUBST_LIST(TK_LIBS)
 
@@ -2903,34 +2850,6 @@ then
 fi
 AC_SUBST(MOZ_ENABLE_DBUS)
 
-dnl ========================================================
-dnl = speech-dispatcher support
-dnl ========================================================
-
-if test "$MOZ_ENABLE_GTK"
-then
-    MOZ_SYNTH_SPEECHD=1
-
-    MOZ_ARG_DISABLE_BOOL(synth-speechd,
-    [  --disable-synth-speechd Disable speech-dispatcher support ],
-        MOZ_SYNTH_SPEECHD=,
-        MOZ_SYNTH_SPEECHD=1)
-fi
-AC_SUBST(MOZ_SYNTH_SPEECHD)
-
-dnl ========================================================
-dnl = Disable WebSMS backend
-dnl ========================================================
-MOZ_ARG_DISABLE_BOOL(websms-backend,
-[  --disable-websms-backend
-                           Disable WebSMS backend],
-    MOZ_WEBSMS_BACKEND=,
-    MOZ_WEBSMS_BACKEND=1)
-
-if test -n "$MOZ_WEBSMS_BACKEND"; then
-    AC_DEFINE(MOZ_WEBSMS_BACKEND)
-fi
-
 dnl =========================================================
 dnl = Whether to exclude hyphenations files in the build
 dnl =========================================================
@@ -2946,30 +2865,6 @@ if test -n "$MOZ_INSTALL_TRACKING"; then
         AC_MSG_ERROR([Must specify --with-adjust-sdk-keyfile when MOZ_INSTALL_TRACKING is defined!])
     fi
 fi
-
-dnl ========================================================
-dnl = Enable IPDL's "expensive" unit tests
-dnl ========================================================
-MOZ_IPDL_TESTS=
-
-MOZ_ARG_ENABLE_BOOL(ipdl-tests,
-[  --enable-ipdl-tests     Enable expensive IPDL tests],
-    MOZ_IPDL_TESTS=1,
-    MOZ_IPDL_TESTS=)
-
-if test -n "$MOZ_IPDL_TESTS"; then
-    AC_DEFINE(MOZ_IPDL_TESTS)
-fi
-
-AC_SUBST(MOZ_IPDL_TESTS)
-
-dnl ========================================================
-dnl = Disable building dbm
-dnl ========================================================
-MOZ_ARG_DISABLE_BOOL(dbm,
-[  --disable-dbm           Disable building dbm],
-    NSS_DISABLE_DBM=1,
-    NSS_DISABLE_DBM=)
 
 dnl ========================================================
 dnl accessibility support on by default on all platforms
@@ -3100,60 +2995,6 @@ else
     AC_DEFINE(MOZ_SAMPLE_TYPE_FLOAT32)
     AC_SUBST(MOZ_SAMPLE_TYPE_FLOAT32)
 fi
-
-dnl ========================================================
-dnl = Disable Speech API pocketsphinx backend
-dnl ========================================================
-if test -n "$MOZ_WEBSPEECH_POCKETSPHINX"; then
-    AC_DEFINE(MOZ_WEBSPEECH_POCKETSPHINX)
-fi
-
-AC_SUBST(MOZ_WEBSPEECH_POCKETSPHINX)
-
-dnl ========================================================
-dnl = Disable Speech API code
-dnl ========================================================
-MOZ_ARG_DISABLE_BOOL(webspeech,
-[  --disable-webspeech        Disable support for HTML Speech API],
-    MOZ_WEBSPEECH=,
-    MOZ_WEBSPEECH=1)
-
-if test -n "$MOZ_WEBSPEECH"; then
-    AC_DEFINE(MOZ_WEBSPEECH)
-fi
-
-AC_SUBST(MOZ_WEBSPEECH)
-
-dnl ========================================================
-dnl = Disable Speech API test backend
-dnl ========================================================
-MOZ_ARG_DISABLE_BOOL(webspeechtestbackend,
-[  --disable-webspeechtestbackend        Disable support for HTML Speech API Test Backend],
-    MOZ_WEBSPEECH_TEST_BACKEND=,
-    MOZ_WEBSPEECH_TEST_BACKEND=1)
-
-if test -z "$MOZ_WEBSPEECH"; then
-MOZ_WEBSPEECH_TEST_BACKEND=
-fi
-
-if test -n "$MOZ_WEBSPEECH_TEST_BACKEND"; then
-    AC_DEFINE(MOZ_WEBSPEECH_TEST_BACKEND)
-fi
-
-AC_SUBST(MOZ_WEBSPEECH_TEST_BACKEND)
-
-dnl ========================================================
-dnl = Disable Speech API models
-dnl ========================================================
-if test -z "$MOZ_WEBSPEECH"; then
-MOZ_WEBSPEECH_MODELS=
-fi
-
-if test -n "$MOZ_WEBSPEECH_MODELS"; then
-    AC_DEFINE(MOZ_WEBSPEECH_MODELS)
-fi
-
-AC_SUBST(MOZ_WEBSPEECH_MODELS)
 
 dnl ========================================================
 dnl = Enable Raw Codecs
@@ -5806,7 +5647,6 @@ AC_SUBST_SET(MOZ_EXTENSIONS)
 AC_SUBST(LIBICONV)
 AC_SUBST(MOZ_TOOLKIT_SEARCH)
 AC_SUBST(MOZ_FEEDS)
-AC_SUBST(NS_PRINTING)
 
 AC_SUBST(MOZ_UNIVERSALCHARDET)
 AC_SUBST(ACCESSIBILITY)
@@ -5830,7 +5670,6 @@ AC_SUBST(MOZ_DIRECTX_SDK_PATH)
 AC_SUBST(MOZ_D3DCOMPILER_XP_DLL)
 AC_SUBST(MOZ_D3DCOMPILER_XP_CAB)
 
-AC_SUBST(MOZ_WEBSMS_BACKEND)
 AC_SUBST(MOZ_ANDROID_APPLICATION_CLASS)
 AC_SUBST(MOZ_ANDROID_BROWSER_INTENT_CLASS)
 AC_SUBST(MOZ_ANDROID_SEARCH_INTENT_CLASS)
@@ -6099,7 +5938,6 @@ AC_SUBST_LIST(MOZ_PNG_LIBS)
 AC_SUBST(MOZ_SYSTEM_NSPR)
 
 AC_SUBST(MOZ_SYSTEM_NSS)
-AC_SUBST(NSS_DISABLE_DBM)
 
 HOST_CMFLAGS=-fobjc-exceptions
 HOST_CMMFLAGS=-fobjc-exceptions

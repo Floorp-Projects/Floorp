@@ -178,6 +178,12 @@ interface nsILoadInfo : nsISupports
   const unsigned long SEC_FORCE_PRIVATE_BROWSING = (1<<13);
 
   /**
+   * Load an error page, it should be one of following : about:neterror,
+   * about:certerror, about:blocked, or about:tabcrashed.
+   */
+  const unsigned long SEC_LOAD_ERROR_PAGE = (1<<14);
+
+  /**
    * The loadingPrincipal is the principal that is responsible for the load.
    * It is *NOT* the principal tied to the resource/URI that this
    * channel is loading, it's the principal of the resource's
@@ -325,6 +331,11 @@ interface nsILoadInfo : nsISupports
    * Returns true if SEC_DONT_FOLLOW_REDIRECTS is set.
    */
   [infallible] readonly attribute boolean dontFollowRedirects;
+
+  /**
+   * Returns true if SEC_LOAD_ERROR_PAGE is set.
+   */
+  [infallible] readonly attribute boolean loadErrorPage;
 
   /**
    * The external contentPolicyType of the channel, used for security checks

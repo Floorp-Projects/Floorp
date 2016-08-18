@@ -1768,7 +1768,7 @@ APZCTreeManager::FindRootContentOrRootApzc() const
 
   // Note: this is intended to find the same "root" that would be found
   // by AsyncCompositionManager::ApplyAsyncContentTransformToTree inside
-  // the MOZ_ANDROID_APZ block. That is, it should find the RCD node if there
+  // the MOZ_WIDGET_ANDROID block. That is, it should find the RCD node if there
   // is one, or the root APZC if there is not.
   // Since BreadthFirstSearch is a pre-order search, we first do a search for
   // the RCD, and then if we don't find one, we do a search for the root APZC.

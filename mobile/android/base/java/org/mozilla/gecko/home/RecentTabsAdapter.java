@@ -147,10 +147,10 @@ public class RecentTabsAdapter extends RecyclerView.Adapter<CombinedHistoryItem>
         final Thread parseThread = new Thread(new Runnable() {
             @Override
             public void run() {
-                // Make sure that the start up code has had a chance to update sessionstore.bak as necessary.
+                // Make sure that the start up code has had a chance to update sessionstore.old as necessary.
                 GeckoProfile.get(context).waitForOldSessionDataProcessing();
 
-                final String jsonString = GeckoProfile.get(context).readSessionFile(true);
+                final String jsonString = GeckoProfile.get(context).readPreviousSessionFile();
                 if (jsonString == null) {
                     // No previous session data.
                     return;

@@ -68,9 +68,9 @@ private:
     nsCOMPtr<nsICacheEntry> mEntry;
 
     // Called by PackagedAppDownloader to write data to the cache entry.
-    NS_METHOD ConsumeData(const char *aBuf,
-                          uint32_t aCount,
-                          uint32_t *aWriteCount);
+    nsresult ConsumeData(const char *aBuf,
+                         uint32_t aCount,
+                         uint32_t *aWriteCount);
 
   private:
     CacheEntryWriter() { }

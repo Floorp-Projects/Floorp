@@ -32,12 +32,11 @@ git checkout 0.5.3
 popd
 rm -rf mp4parse/src/byteorder
 mkdir mp4parse/src/byteorder
-cp _upstream/byteorder/src/lib.rs mp4parse/src/byteorder/mod.rs
-cp _upstream/byteorder/src/new.rs mp4parse/src/byteorder/new.rs
+cp _upstream/byteorder/Cargo.toml byteorder/
+cp _upstream/byteorder/src/lib.rs byteorder/src/
+cp _upstream/byteorder/src/new.rs byteorder/src/
 
 echo "Applying patches..."
-patch -p4 < byteorder-mod.patch
-patch -p4 < mp4parse-mod.patch
 patch -p4 < mp4parse-cargo.patch
 
 echo "Cleaning up..."

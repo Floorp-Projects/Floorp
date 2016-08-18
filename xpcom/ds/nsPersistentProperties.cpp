@@ -623,7 +623,7 @@ nsPersistentProperties::GetKeys(uint32_t* aCount, char*** aKeys)
 // PropertyElement
 ////////////////////////////////////////////////////////////////////////////////
 
-NS_METHOD
+nsresult
 nsPropertyElement::Create(nsISupports* aOuter, REFNSIID aIID, void** aResult)
 {
   if (aOuter) {

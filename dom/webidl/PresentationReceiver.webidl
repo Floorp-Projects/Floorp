@@ -4,8 +4,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-[Pref="dom.presentation.enabled",
- Func="Navigator::HasPresentationSupport"]
+[Pref="dom.presentation.receiver.enabled"]
 interface PresentationReceiver {
   /*
    * Get a list which contains all connected presentation connections

@@ -2,9 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-@namespace url("http://www.w3.org/1999/xhtml");
-@namespace xul url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+package org.mozilla.gecko.media;
 
-html xul|scrollbar {
-  display: none;
-}
+parcelable Sample;

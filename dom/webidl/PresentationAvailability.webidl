@@ -4,8 +4,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-[Pref="dom.presentation.enabled",
- Func="Navigator::HasPresentationSupport"]
+[Pref="dom.presentation.controller.enabled"]
 interface PresentationAvailability : EventTarget {
   /*
    * If there is at least one device discovered by UA, the value is |true|.

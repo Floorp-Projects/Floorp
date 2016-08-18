@@ -540,7 +540,6 @@ js::Nursery::collect(JSRuntime* rt, JS::gcreason::Reason reason)
     MOZ_ASSERT(!rt->mainThread.suppressGC);
     MOZ_RELEASE_ASSERT(CurrentThreadCanAccessRuntime(rt));
 
-    StoreBuffer& sb = rt->gc.storeBuffer;
     if (!isEnabled() || isEmpty()) {
         /*
          * Our barriers are not always exact, and there may be entries in the
@@ -548,7 +547,7 @@ js::Nursery::collect(JSRuntime* rt, JS::gcreason::Reason reason)
          * safe to keep these entries as they may refer to tenured cells which
          * may be freed after this point.
          */
-        sb.clear();
+        rt->gc.storeBuffer.clear();
         return;
     }
 
@@ -567,111 +566,12 @@ js::Nursery::collect(JSRuntime* rt, JS::gcreason::Reason reason)
 
     startProfile(ProfileKey::Total);
 
-    AutoTraceSession session(rt, JS::HeapState::MinorCollecting);
-    AutoStopVerifyingBarriers av(rt, false);
-    AutoDisableProxyCheck disableStrictProxyChecking(rt);
-    mozilla::DebugOnly<AutoEnterOOMUnsafeRegion> oomUnsafeRegion;
+    // The hazard analysis thinks doCollection can invalidate pointers in
+    // tenureCounts below.
+    JS::AutoSuppressGCAnalysis nogc;
 
-    size_t initialUsedSpace = usedSpace();
-
-    // Move objects pointed to by roots from the nursery to the major heap.
-    TenuringTracer mover(rt, this);
-
-    // Mark the store buffer. This must happen first.
-
-    maybeStartProfile(ProfileKey::CancelIonCompilations);
-    if (sb.cancelIonCompilations()) {
-        for (CompartmentsIter c(rt, SkipAtoms); !c.done(); c.next())
-            jit::StopAllOffThreadCompilations(c);
-    }
-    maybeEndProfile(ProfileKey::CancelIonCompilations);
-
-    maybeStartProfile(ProfileKey::TraceValues);
-    sb.traceValues(mover);
-    maybeEndProfile(ProfileKey::TraceValues);
-
-    maybeStartProfile(ProfileKey::TraceCells);
-    sb.traceCells(mover);
-    maybeEndProfile(ProfileKey::TraceCells);
-
-    maybeStartProfile(ProfileKey::TraceSlots);
-    sb.traceSlots(mover);
-    maybeEndProfile(ProfileKey::TraceSlots);
-
-    maybeStartProfile(ProfileKey::TraceWholeCells);
-    sb.traceWholeCells(mover);
-    maybeEndProfile(ProfileKey::TraceWholeCells);
-
-    maybeStartProfile(ProfileKey::TraceGenericEntries);
-    sb.traceGenericEntries(&mover);
-    maybeEndProfile(ProfileKey::TraceGenericEntries);
-
-    maybeStartProfile(ProfileKey::MarkRuntime);
-    rt->gc.markRuntime(&mover, GCRuntime::TraceRuntime, session.lock);
-    maybeEndProfile(ProfileKey::MarkRuntime);
-
-    maybeStartProfile(ProfileKey::MarkDebugger);
-    {
-        gcstats::AutoPhase ap(rt->gc.stats, gcstats::PHASE_MARK_ROOTS);
-        Debugger::markAll(&mover);
-    }
-    maybeEndProfile(ProfileKey::MarkDebugger);
-
-    maybeStartProfile(ProfileKey::ClearNewObjectCache);
-    rt->contextFromMainThread()->caches.newObjectCache.clearNurseryObjects(rt);
-    maybeEndProfile(ProfileKey::ClearNewObjectCache);
-
-    // Most of the work is done here. This loop iterates over objects that have
-    // been moved to the major heap. If these objects have any outgoing pointers
-    // to the nursery, then those nursery objects get moved as well, until no
-    // objects are left to move. That is, we iterate to a fixed point.
-    maybeStartProfile(ProfileKey::CollectToFP);
     TenureCountCache tenureCounts;
-    collectToFixedPoint(mover, tenureCounts);
-    maybeEndProfile(ProfileKey::CollectToFP);
-
-    // Sweep compartments to update the array buffer object's view lists.
-    maybeStartProfile(ProfileKey::SweepArrayBufferViewList);
-    for (CompartmentsIter c(rt, SkipAtoms); !c.done(); c.next())
-        c->sweepAfterMinorGC();
-    maybeEndProfile(ProfileKey::SweepArrayBufferViewList);
-
-    // Update any slot or element pointers whose destination has been tenured.
-    maybeStartProfile(ProfileKey::UpdateJitActivations);
-    js::jit::UpdateJitActivationsForMinorGC(rt, &mover);
-    forwardedBuffers.finish();
-    maybeEndProfile(ProfileKey::UpdateJitActivations);
-
-    maybeStartProfile(ProfileKey::ObjectsTenuredCallback);
-    rt->gc.callObjectsTenuredCallback();
-    maybeEndProfile(ProfileKey::ObjectsTenuredCallback);
-
-    // Sweep.
-    maybeStartProfile(ProfileKey::FreeMallocedBuffers);
-    freeMallocedBuffers();
-    maybeEndProfile(ProfileKey::FreeMallocedBuffers);
-
-    maybeStartProfile(ProfileKey::Sweep);
-    sweep();
-    maybeEndProfile(ProfileKey::Sweep);
-
-    maybeStartProfile(ProfileKey::ClearStoreBuffer);
-    rt->gc.storeBuffer.clear();
-    maybeEndProfile(ProfileKey::ClearStoreBuffer);
-
-    // Make sure hashtables have been updated after the collection.
-    maybeStartProfile(ProfileKey::CheckHashTables);
-#ifdef JS_GC_ZEAL
-    if (rt->hasZealMode(ZealMode::CheckHashTablesOnMinorGC))
-        CheckHashTablesAfterMovingGC(rt);
-#endif
-    maybeEndProfile(ProfileKey::CheckHashTables);
-
-    // Resize the nursery.
-    maybeStartProfile(ProfileKey::Resize);
-    double promotionRate = mover.tenuredSize / double(initialUsedSpace);
-    maybeResizeNursery(reason, initialUsedSpace, promotionRate);
-    maybeEndProfile(ProfileKey::Resize);
+    double promotionRate = doCollection(rt, reason, tenureCounts);
 
     // If we are promoting the nursery, or exhausted the store buffer with
     // pointers to nursery things, which will force a collection well before
@@ -728,6 +628,119 @@ js::Nursery::collect(JSRuntime* rt, JS::gcreason::Reason reason)
                 numChunks());
         printProfileTimes(profileTimes_);
     }
+}
+
+double
+js::Nursery::doCollection(JSRuntime* rt, JS::gcreason::Reason reason,
+                          TenureCountCache& tenureCounts)
+{
+    AutoTraceSession session(rt, JS::HeapState::MinorCollecting);
+    AutoStopVerifyingBarriers av(rt, false);
+    AutoDisableProxyCheck disableStrictProxyChecking(rt);
+    mozilla::DebugOnly<AutoEnterOOMUnsafeRegion> oomUnsafeRegion;
+
+    size_t initialUsedSpace = usedSpace();
+
+    // Move objects pointed to by roots from the nursery to the major heap.
+    TenuringTracer mover(rt, this);
+
+    // Mark the store buffer. This must happen first.
+    StoreBuffer& sb = rt->gc.storeBuffer;
+
+    maybeStartProfile(ProfileKey::CancelIonCompilations);
+    if (sb.cancelIonCompilations()) {
+        for (CompartmentsIter c(rt, SkipAtoms); !c.done(); c.next())
+            jit::StopAllOffThreadCompilations(c);
+    }
+    maybeEndProfile(ProfileKey::CancelIonCompilations);
+
+    maybeStartProfile(ProfileKey::TraceValues);
+    sb.traceValues(mover);
+    maybeEndProfile(ProfileKey::TraceValues);
+
+    maybeStartProfile(ProfileKey::TraceCells);
+    sb.traceCells(mover);
+    maybeEndProfile(ProfileKey::TraceCells);
+
+    maybeStartProfile(ProfileKey::TraceSlots);
+    sb.traceSlots(mover);
+    maybeEndProfile(ProfileKey::TraceSlots);
+
+    maybeStartProfile(ProfileKey::TraceWholeCells);
+    sb.traceWholeCells(mover);
+    maybeEndProfile(ProfileKey::TraceWholeCells);
+
+    maybeStartProfile(ProfileKey::TraceGenericEntries);
+    sb.traceGenericEntries(&mover);
+    maybeEndProfile(ProfileKey::TraceGenericEntries);
+
+    maybeStartProfile(ProfileKey::MarkRuntime);
+    rt->gc.markRuntime(&mover, GCRuntime::TraceRuntime, session.lock);
+    maybeEndProfile(ProfileKey::MarkRuntime);
+
+    maybeStartProfile(ProfileKey::MarkDebugger);
+    {
+        gcstats::AutoPhase ap(rt->gc.stats, gcstats::PHASE_MARK_ROOTS);
+        Debugger::markAll(&mover);
+    }
+    maybeEndProfile(ProfileKey::MarkDebugger);
+
+    maybeStartProfile(ProfileKey::ClearNewObjectCache);
+    rt->contextFromMainThread()->caches.newObjectCache.clearNurseryObjects(rt);
+    maybeEndProfile(ProfileKey::ClearNewObjectCache);
+
+    // Most of the work is done here. This loop iterates over objects that have
+    // been moved to the major heap. If these objects have any outgoing pointers
+    // to the nursery, then those nursery objects get moved as well, until no
+    // objects are left to move. That is, we iterate to a fixed point.
+    maybeStartProfile(ProfileKey::CollectToFP);
+    collectToFixedPoint(mover, tenureCounts);
+    maybeEndProfile(ProfileKey::CollectToFP);
+
+    // Sweep compartments to update the array buffer object's view lists.
+    maybeStartProfile(ProfileKey::SweepArrayBufferViewList);
+    for (CompartmentsIter c(rt, SkipAtoms); !c.done(); c.next())
+        c->sweepAfterMinorGC();
+    maybeEndProfile(ProfileKey::SweepArrayBufferViewList);
+
+    // Update any slot or element pointers whose destination has been tenured.
+    maybeStartProfile(ProfileKey::UpdateJitActivations);
+    js::jit::UpdateJitActivationsForMinorGC(rt, &mover);
+    forwardedBuffers.finish();
+    maybeEndProfile(ProfileKey::UpdateJitActivations);
+
+    maybeStartProfile(ProfileKey::ObjectsTenuredCallback);
+    rt->gc.callObjectsTenuredCallback();
+    maybeEndProfile(ProfileKey::ObjectsTenuredCallback);
+
+    // Sweep.
+    maybeStartProfile(ProfileKey::FreeMallocedBuffers);
+    freeMallocedBuffers();
+    maybeEndProfile(ProfileKey::FreeMallocedBuffers);
+
+    maybeStartProfile(ProfileKey::Sweep);
+    sweep();
+    maybeEndProfile(ProfileKey::Sweep);
+
+    maybeStartProfile(ProfileKey::ClearStoreBuffer);
+    rt->gc.storeBuffer.clear();
+    maybeEndProfile(ProfileKey::ClearStoreBuffer);
+
+    // Make sure hashtables have been updated after the collection.
+    maybeStartProfile(ProfileKey::CheckHashTables);
+#ifdef JS_GC_ZEAL
+    if (rt->hasZealMode(ZealMode::CheckHashTablesOnMinorGC))
+        CheckHashTablesAfterMovingGC(rt);
+#endif
+    maybeEndProfile(ProfileKey::CheckHashTables);
+
+    // Resize the nursery.
+    maybeStartProfile(ProfileKey::Resize);
+    double promotionRate = mover.tenuredSize / double(initialUsedSpace);
+    maybeResizeNursery(reason, initialUsedSpace, promotionRate);
+    maybeEndProfile(ProfileKey::Resize);
+
+    return promotionRate;
 }
 
 void
@@ -790,6 +803,7 @@ js::Nursery::sweep()
     cellsWithUid_.clear();
 
     runSweepActions();
+    sweepDictionaryModeObjects();
 
 #ifdef JS_GC_ZEAL
     /* Poison the nursery contents so touching a freed object will crash. */
@@ -970,4 +984,21 @@ js::Nursery::runSweepActions()
     for (auto action = sweepActions_; action; action = action->next)
         action->thunk(action->data);
     sweepActions_ = nullptr;
+}
+
+bool
+js::Nursery::queueDictionaryModeObjectToSweep(NativeObject* obj)
+{
+    MOZ_ASSERT(IsInsideNursery(obj));
+    return dictionaryModeObjects_.append(obj);
+}
+
+void
+js::Nursery::sweepDictionaryModeObjects()
+{
+    for (auto obj : dictionaryModeObjects_) {
+        if (!IsForwarded(obj))
+            obj->sweepDictionaryListPointer();
+    }
+    dictionaryModeObjects_.clear();
 }
