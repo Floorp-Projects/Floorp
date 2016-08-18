@@ -1905,7 +1905,7 @@ nsWindow::DispatchEvent(WidgetGUIEvent* aEvent)
     return nsEventStatus_eIgnore;
 }
 
-NS_IMETHODIMP
+nsresult
 nsWindow::MakeFullScreen(bool aFullScreen, nsIScreen*)
 {
     mIsFullScreen = aFullScreen;
