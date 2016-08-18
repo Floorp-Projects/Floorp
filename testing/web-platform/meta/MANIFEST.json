@@ -37593,6 +37593,14 @@
     "deleted": [],
     "deleted_reftests": {},
     "items": {
+      "manual": {
+        "pointerevents/pointerevent_element_haspointercapture-manual.html": [
+          {
+            "path": "pointerevents/pointerevent_element_haspointercapture-manual.html",
+            "url": "/pointerevents/pointerevent_element_haspointercapture-manual.html"
+          }
+        ]
+      },
       "reftest": {
         "html/semantics/grouping-content/the-ol-element/reversed-1a.html": [
           {
