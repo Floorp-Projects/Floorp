@@ -8,8 +8,8 @@
 #define mozilla_a11y_DocAccessibleParent_h
 
 #include "nsAccessibilityService.h"
+#include "ProxyAccessible.h"
 #include "mozilla/a11y/PDocAccessibleParent.h"
-#include "mozilla/a11y/ProxyAccessible.h"
 #include "nsClassHashtable.h"
 #include "nsHashKeys.h"
 #include "nsISupportsImpl.h"
@@ -141,11 +141,6 @@ public:
   size_t ChildDocCount() const { return mChildDocs.Length(); }
   const DocAccessibleParent* ChildDocAt(size_t aIdx) const
     { return mChildDocs[aIdx]; }
-
-#if defined(XP_WIN)
-  virtual bool RecvCOMProxy(const IAccessibleHolder& aCOMProxy,
-                            IAccessibleHolder* aParentCOMProxy) override;
-#endif
 
 private:
 
