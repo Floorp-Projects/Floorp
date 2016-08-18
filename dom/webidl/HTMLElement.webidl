@@ -22,7 +22,7 @@ interface HTMLElement : Element {
   [Constant]
   readonly attribute DOMStringMap dataset;
 
-  [GetterThrows, Pure]
+  [GetterThrows, Pure, TreatNullAs=EmptyString]
            attribute DOMString innerText;
 
   // user interaction
