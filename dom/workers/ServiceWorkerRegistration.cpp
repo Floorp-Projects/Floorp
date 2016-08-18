@@ -1192,7 +1192,7 @@ ServiceWorkerRegistrationWorkerThread::InitListener()
   worker->AssertIsOnWorkerThread();
 
   mListener = new WorkerListener(worker, this);
-  if (!HoldWorker(worker, Closing)) {
+  if (!HoldWorker(worker)) {
     mListener = nullptr;
     NS_WARNING("Could not add feature");
     return;
