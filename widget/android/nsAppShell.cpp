@@ -323,6 +323,11 @@ public:
         AndroidAlerts::NotifyListener(
                 aName->ToString(), aTopic->ToCString().get());
     }
+
+    static void OnFullScreenPluginHidden(jni::Object::Param aView)
+    {
+        nsPluginInstanceOwner::ExitFullScreen(aView.Get());
+    }
 };
 
 nsAppShell::nsAppShell()

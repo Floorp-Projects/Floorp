@@ -250,8 +250,6 @@ public class GeckoAppShell
     public static native void addPresentationSurface(Surface surface);
     public static native void removePresentationSurface(Surface surface);
 
-    public static native void onFullScreenPluginHidden(View view);
-
     private static LayerView sLayerView;
     private static Rect sScreenSize;
 
@@ -1488,6 +1486,9 @@ public class GeckoAppShell
             return true;
         }
     }
+
+    @WrapForJNI(calledFrom = "ui", dispatchTo = "gecko")
+    public static native void onFullScreenPluginHidden(View view);
 
     @WrapForJNI(calledFrom = "gecko")
     public static void addFullScreenPluginView(View view) {

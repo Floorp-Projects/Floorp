@@ -91,28 +91,6 @@ Java_org_mozilla_gecko_GeckoAppShell_removePresentationSurface(JNIEnv* jenv, jcl
 }
 
 NS_EXPORT void JNICALL
-Java_org_mozilla_gecko_GeckoAppShell_onFullScreenPluginHidden(JNIEnv* jenv, jclass, jobject view)
-{
-  class ExitFullScreenRunnable : public Runnable {
-    public:
-      ExitFullScreenRunnable(jobject view) : mView(view) {}
-
-      NS_IMETHOD Run() override {
-        JNIEnv* const env = jni::GetGeckoThreadEnv();
-        nsPluginInstanceOwner::ExitFullScreen(mView);
-        env->DeleteGlobalRef(mView);
-        return NS_OK;
-      }
-
-    private:
-      jobject mView;
-  };
-
-  nsCOMPtr<nsIRunnable> runnable = new ExitFullScreenRunnable(jenv->NewGlobalRef(view));
-  NS_DispatchToMainThread(runnable);
-}
-
-NS_EXPORT void JNICALL
 Java_org_mozilla_gecko_GeckoAppShell_onSurfaceTextureFrameAvailable(JNIEnv* jenv, jclass, jobject surfaceTexture, jint id)
 {
   mozilla::gl::AndroidSurfaceTexture* st = mozilla::gl::AndroidSurfaceTexture::Find(id);
