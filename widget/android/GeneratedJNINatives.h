@@ -78,7 +78,7 @@ template<class Impl>
 class GeckoAppShell::Natives : public mozilla::jni::NativeImpl<GeckoAppShell, Impl>
 {
 public:
-    static const JNINativeMethod methods[7];
+    static const JNINativeMethod methods[8];
 };
 
 template<class Impl>
@@ -107,6 +107,10 @@ const JNINativeMethod GeckoAppShell::Natives<Impl>::methods[] = {
     mozilla::jni::MakeNativeMethod<GeckoAppShell::OnSensorChanged_t>(
             mozilla::jni::NativeStub<GeckoAppShell::OnSensorChanged_t, Impl>
             ::template Wrap<&Impl::OnSensorChanged>),
+
+    mozilla::jni::MakeNativeMethod<GeckoAppShell::ReportJavaCrash_t>(
+            mozilla::jni::NativeStub<GeckoAppShell::ReportJavaCrash_t, Impl>
+            ::template Wrap<&Impl::ReportJavaCrash>),
 
     mozilla::jni::MakeNativeMethod<GeckoAppShell::SyncNotifyObservers_t>(
             mozilla::jni::NativeStub<GeckoAppShell::SyncNotifyObservers_t, Impl>

@@ -240,6 +240,7 @@ public class GeckoAppShell
     // helper methods
     public static native void onSurfaceTextureFrameAvailable(Object surfaceTexture, int id);
 
+    @WrapForJNI
     private static native void reportJavaCrash(String stackTrace);
 
     @WrapForJNI(dispatchTo = "gecko")
