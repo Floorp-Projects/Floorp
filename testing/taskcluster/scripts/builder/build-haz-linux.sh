@@ -22,7 +22,7 @@ export AUTOMATION=${GECKO_BASE_REPOSITORY:+1}
 : ${GECKO_DIR:=$WORKSPACE/gecko}
 : ${TOOLTOOL_MANIFEST:=browser/config/tooltool-manifests/linux64/hazard.manifest}
 : ${TOOLTOOL_CACHE:=$WORKSPACE/tt-cache}
-: ${TOOLTOOL_REPO:=https://git.mozilla.org/build/tooltool.git}
+: ${TOOLTOOL_REPO:=https://github.com/mozilla/build-tooltool.git}
 
 if ! [ -d $GECKO_DIR ]; then
     echo "GECKO_DIR must be set to a directory containing a gecko source checkout" >&2
