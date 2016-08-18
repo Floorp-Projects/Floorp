@@ -243,7 +243,7 @@ MediaCodecDataDecoder::MediaCodecDataDecoder(MediaData::Type aType,
   , mInputBuffers(nullptr)
   , mOutputBuffers(nullptr)
   , mMonitor("MediaCodecDataDecoder::mMonitor")
-  , mState(kDecoding)
+  , mState(ModuleState::kDecoding)
 {
 
 }
@@ -296,9 +296,9 @@ static const int64_t kDecoderTimeout = 10000;
 #define BREAK_ON_DECODER_ERROR() \
   if (NS_FAILED(res)) { \
     NS_WARNING("Exiting decoder loop due to exception"); \
-    if (State() == kDrainDecoder) { \
+    if (mState == ModuleState::kDrainDecoder) { \
       INVOKE_CALLBACK(DrainComplete); \
-      State(kDecoding); \
+      SetState(ModuleState::kDecoding); \
     } \
     INVOKE_CALLBACK(Error, MediaDataDecoderError::FATAL_ERROR); \
     break; \
@@ -332,13 +332,13 @@ MediaCodecDataDecoder::WaitForInput()
 {
   MonitorAutoLock lock(mMonitor);
 
-  while (State() == kDecoding && mQueue.empty()) {
+  while (mState ==  ModuleState::kDecoding && mQueue.empty()) {
     // Signal that we require more input.
     INVOKE_CALLBACK(InputExhausted);
     lock.Wait();
   }
 
-  return State() != kStopping;
+  return mState != ModuleState::kStopping;
 }
 
 
@@ -347,17 +347,17 @@ MediaCodecDataDecoder::PeekNextSample()
 {
   MonitorAutoLock lock(mMonitor);
 
-  if (State() == kFlushing) {
+  if (mState == ModuleState::kFlushing) {
     mDecoder->Flush();
     ClearQueue();
-    State(kDecoding);
+    SetState(ModuleState::kDecoding);
     lock.Notify();
     return nullptr;
   }
 
   if (mQueue.empty()) {
-    if (State() == kDrainQueue) {
-      State(kDrainDecoder);
+    if (mState == ModuleState::kDrainQueue) {
+      SetState(ModuleState::kDrainDecoder);
     }
     return nullptr;
   }
@@ -423,7 +423,7 @@ MediaCodecDataDecoder::QueueEOS()
   res = mDecoder->QueueInputBuffer(inputIndex, 0, 0, 0,
                                    MediaCodec::BUFFER_FLAG_END_OF_STREAM);
   if (NS_SUCCEEDED(res)) {
-    State(kDrainWaitEOS);
+    SetState(ModuleState::kDrainWaitEOS);
     mMonitor.Notify();
   }
   return res;
@@ -434,8 +434,8 @@ MediaCodecDataDecoder::HandleEOS(int32_t aOutputStatus)
 {
   MonitorAutoLock lock(mMonitor);
 
-  if (State() == kDrainWaitEOS) {
-    State(kDecoding);
+  if (mState ==  ModuleState::kDrainWaitEOS) {
+    SetState(ModuleState::kDecoding);
     mMonitor.Notify();
 
     INVOKE_CALLBACK(DrainComplete);
@@ -498,7 +498,7 @@ MediaCodecDataDecoder::DecoderLoop()
 
     {
       MonitorAutoLock lock(mMonitor);
-      if (State() == kDrainDecoder) {
+      if (mState == ModuleState::kDrainDecoder) {
         MOZ_ASSERT(!sample, "Shouldn't have a sample when pushing EOF frame");
         res = QueueEOS();
         BREAK_ON_DECODER_ERROR();
@@ -565,45 +565,45 @@ MediaCodecDataDecoder::DecoderLoop()
 
   // We're done.
   MonitorAutoLock lock(mMonitor);
-  State(kShutdown);
+  SetState(ModuleState::kShutdown);
   mMonitor.Notify();
 }
 
 const char*
 MediaCodecDataDecoder::ModuleStateStr(ModuleState aState) {
-  static const char* kStr[] = {
-    "Decoding", "Flushing", "DrainQueue", "DrainDecoder", "DrainWaitEOS",
-    "Stopping", "Shutdown"
-  };
-
-  MOZ_ASSERT(aState < sizeof(kStr) / sizeof(kStr[0]));
-  return kStr[aState];
-}
-
-MediaCodecDataDecoder::ModuleState
-MediaCodecDataDecoder::State() const
-{
-  return mState;
+    switch (aState) {
+      case ModuleState::kDecoding:     return "Decoding";
+      case ModuleState::kFlushing:     return "Flushing";
+      case ModuleState::kDrainQueue:   return "DrainQueue";
+      case ModuleState::kDrainDecoder: return "DrainDecoder";
+      case ModuleState::kDrainWaitEOS: return "DrainWaitEOS";
+      case ModuleState::kStopping:     return "Stopping";
+      case ModuleState::kShutdown:     return "Shutdown";
+      default: MOZ_ASSERT_UNREACHABLE("Invalid state.");
+    }
+    return "Unknown";
 }
 
 bool
-MediaCodecDataDecoder::State(ModuleState aState)
+MediaCodecDataDecoder::SetState(ModuleState aState)
 {
   bool ok = true;
 
-  if (mState == kShutdown) {
+  if (mState == ModuleState::kShutdown) {
     ok = false;
-  } else if (mState == kStopping) {
-    ok = aState == kShutdown;
-  } else if (aState == kDrainDecoder) {
-    ok = mState == kDrainQueue;
-  } else if (aState == kDrainWaitEOS) {
-    ok = mState == kDrainDecoder;
+  } else if (mState == ModuleState::kStopping) {
+    ok = aState == ModuleState::kShutdown;
+  } else if (aState == ModuleState::kDrainDecoder) {
+    ok = mState == ModuleState::kDrainQueue;
+  } else if (aState == ModuleState::kDrainWaitEOS) {
+    ok = mState == ModuleState::kDrainDecoder;
   }
 
   if (ok) {
     LOG("%s -> %s", ModuleStateStr(mState), ModuleStateStr(aState));
     mState = aState;
+  } else {
+    LOG("Fail to transit from %s to %s state", ModuleStateStr(mState), ModuleStateStr(aState));
   }
 
   return ok;
@@ -644,12 +644,12 @@ nsresult
 MediaCodecDataDecoder::Flush()
 {
   MonitorAutoLock lock(mMonitor);
-  if (!State(kFlushing)) {
+  if (!SetState(ModuleState::kFlushing)) {
     return NS_OK;
   }
   lock.Notify();
 
-  while (State() == kFlushing) {
+  while (mState == ModuleState::kFlushing) {
     lock.Wait();
   }
 
@@ -660,11 +660,12 @@ nsresult
 MediaCodecDataDecoder::Drain()
 {
   MonitorAutoLock lock(mMonitor);
-  if (State() == kDrainDecoder || State() == kDrainQueue) {
+  if (mState == ModuleState::kDrainDecoder ||
+      mState == ModuleState::kDrainQueue) {
     return NS_OK;
   }
 
-  State(kDrainQueue);
+  SetState(ModuleState::kDrainQueue);
   lock.Notify();
 
   return NS_OK;
@@ -676,10 +677,10 @@ MediaCodecDataDecoder::Shutdown()
 {
   MonitorAutoLock lock(mMonitor);
 
-  State(kStopping);
+  SetState(ModuleState::kStopping);
   lock.Notify();
 
-  while (mThread && State() != kShutdown) {
+  while (mThread && mState != ModuleState::kShutdown) {
     lock.Wait();
   }
 
