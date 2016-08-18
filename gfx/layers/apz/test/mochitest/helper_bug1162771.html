@@ -1,0 +1,99 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width; initial-scale=1.0">
+  <title>Test for touchend on media elements</title>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/paint_listener.js"></script>
+  <script type="application/javascript">
+
+function* test(testDriver) {
+  var v = document.getElementById('video');
+  var a = document.getElementById('audio');
+  var d = document.getElementById('div');
+
+  document.body.ontouchstart = function(e) {
+    if (e.target === v || e.target === a || e.target === d) {
+      e.target.style.display = 'none';
+      ok(true, 'Set display to none on #' + e.target.id);
+    } else {
+      ok(false, 'Got unexpected touchstart on ' + e.target);
+    }
+    waitForAllPaints(testDriver);
+  };
+
+  document.body.ontouchend = function(e) {
+    if (e.target === v || e.target === a || e.target === d) {
+      e.target._gotTouchend = true;
+      ok(true, 'Got touchend event on #' + e.target.id);
+    }
+    testDriver();
+  };
+
+  yield synthesizeNativeTouch(v, 5, 5, SpecialPowers.DOMWindowUtils.TOUCH_CONTACT);
+  yield synthesizeNativeTouch(v, 5, 5, SpecialPowers.DOMWindowUtils.TOUCH_REMOVE);
+  ok(v._gotTouchend, 'Touchend was received on video element');
+
+  yield synthesizeNativeTouch(a, 5, 5, SpecialPowers.DOMWindowUtils.TOUCH_CONTACT);
+  yield synthesizeNativeTouch(a, 5, 5, SpecialPowers.DOMWindowUtils.TOUCH_REMOVE);
+  ok(a._gotTouchend, 'Touchend was received on audio element');
+
+  yield synthesizeNativeTouch(d, 5, 5, SpecialPowers.DOMWindowUtils.TOUCH_CONTACT);
+  yield synthesizeNativeTouch(d, 5, 5, SpecialPowers.DOMWindowUtils.TOUCH_REMOVE);
+  ok(d._gotTouchend, 'Touchend was received on div element');
+}
+
+waitUntilApzStable()
+.then(runContinuation(test))
+.then(subtestDone);
+
+  </script>
+  <style>
+    * {
+      font-size: 24px;
+      box-sizing: border-box;
+    }
+
+    #video {
+      display:block;
+      position:absolute;
+      top: 100px;
+      left:0;
+      width: 33%;
+      height: 100px;
+      border:solid black 1px;
+      background-color: #8a8;
+    }
+
+    #audio {
+      display:block;
+      position:absolute;
+      top: 100px;
+      left:33%;
+      width: 33%;
+      height: 100px;
+      border:solid black 1px;
+      background-color: #a88;
+    }
+
+    #div {
+      display:block;
+      position:absolute;
+      top: 100px;
+      left: 66%;
+      width: 34%;
+      height: 100px;
+      border:solid black 1px;
+      background-color: #88a;
+    }
+  </style>
+</head>
+<body>
+ <p>Tap on the colored boxes to hide them.</p>
+ <video id="video"></video>
+ <audio id="audio" controls></audio>
+ <div id="div"></div>
+</body>
+</html>
