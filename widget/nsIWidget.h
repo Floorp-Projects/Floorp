@@ -900,11 +900,6 @@ class nsIWidget : public nsISupports
     virtual LayoutDeviceIntRect GetClientBounds() = 0;
 
     /**
-     * Get the non-client area dimensions of the window.
-     */
-    NS_IMETHOD GetNonClientMargins(LayoutDeviceIntMargin& aMargins) = 0;
-
-    /**
      * Sets the non-client area dimensions of the window. Pass -1 to restore
      * the system default frame size for that border. Pass zero to remove
      * a border, or pass a specific value adjust a border. Units are in
