@@ -11,6 +11,7 @@ extern "C" {
 // Local includes
 #include "nricectxhandler.h"
 #include "nricemediastream.h"
+#include "nriceresolver.h"
 
 namespace mozilla {
 
@@ -82,6 +83,36 @@ NrIceCtxHandler::CreateCtx(const std::string& ufrag,
   }
 
   if (!new_ctx->Initialize(hide_non_default, ufrag, pwd)) {
+    return nullptr;
+  }
+
+  // copy the stun, and turn servers from the current context
+  int r = nr_ice_ctx_set_stun_servers(new_ctx->ctx_,
+                                      this->current_ctx->ctx_->stun_servers,
+                                      this->current_ctx->ctx_->stun_server_ct);
+  if (r) {
+    MOZ_MTLOG(ML_ERROR, "Error while setting STUN servers in CreateCtx"
+                        << " (likely ice restart related)");
+    return nullptr;
+  }
+
+  r = nr_ice_ctx_copy_turn_servers(new_ctx->ctx_,
+                                   this->current_ctx->ctx_->turn_servers,
+                                   this->current_ctx->ctx_->turn_server_ct);
+  if (r) {
+    MOZ_MTLOG(ML_ERROR, "Error while copying TURN servers in CreateCtx"
+                        << " (likely ice restart related)");
+    return nullptr;
+  }
+
+  // grab the NrIceResolver stashed in the nriceresolver and allocate another
+  // for the new ctx
+  NrIceResolver* resolver =
+    static_cast<NrIceResolver*>(this->current_ctx->ctx_->resolver->obj);
+  if (!resolver ||
+      NS_FAILED(new_ctx->SetResolver(resolver->AllocateResolver()))) {
+    MOZ_MTLOG(ML_ERROR, "Error while setting dns resolver in CreateCtx"
+                        << " (likely ice restart related)");
     return nullptr;
   }
 
