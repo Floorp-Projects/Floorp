@@ -350,6 +350,21 @@ const JNINativeMethod GeckoView::Window::Natives<Impl>::methods[] = {
 };
 
 template<class Impl>
+class MemoryMonitor::Natives : public mozilla::jni::NativeImpl<MemoryMonitor, Impl>
+{
+public:
+    static const JNINativeMethod methods[1];
+};
+
+template<class Impl>
+const JNINativeMethod MemoryMonitor::Natives<Impl>::methods[] = {
+
+    mozilla::jni::MakeNativeMethod<MemoryMonitor::DispatchMemoryPressure_t>(
+            mozilla::jni::NativeStub<MemoryMonitor::DispatchMemoryPressure_t, Impl>
+            ::template Wrap<&Impl::DispatchMemoryPressure>)
+};
+
+template<class Impl>
 class PrefsHelper::Natives : public mozilla::jni::NativeImpl<PrefsHelper, Impl>
 {
 public:

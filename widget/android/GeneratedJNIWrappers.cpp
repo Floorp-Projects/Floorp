@@ -1144,6 +1144,12 @@ constexpr char GeckoView::Window::Open_t::signature[];
 constexpr char GeckoView::Window::Reattach_t::name[];
 constexpr char GeckoView::Window::Reattach_t::signature[];
 
+const char MemoryMonitor::name[] =
+        "org/mozilla/gecko/MemoryMonitor";
+
+constexpr char MemoryMonitor::DispatchMemoryPressure_t::name[];
+constexpr char MemoryMonitor::DispatchMemoryPressure_t::signature[];
+
 const char PrefsHelper::name[] =
         "org/mozilla/gecko/PrefsHelper";
 

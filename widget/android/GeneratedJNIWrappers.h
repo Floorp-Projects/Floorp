@@ -3571,6 +3571,36 @@ public:
     template<class Impl> class Natives;
 };
 
+class MemoryMonitor : public mozilla::jni::ObjectBase<MemoryMonitor>
+{
+public:
+    static const char name[];
+
+    explicit MemoryMonitor(const Context& ctx) : ObjectBase<MemoryMonitor>(ctx) {}
+
+    struct DispatchMemoryPressure_t {
+        typedef MemoryMonitor Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<> Args;
+        static constexpr char name[] = "dispatchMemoryPressure";
+        static constexpr char signature[] =
+                "()V";
+        static const bool isStatic = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+        static const mozilla::jni::CallingThread callingThread =
+                mozilla::jni::CallingThread::UI;
+        static const mozilla::jni::DispatchTarget dispatchTarget =
+                mozilla::jni::DispatchTarget::CURRENT;
+    };
+
+    static const mozilla::jni::CallingThread callingThread =
+            mozilla::jni::CallingThread::UI;
+
+    template<class Impl> class Natives;
+};
+
 class PrefsHelper : public mozilla::jni::ObjectBase<PrefsHelper>
 {
 public:
