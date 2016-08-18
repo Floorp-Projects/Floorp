@@ -294,7 +294,7 @@ nsWindow::SynthesizeNativeTouchPoint(uint32_t aPointerId,
     return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsWindow::Create(nsIWidget* aParent,
                  void* aNativeParent,
                  const LayoutDeviceIntRect& aRect,

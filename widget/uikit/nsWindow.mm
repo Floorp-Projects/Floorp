@@ -467,7 +467,7 @@ nsWindow::IsTopLevel()
 // nsIWidget
 //
 
-NS_IMETHODIMP
+nsresult
 nsWindow::Create(nsIWidget* aParent,
                  nsNativeWidget aNativeParent,
                  const LayoutDeviceIntRect& aRect,

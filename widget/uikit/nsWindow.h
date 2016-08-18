@@ -29,10 +29,11 @@ public:
     // nsIWidget
     //
 
-    NS_IMETHOD Create(nsIWidget* aParent,
-                      nsNativeWidget aNativeParent,
-                      const LayoutDeviceIntRect& aRect,
-                      nsWidgetInitData* aInitData = nullptr) override;
+    virtual MOZ_MUST_USE nsresult Create(nsIWidget* aParent,
+                                         nsNativeWidget aNativeParent,
+                                         const LayoutDeviceIntRect& aRect,
+                                         nsWidgetInitData* aInitData = nullptr)
+                                         override;
     NS_IMETHOD Destroy() override;
     NS_IMETHOD Show(bool aState) override;
     NS_IMETHOD              Enable(bool aState) override {

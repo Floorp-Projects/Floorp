@@ -1445,7 +1445,7 @@ nsWindow::IsTopLevel()
         mWindowType == eWindowType_invisible;
 }
 
-NS_IMETHODIMP
+nsresult
 nsWindow::Create(nsIWidget* aParent,
                  nsNativeWidget aNativeParent,
                  const LayoutDeviceIntRect& aRect,

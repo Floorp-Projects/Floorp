@@ -410,10 +410,11 @@ nsChildView::ReleaseTitlebarCGContext()
   }
 }
 
-nsresult nsChildView::Create(nsIWidget* aParent,
-                             nsNativeWidget aNativeParent,
-                             const LayoutDeviceIntRect& aRect,
-                             nsWidgetInitData* aInitData)
+nsresult
+nsChildView::Create(nsIWidget* aParent,
+                    nsNativeWidget aNativeParent,
+                    const LayoutDeviceIntRect& aRect,
+                    nsWidgetInitData* aInitData)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 

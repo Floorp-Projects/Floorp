@@ -101,11 +101,11 @@ PuppetWidget::~PuppetWidget()
   Destroy();
 }
 
-NS_IMETHODIMP
-PuppetWidget::Create(nsIWidget* aParent,
-                     nsNativeWidget aNativeParent,
-                     const LayoutDeviceIntRect& aRect,
-                     nsWidgetInitData* aInitData)
+void
+PuppetWidget::InfallibleCreate(nsIWidget* aParent,
+                               nsNativeWidget aNativeParent,
+                               const LayoutDeviceIntRect& aRect,
+                               nsWidgetInitData* aInitData)
 {
   MOZ_ASSERT(!aNativeParent, "got a non-Puppet native parent");
 
@@ -133,7 +133,15 @@ PuppetWidget::Create(nsIWidget* aParent,
     mMemoryPressureObserver = new MemoryPressureObserver(this);
     obs->AddObserver(mMemoryPressureObserver, "memory-pressure", false);
   }
+}
 
+nsresult
+PuppetWidget::Create(nsIWidget* aParent,
+                     nsNativeWidget aNativeParent,
+                     const LayoutDeviceIntRect& aRect,
+                     nsWidgetInitData* aInitData)
+{
+  InfallibleCreate(aParent, aNativeParent, aRect, aInitData);
   return NS_OK;
 }
 
