@@ -37,8 +37,10 @@ class nsIconDecoder : public Decoder
 public:
   virtual ~nsIconDecoder();
 
+protected:
   LexerResult DoDecode(SourceBufferIterator& aIterator,
                        IResumable* aOnResume) override;
+  nsresult FinishInternal() override;
 
 private:
   friend class DecoderFactory;
