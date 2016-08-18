@@ -1973,7 +1973,7 @@ nsBaseWidget::StartAsyncScrollbarDrag(const AsyncDragMetrics& aDragMetrics)
 }
 
 already_AddRefed<nsIScreen>
-nsBaseWidget::GetWidgetScreen()
+nsIWidget::GetWidgetScreen()
 {
   nsCOMPtr<nsIScreenManager> screenManager;
   screenManager = do_GetService("@mozilla.org/gfx/screenmanager;1");
