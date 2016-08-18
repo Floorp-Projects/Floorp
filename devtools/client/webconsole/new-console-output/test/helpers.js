@@ -3,8 +3,6 @@
 
 "use strict";
 
-require("devtools/client/webconsole/new-console-output/test/requireHelper")();
-
 let ReactDOM = require("devtools/client/shared/vendor/react-dom");
 let React = require("devtools/client/shared/vendor/react");
 var TestUtils = React.addons.TestUtils;
@@ -13,7 +11,6 @@ const actions = require("devtools/client/webconsole/new-console-output/actions/m
 const { configureStore } = require("devtools/client/webconsole/new-console-output/store");
 const { IdGenerator } = require("devtools/client/webconsole/new-console-output/utils/id-generator");
 const { stubConsoleMessages } = require("devtools/client/webconsole/new-console-output/test/fixtures/stubs");
-const Services = require("devtools/client/webconsole/new-console-output/test/fixtures/Services");
 
 /**
  * Prepare actions for use in testing.
@@ -35,8 +32,7 @@ function setupActions() {
  * Prepare the store for use in testing.
  */
 function setupStore(input) {
-  // Inject the Services stub.
-  const store = configureStore(Services);
+  const store = configureStore();
 
   // Add the messages from the input commands to the store.
   input.forEach((cmd) => {
