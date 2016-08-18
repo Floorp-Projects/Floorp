@@ -77,8 +77,7 @@ public:
   WorkerHolder();
   virtual ~WorkerHolder();
 
-  bool HoldWorker(WorkerPrivate* aWorkerPrivate,
-                  Status aFailStatus = Canceling);
+  bool HoldWorker(WorkerPrivate* aWorkerPrivate, Status aFailStatus);
   void ReleaseWorker();
 
   virtual bool Notify(Status aStatus) = 0;
