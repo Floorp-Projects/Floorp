@@ -51,3 +51,8 @@ default-preferences pref(layout.css.clip-path-shapes.enabled,true)
 == clip-path-inset-001a.html clip-path-inset-001-ref.html
 == clip-path-inset-001b.html clip-path-inset-001-ref.html
 == clip-path-inset-001c.html clip-path-inset-001-ref.html
+# Anti-aliasing behavior for masking and borders is different
+fuzzy(64,146) == clip-path-inset-002a.html clip-path-inset-002-ref.html
+fuzzy(64,146) == clip-path-inset-002b.html clip-path-inset-002-ref.html
+fuzzy(64,146) == clip-path-inset-002c.html clip-path-inset-002-ref.html
+fuzzy(64,340) == clip-path-inset-003.html clip-path-inset-003-ref.html

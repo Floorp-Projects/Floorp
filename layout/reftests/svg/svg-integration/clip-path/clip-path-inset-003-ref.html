@@ -1,0 +1,26 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE html>
+<html>
+<head>
+  <title>CSS Masking: Ref test for clip-path's inset function (with different rounded corners) 003</title>
+  <link rel="author" title="Manish Goregaokar" href="mailto:manish@mozilla.com">
+  <style type="text/css">
+    #square {
+      width: 180px;
+      height: 180px;
+      background-color: green;
+      position: relative;
+      top: 10px;
+      left: 10px;
+      border-radius: 10px 20px 30px 40px / 50px 60px 70px 80px;
+    }
+  </style>
+</head>
+<body>
+  <p>The test passes if there is a green rect not touching the sides with rounded corners, with different radii</p>
+  <div id="square"></div>
+</body>
+</html>
