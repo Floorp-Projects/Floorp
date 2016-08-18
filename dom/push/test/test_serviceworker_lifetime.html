@@ -43,7 +43,7 @@
   }
 
   function waitForActiveServiceWorker(ctx) {
-    return navigator.serviceWorker.ready.then(function(result) {
+    return waitForActive(ctx.registration).then(function(result) {
       ok(ctx.registration.active, "Service Worker is active");
       return ctx;
     });
