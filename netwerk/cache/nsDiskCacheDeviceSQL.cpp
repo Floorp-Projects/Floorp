@@ -404,10 +404,10 @@ nsOfflineCacheBinding::Create(nsIFile *cacheDir,
   // XXX we might want to create these directories up-front
 
   file->AppendNative(nsPrintfCString("%X", dir1));
-  file->Create(nsIFile::DIRECTORY_TYPE, 00700);
+  Unused << file->Create(nsIFile::DIRECTORY_TYPE, 00700);
 
   file->AppendNative(nsPrintfCString("%X", dir2));
-  file->Create(nsIFile::DIRECTORY_TYPE, 00700);
+  Unused << file->Create(nsIFile::DIRECTORY_TYPE, 00700);
 
   nsresult rv;
   char leaf[64];
