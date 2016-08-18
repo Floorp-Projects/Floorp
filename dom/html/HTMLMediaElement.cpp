@@ -1581,6 +1581,14 @@ void HTMLMediaElement::AbortExistingLoads()
   // with a different load ID to silently be cancelled.
   mCurrentLoadID++;
 
+  // Immediately reject or resolve the already-dispatched
+  // nsResolveOrRejectPendingPlayPromisesRunners. These runners won't be
+  // executed again later since the mCurrentLoadID had been changed.
+  for (auto& runner : mPendingPlayPromisesRunners) {
+    runner->ResolveOrReject();
+  }
+  mPendingPlayPromisesRunners.Clear();
+
   if (mChannelLoader) {
     mChannelLoader->Cancel();
     mChannelLoader = nullptr;
@@ -1642,7 +1650,10 @@ void HTMLMediaElement::AbortExistingLoads()
     NS_ASSERTION(!mDecoder && !mSrcStream, "How did someone setup a new stream/decoder already?");
     // ChangeNetworkState() will call UpdateAudioChannelPlayingState()
     // indirectly which depends on mPaused. So we need to update mPaused first.
-    mPaused = true;
+    if (!mPaused) {
+      mPaused = true;
+      RejectPromises(TakePendingPlayPromises(), NS_ERROR_DOM_MEDIA_ABORT_ERR);
+    }
     ChangeNetworkState(nsIDOMHTMLMediaElement::NETWORK_EMPTY);
     ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_NOTHING);
 
