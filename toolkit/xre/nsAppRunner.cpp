@@ -941,9 +941,9 @@ nsXULAppInfo::InvalidateCachesOnRestart()
   rv = parser.GetString("Compatibility", "InvalidateCaches", buf);
 
   if (NS_FAILED(rv)) {
-    PRFileDesc *fd = nullptr;
-    file->OpenNSPRFileDesc(PR_RDWR | PR_APPEND, 0600, &fd);
-    if (!fd) {
+    PRFileDesc *fd;
+    rv = file->OpenNSPRFileDesc(PR_RDWR | PR_APPEND, 0600, &fd);
+    if (NS_FAILED(rv)) {
       NS_ERROR("could not create output stream");
       return NS_ERROR_NOT_AVAILABLE;
     }
@@ -2620,9 +2620,10 @@ WriteVersion(nsIFile* aProfileDir, const nsCString& aVersion,
   if (aAppDir)
     aAppDir->GetNativePath(appDir);
 
-  PRFileDesc *fd = nullptr;
-  file->OpenNSPRFileDesc(PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE, 0600, &fd);
-  if (!fd) {
+  PRFileDesc *fd;
+  nsresult rv =
+    file->OpenNSPRFileDesc(PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE, 0600, &fd);
+  if (NS_FAILED(rv)) {
     NS_ERROR("could not create output stream");
     return;
   }
