@@ -54,9 +54,12 @@ var {
   getInnerWindowID,
   promiseDocumentReady,
   ChildAPIManager,
+  SchemaAPIManager,
 } = ExtensionUtils;
 
 XPCOMUtils.defineLazyGetter(this, "console", ExtensionUtils.getConsole);
+
+const CATEGORY_EXTENSION_SCRIPTS_CONTENT = "webextension-scripts-content";
 
 function isWhenBeforeOrSame(when1, when2) {
   let table = {"document_start": 0,
@@ -64,6 +67,29 @@ function isWhenBeforeOrSame(when1, when2) {
                "document_idle": 2};
   return table[when1] <= table[when2];
 }
+
+var apiManager = new class extends SchemaAPIManager {
+  constructor() {
+    super("content");
+    this.initialized = false;
+  }
+
+  generateAPIs(...args) {
+    if (!this.initialized) {
+      this.initialized = true;
+      for (let [/* name */, value] of XPCOMUtils.enumerateCategoryEntries(CATEGORY_EXTENSION_SCRIPTS_CONTENT)) {
+        this.loadScript(value);
+      }
+    }
+    return super.generateAPIs(...args);
+  }
+
+  registerSchemaAPI(namespace, envType, getAPI) {
+    if (envType == "content_child") {
+      super.registerSchemaAPI(namespace, envType, getAPI);
+    }
+  }
+};
 
 // This is the fairly simple API that we inject into content
 // scripts.
@@ -419,6 +445,7 @@ class ExtensionContext extends BaseContext {
     Schemas.inject(this.chromeObj, this.childManager);
 
     injectAPI(api(this), this.chromeObj);
+    injectAPI(apiManager.generateAPIs(this), this.chromeObj);
 
     // This is an iframe with content script API enabled. (See Bug 1214658 for rationale)
     if (isExtensionPage) {
