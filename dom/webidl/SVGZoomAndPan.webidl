@@ -10,6 +10,7 @@
  * liability, trademark and document use rules apply.
  */
 
+[NoInterfaceObject]
 interface SVGZoomAndPan {
 
   // Zoom and Pan Types
