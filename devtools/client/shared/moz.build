@@ -21,7 +21,7 @@ DevToolsModules(
     'browser-loader.js',
     'css-angle.js',
     'css-reload.js',
-    'Curl.jsm',
+    'curl.js',
     'demangle.js',
     'developer-toolbar.js',
     'devices.js',
