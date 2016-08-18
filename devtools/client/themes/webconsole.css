@@ -342,14 +342,14 @@ a {
 }
 
 .message[category=console] > .indent,
-.message.console > .indent {
+.message.console-api > .indent {
   border-inline-end: solid #cbcbcb 6px;
 }
 
 .message[category=console][severity=error] > .icon::before,
 .message[category=output][severity=error] > .icon::before,
 .message[category=server][severity=error] > .icon::before,
-.message.console.error > .icon::before,
+.message.console-api.error > .icon::before,
 .message.output.error > .icon::before,
 .message.server.error > .icon::before {
   background-position: -12px -36px;
@@ -357,14 +357,14 @@ a {
 
 .message[category=console][severity=warn] > .icon::before,
 .message[category=server][severity=warn] > .icon::before,
-.message.console.warn > .icon::before,
+.message.console-api.warn > .icon::before,
 .message.server.warn > .icon::before {
   background-position: -24px -36px;
 }
 
 .message[category=console][severity=info] > .icon::before,
 .message[category=server][severity=info] > .icon::before,
-.message.console.info > .icon::before,
+.message.console-api.info > .icon::before,
 .message.server.info > .icon::before {
   background-position: -36px -36px;
 }
