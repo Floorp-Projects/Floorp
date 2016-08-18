@@ -514,7 +514,7 @@ RasterImage::GetFrameInternal(const IntSize& aSize,
     return MakePair(DrawResult::TEMPORARY_ERROR, RefPtr<SourceSurface>());
   }
 
-  RefPtr<SourceSurface> sourceSurface = surface->GetSurface();
+  RefPtr<SourceSurface> sourceSurface = surface->GetSourceSurface();
 
   if (!surface->IsFinished()) {
     return MakePair(DrawResult::INCOMPLETE, Move(sourceSurface));

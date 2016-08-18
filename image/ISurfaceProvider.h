@@ -89,7 +89,7 @@ private:
  * A reference to a surface (stored in an imgFrame) that holds the surface in
  * memory, guaranteeing that it can be drawn. If you have a DrawableSurface
  * |surf| and |if (surf)| returns true, then calls to |surf->Draw()| and
- * |surf->GetSurface()| are guaranteed to succeed.
+ * |surf->GetSourceSurface()| are guaranteed to succeed.
  *
  * Note that the surface may be computed lazily, so a DrawableSurface should not
  * be dereferenced (i.e., operator->() should not be called) until you're
