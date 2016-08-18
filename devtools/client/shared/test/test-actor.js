@@ -431,7 +431,18 @@ var TestActor = exports.TestActor = protocol.ActorClass({
    */
   getBoundingClientRect: protocol.method(function (selector) {
     let node = this._querySelector(selector);
-    return node.getBoundingClientRect();
+    let rect = node.getBoundingClientRect();
+    // DOMRect can't be stringified directly, so return a simple object instead.
+    return {
+      x: rect.x,
+      y: rect.y,
+      width: rect.width,
+      height: rect.height,
+      top: rect.top,
+      right: rect.right,
+      bottom: rect.bottom,
+      left: rect.left
+    };
   }, {
     request: {
       selector: Arg(0, "string"),
