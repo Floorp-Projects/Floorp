@@ -246,8 +246,6 @@ public class GeckoAppShell
     @WrapForJNI(dispatchTo = "gecko")
     public static native void notifyUriVisited(String uri);
 
-    public static native void notifyBatteryChange(double aLevel, boolean aCharging, double aRemainingTime);
-
     public static native void invalidateAndScheduleComposite();
 
     public static native void addPresentationSurface(Surface surface);

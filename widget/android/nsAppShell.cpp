@@ -55,6 +55,7 @@
 
 #include "AndroidAlerts.h"
 #include "ANRReporter.h"
+#include "GeckoBatteryManager.h"
 #include "GeckoNetworkManager.h"
 #include "GeckoScreenOrientation.h"
 #include "PrefsHelper.h"
@@ -343,6 +344,7 @@ nsAppShell::nsAppShell()
         GeckoAppShellSupport::Init();
         GeckoThreadSupport::Init();
         mozilla::ANRReporter::Init();
+        mozilla::GeckoBatteryManager::Init();
         mozilla::GeckoNetworkManager::Init();
         mozilla::GeckoScreenOrientation::Init();
         mozilla::PrefsHelper::Init();
