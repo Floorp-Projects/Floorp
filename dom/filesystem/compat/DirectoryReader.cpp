@@ -25,7 +25,7 @@ public:
   NS_DECL_ISUPPORTS
 
   PromiseHandler(nsIGlobalObject* aGlobalObject,
-                 DOMFileSystem* aFileSystem,
+                 FileSystem* aFileSystem,
                  EntriesCallback* aSuccessCallback,
                  ErrorCallback* aErrorCallback)
     : mGlobal(aGlobalObject)
@@ -106,7 +106,7 @@ private:
   ~PromiseHandler() {}
 
   nsCOMPtr<nsIGlobalObject> mGlobal;
-  RefPtr<DOMFileSystem> mFileSystem;
+  RefPtr<FileSystem> mFileSystem;
   RefPtr<EntriesCallback> mSuccessCallback;
   RefPtr<ErrorCallback> mErrorCallback;
 };
@@ -127,7 +127,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DirectoryReader)
 NS_INTERFACE_MAP_END
 
 DirectoryReader::DirectoryReader(nsIGlobalObject* aGlobal,
-                                 DOMFileSystem* aFileSystem,
+                                 FileSystem* aFileSystem,
                                  Directory* aDirectory)
   : mParent(aGlobal)
   , mFileSystem(aFileSystem)

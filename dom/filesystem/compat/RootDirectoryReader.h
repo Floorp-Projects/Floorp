@@ -19,7 +19,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(RootDirectoryReader, DirectoryReader)
 
   explicit RootDirectoryReader(nsIGlobalObject* aGlobalObject,
-                               DOMFileSystem* aFileSystem,
+                               FileSystem* aFileSystem,
                                const Sequence<RefPtr<Entry>>& aEntries);
 
   virtual void

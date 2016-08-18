@@ -73,7 +73,7 @@ EmptyEntriesCallbackRunnable::Run()
 }
 
 GetEntryHelper::GetEntryHelper(nsIGlobalObject* aGlobalObject,
-                               DOMFileSystem* aFileSystem,
+                               FileSystem* aFileSystem,
                                EntryCallback* aSuccessCallback,
                                ErrorCallback* aErrorCallback,
                                DirectoryEntry::GetInternalType aType)

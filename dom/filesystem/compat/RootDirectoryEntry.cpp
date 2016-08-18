@@ -21,7 +21,7 @@ NS_INTERFACE_MAP_END_INHERITING(DirectoryEntry)
 
 RootDirectoryEntry::RootDirectoryEntry(nsIGlobalObject* aGlobal,
                                        const Sequence<RefPtr<Entry>>& aEntries,
-                                       DOMFileSystem* aFileSystem)
+                                       FileSystem* aFileSystem)
   : DirectoryEntry(aGlobal, nullptr, aFileSystem)
   , mEntries(aEntries)
 {

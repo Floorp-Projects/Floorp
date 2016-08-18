@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_DOMFileSystem_h
-#define mozilla_dom_DOMFileSystem_h
+#ifndef mozilla_dom_FileSystem_h
+#define mozilla_dom_FileSystem_h
 
 #include "mozilla/Attributes.h"
 #include "mozilla/ErrorResult.h"
@@ -22,15 +22,15 @@ class DirectoryEntry;
 class Entry;
 class OwningFileOrDirectory;
 
-class DOMFileSystem final
+class FileSystem final
   : public nsISupports
   , public nsWrapperCache
 {
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(DOMFileSystem)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(FileSystem)
 
-  static already_AddRefed<DOMFileSystem>
+  static already_AddRefed<FileSystem>
   Create(nsIGlobalObject* aGlobalObject);
 
   nsIGlobalObject*
@@ -58,9 +58,9 @@ public:
   CreateRoot(const Sequence<RefPtr<Entry>>& aEntries);
 
 private:
-  explicit DOMFileSystem(nsIGlobalObject* aGlobalObject,
-                         const nsAString& aName);
-  ~DOMFileSystem();
+  explicit FileSystem(nsIGlobalObject* aGlobalObject,
+                      const nsAString& aName);
+  ~FileSystem();
 
   nsCOMPtr<nsIGlobalObject> mParent;
   RefPtr<DirectoryEntry> mRoot;
@@ -70,4 +70,4 @@ private:
 } // namespace dom
 } // namespace mozilla
 
-#endif // mozilla_dom_DOMFileSystem_h
+#endif // mozilla_dom_FileSystem_h

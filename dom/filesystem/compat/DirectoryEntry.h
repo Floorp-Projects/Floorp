@@ -8,7 +8,7 @@
 #define mozilla_dom_DirectoryEntry_h
 
 #include "mozilla/dom/Entry.h"
-#include "mozilla/dom/DOMFileSystemBinding.h"
+#include "mozilla/dom/FileSystemBinding.h"
 
 namespace mozilla {
 namespace dom {
@@ -22,7 +22,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(DirectoryEntry, Entry)
 
   DirectoryEntry(nsIGlobalObject* aGlobalObject, Directory* aDirectory,
-                 DOMFileSystem* aFileSystem);
+                 FileSystem* aFileSystem);
 
   virtual JSObject*
   WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
