@@ -67,6 +67,7 @@ gfxFT2LockedFace::GetMetrics(gfxFont::Metrics* aMetrics,
         aMetrics->zeroOrAveCharWidth = spaceWidth;
         const gfxFloat xHeight = 0.5 * emHeight;
         aMetrics->xHeight = xHeight;
+        aMetrics->capHeight = aMetrics->maxAscent;
         const gfxFloat underlineSize = emHeight / 14.0;
         aMetrics->underlineSize = underlineSize;
         aMetrics->underlineOffset = -underlineSize;
@@ -175,6 +176,17 @@ gfxFT2LockedFace::GetMetrics(gfxFont::Metrics* aMetrics,
         }
         aMetrics->aveCharWidth = 0.0; // updated below
     }
+
+    if (GetCharExtents('H', &extents) && extents.y_bearing < 0.0) {
+        aMetrics->capHeight = -extents.y_bearing;
+    } else {
+        if (os2 && os2->sCapHeight && yScale > 0.0) {
+            aMetrics->capHeight = os2->sCapHeight * yScale;
+        } else {
+            aMetrics->capHeight = aMetrics->maxAscent;
+        }
+    }
+
     // aveCharWidth is used for the width of text input elements so be
     // liberal rather than conservative in the estimate.
     if (os2 && os2->xAvgCharWidth) {
