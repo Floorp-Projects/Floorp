@@ -10,8 +10,7 @@ var {
   EventManager,
 } = ExtensionUtils;
 
-extensions.registerSchemaAPI("storage", context => {
-  let {extension} = context;
+extensions.registerSchemaAPI("storage", (extension, context) => {
   return {
     storage: {
       local: {
