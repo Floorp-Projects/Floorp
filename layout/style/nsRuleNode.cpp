@@ -1278,13 +1278,32 @@ static void SetStyleImage(nsStyleContext* aStyleContext,
     case eCSSUnit_URL:
     {
 #ifdef DEBUG
-      mozilla::css::URLValueData *urlData = aValue.GetURLStructValue();
+      // eCSSUnit_URL is expected only if
+      // 1. we have eCSSUnit_URL values for if-visited style contexts, which
+      //    we can safely treat like 'none'.
+      // 2. aValue is a local-ref URL, e.g. url(#foo).
+      // 3. aValue is a not a local-ref URL, but it refers to an element in
+      //    the current document. For example, the url of the current document
+      //    is "http://foo.html" and aValue is url(http://foo.html#foo).
+      //
+      // We skip image download in TryToStartImageLoadOnValue under #2 and #3,
+      // and that's part of reasons we get eCSSUnit_URL instead of
+      // eCSSUnit_Image here.
 
-      // Either we have eCSSUnit_URL values for if-visited style contexts,
-      // which we can safely treat like 'none', or aValue refers to an
-      // in-document resource. Otherwise this is an unexpected unit.
-      NS_ASSERTION(aStyleContext->IsStyleIfVisited() ||
-                   urlData->GetLocalURLFlag(),
+      // Check #2.
+      bool isLocalRef = aValue.GetURLStructValue()->GetLocalURLFlag();
+
+      // Check #3.
+      bool isEqualExceptRef = false;
+      if (!isLocalRef) {
+        nsIDocument* currentDoc = aStyleContext->PresContext()->Document();
+        nsIURI* docURI = currentDoc->GetDocumentURI();
+        nsIURI* imageURI = aValue.GetURLValue();
+        imageURI->EqualsExceptRef(docURI, &isEqualExceptRef);
+      }
+
+      NS_ASSERTION(aStyleContext->IsStyleIfVisited() || isEqualExceptRef ||
+                   isLocalRef,
                    "unexpected unit; maybe nsCSSValue::Image::Image() failed?");
 #endif
 
