@@ -923,22 +923,6 @@ AccessibleWrap::accNavigate(
   if (accessible->IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
-  // Make sure that varStart != CHILDID_SELF so we don't infinitely recurse
-  if (accessible->IsProxy() && varStart.vt == VT_I4 &&
-      varStart.lVal != CHILDID_SELF) {
-    // Now that we have the starting object, delegate this request to that
-    // object as a self-relative request...
-    RefPtr<IAccessible> comProxy;
-    accessible->GetNativeInterface((void**) getter_AddRefs(comProxy));
-    if (!comProxy) {
-      return E_UNEXPECTED;
-    }
-    VARIANT selfChildId;
-    selfChildId.vt = VT_I4;
-    selfChildId.lVal = CHILDID_SELF;
-    return comProxy->accNavigate(navDir, selfChildId, pvarEndUpAt);
-  }
-
   Accessible* navAccessible = nullptr;
   Maybe<RelationType> xpRelation;
 
