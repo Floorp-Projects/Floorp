@@ -74,7 +74,7 @@ function transformPacket(packet) {
         level,
         parameters,
         messageText,
-        stacktrace: message.stacktrace,
+        stacktrace: message.stacktrace ? message.stacktrace : null,
         frame
       });
     }
