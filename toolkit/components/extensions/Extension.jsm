@@ -59,6 +59,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "Schemas",
 XPCOMUtils.defineLazyModuleGetter(this, "Task",
                                   "resource://gre/modules/Task.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "loadExtScriptInScope",
+                                  "resource://gre/modules/ExtensionGlobalScope.jsm");
+
 XPCOMUtils.defineLazyGetter(this, "require", () => {
   let obj = {};
   Cu.import("resource://devtools/shared/Loader.jsm", obj);
@@ -92,8 +95,6 @@ var {
   flushJarCache,
 } = ExtensionUtils;
 
-XPCOMUtils.defineLazyGetter(this, "console", ExtensionUtils.getConsole);
-
 const LOGGER_ID_BASE = "addons.webextension.";
 const UUID_MAP_PREF = "extensions.webextensions.uuids";
 const LEAVE_STORAGE_PREF = "extensions.webextensions.keepStorageOnUninstall";
@@ -110,8 +111,6 @@ const COMMENT_REGEXP = new RegExp(String.raw`
 
     //.*
   `.replace(/\s+/g, ""), "gm");
-
-var scriptScope = this;
 
 var ExtensionContext, GlobalManager;
 
@@ -142,16 +141,7 @@ var Management = {
     });
 
     for (let [/* name */, value] of XPCOMUtils.enumerateCategoryEntries(CATEGORY_EXTENSION_SCRIPTS)) {
-      let scope = {
-        get console() { return console; },
-        extensions: this,
-        global: scriptScope,
-        require,
-      };
-      Services.scriptloader.loadSubScript(value, scope, "UTF-8");
-
-      // Save the scope to avoid it being garbage collected.
-      this.scopes.push(scope);
+      loadExtScriptInScope(value, this);
     }
 
     this.initialized = promise;

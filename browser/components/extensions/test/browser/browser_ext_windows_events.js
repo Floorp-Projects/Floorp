@@ -53,7 +53,7 @@ add_task(function* testWindowsEvents() {
   yield extension.startup();
   yield extension.awaitMessage("ready");
 
-  let {WindowManager} = Cu.import("resource://gre/modules/Extension.jsm", {});
+  let {WindowManager} = Cu.import("resource://gre/modules/ExtensionGlobalScope.jsm", {}).getGlobalForTesting("chrome");
 
   let currentWindow = window;
   let currentWindowId = WindowManager.getId(currentWindow);
