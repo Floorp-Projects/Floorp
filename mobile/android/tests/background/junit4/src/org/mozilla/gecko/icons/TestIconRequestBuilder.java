@@ -7,6 +7,7 @@ import org.junit.Assert;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.background.testhelpers.TestRunner;
 import org.robolectric.RuntimeEnvironment;
 
@@ -136,5 +137,23 @@ public class TestIconRequestBuilder {
                 .deferBuild();
 
         Assert.assertTrue(request.shouldRunOnBackgroundThread());
+    }
+
+    @Test
+    public void testForLauncherIcon() {
+        // This code will call into GeckoAppShell to determine the launcher icon size for this configuration
+        GeckoAppShell.setApplicationContext(RuntimeEnvironment.application);
+
+        IconRequest request = Icons.with(RuntimeEnvironment.application)
+                .pageUrl(TEST_PAGE_URL_1)
+                .build();
+
+        Assert.assertEquals(32, request.getTargetSize());
+
+        request.modify()
+                .forLauncherIcon()
+                .deferBuild();
+
+        Assert.assertEquals(48, request.getTargetSize());
     }
 }

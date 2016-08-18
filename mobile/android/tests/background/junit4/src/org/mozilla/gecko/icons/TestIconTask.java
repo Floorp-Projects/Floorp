@@ -464,6 +464,45 @@ public class TestIconTask {
         }
     }
 
+    @Test
+    public void testNoLoadersOrProcessorsAreExecutedForPrepareOnlyTasks() {
+        final List<Preparer> preparers = createListOfPreparers();
+        final List<IconLoader> loaders = createListWithSuccessfulLoader();
+        final List<Processor> processors = createListOfProcessors();
+        final IconLoader generator = createGenerator();
+
+        final IconRequest request = createIconRequest()
+                .modify()
+                .prepareOnly()
+                .build();
+
+        final IconTask task = new IconTask(
+                request,
+                preparers,
+                loaders,
+                processors,
+                generator);
+
+        IconResponse response = task.call();
+
+        Assert.assertNull(response);
+
+        // Verify that all preparers are called
+        for (Preparer preparer : preparers) {
+            verify(preparer).prepare(request);
+        }
+
+        // Verify that no loaders are called
+        for (IconLoader loader : loaders) {
+            verify(loader, never()).load(request);
+        }
+
+        // Verify that no processors are called
+        for (Processor processor : processors) {
+            verify(processor, never()).process(eq(request), any(IconResponse.class));
+        }
+    }
+
     public List<IconLoader> createListWithSuccessfulLoader() {
         return Arrays.asList(
                 createFailingLoader(),
