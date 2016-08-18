@@ -1,3 +1,4 @@
+import codecs
 import os
 
 import pystache
@@ -128,5 +129,11 @@ class Templates():
         if not os.path.isfile(path):
             raise TemplatesException('"{}" is not a file'.format(path))
 
-        content = open(path).read()
+        # pystache.render() converts str to unicode. So just feed it a
+        # unicode so it doesn't have to guess the encoding. By verifying
+        # the file is UTF-8 at read time, we also make tracebacks easier
+        # to debug since it is obvious the failure is due to the file content
+        # and not a Python str/unicode issue.
+        with codecs.open(path, 'rb', 'utf-8') as fh:
+            content = fh.read()
         return self.render(path, content, parameters, seen)

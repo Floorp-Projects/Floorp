@@ -4,6 +4,7 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+import codecs
 import logging
 import os
 import yaml
@@ -77,5 +78,5 @@ class TransformTask(base.Task):
 def load_yaml(path, name):
     """Convenience method to load a YAML file in the kind directory"""
     filename = os.path.join(path, name)
-    with open(filename, "rb") as f:
+    with codecs.open(filename, 'rb', 'utf-8') as f:
         return yaml.load(f)
