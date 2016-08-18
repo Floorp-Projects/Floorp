@@ -23,7 +23,7 @@ const TESTS = [ {
   pageid: PAGEID_ERROR_EXTRA,
   extraDelayedCheckFunction: checkErrorExtraPage,
   shouldBeHidden: false,
-  displayedTextElem: "genericBackgroundErrorLabel",
+  displayedTextElem: "bgErrorLabel",
   buttonClick: "finish"
 } ];
 
