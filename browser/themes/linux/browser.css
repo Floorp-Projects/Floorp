@@ -1939,10 +1939,6 @@ notification.pluginVulnerable > .notification-inner > .messageCloseButton:not(:h
   overflow: hidden;
 }
 
-.webextension-popup-browser {
-  border-radius: inherit;
-}
-
 .menuitem-iconic[command="Browser:NewUserContextTab"] > .menu-iconic-left > .menu-iconic-icon {
   visibility: visible;
 }
