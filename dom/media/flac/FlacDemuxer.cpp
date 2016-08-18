@@ -448,6 +448,9 @@ public:
 
   AudioInfo Info() const { return mParser.mInfo; }
 
+  // Return a hash table with tag metadata.
+  MetadataTags* GetTags() const { return mParser.GetTags(); }
+
 private:
   bool GetNextFrame(MediaResourceIndex& aResource)
   {
@@ -693,7 +696,14 @@ FlacTrackDemuxer::GetInfo() const
 {
   if (mParser->Info().IsValid()) {
     // We have a proper metadata header.
-    return mParser->Info().Clone();
+    UniquePtr<TrackInfo> info = mParser->Info().Clone();
+    nsAutoPtr<MetadataTags> tags(mParser->GetTags());
+    if (tags) {
+      for (auto iter = tags->Iter(); !iter.Done(); iter.Next()) {
+        info->mTags.AppendElement(MetadataTag(iter.Key(), iter.Data()));
+      }
+    }
+    return info;
   } else if (mParser->FirstFrame().Info().IsValid()) {
     // Use the first frame header.
     UniquePtr<TrackInfo> info = mParser->FirstFrame().Info().Clone();
