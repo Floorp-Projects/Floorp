@@ -899,7 +899,7 @@ NS_IMETHODIMP nsBaseWidget::MakeFullScreen(bool aFullScreen, nsIScreen* aScreen)
     if (!mOriginalBounds) {
       mOriginalBounds = new LayoutDeviceIntRect();
     }
-    GetScreenBounds(*mOriginalBounds);
+    *mOriginalBounds = GetScreenBounds();
 
     // Move to top-left corner of screen and size to the screen dimensions
     nsCOMPtr<nsIScreen> screen = aScreen;
@@ -974,8 +974,7 @@ nsBaseWidget::UseAPZ()
 
 void nsBaseWidget::CreateCompositor()
 {
-  LayoutDeviceIntRect rect;
-  GetBounds(rect);
+  LayoutDeviceIntRect rect = GetBounds();
   CreateCompositor(rect.width, rect.height);
 }
 
@@ -1493,8 +1492,7 @@ NS_IMETHODIMP nsBaseWidget::ResizeClient(double aWidth,
   NS_ASSERTION((aWidth >=0) , "Negative width passed to ResizeClient");
   NS_ASSERTION((aHeight >=0), "Negative height passed to ResizeClient");
 
-  LayoutDeviceIntRect clientBounds;
-  GetClientBounds(clientBounds);
+  LayoutDeviceIntRect clientBounds = GetClientBounds();
 
   // GetClientBounds and mBounds are device pixels; scale back to desktop pixels
   // if that's what this widget uses for the Move/Resize APIs
@@ -1519,10 +1517,8 @@ NS_IMETHODIMP nsBaseWidget::ResizeClient(double aX,
   NS_ASSERTION((aWidth >=0) , "Negative width passed to ResizeClient");
   NS_ASSERTION((aHeight >=0), "Negative height passed to ResizeClient");
 
-  LayoutDeviceIntRect clientBounds;
-  GetClientBounds(clientBounds);
-
-  LayoutDeviceIntPoint clientOffset(GetClientOffset());
+  LayoutDeviceIntRect clientBounds = GetClientBounds();
+  LayoutDeviceIntPoint clientOffset = GetClientOffset();
 
   if (BoundsUseDesktopPixels()) {
     DesktopToLayoutDeviceScale scale = GetDesktopToDeviceScale();
@@ -1551,19 +1547,20 @@ NS_IMETHODIMP nsBaseWidget::ResizeClient(double aX,
 * If the implementation of nsWindow supports borders this method MUST be overridden
 *
 **/
-NS_IMETHODIMP nsBaseWidget::GetClientBounds(LayoutDeviceIntRect &aRect)
+LayoutDeviceIntRect
+nsBaseWidget::GetClientBounds()
 {
-  return GetBounds(aRect);
+  return GetBounds();
 }
 
 /**
 * If the implementation of nsWindow supports borders this method MUST be overridden
 *
 **/
-NS_IMETHODIMP nsBaseWidget::GetBounds(LayoutDeviceIntRect &aRect)
+LayoutDeviceIntRect
+nsBaseWidget::GetBounds()
 {
-  aRect = mBounds;
-  return NS_OK;
+  return mBounds;
 }
 
 /**
@@ -1571,17 +1568,20 @@ NS_IMETHODIMP nsBaseWidget::GetBounds(LayoutDeviceIntRect &aRect)
 * this method must be overridden
 *
 **/
-NS_IMETHODIMP nsBaseWidget::GetScreenBounds(LayoutDeviceIntRect& aRect)
+LayoutDeviceIntRect
+nsBaseWidget::GetScreenBounds()
 {
-  return GetBounds(aRect);
+  return GetBounds();
 }
 
-NS_IMETHODIMP nsBaseWidget::GetRestoredBounds(LayoutDeviceIntRect& aRect)
+nsresult
+nsBaseWidget::GetRestoredBounds(LayoutDeviceIntRect& aRect)
 {
   if (SizeMode() != nsSizeMode_Normal) {
     return NS_ERROR_FAILURE;
   }
-  return GetScreenBounds(aRect);
+  aRect = GetScreenBounds();
+  return NS_OK;
 }
 
 LayoutDeviceIntPoint
@@ -1979,8 +1979,7 @@ nsIWidget::GetWidgetScreen()
     return nullptr;
   }
 
-  LayoutDeviceIntRect bounds;
-  GetScreenBounds(bounds);
+  LayoutDeviceIntRect bounds = GetScreenBounds();
   DesktopIntRect deskBounds = RoundedToInt(bounds / GetDesktopToDeviceScale());
   nsCOMPtr<nsIScreen> screen;
   screenManager->ScreenForRect(deskBounds.x, deskBounds.y,

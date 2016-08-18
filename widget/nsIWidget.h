@@ -862,19 +862,17 @@ class nsIWidget : public nsISupports
      * popup widgets the returned rect is in screen coordinates and not
      * relative to its parent widget.
      *
-     * @param aRect   On return it holds the  x, y, width and height of
-     *                this widget.
+     * @return the x, y, width and height of this widget.
      */
-    NS_IMETHOD GetBounds(LayoutDeviceIntRect& aRect) = 0;
+    virtual LayoutDeviceIntRect GetBounds() = 0;
 
     /**
      * Get this widget's outside dimensions in device coordinates. This
      * includes any title bar on the window.
      *
-     * @param aRect   On return it holds the  x, y, width and height of
-     *                this widget.
+     * @return the x, y, width and height of this widget.
      */
-    NS_IMETHOD GetScreenBounds(LayoutDeviceIntRect& aRect) = 0;
+    virtual LayoutDeviceIntRect GetScreenBounds() = 0;
 
     /**
      * Similar to GetScreenBounds except that this function will always
@@ -888,7 +886,8 @@ class nsIWidget : public nsISupports
      * @param aRect   On return it holds the  x, y, width and height of
      *                this widget.
      */
-    NS_IMETHOD GetRestoredBounds(LayoutDeviceIntRect& aRect) = 0;
+    virtual MOZ_MUST_USE nsresult
+    GetRestoredBounds(LayoutDeviceIntRect& aRect) = 0;
 
     /**
      * Get this widget's client area bounds, if the window has a 3D border
@@ -896,10 +895,9 @@ class nsIWidget : public nsISupports
      * position of the client area relative to the client area of the parent
      * widget (for root widgets and popup widgets it is in screen coordinates).
      *
-     * @param aRect   On return it holds the  x. y, width and height of
-     *                the client area of this widget.
+     * @return the x, y, width and height of the client area of this widget.
      */
-    NS_IMETHOD GetClientBounds(LayoutDeviceIntRect& aRect) = 0;
+    virtual LayoutDeviceIntRect GetClientBounds() = 0;
 
     /**
      * Get the non-client area dimensions of the window.
@@ -933,9 +931,7 @@ class nsIWidget : public nsISupports
     virtual LayoutDeviceIntSize GetClientSize() {
       // Depending on the backend, overloading this method may be useful if
       // requesting the client offset is expensive.
-      LayoutDeviceIntRect rect;
-      GetClientBounds(rect);
-      return rect.Size();
+      return GetClientBounds().Size();
     }
 
     /**
@@ -1894,13 +1890,7 @@ public:
     virtual bool WidgetPaintsBackground() { return false; }
 
     virtual bool NeedsPaint() {
-       if (!IsVisible()) {
-           return false;
-       }
-       LayoutDeviceIntRect bounds;
-       nsresult rv = GetBounds(bounds);
-       NS_ENSURE_SUCCESS(rv, false);
-       return !bounds.IsEmpty();
+       return IsVisible() && !GetBounds().IsEmpty();
     }
 
     /**
@@ -1916,9 +1906,7 @@ public:
      * probably shouldn't call this method.
      */
     virtual LayoutDeviceIntRect GetNaturalBounds() {
-        LayoutDeviceIntRect bounds;
-        GetBounds(bounds);
-        return bounds;
+        return GetBounds();
     }
 
     /**
