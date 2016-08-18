@@ -4,47 +4,48 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "RootDirectoryEntry.h"
+#include "FileSystemRootDirectoryEntry.h"
 #include "RootDirectoryReader.h"
 #include "mozilla/dom/FileSystemUtils.h"
 
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(RootDirectoryEntry, DirectoryEntry, mEntries)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(FileSystemRootDirectoryEntry,
+                                   FileSystemDirectoryEntry, mEntries)
 
-NS_IMPL_ADDREF_INHERITED(RootDirectoryEntry, DirectoryEntry)
-NS_IMPL_RELEASE_INHERITED(RootDirectoryEntry, DirectoryEntry)
+NS_IMPL_ADDREF_INHERITED(FileSystemRootDirectoryEntry, FileSystemDirectoryEntry)
+NS_IMPL_RELEASE_INHERITED(FileSystemRootDirectoryEntry, FileSystemDirectoryEntry)
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(RootDirectoryEntry)
-NS_INTERFACE_MAP_END_INHERITING(DirectoryEntry)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(FileSystemRootDirectoryEntry)
+NS_INTERFACE_MAP_END_INHERITING(FileSystemDirectoryEntry)
 
-RootDirectoryEntry::RootDirectoryEntry(nsIGlobalObject* aGlobal,
-                                       const Sequence<RefPtr<FileSystemEntry>>& aEntries,
-                                       FileSystem* aFileSystem)
-  : DirectoryEntry(aGlobal, nullptr, aFileSystem)
+FileSystemRootDirectoryEntry::FileSystemRootDirectoryEntry(nsIGlobalObject* aGlobal,
+                                                           const Sequence<RefPtr<FileSystemEntry>>& aEntries,
+                                                           FileSystem* aFileSystem)
+  : FileSystemDirectoryEntry(aGlobal, nullptr, aFileSystem)
   , mEntries(aEntries)
 {
   MOZ_ASSERT(aGlobal);
 }
 
-RootDirectoryEntry::~RootDirectoryEntry()
+FileSystemRootDirectoryEntry::~FileSystemRootDirectoryEntry()
 {}
 
 void
-RootDirectoryEntry::GetName(nsAString& aName, ErrorResult& aRv) const
+FileSystemRootDirectoryEntry::GetName(nsAString& aName, ErrorResult& aRv) const
 {
   aName.Truncate();
 }
 
 void
-RootDirectoryEntry::GetFullPath(nsAString& aPath, ErrorResult& aRv) const
+FileSystemRootDirectoryEntry::GetFullPath(nsAString& aPath, ErrorResult& aRv) const
 {
   aPath.AssignLiteral(FILESYSTEM_DOM_PATH_SEPARATOR_LITERAL);
 }
 
 already_AddRefed<DirectoryReader>
-RootDirectoryEntry::CreateReader() const
+FileSystemRootDirectoryEntry::CreateReader() const
 {
   RefPtr<DirectoryReader> reader =
     new RootDirectoryReader(GetParentObject(), Filesystem(), mEntries);
@@ -52,10 +53,11 @@ RootDirectoryEntry::CreateReader() const
 }
 
 void
-RootDirectoryEntry::GetInternal(const nsAString& aPath, const FileSystemFlags& aFlag,
-                                const Optional<OwningNonNull<EntryCallback>>& aSuccessCallback,
-                                const Optional<OwningNonNull<ErrorCallback>>& aErrorCallback,
-                                GetInternalType aType) const
+FileSystemRootDirectoryEntry::GetInternal(const nsAString& aPath,
+                                          const FileSystemFlags& aFlag,
+                                          const Optional<OwningNonNull<EntryCallback>>& aSuccessCallback,
+                                          const Optional<OwningNonNull<ErrorCallback>>& aErrorCallback,
+                                          GetInternalType aType) const
 {
   if (!aSuccessCallback.WasPassed() && !aErrorCallback.WasPassed()) {
     return;
@@ -135,7 +137,7 @@ RootDirectoryEntry::GetInternal(const nsAString& aPath, const FileSystemFlags& a
     }
   }
 
-  auto* directoryEntry = static_cast<DirectoryEntry*>(entry.get());
+  auto* directoryEntry = static_cast<FileSystemDirectoryEntry*>(entry.get());
   directoryEntry->GetInternal(path, aFlag, aSuccessCallback, aErrorCallback,
                               aType);
 }

@@ -83,8 +83,8 @@ public:
         return;
       }
 
-      RefPtr<DirectoryEntry> entry =
-        new DirectoryEntry(mGlobal, directory, mFileSystem);
+      RefPtr<FileSystemDirectoryEntry> entry =
+        new FileSystemDirectoryEntry(mGlobal, directory, mFileSystem);
       sequence[i] = entry;
     }
 

@@ -10,9 +10,9 @@
 #include "mozilla/EventForwards.h"
 #include "mozilla/dom/DataTransferItemBinding.h"
 #include "mozilla/dom/Directory.h"
-#include "mozilla/dom/DirectoryEntry.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/FileSystem.h"
+#include "mozilla/dom/FileSystemDirectoryEntry.h"
 #include "mozilla/dom/FileSystemFileEntry.h"
 #include "nsIClipboard.h"
 #include "nsISupportsPrimitives.h"
@@ -329,7 +329,7 @@ DataTransferItem::GetAsEntry(ErrorResult& aRv)
     }
 
     RefPtr<Directory> directory = Directory::Create(global, directoryFile);
-    entry = new DirectoryEntry(global, directory, fs);
+    entry = new FileSystemDirectoryEntry(global, directory, fs);
   } else {
     entry = new FileSystemFileEntry(global, file, fs);
   }

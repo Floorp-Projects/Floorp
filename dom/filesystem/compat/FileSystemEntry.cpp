@@ -5,7 +5,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "FileSystemEntry.h"
-#include "DirectoryEntry.h"
+#include "FileSystemDirectoryEntry.h"
 #include "FileSystemFileEntry.h"
 #include "mozilla/dom/UnionTypes.h"
 
@@ -37,9 +37,9 @@ FileSystemEntry::Create(nsIGlobalObject* aGlobalObject,
                                     aFileSystem);
   } else {
     MOZ_ASSERT(aFileOrDirectory.IsDirectory());
-    entry = new DirectoryEntry(aGlobalObject,
-                               aFileOrDirectory.GetAsDirectory(),
-                               aFileSystem);
+    entry = new FileSystemDirectoryEntry(aGlobalObject,
+                                         aFileOrDirectory.GetAsDirectory(),
+                                         aFileSystem);
   }
 
   return entry.forget();
