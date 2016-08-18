@@ -217,6 +217,15 @@ function addXULBrowserDecorations(browser) {
       enumerable: true,
     });
   }
+  if (browser.outerWindowID == undefined) {
+    Object.defineProperty(browser, "outerWindowID", {
+      get() {
+        return browser._outerWindowID;
+      },
+      configurable: true,
+      enumerable: true,
+    });
+  }
 
   // It's not necessary for these to actually do anything.  These properties are
   // swapped between browsers in browser.xml's `swapDocShells`, and then their
