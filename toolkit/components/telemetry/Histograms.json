@@ -9862,6 +9862,13 @@
     "description": "When restoring tabs on startup, reading from sessionstore.js failed, even though the file exists and is not containing an explicitly empty window.",
     "cpp_guard": "ANDROID"
   },
+  "SHARED_WORKER_COUNT": {
+    "alert_emails": ["amarchesini@mozilla.com"],
+    "expires_in_version": "58",
+    "kind": "count",
+    "bug_numbers": [1295980],
+    "description": "Number of the use of SharedWorkers."
+  },
   "FENNEC_SESSIONSTORE_RESTORING_FROM_BACKUP": {
     "alert_emails": ["jh+bugzilla@buttercookie.de"],
     "expires_in_version": "56",
