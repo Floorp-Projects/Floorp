@@ -19,7 +19,8 @@ const ConsoleOutput = createClass({
 
   propTypes: {
     jsterm: PropTypes.object.isRequired,
-    messages: PropTypes.object.isRequired
+    messages: PropTypes.object.isRequired,
+    onViewSourceInDebugger: PropTypes.func.isRequired,
   },
 
   displayName: "ConsoleOutput",
@@ -39,9 +40,10 @@ const ConsoleOutput = createClass({
   },
 
   render() {
-    let messageNodes = this.props.messages.map(function (message) {
+    let {messages, onViewSourceInDebugger} = this.props;
+    let messageNodes = messages.map(function (message) {
       return (
-        MessageContainer({ message, key: message.id })
+        MessageContainer({ message, key: message.id, onViewSourceInDebugger })
       );
     });
     return (

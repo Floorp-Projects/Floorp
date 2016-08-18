@@ -77,6 +77,7 @@ function transformPacket(packet) {
         messageText,
         category: CATEGORY_WEBDEV,
         severity: level,
+        stacktrace: message.stacktrace,
       });
     }
 

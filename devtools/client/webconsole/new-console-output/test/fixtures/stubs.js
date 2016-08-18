@@ -28,6 +28,7 @@ exports.stubConsoleMessages = new Map([
       repeatId: null,
       category: CATEGORY_WEBDEV,
       severity: SEVERITY_LOG,
+      stacktrace: undefined
     })
   ],
   [

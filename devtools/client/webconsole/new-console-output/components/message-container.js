@@ -30,7 +30,8 @@ const MessageContainer = createClass({
   displayName: "MessageContainer",
 
   propTypes: {
-    message: PropTypes.object.isRequired
+    message: PropTypes.object.isRequired,
+    onViewSourceInDebugger: PropTypes.func.isRequired,
   },
 
   shouldComponentUpdate(nextProps, nextState) {
@@ -38,9 +39,9 @@ const MessageContainer = createClass({
   },
 
   render() {
-    const { message } = this.props;
+    const { message, onViewSourceInDebugger } = this.props;
     let MessageComponent = createFactory(getMessageComponent(message));
-    return MessageComponent({ message });
+    return MessageComponent({ message, onViewSourceInDebugger });
   }
 });
 
