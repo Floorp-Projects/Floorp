@@ -4,35 +4,6 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-[NoInterfaceObject]
-interface FileSystemEntry {
-    readonly attribute boolean isFile;
-    readonly attribute boolean isDirectory;
-
-    [GetterThrows]
-    readonly attribute DOMString name;
-
-    [GetterThrows]
-    readonly attribute DOMString fullPath;
-
-    readonly attribute FileSystem filesystem;
-
-/** Not implemented:
- *  void getMetadata(MetadataCallback successCallback,
- *                   optional ErrorCallback errorCallback);
- *  void moveTo(FileSystemDirectoryEntry parent, optional DOMString? name,
- *              optional FileSystemEntryCallback successCallback,
- *              optional ErrorCallback errorCallback);
- *  void copyTo(FileSystemDirectoryEntry parent, optional DOMString? name,
- *              optional FileSystemEntryCallback successCallback,
- *              optional ErrorCallback errorCallback);
- *  DOMString toURL();
- *  void remove(VoidCallback successCallback,
- *              optional ErrorCallback errorCallback);
- *  void getParent(optional FileSystemEntryCallback successCallback,
- *                 optional ErrorCallback errorCallback);
- */
-};
 
 dictionary FileSystemFlags {
     boolean create = false;
@@ -47,60 +18,9 @@ callback interface VoidCallback {
     void handleEvent();
 };
 
-[NoInterfaceObject]
-interface FileSystemDirectoryEntry : FileSystemEntry {
-    FileSystemDirectoryReader createReader();
-
-    void getFile(DOMString? path,
-                 optional FileSystemFlags options,
-                 optional FileSystemEntryCallback successCallback,
-                 optional ErrorCallback errorCallback);
-
-    void getDirectory(DOMString? path,
-                      optional FileSystemFlags options,
-                      optional FileSystemEntryCallback successCallback,
-                      optional ErrorCallback errorCallback);
-
-    // This method is not implemented. ErrorCallback will be called
-    // with NS_ERROR_DOM_NOT_SUPPORTED_ERR.
-    void removeRecursively(VoidCallback successCallback,
-                           optional ErrorCallback errorCallback);
-};
-
-callback interface FileSystemEntriesCallback {
-    void handleEvent(sequence<FileSystemEntry> entries);
-};
-
 callback interface ErrorCallback {
     // This should be FileError but we are implementing just a subset of this API.
     void handleEvent(DOMError error);
-};
-
-[NoInterfaceObject]
-interface FileSystemDirectoryReader {
-
-    // readEntries can be called just once. The second time it returns no data.
-
-    [Throws]
-    void readEntries(FileSystemEntriesCallback successCallback,
-                     optional ErrorCallback errorCallback);
-};
-
-callback interface BlobCallback {
-    void handleEvent(Blob? blob);
-};
-
-[NoInterfaceObject]
-interface FileSystemFileEntry : FileSystemEntry {
-    // the successCallback should be a FileWriteCallback but this method is not
-    // implemented. ErrorCallback will be called with
-    // NS_ERROR_DOM_NOT_SUPPORTED_ERR.
-    void createWriter (VoidCallback successCallback,
-                       optional ErrorCallback errorCallback);
-
-    [BinaryName="GetFile"]
-    void file (BlobCallback successCallback,
-               optional ErrorCallback errorCallback);
 };
 
 [NoInterfaceObject]

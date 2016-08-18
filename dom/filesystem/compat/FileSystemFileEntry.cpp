@@ -7,6 +7,7 @@
 #include "FileSystemFileEntry.h"
 #include "CallbackRunnables.h"
 #include "mozilla/dom/File.h"
+#include "mozilla/dom/FileSystemFileEntryBinding.h"
 
 namespace mozilla {
 namespace dom {

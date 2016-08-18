@@ -20,6 +20,7 @@ namespace dom {
 
 class Directory;
 class FileSystem;
+class FileSystemEntriesCallback;
 
 class FileSystemDirectoryReader
   : public nsISupports

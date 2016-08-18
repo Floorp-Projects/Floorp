@@ -13,6 +13,7 @@ namespace mozilla {
 namespace dom {
 
 class File;
+class BlobCallback;
 
 class FileSystemFileEntry final : public FileSystemEntry
 {
