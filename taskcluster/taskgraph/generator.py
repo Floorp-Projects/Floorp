@@ -138,9 +138,12 @@ class TaskGraphGenerator(object):
             if not os.path.isdir(path):
                 continue
             kind_name = os.path.basename(path)
-            logger.debug("loading kind `{}` from `{}`".format(kind_name, path))
 
             kind_yml = os.path.join(path, 'kind.yml')
+            if not os.path.exists(kind_yml):
+                continue
+
+            logger.debug("loading kind `{}` from `{}`".format(kind_name, path))
             with open(kind_yml) as f:
                 config = yaml.load(f)
 
