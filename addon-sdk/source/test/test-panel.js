@@ -297,11 +297,8 @@ exports["test Hide Before Show"] = function(assert, done) {
 
   let panel2 = Panel({
     onShow: function () {
-      if (showCalled) {
-        assert.ok(hideCalled, 'should not emit show without also emitting hide');
-      } else {
-        assert.ok(!hideCalled, 'should not emit hide without also emitting show');
-      }
+      assert.ok(!showCalled, 'should not emit show');
+      assert.ok(!hideCalled, 'should not emit hide');
       panel1.destroy();
       panel2.destroy();
       done();
