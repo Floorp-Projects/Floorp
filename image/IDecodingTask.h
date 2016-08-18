@@ -113,6 +113,9 @@ public:
 private:
   virtual ~MetadataDecodingTask() { }
 
+  /// Mutex protecting access to mDecoder.
+  Mutex mMutex;
+
   NotNull<RefPtr<Decoder>> mDecoder;
 };
 
