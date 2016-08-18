@@ -872,10 +872,10 @@ VectorImage::Draw(gfxContext* aContext,
 
   // Draw.
   if (result) {
-    RefPtr<SourceSurface> surface = result.DrawableRef()->GetSurface();
-    if (surface) {
+    RefPtr<SourceSurface> sourceSurface = result.Surface()->GetSurface();
+    if (sourceSurface) {
       RefPtr<gfxDrawable> svgDrawable =
-        new gfxSurfaceDrawable(surface, result.DrawableRef()->GetSize());
+        new gfxSurfaceDrawable(sourceSurface, result.Surface()->GetSize());
       Show(svgDrawable, params);
       return DrawResult::SUCCESS;
     }

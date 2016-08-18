@@ -13,7 +13,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/Move.h"
-#include "imgFrame.h"
+#include "ISurfaceProvider.h"
 
 namespace mozilla {
 namespace image {
@@ -44,35 +44,35 @@ public:
   }
 
   LookupResult(LookupResult&& aOther)
-    : mDrawableRef(Move(aOther.mDrawableRef))
+    : mSurface(Move(aOther.mSurface))
     , mMatchType(aOther.mMatchType)
   { }
 
-  LookupResult(DrawableFrameRef&& aDrawableRef, MatchType aMatchType)
-    : mDrawableRef(Move(aDrawableRef))
+  LookupResult(DrawableSurface&& aSurface, MatchType aMatchType)
+    : mSurface(Move(aSurface))
     , mMatchType(aMatchType)
   {
-    MOZ_ASSERT(!mDrawableRef || !(mMatchType == MatchType::NOT_FOUND ||
-                                  mMatchType == MatchType::PENDING),
+    MOZ_ASSERT(!mSurface || !(mMatchType == MatchType::NOT_FOUND ||
+                              mMatchType == MatchType::PENDING),
                "Only NOT_FOUND or PENDING make sense with no surface");
-    MOZ_ASSERT(mDrawableRef || mMatchType == MatchType::NOT_FOUND ||
-                               mMatchType == MatchType::PENDING,
+    MOZ_ASSERT(mSurface || mMatchType == MatchType::NOT_FOUND ||
+                           mMatchType == MatchType::PENDING,
                "NOT_FOUND or PENDING do not make sense with a surface");
   }
 
   LookupResult& operator=(LookupResult&& aOther)
   {
     MOZ_ASSERT(&aOther != this, "Self-move-assignment is not supported");
-    mDrawableRef = Move(aOther.mDrawableRef);
+    mSurface = Move(aOther.mSurface);
     mMatchType = aOther.mMatchType;
     return *this;
   }
 
-  DrawableFrameRef& DrawableRef() { return mDrawableRef; }
-  const DrawableFrameRef& DrawableRef() const { return mDrawableRef; }
+  DrawableSurface& Surface() { return mSurface; }
+  const DrawableSurface& Surface() const { return mSurface; }
 
   /// @return true if this LookupResult contains a surface.
-  explicit operator bool() const { return bool(mDrawableRef); }
+  explicit operator bool() const { return bool(mSurface); }
 
   /// @return what kind of match this is (exact, substitute, etc.)
   MatchType Type() const { return mMatchType; }
@@ -80,7 +80,7 @@ public:
 private:
   LookupResult(const LookupResult&) = delete;
 
-  DrawableFrameRef mDrawableRef;
+  DrawableSurface mSurface;
   MatchType mMatchType;
 };
 

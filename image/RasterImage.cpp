@@ -306,7 +306,7 @@ RasterImage::LookupFrameInternal(uint32_t aFrameNum,
                                                         aFrameNum));
 }
 
-DrawableFrameRef
+DrawableSurface
 RasterImage::LookupFrame(uint32_t aFrameNum,
                          const IntSize& aSize,
                          uint32_t aFlags)
@@ -322,14 +322,14 @@ RasterImage::LookupFrame(uint32_t aFrameNum,
   IntSize requestedSize = CanDownscaleDuringDecode(aSize, aFlags)
                         ? aSize : mSize;
   if (requestedSize.IsEmpty()) {
-    return DrawableFrameRef();  // Can't decode to a surface of zero size.
+    return DrawableSurface();  // Can't decode to a surface of zero size.
   }
 
   LookupResult result = LookupFrameInternal(aFrameNum, requestedSize, aFlags);
 
   if (!result && !mHasSize) {
     // We can't request a decode without knowing our intrinsic size. Give up.
-    return DrawableFrameRef();
+    return DrawableSurface();
   }
 
   if (result.Type() == MatchType::NOT_FOUND ||
@@ -351,21 +351,21 @@ RasterImage::LookupFrame(uint32_t aFrameNum,
 
   if (!result) {
     // We still weren't able to get a frame. Give up.
-    return DrawableFrameRef();
+    return DrawableSurface();
   }
 
-  if (result.DrawableRef()->GetCompositingFailed()) {
-    return DrawableFrameRef();
+  if (result.Surface()->GetCompositingFailed()) {
+    return DrawableSurface();
   }
 
-  MOZ_ASSERT(!result.DrawableRef()->GetIsPaletted(),
+  MOZ_ASSERT(!result.Surface()->GetIsPaletted(),
              "Should not have a paletted frame");
 
   // Sync decoding guarantees that we got the frame, but if it's owned by an
   // async decoder that's currently running, the contents of the frame may not
   // be available yet. Make sure we get everything.
   if (mHasSourceData && (aFlags & FLAG_SYNC_DECODE)) {
-    result.DrawableRef()->WaitUntilFinished();
+    result.Surface()->WaitUntilFinished();
   }
 
   // If we could have done some decoding in this function we need to check if
@@ -373,11 +373,11 @@ RasterImage::LookupFrame(uint32_t aFrameNum,
   // to avoid calling IsAborted if we weren't passed any sync decode flag because
   // IsAborted acquires the monitor for the imgFrame.
   if (aFlags & (FLAG_SYNC_DECODE | FLAG_SYNC_DECODE_IF_FAST) &&
-    result.DrawableRef()->IsAborted()) {
-    return DrawableFrameRef();
+    result.Surface()->IsAborted()) {
+    return DrawableSurface();
   }
 
-  return Move(result.DrawableRef());
+  return Move(result.Surface());
 }
 
 uint32_t
@@ -507,20 +507,20 @@ RasterImage::GetFrameInternal(const IntSize& aSize,
   // Get the frame. If it's not there, it's probably the caller's fault for
   // not waiting for the data to be loaded from the network or not passing
   // FLAG_SYNC_DECODE
-  DrawableFrameRef frameRef =
+  DrawableSurface surface =
     LookupFrame(GetRequestedFrameIndex(aWhichFrame), aSize, aFlags);
-  if (!frameRef) {
+  if (!surface) {
     // The OS threw this frame away and we couldn't redecode it.
     return MakePair(DrawResult::TEMPORARY_ERROR, RefPtr<SourceSurface>());
   }
 
-  RefPtr<SourceSurface> frameSurf = frameRef->GetSurface();
+  RefPtr<SourceSurface> sourceSurface = surface->GetSurface();
 
-  if (!frameRef->IsFinished()) {
-    return MakePair(DrawResult::INCOMPLETE, Move(frameSurf));
+  if (!surface->IsFinished()) {
+    return MakePair(DrawResult::INCOMPLETE, Move(sourceSurface));
   }
 
-  return MakePair(DrawResult::SUCCESS, Move(frameSurf));
+  return MakePair(DrawResult::SUCCESS, Move(sourceSurface));
 }
 
 Pair<DrawResult, RefPtr<layers::Image>>
@@ -1266,7 +1266,7 @@ RasterImage::CanDownscaleDuringDecode(const IntSize& aSize, uint32_t aFlags)
 }
 
 DrawResult
-RasterImage::DrawInternal(DrawableFrameRef&& aFrameRef,
+RasterImage::DrawInternal(DrawableSurface&& aSurface,
                           gfxContext* aContext,
                           const IntSize& aSize,
                           const ImageRegion& aRegion,
@@ -1275,11 +1275,11 @@ RasterImage::DrawInternal(DrawableFrameRef&& aFrameRef,
 {
   gfxContextMatrixAutoSaveRestore saveMatrix(aContext);
   ImageRegion region(aRegion);
-  bool frameIsFinished = aFrameRef->IsFinished();
+  bool frameIsFinished = aSurface->IsFinished();
 
   // By now we may have a frame with the requested size. If not, we need to
   // adjust the drawing parameters accordingly.
-  IntSize finalSize = aFrameRef->GetImageSize();
+  IntSize finalSize = aSurface->GetImageSize();
   bool couldRedecodeForBetterFrame = false;
   if (finalSize != aSize) {
     gfx::Size scale(double(aSize.width) / finalSize.width,
@@ -1290,7 +1290,7 @@ RasterImage::DrawInternal(DrawableFrameRef&& aFrameRef,
     couldRedecodeForBetterFrame = CanDownscaleDuringDecode(aSize, aFlags);
   }
 
-  if (!aFrameRef->Draw(aContext, region, aSamplingFilter, aFlags)) {
+  if (!aSurface->Draw(aContext, region, aSamplingFilter, aFlags)) {
     RecoverFromInvalidFrames(aSize, aFlags);
     return DrawResult::TEMPORARY_ERROR;
   }
@@ -1342,9 +1342,9 @@ RasterImage::Draw(gfxContext* aContext,
                  ? aFlags
                  : aFlags & ~FLAG_HIGH_QUALITY_SCALING;
 
-  DrawableFrameRef ref =
+  DrawableSurface surface =
     LookupFrame(GetRequestedFrameIndex(aWhichFrame), aSize, flags);
-  if (!ref) {
+  if (!surface) {
     // Getting the frame (above) touches the image and kicks off decoding.
     if (mDrawStartTime.IsNull()) {
       mDrawStartTime = TimeStamp::Now();
@@ -1353,9 +1353,9 @@ RasterImage::Draw(gfxContext* aContext,
   }
 
   bool shouldRecordTelemetry = !mDrawStartTime.IsNull() &&
-                               ref->IsFinished();
+                               surface->IsFinished();
 
-  auto result = DrawInternal(Move(ref), aContext, aSize,
+  auto result = DrawInternal(Move(surface), aContext, aSize,
                              aRegion, aSamplingFilter, flags);
 
   if (shouldRecordTelemetry) {

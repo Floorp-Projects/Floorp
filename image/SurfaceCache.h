@@ -212,9 +212,8 @@ struct SurfaceCache
    *                        belongs to.
    * @param aSurfaceKey     Key data which uniquely identifies the requested
    *                        cache entry.
-   * @return                a LookupResult, which will either contain a
-   *                        DrawableFrameRef to a surface, or an empty
-   *                        DrawableFrameRef if the cache entry was not found.
+   * @return                a LookupResult which will contain a DrawableSurface
+   *                        if the cache entry was found.
    */
   static LookupResult Lookup(const ImageKey    aImageKey,
                              const SurfaceKey& aSurfaceKey);
@@ -229,13 +228,11 @@ struct SurfaceCache
    *                        belongs to.
    * @param aSurfaceKey     Key data which uniquely identifies the requested
    *                        cache entry.
-   * @return                a LookupResult, which will either contain a
-   *                        DrawableFrameRef to a surface similar to the
-   *                        the one the caller requested, or an empty
-   *                        DrawableFrameRef if no acceptable match was found.
-   *                        Callers can use LookupResult::IsExactMatch() to check
-   *                        whether the returned surface exactly matches
-   *                        @aSurfaceKey.
+   * @return                a LookupResult which will contain a DrawableSurface
+   *                        if a cache entry similar to the one the caller
+   *                        requested could be found. Callers can use
+   *                        LookupResult::IsExactMatch() to check whether the
+   *                        returned surface exactly matches @aSurfaceKey.
    */
   static LookupResult LookupBestMatch(const ImageKey    aImageKey,
                                       const SurfaceKey& aSurfaceKey);
