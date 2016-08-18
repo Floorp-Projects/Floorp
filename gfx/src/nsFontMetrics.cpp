@@ -173,6 +173,12 @@ nsFontMetrics::XHeight()
 }
 
 nscoord
+nsFontMetrics::CapHeight()
+{
+    return ROUND_TO_TWIPS(GetMetrics().capHeight);
+}
+
+nscoord
 nsFontMetrics::SuperscriptOffset()
 {
     return ROUND_TO_TWIPS(GetMetrics().emHeight *
