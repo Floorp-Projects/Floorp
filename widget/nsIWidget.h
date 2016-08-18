@@ -1200,7 +1200,8 @@ class nsIWidget : public nsISupports
      * FullscreenChanged callback has been or will be called. If other
      * value is returned, the caller should continue the change itself.
      */
-    NS_IMETHOD MakeFullScreen(bool aFullScreen, nsIScreen* aTargetScreen = nullptr) = 0;
+    virtual nsresult MakeFullScreen(bool aFullScreen,
+                                    nsIScreen* aTargetScreen = nullptr) = 0;
 
     /**
      * Same as MakeFullScreen, except that, on systems which natively
@@ -1208,7 +1209,7 @@ class nsIWidget : public nsISupports
      * requests that behavior.
      * It is currently only supported on OS X 10.7+.
      */
-    NS_IMETHOD MakeFullScreenWithNativeTransition(
+    virtual nsresult MakeFullScreenWithNativeTransition(
       bool aFullScreen, nsIScreen* aTargetScreen = nullptr)
     {
       return MakeFullScreen(aFullScreen, aTargetScreen);

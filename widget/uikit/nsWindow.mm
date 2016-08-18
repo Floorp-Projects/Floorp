@@ -689,14 +689,13 @@ nsWindow::SetSizeMode(nsSizeMode aMode)
         return NS_OK;
     }
 
-    nsresult rv = NS_OK;
     mSizeMode = static_cast<nsSizeMode>(aMode);
     if (aMode == nsSizeMode_Maximized || aMode == nsSizeMode_Fullscreen) {
         // Resize to fill screen
-        rv = nsBaseWidget::MakeFullScreen(true);
+        nsBaseWidget::InfallibleMakeFullScreen(true);
     }
     ReportSizeModeEvent(aMode);
-    return rv;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
