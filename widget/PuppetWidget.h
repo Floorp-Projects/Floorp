@@ -56,11 +56,18 @@ protected:
 public:
   NS_DECL_ISUPPORTS_INHERITED
 
+  // PuppetWidget creation is infallible, hence InfallibleCreate(), which
+  // Create() calls.
   using nsBaseWidget::Create; // for Create signature not overridden here
-  NS_IMETHOD Create(nsIWidget* aParent,
-                    nsNativeWidget aNativeParent,
-                    const LayoutDeviceIntRect& aRect,
-                    nsWidgetInitData* aInitData = nullptr) override;
+  virtual nsresult Create(nsIWidget* aParent,
+                          nsNativeWidget aNativeParent,
+                          const LayoutDeviceIntRect& aRect,
+                          nsWidgetInitData* aInitData = nullptr)
+                          override;
+  void InfallibleCreate(nsIWidget* aParent,
+                        nsNativeWidget aNativeParent,
+                        const LayoutDeviceIntRect& aRect,
+                        nsWidgetInitData* aInitData = nullptr);
 
   void InitIMEState();
 

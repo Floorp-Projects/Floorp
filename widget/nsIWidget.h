@@ -421,10 +421,11 @@ class nsIWidget : public nsISupports
      * @param     aInitData     data that is used for widget initialization
      *
      */
-    NS_IMETHOD Create(nsIWidget* aParent,
-                      nsNativeWidget aNativeParent,
-                      const LayoutDeviceIntRect& aRect,
-                      nsWidgetInitData* aInitData = nullptr) = 0;
+    virtual MOZ_MUST_USE nsresult
+    Create(nsIWidget* aParent,
+           nsNativeWidget aNativeParent,
+           const LayoutDeviceIntRect& aRect,
+           nsWidgetInitData* aInitData = nullptr) = 0;
 
     /*
      * As above, but with aRect specified in DesktopPixel units (for top-level
@@ -434,10 +435,11 @@ class nsIWidget : public nsISupports
      * mapping is not straightforward or the native platform needs to use the
      * desktop pixel values directly.
      */
-    NS_IMETHOD Create(nsIWidget* aParent,
-                      nsNativeWidget aNativeParent,
-                      const DesktopIntRect& aRect,
-                      nsWidgetInitData* aInitData = nullptr)
+    virtual MOZ_MUST_USE nsresult
+    Create(nsIWidget* aParent,
+           nsNativeWidget aNativeParent,
+           const DesktopIntRect& aRect,
+           nsWidgetInitData* aInitData = nullptr)
     {
         LayoutDeviceIntRect devPixRect =
           RoundedToInt(aRect * GetDesktopToDeviceScale());

@@ -93,10 +93,10 @@ public:
 
     // nsIWidget
     using nsBaseWidget::Create; // for Create signature not overridden here
-    NS_IMETHOD         Create(nsIWidget* aParent,
-                              nsNativeWidget aNativeParent,
-                              const LayoutDeviceIntRect& aRect,
-                              nsWidgetInitData* aInitData) override;
+    virtual MOZ_MUST_USE nsresult Create(nsIWidget* aParent,
+                                         nsNativeWidget aNativeParent,
+                                         const LayoutDeviceIntRect& aRect,
+                                         nsWidgetInitData* aInitData) override;
     NS_IMETHOD         Destroy(void) override;
     virtual nsIWidget *GetParent() override;
     virtual float      GetDPI() override;
