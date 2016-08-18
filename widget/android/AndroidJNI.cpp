@@ -65,35 +65,6 @@ Java_org_mozilla_gecko_GeckoAppShell_reportJavaCrash(JNIEnv *jenv, jclass, jstri
 }
 
 NS_EXPORT void JNICALL
-Java_org_mozilla_gecko_GeckoAppShell_notifyBatteryChange(JNIEnv* jenv, jclass,
-                                                         jdouble aLevel,
-                                                         jboolean aCharging,
-                                                         jdouble aRemainingTime)
-{
-    class NotifyBatteryChangeRunnable : public Runnable {
-    public:
-      NotifyBatteryChangeRunnable(double aLevel, bool aCharging, double aRemainingTime)
-        : mLevel(aLevel)
-        , mCharging(aCharging)
-        , mRemainingTime(aRemainingTime)
-      {}
-
-      NS_IMETHOD Run() override {
-        hal::NotifyBatteryChange(hal::BatteryInformation(mLevel, mCharging, mRemainingTime));
-        return NS_OK;
-      }
-
-    private:
-      double mLevel;
-      bool   mCharging;
-      double mRemainingTime;
-    };
-
-    nsCOMPtr<nsIRunnable> runnable = new NotifyBatteryChangeRunnable(aLevel, aCharging, aRemainingTime);
-    NS_DispatchToMainThread(runnable);
-}
-
-NS_EXPORT void JNICALL
 Java_org_mozilla_gecko_GeckoAppShell_invalidateAndScheduleComposite(JNIEnv*, jclass)
 {
     nsWindow::InvalidateAndScheduleComposite();

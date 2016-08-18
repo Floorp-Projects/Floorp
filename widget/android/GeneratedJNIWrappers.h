@@ -2057,6 +2057,39 @@ public:
     template<class Impl> class Natives;
 };
 
+class GeckoBatteryManager : public mozilla::jni::ObjectBase<GeckoBatteryManager>
+{
+public:
+    static const char name[];
+
+    explicit GeckoBatteryManager(const Context& ctx) : ObjectBase<GeckoBatteryManager>(ctx) {}
+
+    struct OnBatteryChange_t {
+        typedef GeckoBatteryManager Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<
+                double,
+                bool,
+                double> Args;
+        static constexpr char name[] = "onBatteryChange";
+        static constexpr char signature[] =
+                "(DZD)V";
+        static const bool isStatic = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+        static const mozilla::jni::CallingThread callingThread =
+                mozilla::jni::CallingThread::UI;
+        static const mozilla::jni::DispatchTarget dispatchTarget =
+                mozilla::jni::DispatchTarget::GECKO;
+    };
+
+    static const mozilla::jni::CallingThread callingThread =
+            mozilla::jni::CallingThread::UI;
+
+    template<class Impl> class Natives;
+};
+
 class GeckoEditable : public mozilla::jni::ObjectBase<GeckoEditable>
 {
 public:
