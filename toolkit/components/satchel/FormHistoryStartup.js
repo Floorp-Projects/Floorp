@@ -11,9 +11,6 @@ Components.utils.import("resource://gre/modules/Services.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "FormHistory",
                                   "resource://gre/modules/FormHistory.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "AutoCompleteE10S",
-                                  "resource://gre/modules/AutoCompleteE10S.jsm");
-
 function FormHistoryStartup() { }
 
 FormHistoryStartup.prototype = {

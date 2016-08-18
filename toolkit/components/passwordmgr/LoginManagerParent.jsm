@@ -13,8 +13,8 @@ Cu.import("resource://gre/modules/Task.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "UserAutoCompleteResult",
                                   "resource://gre/modules/LoginManagerContent.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "AutoCompleteE10S",
-                                  "resource://gre/modules/AutoCompleteE10S.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "AutoCompletePopup",
+                                  "resource://gre/modules/AutoCompletePopup.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "DeferredTask",
                                   "resource://gre/modules/DeferredTask.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "LoginDoorhangers",
@@ -101,7 +101,7 @@ var LoginManagerParent = {
 
       case "RemoteLogins:removeLogin": {
         let login = LoginHelper.vanillaObjectToLogin(data.login);
-        AutoCompleteE10S.removeLogin(login);
+        AutoCompletePopup.removeLogin(login);
         break;
       }
     }
@@ -232,7 +232,6 @@ var LoginManagerParent = {
                                    rect, requestId, remote }, target) {
     // Note: previousResult is a regular object, not an
     // nsIAutoCompleteResult.
-    var result;
 
     let searchStringLower = searchString.toLowerCase();
     let logins;
@@ -273,8 +272,8 @@ var LoginManagerParent = {
     // for showing the autocomplete popup (via the regular
     // nsAutoCompleteController).
     if (remote) {
-      result = new UserAutoCompleteResult(searchString, matchingLogins);
-      AutoCompleteE10S.showPopupWithResults(target.ownerDocument.defaultView, rect, result);
+      let results = new UserAutoCompleteResult(searchString, matchingLogins);
+      AutoCompletePopup.showPopupWithResults({ browser: target.ownerDocument.defaultView, rect, results });
     }
 
     // Convert the array of nsILoginInfo to vanilla JS objects since nsILoginInfo
