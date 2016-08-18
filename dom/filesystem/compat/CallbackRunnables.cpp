@@ -76,7 +76,7 @@ GetEntryHelper::GetEntryHelper(nsIGlobalObject* aGlobalObject,
                                FileSystem* aFileSystem,
                                EntryCallback* aSuccessCallback,
                                ErrorCallback* aErrorCallback,
-                               DirectoryEntry::GetInternalType aType)
+                               FileSystemDirectoryEntry::GetInternalType aType)
   : mGlobal(aGlobalObject)
   , mFileSystem(aFileSystem)
   , mSuccessCallback(aSuccessCallback)
@@ -100,7 +100,7 @@ GetEntryHelper::ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue)
 
   JS::Rooted<JSObject*> obj(aCx, &aValue.toObject());
 
-  if (mType == DirectoryEntry::eGetFile) {
+  if (mType == FileSystemDirectoryEntry::eGetFile) {
     RefPtr<File> file;
     if (NS_FAILED(UNWRAP_OBJECT(File, obj, file))) {
       Error(NS_ERROR_DOM_TYPE_MISMATCH_ERR);
@@ -113,7 +113,7 @@ GetEntryHelper::ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue)
     return;
   }
 
-  MOZ_ASSERT(mType == DirectoryEntry::eGetDirectory);
+  MOZ_ASSERT(mType == FileSystemDirectoryEntry::eGetDirectory);
 
   RefPtr<Directory> directory;
   if (NS_FAILED(UNWRAP_OBJECT(Directory, obj, directory))) {
@@ -121,8 +121,8 @@ GetEntryHelper::ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue)
     return;
   }
 
-  RefPtr<DirectoryEntry> entry =
-    new DirectoryEntry(mGlobal, directory, mFileSystem);
+  RefPtr<FileSystemDirectoryEntry> entry =
+    new FileSystemDirectoryEntry(mGlobal, directory, mFileSystem);
   mSuccessCallback->HandleEvent(*entry);
 }
 
