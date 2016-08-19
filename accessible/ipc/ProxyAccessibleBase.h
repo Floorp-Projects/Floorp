@@ -154,7 +154,7 @@ protected:
     mParent(nullptr), mDoc(aThisAsDoc), mWrapper(0), mID(0),
     mRole(roles::DOCUMENT), mOuterDoc(false), mIsDoc(true), mHasValue(false),
     mIsHyperLink(false), mIsHyperText(false)
-  {}
+  { MOZ_COUNT_CTOR(ProxyAccessibleBase); }
 
 protected:
   Derived* mParent;
