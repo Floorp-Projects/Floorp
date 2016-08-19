@@ -1555,7 +1555,7 @@ ParseNaNLiteral(const char16_t* cur, const char16_t* end, Float* result)
             return false;
         CheckedInt<Bits> u = 0;
         do {
-            uint8_t digit;
+            uint8_t digit = 0;
             MOZ_ALWAYS_TRUE(IsHexDigit(*cur, &digit));
             u *= 16;
             u += digit;

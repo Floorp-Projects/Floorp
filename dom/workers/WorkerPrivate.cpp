@@ -5260,14 +5260,14 @@ WorkerPrivate::RemoveChildWorker(ParentType* aChildWorker)
 }
 
 bool
-WorkerPrivate::AddHolder(WorkerHolder* aHolder)
+WorkerPrivate::AddHolder(WorkerHolder* aHolder, Status aFailStatus)
 {
   AssertIsOnWorkerThread();
 
   {
     MutexAutoLock lock(mMutex);
 
-    if (mStatus >= Canceling) {
+    if (mStatus >= aFailStatus) {
       return false;
     }
   }

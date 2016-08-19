@@ -18,6 +18,19 @@ const sampleRDFManifest = {
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "42");
 startupManager();
 
+const {Management} = Components.utils.import("resource://gre/modules/Extension.jsm", {});
+
+function promiseAddonStartup() {
+  return new Promise(resolve => {
+    let listener = (extension) => {
+      Management.off("startup", listener);
+      resolve(extension);
+    };
+
+    Management.on("startup", listener);
+  });
+}
+
 BootstrapMonitor.init();
 
 // Partial list of bootstrap reasons from XPIProvider.jsm
@@ -135,10 +148,10 @@ add_task(function*() {
     version: "3.0",
     bootstrap: true,
     targetApplications: [{
-          id: "xpcshell@tests.mozilla.org",
+      id: "xpcshell@tests.mozilla.org",
       minVersion: "1",
       maxVersion: "1"
-        }],
+    }],
     name: "Test Bootstrap 1 (temporary)",
   }, tempdir, "bootstrap1@tests.mozilla.org", "bootstrap.js");
 
@@ -247,7 +260,10 @@ add_task(function*() {
       }
     });
 
-    yield AddonManager.installTemporaryAddon(webext);
+    yield Promise.all([
+      AddonManager.installTemporaryAddon(webext),
+      promiseAddonStartup(),
+    ]);
     addon = yield promiseAddonByID(ID);
 
     // temporary add-on is installed and started
@@ -274,7 +290,10 @@ add_task(function*() {
       }
     });
 
-    yield AddonManager.installTemporaryAddon(webext);
+    yield Promise.all([
+      AddonManager.installTemporaryAddon(webext),
+      promiseAddonStartup(),
+    ]);
     addon = yield promiseAddonByID(ID);
 
     // temporary add-on is installed and started

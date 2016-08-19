@@ -642,8 +642,10 @@ function BuildConditionSandbox(aURL) {
     var gfxInfo = (NS_GFXINFO_CONTRACTID in CC) && CC[NS_GFXINFO_CONTRACTID].getService(CI.nsIGfxInfo);
     try {
       sandbox.d2d = gfxInfo.D2DEnabled;
+      sandbox.dwrite = gfxInfo.DWriteEnabled;
     } catch (e) {
       sandbox.d2d = false;
+      sandbox.dwrite = false;
     }
     var info = gfxInfo.getInfo();
     sandbox.azureCairo = info.AzureCanvasBackend == "cairo";

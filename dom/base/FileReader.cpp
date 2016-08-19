@@ -701,7 +701,7 @@ nsresult
 FileReader::IncreaseBusyCounter()
 {
   if (mWorkerPrivate && mBusyCount++ == 0 &&
-      !HoldWorker(mWorkerPrivate)) {
+      !HoldWorker(mWorkerPrivate, Closing)) {
     return NS_ERROR_FAILURE;
   }
 

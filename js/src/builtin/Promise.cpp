@@ -804,6 +804,38 @@ EnqueuePromiseResolveThenableJob(JSContext* cx, HandleValue promiseToResolve_,
     return cx->runtime()->enqueuePromiseJob(cx, job, promise, incumbentGlobal);
 }
 
+PromiseTask::PromiseTask(JSContext* cx, Handle<PromiseObject*> promise)
+  : runtime_(cx),
+    promise_(cx, promise)
+{}
+
+PromiseTask::~PromiseTask()
+{
+    MOZ_ASSERT(CurrentThreadCanAccessZone(promise_->zone()));
+}
+
+void
+PromiseTask::finish(JSContext* cx)
+{
+    MOZ_ASSERT(cx == runtime_);
+    {
+        // We can't leave a pending exception when returning to the caller so do
+        // the same thing as Gecko, which is to ignore the error. This should
+        // only happen due to OOM or interruption.
+        AutoCompartment ac(cx, promise_);
+        if (!finishPromise(cx, promise_))
+            cx->clearPendingException();
+    }
+    js_delete(this);
+}
+
+void
+PromiseTask::cancel(JSContext* cx)
+{
+    MOZ_ASSERT(cx == runtime_);
+    js_delete(this);
+}
+
 } // namespace js
 
 static JSObject*

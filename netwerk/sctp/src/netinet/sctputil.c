@@ -1308,6 +1308,7 @@ sctp_iterator_work(struct sctp_iterator *it)
 
 	SCTP_INP_INFO_RLOCK();
 	SCTP_ITERATOR_LOCK();
+	sctp_it_ctl.cur_it = it;
 	if (it->inp) {
 		SCTP_INP_RLOCK(it->inp);
 		SCTP_INP_DECR_REF(it->inp);
@@ -1315,6 +1316,7 @@ sctp_iterator_work(struct sctp_iterator *it)
 	if (it->inp == NULL) {
 		/* iterator is complete */
 done_with_iterator:
+		sctp_it_ctl.cur_it = NULL;
 		SCTP_ITERATOR_UNLOCK();
 		SCTP_INP_INFO_RUNLOCK();
 		if (it->function_atend != NULL) {
@@ -1462,7 +1464,6 @@ sctp_iterator_worker(void)
 
 	sctp_it_ctl.iterator_running = 1;
 	TAILQ_FOREACH_SAFE(it, &sctp_it_ctl.iteratorhead, sctp_nxt_itr, nit) {
-		sctp_it_ctl.cur_it = it;
 		/* now lets work on this one */
 		TAILQ_REMOVE(&sctp_it_ctl.iteratorhead, it, sctp_nxt_itr);
 		SCTP_IPI_ITERATOR_WQ_UNLOCK();
@@ -1470,7 +1471,6 @@ sctp_iterator_worker(void)
 		CURVNET_SET(it->vn);
 #endif
 		sctp_iterator_work(it);
-		sctp_it_ctl.cur_it = NULL;
 #if defined(__FreeBSD__) && __FreeBSD_version >= 801000
 		CURVNET_RESTORE();
 #endif
@@ -5699,7 +5699,7 @@ sctp_sorecvmsg(struct socket *so,
 	 */
 	struct sctp_inpcb *inp = NULL;
 	int my_len = 0;
-	int cp_len = 0, error = 0;	
+	int cp_len = 0, error = 0;
 	struct sctp_queued_to_read *control = NULL, *ctl = NULL, *nxt = NULL;
 	struct mbuf *m = NULL;
 	struct sctp_tcb *stcb = NULL;

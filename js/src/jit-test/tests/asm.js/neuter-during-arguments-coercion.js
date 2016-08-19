@@ -23,6 +23,6 @@ if (isAsmJSCompilationAvailable())
 
 try
 {
-  set({ valueOf() { detachArrayBuffer(buffer, "same-data"); return 17; } });
+  set({ valueOf() { detachArrayBuffer(buffer); return 17; } });
 }
 catch (e) { /* if an exception thrown, swallow */ }

@@ -745,10 +745,8 @@ handle_connection(
                             /* else good status response */
                             if (!isPost && ocspMethodsAllowed == ocspGetUnknown) {
                                 unknown = PR_TRUE;
-                                nextUpdate = PR_Now() + (PRTime)60 * 60 *
-                                                            24 * PR_USEC_PER_SEC; /*tomorrow*/
-                                revoDate = PR_Now() - (PRTime)60 * 60 *
-                                                          24 * PR_USEC_PER_SEC; /*yesterday*/
+                                nextUpdate = PR_Now() + (PRTime)60 * 60 * 24 * PR_USEC_PER_SEC; /*tomorrow*/
+                                revoDate = PR_Now() - (PRTime)60 * 60 * 24 * PR_USEC_PER_SEC;   /*yesterday*/
                             }
                         }
                     }

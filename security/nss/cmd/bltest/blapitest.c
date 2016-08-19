@@ -1236,8 +1236,7 @@ rsa_PublicKeyOp(void *cx, SECItem *output, const SECItem *input)
     RSAPublicKey *pubKey = (RSAPublicKey *)params->pubKey;
     SECStatus rv = RSA_PublicKeyOp(pubKey, output->data, input->data);
     if (rv == SECSuccess) {
-        output->len = pubKey->modulus.data[0] ? pubKey->modulus.len :
-                                              pubKey->modulus.len - 1;
+        output->len = pubKey->modulus.data[0] ? pubKey->modulus.len : pubKey->modulus.len - 1;
     }
     return rv;
 }
@@ -1249,8 +1248,7 @@ rsa_PrivateKeyOp(void *cx, SECItem *output, const SECItem *input)
     RSAPrivateKey *privKey = (RSAPrivateKey *)params->privKey;
     SECStatus rv = RSA_PrivateKeyOp(privKey, output->data, input->data);
     if (rv == SECSuccess) {
-        output->len = privKey->modulus.data[0] ? privKey->modulus.len :
-                                               privKey->modulus.len - 1;
+        output->len = privKey->modulus.data[0] ? privKey->modulus.len : privKey->modulus.len - 1;
     }
     return rv;
 }
@@ -2849,8 +2847,7 @@ print_td:
                 ECPrivateKey *key = (ECPrivateKey *)info->params.asymk.privKey;
                 ECCurveName curveName = key->ecParams.name;
                 fprintf(stdout, "%12s",
-                        ecCurve_map[curveName] ? ecCurve_map[curveName]->text :
-                                               "Unsupported curve");
+                        ecCurve_map[curveName] ? ecCurve_map[curveName]->text : "Unsupported curve");
             }
             break;
 #endif
@@ -3161,7 +3158,7 @@ verify_self_test(bltestIO *result, bltestIO *cmp, bltestCipherMode mode,
 static SECStatus
 ReadFileToItem(PLArenaPool *arena, SECItem *dst, const char *filename)
 {
-    SECItem tmp = {siBuffer, NULL, 0};
+    SECItem tmp = { siBuffer, NULL, 0 };
     PRFileDesc *file;
     SECStatus rv;
 

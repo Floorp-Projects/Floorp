@@ -294,7 +294,7 @@ nsWindow::SynthesizeNativeTouchPoint(uint32_t aPointerId,
     return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsWindow::Create(nsIWidget* aParent,
                  void* aNativeParent,
                  const LayoutDeviceIntRect& aRect,
@@ -564,13 +564,14 @@ nsWindow::ReparentNativeWidget(nsIWidget* aNewParent)
     return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsWindow::MakeFullScreen(bool aFullScreen, nsIScreen*)
 {
     if (mWindowType != eWindowType_toplevel) {
         // Ignore fullscreen request for non-toplevel windows.
         NS_WARNING("MakeFullScreen() on a dialog or child widget?");
-        return nsBaseWidget::MakeFullScreen(aFullScreen);
+        nsBaseWidget::InfallibleMakeFullScreen(aFullScreen);
+        return NS_OK;
     }
 
     if (aFullScreen) {

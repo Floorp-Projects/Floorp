@@ -35,12 +35,12 @@ struct nssListIteratorStr {
     nssListElement *current;
 };
 
-#define NSSLIST_LOCK_IF(list)                                                  \
-    if ((list)->lock)                                                          \
+#define NSSLIST_LOCK_IF(list) \
+    if ((list)->lock)         \
     PZ_Lock((list)->lock)
 
-#define NSSLIST_UNLOCK_IF(list)                                                \
-    if ((list)->lock)                                                          \
+#define NSSLIST_UNLOCK_IF(list) \
+    if ((list)->lock)           \
     PZ_Unlock((list)->lock)
 
 static PRBool

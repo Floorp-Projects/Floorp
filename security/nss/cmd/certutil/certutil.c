@@ -184,7 +184,7 @@ CertReq(SECKEYPrivateKey *privk, SECKEYPublicKey *pubk, KeyType keyType,
         SECOidTag hashAlgTag, CERTName *subject, const char *phone, int ascii,
         const char *emailAddrs, const char *dnsNames,
         certutilExtnList extnList, const char *extGeneric,
-        /*out*/ SECItem *result)
+        PRBool pssCertificate, /*out*/ SECItem *result)
 {
     CERTSubjectPublicKeyInfo *spki;
     CERTCertificateRequest *cr;
@@ -195,6 +195,12 @@ CertReq(SECKEYPrivateKey *privk, SECKEYPublicKey *pubk, KeyType keyType,
     void *extHandle;
     SECItem signedReq = { siBuffer, NULL, 0 };
 
+    arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
+    if (!arena) {
+        SECU_PrintError(progName, "out of memory");
+        return SECFailure;
+    }
+
     /* Create info about public key */
     spki = SECKEY_CreateSubjectPublicKeyInfo(pubk);
     if (!spki) {
@@ -202,17 +208,18 @@ CertReq(SECKEYPrivateKey *privk, SECKEYPublicKey *pubk, KeyType keyType,
         return SECFailure;
     }
 
+    /* Change cert type to RSA-PSS, if desired. */
+    if (pssCertificate) {
+        spki->algorithm.parameters.data = NULL;
+        rv = SECOID_SetAlgorithmID(arena, &spki->algorithm,
+                                   SEC_OID_PKCS1_RSA_PSS_SIGNATURE, 0);
+    }
+
     /* Generate certificate request */
     cr = CERT_CreateCertificateRequest(subject, spki, NULL);
     SECKEY_DestroySubjectPublicKeyInfo(spki);
     if (!cr) {
         SECU_PrintError(progName, "unable to make certificate request");
-        return SECFailure;
-    }
-
-    arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
-    if (!arena) {
-        SECU_PrintError(progName, "out of memory");
         return SECFailure;
     }
 
@@ -2354,6 +2361,7 @@ enum certutilOpts {
     opt_DumpExtensionValue,
     opt_GenericExtensions,
     opt_NewNickname,
+    opt_Pss,
     opt_Help
 };
 
@@ -2472,6 +2480,8 @@ static const secuCommandFlag options_init[] =
         "extGeneric" },
       { /* opt_NewNickname         */ 0, PR_TRUE, 0, PR_FALSE,
         "new-n" },
+      { /* opt_Pss                 */ 0, PR_FALSE, 0, PR_FALSE,
+        "pss" },
     };
 #define NUM_OPTIONS ((sizeof options_init) / (sizeof options_init[0]))
 
@@ -3322,6 +3332,22 @@ certutil_main(int argc, char **argv, PRBool initialize)
         }
     }
 
+    if (certutil.options[opt_Pss].activated) {
+        if (!certutil.commands[cmd_CertReq].activated &&
+            !certutil.commands[cmd_CreateAndAddCert].activated) {
+            PR_fprintf(PR_STDERR,
+                       "%s -%c: --pss only works with -R or -S.\n",
+                       progName, commandToRun);
+            return 255;
+        }
+        if (keytype != rsaKey) {
+            PR_fprintf(PR_STDERR,
+                       "%s -%c: --pss only works with RSA keys.\n",
+                       progName, commandToRun);
+            return 255;
+        }
+    }
+
     /* If we need a list of extensions convert the flags into list format */
     if (certutil.commands[cmd_CertReq].activated ||
         certutil.commands[cmd_CreateAndAddCert].activated ||
@@ -3409,9 +3435,9 @@ certutil_main(int argc, char **argv, PRBool initialize)
                      certutil.options[opt_ExtendedEmailAddrs].arg,
                      certutil.options[opt_ExtendedDNSNames].arg,
                      certutil_extns,
-                     (certutil.options[opt_GenericExtensions].activated ?
-                                                                        certutil.options[opt_GenericExtensions].arg
+                     (certutil.options[opt_GenericExtensions].activated ? certutil.options[opt_GenericExtensions].arg
                                                                         : NULL),
+                     certutil.options[opt_Pss].activated,
                      &certReqDER);
         if (rv)
             goto shutdown;
@@ -3434,9 +3460,9 @@ certutil_main(int argc, char **argv, PRBool initialize)
                      NULL,
                      NULL,
                      nullextnlist,
-                     (certutil.options[opt_GenericExtensions].activated ?
-                                                                        certutil.options[opt_GenericExtensions].arg
+                     (certutil.options[opt_GenericExtensions].activated ? certutil.options[opt_GenericExtensions].arg
                                                                         : NULL),
+                     certutil.options[opt_Pss].activated,
                      &certReqDER);
         if (rv)
             goto shutdown;
@@ -3456,8 +3482,7 @@ certutil_main(int argc, char **argv, PRBool initialize)
                             certutil.commands[cmd_CreateNewCert].activated,
                         certutil.options[opt_SelfSign].activated,
                         certutil_extns,
-                        (certutil.options[opt_GenericExtensions].activated ?
-                                                                           certutil.options[opt_GenericExtensions].arg
+                        (certutil.options[opt_GenericExtensions].activated ? certutil.options[opt_GenericExtensions].arg
                                                                            : NULL),
                         certVersion,
                         &certDER);

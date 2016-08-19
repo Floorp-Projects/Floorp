@@ -1,0 +1,25 @@
+<!DOCTYPE HTML>
+<html>
+  <!-- Test: textarea with minlength is -moz-ui-invalid if the user edits and it's too short -->
+  <head>
+    <style>
+      :-moz-ui-valid { background-color:green; }
+      :-moz-ui-invalid { background-color:red; }
+      * { box-shadow:none; background-color:white; }
+    </style>
+    <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+    <script>
+      function runTest() {
+        var textarea = document.getElementById('textarea');
+        textarea.focus();
+        synthesizeKey('o', {});
+        textarea.blur(); // to hide the caret
+        document.documentElement.className='';
+      }
+    </script>
+  </head>
+  <body onload="runTest()">
+    <textarea id="textarea" minlength="4">fo</textarea>
+  </body>
+</html>
+

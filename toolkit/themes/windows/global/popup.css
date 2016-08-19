@@ -52,7 +52,7 @@ panel[type="arrow"][side="right"] {
   color: var(--panel-arrowcontent-color);
   background: var(--panel-arrowcontent-background);
   background-clip: padding-box;
-  border: var(--panel-arrowcontent-border);
+  border: 1px solid var(--panel-arrowcontent-border);
   margin: 4px;
 }
 
@@ -106,7 +106,7 @@ panel[type="arrow"][side="right"] {
 %ifdef XP_WIN
 @media (-moz-windows-default-theme) {
   .panel-arrowcontent {
-    --panel-arrowcontent-border: 1px solid hsla(210,4%,10%,.2);
+    --panel-arrowcontent-border-color: hsla(210,4%,10%,.2);
     box-shadow: 0 0 4px hsla(210,4%,10%,.2);
   }
 

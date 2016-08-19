@@ -2524,6 +2524,9 @@ js::FreeScriptData(JSRuntime* rt, AutoLockForExclusiveAccess& lock)
     if (!table.initialized())
         return;
 
+    // The table should be empty unless the embedding leaked GC things.
+    MOZ_ASSERT_IF(rt->gc.shutdownCollectedEverything(), table.empty());
+
     for (ScriptDataTable::Enum e(table); !e.empty(); e.popFront()) {
 #ifdef DEBUG
         SharedScriptData* scriptData = e.front();

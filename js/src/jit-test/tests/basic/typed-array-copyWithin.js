@@ -174,7 +174,7 @@ for (var constructor of constructors) {
 
     function detachAndConvertTo(x) {
       return { valueOf() {
-                 detachArrayBuffer(tarray.buffer, "change-data");
+                 detachArrayBuffer(tarray.buffer);
                  return x;
                } };
     }

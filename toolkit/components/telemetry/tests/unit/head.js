@@ -7,8 +7,15 @@ Cu.import("resource://gre/modules/TelemetryController.jsm", this);
 Cu.import("resource://gre/modules/Services.jsm", this);
 Cu.import("resource://gre/modules/PromiseUtils.jsm", this);
 Cu.import("resource://gre/modules/Task.jsm", this);
+Cu.import("resource://gre/modules/FileUtils.jsm", this);
+Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
 Cu.import("resource://testing-common/httpd.js", this);
 Cu.import("resource://gre/modules/AppConstants.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "AddonTestUtils",
+                                  "resource://testing-common/AddonTestUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "OS",
+                                  "resource://gre/modules/osfile.jsm");
 
 const gIsWindows = AppConstants.platform == "win";
 const gIsMac = AppConstants.platform == "macosx";
@@ -160,31 +167,24 @@ function wrapWithExceptionHandler(f) {
   return wrapper;
 }
 
-function loadAddonManager(ID, name, version, platformVersion) {
-  let ns = {};
-  Cu.import("resource://gre/modules/Services.jsm", ns);
-  let head = "../../../../mozapps/extensions/test/xpcshell/head_addons.js";
-  let file = do_get_file(head);
-  let uri = ns.Services.io.newFileURI(file);
-  ns.Services.scriptloader.loadSubScript(uri.spec, gGlobalScope);
-  createAppInfo(ID, name, version, platformVersion);
+function loadAddonManager(...args) {
+  AddonTestUtils.init(gGlobalScope);
+  AddonTestUtils.overrideCertDB();
+  createAppInfo(...args);
+
   // As we're not running in application, we need to setup the features directory
   // used by system add-ons.
   const distroDir = FileUtils.getDir("ProfD", ["sysfeatures", "app0"], true);
-  registerDirectory("XREAppFeat", distroDir);
-  startupManager();
+  AddonTestUtils.registerDirectory("XREAppFeat", distroDir);
+  return AddonTestUtils.promiseStartupManager();
 }
 
 var gAppInfo = null;
 
-function createAppInfo(ID, name, version, platformVersion) {
-  let tmp = {};
-  Cu.import("resource://testing-common/AppInfo.jsm", tmp);
-  tmp.updateAppInfo({
-    ID, name, version, platformVersion,
-    crashReporter: true,
-  });
-  gAppInfo = tmp.getAppInfo();
+function createAppInfo(ID="xpcshell@tests.mozilla.org", name="XPCShell",
+                       version="1.0", platformVersion="1.0") {
+  AddonTestUtils.createAppInfo(ID, name, version, platformVersion);
+  gAppInfo = AddonTestUtils.appInfo;
 }
 
 // Fake the timeout functions for the TelemetryScheduler.

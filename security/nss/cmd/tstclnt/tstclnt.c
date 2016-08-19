@@ -256,7 +256,8 @@ PrintParameterUsage(void)
     fprintf(stderr, "%-20s (Options -4 and -6 cannot be combined.)\n", "");
     fprintf(stderr, "%-20s Enable the extended master secret extension [RFC7627]\n", "-G");
     fprintf(stderr, "%-20s Require the use of FFDHE supported groups "
-                    "[I-D.ietf-tls-negotiated-ff-dhe]\n", "-H");
+                    "[I-D.ietf-tls-negotiated-ff-dhe]\n",
+            "-H");
 }
 
 static void
@@ -1350,6 +1351,8 @@ main(int argc, char **argv)
         goto done;
     }
 
+    SSL_SetPKCS11PinArg(s, &pwdata);
+
     rv = SSL_OptionSet(s, SSL_SECURITY, 1);
     if (rv != SECSuccess) {
         SECU_PrintError(progName, "error enabling socket");
@@ -1499,8 +1502,6 @@ main(int argc, char **argv)
         error = 1;
         goto done;
     }
-
-    SSL_SetPKCS11PinArg(s, &pwdata);
 
     serverCertAuth.dbHandle = CERT_GetDefaultCertDB();
 

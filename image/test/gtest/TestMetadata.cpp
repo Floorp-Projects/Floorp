@@ -240,17 +240,16 @@ TEST_F(ImageDecoderMetadata, NoFrameDelayGIFFullDecode)
   EXPECT_TRUE(bool(imageProgress & FLAG_IS_ANIMATED) == true);
 
   // Ensure that we decoded both frames of the image.
-  LookupResult firstFrameLookupResult =
+  LookupResult result =
     SurfaceCache::Lookup(ImageKey(image.get()),
                          RasterSurfaceKey(imageSize,
                                           DefaultSurfaceFlags(),
-                                          /* aFrameNum = */ 0));
-  EXPECT_EQ(MatchType::EXACT, firstFrameLookupResult.Type());
-                                                             
-  LookupResult secondFrameLookupResult =
-    SurfaceCache::Lookup(ImageKey(image.get()),
-                         RasterSurfaceKey(imageSize,
-                                          DefaultSurfaceFlags(),
-                                          /* aFrameNum = */ 1));
-  EXPECT_EQ(MatchType::EXACT, secondFrameLookupResult.Type());
+                                          PlaybackType::eAnimated));
+  ASSERT_EQ(MatchType::EXACT, result.Type());
+
+  EXPECT_TRUE(NS_SUCCEEDED(result.Surface().Seek(0)));
+  EXPECT_TRUE(bool(result.Surface()));
+
+  EXPECT_TRUE(NS_SUCCEEDED(result.Surface().Seek(1)));
+  EXPECT_TRUE(bool(result.Surface()));
 }

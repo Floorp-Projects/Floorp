@@ -127,7 +127,7 @@ ssl_BeginClientHandshake(sslSocket *ss)
 
     PORT_Assert(ss->opt.noLocks || ssl_Have1stHandshakeLock(ss));
 
-    ss->sec.isServer = 0;
+    ss->sec.isServer = PR_FALSE;
     ssl_ChooseSessionIDProcs(&ss->sec);
 
     rv = ssl_CheckConfigSanity(ss);
@@ -220,7 +220,7 @@ ssl_BeginServerHandshake(sslSocket *ss)
 {
     SECStatus rv;
 
-    ss->sec.isServer = 1;
+    ss->sec.isServer = PR_TRUE;
     ssl_ChooseSessionIDProcs(&ss->sec);
 
     rv = ssl_CheckConfigSanity(ss);

@@ -13,12 +13,12 @@ var gOldProviders;
 function run_test() {
   setupTestCommon();
 
-  setUpdateURLOverride();
-  overrideXHR(xhr_pt1);
-  standardInit();
-
   debugDump("testing that error codes set from a directory provider propagate" +
             "up to AUS.downloadUpdate() correctly (Bug 794211).");
+
+  start_httpserver();
+  setUpdateURLOverride(gURLData + gHTTPHandlerPath);
+  standardInit();
 
   gDirProvider = new FakeDirProvider();
 
@@ -43,25 +43,10 @@ function run_test() {
   do_execute_soon(run_test_pt1);
 }
 
-function xhr_pt1(aXHR) {
-  aXHR.status = 200;
-  aXHR.responseText = gResponseBody;
-  try {
-    let parser = Cc["@mozilla.org/xmlextras/domparser;1"].
-                 createInstance(Ci.nsIDOMParser);
-    aXHR.responseXML = parser.parseFromString(gResponseBody, "application/xml");
-  } catch (e) {
-    aXHR.responseXML = null;
-  }
-  let e = { target: aXHR };
-  aXHR.onload(e);
-}
-
 function run_test_pt1() {
   gUpdates = null;
   gUpdateCount = null;
   gCheckFunc = check_test_pt1;
-
 
   let patches = getRemotePatchString();
   let updates = getRemoteUpdateString(patches);

@@ -7839,20 +7839,8 @@ PresShell::HandleEvent(nsIFrame* aFrame,
         // in the same document by taking the target of the events already in
         // the capture list
         nsCOMPtr<nsIContent> anyTarget;
-        if (TouchManager::gCaptureTouchList->Count() > 0 &&
-            touchEvent->mTouches.Length() > 1) {
-          for (auto iter = TouchManager::gCaptureTouchList->Iter();
-               !iter.Done();
-               iter.Next()) {
-            RefPtr<dom::Touch>& touch = iter.Data();
-            if (touch) {
-              dom::EventTarget* target = touch->GetTarget();
-              if (target) {
-                anyTarget = do_QueryInterface(target);
-                break;
-              }
-            }
-          }
+        if (touchEvent->mTouches.Length() > 1) {
+          anyTarget = TouchManager::GetAnyCapturedTouchTarget();
         }
 
         for (int32_t i = touchEvent->mTouches.Length(); i; ) {
@@ -7860,7 +7848,7 @@ PresShell::HandleEvent(nsIFrame* aFrame,
           dom::Touch* touch = touchEvent->mTouches[i];
 
           int32_t id = touch->Identifier();
-          if (!TouchManager::gCaptureTouchList->Get(id, nullptr)) {
+          if (!TouchManager::HasCapturedTouch(id)) {
             // find the target for this touch
             eventPoint = nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent,
                                                               touch->mRefPoint,
@@ -7914,7 +7902,7 @@ PresShell::HandleEvent(nsIFrame* aFrame,
             touch->mChanged = false;
             int32_t id = touch->Identifier();
 
-            RefPtr<dom::Touch> oldTouch = TouchManager::gCaptureTouchList->GetWeak(id);
+            RefPtr<dom::Touch> oldTouch = TouchManager::GetCapturedTouch(id);
             if (oldTouch) {
               touch->SetTarget(oldTouch->mTarget);
             }
@@ -8032,7 +8020,7 @@ PresShell::HandleEvent(nsIFrame* aFrame,
           }
 
           RefPtr<dom::Touch> oldTouch =
-            TouchManager::gCaptureTouchList->GetWeak(touch->Identifier());
+            TouchManager::GetCapturedTouch(touch->Identifier());
           if (!oldTouch) {
             break;
           }
@@ -10266,8 +10254,8 @@ CompareTrees(nsPresContext* aFirstPresContext, nsIFrame* aFirstFrame,
             LogVerifyMessage(k1, k2, "child widgets are not matched\n");
           }
           else if (nullptr != w1) {
-            w1->GetBounds(r1);
-            w2->GetBounds(r2);
+            r1 = w1->GetBounds();
+            r2 = w2->GetBounds();
             if (!r1.IsEqualEdges(r2)) {
               LogVerifyMessage(k1, k2, "(widget rects)",
                                r1.ToUnknownRect(), r2.ToUnknownRect());

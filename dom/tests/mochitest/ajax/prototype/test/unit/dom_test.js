@@ -985,8 +985,9 @@ new Test.Unit.Runner({
   },
 
   testElementWriteAttributeWithIssues: function() {
-    var input = $('write_attribute_input').writeAttribute({maxlength: 90, tabindex: 10}),
+    var input = $('write_attribute_input').writeAttribute({maxlength: 90, minlength:80, tabindex: 10}),
       td = $('write_attribute_td').writeAttribute({valign: 'bottom', colspan: 2, rowspan: 2});
+    this.assertEqual(80, input.readAttribute('minlength'));
     this.assertEqual(90, input.readAttribute('maxlength'));
     this.assertEqual(10, input.readAttribute('tabindex'));
     this.assertEqual(2,  td.readAttribute('colspan'));

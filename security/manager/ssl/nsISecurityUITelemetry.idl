@@ -96,13 +96,6 @@ const uint32_t WARNING_GEOLOCATION_REQUEST_NEVER_SHARE = 49;
 // It would be nice to measure the two cases of user clicking
 // "not now", and user closing the popup. This is currently not implemented.
 
-/*
- * Firefox Update Errors: UI is only thrown after 
- * repeated errors. We only measure when the UI is shown.
- */
-const uint32_t WARNING_INSECURE_UPDATE = 50;
-const uint32_t WARNING_NO_SECURE_UPDATE = 51;
-
 const uint32_t WARNING_MALWARE_PAGE_TOP = 52;
 const uint32_t WARNING_MALWARE_PAGE_TOP_WHY_BLOCKED = 53;
 const uint32_t WARNING_MALWARE_PAGE_TOP_GET_ME_OUT_OF_HERE = 54;

@@ -143,6 +143,12 @@
 #endif
 
 ; [Components]
+#ifdef MOZ_ARTIFACT_BUILDS
+@RESPATH@/components/prebuilt-interfaces.manifest
+@RESPATH@/components/interfaces.xpt
+@RESPATH@/browser/components/prebuilt-interfaces.manifest
+@RESPATH@/browser/components/interfaces.xpt
+#endif
 @RESPATH@/browser/components/components.manifest
 @RESPATH@/components/alerts.xpt
 #ifdef ACCESSIBILITY

@@ -50,6 +50,10 @@ public:
   {
     return GetValidityState(nsIConstraintValidation::VALIDITY_STATE_TOO_LONG);
   }
+  bool TooShort() const
+  {
+    return GetValidityState(nsIConstraintValidation::VALIDITY_STATE_TOO_SHORT);
+  }
   bool RangeUnderflow() const
   {
     return GetValidityState(nsIConstraintValidation::VALIDITY_STATE_RANGE_UNDERFLOW);

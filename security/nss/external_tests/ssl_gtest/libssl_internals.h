@@ -16,11 +16,11 @@
 SECStatus SSLInt_IncrementClientHandshakeVersion(PRFileDesc *fd);
 
 PRUint32 SSLInt_DetermineKEABits(PRUint16 serverKeyBits,
-                                 SSLAuthType authAlgorithm);
+                                 const SSLCipherSuiteInfo *info);
 
-SECStatus SSLInt_UpdateSSLv2ClientRandom(PRFileDesc *fd,
-                                         uint8_t *rnd, size_t rnd_len,
-                                         uint8_t *msg, size_t msg_len);
+SECStatus SSLInt_UpdateSSLv2ClientRandom(PRFileDesc *fd, uint8_t *rnd,
+                                         size_t rnd_len, uint8_t *msg,
+                                         size_t msg_len);
 
 PRBool SSLInt_ExtensionNegotiated(PRFileDesc *fd, PRUint16 ext);
 void SSLInt_ClearSessionTicketKey();
@@ -31,5 +31,7 @@ PRBool SSLInt_CheckSecretsDestroyed(PRFileDesc *fd);
 PRBool SSLInt_DamageHsTrafficSecret(PRFileDesc *fd);
 PRBool SSLInt_DamageEarlyTrafficSecret(PRFileDesc *fd);
 SECStatus SSLInt_Set0RttAlpn(PRFileDesc *fd, PRUint8 *data, unsigned int len);
+PRBool SSLInt_HasCertWithAuthType(PRFileDesc *fd, SSLAuthType authType);
+PRBool SSLInt_SendAlert(PRFileDesc *fd, uint8_t level, uint8_t type);
 
-#endif // ndef libssl_internals_h_
+#endif  // ndef libssl_internals_h_

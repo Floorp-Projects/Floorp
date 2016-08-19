@@ -40,9 +40,9 @@ namespace dom {
 class AfterSetFilesOrDirectoriesRunnable;
 class Date;
 class DispatchChangeEventCallback;
-class Entry;
 class File;
 class FileList;
+class FileSystemEntry;
 class GetFilesHelper;
 
 /**
@@ -306,6 +306,7 @@ public:
 
   // nsIConstraintValidation
   bool     IsTooLong();
+  bool     IsTooShort();
   bool     IsValueMissing() const;
   bool     HasTypeMismatch() const;
   bool     HasPatternMismatch() const;
@@ -314,6 +315,7 @@ public:
   bool     HasStepMismatch(bool aUseZeroIfValueNaN = false) const;
   bool     HasBadInput() const;
   void     UpdateTooLongValidityState();
+  void     UpdateTooShortValidityState();
   void     UpdateValueMissingValidityState();
   void     UpdateTypeMismatchValidityState();
   void     UpdatePatternMismatchValidityState();
@@ -534,12 +536,29 @@ public:
 
   void SetMaxLength(int32_t aValue, ErrorResult& aRv)
   {
-    if (aValue < 0) {
+    int32_t minLength = MinLength();
+    if (aValue < 0 || (minLength >= 0 && aValue < minLength)) {
       aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
       return;
     }
 
     SetHTMLIntAttr(nsGkAtoms::maxlength, aValue, aRv);
+  }
+
+  int32_t MinLength() const
+  {
+    return GetIntAttr(nsGkAtoms::minlength, -1);
+  }
+
+  void SetMinLength(int32_t aValue, ErrorResult& aRv)
+  {
+    int32_t maxLength = MaxLength();
+    if (aValue < 0 || (maxLength >= 0 && aValue > maxLength)) {
+      aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
+      return;
+    }
+
+    SetHTMLIntAttr(nsGkAtoms::minlength, aValue, aRv);
   }
 
   // XPCOM GetMin() is OK
@@ -728,7 +747,7 @@ public:
     SetHTMLBoolAttr(nsGkAtoms::webkitdirectory, aValue, aRv);
   }
 
-  void GetWebkitEntries(nsTArray<RefPtr<Entry>>& aSequence);
+  void GetWebkitEntries(nsTArray<RefPtr<FileSystemEntry>>& aSequence);
 
   bool IsFilesAndDirectoriesSupported() const;
 
@@ -1049,9 +1068,9 @@ protected:
   bool DoesAutocompleteApply() const;
 
   /**
-   * Returns if the maxlength attribute applies for the current type.
+   * Returns if the minlength or maxlength attributes apply for the current type.
    */
-  bool MaxLengthApplies() const { return IsSingleLineTextControl(false, mType); }
+  bool MinOrMaxLengthApplies() const { return IsSingleLineTextControl(false, mType); }
 
   void FreeData();
   nsTextEditorState *GetEditorState() const;
@@ -1401,7 +1420,7 @@ protected:
   nsString mFirstFilePath;
 
   RefPtr<FileList>  mFileList;
-  Sequence<RefPtr<Entry>> mEntries;
+  Sequence<RefPtr<FileSystemEntry>> mEntries;
 
   nsString mStaticDocFileList;
 

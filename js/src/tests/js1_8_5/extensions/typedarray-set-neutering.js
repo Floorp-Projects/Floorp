@@ -13,61 +13,33 @@ print(BUGNUMBER + ": " + summary);
  * BEGIN TEST *
  **************/
 
-var ab1 = new ArrayBuffer(200);
-var a1 = new Uint8Array(ab1);
-var a1_2 = new Uint8Array(10);
+var ab = new ArrayBuffer(200);
+var a = new Uint8Array(ab);
+var a_2 = new Uint8Array(10);
 
-var src1 = [ 10, 20, 30, 40,
-             10, 20, 30, 40,
-             10, 20, 30, 40,
-             10, 20, 30, 40,
-             10, 20, 30, 40,
-             10, 20, 30, 40,
-             10, 20, 30, 40,
-             10, 20, 30, 40,
-             10, 20, 30, 40,
-             10, 20, 30, 40,
-             ];
-Object.defineProperty(src1, 4, {
+var src = [ 10, 20, 30, 40,
+            10, 20, 30, 40,
+            10, 20, 30, 40,
+            10, 20, 30, 40,
+            10, 20, 30, 40,
+            10, 20, 30, 40,
+            10, 20, 30, 40,
+            10, 20, 30, 40,
+            10, 20, 30, 40,
+            10, 20, 30, 40,
+            ];
+Object.defineProperty(src, 4, {
   get: function () {
-    detachArrayBuffer(ab1, "change-data");
+    detachArrayBuffer(ab);
     gc();
     return 200;
   }
 });
 
-a1.set(src1);
+a.set(src);
 
 // Not really needed
-Array.reverse(a1_2);
-
-var ab2 = new ArrayBuffer(200);
-var a2 = new Uint8Array(ab2);
-var a2_2 = new Uint8Array(10);
-
-var src2 = [ 10, 20, 30, 40,
-             10, 20, 30, 40,
-             10, 20, 30, 40,
-             10, 20, 30, 40,
-             10, 20, 30, 40,
-             10, 20, 30, 40,
-             10, 20, 30, 40,
-             10, 20, 30, 40,
-             10, 20, 30, 40,
-             10, 20, 30, 40,
-             ];
-Object.defineProperty(src2, 4, {
-  get: function () {
-    detachArrayBuffer(ab2, "same-data");
-    gc();
-    return 200;
-  }
-});
-
-a2.set(src2);
-
-// Not really needed
-Array.reverse(a2_2);
+Array.reverse(a_2);
 
 /******************************************************************************/
 

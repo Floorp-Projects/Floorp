@@ -520,8 +520,7 @@ ClientLayerManager::MakeSnapshotIfRequired()
       // The compositor doesn't draw to a different sized surface
       // when there's a rotation. Instead we rotate the result
       // when drawing into dt
-      LayoutDeviceIntRect outerBounds;
-      mWidget->GetBounds(outerBounds);
+      LayoutDeviceIntRect outerBounds = mWidget->GetBounds();
 
       IntRect bounds = ToOutsideIntRect(mShadowTarget->GetClipExtents());
       if (mTargetRotation) {

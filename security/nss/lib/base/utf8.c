@@ -614,7 +614,7 @@ nssUTF8_CopyIntoFixedBuffer(NSSUTF8 *string, char *buffer, PRUint32 bufferSize,
         PRUint32 bs = bufferSize;
         (void)nsslibc_memcpy(buffer, string, bufferSize);
 
-        if ((            ((buffer[bs - 1] & 0x80) == 0x00)) ||
+        if ((((buffer[bs - 1] & 0x80) == 0x00)) ||
             ((bs > 1) && ((buffer[bs - 2] & 0xE0) == 0xC0)) ||
             ((bs > 2) && ((buffer[bs - 3] & 0xF0) == 0xE0)) ||
             ((bs > 3) && ((buffer[bs - 4] & 0xF8) == 0xF0)) ||

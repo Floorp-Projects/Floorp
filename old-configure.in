@@ -69,7 +69,7 @@ GNOMEUI_VERSION=2.2.0
 GCONF_VERSION=1.2.1
 STARTUP_NOTIFICATION_VERSION=0.8
 DBUS_VERSION=0.60
-SQLITE_VERSION=3.13.0
+SQLITE_VERSION=3.14.1
 FONTCONFIG_VERSION=2.7.0
 
 dnl Set various checks
@@ -715,6 +715,18 @@ if test "$GNU_CC"; then
       if test "$result" = "yes"; then
           HAVE_X86_AVX2=1
       fi
+      ;;
+
+    ppc*)
+      AC_MSG_CHECKING([whether we can enable AltiVec support])
+      HAVE_ALTIVEC=
+      _SAVE_CFLAGS=$CFLAGS
+      CFLAGS="$CFLAGS -maltivec"
+      AC_TRY_COMPILE(,,AC_MSG_RESULT([yes])
+                       [HAVE_ALTIVEC=1],
+                       AC_MSG_RESULT([no]))
+      CFLAGS=$_SAVE_CFLAGS
+      ;;
     esac
 
     DSO_LDOPTS='-shared'
@@ -2133,7 +2145,7 @@ MOZ_ARG_WITH_BOOL(system-nss,
     _USE_SYSTEM_NSS=1 )
 
 if test -n "$_USE_SYSTEM_NSS"; then
-    AM_PATH_NSS(3.26, [MOZ_SYSTEM_NSS=1], [AC_MSG_ERROR([you don't have NSS installed or your version is too old])])
+    AM_PATH_NSS(3.27, [MOZ_SYSTEM_NSS=1], [AC_MSG_ERROR([you don't have NSS installed or your version is too old])])
 fi
 
 if test -n "$MOZ_SYSTEM_NSS"; then
@@ -2299,11 +2311,6 @@ fi # SKIP_LIBRARY_CHECKS
 AC_SUBST(MOZ_PNG_ARM_NEON)
 
 dnl ========================================================
-dnl system libffi Support
-dnl ========================================================
-MOZ_CONFIG_FFI()
-
-dnl ========================================================
 dnl =
 dnl = Application
 dnl =
@@ -2342,7 +2349,6 @@ VPX_X86_ASM=
 VPX_ARM_ASM=
 LIBJPEG_TURBO_AS=
 LIBJPEG_TURBO_ASFLAGS=
-MOZ_PERMISSIONS=1
 MOZ_PREF_EXTENSIONS=1
 MOZ_REFLOW_PERF=
 MOZ_SAFE_BROWSING=
@@ -2356,7 +2362,6 @@ MOZ_ZIPWRITER=1
 MOZ_NO_SMART_CARDS=
 NECKO_COOKIES=1
 NECKO_PROTOCOLS_DEFAULT="about data file ftp http res viewsource websocket wyciwyg device"
-BUILD_CTYPES=1
 MOZ_USE_NATIVE_POPUP_WINDOWS=
 MOZ_EXCLUDE_HYPHENATION_DICTIONARIES=
 MOZ_INSTALL_TRACKING=
@@ -3313,20 +3318,6 @@ if test -n "$MOZ_PULSEAUDIO"; then
 fi
 
 AC_SUBST(MOZ_PULSEAUDIO)
-
-dnl ========================================================
-dnl Permissions System
-dnl ========================================================
-MOZ_ARG_DISABLE_BOOL(permissions,
-[  --disable-permissions   Disable permissions (popup and cookie blocking)],
-    MOZ_PERMISSIONS=,
-    MOZ_PERMISSIONS=1
-)
-
-AC_SUBST(MOZ_PERMISSIONS)
-if test -n "$MOZ_PERMISSIONS"; then
-    AC_DEFINE(MOZ_PERMISSIONS)
-fi
 
 dnl ========================================================
 dnl NegotiateAuth
@@ -5590,18 +5581,6 @@ if test "$ENABLE_MARIONETTE"; then
     AC_DEFINE(ENABLE_MARIONETTE)
 fi
 
-dnl
-dnl Build jsctypes on the platforms we can, unless it's explicitly disabled.
-dnl
-MOZ_ARG_DISABLE_BOOL(ctypes,
-[  --disable-ctypes        Disable js-ctypes],
-    BUILD_CTYPES=,
-    BUILD_CTYPES=1)
-AC_SUBST(BUILD_CTYPES)
-if test "$BUILD_CTYPES"; then
-    AC_DEFINE(BUILD_CTYPES)
-fi
-
 dnl ========================================================
 if test "$MOZ_DEBUG" -o "$MOZ_DMD"; then
     MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS=
@@ -5972,6 +5951,7 @@ AC_SUBST(TARGET_XPCOM_ABI)
 AC_SUBST(HAVE_TOOLCHAIN_SUPPORT_MSSSE3)
 AC_SUBST(HAVE_TOOLCHAIN_SUPPORT_MSSE4_1)
 AC_SUBST(HAVE_X86_AVX2)
+AC_SUBST(HAVE_ALTIVEC)
 AC_SUBST(GCC_USE_GNU_LD)
 
 AC_SUBST(WRAP_LDFLAGS)
@@ -6277,10 +6257,6 @@ if test "$_INTL_API" = no; then
     ac_configure_args="$ac_configure_args --without-intl-api"
 fi
 
-if test "$BUILD_CTYPES"; then
-    # Build js-ctypes on the platforms we can.
-    ac_configure_args="$ac_configure_args --enable-ctypes"
-fi
 if test -n "$NSPR_CFLAGS" -o -n "$NSPR_LIBS"; then
     ac_configure_args="$ac_configure_args --with-nspr-cflags='$NSPR_CFLAGS'"
     ac_configure_args="$ac_configure_args --with-nspr-libs='$NSPR_LIBS'"

@@ -263,8 +263,7 @@ cmmf_CopyCertResponse(PLArenaPool *poolp,
     if (src->certifiedKeyPair != NULL) {
         CMMFCertifiedKeyPair *destKeyPair;
 
-        destKeyPair = (poolp == NULL) ? PORT_ZNew(CMMFCertifiedKeyPair) :
-                                      PORT_ArenaZNew(poolp, CMMFCertifiedKeyPair);
+        destKeyPair = (poolp == NULL) ? PORT_ZNew(CMMFCertifiedKeyPair) : PORT_ArenaZNew(poolp, CMMFCertifiedKeyPair);
         if (!destKeyPair) {
             return SECFailure;
         }
@@ -295,8 +294,7 @@ cmmf_CopyCertOrEncCert(PLArenaPool *poolp, CMMFCertOrEncCert *dest,
             dest->cert.certificate = CERT_DupCertificate(src->cert.certificate);
             break;
         case cmmfEncryptedCert:
-            encVal = (poolp == NULL) ? PORT_ZNew(CRMFEncryptedValue) :
-                                     PORT_ArenaZNew(poolp, CRMFEncryptedValue);
+            encVal = (poolp == NULL) ? PORT_ZNew(CRMFEncryptedValue) : PORT_ArenaZNew(poolp, CRMFEncryptedValue);
             if (encVal == NULL) {
                 return SECFailure;
             }
@@ -330,8 +328,7 @@ cmmf_CopyCertifiedKeyPair(PLArenaPool *poolp, CMMFCertifiedKeyPair *dest,
     if (src->privateKey != NULL) {
         CRMFEncryptedValue *encVal;
 
-        encVal = (poolp == NULL) ? PORT_ZNew(CRMFEncryptedValue) :
-                                 PORT_ArenaZNew(poolp, CRMFEncryptedValue);
+        encVal = (poolp == NULL) ? PORT_ZNew(CRMFEncryptedValue) : PORT_ArenaZNew(poolp, CRMFEncryptedValue);
         if (encVal == NULL) {
             return SECFailure;
         }

@@ -523,13 +523,7 @@ ifndef NSS_DISABLE_CHACHAPOLY
             EXTRA_SRCS += poly1305.c
         endif
 
-        ifeq ($(OS_TARGET),SunOS)
-        ifndef NS_USE_GCC
-            CHACHA_NO_SSE2 = 1
-        endif
-        endif
-
-        ifdef CHACHA_NO_SSE2
+        ifneq (1,$(CC_IS_GCC))
             EXTRA_SRCS += chacha20.c
         else
             EXTRA_SRCS += chacha20_vec.c

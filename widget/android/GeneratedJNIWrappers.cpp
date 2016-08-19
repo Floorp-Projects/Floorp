@@ -607,6 +607,9 @@ auto GeckoAppShell::NotifyWakeLockChanged(mozilla::jni::String::Param a0, mozill
     return mozilla::jni::Method<NotifyWakeLockChanged_t>::Call(GeckoAppShell::Context(), nullptr, a0, a1);
 }
 
+constexpr char GeckoAppShell::OnFullScreenPluginHidden_t::name[];
+constexpr char GeckoAppShell::OnFullScreenPluginHidden_t::signature[];
+
 constexpr char GeckoAppShell::OnLocationChanged_t::name[];
 constexpr char GeckoAppShell::OnLocationChanged_t::signature[];
 
@@ -645,13 +648,8 @@ auto GeckoAppShell::RemoveFullScreenPluginView(mozilla::jni::Object::Param a0) -
     return mozilla::jni::Method<RemoveFullScreenPluginView_t>::Call(GeckoAppShell::Context(), nullptr, a0);
 }
 
-constexpr char GeckoAppShell::RequestUiThreadCallback_t::name[];
-constexpr char GeckoAppShell::RequestUiThreadCallback_t::signature[];
-
-auto GeckoAppShell::RequestUiThreadCallback(int64_t a0) -> void
-{
-    return mozilla::jni::Method<RequestUiThreadCallback_t>::Call(GeckoAppShell::Context(), nullptr, a0);
-}
+constexpr char GeckoAppShell::ReportJavaCrash_t::name[];
+constexpr char GeckoAppShell::ReportJavaCrash_t::signature[];
 
 constexpr char GeckoAppShell::ScheduleRestart_t::name[];
 constexpr char GeckoAppShell::ScheduleRestart_t::signature[];
@@ -759,6 +757,12 @@ auto GeckoAppShell::Vibrate(mozilla::jni::LongArray::Param a0, int32_t a1) -> vo
 {
     return mozilla::jni::Method<Vibrate2_t>::Call(GeckoAppShell::Context(), nullptr, a0, a1);
 }
+
+const char GeckoBatteryManager::name[] =
+        "org/mozilla/gecko/GeckoBatteryManager";
+
+constexpr char GeckoBatteryManager::OnBatteryChange_t::name[];
+constexpr char GeckoBatteryManager::OnBatteryChange_t::signature[];
 
 const char GeckoEditable::name[] =
         "org/mozilla/gecko/GeckoEditable";
@@ -1004,6 +1008,17 @@ auto GeckoThread::PumpMessageLoop(mozilla::jni::Object::Param a0) -> bool
     return mozilla::jni::Method<PumpMessageLoop_t>::Call(GeckoThread::Context(), nullptr, a0);
 }
 
+constexpr char GeckoThread::RequestUiThreadCallback_t::name[];
+constexpr char GeckoThread::RequestUiThreadCallback_t::signature[];
+
+auto GeckoThread::RequestUiThreadCallback(int64_t a0) -> void
+{
+    return mozilla::jni::Method<RequestUiThreadCallback_t>::Call(GeckoThread::Context(), nullptr, a0);
+}
+
+constexpr char GeckoThread::RunUiThreadCallback_t::name[];
+constexpr char GeckoThread::RunUiThreadCallback_t::signature[];
+
 constexpr char GeckoThread::SetState_t::name[];
 constexpr char GeckoThread::SetState_t::signature[];
 
@@ -1134,6 +1149,12 @@ constexpr char GeckoView::Window::Open_t::signature[];
 
 constexpr char GeckoView::Window::Reattach_t::name[];
 constexpr char GeckoView::Window::Reattach_t::signature[];
+
+const char MemoryMonitor::name[] =
+        "org/mozilla/gecko/MemoryMonitor";
+
+constexpr char MemoryMonitor::DispatchMemoryPressure_t::name[];
+constexpr char MemoryMonitor::DispatchMemoryPressure_t::signature[];
 
 const char PrefsHelper::name[] =
         "org/mozilla/gecko/PrefsHelper";

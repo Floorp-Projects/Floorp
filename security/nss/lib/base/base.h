@@ -367,7 +367,7 @@ extern const NSSError NSS_ERROR_ARENA_MARKED_BY_ANOTHER_THREAD;
  *  A pointer to the new segment of zeroed memory
  */
 
-#define nss_ZNEWARRAY(arenaOpt, type, quantity)                                \
+#define nss_ZNEWARRAY(arenaOpt, type, quantity) \
     ((type *)nss_ZAlloc((arenaOpt), sizeof(type) * (quantity)))
 
 /*
@@ -387,7 +387,7 @@ extern const NSSError NSS_ERROR_ARENA_MARKED_BY_ANOTHER_THREAD;
  *  NULL upon error
  *  A pointer to the replacement segment of memory
  */
-#define nss_ZREALLOCARRAY(p, type, quantity)                                   \
+#define nss_ZREALLOCARRAY(p, type, quantity) \
     ((type *)nss_ZRealloc((p), sizeof(type) * (quantity)))
 
 /*
@@ -430,7 +430,7 @@ extern const NSSError NSS_ERROR_INVALID_ARENA;
 #define nssArena_VERIFYPOINTER(p) nssArena_verifyPointer(p)
 #else /* DEBUG */
 
-#define nssArena_VERIFYPOINTER(p)                                              \
+#define nssArena_VERIFYPOINTER(p) \
     (((NSSArena *)NULL == (p)) ? PR_FAILURE : PR_SUCCESS)
 #endif /* DEBUG */
 

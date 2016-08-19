@@ -6,6 +6,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=345624
 <head>
   <title>Test for Bug 345624</title>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <style>
     input, textarea { background-color: rgb(0,0,0) !important; }
@@ -16,7 +17,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=345624
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=345624">Mozilla Bug 345624</a>
 <p id="display"></p>
-<div id="content" style="display: none">
+<div id="content">
   <input id='i'>
   <textarea id='t'></textarea>
 </div>
@@ -37,34 +38,81 @@ function checkTooLongValidity(element)
     "Element should not be too long when maxlength is not set");
   is(window.getComputedStyle(element, null).getPropertyValue('background-color'),
      "rgb(0, 255, 0)", ":valid pseudo-class should apply");
+  ok(element.validity.valid, "Element should be valid");
+  ok(element.checkValidity(), "The element should be valid");
 
-  element.maxLength = 3;
+  element.maxLength = 1;
   ok(!element.validity.tooLong,
-    "Element should not be to long when maxlength = value length");
+    "Element should not be too long unless the user edits it");
   is(window.getComputedStyle(element, null).getPropertyValue('background-color'),
      "rgb(0, 255, 0)", ":valid pseudo-class should apply");
+  ok(element.validity.valid, "Element should be valid");
+  ok(element.checkValidity(), "The element should be valid");
 
-  element.maxLength = 5;
+  element.focus();
+
+  synthesizeKey("VK_BACK_SPACE", {});
+  is(element.value, "fo", "value should have changed");
+  ok(element.validity.tooLong,
+    "Element should be too long after a user edit that does not make it short enough");
+  is(window.getComputedStyle(element, null).getPropertyValue('background-color'),
+     "rgb(255, 0, 0)", ":invalid pseudo-class should apply");
+  ok(!element.validity.valid, "Element should be invalid");
+  ok(!element.checkValidity(), "The element should not be valid");
+  is(element.validationMessage,
+          "Please shorten this text to 1 characters or less (you are currently using 2 characters).",
+          "The validation message text is not correct");
+
+  synthesizeKey("VK_BACK_SPACE", {});
+  is(element.value, "f", "value should have changed");
   ok(!element.validity.tooLong,
-    "Element should not be too long when maxlength > value length");
+    "Element should not be too long after a user edit makes it short enough");
   is(window.getComputedStyle(element, null).getPropertyValue('background-color'),
      "rgb(0, 255, 0)", ":valid pseudo-class should apply");
-
   ok(element.validity.valid, "Element should be valid");
 
   element.maxLength = 2;
-  todo(element.validity.tooLong,
-       "Element should be too long when maxlength < value length");
-  todo_is(window.getComputedStyle(element, null).getPropertyValue('background-color'),
-          "rgb(255, 0, 0)", ":invalid pseudo-class should apply");
+  ok(!element.validity.tooLong,
+    "Element should remain valid if maxlength changes but maxlength > length");
+  is(window.getComputedStyle(element, null).getPropertyValue('background-color'),
+     "rgb(0, 255, 0)", ":valid pseudo-class should apply");
+  ok(element.validity.valid, "Element should be valid");
 
-  todo(!element.validity.valid,
-       "Element should not be valid when it is too long");
+  element.maxLength = 1;
+  ok(!element.validity.tooLong,
+    "Element should remain valid if maxlength changes but maxlength = length");
+  is(window.getComputedStyle(element, null).getPropertyValue('background-color'),
+     "rgb(0, 255, 0)", ":valid pseudo-class should apply");
+  ok(element.validity.valid, "Element should be valid");
+  ok(element.checkValidity(), "The element should be valid");
 
-  todo_is(element.validationMessage,
-          "Please shorten this text to 2 characters or less (you are currently using 3 characters).",
+  element.maxLength = 0;
+  ok(element.validity.tooLong,
+    "Element should become invalid if maxlength changes and maxlength < length");
+  is(window.getComputedStyle(element, null).getPropertyValue('background-color'),
+     "rgb(255, 0, 0)", ":invalid pseudo-class should apply");
+  ok(!element.validity.valid, "Element should be invalid");
+  ok(!element.checkValidity(), "The element should not be valid");
+  is(element.validationMessage,
+          "Please shorten this text to 0 characters or less (you are currently using 1 characters).",
           "The validation message text is not correct");
-  todo(!element.checkValidity(), "The element should not be valid");
+
+  element.maxLength = 1;
+  ok(!element.validity.tooLong,
+    "Element should become valid if maxlength changes and maxlength = length");
+  is(window.getComputedStyle(element, null).getPropertyValue('background-color'),
+     "rgb(0, 255, 0)", ":valid pseudo-class should apply");
+  ok(element.validity.valid, "Element should be valid");
+  ok(element.checkValidity(), "The element should be valid");
+
+  element.value = "test";
+  ok(!element.validity.tooLong,
+    "Element should stay valid after programmatic edit (even if value is too long)");
+  is(window.getComputedStyle(element, null).getPropertyValue('background-color'),
+     "rgb(0, 255, 0)", ":valid pseudo-class should apply");
+  ok(element.validity.valid, "Element should be valid");
+  ok(element.checkValidity(), "The element should be valid");
+
   element.setCustomValidity("custom message");
   is(window.getComputedStyle(element, null).getPropertyValue('background-color'),
      "rgb(255, 0, 0)", ":invalid pseudo-class should apply");

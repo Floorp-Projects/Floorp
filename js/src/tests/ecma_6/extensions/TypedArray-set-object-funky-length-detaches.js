@@ -23,7 +23,6 @@ var ctors = [Int8Array, Uint8Array, Uint8ClampedArray,
              Int32Array, Uint32Array,
              Float32Array, Float64Array];
 ctors.forEach(function(TypedArray) {
-  ["change-data", "same-data"].forEach(function(dataHandling) {
     var buf = new ArrayBuffer(512 * 1024);
     var ta = new TypedArray(buf);
 
@@ -41,7 +40,7 @@ ctors.forEach(function(TypedArray) {
         9: 0,
         get length()
         {
-          detachArrayBuffer(buf, dataHandling);
+          detachArrayBuffer(buf);
           return 10;
         }
       };
@@ -57,7 +56,6 @@ ctors.forEach(function(TypedArray) {
       }
 
       assertEq(passed, true);
-  });
 });
 
 /******************************************************************************/

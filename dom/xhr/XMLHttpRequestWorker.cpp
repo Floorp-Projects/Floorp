@@ -1645,7 +1645,7 @@ XMLHttpRequestWorker::MaybePin(ErrorResult& aRv)
     return;
   }
 
-  if (!HoldWorker(mWorkerPrivate)) {
+  if (!HoldWorker(mWorkerPrivate, Canceling)) {
     aRv.Throw(NS_ERROR_FAILURE);
     return;
   }
