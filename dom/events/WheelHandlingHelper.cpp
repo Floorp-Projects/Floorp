@@ -413,12 +413,6 @@ WheelTransaction::OverrideSystemScrollSpeed(WidgetWheelEvent* aEvent)
     return DeltaValues(aEvent);
   }
 
-  // We shouldn't override the scrolling speed on non root scroll frame.
-  if (sTargetFrame !=
-        sTargetFrame->PresContext()->PresShell()->GetRootScrollFrame()) {
-    return DeltaValues(aEvent);
-  }
-
   return DeltaValues(aEvent->OverriddenDeltaX(),
                      aEvent->OverriddenDeltaY());
 }
