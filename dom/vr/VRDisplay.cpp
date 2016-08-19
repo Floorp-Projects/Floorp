@@ -7,9 +7,11 @@
 #include "nsWrapperCache.h"
 
 #include "mozilla/dom/Element.h"
-#include "mozilla/dom/VRDisplayBinding.h"
 #include "mozilla/dom/ElementBinding.h"
+#include "mozilla/dom/Promise.h"
 #include "mozilla/dom/VRDisplay.h"
+#include "mozilla/HoldDropJSObjects.h"
+#include "mozilla/dom/VRDisplayBinding.h"
 #include "Navigator.h"
 #include "gfxVR.h"
 #include "VRDisplayClient.h"
@@ -150,6 +152,12 @@ VREyeParameters::VREyeParameters(nsISupports* aParent,
   , mRenderSize(aRenderSize)
 {
   mFOV = new VRFieldOfView(aParent, aFOV);
+  mozilla::HoldJSObjects(this);
+}
+
+VREyeParameters::~VREyeParameters()
+{
+  mozilla::DropJSObjects(this);
 }
 
 VRFieldOfView*
@@ -177,6 +185,22 @@ JSObject*
 VREyeParameters::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
   return VREyeParametersBinding::Wrap(aCx, this, aGivenProto);
+}
+
+VRStageParameters::VRStageParameters(nsISupports* aParent,
+                                     const gfx::Matrix4x4& aSittingToStandingTransform,
+                                     const gfx::Size& aSize)
+  : mParent(aParent)
+  , mSittingToStandingTransform(aSittingToStandingTransform)
+  , mSittingToStandingTransformArray(nullptr)
+  , mSize(aSize)
+{
+  mozilla::HoldJSObjects(this);
+}
+
+VRStageParameters::~VRStageParameters()
+{
+  mozilla::DropJSObjects(this);
 }
 
 JSObject*
@@ -277,6 +301,12 @@ VRPose::VRPose(nsISupports* aParent, const gfx::VRHMDSensorState& aState)
 {
   mTimeStamp = aState.timestamp * 1000.0f; // Converting from seconds to ms
   mFrameId = aState.inputFrameID;
+  mozilla::HoldJSObjects(this);
+}
+
+VRPose::~VRPose()
+{
+  mozilla::DropJSObjects(this);
 }
 
 void
@@ -411,16 +441,16 @@ VRDisplay::VRDisplay(nsPIDOMWindowInner* aWindow, gfx::VRDisplayClient* aClient)
   , mDepthNear(0.01f) // Default value from WebVR Spec
   , mDepthFar(10000.0f) // Default value from WebVR Spec
 {
-  MOZ_COUNT_CTOR(VRDisplay);
   mDisplayId = aClient->GetDisplayInfo().GetDisplayID();
   mDisplayName = NS_ConvertASCIItoUTF16(aClient->GetDisplayInfo().GetDisplayName());
   mCapabilities = new VRDisplayCapabilities(aWindow, aClient->GetDisplayInfo().GetCapabilities());
+  mozilla::HoldJSObjects(this);
 }
 
 VRDisplay::~VRDisplay()
 {
   ExitPresentInternal();
-  MOZ_COUNT_DTOR(VRDisplay);
+  mozilla::DropJSObjects(this);
 }
 
 void

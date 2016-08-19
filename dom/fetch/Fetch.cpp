@@ -918,7 +918,7 @@ FetchBody<Derived>::RegisterWorkerHolder()
   MOZ_ASSERT(!mWorkerHolder);
   mWorkerHolder = new FetchBodyWorkerHolder<Derived>(this);
 
-  if (!mWorkerHolder->HoldWorker(mWorkerPrivate)) {
+  if (!mWorkerHolder->HoldWorker(mWorkerPrivate, Closing)) {
     NS_WARNING("Failed to add workerHolder");
     mWorkerHolder = nullptr;
     return false;

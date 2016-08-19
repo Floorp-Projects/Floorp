@@ -269,7 +269,7 @@ class KeepAliveHandler final
       MOZ_ASSERT(mWorkerPrivate);
       mWorkerPrivate->AssertIsOnWorkerThread();
       MOZ_ASSERT(!mWorkerHolderAdded);
-      mWorkerHolderAdded = HoldWorker(mWorkerPrivate);
+      mWorkerHolderAdded = HoldWorker(mWorkerPrivate, Terminating);
       return mWorkerHolderAdded;
     }
 
@@ -601,7 +601,7 @@ public:
     //    case the registration/update promise will be rejected
     // 2. A new service worker is registered which will terminate the current
     //    installing worker.
-    if (NS_WARN_IF(!HoldWorker(mWorkerPrivate))) {
+    if (NS_WARN_IF(!HoldWorker(mWorkerPrivate, Terminating))) {
       NS_WARNING("LifeCycleEventWatcher failed to add feature.");
       ReportResult(false);
       return false;

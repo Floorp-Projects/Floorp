@@ -216,7 +216,7 @@ SSL_IMPORT PRFileDesc *DTLS_ImportFD(PRFileDesc *model, PRFileDesc *fd);
  * enabled.  A server will only negotiate TLS_DHE_* cipher suites if the
  * client includes the extension.
  *
- * See SSL_DHEGroupPrefSet() for how to control which groups are enabled.
+ * See SSL_NamedGroupPrefSet() for how to control which groups are enabled.
  *
  * This option cannot be enabled if NSS is not compiled with ECC support.
  */
@@ -352,16 +352,23 @@ SSL_IMPORT SECStatus SSL_CipherPolicyGet(PRInt32 cipher, PRInt32 *policy);
 ** server unless it uses an enabled algorithm.
 **
 ** This also governs what the server sends in the supported_signature_algorithms
-** field of a CertificateRequest.  It also changes what the server uses to sign
-** ServerKeyExchange: a server uses the first entry from this list that is
-** compatible with the client's advertised signature_algorithms extension and
-** the selected server certificate.
+** field of a CertificateRequest.
+**
+** This changes what the server uses to sign ServerKeyExchange and
+** CertificateVerify messages.  An endpoint uses the first entry from this list
+** that is compatible with both its certificate and its peer's advertised
+** values.
 **
 ** Omitting SHA-256 from this list might be foolish.  Support is mandatory in
-** TLS 1.2 and there might be interoperability issues.  For a server, NSS only
-** supports SHA-256 for verifying a TLS 1.2 CertificateVerify.  This list needs
-** to include SHA-256 if client authentication is requested or required, or
-** creating a CertificateRequest will fail.
+** TLS 1.2 and there might be interoperability issues.
+**
+** NSS doesn't support the full combinatorial matrix of hash and signature
+** algorithms with all keys.  NSS preferentially uses the schemes that are
+** defined in TLS 1.3.
+**
+** To select TLS 1.3 signature schemes, split the SignatureScheme into an most
+** significant octet (the hash) and a less significant octet (the signature) and
+** then use this structure.
 */
 SSL_IMPORT SECStatus SSL_SignaturePrefSet(
     PRFileDesc *fd, const SSLSignatureAndHashAlg *algorithms,
@@ -384,7 +391,18 @@ SSL_IMPORT SECStatus SSL_SignaturePrefGet(
 */
 SSL_IMPORT unsigned int SSL_SignatureMaxCount();
 
-/* SSL_DHEGroupPrefSet is used to configure the set of allowed/enabled DHE group
+/*
+** Enable or disable a named group (see SSLNamedGroup).  This includes both EC
+** and FF groups using in Diffie-Hellman key exchange, as well as the EC groups
+** used in ECDSA signatures.  By default libssl enables all supported groups.
+** NSS uses its own preferences to select a group though it will select the
+** first group from SSL_DHEGroupPrefSet if that was called.
+*/
+SSL_IMPORT SECStatus SSL_NamedGroupPrefSet(PRFileDesc *fd, SSLNamedGroup group,
+                                           PRBool enable);
+
+/* Deprecated: use SSL_NamedGroupPrefSet() instead.
+** SSL_DHEGroupPrefSet is used to configure the set of allowed/enabled DHE group
 ** parameters that can be used by NSS for the given server socket.
 ** The first item in the array is used as the default group, if no other
 ** selection criteria can be used by NSS.
@@ -414,13 +432,11 @@ SSL_IMPORT SECStatus SSL_DHEGroupPrefSet(PRFileDesc *fd,
 ** on sockets. The function needs to be called again for every socket that
 ** should use the weak group.
 **
-** It is allowed to use this API in combination with the SSL_DHEGroupPrefSet API.
+** It is allowed to use this API in combination with the SSL_NamedGroupPrefSet API.
 ** If both APIs have been called, the weakest group will be used,
 ** unless it is certain that the client supports larger group parameters.
 ** The weak group will be used as the default group, overriding the preference
-** for the first group potentially set with a call to SSL_DHEGroupPrefSet
-** (The first group set using SSL_DHEGroupPrefSet will still be enabled, but
-** it's no longer the default group.)
+** for the first group potentially set with a call to SSL_DHEGroupPrefSet.
 */
 SSL_IMPORT SECStatus SSL_EnableWeakDHEPrimeGroup(PRFileDesc *fd, PRBool enabled);
 

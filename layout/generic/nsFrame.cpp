@@ -5387,10 +5387,8 @@ nsIFrame::GetTransformMatrix(const nsIFrame* aStopAtAncestor,
     if (widget && rootPresContext) {
       nsIWidget* toplevel = rootPresContext->GetNearestWidget();
       if (toplevel) {
-        LayoutDeviceIntRect screenBounds;
-        widget->GetClientBounds(screenBounds);
-        LayoutDeviceIntRect toplevelScreenBounds;
-        toplevel->GetClientBounds(toplevelScreenBounds);
+        LayoutDeviceIntRect screenBounds = widget->GetClientBounds();
+        LayoutDeviceIntRect toplevelScreenBounds = toplevel->GetClientBounds();
         LayoutDeviceIntPoint translation =
           screenBounds.TopLeft() - toplevelScreenBounds.TopLeft();
 

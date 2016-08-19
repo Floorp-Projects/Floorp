@@ -5,6 +5,7 @@
 
 package org.mozilla.gecko;
 
+import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.db.BrowserProvider;
@@ -145,6 +146,9 @@ class MemoryMonitor extends BroadcastReceiver {
         }
     }
 
+    @WrapForJNI(calledFrom = "ui")
+    private static native void dispatchMemoryPressure();
+
     private boolean increaseMemoryPressure(int level) {
         int oldLevel;
         synchronized (this) {
@@ -176,7 +180,7 @@ class MemoryMonitor extends BroadcastReceiver {
         if (level >= MEMORY_PRESSURE_MEDIUM) {
             //Only send medium or higher events because that's all that is used right now
             if (GeckoThread.isRunning()) {
-                GeckoAppShell.dispatchMemoryPressure();
+                dispatchMemoryPressure();
             }
 
             Favicons.clearMemCache();

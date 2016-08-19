@@ -104,13 +104,11 @@ pref("app.update.log", false);
 // the failure.
 pref("app.update.backgroundMaxErrors", 10);
 
-// The aus update xml certificate checks for application update are disabled on
-// Windows, Mac OS X, and Linux since the mar signature check are implemented on
-// these platforms and is sufficient to prevent us from applying a mar that is
-// not valid. Bug 1182352 will remove the update xml certificate checks and the
-// following two preferences.
+// When |app.update.cert.requireBuiltIn| is true or not specified the
+// final certificate and all certificates the connection is redirected to before
+// the final certificate for the url specified in the |app.update.url|
+// preference must be built-in.
 pref("app.update.cert.requireBuiltIn", false);
-pref("app.update.cert.checkAttributes", false);
 
 // Whether or not app updates are enabled
 pref("app.update.enabled", true);

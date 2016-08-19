@@ -364,7 +364,11 @@ else
 # Windows
 ifeq (,$(filter-out _WIN%,$(NS_USE_GCC)_$(OS_TARGET)))
 NEED_ABSOLUTE_PATH := 1
-ifdef .PYMAKE
+# CURDIR is always an absolute path. If it doesn't start with a /, it's a
+# Windows path meaning we're running under MINGW make (as opposed to MSYS
+# make), or pymake. In both cases, it's preferable to use a Windows path,
+# so use $(CURDIR) as is.
+ifeq (,$(filter /%,$(CURDIR)))
 PWD := $(CURDIR)
 else
 PWD := $(shell pwd)
@@ -382,7 +386,7 @@ endif
 endif
 
 # The quotes allow absolute paths to contain spaces.
-core_abspath = "$(if $(findstring :,$(1)),$(1),$(if $(filter /%,$(1)),$(1),$(PWD)/$(1)))"
+core_abspath = '$(if $(findstring :,$(1)),$(1),$(if $(filter /%,$(1)),$(1),$(PWD)/$(1)))'
 
 $(OBJDIR)/$(PROG_PREFIX)%$(OBJ_SUFFIX): %.c
 	@$(MAKE_OBJDIR)

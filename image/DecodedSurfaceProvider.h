@@ -38,11 +38,11 @@ public:
   //////////////////////////////////////////////////////////////////////////////
 
 public:
-  DrawableFrameRef DrawableRef() override;
   bool IsFinished() const override;
   size_t LogicalSizeInBytes() const override;
 
 protected:
+  DrawableFrameRef DrawableRef(size_t aFrame) override;
   bool IsLocked() const override { return bool(mLockRef); }
   void SetLocked(bool aLocked) override;
 

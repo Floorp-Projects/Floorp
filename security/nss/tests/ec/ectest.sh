@@ -36,13 +36,12 @@ ectest_cleanup()
 {
   html "</TABLE><BR>"
   cd ${QADIR}
-  chmod a+rw $RONLY_DIR
   . common/cleanup.sh
 }
 
 ectest_init
-ECTEST_OUT=`ectest`
-ECTEST_OUT=`echo $ECTEST_OUT | grep -i "not okay"`
+ECTEST_OUT=$(ectest 2>&1)
+ECTEST_OUT=`echo $ECTEST_OUT | grep -i 'not okay\|Assertion failure'`
 # TODO: expose individual tests and failures instead of overall
 if [ -n "$ECTEST_OUT" ] ; then
   html_failed "ec(test) test"

@@ -239,21 +239,17 @@ public class GeckoAppShell
 
     // helper methods
     public static native void onSurfaceTextureFrameAvailable(Object surfaceTexture, int id);
-    public static native void dispatchMemoryPressure();
 
+    @WrapForJNI
     private static native void reportJavaCrash(String stackTrace);
 
     @WrapForJNI(dispatchTo = "gecko")
     public static native void notifyUriVisited(String uri);
 
-    public static native void notifyBatteryChange(double aLevel, boolean aCharging, double aRemainingTime);
-
     public static native void invalidateAndScheduleComposite();
 
     public static native void addPresentationSurface(Surface surface);
     public static native void removePresentationSurface(Surface surface);
-
-    public static native void onFullScreenPluginHidden(View view);
 
     private static LayerView sLayerView;
     private static Rect sScreenSize;
@@ -340,24 +336,6 @@ public class GeckoAppShell
         }
         CRASH_HANDLER.uncaughtException(null, e);
         return null;
-    }
-
-    private static final Runnable sCallbackRunnable = new Runnable() {
-        @Override
-        public void run() {
-            ThreadUtils.assertOnUiThread();
-            long nextDelay = runUiThreadCallback();
-            if (nextDelay >= 0) {
-                ThreadUtils.getUiHandler().postDelayed(this, nextDelay);
-            }
-        }
-    };
-
-    private static native long runUiThreadCallback();
-
-    @WrapForJNI
-    private static void requestUiThreadCallback(long delay) {
-        ThreadUtils.getUiHandler().postDelayed(sCallbackRunnable, delay);
     }
 
     private static float getLocationAccuracy(Location location) {
@@ -1509,6 +1487,9 @@ public class GeckoAppShell
             return true;
         }
     }
+
+    @WrapForJNI(calledFrom = "ui", dispatchTo = "gecko")
+    public static native void onFullScreenPluginHidden(View view);
 
     @WrapForJNI(calledFrom = "gecko")
     public static void addFullScreenPluginView(View view) {

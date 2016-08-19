@@ -6,8 +6,6 @@ fuzzy-if(skiaContent,1,3) == input-dyn-not-disabled.html input-ref.html
 fuzzy-if(skiaContent,1,3) == input-readonly.html input-ref.html
 fuzzy-if(skiaContent,1,3) == input-dyn-readonly.html input-ref.html
 fuzzy-if(skiaContent,1,3) == input-dyn-not-readonly.html input-ref.html
-fuzzy-if(skiaContent,1,3) == input-maxlength-valid.html input-ref.html
-== input-maxlength-invalid.html input-withtext-ref.html
 == input-required-valid.html input-withtext-ref.html
 fuzzy-if(skiaContent,1,3) == input-required-invalid.html input-ref.html
 fuzzy-if(skiaContent,2,5) == input-button.html input-button-ref.html

@@ -14,10 +14,12 @@ from mozpack.files import (
     DeflatedFile,
     Dest,
     ExistingFile,
+    ExtractedTarFile,
     FileFinder,
     File,
     GeneratedFile,
     JarFinder,
+    TarFinder,
     ManifestFile,
     MercurialFile,
     MercurialRevisionFinder,
@@ -55,6 +57,7 @@ import os
 import random
 import string
 import sys
+import tarfile
 import mozpack.path as mozpath
 from tempfile import mkdtemp
 from io import BytesIO
@@ -1010,6 +1013,26 @@ class TestJarFinder(MatchTestTemplate, TestWithTmpDir):
 
         self.assertIsNone(self.finder.get('does-not-exist'))
         self.assertIsInstance(self.finder.get('bar'), DeflatedFile)
+
+class TestTarFinder(MatchTestTemplate, TestWithTmpDir):
+    def add(self, path):
+        self.tar.addfile(tarfile.TarInfo(name=path))
+
+    def do_check(self, pattern, result):
+        do_check(self, self.finder, pattern, result)
+
+    def test_tar_finder(self):
+        self.tar = tarfile.open(name=self.tmppath('test.tar.bz2'),
+                                mode='w:bz2')
+        self.prepare_match_test()
+        self.tar.close()
+        with tarfile.open(name=self.tmppath('test.tar.bz2'),
+                          mode='r:bz2') as tarreader:
+            self.finder = TarFinder(self.tmppath('test.tar.bz2'), tarreader)
+            self.do_match_test()
+
+            self.assertIsNone(self.finder.get('does-not-exist'))
+            self.assertIsInstance(self.finder.get('bar'), ExtractedTarFile)
 
 
 class TestComposedFinder(MatchTestTemplate, TestWithTmpDir):

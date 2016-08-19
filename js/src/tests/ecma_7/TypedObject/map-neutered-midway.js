@@ -9,7 +9,7 @@ var summary =
   "Behavior of mapping from an array whose buffer is detached midway through " +
   "mapping";
 
-function mapOneDimArrayOfUint8(dataHandling)
+function mapOneDimArrayOfUint8()
 {
   var FourByteArray = TypedObject.uint8.array(4);
   var FourByteArrayArray = FourByteArray.array(4);
@@ -23,7 +23,7 @@ function mapOneDimArrayOfUint8(dataHandling)
     arr.map(function(v)
     {
       if (count++ > 0)
-        detachArrayBuffer(buf, dataHandling);
+        detachArrayBuffer(buf);
       return new FourByteArray();
     });
   }, TypeError, "mapping of a detached object worked?");
@@ -33,8 +33,7 @@ function runTests()
 {
   print(BUGNUMBER + ": " + summary);
 
-  mapOneDimArrayOfUint8("change-data");
-  mapOneDimArrayOfUint8("same-data");
+  mapOneDimArrayOfUint8();
 
   if (typeof reportCompare === "function")
     reportCompare(true, true);

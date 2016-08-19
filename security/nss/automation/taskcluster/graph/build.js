@@ -8,13 +8,14 @@ var merge = require("merge");
 var yaml = require("js-yaml");
 var slugid = require("slugid");
 var flatmap = require("flatmap");
+var try_syntax = require("./try_syntax");
 
 // Default values for debugging.
 var TC_OWNER = process.env.TC_OWNER || "{{tc_owner}}";
 var TC_SOURCE = process.env.TC_SOURCE || "{{tc_source}}";
 var TC_PROJECT = process.env.TC_PROJECT || "{{tc_project}}";
+var TC_COMMENT = process.env.TC_COMMENT || "{{tc_comment}}";
 var NSS_PUSHLOG_ID = process.env.NSS_PUSHLOG_ID || "{{nss_pushlog_id}}";
-var NSS_HEAD_REPOSITORY = process.env.NSS_HEAD_REPOSITORY || "{{nss_head_repo}}";
 var NSS_HEAD_REVISION = process.env.NSS_HEAD_REVISION || "{{nss_head_rev}}";
 
 // Register custom YAML types.
@@ -43,7 +44,7 @@ var YAML_SCHEMA = yaml.Schema.create([
     },
 
     construct: function (data) {
-      return process.env[data];
+      return process.env[data] || "{{" + data.toLowerCase() + "}}";
     }
   })
 ]);
@@ -170,8 +171,13 @@ function generatePlatformTasks(platform) {
 
 // Construct the task graph.
 var graph = {
-  tasks: flatmap(["linux", "windows", "tools"], generatePlatformTasks)
+  tasks: flatmap(["linux", "windows", "arm", "tools"], generatePlatformTasks)
 };
+
+// Filter tasks when try syntax is given.
+if (TC_PROJECT == "nss-try") {
+  graph.tasks = try_syntax.filterTasks(graph.tasks, TC_COMMENT);
+}
 
 // Output the final graph.
 process.stdout.write(JSON.stringify(graph, null, 2));

@@ -5,243 +5,195 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ssl.h"
+#include "pk11pub.h"
 #include "sslerr.h"
 #include "sslproto.h"
-#include "pk11pub.h"
 
 extern "C" {
 // This is not something that should make you happy.
 #include "libssl_internals.h"
 }
 
-#include "tls_filter.h"
-#include "tls_connect.h"
 #include "gtest_utils.h"
+#include "tls_connect.h"
+#include "tls_filter.h"
 
 namespace nss_test {
 
 // Replaces the client hello with an SSLv2 version once.
-class SSLv2ClientHelloFilter : public PacketFilter
-{
-  public:
-    SSLv2ClientHelloFilter(TlsAgent* client, uint16_t version)
-        : replaced_(false), client_(client), version_(version), pad_len_(0),
-          reported_pad_len_(0), client_random_len_(16), ciphers_(0),
-          send_escape_(false)
-    { }
+class SSLv2ClientHelloFilter : public PacketFilter {
+ public:
+  SSLv2ClientHelloFilter(TlsAgent* client, uint16_t version)
+      : replaced_(false),
+        client_(client),
+        version_(version),
+        pad_len_(0),
+        reported_pad_len_(0),
+        client_random_len_(16),
+        ciphers_(0),
+        send_escape_(false) {}
 
-    void
-    SetVersion(uint16_t version)
-    {
-        version_ = version;
+  void SetVersion(uint16_t version) { version_ = version; }
+
+  void SetCipherSuites(const std::vector<uint16_t>& ciphers) {
+    ciphers_ = ciphers;
+  }
+
+  // Set a padding length and announce it correctly.
+  void SetPadding(uint8_t pad_len) { SetPadding(pad_len, pad_len); }
+
+  // Set a padding length and allow to lie about its length.
+  void SetPadding(uint8_t pad_len, uint8_t reported_pad_len) {
+    pad_len_ = pad_len;
+    reported_pad_len_ = reported_pad_len;
+  }
+
+  void SetClientRandomLength(uint16_t client_random_len) {
+    client_random_len_ = client_random_len;
+  }
+
+  void SetSendEscape(bool send_escape) { send_escape_ = send_escape; }
+
+ protected:
+  virtual PacketFilter::Action Filter(const DataBuffer& input,
+                                      DataBuffer* output) {
+    if (replaced_) {
+      return KEEP;
     }
 
-    void
-    SetCipherSuites(const std::vector<uint16_t>& ciphers)
-    {
-        ciphers_ = ciphers;
+    // Replace only the very first packet.
+    replaced_ = true;
+
+    // The SSLv2 client hello size.
+    size_t packet_len = SSL_HL_CLIENT_HELLO_HBYTES + (ciphers_.size() * 3) +
+                        client_random_len_ + pad_len_;
+
+    size_t idx = 0;
+    *output = input;
+    output->Allocate(packet_len);
+    output->Truncate(packet_len);
+
+    // Write record length.
+    if (pad_len_ > 0) {
+      size_t masked_len = 0x3fff & packet_len;
+      if (send_escape_) {
+        masked_len |= 0x4000;
+      }
+
+      idx = output->Write(idx, masked_len, 2);
+      idx = output->Write(idx, reported_pad_len_, 1);
+    } else {
+      PR_ASSERT(!send_escape_);
+      idx = output->Write(idx, 0x8000 | packet_len, 2);
     }
 
-    // Set a padding length and announce it correctly.
-    void
-    SetPadding(uint8_t pad_len)
-    {
-        SetPadding(pad_len, pad_len);
+    // Remember header length.
+    size_t hdr_len = idx;
+
+    // Write client hello.
+    idx = output->Write(idx, SSL_MT_CLIENT_HELLO, 1);
+    idx = output->Write(idx, version_, 2);
+
+    // Cipher list length.
+    idx = output->Write(idx, (ciphers_.size() * 3), 2);
+
+    // Session ID length.
+    idx = output->Write(idx, static_cast<uint32_t>(0), 2);
+
+    // ClientRandom length.
+    idx = output->Write(idx, client_random_len_, 2);
+
+    // Cipher suites.
+    for (auto cipher : ciphers_) {
+      idx = output->Write(idx, static_cast<uint32_t>(cipher), 3);
     }
 
-    // Set a padding length and allow to lie about its length.
-    void
-    SetPadding(uint8_t pad_len, uint8_t reported_pad_len)
-    {
-        pad_len_ = pad_len;
-        reported_pad_len_ = reported_pad_len;
+    // Challenge.
+    std::vector<uint8_t> challenge(client_random_len_);
+    PK11_GenerateRandom(challenge.data(), challenge.size());
+    idx = output->Write(idx, challenge.data(), challenge.size());
+
+    // Add padding if any.
+    if (pad_len_ > 0) {
+      std::vector<uint8_t> pad(pad_len_);
+      idx = output->Write(idx, pad.data(), pad.size());
     }
 
-    void
-    SetClientRandomLength(uint16_t client_random_len)
-    {
-        client_random_len_ = client_random_len;
-    }
+    // Update the client random so that the handshake succeeds.
+    SECStatus rv = SSLInt_UpdateSSLv2ClientRandom(
+        client_->ssl_fd(), challenge.data(), challenge.size(),
+        output->data() + hdr_len, output->len() - hdr_len);
+    EXPECT_EQ(SECSuccess, rv);
 
-    void
-    SetSendEscape(bool send_escape)
-    {
-        send_escape_ = send_escape;
-    }
+    return CHANGE;
+  }
 
-  protected:
-    virtual PacketFilter::Action
-    Filter(const DataBuffer& input, DataBuffer* output)
-    {
-        if (replaced_) {
-            return KEEP;
-        }
-
-        // Replace only the very first packet.
-        replaced_ = true;
-
-        // The SSLv2 client hello size.
-        size_t packet_len = SSL_HL_CLIENT_HELLO_HBYTES + (ciphers_.size() * 3) +
-                            client_random_len_ + pad_len_;
-
-        size_t idx = 0;
-        *output = input;
-        output->Allocate(packet_len);
-        output->Truncate(packet_len);
-
-        // Write record length.
-        if (pad_len_ > 0) {
-            size_t masked_len = 0x3fff & packet_len;
-            if (send_escape_) {
-                masked_len |= 0x4000;
-            }
-
-            idx = output->Write(idx, masked_len, 2);
-            idx = output->Write(idx, reported_pad_len_, 1);
-        } else {
-            PR_ASSERT(!send_escape_);
-            idx = output->Write(idx, 0x8000 | packet_len, 2);
-        }
-
-        // Remember header length.
-        size_t hdr_len = idx;
-
-        // Write client hello.
-        idx = output->Write(idx, SSL_MT_CLIENT_HELLO, 1);
-        idx = output->Write(idx, version_, 2);
-
-        // Cipher list length.
-        idx = output->Write(idx, (ciphers_.size() * 3), 2);
-
-        // Session ID length.
-        idx = output->Write(idx, static_cast<uint32_t>(0), 2);
-
-        // ClientRandom length.
-        idx = output->Write(idx, client_random_len_, 2);
-
-        // Cipher suites.
-        for (auto cipher : ciphers_) {
-            idx = output->Write(idx, static_cast<uint32_t>(cipher), 3);
-        }
-
-        // Challenge.
-        std::vector<uint8_t> challenge(client_random_len_);
-        PK11_GenerateRandom(challenge.data(), challenge.size());
-        idx = output->Write(idx, challenge.data(), challenge.size());
-
-        // Add padding if any.
-        if (pad_len_ > 0) {
-            std::vector<uint8_t> pad(pad_len_);
-            idx = output->Write(idx, pad.data(), pad.size());
-        }
-
-        // Update the client random so that the handshake succeeds.
-        SECStatus rv = SSLInt_UpdateSSLv2ClientRandom(client_->ssl_fd(),
-                                                      challenge.data(),
-                                                      challenge.size(),
-                                                      output->data() + hdr_len,
-                                                      output->len() - hdr_len);
-        EXPECT_EQ(SECSuccess, rv);
-
-        return CHANGE;
-    }
-
-  private:
-    bool replaced_;
-    TlsAgent* client_;
-    uint16_t version_;
-    uint8_t pad_len_;
-    uint8_t reported_pad_len_;
-    uint16_t client_random_len_;
-    std::vector<uint16_t> ciphers_;
-    bool send_escape_;
+ private:
+  bool replaced_;
+  TlsAgent* client_;
+  uint16_t version_;
+  uint8_t pad_len_;
+  uint8_t reported_pad_len_;
+  uint16_t client_random_len_;
+  std::vector<uint16_t> ciphers_;
+  bool send_escape_;
 };
 
-class SSLv2ClientHelloTestF : public TlsConnectTestBase
-{
-  public:
-    SSLv2ClientHelloTestF()
-      : TlsConnectTestBase(STREAM, 0), filter_(nullptr)
-    { }
+class SSLv2ClientHelloTestF : public TlsConnectTestBase {
+ public:
+  SSLv2ClientHelloTestF() : TlsConnectTestBase(STREAM, 0), filter_(nullptr) {}
 
-    SSLv2ClientHelloTestF(Mode mode, uint16_t version)
-      : TlsConnectTestBase(mode, version), filter_(nullptr)
-    { }
+  SSLv2ClientHelloTestF(Mode mode, uint16_t version)
+      : TlsConnectTestBase(mode, version), filter_(nullptr) {}
 
-    void
-    SetUp()
-    {
-        TlsConnectTestBase::SetUp();
-        filter_ = new SSLv2ClientHelloFilter(client_, version_);
-        client_->SetPacketFilter(filter_);
-    }
+  void SetUp() {
+    TlsConnectTestBase::SetUp();
+    filter_ = new SSLv2ClientHelloFilter(client_, version_);
+    client_->SetPacketFilter(filter_);
+  }
 
-    void
-    RequireSafeRenegotiation()
-    {
-        server_->EnsureTlsSetup();
-        SECStatus rv =
-            SSL_OptionSet(server_->ssl_fd(), SSL_REQUIRE_SAFE_NEGOTIATION, PR_TRUE);
-        EXPECT_EQ(rv, SECSuccess);
-    }
+  void RequireSafeRenegotiation() {
+    server_->EnsureTlsSetup();
+    SECStatus rv =
+        SSL_OptionSet(server_->ssl_fd(), SSL_REQUIRE_SAFE_NEGOTIATION, PR_TRUE);
+    EXPECT_EQ(rv, SECSuccess);
+  }
 
-    void
-    SetExpectedVersion(uint16_t version)
-    {
-        TlsConnectTestBase::SetExpectedVersion(version);
-        filter_->SetVersion(version);
-    }
+  void SetExpectedVersion(uint16_t version) {
+    TlsConnectTestBase::SetExpectedVersion(version);
+    filter_->SetVersion(version);
+  }
 
-    void
-    SetAvailableCipherSuite(uint16_t cipher)
-    {
-        filter_->SetCipherSuites(std::vector<uint16_t>(1, cipher));
-    }
+  void SetAvailableCipherSuite(uint16_t cipher) {
+    filter_->SetCipherSuites(std::vector<uint16_t>(1, cipher));
+  }
 
-    void
-    SetAvailableCipherSuites(const std::vector<uint16_t>& ciphers)
-    {
-        filter_->SetCipherSuites(ciphers);
-    }
+  void SetAvailableCipherSuites(const std::vector<uint16_t>& ciphers) {
+    filter_->SetCipherSuites(ciphers);
+  }
 
-    void
-    SetPadding(uint8_t pad_len)
-    {
-        filter_->SetPadding(pad_len);
-    }
+  void SetPadding(uint8_t pad_len) { filter_->SetPadding(pad_len); }
 
-    void
-    SetPadding(uint8_t pad_len, uint8_t reported_pad_len)
-    {
-        filter_->SetPadding(pad_len, reported_pad_len);
-    }
+  void SetPadding(uint8_t pad_len, uint8_t reported_pad_len) {
+    filter_->SetPadding(pad_len, reported_pad_len);
+  }
 
-    void
-    SetClientRandomLength(uint16_t client_random_len)
-    {
-        filter_->SetClientRandomLength(client_random_len);
-    }
+  void SetClientRandomLength(uint16_t client_random_len) {
+    filter_->SetClientRandomLength(client_random_len);
+  }
 
-    void
-    SetSendEscape(bool send_escape)
-    {
-        filter_->SetSendEscape(send_escape);
-    }
+  void SetSendEscape(bool send_escape) { filter_->SetSendEscape(send_escape); }
 
-
-  private:
-    SSLv2ClientHelloFilter* filter_;
+ private:
+  SSLv2ClientHelloFilter* filter_;
 };
 
 // Parameterized version of SSLv2ClientHelloTestF we can
 // use with TEST_P to test multiple TLS versions easily.
 class SSLv2ClientHelloTest : public SSLv2ClientHelloTestF,
-                             public ::testing::WithParamInterface<uint16_t>
-{
-  public:
-    SSLv2ClientHelloTest()
-      : SSLv2ClientHelloTestF(STREAM, GetParam())
-    { }
+                             public ::testing::WithParamInterface<uint16_t> {
+ public:
+  SSLv2ClientHelloTest() : SSLv2ClientHelloTestF(STREAM, GetParam()) {}
 };
 
 // Test negotiating TLS 1.0 - 1.2.
@@ -251,7 +203,6 @@ TEST_P(SSLv2ClientHelloTest, Connect) {
 }
 
 // Test negotiating TLS 1.3.
-#ifdef NSS_ENABLE_TLS_1_3
 TEST_F(SSLv2ClientHelloTestF, Connect13) {
   SetExpectedVersion(SSL_LIBRARY_VERSION_TLS_1_3);
   client_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_3,
@@ -259,14 +210,12 @@ TEST_F(SSLv2ClientHelloTestF, Connect13) {
   server_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_3,
                            SSL_LIBRARY_VERSION_TLS_1_3);
 
-  std::vector<uint16_t> cipher_suites =
-    { TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256 };
+  std::vector<uint16_t> cipher_suites = {TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256};
   SetAvailableCipherSuites(cipher_suites);
 
   ConnectExpectFail();
   EXPECT_EQ(SSL_ERROR_RX_MALFORMED_CLIENT_HELLO, server_->error_code());
 }
-#endif
 
 // Test negotiating an EC suite.
 TEST_P(SSLv2ClientHelloTest, NegotiateECSuite) {
@@ -358,8 +307,8 @@ TEST_P(SSLv2ClientHelloTest, RequireSafeRenegotiation) {
 // includes TLS_EMPTY_RENEGOTIATION_INFO_SCSV in the list of cipher suites.
 TEST_P(SSLv2ClientHelloTest, RequireSafeRenegotiationWithSCSV) {
   RequireSafeRenegotiation();
-  std::vector<uint16_t> cipher_suites =
-    { TLS_DHE_RSA_WITH_AES_128_CBC_SHA, TLS_EMPTY_RENEGOTIATION_INFO_SCSV };
+  std::vector<uint16_t> cipher_suites = {TLS_DHE_RSA_WITH_AES_128_CBC_SHA,
+                                         TLS_EMPTY_RENEGOTIATION_INFO_SCSV};
   SetAvailableCipherSuites(cipher_suites);
   Connect();
 }
@@ -374,8 +323,8 @@ TEST_F(SSLv2ClientHelloTestF, FallbackSCSV) {
   server_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_1,
                            SSL_LIBRARY_VERSION_TLS_1_1);
 
-  std::vector<uint16_t> cipher_suites =
-    { TLS_DHE_RSA_WITH_AES_128_CBC_SHA, TLS_FALLBACK_SCSV };
+  std::vector<uint16_t> cipher_suites = {TLS_DHE_RSA_WITH_AES_128_CBC_SHA,
+                                         TLS_FALLBACK_SCSV};
   SetAvailableCipherSuites(cipher_suites);
   Connect();
 }
@@ -390,8 +339,8 @@ TEST_F(SSLv2ClientHelloTestF, InappropriateFallbackSCSV) {
   server_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_1,
                            SSL_LIBRARY_VERSION_TLS_1_2);
 
-  std::vector<uint16_t> cipher_suites =
-    { TLS_DHE_RSA_WITH_AES_128_CBC_SHA, TLS_FALLBACK_SCSV };
+  std::vector<uint16_t> cipher_suites = {TLS_DHE_RSA_WITH_AES_128_CBC_SHA,
+                                         TLS_FALLBACK_SCSV};
   SetAvailableCipherSuites(cipher_suites);
 
   ConnectExpectFail();

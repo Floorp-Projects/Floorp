@@ -28,16 +28,16 @@
  *     .          .            |                                 |
  *   Byte 37      .           -+                                -+
  */
-#define DBS_BLOCK_SIZE (16*1024) /* 16 k */
+#define DBS_BLOCK_SIZE (16 * 1024)                   /* 16 k */
 #define DBS_MAX_ENTRY_SIZE (DBS_BLOCK_SIZE - (2048)) /* 14 k */
-#define DBS_CACHE_SIZE	DBS_BLOCK_SIZE*8
-#define ROUNDDIV(x,y) (x+(y-1))/y
+#define DBS_CACHE_SIZE DBS_BLOCK_SIZE * 8
+#define ROUNDDIV(x, y) (x + (y - 1)) / y
 #define BLOB_HEAD_LEN 4
 #define BLOB_LENGTH_START BLOB_HEAD_LEN
 #define BLOB_LENGTH_LEN 4
-#define BLOB_NAME_START BLOB_LENGTH_START+BLOB_LENGTH_LEN
-#define BLOB_NAME_LEN 1+ROUNDDIV(SHA1_LENGTH,3)*4+1
-#define BLOB_BUF_LEN BLOB_HEAD_LEN+BLOB_LENGTH_LEN+BLOB_NAME_LEN
+#define BLOB_NAME_START BLOB_LENGTH_START + BLOB_LENGTH_LEN
+#define BLOB_NAME_LEN 1 + ROUNDDIV(SHA1_LENGTH, 3) * 4 + 1
+#define BLOB_BUF_LEN BLOB_HEAD_LEN + BLOB_LENGTH_LEN + BLOB_NAME_LEN
 
 /* a Shim data structure. This data structure has a db built into it. */
 typedef struct DBSStr DBS;
@@ -52,8 +52,6 @@ struct DBSStr {
     PRUint32 dbs_len;
     char staticBlobArea[BLOB_BUF_LEN];
 };
-    
-    
 
 /*
  * return true if the Datablock contains a blobtype
@@ -63,9 +61,9 @@ dbs_IsBlob(DBT *blobData)
 {
     unsigned char *addr = (unsigned char *)blobData->data;
     if (blobData->size < BLOB_BUF_LEN) {
-	return PR_FALSE;
+        return PR_FALSE;
     }
-    return addr && ((certDBEntryType) addr[1] == certDBEntryTypeBlob);
+    return addr && ((certDBEntryType)addr[1] == certDBEntryTypeBlob);
 }
 
 /*
@@ -88,12 +86,11 @@ dbs_getBlobSize(DBT *blobData)
 {
     unsigned char *addr = (unsigned char *)blobData->data;
 
-    return (PRUint32)(addr[BLOB_LENGTH_START+3] << 24) | 
-			(addr[BLOB_LENGTH_START+2] << 16) | 
-			(addr[BLOB_LENGTH_START+1] << 8) | 
-			addr[BLOB_LENGTH_START];
+    return (PRUint32)(addr[BLOB_LENGTH_START + 3] << 24) |
+           (addr[BLOB_LENGTH_START + 2] << 16) |
+           (addr[BLOB_LENGTH_START + 1] << 8) |
+           addr[BLOB_LENGTH_START];
 }
-
 
 /* We are using base64 data for the filename, but base64 data can include a
  * '/' which is interpreted as a path separator on  many platforms. Replace it
@@ -104,10 +101,11 @@ dbs_getBlobSize(DBT *blobData)
 static void
 dbs_replaceSlash(char *cp, int len)
 {
-   while (len--) {
-	if (*cp == '/') *cp = '-';
-	cp++;
-   }
+    while (len--) {
+        if (*cp == '/')
+            *cp = '-';
+        cp++;
+    }
 }
 
 /*
@@ -115,33 +113,32 @@ dbs_replaceSlash(char *cp, int len)
  * NOTE: The data element is static data (keeping with the dbm model).
  */
 static void
-dbs_mkBlob(DBS *dbsp,const DBT *key, const DBT *data, DBT *blobData)
+dbs_mkBlob(DBS *dbsp, const DBT *key, const DBT *data, DBT *blobData)
 {
-   unsigned char sha1_data[SHA1_LENGTH];
-   char *b = dbsp->staticBlobArea;
-   PRUint32 length = data->size;
-   SECItem sha1Item;
+    unsigned char sha1_data[SHA1_LENGTH];
+    char *b = dbsp->staticBlobArea;
+    PRUint32 length = data->size;
+    SECItem sha1Item;
 
-   b[0] = CERT_DB_FILE_VERSION; /* certdb version number */
-   b[1] = (char) certDBEntryTypeBlob; /* type */
-   b[2] = 0; /* flags */
-   b[3] = 0; /* reserved */
-   b[BLOB_LENGTH_START] = length & 0xff;
-   b[BLOB_LENGTH_START+1] = (length >> 8) & 0xff;
-   b[BLOB_LENGTH_START+2] = (length >> 16) & 0xff;
-   b[BLOB_LENGTH_START+3] = (length >> 24) & 0xff;
-   sha1Item.data = sha1_data;
-   sha1Item.len = SHA1_LENGTH;
-   SHA1_HashBuf(sha1_data,key->data,key->size);
-   b[BLOB_NAME_START]='b'; /* Make sure we start with a alpha */
-   NSSBase64_EncodeItem(NULL,&b[BLOB_NAME_START+1],BLOB_NAME_LEN-1,&sha1Item);
-   b[BLOB_BUF_LEN-1] = 0;
-   dbs_replaceSlash(&b[BLOB_NAME_START+1],BLOB_NAME_LEN-1);
-   blobData->data = b;
-   blobData->size = BLOB_BUF_LEN;
-   return;
+    b[0] = CERT_DB_FILE_VERSION;      /* certdb version number */
+    b[1] = (char)certDBEntryTypeBlob; /* type */
+    b[2] = 0;                         /* flags */
+    b[3] = 0;                         /* reserved */
+    b[BLOB_LENGTH_START] = length & 0xff;
+    b[BLOB_LENGTH_START + 1] = (length >> 8) & 0xff;
+    b[BLOB_LENGTH_START + 2] = (length >> 16) & 0xff;
+    b[BLOB_LENGTH_START + 3] = (length >> 24) & 0xff;
+    sha1Item.data = sha1_data;
+    sha1Item.len = SHA1_LENGTH;
+    SHA1_HashBuf(sha1_data, key->data, key->size);
+    b[BLOB_NAME_START] = 'b'; /* Make sure we start with a alpha */
+    NSSBase64_EncodeItem(NULL, &b[BLOB_NAME_START + 1], BLOB_NAME_LEN - 1, &sha1Item);
+    b[BLOB_BUF_LEN - 1] = 0;
+    dbs_replaceSlash(&b[BLOB_NAME_START + 1], BLOB_NAME_LEN - 1);
+    blobData->data = b;
+    blobData->size = BLOB_BUF_LEN;
+    return;
 }
-   
 
 /*
  * construct a path to the actual blob. The string returned must be
@@ -150,26 +147,26 @@ dbs_mkBlob(DBS *dbsp,const DBT *key, const DBT *data, DBT *blobData)
  * Note: this file does lots of consistancy checks on the DBT. The
  * routines that call this depend on these checks, so they don't worry
  * about them (success of this routine implies a good blobdata record).
- */ 
+ */
 static char *
-dbs_getBlobFilePath(char *blobdir,DBT *blobData)
+dbs_getBlobFilePath(char *blobdir, DBT *blobData)
 {
     const char *name;
 
     if (blobdir == NULL) {
-	PR_SetError(SEC_ERROR_BAD_DATABASE,0);
-	return NULL;
+        PR_SetError(SEC_ERROR_BAD_DATABASE, 0);
+        return NULL;
     }
     if (!dbs_IsBlob(blobData)) {
-	PR_SetError(SEC_ERROR_BAD_DATABASE,0);
-	return NULL;
+        PR_SetError(SEC_ERROR_BAD_DATABASE, 0);
+        return NULL;
     }
     name = dbs_getBlobFileName(blobData);
     if (!name || *name == 0) {
-	PR_SetError(SEC_ERROR_BAD_DATABASE,0);
-	return NULL;
+        PR_SetError(SEC_ERROR_BAD_DATABASE, 0);
+        return NULL;
     }
-    return  PR_smprintf("%s" PATH_SEPARATOR "%s", blobdir, name);
+    return PR_smprintf("%s" PATH_SEPARATOR "%s", blobdir, name);
 }
 
 /*
@@ -182,7 +179,7 @@ dbs_removeBlob(DBS *dbsp, DBT *blobData)
 
     file = dbs_getBlobFilePath(dbsp->blobdir, blobData);
     if (!file) {
-	return;
+        return;
     }
     PR_Delete(file);
     PR_smprintf_free(file);
@@ -195,8 +192,8 @@ dbs_removeBlob(DBS *dbsp, DBT *blobData)
 static int
 dbs_DirMode(int mode)
 {
-  int x_bits = (mode >> 2) &  0111;
-  return mode | x_bits;
+    int x_bits = (mode >> 2) & 0111;
+    return mode | x_bits;
 }
 
 /*
@@ -214,43 +211,42 @@ dbs_writeBlob(DBS *dbsp, int mode, DBT *blobData, const DBT *data)
 
     file = dbs_getBlobFilePath(dbsp->blobdir, blobData);
     if (!file) {
-	goto loser;
+        goto loser;
     }
     if (PR_Access(dbsp->blobdir, PR_ACCESS_EXISTS) != PR_SUCCESS) {
-	status = PR_MkDir(dbsp->blobdir,dbs_DirMode(mode));
-	if (status != PR_SUCCESS) {
-	    goto loser;
-	}
+        status = PR_MkDir(dbsp->blobdir, dbs_DirMode(mode));
+        if (status != PR_SUCCESS) {
+            goto loser;
+        }
     }
-    filed = PR_OpenFile(file,PR_CREATE_FILE|PR_TRUNCATE|PR_WRONLY, mode);
+    filed = PR_OpenFile(file, PR_CREATE_FILE | PR_TRUNCATE | PR_WRONLY, mode);
     if (filed == NULL) {
-	error = PR_GetError();
-	goto loser;
+        error = PR_GetError();
+        goto loser;
     }
-    len = PR_Write(filed,data->data,data->size);
+    len = PR_Write(filed, data->data, data->size);
     error = PR_GetError();
     PR_Close(filed);
     if (len < (int)data->size) {
-	goto loser;
+        goto loser;
     }
     PR_smprintf_free(file);
     return 0;
 
 loser:
     if (file) {
-	PR_Delete(file);
-	PR_smprintf_free(file);
+        PR_Delete(file);
+        PR_smprintf_free(file);
     }
     /* don't let close or delete reset the error */
-    PR_SetError(error,0);
+    PR_SetError(error, 0);
     return -1;
 }
-
 
 /*
  * we need to keep a address map in memory between calls to DBM.
  * remember what we have mapped can close it when we get another dbm
- * call. 
+ * call.
  *
  * NOTE: Not all platforms support mapped files. This code is designed to
  * detect this at runtime. If map files aren't supported the OS will indicate
@@ -263,15 +259,15 @@ static void
 dbs_freemap(DBS *dbsp)
 {
     if (dbsp->dbs_mapfile) {
-	PR_MemUnmap(dbsp->dbs_addr,dbsp->dbs_len);
-	PR_CloseFileMap(dbsp->dbs_mapfile);
-	dbsp->dbs_mapfile = NULL;
-	dbsp->dbs_addr = NULL;
-	dbsp->dbs_len = 0;
+        PR_MemUnmap(dbsp->dbs_addr, dbsp->dbs_len);
+        PR_CloseFileMap(dbsp->dbs_mapfile);
+        dbsp->dbs_mapfile = NULL;
+        dbsp->dbs_addr = NULL;
+        dbsp->dbs_len = 0;
     } else if (dbsp->dbs_addr) {
-	PORT_Free(dbsp->dbs_addr);
-	dbsp->dbs_addr = NULL;
-	dbsp->dbs_len = 0;
+        PORT_Free(dbsp->dbs_addr);
+        dbsp->dbs_addr = NULL;
+        dbsp->dbs_len = 0;
     }
     return;
 }
@@ -295,22 +291,21 @@ dbs_EmulateMap(PRFileDesc *filed, int len)
 
     addr = PORT_Alloc(len);
     if (addr == NULL) {
-	return NULL;
+        return NULL;
     }
 
-    dataRead = PR_Read(filed,addr,len);
+    dataRead = PR_Read(filed, addr, len);
     if (dataRead != len) {
-	PORT_Free(addr);
-	if (dataRead > 0) {
-	    /* PR_Read didn't set an error, we need to */
-	    PR_SetError(SEC_ERROR_BAD_DATABASE,0);
-	}
-	return NULL;
+        PORT_Free(addr);
+        if (dataRead > 0) {
+            /* PR_Read didn't set an error, we need to */
+            PR_SetError(SEC_ERROR_BAD_DATABASE, 0);
+        }
+        return NULL;
     }
 
     return addr;
 }
-
 
 /*
  * pull a database record off the disk
@@ -329,32 +324,33 @@ dbs_readBlob(DBS *dbsp, DBT *data)
 
     file = dbs_getBlobFilePath(dbsp->blobdir, data);
     if (!file) {
-	goto loser;
+        goto loser;
     }
-    filed = PR_OpenFile(file,PR_RDONLY,0);
-    PR_smprintf_free(file); file = NULL;
+    filed = PR_OpenFile(file, PR_RDONLY, 0);
+    PR_smprintf_free(file);
+    file = NULL;
     if (filed == NULL) {
-	goto loser;
+        goto loser;
     }
 
     len = dbs_getBlobSize(data);
     mapfile = PR_CreateFileMap(filed, len, PR_PROT_READONLY);
     if (mapfile == NULL) {
-	 /* USE PR_GetError instead of PORT_GetError here
-	  * because we are getting the error from PR_xxx
-	  * function */
-	if (PR_GetError() != PR_NOT_IMPLEMENTED_ERROR) {
-	    goto loser;
-	}
-	addr = dbs_EmulateMap(filed, len);
+        /* USE PR_GetError instead of PORT_GetError here
+	     * because we are getting the error from PR_xxx
+	     * function */
+        if (PR_GetError() != PR_NOT_IMPLEMENTED_ERROR) {
+            goto loser;
+        }
+        addr = dbs_EmulateMap(filed, len);
     } else {
-	addr = PR_MemMap(mapfile, 0, len);
+        addr = PR_MemMap(mapfile, 0, len);
     }
     if (addr == NULL) {
-	goto loser;
+        goto loser;
     }
     PR_Close(filed);
-    dbs_setmap(dbsp,mapfile,addr,len);
+    dbs_setmap(dbsp, mapfile, addr, len);
 
     data->data = addr;
     data->size = len;
@@ -364,12 +360,12 @@ loser:
     /* preserve the error code */
     error = PR_GetError();
     if (mapfile) {
-	PR_CloseFileMap(mapfile);
+        PR_CloseFileMap(mapfile);
     }
     if (filed) {
-	PR_Close(filed);
+        PR_Close(filed);
     }
-    PR_SetError(error,0);
+    PR_SetError(error, 0);
     return -1;
 }
 
@@ -382,16 +378,15 @@ dbs_get(const DB *dbs, const DBT *key, DBT *data, unsigned int flags)
     int ret;
     DBS *dbsp = (DBS *)dbs;
     DB *db = (DB *)dbs->internal;
-    
 
     dbs_freemap(dbsp);
-    
-    ret = (* db->get)(db, key, data, flags);
+
+    ret = (*db->get)(db, key, data, flags);
     if ((ret == 0) && dbs_IsBlob(data)) {
-	ret = dbs_readBlob(dbsp,data);
+        ret = dbs_readBlob(dbsp, data);
     }
 
-    return(ret);
+    return (ret);
 }
 
 static int
@@ -406,30 +401,30 @@ dbs_put(const DB *dbs, DBT *key, const DBT *data, unsigned int flags)
 
     /* If the db is readonly, just pass the data down to rdb and let it fail */
     if (!dbsp->readOnly) {
-	DBT oldData;
-	int ret1;
+        DBT oldData;
+        int ret1;
 
-	/* make sure the current record is deleted if it's a blob */
-	ret1 = (*db->get)(db,key,&oldData,0);
+        /* make sure the current record is deleted if it's a blob */
+        ret1 = (*db->get)(db, key, &oldData, 0);
         if ((ret1 == 0) && flags == R_NOOVERWRITE) {
-	    /* let DBM return the error to maintain consistancy */
-	    return (* db->put)(db, key, data, flags);
-	}
-	if ((ret1 == 0) && dbs_IsBlob(&oldData)) {
-	    dbs_removeBlob(dbsp, &oldData);
-	}
+            /* let DBM return the error to maintain consistancy */
+            return (*db->put)(db, key, data, flags);
+        }
+        if ((ret1 == 0) && dbs_IsBlob(&oldData)) {
+            dbs_removeBlob(dbsp, &oldData);
+        }
 
-	if (data->size > DBS_MAX_ENTRY_SIZE) {
-	    dbs_mkBlob(dbsp,key,data,&blob);
-	    ret = dbs_writeBlob(dbsp, dbsp->mode, &blob, data);
-	    data = &blob;
-	}
+        if (data->size > DBS_MAX_ENTRY_SIZE) {
+            dbs_mkBlob(dbsp, key, data, &blob);
+            ret = dbs_writeBlob(dbsp, dbsp->mode, &blob, data);
+            data = &blob;
+        }
     }
 
     if (ret == 0) {
-	ret = (* db->put)(db, key, data, flags);
+        ret = (*db->put)(db, key, data, flags);
     }
-    return(ret);
+    return (ret);
 }
 
 static int
@@ -440,7 +435,7 @@ dbs_sync(const DB *dbs, unsigned int flags)
 
     dbs_freemap(dbsp);
 
-    return (* db->sync)(db, flags);
+    return (*db->sync)(db, flags);
 }
 
 static int
@@ -453,14 +448,14 @@ dbs_del(const DB *dbs, const DBT *key, unsigned int flags)
     dbs_freemap(dbsp);
 
     if (!dbsp->readOnly) {
-	DBT oldData;
-	ret = (*db->get)(db,key,&oldData,0);
-	if ((ret == 0) && dbs_IsBlob(&oldData)) {
-	    dbs_removeBlob(dbsp,&oldData);
-	}
+        DBT oldData;
+        ret = (*db->get)(db, key, &oldData, 0);
+        if ((ret == 0) && dbs_IsBlob(&oldData)) {
+            dbs_removeBlob(dbsp, &oldData);
+        }
     }
 
-    return (* db->del)(db, key, flags);
+    return (*db->del)(db, key, flags);
 }
 
 static int
@@ -469,16 +464,16 @@ dbs_seq(const DB *dbs, DBT *key, DBT *data, unsigned int flags)
     int ret;
     DBS *dbsp = (DBS *)dbs;
     DB *db = (DB *)dbs->internal;
-    
+
     dbs_freemap(dbsp);
-    
-    ret = (* db->seq)(db, key, data, flags);
+
+    ret = (*db->seq)(db, key, data, flags);
     if ((ret == 0) && dbs_IsBlob(data)) {
-	/* don't return a blob read as an error so traversals keep going */
-	(void) dbs_readBlob(dbsp,data);
+        /* don't return a blob read as an error so traversals keep going */
+        (void)dbs_readBlob(dbsp, data);
     }
 
-    return(ret);
+    return (ret);
 }
 
 static int
@@ -489,7 +484,7 @@ dbs_close(DB *dbs)
     int ret;
 
     dbs_freemap(dbsp);
-    ret = (* db->close)(db);
+    ret = (*db->close)(db);
     PORT_Free(dbsp->blobdir);
     PORT_Free(dbsp);
     return ret;
@@ -500,13 +495,13 @@ dbs_fd(const DB *dbs)
 {
     DB *db = (DB *)dbs->internal;
 
-    return (* db->fd)(db);
+    return (*db->fd)(db);
 }
 
 /*
  * the naming convention we use is
  * change the .xxx into .dir. (for nss it's always .db);
- * if no .extension exists or is equal to .dir, add a .dir 
+ * if no .extension exists or is equal to .dir, add a .dir
  * the returned data must be freed.
  */
 #define DIRSUFFIX ".dir"
@@ -522,35 +517,35 @@ dbs_mkBlobDirName(const char *dbname)
      * or the end of the string. NOTE: Windows should check for both separators
      * here. For now this is safe because we know NSS always uses a '.'
      */
-    for (cp = &dbname[dbname_len]; 
-		(cp > dbname) && (*cp != '.') && (*cp != *PATH_SEPARATOR) ;
-			cp--)
-	/* Empty */ ;
+    for (cp = &dbname[dbname_len];
+         (cp > dbname) && (*cp != '.') && (*cp != *PATH_SEPARATOR);
+         cp--)
+        /* Empty */;
     if (*cp == '.') {
-	dbname_end = cp - dbname;
-	if (PORT_Strcmp(cp,DIRSUFFIX) == 0) {
-	    dbname_end = dbname_len;
-	}
+        dbname_end = cp - dbname;
+        if (PORT_Strcmp(cp, DIRSUFFIX) == 0) {
+            dbname_end = dbname_len;
+        }
     }
-    blobDir = PORT_ZAlloc(dbname_end+sizeof(DIRSUFFIX));
+    blobDir = PORT_ZAlloc(dbname_end + sizeof(DIRSUFFIX));
     if (blobDir == NULL) {
-	return NULL;
+        return NULL;
     }
-    PORT_Memcpy(blobDir,dbname,dbname_end);
-    PORT_Memcpy(&blobDir[dbname_end],DIRSUFFIX,sizeof(DIRSUFFIX));
+    PORT_Memcpy(blobDir, dbname, dbname_end);
+    PORT_Memcpy(&blobDir[dbname_end], DIRSUFFIX, sizeof(DIRSUFFIX));
     return blobDir;
 }
 
 #define DBM_DEFAULT 0
 static const HASHINFO dbs_hashInfo = {
-	DBS_BLOCK_SIZE,		/* bucket size, must be greater than = to
-				 * or maximum entry size (+ header)
-				 * we allow before blobing */
-	DBM_DEFAULT,		/* Fill Factor */
-	DBM_DEFAULT,		/* number of elements */
-	DBS_CACHE_SIZE,		/* cache size */
-	DBM_DEFAULT,		/* hash function */
-	DBM_DEFAULT,		/* byte order */
+    DBS_BLOCK_SIZE, /* bucket size, must be greater than = to
+				     * or maximum entry size (+ header)
+				     * we allow before blobing */
+    DBM_DEFAULT,    /* Fill Factor */
+    DBM_DEFAULT,    /* number of elements */
+    DBS_CACHE_SIZE, /* cache size */
+    DBM_DEFAULT,    /* hash function */
+    DBM_DEFAULT,    /* byte order */
 };
 
 /*
@@ -559,9 +554,9 @@ static const HASHINFO dbs_hashInfo = {
  */
 DB *
 dbsopen(const char *dbname, int flags, int mode, DBTYPE type,
-							 const void *userData)
+        const void *userData)
 {
-    DB *db = NULL,*dbs = NULL;
+    DB *db = NULL, *dbs = NULL;
     DBS *dbsp = NULL;
 
     /* NOTE: we are overriding userData with dbs_hashInfo. since all known
@@ -569,13 +564,13 @@ dbsopen(const char *dbname, int flags, int mode, DBTYPE type,
 
     dbsp = (DBS *)PORT_ZAlloc(sizeof(DBS));
     if (!dbsp) {
-	return NULL;
+        return NULL;
     }
     dbs = &dbsp->db;
 
-    dbsp->blobdir=dbs_mkBlobDirName(dbname);
+    dbsp->blobdir = dbs_mkBlobDirName(dbname);
     if (dbsp->blobdir == NULL) {
-	goto loser;
+        goto loser;
     }
     dbsp->mode = mode;
     dbsp->readOnly = (PRBool)(flags == NO_RDONLY);
@@ -586,9 +581,9 @@ dbsopen(const char *dbname, int flags, int mode, DBTYPE type,
     /* the real dbm call */
     db = dbopen(dbname, flags, mode, type, &dbs_hashInfo);
     if (db == NULL) {
-	goto loser;
+        goto loser;
     }
-    dbs->internal = (void *) db;
+    dbs->internal = (void *)db;
     dbs->type = type;
     dbs->close = dbs_close;
     dbs->get = dbs_get;
@@ -601,7 +596,7 @@ dbsopen(const char *dbname, int flags, int mode, DBTYPE type,
     return dbs;
 loser:
     if (db) {
-	(*db->close)(db);
+        (*db->close)(db);
     }
     if (dbsp->blobdir) {
         PORT_Free(dbsp->blobdir);

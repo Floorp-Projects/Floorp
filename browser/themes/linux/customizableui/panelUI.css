@@ -16,7 +16,7 @@
   -moz-appearance: none;
   background: var(--panel-arrowcontent-background);
   color: var(--panel-arrowcontent-color);
-  border: var(--panel-arrowcontent-border);
+  border: 1px solid var(--panel-arrowcontent-border-color);
   margin-top: -6px;
   padding-top: 1px;
 }

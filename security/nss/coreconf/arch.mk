@@ -206,11 +206,11 @@ ifeq (CYGWIN_NT,$(findstring CYGWIN_NT,$(OS_ARCH)))
     endif
 endif
 #
-# If uname -s returns "MINGW32_NT-*", we assume that we are using
+# If uname -s returns "MINGW*_NT-*", we assume that we are using
 # the uname.exe in the MSYS toolkit.
 #
-ifeq (MINGW32_NT,$(findstring MINGW32_NT,$(OS_ARCH)))
-    OS_RELEASE := $(patsubst MINGW32_NT-%,%,$(OS_ARCH))
+ifneq (,$(filter MINGW32_NT-% MINGW64_NT-%,$(OS_ARCH)))
+    OS_RELEASE := $(patsubst MINGW64_NT-%,%,$(patsubst MINGW32_NT-%,%,$(OS_ARCH)))
     OS_ARCH = WINNT
     USE_MSYS = 1
     ifndef CPU_ARCH
@@ -218,7 +218,7 @@ ifeq (MINGW32_NT,$(findstring MINGW32_NT,$(OS_ARCH)))
 	#
 	# MSYS's uname -m returns "i686" on a Pentium Pro machine.
 	#
-	ifneq (,$(findstring 86,$(CPU_ARCH)))
+	ifneq (,$(filter i%86,$(CPU_ARCH)))
 	    CPU_ARCH = x386
 	endif
     endif

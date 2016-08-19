@@ -79,6 +79,8 @@ nsIConstraintValidation::GetValidationMessage(nsAString& aValidationMessage)
       }
     } else if (GetValidityState(VALIDITY_STATE_TOO_LONG)) {
       GetValidationMessage(aValidationMessage, VALIDITY_STATE_TOO_LONG);
+    } else if (GetValidityState(VALIDITY_STATE_TOO_SHORT)) {
+      GetValidationMessage(aValidationMessage, VALIDITY_STATE_TOO_SHORT);
     } else if (GetValidityState(VALIDITY_STATE_VALUE_MISSING)) {
       GetValidationMessage(aValidationMessage, VALIDITY_STATE_VALUE_MISSING);
     } else if (GetValidityState(VALIDITY_STATE_TYPE_MISMATCH)) {

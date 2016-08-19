@@ -24,11 +24,6 @@
 #include "mozilla/Services.h"
 #include "nsThreadUtils.h"
 
-#ifdef MOZ_CRASHREPORTER
-#include "nsICrashReporter.h"
-#include "nsExceptionHandler.h"
-#endif
-
 #include "mozilla/unused.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/UniquePtr.h"
@@ -36,7 +31,6 @@
 #include "mozilla/layers/APZCTreeManager.h"
 #include "nsPluginInstanceOwner.h"
 #include "AndroidSurfaceTexture.h"
-#include "nsMemoryPressure.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -49,60 +43,6 @@ extern "C" {
 /*
  * Incoming JNI methods
  */
-NS_EXPORT jlong JNICALL
-Java_org_mozilla_gecko_GeckoAppShell_runUiThreadCallback(JNIEnv* env, jclass)
-{
-    if (!AndroidBridge::Bridge()) {
-        return -1;
-    }
-
-    return AndroidBridge::Bridge()->RunDelayedUiThreadTasks();
-}
-
-NS_EXPORT void JNICALL
-Java_org_mozilla_gecko_GeckoAppShell_reportJavaCrash(JNIEnv *jenv, jclass, jstring jStackTrace)
-{
-#ifdef MOZ_CRASHREPORTER
-    const nsJNICString stackTrace(jStackTrace, jenv);
-    if (NS_WARN_IF(NS_FAILED(CrashReporter::AnnotateCrashReport(
-            NS_LITERAL_CSTRING("JavaStackTrace"), stackTrace)))) {
-        // Only crash below if crash reporter is initialized and annotation succeeded.
-        // Otherwise try other means of reporting the crash in Java.
-        return;
-    }
-#endif // MOZ_CRASHREPORTER
-    MOZ_CRASH("Uncaught Java exception");
-}
-
-NS_EXPORT void JNICALL
-Java_org_mozilla_gecko_GeckoAppShell_notifyBatteryChange(JNIEnv* jenv, jclass,
-                                                         jdouble aLevel,
-                                                         jboolean aCharging,
-                                                         jdouble aRemainingTime)
-{
-    class NotifyBatteryChangeRunnable : public Runnable {
-    public:
-      NotifyBatteryChangeRunnable(double aLevel, bool aCharging, double aRemainingTime)
-        : mLevel(aLevel)
-        , mCharging(aCharging)
-        , mRemainingTime(aRemainingTime)
-      {}
-
-      NS_IMETHOD Run() override {
-        hal::NotifyBatteryChange(hal::BatteryInformation(mLevel, mCharging, mRemainingTime));
-        return NS_OK;
-      }
-
-    private:
-      double mLevel;
-      bool   mCharging;
-      double mRemainingTime;
-    };
-
-    nsCOMPtr<nsIRunnable> runnable = new NotifyBatteryChangeRunnable(aLevel, aCharging, aRemainingTime);
-    NS_DispatchToMainThread(runnable);
-}
-
 NS_EXPORT void JNICALL
 Java_org_mozilla_gecko_GeckoAppShell_invalidateAndScheduleComposite(JNIEnv*, jclass)
 {
@@ -131,28 +71,6 @@ Java_org_mozilla_gecko_GeckoAppShell_removePresentationSurface(JNIEnv* jenv, jcl
 }
 
 NS_EXPORT void JNICALL
-Java_org_mozilla_gecko_GeckoAppShell_onFullScreenPluginHidden(JNIEnv* jenv, jclass, jobject view)
-{
-  class ExitFullScreenRunnable : public Runnable {
-    public:
-      ExitFullScreenRunnable(jobject view) : mView(view) {}
-
-      NS_IMETHOD Run() override {
-        JNIEnv* const env = jni::GetGeckoThreadEnv();
-        nsPluginInstanceOwner::ExitFullScreen(mView);
-        env->DeleteGlobalRef(mView);
-        return NS_OK;
-      }
-
-    private:
-      jobject mView;
-  };
-
-  nsCOMPtr<nsIRunnable> runnable = new ExitFullScreenRunnable(jenv->NewGlobalRef(view));
-  NS_DispatchToMainThread(runnable);
-}
-
-NS_EXPORT void JNICALL
 Java_org_mozilla_gecko_GeckoAppShell_onSurfaceTextureFrameAvailable(JNIEnv* jenv, jclass, jobject surfaceTexture, jint id)
 {
   mozilla::gl::AndroidSurfaceTexture* st = mozilla::gl::AndroidSurfaceTexture::Find(id);
@@ -162,12 +80,6 @@ Java_org_mozilla_gecko_GeckoAppShell_onSurfaceTextureFrameAvailable(JNIEnv* jenv
   }
 
   st->NotifyFrameAvailable();
-}
-
-NS_EXPORT void JNICALL
-Java_org_mozilla_gecko_GeckoAppShell_dispatchMemoryPressure(JNIEnv* jenv, jclass)
-{
-    NS_DispatchMemoryPressure(MemPressure_New);
 }
 
 }

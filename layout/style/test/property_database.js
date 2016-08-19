@@ -6920,7 +6920,7 @@ if (SupportsMaskShorthand()) {
     initial_values: [ "match-source", "none", "no-repeat", "add", "50% 50%", "center center", "50% 50% / auto", "center / auto", "center center / auto", "50% 50% / auto auto",
       "center none", "center center none", "none center", "none center center", "none 50% 50%", "center / auto none",
       "center center / auto auto none",
-      "match-source none no-repeat add center center", "center centerp no-repeat none add", "none no-repeat add center center / auto", "center center / auto no-repeat none add match-source", "none no-repeat add 0% 0% / auto auto match-source",
+      "match-source none no-repeat add center center", "center center no-repeat none add", "none no-repeat add center center / auto", "center center / auto no-repeat none add match-source", "none no-repeat add 0% 0% / auto auto match-source",
       "border-box", "border-box border-box" ],
     other_values: [
       "none alpha no-repeat add center",

@@ -72,7 +72,9 @@ depends_files := $(foreach root,$(xpidl_modules),$(idl_deps_dir)/$(root).pp)
 
 GARBAGE += $(xpt_files) $(depends_files)
 
+ifdef COMPILE_ENVIRONMENT
 xpidl:: $(xpt_files) $(chrome_manifests) $(interfaces_manifests)
+endif
 
 $(xpt_files): $(process_py) $(call mkdir_deps,$(idl_deps_dir) $(dist_include_dir))
 

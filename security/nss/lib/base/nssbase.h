@@ -158,7 +158,7 @@ NSS_EXTERN NSSError *NSS_GetErrorStack(void);
  *  A pointer to the new segment of zeroed memory
  */
 
-#define NSS_ZNEWARRAY(arenaOpt, type, quantity)                                \
+#define NSS_ZNEWARRAY(arenaOpt, type, quantity) \
     ((type *)NSS_ZAlloc((arenaOpt), sizeof(type) * (quantity)))
 
 /*

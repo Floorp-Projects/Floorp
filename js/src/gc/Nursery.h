@@ -227,7 +227,8 @@ class Nursery
         return total;
     }
 
-    size_t usedSpace() const;
+    // The number of bytes from the start position to the end of the nursery.
+    size_t spaceToEnd() const;
 
     // Free space remaining, not counting chunk trailers.
     MOZ_ALWAYS_INLINE size_t freeSpace() const {
@@ -427,7 +428,7 @@ class Nursery
     void sweepDictionaryModeObjects();
 
     /* Change the allocable space provided by the nursery. */
-    void maybeResizeNursery(JS::gcreason::Reason reason, size_t usedSpace, double promotionRate);
+    void maybeResizeNursery(JS::gcreason::Reason reason, double promotionRate);
     void growAllocableSpace();
     void shrinkAllocableSpace();
 

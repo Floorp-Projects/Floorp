@@ -12,4 +12,5 @@ DIRS = \
 	util_gtest \
 	pk11_gtest \
 	ssl_gtest \
+        nss_bogo_shim \
 	$(NULL)
