@@ -19,7 +19,6 @@
       env:
         GCC_VERSION: clang
         GXX_VERSION: clang++
-        NSS_ENABLE_TLS_1_3: 1
         USE_64: 1
 
     extra:

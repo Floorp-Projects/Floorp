@@ -17,21 +17,26 @@
 
 #include "databuffer.h"
 
+extern bool g_ssl_gtest_verbose;
+
 namespace nss_test {
 
 static PRDescIdentity test_fd_identity = PR_INVALID_IO_LAYER;
 
-#define UNIMPLEMENTED()                          \
-  std::cerr << "Call to unimplemented function " \
-            << __FUNCTION__ << std::endl;        \
-  PR_ASSERT(PR_FALSE);                           \
+#define UNIMPLEMENTED()                                                        \
+  std::cerr << "Call to unimplemented function " << __FUNCTION__ << std::endl; \
+  PR_ASSERT(PR_FALSE);                                                         \
   PR_SetError(PR_NOT_IMPLEMENTED_ERROR, 0)
 
 #define LOG(a) std::cerr << name_ << ": " << a << std::endl
+#define LOGV(a)                      \
+  do {                               \
+    if (g_ssl_gtest_verbose) LOG(a); \
+  } while (false)
 
 class Packet : public DataBuffer {
  public:
-  Packet(const DataBuffer& buf) : DataBuffer(buf), offset_(0) {}
+  Packet(const DataBuffer &buf) : DataBuffer(buf), offset_(0) {}
 
   void Advance(size_t delta) {
     PR_ASSERT(offset_ + delta <= len());
@@ -253,9 +258,7 @@ static int32_t DummyReserved(PRFileDesc *f) {
   return -1;
 }
 
-DummyPrSocket::~DummyPrSocket() {
-  Reset();
-}
+DummyPrSocket::~DummyPrSocket() { Reset(); }
 
 void DummyPrSocket::Reset() {
   delete filter_;
@@ -263,27 +266,32 @@ void DummyPrSocket::Reset() {
     peer_->SetPeer(nullptr);
     peer_ = nullptr;
   }
-  while (!input_.empty())
-  {
-    Packet* front = input_.front();
+  while (!input_.empty()) {
+    Packet *front = input_.front();
     input_.pop();
     delete front;
   }
 }
 
 static const struct PRIOMethods DummyMethods = {
-    PR_DESC_LAYERED,  DummyClose,           DummyRead,
-    DummyWrite,       DummyAvailable,       DummyAvailable64,
-    DummySync,        DummySeek,            DummySeek64,
-    DummyFileInfo,    DummyFileInfo64,      DummyWritev,
-    DummyConnect,     DummyAccept,          DummyBind,
-    DummyListen,      DummyShutdown,        DummyRecv,
-    DummySend,        DummyRecvfrom,        DummySendto,
-    DummyPoll,        DummyAcceptRead,      DummyTransmitFile,
-    DummyGetsockname, DummyGetpeername,     DummyReserved,
-    DummyReserved,    DummyGetsockoption,   DummySetsockoption,
-    DummySendfile,    DummyConnectContinue, DummyReserved,
-    DummyReserved,    DummyReserved,        DummyReserved};
+    PR_DESC_LAYERED,    DummyClose,
+    DummyRead,          DummyWrite,
+    DummyAvailable,     DummyAvailable64,
+    DummySync,          DummySeek,
+    DummySeek64,        DummyFileInfo,
+    DummyFileInfo64,    DummyWritev,
+    DummyConnect,       DummyAccept,
+    DummyBind,          DummyListen,
+    DummyShutdown,      DummyRecv,
+    DummySend,          DummyRecvfrom,
+    DummySendto,        DummyPoll,
+    DummyAcceptRead,    DummyTransmitFile,
+    DummyGetsockname,   DummyGetpeername,
+    DummyReserved,      DummyReserved,
+    DummyGetsockoption, DummySetsockoption,
+    DummySendfile,      DummyConnectContinue,
+    DummyReserved,      DummyReserved,
+    DummyReserved,      DummyReserved};
 
 PRFileDesc *DummyPrSocket::CreateFD(const std::string &name, Mode mode) {
   if (test_fd_identity == PR_INVALID_IO_LAYER) {
@@ -300,7 +308,7 @@ DummyPrSocket *DummyPrSocket::GetAdapter(PRFileDesc *fd) {
   return reinterpret_cast<DummyPrSocket *>(fd->secret);
 }
 
-void DummyPrSocket::PacketReceived(const DataBuffer& packet) {
+void DummyPrSocket::PacketReceived(const DataBuffer &packet) {
   input_.push(new Packet(packet));
 }
 
@@ -313,15 +321,15 @@ int32_t DummyPrSocket::Read(void *data, int32_t len) {
   }
 
   if (input_.empty()) {
-    LOG("Read --> wouldblock " << len);
+    LOGV("Read --> wouldblock " << len);
     PR_SetError(PR_WOULD_BLOCK_ERROR, 0);
     return -1;
   }
 
   Packet *front = input_.front();
-  size_t to_read = std::min(static_cast<size_t>(len),
-                            front->len() - front->offset());
-  memcpy(data, static_cast<const void*>(front->data() + front->offset()),
+  size_t to_read =
+      std::min(static_cast<size_t>(len), front->len() - front->offset());
+  memcpy(data, static_cast<const void *>(front->data() + front->offset()),
          to_read);
   front->Advance(to_read);
 
@@ -361,7 +369,7 @@ int32_t DummyPrSocket::Write(const void *buf, int32_t length) {
     return -1;
   }
 
-  DataBuffer packet(static_cast<const uint8_t*>(buf),
+  DataBuffer packet(static_cast<const uint8_t *>(buf),
                     static_cast<size_t>(length));
   DataBuffer filtered;
   PacketFilter::Action action = PacketFilter::KEEP;
@@ -378,6 +386,7 @@ int32_t DummyPrSocket::Write(const void *buf, int32_t length) {
       LOG("Droppped packet: " << packet);
       break;
     case PacketFilter::KEEP:
+      LOGV("Packet: " << packet);
       peer_->PacketReceived(packet);
       break;
   }
@@ -399,8 +408,7 @@ void Poller::Shutdown() {
   instance = nullptr;
 }
 
-Poller::~Poller()
-{
+Poller::~Poller() {
   while (!timers_.empty()) {
     Timer *timer = timers_.top();
     timers_.pop();
@@ -441,9 +449,8 @@ void Poller::Cancel(Event event, DummyPrSocket *adapter) {
   waiter->callbacks_[event] = nullptr;
 
   // Clean up if there are no callbacks.
-  for (size_t i=0; i<TIMER_EVENT; ++i) {
-    if (waiter->callbacks_[i])
-      return;
+  for (size_t i = 0; i < TIMER_EVENT; ++i) {
+    if (waiter->callbacks_[i]) return;
   }
 
   delete waiter;
@@ -458,8 +465,10 @@ void Poller::SetTimer(uint32_t timer_ms, PollTarget *target, PollCallback cb,
 }
 
 bool Poller::Poll() {
-  std::cerr << "Poll() waiters = " << waiters_.size()
-            << " timers = " << timers_.size() << std::endl;
+  if (g_ssl_gtest_verbose) {
+    std::cerr << "Poll() waiters = " << waiters_.size()
+              << " timers = " << timers_.size() << std::endl;
+  }
   PRIntervalTime timeout = PR_INTERVAL_NO_TIMEOUT;
   PRTime now = PR_Now();
   bool fired = false;

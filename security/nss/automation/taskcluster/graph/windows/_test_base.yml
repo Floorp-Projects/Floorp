@@ -18,3 +18,7 @@ task:
     command:
       - "hg clone -r %NSS_HEAD_REVISION% %NSS_HEAD_REPOSITORY% nss"
       - "bash -c nss/automation/taskcluster/windows/run_tests.sh"
+
+  extra:
+    treeherder:
+      jobKind: test

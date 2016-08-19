@@ -8,7 +8,7 @@
       command:
         - "/bin/bash"
         - "-c"
-        - "bin/checkout.sh && nss/automation/taskcluster/scripts/run_clang_format.sh nss/lib/ssl"
+        - "bin/checkout.sh && nss/automation/taskcluster/scripts/run_clang_format.sh"
 
     extra:
       treeherder:

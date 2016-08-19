@@ -13,7 +13,7 @@ DEFAULT_COMPILER = cl
 ifdef NS_USE_GCC
 	CC           = gcc
 	CCC          = g++
-	LINK         = ld
+	LD           = ld
 	AR           = ar
 	AR          += cr $@
 	RANLIB       = ranlib
@@ -23,7 +23,7 @@ ifdef NS_USE_GCC
 else
 	CC           = cl
 	CCC          = cl
-	LINK         = link
+	LD           = link
         LDFLAGS += -nologo
 	AR           = lib
 	AR          += -nologo -OUT:$@
@@ -219,6 +219,7 @@ ifdef USE_64
 	ifeq ($(_MSC_VER_GE_11),1)
 		LDFLAGS += -SUBSYSTEM:CONSOLE,5.02
 	endif
+	CPU_ARCH = x86_64
 else
 	DEFINES += -D_X86_
 	# VS2012 defaults to -arch:SSE2. Use -arch:IA32 to avoid requiring
@@ -231,6 +232,7 @@ else
 		endif
 		LDFLAGS += -SUBSYSTEM:CONSOLE,5.01
 	endif
+	CPU_ARCH = x386
 endif
 endif
 ifeq ($(CPU_ARCH), ALPHA)

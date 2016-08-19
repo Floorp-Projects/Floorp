@@ -585,6 +585,7 @@ seckey_ExtractPublicKey(const CERTSubjectPublicKeyInfo *spki)
         switch (tag) {
             case SEC_OID_X500_RSA_ENCRYPTION:
             case SEC_OID_PKCS1_RSA_ENCRYPTION:
+            case SEC_OID_PKCS1_RSA_PSS_SIGNATURE:
                 pubk->keyType = rsaKey;
                 prepare_rsa_pub_key_for_asn1(pubk);
                 rv = SEC_QuickDERDecodeItem(arena, pubk, SECKEY_RSAPublicKeyTemplate, &newOs);

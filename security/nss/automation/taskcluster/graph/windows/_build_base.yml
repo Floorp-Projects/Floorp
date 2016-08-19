@@ -21,7 +21,7 @@ task:
         expires: !from_now 24
 
     command:
-      - "hg clone -r %NSS_HEAD_REVISION% %NSS_HEAD_REPOSITORY% nss"
+      - "bash -c \"hg clone -r $NSS_HEAD_REVISION $NSS_HEAD_REPOSITORY nss || (sleep 2; hg clone -r $NSS_HEAD_REVISION $NSS_HEAD_REPOSITORY nss) || (sleep 5; hg clone -r $NSS_HEAD_REVISION $NSS_HEAD_REPOSITORY nss)\""
       - "bash -c nss/automation/taskcluster/windows/build.sh"
 
     env:
@@ -33,4 +33,5 @@ task:
 
   extra:
     treeherder:
+      jobKind: build
       symbol: B

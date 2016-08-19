@@ -36,7 +36,7 @@ RSA_HashCheckSign(SECOidTag hashOid, NSSLOWKEYPublicKey *key,
                   const unsigned char *hash, unsigned int hashLen);
 
 /*
-** Prepare a buffer for padded CBC encryption, growing to the appropriate 
+** Prepare a buffer for padded CBC encryption, growing to the appropriate
 ** boundary, filling with the appropriate padding.
 **
 ** blockSize must be a power of 2.
@@ -48,21 +48,20 @@ RSA_HashCheckSign(SECOidTag hashOid, NSSLOWKEYPublicKey *key,
 ** NOTE: If arena is non-NULL, we re-allocate from there, otherwise
 ** we assume (and use) PR memory (re)allocation.
 */
-extern unsigned char * CBC_PadBuffer(PLArenaPool *arena, unsigned char *inbuf,
-                                     unsigned int inlen, unsigned int *outlen,
-				     int blockSize);
-
+extern unsigned char *CBC_PadBuffer(PLArenaPool *arena, unsigned char *inbuf,
+                                    unsigned int inlen, unsigned int *outlen,
+                                    int blockSize);
 
 /****************************************/
 /*
 ** Power-Up selftests are required for FIPS.
 */
 /* make sure Power-up selftests have been run. */
-extern CK_RV sftk_FIPSEntryOK( void ); 
+extern CK_RV sftk_FIPSEntryOK(void);
 
 /*
 ** make known fixed PKCS #11 key types to their sizes in bytes
-*/	
+*/
 unsigned long sftk_MapKeySize(CK_KEY_TYPE keyType);
 
 /*
@@ -70,73 +69,73 @@ unsigned long sftk_MapKeySize(CK_KEY_TYPE keyType);
 */
 extern PRBool sftk_audit_enabled;
 
-extern void sftk_LogAuditMessage(NSSAuditSeverity severity, 
-				 NSSAuditType, const char *msg);
+extern void sftk_LogAuditMessage(NSSAuditSeverity severity,
+                                 NSSAuditType, const char *msg);
 
 extern void sftk_AuditCreateObject(CK_SESSION_HANDLE hSession,
-			CK_ATTRIBUTE_PTR pTemplate, CK_ULONG ulCount,
-			CK_OBJECT_HANDLE_PTR phObject, CK_RV rv);
+                                   CK_ATTRIBUTE_PTR pTemplate, CK_ULONG ulCount,
+                                   CK_OBJECT_HANDLE_PTR phObject, CK_RV rv);
 
 extern void sftk_AuditCopyObject(CK_SESSION_HANDLE hSession,
-			CK_OBJECT_HANDLE hObject,
-			CK_ATTRIBUTE_PTR pTemplate, CK_ULONG ulCount,
-			CK_OBJECT_HANDLE_PTR phNewObject, CK_RV rv);
+                                 CK_OBJECT_HANDLE hObject,
+                                 CK_ATTRIBUTE_PTR pTemplate, CK_ULONG ulCount,
+                                 CK_OBJECT_HANDLE_PTR phNewObject, CK_RV rv);
 
 extern void sftk_AuditDestroyObject(CK_SESSION_HANDLE hSession,
-			CK_OBJECT_HANDLE hObject, CK_RV rv);
+                                    CK_OBJECT_HANDLE hObject, CK_RV rv);
 
 extern void sftk_AuditGetObjectSize(CK_SESSION_HANDLE hSession,
-			CK_OBJECT_HANDLE hObject, CK_ULONG_PTR pulSize,
-			CK_RV rv);
+                                    CK_OBJECT_HANDLE hObject, CK_ULONG_PTR pulSize,
+                                    CK_RV rv);
 
 extern void sftk_AuditGetAttributeValue(CK_SESSION_HANDLE hSession,
-			CK_OBJECT_HANDLE hObject, CK_ATTRIBUTE_PTR pTemplate,
-			CK_ULONG ulCount, CK_RV rv);
+                                        CK_OBJECT_HANDLE hObject, CK_ATTRIBUTE_PTR pTemplate,
+                                        CK_ULONG ulCount, CK_RV rv);
 
 extern void sftk_AuditSetAttributeValue(CK_SESSION_HANDLE hSession,
-			CK_OBJECT_HANDLE hObject, CK_ATTRIBUTE_PTR pTemplate,
-			CK_ULONG ulCount, CK_RV rv);
+                                        CK_OBJECT_HANDLE hObject, CK_ATTRIBUTE_PTR pTemplate,
+                                        CK_ULONG ulCount, CK_RV rv);
 
 extern void sftk_AuditCryptInit(const char *opName,
-			CK_SESSION_HANDLE hSession,
-			CK_MECHANISM_PTR pMechanism,
-			CK_OBJECT_HANDLE hKey, CK_RV rv);
+                                CK_SESSION_HANDLE hSession,
+                                CK_MECHANISM_PTR pMechanism,
+                                CK_OBJECT_HANDLE hKey, CK_RV rv);
 
 extern void sftk_AuditGenerateKey(CK_SESSION_HANDLE hSession,
-			CK_MECHANISM_PTR pMechanism,
-			CK_ATTRIBUTE_PTR pTemplate, CK_ULONG ulCount,
-			CK_OBJECT_HANDLE_PTR phKey, CK_RV rv);
+                                  CK_MECHANISM_PTR pMechanism,
+                                  CK_ATTRIBUTE_PTR pTemplate, CK_ULONG ulCount,
+                                  CK_OBJECT_HANDLE_PTR phKey, CK_RV rv);
 
 extern void sftk_AuditGenerateKeyPair(CK_SESSION_HANDLE hSession,
-			CK_MECHANISM_PTR pMechanism,
-			CK_ATTRIBUTE_PTR pPublicKeyTemplate,
-			CK_ULONG ulPublicKeyAttributeCount,
-			CK_ATTRIBUTE_PTR pPrivateKeyTemplate,
-			CK_ULONG ulPrivateKeyAttributeCount,
-			CK_OBJECT_HANDLE_PTR phPublicKey,
-			CK_OBJECT_HANDLE_PTR phPrivateKey, CK_RV rv);
+                                      CK_MECHANISM_PTR pMechanism,
+                                      CK_ATTRIBUTE_PTR pPublicKeyTemplate,
+                                      CK_ULONG ulPublicKeyAttributeCount,
+                                      CK_ATTRIBUTE_PTR pPrivateKeyTemplate,
+                                      CK_ULONG ulPrivateKeyAttributeCount,
+                                      CK_OBJECT_HANDLE_PTR phPublicKey,
+                                      CK_OBJECT_HANDLE_PTR phPrivateKey, CK_RV rv);
 
 extern void sftk_AuditWrapKey(CK_SESSION_HANDLE hSession,
-			CK_MECHANISM_PTR pMechanism,
-			CK_OBJECT_HANDLE hWrappingKey, CK_OBJECT_HANDLE hKey,
-			CK_BYTE_PTR pWrappedKey,
-			CK_ULONG_PTR pulWrappedKeyLen, CK_RV rv);
+                              CK_MECHANISM_PTR pMechanism,
+                              CK_OBJECT_HANDLE hWrappingKey, CK_OBJECT_HANDLE hKey,
+                              CK_BYTE_PTR pWrappedKey,
+                              CK_ULONG_PTR pulWrappedKeyLen, CK_RV rv);
 
 extern void sftk_AuditUnwrapKey(CK_SESSION_HANDLE hSession,
-			CK_MECHANISM_PTR pMechanism,
-			CK_OBJECT_HANDLE hUnwrappingKey,
-			CK_BYTE_PTR pWrappedKey, CK_ULONG ulWrappedKeyLen,
-			CK_ATTRIBUTE_PTR pTemplate, CK_ULONG ulAttributeCount,
-			CK_OBJECT_HANDLE_PTR phKey, CK_RV rv);
+                                CK_MECHANISM_PTR pMechanism,
+                                CK_OBJECT_HANDLE hUnwrappingKey,
+                                CK_BYTE_PTR pWrappedKey, CK_ULONG ulWrappedKeyLen,
+                                CK_ATTRIBUTE_PTR pTemplate, CK_ULONG ulAttributeCount,
+                                CK_OBJECT_HANDLE_PTR phKey, CK_RV rv);
 
 extern void sftk_AuditDeriveKey(CK_SESSION_HANDLE hSession,
-			CK_MECHANISM_PTR pMechanism,
-			CK_OBJECT_HANDLE hBaseKey,
-			CK_ATTRIBUTE_PTR pTemplate, CK_ULONG ulAttributeCount,
-			CK_OBJECT_HANDLE_PTR phKey, CK_RV rv);
+                                CK_MECHANISM_PTR pMechanism,
+                                CK_OBJECT_HANDLE hBaseKey,
+                                CK_ATTRIBUTE_PTR pTemplate, CK_ULONG ulAttributeCount,
+                                CK_OBJECT_HANDLE_PTR phKey, CK_RV rv);
 
 extern void sftk_AuditDigestKey(CK_SESSION_HANDLE hSession,
-			CK_OBJECT_HANDLE hKey, CK_RV rv);
+                                CK_OBJECT_HANDLE hKey, CK_RV rv);
 
 /*
 ** FIPS 140-2 Error state
@@ -150,12 +149,12 @@ extern PRBool sftk_fatalError;
 
 #ifdef DEBUG
 
-#define FORK_ASSERT() \
-    { \
-        char* forkAssert = PR_GetEnvSecure("NSS_STRICT_NOFORK"); \
-        if ( (!forkAssert) || (0 == strcmp(forkAssert, "1")) ) { \
-            PORT_Assert(0); \
-        } \
+#define FORK_ASSERT()                                            \
+    {                                                            \
+        char *forkAssert = PR_GetEnvSecure("NSS_STRICT_NOFORK"); \
+        if ((!forkAssert) || (0 == strcmp(forkAssert, "1"))) {   \
+            PORT_Assert(0);                                      \
+        }                                                        \
     }
 
 #else
@@ -170,8 +169,8 @@ extern PRBool sftk_fatalError;
  * - getpid method
  */
 
-#if !defined (CHECK_FORK_MIXED) && !defined(CHECK_FORK_PTHREAD) && \
-    !defined (CHECK_FORK_GETPID)
+#if !defined(CHECK_FORK_MIXED) && !defined(CHECK_FORK_PTHREAD) && \
+    !defined(CHECK_FORK_GETPID)
 
 /* Choose fork check method automatically unless specified
  * This section should be updated as more platforms get pthread fixes
@@ -221,30 +220,31 @@ extern PRBool forked;
 extern pid_t myPid;
 
 #define PARENT_FORKED() (myPid && myPid != getpid())
-    
+
 #endif
 
 extern PRBool parentForkedAfterC_Initialize;
 extern PRBool sftkForkCheckDisabled;
 
-#define CHECK_FORK() \
-    do { \
+#define CHECK_FORK()                                     \
+    do {                                                 \
         if (!sftkForkCheckDisabled && PARENT_FORKED()) { \
-            FORK_ASSERT(); \
-            return CKR_DEVICE_ERROR; \
-        } \
+            FORK_ASSERT();                               \
+            return CKR_DEVICE_ERROR;                     \
+        }                                                \
     } while (0)
 
-#define SKIP_AFTER_FORK(x) if (!parentForkedAfterC_Initialize) x
+#define SKIP_AFTER_FORK(x)              \
+    if (!parentForkedAfterC_Initialize) \
+    x
 
-#define ENABLE_FORK_CHECK() \
-    { \
-        char* doForkCheck = PR_GetEnvSecure("NSS_STRICT_NOFORK"); \
-        if ( doForkCheck && !strcmp(doForkCheck, "DISABLED") ) { \
-            sftkForkCheckDisabled = PR_TRUE; \
-        } \
+#define ENABLE_FORK_CHECK()                                       \
+    {                                                             \
+        char *doForkCheck = PR_GetEnvSecure("NSS_STRICT_NOFORK"); \
+        if (doForkCheck && !strcmp(doForkCheck, "DISABLED")) {    \
+            sftkForkCheckDisabled = PR_TRUE;                      \
+        }                                                         \
     }
-
 
 #else
 
@@ -259,7 +259,6 @@ extern PRBool sftkForkCheckDisabled;
 #endif
 
 #endif
-
 
 SEC_END_PROTOS
 

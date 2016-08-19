@@ -20,32 +20,32 @@ struct NSSLOWCERTCertDBHandleStr {
     DB *permCertDB;
     PZMonitor *dbMon;
     PRBool dbVerify;
-    PRInt32  ref; /* reference count */
+    PRInt32 ref; /* reference count */
 };
 
 #ifdef DBM_USING_NSPR
-#define NO_RDONLY	PR_RDONLY
-#define NO_RDWR		PR_RDWR
-#define NO_CREATE	(PR_RDWR | PR_CREATE_FILE | PR_TRUNCATE)
+#define NO_RDONLY PR_RDONLY
+#define NO_RDWR PR_RDWR
+#define NO_CREATE (PR_RDWR | PR_CREATE_FILE | PR_TRUNCATE)
 #else
-#define NO_RDONLY	O_RDONLY
-#define NO_RDWR		O_RDWR
-#define NO_CREATE	(O_RDWR | O_CREAT | O_TRUNC)
+#define NO_RDONLY O_RDONLY
+#define NO_RDWR O_RDWR
+#define NO_CREATE (O_RDWR | O_CREAT | O_TRUNC)
 #endif
 
-typedef DB * (*rdbfunc)(const char *appName, const char *prefix, 
-				const char *type, int flags);
+typedef DB *(*rdbfunc)(const char *appName, const char *prefix,
+                       const char *type, int flags);
 typedef int (*rdbstatusfunc)(void);
 
 #define RDB_FAIL 1
 #define RDB_RETRY 2
 
-DB * rdbopen(const char *appName, const char *prefix, 
-				const char *type, int flags, int *status);
+DB *rdbopen(const char *appName, const char *prefix,
+            const char *type, int flags, int *status);
 
-DB *dbsopen (const char *dbname , int flags, int mode, DBTYPE type, 
-						const void * appData);
-SECStatus db_Copy(DB *dest,DB *src);
+DB *dbsopen(const char *dbname, int flags, int mode, DBTYPE type,
+            const void *appData);
+SECStatus db_Copy(DB *dest, DB *src);
 int db_InitComplete(DB *db);
 
 #endif
