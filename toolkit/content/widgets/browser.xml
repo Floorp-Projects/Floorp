@@ -900,6 +900,16 @@
           catch (e) {
           }
 
+          // XXX tabbrowser.xml sets "relatedBrowser" as a direct property on
+          // some browsers before they are put into a DOM (and get a binding).
+          // This hack makes sure that we hold a weak reference to the other
+          // browser (and go through the proper getter and setter).
+          if (this.hasOwnProperty("relatedBrowser")) {
+            var relatedBrowser = this.relatedBrowser;
+            delete this.relatedBrowser;
+            this.relatedBrowser = relatedBrowser;
+          }
+
           if (!this.isRemoteBrowser) {
             this.addEventListener("pagehide", this.onPageHide, true);
           }
