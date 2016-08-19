@@ -126,16 +126,15 @@ public:
   MOZ_DECLARE_REFCOUNTED_TYPENAME(CachedSurface)
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CachedSurface)
 
-  CachedSurface(ISurfaceProvider*  aProvider,
-                const Cost         aCost,
-                const ImageKey     aImageKey,
-                const SurfaceKey&  aSurfaceKey)
+  CachedSurface(NotNull<ISurfaceProvider*> aProvider,
+                const Cost                 aCost,
+                const ImageKey             aImageKey,
+                const SurfaceKey&          aSurfaceKey)
     : mProvider(aProvider)
     , mCost(aCost)
     , mImageKey(aImageKey)
     , mSurfaceKey(aSurfaceKey)
   {
-    MOZ_ASSERT(aProvider);
     MOZ_ASSERT(mImageKey, "Must have a valid image key");
   }
 
@@ -158,22 +157,14 @@ public:
     mProvider->SetLocked(aLocked);
   }
 
-  bool IsPlaceholder() const
-  {
-    return !mProvider || mProvider->Availability().IsPlaceholder();
-  }
-
   bool IsLocked() const { return !IsPlaceholder() && mProvider->IsLocked(); }
+  bool IsPlaceholder() const { return mProvider->Availability().IsPlaceholder(); }
+  bool IsDecoded() const { return !IsPlaceholder() && mProvider->IsFinished(); }
 
   ImageKey GetImageKey() const { return mImageKey; }
   SurfaceKey GetSurfaceKey() const { return mSurfaceKey; }
   CostEntry GetCostEntry() { return image::CostEntry(this, mCost); }
   nsExpirationState* GetExpirationState() { return &mExpirationState; }
-
-  bool IsDecoded() const
-  {
-    return !IsPlaceholder() && mProvider->IsFinished();
-  }
 
   // A helper type used by SurfaceCacheImpl::CollectSizeOfSurfaces.
   struct MOZ_STACK_CLASS SurfaceMemoryReport
@@ -215,11 +206,11 @@ public:
   };
 
 private:
-  nsExpirationState  mExpirationState;
-  RefPtr<ISurfaceProvider> mProvider;
-  const Cost         mCost;
-  const ImageKey     mImageKey;
-  const SurfaceKey   mSurfaceKey;
+  nsExpirationState                 mExpirationState;
+  NotNull<RefPtr<ISurfaceProvider>> mProvider;
+  const Cost                        mCost;
+  const ImageKey                    mImageKey;
+  const SurfaceKey                  mSurfaceKey;
 };
 
 static int64_t
@@ -431,11 +422,11 @@ public:
 
   Mutex& GetMutex() { return mMutex; }
 
-  InsertOutcome Insert(ISurfaceProvider* aProvider,
-                       const Cost        aCost,
-                       const ImageKey    aImageKey,
-                       const SurfaceKey& aSurfaceKey,
-                       bool              aSetAvailable)
+  InsertOutcome Insert(NotNull<ISurfaceProvider*> aProvider,
+                       const Cost                 aCost,
+                       const ImageKey             aImageKey,
+                       const SurfaceKey&          aSurfaceKey,
+                       bool                       aSetAvailable)
   {
     // If this is a duplicate surface, refuse to replace the original.
     // XXX(seth): Calling Lookup() and then RemoveEntry() does the lookup
@@ -1054,7 +1045,7 @@ SurfaceCache::Insert(NotNull<ISurfaceProvider*> aProvider,
 
   MutexAutoLock lock(sInstance->GetMutex());
   Cost cost = aProvider->LogicalSizeInBytes();
-  return sInstance->Insert(aProvider.get(), cost, aImageKey, aSurfaceKey,
+  return sInstance->Insert(aProvider, cost, aImageKey, aSurfaceKey,
                            /* aSetAvailable = */ false);
 }
 
