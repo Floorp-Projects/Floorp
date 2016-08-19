@@ -94,54 +94,6 @@ var apiManager = new class extends SchemaAPIManager {
 // scripts.
 var api = context => {
   return {
-    runtime: {
-      connect: function(extensionId, connectInfo) {
-        if (!connectInfo) {
-          connectInfo = extensionId;
-          extensionId = null;
-        }
-        extensionId = extensionId || context.extension.id;
-        let name = connectInfo && connectInfo.name || "";
-        let recipient = {extensionId};
-        return context.messenger.connect(context.messageManager, name, recipient);
-      },
-
-      get id() {
-        return context.extension.id;
-      },
-
-      get lastError() {
-        return context.lastError;
-      },
-
-      getManifest: function() {
-        return Cu.cloneInto(context.extension.manifest, context.cloneScope);
-      },
-
-      getURL: function(url) {
-        return context.extension.baseURI.resolve(url);
-      },
-
-      onConnect: context.messenger.onConnect("runtime.onConnect"),
-
-      onMessage: context.messenger.onMessage("runtime.onMessage"),
-
-      sendMessage: function(...args) {
-        let options; // eslint-disable-line no-unused-vars
-        let extensionId, message, responseCallback;
-        if (args.length == 1) {
-          message = args[0];
-        } else if (args.length == 2) {
-          [message, responseCallback] = args;
-        } else {
-          [extensionId, message, options, responseCallback] = args;
-        }
-        extensionId = extensionId || context.extension.id;
-
-        let recipient = {extensionId};
-        return context.messenger.sendMessage(context.messageManager, message, recipient, responseCallback);
-      },
-    },
 
     extension: {
       getURL: function(url) {
