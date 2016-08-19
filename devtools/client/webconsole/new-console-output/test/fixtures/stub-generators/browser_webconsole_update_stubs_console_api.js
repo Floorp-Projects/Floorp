@@ -12,11 +12,10 @@ const TEST_URI = "http://example.com/browser/devtools/client/webconsole/new-cons
 
 let stubs = [];
 
-snippets.forEach((code, key) => {
-  add_task(function* () {
-    let tempFilePath = OS.Path.join(`${BASE_PATH}/stub-generators`, "test-tempfile.js");
+add_task(function* () {
+  let tempFilePath = OS.Path.join(`${BASE_PATH}/stub-generators`, "test-tempfile.js");
+  for (var [key, {keys, code}] of snippets) {
     OS.File.writeAtomic(tempFilePath, `function triggerPacket() {${code}}`);
-
     let toolbox = yield openNewTabAndToolbox(TEST_URI, "webconsole");
     let hud = toolbox.getCurrentPanel().hud;
     let {ui} = hud;
@@ -24,17 +23,23 @@ snippets.forEach((code, key) => {
     ok(ui.jsterm, "jsterm exists");
     ok(ui.newConsoleOutput, "newConsoleOutput exists");
 
-    toolbox.target.client.addListener("consoleAPICall", (type, res) => {
-      stubs.push(formatStub(key, res));
-      if (stubs.length == snippets.size) {
-        let filePath = OS.Path.join(`${BASE_PATH}/stubs`, "consoleApi.js");
-        OS.File.writeAtomic(filePath, formatFile(stubs));
-        OS.File.writeAtomic(tempFilePath, "");
-      }
+    let received = new Promise(resolve => {
+      let i = 0;
+      toolbox.target.client.addListener("consoleAPICall", (type, res) => {
+        stubs.push(formatStub(keys[i], res));
+        if(++i === keys.length ){
+          resolve();
+        }
+      });
     });
 
     yield ContentTask.spawn(gBrowser.selectedBrowser, {}, function() {
       content.wrappedJSObject.triggerPacket();
     });
-  });
+
+    yield received;
+  }
+  let filePath = OS.Path.join(`${BASE_PATH}/stubs`, "consoleApi.js");
+  OS.File.writeAtomic(filePath, formatFile(stubs));
+  OS.File.writeAtomic(tempFilePath, "");
 });

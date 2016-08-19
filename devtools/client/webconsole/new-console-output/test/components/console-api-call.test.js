@@ -46,6 +46,27 @@ describe("ConsoleAPICall component:", () => {
       expect(messageBody.textContent).toBe(message.messageText);
     });
   });
+
+  describe("console.time", () => {
+    it("does not show anything", () => {
+      const message = stubConsoleMessages.get("console.time('bar')");
+      const rendered = renderComponent(ConsoleApiCall, {message, onViewSourceInDebugger});
+
+      const messageBody = getMessageBody(rendered);
+      expect(messageBody.textContent).toBe("");
+    });
+  });
+
+  describe("console.timeEnd", () => {
+    it("renders as expected", () => {
+      const message = stubConsoleMessages.get("console.timeEnd('bar')");
+      const rendered = renderComponent(ConsoleApiCall, {message, onViewSourceInDebugger});
+
+      const messageBody = getMessageBody(rendered);
+      expect(messageBody.textContent).toBe(message.messageText);
+      expect(messageBody.textContent).toMatch(/^bar: \d+(\.\d+)?ms$/);
+    });
+  });
 });
 
 function getMessageBody(rendered) {
