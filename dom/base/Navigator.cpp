@@ -124,11 +124,6 @@
 #include <cutils/properties.h>
 #endif
 
-#ifdef MOZ_PAY
-#include "nsIPaymentContentHelperService.h"
-#include "mozilla/dom/DOMRequest.h"
-#endif
-
 namespace mozilla {
 namespace dom {
 
@@ -2272,36 +2267,6 @@ Navigator::MozE10sEnabled()
   // This will only be called if IsE10sEnabled() is true.
   return true;
 }
-
-#ifdef MOZ_PAY
-already_AddRefed<DOMRequest>
-Navigator::MozPay(JSContext* aCx,
-                  JS::Handle<JS::Value> aJwts,
-                  ErrorResult& aRv)
-{
-  if (!mWindow || !mWindow->GetDocShell()) {
-    aRv.Throw(NS_ERROR_UNEXPECTED);
-    return nullptr;
-  }
-
-  nsresult rv;
-  nsCOMPtr<nsIPaymentContentHelperService> service =
-    do_GetService("@mozilla.org/payment/content-helper-service;1", &rv);
-  if (!service) {
-    aRv.Throw(rv);
-    return nullptr;
-  }
-
-  RefPtr<nsIDOMDOMRequest> request;
-  rv = service->Pay(mWindow, aJwts, getter_AddRefs(request));
-  if (NS_FAILED(rv)) {
-    aRv.Throw(rv);
-    return nullptr;
-  }
-
-  return request.forget().downcast<DOMRequest>();
-}
-#endif // MOZ_PAY
 
 /* static */
 already_AddRefed<nsPIDOMWindowInner>
