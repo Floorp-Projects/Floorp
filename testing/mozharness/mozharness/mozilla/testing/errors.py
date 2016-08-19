@@ -32,6 +32,12 @@ TinderBoxPrintRe = {
     "mochitest-media_summary": _mochitest_summary,
     "mochitest-plain-clipboard_summary": _mochitest_summary,
     "mochitest-plain-gpu_summary": _mochitest_summary,
+    "marionette_summary": {
+        'regex': re.compile(r'''(passed|failed|todo):\ +(\d+)'''),
+        'pass_group': "passed",
+        'fail_group': "failed",
+        'known_fail_group': "todo",
+    },
     "reftest_summary": {
         'regex': re.compile(r'''REFTEST INFO \| (Successful|Unexpected|Known problems): (\d+) \('''),
         'pass_group': "Successful",
