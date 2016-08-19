@@ -42,21 +42,34 @@ class RuntimeService final : public nsIObserver
   struct WorkerDomainInfo
   {
     nsCString mDomain;
-    nsTArray<WorkerPrivate*> mWorkers;
-    nsTArray<WorkerPrivate*> mServiceWorkers;
+    nsTArray<WorkerPrivate*> mActiveWorkers;
+    nsTArray<WorkerPrivate*> mActiveServiceWorkers;
+    nsTArray<WorkerPrivate*> mQueuedWorkers;
     nsClassHashtable<nsCStringHashKey, SharedWorkerInfo> mSharedWorkerInfos;
     uint32_t mChildWorkerCount;
 
     WorkerDomainInfo()
-    : mWorkers(1), mChildWorkerCount(0)
+    : mActiveWorkers(1), mChildWorkerCount(0)
     { }
+
+    uint32_t
+    ActiveWorkerCount() const
+    {
+      return mActiveWorkers.Length() +
+             mChildWorkerCount;
+    }
+
+    uint32_t
+    ActiveServiceWorkerCount() const
+    {
+      return mActiveServiceWorkers.Length();
+    }
 
     bool
     HasNoWorkers() const
     {
-      return mWorkers.IsEmpty() &&
-             mServiceWorkers.IsEmpty() &&
-             !mChildWorkerCount;
+      return ActiveWorkerCount() == 0 &&
+             ActiveServiceWorkerCount() == 0;
     }
   };
 
