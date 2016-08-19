@@ -294,12 +294,6 @@ public:
 
   bool MozE10sEnabled();
 
-#ifdef MOZ_PAY
-  already_AddRefed<DOMRequest> MozPay(JSContext* aCx,
-                                      JS::Handle<JS::Value> aJwts,
-                                      ErrorResult& aRv);
-#endif // MOZ_PAY
-
   static void GetAcceptLanguages(nsTArray<nsString>& aLanguages);
 
   // WebIDL helper methods
