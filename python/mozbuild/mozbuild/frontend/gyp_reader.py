@@ -107,7 +107,7 @@ def read_from_gyp(config, path, output, vars, non_unified_sources = set()):
         gyp.Load([path], format=b'mozbuild',
             default_variables=str_vars,
             includes=includes,
-            depth=encode(mozpath.dirname(path)),
+            depth=encode(chrome_src),
             params=params)
 
     # Process all targets from the given gyp files and its dependencies.
