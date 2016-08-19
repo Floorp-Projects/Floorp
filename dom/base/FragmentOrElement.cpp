@@ -151,10 +151,15 @@ nsIContent::FindFirstNonChromeOnlyAccessContent() const
   return nullptr;
 }
 
-nsIContent*
-nsIContent::GetFlattenedTreeParent() const
+nsINode*
+nsIContent::GetFlattenedTreeParentNodeInternal() const
 {
-  nsIContent* parent = GetParent();
+  nsINode* parentNode = GetParentNode();
+  if (!parentNode || !parentNode->IsContent()) {
+    MOZ_ASSERT(!parentNode || parentNode == OwnerDoc());
+    return parentNode;
+  }
+  nsIContent* parent = parentNode->AsContent();
 
   if (parent && nsContentUtils::HasDistributedChildren(parent) &&
       nsContentUtils::IsInSameAnonymousTree(parent, this)) {
