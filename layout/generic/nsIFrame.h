@@ -1533,6 +1533,7 @@ public:
     nsCOMPtr<imgIContainer> mContainer;
     int32_t                 mCursor;
     bool                    mHaveHotspot;
+    bool                    mLoading;
     float                   mHotspotX, mHotspotY;
   };
   /**

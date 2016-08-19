@@ -114,6 +114,10 @@ static uint32_t gMouseOrKeyboardEventCounter = 0;
 static nsITimer* gUserInteractionTimer = nullptr;
 static nsITimerCallback* gUserInteractionTimerCallback = nullptr;
 
+static const double kCursorLoadingTimeout = 1000; // ms
+static nsWeakFrame gLastCursorSourceFrame;
+static TimeStamp gLastCursorUpdateTime;
+
 static inline int32_t
 RoundDown(double aDouble)
 {
@@ -3545,27 +3549,36 @@ EventStateManager::UpdateCursor(nsPresContext* aPresContext,
   }
   //If not locked, look for correct cursor
   else if (aTargetFrame) {
-      nsIFrame::Cursor framecursor;
-      nsPoint pt = nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent,
-                                                                aTargetFrame);
-      // Avoid setting cursor when the mouse is over a windowless pluign.
-      if (NS_FAILED(aTargetFrame->GetCursor(pt, framecursor))) {
-        if (XRE_IsContentProcess()) {
-          mLastFrameConsumedSetCursor = true;
-        }
-        return;
+    nsIFrame::Cursor framecursor;
+    nsPoint pt = nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent,
+                                                              aTargetFrame);
+    // Avoid setting cursor when the mouse is over a windowless pluign.
+    if (NS_FAILED(aTargetFrame->GetCursor(pt, framecursor))) {
+      if (XRE_IsContentProcess()) {
+        mLastFrameConsumedSetCursor = true;
       }
-      // Make sure cursors get reset after the mouse leaves a
-      // windowless plugin frame.
-      if (mLastFrameConsumedSetCursor) {
-        ClearCachedWidgetCursor(aTargetFrame);
-        mLastFrameConsumedSetCursor = false;
-      }
-      cursor = framecursor.mCursor;
-      container = framecursor.mContainer;
-      haveHotspot = framecursor.mHaveHotspot;
-      hotspotX = framecursor.mHotspotX;
-      hotspotY = framecursor.mHotspotY;
+      return;
+    }
+    // Make sure cursors get reset after the mouse leaves a
+    // windowless plugin frame.
+    if (mLastFrameConsumedSetCursor) {
+      ClearCachedWidgetCursor(aTargetFrame);
+      mLastFrameConsumedSetCursor = false;
+    }
+    // If the current cursor is from the same frame, and it is now
+    // loading some new image for the cursor, we should wait for a
+    // while rather than taking its fallback cursor directly.
+    if (framecursor.mLoading &&
+        gLastCursorSourceFrame == aTargetFrame &&
+        TimeStamp::NowLoRes() - gLastCursorUpdateTime <
+          TimeDuration::FromMilliseconds(kCursorLoadingTimeout)) {
+      return;
+    }
+    cursor = framecursor.mCursor;
+    container = framecursor.mContainer;
+    haveHotspot = framecursor.mHaveHotspot;
+    hotspotX = framecursor.mHotspotX;
+    hotspotY = framecursor.mHotspotY;
   }
 
   if (Preferences::GetBool("ui.use_activity_cursor", false)) {
@@ -3588,6 +3601,8 @@ EventStateManager::UpdateCursor(nsPresContext* aPresContext,
   if (aTargetFrame) {
     SetCursor(cursor, container, haveHotspot, hotspotX, hotspotY,
               aTargetFrame->GetNearestWidget(), false);
+    gLastCursorSourceFrame = aTargetFrame;
+    gLastCursorUpdateTime = TimeStamp::NowLoRes();
   }
 
   if (mLockCursor || NS_STYLE_CURSOR_AUTO != cursor) {
