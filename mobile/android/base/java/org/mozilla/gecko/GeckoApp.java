@@ -1158,6 +1158,9 @@ public abstract class GeckoApp
         GeckoAppShell.setContextGetter(this);
         GeckoAppShell.setApplicationContext(getApplicationContext());
         GeckoAppShell.setGeckoInterface(this);
+        // We need to set the notification client before launching Gecko, since Gecko could start
+        // sending notifications immediately after startup, which we don't want to lose/crash on.
+        GeckoAppShell.setNotificationClient(makeNotificationClient());
 
         Tabs.getInstance().attachToContext(this);
         try {
@@ -1431,7 +1434,6 @@ public abstract class GeckoApp
             }
         });
 
-        GeckoAppShell.setNotificationClient(makeNotificationClient());
         IntentHelper.init(this);
     }
 
