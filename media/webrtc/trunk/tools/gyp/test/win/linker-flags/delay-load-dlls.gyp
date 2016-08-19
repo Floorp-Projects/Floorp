@@ -12,6 +12,10 @@
         }
       },
       'sources': ['delay-load.cc'],
+      'libraries': [
+        'delayimp.lib',
+        'shell32.lib',
+      ],
     },
     {
       'target_name': 'test_dld_shell32',
@@ -22,6 +26,10 @@
         }
       },
       'sources': ['delay-load.cc'],
+      'libraries': [
+        'delayimp.lib',
+        'shell32.lib',
+      ],
     },
   ]
 }

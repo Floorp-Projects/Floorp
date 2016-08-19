@@ -5,7 +5,7 @@
 {
   'targets': [
     {
-			'toolset': 'host',
+      'toolset': 'host',
       'target_name': 'hello',
       'type': 'executable',
       'sources': [

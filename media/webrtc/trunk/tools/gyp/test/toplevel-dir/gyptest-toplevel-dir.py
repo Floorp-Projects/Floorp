@@ -20,7 +20,7 @@ test.run_gyp('main.gyp', '--toplevel-dir=..', chdir='src/sub1')
 
 toplevel_dir = 'src'
 
-test.build('all', chdir=toplevel_dir)
+test.build('sub1/main.gyp', test.ALL, chdir=toplevel_dir)
 
 test.built_file_must_exist('prog1', type=test.EXECUTABLE, chdir=toplevel_dir)
 

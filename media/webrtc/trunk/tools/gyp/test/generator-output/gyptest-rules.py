@@ -10,8 +10,7 @@ Verifies --generator-output= behavior when using rules.
 
 import TestGyp
 
-# Ninja and Android don't support --generator-output.
-test = TestGyp.TestGyp(formats=['!ninja', '!android'])
+test = TestGyp.TestGyp()
 
 test.writable(test.workpath('rules'), False)
 
