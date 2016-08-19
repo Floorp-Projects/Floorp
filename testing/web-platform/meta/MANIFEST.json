@@ -37667,6 +37667,12 @@
             "path": "web-animations/timing-model/animation-effects/phases-and-states.html",
             "url": "/web-animations/timing-model/animation-effects/phases-and-states.html"
           }
+        ],
+        "web-animations/timing-model/animations/updating-the-finished-state.html": [
+          {
+            "path": "web-animations/timing-model/animations/updating-the-finished-state.html",
+            "url": "/web-animations/timing-model/animations/updating-the-finished-state.html"
+          }
         ]
       }
     },
