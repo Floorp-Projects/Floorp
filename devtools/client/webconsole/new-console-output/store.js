@@ -7,12 +7,9 @@ const {FilterState} = require("devtools/client/webconsole/new-console-output/red
 const {PrefState} = require("devtools/client/webconsole/new-console-output/reducers/prefs");
 const { combineReducers, createStore } = require("devtools/client/shared/vendor/redux");
 const { reducers } = require("./reducers/index");
+const Services = require("Services");
 
-function configureStore(Services) {
-  if (!Services) {
-    Services = require("Services");
-  }
-
+function configureStore() {
   const initialState = {
     prefs: new PrefState({
       logLimit: Math.max(Services.prefs.getIntPref("devtools.hud.loglimit"), 1),

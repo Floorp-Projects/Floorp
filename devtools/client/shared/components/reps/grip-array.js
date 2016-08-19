@@ -69,19 +69,11 @@ define(function (require, exports, module) {
 
           delim = (i == delimMax ? "" : ", ");
 
-          if (value === array) {
-            items.push(Reference({
-              key: i,
-              object: value,
-              delim: delim}
-            ));
-          } else {
-            items.push(GripArrayItem(Object.assign({}, this.props, {
-              key: i,
-              object: value,
-              delim: delim}
-            )));
-          }
+          items.push(GripArrayItem(Object.assign({}, this.props, {
+            key: i,
+            object: value,
+            delim: delim}
+          )));
         } catch (exc) {
           items.push(GripArrayItem(Object.assign({}, this.props, {
             object: exc,
@@ -173,21 +165,6 @@ define(function (require, exports, module) {
             mode: "tiny"
           })),
           this.props.delim
-        )
-      );
-    }
-  }));
-
-  /**
-   * Renders cycle references in an array.
-   */
-  let Reference = React.createFactory(React.createClass({
-    displayName: "Reference",
-
-    render: function () {
-      return (
-        span({title: "Circular reference"},
-          "[…]"
         )
       );
     }
