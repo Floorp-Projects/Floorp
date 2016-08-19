@@ -341,7 +341,8 @@ this.FxAccountsWebChannelHelpers.prototype = {
         log.info("changePassword ignoring unsupported field", name);
       }
     }
-    return this._fxAccounts.updateUserAccountData(newCredentials);
+    return this._fxAccounts.updateUserAccountData(newCredentials)
+      .then(() => this._fxAccounts.updateDeviceRegistration());
   },
 
   /**
