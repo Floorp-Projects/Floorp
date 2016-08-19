@@ -1116,6 +1116,15 @@ GCRuntime::finish()
     nursery.printTotalProfileTimes();
 }
 
+void
+GCRuntime::finishRoots()
+{
+    if (rootsHash.initialized())
+        rootsHash.clear();
+
+    rt->contextFromMainThread()->roots.finishPersistentRoots();
+}
+
 bool
 GCRuntime::setParameter(JSGCParamKey key, uint32_t value, AutoLockGC& lock)
 {
@@ -2522,7 +2531,7 @@ GCRuntime::updatePointersToRelocatedCells(Zone* zone, AutoLockForExclusiveAccess
 
     // Mark roots to update them.
     {
-        traceRuntimeForMajorGC(&trc, lock);
+        markRuntime(&trc, MarkRuntime, lock);
 
         gcstats::AutoPhase ap(stats, gcstats::PHASE_MARK_ROOTS);
         Debugger::markAll(&trc);
@@ -3884,7 +3893,7 @@ GCRuntime::beginMarkPhase(JS::gcreason::Reason reason, AutoLockForExclusiveAcces
         }
     }
 
-    traceRuntimeForMajorGC(gcmarker, lock);
+    markRuntime(gcmarker, MarkRuntime, lock);
 
     gcstats::AutoPhase ap2(stats, gcstats::PHASE_MARK_ROOTS);
 
@@ -4169,7 +4178,7 @@ js::gc::MarkingValidator::nonIncrementalMark(AutoLockForExclusiveAccess& lock)
                 chunk->bitmap.clear();
         }
 
-        gc->traceRuntimeForMajorGC(gcmarker, lock);
+        gc->markRuntime(gcmarker, GCRuntime::MarkRuntime, lock);
 
         gc->incrementalState = State::Mark;
         auto unlimited = SliceBudget::unlimited();
