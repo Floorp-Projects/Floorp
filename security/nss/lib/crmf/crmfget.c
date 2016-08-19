@@ -204,8 +204,7 @@ crmf_copy_control(PLArenaPool *poolp, CRMFControl *srcControl)
     CRMFControl *newControl;
     SECStatus rv;
 
-    newControl = (poolp == NULL) ? PORT_ZNew(CRMFControl) :
-                                 PORT_ArenaZNew(poolp, CRMFControl);
+    newControl = (poolp == NULL) ? PORT_ZNew(CRMFControl) : PORT_ArenaZNew(poolp, CRMFControl);
     if (newControl == NULL) {
         goto loser;
     }
@@ -290,8 +289,7 @@ crmf_copy_cert_request(PLArenaPool *poolp, CRMFCertRequest *srcReq)
     if (srcReq == NULL) {
         return NULL;
     }
-    newReq = (poolp == NULL) ? PORT_ZNew(CRMFCertRequest) :
-                             PORT_ArenaZNew(poolp, CRMFCertRequest);
+    newReq = (poolp == NULL) ? PORT_ZNew(CRMFCertRequest) : PORT_ArenaZNew(poolp, CRMFCertRequest);
     if (newReq == NULL) {
         goto loser;
     }

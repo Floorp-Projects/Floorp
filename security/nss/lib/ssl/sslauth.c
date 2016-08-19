@@ -1,3 +1,4 @@
+/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -96,8 +97,6 @@ SSL_SecurityStatus(PRFileDesc *fd, int *op, char **cp, int *kp0, int *kp1,
                    char **ip, char **sp)
 {
     sslSocket *ss;
-    const char *cipherName;
-    PRBool isDes = PR_FALSE;
 
     ss = ssl_FindSocket(fd);
     if (!ss) {
@@ -121,31 +120,31 @@ SSL_SecurityStatus(PRFileDesc *fd, int *op, char **cp, int *kp0, int *kp1,
     }
 
     if (ss->opt.useSecurity && ss->enoughFirstHsDone) {
-        cipherName = ssl3_cipherName[ss->sec.cipherType];
-        PORT_Assert(cipherName);
-        if (cipherName) {
-            if (PORT_Strstr(cipherName, "DES"))
-                isDes = PR_TRUE;
+        const ssl3BulkCipherDef *bulkCipherDef;
+        PRBool isDes = PR_FALSE;
 
-            if (cp) {
-                *cp = PORT_Strdup(cipherName);
-            }
+        bulkCipherDef = ssl_GetBulkCipherDef(ss->ssl3.hs.suite_def);
+        if (cp) {
+            *cp = PORT_Strdup(bulkCipherDef->short_name);
+        }
+        if (PORT_Strstr(bulkCipherDef->short_name, "DES")) {
+            isDes = PR_TRUE;
         }
 
         if (kp0) {
-            *kp0 = ss->sec.keyBits;
+            *kp0 = bulkCipherDef->key_size * 8;
             if (isDes)
                 *kp0 = (*kp0 * 7) / 8;
         }
         if (kp1) {
-            *kp1 = ss->sec.secretKeyBits;
+            *kp1 = bulkCipherDef->secret_key_size * 8;
             if (isDes)
                 *kp1 = (*kp1 * 7) / 8;
         }
         if (op) {
-            if (ss->sec.keyBits == 0) {
+            if (bulkCipherDef->key_size == 0) {
                 *op = SSL_SECURITY_STATUS_OFF;
-            } else if (ss->sec.secretKeyBits < 90) {
+            } else if (bulkCipherDef->secret_key_size * 8 < 90) {
                 *op = SSL_SECURITY_STATUS_ON_LOW;
             } else {
                 *op = SSL_SECURITY_STATUS_ON_HIGH;

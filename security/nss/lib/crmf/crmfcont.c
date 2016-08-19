@@ -158,8 +158,7 @@ crmf_copy_encryptedvalue_secalg(PLArenaPool *poolp,
     SECAlgorithmID *newAlgId;
     SECStatus rv;
 
-    newAlgId = (poolp != NULL) ? PORT_ArenaZNew(poolp, SECAlgorithmID) :
-                               PORT_ZNew(SECAlgorithmID);
+    newAlgId = (poolp != NULL) ? PORT_ArenaZNew(poolp, SECAlgorithmID) : PORT_ZNew(SECAlgorithmID);
     if (newAlgId == NULL) {
         return SECFailure;
     }
@@ -260,8 +259,7 @@ crmf_copy_encryptedkey(PLArenaPool *poolp,
         case crmfEnvelopedDataChoice:
             destEncrKey->value.envelopedData =
                 SEC_PKCS7CopyContentInfo(srcEncrKey->value.envelopedData);
-            rv = (destEncrKey->value.envelopedData != NULL) ? SECSuccess :
-                                                            SECFailure;
+            rv = (destEncrKey->value.envelopedData != NULL) ? SECSuccess : SECFailure;
             break;
         default:
             rv = SECFailure;

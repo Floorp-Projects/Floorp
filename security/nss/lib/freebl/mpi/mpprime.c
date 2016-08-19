@@ -377,10 +377,13 @@ mp_err mpp_sieve(mp_int *trial, const mp_digit *primes, mp_size nPrimes,
     if (rem == 0) {
       offset = 0;
     } else {
-      offset = prime - (rem / 2);
+      offset = prime - rem;
     }
-    for (i = offset; i < nSieve ; i += prime) {
-      sieve[i] = 1;
+
+    for (i = offset; i < nSieve * 2; i += prime) {
+      if (i % 2 == 0) {
+        sieve[i / 2] = 1;
+      }
     }
   }
 

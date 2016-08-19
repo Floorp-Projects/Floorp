@@ -502,8 +502,7 @@ do_list_certs(const char *progName, int log)
 
         SECU_PrintCertNickname(node, stderr);
         if (log) {
-            fprintf(stderr, "*	Slot=%s*\n", cert->slot ?
-                                                        PK11_GetTokenName(cert->slot)
+            fprintf(stderr, "*	Slot=%s*\n", cert->slot ? PK11_GetTokenName(cert->slot)
                                                         : "none");
             fprintf(stderr, "*	Nickname=%s*\n", cert->nickname);
             fprintf(stderr, "*	Subject=<%s>*\n", cert->subjectName);

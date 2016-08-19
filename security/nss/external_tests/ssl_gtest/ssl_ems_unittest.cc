@@ -4,16 +4,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "secerr.h"
 #include "ssl.h"
+#include "secerr.h"
 #include "sslerr.h"
 #include "sslproto.h"
 
-#include "scoped_ptrs.h"
-#include "tls_parser.h"
-#include "tls_filter.h"
-#include "tls_connect.h"
 #include "gtest_utils.h"
+#include "scoped_ptrs.h"
+#include "tls_connect.h"
+#include "tls_filter.h"
+#include "tls_parser.h"
 
 namespace nss_test {
 
@@ -61,22 +61,19 @@ TEST_P(TlsConnectGenericPre13, ConnectExtendedMasterSecretTicket) {
   Connect();
 }
 
-TEST_P(TlsConnectGenericPre13,
-       ConnectExtendedMasterSecretClientOnly) {
+TEST_P(TlsConnectGenericPre13, ConnectExtendedMasterSecretClientOnly) {
   client_->EnableExtendedMasterSecret();
   ExpectExtendedMasterSecret(false);
   Connect();
 }
 
-TEST_P(TlsConnectGenericPre13,
-       ConnectExtendedMasterSecretServerOnly) {
+TEST_P(TlsConnectGenericPre13, ConnectExtendedMasterSecretServerOnly) {
   server_->EnableExtendedMasterSecret();
   ExpectExtendedMasterSecret(false);
   Connect();
 }
 
-TEST_P(TlsConnectGenericPre13,
-       ConnectExtendedMasterSecretResumeWithout) {
+TEST_P(TlsConnectGenericPre13, ConnectExtendedMasterSecretResumeWithout) {
   EnableExtendedMasterSecret();
   Connect();
 
@@ -89,8 +86,7 @@ TEST_P(TlsConnectGenericPre13,
   EXPECT_EQ(kTlsAlertHandshakeFailure, alert_recorder->description());
 }
 
-TEST_P(TlsConnectGenericPre13,
-       ConnectNormalResumeWithExtendedMasterSecret) {
+TEST_P(TlsConnectGenericPre13, ConnectNormalResumeWithExtendedMasterSecret) {
   ConfigureSessionCache(RESUME_SESSIONID, RESUME_SESSIONID);
   ExpectExtendedMasterSecret(false);
   Connect();
@@ -101,4 +97,4 @@ TEST_P(TlsConnectGenericPre13,
   Connect();
 }
 
-} // namespace nss_test
+}  // namespace nss_test

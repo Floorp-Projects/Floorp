@@ -3818,12 +3818,12 @@ done:
     return (retval);
 }
 
-#ifdef LATER /*
-              * XXX This function is not currently used, but will
-              * be needed later when we do revocation checking of
-              * the responder certificate.  Of course, it may need
-              * revising then, if the cert extension interface has
-              * changed.  (Hopefully it will!)
+#ifdef LATER /*                                                    \
+              * XXX This function is not currently used, but will  \
+              * be needed later when we do revocation checking of  \
+              * the responder certificate.  Of course, it may need \
+              * revising then, if the cert extension interface has \
+              * changed.  (Hopefully it will!)                     \
               */
 
 /* Checks a certificate to see if it has the OCSP no check extension. */
@@ -5999,13 +5999,7 @@ CERT_EnableOCSPDefaultResponder(CERTCertDBHandle *handle)
     rv = CERT_VerifyCertificateNow(handle, cert, PR_TRUE,
                                    certificateUsageCheckAllUsages,
                                    NULL, &usage);
-    if (rv != SECSuccess || (usage & (certificateUsageSSLClient |
-                                      certificateUsageSSLServer |
-                                      certificateUsageSSLServerWithStepUp |
-                                      certificateUsageEmailSigner |
-                                      certificateUsageObjectSigner |
-                                      certificateUsageStatusResponder |
-                                      certificateUsageSSLCA)) == 0) {
+    if (rv != SECSuccess || (usage & (certificateUsageSSLClient | certificateUsageSSLServer | certificateUsageSSLServerWithStepUp | certificateUsageEmailSigner | certificateUsageObjectSigner | certificateUsageStatusResponder | certificateUsageSSLCA)) == 0) {
         PORT_SetError(SEC_ERROR_OCSP_RESPONDER_CERT_INVALID);
         return SECFailure;
     }

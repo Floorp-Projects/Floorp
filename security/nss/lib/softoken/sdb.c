@@ -6,11 +6,11 @@
  *
  * For more information about PKCS 11 See PKCS 11 Token Inteface Standard.
  *   This implementation has two slots:
- *	slot 1 is our generic crypto support. It does not require login.
- *   It supports Public Key ops, and all they bulk ciphers and hashes. 
- *   It can also support Private Key ops for imported Private keys. It does 
+ *      slot 1 is our generic crypto support. It does not require login.
+ *   It supports Public Key ops, and all they bulk ciphers and hashes.
+ *   It can also support Private Key ops for imported Private keys. It does
  *   not have any token storage.
- *	slot 2 is our private key support. It requires a login before use. It
+ *      slot 2 is our private key support. It requires a login before use. It
  *   can store Private Keys and Certs as token objects. Currently only private
  *   keys and their associated Certificates are saved on the token.
  *
@@ -47,16 +47,16 @@
  */
 static PRLock *sqlite_lock = NULL;
 
-#define LOCK_SQLITE()  PR_Lock(sqlite_lock);
-#define UNLOCK_SQLITE()  PR_Unlock(sqlite_lock);
+#define LOCK_SQLITE() PR_Lock(sqlite_lock);
+#define UNLOCK_SQLITE() PR_Unlock(sqlite_lock);
 #else
-#define LOCK_SQLITE()  
-#define UNLOCK_SQLITE()  
+#define LOCK_SQLITE()
+#define UNLOCK_SQLITE()
 #endif
 
 typedef enum {
-	SDB_CERT = 1,
-	SDB_KEY = 2
+    SDB_CERT = 1,
+    SDB_KEY = 2
 } sdbDataType;
 
 /*
@@ -70,19 +70,19 @@ typedef enum {
  * SDB_MAX_BUSY_RETRIES specifies how many times the sdb_ will retry on
  *  a busy condition.
  *
- * SDB_SQLITE_BUSY_TIMEOUT affects all opertions, both manual 
+ * SDB_SQLITE_BUSY_TIMEOUT affects all opertions, both manual
  *   (prepare/step/reset/finalize) and automatic (sqlite3_exec()).
  * SDB_BUSY_RETRY_TIME and SDB_MAX_BUSY_RETRIES only affect manual operations
- * 
- * total wait time for automatic operations: 
+ *
+ * total wait time for automatic operations:
  *   1 second (SDB_SQLITE_BUSY_TIMEOUT/1000).
- * total wait time for manual operations: 
+ * total wait time for manual operations:
  *   (1 second + 5 seconds) * 10 = 60 seconds.
  * (SDB_SQLITE_BUSY_TIMEOUT/1000 + SDB_BUSY_RETRY_TIME)*SDB_MAX_BUSY_RETRIES
  */
 #define SDB_SQLITE_BUSY_TIMEOUT 1000 /* milliseconds */
-#define SDB_BUSY_RETRY_TIME        5 /* seconds */
-#define SDB_MAX_BUSY_RETRIES      10
+#define SDB_BUSY_RETRY_TIME 5        /* seconds */
+#define SDB_MAX_BUSY_RETRIES 10
 
 /*
  * Note on use of sqlReadDB: Only one thread at a time may have an actual
@@ -98,20 +98,20 @@ typedef enum {
  * other operations like NSC_GetAttributeValue */
 
 struct SDBPrivateStr {
-    char *sqlDBName;		/* invariant, path to this database */
-    sqlite3 *sqlXactDB;		/* access protected by dbMon, use protected
-                                 * by the transaction. Current transaction db*/
-    PRThread *sqlXactThread;	/* protected by dbMon,
-			         * current transaction thread */
-    sqlite3 *sqlReadDB;		/* use protected by dbMon, value invariant */
-    PRIntervalTime lastUpdateTime;  /* last time the cache was updated */
-    PRIntervalTime updateInterval;  /* how long the cache can go before it 
-                                     * must be updated again */
-    sdbDataType type;		/* invariant, database type */
-    char *table;	        /* invariant, SQL table which contains the db */
-    char *cacheTable;	        /* invariant, SQL table cache of db */
-    PRMonitor *dbMon;		/* invariant, monitor to protect 
-				 * sqlXact* fields, and use of the sqlReadDB */
+    char *sqlDBName;               /* invariant, path to this database */
+    sqlite3 *sqlXactDB;            /* access protected by dbMon, use protected
+                                    * by the transaction. Current transaction db*/
+    PRThread *sqlXactThread;       /* protected by dbMon,
+                                    * current transaction thread */
+    sqlite3 *sqlReadDB;            /* use protected by dbMon, value invariant */
+    PRIntervalTime lastUpdateTime; /* last time the cache was updated */
+    PRIntervalTime updateInterval; /* how long the cache can go before it
+                                    * must be updated again */
+    sdbDataType type;              /* invariant, database type */
+    char *table;                   /* invariant, SQL table which contains the db */
+    char *cacheTable;              /* invariant, SQL table cache of db */
+    PRMonitor *dbMon;              /* invariant, monitor to protect
+                                    * sqlXact* fields, and use of the sqlReadDB */
 };
 
 typedef struct SDBPrivateStr SDBPrivate;
@@ -130,7 +130,7 @@ static const CK_ATTRIBUTE_TYPE known_attributes[] = {
     CKA_VERIFY, CKA_VERIFY_RECOVER, CKA_DERIVE, CKA_START_DATE, CKA_END_DATE,
     CKA_MODULUS, CKA_MODULUS_BITS, CKA_PUBLIC_EXPONENT, CKA_PRIVATE_EXPONENT,
     CKA_PRIME_1, CKA_PRIME_2, CKA_EXPONENT_1, CKA_EXPONENT_2, CKA_COEFFICIENT,
-    CKA_PRIME, CKA_SUBPRIME, CKA_BASE, CKA_PRIME_BITS, 
+    CKA_PRIME, CKA_SUBPRIME, CKA_BASE, CKA_PRIME_BITS,
     CKA_SUB_PRIME_BITS, CKA_VALUE_BITS, CKA_VALUE_LEN, CKA_EXTRACTABLE,
     CKA_LOCAL, CKA_NEVER_EXTRACTABLE, CKA_ALWAYS_SENSITIVE,
     CKA_KEY_GEN_MECHANISM, CKA_MODIFIABLE, CKA_EC_PARAMS,
@@ -156,8 +156,8 @@ static const CK_ATTRIBUTE_TYPE known_attributes[] = {
     CKA_NETSCAPE_DB, CKA_NETSCAPE_TRUST, CKA_NSS_OVERRIDE_EXTENSIONS
 };
 
-static int known_attributes_size= sizeof(known_attributes)/
-			   sizeof(known_attributes[0]);
+static int known_attributes_size = sizeof(known_attributes) /
+                                   sizeof(known_attributes[0]);
 
 /* Magic for an explicit NULL. NOTE: ideally this should be
  * out of band data. Since it's not completely out of band, pick
@@ -172,20 +172,20 @@ const unsigned char SQLITE_EXPLICIT_NULL[] = { 0xa5, 0x0, 0x5a };
 /*
  * determine when we've completed our tasks
  */
-static int 
+static int
 sdb_done(int err, int *count)
 {
     /* allow as many rows as the database wants to give */
     if (err == SQLITE_ROW) {
-	*count = 0;
-	return 0;
+        *count = 0;
+        return 0;
     }
     if (err != SQLITE_BUSY) {
-	return 1;
+        return 1;
     }
     /* err == SQLITE_BUSY, Dont' retry forever in this case */
     if (++(*count) >= SDB_MAX_BUSY_RETRIES) {
-	return 1;
+        return 1;
     }
     return 0;
 }
@@ -228,7 +228,7 @@ sdb_getFallbackTempDir(void)
         "/var/tmp",
         "/usr/tmp",
         "/tmp",
-        NULL     /* List terminator */
+        NULL /* List terminator */
     };
     unsigned int i;
     struct stat buf;
@@ -239,10 +239,14 @@ sdb_getFallbackTempDir(void)
 
     for (i = 0; i < PR_ARRAY_SIZE(azDirs); i++) {
         zDir = azDirs[i];
-        if (zDir == NULL) continue;
-        if (stat(zDir, &buf)) continue;
-        if (!S_ISDIR(buf.st_mode)) continue;
-        if (access(zDir, 07)) continue;
+        if (zDir == NULL)
+            continue;
+        if (stat(zDir, &buf))
+            continue;
+        if (!S_ISDIR(buf.st_mode))
+            continue;
+        if (access(zDir, 07))
+            continue;
         break;
     }
 
@@ -269,33 +273,33 @@ sdb_getTempDir(sqlite3 *sqlDB)
 
     /* Obtain temporary filename in sqlite's directory for temporary tables */
     sqlrv = sqlite3_file_control(sqlDB, 0, SQLITE_FCNTL_TEMPFILENAME,
-				 (void*)&tempName);
+                                 (void *)&tempName);
     if (sqlrv == SQLITE_NOTFOUND) {
-	/* SQLITE_FCNTL_TEMPFILENAME not implemented because we are using
-	 * an older SQLite. */
-	return sdb_getFallbackTempDir();
+        /* SQLITE_FCNTL_TEMPFILENAME not implemented because we are using
+         * an older SQLite. */
+        return sdb_getFallbackTempDir();
     }
     if (sqlrv != SQLITE_OK) {
-	return NULL;
+        return NULL;
     }
 
     /* We'll extract the temporary directory from tempName */
     foundSeparator = PORT_Strrchr(tempName, PR_GetDirectorySeparator());
     if (foundSeparator) {
-	/* We shorten the temp filename string to contain only
-	  * the directory name (including the trailing separator).
-	  * We know the byte after the foundSeparator position is
-	  * safe to use, in the shortest scenario it contains the
-	  * end-of-string byte.
-	  * By keeping the separator at the found position, it will
-	  * even work if tempDir consists of the separator, only.
-	  * (In this case the toplevel directory will be used for
-	  * access speed testing). */
-	++foundSeparator;
-	*foundSeparator = 0;
+        /* We shorten the temp filename string to contain only
+         * the directory name (including the trailing separator).
+         * We know the byte after the foundSeparator position is
+         * safe to use, in the shortest scenario it contains the
+         * end-of-string byte.
+         * By keeping the separator at the found position, it will
+         * even work if tempDir consists of the separator, only.
+         * (In this case the toplevel directory will be used for
+         * access speed testing). */
+        ++foundSeparator;
+        *foundSeparator = 0;
 
-	/* Now we copy the directory name for our caller */
-	result = PORT_Strdup(tempName);
+        /* Now we copy the directory name for our caller */
+        result = PORT_Strdup(tempName);
     }
 
     sqlite3_free(tempName);
@@ -309,47 +313,45 @@ static CK_RV
 sdb_mapSQLError(sdbDataType type, int sqlerr)
 {
     switch (sqlerr) {
-    /* good matches */
-    case SQLITE_OK:
-    case SQLITE_DONE:
-	return CKR_OK;
-    case SQLITE_NOMEM:
-	return CKR_HOST_MEMORY;
-    case SQLITE_READONLY:
-	return CKR_TOKEN_WRITE_PROTECTED;
-    /* close matches */
-    case SQLITE_AUTH:
-    case SQLITE_PERM:
-	/*return CKR_USER_NOT_LOGGED_IN; */
-    case SQLITE_CANTOPEN:
-    case SQLITE_NOTFOUND:
-	/* NSS distiguishes between failure to open the cert and the key db */
-	return type == SDB_CERT ? 
-		CKR_NETSCAPE_CERTDB_FAILED : CKR_NETSCAPE_KEYDB_FAILED;
-    case SQLITE_IOERR:
-	return CKR_DEVICE_ERROR;
-    default:
-	break;
+        /* good matches */
+        case SQLITE_OK:
+        case SQLITE_DONE:
+            return CKR_OK;
+        case SQLITE_NOMEM:
+            return CKR_HOST_MEMORY;
+        case SQLITE_READONLY:
+            return CKR_TOKEN_WRITE_PROTECTED;
+        /* close matches */
+        case SQLITE_AUTH:
+        case SQLITE_PERM:
+        /*return CKR_USER_NOT_LOGGED_IN; */
+        case SQLITE_CANTOPEN:
+        case SQLITE_NOTFOUND:
+            /* NSS distiguishes between failure to open the cert and the key db */
+            return type == SDB_CERT ? CKR_NETSCAPE_CERTDB_FAILED : CKR_NETSCAPE_KEYDB_FAILED;
+        case SQLITE_IOERR:
+            return CKR_DEVICE_ERROR;
+        default:
+            break;
     }
     return CKR_GENERAL_ERROR;
 }
 
-
 /*
  * build up database name from a directory, prefix, name, version and flags.
  */
-static char *sdb_BuildFileName(const char * directory, 
-			const char *prefix, const char *type, 
-			int version)
+static char *
+sdb_BuildFileName(const char *directory,
+                  const char *prefix, const char *type,
+                  int version)
 {
     char *dbname = NULL;
     /* build the full dbname */
     dbname = sqlite3_mprintf("%s%c%s%s%d.db", directory,
-			     (int)(unsigned char)PR_GetDirectorySeparator(),
-			     prefix, type, version);
+                             (int)(unsigned char)PR_GetDirectorySeparator(),
+                             prefix, type, version);
     return dbname;
 }
-
 
 /*
  * find out how expensive the access system call is for non-existant files
@@ -368,7 +370,7 @@ sdb_measureAccess(const char *directory)
 
     /* no directory, just return one */
     if (directory == NULL) {
-	return 1;
+        return 1;
     }
 
     /* our calculation assumes time is a 4 bytes == 32 bit integer */
@@ -376,10 +378,9 @@ sdb_measureAccess(const char *directory)
 
     directoryLength = strlen(directory);
 
-    maxTempLen = directoryLength + strlen(doesntExistName)
-		 + 1 /* potential additional separator char */
-		 + 11 /* max chars for 32 bit int plus potential sign */
-		 + 1; /* zero terminator */
+    maxTempLen = directoryLength + strlen(doesntExistName) + 1 /* potential additional separator char */
+                 + 11                                          /* max chars for 32 bit int plus potential sign */
+                 + 1;                                          /* zero terminator */
 
     temp = PORT_Alloc(maxTempLen);
     if (!temp) {
@@ -392,7 +393,7 @@ sdb_measureAccess(const char *directory)
 
     strcpy(temp, directory);
     if (directory[directoryLength - 1] != PR_GetDirectorySeparator()) {
-	temp[directoryLength++] = PR_GetDirectorySeparator();
+        temp[directoryLength++] = PR_GetDirectorySeparator();
     }
     tempStartOfFilename = temp + directoryLength;
     maxFileNameLen = maxTempLen - directoryLength;
@@ -400,22 +401,22 @@ sdb_measureAccess(const char *directory)
     /* measure number of Access operations that can be done in 33 milliseconds
      * (1/30'th of a second), or 10000 operations, which ever comes first.
      */
-    time =  PR_IntervalNow();
-    for (i=0; i < 10000u; i++) { 
-	PRIntervalTime next;
+    time = PR_IntervalNow();
+    for (i = 0; i < 10000u; i++) {
+        PRIntervalTime next;
 
-	/* We'll use the variable part first in the filename string, just in
-	 * case it's longer than assumed, so if anything gets cut off, it
-	 * will be cut off from the constant part.
-	 * This code assumes the directory name at the beginning of
-	 * temp remains unchanged during our loop. */
+        /* We'll use the variable part first in the filename string, just in
+         * case it's longer than assumed, so if anything gets cut off, it
+         * will be cut off from the constant part.
+         * This code assumes the directory name at the beginning of
+         * temp remains unchanged during our loop. */
         PR_snprintf(tempStartOfFilename, maxFileNameLen,
-		    ".%lu%s", (PRUint32)(time+i), doesntExistName);
-	PR_Access(temp, PR_ACCESS_EXISTS);
-	next = PR_IntervalNow();
-	delta = next - time;
-	if (delta >= duration)
-	    break;
+                    ".%lu%s", (PRUint32)(time + i), doesntExistName);
+        PR_Access(temp, PR_ACCESS_EXISTS);
+        next = PR_IntervalNow();
+        delta = next - time;
+        if (delta >= duration)
+            break;
     }
 
     PORT_Free(temp);
@@ -434,52 +435,52 @@ sdb_measureAccess(const char *directory)
  */
 static const char DROP_CACHE_CMD[] = "DROP TABLE %s";
 static const char CREATE_CACHE_CMD[] =
-  "CREATE TEMPORARY TABLE %s AS SELECT * FROM %s";
-static const char CREATE_ISSUER_INDEX_CMD[] = 
-  "CREATE INDEX issuer ON %s (a81)";
-static const char CREATE_SUBJECT_INDEX_CMD[] = 
-  "CREATE INDEX subject ON %s (a101)";
+    "CREATE TEMPORARY TABLE %s AS SELECT * FROM %s";
+static const char CREATE_ISSUER_INDEX_CMD[] =
+    "CREATE INDEX issuer ON %s (a81)";
+static const char CREATE_SUBJECT_INDEX_CMD[] =
+    "CREATE INDEX subject ON %s (a101)";
 static const char CREATE_LABEL_INDEX_CMD[] = "CREATE INDEX label ON %s (a3)";
 static const char CREATE_ID_INDEX_CMD[] = "CREATE INDEX ckaid ON %s (a102)";
 
 static CK_RV
-sdb_buildCache(sqlite3 *sqlDB, sdbDataType type, 
-		const char *cacheTable, const char *table)
+sdb_buildCache(sqlite3 *sqlDB, sdbDataType type,
+               const char *cacheTable, const char *table)
 {
     char *newStr;
     int sqlerr = SQLITE_OK;
 
     newStr = sqlite3_mprintf(CREATE_CACHE_CMD, cacheTable, table);
     if (newStr == NULL) {
-	return CKR_HOST_MEMORY;
+        return CKR_HOST_MEMORY;
     }
     sqlerr = sqlite3_exec(sqlDB, newStr, NULL, 0, NULL);
     sqlite3_free(newStr);
     if (sqlerr != SQLITE_OK) {
-	return sdb_mapSQLError(type, sqlerr); 
+        return sdb_mapSQLError(type, sqlerr);
     }
     /* failure to create the indexes is not an issue */
     newStr = sqlite3_mprintf(CREATE_ISSUER_INDEX_CMD, cacheTable);
     if (newStr == NULL) {
-	return CKR_OK;
+        return CKR_OK;
     }
     sqlerr = sqlite3_exec(sqlDB, newStr, NULL, 0, NULL);
     sqlite3_free(newStr);
     newStr = sqlite3_mprintf(CREATE_SUBJECT_INDEX_CMD, cacheTable);
     if (newStr == NULL) {
-	return CKR_OK;
+        return CKR_OK;
     }
     sqlerr = sqlite3_exec(sqlDB, newStr, NULL, 0, NULL);
     sqlite3_free(newStr);
     newStr = sqlite3_mprintf(CREATE_LABEL_INDEX_CMD, cacheTable);
     if (newStr == NULL) {
-	return CKR_OK;
+        return CKR_OK;
     }
     sqlerr = sqlite3_exec(sqlDB, newStr, NULL, 0, NULL);
     sqlite3_free(newStr);
     newStr = sqlite3_mprintf(CREATE_ID_INDEX_CMD, cacheTable);
     if (newStr == NULL) {
-	return CKR_OK;
+        return CKR_OK;
     }
     sqlerr = sqlite3_exec(sqlDB, newStr, NULL, 0, NULL);
     sqlite3_free(newStr);
@@ -500,24 +501,23 @@ sdb_updateCache(SDBPrivate *sdb_p)
     /* drop the old table */
     newStr = sqlite3_mprintf(DROP_CACHE_CMD, sdb_p->cacheTable);
     if (newStr == NULL) {
-	return CKR_HOST_MEMORY;
+        return CKR_HOST_MEMORY;
     }
     sqlerr = sqlite3_exec(sdb_p->sqlReadDB, newStr, NULL, 0, NULL);
     sqlite3_free(newStr);
-    if ((sqlerr != SQLITE_OK) && (sqlerr != SQLITE_ERROR )) {
+    if ((sqlerr != SQLITE_OK) && (sqlerr != SQLITE_ERROR)) {
         /* something went wrong with the drop, don't try to refresh...
          * NOTE: SQLITE_ERROR is returned if the table doesn't exist. In
          * that case, we just continue on and try to reload it */
-	return sdb_mapSQLError(sdb_p->type, sqlerr); 
+        return sdb_mapSQLError(sdb_p->type, sqlerr);
     }
-	
 
     /* set up the new table */
-    error = sdb_buildCache(sdb_p->sqlReadDB,sdb_p->type,
-				sdb_p->cacheTable,sdb_p->table );
+    error = sdb_buildCache(sdb_p->sqlReadDB, sdb_p->type,
+                           sdb_p->cacheTable, sdb_p->table);
     if (error == CKR_OK) {
-	/* we have a new cache! */
-	sdb_p->lastUpdateTime = PR_IntervalNow();
+        /* we have a new cache! */
+        sdb_p->lastUpdateTime = PR_IntervalNow();
     }
     return error;
 }
@@ -535,12 +535,12 @@ sdb_updateCache(SDBPrivate *sdb_p)
  *  in the open and close. Also continually opening and closing the database
  *  defeats the cache code as the cache table is lost on close (thus
  *  requiring us to have to reinitialize the cache every operation).
- * 
+ *
  *  An execption to the shared handle is transations. All writes happen
- *  through a transaction. When we are in  a transaction, we must use the 
- *  same database pointer for that entire transation. In this case we save 
- *  the transaction database and use it for all accesses on the transaction 
- *  thread. Other threads use the common database.  
+ *  through a transaction. When we are in  a transaction, we must use the
+ *  same database pointer for that entire transation. In this case we save
+ *  the transaction database and use it for all accesses on the transaction
+ *  thread. Other threads use the common database.
  *
  *  There can only be once active transaction on the database at a time.
  *
@@ -555,7 +555,7 @@ sdb_updateCache(SDBPrivate *sdb_p)
  *  and read operations return either the physical table or the cache
  *  depending on whether or not the cache exists.
  */
-static CK_RV 
+static CK_RV
 sdb_openDBLocal(SDBPrivate *sdb_p, sqlite3 **sqlDB, const char **table)
 {
     *sqlDB = NULL;
@@ -563,15 +563,15 @@ sdb_openDBLocal(SDBPrivate *sdb_p, sqlite3 **sqlDB, const char **table)
     PR_EnterMonitor(sdb_p->dbMon);
 
     if (table) {
-	*table = sdb_p->table;
+        *table = sdb_p->table;
     }
 
     /* We're in a transaction, use the transaction DB */
     if ((sdb_p->sqlXactDB) && (sdb_p->sqlXactThread == PR_GetCurrentThread())) {
-	*sqlDB =sdb_p->sqlXactDB;
-	/* only one thread can get here, safe to unlock */
+        *sqlDB = sdb_p->sqlXactDB;
+        /* only one thread can get here, safe to unlock */
         PR_ExitMonitor(sdb_p->dbMon);
-	return CKR_OK;
+        return CKR_OK;
     }
 
     /*
@@ -581,32 +581,31 @@ sdb_openDBLocal(SDBPrivate *sdb_p, sqlite3 **sqlDB, const char **table)
      * is on order of human scale, not computer scale.
      */
     if (table && sdb_p->cacheTable) {
-	PRIntervalTime now = PR_IntervalNow();
-	if ((now - sdb_p->lastUpdateTime) > sdb_p->updateInterval) {
-	       sdb_updateCache(sdb_p);
+        PRIntervalTime now = PR_IntervalNow();
+        if ((now - sdb_p->lastUpdateTime) > sdb_p->updateInterval) {
+            sdb_updateCache(sdb_p);
         }
-	*table = sdb_p->cacheTable;
+        *table = sdb_p->cacheTable;
     }
 
     *sqlDB = sdb_p->sqlReadDB;
 
     /* leave holding the lock. only one thread can actually use a given
      * database connection at once */
-	
+
     return CKR_OK;
 }
 
 /* closing the local database currenly means unlocking the monitor */
-static CK_RV 
-sdb_closeDBLocal(SDBPrivate *sdb_p, sqlite3 *sqlDB) 
+static CK_RV
+sdb_closeDBLocal(SDBPrivate *sdb_p, sqlite3 *sqlDB)
 {
-   if (sdb_p->sqlXactDB != sqlDB) {
-	/* if we weren't in a transaction, we got a lock */
+    if (sdb_p->sqlXactDB != sqlDB) {
+        /* if we weren't in a transaction, we got a lock */
         PR_ExitMonitor(sdb_p->dbMon);
-   }
-   return CKR_OK;
+    }
+    return CKR_OK;
 }
-
 
 /*
  * wrapper to sqlite3_open which also sets the busy_timeout
@@ -623,14 +622,14 @@ sdb_openDB(const char *name, sqlite3 **sqlDB, int flags)
     *sqlDB = NULL;
     sqlerr = sqlite3_open(name, sqlDB);
     if (sqlerr != SQLITE_OK) {
-	return sqlerr;
+        return sqlerr;
     }
 
     sqlerr = sqlite3_busy_timeout(*sqlDB, SDB_SQLITE_BUSY_TIMEOUT);
     if (sqlerr != SQLITE_OK) {
-	sqlite3_close(*sqlDB);
-	*sqlDB = NULL;
-	return sqlerr;
+        sqlite3_close(*sqlDB);
+        *sqlDB = NULL;
+        return sqlerr;
     }
     return SQLITE_OK;
 }
@@ -639,15 +638,16 @@ sdb_openDB(const char *name, sqlite3 **sqlDB, int flags)
  * the database handle will not see the new table, we need to close this
  * database and reopen it. Caller must be in a transaction or holding
  * the dbMon. sqlDB is changed on success. */
-static int 
-sdb_reopenDBLocal(SDBPrivate *sdb_p, sqlite3 **sqlDB) {
+static int
+sdb_reopenDBLocal(SDBPrivate *sdb_p, sqlite3 **sqlDB)
+{
     sqlite3 *newDB;
     int sqlerr;
 
     /* open a new database */
     sqlerr = sdb_openDB(sdb_p->sqlDBName, &newDB, SDB_RDONLY);
     if (sqlerr != SQLITE_OK) {
-	return sqlerr;
+        return sqlerr;
     }
 
     /* if we are in a transaction, we may not be holding the monitor.
@@ -656,9 +656,9 @@ sdb_reopenDBLocal(SDBPrivate *sdb_p, sqlite3 **sqlDB) {
     PR_EnterMonitor(sdb_p->dbMon);
     /* update our view of the database */
     if (sdb_p->sqlReadDB == *sqlDB) {
-	sdb_p->sqlReadDB = newDB;
+        sdb_p->sqlReadDB = newDB;
     } else if (sdb_p->sqlXactDB == *sqlDB) {
-	sdb_p->sqlXactDB = newDB;
+        sdb_p->sqlXactDB = newDB;
     }
     PR_ExitMonitor(sdb_p->dbMon);
 
@@ -674,19 +674,18 @@ struct SDBFindStr {
     sqlite3_stmt *findstmt;
 };
 
-
-static const char FIND_OBJECTS_CMD[] =  "SELECT ALL * FROM %s WHERE %s;";
+static const char FIND_OBJECTS_CMD[] = "SELECT ALL * FROM %s WHERE %s;";
 static const char FIND_OBJECTS_ALL_CMD[] = "SELECT ALL * FROM %s;";
 CK_RV
-sdb_FindObjectsInit(SDB *sdb, const CK_ATTRIBUTE *template, CK_ULONG count, 
-				SDBFind **find)
+sdb_FindObjectsInit(SDB *sdb, const CK_ATTRIBUTE *template, CK_ULONG count,
+                    SDBFind **find)
 {
     SDBPrivate *sdb_p = sdb->private;
-    sqlite3  *sqlDB = NULL;
+    sqlite3 *sqlDB = NULL;
     const char *table;
     char *newStr, *findStr = NULL;
     sqlite3_stmt *findstmt = NULL;
-    char *join="";
+    char *join = "";
     int sqlerr = SQLITE_OK;
     CK_RV error = CKR_OK;
     unsigned int i;
@@ -695,74 +694,73 @@ sdb_FindObjectsInit(SDB *sdb, const CK_ATTRIBUTE *template, CK_ULONG count,
     *find = NULL;
     error = sdb_openDBLocal(sdb_p, &sqlDB, &table);
     if (error != CKR_OK) {
-	goto loser;
+        goto loser;
     }
 
     findStr = sqlite3_mprintf("");
-    for (i=0; findStr && i < count; i++) {
-	newStr = sqlite3_mprintf("%s%sa%x=$DATA%d", findStr, join,
-				template[i].type, i);
-        join=" AND ";
-	sqlite3_free(findStr);
-	findStr = newStr;
+    for (i = 0; findStr && i < count; i++) {
+        newStr = sqlite3_mprintf("%s%sa%x=$DATA%d", findStr, join,
+                                 template[i].type, i);
+        join = " AND ";
+        sqlite3_free(findStr);
+        findStr = newStr;
     }
 
     if (findStr == NULL) {
-	error = CKR_HOST_MEMORY;
-	goto loser;
+        error = CKR_HOST_MEMORY;
+        goto loser;
     }
 
     if (count == 0) {
-	newStr = sqlite3_mprintf(FIND_OBJECTS_ALL_CMD, table);
+        newStr = sqlite3_mprintf(FIND_OBJECTS_ALL_CMD, table);
     } else {
-	newStr = sqlite3_mprintf(FIND_OBJECTS_CMD, table, findStr);
+        newStr = sqlite3_mprintf(FIND_OBJECTS_CMD, table, findStr);
     }
     sqlite3_free(findStr);
     if (newStr == NULL) {
-	error = CKR_HOST_MEMORY;
-	goto loser;
+        error = CKR_HOST_MEMORY;
+        goto loser;
     }
     sqlerr = sqlite3_prepare_v2(sqlDB, newStr, -1, &findstmt, NULL);
     sqlite3_free(newStr);
-    for (i=0; sqlerr == SQLITE_OK && i < count; i++) {
-	const void *blobData = template[i].pValue;
-	unsigned int blobSize = template[i].ulValueLen;
-	if (blobSize == 0) {
-	    blobSize = SQLITE_EXPLICIT_NULL_LEN;
-	    blobData = SQLITE_EXPLICIT_NULL;
-	}
-	sqlerr = sqlite3_bind_blob(findstmt, i+1, blobData, blobSize,
-				   SQLITE_TRANSIENT);
+    for (i = 0; sqlerr == SQLITE_OK && i < count; i++) {
+        const void *blobData = template[i].pValue;
+        unsigned int blobSize = template[i].ulValueLen;
+        if (blobSize == 0) {
+            blobSize = SQLITE_EXPLICIT_NULL_LEN;
+            blobData = SQLITE_EXPLICIT_NULL;
+        }
+        sqlerr = sqlite3_bind_blob(findstmt, i + 1, blobData, blobSize,
+                                   SQLITE_TRANSIENT);
     }
     if (sqlerr == SQLITE_OK) {
-	*find = PORT_New(SDBFind);
-	if (*find == NULL) {
-	    error = CKR_HOST_MEMORY;
-	    goto loser;
-	}
-	(*find)->findstmt = findstmt;
-	(*find)->sqlDB = sqlDB;
-	UNLOCK_SQLITE()  
-	return CKR_OK;
-    } 
+        *find = PORT_New(SDBFind);
+        if (*find == NULL) {
+            error = CKR_HOST_MEMORY;
+            goto loser;
+        }
+        (*find)->findstmt = findstmt;
+        (*find)->sqlDB = sqlDB;
+        UNLOCK_SQLITE()
+        return CKR_OK;
+    }
     error = sdb_mapSQLError(sdb_p->type, sqlerr);
 
-loser: 
+loser:
     if (findstmt) {
-	sqlite3_reset(findstmt);
-	sqlite3_finalize(findstmt);
+        sqlite3_reset(findstmt);
+        sqlite3_finalize(findstmt);
     }
     if (sqlDB) {
-	sdb_closeDBLocal(sdb_p, sqlDB) ;
+        sdb_closeDBLocal(sdb_p, sqlDB);
     }
-    UNLOCK_SQLITE()  
+    UNLOCK_SQLITE()
     return error;
 }
 
-
 CK_RV
-sdb_FindObjects(SDB *sdb, SDBFind *sdbFind, CK_OBJECT_HANDLE *object, 
-		CK_ULONG arraySize, CK_ULONG *count)
+sdb_FindObjects(SDB *sdb, SDBFind *sdbFind, CK_OBJECT_HANDLE *object,
+                CK_ULONG arraySize, CK_ULONG *count)
 {
     SDBPrivate *sdb_p = sdb->private;
     sqlite3_stmt *stmt = sdbFind->findstmt;
@@ -772,29 +770,29 @@ sdb_FindObjects(SDB *sdb, SDBFind *sdbFind, CK_OBJECT_HANDLE *object,
     *count = 0;
 
     if (arraySize == 0) {
-	return CKR_OK;
+        return CKR_OK;
     }
-    LOCK_SQLITE()  
+    LOCK_SQLITE()
 
     do {
-	sqlerr = sqlite3_step(stmt);
-	if (sqlerr == SQLITE_BUSY) {
-	    PR_Sleep(SDB_BUSY_RETRY_TIME);
-	}
-	if (sqlerr == SQLITE_ROW) {
-	    /* only care about the id */
-	    *object++= sqlite3_column_int(stmt, 0);
-	    arraySize--;
-	    (*count)++;
-	}
-    } while (!sdb_done(sqlerr,&retry) && (arraySize > 0));
+        sqlerr = sqlite3_step(stmt);
+        if (sqlerr == SQLITE_BUSY) {
+            PR_Sleep(SDB_BUSY_RETRY_TIME);
+        }
+        if (sqlerr == SQLITE_ROW) {
+            /* only care about the id */
+            *object++ = sqlite3_column_int(stmt, 0);
+            arraySize--;
+            (*count)++;
+        }
+    } while (!sdb_done(sqlerr, &retry) && (arraySize > 0));
 
     /* we only have some of the objects, there is probably more,
      * set the sqlerr to an OK value so we return CKR_OK */
     if (sqlerr == SQLITE_ROW && arraySize == 0) {
-	sqlerr = SQLITE_DONE;
+        sqlerr = SQLITE_DONE;
     }
-    UNLOCK_SQLITE()  
+    UNLOCK_SQLITE()
 
     return sdb_mapSQLError(sdb_p->type, sqlerr);
 }
@@ -807,27 +805,27 @@ sdb_FindObjectsFinal(SDB *sdb, SDBFind *sdbFind)
     sqlite3 *sqlDB = sdbFind->sqlDB;
     int sqlerr = SQLITE_OK;
 
-    LOCK_SQLITE()  
+    LOCK_SQLITE()
     if (stmt) {
-	sqlite3_reset(stmt);
-	sqlerr = sqlite3_finalize(stmt);
+        sqlite3_reset(stmt);
+        sqlerr = sqlite3_finalize(stmt);
     }
     if (sqlDB) {
-	sdb_closeDBLocal(sdb_p, sqlDB) ;
+        sdb_closeDBLocal(sdb_p, sqlDB);
     }
     PORT_Free(sdbFind);
 
-    UNLOCK_SQLITE()  
+    UNLOCK_SQLITE()
     return sdb_mapSQLError(sdb_p->type, sqlerr);
 }
 
 static const char GET_ATTRIBUTE_CMD[] = "SELECT ALL %s FROM %s WHERE id=$ID;";
 CK_RV
-sdb_GetAttributeValueNoLock(SDB *sdb, CK_OBJECT_HANDLE object_id, 
-				CK_ATTRIBUTE *template, CK_ULONG count)
+sdb_GetAttributeValueNoLock(SDB *sdb, CK_OBJECT_HANDLE object_id,
+                            CK_ATTRIBUTE *template, CK_ULONG count)
 {
     SDBPrivate *sdb_p = sdb->private;
-    sqlite3  *sqlDB = NULL;
+    sqlite3 *sqlDB = NULL;
     sqlite3_stmt *stmt = NULL;
     char *getStr = NULL;
     char *newStr = NULL;
@@ -838,125 +836,128 @@ sdb_GetAttributeValueNoLock(SDB *sdb, CK_OBJECT_HANDLE object_id,
     int retry = 0;
     unsigned int i;
 
-
     /* open a new db if necessary */
     error = sdb_openDBLocal(sdb_p, &sqlDB, &table);
     if (error != CKR_OK) {
-	goto loser;
+        goto loser;
     }
 
-    for (i=0; i < count; i++) {
-	getStr = sqlite3_mprintf("a%x", template[i].type);
+    for (i = 0; i < count; i++) {
+        getStr = sqlite3_mprintf("a%x", template[i].type);
 
-	if (getStr == NULL) {
-	    error = CKR_HOST_MEMORY;
-	    goto loser;
-	}
+        if (getStr == NULL) {
+            error = CKR_HOST_MEMORY;
+            goto loser;
+        }
 
-	newStr = sqlite3_mprintf(GET_ATTRIBUTE_CMD, getStr, table);
-	sqlite3_free(getStr);
-	getStr = NULL;
-	if (newStr == NULL) {
-	    error = CKR_HOST_MEMORY;
-	    goto loser;
-	}
+        newStr = sqlite3_mprintf(GET_ATTRIBUTE_CMD, getStr, table);
+        sqlite3_free(getStr);
+        getStr = NULL;
+        if (newStr == NULL) {
+            error = CKR_HOST_MEMORY;
+            goto loser;
+        }
 
-	sqlerr = sqlite3_prepare_v2(sqlDB, newStr, -1, &stmt, NULL);
-	sqlite3_free(newStr);
-	newStr = NULL;
-	if (sqlerr == SQLITE_ERROR) {
-	    template[i].ulValueLen = -1;
-	    error = CKR_ATTRIBUTE_TYPE_INVALID;
-	    continue;
-	} else if (sqlerr != SQLITE_OK) { goto loser; }
+        sqlerr = sqlite3_prepare_v2(sqlDB, newStr, -1, &stmt, NULL);
+        sqlite3_free(newStr);
+        newStr = NULL;
+        if (sqlerr == SQLITE_ERROR) {
+            template[i].ulValueLen = -1;
+            error = CKR_ATTRIBUTE_TYPE_INVALID;
+            continue;
+        } else if (sqlerr != SQLITE_OK) {
+            goto loser;
+        }
 
-	sqlerr = sqlite3_bind_int(stmt, 1, object_id);
-	if (sqlerr != SQLITE_OK) { goto loser; }
+        sqlerr = sqlite3_bind_int(stmt, 1, object_id);
+        if (sqlerr != SQLITE_OK) {
+            goto loser;
+        }
 
-	do {
-	    sqlerr = sqlite3_step(stmt);
-	    if (sqlerr == SQLITE_BUSY) {
-		PR_Sleep(SDB_BUSY_RETRY_TIME);
-	    }
-	    if (sqlerr == SQLITE_ROW) {
-	    	unsigned int blobSize;
-	    	const char *blobData;
+        do {
+            sqlerr = sqlite3_step(stmt);
+            if (sqlerr == SQLITE_BUSY) {
+                PR_Sleep(SDB_BUSY_RETRY_TIME);
+            }
+            if (sqlerr == SQLITE_ROW) {
+                unsigned int blobSize;
+                const char *blobData;
 
-	    	blobSize = sqlite3_column_bytes(stmt, 0);
-		blobData = sqlite3_column_blob(stmt, 0);
-		if (blobData == NULL) {
-		    template[i].ulValueLen = -1;
-		    error = CKR_ATTRIBUTE_TYPE_INVALID; 
-		    break;
-		}
-		/* If the blob equals our explicit NULL value, then the 
-		 * attribute is a NULL. */
-		if ((blobSize == SQLITE_EXPLICIT_NULL_LEN) &&
-		   	(PORT_Memcmp(blobData, SQLITE_EXPLICIT_NULL, 
-			      SQLITE_EXPLICIT_NULL_LEN) == 0)) {
-		    blobSize = 0;
-		}
-		if (template[i].pValue) {
-		    if (template[i].ulValueLen < blobSize) {
-			template[i].ulValueLen = -1;
-		    	error = CKR_BUFFER_TOO_SMALL;
-			break;
-		    }
-	    	    PORT_Memcpy(template[i].pValue, blobData, blobSize);
-		}
-		template[i].ulValueLen = blobSize;
-		found = 1;
-	    }
-	} while (!sdb_done(sqlerr,&retry));
-	sqlite3_reset(stmt);
-	sqlite3_finalize(stmt);
-	stmt = NULL;
+                blobSize = sqlite3_column_bytes(stmt, 0);
+                blobData = sqlite3_column_blob(stmt, 0);
+                if (blobData == NULL) {
+                    template[i].ulValueLen = -1;
+                    error = CKR_ATTRIBUTE_TYPE_INVALID;
+                    break;
+                }
+                /* If the blob equals our explicit NULL value, then the
+                 * attribute is a NULL. */
+                if ((blobSize == SQLITE_EXPLICIT_NULL_LEN) &&
+                    (PORT_Memcmp(blobData, SQLITE_EXPLICIT_NULL,
+                                 SQLITE_EXPLICIT_NULL_LEN) == 0)) {
+                    blobSize = 0;
+                }
+                if (template[i].pValue) {
+                    if (template[i].ulValueLen < blobSize) {
+                        template[i].ulValueLen = -1;
+                        error = CKR_BUFFER_TOO_SMALL;
+                        break;
+                    }
+                    PORT_Memcpy(template[i].pValue, blobData, blobSize);
+                }
+                template[i].ulValueLen = blobSize;
+                found = 1;
+            }
+        } while (!sdb_done(sqlerr, &retry));
+        sqlite3_reset(stmt);
+        sqlite3_finalize(stmt);
+        stmt = NULL;
     }
 
 loser:
     /* fix up the error if necessary */
     if (error == CKR_OK) {
-	error = sdb_mapSQLError(sdb_p->type, sqlerr);
-	if (!found && error == CKR_OK) {
-	    error = CKR_OBJECT_HANDLE_INVALID;
-	}
+        error = sdb_mapSQLError(sdb_p->type, sqlerr);
+        if (!found && error == CKR_OK) {
+            error = CKR_OBJECT_HANDLE_INVALID;
+        }
     }
 
     if (stmt) {
-	sqlite3_reset(stmt);
-	sqlite3_finalize(stmt);
+        sqlite3_reset(stmt);
+        sqlite3_finalize(stmt);
     }
 
     /* if we had to open a new database, free it now */
     if (sqlDB) {
-	sdb_closeDBLocal(sdb_p, sqlDB) ;
+        sdb_closeDBLocal(sdb_p, sqlDB);
     }
     return error;
 }
 
 CK_RV
-sdb_GetAttributeValue(SDB *sdb, CK_OBJECT_HANDLE object_id, 
-				CK_ATTRIBUTE *template, CK_ULONG count)
+sdb_GetAttributeValue(SDB *sdb, CK_OBJECT_HANDLE object_id,
+                      CK_ATTRIBUTE *template, CK_ULONG count)
 {
     CK_RV crv;
 
     if (count == 0) {
-	return CKR_OK;
+        return CKR_OK;
     }
 
-    LOCK_SQLITE()  
+    LOCK_SQLITE()
     crv = sdb_GetAttributeValueNoLock(sdb, object_id, template, count);
-    UNLOCK_SQLITE()  
+    UNLOCK_SQLITE()
     return crv;
 }
-   
+
 static const char SET_ATTRIBUTE_CMD[] = "UPDATE %s SET %s WHERE id=$ID;";
 CK_RV
-sdb_SetAttributeValue(SDB *sdb, CK_OBJECT_HANDLE object_id, 
-			const CK_ATTRIBUTE *template, CK_ULONG count)
+sdb_SetAttributeValue(SDB *sdb, CK_OBJECT_HANDLE object_id,
+                      const CK_ATTRIBUTE *template, CK_ULONG count)
 {
     SDBPrivate *sdb_p = sdb->private;
-    sqlite3  *sqlDB = NULL;
+    sqlite3 *sqlDB = NULL;
     sqlite3_stmt *stmt = NULL;
     char *setStr = NULL;
     char *newStr = NULL;
@@ -966,82 +967,85 @@ sdb_SetAttributeValue(SDB *sdb, CK_OBJECT_HANDLE object_id,
     unsigned int i;
 
     if ((sdb->sdb_flags & SDB_RDONLY) != 0) {
-	return CKR_TOKEN_WRITE_PROTECTED;
+        return CKR_TOKEN_WRITE_PROTECTED;
     }
 
     if (count == 0) {
-	return CKR_OK;
+        return CKR_OK;
     }
 
-    LOCK_SQLITE()  
+    LOCK_SQLITE()
     setStr = sqlite3_mprintf("");
-    for (i=0; setStr && i < count; i++) {
-	if (i==0) {
-	    sqlite3_free(setStr);
-   	    setStr = sqlite3_mprintf("a%x=$VALUE%d", 
-				template[i].type, i);
-	    continue;
-	}
-	newStr = sqlite3_mprintf("%s,a%x=$VALUE%d", setStr, 
-				template[i].type, i);
-	sqlite3_free(setStr);
-	setStr = newStr;
+    for (i = 0; setStr && i < count; i++) {
+        if (i == 0) {
+            sqlite3_free(setStr);
+            setStr = sqlite3_mprintf("a%x=$VALUE%d",
+                                     template[i].type, i);
+            continue;
+        }
+        newStr = sqlite3_mprintf("%s,a%x=$VALUE%d", setStr,
+                                 template[i].type, i);
+        sqlite3_free(setStr);
+        setStr = newStr;
     }
     newStr = NULL;
 
     if (setStr == NULL) {
-	return CKR_HOST_MEMORY;
+        return CKR_HOST_MEMORY;
     }
-    newStr =  sqlite3_mprintf(SET_ATTRIBUTE_CMD, sdb_p->table, setStr);
+    newStr = sqlite3_mprintf(SET_ATTRIBUTE_CMD, sdb_p->table, setStr);
     sqlite3_free(setStr);
     if (newStr == NULL) {
-	UNLOCK_SQLITE()  
-	return CKR_HOST_MEMORY;
+        UNLOCK_SQLITE()
+        return CKR_HOST_MEMORY;
     }
     error = sdb_openDBLocal(sdb_p, &sqlDB, NULL);
     if (error != CKR_OK) {
-	goto loser;
+        goto loser;
     }
     sqlerr = sqlite3_prepare_v2(sqlDB, newStr, -1, &stmt, NULL);
-    if (sqlerr != SQLITE_OK) goto loser;
-    for (i=0; i < count; i++) {
-	if (template[i].ulValueLen != 0) {
-	    sqlerr = sqlite3_bind_blob(stmt, i+1, template[i].pValue, 
-				template[i].ulValueLen, SQLITE_STATIC);
-	} else {
-	    sqlerr = sqlite3_bind_blob(stmt, i+2, SQLITE_EXPLICIT_NULL, 
-			SQLITE_EXPLICIT_NULL_LEN, SQLITE_STATIC);
-	}
-        if (sqlerr != SQLITE_OK) goto loser;
+    if (sqlerr != SQLITE_OK)
+        goto loser;
+    for (i = 0; i < count; i++) {
+        if (template[i].ulValueLen != 0) {
+            sqlerr = sqlite3_bind_blob(stmt, i + 1, template[i].pValue,
+                                       template[i].ulValueLen, SQLITE_STATIC);
+        } else {
+            sqlerr = sqlite3_bind_blob(stmt, i + 2, SQLITE_EXPLICIT_NULL,
+                                       SQLITE_EXPLICIT_NULL_LEN, SQLITE_STATIC);
+        }
+        if (sqlerr != SQLITE_OK)
+            goto loser;
     }
-    sqlerr = sqlite3_bind_int(stmt, i+1, object_id);
-    if (sqlerr != SQLITE_OK) goto loser;
+    sqlerr = sqlite3_bind_int(stmt, i + 1, object_id);
+    if (sqlerr != SQLITE_OK)
+        goto loser;
 
     do {
-	sqlerr = sqlite3_step(stmt);
-	if (sqlerr == SQLITE_BUSY) {
-	    PR_Sleep(SDB_BUSY_RETRY_TIME);
-	}
-    } while (!sdb_done(sqlerr,&retry));
+        sqlerr = sqlite3_step(stmt);
+        if (sqlerr == SQLITE_BUSY) {
+            PR_Sleep(SDB_BUSY_RETRY_TIME);
+        }
+    } while (!sdb_done(sqlerr, &retry));
 
 loser:
     if (newStr) {
-	sqlite3_free(newStr);
+        sqlite3_free(newStr);
     }
     if (error == CKR_OK) {
-	error = sdb_mapSQLError(sdb_p->type, sqlerr);
+        error = sdb_mapSQLError(sdb_p->type, sqlerr);
     }
 
     if (stmt) {
-	sqlite3_reset(stmt);
-	sqlite3_finalize(stmt);
+        sqlite3_reset(stmt);
+        sqlite3_finalize(stmt);
     }
 
     if (sqlDB) {
-	sdb_closeDBLocal(sdb_p, sqlDB) ;
+        sdb_closeDBLocal(sdb_p, sqlDB);
     }
 
-    UNLOCK_SQLITE()  
+    UNLOCK_SQLITE()
     return error;
 }
 
@@ -1054,9 +1058,9 @@ sdb_objectExists(SDB *sdb, CK_OBJECT_HANDLE candidate)
     CK_RV crv;
     CK_ATTRIBUTE template = { CKA_LABEL, NULL, 0 };
 
-    crv = sdb_GetAttributeValueNoLock(sdb,candidate,&template, 1);
+    crv = sdb_GetAttributeValueNoLock(sdb, candidate, &template, 1);
     if (crv == CKR_OBJECT_HANDLE_INVALID) {
-	return PR_FALSE;
+        return PR_FALSE;
     }
     return PR_TRUE;
 }
@@ -1076,24 +1080,24 @@ sdb_getObjectId(SDB *sdb)
      */
     if (next_obj == CK_INVALID_HANDLE) {
         PRTime time;
-	time = PR_Now();
+        time = PR_Now();
 
-	next_obj = (CK_OBJECT_HANDLE)(time & 0x3fffffffL);
+        next_obj = (CK_OBJECT_HANDLE)(time & 0x3fffffffL);
     }
     candidate = next_obj++;
     /* detect that we've looped through all the handles... */
     for (count = 0; count < 0x40000000; count++, candidate = next_obj++) {
-	/* mask off excess bits */
-	candidate &= 0x3fffffff;
-	/* if we hit zero, go to the next entry */
-	if (candidate == CK_INVALID_HANDLE) {
-	    continue;
-	}
-	/* make sure we aren't already using */
-	if (!sdb_objectExists(sdb, candidate)) {
-	    /* this one is free */
-	    return candidate;
-	}
+        /* mask off excess bits */
+        candidate &= 0x3fffffff;
+        /* if we hit zero, go to the next entry */
+        if (candidate == CK_INVALID_HANDLE) {
+            continue;
+        }
+        /* make sure we aren't already using */
+        if (!sdb_objectExists(sdb, candidate)) {
+            /* this one is free */
+            return candidate;
+        }
     }
 
     /* no handle is free, fail */
@@ -1102,11 +1106,11 @@ sdb_getObjectId(SDB *sdb)
 
 static const char CREATE_CMD[] = "INSERT INTO %s (id%s) VALUES($ID%s);";
 CK_RV
-sdb_CreateObject(SDB *sdb, CK_OBJECT_HANDLE *object_id, 
-		 const CK_ATTRIBUTE *template, CK_ULONG count)
+sdb_CreateObject(SDB *sdb, CK_OBJECT_HANDLE *object_id,
+                 const CK_ATTRIBUTE *template, CK_ULONG count)
 {
     SDBPrivate *sdb_p = sdb->private;
-    sqlite3  *sqlDB = NULL;
+    sqlite3 *sqlDB = NULL;
     sqlite3_stmt *stmt = NULL;
     char *columnStr = NULL;
     char *valueStr = NULL;
@@ -1118,98 +1122,102 @@ sdb_CreateObject(SDB *sdb, CK_OBJECT_HANDLE *object_id,
     unsigned int i;
 
     if ((sdb->sdb_flags & SDB_RDONLY) != 0) {
-	return CKR_TOKEN_WRITE_PROTECTED;
+        return CKR_TOKEN_WRITE_PROTECTED;
     }
 
-    LOCK_SQLITE()  
-    if ((*object_id != CK_INVALID_HANDLE) && 
-		!sdb_objectExists(sdb, *object_id)) {
-	this_object = *object_id;
+    LOCK_SQLITE()
+    if ((*object_id != CK_INVALID_HANDLE) &&
+        !sdb_objectExists(sdb, *object_id)) {
+        this_object = *object_id;
     } else {
-	this_object = sdb_getObjectId(sdb);
+        this_object = sdb_getObjectId(sdb);
     }
     if (this_object == CK_INVALID_HANDLE) {
-	UNLOCK_SQLITE();
-	return CKR_HOST_MEMORY;
+        UNLOCK_SQLITE();
+        return CKR_HOST_MEMORY;
     }
     columnStr = sqlite3_mprintf("");
     valueStr = sqlite3_mprintf("");
     *object_id = this_object;
-    for (i=0; columnStr && valueStr && i < count; i++) {
-   	newStr = sqlite3_mprintf("%s,a%x", columnStr, template[i].type);
-	sqlite3_free(columnStr);
-	columnStr = newStr;
-   	newStr = sqlite3_mprintf("%s,$VALUE%d", valueStr, i);
-	sqlite3_free(valueStr);
-	valueStr = newStr;
+    for (i = 0; columnStr && valueStr && i < count; i++) {
+        newStr = sqlite3_mprintf("%s,a%x", columnStr, template[i].type);
+        sqlite3_free(columnStr);
+        columnStr = newStr;
+        newStr = sqlite3_mprintf("%s,$VALUE%d", valueStr, i);
+        sqlite3_free(valueStr);
+        valueStr = newStr;
     }
     newStr = NULL;
     if ((columnStr == NULL) || (valueStr == NULL)) {
-	if (columnStr) {
-	    sqlite3_free(columnStr);
-	}
-	if (valueStr) {
-	    sqlite3_free(valueStr);
-	}
-	UNLOCK_SQLITE()  
-	return CKR_HOST_MEMORY;
+        if (columnStr) {
+            sqlite3_free(columnStr);
+        }
+        if (valueStr) {
+            sqlite3_free(valueStr);
+        }
+        UNLOCK_SQLITE()
+        return CKR_HOST_MEMORY;
     }
-    newStr =  sqlite3_mprintf(CREATE_CMD, sdb_p->table, columnStr, valueStr);
+    newStr = sqlite3_mprintf(CREATE_CMD, sdb_p->table, columnStr, valueStr);
     sqlite3_free(columnStr);
     sqlite3_free(valueStr);
     error = sdb_openDBLocal(sdb_p, &sqlDB, NULL);
     if (error != CKR_OK) {
-	goto loser;
+        goto loser;
     }
     sqlerr = sqlite3_prepare_v2(sqlDB, newStr, -1, &stmt, NULL);
-    if (sqlerr != SQLITE_OK) goto loser;
+    if (sqlerr != SQLITE_OK)
+        goto loser;
     sqlerr = sqlite3_bind_int(stmt, 1, *object_id);
-    if (sqlerr != SQLITE_OK) goto loser;
-    for (i=0; i < count; i++) {
-	if (template[i].ulValueLen) {
-	    sqlerr = sqlite3_bind_blob(stmt, i+2, template[i].pValue, 
-			template[i].ulValueLen, SQLITE_STATIC);
-	} else {
-	    sqlerr = sqlite3_bind_blob(stmt, i+2, SQLITE_EXPLICIT_NULL, 
-			SQLITE_EXPLICIT_NULL_LEN, SQLITE_STATIC);
-	}
-        if (sqlerr != SQLITE_OK) goto loser;
+    if (sqlerr != SQLITE_OK)
+        goto loser;
+    for (i = 0; i < count; i++) {
+        if (template[i].ulValueLen) {
+            sqlerr = sqlite3_bind_blob(stmt, i + 2, template[i].pValue,
+                                       template[i].ulValueLen, SQLITE_STATIC);
+        } else {
+            sqlerr = sqlite3_bind_blob(stmt, i + 2, SQLITE_EXPLICIT_NULL,
+                                       SQLITE_EXPLICIT_NULL_LEN, SQLITE_STATIC);
+        }
+        if (sqlerr != SQLITE_OK)
+            goto loser;
     }
 
     do {
-	sqlerr = sqlite3_step(stmt);
-	if (sqlerr == SQLITE_BUSY) {
-	    PR_Sleep(SDB_BUSY_RETRY_TIME);
-	}
-    } while (!sdb_done(sqlerr,&retry));
+        sqlerr = sqlite3_step(stmt);
+        if (sqlerr == SQLITE_BUSY) {
+            PR_Sleep(SDB_BUSY_RETRY_TIME);
+        }
+    } while (!sdb_done(sqlerr, &retry));
 
 loser:
     if (newStr) {
-	sqlite3_free(newStr);
+        sqlite3_free(newStr);
     }
     if (error == CKR_OK) {
-	error = sdb_mapSQLError(sdb_p->type, sqlerr);
+        error = sdb_mapSQLError(sdb_p->type, sqlerr);
     }
 
     if (stmt) {
-	sqlite3_reset(stmt);
-	sqlite3_finalize(stmt);
+        sqlite3_reset(stmt);
+        sqlite3_finalize(stmt);
     }
 
     if (sqlDB) {
-	sdb_closeDBLocal(sdb_p, sqlDB) ;
+        sdb_closeDBLocal(sdb_p, sqlDB);
     }
-    UNLOCK_SQLITE()  
+    UNLOCK_SQLITE()
 
     return error;
 }
 
 static const char DESTROY_CMD[] = "DELETE FROM %s WHERE (id=$ID);";
+
 CK_RV
 sdb_DestroyObject(SDB *sdb, CK_OBJECT_HANDLE object_id)
 {
     SDBPrivate *sdb_p = sdb->private;
-    sqlite3  *sqlDB = NULL;
+    sqlite3 *sqlDB = NULL;
     sqlite3_stmt *stmt = NULL;
     char *newStr = NULL;
     int sqlerr = SQLITE_OK;
@@ -1217,51 +1225,54 @@ sdb_DestroyObject(SDB *sdb, CK_OBJECT_HANDLE object_id)
     int retry = 0;
 
     if ((sdb->sdb_flags & SDB_RDONLY) != 0) {
-	return CKR_TOKEN_WRITE_PROTECTED;
+        return CKR_TOKEN_WRITE_PROTECTED;
     }
 
-    LOCK_SQLITE()  
+    LOCK_SQLITE()
     error = sdb_openDBLocal(sdb_p, &sqlDB, NULL);
     if (error != CKR_OK) {
-	goto loser;
+        goto loser;
     }
-    newStr =  sqlite3_mprintf(DESTROY_CMD, sdb_p->table);
+    newStr = sqlite3_mprintf(DESTROY_CMD, sdb_p->table);
     if (newStr == NULL) {
-	error = CKR_HOST_MEMORY;
-	goto loser;
+        error = CKR_HOST_MEMORY;
+        goto loser;
     }
-    sqlerr =sqlite3_prepare_v2(sqlDB, newStr, -1, &stmt, NULL);
+    sqlerr = sqlite3_prepare_v2(sqlDB, newStr, -1, &stmt, NULL);
     sqlite3_free(newStr);
-    if (sqlerr != SQLITE_OK) goto loser;
-    sqlerr =sqlite3_bind_int(stmt, 1, object_id);
-    if (sqlerr != SQLITE_OK) goto loser;
+    if (sqlerr != SQLITE_OK)
+        goto loser;
+    sqlerr = sqlite3_bind_int(stmt, 1, object_id);
+    if (sqlerr != SQLITE_OK)
+        goto loser;
 
     do {
-	sqlerr = sqlite3_step(stmt);
-	if (sqlerr == SQLITE_BUSY) {
-	    PR_Sleep(SDB_BUSY_RETRY_TIME);
-	}
-    } while (!sdb_done(sqlerr,&retry));
+        sqlerr = sqlite3_step(stmt);
+        if (sqlerr == SQLITE_BUSY) {
+            PR_Sleep(SDB_BUSY_RETRY_TIME);
+        }
+    } while (!sdb_done(sqlerr, &retry));
 
 loser:
     if (error == CKR_OK) {
-	error = sdb_mapSQLError(sdb_p->type, sqlerr);
+        error = sdb_mapSQLError(sdb_p->type, sqlerr);
     }
 
     if (stmt) {
-	sqlite3_reset(stmt);
-	sqlite3_finalize(stmt);
+        sqlite3_reset(stmt);
+        sqlite3_finalize(stmt);
     }
 
     if (sqlDB) {
-	sdb_closeDBLocal(sdb_p, sqlDB) ;
+        sdb_closeDBLocal(sdb_p, sqlDB);
     }
 
-    UNLOCK_SQLITE()  
+    UNLOCK_SQLITE()
     return error;
 }
-   
+
 static const char BEGIN_CMD[] = "BEGIN IMMEDIATE TRANSACTION;";
+
 /*
  * start a transaction.
  *
@@ -1273,63 +1284,61 @@ CK_RV
 sdb_Begin(SDB *sdb)
 {
     SDBPrivate *sdb_p = sdb->private;
-    sqlite3  *sqlDB = NULL;
+    sqlite3 *sqlDB = NULL;
     sqlite3_stmt *stmt = NULL;
     int sqlerr = SQLITE_OK;
     CK_RV error = CKR_OK;
     int retry = 0;
 
-
     if ((sdb->sdb_flags & SDB_RDONLY) != 0) {
-	return CKR_TOKEN_WRITE_PROTECTED;
+        return CKR_TOKEN_WRITE_PROTECTED;
     }
 
-
-    LOCK_SQLITE()  
+    LOCK_SQLITE()
 
     /* get a new version that we will use for the entire transaction */
     sqlerr = sdb_openDB(sdb_p->sqlDBName, &sqlDB, SDB_RDWR);
     if (sqlerr != SQLITE_OK) {
-	goto loser;
+        goto loser;
     }
 
-    sqlerr =sqlite3_prepare_v2(sqlDB, BEGIN_CMD, -1, &stmt, NULL);
+    sqlerr = sqlite3_prepare_v2(sqlDB, BEGIN_CMD, -1, &stmt, NULL);
 
     do {
-	sqlerr = sqlite3_step(stmt);
-	if (sqlerr == SQLITE_BUSY) {
-	    PR_Sleep(SDB_BUSY_RETRY_TIME);
-	}
-    } while (!sdb_done(sqlerr,&retry));
+        sqlerr = sqlite3_step(stmt);
+        if (sqlerr == SQLITE_BUSY) {
+            PR_Sleep(SDB_BUSY_RETRY_TIME);
+        }
+    } while (!sdb_done(sqlerr, &retry));
 
     if (stmt) {
-	sqlite3_reset(stmt);
-	sqlite3_finalize(stmt);
+        sqlite3_reset(stmt);
+        sqlite3_finalize(stmt);
     }
 
 loser:
     error = sdb_mapSQLError(sdb_p->type, sqlerr);
 
-    /* we are starting a new transaction, 
+    /* we are starting a new transaction,
      * and if we succeeded, then save this database for the rest of
      * our transaction */
     if (error == CKR_OK) {
-	/* we hold a 'BEGIN TRANSACTION' and a sdb_p->lock. At this point
-	 * sdb_p->sqlXactDB MUST be null */
-	PR_EnterMonitor(sdb_p->dbMon);
-	PORT_Assert(sdb_p->sqlXactDB == NULL);
-	sdb_p->sqlXactDB = sqlDB;
-	sdb_p->sqlXactThread = PR_GetCurrentThread();
+        /* we hold a 'BEGIN TRANSACTION' and a sdb_p->lock. At this point
+         * sdb_p->sqlXactDB MUST be null */
+        PR_EnterMonitor(sdb_p->dbMon);
+        PORT_Assert(sdb_p->sqlXactDB == NULL);
+        sdb_p->sqlXactDB = sqlDB;
+        sdb_p->sqlXactThread = PR_GetCurrentThread();
         PR_ExitMonitor(sdb_p->dbMon);
     } else {
-	/* we failed to start our transaction,
-	 * free any databases we opened. */
-	if (sqlDB) {
-	    sqlite3_close(sqlDB);
-	}
+        /* we failed to start our transaction,
+         * free any databases we opened. */
+        if (sqlDB) {
+            sqlite3_close(sqlDB);
+        }
     }
 
-    UNLOCK_SQLITE()  
+    UNLOCK_SQLITE()
     return error;
 }
 
@@ -1339,19 +1348,18 @@ loser:
  * these 2 are what the database will show. (no change in to former, change in
  * the latter).
  */
-static CK_RV 
+static CK_RV
 sdb_complete(SDB *sdb, const char *cmd)
 {
     SDBPrivate *sdb_p = sdb->private;
-    sqlite3  *sqlDB = NULL;
+    sqlite3 *sqlDB = NULL;
     sqlite3_stmt *stmt = NULL;
     int sqlerr = SQLITE_OK;
     CK_RV error = CKR_OK;
     int retry = 0;
 
-
     if ((sdb->sdb_flags & SDB_RDONLY) != 0) {
-	return CKR_TOKEN_WRITE_PROTECTED;
+        return CKR_TOKEN_WRITE_PROTECTED;
     }
 
     /* We must have a transation database, or we shouldn't have arrived here */
@@ -1359,40 +1367,40 @@ sdb_complete(SDB *sdb, const char *cmd)
     PORT_Assert(sdb_p->sqlXactDB);
     if (sdb_p->sqlXactDB == NULL) {
         PR_ExitMonitor(sdb_p->dbMon);
-	return CKR_GENERAL_ERROR; /* shouldn't happen */
+        return CKR_GENERAL_ERROR; /* shouldn't happen */
     }
-    PORT_Assert( sdb_p->sqlXactThread == PR_GetCurrentThread());
-    if ( sdb_p->sqlXactThread != PR_GetCurrentThread()) {
+    PORT_Assert(sdb_p->sqlXactThread == PR_GetCurrentThread());
+    if (sdb_p->sqlXactThread != PR_GetCurrentThread()) {
         PR_ExitMonitor(sdb_p->dbMon);
-	return CKR_GENERAL_ERROR; /* shouldn't happen */
+        return CKR_GENERAL_ERROR; /* shouldn't happen */
     }
     sqlDB = sdb_p->sqlXactDB;
-    sdb_p->sqlXactDB = NULL; /* no one else can get to this DB, 
-			      * safe to unlock */
-    sdb_p->sqlXactThread = NULL; 
+    sdb_p->sqlXactDB = NULL; /* no one else can get to this DB,
+                              * safe to unlock */
+    sdb_p->sqlXactThread = NULL;
     PR_ExitMonitor(sdb_p->dbMon);
 
-    sqlerr =sqlite3_prepare_v2(sqlDB, cmd, -1, &stmt, NULL);
+    sqlerr = sqlite3_prepare_v2(sqlDB, cmd, -1, &stmt, NULL);
 
     do {
-	sqlerr = sqlite3_step(stmt);
-	if (sqlerr == SQLITE_BUSY) {
-	    PR_Sleep(SDB_BUSY_RETRY_TIME);
-	}
-    } while (!sdb_done(sqlerr,&retry));
+        sqlerr = sqlite3_step(stmt);
+        if (sqlerr == SQLITE_BUSY) {
+            PR_Sleep(SDB_BUSY_RETRY_TIME);
+        }
+    } while (!sdb_done(sqlerr, &retry));
 
     /* Pending BEGIN TRANSACTIONS Can move forward at this point. */
 
     if (stmt) {
-	sqlite3_reset(stmt);
-	sqlite3_finalize(stmt);
+        sqlite3_reset(stmt);
+        sqlite3_finalize(stmt);
     }
 
     /* we we have a cached DB image, update it as well */
     if (sdb_p->cacheTable) {
-	PR_EnterMonitor(sdb_p->dbMon);
-	sdb_updateCache(sdb_p);
-	PR_ExitMonitor(sdb_p->dbMon);
+        PR_EnterMonitor(sdb_p->dbMon);
+        sdb_updateCache(sdb_p);
+        PR_ExitMonitor(sdb_p->dbMon);
     }
 
     error = sdb_mapSQLError(sdb_p->type, sqlerr);
@@ -1409,9 +1417,9 @@ CK_RV
 sdb_Commit(SDB *sdb)
 {
     CK_RV crv;
-    LOCK_SQLITE()  
-    crv = sdb_complete(sdb,COMMIT_CMD);
-    UNLOCK_SQLITE()  
+    LOCK_SQLITE()
+    crv = sdb_complete(sdb, COMMIT_CMD);
+    UNLOCK_SQLITE()
     return crv;
 }
 
@@ -1420,9 +1428,9 @@ CK_RV
 sdb_Abort(SDB *sdb)
 {
     CK_RV crv;
-    LOCK_SQLITE()  
-    crv = sdb_complete(sdb,ROLLBACK_CMD);
-    UNLOCK_SQLITE()  
+    LOCK_SQLITE()
+    crv = sdb_complete(sdb, ROLLBACK_CMD);
+    UNLOCK_SQLITE()
     return crv;
 }
 
@@ -1433,17 +1441,17 @@ CK_RV
 sdb_GetMetaData(SDB *sdb, const char *id, SECItem *item1, SECItem *item2)
 {
     SDBPrivate *sdb_p = sdb->private;
-    sqlite3  *sqlDB = sdb_p->sqlXactDB;
+    sqlite3 *sqlDB = sdb_p->sqlXactDB;
     sqlite3_stmt *stmt = NULL;
     int sqlerr = SQLITE_OK;
     CK_RV error = CKR_OK;
     int found = 0;
     int retry = 0;
 
-    LOCK_SQLITE()  
+    LOCK_SQLITE()
     error = sdb_openDBLocal(sdb_p, &sqlDB, NULL);
     if (error != CKR_OK) {
-	goto loser;
+        goto loser;
     }
 
     /* handle 'test' versions of the sqlite db */
@@ -1453,77 +1461,79 @@ sdb_GetMetaData(SDB *sdb, const char *id, SECItem *item1, SECItem *item2)
      * database and reopen it. This is safe because we are holding the lock
      * still. */
     if (sqlerr == SQLITE_SCHEMA) {
-	sqlerr = sdb_reopenDBLocal(sdb_p, &sqlDB);
-	if (sqlerr != SQLITE_OK) {
-	    goto loser;
-	}
-	sqlerr = sqlite3_prepare_v2(sqlDB, GET_PW_CMD, -1, &stmt, NULL);
+        sqlerr = sdb_reopenDBLocal(sdb_p, &sqlDB);
+        if (sqlerr != SQLITE_OK) {
+            goto loser;
+        }
+        sqlerr = sqlite3_prepare_v2(sqlDB, GET_PW_CMD, -1, &stmt, NULL);
     }
-    if (sqlerr != SQLITE_OK) goto loser;
+    if (sqlerr != SQLITE_OK)
+        goto loser;
     sqlerr = sqlite3_bind_text(stmt, 1, id, PORT_Strlen(id), SQLITE_STATIC);
     do {
-	sqlerr = sqlite3_step(stmt);
-	if (sqlerr == SQLITE_BUSY) {
-	    PR_Sleep(SDB_BUSY_RETRY_TIME);
-	}
-	if (sqlerr == SQLITE_ROW) {
-	    const char *blobData;
-	    unsigned int len = item1->len;
-	    item1->len = sqlite3_column_bytes(stmt, 1);
-	    if (item1->len > len) {
-		error = CKR_BUFFER_TOO_SMALL;
-		continue;
-	    }
-	    blobData = sqlite3_column_blob(stmt, 1);
-	    PORT_Memcpy(item1->data,blobData, item1->len);
-	    if (item2) {
-		len = item2->len;
-		item2->len = sqlite3_column_bytes(stmt, 2);
-		if (item2->len > len) {
-		    error = CKR_BUFFER_TOO_SMALL;
-		    continue;
-		}
-		blobData = sqlite3_column_blob(stmt, 2);
-		PORT_Memcpy(item2->data,blobData, item2->len);
-	    }
-	    found = 1;
-	}
-    } while (!sdb_done(sqlerr,&retry));
+        sqlerr = sqlite3_step(stmt);
+        if (sqlerr == SQLITE_BUSY) {
+            PR_Sleep(SDB_BUSY_RETRY_TIME);
+        }
+        if (sqlerr == SQLITE_ROW) {
+            const char *blobData;
+            unsigned int len = item1->len;
+            item1->len = sqlite3_column_bytes(stmt, 1);
+            if (item1->len > len) {
+                error = CKR_BUFFER_TOO_SMALL;
+                continue;
+            }
+            blobData = sqlite3_column_blob(stmt, 1);
+            PORT_Memcpy(item1->data, blobData, item1->len);
+            if (item2) {
+                len = item2->len;
+                item2->len = sqlite3_column_bytes(stmt, 2);
+                if (item2->len > len) {
+                    error = CKR_BUFFER_TOO_SMALL;
+                    continue;
+                }
+                blobData = sqlite3_column_blob(stmt, 2);
+                PORT_Memcpy(item2->data, blobData, item2->len);
+            }
+            found = 1;
+        }
+    } while (!sdb_done(sqlerr, &retry));
 
 loser:
     /* fix up the error if necessary */
     if (error == CKR_OK) {
-	error = sdb_mapSQLError(sdb_p->type, sqlerr);
-	if (!found && error == CKR_OK) {
-	    error = CKR_OBJECT_HANDLE_INVALID;
-	}
+        error = sdb_mapSQLError(sdb_p->type, sqlerr);
+        if (!found && error == CKR_OK) {
+            error = CKR_OBJECT_HANDLE_INVALID;
+        }
     }
 
     if (stmt) {
-	sqlite3_reset(stmt);
-	sqlite3_finalize(stmt);
+        sqlite3_reset(stmt);
+        sqlite3_finalize(stmt);
     }
 
     if (sqlDB) {
-	sdb_closeDBLocal(sdb_p, sqlDB) ;
+        sdb_closeDBLocal(sdb_p, sqlDB);
     }
-    UNLOCK_SQLITE()  
+    UNLOCK_SQLITE()
 
     return error;
 }
 
 static const char PW_CREATE_TABLE_CMD[] =
- "CREATE TABLE metaData (id PRIMARY KEY UNIQUE ON CONFLICT REPLACE, item1, item2);";
+    "CREATE TABLE metaData (id PRIMARY KEY UNIQUE ON CONFLICT REPLACE, item1, item2);";
 static const char PW_CREATE_CMD[] =
- "INSERT INTO metaData (id,item1,item2) VALUES($ID,$ITEM1,$ITEM2);";
-static const char MD_CREATE_CMD[]  =
- "INSERT INTO metaData (id,item1) VALUES($ID,$ITEM1);";
+    "INSERT INTO metaData (id,item1,item2) VALUES($ID,$ITEM1,$ITEM2);";
+static const char MD_CREATE_CMD[] =
+    "INSERT INTO metaData (id,item1) VALUES($ID,$ITEM1);";
+
 CK_RV
-sdb_PutMetaData(SDB *sdb, const char *id, const SECItem *item1, 
-					   const SECItem *item2)
+sdb_PutMetaData(SDB *sdb, const char *id, const SECItem *item1,
+                const SECItem *item2)
 {
     SDBPrivate *sdb_p = sdb->private;
-    sqlite3  *sqlDB = sdb_p->sqlXactDB;
+    sqlite3 *sqlDB = sdb_p->sqlXactDB;
     sqlite3_stmt *stmt = NULL;
     int sqlerr = SQLITE_OK;
     CK_RV error = CKR_OK;
@@ -1531,56 +1541,61 @@ sdb_PutMetaData(SDB *sdb, const char *id, const SECItem *item1,
     const char *cmd = PW_CREATE_CMD;
 
     if ((sdb->sdb_flags & SDB_RDONLY) != 0) {
-	return CKR_TOKEN_WRITE_PROTECTED;
+        return CKR_TOKEN_WRITE_PROTECTED;
     }
 
-    LOCK_SQLITE()  
+    LOCK_SQLITE()
     error = sdb_openDBLocal(sdb_p, &sqlDB, NULL);
     if (error != CKR_OK) {
-	goto loser;
+        goto loser;
     }
 
     if (!tableExists(sqlDB, "metaData")) {
-    	sqlerr = sqlite3_exec(sqlDB, PW_CREATE_TABLE_CMD, NULL, 0, NULL);
-        if (sqlerr != SQLITE_OK) goto loser;
+        sqlerr = sqlite3_exec(sqlDB, PW_CREATE_TABLE_CMD, NULL, 0, NULL);
+        if (sqlerr != SQLITE_OK)
+            goto loser;
     }
     if (item2 == NULL) {
-	cmd = MD_CREATE_CMD;
+        cmd = MD_CREATE_CMD;
     }
     sqlerr = sqlite3_prepare_v2(sqlDB, cmd, -1, &stmt, NULL);
-    if (sqlerr != SQLITE_OK) goto loser;
+    if (sqlerr != SQLITE_OK)
+        goto loser;
     sqlerr = sqlite3_bind_text(stmt, 1, id, PORT_Strlen(id), SQLITE_STATIC);
-    if (sqlerr != SQLITE_OK) goto loser;
+    if (sqlerr != SQLITE_OK)
+        goto loser;
     sqlerr = sqlite3_bind_blob(stmt, 2, item1->data, item1->len, SQLITE_STATIC);
-    if (sqlerr != SQLITE_OK) goto loser;
+    if (sqlerr != SQLITE_OK)
+        goto loser;
     if (item2) {
-    	sqlerr = sqlite3_bind_blob(stmt, 3, item2->data, 
-				   item2->len, SQLITE_STATIC);
-        if (sqlerr != SQLITE_OK) goto loser;
+        sqlerr = sqlite3_bind_blob(stmt, 3, item2->data,
+                                   item2->len, SQLITE_STATIC);
+        if (sqlerr != SQLITE_OK)
+            goto loser;
     }
 
     do {
-	sqlerr = sqlite3_step(stmt);
-	if (sqlerr == SQLITE_BUSY) {
-	    PR_Sleep(SDB_BUSY_RETRY_TIME);
-	}
-    } while (!sdb_done(sqlerr,&retry));
+        sqlerr = sqlite3_step(stmt);
+        if (sqlerr == SQLITE_BUSY) {
+            PR_Sleep(SDB_BUSY_RETRY_TIME);
+        }
+    } while (!sdb_done(sqlerr, &retry));
 
 loser:
     /* fix up the error if necessary */
     if (error == CKR_OK) {
-	error = sdb_mapSQLError(sdb_p->type, sqlerr);
+        error = sdb_mapSQLError(sdb_p->type, sqlerr);
     }
 
     if (stmt) {
-	sqlite3_reset(stmt);
-	sqlite3_finalize(stmt);
+        sqlite3_reset(stmt);
+        sqlite3_finalize(stmt);
     }
 
     if (sqlDB) {
-	sdb_closeDBLocal(sdb_p, sqlDB) ;
+        sdb_closeDBLocal(sdb_p, sqlDB);
     }
-    UNLOCK_SQLITE()  
+    UNLOCK_SQLITE()
 
     return error;
 }
@@ -1590,54 +1605,54 @@ CK_RV
 sdb_Reset(SDB *sdb)
 {
     SDBPrivate *sdb_p = sdb->private;
-    sqlite3  *sqlDB = NULL;
+    sqlite3 *sqlDB = NULL;
     char *newStr;
     int sqlerr = SQLITE_OK;
     CK_RV error = CKR_OK;
 
     /* only Key databases can be reset */
     if (sdb_p->type != SDB_KEY) {
-	return CKR_OBJECT_HANDLE_INVALID;
+        return CKR_OBJECT_HANDLE_INVALID;
     }
 
-    LOCK_SQLITE()  
+    LOCK_SQLITE()
     error = sdb_openDBLocal(sdb_p, &sqlDB, NULL);
     if (error != CKR_OK) {
-	goto loser;
+        goto loser;
     }
 
     /* delete the key table */
-    newStr =  sqlite3_mprintf(RESET_CMD, sdb_p->table);
+    newStr = sqlite3_mprintf(RESET_CMD, sdb_p->table);
     if (newStr == NULL) {
-	error = CKR_HOST_MEMORY;
-	goto loser;
+        error = CKR_HOST_MEMORY;
+        goto loser;
     }
     sqlerr = sqlite3_exec(sqlDB, newStr, NULL, 0, NULL);
     sqlite3_free(newStr);
 
-    if (sqlerr != SQLITE_OK) goto loser;
+    if (sqlerr != SQLITE_OK)
+        goto loser;
 
     /* delete the password entry table */
-    sqlerr = sqlite3_exec(sqlDB, "DROP TABLE IF EXISTS metaData;", 
+    sqlerr = sqlite3_exec(sqlDB, "DROP TABLE IF EXISTS metaData;",
                           NULL, 0, NULL);
 
 loser:
     /* fix up the error if necessary */
     if (error == CKR_OK) {
-	error = sdb_mapSQLError(sdb_p->type, sqlerr);
+        error = sdb_mapSQLError(sdb_p->type, sqlerr);
     }
 
     if (sqlDB) {
-	sdb_closeDBLocal(sdb_p, sqlDB) ;
+        sdb_closeDBLocal(sdb_p, sqlDB);
     }
 
-    UNLOCK_SQLITE()  
+    UNLOCK_SQLITE()
     return error;
 }
 
-
-CK_RV 
-sdb_Close(SDB *sdb) 
+CK_RV
+sdb_Close(SDB *sdb)
 {
     SDBPrivate *sdb_p = sdb->private;
     int sqlerr = SQLITE_OK;
@@ -1646,30 +1661,31 @@ sdb_Close(SDB *sdb)
     sqlerr = sqlite3_close(sdb_p->sqlReadDB);
     PORT_Free(sdb_p->sqlDBName);
     if (sdb_p->cacheTable) {
-	sqlite3_free(sdb_p->cacheTable);
+        sqlite3_free(sdb_p->cacheTable);
     }
     if (sdb_p->dbMon) {
-	PR_DestroyMonitor(sdb_p->dbMon);
+        PR_DestroyMonitor(sdb_p->dbMon);
     }
     free(sdb_p);
     free(sdb);
     return sdb_mapSQLError(type, sqlerr);
 }
 
-
 /*
  * functions to support open
  */
 
 static const char CHECK_TABLE_CMD[] = "SELECT ALL * FROM %s LIMIT 0;";
+
 /* return 1 if sqlDB contains table 'tableName */
-static int tableExists(sqlite3 *sqlDB, const char *tableName)
+static int
+tableExists(sqlite3 *sqlDB, const char *tableName)
 {
-    char * cmd = sqlite3_mprintf(CHECK_TABLE_CMD, tableName);
+    char *cmd = sqlite3_mprintf(CHECK_TABLE_CMD, tableName);
     int sqlerr = SQLITE_OK;
 
     if (cmd == NULL) {
-	return 0;
+        return 0;
     }
 
     sqlerr = sqlite3_exec(sqlDB, cmd, NULL, 0, 0);
@@ -1678,7 +1694,8 @@ static int tableExists(sqlite3 *sqlDB, const char *tableName)
     return (sqlerr == SQLITE_OK) ? 1 : 0;
 }
 
-void sdb_SetForkState(PRBool forked)
+void
+sdb_SetForkState(PRBool forked)
 {
     /* XXXright now this is a no-op. The global fork state in the softokn3
      * shared library is already taken care of at the PKCS#11 level.
@@ -1690,11 +1707,11 @@ void sdb_SetForkState(PRBool forked)
  * initialize a single database
  */
 static const char INIT_CMD[] =
- "CREATE TABLE %s (id PRIMARY KEY UNIQUE ON CONFLICT ABORT%s)";
+    "CREATE TABLE %s (id PRIMARY KEY UNIQUE ON CONFLICT ABORT%s)";
 
-CK_RV 
+CK_RV
 sdb_init(char *dbname, char *table, sdbDataType type, int *inUpdate,
-	 int *newInit, int inFlags, PRUint32 accessOps, SDB **pSdb)
+         int *newInit, int inFlags, PRUint32 accessOps, SDB **pSdb)
 {
     int i;
     char *initStr = NULL;
@@ -1715,20 +1732,20 @@ sdb_init(char *dbname, char *table, sdbDataType type, int *inUpdate,
     *pSdb = NULL;
     *inUpdate = 0;
 
-    /* sqlite3 doesn't have a flag to specify that we want to 
+    /* sqlite3 doesn't have a flag to specify that we want to
      * open the database read only. If the db doesn't exist,
      * sqlite3 will always create it.
      */
     LOCK_SQLITE();
     create = (PR_Access(dbname, PR_ACCESS_EXISTS) != PR_SUCCESS);
     if ((flags == SDB_RDONLY) && create) {
-	error = sdb_mapSQLError(type, SQLITE_CANTOPEN);
-	goto loser;
+        error = sdb_mapSQLError(type, SQLITE_CANTOPEN);
+        goto loser;
     }
     sqlerr = sdb_openDB(dbname, &sqlDB, flags);
     if (sqlerr != SQLITE_OK) {
-	error = sdb_mapSQLError(type, sqlerr); 
-	goto loser;
+        error = sdb_mapSQLError(type, sqlerr);
+        goto loser;
     }
 
     /*
@@ -1743,90 +1760,90 @@ sdb_init(char *dbname, char *table, sdbDataType type, int *inUpdate,
     }
 
     if (flags != SDB_RDONLY) {
-	sqlerr = sqlite3_exec(sqlDB, BEGIN_CMD, NULL, 0, NULL);
-	if (sqlerr != SQLITE_OK) {
-	    error = sdb_mapSQLError(type, sqlerr);
-	    goto loser;
-	}
-	inTransaction = 1;
+        sqlerr = sqlite3_exec(sqlDB, BEGIN_CMD, NULL, 0, NULL);
+        if (sqlerr != SQLITE_OK) {
+            error = sdb_mapSQLError(type, sqlerr);
+            goto loser;
+        }
+        inTransaction = 1;
     }
-    if (!tableExists(sqlDB,table)) {
-	*newInit = 1;
-	if (flags != SDB_CREATE) {
-	    error = sdb_mapSQLError(type, SQLITE_CANTOPEN);
-	    goto loser;
-	}
-	initStr = sqlite3_mprintf("");
-	for (i=0; initStr && i < known_attributes_size; i++) {
-	    newStr = sqlite3_mprintf("%s, a%x",initStr, known_attributes[i]);
-	    sqlite3_free(initStr);
-	    initStr = newStr;
-	}
-	if (initStr == NULL) {
-	    error = CKR_HOST_MEMORY;
-	    goto loser;
-	}
-
-	newStr = sqlite3_mprintf(INIT_CMD, table, initStr);
-	sqlite3_free(initStr);
-	if (newStr == NULL) {
+    if (!tableExists(sqlDB, table)) {
+        *newInit = 1;
+        if (flags != SDB_CREATE) {
+            error = sdb_mapSQLError(type, SQLITE_CANTOPEN);
+            goto loser;
+        }
+        initStr = sqlite3_mprintf("");
+        for (i = 0; initStr && i < known_attributes_size; i++) {
+            newStr = sqlite3_mprintf("%s, a%x", initStr, known_attributes[i]);
+            sqlite3_free(initStr);
+            initStr = newStr;
+        }
+        if (initStr == NULL) {
             error = CKR_HOST_MEMORY;
-	    goto loser;
-	}
-	sqlerr = sqlite3_exec(sqlDB, newStr, NULL, 0, NULL);
-	sqlite3_free(newStr);
-	if (sqlerr != SQLITE_OK) {
-            error = sdb_mapSQLError(type, sqlerr); 
-	    goto loser;
-	}
+            goto loser;
+        }
 
-	newStr = sqlite3_mprintf(CREATE_ISSUER_INDEX_CMD, table);
-	if (newStr == NULL) {
+        newStr = sqlite3_mprintf(INIT_CMD, table, initStr);
+        sqlite3_free(initStr);
+        if (newStr == NULL) {
             error = CKR_HOST_MEMORY;
-	    goto loser;
-	}
-	sqlerr = sqlite3_exec(sqlDB, newStr, NULL, 0, NULL);
-	sqlite3_free(newStr);
-	if (sqlerr != SQLITE_OK) {
-            error = sdb_mapSQLError(type, sqlerr); 
-	    goto loser;
-	}
+            goto loser;
+        }
+        sqlerr = sqlite3_exec(sqlDB, newStr, NULL, 0, NULL);
+        sqlite3_free(newStr);
+        if (sqlerr != SQLITE_OK) {
+            error = sdb_mapSQLError(type, sqlerr);
+            goto loser;
+        }
 
-	newStr = sqlite3_mprintf(CREATE_SUBJECT_INDEX_CMD, table);
-	if (newStr == NULL) {
+        newStr = sqlite3_mprintf(CREATE_ISSUER_INDEX_CMD, table);
+        if (newStr == NULL) {
             error = CKR_HOST_MEMORY;
-	    goto loser;
-	}
-	sqlerr = sqlite3_exec(sqlDB, newStr, NULL, 0, NULL);
-	sqlite3_free(newStr);
-	if (sqlerr != SQLITE_OK) {
-            error = sdb_mapSQLError(type, sqlerr); 
-	    goto loser;
-	}
+            goto loser;
+        }
+        sqlerr = sqlite3_exec(sqlDB, newStr, NULL, 0, NULL);
+        sqlite3_free(newStr);
+        if (sqlerr != SQLITE_OK) {
+            error = sdb_mapSQLError(type, sqlerr);
+            goto loser;
+        }
 
-	newStr = sqlite3_mprintf(CREATE_LABEL_INDEX_CMD, table);
-	if (newStr == NULL) {
+        newStr = sqlite3_mprintf(CREATE_SUBJECT_INDEX_CMD, table);
+        if (newStr == NULL) {
             error = CKR_HOST_MEMORY;
-	    goto loser;
-	}
-	sqlerr = sqlite3_exec(sqlDB, newStr, NULL, 0, NULL);
-	sqlite3_free(newStr);
-	if (sqlerr != SQLITE_OK) {
-            error = sdb_mapSQLError(type, sqlerr); 
-	    goto loser;
-	}
+            goto loser;
+        }
+        sqlerr = sqlite3_exec(sqlDB, newStr, NULL, 0, NULL);
+        sqlite3_free(newStr);
+        if (sqlerr != SQLITE_OK) {
+            error = sdb_mapSQLError(type, sqlerr);
+            goto loser;
+        }
 
-	newStr = sqlite3_mprintf(CREATE_ID_INDEX_CMD, table);
-	if (newStr == NULL) {
+        newStr = sqlite3_mprintf(CREATE_LABEL_INDEX_CMD, table);
+        if (newStr == NULL) {
             error = CKR_HOST_MEMORY;
-	    goto loser;
-	}
-	sqlerr = sqlite3_exec(sqlDB, newStr, NULL, 0, NULL);
-	sqlite3_free(newStr);
-	if (sqlerr != SQLITE_OK) {
-            error = sdb_mapSQLError(type, sqlerr); 
-	    goto loser;
-	}
+            goto loser;
+        }
+        sqlerr = sqlite3_exec(sqlDB, newStr, NULL, 0, NULL);
+        sqlite3_free(newStr);
+        if (sqlerr != SQLITE_OK) {
+            error = sdb_mapSQLError(type, sqlerr);
+            goto loser;
+        }
+
+        newStr = sqlite3_mprintf(CREATE_ID_INDEX_CMD, table);
+        if (newStr == NULL) {
+            error = CKR_HOST_MEMORY;
+            goto loser;
+        }
+        sqlerr = sqlite3_exec(sqlDB, newStr, NULL, 0, NULL);
+        sqlite3_free(newStr);
+        if (sqlerr != SQLITE_OK) {
+            error = sdb_mapSQLError(type, sqlerr);
+            goto loser;
+        }
     }
     /*
      * detect the case where we have created the database, but have
@@ -1839,22 +1856,22 @@ sdb_init(char *dbname, char *table, sdbDataType type, int *inUpdate,
      * on noticing that the cert database didn't exist (see newInit set above).
      */
     if (type == SDB_KEY && !tableExists(sqlDB, "metaData")) {
-	*newInit = 1;
+        *newInit = 1;
     }
-    
+
     /* access to network filesystems are significantly slower than local ones
      * for database operations. In those cases we need to create a cached copy
      * of the database in a temporary location on the local disk. SQLITE
      * already provides a way to create a temporary table and initialize it,
      * so we use it for the cache (see sdb_buildCache for how it's done).*/
 
-     /* 
+    /*
       * we decide whether or not to use the cache based on the following input.
       *
-      * NSS_SDB_USE_CACHE environment variable is non-existant or set to 
+      * NSS_SDB_USE_CACHE environment variable is non-existant or set to
       *   anything other than "no" or "yes" ("auto", for instance).
       *   This is the normal case. NSS will measure the performance of access
-      *   to the temp database versus the access to the users passed in 
+      *   to the temp database versus the access to the users passed in
       *   database location. If the temp database location is "significantly"
       *   faster we will use the cache.
       *
@@ -1865,56 +1882,56 @@ sdb_init(char *dbname, char *table, sdbDataType type, int *inUpdate,
       *   always be used.
       *
       * It is expected that most applications would use the "auto" selection,
-      * the environment variable is primarily to simplify testing, and to 
+      * the environment variable is primarily to simplify testing, and to
       * correct potential corner cases where  */
 
-     env = PR_GetEnvSecure("NSS_SDB_USE_CACHE");
+    env = PR_GetEnvSecure("NSS_SDB_USE_CACHE");
 
-     if (env && PORT_Strcasecmp(env,"no") == 0) {
-	enableCache = PR_FALSE;
-     } else if (env && PORT_Strcasecmp(env,"yes") == 0) {
-	enableCache = PR_TRUE;
-     } else {
-	char *tempDir = NULL;
-	PRUint32 tempOps = 0;
-	/*
-	 *  Use PR_Access to determine how expensive it
-	 * is to check for the existance of a local file compared to the same
-	 * check in the temp directory. If the temp directory is faster, cache
-	 * the database there. */
-	tempDir = sdb_getTempDir(sqlDB);
-	if (tempDir) {
-	    tempOps = sdb_measureAccess(tempDir);
-	    PORT_Free(tempDir);
+    if (env && PORT_Strcasecmp(env, "no") == 0) {
+        enableCache = PR_FALSE;
+    } else if (env && PORT_Strcasecmp(env, "yes") == 0) {
+        enableCache = PR_TRUE;
+    } else {
+        char *tempDir = NULL;
+        PRUint32 tempOps = 0;
+        /*
+         *  Use PR_Access to determine how expensive it
+         * is to check for the existance of a local file compared to the same
+         * check in the temp directory. If the temp directory is faster, cache
+         * the database there. */
+        tempDir = sdb_getTempDir(sqlDB);
+        if (tempDir) {
+            tempOps = sdb_measureAccess(tempDir);
+            PORT_Free(tempDir);
 
-	    /* There is a cost to continually copying the database. 
-	     * Account for that cost  with the arbitrary factor of 10 */
-	    enableCache = (PRBool)(tempOps > accessOps * 10);
-	}
+            /* There is a cost to continually copying the database.
+             * Account for that cost  with the arbitrary factor of 10 */
+            enableCache = (PRBool)(tempOps > accessOps * 10);
+        }
     }
 
     if (enableCache) {
-	/* try to set the temp store to memory.*/
-	sqlite3_exec(sqlDB, "PRAGMA temp_store=MEMORY", NULL, 0, NULL);
-	/* Failure to set the temp store to memory is not fatal,
+        /* try to set the temp store to memory.*/
+        sqlite3_exec(sqlDB, "PRAGMA temp_store=MEMORY", NULL, 0, NULL);
+        /* Failure to set the temp store to memory is not fatal,
          * ignore the error */
 
-	cacheTable = sqlite3_mprintf("%sCache",table);
-	if (cacheTable == NULL) {
-	    error = CKR_HOST_MEMORY;
-	    goto loser;
-	}
-	/* build the cache table */
-	error = sdb_buildCache(sqlDB, type, cacheTable, table);
-	if (error != CKR_OK) {
-	    goto loser;
-	}
-	/* initialize the last cache build time */
-	now = PR_IntervalNow();
+        cacheTable = sqlite3_mprintf("%sCache", table);
+        if (cacheTable == NULL) {
+            error = CKR_HOST_MEMORY;
+            goto loser;
+        }
+        /* build the cache table */
+        error = sdb_buildCache(sqlDB, type, cacheTable, table);
+        if (error != CKR_OK) {
+            goto loser;
+        }
+        /* initialize the last cache build time */
+        now = PR_IntervalNow();
     }
 
-    sdb = (SDB *) malloc(sizeof(SDB));
-    sdb_p = (SDBPrivate *) malloc(sizeof(SDBPrivate));
+    sdb = (SDB *)malloc(sizeof(SDB));
+    sdb_p = (SDBPrivate *)malloc(sizeof(SDBPrivate));
 
     /* invariant fields */
     sdb_p->sqlDBName = PORT_Strdup(dbname);
@@ -1924,7 +1941,7 @@ sdb_init(char *dbname, char *table, sdbDataType type, int *inUpdate,
     sdb_p->lastUpdateTime = now;
     /* set the cache delay time. This is how long we will wait before we
      * decide the existing cache is stale. Currently set to 10 sec */
-    sdb_p->updateInterval = PR_SecondsToInterval(10); 
+    sdb_p->updateInterval = PR_SecondsToInterval(10);
     sdb_p->dbMon = PR_NewMonitor();
     /* these fields are protected by the lock */
     sdb_p->sqlXactDB = NULL;
@@ -1950,12 +1967,12 @@ sdb_init(char *dbname, char *table, sdbDataType type, int *inUpdate,
     sdb->sdb_SetForkState = sdb_SetForkState;
 
     if (inTransaction) {
-	sqlerr = sqlite3_exec(sqlDB, COMMIT_CMD, NULL, 0, NULL);
-	if (sqlerr != SQLITE_OK) {
-	    error = sdb_mapSQLError(sdb_p->type, sqlerr);
-	    goto loser;
-	}
-	inTransaction = 0;
+        sqlerr = sqlite3_exec(sqlDB, COMMIT_CMD, NULL, 0, NULL);
+        if (sqlerr != SQLITE_OK) {
+            error = sdb_mapSQLError(sdb_p->type, sqlerr);
+            goto loser;
+        }
+        inTransaction = 0;
     }
 
     sdb_p->sqlReadDB = sqlDB;
@@ -1967,50 +1984,48 @@ sdb_init(char *dbname, char *table, sdbDataType type, int *inUpdate,
 loser:
     /* lots of stuff to do */
     if (inTransaction) {
-	sqlite3_exec(sqlDB, ROLLBACK_CMD, NULL, 0, NULL);
+        sqlite3_exec(sqlDB, ROLLBACK_CMD, NULL, 0, NULL);
     }
     if (sdb) {
-	free(sdb);
+        free(sdb);
     }
     if (sdb_p) {
-	free(sdb_p);
+        free(sdb_p);
     }
     if (sqlDB) {
-	sqlite3_close(sqlDB);
+        sqlite3_close(sqlDB);
     }
     UNLOCK_SQLITE();
     return error;
-
 }
-
 
 /* sdbopen */
 CK_RV
 s_open(const char *directory, const char *certPrefix, const char *keyPrefix,
-	int cert_version, int key_version, int flags, 
-	SDB **certdb, SDB **keydb, int *newInit)
+       int cert_version, int key_version, int flags,
+       SDB **certdb, SDB **keydb, int *newInit)
 {
     char *cert = sdb_BuildFileName(directory, certPrefix,
-				   "cert", cert_version);
+                                   "cert", cert_version);
     char *key = sdb_BuildFileName(directory, keyPrefix,
-				   "key", key_version);
+                                  "key", key_version);
     CK_RV error = CKR_OK;
     int inUpdate;
     PRUint32 accessOps;
 
-    if (certdb) 
-	*certdb = NULL;
-    if (keydb) 
-	*keydb = NULL;
+    if (certdb)
+        *certdb = NULL;
+    if (keydb)
+        *keydb = NULL;
     *newInit = 0;
 
 #ifdef SQLITE_UNSAFE_THREADS
     if (sqlite_lock == NULL) {
-	sqlite_lock = PR_NewLock();
-	if (sqlite_lock == NULL) {
-	    error = CKR_HOST_MEMORY;
-	    goto loser;
-	}
+        sqlite_lock = PR_NewLock();
+        if (sqlite_lock == NULL) {
+            error = CKR_HOST_MEMORY;
+            goto loser;
+        }
     }
 #endif
 
@@ -2023,8 +2038,8 @@ s_open(const char *directory, const char *certPrefix, const char *keyPrefix,
         /* If the environment variable is set to yes or no, sdb_init() will
          * ignore the value of accessOps, and we can skip the measuring.*/
         if (!env || ((PORT_Strcasecmp(env, "no") != 0) &&
-                     (PORT_Strcasecmp(env, "yes") != 0))){
-           accessOps = sdb_measureAccess(directory);
+                     (PORT_Strcasecmp(env, "yes") != 0))) {
+            accessOps = sdb_measureAccess(directory);
         }
     }
 
@@ -2032,16 +2047,16 @@ s_open(const char *directory, const char *certPrefix, const char *keyPrefix,
      * open the cert data base
      */
     if (certdb) {
-	/* initialize Certificate database */
-	error = sdb_init(cert, "nssPublic", SDB_CERT, &inUpdate,
-			 newInit, flags, accessOps, certdb);
-	if (error != CKR_OK) {
-	    goto loser;
-	}
+        /* initialize Certificate database */
+        error = sdb_init(cert, "nssPublic", SDB_CERT, &inUpdate,
+                         newInit, flags, accessOps, certdb);
+        if (error != CKR_OK) {
+            goto loser;
+        }
     }
 
     /*
-     * open the key data base: 
+     * open the key data base:
      *  NOTE:if we want to implement a single database, we open
      *  the same database file as the certificate here.
      *
@@ -2049,32 +2064,31 @@ s_open(const char *directory, const char *certPrefix, const char *keyPrefix,
      *  conflict.
      */
     if (keydb) {
-	/* initialize the Key database */
-	error = sdb_init(key, "nssPrivate", SDB_KEY, &inUpdate, 
-			newInit, flags, accessOps, keydb);
-	if (error != CKR_OK) {
-	    goto loser;
-	} 
+        /* initialize the Key database */
+        error = sdb_init(key, "nssPrivate", SDB_KEY, &inUpdate,
+                         newInit, flags, accessOps, keydb);
+        if (error != CKR_OK) {
+            goto loser;
+        }
     }
-
 
 loser:
     if (cert) {
-	sqlite3_free(cert);
+        sqlite3_free(cert);
     }
     if (key) {
-	sqlite3_free(key);
+        sqlite3_free(key);
     }
 
     if (error != CKR_OK) {
-	/* currently redundant, but could be necessary if more code is added
-	 * just before loser */
-	if (keydb && *keydb) {
-	    sdb_Close(*keydb);
-	}
-	if (certdb && *certdb) {
-	    sdb_Close(*certdb);
-	}
+        /* currently redundant, but could be necessary if more code is added
+         * just before loser */
+        if (keydb && *keydb) {
+            sdb_Close(*keydb);
+        }
+        if (certdb && *certdb) {
+            sdb_Close(*certdb);
+        }
     }
 
     return error;
@@ -2085,8 +2099,8 @@ s_shutdown()
 {
 #ifdef SQLITE_UNSAFE_THREADS
     if (sqlite_lock) {
-	PR_DestroyLock(sqlite_lock);
-	sqlite_lock = NULL;
+        PR_DestroyLock(sqlite_lock);
+        sqlite_lock = NULL;
     }
 #endif
     return CKR_OK;
