@@ -395,6 +395,10 @@ html, body, #app, #memory-tool {
   padding-inline-end: 5px;
 }
 
+.children-pointer:dir(rtl) {
+  transform: scaleX(-1);
+}
+
 /**
  * Heap tree view columns
  */
