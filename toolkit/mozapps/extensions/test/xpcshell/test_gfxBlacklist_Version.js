@@ -131,7 +131,6 @@ function run_test() {
 
     status = gfxInfo.getFeatureStatus(Ci.nsIGfxInfo.FEATURE_DX_INTEROP2, failureId);
     do_check_eq(status, Ci.nsIGfxInfo.FEATURE_STATUS_OK);
-    do_check_eq(failureId.value, "FEATURE_FAILURE_DL_BLACKLIST_NO_ID");
 
     gTestserver.stop(do_test_finished);
   }
