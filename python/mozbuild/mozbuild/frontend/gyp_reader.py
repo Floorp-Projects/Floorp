@@ -93,6 +93,7 @@ def read_from_gyp(config, path, output, vars, non_unified_sources = set()):
         b'parallel': False,
         b'generator_flags': {},
         b'build_files': [path],
+        b'root_targets': None,
     }
 
     # Files that gyp_chromium always includes
