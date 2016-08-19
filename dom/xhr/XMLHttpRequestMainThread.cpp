@@ -1535,7 +1535,10 @@ XMLHttpRequestMainThread::OpenInternal(const nsACString& aMethod,
   mFlagAborted = false;
   mFlagTimedOut = false;
 
-  rv = InitChannel();
+  // The channel should really be created on send(), but we have a chrome-only
+  // XHR.channel API which necessitates creating the channel now, while doing
+  // the rest of the channel-setup later at send-time.
+  rv = CreateChannel();
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Step 12
@@ -2336,7 +2339,7 @@ XMLHttpRequestMainThread::RequestBody<const ArrayBufferView>::GetAsStream(
 
 
 nsresult
-XMLHttpRequestMainThread::InitChannel()
+XMLHttpRequestMainThread::CreateChannel()
 {
   // When we are called from JS we can find the load group for the page,
   // and add ourselves to it. This way any pending requests
@@ -2404,6 +2407,205 @@ XMLHttpRequestMainThread::InitChannel()
     nsCOMPtr<nsITimedChannel> timedChannel(do_QueryInterface(httpChannel));
     if (timedChannel) {
       timedChannel->SetInitiatorType(NS_LITERAL_STRING("xmlhttprequest"));
+    }
+  }
+
+  return NS_OK;
+}
+
+nsresult
+XMLHttpRequestMainThread::InitiateFetch(nsIInputStream* aUploadStream,
+                                        int64_t aUploadLength,
+                                        nsACString& aUploadContentType)
+{
+  nsresult rv;
+
+  // nsIRequest::LOAD_BACKGROUND prevents throbber from becoming active, which
+  // in turn keeps STOP button from becoming active.  If the consumer passed in
+  // a progress event handler we must load with nsIRequest::LOAD_NORMAL or
+  // necko won't generate any progress notifications.
+  if (HasListenersFor(nsGkAtoms::onprogress) ||
+      (mUpload && mUpload->HasListenersFor(nsGkAtoms::onprogress))) {
+    nsLoadFlags loadFlags;
+    mChannel->GetLoadFlags(&loadFlags);
+    loadFlags &= ~nsIRequest::LOAD_BACKGROUND;
+    loadFlags |= nsIRequest::LOAD_NORMAL;
+    mChannel->SetLoadFlags(loadFlags);
+  }
+
+  nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(mChannel));
+  if (httpChannel) {
+    // If the user hasn't overridden the Accept header, set it to */* per spec.
+    if (!mAuthorRequestHeaders.Has("accept")) {
+      mAuthorRequestHeaders.Set("accept", NS_LITERAL_CSTRING("*/*"));
+    }
+
+    mAuthorRequestHeaders.ApplyToChannel(httpChannel);
+
+    if (!IsSystemXHR()) {
+      nsCOMPtr<nsPIDOMWindowInner> owner = GetOwner();
+      nsCOMPtr<nsIDocument> doc = owner ? owner->GetExtantDoc() : nullptr;
+      nsContentUtils::SetFetchReferrerURIWithPolicy(mPrincipal, doc,
+                                                    httpChannel,
+                                                    mozilla::net::RP_Default);
+    }
+
+    // Some extensions override the http protocol handler and provide their own
+    // implementation. The channels returned from that implementation don't
+    // always seem to implement the nsIUploadChannel2 interface, presumably
+    // because it's a new interface. Eventually we should remove this and simply
+    // require that http channels implement the new interface (see bug 529041).
+    nsCOMPtr<nsIUploadChannel2> uploadChannel2 = do_QueryInterface(httpChannel);
+    if (!uploadChannel2) {
+      nsCOMPtr<nsIConsoleService> consoleService =
+        do_GetService(NS_CONSOLESERVICE_CONTRACTID);
+      if (consoleService) {
+        consoleService->LogStringMessage(NS_LITERAL_STRING(
+          "Http channel implementation doesn't support nsIUploadChannel2. "
+          "An extension has supplied a non-functional http protocol handler. "
+          "This will break behavior and in future releases not work at all."
+        ).get());
+      }
+    }
+
+    if (aUploadStream) {
+      // If necessary, wrap the stream in a buffered stream so as to guarantee
+      // support for our upload when calling ExplicitSetUploadStream.
+      nsCOMPtr<nsIInputStream> bufferedStream;
+      if (!NS_InputStreamIsBuffered(aUploadStream)) {
+        rv = NS_NewBufferedInputStream(getter_AddRefs(bufferedStream),
+                                       aUploadStream, 4096);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        aUploadStream = bufferedStream;
+      }
+
+      // We want to use a newer version of the upload channel that won't
+      // ignore the necessary headers for an empty Content-Type.
+      nsCOMPtr<nsIUploadChannel2> uploadChannel2(do_QueryInterface(httpChannel));
+      // This assertion will fire if buggy extensions are installed
+      NS_ASSERTION(uploadChannel2, "http must support nsIUploadChannel2");
+      if (uploadChannel2) {
+          uploadChannel2->ExplicitSetUploadStream(aUploadStream,
+                                                  aUploadContentType,
+                                                  mUploadTotal, mRequestMethod,
+                                                  false);
+      } else {
+        // The http channel doesn't support the new nsIUploadChannel2.
+        // Emulate it as best we can using nsIUploadChannel.
+        if (aUploadContentType.IsEmpty()) {
+          aUploadContentType.AssignLiteral("application/octet-stream");
+        }
+        nsCOMPtr<nsIUploadChannel> uploadChannel =
+          do_QueryInterface(httpChannel);
+        uploadChannel->SetUploadStream(aUploadStream, aUploadContentType,
+                                       mUploadTotal);
+        // Reset the method to its original value
+        httpChannel->SetRequestMethod(mRequestMethod);
+      }
+    }
+  }
+
+  // Due to the chrome-only XHR.channel API, we need a hacky way to set the
+  // SEC_COOKIES_INCLUDE *after* the channel has been has been created, since
+  // .withCredentials can be called after open() is called.
+  // Not doing this for privileged system XHRs since those don't use CORS.
+  if (!IsSystemXHR() && !mIsAnon && mFlagACwithCredentials) {
+    nsCOMPtr<nsILoadInfo> loadInfo = mChannel->GetLoadInfo();
+    static_cast<net::LoadInfo*>(loadInfo.get())->SetIncludeCookiesSecFlag();
+  }
+
+  // Blocking gets are common enough out of XHR that we should mark
+  // the channel slow by default for pipeline purposes
+  AddLoadFlags(mChannel, nsIRequest::INHIBIT_PIPELINE);
+
+  // We never let XHR be blocked by head CSS/JS loads to avoid potential
+  // deadlock where server generation of CSS/JS requires an XHR signal.
+  nsCOMPtr<nsIClassOfService> cos(do_QueryInterface(mChannel));
+  if (cos) {
+    cos->AddClassFlags(nsIClassOfService::Unblocked);
+  }
+
+  // Disable Necko-internal response timeouts.
+  nsCOMPtr<nsIHttpChannelInternal>
+    internalHttpChannel(do_QueryInterface(mChannel));
+  if (internalHttpChannel) {
+    internalHttpChannel->SetResponseTimeoutEnabled(false);
+  }
+
+  if (!mIsAnon) {
+    AddLoadFlags(mChannel, nsIChannel::LOAD_EXPLICIT_CREDENTIALS);
+  }
+
+  // Bypass the network cache in cases where it makes no sense:
+  // POST responses are always unique, and we provide no API that would
+  // allow our consumers to specify a "cache key" to access old POST
+  // responses, so they are not worth caching.
+  if (mRequestMethod.EqualsLiteral("POST")) {
+    AddLoadFlags(mChannel,
+                 nsICachingChannel::LOAD_BYPASS_LOCAL_CACHE |
+                 nsIRequest::INHIBIT_CACHING);
+  } else {
+    // When we are sync loading, we need to bypass the local cache when it would
+    // otherwise block us waiting for exclusive access to the cache.  If we don't
+    // do this, then we could dead lock in some cases (see bug 309424).
+    //
+    // Also don't block on the cache entry on async if it is busy - favoring parallelism
+    // over cache hit rate for xhr. This does not disable the cache everywhere -
+    // only in cases where more than one channel for the same URI is accessed
+    // simultanously.
+    AddLoadFlags(mChannel, nsICachingChannel::LOAD_BYPASS_LOCAL_CACHE_IF_BUSY);
+  }
+
+  // Since we expect XML data, set the type hint accordingly
+  // if the channel doesn't know any content type.
+  // This means that we always try to parse local files as XML
+  // ignoring return value, as this is not critical
+  nsAutoCString contentType;
+  if (NS_FAILED(mChannel->GetContentType(contentType)) ||
+      contentType.IsEmpty() ||
+      contentType.Equals(UNKNOWN_CONTENT_TYPE)) {
+    mChannel->SetContentType(NS_LITERAL_CSTRING("application/xml"));
+  }
+
+  // Set up the preflight if needed
+  if (!IsSystemXHR()) {
+    nsTArray<nsCString> CORSUnsafeHeaders;
+    mAuthorRequestHeaders.GetCORSUnsafeHeaders(CORSUnsafeHeaders);
+    nsCOMPtr<nsILoadInfo> loadInfo = mChannel->GetLoadInfo();
+    loadInfo->SetCorsPreflightInfo(CORSUnsafeHeaders,
+                                   mFlagHadUploadListenersOnSend);
+  }
+
+  // Hook us up to listen to redirects and the like. Only do this very late
+  // since this creates a cycle between the channel and us. This cycle has
+  // to be manually broken if anything below fails.
+  mChannel->GetNotificationCallbacks(getter_AddRefs(mNotificationCallbacks));
+  mChannel->SetNotificationCallbacks(this);
+
+  if (internalHttpChannel) {
+    internalHttpChannel->SetBlockAuthPrompt(ShouldBlockAuthPrompt());
+  }
+
+  // Because of bug 682305, we can't let listener be the XHR object itself
+  // because JS wouldn't be able to use it. So create a listener around 'this'.
+  // Make sure to hold a strong reference so that we don't leak the wrapper.
+  nsCOMPtr<nsIStreamListener> listener = new net::nsStreamListenerWrapper(this);
+
+  // Start reading from the channel
+  rv = mChannel->AsyncOpen2(listener);
+  listener = nullptr;
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    // Drop our ref to the channel to avoid cycles. Also drop channel's
+    // ref to us to be extra safe.
+    mChannel->SetNotificationCallbacks(mNotificationCallbacks);
+    mChannel = nullptr;
+
+    mErrorLoad = true;
+
+    // Per spec, we throw on sync errors, but not async.
+    if (mFlagSynchronous) {
+      return rv;
     }
   }
 
@@ -2508,65 +2710,9 @@ XMLHttpRequestMainThread::SendInternal(const RequestBodyBase* aBody)
     return NS_ERROR_DOM_INVALID_STATE_ERR;
   }
 
-  // nsIRequest::LOAD_BACKGROUND prevents throbber from becoming active, which
-  // in turn keeps STOP button from becoming active.  If the consumer passed in
-  // a progress event handler we must load with nsIRequest::LOAD_NORMAL or
-  // necko won't generate any progress notifications.
-  if (HasListenersFor(nsGkAtoms::onprogress) ||
-      (mUpload && mUpload->HasListenersFor(nsGkAtoms::onprogress))) {
-    nsLoadFlags loadFlags;
-    mChannel->GetLoadFlags(&loadFlags);
-    loadFlags &= ~nsIRequest::LOAD_BACKGROUND;
-    loadFlags |= nsIRequest::LOAD_NORMAL;
-    mChannel->SetLoadFlags(loadFlags);
-  }
-
   // XXX We should probably send a warning to the JS console
   //     if there are no event listeners set and we are doing
   //     an asynchronous call.
-
-  // Ignore argument if method is GET, there is no point in trying to
-  // upload anything
-  nsAutoCString method;
-  nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(mChannel));
-
-  if (httpChannel) {
-    // If the user hasn't overridden the Accept header, set it to */* as per spec
-    if (!mAuthorRequestHeaders.Has("accept")) {
-      mAuthorRequestHeaders.Set("Accept", NS_LITERAL_CSTRING("*/*"));
-    }
-
-    // Spec step 5
-    mAuthorRequestHeaders.ApplyToChannel(httpChannel);
-
-    httpChannel->GetRequestMethod(method); // If GET, method name will be uppercase
-
-    if (!IsSystemXHR()) {
-      nsCOMPtr<nsPIDOMWindowInner> owner = GetOwner();
-      nsCOMPtr<nsIDocument> doc = owner ? owner->GetExtantDoc() : nullptr;
-      nsContentUtils::SetFetchReferrerURIWithPolicy(mPrincipal, doc,
-                                                    httpChannel, mozilla::net::RP_Default);
-    }
-
-    // Some extensions override the http protocol handler and provide their own
-    // implementation. The channels returned from that implementation doesn't
-    // seem to always implement the nsIUploadChannel2 interface, presumably
-    // because it's a new interface.
-    // Eventually we should remove this and simply require that http channels
-    // implement the new interface.
-    // See bug 529041
-    nsCOMPtr<nsIUploadChannel2> uploadChannel2 =
-      do_QueryInterface(httpChannel);
-    if (!uploadChannel2) {
-      nsCOMPtr<nsIConsoleService> consoleService =
-        do_GetService(NS_CONSOLESERVICE_CONTRACTID);
-      if (consoleService) {
-        consoleService->LogStringMessage(NS_LITERAL_STRING(
-          "Http channel implementation doesn't support nsIUploadChannel2. An extension has supplied a non-functional http protocol handler. This will break behavior and in future releases not work at all."
-                                                           ).get());
-      }
-    }
-  }
 
   mUploadTransferred = 0;
   mUploadTotal = 0;
@@ -2574,16 +2720,17 @@ XMLHttpRequestMainThread::SendInternal(const RequestBodyBase* aBody)
   mUploadComplete = true;
   mErrorLoad = false;
   mLoadTotal = 0;
+  nsCOMPtr<nsIInputStream> uploadStream;
+  nsAutoCString uploadContentType;
+  nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(mChannel));
   if (aBody && httpChannel &&
-      !method.LowerCaseEqualsLiteral("get") &&
-      !method.LowerCaseEqualsLiteral("head")) {
+      !mRequestMethod.EqualsLiteral("GET") &&
+      !mRequestMethod.EqualsLiteral("HEAD")) {
 
     nsAutoCString charset;
     nsAutoCString defaultContentType;
-    nsCOMPtr<nsIInputStream> postDataStream;
-
     uint64_t size_u64;
-    rv = aBody->GetAsStream(getter_AddRefs(postDataStream),
+    rv = aBody->GetAsStream(getter_AddRefs(uploadStream),
                             &size_u64, defaultContentType, charset);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -2591,19 +2738,17 @@ XMLHttpRequestMainThread::SendInternal(const RequestBodyBase* aBody)
     mUploadTotal =
       net::InScriptableRange(size_u64) ? static_cast<int64_t>(size_u64) : -1;
 
-    if (postDataStream) {
+    if (uploadStream) {
       // If author set no Content-Type, use the default from GetAsStream().
-      nsAutoCString contentType;
-
-      mAuthorRequestHeaders.Get("content-type", contentType);
-      if (contentType.IsVoid()) {
-        contentType = defaultContentType;
+      mAuthorRequestHeaders.Get("content-type", uploadContentType);
+      if (uploadContentType.IsVoid()) {
+        uploadContentType = defaultContentType;
 
         if (!charset.IsEmpty()) {
           // If we are providing the default content type, then we also need to
           // provide a charset declaration.
-          contentType.Append(NS_LITERAL_CSTRING(";charset="));
-          contentType.Append(charset);
+          uploadContentType.Append(NS_LITERAL_CSTRING(";charset="));
+          uploadContentType.Append(charset);
         }
       }
 
@@ -2611,7 +2756,7 @@ XMLHttpRequestMainThread::SendInternal(const RequestBodyBase* aBody)
       if (!charset.IsEmpty()) {
         // Replace all case-insensitive matches of the charset in the
         // content-type with the correct case.
-        RequestHeaders::CharsetIterator iter(contentType);
+        RequestHeaders::CharsetIterator iter(uploadContentType);
         const nsCaseInsensitiveCStringComparator cmp;
         while (iter.Next()) {
           if (!iter.Equals(charset, cmp)) {
@@ -2620,130 +2765,15 @@ XMLHttpRequestMainThread::SendInternal(const RequestBodyBase* aBody)
         }
       }
 
-      // If necessary, wrap the stream in a buffered stream so as to guarantee
-      // support for our upload when calling ExplicitSetUploadStream.
-      if (!NS_InputStreamIsBuffered(postDataStream)) {
-        nsCOMPtr<nsIInputStream> bufferedStream;
-        rv = NS_NewBufferedInputStream(getter_AddRefs(bufferedStream),
-                                       postDataStream,
-                                       4096);
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        postDataStream = bufferedStream;
-      }
-
       mUploadComplete = false;
-
-      // We want to use a newer version of the upload channel that won't
-      // ignore the necessary headers for an empty Content-Type.
-      nsCOMPtr<nsIUploadChannel2> uploadChannel2(do_QueryInterface(httpChannel));
-      // This assertion will fire if buggy extensions are installed
-      NS_ASSERTION(uploadChannel2, "http must support nsIUploadChannel2");
-      if (uploadChannel2) {
-          uploadChannel2->ExplicitSetUploadStream(postDataStream, contentType,
-                                                 mUploadTotal, method, false);
-      }
-      else {
-        // http channel doesn't support the new nsIUploadChannel2. Emulate
-        // as best we can using nsIUploadChannel
-        if (contentType.IsEmpty()) {
-          contentType.AssignLiteral("application/octet-stream");
-        }
-        nsCOMPtr<nsIUploadChannel> uploadChannel =
-          do_QueryInterface(httpChannel);
-        uploadChannel->SetUploadStream(postDataStream, contentType, mUploadTotal);
-        // Reset the method to its original value
-        httpChannel->SetRequestMethod(method);
-      }
     }
   }
 
   ResetResponse();
 
-  if (!IsSystemXHR() && !mIsAnon && mFlagACwithCredentials) {
-    // This is quite sad. We have to create the channel in .open(), since the
-    // chrome-only xhr.channel API depends on that. However .withCredentials
-    // can be modified after, so we don't know what to set the
-    // SEC_COOKIES_INCLUDE flag to when the channel is
-    // created. So set it here using a hacky internal API.
-
-    // Not doing this for system XHR uses since those don't use CORS.
-    nsCOMPtr<nsILoadInfo> loadInfo = mChannel->GetLoadInfo();
-    static_cast<net::LoadInfo*>(loadInfo.get())->SetIncludeCookiesSecFlag();
-  }
-
-  // Blocking gets are common enough out of XHR that we should mark
-  // the channel slow by default for pipeline purposes
-  AddLoadFlags(mChannel, nsIRequest::INHIBIT_PIPELINE);
-
-  nsCOMPtr<nsIClassOfService> cos(do_QueryInterface(mChannel));
-  if (cos) {
-    // we never let XHR be blocked by head CSS/JS loads to avoid
-    // potential deadlock where server generation of CSS/JS requires
-    // an XHR signal.
-    cos->AddClassFlags(nsIClassOfService::Unblocked);
-  }
-
-  nsCOMPtr<nsIHttpChannelInternal>
-    internalHttpChannel(do_QueryInterface(mChannel));
-  if (internalHttpChannel) {
-    // Disable Necko-internal response timeouts.
-    internalHttpChannel->SetResponseTimeoutEnabled(false);
-  }
-
-  if (!mIsAnon) {
-    AddLoadFlags(mChannel, nsIChannel::LOAD_EXPLICIT_CREDENTIALS);
-  }
-
-  // Bypass the network cache in cases where it makes no sense:
-  // POST responses are always unique, and we provide no API that would
-  // allow our consumers to specify a "cache key" to access old POST
-  // responses, so they are not worth caching.
-  if (method.EqualsLiteral("POST")) {
-    AddLoadFlags(mChannel,
-                 nsICachingChannel::LOAD_BYPASS_LOCAL_CACHE |
-                 nsIRequest::INHIBIT_CACHING);
-  } else {
-    // When we are sync loading, we need to bypass the local cache when it would
-    // otherwise block us waiting for exclusive access to the cache.  If we don't
-    // do this, then we could dead lock in some cases (see bug 309424).
-    //
-    // Also don't block on the cache entry on async if it is busy - favoring parallelism
-    // over cache hit rate for xhr. This does not disable the cache everywhere -
-    // only in cases where more than one channel for the same URI is accessed
-    // simultanously.
-
-    AddLoadFlags(mChannel,
-                 nsICachingChannel::LOAD_BYPASS_LOCAL_CACHE_IF_BUSY);
-  }
-
-  // Since we expect XML data, set the type hint accordingly
-  // if the channel doesn't know any content type.
-  // This means that we always try to parse local files as XML
-  // ignoring return value, as this is not critical
-  nsAutoCString contentType;
-  if (NS_FAILED(mChannel->GetContentType(contentType)) ||
-      contentType.IsEmpty() ||
-      contentType.Equals(UNKNOWN_CONTENT_TYPE)) {
-    mChannel->SetContentType(NS_LITERAL_CSTRING("application/xml"));
-  }
-
-  // We're about to send the request.  Start our timeout.
-  mRequestSentTime = PR_Now();
-  StartTimeoutTimer();
-
-  // Check if we should enabled cross-origin upload listeners.
+  // Check if we should enable cross-origin upload listeners.
   if (mUpload && mUpload->HasListeners()) {
     mFlagHadUploadListenersOnSend = true;
-  }
-
-  // Set up the preflight if needed
-  if (!IsSystemXHR()) {
-    nsTArray<nsCString> CORSUnsafeHeaders;
-    mAuthorRequestHeaders.GetCORSUnsafeHeaders(CORSUnsafeHeaders);
-    nsCOMPtr<nsILoadInfo> loadInfo = mChannel->GetLoadInfo();
-    loadInfo->SetCorsPreflightInfo(CORSUnsafeHeaders,
-                                   mFlagHadUploadListenersOnSend);
   }
 
   mIsMappedArrayBuffer = false;
@@ -2762,38 +2792,12 @@ XMLHttpRequestMainThread::SendInternal(const RequestBodyBase* aBody)
     }
   }
 
-  // Hook us up to listen to redirects and the like
-  // Only do this very late since this creates a cycle between
-  // the channel and us. This cycle has to be manually broken if anything
-  // below fails.
-  mChannel->GetNotificationCallbacks(getter_AddRefs(mNotificationCallbacks));
-  mChannel->SetNotificationCallbacks(this);
+  rv = InitiateFetch(uploadStream, mUploadTotal, uploadContentType);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  if (internalHttpChannel) {
-    internalHttpChannel->SetBlockAuthPrompt(ShouldBlockAuthPrompt());
-  }
-
-  // Start reading from the channel
-  // Because of bug 682305, we can't let listener be the XHR object itself
-  // because JS wouldn't be able to use it. So create a listener around 'this'.
-  // Make sure to hold a strong reference so that we don't leak the wrapper.
-  nsCOMPtr<nsIStreamListener> listener = new net::nsStreamListenerWrapper(this);
-  rv = mChannel->AsyncOpen2(listener);
-  listener = nullptr;
-
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    // Drop our ref to the channel to avoid cycles. Also drop channel's
-    // ref to us to be extra safe.
-    mChannel->SetNotificationCallbacks(mNotificationCallbacks);
-    mChannel = nullptr;
-
-    mErrorLoad = true;
-
-    // Per spec, we throw on sync errors, but not async.
-    if (mFlagSynchronous) {
-      return rv;
-    }
-  }
+  // Start our timeout
+  mRequestSentTime = PR_Now();
+  StartTimeoutTimer();
 
   mWaitingForOnStopRequest = true;
 
