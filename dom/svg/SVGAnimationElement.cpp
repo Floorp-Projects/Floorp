@@ -10,6 +10,7 @@
 #include "nsSMILAnimationController.h"
 #include "nsSMILAnimationFunction.h"
 #include "nsContentUtils.h"
+#include "nsIContentInlines.h"
 #include "nsIURI.h"
 #include "prtime.h"
 
