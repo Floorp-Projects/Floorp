@@ -10,6 +10,7 @@
 #include "nsIContent.h"
 #include "nsIDocument.h"
 #include "nsContentUtils.h"
+#include "mozilla/dom/Element.h"
 
 inline bool
 nsIContent::IsInHTMLDocument() const
@@ -22,5 +23,15 @@ nsIContent::IsInChromeDocument()
 {
   return nsContentUtils::IsChromeDoc(OwnerDoc());
 }
+
+inline mozilla::dom::ShadowRoot* nsIContent::GetShadowRoot() const
+{
+  if (!IsElement()) {
+    return nullptr;
+  }
+
+  return AsElement()->FastGetShadowRoot();
+}
+
 
 #endif // nsIContentInlines_h

@@ -1066,16 +1066,6 @@ FragmentOrElement::GetXBLInsertionParent() const
 }
 
 ShadowRoot*
-FragmentOrElement::GetShadowRoot() const
-{
-  nsDOMSlots *slots = GetExistingDOMSlots();
-  if (slots) {
-    return slots->mShadowRoot;
-  }
-  return nullptr;
-}
-
-ShadowRoot*
 FragmentOrElement::GetContainingShadow() const
 {
   nsDOMSlots *slots = GetExistingDOMSlots();
