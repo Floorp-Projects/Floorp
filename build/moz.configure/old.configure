@@ -169,6 +169,7 @@ def old_configure_options(*options):
     '--enable-cookies',
     '--enable-cpp-rtti',
     '--enable-crashreporter',
+    '--enable-ctypes',
     '--enable-dbus',
     '--enable-debug-js-modules',
     '--enable-directshow',
