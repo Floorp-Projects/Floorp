@@ -78,7 +78,7 @@ private:
         return flags;
     }
 
-    UniquePtr<gfxTextRun> mTextRun;
+    RefPtr<gfxTextRun> mTextRun;
 };
 
 class StubPropertyProvider : public gfxTextRun::PropertyProvider {
