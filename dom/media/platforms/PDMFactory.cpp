@@ -48,6 +48,7 @@
 
 #include "MP4Decoder.h"
 
+#include "mp4_demuxer/H264.h"
 
 namespace mozilla {
 
@@ -76,6 +77,65 @@ public:
 
 StaticAutoPtr<PDMFactoryImpl> PDMFactory::sInstance;
 StaticMutex PDMFactory::sMonitor;
+
+class SupportChecker
+{
+public:
+  enum class Result : uint8_t
+  {
+    kSupported,
+    kVideoFormatNotSupported,
+    kAudioFormatNotSupported,
+    kUnknown,
+  };
+
+  template<class Func>
+  void
+  AddToCheckList(Func&& aChecker)
+  {
+    mCheckerList.AppendElement(mozilla::Forward<Func>(aChecker));
+  }
+
+  void
+  AddMediaFormatChecker(const TrackInfo& aTrackConfig)
+  {
+    if (aTrackConfig.IsVideo()) {
+    auto mimeType = aTrackConfig.GetAsVideoInfo()->mMimeType;
+    RefPtr<MediaByteBuffer> extraData = aTrackConfig.GetAsVideoInfo()->mExtraData;
+    AddToCheckList(
+      [mimeType, extraData]() {
+        if (MP4Decoder::IsH264(mimeType)) {
+          mp4_demuxer::SPSData spsdata;
+          // WMF H.264 Video Decoder and Apple ATDecoder
+          // do not support YUV444 format.
+          // For consistency, all decoders should be checked.
+          if (!mp4_demuxer::H264::DecodeSPSFromExtraData(extraData, spsdata) ||
+              spsdata.chroma_format_idc == PDMFactory::kYUV444) {
+            return SupportChecker::Result::kVideoFormatNotSupported;
+          }
+        }
+        return SupportChecker::Result::kSupported;
+      });
+    }
+  }
+
+  SupportChecker::Result
+  Check()
+  {
+    for (auto& checker : mCheckerList) {
+    auto result = checker();
+    if (result != SupportChecker::Result::kSupported) {
+      return result;
+    }
+    }
+    return SupportChecker::Result::kSupported;
+  }
+
+  void Clear() { mCheckerList.Clear(); }
+
+private:
+  nsTArray<mozilla::function<SupportChecker::Result()>> mCheckerList;
+}; // SupportChecker
 
 PDMFactory::PDMFactory()
 {
@@ -168,7 +228,23 @@ PDMFactory::CreateDecoderWithPDM(PlatformDecoderModule* aPDM,
   MOZ_ASSERT(aPDM);
   RefPtr<MediaDataDecoder> m;
 
+  SupportChecker supportChecker;
   const TrackInfo& config = aParams.mConfig;
+  supportChecker.AddMediaFormatChecker(config);
+
+  auto reason = supportChecker.Check();
+  if (reason != SupportChecker::Result::kSupported) {
+    DecoderDoctorDiagnostics* diagnostics = aParams.mDiagnostics;
+    if (diagnostics) {
+      if (reason == SupportChecker::Result::kVideoFormatNotSupported) {
+        diagnostics->SetVideoFormatNotSupport();
+      } else if (reason == SupportChecker::Result::kAudioFormatNotSupported) {
+        diagnostics->SetAudioFormatNotSupport();
+      }
+    }
+    return nullptr;
+  }
+
   if (config.IsAudio()) {
     m = aPDM->CreateAudioDecoder(aParams);
     return m.forget();
