@@ -764,10 +764,8 @@ DocAccessible::AttributeChanged(nsIDocument* aDocument,
     accessible = this;
   }
 
-  if (!accessible->IsBoundToParent()) {
-    MOZ_ASSERT_UNREACHABLE("DOM attribute change on accessible detached from tree");
-    return;
-  }
+  MOZ_ASSERT(accessible->IsBoundToParent() || accessible->IsDoc(),
+             "DOM attribute change on an accessible detached from the tree");
 
   // Fire accessible events iff there's an accessible, otherwise we consider
   // the accessible state wasn't changed, i.e. its state is initial state.
@@ -980,7 +978,7 @@ DocAccessible::ARIAAttributeChanged(Accessible* aAccessible, nsIAtom* aAttribute
   if (aAttribute == nsGkAtoms::aria_hidden) {
     bool isDefined = aria::HasDefinedARIAHidden(elm);
     if (isDefined != aAccessible->IsARIAHidden() &&
-        !aAccessible->Parent()->IsARIAHidden()) {
+        (!aAccessible->Parent() || !aAccessible->Parent()->IsARIAHidden())) {
       aAccessible->SetARIAHidden(isDefined);
 
       RefPtr<AccEvent> event =
