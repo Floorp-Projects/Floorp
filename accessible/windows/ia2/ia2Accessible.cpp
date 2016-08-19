@@ -73,7 +73,14 @@ ia2Accessible::get_nRelations(long* aNRelations)
   if (acc->IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
-  MOZ_ASSERT(!acc->IsProxy());
+  if (acc->IsProxy()) {
+    // XXX evaluate performance of collecting all relation targets.
+    nsTArray<RelationType> types;
+    nsTArray<nsTArray<ProxyAccessible*>> targetSets;
+    acc->Proxy()->Relations(&types, &targetSets);
+    *aNRelations = types.Length();
+    return S_OK;
+  }
 
   for (uint32_t idx = 0; idx < ArrayLength(sRelationTypePairs); idx++) {
     if (sRelationTypePairs[idx].second == IA2_RELATION_NULL)
@@ -102,7 +109,33 @@ ia2Accessible::get_relation(long aRelationIndex,
   if (acc->IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
-  MOZ_ASSERT(!acc->IsProxy());
+  if (acc->IsProxy()) {
+    nsTArray<RelationType> types;
+    nsTArray<nsTArray<ProxyAccessible*>> targetSets;
+    acc->Proxy()->Relations(&types, &targetSets);
+
+    size_t targetSetCount = targetSets.Length();
+    for (size_t i = 0; i < targetSetCount; i++) {
+      uint32_t relTypeIdx = static_cast<uint32_t>(types[i]);
+      MOZ_ASSERT(sRelationTypePairs[relTypeIdx].first == types[i]);
+      if (sRelationTypePairs[relTypeIdx].second == IA2_RELATION_NULL)
+        continue;
+
+      if (static_cast<size_t>(aRelationIndex) == i) {
+        nsTArray<RefPtr<Accessible>> targets;
+        size_t targetCount = targetSets[i].Length();
+        for (size_t j = 0; j < targetCount; j++)
+          targets.AppendElement(WrapperFor(targetSets[i][j]));
+
+        RefPtr<ia2AccessibleRelation> rel =
+          new ia2AccessibleRelation(types[i], Move(targets));
+        rel.forget(aRelation);
+        return S_OK;
+      }
+    }
+
+    return E_INVALIDARG;
+  }
 
   long relIdx = 0;
   for (uint32_t idx = 0; idx < ArrayLength(sRelationTypePairs); idx++) {
@@ -143,7 +176,33 @@ ia2Accessible::get_relations(long aMaxRelations,
   if (acc->IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
-  MOZ_ASSERT(!acc->IsProxy());
+  if (acc->IsProxy()) {
+    nsTArray<RelationType> types;
+    nsTArray<nsTArray<ProxyAccessible*>> targetSets;
+    acc->Proxy()->Relations(&types, &targetSets);
+
+    size_t count = std::min(targetSets.Length(),
+                            static_cast<size_t>(aMaxRelations));
+    size_t i = 0;
+    while (i < count) {
+      uint32_t relTypeIdx = static_cast<uint32_t>(types[i]);
+      if (sRelationTypePairs[relTypeIdx].second == IA2_RELATION_NULL)
+        continue;
+
+      size_t targetCount = targetSets[i].Length();
+      nsTArray<RefPtr<Accessible>> targets(targetCount);
+      for (size_t j = 0; j < targetCount; j++)
+        targets.AppendElement(WrapperFor(targetSets[i][j]));
+
+      RefPtr<ia2AccessibleRelation> rel =
+        new ia2AccessibleRelation(types[i], Move(targets));
+      rel.forget(aRelation + i);
+      i++;
+    }
+
+    *aNRelations = i;
+    return S_OK;
+  }
 
   for (uint32_t idx = 0; idx < ArrayLength(sRelationTypePairs) &&
        *aNRelations < aMaxRelations; idx++) {
@@ -184,8 +243,10 @@ ia2Accessible::role(long* aRole)
     break;
 
   a11y::role geckoRole;
-  MOZ_ASSERT(!acc->IsProxy());
-  geckoRole = acc->Role();
+  if (acc->IsProxy())
+    geckoRole = acc->Proxy()->Role();
+  else
+    geckoRole = acc->Role();
   switch (geckoRole) {
 #include "RoleMap.h"
     default:
@@ -196,11 +257,16 @@ ia2Accessible::role(long* aRole)
 
   // Special case, if there is a ROLE_ROW inside of a ROLE_TREE_TABLE, then call
   // the IA2 role a ROLE_OUTLINEITEM.
-  MOZ_ASSERT(!acc->IsProxy());
-  if (geckoRole == roles::ROW) {
-    Accessible* xpParent = acc->Parent();
-    if (xpParent && xpParent->Role() == roles::TREE_TABLE)
+  if (acc->IsProxy()) {
+    if (geckoRole == roles::ROW && acc->Proxy()->Parent() &&
+        acc->Proxy()->Parent()->Role() == roles::TREE_TABLE)
       *aRole = ROLE_SYSTEM_OUTLINEITEM;
+  } else {
+    if (geckoRole == roles::ROW) {
+      Accessible* xpParent = acc->Parent();
+      if (xpParent && xpParent->Role() == roles::TREE_TABLE)
+        *aRole = ROLE_SYSTEM_OUTLINEITEM;
+    }
   }
 
   return S_OK;
@@ -217,9 +283,12 @@ ia2Accessible::scrollTo(enum IA2ScrollType aScrollType)
   if (acc->IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
-  MOZ_ASSERT(!acc->IsProxy());
-  nsCoreUtils::ScrollTo(acc->Document()->PresShell(), acc->GetContent(),
-                        aScrollType);
+  if (acc->IsProxy()) {
+    acc->Proxy()->ScrollTo(aScrollType);
+  } else {
+    nsCoreUtils::ScrollTo(acc->Document()->PresShell(), acc->GetContent(),
+                          aScrollType);
+  }
 
   return S_OK;
 
@@ -240,8 +309,11 @@ ia2Accessible::scrollToPoint(enum IA2CoordinateType aCoordType,
     nsIAccessibleCoordinateType::COORDTYPE_SCREEN_RELATIVE :
     nsIAccessibleCoordinateType::COORDTYPE_PARENT_RELATIVE;
 
-  MOZ_ASSERT(!acc->IsProxy());
-  acc->ScrollToPoint(geckoCoordType, aX, aY);
+  if (acc->IsProxy()) {
+    acc->Proxy()->ScrollToPoint(geckoCoordType, aX, aY);
+  } else {
+    acc->ScrollToPoint(geckoCoordType, aX, aY);
+  }
 
   return S_OK;
 
@@ -301,8 +373,10 @@ ia2Accessible::get_states(AccessibleStates* aStates)
   }
 
   uint64_t state;
-  MOZ_ASSERT(!acc->IsProxy());
-  state = acc->State();
+  if (acc->IsProxy())
+    state = acc->Proxy()->State();
+  else
+    state = acc->State();
 
   if (state & states::INVALID)
     *aStates |= IA2_STATE_INVALID_ENTRY;
@@ -474,8 +548,10 @@ ia2Accessible::get_indexInParent(long* aIndexInParent)
   if (acc->IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
-  MOZ_ASSERT(!acc->IsProxy());
-  *aIndexInParent = acc->IndexInParent();
+  if (acc->IsProxy())
+    *aIndexInParent = acc->Proxy()->IndexInParent();
+  else
+    *aIndexInParent = acc->IndexInParent();
 
   if (*aIndexInParent == -1)
     return S_FALSE;
@@ -556,8 +632,9 @@ ia2Accessible::get_attributes(BSTR* aAttributes)
     return ConvertToIA2Attributes(attributes, aAttributes);
   }
 
-  MOZ_ASSERT(!acc->IsProxy());
-  return E_UNEXPECTED;
+  nsTArray<Attribute> attrs;
+  acc->Proxy()->Attributes(&attrs);
+  return ConvertToIA2Attributes(&attrs, aAttributes);
 
   A11Y_TRYBLOCK_END
 }
@@ -642,12 +719,21 @@ ia2Accessible::get_relationTargetsOfType(BSTR aType,
     return CO_E_OBJNOTCONNECTED;
 
   nsTArray<Accessible*> targets;
-  MOZ_ASSERT(!acc->IsProxy());
-  Relation rel = acc->RelationByType(*relationType);
-  Accessible* target = nullptr;
-  while ((target = rel.Next()) &&
-         static_cast<long>(targets.Length()) <= aMaxTargets) {
-    targets.AppendElement(target);
+  if (acc->IsProxy()) {
+    nsTArray<ProxyAccessible*> targetProxies =
+      acc->Proxy()->RelationByType(*relationType);
+
+    size_t targetCount = aMaxTargets;
+    if (targetProxies.Length() < targetCount)
+      targetCount = targetProxies.Length();
+    for (size_t i = 0; i < targetCount; i++)
+      targets.AppendElement(WrapperFor(targetProxies[i]));
+  } else {
+    Relation rel = acc->RelationByType(*relationType);
+    Accessible* target = nullptr;
+    while ((target = rel.Next()) &&
+           static_cast<long>(targets.Length()) <= aMaxTargets)
+      targets.AppendElement(target);
   }
 
   *aNTargets = targets.Length();
