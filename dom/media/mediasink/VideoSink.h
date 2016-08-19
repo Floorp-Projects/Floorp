@@ -139,6 +139,15 @@ private:
   // Max frame number sent to compositor at a time.
   // Based on the pref value obtained in MDSM.
   const uint32_t mVideoQueueSendToCompositorSize;
+
+  // Talos tests for the compositor require at least one frame in the
+  // video queue so that the compositor has something to composit during
+  // the talos test when the decode is stressed. We have a minimum size
+  // on the video queue in order to facilitate this talos test.
+  // Note: Normal playback should not have a queue size of more than 0,
+  // otherwise A/V sync will be ruined! *Only* make this non-zero for
+  // testing purposes.
+  const uint32_t mMinVideoQueueSize;
 };
 
 } // namespace media
