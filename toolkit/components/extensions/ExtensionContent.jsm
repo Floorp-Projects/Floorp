@@ -436,7 +436,9 @@ class ExtensionContext extends BaseContext {
     Cu.waiveXrays(this.sandbox).chrome = this.chromeObj;
 
     let incognito = PrivateBrowsingUtils.isContentWindowPrivate(this.contentWindow);
-    this.childManager = new ChildAPIManager(this, mm, ["storage", "test"], {
+    let localApis = {};
+    apiManager.generateAPIs(this, localApis);
+    this.childManager = new ChildAPIManager(this, mm, localApis, {
       type: "content_script",
       url,
       incognito,
@@ -445,7 +447,6 @@ class ExtensionContext extends BaseContext {
     Schemas.inject(this.chromeObj, this.childManager);
 
     injectAPI(api(this), this.chromeObj);
-    injectAPI(apiManager.generateAPIs(this), this.chromeObj);
 
     // This is an iframe with content script API enabled. (See Bug 1214658 for rationale)
     if (isExtensionPage) {

@@ -362,9 +362,12 @@ class InjectionContext extends Context {
    * @param {string} namespace The namespace of the API. This may contain dots,
    *     e.g. in the case of "devtools.inspectedWindow".
    * @param {string} [name] The name of the property in the namespace.
+   *     `null` if we are checking whether the namespace should be injected.
+   * @param {Array} restrictions An arbitrary list of restrictions as declared
+   *     by the schema for a given API node.
    * @returns {*} An object with the property `name`, `true` or a falsey value.
    */
-  shouldInject(namespace, name) {
+  shouldInject(namespace, name, restrictions) {
     throw new Error("Not implemented");
   }
 
@@ -589,6 +592,13 @@ class Entry {
      * value prior to any normalization.
      */
     this.preprocessor = schema.preprocess || null;
+
+    /**
+     * @property {Array<string>} [restrictions]
+     * A list of restrictions to consider before generating the API.
+     * These are not parsed by the schema, but passed to `shouldInject`.
+     */
+    this.restrictions = schema.restrictions || null;
   }
 
   /**
@@ -1228,8 +1238,8 @@ class SubModuleProperty extends Entry {
   // namespaceName: Namespace in which the property lives.
   // reference: Name of the type defining the functions to add to the property.
   // properties: Additional properties to add to the module (unsupported).
-  constructor(name, namespaceName, reference, properties) {
-    super();
+  constructor(schema, name, namespaceName, reference, properties) {
+    super(schema);
     this.name = name;
     this.namespaceName = namespaceName;
     this.reference = reference;
@@ -1253,7 +1263,7 @@ class SubModuleProperty extends Entry {
     let functions = type.functions;
     for (let fun of functions) {
       let subpath = path.concat(name);
-      let pathObj = context.shouldInject(subpath.join("."), fun.name);
+      let pathObj = context.shouldInject(subpath.join("."), fun.name, fun.restrictions || ns.defaultRestrictions);
       if (pathObj) {
         pathObj = pathObj === true ? null : pathObj;
         fun.inject(pathObj, subpath, fun.name, obj, context);
@@ -1467,6 +1477,8 @@ this.Schemas = {
     if (!ns) {
       ns = new Map();
       ns.permissions = null;
+      ns.restrictions = null;
+      ns.defeaultRestrictions = null;
       this.namespaces.set(namespaceName, ns);
     }
     ns.set(symbol, value);
@@ -1478,7 +1490,7 @@ this.Schemas = {
 
     // Do some simple validation of our own schemas.
     function checkTypeProperties(...extra) {
-      let allowedSet = new Set([...allowedProperties, ...extra, "description", "deprecated", "preprocess"]);
+      let allowedSet = new Set([...allowedProperties, ...extra, "description", "deprecated", "preprocess", "restrictions"]);
       for (let prop of Object.keys(type)) {
         if (!allowedSet.has(prop)) {
           throw new Error(`Internal error: Namespace ${path.join(".")} has invalid type property "${prop}" in type "${type.id || JSON.stringify(type)}"`);
@@ -1700,7 +1712,7 @@ this.Schemas = {
   loadProperty(namespaceName, name, prop) {
     if ("$ref" in prop) {
       if (!prop.unsupported) {
-        this.register(namespaceName, name, new SubModuleProperty(name, namespaceName, prop.$ref,
+        this.register(namespaceName, name, new SubModuleProperty(prop, name, namespaceName, prop.$ref,
                                                                  prop.properties || {}));
       }
     } else if ("value" in prop) {
@@ -1819,10 +1831,10 @@ this.Schemas = {
         this.loadEvent(name, event);
       }
 
-      if (namespace.permissions) {
-        let ns = this.namespaces.get(name);
-        ns.permissions = namespace.permissions;
-      }
+      let ns = this.namespaces.get(name);
+      ns.permissions = namespace.permissions || null;
+      ns.restrictions = namespace.restrictions || null;
+      ns.defaultRestrictions = namespace.defaultRestrictions || null;
     }
   },
 
@@ -1868,9 +1880,13 @@ this.Schemas = {
         continue;
       }
 
+      if (!wrapperFuncs.shouldInject(namespace, null, ns.restrictions)) {
+        continue;
+      }
+
       let obj = Cu.createObjectIn(dest, {defineAs: namespace});
       for (let [name, entry] of ns) {
-        let pathObj = context.shouldInject(namespace, name);
+        let pathObj = context.shouldInject(namespace, name, entry.restrictions || ns.defaultRestrictions);
         if (pathObj) {
           pathObj = pathObj === true ? null : pathObj;
           entry.inject(pathObj, [namespace], name, obj, context);
