@@ -21,7 +21,11 @@ function messages(state = new MessageState(), action) {
     case constants.MESSAGE_ADD:
       let newMessage = action.message;
 
-      if (newMessage.type === "clear") {
+      if (newMessage.type === constants.MESSAGE_TYPE.NULL_MESSAGE) {
+        return state;
+      }
+
+      if (newMessage.type === constants.MESSAGE_TYPE.CLEAR) {
         return state.set("messagesById", Immutable.List([newMessage]));
       }
 
