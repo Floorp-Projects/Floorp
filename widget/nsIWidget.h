@@ -135,8 +135,9 @@ typedef void* nsNativeWidget;
 #endif // MOZ_X11
 #endif
 #ifdef MOZ_WIDGET_ANDROID
-#define NS_NATIVE_NEW_EGL_SURFACE      100
-#define NS_JAVA_SURFACE                101
+#define NS_JAVA_SURFACE                100
+#define NS_PRESENTATION_WINDOW         101
+#define NS_PRESENTATION_SURFACE        102
 #endif
 
 #define NS_IWIDGET_IID \

@@ -257,8 +257,6 @@ public:
 
     int GetAPIVersion() { return mAPIVersion; }
 
-    void InvalidateAndScheduleComposite();
-
     nsresult GetProxyForURI(const nsACString & aSpec,
                             const nsACString & aScheme,
                             const nsACString & aHost,
@@ -342,15 +340,6 @@ private:
 public:
     void PostTaskToUiThread(already_AddRefed<Runnable> aTask, int aDelayMs);
     int64_t RunDelayedUiThreadTasks();
-
-    void* GetPresentationWindow();
-    void SetPresentationWindow(void* aPresentationWindow);
-
-    EGLSurface GetPresentationSurface();
-    void SetPresentationSurface(EGLSurface aPresentationSurface);
-private:
-    void* mPresentationWindow;
-    EGLSurface mPresentationSurface;
 };
 
 class AutoJNIClass {
