@@ -182,8 +182,6 @@ AndroidBridge::~AndroidBridge()
 AndroidBridge::AndroidBridge()
   : mLayerClient(nullptr)
   , mUiTaskQueueLock("UiTaskQueue")
-  , mPresentationWindow(nullptr)
-  , mPresentationSurface(nullptr)
 {
     ALOG_BRIDGE("AndroidBridge::Init");
 
@@ -1316,12 +1314,6 @@ AndroidBridge::GetScreenAngle()
     return GeckoAppShell::GetScreenAngle();
 }
 
-void
-AndroidBridge::InvalidateAndScheduleComposite()
-{
-    nsWindow::InvalidateAndScheduleComposite();
-}
-
 nsresult
 AndroidBridge::GetProxyForURI(const nsACString & aSpec,
                               const nsACString & aScheme,
@@ -1562,51 +1554,6 @@ AndroidBridge::RunDelayedUiThreadTasks()
         nextTask->Run();
     }
     return -1;
-}
-
-void*
-AndroidBridge::GetPresentationWindow()
-{
-    return mPresentationWindow;
-}
-
-void
-AndroidBridge::SetPresentationWindow(void* aPresentationWindow)
-{
-     if (mPresentationWindow) {
-         const bool wasAlreadyPaused = nsWindow::IsCompositionPaused();
-         if (!wasAlreadyPaused) {
-             nsWindow::SchedulePauseComposition();
-         }
-
-         mPresentationWindow = aPresentationWindow;
-         if (mPresentationSurface) {
-             // destroy the egl surface!
-             // The compositor is paused so it should be okay to destroy
-             // the surface here.
-             mozilla::gl::GLContextProvider::DestroyEGLSurface(mPresentationSurface);
-             mPresentationSurface = nullptr;
-         }
-
-         if (!wasAlreadyPaused) {
-             nsWindow::ScheduleResumeComposition();
-         }
-     }
-     else {
-         mPresentationWindow = aPresentationWindow;
-     }
-}
-
-EGLSurface
-AndroidBridge::GetPresentationSurface()
-{
-    return mPresentationSurface;
-}
-
-void
-AndroidBridge::SetPresentationSurface(EGLSurface aPresentationSurface)
-{
-    mPresentationSurface = aPresentationSurface;
 }
 
 Object::LocalRef AndroidBridge::ChannelCreate(Object::Param stream) {

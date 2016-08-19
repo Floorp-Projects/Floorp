@@ -183,7 +183,8 @@ public:
     NS_IMETHOD SetHasTransparentBackground(bool aTransparent) { return NS_OK; }
     NS_IMETHOD GetHasTransparentBackground(bool& aTransparent) { aTransparent = false; return NS_OK; }
     NS_IMETHOD HideWindowChrome(bool aShouldHide) override { return NS_ERROR_NOT_IMPLEMENTED; }
-    virtual void* GetNativeData(uint32_t aDataType) override;
+    void* GetNativeData(uint32_t aDataType) override;
+    void SetNativeData(uint32_t aDataType, uintptr_t aVal) override;
     NS_IMETHOD SetTitle(const nsAString& aTitle) override { return NS_OK; }
     NS_IMETHOD SetIcon(const nsAString& aIconSpec) override { return NS_OK; }
     NS_IMETHOD EnableDragDrop(bool aEnable) override { return NS_OK; }
@@ -214,11 +215,6 @@ public:
     virtual bool NeedsPaint() override;
     virtual void DrawWindowUnderlay(LayerManagerComposite* aManager, LayoutDeviceIntRect aRect) override;
     virtual void DrawWindowOverlay(LayerManagerComposite* aManager, LayoutDeviceIntRect aRect) override;
-
-    static bool IsCompositionPaused();
-    static void InvalidateAndScheduleComposite();
-    static void SchedulePauseComposition();
-    static void ScheduleResumeComposition();
 
     virtual bool WidgetPaintsBackground() override;
 

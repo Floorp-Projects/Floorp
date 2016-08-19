@@ -105,10 +105,6 @@ NS_IMPL_ISUPPORTS_INHERITED0(nsWindow, nsBaseWidget)
 // one.
 static nsTArray<nsWindow*> gTopLevelWindows;
 
-// FIXME: because we don't support multiple GeckoViews for every feature
-// yet, we have to default to a particular GeckoView for certain calls.
-static nsWindow* gGeckoViewWindow;
-
 static bool sFailedToCreateGLContext = false;
 
 // Multitouch swipe thresholds in inches
@@ -1386,8 +1382,6 @@ nsWindow::GeckoViewSupport::Open(const jni::Class::LocalRef& aCls,
             aCls.Env(), LayerView::Compositor::Ref::From(aCompositor));
     window->mLayerViewSupport.Attach(compositor, window, compositor);
 
-    gGeckoViewWindow = window;
-
     if (window->mWidgetListener) {
         nsCOMPtr<nsIXULWindow> xulWindow(
                 window->mWidgetListener->GetXULWindow());
@@ -1526,10 +1520,6 @@ nsWindow::~nsWindow()
 {
     gTopLevelWindows.RemoveElement(this);
     ALOG("nsWindow %p destructor", (void*)this);
-
-    if (gGeckoViewWindow == this) {
-        gGeckoViewWindow = nullptr;
-    }
 }
 
 bool
@@ -2145,9 +2135,25 @@ nsWindow::GetNativeData(uint32_t aDataType)
                 return lvs->GetSurface().Get();
             }
             return nullptr;
+
+        case NS_PRESENTATION_WINDOW:
+            return PMPMSupport::sWindow;
+
+        case NS_PRESENTATION_SURFACE:
+            return PMPMSupport::sSurface;
     }
 
     return nullptr;
+}
+
+void
+nsWindow::SetNativeData(uint32_t aDataType, uintptr_t aVal)
+{
+    switch (aDataType) {
+        case NS_PRESENTATION_SURFACE:
+            PMPMSupport::sSurface = reinterpret_cast<EGLSurface>(aVal);
+            break;
+    }
 }
 
 void
@@ -3557,42 +3563,6 @@ nsWindow::DrawWindowOverlay(LayerManagerComposite* aManager,
 
     mLayerRendererFrame->EndDrawing();
     mLayerRendererFrame = nullptr;
-}
-
-// off-main-thread compositor fields and functions
-
-void
-nsWindow::InvalidateAndScheduleComposite()
-{
-    if (gGeckoViewWindow && gGeckoViewWindow->mLayerViewSupport) {
-        gGeckoViewWindow->mLayerViewSupport->
-                SyncInvalidateAndScheduleComposite();
-    }
-}
-
-bool
-nsWindow::IsCompositionPaused()
-{
-    if (gGeckoViewWindow && gGeckoViewWindow->mLayerViewSupport) {
-        return gGeckoViewWindow->mLayerViewSupport->CompositorPaused();
-    }
-    return false;
-}
-
-void
-nsWindow::SchedulePauseComposition()
-{
-    if (gGeckoViewWindow && gGeckoViewWindow->mLayerViewSupport) {
-        return gGeckoViewWindow->mLayerViewSupport->SyncPauseCompositor();
-    }
-}
-
-void
-nsWindow::ScheduleResumeComposition()
-{
-    if (gGeckoViewWindow && gGeckoViewWindow->mLayerViewSupport) {
-        return gGeckoViewWindow->mLayerViewSupport->SyncResumeCompositor();
-    }
 }
 
 bool

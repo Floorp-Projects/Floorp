@@ -256,6 +256,7 @@ public:
   already_AddRefed<mozilla::layers::ImageContainer> GetImageContainerForVideo(nsNPAPIPluginInstance::VideoInfo* aVideoInfo);
 
   void Invalidate();
+  void Recomposite();
 
   void RequestFullScreen();
   void ExitFullScreen();
