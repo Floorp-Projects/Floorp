@@ -217,27 +217,6 @@ public:
         virtual uint32_t GetAppUnitsPerDevUnit() = 0;
     };
 
-    class ClusterIterator {
-    public:
-        explicit ClusterIterator(const gfxTextRun* aTextRun);
-
-        void Reset();
-
-        bool NextCluster();
-
-        uint32_t Position() const {
-            return mCurrentChar;
-        }
-
-        Range ClusterRange() const;
-
-        gfxFloat ClusterAdvance(PropertyProvider *aProvider) const;
-
-    private:
-        const gfxTextRun* mTextRun;
-        uint32_t    mCurrentChar;
-    };
-
     struct DrawParams
     {
         gfxContext* context;
