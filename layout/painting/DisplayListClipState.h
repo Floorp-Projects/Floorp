@@ -30,7 +30,6 @@ public:
     , mCurrentCombinedClip(nullptr)
     , mScrollClipContentDescendants(nullptr)
     , mScrollClipContainingBlockDescendants(nullptr)
-    , mClipContentDescendantsScrollClip(nullptr)
     , mStackingContextAncestorSC(nullptr)
   {}
 
@@ -76,8 +75,11 @@ private:
     mCurrentCombinedClip = nullptr;
   }
 
-  void SetScrollClipForContainingBlockDescendants(nsDisplayListBuilder* aBuilder,
-                                                  const DisplayItemScrollClip* aScrollClip);
+  void SetScrollClipForContainingBlockDescendants(const DisplayItemScrollClip* aScrollClip)
+  {
+    mScrollClipContainingBlockDescendants = aScrollClip;
+    mStackingContextAncestorSC = DisplayItemScrollClip::PickAncestor(mStackingContextAncestorSC, aScrollClip);
+  }
 
   void Clear()
   {
@@ -181,11 +183,6 @@ private:
    */
   const DisplayItemScrollClip* mScrollClipContentDescendants;
   const DisplayItemScrollClip* mScrollClipContainingBlockDescendants;
-
-  /**
-   * The scroll clip that was in effect when mClipContentDescendants was set.
-   */
-  const DisplayItemScrollClip* mClipContentDescendantsScrollClip;
 
   /**
    * A scroll clip that is an ancestor of all the scroll clips that were
@@ -435,10 +432,9 @@ public:
     mState.SetClipForContainingBlockDescendants(aClip);
   }
 
-  void SetScrollClipForContainingBlockDescendants(nsDisplayListBuilder* aBuilder,
-                                                  const DisplayItemScrollClip* aScrollClip)
+  void SetScrollClipForContainingBlockDescendants(const DisplayItemScrollClip* aScrollClip)
   {
-    mState.SetScrollClipForContainingBlockDescendants(aBuilder, aScrollClip);
+    mState.SetScrollClipForContainingBlockDescendants(aScrollClip);
   }
 
   /**
