@@ -678,7 +678,7 @@ public:
    *
    * @return The ShadowRoot currently bound to this element.
    */
-  virtual mozilla::dom::ShadowRoot *GetShadowRoot() const = 0;
+  inline mozilla::dom::ShadowRoot *GetShadowRoot() const;
 
   /**
    * Gets the root of the node tree for this content if it is in a shadow tree.
