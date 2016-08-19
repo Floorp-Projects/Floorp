@@ -5,13 +5,7 @@
 function* openPanel(extension, win = window) {
   clickBrowserAction(extension, win);
 
-  let {target} = yield BrowserTestUtils.waitForEvent(win.document, "load", true, (event) => {
-    return event.target.location && event.target.location.href.endsWith("popup.html");
-  });
-
-  return target.defaultView
-               .QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDocShell)
-               .chromeEventHandler;
+  return yield awaitExtensionPanel(extension, win);
 }
 
 function* awaitResize(browser) {
