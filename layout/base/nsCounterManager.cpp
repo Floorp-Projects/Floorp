@@ -226,31 +226,32 @@ nsCounterManager::AddCounterResetsAndIncrements(nsIFrame *aFrame)
     int32_t i, i_end;
     bool dirty = false;
     for (i = 0, i_end = styleContent->CounterResetCount(); i != i_end; ++i)
-      dirty |= AddResetOrIncrement(aFrame, i, styleContent->CounterResetAt(i),
-                                   nsCounterChangeNode::RESET);
+        dirty |= AddResetOrIncrement(aFrame, i,
+                                     styleContent->GetCounterResetAt(i),
+                                     nsCounterChangeNode::RESET);
     for (i = 0, i_end = styleContent->CounterIncrementCount(); i != i_end; ++i)
-      dirty |=
-        AddResetOrIncrement(aFrame, i, styleContent->CounterIncrementAt(i),
-                            nsCounterChangeNode::INCREMENT);
+        dirty |= AddResetOrIncrement(aFrame, i,
+                                     styleContent->GetCounterIncrementAt(i),
+                                     nsCounterChangeNode::INCREMENT);
     return dirty;
 }
 
 bool
-nsCounterManager::AddResetOrIncrement(nsIFrame* aFrame, int32_t aIndex,
-                                      const nsStyleCounterData& aCounterData,
+nsCounterManager::AddResetOrIncrement(nsIFrame *aFrame, int32_t aIndex,
+                                      const nsStyleCounterData *aCounterData,
                                       nsCounterNode::Type aType)
 {
-  nsCounterChangeNode* node =
-    new nsCounterChangeNode(aFrame, aType, aCounterData.mValue, aIndex);
+    nsCounterChangeNode *node =
+        new nsCounterChangeNode(aFrame, aType, aCounterData->mValue, aIndex);
 
-  nsCounterList* counterList = CounterListFor(aCounterData.mCounter);
+    nsCounterList *counterList = CounterListFor(aCounterData->mCounter);
 
-  counterList->Insert(node);
-  if (!counterList->IsLast(node)) {
-    // Tell the caller it's responsible for recalculating the entire
-    // list.
-    counterList->SetDirty();
-    return true;
+    counterList->Insert(node);
+    if (!counterList->IsLast(node)) {
+        // Tell the caller it's responsible for recalculating the entire
+        // list.
+        counterList->SetDirty();
+        return true;
     }
 
     // Don't call Calc() if the list is already dirty -- it'll be recalculated
