@@ -14,6 +14,9 @@ generator_supports_multiple_toolsets = True
 
 generator_wants_static_library_dependencies_adjusted = False
 
+generator_filelist_paths = {
+}
+
 generator_default_variables = {
 }
 for dirname in ['INTERMEDIATE_DIR', 'SHARED_INTERMEDIATE_DIR', 'PRODUCT_DIR',
@@ -24,7 +27,8 @@ for unused in ['RULE_INPUT_PATH', 'RULE_INPUT_ROOT', 'RULE_INPUT_NAME',
                'RULE_INPUT_DIRNAME', 'RULE_INPUT_EXT',
                'EXECUTABLE_PREFIX', 'EXECUTABLE_SUFFIX',
                'STATIC_LIB_PREFIX', 'STATIC_LIB_SUFFIX',
-               'SHARED_LIB_PREFIX', 'SHARED_LIB_SUFFIX']:
+               'SHARED_LIB_PREFIX', 'SHARED_LIB_SUFFIX',
+               'CONFIGURATION_NAME']:
   generator_default_variables[unused] = ''
 
 
@@ -44,19 +48,7 @@ def CalculateVariables(default_variables, params):
     generator_additional_path_sections = getattr(msvs_generator,
         'generator_additional_path_sections', [])
 
-    # Set a variable so conditions can be based on msvs_version.
-    msvs_version = gyp.msvs_emulation.GetVSVersion(generator_flags)
-    default_variables['MSVS_VERSION'] = msvs_version.ShortName()
-
-    # To determine processor word size on Windows, in addition to checking
-    # PROCESSOR_ARCHITECTURE (which reflects the word size of the current
-    # process), it is also necessary to check PROCESSOR_ARCHITEW6432 (which
-    # contains the actual word size of the system when running thru WOW64).
-    if ('64' in os.environ.get('PROCESSOR_ARCHITECTURE', '') or
-        '64' in os.environ.get('PROCESSOR_ARCHITEW6432', '')):
-      default_variables['MSVS_OS_BITS'] = 64
-    else:
-      default_variables['MSVS_OS_BITS'] = 32
+    gyp.msvs_emulation.CalculateCommonVariables(default_variables, params)
 
 
 def CalculateGeneratorInputInfo(params):
@@ -67,6 +59,17 @@ def CalculateGeneratorInputInfo(params):
     global generator_wants_static_library_dependencies_adjusted
     generator_wants_static_library_dependencies_adjusted = True
 
+  toplevel = params['options'].toplevel_dir
+  generator_dir = os.path.relpath(params['options'].generator_output or '.')
+  # output_dir: relative path from generator_dir to the build directory.
+  output_dir = generator_flags.get('output_dir', 'out')
+  qualified_out_dir = os.path.normpath(os.path.join(
+      toplevel, generator_dir, output_dir, 'gypfiles'))
+  global generator_filelist_paths
+  generator_filelist_paths = {
+      'toplevel': toplevel,
+      'qualified_out_dir': qualified_out_dir,
+  }
 
 def GenerateOutput(target_list, target_dicts, data, params):
   # Map of target -> list of targets it depends on.
@@ -85,7 +88,11 @@ def GenerateOutput(target_list, target_dicts, data, params):
       edges[target].append(dep)
       targets_to_visit.append(dep)
 
-  filename = 'dump.json'
+  try:
+    filepath = params['generator_flags']['output_dir']
+  except KeyError:
+    filepath = '.'
+  filename = os.path.join(filepath, 'dump.json')
   f = open(filename, 'w')
   json.dump(edges, f)
   f.close()

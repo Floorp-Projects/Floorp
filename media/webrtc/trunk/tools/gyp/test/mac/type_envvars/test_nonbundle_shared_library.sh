@@ -14,8 +14,18 @@ test $EXECUTABLE_NAME = libnonbundle_shared_library.dylib
 test $EXECUTABLE_PATH = libnonbundle_shared_library.dylib
 [[ ! $WRAPPER_NAME && ${WRAPPER_NAME-_} ]]
 
+[[ ! $CONTENTS_FOLDER_PATH && ${CONTENTS_FOLDER_PATH-_} ]]
+[[ ! $EXECUTABLE_FOLDER_PATH && ${EXECUTABLE_FOLDER_PATH-_} ]]
+[[ ! $UNLOCALIZED_RESOURCES_FOLDER_PATH && \
+       ${UNLOCALIZED_RESOURCES_FOLDER_PATH-_} ]]
+[[ ! $JAVA_FOLDER_PATH && ${JAVA_FOLDER_PATH-_} ]]
+[[ ! $FRAMEWORKS_FOLDER_PATH && ${FRAMEWORKS_FOLDER_PATH-_} ]]
+[[ ! $SHARED_FRAMEWORKS_FOLDER_PATH && ${SHARED_FRAMEWORKS_FOLDER_PATH-_} ]]
+[[ ! $SHARED_SUPPORT_FOLDER_PATH && ${SHARED_SUPPORT_FOLDER_PATH-_} ]]
+[[ ! $PLUGINS_FOLDER_PATH && ${PLUGINS_FOLDER_PATH-_} ]]
+[[ ! $XPCSERVICES_FOLDER_PATH && ${XPCSERVICES_FOLDER_PATH-_} ]]
+
 test $DYLIB_INSTALL_NAME_BASE = "/usr/local/lib"
 test $LD_DYLIB_INSTALL_NAME = "/usr/local/lib/libnonbundle_shared_library.dylib"
 
-# Should be set, but empty.
-[[ ! $SDKROOT && ! ${SDKROOT-_} ]]
+"$(dirname "$0")/test_check_sdkroot.sh"

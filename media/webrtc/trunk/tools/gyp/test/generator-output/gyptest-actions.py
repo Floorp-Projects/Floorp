@@ -10,8 +10,7 @@ Verifies --generator-output= behavior when using actions.
 
 import TestGyp
 
-# Ninja and Android don't support --generator-output.
-test = TestGyp.TestGyp(formats=['!ninja', '!android'])
+test = TestGyp.TestGyp()
 
 # All the generated files should go under 'gypfiles'. The source directory
 # ('actions') should be untouched.

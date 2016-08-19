@@ -11,6 +11,12 @@ dependent targets, but not the targets themselves.
 
 import os
 import sys
+
+if sys.platform == 'win32':
+  print "This test is currently disabled: https://crbug.com/483696."
+  sys.exit(0)
+
+
 import TestGyp
 
 # NOTE(piman): This test will not work with other generators because:
@@ -21,6 +27,9 @@ import TestGyp
 # which I don't think is available on all generators.
 # TODO(piman): Extend to other generators when possible.
 test = TestGyp.TestGyp(formats=['ninja'])
+# xcode-ninja doesn't support building single object files by design.
+if test.format == 'xcode-ninja':
+  test.skip_test()
 
 test.run_gyp('action_dependencies.gyp', chdir='src')
 

@@ -115,5 +115,18 @@
         'GCC_C_LANGUAGE_STANDARD': 'c99',
       },
     },
+    {
+      'target_name': 'ansi_standard',
+      'type': 'shared_library',
+      'sources': [
+        'cfile.c',
+      ],
+      'xcode_settings': {
+        'OTHER_CFLAGS': [
+          '-DCFLAG',
+        ],
+        'GCC_C_LANGUAGE_STANDARD': 'ansi',
+      },
+    },
   ],
 }

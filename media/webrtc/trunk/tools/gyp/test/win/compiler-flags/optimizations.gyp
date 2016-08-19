@@ -74,6 +74,26 @@
       'sources': ['hello.cc'],
     },
     {
+      'target_name': 'test_opt_intrinsic',
+      'type': 'executable',
+      'msvs_settings': {
+        'VCCLCompilerTool': {
+          'EnableIntrinsicFunctions': 'true'
+        }
+      },
+      'sources': ['hello.cc'],
+    },
+    {
+      'target_name': 'test_opt_intrinsic_off',
+      'type': 'executable',
+      'msvs_settings': {
+        'VCCLCompilerTool': {
+          'EnableIntrinsicFunctions': 'false'
+        }
+      },
+      'sources': ['hello.cc'],
+    },
+    {
       'target_name': 'test_opt_inline_off',
       'type': 'executable',
       'msvs_settings': {
@@ -139,6 +159,46 @@
       'msvs_settings': {
         'VCCLCompilerTool': {
           'WholeProgramOptimization': 'true'
+        }
+      },
+      'sources': ['hello.cc'],
+    },
+    {
+      'target_name': 'test_opt_sp',
+      'type': 'executable',
+      'msvs_settings': {
+        'VCCLCompilerTool': {
+          'StringPooling': 'true'
+        }
+      },
+      'sources': ['hello.cc'],
+    },
+    {
+      'target_name': 'test_opt_sp_off',
+      'type': 'executable',
+      'msvs_settings': {
+        'VCCLCompilerTool': {
+          'StringPooling': 'false'
+        }
+      },
+      'sources': ['hello.cc'],
+    },
+    {
+      'target_name': 'test_opt_fso',
+      'type': 'executable',
+      'msvs_settings': {
+        'VCCLCompilerTool': {
+          'EnableFiberSafeOptimizations': 'true'
+        }
+      },
+      'sources': ['hello.cc'],
+    },
+    {
+      'target_name': 'test_opt_fso_off',
+      'type': 'executable',
+      'msvs_settings': {
+        'VCCLCompilerTool': {
+          'EnableFiberSafeOptimizations': 'false'
         }
       },
       'sources': ['hello.cc'],

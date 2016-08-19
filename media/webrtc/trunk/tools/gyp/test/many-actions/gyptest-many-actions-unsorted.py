@@ -9,11 +9,18 @@ Make sure lots of actions in the same target don't cause exceeding command
 line length.
 """
 
+import sys
+
+if sys.platform == 'win32':
+  print "This test is currently disabled: https://crbug.com/483696."
+  sys.exit(0)
+
 import TestGyp
 
 test = TestGyp.TestGyp()
 
 test.run_gyp('many-actions-unsorted.gyp')
+
 test.build('many-actions-unsorted.gyp', test.ALL)
 for i in range(15):
   test.built_file_must_exist('generated_%d.h' % i)

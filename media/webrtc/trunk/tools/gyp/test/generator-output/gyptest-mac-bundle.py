@@ -13,8 +13,10 @@ import TestGyp
 import sys
 
 if sys.platform == 'darwin':
-  # Ninja doesn't support --generator-output.
-  test = TestGyp.TestGyp(formats=['!ninja'])
+  print "This test is currently disabled: https://crbug.com/483696."
+  sys.exit(0)
+
+  test = TestGyp.TestGyp(formats=[])
 
   MAC_BUNDLE_DIR = 'mac-bundle'
   GYPFILES_DIR = 'gypfiles'

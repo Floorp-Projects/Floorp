@@ -16,7 +16,7 @@ if sys.platform == 'win32':
   test = TestGyp.TestGyp(formats=['msvs', 'ninja'])
 
   CHDIR = 'linker-flags'
-  test.run_gyp('default-libs.gyp', chdir=CHDIR)
-  test.build('default-libs.gyp', test.ALL, chdir=CHDIR)
+  test.run_gyp('no-default-libs.gyp', chdir=CHDIR)
+  test.build('no-default-libs.gyp', test.ALL, chdir=CHDIR, status=1)
 
   test.pass_test()
