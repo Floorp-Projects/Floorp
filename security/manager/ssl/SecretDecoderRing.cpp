@@ -4,50 +4,41 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "stdlib.h"
-#include "plstr.h"
-#include "plbase64.h"
+#include "SecretDecoderRing.h"
 
+#include "ScopedNSSTypes.h"
 #include "mozilla/Base64.h"
 #include "mozilla/Casting.h"
 #include "mozilla/Services.h"
-#include "nsMemory.h"
-#include "nsString.h"
 #include "nsCOMPtr.h"
-#include "nsThreadUtils.h"
+#include "nsCRT.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIObserverService.h"
 #include "nsIServiceManager.h"
 #include "nsITokenPasswordDialogs.h"
-
-#include "nsISecretDecoderRing.h"
-#include "nsCRT.h"
-#include "nsSDR.h"
+#include "nsMemory.h"
 #include "nsNSSComponent.h"
 #include "nsNSSHelper.h"
-#include "nsNSSShutDown.h"
-#include "ScopedNSSTypes.h"
-
+#include "nsString.h"
+#include "nsThreadUtils.h"
 #include "pk11func.h"
 #include "pk11sdr.h" // For PK11SDR_Encrypt, PK11SDR_Decrypt
-
+#include "plstr.h"
 #include "ssl.h" // For SSL_ClearSessionCache
+#include "stdlib.h"
 
 using namespace mozilla;
 
-// Standard ISupports implementation
 // NOTE: Should these be the thread-safe versions?
-NS_IMPL_ISUPPORTS(nsSecretDecoderRing, nsISecretDecoderRing, nsISecretDecoderRingConfig)
+NS_IMPL_ISUPPORTS(SecretDecoderRing, nsISecretDecoderRing,
+                  nsISecretDecoderRingConfig)
 
-// nsSecretDecoderRing constructor
-nsSecretDecoderRing::nsSecretDecoderRing()
+SecretDecoderRing::SecretDecoderRing()
 {
-  // initialize superclass
 }
 
-// nsSecretDecoderRing destructor
-nsSecretDecoderRing::~nsSecretDecoderRing()
+SecretDecoderRing::~SecretDecoderRing()
 {
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
@@ -58,8 +49,8 @@ nsSecretDecoderRing::~nsSecretDecoderRing()
 }
 
 NS_IMETHODIMP
-nsSecretDecoderRing::Encrypt(unsigned char* data, uint32_t dataLen,
-                             unsigned char** result, uint32_t* _retval)
+SecretDecoderRing::Encrypt(unsigned char* data, uint32_t dataLen,
+                           unsigned char** result, uint32_t* _retval)
 {
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
@@ -105,8 +96,8 @@ nsSecretDecoderRing::Encrypt(unsigned char* data, uint32_t dataLen,
 }
 
 NS_IMETHODIMP
-nsSecretDecoderRing::Decrypt(unsigned char* data, uint32_t dataLen,
-                             unsigned char** result, uint32_t* _retval)
+SecretDecoderRing::Decrypt(unsigned char* data, uint32_t dataLen,
+                           unsigned char** result, uint32_t* _retval)
 {
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
@@ -146,7 +137,7 @@ nsSecretDecoderRing::Decrypt(unsigned char* data, uint32_t dataLen,
 }
 
 NS_IMETHODIMP
-nsSecretDecoderRing::EncryptString(const char* text, char** _retval)
+SecretDecoderRing::EncryptString(const char* text, char** _retval)
 {
   nsresult rv = NS_OK;
   unsigned char *encrypted = 0;
@@ -169,7 +160,7 @@ loser:
 }
 
 NS_IMETHODIMP
-nsSecretDecoderRing::DecryptString(const char* crypt, char** _retval)
+SecretDecoderRing::DecryptString(const char* crypt, char** _retval)
 {
   nsresult rv = NS_OK;
   char *r = 0;
@@ -208,7 +199,7 @@ loser:
 }
 
 NS_IMETHODIMP
-nsSecretDecoderRing::ChangePassword()
+SecretDecoderRing::ChangePassword()
 {
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
@@ -236,7 +227,7 @@ nsSecretDecoderRing::ChangePassword()
 }
 
 NS_IMETHODIMP
-nsSecretDecoderRing::Logout()
+SecretDecoderRing::Logout()
 {
   static NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
 
@@ -259,7 +250,7 @@ nsSecretDecoderRing::Logout()
 }
 
 NS_IMETHODIMP
-nsSecretDecoderRing::LogoutAndTeardown()
+SecretDecoderRing::LogoutAndTeardown()
 {
   static NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
 
@@ -291,7 +282,7 @@ nsSecretDecoderRing::LogoutAndTeardown()
 }
 
 NS_IMETHODIMP
-nsSecretDecoderRing::SetWindow(nsISupports*)
+SecretDecoderRing::SetWindow(nsISupports*)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
