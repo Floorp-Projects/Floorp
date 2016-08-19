@@ -426,9 +426,13 @@ PrefBranch.prototype = {
    * Helper function to initialize the root PrefBranch.
    */
   _initializeRoot: function () {
-    if (localStorage.length === 0) {
-      // FIXME - this is where we'll load devtools.js to install the
-      // default prefs.
+    if (localStorage.length === 0 && Services._defaultPrefsEnabled) {
+      /* eslint-disable no-eval */
+      let devtools = require("raw!prefs!devtools/client/preferences/devtools");
+      eval(devtools);
+      let all = require("raw!prefs!modules/libpref/init/all");
+      eval(all);
+      /* eslint-enable no-eval */
     }
 
     // Read the prefs from local storage and create the local
@@ -449,12 +453,25 @@ PrefBranch.prototype = {
 };
 
 const Services = {
+  _prefs: null,
+
+  // For use by tests.  If set to false before Services.prefs is used,
+  // this will disable the reading of the default prefs.
+  _defaultPrefsEnabled: true,
+
   /**
    * An implementation of nsIPrefService that is based on local
    * storage.  Only the subset of nsIPrefService that is actually used
-   * by devtools is implemented here.
+   * by devtools is implemented here.  This is lazily instantiated so
+   * that the tests have a chance to disable the loading of default
+   * prefs.
    */
-  prefs: new PrefBranch(null, "", ""),
+  get prefs() {
+    if (!this._prefs) {
+      this._prefs = new PrefBranch(null, "", "");
+    }
+    return this._prefs;
+  },
 
   /**
    * An implementation of Services.appinfo that holds just the
@@ -582,7 +599,5 @@ function pref(name, value) {
 }
 
 module.exports = Services;
-// This is exported to silence eslint and, at some point, perhaps to
-// provide it when loading devtools.js in order to install the default
-// preferences.
+// This is exported to silence eslint.
 exports.pref = pref;
