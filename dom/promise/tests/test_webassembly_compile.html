@@ -65,10 +65,55 @@ function compileManySuccess() {
   );
 }
 
+function compileInWorker() {
+  var w = new Worker(`data:text/plain,
+    onmessage = e => {
+      WebAssembly.compile(e.data).then(m => {
+          var i = new WebAssembly.Instance(m);
+          if (i.exports.foo() !== 42)
+            throw "bad i.exports.foo() result";
+          postMessage("ok");
+          close();
+      }).catch(err => { throw err });
+    }
+  `);
+  w.postMessage(fooModuleCode);
+  w.onmessage = e => {
+    ok(e.data === "ok", "worker test");
+    runTest();
+  }
+}
+
+function terminateCompileInWorker() {
+    var w = new Worker(`data:text/plain,
+      var fooModuleCode;
+      function spawnWork() {
+        const N = 100;
+        var arr = [];
+        for (var i = 0; i < N; i++)
+          arr.push(WebAssembly.compile(fooModuleCode));
+        Promise.all(arr).then(spawnWork);
+      }
+      onmessage = e => {
+        fooModuleCode = e.data;
+        spawnWork();
+        postMessage("ok");
+      }
+    `);
+    w.postMessage(fooModuleCode);
+    w.onmessage = e => {
+      ok(e.data === "ok", "worker finished first step");
+      w.terminate();
+      runTest();
+    }
+}
+
 var tests = [ propertiesExist,
               compileFail,
               compileSuccess,
-              compileManySuccess
+              compileManySuccess,
+              compileInWorker,
+              terminateCompileInWorker
             ];
 
 function runTest() {
