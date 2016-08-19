@@ -2389,6 +2389,62 @@ AsmJSCacheOpenEntryForWrite(JS::Handle<JSObject*> aGlobal,
                                        aSize, aMemory, aHandle);
 }
 
+class AsyncTaskRunnable final : public Runnable
+{
+  ~AsyncTaskRunnable()
+  {
+    MOZ_ASSERT(!mTask);
+  }
+
+public:
+  explicit AsyncTaskRunnable(JS::AsyncTask* aTask)
+    : mTask(aTask)
+  {
+    MOZ_ASSERT(mTask);
+  }
+
+protected:
+  NS_IMETHOD Run() override
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+    MOZ_ASSERT(sContext == mTask->user);
+
+    AutoJSAPI jsapi;
+    jsapi.Init();
+
+    mTask->finish(sContext);
+    mTask = nullptr;  // mTask may delete itself
+
+    return NS_OK;
+  }
+
+private:
+  JS::AsyncTask* mTask;
+};
+
+static bool
+StartAsyncTaskCallback(JSContext* aCx, JS::AsyncTask* aTask)
+{
+  MOZ_ASSERT(aCx == sContext);
+  aTask->user = sContext;
+  return true;
+}
+
+static bool
+FinishAsyncTaskCallback(JS::AsyncTask* aTask)
+{
+  // AsyncTasks can finish during shutdown so cannot simply
+  // NS_DispatchToMainThread.
+  nsCOMPtr<nsIThread> mainThread = do_GetMainThread();
+  if (!mainThread) {
+    return false;
+  }
+
+  RefPtr<AsyncTaskRunnable> r = new AsyncTaskRunnable(aTask);
+  MOZ_ALWAYS_SUCCEEDS(mainThread->Dispatch(r.forget(), NS_DISPATCH_NORMAL));
+  return true;
+}
+
 void
 nsJSContext::EnsureStatics()
 {
@@ -2423,6 +2479,8 @@ nsJSContext::EnsureStatics()
     asmjscache::CloseEntryForWrite
   };
   JS::SetAsmJSCacheOps(sContext, &asmJSCacheOps);
+
+  JS::SetAsyncTaskCallbacks(sContext, StartAsyncTaskCallback, FinishAsyncTaskCallback);
 
   // Set these global xpconnect options...
   Preferences::RegisterCallbackAndCall(SetMemoryHighWaterMarkPrefChangedCallback,
