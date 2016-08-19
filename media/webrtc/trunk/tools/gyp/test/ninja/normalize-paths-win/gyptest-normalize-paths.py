@@ -31,6 +31,10 @@ if sys.platform == 'win32':
       'AnotherName.exe' not in second):
     test.fail_test()
 
+  copytarget = open(test.built_file_path('obj/copy_target.ninja')).read()
+  if '$(VSInstallDir)' in copytarget:
+    test.fail_test()
+
   action = open(test.built_file_path('obj/action.ninja')).read()
   if '..\\..\\out\\Default' in action:
     test.fail_test()

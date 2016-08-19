@@ -23,10 +23,7 @@ test.relocate('src', 'relocate/src')
 
 test.build('shared_dependency.gyp', test.ALL, chdir='relocate/src')
 
-if test.format=='android':
-  makefile_path = 'relocate/src/GypAndroid.mk'
-else:
-  makefile_path = 'relocate/src/Makefile'
+makefile_path = 'relocate/src/Makefile'
 
 with open(makefile_path) as makefile:
   make_contents = makefile.read()

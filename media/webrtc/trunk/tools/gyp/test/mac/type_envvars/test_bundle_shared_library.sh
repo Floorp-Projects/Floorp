@@ -15,9 +15,24 @@ test $EXECUTABLE_PATH = \
     "bundle_shared_library.framework/Versions/A/bundle_shared_library"
 test $WRAPPER_NAME = bundle_shared_library.framework
 
+test $CONTENTS_FOLDER_PATH = bundle_shared_library.framework/Versions/A
+test $EXECUTABLE_FOLDER_PATH = bundle_shared_library.framework/Versions/A
+test $UNLOCALIZED_RESOURCES_FOLDER_PATH = \
+    bundle_shared_library.framework/Versions/A/Resources
+test $JAVA_FOLDER_PATH = \
+    bundle_shared_library.framework/Versions/A/Resources/Java
+test $FRAMEWORKS_FOLDER_PATH = \
+    bundle_shared_library.framework/Versions/A/Frameworks
+test $SHARED_FRAMEWORKS_FOLDER_PATH = \
+    bundle_shared_library.framework/Versions/A/SharedFrameworks
+test $SHARED_SUPPORT_FOLDER_PATH = \
+    bundle_shared_library.framework/Versions/A/Resources
+test $PLUGINS_FOLDER_PATH = bundle_shared_library.framework/Versions/A/PlugIns
+test $XPCSERVICES_FOLDER_PATH = \
+    bundle_shared_library.framework/Versions/A/XPCServices
+
 test $DYLIB_INSTALL_NAME_BASE = "/Library/Frameworks"
 test $LD_DYLIB_INSTALL_NAME = \
     "/Library/Frameworks/bundle_shared_library.framework/Versions/A/bundle_shared_library"
 
-# Should be set, but empty.
-[[ ! $SDKROOT && ! ${SDKROOT-_} ]]
+"$(dirname "$0")/test_check_sdkroot.sh"

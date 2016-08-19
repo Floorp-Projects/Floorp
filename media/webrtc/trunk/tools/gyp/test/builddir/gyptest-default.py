@@ -23,8 +23,8 @@ import TestGyp
 # its sources. I'm not sure if make is wrong for writing outside the current
 # directory, or if the test is wrong for assuming everything generated is under
 # the current directory.
-# Android does not support setting the build directory.
-test = TestGyp.TestGyp(formats=['!make', '!ninja', '!android'])
+# Ninja and CMake do not support setting the build directory.
+test = TestGyp.TestGyp(formats=['!make', '!ninja', '!cmake'])
 
 test.run_gyp('prog1.gyp', '--depth=..', chdir='src')
 if test.format == 'msvs':

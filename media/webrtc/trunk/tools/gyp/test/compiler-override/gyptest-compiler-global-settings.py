@@ -34,9 +34,19 @@ output = open(gypfile, 'w')
 output.write(s.substitute(replacements))
 output.close()
 
+old_env = dict(os.environ)
+os.environ['GYP_CROSSCOMPILE'] = '1'
 test.run_gyp(gypfile)
+os.environ.clear()
+os.environ.update(old_env)
+
 test.build(gypfile)
 test.must_contain_all_lines(test.stdout(), ['my_cc.py', 'my_cxx.py', 'FOO'])
+
+# The xcode generator chokes on the 'host' toolset. Skip the rest of
+# this test (cf. https://code.google.com/p/gyp/issues/detail?id=454).
+if test.format == 'xcode-ninja':
+  test.pass_test()
 
 # Same again but with the host toolset.
 replacements['TOOLSET'] = 'host'
@@ -45,8 +55,24 @@ output = open(gypfile, 'w')
 output.write(s.substitute(replacements))
 output.close()
 
+old_env = dict(os.environ)
+os.environ['GYP_CROSSCOMPILE'] = '1'
 test.run_gyp(gypfile)
+os.environ.clear()
+os.environ.update(old_env)
+
 test.build(gypfile)
 test.must_contain_all_lines(test.stdout(), ['my_cc.py', 'my_cxx.py', 'BAR'])
+
+# Check that CC_host overrides make_global_settings
+old_env = dict(os.environ)
+os.environ['CC_host'] = '%s %s/my_cc.py SECRET' % (replacements['PYTHON'],
+                                                   replacements['PWD'])
+test.run_gyp(gypfile)
+os.environ.clear()
+os.environ.update(old_env)
+
+test.build(gypfile)
+test.must_contain_all_lines(test.stdout(), ['SECRET', 'my_cxx.py', 'BAR'])
 
 test.pass_test()
