@@ -1,0 +1,33 @@
+<!doctype html>
+<meta charset=utf-8>
+<script src="../testcommon.js"></script>
+<body>
+<script>
+'use strict';
+
+test(function(t) {
+  var div = document.createElement('div');
+  document.documentElement.appendChild(div);
+  var anim = div.animate([ { borderRadius: "0", borderTopRightRadius: "10%" },
+                           { borderTopLeftRadius: "20%",
+                             borderTopRightRadius: "30%",
+                             borderBottomRightRadius: "40%",
+                             borderBottomLeftRadius: "50%" },
+                           { borderRadius: "50%" } ],
+                         { spacing:"paced(border-radius)" });
+
+  var frames = anim.effect.getKeyframes();
+  var dist = [ 0,
+               Math.sqrt(20 * 20 + (30 - 10) * (30 - 10) + 40 * 40 + 50 * 50),
+               Math.sqrt((50 - 20) * (50 - 20) + (50 - 30) * (50 - 30) +
+                         (50 - 40) * (50 - 40) + (50 - 50) * (50 - 50)) ];
+  var cumDist = [];
+  dist.reduce(function(prev, curr, i) { return cumDist[i] = prev + curr; }, 0);
+  assert_approx_equals(frames[1].computedOffset, cumDist[1] / cumDist[2],
+                       0.0001, 'frame offset');
+}, 'Test for the longhand components of the shorthand property surely sorted' );
+
+done();
+
+</script>
+</body>
