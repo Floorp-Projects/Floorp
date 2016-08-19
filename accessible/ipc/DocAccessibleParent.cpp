@@ -482,6 +482,7 @@ DocAccessibleParent::RecvCOMProxy(const IAccessibleHolder& aCOMProxy,
   SetCOMInterface(ptr);
 
   Accessible* outerDoc = OuterDocOfRemoteBrowser();
+  MOZ_ASSERT(outerDoc);
   IAccessible* rawNative = nullptr;
   if (outerDoc) {
     outerDoc->GetNativeInterface((void**) &rawNative);
