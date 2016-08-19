@@ -11,8 +11,9 @@
 const URL = "data:text/html;charset=utf8,test page for toolbox switching";
 
 var {Toolbox} = require("devtools/client/framework/toolbox");
-var strings = Services.strings.createBundle(
-  "chrome://devtools/locale/toolbox.properties");
+
+const {LocalizationHelper} = require("devtools/shared/l10n");
+const L10N = new LocalizationHelper("devtools/locale/toolbox.properties");
 
 add_task(function* () {
   info("Create a test tab and open the toolbox");
@@ -20,7 +21,7 @@ add_task(function* () {
   let target = TargetFactory.forTab(tab);
   let toolbox = yield gDevTools.showToolbox(target, "webconsole");
 
-  let shortcut = strings.GetStringFromName("toolbox.toggleHost.key");
+  let shortcut = L10N.getStr("toolbox.toggleHost.key");
 
   let {SIDE, BOTTOM, WINDOW} = Toolbox.HostType;
   checkHostType(toolbox, BOTTOM, SIDE);
