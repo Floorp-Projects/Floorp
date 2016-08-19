@@ -713,6 +713,185 @@ AsmJSCacheOpenEntryForWrite(JS::Handle<JSObject*> aGlobal,
                                        aSize, aMemory, aHandle);
 }
 
+class AsyncTaskWorkerHolder final : public WorkerHolder
+{
+  bool Notify(Status aStatus) override
+  {
+    // The async task must complete in bounded time and there is not (currently)
+    // a clean way to cancel it. Async tasks do not run arbitrary content.
+    return true;
+  }
+
+public:
+  WorkerPrivate* Worker() const
+  {
+    return mWorkerPrivate;
+  }
+};
+
+template <class RunnableBase>
+class AsyncTaskBase : public RunnableBase
+{
+  UniquePtr<AsyncTaskWorkerHolder> mHolder;
+
+  // Disable the usual pre/post-dispatch thread assertions since we are
+  // dispatching from some random JS engine internal thread:
+
+  bool PreDispatch(WorkerPrivate* aWorkerPrivate) override
+  {
+    return true;
+  }
+
+  void PostDispatch(WorkerPrivate* aWorkerPrivate, bool aDispatchResult) override
+  { }
+
+protected:
+  explicit AsyncTaskBase(UniquePtr<AsyncTaskWorkerHolder> aHolder)
+    : RunnableBase(aHolder->Worker(),
+                   WorkerRunnable::WorkerThreadUnchangedBusyCount)
+    , mHolder(Move(aHolder))
+  {
+    MOZ_ASSERT(mHolder);
+  }
+
+  ~AsyncTaskBase()
+  {
+    MOZ_ASSERT(!mHolder);
+  }
+
+  void DestroyHolder()
+  {
+    MOZ_ASSERT(mHolder);
+    mHolder.reset();
+  }
+
+public:
+  UniquePtr<AsyncTaskWorkerHolder> StealHolder()
+  {
+    return Move(mHolder);
+  }
+};
+
+class AsyncTaskRunnable final : public AsyncTaskBase<WorkerRunnable>
+{
+  JS::AsyncTask* mTask;
+
+  ~AsyncTaskRunnable()
+  {
+    MOZ_ASSERT(!mTask);
+  }
+
+  void PostDispatch(WorkerPrivate* aWorkerPrivate, bool aDispatchResult) override
+  {
+    // For the benefit of the destructor assert.
+    if (!aDispatchResult) {
+      mTask = nullptr;
+    }
+  }
+
+public:
+  AsyncTaskRunnable(UniquePtr<AsyncTaskWorkerHolder> aHolder,
+                    JS::AsyncTask* aTask)
+    : AsyncTaskBase<WorkerRunnable>(Move(aHolder))
+    , mTask(aTask)
+  {
+    MOZ_ASSERT(mTask);
+  }
+
+  bool WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
+  {
+    MOZ_ASSERT(aWorkerPrivate == mWorkerPrivate);
+    MOZ_ASSERT(aCx == mWorkerPrivate->GetJSContext());
+    MOZ_ASSERT(mTask);
+
+    AutoJSAPI jsapi;
+    jsapi.Init();
+
+    mTask->finish(mWorkerPrivate->GetJSContext());
+    mTask = nullptr;  // mTask may delete itself
+
+    DestroyHolder();
+
+    return true;
+  }
+
+  nsresult Cancel() override
+  {
+    MOZ_ASSERT(mTask);
+
+    AutoJSAPI jsapi;
+    jsapi.Init();
+
+    mTask->cancel(mWorkerPrivate->GetJSContext());
+    mTask = nullptr;  // mTask may delete itself
+
+    DestroyHolder();
+
+    return WorkerRunnable::Cancel();
+  }
+};
+
+class AsyncTaskControlRunnable final
+  : public AsyncTaskBase<WorkerControlRunnable>
+{
+public:
+  explicit AsyncTaskControlRunnable(UniquePtr<AsyncTaskWorkerHolder> aHolder)
+    : AsyncTaskBase<WorkerControlRunnable>(Move(aHolder))
+  { }
+
+  bool WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
+  {
+    // See comment in FinishAsyncTaskCallback.
+    DestroyHolder();
+    return true;
+  }
+};
+
+static bool
+StartAsyncTaskCallback(JSContext* aCx, JS::AsyncTask* aTask)
+{
+  WorkerPrivate* worker = GetWorkerPrivateFromContext(aCx);
+  worker->AssertIsOnWorkerThread();
+
+  auto holder = MakeUnique<AsyncTaskWorkerHolder>();
+  if (!holder->HoldWorker(worker, Status::Closing)) {
+    return false;
+  }
+
+  // Matched by a UniquePtr in FinishAsyncTaskCallback which, by
+  // interface contract, must be called in the future.
+  aTask->user = holder.release();
+  return true;
+}
+
+static bool
+FinishAsyncTaskCallback(JS::AsyncTask* aTask)
+{
+  // May execute either on the worker thread or a random JS-internal helper
+  // thread.
+
+  // Match the release() in StartAsyncTaskCallback.
+  UniquePtr<AsyncTaskWorkerHolder> holder(
+    static_cast<AsyncTaskWorkerHolder*>(aTask->user));
+
+  RefPtr<AsyncTaskRunnable> r = new AsyncTaskRunnable(Move(holder), aTask);
+
+  // WorkerRunnable::Dispatch() can fail during worker shutdown. In that case,
+  // report failure back to the JS engine but make sure to release the
+  // WorkerHolder on the worker thread using a control runnable. Control
+  // runables aren't suitable for calling AsyncTask::finish() since they are run
+  // via the interrupt callback which breaks JS run-to-completion.
+  if (!r->Dispatch()) {
+    RefPtr<AsyncTaskControlRunnable> cr =
+      new AsyncTaskControlRunnable(r->StealHolder());
+
+    MOZ_ALWAYS_TRUE(cr->Dispatch());
+    return false;
+  }
+
+  return true;
+}
+
 class WorkerJSRuntime;
 
 class WorkerThreadContextPrivate : private PerThreadAtomCache
@@ -807,6 +986,8 @@ InitJSContextForWorker(WorkerPrivate* aWorkerPrivate, JSContext* aWorkerCx)
     asmjscache::CloseEntryForWrite
   };
   JS::SetAsmJSCacheOps(aWorkerCx, &asmJSCacheOps);
+
+  JS::SetAsyncTaskCallbacks(aWorkerCx, StartAsyncTaskCallback, FinishAsyncTaskCallback);
 
   if (!JS::InitSelfHostedCode(aWorkerCx)) {
     NS_WARNING("Could not init self-hosted code!");
