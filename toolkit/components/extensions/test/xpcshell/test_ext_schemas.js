@@ -407,12 +407,12 @@ let wrapper = {
     return permissions.has(permission);
   },
 
-  callFunction(path, name, args) {
+  callFunction(pathObj, path, name, args) {
     let ns = path.join(".");
     tally("call", ns, name, args);
   },
 
-  callFunctionNoReturn(path, name, args) {
+  callFunctionNoReturn(pathObj, path, name, args) {
     let ns = path.join(".");
     tally("call", ns, name, args);
   },
@@ -421,25 +421,25 @@ let wrapper = {
     return ns != "do-not-inject";
   },
 
-  getProperty(path, name) {
+  getProperty(pathObj, path, name) {
     let ns = path.join(".");
     tally("get", ns, name);
   },
 
-  setProperty(path, name, value) {
+  setProperty(pathObj, path, name, value) {
     let ns = path.join(".");
     tally("set", ns, name, value);
   },
 
-  addListener(path, name, listener, args) {
+  addListener(pathObj, path, name, listener, args) {
     let ns = path.join(".");
     tally("addListener", ns, name, [listener, args]);
   },
-  removeListener(path, name, listener) {
+  removeListener(pathObj, path, name, listener) {
     let ns = path.join(".");
     tally("removeListener", ns, name, [listener]);
   },
-  hasListener(path, name, listener) {
+  hasListener(pathObj, path, name, listener) {
     let ns = path.join(".");
     tally("hasListener", ns, name, [listener]);
   },

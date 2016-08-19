@@ -94,6 +94,7 @@ const CONTEXT_FOR_VALIDATION = [
 // Callers of Schemas.inject should implement all of these methods.
 const CONTEXT_FOR_INJECTION = [
   ...CONTEXT_FOR_VALIDATION,
+  "shouldInject",
   "callFunction",
   "callFunctionNoReturn",
   "callAsyncFunction",
@@ -340,15 +341,44 @@ class InjectionContext extends Context {
   }
 
   /**
+   * Called before injecting an API. The return value is used to determine
+   * whether to inject the API, and if so what the value of the `pathObj`
+   * parameter should be when the methods of this interface are called.
+   * - If falsey, the API is not injected.
+   * - If `true`, the API is injected and the `pathObj` parameter is `null`.
+   * - If an object, the `pathObj` parameter is this object. The object SHOULD
+   *   have a property `name`.
+   *
+   * With the above contract, a local API implementation can simply be
+   * implemented as follows:
+   *
+   *    callFunction(pathObj, path, name, args) {
+   *      if (pathObj)
+   *        return pathObj[name];
+   *      // else the local API does not exist, so fall back or throw an error.
+   *    }
+   *
+   * @abstract
+   * @param {string} namespace The namespace of the API. This may contain dots,
+   *     e.g. in the case of "devtools.inspectedWindow".
+   * @param {string} [name] The name of the property in the namespace.
+   * @returns {*} An object with the property `name`, `true` or a falsey value.
+   */
+  shouldInject(namespace, name) {
+    throw new Error("Not implemented");
+  }
+
+  /**
    * Calls function `path`.`name` and returns its return value.
    *
    * @abstract
+   * @param {*} pathObj See `shouldInject`.
    * @param {Array<string>} path The API path, e.g. `["storage", "local"]`.
    * @param {string} name The method name, e.g. "get".
    * @param {Array} args The parameters for the function.
    * @returns {*} The return value of the invoked function.
    */
-  callFunction(path, name, args) {
+  callFunction(pathObj, path, name, args) {
     throw new Error("Not implemented");
   }
 
@@ -356,11 +386,12 @@ class InjectionContext extends Context {
    * Calls function `path`.`name` and ignores its return value.
    *
    * @abstract
+   * @param {*} pathObj See `shouldInject`.
    * @param {Array<string>} path The API path, e.g. `["storage", "local"]`.
    * @param {string} name The method name, e.g. "get".
    * @param {Array} args The parameters for the function.
    */
-  callFunctionNoReturn(path, name, args) {
+  callFunctionNoReturn(pathObj, path, name, args) {
     throw new Error("Not implemented");
   }
 
@@ -368,6 +399,7 @@ class InjectionContext extends Context {
    * Call function `path`.`name` that completes asynchronously.
    *
    * @abstract
+   * @param {*} pathObj See `shouldInject`.
    * @param {Array<string>} path The API path, e.g. `["storage", "local"]`.
    * @param {string} name The method name, e.g. "get".
    * @param {Array} args The parameters for the function.
@@ -376,7 +408,7 @@ class InjectionContext extends Context {
    * @returns {Promise|undefined} Must be void if `callback` is set, and a
    *     promise otherwise. The promise is resolved when the function completes.
    */
-  callAsyncFunction(path, name, args, callback) {
+  callAsyncFunction(pathObj, path, name, args, callback) {
     throw new Error("Not implemented");
   }
 
@@ -384,11 +416,12 @@ class InjectionContext extends Context {
    * Retrieves the value of property `path`.`name`.
    *
    * @abstract
+   * @param {*} pathObj See `shouldInject`.
    * @param {Array<string>} path The API path, e.g. `["storage", "local"]`.
    * @param {string} name The property name.
    * @returns {*} The value of the property.
    */
-  getProperty(path, name) {
+  getProperty(pathObj, path, name) {
     throw new Error("Not implemented");
   }
 
@@ -396,11 +429,12 @@ class InjectionContext extends Context {
    * Assigns the value of property `path`.`name`.
    *
    * @abstract
+   * @param {*} pathObj See `shouldInject`.
    * @param {Array<string>} path The API path, e.g. `["storage", "local"]`.
    * @param {string} name The property name.
    * @param {string} value The new value of the property.
    */
-  setProperty(path, name, value) {
+  setProperty(pathObj, path, name, value) {
     throw new Error("Not implemented");
   }
 
@@ -408,13 +442,14 @@ class InjectionContext extends Context {
    * Registers `listener` for event `path`.`name`.
    *
    * @abstract
+   * @param {*} pathObj See `shouldInject`.
    * @param {Array<string>} path The API path, e.g. `["storage", "local"]`.
    * @param {string} name The event name, e.g. "onChanged"
    * @param {function} listener The callback to be called when the event fires.
    * @param {Array} args Extra parameters for EventManager.addListener.
    * @see EventManager.addListener
    */
-  addListener(path, name, listener, args) {
+  addListener(pathObj, path, name, listener, args) {
     throw new Error("Not implemented");
   }
 
@@ -422,13 +457,14 @@ class InjectionContext extends Context {
    * Checks whether `listener` is listening to event `path`.`name`.
    *
    * @abstract
+   * @param {*} pathObj See `shouldInject`.
    * @param {Array<string>} path The API path, e.g. `["storage", "local"]`.
    * @param {string} name The event name, e.g. "onChanged"
    * @param {function} listener The event listener.
    * @returns {boolean} Whether `listener` was added to event `path`.`name`.
    * @see EventManager.hasListener
    */
-  hasListener(path, name, listener) {
+  hasListener(pathObj, path, name, listener) {
     throw new Error("Not implemented");
   }
 
@@ -436,12 +472,13 @@ class InjectionContext extends Context {
    * Unregisters `listener` from event `path`.`name`.
    *
    * @abstract
+   * @param {*} pathObj See `shouldInject`.
    * @param {Array<string>} path The API path, e.g. `["storage", "local"]`.
    * @param {string} name The event name, e.g. "onChanged"
    * @param {function} listener The event listener.
    * @see EventManager.removeListener
    */
-  removeListener(path, name, listener) {
+  removeListener(pathObj, path, name, listener) {
     throw new Error("Not implemented");
   }
 }
@@ -612,12 +649,13 @@ class Entry {
    * `context` is used to call the actual implementation
    * of a given function or event.
    *
+   * @param {*} pathObj See `shouldInject`.
    * @param {Array<string>} path The API path, e.g. `["storage", "local"]`.
    * @param {string} name The method name, e.g. "get".
    * @param {object} dest The object where `path`.`name` should be stored.
    * @param {InjectionContext} context
    */
-  inject(path, name, dest, context) {
+  inject(pathObj, path, name, dest, context) {
   }
 }
 
@@ -808,7 +846,7 @@ class StringType extends Type {
     return baseType == "string";
   }
 
-  inject(path, name, dest, context) {
+  inject(pathObj, path, name, dest, context) {
     if (this.enumeration) {
       let obj = Cu.createObjectIn(dest, {defineAs: name});
       for (let e of this.enumeration) {
@@ -1125,7 +1163,7 @@ class ValueProperty extends Entry {
     this.value = value;
   }
 
-  inject(path, name, dest, context) {
+  inject(pathObj, path, name, dest, context) {
     dest[name] = this.value;
   }
 }
@@ -1145,14 +1183,14 @@ class TypeProperty extends Entry {
     throw context.makeError(`${msg} for ${this.namespaceName}.${this.name}.`);
   }
 
-  inject(path, name, dest, context) {
+  inject(pathObj, path, name, dest, context) {
     if (this.unsupported) {
       return;
     }
 
     let getStub = () => {
       this.checkDeprecated(context);
-      return context.getProperty(path, name);
+      return context.getProperty(pathObj, path, name);
     };
 
     let desc = {
@@ -1169,7 +1207,7 @@ class TypeProperty extends Entry {
           this.throwError(context, normalized.error);
         }
 
-        context.setProperty(path, name, normalized.value);
+        context.setProperty(pathObj, path, name, normalized.value);
       };
 
       desc.set = Cu.exportFunction(setStub, dest);
@@ -1198,7 +1236,7 @@ class SubModuleProperty extends Entry {
     this.properties = properties;
   }
 
-  inject(path, name, dest, context) {
+  inject(pathObj, path, name, dest, context) {
     let obj = Cu.createObjectIn(dest, {defineAs: name});
 
     let ns = Schemas.namespaces.get(this.namespaceName);
@@ -1214,7 +1252,12 @@ class SubModuleProperty extends Entry {
 
     let functions = type.functions;
     for (let fun of functions) {
-      fun.inject(path.concat(name), fun.name, obj, context);
+      let subpath = path.concat(name);
+      let pathObj = context.shouldInject(subpath.join("."), fun.name);
+      if (pathObj) {
+        pathObj = pathObj === true ? null : pathObj;
+        fun.inject(pathObj, subpath, fun.name, obj, context);
+      }
     }
 
     // TODO: Inject this.properties.
@@ -1322,7 +1365,7 @@ class FunctionEntry extends CallEntry {
     this.hasAsyncCallback = type.hasAsyncCallback;
   }
 
-  inject(path, name, dest, context) {
+  inject(pathObj, path, name, dest, context) {
     if (this.unsupported) {
       return;
     }
@@ -1340,19 +1383,19 @@ class FunctionEntry extends CallEntry {
         if (this.hasAsyncCallback) {
           callback = actuals.pop();
         }
-        return context.callAsyncFunction(path, name, actuals, callback);
+        return context.callAsyncFunction(pathObj, path, name, actuals, callback);
       };
     } else if (!this.returns) {
       stub = (...args) => {
         this.checkDeprecated(context);
         let actuals = this.checkParameters(args, context);
-        return context.callFunctionNoReturn(path, name, actuals);
+        return context.callFunctionNoReturn(pathObj, path, name, actuals);
       };
     } else {
       stub = (...args) => {
         this.checkDeprecated(context);
         let actuals = this.checkParameters(args, context);
-        return context.callFunction(path, name, actuals);
+        return context.callFunction(pathObj, path, name, actuals);
       };
     }
     Cu.exportFunction(stub, dest, {defineAs: name});
@@ -1376,7 +1419,7 @@ class Event extends CallEntry {
     return r.value;
   }
 
-  inject(path, name, dest, context) {
+  inject(pathObj, path, name, dest, context) {
     if (this.unsupported) {
       return;
     }
@@ -1388,17 +1431,17 @@ class Event extends CallEntry {
     let addStub = (listener, ...args) => {
       listener = this.checkListener(listener, context);
       let actuals = this.checkParameters(args, context);
-      context.addListener(this.path, name, listener, actuals);
+      context.addListener(pathObj, this.path, name, listener, actuals);
     };
 
     let removeStub = (listener) => {
       listener = this.checkListener(listener, context);
-      context.removeListener(this.path, name, listener);
+      context.removeListener(pathObj, this.path, name, listener);
     };
 
     let hasStub = (listener) => {
       listener = this.checkListener(listener, context);
-      return context.hasListener(this.path, name, listener);
+      return context.hasListener(pathObj, this.path, name, listener);
     };
 
     let obj = Cu.createObjectIn(dest, {defineAs: name});
@@ -1827,8 +1870,10 @@ this.Schemas = {
 
       let obj = Cu.createObjectIn(dest, {defineAs: namespace});
       for (let [name, entry] of ns) {
-        if (wrapperFuncs.shouldInject(namespace, name)) {
-          entry.inject([namespace], name, obj, context);
+        let pathObj = context.shouldInject(namespace, name);
+        if (pathObj) {
+          pathObj = pathObj === true ? null : pathObj;
+          entry.inject(pathObj, [namespace], name, obj, context);
         }
       }
 
