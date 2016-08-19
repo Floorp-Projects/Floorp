@@ -674,6 +674,8 @@ public class BrowserApp extends GeckoApp
         mFindInPageBar = (FindInPageBar) findViewById(R.id.find_in_page);
         mMediaCastingBar = (MediaCastingBar) findViewById(R.id.media_casting);
 
+        mDoorhangerOverlay = findViewById(R.id.doorhanger_overlay);
+
         EventDispatcher.getInstance().registerGeckoThreadListener((GeckoEventListener)this,
             "Gecko:DelayedStartup",
             "Menu:Open",
@@ -969,9 +971,6 @@ public class BrowserApp extends GeckoApp
 
     @Override
     public void onAttachedToWindow() {
-        mDoorhangerOverlay = findViewById(R.id.doorhanger_overlay);
-        mDoorhangerOverlay.setVisibility(View.VISIBLE);
-
         // We can't show the first run experience until Gecko has finished initialization (bug 1077583).
         checkFirstrun(this, new SafeIntent(getIntent()));
     }
