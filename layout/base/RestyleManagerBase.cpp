@@ -518,7 +518,14 @@ RecomputePosition(nsIFrame* aFrame)
         // ReflowInput::ApplyRelativePositioning would work here, but
         // since we've already checked mPosition and aren't changing the frame's
         // normal position, go ahead and add the offsets directly.
-        cont->SetPosition(cont->GetNormalPosition() +
+        // First, we need to ensure that the normal position is stored though.
+        nsPoint normalPosition = cont->GetNormalPosition();
+        auto props = cont->Properties();
+        const auto& prop = nsIFrame::NormalPositionProperty();
+        if (!props.Get(prop)) {
+          props.Set(prop, new nsPoint(normalPosition));
+        }
+        cont->SetPosition(normalPosition +
                           nsPoint(newOffsets.left, newOffsets.top));
       }
     }
