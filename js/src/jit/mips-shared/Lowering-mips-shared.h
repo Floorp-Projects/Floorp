@@ -23,7 +23,6 @@ class LIRGeneratorMIPSShared : public LIRGeneratorShared
     // x86 has constraints on what registers can be formatted for 1-byte
     // stores and loads; on MIPS all registers are okay.
     LAllocation useByteOpRegister(MDefinition* mir);
-    LAllocation useByteOpRegisterAtStart(MDefinition* mir);
     LAllocation useByteOpRegisterOrNonDoubleConstant(MDefinition* mir);
     LDefinition tempByteOpRegister();
 

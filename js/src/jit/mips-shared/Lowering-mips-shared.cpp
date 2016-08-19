@@ -24,12 +24,6 @@ LIRGeneratorMIPSShared::useByteOpRegister(MDefinition* mir)
 }
 
 LAllocation
-LIRGeneratorMIPSShared::useByteOpRegisterAtStart(MDefinition* mir)
-{
-    return useRegisterAtStart(mir);
-}
-
-LAllocation
 LIRGeneratorMIPSShared::useByteOpRegisterOrNonDoubleConstant(MDefinition* mir)
 {
     return useRegisterOrNonDoubleConstant(mir);

@@ -25,7 +25,6 @@ class LIRGeneratorARM64 : public LIRGeneratorShared
                                bool useAtStart = false);
 
     LAllocation useByteOpRegister(MDefinition* mir);
-    LAllocation useByteOpRegisterAtStart(MDefinition* mir);
     LAllocation useByteOpRegisterOrNonDoubleConstant(MDefinition* mir);
 
     inline LDefinition tempToUnbox() {

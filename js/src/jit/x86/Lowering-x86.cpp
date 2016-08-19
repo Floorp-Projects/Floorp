@@ -32,12 +32,6 @@ LIRGeneratorX86::useByteOpRegister(MDefinition* mir)
 }
 
 LAllocation
-LIRGeneratorX86::useByteOpRegisterAtStart(MDefinition* mir)
-{
-    return useFixedAtStart(mir, eax);
-}
-
-LAllocation
 LIRGeneratorX86::useByteOpRegisterOrNonDoubleConstant(MDefinition* mir)
 {
     return useFixed(mir, eax);
