@@ -71,8 +71,7 @@ def make_hg_url(hg_host, repo_path, protocol='http', revision=None,
 
 
 class MercurialVCS(ScriptMixin, LogMixin, TransferMixin):
-    # For the most part, scripts import mercurial, update,
-    # hgtool uses mercurial, share, out
+    # For the most part, scripts import mercurial, update
     # tag-release.py imports
     #  apply_and_push, update, get_revision, out, BRANCH, REVISION,
     #  get_branches, cleanOutgoingRevs
