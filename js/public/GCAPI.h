@@ -158,6 +158,12 @@ extern JS_PUBLIC_API(void)
 PrepareZoneForGC(Zone* zone);
 
 /**
+ * Schedule the system zone to be collected as part of the next GC.
+ */
+extern JS_PUBLIC_API(void)
+PrepareSystemZoneForGC(JSContext* cx);
+
+/**
  * Schedule all zones to be collected in the next GC.
  */
 extern JS_PUBLIC_API(void)
