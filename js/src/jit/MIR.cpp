@@ -3000,33 +3000,6 @@ MBinaryArithInstruction::constantDoubleResult(TempAllocator& alloc)
 }
 
 MDefinition*
-MRsh::foldsTo(TempAllocator& alloc)
-{
-    MDefinition* lhs = getOperand(0);
-    MDefinition* rhs = getOperand(1);
-
-    if (!lhs->isLsh() || !rhs->isConstant() || rhs->type() != MIRType::Int32)
-        return this;
-
-    if (!lhs->getOperand(1)->isConstant() || lhs->getOperand(1)->type() != MIRType::Int32)
-        return this;
-
-    uint32_t shift = rhs->toConstant()->toInt32();
-    uint32_t shift_lhs = lhs->getOperand(1)->toConstant()->toInt32();
-    if (shift != shift_lhs)
-        return this;
-
-    switch (shift) {
-      case 16:
-        return MSignExtend::New(alloc, lhs->getOperand(0), MSignExtend::Half);
-      case 24:
-        return MSignExtend::New(alloc, lhs->getOperand(0), MSignExtend::Byte);
-    }
-
-    return this;
-}
-
-MDefinition*
 MBinaryArithInstruction::foldsTo(TempAllocator& alloc)
 {
     if (specialization_ == MIRType::None)

@@ -40,18 +40,6 @@ MacroAssembler::moveGPRToFloat32(Register src, FloatRegister dest)
     ma_vxfer(src, dest);
 }
 
-void
-MacroAssembler::move8SignExtend(Register src, Register dest)
-{
-    as_sxtb(dest, src, 0);
-}
-
-void
-MacroAssembler::move16SignExtend(Register src, Register dest)
-{
-    as_sxth(dest, src, 0);
-}
-
 // ===============================================================
 // Logical instructions
 
