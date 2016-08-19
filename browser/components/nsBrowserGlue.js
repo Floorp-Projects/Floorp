@@ -24,6 +24,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "AlertsService", "@mozilla.org/alerts-s
   ["AddonManager", "resource://gre/modules/AddonManager.jsm"],
   ["AddonWatcher", "resource://gre/modules/AddonWatcher.jsm"],
   ["AsyncShutdown", "resource://gre/modules/AsyncShutdown.jsm"],
+  ["AutoCompletePopup", "resource://gre/modules/AutoCompletePopup.jsm"],
   ["BookmarkHTMLUtils", "resource://gre/modules/BookmarkHTMLUtils.jsm"],
   ["BookmarkJSONUtils", "resource://gre/modules/BookmarkJSONUtils.jsm"],
   ["BrowserUITelemetry", "resource:///modules/BrowserUITelemetry.jsm"],
@@ -81,7 +82,6 @@ XPCOMUtils.defineLazyGetter(this, "gBrandBundle", function() {
 XPCOMUtils.defineLazyGetter(this, "gBrowserBundle", function() {
   return Services.strings.createBundle('chrome://browser/locale/browser.properties');
 });
-
 
 // Seconds of idle before trying to create a bookmarks backup.
 const BOOKMARKS_BACKUP_IDLE_TIME_SEC = 8 * 60;
@@ -1055,6 +1055,8 @@ BrowserGlue.prototype = {
 
     CaptivePortalWatcher.init();
 
+    AutoCompletePopup.init();
+
     this._firstWindowTelemetry(aWindow);
     this._firstWindowLoaded();
   },
@@ -1080,12 +1082,11 @@ BrowserGlue.prototype = {
     BrowserUsageTelemetry.uninit();
     SelfSupportBackend.uninit();
     NewTabMessages.uninit();
-
     CaptivePortalWatcher.uninit();
-
     AboutNewTab.uninit();
     webrtcUI.uninit();
     FormValidationHandler.uninit();
+    AutoCompletePopup.uninit();
     if (AppConstants.NIGHTLY_BUILD) {
       AddonWatcher.uninit();
     }

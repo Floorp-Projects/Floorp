@@ -631,7 +631,9 @@ class Clobber(MachCommandBase):
     @CommandArgument('what', default=['objdir'], nargs='*',
         help='Target to clobber, must be one of {{{}}} (default objdir).'.format(
              ', '.join(CLOBBER_CHOICES)))
-    def clobber(self, what):
+    @CommandArgument('--full', action='store_true',
+        help='Perform a full clobber')
+    def clobber(self, what, full=False):
         invalid = set(what) - set(self.CLOBBER_CHOICES)
         if invalid:
             print('Unknown clobber target(s): {}'.format(', '.join(invalid)))
@@ -640,7 +642,7 @@ class Clobber(MachCommandBase):
         ret = 0
         if 'objdir' in what:
             try:
-                self.remove_objdir()
+                self.remove_objdir(full=full)
             except OSError as e:
                 if sys.platform.startswith('win'):
                     if isinstance(e, WindowsError) and e.winerror in (5,32):

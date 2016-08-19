@@ -1512,6 +1512,7 @@ public:
 
     // Font metrics
     struct Metrics {
+        gfxFloat capHeight;
         gfxFloat xHeight;
         gfxFloat strikeoutSize;
         gfxFloat strikeoutOffset;

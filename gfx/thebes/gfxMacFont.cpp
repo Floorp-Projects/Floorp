@@ -256,6 +256,10 @@ gfxMacFont::InitMetrics()
         mMetrics.xHeight = ::CGFontGetXHeight(mCGFont) * cgConvFactor;
     }
 
+    if (mMetrics.capHeight == 0.0) {
+        mMetrics.capHeight = ::CGFontGetCapHeight(mCGFont) * cgConvFactor;
+    }
+
     if (mStyle.sizeAdjust > 0.0 && mStyle.size > 0.0 &&
         mMetrics.xHeight > 0.0) {
         // apply font-size-adjust, and recalculate metrics
@@ -336,7 +340,7 @@ gfxMacFont::InitMetrics()
     fprintf (stderr, "    emHeight: %f emAscent: %f emDescent: %f\n", mMetrics.emHeight, mMetrics.emAscent, mMetrics.emDescent);
     fprintf (stderr, "    maxAscent: %f maxDescent: %f maxAdvance: %f\n", mMetrics.maxAscent, mMetrics.maxDescent, mMetrics.maxAdvance);
     fprintf (stderr, "    internalLeading: %f externalLeading: %f\n", mMetrics.internalLeading, mMetrics.externalLeading);
-    fprintf (stderr, "    spaceWidth: %f aveCharWidth: %f xHeight: %f\n", mMetrics.spaceWidth, mMetrics.aveCharWidth, mMetrics.xHeight);
+    fprintf (stderr, "    spaceWidth: %f aveCharWidth: %f xHeight: %f capHeight: %f\n", mMetrics.spaceWidth, mMetrics.aveCharWidth, mMetrics.xHeight, mMetrics.capHeight);
     fprintf (stderr, "    uOff: %f uSize: %f stOff: %f stSize: %f\n", mMetrics.underlineOffset, mMetrics.underlineSize, mMetrics.strikeoutOffset, mMetrics.strikeoutSize);
 #endif
 }
@@ -423,6 +427,7 @@ gfxMacFont::InitMetricsFromPlatform()
     mMetrics.aveCharWidth = 0;
 
     mMetrics.xHeight = ::CTFontGetXHeight(ctFont);
+    mMetrics.capHeight = ::CTFontGetCapHeight(ctFont);
 
     ::CFRelease(ctFont);
 

@@ -216,6 +216,7 @@ gfxDWriteFont::ComputeMetrics(AntialiasOption anAAOption)
     mFUnitsConvFactor = float(mAdjustedSize / fontMetrics.designUnitsPerEm);
 
     mMetrics->xHeight = fontMetrics.xHeight * mFUnitsConvFactor;
+    mMetrics->capHeight = fontMetrics.capHeight * mFUnitsConvFactor;
 
     mMetrics->maxAscent = ceil(fontMetrics.ascent * mFUnitsConvFactor);
     mMetrics->maxDescent = ceil(fontMetrics.descent * mFUnitsConvFactor);
@@ -311,8 +312,9 @@ gfxDWriteFont::ComputeMetrics(AntialiasOption anAAOption)
     printf("    emHeight: %f emAscent: %f emDescent: %f\n", mMetrics->emHeight, mMetrics->emAscent, mMetrics->emDescent);
     printf("    maxAscent: %f maxDescent: %f maxAdvance: %f\n", mMetrics->maxAscent, mMetrics->maxDescent, mMetrics->maxAdvance);
     printf("    internalLeading: %f externalLeading: %f\n", mMetrics->internalLeading, mMetrics->externalLeading);
-    printf("    spaceWidth: %f aveCharWidth: %f zeroOrAve: %f xHeight: %f\n",
-           mMetrics->spaceWidth, mMetrics->aveCharWidth, mMetrics->zeroOrAveCharWidth, mMetrics->xHeight);
+    printf("    spaceWidth: %f aveCharWidth: %f zeroOrAve: %f\n",
+           mMetrics->spaceWidth, mMetrics->aveCharWidth, mMetrics->zeroOrAveCharWidth);
+    printf("    xHeight: %f capHeight: %f\n", mMetrics->xHeight, mMetrics->capHeight);
     printf("    uOff: %f uSize: %f stOff: %f stSize: %f\n",
            mMetrics->underlineOffset, mMetrics->underlineSize, mMetrics->strikeoutOffset, mMetrics->strikeoutSize);
 #endif

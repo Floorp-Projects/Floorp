@@ -2,7 +2,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 // Tests that scrollIntoViewIfNeeded works properly.
-var {scrollIntoViewIfNeeded} = require("devtools/shared/layout/utils");
+var {scrollIntoViewIfNeeded} = require("devtools/client/shared/scroll");
 
 const TEST_URI = TEST_URI_ROOT + "browser_layoutHelpers.html";
 

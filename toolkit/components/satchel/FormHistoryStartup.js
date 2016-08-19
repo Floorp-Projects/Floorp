@@ -11,9 +11,6 @@ Components.utils.import("resource://gre/modules/Services.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "FormHistory",
                                   "resource://gre/modules/FormHistory.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "AutoCompleteE10S",
-                                  "resource://gre/modules/AutoCompleteE10S.jsm");
-
 function FormHistoryStartup() { }
 
 FormHistoryStartup.prototype = {
@@ -45,6 +42,7 @@ FormHistoryStartup.prototype = {
   },
 
   inited: false,
+  pendingQuery: null,
 
   init: function()
   {
@@ -62,7 +60,14 @@ FormHistoryStartup.prototype = {
                          getService(Ci.nsIMessageListenerManager);
     messageManager.loadFrameScript("chrome://satchel/content/formSubmitListener.js", true);
     messageManager.addMessageListener("FormHistory:FormSubmitEntries", this);
-    messageManager.addMessageListener("FormHistory:AutoCompleteSearchAsync", this);
+
+    // For each of these messages, we could receive them from content,
+    // or we might receive them from the ppmm if the searchbar is
+    // having its history queried.
+    for (let manager of [messageManager, Services.ppmm]) {
+      manager.addMessageListener("FormHistory:AutoCompleteSearchAsync", this);
+      manager.addMessageListener("FormHistory:RemoveEntry", this);
+    }
   },
 
   receiveMessage: function(message) {
@@ -82,9 +87,58 @@ FormHistoryStartup.prototype = {
       }
 
       case "FormHistory:AutoCompleteSearchAsync": {
-        AutoCompleteE10S.search(message);
+        let { id, searchString, params } = message.data;
+
+        if (this.pendingQuery) {
+          this.pendingQuery.cancel();
+          this.pendingQuery = null;
+        }
+
+        let mm;
+        if (message.target instanceof Ci.nsIMessageListenerManager) {
+          // The target is the PPMM, meaning that the parent process
+          // is requesting FormHistory data on the searchbar.
+          mm = message.target;
+        } else {
+          // Otherwise, the target is a <xul:browser>.
+          mm = message.target.messageManager;
+        }
+
+        let results = [];
+        let processResults = {
+          handleResult: aResult => {
+            results.push(aResult);
+          },
+          handleCompletion: aReason => {
+            // Check that the current query is still the one we created. Our
+            // query might have been canceled shortly before completing, in
+            // that case we don't want to call the callback anymore.
+            if (query == this.pendingQuery) {
+              this.pendingQuery = null;
+              if (!aReason) {
+                mm.sendAsyncMessage("FormHistory:AutoCompleteSearchResults",
+                                    { id, results });
+              }
+            }
+          }
+        };
+
+        let query = FormHistory.getAutoCompleteResults(searchString, params,
+                                                       processResults);
+        this.pendingQuery = query;
         break;
       }
+
+      case "FormHistory:RemoveEntry": {
+        let { inputName, value } = message.data;
+        FormHistory.update({
+          op: "remove",
+          fieldname: inputName,
+          value,
+        });
+        break;
+      }
+
     }
   }
 };

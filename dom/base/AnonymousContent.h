@@ -26,6 +26,7 @@ public:
 
   explicit AnonymousContent(Element* aContentNode);
   Element* GetContentNode();
+  Element* GetElementById(const nsAString& aElementId);
   void SetContentNode(Element* aContentNode);
   bool WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto, JS::MutableHandle<JSObject*> aReflector);
 
@@ -58,7 +59,6 @@ public:
 
 private:
   ~AnonymousContent();
-  Element* GetElementById(const nsAString& aElementId);
   nsCOMPtr<Element> mContentNode;
 };
 

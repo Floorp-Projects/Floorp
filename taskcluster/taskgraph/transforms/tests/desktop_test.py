@@ -78,3 +78,19 @@ def split_e10s(config, tests):
             test['treeherder-symbol'] = join_symbol(group, symbol)
             test['mozharness'].setdefault('extra-options', []).append('--e10s')
         yield test
+
+
+@transforms.add
+def allow_software_gl_layers(config, tests):
+    for test in tests:
+        allow = get_keyed_by(item=test, field='allow-software-gl-layers',
+                             item_name=test['test-name'])
+        if allow:
+            assert test['instance-size'] != 'legacy',\
+                   'Software GL layers on a legacy instance is disallowed (bug 1296086).'
+
+            # This should be set always once bug 1296086 is resolved.
+            test['mozharness'].setdefault('extra-options', [])\
+                              .append("--allow-software-gl-layers")
+
+        yield test

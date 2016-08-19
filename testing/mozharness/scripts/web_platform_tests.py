@@ -40,7 +40,13 @@ class WebPlatformTest(TestingMixin, MercurialScript, BlobUploadMixin):
         [["--this-chunk"], {
             "action": "store",
             "dest": "this_chunk",
-            "help": "Number of this chunk"}]
+            "help": "Number of this chunk"}
+         ],
+        [["--allow-software-gl-layers"], {
+            "action": "store_true",
+            "dest": "allow_software_gl_layers",
+            "default": False,
+            "help": "Permits a software GL implementation (such as LLVMPipe) to use the GL compositor."}]
     ] + copy.deepcopy(testing_config_options) + \
         copy.deepcopy(blobupload_config_options)
 
@@ -183,6 +189,10 @@ class WebPlatformTest(TestingMixin, MercurialScript, BlobUploadMixin):
                                         log_compact=True)
 
         env = {'MINIDUMP_SAVE_PATH': dirs['abs_blob_upload_dir']}
+
+        if self.config['allow_software_gl_layers']:
+            env['MOZ_LAYERS_ALLOW_SOFTWARE_GL'] = '1'
+
         env = self.query_env(partial_env=env, log_level=INFO)
 
         return_code = self.run_command(cmd,

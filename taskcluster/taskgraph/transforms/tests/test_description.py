@@ -86,6 +86,11 @@ test_description_schema = Schema({
     Required('loopback-audio', default=False): bool,
     Required('loopback-video', default=False): bool,
 
+    # Whether the test can run using a software GL implementation on Linux
+    # using the GL compositor. May not be used with "legacy" sized instances
+    # due to poor LLVMPipe performance (bug 1296086).
+    Optional('allow-software-gl-layers', default=True): bool,
+
     # The worker implementation for this test, as dictated by policy and by the
     # test platform.
     Optional('worker-implementation'): Any(

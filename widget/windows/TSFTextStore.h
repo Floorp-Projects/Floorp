@@ -985,7 +985,8 @@ protected:
   static DWORD sClientId;
 
   // Enables/Disables hack for specific TIP.
-  static bool sCreateNativeCaretForATOK;
+  static bool sCreateNativeCaretForLegacyATOK;
+  static bool sDoNotReturnNoLayoutErrorToATOKOfCompositionString;
   static bool sDoNotReturnNoLayoutErrorToMSSimplifiedTIP;
   static bool sDoNotReturnNoLayoutErrorToMSTraditionalTIP;
   static bool sDoNotReturnNoLayoutErrorToFreeChangJie;

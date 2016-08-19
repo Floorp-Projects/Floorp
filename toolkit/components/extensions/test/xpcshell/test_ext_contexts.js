@@ -13,16 +13,13 @@ var {
 
 class StubContext extends BaseContext {
   constructor() {
-    super();
+    let fakeExtension = {id: "test@web.extension"};
+    super(fakeExtension);
     this.sandbox = Cu.Sandbox(global);
   }
 
   get cloneScope() {
-    return this. sandbox;
-  }
-
-  get extension() {
-    return {id: "test@web.extension"};
+    return this.sandbox;
   }
 }
 
@@ -130,13 +127,13 @@ add_task(function* test_post_unload_listeners() {
 
 class Context extends BaseContext {
   constructor(principal) {
-    super();
+    let fakeExtension = {id: "test@web.extension"};
+    super(fakeExtension);
     Object.defineProperty(this, "principal", {
       value: principal,
       configurable: true,
     });
     this.sandbox = Cu.Sandbox(principal, {wantXrays: false});
-    this.extension = {id: "test@web.extension"};
   }
 
   get cloneScope() {

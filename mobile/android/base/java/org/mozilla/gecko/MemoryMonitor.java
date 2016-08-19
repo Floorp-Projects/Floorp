@@ -8,6 +8,7 @@ package org.mozilla.gecko;
 import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.BrowserContract;
+import org.mozilla.gecko.db.BrowserProvider;
 import org.mozilla.gecko.favicons.Favicons;
 import org.mozilla.gecko.home.ImageLoader;
 import org.mozilla.gecko.util.ThreadUtils;
@@ -18,6 +19,7 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
 /**
@@ -55,6 +57,7 @@ class MemoryMonitor extends BroadcastReceiver {
         return sInstance;
     }
 
+    private Context mAppContext;
     private final PressureDecrementer mPressureDecrementer;
     private int mMemoryPressure;                  // Synchronized access only.
     private volatile boolean mStoragePressure;    // Accessed via UI thread intent, background runnables.
@@ -70,12 +73,13 @@ class MemoryMonitor extends BroadcastReceiver {
             return;
         }
 
+        mAppContext = context.getApplicationContext();
         IntentFilter filter = new IntentFilter();
         filter.addAction(Intent.ACTION_DEVICE_STORAGE_LOW);
         filter.addAction(Intent.ACTION_DEVICE_STORAGE_OK);
         filter.addAction(ACTION_MEMORY_DUMP);
         filter.addAction(ACTION_FORCE_PRESSURE);
-        context.getApplicationContext().registerReceiver(this, filter);
+        mAppContext.registerReceiver(this, filter);
         mInited = true;
     }
 
@@ -181,6 +185,8 @@ class MemoryMonitor extends BroadcastReceiver {
 
             Favicons.clearMemCache();
             ImageLoader.clearLruCache();
+            LocalBroadcastManager.getInstance(mAppContext)
+                    .sendBroadcast(new Intent(BrowserProvider.ACTION_SHRINK_MEMORY));
         }
         return true;
     }
