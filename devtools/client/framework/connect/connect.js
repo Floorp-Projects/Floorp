@@ -8,20 +8,17 @@
 
 var Cu = Components.utils;
 var {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
-var {XPCOMUtils} = require("resource://gre/modules/XPCOMUtils.jsm");
 var Services = require("Services");
 var {gDevTools} = require("devtools/client/framework/devtools");
 var {TargetFactory} = require("devtools/client/framework/target");
 var {Toolbox} = require("devtools/client/framework/toolbox");
 var {DebuggerClient} = require("devtools/shared/client/main");
 var {Task} = require("devtools/shared/task");
+var {LocalizationHelper} = require("devtools/shared/l10n");
+var L10N = new LocalizationHelper("devtools/locale/connection-screen.properties");
 
 var gClient;
 var gConnectionTimeout;
-
-XPCOMUtils.defineLazyGetter(window, "l10n", function () {
-  return Services.strings.createBundle("chrome://devtools/locale/connection-screen.properties");
-});
 
 /**
  * Once DOM is ready, we prefil the host/port inputs with
@@ -134,7 +131,7 @@ var onConnectionReady = Task.async(function* ([aType, aTraits]) {
         openToolbox(globals, true, "webconsole", false);
       }
     };
-    a.title = a.textContent = window.l10n.GetStringFromName("mainProcess");
+    a.title = a.textContent = L10N.getStr("mainProcess");
     a.className = "remote-process";
     a.href = "#";
     gParent.appendChild(a);
