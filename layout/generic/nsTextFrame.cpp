@@ -966,7 +966,6 @@ public:
   }
   ~BuildTextRunsScanner() {
     NS_ASSERTION(mBreakSinks.IsEmpty(), "Should have been cleared");
-    NS_ASSERTION(mTextRunsToDelete.IsEmpty(), "Should have been cleared");
     NS_ASSERTION(mLineBreakBeforeFrames.IsEmpty(), "Should have been cleared");
     NS_ASSERTION(mMappedFlows.IsEmpty(), "Should have been cleared");
   }
@@ -1106,7 +1105,6 @@ private:
   AutoTArray<MappedFlow,10>   mMappedFlows;
   AutoTArray<nsTextFrame*,50> mLineBreakBeforeFrames;
   AutoTArray<UniquePtr<BreakSink>,10> mBreakSinks;
-  AutoTArray<RefPtr<gfxTextRun>,5> mTextRunsToDelete;
   nsLineBreaker                 mLineBreaker;
   RefPtr<gfxTextRun>            mCurrentFramesAllSameTextRun;
   DrawTarget*                   mDrawTarget;
@@ -1622,7 +1620,6 @@ void BuildTextRunsScanner::FlushLineBreaks(gfxTextRun* aTrailingTextRun)
     mBreakSinks[i]->Finish(mMissingFonts);
   }
   mBreakSinks.Clear();
-  mTextRunsToDelete.Clear();
 }
 
 void BuildTextRunsScanner::AccumulateRunInfo(nsTextFrame* aFrame)
@@ -2373,9 +2370,6 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
     // pointers around.
     textRun->SetUserData(nullptr);
     DestroyUserData(userDataToDestroy);
-    // Arrange for this textrun to be deleted the next time the linebreaker
-    // is flushed out
-    mTextRunsToDelete.AppendElement(Move(textRun));
     return nullptr;
   }
 
