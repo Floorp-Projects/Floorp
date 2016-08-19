@@ -629,15 +629,15 @@ GlobalManager = {
         return context.extension.hasPermission(permission);
       },
 
-      callFunction(path, name, args) {
+      callFunction(pathObj, path, name, args) {
         return findPathInObject(apis, path)[name](...args);
       },
 
-      callFunctionNoReturn(path, name, args) {
+      callFunctionNoReturn(pathObj, path, name, args) {
         findPathInObject(apis, path)[name](...args);
       },
 
-      callAsyncFunction(path, name, args, callback) {
+      callAsyncFunction(pathObj, path, name, args, callback) {
         // We pass an empty stub function as a default callback for
         // the `chrome` API, so promise objects are not returned,
         // and lastError values are reported immediately.
@@ -662,21 +662,21 @@ GlobalManager = {
         return findPathInObject(apis, [namespace]) != null;
       },
 
-      getProperty(path, name) {
+      getProperty(pathObj, path, name) {
         return findPathInObject(apis, path)[name];
       },
 
-      setProperty(path, name, value) {
+      setProperty(pathObj, path, name, value) {
         findPathInObject(apis, path)[name] = value;
       },
 
-      addListener(path, name, listener, args) {
+      addListener(pathObj, path, name, listener, args) {
         findPathInObject(apis, path)[name].addListener.call(null, listener, ...args);
       },
-      removeListener(path, name, listener) {
+      removeListener(pathObj, path, name, listener) {
         findPathInObject(apis, path)[name].removeListener.call(null, listener);
       },
-      hasListener(path, name, listener) {
+      hasListener(pathObj, path, name, listener) {
         return findPathInObject(apis, path)[name].hasListener.call(null, listener);
       },
     };
