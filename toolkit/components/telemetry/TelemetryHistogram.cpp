@@ -879,6 +879,8 @@ public:
   nsresult Add(const nsCString& key, uint32_t aSample);
   void Clear(bool subsession);
 
+  nsresult GetEnumId(mozilla::Telemetry::ID& id);
+
 private:
   typedef nsBaseHashtableET<nsCStringHashKey, Histogram*> KeyedHistogramEntry;
   typedef AutoHashtable<KeyedHistogramEntry> KeyedHistogramMapType;
@@ -1108,6 +1110,12 @@ KeyedHistogram::GetJSSnapshot(JSContext* cx, JS::Handle<JSObject*> obj,
   return NS_OK;
 }
 
+nsresult
+KeyedHistogram::GetEnumId(mozilla::Telemetry::ID& id)
+{
+  return internal_GetHistogramEnumId(mName.get(), &id);
+}
+
 } // namespace
 
 
@@ -1128,6 +1136,279 @@ internal_GetKeyedHistogramById(const nsACString &name)
   KeyedHistogram* keyed = nullptr;
   gKeyedHistograms.Get(name, &keyed);
   return keyed;
+}
+
+} // namespace
+
+
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+//
+// PRIVATE: functions related to addon histograms
+
+namespace {
+
+// Compute the name to pass into Histogram for the addon histogram
+// 'name' from the addon 'id'.  We can't use 'name' directly because it
+// might conflict with other histograms in other addons or even with our
+// own.
+void
+internal_AddonHistogramName(const nsACString &id, const nsACString &name,
+                            nsACString &ret)
+{
+  ret.Append(id);
+  ret.Append(':');
+  ret.Append(name);
+}
+
+bool
+internal_CreateHistogramForAddon(const nsACString &name,
+                                 AddonHistogramInfo &info)
+{
+  Histogram *h;
+  nsresult rv = internal_HistogramGet(PromiseFlatCString(name).get(), "never",
+                                      info.histogramType, info.min, info.max,
+                                      info.bucketCount, true, &h);
+  if (NS_FAILED(rv)) {
+    return false;
+  }
+  // Don't let this histogram be reported via the normal means
+  // (e.g. Telemetry.registeredHistograms); we'll make it available in
+  // other ways.
+  h->ClearFlags(Histogram::kUmaTargetedHistogramFlag);
+  info.h = h;
+  return true;
+}
+
+bool
+internal_AddonHistogramReflector(AddonHistogramEntryType *entry,
+                                 JSContext *cx, JS::Handle<JSObject*> obj)
+{
+  AddonHistogramInfo &info = entry->mData;
+
+  // Never even accessed the histogram.
+  if (!info.h) {
+    // Have to force creation of HISTOGRAM_FLAG histograms.
+    if (info.histogramType != nsITelemetry::HISTOGRAM_FLAG)
+      return true;
+
+    if (!internal_CreateHistogramForAddon(entry->GetKey(), info)) {
+      return false;
+    }
+  }
+
+  if (internal_IsEmpty(info.h)) {
+    return true;
+  }
+
+  JS::Rooted<JSObject*> snapshot(cx, JS_NewPlainObject(cx));
+  if (!snapshot) {
+    // Just consider this to be skippable.
+    return true;
+  }
+  switch (internal_ReflectHistogramSnapshot(cx, snapshot, info.h)) {
+  case REFLECT_FAILURE:
+  case REFLECT_CORRUPT:
+    return false;
+  case REFLECT_OK:
+    const nsACString &histogramName = entry->GetKey();
+    if (!JS_DefineProperty(cx, obj, PromiseFlatCString(histogramName).get(),
+                           snapshot, JSPROP_ENUMERATE)) {
+      return false;
+    }
+    break;
+  }
+  return true;
+}
+
+bool
+internal_AddonReflector(AddonEntryType *entry, JSContext *cx,
+                        JS::Handle<JSObject*> obj)
+{
+  const nsACString &addonId = entry->GetKey();
+  JS::Rooted<JSObject*> subobj(cx, JS_NewPlainObject(cx));
+  if (!subobj) {
+    return false;
+  }
+
+  AddonHistogramMapType *map = entry->mData;
+  if (!(map->ReflectIntoJS(internal_AddonHistogramReflector, cx, subobj)
+        && JS_DefineProperty(cx, obj, PromiseFlatCString(addonId).get(),
+                             subobj, JSPROP_ENUMERATE))) {
+    return false;
+  }
+  return true;
+}
+
+} // namespace
+
+
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+//
+// PRIVATE: thread-unsafe helpers for the external interface
+
+namespace {
+
+void
+internal_SetHistogramRecordingEnabled(mozilla::Telemetry::ID aID, bool aEnabled)
+{
+  if (!internal_IsHistogramEnumId(aID)) {
+    MOZ_ASSERT(false, "Telemetry::SetHistogramRecordingEnabled(...) must be used with an enum id");
+    return;
+  }
+
+  if (gHistograms[aID].keyed) {
+    const nsDependentCString id(gHistograms[aID].id());
+    KeyedHistogram* keyed = internal_GetKeyedHistogramById(id);
+    if (keyed) {
+      keyed->SetRecordingEnabled(aEnabled);
+      return;
+    }
+  } else {
+    Histogram *h;
+    nsresult rv = internal_GetHistogramByEnumId(aID, &h);
+    if (NS_SUCCEEDED(rv)) {
+      h->SetRecordingEnabled(aEnabled);
+      return;
+    }
+  }
+
+  MOZ_ASSERT(false, "Telemetry::SetHistogramRecordingEnabled(...) id not found");
+}
+
+void internal_armIPCTimer()
+{
+  if (gIPCTimerArmed) {
+    return;
+  }
+  if (!gIPCTimer) {
+    CallCreateInstance(NS_TIMER_CONTRACTID, &gIPCTimer);
+  }
+  if (gIPCTimer) {
+    gIPCTimer->InitWithFuncCallback(TelemetryHistogram::IPCTimerFired,
+                                    nullptr, kBatchTimeoutMs,
+                                    nsITimer::TYPE_ONE_SHOT);
+    gIPCTimerArmed = true;
+  }
+}
+
+bool
+internal_RemoteAccumulate(mozilla::Telemetry::ID aId, uint32_t aSample)
+{
+  if (XRE_IsParentProcess()) {
+    return false;
+  }
+  if (!gAccumulations) {
+    gAccumulations = new nsTArray<Accumulation>();
+  }
+  gAccumulations->AppendElement(Accumulation{aId, aSample});
+  internal_armIPCTimer();
+  return true;
+}
+
+bool
+internal_RemoteAccumulate(mozilla::Telemetry::ID aId,
+                    const nsCString& aKey, uint32_t aSample)
+{
+  if (XRE_IsParentProcess()) {
+    return false;
+  }
+  if (!gKeyedAccumulations) {
+    gKeyedAccumulations = new nsTArray<KeyedAccumulation>();
+  }
+  gKeyedAccumulations->AppendElement(KeyedAccumulation{aId, aSample, aKey});
+  internal_armIPCTimer();
+  return true;
+}
+
+void internal_Accumulate(mozilla::Telemetry::ID aHistogram, uint32_t aSample)
+{
+  if (!internal_CanRecordBase() ||
+      internal_RemoteAccumulate(aHistogram, aSample)) {
+    return;
+  }
+  Histogram *h;
+  nsresult rv = internal_GetHistogramByEnumId(aHistogram, &h);
+  if (NS_SUCCEEDED(rv)) {
+    internal_HistogramAdd(*h, aSample, gHistograms[aHistogram].dataset);
+  }
+}
+
+void
+internal_Accumulate(mozilla::Telemetry::ID aID,
+                    const nsCString& aKey, uint32_t aSample)
+{
+  if (!gInitDone || !internal_CanRecordBase() ||
+      internal_RemoteAccumulate(aID, aKey, aSample)) {
+    return;
+  }
+  const HistogramInfo& th = gHistograms[aID];
+  KeyedHistogram* keyed
+     = internal_GetKeyedHistogramById(nsDependentCString(th.id()));
+  MOZ_ASSERT(keyed);
+  keyed->Add(aKey, aSample);
+}
+
+void
+internal_Accumulate(Histogram& aHistogram, uint32_t aSample)
+{
+  if (XRE_IsParentProcess()) {
+    internal_HistogramAdd(aHistogram, aSample);
+    return;
+  }
+
+  mozilla::Telemetry::ID id;
+  nsresult rv = internal_GetHistogramEnumId(aHistogram.histogram_name().c_str(), &id);
+  if (NS_SUCCEEDED(rv)) {
+    internal_RemoteAccumulate(id, aSample);
+  }
+}
+
+void
+internal_Accumulate(KeyedHistogram& aKeyed,
+                    const nsCString& aKey, uint32_t aSample)
+{
+  if (XRE_IsParentProcess()) {
+    aKeyed.Add(aKey, aSample);
+    return;
+  }
+
+  mozilla::Telemetry::ID id;
+  if (NS_SUCCEEDED(aKeyed.GetEnumId(id))) {
+    internal_RemoteAccumulate(id, aKey, aSample);
+  }
+}
+
+void
+internal_AccumulateChild(mozilla::Telemetry::ID aId, uint32_t aSample)
+{
+  if (!internal_CanRecordBase()) {
+    return;
+  }
+  Histogram* h;
+  nsresult rv = internal_GetHistogramByEnumId(aId, &h, true);
+  if (NS_SUCCEEDED(rv)) {
+    internal_HistogramAdd(*h, aSample, gHistograms[aId].dataset);
+  } else {
+    NS_WARNING("NS_FAILED GetHistogramByEnumId for CHILD");
+  }
+}
+
+void
+internal_AccumulateChildKeyed(mozilla::Telemetry::ID aId,
+                              const nsCString& aKey, uint32_t aSample)
+{
+  if (!gInitDone || !internal_CanRecordBase()) {
+    return;
+  }
+  const HistogramInfo& th = gHistograms[aId];
+  nsCString id;
+  id.Append(th.id());
+  id.AppendLiteral(CHILD_HISTOGRAM_SUFFIX);
+  KeyedHistogram* keyed = internal_GetKeyedHistogramById(id);
+  MOZ_ASSERT(keyed);
+  keyed->Add(aKey, aSample);
 }
 
 } // namespace
@@ -1175,19 +1456,17 @@ internal_JSHistogram_Add(JSContext *cx, unsigned argc, JS::Value *vp)
     return true;
   }
 
-  // If we don't have an argument for the count histogram, assume an increment of 1.
-  // Otherwise, make sure to run some sanity checks on the argument.
-  if ((type == base::CountHistogram::COUNT_HISTOGRAM) && (args.length() == 0)) {
-    internal_HistogramAdd(*h, 1);
-    return true;
-  }
-
-  // For categorical histograms we allow passing a string argument that specifies the label.
+  uint32_t value = 0;
   mozilla::Telemetry::ID id;
-  if (type == base::LinearHistogram::LINEAR_HISTOGRAM &&
+  if ((type == base::CountHistogram::COUNT_HISTOGRAM) && (args.length() == 0)) {
+    // If we don't have an argument for the count histogram, assume an increment of 1.
+    // Otherwise, make sure to run some sanity checks on the argument.
+    value = 1;
+  } else if (type == base::LinearHistogram::LINEAR_HISTOGRAM &&
       (args.length() > 0) && args[0].isString() &&
       NS_SUCCEEDED(internal_GetHistogramEnumId(h->histogram_name().c_str(), &id)) &&
       gHistograms[id].histogramType == nsITelemetry::HISTOGRAM_CATEGORICAL) {
+    // For categorical histograms we allow passing a string argument that specifies the label.
     nsAutoJSString label;
     if (!label.init(cx, args[0])) {
       JS_ReportError(cx, "Invalid string parameter");
@@ -1201,26 +1480,25 @@ internal_JSHistogram_Add(JSContext *cx, unsigned argc, JS::Value *vp)
     }
 
     return true;
+  } else {
+    // All other accumulations expect one numerical argument.
+    if (!args.length()) {
+      JS_ReportError(cx, "Expected one argument");
+      return false;
+    }
+
+    if (!(args[0].isNumber() || args[0].isBoolean())) {
+      JS_ReportError(cx, "Not a number");
+      return false;
+    }
+
+    if (!JS::ToUint32(cx, args[0], &value)) {
+      JS_ReportError(cx, "Failed to convert argument");
+      return false;
+    }
   }
 
-  // All other accumulations expect one numerical argument.
-  int32_t value = 0;
-  if (!args.length()) {
-    JS_ReportError(cx, "Expected one argument");
-    return false;
-  }
-
-  if (!(args[0].isNumber() || args[0].isBoolean())) {
-    JS_ReportError(cx, "Not a number");
-    return false;
-  }
-
-  if (!JS::ToInt32(cx, args[0], &value)) {
-    JS_ReportError(cx, "Failed to convert argument");
-    return false;
-  }
-
-  internal_HistogramAdd(*h, value);
+  internal_Accumulate(*h, value);
   return true;
 }
 
@@ -1468,7 +1746,7 @@ internal_JSKeyedHistogram_Add(JSContext *cx, unsigned argc, JS::Value *vp)
     }
   }
 
-  keyed->Add(NS_ConvertUTF16toUTF8(key), value);
+  internal_Accumulate(*keyed, NS_ConvertUTF16toUTF8(key), value);
   return true;
 }
 
@@ -1613,249 +1891,6 @@ internal_WrapAndReturnKeyedHistogram(KeyedHistogram *h, JSContext *cx,
   JS_SetPrivate(obj, h);
   ret.setObject(*obj);
   return NS_OK;
-}
-
-} // namespace
-
-
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-//
-// PRIVATE: functions related to addon histograms
-
-namespace {
-
-// Compute the name to pass into Histogram for the addon histogram
-// 'name' from the addon 'id'.  We can't use 'name' directly because it
-// might conflict with other histograms in other addons or even with our
-// own.
-void
-internal_AddonHistogramName(const nsACString &id, const nsACString &name,
-                            nsACString &ret)
-{
-  ret.Append(id);
-  ret.Append(':');
-  ret.Append(name);
-}
-
-bool
-internal_CreateHistogramForAddon(const nsACString &name,
-                                 AddonHistogramInfo &info)
-{
-  Histogram *h;
-  nsresult rv = internal_HistogramGet(PromiseFlatCString(name).get(), "never",
-                                      info.histogramType, info.min, info.max,
-                                      info.bucketCount, true, &h);
-  if (NS_FAILED(rv)) {
-    return false;
-  }
-  // Don't let this histogram be reported via the normal means
-  // (e.g. Telemetry.registeredHistograms); we'll make it available in
-  // other ways.
-  h->ClearFlags(Histogram::kUmaTargetedHistogramFlag);
-  info.h = h;
-  return true;
-}
-
-bool
-internal_AddonHistogramReflector(AddonHistogramEntryType *entry,
-                                 JSContext *cx, JS::Handle<JSObject*> obj)
-{
-  AddonHistogramInfo &info = entry->mData;
-
-  // Never even accessed the histogram.
-  if (!info.h) {
-    // Have to force creation of HISTOGRAM_FLAG histograms.
-    if (info.histogramType != nsITelemetry::HISTOGRAM_FLAG)
-      return true;
-
-    if (!internal_CreateHistogramForAddon(entry->GetKey(), info)) {
-      return false;
-    }
-  }
-
-  if (internal_IsEmpty(info.h)) {
-    return true;
-  }
-
-  JS::Rooted<JSObject*> snapshot(cx, JS_NewPlainObject(cx));
-  if (!snapshot) {
-    // Just consider this to be skippable.
-    return true;
-  }
-  switch (internal_ReflectHistogramSnapshot(cx, snapshot, info.h)) {
-  case REFLECT_FAILURE:
-  case REFLECT_CORRUPT:
-    return false;
-  case REFLECT_OK:
-    const nsACString &histogramName = entry->GetKey();
-    if (!JS_DefineProperty(cx, obj, PromiseFlatCString(histogramName).get(),
-                           snapshot, JSPROP_ENUMERATE)) {
-      return false;
-    }
-    break;
-  }
-  return true;
-}
-
-bool
-internal_AddonReflector(AddonEntryType *entry, JSContext *cx,
-                        JS::Handle<JSObject*> obj)
-{
-  const nsACString &addonId = entry->GetKey();
-  JS::Rooted<JSObject*> subobj(cx, JS_NewPlainObject(cx));
-  if (!subobj) {
-    return false;
-  }
-
-  AddonHistogramMapType *map = entry->mData;
-  if (!(map->ReflectIntoJS(internal_AddonHistogramReflector, cx, subobj)
-        && JS_DefineProperty(cx, obj, PromiseFlatCString(addonId).get(),
-                             subobj, JSPROP_ENUMERATE))) {
-    return false;
-  }
-  return true;
-}
-
-} // namespace
-
-
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-//
-// PRIVATE: thread-unsafe helpers for the external interface
-
-namespace {
-
-void
-internal_SetHistogramRecordingEnabled(mozilla::Telemetry::ID aID, bool aEnabled)
-{
-  if (!internal_IsHistogramEnumId(aID)) {
-    MOZ_ASSERT(false, "Telemetry::SetHistogramRecordingEnabled(...) must be used with an enum id");
-    return;
-  }
-
-  if (gHistograms[aID].keyed) {
-    const nsDependentCString id(gHistograms[aID].id());
-    KeyedHistogram* keyed = internal_GetKeyedHistogramById(id);
-    if (keyed) {
-      keyed->SetRecordingEnabled(aEnabled);
-      return;
-    }
-  } else {
-    Histogram *h;
-    nsresult rv = internal_GetHistogramByEnumId(aID, &h);
-    if (NS_SUCCEEDED(rv)) {
-      h->SetRecordingEnabled(aEnabled);
-      return;
-    }
-  }
-
-  MOZ_ASSERT(false, "Telemetry::SetHistogramRecordingEnabled(...) id not found");
-}
-
-void internal_armIPCTimer()
-{
-  if (gIPCTimerArmed) {
-    return;
-  }
-  if (!gIPCTimer) {
-    CallCreateInstance(NS_TIMER_CONTRACTID, &gIPCTimer);
-  }
-  if (gIPCTimer) {
-    gIPCTimer->InitWithFuncCallback(TelemetryHistogram::IPCTimerFired,
-                                    nullptr, kBatchTimeoutMs,
-                                    nsITimer::TYPE_ONE_SHOT);
-    gIPCTimerArmed = true;
-  }
-}
-
-bool
-internal_RemoteAccumulate(mozilla::Telemetry::ID aId, uint32_t aSample)
-{
-  if (XRE_IsParentProcess()) {
-    return false;
-  }
-  if (!gAccumulations) {
-    gAccumulations = new nsTArray<Accumulation>();
-  }
-  gAccumulations->AppendElement(Accumulation{aId, aSample});
-  internal_armIPCTimer();
-  return true;
-}
-
-bool
-internal_RemoteAccumulate(mozilla::Telemetry::ID aId,
-                    const nsCString& aKey, uint32_t aSample)
-{
-  if (XRE_IsParentProcess()) {
-    return false;
-  }
-  if (!gKeyedAccumulations) {
-    gKeyedAccumulations = new nsTArray<KeyedAccumulation>();
-  }
-  gKeyedAccumulations->AppendElement(KeyedAccumulation{aId, aSample, aKey});
-  internal_armIPCTimer();
-  return true;
-}
-
-void internal_Accumulate(mozilla::Telemetry::ID aHistogram, uint32_t aSample)
-{
-  if (!internal_CanRecordBase() ||
-      internal_RemoteAccumulate(aHistogram, aSample)) {
-    return;
-  }
-  Histogram *h;
-  nsresult rv = internal_GetHistogramByEnumId(aHistogram, &h);
-  if (NS_SUCCEEDED(rv)) {
-    internal_HistogramAdd(*h, aSample, gHistograms[aHistogram].dataset);
-  }
-}
-
-void
-internal_Accumulate(mozilla::Telemetry::ID aID,
-                    const nsCString& aKey, uint32_t aSample)
-{
-  if (!gInitDone || !internal_CanRecordBase() ||
-      internal_RemoteAccumulate(aID, aKey, aSample)) {
-    return;
-  }
-  const HistogramInfo& th = gHistograms[aID];
-  KeyedHistogram* keyed
-     = internal_GetKeyedHistogramById(nsDependentCString(th.id()));
-  MOZ_ASSERT(keyed);
-  keyed->Add(aKey, aSample);
-}
-
-void
-internal_AccumulateChild(mozilla::Telemetry::ID aId, uint32_t aSample)
-{
-  if (!internal_CanRecordBase()) {
-    return;
-  }
-  Histogram* h;
-  nsresult rv = internal_GetHistogramByEnumId(aId, &h, true);
-  if (NS_SUCCEEDED(rv)) {
-    internal_HistogramAdd(*h, aSample, gHistograms[aId].dataset);
-  } else {
-    NS_WARNING("NS_FAILED GetHistogramByEnumId for CHILD");
-  }
-}
-
-void
-internal_AccumulateChildKeyed(mozilla::Telemetry::ID aId,
-                              const nsCString& aKey, uint32_t aSample)
-{
-  if (!gInitDone || !internal_CanRecordBase()) {
-    return;
-  }
-  const HistogramInfo& th = gHistograms[aId];
-  nsCString id;
-  id.Append(th.id());
-  id.AppendLiteral(CHILD_HISTOGRAM_SUFFIX);
-  KeyedHistogram* keyed = internal_GetKeyedHistogramById(id);
-  MOZ_ASSERT(keyed);
-  keyed->Add(aKey, aSample);
 }
 
 } // namespace
