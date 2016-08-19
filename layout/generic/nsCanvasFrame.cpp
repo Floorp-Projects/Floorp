@@ -492,14 +492,19 @@ nsCanvasFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
         needBlendContainer = true;
       }
 
+      nsRect bgRect = GetRectRelativeToSelf() + aBuilder->ToReferenceFrame(this);
+      nsDisplayBackgroundImage::InitData bgData =
+        nsDisplayBackgroundImage::GetInitData(aBuilder, this, i, bgRect, bg,
+                                              nsDisplayBackgroundImage::LayerizeFixed::ALWAYS_LAYERIZE_FIXED_BACKGROUND);
+
       nsDisplayList thisItemList;
-      nsDisplayCanvasBackgroundImage* bgItem =
-        new (aBuilder) nsDisplayCanvasBackgroundImage(aBuilder, this, i, bg);
-      if (bgItem->ShouldFixToViewport(aBuilder)) {
+      if (bgData.shouldFixToViewport) {
+        nsDisplayCanvasBackgroundImage* bgItem =
+          new (aBuilder) nsDisplayCanvasBackgroundImage(bgData);
         thisItemList.AppendNewToTop(
           nsDisplayFixedPosition::CreateForFixedBackground(aBuilder, this, bgItem, i));
       } else {
-        thisItemList.AppendNewToTop(bgItem);
+        thisItemList.AppendNewToTop(new (aBuilder) nsDisplayCanvasBackgroundImage(bgData));
       }
 
       if (layers.mLayers[i].mBlendMode != NS_STYLE_BLEND_NORMAL) {
