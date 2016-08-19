@@ -27,7 +27,7 @@ def _check_crash_counts(has_crashed, runner, mock_marionette):
         assert runner.crashed == 0
 
 
-@pytest.fixture()
+@pytest.fixture
 def mock_marionette(request):
     """ Mock marionette instance """
     marionette = MagicMock(spec=Marionette)
@@ -38,7 +38,7 @@ def mock_marionette(request):
     return marionette
 
 
-@pytest.fixture()
+@pytest.fixture
 def empty_marionette_testcase():
     """ Testable MarionetteTestCase class """
     class EmptyTestCase(marionette_test.MarionetteTestCase):
@@ -48,7 +48,7 @@ def empty_marionette_testcase():
     return EmptyTestCase
 
 
-@pytest.fixture()
+@pytest.fixture
 def empty_marionette_test(mock_marionette, empty_marionette_testcase):
     return empty_marionette_testcase(lambda: mock_marionette, 'test_nothing')
 
@@ -62,7 +62,7 @@ def logger():
     return Mock(spec=mozlog.structuredlog.StructuredLogger)
 
 
-@pytest.fixture()
+@pytest.fixture
 def mach_parsed_kwargs(logger):
     """
     Parsed and verified dictionary used during simplest
@@ -127,7 +127,7 @@ def mach_parsed_kwargs(logger):
     }
 
 
-@pytest.fixture()
+@pytest.fixture
 def runner(mach_parsed_kwargs):
     """
     MarionetteTestRunner instance initialized with default options.
@@ -135,7 +135,7 @@ def runner(mach_parsed_kwargs):
     return MarionetteTestRunner(**mach_parsed_kwargs)
 
 
-@pytest.fixture()
+@pytest.fixture
 def mock_runner(runner, mock_marionette, monkeypatch):
     """
     MarionetteTestRunner instance with mocked-out
@@ -260,6 +260,127 @@ def test_args_passed_to_driverclass(mock_runner):
     with pytest.raises(IOError):
         mock_runner.run_tests(['fake_tests.ini'])
     assert mock_runner.driverclass.call_args[1] == built_kwargs
+
+
+@pytest.fixture
+def build_kwargs_using(mach_parsed_kwargs):
+    '''Helper function for test_build_kwargs_* functions'''
+    def kwarg_builder(new_items, return_socket=False):
+        mach_parsed_kwargs.update(new_items)
+        runner = MarionetteTestRunner(**mach_parsed_kwargs)
+        with patch('marionette.runner.base.socket') as socket:
+            built_kwargs = runner._build_kwargs()
+        if return_socket:
+            return built_kwargs, socket
+        return built_kwargs
+    return kwarg_builder
+
+
+@pytest.fixture
+def expected_driver_args(runner):
+    '''Helper fixture for tests of _build_kwargs
+    with binary/emulator.
+    Provides a dictionary of certain arguments
+    related to binary/emulator settings
+    which we expect to be passed to the
+    driverclass constructor. Expected values can
+    be updated in tests as needed.
+    Provides convenience methods for comparing the
+    expected arguments to the argument dictionary
+    created by _build_kwargs. '''
+
+    class ExpectedDict(dict):
+        def assert_matches(self, actual):
+            for (k, v) in self.items():
+                assert actual[k] == v
+
+        def assert_keys_not_in(self, actual):
+            for k in self.keys():
+                assert k not in actual
+
+    expected = ExpectedDict(host=None, port=None, bin=None)
+    for attr in ['app', 'app_args', 'profile', 'addons', 'gecko_log']:
+        expected[attr] = getattr(runner, attr)
+    return expected
+
+
+def test_build_kwargs_basic_args(build_kwargs_using):
+    '''Test the functionality of runner._build_kwargs:
+    make sure that basic arguments (those which should
+    always be included, irrespective of the runner's settings)
+    get passed to the call to runner.driverclass'''
+
+    basic_args = ['timeout', 'socket_timeout', 'prefs',
+                  'startup_timeout', 'verbose', 'symbols_path']
+    built_kwargs = build_kwargs_using([(a, getattr(sentinel, a)) for a in basic_args])
+    for arg in basic_args:
+        assert built_kwargs[arg] is getattr(sentinel, arg)
+
+
+@pytest.mark.parametrize('workspace', ['path/to/workspace', None])
+def test_build_kwargs_with_workspace(build_kwargs_using, workspace):
+    built_kwargs = build_kwargs_using({'workspace': workspace})
+    if workspace:
+        assert built_kwargs['workspace'] == workspace
+    else:
+        assert 'workspace' not in built_kwargs
+
+
+@pytest.mark.parametrize('address', ['host:123', None])
+def test_build_kwargs_with_address(build_kwargs_using, address):
+    built_kwargs, socket = build_kwargs_using(
+        {'address': address, 'binary': None, 'emulator': None},
+        return_socket=True
+    )
+    assert 'connect_to_running_emulator' not in built_kwargs
+    if address is not None:
+        host, port = address.split(":")
+        assert built_kwargs['host'] == host and built_kwargs['port'] == int(port)
+        socket.socket().connect.assert_called_with((host, int(port)))
+        assert socket.socket().close.called
+    else:
+        assert not socket.socket.called
+
+
+@pytest.mark.parametrize('address', ['host:123', None])
+@pytest.mark.parametrize('binary', ['path/to/bin', None])
+def test_build_kwargs_with_binary_or_address(expected_driver_args, build_kwargs_using,
+                                             binary, address):
+    built_kwargs = build_kwargs_using({'binary': binary, 'address': address, 'emulator': None})
+    if binary:
+        expected_driver_args['bin'] = binary
+        if address:
+            host, port = address.split(":")
+            expected_driver_args.update({'host': host, 'port': int(port)})
+        else:
+            expected_driver_args.update({'host': 'localhost', 'port': 2828})
+        expected_driver_args.assert_matches(built_kwargs)
+    elif address is None:
+        expected_driver_args.assert_keys_not_in(built_kwargs)
+
+
+@pytest.mark.parametrize('address', ['host:123', None])
+@pytest.mark.parametrize('emulator', [True, False, None])
+def test_build_kwargs_with_emulator_or_address(expected_driver_args, build_kwargs_using,
+                                               emulator, address):
+    emulator_props = [(a, getattr(sentinel, a)) for a in ['avd_home', 'adb_path', 'emulator_bin']]
+    built_kwargs = build_kwargs_using(
+        [('emulator', emulator),  ('address', address), ('binary', None)] + emulator_props
+    )
+    if emulator:
+        expected_driver_args.update(emulator_props)
+        expected_driver_args['emulator_binary'] = expected_driver_args.pop('emulator_bin')
+        expected_driver_args['bin'] = True
+        if address:
+            expected_driver_args['connect_to_running_emulator'] = True
+            host, port = address.split(":")
+            expected_driver_args.update({'host': host, 'port': int(port)})
+        else:
+            expected_driver_args.update({'host': 'localhost', 'port': 2828})
+            assert 'connect_to_running_emulator' not in built_kwargs
+        expected_driver_args.assert_matches(built_kwargs)
+    elif not address:
+        expected_driver_args.assert_keys_not_in(built_kwargs)
 
 
 def test_harness_sets_up_default_test_handlers(mach_parsed_kwargs):
