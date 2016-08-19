@@ -1427,10 +1427,14 @@ let nextId = 1;
 // Extension.jsm. It handles asynchronous function calls as well as
 // event listeners.
 class ChildAPIManager {
-  constructor(context, messageManager, namespaces, contextData) {
+  constructor(context, messageManager, localApis, contextData) {
     this.context = context;
     this.messageManager = messageManager;
-    this.namespaces = namespaces;
+
+    // The root namespace of all locally implemented APIs. If an extension calls
+    // an API that does not exist in this object, then the implementation is
+    // delegated to the ParentAPIManager.
+    this.localApis = localApis;
 
     let id = String(context.extension.id) + "." + String(context.contextId);
     this.id = id;
@@ -1485,10 +1489,17 @@ class ChildAPIManager {
   }
 
   callFunction(pathObj, path, name, args) {
+    if (pathObj) {
+      return pathObj[name](...args);
+    }
     throw new Error("Not implemented");
   }
 
   callFunctionNoReturn(pathObj, path, name, args) {
+    if (pathObj) {
+      pathObj[name](...args);
+      return;
+    }
     this.messageManager.sendAsyncMessage("API:Call", {
       childId: this.id,
       path, name, args,
@@ -1496,6 +1507,15 @@ class ChildAPIManager {
   }
 
   callAsyncFunction(pathObj, path, name, args, callback) {
+    if (pathObj) {
+      let promise;
+      try {
+        promise = pathObj[name](...args) || Promise.resolve();
+      } catch (e) {
+        promise = Promise.reject(e);
+      }
+      return this.context.wrapPromise(promise, callback);
+    }
     let callId = nextId++;
     let deferred = PromiseUtils.defer();
     this.callPromises.set(callId, deferred);
@@ -1509,8 +1529,27 @@ class ChildAPIManager {
     return this.context.wrapPromise(deferred.promise, callback);
   }
 
-  shouldInject(namespace, name) {
-    return this.namespaces.includes(namespace);
+  shouldInject(namespace, name, restrictions) {
+    // Do not generate content script APIs, unless explicitly allowed.
+    if (this.context.envType === "content_child" &&
+        (!restrictions || !restrictions.includes("content"))) {
+      return false;
+    }
+    let pathObj = this.localApis;
+    if (pathObj) {
+      for (let part of namespace.split(".")) {
+        pathObj = pathObj[part];
+        if (!pathObj) {
+          break;
+        }
+      }
+      if (pathObj && (name === null || name in pathObj)) {
+        return pathObj;
+      }
+    }
+
+    // No local API found, defer implementation to the parent.
+    return true;
   }
 
   hasPermission(permission) {
@@ -1518,14 +1557,25 @@ class ChildAPIManager {
   }
 
   getProperty(pathObj, path, name) {
+    if (pathObj) {
+      return pathObj[name];
+    }
     throw new Error("Not implemented");
   }
 
   setProperty(pathObj, path, name, value) {
+    if (pathObj) {
+      pathObj[name] = value;
+      return;
+    }
     throw new Error("Not implemented");
   }
 
   addListener(pathObj, path, name, listener, args) {
+    if (pathObj) {
+      pathObj[name].addListener(listener, ...args);
+      return;
+    }
     let ref = path.concat(name).join(".");
     let set;
     if (this.listeners.has(ref)) {
@@ -1548,6 +1598,10 @@ class ChildAPIManager {
   }
 
   removeListener(pathObj, path, name, listener) {
+    if (pathObj) {
+      pathObj[name].removeListener(listener);
+      return;
+    }
     let ref = path.concat(name).join(".");
     let set = this.listeners.get(ref) || new Set();
     set.remove(listener);
@@ -1561,6 +1615,9 @@ class ChildAPIManager {
   }
 
   hasListener(pathObj, path, name, listener) {
+    if (pathObj) {
+      return pathObj[name].hasListener(listener);
+    }
     let ref = path.concat(name).join(".");
     let set = this.listeners.get(ref) || new Set();
     return set.has(listener);
