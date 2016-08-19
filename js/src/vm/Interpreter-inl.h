@@ -763,6 +763,17 @@ UrshOperation(JSContext* cx, HandleValue lhs, HandleValue rhs, MutableHandleValu
     return true;
 }
 
+template <typename T>
+static MOZ_ALWAYS_INLINE bool
+SignExtendOperation(JSContext* cx, HandleValue in, int* out)
+{
+    int32_t i;
+    if (!ToInt32(cx, in, &i))
+        return false;
+    *out = (T)i;
+    return true;
+}
+
 #undef RELATIONAL_OP
 
 inline JSFunction*
