@@ -20,6 +20,9 @@ function run_child_test() {
   let countHist = Telemetry.getHistogramById("TELEMETRY_TEST_COUNT");
   countHist.add();
   countHist.add();
+  let categHist = Telemetry.getHistogramById("TELEMETRY_TEST_CATEGORICAL");
+  categHist.add("Label2");
+  categHist.add("Label3");
 
   let flagKeyed = Telemetry.getKeyedHistogramById("TELEMETRY_TEST_KEYED_FLAG");
   flagKeyed.add("a", 1);
@@ -34,10 +37,13 @@ function check_histogram_values(payload) {
   const hs = payload.histograms;
   Assert.ok("TELEMETRY_TEST_COUNT" in hs, "Should have count test histogram.");
   Assert.ok("TELEMETRY_TEST_FLAG" in hs, "Should have flag test histogram.");
+  Assert.ok("TELEMETRY_TEST_CATEGORICAL" in hs, "Should have categorical test histogram.");
   Assert.equal(hs["TELEMETRY_TEST_COUNT"].sum, 2,
                "Count test histogram should have the right value.");
   Assert.equal(hs["TELEMETRY_TEST_FLAG"].sum, 1,
                "Flag test histogram should have the right value.");
+  Assert.equal(hs["TELEMETRY_TEST_CATEGORICAL"].sum, 3,
+               "Categorical test histogram should have the right sum.");
 
   const kh = payload.keyedHistograms;
   Assert.ok("TELEMETRY_TEST_KEYED_COUNT" in kh, "Should have keyed count test histogram.");
@@ -85,7 +91,7 @@ add_task(function*() {
   });
   const payload = TelemetrySession.getPayload("test-ping");
   Assert.ok("processes" in payload, "Should have processes section");
-  Assert.ok("content" in payload.processes,"Should have child process section");
+  Assert.ok("content" in payload.processes, "Should have child process section");
   Assert.ok("histograms" in payload.processes.content, "Child process section should have histograms.");
   Assert.ok("keyedHistograms" in payload.processes.content, "Child process section should have keyed histograms.");
   check_histogram_values(payload.processes.content);
