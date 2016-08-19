@@ -403,7 +403,10 @@ add_test(function test_helpers_open_sync_preferences() {
 });
 
 add_task(function* test_helpers_change_password() {
-  let updateCalled = false;
+  let wasCalled = {
+    updateUserAccountData: false,
+    updateDeviceRegistration: false
+  };
   let helpers = new FxAccountsWebChannelHelpers({
     fxAccounts: {
       updateUserAccountData(credentials) {
@@ -413,15 +416,49 @@ add_task(function* test_helpers_change_password() {
           do_check_true(credentials.hasOwnProperty("kA"));
           // "foo" isn't a field known by storage, so should be dropped.
           do_check_false(credentials.hasOwnProperty("foo"));
-          updateCalled = true;
+          wasCalled.updateUserAccountData = true;
 
           resolve();
         });
+      },
+
+      updateDeviceRegistration() {
+        do_check_eq(arguments.length, 0);
+        wasCalled.updateDeviceRegistration = true;
+        return Promise.resolve()
       }
     }
   });
   yield helpers.changePassword({ email: "email", uid: "uid", kA: "kA", foo: "foo" });
-  do_check_true(updateCalled);
+  do_check_true(wasCalled.updateUserAccountData);
+  do_check_true(wasCalled.updateDeviceRegistration);
+});
+
+add_task(function* test_helpers_change_password_with_error() {
+  let wasCalled = {
+    updateUserAccountData: false,
+    updateDeviceRegistration: false
+  };
+  let helpers = new FxAccountsWebChannelHelpers({
+    fxAccounts: {
+      updateUserAccountData() {
+        wasCalled.updateUserAccountData = true;
+        return Promise.reject();
+      },
+
+      updateDeviceRegistration() {
+        wasCalled.updateDeviceRegistration = true;
+        return Promise.resolve()
+      }
+    }
+  });
+  try {
+    yield helpers.changePassword({});
+    do_check_false('changePassword should have rejected');
+  } catch (_) {
+    do_check_true(wasCalled.updateUserAccountData);
+    do_check_false(wasCalled.updateDeviceRegistration);
+  }
 });
 
 function run_test() {
