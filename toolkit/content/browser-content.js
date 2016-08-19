@@ -1401,8 +1401,9 @@ let AutoCompletePopup = {
 
   MESSAGES: [
     "FormAutoComplete:HandleEnter",
-    "FormAutoComplete:PopupOpened",
     "FormAutoComplete:PopupClosed",
+    "FormAutoComplete:PopupOpened",
+    "FormAutoComplete:RequestFocus",
   ],
 
   init: function() {
@@ -1477,6 +1478,13 @@ let AutoCompletePopup = {
 
       case "FormAutoComplete:PopupOpened": {
         this._popupOpen = true;
+        break;
+      }
+
+      case "FormAutoComplete:RequestFocus": {
+        if (this._input) {
+          this._input.focus();
+        }
         break;
       }
     }
@@ -1561,7 +1569,7 @@ let AutoCompletePopup = {
     }
 
     return results;
-  }
+  },
 }
 
 AutoCompletePopup.init();

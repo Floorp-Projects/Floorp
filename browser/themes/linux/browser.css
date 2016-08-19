@@ -914,6 +914,10 @@ notification[value="translation"] menulist > .menulist-dropmarker {
   display: block;
 }
 
+/* AutoComplete */
+
+%include ../shared/autocomplete.inc.css
+
 #treecolAutoCompleteImage {
   max-width : 36px;
 }
