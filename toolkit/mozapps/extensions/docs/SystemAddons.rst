@@ -10,7 +10,8 @@ System Add-ons
 --------------
 System add-ons:
 
-* Are add-ons that ship with Firefox and cannot be disabled
+* Are add-ons that ship with Firefox, are hidden from the UI, and cannot be
+  disabled
 * Can be updated by Firefox depending on the AUS response to Firefox's update
   request
 * Are stored in two locations:
@@ -56,7 +57,7 @@ AUS should respond with an XML document that looks something like this:
   <?xml version="1.0"?>
   <updates>
     <addons>
-      <addon id="loop@mozilla.org" URL="https://ftp.mozilla.org/pub/system-addons/hello/loop@mozilla.org-1.0.xpi" hashFunction="sha512" hashValue="abcdef123" size="1234" version="1.0"/>
+      <addon id="flyweb@mozilla.org" URL="https://ftp.mozilla.org/pub/system-addons/flyweb/flyweb@mozilla.org-1.0.xpi" hashFunction="sha512" hashValue="abcdef123" size="1234" version="1.0"/>
       <addon id="pocket@mozilla.org" URL="https://ftp.mozilla.org/pub/system-addons/pocket/pocket@mozilla.org-1.0.xpi" hashFunction="sha512" hashValue="abcdef123" size="1234" version="1.0"/>
     </addons>
   </updates>
@@ -88,8 +89,7 @@ After receiving the update response, Firefox modifies the **update** add-ons
 according to the following algorithm:
 
 1. If the ``<addons>`` tag is empty (``<addons></addons>``) in the response,
-   **disable all system add-ons**, including both the **update** and **default**
-   sets.
+   **remove all system add-on updates**.
 2. If no add-ons were specified in the response (i.e. the ``<addons>`` tag
    is not present), do nothing and finish.
 3. If the **update** add-on set is equal to the set of add-ons specified in the
@@ -116,7 +116,6 @@ according to the following algorithm:
 
 6. Once all downloaded add-ons are validated, install them into the profile
    directory as part of the **update** set.
-7. Disable any **default** add-ons that were not present in the update response.
 
 Notes on the update process:
 
@@ -128,44 +127,45 @@ The follow section describes common situations that we have or expect to run
 into and how the protocol described above handles them.
 
 For simplicity, unless otherwise specified, all examples assume that there are
-two system add-ons in existence: **Loop** and **Pocket**.
+two system add-ons in existence: **FlyWeb** and **Pocket**.
 
 Basic
 ~~~~~
-A user has Firefox 45, which shipped with Loop 1.0 and Pocket 1.0. We want to
-update users to Loop 2.0. AUS sends out the following update response:
+A user has Firefox 45, which shipped with FlyWeb 1.0 and Pocket 1.0. We want to
+update users to FlyWeb 2.0. AUS sends out the following update response:
 
 .. code-block:: xml
 
   <updates>
     <addons>
-      <addon id="loop@mozilla.org" URL="https://ftp.mozilla.org/pub/system-addons/hello/loop@mozilla.org-2.0.xpi" hashFunction="sha512" hashValue="abcdef123" size="1234" version="2.0"/>
+      <addon id="flyweb@mozilla.org" URL="https://ftp.mozilla.org/pub/system-addons/flyweb/flyweb@mozilla.org-2.0.xpi" hashFunction="sha512" hashValue="abcdef123" size="1234" version="2.0"/>
       <addon id="pocket@mozilla.org" URL="https://ftp.mozilla.org/pub/system-addons/pocket/pocket@mozilla.org-1.0.xpi" hashFunction="sha512" hashValue="abcdef123" size="1234" version="1.0"/>
     </addons>
   </updates>
 
-Firefox will download Loop 2.0 and Pocket 1.0 and store them in the profile directory.
+Firefox will download FlyWeb 2.0 and Pocket 1.0 and store them in the profile directory.
 
 Missing Add-on
 ~~~~~~~~~~~~~~
-A user has Firefox 45, which shipped with Loop 1.0 and Pocket 1.0. We want to
-update users to Loop 2.0, but accidentally forget to specify Pocket in the
+A user has Firefox 45, which shipped with FlyWeb 1.0 and Pocket 1.0. We want to
+update users to FlyWeb 2.0, but accidentally forget to specify Pocket in the
 update response. AUS sends out the following:
 
 .. code-block:: xml
 
   <updates>
     <addons>
-      <addon id="loop@mozilla.org" URL="https://ftp.mozilla.org/pub/system-addons/hello/loop@mozilla.org-2.0.xpi" hashFunction="sha512" hashValue="abcdef123" size="1234" version="2.0"/>
+      <addon id="flyweb@mozilla.org" URL="https://ftp.mozilla.org/pub/system-addons/flyweb/flyweb@mozilla.org-2.0.xpi" hashFunction="sha512" hashValue="abcdef123" size="1234" version="2.0"/>
     </addons>
   </updates>
 
-Firefox will download Loop 2.0 and store it in the profile directory. It will
-disable Pocket completely.
+Firefox will download FlyWeb 2.0 and store it in the profile directory. Pocket
+1.0 from the **default** location will be used.
 
-Disable all system add-ons
-~~~~~~~~~~~~~~~~~~~~~~~~~~
-A response from AUS with an empty add-on set will *disable all system add-ons*:
+Remove all system add-on updates
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+A response from AUS with an empty add-on set will *remove all system add-on
+updates*:
 
 .. code-block:: xml
 
@@ -175,19 +175,19 @@ A response from AUS with an empty add-on set will *disable all system add-ons*:
 
 Rollout
 ~~~~~~~
-A user has Firefox 45, which shipped with Loop 1.0 and Pocket 1.0. We want to
-rollout Loop 2.0 at a 10% sample rate. 10% of the time, AUS sends out:
+A user has Firefox 45, which shipped with FlyWeb 1.0 and Pocket 1.0. We want to
+rollout FlyWeb 2.0 at a 10% sample rate. 10% of the time, AUS sends out:
 
 .. code-block:: xml
 
   <updates>
     <addons>
-      <addon id="loop@mozilla.org" URL="https://ftp.mozilla.org/pub/system-addons/hello/loop@mozilla.org-2.0.xpi" hashFunction="sha512" hashValue="abcdef123" size="1234" version="2.0"/>
+      <addon id="flyweb@mozilla.org" URL="https://ftp.mozilla.org/pub/system-addons/flyweb/flyweb@mozilla.org-2.0.xpi" hashFunction="sha512" hashValue="abcdef123" size="1234" version="2.0"/>
       <addon id="pocket@mozilla.org" URL="https://ftp.mozilla.org/pub/system-addons/pocket/pocket@mozilla.org-1.0.xpi" hashFunction="sha512" hashValue="abcdef123" size="1234" version="1.0"/>
     </addons>
   </updates>
 
-With this response, Firefox will download Pocket 1.0 and Loop 2.0 and install
+With this response, Firefox will download Pocket 1.0 and FlyWeb 2.0 and install
 them into the profile directory.
 
 The other 90% of the time, AUS sends out an empty response:
@@ -197,44 +197,28 @@ The other 90% of the time, AUS sends out an empty response:
   <updates></updates>
 
 With the empty response, Firefox will not make any changes. This means users who
-haven’t seen the 10% update response will stay on Loop 1.0, and users who have
-seen it will stay on Loop 2.0.
+haven’t seen the 10% update response will stay on FlyWeb 1.0, and users who have
+seen it will stay on FlyWeb 2.0.
 
 Once we’re happy with the rollout and want to switch to 100%, AUS will send the
-10% update response to 100% of users, upgrading everyone to Loop 2.0.
+10% update response to 100% of users, upgrading everyone to FlyWeb 2.0.
 
 Rollback
 ~~~~~~~~
 This example continues from the “Rollout” example. If, during the 10% rollout,
-we find a major issue with Loop 2.0, we want to roll all users back to Loop 1.0.
+we find a major issue with FlyWeb 2.0, we want to roll all users back to FlyWeb 1.0.
 AUS sends out the following:
 
 .. code-block:: xml
 
   <updates>
     <addons>
-      <addon id="loop@mozilla.org" URL="https://ftp.mozilla.org/pub/system-addons/hello/loop@mozilla.org-1.0.xpi" hashFunction="sha512" hashValue="abcdef123" size="1234" version="1.0"/>
+      <addon id="flyweb@mozilla.org" URL="https://ftp.mozilla.org/pub/system-addons/flyweb/flyweb@mozilla.org-1.0.xpi" hashFunction="sha512" hashValue="abcdef123" size="1234" version="1.0"/>
       <addon id="pocket@mozilla.org" URL="https://ftp.mozilla.org/pub/system-addons/pocket/pocket@mozilla.org-1.0.xpi" hashFunction="sha512" hashValue="abcdef123" size="1234" version="1.0"/>
     </addons>
   </updates>
 
-For users who have updated, Firefox will download Loop 1.0 and Pocket 1.0 and
+For users who have updated, Firefox will download FlyWeb 1.0 and Pocket 1.0 and
 install them into the profile directory. For users that haven’t yet updated,
 Firefox will see that the **default** add-on set matches the set in the update
 ping and clear the **update** add-on set.
-
-Disable an Add-on
-~~~~~~~~~~~~~~~~~
-A user has Firefox 45, with Pocket 1.0 and Loop 1.0. Loop 1.0 ends up having a
-serious bug, and we want to disable the add-on completely while we work on a
-fix. AUS sends out the following:
-
-.. code-block:: xml
-
-  <updates>
-    <addons>
-      <addon id="pocket@mozilla.org" URL="https://ftp.mozilla.org/pub/system-addons/pocket/pocket@mozilla.org-1.0.xpi" hashFunction="sha512" hashValue="abcdef123" size="1234" version="1.0"/>
-    </addons>
-  </updates>
-
-Firefox will download Pocket 1.0 and install it to the profile directory, and disable Loop.
