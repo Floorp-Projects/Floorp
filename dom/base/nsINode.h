@@ -1751,17 +1751,7 @@ public:
   }
 protected:
   void SetParentIsContent(bool aValue) { SetBoolFlag(ParentIsContent, aValue); }
-  /**
-   * This is a special case of SetIsInDocument used to special-case it for the
-   * document constructor (which can't do the IsStyledByServo() check).
-   */
-  void SetIsDocument() { SetBoolFlag(IsInDocument); }
-  void SetIsInDocument() {
-    if (IsStyledByServo()) {
-      SetIsDirtyAndHasDirtyDescendantsForServo();
-    }
-    SetBoolFlag(IsInDocument);
-  }
+  void SetIsInDocument() { SetBoolFlag(IsInDocument); }
   void SetNodeIsContent() { SetBoolFlag(NodeIsContent); }
   void ClearInDocument() { ClearBoolFlag(IsInDocument); }
   void SetIsElement() { SetBoolFlag(NodeIsElement); }
