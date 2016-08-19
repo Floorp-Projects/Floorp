@@ -16,7 +16,7 @@ config = {
         "branch": "default",
         "dest": "tools",
     }, {
-        "vcs": "hgtool",
+        "vcs": "hg",
         "repo": "https://hg.mozilla.org/releases/mozilla-esr45",
         "revision": "%(revision)s",
         "dest": "mozilla-esr45",

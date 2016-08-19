@@ -24,11 +24,6 @@ config = {
             sys.executable,
             os.path.join(external_tools_path, 'gittool.py')
         ],
-        'hgtool.py': [
-            # Bug 1227079 - Python executable eeded to get it executed on Windows
-            sys.executable,
-            os.path.join(external_tools_path, 'hgtool.py')
-        ],
     },
 
     # PIP
