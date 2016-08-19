@@ -675,7 +675,7 @@ js::Nursery::doCollection(JSRuntime* rt, JS::gcreason::Reason reason,
     maybeEndProfile(ProfileKey::TraceGenericEntries);
 
     maybeStartProfile(ProfileKey::MarkRuntime);
-    rt->gc.traceRuntimeForMinorGC(&mover, session.lock);
+    rt->gc.markRuntime(&mover, GCRuntime::TraceRuntime, session.lock);
     maybeEndProfile(ProfileKey::MarkRuntime);
 
     maybeStartProfile(ProfileKey::MarkDebugger);
@@ -785,10 +785,6 @@ js::Nursery::freeMallocedBuffers()
 void
 js::Nursery::waitBackgroundFreeEnd()
 {
-    // We may finishRoots before nursery init if runtime init fails.
-    if (!isEnabled())
-        return;
-
     MOZ_ASSERT(freeMallocedBuffersTask);
     freeMallocedBuffersTask->join();
 }

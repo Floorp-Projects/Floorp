@@ -200,10 +200,6 @@ void
 js::MarkAtoms(JSTracer* trc, AutoLockForExclusiveAccess& lock)
 {
     JSRuntime* rt = trc->runtime();
-
-    if (rt->atomsAreFinished())
-        return;
-
     for (AtomSet::Enum e(rt->atoms(lock)); !e.empty(); e.popFront()) {
         const AtomStateEntry& entry = e.front();
         if (!entry.isPinned())

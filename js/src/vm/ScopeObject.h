@@ -1352,7 +1352,6 @@ class DebugScopes
   public:
     void mark(JSTracer* trc);
     void sweep(JSRuntime* rt);
-    void finish();
 #ifdef JS_GC_ZEAL
     void checkHashTablesAfterMovingGC(JSRuntime* rt);
 #endif

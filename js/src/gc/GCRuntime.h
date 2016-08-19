@@ -653,8 +653,8 @@ class GCRuntime
         TraceRuntime,
         MarkRuntime
     };
-    void traceRuntime(JSTracer* trc, AutoLockForExclusiveAccess& lock);
-    void traceRuntimeForMinorGC(JSTracer* trc, AutoLockForExclusiveAccess& lock);
+    void markRuntime(JSTracer* trc, TraceOrMarkRuntime traceOrMark,
+                     AutoLockForExclusiveAccess& lock);
 
     void notifyDidPaint();
     void shrinkBuffers();
@@ -946,9 +946,6 @@ class GCRuntime
     MOZ_MUST_USE bool beginMarkPhase(JS::gcreason::Reason reason, AutoLockForExclusiveAccess& lock);
     bool shouldPreserveJITCode(JSCompartment* comp, int64_t currentTime,
                                JS::gcreason::Reason reason);
-    void traceRuntimeForMajorGC(JSTracer* trc, AutoLockForExclusiveAccess& lock);
-    void traceRuntimeCommon(JSTracer* trc, TraceOrMarkRuntime traceOrMark,
-                            AutoLockForExclusiveAccess& lock);
     void bufferGrayRoots();
     void markCompartments();
     IncrementalProgress drainMarkStack(SliceBudget& sliceBudget, gcstats::Phase phase);
