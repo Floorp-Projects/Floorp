@@ -2753,6 +2753,19 @@ class nsDisplayBackgroundImage : public nsDisplayImageContainer {
 public:
   typedef mozilla::StyleGeometryBox StyleGeometryBox;
 
+  struct InitData {
+    nsDisplayListBuilder* builder;
+    nsIFrame* frame;
+    const nsStyleBackground* backgroundStyle;
+    nsCOMPtr<imgIContainer> image;
+    nsRect backgroundRect;
+    nsRect fillArea;
+    nsRect destArea;
+    uint32_t layer;
+    bool isRasterImage;
+    bool shouldFixToViewport;
+  };
+
   /**
    * aLayer signifies which background layer this item represents.
    * aIsThemed should be the value of aFrame->IsThemed.
@@ -2760,9 +2773,18 @@ public:
    * nsCSSRendering::FindBackground, or null if FindBackground returned false.
    * aBackgroundRect is relative to aFrame.
    */
-  nsDisplayBackgroundImage(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-                           uint32_t aLayer, const nsRect& aBackgroundRect,
-                           const nsStyleBackground* aBackgroundStyle);
+  enum class LayerizeFixed : uint8_t {
+    ALWAYS_LAYERIZE_FIXED_BACKGROUND,
+    DO_NOT_LAYERIZE_FIXED_BACKGROUND_IF_AVOIDING_COMPONENT_ALPHA_LAYERS
+  };
+  static InitData GetInitData(nsDisplayListBuilder* aBuilder,
+                              nsIFrame* aFrame,
+                              uint32_t aLayer,
+                              const nsRect& aBackgroundRect,
+                              const nsStyleBackground* aBackgroundStyle,
+                              LayerizeFixed aLayerizeFixed);
+
+  explicit nsDisplayBackgroundImage(const InitData& aInitData);
   virtual ~nsDisplayBackgroundImage();
 
   // This will create and append new items for all the layers of the
@@ -2835,17 +2857,14 @@ public:
                                       const nsRect& aRect,
                                       const nsRect& aBackgroundRect);
 
-  virtual bool ShouldFixToViewport(nsDisplayListBuilder* aBuilder) override;
+  virtual bool ShouldFixToViewport(nsDisplayListBuilder* aBuilder) override { return mShouldFixToViewport; }
 
 protected:
   typedef class mozilla::layers::ImageContainer ImageContainer;
   typedef class mozilla::layers::ImageLayer ImageLayer;
 
   bool TryOptimizeToImageLayer(LayerManager* aManager, nsDisplayListBuilder* aBuilder);
-  bool IsNonEmptyFixedImage() const;
   nsRect GetBoundsInternal(nsDisplayListBuilder* aBuilder);
-  bool ShouldTreatAsFixed() const;
-  bool ComputeShouldTreatAsFixed(bool isTransformedFixed) const;
 
   void PaintInternal(nsDisplayListBuilder* aBuilder, nsRenderingContext* aCtx,
                      const nsRect& aBounds, nsRect* aClipRect);
@@ -2872,7 +2891,7 @@ protected:
   uint32_t mLayer;
   bool mIsRasterImage;
   /* Whether the image should be treated as fixed to the viewport. */
-  bool mShouldTreatAsFixed;
+  bool mShouldFixToViewport;
 };
 
 
