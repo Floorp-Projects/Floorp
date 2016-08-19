@@ -109,6 +109,9 @@ private:
     // keep it last in the list, so its destructor is called first.
     mozilla::UniquePtr<GeckoViewSupport> mGeckoViewSupport;
 
+    // Class that implements native PresentationMediaPlayerManager calls.
+    class PMPMSupport;
+
 public:
     static nsWindow* TopWindow();
 
