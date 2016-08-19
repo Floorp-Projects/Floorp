@@ -105,12 +105,6 @@ namespace NeckoCommonInternal {
 inline bool
 UsingNeckoIPCSecurity()
 {
-
-  if (!NeckoCommonInternal::gRegisteredBool) {
-    Preferences::AddBoolVarCache(&NeckoCommonInternal::gSecurityDisabled,
-                                 "network.disable.ipc.security");
-    NeckoCommonInternal::gRegisteredBool = true;
-  }
   return !NeckoCommonInternal::gSecurityDisabled;
 }
 
