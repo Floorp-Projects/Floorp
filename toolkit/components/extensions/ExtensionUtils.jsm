@@ -431,7 +431,7 @@ class BaseContext {
           },
           value => {
             if (this.unloaded) {
-              dump(`Promise rejected after context unloaded\n`);
+              dump(`Promise rejected after context unloaded: ${value && value.message}\n`);
             } else {
               this.runSafeWithoutClone(reject, this.normalizeError(value));
             }
