@@ -486,6 +486,11 @@ AttemptVideoConvertAndScale(TextureSource* aSource, const SourceSurface* aSource
                             const gfx::Rect& aClipRect,
                             DrawTarget* aDest, const DrawTarget* aBuffer)
 {
+#if defined(XP_WIN) && defined(_M_X64)
+  // libyuv does not support SIMD scaling on win 64bit. See Bug 1295927.
+  return false;
+#endif
+
   WrappingTextureSourceYCbCrBasic* wrappingSource = aSource->AsWrappingTextureSourceYCbCrBasic();
   if (!wrappingSource)
     return false;
