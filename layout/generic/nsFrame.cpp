@@ -2841,7 +2841,7 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
 
     clipState.SetClipForContainingBlockDescendants(
       &savedOutOfFlowData->mContainingBlockClip);
-    clipState.SetScrollClipForContainingBlockDescendants(aBuilder,
+    clipState.SetScrollClipForContainingBlockDescendants(
       savedOutOfFlowData->mContainingBlockScrollClip);
   } else if (GetStateBits() & NS_FRAME_FORCE_DISPLAY_LIST_DESCEND_INTO &&
              isPlaceholder) {
@@ -2856,7 +2856,7 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
     // instead since we know we won't render anything, and the inner out-of-flow
     // frame will setup the correct clip for itself.
     clipState.SetClipForContainingBlockDescendants(nullptr);
-    clipState.SetScrollClipForContainingBlockDescendants(aBuilder, nullptr);
+    clipState.SetScrollClipForContainingBlockDescendants(nullptr);
   }
 
   // Setup clipping for the parent's overflow:-moz-hidden-unscrollable,

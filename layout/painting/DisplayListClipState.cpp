@@ -36,28 +36,6 @@ DisplayListClipState::GetCurrentCombinedClip(nsDisplayListBuilder* aBuilder)
 }
 
 void
-DisplayListClipState::SetScrollClipForContainingBlockDescendants(
-    nsDisplayListBuilder* aBuilder,
-    const DisplayItemScrollClip* aScrollClip)
-{
-  if (aBuilder->IsPaintingToWindow() &&
-      mClipContentDescendants &&
-      aScrollClip != mScrollClipContainingBlockDescendants) {
-    // Disable paint skipping for all scroll frames on the way to aScrollClip.
-    for (const DisplayItemScrollClip* sc = mClipContentDescendantsScrollClip;
-         sc && !DisplayItemScrollClip::IsAncestor(sc, aScrollClip);
-         sc = sc->mParent) {
-      if (sc->mScrollableFrame) {
-        sc->mScrollableFrame->SetScrollsClipOnUnscrolledOutOfFlow();
-      }
-    }
-    mClipContentDescendantsScrollClip = nullptr;
-  }
-  mScrollClipContainingBlockDescendants = aScrollClip;
-  mStackingContextAncestorSC = DisplayItemScrollClip::PickAncestor(mStackingContextAncestorSC, aScrollClip);
-}
-
-void
 DisplayListClipState::ClipContainingBlockDescendants(const nsRect& aRect,
                                                      const nscoord* aRadii,
                                                      DisplayItemClip& aClipOnStack)
@@ -71,7 +49,6 @@ DisplayListClipState::ClipContainingBlockDescendants(const nsRect& aRect,
     aClipOnStack.IntersectWith(*mClipContainingBlockDescendants);
   }
   mClipContainingBlockDescendants = &aClipOnStack;
-  mClipContentDescendantsScrollClip = GetCurrentInnermostScrollClip();
   mCurrentCombinedClip = nullptr;
 }
 
