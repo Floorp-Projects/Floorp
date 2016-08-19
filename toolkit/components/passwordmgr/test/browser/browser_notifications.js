@@ -38,7 +38,8 @@ add_task(function* test_save_change() {
       // Submit the form in the content page with the credentials from the test
       // case. This will cause the doorhanger notification to be displayed.
       let promiseShown = BrowserTestUtils.waitForEvent(PopupNotifications.panel,
-                                                       "Shown");
+                                                       "popupshown",
+                                                       (event) => event.target == PopupNotifications.panel);
       yield ContentTask.spawn(browser, { username, password },
         function* ({ username, password }) {
           let doc = content.document;
@@ -47,13 +48,15 @@ add_task(function* test_save_change() {
           doc.getElementById("form-basic").submit();
         });
       yield promiseShown;
-
       let notificationElement = PopupNotifications.panel.childNodes[0];
+      // Style flush to make sure binding is attached
+      notificationElement.querySelector("#password-notification-password").clientTop;
+
       // Check the actual content of the popup notification.
       Assert.equal(notificationElement.querySelector("#password-notification-username")
-                           .getAttribute("value"), username);
+                           .value, username);
       Assert.equal(notificationElement.querySelector("#password-notification-password")
-                           .getAttribute("value"), password);
+                           .value, password);
 
       // Simulate the action on the notification to request the login to be
       // saved, and wait for the data to be updated or saved based on the type
