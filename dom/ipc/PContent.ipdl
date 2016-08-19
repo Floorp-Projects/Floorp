@@ -722,8 +722,7 @@ parent:
                  bool haveBidiKeyboards, nsString[] dictionaries,
                  ClipboardCapabilities clipboardCaps,
                  DomainPolicyClone domainPolicy,
-                 StructuredCloneData initialData,
-                 OptionalURIParams userContentSheetURL);
+                 StructuredCloneData initialData);
 
     sync CreateChildProcess(IPCTabContext context,
                             ProcessPriority priority,
