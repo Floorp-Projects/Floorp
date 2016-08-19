@@ -8,7 +8,7 @@ const {
   setupActions,
   setupStore
 } = require("devtools/client/webconsole/new-console-output/test/helpers");
-const { stubConsoleMessages } = require("devtools/client/webconsole/new-console-output/test/fixtures/stubs");
+const stubConsoleMessages = require("devtools/client/webconsole/new-console-output/test/fixtures/stubs/index");
 
 const expect = require("expect");
 
@@ -78,7 +78,7 @@ describe("Message reducer:", () => {
     const messages = getAllMessages(getState());
 
     expect(messages.size).toBe(1);
-    expect(messages.first().parameters[0]).toBe("Console cleared.");
+    expect(messages.first().parameters[0]).toBe("Console was cleared.");
   });
 
   it("limits the number of messages displayed", () => {
