@@ -88,6 +88,8 @@ UNIFIED_SOURCES += [
     'CustomEvent.cpp',
     'DataContainerEvent.cpp',
     'DataTransfer.cpp',
+    'DataTransferItem.cpp',
+    'DataTransferItemList.cpp',
     'DeviceMotionEvent.cpp',
     'DOMEventTargetHelper.cpp',
     'DragEvent.cpp',
@@ -126,8 +128,6 @@ UNIFIED_SOURCES += [
 
 # nsEventStateManager.cpp should be built separately because of Mac OS X headers.
 SOURCES += [
-    'DataTransferItem.cpp',
-    'DataTransferItemList.cpp',
     'EventStateManager.cpp',
 ]
 

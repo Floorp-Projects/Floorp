@@ -11,9 +11,9 @@
 #include "secoidt.h"
 #include "hasht.h"
 
-typedef SECItem * (* SEC_PKCS5GetPBEPassword)(void *arg);
+typedef SECItem *(*SEC_PKCS5GetPBEPassword)(void *arg);
 
-/* used for V2 PKCS 12 Draft Spec */ 
+/* used for V2 PKCS 12 Draft Spec */
 typedef enum {
     pbeBitGenIDNull = 0,
     pbeBitGenCipherKey = 0x01,
@@ -31,37 +31,36 @@ typedef struct NSSPKCS5PBEParameterStr NSSPKCS5PBEParameter;
 
 struct NSSPKCS5PBEParameterStr {
     PLArenaPool *poolp;
-    SECItem	salt;		/* octet string */
-    SECItem	iteration;	/* integer */
-    SECItem	keyLength;	/* integer */
+    SECItem salt;      /* octet string */
+    SECItem iteration; /* integer */
+    SECItem keyLength; /* integer */
 
     /* used locally */
-    int		iter;
-    int 	keyLen;
-    int		ivLen;
+    int iter;
+    int keyLen;
+    int ivLen;
     unsigned char *ivData;
     HASH_HashType hashType;
     NSSPKCS5PBEType pbeType;
-    SECAlgorithmID  prfAlg;	
-    PBEBitGenID	keyID;
-    SECOidTag	encAlg;
-    PRBool	is2KeyDES;
+    SECAlgorithmID prfAlg;
+    PBEBitGenID keyID;
+    SECOidTag encAlg;
+    PRBool is2KeyDES;
 };
-
 
 SEC_BEGIN_PROTOS
 /* Create a PKCS5 Algorithm ID
  * The algorithm ID is set up using the PKCS #5 parameter structure
  *  algorithm is the PBE algorithm ID for the desired algorithm
- *  pbe is a pbe param block with all the info needed to create the 
+ *  pbe is a pbe param block with all the info needed to create the
  *   algorithm id.
- * If an error occurs or the algorithm specified is not supported 
+ * If an error occurs or the algorithm specified is not supported
  * or is not a password based encryption algorithm, NULL is returned.
  * Otherwise, a pointer to the algorithm id is returned.
  */
 extern SECAlgorithmID *
 nsspkcs5_CreateAlgorithmID(PLArenaPool *arena, SECOidTag algorithm,
-						NSSPKCS5PBEParameter *pbe);
+                           NSSPKCS5PBEParameter *pbe);
 
 /*
  * Convert an Algorithm ID to a PBE Param.
@@ -80,8 +79,7 @@ NSSPKCS5PBEParameter *
 nsspkcs5_NewParam(SECOidTag alg, HASH_HashType hashType, SECItem *salt,
                   int iterationCount);
 
-
-/* Encrypt/Decrypt data using password based encryption.  
+/* Encrypt/Decrypt data using password based encryption.
  *  algid is the PBE algorithm identifier,
  *  pwitem is the password,
  *  src is the source for encryption/decryption,
@@ -92,11 +90,11 @@ nsspkcs5_NewParam(SECOidTag alg, HASH_HashType hashType, SECItem *salt,
  */
 extern SECItem *
 nsspkcs5_CipherData(NSSPKCS5PBEParameter *, SECItem *pwitem,
-		    SECItem *src, PRBool encrypt, PRBool *update);
+                    SECItem *src, PRBool encrypt, PRBool *update);
 
 extern SECItem *
 nsspkcs5_ComputeKeyAndIV(NSSPKCS5PBEParameter *, SECItem *pwitem,
-		    			SECItem *iv, PRBool faulty3DES);
+                         SECItem *iv, PRBool faulty3DES);
 
 /* Destroys PBE parameter */
 extern void

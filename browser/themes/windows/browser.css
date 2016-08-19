@@ -170,6 +170,7 @@
   overflow: -moz-hidden-unscrollable;
   max-height: 4em;
   transition: min-height 170ms ease-out, max-height 170ms ease-out;
+  padding: 0 5px;
 }
 
 #navigator-toolbox > toolbar:not(#toolbar-menubar):not(#TabsToolbar):not(#nav-bar):not(#addon-bar)[collapsed=true] {

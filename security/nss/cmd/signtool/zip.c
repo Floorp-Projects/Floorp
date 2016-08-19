@@ -159,8 +159,7 @@ JzipAdd(char *fullname, char *filename, ZIPfile *zipfile, int compression_level)
         } else {
             nsprErr = NULL;
         }
-        PR_fprintf(errorFD, "%s: %s\n", fullname, nsprErr ? nsprErr :
-                                                          "");
+        PR_fprintf(errorFD, "%s: %s\n", fullname, nsprErr ? nsprErr : "");
         errorCount++;
         if (nsprErr)
             PR_Free(nsprErr);
@@ -280,8 +279,7 @@ JzipAdd(char *fullname, char *filename, ZIPfile *zipfile, int compression_level)
         } else {
             nsprErr = NULL;
         }
-        PR_fprintf(errorFD, "Writing zip data: %s\n", nsprErr ? nsprErr :
-                                                              "");
+        PR_fprintf(errorFD, "Writing zip data: %s\n", nsprErr ? nsprErr : "");
         if (nsprErr)
             PR_Free(nsprErr);
         errorCount++;
@@ -297,8 +295,7 @@ JzipAdd(char *fullname, char *filename, ZIPfile *zipfile, int compression_level)
         } else {
             nsprErr = NULL;
         }
-        PR_fprintf(errorFD, "Writing zip data: %s\n", nsprErr ? nsprErr :
-                                                              "");
+        PR_fprintf(errorFD, "Writing zip data: %s\n", nsprErr ? nsprErr : "");
         if (nsprErr)
             PR_Free(nsprErr);
         errorCount++;

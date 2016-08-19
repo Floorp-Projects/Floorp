@@ -1429,6 +1429,25 @@ gfxUtils::ThreadSafeGetFeatureStatus(const nsCOMPtr<nsIGfxInfo>& gfxInfo,
 }
 
 /* static */ bool
+gfxUtils::IsFeatureBlacklisted(nsCOMPtr<nsIGfxInfo> gfxInfo, int32_t feature,
+                               nsACString* const out_blacklistId)
+{
+  if (!gfxInfo) {
+    gfxInfo = services::GetGfxInfo();
+  }
+
+  int32_t status;
+  if (!NS_SUCCEEDED(gfxUtils::ThreadSafeGetFeatureStatus(gfxInfo, feature,
+                                                         *out_blacklistId, &status)))
+  {
+    out_blacklistId->AssignLiteral("");
+    return true;
+  }
+
+  return status != nsIGfxInfo::FEATURE_STATUS_OK;
+}
+
+/* static */ bool
 gfxUtils::DumpDisplayList() {
   return gfxPrefs::LayoutDumpDisplayList() ||
          (gfxPrefs::LayoutDumpDisplayListContent() && XRE_IsContentProcess());

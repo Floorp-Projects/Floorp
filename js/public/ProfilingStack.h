@@ -50,7 +50,7 @@ class ProfileEntry
 
   public:
     // These traits are bit masks. Make sure they're powers of 2.
-    enum Flags {
+    enum Flags : uint32_t {
         // Indicate whether a profile entry represents a CPP frame. If not set,
         // a JS frame is assumed by default. You're not allowed to publicly
         // change the frame type. Instead, initialize the ProfileEntry as either

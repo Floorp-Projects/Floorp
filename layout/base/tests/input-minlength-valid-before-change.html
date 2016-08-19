@@ -1,0 +1,15 @@
+<!DOCTYPE HTML>
+<html>
+  <!-- Test: input with minlength is valid until the user edits it, even if it's too short -->
+  <head>
+    <style>
+      :valid { background-color:green; }
+      :invalid { background-color:red; }
+      * { background-color:white; }
+    </style>
+  </head>
+  <body onload="document.documentElement.className=''">
+    <input id="input" minlength="5" value="foo">
+  </body>
+</html>
+

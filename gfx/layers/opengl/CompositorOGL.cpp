@@ -707,7 +707,7 @@ CompositorOGL::BeginFrame(const nsIntRegion& aInvalidRegion,
     aClipRectOut->SetRect(0, 0, width, height);
   }
 
-  mGLContext->fClearColor(0.0, 0.0, 0.0, 0.0);
+  mGLContext->fClearColor(mBeginFrameClearColor.r, mBeginFrameClearColor.g, mBeginFrameClearColor.b, mBeginFrameClearColor.a);
   mGLContext->fClear(LOCAL_GL_COLOR_BUFFER_BIT | LOCAL_GL_DEPTH_BUFFER_BIT);
 }
 

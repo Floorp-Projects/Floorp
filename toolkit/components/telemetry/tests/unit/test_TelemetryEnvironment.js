@@ -907,13 +907,13 @@ add_task(function* test_addonsWatch_InterestingChange() {
 
   // Test for receiving one notification after each change.
   let checkpointPromise = registerCheckpointPromise(1);
-  yield AddonTestUtils.installXPIFromURL(ADDON_INSTALL_URL);
+  yield AddonManagerTesting.installXPIFromURL(ADDON_INSTALL_URL);
   yield checkpointPromise;
   assertCheckpoint(1);
   Assert.ok(ADDON_ID in TelemetryEnvironment.currentEnvironment.addons.activeAddons);
 
   checkpointPromise = registerCheckpointPromise(2);
-  let addon = yield AddonTestUtils.getAddonById(ADDON_ID);
+  let addon = yield AddonManagerTesting.getAddonById(ADDON_ID);
   addon.userDisabled = true;
   yield checkpointPromise;
   assertCheckpoint(2);
@@ -926,7 +926,7 @@ add_task(function* test_addonsWatch_InterestingChange() {
   Assert.ok(ADDON_ID in TelemetryEnvironment.currentEnvironment.addons.activeAddons);
 
   checkpointPromise = registerCheckpointPromise(4);
-  yield AddonTestUtils.uninstallAddonByID(ADDON_ID);
+  yield AddonManagerTesting.uninstallAddonByID(ADDON_ID);
   yield checkpointPromise;
   assertCheckpoint(4);
   Assert.ok(!(ADDON_ID in TelemetryEnvironment.currentEnvironment.addons.activeAddons));
@@ -1017,8 +1017,8 @@ add_task(function* test_addonsWatch_NotInterestingChange() {
       deferred.resolve();
     });
 
-  yield AddonTestUtils.installXPIFromURL(DICTIONARY_ADDON_INSTALL_URL);
-  yield AddonTestUtils.installXPIFromURL(INTERESTING_ADDON_INSTALL_URL);
+  yield AddonManagerTesting.installXPIFromURL(DICTIONARY_ADDON_INSTALL_URL);
+  yield AddonManagerTesting.installXPIFromURL(INTERESTING_ADDON_INSTALL_URL);
 
   yield deferred.promise;
   Assert.ok(!("telemetry-dictionary@tests.mozilla.org" in
@@ -1076,7 +1076,7 @@ add_task(function* test_addonsAndPlugins() {
   };
 
   // Install an addon so we have some data.
-  yield AddonTestUtils.installXPIFromURL(ADDON_INSTALL_URL);
+  yield AddonManagerTesting.installXPIFromURL(ADDON_INSTALL_URL);
 
   let data = TelemetryEnvironment.currentEnvironment;
   checkEnvironmentData(data);
@@ -1117,7 +1117,7 @@ add_task(function* test_addonsAndPlugins() {
   Assert.equal(data.addons.persona, personaId, "The correct Persona Id must be reported.");
 
   // Uninstall the addon.
-  yield AddonTestUtils.uninstallAddonByID(ADDON_ID);
+  yield AddonManagerTesting.uninstallAddonByID(ADDON_ID);
 });
 
 add_task(function* test_signedAddon() {
@@ -1146,7 +1146,7 @@ add_task(function* test_signedAddon() {
   TelemetryEnvironment.registerChangeListener("test_signedAddon", deferred.resolve);
 
   // Install the addon.
-  yield AddonTestUtils.installXPIFromURL(ADDON_INSTALL_URL);
+  yield AddonManagerTesting.installXPIFromURL(ADDON_INSTALL_URL);
 
   yield deferred.promise;
   // Unregister the listener.
@@ -1173,7 +1173,7 @@ add_task(function* test_addonsFieldsLimit() {
   // Install the addon and wait for the TelemetryEnvironment to pick it up.
   let deferred = PromiseUtils.defer();
   TelemetryEnvironment.registerChangeListener("test_longFieldsAddon", deferred.resolve);
-  yield AddonTestUtils.installXPIFromURL(ADDON_INSTALL_URL);
+  yield AddonManagerTesting.installXPIFromURL(ADDON_INSTALL_URL);
   yield deferred.promise;
   TelemetryEnvironment.unregisterChangeListener("test_longFieldsAddon");
 
@@ -1255,7 +1255,7 @@ add_task(function* test_collectionWithbrokenAddonData() {
   gNow = fakeNow(futureDate(gNow, 10 * MILLISECONDS_PER_MINUTE));
   // Now install an addon which returns the correct information.
   checkpointPromise = registerCheckpointPromise(2);
-  yield AddonTestUtils.installXPIFromURL(ADDON_INSTALL_URL);
+  yield AddonManagerTesting.installXPIFromURL(ADDON_INSTALL_URL);
   yield checkpointPromise;
   assertCheckpoint(2);
 
@@ -1278,7 +1278,7 @@ add_task(function* test_collectionWithbrokenAddonData() {
   AddonManagerPrivate.unregisterProvider(brokenAddonProvider);
 
   // Uninstall the valid addon.
-  yield AddonTestUtils.uninstallAddonByID(ADDON_ID);
+  yield AddonManagerTesting.uninstallAddonByID(ADDON_ID);
 });
 
 add_task(function* test_changeThrottling() {

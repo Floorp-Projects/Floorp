@@ -788,7 +788,7 @@ GLContext::InitWithPrefixImpl(const char* prefix, bool trygl)
 
     // The order of these strings must match up with the order of the enum
     // defined in GLContext.h for vendor IDs.
-    const char* vendorMatchStrings[size_t(GLVendor::Other)] = {
+    const char* vendorMatchStrings[size_t(GLVendor::Other) + 1] = {
         "Intel",
         "NVIDIA",
         "ATI",
@@ -797,7 +797,8 @@ GLContext::InitWithPrefixImpl(const char* prefix, bool trygl)
         "nouveau",
         "Vivante",
         "VMware, Inc.",
-        "ARM"
+        "ARM",
+        "Unknown"
     };
 
     mVendor = GLVendor::Other;
@@ -810,7 +811,7 @@ GLContext::InitWithPrefixImpl(const char* prefix, bool trygl)
 
     // The order of these strings must match up with the order of the enum
     // defined in GLContext.h for renderer IDs.
-    const char* rendererMatchStrings[size_t(GLRenderer::Other)] = {
+    const char* rendererMatchStrings[size_t(GLRenderer::Other) + 1] = {
         "Adreno 200",
         "Adreno 205",
         "Adreno (TM) 200",
@@ -826,7 +827,8 @@ GLContext::InitWithPrefixImpl(const char* prefix, bool trygl)
         "Android Emulator",
         "Gallium 0.4 on llvmpipe",
         "Intel HD Graphics 3000 OpenGL Engine",
-        "Microsoft Basic Render Driver"
+        "Microsoft Basic Render Driver",
+        "Unknown"
     };
 
     mRenderer = GLRenderer::Other;
@@ -838,20 +840,10 @@ GLContext::InitWithPrefixImpl(const char* prefix, bool trygl)
     }
 
     if (ShouldSpew()) {
-        const char* vendors[size_t(GLVendor::Other)] = {
-            "Intel",
-            "NVIDIA",
-            "ATI",
-            "Qualcomm"
-        };
-
-        MOZ_ASSERT(glVendorString);
-        if (mVendor < GLVendor::Other) {
-            printf_stderr("OpenGL vendor ('%s') recognized as: %s\n",
-                          glVendorString, vendors[size_t(mVendor)]);
-        } else {
-            printf_stderr("OpenGL vendor ('%s') not recognized.\n", glVendorString);
-        }
+        printf_stderr("GL_VENDOR: %s\n", glVendorString);
+        printf_stderr("mVendor: %s\n", vendorMatchStrings[size_t(mVendor)]);
+        printf_stderr("GL_RENDERER: %s\n", glRendererString);
+        printf_stderr("mRenderer: %s\n", rendererMatchStrings[size_t(mRenderer)]);
     }
 
     ////////////////

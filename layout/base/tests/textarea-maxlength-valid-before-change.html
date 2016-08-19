@@ -1,0 +1,15 @@
+<!DOCTYPE HTML>
+<html>
+  <!-- Test: textarea with maxlength is valid until the user edits it, even if it's too long -->
+  <head>
+    <style>
+      :valid { background-color:green; }
+      :invalid { background-color:red; }
+      * { background-color:white; }
+    </style>
+  </head>
+  <body onload="document.documentElement.className=''">
+    <textarea id="textarea" maxlength="2">foo</textarea>
+  </body>
+</html>
+

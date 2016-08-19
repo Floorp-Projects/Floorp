@@ -550,7 +550,7 @@ bool imgFrame::Draw(gfxContext* aContext, const ImageRegion& aRegion,
 
   bool doPartialDecode = !AreAllPixelsWritten();
 
-  RefPtr<SourceSurface> surf = GetSurfaceInternal();
+  RefPtr<SourceSurface> surf = GetSourceSurfaceInternal();
   if (!surf) {
     return false;
   }
@@ -807,14 +807,14 @@ imgFrame::SetOptimizable()
 }
 
 already_AddRefed<SourceSurface>
-imgFrame::GetSurface()
+imgFrame::GetSourceSurface()
 {
   MonitorAutoLock lock(mMonitor);
-  return GetSurfaceInternal();
+  return GetSourceSurfaceInternal();
 }
 
 already_AddRefed<SourceSurface>
-imgFrame::GetSurfaceInternal()
+imgFrame::GetSourceSurfaceInternal()
 {
   mMonitor.AssertCurrentThreadOwns();
 

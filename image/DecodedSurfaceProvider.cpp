@@ -27,7 +27,7 @@ DecodedSurfaceProvider::DecodedSurfaceProvider(NotNull<RasterImage*> aImage,
   MOZ_ASSERT(!mDecoder->IsMetadataDecode(),
              "Use MetadataDecodingTask for metadata decodes");
   MOZ_ASSERT(mDecoder->IsFirstFrameDecode(),
-             "Use AnimationDecodingTask for animation decodes");
+             "Use AnimationSurfaceProvider for animation decodes");
 }
 
 DecodedSurfaceProvider::~DecodedSurfaceProvider()
@@ -53,8 +53,11 @@ DecodedSurfaceProvider::DropImageReference()
 }
 
 DrawableFrameRef
-DecodedSurfaceProvider::DrawableRef()
+DecodedSurfaceProvider::DrawableRef(size_t aFrame)
 {
+  MOZ_ASSERT(aFrame == 0,
+             "Requesting an animation frame from a DecodedSurfaceProvider?");
+
   // We depend on SurfaceCache::SurfaceAvailable() to provide synchronization
   // for methods that touch |mSurface|; after SurfaceAvailable() is called,
   // |mSurface| should be non-null and shouldn't be mutated further until we get

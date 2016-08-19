@@ -16,9 +16,16 @@
 
 SimpleTest.waitForExplicitFinish();
 SimpleTest.requestFlakyTimeout("untriaged");
+SpecialPowers.pushPrefEnv({"set": [
+    ["mousewheel.system_scroll_override_on_root_content.enabled", false]
+]}, runTest);
 
-var subWin = window.open("window_wheel_default_action.html", "_blank",
-                         "width=500,height=500,scrollbars=yes");
+var subWin = null;
+
+function runTest() {
+  subWin = window.open("window_wheel_default_action.html", "_blank",
+                       "width=500,height=500,scrollbars=yes");
+}
 
 function finish()
 {

@@ -220,7 +220,7 @@ PrintParameterUsage()
         "-A <ca> Nickname of a CA used to sign a stapled cert status\n"
         "-U override default ECDHE ephemeral key reuse, 0: refresh, 1: reuse\n"
         "-H override default DHE server support, 0: disable, 1: enable, "
-            " 2: require DH named groups\n"
+        " 2: require DH named groups\n"
         "-W override default DHE server weak parameters support, 0: disable, 1: enable\n"
         "-c Restrict ciphers\n"
         "-Y prints cipher values allowed for parameter -c and exits\n"
@@ -518,8 +518,7 @@ mySSLSNISocketConfig(PRFileDesc *fd, const SECItem *sniNameArr,
                 if (privKey == NULL) {
                     goto loser; /* Send alert */
                 }
-                if (SSL_ConfigServerCert(fd, cert, privKey, NULL, 0)
-                    != SECSuccess) {
+                if (SSL_ConfigServerCert(fd, cert, privKey, NULL, 0) != SECSuccess) {
                     goto loser; /* Send alert */
                 }
                 SECKEY_DestroyPrivateKey(privKey);
@@ -2015,8 +2014,8 @@ server_main(
     }
 
     if (enableALPN) {
-        PRUint8 alpnVal[] = {0x08,
-                             0x68, 0x74, 0x74, 0x70, 0x2f, 0x31, 0x2e, 0x31};
+        PRUint8 alpnVal[] = { 0x08,
+                              0x68, 0x74, 0x74, 0x70, 0x2f, 0x31, 0x2e, 0x31 };
         rv = SSL_OptionSet(model_sock, SSL_ENABLE_ALPN, PR_TRUE);
         if (rv != SECSuccess) {
             errExit("error enabling ALPN");
@@ -2861,8 +2860,7 @@ main(int argc, char **argv)
     if (rv == SECSuccess && logStats) {
         loggerThread = PR_CreateThread(PR_SYSTEM_THREAD,
                                        logger, NULL, PR_PRIORITY_NORMAL,
-                                       useLocalThreads ?
-                                                       PR_LOCAL_THREAD
+                                       useLocalThreads ? PR_LOCAL_THREAD
                                                        : PR_GLOBAL_THREAD,
                                        PR_JOINABLE_THREAD, 0);
         if (loggerThread == NULL) {

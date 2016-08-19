@@ -180,7 +180,10 @@ public:
                                            uint16_t aDuration,
                                            nsISupports* aData,
                                            nsIRunnable* aCallback) override;
-  NS_IMETHOD              MakeFullScreen(bool aFullScreen, nsIScreen* aScreen = nullptr) override;
+  virtual nsresult        MakeFullScreen(bool aFullScreen,
+                                         nsIScreen* aScreen = nullptr) override;
+  void                    InfallibleMakeFullScreen(bool aFullScreen,
+                                                   nsIScreen* aScreen = nullptr);
 
   virtual LayerManager*   GetLayerManager(PLayerTransactionChild* aShadowManager = nullptr,
                                           LayersBackend aBackendHint = mozilla::layers::LayersBackend::LAYERS_NONE,
@@ -214,11 +217,10 @@ public:
   NS_IMETHOD              MoveClient(double aX, double aY) override;
   NS_IMETHOD              ResizeClient(double aWidth, double aHeight, bool aRepaint) override;
   NS_IMETHOD              ResizeClient(double aX, double aY, double aWidth, double aHeight, bool aRepaint) override;
-  NS_IMETHOD              GetBounds(LayoutDeviceIntRect& aRect) override;
-  NS_IMETHOD              GetClientBounds(LayoutDeviceIntRect& aRect) override;
-  NS_IMETHOD              GetScreenBounds(LayoutDeviceIntRect& aRect) override;
-  NS_IMETHOD              GetRestoredBounds(LayoutDeviceIntRect& aRect) override;
-  NS_IMETHOD              GetNonClientMargins(LayoutDeviceIntMargin& aMargins) override;
+  virtual LayoutDeviceIntRect GetBounds() override;
+  virtual LayoutDeviceIntRect GetClientBounds() override;
+  virtual LayoutDeviceIntRect GetScreenBounds() override;
+  virtual MOZ_MUST_USE nsresult GetRestoredBounds(LayoutDeviceIntRect& aRect) override;
   NS_IMETHOD              SetNonClientMargins(LayoutDeviceIntMargin& aMargins) override;
   virtual LayoutDeviceIntPoint GetClientOffset() override;
   NS_IMETHOD              EnableDragDrop(bool aEnable) override;
@@ -262,7 +264,7 @@ public:
   CreateChild(const LayoutDeviceIntRect& aRect,
               nsWidgetInitData* aInitData = nullptr,
               bool aForceUseIWidgetParent = false) override;
-  NS_IMETHOD              AttachViewToTopLevel(bool aUseAttachedEvents) override;
+  virtual void            AttachViewToTopLevel(bool aUseAttachedEvents) override;
   virtual nsIWidgetListener* GetAttachedWidgetListener() override;
   virtual void               SetAttachedWidgetListener(nsIWidgetListener* aListener) override;
   virtual nsIWidgetListener* GetPreviouslyAttachedWidgetListener() override;
@@ -320,9 +322,6 @@ public:
   {
     return aClientSize;
   }
-
-  // return the screen the widget is in.
-  already_AddRefed<nsIScreen> GetWidgetScreen();
 
   // return true if this is a popup widget with a native titlebar
   bool IsPopupWithTitleBar() const

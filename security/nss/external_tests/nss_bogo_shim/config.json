@@ -1,0 +1,41 @@
+{
+    "DisabledTests": {
+        "*HelloRetryRequest*":"HRR hasn't landed yet",
+        "SecondClientHelloWrongCurve":"HRR hasn't landed yet",
+        "KeyUpdate":"KeyUpdate Unimplemented",
+        "ClientAuth-NoFallback-TLS13":"Disagreement about alerts. Bug 1294975",
+        "ClientAuth-SHA1-Fallback":"Disagreement about alerts. Bug 1294975",
+        "SendWarningAlerts-TLS13":"NSS needs to trigger on warning alerts",
+        "*SignatureType-TLS13":"SignatureScheme patch",
+        "ECDSACurveMismatch-Verify-TLS13":"SignatureScheme patch",
+        "ServerAuth-NoFallback-TLS13":"PSS",
+        "NoSupportedCurves":"This tests a non-spec behavior for TLS 1.2 and expects the wrong alert for TLS 1.3",
+        "SendEmptyRecords":"Tests a non-spec behavior in BoGo where it chokes on too many empty records",
+        "LargePlaintext":"NSS needs to check for over-long records. Bug 1294978",
+        "TLS13-RC4-MD5-server":"This fails properly but returns an unexpected error. Not a bug but needs cleanup",
+        "*VersionTolerance":"BoGo expects us to negotiate 1.3 but we negotiate 1.2 because BoGo didn't send draft version",
+        "*SSL3*":"NSS disables SSLv3",
+        "*SSLv3*":"NSS disables SSLv3",
+        "*AES256*":"Inconsistent support for AES256",
+        "*AES128-SHA256*":"No support for Suite B ciphers",
+        "*CHACHA20-POLY1305-OLD*":"Old ChaCha/Poly",
+        "DuplicateExtension*":"NSS sends unexpected_extension alert",
+        "WeakDH":"NSS supports 768-bit DH",
+        "SillyDH":"NSS supports 4097-bit DH",
+        "SendWarningAlerts":"This appears to be Boring-specific",
+        "V2ClientHello-WarningAlertPrefix":"Bug 1292893",
+        "TLS12-AES128-GCM-client":"Bug 1292895",
+        "*TLS12-AES128-GCM-LargeRecord*":"Bug 1292895",
+        "Renegotiate-Client-Forbidden-1":"Bug 1292898",
+        "Renegotiate-Server-Forbidden":"NSS doesn't disable renegotiation by default",
+        "Renegotiate-Client-NoIgnore":"NSS doesn't disable renegotiation by default",
+        "StrayHelloRequest*":"NSS doesn't disable renegotiation by default"
+    },
+    "ErrorMap" : {
+        ":HANDSHAKE_FAILURE_ON_CLIENT_HELLO:":"SSL_ERROR_NO_CYPHER_OVERLAP",
+        ":UNKNOWN_CIPHER_RETURNED:":"SSL_ERROR_NO_CYPHER_OVERLAP",
+        ":OLD_SESSION_CIPHER_NOT_RETURNED:":"SSL_ERROR_NO_CYPHER_OVERLAP",
+        ":NO_SHARED_CIPHER:":"SSL_ERROR_NO_CYPHER_OVERLAP"
+    }
+}
+

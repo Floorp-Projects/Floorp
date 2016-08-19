@@ -14,6 +14,7 @@
 
 #include "mozilla/BasicEvents.h"
 #include "mozilla/dom/Touch.h"
+#include "mozilla/TouchEvents.h"
 #include "nsRefPtrHashtable.h"
 
 class PresShell;
@@ -36,13 +37,25 @@ public:
                       bool& aIsHandlingUserInput,
                       nsCOMPtr<nsIContent>& aCurrentEventContent);
 
-  static nsRefPtrHashtable<nsUint32HashKey, mozilla::dom::Touch>* gCaptureTouchList;
+  static already_AddRefed<nsIContent> GetAnyCapturedTouchTarget();
+  static bool HasCapturedTouch(int32_t aId);
+  static already_AddRefed<dom::Touch> GetCapturedTouch(int32_t aId);
 
 private:
   void EvictTouches();
+  static void EvictTouchPoint(RefPtr<dom::Touch>& aTouch,
+                              nsIDocument* aLimitToDocument = nullptr);
+  static void AppendToTouchList(WidgetTouchEvent::TouchArray* aTouchList);
 
   RefPtr<PresShell>   mPresShell;
   nsCOMPtr<nsIDocument> mDocument;
+
+  struct TouchInfo
+  {
+    RefPtr<mozilla::dom::Touch> mTouch;
+    nsCOMPtr<nsIContent> mNonAnonymousTarget;
+  };
+  static nsDataHashtable<nsUint32HashKey, TouchInfo>* sCaptureTouchList;
 };
 
 } // namespace mozilla

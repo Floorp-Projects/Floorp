@@ -665,7 +665,7 @@ protected:
    * Returns the target to the buffer provider. i.e. this will queue a frame for
    * rendering.
    */
-  void ReturnTarget();
+  void ReturnTarget(bool aForceReset = false);
 
   /**
    * Check if the target is valid after calling EnsureTarget.

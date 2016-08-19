@@ -212,8 +212,7 @@ verify_global(JAR *jar)
                         PR_fprintf(outputFD,
                                    "  md5 digest on global metainfo: %s\n",
                                    PORT_Memcmp(md5_digest, globaldig->md5, MD5_LENGTH)
-                                       ?
-                                       "no match"
+                                       ? "no match"
                                        : "match");
                     }
 
@@ -221,8 +220,7 @@ verify_global(JAR *jar)
                         PR_fprintf(outputFD,
                                    "  sha digest on global metainfo: %s\n",
                                    PORT_Memcmp(sha1_digest, globaldig->sha1, SHA1_LENGTH)
-                                       ?
-                                       "no match"
+                                       ? "no match"
                                        : "match");
                     }
 

@@ -9,7 +9,8 @@
 #include "mozilla/dom/DOMError.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/FileBinding.h"
-#include "mozilla/dom/FileEntry.h"
+#include "mozilla/dom/FileSystemDirectoryReaderBinding.h"
+#include "mozilla/dom/FileSystemFileEntry.h"
 #include "mozilla/dom/Promise.h"
 #include "nsIGlobalObject.h"
 #include "nsPIDOMWindow.h"
@@ -17,8 +18,8 @@
 namespace mozilla {
 namespace dom {
 
-EntryCallbackRunnable::EntryCallbackRunnable(EntryCallback* aCallback,
-                                             Entry* aEntry)
+EntryCallbackRunnable::EntryCallbackRunnable(FileSystemEntryCallback* aCallback,
+                                             FileSystemEntry* aEntry)
   : mCallback(aCallback)
   , mEntry(aEntry)
 {
@@ -58,7 +59,7 @@ ErrorCallbackRunnable::Run()
   return NS_OK;
 }
 
-EmptyEntriesCallbackRunnable::EmptyEntriesCallbackRunnable(EntriesCallback* aCallback)
+EmptyEntriesCallbackRunnable::EmptyEntriesCallbackRunnable(FileSystemEntriesCallback* aCallback)
   : mCallback(aCallback)
 {
   MOZ_ASSERT(aCallback);
@@ -67,16 +68,16 @@ EmptyEntriesCallbackRunnable::EmptyEntriesCallbackRunnable(EntriesCallback* aCal
 NS_IMETHODIMP
 EmptyEntriesCallbackRunnable::Run()
 {
-  Sequence<OwningNonNull<Entry>> sequence;
+  Sequence<OwningNonNull<FileSystemEntry>> sequence;
   mCallback->HandleEvent(sequence);
   return NS_OK;
 }
 
 GetEntryHelper::GetEntryHelper(nsIGlobalObject* aGlobalObject,
-                               DOMFileSystem* aFileSystem,
-                               EntryCallback* aSuccessCallback,
+                               FileSystem* aFileSystem,
+                               FileSystemEntryCallback* aSuccessCallback,
                                ErrorCallback* aErrorCallback,
-                               DirectoryEntry::GetInternalType aType)
+                               FileSystemDirectoryEntry::GetInternalType aType)
   : mGlobal(aGlobalObject)
   , mFileSystem(aFileSystem)
   , mSuccessCallback(aSuccessCallback)
@@ -100,19 +101,20 @@ GetEntryHelper::ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue)
 
   JS::Rooted<JSObject*> obj(aCx, &aValue.toObject());
 
-  if (mType == DirectoryEntry::eGetFile) {
+  if (mType == FileSystemDirectoryEntry::eGetFile) {
     RefPtr<File> file;
     if (NS_FAILED(UNWRAP_OBJECT(File, obj, file))) {
       Error(NS_ERROR_DOM_TYPE_MISMATCH_ERR);
       return;
     }
 
-    RefPtr<FileEntry> entry = new FileEntry(mGlobal, file, mFileSystem);
+    RefPtr<FileSystemFileEntry> entry =
+      new FileSystemFileEntry(mGlobal, file, mFileSystem);
     mSuccessCallback->HandleEvent(*entry);
     return;
   }
 
-  MOZ_ASSERT(mType == DirectoryEntry::eGetDirectory);
+  MOZ_ASSERT(mType == FileSystemDirectoryEntry::eGetDirectory);
 
   RefPtr<Directory> directory;
   if (NS_FAILED(UNWRAP_OBJECT(Directory, obj, directory))) {
@@ -120,8 +122,8 @@ GetEntryHelper::ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue)
     return;
   }
 
-  RefPtr<DirectoryEntry> entry =
-    new DirectoryEntry(mGlobal, directory, mFileSystem);
+  RefPtr<FileSystemDirectoryEntry> entry =
+    new FileSystemDirectoryEntry(mGlobal, directory, mFileSystem);
   mSuccessCallback->HandleEvent(*entry);
 }
 

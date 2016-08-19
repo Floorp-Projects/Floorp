@@ -4437,7 +4437,7 @@ QuotaManager::EnsureOriginIsInitialized(PersistenceType aPersistenceType,
     }
 
     if (gFixedLimitKB >= 0) {
-      mTemporaryStorageLimit = gFixedLimitKB * 1024;
+      mTemporaryStorageLimit = static_cast<uint64_t>(gFixedLimitKB) * 1024;
     }
     else {
       nsCOMPtr<nsIFile> storageDir =

@@ -1535,7 +1535,7 @@ AndroidBridge::PostTaskToUiThread(already_AddRefed<Runnable> aTask, int aDelayMs
         // if we're inserting it at the head of the queue, notify Java because
         // we need to get a callback at an earlier time than the last scheduled
         // callback
-        GeckoAppShell::RequestUiThreadCallback((int64_t)aDelayMs);
+        GeckoThread::RequestUiThreadCallback(int64_t(aDelayMs));
     }
 }
 

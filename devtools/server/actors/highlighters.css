@@ -411,6 +411,7 @@
   --magnifier-height: 96px;
   /* Width accounts for all color formats (hsl being the longest) */
   --label-width: 160px;
+  --label-height: 23px;
   --color: #e0e0e0;
 
   position: absolute;
@@ -446,8 +447,45 @@
   background-color: var(--color);
   border-radius: 2px;
   width: var(--label-width);
-  transform: translateX(calc((var(--magnifier-width) - var(--label-width)) / 2));
+  height: var(--label-height);
   position: relative;
+
+  --label-horizontal-center:
+    translateX(calc((var(--magnifier-width) - var(--label-width)) / 2));
+  --label-horizontal-left:
+    translateX(calc((-1 * var(--label-width) + var(--magnifier-width) / 2)));
+  --label-horizontal-right:
+    translateX(calc(var(--magnifier-width) / 2));
+  --label-vertical-top:
+    translateY(calc((-1 * var(--magnifier-height)) - var(--label-height)));
+
+  /* By default the color label container sits below the canvas.
+     Here we just center it horizontally */
+  transform: var(--label-horizontal-center);
+  transition: transform .1s ease-in-out;
+}
+
+/* If there isn't enough space below the canvas, we move the label container to the top */
+:-moz-native-anonymous .eye-dropper-root[top] .eye-dropper-color-container {
+  transform: var(--label-horizontal-center) var(--label-vertical-top);
+}
+
+/* If there isn't enough space right of the canvas to horizontally center the label
+   container, offset it to the left */
+:-moz-native-anonymous .eye-dropper-root[left] .eye-dropper-color-container {
+  transform: var(--label-horizontal-left);
+}
+:-moz-native-anonymous .eye-dropper-root[left][top] .eye-dropper-color-container {
+  transform: var(--label-horizontal-left) var(--label-vertical-top);
+}
+
+/* If there isn't enough space left of the canvas to horizontally center the label
+   container, offset it to the right */
+:-moz-native-anonymous .eye-dropper-root[right] .eye-dropper-color-container {
+  transform: var(--label-horizontal-right);
+}
+:-moz-native-anonymous .eye-dropper-root[right][top] .eye-dropper-color-container {
+  transform: var(--label-horizontal-right) var(--label-vertical-top);
 }
 
 :-moz-native-anonymous .eye-dropper-color-preview {

@@ -20,6 +20,7 @@
 #include "nsCOMPtr.h"                // for already_AddRefed
 #include "mozilla/gfx/Point.h"       // for mozilla::gfx::IntSize
 #include "mozilla/gfx/2D.h"          // for SourceSurface
+#include "PlaybackType.h"
 #include "SurfaceFlags.h"
 #include "SVGImageContext.h"         // for SVGImageContext
 
@@ -55,7 +56,7 @@ public:
   {
     return aOther.mSize == mSize &&
            aOther.mSVGContext == mSVGContext &&
-           aOther.mAnimationTime == mAnimationTime &&
+           aOther.mPlayback == mPlayback &&
            aOther.mFlags == mFlags;
   }
 
@@ -63,23 +64,23 @@ public:
   {
     uint32_t hash = HashGeneric(mSize.width, mSize.height);
     hash = AddToHash(hash, mSVGContext.map(HashSIC).valueOr(0));
-    hash = AddToHash(hash, mAnimationTime, uint32_t(mFlags));
+    hash = AddToHash(hash, uint8_t(mPlayback), uint32_t(mFlags));
     return hash;
   }
 
   const IntSize& Size() const { return mSize; }
   Maybe<SVGImageContext> SVGContext() const { return mSVGContext; }
-  float AnimationTime() const { return mAnimationTime; }
+  PlaybackType Playback() const { return mPlayback; }
   SurfaceFlags Flags() const { return mFlags; }
 
 private:
   SurfaceKey(const IntSize& aSize,
              const Maybe<SVGImageContext>& aSVGContext,
-             const float aAnimationTime,
-             const SurfaceFlags aFlags)
+             PlaybackType aPlayback,
+             SurfaceFlags aFlags)
     : mSize(aSize)
     , mSVGContext(aSVGContext)
-    , mAnimationTime(aAnimationTime)
+    , mPlayback(aPlayback)
     , mFlags(aFlags)
   { }
 
@@ -87,36 +88,35 @@ private:
     return aSIC.Hash();
   }
 
-  friend SurfaceKey RasterSurfaceKey(const IntSize&,
-                                     SurfaceFlags,
-                                     uint32_t);
+  friend SurfaceKey RasterSurfaceKey(const IntSize&, SurfaceFlags, PlaybackType);
   friend SurfaceKey VectorSurfaceKey(const IntSize&,
-                                     const Maybe<SVGImageContext>&,
-                                     float);
+                                     const Maybe<SVGImageContext>&);
 
   IntSize                mSize;
   Maybe<SVGImageContext> mSVGContext;
-  float                  mAnimationTime;
+  PlaybackType           mPlayback;
   SurfaceFlags           mFlags;
 };
 
 inline SurfaceKey
 RasterSurfaceKey(const gfx::IntSize& aSize,
                  SurfaceFlags aFlags,
-                 uint32_t aFrameNum)
+                 PlaybackType aPlayback)
 {
-  return SurfaceKey(aSize, Nothing(), float(aFrameNum), aFlags);
+  return SurfaceKey(aSize, Nothing(), aPlayback, aFlags);
 }
 
 inline SurfaceKey
 VectorSurfaceKey(const gfx::IntSize& aSize,
-                 const Maybe<SVGImageContext>& aSVGContext,
-                 float aAnimationTime)
+                 const Maybe<SVGImageContext>& aSVGContext)
 {
   // We don't care about aFlags for VectorImage because none of the flags we
   // have right now influence VectorImage's rendering. If we add a new flag that
   // *does* affect how a VectorImage renders, we'll have to change this.
-  return SurfaceKey(aSize, aSVGContext, aAnimationTime, DefaultSurfaceFlags());
+  // Similarly, we don't accept a PlaybackType parameter because we don't
+  // currently cache frames of animated SVG images.
+  return SurfaceKey(aSize, aSVGContext, PlaybackType::eStatic,
+                    DefaultSurfaceFlags());
 }
 
 
@@ -212,9 +212,8 @@ struct SurfaceCache
    *                        belongs to.
    * @param aSurfaceKey     Key data which uniquely identifies the requested
    *                        cache entry.
-   * @return                a LookupResult, which will either contain a
-   *                        DrawableFrameRef to a surface, or an empty
-   *                        DrawableFrameRef if the cache entry was not found.
+   * @return                a LookupResult which will contain a DrawableSurface
+   *                        if the cache entry was found.
    */
   static LookupResult Lookup(const ImageKey    aImageKey,
                              const SurfaceKey& aSurfaceKey);
@@ -229,13 +228,11 @@ struct SurfaceCache
    *                        belongs to.
    * @param aSurfaceKey     Key data which uniquely identifies the requested
    *                        cache entry.
-   * @return                a LookupResult, which will either contain a
-   *                        DrawableFrameRef to a surface similar to the
-   *                        the one the caller requested, or an empty
-   *                        DrawableFrameRef if no acceptable match was found.
-   *                        Callers can use LookupResult::IsExactMatch() to check
-   *                        whether the returned surface exactly matches
-   *                        @aSurfaceKey.
+   * @return                a LookupResult which will contain a DrawableSurface
+   *                        if a cache entry similar to the one the caller
+   *                        requested could be found. Callers can use
+   *                        LookupResult::IsExactMatch() to check whether the
+   *                        returned surface exactly matches @aSurfaceKey.
    */
   static LookupResult LookupBestMatch(const ImageKey    aImageKey,
                                       const SurfaceKey& aSurfaceKey);

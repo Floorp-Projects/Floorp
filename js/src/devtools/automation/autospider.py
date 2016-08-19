@@ -107,21 +107,6 @@ def set_vars_from_script(script, vars):
                 env[var] = "%s;%s" % (env[var], originals[var])
 
 
-def call_alternates(binaries, *args, **kwargs):
-    last_exception = None
-    for binary in binaries:
-        try:
-            # Call through a shell due to Windows portability problems.
-            rc = subprocess.call(['sh', '-c', binary], *args, **kwargs)
-            if rc == 127:
-                raise OSError("command not found: %s" % binary)
-            return rc
-        except OSError as e:
-            # Assume the binary was not found.
-            last_exception = e
-    raise last_exception
-
-
 def ensure_dir_exists(name, clobber=True):
     if clobber:
         shutil.rmtree(name, ignore_errors=True)
@@ -141,12 +126,6 @@ if args.variant == 'nonunified':
         if 'moz.build' in filenames:
             subprocess.check_call(['sed', '-i', 's/UNIFIED_SOURCES/SOURCES/',
                                    os.path.join(dirpath, 'moz.build')])
-
-if not args.nobuild:
-    autoconfs = ['autoconf-2.13', 'autoconf2.13', 'autoconf213']
-    if call_alternates(autoconfs, cwd=DIR.js_src) != 0:
-        logging.error('autoconf failed')
-        sys.exit(1)
 
 OBJDIR = os.path.join(DIR.source, args.objdir)
 OUTDIR = os.path.join(OBJDIR, "out")
@@ -275,8 +254,15 @@ for k, v in variant.get('env', {}).items():
 if not args.nobuild:
     CONFIGURE_ARGS += ' --enable-nspr-build'
     CONFIGURE_ARGS += ' --prefix={OBJDIR}/dist'.format(OBJDIR=POBJDIR)
-    run_command(['sh', '-c', posixpath.join(PDIR.js_src, 'configure') + ' ' + CONFIGURE_ARGS], check=True)
 
+    # Generate a configure script from configure.in.
+    configure = os.path.join(DIR.js_src, 'configure')
+    if not os.path.exists(configure):
+        shutil.copyfile(configure + ".in", configure)
+        os.chmod(configure, 0755)
+
+    # Run configure; make
+    run_command(['sh', '-c', posixpath.join(PDIR.js_src, 'configure') + ' ' + CONFIGURE_ARGS], check=True)
     run_command('%s -s -w %s' % (MAKE, MAKEFLAGS), shell=True, check=True)
 
 COMMAND_PREFIX = []

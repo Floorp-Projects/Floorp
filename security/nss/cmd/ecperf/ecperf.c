@@ -5,8 +5,8 @@
 #include "blapi.h"
 #include "ec.h"
 #include "ecl-curve.h"
-#include "nss.h"
-#include "secutil.h"
+#include "prprf.h"
+#include "basicutil.h"
 #include "pkcs11.h"
 #include "nspr.h"
 #include <stdio.h>
@@ -86,11 +86,13 @@ static SECOidTag ecCurve_oid_map[] = {
     SEC_OID_UNKNOWN, /* ECCurve_WTLS_1 */
     SEC_OID_UNKNOWN, /* ECCurve_WTLS_8 */
     SEC_OID_UNKNOWN, /* ECCurve_WTLS_9 */
-    SEC_OID_UNKNOWN /* ECCurve_pastLastCurve */
+    SEC_OID_UNKNOWN  /* ECCurve_pastLastCurve */
 };
 
 typedef SECStatus (*op_func)(void *, void *, void *);
 typedef SECStatus (*pk11_op_func)(CK_SESSION_HANDLE, void *, void *, void *);
+
+typedef SECItem SECKEYECParams;
 
 typedef struct ThreadDataStr {
     op_func op;
@@ -710,9 +712,16 @@ main(int argv, char **argc)
         usefreebl = 1;
     }
 
-    rv = NSS_NoDB_Init(NULL);
+    rv = RNG_RNGInit();
     if (rv != SECSuccess) {
-        SECU_PrintError("Error:", "NSS_NoDB_Init");
+        SECU_PrintError("Error:", "RNG_RNGInit");
+        return -1;
+    }
+    RNG_SystemInfoForRNG();
+
+    rv = SECOID_Init();
+    if (rv != SECSuccess) {
+        SECU_PrintError("Error:", "SECOID_Init");
         goto cleanup;
     }
 
@@ -765,7 +774,8 @@ main(int argv, char **argc)
 #endif
 
 cleanup:
-    rv |= NSS_Shutdown();
+    rv |= SECOID_Shutdown();
+    RNG_RNGShutdown();
 
     if (rv != SECSuccess) {
         printf("Error: exiting with error value\n");

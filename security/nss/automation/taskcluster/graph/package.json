@@ -1,0 +1,15 @@
+{
+  "name": "decision-task",
+  "version": "0.0.1",
+  "private": true,
+  "author": "Tim Taubert <ttaubert@mozilla.com>",
+  "description": "Decision Task for NSS",
+  "dependencies": {
+    "flatmap": "0.0.3",
+    "intersect": "^1.0.1",
+    "js-yaml": "^3.6.1",
+    "merge": "^1.2.0",
+    "minimist": "^1.2.0",
+    "slugid": "^1.1.0"
+  }
+}

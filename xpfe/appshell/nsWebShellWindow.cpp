@@ -171,13 +171,13 @@ nsresult nsWebShellWindow::Initialize(nsIXULWindow* aParent,
   }
 
   mWindow->SetWidgetListener(this);
-  mWindow->Create((nsIWidget *)parentWidget,          // Parent nsIWidget
-                  nullptr,                            // Native parent widget
-                  deskRect,                           // Widget dimensions
-                  &widgetInitData);                   // Widget initialization data
+  rv = mWindow->Create((nsIWidget *)parentWidget, // Parent nsIWidget
+                       nullptr,                   // Native parent widget
+                       deskRect,                  // Widget dimensions
+                       &widgetInitData);          // Widget initialization data
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  LayoutDeviceIntRect r;
-  mWindow->GetClientBounds(r);
+  LayoutDeviceIntRect r = mWindow->GetClientBounds();
   // Match the default background color of content. Important on windows
   // since we no longer use content child widgets.
   mWindow->SetBackgroundColor(NS_RGB(255,255,255));

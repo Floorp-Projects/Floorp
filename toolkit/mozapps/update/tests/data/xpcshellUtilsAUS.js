@@ -126,6 +126,8 @@ const PIPE_TO_NULL = IS_WIN ? ">nul" : "> /dev/null 2>&1";
 
 const LOG_FUNCTION = do_print;
 
+const gHTTPHandlerPath = "updates.xml";
+
 // This default value will be overridden when using the http server.
 var gURLData = URL_HOST + "/";
 
@@ -1110,20 +1112,6 @@ function standardInit() {
   createAppInfo("xpcshell@tests.mozilla.org", APP_INFO_NAME, "1.0", "2.0");
   // Initialize the update service stub component
   initUpdateServiceStub();
-}
-
-/**
- * Custom path handler for the http server
- *
- * @param   aMetadata
- *          The http metadata for the request.
- * @param   aResponse
- *          The http response for the request.
- */
-function pathHandler(aMetadata, aResponse) {
-  aResponse.setHeader("Content-Type", "text/xml", false);
-  aResponse.setStatusLine(aMetadata.httpVersion, gResponseStatusCode, "OK");
-  aResponse.bodyOutputStream.write(gResponseBody, gResponseBody.length);
 }
 
 /**
@@ -3585,82 +3573,6 @@ function checkFilesInDirRecursive(aDir, aCallback) {
   }
 }
 
-/**
- * Sets up the bare bones XMLHttpRequest implementation below.
- *
- * @param   aCallback
- *          The callback function that will call the nsIDomEventListener's
- *          handleEvent method.
- *
- *          Example of the callback function
- *
- *            function callHandleEvent(aXHR) {
- *              aXHR.status = gExpectedStatus;
- *              let e = { target: aXHR };
- *              aXHR.onload.handleEvent(e);
- *            }
- */
-function overrideXHR(aCallback) {
-  Cu.import("resource://testing-common/MockRegistrar.jsm");
-  MockRegistrar.register("@mozilla.org/xmlextras/xmlhttprequest;1", xhr, [aCallback]);
-}
-
-/**
- * Bare bones XMLHttpRequest implementation for testing onprogress, onerror,
- * and onload nsIDomEventListener handleEvent.
- */
-function makeHandler(aVal) {
-  if (typeof aVal == "function") {
-    return { handleEvent: aVal };
-  }
-  return aVal;
-}
-function xhr(aCallback) {
-  this._callback = aCallback;
-}
-xhr.prototype = {
-  overrideMimeType: function(aMimetype) { },
-  setRequestHeader: function(aHeader, aValue) { },
-  status: null,
-  channel: {
-    set notificationCallbacks(aVal) { },
-    QueryInterface: XPCOMUtils.generateQI([Ci.nsIChannel])
-  },
-  _url: null,
-  _method: null,
-  open: function(aMethod, aUrl) {
-    this.channel.originalURI = Services.io.newURI(aUrl, null, null);
-    this._method = aMethod; this._url = aUrl;
-  },
-  responseXML: null,
-  responseText: null,
-  send: function(aBody) {
-    do_execute_soon(function() {
-      this._callback(this);
-    }.bind(this)); // Use a timeout so the XHR completes
-  },
-  _onprogress: null,
-  set onprogress(aValue) { this._onprogress = makeHandler(aValue); },
-  get onprogress() { return this._onprogress; },
-  _onerror: null,
-  set onerror(aValue) { this._onerror = makeHandler(aValue); },
-  get onerror() { return this._onerror; },
-  _onload: null,
-  set onload(aValue) { this._onload = makeHandler(aValue); },
-  get onload() { return this._onload; },
-  addEventListener: function(aEvent, aValue, aCapturing) {
-    eval("this._on" + aEvent + " = aValue");
-  },
-  flags: Ci.nsIClassInfo.SINGLETON,
-  getScriptableHelper: () => null,
-  getInterfaces: function(aCount) {
-    let interfaces = [Ci.nsISupports];
-    aCount.value = interfaces.length;
-    return interfaces;
-  },
-  get wrappedJSObject() { return this; },
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIClassInfo])
-};
 
 /**
  * Helper function to override the update prompt component to verify whether it
@@ -3727,6 +3639,9 @@ const updateCheckListener = {
   onError: function UCL_onError(aRequest, aUpdate) {
     gRequestURL = aRequest.channel.originalURI.spec;
     gStatusCode = aRequest.status;
+    if (gStatusCode == 0) {
+      gStatusCode = aRequest.channel.QueryInterface(Ci.nsIRequest).status;
+    }
     gStatusText = aUpdate.statusText ? aUpdate.statusText : null;
     debugDump("url = " + gRequestURL + ", " +
               "request.status = " + gStatusCode + ", " +
@@ -3774,10 +3689,25 @@ function start_httpserver() {
   let { HttpServer } = Cu.import("resource://testing-common/httpd.js", {});
   gTestserver = new HttpServer();
   gTestserver.registerDirectory("/", dir);
+  gTestserver.registerPathHandler("/" + gHTTPHandlerPath, pathHandler);
   gTestserver.start(-1);
   let testserverPort = gTestserver.identity.primaryPort;
   gURLData = URL_HOST + ":" + testserverPort + "/";
   debugDump("http server port = " + testserverPort);
+}
+
+/**
+ * Custom path handler for the http server
+ *
+ * @param   aMetadata
+ *          The http metadata for the request.
+ * @param   aResponse
+ *          The http response for the request.
+ */
+function pathHandler(aMetadata, aResponse) {
+  aResponse.setHeader("Content-Type", "text/xml", false);
+  aResponse.setStatusLine(aMetadata.httpVersion, gResponseStatusCode, "OK");
+  aResponse.bodyOutputStream.write(gResponseBody, gResponseBody.length);
 }
 
 /**

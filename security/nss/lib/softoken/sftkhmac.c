@@ -15,20 +15,20 @@ static HASH_HashType
 MACMechanismToHash(CK_MECHANISM_TYPE mech)
 {
     switch (mech) {
-	case CKM_MD5_HMAC:
-	case CKM_SSL3_MD5_MAC:
-	    return HASH_AlgMD5;
-	case CKM_SHA_1_HMAC:
-	case CKM_SSL3_SHA1_MAC:
-	    return HASH_AlgSHA1;
-	case CKM_SHA224_HMAC:
-	    return HASH_AlgSHA224;
-	case CKM_SHA256_HMAC:
-	    return HASH_AlgSHA256;
-	case CKM_SHA384_HMAC:
-	    return HASH_AlgSHA384;
-	case CKM_SHA512_HMAC:
-	    return HASH_AlgSHA512;
+        case CKM_MD5_HMAC:
+        case CKM_SSL3_MD5_MAC:
+            return HASH_AlgMD5;
+        case CKM_SHA_1_HMAC:
+        case CKM_SSL3_SHA1_MAC:
+            return HASH_AlgSHA1;
+        case CKM_SHA224_HMAC:
+            return HASH_AlgSHA224;
+        case CKM_SHA256_HMAC:
+            return HASH_AlgSHA256;
+        case CKM_SHA384_HMAC:
+            return HASH_AlgSHA384;
+        case CKM_SHA512_HMAC:
+            return HASH_AlgSHA512;
     }
     return HASH_AlgNULL;
 }
@@ -37,7 +37,7 @@ static sftk_MACConstantTimeCtx *
 SetupMAC(CK_MECHANISM_PTR mech, SFTKObject *key)
 {
     CK_NSS_MAC_CONSTANT_TIME_PARAMS *params =
-	(CK_NSS_MAC_CONSTANT_TIME_PARAMS *) mech->pParameter;
+        (CK_NSS_MAC_CONSTANT_TIME_PARAMS *)mech->pParameter;
     sftk_MACConstantTimeCtx *ctx;
     HASH_HashType alg;
     SFTKAttribute *keyval;
@@ -45,29 +45,29 @@ SetupMAC(CK_MECHANISM_PTR mech, SFTKObject *key)
     unsigned int secretLength;
 
     if (mech->ulParameterLen != sizeof(CK_NSS_MAC_CONSTANT_TIME_PARAMS)) {
-	return NULL;
+        return NULL;
     }
 
     alg = MACMechanismToHash(params->macAlg);
     if (alg == HASH_AlgNULL) {
-	return NULL;
+        return NULL;
     }
 
-    keyval = sftk_FindAttribute(key,CKA_VALUE);
+    keyval = sftk_FindAttribute(key, CKA_VALUE);
     if (keyval == NULL) {
-	return NULL;
+        return NULL;
     }
     secretLength = keyval->attrib.ulValueLen;
     if (secretLength > sizeof(secret)) {
-	sftk_FreeAttribute(keyval);
-	return NULL;
+        sftk_FreeAttribute(keyval);
+        return NULL;
     }
     memcpy(secret, keyval->attrib.pValue, secretLength);
     sftk_FreeAttribute(keyval);
 
     ctx = PORT_Alloc(sizeof(sftk_MACConstantTimeCtx));
     if (!ctx) {
-	return NULL;
+        return NULL;
     }
 
     memcpy(ctx->secret, secret, secretLength);
@@ -82,15 +82,15 @@ sftk_MACConstantTimeCtx *
 sftk_HMACConstantTime_New(CK_MECHANISM_PTR mech, SFTKObject *key)
 {
     CK_NSS_MAC_CONSTANT_TIME_PARAMS *params =
-	(CK_NSS_MAC_CONSTANT_TIME_PARAMS *) mech->pParameter;
+        (CK_NSS_MAC_CONSTANT_TIME_PARAMS *)mech->pParameter;
     sftk_MACConstantTimeCtx *ctx;
 
     if (params->ulHeaderLen > sizeof(ctx->header)) {
-	return NULL;
+        return NULL;
     }
     ctx = SetupMAC(mech, key);
     if (!ctx) {
-	return NULL;
+        return NULL;
     }
 
     ctx->headerLength = params->ulHeaderLen;
@@ -102,30 +102,30 @@ sftk_MACConstantTimeCtx *
 sftk_SSLv3MACConstantTime_New(CK_MECHANISM_PTR mech, SFTKObject *key)
 {
     CK_NSS_MAC_CONSTANT_TIME_PARAMS *params =
-	(CK_NSS_MAC_CONSTANT_TIME_PARAMS *) mech->pParameter;
+        (CK_NSS_MAC_CONSTANT_TIME_PARAMS *)mech->pParameter;
     unsigned int padLength = 40, j;
     sftk_MACConstantTimeCtx *ctx;
 
     if (params->macAlg != CKM_SSL3_MD5_MAC &&
-	params->macAlg != CKM_SSL3_SHA1_MAC) {
-	return NULL;
+        params->macAlg != CKM_SSL3_SHA1_MAC) {
+        return NULL;
     }
     ctx = SetupMAC(mech, key);
     if (!ctx) {
-	return NULL;
+        return NULL;
     }
 
     if (params->macAlg == CKM_SSL3_MD5_MAC) {
-	padLength = 48;
+        padLength = 48;
     }
 
     ctx->headerLength =
-	ctx->secretLength +
-	padLength +
-	params->ulHeaderLen;
+        ctx->secretLength +
+        padLength +
+        params->ulHeaderLen;
 
     if (ctx->headerLength > sizeof(ctx->header)) {
-	goto loser;
+        goto loser;
     }
 
     j = 0;
@@ -145,41 +145,41 @@ loser:
 void
 sftk_HMACConstantTime_Update(void *pctx, const void *data, unsigned int len)
 {
-    sftk_MACConstantTimeCtx *ctx = (sftk_MACConstantTimeCtx *) pctx;
+    sftk_MACConstantTimeCtx *ctx = (sftk_MACConstantTimeCtx *)pctx;
     PORT_CheckSuccess(HMAC_ConstantTime(
-	ctx->mac, NULL, sizeof(ctx->mac),
-	ctx->hash,
-	ctx->secret, ctx->secretLength,
-	ctx->header, ctx->headerLength,
-	data, len,
-	ctx->totalLength));
+        ctx->mac, NULL, sizeof(ctx->mac),
+        ctx->hash,
+        ctx->secret, ctx->secretLength,
+        ctx->header, ctx->headerLength,
+        data, len,
+        ctx->totalLength));
 }
 
 void
 sftk_SSLv3MACConstantTime_Update(void *pctx, const void *data, unsigned int len)
 {
-    sftk_MACConstantTimeCtx *ctx = (sftk_MACConstantTimeCtx *) pctx;
+    sftk_MACConstantTimeCtx *ctx = (sftk_MACConstantTimeCtx *)pctx;
     PORT_CheckSuccess(SSLv3_MAC_ConstantTime(
-	ctx->mac, NULL, sizeof(ctx->mac),
-	ctx->hash,
-	ctx->secret, ctx->secretLength,
-	ctx->header, ctx->headerLength,
-	data, len,
-	ctx->totalLength));
+        ctx->mac, NULL, sizeof(ctx->mac),
+        ctx->hash,
+        ctx->secret, ctx->secretLength,
+        ctx->header, ctx->headerLength,
+        data, len,
+        ctx->totalLength));
 }
 
 void
 sftk_MACConstantTime_EndHash(void *pctx, void *out, unsigned int *outLength,
-			     unsigned int maxLength)
+                             unsigned int maxLength)
 {
-    const sftk_MACConstantTimeCtx *ctx = (sftk_MACConstantTimeCtx *) pctx;
+    const sftk_MACConstantTimeCtx *ctx = (sftk_MACConstantTimeCtx *)pctx;
     unsigned int toCopy = ctx->hash->length;
     if (toCopy > maxLength) {
-	toCopy = maxLength;
+        toCopy = maxLength;
     }
     memcpy(out, ctx->mac, toCopy);
     if (outLength) {
-	*outLength = toCopy;
+        *outLength = toCopy;
     }
 }
 

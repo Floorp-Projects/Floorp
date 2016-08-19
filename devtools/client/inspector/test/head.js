@@ -395,6 +395,28 @@ function* getNodeFrontForSelector(selector, inspector) {
 }
 
 /**
+ * A simple polling helper that executes a given function until it returns true.
+ * @param {Function} check A generator function that is expected to return true at some
+ * stage.
+ * @param {String} desc A text description to be displayed when the polling starts.
+ * @param {Number} attemptes Optional number of times we poll. Defaults to 10.
+ * @param {Number} timeBetweenAttempts Optional time to wait between each attempt.
+ * Defaults to 200ms.
+ */
+function* poll(check, desc, attempts = 10, timeBetweenAttempts = 200) {
+  info(desc);
+
+  for (let i = 0; i < attempts; i++) {
+    if (yield check()) {
+      return;
+    }
+    yield new Promise(resolve => setTimeout(resolve, timeBetweenAttempts));
+  }
+
+  throw new Error(`Timeout while: ${desc}`);
+}
+
+/**
  * Encapsulate some common operations for highlighter's tests, to have
  * the tests cleaner, without exposing directly `inspector`, `highlighter`, and
  * `testActor` if not needed.
@@ -458,6 +480,22 @@ const getHighlighterHelperFor = (type) => Task.async(
       getElementAttribute: function* (id, name) {
         return yield testActor.getHighlighterNodeAttribute(
           prefix + id, name, highlighter);
+      },
+
+      waitForElementAttributeSet: function* (id, name) {
+        yield poll(function* () {
+          let value = yield testActor.getHighlighterNodeAttribute(
+            prefix + id, name, highlighter);
+          return !!value;
+        }, `Waiting for element ${id} to have attribute ${name} set`);
+      },
+
+      waitForElementAttributeRemoved: function* (id, name) {
+        yield poll(function* () {
+          let value = yield testActor.getHighlighterNodeAttribute(
+            prefix + id, name, highlighter);
+          return !value;
+        }, `Waiting for element ${id} to have attribute ${name} removed`);
       },
 
       synthesizeMouse: function* (options) {

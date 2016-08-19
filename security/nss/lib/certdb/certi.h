@@ -55,14 +55,14 @@ struct CRLEntryCacheStr {
     CRLEntryCache *prev, *next;
 };
 
-#define CRL_CACHE_INVALID_CRLS 0x0001 /* this state will be set
-            if we have CRL objects with an invalid DER or signature. Can be
-            cleared if the invalid objects are deleted from the token */
-#define CRL_CACHE_LAST_FETCH_FAILED 0x0002 /* this state will be set
-            if the last CRL fetch encountered an error. Can be cleared if a
+#define CRL_CACHE_INVALID_CRLS 0x0001      /* this state will be set             \
+                 if we have CRL objects with an invalid DER or signature. Can be \
+                 cleared if the invalid objects are deleted from the token */
+#define CRL_CACHE_LAST_FETCH_FAILED 0x0002 /* this state will be set        \
+            if the last CRL fetch encountered an error. Can be cleared if a \
             new fetch succeeds */
 
-#define CRL_CACHE_OUT_OF_MEMORY 0x0004 /* this state will be set
+#define CRL_CACHE_OUT_OF_MEMORY 0x0004 /* this state will be set \
             if we don't have enough memory to build the hash table of entries */
 
 typedef enum {

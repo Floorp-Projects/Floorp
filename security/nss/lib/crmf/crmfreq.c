@@ -275,8 +275,7 @@ crmf_template_add_public_key(PLArenaPool *poolp,
     CERTSubjectPublicKeyInfo *spki;
     SECStatus rv;
 
-    *dest = spki = (poolp == NULL) ? PORT_ZNew(CERTSubjectPublicKeyInfo) :
-                                   PORT_ArenaZNew(poolp, CERTSubjectPublicKeyInfo);
+    *dest = spki = (poolp == NULL) ? PORT_ZNew(CERTSubjectPublicKeyInfo) : PORT_ArenaZNew(poolp, CERTSubjectPublicKeyInfo);
     if (spki == NULL) {
         goto loser;
     }
@@ -527,8 +526,7 @@ crmf_create_cert_extension(PLArenaPool *poolp,
     SECOidData *oidData;
     SECStatus rv;
 
-    newExt = (poolp == NULL) ? PORT_ZNew(CRMFCertExtension) :
-                             PORT_ArenaZNew(poolp, CRMFCertExtension);
+    newExt = (poolp == NULL) ? PORT_ZNew(CRMFCertExtension) : PORT_ArenaZNew(poolp, CRMFCertExtension);
     if (newExt == NULL) {
         goto loser;
     }

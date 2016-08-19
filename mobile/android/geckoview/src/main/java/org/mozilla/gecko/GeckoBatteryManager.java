@@ -14,6 +14,8 @@ import android.os.Build;
 import android.os.SystemClock;
 import android.util.Log;
 
+import org.mozilla.gecko.annotation.WrapForJNI;
+
 public class GeckoBatteryManager extends BroadcastReceiver {
     private static final String LOGTAG = "GeckoBatteryManager";
 
@@ -70,6 +72,10 @@ public class GeckoBatteryManager extends BroadcastReceiver {
         mApplicationContext = null;
         mIsEnabled = false;
     }
+
+    @WrapForJNI(calledFrom = "ui", dispatchTo = "gecko")
+    private static native void onBatteryChange(double level, boolean charging,
+                                               double remainingTime);
 
     @Override
     public void onReceive(Context context, Intent intent) {
@@ -166,7 +172,7 @@ public class GeckoBatteryManager extends BroadcastReceiver {
          */
         if (sNotificationsEnabled &&
                 (previousCharging != isCharging() || previousLevel != getLevel())) {
-            GeckoAppShell.notifyBatteryChange(getLevel(), isCharging(), getRemainingTime());
+            onBatteryChange(getLevel(), isCharging(), getRemainingTime());
         }
     }
 

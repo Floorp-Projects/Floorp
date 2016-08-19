@@ -7,9 +7,6 @@
 == textarea-dyn-readonly.html textarea-ref.html
 == textarea-dyn-not-readonly-not-changed.html textarea-ref.html
 == textarea-dyn-not-readonly-changed.html textarea-ref.html
-== textarea-maxlength-valid.html textarea-ref.html
-== textarea-maxlength-invalid.html textarea-withtext-ref.html
-== textarea-maxlength-default-value-invalid.html textarea-withtext-ref.html
 == textarea-required-valid.html textarea-withtext-ref.html
 == textarea-required-invalid.html textarea-ref.html
 == textarea-required-invalid-changed.html textarea-ref.html

@@ -62,7 +62,7 @@ CheckDecoderState(const ImageTestCase& aTestCase, Decoder* aDecoder)
   // Get the current frame, which is always the first frame of the image
   // because CreateAnonymousDecoder() forces a first-frame-only decode.
   RawAccessFrameRef currentFrame = aDecoder->GetCurrentFrameRef();
-  RefPtr<SourceSurface> surface = currentFrame->GetSurface();
+  RefPtr<SourceSurface> surface = currentFrame->GetSourceSurface();
 
   // Verify that the resulting surfaces matches our expectations.
   EXPECT_EQ(SurfaceType::DATA, surface->GetType());
@@ -365,6 +365,237 @@ TEST_F(ImageDecoders, CorruptICOWithBadBMPHeightMultiChunk)
   CheckDecoderMultiChunk(CorruptICOWithBadBMPHeightTestCase());
 }
 
+TEST_F(ImageDecoders, AnimatedGIFWithFRAME_FIRST)
+{
+  ImageTestCase testCase = GreenFirstFrameAnimatedGIFTestCase();
+
+  // Verify that we can decode this test case and retrieve the first frame using
+  // imgIContainer::FRAME_FIRST. This ensures that we correctly trigger a
+  // single-frame decode rather than an animated decode when
+  // imgIContainer::FRAME_FIRST is requested.
+
+  // Create an image.
+  RefPtr<Image> image =
+    ImageFactory::CreateAnonymousImage(nsDependentCString(testCase.mMimeType));
+  ASSERT_TRUE(!image->HasError());
+
+  nsCOMPtr<nsIInputStream> inputStream = LoadFile(testCase.mPath);
+  ASSERT_TRUE(inputStream);
+
+  // Figure out how much data we have.
+  uint64_t length;
+  nsresult rv = inputStream->Available(&length);
+  ASSERT_TRUE(NS_SUCCEEDED(rv));
+
+  // Write the data into the image.
+  rv = image->OnImageDataAvailable(nullptr, nullptr, inputStream, 0,
+                                   static_cast<uint32_t>(length));
+  ASSERT_TRUE(NS_SUCCEEDED(rv));
+
+  // Let the image know we've sent all the data.
+  rv = image->OnImageDataComplete(nullptr, nullptr, NS_OK, true);
+  ASSERT_TRUE(NS_SUCCEEDED(rv));
+
+  RefPtr<ProgressTracker> tracker = image->GetProgressTracker();
+  tracker->SyncNotifyProgress(FLAG_LOAD_COMPLETE);
+
+  // Lock the image so its surfaces don't disappear during the test.
+  image->LockImage();
+
+  // Use GetFrame() to force a sync decode of the image, specifying FRAME_FIRST
+  // to ensure that we don't get an animated decode.
+  RefPtr<SourceSurface> surface =
+    image->GetFrame(imgIContainer::FRAME_FIRST,
+                    imgIContainer::FLAG_SYNC_DECODE);
+
+  // Ensure that the image's metadata meets our expectations.
+  IntSize imageSize(0, 0);
+  rv = image->GetWidth(&imageSize.width);
+  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  rv = image->GetHeight(&imageSize.height);
+  EXPECT_TRUE(NS_SUCCEEDED(rv));
+
+  EXPECT_EQ(testCase.mSize.width, imageSize.width);
+  EXPECT_EQ(testCase.mSize.height, imageSize.height);
+
+  Progress imageProgress = tracker->GetProgress();
+
+  EXPECT_TRUE(bool(imageProgress & FLAG_HAS_TRANSPARENCY) == false);
+  EXPECT_TRUE(bool(imageProgress & FLAG_IS_ANIMATED) == true);
+
+  // Ensure that we decoded the static version of the image.
+  {
+    LookupResult result =
+      SurfaceCache::Lookup(ImageKey(image.get()),
+                           RasterSurfaceKey(imageSize,
+                                            DefaultSurfaceFlags(),
+                                            PlaybackType::eStatic));
+    ASSERT_EQ(MatchType::EXACT, result.Type());
+    EXPECT_TRUE(bool(result.Surface()));
+  }
+
+  // Ensure that we didn't decode the animated version of the image.
+  {
+    LookupResult result =
+      SurfaceCache::Lookup(ImageKey(image.get()),
+                           RasterSurfaceKey(imageSize,
+                                            DefaultSurfaceFlags(),
+                                            PlaybackType::eAnimated));
+    ASSERT_EQ(MatchType::NOT_FOUND, result.Type());
+  }
+
+  // Use GetFrame() to force a sync decode of the image, this time specifying
+  // FRAME_CURRENT to ensure that we get an animated decode.
+  RefPtr<SourceSurface> animatedSurface =
+    image->GetFrame(imgIContainer::FRAME_CURRENT,
+                    imgIContainer::FLAG_SYNC_DECODE);
+
+  // Ensure that we decoded both frames of the animated version of the image.
+  {
+    LookupResult result =
+      SurfaceCache::Lookup(ImageKey(image.get()),
+                           RasterSurfaceKey(imageSize,
+                                            DefaultSurfaceFlags(),
+                                            PlaybackType::eAnimated));
+    ASSERT_EQ(MatchType::EXACT, result.Type());
+
+    EXPECT_TRUE(NS_SUCCEEDED(result.Surface().Seek(0)));
+    EXPECT_TRUE(bool(result.Surface()));
+
+    EXPECT_TRUE(NS_SUCCEEDED(result.Surface().Seek(1)));
+    EXPECT_TRUE(bool(result.Surface()));
+  }
+
+  // Ensure that the static version is still around.
+  {
+    LookupResult result =
+      SurfaceCache::Lookup(ImageKey(image.get()),
+                           RasterSurfaceKey(imageSize,
+                                            DefaultSurfaceFlags(),
+                                            PlaybackType::eStatic));
+    ASSERT_EQ(MatchType::EXACT, result.Type());
+    EXPECT_TRUE(bool(result.Surface()));
+  }
+}
+
+TEST_F(ImageDecoders, AnimatedGIFWithFRAME_CURRENT)
+{
+  ImageTestCase testCase = GreenFirstFrameAnimatedGIFTestCase();
+
+  // Verify that we can decode this test case and retrieve the entire sequence
+  // of frames using imgIContainer::FRAME_CURRENT. This ensures that we
+  // correctly trigger an animated decode rather than a single-frame decode when
+  // imgIContainer::FRAME_CURRENT is requested.
+
+  // Create an image.
+  RefPtr<Image> image =
+    ImageFactory::CreateAnonymousImage(nsDependentCString(testCase.mMimeType));
+  ASSERT_TRUE(!image->HasError());
+
+  nsCOMPtr<nsIInputStream> inputStream = LoadFile(testCase.mPath);
+  ASSERT_TRUE(inputStream);
+
+  // Figure out how much data we have.
+  uint64_t length;
+  nsresult rv = inputStream->Available(&length);
+  ASSERT_TRUE(NS_SUCCEEDED(rv));
+
+  // Write the data into the image.
+  rv = image->OnImageDataAvailable(nullptr, nullptr, inputStream, 0,
+                                   static_cast<uint32_t>(length));
+  ASSERT_TRUE(NS_SUCCEEDED(rv));
+
+  // Let the image know we've sent all the data.
+  rv = image->OnImageDataComplete(nullptr, nullptr, NS_OK, true);
+  ASSERT_TRUE(NS_SUCCEEDED(rv));
+
+  RefPtr<ProgressTracker> tracker = image->GetProgressTracker();
+  tracker->SyncNotifyProgress(FLAG_LOAD_COMPLETE);
+
+  // Lock the image so its surfaces don't disappear during the test.
+  image->LockImage();
+
+  // Use GetFrame() to force a sync decode of the image, specifying
+  // FRAME_CURRENT to ensure we get an animated decode.
+  RefPtr<SourceSurface> surface =
+    image->GetFrame(imgIContainer::FRAME_CURRENT,
+                    imgIContainer::FLAG_SYNC_DECODE);
+
+  // Ensure that the image's metadata meets our expectations.
+  IntSize imageSize(0, 0);
+  rv = image->GetWidth(&imageSize.width);
+  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  rv = image->GetHeight(&imageSize.height);
+  EXPECT_TRUE(NS_SUCCEEDED(rv));
+
+  EXPECT_EQ(testCase.mSize.width, imageSize.width);
+  EXPECT_EQ(testCase.mSize.height, imageSize.height);
+
+  Progress imageProgress = tracker->GetProgress();
+
+  EXPECT_TRUE(bool(imageProgress & FLAG_HAS_TRANSPARENCY) == false);
+  EXPECT_TRUE(bool(imageProgress & FLAG_IS_ANIMATED) == true);
+
+  // Ensure that we decoded both frames of the animated version of the image.
+  {
+    LookupResult result =
+      SurfaceCache::Lookup(ImageKey(image.get()),
+                           RasterSurfaceKey(imageSize,
+                                            DefaultSurfaceFlags(),
+                                            PlaybackType::eAnimated));
+    ASSERT_EQ(MatchType::EXACT, result.Type());
+
+    EXPECT_TRUE(NS_SUCCEEDED(result.Surface().Seek(0)));
+    EXPECT_TRUE(bool(result.Surface()));
+
+    EXPECT_TRUE(NS_SUCCEEDED(result.Surface().Seek(1)));
+    EXPECT_TRUE(bool(result.Surface()));
+  }
+
+  // Ensure that we didn't decode the static version of the image.
+  {
+    LookupResult result =
+      SurfaceCache::Lookup(ImageKey(image.get()),
+                           RasterSurfaceKey(imageSize,
+                                            DefaultSurfaceFlags(),
+                                            PlaybackType::eStatic));
+    ASSERT_EQ(MatchType::NOT_FOUND, result.Type());
+  }
+
+  // Use GetFrame() to force a sync decode of the image, this time specifying
+  // FRAME_FIRST to ensure that we get a single-frame decode.
+  RefPtr<SourceSurface> animatedSurface =
+    image->GetFrame(imgIContainer::FRAME_FIRST,
+                    imgIContainer::FLAG_SYNC_DECODE);
+
+  // Ensure that we decoded the static version of the image.
+  {
+    LookupResult result =
+      SurfaceCache::Lookup(ImageKey(image.get()),
+                           RasterSurfaceKey(imageSize,
+                                            DefaultSurfaceFlags(),
+                                            PlaybackType::eStatic));
+    ASSERT_EQ(MatchType::EXACT, result.Type());
+    EXPECT_TRUE(bool(result.Surface()));
+  }
+
+  // Ensure that both frames of the animated version are still around.
+  {
+    LookupResult result =
+      SurfaceCache::Lookup(ImageKey(image.get()),
+                           RasterSurfaceKey(imageSize,
+                                            DefaultSurfaceFlags(),
+                                            PlaybackType::eAnimated));
+    ASSERT_EQ(MatchType::EXACT, result.Type());
+
+    EXPECT_TRUE(NS_SUCCEEDED(result.Surface().Seek(0)));
+    EXPECT_TRUE(bool(result.Surface()));
+
+    EXPECT_TRUE(NS_SUCCEEDED(result.Surface().Seek(1)));
+    EXPECT_TRUE(bool(result.Surface()));
+  }
+}
+
 TEST_F(ImageDecoders, AnimatedGIFWithExtraImageSubBlocks)
 {
   ImageTestCase testCase = ExtraImageSubBlocksAnimatedGIFTestCase();
@@ -419,17 +650,16 @@ TEST_F(ImageDecoders, AnimatedGIFWithExtraImageSubBlocks)
   EXPECT_TRUE(bool(imageProgress & FLAG_IS_ANIMATED) == true);
 
   // Ensure that we decoded both frames of the image.
-  LookupResult firstFrameLookupResult =
+  LookupResult result =
     SurfaceCache::Lookup(ImageKey(image.get()),
                          RasterSurfaceKey(imageSize,
                                           DefaultSurfaceFlags(),
-                                          /* aFrameNum = */ 0));
-  EXPECT_EQ(MatchType::EXACT, firstFrameLookupResult.Type());
+                                          PlaybackType::eAnimated));
+  ASSERT_EQ(MatchType::EXACT, result.Type());
 
-  LookupResult secondFrameLookupResult =
-    SurfaceCache::Lookup(ImageKey(image.get()),
-                         RasterSurfaceKey(imageSize,
-                                          DefaultSurfaceFlags(),
-                                          /* aFrameNum = */ 1));
-  EXPECT_EQ(MatchType::EXACT, secondFrameLookupResult.Type());
+  EXPECT_TRUE(NS_SUCCEEDED(result.Surface().Seek(0)));
+  EXPECT_TRUE(bool(result.Surface()));
+
+  EXPECT_TRUE(NS_SUCCEEDED(result.Surface().Seek(1)));
+  EXPECT_TRUE(bool(result.Surface()));
 }

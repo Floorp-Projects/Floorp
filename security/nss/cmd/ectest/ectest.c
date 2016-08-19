@@ -5,8 +5,9 @@
 #include "blapi.h"
 #include "ec.h"
 #include "ecl-curve.h"
-#include "nss.h"
-#include "secutil.h"
+#include "prprf.h"
+#include "basicutil.h"
+#include "secder.h"
 #include "secitem.h"
 #include "nspr.h"
 #include <stdio.h>
@@ -155,9 +156,10 @@ main(int argv, char **argc)
     SECStatus rv = SECSuccess;
     int numkats = 0;
     int i = 0;
-    rv = NSS_NoDB_Init(NULL);
+
+    rv = SECOID_Init();
     if (rv != SECSuccess) {
-        SECU_PrintError("Error:", "NSS_NoDB_Init");
+        SECU_PrintError("Error:", "SECOID_Init");
         goto cleanup;
     }
 
@@ -175,7 +177,7 @@ main(int argv, char **argc)
     }
 
 cleanup:
-    rv |= NSS_Shutdown();
+    rv |= SECOID_Shutdown();
 
     if (rv != SECSuccess) {
         printf("Error: exiting with error value\n");

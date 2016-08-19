@@ -4157,8 +4157,7 @@ GetWindowClientRectCenter(nsIWidget* aWidget)
 {
   NS_ENSURE_TRUE(aWidget, LayoutDeviceIntPoint(0, 0));
 
-  LayoutDeviceIntRect rect;
-  aWidget->GetClientBounds(rect);
+  LayoutDeviceIntRect rect = aWidget->GetClientBounds();
   LayoutDeviceIntPoint point(rect.x + rect.width / 2,
                              rect.y + rect.height / 2);
   int32_t round = aWidget->RoundsWidgetCoordinatesTo();

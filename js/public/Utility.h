@@ -72,6 +72,7 @@ enum ThreadType {
     THREAD_TYPE_COMPRESS,       // 5
     THREAD_TYPE_GCHELPER,       // 6
     THREAD_TYPE_GCPARALLEL,     // 7
+    THREAD_TYPE_PROMISE_TASK,   // 8
     THREAD_TYPE_MAX             // Used to check shell function arguments
 };
 

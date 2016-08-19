@@ -9,7 +9,8 @@
 #include "softoken.h"
 
 static CK_RV
-jpake_mapStatus(SECStatus rv, CK_RV invalidArgsMapping) {
+jpake_mapStatus(SECStatus rv, CK_RV invalidArgsMapping)
+{
     int err;
     if (rv == SECSuccess)
         return CKR_OK;
@@ -17,9 +18,12 @@ jpake_mapStatus(SECStatus rv, CK_RV invalidArgsMapping) {
     switch (err) {
         /* XXX: SEC_ERROR_INVALID_ARGS might be caused by invalid template
             parameters. */
-        case SEC_ERROR_INVALID_ARGS:  return invalidArgsMapping;
-        case SEC_ERROR_BAD_SIGNATURE: return CKR_SIGNATURE_INVALID;
-        case SEC_ERROR_NO_MEMORY:     return CKR_HOST_MEMORY;
+        case SEC_ERROR_INVALID_ARGS:
+            return invalidArgsMapping;
+        case SEC_ERROR_BAD_SIGNATURE:
+            return CKR_SIGNATURE_INVALID;
+        case SEC_ERROR_NO_MEMORY:
+            return CKR_HOST_MEMORY;
     }
     return CKR_FUNCTION_FAILED;
 }
@@ -27,15 +31,15 @@ jpake_mapStatus(SECStatus rv, CK_RV invalidArgsMapping) {
 /* If key is not NULL then the gx value will be stored as an attribute with
    the type given by the gxAttrType parameter. */
 static CK_RV
-jpake_Sign(PLArenaPool * arena, const PQGParams * pqg, HASH_HashType hashType,
-           const SECItem * signerID, const SECItem * x,
-           CK_NSS_JPAKEPublicValue * out)
+jpake_Sign(PLArenaPool *arena, const PQGParams *pqg, HASH_HashType hashType,
+           const SECItem *signerID, const SECItem *x,
+           CK_NSS_JPAKEPublicValue *out)
 {
     SECItem gx, gv, r;
     CK_RV crv;
 
     PORT_Assert(arena != NULL);
-    
+
     gx.data = NULL;
     gv.data = NULL;
     r.data = NULL;
@@ -45,9 +49,9 @@ jpake_Sign(PLArenaPool * arena, const PQGParams * pqg, HASH_HashType hashType,
     if (crv == CKR_OK) {
         if ((out->pGX != NULL && out->ulGXLen >= gx.len) ||
             (out->pGV != NULL && out->ulGVLen >= gv.len) ||
-            (out->pR  != NULL && out->ulRLen >= r.len)) {
-            PORT_Memcpy(out->pGX, gx.data, gx.len); 
-            PORT_Memcpy(out->pGV, gv.data, gv.len); 
+            (out->pR != NULL && out->ulRLen >= r.len)) {
+            PORT_Memcpy(out->pGX, gx.data, gx.len);
+            PORT_Memcpy(out->pGV, gv.data, gv.len);
             PORT_Memcpy(out->pR, r.data, r.len);
             out->ulGXLen = gx.len;
             out->ulGVLen = gv.len;
@@ -55,40 +59,45 @@ jpake_Sign(PLArenaPool * arena, const PQGParams * pqg, HASH_HashType hashType,
         } else {
             crv = CKR_MECHANISM_PARAM_INVALID;
         }
-    } 
+    }
     return crv;
 }
 
 static CK_RV
-jpake_Verify(PLArenaPool * arena, const PQGParams * pqg,
-             HASH_HashType hashType, const SECItem * signerID,
-             const CK_BYTE * peerIDData, CK_ULONG peerIDLen,
-             const CK_NSS_JPAKEPublicValue * publicValueIn)
+jpake_Verify(PLArenaPool *arena, const PQGParams *pqg,
+             HASH_HashType hashType, const SECItem *signerID,
+             const CK_BYTE *peerIDData, CK_ULONG peerIDLen,
+             const CK_NSS_JPAKEPublicValue *publicValueIn)
 {
     SECItem peerID, gx, gv, r;
-    peerID.data = (unsigned char *) peerIDData; peerID.len = peerIDLen;
-    gx.data = publicValueIn->pGX; gx.len = publicValueIn->ulGXLen;
-    gv.data = publicValueIn->pGV; gv.len = publicValueIn->ulGVLen;
-    r.data = publicValueIn->pR;   r.len = publicValueIn->ulRLen;
+    peerID.data = (unsigned char *)peerIDData;
+    peerID.len = peerIDLen;
+    gx.data = publicValueIn->pGX;
+    gx.len = publicValueIn->ulGXLen;
+    gv.data = publicValueIn->pGV;
+    gv.len = publicValueIn->ulGVLen;
+    r.data = publicValueIn->pR;
+    r.len = publicValueIn->ulRLen;
     return jpake_mapStatus(JPAKE_Verify(arena, pqg, hashType, signerID, &peerID,
                                         &gx, &gv, &r),
                            CKR_MECHANISM_PARAM_INVALID);
 }
 
-#define NUM_ELEM(x) (sizeof (x) / sizeof (x)[0])
+#define NUM_ELEM(x) (sizeof(x) / sizeof(x)[0])
 
 /* If the template has the key type set, ensure that it was set to the correct
  * value. If the template did not have the key type set, set it to the
  * correct value.
  */
 static CK_RV
-jpake_enforceKeyType(SFTKObject * key, CK_KEY_TYPE keyType) {
+jpake_enforceKeyType(SFTKObject *key, CK_KEY_TYPE keyType)
+{
     CK_RV crv;
-    SFTKAttribute * keyTypeAttr = sftk_FindAttribute(key, CKA_KEY_TYPE);
+    SFTKAttribute *keyTypeAttr = sftk_FindAttribute(key, CKA_KEY_TYPE);
     if (keyTypeAttr != NULL) {
         crv = *(CK_KEY_TYPE *)keyTypeAttr->attrib.pValue == keyType
-            ? CKR_OK
-            : CKR_TEMPLATE_INCONSISTENT;
+                  ? CKR_OK
+                  : CKR_TEMPLATE_INCONSISTENT;
         sftk_FreeAttribute(keyTypeAttr);
     } else {
         crv = sftk_forceAttribute(key, CKA_KEY_TYPE, &keyType, sizeof keyType);
@@ -97,11 +106,11 @@ jpake_enforceKeyType(SFTKObject * key, CK_KEY_TYPE keyType) {
 }
 
 static CK_RV
-jpake_MultipleSecItem2Attribute(SFTKObject * key, const SFTKItemTemplate * attrs,
+jpake_MultipleSecItem2Attribute(SFTKObject *key, const SFTKItemTemplate *attrs,
                                 size_t attrsCount)
 {
     size_t i;
-    
+
     for (i = 0; i < attrsCount; ++i) {
         CK_RV crv = sftk_forceAttribute(key, attrs[i].type, attrs[i].item->data,
                                         attrs[i].item->len);
@@ -112,12 +121,12 @@ jpake_MultipleSecItem2Attribute(SFTKObject * key, const SFTKItemTemplate * attrs
 }
 
 CK_RV
-jpake_Round1(HASH_HashType hashType, CK_NSS_JPAKERound1Params * params,
-             SFTKObject * key)
+jpake_Round1(HASH_HashType hashType, CK_NSS_JPAKERound1Params *params,
+             SFTKObject *key)
 {
     CK_RV crv;
     PQGParams pqg;
-    PLArenaPool * arena;
+    PLArenaPool *arena;
     SECItem signerID;
     SFTKItemTemplate templateAttrs[] = {
         { CKA_PRIME, &pqg.prime },
@@ -127,7 +136,7 @@ jpake_Round1(HASH_HashType hashType, CK_NSS_JPAKERound1Params * params,
     };
     SECItem x2, gx1, gx2;
     const SFTKItemTemplate generatedAttrs[] = {
-        { CKA_NSS_JPAKE_X2,  &x2  },
+        { CKA_NSS_JPAKE_X2, &x2 },
         { CKA_NSS_JPAKE_GX1, &gx1 },
         { CKA_NSS_JPAKE_GX2, &gx2 },
     };
@@ -170,7 +179,7 @@ jpake_Round1(HASH_HashType hashType, CK_NSS_JPAKERound1Params * params,
         gx1.len = params->gx1.ulGXLen;
         gx2.data = params->gx2.pGX;
         gx2.len = params->gx2.ulGXLen;
-        crv = jpake_MultipleSecItem2Attribute(key, generatedAttrs, 
+        crv = jpake_MultipleSecItem2Attribute(key, generatedAttrs,
                                               NUM_ELEM(generatedAttrs));
     }
 
@@ -179,19 +188,19 @@ jpake_Round1(HASH_HashType hashType, CK_NSS_JPAKERound1Params * params,
 }
 
 CK_RV
-jpake_Round2(HASH_HashType hashType, CK_NSS_JPAKERound2Params * params,
-             SFTKObject * sourceKey, SFTKObject * key)
+jpake_Round2(HASH_HashType hashType, CK_NSS_JPAKERound2Params *params,
+             SFTKObject *sourceKey, SFTKObject *key)
 {
     CK_RV crv;
-    PLArenaPool * arena;
+    PLArenaPool *arena;
     PQGParams pqg;
     SECItem signerID, x2, gx1, gx2;
-    SFTKItemTemplate sourceAttrs[] = { 
+    SFTKItemTemplate sourceAttrs[] = {
         { CKA_PRIME, &pqg.prime },
         { CKA_SUBPRIME, &pqg.subPrime },
         { CKA_BASE, &pqg.base },
         { CKA_NSS_JPAKE_SIGNERID, &signerID },
-        { CKA_NSS_JPAKE_X2,  &x2 },
+        { CKA_NSS_JPAKE_X2, &x2 },
         { CKA_NSS_JPAKE_GX1, &gx1 },
         { CKA_NSS_JPAKE_GX2, &gx2 },
     };
@@ -200,7 +209,7 @@ jpake_Round2(HASH_HashType hashType, CK_NSS_JPAKERound2Params * params,
         { CKA_NSS_JPAKE_SIGNERID, &signerID },
         { CKA_PRIME, &pqg.prime },
         { CKA_SUBPRIME, &pqg.subPrime },
-        { CKA_NSS_JPAKE_X2,  &x2  },
+        { CKA_NSS_JPAKE_X2, &x2 },
         { CKA_NSS_JPAKE_X2S, &x2s },
         { CKA_NSS_JPAKE_GX1, &gx1 },
         { CKA_NSS_JPAKE_GX2, &gx2 },
@@ -251,7 +260,7 @@ jpake_Round2(HASH_HashType hashType, CK_NSS_JPAKERound2Params * params,
         pqg.base.data = NULL;
         x2s.data = NULL;
         crv = jpake_mapStatus(JPAKE_Round2(arena, &pqg.prime, &pqg.subPrime,
-                                           &gx1, &gx3, &gx4, &pqg.base, 
+                                           &gx1, &gx3, &gx4, &pqg.base,
                                            &x2, &s, &x2s),
                               CKR_MECHANISM_PARAM_INVALID);
     }
@@ -281,10 +290,10 @@ jpake_Round2(HASH_HashType hashType, CK_NSS_JPAKERound2Params * params,
 }
 
 CK_RV
-jpake_Final(HASH_HashType hashType, const CK_NSS_JPAKEFinalParams * param,
-            SFTKObject * sourceKey, SFTKObject * key)
+jpake_Final(HASH_HashType hashType, const CK_NSS_JPAKEFinalParams *param,
+            SFTKObject *sourceKey, SFTKObject *key)
 {
-    PLArenaPool * arena;
+    PLArenaPool *arena;
     SECItem K;
     PQGParams pqg;
     CK_RV crv;
@@ -294,7 +303,7 @@ jpake_Final(HASH_HashType hashType, const CK_NSS_JPAKEFinalParams * param,
         { CKA_NSS_JPAKE_SIGNERID, &signerID },
         { CKA_PRIME, &pqg.prime },
         { CKA_SUBPRIME, &pqg.subPrime },
-        { CKA_NSS_JPAKE_X2,  &x2  },
+        { CKA_NSS_JPAKE_X2, &x2 },
         { CKA_NSS_JPAKE_X2S, &x2s },
         { CKA_NSS_JPAKE_GX1, &gx1 },
         { CKA_NSS_JPAKE_GX2, &gx2 },
@@ -309,7 +318,7 @@ jpake_Final(HASH_HashType hashType, const CK_NSS_JPAKEFinalParams * param,
     arena = PORT_NewArena(NSS_SOFTOKEN_DEFAULT_CHUNKSIZE);
     if (arena == NULL)
         crv = CKR_HOST_MEMORY;
-    
+
     /* TODO: verify key type CKK_NSS_JPAKE_ROUND2 */
 
     crv = sftk_MultipleAttribute2SecItem(arena, sourceKey, sourceAttrs,

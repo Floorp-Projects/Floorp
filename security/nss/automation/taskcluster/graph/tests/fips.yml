@@ -6,6 +6,7 @@
 
     payload:
       env:
+        ASAN_OPTIONS: detect_leaks=0
         NSS_TESTS: fips
 
     extra:

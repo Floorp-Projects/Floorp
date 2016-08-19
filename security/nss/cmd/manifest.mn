@@ -22,6 +22,8 @@ endif
 ifndef NSS_BUILD_UTIL_ONLY
 SOFTOKEN_SRCDIRS = \
  $(BLTEST_SRCDIR) \
+ $(ECPERF_SRCDIR) \
+ $(ECTEST_SRCDIR) \
  $(FIPSTEST_SRCDIR)  \
  $(LOWHASHTEST_SRCDIR)  \
  $(SHLIBSIGN_SRCDIR) \
@@ -42,8 +44,6 @@ NSS_SRCDIRS = \
  dbtest \
  derdump  \
  digest  \
- ecperf \
- ectest \
  httpserv  \
  listsuites \
  makepqg  \

@@ -55,7 +55,9 @@ bool TlsParser::ReadVariable(DataBuffer* val, size_t len_size) {
 }
 
 bool TlsParser::Skip(size_t len) {
-  if (len > remaining()) { return false; }
+  if (len > remaining()) {
+    return false;
+  }
   consume(len);
   return true;
 }
@@ -68,4 +70,4 @@ bool TlsParser::SkipVariable(size_t len_size) {
   return Skip(len);
 }
 
-} // namespace nss_test
+}  // namespace nss_test

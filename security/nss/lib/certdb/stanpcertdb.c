@@ -142,7 +142,7 @@ extern const NSSError NSS_ERROR_ALREADY_INITIALIZED;
 extern const NSSError NSS_ERROR_PKCS11;
 
 /* Look at the stan error stack and map it to NSS 3 errors */
-#define STAN_MAP_ERROR(x, y)                                                   \
+#define STAN_MAP_ERROR(x, y) \
     else if (error == (x)) { secError = y; }
 
 /*

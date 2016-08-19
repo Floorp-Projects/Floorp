@@ -23,7 +23,7 @@ for (let fun of ['getInt8', 'getInt16']) {
 if ('detachArrayBuffer' in this) {
     // ToIndex is called before detachment check, so we can tell the difference
     // between a ToIndex failure and a real out of bounds failure.
-    detachArrayBuffer(buffer, 'same-data');
+    detachArrayBuffer(buffer);
 
     check(view);
 

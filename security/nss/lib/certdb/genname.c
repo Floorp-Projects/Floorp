@@ -1573,15 +1573,16 @@ done:
  *
  */
 
-#define STRING_TO_SECITEM(str)                                                 \
-    {                                                                          \
-        siBuffer, (unsigned char *)str, sizeof(str) - 1                        \
+#define STRING_TO_SECITEM(str)                          \
+    {                                                   \
+        siBuffer, (unsigned char *)str, sizeof(str) - 1 \
     }
 
-#define NAME_CONSTRAINTS_ENTRY(CA)                                             \
-    {                                                                          \
-        STRING_TO_SECITEM(CA##_SUBJECT_DN),                                    \
-        STRING_TO_SECITEM(CA##_NAME_CONSTRAINTS)                               \
+#define NAME_CONSTRAINTS_ENTRY(CA)                   \
+    {                                                \
+        STRING_TO_SECITEM(CA##_SUBJECT_DN)           \
+        ,                                            \
+            STRING_TO_SECITEM(CA##_NAME_CONSTRAINTS) \
     }
 
 /* Agence Nationale de la Securite des Systemes d'Information (ANSSI) */

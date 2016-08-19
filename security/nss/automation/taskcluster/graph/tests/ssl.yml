@@ -5,7 +5,7 @@
       description: "SSL tests (standard)"
 
     payload:
-      maxRunTime: 7200
+      maxRunTime: 14400
       env:
         NSS_CYCLES: standard
         NSS_TESTS: ssl

@@ -146,14 +146,14 @@ public:
     MOZ_ASSERT(mImageKey, "Must have a valid image key");
   }
 
-  DrawableFrameRef DrawableRef() const
+  DrawableSurface GetDrawableSurface() const
   {
     if (MOZ_UNLIKELY(IsPlaceholder())) {
-      MOZ_ASSERT_UNREACHABLE("Shouldn't call DrawableRef() on a placeholder");
-      return DrawableFrameRef();
+      MOZ_ASSERT_UNREACHABLE("Called GetDrawableSurface() on a placeholder");
+      return DrawableSurface();
     }
 
-    return mProvider->DrawableRef();
+    return mProvider->Surface();
   }
 
   void SetLocked(bool aLocked)
@@ -198,17 +198,20 @@ public:
       SurfaceMemoryCounter counter(aCachedSurface->GetSurfaceKey(),
                                    aCachedSurface->IsLocked());
 
-      if (!aCachedSurface->IsPlaceholder()) {
-        DrawableFrameRef surfaceRef = aCachedSurface->DrawableRef();
-        if (surfaceRef) {
-          counter.SubframeSize() = Some(surfaceRef->GetSize());
-
-          size_t heap = 0, nonHeap = 0;
-          surfaceRef->AddSizeOfExcludingThis(mMallocSizeOf, heap, nonHeap);
-          counter.Values().SetDecodedHeap(heap);
-          counter.Values().SetDecodedNonHeap(nonHeap);
-        }
+      if (aCachedSurface->IsPlaceholder()) {
+        return;
       }
+
+      // Record the memory used by the ISurfaceProvider. This may not have a
+      // straightforward relationship to the size of the surface that
+      // DrawableRef() returns if the surface is generated dynamically. (i.e.,
+      // for surfaces with PlaybackType::eAnimated.)
+      size_t heap = 0;
+      size_t nonHeap = 0;
+      aCachedSurface->mProvider
+        ->AddSizeOfExcludingThis(mMallocSizeOf, heap, nonHeap);
+      counter.Values().SetDecodedHeap(heap);
+      counter.Values().SetDecodedNonHeap(nonHeap);
 
       mCounters.AppendElement(counter);
     }
@@ -221,7 +224,6 @@ public:
 private:
   nsExpirationState  mExpirationState;
   RefPtr<ISurfaceProvider> mProvider;
-  DrawableFrameRef   mDrawableRef;
   const Cost         mCost;
   const ImageKey     mImageKey;
   const SurfaceKey   mSurfaceKey;
@@ -299,8 +301,8 @@ public:
       if (current->IsPlaceholder()) {
         continue;
       }
-      // Matching the animation time and SVG context is required.
-      if (currentKey.AnimationTime() != aIdealKey.AnimationTime() ||
+      // Matching the playback type and SVG context is required.
+      if (currentKey.Playback() != aIdealKey.Playback() ||
           currentKey.SVGContext() != aIdealKey.SVGContext()) {
         continue;
       }
@@ -599,8 +601,8 @@ public:
       return LookupResult(MatchType::PENDING);
     }
 
-    DrawableFrameRef ref = surface->DrawableRef();
-    if (!ref) {
+    DrawableSurface drawableSurface = surface->GetDrawableSurface();
+    if (!drawableSurface) {
       // The surface was released by the operating system. Remove the cache
       // entry as well.
       Remove(surface);
@@ -613,7 +615,7 @@ public:
 
     MOZ_ASSERT(surface->GetSurfaceKey() == aSurfaceKey,
                "Lookup() not returning an exact match?");
-    return LookupResult(Move(ref), MatchType::EXACT);
+    return LookupResult(Move(drawableSurface), MatchType::EXACT);
   }
 
   LookupResult LookupBestMatch(const ImageKey         aImageKey,
@@ -632,7 +634,7 @@ public:
     // encounter a performance problem here we can revisit this.
 
     RefPtr<CachedSurface> surface;
-    DrawableFrameRef ref;
+    DrawableSurface drawableSurface;
     MatchType matchType = MatchType::NOT_FOUND;
     while (true) {
       Tie(surface, matchType) = cache->LookupBestMatch(aSurfaceKey);
@@ -641,8 +643,8 @@ public:
         return LookupResult(matchType);  // Lookup in the per-image cache missed.
       }
 
-      ref = surface->DrawableRef();
-      if (ref) {
+      drawableSurface = surface->GetDrawableSurface();
+      if (drawableSurface) {
         break;
       }
 
@@ -656,14 +658,14 @@ public:
     MOZ_ASSERT_IF(matchType == MatchType::SUBSTITUTE_BECAUSE_NOT_FOUND ||
                   matchType == MatchType::SUBSTITUTE_BECAUSE_PENDING,
       surface->GetSurfaceKey().SVGContext() == aSurfaceKey.SVGContext() &&
-      surface->GetSurfaceKey().AnimationTime() == aSurfaceKey.AnimationTime() &&
+      surface->GetSurfaceKey().Playback() == aSurfaceKey.Playback() &&
       surface->GetSurfaceKey().Flags() == aSurfaceKey.Flags());
 
     if (matchType == MatchType::EXACT) {
       MarkUsed(surface, cache);
     }
 
-    return LookupResult(Move(ref), matchType);
+    return LookupResult(Move(drawableSurface), matchType);
   }
 
   bool CanHold(const Cost aCost) const

@@ -81,10 +81,8 @@ SignArchive(char *tree, char *keyName, char *zip_file, int javascript,
         }
 
         /* rsa/dsa to zip */
-        sprintf(tempfn, "META-INF/%s.%s", base, (keyType == dsaKey ?
-                                                                   "dsa"
-                                                                   :
-                                                                   "rsa"));
+        sprintf(tempfn, "META-INF/%s.%s", base, (keyType == dsaKey ? "dsa"
+                                                                   : "rsa"));
         sprintf(fullfn, "%s/%s", tree, tempfn);
         JzipAdd(fullfn, tempfn, zipfile, compression_level);
 
@@ -106,10 +104,8 @@ SignArchive(char *tree, char *keyName, char *zip_file, int javascript,
     /* Add the rsa/dsa file to the zip archive normally */
     if (!xpi_arc) {
         /* rsa/dsa to zip */
-        sprintf(tempfn, "META-INF/%s.%s", base, (keyType == dsaKey ?
-                                                                   "dsa"
-                                                                   :
-                                                                   "rsa"));
+        sprintf(tempfn, "META-INF/%s.%s", base, (keyType == dsaKey ? "dsa"
+                                                                   : "rsa"));
         sprintf(fullfn, "%s/%s", tree, tempfn);
         JzipAdd(fullfn, tempfn, zipfile, compression_level);
     }
@@ -171,8 +167,7 @@ sign_all_arc_fn(char *relpath, char *basedir, char *reldir, char *filename,
 
     /* Make sure there is one and only one ".arc" in the relative path,
      * and that it is at the end of the path (don't sign .arcs within .arcs) */
-    if ((PL_strcaserstr(relpath, ".arc") == relpath + strlen(relpath) -
-                                                4) &&
+    if ((PL_strcaserstr(relpath, ".arc") == relpath + strlen(relpath) - 4) &&
         (PL_strcasestr(relpath, ".arc") == relpath + strlen(relpath) - 4)) {
 
         if (!infop) {
