@@ -16,6 +16,7 @@ category webextension-scripts test chrome://extensions/content/ext-test.js
 
 # scripts specific for content process.
 category webextension-scripts-content i18n chrome://extensions/content/ext-i18n.js
+category webextension-scripts-content runtime chrome://extensions/content/ext-c-runtime.js
 
 # schemas
 category webextension-schemas alarms chrome://extensions/content/schemas/alarms.json
