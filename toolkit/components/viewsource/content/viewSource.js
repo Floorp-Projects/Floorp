@@ -747,10 +747,6 @@ var PrintPreviewListener = {
     gBrowser.collapsed = false;
     document.getElementById("viewSource-toolbox").hidden = false;
   },
-
-  activateBrowser(browser) {
-    browser.docShellIsActive = true;
-  },
 };
 
 // viewZoomOverlay.js uses this
