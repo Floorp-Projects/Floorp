@@ -31,8 +31,7 @@
 using namespace mozilla;
 
 // NOTE: Should these be the thread-safe versions?
-NS_IMPL_ISUPPORTS(SecretDecoderRing, nsISecretDecoderRing,
-                  nsISecretDecoderRingConfig)
+NS_IMPL_ISUPPORTS(SecretDecoderRing, nsISecretDecoderRing)
 
 SecretDecoderRing::SecretDecoderRing()
 {
@@ -48,9 +47,9 @@ SecretDecoderRing::~SecretDecoderRing()
   shutdown(calledFromObject);
 }
 
-NS_IMETHODIMP
+nsresult
 SecretDecoderRing::Encrypt(unsigned char* data, uint32_t dataLen,
-                           unsigned char** result, uint32_t* _retval)
+                   /*out*/ unsigned char** result, /*out*/ uint32_t* resultLen)
 {
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
@@ -90,14 +89,14 @@ SecretDecoderRing::Encrypt(unsigned char* data, uint32_t dataLen,
   }
 
   *result = reply.data;
-  *_retval = reply.len;
+  *resultLen = reply.len;
 
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 SecretDecoderRing::Decrypt(unsigned char* data, uint32_t dataLen,
-                           unsigned char** result, uint32_t* _retval)
+                   /*out*/ unsigned char** result, /*out*/ uint32_t* resultLen)
 {
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
@@ -107,7 +106,7 @@ SecretDecoderRing::Decrypt(unsigned char* data, uint32_t dataLen,
   nsCOMPtr<nsIInterfaceRequestor> ctx = new PipUIContext();
 
   *result = nullptr;
-  *_retval = 0;
+  *resultLen = 0;
 
   /* Find token with SDR key */
   UniquePK11SlotInfo slot(PK11_GetInternalKeySlot());
@@ -131,7 +130,7 @@ SecretDecoderRing::Decrypt(unsigned char* data, uint32_t dataLen,
   }
 
   *result = reply.data;
-  *_retval = reply.len;
+  *resultLen = reply.len;
 
   return NS_OK;
 }
@@ -280,10 +279,3 @@ SecretDecoderRing::LogoutAndTeardown()
 
   return rv;
 }
-
-NS_IMETHODIMP
-SecretDecoderRing::SetWindow(nsISupports*)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-

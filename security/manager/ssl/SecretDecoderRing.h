@@ -10,24 +10,17 @@
 #include "nsISecretDecoderRing.h"
 #include "nsNSSShutDown.h"
 
-/**
- *   Implements nsISecretDecoderRing.
- *   Should eventually implement an interface to set window
- *   context and other information. (nsISecretDecoderRingConfig)
- */
 #define NS_SECRETDECODERRING_CONTRACTID "@mozilla.org/security/sdr;1"
 
 #define NS_SECRETDECODERRING_CID \
   { 0x0c4f1ddc, 0x1dd2, 0x11b2, { 0x9d, 0x95, 0xf2, 0xfd, 0xf1, 0x13, 0x04, 0x4b } }
 
 class SecretDecoderRing : public nsISecretDecoderRing
-                        , public nsISecretDecoderRingConfig
                         , public nsNSSShutDownObject
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSISECRETDECODERRING
-  NS_DECL_NSISECRETDECODERRINGCONFIG
 
   SecretDecoderRing();
 
@@ -36,6 +29,12 @@ public:
 
 protected:
   virtual ~SecretDecoderRing();
+
+private:
+  nsresult Encrypt(unsigned char* data, uint32_t dataLen,
+                   /*out*/ unsigned char** result, /*out*/ uint32_t* resultLen);
+  nsresult Decrypt(unsigned char* data, uint32_t dataLen,
+                   /*out*/ unsigned char** result, /*out*/ uint32_t* resultLen);
 };
 
 #endif // SecretDecoderRing_h
