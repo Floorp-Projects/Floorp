@@ -7121,6 +7121,12 @@ JS::PrepareZoneForGC(Zone* zone)
 }
 
 JS_PUBLIC_API(void)
+JS::PrepareSystemZoneForGC(JSContext* cx)
+{
+    PrepareZoneForGC(cx->runtime()->gc.systemZone);
+}
+
+JS_PUBLIC_API(void)
 JS::PrepareForFullGC(JSContext* cx)
 {
     for (ZonesIter zone(cx, WithAtoms); !zone.done(); zone.next())
