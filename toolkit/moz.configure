@@ -369,11 +369,7 @@ def eme(value, fmp4):
 
 @depends('--enable-eme')
 def eme_modules(value):
-    # Theoretically, we could pass `value` directly when it is a
-    # PositiveOptionValue, but somehow, the JSON serialization in configure.py
-    # outputs inconsistent data in some cases when we do (a closing bracket
-    # without an opening one).
-    return list(value) if value else []
+    return value
 
 set_config('MOZ_EME', eme)
 set_define('MOZ_EME', eme)
