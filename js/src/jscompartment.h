@@ -415,6 +415,9 @@ struct JSCompartment
 
     js::WrapperMap               crossCompartmentWrappers;
 
+    using CCKeyVector = mozilla::Vector<js::CrossCompartmentKey, 0, js::SystemAllocPolicy>;
+    CCKeyVector                  nurseryCCKeys;
+
   public:
     /* Last time at which an animation was played for a global in this compartment. */
     int64_t                      lastAnimationTime;
