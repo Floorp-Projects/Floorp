@@ -962,6 +962,41 @@ gfxFontUtils::DetermineFontDataType(const uint8_t *aFontData, uint32_t aFontData
     return GFX_USERFONT_UNKNOWN;
 }
 
+static int
+DirEntryCmp(const void* aKey, const void* aItem)
+{
+    int32_t tag = *static_cast<const int32_t*>(aKey);
+    const TableDirEntry* entry = static_cast<const TableDirEntry*>(aItem);
+    return tag - int32_t(entry->tag);
+}
+
+/* static */
+TableDirEntry*
+gfxFontUtils::FindTableDirEntry(const void* aFontData, uint32_t aTableTag)
+{
+    const SFNTHeader* header =
+        reinterpret_cast<const SFNTHeader*>(aFontData);
+    const TableDirEntry* dir =
+        reinterpret_cast<const TableDirEntry*>(header + 1);
+    return static_cast<TableDirEntry*>
+        (bsearch(&aTableTag, dir, uint16_t(header->numTables),
+                 sizeof(TableDirEntry), DirEntryCmp));
+}
+
+/* static */
+hb_blob_t*
+gfxFontUtils::GetTableFromFontData(const void* aFontData, uint32_t aTableTag)
+{
+    const TableDirEntry* dir = FindTableDirEntry(aFontData, aTableTag);
+    if (dir) {
+        return hb_blob_create(reinterpret_cast<const char*>(aFontData) +
+                                  dir->offset, dir->length,
+                              HB_MEMORY_MODE_READONLY, nullptr, nullptr);
+
+    }
+    return nullptr;
+}
+
 nsresult
 gfxFontUtils::RenameFont(const nsAString& aName, const uint8_t *aFontData, 
                          uint32_t aFontDataLength, FallibleTArray<uint8_t> *aNewFont)
@@ -1045,21 +1080,14 @@ gfxFontUtils::RenameFont(const nsAString& aName, const uint8_t *aFontData,
     SFNTHeader *sfntHeader = reinterpret_cast<SFNTHeader*>(newFontData);
 
     // table directory entries begin immediately following SFNT header
-    TableDirEntry *dirEntry = 
-        reinterpret_cast<TableDirEntry*>(newFontData + sizeof(SFNTHeader));
+    TableDirEntry *dirEntry =
+        FindTableDirEntry(newFontData, TRUETYPE_TAG('n','a','m','e'));
+    // function only called if font validates, so this should always be true
+    MOZ_ASSERT(dirEntry, "attempt to rename font with no name table");
 
     uint32_t numTables = sfntHeader->numTables;
     
-    for (i = 0; i < numTables; i++, dirEntry++) {
-        if (dirEntry->tag == TRUETYPE_TAG('n','a','m','e')) {
-            break;
-        }
-    }
-    
-    // function only called if font validates, so this should always be true
-    NS_ASSERTION(i < numTables, "attempt to rename font with no name table");
-
-    // note: dirEntry now points to name record
+    // note: dirEntry now points to 'name' table record
     
     // recalculate name table checksum
     uint32_t checkSum = 0;
@@ -1116,25 +1144,11 @@ gfxFontUtils::GetFullNameFromSFNT(const uint8_t* aFontData, uint32_t aLength,
 {
     aFullName.AssignLiteral("(MISSING NAME)"); // should always get replaced
 
-    NS_ENSURE_TRUE(aLength >= sizeof(SFNTHeader), NS_ERROR_UNEXPECTED);
-    const SFNTHeader *sfntHeader =
-        reinterpret_cast<const SFNTHeader*>(aFontData);
     const TableDirEntry *dirEntry =
-        reinterpret_cast<const TableDirEntry*>(aFontData + sizeof(SFNTHeader));
-    uint32_t numTables = sfntHeader->numTables;
-    NS_ENSURE_TRUE(aLength >=
-                   sizeof(SFNTHeader) + numTables * sizeof(TableDirEntry),
-                   NS_ERROR_UNEXPECTED);
-    bool foundName = false;
-    for (uint32_t i = 0; i < numTables; i++, dirEntry++) {
-        if (dirEntry->tag == TRUETYPE_TAG('n','a','m','e')) {
-            foundName = true;
-            break;
-        }
-    }
+        FindTableDirEntry(aFontData, TRUETYPE_TAG('n','a','m','e'));
     
     // should never fail, as we're only called after font validation succeeded
-    NS_ENSURE_TRUE(foundName, NS_ERROR_NOT_AVAILABLE);
+    NS_ENSURE_TRUE(dirEntry, NS_ERROR_NOT_AVAILABLE);
 
     uint32_t len = dirEntry->length;
     NS_ENSURE_TRUE(aLength > len && aLength - len >= dirEntry->offset,
