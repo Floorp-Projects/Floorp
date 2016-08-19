@@ -664,7 +664,8 @@ nsScreenGonk::EnableMirroring()
     nsWidgetInitData initData;
     initData.mScreenId = mId;
     RefPtr<nsWindow> window = new nsWindow();
-    window->Create(nullptr, nullptr, mNaturalBounds, &initData);
+    nsresult rv = window->Create(nullptr, nullptr, mNaturalBounds, &initData);
+    NS_ENSURE_SUCCESS(rv, false);
     MOZ_ASSERT(static_cast<nsWindow*>(window)->GetScreen() == this);
 
     // Update mMirroringWidget on compositor thread
