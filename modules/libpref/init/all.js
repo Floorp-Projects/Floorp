@@ -4295,11 +4295,7 @@ pref("font.name.monospace.x-unicode", "dt-interface user-ucs2.cjk_japan-0");
 
 // Login Manager prefs
 pref("signon.rememberSignons",              true);
-#ifdef NIGHTLY_BUILD
 pref("signon.rememberSignons.visibilityToggle", true);
-#else
-pref("signon.rememberSignons.visibilityToggle", false);
-#endif
 pref("signon.autofillForms",                true);
 pref("signon.autologin.proxy",              false);
 pref("signon.formlessCapture.enabled",      true);
