@@ -6,6 +6,7 @@
 
 #include "DocAccessibleParent.h"
 #include "mozilla/a11y/Platform.h"
+#include "ProxyAccessible.h"
 #include "mozilla/dom/TabParent.h"
 #include "xpcAccessibleDocument.h"
 #include "xpcAccEvents.h"
@@ -102,24 +103,9 @@ DocAccessibleParent::AddSubtree(ProxyAccessible* aParent,
   }
 
   auto role = static_cast<a11y::role>(newChild.Role());
-
-#if defined(XP_WIN)
-  const IAccessibleHolder& proxyStream = newChild.COMProxy();
-  RefPtr<IAccessible> comPtr(proxyStream.Get());
-  if (!comPtr) {
-    NS_ERROR("Could not obtain remote IAccessible interface");
-    return 0;
-  }
-
-  ProxyAccessible* newProxy =
-    new ProxyAccessible(newChild.ID(), aParent, this, role,
-                        newChild.Interfaces(), comPtr);
-#else
   ProxyAccessible* newProxy =
     new ProxyAccessible(newChild.ID(), aParent, this, role,
                         newChild.Interfaces());
-#endif
-
   aParent->AddChildAt(aIdxInParent, newProxy);
   mAccessibles.PutEntry(newChild.ID())->mProxy = newProxy;
   ProxyCreated(newProxy, newChild.Interfaces());
@@ -466,32 +452,5 @@ DocAccessibleParent::GetXPCAccessible(ProxyAccessible* aProxy)
 
   return doc->GetXPCAccessible(aProxy);
 }
-
-#if defined(XP_WIN)
-/**
- * @param aCOMProxy COM Proxy to the document in the content process.
- * @param aParentCOMProxy COM Proxy to the OuterDocAccessible that is
- *        the parent of the document. The content process will use this
- *        proxy when traversing up across the content/chrome boundary.
- */
-bool
-DocAccessibleParent::RecvCOMProxy(const IAccessibleHolder& aCOMProxy,
-                                  IAccessibleHolder* aParentCOMProxy)
-{
-  RefPtr<IAccessible> ptr(aCOMProxy.Get());
-  SetCOMInterface(ptr);
-
-  Accessible* outerDoc = OuterDocOfRemoteBrowser();
-  MOZ_ASSERT(outerDoc);
-  IAccessible* rawNative = nullptr;
-  if (outerDoc) {
-    outerDoc->GetNativeInterface((void**) &rawNative);
-  }
-
-  aParentCOMProxy->Set(IAccessibleHolder::COMPtrType(rawNative));
-  return true;
-}
-#endif // defined(XP_WIN)
-
 } // a11y
 } // mozilla
