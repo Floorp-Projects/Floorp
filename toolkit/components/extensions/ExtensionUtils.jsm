@@ -1480,18 +1480,18 @@ class ChildAPIManager {
     return this.context.cloneScope;
   }
 
-  callFunction(path, name, args) {
+  callFunction(pathObj, path, name, args) {
     throw new Error("Not implemented");
   }
 
-  callFunctionNoReturn(path, name, args) {
+  callFunctionNoReturn(pathObj, path, name, args) {
     this.messageManager.sendAsyncMessage("API:Call", {
       childId: this.id,
       path, name, args,
     });
   }
 
-  callAsyncFunction(path, name, args, callback) {
+  callAsyncFunction(pathObj, path, name, args, callback) {
     let callId = nextId++;
     let deferred = PromiseUtils.defer();
     this.callPromises.set(callId, deferred);
@@ -1513,15 +1513,15 @@ class ChildAPIManager {
     return this.context.extension.permissions.has(permission);
   }
 
-  getProperty(path, name) {
+  getProperty(pathObj, path, name) {
     throw new Error("Not implemented");
   }
 
-  setProperty(path, name, value) {
+  setProperty(pathObj, path, name, value) {
     throw new Error("Not implemented");
   }
 
-  addListener(path, name, listener, args) {
+  addListener(pathObj, path, name, listener, args) {
     let ref = path.concat(name).join(".");
     let set;
     if (this.listeners.has(ref)) {
@@ -1543,7 +1543,7 @@ class ChildAPIManager {
     }
   }
 
-  removeListener(path, name, listener) {
+  removeListener(pathObj, path, name, listener) {
     let ref = path.concat(name).join(".");
     let set = this.listeners.get(ref) || new Set();
     set.remove(listener);
@@ -1556,7 +1556,7 @@ class ChildAPIManager {
     }
   }
 
-  hasListener(path, name, listener) {
+  hasListener(pathObj, path, name, listener) {
     let ref = path.concat(name).join(".");
     let set = this.listeners.get(ref) || new Set();
     return set.has(listener);
