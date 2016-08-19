@@ -1389,6 +1389,8 @@ void HTMLMediaElement::NotifyMediaStreamTracksAvailable(DOMMediaStream* aStream)
 
   LOG(LogLevel::Debug, ("MediaElement %p MediaStream tracks available", this));
 
+  mSrcStreamTracksAvailable = true;
+
   bool videoHasChanged = IsVideo() && HasVideo() != !VideoTracks()->IsEmpty();
 
   if (videoHasChanged) {
@@ -2847,6 +2849,7 @@ NS_IMPL_ISUPPORTS(HTMLMediaElement::ShutdownObserver, nsIObserver)
 HTMLMediaElement::HTMLMediaElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo),
     mWatchManager(this, AbstractThread::MainThread()),
+    mSrcStreamTracksAvailable(false),
     mSrcStreamPausedCurrentTime(-1),
     mShutdownObserver(new ShutdownObserver),
     mCurrentLoadID(0),
@@ -4176,6 +4179,7 @@ void HTMLMediaElement::EndSrcMediaStreamPlayback()
 
   mSrcStream->UnregisterTrackListener(mMediaStreamTrackListener);
   mMediaStreamTrackListener = nullptr;
+  mSrcStreamTracksAvailable = false;
 
   mSrcStream->RemovePrincipalChangeObserver(this);
   mSrcStreamVideoPrincipal = nullptr;
@@ -4250,6 +4254,8 @@ HTMLMediaElement::NotifyMediaStreamTrackAdded(const RefPtr<MediaStreamTrack>& aT
       videoTrack->SetEnabledInternal(true, MediaTrack::FIRE_NO_EVENTS);
     }
   }
+
+  mWatchManager.ManualNotify(&HTMLMediaElement::UpdateReadyStateInternal);
 }
 
 void
@@ -4684,9 +4690,14 @@ HTMLMediaElement::UpdateReadyStateInternal()
   }
 
   if (mSrcStream && mReadyState < nsIDOMHTMLMediaElement::HAVE_METADATA) {
+    if (!mSrcStreamTracksAvailable) {
+      LOG(LogLevel::Debug, ("MediaElement %p UpdateReadyStateInternal() "
+                            "MediaStreamTracks not available yet", this));
+      return;
+    }
+
     bool hasAudioTracks = !AudioTracks()->IsEmpty();
     bool hasVideoTracks = !VideoTracks()->IsEmpty();
-
     if (!hasAudioTracks && !hasVideoTracks) {
       LOG(LogLevel::Debug, ("MediaElement %p UpdateReadyStateInternal() "
                             "Stream with no tracks", this));

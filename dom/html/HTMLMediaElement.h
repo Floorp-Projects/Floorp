@@ -1287,6 +1287,9 @@ protected:
   // At most one of mDecoder and mSrcStream can be non-null.
   RefPtr<DOMMediaStream> mSrcStream;
 
+  // True once mSrcStream's initial set of tracks are known.
+  bool mSrcStreamTracksAvailable;
+
   // If non-negative, the time we should return for currentTime while playing
   // mSrcStream.
   double mSrcStreamPausedCurrentTime;
