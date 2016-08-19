@@ -33,8 +33,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "MatchGlobs",
                                   "resource://gre/modules/MatchPattern.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "MessageChannel",
                                   "resource://gre/modules/MessageChannel.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
-                                  "resource://gre/modules/PrivateBrowsingUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PromiseUtils",
                                   "resource://gre/modules/PromiseUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Schemas",
@@ -48,7 +46,6 @@ var {
   BaseContext,
   LocaleData,
   Messenger,
-  injectAPI,
   flushJarCache,
   getInnerWindowID,
   promiseDocumentReady,
@@ -88,25 +85,6 @@ var apiManager = new class extends SchemaAPIManager {
       super.registerSchemaAPI(namespace, envType, getAPI);
     }
   }
-};
-
-// This is the fairly simple API that we inject into content
-// scripts.
-var api = context => {
-  return {
-
-    extension: {
-      getURL: function(url) {
-        return context.extension.baseURI.resolve(url);
-      },
-
-      get lastError() {
-        return context.lastError;
-      },
-
-      inIncognitoContext: PrivateBrowsingUtils.isContentWindowPrivate(context.contentWindow),
-    },
-  };
 };
 
 // Represents a content script.
@@ -366,18 +344,14 @@ class ExtensionContext extends BaseContext {
     // reason. However, we waive here anyway in case that changes.
     Cu.waiveXrays(this.sandbox).chrome = this.chromeObj;
 
-    let incognito = PrivateBrowsingUtils.isContentWindowPrivate(this.contentWindow);
     let localApis = {};
     apiManager.generateAPIs(this, localApis);
     this.childManager = new ChildAPIManager(this, mm, localApis, {
       type: "content_script",
       url,
-      incognito,
     });
 
     Schemas.inject(this.chromeObj, this.childManager);
-
-    injectAPI(api(this), this.chromeObj);
 
     // This is an iframe with content script API enabled. (See Bug 1214658 for rationale)
     if (isExtensionPage) {
