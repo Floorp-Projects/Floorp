@@ -7,8 +7,6 @@
 #include <dlfcn.h>
 #include <math.h>
 #include <GLES2/gl2.h>
-#include <android/native_window.h>
-#include <android/native_window_jni.h>
 
 #include "mozilla/layers/CompositorBridgeChild.h"
 #include "mozilla/layers/CompositorBridgeParent.h"
@@ -1032,28 +1030,6 @@ AndroidBridge::GetCurrentNetworkInformation(hal::NetworkInformation* aNetworkInf
     aNetworkInfo->dhcpGateway() = info[2];
 
     env->ReleaseDoubleArrayElements(arr.Get(), info, 0);
-}
-
-void*
-AndroidBridge::AcquireNativeWindow(JNIEnv* aEnv, jobject aSurface)
-{
-    return ANativeWindow_fromSurface(aEnv, aSurface);
-}
-
-void
-AndroidBridge::ReleaseNativeWindow(void *window)
-{
-    return ANativeWindow_release((ANativeWindow*)window);
-}
-
-IntSize
-AndroidBridge::GetNativeWindowSize(void* window)
-{
-    if (!window) {
-      return IntSize(0, 0);
-    }
-
-    return IntSize(ANativeWindow_getWidth((ANativeWindow*)window), ANativeWindow_getHeight((ANativeWindow*)window));
 }
 
 jobject
