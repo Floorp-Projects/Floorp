@@ -67,12 +67,6 @@ static StaticRefPtr<SurfaceCacheImpl> sInstance;
  */
 typedef size_t Cost;
 
-// Placeholders do not have surfaces, but need to be given a trivial cost for
-// our invariants to hold.
-// XXX(seth): This is only true of old-style placeholders inserted via
-// InsertPlaceholder().
-static const Cost sPlaceholderCost = 1;
-
 static Cost
 ComputeCost(const IntSize& aSize, uint32_t aBytesPerPixel)
 {
@@ -141,8 +135,7 @@ public:
     , mImageKey(aImageKey)
     , mSurfaceKey(aSurfaceKey)
   {
-    MOZ_ASSERT(aProvider || mCost == sPlaceholderCost,
-               "Old-style placeholders should have trivial cost");
+    MOZ_ASSERT(aProvider);
     MOZ_ASSERT(mImageKey, "Must have a valid image key");
   }
 
@@ -367,7 +360,7 @@ public:
       }
     } else {
       if (exactMatch) {
-        // We found an "exact match", it must have been a placeholder.
+        // We found an "exact match"; it must have been a placeholder.
         MOZ_ASSERT(exactMatch->IsPlaceholder());
         matchType = MatchType::PENDING;
       } else {
@@ -1062,19 +1055,6 @@ SurfaceCache::Insert(NotNull<ISurfaceProvider*> aProvider,
   MutexAutoLock lock(sInstance->GetMutex());
   Cost cost = aProvider->LogicalSizeInBytes();
   return sInstance->Insert(aProvider.get(), cost, aImageKey, aSurfaceKey,
-                           /* aSetAvailable = */ false);
-}
-
-/* static */ InsertOutcome
-SurfaceCache::InsertPlaceholder(const ImageKey    aImageKey,
-                                const SurfaceKey& aSurfaceKey)
-{
-  if (!sInstance) {
-    return InsertOutcome::FAILURE;
-  }
-
-  MutexAutoLock lock(sInstance->GetMutex());
-  return sInstance->Insert(nullptr, sPlaceholderCost, aImageKey, aSurfaceKey,
                            /* aSetAvailable = */ false);
 }
 
