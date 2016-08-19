@@ -463,7 +463,7 @@ class GeckoMigration(MercurialScript, BalrogMixin, VirtualenvMixin,
         self.touch_clobber_file(dirs['abs_to_dir'])
 
     def pull(self):
-        """ Pull tools first, then use hgtool for the gecko repos
+        """ Pull tools first, then clone the gecko repos
             """
         repos = [{
             "repo": self.config["tools_repo_url"],

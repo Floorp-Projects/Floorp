@@ -361,6 +361,7 @@ class SpidermonkeyBuild(MockMixin,
 
         rev = self.vcs_checkout(
             vcs='hg',
+            branch="default",
             repo=self.config['tools_repo'],
             clean=False,
             dest=dirs['abs_tools_dir'],
