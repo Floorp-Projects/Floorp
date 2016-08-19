@@ -989,6 +989,7 @@ setReq.onerror = function() {
                 filters.append(tags(self.test_tags))
             json_path = update_mozinfo(filepath)
             self.logger.info("mozinfo updated with the following: {}".format(None))
+            self.logger.info("mozinfo is: {}".format(mozinfo.info))
             manifest_tests = manifest.active_tests(exists=False,
                                                    disabled=True,
                                                    filters=filters,
