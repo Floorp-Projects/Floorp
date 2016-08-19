@@ -35,12 +35,6 @@ LIRGeneratorARM::useByteOpRegister(MDefinition* mir)
 }
 
 LAllocation
-LIRGeneratorARM::useByteOpRegisterAtStart(MDefinition* mir)
-{
-    return useRegisterAtStart(mir);
-}
-
-LAllocation
 LIRGeneratorARM::useByteOpRegisterOrNonDoubleConstant(MDefinition* mir)
 {
     return useRegisterOrNonDoubleConstant(mir);
