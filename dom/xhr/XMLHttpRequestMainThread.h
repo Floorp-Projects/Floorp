@@ -236,7 +236,10 @@ public:
   virtual uint16_t ReadyState() const override;
 
   // request
-  nsresult InitChannel();
+  nsresult CreateChannel();
+  nsresult InitiateFetch(nsIInputStream* aUploadStream,
+                         int64_t aUploadLength,
+                         nsACString& aUploadContentType);
 
   virtual void
   Open(const nsACString& aMethod, const nsAString& aUrl,
