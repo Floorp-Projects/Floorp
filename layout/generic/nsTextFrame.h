@@ -597,7 +597,7 @@ public:
 protected:
   virtual ~nsTextFrame();
 
-  gfxTextRun* mTextRun;
+  RefPtr<gfxTextRun> mTextRun;
   nsIFrame*   mNextContinuation;
   // The key invariant here is that mContentOffset never decreases along
   // a next-continuation chain. And of course mContentOffset is always <= the
