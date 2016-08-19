@@ -92,6 +92,9 @@ private:
   DECL_MEDIA_PREF("media.resampling.rate",                    AudioSinkResampleRate, uint32_t, 48000);
   DECL_MEDIA_PREF("media.forcestereo.enabled",                AudioSinkForceStereo, bool, true);
 
+  // VideoSink
+  DECL_MEDIA_PREF("media.ruin-av-sync.enabled",               RuinAvSync, bool, false);
+
   // PlatformDecoderModule
   DECL_MEDIA_PREF("media.apple.forcevda",                     AppleForceVDA, bool, false);
   DECL_MEDIA_PREF("media.gmp.insecure.allow",                 GMPAllowInsecure, bool, false);
