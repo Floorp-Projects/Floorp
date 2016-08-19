@@ -14,14 +14,13 @@ config = {
 
     # repositories
     "mozilla_dir": "try",
-    "hgtool_base_bundle_urls": ["https://archive.mozilla.org/pub/firefox/bundles"],
     "repos": [{
         "vcs": "hg",
         "repo": "https://hg.mozilla.org/build/tools",
         "branch": "default",
         "dest": "tools",
     }, {
-        "vcs": "hgtool",
+        "vcs": "hg",
         "repo": "https://hg.mozilla.org/try",
         "revision": "%(revision)s",
         "dest": "try",
