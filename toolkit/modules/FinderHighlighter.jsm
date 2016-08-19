@@ -18,6 +18,7 @@ XPCOMUtils.defineLazyGetter(this, "kDebug", () => {
   return Services.prefs.getPrefType(kDebugPref) && Services.prefs.getBoolPref(kDebugPref);
 });
 
+const kContentChangeThresholdPx = 5;
 const kModalHighlightRepaintFreqMs = 10;
 const kHighlightAllPref = "findbar.highlightAll";
 const kModalHighlightPref = "findbar.modalHighlight";
@@ -153,6 +154,7 @@ function FinderHighlighter(finder) {
   this._currentFoundRange = null;
   this._modal = Services.prefs.getBoolPref(kModalHighlightPref);
   this._highlightAll = Services.prefs.getBoolPref(kHighlightAllPref);
+  this._lastIteratorParams = null;
   this.finder = finder;
   this.visible = false;
 }
@@ -207,56 +209,72 @@ FinderHighlighter.prototype = {
     let window = this.finder._getWindow();
     let controller = this.finder._getSelectionController(window);
     let doc = window.document;
-    let found = false;
-
-    this.clear();
+    this._found = false;
 
     if (!controller || !doc || !doc.documentElement) {
       // Without the selection controller,
       // we are unable to (un)highlight any matches
-      return found;
+      return this._found;
     }
 
     if (highlight) {
-      yield this.iterator.start({
+      let params = {
         caseSensitive: this.finder._fastFind.caseSensitive,
         entireWord: this.finder._fastFind.entireWord,
         linksOnly, word,
         finder: this.finder,
-        onRange: range => {
-          this.highlightRange(range, controller, window);
-          found = true;
-        },
+        listener: this,
         useCache: true
-      });
-      if (found)
-        this.finder._outlineLink(true);
+      };
+      if (this.iterator._areParamsEqual(params, this._lastIteratorParams))
+        return this._found;
+      if (params) {
+        yield this.iterator.start(params);
+        if (this._found)
+          this.finder._outlineLink(true);
+      }
     } else {
       this.hide(window);
-      this.clear();
-      this.iterator.reset();
 
       // Removing the highlighting always succeeds, so return true.
-      found = true;
+      this._found = true;
     }
 
-    return found;
+    return this._found;
   }),
+
+  // FinderIterator listener implementation
+
+  onIteratorRangeFound(range) {
+    this.highlightRange(range);
+    this._found = true;
+  },
+
+  onIteratorReset() {
+    this.clear();
+  },
+
+  onIteratorRestart() {},
+
+  onIteratorStart(params) {
+    // Save a clean params set for use later in the `update()` method.
+    this._lastIteratorParams = params;
+    this.clear();
+    if (!this._modal)
+      this.hide(this.finder._getWindow(), this.finder._fastFind.getFoundRange());
+  },
 
   /**
    * Add a range to the find selection, i.e. highlight it, and if it's inside an
    * editable node, track it.
    *
-   * @param {nsIDOMRange}            range      Range object to be highlighted
-   * @param {nsISelectionController} controller Selection controller of the
-   *                                            document that the range belongs
-   *                                            to
-   * @param {nsIDOMWindow}           window     Window object, whose DOM tree
-   *                                            is being traversed
+   * @param {nsIDOMRange} range Range object to be highlighted
    */
-  highlightRange(range, controller, window) {
+  highlightRange(range) {
     let node = range.startContainer;
     let editableNode = this._getEditableNode(node);
+    let window = node.ownerDocument.defaultView;
+    let controller = this.finder._getSelectionController(window);
     if (editableNode) {
       controller = editableNode.editor.selectionController;
     }
@@ -325,8 +343,11 @@ FinderHighlighter.prototype = {
       }
     }
 
-    if (!this._modal || !this.visible)
-      return;
+    if (this._modalRepaintScheduler) {
+      window.clearTimeout(this._modalRepaintScheduler);
+      this._modalRepaintScheduler = null;
+    }
+    this._lastWindowDimensions = null;
 
     if (this._modalHighlightOutline)
       this._modalHighlightOutline.setAttributeForElement(kModalOutlineId, "hidden", "true");
@@ -364,15 +385,12 @@ FinderHighlighter.prototype = {
     let foundRange = this.finder._fastFind.getFoundRange();
     if (!this._modal) {
       if (this._highlightAll) {
+        this._currentFoundRange = foundRange;
         let params = this.iterator.params;
-        if (this._lastIteratorParams &&
-            this.iterator._areParamsEqual(params, this._lastIteratorParams)) {
+        if (this.iterator._areParamsEqual(params, this._lastIteratorParams))
           return;
-        }
-        this.hide(window, foundRange);
-        if (params.word)
+        if (params)
           this.highlight(true, params.word, params.linksOnly);
-        this._lastIteratorParams = params;
       }
       return;
     }
@@ -436,8 +454,7 @@ FinderHighlighter.prototype = {
    * keep to build the mask for.
    */
   clear() {
-    if (!this._modal)
-      return;
+    this._currentFoundRange = null;
 
     // Reset the Map, because no range references a node anymore.
     if (this._modalHighlightRectsMap)
@@ -451,6 +468,8 @@ FinderHighlighter.prototype = {
    * everything when the user starts to find in page again.
    */
   onLocationChange() {
+    this.clear();
+
     if (!this._modalHighlightOutline)
       return;
 
@@ -740,13 +759,14 @@ FinderHighlighter.prototype = {
 
     // Make sure the dimmed mask node takes the full width and height that's available.
     let {width, height} = this._getWindowDimensions(window);
+    this._lastWindowDimensions = { width, height };
     maskNode.setAttribute("id", kMaskId);
     maskNode.setAttribute("class", kMaskId + (kDebug ? ` ${kModalIdPrefix}-findbar-debug` : ""));
     maskNode.setAttribute("style", `width: ${width}px; height: ${height}px;`);
     if (this._brightText)
       maskNode.setAttribute("brighttext", "true");
 
-    if (paintContent) {
+    if (paintContent || this._modalHighlightAllMask) {
       // Create a DOM node for each rectangle representing the ranges we found.
       let maskContent = [];
       const kRectClassName = kModalIdPrefix + "-findbar-modalHighlight-rect";
@@ -794,12 +814,39 @@ FinderHighlighter.prototype = {
    * `kModalHighlightRepaintFreqMs` milliseconds.
    *
    * @param {nsIDOMWindow} window
+   * @param {Boolean}      contentChanged Whether the documents' content changed
+   *                                      in the meantime. This happens when the
+   *                                      DOM is updated whilst the page is loaded.
    */
-  _scheduleRepaintOfMask(window) {
-    if (this._modalRepaintScheduler)
+  _scheduleRepaintOfMask(window, contentChanged = false) {
+    if (this._modalRepaintScheduler) {
       window.clearTimeout(this._modalRepaintScheduler);
-    this._modalRepaintScheduler = window.setTimeout(
-      this._repaintHighlightAllMask.bind(this, window), kModalHighlightRepaintFreqMs);
+      this._modalRepaintScheduler = null;
+    }
+
+    // When we request to repaint unconditionally, we mean to call
+    // `_repaintHighlightAllMask()` right after the timeout.
+    if (!this._unconditionalRepaintRequested)
+      this._unconditionalRepaintRequested = !contentChanged;
+
+    this._modalRepaintScheduler = window.setTimeout(() => {
+      if (this._unconditionalRepaintRequested) {
+        this._unconditionalRepaintRequested = false;
+        this._repaintHighlightAllMask(window);
+        return;
+      }
+
+      let { width, height } = this._getWindowDimensions(window);
+      if (!this._modalHighlightRectsMap ||
+          (Math.abs(this._lastWindowDimensions.width - width) < kContentChangeThresholdPx &&
+           Math.abs(this._lastWindowDimensions.height - height) < kContentChangeThresholdPx)) {
+        return;
+      }
+
+      this.iterator.restart(this.finder);
+      this._lastWindowDimensions = { width, height };
+      this._repaintHighlightAllMask(window);
+    }, kModalHighlightRepaintFreqMs);
   },
 
   /**
@@ -838,12 +885,12 @@ FinderHighlighter.prototype = {
       return;
 
     this._highlightListeners = [
-      this._scheduleRepaintOfMask.bind(this, window),
+      this._scheduleRepaintOfMask.bind(this, window, true),
       this.hide.bind(this, window, null)
     ];
-    window.addEventListener("DOMContentLoaded", this._highlightListeners[0]);
+    let target = this.iterator._getDocShell(window).chromeEventHandler;
+    target.addEventListener("MozAfterPaint", this._highlightListeners[0]);
     window.addEventListener("click", this._highlightListeners[1]);
-    window.addEventListener("resize", this._highlightListeners[1]);
   },
 
   /**
@@ -855,9 +902,9 @@ FinderHighlighter.prototype = {
     if (!this._highlightListeners)
       return;
 
-    window.removeEventListener("DOMContentLoaded", this._highlightListeners[0]);
+    let target = this.iterator._getDocShell(window).chromeEventHandler;
+    target.removeEventListener("MozAfterPaint", this._highlightListeners[0]);
     window.removeEventListener("click", this._highlightListeners[1]);
-    window.removeEventListener("resize", this._highlightListeners[1]);
 
     this._highlightListeners = null;
   },
