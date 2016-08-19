@@ -76,7 +76,7 @@ register size_t length;
     if (length == 0 || dst == src) /* nothing to do */
         goto done;
 
-    /*
+/*
      * Macros: loop-t-times; and loop-t-times, t>0
      */
 #define TLOOP(s) \

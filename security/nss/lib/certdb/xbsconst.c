@@ -37,8 +37,8 @@ static const SEC_ASN1Template CERTBasicConstraintsTemplate[] = {
 static unsigned char hexTrue = 0xff;
 static unsigned char hexFalse = 0x00;
 
-#define GEN_BREAK(status)                                                      \
-    rv = status;                                                               \
+#define GEN_BREAK(status) \
+    rv = status;          \
     break;
 
 SECStatus

@@ -27,12 +27,17 @@ struct ScopedDelete {
   void operator()(SECKEYPrivateKey* key) { SECKEY_DestroyPrivateKey(key); }
 };
 
-template<class T>
+template <class T>
 struct ScopedMaybeDelete {
-  void operator()(T* ptr) { if (ptr) { ScopedDelete del; del(ptr); } }
+  void operator()(T* ptr) {
+    if (ptr) {
+      ScopedDelete del;
+      del(ptr);
+    }
+  }
 };
 
-#define SCOPED(x) typedef std::unique_ptr<x, ScopedMaybeDelete<x> > Scoped ## x
+#define SCOPED(x) typedef std::unique_ptr<x, ScopedMaybeDelete<x> > Scoped##x
 
 SCOPED(CERTCertificate);
 SCOPED(CERTSubjectPublicKeyInfo);

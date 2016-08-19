@@ -1,0 +1,20 @@
+#
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+CORE_DEPTH = ../..
+DEPTH      = ../..
+MODULE = nss
+
+CPPSRCS = \
+      config.cc \
+      nsskeys.cc \
+      nss_bogo_shim.cc \
+      $(NULL)
+
+REQUIRES = nspr nss libdbm
+
+PROGRAM = nss_bogo_shim
+#EXTRA_LIBS = $(DIST)/lib/$(LIB_PREFIX)softokn.$(LIB_SUFFIX)
+
+USE_STATIC_LIBS = 1

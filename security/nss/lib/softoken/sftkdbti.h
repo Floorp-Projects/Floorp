@@ -9,17 +9,17 @@
  * private defines
  */
 struct SFTKDBHandleStr {
-    SDB   *db;
+    SDB *db;
     PRInt32 ref;
-    CK_OBJECT_HANDLE  type;
+    CK_OBJECT_HANDLE type;
     SECItem passwordKey;
     SECItem *newKey;
     SECItem *oldKey;
     SECItem *updatePasswordKey;
     PZLock *passwordLock;
     SFTKDBHandle *peerDB;
-    SDB   *update;
-    char  *updateID;
+    SDB *update;
+    char *updateID;
     PRBool updateDBIsInit;
 };
 
@@ -34,27 +34,25 @@ struct SFTKDBHandleStr {
 #define SFTK_MAX_IDS 10
 
 #define SFTK_GET_SDB(handle) \
-	((handle)->update ? (handle)->update : (handle)->db)
+    ((handle)->update ? (handle)->update : (handle)->db)
 
 SECStatus sftkdb_DecryptAttribute(SECItem *passKey, SECItem *cipherText,
-			SECItem **plainText);
+                                  SECItem **plainText);
 SECStatus sftkdb_EncryptAttribute(PLArenaPool *arena, SECItem *passKey,
-			SECItem *plainText, SECItem **cipherText);
+                                  SECItem *plainText, SECItem **cipherText);
 SECStatus sftkdb_SignAttribute(PLArenaPool *arena, SECItem *passKey,
-			CK_OBJECT_HANDLE objectID,
-			CK_ATTRIBUTE_TYPE attrType,
-			SECItem *plainText, SECItem **sigText);
+                               CK_OBJECT_HANDLE objectID,
+                               CK_ATTRIBUTE_TYPE attrType,
+                               SECItem *plainText, SECItem **sigText);
 SECStatus sftkdb_VerifyAttribute(SECItem *passKey,
-			CK_OBJECT_HANDLE objectID,
-			CK_ATTRIBUTE_TYPE attrType,
-			SECItem *plainText, SECItem *sigText);
+                                 CK_OBJECT_HANDLE objectID,
+                                 CK_ATTRIBUTE_TYPE attrType,
+                                 SECItem *plainText, SECItem *sigText);
 
 void sftk_ULong2SDBULong(unsigned char *data, CK_ULONG value);
 CK_RV sftkdb_Update(SFTKDBHandle *handle, SECItem *key);
-CK_RV sftkdb_PutAttributeSignature(SFTKDBHandle *handle, 
-		SDB *keyTarget, CK_OBJECT_HANDLE objectID, 
-		CK_ATTRIBUTE_TYPE type, SECItem *signText);
-
-
+CK_RV sftkdb_PutAttributeSignature(SFTKDBHandle *handle,
+                                   SDB *keyTarget, CK_OBJECT_HANDLE objectID,
+                                   CK_ATTRIBUTE_TYPE type, SECItem *signText);
 
 #endif

@@ -14,8 +14,8 @@
 #define CERTDB_NS_TRUSTED_CA (1u << 5)
 #define CERTDB_USER (1u << 6)
 #define CERTDB_TRUSTED_CLIENT_CA (1u << 7) /* trusted for issuing client certs */
-#define CERTDB_INVISIBLE_CA (1u << 8) /* don't show in UI */
-#define CERTDB_GOVT_APPROVED_CA (1u << 9) /* can do strong crypto in export ver */
+#define CERTDB_INVISIBLE_CA (1u << 8)      /* don't show in UI */
+#define CERTDB_GOVT_APPROVED_CA (1u << 9)  /* can do strong crypto in export ver */
 
 /* old usage, to keep old programs compiling */
 /* On Windows, Mac, and Linux (and other gcc platforms), we can give compile
