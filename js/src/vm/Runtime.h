@@ -633,9 +633,7 @@ struct JSRuntime : public JS::shadow::Runtime,
         return handlingJitInterrupt_;
     }
 
-    using InterruptCallbackVector = js::Vector<JSInterruptCallback, 2, js::SystemAllocPolicy>;
-    InterruptCallbackVector interruptCallbacks;
-    bool interruptCallbackDisabled;
+    JSInterruptCallback interruptCallback;
 
     JSGetIncumbentGlobalCallback getIncumbentGlobalCallback;
     JSEnqueuePromiseJobCallback enqueuePromiseJobCallback;
