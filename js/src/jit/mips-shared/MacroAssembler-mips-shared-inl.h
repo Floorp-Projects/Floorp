@@ -26,18 +26,6 @@ MacroAssembler::moveGPRToFloat32(Register src, FloatRegister dest)
     moveToFloat32(src, dest);
 }
 
-void
-MacroAssembler::move8SignExtend(Register src, Register dest)
-{
-    as_seb(dest, src);
-}
-
-void
-MacroAssembler::move16SignExtend(Register src, Register dest)
-{
-    as_seh(dest, src);
-}
-
 // ===============================================================
 // Logical instructions
 
