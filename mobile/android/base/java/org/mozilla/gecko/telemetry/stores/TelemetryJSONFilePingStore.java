@@ -126,17 +126,22 @@ public class TelemetryJSONFilePingStore extends TelemetryPingStore {
             return;
         }
 
-        final SortedSet<File> sortedFiles = new TreeSet<>(fileLastModifiedComparator);
-        sortedFiles.addAll(Arrays.asList(files));
+        // It's possible that multiple files will have the same timestamp: in this case they are treated
+        // as equal by the fileLastModifiedComparator. We therefore have to use a sorted list (as
+        // opposed to a set, or map).
+        final ArrayList<File> sortedFiles = new ArrayList<>(Arrays.asList(files));
+        Collections.sort(sortedFiles, fileLastModifiedComparator);
         deleteSmallestFiles(sortedFiles, files.length - MAX_PING_COUNT);
     }
 
-    private void deleteSmallestFiles(final SortedSet<File> files, final int numFilesToRemove) {
+    private void deleteSmallestFiles(final ArrayList<File> files, final int numFilesToRemove) {
         final Iterator<File> it = files.iterator();
         int i = 0;
+
         while (i < numFilesToRemove) {
             i += 1;
-            // Sorted set so we're iterating over ascending files.
+
+            // Sorted list so we're iterating over ascending files.
             final File file = it.next(); // file count > files to remove so this should not throw.
             file.delete();
         }
