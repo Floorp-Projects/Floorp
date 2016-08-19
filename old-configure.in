@@ -1498,11 +1498,10 @@ dnl Xt is dependent upon SM as of X11R6
 dnl ========================================================
 if test -n "$MOZ_X11"; then
     AC_DEFINE_UNQUOTED(FUNCPROTO,15)
-    XLIBS="-lX11-xcb -lX11 -lxcb-shm -lxcb $XLIBS"
     _SAVE_LDFLAGS="$LDFLAGS"
     _SAVE_LIBS="$LIBS"
     LDFLAGS="$XLDFLAGS $LDFLAGS"
-    AC_CHECK_LIB(X11, XDrawLines, [X11_LIBS="-lX11"],
+    AC_CHECK_LIB(X11, XDrawLines, [XLIBS="-lX11 $XLIBS"],
         [MISSING_X="$MISSING_X -lX11"], $XLIBS)
     AC_CHECK_LIB(Xext, XextAddDisplay, [XEXT_LIBS="-lXext"],
         [MISSING_X="$MISSING_X -lXext"], $XLIBS)
@@ -1518,9 +1517,12 @@ if test -n "$MOZ_X11"; then
     dnl ========================================================
     dnl = Check for xcb
     dnl ========================================================
-    AC_CHECK_LIB(X11-xcb, XGetXCBConnection,, [MISSING_X="$MISSING_X -lX11-xcb"], $XLIBS)
-    AC_CHECK_LIB(xcb-shm, xcb_shm_query_version,, [MISSING_X="$MISSING_X -lxcb-shm"], $XLIBS)
-    AC_CHECK_LIB(xcb, xcb_connect,, [MISSING_X="$MISSING_X -lxcb"], $XLIBS)
+    AC_CHECK_LIB(xcb, xcb_connect, [XLIBS="-lxcb $XLIBS"],
+        [MISSING_X="$MISSING_X -lxcb"], $XLIBS)
+    AC_CHECK_LIB(xcb-shm, xcb_shm_query_version, [XLIBS="-lxcb-shm $XLIBS"],
+        [MISSING_X="$MISSING_X -lxcb-shm"], $XLIBS)
+    AC_CHECK_LIB(X11-xcb, XGetXCBConnection, [XLIBS="-lX11-xcb $XLIBS"],
+        [MISSING_X="$MISSING_X -lX11-xcb"], $XLIBS)
 
     dnl ========================================================
     dnl = Check for Xss

@@ -44,12 +44,12 @@ public:
   virtual const char* Name() const override { return "NoActionState"; }
 
   virtual nsEventStatus OnPress(AccessibleCaretEventHub* aContext,
-                                const nsPoint& aPoint,
-                                int32_t aTouchId) override
+                                const nsPoint& aPoint, int32_t aTouchId,
+                                EventClassID aEventClass) override
   {
     nsEventStatus rv = nsEventStatus_eIgnore;
 
-    if (NS_SUCCEEDED(aContext->mManager->PressCaret(aPoint))) {
+    if (NS_SUCCEEDED(aContext->mManager->PressCaret(aPoint, aEventClass))) {
       aContext->SetState(aContext->PressCaretState());
       rv = nsEventStatus_eConsumeNoDefault;
     } else {
@@ -269,13 +269,14 @@ public:
   virtual const char* Name() const override { return "PostScrollState"; }
 
   virtual nsEventStatus OnPress(AccessibleCaretEventHub* aContext,
-                                const nsPoint& aPoint,
-                                int32_t aTouchId) override
+                                const nsPoint& aPoint, int32_t aTouchId,
+                                EventClassID aEventClass) override
   {
     aContext->mManager->OnScrollEnd();
     aContext->SetState(aContext->NoActionState());
 
-    return aContext->GetState()->OnPress(aContext, aPoint, aTouchId);
+    return aContext->GetState()->OnPress(aContext, aPoint, aTouchId,
+                                         aEventClass);
   }
 
   virtual void OnScrollStart(AccessibleCaretEventHub* aContext) override
@@ -515,7 +516,7 @@ AccessibleCaretEventHub::HandleMouseEvent(WidgetMouseEvent* aEvent)
   switch (aEvent->mMessage) {
     case eMouseDown:
       AC_LOGV("Before eMouseDown, state: %s", mState->Name());
-      rv = mState->OnPress(this, point, id);
+      rv = mState->OnPress(this, point, id, eMouseEventClass);
       AC_LOGV("After eMouseDown, state: %s, consume: %d", mState->Name(), rv);
       break;
 
@@ -563,7 +564,7 @@ AccessibleCaretEventHub::HandleTouchEvent(WidgetTouchEvent* aEvent)
   switch (aEvent->mMessage) {
     case eTouchStart:
       AC_LOGV("Before eTouchStart, state: %s", mState->Name());
-      rv = mState->OnPress(this, point, id);
+      rv = mState->OnPress(this, point, id, eTouchEventClass);
       AC_LOGV("After eTouchStart, state: %s, consume: %d", mState->Name(), rv);
       break;
 

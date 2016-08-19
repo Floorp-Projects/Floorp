@@ -42,6 +42,7 @@ DevToolsModules(
     'output-parser.js',
     'poller.js',
     'prefs.js',
+    'scroll.js',
     'source-utils.js',
     'SplitView.jsm',
     'suggestion-picker.js',

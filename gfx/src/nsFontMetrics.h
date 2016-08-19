@@ -75,6 +75,11 @@ public:
     nscoord XHeight();
 
     /**
+     * Return the font's cap-height.
+     */
+    nscoord CapHeight();
+
+    /**
      * Return the font's superscript offset (the distance from the
      * baseline to where a superscript's baseline should be placed).
      * The value returned will be positive.

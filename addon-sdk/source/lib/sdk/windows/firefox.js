@@ -182,7 +182,7 @@ function makeNewWindow(domWindow, browserHint = false) {
     return new Window(domWindow);
 }
 
-for (let domWindow of windows()) {
+for (let domWindow of windows(null, {includePrivate: supportPrivateWindows})) {
   let window = makeNewWindow(domWindow);
   if (window instanceof BrowserWindow)
     addListItem(browserWindows, window);

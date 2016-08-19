@@ -237,6 +237,11 @@ void Gecko_ResetStyleCoord(nsStyleUnit* unit, nsStyleUnion* value);
 // Set an nsStyleCoord to a computed `calc()` value
 void Gecko_SetStyleCoordCalcValue(nsStyleUnit* unit, nsStyleUnion* value, nsStyleCoord::CalcValue calc);
 
+void Gecko_CopyClipPathValueFrom(mozilla::StyleClipPath* dst, const mozilla::StyleClipPath* src);
+
+void Gecko_DestroyClipPath(mozilla::StyleClipPath* clip);
+mozilla::StyleBasicShape* Gecko_NewBasicShape(mozilla::StyleBasicShapeType type);
+
 NS_DECL_THREADSAFE_FFI_REFCOUNTING(nsStyleCoord::Calc, Calc);
 
 // Styleset and Stylesheet management.

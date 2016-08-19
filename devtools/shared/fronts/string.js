@@ -5,8 +5,7 @@
 
 const {DebuggerServer} = require("devtools/server/main");
 const promise = require("promise");
-const {Class} = require("sdk/core/heritage");
-const {longStringSpec} = require("devtools/shared/specs/string");
+const {longStringSpec, SimpleStringFront} = require("devtools/shared/specs/string");
 const protocol = require("devtools/shared/protocol");
 
 const LongStringFront = protocol.FrontClass(longStringSpec, {
@@ -45,35 +44,4 @@ const LongStringFront = protocol.FrontClass(longStringSpec, {
 });
 
 exports.LongStringFront = LongStringFront;
-
-/**
- * When a caller is expecting a LongString actor but the string is already available on
- * client, the SimpleStringFront can be used as it shares the same API as a
- * LongStringFront but will not make unnecessary trips to the server.
- */
-exports.SimpleStringFront = Class({
-  initialize: function (str) {
-    this.str = str;
-  },
-
-  get length() {
-    return this.str.length;
-  },
-
-  get initial() {
-    return this.str;
-  },
-
-  string: function () {
-    return promise.resolve(this.str);
-  },
-
-  substring: function (start, end) {
-    return promise.resolve(this.str.substring(start, end));
-  },
-
-  release: function () {
-    this.str = null;
-    return promise.resolve(undefined);
-  }
-});
+exports.SimpleStringFront = SimpleStringFront;

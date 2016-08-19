@@ -6,10 +6,8 @@
 
 const {HTMLTooltip} = require("devtools/client/shared/widgets/HTMLTooltip");
 const {MdnDocsWidget} = require("devtools/client/shared/widgets/MdnDocsWidget");
+const {KeyShortcuts} = require("devtools/client/shared/key-shortcuts");
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
-
-loader.lazyRequireGetter(this, "KeyShortcuts",
-  "devtools/client/shared/key-shortcuts", true);
 
 const TOOLTIP_WIDTH = 418;
 const TOOLTIP_HEIGHT = 308;

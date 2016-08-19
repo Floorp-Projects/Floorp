@@ -221,9 +221,9 @@ PlatformDecoderModule::ConversionRequired
 WMFDecoderModule::DecoderNeedsConversion(const TrackInfo& aConfig) const
 {
   if (aConfig.IsVideo() && MP4Decoder::IsH264(aConfig.mMimeType)) {
-    return kNeedAnnexB;
+    return ConversionRequired::kNeedAnnexB;
   } else {
-    return kNeedNone;
+    return ConversionRequired::kNeedNone;
   }
 }
 

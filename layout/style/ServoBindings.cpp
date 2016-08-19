@@ -746,6 +746,28 @@ Gecko_SetStyleCoordCalcValue(nsStyleUnit* aUnit, nsStyleUnion* aValue, nsStyleCo
   calcRef->AddRef();
 }
 
+void
+Gecko_CopyClipPathValueFrom(mozilla::StyleClipPath* aDst, const mozilla::StyleClipPath* aSrc)
+{
+  MOZ_ASSERT(aDst);
+  MOZ_ASSERT(aSrc);
+
+  *aDst = *aSrc;
+}
+
+void
+Gecko_DestroyClipPath(mozilla::StyleClipPath* aClip)
+{
+  aClip->~StyleClipPath();
+}
+
+mozilla::StyleBasicShape*
+Gecko_NewBasicShape(mozilla::StyleBasicShapeType aType)
+{
+  RefPtr<StyleBasicShape> ptr = new mozilla::StyleBasicShape(aType);
+  return ptr.forget().take();
+}
+
 NS_IMPL_THREADSAFE_FFI_REFCOUNTING(nsStyleCoord::Calc, Calc);
 
 #define STYLE_STRUCT(name, checkdata_cb)                                      \

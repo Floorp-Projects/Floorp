@@ -8,26 +8,47 @@
 const Immutable = require("devtools/client/shared/vendor/immutable");
 const constants = require("devtools/client/webconsole/new-console-output/constants");
 
-function messages(state = Immutable.List(), action) {
+const MessageState = Immutable.Record({
+  messagesById: Immutable.List(),
+  messagesUiById: Immutable.List(),
+});
+
+function messages(state = new MessageState(), action) {
+  const messagesById = state.messagesById;
+  const messagesUiById = state.messagesUiById;
+
   switch (action.type) {
     case constants.MESSAGE_ADD:
       let newMessage = action.message;
 
       if (newMessage.type === "clear") {
-        return Immutable.List([newMessage]);
+        return state.set("messagesById", Immutable.List([newMessage]));
       }
 
-      if (newMessage.allowRepeating && state.size > 0) {
-        let lastMessage = state.last();
+      if (newMessage.allowRepeating && messagesById.size > 0) {
+        let lastMessage = messagesById.last();
         if (lastMessage.repeatId === newMessage.repeatId) {
-          return state.pop().push(
-            newMessage.set("repeat", lastMessage.repeat + 1)
-          );
+          return state.withMutations(function (record) {
+            record.set("messagesById", messagesById.pop().push(
+              newMessage.set("repeat", lastMessage.repeat + 1)
+            ));
+          });
         }
       }
-      return state.push(newMessage);
+
+      return state.withMutations(function (record) {
+        record.set("messagesById", messagesById.push(newMessage));
+        if (newMessage.type === "trace") {
+          record.set("messagesUiById", messagesUiById.push(newMessage.id));
+        }
+      });
     case constants.MESSAGES_CLEAR:
-      return Immutable.List();
+      return state.set("messagesById", Immutable.List());
+    case constants.MESSAGE_OPEN:
+      return state.set("messagesUiById", messagesUiById.push(action.id));
+    case constants.MESSAGE_CLOSE:
+      let index = state.messagesUiById.indexOf(action.id);
+      return state.deleteIn(["messagesUiById", index]);
   }
 
   return state;

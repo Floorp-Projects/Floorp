@@ -10,6 +10,7 @@ import java.util.HashMap;
 import org.mozilla.gecko.GeckoProfile;
 
 import android.content.Context;
+import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.text.TextUtils;
 
@@ -81,6 +82,13 @@ public class PerProfileDatabases<T extends SQLiteOpenHelper> {
 
             mStorages.put(profile, helper);
             return helper;
+        }
+    }
+
+    public synchronized void shrinkMemory() {
+        for (T t : mStorages.values()) {
+            final SQLiteDatabase db = t.getWritableDatabase();
+            db.execSQL("PRAGMA shrink_memory");
         }
     }
 }

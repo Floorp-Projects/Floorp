@@ -50,6 +50,11 @@ var startTest = function(test, token) {
     numVideoElementsFinished += 1;
     if (v === v1) {
       removeNodeAndSource(v1);
+      v2.load();
+    }
+
+    if (v === v2) {
+      vout.src = URL.createObjectURL(v2.mozCaptureStreamUntilEnded());
       v2.play();
       vout.play();
     }
@@ -76,7 +81,6 @@ var startTest = function(test, token) {
 
   v1.src = test.name;
   v2.src = test.name;
-  vout.src = URL.createObjectURL(v2.mozCaptureStreamUntilEnded());
 
   setupElement(v1, "v1");
   setupElement(v2, "v2");

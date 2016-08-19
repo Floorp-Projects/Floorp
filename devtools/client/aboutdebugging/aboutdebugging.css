@@ -22,7 +22,7 @@ button {
 .category {
   display: flex;
   flex-direction: row;
-  align-content: center;
+  align-items: center;
 }
 
 .category-name {

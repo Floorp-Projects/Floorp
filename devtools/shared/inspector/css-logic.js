@@ -41,8 +41,7 @@
  */
 
 const Services = require("Services");
-
-loader.lazyRequireGetter(this, "CSSLexer", "devtools/shared/css-lexer");
+const CSSLexer = require("devtools/shared/css-lexer");
 
 /**
  * Special values for filter, in addition to an href these values can be used
