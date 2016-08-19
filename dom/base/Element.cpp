@@ -3436,11 +3436,10 @@ Element::GetAnimations(const AnimationFilter& filter,
   CSSPseudoElementType pseudoType = CSSPseudoElementType::NotPseudo;
   // For animations on generated-content elements, the animations are stored
   // on the parent element.
-  nsIAtom* name = NodeInfo()->NameAtom();
-  if (name == nsGkAtoms::mozgeneratedcontentbefore) {
+  if (IsGeneratedContentContainerForBefore()) {
     elem = GetParentElement();
     pseudoType = CSSPseudoElementType::before;
-  } else if (name == nsGkAtoms::mozgeneratedcontentafter) {
+  } else if (IsGeneratedContentContainerForAfter()) {
     elem = GetParentElement();
     pseudoType = CSSPseudoElementType::after;
   }
