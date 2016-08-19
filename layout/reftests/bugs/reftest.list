@@ -1930,7 +1930,7 @@ skip-if(B2G||Mulet) == 1150021-1.xul 1150021-1-ref.xul
 == 1155828-1.html 1155828-1-ref.html
 == 1156129-1.html 1156129-1-ref.html
 pref(dom.use_xbl_scopes_for_remote_xul,true) HTTP(..) == 1157127-1.html 1157127-1-ref.html
-== 1169331-1.html 1169331-1-ref.html
+fuzzy-if(Android,1,1) == 1169331-1.html 1169331-1-ref.html
 fuzzy(1,74) fuzzy-if(gtkWidget,6,79) == 1174332-1.html 1174332-1-ref.html
 == 1179078-1.html 1179078-1-ref.html
 == 1179288-1.html 1179288-1-ref.html

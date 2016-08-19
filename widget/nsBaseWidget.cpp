@@ -475,7 +475,7 @@ nsBaseWidget::CreateChild(const LayoutDeviceIntRect& aRect,
 }
 
 // Attach a view to our widget which we'll send events to.
-NS_IMETHODIMP
+void
 nsBaseWidget::AttachViewToTopLevel(bool aUseAttachedEvents)
 {
   NS_ASSERTION((mWindowType == eWindowType_toplevel ||
@@ -485,8 +485,6 @@ nsBaseWidget::AttachViewToTopLevel(bool aUseAttachedEvents)
                "Can't attach to window of that type");
 
   mUseAttachedEvents = aUseAttachedEvents;
-
-  return NS_OK;
 }
 
 nsIWidgetListener* nsBaseWidget::GetAttachedWidgetListener()
@@ -893,7 +891,8 @@ nsBaseWidget::PerformFullscreenTransition(FullscreenTransitionStage aStage,
 // Put the window into full-screen mode
 //
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsBaseWidget::MakeFullScreen(bool aFullScreen, nsIScreen* aScreen)
+void
+nsBaseWidget::InfallibleMakeFullScreen(bool aFullScreen, nsIScreen* aScreen)
 {
   HideWindowChrome(aFullScreen);
 
@@ -901,7 +900,7 @@ NS_IMETHODIMP nsBaseWidget::MakeFullScreen(bool aFullScreen, nsIScreen* aScreen)
     if (!mOriginalBounds) {
       mOriginalBounds = new LayoutDeviceIntRect();
     }
-    GetScreenBounds(*mOriginalBounds);
+    *mOriginalBounds = GetScreenBounds();
 
     // Move to top-left corner of screen and size to the screen dimensions
     nsCOMPtr<nsIScreen> screen = aScreen;
@@ -923,7 +922,12 @@ NS_IMETHODIMP nsBaseWidget::MakeFullScreen(bool aFullScreen, nsIScreen* aScreen)
              mOriginalBounds->height, true);
     }
   }
+}
 
+nsresult
+nsBaseWidget::MakeFullScreen(bool aFullScreen, nsIScreen* aScreen)
+{
+  InfallibleMakeFullScreen(aFullScreen, aScreen);
   return NS_OK;
 }
 
@@ -976,8 +980,7 @@ nsBaseWidget::UseAPZ()
 
 void nsBaseWidget::CreateCompositor()
 {
-  LayoutDeviceIntRect rect;
-  GetBounds(rect);
+  LayoutDeviceIntRect rect = GetBounds();
   CreateCompositor(rect.width, rect.height);
 }
 
@@ -1495,8 +1498,7 @@ NS_IMETHODIMP nsBaseWidget::ResizeClient(double aWidth,
   NS_ASSERTION((aWidth >=0) , "Negative width passed to ResizeClient");
   NS_ASSERTION((aHeight >=0), "Negative height passed to ResizeClient");
 
-  LayoutDeviceIntRect clientBounds;
-  GetClientBounds(clientBounds);
+  LayoutDeviceIntRect clientBounds = GetClientBounds();
 
   // GetClientBounds and mBounds are device pixels; scale back to desktop pixels
   // if that's what this widget uses for the Move/Resize APIs
@@ -1521,10 +1523,8 @@ NS_IMETHODIMP nsBaseWidget::ResizeClient(double aX,
   NS_ASSERTION((aWidth >=0) , "Negative width passed to ResizeClient");
   NS_ASSERTION((aHeight >=0), "Negative height passed to ResizeClient");
 
-  LayoutDeviceIntRect clientBounds;
-  GetClientBounds(clientBounds);
-
-  LayoutDeviceIntPoint clientOffset(GetClientOffset());
+  LayoutDeviceIntRect clientBounds = GetClientBounds();
+  LayoutDeviceIntPoint clientOffset = GetClientOffset();
 
   if (BoundsUseDesktopPixels()) {
     DesktopToLayoutDeviceScale scale = GetDesktopToDeviceScale();
@@ -1553,19 +1553,20 @@ NS_IMETHODIMP nsBaseWidget::ResizeClient(double aX,
 * If the implementation of nsWindow supports borders this method MUST be overridden
 *
 **/
-NS_IMETHODIMP nsBaseWidget::GetClientBounds(LayoutDeviceIntRect &aRect)
+LayoutDeviceIntRect
+nsBaseWidget::GetClientBounds()
 {
-  return GetBounds(aRect);
+  return GetBounds();
 }
 
 /**
 * If the implementation of nsWindow supports borders this method MUST be overridden
 *
 **/
-NS_IMETHODIMP nsBaseWidget::GetBounds(LayoutDeviceIntRect &aRect)
+LayoutDeviceIntRect
+nsBaseWidget::GetBounds()
 {
-  aRect = mBounds;
-  return NS_OK;
+  return mBounds;
 }
 
 /**
@@ -1573,29 +1574,26 @@ NS_IMETHODIMP nsBaseWidget::GetBounds(LayoutDeviceIntRect &aRect)
 * this method must be overridden
 *
 **/
-NS_IMETHODIMP nsBaseWidget::GetScreenBounds(LayoutDeviceIntRect& aRect)
+LayoutDeviceIntRect
+nsBaseWidget::GetScreenBounds()
 {
-  return GetBounds(aRect);
+  return GetBounds();
 }
 
-NS_IMETHODIMP nsBaseWidget::GetRestoredBounds(LayoutDeviceIntRect& aRect)
+nsresult
+nsBaseWidget::GetRestoredBounds(LayoutDeviceIntRect& aRect)
 {
   if (SizeMode() != nsSizeMode_Normal) {
     return NS_ERROR_FAILURE;
   }
-  return GetScreenBounds(aRect);
+  aRect = GetScreenBounds();
+  return NS_OK;
 }
 
 LayoutDeviceIntPoint
 nsBaseWidget::GetClientOffset()
 {
   return LayoutDeviceIntPoint(0, 0);
-}
-
-NS_IMETHODIMP
-nsBaseWidget::GetNonClientMargins(LayoutDeviceIntMargin &margins)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
@@ -1973,7 +1971,7 @@ nsBaseWidget::StartAsyncScrollbarDrag(const AsyncDragMetrics& aDragMetrics)
 }
 
 already_AddRefed<nsIScreen>
-nsBaseWidget::GetWidgetScreen()
+nsIWidget::GetWidgetScreen()
 {
   nsCOMPtr<nsIScreenManager> screenManager;
   screenManager = do_GetService("@mozilla.org/gfx/screenmanager;1");
@@ -1981,8 +1979,7 @@ nsBaseWidget::GetWidgetScreen()
     return nullptr;
   }
 
-  LayoutDeviceIntRect bounds;
-  GetScreenBounds(bounds);
+  LayoutDeviceIntRect bounds = GetScreenBounds();
   DesktopIntRect deskBounds = RoundedToInt(bounds / GetDesktopToDeviceScale());
   nsCOMPtr<nsIScreen> screen;
   screenManager->ScreenForRect(deskBounds.x, deskBounds.y,

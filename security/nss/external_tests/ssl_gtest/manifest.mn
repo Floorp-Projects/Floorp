@@ -15,13 +15,17 @@ CPPSRCS = \
       ssl_0rtt_unittest.cc \
       ssl_agent_unittest.cc \
       ssl_auth_unittest.cc \
+      ssl_cert_ext_unittest.cc \
       ssl_ciphersuite_unittest.cc \
+      ssl_damage_unittest.cc \
       ssl_dhe_unittest.cc \
       ssl_drop_unittest.cc \
+      ssl_ecdh_unittest.cc \
       ssl_ems_unittest.cc \
       ssl_extension_unittest.cc \
       ssl_gtest.cc \
       ssl_loopback_unittest.cc \
+      ssl_record_unittest.cc \
       ssl_resumption_unittest.cc \
       ssl_skip_unittest.cc \
       ssl_staticrsa_unittest.cc \

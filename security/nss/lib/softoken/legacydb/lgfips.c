@@ -22,7 +22,6 @@
 #pragma init(lg_startup_tests)
 #endif
 
-
 /* GCC Attribute */
 #if defined(__GNUC__) && !defined(NSS_NO_INIT_SUPPORT)
 #define INIT_FUNCTION __attribute__((constructor))
@@ -37,32 +36,31 @@ static void INIT_FUNCTION lg_startup_tests(void);
 #include <windows.h>
 
 BOOL WINAPI DllMain(
-    HINSTANCE hinstDLL,  // handle to DLL module
-    DWORD fdwReason,     // reason for calling function
-    LPVOID lpReserved )  // reserved
+    HINSTANCE hinstDLL, // handle to DLL module
+    DWORD fdwReason,    // reason for calling function
+    LPVOID lpReserved)  // reserved
 {
     // Perform actions based on the reason for calling.
-    switch( fdwReason ) 
-    { 
+    switch (fdwReason) {
         case DLL_PROCESS_ATTACH:
-         // Initialize once for each new process.
-         // Return FALSE to fail DLL load.
-	lg_startup_tests();
+            // Initialize once for each new process.
+            // Return FALSE to fail DLL load.
+            lg_startup_tests();
             break;
 
         case DLL_THREAD_ATTACH:
-         // Do thread-specific initialization.
+            // Do thread-specific initialization.
             break;
 
         case DLL_THREAD_DETACH:
-         // Do thread-specific cleanup.
+            // Do thread-specific cleanup.
             break;
 
         case DLL_PROCESS_DETACH:
-         // Perform any necessary cleanup.
+            // Perform any necessary cleanup.
             break;
     }
-    return TRUE;  // Successful DLL_PROCESS_ATTACH.
+    return TRUE; // Successful DLL_PROCESS_ATTACH.
 }
 #endif
 
@@ -70,12 +68,14 @@ static PRBool lg_self_tests_ran = PR_FALSE;
 static PRBool lg_self_tests_success = PR_FALSE;
 
 static void
-lg_local_function(void) {}
+lg_local_function(void)
+{
+}
 
 /*
- * This function is called at dll load time, the code tha makes this 
+ * This function is called at dll load time, the code tha makes this
  * happen is platform specific on defined above.
- */ 
+ */
 static void
 lg_startup_tests(void)
 {
@@ -88,28 +88,28 @@ lg_startup_tests(void)
 
     /* no self tests required for the legacy db, only the integrity check */
     /* check the integrity of our shared library */
-    if (!BLAPI_SHVerify(libraryName, (PRFuncPtr) &lg_local_function)) {
-	/* something is wrong with the library, fail without enabling
-	 * the fips token */
-	return;
+    if (!BLAPI_SHVerify(libraryName, (PRFuncPtr)&lg_local_function)) {
+        /* something is wrong with the library, fail without enabling
+         * the fips token */
+        return;
     }
-    /* FIPS product has been installed and is functioning, allow 
+    /* FIPS product has been installed and is functioning, allow
      * the module to operate in fips mode */
     lg_self_tests_success = PR_TRUE;
 }
 
 PRBool
-lg_FIPSEntryOK() {
+lg_FIPSEntryOK()
+{
 #ifdef NSS_NO_INIT_SUPPORT
-   /* this should only be set on platforms that can't handle one of the INIT
-    * schemes.  This code allows those platforms to continue to function, 
-    * though they don't meet the strict NIST requirements. If NO_INIT_SUPPORT
-    * is not set, and init support has not been properly enabled, softken
-    * will always fail because of the test below */
+    /* this should only be set on platforms that can't handle one of the INIT
+     * schemes.  This code allows those platforms to continue to function,
+     * though they don't meet the strict NIST requirements. If NO_INIT_SUPPORT
+     * is not set, and init support has not been properly enabled, softken
+     * will always fail because of the test below */
     if (!lg_self_tests_ran) {
-	lg_startup_tests();
+        lg_startup_tests();
     }
 #endif
     return lg_self_tests_success;
 }
-

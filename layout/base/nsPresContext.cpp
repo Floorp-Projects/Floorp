@@ -2968,8 +2968,7 @@ SortConfigurations(nsTArray<nsIWidget::Configuration>* aConfigurations)
       for (uint32_t j = 0; j < pluginsToMove.Length(); ++j) {
         if (i == j)
           continue;
-        LayoutDeviceIntRect bounds;
-        pluginsToMove[j].mChild->GetBounds(bounds);
+        LayoutDeviceIntRect bounds = pluginsToMove[j].mChild->GetBounds();
         AutoTArray<LayoutDeviceIntRect,1> clipRects;
         pluginsToMove[j].mChild->GetWindowClipRegion(&clipRects);
         if (HasOverlap(bounds.TopLeft(), clipRects,

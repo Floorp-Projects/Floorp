@@ -26,7 +26,7 @@ menulist > menupopup {
   --panel-arrowcontent-padding: 10px;
   --panel-arrowcontent-background: -moz-field;
   --panel-arrowcontent-color: -moz-FieldText;
-  --panel-arrowcontent-border: 1px solid ThreeDShadow;
+  --panel-arrowcontent-border-color: ThreeDShadow;
 }
 
 /* ::::: root elements ::::: */

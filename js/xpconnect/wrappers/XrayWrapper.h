@@ -83,6 +83,11 @@ public:
         return result.succeed();
     }
 
+    static bool getBuiltinClass(JSContext* cx, JS::HandleObject wrapper, const js::Wrapper& baseInstance,
+                                js::ESClass* cls) {
+        return baseInstance.getBuiltinClass(cx, wrapper, cls);
+    }
+
     static const char* className(JSContext* cx, JS::HandleObject wrapper, const js::Wrapper& baseInstance) {
         return baseInstance.className(cx, wrapper);
     }
@@ -390,6 +395,12 @@ public:
         return JS_WrapObject(cx, protop);
     }
 
+    static bool getBuiltinClass(JSContext* cx, JS::HandleObject wrapper, const js::Wrapper& baseInstance,
+                                js::ESClass* cls) {
+        *cls = js::ESClass::Other;
+        return true;
+    }
+
     static const char* className(JSContext* cx, JS::HandleObject wrapper, const js::Wrapper& baseInstance) {
         return "Opaque";
     }
@@ -458,6 +469,7 @@ class XrayWrapper : public Base {
     virtual bool getOwnEnumerablePropertyKeys(JSContext* cx, JS::Handle<JSObject*> wrapper,
                                               JS::AutoIdVector& props) const override;
 
+    virtual bool getBuiltinClass(JSContext* cx, JS::HandleObject wapper, js::ESClass* cls) const override;
     virtual const char* className(JSContext* cx, JS::HandleObject proxy) const override;
 
     static const XrayWrapper singleton;

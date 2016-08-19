@@ -545,8 +545,12 @@ HTMLBreadcrumbs.prototype = {
   handleFocus: function (event) {
     event.stopPropagation();
 
-    this.outer.setAttribute("aria-activedescendant",
-      this.nodeHierarchy[this.currentIndex].button.id);
+    let node = this.nodeHierarchy[this.currentIndex];
+    if (node) {
+      this.outer.setAttribute("aria-activedescendant", node.button.id);
+    } else {
+      this.outer.removeAttribute("aria-activedescendant");
+    }
 
     this.outer.focus();
   },
@@ -665,6 +669,9 @@ HTMLBreadcrumbs.prototype = {
       if (this.hadFocus) {
         this.nodeHierarchy[index].button.focus();
       }
+    } else {
+      // Unset active active descendant when all buttons are unselected.
+      this.outer.removeAttribute("aria-activedescendant");
     }
     this.currentIndex = index;
   },

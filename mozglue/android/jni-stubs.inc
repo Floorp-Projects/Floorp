@@ -20,25 +20,6 @@ Java_org_mozilla_gecko_GeckoAppShell_onSurfaceTextureFrameAvailable(JNIEnv * arg
 
 #ifdef JNI_STUBS
 
-typedef void (*Java_org_mozilla_gecko_GeckoAppShell_dispatchMemoryPressure_t)(JNIEnv *, jclass);
-static Java_org_mozilla_gecko_GeckoAppShell_dispatchMemoryPressure_t f_Java_org_mozilla_gecko_GeckoAppShell_dispatchMemoryPressure;
-extern "C" NS_EXPORT void MOZ_JNICALL
-Java_org_mozilla_gecko_GeckoAppShell_dispatchMemoryPressure(JNIEnv * arg0, jclass arg1) {
-    if (!f_Java_org_mozilla_gecko_GeckoAppShell_dispatchMemoryPressure) {
-        arg0->ThrowNew(arg0->FindClass("java/lang/UnsupportedOperationException"),
-                       "JNI Function called before it was loaded");
-        return ;
-    }
-     f_Java_org_mozilla_gecko_GeckoAppShell_dispatchMemoryPressure(arg0, arg1);
-}
-#endif
-
-#ifdef JNI_BINDINGS
-  xul_dlsym("Java_org_mozilla_gecko_GeckoAppShell_dispatchMemoryPressure", &f_Java_org_mozilla_gecko_GeckoAppShell_dispatchMemoryPressure);
-#endif
-
-#ifdef JNI_STUBS
-
 typedef void (*Java_org_mozilla_gecko_GeckoAppShell_reportJavaCrash_t)(JNIEnv *, jclass, jstring);
 static Java_org_mozilla_gecko_GeckoAppShell_reportJavaCrash_t f_Java_org_mozilla_gecko_GeckoAppShell_reportJavaCrash;
 extern "C" NS_EXPORT void MOZ_JNICALL
@@ -73,25 +54,6 @@ Java_org_mozilla_gecko_GeckoAppShell_notifyUriVisited(JNIEnv * arg0, jclass arg1
 
 #ifdef JNI_BINDINGS
   xul_dlsym("Java_org_mozilla_gecko_GeckoAppShell_notifyUriVisited", &f_Java_org_mozilla_gecko_GeckoAppShell_notifyUriVisited);
-#endif
-
-#ifdef JNI_STUBS
-
-typedef void (*Java_org_mozilla_gecko_GeckoAppShell_notifyBatteryChange_t)(JNIEnv *, jclass, jdouble, jboolean, jdouble);
-static Java_org_mozilla_gecko_GeckoAppShell_notifyBatteryChange_t f_Java_org_mozilla_gecko_GeckoAppShell_notifyBatteryChange;
-extern "C" NS_EXPORT void MOZ_JNICALL
-Java_org_mozilla_gecko_GeckoAppShell_notifyBatteryChange(JNIEnv * arg0, jclass arg1, jdouble arg2, jboolean arg3, jdouble arg4) {
-    if (!f_Java_org_mozilla_gecko_GeckoAppShell_notifyBatteryChange) {
-        arg0->ThrowNew(arg0->FindClass("java/lang/UnsupportedOperationException"),
-                       "JNI Function called before it was loaded");
-        return ;
-    }
-     f_Java_org_mozilla_gecko_GeckoAppShell_notifyBatteryChange(arg0, arg1, arg2, arg3, arg4);
-}
-#endif
-
-#ifdef JNI_BINDINGS
-  xul_dlsym("Java_org_mozilla_gecko_GeckoAppShell_notifyBatteryChange", &f_Java_org_mozilla_gecko_GeckoAppShell_notifyBatteryChange);
 #endif
 
 #ifdef JNI_STUBS
@@ -153,25 +115,6 @@ Java_org_mozilla_gecko_GeckoAppShell_removePresentationSurface(JNIEnv * arg0, jc
 
 #ifdef JNI_STUBS
 
-typedef void (*Java_org_mozilla_gecko_GeckoAppShell_onFullScreenPluginHidden_t)(JNIEnv *, jclass, jobject);
-static Java_org_mozilla_gecko_GeckoAppShell_onFullScreenPluginHidden_t f_Java_org_mozilla_gecko_GeckoAppShell_onFullScreenPluginHidden;
-extern "C" NS_EXPORT void MOZ_JNICALL
-Java_org_mozilla_gecko_GeckoAppShell_onFullScreenPluginHidden(JNIEnv * arg0, jclass arg1, jobject arg2) {
-    if (!f_Java_org_mozilla_gecko_GeckoAppShell_onFullScreenPluginHidden) {
-        arg0->ThrowNew(arg0->FindClass("java/lang/UnsupportedOperationException"),
-                       "JNI Function called before it was loaded");
-        return ;
-    }
-     f_Java_org_mozilla_gecko_GeckoAppShell_onFullScreenPluginHidden(arg0, arg1, arg2);
-}
-#endif
-
-#ifdef JNI_BINDINGS
-  xul_dlsym("Java_org_mozilla_gecko_GeckoAppShell_onFullScreenPluginHidden", &f_Java_org_mozilla_gecko_GeckoAppShell_onFullScreenPluginHidden);
-#endif
-
-#ifdef JNI_STUBS
-
 typedef void (*Java_org_mozilla_gecko_GeckoAppShell_syncNotifyObservers_t)(JNIEnv *, jclass, jstring, jstring);
 static Java_org_mozilla_gecko_GeckoAppShell_syncNotifyObservers_t f_Java_org_mozilla_gecko_GeckoAppShell_syncNotifyObservers;
 extern "C" NS_EXPORT void MOZ_JNICALL
@@ -206,25 +149,6 @@ Java_org_mozilla_gecko_GeckoAppShell_nativeNotifyObservers(JNIEnv * arg0, jclass
 
 #ifdef JNI_BINDINGS
   xul_dlsym("Java_org_mozilla_gecko_GeckoAppShell_nativeNotifyObservers", &f_Java_org_mozilla_gecko_GeckoAppShell_nativeNotifyObservers);
-#endif
-
-#ifdef JNI_STUBS
-
-typedef jlong (*Java_org_mozilla_gecko_GeckoAppShell_runUiThreadCallback_t)(JNIEnv *, jclass);
-static Java_org_mozilla_gecko_GeckoAppShell_runUiThreadCallback_t f_Java_org_mozilla_gecko_GeckoAppShell_runUiThreadCallback;
-extern "C" NS_EXPORT jlong MOZ_JNICALL
-Java_org_mozilla_gecko_GeckoAppShell_runUiThreadCallback(JNIEnv * arg0, jclass arg1) {
-    if (!f_Java_org_mozilla_gecko_GeckoAppShell_runUiThreadCallback) {
-        arg0->ThrowNew(arg0->FindClass("java/lang/UnsupportedOperationException"),
-                       "JNI Function called before it was loaded");
-        return 0;
-    }
-    return f_Java_org_mozilla_gecko_GeckoAppShell_runUiThreadCallback(arg0, arg1);
-}
-#endif
-
-#ifdef JNI_BINDINGS
-  xul_dlsym("Java_org_mozilla_gecko_GeckoAppShell_runUiThreadCallback", &f_Java_org_mozilla_gecko_GeckoAppShell_runUiThreadCallback);
 #endif
 
 #ifdef JNI_STUBS
@@ -282,6 +206,25 @@ Java_org_mozilla_gecko_GeckoAppShell_notifyAlertListener(JNIEnv * arg0, jclass a
 
 #ifdef JNI_BINDINGS
   xul_dlsym("Java_org_mozilla_gecko_GeckoAppShell_notifyAlertListener", &f_Java_org_mozilla_gecko_GeckoAppShell_notifyAlertListener);
+#endif
+
+#ifdef JNI_STUBS
+
+typedef void (*Java_org_mozilla_gecko_GeckoAppShell_onFullScreenPluginHidden_t)(JNIEnv *, jclass, jobject);
+static Java_org_mozilla_gecko_GeckoAppShell_onFullScreenPluginHidden_t f_Java_org_mozilla_gecko_GeckoAppShell_onFullScreenPluginHidden;
+extern "C" NS_EXPORT void MOZ_JNICALL
+Java_org_mozilla_gecko_GeckoAppShell_onFullScreenPluginHidden(JNIEnv * arg0, jclass arg1, jobject arg2) {
+    if (!f_Java_org_mozilla_gecko_GeckoAppShell_onFullScreenPluginHidden) {
+        arg0->ThrowNew(arg0->FindClass("java/lang/UnsupportedOperationException"),
+                       "JNI Function called before it was loaded");
+        return ;
+    }
+     f_Java_org_mozilla_gecko_GeckoAppShell_onFullScreenPluginHidden(arg0, arg1, arg2);
+}
+#endif
+
+#ifdef JNI_BINDINGS
+  xul_dlsym("Java_org_mozilla_gecko_GeckoAppShell_onFullScreenPluginHidden", &f_Java_org_mozilla_gecko_GeckoAppShell_onFullScreenPluginHidden);
 #endif
 
 #ifdef JNI_STUBS

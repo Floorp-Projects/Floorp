@@ -230,7 +230,7 @@ TEST(ImageSurfaceSink, SurfaceSinkWritePixelsFinish)
 
     // Check that the generated image is correct.
     RawAccessFrameRef currentFrame = aDecoder->GetCurrentFrameRef();
-    RefPtr<SourceSurface> surface = currentFrame->GetSurface();
+    RefPtr<SourceSurface> surface = currentFrame->GetSourceSurface();
     EXPECT_TRUE(IsSolidColor(surface, BGRAColor::Transparent()));
   });
 }
@@ -632,7 +632,7 @@ TEST(ImageSurfaceSink, SurfaceSinkWriteEmptyRow)
 
       auto checkFunc = [&]{
         RawAccessFrameRef currentFrame = aDecoder->GetCurrentFrameRef();
-        RefPtr<SourceSurface> surface = currentFrame->GetSurface();
+        RefPtr<SourceSurface> surface = currentFrame->GetSourceSurface();
 
         EXPECT_TRUE(RowsAreSolidColor(surface, 0, 20, BGRAColor::Green()));
         EXPECT_TRUE(RowsAreSolidColor(surface, 20, 60, BGRAColor::Transparent()));
@@ -686,7 +686,7 @@ TEST(ImageSurfaceSink, SurfaceSinkProgressivePasses)
 
       // Check that the generated image is correct.
       RawAccessFrameRef currentFrame = aDecoder->GetCurrentFrameRef();
-      RefPtr<SourceSurface> surface = currentFrame->GetSurface();
+      RefPtr<SourceSurface> surface = currentFrame->GetSourceSurface();
       EXPECT_TRUE(IsSolidColor(surface, BGRAColor::Red()));
     }
 
@@ -695,7 +695,7 @@ TEST(ImageSurfaceSink, SurfaceSinkProgressivePasses)
 
       // Check that the generated image is still the first pass image.
       RawAccessFrameRef currentFrame = aDecoder->GetCurrentFrameRef();
-      RefPtr<SourceSurface> surface = currentFrame->GetSurface();
+      RefPtr<SourceSurface> surface = currentFrame->GetSourceSurface();
       EXPECT_TRUE(IsSolidColor(surface, BGRAColor::Red()));
     }
 
@@ -715,7 +715,7 @@ TEST(ImageSurfaceSink, SurfaceSinkProgressivePasses)
 
       // Check that the generated image is correct.
       RawAccessFrameRef currentFrame = aDecoder->GetCurrentFrameRef();
-      RefPtr<SourceSurface> surface = currentFrame->GetSurface();
+      RefPtr<SourceSurface> surface = currentFrame->GetSourceSurface();
       EXPECT_TRUE(IsSolidColor(surface, BGRAColor::Green()));
     }
   });
@@ -840,7 +840,7 @@ TEST(ImageSurfaceSink, SurfaceSinkInvalidRect)
 
       // Check that the generated image is correct.
       RawAccessFrameRef currentFrame = aDecoder->GetCurrentFrameRef();
-      RefPtr<SourceSurface> surface = currentFrame->GetSurface();
+      RefPtr<SourceSurface> surface = currentFrame->GetSourceSurface();
       EXPECT_TRUE(IsSolidColor(surface, BGRAColor::Green()));
     }
   });
@@ -866,7 +866,7 @@ TEST(ImageSurfaceSink, SurfaceSinkFlipVertically)
 
       // Check that the generated image is correct.
       RawAccessFrameRef currentFrame = aDecoder->GetCurrentFrameRef();
-      RefPtr<SourceSurface> surface = currentFrame->GetSurface();
+      RefPtr<SourceSurface> surface = currentFrame->GetSourceSurface();
       EXPECT_TRUE(IsSolidColor(surface, BGRAColor::Red()));
     }
 
@@ -875,7 +875,7 @@ TEST(ImageSurfaceSink, SurfaceSinkFlipVertically)
 
       // Check that the generated image is still the first pass image.
       RawAccessFrameRef currentFrame = aDecoder->GetCurrentFrameRef();
-      RefPtr<SourceSurface> surface = currentFrame->GetSurface();
+      RefPtr<SourceSurface> surface = currentFrame->GetSourceSurface();
       EXPECT_TRUE(IsSolidColor(surface, BGRAColor::Red()));
     }
 
@@ -902,7 +902,7 @@ TEST(ImageSurfaceSink, SurfaceSinkFlipVertically)
 
       // Check that the generated image is correct.
       RawAccessFrameRef currentFrame = aDecoder->GetCurrentFrameRef();
-      RefPtr<SourceSurface> surface = currentFrame->GetSurface();
+      RefPtr<SourceSurface> surface = currentFrame->GetSourceSurface();
       EXPECT_TRUE(RowsAreSolidColor(surface, 0, 75, BGRAColor::Red()));
       EXPECT_TRUE(RowsAreSolidColor(surface, 75, 25, BGRAColor::Green()));
     }
@@ -923,7 +923,7 @@ TEST(ImageSurfaceSink, SurfaceSinkFlipVertically)
 
       // Check that the generated image is correct.
       RawAccessFrameRef currentFrame = aDecoder->GetCurrentFrameRef();
-      RefPtr<SourceSurface> surface = currentFrame->GetSurface();
+      RefPtr<SourceSurface> surface = currentFrame->GetSourceSurface();
       EXPECT_TRUE(IsSolidColor(surface, BGRAColor::Green()));
     }
   });

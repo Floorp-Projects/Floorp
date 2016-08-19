@@ -9,7 +9,7 @@
 #include "prlong.h"
 #include "pcertt.h"
 
-#include "lowkeyti.h" 	/* for struct NSSLOWKEYPublicKeyStr */
+#include "lowkeyti.h" /* for struct NSSLOWKEYPublicKeyStr */
 
 SEC_BEGIN_PROTOS
 
@@ -20,51 +20,51 @@ SECStatus nsslowcert_InitLocks(void);
 
 /*
 ** Add a DER encoded certificate to the permanent database.
-**	"derCert" is the DER encoded certificate.
-**	"nickname" is the nickname to use for the cert
-**	"trust" is the trust parameters for the cert
+**  "derCert" is the DER encoded certificate.
+**  "nickname" is the nickname to use for the cert
+**  "trust" is the trust parameters for the cert
 */
-SECStatus nsslowcert_AddPermCert(NSSLOWCERTCertDBHandle *handle, 
-			NSSLOWCERTCertificate *cert,
-				char *nickname, NSSLOWCERTCertTrust *trust);
+SECStatus nsslowcert_AddPermCert(NSSLOWCERTCertDBHandle *handle,
+                                 NSSLOWCERTCertificate *cert,
+                                 char *nickname, NSSLOWCERTCertTrust *trust);
 SECStatus nsslowcert_AddPermNickname(NSSLOWCERTCertDBHandle *dbhandle,
-				NSSLOWCERTCertificate *cert, char *nickname);
+                                     NSSLOWCERTCertificate *cert, char *nickname);
 
 SECStatus nsslowcert_DeletePermCertificate(NSSLOWCERTCertificate *cert);
 
-typedef SECStatus (PR_CALLBACK * PermCertCallback)(NSSLOWCERTCertificate *cert,
-                                                   SECItem *k, void *pdata);
+typedef SECStatus(PR_CALLBACK *PermCertCallback)(NSSLOWCERTCertificate *cert,
+                                                 SECItem *k, void *pdata);
 /*
 ** Traverse the entire permanent database, and pass the certs off to a
 ** user supplied function.
-**	"certfunc" is the user function to call for each certificate
-**	"udata" is the user's data, which is passed through to "certfunc"
+**  "certfunc" is the user function to call for each certificate
+**  "udata" is the user's data, which is passed through to "certfunc"
 */
 SECStatus
 nsslowcert_TraversePermCerts(NSSLOWCERTCertDBHandle *handle,
-		      PermCertCallback certfunc,
-		      void *udata );
+                             PermCertCallback certfunc,
+                             void *udata);
 
 PRBool
 nsslowcert_CertDBKeyConflict(SECItem *derCert, NSSLOWCERTCertDBHandle *handle);
 
 certDBEntryRevocation *
 nsslowcert_FindCrlByKey(NSSLOWCERTCertDBHandle *handle,
-					 SECItem *crlKey, PRBool isKRL);
+                        SECItem *crlKey, PRBool isKRL);
 
 SECStatus
-nsslowcert_DeletePermCRL(NSSLOWCERTCertDBHandle *handle,const SECItem *derName,
-								PRBool isKRL);
+nsslowcert_DeletePermCRL(NSSLOWCERTCertDBHandle *handle, const SECItem *derName,
+                         PRBool isKRL);
 SECStatus
-nsslowcert_AddCrl(NSSLOWCERTCertDBHandle *handle, SECItem *derCrl ,
-				SECItem *derKey, char *url, PRBool isKRL);
+nsslowcert_AddCrl(NSSLOWCERTCertDBHandle *handle, SECItem *derCrl,
+                  SECItem *derKey, char *url, PRBool isKRL);
 
 NSSLOWCERTCertDBHandle *nsslowcert_GetDefaultCertDB();
 NSSLOWKEYPublicKey *nsslowcert_ExtractPublicKey(NSSLOWCERTCertificate *);
 
 NSSLOWCERTCertificate *
 nsslowcert_NewTempCertificate(NSSLOWCERTCertDBHandle *handle, SECItem *derCert,
-                        char *nickname, PRBool isperm, PRBool copyDER);
+                              char *nickname, PRBool isperm, PRBool copyDER);
 NSSLOWCERTCertificate *
 nsslowcert_DupCertificate(NSSLOWCERTCertificate *cert);
 void nsslowcert_DestroyCertificate(NSSLOWCERTCertificate *cert);
@@ -72,7 +72,7 @@ void nsslowcert_DestroyTrust(NSSLOWCERTTrust *Trust);
 
 /*
  * Lookup a certificate in the databases without locking
- *	"certKey" is the database key to look for
+ *  "certKey" is the database key to look for
  *
  * XXX - this should be internal, but pkcs 11 needs to call it during a
  * traversal.
@@ -82,7 +82,7 @@ nsslowcert_FindCertByKey(NSSLOWCERTCertDBHandle *handle, const SECItem *certKey)
 
 /*
  * Lookup trust for a certificate in the databases without locking
- *	"certKey" is the database key to look for
+ *  "certKey" is the database key to look for
  *
  * XXX - this should be internal, but pkcs 11 needs to call it during a
  * traversal.
@@ -93,22 +93,22 @@ nsslowcert_FindTrustByKey(NSSLOWCERTCertDBHandle *handle, const SECItem *certKey
 /*
 ** Generate a certificate key from the issuer and serialnumber, then look it
 ** up in the database.  Return the cert if found.
-**	"issuerAndSN" is the issuer and serial number to look for
+**  "issuerAndSN" is the issuer and serial number to look for
 */
 extern NSSLOWCERTCertificate *
-nsslowcert_FindCertByIssuerAndSN (NSSLOWCERTCertDBHandle *handle, NSSLOWCERTIssuerAndSN *issuerAndSN);
+nsslowcert_FindCertByIssuerAndSN(NSSLOWCERTCertDBHandle *handle, NSSLOWCERTIssuerAndSN *issuerAndSN);
 
 /*
 ** Generate a certificate key from the issuer and serialnumber, then look it
 ** up in the database.  Return the cert if found.
-**	"issuerAndSN" is the issuer and serial number to look for
+**  "issuerAndSN" is the issuer and serial number to look for
 */
 extern NSSLOWCERTTrust *
-nsslowcert_FindTrustByIssuerAndSN (NSSLOWCERTCertDBHandle *handle, NSSLOWCERTIssuerAndSN *issuerAndSN);
+nsslowcert_FindTrustByIssuerAndSN(NSSLOWCERTCertDBHandle *handle, NSSLOWCERTIssuerAndSN *issuerAndSN);
 
 /*
 ** Find a certificate in the database by a DER encoded certificate
-**	"derCert" is the DER encoded certificate
+**  "derCert" is the DER encoded certificate
 */
 extern NSSLOWCERTCertificate *
 nsslowcert_FindCertByDERCert(NSSLOWCERTCertDBHandle *handle, SECItem *derCert);
@@ -125,21 +125,21 @@ char *nsslowcert_FixupEmailAddr(char *emailAddr);
 **              then a temporary nickname is generated.
 */
 extern NSSLOWCERTCertificate *
-nsslowcert_DecodeDERCertificate (SECItem *derSignedCert, char *nickname);
+nsslowcert_DecodeDERCertificate(SECItem *derSignedCert, char *nickname);
 
 SECStatus
 nsslowcert_KeyFromDERCert(PLArenaPool *arena, SECItem *derCert, SECItem *key);
 
 certDBEntrySMime *
 nsslowcert_ReadDBSMimeEntry(NSSLOWCERTCertDBHandle *certHandle,
-							 char *emailAddr);
+                            char *emailAddr);
 void
 nsslowcert_DestroyDBEntry(certDBEntry *entry);
 
 SECStatus
 nsslowcert_OpenCertDB(NSSLOWCERTCertDBHandle *handle, PRBool readOnly,
-		const char *domain, const char *prefix,
-                NSSLOWCERTDBNameFunc namecb, void *cbarg, PRBool openVolatile);
+                      const char *domain, const char *prefix,
+                      NSSLOWCERTDBNameFunc namecb, void *cbarg, PRBool openVolatile);
 
 void
 nsslowcert_ClosePermCertDB(NSSLOWCERTCertDBHandle *handle);
@@ -150,42 +150,41 @@ nsslowcert_ClosePermCertDB(NSSLOWCERTCertDBHandle *handle);
 PRBool
 nsslowcert_IsNewer(NSSLOWCERTCertificate *certa, NSSLOWCERTCertificate *certb);
 
-
 SECStatus
 nsslowcert_TraverseDBEntries(NSSLOWCERTCertDBHandle *handle,
-		      certDBEntryType type,
-		      SECStatus (* callback)(SECItem *data, SECItem *key,
-					    certDBEntryType type, void *pdata),
-		      void *udata );
+                             certDBEntryType type,
+                             SECStatus (*callback)(SECItem *data, SECItem *key,
+                                                   certDBEntryType type, void *pdata),
+                             void *udata);
 SECStatus
 nsslowcert_TraversePermCertsForSubject(NSSLOWCERTCertDBHandle *handle,
-				 SECItem *derSubject,
-				 NSSLOWCERTCertCallback cb, void *cbarg);
+                                       SECItem *derSubject,
+                                       NSSLOWCERTCertCallback cb, void *cbarg);
 int
 nsslowcert_NumPermCertsForSubject(NSSLOWCERTCertDBHandle *handle,
-							 SECItem *derSubject);
+                                  SECItem *derSubject);
 SECStatus
 nsslowcert_TraversePermCertsForNickname(NSSLOWCERTCertDBHandle *handle,
-	 	char *nickname, NSSLOWCERTCertCallback cb, void *cbarg);
+                                        char *nickname, NSSLOWCERTCertCallback cb, void *cbarg);
 
 int
-nsslowcert_NumPermCertsForNickname(NSSLOWCERTCertDBHandle *handle, 
-							char *nickname);
+nsslowcert_NumPermCertsForNickname(NSSLOWCERTCertDBHandle *handle,
+                                   char *nickname);
 SECStatus
 nsslowcert_GetCertTrust(NSSLOWCERTCertificate *cert,
-					 NSSLOWCERTCertTrust *trust);
+                        NSSLOWCERTCertTrust *trust);
 
 SECStatus
-nsslowcert_SaveSMimeProfile(NSSLOWCERTCertDBHandle *dbhandle, char *emailAddr, 
-	SECItem *derSubject, SECItem *emailProfile, SECItem *profileTime);
+nsslowcert_SaveSMimeProfile(NSSLOWCERTCertDBHandle *dbhandle, char *emailAddr,
+                            SECItem *derSubject, SECItem *emailProfile, SECItem *profileTime);
 
 /*
  * Change the trust attributes of a certificate and make them permanent
  * in the database.
  */
 SECStatus
-nsslowcert_ChangeCertTrust(NSSLOWCERTCertDBHandle *handle, 
-	  	NSSLOWCERTCertificate *cert, NSSLOWCERTCertTrust *trust);
+nsslowcert_ChangeCertTrust(NSSLOWCERTCertDBHandle *handle,
+                           NSSLOWCERTCertificate *cert, NSSLOWCERTCertTrust *trust);
 
 PRBool
 nsslowcert_needDBVerify(NSSLOWCERTCertDBHandle *handle);
@@ -216,14 +215,14 @@ pkcs11_allocStaticData(int datalen, unsigned char *space, int spaceLen);
 
 unsigned char *
 pkcs11_copyStaticData(unsigned char *data, int datalen, unsigned char *space,
-						int spaceLen);
+                      int spaceLen);
 NSSLOWCERTCertificate *
 nsslowcert_CreateCert(void);
 
 certDBEntry *
-nsslowcert_DecodeAnyDBEntry(SECItem *dbData, const SECItem *dbKey, 
+nsslowcert_DecodeAnyDBEntry(SECItem *dbData, const SECItem *dbKey,
                             certDBEntryType entryType, void *pdata);
 
 SEC_END_PROTOS
 
- #endif /* _PCERTDB_H_ */
+#endif /* _PCERTDB_H_ */

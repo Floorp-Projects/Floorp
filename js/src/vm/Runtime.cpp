@@ -156,6 +156,8 @@ JSRuntime::JSRuntime(JSRuntime* parentRuntime)
     enqueuePromiseJobCallbackData(nullptr),
     promiseRejectionTrackerCallback(nullptr),
     promiseRejectionTrackerCallbackData(nullptr),
+    startAsyncTaskCallback(nullptr),
+    finishAsyncTaskCallback(nullptr),
 #ifdef DEBUG
     mainThreadHasExclusiveAccess(false),
 #endif

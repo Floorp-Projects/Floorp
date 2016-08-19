@@ -12,6 +12,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/MessagePort.h"
 #include "mozilla/dom/SharedWorkerBinding.h"
+#include "mozilla/Telemetry.h"
 #include "nsContentUtils.h"
 #include "nsIClassInfoImpl.h"
 #include "nsIDOMEvent.h"
@@ -71,6 +72,8 @@ SharedWorker::Constructor(const GlobalObject& aGlobal, JSContext* aCx,
     aRv = rv;
     return nullptr;
   }
+
+  Telemetry::Accumulate(Telemetry::SHARED_WORKER_COUNT, 1);
 
   return sharedWorker.forget();
 }

@@ -1,0 +1,25 @@
+<!DOCTYPE HTML>
+<html>
+  <!-- Test: input with minlength is invalid if the user edits and it's too short -->
+  <head>
+    <style>
+      :valid { background-color:green; }
+      :invalid { background-color:red; }
+      * { box-shadow:none; background-color:white; }
+    </style>
+    <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+    <script>
+      function runTest() {
+        var input = document.getElementById('input');
+        input.focus();
+        synthesizeKey('o', {});
+        input.blur(); // to hide the caret
+        document.documentElement.className='';
+      }
+    </script>
+  </head>
+  <body onload="runTest()">
+    <input id="input" minlength="4" value="fo">
+  </body>
+</html>
+

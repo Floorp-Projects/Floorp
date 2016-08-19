@@ -44,6 +44,9 @@ public:
     NS_IMETHOD GetPixelDepth(int32_t* aPixelDepth) override;
     NS_IMETHOD GetColorDepth(int32_t* aColorDepth) override;
 
+    NS_IMETHOD GetContentsScaleFactor(double* aContentsScaleFactor) override;
+    NS_IMETHOD GetDefaultCSSScaleFactor(double* aScaleFactor) override;
+
 private:
 
     void PopulateByDetails(mozilla::dom::ScreenDetails aDetails);
@@ -52,6 +55,7 @@ private:
     void InvalidateCache();
 
     double mContentsScaleFactor;
+    double mDefaultCSSScaleFactor;
     RefPtr<nsScreenManagerProxy> mScreenManager;
     uint32_t mId;
     int32_t mPixelDepth;

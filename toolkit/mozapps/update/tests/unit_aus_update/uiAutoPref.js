@@ -15,9 +15,8 @@ function run_test() {
   Services.prefs.setBoolPref(PREF_APP_UPDATE_AUTO, false);
   Services.prefs.setBoolPref(PREF_APP_UPDATE_SILENT, false);
 
-  setUpdateURLOverride();
-  // The mock XMLHttpRequest is MUCH faster
-  overrideXHR(callHandleEvent);
+  start_httpserver();
+  setUpdateURLOverride(gURLData + gHTTPHandlerPath);
   standardInit();
 
   let windowWatcherCID =
@@ -52,21 +51,6 @@ function check_status() {
   reloadUpdateManagerData();
 
   do_execute_soon(doTestFinish);
-}
-
-// Callback function used by the custom XMLHttpRequest implementation to
-// call the nsIDOMEventListener's handleEvent method for onload.
-function callHandleEvent(aXHR) {
-  aXHR.status = 400;
-  aXHR.responseText = gResponseBody;
-  try {
-    let parser = Cc["@mozilla.org/xmlextras/domparser;1"].
-                 createInstance(Ci.nsIDOMParser);
-    aXHR.responseXML = parser.parseFromString(gResponseBody, "application/xml");
-  } catch (e) {
-  }
-  let e = { target: aXHR };
-  aXHR.onload(e);
 }
 
 function check_showUpdateAvailable() {

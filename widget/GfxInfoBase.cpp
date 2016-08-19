@@ -160,7 +160,8 @@ GetPrefNameForFeature(int32_t aFeature)
       break;
     case nsIGfxInfo::FEATURE_VP8_HW_DECODE:
     case nsIGfxInfo::FEATURE_VP9_HW_DECODE:
-      // We don't provide prefs for this features.
+    case nsIGfxInfo::FEATURE_DX_INTEROP2:
+      // We don't provide prefs for these features.
       break;
     default:
       MOZ_ASSERT_UNREACHABLE("Unexpected nsIGfxInfo feature?!");

@@ -4020,14 +4020,7 @@ TSFTextStore::GetScreenExtInternal(RECT& aScreenExt)
     return false;
   }
 
-  LayoutDeviceIntRect boundRect;
-  if (NS_FAILED(refWindow->GetClientBounds(boundRect))) {
-    MOZ_LOG(sTextStoreLog, LogLevel::Error,
-      ("0x%p   TSFTextStore::GetScreenExtInternal() FAILED due to "
-       "failed to get the client bounds", this));
-    return false;
-  }
-
+  LayoutDeviceIntRect boundRect = refWindow->GetClientBounds();
   boundRect.MoveTo(0, 0);
 
   // Clip frame rect to window rect

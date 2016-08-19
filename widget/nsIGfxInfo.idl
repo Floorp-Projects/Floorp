@@ -18,7 +18,7 @@ interface nsIGfxInfo : nsISupports
   readonly attribute DOMString DWriteVersion;
   readonly attribute DOMString cleartypeParameters;
 
-  // XXX: Switch to a list of devices, rather than explicitly numbering them. 
+  // XXX: Switch to a list of devices, rather than explicitly numbering them.
 
   /**
    * The name of the display adapter.
@@ -28,11 +28,11 @@ interface nsIGfxInfo : nsISupports
 
   readonly attribute DOMString adapterDriver;
   readonly attribute DOMString adapterDriver2;
-  
+
   /* These types are inspired by DXGI_ADAPTER_DESC */
   readonly attribute DOMString adapterVendorID;
   readonly attribute DOMString adapterVendorID2;
-  
+
   readonly attribute DOMString adapterDeviceID;
   readonly attribute DOMString adapterDeviceID2;
 
@@ -44,10 +44,10 @@ interface nsIGfxInfo : nsISupports
    */
   readonly attribute DOMString adapterRAM;
   readonly attribute DOMString adapterRAM2;
-  
+
   readonly attribute DOMString adapterDriverVersion;
   readonly attribute DOMString adapterDriverVersion2;
-  
+
   readonly attribute DOMString adapterDriverDate;
   readonly attribute DOMString adapterDriverDate2;
 
@@ -111,6 +111,8 @@ interface nsIGfxInfo : nsISupports
   const long FEATURE_VP8_HW_DECODE = 17;
   /* Whether hardware VP9 decoding is supported, starting in 48. */
   const long FEATURE_VP9_HW_DECODE = 18;
+  /* Whether NV_dx_interop2 is supported, starting in 50. */
+  const long FEATURE_DX_INTEROP2 = 19;
 
   /*
    * A set of return values from GetFeatureStatus
@@ -142,7 +144,7 @@ interface nsIGfxInfo : nsISupports
 
   /*
    * Ask about a feature, return the minimum driver version required for it if its status is
-   * FEATURE_BLOCKED_DRIVER_VERSION, otherwise return an empty string. 
+   * FEATURE_BLOCKED_DRIVER_VERSION, otherwise return an empty string.
    */
   DOMString getFeatureSuggestedDriverVersion(in long aFeature);
 

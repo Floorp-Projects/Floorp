@@ -310,7 +310,7 @@ EXTRA_CONFIG_DEPS := \
 
 $(CONFIGURES): %: %.in $(EXTRA_CONFIG_DEPS)
 	@echo Generating $@
-	sed '1,/^divert/d' $< > $@
+	cp -f $< $@
 	chmod +x $@
 
 CONFIG_STATUS_DEPS := \

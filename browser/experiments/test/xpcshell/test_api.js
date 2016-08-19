@@ -28,7 +28,7 @@ function uninstallExperimentAddons() {
   return Task.spawn(function* () {
     let addons = yield getExperimentAddons();
     for (let a of addons) {
-      yield AddonTestUtils.uninstallAddonByID(a.id);
+      yield AddonManagerTesting.uninstallAddonByID(a.id);
     }
   });
 }
@@ -412,7 +412,7 @@ add_task(function* test_addonAlreadyInstalled() {
 
   // Install conflicting addon.
 
-  yield AddonTestUtils.installXPIFromURL(gDataRoot + EXPERIMENT1_XPI_NAME, EXPERIMENT1_XPI_SHA1);
+  yield AddonManagerTesting.installXPIFromURL(gDataRoot + EXPERIMENT1_XPI_NAME, EXPERIMENT1_XPI_SHA1);
   addons = yield getExperimentAddons();
   Assert.equal(addons.length, 1, "1 add-on is installed.");
   list = yield experiments.getExperiments();
@@ -1407,7 +1407,7 @@ add_task(function* test_unexpectedUninstall() {
   // Uninstall the addon through the addon manager instead of stopping it through
   // the experiments API.
 
-  yield AddonTestUtils.uninstallAddonByID(EXPERIMENT1_ID);
+  yield AddonManagerTesting.uninstallAddonByID(EXPERIMENT1_ID);
   yield experiments._mainTask;
 
   yield experiments.notify();
@@ -1433,7 +1433,7 @@ add_task(function* testUnknownExperimentsUninstalled() {
 
   // Simulate us not listening.
   experiments._unregisterWithAddonManager();
-  yield AddonTestUtils.installXPIFromURL(gDataRoot + EXPERIMENT1_XPI_NAME, EXPERIMENT1_XPI_SHA1);
+  yield AddonManagerTesting.installXPIFromURL(gDataRoot + EXPERIMENT1_XPI_NAME, EXPERIMENT1_XPI_SHA1);
   experiments._registerWithAddonManager();
 
   addons = yield getExperimentAddons();
@@ -1472,7 +1472,7 @@ add_task(function* testForeignExperimentInstall() {
 
   let failed = false;
   try {
-    yield AddonTestUtils.installXPIFromURL(gDataRoot + EXPERIMENT1_XPI_NAME, EXPERIMENT1_XPI_SHA1);
+    yield AddonManagerTesting.installXPIFromURL(gDataRoot + EXPERIMENT1_XPI_NAME, EXPERIMENT1_XPI_SHA1);
   } catch (ex) {
     failed = true;
   }
@@ -1622,7 +1622,7 @@ add_task(function* test_foreignUninstallAndRestart() {
   Assert.equal(addons.length, 1, "A single experiment add-on is installed.");
   Assert.ok(addons[0].isActive, "That experiment is active.");
 
-  yield AddonTestUtils.uninstallAddonByID(EXPERIMENT1_ID);
+  yield AddonManagerTesting.uninstallAddonByID(EXPERIMENT1_ID);
   yield experiments._mainTask;
 
   addons = yield getExperimentAddons();

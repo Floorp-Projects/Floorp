@@ -56,6 +56,13 @@ ValidityState::GetTooLong(bool* aTooLong)
 }
 
 NS_IMETHODIMP
+ValidityState::GetTooShort(bool* aTooShort)
+{
+  *aTooShort = TooShort();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 ValidityState::GetRangeUnderflow(bool* aRangeUnderflow)
 {
   *aRangeUnderflow = RangeUnderflow();

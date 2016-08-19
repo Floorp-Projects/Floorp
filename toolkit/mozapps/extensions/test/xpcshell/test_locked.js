@@ -361,7 +361,12 @@ add_task(function* run_test_1() {
    // Restarting will actually apply changes to extensions.ini which will
    // then be put into the in-memory database when we next fail to load the
    // real thing
-   restartManager();
+   try {
+     shutdownManager();
+   } catch (e) {
+     // We're expecting an error here.
+   }
+   startupManager(false);
 
    // Shouldn't have seen any startup changes
    check_startup_changes(AddonManager.STARTUP_CHANGE_INSTALLED, []);
@@ -440,7 +445,11 @@ add_task(function* run_test_1() {
 
    // After allowing access to the original DB things should go back to as
    // they were previously
-   shutdownManager();
+   try {
+     shutdownManager();
+   } catch (e) {
+     // We're expecting an error here.
+   }
    do_print("Unlocking " + gExtensionsJSON.path);
    yield file.close();
    gExtensionsJSON.permissions = filePermissions;
@@ -521,6 +530,12 @@ add_task(function* run_test_1() {
    do_check_false(t2.appDisabled);
    do_check_eq(t2.pendingOperations, AddonManager.PENDING_NONE);
    do_check_true(isThemeInAddonsList(profileDir, t2.id));
+
+   try {
+     shutdownManager();
+   } catch (e) {
+     // We're expecting an error here.
+   }
 });
 
 

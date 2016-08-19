@@ -43,9 +43,9 @@ panel[type="arrow"][side="right"] {
   -moz-appearance: none;
   background: var(--panel-arrowcontent-background);
   border-radius: var(--panel-arrowcontent-border-radius);
-  box-shadow: 0 0 0 1px hsla(210,4%,10%,.05);
+  box-shadow: 0 0 0 1px var(--panel-arrowcontent-border-color);
   color: var(--panel-arrowcontent-color);
-  border: var(--panel-arrowcontent-border);
+  border: none;
   padding: var(--panel-arrowcontent-padding);
   margin: 1px;
 }

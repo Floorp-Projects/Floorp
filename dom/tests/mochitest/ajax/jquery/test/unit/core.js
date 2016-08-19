@@ -320,7 +320,7 @@ test("index(Object)", function() {
 });
 
 test("attr(String)", function() {
-	expect(26);
+	expect(29);
 	equals( $('#text1').attr('value'), "Test", 'Check for value attribute' );
 	equals( $('#text1').attr('value', "Test2").attr('defaultValue'), "Test", 'Check for defaultValue attribute' );
 	equals( $('#text1').attr('type'), "text", 'Check for type attribute' );
@@ -334,6 +334,9 @@ test("attr(String)", function() {
 	equals( $('#name').attr('name'), "name", 'Check for name attribute' );
 	equals( $('#text1').attr('name'), "action", 'Check for name attribute' );
 	ok( $('#form').attr('action').indexOf("formaction") >= 0, 'Check for action attribute' );
+	equals( $('#text1').attr('minlength'), '20', 'Check for minlength attribute' );
+	equals( $('#text1').attr('minLength'), '20', 'Check for minLength attribute' );
+	equals( $('#area1').attr('minLength'), '20', 'Check for minLength attribute' );
 	equals( $('#text1').attr('maxlength'), '30', 'Check for maxlength attribute' );
 	equals( $('#text1').attr('maxLength'), '30', 'Check for maxLength attribute' );
 	equals( $('#area1').attr('maxLength'), '30', 'Check for maxLength attribute' );
@@ -394,7 +397,7 @@ test("attr(Hash)", function() {
 });
 
 test("attr(String, Object)", function() {
-	expect(17);
+	expect(19);
 	var div = $("div").attr("foo", "bar");
 		fail = false;
 	for ( var i = 0; i < div.size(); i++ ) {
@@ -421,6 +424,10 @@ test("attr(String, Object)", function() {
 	equals( document.getElementById('name').maxLength, '5', 'Set maxlength attribute' );
 	$("#name").attr('maxLength', '10');
 	equals( document.getElementById('name').maxLength, '10', 'Set maxlength attribute' );
+	$("#name").attr('minlength', '5');
+	equals( document.getElementById('name').minLength, '5', 'Set minlength attribute' );
+	$("#name").attr('minLength', '10');
+	equals( document.getElementById('name').minLength, '10', 'Set minlength attribute' );
 
 	// for #1070
 	$("#name").attr('someAttr', '0');

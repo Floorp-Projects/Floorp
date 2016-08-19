@@ -355,6 +355,12 @@ public:
   void GetScrollableLayers(nsTArray<Layer*>& aArray);
 
   /**
+   * Returns a LayerMetricsWrapper containing the Root
+   * Content Documents layer.
+   */
+  LayerMetricsWrapper GetRootContentLayer();
+
+  /**
    * CONSTRUCTION PHASE ONLY
    * Called when a managee has mutated.
    * Subclasses overriding this method must first call their

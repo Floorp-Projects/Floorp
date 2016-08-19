@@ -1333,7 +1333,7 @@ AstDecodeImportSection(AstDecodeContext& c)
         return AstDecodeFail(c,  "too many imports");
 
     for (uint32_t i = 0; i < numImports; i++) {
-        AstImport* import;
+        AstImport* import = nullptr;
         if (!AstDecodeImport(c, i, &import))
             return false;
         if (!c.module().append(import))
@@ -1495,7 +1495,7 @@ AstDecodeExportSection(AstDecodeContext& c)
         return AstDecodeFail(c, "too many exports");
 
     for (uint32_t i = 0; i < numExports; i++) {
-        AstExport* export_;
+        AstExport* export_ = nullptr;
         if (!AstDecodeFunctionExport(c, &export_))
             return false;
         if (!c.module().append(export_))

@@ -14,7 +14,7 @@ task:
 
   payload:
     maxRunTime: 3600
-    image: ttaubert/nss-ci:0.0.17
+    image: !env TC_IMAGE
 
     artifacts:
       public:
@@ -35,4 +35,5 @@ task:
 
   extra:
     treeherder:
+      jobKind: build
       symbol: B

@@ -292,22 +292,15 @@ private:
       nsAutoCString surfacePathPrefix(aPathPrefix);
       surfacePathPrefix.Append(counter.IsLocked() ? "locked/" : "unlocked/");
       surfacePathPrefix.Append("surface(");
-
-      if (counter.SubframeSize() &&
-          *counter.SubframeSize() != counter.Key().Size()) {
-        surfacePathPrefix.AppendInt(counter.SubframeSize()->width);
-        surfacePathPrefix.Append("x");
-        surfacePathPrefix.AppendInt(counter.SubframeSize()->height);
-        surfacePathPrefix.Append(" subframe of ");
-      }
-
       surfacePathPrefix.AppendInt(counter.Key().Size().width);
       surfacePathPrefix.Append("x");
       surfacePathPrefix.AppendInt(counter.Key().Size().height);
 
       if (counter.Type() == SurfaceMemoryCounterType::NORMAL) {
-        surfacePathPrefix.Append("@");
-        surfacePathPrefix.AppendFloat(counter.Key().AnimationTime());
+        PlaybackType playback = counter.Key().Playback();
+        surfacePathPrefix.Append(playback == PlaybackType::eAnimated
+                                 ? " (animation)"
+                                 : "");
 
         if (counter.Key().Flags() != DefaultSurfaceFlags()) {
           surfacePathPrefix.Append(", flags:");

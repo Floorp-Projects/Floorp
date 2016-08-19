@@ -2097,25 +2097,14 @@ JS_GetArrayBufferViewData(JSObject* obj, bool* isSharedMemory, const JS::AutoChe
 extern JS_FRIEND_API(JSObject*)
 JS_GetArrayBufferViewBuffer(JSContext* cx, JS::HandleObject obj, bool* isSharedMemory);
 
-enum DetachDataDisposition {
-    ChangeData,
-    KeepData
-};
-
 /**
  * Detach an ArrayBuffer, causing all associated views to no longer refer to
  * the ArrayBuffer's original attached memory.
  *
- * The |changeData| argument is a hint to inform internal behavior with respect
- * to the ArrayBuffer's internal pointer to associated data.  |ChangeData|
- * attempts to set the internal pointer to fresh memory of the same size as the
- * original memory; |KeepData| attempts to preserve the original pointer, even
- * while the ArrayBuffer appears observably detached.  There is no guarantee
- * this parameter is respected -- it's only a hint.
+ * The |changeData| argument is obsolete and ignored.
  */
 extern JS_FRIEND_API(bool)
-JS_DetachArrayBuffer(JSContext* cx, JS::HandleObject obj,
-                     DetachDataDisposition changeData);
+JS_DetachArrayBuffer(JSContext* cx, JS::HandleObject obj);
 
 /**
  * Check whether the obj is a detached ArrayBufferObject. Note that this may

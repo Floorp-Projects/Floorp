@@ -1192,9 +1192,36 @@ Resolve(JSContext* cx, Module& module, Handle<PromiseObject*> promise)
     return promise->resolve(cx, resolutionValue);
 }
 
+struct CompileTask : PromiseTask
+{
+    MutableBytes bytecode;
+    CompileArgs  compileArgs;
+    UniqueChars  error;
+    SharedModule module;
+
+    CompileTask(JSContext* cx, Handle<PromiseObject*> promise)
+      : PromiseTask(cx, promise)
+    {}
+
+    void execute() override {
+        module = Compile(*bytecode, compileArgs, &error);
+    }
+
+    bool finishPromise(JSContext* cx, Handle<PromiseObject*> promise) override {
+        return module
+               ? Resolve(cx, *module, promise)
+               : Reject(cx, compileArgs, Move(error), promise);
+    }
+};
+
 static bool
 WebAssembly_compile(JSContext* cx, unsigned argc, Value* vp)
 {
+    if (!cx->startAsyncTaskCallback || !cx->finishAsyncTaskCallback) {
+        JS_ReportError(cx, "WebAssembly.compile not supported in this runtime.");
+        return false;
+    }
+
     CallArgs callArgs = CallArgsFromVp(argc, vp);
 
     RootedFunction nopFun(cx, NewNativeFunction(cx, Nop, 0, nullptr));
@@ -1205,9 +1232,11 @@ WebAssembly_compile(JSContext* cx, unsigned argc, Value* vp)
     if (!promise)
         return false;
 
-    MutableBytes bytecode;
-    CompileArgs compileArgs;
-    if (!GetCompileArgs(cx, callArgs, "WebAssembly.compile", &bytecode, &compileArgs)) {
+    auto task = cx->make_unique<CompileTask>(cx, promise);
+    if (!task)
+        return false;
+
+    if (!GetCompileArgs(cx, callArgs, "WebAssembly.compile", &task->bytecode, &task->compileArgs)) {
         if (!cx->isExceptionPending())
             return false;
 
@@ -1222,13 +1251,12 @@ WebAssembly_compile(JSContext* cx, unsigned argc, Value* vp)
         return true;
     }
 
-    UniqueChars error;
-    if (SharedModule module = Compile(*bytecode, compileArgs, &error)) {
-        if (!Resolve(cx, *module, promise))
+    if (CanUseExtraThreads()) {
+        if (!StartPromiseTask(cx, Move(task)))
             return false;
     } else {
-        if (!Reject(cx, compileArgs, Move(error), promise))
-            return false;
+        task->execute();
+        task->finishPromise(cx, promise);
     }
 
     callArgs.rval().setObject(*promise);

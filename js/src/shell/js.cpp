@@ -150,6 +150,17 @@ static const TimeDuration MAX_TIMEOUT_INTERVAL = TimeDuration::FromSeconds(1800.
 
 #ifdef SPIDERMONKEY_PROMISE
 using JobQueue = GCVector<JSObject*, 0, SystemAllocPolicy>;
+
+struct ShellAsyncTasks
+{
+    explicit ShellAsyncTasks(JSContext* cx)
+      : outstanding(0),
+        finished(cx)
+    {}
+
+    size_t outstanding;
+    Vector<JS::AsyncTask*> finished;
+};
 #endif // SPIDERMONKEY_PROMISE
 
 // Per-context shell state.
@@ -168,6 +179,7 @@ struct ShellContext
 #ifdef SPIDERMONKEY_PROMISE
     JS::PersistentRootedValue promiseRejectionTrackerCallback;
     JS::PersistentRooted<JobQueue> jobQueue;
+    ExclusiveData<ShellAsyncTasks> asyncTasks;
 #endif // SPIDERMONKEY_PROMISE
 
     /*
@@ -329,6 +341,7 @@ ShellContext::ShellContext(JSContext* cx)
     lastWarning(cx, NullValue()),
 #ifdef SPIDERMONKEY_PROMISE
     promiseRejectionTrackerCallback(cx, NullValue()),
+    asyncTasks(cx),
 #endif // SPIDERMONKEY_PROMISE
     exitCode(0),
     quitting(false),
@@ -643,6 +656,28 @@ ShellEnqueuePromiseJobCallback(JSContext* cx, JS::HandleObject job, JS::HandleOb
     MOZ_ASSERT(job);
     return sc->jobQueue.append(job);
 }
+
+static bool
+ShellStartAsyncTaskCallback(JSContext* cx, JS::AsyncTask* task)
+{
+    ShellContext* sc = GetShellContext(cx);
+    task->user = sc;
+
+    ExclusiveData<ShellAsyncTasks>::Guard asyncTasks = sc->asyncTasks.lock();
+    asyncTasks->outstanding++;
+    return true;
+}
+
+static bool
+ShellFinishAsyncTaskCallback(JS::AsyncTask* task)
+{
+    ShellContext* sc = (ShellContext*)task->user;
+
+    ExclusiveData<ShellAsyncTasks>::Guard asyncTasks = sc->asyncTasks.lock();
+    MOZ_ASSERT(asyncTasks->outstanding > 0);
+    asyncTasks->outstanding--;
+    return asyncTasks->finished.append(task);
+}
 #endif // SPIDERMONKEY_PROMISE
 
 static bool
@@ -652,6 +687,25 @@ DrainJobQueue(JSContext* cx)
     ShellContext* sc = GetShellContext(cx);
     if (sc->quitting)
         return true;
+
+    // Wait for any outstanding async tasks to finish so that the
+    // finishedAsyncTasks list is fixed.
+    while (true) {
+        if (!sc->asyncTasks.lock()->outstanding)
+            break;
+        AutoLockHelperThreadState lock;
+        HelperThreadState().wait(lock, GlobalHelperThreadState::CONSUMER);
+    }
+
+    // Lock the whole time while flushing the asyncTasks finished queue so that
+    // any new tasks created during finish() cannot racily join the job queue.
+    {
+        ExclusiveData<ShellAsyncTasks>::Guard asyncTasks = sc->asyncTasks.lock();
+        for (JS::AsyncTask* task : asyncTasks->finished)
+            task->finish(cx);
+        asyncTasks->finished.clear();
+    }
+
     RootedObject job(cx);
     JS::HandleValueArray args(JS::HandleValueArray::empty());
     RootedValue rval(cx);
@@ -2977,6 +3031,7 @@ WorkerMain(void* arg)
     sc->jobQueue.init(cx, JobQueue(SystemAllocPolicy()));
     JS::SetEnqueuePromiseJobCallback(cx, ShellEnqueuePromiseJobCallback);
     JS::SetGetIncumbentGlobalCallback(cx, ShellGetIncumbentGlobalCallback);
+    JS::SetAsyncTaskCallbacks(cx, ShellStartAsyncTaskCallback, ShellFinishAsyncTaskCallback);
 #endif // SPIDERMONKEY_PROMISE
 
     EnvironmentPreparer environmentPreparer(cx);
@@ -7523,6 +7578,7 @@ main(int argc, char** argv, char** envp)
     sc->jobQueue.init(cx, JobQueue(SystemAllocPolicy()));
     JS::SetEnqueuePromiseJobCallback(cx, ShellEnqueuePromiseJobCallback);
     JS::SetGetIncumbentGlobalCallback(cx, ShellGetIncumbentGlobalCallback);
+    JS::SetAsyncTaskCallbacks(cx, ShellStartAsyncTaskCallback, ShellFinishAsyncTaskCallback);
 #endif // SPIDERMONKEY_PROMISE
 
     EnvironmentPreparer environmentPreparer(cx);

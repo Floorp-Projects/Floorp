@@ -36,12 +36,11 @@ public:
 
   NS_DECL_ISUPPORTS_INHERITED
 
-  NS_IMETHOD GetClientBounds(LayoutDeviceIntRect& aRect) override {
-    aRect = LayoutDeviceIntRect(0, 0, gCompWidth, gCompHeight);
-    return NS_OK;
+  virtual LayoutDeviceIntRect GetClientBounds() override {
+    return LayoutDeviceIntRect(0, 0, gCompWidth, gCompHeight);
   }
-  NS_IMETHOD GetBounds(LayoutDeviceIntRect& aRect) override {
-    return GetClientBounds(aRect);
+  virtual LayoutDeviceIntRect GetBounds() override {
+    return GetClientBounds();
   }
 
   void* GetNativeData(uint32_t aDataType) override {
@@ -59,11 +58,11 @@ public:
     return nullptr;
   }
 
-  NS_IMETHOD              Create(nsIWidget* aParent,
+  virtual nsresult        Create(nsIWidget* aParent,
                                  nsNativeWidget aNativeParent,
                                  const LayoutDeviceIntRect& aRect,
                                  nsWidgetInitData* aInitData = nullptr) override { return NS_OK; }
-  NS_IMETHOD              Create(nsIWidget* aParent,
+  virtual nsresult        Create(nsIWidget* aParent,
                                  nsNativeWidget aNativeParent,
                                  const DesktopIntRect& aRect,
                                  nsWidgetInitData* aInitData = nullptr) override { return NS_OK; }

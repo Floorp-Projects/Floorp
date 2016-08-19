@@ -63,33 +63,6 @@ protected:
 
 
 /**
- * An IDecodingTask implementation for full decodes of animated images.
- */
-class AnimationDecodingTask final : public IDecodingTask
-{
-public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(AnimationDecodingTask, override)
-
-  explicit AnimationDecodingTask(NotNull<Decoder*> aDecoder);
-
-  void Run() override;
-  bool ShouldPreferSyncRun() const override;
-
-  // Full decodes are low priority compared to metadata decodes because they
-  // don't block layout or page load.
-  TaskPriority Priority() const override { return TaskPriority::eLow; }
-
-private:
-  virtual ~AnimationDecodingTask() { }
-
-  /// Mutex protecting access to mDecoder.
-  Mutex mMutex;
-
-  NotNull<RefPtr<Decoder>> mDecoder;
-};
-
-
-/**
  * An IDecodingTask implementation for metadata decodes of images.
  */
 class MetadataDecodingTask final : public IDecodingTask
@@ -112,6 +85,9 @@ public:
 
 private:
   virtual ~MetadataDecodingTask() { }
+
+  /// Mutex protecting access to mDecoder.
+  Mutex mMutex;
 
   NotNull<RefPtr<Decoder>> mDecoder;
 };

@@ -36,13 +36,12 @@ ecperf_cleanup()
 {
   html "</TABLE><BR>"
   cd ${QADIR}
-  chmod a+rw $RONLY_DIR
   . common/cleanup.sh
 }
 
 ecperf_init
-ECPERF_OUT=`ecperf`
-ECPERF_OUT=`echo $ECPERF_OUT | grep -i "failed"`
+ECPERF_OUT=$(ecperf 2>&1)
+ECPERF_OUT=`echo $ECPERF_OUT | grep -i 'failed\|Assertion failure'`
 # TODO: this is a perf test we don't check for performance here but only failed
 if [ -n "$ECPERF_OUT" ] ; then
   html_failed "ec(perf) test"

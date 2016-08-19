@@ -13,6 +13,7 @@
 #include "AndroidJavaWrappers.h"
 #include "GeneratedJNIWrappers.h"
 #include "mozilla/EventForwards.h"
+#include "mozilla/Mutex.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/TextRange.h"
 #include "mozilla/UniquePtr.h"
@@ -53,18 +54,60 @@ private:
              class Impl = typename Lambda::TargetClass>
     class WindowEvent;
 
-    class GeckoViewSupport;
-    // Object that implements native GeckoView calls and associated states.
-    // nullptr for nsWindows that were not opened from GeckoView.
-    mozilla::UniquePtr<GeckoViewSupport> mGeckoViewSupport;
+    // Smart pointer for holding a pointer back to the nsWindow inside a native
+    // object class. The nsWindow pointer is automatically cleared when the
+    // nsWindow is destroyed, and a WindowPtr<Impl>::Locked class is provided
+    // for thread-safe access to the nsWindow pointer off of the Gecko thread.
+    template<class Impl> class WindowPtr;
+
+    // Smart pointer for holding a pointer to a native object class. The
+    // pointer is automatically cleared when the object is destroyed.
+    template<class Impl>
+    class NativePtr final
+    {
+        friend WindowPtr<Impl>;
+
+        static const char sName[];
+
+        WindowPtr<Impl>* mPtr;
+        Impl* mImpl;
+        mozilla::Mutex mImplLock;
+
+    public:
+        class Locked;
+
+        NativePtr() : mPtr(nullptr), mImpl(nullptr), mImplLock(sName) {}
+        ~NativePtr() { MOZ_ASSERT(!mPtr); }
+
+        operator Impl*() const
+        {
+            MOZ_ASSERT(NS_IsMainThread());
+            return mImpl;
+        }
+
+        Impl* operator->() const { return operator Impl*(); }
+
+        template<class Instance, typename... Args>
+        void Attach(Instance aInstance, nsWindow* aWindow, Args&&... aArgs);
+        void Detach();
+    };
 
     class LayerViewSupport;
-    mozilla::UniquePtr<LayerViewSupport> mLayerViewSupport;
+    // Object that implements native LayerView calls.
+    // Owned by the Java LayerView instance.
+    NativePtr<LayerViewSupport> mLayerViewSupport;
 
     class NPZCSupport;
     // Object that implements native NativePanZoomController calls.
     // Owned by the Java NativePanZoomController instance.
-    NPZCSupport* mNPZCSupport;
+    NativePtr<NPZCSupport> mNPZCSupport;
+
+    class GeckoViewSupport;
+    // Object that implements native GeckoView calls and associated states.
+    // nullptr for nsWindows that were not opened from GeckoView.
+    // Because other objects get destroyed in the mGeckOViewSupport destructor,
+    // keep it last in the list, so its destructor is called first.
+    mozilla::UniquePtr<GeckoViewSupport> mGeckoViewSupport;
 
 public:
     static nsWindow* TopWindow();
@@ -83,10 +126,10 @@ public:
     //
 
     using nsBaseWidget::Create; // for Create signature not overridden here
-    NS_IMETHOD Create(nsIWidget* aParent,
-                      nsNativeWidget aNativeParent,
-                      const LayoutDeviceIntRect& aRect,
-                      nsWidgetInitData* aInitData) override;
+    virtual MOZ_MUST_USE nsresult Create(nsIWidget* aParent,
+                                         nsNativeWidget aNativeParent,
+                                         const LayoutDeviceIntRect& aRect,
+                                         nsWidgetInitData* aInitData) override;
     NS_IMETHOD Destroy(void) override;
     NS_IMETHOD ConfigureChildren(const nsTArray<nsIWidget::Configuration>&) override;
     NS_IMETHOD SetParent(nsIWidget* aNewParent) override;
@@ -118,12 +161,14 @@ public:
     virtual bool IsEnabled() const override;
     NS_IMETHOD Invalidate(const LayoutDeviceIntRect& aRect) override;
     NS_IMETHOD SetFocus(bool aRaise = false) override;
-    NS_IMETHOD GetScreenBounds(LayoutDeviceIntRect& aRect) override;
+    virtual LayoutDeviceIntRect GetScreenBounds() override;
     virtual LayoutDeviceIntPoint WidgetToScreenOffset() override;
     NS_IMETHOD DispatchEvent(mozilla::WidgetGUIEvent* aEvent,
                              nsEventStatus& aStatus) override;
     nsEventStatus DispatchEvent(mozilla::WidgetGUIEvent* aEvent);
-    NS_IMETHOD MakeFullScreen(bool aFullScreen, nsIScreen* aTargetScreen = nullptr) override;
+    virtual nsresult MakeFullScreen(bool aFullScreen,
+                                    nsIScreen* aTargetScreen = nullptr)
+                                    override;
     NS_IMETHOD SetWindowClass(const nsAString& xulWinType) override;
 
 
