@@ -108,7 +108,7 @@ public:
                           char16_t      aChar,
                           bool          aVertical) = 0;
 
-  virtual UniquePtr<gfxTextRun>
+  virtual already_AddRefed<gfxTextRun>
   MakeTextRun(DrawTarget*        aDrawTarget,
               int32_t            aAppUnitsPerDevPixel,
               gfxFontGroup*      aFontGroup,
@@ -230,7 +230,7 @@ public:
                       aChar, aVertical, 3).Exists());
   }
 
-  virtual UniquePtr<gfxTextRun>
+  virtual already_AddRefed<gfxTextRun>
   MakeTextRun(DrawTarget*        aDrawTarget,
               int32_t            aAppUnitsPerDevPixel,
               gfxFontGroup*      aFontGroup,
@@ -383,7 +383,7 @@ nsPropertiesTable::ElementAt(DrawTarget*   /* aDrawTarget */,
 }
 
 /* virtual */
-UniquePtr<gfxTextRun>
+already_AddRefed<gfxTextRun>
 nsPropertiesTable::MakeTextRun(DrawTarget*        aDrawTarget,
                                int32_t            aAppUnitsPerDevPixel,
                                gfxFontGroup*      aFontGroup,
@@ -432,7 +432,7 @@ public:
     return mFontFamilyName;
   }
 
-  virtual UniquePtr<gfxTextRun>
+  virtual already_AddRefed<gfxTextRun>
   MakeTextRun(DrawTarget*        aDrawTarget,
               int32_t            aAppUnitsPerDevPixel,
               gfxFontGroup*      aFontGroup,
@@ -473,7 +473,7 @@ nsOpenTypeTable::UpdateCache(DrawTarget*   aDrawTarget,
                              char16_t      aChar)
 {
   if (mCharCache != aChar) {
-    UniquePtr<gfxTextRun> textRun = aFontGroup->
+    RefPtr<gfxTextRun> textRun = aFontGroup->
       MakeTextRun(&aChar, 1, aDrawTarget, aAppUnitsPerDevPixel, 0, nullptr);
     const gfxTextRun::CompressedGlyph& data = textRun->GetCharacterGlyphs()[0];
     if (data.IsSimpleGlyph()) {
@@ -555,7 +555,7 @@ nsOpenTypeTable::HasPartsOf(DrawTarget*   aDrawTarget,
 }
 
 /* virtual */
-UniquePtr<gfxTextRun>
+already_AddRefed<gfxTextRun>
 nsOpenTypeTable::MakeTextRun(DrawTarget*        aDrawTarget,
                              int32_t            aAppUnitsPerDevPixel,
                              gfxFontGroup*      aFontGroup,
@@ -567,7 +567,7 @@ nsOpenTypeTable::MakeTextRun(DrawTarget*        aDrawTarget,
   gfxTextRunFactory::Parameters params = {
     aDrawTarget, nullptr, nullptr, nullptr, 0, aAppUnitsPerDevPixel
   };
-  UniquePtr<gfxTextRun> textRun =
+  RefPtr<gfxTextRun> textRun =
     gfxTextRun::Create(&params, 1, aFontGroup, 0);
   textRun->AddGlyphRun(aFontGroup->GetFirstValidFont(),
                        gfxTextRange::kFontGroup, 0,
@@ -585,7 +585,7 @@ nsOpenTypeTable::MakeTextRun(DrawTarget*        aDrawTarget,
   g.SetComplex(true, true, 1);
   textRun->SetGlyphs(0, g, &detailedGlyph);
 
-  return textRun;
+  return textRun.forget();
 }
 
 // -----------------------------------------------------------------------------
@@ -1136,7 +1136,7 @@ StretchEnumContext::TryVariants(nsGlyphTable* aGlyphTable,
         displayOperatorMinHeight =
           mathFont->GetMathConstant(gfxFontEntry::DisplayOperatorMinHeight,
                                     oneDevPixel);
-        UniquePtr<gfxTextRun> textRun =
+        RefPtr<gfxTextRun> textRun =
           aGlyphTable->MakeTextRun(mDrawTarget, oneDevPixel, *aFontGroup, ch);
         nsBoundingMetrics bm = MeasureTextRun(mDrawTarget, textRun.get());
         float largeopFactor = kLargeOpFactor;
@@ -1166,7 +1166,7 @@ StretchEnumContext::TryVariants(nsGlyphTable* aGlyphTable,
       continue;
     }
 
-    UniquePtr<gfxTextRun> textRun =
+    RefPtr<gfxTextRun> textRun =
       aGlyphTable->MakeTextRun(mDrawTarget, oneDevPixel, *aFontGroup, ch);
     nsBoundingMetrics bm = MeasureTextRun(mDrawTarget, textRun.get());
     if (ch.IsGlyphID()) {
@@ -1254,7 +1254,7 @@ nsMathMLChar::StretchEnumContext::TryParts(nsGlyphTable* aGlyphTable,
   NormalizeDefaultFont(font, mFontSizeInflation);
 
   // Compute the bounding metrics of all partial glyphs
-  UniquePtr<gfxTextRun> textRun[4];
+  RefPtr<gfxTextRun> textRun[4];
   nsGlyphCode chdata[4];
   nsBoundingMetrics bmdata[4];
   nscoord sizedata[4];

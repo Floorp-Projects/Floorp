@@ -71,8 +71,6 @@ struct gfxTextRunDrawCallbacks {
  * gfxFont. The glyphs are associated with a string of source text, and the
  * gfxTextRun APIs take parameters that are offsets into that source text.
  * 
- * gfxTextRuns are not refcounted. They should be deleted when no longer required.
- * 
  * gfxTextRuns are mostly immutable. The only things that can change are
  * inter-cluster spacing and line break placement. Spacing is always obtained
  * lazily by methods that need it, it is not cached. Line breaks are stored
@@ -84,8 +82,11 @@ struct gfxTextRunDrawCallbacks {
  * It is important that zero-length substrings are handled correctly. This will
  * be on the test!
  */
-class gfxTextRun : public gfxShapedText {
-public:
+class gfxTextRun : public gfxShapedText
+{
+    NS_INLINE_DECL_REFCOUNTING(gfxTextRun);
+
+protected:
     // Override operator delete to properly free the object that was
     // allocated via malloc.
     void operator delete(void* p) {
@@ -94,6 +95,7 @@ public:
 
     virtual ~gfxTextRun();
 
+public:
     typedef gfxFont::RunMetrics Metrics;
     typedef mozilla::gfx::DrawTarget DrawTarget;
 
@@ -443,7 +445,7 @@ public:
 
     // Call this, don't call "new gfxTextRun" directly. This does custom
     // allocation and initialization
-    static mozilla::UniquePtr<gfxTextRun>
+    static already_AddRefed<gfxTextRun>
     Create(const gfxTextRunFactory::Parameters *aParams,
            uint32_t aLength, gfxFontGroup *aFontGroup,
            uint32_t aFlags);
@@ -813,7 +815,7 @@ public:
      * textrun will copy it.
      * This calls FetchGlyphExtents on the textrun.
      */
-    virtual mozilla::UniquePtr<gfxTextRun>
+    virtual already_AddRefed<gfxTextRun>
     MakeTextRun(const char16_t *aString, uint32_t aLength,
                 const Parameters *aParams, uint32_t aFlags,
                 gfxMissingFontRecorder *aMFR);
@@ -823,7 +825,7 @@ public:
      * textrun will copy it.
      * This calls FetchGlyphExtents on the textrun.
      */
-    virtual mozilla::UniquePtr<gfxTextRun>
+    virtual already_AddRefed<gfxTextRun>
     MakeTextRun(const uint8_t *aString, uint32_t aLength,
                 const Parameters *aParams, uint32_t aFlags,
                 gfxMissingFontRecorder *aMFR);
@@ -833,7 +835,7 @@ public:
      * a full Parameters record.
      */
     template<typename T>
-    mozilla::UniquePtr<gfxTextRun>
+    already_AddRefed<gfxTextRun>
     MakeTextRun(const T* aString, uint32_t aLength,
                 DrawTarget* aRefDrawTarget,
                 int32_t aAppUnitsPerDevUnit,
@@ -861,7 +863,7 @@ public:
      * The caller is responsible for deleting the returned text run
      * when no longer required.
      */
-    mozilla::UniquePtr<gfxTextRun>
+    already_AddRefed<gfxTextRun>
     MakeHyphenTextRun(DrawTarget* aDrawTarget, uint32_t aAppUnitsPerDevUnit);
 
     /**
@@ -1095,7 +1097,7 @@ protected:
 
     // Cache a textrun representing an ellipsis (useful for CSS text-overflow)
     // at a specific appUnitsPerDevPixel size and orientation
-    mozilla::UniquePtr<gfxTextRun>   mCachedEllipsisTextRun;
+    RefPtr<gfxTextRun>   mCachedEllipsisTextRun;
 
     // cache the most recent pref font to avoid general pref font lookup
     RefPtr<gfxFontFamily> mLastPrefFamily;
@@ -1115,13 +1117,13 @@ protected:
      * Textrun creation short-cuts for special cases where we don't need to
      * call a font shaper to generate glyphs.
      */
-    mozilla::UniquePtr<gfxTextRun>
+    already_AddRefed<gfxTextRun>
     MakeEmptyTextRun(const Parameters *aParams, uint32_t aFlags);
 
-    mozilla::UniquePtr<gfxTextRun>
+    already_AddRefed<gfxTextRun>
     MakeSpaceTextRun(const Parameters *aParams, uint32_t aFlags);
 
-    mozilla::UniquePtr<gfxTextRun>
+    already_AddRefed<gfxTextRun>
     MakeBlankTextRun(uint32_t aLength, const Parameters *aParams,
                      uint32_t aFlags);
 
