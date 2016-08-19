@@ -120,8 +120,7 @@
       hidden="true"
       data-category="paneAdvanced">
   <label class="header-name" flex="1">&paneAdvanced.title;</label>
-  <button class="help-button"
-          aria-label="&helpButton.label;"/>
+  <html:a class="help-button" target="_blank" aria-label="&helpButton.label;"></html:a>
 </hbox>
 
 <tabbox id="advancedPrefs"
