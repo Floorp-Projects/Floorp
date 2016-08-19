@@ -30,6 +30,7 @@ class LIRGeneratorX86 : public LIRGeneratorX86Shared
     // will assert on us.) Ideally, we'd just ask the register allocator to
     // give us one of {al,bl,cl,dl}. For now, just useFixed(al).
     LAllocation useByteOpRegister(MDefinition* mir);
+    LAllocation useByteOpRegisterAtStart(MDefinition* mir);
     LAllocation useByteOpRegisterOrNonDoubleConstant(MDefinition* mir);
     LDefinition tempByteOpRegister();
 
