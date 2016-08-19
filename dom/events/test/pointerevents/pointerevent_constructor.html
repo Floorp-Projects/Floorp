@@ -15,11 +15,10 @@
     <h4>Test Description: This test checks if PointerEvent constructor works properly using synthetic pointerover and pointerout events. For valid results, this test must be run without generating real (trusted) pointerover or pointerout events on the black rectangle below.</h4>
     <div id="target0"></div>
     <script>
-        var eventTested = false;
         var detected_pointertypes = {};
-        setup({ explicit_done: true });
         add_completion_callback(showPointerTypes);
-        function run() {
+
+        async_test(function() {
             var target0 = document.getElementById("target0");
             // set values for non-default constructor
             var testBubbles = true;
@@ -34,10 +33,8 @@
             var testTiltY = 30;
             var testPressure = 0.4;
             var testIsPrimary = true;
-            var pointerEventCustom;
-            var pointerEventDefault;
 
-            on_event(target0, "pointerover", function(event) {
+            on_event(target0, "pointerover", this.step_func(function(event) {
                 detected_pointertypes[ event.pointerType ] = true;
                 generate_tests(assert_equals, [
                     ["custom bubbles", event.bubbles, testBubbles],
@@ -55,25 +52,25 @@
                 test(function() {
                     assert_approx_equals(event.pressure, testPressure, 0.00000001, "custom pressure: ");
                 }, "custom pressure: ");
-            });
+            }));
 
-            on_event(target0, "pointerout", function(event) {
+            on_event(target0, "pointerout", this.step_func(function(event) {
                 generate_tests(assert_equals, [
                     ["default pointerId", event.pointerId, 0],
                     ["default pointerType", event.pointerType, ""],
-                    ["default width", event.width, 0],
-                    ["default height", event.height, 0],
+                    ["default width", event.width, 1],
+                    ["default height", event.height, 1],
                     ["default tiltX", event.tiltX, 0],
                     ["default tiltY", event.tiltY, 0],
                     ["default pressure", event.pressure, 0],
                     ["default isPrimary", event.isPrimary, false]
                 ]);
-            });
+            }));
 
-            test(function() {
+            on_event(window, "load", this.step_func_done(function() {
                 assert_not_equals(window.PointerEvent, undefined);
 
-                pointerEventCustom = new PointerEvent("pointerover",
+                var pointerEventCustom = new PointerEvent("pointerover",
                 {bubbles: testBubbles,
                 cancelable: testCancelable,
                 pointerId: testPointerId,
@@ -91,11 +88,10 @@
                 // For attributes where values are not provided to the constructor, the corresponding default values must be used.
                 // TA: 12.1
                 target0.dispatchEvent(pointerEventCustom);
-                pointerEventDefault = new PointerEvent("pointerout");
+                var pointerEventDefault = new PointerEvent("pointerout");
                 target0.dispatchEvent(pointerEventDefault);
-                done();
-            }, "PointerEvent constructor");
-        }
+            }, "PointerEvent constructor"));
+        })
     </script>
     <div id="complete-notice">
     <p>The following pointer types were detected: <span id="pointertype-log"></span>.</p>
