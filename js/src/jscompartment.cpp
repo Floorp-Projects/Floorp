@@ -703,27 +703,6 @@ JSCompartment::traceRoots(JSTracer* trc, js::gc::GCRuntime::TraceOrMarkRuntime t
 }
 
 void
-JSCompartment::finishRoots()
-{
-    if (watchpointMap)
-        watchpointMap->clear();
-
-    if (debugScopes)
-        debugScopes->finish();
-
-    if (lazyArrayBuffers)
-        lazyArrayBuffers->clear();
-
-    if (objectMetadataTable)
-        objectMetadataTable->clear();
-
-    clearScriptCounts();
-
-    if (nonSyntacticLexicalScopes_)
-        nonSyntacticLexicalScopes_->clear();
-}
-
-void
 JSCompartment::sweepAfterMinorGC()
 {
     globalWriteBarriered = 0;
