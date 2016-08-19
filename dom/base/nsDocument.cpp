@@ -1468,7 +1468,7 @@ nsIDocument::nsIDocument()
     mHasScrollLinkedEffect(false),
     mUserHasInteracted(false)
 {
-  SetIsDocument();
+  SetIsInDocument();
 
   PR_INIT_CLIST(&mDOMMediaQueryLists);
 }
