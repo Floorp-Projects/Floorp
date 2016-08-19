@@ -294,9 +294,9 @@ PlatformDecoderModule::ConversionRequired
 EMEDecoderModule::DecoderNeedsConversion(const TrackInfo& aConfig) const
 {
   if (aConfig.IsVideo() && MP4Decoder::IsH264(aConfig.mMimeType)) {
-    return kNeedAVCC;
+    return ConversionRequired::kNeedAVCC;
   } else {
-    return kNeedNone;
+    return ConversionRequired::kNeedNone;
   }
 }
 

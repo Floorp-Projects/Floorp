@@ -26,18 +26,18 @@ ConsoleCommand.propTypes = {
  */
 function ConsoleCommand(props) {
   const { message } = props;
-  const {category, severity} = message;
+  const {source, level} = message;
 
-  const icon = MessageIcon({severity: severity});
+  const icon = MessageIcon({level});
 
   const classes = ["message"];
 
-  if (category) {
-    classes.push(category);
+  if (source) {
+    classes.push(source);
   }
 
-  if (severity) {
-    classes.push(severity);
+  if (level) {
+    classes.push(level);
   }
 
   return dom.div({

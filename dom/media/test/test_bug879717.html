@@ -46,7 +46,6 @@ var startTest = function(media, token) {
 
   // Captured file playback
   var v2 = document.createElement("video");
-  v2.autoplay = true;
 
   // Stream playback
   var v3 = document.createElement("video");
@@ -120,7 +119,12 @@ var startTest = function(media, token) {
 
   v1.src = media.name;
   v2.src = media.name;
-  v3.srcObject = v2.mozCaptureStreamUntilEnded();
+  v2.preload = 'metadata';
+
+  v2.addEventListener('loadedmetadata', function () {
+    v3.srcObject = v2.mozCaptureStreamUntilEnded();
+    v2.play();
+  });
 }
 
 manager.runTests(getPlayableVideos(gSmallTests), startTest);

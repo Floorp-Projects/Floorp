@@ -155,10 +155,6 @@ function CssComputedView(inspector, document, pageStyle) {
   let cssProperties = getCssProperties(inspector.toolbox);
   this._outputParser = new OutputParser(document, cssProperties.supportsType);
 
-  let chromeReg = Cc["@mozilla.org/chrome/chrome-registry;1"]
-    .getService(Ci.nsIXULChromeRegistry);
-  this.getRTLAttr = chromeReg.isLocaleRTL("global") ? "rtl" : "ltr";
-
   // Create bound methods.
   this.focusWindow = this.focusWindow.bind(this);
   this._onContextMenu = this._onContextMenu.bind(this);
@@ -830,7 +826,6 @@ PropertyInfo.prototype = {
 function PropertyView(tree, name) {
   this.tree = tree;
   this.name = name;
-  this.getRTLAttr = tree.getRTLAttr;
 
   this.link = "https://developer.mozilla.org/CSS/" + name;
 

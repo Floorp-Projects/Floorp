@@ -12,51 +12,102 @@ const {
   DOM: dom,
   PropTypes
 } = require("devtools/client/shared/vendor/react");
+const FrameView = createFactory(require("devtools/client/shared/components/frame"));
+const StackTrace = createFactory(require("devtools/client/shared/components/stack-trace"));
 const GripMessageBody = createFactory(require("devtools/client/webconsole/new-console-output/components/grip-message-body").GripMessageBody);
 const MessageRepeat = createFactory(require("devtools/client/webconsole/new-console-output/components/message-repeat").MessageRepeat);
 const MessageIcon = createFactory(require("devtools/client/webconsole/new-console-output/components/message-icon").MessageIcon);
+const CollapseButton = createFactory(require("devtools/client/webconsole/new-console-output/components/collapse-button").CollapseButton);
+const {l10n} = require("devtools/client/webconsole/new-console-output/utils/messages");
+const actions = require("devtools/client/webconsole/new-console-output/actions/messages");
 
 ConsoleApiCall.displayName = "ConsoleApiCall";
 
 ConsoleApiCall.propTypes = {
   message: PropTypes.object.isRequired,
+  sourceMapService: PropTypes.object,
+  onViewSourceInDebugger: PropTypes.func.isRequired,
+  open: PropTypes.bool.isRequired,
 };
 
 function ConsoleApiCall(props) {
-  const { message } = props;
-  const {category, severity} = message;
+  const { dispatch, message, sourceMapService, onViewSourceInDebugger, open } = props;
+  const {source, level, stacktrace, type, frame } = message;
 
-  const messageBody = message.parameters ?
-    message.parameters.map((grip) => GripMessageBody({grip})) :
-    message.messageText;
+  let messageBody;
+  if (type === "trace") {
+    messageBody = dom.span({className: "cm-variable"}, "console.trace()");
+  } else if (message.parameters) {
+    messageBody = message.parameters.map((grip, key) => GripMessageBody({grip, key}));
+  } else {
+    messageBody = message.messageText;
+  }
 
-  const icon = MessageIcon({severity: severity});
+  const icon = MessageIcon({level});
   const repeat = MessageRepeat({repeat: message.repeat});
+
+  let collapse = "";
+  let attachment = "";
+  if (stacktrace) {
+    attachment = dom.div({className: "stacktrace devtools-monospace"},
+      StackTrace({
+        stacktrace: stacktrace,
+        onViewSourceInDebugger: onViewSourceInDebugger
+      })
+    );
+
+    collapse = CollapseButton({
+      open: open,
+      title: l10n.getStr("messageToggleDetails"),
+      onClick: function () {
+        if (open) {
+          dispatch(actions.messageClose(message.id));
+        } else {
+          dispatch(actions.messageOpen(message.id));
+        }
+      },
+    });
+  }
 
   const classes = ["message", "cm-s-mozilla"];
 
-  if (category) {
-    classes.push(category);
+  if (source) {
+    classes.push(source);
   }
 
-  if (severity) {
-    classes.push(severity);
+  if (level) {
+    classes.push(level);
   }
 
+  if (open === true) {
+    classes.push("open");
+  }
+
+  const shouldRenderFrame = frame && frame.source !== "debugger eval code";
   return dom.div({
     className: classes.join(" ")
   },
     // @TODO add timestamp
     // @TODO add indent if necessary
     icon,
+    collapse,
     dom.span({className: "message-body-wrapper"},
       dom.span({},
         dom.span({className: "message-flex-body"},
           dom.span({className: "message-body devtools-monospace"},
             messageBody
           ),
-          repeat
-        )
+          repeat,
+          dom.span({ className: "message-location devtools-monospace" },
+            shouldRenderFrame ? FrameView({
+              frame,
+              onClick: onViewSourceInDebugger,
+              showEmptyPathAsHost: true,
+              sourceMapService
+            }) : null
+          )
+        ),
+        attachment
       )
     )
   );

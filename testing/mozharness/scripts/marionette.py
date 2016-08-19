@@ -129,6 +129,13 @@ class MarionetteTest(TestingMixin, MercurialScript, BlobUploadMixin, TransferMix
          "default": False,
          "help": "Run tests with multiple processes. (Desktop builds only)",
         }
+    ], [
+       ["--allow-software-gl-layers"],
+       {"action": "store_true",
+        "dest": "allow_software_gl_layers",
+        "default": False,
+        "help": "Permits a software GL implementation (such as LLVMPipe) to use the GL compositor."
+       }
      ]] + copy.deepcopy(testing_config_options) \
         + copy.deepcopy(blobupload_config_options)
 
@@ -427,6 +434,10 @@ class MarionetteTest(TestingMixin, MercurialScript, BlobUploadMixin, TransferMix
             env['GAIATEST_SKIP_WARNING'] = '1'
         env['MOZ_UPLOAD_DIR'] = self.query_abs_dirs()['abs_blob_upload_dir']
         env['MINIDUMP_SAVE_PATH'] = self.query_abs_dirs()['abs_blob_upload_dir']
+
+        if self.config['allow_software_gl_layers']:
+            env['MOZ_LAYERS_ALLOW_SOFTWARE_GL'] = '1'
+
         if not os.path.isdir(env['MOZ_UPLOAD_DIR']):
             self.mkdir_p(env['MOZ_UPLOAD_DIR'])
         env = self.query_env(partial_env=env)

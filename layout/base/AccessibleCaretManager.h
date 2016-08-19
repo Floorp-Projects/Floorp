@@ -58,7 +58,7 @@ public:
 
   // Press caret on the given point. Return NS_OK if the point is actually on
   // one of the carets.
-  virtual nsresult PressCaret(const nsPoint& aPoint);
+  virtual nsresult PressCaret(const nsPoint& aPoint, EventClassID aEventClass);
 
   // Drag caret to the given point. It's required to call PressCaret()
   // beforehand.

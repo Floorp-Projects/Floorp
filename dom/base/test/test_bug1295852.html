@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<title>Bug 1295852</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+<body>
+<script>
+
+var names = [
+  "span", "_moz_generated_content_before", "_moz_generated_content_after"
+];
+
+names.forEach(name => {
+  var element = document.createElement(name);
+  element.animate({ "color": ["red", "blue"] }, { duration: 1000 });
+  is(element.getAnimations().length, 1);
+});
+
+</script>

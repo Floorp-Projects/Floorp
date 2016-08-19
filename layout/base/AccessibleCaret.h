@@ -14,6 +14,7 @@
 #include "nsIDOMEventListener.h"
 #include "nsISupportsBase.h"
 #include "nsISupportsImpl.h"
+#include "nsLiteralString.h"
 #include "nsRect.h"
 #include "mozilla/RefPtr.h"
 #include "nsString.h"
@@ -122,7 +123,11 @@ public:
 
   // Is the point within the caret's rect? The point should be relative to root
   // frame.
-  bool Contains(const nsPoint& aPoint) const;
+  enum class TouchArea {
+    Full, // Contains both text overlay and caret image.
+    CaretImage
+  };
+  bool Contains(const nsPoint& aPoint, TouchArea aTouchArea) const;
 
   // The geometry center of the imaginary caret (nsCaret) to which this
   // AccessibleCaret is attached. It is needed when dragging the caret.
@@ -144,21 +149,29 @@ public:
 protected:
   // Argument aRect should be relative to CustomContentContainerFrame().
   void SetCaretElementStyle(const nsRect& aRect, float aZoomLevel);
+  void SetTextOverlayElementStyle(const nsRect& aRect, float aZoomLevel);
+  void SetCaretImageElementStyle(const nsRect& aRect, float aZoomLevel);
   void SetSelectionBarElementStyle(const nsRect& aRect, float aZoomLevel);
 
   // Get current zoom level.
   float GetZoomLevel();
 
+  // Element which contains the text overly for the 'Contains' test.
+  dom::Element* TextOverlayElement() const
+  {
+    return mCaretElementHolder->GetElementById(sTextOverlayElementId);
+  }
+
   // Element which contains the caret image for 'Contains' test.
   dom::Element* CaretImageElement() const
   {
-    return CaretElement()->GetFirstElementChild();
+    return mCaretElementHolder->GetElementById(sCaretImageElementId);
   }
 
   // Element which represents the text selection bar.
   dom::Element* SelectionBarElement() const
   {
-    return CaretElement()->GetLastElementChild();
+    return mCaretElementHolder->GetElementById(sSelectionBarElementId);
   }
 
   nsIFrame* RootFrame() const
@@ -227,6 +240,9 @@ protected:
   static float sHeight;
   static float sMarginLeft;
   static float sBarWidth;
+  static const nsLiteralString sTextOverlayElementId;
+  static const nsLiteralString sCaretImageElementId;
+  static const nsLiteralString sSelectionBarElementId;
 
 }; // class AccessibleCaret
 

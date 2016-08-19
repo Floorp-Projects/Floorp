@@ -2,7 +2,7 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
-const { stubConsoleMessages } = require("devtools/client/webconsole/new-console-output/test/fixtures/stubs");
+const stubConsoleMessages = require("devtools/client/webconsole/new-console-output/test/fixtures/stubs/index");
 
 const { PageError } = require("devtools/client/webconsole/new-console-output/components/message-types/page-error");
 
@@ -14,7 +14,7 @@ const {
 
 describe("PageError component:", () => {
   it("renders a page error", () => {
-    const message = stubConsoleMessages.get("ReferenceError");
+    const message = stubConsoleMessages.get("ReferenceError: asdf is not defined");
     const rendered = renderComponent(PageError, {message});
 
     const messageBody = getMessageBody(rendered);

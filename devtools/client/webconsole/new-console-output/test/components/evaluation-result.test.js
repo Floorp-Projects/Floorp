@@ -2,7 +2,7 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
-const { stubConsoleMessages } = require("devtools/client/webconsole/new-console-output/test/fixtures/stubs");
+const stubConsoleMessages = require("devtools/client/webconsole/new-console-output/test/fixtures/stubs/index");
 const { EvaluationResult } = require("devtools/client/webconsole/new-console-output/components/message-types/evaluation-result");
 
 const expect = require("expect");

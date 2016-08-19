@@ -8,6 +8,7 @@
 #include <cstdio>
 #include <dlfcn.h>
 #include <unistd.h>
+#include <errno.h>
 #include <algorithm>
 #include <fcntl.h>
 #include "ElfLoader.h"
@@ -109,6 +110,11 @@ __wrap_dl_iterate_phdr(dl_phdr_cb callback, void *data)
   if (!ElfLoader::Singleton.dbg)
     return -1;
 
+  int pipefd[2];
+  bool valid_pipe = (pipe(pipefd) == 0);
+  AutoCloseFD read_fd(pipefd[0]);
+  AutoCloseFD write_fd(pipefd[1]);
+
   for (ElfLoader::DebuggerHelper::iterator it = ElfLoader::Singleton.dbg.begin();
        it < ElfLoader::Singleton.dbg.end(); ++it) {
     dl_phdr_info info;
@@ -119,9 +125,52 @@ __wrap_dl_iterate_phdr(dl_phdr_cb callback, void *data)
 
     // Assuming l_addr points to Elf headers (in most cases, this is true),
     // get the Phdr location from there.
-    uint8_t mapped;
-    // If the page is not mapped, mincore returns an error.
-    if (!mincore(const_cast<void*>(it->l_addr), PageSize(), &mapped)) {
+    // Unfortunately, when l_addr doesn't point to Elf headers, it may point
+    // to unmapped memory, or worse, unreadable memory. The only way to detect
+    // the latter without causing a SIGSEGV is to use the pointer in a system
+    // call that will try to read from there, and return an EFAULT error if
+    // it can't. One such system call is write(). It used to be possible to
+    // use a file descriptor on /dev/null for these kind of things, but recent
+    // Linux kernels never return an EFAULT error when using /dev/null.
+    // So instead, we use a self pipe. We do however need to read() from the
+    // read end of the pipe as well so as to not fill up the pipe buffer and
+    // block on subsequent writes.
+    // In the unlikely event reads from or write to the pipe fail for some
+    // other reason than EFAULT, we don't try any further and just skip setting
+    // the Phdr location for all subsequent libraries, rather than trying to
+    // start over with a new pipe.
+    int can_read = true;
+    if (valid_pipe) {
+      int ret;
+      char raw_ehdr[sizeof(Elf::Ehdr)];
+      static_assert(sizeof(raw_ehdr) < PIPE_BUF, "PIPE_BUF is too small");
+      do {
+        // writes are atomic when smaller than PIPE_BUF, per POSIX.1-2008.
+        ret = write(write_fd, it->l_addr, sizeof(raw_ehdr));
+      } while (ret == -1 && errno == EINTR);
+      if (ret != sizeof(raw_ehdr)) {
+        if (ret == -1 && errno == EFAULT) {
+          can_read = false;
+        } else {
+          valid_pipe = false;
+        }
+      } else {
+        size_t nbytes = 0;
+        do {
+          // Per POSIX.1-2008, interrupted reads can return a length smaller
+          // than the given one instead of failing with errno EINTR.
+          ret = read(read_fd, raw_ehdr + nbytes, sizeof(raw_ehdr) - nbytes);
+          if (ret > 0)
+              nbytes += ret;
+        } while ((nbytes != sizeof(raw_ehdr) && ret > 0) ||
+                 (ret == -1 && errno == EINTR));
+        if (nbytes != sizeof(raw_ehdr)) {
+          valid_pipe = false;
+        }
+      }
+    }
+
+    if (valid_pipe && can_read) {
       const Elf::Ehdr *ehdr = Elf::Ehdr::validate(it->l_addr);
       if (ehdr) {
         info.dlpi_phdr = reinterpret_cast<const Elf::Phdr *>(

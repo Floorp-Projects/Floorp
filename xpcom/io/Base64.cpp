@@ -373,6 +373,7 @@ static nsresult
 Base64DecodeHelper(const char* aBase64, uint32_t aBase64Len, char* aBinary,
                    uint32_t* aBinaryLen)
 {
+  MOZ_ASSERT(aBinary);
   if (!PL_Base64Decode(aBase64, aBase64Len, aBinary)) {
     return NS_ERROR_INVALID_ARG;
   }

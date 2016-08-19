@@ -22,6 +22,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "ReaderMode",
                                   "resource://gre/modules/ReaderMode.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Pocket",
                                   "chrome://pocket/content/Pocket.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "AboutPocket",
+                                  "chrome://pocket/content/AboutPocket.jsm");
 XPCOMUtils.defineLazyGetter(this, "gPocketBundle", function() {
   return Services.strings.createBundle("chrome://pocket/locale/pocket.properties");
 });
@@ -29,6 +31,9 @@ XPCOMUtils.defineLazyGetter(this, "gPocketStyleURI", function() {
   return Services.io.newURI("chrome://pocket/skin/pocket.css", null, null);
 });
 
+// Due to bug 1051238 frame scripts are cached forever, so we can't update them
+// as a restartless add-on. The Math.random() is the work around for this.
+const PROCESS_SCRIPT = "chrome://pocket/content/pocket-content-process.js?" + Math.random();
 
 const PREF_BRANCH = "extensions.pocket.";
 const PREFS = {
@@ -66,63 +71,6 @@ function createElementWithAttrs(document, type, attrs) {
   })
   return element;
 }
-
-XPCOMUtils.defineLazyGetter(this, "AboutSaved", function() {
-  return new PocketAboutPage("chrome://pocket/content/panels/saved.html",
-                             "pocket-saved",
-                             "{3e759f54-37af-7843-9824-f71b5993ceed}",
-                             "About Pocket Saved");
-});
-
-XPCOMUtils.defineLazyGetter(this, "AboutSignup", function() {
-  return new PocketAboutPage("chrome://pocket/content/panels/signup.html",
-                             "pocket-signup",
-                             "{8548329d-00c4-234e-8f17-75026db3b56e}",
-                             "About Pocket Signup");
-});
-
-
-function PocketAboutPage(chromeURL, aboutHost, classID, description) {
-  this.chromeURL = chromeURL;
-  this.aboutHost = aboutHost;
-  this.classID = Components.ID(classID);
-  this.description = description;
-}
-PocketAboutPage.prototype = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIAboutModule]),
-  getURIFlags: function(aURI) {
-    return Ci.nsIAboutModule.ALLOW_SCRIPT |
-           Ci.nsIAboutModule.URI_SAFE_FOR_UNTRUSTED_CONTENT |
-           Ci.nsIAboutModule.HIDE_FROM_ABOUTABOUT;
-  },
-
-  newChannel: function(aURI, aLoadInfo) {
-    let newURI = Services.io.newURI(this.chromeURL, null, null);
-    let channel = Services.io.newChannelFromURIWithLoadInfo(newURI,
-                                                            aLoadInfo);
-    channel.originalURI = aURI;
-    return channel;
-  },
-
-  createInstance: function(outer, iid) {
-    if (outer != null) {
-      throw Cr.NS_ERROR_NO_AGGREGATION;
-    }
-    return this.QueryInterface(iid);
-  },
-
-  register: function() {
-    Cm.QueryInterface(Ci.nsIComponentRegistrar).registerFactory(
-      this.classID, this.description,
-      "@mozilla.org/network/protocol/about;1?what=" + this.aboutHost, this);
-  },
-
-  unregister: function() {
-    Cm.QueryInterface(Ci.nsIComponentRegistrar).unregisterFactory(
-      this.classID, this);
-  }
-};
-
 
 function CreatePocketWidget(reason) {
   let id = "pocket-button"
@@ -365,8 +313,7 @@ var PocketOverlay = {
     this._sheetType = styleSheetService.AUTHOR_SHEET;
     this._cachedSheet = styleSheetService.preloadSheet(gPocketStyleURI,
                                                        this._sheetType);
-    AboutSaved.register();
-    AboutSignup.register();
+    Services.ppmm.loadProcessScript(PROCESS_SCRIPT, true);
     PocketReader.startup();
     CustomizableUI.addListener(this);
     CreatePocketWidget(reason);
@@ -377,8 +324,15 @@ var PocketOverlay = {
     }
   },
   shutdown: function(reason) {
-    AboutSaved.unregister();
-    AboutSignup.unregister();
+    let ppmm = Cc["@mozilla.org/parentprocessmessagemanager;1"]
+                 .getService(Ci.nsIMessageBroadcaster);
+    ppmm.broadcastAsyncMessage("PocketShuttingDown");
+    // Although the ppmm loads the scripts into the chrome process as well,
+    // we need to manually unregister here anyway to ensure these aren't part
+    // of the chrome process and avoid errors.
+    AboutPocket.aboutSaved.unregister();
+    AboutPocket.aboutSignup.unregister();
+
     CustomizableUI.removeListener(this);
     for (let window of CustomizableUI.windows) {
       for (let id of ["panelMenu_pocket", "menu_pocket", "BMB_pocket",

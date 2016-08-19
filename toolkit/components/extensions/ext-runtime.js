@@ -20,7 +20,8 @@ var {
 XPCOMUtils.defineLazyModuleGetter(this, "NativeApp",
                                   "resource://gre/modules/NativeMessaging.jsm");
 
-extensions.registerSchemaAPI("runtime", (extension, context) => {
+extensions.registerSchemaAPI("runtime", context => {
+  let {extension} = context;
   return {
     runtime: {
       onStartup: new EventManager(context, "runtime.onStartup", fire => {
@@ -64,7 +65,8 @@ extensions.registerSchemaAPI("runtime", (extension, context) => {
 
       connect: function(extensionId, connectInfo) {
         let name = connectInfo !== null && connectInfo.name || "";
-        let recipient = extensionId !== null ? {extensionId} : {extensionId: extension.id};
+        extensionId = extensionId || extension.id;
+        let recipient = {extensionId};
 
         return context.messenger.connect(Services.cpmm, name, recipient);
       },
@@ -79,7 +81,8 @@ extensions.registerSchemaAPI("runtime", (extension, context) => {
         } else {
           [extensionId, message, options, responseCallback] = args;
         }
-        let recipient = {extensionId: extensionId ? extensionId : extension.id};
+        extensionId = extensionId || extension.id;
+        let recipient = {extensionId};
 
         if (!GlobalManager.extensionMap.has(recipient.extensionId)) {
           return context.wrapPromise(Promise.reject({message: "Invalid extension ID"}),

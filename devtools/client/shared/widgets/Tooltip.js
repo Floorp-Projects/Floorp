@@ -13,21 +13,10 @@ const {TooltipToggle} = require("devtools/client/shared/widgets/tooltip/TooltipT
 const EventEmitter = require("devtools/shared/event-emitter");
 const {colorUtils} = require("devtools/shared/css-color");
 const Heritage = require("sdk/core/heritage");
-const {XPCOMUtils} = require("resource://gre/modules/XPCOMUtils.jsm");
 const {HTMLTooltip} = require("devtools/client/shared/widgets/HTMLTooltip");
 const {KeyShortcuts} = require("devtools/client/shared/key-shortcuts");
 const {Task} = require("devtools/shared/task");
 const {KeyCodes} = require("devtools/client/shared/keycodes");
-
-loader.lazyRequireGetter(this, "beautify", "devtools/shared/jsbeautify/beautify");
-loader.lazyRequireGetter(this, "setNamedTimeout", "devtools/client/shared/widgets/view-helpers", true);
-loader.lazyRequireGetter(this, "clearNamedTimeout", "devtools/client/shared/widgets/view-helpers", true);
-loader.lazyRequireGetter(this, "setNamedTimeout", "devtools/client/shared/widgets/view-helpers", true);
-
-XPCOMUtils.defineLazyModuleGetter(this, "VariablesView",
-  "resource://devtools/client/shared/widgets/VariablesView.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "VariablesViewController",
-  "resource://devtools/client/shared/widgets/VariablesViewController.jsm");
 
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
 const ESCAPE_KEYCODE = KeyCodes.DOM_VK_ESCAPE;
@@ -424,78 +413,6 @@ Tooltip.prototype = {
     } else {
       this.content = vbox;
     }
-  },
-
-  /**
-   * Fill the tooltip with a variables view, inspecting an object via its
-   * corresponding object actor, as specified in the remote debugging protocol.
-   *
-   * @param {object} objectActor
-   *        The value grip for the object actor.
-   * @param {object} viewOptions [optional]
-   *        Options for the variables view visualization.
-   * @param {object} controllerOptions [optional]
-   *        Options for the variables view controller.
-   * @param {object} relayEvents [optional]
-   *        A collection of events to listen on the variables view widget.
-   *        For example, { fetched: () => ... }
-   * @param {boolean} reuseCachedWidget [optional]
-   *        Pass false to instantiate a brand new widget for this variable.
-   *        Otherwise, if a variable was previously inspected, its widget
-   *        will be reused.
-   * @param {Toolbox} toolbox [optional]
-   *        Pass the instance of the current toolbox if you want the variables
-   *        view widget to allow highlighting and selection of DOM nodes
-   */
-  setVariableContent: function (objectActor,
-                               viewOptions = {},
-                               controllerOptions = {},
-                               relayEvents = {},
-                               extraButtons = [],
-                               toolbox = null) {
-    let vbox = this.doc.createElement("vbox");
-    vbox.className = "devtools-tooltip-variables-view-box";
-    vbox.setAttribute("flex", "1");
-
-    let innerbox = this.doc.createElement("vbox");
-    innerbox.className = "devtools-tooltip-variables-view-innerbox";
-    innerbox.setAttribute("flex", "1");
-    vbox.appendChild(innerbox);
-
-    for (let { label, className, command } of extraButtons) {
-      let button = this.doc.createElement("button");
-      button.className = className;
-      button.setAttribute("label", label);
-      button.addEventListener("command", command);
-      vbox.appendChild(button);
-    }
-
-    let widget = new VariablesView(innerbox, viewOptions);
-
-    // If a toolbox was provided, link it to the vview
-    if (toolbox) {
-      widget.toolbox = toolbox;
-    }
-
-    // Analyzing state history isn't useful with transient object inspectors.
-    widget.commitHierarchy = () => {};
-
-    for (let e in relayEvents) {
-      widget.on(e, relayEvents[e]);
-    }
-    VariablesViewController.attach(widget, controllerOptions);
-
-    // Some of the view options are allowed to change between uses.
-    widget.searchPlaceholder = viewOptions.searchPlaceholder;
-    widget.searchEnabled = viewOptions.searchEnabled;
-
-    // Use the object actor's grip to display it as a variable in the widget.
-    // The controller options are allowed to change between uses.
-    widget.controller.setSingleVariable(
-      { objectActor: objectActor }, controllerOptions);
-
-    this.content = vbox;
-    this.panel.setAttribute("clamped-dimensions", "");
   },
 
   /**
