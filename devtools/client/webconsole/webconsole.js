@@ -539,6 +539,8 @@ WebConsoleFrame.prototype = {
     this.jsterm = new JSTerm(this);
     this.jsterm.init();
 
+    let toolbox = gDevTools.getToolbox(this.owner.target);
+
     if (this.NEW_CONSOLE_OUTPUT_ENABLED) {
       // @TODO Remove this once JSTerm is handled with React/Redux.
       this.window.jsterm = this.jsterm;
@@ -551,7 +553,7 @@ WebConsoleFrame.prototype = {
       this.outputNode.parentNode.appendChild(this.experimentalOutputNode);
       // @TODO Once the toolbox has been converted to React, see if passing
       // in JSTerm is still necessary.
-      this.newConsoleOutput = new this.window.NewConsoleOutput(this.experimentalOutputNode, this.jsterm);
+      this.newConsoleOutput = new this.window.NewConsoleOutput(this.experimentalOutputNode, this.jsterm, toolbox);
       console.log("Created newConsoleOutput", this.newConsoleOutput);
 
       let filterToolbar = doc.querySelector(".hud-console-filter-toolbar");
@@ -563,7 +565,6 @@ WebConsoleFrame.prototype = {
     this.jsterm.on("sidebar-opened", this.resize);
     this.jsterm.on("sidebar-closed", this.resize);
 
-    let toolbox = gDevTools.getToolbox(this.owner.target);
     if (toolbox) {
       toolbox.on("webconsole-selected", this._onPanelSelected);
     }
@@ -1929,8 +1930,14 @@ WebConsoleFrame.prototype = {
   handleTabNavigated: function (event, packet) {
     if (event == "will-navigate") {
       if (this.persistLog) {
-        let marker = new Messages.NavigationMarker(packet, Date.now());
-        this.output.addMessage(marker);
+        if (this.NEW_CONSOLE_OUTPUT_ENABLED) {
+          // Add a _type to hit convertCachedPacket.
+          packet._type = true;
+          this.newConsoleOutput.dispatchMessageAdd(packet);
+        } else {
+          let marker = new Messages.NavigationMarker(packet, Date.now());
+          this.output.addMessage(marker);
+        }
       } else {
         this.jsterm.clearOutput();
       }
@@ -3222,6 +3229,21 @@ WebConsoleConnectionProxy.prototype = {
   },
 
   /**
+   * Dispatch a message add on the new frontend and emit an event for tests.
+   */
+  dispatchMessageAdd: function(packet) {
+    this.webConsoleFrame.newConsoleOutput.dispatchMessageAdd(packet);
+
+    // Return the last message in the DOM as the message that was just dispatched. This may not
+    // always be true in the case of filtered messages, but it's close enough for our tests.
+    let messageNodes = this.webConsoleFrame.experimentalOutputNode.querySelectorAll(".message");
+    this.webConsoleFrame.emit("new-messages", {
+      response: packet,
+      node: messageNodes[messageNodes.length - 1],
+    });
+  },
+
+  /**
    * The "cachedMessages" response handler.
    *
    * @private
@@ -3248,7 +3270,7 @@ WebConsoleConnectionProxy.prototype = {
 
     if (this.webConsoleFrame.NEW_CONSOLE_OUTPUT_ENABLED) {
       for (let packet of messages) {
-        this.webConsoleFrame.newConsoleOutput.dispatchMessageAdd(packet);
+        this.dispatchMessageAdd(packet);
       }
     } else {
       this.webConsoleFrame.displayCachedMessages(messages);
@@ -3274,7 +3296,7 @@ WebConsoleConnectionProxy.prototype = {
   _onPageError: function (type, packet) {
     if (this.webConsoleFrame && packet.from == this._consoleActor) {
       if (this.webConsoleFrame.NEW_CONSOLE_OUTPUT_ENABLED) {
-        this.webConsoleFrame.newConsoleOutput.dispatchMessageAdd(packet);
+        this.dispatchMessageAdd(packet);
         return;
       }
       this.webConsoleFrame.handlePageError(packet.pageError);
@@ -3310,7 +3332,7 @@ WebConsoleConnectionProxy.prototype = {
   _onConsoleAPICall: function (type, packet) {
     if (this.webConsoleFrame && packet.from == this._consoleActor) {
       if (this.webConsoleFrame.NEW_CONSOLE_OUTPUT_ENABLED) {
-        this.webConsoleFrame.newConsoleOutput.dispatchMessageAdd(packet);
+        this.dispatchMessageAdd(packet);
       } else {
         this.webConsoleFrame.handleConsoleAPICall(packet.message);
       }

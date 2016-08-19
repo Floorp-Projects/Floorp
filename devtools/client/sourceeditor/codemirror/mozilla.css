@@ -16,15 +16,11 @@
   --breakpoint-conditional-background: url("chrome://devtools/skin/images/breakpoint.svg#dark-conditional");
 }
 
-.errors {
+.CodeMirror .errors {
   width: 16px;
 }
 
-.hit-counts {
-  width: 6px;
-}
-
-.error {
+.CodeMirror .error {
   display: inline-block;
   margin-left: 5px;
   width: 12px;
@@ -32,9 +28,15 @@
   background-repeat: no-repeat;
   background-position: center;
   background-size: contain;
+  background-image: url("chrome://devtools/skin/images/editor-error.png");
+  opacity: 0.75;
 }
 
-.hit-count {
+.CodeMirror .hit-counts {
+  width: 6px;
+}
+
+.CodeMirror .hit-count {
   display: inline-block;
   height: 12px;
   border: solid rgba(0,0,0,0.2);
@@ -43,11 +45,6 @@
   padding: 0 3px;
   font-size: 10px;
   pointer-events: none;
-}
-
-.error {
-  background-image: url("chrome://devtools/skin/images/editor-error.png");
-  opacity: 0.75;
 }
 
 .CodeMirror-linenumber:before {

@@ -2,8 +2,8 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
-// Require helper is necessary to load certain modules.
-require("devtools/client/webconsole/new-console-output/test/requireHelper")();
+const expect = require("expect");
+const sinon = require("sinon");
 const { render, mount } = require("enzyme");
 
 const { createFactory } = require("devtools/client/shared/vendor/react");
@@ -18,9 +18,6 @@ const {
 } = require("devtools/client/webconsole/new-console-output/constants");
 
 const { setupStore } = require("devtools/client/webconsole/new-console-output/test/helpers");
-
-const expect = require("expect");
-const sinon = require("sinon");
 
 describe("FilterBar component:", () => {
   it("initial render", () => {
@@ -65,13 +62,15 @@ describe("FilterBar component:", () => {
     };
     const logButton = FilterButton(Object.assign({}, buttonProps,
       { label: "Logs", filterKey: MESSAGE_LEVEL.LOG }));
+    const debugButton = FilterButton(Object.assign({}, buttonProps,
+      { label: "Debug", filterKey: MESSAGE_LEVEL.DEBUG }));
     const infoButton = FilterButton(Object.assign({}, buttonProps,
       { label: "Info", filterKey: MESSAGE_LEVEL.INFO }));
     const warnButton = FilterButton(Object.assign({}, buttonProps,
       { label: "Warnings", filterKey: MESSAGE_LEVEL.WARN }));
     const errorButton = FilterButton(Object.assign({}, buttonProps,
       { label: "Errors", filterKey: MESSAGE_LEVEL.ERROR }));
-    expect(wrapper.contains([errorButton, warnButton, logButton, infoButton])).toBe(true);
+    expect(wrapper.contains([errorButton, warnButton, logButton, infoButton, debugButton])).toBe(true);
   });
 
   it("fires MESSAGES_CLEAR action when clear button is clicked", () => {

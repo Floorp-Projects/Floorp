@@ -2,24 +2,27 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
-const { stubConsoleMessages } = require("devtools/client/webconsole/new-console-output/test/fixtures/stubs");
-
-const { MessageContainer } = require("devtools/client/webconsole/new-console-output/components/message-container");
-const { ConsoleApiCall } = require("devtools/client/webconsole/new-console-output/components/message-types/console-api-call");
-const { EvaluationResult } = require("devtools/client/webconsole/new-console-output/components/message-types/evaluation-result");
-const { PageError } = require("devtools/client/webconsole/new-console-output/components/message-types/page-error");
-
+// Test utils.
 const expect = require("expect");
-
 const {
   renderComponent,
   shallowRenderComponent
 } = require("devtools/client/webconsole/new-console-output/test/helpers");
 
+// Components under test.
+const { MessageContainer } = require("devtools/client/webconsole/new-console-output/components/message-container");
+const { ConsoleApiCall } = require("devtools/client/webconsole/new-console-output/components/message-types/console-api-call");
+const { EvaluationResult } = require("devtools/client/webconsole/new-console-output/components/message-types/evaluation-result");
+const { PageError } = require("devtools/client/webconsole/new-console-output/components/message-types/page-error");
+
+// Test fakes.
+const stubConsoleMessages = require("devtools/client/webconsole/new-console-output/test/fixtures/stubs/index");
+const onViewSourceInDebugger = () => {};
+
 describe("MessageContainer component:", () => {
   it("pipes data to children as expected", () => {
     const message = stubConsoleMessages.get("console.log('foobar', 'test')");
-    const rendered = renderComponent(MessageContainer, {message});
+    const rendered = renderComponent(MessageContainer, {message, onViewSourceInDebugger});
 
     expect(rendered.textContent.includes("foobar")).toBe(true);
   });
@@ -35,13 +38,17 @@ describe("MessageContainer component:", () => {
       },
       {
         component: PageError,
-        message: stubConsoleMessages.get("ReferenceError")
+        message: stubConsoleMessages.get("ReferenceError: asdf is not defined")
       }
     ];
 
     messageTypes.forEach(info => {
-      const rendered = shallowRenderComponent(MessageContainer, {message: info.message});
-      expect(rendered.type).toBe(info.component);
+      const { component, message } = info;
+      const rendered = shallowRenderComponent(MessageContainer, {
+        message,
+        onViewSourceInDebugger,
+      });
+      expect(rendered.type).toBe(component);
     });
   });
 });

@@ -208,7 +208,7 @@ var gSearchPane = {
 
   onTreeSelect: function() {
     document.getElementById("removeEngineButton").disabled =
-      gEngineView.selectedIndex == -1 || gEngineView.lastIndex == 0;
+      !gEngineView.isEngineSelectedAndRemovable();
   },
 
   onTreeKeyPress: function(aEvent) {
@@ -229,7 +229,9 @@ var gSearchPane = {
           (!isMac && aEvent.keyCode == KeyEvent.DOM_VK_F2)) {
         tree.startEditing(index, tree.columns.getLastColumn());
       } else if (aEvent.keyCode == KeyEvent.DOM_VK_DELETE ||
-                 isMac && aEvent.shiftKey && aEvent.keyCode == KeyEvent.DOM_VK_BACK_SPACE) {
+                 (isMac && aEvent.shiftKey &&
+                  aEvent.keyCode == KeyEvent.DOM_VK_BACK_SPACE &&
+                  gEngineView.isEngineSelectedAndRemovable())) {
         // Delete and Shift+Backspace (Mac) removes selected engine.
         Services.search.removeEngine(gEngineView.selectedEngine.originalEngine);
      }
@@ -387,6 +389,10 @@ EngineStore.prototype = {
   },
 
   removeEngine: function ES_removeEngine(aEngine) {
+    if (this._engines.length == 1) {
+      throw new Error("Cannot remove last engine!");
+    }
+
     let engineName = aEngine.name;
     let index = this._engines.findIndex(element => element.name == engineName);
 
@@ -488,6 +494,10 @@ EngineView.prototype = {
 
   isCheckBox: function(index, column) {
     return column.id == "engineShown";
+  },
+
+  isEngineSelectedAndRemovable: function() {
+    return this.selectedIndex != -1 && this.lastIndex != 0;
   },
 
   // nsITreeView

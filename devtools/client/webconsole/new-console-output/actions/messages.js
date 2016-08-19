@@ -13,7 +13,9 @@ const { IdGenerator } = require("devtools/client/webconsole/new-console-output/u
 
 const {
   MESSAGE_ADD,
-  MESSAGES_CLEAR
+  MESSAGES_CLEAR,
+  MESSAGE_OPEN,
+  MESSAGE_CLOSE,
 } = require("../constants");
 
 const defaultIdGenerator = new IdGenerator();
@@ -36,5 +38,21 @@ function messagesClear() {
   };
 }
 
+function messageOpen(id) {
+  return {
+    type: MESSAGE_OPEN,
+    id
+  };
+}
+
+function messageClose(id) {
+  return {
+    type: MESSAGE_CLOSE,
+    id
+  };
+}
+
 exports.messageAdd = messageAdd;
 exports.messagesClear = messagesClear;
+exports.messageOpen = messageOpen;
+exports.messageClose = messageClose;
