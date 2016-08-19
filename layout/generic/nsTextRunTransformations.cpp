@@ -280,12 +280,14 @@ nsCaseTransformTextRunFactory::TransformString(
     const nsIAtom* aLanguage,
     nsTArray<bool>& aCharsToMergeArray,
     nsTArray<bool>& aDeletedCharsArray,
-    nsTransformedTextRun* aTextRun,
+    const nsTransformedTextRun* aTextRun,
+    uint32_t aOffsetInTextRun,
     nsTArray<uint8_t>* aCanBreakBeforeArray,
     nsTArray<RefPtr<nsTransformedCharStyle>>* aStyleArray)
 {
-  NS_PRECONDITION(!aTextRun || (aCanBreakBeforeArray && aStyleArray),
-                  "either none or all three optional parameters required");
+  bool auxiliaryOutputArrays = aCanBreakBeforeArray && aStyleArray;
+  NS_PRECONDITION(!auxiliaryOutputArrays || aTextRun,
+                  "text run must be provided to use aux output arrays");
 
   uint32_t length = aString.Length();
   const char16_t* str = aString.BeginReading();
@@ -311,12 +313,12 @@ nsCaseTransformTextRunFactory::TransformString(
   uint32_t irishMarkSrc; // corresponding location in source string (may differ
                          // from output due to expansions like eszet -> 'SS')
 
-  for (uint32_t i = 0; i < length; ++i) {
+  for (uint32_t i = 0; i < length; ++i, ++aOffsetInTextRun) {
     uint32_t ch = str[i];
 
     RefPtr<nsTransformedCharStyle> charStyle;
     if (aTextRun) {
-      charStyle = aTextRun->mStyles[i];
+      charStyle = aTextRun->mStyles[aOffsetInTextRun];
       style = aAllUppercase ? NS_STYLE_TEXT_TRANSFORM_UPPERCASE :
         charStyle->mTextTransform;
       forceNonFullWidth = charStyle->mForceNonFullWidth;
@@ -490,7 +492,7 @@ nsCaseTransformTextRunFactory::TransformString(
             // Remove the trailing entries (corresponding to the deleted hyphen)
             // from the auxiliary arrays.
             aCharsToMergeArray.SetLength(aCharsToMergeArray.Length() - 1);
-            if (aTextRun) {
+            if (auxiliaryOutputArrays) {
               aStyleArray->SetLength(aStyleArray->Length() - 1);
               aCanBreakBeforeArray->SetLength(aCanBreakBeforeArray->Length() - 1);
               inhibitBreakBefore = true;
@@ -531,7 +533,8 @@ nsCaseTransformTextRunFactory::TransformString(
           break;
         }
         capitalizeDutchIJ = false;
-        if (i < aTextRun->mCapitalize.Length() && aTextRun->mCapitalize[i]) {
+        if (aOffsetInTextRun < aTextRun->mCapitalize.Length() &&
+            aTextRun->mCapitalize[aOffsetInTextRun]) {
           if (languageSpecificCasing == eLSCB_Turkish && ch == 'i') {
             ch = LATIN_CAPITAL_LETTER_I_WITH_DOT_ABOVE;
             break;
@@ -577,11 +580,11 @@ nsCaseTransformTextRunFactory::TransformString(
     } else {
       aDeletedCharsArray.AppendElement(false);
       aCharsToMergeArray.AppendElement(false);
-      if (aTextRun) {
+      if (auxiliaryOutputArrays) {
         aStyleArray->AppendElement(charStyle);
         aCanBreakBeforeArray->AppendElement(
           inhibitBreakBefore ? gfxShapedText::CompressedGlyph::FLAG_BREAK_TYPE_NONE
-                             : aTextRun->CanBreakBefore(i));
+                             : aTextRun->CanBreakBefore(aOffsetInTextRun));
       }
 
       if (IS_IN_BMP(ch)) {
@@ -589,7 +592,8 @@ nsCaseTransformTextRunFactory::TransformString(
       } else {
         aConvertedString.Append(H_SURROGATE(ch));
         aConvertedString.Append(L_SURROGATE(ch));
-        ++i;
+        i++;
+        aOffsetInTextRun++;
         aDeletedCharsArray.AppendElement(true); // not exactly deleted, but the
                                                 // trailing surrogate is skipped
         ++extraChars;
@@ -598,7 +602,7 @@ nsCaseTransformTextRunFactory::TransformString(
       while (extraChars-- > 0) {
         mergeNeeded = true;
         aCharsToMergeArray.AppendElement(true);
-        if (aTextRun) {
+        if (auxiliaryOutputArrays) {
           aStyleArray->AppendElement(charStyle);
           aCanBreakBeforeArray->AppendElement(
             gfxShapedText::CompressedGlyph::FLAG_BREAK_TYPE_NONE);
@@ -627,7 +631,7 @@ nsCaseTransformTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
                                      nullptr,
                                      charsToMergeArray,
                                      deletedCharsArray,
-                                     aTextRun,
+                                     aTextRun, 0,
                                      &canBreakBeforeArray,
                                      &styleArray);
 
