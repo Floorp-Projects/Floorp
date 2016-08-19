@@ -66,8 +66,6 @@ class nsLayoutStylesheetCache final
 
   static void Shutdown();
 
-  static void SetUserContentCSSURL(nsIURI* aURI);
-
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
 private:
@@ -94,7 +92,6 @@ private:
   static mozilla::StaticRefPtr<nsLayoutStylesheetCache> gStyleCache_Servo;
   static mozilla::StaticRefPtr<mozilla::css::Loader> gCSSLoader_Gecko;
   static mozilla::StaticRefPtr<mozilla::css::Loader> gCSSLoader_Servo;
-  static mozilla::StaticRefPtr<nsIURI> gUserContentSheetURL;
   mozilla::StyleBackendType mBackendType;
   mozilla::StyleSheetHandle::RefPtr mChromePreferenceSheet;
   mozilla::StyleSheetHandle::RefPtr mContentEditableSheet;
