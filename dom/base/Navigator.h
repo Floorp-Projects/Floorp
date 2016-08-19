@@ -39,7 +39,6 @@ class MediaDevices;
 struct MediaStreamConstraints;
 class WakeLock;
 class ArrayBufferViewOrBlobOrStringOrFormData;
-struct MobileIdOptions;
 class ServiceWorkerContainer;
 class DOMRequest;
 struct FlyWebPublishOptions;
@@ -250,10 +249,6 @@ public:
   nsDOMCameraManager* GetMozCameras(ErrorResult& aRv);
   MediaDevices* GetMediaDevices(ErrorResult& aRv);
 
-#ifdef MOZ_B2G
-  already_AddRefed<Promise> GetMobileIdAssertion(const MobileIdOptions& options,
-                                                 ErrorResult& aRv);
-#endif
 #ifdef MOZ_B2G_RIL
   MobileConnectionArray* GetMozMobileConnections(ErrorResult& aRv);
 #endif // MOZ_B2G_RIL
@@ -318,10 +313,6 @@ public:
 #endif // MOZ_NFC
   static bool HasUserMediaSupport(JSContext* /* unused */,
                                   JSObject* /* unused */);
-
-#ifdef MOZ_B2G
-  static bool HasMobileIdSupport(JSContext* aCx, JSObject* aGlobal);
-#endif
 
   static bool IsE10sEnabled(JSContext* aCx, JSObject* aGlobal);
 

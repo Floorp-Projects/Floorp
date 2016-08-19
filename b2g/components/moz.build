@@ -17,7 +17,6 @@ EXTRA_COMPONENTS += [
     'FxAccountsUIGlue.js',
     'HelperAppDialog.js',
     'MailtoProtocolHandler.js',
-    'MobileIdentityUIGlue.js',
     'OMAContentHandler.js',
     'PaymentGlue.js',
     'PaymentProviderStrategy.js',
