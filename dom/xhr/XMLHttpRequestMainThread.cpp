@@ -2531,8 +2531,13 @@ XMLHttpRequestMainThread::SendInternal(const RequestBodyBase* aBody)
   nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(mChannel));
 
   if (httpChannel) {
+    // If the user hasn't overridden the Accept header, set it to */* as per spec
+    if (!mAuthorRequestHeaders.Has("accept")) {
+      mAuthorRequestHeaders.Set("Accept", NS_LITERAL_CSTRING("*/*"));
+    }
+
     // Spec step 5
-    SetAuthorRequestHeadersOnChannel(httpChannel);
+    mAuthorRequestHeaders.ApplyToChannel(httpChannel);
 
     httpChannel->GetRequestMethod(method); // If GET, method name will be uppercase
 
@@ -2541,15 +2546,6 @@ XMLHttpRequestMainThread::SendInternal(const RequestBodyBase* aBody)
       nsCOMPtr<nsIDocument> doc = owner ? owner->GetExtantDoc() : nullptr;
       nsContentUtils::SetFetchReferrerURIWithPolicy(mPrincipal, doc,
                                                     httpChannel, mozilla::net::RP_Default);
-    }
-
-    // If the user hasn't overridden the Accept header, set it to */* as per spec
-    nsAutoCString acceptHeader;
-    GetAuthorRequestHeaderValue("accept", acceptHeader);
-    if (acceptHeader.IsVoid()) {
-      httpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Accept"),
-                                    NS_LITERAL_CSTRING("*/*"),
-                                    false);
     }
 
     // Some extensions override the http protocol handler and provide their own
@@ -2599,7 +2595,7 @@ XMLHttpRequestMainThread::SendInternal(const RequestBodyBase* aBody)
       // If author set no Content-Type, use the default from GetAsStream().
       nsAutoCString contentType;
 
-      GetAuthorRequestHeaderValue("content-type", contentType);
+      mAuthorRequestHeaders.Get("content-type", contentType);
       if (contentType.IsVoid()) {
         contentType = defaultContentType;
 
@@ -2613,52 +2609,14 @@ XMLHttpRequestMainThread::SendInternal(const RequestBodyBase* aBody)
 
       // We don't want to set a charset for streams.
       if (!charset.IsEmpty()) {
-        nsAutoCString specifiedCharset;
-        bool haveCharset;
-        int32_t charsetStart, charsetEnd;
-        rv = NS_ExtractCharsetFromContentType(contentType, specifiedCharset,
-                                              &haveCharset, &charsetStart,
-                                              &charsetEnd);
-        while (NS_SUCCEEDED(rv) && haveCharset) {
-          // special case: the extracted charset is quoted with single quotes
-          // -- for the purpose of preserving what was set we want to handle
-          // them as delimiters (although they aren't really)
-          if (specifiedCharset.Length() >= 2 &&
-              specifiedCharset.First() == '\'' &&
-              specifiedCharset.Last() == '\'') {
-            specifiedCharset = Substring(specifiedCharset, 1,
-                                         specifiedCharset.Length() - 2);
+        // Replace all case-insensitive matches of the charset in the
+        // content-type with the correct case.
+        RequestHeaders::CharsetIterator iter(contentType);
+        const nsCaseInsensitiveCStringComparator cmp;
+        while (iter.Next()) {
+          if (!iter.Equals(charset, cmp)) {
+            iter.Replace(charset);
           }
-
-          // If the content-type the page set already has a charset parameter,
-          // and it's the same charset, up to case, as |charset|, just send the
-          // page-set content-type header.  Apparently at least
-          // google-web-toolkit is broken and relies on the exact case of its
-          // charset parameter, which makes things break if we use |charset|
-          // (which is always a fully resolved charset per our charset alias
-          // table, hence might be differently cased).
-          if (!specifiedCharset.Equals(charset,
-                                       nsCaseInsensitiveCStringComparator())) {
-            // Find the start of the actual charset declaration, skipping the
-            // "; charset=" to avoid modifying whitespace.
-            int32_t charIdx =
-              Substring(contentType, charsetStart,
-                        charsetEnd - charsetStart).FindChar('=') + 1;
-            MOZ_ASSERT(charIdx != -1);
-
-            contentType.Replace(charsetStart + charIdx,
-                                charsetEnd - charsetStart - charIdx,
-                                charset);
-          }
-
-          // Look for another charset declaration in the string, limiting the
-          // search to only look for charsets before the current charset, to
-          // prevent finding the same charset twice.
-          nsDependentCSubstring interestingSection =
-            Substring(contentType, 0, charsetStart);
-          rv = NS_ExtractCharsetFromContentType(interestingSection,
-                                                specifiedCharset, &haveCharset,
-                                                &charsetStart, &charsetEnd);
         }
       }
 
@@ -2782,23 +2740,7 @@ XMLHttpRequestMainThread::SendInternal(const RequestBodyBase* aBody)
   // Set up the preflight if needed
   if (!IsSystemXHR()) {
     nsTArray<nsCString> CORSUnsafeHeaders;
-    const char *kCrossOriginSafeHeaders[] = {
-      "accept", "accept-language", "content-language", "content-type",
-      "last-event-id"
-    };
-    for (RequestHeader& header : mAuthorRequestHeaders) {
-      bool safe = false;
-      for (uint32_t i = 0; i < ArrayLength(kCrossOriginSafeHeaders); ++i) {
-        if (header.name.LowerCaseEqualsASCII(kCrossOriginSafeHeaders[i])) {
-          safe = true;
-          break;
-        }
-      }
-      if (!safe) {
-        CORSUnsafeHeaders.AppendElement(header.name);
-      }
-    }
-
+    mAuthorRequestHeaders.GetCORSUnsafeHeaders(CORSUnsafeHeaders);
     nsCOMPtr<nsILoadInfo> loadInfo = mChannel->GetLoadInfo();
     loadInfo->SetCorsPreflightInfo(CORSUnsafeHeaders,
                                    mFlagHadUploadListenersOnSend);
@@ -2968,30 +2910,13 @@ XMLHttpRequestMainThread::SetRequestHeader(const nsACString& aName,
   // Skipping for now, as normalizing the case of header names may not be
   // web-compatible. See bug 1285036.
 
-  // Step 6.2
-  bool notAlreadySet = true;
-  const nsCaseInsensitiveCStringComparator ignoreCase;
-  for (RequestHeader& header : mAuthorRequestHeaders) {
-    if (header.name.Equals(aName, ignoreCase)) {
-      // Gecko-specific: invalid headers can be set by privileged
-      //                 callers, but will not merge.
-      if (isPrivilegedCaller && isForbiddenHeader) {
-        header.value.Assign(value);
-      } else {
-        header.value.AppendLiteral(", ");
-        header.value.Append(value);
-      }
-      notAlreadySet = false;
-      break;
-    }
-  }
-
-  // Step 6.3
-  if (notAlreadySet) {
-    RequestHeader newHeader = {
-      nsCString(aName), nsCString(value)
-    };
-    mAuthorRequestHeaders.AppendElement(newHeader);
+  // Step 6.2-6.3
+  // Gecko-specific: invalid headers can be set by privileged
+  //                 callers, but will not merge.
+  if (isPrivilegedCaller && isForbiddenHeader) {
+    mAuthorRequestHeaders.Set(aName, value);
+  } else {
+    mAuthorRequestHeaders.MergeOrSet(aName, value);
   }
 
   return NS_OK;
@@ -3232,32 +3157,6 @@ XMLHttpRequestMainThread::AsyncOnChannelRedirect(nsIChannel *aOldChannel,
   return NS_OK;
 }
 
-void
-XMLHttpRequestMainThread::GetAuthorRequestHeaderValue(const char* aName,
-                                                      nsACString& outValue)
-{
-  for (RequestHeader& header : mAuthorRequestHeaders) {
-    if (header.name.EqualsIgnoreCase(aName)) {
-      outValue.Assign(header.value);
-      return;
-    }
-  }
-  outValue.SetIsVoid(true);
-}
-
-void
-XMLHttpRequestMainThread::SetAuthorRequestHeadersOnChannel(
-  nsCOMPtr<nsIHttpChannel> aHttpChannel)
-{
-  for (RequestHeader& header : mAuthorRequestHeaders) {
-    if (header.value.IsEmpty()) {
-      aHttpChannel->SetEmptyRequestHeader(header.name);
-    } else {
-      aHttpChannel->SetRequestHeader(header.name, header.value, false);
-    }
-  }
-}
-
 nsresult
 XMLHttpRequestMainThread::OnRedirectVerifyCallback(nsresult result)
 {
@@ -3270,7 +3169,7 @@ XMLHttpRequestMainThread::OnRedirectVerifyCallback(nsresult result)
     nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(mChannel));
     if (httpChannel) {
       // Ensure all original headers are duplicated for the new channel (bug #553888)
-      SetAuthorRequestHeadersOnChannel(httpChannel);
+      mAuthorRequestHeaders.ApplyToChannel(httpChannel);
     }
   } else {
     mErrorLoad = true;
@@ -3563,9 +3462,7 @@ XMLHttpRequestMainThread::ShouldBlockAuthPrompt()
   // Verify that it's ok to prompt for credentials here, per spec
   // http://xhr.spec.whatwg.org/#the-send%28%29-method
 
-  nsAutoCString contentType;
-  GetAuthorRequestHeaderValue("authorization", contentType);
-  if (!contentType.IsVoid()) {
+  if (mAuthorRequestHeaders.Has("authorization")) {
     return true;
   }
 
@@ -3835,6 +3732,193 @@ ArrayBufferBuilder::areOverlappingRegions(const uint8_t* aStart1,
   const uint8_t* min_end   = end1 < end2 ? end1 : end2;
 
   return max_start < min_end;
+}
+
+RequestHeaders::RequestHeader*
+RequestHeaders::Find(const nsACString& aName)
+{
+  const nsCaseInsensitiveCStringComparator ignoreCase;
+  for (RequestHeaders::RequestHeader& header : mHeaders) {
+    if (header.mName.Equals(aName, ignoreCase)) {
+      return &header;
+    }
+  }
+  return nullptr;
+}
+
+bool
+RequestHeaders::Has(const char* aName)
+{
+  return Has(nsDependentCString(aName));
+}
+
+bool
+RequestHeaders::Has(const nsACString& aName)
+{
+  return !!Find(aName);
+}
+
+void
+RequestHeaders::Get(const char* aName, nsACString& aValue)
+{
+  Get(nsDependentCString(aName), aValue);
+}
+
+void
+RequestHeaders::Get(const nsACString& aName, nsACString& aValue)
+{
+  RequestHeader* header = Find(aName);
+  if (header) {
+    aValue = header->mValue;
+  } else {
+    aValue.SetIsVoid(true);
+  }
+}
+
+void
+RequestHeaders::Set(const char* aName, const nsACString& aValue)
+{
+  Set(nsDependentCString(aName), aValue);
+}
+
+void
+RequestHeaders::Set(const nsACString& aName, const nsACString& aValue)
+{
+  RequestHeader* header = Find(aName);
+  if (header) {
+    header->mValue.Assign(aValue);
+  } else {
+    RequestHeader newHeader = {
+      nsCString(aName), nsCString(aValue)
+    };
+    mHeaders.AppendElement(newHeader);
+  }
+}
+
+void
+RequestHeaders::MergeOrSet(const char* aName, const nsACString& aValue)
+{
+  MergeOrSet(nsDependentCString(aName), aValue);
+}
+
+void
+RequestHeaders::MergeOrSet(const nsACString& aName, const nsACString& aValue)
+{
+  RequestHeader* header = Find(aName);
+  if (header) {
+    header->mValue.AppendLiteral(", ");
+    header->mValue.Append(aValue);
+  } else {
+    RequestHeader newHeader = {
+      nsCString(aName), nsCString(aValue)
+    };
+    mHeaders.AppendElement(newHeader);
+  }
+}
+
+void
+RequestHeaders::Clear()
+{
+  mHeaders.Clear();
+}
+
+void
+RequestHeaders::ApplyToChannel(nsIHttpChannel* aHttpChannel) const
+{
+  for (const RequestHeader& header : mHeaders) {
+    if (header.mValue.IsEmpty()) {
+      aHttpChannel->SetEmptyRequestHeader(header.mName);
+    } else {
+      aHttpChannel->SetRequestHeader(header.mName, header.mValue, false);
+    }
+  }
+}
+
+void
+RequestHeaders::GetCORSUnsafeHeaders(nsTArray<nsCString>& aArray) const
+{
+  static const char *kCrossOriginSafeHeaders[] = {
+    "accept", "accept-language", "content-language", "content-type",
+    "last-event-id"
+  };
+  const uint32_t kCrossOriginSafeHeadersLength =
+    ArrayLength(kCrossOriginSafeHeaders);
+  for (const RequestHeader& header : mHeaders) {
+    bool safe = false;
+    for (uint32_t i = 0; i < kCrossOriginSafeHeadersLength; ++i) {
+      if (header.mName.LowerCaseEqualsASCII(kCrossOriginSafeHeaders[i])) {
+        safe = true;
+        break;
+      }
+    }
+    if (!safe) {
+      aArray.AppendElement(header.mName);
+    }
+  }
+}
+
+RequestHeaders::CharsetIterator::CharsetIterator(nsACString& aSource) :
+  mValid(false),
+  mCurPos(-1),
+  mCurLen(-1),
+  mCutoff(aSource.Length()),
+  mSource(aSource)
+{
+}
+
+bool
+RequestHeaders::CharsetIterator::Equals(const nsACString& aOther,
+                                        const nsCStringComparator& aCmp) const
+{
+  if (mValid) {
+    return Substring(mSource, mCurPos, mCurLen).Equals(aOther, aCmp);
+  } else {
+    return false;
+  }
+}
+
+void
+RequestHeaders::CharsetIterator::Replace(const nsACString& aReplacement)
+{
+  if (mValid) {
+    mSource.Replace(mCurPos, mCurLen, aReplacement);
+    mCurLen = aReplacement.Length();
+  }
+}
+
+bool
+RequestHeaders::CharsetIterator::Next()
+{
+  int32_t start, end;
+  nsAutoCString charset;
+
+  // Look for another charset declaration in the string, limiting the
+  // search to only the characters before the parts we've already searched
+  // (before mCutoff), so that we don't find the same charset twice.
+  NS_ExtractCharsetFromContentType(Substring(mSource, 0, mCutoff),
+                                   charset, &mValid, &start, &end);
+
+  if (!mValid) {
+    return false;
+  }
+
+  // Everything after the = sign is the part of the charset we want.
+  mCurPos = mSource.FindChar('=', start) + 1;
+  mCurLen = end - mCurPos;
+
+  // Special case: the extracted charset is quoted with single quotes.
+  // For the purpose of preserving what was set we want to handle them
+  // as delimiters (although they aren't really).
+  if (charset.Length() >= 2 &&
+      charset.First() == '\'' &&
+      charset.Last() == '\'') {
+    ++mCurPos;
+    mCurLen -= 2;
+  }
+
+  mCutoff = start;
+
+  return true;
 }
 
 } // dom namespace
