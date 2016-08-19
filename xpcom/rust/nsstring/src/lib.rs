@@ -728,3 +728,171 @@ extern "C" {
     fn Gecko_AppendUTF16toCString(this: *mut nsACString, other: *const nsAString);
     fn Gecko_AppendUTF8toString(this: *mut nsAString, other: *const nsACString);
 }
+
+//////////////////////////////////////
+// Repr Validation Helper Functions //
+//////////////////////////////////////
+
+pub mod test_helpers {
+    //! This module only exists to help with ensuring that the layout of the
+    //! structs inside of rust and C++ are identical.
+    //!
+    //! It is public to ensure that these testing functions are avaliable to
+    //! gtest code.
+
+    use super::{
+        nsFixedCStringRepr,
+        nsFixedStringRepr,
+        nsCStringRepr,
+        nsStringRepr,
+        F_NONE,
+        F_TERMINATED,
+        F_VOIDED,
+        F_SHARED,
+        F_OWNED,
+        F_FIXED,
+        F_LITERAL,
+        F_CLASS_FIXED,
+    };
+    use std::mem;
+
+    // A helper macro for finding the offset of a member of a struct. This macro is
+    // unsafe to use, because it can trigger UB if the type T's `Deref`
+    // implementation is implicitly used to access the member $m.
+    macro_rules! offset_of {
+        ($T:ty, $m:ident) => {
+            {
+                let tmp: $T = mem::zeroed();
+                let offset =
+                    (&tmp.$m as *const _ as usize) -
+                    (&tmp as *const _ as usize);
+                mem::forget(tmp);
+                offset
+            }
+        }
+    }
+
+    // A helper macro for finding the size of a member of a struct. This macro is
+    // unsafe to use, because it can trigger UB if the type T's `Deref`
+    // implementation is implicitly used to access the member $m.
+    macro_rules! size_of_member {
+        ($T:ty, $m:ident) => {
+            {
+                let tmp: $T = mem::zeroed();
+                let size = mem::size_of_val(&tmp.$m);
+                mem::forget(tmp);
+                size
+            }
+        }
+    }
+
+    #[no_mangle]
+    #[allow(non_snake_case)]
+    pub extern fn Rust_Test_CStringReprInformation(size: *mut usize,
+                                                   align: *mut usize,
+                                                   data_off: *mut usize,
+                                                   data_size: *mut usize,
+                                                   length_off: *mut usize,
+                                                   length_size: *mut usize,
+                                                   flags_off: *mut usize,
+                                                   flags_size: *mut usize) {
+        unsafe {
+            *size = mem::size_of::<nsCStringRepr>();
+            *align = mem::align_of::<nsCStringRepr>();
+            *data_off = offset_of!(nsCStringRepr, data);
+            *data_size = size_of_member!(nsCStringRepr, data);
+            *length_off = offset_of!(nsCStringRepr, length);
+            *length_size = size_of_member!(nsCStringRepr, length);
+            *flags_off = offset_of!(nsCStringRepr, flags);
+            *flags_size = size_of_member!(nsCStringRepr, flags);
+        }
+    }
+
+    #[no_mangle]
+    #[allow(non_snake_case)]
+    pub extern fn Rust_Test_StringReprInformation(size: *mut usize,
+                                                  align: *mut usize,
+                                                  data_off: *mut usize,
+                                                  data_size: *mut usize,
+                                                  length_off: *mut usize,
+                                                  length_size: *mut usize,
+                                                  flags_off: *mut usize,
+                                                  flags_size: *mut usize) {
+        unsafe {
+            *size = mem::size_of::<nsStringRepr>();
+            *align = mem::align_of::<nsStringRepr>();
+            *data_off = offset_of!(nsStringRepr, data);
+            *data_size = size_of_member!(nsStringRepr, data);
+            *length_off = offset_of!(nsStringRepr, length);
+            *length_size = size_of_member!(nsStringRepr, length);
+            *flags_off = offset_of!(nsStringRepr, flags);
+            *flags_size = size_of_member!(nsStringRepr, flags);
+        }
+    }
+
+    #[no_mangle]
+    #[allow(non_snake_case)]
+    pub extern fn Rust_Test_FixedCStringReprInformation(size: *mut usize,
+                                                        align: *mut usize,
+                                                        base_off: *mut usize,
+                                                        base_size: *mut usize,
+                                                        capacity_off: *mut usize,
+                                                        capacity_size: *mut usize,
+                                                        buffer_off: *mut usize,
+                                                        buffer_size: *mut usize) {
+        unsafe {
+            *size = mem::size_of::<nsFixedCStringRepr>();
+            *align = mem::align_of::<nsFixedCStringRepr>();
+            *base_off = offset_of!(nsFixedCStringRepr, base);
+            *base_size = size_of_member!(nsFixedCStringRepr, base);
+            *capacity_off = offset_of!(nsFixedCStringRepr, capacity);
+            *capacity_size = size_of_member!(nsFixedCStringRepr, capacity);
+            *buffer_off = offset_of!(nsFixedCStringRepr, buffer);
+            *buffer_size = size_of_member!(nsFixedCStringRepr, buffer);
+        }
+    }
+
+    #[no_mangle]
+    #[allow(non_snake_case)]
+    pub extern fn Rust_Test_FixedStringReprInformation(size: *mut usize,
+                                                       align: *mut usize,
+                                                       base_off: *mut usize,
+                                                       base_size: *mut usize,
+                                                       capacity_off: *mut usize,
+                                                       capacity_size: *mut usize,
+                                                       buffer_off: *mut usize,
+                                                       buffer_size: *mut usize) {
+        unsafe {
+            *size = mem::size_of::<nsFixedStringRepr>();
+            *align = mem::align_of::<nsFixedStringRepr>();
+            *base_off = offset_of!(nsFixedStringRepr, base);
+            *base_size = size_of_member!(nsFixedStringRepr, base);
+            *capacity_off = offset_of!(nsFixedStringRepr, capacity);
+            *capacity_size = size_of_member!(nsFixedStringRepr, capacity);
+            *buffer_off = offset_of!(nsFixedStringRepr, buffer);
+            *buffer_size = size_of_member!(nsFixedStringRepr, buffer);
+        }
+    }
+
+    #[no_mangle]
+    #[allow(non_snake_case)]
+    pub extern fn Rust_Test_NsStringFlags(f_none: *mut u32,
+                                          f_terminated: *mut u32,
+                                          f_voided: *mut u32,
+                                          f_shared: *mut u32,
+                                          f_owned: *mut u32,
+                                          f_fixed: *mut u32,
+                                          f_literal: *mut u32,
+                                          f_class_fixed: *mut u32) {
+        unsafe {
+            *f_none = F_NONE;
+            *f_terminated = F_TERMINATED;
+            *f_voided = F_VOIDED;
+            *f_shared = F_SHARED;
+            *f_owned = F_OWNED;
+            *f_fixed = F_FIXED;
+            *f_literal = F_LITERAL;
+            *f_class_fixed = F_CLASS_FIXED;
+        }
+    }
+}
