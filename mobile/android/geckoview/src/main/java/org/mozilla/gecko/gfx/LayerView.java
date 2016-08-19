@@ -75,8 +75,8 @@ public class LayerView extends ScrollView implements Tabs.OnTabsChangedListener 
 
     /* This is written by the compositor thread (while the UI thread
      * is blocked on it) and read by the UI thread. */
+    @WrapForJNI(stubName = "CompositorCreated", calledFrom = "ui")
     private volatile boolean mCompositorCreated;
-
 
     private class Compositor extends JNIObject {
         public Compositor() {
@@ -488,6 +488,7 @@ public class LayerView extends ScrollView implements Tabs.OnTabsChangedListener 
         }
     }
 
+    @WrapForJNI(calledFrom = "ui")
     protected Object getCompositor() {
         return mCompositor;
     }
