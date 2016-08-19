@@ -58,13 +58,12 @@
   <key key="&focusSearch2.key;" modifiers="accel" id="focusSearch2" oncommand=";"/>
 </keyset>
 
-<hbox id="header-application"
+<hbox id="header-applications"
       class="header"
       hidden="true"
       data-category="paneApplications">
   <label class="header-name" flex="1">&paneApplications.title;</label>
-  <button class="help-button"
-          aria-label="&helpButton.label;"/>
+  <html:a class="help-button" target="_blank" aria-label="&helpButton.label;"></html:a>
 </hbox>
 
 <vbox id="applicationsContent"
