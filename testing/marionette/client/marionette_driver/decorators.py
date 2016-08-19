@@ -43,13 +43,17 @@ def do_process_check(func, always=False):
         except (MarionetteException, IOError) as e:
             exc, val, tb = sys.exc_info()
 
+            # In case of no Marionette failures ensure to check for possible crashes.
+            # Do it before checking for port disconnects, to avoid reporting of unrelated
+            # crashes due to a forced shutdown of the application.
+            if not isinstance(e, MarionetteException) or type(e) is MarionetteException:
+                if not always:
+                    check_for_crash()
+
             # In case of socket failures force a shutdown of the application
             if type(e) in (socket.error, socket.timeout):
                 m.force_shutdown()
 
-            if not isinstance(e, MarionetteException) or type(e) is MarionetteException:
-                if not always:
-                    check_for_crash()
             raise exc, val, tb
         finally:
             if always:
