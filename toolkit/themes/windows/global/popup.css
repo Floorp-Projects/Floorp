@@ -52,7 +52,7 @@ panel[type="arrow"][side="right"] {
   color: var(--panel-arrowcontent-color);
   background: var(--panel-arrowcontent-background);
   background-clip: padding-box;
-  border: 1px solid var(--panel-arrowcontent-border);
+  border: 1px solid var(--panel-arrowcontent-border-color);
   margin: 4px;
 }
 
