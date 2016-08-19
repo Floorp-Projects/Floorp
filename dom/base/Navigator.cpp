@@ -60,9 +60,6 @@
 #include "Connection.h"
 #include "mozilla/dom/Event.h" // for nsIDOMEvent::InternalDOMEvent()
 #include "nsGlobalWindow.h"
-#ifdef MOZ_B2G
-#include "nsIMobileIdentityService.h"
-#endif
 #ifdef MOZ_B2G_RIL
 #include "mozilla/dom/MobileConnectionArray.h"
 #endif
@@ -1783,13 +1780,6 @@ Navigator::HasFeature(const nsAString& aName, ErrorResult& aRv)
       return p.forget();
     }
 
-#ifdef MOZ_B2G
-    if (featureName.EqualsLiteral("Navigator.getMobileIdAssertion")) {
-      p->MaybeResolve(true);
-      return p.forget();
-    }
-#endif
-
     if (featureName.EqualsLiteral("XMLHttpRequest.mozSystem")) {
       p->MaybeResolve(true);
       return p.forget();
@@ -1908,45 +1898,6 @@ Navigator::MozTCPSocket()
   RefPtr<LegacyMozTCPSocket> socket = new LegacyMozTCPSocket(GetWindow());
   return socket.forget();
 }
-
-#ifdef MOZ_B2G
-already_AddRefed<Promise>
-Navigator::GetMobileIdAssertion(const MobileIdOptions& aOptions,
-                                ErrorResult& aRv)
-{
-  if (!mWindow || !mWindow->GetDocShell()) {
-    aRv.Throw(NS_ERROR_UNEXPECTED);
-    return nullptr;
-  }
-
-  nsCOMPtr<nsIMobileIdentityService> service =
-    do_GetService("@mozilla.org/mobileidentity-service;1");
-  if (!service) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
-  }
-
-  JSContext *cx = nsContentUtils::GetCurrentJSContext();
-  if (!cx) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
-  }
-
-  JS::Rooted<JS::Value> optionsValue(cx);
-  if (!ToJSValue(cx, aOptions, &optionsValue)) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
-  }
-
-  nsCOMPtr<nsISupports> promise;
-  aRv = service->GetMobileIdAssertion(mWindow,
-                                      optionsValue,
-                                      getter_AddRefs(promise));
-
-  RefPtr<Promise> p = static_cast<Promise*>(promise.get());
-  return p.forget();
-}
-#endif // MOZ_B2G
 
 #ifdef MOZ_B2G_RIL
 
@@ -2307,29 +2258,6 @@ Navigator::HasUserMediaSupport(JSContext* /* unused */,
   return Preferences::GetBool("media.navigator.enabled", false) ||
          Preferences::GetBool("media.peerconnection.enabled", false);
 }
-
-#ifdef MOZ_B2G
-/* static */
-bool
-Navigator::HasMobileIdSupport(JSContext* aCx, JSObject* aGlobal)
-{
-  nsCOMPtr<nsPIDOMWindowInner> win = GetWindowFromGlobal(aGlobal);
-  if (!win) {
-    return false;
-  }
-
-  nsIDocument* doc = win->GetExtantDoc();
-  if (!doc) {
-    return false;
-  }
-
-  nsIPrincipal* principal = doc->NodePrincipal();
-  uint32_t permission = GetPermission(principal, "mobileid");
-
-  return permission == nsIPermissionManager::PROMPT_ACTION ||
-         permission == nsIPermissionManager::ALLOW_ACTION;
-}
-#endif
 
 /* static */
 bool
