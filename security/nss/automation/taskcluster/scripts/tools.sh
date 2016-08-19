@@ -14,3 +14,16 @@ switch_compilers() {
         exit 1
     fi
 }
+
+# Usage: hg_clone repo dir [revision=@]
+hg_clone() {
+    repo=$1
+    dir=$2
+    rev=${3:-@}
+    for i in 0 2 5; do
+        sleep $i
+        hg clone -r "$rev" "$repo" "$dir" && return
+        rm -rf "$dir"
+    done
+    exit 1
+}

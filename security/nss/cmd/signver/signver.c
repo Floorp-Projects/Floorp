@@ -84,7 +84,6 @@ enum {
     opt_ASCII,
     opt_CertDir,
     opt_InputDataFile,
-    opt_ItemNumber,
     opt_OutputFile,
     opt_InputSigFile,
     opt_PrintWhyFailure,

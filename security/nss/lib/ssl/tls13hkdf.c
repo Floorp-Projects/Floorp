@@ -14,9 +14,6 @@
 #include "sslerr.h"
 #include "sslimpl.h"
 
-/* TODO(ekr@rtfm.com): Export this separately. */
-unsigned char *tls13_EncodeUintX(PRUint32 value, unsigned int bytes, unsigned char *to);
-
 /* This table contains the mapping between TLS hash identifiers and the
  * PKCS#11 identifiers */
 static const struct {
@@ -175,13 +172,13 @@ tls13_HkdfExpandLabel(PK11SymKey *prk, SSLHashType baseHash,
         goto abort;
     }
 
-    ptr = tls13_EncodeUintX(keySize, 2, ptr);
-    ptr = tls13_EncodeUintX(labelLen + kLabelPrefixLen, 1, ptr);
+    ptr = ssl_EncodeUintX(keySize, 2, ptr);
+    ptr = ssl_EncodeUintX(labelLen + kLabelPrefixLen, 1, ptr);
     PORT_Memcpy(ptr, kLabelPrefix, kLabelPrefixLen);
     ptr += kLabelPrefixLen;
     PORT_Memcpy(ptr, label, labelLen);
     ptr += labelLen;
-    ptr = tls13_EncodeUintX(handshakeHashLen, 1, ptr);
+    ptr = ssl_EncodeUintX(handshakeHashLen, 1, ptr);
     if (handshakeHash) {
         PORT_Memcpy(ptr, handshakeHash, handshakeHashLen);
         ptr += handshakeHashLen;

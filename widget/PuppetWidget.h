@@ -56,11 +56,18 @@ protected:
 public:
   NS_DECL_ISUPPORTS_INHERITED
 
+  // PuppetWidget creation is infallible, hence InfallibleCreate(), which
+  // Create() calls.
   using nsBaseWidget::Create; // for Create signature not overridden here
-  NS_IMETHOD Create(nsIWidget* aParent,
-                    nsNativeWidget aNativeParent,
-                    const LayoutDeviceIntRect& aRect,
-                    nsWidgetInitData* aInitData = nullptr) override;
+  virtual nsresult Create(nsIWidget* aParent,
+                          nsNativeWidget aNativeParent,
+                          const LayoutDeviceIntRect& aRect,
+                          nsWidgetInitData* aInitData = nullptr)
+                          override;
+  void InfallibleCreate(nsIWidget* aParent,
+                        nsNativeWidget aNativeParent,
+                        const LayoutDeviceIntRect& aRect,
+                        nsWidgetInitData* aInitData = nullptr);
 
   void InitIMEState();
 
@@ -209,7 +216,7 @@ public:
   // Get the screen position of the application window.
   nsIntPoint GetWindowPosition();
 
-  NS_IMETHOD GetScreenBounds(LayoutDeviceIntRect& aRect) override;
+  virtual LayoutDeviceIntRect GetScreenBounds() override;
 
   NS_IMETHOD StartPluginIME(const mozilla::WidgetKeyboardEvent& aKeyboardEvent,
                             int32_t aPanelX, int32_t aPanelY,

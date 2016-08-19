@@ -116,7 +116,7 @@ bool TestDetachObject()
 {
     JS::RootedObject obj(cx, CreateNewObject(8, 12));
     CHECK(obj);
-    JS_DetachArrayBuffer(cx, obj, ChangeData);
+    JS_DetachArrayBuffer(cx, obj);
     CHECK(JS_IsDetachedArrayBufferObject(obj));
 
     return true;

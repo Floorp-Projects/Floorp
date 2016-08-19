@@ -297,11 +297,10 @@ FrameAnimator::RequestRefresh(AnimationState& aState, const TimeStamp& aTime)
 LookupResult
 FrameAnimator::GetCompositedFrame(uint32_t aFrameNum)
 {
-  MOZ_ASSERT(aFrameNum != 0, "First frame is never composited");
-
   // If we have a composited version of this frame, return that.
   if (mLastCompositedFrameIndex == int32_t(aFrameNum)) {
-    return LookupResult(mCompositingFrame->DrawableRef(), MatchType::EXACT);
+    return LookupResult(DrawableSurface(mCompositingFrame->DrawableRef()),
+                        MatchType::EXACT);
   }
 
   // Otherwise return the raw frame. DoBlend is required to ensure that we only
@@ -310,9 +309,20 @@ FrameAnimator::GetCompositedFrame(uint32_t aFrameNum)
     SurfaceCache::Lookup(ImageKey(mImage),
                          RasterSurfaceKey(mSize,
                                           DefaultSurfaceFlags(),
-                                          aFrameNum));
-  MOZ_ASSERT(!result || !result.DrawableRef()->GetIsPaletted(),
+                                          PlaybackType::eAnimated));
+  if (!result) {
+    return result;
+  }
+
+  // Seek to the appropriate frame. If seeking fails, it means that we couldn't
+  // get the frame we're looking for; treat this as if the lookup failed.
+  if (NS_FAILED(result.Surface().Seek(aFrameNum))) {
+    return LookupResult(MatchType::NOT_FOUND);
+  }
+
+  MOZ_ASSERT(!result.Surface()->GetIsPaletted(),
              "About to return a paletted frame");
+
   return result;
 }
 
@@ -338,7 +348,7 @@ DoCollectSizeOfCompositingSurfaces(const RawAccessFrameRef& aSurface,
   // Concoct a SurfaceKey for this surface.
   SurfaceKey key = RasterSurfaceKey(aSurface->GetImageSize(),
                                     DefaultSurfaceFlags(),
-                                    /* aFrameNum = */ 0);
+                                    PlaybackType::eStatic);
 
   // Create a counter for this surface.
   SurfaceMemoryCounter counter(key, /* aIsLocked = */ true, aType);
@@ -380,9 +390,19 @@ FrameAnimator::GetRawFrame(uint32_t aFrameNum) const
     SurfaceCache::Lookup(ImageKey(mImage),
                          RasterSurfaceKey(mSize,
                                           DefaultSurfaceFlags(),
-                                          aFrameNum));
-  return result ? result.DrawableRef()->RawAccessRef()
-                : RawAccessFrameRef();
+                                          PlaybackType::eAnimated));
+  if (!result) {
+    return RawAccessFrameRef();
+  }
+
+  // Seek to the frame we want. If seeking fails, it means we couldn't get the
+  // frame we're looking for, so we bail here to avoid returning the wrong frame
+  // to the caller.
+  if (NS_FAILED(result.Surface().Seek(aFrameNum))) {
+    return RawAccessFrameRef();  // Not available yet.
+  }
+
+  return result.Surface()->RawAccessRef();
 }
 
 //******************************************************************************

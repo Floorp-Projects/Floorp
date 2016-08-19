@@ -183,7 +183,7 @@
   }
 }
 
-@media (-moz-windows-compositor) {
+@media (-moz-windows-glass) {
   #placesToolbox {
     border-top: none;
   }

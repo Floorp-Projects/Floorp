@@ -183,7 +183,7 @@ static bool
 DecodeBrTable(FunctionDecoder& f)
 {
     uint32_t tableLength;
-    ExprType type;
+    ExprType type = ExprType::Limit;
     if (!f.iter().readBrTable(&tableLength, &type, nullptr, nullptr))
         return false;
 

@@ -673,12 +673,11 @@ NS_IMETHODIMP nsXULWindow::SetPositionAndSize(int32_t aX, int32_t aY,
 NS_IMETHODIMP nsXULWindow::GetPositionAndSize(int32_t* x, int32_t* y, int32_t* cx,
    int32_t* cy)
 {
-  LayoutDeviceIntRect rect;
 
   if (!mWindow)
     return NS_ERROR_FAILURE;
 
-  mWindow->GetScreenBounds(rect);
+  LayoutDeviceIntRect rect = mWindow->GetScreenBounds();
 
   if (x)
     *x = rect.x;

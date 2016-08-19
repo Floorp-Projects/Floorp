@@ -86,6 +86,10 @@
 @BINPATH@/blocklist.xml
 
 ; [Components]
+#ifdef MOZ_ARTIFACT_BUILDS
+@BINPATH@/components/interfaces.xpt
+@BINPATH@/components/prebuilt-interfaces.manifest
+#endif
 @BINPATH@/components/components.manifest
 @BINPATH@/components/alerts.xpt
 #ifdef ACCESSIBILITY

@@ -265,7 +265,7 @@ CheckHorizontallyInterpolatedImage(Decoder* aDecoder,
                                    const vector<BGRAColor>& aColors)
 {
   RawAccessFrameRef currentFrame = aDecoder->GetCurrentFrameRef();
-  RefPtr<SourceSurface> surface = currentFrame->GetSurface();
+  RefPtr<SourceSurface> surface = currentFrame->GetSourceSurface();
 
   for (int32_t row = 0; row < aSize.height; ++row) {
     if (!IsImportantRow(row, aPass)) {
@@ -402,7 +402,7 @@ CheckVerticallyInterpolatedImage(Decoder* aDecoder,
 
     // Check that the pixels match.
     RawAccessFrameRef currentFrame = aDecoder->GetCurrentFrameRef();
-    RefPtr<SourceSurface> surface = currentFrame->GetSurface();
+    RefPtr<SourceSurface> surface = currentFrame->GetSourceSurface();
     if (!RowHasPixels(surface, row, expectedPixels)) {
       return false;
     }

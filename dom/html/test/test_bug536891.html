@@ -12,40 +12,54 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=536891
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=536891">Mozilla Bug 536891</a>
 <p id="display"></p>
 <div id="content" style="display: none">
-<textarea id="t" maxlength="-2"></textarea>
-<input id="i" type="text" maxlength="-2">
-<input id="p" type="password" maxlength="-2">
+<textarea id="t" maxlength="-2" minlength="-2"></textarea>
+<input id="i" type="text" maxlength="-2" minlength="-2">
+<input id="p" type="password" maxlength="-2" minlength="-2">
 </div>
 <pre id="test">
 <script type="application/javascript">
 
 /** Test for Bug 536891 **/
 
-function checkNegativeMaxLength(element)
+function checkNegativeMinMaxLength(element)
 {
-  /* maxLength is set to -2 initially in the document, see above */
-  is(element.maxLength, -1, "negative maxLength should be considered invalid and represented as -1");
+  for(let type of ["min", "max"]) {
+    /* value is set to -2 initially in the document, see above */
+    is(element[type + "Length"], -1, "negative " + type + "Length should be considered invalid and represented as -1");
 
-  element.setAttribute('maxLength', -15);
-  is(element.maxLength, -1, "negative maxLength is not processed correctly when set dynamically");
-  is(element.getAttribute('maxLength'), "-15", "maxLength attribute doesn't return the correct value");
+    // changing the property to an negative value should throw (see bug 536895).
+    for(let value of [-15, -2147483648]) { // PR_INT32_MIN
+      let threw = false;
+      try {
+        element[type + "Length"] = value;
+      } catch(e) {
+        threw = true;
+      }
+      is(threw, true, "setting " + type + "Length property to " + value + " should throw");
+    }
+    element[type + "Length"] = "non-numerical value";
+    is(element[type + "Length"], 0, "setting " + type + "Length property to a non-numerical value should set it to zero");
 
-  element.setAttribute('maxLength', 0);
-  is(element.maxLength, 0, "negative maxLength is not processed correctly");
-  element.setAttribute('maxLength', 2147483647); /* PR_INT32_MAX */
-  is(element.maxLength, 2147483647, "negative maxLength is not processed correctly");
-  element.setAttribute('maxLength', -2147483648); /* PR_INT32_MIN */
-  is(element.maxLength, -1, "negative maxLength is not processed correctly");
-  element.setAttribute('maxLength', 'non-numerical-value');
-  is(element.maxLength, -1, "non-numerical value should be considered invalid and represented as -1");
 
-  /* we do not check when changing the value from the DOM because it is throwing an exception, see bug 536895 */
+    element.setAttribute(type + 'Length', -15);
+    is(element[type + "Length"], -1, "negative " + type + "Length is not processed correctly when set dynamically");
+    is(element.getAttribute(type + 'Length'), "-15", type + "Length attribute doesn't return the correct value");
+
+    element.setAttribute(type + 'Length', 0);
+    is(element[type + "Length"], 0, "zero " + type + "Length is not processed correctly");
+    element.setAttribute(type + 'Length', 2147483647); // PR_INT32_MAX 
+    is(element[type + "Length"], 2147483647, "negative " + type + "Length is not processed correctly");
+    element.setAttribute(type + 'Length', -2147483648);  // PR_INT32_MIN
+    is(element[type + "Length"], -1, "negative " + type + "Length is not processed correctly");
+    element.setAttribute(type + 'Length', 'non-numerical-value');
+    is(element[type + "Length"], -1, "non-numerical value should be considered invalid and represented as -1");
+  }
 }
 
 /* TODO: correct behavior may be checked for email, telephone, url and search input types */
-checkNegativeMaxLength(document.getElementById('t'));
-checkNegativeMaxLength(document.getElementById('i'));
-checkNegativeMaxLength(document.getElementById('p'));
+checkNegativeMinMaxLength(document.getElementById('t'));
+checkNegativeMinMaxLength(document.getElementById('i'));
+checkNegativeMinMaxLength(document.getElementById('p'));
 
 </script>
 </pre>

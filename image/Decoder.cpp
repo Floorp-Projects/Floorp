@@ -98,10 +98,9 @@ Decoder::Init()
   // Metadata decoders must not set an output size.
   MOZ_ASSERT_IF(mMetadataDecode, !mHaveExplicitOutputSize);
 
-  // It doesn't make sense to decode anything but the first frame if we can't
-  // store anything in the SurfaceCache, since only the last frame we decode
-  // will be retrievable.
-  MOZ_ASSERT(ShouldUseSurfaceCache() || IsFirstFrameDecode());
+  // All decoders must be anonymous except for metadata decoders.
+  // XXX(seth): Soon that exception will be removed.
+  MOZ_ASSERT_IF(mImage, IsMetadataDecode());
 
   // Implementation-specific initialization.
   nsresult rv = InitInternal();
@@ -341,13 +340,6 @@ Decoder::AllocateFrameInternal(uint32_t aFrameNum,
     return RawAccessFrameRef();
   }
 
-  const uint32_t bytesPerPixel = aPaletteDepth == 0 ? 4 : 1;
-  if (ShouldUseSurfaceCache() &&
-      !SurfaceCache::CanHold(aFrameRect.Size(), bytesPerPixel)) {
-    NS_WARNING("Trying to add frame that's too large for the SurfaceCache");
-    return RawAccessFrameRef();
-  }
-
   NotNull<RefPtr<imgFrame>> frame = WrapNotNull(new imgFrame());
   bool nonPremult = bool(mSurfaceFlags & SurfaceFlags::NO_PREMULTIPLY_ALPHA);
   if (NS_FAILED(frame->InitForDecoder(aOutputSize, aFrameRect, aFormat,
@@ -360,29 +352,6 @@ Decoder::AllocateFrameInternal(uint32_t aFrameNum,
   if (!ref) {
     frame->Abort();
     return RawAccessFrameRef();
-  }
-
-  if (ShouldUseSurfaceCache()) {
-    NotNull<RefPtr<ISurfaceProvider>> provider =
-      WrapNotNull(new SimpleSurfaceProvider(frame));
-    InsertOutcome outcome =
-      SurfaceCache::Insert(provider, ImageKey(mImage.get()),
-                           RasterSurfaceKey(aOutputSize,
-                                            mSurfaceFlags,
-                                            aFrameNum));
-    if (outcome == InsertOutcome::FAILURE) {
-      // We couldn't insert the surface, almost certainly due to low memory. We
-      // treat this as a permanent error to help the system recover; otherwise,
-      // we might just end up attempting to decode this image again immediately.
-      ref->Abort();
-      return RawAccessFrameRef();
-    } else if (outcome == InsertOutcome::FAILURE_ALREADY_PRESENT) {
-      // Another decoder beat us to decoding this frame. We abort this decoder
-      // rather than treat this as a real error.
-      mDecodeAborted = true;
-      ref->Abort();
-      return RawAccessFrameRef();
-    }
   }
 
   if (aFrameNum == 1) {

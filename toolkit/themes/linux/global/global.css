@@ -38,7 +38,7 @@ toolbar[type="menubar"]:not([autohide="true"]):not(:-moz-lwtheme):-moz-system-me
   --panel-arrowcontent-padding: 10px;
   --panel-arrowcontent-background: -moz-field;
   --panel-arrowcontent-color: -moz-fieldText;
-  --panel-arrowcontent-border: 1px solid ThreeDShadow;
+  --panel-arrowcontent-border-color: ThreeDShadow;
 }
 
 /* ::::: root elements ::::: */

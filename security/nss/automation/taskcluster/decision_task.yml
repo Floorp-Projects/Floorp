@@ -1,0 +1,96 @@
+---
+version: 0
+metadata:
+  name: "NSS Continuous Integration"
+  description: "The Taskcluster task graph for the NSS tree"
+  owner: "mozilla-taskcluster-maintenance@mozilla.com"
+  source: {{{source}}}
+
+scopes:
+  # Note the below scopes are insecure however these get overriden on the server
+  # side to whatever scopes are set by mozilla-taskcluster.
+  - queue:*
+  - docker-worker:*
+  - scheduler:*
+
+# Available mustache parameters (see the mozilla-taskcluster source):
+#
+# - owner:          push user (email address)
+# - source:         URL of this YAML file
+# - url:            repository URL
+# - project:        alias for the destination repository (basename of
+#                   the repo url)
+# - level:          SCM level of the destination repository
+#                   (1 = try, 3 = core)
+# - revision:       (short) hg revision of the head of the push
+# - revision_hash:  (long) hg revision of the head of the push
+# - comment:        comment of the push
+# - pushlog_id:     id in the pushlog table of the repository
+#
+# and functions:
+# - as_slugid:      convert a label into a slugId
+# - from_now:       generate a timestamp at a fixed offset from now
+
+tasks:
+  - taskId: '{{#as_slugid}}decision task{{/as_slugid}}'
+    reruns: 3
+    task:
+      created: '{{now}}'
+      deadline: '{{#from_now}}1 day{{/from_now}}'
+      expires: '{{#from_now}}14 days{{/from_now}}'
+
+      metadata:
+        owner: mozilla-taskcluster-maintenance@mozilla.com
+        source: {{{source}}}
+        name: "NSS Decision Task"
+        description: |
+            The task that creates all of the other tasks in the task graph
+
+      workerType: "hg-worker"
+      provisionerId: "aws-provisioner-v1"
+
+      tags:
+        createdForUser: {{owner}}
+
+      routes:
+        - "tc-treeherder-stage.v2.{{project}}.{{revision}}.{{pushlog_id}}"
+        - "tc-treeherder.v2.{{project}}.{{revision}}.{{pushlog_id}}"
+
+      payload:
+        image: "ttaubert/nss-ci:0.0.22"
+
+        env:
+          TC_OWNER: {{owner}}
+          TC_SOURCE: {{{source}}}
+          TC_PROJECT: {{project}}
+          TC_COMMENT: '{{comment}}'
+          TC_IMAGE: "ttaubert/nss-ci:0.0.22"
+          NSS_PUSHLOG_ID: '{{pushlog_id}}'
+          NSS_HEAD_REPOSITORY: '{{{url}}}'
+          NSS_HEAD_REVISION: '{{revision}}'
+
+        maxRunTime: 1800
+
+        command:
+          - bash
+          - -cx
+          - >
+            bin/checkout.sh &&
+            nss/automation/taskcluster/scripts/extend_task_graph.sh
+
+        artifacts:
+          public:
+            type: "directory"
+            path: "/home/worker/artifacts"
+            expires: "{{#from_now}}7 days{{/from_now}}"
+
+        graphs:
+          - /home/worker/artifacts/graph.json
+
+      extra:
+        treeherder:
+          symbol: D
+          build:
+            platform: nss-decision
+          machine:
+            platform: nss-decision

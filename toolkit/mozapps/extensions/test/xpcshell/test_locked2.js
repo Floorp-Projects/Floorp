@@ -217,7 +217,12 @@ add_task(function*() {
 
   // After allowing access to the original DB things should still be
   // back how they were before the lock
-  shutdownManager();
+  let shutdownError;
+  try {
+    shutdownManager();
+  } catch (e) {
+    shutdownError = e;
+  }
   yield file.close();
   gExtensionsJSON.permissions = filePermissions;
   startupManager();
@@ -226,7 +231,7 @@ add_task(function*() {
   // readable, so our changes were saved. On Windows,
   // these things happened when we had no access to the database so
   // they are seen as external changes when we get the database back
-  if (gXPISaveError) {
+  if (shutdownError) {
     do_print("Previous XPI save failed");
     check_startup_changes(AddonManager.STARTUP_CHANGE_INSTALLED,
         ["addon6@tests.mozilla.org"]);

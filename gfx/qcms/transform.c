@@ -1296,7 +1296,7 @@ qcms_transform* qcms_transform_create(
 #endif
 		    } else
 #endif
-#if (defined(__POWERPC__) || defined(__powerpc__))
+#if (defined(__POWERPC__) || defined(__powerpc__) && !defined(__NO_FPRS__))
 		    if (have_altivec()) {
 			    if (in_type == QCMS_DATA_RGB_8)
 				    transform->transform_fn = qcms_transform_data_rgb_out_lut_altivec;

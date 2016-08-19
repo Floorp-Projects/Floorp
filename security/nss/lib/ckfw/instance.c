@@ -316,7 +316,7 @@ nssCKFWInstance_Create(
 
 nomem:
     *pError = CKR_HOST_MEMORY;
-    /*FALLTHROUGH*/
+/*FALLTHROUGH*/
 loser:
 
     if (CK_TRUE == called_Initialize) {

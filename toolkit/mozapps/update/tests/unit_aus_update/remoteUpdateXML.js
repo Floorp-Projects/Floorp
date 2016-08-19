@@ -11,10 +11,9 @@ function run_test() {
 
   debugDump("testing remote update xml attributes");
 
-  setUpdateURLOverride();
+  start_httpserver();
+  setUpdateURLOverride(gURLData + gHTTPHandlerPath);
   setUpdateChannel("test_channel");
-  // The mock XMLHttpRequest is MUCH faster
-  overrideXHR(callHandleEvent);
   standardInit();
   do_execute_soon(run_test_pt01);
 }
@@ -34,24 +33,6 @@ function check_test_helper_pt1() {
   Assert.equal(gUpdateCount, gExpectedCount,
                "the update count" + MSG_SHOULD_EQUAL);
   gNextRunFunc();
-}
-
-// Callback function used by the custom XMLHttpRequest implementation to
-// call the nsIDOMEventListener's handleEvent method for onload.
-function callHandleEvent(aXHR) {
-  aXHR.status = 400;
-  aXHR.responseText = gResponseBody;
-  try {
-    if (gResponseBody) {
-      let parser = Cc["@mozilla.org/xmlextras/domparser;1"].
-                   createInstance(Ci.nsIDOMParser);
-      aXHR.responseXML = parser.parseFromString(gResponseBody, "application/xml");
-    }
-  } catch (e) {
-    aXHR.responseXML = null;
-  }
-  let e = { target: aXHR };
-  aXHR.onload(e);
 }
 
 // update xml not found
@@ -125,7 +106,7 @@ function check_test_pt02() {
             "the update showNeverForVersion attribute" + MSG_SHOULD_EQUAL);
   Assert.equal(bestUpdate.promptWaitTime, "345600",
                "the update promptWaitTime attribute" + MSG_SHOULD_EQUAL);
-  Assert.equal(bestUpdate.serviceURL, URL_HOST + "/update.xml?force=1",
+  Assert.equal(bestUpdate.serviceURL, gURLData + gHTTPHandlerPath + "?force=1",
                "the update serviceURL attribute" + MSG_SHOULD_EQUAL);
   Assert.equal(bestUpdate.channel, "test_channel",
                "the update channel attribute" + MSG_SHOULD_EQUAL);
@@ -243,7 +224,7 @@ function check_test_pt03() {
             "the update showNeverForVersion attribute" + MSG_SHOULD_EQUAL);
   Assert.equal(bestUpdate.promptWaitTime, "691200",
                "the update promptWaitTime attribute" + MSG_SHOULD_EQUAL);
-  Assert.equal(bestUpdate.serviceURL, URL_HOST + "/update.xml?force=1",
+  Assert.equal(bestUpdate.serviceURL, gURLData + gHTTPHandlerPath + "?force=1",
                "the update serviceURL attribute" + MSG_SHOULD_EQUAL);
   Assert.equal(bestUpdate.channel, "test_channel",
                "the update channel attribute" + MSG_SHOULD_EQUAL);

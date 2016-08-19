@@ -752,8 +752,7 @@ P12U_ListPKCS12File(char *in_file, PK11SlotInfo *slot,
                             PR_Close(fd);
                         }
                     } else if (SECU_PrintSignedData(stdout, dip->der,
-                                                    (dip->hasKey) ?
-                                                                  "(has private key)"
+                                                    (dip->hasKey) ? "(has private key)"
                                                                   : "",
                                                     0, (SECU_PPFunc)SECU_PrintCertificate) !=
                                0) {
@@ -982,10 +981,8 @@ main(int argc, char **argv)
 
     slotname = SECU_GetOptionArg(&pk12util, opt_TokenName);
 
-    import_file = (pk12util.options[opt_List].activated) ?
-                                                         SECU_GetOptionArg(&pk12util, opt_List)
-                                                         :
-                                                         SECU_GetOptionArg(&pk12util, opt_Import);
+    import_file = (pk12util.options[opt_List].activated) ? SECU_GetOptionArg(&pk12util, opt_List)
+                                                         : SECU_GetOptionArg(&pk12util, opt_Import);
     export_file = SECU_GetOptionArg(&pk12util, opt_Export);
 
     if (pk12util.options[opt_P12FilePWFile].activated) {
@@ -1052,8 +1049,7 @@ main(int argc, char **argv)
         }
     }
 
-    certCipher = PK11_IsFIPS() ? SEC_OID_UNKNOWN :
-                               SEC_OID_PKCS12_V2_PBE_WITH_SHA1_AND_40_BIT_RC2_CBC;
+    certCipher = PK11_IsFIPS() ? SEC_OID_UNKNOWN : SEC_OID_PKCS12_V2_PBE_WITH_SHA1_AND_40_BIT_RC2_CBC;
     if (pk12util.options[opt_CertCipher].activated) {
         char *cipherString = pk12util.options[opt_CertCipher].arg;
 

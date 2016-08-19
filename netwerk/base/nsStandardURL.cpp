@@ -1775,6 +1775,8 @@ nsStandardURL::FindHostLimit(nsACString::const_iterator& aStart,
   }
 }
 
+// If aValue only has a host part and no port number, the port
+// will not be reset!!!
 NS_IMETHODIMP
 nsStandardURL::SetHostPort(const nsACString &aValue)
 {
@@ -1843,6 +1845,18 @@ nsStandardURL::SetHostPort(const nsACString &aValue)
     }
 
     return NS_OK;
+}
+
+// This function is different than SetHostPort in that the port number will be
+// reset as well if aValue parameter does not contain a port port number.
+NS_IMETHODIMP
+nsStandardURL::SetHostAndPort(const nsACString &aValue)
+{
+  // Reset the port and than call SetHostPort. SetHostPort does not reset
+  // the port number.
+  nsresult rv = SetPort(-1);
+  NS_ENSURE_SUCCESS(rv, rv);
+  return SetHostPort(aValue);
 }
 
 NS_IMETHODIMP

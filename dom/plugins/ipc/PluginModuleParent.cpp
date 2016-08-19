@@ -2687,6 +2687,7 @@ PluginModuleParent::NPP_NewInternal(NPMIMEType pluginType, NPP instance,
                                     InfallibleTArray<nsCString>& values,
                                     NPSavedData* saved, NPError* error)
 {
+    MOZ_ASSERT(names.Length() == values.Length());
     if (mPluginName.IsEmpty()) {
         GetPluginDetails();
         InitQuirksModes(nsDependentCString(pluginType));
@@ -2712,6 +2713,18 @@ PluginModuleParent::NPP_NewInternal(NPMIMEType pluginType, NPP instance,
         new PluginInstanceParent(this, instance, strPluginType, mNPNIface);
 
     if (mIsFlashPlugin) {
+        // In Bug 1287588, we found out that if the salign attribute is before
+        // the scale attribute in embed parameters, flash objects render
+        // incorrectly. This is most likely due to an order of operations
+        // problem in the plugin itself. Bug 1264270 changes the order in which
+        // parameters were passed, causing this bug to trigger on pages that
+        // formerly worked. In order to keep things working the way they were in
+        // Firefox <= 48, we reverse the order of parameters, making sure it
+        // happens before we possibly appends more parameters. This should keep
+        // parameters in the same order as prior versions.
+        std::reverse(names.begin(), names.end());
+        std::reverse(values.begin(), values.end());
+
         parentInstance->InitMetadata(strPluginType, srcAttribute);
 #ifdef XP_WIN
         bool supportsAsyncRender = false;

@@ -2068,7 +2068,7 @@ CERT_IsCACert(CERTCertificate *cert, unsigned int *rettype)
      */
     CERTBasicConstraints constraints;
     if ((CERT_FindBasicConstraintExten(cert, &constraints) == SECSuccess &&
-        constraints.isCA) ||
+         constraints.isCA) ||
         (cert->isRoot && cert_Version(cert) < SEC_CERTIFICATE_VERSION_3))
         cType |= (NS_CERT_TYPE_SSL_CA | NS_CERT_TYPE_EMAIL_CA);
 
@@ -2077,7 +2077,9 @@ CERT_IsCACert(CERTCertificate *cert, unsigned int *rettype)
      */
     cType = cert_ComputeTrustOverrides(cert, cType);
     ret = (cType & (NS_CERT_TYPE_SSL_CA | NS_CERT_TYPE_EMAIL_CA |
-                    NS_CERT_TYPE_OBJECT_SIGNING_CA)) ? PR_TRUE : PR_FALSE;
+                    NS_CERT_TYPE_OBJECT_SIGNING_CA))
+              ? PR_TRUE
+              : PR_FALSE;
 
     if (rettype) {
         *rettype = cType;

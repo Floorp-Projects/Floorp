@@ -349,6 +349,10 @@ public:
                     const gfx::IntRect& aClipRect = gfx::IntRect(),
                     const gfx::Matrix4x4& aTransform = gfx::Matrix4x4());
 
+  void SetBeginFrameClearColor(const gfx::Color& aColor) {
+    mBeginFrameClearColor = aColor;
+  }
+
   /*
    * Clear aRect on current render target.
    */
@@ -633,6 +637,8 @@ protected:
 #if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 17
   FenceHandle mReleaseFenceHandle;
 #endif
+
+  gfx::Color mBeginFrameClearColor;
 
 private:
   static LayersBackend sBackend;

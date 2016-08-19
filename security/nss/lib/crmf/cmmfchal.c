@@ -97,7 +97,7 @@ cmmf_create_witness_and_challenge(PLArenaPool *poolp,
     }
     rv = SECITEM_CopyItem(poolp, &challenge->senderDER, senderDER);
     crmf_get_public_value(inPubKey, &challenge->key);
-    /* Fall through */
+/* Fall through */
 loser:
     if (spki != NULL) {
         SECKEY_DestroySubjectPublicKeyInfo(spki);

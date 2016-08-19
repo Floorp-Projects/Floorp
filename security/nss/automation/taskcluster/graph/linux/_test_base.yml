@@ -14,9 +14,13 @@ task:
 
   payload:
     maxRunTime: 3600
-    image: ttaubert/nss-ci:0.0.17
+    image: !env TC_IMAGE
 
     command:
       - "/bin/bash"
       - "-c"
       - "bin/checkout.sh && nss/automation/taskcluster/scripts/run_tests.sh"
+
+  extra:
+    treeherder:
+      jobKind: test

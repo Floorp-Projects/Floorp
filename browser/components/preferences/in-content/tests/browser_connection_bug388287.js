@@ -3,25 +3,13 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 Components.utils.import("resource://gre/modules/Services.jsm");
-
-// From browser/components/preferences/in-content/test/head.js
-function open_preferences(aCallback) {
-  gBrowser.selectedTab = gBrowser.addTab("about:preferences");
-  let newTabBrowser = gBrowser.getBrowserForTab(gBrowser.selectedTab);
-  newTabBrowser.addEventListener("Initialized", function () {
-    newTabBrowser.removeEventListener("Initialized", arguments.callee, true);
-    aCallback(gBrowser.contentWindow);
-  }, true);
-}
+Components.utils.import("resource://gre/modules/Task.jsm");
 
 function test() {
   waitForExplicitFinish();
-  let connectionTests = runConnectionTestsGen();
-  connectionTests.next();
   const connectionURL = "chrome://browser/content/preferences/connection.xul";
   let closeable = false;
   let finalTest = false;
-  let prefWin;
 
   // The changed preferences need to be backed up and restored because this mochitest
   // changes them setting from the default
@@ -38,55 +26,34 @@ function test() {
       Services.prefs.clearUserPref("network.proxy.backup." + proxyType);
       Services.prefs.clearUserPref("network.proxy.backup." + proxyType + "_port");
     }
-    try {
-      Services.ww.unregisterNotification(observer);
-    } catch (e) {
-      // Do nothing, if the test was successful the above line should fail silently.
-    }
   });
 
-  // this observer is registered after the pref tab loads
-  let observer = {
-    observe: function(aSubject, aTopic, aData) {
-      if (aTopic == "domwindowopened") {
-        // when the connection window loads, proceed forward in test
-        let win = aSubject.QueryInterface(Components.interfaces.nsIDOMWindow);
-        win.addEventListener("load", function winLoadListener() {
-          win.removeEventListener("load", winLoadListener);
-          if (win.location.href == connectionURL) {
-            // If this is a connection window, run the next test
-            connectionTests.next(win);
-          }
-        });
-      } else if (aTopic == "domwindowclosed") {
-        // Check if the window should have closed, and respawn another window for further testing
-        let win = aSubject.QueryInterface(Components.interfaces.nsIDOMWindow);
-        if (win.location.href == connectionURL) {
-          ok(closeable, "Connection dialog closed");
-
-          // Last close event, don't respawn, and clean up
-          if (finalTest) {
-            Services.ww.unregisterNotification(observer);
-            gBrowser.removeCurrentTab();
-            finish();
-            return;
-          }
-
-          // Open another connection pane for the next test
-          gBrowser.contentWindow.gAdvancedPane.showConnections();
-        }
-      }
-    }
-  };
-
-  // The actual tests to run, in a generator
-  function* runConnectionTestsGen() {
-    let doc, connectionWin, proxyTypePref, sharePref, httpPref, httpPortPref, ftpPref, ftpPortPref;
+  /*
+   The connection dialog alone won't save onaccept since it uses type="child",
+   so it has to be opened as a sub dialog of the main pref tab.
+   Open the main tab here.
+   */
+  open_preferences(Task.async(function* tabOpened(aContentWindow) {
+    let dialog, dialogClosingPromise;
+    let doc, proxyTypePref, sharePref, httpPref, httpPortPref, ftpPref, ftpPortPref;
 
     // Convenient function to reset the variables for the new window
-    function setDoc(win) {
-      doc = win.document;
-      connectionWin = win;
+    function* setDoc() {
+      if (closeable) {
+        let dialogClosingEvent = yield dialogClosingPromise;
+        ok(dialogClosingEvent, "Connection dialog closed");
+      }
+
+      if (finalTest) {
+        gBrowser.removeCurrentTab();
+        finish();
+        return;
+      }
+
+      dialog = yield openAndLoadSubDialog(connectionURL);
+      dialogClosingPromise = waitForEvent(dialog.document.documentElement, "dialogclosing");
+
+      doc = dialog.document;
       proxyTypePref = doc.getElementById("network.proxy.type");
       sharePref = doc.getElementById("network.proxy.share_proxy_settings");
       httpPref = doc.getElementById("network.proxy.http");
@@ -96,7 +63,7 @@ function test() {
     }
 
     // This batch of tests should not close the dialog
-    setDoc(yield null);
+    yield setDoc();
 
     // Testing HTTP port 0 with share on
     proxyTypePref.value = 1;
@@ -126,7 +93,7 @@ function test() {
     doc.documentElement.acceptDialog();
 
     // HTTP 80, FTP 0, with share on
-    setDoc(yield null);
+    yield setDoc();
     proxyTypePref.value = 1;
     sharePref.value = true;
     ftpPref.value = "localhost";
@@ -136,7 +103,7 @@ function test() {
     doc.documentElement.acceptDialog();
 
     // HTTP host empty, port 0 with share on
-    setDoc(yield null);
+    yield setDoc();
     proxyTypePref.value = 1;
     sharePref.value = true;
     httpPref.value = "";
@@ -144,7 +111,7 @@ function test() {
     doc.documentElement.acceptDialog();
 
     // HTTP 0, but in no proxy mode
-    setDoc(yield null);
+    yield setDoc();
     proxyTypePref.value = 0;
     sharePref.value = true;
     httpPref.value = "localhost";
@@ -153,16 +120,6 @@ function test() {
     // This is the final test, don't spawn another connection window
     finalTest = true;
     doc.documentElement.acceptDialog();
-    yield null;
-  }
-
-  /*
-   The connection dialog alone won't save onaccept since it uses type="child",
-   so it has to be opened as a sub dialog of the main pref tab.
-   Open the main tab here.
-   */
-  open_preferences(function tabOpened(aContentWindow) {
-    Services.ww.registerNotification(observer);
-    gBrowser.contentWindow.gAdvancedPane.showConnections();
-  });
+    yield setDoc();
+  }));
 }

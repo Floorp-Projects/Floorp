@@ -53,10 +53,17 @@
 #include "mozilla/Logging.h"
 #endif
 
+#ifdef MOZ_CRASHREPORTER
+#include "nsICrashReporter.h"
+#include "nsExceptionHandler.h"
+#endif
+
 #include "AndroidAlerts.h"
 #include "ANRReporter.h"
+#include "GeckoBatteryManager.h"
 #include "GeckoNetworkManager.h"
 #include "GeckoScreenOrientation.h"
+#include "MemoryMonitor.h"
 #include "PrefsHelper.h"
 #include "Telemetry.h"
 #include "ThumbnailHelper.h"
@@ -198,6 +205,15 @@ public:
                 category.get(),
                 aData ? aData->ToString().get() : nullptr);
     }
+
+    static int64_t RunUiThreadCallback()
+    {
+        if (!AndroidBridge::Bridge()) {
+            return -1;
+        }
+
+        return AndroidBridge::Bridge()->RunDelayedUiThreadTasks();
+    }
 };
 
 uint32_t GeckoThreadSupport::sPauseCount;
@@ -207,6 +223,21 @@ class GeckoAppShellSupport final
     : public java::GeckoAppShell::Natives<GeckoAppShellSupport>
 {
 public:
+    static void ReportJavaCrash(jni::String::Param aStackTrace)
+    {
+#ifdef MOZ_CRASHREPORTER
+        if (NS_WARN_IF(NS_FAILED(CrashReporter::AnnotateCrashReport(
+                NS_LITERAL_CSTRING("JavaStackTrace"),
+                aStackTrace->ToCString())))) {
+            // Only crash below if crash reporter is initialized and annotation
+            // succeeded. Otherwise try other means of reporting the crash in
+            // Java.
+            return;
+        }
+#endif // MOZ_CRASHREPORTER
+        MOZ_CRASH("Uncaught Java exception");
+    }
+
     static void SyncNotifyObservers(jni::String::Param aTopic,
                                     jni::String::Param aData)
     {
@@ -312,6 +343,11 @@ public:
         AndroidAlerts::NotifyListener(
                 aName->ToString(), aTopic->ToCString().get());
     }
+
+    static void OnFullScreenPluginHidden(jni::Object::Param aView)
+    {
+        nsPluginInstanceOwner::ExitFullScreen(aView.Get());
+    }
 };
 
 nsAppShell::nsAppShell()
@@ -334,8 +370,10 @@ nsAppShell::nsAppShell()
         GeckoAppShellSupport::Init();
         GeckoThreadSupport::Init();
         mozilla::ANRReporter::Init();
+        mozilla::GeckoBatteryManager::Init();
         mozilla::GeckoNetworkManager::Init();
         mozilla::GeckoScreenOrientation::Init();
+        mozilla::MemoryMonitor::Init();
         mozilla::PrefsHelper::Init();
         mozilla::widget::Telemetry::Init();
         mozilla::ThumbnailHelper::Init();

@@ -929,6 +929,12 @@ LayerManagerComposite::Render(const nsIntRegion& aInvalidRegion, const nsIntRegi
   CompositorBench(mCompositor, bounds);
 
   MOZ_ASSERT(mRoot->GetOpacity() == 1);
+#if defined(MOZ_WIDGET_ANDROID)
+  LayerMetricsWrapper wrapper = GetRootContentLayer();
+  if (wrapper) {
+    mCompositor->SetBeginFrameClearColor(wrapper.Metadata().GetBackgroundColor());
+  }
+#endif
   if (mRoot->GetClipRect()) {
     clipRect = *mRoot->GetClipRect();
     IntRect rect(clipRect.x, clipRect.y, clipRect.width, clipRect.height);
@@ -996,6 +1002,13 @@ LayerManagerComposite::Render(const nsIntRegion& aInvalidRegion, const nsIntRegi
   mCompositor->GetWidget()->PostRender(this);
 
   RecordFrame();
+
+#if defined(MOZ_WIDGET_ANDROID)
+  // Reset the clear color to white so that if a page is loaded with a different background
+  // color, the page will be white while the new page is loading instead of the background
+  // color of the previous page.
+  mCompositor->SetBeginFrameClearColor(gfx::Color(1.0, 1.0, 1.0, 1.0));
+#endif
 }
 
 #if defined(MOZ_WIDGET_ANDROID) || defined(MOZ_WIDGET_GONK)

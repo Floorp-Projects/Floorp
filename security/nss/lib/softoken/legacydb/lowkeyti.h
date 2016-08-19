@@ -11,7 +11,6 @@
 #include "secasn1t.h"
 #include "secoidt.h"
 
-
 /*
  * a key in/for the data base
  */
@@ -32,7 +31,7 @@ typedef struct NSSLOWKEYDBHandleStr NSSLOWKEYDBHandle;
 #define NSSLOWKEY_DB_FILE_VERSION 3
 #endif
 
-#define NSSLOWKEY_VERSION	    0	/* what we *create* */
+#define NSSLOWKEY_VERSION 0 /* what we *create* */
 
 /*
 ** Typedef for callback to get a password "key".
@@ -44,7 +43,7 @@ extern const SEC_ASN1Template lg_nsslowkey_DSAPrivateKeyTemplate[];
 extern const SEC_ASN1Template lg_nsslowkey_DHPrivateKeyTemplate[];
 extern const SEC_ASN1Template lg_nsslowkey_DHPrivateKeyExportTemplate[];
 #ifndef NSS_DISABLE_ECC
-#define NSSLOWKEY_EC_PRIVATE_KEY_VERSION   1  /* as per SECG 1 C.4 */
+#define NSSLOWKEY_EC_PRIVATE_KEY_VERSION 1 /* as per SECG 1 C.4 */
 extern const SEC_ASN1Template lg_nsslowkey_ECPrivateKeyTemplate[];
 #endif /* NSS_DISABLE_ECC */
 
@@ -71,7 +70,7 @@ struct NSSLOWKEYPrivateKeyInfoStr {
     NSSLOWKEYAttribute **attributes;
 };
 typedef struct NSSLOWKEYPrivateKeyInfoStr NSSLOWKEYPrivateKeyInfo;
-#define NSSLOWKEY_PRIVATE_KEY_INFO_VERSION	0	/* what we *create* */
+#define NSSLOWKEY_PRIVATE_KEY_INFO_VERSION 0 /* what we *create* */
 
 /*
 ** A PKCS#8 private key info object
@@ -83,11 +82,10 @@ struct NSSLOWKEYEncryptedPrivateKeyInfoStr {
 };
 typedef struct NSSLOWKEYEncryptedPrivateKeyInfoStr NSSLOWKEYEncryptedPrivateKeyInfo;
 
-
-typedef enum { 
-    NSSLOWKEYNullKey = 0, 
-    NSSLOWKEYRSAKey = 1, 
-    NSSLOWKEYDSAKey = 2, 
+typedef enum {
+    NSSLOWKEYNullKey = 0,
+    NSSLOWKEYRSAKey = 1,
+    NSSLOWKEYDSAKey = 2,
     NSSLOWKEYDHKey = 4,
     NSSLOWKEYECKey = 5
 } NSSLOWKEYType;
@@ -97,12 +95,12 @@ typedef enum {
 */
 struct NSSLOWKEYPublicKeyStr {
     PLArenaPool *arena;
-    NSSLOWKEYType keyType ;
+    NSSLOWKEYType keyType;
     union {
         RSAPublicKey rsa;
-	DSAPublicKey dsa;
-	DHPublicKey  dh;
-	ECPublicKey  ec;
+        DSAPublicKey dsa;
+        DHPublicKey dh;
+        ECPublicKey ec;
     } u;
 };
 typedef struct NSSLOWKEYPublicKeyStr NSSLOWKEYPublicKey;
@@ -117,13 +115,12 @@ struct NSSLOWKEYPrivateKeyStr {
     NSSLOWKEYType keyType;
     union {
         RSAPrivateKey rsa;
-	DSAPrivateKey dsa;
-	DHPrivateKey  dh;
-	ECPrivateKey  ec;
+        DSAPrivateKey dsa;
+        DHPrivateKey dh;
+        ECPrivateKey ec;
     } u;
 };
 typedef struct NSSLOWKEYPrivateKeyStr NSSLOWKEYPrivateKey;
-
 
 typedef struct NSSLOWKEYPasswordEntryStr NSSLOWKEYPasswordEntry;
 struct NSSLOWKEYPasswordEntryStr {
@@ -132,5 +129,4 @@ struct NSSLOWKEYPasswordEntryStr {
     unsigned char data[128];
 };
 
-
-#endif	/* _LOWKEYTI_H_ */
+#endif /* _LOWKEYTI_H_ */

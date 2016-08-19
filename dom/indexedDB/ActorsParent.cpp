@@ -12636,12 +12636,16 @@ IdleConnectionRunnable::Run()
 
   if (owningThread) {
     mDatabaseInfo->AssertIsOnConnectionThread();
-    MOZ_ASSERT(mDatabaseInfo->mConnection);
-    mDatabaseInfo->mConnection->DoIdleProcessing(mNeedsCheckpoint);
 
-    MOZ_ALWAYS_SUCCEEDS(
-      owningThread->Dispatch(this, NS_DISPATCH_NORMAL));
-    return NS_OK;
+    // The connection could be null if EnsureConnection() didn't run or was not
+    // successful in TransactionDatabaseOperationBase::RunOnConnectionThread().
+    if (mDatabaseInfo->mConnection) {
+      mDatabaseInfo->mConnection->DoIdleProcessing(mNeedsCheckpoint);
+
+      MOZ_ALWAYS_SUCCEEDS(
+        owningThread->Dispatch(this, NS_DISPATCH_NORMAL));
+      return NS_OK;
+    }
   }
 
   RefPtr<ConnectionPool> connectionPool = mDatabaseInfo->mConnectionPool;
@@ -12680,6 +12684,8 @@ CloseConnectionRunnable::Run()
     nsCOMPtr<nsIEventTarget> owningThread;
     mOwningThread.swap(owningThread);
 
+    // The connection could be null if EnsureConnection() didn't run or was not
+    // successful in TransactionDatabaseOperationBase::RunOnConnectionThread().
     if (mDatabaseInfo->mConnection) {
       mDatabaseInfo->AssertIsOnConnectionThread();
 

@@ -7,6 +7,6 @@ load();
 load();
 load();
 
-detachArrayBuffer(buffer, "change-data");
+detachArrayBuffer(buffer);
 
 load();

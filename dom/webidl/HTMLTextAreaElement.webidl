@@ -29,6 +29,8 @@ interface HTMLTextAreaElement : HTMLElement {
   [SetterThrows, Pure]
            attribute long maxLength;
   [SetterThrows, Pure]
+           attribute long minLength;
+  [SetterThrows, Pure]
            attribute DOMString name;
   [SetterThrows, Pure]
            attribute DOMString placeholder;

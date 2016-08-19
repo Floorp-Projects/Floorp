@@ -1,0 +1,17 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+#include "nsISupports.idl"
+
+interface nsIDOMElement;
+
+[scriptable, uuid(14e5a0cb-e223-4202-95e8-fe53275193ea)]
+interface nsIBrowser : nsISupports
+{
+  /**
+   * Gets a related browser for a given browser (if any). If this exists, then
+   * we should attempt to use the same content parent as its frameLoader
+   * for any new tab parents.
+   */
+  readonly attribute nsIDOMElement relatedBrowser;
+};

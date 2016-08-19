@@ -17,5 +17,4 @@
 #define SFTK_MIN_FIPS_USER_SLOT_ID 101
 #define SFTK_MAX_FIPS_USER_SLOT_ID 127
 
-
 #endif /* _PKCS11NI_H_ */

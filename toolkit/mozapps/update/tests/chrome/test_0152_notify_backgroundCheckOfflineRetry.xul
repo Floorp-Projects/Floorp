@@ -1,0 +1,96 @@
+<?xml version="1.0"?>
+<!--
+/* Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/publicdomain/zero/1.0/
+ */
+-->
+
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+
+<window title="Test that an update check that fails due to being offline is performed after going online"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="runTestDefault();">
+<script type="application/javascript"
+        src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+<script type="application/javascript"
+        src="utils.js"/>
+
+<script type="application/javascript">
+<![CDATA[
+
+const TESTS = [ {
+  pageid: PAGEID_FOUND_BASIC,
+  buttonClick: "extra1"
+} ];
+
+const NETWORK_ERROR_OFFLINE = 111;
+var gProxyPrefValue;
+
+function runTest() {
+  debugDump("entering");
+
+  let url = URL_HTTP_UPDATE_XML + "?showDetails=1" + getVersionParams();
+  setUpdateURLOverride(url);
+
+  Services.prefs.setBoolPref(PREF_APP_UPDATE_ENABLED, true);
+  Services.prefs.setBoolPref(PREF_APP_UPDATE_AUTO, false);
+
+  Services.io.offline = true;
+  gProxyPrefValue = Services.prefs.getIntPref("network.proxy.type");
+  Services.prefs.setIntPref("network.proxy.type", 0);
+
+  gUpdateChecker.checkForUpdates(updateCheckListener, true);
+}
+
+function resetOffline() {
+  Services.prefs.setIntPref("network.proxy.type", gProxyPrefValue);
+  Services.io.offline = false;
+}
+
+/* Update check listener */
+const updateCheckListener = {
+  onProgress: function UCL_onProgress(aRequest, aPosition, aTotalSize) {
+  },
+
+  onCheckComplete: function UCL_onCheckComplete(aRequest, aUpdates, aUpdateCount) {
+    let status = aRequest.status;
+    if (status == 0) {
+      status = aRequest.channel.QueryInterface(Ci.nsIRequest).status;
+    }
+    debugDump("url = " + aRequest.channel.originalURI.spec + ", " +
+              "request.status = " + status + ", " +
+              "updateCount = " + aUpdateCount);
+    ok(false, "Unexpected updateCheckListener::onCheckComplete called");
+  },
+
+  onError: function UCL_onError(aRequest, aUpdate) {
+    let status = aRequest.status;
+    if (status == 0) {
+      status = aRequest.channel.QueryInterface(Ci.nsIRequest).status;
+    }
+    is(status, Cr.NS_ERROR_OFFLINE,
+       "checking the request status value");
+    is(aUpdate.errorCode, NETWORK_ERROR_OFFLINE,
+       "checking the update error code");
+    debugDump("url = " + aRequest.channel.originalURI.spec + ", " +
+              "request.status = " + status + ", " +
+              "update.statusText = " +
+              (aUpdate.statusText ? aUpdate.statusText : "null"));
+    gAUS.onError(aRequest, aUpdate);
+    // Use a timeout to allow the XHR to complete
+    SimpleTest.executeSoon(resetOffline);
+  },
+
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIUpdateCheckListener])
+};
+
+]]>
+</script>
+
+<body xmlns="http://www.w3.org/1999/xhtml">
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test"></pre>
+</body>
+</window>

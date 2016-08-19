@@ -35,9 +35,11 @@ public:
 
   // nsIWidget
   using PuppetWidget::Create; // for Create signature not overridden here
-  NS_IMETHOD Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
-                    const LayoutDeviceIntRect& aRect,
-                    nsWidgetInitData* aInitData = nullptr) override;
+  virtual MOZ_MUST_USE nsresult Create(nsIWidget* aParent,
+                                       nsNativeWidget aNativeParent,
+                                       const LayoutDeviceIntRect& aRect,
+                                       nsWidgetInitData* aInitData = nullptr)
+                                       override;
   NS_IMETHOD Destroy() override;
   NS_IMETHOD SetFocus(bool aRaise = false) override;
   NS_IMETHOD SetParent(nsIWidget* aNewParent) override;

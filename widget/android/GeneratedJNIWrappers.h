@@ -1630,6 +1630,24 @@ public:
 
     static auto NotifyWakeLockChanged(mozilla::jni::String::Param, mozilla::jni::String::Param) -> void;
 
+    struct OnFullScreenPluginHidden_t {
+        typedef GeckoAppShell Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<
+                mozilla::jni::Object::Param> Args;
+        static constexpr char name[] = "onFullScreenPluginHidden";
+        static constexpr char signature[] =
+                "(Landroid/view/View;)V";
+        static const bool isStatic = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+        static const mozilla::jni::CallingThread callingThread =
+                mozilla::jni::CallingThread::UI;
+        static const mozilla::jni::DispatchTarget dispatchTarget =
+                mozilla::jni::DispatchTarget::GECKO;
+    };
+
     struct OnLocationChanged_t {
         typedef GeckoAppShell Owner;
         typedef void ReturnType;
@@ -1764,15 +1782,15 @@ public:
 
     static auto RemoveFullScreenPluginView(mozilla::jni::Object::Param) -> void;
 
-    struct RequestUiThreadCallback_t {
+    struct ReportJavaCrash_t {
         typedef GeckoAppShell Owner;
         typedef void ReturnType;
         typedef void SetterType;
         typedef mozilla::jni::Args<
-                int64_t> Args;
-        static constexpr char name[] = "requestUiThreadCallback";
+                mozilla::jni::String::Param> Args;
+        static constexpr char name[] = "reportJavaCrash";
         static constexpr char signature[] =
-                "(J)V";
+                "(Ljava/lang/String;)V";
         static const bool isStatic = true;
         static const mozilla::jni::ExceptionMode exceptionMode =
                 mozilla::jni::ExceptionMode::ABORT;
@@ -1781,8 +1799,6 @@ public:
         static const mozilla::jni::DispatchTarget dispatchTarget =
                 mozilla::jni::DispatchTarget::CURRENT;
     };
-
-    static auto RequestUiThreadCallback(int64_t) -> void;
 
     struct ScheduleRestart_t {
         typedef GeckoAppShell Owner;
@@ -2073,6 +2089,39 @@ public:
 
     static const mozilla::jni::CallingThread callingThread =
             mozilla::jni::CallingThread::ANY;
+
+    template<class Impl> class Natives;
+};
+
+class GeckoBatteryManager : public mozilla::jni::ObjectBase<GeckoBatteryManager>
+{
+public:
+    static const char name[];
+
+    explicit GeckoBatteryManager(const Context& ctx) : ObjectBase<GeckoBatteryManager>(ctx) {}
+
+    struct OnBatteryChange_t {
+        typedef GeckoBatteryManager Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<
+                double,
+                bool,
+                double> Args;
+        static constexpr char name[] = "onBatteryChange";
+        static constexpr char signature[] =
+                "(DZD)V";
+        static const bool isStatic = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+        static const mozilla::jni::CallingThread callingThread =
+                mozilla::jni::CallingThread::UI;
+        static const mozilla::jni::DispatchTarget dispatchTarget =
+                mozilla::jni::DispatchTarget::GECKO;
+    };
+
+    static const mozilla::jni::CallingThread callingThread =
+            mozilla::jni::CallingThread::UI;
 
     template<class Impl> class Natives;
 };
@@ -3109,6 +3158,43 @@ public:
 
     static auto PumpMessageLoop(mozilla::jni::Object::Param) -> bool;
 
+    struct RequestUiThreadCallback_t {
+        typedef GeckoThread Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<
+                int64_t> Args;
+        static constexpr char name[] = "requestUiThreadCallback";
+        static constexpr char signature[] =
+                "(J)V";
+        static const bool isStatic = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+        static const mozilla::jni::CallingThread callingThread =
+                mozilla::jni::CallingThread::ANY;
+        static const mozilla::jni::DispatchTarget dispatchTarget =
+                mozilla::jni::DispatchTarget::CURRENT;
+    };
+
+    static auto RequestUiThreadCallback(int64_t) -> void;
+
+    struct RunUiThreadCallback_t {
+        typedef GeckoThread Owner;
+        typedef int64_t ReturnType;
+        typedef int64_t SetterType;
+        typedef mozilla::jni::Args<> Args;
+        static constexpr char name[] = "runUiThreadCallback";
+        static constexpr char signature[] =
+                "()J";
+        static const bool isStatic = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+        static const mozilla::jni::CallingThread callingThread =
+                mozilla::jni::CallingThread::UI;
+        static const mozilla::jni::DispatchTarget dispatchTarget =
+                mozilla::jni::DispatchTarget::CURRENT;
+    };
+
     struct SetState_t {
         typedef GeckoThread Owner;
         typedef void ReturnType;
@@ -3486,7 +3572,7 @@ public:
                 int32_t> Args;
         static constexpr char name[] = "open";
         static constexpr char signature[] =
-                "(Lorg/mozilla/gecko/GeckoView$Window;Lorg/mozilla/gecko/GeckoView;Lorg/mozilla/gecko/gfx/LayerView$Compositor;Ljava/lang/String;II)V";
+                "(Lorg/mozilla/gecko/GeckoView$Window;Lorg/mozilla/gecko/GeckoView;Ljava/lang/Object;Ljava/lang/String;II)V";
         static const bool isStatic = true;
         static const mozilla::jni::ExceptionMode exceptionMode =
                 mozilla::jni::ExceptionMode::ABORT;
@@ -3505,7 +3591,7 @@ public:
                 mozilla::jni::Object::Param> Args;
         static constexpr char name[] = "reattach";
         static constexpr char signature[] =
-                "(Lorg/mozilla/gecko/GeckoView;Lorg/mozilla/gecko/gfx/LayerView$Compositor;)V";
+                "(Lorg/mozilla/gecko/GeckoView;Ljava/lang/Object;)V";
         static const bool isStatic = false;
         static const mozilla::jni::ExceptionMode exceptionMode =
                 mozilla::jni::ExceptionMode::ABORT;
@@ -3517,6 +3603,36 @@ public:
 
     static const mozilla::jni::CallingThread callingThread =
             mozilla::jni::CallingThread::ANY;
+
+    template<class Impl> class Natives;
+};
+
+class MemoryMonitor : public mozilla::jni::ObjectBase<MemoryMonitor>
+{
+public:
+    static const char name[];
+
+    explicit MemoryMonitor(const Context& ctx) : ObjectBase<MemoryMonitor>(ctx) {}
+
+    struct DispatchMemoryPressure_t {
+        typedef MemoryMonitor Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<> Args;
+        static constexpr char name[] = "dispatchMemoryPressure";
+        static constexpr char signature[] =
+                "()V";
+        static const bool isStatic = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+        static const mozilla::jni::CallingThread callingThread =
+                mozilla::jni::CallingThread::UI;
+        static const mozilla::jni::DispatchTarget dispatchTarget =
+                mozilla::jni::DispatchTarget::CURRENT;
+    };
+
+    static const mozilla::jni::CallingThread callingThread =
+            mozilla::jni::CallingThread::UI;
 
     template<class Impl> class Natives;
 };
@@ -4634,7 +4750,7 @@ public:
         static const mozilla::jni::CallingThread callingThread =
                 mozilla::jni::CallingThread::UI;
         static const mozilla::jni::DispatchTarget dispatchTarget =
-                mozilla::jni::DispatchTarget::CURRENT;
+                mozilla::jni::DispatchTarget::GECKO;
     };
 
     struct HandleMotionEvent_t {

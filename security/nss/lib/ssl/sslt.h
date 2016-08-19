@@ -302,6 +302,7 @@ typedef enum {
 
 #define SSL_MAX_EXTENSIONS 16 /* doesn't include ssl_padding_xtn. */
 
+/* Deprecated */
 typedef enum {
     ssl_dhe_group_none = 0,
     ssl_ff_dhe_2048_group = 1,
@@ -311,5 +312,39 @@ typedef enum {
     ssl_ff_dhe_8192_group = 5,
     ssl_dhe_group_max
 } SSLDHEGroupType;
+
+typedef enum {
+    ssl_grp_ec_sect163k1 = 1,
+    ssl_grp_ec_sect163r1 = 2,
+    ssl_grp_ec_sect163r2 = 3,
+    ssl_grp_ec_sect193r1 = 4,
+    ssl_grp_ec_sect193r2 = 5,
+    ssl_grp_ec_sect233k1 = 6,
+    ssl_grp_ec_sect233r1 = 7,
+    ssl_grp_ec_sect239k1 = 8,
+    ssl_grp_ec_sect283k1 = 9,
+    ssl_grp_ec_sect283r1 = 10,
+    ssl_grp_ec_sect409k1 = 11,
+    ssl_grp_ec_sect409r1 = 12,
+    ssl_grp_ec_sect571k1 = 13,
+    ssl_grp_ec_sect571r1 = 14,
+    ssl_grp_ec_secp160k1 = 15,
+    ssl_grp_ec_secp160r1 = 16,
+    ssl_grp_ec_secp160r2 = 17,
+    ssl_grp_ec_secp192k1 = 18,
+    ssl_grp_ec_secp192r1 = 19,
+    ssl_grp_ec_secp224k1 = 20,
+    ssl_grp_ec_secp224r1 = 21,
+    ssl_grp_ec_secp256k1 = 22,
+    ssl_grp_ec_secp256r1 = 23,
+    ssl_grp_ec_secp384r1 = 24,
+    ssl_grp_ec_secp521r1 = 25,
+    ssl_grp_ffdhe_2048 = 256, /* RFC7919 */
+    ssl_grp_ffdhe_3072 = 257,
+    ssl_grp_ffdhe_4096 = 258,
+    ssl_grp_ffdhe_6144 = 259,
+    ssl_grp_ffdhe_8192 = 260,
+    ssl_grp_ffdhe_custom = 65537 /* special value */
+} SSLNamedGroup;
 
 #endif /* __sslt_h_ */

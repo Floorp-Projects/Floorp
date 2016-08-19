@@ -6,7 +6,7 @@
 #include "secerr.h"
 
 /*
- * Prepare a buffer for any padded CBC encryption algorithm, growing to the 
+ * Prepare a buffer for any padded CBC encryption algorithm, growing to the
  * appropriate boundary and filling with the appropriate padding.
  * blockSize must be a power of 2.
  *
@@ -15,12 +15,12 @@
  */
 unsigned char *
 CBC_PadBuffer(PLArenaPool *arena, unsigned char *inbuf, unsigned int inlen,
-	      unsigned int *outlen, int blockSize)
+              unsigned int *outlen, int blockSize)
 {
     unsigned char *outbuf;
-    unsigned int   des_len;
-    unsigned int   i;
-    unsigned char  des_pad_len;
+    unsigned int des_len;
+    unsigned int i;
+    unsigned char des_pad_len;
 
     /*
      * We need from 1 to blockSize bytes -- we *always* grow.
@@ -30,19 +30,19 @@ CBC_PadBuffer(PLArenaPool *arena, unsigned char *inbuf, unsigned int inlen,
     des_len = (inlen + blockSize) & ~(blockSize - 1);
 
     if (arena != NULL) {
-	outbuf = (unsigned char*)PORT_ArenaGrow (arena, inbuf, inlen, des_len);
+        outbuf = (unsigned char *)PORT_ArenaGrow(arena, inbuf, inlen, des_len);
     } else {
-	outbuf = (unsigned char*)PORT_Realloc (inbuf, des_len);
+        outbuf = (unsigned char *)PORT_Realloc(inbuf, des_len);
     }
 
     if (outbuf == NULL) {
-	PORT_SetError (SEC_ERROR_NO_MEMORY);
-	return NULL;
+        PORT_SetError(SEC_ERROR_NO_MEMORY);
+        return NULL;
     }
 
     des_pad_len = des_len - inlen;
     for (i = inlen; i < des_len; i++)
-	outbuf[i] = des_pad_len;
+        outbuf[i] = des_pad_len;
 
     *outlen = des_len;
     return outbuf;

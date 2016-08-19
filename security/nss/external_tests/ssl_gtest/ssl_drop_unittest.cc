@@ -4,14 +4,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "secerr.h"
 #include "ssl.h"
+#include "secerr.h"
 
-#include "scoped_ptrs.h"
-#include "tls_parser.h"
-#include "tls_filter.h"
-#include "tls_connect.h"
 #include "gtest_utils.h"
+#include "scoped_ptrs.h"
+#include "tls_connect.h"
+#include "tls_filter.h"
+#include "tls_parser.h"
 
 namespace nss_test {
 
@@ -19,9 +19,7 @@ namespace nss_test {
 // writes in libssl are on record boundaries.
 class SelectiveDropFilter : public PacketFilter, public PollTarget {
  public:
-  SelectiveDropFilter(uint32_t pattern)
-      : pattern_(pattern),
-        counter_(0) {}
+  SelectiveDropFilter(uint32_t pattern) : pattern_(pattern), counter_(0) {}
 
  protected:
   virtual Action Filter(const DataBuffer& input, DataBuffer* output) override {
@@ -81,4 +79,4 @@ TEST_P(TlsConnectDatagram, DropServerSecondFlightThrice) {
   Connect();
 }
 
-} // namespace nss_test
+}  // namespace nss_test

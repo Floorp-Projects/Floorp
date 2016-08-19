@@ -44,12 +44,6 @@
 NSS_STRICT_SHUTDOWN=1
 export NSS_STRICT_SHUTDOWN
 
-# If using ASan, disable LSan; see bug 1246801.
-if [ -z "${NSS_ENABLE_LSAN}" ]; then
-    ASAN_OPTIONS="detect_leaks=0${ASAN_OPTIONS:+:$ASAN_OPTIONS}"
-    export ASAN_OPTIONS
-fi
-
 # Init directories based on HOSTDIR variable
 if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
     init_directories()
@@ -184,30 +178,48 @@ if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
     {      # 3 functions so we can put targets in the output.log easier
         echo $* >>${RESULTS}
     }
-    html_passed()
+    increase_msg_id()
     {
-        html_detect_core "$@" || return
         MSG_ID=`cat ${MSG_ID_FILE}`
         MSG_ID=`expr ${MSG_ID} + 1`
         echo ${MSG_ID} > ${MSG_ID_FILE}
+    }
+    html_passed_ignore_core()
+    {
+        increase_msg_id
         html "<TR><TD>#${MSG_ID}: $1 ${HTML_PASSED}"
         echo "${SCRIPTNAME}: #${MSG_ID}: $* - PASSED"
+    }
+    html_passed()
+    {
+        html_detect_core "$@" || return
+        increase_msg_id
+        html "<TR><TD>#${MSG_ID}: $1 ${HTML_PASSED}"
+        echo "${SCRIPTNAME}: #${MSG_ID}: $* - PASSED"
+    }
+    html_failed_ignore_core()
+    {
+        increase_msg_id
+        html "<TR><TD>#${MSG_ID}: $1 ${HTML_FAILED}"
+        echo "${SCRIPTNAME}: #${MSG_ID}: $* - FAILED"
     }
     html_failed()
     {
         html_detect_core "$@" || return
-        MSG_ID=`cat ${MSG_ID_FILE}`
-        MSG_ID=`expr ${MSG_ID} + 1`
-        echo ${MSG_ID} > ${MSG_ID_FILE}
+        increase_msg_id
         html "<TR><TD>#${MSG_ID}: $1 ${HTML_FAILED}"
         echo "${SCRIPTNAME}: #${MSG_ID}: $* - FAILED"
+    }
+    html_unknown_ignore_core()
+    {
+        increase_msg_id
+        html "<TR><TD>#${MSG_ID}: $1 ${HTML_UNKNOWN}"
+        echo "${SCRIPTNAME}: #${MSG_ID}: $* - UNKNOWN"
     }
     html_unknown()
     {
         html_detect_core "$@" || return
-        MSG_ID=`cat ${MSG_ID_FILE}`
-        MSG_ID=`expr ${MSG_ID} + 1`
-        echo ${MSG_ID} > ${MSG_ID_FILE}
+        increase_msg_id
         html "<TR><TD>#${MSG_ID}: $1 ${HTML_UNKNOWN}"
         echo "${SCRIPTNAME}: #${MSG_ID}: $* - UNKNOWN"
     }
@@ -215,9 +227,7 @@ if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
     {
         detect_core
         if [ $? -ne 0 ]; then
-            MSG_ID=`cat ${MSG_ID_FILE}`
-            MSG_ID=`expr ${MSG_ID} + 1`
-            echo ${MSG_ID} > ${MSG_ID_FILE}
+            increase_msg_id
             html "<TR><TD>#${MSG_ID}: $* ${HTML_FAILED_CORE}"
             echo "${SCRIPTNAME}: #${MSG_ID}: $* - Core file is detected - FAILED"
             return 1

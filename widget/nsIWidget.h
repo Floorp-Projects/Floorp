@@ -421,10 +421,11 @@ class nsIWidget : public nsISupports
      * @param     aInitData     data that is used for widget initialization
      *
      */
-    NS_IMETHOD Create(nsIWidget* aParent,
-                      nsNativeWidget aNativeParent,
-                      const LayoutDeviceIntRect& aRect,
-                      nsWidgetInitData* aInitData = nullptr) = 0;
+    virtual MOZ_MUST_USE nsresult
+    Create(nsIWidget* aParent,
+           nsNativeWidget aNativeParent,
+           const LayoutDeviceIntRect& aRect,
+           nsWidgetInitData* aInitData = nullptr) = 0;
 
     /*
      * As above, but with aRect specified in DesktopPixel units (for top-level
@@ -434,10 +435,11 @@ class nsIWidget : public nsISupports
      * mapping is not straightforward or the native platform needs to use the
      * desktop pixel values directly.
      */
-    NS_IMETHOD Create(nsIWidget* aParent,
-                      nsNativeWidget aNativeParent,
-                      const DesktopIntRect& aRect,
-                      nsWidgetInitData* aInitData = nullptr)
+    virtual MOZ_MUST_USE nsresult
+    Create(nsIWidget* aParent,
+           nsNativeWidget aNativeParent,
+           const DesktopIntRect& aRect,
+           nsWidgetInitData* aInitData = nullptr)
     {
         LayoutDeviceIntRect devPixRect =
           RoundedToInt(aRect * GetDesktopToDeviceScale());
@@ -479,7 +481,7 @@ class nsIWidget : public nsISupports
      * aUseAttachedEvents if true, events are sent to the attached listener
      * instead of the normal listener.
      */
-    NS_IMETHOD AttachViewToTopLevel(bool aUseAttachedEvents) = 0;
+    virtual void AttachViewToTopLevel(bool aUseAttachedEvents) = 0;
 
     /**
      * Accessor functions to get and set the attached listener. Used by
@@ -862,19 +864,17 @@ class nsIWidget : public nsISupports
      * popup widgets the returned rect is in screen coordinates and not
      * relative to its parent widget.
      *
-     * @param aRect   On return it holds the  x, y, width and height of
-     *                this widget.
+     * @return the x, y, width and height of this widget.
      */
-    NS_IMETHOD GetBounds(LayoutDeviceIntRect& aRect) = 0;
+    virtual LayoutDeviceIntRect GetBounds() = 0;
 
     /**
      * Get this widget's outside dimensions in device coordinates. This
      * includes any title bar on the window.
      *
-     * @param aRect   On return it holds the  x, y, width and height of
-     *                this widget.
+     * @return the x, y, width and height of this widget.
      */
-    NS_IMETHOD GetScreenBounds(LayoutDeviceIntRect& aRect) = 0;
+    virtual LayoutDeviceIntRect GetScreenBounds() = 0;
 
     /**
      * Similar to GetScreenBounds except that this function will always
@@ -888,7 +888,8 @@ class nsIWidget : public nsISupports
      * @param aRect   On return it holds the  x, y, width and height of
      *                this widget.
      */
-    NS_IMETHOD GetRestoredBounds(LayoutDeviceIntRect& aRect) = 0;
+    virtual MOZ_MUST_USE nsresult
+    GetRestoredBounds(LayoutDeviceIntRect& aRect) = 0;
 
     /**
      * Get this widget's client area bounds, if the window has a 3D border
@@ -896,15 +897,9 @@ class nsIWidget : public nsISupports
      * position of the client area relative to the client area of the parent
      * widget (for root widgets and popup widgets it is in screen coordinates).
      *
-     * @param aRect   On return it holds the  x. y, width and height of
-     *                the client area of this widget.
+     * @return the x, y, width and height of the client area of this widget.
      */
-    NS_IMETHOD GetClientBounds(LayoutDeviceIntRect& aRect) = 0;
-
-    /**
-     * Get the non-client area dimensions of the window.
-     */
-    NS_IMETHOD GetNonClientMargins(LayoutDeviceIntMargin& aMargins) = 0;
+    virtual LayoutDeviceIntRect GetClientBounds() = 0;
 
     /**
      * Sets the non-client area dimensions of the window. Pass -1 to restore
@@ -933,9 +928,7 @@ class nsIWidget : public nsISupports
     virtual LayoutDeviceIntSize GetClientSize() {
       // Depending on the backend, overloading this method may be useful if
       // requesting the client offset is expensive.
-      LayoutDeviceIntRect rect;
-      GetClientBounds(rect);
-      return rect.Size();
+      return GetClientBounds().Size();
     }
 
     /**
@@ -1192,6 +1185,11 @@ class nsIWidget : public nsISupports
                                              nsIRunnable* aCallback) = 0;
 
     /**
+     * Return the screen the widget is in, or null if we don't know.
+     */
+    already_AddRefed<nsIScreen> GetWidgetScreen();
+
+    /**
      * Put the toplevel window into or out of fullscreen mode.
      * If aTargetScreen is given, attempt to go fullscreen on that screen,
      * if possible.  (If not, it behaves as if aTargetScreen is null.)
@@ -1202,7 +1200,8 @@ class nsIWidget : public nsISupports
      * FullscreenChanged callback has been or will be called. If other
      * value is returned, the caller should continue the change itself.
      */
-    NS_IMETHOD MakeFullScreen(bool aFullScreen, nsIScreen* aTargetScreen = nullptr) = 0;
+    virtual nsresult MakeFullScreen(bool aFullScreen,
+                                    nsIScreen* aTargetScreen = nullptr) = 0;
 
     /**
      * Same as MakeFullScreen, except that, on systems which natively
@@ -1210,7 +1209,7 @@ class nsIWidget : public nsISupports
      * requests that behavior.
      * It is currently only supported on OS X 10.7+.
      */
-    NS_IMETHOD MakeFullScreenWithNativeTransition(
+    virtual nsresult MakeFullScreenWithNativeTransition(
       bool aFullScreen, nsIScreen* aTargetScreen = nullptr)
     {
       return MakeFullScreen(aFullScreen, aTargetScreen);
@@ -1889,13 +1888,7 @@ public:
     virtual bool WidgetPaintsBackground() { return false; }
 
     virtual bool NeedsPaint() {
-       if (!IsVisible()) {
-           return false;
-       }
-       LayoutDeviceIntRect bounds;
-       nsresult rv = GetBounds(bounds);
-       NS_ENSURE_SUCCESS(rv, false);
-       return !bounds.IsEmpty();
+       return IsVisible() && !GetBounds().IsEmpty();
     }
 
     /**
@@ -1911,9 +1904,7 @@ public:
      * probably shouldn't call this method.
      */
     virtual LayoutDeviceIntRect GetNaturalBounds() {
-        LayoutDeviceIntRect bounds;
-        GetBounds(bounds);
-        return bounds;
+        return GetBounds();
     }
 
     /**

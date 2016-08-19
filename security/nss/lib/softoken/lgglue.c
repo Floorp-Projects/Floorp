@@ -1,7 +1,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-/* 
+/*
  *  The following code handles the storage of PKCS 11 modules used by the
  * NSS. This file is written to abstract away how the modules are
  * stored so we can deside that later.
@@ -35,49 +35,51 @@ static char *
 sftkdb_resolvePath(const char *orig)
 {
     int count = 0;
-    int len =0;
+    int len = 0;
     int ret = -1;
     char *resolved = NULL;
     char *source = NULL;
 
     len = 1025; /* MAX PATH +1*/
-    if (strlen(orig)+1 > len) {
-	/* PATH TOO LONG */
-	return NULL;
+    if (strlen(orig) + 1 > len) {
+        /* PATH TOO LONG */
+        return NULL;
     }
     resolved = PORT_Alloc(len);
     if (!resolved) {
-	return NULL;
+        return NULL;
     }
     source = PORT_Alloc(len);
     if (!source) {
-	goto loser;
+        goto loser;
     }
     PORT_Strcpy(source, orig);
     /* Walk down all the links */
-    while ( count++ < LG_MAX_LINKS) {
-	char *tmp;
-	/* swap our previous sorce out with resolved */
-	/* read it */
-	ret = readlink(source, resolved, len-1);
-	if (ret  < 0) {
-	    break;
- 	}
-	resolved[ret] = 0;
-	tmp = source; source = resolved; resolved = tmp;
+    while (count++ < LG_MAX_LINKS) {
+        char *tmp;
+        /* swap our previous sorce out with resolved */
+        /* read it */
+        ret = readlink(source, resolved, len - 1);
+        if (ret < 0) {
+            break;
+        }
+        resolved[ret] = 0;
+        tmp = source;
+        source = resolved;
+        resolved = tmp;
     }
     if (count > 1) {
-	ret = 0;
+        ret = 0;
     }
 loser:
     if (resolved) {
-	PORT_Free(resolved);
+        PORT_Free(resolved);
     }
     if (ret < 0) {
-	if (source) {
-	    PORT_Free(source);
-	    source = NULL;
-	}
+        if (source) {
+            PORT_Free(source);
+            source = NULL;
+        }
     }
     return source;
 }
@@ -93,22 +95,21 @@ sftkdb_LoadFromPath(const char *path, const char *libname)
     PRLibSpec libSpec;
     PRLibrary *lib = NULL;
 
-
-    /* strip of our parent's library name */ 
+    /* strip of our parent's library name */
     c = strrchr(path, PR_GetDirectorySeparator());
     if (!c) {
-	return NULL; /* invalid path */
+        return NULL; /* invalid path */
     }
-    pathLen = (c-path)+1;
+    pathLen = (c - path) + 1;
     nameLen = strlen(libname);
-    fullPathLen = pathLen + nameLen +1;
+    fullPathLen = pathLen + nameLen + 1;
     fullPathName = (char *)PORT_Alloc(fullPathLen);
     if (fullPathName == NULL) {
-	return NULL; /* memory allocation error */
+        return NULL; /* memory allocation error */
     }
     PORT_Memcpy(fullPathName, path, pathLen);
-    PORT_Memcpy(fullPathName+pathLen, libname, nameLen);
-    fullPathName[fullPathLen-1] = 0;
+    PORT_Memcpy(fullPathName + pathLen, libname, nameLen);
+    fullPathName[fullPathLen - 1] = 0;
 
     libSpec.type = PR_LibSpec_Pathname;
     libSpec.value.pathname = fullPathName;
@@ -117,7 +118,6 @@ sftkdb_LoadFromPath(const char *path, const char *libname)
     return lib;
 }
 
-
 static PRLibrary *
 sftkdb_LoadLibrary(const char *libname)
 {
@@ -125,37 +125,37 @@ sftkdb_LoadLibrary(const char *libname)
     PRFuncPtr fn_addr;
     char *parentLibPath = NULL;
 
-    fn_addr  = (PRFuncPtr) &sftkdb_LoadLibrary;
+    fn_addr = (PRFuncPtr)&sftkdb_LoadLibrary;
     parentLibPath = PR_GetLibraryFilePathname(SOFTOKEN_LIB_NAME, fn_addr);
 
     if (!parentLibPath) {
-	goto done;
+        goto done;
     }
 
     lib = sftkdb_LoadFromPath(parentLibPath, libname);
 #ifdef XP_UNIX
     /* handle symbolic link case */
     if (!lib) {
-	char *trueParentLibPath = sftkdb_resolvePath(parentLibPath);
-	if (!trueParentLibPath) {
-	    goto done;
-	}
-    	lib = sftkdb_LoadFromPath(trueParentLibPath, libname);
-	PORT_Free(trueParentLibPath);
+        char *trueParentLibPath = sftkdb_resolvePath(parentLibPath);
+        if (!trueParentLibPath) {
+            goto done;
+        }
+        lib = sftkdb_LoadFromPath(trueParentLibPath, libname);
+        PORT_Free(trueParentLibPath);
     }
 #endif
 
 done:
     if (parentLibPath) {
-	PORT_Free(parentLibPath);
+        PORT_Free(parentLibPath);
     }
 
     /* still couldn't load it, try the generic path */
     if (!lib) {
-	PRLibSpec libSpec;
-	libSpec.type = PR_LibSpec_Pathname;
-	libSpec.value.pathname = libname;
-	lib = PR_LoadLibraryWithFlags(libSpec, PR_LD_NOW | PR_LD_LOCAL);
+        PRLibSpec libSpec;
+        libSpec.type = PR_LibSpec_Pathname;
+        libSpec.value.pathname = libname;
+        lib = PR_LoadLibraryWithFlags(libSpec, PR_LD_NOW | PR_LD_LOCAL);
     }
 
     return lib;
@@ -167,35 +167,35 @@ done:
  */
 static SECStatus
 sftkdb_encrypt_stub(PLArenaPool *arena, SDB *sdb, SECItem *plainText,
-		    SECItem **cipherText)
+                    SECItem **cipherText)
 {
     SFTKDBHandle *handle = sdb->app_private;
     SECStatus rv;
 
     if (handle == NULL) {
-	return SECFailure;
+        return SECFailure;
     }
 
     /* if we aren't the key handle, try the other handle */
     if (handle->type != SFTK_KEYDB_TYPE) {
-	handle = handle->peerDB;
+        handle = handle->peerDB;
     }
 
     /* not a key handle */
     if (handle == NULL || handle->passwordLock == NULL) {
-	return SECFailure;
+        return SECFailure;
     }
 
     PZ_Lock(handle->passwordLock);
     if (handle->passwordKey.data == NULL) {
-	PZ_Unlock(handle->passwordLock);
-	/* PORT_SetError */
-	return SECFailure;
+        PZ_Unlock(handle->passwordLock);
+        /* PORT_SetError */
+        return SECFailure;
     }
 
-    rv = sftkdb_EncryptAttribute(arena, 
-	handle->newKey?handle->newKey:&handle->passwordKey, 
-	plainText, cipherText);
+    rv = sftkdb_EncryptAttribute(arena,
+                                 handle->newKey ? handle->newKey : &handle->passwordKey,
+                                 plainText, cipherText);
     PZ_Unlock(handle->passwordLock);
 
     return rv;
@@ -206,176 +206,176 @@ sftkdb_encrypt_stub(PLArenaPool *arena, SDB *sdb, SECItem *plainText,
  * various keys and attributes.
  */
 static SECStatus
-sftkdb_decrypt_stub(SDB *sdb, SECItem *cipherText, SECItem **plainText) 
+sftkdb_decrypt_stub(SDB *sdb, SECItem *cipherText, SECItem **plainText)
 {
     SFTKDBHandle *handle = sdb->app_private;
     SECStatus rv;
     SECItem *oldKey = NULL;
 
     if (handle == NULL) {
-	return SECFailure;
+        return SECFailure;
     }
 
     /* if we aren't th handle, try the other handle */
     oldKey = handle->oldKey;
     if (handle->type != SFTK_KEYDB_TYPE) {
-	handle = handle->peerDB;
+        handle = handle->peerDB;
     }
 
     /* not a key handle */
     if (handle == NULL || handle->passwordLock == NULL) {
-	return SECFailure;
+        return SECFailure;
     }
 
     PZ_Lock(handle->passwordLock);
     if (handle->passwordKey.data == NULL) {
-	PZ_Unlock(handle->passwordLock);
-	/* PORT_SetError */
-	return SECFailure;
+        PZ_Unlock(handle->passwordLock);
+        /* PORT_SetError */
+        return SECFailure;
     }
-    rv = sftkdb_DecryptAttribute( oldKey ? oldKey : &handle->passwordKey,
-		cipherText, plainText);
+    rv = sftkdb_DecryptAttribute(oldKey ? oldKey : &handle->passwordKey,
+                                 cipherText, plainText);
     PZ_Unlock(handle->passwordLock);
 
     return rv;
 }
 
-static const char *LEGACY_LIB_NAME = 
-	SHLIB_PREFIX"nssdbm"SHLIB_VERSION"."SHLIB_SUFFIX;
+static const char *LEGACY_LIB_NAME =
+    SHLIB_PREFIX "nssdbm" SHLIB_VERSION "." SHLIB_SUFFIX;
 /*
  * 2 bools to tell us if we've check the legacy library successfully or
  * not. Initialize on startup to false by the C BSS segment;
  */
 static PRLibrary *legacy_glue_lib = NULL;
-static SECStatus 
+static SECStatus
 sftkdbLoad_Legacy()
 {
     PRLibrary *lib = NULL;
     LGSetCryptFunc setCryptFunction = NULL;
 
     if (legacy_glue_lib) {
-	return SECSuccess;
+        return SECSuccess;
     }
 
     lib = sftkdb_LoadLibrary(LEGACY_LIB_NAME);
     if (lib == NULL) {
-	return SECFailure;
+        return SECFailure;
     }
-    
+
     legacy_glue_open = (LGOpenFunc)PR_FindFunctionSymbol(lib, "legacy_Open");
-    legacy_glue_readSecmod = (LGReadSecmodFunc) PR_FindFunctionSymbol(lib,
-						 "legacy_ReadSecmodDB");
-    legacy_glue_releaseSecmod = (LGReleaseSecmodFunc) PR_FindFunctionSymbol(lib,
-					 	 "legacy_ReleaseSecmodDBData");
-    legacy_glue_deleteSecmod = (LGDeleteSecmodFunc) PR_FindFunctionSymbol(lib,
-						 "legacy_DeleteSecmodDB");
-    legacy_glue_addSecmod = (LGAddSecmodFunc)PR_FindFunctionSymbol(lib, 
-						 "legacy_AddSecmodDB");
-    legacy_glue_shutdown = (LGShutdownFunc) PR_FindFunctionSymbol(lib, 
-						"legacy_Shutdown");
-    setCryptFunction = (LGSetCryptFunc) PR_FindFunctionSymbol(lib, 
-						"legacy_SetCryptFunctions");
+    legacy_glue_readSecmod =
+        (LGReadSecmodFunc)PR_FindFunctionSymbol(lib, "legacy_ReadSecmodDB");
+    legacy_glue_releaseSecmod =
+        (LGReleaseSecmodFunc)PR_FindFunctionSymbol(lib, "legacy_ReleaseSecmodDBData");
+    legacy_glue_deleteSecmod =
+        (LGDeleteSecmodFunc)PR_FindFunctionSymbol(lib, "legacy_DeleteSecmodDB");
+    legacy_glue_addSecmod =
+        (LGAddSecmodFunc)PR_FindFunctionSymbol(lib, "legacy_AddSecmodDB");
+    legacy_glue_shutdown =
+        (LGShutdownFunc)PR_FindFunctionSymbol(lib, "legacy_Shutdown");
+    setCryptFunction =
+        (LGSetCryptFunc)PR_FindFunctionSymbol(lib, "legacy_SetCryptFunctions");
 
-    if (!legacy_glue_open || !legacy_glue_readSecmod || 
-	    !legacy_glue_releaseSecmod || !legacy_glue_deleteSecmod || 
-	    !legacy_glue_addSecmod || !setCryptFunction) {
-	PR_UnloadLibrary(lib);
-	return SECFailure;
+    if (!legacy_glue_open || !legacy_glue_readSecmod ||
+        !legacy_glue_releaseSecmod || !legacy_glue_deleteSecmod ||
+        !legacy_glue_addSecmod || !setCryptFunction) {
+        PR_UnloadLibrary(lib);
+        return SECFailure;
     }
 
-    setCryptFunction(sftkdb_encrypt_stub,sftkdb_decrypt_stub);
+    setCryptFunction(sftkdb_encrypt_stub, sftkdb_decrypt_stub);
     legacy_glue_lib = lib;
     return SECSuccess;
 }
 
 CK_RV
-sftkdbCall_open(const char *dir, const char *certPrefix, const char *keyPrefix, 
-		int certVersion, int keyVersion, int flags,
-		SDB **certDB, SDB **keyDB)
+sftkdbCall_open(const char *dir, const char *certPrefix, const char *keyPrefix,
+                int certVersion, int keyVersion, int flags,
+                SDB **certDB, SDB **keyDB)
 {
     SECStatus rv;
 
     rv = sftkdbLoad_Legacy();
     if (rv != SECSuccess) {
-	return CKR_GENERAL_ERROR;
+        return CKR_GENERAL_ERROR;
     }
     if (!legacy_glue_open) {
-	PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
-	return SECFailure;
+        PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
+        return SECFailure;
     }
-    return (*legacy_glue_open)(dir, certPrefix, keyPrefix, 
-				certVersion, keyVersion,
-				flags, certDB, keyDB);
+    return (*legacy_glue_open)(dir, certPrefix, keyPrefix,
+                               certVersion, keyVersion,
+                               flags, certDB, keyDB);
 }
 
 char **
-sftkdbCall_ReadSecmodDB(const char *appName, const char *filename, 
-			const char *dbname, char *params, PRBool rw)
+sftkdbCall_ReadSecmodDB(const char *appName, const char *filename,
+                        const char *dbname, char *params, PRBool rw)
 {
     SECStatus rv;
 
     rv = sftkdbLoad_Legacy();
     if (rv != SECSuccess) {
-	return NULL;
+        return NULL;
     }
     if (!legacy_glue_readSecmod) {
-	PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
-	return NULL;
+        PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
+        return NULL;
     }
     return (*legacy_glue_readSecmod)(appName, filename, dbname, params, rw);
 }
 
 SECStatus
-sftkdbCall_ReleaseSecmodDBData(const char *appName, 
-			const char *filename, const char *dbname, 
-			char **moduleSpecList, PRBool rw)
+sftkdbCall_ReleaseSecmodDBData(const char *appName,
+                               const char *filename, const char *dbname,
+                               char **moduleSpecList, PRBool rw)
 {
     SECStatus rv;
 
     rv = sftkdbLoad_Legacy();
     if (rv != SECSuccess) {
-	return rv;
+        return rv;
     }
     if (!legacy_glue_releaseSecmod) {
-	PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
-	return SECFailure;
+        PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
+        return SECFailure;
     }
-    return (*legacy_glue_releaseSecmod)(appName, filename, dbname, 
-					  moduleSpecList, rw);
+    return (*legacy_glue_releaseSecmod)(appName, filename, dbname,
+                                        moduleSpecList, rw);
 }
 
 SECStatus
-sftkdbCall_DeleteSecmodDB(const char *appName, 
-		      const char *filename, const char *dbname, 
-		      char *args, PRBool rw)
+sftkdbCall_DeleteSecmodDB(const char *appName,
+                          const char *filename, const char *dbname,
+                          char *args, PRBool rw)
 {
     SECStatus rv;
 
     rv = sftkdbLoad_Legacy();
     if (rv != SECSuccess) {
-	return rv;
+        return rv;
     }
     if (!legacy_glue_deleteSecmod) {
-	PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
-	return SECFailure;
+        PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
+        return SECFailure;
     }
     return (*legacy_glue_deleteSecmod)(appName, filename, dbname, args, rw);
 }
 
 SECStatus
-sftkdbCall_AddSecmodDB(const char *appName, 
-		   const char *filename, const char *dbname, 
-		   char *module, PRBool rw)
+sftkdbCall_AddSecmodDB(const char *appName,
+                       const char *filename, const char *dbname,
+                       char *module, PRBool rw)
 {
     SECStatus rv;
 
     rv = sftkdbLoad_Legacy();
     if (rv != SECSuccess) {
-	return rv;
+        return rv;
     }
     if (!legacy_glue_addSecmod) {
-	PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
-	return SECFailure;
+        PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
+        return SECFailure;
     }
     return (*legacy_glue_addSecmod)(appName, filename, dbname, module, rw);
 }
@@ -386,13 +386,13 @@ sftkdbCall_Shutdown(void)
     CK_RV crv = CKR_OK;
     char *disableUnload = NULL;
     if (!legacy_glue_lib) {
-	return CKR_OK;
+        return CKR_OK;
     }
     if (legacy_glue_shutdown) {
 #ifdef NO_FORK_CHECK
-	PRBool parentForkedAfterC_Initialize = PR_FALSE;
+        PRBool parentForkedAfterC_Initialize = PR_FALSE;
 #endif
-	crv = (*legacy_glue_shutdown)(parentForkedAfterC_Initialize);
+        crv = (*legacy_glue_shutdown)(parentForkedAfterC_Initialize);
     }
     disableUnload = PR_GetEnvSecure("NSS_DISABLE_UNLOAD");
     if (!disableUnload) {
@@ -406,5 +406,3 @@ sftkdbCall_Shutdown(void)
     legacy_glue_addSecmod = NULL;
     return crv;
 }
-    
-

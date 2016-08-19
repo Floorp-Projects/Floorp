@@ -542,7 +542,7 @@ ConvertToSID(sidCacheEntry *from,
         case ssl_auth_ecdh_rsa:
         case ssl_auth_ecdh_ecdsa:
             to->certType.namedCurve =
-                ssl_LookupNamedGroup((NamedGroup)from->u.ssl3.certTypeArgs);
+                ssl_LookupNamedGroup((SSLNamedGroup)from->u.ssl3.certTypeArgs);
             break;
         default:
             break;

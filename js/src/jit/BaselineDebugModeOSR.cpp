@@ -370,16 +370,13 @@ PatchBaselineFramesForDebugMode(JSContext* cx, const Debugger::ExecutionObservab
     //  D. From the debug prologue.
     //  E. From the debug epilogue.
     //
-    // Off to On to Off:
-    //  F. Undo case B, I or J above on previously patched yet unpopped frames.
-    //
-    // On to Off to On:
-    //  G. Undo cases B, C, D, E, I or J above on previously patched yet unpopped
+    // Cycles (On to Off to On)+ or (Off to On to Off)+:
+    //  F. Undo cases B, C, D, E, I or J above on previously patched yet unpopped
     //     frames.
     //
     // In general, we patch the return address from the VM call to return to a
     // "continuation fixer" to fix up machine state (registers and stack
-    // state). Specifics on what need to be done are documented below.
+    // state). Specifics on what needs to be done are documented below.
     //
 
     CommonFrameLayout* prev = nullptr;
@@ -458,7 +455,7 @@ PatchBaselineFramesForDebugMode(JSContext* cx, const Debugger::ExecutionObservab
                 break;
             }
 
-            // Cases F and G above.
+            // Case F above.
             //
             // We undo a previous recompile by handling cases B, C, D, E, I or J
             // like normal, except that we retrieve the pc information via
@@ -467,22 +464,13 @@ PatchBaselineFramesForDebugMode(JSContext* cx, const Debugger::ExecutionObservab
             if (info) {
                 MOZ_ASSERT(info->pc == pc);
                 MOZ_ASSERT(info->frameKind == kind);
-
-                // Case G, might need to undo B, C, D, E, I or J.
-                MOZ_ASSERT_IF(script->baselineScript()->hasDebugInstrumentation(),
-                              kind == ICEntry::Kind_CallVM ||
-                              kind == ICEntry::Kind_WarmupCounter ||
-                              kind == ICEntry::Kind_StackCheck ||
-                              kind == ICEntry::Kind_EarlyStackCheck ||
-                              kind == ICEntry::Kind_DebugTrap ||
-                              kind == ICEntry::Kind_DebugPrologue ||
-                              kind == ICEntry::Kind_DebugEpilogue);
-                // Case F, should only need to undo case B, I or J.
-                MOZ_ASSERT_IF(!script->baselineScript()->hasDebugInstrumentation(),
-                              kind == ICEntry::Kind_CallVM ||
-                              kind == ICEntry::Kind_WarmupCounter||
-                              kind == ICEntry::Kind_StackCheck ||
-                              kind == ICEntry::Kind_EarlyStackCheck);
+                MOZ_ASSERT(kind == ICEntry::Kind_CallVM ||
+                           kind == ICEntry::Kind_WarmupCounter ||
+                           kind == ICEntry::Kind_StackCheck ||
+                           kind == ICEntry::Kind_EarlyStackCheck ||
+                           kind == ICEntry::Kind_DebugTrap ||
+                           kind == ICEntry::Kind_DebugPrologue ||
+                           kind == ICEntry::Kind_DebugEpilogue);
 
                 // We will have allocated a new recompile info, so delete the
                 // existing one.

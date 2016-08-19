@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "secerr.h"
 #include "ssl.h"
+#include "secerr.h"
 #include "sslerr.h"
 #include "sslproto.h"
 
@@ -14,13 +14,19 @@ extern "C" {
 #include "libssl_internals.h"
 }
 
-#include "scoped_ptrs.h"
-#include "tls_parser.h"
-#include "tls_filter.h"
-#include "tls_connect.h"
 #include "gtest_utils.h"
+#include "scoped_ptrs.h"
+#include "tls_connect.h"
+#include "tls_filter.h"
+#include "tls_parser.h"
 
 namespace nss_test {
+
+TEST_P(TlsConnectGeneric, ServerAuthBigRsa) {
+  Reset(TlsAgent::kRsa2048);
+  Connect();
+  CheckKeys(ssl_kea_ecdh, ssl_auth_rsa_sign);
+}
 
 TEST_P(TlsConnectGeneric, ClientAuth) {
   client_->SetupClientAuth();
@@ -45,65 +51,157 @@ TEST_P(TlsConnectGeneric, ClientAuthRequestedRejected) {
   CheckKeys(ssl_kea_ecdh, ssl_auth_rsa_sign);
 }
 
-
 TEST_P(TlsConnectGeneric, ClientAuthEcdsa) {
-  Reset(TlsAgent::kServerEcdsa);
+  Reset(TlsAgent::kServerEcdsa256);
   client_->SetupClientAuth();
   server_->RequestClientAuth(true);
   Connect();
   CheckKeys(ssl_kea_ecdh, ssl_auth_ecdsa);
 }
 
+TEST_P(TlsConnectGeneric, ClientAuthBigRsa) {
+  Reset(TlsAgent::kServerRsa, TlsAgent::kRsa2048);
+  client_->SetupClientAuth();
+  server_->RequestClientAuth(true);
+  Connect();
+  CheckKeys(ssl_kea_ecdh, ssl_auth_rsa_sign);
+}
+
+// Offset is the position in the captured buffer where the signature sits.
+static void CheckSigAlgs(TlsInspectorRecordHandshakeMessage* capture,
+                         size_t offset, TlsAgent* peer,
+                         SSLHashType expected_hash, size_t expected_size) {
+  EXPECT_LT(offset + 2U, capture->buffer().len());
+  EXPECT_EQ(expected_hash, capture->buffer().data()[offset]);
+  EXPECT_EQ(ssl_sign_rsa, capture->buffer().data()[offset + 1]);
+
+  ScopedCERTCertificate remote_cert(SSL_PeerCertificate(peer->ssl_fd()));
+  ScopedSECKEYPublicKey remote_key(CERT_ExtractPublicKey(remote_cert.get()));
+  EXPECT_EQ(expected_size, SECKEY_PublicKeyStrengthInBits(remote_key.get()));
+}
+
+// The server should prefer SHA-256 by default, even for the small key size used
+// in the default certificate.
+TEST_P(TlsConnectTls12, ServerAuthCheckSigAlg) {
+  EnsureTlsSetup();
+  auto capture_ske =
+      new TlsInspectorRecordHandshakeMessage(kTlsHandshakeServerKeyExchange);
+  server_->SetPacketFilter(capture_ske);
+  Connect();
+  CheckKeys(ssl_kea_ecdh, ssl_auth_rsa_sign);
+
+  const DataBuffer& buffer = capture_ske->buffer();
+  EXPECT_LT(3U, buffer.len());
+  EXPECT_EQ(3U, buffer.data()[0]) << "curve_type == named_curve";
+  uint32_t tmp;
+  EXPECT_TRUE(buffer.Read(1, 2, &tmp)) << "read NamedCurve";
+  EXPECT_EQ(ssl_grp_ec_secp256r1, tmp);
+  EXPECT_TRUE(buffer.Read(3, 1, &tmp)) << " read ECPoint";
+  CheckSigAlgs(capture_ske, 4 + tmp, client_, ssl_hash_sha256, 1024);
+}
+
+TEST_P(TlsConnectTls12, ClientAuthCheckSigAlg) {
+  EnsureTlsSetup();
+  auto capture_cert_verify =
+      new TlsInspectorRecordHandshakeMessage(kTlsHandshakeCertificateVerify);
+  client_->SetPacketFilter(capture_cert_verify);
+  client_->SetupClientAuth();
+  server_->RequestClientAuth(true);
+  Connect();
+  CheckKeys(ssl_kea_ecdh, ssl_auth_rsa_sign);
+
+  CheckSigAlgs(capture_cert_verify, 0, server_, ssl_hash_sha1, 1024);
+}
+
+TEST_P(TlsConnectTls12, ClientAuthBigRsaCheckSigAlg) {
+  Reset(TlsAgent::kServerRsa, TlsAgent::kRsa2048);
+  auto capture_cert_verify =
+      new TlsInspectorRecordHandshakeMessage(kTlsHandshakeCertificateVerify);
+  client_->SetPacketFilter(capture_cert_verify);
+  client_->SetupClientAuth();
+  server_->RequestClientAuth(true);
+  Connect();
+  CheckKeys(ssl_kea_ecdh, ssl_auth_rsa_sign);
+  CheckSigAlgs(capture_cert_verify, 0, server_, ssl_hash_sha256, 2048);
+}
+
 static const SSLSignatureAndHashAlg SignatureEcdsaSha384[] = {
-  {ssl_hash_sha384, ssl_sign_ecdsa}
-};
+    {ssl_hash_sha384, ssl_sign_ecdsa}};
 static const SSLSignatureAndHashAlg SignatureEcdsaSha256[] = {
-  {ssl_hash_sha256, ssl_sign_ecdsa}
-};
+    {ssl_hash_sha256, ssl_sign_ecdsa}};
 static const SSLSignatureAndHashAlg SignatureRsaSha384[] = {
-  {ssl_hash_sha384, ssl_sign_rsa}
-};
+    {ssl_hash_sha384, ssl_sign_rsa}};
 static const SSLSignatureAndHashAlg SignatureRsaSha256[] = {
-  {ssl_hash_sha256, ssl_sign_rsa}
-};
+    {ssl_hash_sha256, ssl_sign_rsa}};
 
 // When signature algorithms match up, this should connect successfully; even
 // for TLS 1.1 and 1.0, where they should be ignored.
 TEST_P(TlsConnectGeneric, SignatureAlgorithmServerAuth) {
+  Reset(TlsAgent::kServerEcdsa384);
   client_->SetSignatureAlgorithms(SignatureEcdsaSha384,
                                   PR_ARRAY_SIZE(SignatureEcdsaSha384));
   server_->SetSignatureAlgorithms(SignatureEcdsaSha384,
                                   PR_ARRAY_SIZE(SignatureEcdsaSha384));
-  Reset(TlsAgent::kServerEcdsa);
   Connect();
+  CheckKeys(ssl_kea_ecdh, ssl_auth_ecdsa);
 }
 
 // Here the client picks a single option, which should work in all versions.
 // Defaults on the server include the first option.
 TEST_P(TlsConnectGeneric, SignatureAlgorithmClientOnly) {
   const SSLSignatureAndHashAlg clientAlgorithms[] = {
-    {ssl_hash_sha384, ssl_sign_ecdsa},
-    {ssl_hash_sha384, ssl_sign_rsa}, // supported but unusable
-    {ssl_hash_md5, ssl_sign_ecdsa} // unsupported and ignored
+      {ssl_hash_sha384, ssl_sign_ecdsa},
+      {ssl_hash_sha384, ssl_sign_rsa},  // supported but unusable
+      {ssl_hash_md5, ssl_sign_ecdsa}    // unsupported and ignored
   };
+  Reset(TlsAgent::kServerEcdsa384);
   client_->SetSignatureAlgorithms(clientAlgorithms,
                                   PR_ARRAY_SIZE(clientAlgorithms));
-  Reset(TlsAgent::kServerEcdsa);
   Connect();
+  CheckKeys(ssl_kea_ecdh, ssl_auth_ecdsa);
 }
 
 // Here the server picks a single option, which should work in all versions.
 // Defaults on the client include the provided option.
 TEST_P(TlsConnectGeneric, SignatureAlgorithmServerOnly) {
+  Reset(TlsAgent::kServerEcdsa384);
   server_->SetSignatureAlgorithms(SignatureEcdsaSha384,
                                   PR_ARRAY_SIZE(SignatureEcdsaSha384));
-  Reset(TlsAgent::kServerEcdsa);
   Connect();
+  CheckKeys(ssl_kea_ecdh, ssl_auth_ecdsa);
 }
 
-// There is no need for overlap on signatures; since we don't actually use the
-// signatures for static RSA, this should still connect successfully.
-// This should also work in TLS 1.0 and 1.1 where the algorithms aren't used.
+// In TlS 1.2, a P-256 cert can be used with SHA-384.
+TEST_P(TlsConnectTls12, SignatureSchemeCurveMismatch12) {
+  Reset(TlsAgent::kServerEcdsa256);
+  client_->SetSignatureAlgorithms(SignatureEcdsaSha384,
+                                  PR_ARRAY_SIZE(SignatureEcdsaSha384));
+  Connect();
+  CheckKeys(ssl_kea_ecdh, ssl_auth_ecdsa);
+}
+
+#ifdef NSS_ENABLE_TLS_1_3
+TEST_P(TlsConnectTls13, SignatureAlgorithmServerUnsupported) {
+  Reset(TlsAgent::kServerEcdsa256);  // P-256 cert
+  server_->SetSignatureAlgorithms(SignatureEcdsaSha384,
+                                  PR_ARRAY_SIZE(SignatureEcdsaSha384));
+  ConnectExpectFail();
+  server_->CheckErrorCode(SSL_ERROR_UNSUPPORTED_SIGNATURE_ALGORITHM);
+  client_->CheckErrorCode(SSL_ERROR_NO_CYPHER_OVERLAP);
+}
+
+TEST_P(TlsConnectTls13, SignatureAlgorithmClientUnsupported) {
+  Reset(TlsAgent::kServerEcdsa256);  // P-256 cert
+  client_->SetSignatureAlgorithms(SignatureEcdsaSha384,
+                                  PR_ARRAY_SIZE(SignatureEcdsaSha384));
+  ConnectExpectFail();
+  server_->CheckErrorCode(SSL_ERROR_UNSUPPORTED_SIGNATURE_ALGORITHM);
+  client_->CheckErrorCode(SSL_ERROR_NO_CYPHER_OVERLAP);
+}
+#endif
+
+// Where there is no overlap on signature schemes, we still connect successfully
+// if we aren't going to use a signature.
 TEST_P(TlsConnectGenericPre13, SignatureAlgorithmNoOverlapStaticRsa) {
   client_->SetSignatureAlgorithms(SignatureRsaSha384,
                                   PR_ARRAY_SIZE(SignatureRsaSha384));
@@ -114,20 +212,20 @@ TEST_P(TlsConnectGenericPre13, SignatureAlgorithmNoOverlapStaticRsa) {
   CheckKeys(ssl_kea_rsa, ssl_auth_rsa_decrypt);
 }
 
-// TODO(ekr@rtfm.com): We need to enable this for 1.3 when we fix
-// bug 1287267.
-TEST_P(TlsConnectTls12, SignatureAlgorithmNoOverlapEcdsa) {
-  Reset(TlsAgent::kServerEcdsa);
+TEST_P(TlsConnectTls12Plus, SignatureAlgorithmNoOverlapEcdsa) {
+  Reset(TlsAgent::kServerEcdsa256);
   client_->SetSignatureAlgorithms(SignatureEcdsaSha384,
                                   PR_ARRAY_SIZE(SignatureEcdsaSha384));
   server_->SetSignatureAlgorithms(SignatureEcdsaSha256,
                                   PR_ARRAY_SIZE(SignatureEcdsaSha256));
   ConnectExpectFail();
+  client_->CheckErrorCode(SSL_ERROR_NO_CYPHER_OVERLAP);
+  server_->CheckErrorCode(SSL_ERROR_UNSUPPORTED_SIGNATURE_ALGORITHM);
 }
 
 // Pre 1.2, a mismatch on signature algorithms shouldn't affect anything.
 TEST_P(TlsConnectPre12, SignatureAlgorithmNoOverlapEcdsa) {
-  Reset(TlsAgent::kServerEcdsa);
+  Reset(TlsAgent::kServerEcdsa256);
   client_->SetSignatureAlgorithms(SignatureEcdsaSha384,
                                   PR_ARRAY_SIZE(SignatureEcdsaSha384));
   server_->SetSignatureAlgorithms(SignatureEcdsaSha256,
@@ -144,15 +242,11 @@ TEST_P(TlsConnectTls12Plus, RequestClientAuthWithSha384) {
 
 class BeforeFinished : public TlsRecordFilter {
  private:
-  enum HandshakeState {
-    BEFORE_CCS,
-    AFTER_CCS,
-    DONE
-  };
+  enum HandshakeState { BEFORE_CCS, AFTER_CCS, DONE };
 
  public:
-  BeforeFinished(TlsAgent* client, TlsAgent* server,
-                 VoidFunction before_ccs, VoidFunction before_finished)
+  BeforeFinished(TlsAgent* client, TlsAgent* server, VoidFunction before_ccs,
+                 VoidFunction before_finished)
       : client_(client),
         server_(server),
         before_ccs_(before_ccs),
@@ -160,8 +254,9 @@ class BeforeFinished : public TlsRecordFilter {
         state_(BEFORE_CCS) {}
 
  protected:
-  virtual PacketFilter::Action FilterRecord(
-      const RecordHeader& header, const DataBuffer& body, DataBuffer* out) {
+  virtual PacketFilter::Action FilterRecord(const RecordHeader& header,
+                                            const DataBuffer& body,
+                                            DataBuffer* out) {
     switch (state_) {
       case BEFORE_CCS:
         // Awaken when we see the CCS.
@@ -223,7 +318,7 @@ class BeforeFinished13 : public PacketFilter {
   };
 
  public:
-  BeforeFinished13(TlsAgent* client, TlsAgent *server,
+  BeforeFinished13(TlsAgent* client, TlsAgent* server,
                    VoidFunction before_finished)
       : client_(client),
         server_(server),
@@ -240,8 +335,8 @@ class BeforeFinished13 : public PacketFilter {
                   SSLInt_SetMTU(server_->ssl_fd(), input.len() - 1));
         return DROP;
 
-        // Packet 2 is the first part of the server's retransmitted first
-        // flight.  Keep that.
+      // Packet 2 is the first part of the server's retransmitted first
+      // flight.  Keep that.
 
       case 3:
         // Packet 3 is the second part of the server's retransmitted first
@@ -258,28 +353,25 @@ class BeforeFinished13 : public PacketFilter {
   }
 
  private:
-  TlsAgent *client_;
-  TlsAgent *server_;
+  TlsAgent* client_;
+  TlsAgent* server_;
   VoidFunction before_finished_;
   size_t records_;
 };
 
-#ifdef NSS_ENABLE_TLS_1_3
 // This test uses an AuthCertificateCallback that blocks.  A filter is used to
 // split the server's first flight into two pieces.  Before the second piece is
 // processed by the client, SSL_AuthCertificateComplete() is called.
 TEST_F(TlsConnectDatagram13, AuthCompleteBeforeFinished) {
   client_->SetAuthCertificateCallback(
-      [](TlsAgent&, PRBool, PRBool) -> SECStatus {
-        return SECWouldBlock;
-      });
+      [](TlsAgent*, PRBool, PRBool) -> SECStatus { return SECWouldBlock; });
   server_->SetPacketFilter(new BeforeFinished13(client_, server_, [this]() {
-        EXPECT_EQ(SECSuccess, SSL_AuthCertificateComplete(client_->ssl_fd(), 0));
-      }));
+    EXPECT_EQ(SECSuccess, SSL_AuthCertificateComplete(client_->ssl_fd(), 0));
+  }));
   Connect();
 }
 
-static void TriggerAuthComplete(PollTarget *target, Event event) {
+static void TriggerAuthComplete(PollTarget* target, Event event) {
   std::cerr << "client: call SSL_AuthCertificateComplete" << std::endl;
   EXPECT_EQ(TIMER_EVENT, event);
   TlsAgent* client = static_cast<TlsAgent*>(target);
@@ -291,8 +383,8 @@ static void TriggerAuthComplete(PollTarget *target, Event event) {
 // will trigger after the Finished message is processed.
 TEST_F(TlsConnectDatagram13, AuthCompleteAfterFinished) {
   client_->SetAuthCertificateCallback(
-      [this](TlsAgent&, PRBool, PRBool) -> SECStatus {
-        Poller::Timer *timer_handle;
+      [this](TlsAgent*, PRBool, PRBool) -> SECStatus {
+        Poller::Timer* timer_handle;
         // This is really just to unroll the stack.
         Poller::Instance()->SetTimer(1U, client_, TriggerAuthComplete,
                                      &timer_handle);
@@ -300,13 +392,13 @@ TEST_F(TlsConnectDatagram13, AuthCompleteAfterFinished) {
       });
   Connect();
 }
-#endif
 
 TEST_P(TlsConnectGenericPre13, ClientWriteBetweenCCSAndFinishedWithFalseStart) {
   client_->EnableFalseStart();
-  server_->SetPacketFilter(new BeforeFinished(client_, server_, [this]() {
-        EXPECT_TRUE(client_->can_falsestart_hook_called());
-      }, [this]() {
+  server_->SetPacketFilter(new BeforeFinished(
+      client_, server_,
+      [this]() { EXPECT_TRUE(client_->can_falsestart_hook_called()); },
+      [this]() {
         // Write something, which used to fail: bug 1235366.
         client_->SendData(10);
       }));
@@ -319,15 +411,17 @@ TEST_P(TlsConnectGenericPre13, ClientWriteBetweenCCSAndFinishedWithFalseStart) {
 TEST_P(TlsConnectGenericPre13, AuthCompleteBeforeFinishedWithFalseStart) {
   client_->EnableFalseStart();
   client_->SetAuthCertificateCallback(
-      [](TlsAgent&, PRBool, PRBool) -> SECStatus {
-        return SECWouldBlock;
-      });
-  server_->SetPacketFilter(new BeforeFinished(client_, server_, []() {
+      [](TlsAgent*, PRBool, PRBool) -> SECStatus { return SECWouldBlock; });
+  server_->SetPacketFilter(new BeforeFinished(
+      client_, server_,
+      []() {
         // Do nothing before CCS
-      }, [this]() {
+      },
+      [this]() {
         EXPECT_FALSE(client_->can_falsestart_hook_called());
         // AuthComplete before Finished still enables false start.
-        EXPECT_EQ(SECSuccess, SSL_AuthCertificateComplete(client_->ssl_fd(), 0));
+        EXPECT_EQ(SECSuccess,
+                  SSL_AuthCertificateComplete(client_->ssl_fd(), 0));
         EXPECT_TRUE(client_->can_falsestart_hook_called());
         client_->SendData(10);
       }));
@@ -337,4 +431,88 @@ TEST_P(TlsConnectGenericPre13, AuthCompleteBeforeFinishedWithFalseStart) {
   Receive(10);
 }
 
+static const SSLExtraServerCertData ServerCertDataRsaPkcs1Decrypt = {
+    ssl_auth_rsa_decrypt, nullptr, nullptr, nullptr};
+static const SSLExtraServerCertData ServerCertDataRsaPkcs1Sign = {
+    ssl_auth_rsa_sign, nullptr, nullptr, nullptr};
+static const SSLExtraServerCertData ServerCertDataRsaPss = {
+    ssl_auth_rsa_pss, nullptr, nullptr, nullptr};
+
+// Test RSA cert with usage=[signature, encipherment].
+TEST_F(TlsAgentStreamTestServer, ConfigureCertRsaPkcs1SignAndKEX) {
+  Reset(TlsAgent::kServerRsa);
+
+  PRFileDesc* ssl_fd = agent_->ssl_fd();
+  EXPECT_TRUE(SSLInt_HasCertWithAuthType(ssl_fd, ssl_auth_rsa_decrypt));
+  EXPECT_TRUE(SSLInt_HasCertWithAuthType(ssl_fd, ssl_auth_rsa_sign));
+  EXPECT_TRUE(SSLInt_HasCertWithAuthType(ssl_fd, ssl_auth_rsa_pss));
+
+  // Configuring for only rsa_sign, rsa_pss, or rsa_decrypt should work.
+  EXPECT_TRUE(agent_->ConfigServerCert(TlsAgent::kServerRsa, false,
+                                       &ServerCertDataRsaPkcs1Decrypt));
+  EXPECT_TRUE(agent_->ConfigServerCert(TlsAgent::kServerRsa, false,
+                                       &ServerCertDataRsaPkcs1Sign));
+  EXPECT_TRUE(agent_->ConfigServerCert(TlsAgent::kServerRsa, false,
+                                       &ServerCertDataRsaPss));
+}
+
+// Test RSA cert with usage=[signature].
+TEST_F(TlsAgentStreamTestServer, ConfigureCertRsaPkcs1Sign) {
+  Reset(TlsAgent::kServerRsaSign);
+
+  PRFileDesc* ssl_fd = agent_->ssl_fd();
+  EXPECT_FALSE(SSLInt_HasCertWithAuthType(ssl_fd, ssl_auth_rsa_decrypt));
+  EXPECT_TRUE(SSLInt_HasCertWithAuthType(ssl_fd, ssl_auth_rsa_sign));
+  EXPECT_TRUE(SSLInt_HasCertWithAuthType(ssl_fd, ssl_auth_rsa_pss));
+
+  // Configuring for only rsa_decrypt should fail.
+  EXPECT_FALSE(agent_->ConfigServerCert(TlsAgent::kServerRsaSign, false,
+                                        &ServerCertDataRsaPkcs1Decrypt));
+
+  // Configuring for only rsa_sign or rsa_pss should work.
+  EXPECT_TRUE(agent_->ConfigServerCert(TlsAgent::kServerRsaSign, false,
+                                       &ServerCertDataRsaPkcs1Sign));
+  EXPECT_TRUE(agent_->ConfigServerCert(TlsAgent::kServerRsaSign, false,
+                                       &ServerCertDataRsaPss));
+}
+
+// Test RSA cert with usage=[encipherment].
+TEST_F(TlsAgentStreamTestServer, ConfigureCertRsaPkcs1KEX) {
+  Reset(TlsAgent::kServerRsaDecrypt);
+
+  PRFileDesc* ssl_fd = agent_->ssl_fd();
+  EXPECT_TRUE(SSLInt_HasCertWithAuthType(ssl_fd, ssl_auth_rsa_decrypt));
+  EXPECT_FALSE(SSLInt_HasCertWithAuthType(ssl_fd, ssl_auth_rsa_sign));
+  EXPECT_FALSE(SSLInt_HasCertWithAuthType(ssl_fd, ssl_auth_rsa_pss));
+
+  // Configuring for only rsa_sign or rsa_pss should fail.
+  EXPECT_FALSE(agent_->ConfigServerCert(TlsAgent::kServerRsaDecrypt, false,
+                                        &ServerCertDataRsaPkcs1Sign));
+  EXPECT_FALSE(agent_->ConfigServerCert(TlsAgent::kServerRsaDecrypt, false,
+                                        &ServerCertDataRsaPss));
+
+  // Configuring for only rsa_decrypt should work.
+  EXPECT_TRUE(agent_->ConfigServerCert(TlsAgent::kServerRsaDecrypt, false,
+                                       &ServerCertDataRsaPkcs1Decrypt));
+}
+
+// Test configuring an RSA-PSS cert.
+TEST_F(TlsAgentStreamTestServer, ConfigureCertRsaPss) {
+  Reset(TlsAgent::kServerRsaPss);
+
+  PRFileDesc* ssl_fd = agent_->ssl_fd();
+  EXPECT_FALSE(SSLInt_HasCertWithAuthType(ssl_fd, ssl_auth_rsa_decrypt));
+  EXPECT_FALSE(SSLInt_HasCertWithAuthType(ssl_fd, ssl_auth_rsa_sign));
+  EXPECT_TRUE(SSLInt_HasCertWithAuthType(ssl_fd, ssl_auth_rsa_pss));
+
+  // Configuring for only rsa_sign or rsa_decrypt should fail.
+  EXPECT_FALSE(agent_->ConfigServerCert(TlsAgent::kServerRsaPss, false,
+                                        &ServerCertDataRsaPkcs1Sign));
+  EXPECT_FALSE(agent_->ConfigServerCert(TlsAgent::kServerRsaPss, false,
+                                        &ServerCertDataRsaPkcs1Decrypt));
+
+  // Configuring for only rsa_pss should work.
+  EXPECT_TRUE(agent_->ConfigServerCert(TlsAgent::kServerRsaPss, false,
+                                       &ServerCertDataRsaPss));
+}
 }

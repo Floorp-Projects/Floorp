@@ -18,20 +18,20 @@ def pkg_config_version(pkg_config):
 # - `package_desc` package name and version requirement string, list of
 #   strings describing packages to locate, or depends function that will
 #   resolve to such a string or list of strings.
-# - `condition` a depends function that will determine whether to perform
+# - `when` a depends function that will determine whether to perform
 #   any checks (default is to always perform checks).
 # - `allow_missing` If set, failure to fulfill the package description
 #   will not result in an error or logged message, and any error message
 #   will be returned to the caller.
 #   Returns `True` when the package description is fulfilled.
 @template
-def pkg_check_modules(var, package_desc, condition=always,
+def pkg_check_modules(var, package_desc, when=always,
                       allow_missing=False):
     if isinstance(package_desc, (tuple, list)):
         package_desc = ' '.join(package_desc)
     package_desc = dependable(package_desc)
 
-    @depends_when(pkg_config, pkg_config_version, when=condition)
+    @depends_when(pkg_config, pkg_config_version, when=when)
     def check_pkg_config(pkg_config, version):
         min_version = '0.9.0'
         if pkg_config is None:
@@ -42,7 +42,7 @@ def pkg_check_modules(var, package_desc, condition=always,
             die("*** Your version of pkg-config is too old. You need version %s or newer.",
                 min_version)
 
-    @depends_when(pkg_config, package_desc, when=condition)
+    @depends_when(pkg_config, package_desc, when=when)
     @imports('subprocess')
     @imports('sys')
     @imports(_from='mozbuild.configure.util', _import='LineIO')

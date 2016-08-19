@@ -261,7 +261,7 @@ GetAndInitDisplayForAccelANGLE(GLLibraryEGL& egl, nsACString* const out_failureI
         ret = GetAndInitDisplay(egl, EGL_DEFAULT_DISPLAY);
     }
 
-    if (!ret) {
+    if (!ret && out_failureId->IsEmpty()) {
         *out_failureId = NS_LITERAL_CSTRING("FEATURE_FAILURE_ACCL_ANGLE_NO_DISP");
     }
 

@@ -251,7 +251,7 @@ nsResizerFrame::HandleEvent(nsPresContext* aPresContext,
         if (menuPopupFrame) {
           nsCOMPtr<nsIWidget> widget = menuPopupFrame->GetWidget();
           if (widget)
-            widget->GetScreenBounds(oldRect);
+            oldRect = widget->GetScreenBounds();
 
           // convert the new rectangle into outer window coordinates
           LayoutDeviceIntPoint clientOffset = widget->GetClientOffset();

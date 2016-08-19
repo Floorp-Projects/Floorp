@@ -25,7 +25,11 @@ const { Grip } = require("devtools/client/shared/components/reps/grip");
 GripMessageBody.displayName = "GripMessageBody";
 
 GripMessageBody.propTypes = {
-  grip: PropTypes.object.isRequired,
+  grip: PropTypes.oneOfType([
+    PropTypes.string,
+    PropTypes.number,
+    PropTypes.object,
+  ]).isRequired,
 };
 
 function GripMessageBody(props) {

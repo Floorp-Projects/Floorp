@@ -14,7 +14,8 @@ add_task(function* () {
                .then(getHighlighterHelperFor(HIGHLIGHTER_TYPE));
   helper.prefix = ID;
 
-  let {show, finalize} = helper;
+  let {show, finalize,
+       waitForElementAttributeSet, waitForElementAttributeRemoved} = helper;
 
   info("Show the eyedropper with the copyOnSelect option");
   yield show("html", {copyOnSelect: true});
@@ -36,29 +37,3 @@ add_task(function* () {
   finalize();
 });
 
-function* waitForElementAttributeSet(id, name, {getElementAttribute}) {
-  yield poll(function* () {
-    let value = yield getElementAttribute(id, name);
-    return !!value;
-  }, `Waiting for element ${id} to have attribute ${name} set`);
-}
-
-function* waitForElementAttributeRemoved(id, name, {getElementAttribute}) {
-  yield poll(function* () {
-    let value = yield getElementAttribute(id, name);
-    return !value;
-  }, `Waiting for element ${id} to have attribute ${name} removed`);
-}
-
-function* poll(check, desc) {
-  info(desc);
-
-  for (let i = 0; i < 10; i++) {
-    if (yield check()) {
-      return;
-    }
-    yield new Promise(resolve => setTimeout(resolve, 200));
-  }
-
-  throw new Error(`Timeout while: ${desc}`);
-}
