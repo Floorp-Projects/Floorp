@@ -25,6 +25,11 @@ public class HistoryDividerItemDecoration extends RecyclerView.ItemDecoration {
     @Override
     public void getItemOffsets(Rect outRect, View view, RecyclerView parent, RecyclerView.State state) {
         final int position = parent.getChildAdapterPosition(view);
+        if (position == RecyclerView.NO_POSITION) {
+            // This view is no longer corresponds to an adapter position (pending changes).
+            return;
+        }
+
         if (parent.getAdapter().getItemViewType(position) !=
                 CombinedHistoryItem.ItemType.itemTypeToViewType(CombinedHistoryItem.ItemType.SECTION_HEADER)) {
             outRect.set(0, 0, 0, mDividerHeight);
@@ -36,9 +41,16 @@ public class HistoryDividerItemDecoration extends RecyclerView.ItemDecoration {
         if (parent.getChildCount() == 0) {
             return;
         }
+
         for (int i = 0; i < parent.getChildCount(); i++) {
             final View child = parent.getChildAt(i);
             final int position = parent.getChildAdapterPosition(child);
+
+            if (position == RecyclerView.NO_POSITION) {
+                // This view is no longer corresponds to an adapter position (pending changes).
+                continue;
+            }
+
             if (parent.getAdapter().getItemViewType(position) !=
                     CombinedHistoryItem.ItemType.itemTypeToViewType(CombinedHistoryItem.ItemType.SECTION_HEADER)) {
                 final float bottom = child.getBottom() + child.getTranslationY();
