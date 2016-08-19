@@ -245,21 +245,20 @@ MergeSortedFrameLists(nsFrameList& aDest, nsFrameList& aSrc,
       aDest.AppendFrames(nullptr, aSrc);
       break;
     }
-    int32_t result = nsLayoutUtils::CompareTreePosition(src->GetContent(),
-                                                        dest->GetContent(),
+    nsIContent* srcContent = src->GetContent();
+    nsIContent* destContent = dest->GetContent();
+    int32_t result = nsLayoutUtils::CompareTreePosition(srcContent,
+                                                        destContent,
                                                         aCommonAncestor);
     if (MOZ_UNLIKELY(result == 0)) {
       // NOTE: we get here when comparing ::before/::after for the same element.
-      auto srcPseudo = src->GetContent()->NodeInfo()->NameAtom();
-      if (MOZ_UNLIKELY(srcPseudo == nsGkAtoms::mozgeneratedcontentbefore)) {
-        auto destPseudo = dest->GetContent()->NodeInfo()->NameAtom();
-        if (MOZ_LIKELY(destPseudo != nsGkAtoms::mozgeneratedcontentbefore) ||
+      if (MOZ_UNLIKELY(srcContent->IsGeneratedContentContainerForBefore())) {
+        if (MOZ_LIKELY(!destContent->IsGeneratedContentContainerForBefore()) ||
             ::IsPrevContinuationOf(src, dest)) {
           result = -1;
         }
-      } else if (MOZ_UNLIKELY(srcPseudo == nsGkAtoms::mozgeneratedcontentafter)) {
-        auto destPseudo = dest->GetContent()->NodeInfo()->NameAtom();
-        if (MOZ_UNLIKELY(destPseudo == nsGkAtoms::mozgeneratedcontentafter) &&
+      } else if (MOZ_UNLIKELY(srcContent->IsGeneratedContentContainerForAfter())) {
+        if (MOZ_UNLIKELY(destContent->IsGeneratedContentContainerForAfter()) &&
             ::IsPrevContinuationOf(src, dest)) {
           result = -1;
         }
