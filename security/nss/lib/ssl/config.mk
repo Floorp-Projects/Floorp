@@ -72,3 +72,6 @@ DEFINES += -DNSS_SSL_ENABLE_ZLIB
 include $(CORE_DEPTH)/coreconf/zlib.mk
 endif
 
+ifdef NSS_DISABLE_TLS_1_3
+DEFINES += -DNSS_DISABLE_TLS_1_3
+endif

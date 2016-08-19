@@ -603,8 +603,7 @@ nsViewManager::InvalidateWidgetArea(nsView *aWidgetView,
         // plugin widgets are basically invisible
 #ifndef XP_MACOSX
         // GetBounds should compensate for chrome on a toplevel widget
-        LayoutDeviceIntRect bounds;
-        childWidget->GetBounds(bounds);
+        LayoutDeviceIntRect bounds = childWidget->GetBounds();
 
         nsTArray<LayoutDeviceIntRect> clipRects;
         childWidget->GetWindowClipRegion(&clipRects);

@@ -3,7 +3,7 @@
 "use strict";
 
 const {
-  SEVERITY_ERROR,
+  MESSAGE_LEVEL,
 } = require("devtools/client/webconsole/new-console-output/constants");
 const { MessageIcon } = require("devtools/client/webconsole/new-console-output/components/message-icon");
 
@@ -14,8 +14,8 @@ const {
 } = require("devtools/client/webconsole/new-console-output/test/helpers");
 
 describe("MessageIcon component:", () => {
-  it("renders icon based on severity", () => {
-    const rendered = renderComponent(MessageIcon, { severity: SEVERITY_ERROR });
+  it("renders icon based on level", () => {
+    const rendered = renderComponent(MessageIcon, { level: MESSAGE_LEVEL.ERROR });
 
     expect(rendered.classList.contains("icon")).toBe(true);
     expect(rendered.getAttribute("title")).toBe("Error");

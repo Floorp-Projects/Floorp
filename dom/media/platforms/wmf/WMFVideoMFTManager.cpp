@@ -166,7 +166,7 @@ StaticAutoPtr<D3DDLLBlacklistingCache> sD3D11BlacklistingCache;
 StaticAutoPtr<D3DDLLBlacklistingCache> sD3D9BlacklistingCache;
 
 // If a blacklisted DLL is found, return its information, otherwise "".
-static const nsACString&
+static const nsCString&
 FindDXVABlacklistedDLL(StaticAutoPtr<D3DDLLBlacklistingCache>& aDLLBlacklistingCache,
                        const char* aDLLBlacklistPrefName)
 {
@@ -280,13 +280,13 @@ FindDXVABlacklistedDLL(StaticAutoPtr<D3DDLLBlacklistingCache>& aDLLBlacklistingC
   return aDLLBlacklistingCache->mBlacklistedDLL;
 }
 
-static const nsACString&
+static const nsCString&
 FindD3D11BlacklistedDLL() {
   return FindDXVABlacklistedDLL(sD3D11BlacklistingCache,
                                 "media.wmf.disable-d3d11-for-dlls");
 }
 
-static const nsACString&
+static const nsCString&
 FindD3D9BlacklistedDLL() {
   return FindDXVABlacklistedDLL(sD3D9BlacklistingCache,
                                 "media.wmf.disable-d3d9-for-dlls");
@@ -305,10 +305,10 @@ public:
     nsCString secondFailureReason;
     if (mBackend == LayersBackend::LAYERS_D3D11 &&
         MediaPrefs::PDMWMFAllowD3D11() && IsWin8OrLater()) {
-      const nsACString& blacklistedDLL = FindD3D11BlacklistedDLL();
+      const nsCString& blacklistedDLL = FindD3D11BlacklistedDLL();
       if (!blacklistedDLL.IsEmpty()) {
         failureReason->AppendPrintf("D3D11 blacklisted with DLL %s",
-                                    blacklistedDLL);
+                                    blacklistedDLL.get());
       } else {
         mDXVA2Manager = DXVA2Manager::CreateD3D11DXVA(*failureReason);
         if (mDXVA2Manager) {
@@ -321,10 +321,10 @@ public:
       mFailureReason.Append(NS_LITERAL_CSTRING("; "));
     }
 
-    const nsACString& blacklistedDLL = FindD3D9BlacklistedDLL();
+    const nsCString& blacklistedDLL = FindD3D9BlacklistedDLL();
     if (!blacklistedDLL.IsEmpty()) {
       mFailureReason.AppendPrintf("D3D9 blacklisted with DLL %s",
-                                  blacklistedDLL);
+                                  blacklistedDLL.get());
     } else {
       mDXVA2Manager = DXVA2Manager::CreateD3D9DXVA(*failureReason);
       // Make sure we include the messages from both attempts (if applicable).

@@ -278,8 +278,7 @@ private:
 
   mWaitingForPaint = NO;
 
-  LayoutDeviceIntRect geckoBounds;
-  mGeckoChild->GetBounds(geckoBounds);
+  LayoutDeviceIntRect geckoBounds = mGeckoChild->GetBounds();
   LayoutDeviceIntRegion region(geckoBounds);
 
   mGeckoChild->PaintWindow(region);
@@ -305,8 +304,7 @@ private:
 - (void)drawRect:(CGRect)aRect inContext:(CGContextRef)aContext
 {
 #ifdef DEBUG_UPDATE
-  LayoutDeviceIntRect geckoBounds;
-  mGeckoChild->GetBounds(geckoBounds);
+  LayoutDeviceIntRect geckoBounds = mGeckoChild->GetBounds();
 
   fprintf (stderr, "---- Update[%p][%p] [%f %f %f %f] cgc: %p\n  gecko bounds: [%d %d %d %d]\n",
            self, mGeckoChild,
@@ -469,7 +467,7 @@ nsWindow::IsTopLevel()
 // nsIWidget
 //
 
-NS_IMETHODIMP
+nsresult
 nsWindow::Create(nsIWidget* aParent,
                  nsNativeWidget aNativeParent,
                  const LayoutDeviceIntRect& aRect,
@@ -691,14 +689,13 @@ nsWindow::SetSizeMode(nsSizeMode aMode)
         return NS_OK;
     }
 
-    nsresult rv = NS_OK;
     mSizeMode = static_cast<nsSizeMode>(aMode);
     if (aMode == nsSizeMode_Maximized || aMode == nsSizeMode_Fullscreen) {
         // Resize to fill screen
-        rv = nsBaseWidget::MakeFullScreen(true);
+        nsBaseWidget::InfallibleMakeFullScreen(true);
     }
     ReportSizeModeEvent(aMode);
-    return rv;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -774,23 +771,15 @@ void nsWindow::ReportSizeModeEvent(nsSizeMode aMode)
 void nsWindow::ReportSizeEvent()
 {
     if (mWidgetListener) {
-        LayoutDeviceIntRect innerBounds;
-        GetClientBounds(innerBounds);
+        LayoutDeviceIntRect innerBounds = GetClientBounds();
         mWidgetListener->WindowResized(this, innerBounds.width, innerBounds.height);
     }
 }
 
-NS_IMETHODIMP
-nsWindow::GetScreenBounds(LayoutDeviceIntRect& aRect)
+LayoutDeviceIntRect
+nsWindow::GetScreenBounds()
 {
-    LayoutDeviceIntPoint p = WidgetToScreenOffset();
-
-    aRect.x = p.x;
-    aRect.y = p.y;
-    aRect.width = mBounds.width;
-    aRect.height = mBounds.height;
-
-    return NS_OK;
+    return LayoutDeviceIntRect(WidgetToScreenOffset(), mBounds.Size());
 }
 
 LayoutDeviceIntPoint nsWindow::WidgetToScreenOffset()

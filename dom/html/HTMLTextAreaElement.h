@@ -10,6 +10,7 @@
 #include "mozilla/Attributes.h"
 #include "nsIDOMHTMLTextAreaElement.h"
 #include "nsITextControlElement.h"
+#include "nsIControllers.h"
 #include "nsIDOMNSEditableElement.h"
 #include "nsCOMPtr.h"
 #include "nsGenericHTMLElement.h"
@@ -155,8 +156,10 @@ public:
 
   // nsIConstraintValidation
   bool     IsTooLong();
+  bool     IsTooShort();
   bool     IsValueMissing() const;
   void     UpdateTooLongValidityState();
+  void     UpdateTooShortValidityState();
   void     UpdateValueMissingValidityState();
   void     UpdateBarredFromConstraintValidation();
   nsresult GetValidationMessage(nsAString& aValidationMessage,
@@ -199,10 +202,24 @@ public:
   }
   void SetMaxLength(int32_t aMaxLength, ErrorResult& aError)
   {
-    if (aMaxLength < 0) {
+    int32_t minLength = MinLength();
+    if (aMaxLength < 0 || (minLength >= 0 && aMaxLength < minLength)) {
       aError.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
     } else {
       SetHTMLIntAttr(nsGkAtoms::maxlength, aMaxLength, aError);
+    }
+  }
+  int32_t MinLength()
+  {
+    return GetIntAttr(nsGkAtoms::minlength, -1);
+  }
+  void SetMinLength(int32_t aMinLength, ErrorResult& aError)
+  {
+    int32_t maxLength = MaxLength();
+    if (aMinLength < 0 || (maxLength >= 0 && aMinLength > maxLength)) {
+      aError.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
+    } else {
+      SetHTMLIntAttr(nsGkAtoms::minlength, aMinLength, aError);
     }
   }
   // XPCOM GetName is fine

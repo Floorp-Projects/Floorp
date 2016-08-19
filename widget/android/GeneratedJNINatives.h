@@ -78,7 +78,7 @@ template<class Impl>
 class GeckoAppShell::Natives : public mozilla::jni::NativeImpl<GeckoAppShell, Impl>
 {
 public:
-    static const JNINativeMethod methods[6];
+    static const JNINativeMethod methods[8];
 };
 
 template<class Impl>
@@ -96,6 +96,10 @@ const JNINativeMethod GeckoAppShell::Natives<Impl>::methods[] = {
             mozilla::jni::NativeStub<GeckoAppShell::NotifyUriVisited_t, Impl>
             ::template Wrap<&Impl::NotifyUriVisited>),
 
+    mozilla::jni::MakeNativeMethod<GeckoAppShell::OnFullScreenPluginHidden_t>(
+            mozilla::jni::NativeStub<GeckoAppShell::OnFullScreenPluginHidden_t, Impl>
+            ::template Wrap<&Impl::OnFullScreenPluginHidden>),
+
     mozilla::jni::MakeNativeMethod<GeckoAppShell::OnLocationChanged_t>(
             mozilla::jni::NativeStub<GeckoAppShell::OnLocationChanged_t, Impl>
             ::template Wrap<&Impl::OnLocationChanged>),
@@ -104,9 +108,28 @@ const JNINativeMethod GeckoAppShell::Natives<Impl>::methods[] = {
             mozilla::jni::NativeStub<GeckoAppShell::OnSensorChanged_t, Impl>
             ::template Wrap<&Impl::OnSensorChanged>),
 
+    mozilla::jni::MakeNativeMethod<GeckoAppShell::ReportJavaCrash_t>(
+            mozilla::jni::NativeStub<GeckoAppShell::ReportJavaCrash_t, Impl>
+            ::template Wrap<&Impl::ReportJavaCrash>),
+
     mozilla::jni::MakeNativeMethod<GeckoAppShell::SyncNotifyObservers_t>(
             mozilla::jni::NativeStub<GeckoAppShell::SyncNotifyObservers_t, Impl>
             ::template Wrap<&Impl::SyncNotifyObservers>)
+};
+
+template<class Impl>
+class GeckoBatteryManager::Natives : public mozilla::jni::NativeImpl<GeckoBatteryManager, Impl>
+{
+public:
+    static const JNINativeMethod methods[1];
+};
+
+template<class Impl>
+const JNINativeMethod GeckoBatteryManager::Natives<Impl>::methods[] = {
+
+    mozilla::jni::MakeNativeMethod<GeckoBatteryManager::OnBatteryChange_t>(
+            mozilla::jni::NativeStub<GeckoBatteryManager::OnBatteryChange_t, Impl>
+            ::template Wrap<&Impl::OnBatteryChange>)
 };
 
 template<class Impl>
@@ -272,7 +295,7 @@ template<class Impl>
 class GeckoThread::Natives : public mozilla::jni::NativeImpl<GeckoThread, Impl>
 {
 public:
-    static const JNINativeMethod methods[5];
+    static const JNINativeMethod methods[6];
 };
 
 template<class Impl>
@@ -289,6 +312,10 @@ const JNINativeMethod GeckoThread::Natives<Impl>::methods[] = {
     mozilla::jni::MakeNativeMethod<GeckoThread::OnResume_t>(
             mozilla::jni::NativeStub<GeckoThread::OnResume_t, Impl>
             ::template Wrap<&Impl::OnResume>),
+
+    mozilla::jni::MakeNativeMethod<GeckoThread::RunUiThreadCallback_t>(
+            mozilla::jni::NativeStub<GeckoThread::RunUiThreadCallback_t, Impl>
+            ::template Wrap<&Impl::RunUiThreadCallback>),
 
     mozilla::jni::MakeNativeMethod<GeckoThread::SpeculativeConnect_t>(
             mozilla::jni::NativeStub<GeckoThread::SpeculativeConnect_t, Impl>
@@ -328,6 +355,21 @@ const JNINativeMethod GeckoView::Window::Natives<Impl>::methods[] = {
     mozilla::jni::MakeNativeMethod<GeckoView::Window::Reattach_t>(
             mozilla::jni::NativeStub<GeckoView::Window::Reattach_t, Impl>
             ::template Wrap<&Impl::Reattach>)
+};
+
+template<class Impl>
+class MemoryMonitor::Natives : public mozilla::jni::NativeImpl<MemoryMonitor, Impl>
+{
+public:
+    static const JNINativeMethod methods[1];
+};
+
+template<class Impl>
+const JNINativeMethod MemoryMonitor::Natives<Impl>::methods[] = {
+
+    mozilla::jni::MakeNativeMethod<MemoryMonitor::DispatchMemoryPressure_t>(
+            mozilla::jni::NativeStub<MemoryMonitor::DispatchMemoryPressure_t, Impl>
+            ::template Wrap<&Impl::DispatchMemoryPressure>)
 };
 
 template<class Impl>

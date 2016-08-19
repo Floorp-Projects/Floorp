@@ -1097,10 +1097,8 @@ printArg(Value *ptr, int arg_number)
             } else {
                 constType = getConstFromAttribute(attribute->type);
                 if (constType != ConstNone) {
-                    CK_ULONG value = (constType == ConstBool) ?
-                                                              *(CK_BBOOL *)attribute->pValue
-                                                              :
-                                                              *(CK_ULONG *)attribute->pValue;
+                    CK_ULONG value = (constType == ConstBool) ? *(CK_BBOOL *)attribute->pValue
+                                                              : *(CK_ULONG *)attribute->pValue;
                     printConst(value, constType, 1);
                 } else {
                     printf("\n");

@@ -32,3 +32,10 @@ TEST_DIRS += [
 
 DIST_SUBDIR = 'browser'
 export('DIST_SUBDIR')
+
+if CONFIG['MOZ_ARTIFACT_BUILDS']:
+    # Ensure a pre-built interfaces.xpt installed to the objdir by the artifact
+    # code is included by the top-level chrome.manifest.
+    EXTRA_COMPONENTS += [
+        '../build/prebuilt-interfaces.manifest',
+    ]

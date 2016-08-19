@@ -639,7 +639,7 @@ js::Nursery::doCollection(JSRuntime* rt, JS::gcreason::Reason reason,
     AutoDisableProxyCheck disableStrictProxyChecking(rt);
     mozilla::DebugOnly<AutoEnterOOMUnsafeRegion> oomUnsafeRegion;
 
-    size_t initialUsedSpace = usedSpace();
+    size_t initialNurserySize = nurserySize();
 
     // Move objects pointed to by roots from the nursery to the major heap.
     TenuringTracer mover(rt, this);
@@ -736,8 +736,8 @@ js::Nursery::doCollection(JSRuntime* rt, JS::gcreason::Reason reason,
 
     // Resize the nursery.
     maybeStartProfile(ProfileKey::Resize);
-    double promotionRate = mover.tenuredSize / double(initialUsedSpace);
-    maybeResizeNursery(reason, initialUsedSpace, promotionRate);
+    double promotionRate = mover.tenuredSize / double(initialNurserySize);
+    maybeResizeNursery(reason, promotionRate);
     maybeEndProfile(ProfileKey::Resize);
 
     return promotionRate;
@@ -830,18 +830,15 @@ js::Nursery::sweep()
 }
 
 size_t
-js::Nursery::usedSpace() const
+js::Nursery::spaceToEnd() const
 {
-    MOZ_ASSERT(currentChunk_ >= currentStartChunk_);
-    MOZ_ASSERT(currentStartPosition_ - chunk(currentStartChunk_).start() <= NurseryChunkUsableSize);
-    MOZ_ASSERT(position_ - chunk(currentChunk_).start() <= NurseryChunkUsableSize);
+    unsigned lastChunk = numChunks() - 1;
 
-    if (currentChunk_ == currentStartChunk_)
-        return position_ - currentStartPosition_;
+    MOZ_ASSERT(lastChunk >= currentStartChunk_);
+    MOZ_ASSERT(currentStartPosition_ - chunk(currentStartChunk_).start() <= NurseryChunkUsableSize);
 
     size_t bytes = (chunk(currentStartChunk_).end() - currentStartPosition_) +
-                   ((currentChunk_ - currentStartChunk_ - 1) * NurseryChunkUsableSize) +
-                   position_ - chunk(currentChunk_).start();
+                   ((lastChunk - currentStartChunk_) * NurseryChunkUsableSize);
 
     MOZ_ASSERT(bytes <= numChunks() * NurseryChunkUsableSize);
 
@@ -867,7 +864,7 @@ js::Nursery::setStartPosition()
 }
 
 void
-js::Nursery::maybeResizeNursery(JS::gcreason::Reason reason, size_t usedSpace, double promotionRate)
+js::Nursery::maybeResizeNursery(JS::gcreason::Reason reason, double promotionRate)
 {
     static const double GrowThreshold   = 0.05;
     static const double ShrinkThreshold = 0.01;
@@ -879,12 +876,7 @@ js::Nursery::maybeResizeNursery(JS::gcreason::Reason reason, size_t usedSpace, d
         return;
     }
 
-    // Don't use promotion rate unless we have enough data to belive it is
-    // accurate.
-    if (usedSpace < NurseryChunkUsableSize / 2)
-        return;
-
-    if (reason == JS::gcreason::OUT_OF_NURSERY && promotionRate > GrowThreshold)
+    if (promotionRate > GrowThreshold)
         growAllocableSpace();
     else if (promotionRate < ShrinkThreshold && previousPromotionRate_ < ShrinkThreshold)
         shrinkAllocableSpace();

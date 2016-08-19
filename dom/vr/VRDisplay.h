@@ -130,7 +130,7 @@ public:
   virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
 protected:
-  ~VRPose() {}
+  ~VRPose();
   nsCOMPtr<nsISupports> mParent;
 
   double mTimeStamp;
@@ -151,13 +151,7 @@ class VRStageParameters final : public nsWrapperCache
 public:
   VRStageParameters(nsISupports* aParent,
                     const gfx::Matrix4x4& aSittingToStandingTransform,
-                    const gfx::Size& aSize)
-    : mParent(aParent)
-    , mSittingToStandingTransform(aSittingToStandingTransform)
-    , mSittingToStandingTransformArray(nullptr)
-    , mSize(aSize)
-  {
-  }
+                    const gfx::Size& aSize);
 
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(VRStageParameters)
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(VRStageParameters)
@@ -172,7 +166,7 @@ public:
   virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
 protected:
-  ~VRStageParameters() {}
+  ~VRStageParameters();
 
   nsCOMPtr<nsISupports> mParent;
 
@@ -203,7 +197,7 @@ public:
   nsISupports* GetParentObject() const { return mParent; }
   virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 protected:
-  ~VREyeParameters() {}
+  ~VREyeParameters();
 
   nsCOMPtr<nsISupports> mParent;
 

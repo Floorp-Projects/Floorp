@@ -237,7 +237,7 @@ main(int argc, char **argv)
     }
 
     /* free certs */
-    for (rcpt = recipients; rcpt != NULL; ) {
+    for (rcpt = recipients; rcpt != NULL;) {
         struct recipient *next = rcpt->next;
         CERT_DestroyCertificate(rcpt->cert);
         PORT_Free(rcpt->nickname);

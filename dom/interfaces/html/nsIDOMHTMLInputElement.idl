@@ -49,6 +49,7 @@ interface nsIDOMHTMLInputElement : nsISupports
            attribute DOMString             max;
            attribute long                  maxLength;
            attribute DOMString             min;
+           attribute long                  minLength;
 
            attribute boolean               multiple;
            attribute DOMString             name;

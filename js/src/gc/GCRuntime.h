@@ -682,6 +682,12 @@ class GCRuntime
         return uid;
     }
 
+#ifdef DEBUG
+    bool shutdownCollectedEverything() const {
+        return arenasEmptyAtShutdown;
+    }
+#endif
+
   public:
     // Internal public interface
     State state() const { return incrementalState; }
@@ -1350,6 +1356,8 @@ class GCRuntime
 
     size_t noGCOrAllocationCheck;
     size_t noNurseryAllocationCheck;
+
+    bool arenasEmptyAtShutdown;
 #endif
 
     /* Synchronize GC heap access between main thread and GCHelperState. */

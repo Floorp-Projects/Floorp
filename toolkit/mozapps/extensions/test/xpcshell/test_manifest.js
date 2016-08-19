@@ -243,7 +243,7 @@ function run_test() {
       maxVersion: "1"
     }],
     name: "Test Addon 18"
-  }, profileDir, null, "options.xul");
+  }, profileDir, undefined, "options.xul");
 
   writeInstallRDFForExtension({
     id: "addon19@tests.mozilla.org",
@@ -305,7 +305,7 @@ function run_test() {
       maxVersion: "1"
     }],
     name: "Test Addon 23"
-  }, profileDir, null, "options.xul");
+  }, profileDir, undefined, "options.xul");
 
   writeInstallRDFForExtension({
     id: "addon24@tests.mozilla.org",
@@ -316,7 +316,7 @@ function run_test() {
       maxVersion: "1"
     }],
     name: "Test Addon 24"
-  }, profileDir, null, "options.xul");
+  }, profileDir, undefined, "options.xul");
 
   writeInstallRDFForExtension({
     id: "addon25@tests.mozilla.org",
@@ -340,7 +340,7 @@ function run_test() {
       maxVersion: "1"
     }],
     name: "Test Addon 26"
-  }, profileDir, null, "options.xul");
+  }, profileDir, undefined, "options.xul");
 
   do_test_pending();
   startupManager();

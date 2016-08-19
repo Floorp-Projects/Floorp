@@ -742,7 +742,7 @@ TabChild::Init()
     NS_ERROR("couldn't create fake widget");
     return NS_ERROR_FAILURE;
   }
-  mPuppetWidget->Create(
+  mPuppetWidget->InfallibleCreate(
     nullptr, 0,              // no parents
     LayoutDeviceIntRect(0, 0, 0, 0),
     nullptr                  // HandleWidgetEvent

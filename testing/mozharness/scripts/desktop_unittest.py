@@ -404,6 +404,8 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
                     option = option % str_format_values
                     if not option.endswith('None'):
                         base_cmd.append(option)
+                if self.structured_output(suite_category):
+                    base_cmd.append("--log-raw=-")
                 return base_cmd
             else:
                 self.warning("Suite options for %s could not be determined."

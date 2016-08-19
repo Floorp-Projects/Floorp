@@ -9,6 +9,10 @@ Cu.import("resource://gre/modules/Promise.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/osfile.jsm");
 Cu.import("resource://testing-common/AddonManagerTesting.jsm");
+Cu.import("resource://testing-common/AddonTestUtils.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "AddonManager",
+                                  "resource://gre/modules/AddonManager.jsm");
 
 const PREF_EXPERIMENTS_ENABLED  = "experiments.enabled";
 const PREF_LOGGING_LEVEL        = "experiments.logging.level";
@@ -127,15 +131,15 @@ function dateToSeconds(date) {
 
 var gGlobalScope = this;
 function loadAddonManager() {
-  let ns = {};
-  Cu.import("resource://gre/modules/Services.jsm", ns);
-  let head = "../../../../toolkit/mozapps/extensions/test/xpcshell/head_addons.js";
-  let file = do_get_file(head);
-  let uri = ns.Services.io.newFileURI(file);
-  ns.Services.scriptloader.loadSubScript(uri.spec, gGlobalScope);
+  AddonTestUtils.init(gGlobalScope);
+  AddonTestUtils.overrideCertDB();
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
-  startupManager();
+  return AddonTestUtils.promiseStartupManager();
 }
+
+const {
+  promiseRestartManager,
+} = AddonTestUtils;
 
 // Starts the addon manager without creating app info. We can't directly use
 // |loadAddonManager| defined above in test_conditions.js as it would make the test fail.
@@ -162,13 +166,8 @@ function getExperimentAddons(previous=false) {
 
 function createAppInfo(ID="xpcshell@tests.mozilla.org", name="XPCShell",
                        version="1.0", platformVersion="1.0") {
-  let tmp = {};
-  Cu.import("resource://testing-common/AppInfo.jsm", tmp);
-  tmp.updateAppInfo({
-    ID, name, version, platformVersion,
-    crashReporter: true,
-  });
-  gAppInfo = tmp.getAppInfo();
+  AddonTestUtils.createAppInfo(ID, name, version, platformVersion);
+  gAppInfo = AddonTestUtils.appInfo;
 }
 
 /**

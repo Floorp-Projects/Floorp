@@ -68,11 +68,15 @@ from mozbuild.util import (
     FileAvoidWrite,
 )
 import mozinstall
-from mozpack.files import FileFinder
+from mozpack.files import (
+    JarFinder,
+    TarFinder,
+)
 from mozpack.mozjar import (
     JarReader,
     JarWriter,
 )
+from mozpack.packager.unpack import UnpackFinder
 import mozpack.path as mozpath
 from mozregression.download_manager import (
     DownloadManager,
@@ -184,22 +188,33 @@ class ArtifactJob(object):
                              'matched an archive path.'.format(
                                  patterns=LinuxArtifactJob.test_artifact_patterns))
 
+
 class AndroidArtifactJob(ArtifactJob):
+
+    package_artifact_patterns = {
+        'application.ini',
+        'platform.ini',
+        '**/*.so',
+        '**/interfaces.xpt',
+    }
+
     def process_artifact(self, filename, processed_filename):
         # Extract all .so files into the root, which will get copied into dist/bin.
         with JarWriter(file=processed_filename, optimize=False, compress_level=5) as writer:
-            for f in JarReader(filename):
-                if not f.filename.endswith('.so') and \
-                   not f.filename in ('platform.ini', 'application.ini'):
+            for p, f in UnpackFinder(JarFinder(filename, JarReader(filename))):
+                if not any(mozpath.match(p, pat) for pat in self.package_artifact_patterns):
                     continue
 
-                basename = os.path.basename(f.filename)
+                dirname, basename = os.path.split(p)
                 self.log(logging.INFO, 'artifact',
                     {'basename': basename},
                    'Adding {basename} to processed archive')
 
-                basename = mozpath.join('bin', basename)
-                writer.add(basename.encode('utf-8'), f)
+                basedir = 'bin'
+                if not basename.endswith('.so'):
+                    basedir = mozpath.join('bin', dirname.lstrip('assets/'))
+                basename = mozpath.join(basedir, basename)
+                writer.add(basename.encode('utf-8'), f.open())
 
 
 class LinuxArtifactJob(ArtifactJob):
@@ -214,6 +229,7 @@ class LinuxArtifactJob(ArtifactJob):
         'firefox/plugin-container',
         'firefox/updater',
         'firefox/**/*.so',
+        'firefox/**/interfaces.xpt',
     }
 
     def process_package_artifact(self, filename, processed_filename):
@@ -221,21 +237,18 @@ class LinuxArtifactJob(ArtifactJob):
 
         with JarWriter(file=processed_filename, optimize=False, compress_level=5) as writer:
             with tarfile.open(filename) as reader:
-                for f in reader:
-                    if not f.isfile():
-                        continue
-
-                    if not any(mozpath.match(f.name, p) for p in self.package_artifact_patterns):
+                for p, f in UnpackFinder(TarFinder(filename, reader)):
+                    if not any(mozpath.match(p, pat) for pat in self.package_artifact_patterns):
                         continue
 
                     # We strip off the relative "firefox/" bit from the path,
                     # but otherwise preserve it.
                     destpath = mozpath.join('bin',
-                                            mozpath.relpath(f.name, "firefox"))
+                                            mozpath.relpath(p, "firefox"))
                     self.log(logging.INFO, 'artifact',
                              {'destpath': destpath},
                              'Adding {destpath} to processed archive')
-                    writer.add(destpath.encode('utf-8'), reader.extractfile(f), mode=f.mode)
+                    writer.add(destpath.encode('utf-8'), f.open(), mode=f.mode)
                     added_entry = True
 
         if not added_entry:
@@ -307,28 +320,29 @@ class MacArtifactJob(ArtifactJob):
                 'gmp-clearkey/0.1/libclearkey.dylib',
                 # 'gmp-fake/1.0/libfake.dylib',
                 # 'gmp-fakeopenh264/1.0/libfakeopenh264.dylib',
+                '**/interfaces.xpt',
             ])
 
             with JarWriter(file=processed_filename, optimize=False, compress_level=5) as writer:
                 root, paths = paths_no_keep_path
-                finder = FileFinder(mozpath.join(source, root))
+                finder = UnpackFinder(mozpath.join(source, root))
                 for path in paths:
                     for p, f in finder.find(path):
                         self.log(logging.INFO, 'artifact',
-                            {'path': path},
+                            {'path': p},
                             'Adding {path} to processed archive')
                         destpath = mozpath.join('bin', os.path.basename(p))
-                        writer.add(destpath.encode('utf-8'), f, mode=os.stat(mozpath.join(finder.base, p)).st_mode)
+                        writer.add(destpath.encode('utf-8'), f, mode=f.mode)
 
                 root, paths = paths_keep_path
-                finder = FileFinder(mozpath.join(source, root))
+                finder = UnpackFinder(mozpath.join(source, root))
                 for path in paths:
                     for p, f in finder.find(path):
                         self.log(logging.INFO, 'artifact',
-                            {'path': path},
+                            {'path': p},
                             'Adding {path} to processed archive')
                         destpath = mozpath.join('bin', p)
-                        writer.add(destpath.encode('utf-8'), f, mode=os.stat(mozpath.join(finder.base, p)).st_mode)
+                        writer.add(destpath.encode('utf-8'), f.open(), mode=f.mode)
 
         finally:
             try:
@@ -347,6 +361,7 @@ class WinArtifactJob(ArtifactJob):
         'firefox/application.ini',
         'firefox/**/*.dll',
         'firefox/*.exe',
+        'firefox/**/interfaces.xpt',
     }
     # These are a subset of TEST_HARNESS_BINS in testing/mochitest/Makefile.in.
     test_artifact_patterns = {
@@ -364,17 +379,17 @@ class WinArtifactJob(ArtifactJob):
     def process_package_artifact(self, filename, processed_filename):
         added_entry = False
         with JarWriter(file=processed_filename, optimize=False, compress_level=5) as writer:
-            for f in JarReader(filename):
-                if not any(mozpath.match(f.filename, p) for p in self.package_artifact_patterns):
+            for p, f in UnpackFinder(JarFinder(filename, JarReader(filename))):
+                if not any(mozpath.match(p, pat) for pat in self.package_artifact_patterns):
                     continue
 
                 # strip off the relative "firefox/" bit from the path:
-                basename = mozpath.relpath(f.filename, "firefox")
+                basename = mozpath.relpath(p, "firefox")
                 basename = mozpath.join('bin', basename)
                 self.log(logging.INFO, 'artifact',
                     {'basename': basename},
                     'Adding {basename} to processed archive')
-                writer.add(basename.encode('utf-8'), f)
+                writer.add(basename.encode('utf-8'), f.open(), mode=f.mode)
                 added_entry = True
 
         if not added_entry:

@@ -793,11 +793,19 @@ gfxFontconfigFontEntry::CreateFontInstance(const gfxFontStyle *aFontStyle,
                                            bool aNeedsBold)
 {
     nsAutoRef<FcPattern> pattern(FcPatternCreate());
+    if (!pattern) {
+        NS_WARNING("Failed to create Fontconfig pattern for font instance");
+        return nullptr;
+    }
     FcPatternAddDouble(pattern, FC_PIXEL_SIZE, aFontStyle->size);
 
     PreparePattern(pattern, aFontStyle->printerFont);
     nsAutoRef<FcPattern> renderPattern
         (FcFontRenderPrepare(nullptr, pattern, mFontPattern));
+    if (!renderPattern) {
+        NS_WARNING("Failed to prepare Fontconfig pattern for font instance");
+        return nullptr;
+    }
 
     cairo_scaled_font_t* scaledFont =
         CreateScaledFont(renderPattern, aFontStyle, aNeedsBold);

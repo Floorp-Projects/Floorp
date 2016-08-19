@@ -5,7 +5,7 @@
 // all relevant functions.
 let buffer = new ArrayBuffer(32);
 let array  = new Int32Array(buffer);
-detachArrayBuffer(buffer, "change-data");
+detachArrayBuffer(buffer);
 
 // A nice poisoned callable to ensure that we fail on a detached buffer check
 // before a method attempts to do anything with its arguments.

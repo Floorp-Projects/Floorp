@@ -357,7 +357,6 @@ CompositorD3D11::Initialize(nsCString* const out_failureReason)
       *out_failureReason = "FEATURE_FAILURE_D3D11_OBJ_SYNC";
       return false;
     }
-      *out_failureReason = "FEATURE_FAILURE_D3D11_VR_BUFFER";
   }
 
   RefPtr<IDXGIDevice> dxgiDevice;

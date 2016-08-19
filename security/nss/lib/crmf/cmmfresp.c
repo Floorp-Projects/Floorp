@@ -92,9 +92,7 @@ cmmf_ExtractCertsFromList(CERTCertList *inCertList,
         numNodes++;
     }
 
-    arrayLocalCopy = *certArray = (poolp == NULL) ?
-                                    PORT_NewArray(CERTCertificate *, (numNodes + 1)) :
-                                    PORT_ArenaNewArray(poolp, CERTCertificate *, (numNodes + 1));
+    arrayLocalCopy = *certArray = (poolp == NULL) ? PORT_NewArray(CERTCertificate *, (numNodes + 1)) : PORT_ArenaNewArray(poolp, CERTCertificate *, (numNodes + 1));
     if (arrayLocalCopy == NULL) {
         return SECFailure;
     }

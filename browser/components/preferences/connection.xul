@@ -1,9 +1,8 @@
 <?xml version="1.0"?>
 
-# -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
-# This Source Code Form is subject to the terms of the Mozilla Public
-# License, v. 2.0. If a copy of the MPL was not distributed with this
-# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <!DOCTYPE prefwindow SYSTEM "chrome://browser/locale/preferences/connection.dtd">
 
@@ -15,16 +14,12 @@
             dlgbuttons="accept,cancel,help"
             onbeforeaccept="return gConnectionsDialog.beforeAccept();"
             onload="gConnectionsDialog.checkForSystemProxy();"
-            ondialoghelp="openPrefsHelp()"
-#ifdef XP_MACOSX
-            style="width: &window.macWidth; !important;">
-#else
-            style="width: &window.width; !important;">
-#endif
+            ondialoghelp="openPrefsHelp()">
 
   <script type="application/javascript" src="chrome://browser/content/utilityOverlay.js"/>
 
   <prefpane id="ConnectionsDialogPane"
+            class="largeDialogContainer"
             helpTopic="prefs-connection-settings">
 
     <preferences>
@@ -59,7 +54,7 @@
       <preference id="network.proxy.backup.socks"        name="network.proxy.backup.socks"        type="string"/>
       <preference id="network.proxy.backup.socks_port"   name="network.proxy.backup.socks_port"   type="int"/>
     </preferences>
-    
+
     <script type="application/javascript" src="chrome://browser/content/preferences/connection.js"/>
 
     <stringbundle id="preferencesBundle" src="chrome://browser/locale/preferences/preferences.properties"/>
@@ -156,7 +151,7 @@
                    oninput="gConnectionsDialog.updateReloadButton();"/>
           <button id="autoReload" icon="refresh"
                   label="&reload.label;" accesskey="&reload.accesskey;"
-                  oncommand="gConnectionsDialog.reloadPAC();" 
+                  oncommand="gConnectionsDialog.reloadPAC();"
                   preference="pref.advanced.proxies.disable_button.reload"/>
         </hbox>
       </radiogroup>
@@ -171,4 +166,3 @@
     <separator/>
   </prefpane>
 </prefwindow>
-

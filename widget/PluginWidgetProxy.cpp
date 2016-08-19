@@ -47,7 +47,7 @@ PluginWidgetProxy::~PluginWidgetProxy()
   PWLOG("PluginWidgetProxy::~PluginWidgetProxy()\n");
 }
 
-NS_IMETHODIMP
+nsresult
 PluginWidgetProxy::Create(nsIWidget* aParent,
                           nsNativeWidget aNativeParent,
                           const LayoutDeviceIntRect& aRect,

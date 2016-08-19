@@ -4,7 +4,7 @@
 assertThrowsInstanceOf(() => {
     let buffer = new ArrayBuffer(32);
     let array  = new Int32Array(buffer);
-    detachArrayBuffer(buffer, "change-data");
+    detachArrayBuffer(buffer);
     array.sort();
 }, TypeError);
 

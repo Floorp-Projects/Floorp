@@ -6,8 +6,6 @@ skip-if(B2G||Mulet) == input-dyn-disabled.html input-ref.html # Initial mulet tr
 == input-readonly.html input-ref.html
 == input-dyn-readonly.html input-ref.html
 == input-dyn-not-readonly.html input-ref.html
-== input-maxlength-valid.html input-ref.html
-== input-maxlength-invalid.html input-withtext-ref.html
 == input-required-valid.html input-withtext-ref.html
 == input-required-invalid.html input-ref.html
 == input-button.html input-button-ref.html

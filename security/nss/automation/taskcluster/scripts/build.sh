@@ -2,9 +2,9 @@
 
 set -v -e -x
 
-if [ $(id -u) = 0 ]; then
-    source $(dirname $0)/tools.sh
+source $(dirname $0)/tools.sh
 
+if [[ $(id -u) -eq 0 ]]; then
     # Set compiler.
     switch_compilers
 
@@ -13,12 +13,10 @@ if [ $(id -u) = 0 ]; then
 fi
 
 # Clone NSPR if needed.
-if [ ! -d "nspr" ]; then
-    hg clone https://hg.mozilla.org/projects/nspr
-fi
+hg_clone https://hg.mozilla.org/projects/nspr nspr default
 
 # Build.
-cd nss && make nss_build_all && cd ..
+make -C nss nss_build_all
 
 # Generate certificates.
 NSS_TESTS=cert NSS_CYCLES="standard pkix sharedb" $(dirname $0)/run_tests.sh

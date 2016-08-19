@@ -13,12 +13,13 @@ extern "C" {
 }
 
 #include <iostream>
-#include "tls_agent.h"
 #include "gtest_utils.h"
+#include "tls_agent.h"
 
 namespace nss_test {
 
-PacketFilter::Action TlsRecordFilter::Filter(const DataBuffer& input, DataBuffer* output) {
+PacketFilter::Action TlsRecordFilter::Filter(const DataBuffer& input,
+                                             DataBuffer* output) {
   bool changed = false;
   size_t offset = 0U;
   output->Allocate(input.len());
@@ -31,24 +32,11 @@ PacketFilter::Action TlsRecordFilter::Filter(const DataBuffer& input, DataBuffer
       return KEEP;
     }
 
-    DataBuffer filtered;
-    PacketFilter::Action action = FilterRecord(header, record, &filtered);
-    if (action == DROP) {
+    if (FilterRecord(header, record, &offset, output) != KEEP) {
       changed = true;
-      std::cerr << "record drop: " << record << std::endl;
-      continue; // don't copy this one
+    } else {
+      offset = header.Write(output, offset, record);
     }
-
-    const DataBuffer* source = &record;
-    if (action == CHANGE) {
-      EXPECT_GT(0x10000U, filtered.len());
-      changed = true;
-      std::cerr << "record old: " << record << std::endl;
-      std::cerr << "record new: " << filtered << std::endl;
-      source = &filtered;
-    }
-
-    offset = header.Write(output, offset, *source);
   }
   output->Truncate(offset);
 
@@ -59,6 +47,33 @@ PacketFilter::Action TlsRecordFilter::Filter(const DataBuffer& input, DataBuffer
   }
 
   return KEEP;
+}
+
+PacketFilter::Action TlsRecordFilter::FilterRecord(const RecordHeader& header,
+                                                   const DataBuffer& record,
+                                                   size_t* offset,
+                                                   DataBuffer* output) {
+  DataBuffer filtered;
+  PacketFilter::Action action = FilterRecord(header, record, &filtered);
+  if (action == KEEP) {
+    return KEEP;
+  }
+
+  if (action == DROP) {
+    std::cerr << "record drop: " << record << std::endl;
+    return DROP;
+  }
+
+  const DataBuffer* source = &record;
+  if (action == CHANGE) {
+    EXPECT_GT(0x10000U, filtered.len());
+    std::cerr << "record old: " << record << std::endl;
+    std::cerr << "record new: " << filtered << std::endl;
+    source = &filtered;
+  }
+
+  *offset = header.Write(output, *offset, *source);
+  return CHANGE;
 }
 
 bool TlsRecordFilter::RecordHeader::Parse(TlsParser* parser, DataBuffer* body) {
@@ -87,8 +102,8 @@ bool TlsRecordFilter::RecordHeader::Parse(TlsParser* parser, DataBuffer* body) {
   return parser->ReadVariable(body, 2);
 }
 
-size_t TlsRecordFilter::RecordHeader::Write(
-    DataBuffer* buffer, size_t offset, const DataBuffer& body) const {
+size_t TlsRecordFilter::RecordHeader::Write(DataBuffer* buffer, size_t offset,
+                                            const DataBuffer& body) const {
   offset = buffer->Write(offset, content_type_, 1);
   offset = buffer->Write(offset, version_, 2);
   if (is_dtls()) {
@@ -111,7 +126,7 @@ PacketFilter::Action TlsHandshakeFilter::FilterRecord(
 
   bool changed = false;
   size_t offset = 0U;
-  output->Allocate(input.len()); // Preallocate a little.
+  output->Allocate(input.len());  // Preallocate a little.
 
   TlsParser parser(input);
   while (parser.remaining()) {
@@ -146,18 +161,18 @@ PacketFilter::Action TlsHandshakeFilter::FilterRecord(
 
 bool TlsHandshakeFilter::HandshakeHeader::ReadLength(TlsParser* parser,
                                                      const RecordHeader& header,
-                                                     uint32_t *length) {
+                                                     uint32_t* length) {
   if (!parser->Read(length, 3)) {
-    return false; // malformed
+    return false;  // malformed
   }
 
   if (!header.is_dtls()) {
-    return true; // nothing left to do
+    return true;  // nothing left to do
   }
 
   // Read and check DTLS parameters
   uint32_t message_seq_tmp;
-  if (!parser->Read(&message_seq_tmp, 2)) { // sequence number
+  if (!parser->Read(&message_seq_tmp, 2)) {  // sequence number
     return false;
   }
   message_seq_ = message_seq_tmp;
@@ -177,12 +192,10 @@ bool TlsHandshakeFilter::HandshakeHeader::ReadLength(TlsParser* parser,
 }
 
 bool TlsHandshakeFilter::HandshakeHeader::Parse(
-    TlsParser* parser, const RecordHeader& record_header,
-    DataBuffer* body) {
-
+    TlsParser* parser, const RecordHeader& record_header, DataBuffer* body) {
   version_ = record_header.version();
   if (!parser->Read(&handshake_type_)) {
-    return false; // malformed
+    return false;  // malformed
   }
   uint32_t length;
   if (!ReadLength(parser, record_header, &length)) {
@@ -194,20 +207,20 @@ bool TlsHandshakeFilter::HandshakeHeader::Parse(
 
 size_t TlsHandshakeFilter::HandshakeHeader::Write(
     DataBuffer* buffer, size_t offset, const DataBuffer& body) const {
-    offset = buffer->Write(offset, handshake_type(), 1);
+  offset = buffer->Write(offset, handshake_type(), 1);
+  offset = buffer->Write(offset, body.len(), 3);
+  if (is_dtls()) {
+    offset = buffer->Write(offset, message_seq_, 2);
+    offset = buffer->Write(offset, 0U, 3);  // fragment_offset
     offset = buffer->Write(offset, body.len(), 3);
-    if (is_dtls()) {
-      offset = buffer->Write(offset, message_seq_, 2);
-      offset = buffer->Write(offset, 0U, 3); // fragment_offset
-      offset = buffer->Write(offset, body.len(), 3);
-    }
-    offset = buffer->Write(offset, body);
-    return offset;
+  }
+  offset = buffer->Write(offset, body);
+  return offset;
 }
 
 PacketFilter::Action TlsInspectorRecordHandshakeMessage::FilterHandshake(
-    const HandshakeHeader& header,
-    const DataBuffer& input, DataBuffer* output) {
+    const HandshakeHeader& header, const DataBuffer& input,
+    DataBuffer* output) {
   // Only do this once.
   if (buffer_.len()) {
     return KEEP;
@@ -219,10 +232,9 @@ PacketFilter::Action TlsInspectorRecordHandshakeMessage::FilterHandshake(
   return KEEP;
 }
 
-
 PacketFilter::Action TlsInspectorReplaceHandshakeMessage::FilterHandshake(
-    const HandshakeHeader& header,
-    const DataBuffer& input, DataBuffer* output) {
+    const HandshakeHeader& header, const DataBuffer& input,
+    DataBuffer* output) {
   if (header.handshake_type() == handshake_type_) {
     *output = buffer_;
     return CHANGE;
@@ -231,9 +243,10 @@ PacketFilter::Action TlsInspectorReplaceHandshakeMessage::FilterHandshake(
   return KEEP;
 }
 
-PacketFilter::Action TlsAlertRecorder::FilterRecord(
-    const RecordHeader& header, const DataBuffer& input, DataBuffer* output) {
-  if (level_ == kTlsAlertFatal) { // already fatal
+PacketFilter::Action TlsAlertRecorder::FilterRecord(const RecordHeader& header,
+                                                    const DataBuffer& input,
+                                                    DataBuffer* output) {
+  if (level_ == kTlsAlertFatal) {  // already fatal
     return KEEP;
   }
   if (header.content_type() != kTlsAlertType) {
@@ -247,7 +260,7 @@ PacketFilter::Action TlsAlertRecorder::FilterRecord(
   if (!parser.Read(&lvl)) {
     return KEEP;
   }
-  if (lvl == kTlsAlertWarning) { // not strong enough
+  if (lvl == kTlsAlertWarning) {  // not strong enough
     return KEEP;
   }
   level_ = lvl;
@@ -279,8 +292,8 @@ PacketFilter::Action ChainedPacketFilter::Filter(const DataBuffer& input,
 }
 
 PacketFilter::Action TlsExtensionFilter::FilterHandshake(
-    const HandshakeHeader& header,
-    const DataBuffer& input, DataBuffer* output) {
+    const HandshakeHeader& header, const DataBuffer& input,
+    DataBuffer* output) {
   if (header.handshake_type() == kTlsHandshakeClientHello) {
     TlsParser parser(input);
     if (!FindClientHelloExtensions(&parser, header)) {
@@ -300,19 +313,19 @@ PacketFilter::Action TlsExtensionFilter::FilterHandshake(
 
 bool TlsExtensionFilter::FindClientHelloExtensions(TlsParser* parser,
                                                    const Versioned& header) {
-  if (!parser->Skip(2 + 32)) { // version + random
+  if (!parser->Skip(2 + 32)) {  // version + random
     return false;
   }
-  if (!parser->SkipVariable(1)) { // session ID
+  if (!parser->SkipVariable(1)) {  // session ID
     return false;
   }
-  if (header.is_dtls() && !parser->SkipVariable(1)) { // DTLS cookie
+  if (header.is_dtls() && !parser->SkipVariable(1)) {  // DTLS cookie
     return false;
   }
-  if (!parser->SkipVariable(2)) { // cipher suites
+  if (!parser->SkipVariable(2)) {  // cipher suites
     return false;
   }
-  if (!parser->SkipVariable(1)) { // compression methods
+  if (!parser->SkipVariable(1)) {  // compression methods
     return false;
   }
   return true;
@@ -324,19 +337,19 @@ bool TlsExtensionFilter::FindServerHelloExtensions(TlsParser* parser) {
     return false;
   }
   uint16_t version = static_cast<uint16_t>(vtmp);
-  if (!parser->Skip(32)) { // random
+  if (!parser->Skip(32)) {  // random
     return false;
   }
   if (NormalizeTlsVersion(version) <= SSL_LIBRARY_VERSION_TLS_1_2) {
-    if (!parser->SkipVariable(1)) { // session ID
+    if (!parser->SkipVariable(1)) {  // session ID
       return false;
     }
   }
-  if (!parser->Skip(2)) { // cipher suite
+  if (!parser->Skip(2)) {  // cipher suite
     return false;
   }
   if (NormalizeTlsVersion(version) <= SSL_LIBRARY_VERSION_TLS_1_2) {
-    if (!parser->Skip(1)) { // compression method
+    if (!parser->Skip(1)) {  // compression method
       return false;
     }
   }
@@ -348,10 +361,10 @@ PacketFilter::Action TlsExtensionFilter::FilterExtensions(
   size_t length_offset = parser->consumed();
   uint32_t all_extensions;
   if (!parser->Read(&all_extensions, 2)) {
-    return KEEP; // no extensions, odd but OK
+    return KEEP;  // no extensions, odd but OK
   }
   if (all_extensions != parser->remaining()) {
-    return KEEP; // malformed
+    return KEEP;  // malformed
   }
 
   bool changed = false;
@@ -363,17 +376,17 @@ PacketFilter::Action TlsExtensionFilter::FilterExtensions(
   while (parser->remaining()) {
     uint32_t extension_type;
     if (!parser->Read(&extension_type, 2)) {
-      return KEEP; // malformed
+      return KEEP;  // malformed
     }
 
     DataBuffer extension;
     if (!parser->ReadVariable(&extension, 2)) {
-      return KEEP; // malformed
+      return KEEP;  // malformed
     }
 
     DataBuffer filtered;
-    PacketFilter::Action action = FilterExtension(extension_type, extension,
-                                                  &filtered);
+    PacketFilter::Action action =
+        FilterExtension(extension_type, extension, &filtered);
     if (action == DROP) {
       changed = true;
       std::cerr << "extension drop: " << extension << std::endl;
@@ -400,7 +413,7 @@ PacketFilter::Action TlsExtensionFilter::FilterExtensions(
     size_t newlen = output->len() - length_offset - 2;
     EXPECT_GT(0x10000U, newlen);
     if (newlen >= 0x10000) {
-      return KEEP; // bad: size increased too much
+      return KEEP;  // bad: size increased too much
     }
     output->Write(length_offset, newlen, 2);
     return CHANGE;
@@ -416,8 +429,19 @@ PacketFilter::Action TlsExtensionCapture::FilterExtension(
   return KEEP;
 }
 
-PacketFilter::Action AfterRecordN::FilterRecord(
-      const RecordHeader& header, const DataBuffer& body, DataBuffer* out) {
+PacketFilter::Action TlsExtensionReplacer::FilterExtension(
+    uint16_t extension_type, const DataBuffer& input, DataBuffer* output) {
+  if (extension_type != extension_) {
+    return KEEP;
+  }
+
+  *output = data_;
+  return CHANGE;
+}
+
+PacketFilter::Action AfterRecordN::FilterRecord(const RecordHeader& header,
+                                                const DataBuffer& body,
+                                                DataBuffer* out) {
   if (counter_++ == record_) {
     DataBuffer buf;
     header.Write(&buf, 0, body);
@@ -431,12 +455,11 @@ PacketFilter::Action AfterRecordN::FilterRecord(
 }
 
 PacketFilter::Action TlsInspectorClientHelloVersionChanger::FilterHandshake(
-    const HandshakeHeader& header,
-    const DataBuffer& input, DataBuffer* output) {
+    const HandshakeHeader& header, const DataBuffer& input,
+    DataBuffer* output) {
   if (header.handshake_type() == kTlsHandshakeClientKeyExchange) {
-    EXPECT_EQ(
-        SECSuccess,
-        SSLInt_IncrementClientHandshakeVersion(server_->ssl_fd()));
+    EXPECT_EQ(SECSuccess,
+              SSLInt_IncrementClientHandshakeVersion(server_->ssl_fd()));
   }
   return KEEP;
 }

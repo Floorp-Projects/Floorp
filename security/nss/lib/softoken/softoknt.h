@@ -8,15 +8,15 @@
 #ifndef _SOFTOKNT_H_
 #define _SOFTOKNT_H_
 
-#define NSS_SOFTOKEN_DEFAULT_CHUNKSIZE   2048
+#define NSS_SOFTOKEN_DEFAULT_CHUNKSIZE 2048
 
 /*
  * FIPS 140-2 auditing
  */
 typedef enum {
-    NSS_AUDIT_ERROR = 3,    /* errors */
-    NSS_AUDIT_WARNING = 2,  /* warning messages */
-    NSS_AUDIT_INFO = 1      /* informational messages */
+    NSS_AUDIT_ERROR = 3,   /* errors */
+    NSS_AUDIT_WARNING = 2, /* warning messages */
+    NSS_AUDIT_INFO = 1     /* informational messages */
 } NSSAuditSeverity;
 
 typedef enum {

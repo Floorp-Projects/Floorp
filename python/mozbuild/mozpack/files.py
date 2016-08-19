@@ -35,7 +35,10 @@ from tempfile import (
     mkstemp,
     NamedTemporaryFile,
 )
-
+from tarfile import (
+    TarFile,
+    TarInfo,
+)
 try:
     import hglib
 except ImportError:
@@ -136,6 +139,22 @@ class BaseFile(object):
                 return True
         return False
 
+    @staticmethod
+    def normalize_mode(mode):
+        # Normalize file mode:
+        # - keep file type (e.g. S_IFREG)
+        ret = stat.S_IFMT(mode)
+        # - expand user read and execute permissions to everyone
+        if mode & 0400:
+            ret |= 0444
+        if mode & 0100:
+            ret |= 0111
+        # - keep user write permissions
+        if mode & 0200:
+            ret |= 0200
+        # - leave away sticky bit, setuid, setgid
+        return ret
+
     def copy(self, dest, skip_if_older=True):
         '''
         Copy the BaseFile content to the destination given as a string or a
@@ -224,19 +243,7 @@ class File(BaseFile):
             return None
         assert self.path is not None
         mode = os.stat(self.path).st_mode
-        # Normalize file mode:
-        # - keep file type (e.g. S_IFREG)
-        ret = stat.S_IFMT(mode)
-        # - expand user read and execute permissions to everyone
-        if mode & 0400:
-            ret |= 0444
-        if mode & 0100:
-            ret |= 0111
-        # - keep user write permissions
-        if mode & 0200:
-            ret |= 0200
-        # - leave away sticky bit, setuid, setgid
-        return ret
+        return self.normalize_mode(mode)
 
     def read(self):
         '''Return the contents of the file.'''
@@ -505,6 +512,23 @@ class DeflatedFile(BaseFile):
         self.file.seek(0)
         return self.file
 
+class ExtractedTarFile(GeneratedFile):
+    '''
+    File class for members of a tar archive. Contents of the underlying file
+    are extracted immediately and stored in memory.
+    '''
+    def __init__(self, tar, info):
+        assert isinstance(info, TarInfo)
+        assert isinstance(tar, TarFile)
+        GeneratedFile.__init__(self, tar.extractfile(info).read())
+        self._mode = self.normalize_mode(info.mode)
+
+    @property
+    def mode(self):
+        return self._mode
+
+    def read(self):
+        return self.content
 
 class XPTFile(GeneratedFile):
     '''
@@ -948,6 +972,30 @@ class JarFinder(BaseFinder):
         '''
         return self._find_helper(pattern, self._files,
                                  lambda x: DeflatedFile(self._files[x]))
+
+
+class TarFinder(BaseFinder):
+    '''
+    Helper to get files from a TarFile.
+    '''
+    def __init__(self, base, tar, **kargs):
+        '''
+        Create a TarFinder for files in the given TarFile. The base argument
+        is used as an indication of the Tar file location.
+        '''
+        assert isinstance(tar, TarFile)
+        self._tar = tar
+        BaseFinder.__init__(self, base, **kargs)
+        self._files = OrderedDict((f.name, f) for f in tar if f.isfile())
+
+    def _find(self, pattern):
+        '''
+        Actual implementation of TarFinder.find(), dispatching to specialized
+        member functions depending on what kind of pattern was given.
+        '''
+        return self._find_helper(pattern, self._files,
+                                 lambda x: ExtractedTarFile(self._tar,
+                                                            self._files[x]))
 
 
 class ComposedFinder(BaseFinder):

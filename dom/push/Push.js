@@ -104,8 +104,8 @@ Push.prototype = {
         }
 
         let appServerKey = options.applicationServerKey;
-        let keyView = new Uint8Array(ArrayBuffer.isView(appServerKey) ?
-                                     appServerKey.buffer : appServerKey);
+        let keyView = new this._window.Uint8Array(ArrayBuffer.isView(appServerKey) ?
+                                                  appServerKey.buffer : appServerKey);
         if (keyView.byteLength === 0) {
           callback._rejectWithError(Cr.NS_ERROR_DOM_PUSH_INVALID_KEY_ERR);
           return;

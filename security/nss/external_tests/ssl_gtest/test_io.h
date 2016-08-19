@@ -10,9 +10,9 @@
 #include <string.h>
 #include <map>
 #include <memory>
+#include <ostream>
 #include <queue>
 #include <string>
-#include <ostream>
 
 #include "prio.h"
 
@@ -26,9 +26,9 @@ class DummyPrSocket;  // Fwd decl.
 class PacketFilter {
  public:
   enum Action {
-    KEEP,   // keep the original packet unmodified
-    CHANGE, // change the packet to a different value
-    DROP    // drop the packet
+    KEEP,    // keep the original packet unmodified
+    CHANGE,  // change the packet to a different value
+    DROP     // drop the packet
   };
 
   virtual ~PacketFilter() {}
@@ -73,11 +73,7 @@ class DummyPrSocket {
 
  private:
   DummyPrSocket(const std::string& name, Mode mode)
-      : name_(name),
-        mode_(mode),
-        peer_(nullptr),
-        input_(),
-        filter_(nullptr) {}
+      : name_(name), mode_(mode), peer_(nullptr), input_(), filter_(nullptr) {}
 
   const std::string name_;
   Mode mode_;

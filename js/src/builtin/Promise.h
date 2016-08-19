@@ -98,6 +98,42 @@ bool EnqueuePromiseReactionJob(JSContext* cx, HandleValue handler, HandleValue h
 bool EnqueuePromiseResolveThenableJob(JSContext* cx, HandleValue promiseToResolve,
                                       HandleValue thenable, HandleValue then);
 
+/**
+ * A PromiseTask represents a task that can be dispatched to a helper thread
+ * (via StartPromiseTask), executed (by implementing PromiseTask::execute()),
+ * and then resolved back on the original JSContext owner thread.
+ * Because it contains a PersistentRooted, a PromiseTask will only be destroyed
+ * on the JSContext's owner thread.
+ */
+class PromiseTask : public JS::AsyncTask
+{
+    JSRuntime* runtime_;
+    PersistentRooted<PromiseObject*> promise_;
+
+    // PromiseTask implements JS::AsyncTask and prevents derived classes from
+    // overriding; derived classes should implement the new pure virtual
+    // functions introduced below. Both of these methods 'delete this'.
+    void finish(JSContext* cx) override final;
+    void cancel(JSContext* cx) override final;
+
+  protected:
+    // Called by PromiseTask on the JSContext's owner thread after execute()
+    // completes on the helper thread, assuming JS::FinishAsyncTaskCallback
+    // succeeds. After this method returns, the task will be deleted.
+    virtual bool finishPromise(JSContext* cx, Handle<PromiseObject*> promise) = 0;
+
+  public:
+    PromiseTask(JSContext* cx, Handle<PromiseObject*> promise);
+    ~PromiseTask();
+    JSRuntime* runtime() const { return runtime_; }
+
+    // Called on a helper thread after StartAsyncTask. After execute()
+    // completes, the JS::FinishAsyncTaskCallback will be called. If this fails
+    // the task will be enqueued for deletion at some future point without ever
+    // calling finishPromise().
+    virtual void execute() = 0;
+};
+
 } // namespace js
 
 #endif /* builtin_Promise_h */

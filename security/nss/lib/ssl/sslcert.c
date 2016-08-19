@@ -368,6 +368,7 @@ ssl_GetEcdhAuthType(CERTCertificate *cert)
     SECOidTag sigTag = SECOID_GetAlgorithmTag(&cert->signature);
     switch (sigTag) {
         case SEC_OID_PKCS1_RSA_ENCRYPTION:
+        case SEC_OID_PKCS1_RSA_PSS_SIGNATURE:
         case SEC_OID_PKCS1_MD2_WITH_RSA_ENCRYPTION:
         case SEC_OID_PKCS1_MD4_WITH_RSA_ENCRYPTION:
         case SEC_OID_PKCS1_MD5_WITH_RSA_ENCRYPTION:
@@ -390,49 +391,86 @@ ssl_GetEcdhAuthType(CERTCertificate *cert)
     }
 }
 
-/* This function examines the type of certificate and its key usage and
- * configures a certificate based on that information.  For RSA certificates
- * only, this can mean that two certificates are configured.
+/* This function examines the key usages of the given RSA-PKCS1 certificate
+ * and configures one or multiple server certificates based on that data.
  *
- * If the optional data argument contains an authType value other than
- * ssl_auth_null, then only that slot will be used.  If that choice is invalid,
+ * If the data argument contains an authType value other than ssl_auth_null,
+ * then only that slot will be used.  If that choice is invalid,
+ * then this will fail. */
+static SECStatus
+ssl_ConfigRsaPkcs1CertByUsage(sslSocket *ss, CERTCertificate *cert,
+                              sslKeyPair *keyPair,
+                              SSLExtraServerCertData *data)
+{
+    SECStatus rv = SECFailure;
+
+    PRBool ku_sig = (PRBool)(cert->keyUsage & KU_DIGITAL_SIGNATURE);
+    PRBool ku_enc = (PRBool)(cert->keyUsage & KU_KEY_ENCIPHERMENT);
+
+    if ((data->authType == ssl_auth_rsa_sign && ku_sig) ||
+        (data->authType == ssl_auth_rsa_pss && ku_sig) ||
+        (data->authType == ssl_auth_rsa_decrypt && ku_enc)) {
+        return ssl_ConfigCert(ss, cert, keyPair, data);
+    }
+
+    if (data->authType != ssl_auth_null || !(ku_sig || ku_enc)) {
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        return SECFailure;
+    }
+
+    if (ku_sig) {
+        data->authType = ssl_auth_rsa_sign;
+        rv = ssl_ConfigCert(ss, cert, keyPair, data);
+        if (rv != SECSuccess) {
+            return rv;
+        }
+
+        /* This certificate is RSA, assume that it's also PSS. */
+        data->authType = ssl_auth_rsa_pss;
+        rv = ssl_ConfigCert(ss, cert, keyPair, data);
+        if (rv != SECSuccess) {
+            return rv;
+        }
+    }
+
+    if (ku_enc) {
+        /* If ku_sig=true we configure signature and encryption slots with the
+         * same cert. This is bad form, but there are enough dual-usage RSA
+         * certs that we can't really break by limiting this to one type. */
+        data->authType = ssl_auth_rsa_decrypt;
+        rv = ssl_ConfigCert(ss, cert, keyPair, data);
+        if (rv != SECSuccess) {
+            return rv;
+        }
+    }
+
+    return rv;
+}
+
+/* This function examines the type of certificate and its key usage and
+ * configures a certificate based on that information.  For some certificates
+ * this can mean that multiple server certificates are configured.
+ *
+ * If the data argument contains an authType value other than ssl_auth_null,
+ * then only that slot will be used.  If that choice is invalid,
  * then this will fail. */
 static SECStatus
 ssl_ConfigCertByUsage(sslSocket *ss, CERTCertificate *cert,
                       sslKeyPair *keyPair, const SSLExtraServerCertData *data)
 {
     SECStatus rv = SECFailure;
-    SSLExtraServerCertData arg = {
-        ssl_auth_null, NULL, NULL, NULL
-    };
+    SSLExtraServerCertData arg;
     SECOidTag tag;
 
-    if (data) {
-        /* Take a (shallow) copy so that we can play with it */
-        memcpy(&arg, data, sizeof(arg));
-    }
+    PORT_Assert(data);
+    /* Take a (shallow) copy so that we can play with it */
+    memcpy(&arg, data, sizeof(arg));
+
     tag = SECOID_GetAlgorithmTag(&cert->subjectPublicKeyInfo.algorithm);
     switch (tag) {
         case SEC_OID_X500_RSA_ENCRYPTION:
         case SEC_OID_PKCS1_RSA_ENCRYPTION:
-            if (cert->keyUsage & KU_DIGITAL_SIGNATURE) {
-                if ((cert->keyUsage & KU_KEY_ENCIPHERMENT) &&
-                    arg.authType == ssl_auth_null) {
-                    /* Two usages is bad form, but there are enough dual-usage RSA
-                     * certs that we can't really break by limiting this to one.
-                     * Configure both slots only if no explicit slot was set. */
-                    arg.authType = ssl_auth_rsa_decrypt;
-                    rv = ssl_ConfigCert(ss, cert, keyPair, &arg);
-                    if (rv != SECSuccess) {
-                        return rv;
-                    }
-                }
-
-                arg.authType = ssl_auth_rsa_sign;
-            } else if (cert->keyUsage & KU_KEY_ENCIPHERMENT) {
-                arg.authType = ssl_auth_rsa_decrypt;
-            }
-            break;
+            return ssl_ConfigRsaPkcs1CertByUsage(ss, cert, keyPair, &arg);
 
         case SEC_OID_PKCS1_RSA_PSS_SIGNATURE:
             if (cert->keyUsage & KU_DIGITAL_SIGNATURE) {

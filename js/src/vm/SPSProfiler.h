@@ -15,7 +15,7 @@
 #include "jsscript.h"
 
 #include "js/ProfilingStack.h"
-#include "threading/LockGuard.h"
+#include "threading/ExclusiveData.h"
 #include "threading/Mutex.h"
 
 /*
@@ -107,8 +107,13 @@
 
 namespace js {
 
-typedef HashMap<JSScript*, const char*, DefaultHasher<JSScript*>, SystemAllocPolicy>
-        ProfileStringMap;
+// The `ProfileStringMap` weakly holds its `JSScript*` keys and owns its string
+// values. Entries are removed when the `JSScript` is finalized; see
+// `SPSProfiler::onScriptFinalized`.
+using ProfileStringMap = HashMap<JSScript*,
+                                 UniqueChars,
+                                 DefaultHasher<JSScript*>,
+                                 SystemAllocPolicy>;
 
 class AutoSPSEntry;
 class SPSEntryMarker;
@@ -121,23 +126,21 @@ class SPSProfiler
     friend class SPSBaselineOSRMarker;
 
     JSRuntime*           rt;
-    ProfileStringMap     strings;
+    ExclusiveData<ProfileStringMap> strings;
     ProfileEntry*        stack_;
     uint32_t*            size_;
     uint32_t             max_;
     bool                 slowAssertions;
     uint32_t             enabled_;
-    js::Mutex            lock_;
     void                (*eventMarker_)(const char*);
 
-    const char* allocProfileString(JSScript* script, JSFunction* function);
+    UniqueChars allocProfileString(JSScript* script, JSFunction* function);
     void push(const char* string, void* sp, JSScript* script, jsbytecode* pc, bool copy,
               ProfileEntry::Category category = ProfileEntry::Category::JS);
     void pop();
 
   public:
     explicit SPSProfiler(JSRuntime* rt);
-    ~SPSProfiler();
 
     bool init();
 
@@ -233,15 +236,13 @@ class MOZ_RAII AutoSuppressProfilerSampling
 inline size_t
 SPSProfiler::stringsCount()
 {
-    LockGuard<Mutex> lock(lock_);
-    return strings.count();
+    return strings.lock()->count();
 }
 
 inline void
 SPSProfiler::stringsReset()
 {
-    LockGuard<Mutex> lock(lock_);
-    strings.clear();
+    strings.lock()->clear();
 }
 
 /*

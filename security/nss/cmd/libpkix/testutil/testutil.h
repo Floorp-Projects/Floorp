@@ -229,9 +229,8 @@ extern "C" {
         }                            \
     } while (0)
 
-#define PKIX_TEST_ARENAS_ARG(arena)                                           \
-    (arena ? (PORT_Strcmp(arena, "arenas") ? PKIX_FALSE : (j++, PKIX_TRUE)) : \
-           PKIX_FALSE)
+#define PKIX_TEST_ARENAS_ARG(arena) \
+    (arena ? (PORT_Strcmp(arena, "arenas") ? PKIX_FALSE : (j++, PKIX_TRUE)) : PKIX_FALSE)
 
 #define PKIX_TEST_ERROR_RECEIVED (pkixTestErrorMsg || pkixTestErrorResult)
 

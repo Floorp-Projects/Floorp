@@ -260,7 +260,7 @@ public:
   void RequestFullScreen();
   void ExitFullScreen();
 
-  // Called from AndroidJNI when we removed the fullscreen view.
+  // Called from nsAppShell when we removed the fullscreen view.
   static void ExitFullScreen(jobject view);
 #endif
 

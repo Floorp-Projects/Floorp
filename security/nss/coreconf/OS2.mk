@@ -20,7 +20,7 @@ PROG_SUFFIX = .exe
 
 
 CCC			= gcc
-LINK			= gcc
+LD  			= gcc
 AR                      = emxomfar r $@
 # Keep AR_FLAGS blank so that we do not have to change rules.mk
 AR_FLAGS                = 

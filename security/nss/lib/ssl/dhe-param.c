@@ -40,7 +40,7 @@ static const unsigned char ff_dhe_2048_p[] = {
 };
 
 static const ssl3DHParams ff_dhe_2048_params = {
-    ffdhe_2048,
+    ssl_grp_ffdhe_2048,
     { siBuffer, (unsigned char *)ff_dhe_2048_p, sizeof(ff_dhe_2048_p) },
     { siBuffer, (unsigned char *)ff_dhe_g2, sizeof(ff_dhe_g2) },
 };
@@ -97,7 +97,7 @@ static const unsigned char ff_dhe_3072_p[] = {
 };
 
 static const ssl3DHParams ff_dhe_3072_params = {
-    ffdhe_3072,
+    ssl_grp_ffdhe_3072,
     { siBuffer, (unsigned char *)ff_dhe_3072_p, sizeof(ff_dhe_3072_p) },
     { siBuffer, (unsigned char *)ff_dhe_g2, sizeof(ff_dhe_g2) },
 };
@@ -170,7 +170,7 @@ static const unsigned char ff_dhe_4096_p[] = {
 };
 
 static const ssl3DHParams ff_dhe_4096_params = {
-    ffdhe_4096,
+    ssl_grp_ffdhe_4096,
     { siBuffer, (unsigned char *)ff_dhe_4096_p, sizeof(ff_dhe_4096_p) },
     { siBuffer, (unsigned char *)ff_dhe_g2, sizeof(ff_dhe_g2) },
 };
@@ -275,7 +275,7 @@ static const unsigned char ff_dhe_6144_p[] = {
 };
 
 static const ssl3DHParams ff_dhe_6144_params = {
-    ffdhe_6144,
+    ssl_grp_ffdhe_6144,
     { siBuffer, (unsigned char *)ff_dhe_6144_p, sizeof(ff_dhe_6144_p) },
     { siBuffer, (unsigned char *)ff_dhe_g2, sizeof(ff_dhe_g2) },
 };
@@ -412,7 +412,7 @@ static const unsigned char ff_dhe_8192_p[] = {
 };
 
 static const ssl3DHParams ff_dhe_8192_params = {
-    ffdhe_8192,
+    ssl_grp_ffdhe_8192,
     { siBuffer, (unsigned char *)ff_dhe_8192_p, sizeof(ff_dhe_8192_p) },
     { siBuffer, (unsigned char *)ff_dhe_g2, sizeof(ff_dhe_g2) },
 };
