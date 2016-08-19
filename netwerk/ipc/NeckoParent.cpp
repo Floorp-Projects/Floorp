@@ -76,6 +76,15 @@ NeckoParent::NeckoParent()
 
   mObserver = new OfflineObserver(this);
   gNeckoParent = this;
+
+  // only register once--we will have multiple NeckoParents if there are
+  // multiple child processes.
+  static bool registeredBool = false;
+  if (!registeredBool) {
+    Preferences::AddBoolVarCache(&NeckoCommonInternal::gSecurityDisabled,
+                                 "network.disable.ipc.security");
+    registeredBool = true;
+  }
 }
 
 NeckoParent::~NeckoParent()
