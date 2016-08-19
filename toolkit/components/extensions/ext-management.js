@@ -17,6 +17,7 @@ function installType(addon) {
 }
 
 extensions.registerSchemaAPI("management", context => {
+  let {extension} = context;
   return {
     management: {
       getSelf: function() {
