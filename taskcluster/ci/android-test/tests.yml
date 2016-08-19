@@ -68,6 +68,26 @@ jsreftest:
         extra-options:
             - --test-suite=jsreftest
 
+marionette:
+    description: "Marionette unittest run"
+    suite: marionette
+    treeherder-symbol: tc(Mn)
+    chunks: 10
+    instance-size: xlarge
+    loopback-video: true
+    e10s: false
+    tier: 3
+    max-run-time: 3600
+    mozharness:
+        script: mozharness/scripts/android_emulator_unittest.py
+        no-read-buildbot-config: true
+        config:
+            - mozharness/configs/android/androidarm_4_3.py
+            - mozharness/configs/remove_executables.py
+            - mozharness/configs/android/androidarm_4_3-tc.py
+        extra-options:
+            - --test-suite=marionette
+
 mochitest:
     description: "Mochitest plain run"
     suite: mochitest/plain-chunked
