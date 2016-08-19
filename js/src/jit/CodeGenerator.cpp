@@ -11785,6 +11785,22 @@ CodeGenerator::visitRandom(LRandom* ins)
 }
 
 void
+CodeGenerator::visitSignExtend(LSignExtend* ins)
+{
+    Register input = ToRegister(ins->input());
+    Register output = ToRegister(ins->output());
+
+    switch (ins->mode()) {
+      case MSignExtend::Byte:
+        masm.move8SignExtend(input, output);
+        break;
+      case MSignExtend::Half:
+        masm.move16SignExtend(input, output);
+        break;
+    }
+}
+
+void
 CodeGenerator::visitRotate(LRotate* ins)
 {
     MRotate* mir = ins->mir();
