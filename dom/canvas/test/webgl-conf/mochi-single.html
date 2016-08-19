@@ -34,11 +34,11 @@ window.webglTestHarness = {
   },
 };
 
-if (parent) {
-  parent.SimpleTest.waitForExplicitFinish();
-  parent.SimpleTest.requestFlakyTimeout('untriaged');
+if ('SpecialPowers' in window) {
+  if (parent) {
+    parent.SimpleTest.waitForExplicitFinish();
+    parent.SimpleTest.requestFlakyTimeout('untriaged');
 
-  try {
     if (navigator.appVersion.indexOf('Android') != -1) {
       // From layout/tools/reftest/reftest.js:
       var version = SpecialPowers.Services.sysinfo.getProperty('version');
@@ -48,17 +48,25 @@ if (parent) {
         parent.SimpleTest.requestLongerTimeout(timeoutLengthMultiplier);
       }
     }
-  } catch (e) {
-    console.log('Warning: No SpecialPowers.');
   }
+
+  var setPrefList = [
+    ['webgl.force-enabled', true],
+    ['webgl.enable-webgl2', true],
+  ];
+  SpecialPowers.pushPrefEnv({'set': setPrefList}, begin);
+} else {
+  console.log('Warning: No SpecialPowers.');
+  begin();
 }
 
-SpecialPowers.pushPrefEnv({"set": [['webgl.force-enabled', true]]});
 ////////////////////////////////////////////////////////////////////////
 
-var testPath = location.search.substr(1);
-console.log('testPath: ' + testPath);
-frameElem.src = testPath;
+function begin() {
+  var testPath = location.search.substr(1);
+  console.log('testPath: ' + testPath);
+  frameElem.src = testPath;
+}
 
 </script>
 </body>
