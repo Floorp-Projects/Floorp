@@ -218,6 +218,9 @@ function do_tests() {
     "someotherstring": true
   }, "pref worked");
 
+  // Regression test for bug 1296427.
+  pref("devtools.hud.loglimit", 1000);
+  pref("devtools.hud.loglimit.network", 1000);
 
   // Clean up.
   localStorage.clear();
