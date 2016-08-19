@@ -1,0 +1,67 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1295719
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1295719</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1295719">Mozilla Bug 1295719</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<input id="test_number" type="number" value=50>
+<input id="test_range" type="range" value=50 max=100 min=0>
+<script type="text/javascript">
+
+/** Test for Bug 1295719 **/
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(runTests);
+
+function runTests() {
+  let number = window.document.getElementById("test_number");
+  let range = window.document.getElementById("test_range");
+  let waiting_event_sequence = ["keydown", "keypress", "input", "change"];
+
+  let waiting_event_idx = 0;
+  waiting_event_sequence.forEach((eventType) => {
+    number.addEventListener(eventType, (event) => {
+      let waiting_event = waiting_event_sequence[waiting_event_idx];
+      is(waiting_event, eventType, "Waiting " + waiting_event + " get " + eventType);
+      // Input element will fire input and change events when handling keypress
+      // with keycode=arrows. When user press and hold the keyboard, we expect
+      // that input element repeatedly fires "keydown", "keypress", "input", and
+      // "change" events until user release the keyboard. Using
+      // waiting_event_sequence as a circular buffer and reset waiting_event_idx
+      // when it point to the end of buffer.
+      waiting_event_idx = waiting_event_idx == waiting_event_sequence.length -1 ? 0 : waiting_event_idx + 1;
+    }, false);
+    range.addEventListener(eventType, (event) => {
+      let waiting_event = waiting_event_sequence[waiting_event_idx];
+      is(waiting_event, eventType, "Waiting " + waiting_event + " get " + eventType);
+      waiting_event_idx = waiting_event_idx == waiting_event_sequence.length - 1 ? 0 : waiting_event_idx + 1;
+    }, false);
+  });
+
+  number.focus();
+  synthesizeKey("VK_DOWN", {type: "keydown"});
+  synthesizeKey("VK_DOWN", {type: "keydown"});
+  synthesizeKey("VK_DOWN", {type: "keyup"});
+  number.blur();
+  range.focus();
+  waiting_event_idx = 0;
+  synthesizeKey("VK_DOWN", {type: "keydown"});
+  synthesizeKey("VK_DOWN", {type: "keydown"});
+  synthesizeKey("VK_DOWN", {type: "keyup"});
+
+  SimpleTest.finish();
+}
+
+</script>
+</body>
+</html>
