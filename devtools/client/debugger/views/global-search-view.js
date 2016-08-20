@@ -666,7 +666,7 @@ LineResults.prototype = {
   _ellipsis: (function () {
     let label = document.createElement("label");
     label.className = "plain dbg-results-line-contents-string";
-    label.setAttribute("value", L10N.ellipsis);
+    label.setAttribute("value", ELLIPSIS);
     return label;
   })(),
 
