@@ -1539,6 +1539,11 @@ fi
 AC_SUBST(ZLIB_IN_MOZGLUE)
 
 dnl ========================================================
+dnl system libffi Support
+dnl ========================================================
+MOZ_CONFIG_FFI()
+
+dnl ========================================================
 dnl =
 dnl = Application
 dnl =
@@ -2097,13 +2102,22 @@ dnl =
 dnl ========================================================
 MOZ_ARG_HEADER(Standalone module options (Not for building Mozilla))
 
+dnl ========================================================
+dnl = Build jsctypes if it's enabled
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(ctypes,
+[  --enable-ctypes         Enable js-ctypes (default=no)],
+    BUILD_CTYPES=1,
+    BUILD_CTYPES= )
+JS_HAS_CTYPES=$BUILD_CTYPES
+AC_SUBST(JS_HAS_CTYPES)
+AC_SUBST(BUILD_CTYPES)
 if test "$JS_HAS_CTYPES"; then
-  dnl JS_HAS_CTYPES is defined by Python configure. This check remains
-  dnl as long as determining $AS remains in old-configure.
   dnl Error out if we're on MSVC and MASM is unavailable.
   if test -n "$_MSC_VER" -a \( "$AS" != "ml.exe" -a "$AS" != "ml64.exe" \); then
     AC_MSG_ERROR([\"$AS\" is not a suitable assembler to build js-ctypes. If you are building with MS Visual Studio 8 Express, you may download the MASM 8.0 package, upgrade to Visual Studio 9 Express, or install the Vista SDK. Or do not use --enable-ctypes.])
   fi
+  AC_DEFINE(JS_HAS_CTYPES)
 fi
 
 dnl ========================================================

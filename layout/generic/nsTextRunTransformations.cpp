@@ -32,7 +32,7 @@ using namespace mozilla;
 #define GREEK_SMALL_LETTER_FINAL_SIGMA         0x03C2
 #define GREEK_SMALL_LETTER_SIGMA               0x03C3
 
-UniquePtr<nsTransformedTextRun>
+already_AddRefed<nsTransformedTextRun>
 nsTransformedTextRun::Create(const gfxTextRunFactory::Parameters* aParams,
                              nsTransformingTextRunFactory* aFactory,
                              gfxFontGroup* aFontGroup,
@@ -49,10 +49,11 @@ nsTransformedTextRun::Create(const gfxTextRunFactory::Parameters* aParams,
     return nullptr;
   }
 
-  return UniquePtr<nsTransformedTextRun>(
+  RefPtr<nsTransformedTextRun> result =
     new (storage) nsTransformedTextRun(aParams, aFactory, aFontGroup,
                                        aString, aLength, aFlags,
-                                       Move(aStyles), aOwnsFactory));
+                                       Move(aStyles), aOwnsFactory);
+  return result.forget();
 }
 
 void
@@ -98,7 +99,7 @@ nsTransformedTextRun::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
   return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
 }
 
-UniquePtr<nsTransformedTextRun>
+already_AddRefed<nsTransformedTextRun>
 nsTransformingTextRunFactory::MakeTextRun(const char16_t* aString, uint32_t aLength,
                                           const gfxTextRunFactory::Parameters* aParams,
                                           gfxFontGroup* aFontGroup, uint32_t aFlags,
@@ -110,7 +111,7 @@ nsTransformingTextRunFactory::MakeTextRun(const char16_t* aString, uint32_t aLen
                                       aOwnsFactory);
 }
 
-UniquePtr<nsTransformedTextRun>
+already_AddRefed<nsTransformedTextRun>
 nsTransformingTextRunFactory::MakeTextRun(const uint8_t* aString, uint32_t aLength,
                                           const gfxTextRunFactory::Parameters* aParams,
                                           gfxFontGroup* aFontGroup, uint32_t aFlags,
@@ -635,8 +636,8 @@ nsCaseTransformTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
     GetParametersForInner(aTextRun, &flags, aRefDrawTarget);
   gfxFontGroup* fontGroup = aTextRun->GetFontGroup();
 
-  UniquePtr<nsTransformedTextRun> transformedChild;
-  UniquePtr<gfxTextRun> cachedChild;
+  RefPtr<nsTransformedTextRun> transformedChild;
+  RefPtr<gfxTextRun> cachedChild;
   gfxTextRun* child;
 
   if (mInnerTransformingTextRunFactory) {
