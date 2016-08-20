@@ -3,7 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const Services = require("Services");
+const parsePropertiesFile = require("devtools/client/shared/vendor/node-properties");
+const { sprintf } = require("devtools/client/shared/vendor/sprintf");
 
 /**
  * Localization convenience methods.
@@ -12,8 +13,9 @@ const Services = require("Services");
  *        The desired string bundle's name.
  */
 function LocalizationHelper(stringBundleName) {
-  loader.lazyGetter(this, "stringBundle", () =>
-    Services.strings.createBundle(stringBundleName));
+  loader.lazyGetter(this, "properties", () => {
+    return parsePropertiesFile(require(`raw!${stringBundleName}`));
+  });
 }
 
 LocalizationHelper.prototype = {
@@ -24,7 +26,11 @@ LocalizationHelper.prototype = {
    * @return string
    */
   getStr: function (name) {
-    return this.stringBundle.GetStringFromName(name);
+    if (name in this.properties) {
+      return this.properties[name];
+    }
+
+    throw new Error("No localization found for [" + name + "]");
   },
 
   /**
@@ -35,7 +41,7 @@ LocalizationHelper.prototype = {
    * @return string
    */
   getFormatStr: function (name, ...args) {
-    return this.stringBundle.formatStringFromName(name, args, args.length);
+    return sprintf(this.getStr(name), ...args);
   },
 
   /**
@@ -51,9 +57,8 @@ LocalizationHelper.prototype = {
     let newArgs = args.map(x => {
       return typeof x == "number" ? this.numberWithDecimals(x, 2) : x;
     });
-    return this.stringBundle.formatStringFromName(name,
-                                                  newArgs,
-                                                  newArgs.length);
+
+    return this.getFormatStr(name, ...newArgs);
   },
 
   /**

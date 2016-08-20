@@ -4,18 +4,19 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+"use strict";
+
 /**
  * This file contains helper functions for internationalizing projecteditor strings
  */
 
-const { Cu, Cc, Ci } = require("chrome");
 const { LocalizationHelper } = require("devtools/client/shared/l10n");
 const ITCHPAD_STRINGS_URI = "chrome://devtools/locale/projecteditor.properties";
-const L10N = new LocalizationHelper(ITCHPAD_STRINGS_URI).stringBundle;
+const L10N = new LocalizationHelper(ITCHPAD_STRINGS_URI);
 
 function getLocalizedString(name) {
   try {
-    return L10N.GetStringFromName(name);
+    return L10N.getStr(name);
   } catch (ex) {
     console.log("Error reading '" + name + "'");
     throw new Error("l10n error with " + name);
