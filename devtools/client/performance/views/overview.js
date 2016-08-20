@@ -3,7 +3,6 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 /* import-globals-from ../performance-controller.js */
 /* import-globals-from ../performance-view.js */
-/* globals Iterator */
 "use strict";
 
 // No sense updating the overview more often than receiving data from the
@@ -319,7 +318,7 @@ var OverviewView = {
   }),
 
   _setGraphVisibilityFromRecordingFeatures: function (recording) {
-    for (let [graphName, requirements] of Iterator(GRAPH_REQUIREMENTS)) {
+    for (let [graphName, requirements] of Object.entries(GRAPH_REQUIREMENTS)) {
       this.graphs.enable(graphName,
                          PerformanceController.isFeatureSupported(requirements.features));
     }

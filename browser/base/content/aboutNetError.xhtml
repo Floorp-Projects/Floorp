@@ -422,9 +422,8 @@
             errorCode.href = "javascript:void(0)";
             errorCode.addEventListener("click", () => {
               let debugInfo = document.getElementById("certificateErrorDebugInformation");
-              if (toggleDisplay(debugInfo) == "block") {
-                debugInfo.scrollIntoView({block: "start", behavior: "smooth"});
-              }
+              debugInfo.style.display = "block";
+              debugInfo.scrollIntoView({block: "start", behavior: "smooth"});
             }, false);
           }
         }

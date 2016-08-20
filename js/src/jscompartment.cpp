@@ -209,44 +209,6 @@ JSCompartment::ensureJitCompartmentExists(JSContext* cx)
     return true;
 }
 
-/*
- * This class is used to add a post barrier on the crossCompartmentWrappers map,
- * as the key is calculated based on objects which may be moved by generational
- * GC.
- */
-class WrapperMapRef : public BufferableRef
-{
-    WrapperMap* map;
-    CrossCompartmentKey key;
-
-  public:
-    WrapperMapRef(WrapperMap* map, const CrossCompartmentKey& key)
-      : map(map), key(key) {}
-
-    struct TraceFunctor {
-        JSTracer* trc_;
-        const char* name_;
-        TraceFunctor(JSTracer *trc, const char* name) : trc_(trc), name_(name) {}
-
-        template <class T> void operator()(T* t) { TraceManuallyBarrieredEdge(trc_, t, name_); }
-    };
-    void trace(JSTracer* trc) override {
-        CrossCompartmentKey prior = key;
-        key.applyToWrapped(TraceFunctor(trc, "ccw wrapped"));
-        key.applyToDebugger(TraceFunctor(trc, "ccw debugger"));
-        if (key == prior)
-            return;
-
-        /* Look for the original entry, which might have been removed. */
-        WrapperMap::Ptr p = map->lookup(prior);
-        if (!p)
-            return;
-
-        /* Rekey the entry. */
-        map->rekeyAs(prior, key, key);
-    }
-};
-
 #ifdef JSGC_HASH_TABLE_CHECKS
 namespace {
 struct CheckGCThingAfterMovingGCFunctor {
@@ -288,16 +250,20 @@ JSCompartment::putWrapper(JSContext* cx, const CrossCompartmentKey& wrapped,
     /* There's no point allocating wrappers in the nursery since we will tenure them anyway. */
     MOZ_ASSERT(!IsInsideNursery(static_cast<gc::Cell*>(wrapper.toGCThing())));
 
-    if (!crossCompartmentWrappers.put(wrapped, ReadBarriered<Value>(wrapper))) {
+    bool isNuseryKey =
+        const_cast<CrossCompartmentKey&>(wrapped).applyToWrapped(IsInsideNurseryFunctor()) ||
+        const_cast<CrossCompartmentKey&>(wrapped).applyToDebugger(IsInsideNurseryFunctor());
+
+    if (isNuseryKey && !nurseryCCKeys.append(wrapped)) {
         ReportOutOfMemory(cx);
         return false;
     }
 
-    if (const_cast<CrossCompartmentKey&>(wrapped).applyToWrapped(IsInsideNurseryFunctor()) ||
-        const_cast<CrossCompartmentKey&>(wrapped).applyToDebugger(IsInsideNurseryFunctor()))
-    {
-        WrapperMapRef ref(&crossCompartmentWrappers, wrapped);
-        cx->runtime()->gc.storeBuffer.putGeneric(ref);
+    if (!crossCompartmentWrappers.put(wrapped, ReadBarriered<Value>(wrapper))) {
+        if (isNuseryKey)
+            nurseryCCKeys.popBack();
+        ReportOutOfMemory(cx);
+        return false;
     }
 
     return true;
@@ -628,6 +594,16 @@ JSCompartment::trace(JSTracer* trc)
     savedStacks_.trace(trc);
 }
 
+struct TraceFunctor {
+    JSTracer* trc_;
+    const char* name_;
+    TraceFunctor(JSTracer *trc, const char* name)
+      : trc_(trc), name_(name) {}
+    template <class T> void operator()(T* t) {
+        TraceManuallyBarrieredEdge(trc_, t, name_);
+    }
+};
+
 void
 JSCompartment::traceRoots(JSTracer* trc, js::gc::GCRuntime::TraceOrMarkRuntime traceOrMark)
 {
@@ -699,7 +675,40 @@ JSCompartment::traceRoots(JSTracer* trc, js::gc::GCRuntime::TraceOrMarkRuntime t
     if (nonSyntacticLexicalScopes_)
         nonSyntacticLexicalScopes_->trace(trc);
 
+    // In a minor GC we need to mark nursery objects that are the targets of
+    // cross compartment wrappers.
+    if (trc->runtime()->isHeapMinorCollecting()) {
+        for (auto key : nurseryCCKeys) {
+            CrossCompartmentKey prior = key;
+            key.applyToWrapped(TraceFunctor(trc, "ccw wrapped"));
+            key.applyToDebugger(TraceFunctor(trc, "ccw debugger"));
+            crossCompartmentWrappers.rekeyIfMoved(prior, key);
+        }
+        nurseryCCKeys.clear();
+    }
+
     wasm.trace(trc);
+}
+
+void
+JSCompartment::finishRoots()
+{
+    if (watchpointMap)
+        watchpointMap->clear();
+
+    if (debugScopes)
+        debugScopes->finish();
+
+    if (lazyArrayBuffers)
+        lazyArrayBuffers->clear();
+
+    if (objectMetadataTable)
+        objectMetadataTable->clear();
+
+    clearScriptCounts();
+
+    if (nonSyntacticLexicalScopes_)
+        nonSyntacticLexicalScopes_->clear();
 }
 
 void

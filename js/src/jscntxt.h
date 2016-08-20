@@ -577,7 +577,8 @@ DestroyContext(JSContext* cx);
 
 enum ErrorArgumentsType {
     ArgumentsAreUnicode,
-    ArgumentsAreASCII
+    ArgumentsAreASCII,
+    ArgumentsAreLatin1
 };
 
 /*

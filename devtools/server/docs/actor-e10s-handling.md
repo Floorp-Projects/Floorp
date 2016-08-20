@@ -44,14 +44,9 @@ The `setupParentProcess` function will receive a parameter that contains a refer
 See below an example implementation of a `setupParent` function in the parent process:
 
 ```
-let gTrackedMessageManager = new Set();
 exports.setupParentProcess = function setupParentProcess({ mm, prefix }) {
-  // Prevent multiple subscriptions on the same messagemanager.
-  if (gTrackedMessageManager.has(mm)) { return; }
-  gTrackedMessageManager.add(mm);
-
   // Start listening for messages from the actor in the child process.
-  mm.addMessageListener("debug:some-message-name", handleChildRequest);
+  setMessageManager(mm);
 
   function handleChildRequest(msg) {
     switch (msg.json.method) {
@@ -67,23 +62,30 @@ exports.setupParentProcess = function setupParentProcess({ mm, prefix }) {
     }
   }
 
-  // Listen to the disconnection message to clean-up.
-  DebuggerServer.once("disconnected-from-child:" + prefix, handleMessageManagerDisconnected);
-
-  function handleMessageManagerDisconnected(evt, { mm: disconnected_mm }) {
-    // filter out not subscribed message managers
-    if (disconnected_mm !== mm || !gTrackedMessageManager.has(mm)) {
-      return;
+  function setMessageManager(newMM) {
+    if (mm) {
+      // Remove listener from old message manager
+      mm.removeMessageListener("debug:some-message-name", handleChildRequest);
     }
-
-    gTrackedMessageManager.delete(mm);
-
-    // unregister for director-script requests handlers from the parent process (if any)
-    mm.removeMessageListener("debug:director-registry-request", handleChildRequest);
+    // Switch to the new message manager for future use
+    // Note: Make sure that any other functions also use the new reference.
+    mm = newMM;
+    if (mm) {
+      // Add listener to new message manager
+      mm.addMessageListener("debug:some-message-name", handleChildRequest);
+    }
   }
+
+  return {
+    onBrowserSwap: setMessageManager,
+    onDisconnected: () => setMessageManager(null),
+  };
+};
 ```
 
-The `DebuggerServer` emits "disconnected-from-child:PREFIX" events to give the actor modules the chance to cleanup their handlers registered on the disconnected message manager.
+The server will call the `onDisconnected` method returned by the parent process setup flow to give the actor modules the chance to cleanup their handlers registered on the disconnected message manager.
+
+The server will call the `onBrowserSwap` method returned by the parent process setup flow to notify actor modules when the message manager for the target frame has changed.  The parent process code should remove any message listeners from the previous message manager and add them to the new one.
 
 ## Summary of the setup flow
 
@@ -100,5 +102,5 @@ In the parent process:
 * The DebuggerServer receives the `DebuggerServerConnection.setupInParent` request,
 * tries to load the required module,
 * tries to call the `module[setupParent]` function with the frame message manager and the prefix as parameters `{ mm, prefix }`,
-* the `setupParent` function then uses the mm to subscribe the messagemanager events,
-* the `setupParent` function also uses the DebuggerServer object to subscribe *once* to the `"disconnected-from-child:PREFIX"` event to unsubscribe from messagemanager events.
+* the `setupParent` function then uses the mm to subscribe the message manager events,
+* the `setupParent` function returns an object with `onDisconnected` and `onBrowserSwap` methods which the server can use to notify the module of various lifecycle events

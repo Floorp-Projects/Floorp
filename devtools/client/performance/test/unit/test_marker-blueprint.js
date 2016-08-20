@@ -18,7 +18,7 @@ add_task(function () {
   ok(Object.keys(TIMELINE_BLUEPRINT).length,
     "The timeline blueprint has at least one entry.");
 
-  for (let [, value] of Iterator(TIMELINE_BLUEPRINT)) {
+  for (let value of Object.values(TIMELINE_BLUEPRINT)) {
     ok("group" in value,
       "Each entry in the timeline blueprint contains a `group` key.");
     ok("colorName" in value,
