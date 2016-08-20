@@ -67,7 +67,7 @@ const AutoMigrate = {
     }
     // Now register places, password and sync observers:
     this.onItemAdded = this.onItemMoved = this.onItemChanged =
-      this.removeUndoOption;
+      this.removeUndoOption.bind(this, this.UNDO_REMOVED_REASON_BOOKMARK_CHANGE);
     PlacesUtils.addLazyBookmarkObserver(this, true);
     for (let topic of [kSyncTopic, kPasswordManagerTopic]) {
       Services.obs.addObserver(this, topic, true);
@@ -80,10 +80,10 @@ const AutoMigrate = {
       // (Note that this ignores logins being removed as that doesn't
       //  impair the 'undo' functionality of the import.)
       if (kPasswordManagerTopicTypes.has(data)) {
-        this.removeUndoOption();
+        this.removeUndoOption(this.UNDO_REMOVED_REASON_PASSWORD_CHANGE);
       }
     } else if (topic == kSyncTopic) {
-      this.removeUndoOption();
+      this.removeUndoOption(this.UNDO_REMOVED_REASON_SYNC_SIGNIN);
     }
   },
 
@@ -247,11 +247,11 @@ const AutoMigrate = {
       // ignore failure.
     }
     histogram.add(25);
-    this.removeUndoOption();
+    this.removeUndoOption(this.UNDO_REMOVED_REASON_UNDO_USED);
     histogram.add(30);
   }),
 
-  removeUndoOption() {
+  removeUndoOption(reason) {
     // Remove observers, and ensure that exceptions doing so don't break
     // removing the pref.
     for (let topic of [kSyncTopic, kPasswordManagerTopic]) {
@@ -266,6 +266,8 @@ const AutoMigrate = {
     } catch (ex) {
       Cu.reportError("Error removing lazy bookmark observer: " + ex);
     }
+
+    let migrationBrowser = Preferences.get(kAutoMigrateBrowserPref, "unknown");
     Services.prefs.clearUserPref(kAutoMigrateStartedPref);
     Services.prefs.clearUserPref(kAutoMigrateFinishedPref);
     Services.prefs.clearUserPref(kAutoMigrateBrowserPref);
@@ -283,6 +285,9 @@ const AutoMigrate = {
         }
       }
     }
+    let histogram =
+      Services.telemetry.getKeyedHistogramById("FX_STARTUP_MIGRATION_UNDO_REASON");
+    histogram.add(migrationBrowser, reason);
   },
 
   getBrowserUsedForMigration() {
@@ -316,7 +321,7 @@ const AutoMigrate = {
     // in which case we remove the undo prefs (which will cause canUndo() to
     // return false from now on.):
     if (!this.shouldStillShowUndoPrompt()) {
-      this.removeUndoOption();
+      this.removeUndoOption(this.UNDO_REMOVED_REASON_OFFER_EXPIRED);
       return;
     }
 
@@ -334,7 +339,7 @@ const AutoMigrate = {
         label: this.getLocalizedString("automigration.undo.keep.label"),
         accessKey: this.getLocalizedString("automigration.undo.keep.accesskey"),
         callback: () => {
-          this.removeUndoOption();
+          this.removeUndoOption(this.UNDO_REMOVED_REASON_OFFER_REJECTED);
         },
       },
       {
@@ -370,6 +375,13 @@ const AutoMigrate = {
     }
     return true;
   },
+
+  UNDO_REMOVED_REASON_UNDO_USED: 0,
+  UNDO_REMOVED_REASON_SYNC_SIGNIN: 1,
+  UNDO_REMOVED_REASON_PASSWORD_CHANGE: 2,
+  UNDO_REMOVED_REASON_BOOKMARK_CHANGE: 3,
+  UNDO_REMOVED_REASON_OFFER_EXPIRED: 4,
+  UNDO_REMOVED_REASON_OFFER_REJECTED: 5,
 
   QueryInterface: XPCOMUtils.generateQI(
     [Ci.nsIObserver, Ci.nsINavBookmarkObserver, Ci.nsISupportsWeakReference]
