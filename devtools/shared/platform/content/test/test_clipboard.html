@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1290230
+-->
+<head>
+  <title>Test for Bug 1290230 - clipboard helpers</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+
+<script type="application/javascript;version=1.8">
+"use strict";
+var exports = {}
+</script>
+
+  <script type="application/javascript;version=1.8"
+	  src="resource://devtools/shared/platform/content/clipboard.js"></script>
+
+</head>
+<body onload="do_tests()">
+<script type="application/javascript;version=1.8">
+"use strict";
+
+const RESULT = "lark bunting";
+
+function doCopy(e) {
+  console.log(e.isTrusted);
+  copyString(RESULT);
+}
+
+function do_tests() {
+  let elt = document.querySelector("#key");
+  elt.addEventListener("keydown", doCopy);
+
+  // Set the clipboard to something other than what we expect.
+  SpecialPowers.clipboardCopyString("snowy owl");
+
+  elt.focus();
+  synthesizeKey("x", {});
+
+  is(SpecialPowers.getClipboardData("text/unicode"), RESULT, "clipboard copying worked");
+
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+<div id="key" tabindex="-1">Type Here</div>
+</body>

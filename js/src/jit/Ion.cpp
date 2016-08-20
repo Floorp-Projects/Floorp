@@ -613,6 +613,12 @@ jit::LazyLinkTopActivation(JSContext* cx)
 JitRuntime::Mark(JSTracer* trc, AutoLockForExclusiveAccess& lock)
 {
     MOZ_ASSERT(!trc->runtime()->isHeapMinorCollecting());
+
+    // Shared stubs are allocated in the atoms compartment, so do not iterate
+    // them after the atoms heap after it has been "finished."
+    if (trc->runtime()->atomsAreFinished())
+        return;
+
     Zone* zone = trc->runtime()->atomsCompartment(lock)->zone();
     for (auto i = zone->cellIter<JitCode>(); !i.done(); i.next()) {
         JitCode* code = i;

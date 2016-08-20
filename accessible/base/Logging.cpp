@@ -675,13 +675,13 @@ logging::TreeInfo(const char* aMsg, uint32_t aExtraFlags, Accessible* aParent)
 
 void
 logging::Tree(const char* aTitle, const char* aMsgText,
-              DocAccessible* aDocument, GetTreePrefix aPrefixFunc,
+              Accessible* aRoot, GetTreePrefix aPrefixFunc,
               void* aGetTreePrefixData)
 {
   logging::MsgBegin(aTitle, aMsgText);
 
   nsAutoString level;
-  Accessible* root = aDocument;
+  Accessible* root = aRoot;
   do {
     const char* prefix = aPrefixFunc ? aPrefixFunc(aGetTreePrefixData, root) : "";
     printf("%s", NS_ConvertUTF16toUTF8(level).get());
@@ -691,14 +691,14 @@ logging::Tree(const char* aTitle, const char* aMsgText,
       root = root->FirstChild();
       continue;
     }
-    int32_t idxInParent = !root->IsDoc() && root->mParent ?
+    int32_t idxInParent = root != aRoot && root->mParent ?
       root->mParent->mChildren.IndexOf(root) : -1;
     if (idxInParent != -1 &&
         idxInParent < static_cast<int32_t>(root->mParent->mChildren.Length() - 1)) {
       root = root->mParent->mChildren.ElementAt(idxInParent + 1);
       continue;
     }
-    while (!root->IsDoc() && (root = root->Parent())) {
+    while (root != aRoot && (root = root->Parent())) {
       level.Cut(0, 2);
       int32_t idxInParent = !root->IsDoc() && root->mParent ?
         root->mParent->mChildren.IndexOf(root) : -1;
@@ -709,7 +709,7 @@ logging::Tree(const char* aTitle, const char* aMsgText,
       }
     }
   }
-  while (root && !root->IsDoc());
+  while (root && root != aRoot);
 
   logging::MsgEnd();
 }

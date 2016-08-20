@@ -415,6 +415,9 @@ struct JSCompartment
 
     js::WrapperMap               crossCompartmentWrappers;
 
+    using CCKeyVector = mozilla::Vector<js::CrossCompartmentKey, 0, js::SystemAllocPolicy>;
+    CCKeyVector                  nurseryCCKeys;
+
   public:
     /* Last time at which an animation was played for a global in this compartment. */
     int64_t                      lastAnimationTime;
@@ -601,6 +604,10 @@ struct JSCompartment
      * regardless of whether the JSCompartment itself is still live.
      */
     void traceRoots(JSTracer* trc, js::gc::GCRuntime::TraceOrMarkRuntime traceOrMark);
+    /*
+     * This method clears out tables of roots in preparation for the final GC.
+     */
+    void finishRoots();
     /*
      * These methods mark pointers that cross compartment boundaries. They are
      * called in per-zone GCs to prevent the wrappers' outgoing edges from

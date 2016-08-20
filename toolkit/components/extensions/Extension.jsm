@@ -651,7 +651,7 @@ GlobalManager = {
       },
 
       callFunctionNoReturn(path, name, args) {
-        return findPathInObject(schemaApi, path)[name](...args);
+        findPathInObject(schemaApi, path)[name](...args);
       },
 
       callAsyncFunction(path, name, args, callback) {
@@ -688,10 +688,10 @@ GlobalManager = {
       },
 
       addListener(path, name, listener, args) {
-        return findPathInObject(schemaApi, path)[name].addListener.call(null, listener, ...args);
+        findPathInObject(schemaApi, path)[name].addListener.call(null, listener, ...args);
       },
       removeListener(path, name, listener) {
-        return findPathInObject(schemaApi, path)[name].removeListener.call(null, listener);
+        findPathInObject(schemaApi, path)[name].removeListener.call(null, listener);
       },
       hasListener(path, name, listener) {
         return findPathInObject(schemaApi, path)[name].hasListener.call(null, listener);
