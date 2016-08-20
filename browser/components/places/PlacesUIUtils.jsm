@@ -884,8 +884,7 @@ this.PlacesUIUtils = {
   /**
    * Gives the user a chance to cancel loading lots of tabs at once
    */
-  _confirmOpenInTabs:
-  function PUIU__confirmOpenInTabs(numTabsToOpen, aWindow) {
+  confirmOpenInTabs(numTabsToOpen, aWindow) {
     const WARN_ON_OPEN_PREF = "browser.tabs.warnOnOpen";
     var reallyOpen = true;
 
@@ -988,7 +987,7 @@ this.PlacesUIUtils = {
           urlsToOpen.push({uri: node.uri, isBookmark: false});
         }
 
-        if (this._confirmOpenInTabs(urlsToOpen.length, window)) {
+        if (this.confirmOpenInTabs(urlsToOpen.length, window)) {
           this._openTabset(urlsToOpen, aEvent, window);
         }
       }, Cu.reportError);
@@ -999,7 +998,7 @@ this.PlacesUIUtils = {
     let window = aView.ownerWindow;
 
     let urlsToOpen = PlacesUtils.getURLsForContainerNode(aNode);
-    if (this._confirmOpenInTabs(urlsToOpen.length, window)) {
+    if (this.confirmOpenInTabs(urlsToOpen.length, window)) {
       this._openTabset(urlsToOpen, aEvent, window);
     }
   },
