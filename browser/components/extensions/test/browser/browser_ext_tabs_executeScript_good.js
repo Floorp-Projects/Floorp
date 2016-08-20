@@ -143,7 +143,7 @@ add_task(function* testGoodPermissions() {
     },
     setup: extension => {
       return clickBrowserAction(extension).then(() => {
-        return awaitExtensionPanel(extension);
+        return awaitExtensionPanel(extension, window, "_blank.html");
       });
     },
     tearDown: closeBrowserAction,
