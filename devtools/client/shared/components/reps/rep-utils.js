@@ -109,6 +109,10 @@ define(function (require, exports, module) {
     return {};
   }
 
+  function getURLDisplayString(url) {
+    return cropString(url);
+  }
+
   function isDataURL(url) {
     return (url && url.substr(0, 5) == "data:");
   }
@@ -147,4 +151,5 @@ define(function (require, exports, module) {
   exports.parseURLParams = parseURLParams;
   exports.parseURLEncodedText = parseURLEncodedText;
   exports.getFileName = getFileName;
+  exports.getURLDisplayString = getURLDisplayString;
 });
