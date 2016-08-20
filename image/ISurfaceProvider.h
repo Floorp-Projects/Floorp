@@ -56,7 +56,8 @@ public:
 
   /// @return the number of bytes of memory this ISurfaceProvider is expected to
   /// require. Optimizations may result in lower real memory usage. Trivial
-  /// overhead is ignored.
+  /// overhead is ignored. Because this value is used in bookkeeping, it's
+  /// important that it be constant over the lifetime of this object.
   virtual size_t LogicalSizeInBytes() const = 0;
 
   /// @return the actual number of bytes of memory this ISurfaceProvider is

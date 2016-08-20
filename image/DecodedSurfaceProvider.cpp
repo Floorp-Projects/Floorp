@@ -187,9 +187,7 @@ DecodedSurfaceProvider::CheckForNewSurface()
 
   // We just got a surface for the first time; let the surface cache know.
   MOZ_ASSERT(mImage);
-  SurfaceCache::SurfaceAvailable(WrapNotNull(this),
-                                 GetImageKey(),
-                                 GetSurfaceKey());
+  SurfaceCache::SurfaceAvailable(WrapNotNull(this));
 }
 
 void

@@ -253,9 +253,7 @@ AnimationSurfaceProvider::AnnounceSurfaceAvailable()
   // AddSizeOfExcludingThis(), since otherwise we'd be acquiring mFramesMutex
   // and then the surface cache lock, while the memory reporting code would
   // acquire the surface cache lock and then mFramesMutex.
-  SurfaceCache::SurfaceAvailable(WrapNotNull(this),
-                                 GetImageKey(),
-                                 GetSurfaceKey());
+  SurfaceCache::SurfaceAvailable(WrapNotNull(this));
 }
 
 void
