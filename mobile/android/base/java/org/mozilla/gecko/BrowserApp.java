@@ -6,6 +6,7 @@
 package org.mozilla.gecko;
 
 import android.Manifest;
+import android.annotation.TargetApi;
 import android.app.DownloadManager;
 import android.os.Environment;
 import android.support.annotation.CheckResult;
@@ -2220,6 +2221,7 @@ public class BrowserApp extends GeckoApp
         return homepagePartner;
     }
 
+    @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
     @Override
     public void onTabsLayoutChange(int width, int height) {
         int animationLength = TABS_ANIMATION_DURATION;
