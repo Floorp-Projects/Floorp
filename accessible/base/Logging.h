@@ -143,7 +143,7 @@ void TreeInfo(const char* aMsg, uint32_t aExtraFlags, Accessible* aParent);
  * Log the accessible/DOM tree.
  */
 typedef const char* (*GetTreePrefix)(void* aData, Accessible*);
-void Tree(const char* aTitle, const char* aMsgText, DocAccessible* aDoc,
+void Tree(const char* aTitle, const char* aMsgText, Accessible* aRoot,
           GetTreePrefix aPrefixFunc = nullptr, void* aGetTreePrefixData = nullptr);
 void DOMTree(const char* aTitle, const char* aMsgText, DocAccessible* aDoc);
 

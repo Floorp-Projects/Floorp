@@ -4,50 +4,34 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "stdlib.h"
-#include "plstr.h"
-#include "plbase64.h"
+#include "SecretDecoderRing.h"
 
+#include "ScopedNSSTypes.h"
 #include "mozilla/Base64.h"
 #include "mozilla/Casting.h"
 #include "mozilla/Services.h"
-#include "nsMemory.h"
-#include "nsString.h"
 #include "nsCOMPtr.h"
-#include "nsThreadUtils.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIObserverService.h"
 #include "nsIServiceManager.h"
 #include "nsITokenPasswordDialogs.h"
-
-#include "nsISecretDecoderRing.h"
-#include "nsCRT.h"
-#include "nsSDR.h"
 #include "nsNSSComponent.h"
 #include "nsNSSHelper.h"
-#include "nsNSSShutDown.h"
-#include "ScopedNSSTypes.h"
-
 #include "pk11func.h"
 #include "pk11sdr.h" // For PK11SDR_Encrypt, PK11SDR_Decrypt
-
 #include "ssl.h" // For SSL_ClearSessionCache
 
 using namespace mozilla;
 
-// Standard ISupports implementation
 // NOTE: Should these be the thread-safe versions?
-NS_IMPL_ISUPPORTS(nsSecretDecoderRing, nsISecretDecoderRing, nsISecretDecoderRingConfig)
+NS_IMPL_ISUPPORTS(SecretDecoderRing, nsISecretDecoderRing)
 
-// nsSecretDecoderRing constructor
-nsSecretDecoderRing::nsSecretDecoderRing()
+SecretDecoderRing::SecretDecoderRing()
 {
-  // initialize superclass
 }
 
-// nsSecretDecoderRing destructor
-nsSecretDecoderRing::~nsSecretDecoderRing()
+SecretDecoderRing::~SecretDecoderRing()
 {
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
@@ -57,16 +41,13 @@ nsSecretDecoderRing::~nsSecretDecoderRing()
   shutdown(calledFromObject);
 }
 
-NS_IMETHODIMP
-nsSecretDecoderRing::Encrypt(unsigned char* data, uint32_t dataLen,
-                             unsigned char** result, uint32_t* _retval)
+nsresult
+SecretDecoderRing::Encrypt(const nsACString& data, /*out*/ nsACString& result)
 {
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
-
-  nsCOMPtr<nsIInterfaceRequestor> ctx = new PipUIContext();
 
   UniquePK11SlotInfo slot(PK11_GetInternalKeySlot());
   if (!slot) {
@@ -74,6 +55,7 @@ nsSecretDecoderRing::Encrypt(unsigned char* data, uint32_t dataLen,
   }
 
   /* Make sure token is initialized. */
+  nsCOMPtr<nsIInterfaceRequestor> ctx = new PipUIContext();
   nsresult rv = setPassword(slot.get(), ctx, locker);
   if (NS_FAILED(rv)) {
     return rv;
@@ -89,34 +71,24 @@ nsSecretDecoderRing::Encrypt(unsigned char* data, uint32_t dataLen,
   keyid.data = nullptr;
   keyid.len = 0;
   SECItem request;
-  request.data = data;
-  request.len = dataLen;
-  SECItem reply;
-  reply.data = nullptr;
-  reply.len = 0;
+  request.data = BitwiseCast<unsigned char*, const char*>(data.BeginReading());
+  request.len = data.Length();
+  ScopedAutoSECItem reply;
   if (PK11SDR_Encrypt(&keyid, &request, &reply, ctx) != SECSuccess) {
     return NS_ERROR_FAILURE;
   }
 
-  *result = reply.data;
-  *_retval = reply.len;
-
+  result.Assign(BitwiseCast<char*, unsigned char*>(reply.data), reply.len);
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsSecretDecoderRing::Decrypt(unsigned char* data, uint32_t dataLen,
-                             unsigned char** result, uint32_t* _retval)
+nsresult
+SecretDecoderRing::Decrypt(const nsACString& data, /*out*/ nsACString& result)
 {
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
-
-  nsCOMPtr<nsIInterfaceRequestor> ctx = new PipUIContext();
-
-  *result = nullptr;
-  *_retval = 0;
 
   /* Find token with SDR key */
   UniquePK11SlotInfo slot(PK11_GetInternalKeySlot());
@@ -125,90 +97,61 @@ nsSecretDecoderRing::Decrypt(unsigned char* data, uint32_t dataLen,
   }
 
   /* Force authentication */
+  nsCOMPtr<nsIInterfaceRequestor> ctx = new PipUIContext();
   if (PK11_Authenticate(slot.get(), true, ctx) != SECSuccess) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
   SECItem request;
-  request.data = data;
-  request.len = dataLen;
-  SECItem reply;
-  reply.data = nullptr;
-  reply.len = 0;
+  request.data = BitwiseCast<unsigned char*, const char*>(data.BeginReading());
+  request.len = data.Length();
+  ScopedAutoSECItem reply;
   if (PK11SDR_Decrypt(&request, &reply, ctx) != SECSuccess) {
     return NS_ERROR_FAILURE;
   }
 
-  *result = reply.data;
-  *_retval = reply.len;
+  result.Assign(BitwiseCast<char*, unsigned char*>(reply.data), reply.len);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+SecretDecoderRing::EncryptString(const nsACString& text,
+                         /*out*/ nsACString& encryptedBase64Text)
+{
+  nsAutoCString encryptedText;
+  nsresult rv = Encrypt(text, encryptedText);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  rv = Base64Encode(encryptedText, encryptedBase64Text);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsSecretDecoderRing::EncryptString(const char* text, char** _retval)
+SecretDecoderRing::DecryptString(const nsACString& encryptedBase64Text,
+                         /*out*/ nsACString& decryptedText)
 {
-  nsresult rv = NS_OK;
-  unsigned char *encrypted = 0;
-  uint32_t eLen = 0;
-
-  if (!text || !_retval) {
-    rv = NS_ERROR_INVALID_POINTER;
-    goto loser;
+  nsAutoCString encryptedText;
+  nsresult rv = Base64Decode(encryptedBase64Text, encryptedText);
+  if (NS_FAILED(rv)) {
+    return rv;
   }
 
-  rv = Encrypt((unsigned char *)text, strlen(text), &encrypted, &eLen);
-  if (rv != NS_OK) { goto loser; }
+  rv = Decrypt(encryptedText, decryptedText);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
-  rv = Base64Encode(BitwiseCast<const char*>(encrypted), eLen, _retval);
-
-loser:
-  if (encrypted) PORT_Free(encrypted);
-
-  return rv;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
-nsSecretDecoderRing::DecryptString(const char* crypt, char** _retval)
-{
-  nsresult rv = NS_OK;
-  char *r = 0;
-  unsigned char *decoded = 0;
-  uint32_t decodedLen = 0;
-  unsigned char *decrypted = 0;
-  uint32_t decryptedLen = 0;
-
-  if (!crypt || !_retval) {
-    rv = NS_ERROR_INVALID_POINTER;
-    goto loser;
-  }
-
-  rv = Base64Decode(crypt, strlen(crypt), BitwiseCast<char**>(&decoded),
-                    &decodedLen);
-  if (NS_FAILED(rv)) goto loser;
-
-  rv = Decrypt(decoded, decodedLen, &decrypted, &decryptedLen);
-  if (rv != NS_OK) goto loser;
-
-  // Convert to NUL-terminated string
-  r = (char *)moz_xmalloc(decryptedLen+1);
-  if (!r) { rv = NS_ERROR_OUT_OF_MEMORY; goto loser; }
-
-  memcpy(r, decrypted, decryptedLen);
-  r[decryptedLen] = 0;
-
-  *_retval = r;
-  r = 0;
-
-loser:
-  if (decrypted) PORT_Free(decrypted);
-  if (decoded) free(decoded);
-
-  return rv;
-}
-
-NS_IMETHODIMP
-nsSecretDecoderRing::ChangePassword()
+SecretDecoderRing::ChangePassword()
 {
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
@@ -236,7 +179,7 @@ nsSecretDecoderRing::ChangePassword()
 }
 
 NS_IMETHODIMP
-nsSecretDecoderRing::Logout()
+SecretDecoderRing::Logout()
 {
   static NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
 
@@ -259,7 +202,7 @@ nsSecretDecoderRing::Logout()
 }
 
 NS_IMETHODIMP
-nsSecretDecoderRing::LogoutAndTeardown()
+SecretDecoderRing::LogoutAndTeardown()
 {
   static NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
 
@@ -289,10 +232,3 @@ nsSecretDecoderRing::LogoutAndTeardown()
 
   return rv;
 }
-
-NS_IMETHODIMP
-nsSecretDecoderRing::SetWindow(nsISupports*)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-

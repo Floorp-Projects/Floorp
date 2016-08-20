@@ -885,6 +885,7 @@ nsCSPReportURI::toString(nsAString& outStr) const
 nsCSPSandboxFlags::nsCSPSandboxFlags(const nsAString& aFlags)
   : mFlags(aFlags)
 {
+  ToLowerCase(mFlags);
 }
 
 nsCSPSandboxFlags::~nsCSPSandboxFlags()
