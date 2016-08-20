@@ -173,7 +173,10 @@ function getRange(aSourceNode, aFragment) {
  * @param aPath The path to the local document.
  */
 function getParsedDocument(aPath) {
-  var doc = do_parse_document(aPath, "application/xml");
+  return do_parse_document(aPath, "application/xml").then(processParsedDocument);
+}
+
+function processParsedDocument(doc) {
   do_check_true(doc.documentElement.localName != "parsererror");
   do_check_true(doc instanceof C_i.nsIDOMXPathEvaluator);
   do_check_true(doc instanceof C_i.nsIDOMDocument);
@@ -214,7 +217,10 @@ function getParsedDocument(aPath) {
  */
 function run_extract_test() {
   var filePath = "test_delete_range.xml";
-  var doc = getParsedDocument(filePath);
+  getParsedDocument(filePath).then(do_extract_test);
+}
+
+function do_extract_test(doc) {
   var tests = doc.getElementsByTagName("test");
 
   // Run our deletion, extraction tests.
@@ -333,7 +339,10 @@ function run_extract_test() {
  */
 function run_miscellaneous_tests() {
   var filePath = "test_delete_range.xml";
-  var doc = getParsedDocument(filePath);
+  getParsedDocument(filePath).then(do_miscellaneous_tests);
+}
+
+function do_miscellaneous_tests(doc) {
   var tests = doc.getElementsByTagName("test");
 
   // Let's try some invalid inputs to our DOM range and see what happens.

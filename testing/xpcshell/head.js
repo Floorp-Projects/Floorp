@@ -23,6 +23,7 @@ _register_modules_protocol_handler();
 
 var _Promise = Components.utils.import("resource://gre/modules/Promise.jsm", {}).Promise;
 var _PromiseTestUtils = Components.utils.import("resource://testing-common/PromiseTestUtils.jsm", {}).PromiseTestUtils;
+Components.utils.importGlobalProperties(["XMLHttpRequest"]);
 
 // Support a common assertion library, Assert.jsm.
 var AssertCls = Components.utils.import("resource://testing-common/Assert.jsm", null).Assert;
@@ -1098,20 +1099,21 @@ function do_parse_document(aPath, aType) {
                Components.stack.caller);
   }
 
-  var lf = do_get_file(aPath);
-  const C_i = Components.interfaces;
-  const parserClass = "@mozilla.org/xmlextras/domparser;1";
-  const streamClass = "@mozilla.org/network/file-input-stream;1";
-  var stream = Components.classes[streamClass]
-                         .createInstance(C_i.nsIFileInputStream);
-  stream.init(lf, -1, -1, C_i.nsIFileInputStream.CLOSE_ON_EOF);
-  var parser = Components.classes[parserClass]
-                         .createInstance(C_i.nsIDOMParser);
-  var doc = parser.parseFromStream(stream, null, lf.fileSize, aType);
-  parser = null;
-  stream = null;
-  lf = null;
-  return doc;
+  let file = do_get_file(aPath),
+      ios = Components.classes['@mozilla.org/network/io-service;1']
+            .getService(Components.interfaces.nsIIOService),
+      url = ios.newFileURI(file).spec;
+  file = null;
+  return new Promise((resolve, reject) => {
+    let xhr = new XMLHttpRequest();
+    xhr.open("GET", url);
+    xhr.responseType = "document";
+    xhr.onerror = reject;
+    xhr.onload = () => {
+      resolve(xhr.response);
+    };
+    xhr.send();
+  });
 }
 
 /**
