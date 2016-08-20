@@ -7,10 +7,6 @@
 
 "use strict";
 
-/* eslint-disable mozilla/reject-some-requires */
-const {Cc, Ci} = require("chrome");
-/* eslint-enable mozilla/reject-some-requires */
-
 // Page size for pageup/pagedown
 const PAGE_SIZE = 10;
 const DEFAULT_MAX_CHILDREN = 100;
@@ -63,6 +59,7 @@ const {getCssProperties} = require("devtools/shared/fronts/css-properties");
 const {KeyCodes} = require("devtools/client/shared/keycodes");
 
 const {AutocompletePopup} = require("devtools/client/shared/autocomplete-popup");
+const clipboardHelper = require("devtools/shared/platform/clipboard");
 
 XPCOMUtils.defineLazyModuleGetter(this, "PluralForm",
   "resource://gre/modules/PluralForm.jsm");
@@ -3622,10 +3619,5 @@ function getAutocompleteMaxWidth(element, container) {
 loader.lazyGetter(MarkupView.prototype, "strings", () => Services.strings.createBundle(
   "chrome://devtools/locale/inspector.properties"
 ));
-
-XPCOMUtils.defineLazyGetter(this, "clipboardHelper", function () {
-  return Cc["@mozilla.org/widget/clipboardhelper;1"]
-    .getService(Ci.nsIClipboardHelper);
-});
 
 exports.MarkupView = MarkupView;
