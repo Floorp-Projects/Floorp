@@ -519,14 +519,18 @@ MessageManagerTunnel.prototype = {
     this.innerParentMM.sendAsyncMessage(name, ...args);
   },
 
-  receiveMessage({ name, data, objects, principal }) {
+  receiveMessage({ name, data, objects, principal, sync }) {
     if (!this._shouldTunnelInnerToOuter(name)) {
       debug(`Received unexpected message ${name}`);
-      return;
+      return undefined;
     }
 
-    debug(`${name} inner -> outer`);
+    debug(`${name} inner -> outer, sync: ${sync}`);
+    if (sync) {
+      return this.outerChildMM.sendSyncMessage(name, data, objects, principal);
+    }
     this.outerChildMM.sendAsyncMessage(name, data, objects, principal);
+    return undefined;
   },
 
   _shouldTunnelOuterToInner(name) {

@@ -35,6 +35,20 @@ function swapToInnerBrowser({ tab, containerURL, getInnerBrowser }) {
   let innerBrowser;
   let tunnel;
 
+  // Dispatch a custom event each time the _viewport content_ is swapped from one browser
+  // to another.  DevTools server code uses this to follow the content if there is an
+  // active DevTools connection.  While browser.xml does dispatch it's own SwapDocShells
+  // event, this one is easier for DevTools to follow because it's only emitted once per
+  // transition, instead of twice like SwapDocShells.
+  let dispatchDevToolsBrowserSwap = (from, to) => {
+    let CustomEvent = tab.ownerDocument.defaultView.CustomEvent;
+    let event = new CustomEvent("DevTools:BrowserSwap", {
+      detail: to,
+      bubbles: true,
+    });
+    from.dispatchEvent(event);
+  };
+
   return {
 
     start: Task.async(function* () {
@@ -72,6 +86,7 @@ function swapToInnerBrowser({ tab, containerURL, getInnerBrowser }) {
       // 4. Swap tab content from the regular browser tab to the browser within
       //    the viewport in the tool UI, preserving all state via
       //    `gBrowser._swapBrowserDocShells`.
+      dispatchDevToolsBrowserSwap(tab.linkedBrowser, innerBrowser);
       gBrowser._swapBrowserDocShells(tab, innerBrowser);
 
       // 5. Force the original browser tab to be non-remote since the tool UI
@@ -115,6 +130,7 @@ function swapToInnerBrowser({ tab, containerURL, getInnerBrowser }) {
       // 4. Swap tab content from the browser within the viewport in the tool UI
       //    to the regular browser tab, preserving all state via
       //    `gBrowser._swapBrowserDocShells`.
+      dispatchDevToolsBrowserSwap(innerBrowser, contentBrowser);
       gBrowser._swapBrowserDocShells(contentTab, innerBrowser);
       innerBrowser = null;
 
@@ -126,6 +142,7 @@ function swapToInnerBrowser({ tab, containerURL, getInnerBrowser }) {
       // 6. Swap the content into the original browser tab and close the
       //    temporary tab used to hold the content via
       //    `swapBrowsersAndCloseOther`.
+      dispatchDevToolsBrowserSwap(contentBrowser, tab.linkedBrowser);
       gBrowser.swapBrowsersAndCloseOther(tab, contentTab);
       gBrowser = null;
 
@@ -195,6 +212,15 @@ function addXULBrowserDecorations(browser) {
     Object.defineProperty(browser, "messageManager", {
       get() {
         return this.frameLoader.messageManager;
+      },
+      configurable: true,
+      enumerable: true,
+    });
+  }
+  if (browser.outerWindowID == undefined) {
+    Object.defineProperty(browser, "outerWindowID", {
+      get() {
+        return browser._outerWindowID;
       },
       configurable: true,
       enumerable: true,

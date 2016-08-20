@@ -93,7 +93,11 @@ switch(osName)
     }
     break;
 
-  default: // Linux and others.
+  case "Linux":
+    todo(false, "Acceleration supported on Linux, but only on taskcluster instances (bug 1296086)");
+    break;
+
+  default:
     if (xr.OS == "Android" && xr.widgetToolkit != "gonk") {
       isnot(acceleratedWindows, 0, "Acceleration enabled on Android");
     } else {

@@ -82,6 +82,36 @@
       }
     }
 
+    function insertInaccessibleAccessibleSiblings()
+    {
+      this.eventSeq = [
+        new invokerChecker(EVENT_REORDER, "c3")
+      ];
+
+      this.invoke = function insertInaccessibleAccessibleSiblings_invoke()
+      {
+        getNode("c3").appendChild(document.createElement("span"));
+        getNode("c3").appendChild(document.createElement("input"));
+      }
+
+      this.finalCheck = function insertInaccessibleAccessibleSiblings_finalCheck()
+      {
+        var accTree =
+          { SECTION: [ // container
+            { PUSHBUTTON: [
+              { TEXT_LEAF: [] }
+            ] },
+            { ENTRY: [ ] }
+          ] };
+        testAccessibleTree("c3", accTree);
+      }
+
+      this.getID = function insertInaccessibleAccessibleSiblings_getID()
+      {
+        return "insert inaccessible and then accessible siblings";
+      }
+    }
+
     ////////////////////////////////////////////////////////////////////////////
     // Do tests
     ////////////////////////////////////////////////////////////////////////////
@@ -96,6 +126,7 @@
 
       gQueue.push(new prependAppend("c1"));
       gQueue.push(new removeRemove("c2"));
+      gQueue.push(new insertInaccessibleAccessibleSiblings());
 
       gQueue.invoke(); // Will call SimpleTest.finish();
     }
@@ -113,5 +144,7 @@
 
   <div id="c1"><input></div>
   <div id="c2"><span><input type="checkbox"><input></span><input type="button"></div>
+
+  <div id="c3"><input type="button" value="button"></div>
 </body>
 </html>

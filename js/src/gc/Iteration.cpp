@@ -17,18 +17,6 @@
 using namespace js;
 using namespace js::gc;
 
-void
-js::TraceRuntime(JSTracer* trc)
-{
-    MOZ_ASSERT(!trc->isMarkingTracer());
-
-    JSRuntime* rt = trc->runtime();
-    rt->gc.evictNursery();
-    AutoPrepareForTracing prep(rt->contextFromMainThread(), WithAtoms);
-    gcstats::AutoPhase ap(rt->gc.stats, gcstats::PHASE_TRACE_HEAP);
-    rt->gc.markRuntime(trc, GCRuntime::TraceRuntime, prep.session().lock);
-}
-
 static void
 IterateCompartmentsArenasCells(JSContext* cx, Zone* zone, void* data,
                                JSIterateCompartmentCallback compartmentCallback,

@@ -4,7 +4,7 @@
 /* import-globals-from ../performance-controller.js */
 /* import-globals-from ../performance-view.js */
 /* globals WaterfallView, JsCallTreeView, JsFlameGraphView, MemoryCallTreeView,
-           MemoryFlameGraphView, Iterator */
+           MemoryFlameGraphView */
 "use strict";
 
 /**
@@ -75,7 +75,7 @@ var DetailsView = {
       button.removeEventListener("command", this._onViewToggle);
     }
 
-    for (let [, component] of Iterator(this.components)) {
+    for (let component of Object.values(this.components)) {
       component.initialized && (yield component.view.destroy());
     }
 
@@ -97,7 +97,7 @@ var DetailsView = {
     let isCompleted = recording && recording.isCompleted();
     let invalidCurrentView = false;
 
-    for (let [name, { view }] of Iterator(this.components)) {
+    for (let [name, { view }] of Object.entries(this.components)) {
       let isSupported = this._isViewSupported(name);
 
       $(`toolbarbutton[data-view=${name}]`).hidden = !isSupported;
@@ -204,7 +204,7 @@ var DetailsView = {
     let selectedPanel = this.el.selectedPanel;
     let selectedId = selectedPanel.id;
 
-    for (let [, { id, view }] of Iterator(this.components)) {
+    for (let { id, view } of Object.values(this.components)) {
       if (id == selectedId && view == viewObject) {
         return true;
       }

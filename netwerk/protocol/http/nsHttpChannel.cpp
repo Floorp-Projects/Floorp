@@ -6346,7 +6346,14 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult st
     MOZ_ASSERT(NS_IsMainThread(),
                "OnStopRequest should only be called from the main thread");
 
-    mUploadStream = nullptr;
+    if (!mAuthRetryPending) {
+        // We must not release the upload stream (that may contain POST data)
+        // before we finish any authentication loops happing during lifetime
+        // of this very channel.  Otherwise, we may loose the upload data when
+        // authenticating to e.g. an NTLM authenticated site.
+        LOG(("  dropping upload stream"));
+        mUploadStream = nullptr;
+    }
 
     if (NS_FAILED(status)) {
         ProcessSecurityReport(status);

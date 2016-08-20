@@ -544,7 +544,8 @@ FT2FontEntry::GetFontTable(uint32_t aTableTag)
         FTUserFontData *userFontData = static_cast<FTUserFontData*>(
             cairo_font_face_get_user_data(mFontFace, &sFTUserFontDataKey));
         if (userFontData && userFontData->FontData()) {
-            return GetTableFromFontData(userFontData->FontData(), aTableTag);
+            return gfxFontUtils::GetTableFromFontData(userFontData->FontData(),
+                                                      aTableTag);
         }
     }
 

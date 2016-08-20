@@ -1890,9 +1890,35 @@ function openLocation() {
   }
 }
 
-function BrowserOpenTab()
-{
-  openUILinkIn(BROWSER_NEW_TAB_URL, "tab");
+function BrowserOpenTab(event) {
+  let where = "tab";
+  let relatedToCurrent = false;
+
+  if (event) {
+    where = whereToOpenLink(event, false, true);
+
+    switch (where) {
+      case "tab":
+      case "tabshifted":
+        // When accel-click or middle-click are used, open the new tab as
+        // related to the current tab. We need to exclude key events here,
+        // where the accel key is required for the shortcut.
+        // 'event' and its sourceEvent are command events, the latter of which
+        // doesn't have its own sourceEvent. These events don't indicate how
+        // they were invoked, except that the sourceEvent for keyboard
+        // shortcuts have <key> targets, and those for clicking a toolbar
+        // button or activating a menu item have that button or menuitem as
+        // their target.
+        relatedToCurrent = !event.sourceEvent ||
+                           event.sourceEvent.target.localName != "key";
+        break;
+      case "current":
+        where = "tab";
+        break;
+    }
+  }
+
+  openUILinkIn(BROWSER_NEW_TAB_URL, where, { relatedToCurrent });
 }
 
 /* Called from the openLocation dialog. This allows that dialog to instruct
@@ -7858,14 +7884,6 @@ var MousePosTracker = {
     }
   }
 };
-
-function BrowserOpenNewTabOrWindow(event) {
-  if (event.shiftKey) {
-    OpenBrowserWindow();
-  } else {
-    BrowserOpenTab();
-  }
-}
 
 var ToolbarIconColor = {
   init: function () {
