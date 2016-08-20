@@ -586,11 +586,11 @@ GlobalManager = {
       },
 
       callFunction(pathObj, path, name, args) {
-        return findPathInObject(apis, path)[name](...args);
+        return pathObj[name](...args);
       },
 
       callFunctionNoReturn(pathObj, path, name, args) {
-        findPathInObject(apis, path)[name](...args);
+        pathObj[name](...args);
       },
 
       callAsyncFunction(pathObj, path, name, args, callback) {
@@ -603,12 +603,12 @@ GlobalManager = {
 
         let promise;
         try {
-          promise = findPathInObject(apis, path)[name](...args);
+          promise = pathObj[name](...args) || Promise.resolve();
         } catch (e) {
           promise = Promise.reject(e);
         }
 
-        return context.wrapPromise(promise || Promise.resolve(), callback);
+        return context.wrapPromise(promise, callback);
       },
 
       shouldInject(namespace, name, restrictions) {
@@ -617,25 +617,25 @@ GlobalManager = {
             (!restrictions || !restrictions.includes("content"))) {
           return false;
         }
-        return findPathInObject(apis, [namespace]) != null;
+        return findPathInObject(apis, [namespace]);
       },
 
       getProperty(pathObj, path, name) {
-        return findPathInObject(apis, path)[name];
+        return pathObj[name];
       },
 
       setProperty(pathObj, path, name, value) {
-        findPathInObject(apis, path)[name] = value;
+        pathObj[name] = value;
       },
 
       addListener(pathObj, path, name, listener, args) {
-        findPathInObject(apis, path)[name].addListener.call(null, listener, ...args);
+        pathObj[name].addListener.call(null, listener, ...args);
       },
       removeListener(pathObj, path, name, listener) {
-        findPathInObject(apis, path)[name].removeListener.call(null, listener);
+        pathObj[name].removeListener.call(null, listener);
       },
       hasListener(pathObj, path, name, listener) {
-        return findPathInObject(apis, path)[name].hasListener.call(null, listener);
+        return pathObj[name].hasListener.call(null, listener);
       },
     };
     Schemas.inject(dest, schemaWrapper);
