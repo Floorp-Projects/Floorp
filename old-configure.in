@@ -2311,6 +2311,11 @@ fi # SKIP_LIBRARY_CHECKS
 AC_SUBST(MOZ_PNG_ARM_NEON)
 
 dnl ========================================================
+dnl system libffi Support
+dnl ========================================================
+MOZ_CONFIG_FFI()
+
+dnl ========================================================
 dnl =
 dnl = Application
 dnl =
@@ -2362,6 +2367,7 @@ MOZ_ZIPWRITER=1
 MOZ_NO_SMART_CARDS=
 NECKO_COOKIES=1
 NECKO_PROTOCOLS_DEFAULT="about data file ftp http res viewsource websocket wyciwyg device"
+BUILD_CTYPES=1
 MOZ_USE_NATIVE_POPUP_WINDOWS=
 MOZ_EXCLUDE_HYPHENATION_DICTIONARIES=
 MOZ_INSTALL_TRACKING=
@@ -5581,6 +5587,18 @@ if test "$ENABLE_MARIONETTE"; then
     AC_DEFINE(ENABLE_MARIONETTE)
 fi
 
+dnl
+dnl Build jsctypes on the platforms we can, unless it's explicitly disabled.
+dnl
+MOZ_ARG_DISABLE_BOOL(ctypes,
+[  --disable-ctypes        Disable js-ctypes],
+    BUILD_CTYPES=,
+    BUILD_CTYPES=1)
+AC_SUBST(BUILD_CTYPES)
+if test "$BUILD_CTYPES"; then
+    AC_DEFINE(BUILD_CTYPES)
+fi
+
 dnl ========================================================
 if test "$MOZ_DEBUG" -o "$MOZ_DMD"; then
     MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS=
@@ -6257,6 +6275,10 @@ if test "$_INTL_API" = no; then
     ac_configure_args="$ac_configure_args --without-intl-api"
 fi
 
+if test "$BUILD_CTYPES"; then
+    # Build js-ctypes on the platforms we can.
+    ac_configure_args="$ac_configure_args --enable-ctypes"
+fi
 if test -n "$NSPR_CFLAGS" -o -n "$NSPR_LIBS"; then
     ac_configure_args="$ac_configure_args --with-nspr-cflags='$NSPR_CFLAGS'"
     ac_configure_args="$ac_configure_args --with-nspr-libs='$NSPR_LIBS'"

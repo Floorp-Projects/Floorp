@@ -652,7 +652,7 @@ gfxDownloadedFcFontEntry::GetFontTable(uint32_t aTableTag)
     // so we can just return a blob that "wraps" the appropriate chunk of it.
     // The blob should not attempt to free its data, as the entire sfnt data
     // will be freed when the font entry is deleted.
-    return GetTableFromFontData(mFontData, aTableTag);
+    return gfxFontUtils::GetTableFromFontData(mFontData, aTableTag);
 }
 
 /*

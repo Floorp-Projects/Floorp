@@ -8794,11 +8794,18 @@ nsDocument::EnumerateSubDocuments(nsSubDocEnumFunc aCallback, void *aData)
     return;
   }
 
+  // PLDHashTable::Iterator can't handle modifications while iterating so we
+  // copy all entries to an array first before calling any callbacks.
+  AutoTArray<nsCOMPtr<nsIDocument>, 8> subdocs;
   for (auto iter = mSubDocuments->Iter(); !iter.Done(); iter.Next()) {
     auto entry = static_cast<SubDocMapEntry*>(iter.Get());
     nsIDocument* subdoc = entry->mSubDocument;
-    bool next = subdoc ? aCallback(subdoc, aData) : true;
-    if (!next) {
+    if (subdoc) {
+      subdocs.AppendElement(subdoc);
+    }
+  }
+  for (auto subdoc : subdocs) {
+    if (!aCallback(subdoc, aData)) {
       break;
     }
   }

@@ -764,10 +764,8 @@ DocAccessible::AttributeChanged(nsIDocument* aDocument,
     accessible = this;
   }
 
-  if (!accessible->IsBoundToParent()) {
-    MOZ_ASSERT_UNREACHABLE("DOM attribute change on accessible detached from tree");
-    return;
-  }
+  MOZ_ASSERT(accessible->IsBoundToParent() || accessible->IsDoc(),
+             "DOM attribute change on an accessible detached from the tree");
 
   // Fire accessible events iff there's an accessible, otherwise we consider
   // the accessible state wasn't changed, i.e. its state is initial state.
@@ -980,7 +978,7 @@ DocAccessible::ARIAAttributeChanged(Accessible* aAccessible, nsIAtom* aAttribute
   if (aAttribute == nsGkAtoms::aria_hidden) {
     bool isDefined = aria::HasDefinedARIAHidden(elm);
     if (isDefined != aAccessible->IsARIAHidden() &&
-        !aAccessible->Parent()->IsARIAHidden()) {
+        (!aAccessible->Parent() || !aAccessible->Parent()->IsARIAHidden())) {
       aAccessible->SetARIAHidden(isDefined);
 
       RefPtr<AccEvent> event =
@@ -1452,6 +1450,11 @@ DocAccessible::DoInitialUpdate()
 
   // Build initial tree.
   CacheChildrenInSubtree(this);
+#ifdef A11Y_LOG
+  if (logging::IsEnabled(logging::eVerbose)) {
+    logging::Tree("TREE", "Initial subtree", this);
+  }
+#endif
 
   // Fire reorder event after the document tree is constructed. Note, since
   // this reorder event is processed by parent document then events targeted to
@@ -1763,7 +1766,7 @@ InsertIterator::Next()
 #endif
 
     // If inserted nodes are siblings then just move the walker next.
-    if (prevNode && prevNode->GetNextSibling() == node) {
+    if (mChild && prevNode && prevNode->GetNextSibling() == node) {
       Accessible* nextChild = mWalker.Scope(node);
       if (nextChild) {
         mChildBefore = mChild;
@@ -2212,9 +2215,6 @@ DocAccessible::CacheChildrenInSubtree(Accessible* aRoot,
 
   Accessible* root = aRoot->IsHTMLCombobox() ? aRoot->FirstChild() : aRoot;
   if (root->KidsFromDOM()) {
-#ifdef A11Y_LOG
-  logging::TreeInfo("caching children", logging::eVerbose, aRoot);
-#endif
     TreeMutation mt(root, TreeMutation::kNoEvents);
     TreeWalker walker(root);
     while (Accessible* child = walker.Next()) {

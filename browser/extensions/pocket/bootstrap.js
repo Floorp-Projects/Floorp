@@ -88,6 +88,7 @@ function CreatePocketWidget(reason) {
     defaultArea: CustomizableUI.AREA_NAVBAR,
     introducedInVersion: "pref",
     type: "view",
+    tabSpecific: true,
     viewId: "PanelUI-pocketView",
     label: gPocketBundle.GetStringFromName("pocket-button.label"),
     tooltiptext: gPocketBundle.GetStringFromName("pocket-button.tooltiptext"),

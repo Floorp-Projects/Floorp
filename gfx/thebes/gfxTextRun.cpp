@@ -131,7 +131,7 @@ gfxTextRun::AllocateStorageForTextRun(size_t aSize, uint32_t aLength)
     return storage;
 }
 
-UniquePtr<gfxTextRun>
+already_AddRefed<gfxTextRun>
 gfxTextRun::Create(const gfxTextRunFactory::Parameters *aParams,
                    uint32_t aLength, gfxFontGroup *aFontGroup, uint32_t aFlags)
 {
@@ -140,8 +140,9 @@ gfxTextRun::Create(const gfxTextRunFactory::Parameters *aParams,
         return nullptr;
     }
 
-    return UniquePtr<gfxTextRun>(new (storage) gfxTextRun(aParams, aLength,
-                                                          aFontGroup, aFlags));
+    RefPtr<gfxTextRun> result = new (storage) gfxTextRun(aParams, aLength,
+                                                         aFontGroup, aFlags);
+    return result.forget();
 }
 
 gfxTextRun::gfxTextRun(const gfxTextRunFactory::Parameters *aParams,
@@ -1476,59 +1477,6 @@ gfxTextRun::FetchGlyphExtents(DrawTarget* aRefDrawTarget)
 }
 
 
-gfxTextRun::ClusterIterator::ClusterIterator(gfxTextRun *aTextRun)
-    : mTextRun(aTextRun), mCurrentChar(uint32_t(-1))
-{
-}
-
-void
-gfxTextRun::ClusterIterator::Reset()
-{
-    mCurrentChar = uint32_t(-1);
-}
-
-bool
-gfxTextRun::ClusterIterator::NextCluster()
-{
-    uint32_t len = mTextRun->GetLength();
-    while (++mCurrentChar < len) {
-        if (mTextRun->IsClusterStart(mCurrentChar)) {
-            return true;
-        }
-    }
-
-    mCurrentChar = uint32_t(-1);
-    return false;
-}
-
-gfxTextRun::Range
-gfxTextRun::ClusterIterator::ClusterRange() const
-{
-    if (mCurrentChar == uint32_t(-1)) {
-        return Range(0, 0);
-    }
-
-    uint32_t i = mCurrentChar,
-             len = mTextRun->GetLength();
-    while (++i < len) {
-        if (mTextRun->IsClusterStart(i)) {
-            break;
-        }
-    }
-
-    return Range(mCurrentChar, i);
-}
-
-gfxFloat
-gfxTextRun::ClusterIterator::ClusterAdvance(PropertyProvider *aProvider) const
-{
-    if (mCurrentChar == uint32_t(-1)) {
-        return 0;
-    }
-
-    return mTextRun->GetAdvanceWidth(ClusterRange(), aProvider);
-}
-
 size_t
 gfxTextRun::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf)
 {
@@ -1968,19 +1916,19 @@ gfxFontGroup::IsInvalidChar(char16_t ch)
             IsBidiControl(ch));
 }
 
-UniquePtr<gfxTextRun>
+already_AddRefed<gfxTextRun>
 gfxFontGroup::MakeEmptyTextRun(const Parameters *aParams, uint32_t aFlags)
 {
     aFlags |= TEXT_IS_8BIT | TEXT_IS_ASCII | TEXT_IS_PERSISTENT;
     return gfxTextRun::Create(aParams, 0, this, aFlags);
 }
 
-UniquePtr<gfxTextRun>
+already_AddRefed<gfxTextRun>
 gfxFontGroup::MakeSpaceTextRun(const Parameters *aParams, uint32_t aFlags)
 {
     aFlags |= TEXT_IS_8BIT | TEXT_IS_ASCII | TEXT_IS_PERSISTENT;
 
-    UniquePtr<gfxTextRun> textRun =
+    RefPtr<gfxTextRun> textRun =
         gfxTextRun::Create(aParams, 1, this, aFlags);
     if (!textRun) {
         return nullptr;
@@ -2022,14 +1970,14 @@ gfxFontGroup::MakeSpaceTextRun(const Parameters *aParams, uint32_t aFlags)
     // Note that the gfxGlyphExtents glyph bounds storage for the font will
     // always contain an entry for the font's space glyph, so we don't have
     // to call FetchGlyphExtents here.
-    return textRun;
+    return textRun.forget();
 }
 
-UniquePtr<gfxTextRun>
+already_AddRefed<gfxTextRun>
 gfxFontGroup::MakeBlankTextRun(uint32_t aLength,
                                const Parameters *aParams, uint32_t aFlags)
 {
-    UniquePtr<gfxTextRun> textRun =
+    RefPtr<gfxTextRun> textRun =
         gfxTextRun::Create(aParams, aLength, this, aFlags);
     if (!textRun) {
         return nullptr;
@@ -2041,10 +1989,10 @@ gfxFontGroup::MakeBlankTextRun(uint32_t aLength,
     }
     textRun->AddGlyphRun(GetFirstValidFont(), gfxTextRange::kFontGroup, 0, false,
                          orientation);
-    return textRun;
+    return textRun.forget();
 }
 
-UniquePtr<gfxTextRun>
+already_AddRefed<gfxTextRun>
 gfxFontGroup::MakeHyphenTextRun(DrawTarget* aDrawTarget,
                                 uint32_t aAppUnitsPerDevUnit)
 {
@@ -2069,7 +2017,7 @@ gfxFontGroup::GetHyphenWidth(gfxTextRun::PropertyProvider *aProvider)
     if (mHyphenWidth < 0) {
         RefPtr<DrawTarget> dt(aProvider->GetDrawTarget());
         if (dt) {
-            UniquePtr<gfxTextRun>
+            RefPtr<gfxTextRun>
                 hyphRun(MakeHyphenTextRun(dt,
                                           aProvider->GetAppUnitsPerDevUnit()));
             mHyphenWidth = hyphRun.get() ? hyphRun->GetAdvanceWidth() : 0;
@@ -2078,7 +2026,7 @@ gfxFontGroup::GetHyphenWidth(gfxTextRun::PropertyProvider *aProvider)
     return mHyphenWidth;
 }
 
-UniquePtr<gfxTextRun>
+already_AddRefed<gfxTextRun>
 gfxFontGroup::MakeTextRun(const uint8_t *aString, uint32_t aLength,
                           const Parameters *aParams, uint32_t aFlags,
                           gfxMissingFontRecorder *aMFR)
@@ -2100,8 +2048,8 @@ gfxFontGroup::MakeTextRun(const uint8_t *aString, uint32_t aLength,
         return MakeBlankTextRun(aLength, aParams, aFlags);
     }
 
-    UniquePtr<gfxTextRun> textRun = gfxTextRun::Create(aParams, aLength,
-                                                       this, aFlags);
+    RefPtr<gfxTextRun> textRun = gfxTextRun::Create(aParams, aLength, this,
+                                                    aFlags);
     if (!textRun) {
         return nullptr;
     }
@@ -2110,10 +2058,10 @@ gfxFontGroup::MakeTextRun(const uint8_t *aString, uint32_t aLength,
 
     textRun->FetchGlyphExtents(aParams->mDrawTarget);
 
-    return textRun;
+    return textRun.forget();
 }
 
-UniquePtr<gfxTextRun>
+already_AddRefed<gfxTextRun>
 gfxFontGroup::MakeTextRun(const char16_t *aString, uint32_t aLength,
                           const Parameters *aParams, uint32_t aFlags,
                           gfxMissingFontRecorder *aMFR)
@@ -2129,8 +2077,8 @@ gfxFontGroup::MakeTextRun(const char16_t *aString, uint32_t aLength,
         return MakeBlankTextRun(aLength, aParams, aFlags);
     }
 
-    UniquePtr<gfxTextRun> textRun = gfxTextRun::Create(aParams, aLength,
-                                                       this, aFlags);
+    RefPtr<gfxTextRun> textRun = gfxTextRun::Create(aParams, aLength, this,
+                                                    aFlags);
     if (!textRun) {
         return nullptr;
     }
@@ -2139,7 +2087,7 @@ gfxFontGroup::MakeTextRun(const char16_t *aString, uint32_t aLength,
 
     textRun->FetchGlyphExtents(aParams->mDrawTarget);
 
-    return textRun;
+    return textRun.forget();
 }
 
 template<typename T>

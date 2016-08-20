@@ -206,7 +206,7 @@ gc::GCRuntime::startVerifyPreBarriers()
     incrementalState = State::MarkRoots;
 
     /* Make all the roots be edges emanating from the root node. */
-    markRuntime(trc, TraceRuntime, prep.session().lock);
+    traceRuntime(trc, prep.session().lock);
 
     VerifyNode* node;
     node = trc->curnode;
@@ -507,9 +507,9 @@ CheckHeapTracer::onChild(const JS::GCCellPtr& thing)
 bool
 CheckHeapTracer::check(AutoLockForExclusiveAccess& lock)
 {
-    // The analysis thinks that markRuntime might GC by calling a GC callback.
+    // The analysis thinks that traceRuntime might GC by calling a GC callback.
     JS::AutoSuppressGCAnalysis nogc;
-    rt->gc.markRuntime(this, GCRuntime::TraceRuntime, lock);
+    rt->gc.traceRuntime(this, lock);
 
     while (!stack.empty()) {
         WorkItem item = stack.back();
