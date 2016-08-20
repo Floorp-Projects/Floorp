@@ -11,7 +11,7 @@ define(function (require, exports, module) {
   const React = require("devtools/client/shared/vendor/react");
 
   // Reps
-  const { isGrip, getFileName } = require("./rep-utils");
+  const { isGrip, getURLDisplayString } = require("./rep-utils");
 
   // Shortcuts
   const DOM = React.DOM;
@@ -41,7 +41,7 @@ define(function (require, exports, module) {
     getLocation: function (grip) {
       // Embedded stylesheets don't have URL and so, no preview.
       let url = grip.preview ? grip.preview.url : "";
-      return url ? getFileName(url) : "";
+      return url ? getURLDisplayString(url) : "";
     },
 
     render: function () {

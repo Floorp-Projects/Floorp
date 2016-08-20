@@ -39,7 +39,7 @@ window.onload = Task.async(function* () {
 
     // Test rendering
     const renderedComponent = renderComponent(StyleSheet.rep, { object: gripStub });
-    is(renderedComponent.textContent, "StyleSheet styles.css", "StyleSheet rep has expected text content");
+    is(renderedComponent.textContent, "StyleSheet https://example.com/styles.css", "StyleSheet rep has expected text content");
   } catch(e) {
     ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
   } finally {
