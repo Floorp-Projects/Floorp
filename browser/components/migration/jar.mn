@@ -5,4 +5,5 @@
 browser.jar:
 *  content/browser/migration/migration.xul                    (content/migration.xul)
    content/browser/migration/migration.js                     (content/migration.js)
+   content/browser/migration/automigration.properties         (content/automigration.properties)
    content/browser/aboutWelcomeBack.xhtml                     (content/aboutWelcomeBack.xhtml)

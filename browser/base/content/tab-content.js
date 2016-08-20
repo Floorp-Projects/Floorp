@@ -148,6 +148,7 @@ var AboutHomeListener = {
     addEventListener("click", this, true);
     addEventListener("pagehide", this, true);
 
+    sendAsyncMessage("AboutHome:MaybeShowAutoMigrationUndoNotification");
     sendAsyncMessage("AboutHome:RequestUpdate");
   },
 
