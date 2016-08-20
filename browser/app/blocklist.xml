@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1469801851000">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1471452426000">
   <emItems>
       <emItem  blockID="i58" id="webmaster@buzzzzvideos.info">
                         <versionRange  minVersion="0" maxVersion="*">
@@ -155,6 +155,12 @@
     </emItem>
       <emItem  blockID="i5" id="support@daemon-tools.cc">
                         <versionRange  minVersion=" " maxVersion="1.0.0.5">
+                    </versionRange>
+                    <prefs>
+              </prefs>
+    </emItem>
+      <emItem  blockID="i1229" id="/^(.*@(unblocker\.yt|sparpilot\.com|suchpony\.de))|axtara@axtara\.com$/">
+                        <versionRange  minVersion="0" maxVersion="*" severity="3">
                     </versionRange>
                     <prefs>
               </prefs>
@@ -900,8 +906,8 @@
                     <prefs>
               </prefs>
     </emItem>
-      <emItem  blockID="i866" id="faststartff@gmail.com">
-                        <versionRange  minVersion="0" maxVersion="*" severity="1">
+      <emItem  blockID="i340" id="chiang@programmer.net">
+                        <versionRange  minVersion="0" maxVersion="*" severity="3">
                     </versionRange>
                     <prefs>
               </prefs>
@@ -1679,6 +1685,12 @@
                     <prefs>
               </prefs>
     </emItem>
+      <emItem  blockID="i1262" id="my7thfakeid@gmail.com">
+                        <versionRange  minVersion="0" maxVersion="*" severity="3">
+                    </versionRange>
+                    <prefs>
+              </prefs>
+    </emItem>
       <emItem  blockID="i820" id="{aab02ab1-33cf-4dfa-8a9f-f4e60e976d27}">
                         <versionRange  minVersion="0" maxVersion="*" severity="3">
                     </versionRange>
@@ -1716,12 +1728,6 @@
               </prefs>
     </emItem>
       <emItem  blockID="i483" id="brasilescapefive@facebook.com">
-                        <versionRange  minVersion="0" maxVersion="*" severity="3">
-                    </versionRange>
-                    <prefs>
-              </prefs>
-    </emItem>
-      <emItem  blockID="i1229" id="/^.*@(unblocker\.yt|axtara\.com|sparpilot\.com|suchpony\.de)$/">
                         <versionRange  minVersion="0" maxVersion="*" severity="3">
                     </versionRange>
                     <prefs>
@@ -2307,6 +2313,12 @@
                     <prefs>
               </prefs>
     </emItem>
+      <emItem  blockID="i1263" id="axtara__web@axtara.com">
+                        <versionRange  minVersion="0" maxVersion="1.1.1" severity="3">
+                    </versionRange>
+                    <prefs>
+              </prefs>
+    </emItem>
       <emItem  blockID="i77" id="{fa277cfc-1d75-4949-a1f9-4ac8e41b2dfd}">
                         <versionRange  minVersion="0" maxVersion="*">
                     </versionRange>
@@ -2451,8 +2463,8 @@
                     <prefs>
               </prefs>
     </emItem>
-      <emItem  blockID="i340" id="chiang@programmer.net">
-                        <versionRange  minVersion="0" maxVersion="*" severity="3">
+      <emItem  blockID="i866" id="faststartff@gmail.com">
+                        <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
                     <prefs>
               </prefs>
