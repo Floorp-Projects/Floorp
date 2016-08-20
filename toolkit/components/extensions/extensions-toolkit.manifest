@@ -14,6 +14,9 @@ category webextension-scripts extension chrome://extensions/content/ext-extensio
 category webextension-scripts storage chrome://extensions/content/ext-storage.js
 category webextension-scripts test chrome://extensions/content/ext-test.js
 
+# scripts specific for content process.
+category webextension-scripts-content i18n chrome://extensions/content/ext-i18n.js
+
 # schemas
 category webextension-schemas alarms chrome://extensions/content/schemas/alarms.json
 category webextension-schemas cookies chrome://extensions/content/schemas/cookies.json
