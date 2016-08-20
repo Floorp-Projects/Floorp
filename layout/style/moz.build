@@ -92,6 +92,7 @@ EXPORTS.mozilla += [
     'RuleNodeCacheConditions.h',
     'RuleProcessorCache.h',
     'ServoBindingHelpers.h',
+    'ServoBindingList.h',
     'ServoBindings.h',
     'ServoElementSnapshot.h',
     'ServoStyleSet.h',

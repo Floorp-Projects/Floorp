@@ -11,7 +11,7 @@ define(function (require, exports, module) {
   const React = require("devtools/client/shared/vendor/react");
 
   // Reps
-  const { isGrip, cropString } = require("./rep-utils");
+  const { isGrip, getURLDisplayString } = require("./rep-utils");
 
   // Shortcuts
   const DOM = React.DOM;
@@ -38,7 +38,7 @@ define(function (require, exports, module) {
     },
 
     getLocation: function (grip) {
-      return cropString(grip.preview.url);
+      return getURLDisplayString(grip.preview.url);
     },
 
     render: function () {

@@ -30,6 +30,8 @@ this.FinderIterator = {
   get kIterationSizeMax() { return kIterationSizeMax },
 
   get params() {
+    if (!this._currentParams && !this._previousParams)
+      return null;
     return Object.assign({}, this._currentParams || this._previousParams);
   },
 
@@ -42,9 +44,9 @@ this.FinderIterator = {
    * yield `undefined`, instead of a range.
    * Upon re-entrance after a break, we check if `stop()` was called during the
    * break and if so, we stop iterating.
-   * Results are also passed to the `onRange` callback method, along with a flag
-   * that specifies if the result comes from the cache or is fresh. The callback
-   * also adheres to the `limit` flag.
+   * Results are also passed to the `listener.onIteratorRangeFound` callback
+   * method, along with a flag that specifies if the result comes from the cache
+   * or is fresh. The callback also adheres to the `limit` flag.
    * The returned promise is resolved when 1) the limit is reached, 2) when all
    * the ranges have been found or 3) when `stop()` is called whilst iterating.
    *
@@ -58,14 +60,19 @@ this.FinderIterator = {
    * @param {Boolean}  [options.linksOnly]   Only yield ranges that are inside a
    *                                         hyperlink (used by QuickFind).
    *                                         Optional, defaults to `false`.
-   * @param {Function} options.onRange       Callback invoked when a range is found
+   * @param {Object}   options.listener    Listener object that implements the
+   *                                       following callback functions:
+   *                                        - onIteratorRangeFound({nsIDOMRange} range);
+   *                                        - onIteratorReset();
+   *                                        - onIteratorRestart({Object} iterParams);
+   *                                        - onIteratorStart({Object} iterParams);
    * @param {Boolean}  [options.useCache]    Whether to allow results already
    *                                         present in the cache or demand fresh.
    *                                         Optional, defaults to `false`.
    * @param {String}   options.word          Word to search for
    * @return {Promise}
    */
-  start({ caseSensitive, entireWord, finder, limit, linksOnly, onRange, useCache, word }) {
+  start({ caseSensitive, entireWord, finder, limit, linksOnly, listener, useCache, word }) {
     // Take care of default values for non-required options.
     if (typeof limit != "number")
       limit = -1;
@@ -83,23 +90,27 @@ this.FinderIterator = {
       throw new Error("Missing required option 'finder'");
     if (!word)
       throw new Error("Missing required option 'word'");
-    if (typeof onRange != "function")
-      throw new TypeError("Missing valid, required option 'onRange'");
+    if (typeof listener != "object" || !listener.onIteratorRangeFound)
+      throw new TypeError("Missing valid, required option 'listener'");
 
-    // Don't add the same listener twice.
-    if (this._listeners.has(onRange))
-      throw new Error("Already listening to iterator results");
+    // If the listener was added before, make sure the promise is resolved before
+    // we replace it with another.
+    if (this._listeners.has(listener)) {
+      let { onEnd } = this._listeners.get(listener);
+      if (onEnd)
+        onEnd();
+    }
 
     let window = finder._getWindow();
     let resolver;
     let promise = new Promise(resolve => resolver = resolve);
     let iterParams = { caseSensitive, entireWord, linksOnly, useCache, word };
 
-    this._listeners.set(onRange, { limit, onEnd: resolver });
+    this._listeners.set(listener, { limit, onEnd: resolver });
 
     // If we're not running anymore and we're requesting the previous result, use it.
     if (!this.running && this._previousResultAvailable(iterParams)) {
-      this._yieldPreviousResult(onRange, window);
+      this._yieldPreviousResult(listener, window);
       return promise;
     }
 
@@ -110,7 +121,7 @@ this.FinderIterator = {
         throw new Error(`We're currently iterating over '${this._currentParams.word}', not '${word}'`);
 
       // if we're still running, yield the set we have built up this far.
-      this._yieldIntermediateResult(onRange, window);
+      this._yieldIntermediateResult(listener, window);
 
       return promise;
     }
@@ -149,7 +160,27 @@ this.FinderIterator = {
 
     for (let [, { onEnd }] of this._listeners)
       onEnd();
-    this._listeners.clear();
+  },
+
+  /**
+   * Stops the iteration that currently running, if it is, and start a new one
+   * with the exact same params as before.
+   *
+   * @param {Finder} finder Currently active Finder instance
+   */
+  restart(finder) {
+    // Capture current iterator params before we stop the show.
+    let iterParams = this.params;
+    if (!iterParams)
+      return;
+    this.stop();
+
+    // Restart manually.
+    this.running = true;
+    this._currentParams = iterParams;
+
+    this._findAllRanges(finder, finder._getWindow(), ++this._spawnId);
+    this._notifyListeners("restart", iterParams);
   },
 
   /**
@@ -165,6 +196,7 @@ this.FinderIterator = {
     this.ranges = [];
     this.running = false;
 
+    this._notifyListeners("reset");
     for (let [, { onEnd }] of this._listeners)
       onEnd();
     this._listeners.clear();
@@ -192,12 +224,32 @@ this.FinderIterator = {
   },
 
   /**
+   * Safely notify all registered listeners that an event has occurred.
+   *
+   * @param {String}   callback    Name of the callback to invoke
+   * @param {mixed}    [params]    Optional argument that will be passed to the
+   *                               callback
+   * @param {Iterable} [listeners] Set of listeners to notify. Optional, defaults
+   *                               to `this._listeners.keys()`.
+   */
+  _notifyListeners(callback, params, listeners = this._listeners.keys()) {
+    callback = "onIterator" + callback.charAt(0).toUpperCase() + callback.substr(1);
+    for (let listener of listeners) {
+      try {
+        listener[callback](params);
+      } catch (ex) {
+        Cu.reportError("FinderIterator Error: " + ex);
+      }
+    }
+  },
+
+  /**
    * Internal; check if an iteration request is available in the previous result
    * that we cached.
    *
-   * @param {Boolean}  options.caseSensitive Whether to search in case sensitive
+   * @param  {Boolean} options.caseSensitive Whether to search in case sensitive
    *                                         mode
-   * @param {Boolean}  options.entireWord    Whether to search in entire-word mode
+   * @param  {Boolean} options.entireWord    Whether to search in entire-word mode
    * @param  {Boolean} options.linksOnly     Whether to search for the word to be
    *                                         present in links only
    * @param  {Boolean} options.useCache      Whether the consumer wants to use the
@@ -233,17 +285,20 @@ this.FinderIterator = {
    * make sure we don't block the host process too long. In the case of a break
    * like this, we yield `undefined`, instead of a range.
    *
-   * @param {Function}     onRange     Callback invoked when a range is found
+   * @param {Object}       listener    Listener object
    * @param {Array}        rangeSource Set of ranges to iterate over
    * @param {nsIDOMWindow} window      The window object is only really used
    *                                   for access to `setTimeout`
+   * @param {Boolean}      [withPause] Whether to pause after each `kIterationSizeMax`
+   *                                   number of ranges yielded. Optional, defaults
+   *                                   to `true`.
    * @yield {nsIDOMRange}
    */
-  _yieldResult: function* (onRange, rangeSource, window) {
+  _yieldResult: function* (listener, rangeSource, window, withPause = true) {
     // We keep track of the number of iterations to allow a short pause between
     // every `kIterationSizeMax` number of iterations.
     let iterCount = 0;
-    let { limit, onEnd } = this._listeners.get(onRange);
+    let { limit, onEnd } = this._listeners.get(listener);
     let ranges = rangeSource.slice(0, limit > -1 ? limit : undefined);
     for (let range of ranges) {
       try {
@@ -256,13 +311,13 @@ this.FinderIterator = {
 
       // Pass a flag that is `true` when we're returning the result from a
       // cached previous iteration.
-      onRange(range, !this.running);
+      listener.onIteratorRangeFound(range, !this.running);
       yield range;
 
-      if (++iterCount >= kIterationSizeMax) {
+      if (withPause && ++iterCount >= kIterationSizeMax) {
         iterCount = 0;
         // Make sure to save the current limit for later.
-        this._listeners.set(onRange, { limit, onEnd });
+        this._listeners.set(listener, { limit, onEnd });
         // Sleep for the rest of this cycle.
         yield new Promise(resolve => window.setTimeout(resolve, 0));
         // After a sleep, the set of ranges may have updated.
@@ -271,14 +326,14 @@ this.FinderIterator = {
 
       if (limit !== -1 && --limit === 0) {
         // We've reached our limit; no need to do more work.
-        this._listeners.delete(onRange);
+        this._listeners.delete(listener);
         onEnd();
         return;
       }
     }
 
     // Save the updated limit globally.
-    this._listeners.set(onRange, { limit, onEnd });
+    this._listeners.set(listener, { limit, onEnd });
   },
 
   /**
@@ -286,20 +341,19 @@ this.FinderIterator = {
    * mark the listener as 'catching up', meaning it will not receive fresh
    * results from a running iterator.
    *
-   * @param {Function}     onRange Callback invoked when a range is found
-   * @param {nsIDOMWindow} window  The window object is only really used
-   *                               for access to `setTimeout`
+   * @param {Object}       listener Listener object
+   * @param {nsIDOMWindow} window   The window object is only really used
+   *                                for access to `setTimeout`
    * @yield {nsIDOMRange}
    */
-  _yieldPreviousResult: Task.async(function* (onRange, window) {
-    this._catchingUp.add(onRange);
-    yield* this._yieldResult(onRange, this._previousRanges, window);
-    this._catchingUp.delete(onRange);
-    let { onEnd } = this._listeners.get(onRange);
-    if (onEnd) {
+  _yieldPreviousResult: Task.async(function* (listener, window) {
+    this._notifyListeners("start", this.params, [listener]);
+    this._catchingUp.add(listener);
+    yield* this._yieldResult(listener, this._previousRanges, window);
+    this._catchingUp.delete(listener);
+    let { onEnd } = this._listeners.get(listener);
+    if (onEnd)
       onEnd();
-      this._listeners.delete(onRange);
-    }
   }),
 
   /**
@@ -307,15 +361,16 @@ this.FinderIterator = {
    * mark the listener as 'catching up', meaning it will not receive fresh
    * results from the running iterator.
    *
-   * @param {Function}     onRange Callback invoked when a range is found
-   * @param {nsIDOMWindow} window  The window object is only really used
-   *                               for access to `setTimeout`
+   * @param {Object}       listener Listener object
+   * @param {nsIDOMWindow} window   The window object is only really used
+   *                                for access to `setTimeout`
    * @yield {nsIDOMRange}
    */
-  _yieldIntermediateResult: Task.async(function* (onRange, window) {
-    this._catchingUp.add(onRange);
-    yield* this._yieldResult(onRange, this.ranges, window);
-    this._catchingUp.delete(onRange);
+  _yieldIntermediateResult: Task.async(function* (listener, window) {
+    this._notifyListeners("start", this.params, [listener]);
+    this._catchingUp.add(listener);
+    yield* this._yieldResult(listener, this.ranges, window, false);
+    this._catchingUp.delete(listener);
   }),
 
   /**
@@ -329,6 +384,8 @@ this.FinderIterator = {
    * @yield {nsIDOMRange}
    */
   _findAllRanges: Task.async(function* (finder, window, spawnId) {
+    this._notifyListeners("start", this.params);
+
     // First we collect all frames we need to search through, whilst making sure
     // that the parent window gets dibs.
     let frames = [window].concat(this._collectFrames(window, finder));
@@ -348,21 +405,21 @@ this.FinderIterator = {
         this.ranges.push(range);
 
         // Call each listener with the range we just found.
-        for (let [onRange, { limit, onEnd }] of this._listeners) {
-          if (this._catchingUp.has(onRange))
+        for (let [listener, { limit, onEnd }] of this._listeners) {
+          if (this._catchingUp.has(listener))
             continue;
 
-          onRange(range);
+          listener.onIteratorRangeFound(range);
 
           if (limit !== -1 && --limit === 0) {
             // We've reached our limit; no need to do more work for this listener.
-            this._listeners.delete(onRange);
+            this._listeners.delete(listener);
             onEnd();
             continue;
           }
 
           // Save the updated limit globally.
-          this._listeners.set(onRange, { limit, onEnd });
+          this._listeners.set(listener, { limit, onEnd });
         }
 
         yield range;

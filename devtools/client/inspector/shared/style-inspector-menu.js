@@ -15,8 +15,7 @@ const Menu = require("devtools/client/framework/menu");
 const MenuItem = require("devtools/client/framework/menu-item");
 
 const overlays = require("devtools/client/inspector/shared/style-inspector-overlays");
-loader.lazyServiceGetter(this, "clipboardHelper",
-  "@mozilla.org/widget/clipboardhelper;1", "nsIClipboardHelper");
+const clipboardHelper = require("devtools/shared/platform/clipboard");
 loader.lazyGetter(this, "_strings", () => {
   return Services.strings
   .createBundle("chrome://devtools-shared/locale/styleinspector.properties");

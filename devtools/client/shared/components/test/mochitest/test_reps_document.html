@@ -41,7 +41,7 @@ window.onload = Task.async(function* () {
 
     // Test rendering
     const renderedComponent = renderComponent(Document.rep, { object: gripStub });
-    is(renderedComponent.textContent, "/en-US/firefox/new/", "Document rep has expected text content");
+    is(renderedComponent.textContent, "https://www.mozilla.org/en-US/firefox/new/", "Document rep has expected text content");
   } catch(e) {
     ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
   } finally {
