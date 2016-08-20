@@ -8,7 +8,7 @@
 const {CSSFilterEditorWidget} = require("devtools/client/shared/widgets/FilterWidget");
 
 const { LocalizationHelper } = require("devtools/client/shared/l10n");
-const STRINGS_URI = "chrome://devtools/locale/filterwidget.properties";
+const STRINGS_URI = "devtools/locale/filterwidget.properties";
 const L10N = new LocalizationHelper(STRINGS_URI);
 
 const TEST_URI = `data:text/html,<div id="filter-container" />`;
