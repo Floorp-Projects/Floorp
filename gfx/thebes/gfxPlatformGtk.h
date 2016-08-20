@@ -132,6 +132,15 @@ public:
       return true;
     }
 
+    bool AccelerateLayersByDefault() override {
+#ifdef NIGHTLY_BUILD
+      // Only enable the GL compositor on Nightly for now until we have
+      // sufficient data for blocklisting.
+      return true;
+#endif
+      return false;
+    }
+
 #ifdef GL_PROVIDER_GLX
     already_AddRefed<mozilla::gfx::VsyncSource> CreateHardwareVsyncSource() override;
 #endif

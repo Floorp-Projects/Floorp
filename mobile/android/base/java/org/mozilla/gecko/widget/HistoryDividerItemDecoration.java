@@ -1,3 +1,8 @@
+/* -*- Mode: Java; c-basic-offset: 4; tab-width: 20; indent-tabs-mode: nil; -*-
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 package org.mozilla.gecko.widget;
 
 import android.content.Context;
@@ -25,6 +30,11 @@ public class HistoryDividerItemDecoration extends RecyclerView.ItemDecoration {
     @Override
     public void getItemOffsets(Rect outRect, View view, RecyclerView parent, RecyclerView.State state) {
         final int position = parent.getChildAdapterPosition(view);
+        if (position == RecyclerView.NO_POSITION) {
+            // This view is no longer corresponds to an adapter position (pending changes).
+            return;
+        }
+
         if (parent.getAdapter().getItemViewType(position) !=
                 CombinedHistoryItem.ItemType.itemTypeToViewType(CombinedHistoryItem.ItemType.SECTION_HEADER)) {
             outRect.set(0, 0, 0, mDividerHeight);
@@ -36,9 +46,16 @@ public class HistoryDividerItemDecoration extends RecyclerView.ItemDecoration {
         if (parent.getChildCount() == 0) {
             return;
         }
+
         for (int i = 0; i < parent.getChildCount(); i++) {
             final View child = parent.getChildAt(i);
             final int position = parent.getChildAdapterPosition(child);
+
+            if (position == RecyclerView.NO_POSITION) {
+                // This view is no longer corresponds to an adapter position (pending changes).
+                continue;
+            }
+
             if (parent.getAdapter().getItemViewType(position) !=
                     CombinedHistoryItem.ItemType.itemTypeToViewType(CombinedHistoryItem.ItemType.SECTION_HEADER)) {
                 final float bottom = child.getBottom() + child.getTranslationY();

@@ -699,11 +699,11 @@
   exports.LocalDebuggerTransport = LocalDebuggerTransport;
 
   /**
-   * A transport for the debugging protocol that uses nsIMessageSenders to
+   * A transport for the debugging protocol that uses nsIMessageManagers to
    * exchange packets with servers running in child processes.
    *
-   * In the parent process, |sender| should be the nsIMessageSender for the
-   * child process. In a child process, |sender| should be the child process
+   * In the parent process, |mm| should be the nsIMessageSender for the
+   * child process. In a child process, |mm| should be the child process
    * message manager, which sends packets to the parent.
    *
    * |prefix| is a string included in the message names, to distinguish
@@ -712,10 +712,10 @@
    * This transport exchanges messages named 'debug:<prefix>:packet', where
    * <prefix> is |prefix|, whose data is the protocol packet.
    */
-  function ChildDebuggerTransport(sender, prefix) {
+  function ChildDebuggerTransport(mm, prefix) {
     EventEmitter.decorate(this);
 
-    this._sender = sender;
+    this._mm = mm;
     this._messageName = "debug:" + prefix + ":packet";
   }
 
@@ -729,13 +729,13 @@
 
     hooks: null,
 
-    ready: function () {
-      this._sender.addMessageListener(this._messageName, this);
+    _addListener() {
+      this._mm.addMessageListener(this._messageName, this);
     },
 
-    close: function () {
+    _removeListener() {
       try {
-        this._sender.removeMessageListener(this._messageName, this);
+        this._mm.removeMessageListener(this._messageName, this);
       } catch (e) {
         if (e.result != Cr.NS_ERROR_NULL_POINTER) {
           throw e;
@@ -744,6 +744,14 @@
         // this point with a dead messageManager which only throws errors but does not
         // seem to indicate in any other way that it is dead.
       }
+    },
+
+    ready: function () {
+      this._addListener();
+    },
+
+    close: function () {
+      this._removeListener();
       this.emit("close");
       this.hooks.onClosed();
     },
@@ -756,7 +764,7 @@
     send: function (packet) {
       this.emit("send", packet);
       try {
-        this._sender.sendAsyncMessage(this._messageName, packet);
+        this._mm.sendAsyncMessage(this._messageName, packet);
       } catch (e) {
         if (e.result != Cr.NS_ERROR_NULL_POINTER) {
           throw e;
@@ -769,7 +777,13 @@
 
     startBulkSend: function () {
       throw new Error("Can't send bulk data to child processes.");
-    }
+    },
+
+    swapBrowser(mm) {
+      this._removeListener();
+      this._mm = mm;
+      this._addListener();
+    },
   };
 
   exports.ChildDebuggerTransport = ChildDebuggerTransport;

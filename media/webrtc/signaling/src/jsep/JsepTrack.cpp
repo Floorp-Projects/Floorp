@@ -350,11 +350,9 @@ JsepTrack::NegotiateCodecs(
   for (auto codec : *codecs) {
     if (codec->mName == "red") {
       red = static_cast<JsepVideoCodecDescription*>(codec);
-      break;
     }
-    if (codec->mName == "ulpfec") {
+    else if (codec->mName == "ulpfec") {
       ulpfec = static_cast<JsepVideoCodecDescription*>(codec);
-      break;
     }
   }
   // if we have a red codec remove redundant encodings that don't exist
