@@ -44,7 +44,7 @@ nsDataSignatureVerifier::~nsDataSignatureVerifier()
     return;
   }
 
-  shutdown(calledFromObject);
+  shutdown(ShutdownCalledFrom::Object);
 }
 
 NS_IMETHODIMP
