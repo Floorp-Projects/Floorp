@@ -6,15 +6,10 @@
 
 "use strict";
 
-/* eslint-disable mozilla/reject-some-requires */
-const {Ci} = require("chrome");
-/* eslint-enable mozilla/reject-some-requires */
-const Services = require("Services");
 const promise = require("promise");
 
-const ELLIPSIS = Services.prefs.getComplexValue(
-    "intl.ellipsis",
-    Ci.nsIPrefLocalizedString).data;
+const {ELLIPSIS} = require("devtools/client/shared/l10n");
+
 const MAX_LABEL_LENGTH = 40;
 
 const NS_XHTML = "http://www.w3.org/1999/xhtml";
