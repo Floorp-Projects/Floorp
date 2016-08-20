@@ -69,7 +69,7 @@ nsNSSU2FToken::~nsNSSU2FToken()
   }
 
   destructorSafeDestroyNSSReference();
-  shutdown(calledFromObject);
+  shutdown(ShutdownCalledFrom::Object);
 }
 
 void

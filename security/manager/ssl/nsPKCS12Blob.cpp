@@ -62,7 +62,7 @@ nsPKCS12Blob::~nsPKCS12Blob()
     return;
   }
 
-  shutdown(calledFromObject);
+  shutdown(ShutdownCalledFrom::Object);
 }
 
 // nsPKCS12Blob::SetToken

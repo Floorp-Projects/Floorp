@@ -2,15 +2,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef _INC_NSSShutDown_H
-#define _INC_NSSShutDown_H
+#ifndef nsNSSShutDown_h
+#define nsNSSShutDown_h
 
-#include "nscore.h"
-#include "nspr.h"
 #include "PLDHashTable.h"
+#include "mozilla/Assertions.h"
 #include "mozilla/CondVar.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/StaticMutex.h"
+#include "nscore.h"
+#include "nspr.h"
 
 class nsNSSShutDownObject;
 class nsOnPK11LogoutCancelObject;
@@ -29,7 +30,7 @@ public:
   // Wait for all activity to stop, and block any other thread on entering
   // relevant PSM code.
   PRStatus restrictActivityToCurrentThread();
-  
+
   // Go back to normal state.
   void releaseCurrentThreadActivityRestriction();
 
@@ -101,10 +102,10 @@ protected:
   A class deriving from nsNSSShutDownObject will have its instances
   automatically tracked in a list. However, it must follow some rules
   to assure correct behaviour.
-  
+
   The tricky part is that it is not possible to call virtual
   functions from a destructor.
-  
+
   The deriving class must override virtualDestroyNSSReference().
   Within this function, it should clean up all resources held to NSS.
   The function will be called by the global list, if it is time to
@@ -124,7 +125,7 @@ protected:
   then check to see if NSS has already been shut down by calling
   isAlreadyShutDown(). If NSS has not been shut down, the destructor
   must then call destructorSafeDestroyNSSReference() and then
-  shutdown(calledFromObject). The second call will deregister with
+  shutdown(ShutdownCalledFrom::Object). The second call will deregister with
   the tracking list, to ensure no additional attempt to free the resources
   will be made.
 
@@ -163,7 +164,7 @@ protected:
     {
       destructorSafeDestroyNSSReference();
     }
-    
+
     void destructorSafeDestroyNSSReference()
     {
       // clean up all NSS resources here
@@ -176,14 +177,14 @@ protected:
         return;
       }
       destructorSafeDestroyNSSReference();
-      shutdown(calledFromObject);
+      shutdown(ShutdownCalledFrom::Object);
     }
-    
+
     NS_IMETHODIMP doSomething()
     {
       if (isAlreadyShutDown())
         return NS_ERROR_NOT_AVAILABLE;
-      
+
       // use the NSS resources and do something
     }
   };
@@ -192,35 +193,41 @@ protected:
 class nsNSSShutDownObject
 {
 public:
-
-  enum CalledFromType {calledFromList, calledFromObject};
+  enum class ShutdownCalledFrom {
+    List,
+    Object,
+  };
 
   nsNSSShutDownObject()
   {
     mAlreadyShutDown = false;
     nsNSSShutDownList::remember(this);
   }
-  
+
   virtual ~nsNSSShutDownObject()
   {
-    // the derived class must call 
-    //   shutdown(calledFromObject);
+    // The derived class must call
+    //   shutdown(ShutdownCalledFrom::Object);
     // in its destructor
   }
-  
-  void shutdown(CalledFromType calledFrom)
+
+  void shutdown(ShutdownCalledFrom calledFrom)
   {
     if (!mAlreadyShutDown) {
-      if (calledFromObject == calledFrom) {
-        nsNSSShutDownList::forget(this);
-      }
-      if (calledFromList == calledFrom) {
-        virtualDestroyNSSReference();
+      switch (calledFrom) {
+        case ShutdownCalledFrom::Object:
+          nsNSSShutDownList::forget(this);
+          break;
+        case ShutdownCalledFrom::List:
+          virtualDestroyNSSReference();
+          break;
+        default:
+          MOZ_CRASH("shutdown() called from an unknown source");
       }
       mAlreadyShutDown = true;
     }
   }
-  
+
   bool isAlreadyShutDown() const { return mAlreadyShutDown; }
 
 protected:
@@ -233,26 +240,25 @@ class nsOnPK11LogoutCancelObject
 {
 public:
   nsOnPK11LogoutCancelObject()
-  :mIsLoggedOut(false)
+    : mIsLoggedOut(false)
   {
     nsNSSShutDownList::remember(this);
   }
-  
+
   virtual ~nsOnPK11LogoutCancelObject()
   {
     nsNSSShutDownList::forget(this);
   }
-  
+
   void logout()
   {
     // We do not care for a race condition.
     // Once the bool arrived at false,
     // later calls to isPK11LoggedOut() will see it.
     // This is a one-time change from 0 to 1.
-    
     mIsLoggedOut = true;
   }
-  
+
   bool isPK11LoggedOut()
   {
     return mIsLoggedOut;
@@ -262,4 +268,4 @@ private:
   volatile bool mIsLoggedOut;
 };
 
-#endif
+#endif // nsNSSShutDown_h

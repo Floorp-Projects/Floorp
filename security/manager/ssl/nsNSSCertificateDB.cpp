@@ -91,7 +91,7 @@ nsNSSCertificateDB::~nsNSSCertificateDB()
     return;
   }
 
-  shutdown(calledFromObject);
+  shutdown(ShutdownCalledFrom::Object);
 }
 
 NS_IMETHODIMP

@@ -81,7 +81,7 @@ nsPKCS11Slot::~nsPKCS11Slot()
     return;
   }
   destructorSafeDestroyNSSReference();
-  shutdown(calledFromObject);
+  shutdown(ShutdownCalledFrom::Object);
 }
 
 void
@@ -292,7 +292,7 @@ nsPKCS11Module::~nsPKCS11Module()
     return;
   }
   destructorSafeDestroyNSSReference();
-  shutdown(calledFromObject);
+  shutdown(ShutdownCalledFrom::Object);
 }
 
 void
@@ -423,7 +423,7 @@ nsPKCS11ModuleDB::~nsPKCS11ModuleDB()
     return;
   }
 
-  shutdown(calledFromObject);
+  shutdown(ShutdownCalledFrom::Object);
 }
 
 NS_IMETHODIMP
