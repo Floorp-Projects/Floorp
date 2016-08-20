@@ -45,7 +45,7 @@ function init() {
 
     let links = [
       {id: "releaseNotesURL", pref: "app.releaseNotesURL"},
-      {id: "supportURL",      pref: "app.support.baseURL"},
+      {id: "supportURL",      pref: "app.supportURL"},
       {id: "faqURL",          pref: "app.faqURL"},
       {id: "privacyURL",      pref: "app.privacyURL"},
       {id: "creditsURL",      pref: "app.creditsURL"},
