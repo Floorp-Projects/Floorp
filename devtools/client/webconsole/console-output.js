@@ -8,8 +8,6 @@
 
 const {Ci, Cu} = require("chrome");
 
-const Services = require("Services");
-
 loader.lazyImporter(this, "VariablesView", "resource://devtools/client/shared/widgets/VariablesView.jsm");
 loader.lazyImporter(this, "escapeHTML", "resource://devtools/client/shared/widgets/VariablesView.jsm");
 loader.lazyImporter(this, "PluralForm", "resource://gre/modules/PluralForm.jsm");
@@ -31,7 +29,7 @@ const l10n = new WebConsoleUtils.L10n(STRINGS_URI);
 const nodeConstants = require("devtools/shared/dom-node-constants");
 
 const MAX_STRING_GRIP_LENGTH = 36;
-const ELLIPSIS = Services.prefs.getComplexValue("intl.ellipsis", Ci.nsIPrefLocalizedString).data;
+const {ELLIPSIS} = require("devtools/client/shared/l10n");
 
 const validProtocols = /^(http|https|ftp|data|javascript|resource|chrome):/i;
 

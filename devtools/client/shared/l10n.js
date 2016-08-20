@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { Ci } = require("chrome");
 const Services = require("Services");
 
 /**
@@ -15,9 +14,6 @@ const Services = require("Services");
 function LocalizationHelper(stringBundleName) {
   loader.lazyGetter(this, "stringBundle", () =>
     Services.strings.createBundle(stringBundleName));
-  loader.lazyGetter(this, "ellipsis", () =>
-    Services.prefs.getComplexValue("intl.ellipsis", Ci.nsIPrefLocalizedString)
-                  .data);
 }
 
 LocalizationHelper.prototype = {
@@ -96,6 +92,9 @@ LocalizationHelper.prototype = {
   }
 };
 
+const sharedL10N = new LocalizationHelper("chrome://devtools/locale/shared.properties");
+const ELLIPSIS = sharedL10N.getStr("ellipsis");
+
 /**
  * A helper for having the same interface as LocalizationHelper, but for more
  * than one file. Useful for abstracting l10n string locations.
@@ -131,3 +130,4 @@ function MultiLocalizationHelper(...stringBundleNames) {
 
 exports.LocalizationHelper = LocalizationHelper;
 exports.MultiLocalizationHelper = MultiLocalizationHelper;
+exports.ELLIPSIS = ELLIPSIS;
