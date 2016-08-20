@@ -49,7 +49,7 @@ ContentSignatureVerifier::~ContentSignatureVerifier()
     return;
   }
   destructorSafeDestroyNSSReference();
-  shutdown(calledFromObject);
+  shutdown(ShutdownCalledFrom::Object);
 }
 
 NS_IMETHODIMP

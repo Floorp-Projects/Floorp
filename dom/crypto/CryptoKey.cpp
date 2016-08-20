@@ -163,7 +163,7 @@ CryptoKey::~CryptoKey()
     return;
   }
   destructorSafeDestroyNSSReference();
-  shutdown(calledFromObject);
+  shutdown(ShutdownCalledFrom::Object);
 }
 
 JSObject*

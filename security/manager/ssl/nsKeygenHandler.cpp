@@ -202,7 +202,7 @@ nsKeygenFormProcessor::~nsKeygenFormProcessor()
     return;
   }
 
-  shutdown(calledFromObject);
+  shutdown(ShutdownCalledFrom::Object);
 }
 
 nsresult

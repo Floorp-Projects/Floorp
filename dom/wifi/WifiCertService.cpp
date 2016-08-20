@@ -440,7 +440,7 @@ WifiCertService::~WifiCertService()
   if (isAlreadyShutDown()) {
     return;
   }
-  shutdown(calledFromObject);
+  shutdown(ShutdownCalledFrom::Object);
 }
 
 already_AddRefed<WifiCertService>
