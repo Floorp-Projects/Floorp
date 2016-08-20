@@ -54,7 +54,7 @@ class XULTreeAccessible;
 #ifdef A11Y_LOG
 namespace logging {
   typedef const char* (*GetTreePrefix)(void* aData, Accessible*);
-  void Tree(const char* aTitle, const char* aMsgText, DocAccessible* aDoc,
+  void Tree(const char* aTitle, const char* aMsgText, Accessible* aRoot,
             GetTreePrefix aPrefixFunc, void* GetTreePrefixData);
 };
 #endif
@@ -1136,7 +1136,7 @@ protected:
 
 #ifdef A11Y_LOG
   friend void logging::Tree(const char* aTitle, const char* aMsgText,
-                            DocAccessible* aDoc,
+                            Accessible* aRoot,
                             logging::GetTreePrefix aPrefixFunc,
                             void* aGetTreePrefixData);
 #endif

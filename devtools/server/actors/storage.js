@@ -32,8 +32,6 @@ loader.lazyGetter(this, "indexedDBForStorage", () => {
   }
 });
 
-var gTrackedMessageManager = new Map();
-
 // Maximum number of cookies/local storage key-value-pairs that can be sent
 // over the wire to the client in one request.
 const MAX_STORE_OBJECT_COUNT = 50;
@@ -645,11 +643,11 @@ StorageActors.createActor({
     this.removeAllCookies =
       callParentProcess.bind(null, "removeAllCookies");
 
-    addMessageListener("storage:storage-cookie-request-child",
+    addMessageListener("debug:storage-cookie-request-child",
                        cookieHelpers.handleParentRequest);
 
     function callParentProcess(methodName, ...args) {
-      let reply = sendSyncMessage("storage:storage-cookie-request-parent", {
+      let reply = sendSyncMessage("debug:storage-cookie-request-parent", {
         method: methodName,
         args: args
       });
@@ -923,38 +921,12 @@ var cookieHelpers = {
  * E10S parent/child setup helpers
  */
 
-exports.setupParentProcessForCookies = function ({mm, prefix}) {
+exports.setupParentProcessForCookies = function ({ mm, prefix }) {
   cookieHelpers.onCookieChanged =
     callChildProcess.bind(null, "onCookieChanged");
 
   // listen for director-script requests from the child process
-  mm.addMessageListener("storage:storage-cookie-request-parent",
-                        cookieHelpers.handleChildRequest);
-
-  DebuggerServer.once("disconnected-from-child:" + prefix,
-                      handleMessageManagerDisconnected);
-
-  gTrackedMessageManager.set("cookies", mm);
-
-  function handleMessageManagerDisconnected(evt, { mm: disconnectedMm }) {
-    // filter out not subscribed message managers
-    if (disconnectedMm !== mm || !gTrackedMessageManager.has("cookies")) {
-      return;
-    }
-
-    // Although "disconnected-from-child" implies that the child is already
-    // disconnected this is not the case. The disconnection takes place after
-    // this method has finished. This gives us chance to clean up items within
-    // the parent process e.g. observers.
-    cookieHelpers.removeCookieObservers();
-
-    gTrackedMessageManager.delete("cookies");
-
-    // unregister for director-script requests handlers from the parent process
-    // (if any)
-    mm.removeMessageListener("storage:storage-cookie-request-parent",
-                             cookieHelpers.handleChildRequest);
-  }
+  setMessageManager(mm);
 
   function callChildProcess(methodName, ...args) {
     if (methodName === "onCookieChanged") {
@@ -962,7 +934,7 @@ exports.setupParentProcessForCookies = function ({mm, prefix}) {
     }
 
     try {
-      mm.sendAsyncMessage("storage:storage-cookie-request-child", {
+      mm.sendAsyncMessage("debug:storage-cookie-request-child", {
         method: methodName,
         args: args
       });
@@ -971,6 +943,30 @@ exports.setupParentProcessForCookies = function ({mm, prefix}) {
       // been closed. This can legitimately happen in between test runs.
     }
   }
+
+  function setMessageManager(newMM) {
+    if (mm) {
+      mm.removeMessageListener("debug:storage-cookie-request-parent",
+                               cookieHelpers.handleChildRequest);
+    }
+    mm = newMM;
+    if (mm) {
+      mm.addMessageListener("debug:storage-cookie-request-parent",
+                            cookieHelpers.handleChildRequest);
+    }
+  }
+
+  return {
+    onBrowserSwap: setMessageManager,
+    onDisconnected: () => {
+      // Although "disconnected-from-child" implies that the child is already
+      // disconnected this is not the case. The disconnection takes place after
+      // this method has finished. This gives us chance to clean up items within
+      // the parent process e.g. observers.
+      cookieHelpers.removeCookieObservers();
+      setMessageManager(null);
+    }
+  };
 };
 
 /**
@@ -1636,7 +1632,7 @@ StorageActors.createActor({
     this.removeDBRecord = callParentProcessAsync.bind(null, "removeDBRecord");
     this.clearDBStore = callParentProcessAsync.bind(null, "clearDBStore");
 
-    addMessageListener("storage:storage-indexedDB-request-child", msg => {
+    addMessageListener("debug:storage-indexedDB-request-child", msg => {
       switch (msg.json.method) {
         case "backToChild": {
           let [func, rv] = msg.json.args;
@@ -1660,7 +1656,7 @@ StorageActors.createActor({
 
       unresolvedPromises.set(methodName, deferred);
 
-      sendAsyncMessage("storage:storage-indexedDB-request-parent", {
+      sendAsyncMessage("debug:storage-indexedDB-request-parent", {
         method: methodName,
         args: args
       });
@@ -1704,7 +1700,7 @@ var indexedDBHelpers = {
     let mm = Cc["@mozilla.org/globalmessagemanager;1"]
                .getService(Ci.nsIMessageListenerManager);
 
-    mm.broadcastAsyncMessage("storage:storage-indexedDB-request-child", {
+    mm.broadcastAsyncMessage("debug:storage-indexedDB-request-child", {
       method: "backToChild",
       args: args
     });
@@ -1714,7 +1710,7 @@ var indexedDBHelpers = {
     let mm = Cc["@mozilla.org/globalmessagemanager;1"]
                .getService(Ci.nsIMessageListenerManager);
 
-    mm.broadcastAsyncMessage("storage:storage-indexedDB-request-child", {
+    mm.broadcastAsyncMessage("debug:storage-indexedDB-request-child", {
       method: "onItemUpdated",
       args: [ action, host, path ]
     });
@@ -2141,29 +2137,26 @@ var indexedDBHelpers = {
  * E10S parent/child setup helpers
  */
 
-exports.setupParentProcessForIndexedDB = function ({mm, prefix}) {
+exports.setupParentProcessForIndexedDB = function ({ mm, prefix }) {
   // listen for director-script requests from the child process
-  mm.addMessageListener("storage:storage-indexedDB-request-parent",
-                        indexedDBHelpers.handleChildRequest);
+  setMessageManager(mm);
 
-  DebuggerServer.once("disconnected-from-child:" + prefix,
-                      handleMessageManagerDisconnected);
-
-  gTrackedMessageManager.set("indexedDB", mm);
-
-  function handleMessageManagerDisconnected(evt, { mm: disconnectedMm }) {
-    // filter out not subscribed message managers
-    if (disconnectedMm !== mm || !gTrackedMessageManager.has("indexedDB")) {
-      return;
+  function setMessageManager(newMM) {
+    if (mm) {
+      mm.removeMessageListener("debug:storage-indexedDB-request-parent",
+                               indexedDBHelpers.handleChildRequest);
     }
-
-    gTrackedMessageManager.delete("indexedDB");
-
-    // unregister for director-script requests handlers from the parent process
-    // (if any)
-    mm.removeMessageListener("storage:storage-indexedDB-request-parent",
-                             indexedDBHelpers.handleChildRequest);
+    mm = newMM;
+    if (mm) {
+      mm.addMessageListener("debug:storage-indexedDB-request-parent",
+                            indexedDBHelpers.handleChildRequest);
+    }
   }
+
+  return {
+    onBrowserSwap: setMessageManager,
+    onDisconnected: () => setMessageManager(null),
+  };
 };
 
 /**

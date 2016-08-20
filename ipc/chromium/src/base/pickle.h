@@ -22,6 +22,10 @@
 #include "mozilla/ipc/Faulty.h"
 #endif
 
+#if !defined(RELEASE_BUILD) || defined(DEBUG)
+#define MOZ_PICKLE_SENTINEL_CHECKING
+#endif
+
 class Pickle;
 
 class PickleIterator {
@@ -114,7 +118,14 @@ class Pickle {
   // Use it for reading the object sizes.
   MOZ_MUST_USE bool ReadLength(PickleIterator* iter, int* result) const;
 
-  MOZ_MUST_USE bool ReadSentinel(PickleIterator* iter, uint32_t sentinel) const;
+  MOZ_MUST_USE bool ReadSentinel(PickleIterator* iter, uint32_t sentinel) const
+#ifdef MOZ_PICKLE_SENTINEL_CHECKING
+    ;
+#else
+  {
+    return true;
+  }
+#endif
 
   void EndRead(PickleIterator& iter) const;
 
@@ -217,7 +228,14 @@ class Pickle {
   bool WriteBytes(const void* data, uint32_t data_len,
                   uint32_t alignment = sizeof(memberAlignmentType));
 
-  bool WriteSentinel(uint32_t sentinel);
+  bool WriteSentinel(uint32_t sentinel)
+#ifdef MOZ_PICKLE_SENTINEL_CHECKING
+    ;
+#else
+  {
+    return true;
+  }
+#endif
 
   int32_t* GetInt32PtrForTest(uint32_t offset);
 

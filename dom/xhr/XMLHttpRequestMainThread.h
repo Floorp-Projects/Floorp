@@ -112,6 +112,43 @@ protected:
 
 class nsXMLHttpRequestXPCOMifier;
 
+class RequestHeaders
+{
+  struct RequestHeader
+  {
+    nsCString mName;
+    nsCString mValue;
+  };
+  nsTArray<RequestHeader> mHeaders;
+  RequestHeader* Find(const nsACString& aName);
+
+public:
+  class CharsetIterator
+  {
+    bool mValid;
+    int32_t mCurPos, mCurLen, mCutoff;
+    nsACString& mSource;
+
+  public:
+    explicit CharsetIterator(nsACString& aSource);
+    bool Equals(const nsACString& aOther, const nsCStringComparator& aCmp) const;
+    void Replace(const nsACString& aReplacement);
+    bool Next();
+  };
+
+  bool Has(const char* aName);
+  bool Has(const nsACString& aName);
+  void Get(const char* aName, nsACString& aValue);
+  void Get(const nsACString& aName, nsACString& aValue);
+  void Set(const char* aName, const nsACString& aValue);
+  void Set(const nsACString& aName, const nsACString& aValue);
+  void MergeOrSet(const char* aName, const nsACString& aValue);
+  void MergeOrSet(const nsACString& aName, const nsACString& aValue);
+  void Clear();
+  void ApplyToChannel(nsIHttpChannel* aChannel) const;
+  void GetCORSUnsafeHeaders(nsTArray<nsCString>& aArray) const;
+};
+
 // Make sure that any non-DOM interfaces added here are also added to
 // nsXMLHttpRequestXPCOMifier.
 class XMLHttpRequestMainThread final : public XMLHttpRequest,
@@ -199,7 +236,10 @@ public:
   virtual uint16_t ReadyState() const override;
 
   // request
-  nsresult InitChannel();
+  nsresult CreateChannel();
+  nsresult InitiateFetch(nsIInputStream* aUploadStream,
+                         int64_t aUploadLength,
+                         nsACString& aUploadContentType);
 
   virtual void
   Open(const nsACString& aMethod, const nsAString& aUrl,
@@ -720,15 +760,7 @@ protected:
 
   bool ShouldBlockAuthPrompt();
 
-  struct RequestHeader
-  {
-    nsCString name;
-    nsCString value;
-  };
-  nsTArray<RequestHeader> mAuthorRequestHeaders;
-
-  void GetAuthorRequestHeaderValue(const char* aName, nsACString& outValue);
-  void SetAuthorRequestHeadersOnChannel(nsCOMPtr<nsIHttpChannel> aChannel);
+  RequestHeaders mAuthorRequestHeaders;
 
   // Helper object to manage our XPCOM scriptability bits
   nsXMLHttpRequestXPCOMifier* mXPCOMifier;

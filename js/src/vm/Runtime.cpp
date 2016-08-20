@@ -385,22 +385,6 @@ JSRuntime::destroyRuntime()
             CancelOffThreadIonCompile(comp, nullptr);
         CancelOffThreadParses(this);
 
-        /* Clear debugging state to remove GC roots. */
-        for (CompartmentsIter comp(this, SkipAtoms); !comp.done(); comp.next()) {
-            if (WatchpointMap* wpmap = comp->watchpointMap)
-                wpmap->clear();
-        }
-
-        /*
-         * Clear script counts map, to remove the strong reference on the
-         * JSScript key.
-         */
-        for (CompartmentsIter comp(this, SkipAtoms); !comp.done(); comp.next())
-            comp->clearScriptCounts();
-
-        /* Clear atoms to remove GC roots and heap allocations. */
-        finishAtoms();
-
         /* Remove persistent GC roots. */
         gc.finishRoots();
 
@@ -422,12 +406,6 @@ JSRuntime::destroyRuntime()
 
     MOZ_ASSERT(ionLazyLinkListSize_ == 0);
     MOZ_ASSERT(ionLazyLinkList_.isEmpty());
-
-    /*
-     * Clear the self-hosted global and delete self-hosted classes *after*
-     * GC, as finalizers for objects check for clasp->finalize during GC.
-     */
-    finishSelfHosting();
 
     MOZ_ASSERT(!numExclusiveThreads);
     AutoLockForExclusiveAccess lock(this);

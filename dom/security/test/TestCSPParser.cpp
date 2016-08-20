@@ -285,11 +285,13 @@ nsresult TestIgnoreUpperLowerCasePolicies() {
     { "script-src 'SHA256-siVR8vAcqP06h2ppeNwqgjr0yZ6yned4X2VF84j4GmI='",
       "script-src 'sha256-siVR8vAcqP06h2ppeNwqgjr0yZ6yned4X2VF84j4GmI='" },
     { "refERRer No-refeRRer",
-      "referrer No-refeRRer" },
+      "referrer no-referrer" },
     { "upgrade-INSECURE-requests",
       "upgrade-insecure-requests" },
+    { "sanDBox alloW-foRMs",
+      "sandbox allow-forms"},
     { "require-SRI-for sCript stYle",
-        "require-sri-for script style"}
+      "require-sri-for script style"},
   };
 
   uint32_t policyCount = sizeof(policies) / sizeof(PolicyTest);
@@ -463,7 +465,9 @@ nsresult TestSimplePolicies() {
     { "upgrade-insecure-requests",
       "upgrade-insecure-requests" },
     { "upgrade-insecure-requests https:",
-      "upgrade-insecure-requests" }
+      "upgrade-insecure-requests" },
+    { "sandbox allow-scripts allow-forms  ",
+      "sandbox allow-scripts allow-forms" },
   };
 
   uint32_t policyCount = sizeof(policies) / sizeof(PolicyTest);
@@ -528,8 +532,8 @@ nsresult TestPoliciesWithInvalidSrc() {
       "script-src 'none'" },
     { "require-SRI-for script elephants",
       "require-sri-for script"},
-    { "require-sri-for paul",
-      ""}
+    { "sandbox    foo",
+      "sandbox"},
   };
 
   // amount of tests - 1, because the latest should be ignored.
@@ -550,6 +554,11 @@ nsresult TestBadPolicies() {
     { "default-src: aaa", "" },
     { "asdf http://test.com", ""},
     { "referrer", ""},
+    { "referrer foo", ""},
+    { "require-sri-for", ""},
+    { "require-sri-for foo", ""},
+    { "report-uri", ""},
+    { "report-uri http://:foo", ""},
   };
 
   uint32_t policyCount = sizeof(policies) / sizeof(PolicyTest);

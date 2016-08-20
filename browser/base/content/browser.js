@@ -1367,6 +1367,15 @@ var gBrowserInit = {
 
       PanicButtonNotifier.init();
     });
+
+    gBrowser.tabContainer.addEventListener("TabSelect", function() {
+      for (let panel of document.querySelectorAll("panel[tabspecific='true']")) {
+        if (panel.state == "open") {
+          panel.hidePopup();
+        }
+      }
+    });
+
     this.delayedStartupFinished = true;
 
     Services.obs.notifyObservers(window, "browser-delayed-startup-finished", "");
@@ -1881,9 +1890,35 @@ function openLocation() {
   }
 }
 
-function BrowserOpenTab()
-{
-  openUILinkIn(BROWSER_NEW_TAB_URL, "tab");
+function BrowserOpenTab(event) {
+  let where = "tab";
+  let relatedToCurrent = false;
+
+  if (event) {
+    where = whereToOpenLink(event, false, true);
+
+    switch (where) {
+      case "tab":
+      case "tabshifted":
+        // When accel-click or middle-click are used, open the new tab as
+        // related to the current tab. We need to exclude key events here,
+        // where the accel key is required for the shortcut.
+        // 'event' and its sourceEvent are command events, the latter of which
+        // doesn't have its own sourceEvent. These events don't indicate how
+        // they were invoked, except that the sourceEvent for keyboard
+        // shortcuts have <key> targets, and those for clicking a toolbar
+        // button or activating a menu item have that button or menuitem as
+        // their target.
+        relatedToCurrent = !event.sourceEvent ||
+                           event.sourceEvent.target.localName != "key";
+        break;
+      case "current":
+        where = "tab";
+        break;
+    }
+  }
+
+  openUILinkIn(BROWSER_NEW_TAB_URL, where, { relatedToCurrent });
 }
 
 /* Called from the openLocation dialog. This allows that dialog to instruct
@@ -6613,9 +6648,17 @@ var gIdentityHandler = {
     return this._identityPopupInsecureLoginFormsLearnMore =
       document.getElementById("identity-popup-insecure-login-forms-learn-more");
   },
+  get _identityIconLabels () {
+    delete this._identityIconLabels;
+    return this._identityIconLabels = document.getElementById("identity-icon-labels");
+  },
   get _identityIconLabel () {
     delete this._identityIconLabel;
     return this._identityIconLabel = document.getElementById("identity-icon-label");
+  },
+  get _connectionIcon () {
+    delete this._connectionIcon;
+    return this._connectionIcon = document.getElementById("connection-icon");
   },
   get _overrideService () {
     delete this._overrideService;
@@ -6905,7 +6948,6 @@ var gIdentityHandler = {
         // pages, either already insecure or with mixed active content loaded.
         this._identityBox.classList.add("insecureLoginForms");
       }
-      tooltip = gNavigatorBundle.getString("identity.unknown.tooltip");
     }
 
     if (this._isCertUserOverridden) {
@@ -6944,7 +6986,8 @@ var gIdentityHandler = {
     }
 
     // Push the appropriate strings out to the UI
-    this._identityBox.tooltipText = tooltip;
+    this._connectionIcon.tooltipText = tooltip;
+    this._identityIconLabels.tooltipText = tooltip;
     this._identityIcon.tooltipText = gNavigatorBundle.getString("identity.icon.tooltip");
     this._identityIconLabel.value = icon_label;
     this._identityIconCountryLabel.value = icon_country_label;
@@ -7103,14 +7146,14 @@ var gIdentityHandler = {
 
     // Fill in the CA name if we have a valid TLS certificate.
     if (this._isSecure || this._isCertUserOverridden) {
-      verifier = this._identityBox.tooltipText;
+      verifier = this._identityIconLabels.tooltipText;
     }
 
     // Fill in organization information if we have a valid EV certificate.
     if (this._isEV) {
       let iData = this.getIdentityData();
       host = owner = iData.subjectOrg;
-      verifier = this._identityBox.tooltipText;
+      verifier = this._identityIconLabels.tooltipText;
 
       // Build an appropriate supplemental block out of whatever location data we have
       if (iData.city)
@@ -7841,14 +7884,6 @@ var MousePosTracker = {
     }
   }
 };
-
-function BrowserOpenNewTabOrWindow(event) {
-  if (event.shiftKey) {
-    OpenBrowserWindow();
-  } else {
-    BrowserOpenTab();
-  }
-}
 
 var ToolbarIconColor = {
   init: function () {

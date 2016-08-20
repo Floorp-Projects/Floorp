@@ -3681,6 +3681,7 @@ FlushLayoutRecursive(nsIDocument* aDocument,
                      void* aData = nullptr)
 {
   MOZ_ASSERT(!aData);
+  nsCOMPtr<nsIDocument> kungFuDeathGrip(aDocument);
   aDocument->EnumerateSubDocuments(FlushLayoutRecursive, nullptr);
   aDocument->FlushPendingNotifications(Flush_Layout);
   return true;

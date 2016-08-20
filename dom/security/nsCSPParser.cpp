@@ -928,7 +928,10 @@ nsCSPParser::referrerDirectiveValue(nsCSPDirective* aDir)
 }
 
 void
-nsCSPParser::requireSRIForDirectiveValue(nsRequireSRIForDirective* aDir) {
+nsCSPParser::requireSRIForDirectiveValue(nsRequireSRIForDirective* aDir)
+{
+  CSPPARSERLOG(("nsCSPParser::requireSRIForDirectiveValue"));
+
   // directive-value = "style" / "script"
   // directive name is token 0, we need to examine the remaining tokens
   for (uint32_t i = 1; i < mCurDir.Length(); i++) {
@@ -956,20 +959,25 @@ nsCSPParser::requireSRIForDirectiveValue(nsRequireSRIForDirective* aDir) {
                     NS_ConvertUTF16toUTF8(mCurValue).get()));
     }
   }
+
   if (!(aDir->hasType(nsIContentPolicy::TYPE_STYLESHEET)) &&
       !(aDir->hasType(nsIContentPolicy::TYPE_SCRIPT))) {
     const char16_t* directiveName[] = { mCurToken.get() };
     logWarningErrorToConsole(nsIScriptError::warningFlag, "ignoringDirectiveWithNoValues",
                                directiveName, ArrayLength(directiveName));
+    delete aDir;
     return;
-  } else {
-    mPolicy->addDirective(aDir);
   }
+  
+  mPolicy->addDirective(aDir);
 }
 
 void
-nsCSPParser::reportURIList(nsTArray<nsCSPBaseSrc*>& outSrcs)
+nsCSPParser::reportURIList(nsCSPDirective* aDir)
 {
+  CSPPARSERLOG(("nsCSPParser::reportURIList"));
+
+  nsTArray<nsCSPBaseSrc*> srcs;
   nsCOMPtr<nsIURI> uri;
   nsresult rv;
 
@@ -993,8 +1001,19 @@ nsCSPParser::reportURIList(nsTArray<nsCSPBaseSrc*>& outSrcs)
 
     // Create new nsCSPReportURI and append to the list.
     nsCSPReportURI* reportURI = new nsCSPReportURI(uri);
-    outSrcs.AppendElement(reportURI);
+    srcs.AppendElement(reportURI);
   }
+
+  if (srcs.Length() == 0) {
+    const char16_t* directiveName[] = { mCurToken.get() };
+    logWarningErrorToConsole(nsIScriptError::warningFlag, "ignoringDirectiveWithNoValues",
+                             directiveName, ArrayLength(directiveName));
+    delete aDir;
+    return;
+  }
+
+  aDir->addSrcs(srcs);
+  mPolicy->addDirective(aDir);
 }
 
 /* Helper function for parsing sandbox flags. This function solely concatenates
@@ -1002,8 +1021,10 @@ nsCSPParser::reportURIList(nsTArray<nsCSPBaseSrc*>& outSrcs)
  * (nsContentUtils::ParseSandboxAttributeToFlags) can parse them.
  */
 void
-nsCSPParser::sandboxFlagList(nsTArray<nsCSPBaseSrc*>& outSrcs)
+nsCSPParser::sandboxFlagList(nsCSPDirective* aDir)
 {
+  CSPPARSERLOG(("nsCSPParser::sandboxFlagList"));
+
   nsAutoString flags;
 
   // remember, srcs start at index 1
@@ -1028,8 +1049,12 @@ nsCSPParser::sandboxFlagList(nsTArray<nsCSPBaseSrc*>& outSrcs)
     }
   }
 
-  nsCSPSandboxFlags* sandboxFlags = new nsCSPSandboxFlags(flags);
-  outSrcs.AppendElement(sandboxFlags);
+  // Please note that the sandbox directive can exist
+  // by itself (not containing any flags).
+  nsTArray<nsCSPBaseSrc*> srcs;
+  srcs.AppendElement(new nsCSPSandboxFlags(flags));
+  aDir->addSrcs(srcs);
+  mPolicy->addDirective(aDir);
 }
 
 // directive-value = *( WSP / <VCHAR except ";" and ","> )
@@ -1038,22 +1063,7 @@ nsCSPParser::directiveValue(nsTArray<nsCSPBaseSrc*>& outSrcs)
 {
   CSPPARSERLOG(("nsCSPParser::directiveValue"));
 
-  // The tokenzier already generated an array in the form of
-  // [ name, src, src, ... ], no need to parse again, but
-  // special case handling in case the directive is report-uri.
-  if (CSP_IsDirective(mCurDir[0], nsIContentSecurityPolicy::REPORT_URI_DIRECTIVE)) {
-    reportURIList(outSrcs);
-    return;
-  }
-
-  // For the sandbox flag the source list is a list of flags, so we're special
-  // casing this directive
-  if (CSP_IsDirective(mCurDir[0], nsIContentSecurityPolicy::SANDBOX_DIRECTIVE)) {
-    sandboxFlagList(outSrcs);
-    return;
-  }
-
-  // Otherwise just forward to sourceList
+  // Just forward to sourceList
   sourceList(outSrcs);
 }
 
@@ -1209,6 +1219,20 @@ nsCSPParser::directive()
   // source lists)
   if (cspDir->equals(nsIContentSecurityPolicy::REFERRER_DIRECTIVE)) {
     referrerDirectiveValue(cspDir);
+    return;
+  }
+
+  // special case handling for report-uri directive (since it doesn't contain
+  // a valid source list but rather actual URIs)
+  if (CSP_IsDirective(mCurDir[0], nsIContentSecurityPolicy::REPORT_URI_DIRECTIVE)) {
+    reportURIList(cspDir);
+    return;
+  }
+
+  // special case handling for sandbox directive (since it doe4sn't contain
+  // a valid source list but rather special sandbox flags)
+  if (CSP_IsDirective(mCurDir[0], nsIContentSecurityPolicy::SANDBOX_DIRECTIVE)) {
+    sandboxFlagList(cspDir);
     return;
   }
 

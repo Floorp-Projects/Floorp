@@ -752,6 +752,63 @@ gfxGDIFontList::LookupLocalFont(const nsAString& aFontName,
     return fe;
 }
 
+// If aFontData contains only a MS/Symbol cmap subtable, not MS/Unicode,
+// we modify the subtable header to mark it as Unicode instead, because
+// otherwise GDI will refuse to load the font.
+// NOTE that this function does not bounds-check every access to the font data.
+// This is OK because we only use it on data that has already been validated
+// by OTS, and therefore we will not hit out-of-bounds accesses here.
+static bool
+FixupSymbolEncodedFont(uint8_t* aFontData, uint32_t aLength)
+{
+    struct CmapHeader {
+        AutoSwap_PRUint16 version;
+        AutoSwap_PRUint16 numTables;
+    };
+    struct CmapEncodingRecord {
+        AutoSwap_PRUint16 platformID;
+        AutoSwap_PRUint16 encodingID;
+        AutoSwap_PRUint32 offset;
+    };
+    const uint32_t kCMAP = TRUETYPE_TAG('c','m','a','p');
+    const TableDirEntry* dir =
+        gfxFontUtils::FindTableDirEntry(aFontData, kCMAP);
+    if (dir && uint32_t(dir->length) >= sizeof(CmapHeader)) {
+        CmapHeader *cmap =
+            reinterpret_cast<CmapHeader*>(aFontData + uint32_t(dir->offset));
+        CmapEncodingRecord *encRec =
+            reinterpret_cast<CmapEncodingRecord*>(cmap + 1);
+        int32_t symbolSubtable = -1;
+        for (uint32_t i = 0; i < (uint16_t)cmap->numTables; ++i) {
+            if (uint16_t(encRec[i].platformID) !=
+                gfxFontUtils::PLATFORM_ID_MICROSOFT) {
+                continue; // only interested in MS platform
+            }
+            if (uint16_t(encRec[i].encodingID) ==
+                gfxFontUtils::ENCODING_ID_MICROSOFT_UNICODEBMP) {
+                // We've got a Microsoft/Unicode table, so don't interfere.
+                symbolSubtable = -1;
+                break;
+            }
+            if (uint16_t(encRec[i].encodingID) ==
+                gfxFontUtils::ENCODING_ID_MICROSOFT_SYMBOL) {
+                // Found a symbol subtable; remember it for possible fixup,
+                // but if we subsequently find a Microsoft/Unicode subtable,
+                // we'll cancel this.
+                symbolSubtable = i;
+            }
+        }
+        if (symbolSubtable != -1) {
+            // We found a windows/symbol cmap table, and no windows/unicode one;
+            // change the encoding ID so that AddFontMemResourceEx will accept it
+            encRec[symbolSubtable].encodingID =
+                gfxFontUtils::ENCODING_ID_MICROSOFT_UNICODEBMP;
+            return true;
+        }
+    }
+    return false;
+}
+
 gfxFontEntry*
 gfxGDIFontList::MakePlatformFont(const nsAString& aFontName,
                                  uint16_t aWeight,
@@ -799,8 +856,14 @@ gfxGDIFontList::MakePlatformFont(const nsAString& aFontName,
     //  to the process that made the call and is not enumerable."
     fontRef = AddFontMemResourceEx(fontData, fontLength, 
                                     0 /* reserved */, &numFonts);
-    if (!fontRef)
+    if (!fontRef) {
+        if (FixupSymbolEncodedFont(fontData, fontLength)) {
+            fontRef = AddFontMemResourceEx(fontData, fontLength, 0, &numFonts);
+        }
+    }
+    if (!fontRef) {
         return nullptr;
+    }
 
     // only load fonts with a single face contained in the data
     // AddFontMemResourceEx generates an additional face name for

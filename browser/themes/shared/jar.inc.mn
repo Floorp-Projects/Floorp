@@ -107,7 +107,7 @@
   skin/classic/browser/tabbrowser/connecting@2x.png            (../shared/tabbrowser/connecting@2x.png)
   skin/classic/browser/tabbrowser/crashed.svg                  (../shared/tabbrowser/crashed.svg)
   skin/classic/browser/tabbrowser/pendingpaint.png             (../shared/tabbrowser/pendingpaint.png)
-* skin/classic/browser/tabbrowser/tab-audio.svg                (../shared/tabbrowser/tab-audio.svg)
+  skin/classic/browser/tabbrowser/tab-audio.svg                (../shared/tabbrowser/tab-audio.svg)
   skin/classic/browser/tabbrowser/tab-audio-small.svg          (../shared/tabbrowser/tab-audio-small.svg)
   skin/classic/browser/tabbrowser/tab-overflow-indicator.png   (../shared/tabbrowser/tab-overflow-indicator.png)
   skin/classic/browser/theme-switcher-icon.png                 (../shared/theme-switcher-icon.png)

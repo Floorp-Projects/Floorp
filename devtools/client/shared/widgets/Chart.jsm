@@ -381,7 +381,7 @@ function createTableChart(document, { title, data, strings, totals }) {
     boxNode.setAttribute("name", rowInfo.label);
     rowNode.appendChild(boxNode);
 
-    for (let [key, value] in Iterator(rowInfo)) {
+    for (let [key, value] of Object.entries(rowInfo)) {
       let index = data.indexOf(rowInfo);
       let stringified = strings[key] ? strings[key](value, index) : value;
       let labelNode = document.createElement("label");
@@ -399,7 +399,7 @@ function createTableChart(document, { title, data, strings, totals }) {
   let totalsNode = document.createElement("vbox");
   totalsNode.className = "table-chart-totals";
 
-  for (let [key, value] in Iterator(totals)) {
+  for (let [key, value] of Object.entries(totals)) {
     let total = data.reduce((acc, e) => acc + e[key], 0);
     let stringified = totals[key] ? totals[key](total || 0) : total;
     let labelNode = document.createElement("label");
