@@ -148,12 +148,13 @@ ServoRestyleManager::RecreateStyleContexts(nsIContent* aContent,
     if (aContent->IsElement()) {
       Element* aElement = aContent->AsElement();
       const static CSSPseudoElementType pseudosToRestyle[] = {
-        CSSPseudoElementType::before, CSSPseudoElementType::after,
+        CSSPseudoElementType::before,
+        CSSPseudoElementType::after,
       };
 
       for (CSSPseudoElementType pseudoType : pseudosToRestyle) {
-        nsIAtom* pseudoTag =
-          nsCSSPseudoElements::GetPseudoAtom(pseudoType);
+        nsIAtom* pseudoTag = nsCSSPseudoElements::GetPseudoAtom(pseudoType);
+
         if (nsIFrame* pseudoFrame =
               FrameForPseudoElement(aElement, pseudoTag)) {
           // TODO: we could maybe make this more performant via calling into
@@ -169,13 +170,26 @@ ServoRestyleManager::RecreateStyleContexts(nsIContent* aContent,
                         changeHint & nsChangeHint_ReconstructFrame);
           if (pseudoContext) {
             pseudoFrame->SetStyleContext(pseudoContext);
+
+            // We only care restyling text nodes, since other type of nodes
+            // (images), are still not supported. If that eventually changes, we
+            // may have to write more code here... Or not, I don't think too
+            // many inherited properties can affect those other frames.
+            StyleChildrenIterator it(pseudoFrame->GetContent());
+            for (nsIContent* n = it.GetNextChild(); n; n = it.GetNextChild()) {
+              if (n->IsNodeOfType(nsINode::eTEXT)) {
+                RefPtr<nsStyleContext> childContext =
+                  aStyleSet->ResolveStyleForText(n, pseudoContext);
+                MOZ_ASSERT(n->GetPrimaryFrame(),
+                           "How? This node is created at FC time!");
+                n->GetPrimaryFrame()->SetStyleContext(childContext);
+              }
+            }
           }
         }
       }
     }
 
-    // TODO: There are other continuations we still haven't restyled, mostly
-    // pseudo-elements. We have to deal with those, and with anonymous boxes.
     aContent->UnsetIsDirtyForServo();
   }
 
