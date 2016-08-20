@@ -113,7 +113,7 @@ AppCacheUtils.prototype = {
         original: parsedUri.original
       });
     }
-    for (let [uri, value] of Iterator(dupes)) {
+    for (let [uri, value] of Object.entries(dupes)) {
       if (value.length > 1) {
         this._addError(0, "duplicateURI", uri, JSON.stringify(value));
       }

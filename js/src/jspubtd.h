@@ -196,13 +196,6 @@ class JS_PUBLIC_API(AutoGCRooter)
     static void traceAll(JSTracer* trc);
     static void traceAllWrappers(JSTracer* trc);
 
-    /* T must be a context type */
-    template<typename T>
-    static void traceAllInContext(T* cx, JSTracer* trc) {
-        for (AutoGCRooter* gcr = cx->roots.autoGCRooters_; gcr; gcr = gcr->down)
-            gcr->trace(trc);
-    }
-
   protected:
     AutoGCRooter * const down;
 

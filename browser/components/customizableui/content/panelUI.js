@@ -335,6 +335,9 @@ const PanelUI = {
       tempPanel.setAttribute("id", "customizationui-widget-panel");
       tempPanel.setAttribute("class", "cui-widget-panel");
       tempPanel.setAttribute("viewId", aViewId);
+      if (aAnchor.getAttribute("tabspecific")) {
+        tempPanel.setAttribute("tabspecific", true);
+      }
       if (this._disableAnimations) {
         tempPanel.setAttribute("animate", "false");
       }

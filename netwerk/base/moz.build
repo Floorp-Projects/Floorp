@@ -102,7 +102,6 @@ XPIDL_SOURCES += [
     'nsIResponseHeadProvider.idl',
     'nsIResumableChannel.idl',
     'nsISecCheckWrapChannel.idl',
-    'nsISecretDecoderRing.idl',
     'nsISecureBrowserUI.idl',
     'nsISecurityEventSink.idl',
     'nsISecurityInfoProvider.idl',

@@ -33,7 +33,7 @@ function* testButton(toolbox, Telemetry) {
 function checkResults(histIdFocus, Telemetry) {
   let result = Telemetry.prototype.telemetryInfo;
 
-  for (let [histId, value] of Iterator(result)) {
+  for (let [histId, value] of Object.entries(result)) {
     if (histId.startsWith("DEVTOOLS_INSPECTOR_") ||
         !histId.includes(histIdFocus)) {
       // Inspector stats are tested in

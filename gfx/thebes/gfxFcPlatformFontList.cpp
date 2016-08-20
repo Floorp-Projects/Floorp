@@ -422,7 +422,7 @@ gfxFontconfigFontEntry::GetFontTable(uint32_t aTableTag)
 {
     // for data fonts, read directly from the font data
     if (mFontData) {
-        return GetTableFromFontData(mFontData, aTableTag);
+        return gfxFontUtils::GetTableFromFontData(mFontData, aTableTag);
     }
 
     return gfxFontEntry::GetFontTable(aTableTag);

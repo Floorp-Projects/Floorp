@@ -4113,8 +4113,6 @@ nsCookieService::GetExpiry(nsCookieAttributes &aCookieAttributes,
    *
    * Note: We need to consider accounting for network lag here, per RFC.
    */
-  int64_t delta;
-
   // check for max-age attribute first; this overrides expires attribute
   if (!aCookieAttributes.maxage.IsEmpty()) {
     // obtain numeric value of maxageAttribute
@@ -4126,7 +4124,9 @@ nsCookieService::GetExpiry(nsCookieAttributes &aCookieAttributes,
       return true;
     }
 
-    delta = maxage;
+    // if this addition overflows, expiryTime will be less than currentTime
+    // and the cookie will be expired - that's okay.
+    aCookieAttributes.expiryTime = aCurrentTime + maxage;
 
   // check for expires attribute
   } else if (!aCookieAttributes.expires.IsEmpty()) {
@@ -4137,16 +4137,17 @@ nsCookieService::GetExpiry(nsCookieAttributes &aCookieAttributes,
       return true;
     }
 
-    delta = expires / int64_t(PR_USEC_PER_SEC) - aServerTime;
+    // If set-cookie used absolute time to set expiration, and it can't use
+    // client time to set expiration.
+    // Because if current time be set in the future, but the cookie expire
+    // time be set less than current time and more than server time.
+    // The cookie item have to be used to the expired cookie.
+    aCookieAttributes.expiryTime = expires / int64_t(PR_USEC_PER_SEC);
 
   // default to session cookie if no attributes found
   } else {
     return true;
   }
-
-  // if this addition overflows, expiryTime will be less than currentTime
-  // and the cookie will be expired - that's okay.
-  aCookieAttributes.expiryTime = aCurrentTime + delta;
 
   return false;
 }
