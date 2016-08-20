@@ -10,7 +10,7 @@ const EventEmitter = require("devtools/shared/event-emitter");
 const {createNode} = require("devtools/client/animationinspector/utils");
 const { LocalizationHelper } = require("devtools/client/shared/l10n");
 
-const STRINGS_URI = "chrome://devtools/locale/animationinspector.properties";
+const STRINGS_URI = "devtools/locale/animationinspector.properties";
 const L10N = new LocalizationHelper(STRINGS_URI);
 
 // List of playback rate presets displayed in the timeline toolbar.
