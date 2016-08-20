@@ -20,6 +20,8 @@ const kPasswordManagerTopicTypes = new Set([
   "modifyLogin",
 ]);
 
+const kNotificationId = "abouthome-automigration-undo";
+
 Cu.import("resource:///modules/MigrationUtils.jsm");
 Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://gre/modules/PlacesUtils.jsm");
@@ -249,6 +251,71 @@ const AutoMigrate = {
     Services.prefs.clearUserPref(kAutoMigrateStartedPref);
     Services.prefs.clearUserPref(kAutoMigrateFinishedPref);
     Services.prefs.clearUserPref(kAutoMigrateBrowserPref);
+
+    let browserWindows = Services.wm.getEnumerator("navigator:browser");
+    while (browserWindows.hasMoreElements()) {
+      let win = browserWindows.getNext();
+      if (!win.closed) {
+        for (let browser of win.gBrowser.browsers) {
+          let nb = win.gBrowser.getNotificationBox(browser);
+          let notification = nb.getNotificationWithValue(kNotificationId);
+          if (notification) {
+            nb.removeNotification(notification);
+          }
+        }
+      }
+    }
+  },
+
+  getBrowserUsedForMigration() {
+    let browserId = Services.prefs.getCharPref(kAutoMigrateBrowserPref);
+    if (browserId) {
+      return MigrationUtils.getBrowserName(browserId);
+    }
+    return null;
+  },
+
+  maybeShowUndoNotification(target) {
+    this.canUndo().then(canUndo => {
+      // The tab might have navigated since we requested the undo state:
+      if (!canUndo || target.currentURI.spec != "about:home") {
+        return;
+      }
+      let win = target.ownerGlobal;
+      let notificationBox = win.gBrowser.getNotificationBox(target);
+      if (!notificationBox || notificationBox.getNotificationWithValue("abouthome-automigration-undo")) {
+        return;
+      }
+
+      let browserName = this.getBrowserUsedForMigration();
+      let message;
+      if (browserName) {
+        message = MigrationUtils.getLocalizedString("automigration.undo.message",
+                                                    [browserName]);
+      } else {
+        message = MigrationUtils.getLocalizedString("automigration.undo.unknownBrowserMessage");
+      }
+
+      let buttons = [
+        {
+          label: MigrationUtils.getLocalizedString("automigration.undo.keep.label"),
+          accessKey: MigrationUtils.getLocalizedString("automigration.undo.keep.accesskey"),
+          callback: () => {
+            this.removeUndoOption();
+          },
+        },
+        {
+          label: MigrationUtils.getLocalizedString("automigration.undo.dontkeep.label"),
+          accessKey: MigrationUtils.getLocalizedString("automigration.undo.dontkeep.accesskey"),
+          callback: () => {
+            this.undo();
+          },
+        },
+      ];
+      notificationBox.appendNotification(
+        message, kNotificationId, null, notificationBox.PRIORITY_INFO_HIGH, buttons
+      );
+    });
   },
 
   QueryInterface: XPCOMUtils.generateQI(
