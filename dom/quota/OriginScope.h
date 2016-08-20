@@ -23,48 +23,6 @@ public:
     eNull
   };
 
-private:
-  struct OriginAndAttributes
-  {
-    nsCString mOrigin;
-    PrincipalOriginAttributes mAttributes;
-
-    OriginAndAttributes(const OriginAndAttributes& aOther)
-      : mOrigin(aOther.mOrigin)
-      , mAttributes(aOther.mAttributes)
-    {
-      MOZ_COUNT_CTOR(OriginAndAttributes);
-    }
-
-    explicit OriginAndAttributes(const nsACString& aOrigin)
-      : mOrigin(aOrigin)
-    {
-      nsCString originNoSuffix;
-      MOZ_ALWAYS_TRUE(mAttributes.PopulateFromOrigin(aOrigin, originNoSuffix));
-
-      MOZ_COUNT_CTOR(OriginAndAttributes);
-    }
-
-    ~OriginAndAttributes()
-    {
-      MOZ_COUNT_DTOR(OriginAndAttributes);
-    }
-  };
-
-  union {
-    // eOrigin
-    OriginAndAttributes* mOriginAndAttributes;
-
-    // ePattern
-    mozilla::OriginAttributesPattern* mPattern;
-
-    // eNull
-    void* mDummy;
-  };
-
-  Type mType;
-
-public:
   static OriginScope
   FromOrigin(const nsACString& aOrigin)
   {
@@ -87,27 +45,6 @@ public:
   FromNull()
   {
     return OriginScope();
-  }
-
-  OriginScope(const OriginScope& aOther)
-  {
-    Destroy();
-
-    if (aOther.IsOrigin()) {
-      mOriginAndAttributes =
-        new OriginAndAttributes(*aOther.mOriginAndAttributes);
-    } else if (aOther.IsPattern()) {
-      mPattern = new mozilla::OriginAttributesPattern(*aOther.mPattern);
-    } else {
-      mDummy = aOther.mDummy;
-    }
-
-    mType = aOther.mType;
-  }
-
-  ~OriginScope()
-  {
-    Destroy();
   }
 
   bool
@@ -137,41 +74,31 @@ public:
   void
   SetFromOrigin(const nsACString& aOrigin)
   {
-    Destroy();
-
-    mOriginAndAttributes = new OriginAndAttributes(aOrigin);
-
+    mOrigin = aOrigin;
     mType = eOrigin;
+
+    nsCString originNoSuffix;
+    MOZ_ALWAYS_TRUE(mOriginAttributes.PopulateFromOrigin(aOrigin,
+                                                         originNoSuffix));
   }
 
   void
   SetFromPattern(const mozilla::OriginAttributesPattern& aPattern)
   {
-    Destroy();
-
-    mPattern = new mozilla::OriginAttributesPattern(aPattern);
-
+    mPattern = aPattern;
     mType = ePattern;
   }
 
   void
   SetFromJSONPattern(const nsAString& aJSONPattern)
   {
-    Destroy();
-
-    mPattern = new mozilla::OriginAttributesPattern();
-    MOZ_ALWAYS_TRUE(mPattern->Init(aJSONPattern));
-
+    MOZ_ALWAYS_TRUE(mPattern.Init(aJSONPattern));
     mType = ePattern;
   }
 
   void
   SetFromNull()
   {
-    Destroy();
-
-    mDummy = nullptr;
-
     mType = eNull;
   }
 
@@ -179,49 +106,40 @@ public:
   GetOrigin() const
   {
     MOZ_ASSERT(IsOrigin());
-    MOZ_ASSERT(mOriginAndAttributes);
-
-    return mOriginAndAttributes->mOrigin;
+    return mOrigin;
   }
 
   void
   SetOrigin(const nsACString& aOrigin)
   {
     MOZ_ASSERT(IsOrigin());
-    MOZ_ASSERT(mOriginAndAttributes);
-    mOriginAndAttributes->mOrigin = aOrigin;
+    mOrigin = aOrigin;
   }
 
   const mozilla::OriginAttributes&
   GetOriginAttributes() const
   {
     MOZ_ASSERT(IsOrigin());
-    MOZ_ASSERT(mOriginAndAttributes);
-    return mOriginAndAttributes->mAttributes;
+    return mOriginAttributes;
   }
 
   const mozilla::OriginAttributesPattern&
   GetPattern() const
   {
     MOZ_ASSERT(IsPattern());
-    MOZ_ASSERT(mPattern);
-    return *mPattern;
+    return mPattern;
   }
 
   bool MatchesOrigin(const OriginScope& aOther) const
   {
     MOZ_ASSERT(aOther.IsOrigin());
-    MOZ_ASSERT(aOther.mOriginAndAttributes);
 
     bool match;
 
     if (IsOrigin()) {
-      MOZ_ASSERT(mOriginAndAttributes);
-      match = mOriginAndAttributes->mOrigin.Equals(
-                aOther.mOriginAndAttributes->mOrigin);
+      match = mOrigin.Equals(aOther.mOrigin);
     } else if (IsPattern()) {
-      MOZ_ASSERT(mPattern);
-      match = mPattern->Matches(aOther.mOriginAndAttributes->mAttributes);
+      match = mPattern.Matches(aOther.mOriginAttributes);
     } else {
       match = true;
     }
@@ -232,16 +150,13 @@ public:
   bool MatchesPattern(const OriginScope& aOther) const
   {
     MOZ_ASSERT(aOther.IsPattern());
-    MOZ_ASSERT(aOther.mPattern);
 
     bool match;
 
     if (IsOrigin()) {
-      MOZ_ASSERT(mOriginAndAttributes);
-      match = aOther.mPattern->Matches(mOriginAndAttributes->mAttributes);
+      match = aOther.mPattern.Matches(mOriginAttributes);
     } else if (IsPattern()) {
-      MOZ_ASSERT(mPattern);
-      match = mPattern->Overlaps(*aOther.mPattern);
+      match = mPattern.Overlaps(aOther.mPattern);
     } else {
       match = true;
     }
@@ -268,13 +183,11 @@ public:
   Clone()
   {
     if (IsOrigin()) {
-      MOZ_ASSERT(mOriginAndAttributes);
-      return OriginScope(*mOriginAndAttributes);
+      return OriginScope(mOrigin);
     }
 
     if (IsPattern()) {
-      MOZ_ASSERT(mPattern);
-      return OriginScope(*mPattern);
+      return OriginScope(mPattern);
     }
 
     MOZ_ASSERT(IsNull());
@@ -282,49 +195,37 @@ public:
   }
 
 private:
-  explicit OriginScope(const OriginAndAttributes& aOriginAndAttributes)
-    : mOriginAndAttributes(new OriginAndAttributes(aOriginAndAttributes))
-    , mType(eOrigin)
-  { }
-
   explicit OriginScope(const nsACString& aOrigin)
-    : mOriginAndAttributes(new OriginAndAttributes(aOrigin))
+    : mOrigin(aOrigin)
     , mType(eOrigin)
-  { }
+  {
+    nsCString originNoSuffix;
+    MOZ_ALWAYS_TRUE(mOriginAttributes.PopulateFromOrigin(aOrigin,
+                                                         originNoSuffix));
+  }
 
   explicit OriginScope(const mozilla::OriginAttributesPattern& aPattern)
-    : mPattern(new mozilla::OriginAttributesPattern(aPattern))
+    : mPattern(aPattern)
     , mType(ePattern)
   { }
 
   explicit OriginScope(const nsAString& aJSONPattern)
-    : mPattern(new mozilla::OriginAttributesPattern())
-    , mType(ePattern)
+    : mType(ePattern)
   {
-    MOZ_ALWAYS_TRUE(mPattern->Init(aJSONPattern));
+    MOZ_ALWAYS_TRUE(mPattern.Init(aJSONPattern));
   }
 
   OriginScope()
-    : mDummy(nullptr)
-    , mType(eNull)
+    : mType(eNull)
   { }
-
-  void
-  Destroy()
-  {
-    if (IsOrigin()) {
-      MOZ_ASSERT(mOriginAndAttributes);
-      delete mOriginAndAttributes;
-      mOriginAndAttributes = nullptr;
-    } else if (IsPattern()) {
-      MOZ_ASSERT(mPattern);
-      delete mPattern;
-      mPattern = nullptr;
-    }
-  }
 
   bool
   operator==(const OriginScope& aOther) = delete;
+
+  nsCString mOrigin;
+  PrincipalOriginAttributes mOriginAttributes;
+  mozilla::OriginAttributesPattern mPattern;
+  Type mType;
 };
 
 END_QUOTA_NAMESPACE
