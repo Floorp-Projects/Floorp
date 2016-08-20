@@ -6,15 +6,10 @@
 
 "use strict";
 
-/* eslint-disable mozilla/reject-some-requires */
-const {Cc, Ci} = require("chrome");
-/* eslint-enable mozilla/reject-some-requires */
-
 var Services = require("Services");
 var promise = require("promise");
 var defer = require("devtools/shared/defer");
 var EventEmitter = require("devtools/shared/event-emitter");
-var clipboard = require("sdk/clipboard");
 const {executeSoon} = require("devtools/shared/DevToolsUtils");
 var {KeyShortcuts} = require("devtools/client/shared/key-shortcuts");
 var {Task} = require("devtools/shared/task");
@@ -34,15 +29,13 @@ const {MarkupView} = require("devtools/client/inspector/markup/markup");
 const {RuleViewTool} = require("devtools/client/inspector/rules/rules");
 const {ToolSidebar} = require("devtools/client/inspector/toolsidebar");
 const {ViewHelpers} = require("devtools/client/shared/widgets/view-helpers");
+const clipboardHelper = require("devtools/shared/platform/clipboard");
 
 loader.lazyGetter(this, "strings", () => {
   return Services.strings.createBundle("chrome://devtools/locale/inspector.properties");
 });
 loader.lazyGetter(this, "toolboxStrings", () => {
   return Services.strings.createBundle("chrome://devtools/locale/toolbox.properties");
-});
-loader.lazyGetter(this, "clipboardHelper", () => {
-  return Cc["@mozilla.org/widget/clipboardhelper;1"].getService(Ci.nsIClipboardHelper);
 });
 
 /**
@@ -828,10 +821,10 @@ InspectorPanel.prototype = {
    * into the current node's outer HTML, otherwise returns null.
    */
   _getClipboardContentForPaste: function () {
-    let flavors = clipboard.currentFlavors;
+    let flavors = clipboardHelper.getCurrentFlavors();
     if (flavors.indexOf("text") != -1 ||
         (flavors.indexOf("html") != -1 && flavors.indexOf("image") == -1)) {
-      let content = clipboard.get();
+      let content = clipboardHelper.getData();
       if (content && content.trim().length > 0) {
         return content;
       }

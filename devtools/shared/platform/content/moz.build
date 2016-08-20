@@ -5,7 +5,12 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DevToolsModules(
+    'clipboard.js',
     'stack.js',
 )
 
 XPCSHELL_TESTS_MANIFESTS += ['test/xpcshell.ini']
+
+MOCHITEST_MANIFESTS += [
+    'test/mochitest.ini',
+]

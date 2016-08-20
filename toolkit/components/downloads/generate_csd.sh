@@ -1,11 +1,9 @@
 #!/usr/bin/env bash
 
-# A script to generate toolkit/components/downloads/csd.pb.{cc,h} for use in
-# nsIApplicationReputationQuery. This script assumes you have downloaded and
-# installed the protocol buffer compiler.
-# As of June 26 2014, csd.proto contains many protobufs that are currently
-# unused by ApplicationReputation. You may want to strip csd.proto of these
-# before running the protocol compiler on it.
+# A script to generate
+# chromium/chrome/common/safe_browsing/csd.pb.{cc,h} for use in
+# nsIApplicationReputationQuery. This script assumes you have
+# downloaded and installed the protocol buffer compiler.
 
 set -e
 
@@ -17,7 +15,7 @@ echo "Using $PROTOC_PATH as protocol compiler"
 
 if [ ! -e $PROTOC_PATH ]; then
   echo "You must install the protocol compiler from " \
-       "https://code.google.com/p/protobuf/downloads/list"
+       "https://github.com/google/protobuf/releases"
   exit 1
 fi
 
@@ -28,7 +26,8 @@ if [ ! -f nsDownloadManager.cpp ]; then
 fi
 
 # Get the protocol buffer and compile it
-CSD_PROTO_URL="https://chromium.googlesource.com/playground/chromium-blink-merge/+/master/chrome/common/safe_browsing/csd.proto?format=TEXT"
+CSD_PROTO_URL="https://chromium.googlesource.com/chromium/src/+/master/chrome/common/safe_browsing/csd.proto?format=TEXT"
+CSD_PATH="chromium/chrome/common/safe_browsing"
 
-curl $CSD_PROTO_URL | base64 --decode > csd.proto
-$PROTOC_PATH csd.proto --cpp_out=.
+curl "$CSD_PROTO_URL" | base64 --decode > "$CSD_PATH"/csd.proto
+"$PROTOC_PATH" "$CSD_PATH"/csd.proto --cpp_out=.
