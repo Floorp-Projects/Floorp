@@ -11,7 +11,7 @@ const appInfo = Services.appinfo;
 loader.lazyRequireGetter(this, "NetworkHelper", "devtools/shared/webconsole/network-helper");
 
 loader.lazyGetter(this, "L10N", () => {
-  return new LocalizationHelper("chrome://devtools/locale/har.properties");
+  return new LocalizationHelper("devtools/locale/har.properties");
 });
 
 const HAR_VERSION = "1.1";
