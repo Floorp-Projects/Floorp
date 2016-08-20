@@ -18,14 +18,15 @@
 
 #include "jsstr.h"
 
+#include "js/UniquePtr.h"
 #include "threading/LockGuard.h"
 #include "vm/TraceLogging.h"
 
-#ifndef TRACE_LOG_DIR
+#ifndef DEFAULT_TRACE_LOG_DIR
 # if defined(_WIN32)
-#  define TRACE_LOG_DIR ""
+#  define DEFAULT_TRACE_LOG_DIR "."
 # else
-#  define TRACE_LOG_DIR "/tmp/"
+#  define DEFAULT_TRACE_LOG_DIR "/tmp/"
 # endif
 #endif
 
@@ -34,25 +35,78 @@ using mozilla::NativeEndian;
 
 TraceLoggerGraphState* traceLoggerGraphState = nullptr;
 
+// gcc and clang have these in symcat.h, but MSVC does not.
+#ifndef STRINGX
+# define STRINGX(x) #x
+#endif
+#ifndef XSTRING
+# define XSTRING(macro) STRINGX(macro)
+#endif
+
 #define MAX_LOGGERS 999
+
+// Return a filename relative to the output directory. %u and %d substitutions
+// are allowed, with %u standing for a full 32-bit number and %d standing for
+// an up to 3-digit number.
+static js::UniqueChars
+AllocTraceLogFilename(const char* pattern, ...) {
+    js::UniqueChars filename;
+
+    va_list ap;
+
+    static const char* outdir = getenv("TLDIR") ? getenv("TLDIR") : DEFAULT_TRACE_LOG_DIR;
+    size_t len = strlen(outdir) + 1; // "+ 1" is for the '/'
+
+    for (const char* p = pattern; *p; p++) {
+        if (*p == '%') {
+            p++;
+            if (*p == 'u')
+                len += sizeof("4294967295") - 1;
+            else if (*p == 'd')
+                len += sizeof(XSTRING(MAX_LOGGERS)) - 1;
+            else
+                MOZ_CRASH("Invalid format");
+        } else {
+            len++;
+        }
+    }
+
+    len++; // For the terminating NUL.
+
+    filename.reset((char*) js_malloc(len));
+    if (!filename)
+        return nullptr;
+    char* rest = filename.get() + sprintf(filename.get(), "%s/", outdir);
+
+    va_start(ap, pattern);
+    int ret = vsnprintf(rest, len, pattern, ap);
+    va_end(ap);
+    if (ret < 0)
+        return nullptr;
+
+    MOZ_ASSERT(ret <= len - (strlen(outdir) + 1),
+               "overran TL filename buffer; %d given too large a value?");
+
+    return filename;
+}
 
 bool
 TraceLoggerGraphState::init()
 {
     pid_ = (uint32_t) getpid();
 
-    char filename[sizeof TRACE_LOG_DIR "tl-data.4294967295.json"];
-    sprintf(filename, TRACE_LOG_DIR "tl-data.%u.json", pid_);
-    out = fopen(filename, "w");
+    js::UniqueChars filename = AllocTraceLogFilename("tl-data.%u.json", pid_);
+    out = fopen(filename.get(), "w");
     if (!out)
         return false;
 
     fprintf(out, "[");
 
-    // Write the last tl-data.*.json file to tl-data.json.
+    // Write the latest tl-data.*.json file to tl-data.json.
     // In most cases that is the wanted file.
-    if (FILE* last = fopen(TRACE_LOG_DIR "tl-data.json", "w")) {
-        fprintf(last, "\"tl-data.%u.json\"", pid_);
+    js::UniqueChars masterFilename = AllocTraceLogFilename("tl-data.json");
+    if (FILE* last = fopen(masterFilename.get(), "w")) {
+        fprintf(last, "\"%s\"", filename.get());
         fclose(last);
     }
 
@@ -83,7 +137,8 @@ TraceLoggerGraphState::nextLoggerId()
     MOZ_ASSERT(initialized);
 
     if (numLoggers > MAX_LOGGERS) {
-        fprintf(stderr, "TraceLogging: Can't create more than %d different loggers.", MAX_LOGGERS);
+        fputs("TraceLogging: Can't create more than " XSTRING(MAX_LOGGERS) " different loggers.",
+              stderr);
         return uint32_t(-1);
     }
 
@@ -152,23 +207,20 @@ TraceLoggerGraph::init(uint64_t startTimestamp)
 
     uint32_t pid = traceLoggerGraphState->pid();
 
-    char dictFilename[sizeof TRACE_LOG_DIR "tl-dict.4294967295.100.json"];
-    sprintf(dictFilename, TRACE_LOG_DIR "tl-dict.%u.%d.json", pid, loggerId);
-    dictFile = fopen(dictFilename, "w");
+    js::UniqueChars dictFilename = AllocTraceLogFilename("tl-dict.%u.%d.json", pid, loggerId);
+    dictFile = fopen(dictFilename.get(), "w");
     if (!dictFile)
         return false;
     auto cleanupDict = MakeScopeExit([&] { fclose(dictFile); dictFile = nullptr; });
 
-    char treeFilename[sizeof TRACE_LOG_DIR "tl-tree.4294967295.100.tl"];
-    sprintf(treeFilename, TRACE_LOG_DIR "tl-tree.%u.%d.tl", pid, loggerId);
-    treeFile = fopen(treeFilename, "w+b");
+    js::UniqueChars treeFilename = AllocTraceLogFilename("tl-tree.%u.%d.json", pid, loggerId);
+    treeFile = fopen(treeFilename.get(), "w+b");
     if (!treeFile)
         return false;
     auto cleanupTree = MakeScopeExit([&] { fclose(treeFile); treeFile = nullptr; });
 
-    char eventFilename[sizeof TRACE_LOG_DIR "tl-event.4294967295.100.tl"];
-    sprintf(eventFilename, TRACE_LOG_DIR "tl-event.%u.%d.tl", pid, loggerId);
-    eventFile = fopen(eventFilename, "wb");
+    js::UniqueChars eventFilename = AllocTraceLogFilename("tl-event.%u.%d.tl", pid, loggerId);
+    eventFile = fopen(eventFilename.get(), "wb");
     if (!eventFile)
         return false;
     auto cleanupEvent = MakeScopeExit([&] { fclose(eventFile); eventFile = nullptr; });
