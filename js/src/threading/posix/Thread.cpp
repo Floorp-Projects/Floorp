@@ -164,3 +164,25 @@ js::ThisThread::SetName(const char* name)
 #endif
   MOZ_RELEASE_ASSERT(!rv);
 }
+
+void
+js::ThisThread::GetName(char* nameBuffer, size_t len)
+{
+  // Using http://stackoverflow.com/questions/2369738/can-i-set-the-name-of-a-thread-in-pthreads-linux as a reference.
+
+  int rv;
+#ifdef XP_DARWIN
+  rv = pthread_getname_np(pthread_self(), nameBuffer, len);
+#elif defined(__DragonFly__) || defined(__FreeBSD__) || defined(__OpenBSD__)
+  pthread_get_name_np(pthread_self(), nameBuffer, len);
+  rv = 0;
+#elif defined(__NetBSD__)
+  rv = pthread_getname_np(pthread_self(), nameBuffer, len);
+#else
+  rv = pthread_getname_np(pthread_self(), nameBuffer, len);
+#endif
+
+  MOZ_RELEASE_ASSERT(len > 0);
+  if (rv)
+    nameBuffer[0] = '\0';
+}
