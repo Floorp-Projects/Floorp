@@ -86,7 +86,7 @@ public class CombinedHistoryAdapter extends RecyclerView.Adapter<CombinedHistory
     }
 
     public interface RecentTabsUpdateHandler {
-        void onRecentTabsCountUpdated(int count);
+        void onRecentTabsCountUpdated(int count, boolean countReliable);
     }
 
     public RecentTabsUpdateHandler getRecentTabsUpdateHandler() {
@@ -96,7 +96,7 @@ public class CombinedHistoryAdapter extends RecyclerView.Adapter<CombinedHistory
 
         recentTabsUpdateHandler = new RecentTabsUpdateHandler() {
             @Override
-            public void onRecentTabsCountUpdated(final int count) {
+            public void onRecentTabsCountUpdated(final int count, final boolean countReliable) {
                 // Now that other items can move around depending on the visibility of the
                 // Recent Tabs folder, only update the recentTabsCount on the UI thread.
                 ThreadUtils.postToUiThread(new Runnable() {
