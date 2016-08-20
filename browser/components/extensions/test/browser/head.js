@@ -91,9 +91,9 @@ function getPanelForNode(node) {
   return node;
 }
 
-function* awaitExtensionPanel(extension, win = window) {
+var awaitExtensionPanel = Task.async(function* (extension, win = window, filename = "popup.html") {
   let {target} = yield BrowserTestUtils.waitForEvent(win.document, "load", true, (event) => {
-    return event.target.location && event.target.location.href.endsWith("popup.html");
+    return event.target.location && event.target.location.href.endsWith(filename);
   });
 
   let browser = target.defaultView
@@ -108,7 +108,7 @@ function* awaitExtensionPanel(extension, win = window) {
   yield promisePopupShown(getPanelForNode(browser));
 
   return browser;
-}
+});
 
 function getBrowserActionWidget(extension) {
   return CustomizableUI.getWidget(makeWidgetId(extension.id) + "-browser-action");
