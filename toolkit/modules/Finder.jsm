@@ -31,6 +31,7 @@ function Finder(docShell) {
   this._fastFind = Cc["@mozilla.org/typeaheadfind;1"].createInstance(Ci.nsITypeAheadFind);
   this._fastFind.init(docShell);
 
+  this._currentFoundRange = null;
   this._docShell = docShell;
   this._listeners = [];
   this._previousLink = null;
@@ -40,6 +41,8 @@ function Finder(docShell) {
   docShell.QueryInterface(Ci.nsIInterfaceRequestor)
           .getInterface(Ci.nsIWebProgress)
           .addProgressListener(this, Ci.nsIWebProgress.NOTIFY_LOCATION);
+  BrowserUtils.getRootWindow(this._docShell).addEventListener("unload",
+    this.onLocationChange.bind(this, { isTopLevel: true }));
 }
 
 Finder.prototype = {
@@ -62,7 +65,8 @@ Finder.prototype = {
       .getInterface(Ci.nsIWebProgress)
       .removeProgressListener(this, Ci.nsIWebProgress.NOTIFY_LOCATION);
     this._listeners = [];
-    this._fastFind = this._docShell = this._previousLink = this._highlighter = null;
+    this._currentFoundRange = this._fastFind = this._docShell = this._previousLink =
+      this._highlighter = null;
   },
 
   addResultListener: function (aListener) {
@@ -139,11 +143,15 @@ Finder.prototype = {
   },
 
   set caseSensitive(aSensitive) {
+    if (this._fastFind.caseSensitive === aSensitive)
+      return;
     this._fastFind.caseSensitive = aSensitive;
     this.iterator.reset();
   },
 
   set entireWord(aEntireWord) {
+    if (this._fastFind.entireWord === aEntireWord)
+      return;
     this._fastFind.entireWord = aEntireWord;
     this.iterator.reset();
   },
@@ -335,6 +343,8 @@ Finder.prototype = {
   },
 
   onHighlightAllChange(highlightAll) {
+    if (this._iterator)
+      this._iterator.reset();
     if (this._highlighter)
       this._highlighter.onHighlightAllChange(highlightAll);
   },
@@ -379,12 +389,21 @@ Finder.prototype = {
     }
   },
 
-  _notifyMatchesCount: function(result) {
+  _notifyMatchesCount: function(result = this._currentMatchesCountResult) {
+    if (!result)
+      return;
+    // The `_currentFound` property is only used for internal bookkeeping.
+    delete result._currentFound;
+    if (result.total == this._currentMatchLimit)
+      result.total = -1;
+
     for (let l of this._listeners) {
       try {
         l.onMatchesCountResult(result);
       } catch (ex) {}
     }
+
+    this._currentMatchesCountResult = null;
   },
 
   requestMatchesCount: function(aWord, aMatchLimit, aLinksOnly) {
@@ -398,12 +417,14 @@ Finder.prototype = {
     }
 
     let window = this._getWindow();
-    let result = {
+    this._currentFoundRange = this._fastFind.getFoundRange();
+    this._currentMatchLimit = aMatchLimit;
+
+    this._currentMatchesCountResult = {
       total: 0,
       current: 0,
       _currentFound: false
     };
-    let foundRange = this._fastFind.getFoundRange();
 
     this.iterator.start({
       caseSensitive: this._fastFind.caseSensitive,
@@ -411,29 +432,37 @@ Finder.prototype = {
       finder: this,
       limit: aMatchLimit,
       linksOnly: aLinksOnly,
-      onRange: range => {
-        ++result.total;
-        if (!result._currentFound) {
-          ++result.current;
-          result._currentFound = (foundRange &&
-            range.startContainer == foundRange.startContainer &&
-            range.startOffset == foundRange.startOffset &&
-            range.endContainer == foundRange.endContainer &&
-            range.endOffset == foundRange.endOffset);
-        }
-      },
+      listener: this,
       useCache: true,
       word: aWord
-    }).then(() => {
-      // The `_currentFound` property is only used for internal bookkeeping.
-      delete result._currentFound;
-
-      if (result.total == aMatchLimit)
-        result.total = -1;
-
-      this._notifyMatchesCount(result);
-    });
+    }).then(this._notifyMatchesCount.bind(this));
   },
+
+  // FinderIterator listener implementation
+
+  onIteratorRangeFound(range) {
+    let result = this._currentMatchesCountResult;
+    if (!result)
+      return;
+
+    ++result.total;
+    if (!result._currentFound) {
+      ++result.current;
+      result._currentFound = (this._currentFoundRange &&
+        range.startContainer == this._currentFoundRange.startContainer &&
+        range.startOffset == this._currentFoundRange.startOffset &&
+        range.endContainer == this._currentFoundRange.endContainer &&
+        range.endOffset == this._currentFoundRange.endOffset);
+    }
+  },
+
+  onIteratorReset() {},
+
+  onIteratorRestart({ word, linksOnly }) {
+    this.requestMatchesCount(word, this._currentMatchLimit, linksOnly);
+   },
+
+   onIteratorStart() {},
 
   _getWindow: function () {
     return this._docShell.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindow);
@@ -555,7 +584,7 @@ Finder.prototype = {
       return;
 
     // Avoid leaking if we change the page.
-    this._previousLink = null;
+    this._previousLink = this._currentFoundRange = null;
     this.highlighter.onLocationChange();
     this.iterator.reset();
   },

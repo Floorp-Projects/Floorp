@@ -11,7 +11,7 @@ define(function (require, exports, module) {
   const React = require("devtools/client/shared/vendor/react");
 
   // Reps
-  const { isGrip } = require("./rep-utils");
+  const { isGrip, getURLDisplayString } = require("./rep-utils");
 
   // Shortcuts
   const { span } = React.DOM;
@@ -42,7 +42,7 @@ define(function (require, exports, module) {
     },
 
     getDescription: function (grip) {
-      return grip.preview.url;
+      return getURLDisplayString(grip.preview.url);
     },
 
     render: function () {
