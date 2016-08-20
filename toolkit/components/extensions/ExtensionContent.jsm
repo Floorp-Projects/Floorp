@@ -50,7 +50,6 @@ var {
   Messenger,
   injectAPI,
   flushJarCache,
-  detectLanguage,
   getInnerWindowID,
   promiseDocumentReady,
   ChildAPIManager,
@@ -154,26 +153,6 @@ var api = context => {
       },
 
       inIncognitoContext: PrivateBrowsingUtils.isContentWindowPrivate(context.contentWindow),
-    },
-
-    i18n: {
-      getMessage: function(messageName, substitutions) {
-        return context.extension.localizeMessage(messageName, substitutions, {cloneScope: context.cloneScope});
-      },
-
-      getAcceptLanguages: function(callback) {
-        let result = context.extension.localeData.acceptLanguages;
-        return context.wrapPromise(Promise.resolve(result), callback);
-      },
-
-      getUILanguage: function() {
-        return context.extension.localeData.uiLocale;
-      },
-
-      detectLanguage: function(text, callback) {
-        let result = detectLanguage(text);
-        return context.wrapPromise(result, callback);
-      },
     },
   };
 };
