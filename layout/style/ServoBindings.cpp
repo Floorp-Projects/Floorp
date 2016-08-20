@@ -275,27 +275,25 @@ void
 Gecko_StoreStyleDifference(RawGeckoNode* aNode, nsChangeHint aChangeHintToStore)
 {
 #ifdef MOZ_STYLO
-  MOZ_ASSERT(aNode->IsContent());
+  MOZ_ASSERT(aNode->IsElement());
   MOZ_ASSERT(aNode->IsDirtyForServo(),
              "Change hint stored in a not-dirty node");
 
-  // For elements, we need to store the change hint in the proper style context.
-  // For text nodes, we want to store the change hint in the parent element,
-  // since Gecko's change list only operates on Elements, and we'll fail to
-  // compute the change hint for the element properly because the property won't
-  // always be in the cache of the parent's nsStyleContext.
-  //
-  // For Gecko this is not a problem, because they access the inherited structs
-  // from the parent style context in order to inherit them, so they're found in
-  // the cache and get compared.
-  Element* aElement =
-    aNode->IsElement() ? aNode->AsElement() : aNode->GetParentElement();
-
+  Element* aElement = aNode->AsElement();
   nsIFrame* primaryFrame = aElement->GetPrimaryFrame();
   if (!primaryFrame) {
-    // TODO: Pick the undisplayed content map from the frame-constructor, and
-    // stick it there. For now we're generating ReconstructFrame
-    // unconditionally, which is suboptimal.
+    // If there's no primary frame, that means that either this content is
+    // undisplayed (so we only need to check at the restyling phase for the
+    // display value on the element), or is a display: contents element.
+    //
+    // In this second case, we should store it in the frame constructor display
+    // contents map. Note that while this operation looks hairy, this would be
+    // thread-safe because the content should be there already (we'd only need
+    // to read the map and modify our entry).
+    //
+    // That being said, we still don't support display: contents anyway, so it's
+    // probably not worth it to do all the roundtrip just yet until we have a
+    // more concrete plan.
     return;
   }
 
