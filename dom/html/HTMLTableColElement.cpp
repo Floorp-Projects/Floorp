@@ -44,7 +44,8 @@ HTMLTableColElement::ParseAttribute(int32_t aNamespaceID,
     }
     if (aAttribute == nsGkAtoms::span) {
       /* protection from unrealistic large colspan values */
-      return aResult.ParseIntWithBounds(aValue, 1, MAX_COLSPAN);
+      aResult.ParseIntWithFallback(aValue, 1, MAX_COLSPAN);
+      return true;
     }
     if (aAttribute == nsGkAtoms::width) {
       return aResult.ParseSpecialIntValue(aValue);
