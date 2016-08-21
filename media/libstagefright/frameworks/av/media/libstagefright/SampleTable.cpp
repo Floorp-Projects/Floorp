@@ -252,7 +252,10 @@ status_t SampleTable::setSampleToChunkParams(
     }
 
     mSampleToChunkEntries =
-        new SampleToChunkEntry[mNumSampleToChunkOffsets];
+        new (mozilla::fallible) SampleToChunkEntry[mNumSampleToChunkOffsets];
+    if (!mSampleToChunkEntries) {
+      return ERROR_BUFFER_TOO_SMALL;
+    }
 
     for (uint32_t i = 0; i < mNumSampleToChunkOffsets; ++i) {
         uint8_t buffer[12];
@@ -358,9 +361,14 @@ status_t SampleTable::setTimeToSampleParams(
         // Avoid later overflow.
         return ERROR_MALFORMED;
     }
-    mTimeToSample = new uint32_t[mTimeToSampleCount * 2];
 
     size_t size = sizeof(uint32_t) * mTimeToSampleCount * 2;
+
+    mTimeToSample = new (mozilla::fallible) uint32_t[mTimeToSampleCount * 2];
+    if (!mTimeToSample) {
+      return ERROR_BUFFER_TOO_SMALL;
+    }
+
     if (mDataSource->readAt(
                 data_offset + 8, mTimeToSample, size) < (ssize_t)size) {
         return ERROR_IO;
@@ -400,7 +408,10 @@ status_t SampleTable::setCompositionTimeToSampleParams(
     }
 
     mNumCompositionTimeDeltaEntries = numEntries;
-    mCompositionTimeDeltaEntries = new uint32_t[2 * numEntries];
+    mCompositionTimeDeltaEntries = new (mozilla::fallible) uint32_t[2 * numEntries];
+    if (!mCompositionTimeDeltaEntries) {
+      return ERROR_BUFFER_TOO_SMALL;
+    }
 
     if (mDataSource->readAt(
                 data_offset + 8, mCompositionTimeDeltaEntries, numEntries * 8)
@@ -449,7 +460,10 @@ status_t SampleTable::setSyncSampleParams(off64_t data_offset, size_t data_size)
         ALOGV("Table of sync samples is empty or has only a single entry!");
     }
 
-    mSyncSamples = new uint32_t[mNumSyncSamples];
+    mSyncSamples = new (mozilla::fallible) uint32_t[mNumSyncSamples];
+    if (!mSyncSamples) {
+      return ERROR_BUFFER_TOO_SMALL;
+    }
     size_t size = mNumSyncSamples * sizeof(uint32_t);
     if (mDataSource->readAt(mSyncSampleOffset + 8, mSyncSamples, size)
             != (ssize_t)size) {
@@ -646,7 +660,10 @@ SampleTable::parseSampleCencInfo() {
         return ERROR_MALFORMED;
     }
 
-    mCencInfo = new SampleCencInfo[mCencInfoCount];
+    mCencInfo = new (mozilla::fallible) SampleCencInfo[mCencInfoCount];
+    if (!mCencInfo) {
+      return ERROR_BUFFER_TOO_SMALL;
+    }
     for (uint32_t i = 0; i < mCencInfoCount; i++) {
         mCencInfo[i].mSubsamples = NULL;
     }
@@ -691,7 +708,10 @@ SampleTable::parseSampleCencInfo() {
             return ERROR_MALFORMED;
         }
 
-        info.mSubsamples = new SampleCencInfo::SubsampleSizes[info.mSubsampleCount];
+        info.mSubsamples = new (mozilla::fallible) SampleCencInfo::SubsampleSizes[info.mSubsampleCount];
+        if (!info.mSubsamples) {
+          return ERROR_BUFFER_TOO_SMALL;
+        }
         for (uint16_t j = 0; j < info.mSubsampleCount; j++) {
             auto& subsample = info.mSubsamples[j];
             if (!mDataSource->getUInt16(offset, &subsample.mClearBytes) ||
@@ -754,14 +774,17 @@ int SampleTable::CompareIncreasingTime(const void *_a, const void *_b) {
     return 0;
 }
 
-void SampleTable::buildSampleEntriesTable() {
+status_t SampleTable::buildSampleEntriesTable() {
     Mutex::Autolock autoLock(mLock);
 
     if (mSampleTimeEntries != NULL) {
-        return;
+        return OK;
     }
 
-    mSampleTimeEntries = new SampleTimeEntry[mNumSampleSizes];
+    mSampleTimeEntries = new (mozilla::fallible) SampleTimeEntry[mNumSampleSizes];
+    if (!mSampleTimeEntries) {
+      return ERROR_BUFFER_TOO_SMALL;
+    }
 
     uint32_t sampleIndex = 0;
     uint32_t sampleTime = 0;
@@ -793,11 +816,15 @@ void SampleTable::buildSampleEntriesTable() {
 
     qsort(mSampleTimeEntries, mNumSampleSizes, sizeof(SampleTimeEntry),
           CompareIncreasingTime);
+    return OK;
 }
 
 status_t SampleTable::findSampleAtTime(
         uint32_t req_time, uint32_t *sample_index, uint32_t flags) {
-    buildSampleEntriesTable();
+    status_t err = buildSampleEntriesTable();
+    if (err != OK) {
+      return err;
+    }
 
     uint32_t left = 0;
     uint32_t right = mNumSampleSizes;
