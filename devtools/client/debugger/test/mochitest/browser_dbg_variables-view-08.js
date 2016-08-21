@@ -40,7 +40,7 @@ var test = Task.async(function* () {
   obj.expand();
   yield expanded;
 
-  let values = [" ", "\r", "\n", "\t", "\f", "\uFEFF", "\xA0"];
+  let values = ["", " ", "\r", "\n", "\t", "\f", "\uFEFF", "\xA0"];
   let count = values.length;
 
   for (let [property, value] of obj) {

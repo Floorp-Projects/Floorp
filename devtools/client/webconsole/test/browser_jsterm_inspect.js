@@ -25,7 +25,7 @@ add_task(function* () {
 
   // The single variable view contains a scope with the variable name
   // and unnamed subitem that contains the properties
-  let variable = view.getScopeAtIndex(0).get("");
+  let variable = view.getScopeAtIndex(0).get(undefined);
   ok(variable, "variable object");
 
   yield findVariableViewProperties(variable, [
