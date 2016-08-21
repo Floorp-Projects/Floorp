@@ -42,6 +42,7 @@ public:
   bool RecvNewContentImageBridge(Endpoint<PImageBridgeParent>&& aEndpoint) override;
   bool RecvNewContentVRManager(Endpoint<PVRManagerParent>&& aEndpoint) override;
   bool RecvDeallocateLayerTreeId(const uint64_t& aLayersId) override;
+  bool RecvGetDeviceStatus(GPUDeviceData* aOutStatus) override;
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
 

@@ -2030,6 +2030,39 @@ gfxWindowsPlatform::GetAcceleratedCompositorBackends(nsTArray<LayersBackend>& aB
 }
 
 void
+gfxWindowsPlatform::ImportGPUDeviceData(const mozilla::gfx::GPUDeviceData& aData)
+{
+  MOZ_ASSERT(XRE_IsParentProcess());
+
+  gfxPlatform::ImportGPUDeviceData(aData);
+
+  gfxConfig::ImportChange(Feature::D3D11_COMPOSITING, aData.d3d11Compositing());
+  gfxConfig::ImportChange(Feature::D3D9_COMPOSITING, aData.d3d9Compositing());
+
+  DeviceManagerD3D11* dm = DeviceManagerD3D11::Get();
+  if (gfxConfig::IsEnabled(Feature::D3D11_COMPOSITING)) {
+    dm->ImportDeviceInfo(aData.d3d11Device());
+  } else {
+    // There should be no devices, so this just takes away the device status.
+    dm->ResetDevices();
+
+    // Make sure we disable D2D if content processes might use it.
+    FeatureState& d2d1 = gfxConfig::GetFeature(Feature::DIRECT2D);
+    if (d2d1.IsEnabled()) {
+      d2d1.SetFailed(
+        FeatureStatus::Unavailable,
+        "Direct2D requires Direct3D 11 compositing",
+        NS_LITERAL_CSTRING("FEATURE_FAILURE_D2D_D3D11_COMP"));
+    }
+  }
+
+  // For completeness (and messaging in about:support). Content recomputes this
+  // on its own, and we won't use ANGLE in the UI process if we're using a GPU
+  // process.
+  UpdateANGLEConfig();
+}
+
+void
 gfxWindowsPlatform::ImportContentDeviceData(const mozilla::gfx::ContentDeviceData& aData)
 {
   MOZ_ASSERT(XRE_IsContentProcess());
