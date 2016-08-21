@@ -30,6 +30,12 @@ LIRGeneratorX64::useByteOpRegister(MDefinition* mir)
 }
 
 LAllocation
+LIRGeneratorX64::useByteOpRegisterAtStart(MDefinition* mir)
+{
+    return useRegisterAtStart(mir);
+}
+
+LAllocation
 LIRGeneratorX64::useByteOpRegisterOrNonDoubleConstant(MDefinition* mir)
 {
     return useRegisterOrNonDoubleConstant(mir);
