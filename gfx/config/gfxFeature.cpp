@@ -160,7 +160,6 @@ FeatureState::MaybeSetFailed(FeatureStatus aStatus, const char* aMessage,
 bool
 FeatureState::DisabledByDefault() const
 {
-  AssertInitialized();
   return mDefault.mStatus != FeatureStatus::Available;
 }
 
@@ -256,7 +255,33 @@ FeatureState::SetFailureId(const nsACString& aFailureId)
   }
 }
 
-const nsACString&
+const char*
+FeatureState::GetFailureMessage() const
+{
+  AssertInitialized();
+  MOZ_ASSERT(!IsEnabled());
+
+  if (mRuntime.mStatus != FeatureStatus::Unused &&
+      IsFeatureStatusFailure(mRuntime.mStatus))
+  {
+    return mRuntime.mMessage;
+  }
+  if (mEnvironment.mStatus != FeatureStatus::Unused &&
+      IsFeatureStatusFailure(mEnvironment.mStatus))
+  {
+    return mEnvironment.mMessage;
+  }
+  if (mUser.mStatus != FeatureStatus::Unused &&
+      IsFeatureStatusFailure(mUser.mStatus))
+  {
+    return mUser.mMessage;
+  }
+
+  MOZ_ASSERT(IsFeatureStatusFailure(mDefault.mStatus));
+  return mDefault.mMessage;
+}
+
+const nsCString&
 FeatureState::GetFailureId() const
 {
   MOZ_ASSERT(!IsEnabled());

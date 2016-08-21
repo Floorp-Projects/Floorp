@@ -8,12 +8,16 @@
 #include "gfxPrefs.h"
 #include "GPUProcessHost.h"
 #include "mozilla/gfx/gfxVars.h"
+#if defined(XP_WIN)
+# include "mozilla/gfx/DeviceManagerD3D11.h"
+#endif
 
 namespace mozilla {
 namespace gfx {
 
 GPUChild::GPUChild(GPUProcessHost* aHost)
- : mHost(aHost)
+ : mHost(aHost),
+   mGPUReady(false)
 {
   MOZ_COUNT_CTOR(GPUChild);
 }
@@ -60,6 +64,33 @@ void
 GPUChild::OnVarChanged(const GfxVarUpdate& aVar)
 {
   SendUpdateVar(aVar);
+}
+
+void
+GPUChild::EnsureGPUReady()
+{
+  if (mGPUReady) {
+    return;
+  }
+
+  GPUDeviceData data;
+  SendGetDeviceStatus(&data);
+
+  gfxPlatform::GetPlatform()->ImportGPUDeviceData(data);
+  mGPUReady = true;
+}
+
+bool
+GPUChild::RecvInitComplete(const GPUDeviceData& aData)
+{
+  // We synchronously requested GPU parameters before this arrived.
+  if (mGPUReady) {
+    return true;
+  }
+
+  gfxPlatform::GetPlatform()->ImportGPUDeviceData(aData);
+  mGPUReady = true;
+  return true;
 }
 
 void
