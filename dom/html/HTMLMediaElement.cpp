@@ -907,6 +907,7 @@ void HTMLMediaElement::ShutdownDecoder()
 {
   RemoveMediaElementFromURITable();
   NS_ASSERTION(mDecoder, "Must have decoder to shut down");
+  mWaitingForKeyListener.DisconnectIfExists();
   mDecoder->Shutdown();
   mDecoder = nullptr;
 }
@@ -983,6 +984,7 @@ void HTMLMediaElement::AbortExistingLoads()
 #ifdef MOZ_EME
   mPendingEncryptedInitData.mInitDatas.Clear();
 #endif // MOZ_EME
+  mWaitingForKey = false;
   mSourcePointer = nullptr;
 
   mTags = nullptr;
@@ -2509,6 +2511,7 @@ HTMLMediaElement::HTMLMediaElement(already_AddRefed<mozilla::dom::NodeInfo>& aNo
     mMediaSecurityVerified(false),
     mCORSMode(CORS_NONE),
     mIsEncrypted(false),
+    mWaitingForKey(false),
     mDownloadSuspendedByCache(false, "HTMLMediaElement::mDownloadSuspendedByCache"),
     mAudioChannelVolume(1.0),
     mPlayingThroughTheAudioChannel(false),
@@ -3438,6 +3441,13 @@ nsresult HTMLMediaElement::FinishDecoderSetup(MediaDecoder* aDecoder,
     }
   }
 #endif
+
+  MediaEventSource<void>* waitingForKeyProducer = mDecoder->WaitingForKeyEvent();
+  // Not every decoder will produce waitingForKey events, only add ones that can
+  if (waitingForKeyProducer) {
+    mWaitingForKeyListener = waitingForKeyProducer->Connect(
+      AbstractThread::MainThread(), this, &HTMLMediaElement::CannotDecryptWaitingForKey);
+  }
 
   if (mChannelLoader) {
     mChannelLoader->Done();
@@ -4501,6 +4511,7 @@ void HTMLMediaElement::ChangeReadyState(nsMediaReadyState aState)
   if (oldState < nsIDOMHTMLMediaElement::HAVE_FUTURE_DATA &&
       mReadyState >= nsIDOMHTMLMediaElement::HAVE_FUTURE_DATA &&
       IsPotentiallyPlaying()) {
+    mWaitingForKey = false;
     DispatchAsyncEvent(NS_LITERAL_STRING("playing"));
   }
 
@@ -5885,6 +5896,27 @@ HTMLMediaElement::GetTopLevelPrincipal()
   return principal.forget();
 }
 #endif // MOZ_EME
+
+void
+HTMLMediaElement::CannotDecryptWaitingForKey()
+{
+  // See: http://w3c.github.io/encrypted-media/#dom-evt-waitingforkey
+  // Spec: 7.5.4 Queue a "waitingforkey" Event
+  // Spec: 1. Let the media element be the specified HTMLMediaElement object.
+
+  // Note, existing code will handle the ready state of this element, as
+  // such this function does not handle changing or checking mReadyState.
+
+  // Spec: 2. If the media element's waiting for key value is true, abort these steps.
+  if (!mWaitingForKey) {
+    // Spec: 3. Set the media element's waiting for key value to true.
+    // Spec: 4. Queue a task to fire a simple event named waitingforkey at the media element.
+    DispatchAsyncEvent(NS_LITERAL_STRING("waitingforkey"));
+    mWaitingForKey = true;
+    // No need to explicitly suspend playback, it happens automatically when
+    // it's starving for decoded frames.
+  }
+}
 
 NS_IMETHODIMP HTMLMediaElement::WindowAudioCaptureChanged(bool aCapture)
 {
