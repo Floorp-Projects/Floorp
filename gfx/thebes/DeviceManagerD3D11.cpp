@@ -342,12 +342,14 @@ DeviceManagerD3D11::CreateCompositorDevice(FeatureState& d3d11)
     D3D11Checks::WarnOnAdapterMismatch(device);
   }
 
+  int featureLevel = device->GetFeatureLevel();
   {
     MutexAutoLock lock(mDeviceLock);
     mCompositorDevice = device;
     mDeviceStatus = Some(D3D11DeviceStatus(
       false,
       textureSharingWorks,
+      featureLevel,
       DxgiAdapterDesc::From(desc)));
   }
   mCompositorDevice->SetExceptionMode(0);
@@ -408,12 +410,14 @@ DeviceManagerD3D11::CreateWARPCompositorDevice()
   DxgiAdapterDesc nullAdapter;
   PodZero(&nullAdapter);
 
+  int featureLevel = device->GetFeatureLevel();
   {
     MutexAutoLock lock(mDeviceLock);
     mCompositorDevice = device;
     mDeviceStatus = Some(D3D11DeviceStatus(
       true,
       textureSharingWorks,
+      featureLevel,
       nullAdapter));
   }
   mCompositorDevice->SetExceptionMode(0);
@@ -642,13 +646,12 @@ DeviceManagerD3D11::GetContentDevice()
 }
 
 unsigned
-DeviceManagerD3D11::GetFeatureLevel() const
+DeviceManagerD3D11::GetCompositorFeatureLevel() const
 {
-  MOZ_ASSERT(NS_IsMainThread());
-  if (!mCompositorDevice) {
+  if (!mDeviceStatus) {
     return 0;
   }
-  return mCompositorDevice->GetFeatureLevel();
+  return mDeviceStatus->featureLevel();
 }
 
 bool
