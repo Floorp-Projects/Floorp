@@ -1860,7 +1860,9 @@ nsJSContext::LoadEnd()
     return;
   }
 
+  // Its probably a good idea to GC soon since we have finished loading.
   sLoadingInProgress = false;
+  PokeGC(JS::gcreason::LOAD_END);
 }
 
 // Only trigger expensive timers when they have been checked a number of times.
