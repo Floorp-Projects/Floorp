@@ -680,6 +680,11 @@ protected:
     virtual void InitAcceleration();
 
     /**
+     * Called immediately before deleting the gfxPlatform object.
+     */
+    virtual void WillShutdown();
+
+    /**
      * Initialized hardware vsync based on each platform.
      */
     virtual already_AddRefed<mozilla::gfx::VsyncSource> CreateHardwareVsyncSource();
