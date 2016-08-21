@@ -350,10 +350,10 @@ gfxWindowsPlatform::gfxWindowsPlatform()
 
 gfxWindowsPlatform::~gfxWindowsPlatform()
 {
+  mozilla::gfx::Factory::D2DCleanup();
+
   DeviceManagerD3D11::Shutdown();
   mDeviceManager = nullptr;
-
-  mozilla::gfx::Factory::D2DCleanup();
 
   /*
    * Uninitialize COM
