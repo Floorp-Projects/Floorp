@@ -2890,8 +2890,7 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
     newInnerWindow->mChromeEventHandler = mChromeEventHandler;
   }
 
-  nsJSContext::PokeGC(JS::gcreason::SET_NEW_DOCUMENT,
-                      GetWrapperPreserveColor());
+  nsJSContext::PokeGC(JS::gcreason::SET_NEW_DOCUMENT);
   mContext->DidInitializeContext();
 
   // We wait to fire the debugger hook until the window is all set up and hooked
@@ -3108,8 +3107,7 @@ nsGlobalWindow::DetachFromDocShell()
   mChromeEventHandler = nullptr; // force release now
 
   if (mContext) {
-    nsJSContext::PokeGC(JS::gcreason::SET_DOC_SHELL,
-                        GetWrapperPreserveColor());
+    nsJSContext::PokeGC(JS::gcreason::SET_DOC_SHELL);
     mContext = nullptr;
   }
 

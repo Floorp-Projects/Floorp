@@ -1038,8 +1038,7 @@ nsDocumentViewer::LoadComplete(nsresult aStatus)
   nsJSContext::LoadEnd();
 
   // It's probably a good idea to GC soon since we have finished loading.
-  nsJSContext::PokeGC(JS::gcreason::LOAD_END,
-                      mDocument ? mDocument->GetWrapperPreserveColor() : nullptr);
+  PokeGC(JS::gcreason::LOAD_END);
 
 #ifdef NS_PRINTING
   // Check to see if someone tried to print during the load
@@ -1287,9 +1286,7 @@ nsDocumentViewer::PageHide(bool aIsUnload)
 
   if (aIsUnload) {
     // Poke the GC. The window might be collectable garbage now.
-    nsJSContext::PokeGC(JS::gcreason::PAGE_HIDE,
-                        mDocument->GetWrapperPreserveColor(),
-                        NS_GC_DELAY * 2);
+    nsJSContext::PokeGC(JS::gcreason::PAGE_HIDE, NS_GC_DELAY * 2);
   }
 
   mDocument->OnPageHide(!aIsUnload, nullptr);
