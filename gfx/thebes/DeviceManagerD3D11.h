@@ -67,16 +67,16 @@ private:
 
   void DisableD3D11AfterCrash();
 
-  void AttemptD3D11DeviceCreation(mozilla::gfx::FeatureState& d3d11);
-  bool AttemptD3D11DeviceCreationHelper(
+  void CreateCompositorDevice(mozilla::gfx::FeatureState& d3d11);
+  bool CreateCompositorDeviceHelper(
       mozilla::gfx::FeatureState& aD3d11,
       IDXGIAdapter1* aAdapter,
       bool aAttemptVideoSupport,
       RefPtr<ID3D11Device>& aOutDevice);
 
-  void AttemptWARPDeviceCreation();
+  void CreateWARPCompositorDevice();
 
-  mozilla::gfx::FeatureStatus AttemptD3D11ContentDeviceCreation();
+  mozilla::gfx::FeatureStatus CreateContentDevice();
 
   bool CreateDevice(IDXGIAdapter* aAdapter,
                     D3D_DRIVER_TYPE aDriverType,
