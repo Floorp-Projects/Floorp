@@ -43,8 +43,6 @@ DeviceManagerD3D11::Shutdown()
 
 DeviceManagerD3D11::DeviceManagerD3D11()
  : mDeviceLock("gfxWindowsPlatform.mDeviceLock"),
-   mIsWARP(false),
-   mTextureSharingWorks(false),
    mCompositorDeviceSupportsVideo(false)
 {
   // Set up the D3D11 feature levels we can ask for.
@@ -97,10 +95,17 @@ DeviceManagerD3D11::ReleaseD3D11()
   sD3D11CreateDeviceFn = nullptr;
 }
 
+static inline bool
+ProcessOwnsCompositor()
+{
+  return XRE_GetProcessType() == GeckoProcessType_GPU ||
+         (XRE_IsParentProcess() && !gfxConfig::IsEnabled(Feature::GPU_PROCESS));
+}
+
 bool
 DeviceManagerD3D11::CreateCompositorDevices()
 {
-  MOZ_ASSERT(XRE_IsParentProcess() || XRE_GetProcessType() == GeckoProcessType_GPU);
+  MOZ_ASSERT(ProcessOwnsCompositor());
 
   FeatureState& d3d11 = gfxConfig::GetFeature(Feature::D3D11_COMPOSITING);
   MOZ_ASSERT(d3d11.IsEnabled());
@@ -127,13 +132,22 @@ DeviceManagerD3D11::CreateCompositorDevices()
 }
 
 void
-DeviceManagerD3D11::InheritDeviceInfo(const DeviceInitData& aDeviceInfo)
+DeviceManagerD3D11::ImportDeviceInfo(const D3D11DeviceStatus& aDeviceStatus)
 {
-  MOZ_ASSERT_IF(!XRE_IsContentProcess(),
-                XRE_IsParentProcess() && gfxPrefs::GPUProcessDevEnabled());
+  MOZ_ASSERT(!ProcessOwnsCompositor());
 
-  mIsWARP = gfxPrefs::LayersD3D11ForceWARP();
-  mTextureSharingWorks = aDeviceInfo.d3d11TextureSharingWorks();
+  mDeviceStatus = Some(aDeviceStatus);
+}
+
+void
+DeviceManagerD3D11::ExportDeviceInfo(D3D11DeviceStatus* aOut)
+{
+  MOZ_ASSERT(ProcessOwnsCompositor());
+  MOZ_ASSERT(!!mCompositorDevice == !!mDeviceStatus);
+
+  if (mDeviceStatus) {
+    *aOut = mDeviceStatus.value();
+  }
 }
 
 void
@@ -144,6 +158,10 @@ DeviceManagerD3D11::CreateContentDevices()
   if (!LoadD3D11()) {
     return;
   }
+
+  // We should have been assigned a DeviceStatus from the parent process,
+  // GPU process, or the same process if using in-process compositing.
+  MOZ_ASSERT(mDeviceStatus);
 
   if (CreateContentDevice() == FeatureStatus::CrashedInHandler) {
     DisableD3D11AfterCrash();
@@ -176,14 +194,21 @@ DeviceManagerD3D11::GetDXGIAdapter()
     return nullptr;
   }
 
-  if (!XRE_IsContentProcess()) {
-    // In the parent process, we pick the first adapter.
+  if (!mDeviceStatus) {
+    // If we haven't created a device yet, and have no existing device status,
+    // then this must be the compositor device. Pick the first adapter we can.
+    MOZ_ASSERT(ProcessOwnsCompositor());
+
     if (FAILED(factory1->EnumAdapters1(0, getter_AddRefs(mAdapter)))) {
       return nullptr;
     }
   } else {
-    const DxgiAdapterDesc& parent =
-      gfxPlatform::GetPlatform()->GetParentDevicePrefs().adapter();
+    // In the UI and GPU process, we clear mDeviceStatus on device reset, so we
+    // should never reach here. Furthermore, the UI process does not create
+    // devices when using a GPU process.
+    //
+    // So, this should only ever get called on the content process.
+    MOZ_ASSERT(XRE_IsContentProcess());
 
     // In the child process, we search for the adapter that matches the parent
     // process. The first adapter can be mismatched on dual-GPU systems.
@@ -193,12 +218,14 @@ DeviceManagerD3D11::GetDXGIAdapter()
         break;
       }
 
+      const DxgiAdapterDesc& preferred = mDeviceStatus->adapter();
+
       DXGI_ADAPTER_DESC desc;
       if (SUCCEEDED(adapter->GetDesc(&desc)) &&
-          desc.AdapterLuid.HighPart == parent.AdapterLuid.HighPart &&
-          desc.AdapterLuid.LowPart == parent.AdapterLuid.LowPart &&
-          desc.VendorId == parent.VendorId &&
-          desc.DeviceId == parent.DeviceId)
+          desc.AdapterLuid.HighPart == preferred.AdapterLuid.HighPart &&
+          desc.AdapterLuid.LowPart == preferred.AdapterLuid.LowPart &&
+          desc.VendorId == preferred.VendorId &&
+          desc.DeviceId == preferred.DeviceId)
       {
         mAdapter = adapter.forget();
         break;
@@ -290,34 +317,38 @@ DeviceManagerD3D11::CreateCompositorDevice(FeatureState& d3d11)
     mCompositorDeviceSupportsVideo = true;
   }
 
-  {
-    MutexAutoLock lock(mDeviceLock);
-    mCompositorDevice = device;
-  }
-
   // Only test this when not using WARP since it can fail and cause
   // GetDeviceRemovedReason to return weird values.
-  mTextureSharingWorks = D3D11Checks::DoesTextureSharingWork(mCompositorDevice);
+  bool textureSharingWorks = D3D11Checks::DoesTextureSharingWork(device);
 
-  if (!mTextureSharingWorks) {
+  DXGI_ADAPTER_DESC desc;
+  PodZero(&desc);
+  adapter->GetDesc(&desc);
+
+  if (!textureSharingWorks) {
     gfxConfig::SetFailed(Feature::D3D11_HW_ANGLE,
                          FeatureStatus::Broken,
                          "Texture sharing doesn't work");
   }
-
-  if (D3D11Checks::DoesRenderTargetViewNeedRecreating(mCompositorDevice)) {
+  if (D3D11Checks::DoesRenderTargetViewNeedRecreating(device)) {
     gfxConfig::SetFailed(Feature::D3D11_HW_ANGLE,
                          FeatureStatus::Broken,
                          "RenderTargetViews need recreating");
   }
-
   if (XRE_IsParentProcess()) {
     // It seems like this may only happen when we're using the NVIDIA gpu
-    D3D11Checks::WarnOnAdapterMismatch(mCompositorDevice);
+    D3D11Checks::WarnOnAdapterMismatch(device);
   }
 
+  {
+    MutexAutoLock lock(mDeviceLock);
+    mCompositorDevice = device;
+    mDeviceStatus = Some(D3D11DeviceStatus(
+      false,
+      textureSharingWorks,
+      DxgiAdapterDesc::From(desc)));
+  }
   mCompositorDevice->SetExceptionMode(0);
-  mIsWARP = false;
 }
 
 bool
@@ -365,28 +396,37 @@ DeviceManagerD3D11::CreateWARPCompositorDevice()
     return;
   }
 
+  // Only test for texture sharing on Windows 8 since it puts the device into
+  // an unusable state if used on Windows 7
+  bool textureSharingWorks = false;
+  if (IsWin8OrLater()) {
+    textureSharingWorks = D3D11Checks::DoesTextureSharingWork(device);
+  }
+
+  DxgiAdapterDesc nullAdapter;
+  PodZero(&nullAdapter);
+
   {
     MutexAutoLock lock(mDeviceLock);
     mCompositorDevice = device;
-  }
-  reporterWARP.SetSuccessful();
-
-  // Only test for texture sharing on Windows 8 since it puts the device into
-  // an unusable state if used on Windows 7
-  if (IsWin8OrLater()) {
-    mTextureSharingWorks = D3D11Checks::DoesTextureSharingWork(mCompositorDevice);
+    mDeviceStatus = Some(D3D11DeviceStatus(
+      true,
+      textureSharingWorks,
+      nullAdapter));
   }
   mCompositorDevice->SetExceptionMode(0);
-  mIsWARP = true;
+
+  reporterWARP.SetSuccessful();
 }
 
 FeatureStatus
 DeviceManagerD3D11::CreateContentDevice()
 {
   RefPtr<IDXGIAdapter1> adapter;
-  if (!mIsWARP) {
+  if (!mDeviceStatus->isWARP()) {
     adapter = GetDXGIAdapter();
     if (!adapter) {
+      gfxCriticalNote << "Could not get a DXGI adapter";
       return FeatureStatus::Unavailable;
     }
   }
@@ -395,7 +435,9 @@ DeviceManagerD3D11::CreateContentDevice()
   RefPtr<ID3D11Device> device;
 
   UINT flags = D3D11_CREATE_DEVICE_BGRA_SUPPORT;
-  D3D_DRIVER_TYPE type = mIsWARP ? D3D_DRIVER_TYPE_WARP : D3D_DRIVER_TYPE_UNKNOWN;
+  D3D_DRIVER_TYPE type = mDeviceStatus->isWARP()
+                         ? D3D_DRIVER_TYPE_WARP
+                         : D3D_DRIVER_TYPE_UNKNOWN;
   if (!CreateDevice(adapter, type, flags, hr, device)) {
     gfxCriticalNote << "Recovered from crash while creating a D3D11 content device";
     gfxWindowsPlatform::RecordContentDeviceFailure(TelemetryDeviceCode::Content);
@@ -408,11 +450,6 @@ DeviceManagerD3D11::CreateContentDevice()
     return FeatureStatus::Failed;
   }
 
-  {
-    MutexAutoLock lock(mDeviceLock);
-    mContentDevice = device;
-  }
-
   // InitializeD2D() will abort early if the compositor device did not support
   // texture sharing. If we're in the content process, we can't rely on the
   // parent device alone: some systems have dual GPUs that are capable of
@@ -420,18 +457,18 @@ DeviceManagerD3D11::CreateContentDevice()
   // we re-check texture sharing against the newly created D3D11 content device.
   // If it fails, we won't use Direct2D.
   if (XRE_IsContentProcess()) {
-    if (!D3D11Checks::DoesTextureSharingWork(mContentDevice)) {
-      {
-        MutexAutoLock lock(mDeviceLock);
-        mContentDevice = nullptr;
-      }
+    if (!D3D11Checks::DoesTextureSharingWork(device)) {
       return FeatureStatus::Failed;
     }
 
-    DebugOnly<bool> ok = ContentAdapterIsParentAdapter(mContentDevice);
+    DebugOnly<bool> ok = ContentAdapterIsParentAdapter(device);
     MOZ_ASSERT(ok);
   }
 
+  {
+    MutexAutoLock lock(mDeviceLock);
+    mContentDevice = device;
+  }
   mContentDevice->SetExceptionMode(0);
 
   RefPtr<ID3D10Multithread> multi;
@@ -498,6 +535,7 @@ DeviceManagerD3D11::ResetDevices()
 
   mCompositorDevice = nullptr;
   mContentDevice = nullptr;
+  mDeviceStatus = Nothing();
   Factory::SetDirect3D11Device(nullptr);
 }
 
@@ -510,15 +548,18 @@ DeviceManagerD3D11::ContentAdapterIsParentAdapter(ID3D11Device* device)
     return false;
   }
 
-  const DxgiAdapterDesc& parent =
-    gfxPlatform::GetPlatform()->GetParentDevicePrefs().adapter();
-  if (desc.VendorId != parent.VendorId ||
-      desc.DeviceId != parent.DeviceId ||
-      desc.SubSysId != parent.SubSysId ||
-      desc.AdapterLuid.HighPart != parent.AdapterLuid.HighPart ||
-      desc.AdapterLuid.LowPart != parent.AdapterLuid.LowPart)
+  const DxgiAdapterDesc& preferred = mDeviceStatus->adapter();
+
+  if (desc.VendorId != preferred.VendorId ||
+      desc.DeviceId != preferred.DeviceId ||
+      desc.SubSysId != preferred.SubSysId ||
+      desc.AdapterLuid.HighPart != preferred.AdapterLuid.HighPart ||
+      desc.AdapterLuid.LowPart != preferred.AdapterLuid.LowPart)
   {
-    gfxCriticalNote << "VendorIDMismatch P " << hexa(parent.VendorId) << " " << hexa(desc.VendorId);
+    gfxCriticalNote <<
+      "VendorIDMismatch P " <<
+      hexa(preferred.VendorId) << " " <<
+      hexa(desc.VendorId);
     return false;
   }
 
@@ -599,7 +640,7 @@ DeviceManagerD3D11::GetContentDevice()
 }
 
 unsigned
-DeviceManagerD3D11::GetD3D11Version() const
+DeviceManagerD3D11::GetFeatureLevel() const
 {
   MOZ_ASSERT(NS_IsMainThread());
   if (!mCompositorDevice) {
@@ -609,15 +650,23 @@ DeviceManagerD3D11::GetD3D11Version() const
 }
 
 bool
-DeviceManagerD3D11::TextureSharingWorks() const
+DeviceManagerD3D11::TextureSharingWorks()
 {
-  return mTextureSharingWorks;
+  MutexAutoLock lock(mDeviceLock);
+  if (!mDeviceStatus) {
+    return false;
+  }
+  return mDeviceStatus->textureSharingWorks();
 }
 
 bool
-DeviceManagerD3D11::IsWARP() const
+DeviceManagerD3D11::IsWARP()
 {
-  return mIsWARP;
+  MutexAutoLock lock(mDeviceLock);
+  if (!mDeviceStatus) {
+    return false;
+  }
+  return mDeviceStatus->isWARP();
 }
 
 } // namespace gfx
