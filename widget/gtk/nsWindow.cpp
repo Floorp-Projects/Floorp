@@ -1880,12 +1880,6 @@ nsWindow::WidgetToScreenOffset()
 }
 
 NS_IMETHODIMP
-nsWindow::EnableDragDrop(bool aEnable)
-{
-    return NS_OK;
-}
-
-NS_IMETHODIMP
 nsWindow::CaptureMouse(bool aCapture)
 {
     LOG(("CaptureMouse %p\n", (void *)this));

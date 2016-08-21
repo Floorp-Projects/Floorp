@@ -148,7 +148,6 @@ public:
     NS_IMETHOD         SetIcon(const nsAString& aIconSpec) override;
     NS_IMETHOD         SetWindowClass(const nsAString& xulWinType) override;
     virtual LayoutDeviceIntPoint WidgetToScreenOffset() override;
-    NS_IMETHOD         EnableDragDrop(bool aEnable) override;
     NS_IMETHOD         CaptureMouse(bool aCapture) override;
     NS_IMETHOD         CaptureRollupEvents(nsIRollupListener *aListener,
                                            bool aDoCapture) override;
