@@ -34,7 +34,8 @@ public:
     , mCallback(aCallback)
     , mTaskQueue(aDecodeTaskQueue)
     , mProxy(aProxy)
-    , mSamplesWaitingForKey(new SamplesWaitingForKey(this, mTaskQueue, mProxy))
+    , mSamplesWaitingForKey(new SamplesWaitingForKey(this, this->mCallback,
+                                                     mTaskQueue, mProxy))
     , mIsShutdown(false)
   {
   }
@@ -171,7 +172,8 @@ public:
                            CDMProxy* aProxy,
                            TaskQueue* aTaskQueue)
    : MediaDataDecoderProxy(Move(aProxyThread), aCallback)
-   , mSamplesWaitingForKey(new SamplesWaitingForKey(this, aTaskQueue, aProxy))
+   , mSamplesWaitingForKey(new SamplesWaitingForKey(this, aCallback,
+                                                    aTaskQueue, aProxy))
    , mProxy(aProxy)
   {
   }
