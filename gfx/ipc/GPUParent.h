@@ -25,7 +25,8 @@ public:
             IPC::Channel* aChannel);
 
   bool RecvInit(nsTArray<GfxPrefSetting>&& prefs,
-                nsTArray<GfxVarUpdate>&& vars) override;
+                nsTArray<GfxVarUpdate>&& vars,
+                const DevicePrefs& devicePrefs) override;
   bool RecvInitVsyncBridge(Endpoint<PVsyncBridgeParent>&& aVsyncEndpoint) override;
   bool RecvInitImageBridge(Endpoint<PImageBridgeParent>&& aEndpoint) override;
   bool RecvInitVRManager(Endpoint<PVRManagerParent>&& aEndpoint) override;
