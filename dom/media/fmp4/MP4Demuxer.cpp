@@ -236,12 +236,22 @@ MP4TrackDemuxer::MP4TrackDemuxer(MP4Demuxer* aParent,
 {
   EnsureUpToDateIndex(); // Force update of index
 
+  VideoInfo* videoInfo = mInfo->GetAsVideoInfo();
   // Collect telemetry from h264 AVCC SPS.
-  if (mInfo->GetAsVideoInfo() &&
+  if (videoInfo &&
       (mInfo->mMimeType.EqualsLiteral("video/mp4") ||
        mInfo->mMimeType.EqualsLiteral("video/avc"))) {
-    mNeedSPSForTelemetry =
-      AccumulateSPSTelemetry(mInfo->GetAsVideoInfo()->mExtraData);
+    RefPtr<MediaByteBuffer> extraData = videoInfo->mExtraData;
+    mNeedSPSForTelemetry = AccumulateSPSTelemetry(extraData);
+    mp4_demuxer::SPSData spsdata;
+    if (mp4_demuxer::H264::DecodeSPSFromExtraData(extraData, spsdata) &&
+        spsdata.pic_width > 0 && spsdata.pic_height > 0 &&
+        mp4_demuxer::H264::EnsureSPSIsSane(spsdata)) {
+      videoInfo->mImage.width = spsdata.pic_width;
+      videoInfo->mImage.height = spsdata.pic_height;
+      videoInfo->mDisplay.width = spsdata.display_width;
+      videoInfo->mDisplay.height = spsdata.display_height;
+    }
   } else {
     // No SPS to be found.
     mNeedSPSForTelemetry = false;
