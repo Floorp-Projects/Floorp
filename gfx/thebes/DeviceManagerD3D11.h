@@ -12,6 +12,7 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/StaticPtr.h"
 #include "nsTArray.h"
+#include "nsWindowsHelpers.h"
 
 #include <windows.h>
 #include <objbase.h>
@@ -86,8 +87,13 @@ private:
 
   bool ContentAdapterIsParentAdapter(ID3D11Device* device);
 
+  bool LoadD3D11();
+  void CreateDevicesImpl();
+
 private:
   static StaticAutoPtr<DeviceManagerD3D11> sInstance;
+
+  nsModuleHandle mD3D11Module;
 
   mozilla::Mutex mDeviceLock;
   nsTArray<D3D_FEATURE_LEVEL> mFeatureLevels;
