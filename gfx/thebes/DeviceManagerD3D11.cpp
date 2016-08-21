@@ -311,8 +311,10 @@ DeviceManagerD3D11::CreateCompositorDevice(FeatureState& d3d11)
                          "RenderTargetViews need recreating");
   }
 
-  // It seems like this may only happen when we're using the NVIDIA gpu
-  D3D11Checks::WarnOnAdapterMismatch(mCompositorDevice);
+  if (XRE_IsParentProcess()) {
+    // It seems like this may only happen when we're using the NVIDIA gpu
+    D3D11Checks::WarnOnAdapterMismatch(mCompositorDevice);
+  }
 
   mCompositorDevice->SetExceptionMode(0);
   mIsWARP = false;

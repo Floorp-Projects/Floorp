@@ -141,6 +141,31 @@ gfxConfig::Reenable(Feature aFeature, Fallback aFallback)
   state.SetRuntime(FeatureStatus::Available, nullptr);
 }
 
+/* static */ void
+gfxConfig::Inherit(Feature aFeature, FeatureStatus aStatus)
+{
+  FeatureState& state = sConfig->GetState(aFeature);
+
+  switch (aStatus) {
+  case FeatureStatus::Unused:
+    break;
+  case FeatureStatus::Available:
+    gfxConfig::EnableByDefault(aFeature);
+    break;
+  case FeatureStatus::ForceEnabled:
+    gfxConfig::EnableByDefault(aFeature);
+    gfxConfig::UserForceEnable(aFeature, "Inherited from parent process");
+    break;
+  default:
+    gfxConfig::SetDefault(
+      aFeature,
+      false,
+      aStatus,
+      "Disabled in parent process");
+    break;
+  }
+}
+
 /* static */ bool
 gfxConfig::UseFallback(Fallback aFallback)
 {
