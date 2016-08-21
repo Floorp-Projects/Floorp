@@ -56,7 +56,10 @@ public:
   bool TextureSharingWorks() const;
   bool IsWARP() const;
 
-  void CreateDevices();
+  bool CreateCompositorDevices();
+  void CreateContentDevices();
+
+  void InheritDeviceInfo(const DeviceInitData& aDeviceInfo);
   void ResetDevices();
 
   // Call GetDeviceRemovedReason on each device until one returns
@@ -88,11 +91,14 @@ private:
   bool ContentAdapterIsParentAdapter(ID3D11Device* device);
 
   bool LoadD3D11();
-  void CreateDevicesImpl();
+  void ReleaseD3D11();
 
 private:
   static StaticAutoPtr<DeviceManagerD3D11> sInstance;
 
+  // This is assigned during device creation. Afterwards, it is released if
+  // devices failed, and "forgotten" if devices succeeded (meaning, we leak
+  // the ref and unassign the module).
   nsModuleHandle mD3D11Module;
 
   mozilla::Mutex mDeviceLock;
