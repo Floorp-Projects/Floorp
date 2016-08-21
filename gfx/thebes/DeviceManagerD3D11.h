@@ -8,9 +8,11 @@
 
 #include "gfxPlatform.h"
 #include "gfxTelemetry.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/StaticPtr.h"
+#include "mozilla/gfx/GraphicsMessages.h"
 #include "nsTArray.h"
 #include "nsWindowsHelpers.h"
 
@@ -52,14 +54,16 @@ public:
   RefPtr<ID3D11Device> GetContentDevice();
   RefPtr<ID3D11Device> CreateDecoderDevice();
 
-  unsigned GetD3D11Version() const;
-  bool TextureSharingWorks() const;
-  bool IsWARP() const;
+  unsigned GetFeatureLevel() const;
+  bool TextureSharingWorks();
+  bool IsWARP();
 
   bool CreateCompositorDevices();
   void CreateContentDevices();
 
-  void InheritDeviceInfo(const DeviceInitData& aDeviceInfo);
+  void ImportDeviceInfo(const D3D11DeviceStatus& aDeviceStatus);
+  void ExportDeviceInfo(D3D11DeviceStatus* aOut);
+
   void ResetDevices();
 
   // Call GetDeviceRemovedReason on each device until one returns
@@ -107,9 +111,9 @@ private:
   RefPtr<ID3D11Device> mCompositorDevice;
   RefPtr<ID3D11Device> mContentDevice;
   RefPtr<ID3D11Device> mDecoderDevice;
-  mozilla::Atomic<bool> mIsWARP;
-  mozilla::Atomic<bool> mTextureSharingWorks;
   bool mCompositorDeviceSupportsVideo;
+
+  Maybe<D3D11DeviceStatus> mDeviceStatus;
 };
 
 } // namespace gfx

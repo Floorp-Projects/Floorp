@@ -264,11 +264,23 @@ FeatureState::GetFailureId() const
 }
 
 void
+FeatureState::Reset()
+{
+  mDefault.Set(FeatureStatus::Unused);
+  mUser.Set(FeatureStatus::Unused);
+  mEnvironment.Set(FeatureStatus::Unused);
+  mRuntime.Set(FeatureStatus::Unused);
+  mFailureId = nsCString();
+}
+
+void
 FeatureState::Instance::Set(FeatureStatus aStatus, const char* aMessage /* = nullptr */)
 {
   mStatus = aStatus;
   if (aMessage) {
     SprintfLiteral(mMessage, "%s", aMessage);
+  } else {
+    mMessage[0] = '\0';
   }
 }
 

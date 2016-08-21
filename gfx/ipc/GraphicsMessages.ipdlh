@@ -13,14 +13,10 @@ using mozilla::gfx::IntSize from "mozilla/gfx/Point.h";
 namespace mozilla {
 namespace gfx {
 
-struct DeviceInitData
+struct D3D11DeviceStatus
 {
-  bool useHwCompositing;
-
-  // Windows only.
-  bool useD3D11;
-  bool d3d11TextureSharingWorks;
-  bool useD2D1;
+  bool isWARP;
+  bool textureSharingWorks;
   DxgiAdapterDesc adapter;
 };
 
@@ -31,6 +27,12 @@ struct DevicePrefs
   FeatureStatus d3d9Compositing;
   FeatureStatus oglCompositing;
   FeatureStatus useD2D1;
+};
+
+struct ContentDeviceData
+{
+  DevicePrefs prefs;
+  D3D11DeviceStatus d3d11;
 };
 
 union GfxVarValue

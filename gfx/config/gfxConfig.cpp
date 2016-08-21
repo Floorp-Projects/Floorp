@@ -146,6 +146,8 @@ gfxConfig::Inherit(Feature aFeature, FeatureStatus aStatus)
 {
   FeatureState& state = sConfig->GetState(aFeature);
 
+  state.Reset();
+
   switch (aStatus) {
   case FeatureStatus::Unused:
     break;
