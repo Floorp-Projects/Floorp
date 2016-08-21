@@ -54,7 +54,7 @@ public:
   RefPtr<ID3D11Device> GetContentDevice();
   RefPtr<ID3D11Device> CreateDecoderDevice();
 
-  unsigned GetFeatureLevel() const;
+  unsigned GetCompositorFeatureLevel() const;
   bool TextureSharingWorks();
   bool IsWARP();
 
