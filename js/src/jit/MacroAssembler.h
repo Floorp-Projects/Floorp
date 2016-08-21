@@ -700,6 +700,9 @@ class MacroAssembler : public MacroAssemblerSpecific
     inline void moveFloat32ToGPR(FloatRegister src, Register dest) PER_SHARED_ARCH;
     inline void moveGPRToFloat32(Register src, FloatRegister dest) PER_SHARED_ARCH;
 
+    inline void move8SignExtend(Register src, Register dest) PER_SHARED_ARCH;
+    inline void move16SignExtend(Register src, Register dest) PER_SHARED_ARCH;
+
     // ===============================================================
     // Logical instructions
 
