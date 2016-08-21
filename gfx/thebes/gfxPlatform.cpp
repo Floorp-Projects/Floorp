@@ -2447,8 +2447,20 @@ void
 gfxPlatform::BuildContentDeviceData(mozilla::gfx::ContentDeviceData* aOut)
 {
   MOZ_ASSERT(XRE_IsParentProcess());
+
+  // Make sure our settings are synchronized from the GPU process.
+  GPUProcessManager::Get()->EnsureGPUReady();
+
   aOut->prefs().hwCompositing() = gfxConfig::GetValue(Feature::HW_COMPOSITING);
   aOut->prefs().oglCompositing() = gfxConfig::GetValue(Feature::OPENGL_COMPOSITING);
+}
+
+void
+gfxPlatform::ImportGPUDeviceData(const mozilla::gfx::GPUDeviceData& aData)
+{
+  MOZ_ASSERT(XRE_IsParentProcess());
+
+  gfxConfig::ImportChange(Feature::OPENGL_COMPOSITING, aData.oglCompositing());
 }
 
 bool

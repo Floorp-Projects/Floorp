@@ -142,8 +142,10 @@ DeviceManagerD3D11::ImportDeviceInfo(const D3D11DeviceStatus& aDeviceStatus)
 void
 DeviceManagerD3D11::ExportDeviceInfo(D3D11DeviceStatus* aOut)
 {
-  MOZ_ASSERT(ProcessOwnsCompositor());
-  MOZ_ASSERT(!!mCompositorDevice == !!mDeviceStatus);
+  // Even though the parent process might not own the compositor, we still
+  // populate DeviceManagerD3D11 with device statistics (for simplicity).
+  // That means it still gets queried for compositor information.
+  MOZ_ASSERT(XRE_IsParentProcess() || XRE_GetProcessType() == GeckoProcessType_GPU);
 
   if (mDeviceStatus) {
     *aOut = mDeviceStatus.value();

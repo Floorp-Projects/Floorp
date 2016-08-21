@@ -252,6 +252,7 @@ protected:
     void GetAcceleratedCompositorBackends(nsTArray<mozilla::layers::LayersBackend>& aBackends) override;
     virtual void GetPlatformCMSOutputProfile(void* &mem, size_t &size) override;
 
+    void ImportGPUDeviceData(const mozilla::gfx::GPUDeviceData& aData) override;
     void ImportContentDeviceData(const mozilla::gfx::ContentDeviceData& aData) override;
     void BuildContentDeviceData(mozilla::gfx::ContentDeviceData* aOut) override;
 
