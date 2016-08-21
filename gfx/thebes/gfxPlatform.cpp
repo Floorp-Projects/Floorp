@@ -875,6 +875,8 @@ gfxPlatform::Shutdown()
 
     gfxConfig::Shutdown();
 
+    gPlatform->WillShutdown();
+
     delete gPlatform;
     gPlatform = nullptr;
 }
@@ -928,11 +930,18 @@ gfxPlatform::ShutdownLayersIPC()
     }
 }
 
-gfxPlatform::~gfxPlatform()
+void
+gfxPlatform::WillShutdown()
 {
+    // Destoy these first in case they depend on backend-specific resources.
+    // Otherwise, the backend's destructor would be called before the
+    // base gfxPlatform destructor.
     mScreenReferenceSurface = nullptr;
     mScreenReferenceDrawTarget = nullptr;
+}
 
+gfxPlatform::~gfxPlatform()
+{
     // The cairo folks think we should only clean up in debug builds,
     // but we're generally in the habit of trying to shut down as
     // cleanly as possible even in production code, so call this
