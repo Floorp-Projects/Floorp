@@ -343,7 +343,7 @@ VariablesViewController.prototype = {
       deferred.resolve();
       return deferred.promise;
     }
-    
+
     if (aGrip.class === "Promise" && aGrip.promiseState) {
       const { state, value, reason } = aGrip.promiseState;
       aTarget.addItem("<state>", { value: state }, { internalItem: true });
@@ -762,7 +762,7 @@ VariablesViewController.prototype = {
     scope.expanded = true; // Expand the scope by default.
     scope.locked = true; // Prevent collapsing the scope.
 
-    let variable = scope.addItem("", { enumerable: true });
+    let variable = scope.addItem(undefined, { enumerable: true });
     let populated;
 
     if (options.objectActor) {
