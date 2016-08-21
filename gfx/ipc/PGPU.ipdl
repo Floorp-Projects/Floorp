@@ -32,7 +32,9 @@ sync protocol PGPU
 {
 parent:
   // Sent by the UI process to initiate core settings.
-  async Init(GfxPrefSetting[] prefs, GfxVarUpdate[] vars);
+  async Init(GfxPrefSetting[] prefs,
+             GfxVarUpdate[] vars,
+             DevicePrefs devicePrefs);
 
   async InitVsyncBridge(Endpoint<PVsyncBridgeParent> endpoint);
   async InitImageBridge(Endpoint<PImageBridgeParent> endpoint);

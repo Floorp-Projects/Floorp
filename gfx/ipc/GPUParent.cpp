@@ -17,6 +17,9 @@
 #include "VRManager.h"
 #include "VRManagerParent.h"
 #include "VsyncBridgeParent.h"
+#if defined(XP_WIN)
+# include "mozilla/gfx/DeviceManagerD3D11.h"
+#endif
 
 namespace mozilla {
 namespace gfx {
@@ -45,6 +48,9 @@ GPUParent::Init(base::ProcessId aParentPid,
   gfxPrefs::GetSingleton();
   gfxConfig::Init();
   gfxVars::Initialize();
+#if defined(XP_WIN)
+  DeviceManagerD3D11::Init();
+#endif
   CompositorThreadHolder::Start();
   VRManager::ManagerInit();
   gfxPlatform::InitNullMetadata();
@@ -53,7 +59,8 @@ GPUParent::Init(base::ProcessId aParentPid,
 
 bool
 GPUParent::RecvInit(nsTArray<GfxPrefSetting>&& prefs,
-                    nsTArray<GfxVarUpdate>&& vars)
+                    nsTArray<GfxVarUpdate>&& vars,
+                    const DevicePrefs& devicePrefs)
 {
   const nsTArray<gfxPrefs::Pref*>& globalPrefs = gfxPrefs::all();
   for (auto& setting : prefs) {
@@ -63,6 +70,20 @@ GPUParent::RecvInit(nsTArray<GfxPrefSetting>&& prefs,
   for (const auto& var : vars) {
     gfxVars::ApplyUpdate(var);
   }
+
+  // Inherit device preferences.
+  gfxConfig::Inherit(Feature::HW_COMPOSITING, devicePrefs.hwCompositing());
+  gfxConfig::Inherit(Feature::D3D11_COMPOSITING, devicePrefs.d3d11Compositing());
+  gfxConfig::Inherit(Feature::D3D9_COMPOSITING, devicePrefs.d3d9Compositing());
+  gfxConfig::Inherit(Feature::OPENGL_COMPOSITING, devicePrefs.oglCompositing());
+  gfxConfig::Inherit(Feature::DIRECT2D, devicePrefs.useD2D1());
+
+#if defined(XP_WIN)
+  if (gfxConfig::IsEnabled(Feature::D3D11_COMPOSITING)) {
+    DeviceManagerD3D11::Get()->CreateCompositorDevices();
+  }
+#endif
+
   return true;
 }
 
@@ -170,6 +191,9 @@ GPUParent::ActorDestroy(ActorDestroyReason aWhy)
     mVsyncBridge->Shutdown();
   }
   CompositorThreadHolder::Shutdown();
+#if defined(XP_WIN)
+  DeviceManagerD3D11::Shutdown();
+#endif
   gfxVars::Shutdown();
   gfxConfig::Shutdown();
   gfxPrefs::DestroySingleton();

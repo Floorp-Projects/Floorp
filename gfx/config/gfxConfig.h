@@ -67,6 +67,9 @@ public:
                                const nsACString& aFailureId = EmptyCString());
   static void EnableByDefault(Feature aFeature);
 
+  // Inherit a computed value from another process.
+  static void Inherit(Feature aFeature, FeatureStatus aStatus);
+
   // Set a environment status that overrides both the default and user
   // statuses; this should be used to disable features based on system
   // or hardware problems that can be determined up-front. The only
