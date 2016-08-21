@@ -736,7 +736,7 @@ NS_IMETHODIMP nsBaseWidget::PlaceBehind(nsTopLevelWidgetZPlacement aPlacement,
 // merely stores the state.
 //
 //-------------------------------------------------------------------------
-NS_IMETHODIMP
+void
 nsBaseWidget::SetSizeMode(nsSizeMode aMode)
 {
   MOZ_ASSERT(aMode == nsSizeMode_Normal ||
@@ -744,7 +744,6 @@ nsBaseWidget::SetSizeMode(nsSizeMode aMode)
              aMode == nsSizeMode_Maximized ||
              aMode == nsSizeMode_Fullscreen);
   mSizeMode = aMode;
-  return NS_OK;
 }
 
 //-------------------------------------------------------------------------

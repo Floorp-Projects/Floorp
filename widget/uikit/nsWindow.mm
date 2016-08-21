@@ -682,11 +682,11 @@ nsWindow::PlaceBehind(nsTopLevelWidgetZPlacement aPlacement,
   return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsWindow::SetSizeMode(nsSizeMode aMode)
 {
     if (aMode == static_cast<int32_t>(mSizeMode)) {
-        return NS_OK;
+        return;
     }
 
     mSizeMode = static_cast<nsSizeMode>(aMode);
@@ -695,7 +695,6 @@ nsWindow::SetSizeMode(nsSizeMode aMode)
         nsBaseWidget::InfallibleMakeFullScreen(true);
     }
     ReportSizeModeEvent(aMode);
-    return NS_OK;
 }
 
 NS_IMETHODIMP

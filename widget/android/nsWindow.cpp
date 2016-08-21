@@ -1848,7 +1848,7 @@ nsWindow::PlaceBehind(nsTopLevelWidgetZPlacement aPlacement,
     return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsWindow::SetSizeMode(nsSizeMode aMode)
 {
     switch (aMode) {
@@ -1861,7 +1861,6 @@ nsWindow::SetSizeMode(nsSizeMode aMode)
         default:
             break;
     }
-    return NS_OK;
 }
 
 NS_IMETHODIMP
