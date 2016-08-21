@@ -35,6 +35,7 @@ class LIRGeneratorX64 : public LIRGeneratorX86Shared
     // x86 has constraints on what registers can be formatted for 1-byte
     // stores and loads; on x64 all registers are okay.
     LAllocation useByteOpRegister(MDefinition* mir);
+    LAllocation useByteOpRegisterAtStart(MDefinition* mir);
     LAllocation useByteOpRegisterOrNonDoubleConstant(MDefinition* mir);
     LDefinition tempByteOpRegister();
 
