@@ -87,67 +87,66 @@ DeviceManagerD3D11::LoadD3D11()
 }
 
 void
-DeviceManagerD3D11::CreateDevices()
+DeviceManagerD3D11::ReleaseD3D11()
 {
+  MOZ_ASSERT(!mCompositorDevice);
+  MOZ_ASSERT(!mContentDevice);
+  MOZ_ASSERT(!mDecoderDevice);
+
+  mD3D11Module.reset();
+  sD3D11CreateDeviceFn = nullptr;
+}
+
+bool
+DeviceManagerD3D11::CreateCompositorDevices()
+{
+  MOZ_ASSERT(XRE_IsParentProcess() || XRE_GetProcessType() == GeckoProcessType_GPU);
+
   FeatureState& d3d11 = gfxConfig::GetFeature(Feature::D3D11_COMPOSITING);
   MOZ_ASSERT(d3d11.IsEnabled());
+
+  if (!LoadD3D11()) {
+    return false;
+  }
+
+  CreateCompositorDevice(d3d11);
+
+  if (!d3d11.IsEnabled()) {
+    MOZ_ASSERT(!mCompositorDevice);
+    ReleaseD3D11();
+    return false;
+  }
+
+  // We leak these everywhere and we need them our entire runtime anyway, let's
+  // leak it here as well. We keep the pointer to sD3D11CreateDeviceFn around
+  // as well for D2D1 and device resets.
+  mD3D11Module.disown();
+
+  MOZ_ASSERT(mCompositorDevice);
+  return d3d11.IsEnabled();
+}
+
+void
+DeviceManagerD3D11::InheritDeviceInfo(const DeviceInitData& aDeviceInfo)
+{
+  MOZ_ASSERT_IF(!XRE_IsContentProcess(),
+                XRE_IsParentProcess() && gfxPrefs::GPUProcessDevEnabled());
+
+  mIsWARP = gfxPrefs::LayersD3D11ForceWARP();
+  mTextureSharingWorks = aDeviceInfo.d3d11TextureSharingWorks();
+}
+
+void
+DeviceManagerD3D11::CreateContentDevices()
+{
+  MOZ_ASSERT(gfxConfig::IsEnabled(Feature::D3D11_COMPOSITING));
 
   if (!LoadD3D11()) {
     return;
   }
 
-  CreateDevicesImpl();
-
-  if (d3d11.IsEnabled()) {
-    // We leak these everywhere and we need them our entire runtime anyway, let's
-    // leak it here as well. We keep the pointer to sD3D11CreateDeviceFn around
-    // as well for D2D1 and device resets.
-    mD3D11Module.disown();
-  } else {
-    mD3D11Module.reset();
-    sD3D11CreateDeviceFn = nullptr;
-  }
-}
-
-void
-DeviceManagerD3D11::CreateDevicesImpl()
-{
-  FeatureState& d3d11 = gfxConfig::GetFeature(Feature::D3D11_COMPOSITING);
-  MOZ_ASSERT(d3d11.IsEnabled());
-
-  // Check if a failure was injected for testing.
-  if (gfxPrefs::DeviceFailForTesting()) {
-    d3d11.SetFailed(FeatureStatus::Failed, "Direct3D11 device failure simulated by preference",
-                    NS_LITERAL_CSTRING("FEATURE_FAILURE_D3D11_SIM"));
-    return;
-  }
-
-  if (XRE_IsParentProcess()) {
-    CreateCompositorDevice(d3d11);
-    if (d3d11.GetValue() == FeatureStatus::CrashedInHandler) {
-      return;
-    }
-
-    // If we still have no device by now, exit.
-    if (!mCompositorDevice) {
-      MOZ_ASSERT(!gfxConfig::IsEnabled(Feature::D3D11_COMPOSITING));
-      return;
-    }
-
-    // Either device creation function should have returned Available.
-    MOZ_ASSERT(d3d11.IsEnabled());
-  } else {
-    // Child processes do not need a compositor, but they do need to know
-    // whether the parent process is using WARP and whether or not texture
-    // sharing works.
-    mIsWARP = gfxPrefs::LayersD3D11ForceWARP();
-    mTextureSharingWorks =
-      gfxPlatform::GetPlatform()->GetParentDevicePrefs().d3d11TextureSharingWorks();
-  }
-
   if (CreateContentDevice() == FeatureStatus::CrashedInHandler) {
     DisableD3D11AfterCrash();
-    return;
   }
 }
 
@@ -220,6 +219,13 @@ bool
 DeviceManagerD3D11::CreateCompositorDeviceHelper(
   FeatureState& aD3d11, IDXGIAdapter1* aAdapter, bool aAttemptVideoSupport, RefPtr<ID3D11Device>& aOutDevice)
 {
+  // Check if a failure was injected for testing.
+  if (gfxPrefs::DeviceFailForTesting()) {
+    aD3d11.SetFailed(FeatureStatus::Failed, "Direct3D11 device failure simulated by preference",
+                     NS_LITERAL_CSTRING("FEATURE_FAILURE_D3D11_SIM"));
+    return false;
+  }
+
   // Use D3D11_CREATE_DEVICE_PREVENT_INTERNAL_THREADING_OPTIMIZATIONS
   // to prevent bug 1092260. IE 11 also uses this flag.
   UINT flags = D3D11_CREATE_DEVICE_BGRA_SUPPORT | D3D11_CREATE_DEVICE_PREVENT_INTERNAL_THREADING_OPTIMIZATIONS;
