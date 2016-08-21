@@ -57,7 +57,7 @@ public:
     NS_IMETHOD              Move(double aX, double aY) override;
     NS_IMETHOD              PlaceBehind(nsTopLevelWidgetZPlacement aPlacement,
                                         nsIWidget *aWidget, bool aActivate) override;
-    NS_IMETHOD              SetSizeMode(nsSizeMode aMode) override;
+    virtual void            SetSizeMode(nsSizeMode aMode) override;
     void                    EnteredFullScreen(bool aFullScreen);
     NS_IMETHOD              Resize(double aWidth, double aHeight, bool aRepaint) override;
     NS_IMETHOD              Resize(double aX, double aY, double aWidth, double aHeight, bool aRepaint) override;
