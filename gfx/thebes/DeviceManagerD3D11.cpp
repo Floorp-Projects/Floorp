@@ -82,11 +82,7 @@ DeviceManagerD3D11::CreateDevices()
   }
 
   if (XRE_IsParentProcess()) {
-    if (!gfxPrefs::LayersD3D11ForceWARP()) {
-      AttemptD3D11DeviceCreation(d3d11);
-    } else {
-      AttemptWARPDeviceCreation();
-    }
+    CreateCompositorDevice(d3d11);
     if (d3d11.GetValue() == FeatureStatus::CrashedInHandler) {
       return;
     }
@@ -108,7 +104,7 @@ DeviceManagerD3D11::CreateDevices()
       gfxPlatform::GetPlatform()->GetParentDevicePrefs().d3d11TextureSharingWorks();
   }
 
-  if (AttemptD3D11ContentDeviceCreation() == FeatureStatus::CrashedInHandler) {
+  if (CreateContentDevice() == FeatureStatus::CrashedInHandler) {
     DisableD3D11AfterCrash();
     return;
   }
@@ -185,7 +181,7 @@ DeviceManagerD3D11::GetDXGIAdapter()
 }
 
 bool
-DeviceManagerD3D11::AttemptD3D11DeviceCreationHelper(
+DeviceManagerD3D11::CreateCompositorDeviceHelper(
   FeatureState& aD3d11, IDXGIAdapter1* aAdapter, bool aAttemptVideoSupport, RefPtr<ID3D11Device>& aOutDevice)
 {
   // Use D3D11_CREATE_DEVICE_PREVENT_INTERNAL_THREADING_OPTIMIZATIONS
@@ -227,8 +223,13 @@ DeviceManagerD3D11::AttemptD3D11DeviceCreationHelper(
 }
 
 void
-DeviceManagerD3D11::AttemptD3D11DeviceCreation(FeatureState& d3d11)
+DeviceManagerD3D11::CreateCompositorDevice(FeatureState& d3d11)
 {
+  if (gfxPrefs::LayersD3D11ForceWARP()) {
+    CreateWARPCompositorDevice();
+    return;
+  }
+
   RefPtr<IDXGIAdapter1> adapter = GetDXGIAdapter();
   if (!adapter) {
     d3d11.SetFailed(FeatureStatus::Unavailable, "Failed to acquire a DXGI adapter",
@@ -237,10 +238,10 @@ DeviceManagerD3D11::AttemptD3D11DeviceCreation(FeatureState& d3d11)
   }
 
   RefPtr<ID3D11Device> device;
-  if (!AttemptD3D11DeviceCreationHelper(d3d11, adapter, true, device)) {
+  if (!CreateCompositorDeviceHelper(d3d11, adapter, true, device)) {
     // Try again without video support and record that it failed.
     mCompositorDeviceSupportsVideo = false;
-    if (!AttemptD3D11DeviceCreationHelper(d3d11, adapter, false, device)) {
+    if (!CreateCompositorDeviceHelper(d3d11, adapter, false, device)) {
       return;
     }
   } else {
@@ -295,7 +296,7 @@ DeviceManagerD3D11::CreateDevice(IDXGIAdapter* aAdapter,
 }
 
 void
-DeviceManagerD3D11::AttemptWARPDeviceCreation()
+DeviceManagerD3D11::CreateWARPCompositorDevice()
 {
   ScopedGfxFeatureReporter reporterWARP("D3D11-WARP", gfxPrefs::LayersD3D11ForceWARP());
   FeatureState& d3d11 = gfxConfig::GetFeature(Feature::D3D11_COMPOSITING);
@@ -336,7 +337,7 @@ DeviceManagerD3D11::AttemptWARPDeviceCreation()
 }
 
 FeatureStatus
-DeviceManagerD3D11::AttemptD3D11ContentDeviceCreation()
+DeviceManagerD3D11::CreateContentDevice()
 {
   RefPtr<IDXGIAdapter1> adapter;
   if (!mIsWARP) {
