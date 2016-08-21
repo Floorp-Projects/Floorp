@@ -79,6 +79,8 @@ EditorController::RegisterEditingCommands(
 
   // Insert content
   NS_REGISTER_ONE_COMMAND(InsertPlaintextCommand, "cmd_insertText");
+  NS_REGISTER_ONE_COMMAND(InsertParagraphCommand, "cmd_insertParagraph");
+  NS_REGISTER_ONE_COMMAND(InsertLineBreakCommand, "cmd_insertLineBreak");
   NS_REGISTER_ONE_COMMAND(PasteQuotationCommand, "cmd_pasteQuote");
 
   return NS_OK;
