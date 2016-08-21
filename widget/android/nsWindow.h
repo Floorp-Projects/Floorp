@@ -159,7 +159,7 @@ public:
     NS_IMETHOD PlaceBehind(nsTopLevelWidgetZPlacement aPlacement,
                            nsIWidget *aWidget,
                            bool aActivate) override;
-    NS_IMETHOD SetSizeMode(nsSizeMode aMode) override;
+    virtual void SetSizeMode(nsSizeMode aMode) override;
     NS_IMETHOD Enable(bool aState) override;
     virtual bool IsEnabled() const override;
     NS_IMETHOD Invalidate(const LayoutDeviceIntRect& aRect) override;

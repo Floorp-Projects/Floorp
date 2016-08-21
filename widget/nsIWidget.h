@@ -828,7 +828,7 @@ class nsIWidget : public nsISupports
      * Minimize, maximize or normalize the window size.
      * Takes a value from nsSizeMode (see nsIWidgetListener.h)
      */
-    NS_IMETHOD SetSizeMode(nsSizeMode aMode) = 0;
+    virtual void SetSizeMode(nsSizeMode aMode) = 0;
 
     /**
      * Return size mode (minimized, maximized, normalized).

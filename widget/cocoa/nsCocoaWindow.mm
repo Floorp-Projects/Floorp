@@ -1235,12 +1235,13 @@ NS_IMETHODIMP nsCocoaWindow::PlaceBehind(nsTopLevelWidgetZPlacement aPlacement,
   return NS_OK;
 }
 
-NS_IMETHODIMP nsCocoaWindow::SetSizeMode(nsSizeMode aMode)
+void
+nsCocoaWindow::SetSizeMode(nsSizeMode aMode)
 {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   if (!mWindow)
-    return NS_OK;
+    return;
 
   // mSizeMode will be updated in DispatchSizeModeEvent, which will be called
   // from a delegate method that handles the state change during one of the
@@ -1268,9 +1269,7 @@ NS_IMETHODIMP nsCocoaWindow::SetSizeMode(nsSizeMode aMode)
       MakeFullScreen(true);
   }
 
-  return NS_OK;
-
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 // This has to preserve the window's frame bounds.

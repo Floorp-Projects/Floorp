@@ -465,11 +465,11 @@ interface ChromeWindow {
   [Throws, Func="nsGlobalWindow::IsPrivilegedChromeWindow"]
   void                      setCursor(DOMString cursor);
 
-  [Throws, Func="nsGlobalWindow::IsPrivilegedChromeWindow", UnsafeInPrerendering]
+  [Func="nsGlobalWindow::IsPrivilegedChromeWindow", UnsafeInPrerendering]
   void                      maximize();
-  [Throws, Func="nsGlobalWindow::IsPrivilegedChromeWindow", UnsafeInPrerendering]
+  [Func="nsGlobalWindow::IsPrivilegedChromeWindow", UnsafeInPrerendering]
   void                      minimize();
-  [Throws, Func="nsGlobalWindow::IsPrivilegedChromeWindow", UnsafeInPrerendering]
+  [Func="nsGlobalWindow::IsPrivilegedChromeWindow", UnsafeInPrerendering]
   void                      restore();
 
   /**
