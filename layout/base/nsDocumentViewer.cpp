@@ -1284,11 +1284,6 @@ nsDocumentViewer::PageHide(bool aIsUnload)
     return NS_ERROR_NULL_POINTER;
   }
 
-  if (aIsUnload) {
-    // Poke the GC. The window might be collectable garbage now.
-    nsJSContext::PokeGC(JS::gcreason::PAGE_HIDE, NS_GC_DELAY * 2);
-  }
-
   mDocument->OnPageHide(!aIsUnload, nullptr);
 
   // inform the window so that the focus state is reset.
@@ -1298,6 +1293,10 @@ nsDocumentViewer::PageHide(bool aIsUnload)
     window->PageHidden();
 
   if (aIsUnload) {
+    // Poke the GC. The window might be collectable garbage now.
+    nsJSContext::PokeGC(JS::gcreason::PAGE_HIDE, NS_GC_DELAY * 2);
+
+    // if Destroy() was called during OnPageHide(), mDocument is nullptr.
     NS_ENSURE_STATE(mDocument);
 
     // First, get the window from the document...
