@@ -223,7 +223,7 @@ public:
   virtual MOZ_MUST_USE nsresult GetRestoredBounds(LayoutDeviceIntRect& aRect) override;
   NS_IMETHOD              SetNonClientMargins(LayoutDeviceIntMargin& aMargins) override;
   virtual LayoutDeviceIntPoint GetClientOffset() override;
-  NS_IMETHOD              EnableDragDrop(bool aEnable) override;
+  virtual void            EnableDragDrop(bool aEnable) override {};
   NS_IMETHOD              GetAttention(int32_t aCycleCount) override;
   virtual bool            HasPendingInputEvent() override;
   NS_IMETHOD              SetIcon(const nsAString &anIconSpec) override;
