@@ -4560,7 +4560,7 @@ WorkerPrivate::DoRunLoop(JSContext* aCx)
       currentStatus = mStatus;
     }
 
-    // If the close handler has finished and all features are done then we can
+    // If the close handler has finished and all holders are done then we can
     // kill this thread.
     if (currentStatus != Running && !HasActiveHolders()) {
       if (mCloseHandlerFinished && currentStatus != Killing) {
@@ -5309,9 +5309,9 @@ WorkerPrivate::NotifyHolders(JSContext* aCx, Status aStatus)
 
   nsTObserverArray<WorkerHolder*>::ForwardIterator iter(mHolders);
   while (iter.HasMore()) {
-    WorkerHolder* feature = iter.GetNext();
-    if (!feature->Notify(aStatus)) {
-      NS_WARNING("Failed to notify feature!");
+    WorkerHolder* holder = iter.GetNext();
+    if (!holder->Notify(aStatus)) {
+      NS_WARNING("Failed to notify holder!");
     }
     MOZ_ASSERT(!JS_IsExceptionPending(aCx));
   }
@@ -5802,7 +5802,7 @@ WorkerPrivate::NotifyInternal(JSContext* aCx, Status aStatus)
 
   MOZ_ASSERT(previousStatus >= Canceling || mKillTime.IsNull());
 
-  // Let all our features know the new status.
+  // Let all our holders know the new status.
   NotifyHolders(aCx, aStatus);
   MOZ_ASSERT(!JS_IsExceptionPending(aCx));
 
