@@ -142,7 +142,7 @@ AccessibleCaret::SetSelectionBarEnabled(bool aEnabled)
   mSelectionBarEnabled = aEnabled;
 }
 
-/* static */ nsString
+/* static */ nsAutoString
 AccessibleCaret::AppearanceString(Appearance aAppearance)
 {
   nsAutoString string;

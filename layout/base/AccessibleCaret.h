@@ -181,8 +181,8 @@ protected:
 
   nsIFrame* CustomContentContainerFrame() const;
 
-  // Transform Appearance to CSS class name in ua.css.
-  static nsString AppearanceString(Appearance aAppearance);
+  // Transform Appearance to CSS id used in ua.css.
+  static nsAutoString AppearanceString(Appearance aAppearance);
 
   already_AddRefed<dom::Element> CreateCaretElement(nsIDocument* aDocument) const;
 
