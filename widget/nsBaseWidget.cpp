@@ -1599,11 +1599,6 @@ nsBaseWidget::SetNonClientMargins(LayoutDeviceIntMargin &margins)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP nsBaseWidget::EnableDragDrop(bool aEnable)
-{
-  return NS_OK;
-}
-
 uint32_t nsBaseWidget::GetMaxTouchPoints() const
 {
   return 0;
