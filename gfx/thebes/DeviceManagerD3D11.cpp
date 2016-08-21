@@ -15,7 +15,6 @@
 #include "mozilla/gfx/GraphicsMessages.h"
 #include "mozilla/gfx/Logging.h"
 #include "nsIGfxInfo.h"
-#include "nsWindowsHelpers.h"
 #include <d3d11.h>
 
 namespace mozilla {
@@ -57,22 +56,64 @@ DeviceManagerD3D11::DeviceManagerD3D11()
   mFeatureLevels.AppendElement(D3D_FEATURE_LEVEL_10_0);
 }
 
+bool
+DeviceManagerD3D11::LoadD3D11()
+{
+  FeatureState& d3d11 = gfxConfig::GetFeature(Feature::D3D11_COMPOSITING);
+  MOZ_ASSERT(d3d11.IsEnabled());
+
+  if (sD3D11CreateDeviceFn) {
+    return true;
+  }
+
+  nsModuleHandle module(LoadLibrarySystem32(L"d3d11.dll"));
+  if (!module) {
+    d3d11.SetFailed(FeatureStatus::Unavailable, "Direct3D11 not available on this computer",
+                    NS_LITERAL_CSTRING("FEATURE_FAILURE_D3D11_LIB"));
+    return false;
+  }
+
+  sD3D11CreateDeviceFn =
+    (decltype(D3D11CreateDevice)*)GetProcAddress(module, "D3D11CreateDevice");
+  if (!sD3D11CreateDeviceFn) {
+    // We should just be on Windows Vista or XP in this case.
+    d3d11.SetFailed(FeatureStatus::Unavailable, "Direct3D11 not available on this computer",
+                    NS_LITERAL_CSTRING("FEATURE_FAILURE_D3D11_FUNCPTR"));
+    return false;
+  }
+
+  mD3D11Module.steal(module);
+  return true;
+}
+
 void
 DeviceManagerD3D11::CreateDevices()
 {
   FeatureState& d3d11 = gfxConfig::GetFeature(Feature::D3D11_COMPOSITING);
   MOZ_ASSERT(d3d11.IsEnabled());
 
-  nsModuleHandle d3d11Module(LoadLibrarySystem32(L"d3d11.dll"));
-  sD3D11CreateDeviceFn =
-    (decltype(D3D11CreateDevice)*)GetProcAddress(d3d11Module, "D3D11CreateDevice");
-
-  if (!sD3D11CreateDeviceFn) {
-    // We should just be on Windows Vista or XP in this case.
-    d3d11.SetFailed(FeatureStatus::Unavailable, "Direct3D11 not available on this computer",
-                    NS_LITERAL_CSTRING("FEATURE_FAILURE_D3D11_LIB"));
+  if (!LoadD3D11()) {
     return;
   }
+
+  CreateDevicesImpl();
+
+  if (d3d11.IsEnabled()) {
+    // We leak these everywhere and we need them our entire runtime anyway, let's
+    // leak it here as well. We keep the pointer to sD3D11CreateDeviceFn around
+    // as well for D2D1 and device resets.
+    mD3D11Module.disown();
+  } else {
+    mD3D11Module.reset();
+    sD3D11CreateDeviceFn = nullptr;
+  }
+}
+
+void
+DeviceManagerD3D11::CreateDevicesImpl()
+{
+  FeatureState& d3d11 = gfxConfig::GetFeature(Feature::D3D11_COMPOSITING);
+  MOZ_ASSERT(d3d11.IsEnabled());
 
   // Check if a failure was injected for testing.
   if (gfxPrefs::DeviceFailForTesting()) {
@@ -108,11 +149,6 @@ DeviceManagerD3D11::CreateDevices()
     DisableD3D11AfterCrash();
     return;
   }
-
-  // We leak these everywhere and we need them our entire runtime anyway, let's
-  // leak it here as well. We keep the pointer to sD3D11CreateDeviceFn around
-  // as well for D2D1 and device resets.
-  d3d11Module.disown();
 }
 
 IDXGIAdapter1*
