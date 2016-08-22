@@ -1094,6 +1094,9 @@ SyncEngine.prototype = {
           }
         }
       } catch (ex) {
+        if (Async.isShutdownException(ex)) {
+          throw ex;
+        }
         self._log.warn("Error decrypting record", ex);
         self._noteApplyFailure();
         failed.push(item.id);
