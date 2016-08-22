@@ -1306,6 +1306,19 @@ LIRGenerator::visitUrsh(MUrsh* ins)
 }
 
 void
+LIRGenerator::visitSignExtend(MSignExtend* ins)
+{
+    LInstructionHelper<1, 1, 0>* lir;
+
+    if (ins->mode() == MSignExtend::Byte)
+        lir = new(alloc()) LSignExtend(useByteOpRegisterAtStart(ins->input()), ins->mode());
+    else
+        lir = new(alloc()) LSignExtend(useRegisterAtStart(ins->input()), ins->mode());
+
+    define(lir, ins);
+}
+
+void
 LIRGenerator::visitRotate(MRotate* ins)
 {
     MDefinition* input = ins->input();

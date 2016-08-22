@@ -6920,7 +6920,7 @@ if (SupportsMaskShorthand()) {
     initial_values: [ "match-source", "none", "no-repeat", "add", "50% 50%", "center center", "50% 50% / auto", "center / auto", "center center / auto", "50% 50% / auto auto",
       "center none", "center center none", "none center", "none center center", "none 50% 50%", "center / auto none",
       "center center / auto auto none",
-      "match-source none no-repeat add center center", "center center no-repeat none add", "none no-repeat add center center / auto", "center center / auto no-repeat none add match-source", "none no-repeat add 0% 0% / auto auto match-source",
+      "match-source none no-repeat add center center", "center center no-repeat none add", "none no-repeat add center center / auto", "center center / auto no-repeat none add match-source", "none no-repeat add 50% 50% / auto auto match-source",
       "border-box", "border-box border-box" ],
     other_values: [
       "none alpha no-repeat add center",
@@ -7087,8 +7087,8 @@ if (SupportsMaskShorthand()) {
     domProp: "maskPositionX",
     inherited: false,
     type: CSS_TYPE_LONGHAND,
-    initial_values: [ "left 0%", "left", "0%" ],
-    other_values: [ "right", "center", "50%", "left, left", "left, right", "right, left", "left, 0%", "10%, 20%, 40%", "0px", "30px", "0%, 10%, 20%, 30%", "left, left, left, left, left",
+    initial_values: [ "center", "50%" ],
+    other_values: [ "right", "left", "0%", "left, left", "left, right", "right, left", "left, 0%", "10%, 20%, 40%", "0px", "30px", "0%, 10%, 20%, 30%", "left, left, left, left, left",
       "calc(20px)",
       "calc(20px + 1em)",
       "calc(20px / 2)",
@@ -7107,14 +7107,14 @@ if (SupportsMaskShorthand()) {
     invalid_values: [ "center 10px", "right 10% 50%", "left right", "left left",
                       "bottom 20px", "top 10%", "bottom 3em",
                       "top", "bottom", "top, top", "top, bottom", "bottom, top", "top, 0%", "top, top, top, top, top",
-                      "calc(0px + rubbish)"],
+                      "calc(0px + rubbish)", "center 0%"],
   };
   gCSSProperties["mask-position-y"] = {
     domProp: "maskPositionY",
     inherited: false,
     type: CSS_TYPE_LONGHAND,
-    initial_values: [ "top 0%", "top", "0%" ],
-    other_values: [ "bottom", "center", "50%", "top, top", "top, bottom", "bottom, top", "top, 0%", "10%, 20%, 40%", "0px", "30px", "0%, 10%, 20%, 30%", "top, top, top, top, top",
+    initial_values: [ "center", "50%" ],
+    other_values: [ "bottom", "top", "0%", "top, top", "top, bottom", "bottom, top", "top, 0%", "10%, 20%, 40%", "0px", "30px", "0%, 10%, 20%, 30%", "top, top, top, top, top",
       "calc(20px)",
       "calc(20px + 1em)",
       "calc(20px / 2)",
@@ -7133,7 +7133,7 @@ if (SupportsMaskShorthand()) {
     invalid_values: [ "center 10px", "bottom 10% 50%", "top bottom", "top top",
                       "right 20px", "left 10%", "right 3em",
                       "left", "right", "left, left", "left, right", "right, left", "left, 0%", "left, left, left, left, left",
-                      "calc(0px + rubbish)"],
+                      "calc(0px + rubbish)", "center 0%"],
   };
   gCSSProperties["mask-repeat"] = {
     domProp: "maskRepeat",

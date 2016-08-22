@@ -526,7 +526,6 @@ public:
   NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS_INHERITED(XMLHttpRequestMainThread,
                                                                    XMLHttpRequest)
   bool AllowUploadProgress();
-  void RootJSResultObjects();
 
   virtual void DisconnectFromOwner() override;
 

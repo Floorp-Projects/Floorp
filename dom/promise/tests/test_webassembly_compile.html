@@ -1,0 +1,89 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>WebAssembly.compile Test</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<script>
+const wasmTextToBinary = SpecialPowers.unwrap(SpecialPowers.Cu.getJSTestingFunctions().wasmTextToBinary);
+const fooModuleCode = wasmTextToBinary(`(module
+  (func $foo (result i32) (i32.const 42))
+  (export "foo" $foo)
+)`, 'new-format');
+
+function checkFooModule(m) {
+  ok(m instanceof WebAssembly.Module, "got a module");
+  var i = new WebAssembly.Instance(m);
+  ok(i instanceof WebAssembly.Instance, "got an instance");
+  ok(i.exports.foo() === 42, "got 42");
+}
+
+function propertiesExist() {
+  ok(WebAssembly, "WebAssembly object should exist");
+  ok(WebAssembly.compile, "WebAssembly.compile function should exist");
+
+  runTest();
+}
+
+function compileFail() {
+  WebAssembly.compile().then(
+    () => { ok(false, "should have failed"); runTest() }
+  ).catch(
+    err => { ok(err instanceof TypeError, "empty compile failed"); runTest() }
+  );
+}
+
+function compileSuccess() {
+  WebAssembly.compile(fooModuleCode).then(
+    m => { checkFooModule(m); runTest() }
+  ).catch(
+    err => { ok(false, String(err)); runTest() }
+  );
+}
+
+function compileManySuccess() {
+  const N = 100;
+
+  var arr = [];
+  for (var i = 0; i < N; i++)
+    arr.push(WebAssembly.compile(fooModuleCode));
+
+  SpecialPowers.gc();
+
+  Promise.all(arr).then (ms => {
+    ok(ms.length === N, "got the right number");
+    for (var i = 0; i < N; i++)
+      checkFooModule(ms[i]);
+    runTest();
+  }).catch(
+    err => { ok(false, String(err)); runTest() }
+  );
+}
+
+var tests = [ propertiesExist,
+              compileFail,
+              compileSuccess,
+              compileManySuccess
+            ];
+
+function runTest() {
+  if (!tests.length) {
+    SimpleTest.finish();
+    return;
+  }
+
+  var test = tests.shift();
+  test();
+}
+
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv({"set": [["javascript.options.wasm", true]]}, runTest);
+</script>
+</body>
+</html>
+

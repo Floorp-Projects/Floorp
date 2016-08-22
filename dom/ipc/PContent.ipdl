@@ -1141,7 +1141,7 @@ parent:
      * Request graphics initialization information from the parent.
      */
     sync GetGraphicsDeviceInitData()
-        returns (DeviceInitData aData);
+        returns (ContentDeviceData aData);
 
     sync CreateWindow(nullable PBrowser aThisTab,
                       PBrowser aNewTab,

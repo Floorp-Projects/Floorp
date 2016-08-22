@@ -16,6 +16,7 @@
 #include "nsAutoPtr.h"
 #include "nsClassHashtable.h"
 #include "nsContainerFrame.h"
+#include "nsIContentInlines.h"
 #include "mozilla/SplayTree.h"
 #include "mozilla/RestyleLogging.h"
 #include "GeckoProfiler.h"

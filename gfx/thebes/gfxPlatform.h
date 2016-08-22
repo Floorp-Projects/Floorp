@@ -51,7 +51,8 @@ class DataSourceSurface;
 class ScaledFont;
 class DrawEventRecorder;
 class VsyncSource;
-class DeviceInitData;
+class ContentDeviceData;
+class GPUDeviceData;
 
 inline uint32_t
 BackendTypeBit(BackendType b)
@@ -644,10 +645,6 @@ public:
 
     virtual void CompositorUpdated() {}
 
-    // Return information on how child processes should initialize graphics
-    // devices. Currently this is only used on Windows.
-    virtual void GetDeviceInitData(mozilla::gfx::DeviceInitData* aOut);
-
     // Plugin async drawing support.
     virtual bool SupportsPluginDirectBitmapDrawing() {
       return false;
@@ -672,11 +669,28 @@ public:
 
     const gfxSkipChars& EmptySkipChars() const { return kEmptySkipChars; }
 
+    /**
+     * Return information on how child processes should initialize graphics
+     * devices.
+     */
+    virtual void BuildContentDeviceData(mozilla::gfx::ContentDeviceData* aOut);
+
+    /**
+     * Imports settings from the GPU process. This should only be called through
+     * GPUProcessManager, in the UI process.
+     */
+    virtual void ImportGPUDeviceData(const mozilla::gfx::GPUDeviceData& aData);
+
 protected:
     gfxPlatform();
     virtual ~gfxPlatform();
 
     virtual void InitAcceleration();
+
+    /**
+     * Called immediately before deleting the gfxPlatform object.
+     */
+    virtual void WillShutdown();
 
     /**
      * Initialized hardware vsync based on each platform.
@@ -699,10 +713,11 @@ protected:
                           uint32_t aContentBitmask, mozilla::gfx::BackendType aContentDefault);
 
     /**
-     * If in a child process, triggers a refresh of device preferences, then returns true.
-     * In a parent process, nothing happens and false is returned.
+     * Content-process only. Requests device preferences from the parent process
+     * and updates any cached settings.
      */
-    virtual bool UpdateDeviceInitData();
+    void FetchAndImportContentDeviceData();
+    virtual void ImportContentDeviceData(const mozilla::gfx::ContentDeviceData& aData);
 
     /**
      * Increase the global device counter after a device has been removed/reset.
@@ -736,8 +751,6 @@ protected:
 
     static already_AddRefed<mozilla::gfx::ScaledFont>
       GetScaledFontForFontWithCairoSkia(mozilla::gfx::DrawTarget* aTarget, gfxFont* aFont);
-
-    static mozilla::gfx::DeviceInitData& GetParentDevicePrefs();
 
     int8_t  mAllowDownloadableFonts;
     int8_t  mGraphiteShapingEnabled;

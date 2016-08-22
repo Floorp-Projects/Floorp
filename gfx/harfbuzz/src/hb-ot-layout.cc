@@ -70,12 +70,18 @@ _hb_ot_layout_create (hb_face_t *face)
     unsigned int gsub_len = hb_blob_get_length (layout->gsub_blob);
     unsigned int gpos_len = hb_blob_get_length (layout->gpos_blob);
     if (0
-      || (442 == gdef_len && 42038 == gpos_len && 2874 == gsub_len) /* Windows 7 timesi.ttf */
-      || (430 == gdef_len && 40662 == gpos_len && 2874 == gsub_len) /* Windows 7 timesbi.ttf */
-      || (442 == gdef_len && 39116 == gpos_len && 2874 == gsub_len) /* Windows ??? timesi.ttf */
-      || (430 == gdef_len && 39374 == gpos_len && 2874 == gsub_len) /* Windows ??? timesbi.ttf */
-      || (490 == gdef_len && 41638 == gpos_len && 3046 == gsub_len) /* OS X 10.11.3 Times New Roman Italic.ttf */
-      || (478 == gdef_len && 41902 == gpos_len && 3046 == gsub_len) /* OS X 10.11.3 Times New Roman Bold Italic.ttf */
+      /* sha1sum:c5ee92f0bca4bfb7d06c4d03e8cf9f9cf75d2e8a Windows 7? timesi.ttf */
+      || (442 == gdef_len && 42038 == gpos_len && 2874 == gsub_len)
+      /* sha1sum:37fc8c16a0894ab7b749e35579856c73c840867b Windows 7? timesbi.ttf */
+      || (430 == gdef_len && 40662 == gpos_len && 2874 == gsub_len)
+      /* sha1sum:19fc45110ea6cd3cdd0a5faca256a3797a069a80 Windows 7 timesi.ttf */
+      || (442 == gdef_len && 39116 == gpos_len && 2874 == gsub_len)
+      /* sha1sum:6d2d3c9ed5b7de87bc84eae0df95ee5232ecde26 Windows 7 timesbi.ttf */
+      || (430 == gdef_len && 39374 == gpos_len && 2874 == gsub_len)
+      /* sha1sum:8583225a8b49667c077b3525333f84af08c6bcd8 OS X 10.11.3 Times New Roman Italic.ttf */
+      || (490 == gdef_len && 41638 == gpos_len && 3046 == gsub_len)
+      /* sha1sum:ec0f5a8751845355b7c3271d11f9918a966cb8c9 OS X 10.11.3 Times New Roman Bold Italic.ttf */
+      || (478 == gdef_len && 41902 == gpos_len && 3046 == gsub_len)
     )
     {
       /* In certain versions of Times New Roman Italic and Bold Italic,
@@ -86,6 +92,45 @@ _hb_ot_layout_create (hb_face_t *face)
        */
      if (3 == layout->gdef->get_glyph_class (5))
        layout->gdef = &OT::Null(OT::GDEF);
+    }
+    else if (0
+      /* sha1sum:96eda93f7d33e79962451c6c39a6b51ee893ce8c  tahoma.ttf from Windows 8 */
+      || (898 == gdef_len && 46470 == gpos_len && 12554 == gsub_len)
+      /* sha1sum:20928dc06014e0cd120b6fc942d0c3b1a46ac2bc  tahomabd.ttf from Windows 8 */
+      || (910 == gdef_len && 47732 == gpos_len && 12566 == gsub_len)
+      /* sha1sum:4f95b7e4878f60fa3a39ca269618dfde9721a79e  tahoma.ttf from Windows 8.1 */
+      || (928 == gdef_len && 59332 == gpos_len && 23298 == gsub_len)
+      /* sha1sum:6d400781948517c3c0441ba42acb309584b73033  tahomabd.ttf from Windows 8.1 */
+      || (940 == gdef_len && 60732 == gpos_len && 23310 == gsub_len)
+      /* sha1sum:e55fa2dfe957a9f7ec26be516a0e30b0c925f846  tahoma.ttf from Windows 10 */
+      || (994 == gdef_len && 60336 == gpos_len && 24474 == gsub_len)
+      /* sha1sum:7199385abb4c2cc81c83a151a7599b6368e92343  tahomabd.ttf from Windows 10 */
+      || (1006 == gdef_len && 61740 == gpos_len && 24470 == gsub_len)
+      /* sha1sum:b0d36cf5a2fbe746a3dd277bffc6756a820807a7  Tahoma.ttf from Mac OS X 10.9 */
+      || (832 == gdef_len && 47162 == gpos_len && 7324 == gsub_len)
+      /* sha1sum:12fc4538e84d461771b30c18b5eb6bd434e30fba  Tahoma Bold.ttf from Mac OS X 10.9 */
+      || (844 == gdef_len && 45474 == gpos_len && 7302 == gsub_len)
+      /* sha1sum:73da7f025b238a3f737aa1fde22577a6370f77b0  himalaya.ttf from Windows 8 */
+      || (192 == gdef_len && 7254 == gpos_len && 12638 == gsub_len)
+      /* sha1sum:6e80fd1c0b059bbee49272401583160dc1e6a427  himalaya.ttf from Windows 8.1 */
+      || (192 == gdef_len && 7254 == gpos_len && 12690 == gsub_len)
+      /* 8d9267aea9cd2c852ecfb9f12a6e834bfaeafe44  cantarell-fonts-0.0.21/otf/Cantarell-Regular.otf */
+      /* 983988ff7b47439ab79aeaf9a45bd4a2c5b9d371  cantarell-fonts-0.0.21/otf/Cantarell-Oblique.otf */
+      || (188 == gdef_len && 3852 == gpos_len && 248 == gsub_len)
+      /* 2c0c90c6f6087ffbfea76589c93113a9cbb0e75f  cantarell-fonts-0.0.21/otf/Cantarell-Bold.otf */
+      /* 55461f5b853c6da88069ffcdf7f4dd3f8d7e3e6b  cantarell-fonts-0.0.21/otf/Cantarell-Bold-Oblique.otf */
+      || (188 == gdef_len && 3426 == gpos_len && 264 == gsub_len)
+    )
+    {
+      /* Many versions of Tahoma have bad GDEF tables that incorrectly classify some spacing marks
+       * such as certain IPA symbols as glyph class 3. So do older versions of Microsoft Himalaya,
+       * and the version of Cantarell shipped by Ubuntu 16.04.
+       * Nuke the GDEF tables of these fonts to avoid unwanted width-zeroing.
+       * See https://bugzilla.mozilla.org/show_bug.cgi?id=1279925
+       *     https://bugzilla.mozilla.org/show_bug.cgi?id=1279693
+       *     https://bugzilla.mozilla.org/show_bug.cgi?id=1279875
+       */
+      layout->gdef = &OT::Null(OT::GDEF);
     }
   }
 

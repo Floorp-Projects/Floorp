@@ -106,17 +106,17 @@ AndroidContentController::PostDelayedTask(already_AddRefed<Runnable> aTask, int 
     AndroidBridge::Bridge()->PostTaskToUiThread(Move(aTask), aDelayMs);
 }
 void
-AndroidContentController::UpdateOverscrollVelocity(const float aX, const float aY)
+AndroidContentController::UpdateOverscrollVelocity(const float aX, const float aY, const bool aIsRootContent)
 {
-  if (mAndroidWindow) {
+  if (aIsRootContent && mAndroidWindow) {
     mAndroidWindow->UpdateOverscrollVelocity(aX, aY);
   }
 }
 
 void
-AndroidContentController::UpdateOverscrollOffset(const float aX, const float aY)
+AndroidContentController::UpdateOverscrollOffset(const float aX, const float aY, const bool aIsRootContent)
 {
-  if (mAndroidWindow) {
+  if (aIsRootContent && mAndroidWindow) {
     mAndroidWindow->UpdateOverscrollOffset(aX, aY);
   }
 }

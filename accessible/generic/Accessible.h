@@ -14,6 +14,7 @@
 #include "mozilla/UniquePtr.h"
 
 #include "nsIContent.h"
+#include "nsIContentInlines.h"
 #include "nsString.h"
 #include "nsTArray.h"
 #include "nsRefPtrHashtable.h"

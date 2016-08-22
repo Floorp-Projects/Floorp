@@ -154,7 +154,6 @@ public:
   virtual void SetXBLBinding(nsXBLBinding* aBinding,
                              nsBindingManager* aOldBindingManager = nullptr) override;
   virtual mozilla::dom::ShadowRoot *GetContainingShadow() const override;
-  virtual mozilla::dom::ShadowRoot *GetShadowRoot() const override;
   virtual nsTArray<nsIContent*> &DestInsertionPoints() override;
   virtual nsTArray<nsIContent*> *GetExistingDestInsertionPoints() const override;
   virtual void SetShadowRoot(mozilla::dom::ShadowRoot* aShadowRoot) override;

@@ -126,14 +126,12 @@ PluginWidgetParent::RecvCreate(nsresult* aResult)
     return false;
   }
 
-  DebugOnly<nsresult> drv;
-  drv = mWidget->EnableDragDrop(true);
-  NS_ASSERTION(NS_SUCCEEDED(drv), "widget call failure");
+  mWidget->EnableDragDrop(true);
 
 #if defined(MOZ_WIDGET_GTK)
   // For setup, initially GTK code expects 'window' to hold the parent.
   mWrapper->window = mWidget->GetNativeData(NS_NATIVE_PLUGIN_PORT);
-  drv = mWrapper->CreateXEmbedWindow(false);
+  DebugOnly<nsresult> drv = mWrapper->CreateXEmbedWindow(false);
   NS_ASSERTION(NS_SUCCEEDED(drv), "widget call failure");
   mWrapper->SetAllocation();
   PWLOG("Plugin XID=%p\n", (void*)mWrapper->window);
@@ -165,8 +163,7 @@ PluginWidgetParent::KillWidget()
   PWLOG("PluginWidgetParent::KillWidget() widget=%p\n", (void*)mWidget.get());
   if (mWidget) {
     mWidget->UnregisterPluginWindowForRemoteUpdates();
-    DebugOnly<nsresult> rv = mWidget->Destroy();
-    NS_ASSERTION(NS_SUCCEEDED(rv), "widget destroy failure");
+    mWidget->Destroy();
 #if defined(MOZ_WIDGET_GTK)
     mWidget->SetNativeData(NS_NATIVE_PLUGIN_OBJECT_PTR, (uintptr_t)0);
     mWrapper = nullptr;

@@ -214,7 +214,8 @@ void Gecko_UnsetNodeFlags(RawGeckoNode* node, uint32_t flags);
 //
 // Also, we might want a ComputedValues to ComputedValues API for animations?
 // Not if we do them in Gecko...
-nsStyleContext* Gecko_GetStyleContext(RawGeckoNode* node);
+nsStyleContext* Gecko_GetStyleContext(RawGeckoNode* node,
+                                      nsIAtom* aPseudoTagOrNull);
 nsChangeHint Gecko_CalcStyleDifference(nsStyleContext* oldstyle,
                                        ServoComputedValuesBorrowed newstyle);
 void Gecko_StoreStyleDifference(RawGeckoNode* node, nsChangeHint change);
@@ -224,6 +225,17 @@ void Gecko_StoreStyleDifference(RawGeckoNode* node, nsChangeHint change);
 // friend function declaration in nsTArray.h
 void Gecko_EnsureTArrayCapacity(void* array, size_t capacity, size_t elem_size);
 
+// Same here, `array` must be an nsTArray<T>, for some T.
+//
+// Important note: Only valid for POD types, since destructors won't be run
+// otherwise. This is ensured with rust traits for the relevant structs.
+void Gecko_ClearPODTArray(void* array, size_t elem_size, size_t elem_align);
+
+// Clear the mContents field in nsStyleContent. This is needed to run the
+// destructors, otherwise we'd leak the images (though we still don't support
+// those), strings, and whatnot.
+void Gecko_ClearStyleContents(nsStyleContent* content);
+void Gecko_CopyStyleContentsFrom(nsStyleContent* content, const nsStyleContent* other);
 
 void Gecko_EnsureImageLayersLength(nsStyleImageLayers* layers, size_t len);
 

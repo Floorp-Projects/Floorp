@@ -1597,6 +1597,16 @@ void nsPluginInstanceOwner::Invalidate() {
   InvalidateRect(&rect);
 }
 
+void nsPluginInstanceOwner::Recomposite() {
+  nsIWidget* const widget = mPluginFrame->GetNearestWidget();
+  NS_ENSURE_TRUE_VOID(widget);
+
+  LayerManager* const lm = widget->GetLayerManager();
+  NS_ENSURE_TRUE_VOID(lm);
+
+  lm->Composite();
+}
+
 void nsPluginInstanceOwner::RequestFullScreen() {
   if (mFullScreen)
     return;
@@ -3383,7 +3393,6 @@ NS_IMETHODIMP nsPluginInstanceOwner::CreateWidget(void)
         return rv;
       }
     }
-
 
     mWidget->EnableDragDrop(true);
     mWidget->Show(false);

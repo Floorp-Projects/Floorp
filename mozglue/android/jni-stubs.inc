@@ -58,63 +58,6 @@ Java_org_mozilla_gecko_GeckoAppShell_notifyUriVisited(JNIEnv * arg0, jclass arg1
 
 #ifdef JNI_STUBS
 
-typedef void (*Java_org_mozilla_gecko_GeckoAppShell_invalidateAndScheduleComposite_t)(JNIEnv *, jclass);
-static Java_org_mozilla_gecko_GeckoAppShell_invalidateAndScheduleComposite_t f_Java_org_mozilla_gecko_GeckoAppShell_invalidateAndScheduleComposite;
-extern "C" NS_EXPORT void MOZ_JNICALL
-Java_org_mozilla_gecko_GeckoAppShell_invalidateAndScheduleComposite(JNIEnv * arg0, jclass arg1) {
-    if (!f_Java_org_mozilla_gecko_GeckoAppShell_invalidateAndScheduleComposite) {
-        arg0->ThrowNew(arg0->FindClass("java/lang/UnsupportedOperationException"),
-                       "JNI Function called before it was loaded");
-        return ;
-    }
-     f_Java_org_mozilla_gecko_GeckoAppShell_invalidateAndScheduleComposite(arg0, arg1);
-}
-#endif
-
-#ifdef JNI_BINDINGS
-  xul_dlsym("Java_org_mozilla_gecko_GeckoAppShell_invalidateAndScheduleComposite", &f_Java_org_mozilla_gecko_GeckoAppShell_invalidateAndScheduleComposite);
-#endif
-
-#ifdef JNI_STUBS
-
-typedef void (*Java_org_mozilla_gecko_GeckoAppShell_addPresentationSurface_t)(JNIEnv *, jclass, jobject);
-static Java_org_mozilla_gecko_GeckoAppShell_addPresentationSurface_t f_Java_org_mozilla_gecko_GeckoAppShell_addPresentationSurface;
-extern "C" NS_EXPORT void MOZ_JNICALL
-Java_org_mozilla_gecko_GeckoAppShell_addPresentationSurface(JNIEnv * arg0, jclass arg1, jobject arg2) {
-    if (!f_Java_org_mozilla_gecko_GeckoAppShell_addPresentationSurface) {
-        arg0->ThrowNew(arg0->FindClass("java/lang/UnsupportedOperationException"),
-                       "JNI Function called before it was loaded");
-        return ;
-    }
-     f_Java_org_mozilla_gecko_GeckoAppShell_addPresentationSurface(arg0, arg1, arg2);
-}
-#endif
-
-#ifdef JNI_BINDINGS
-  xul_dlsym("Java_org_mozilla_gecko_GeckoAppShell_addPresentationSurface", &f_Java_org_mozilla_gecko_GeckoAppShell_addPresentationSurface);
-#endif
-
-#ifdef JNI_STUBS
-
-typedef void (*Java_org_mozilla_gecko_GeckoAppShell_removePresentationSurface_t)(JNIEnv *, jclass, jobject);
-static Java_org_mozilla_gecko_GeckoAppShell_removePresentationSurface_t f_Java_org_mozilla_gecko_GeckoAppShell_removePresentationSurface;
-extern "C" NS_EXPORT void MOZ_JNICALL
-Java_org_mozilla_gecko_GeckoAppShell_removePresentationSurface(JNIEnv * arg0, jclass arg1, jobject arg2) {
-    if (!f_Java_org_mozilla_gecko_GeckoAppShell_removePresentationSurface) {
-        arg0->ThrowNew(arg0->FindClass("java/lang/UnsupportedOperationException"),
-                       "JNI Function called before it was loaded");
-        return ;
-    }
-     f_Java_org_mozilla_gecko_GeckoAppShell_removePresentationSurface(arg0, arg1, arg2);
-}
-#endif
-
-#ifdef JNI_BINDINGS
-  xul_dlsym("Java_org_mozilla_gecko_GeckoAppShell_removePresentationSurface", &f_Java_org_mozilla_gecko_GeckoAppShell_removePresentationSurface);
-#endif
-
-#ifdef JNI_STUBS
-
 typedef void (*Java_org_mozilla_gecko_GeckoAppShell_syncNotifyObservers_t)(JNIEnv *, jclass, jstring, jstring);
 static Java_org_mozilla_gecko_GeckoAppShell_syncNotifyObservers_t f_Java_org_mozilla_gecko_GeckoAppShell_syncNotifyObservers;
 extern "C" NS_EXPORT void MOZ_JNICALL

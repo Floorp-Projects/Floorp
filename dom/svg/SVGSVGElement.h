@@ -9,6 +9,7 @@
 
 #include "mozilla/dom/FromParser.h"
 #include "nsAutoPtr.h"
+#include "nsIContentInlines.h"
 #include "nsISVGPoint.h"
 #include "nsSVGEnum.h"
 #include "nsSVGLength2.h"

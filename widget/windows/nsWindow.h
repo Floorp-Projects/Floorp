@@ -103,7 +103,7 @@ public:
                                        const LayoutDeviceIntRect& aRect,
                                        nsWidgetInitData* aInitData = nullptr)
                                        override;
-  NS_IMETHOD              Destroy() override;
+  virtual void            Destroy() override;
   NS_IMETHOD              SetParent(nsIWidget *aNewParent) override;
   virtual nsIWidget*      GetParent(void) override;
   virtual float           GetDPI() override;
@@ -130,7 +130,7 @@ public:
                                           int32_t aHorizontal,
                                           int32_t aVertical) override;
   NS_IMETHOD              PlaceBehind(nsTopLevelWidgetZPlacement aPlacement, nsIWidget *aWidget, bool aActivate) override;
-  NS_IMETHOD              SetSizeMode(nsSizeMode aMode) override;
+  virtual void            SetSizeMode(nsSizeMode aMode) override;
   NS_IMETHOD              Enable(bool aState) override;
   virtual bool            IsEnabled() const override;
   NS_IMETHOD              SetFocus(bool aRaise) override;
@@ -165,7 +165,7 @@ public:
   virtual LayoutDeviceIntSize ClientToWindowSize(const LayoutDeviceIntSize& aClientSize) override;
   NS_IMETHOD              DispatchEvent(mozilla::WidgetGUIEvent* aEvent,
                                         nsEventStatus& aStatus) override;
-  NS_IMETHOD              EnableDragDrop(bool aEnable) override;
+  virtual void            EnableDragDrop(bool aEnable) override;
   NS_IMETHOD              CaptureMouse(bool aCapture) override;
   NS_IMETHOD              CaptureRollupEvents(nsIRollupListener * aListener,
                                               bool aDoCapture) override;

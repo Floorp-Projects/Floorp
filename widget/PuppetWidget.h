@@ -76,7 +76,7 @@ public:
               nsWidgetInitData* aInitData = nullptr,
               bool aForceUseIWidgetParent = false) override;
 
-  NS_IMETHOD Destroy() override;
+  virtual void Destroy() override;
 
   NS_IMETHOD Show(bool aState) override;
 
@@ -199,6 +199,9 @@ public:
   virtual double GetDefaultScaleInternal() override;
 
   virtual bool NeedsPaint() override;
+
+  // Paint the widget immediately if any paints are queued up.
+  void PaintNowIfNeeded();
 
   virtual TabChild* GetOwningTabChild() override { return mTabChild; }
 

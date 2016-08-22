@@ -141,7 +141,11 @@ add_task(function* testGoodPermissions() {
       "permissions": ["activeTab"],
       "browser_action": {"default_popup": "_blank.html"},
     },
-    setup: clickBrowserAction,
+    setup: extension => {
+      return clickBrowserAction(extension).then(() => {
+        return awaitExtensionPanel(extension, window, "_blank.html");
+      });
+    },
     tearDown: closeBrowserAction,
   });
 

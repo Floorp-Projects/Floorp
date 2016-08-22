@@ -271,11 +271,11 @@ public:
 
 private:
     // for |AddCounterResetsAndIncrements| only
-    bool AddResetOrIncrement(nsIFrame *aFrame, int32_t aIndex,
-                               const nsStyleCounterData *aCounterData,
-                               nsCounterNode::Type aType);
+  bool AddResetOrIncrement(nsIFrame* aFrame, int32_t aIndex,
+                           const nsStyleCounterData& aCounterData,
+                           nsCounterNode::Type aType);
 
-    nsClassHashtable<nsStringHashKey, nsCounterList> mNames;
+  nsClassHashtable<nsStringHashKey, nsCounterList> mNames;
 };
 
 #endif /* nsCounterManager_h_ */

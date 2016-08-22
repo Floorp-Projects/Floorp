@@ -14,6 +14,7 @@
 #include "nsDOMTokenList.h"
 #include "nsIDOMNode.h"
 #include "nsIDocument.h"
+#include "nsIFrame.h"
 #include "nsINode.h"
 #include "nsIPrincipal.h"
 #include "nsNameSpaceManager.h"
@@ -24,7 +25,10 @@
 
 #include "mozilla/EventStates.h"
 #include "mozilla/ServoElementSnapshot.h"
+#include "mozilla/ServoRestyleManager.h"
 #include "mozilla/dom/Element.h"
+
+using namespace mozilla;
 
 #define IMPL_STRONG_REF_TYPE(name, T)           \
   already_AddRefed<T> name::Consume() {         \
@@ -196,15 +200,17 @@ Gecko_UnsetNodeFlags(RawGeckoNode* aNode, uint32_t aFlags)
 }
 
 nsStyleContext*
-Gecko_GetStyleContext(RawGeckoNode* aNode)
+Gecko_GetStyleContext(RawGeckoNode* aNode, nsIAtom* aPseudoTagOrNull)
 {
   MOZ_ASSERT(aNode->IsContent());
-  nsIFrame* primaryFrame = aNode->AsContent()->GetPrimaryFrame();
-  if (!primaryFrame) {
+  nsIFrame* relevantFrame =
+    ServoRestyleManager::FrameForPseudoElement(aNode->AsContent(),
+                                               aPseudoTagOrNull);
+  if (!relevantFrame) {
     return nullptr;
   }
 
-  return primaryFrame->StyleContext();
+  return relevantFrame->StyleContext();
 }
 
 nsChangeHint
@@ -709,8 +715,40 @@ Gecko_CreateGradient(uint8_t aShape,
 void
 Gecko_EnsureTArrayCapacity(void* aArray, size_t aCapacity, size_t aElemSize)
 {
-  auto base = reinterpret_cast<nsTArray_base<nsTArrayInfallibleAllocator, nsTArray_CopyWithMemutils> *>(aArray);
+  auto base =
+    reinterpret_cast<nsTArray_base<nsTArrayInfallibleAllocator,
+                                   nsTArray_CopyWithMemutils>*>(aArray);
+
   base->EnsureCapacity<nsTArrayInfallibleAllocator>(aCapacity, aElemSize);
+}
+
+void
+Gecko_ClearPODTArray(void* aArray, size_t aElementSize, size_t aElementAlign)
+{
+  auto base =
+    reinterpret_cast<nsTArray_base<nsTArrayInfallibleAllocator,
+                                   nsTArray_CopyWithMemutils>*>(aArray);
+
+  base->template ShiftData<nsTArrayInfallibleAllocator>(0, base->Length(), 0,
+                                                        aElementSize, aElementAlign);
+}
+
+void
+Gecko_ClearStyleContents(nsStyleContent* aContent)
+{
+  aContent->AllocateContents(0);
+}
+
+void
+Gecko_CopyStyleContentsFrom(nsStyleContent* aContent, const nsStyleContent* aOther)
+{
+  uint32_t count = aOther->ContentCount();
+
+  aContent->AllocateContents(count);
+
+  for (uint32_t i = 0; i < count; ++i) {
+    aContent->ContentAt(i) = aOther->ContentAt(i);
+  }
 }
 
 void

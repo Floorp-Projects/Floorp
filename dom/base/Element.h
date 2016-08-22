@@ -807,6 +807,12 @@ public:
   already_AddRefed<ShadowRoot> CreateShadowRoot(ErrorResult& aError);
   already_AddRefed<DestinationInsertionPointList> GetDestinationInsertionPoints();
 
+  ShadowRoot *FastGetShadowRoot() const
+  {
+    nsDOMSlots* slots = GetExistingDOMSlots();
+    return slots ? slots->mShadowRoot.get() : nullptr;
+  }
+
   void ScrollIntoView();
   void ScrollIntoView(bool aTop);
   void ScrollIntoView(const ScrollIntoViewOptions &aOptions);

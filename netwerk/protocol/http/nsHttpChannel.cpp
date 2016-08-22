@@ -938,12 +938,39 @@ CallTypeSniffers(void *aClosure, const uint8_t *aData, uint32_t aCount)
   }
 }
 
+// Helper Function to report messages to the console when loading
+// a resource was blocked due to a MIME type mismatch.
+void
+ReportTypeBlocking(nsIURI* aURI,
+                   nsILoadInfo* aLoadInfo,
+                   const char* aMessageName)
+{
+    nsAutoCString spec;
+    aURI->GetSpec(spec);
+    NS_ConvertUTF8toUTF16 specUTF16(spec);
+    const char16_t* params[] = { specUTF16.get() };
+    nsCOMPtr<nsIDocument> doc;
+    if (aLoadInfo) {
+        nsCOMPtr<nsIDOMDocument> domDoc;
+        aLoadInfo->GetLoadingDocument(getter_AddRefs(domDoc));
+        if (domDoc) {
+            doc = do_QueryInterface(domDoc);
+        }
+    }
+    nsContentUtils::ReportToConsole(nsIScriptError::errorFlag,
+                                    NS_LITERAL_CSTRING("MIMEMISMATCH"),
+                                    doc,
+                                    nsContentUtils::eSECURITY_PROPERTIES,
+                                    aMessageName,
+                                    params, ArrayLength(params));
+}
+
 // Check and potentially enforce X-Content-Type-Options: nosniff
 nsresult
-ProcessXCTO(nsHttpResponseHead* aResponseHead, nsILoadInfo* aLoadInfo)
+ProcessXCTO(nsIURI* aURI, nsHttpResponseHead* aResponseHead, nsILoadInfo* aLoadInfo)
 {
-    if (!aResponseHead || !aLoadInfo) {
-        // if there is no response head or no loadInfo, then there is nothing to do
+    if (!aURI || !aResponseHead || !aLoadInfo) {
+        // if there is no uri, no response head or no loadInfo, then there is nothing to do
         return NS_OK;
     }
 
@@ -997,6 +1024,7 @@ ProcessXCTO(nsHttpResponseHead* aResponseHead, nsILoadInfo* aLoadInfo)
         if (contentType.EqualsLiteral(TEXT_CSS)) {
             return NS_OK;
         }
+        ReportTypeBlocking(aURI, aLoadInfo, "MimeTypeMismatch");
         return NS_ERROR_CORRUPTED_CONTENT;
     }
 
@@ -1004,6 +1032,7 @@ ProcessXCTO(nsHttpResponseHead* aResponseHead, nsILoadInfo* aLoadInfo)
         if (StringBeginsWith(contentType, NS_LITERAL_CSTRING("image/"))) {
             return NS_OK;
         }
+        ReportTypeBlocking(aURI, aLoadInfo, "MimeTypeMismatch");
         return NS_ERROR_CORRUPTED_CONTENT;
     }
 
@@ -1011,10 +1040,107 @@ ProcessXCTO(nsHttpResponseHead* aResponseHead, nsILoadInfo* aLoadInfo)
         if (nsContentUtils::IsScriptType(contentType)) {
             return NS_OK;
         }
+        ReportTypeBlocking(aURI, aLoadInfo, "MimeTypeMismatch");
         return NS_ERROR_CORRUPTED_CONTENT;
     }
     return NS_OK;
 }
+
+// Ensure that a load of type script has correct MIME type
+nsresult
+EnsureMIMEOfScript(nsIURI* aURI, nsHttpResponseHead* aResponseHead, nsILoadInfo* aLoadInfo)
+{
+    if (!aURI || !aResponseHead || !aLoadInfo) {
+        // if there is no uri, no response head or no loadInfo, then there is nothing to do
+        return NS_OK;
+    }
+
+    if (aLoadInfo->GetExternalContentPolicyType() != nsIContentPolicy::TYPE_SCRIPT) {
+        // if this is not a script load, then there is nothing to do
+        return NS_OK;
+    }
+
+    nsAutoCString contentType;
+    aResponseHead->ContentType(contentType);
+    NS_ConvertUTF8toUTF16 typeString(contentType);
+
+    if (nsContentUtils::IsJavascriptMIMEType(typeString)) {
+        // script load has type script
+        Telemetry::Accumulate(Telemetry::SCRIPT_BLOCK_WRONG_MIME, 1);
+        return NS_OK;
+    }
+
+    if (StringBeginsWith(contentType, NS_LITERAL_CSTRING("image/"))) {
+        // script load has type image
+        Telemetry::Accumulate(Telemetry::SCRIPT_BLOCK_WRONG_MIME, 2);
+
+        // Instead of consulting Preferences::GetBool() all the time we
+        // can cache the result to speed things up.
+        static bool sCachedBlockScriptWithMimeImage = false;
+        static bool sIsInited = false;
+        if (!sIsInited) {
+            sIsInited = true;
+            Preferences::AddBoolVarCache(&sCachedBlockScriptWithMimeImage,
+                                         "security.block_script_with_mime_image");
+        }
+
+        // do not block the load if the feature is not enabled
+        if (!sCachedBlockScriptWithMimeImage) {
+            return NS_OK;
+        }
+        // log a warning to the console that loading script was
+        // blocked due to having a wrong MIME type
+        ReportTypeBlocking(aURI, aLoadInfo, "BlockScriptWithWrongMimeType");
+        return NS_ERROR_CORRUPTED_CONTENT;
+    }
+
+    if (StringBeginsWith(contentType, NS_LITERAL_CSTRING("audio/"))) {
+        // script load has type audio
+        Telemetry::Accumulate(Telemetry::SCRIPT_BLOCK_WRONG_MIME, 3); 
+        return NS_OK;
+    }
+
+    if (StringBeginsWith(contentType, NS_LITERAL_CSTRING("video/"))) {
+        // script load has type video
+        Telemetry::Accumulate(Telemetry::SCRIPT_BLOCK_WRONG_MIME, 4); 
+        return NS_OK;
+    }
+
+    if (StringBeginsWith(contentType, NS_LITERAL_CSTRING("text/plain"))) {
+        // script load has type text/plain
+        Telemetry::Accumulate(Telemetry::SCRIPT_BLOCK_WRONG_MIME, 5); 
+        return NS_OK;
+    }
+
+    if (StringBeginsWith(contentType, NS_LITERAL_CSTRING("text/csv"))) {
+        // script load has type text/csv
+        Telemetry::Accumulate(Telemetry::SCRIPT_BLOCK_WRONG_MIME, 6); 
+        return NS_OK;
+    }
+
+    if (StringBeginsWith(contentType, NS_LITERAL_CSTRING("text/xml"))) {
+        // script load has type text/xml
+        Telemetry::Accumulate(Telemetry::SCRIPT_BLOCK_WRONG_MIME, 7); 
+        return NS_OK;
+    }
+
+    if (StringBeginsWith(contentType, NS_LITERAL_CSTRING("application/octet-stream"))) {
+        // script load has type application/octet-stream
+        Telemetry::Accumulate(Telemetry::SCRIPT_BLOCK_WRONG_MIME, 8); 
+        return NS_OK;
+    }
+
+    if (StringBeginsWith(contentType, NS_LITERAL_CSTRING("application/xml"))) {
+        // script load has type application/xml
+        Telemetry::Accumulate(Telemetry::SCRIPT_BLOCK_WRONG_MIME, 9); 
+        return NS_OK;
+    }
+
+    // script load has unknown type
+    Telemetry::Accumulate(Telemetry::SCRIPT_BLOCK_WRONG_MIME, 0); 
+    return NS_OK;
+}
+
 
 nsresult
 nsHttpChannel::CallOnStartRequest()
@@ -1025,31 +1151,11 @@ nsHttpChannel::CallOnStartRequest()
                        "CORS preflight must have been finished by the time we "
                        "call OnStartRequest");
 
-    nsresult rv = ProcessXCTO(mResponseHead, mLoadInfo);
-    if (NS_FAILED(rv)) {
-        LOG(("XCTO: nosniff verification failed.\n"));
-        // log a warning to the console that loading the resrouce was
-        // blocked due to MIME type mismatch.
-        nsAutoCString spec;
-        mURI->GetSpec(spec);
-        NS_ConvertUTF8toUTF16 specUTF16(spec);
-        const char16_t* params[] = { specUTF16.get() };
-        nsCOMPtr<nsIDocument> doc;
-        if (mLoadInfo) {
-            nsCOMPtr<nsIDOMDocument> domDoc;
-            mLoadInfo->GetLoadingDocument(getter_AddRefs(domDoc));
-            if (domDoc) {
-                doc = do_QueryInterface(domDoc);
-            }
-        }
-        nsContentUtils::ReportToConsole(nsIScriptError::errorFlag,
-                                        NS_LITERAL_CSTRING("XCTO"),
-                                        doc,
-                                        nsContentUtils::eSECURITY_PROPERTIES,
-                                        "MimeTypeMismatch",
-                                        params, ArrayLength(params));
-        return rv;
-    }
+    nsresult rv = EnsureMIMEOfScript(mURI, mResponseHead, mLoadInfo);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = ProcessXCTO(mURI, mResponseHead, mLoadInfo);
+    NS_ENSURE_SUCCESS(rv, rv);
 
     if (mOnStartRequestCalled) {
         // This can only happen when a range request loading rest of the data

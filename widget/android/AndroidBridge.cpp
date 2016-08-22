@@ -7,8 +7,6 @@
 #include <dlfcn.h>
 #include <math.h>
 #include <GLES2/gl2.h>
-#include <android/native_window.h>
-#include <android/native_window_jni.h>
 
 #include "mozilla/layers/CompositorBridgeChild.h"
 #include "mozilla/layers/CompositorBridgeParent.h"
@@ -182,8 +180,6 @@ AndroidBridge::~AndroidBridge()
 AndroidBridge::AndroidBridge()
   : mLayerClient(nullptr)
   , mUiTaskQueueLock("UiTaskQueue")
-  , mPresentationWindow(nullptr)
-  , mPresentationSurface(nullptr)
 {
     ALOG_BRIDGE("AndroidBridge::Init");
 
@@ -1036,28 +1032,6 @@ AndroidBridge::GetCurrentNetworkInformation(hal::NetworkInformation* aNetworkInf
     env->ReleaseDoubleArrayElements(arr.Get(), info, 0);
 }
 
-void*
-AndroidBridge::AcquireNativeWindow(JNIEnv* aEnv, jobject aSurface)
-{
-    return ANativeWindow_fromSurface(aEnv, aSurface);
-}
-
-void
-AndroidBridge::ReleaseNativeWindow(void *window)
-{
-    return ANativeWindow_release((ANativeWindow*)window);
-}
-
-IntSize
-AndroidBridge::GetNativeWindowSize(void* window)
-{
-    if (!window) {
-      return IntSize(0, 0);
-    }
-
-    return IntSize(ANativeWindow_getWidth((ANativeWindow*)window), ANativeWindow_getHeight((ANativeWindow*)window));
-}
-
 jobject
 AndroidBridge::GetGlobalContextRef() {
     if (sGlobalContext) {
@@ -1316,12 +1290,6 @@ AndroidBridge::GetScreenAngle()
     return GeckoAppShell::GetScreenAngle();
 }
 
-void
-AndroidBridge::InvalidateAndScheduleComposite()
-{
-    nsWindow::InvalidateAndScheduleComposite();
-}
-
 nsresult
 AndroidBridge::GetProxyForURI(const nsACString & aSpec,
                               const nsACString & aScheme,
@@ -1562,51 +1530,6 @@ AndroidBridge::RunDelayedUiThreadTasks()
         nextTask->Run();
     }
     return -1;
-}
-
-void*
-AndroidBridge::GetPresentationWindow()
-{
-    return mPresentationWindow;
-}
-
-void
-AndroidBridge::SetPresentationWindow(void* aPresentationWindow)
-{
-     if (mPresentationWindow) {
-         const bool wasAlreadyPaused = nsWindow::IsCompositionPaused();
-         if (!wasAlreadyPaused) {
-             nsWindow::SchedulePauseComposition();
-         }
-
-         mPresentationWindow = aPresentationWindow;
-         if (mPresentationSurface) {
-             // destroy the egl surface!
-             // The compositor is paused so it should be okay to destroy
-             // the surface here.
-             mozilla::gl::GLContextProvider::DestroyEGLSurface(mPresentationSurface);
-             mPresentationSurface = nullptr;
-         }
-
-         if (!wasAlreadyPaused) {
-             nsWindow::ScheduleResumeComposition();
-         }
-     }
-     else {
-         mPresentationWindow = aPresentationWindow;
-     }
-}
-
-EGLSurface
-AndroidBridge::GetPresentationSurface()
-{
-    return mPresentationSurface;
-}
-
-void
-AndroidBridge::SetPresentationSurface(EGLSurface aPresentationSurface)
-{
-    mPresentationSurface = aPresentationSurface;
 }
 
 Object::LocalRef AndroidBridge::ChannelCreate(Object::Param stream) {
