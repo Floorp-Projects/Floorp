@@ -639,7 +639,7 @@ js::Nursery::doCollection(JSRuntime* rt, JS::gcreason::Reason reason,
     AutoDisableProxyCheck disableStrictProxyChecking(rt);
     mozilla::DebugOnly<AutoEnterOOMUnsafeRegion> oomUnsafeRegion;
 
-    size_t initialNurserySize = nurserySize();
+    size_t initialNurserySize = spaceToEnd();
 
     // Move objects pointed to by roots from the nursery to the major heap.
     TenuringTracer mover(rt, this);
