@@ -7,7 +7,6 @@
 
 #include "mozilla/gfx/2D.h"
 #include "mozilla/RefPtr.h"
-#include "mozilla/UniquePtr.h"
 #include "nsCOMPtr.h"
 #include "nsTArray.h"
 #include "nsString.h"
@@ -255,7 +254,7 @@ RunTest (TestEntry *test, gfxContext *ctx) {
 
     fontGroup = gfxPlatform::GetPlatform()->CreateFontGroup(NS_ConvertUTF8toUTF16(test->utf8FamilyString), &test->fontStyle, nullptr, nullptr, 1.0);
 
-    UniquePtr<gfxTextRun> textRun;
+    RefPtr<gfxTextRun> textRun;
     gfxTextRunFactory::Parameters params = {
       ctx, nullptr, nullptr, nullptr, 0, 60
     };
