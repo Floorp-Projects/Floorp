@@ -38,7 +38,7 @@ const ERR_DIRECTOR_UNINSTALLED_SCRIPTID = "uninstalled director-script id";
  * A MessagePort Actor allowing communication through messageport events
  * over the remote debugging protocol.
  */
-var MessagePortActor = exports.MessagePortActor = protocol.ActorClass(messagePortSpec, {
+var MessagePortActor = exports.MessagePortActor = protocol.ActorClassWithSpec(messagePortSpec, {
   /**
    * Create a MessagePort actor.
    *
@@ -149,7 +149,7 @@ var MessagePortActor = exports.MessagePortActor = protocol.ActorClass(messagePor
  * directly connect the debugger client and the content script using a MessageChannel) on tab
  * navigation.
  */
-var DirectorScriptActor = exports.DirectorScriptActor = protocol.ActorClass(directorScriptSpec, {
+var DirectorScriptActor = exports.DirectorScriptActor = protocol.ActorClassWithSpec(directorScriptSpec, {
   /**
    * Creates the director script actor
    *
@@ -337,7 +337,7 @@ var DirectorScriptActor = exports.DirectorScriptActor = protocol.ActorClass(dire
 /**
  * The DirectorManager Actor is a tab actor which manages enabling/disabling director scripts.
  */
-const DirectorManagerActor = exports.DirectorManagerActor = protocol.ActorClass(directorManagerSpec, {
+const DirectorManagerActor = exports.DirectorManagerActor = protocol.ActorClassWithSpec(directorManagerSpec, {
   /* init & destroy methods */
   initialize: function (conn, tabActor) {
     protocol.Actor.prototype.initialize.call(this, conn);

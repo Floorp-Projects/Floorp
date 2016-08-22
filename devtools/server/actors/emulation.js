@@ -9,7 +9,7 @@ const protocol = require("devtools/shared/protocol");
 const { emulationSpec } = require("devtools/shared/specs/emulation");
 const { SimulatorCore } = require("devtools/shared/touch/simulator-core");
 
-let EmulationActor = protocol.ActorClass(emulationSpec, {
+let EmulationActor = protocol.ActorClassWithSpec(emulationSpec, {
   initialize(conn, tabActor) {
     protocol.Actor.prototype.initialize.call(this, conn);
     this.docShell = tabActor.docShell;

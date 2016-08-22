@@ -11,7 +11,7 @@ const Services = require("Services");
 const { BreakpointActor, setBreakpointAtEntryPoints } = require("devtools/server/actors/breakpoint");
 const { OriginalLocation, GeneratedLocation } = require("devtools/server/actors/common");
 const { createValueGrip } = require("devtools/server/actors/object");
-const { ActorClass, Arg, RetVal, method } = require("devtools/shared/protocol");
+const { ActorClassWithSpec, Arg, RetVal, method } = require("devtools/shared/protocol");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const { assert, fetch } = DevToolsUtils;
 const { joinURI } = require("devtools/shared/path");
@@ -141,7 +141,7 @@ function resolveURIToLocalPath(aURI) {
  * @param String contentType
  *        Optional. The content type of this source, if immediately available.
  */
-let SourceActor = ActorClass(sourceSpec, {
+let SourceActor = ActorClassWithSpec(sourceSpec, {
   typeName: "source",
 
   initialize: function ({ source, thread, originalUrl, generatedSource,

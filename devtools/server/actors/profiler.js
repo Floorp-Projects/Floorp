@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { Actor, ActorClass } = require("devtools/shared/protocol");
+const { Actor, ActorClassWithSpec } = require("devtools/shared/protocol");
 const { Profiler } = require("devtools/server/performance/profiler");
 const { actorBridgeWithSpec } = require("devtools/server/actors/common");
 const { profilerSpec } = require("devtools/shared/specs/profiler");
@@ -16,7 +16,7 @@ loader.lazyRequireGetter(this, "events", "sdk/event/core");
  *
  * @see devtools/server/performance/profiler.js for documentation.
  */
-var ProfilerActor = exports.ProfilerActor = ActorClass(profilerSpec, {
+var ProfilerActor = exports.ProfilerActor = ActorClassWithSpec(profilerSpec, {
   initialize: function (conn) {
     Actor.prototype.initialize.call(this, conn);
     this._onProfilerEvent = this._onProfilerEvent.bind(this);

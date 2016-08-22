@@ -9,11 +9,11 @@
  * epoch of the performance entry.
  */
 
-const { Actor, ActorClass } = require("devtools/shared/protocol");
+const { Actor, ActorClassWithSpec } = require("devtools/shared/protocol");
 const performanceSpec = require("devtools/shared/specs/performance-entries");
 const events = require("sdk/event/core");
 
-var PerformanceEntriesActor = ActorClass(performanceSpec, {
+var PerformanceEntriesActor = ActorClassWithSpec(performanceSpec, {
   listenerAdded: false,
 
   initialize: function (conn, tabActor) {

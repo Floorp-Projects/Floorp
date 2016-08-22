@@ -25,7 +25,7 @@ const AUDIO_NODE_DEFINITION = require("devtools/server/actors/utils/audionodes.j
  *            Boolean indicating if the audio node is bypassable (splitter,
  *            merger and destination nodes, for example, are not)
  */
-const AudioNodeFront = protocol.FrontClass(audionodeSpec, {
+const AudioNodeFront = protocol.FrontClassWithSpec(audionodeSpec, {
   form: function (form, detail) {
     if (detail === "actorid") {
       this.actorID = form;
@@ -53,7 +53,7 @@ exports.AudioNodeFront = AudioNodeFront;
 /**
  * The corresponding Front object for the WebAudioActor.
  */
-const WebAudioFront = protocol.FrontClass(webAudioSpec, {
+const WebAudioFront = protocol.FrontClassWithSpec(webAudioSpec, {
   initialize: function (client, { webaudioActor }) {
     protocol.Front.prototype.initialize.call(this, client, { actor: webaudioActor });
     this.manage(this);

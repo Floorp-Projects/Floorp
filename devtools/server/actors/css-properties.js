@@ -15,12 +15,12 @@ loader.lazyGetter(this, "appInfo", () => {
 });
 
 const protocol = require("devtools/shared/protocol");
-const { ActorClass, Actor } = protocol;
+const { ActorClassWithSpec, Actor } = protocol;
 const { cssPropertiesSpec } = require("devtools/shared/specs/css-properties");
 const { CSS_PROPERTIES, CSS_TYPES } = require("devtools/shared/css-properties-db");
 const { cssColors } = require("devtools/shared/css-color-db");
 
-exports.CssPropertiesActor = ActorClass(cssPropertiesSpec, {
+exports.CssPropertiesActor = ActorClassWithSpec(cssPropertiesSpec, {
   typeName: "cssProperties",
 
   initialize(conn, parent) {
