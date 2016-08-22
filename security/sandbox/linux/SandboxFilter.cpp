@@ -541,6 +541,7 @@ public:
     case __NR_unlink:
     CASES_FOR_fchown:
     case __NR_fchmod:
+    case __NR_flock:
 #endif
       return Allow();
 
