@@ -397,7 +397,7 @@ description#identity-popup-content-verifier,
 .identity-popup-permission-state-label {
   margin-inline-end: 5px;
   text-align: end;
-  opacity: 0.6;
+  color: graytext;
 }
 
 .identity-popup-permission-remove-button {
@@ -421,21 +421,22 @@ description#identity-popup-content-verifier,
   height: 16px;
   list-style-image: url(chrome://browser/skin/panel-icons.svg#cancel);
   filter: url(chrome://browser/skin/filters.svg#fill);
-  fill: #999;
+  fill: graytext;
 }
 
 .identity-popup-permission-remove-button > .button-box > .button-text {
   display: none;
 }
 
+/* swap foreground / background colors on hover */
 .identity-popup-permission-remove-button:hover {
-  background-color: #999;
+  background-color: graytext;
 }
 
 .identity-popup-permission-remove-button:hover > .button-box > .button-icon {
-  fill: #fff;
+  fill: -moz-field;
 }
 
 .identity-popup-permission-remove-button:hover:active {
-  background-color: #808080;
+  background-color: -moz-fieldtext;
 }
