@@ -3484,10 +3484,3 @@ nsFrameLoader::PopulateUserContextIdFromAttribute(DocShellOriginAttributes& aAtt
 
   return NS_OK;
 }
-
-nsIMessageSender*
-nsFrameLoader::GetProcessMessageManager() const
-{
-  return mRemoteBrowser ? mRemoteBrowser->Manager()->GetMessageManager()
-                        : nullptr;
-};

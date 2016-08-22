@@ -19,6 +19,8 @@
   { 0xeeec9ebf, 0x8ecf, 0x4e38,                                 \
     { 0x81, 0xda, 0xb7, 0x34, 0x13, 0x7e, 0xac, 0xf3 } }
 
+class nsFrameMessageManager;
+
 namespace IPC {
 class Principal;
 } // namespace IPC
@@ -79,8 +81,6 @@ public:
   virtual bool IsContentBridgeParent() const { return false; }
 
   ContentBridgeParent* AsContentBridgeParent();
-
-  nsFrameMessageManager* GetMessageManager() const { return mMessageManager; }
 
   virtual int32_t Pid() const = 0;
 
