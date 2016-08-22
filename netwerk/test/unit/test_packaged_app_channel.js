@@ -211,7 +211,6 @@ function run_test()
   do_register_cleanup(reset_pref);
 
   add_test(test_channel);
-  add_test(test_channel_no_notificationCallbacks);
   add_test(test_channel_uris);
 
   add_test(test_channel_with_bad_signature_from_trusted_origin);
@@ -223,10 +222,7 @@ function run_test()
 
 function test_channel_with_bad_signature() {
   var channel = make_channel(uri+"/package_with_bad_signature!//index.html");
-  channel.loadInfo.originAttributes = { appId: 1024,
-                                        inIsolatedMozBrowser: false
-                                      };
-  channel.notificationCallbacks = new LoadContextCallback(1024, false, false, false);
+  channel.loadInfo.originAttributes = new OriginAttributes(1024, false);
   channel.asyncOpen2(new Listener(function(l) {
     do_check_true(l.gotFileNotFound);
     run_next_test();
@@ -240,10 +236,7 @@ function test_channel_with_bad_signature_from_trusted_origin() {
   origin.data = uri;
   Services.prefs.setComplexValue(pref, Ci.nsISupportsString, origin);
   var channel = make_channel(uri+"/package_with_bad_signature!//index.html");
-  channel.loadInfo.originAttributes = { appId: 1024,
-                                        inIsolatedMozBrowser: false
-                                      };
-  channel.notificationCallbacks = new LoadContextCallback(1024, false, false, false);
+  channel.loadInfo.originAttributes = new OriginAttributes(1024, false);
   channel.asyncOpen2(new Listener(function(l) {
     do_check_true(l.gotStopRequestOK);
     Services.prefs.clearUserPref(pref);
@@ -253,25 +246,18 @@ function test_channel_with_bad_signature_from_trusted_origin() {
 
 function test_channel_with_good_signature() {
   var channel = make_channel(uri+"/package_with_good_signature!//index.html");
-  channel.loadInfo.originAttributes = { appId: 1024,
-                                        inIsolatedMozBrowser: false
-                                      };
-  channel.notificationCallbacks = new LoadContextCallback(1024, false, false, false);
+  channel.loadInfo.originAttributes = new OriginAttributes(1024, false);
   channel.asyncOpen2(new Listener(function(l) {
     do_check_true(l.gotStopRequestOK);
     run_next_test();
   }));
 }
 
-function test_channel(aNullNotificationCallbacks) {
+function test_channel() {
   var channel = make_channel(uri+"/package!//index.html");
   channel.loadInfo.originAttributes = { appId: 1024,
                                         inIsolatedMozBrowser: false
                                       };
-
-  if (!aNullNotificationCallbacks) {
-    channel.notificationCallbacks = new LoadContextCallback(1024, false, false, false);
-  }
 
   channel.asyncOpen2(new Listener(function(l) {
     // XXX: no content length available for this resource
@@ -280,10 +266,6 @@ function test_channel(aNullNotificationCallbacks) {
     do_check_true(l.gotStopRequestOK);
     run_next_test();
   }));
-}
-
-function test_channel_no_notificationCallbacks() {
-  test_channel(true);
 }
 
 function test_channel_uris() {

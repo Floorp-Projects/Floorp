@@ -43,11 +43,11 @@ var appsService = Cc['@mozilla.org/AppsService;1']
 
 var cookies = [
   { cookieName: 'LCC_App_BrowF_PrivF',
-    loadContext: null },
+    originAttributes: null },
   { cookieName: 'LCC_App_BrowT_PrivF',
-    loadContext: null },
+    originAttributes: null },
   { cookieName: 'AppUninstall_Witness',
-    loadContext: new LoadContextCallback(0, false, false, 1) },
+    originAttributes: new OriginAttributes(0, false, 0) },
 ];
 var counter = 0;
 
@@ -97,7 +97,7 @@ function cookieCheckHandler(metadata, response) {
 function setupChannel(path) {
   var url = NetUtil.newURI("http://localhost:4444" + path);
   var chan = NetUtil.newChannel({uri: url, loadUsingSystemPrincipal: true});
-  chan.notificationCallbacks = cookies[counter].loadContext;
+  chan.loadInfo.originAttributes = cookies[counter].originAttributes;
   chan.QueryInterface(Ci.nsIHttpChannel);
   return chan;
 }
@@ -134,8 +134,8 @@ var gCurrentCookiesCount = 0;
 function onInstall() {
   gTestAppId = appsService.getAppLocalIdByManifestURL(gManifestURL);
 
-  cookies[0].loadContext = new LoadContextCallback(gTestAppId, false, false, 1);
-  cookies[1].loadContext = new LoadContextCallback(gTestAppId, true, false, 1);
+  cookies[0].originAttributes = new OriginAttributes(gTestAppId, false, 0);
+  cookies[1].originAttributes = new OriginAttributes(gTestAppId, true, 0);
 
   is(getCookiesCountForApp(gTestAppId), 0, "App should have no cookies");
 

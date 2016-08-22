@@ -25,11 +25,6 @@ function getChannelForURL(url) {
       contentPolicyType: Ci.nsIContentPolicy.TYPE_OTHER
     });
 
-  tmpChannel.notificationCallbacks =
-    new LoadContextCallback(principal.appId,
-                            principal.isInIsolatedMozBrowserElement,
-                            false,
-                            false);
   return tmpChannel;
 }
 
