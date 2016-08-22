@@ -89,7 +89,16 @@ add_task(function* test_experiments_api() {
     },
 
     background() {
-      browser.meh.hello("Here I am");
+      // The test code below checks that hello() is called at the right
+      // time with the string "Here I am".  Verify that the api schema is
+      // being correctly interpreted by calling hello() with bad arguments
+      // and only calling hello() with the magic string if the call with
+      // bad arguments throws.
+      try {
+        browser.meh.hello("I should not see this", "since two arguments are bad");
+      } catch (err) {
+        browser.meh.hello("Here I am");
+      }
     },
   });
 
@@ -151,7 +160,6 @@ add_task(function* test_experiments_api() {
 
   let hello = yield promise;
   equal(hello, "Here I am", "Should get hello from add-on");
-
 
   // Cleanup.
   apiAddon.uninstall();
