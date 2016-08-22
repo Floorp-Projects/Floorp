@@ -912,7 +912,7 @@ Debugger::slowPathOnLeaveFrame(JSContext* cx, AbstractFramePtr frame, jsbytecode
                 if (!dbg->wrapDebuggeeValue(cx, &wrappedValue) ||
                     !dbg->newCompletionValue(cx, status, wrappedValue, &completion))
                 {
-                    status = dbg->handleUncaughtException(ac, false);
+                    status = dbg->reportUncaughtException(ac);
                     break;
                 }
 
@@ -1318,6 +1318,48 @@ private:
 } // anonymous namespace
 
 JSTrapStatus
+Debugger::reportUncaughtException(Maybe<AutoCompartment>& ac)
+{
+    JSContext* cx = ac->context()->asJSContext();
+
+    // Uncaught exceptions arise from Debugger code, and so we must already be
+    // in an NX section.
+    MOZ_ASSERT(EnterDebuggeeNoExecute::isLockedInStack(cx, *this));
+
+    if (cx->isExceptionPending()) {
+        /*
+         * We want to report the pending exception, but we want to let the
+         * embedding handle it however it wants to.  So pretend like we're
+         * starting a new script execution on our current compartment (which
+         * is the debugger compartment, so reported errors won't get
+         * reported to various onerror handlers in debuggees) and as part of
+         * that "execution" simply throw our exception so the embedding can
+         * deal.
+         */
+        RootedValue exn(cx);
+        if (cx->getPendingException(&exn)) {
+            /*
+             * Clear the exception, because
+             * PrepareScriptEnvironmentAndInvoke will assert that we don't
+             * have one.
+             */
+            cx->clearPendingException();
+            ReportExceptionClosure reportExn(exn);
+            PrepareScriptEnvironmentAndInvoke(cx, cx->global(), reportExn);
+        }
+        /*
+         * And if not, or if PrepareScriptEnvironmentAndInvoke somehow left
+         * an exception on cx (which it totally shouldn't do), just give
+         * up.
+         */
+        cx->clearPendingException();
+    }
+
+    ac.reset();
+    return JSTRAP_ERROR;
+}
+
+JSTrapStatus
 Debugger::handleUncaughtExceptionHelper(Maybe<AutoCompartment>& ac,
                                         MutableHandleValue* vp, bool callHook,
                                         const Maybe<HandleValue>& thisVForCheck,
@@ -1349,35 +1391,9 @@ Debugger::handleUncaughtExceptionHelper(Maybe<AutoCompartment>& ac,
             }
         }
 
-        if (cx->isExceptionPending()) {
-            /*
-             * We want to report the pending exception, but we want to let the
-             * embedding handle it however it wants to.  So pretend like we're
-             * starting a new script execution on our current compartment (which
-             * is the debugger compartment, so reported errors won't get
-             * reported to various onerror handlers in debuggees) and as part of
-             * that "execution" simply throw our exception so the embedding can
-             * deal.
-             */
-            RootedValue exn(cx);
-            if (cx->getPendingException(&exn)) {
-                /*
-                 * Clear the exception, because
-                 * PrepareScriptEnvironmentAndInvoke will assert that we don't
-                 * have one.
-                 */
-                cx->clearPendingException();
-                ReportExceptionClosure reportExn(exn);
-                PrepareScriptEnvironmentAndInvoke(cx, cx->global(), reportExn);
-            }
-            /*
-             * And if not, or if PrepareScriptEnvironmentAndInvoke somehow left
-             * an exception on cx (which it totally shouldn't do), just give
-             * up.
-             */
-            cx->clearPendingException();
-        }
+        return reportUncaughtException(ac);
     }
+
     ac.reset();
     return JSTRAP_ERROR;
 }
@@ -1665,7 +1681,7 @@ Debugger::fireDebuggerStatement(JSContext* cx, MutableHandleValue vp)
     ScriptFrameIter iter(cx);
     RootedValue scriptFrame(cx);
     if (!getScriptFrame(cx, iter, &scriptFrame))
-        return handleUncaughtException(ac, false);
+        return reportUncaughtException(ac);
 
     RootedValue fval(cx, ObjectValue(*hook));
     RootedValue rv(cx);
@@ -1693,7 +1709,7 @@ Debugger::fireExceptionUnwind(JSContext* cx, MutableHandleValue vp)
 
     ScriptFrameIter iter(cx);
     if (!getScriptFrame(cx, iter, &scriptFrame) || !wrapDebuggeeValue(cx, &wrappedExc))
-        return handleUncaughtException(ac, false);
+        return reportUncaughtException(ac);
 
     RootedValue fval(cx, ObjectValue(*hook));
     RootedValue rv(cx);
@@ -1716,7 +1732,7 @@ Debugger::fireEnterFrame(JSContext* cx, AbstractFramePtr frame, MutableHandleVal
 
     RootedValue scriptFrame(cx);
     if (!getScriptFrame(cx, frame, &scriptFrame))
-        return handleUncaughtException(ac, false);
+        return reportUncaughtException(ac);
 
     RootedValue fval(cx, ObjectValue(*hook));
     RootedValue rv(cx);
@@ -1737,7 +1753,7 @@ Debugger::fireNewScript(JSContext* cx, Handle<DebuggerScriptReferent> scriptRefe
 
     JSObject* dsobj = wrapVariantReferent(cx, scriptReferent);
     if (!dsobj) {
-        handleUncaughtException(ac, false);
+        reportUncaughtException(ac);
         return;
     }
 
@@ -1764,7 +1780,7 @@ Debugger::fireOnGarbageCollectionHook(JSContext* cx,
 
     JSObject* dataObj = gcData->toJSObject(cx);
     if (!dataObj) {
-        handleUncaughtException(ac, false);
+        reportUncaughtException(ac);
         return;
     }
 
@@ -1901,7 +1917,7 @@ Debugger::onTrap(JSContext* cx, MutableHandleValue vp)
 
             RootedValue scriptFrame(cx);
             if (!dbg->getScriptFrame(cx, iter, &scriptFrame))
-                return dbg->handleUncaughtException(ac, false);
+                return dbg->reportUncaughtException(ac);
             RootedValue rv(cx);
             Rooted<JSObject*> handler(cx, bp->handler);
             bool ok = CallMethodIfPresent(cx, handler, "hit", 1, scriptFrame.address(), &rv);
@@ -2018,7 +2034,7 @@ Debugger::fireNewGlobalObject(JSContext* cx, Handle<GlobalObject*> global, Mutab
 
     RootedValue wrappedGlobal(cx, ObjectValue(*global));
     if (!wrapDebuggeeValue(cx, &wrappedGlobal))
-        return handleUncaughtException(ac, false);
+        return reportUncaughtException(ac);
 
     // onNewGlobalObject is infallible, and thus is only allowed to return
     // undefined as a resumption value. If it returns anything else, we throw.
@@ -2192,7 +2208,7 @@ Debugger::firePromiseHook(JSContext* cx, Hook hook, HandleObject promise, Mutabl
 
     RootedValue dbgObj(cx, ObjectValue(*promise));
     if (!wrapDebuggeeValue(cx, &dbgObj))
-        return handleUncaughtException(ac, false);
+        return reportUncaughtException(ac);
 
     // Like onNewGlobalObject, the Promise hooks are infallible and the comments
     // in |Debugger::fireNewGlobalObject| apply here as well.
