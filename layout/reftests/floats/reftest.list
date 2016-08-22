@@ -10,7 +10,7 @@ fuzzy-if(gtkWidget,1,10) == float-outside-block-push.html float-outside-block-pu
 == relative-float-2.html relative-float-2-ref.html
 == zero-height-float-base.html zero-height-float-ref.html
 fails == zero-height-float.html zero-height-float-ref.html # bug 81710
-fails == 345369-1.html 345369-1-ref.html
+== 345369-1.html 345369-1-ref.html
 fails == 345369-2.html 345369-2-ref.html
 == 345369-3.html 345369-3-ref.html
 == 345369-4.html 345369-4-ref.html
@@ -24,6 +24,8 @@ fails == 345369-2.html 345369-2-ref.html
 == 1260031-1.html?display:table 1260031-1-ref.html
 == 1260031-1.html?display:table-cell 1260031-1-ref.html
 == 1260031-1.html?overflow:hidden 1260031-1-ref.html
+== 1291110-1.html 1291110-1-ref.html
+== 1291110-2.html 1291110-2-ref.html
 == float-in-rtl-1a.html float-in-rtl-1-ref.html
 fuzzy-if(skiaContent,1,27000) == float-in-rtl-1b.html float-in-rtl-1-ref.html
 fuzzy-if(skiaContent,1,27000) == float-in-rtl-1c.html float-in-rtl-1-ref.html
