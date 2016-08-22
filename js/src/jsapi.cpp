@@ -4640,24 +4640,18 @@ JS_CheckForInterrupt(JSContext* cx)
     return js::CheckForInterrupt(cx);
 }
 
-JS_PUBLIC_API(bool)
-JS_AddInterruptCallback(JSContext* cx, JSInterruptCallback callback)
+JS_PUBLIC_API(JSInterruptCallback)
+JS_SetInterruptCallback(JSContext* cx, JSInterruptCallback callback)
 {
-    return cx->interruptCallbacks.append(callback);
+    JSInterruptCallback old = cx->interruptCallback;
+    cx->interruptCallback = callback;
+    return old;
 }
 
-JS_PUBLIC_API(bool)
-JS_DisableInterruptCallback(JSContext* cx)
+JS_PUBLIC_API(JSInterruptCallback)
+JS_GetInterruptCallback(JSContext* cx)
 {
-    bool result = cx->interruptCallbackDisabled;
-    cx->interruptCallbackDisabled = true;
-    return result;
-}
-
-JS_PUBLIC_API(void)
-JS_ResetInterruptCallback(JSContext* cx, bool enable)
-{
-    cx->interruptCallbackDisabled = enable;
+    return cx->interruptCallback;
 }
 
 /************************************************************************/

@@ -7563,7 +7563,7 @@ main(int argc, char** argv, char** envp)
     JS_SetSecurityCallbacks(cx, &ShellPrincipals::securityCallbacks);
     JS_InitDestroyPrincipalsCallback(cx, ShellPrincipals::destroy);
 
-    JS_AddInterruptCallback(cx, ShellInterruptCallback);
+    JS_SetInterruptCallback(cx, ShellInterruptCallback);
     JS::SetBuildIdOp(cx, ShellBuildId);
     JS::SetAsmJSCacheOps(cx, &asmJSCacheOps);
 
