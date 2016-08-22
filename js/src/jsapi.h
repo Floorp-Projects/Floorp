@@ -524,15 +524,15 @@ class HandleValueArray
 /************************************************************************/
 
 struct JSFreeOp {
-  private:
+  protected:
     JSRuntime*  runtime_;
 
-  protected:
     explicit JSFreeOp(JSRuntime* rt)
       : runtime_(rt) { }
 
   public:
     JSRuntime* runtime() const {
+        MOZ_ASSERT(runtime_);
         return runtime_;
     }
 };
