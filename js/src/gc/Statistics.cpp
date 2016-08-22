@@ -1311,7 +1311,7 @@ Statistics::printSliceProfile()
     }
 
     fprintf(stderr, "MajorGC: %20s %1d -> %1d      ",
-            ExplainReason(slice.reason), slice.initialState, slice.finalState);
+            ExplainReason(slice.reason), int(slice.initialState), int(slice.finalState));
 
     ProfileTimes times;
     times[ProfileKey::Total] = slice.duration();
