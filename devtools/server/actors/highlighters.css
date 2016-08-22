@@ -404,6 +404,16 @@
   shape-rendering: crispEdges;
 }
 
+/* CSS Grid highlighter */
+
+:-moz-native-anonymous .css-grid-canvas {
+  position: absolute;
+  pointer-events: none;
+  top: 0;
+  left: 0;
+  image-rendering: -moz-crisp-edges;
+}
+
 /* Eye dropper */
 
 :-moz-native-anonymous .eye-dropper-root {

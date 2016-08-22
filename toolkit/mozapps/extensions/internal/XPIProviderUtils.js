@@ -2038,14 +2038,10 @@ this.XPIDatabaseReconcile = {
     let addons = currentAddons.get(KEY_APP_SYSTEM_ADDONS) || new Map();
 
     let hideLocation;
-    if (systemAddonLocation.isActive() && systemAddonLocation.isValid(addons)) {
-      // Hide the system add-on defaults
-      logger.info("Hiding the default system add-ons.");
-      hideLocation = KEY_APP_SYSTEM_DEFAULTS;
-    }
-    else {
-      // Hide the system add-on updates
-      logger.info("Hiding the updated system add-ons.");
+
+    if (!systemAddonLocation.isValid(addons)) {
+      // Hide the system add-on updates if any are invalid.
+      logger.info("One or more updated system add-ons invalid, falling back to defaults.");
       hideLocation = KEY_APP_SYSTEM_ADDONS;
     }
 

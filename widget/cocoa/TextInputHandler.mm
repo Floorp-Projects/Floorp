@@ -3267,7 +3267,18 @@ IMEInputHandler::GetAttributedSubstringFromRange(NSRange& aRange,
 
   nsAutoString str;
   WidgetQueryContentEvent textContent(true, eQueryTextContent, mWidget);
-  textContent.InitForQueryTextContent(aRange.location, aRange.length);
+  WidgetQueryContentEvent::Options options;
+  int64_t startOffset = aRange.location;
+  if (IsIMEComposing()) {
+    // The composition may be at different offset from the selection start
+    // offset at dispatching compositionstart because start of composition
+    // is fixed when composition string becomes non-empty in the editor.
+    // Therefore, we need to use query event which is relative to insertion
+    // point.
+    options.mRelativeToInsertionPoint = true;
+    startOffset -= mIMECompositionStart;
+  }
+  textContent.InitForQueryTextContent(startOffset, aRange.length, options);
   textContent.RequestFontRanges();
   DispatchEvent(textContent);
 
@@ -3435,7 +3446,18 @@ IMEInputHandler::FirstRectForCharacterRange(NSRange& aRange,
   bool useCaretRect = (aRange.length == 0);
   if (!useCaretRect) {
     WidgetQueryContentEvent charRect(true, eQueryTextRect, mWidget);
-    charRect.InitForQueryTextRect(aRange.location, 1);
+    WidgetQueryContentEvent::Options options;
+    int64_t startOffset = aRange.location;
+    if (IsIMEComposing()) {
+      // The composition may be at different offset from the selection start
+      // offset at dispatching compositionstart because start of composition
+      // is fixed when composition string becomes non-empty in the editor.
+      // Therefore, we need to use query event which is relative to insertion
+      // point.
+      options.mRelativeToInsertionPoint = true;
+      startOffset -= mIMECompositionStart;
+    }
+    charRect.InitForQueryTextRect(startOffset, 1, options);
     DispatchEvent(charRect);
     if (charRect.mSucceeded) {
       r = charRect.mReply.mRect;
@@ -3450,7 +3472,18 @@ IMEInputHandler::FirstRectForCharacterRange(NSRange& aRange,
 
   if (useCaretRect) {
     WidgetQueryContentEvent caretRect(true, eQueryCaretRect, mWidget);
-    caretRect.InitForQueryCaretRect(aRange.location);
+    WidgetQueryContentEvent::Options options;
+    int64_t startOffset = aRange.location;
+    if (IsIMEComposing()) {
+      // The composition may be at different offset from the selection start
+      // offset at dispatching compositionstart because start of composition
+      // is fixed when composition string becomes non-empty in the editor.
+      // Therefore, we need to use query event which is relative to insertion
+      // point.
+      options.mRelativeToInsertionPoint = true;
+      startOffset -= mIMECompositionStart;
+    }
+    caretRect.InitForQueryCaretRect(startOffset, options);
     DispatchEvent(caretRect);
     if (!caretRect.mSucceeded) {
       return rect;

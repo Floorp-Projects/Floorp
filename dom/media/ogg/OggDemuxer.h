@@ -220,6 +220,7 @@ private:
   void SetupTargetTheora(TheoraState* aTheoraState, OggHeaders& aHeaders);
   void SetupTargetVorbis(VorbisState* aVorbisState, OggHeaders& aHeaders);
   void SetupTargetOpus(OpusState* aOpusState, OggHeaders& aHeaders);
+  void SetupTargetFlac(FlacState* aFlacState, OggHeaders& aHeaders);
   void SetupTargetSkeleton();
   void SetupMediaTracksInfo(const nsTArray<uint32_t>& aSerials);
   void FillTags(TrackInfo* aInfo, MetadataTags* aTags);
@@ -264,6 +265,9 @@ private:
   OpusState* mOpusState;
 
   // Get the bitstream decode state for the given track type
+  // Decode state of the Flac bitstream we're decoding, if we have one.
+  FlacState* mFlacState;
+
   OggCodecState* GetTrackCodecState(TrackInfo::TrackType aType) const;
   TrackInfo::TrackType GetCodecStateType(OggCodecState* aState) const;
 
@@ -302,6 +306,8 @@ private:
   uint32_t mVorbisSerial;
   uint32_t mOpusSerial;
   uint32_t mTheoraSerial;
+  uint32_t mFlacSerial;
+
   vorbis_info mVorbisInfo;
   int mOpusPreSkip;
   th_info mTheoraInfo;

@@ -66,10 +66,10 @@
 {
 "algorithm": "sha512",
 "visibility": "public",
-"filename": "gradle.tar.xz",
+"filename": "gradle-dist.tar.xz",
 "unpack": true,
-"digest": "5ebf4c34e43faba54d189156a1d590f1e99775d1004f18cb7619d9975a5c2bd252021e470abd82bceb28580c1a22dd5501320062a0d83b5588b84633ac30c494",
-"size": 51936348
+"digest": "990edc0e4039dbe5f77790ef59dc0d58faebbb8c82ee497615c7991eec99fe4668d0ab05508c48664b635ff6c0cfd4272db464ae1efaa548e471ab451fe0944f",
+"size": 51955340
 },
 {
 "version": "rustc 1.8.0 (db2939409 2016-04-11)",

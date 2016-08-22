@@ -351,6 +351,8 @@ mochitest-webgl:
                     - mozharness/configs/remove_executables.py
         extra-options:
             - --mochitest-suite=mochitest-gl
+    # Bug 1296733: llvmpipe with mesa 9.2.1 lacks thread safety
+    allow-software-gl-layers: false
 
 reftest:
     description: "Reftest run"

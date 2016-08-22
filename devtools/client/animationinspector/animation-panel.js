@@ -47,6 +47,8 @@ var AnimationsPanel = {
     this.rewindTimelineButtonEl.setAttribute("title",
       L10N.getStr("timeline.rewindButtonTooltip"));
 
+    $("#all-animations-label").textContent = L10N.getStr("panel.allAnimations");
+
     // If the server doesn't support toggling all animations at once, hide the
     // whole global toolbar.
     if (!AnimationsController.traits.hasToggleAll) {
@@ -183,8 +185,8 @@ var AnimationsPanel = {
     } else {
       document.body.setAttribute("empty", "true");
       document.body.removeAttribute("timeline");
-      $("#error-type").textContent =
-        L10N.getStr("panel.invalidElementSelected");
+      $("#error-type").textContent = L10N.getStr("panel.invalidElementSelected");
+      $("#error-hint").textContent = L10N.getStr("panel.selectElement");
     }
   },
 

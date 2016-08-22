@@ -70,6 +70,7 @@ public:
   NS_DECL_NSIMEDIADEVICE
 
   void SetId(const nsAString& aID);
+  void SetRawId(const nsAString& aID);
   virtual uint32_t GetBestFitnessDistance(
       const nsTArray<const NormalizedConstraintSet*>& aConstraintSets);
   virtual Source* GetSource() = 0;
@@ -95,6 +96,7 @@ private:
 protected:
   nsString mName;
   nsString mID;
+  nsString mRawID;
   dom::MediaSourceEnum mMediaSource;
   RefPtr<MediaEngineSource> mSource;
   RefPtr<MediaEngineSource::AllocationHandle> mAllocationHandle;

@@ -272,7 +272,6 @@ public:
   const uint8_t* Peek(size_t aCount)
   {
     if (aCount > mRemaining) {
-      MOZ_ASSERT(false);
       return nullptr;
     }
     return mPtr;

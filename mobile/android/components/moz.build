@@ -21,6 +21,7 @@ EXTRA_COMPONENTS += [
     'ContentPermissionPrompt.js',
     'DirectoryProvider.js',
     'FilePicker.js',
+    'FxAccountsPush.js',
     'HelperAppDialog.js',
     'ImageBlockingPolicy.js',
     'LoginManagerPrompter.js',
