@@ -8,6 +8,8 @@
 
 #include "nsTArray.h"
 #include "js/TypeDecls.h"
+#include "mozilla/Function.h"
+#include "mozilla/Maybe.h"
 
 namespace mozilla {
 namespace dom {
@@ -31,7 +33,7 @@ public:
 
   // Get the Function to call.  If this returns nullptr, GetHandlerText() will
   // be called to get the string.
-  virtual mozilla::dom::Function *GetCallback() = 0;
+  virtual mozilla::dom::Function* GetCallback() = 0;
 
   // Get the handler text of not a compiled object.
   virtual const nsAString& GetHandlerText() = 0;
