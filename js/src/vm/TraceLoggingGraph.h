@@ -7,8 +7,6 @@
 #ifndef TraceLoggingGraph_h
 #define TraceLoggingGraph_h
 
-#include "jslock.h"
-
 #include "js/TypeDecls.h"
 #include "threading/Mutex.h"
 #include "vm/TraceLoggingTypes.h"

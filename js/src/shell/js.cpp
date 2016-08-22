@@ -49,7 +49,6 @@
 #include "jsatom.h"
 #include "jscntxt.h"
 #include "jsfun.h"
-#include "jslock.h"
 #include "jsobj.h"
 #include "jsprf.h"
 #include "jsscript.h"
@@ -3320,7 +3319,7 @@ KillWorkerThreads()
 
     while (true) {
         // We need to leave the AutoLockWorkerThreads scope before we call
-        // PR_JoinThread, to avoid deadlocks when AutoLockWorkerThreads is
+        // js::Thread::join, to avoid deadlocks when AutoLockWorkerThreads is
         // used by the worker thread.
         Thread* thread;
         {
