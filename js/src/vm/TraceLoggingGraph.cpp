@@ -14,100 +14,41 @@
 #endif
 
 #include "mozilla/EndianUtils.h"
-#include "mozilla/ScopeExit.h"
 
 #include "jsstr.h"
 
-#include "js/UniquePtr.h"
 #include "threading/LockGuard.h"
-#include "threading/Thread.h"
 #include "vm/TraceLogging.h"
 
-#ifndef DEFAULT_TRACE_LOG_DIR
+#ifndef TRACE_LOG_DIR
 # if defined(_WIN32)
-#  define DEFAULT_TRACE_LOG_DIR "."
+#  define TRACE_LOG_DIR ""
 # else
-#  define DEFAULT_TRACE_LOG_DIR "/tmp/"
+#  define TRACE_LOG_DIR "/tmp/"
 # endif
 #endif
 
-using mozilla::MakeScopeExit;
 using mozilla::NativeEndian;
 
 TraceLoggerGraphState* traceLoggerGraphState = nullptr;
-
-// gcc and clang have these in symcat.h, but MSVC does not.
-#ifndef STRINGX
-# define STRINGX(x) #x
-#endif
-#ifndef XSTRING
-# define XSTRING(macro) STRINGX(macro)
-#endif
-
-#define MAX_LOGGERS 999
-
-// Return a filename relative to the output directory. %u and %d substitutions
-// are allowed, with %u standing for a full 32-bit number and %d standing for
-// an up to 3-digit number.
-static js::UniqueChars
-AllocTraceLogFilename(const char* pattern, ...) {
-    js::UniqueChars filename;
-
-    va_list ap;
-
-    static const char* outdir = getenv("TLDIR") ? getenv("TLDIR") : DEFAULT_TRACE_LOG_DIR;
-    size_t len = strlen(outdir) + 1; // "+ 1" is for the '/'
-
-    for (const char* p = pattern; *p; p++) {
-        if (*p == '%') {
-            p++;
-            if (*p == 'u')
-                len += sizeof("4294967295") - 1;
-            else if (*p == 'd')
-                len += sizeof(XSTRING(MAX_LOGGERS)) - 1;
-            else
-                MOZ_CRASH("Invalid format");
-        } else {
-            len++;
-        }
-    }
-
-    len++; // For the terminating NUL.
-
-    filename.reset((char*) js_malloc(len));
-    if (!filename)
-        return nullptr;
-    char* rest = filename.get() + sprintf(filename.get(), "%s/", outdir);
-
-    va_start(ap, pattern);
-    int ret = vsnprintf(rest, len, pattern, ap);
-    va_end(ap);
-    if (ret < 0)
-        return nullptr;
-
-    MOZ_ASSERT(ret <= len - (strlen(outdir) + 1),
-               "overran TL filename buffer; %d given too large a value?");
-
-    return filename;
-}
 
 bool
 TraceLoggerGraphState::init()
 {
     pid_ = (uint32_t) getpid();
 
-    js::UniqueChars filename = AllocTraceLogFilename("tl-data.%u.json", pid_);
-    out = fopen(filename.get(), "w");
+    char filename[sizeof TRACE_LOG_DIR "tl-data.4294967295.json"];
+    sprintf(filename, TRACE_LOG_DIR "tl-data.%u.json", pid_);
+    out = fopen(filename, "w");
     if (!out)
         return false;
 
     fprintf(out, "[");
 
-    // Write the latest tl-data.*.json file to tl-data.json.
+    // Write the last tl-data.*.json file to tl-data.json.
     // In most cases that is the wanted file.
-    js::UniqueChars masterFilename = AllocTraceLogFilename("tl-data.json");
-    if (FILE* last = fopen(masterFilename.get(), "w")) {
-        fprintf(last, "\"%s\"", filename.get());
+    if (FILE* last = fopen(TRACE_LOG_DIR "tl-data.json", "w")) {
+        fprintf(last, "\"tl-data.%u.json\"", pid_);
         fclose(last);
     }
 
@@ -137,9 +78,8 @@ TraceLoggerGraphState::nextLoggerId()
 
     MOZ_ASSERT(initialized);
 
-    if (numLoggers > MAX_LOGGERS) {
-        fputs("TraceLogging: Can't create more than " XSTRING(MAX_LOGGERS) " different loggers.",
-              stderr);
+    if (numLoggers > 999) {
+        fprintf(stderr, "TraceLogging: Can't create more than 999 different loggers.");
         return uint32_t(-1);
     }
 
@@ -152,19 +92,8 @@ TraceLoggerGraphState::nextLoggerId()
     }
 
     int written = fprintf(out, "{\"tree\":\"tl-tree.%u.%d.tl\", \"events\":\"tl-event.%u.%d.tl\", "
-                               "\"dict\":\"tl-dict.%u.%d.json\", \"treeFormat\":\"64,64,31,1,32\"",
+                               "\"dict\":\"tl-dict.%u.%d.json\", \"treeFormat\":\"64,64,31,1,32\"}",
                           pid_, numLoggers, pid_, numLoggers, pid_, numLoggers);
-
-    if (written > 0) {
-        char threadName[16];
-        js::ThisThread::GetName(threadName, sizeof(threadName));
-        if (threadName[0])
-            written = fprintf(out, ", \"threadName\":\"%s\"", threadName);
-    }
-
-    if (written > 0)
-        written = fprintf(out, "}");
-
     if (written < 0) {
         fprintf(stderr, "TraceLogging: Error while writing.\n");
         return uint32_t(-1);
@@ -203,39 +132,57 @@ js::DestroyTraceLoggerGraphState()
 bool
 TraceLoggerGraph::init(uint64_t startTimestamp)
 {
-    auto fail = MakeScopeExit([&] { failed = true; });
+    if (!tree.init()) {
+        failed = true;
+        return false;
+    }
+    if (!stack.init()) {
+        failed = true;
+        return false;
+    }
 
-    if (!tree.init())
+    if (!EnsureTraceLoggerGraphState()) {
+        failed = true;
         return false;
-    if (!stack.init())
-        return false;
-
-    if (!EnsureTraceLoggerGraphState())
-        return false;
+    }
 
     uint32_t loggerId = traceLoggerGraphState->nextLoggerId();
-    if (loggerId == uint32_t(-1))
+    if (loggerId == uint32_t(-1)) {
+        failed = true;
         return false;
+    }
 
     uint32_t pid = traceLoggerGraphState->pid();
 
-    js::UniqueChars dictFilename = AllocTraceLogFilename("tl-dict.%u.%d.json", pid, loggerId);
-    dictFile = fopen(dictFilename.get(), "w");
-    if (!dictFile)
+    char dictFilename[sizeof TRACE_LOG_DIR "tl-dict.4294967295.100.json"];
+    sprintf(dictFilename, TRACE_LOG_DIR "tl-dict.%u.%d.json", pid, loggerId);
+    dictFile = fopen(dictFilename, "w");
+    if (!dictFile) {
+        failed = true;
         return false;
-    auto cleanupDict = MakeScopeExit([&] { fclose(dictFile); dictFile = nullptr; });
+    }
 
-    js::UniqueChars treeFilename = AllocTraceLogFilename("tl-tree.%u.%d.json", pid, loggerId);
-    treeFile = fopen(treeFilename.get(), "w+b");
-    if (!treeFile)
+    char treeFilename[sizeof TRACE_LOG_DIR "tl-tree.4294967295.100.tl"];
+    sprintf(treeFilename, TRACE_LOG_DIR "tl-tree.%u.%d.tl", pid, loggerId);
+    treeFile = fopen(treeFilename, "w+b");
+    if (!treeFile) {
+        fclose(dictFile);
+        dictFile = nullptr;
+        failed = true;
         return false;
-    auto cleanupTree = MakeScopeExit([&] { fclose(treeFile); treeFile = nullptr; });
+    }
 
-    js::UniqueChars eventFilename = AllocTraceLogFilename("tl-event.%u.%d.tl", pid, loggerId);
-    eventFile = fopen(eventFilename.get(), "wb");
-    if (!eventFile)
+    char eventFilename[sizeof TRACE_LOG_DIR "tl-event.4294967295.100.tl"];
+    sprintf(eventFilename, TRACE_LOG_DIR "tl-event.%u.%d.tl", pid, loggerId);
+    eventFile = fopen(eventFilename, "wb");
+    if (!eventFile) {
+        fclose(dictFile);
+        fclose(treeFile);
+        dictFile = nullptr;
+        treeFile = nullptr;
+        failed = true;
         return false;
-    auto cleanupEvent = MakeScopeExit([&] { fclose(eventFile); eventFile = nullptr; });
+    }
 
     // Create the top tree node and corresponding first stack item.
     TreeEntry& treeEntry = tree.pushUninitialized();
@@ -250,15 +197,18 @@ TraceLoggerGraph::init(uint64_t startTimestamp)
     stackEntry.setLastChildId(0);
     stackEntry.setActive(true);
 
-    if (fprintf(dictFile, "[") < 0) {
+    int written = fprintf(dictFile, "[");
+    if (written < 0) {
         fprintf(stderr, "TraceLogging: Error while writing.\n");
+        fclose(dictFile);
+        fclose(treeFile);
+        fclose(eventFile);
+        dictFile = nullptr;
+        treeFile = nullptr;
+        eventFile = nullptr;
+        failed = true;
         return false;
     }
-
-    fail.release();
-    cleanupDict.release();
-    cleanupTree.release();
-    cleanupEvent.release();
 
     return true;
 }
@@ -277,8 +227,8 @@ TraceLoggerGraph::~TraceLoggerGraph()
 
     if (!failed && treeFile) {
         // Make sure every start entry has a corresponding stop value.
-        // We temporarily enable logging for this. Stop doesn't need any extra data,
-        // so is safe to do even when we have encountered OOM.
+        // We temporary enable logging for this. Stop doesn't need any extra data,
+        // so is safe to do, even when we encountered OOM.
         enabled = 1;
         while (stack.size() > 1)
             stopEvent(0);
