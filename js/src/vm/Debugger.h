@@ -500,6 +500,12 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
                               WeakGlobalObjectSet::Enum* debugEnum);
 
     /*
+     * Report and clear the pending exception on ac.context, if any, and return
+     * JSTRAP_ERROR.
+     */
+    JSTrapStatus reportUncaughtException(mozilla::Maybe<AutoCompartment>& ac);
+
+    /*
      * Cope with an error or exception in a debugger hook.
      *
      * If callHook is true, then call the uncaughtExceptionHook, if any. If, in
