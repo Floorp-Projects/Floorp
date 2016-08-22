@@ -10,7 +10,6 @@
 #include "jsalloc.h"
 #include "jsstr.h"
 
-// Tree items, meaning they have a start and stop and form a nested tree.
 #define TRACELOGGER_TREE_ITEMS(_)                     \
     _(AnnotateScripts)                                \
     _(Baseline)                                       \
@@ -71,7 +70,6 @@
     _(IonBuilderRestartLoop)                          \
     _(VMSpecific)
 
-// Log items, with timestamp only.
 #define TRACELOGGER_LOG_ITEMS(_)                      \
     _(Bailout)                                        \
     _(Invalidation)                                   \
@@ -109,9 +107,8 @@ TLTextIdString(TraceLoggerTextId id)
 uint32_t
 TLStringToTextId(JSLinearString* str);
 
-// Return whether a given item id can be enabled/disabled.
 inline bool
-TLTextIdIsTogglable(uint32_t id)
+TLTextIdIsToggable(uint32_t id)
 {
     if (id == TraceLogger_Error)
         return false;
@@ -146,7 +143,7 @@ class ContinuousSpace {
     uint32_t size_;
     uint32_t capacity_;
 
-    // The maximum number of bytes of RAM a continuous space structure can take.
+    // The maximum amount of ram memory a continuous space structure can take (in bytes).
     static const uint32_t LIMIT = 200 * 1024 * 1024;
 
   public:

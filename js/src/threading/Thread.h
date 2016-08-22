@@ -185,12 +185,6 @@ Thread::Id GetId();
 // nothing.
 void SetName(const char* name);
 
-// Get the current thread name. As with SetName, not available on all
-// platforms. On these platforms getName() will give back an empty string (by
-// storing NUL in nameBuffer[0]). 'len' is the bytes available to be written in
-// 'nameBuffer', including the terminating NUL.
-void GetName(char* nameBuffer, size_t len);
-
 } // namespace ThisThread
 
 namespace detail {

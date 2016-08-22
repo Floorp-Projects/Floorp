@@ -358,9 +358,14 @@ TraceLoggerThread::getOrCreateEventPayload(const char* text)
 
     AutoTraceLog internal(this, TraceLogger_Internal);
 
-    char* str = js_strdup(text);
+    size_t len = strlen(text);
+    char* str = js_pod_malloc<char>(len + 1);
     if (!str)
         return nullptr;
+
+    DebugOnly<size_t> ret = snprintf(str, len + 1, "%s", text);
+    MOZ_ASSERT(ret == len);
+    MOZ_ASSERT(strlen(str) == len);
 
     uint32_t textId = nextTextId;
 
@@ -541,7 +546,7 @@ TraceLoggerThread::log(uint32_t id)
     MOZ_ASSERT(traceLoggerState);
 
     // We request for 3 items to add, since if we don't have enough room
-    // we record the time it took to make more space. To log this information
+    // we record the time it took to make more place. To log this information
     // we need 2 extra free entries.
     if (!events.hasSpaceForAdd(3)) {
         uint64_t start = rdtsc() - traceLoggerState->startupTime;
@@ -669,7 +674,7 @@ TraceLoggerThreadState::init()
         );
         for (uint32_t i = 1; i < TraceLogger_Last; i++) {
             TraceLoggerTextId id = TraceLoggerTextId(i);
-            if (!TLTextIdIsTogglable(id))
+            if (!TLTextIdIsToggable(id))
                 continue;
             printf("  %s\n", TLTextIdString(id));
         }
@@ -680,7 +685,7 @@ TraceLoggerThreadState::init()
 
     for (uint32_t i = 1; i < TraceLogger_Last; i++) {
         TraceLoggerTextId id = TraceLoggerTextId(i);
-        if (TLTextIdIsTogglable(id))
+        if (TLTextIdIsToggable(id))
             enabledTextIds[i] = ContainsFlag(env, TLTextIdString(id));
         else
             enabledTextIds[i] = true;
@@ -766,11 +771,11 @@ TraceLoggerThreadState::init()
         }
 
         if (strstr(options, "EnableMainThread"))
-            mainThreadEnabled = true;
+           mainThreadEnabled = true;
         if (strstr(options, "EnableOffThread"))
-            offThreadEnabled = true;
+           offThreadEnabled = true;
         if (strstr(options, "EnableGraph"))
-            graphSpewingEnabled = true;
+           graphSpewingEnabled = true;
     }
 
     startupTime = rdtsc();
@@ -785,7 +790,7 @@ TraceLoggerThreadState::init()
 void
 TraceLoggerThreadState::enableTextId(JSContext* cx, uint32_t textId)
 {
-    MOZ_ASSERT(TLTextIdIsTogglable(textId));
+    MOZ_ASSERT(TLTextIdIsToggable(textId));
 
     if (enabledTextIds[textId])
         return;
@@ -808,7 +813,7 @@ TraceLoggerThreadState::enableTextId(JSContext* cx, uint32_t textId)
 void
 TraceLoggerThreadState::disableTextId(JSContext* cx, uint32_t textId)
 {
-    MOZ_ASSERT(TLTextIdIsTogglable(textId));
+    MOZ_ASSERT(TLTextIdIsToggable(textId));
 
     if (!enabledTextIds[textId])
         return;
@@ -1011,10 +1016,10 @@ TraceLoggerEvent::~TraceLoggerEvent()
 TraceLoggerEvent&
 TraceLoggerEvent::operator=(const TraceLoggerEvent& other)
 {
-    if (other.hasPayload())
-        other.payload()->use();
     if (hasPayload())
         payload()->release();
+    if (other.hasPayload())
+        other.payload()->use();
 
     payload_ = other.payload_;
 
