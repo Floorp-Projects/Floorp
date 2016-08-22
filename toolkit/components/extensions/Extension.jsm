@@ -88,7 +88,6 @@ var {
   EventEmitter,
   LocaleData,
   Messenger,
-  injectAPI,
   instanceOf,
   flushJarCache,
 } = ExtensionUtils;
@@ -180,11 +179,8 @@ var Management = {
     this.schemaApis.push({namespace, getAPI});
   },
 
-  // Mash together into a single object all the APIs registered by the
-  // functions above. Return the merged object.
-  generateAPIs(context, apis, namespaces = null) {
-    let obj = {};
-
+  // Mash together all the APIs from apis into obj.
+  generateAPIs(context, apis, obj, namespaces = null) {
     // Recursively copy properties from source to dest.
     function copy(dest, source) {
       for (let prop in source) {
@@ -213,7 +209,6 @@ var Management = {
       api = api.getAPI(context);
       copy(obj, api);
     }
-    return obj;
   },
 
   // The ext-*.js scripts can ask to be notified for certain hooks.
@@ -625,11 +620,11 @@ GlobalManager = {
   },
 
   injectInObject(context, defaultCallback, dest, namespaces = null) {
-    let schemaApi = Management.generateAPIs(context, Management.schemaApis, namespaces);
-
-    // Add in any extra API namespaces which do not have implementations
-    // outside of their schema file.
-    schemaApi.extensionTypes = {};
+    let apis = {
+      extensionTypes: {},
+    };
+    Management.generateAPIs(context, Management.schemaApis, apis, namespaces);
+    Management.generateAPIs(context, context.extension.apis, apis, namespaces);
 
     let schemaWrapper = {
       get principal() {
@@ -645,11 +640,11 @@ GlobalManager = {
       },
 
       callFunction(path, name, args) {
-        return findPathInObject(schemaApi, path)[name](...args);
+        return findPathInObject(apis, path)[name](...args);
       },
 
       callFunctionNoReturn(path, name, args) {
-        findPathInObject(schemaApi, path)[name](...args);
+        findPathInObject(apis, path)[name](...args);
       },
 
       callAsyncFunction(path, name, args, callback) {
@@ -662,7 +657,7 @@ GlobalManager = {
 
         let promise;
         try {
-          promise = findPathInObject(schemaApi, path)[name](...args);
+          promise = findPathInObject(apis, path)[name](...args);
         } catch (e) {
           promise = Promise.reject(e);
         }
@@ -674,31 +669,28 @@ GlobalManager = {
         if (namespaces && !namespaces.includes(namespace)) {
           return false;
         }
-        return findPathInObject(schemaApi, [namespace]) != null;
+        return findPathInObject(apis, [namespace]) != null;
       },
 
       getProperty(path, name) {
-        return findPathInObject(schemaApi, path)[name];
+        return findPathInObject(apis, path)[name];
       },
 
       setProperty(path, name, value) {
-        findPathInObject(schemaApi, path)[name] = value;
+        findPathInObject(apis, path)[name] = value;
       },
 
       addListener(path, name, listener, args) {
-        findPathInObject(schemaApi, path)[name].addListener.call(null, listener, ...args);
+        findPathInObject(apis, path)[name].addListener.call(null, listener, ...args);
       },
       removeListener(path, name, listener) {
-        findPathInObject(schemaApi, path)[name].removeListener.call(null, listener);
+        findPathInObject(apis, path)[name].removeListener.call(null, listener);
       },
       hasListener(path, name, listener) {
-        return findPathInObject(schemaApi, path)[name].hasListener.call(null, listener);
+        return findPathInObject(apis, path)[name].hasListener.call(null, listener);
       },
     };
     Schemas.inject(dest, schemaWrapper);
-
-    let experimentalApis = Management.generateAPIs(context, context.extension.apis, namespaces);
-    injectAPI(experimentalApis, dest);
   },
 
   observe(document, topic, data) {
