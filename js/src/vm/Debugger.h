@@ -519,14 +519,16 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
      * do some things in the debugger compartment and some things in the
      * debuggee compartment.
      */
-    JSTrapStatus handleUncaughtException(mozilla::Maybe<AutoCompartment>& ac, bool callHook);
-    JSTrapStatus handleUncaughtException(mozilla::Maybe<AutoCompartment>& ac, MutableHandleValue vp, bool callHook,
+    JSTrapStatus handleUncaughtException(mozilla::Maybe<AutoCompartment>& ac);
+    JSTrapStatus handleUncaughtException(mozilla::Maybe<AutoCompartment>& ac,
+                                         MutableHandleValue vp,
                                          const mozilla::Maybe<HandleValue>& thisVForCheck = mozilla::Nothing(),
                                          AbstractFramePtr frame = NullFramePtr());
 
     JSTrapStatus handleUncaughtExceptionHelper(mozilla::Maybe<AutoCompartment>& ac,
-                                               MutableHandleValue* vp, bool callHook,
-                                               const mozilla::Maybe<HandleValue>& thisVForCheck, AbstractFramePtr frame);
+                                               MutableHandleValue* vp,
+                                               const mozilla::Maybe<HandleValue>& thisVForCheck,
+                                               AbstractFramePtr frame);
 
     /*
      * Handle the result of a hook that is expected to return a resumption
