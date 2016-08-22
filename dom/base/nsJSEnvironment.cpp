@@ -2534,10 +2534,6 @@ nsJSContext::EnsureStatics()
                                        "javascript.options.mem.gc_allocation_threshold_mb",
                                        (void *)JSGC_ALLOCATION_THRESHOLD);
 
-  Preferences::RegisterCallbackAndCall(SetMemoryGCPrefChangedCallback,
-                                       "javascript.options.mem.gc_decommit_threshold_mb",
-                                       (void *)JSGC_DECOMMIT_THRESHOLD);
-
   Preferences::RegisterCallbackAndCall(SetIncrementalCCPrefChangedCallback,
                                        "dom.cycle_collector.incremental");
 

@@ -37,11 +37,9 @@ testChangeParam("lowFrequencyHeapGrowth");
 testChangeParam("dynamicHeapGrowth");
 testChangeParam("dynamicMarkSlice");
 testChangeParam("allocationThreshold");
-testChangeParam("decommitThreshold");
 testChangeParam("minEmptyChunkCount");
 testChangeParam("maxEmptyChunkCount");
 testChangeParam("compactingEnabled");
 
 testLargeParamValue("highFrequencyLowLimit");
 testLargeParamValue("highFrequencyHighLimit");
-testLargeParamValue("decommitThreshold");

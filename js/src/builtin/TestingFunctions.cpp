@@ -360,7 +360,6 @@ MinorGC(JSContext* cx, unsigned argc, Value* vp)
     _("dynamicHeapGrowth",          JSGC_DYNAMIC_HEAP_GROWTH,            true)  \
     _("dynamicMarkSlice",           JSGC_DYNAMIC_MARK_SLICE,             true)  \
     _("allocationThreshold",        JSGC_ALLOCATION_THRESHOLD,           true)  \
-    _("decommitThreshold",          JSGC_DECOMMIT_THRESHOLD,             true)  \
     _("minEmptyChunkCount",         JSGC_MIN_EMPTY_CHUNK_COUNT,          true)  \
     _("maxEmptyChunkCount",         JSGC_MAX_EMPTY_CHUNK_COUNT,          true)  \
     _("compactingEnabled",          JSGC_COMPACTING_ENABLED,             true)  \
