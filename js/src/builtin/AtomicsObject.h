@@ -144,11 +144,6 @@ public:
     // or coarser.
     static mozilla::Atomic<js::Mutex*> lock_;
 
-#ifdef DEBUG
-    // Null or the thread holding the lock.
-    static mozilla::Atomic<PRThread*> lockHolder_;
-#endif
-
     // A flag that controls whether waiting is allowed.
     bool canWait_;
 };
