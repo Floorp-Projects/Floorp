@@ -21,6 +21,7 @@ if CONFIG['HOST_OS_ARCH'] == 'WINNT':
     HOST_OS_LIBS += [
         'ws2_32',
     ]
+    USE_STATIC_LIBS = True
 
 LOCAL_INCLUDES += [
     '/toolkit/mozapps/update/updater',
