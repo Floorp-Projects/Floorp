@@ -112,6 +112,8 @@ class External;
 class Function;
 class Gamepad;
 enum class ImageBitmapFormat : uint32_t;
+class IdleRequest;
+class IdleRequestCallback;
 class Location;
 class MediaQueryList;
 class MozSelfSupport;
@@ -752,6 +754,7 @@ public:
 
   // Update the VR displays for this window
   bool UpdateVRDisplays(nsTArray<RefPtr<mozilla::dom::VRDisplay>>& aDisplays);
+
   // Inner windows only.
   // Called to inform that the set of active VR displays has changed.
   void NotifyActiveVRDisplaysChanged();
@@ -1065,6 +1068,14 @@ public:
   int32_t RequestAnimationFrame(mozilla::dom::FrameRequestCallback& aCallback,
                                 mozilla::ErrorResult& aError);
   void CancelAnimationFrame(int32_t aHandle, mozilla::ErrorResult& aError);
+
+  uint32_t RequestIdleCallback(JSContext* aCx,
+                               mozilla::dom::IdleRequestCallback& aCallback,
+                               const mozilla::dom::IdleRequestOptions& aOptions,
+                               mozilla::ErrorResult& aError);
+  void CancelIdleCallback(uint32_t aHandle);
+
+
 #ifdef MOZ_WEBSPEECH
   mozilla::dom::SpeechSynthesis*
     GetSpeechSynthesis(mozilla::ErrorResult& aError);
@@ -1236,7 +1247,6 @@ public:
   already_AddRefed<nsWindowRoot> GetWindowRoot(mozilla::ErrorResult& aError);
 
   mozilla::dom::Performance* GetPerformance();
-
 protected:
   // Web IDL helpers
 
@@ -1849,8 +1859,22 @@ protected:
 
   uint32_t mSerial;
 
+  void DisableIdleCallbackRequests();
+  void UnthrottleIdleCallbackRequests();
+
+  void PostThrottledIdleCallback();
+
+  typedef mozilla::LinkedList<mozilla::dom::IdleRequest> IdleRequests;
+  static void InsertIdleCallbackIntoList(mozilla::dom::IdleRequest* aRequest,
+                                         IdleRequests& aList);
+
    // The current idle request callback timeout handle
   uint32_t mIdleCallbackTimeoutCounter;
+  // The current idle request callback handle
+  uint32_t mIdleRequestCallbackCounter;
+  IdleRequests mIdleRequestCallbacks;
+  IdleRequests mThrottledIdleRequestCallbacks;
+
 #ifdef DEBUG
   bool mSetOpenerWindowCalled;
   nsCOMPtr<nsIURI> mLastOpenedURI;
