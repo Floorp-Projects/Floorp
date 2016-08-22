@@ -381,6 +381,8 @@ mochitest-browser-chrome:
     chunks:
         by-test-platform:
             linux64-jsdcov/opt: 35
+            linux64/debug: 12
+            linux32/debug: 12
             linux64-asan/opt: 10
             default: 7
     e10s:
@@ -393,6 +395,7 @@ mochitest-browser-chrome:
             linux64-jsdcov/opt: 7200
             linux64-ccov/opt: 7200
             linux64/debug: 5400
+            linux32/debug: 5400
             default: 3600
     mozharness:
         script: desktop_unittest.py
