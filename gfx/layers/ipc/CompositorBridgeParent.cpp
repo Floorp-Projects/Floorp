@@ -2584,7 +2584,11 @@ CrossProcessCompositorBridgeParent::AllocPAPZParent(const uint64_t& aLayersId)
     return nullptr;
   }
 
-  RefPtr<RemoteContentController> controller = new RemoteContentController(aLayersId);
+  RemoteContentController* controller = new RemoteContentController(aLayersId);
+
+  // Increment the controller's refcount before we return it. This will keep the
+  // controller alive until it is released by IPDL in DeallocPAPZParent.
+  controller->AddRef();
 
   MonitorAutoLock lock(*sIndirectLayerTreesLock);
   CompositorBridgeParent::LayerTreeState& state = sIndirectLayerTrees[aLayersId];
@@ -2597,6 +2601,8 @@ CrossProcessCompositorBridgeParent::AllocPAPZParent(const uint64_t& aLayersId)
 bool
 CrossProcessCompositorBridgeParent::DeallocPAPZParent(PAPZParent* aActor)
 {
+  RemoteContentController* controller = static_cast<RemoteContentController*>(aActor);
+  controller->Release();
   return true;
 }
 
