@@ -628,7 +628,13 @@ BlockReflowInput::AddFloat(nsLineLayout*       aLineLayout,
     if (placed) {
       // Pass on updated available space to the current inline reflow engine
       WritingMode wm = mReflowInput.GetWritingMode();
-      nsFlowAreaRect floatAvailSpace = GetFloatAvailableSpace(mBCoord);
+      // If we have mLineBSize, we are reflowing the line again due to
+      // LineReflowStatus::RedoMoreFloats. We should use mLineBSize to query the
+      // correct available space.
+      nsFlowAreaRect floatAvailSpace =
+        mLineBSize.isNothing()
+        ? GetFloatAvailableSpace(mBCoord)
+        : GetFloatAvailableSpaceForBSize(mBCoord, mLineBSize.value(), nullptr);
       LogicalRect availSpace(wm, floatAvailSpace.mRect.IStart(wm), mBCoord,
                              floatAvailSpace.mRect.ISize(wm),
                              floatAvailSpace.mRect.BSize(wm));
