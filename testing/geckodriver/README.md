@@ -63,17 +63,17 @@ contain any of the following fields:
         <td><code>args</code>
         <td>Array of strings
         <td>
-        <td>Command line arguments to pass to the
- Firefox binary. These must include the leading `--` where required
- e.g. `["--devtools"]`.
+        <td>Command line arguments to pass to the Firefox binary.
+          These must include the leading <code>--</code> where required
+          e.g. <code>["--devtools"]</code>.
     </tr>
     <tr>
         <td><code>profile</code>
         <td>String
         <td>New empty profile
         <td>Base64-encoded zip of a profile directory
- to use as the profile for the Firefox instance. This may be used to
- e.g. install extensions or custom certificates.
+          to use as the profile for the Firefox instance.
+          This may be used to e.g. install extensions or custom certificates.
     </tr>
 </table>
 
