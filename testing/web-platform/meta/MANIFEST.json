@@ -37644,12 +37644,6 @@
         ]
       },
       "testharness": {
-        "XMLHttpRequest/event-error.html": [
-          {
-            "path": "XMLHttpRequest/event-error.html",
-            "url": "/XMLHttpRequest/event-error.html"
-          }
-        ],
         "css-shapes/basic-shape-circle-ellipse-serialization.html": [
           {
             "path": "css-shapes/basic-shape-circle-ellipse-serialization.html",
