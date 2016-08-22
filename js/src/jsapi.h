@@ -1734,13 +1734,6 @@ typedef enum JSGCParamKey {
     JSGC_ALLOCATION_THRESHOLD = 19,
 
     /**
-     * We decommit memory lazily. If more than this number of megabytes is
-     * available to be decommitted, then JS_MaybeGC will trigger a shrinking GC
-     * to decommit it.
-     */
-    JSGC_DECOMMIT_THRESHOLD = 20,
-
-    /**
      * We try to keep at least this many unused chunks in the free chunk pool at
      * all times, even after a shrinking GC.
      */
