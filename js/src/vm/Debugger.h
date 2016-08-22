@@ -567,7 +567,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
 
     bool processResumptionValue(mozilla::Maybe<AutoCompartment>& ac, AbstractFramePtr frame,
                                 const mozilla::Maybe<HandleValue>& maybeThis, HandleValue rval,
-                                JSTrapStatus* statusp, MutableHandleValue vp);
+                                JSTrapStatus& statusp, MutableHandleValue vp);
 
     GlobalObject* unwrapDebuggeeArgument(JSContext* cx, const Value& v);
 
