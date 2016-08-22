@@ -5,9 +5,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=635636
 -->
 <head>
   <title>Test for Bug 635636</title>
-  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
-  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css">
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=635636">Mozilla Bug 635636</a>
@@ -33,8 +33,9 @@ addLoadEvent(function() {
     w.document.designMode = 'on';
     w.location = "data:text/plain,2";
     d = w.document.getElementsByTagName("div")[0];
-    const Ci = Components.interfaces;
-    var mainWindow = w.QueryInterface(Ci.nsIInterfaceRequestor)
+    const Ci = SpecialPowers.Ci;
+    var mainWindow = SpecialPowers.wrap(w)
+                      .QueryInterface(Ci.nsIInterfaceRequestor)
                       .getInterface(Ci.nsIWebNavigation)
                       .QueryInterface(Ci.nsIDocShellTreeItem)
                       .rootTreeItem
