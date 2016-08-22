@@ -386,6 +386,20 @@ function isInvalidCachedGuidError(error) {
     "Trying to update the GUIDs cache with an invalid GUID";
 }
 
+// A helper for whenever we want to know if a GUID doesn't exist in the places
+// database. Primarily used to detect orphans on incoming records.
+var GUIDMissing = Task.async(function* (guid) {
+  try {
+    yield PlacesUtils.promiseItemId(guid);
+    return false;
+  } catch (ex) {
+    if (ex.message == "no item found for the given GUID") {
+      return true;
+    }
+    throw ex;
+  }
+});
+
 // Tag queries use a `place:` URL that refers to the tag folder ID. When we
 // apply a synced tag query from a remote client, we need to update the URL to
 // point to the local tag folder.
@@ -462,10 +476,10 @@ var reparentOrphans = Task.async(function* (item) {
 // Inserts a synced bookmark into the database.
 var insertSyncBookmark = Task.async(function* (insertInfo) {
   let requestedParentGuid = insertInfo.parentGuid;
-  let parent = yield PlacesUtils.bookmarks.fetch(requestedParentGuid);
+  let isOrphan = yield GUIDMissing(insertInfo.parentGuid);
 
   // Default to "unfiled" for new bookmarks if the parent doesn't exist.
-  if (parent) {
+  if (!isOrphan) {
     BookmarkSyncLog.debug(`insertSyncBookmark: Item ${
       insertInfo.guid} is not an orphan`);
   } else {
@@ -481,7 +495,7 @@ var insertSyncBookmark = Task.async(function* (insertInfo) {
 
   let newItem;
   if (insertInfo.kind == BookmarkSyncUtils.KINDS.LIVEMARK) {
-    newItem = yield insertSyncLivemark(parent, insertInfo);
+    newItem = yield insertSyncLivemark(insertInfo);
   } else {
     let item = yield PlacesUtils.bookmarks.insert(insertInfo);
     let newId = yield PlacesUtils.promiseItemId(item.guid);
@@ -493,7 +507,7 @@ var insertSyncBookmark = Task.async(function* (insertInfo) {
   }
 
   // If the item is an orphan, annotate it with its real parent ID.
-  if (!parent) {
+  if (isOrphan) {
     yield annotateOrphan(newItem, requestedParentGuid);
   }
 
@@ -504,7 +518,7 @@ var insertSyncBookmark = Task.async(function* (insertInfo) {
 });
 
 // Inserts a synced livemark.
-var insertSyncLivemark = Task.async(function* (requestedParent, insertInfo) {
+var insertSyncLivemark = Task.async(function* (insertInfo) {
   let parentId = yield PlacesUtils.promiseItemId(insertInfo.parentGuid);
   let parentIsLivemark = PlacesUtils.annotations.itemHasAnnotation(parentId,
     PlacesUtils.LMANNO_FEEDURI);
@@ -693,8 +707,8 @@ var updateSyncBookmark = Task.async(function* (updateInfo) {
       if (PlacesUtils.isRootItem(oldId)) {
         throw new Error(`Cannot move Places root ${oldId}`);
       }
-      let parent = yield PlacesUtils.bookmarks.fetch(requestedParentGuid);
-      if (parent) {
+      isOrphan = yield GUIDMissing(requestedParentGuid);
+      if (!isOrphan) {
         BookmarkSyncLog.debug(`updateSyncBookmark: Item ${
           updateInfo.guid} is not an orphan`);
       } else {
@@ -704,7 +718,6 @@ var updateSyncBookmark = Task.async(function* (updateInfo) {
         BookmarkSyncLog.trace(`updateSyncBookmark: Item ${
           updateInfo.guid} is an orphan: could not find parent ${
           requestedParentGuid}`);
-        isOrphan = true;
         delete updateInfo.parentGuid;
       }
       // If we're reparenting the item, pass the default index so that
