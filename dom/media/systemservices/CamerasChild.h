@@ -12,7 +12,7 @@
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/camera/PCamerasChild.h"
 #include "mozilla/camera/PCamerasParent.h"
-#include "DeviceChangeCallback.h"
+#include "mozilla/media/DeviceChangeCallback.h"
 #include "mozilla/Mutex.h"
 #include "base/singleton.h"
 #include "nsCOMPtr.h"

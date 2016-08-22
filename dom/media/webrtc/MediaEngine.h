@@ -11,7 +11,7 @@
 #include "MediaTrackConstraints.h"
 #include "mozilla/dom/MediaStreamTrackBinding.h"
 #include "mozilla/dom/VideoStreamTrack.h"
-#include "DeviceChangeCallback.h"
+#include "mozilla/media/DeviceChangeCallback.h"
 
 namespace mozilla {
 
