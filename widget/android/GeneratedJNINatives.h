@@ -400,6 +400,29 @@ const JNINativeMethod PrefsHelper::Natives<Impl>::methods[] = {
 };
 
 template<class Impl>
+class PresentationMediaPlayerManager::Natives : public mozilla::jni::NativeImpl<PresentationMediaPlayerManager, Impl>
+{
+public:
+    static const JNINativeMethod methods[3];
+};
+
+template<class Impl>
+const JNINativeMethod PresentationMediaPlayerManager::Natives<Impl>::methods[] = {
+
+    mozilla::jni::MakeNativeMethod<PresentationMediaPlayerManager::AddPresentationSurface_t>(
+            mozilla::jni::NativeStub<PresentationMediaPlayerManager::AddPresentationSurface_t, Impl>
+            ::template Wrap<&Impl::AddPresentationSurface>),
+
+    mozilla::jni::MakeNativeMethod<PresentationMediaPlayerManager::InvalidateAndScheduleComposite_t>(
+            mozilla::jni::NativeStub<PresentationMediaPlayerManager::InvalidateAndScheduleComposite_t, Impl>
+            ::template Wrap<&Impl::InvalidateAndScheduleComposite>),
+
+    mozilla::jni::MakeNativeMethod<PresentationMediaPlayerManager::RemovePresentationSurface_t>(
+            mozilla::jni::NativeStub<PresentationMediaPlayerManager::RemovePresentationSurface_t, Impl>
+            ::template Wrap<&Impl::RemovePresentationSurface>)
+};
+
+template<class Impl>
 class Telemetry::Natives : public mozilla::jni::NativeImpl<Telemetry, Impl>
 {
 public:

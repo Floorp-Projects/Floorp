@@ -350,10 +350,10 @@ gfxWindowsPlatform::gfxWindowsPlatform()
 
 gfxWindowsPlatform::~gfxWindowsPlatform()
 {
+  mozilla::gfx::Factory::D2DCleanup();
+
   DeviceManagerD3D11::Shutdown();
   mDeviceManager = nullptr;
-
-  mozilla::gfx::Factory::D2DCleanup();
 
   /*
    * Uninitialize COM
@@ -471,6 +471,12 @@ gfxWindowsPlatform::HandleDeviceReset()
   imgLoader::PrivateBrowsingLoader()->ClearCache(true);
   imgLoader::PrivateBrowsingLoader()->ClearCache(false);
   gfxAlphaBoxBlur::ShutdownBlurCache();
+
+  if (XRE_IsContentProcess()) {
+    // Fetch updated device parameters.
+    FetchAndImportContentDeviceData();
+    UpdateANGLEConfig();
+  }
 
   InitializeDevices();
   UpdateANGLEConfig();
@@ -1437,15 +1443,17 @@ InitializeANGLEConfig()
 void
 gfxWindowsPlatform::InitializeConfig()
 {
-  if (!XRE_IsParentProcess()) {
-    // Child processes init their configuration via UpdateDeviceInitData().
-    return;
+  if (XRE_IsParentProcess()) {
+    // The parent process first determines which features can be attempted.
+    // This information is relayed to content processes and the GPU process.
+    InitializeD3D9Config();
+    InitializeD3D11Config();
+    InitializeANGLEConfig();
+    InitializeD2DConfig();
+  } else {
+    FetchAndImportContentDeviceData();
+    InitializeANGLEConfig();
   }
-
-  InitializeD3D9Config();
-  InitializeD3D11Config();
-  InitializeANGLEConfig();
-  InitializeD2DConfig();
 }
 
 void
@@ -1521,29 +1529,6 @@ gfxWindowsPlatform::InitializeD3D11Config()
   }
 }
 
-bool
-gfxWindowsPlatform::UpdateDeviceInitData()
-{
-  if (!gfxPlatform::UpdateDeviceInitData()) {
-    return false;
-  }
-
-  gfxConfig::InitOrUpdate(
-    Feature::D3D11_COMPOSITING,
-    GetParentDevicePrefs().useD3D11(),
-    FeatureStatus::Disabled,
-    "Disabled by parent process");
-
-  gfxConfig::InitOrUpdate(
-    Feature::DIRECT2D,
-    GetParentDevicePrefs().useD2D1(),
-    FeatureStatus::Disabled,
-    "Disabled by parent process");
-
-  InitializeANGLEConfig();
-  return true;
-}
-
 /* static */ void
 gfxWindowsPlatform::RecordContentDeviceFailure(TelemetryDeviceCode aDevice)
 {
@@ -1561,9 +1546,6 @@ gfxWindowsPlatform::RecordContentDeviceFailure(TelemetryDeviceCode aDevice)
 void
 gfxWindowsPlatform::InitializeDevices()
 {
-  // Ask the parent process for an updated list of which devices to create.
-  UpdateDeviceInitData();
-
   // If acceleration is disabled, we refuse to initialize anything.
   if (!gfxConfig::IsEnabled(Feature::HW_COMPOSITING)) {
     return;
@@ -1594,14 +1576,17 @@ gfxWindowsPlatform::InitializeDevices()
     return;
   }
 
+  bool shouldUseD2D = gfxConfig::IsEnabled(Feature::DIRECT2D);
+
   // First, initialize D3D11. If this succeeds we attempt to use Direct2D.
   InitializeD3D11();
   InitializeD2D();
 
-  if (!gfxConfig::IsEnabled(Feature::DIRECT2D)) {
-    if (XRE_IsContentProcess() && GetParentDevicePrefs().useD2D1()) {
-      RecordContentDeviceFailure(TelemetryDeviceCode::D2D1);
-    }
+  if (!gfxConfig::IsEnabled(Feature::DIRECT2D) &&
+      XRE_IsContentProcess() &&
+      shouldUseD2D)
+  {
+    RecordContentDeviceFailure(TelemetryDeviceCode::D2D1);
   }
 }
 
@@ -1614,12 +1599,18 @@ gfxWindowsPlatform::InitializeD3D11()
   // blacklisted, then this function will abort if WARP is disabled, causing us
   // to fallback to D3D9 or Basic layers. If WARP is not disabled it will use
   // a WARP device which should always be available on Windows 7 and higher.
-  FeatureState& d3d11 = gfxConfig::GetFeature(Feature::D3D11_COMPOSITING);
-  if (!d3d11.IsEnabled()) {
+  if (!gfxConfig::IsEnabled(Feature::D3D11_COMPOSITING)) {
     return;
   }
 
-  DeviceManagerD3D11::Get()->CreateDevices();
+  DeviceManagerD3D11* dm = DeviceManagerD3D11::Get();
+  if (XRE_IsParentProcess()) {
+    if (!dm->CreateCompositorDevices()) {
+      return;
+    }
+  }
+
+  dm->CreateContentDevices();
 }
 
 void
@@ -2027,7 +2018,7 @@ gfxWindowsPlatform::GetAcceleratedCompositorBackends(nsTArray<LayersBackend>& aB
     aBackends.AppendElement(LayersBackend::LAYERS_D3D9);
   }
 
-  if (DeviceManagerD3D11::Get()->GetCompositorDevice()) {
+  if (gfxConfig::IsEnabled(Feature::D3D11_COMPOSITING)) {
     aBackends.AppendElement(LayersBackend::LAYERS_D3D11);
   } else {
     NS_WARNING("Direct3D 11-accelerated layers are not supported on this system.");
@@ -2039,30 +2030,72 @@ gfxWindowsPlatform::GetAcceleratedCompositorBackends(nsTArray<LayersBackend>& aB
 }
 
 void
-gfxWindowsPlatform::GetDeviceInitData(DeviceInitData* aOut)
+gfxWindowsPlatform::ImportGPUDeviceData(const mozilla::gfx::GPUDeviceData& aData)
+{
+  MOZ_ASSERT(XRE_IsParentProcess());
+
+  gfxPlatform::ImportGPUDeviceData(aData);
+
+  gfxConfig::ImportChange(Feature::D3D11_COMPOSITING, aData.d3d11Compositing());
+  gfxConfig::ImportChange(Feature::D3D9_COMPOSITING, aData.d3d9Compositing());
+
+  DeviceManagerD3D11* dm = DeviceManagerD3D11::Get();
+  if (gfxConfig::IsEnabled(Feature::D3D11_COMPOSITING)) {
+    dm->ImportDeviceInfo(aData.d3d11Device());
+  } else {
+    // There should be no devices, so this just takes away the device status.
+    dm->ResetDevices();
+
+    // Make sure we disable D2D if content processes might use it.
+    FeatureState& d2d1 = gfxConfig::GetFeature(Feature::DIRECT2D);
+    if (d2d1.IsEnabled()) {
+      d2d1.SetFailed(
+        FeatureStatus::Unavailable,
+        "Direct2D requires Direct3D 11 compositing",
+        NS_LITERAL_CSTRING("FEATURE_FAILURE_D2D_D3D11_COMP"));
+    }
+  }
+
+  // For completeness (and messaging in about:support). Content recomputes this
+  // on its own, and we won't use ANGLE in the UI process if we're using a GPU
+  // process.
+  UpdateANGLEConfig();
+}
+
+void
+gfxWindowsPlatform::ImportContentDeviceData(const mozilla::gfx::ContentDeviceData& aData)
+{
+  MOZ_ASSERT(XRE_IsContentProcess());
+
+  gfxPlatform::ImportContentDeviceData(aData);
+
+  const DevicePrefs& prefs = aData.prefs();
+  gfxConfig::Inherit(Feature::D3D11_COMPOSITING, prefs.d3d11Compositing());
+  gfxConfig::Inherit(Feature::D3D9_COMPOSITING, prefs.d3d9Compositing());
+  gfxConfig::Inherit(Feature::DIRECT2D, prefs.useD2D1());
+
+  if (gfxConfig::IsEnabled(Feature::D3D11_COMPOSITING)) {
+    DeviceManagerD3D11* dm = DeviceManagerD3D11::Get();
+    dm->ImportDeviceInfo(aData.d3d11());
+  }
+}
+
+void
+gfxWindowsPlatform::BuildContentDeviceData(ContentDeviceData* aOut)
 {
   // Check for device resets before giving back new graphics information.
   UpdateRenderMode();
 
-  gfxPlatform::GetDeviceInitData(aOut);
+  gfxPlatform::BuildContentDeviceData(aOut);
 
-  // IPDL initializes each field to false for us so we can early return.
-  if (!gfxConfig::IsEnabled(Feature::D3D11_COMPOSITING)) {
-    return;
-  }
+  const FeatureState& d3d11 = gfxConfig::GetFeature(Feature::D3D11_COMPOSITING);
+  aOut->prefs().d3d11Compositing() = d3d11.GetValue();
+  aOut->prefs().d3d9Compositing() = gfxConfig::GetValue(Feature::D3D9_COMPOSITING);
+  aOut->prefs().useD2D1() = gfxConfig::GetValue(Feature::DIRECT2D);
 
-  DeviceManagerD3D11* dm = DeviceManagerD3D11::Get();
-
-  aOut->useD3D11() = true;
-  aOut->d3d11TextureSharingWorks() = dm->TextureSharingWorks();
-  aOut->useD2D1() = gfxConfig::IsEnabled(Feature::DIRECT2D);
-
-  if (RefPtr<ID3D11Device> device = dm->GetCompositorDevice()) {
-    DXGI_ADAPTER_DESC desc;
-    if (!D3D11Checks::GetDxgiDesc(device, &desc)) {
-      return;
-    }
-    aOut->adapter() = DxgiAdapterDesc::From(desc);
+  if (d3d11.IsEnabled()) {
+    DeviceManagerD3D11* dm = DeviceManagerD3D11::Get();
+    dm->ExportDeviceInfo(&aOut->d3d11());
   }
 }
 

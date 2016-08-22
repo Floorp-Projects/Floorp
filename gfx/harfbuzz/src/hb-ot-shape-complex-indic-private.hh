@@ -60,11 +60,10 @@ enum indic_category_t {
   OT_Repha = 15, /* Atomically-encoded logical or visual repha. */
   OT_Ra = 16,
   OT_CM = 17,  /* Consonant-Medial. */
-  OT_Symbol = 18, /* Avagraha, etc that take marks (SM,A,VD). */
-  OT_CM2 = 31 /* Consonant-Medial, second slot. */
+  OT_Symbol = 18 /* Avagraha, etc that take marks (SM,A,VD). */
 };
 
-#define MEDIAL_FLAGS (FLAG (OT_CM) | FLAG (OT_CM2))
+#define MEDIAL_FLAGS (FLAG (OT_CM))
 
 /* Note:
  *

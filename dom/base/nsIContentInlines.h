@@ -10,6 +10,7 @@
 #include "nsIContent.h"
 #include "nsIDocument.h"
 #include "nsContentUtils.h"
+#include "mozilla/dom/Element.h"
 
 inline bool
 nsIContent::IsInHTMLDocument() const
@@ -22,5 +23,49 @@ nsIContent::IsInChromeDocument()
 {
   return nsContentUtils::IsChromeDoc(OwnerDoc());
 }
+
+inline mozilla::dom::ShadowRoot* nsIContent::GetShadowRoot() const
+{
+  if (!IsElement()) {
+    return nullptr;
+  }
+
+  return AsElement()->FastGetShadowRoot();
+}
+
+inline nsINode* nsINode::GetFlattenedTreeParentNode() const
+{
+  nsINode* parent = GetParentNode();
+
+  // Try to short-circuit past the complicated and not-exactly-fast logic for
+  // computing the flattened parent.
+  //
+  // There are three cases where we need might something other than parentNode:
+  //   (1) The node is an explicit child of an XBL-bound element, re-bound
+  //       to an XBL insertion point.
+  //   (2) The node is a top-level element in a shadow tree, whose flattened
+  //       parent is the host element (as opposed to the actual parent which
+  //       is the shadow root).
+  //   (3) The node is an explicit child of an element with a shadow root,
+  //       re-bound to an insertion point.
+  bool needSlowCall = HasFlag(NODE_MAY_BE_IN_BINDING_MNGR) ||
+                      IsInShadowTree() ||
+                      (parent && parent->IsContent() &&
+                       parent->AsContent()->GetShadowRoot());
+  if (MOZ_UNLIKELY(needSlowCall)) {
+    MOZ_ASSERT(IsContent());
+    return AsContent()->GetFlattenedTreeParentNodeInternal();
+  }
+
+  return parent;
+}
+
+inline nsIContent*
+nsIContent::GetFlattenedTreeParent() const
+{
+  nsINode* parent = GetFlattenedTreeParentNode();
+  return (parent && parent->IsContent()) ? parent->AsContent() : nullptr;
+}
+
 
 #endif // nsIContentInlines_h

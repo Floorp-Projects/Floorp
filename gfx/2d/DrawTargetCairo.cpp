@@ -731,7 +731,8 @@ DrawTargetCairo::LockBits(uint8_t** aData, IntSize* aSize,
     }
   }
 #endif
-  if (cairo_surface_get_type(surf) == CAIRO_SURFACE_TYPE_IMAGE) {
+  if (cairo_surface_get_type(surf) == CAIRO_SURFACE_TYPE_IMAGE &&
+      cairo_surface_status(surf) == CAIRO_STATUS_SUCCESS) {
     PointDouble offset;
     cairo_surface_get_device_offset(target, &offset.x, &offset.y);
     // verify the device offset can be converted to integers suitable for a bounds rect

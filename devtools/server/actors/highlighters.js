@@ -656,6 +656,10 @@ const { BoxModelHighlighter } = require("./highlighters/box-model");
 register(BoxModelHighlighter);
 exports.BoxModelHighlighter = BoxModelHighlighter;
 
+const { CssGridHighlighter } = require("./highlighters/css-grid");
+register(CssGridHighlighter);
+exports.CssGridHighlighter = CssGridHighlighter;
+
 const { CssTransformHighlighter } = require("./highlighters/css-transform");
 register(CssTransformHighlighter);
 exports.CssTransformHighlighter = CssTransformHighlighter;

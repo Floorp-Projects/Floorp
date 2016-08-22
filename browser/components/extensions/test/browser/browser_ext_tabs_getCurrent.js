@@ -62,6 +62,7 @@ add_task(function* () {
   yield extension.awaitMessage("tab-finished");
 
   clickBrowserAction(extension);
+  yield awaitExtensionPanel(extension);
   yield extension.awaitMessage("popup-finished");
   yield closeBrowserAction(extension);
 

@@ -608,4 +608,10 @@ interface nsILoadInfo : nsISupports
     MOZ_ALWAYS_SUCCEEDS(MaybeIncreaseTainting(tainting));
   }
 %}
+
+  /**
+   * Returns true if this load is for top level document.
+   * Note that the load for a sub-frame's document will return false here.
+   */
+  [infallible] readonly attribute boolean isTopLevelLoad;
 };

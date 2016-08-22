@@ -88,7 +88,7 @@ hb_tag_from_string (const char *str, int len)
 /**
  * hb_tag_to_string:
  * @tag: 
- * @buf: (array fixed-size=4): 
+ * @buf: (out caller-allocates) (array fixed-size=4) (element-type uint8_t): 
  *
  * 
  *
@@ -506,6 +506,9 @@ hb_script_get_horizontal_direction (hb_script_t script)
 
     /* Unicode-8.0 additions */
     case HB_SCRIPT_OLD_HUNGARIAN:
+
+    /* Unicode-9.0 additions */
+    case HB_SCRIPT_ADLAM:
 
       return HB_DIRECTION_RTL;
   }

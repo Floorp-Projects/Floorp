@@ -68,14 +68,16 @@ class FeatureState
                                  const char* aMessage)> StatusIterCallback;
   void ForEachStatusChange(const StatusIterCallback& aCallback) const;
 
-  const nsACString& GetFailureId() const;
+  const char* GetFailureMessage() const;
+  const nsCString& GetFailureId() const;
+
+  bool DisabledByDefault() const;
 
  private:
   void SetUser(FeatureStatus aStatus, const char* aMessage);
   void SetEnvironment(FeatureStatus aStatus, const char* aMessage);
   void SetRuntime(FeatureStatus aStatus, const char* aMessage);
   bool IsForcedOnByUser() const;
-  bool DisabledByDefault() const;
   const char* GetRuntimeMessage() const;
   bool IsInitialized() const {
     return mDefault.IsInitialized();
@@ -84,6 +86,9 @@ class FeatureState
   void AssertInitialized() const {
     MOZ_ASSERT(IsInitialized());
   }
+
+  // Clear all state.
+  void Reset();
 
  private:
   void SetFailureId(const nsACString& aFailureId);

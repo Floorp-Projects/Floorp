@@ -1,0 +1,132 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1288361 - Block scripts with incorrect MIME type</title>
+  <!-- Including SimpleTest.js so we can use waitForExplicitFinish !-->
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<script id="scriptMIMEScript"></script>
+<script id="scriptMIMEImage"></script>
+
+<script class="testbody" type="text/javascript">
+/* Description of the test:
+ * We perform 6 sub tests and make sure that scripts with incorrect MIME
+ * types are blocked correctly:
+ *   Test 1: <script src="">              MIME script -> LOAD
+ *   Test 2: <script src="">              MIME image/ -> BLOCKED
+ *   Test 3: new Worker()                 MIME script -> LOAD
+ *   Test 4: new Worker()                 MIME image/ -> BLOCKED
+ *   Test 5: new Worker(importScripts())  MIME script -> LOAD
+ *   Test 6: new Worker(importScripts())  MIME image/ -> BLOCKED
+ */
+
+SpecialPowers.setBoolPref("security.block_script_with_mime_image", true);
+
+SimpleTest.waitForExplicitFinish();
+
+const NUM_TESTS = 6;
+var testCounter = 0;
+
+function checkFinish() {
+	testCounter++;
+	if (testCounter === NUM_TESTS) {
+		SimpleTest.finish();
+	}
+}
+
+// ------------------------------------------------------------------
+// Test 1: <script src="">              MIME script -> LOAD
+var scriptMIMEScript = document.getElementById("scriptMIMEScript");
+scriptMIMEScript.onload = function() {
+  ok(true, "<script> with correct MIME type should load");
+  checkFinish();
+}
+scriptMIMEScript.onerror = function() {
+  ok(false, "<script> with correct MIME type should load");
+  checkFinish();
+}
+scriptMIMEScript.src = "file_block_script_wrong_mime_server.sjs?scriptMIMEScript";
+
+
+// ------------------------------------------------------------------
+// Test 2: <script src="">              MIME image/ -> BLOCKED
+var scriptMIMEImage = document.getElementById("scriptMIMEImage");
+scriptMIMEImage.onload = function() {
+  ok(false, "<script> with MIME type 'image/' should be blocked");
+  checkFinish();
+}
+scriptMIMEImage.onerror = function() {
+  ok(true, "<script> with MIME type 'image/' should be blocked");
+  checkFinish();
+}
+scriptMIMEImage.src = "file_block_script_wrong_mime_server.sjs?scriptMIMEImage";
+
+// ------------------------------------------------------------------
+// Test 3: new Worker()                 MIME script -> LOAD
+var workerCorrectMIME = new Worker("file_block_script_wrong_mime_server.sjs?scriptMIMEScript");
+workerCorrectMIME.onmessage = function(event) {
+  is(event.data, "worker-loaded", "worker() with correct MIME type should load!");
+  checkFinish();
+};
+workerCorrectMIME.onerror = function(error) {
+  ok(false, "worker() with correct MIME type should load!");
+  error.preventDefault();
+  checkFinish();
+};
+workerCorrectMIME.postMessage("workerCorrectMIME");
+
+
+// ------------------------------------------------------------------
+// Test 4: new Worker()                 MIME image/ -> BLOCKED
+var workerWrongMIME = new Worker("file_block_script_wrong_mime_server.sjs?scriptMIMEImage");
+workerWrongMIME.onmessage = function(event) {
+  ok(false, "worker() with MIME type 'image/' should be blocked!");
+  checkFinish();
+};
+workerWrongMIME.onerror = function(error) {
+  var msg = error.message;
+  ok((msg.match(/^NetworkError/) || msg.match(/Failed to load worker script/)),
+     "worker() with MIME type 'image/' should be blocked!");
+  error.preventDefault();
+  checkFinish();
+};
+workerWrongMIME.postMessage("workerWrongMIME");
+
+
+// ------------------------------------------------------------------
+// Test 5: new Worker(importScripts())  MIME script -> LOAD
+var workerImportCorrectMIME = new Worker("file_block_importscript_wrong_mime_allowed.js");
+workerImportCorrectMIME.onmessage = function(event) {
+  is(event.data, "worker-loaded", "worker(importScripts()) with correct MIME type should load!");
+  checkFinish();
+};
+workerImportCorrectMIME.onerror = function(error) {
+  ok(false, "worker(importScripts()) with correct MIME type should load!");
+  error.preventDefault();
+  checkFinish();
+};
+workerImportCorrectMIME.postMessage("workerImportCorrectMIME");
+
+
+// ------------------------------------------------------------------
+// Test 6: new Worker(importScripts())  MIME image/ -> BLOCKED
+var workerImportWrongMIME = new Worker("file_block_importscript_wrong_mime_blocked.js");
+workerImportWrongMIME.onmessage = function(event) {
+  ok(false, "worker(importScripts()) with MIME type 'image/' should be blocked!");
+  checkFinish();
+};
+workerImportWrongMIME.onerror = function(error) {
+  var msg = error.message;
+  ok((msg.match(/^NetworkError/) || msg.match(/Failed to load worker script/)),
+     "worker(importScripts()) with MIME type 'image/' should be blocked!");
+  error.preventDefault();
+  checkFinish();
+};
+workerImportWrongMIME.postMessage("workerImportWrongMIME");
+
+</script>
+</body>
+</html>

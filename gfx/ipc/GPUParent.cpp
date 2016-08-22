@@ -17,6 +17,9 @@
 #include "VRManager.h"
 #include "VRManagerParent.h"
 #include "VsyncBridgeParent.h"
+#if defined(XP_WIN)
+# include "mozilla/gfx/DeviceManagerD3D11.h"
+#endif
 
 namespace mozilla {
 namespace gfx {
@@ -45,6 +48,9 @@ GPUParent::Init(base::ProcessId aParentPid,
   gfxPrefs::GetSingleton();
   gfxConfig::Init();
   gfxVars::Initialize();
+#if defined(XP_WIN)
+  DeviceManagerD3D11::Init();
+#endif
   CompositorThreadHolder::Start();
   VRManager::ManagerInit();
   gfxPlatform::InitNullMetadata();
@@ -53,7 +59,8 @@ GPUParent::Init(base::ProcessId aParentPid,
 
 bool
 GPUParent::RecvInit(nsTArray<GfxPrefSetting>&& prefs,
-                    nsTArray<GfxVarUpdate>&& vars)
+                    nsTArray<GfxVarUpdate>&& vars,
+                    const DevicePrefs& devicePrefs)
 {
   const nsTArray<gfxPrefs::Pref*>& globalPrefs = gfxPrefs::all();
   for (auto& setting : prefs) {
@@ -63,6 +70,25 @@ GPUParent::RecvInit(nsTArray<GfxPrefSetting>&& prefs,
   for (const auto& var : vars) {
     gfxVars::ApplyUpdate(var);
   }
+
+  // Inherit device preferences.
+  gfxConfig::Inherit(Feature::HW_COMPOSITING, devicePrefs.hwCompositing());
+  gfxConfig::Inherit(Feature::D3D11_COMPOSITING, devicePrefs.d3d11Compositing());
+  gfxConfig::Inherit(Feature::D3D9_COMPOSITING, devicePrefs.d3d9Compositing());
+  gfxConfig::Inherit(Feature::OPENGL_COMPOSITING, devicePrefs.oglCompositing());
+  gfxConfig::Inherit(Feature::DIRECT2D, devicePrefs.useD2D1());
+
+#if defined(XP_WIN)
+  if (gfxConfig::IsEnabled(Feature::D3D11_COMPOSITING)) {
+    DeviceManagerD3D11::Get()->CreateCompositorDevices();
+  }
+#endif
+
+  // Send a message to the UI process that we're done.
+  GPUDeviceData data;
+  RecvGetDeviceStatus(&data);
+  Unused << SendInitComplete(data);
+
   return true;
 }
 
@@ -99,6 +125,43 @@ bool
 GPUParent::RecvUpdateVar(const GfxVarUpdate& aUpdate)
 {
   gfxVars::ApplyUpdate(aUpdate);
+  return true;
+}
+
+static void
+CopyFeatureChange(Feature aFeature, FeatureChange* aOut)
+{
+  FeatureState& feature = gfxConfig::GetFeature(aFeature);
+  if (feature.DisabledByDefault() || feature.IsEnabled()) {
+    // No change:
+    //   - Disabled-by-default means the parent process told us not to use this feature.
+    //   - Enabled means we were told to use this feature, and we didn't discover anything
+    //     that would prevent us from doing so.
+    *aOut = null_t();
+    return;
+  }
+
+  MOZ_ASSERT(!feature.IsEnabled());
+
+  nsCString message;
+  message.AssignASCII(feature.GetFailureMessage());
+
+  *aOut = FeatureFailure(feature.GetValue(), message, feature.GetFailureId());
+}
+
+bool
+GPUParent::RecvGetDeviceStatus(GPUDeviceData* aOut)
+{
+  CopyFeatureChange(Feature::D3D11_COMPOSITING, &aOut->d3d11Compositing());
+  CopyFeatureChange(Feature::D3D9_COMPOSITING, &aOut->d3d9Compositing());
+  CopyFeatureChange(Feature::OPENGL_COMPOSITING, &aOut->oglCompositing());
+
+#if defined(XP_WIN)
+  if (DeviceManagerD3D11* dm = DeviceManagerD3D11::Get()) {
+    dm->ExportDeviceInfo(&aOut->d3d11Device());
+  }
+#endif
+
   return true;
 }
 
@@ -170,6 +233,9 @@ GPUParent::ActorDestroy(ActorDestroyReason aWhy)
     mVsyncBridge->Shutdown();
   }
   CompositorThreadHolder::Shutdown();
+#if defined(XP_WIN)
+  DeviceManagerD3D11::Shutdown();
+#endif
   gfxVars::Shutdown();
   gfxConfig::Shutdown();
   gfxPrefs::DestroySingleton();

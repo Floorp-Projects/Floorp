@@ -38,7 +38,7 @@
 
   var BrowserApp = Services.wm.getMostRecentWindow("navigator:browser").BrowserApp;
   SimpleTest.waitForExplicitFinish();
-  SimpleTest.requestLongerTimeout(2);  // several long waits and GCs make for a long-running test
+  SimpleTest.requestLongerTimeout(3);  // several long waits and GCs make for a long-running test
   SimpleTest.requestCompleteLog();  // so that "PERFHERDER_DATA" can be scraped from the log
 
   function checkpoint(aName) {

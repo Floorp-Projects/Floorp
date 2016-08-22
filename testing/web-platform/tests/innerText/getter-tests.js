@@ -260,6 +260,8 @@ testText("<div>abc<!--comment-->def", "abcdef", "comment ignored");
 /**** text-transform ****/
 
 testText("<div><div style='text-transform:uppercase'>abc", "ABC", "text-transform is applied");
+testText("<div><div style='text-transform:uppercase'>Ma\xDF", "MASS", "text-transform handles es-zet");
+testText("<div><div lang='tr' style='text-transform:uppercase'>i \u0131", "\u0130 I", "text-transform handles Turkish casing");
 
 /**** block-in-inline ****/
 

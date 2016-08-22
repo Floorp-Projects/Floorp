@@ -12,12 +12,15 @@ import android.os.Bundle;
 import android.support.v7.media.MediaRouter;
 import android.util.Log;
 import android.view.Display;
+import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 
 import org.mozilla.gecko.AppConstants.Versions;
+
+import org.mozilla.gecko.annotation.WrapForJNI;
 
 /**
  * A MediaPlayerManager with API 17+ Presentation support.
@@ -61,7 +64,8 @@ public class PresentationMediaPlayerManager extends MediaPlayerManager {
             }
 
             if (presentation == null) {
-                presentation = new GeckoPresentation(getActivity(), display);
+                final GeckoView geckoView = (GeckoView) getActivity().findViewById(R.id.layer_view);
+                presentation = new GeckoPresentation(getActivity(), display, geckoView);
 
                 try {
                     presentation.show();
@@ -77,10 +81,23 @@ public class PresentationMediaPlayerManager extends MediaPlayerManager {
         }
     }
 
-    private final static class GeckoPresentation extends Presentation {
+    @WrapForJNI(calledFrom = "ui")
+    /* protected */ static native void invalidateAndScheduleComposite(GeckoView geckoView);
+
+    @WrapForJNI(calledFrom = "ui")
+    /* protected */ static native void addPresentationSurface(GeckoView geckoView, Surface surface);
+
+    @WrapForJNI(calledFrom = "ui")
+    /* protected */ static native void removePresentationSurface();
+
+    private static final class GeckoPresentation extends Presentation {
         private SurfaceView mView;
-        public GeckoPresentation(Context context, Display display) {
+        private GeckoView mGeckoView;
+
+        public GeckoPresentation(Context context, Display display, GeckoView geckoView) {
             super(context, display);
+
+            mGeckoView = geckoView;
         }
 
         @Override
@@ -91,27 +108,32 @@ public class PresentationMediaPlayerManager extends MediaPlayerManager {
             setContentView(mView, new ViewGroup.LayoutParams(
                     ViewGroup.LayoutParams.MATCH_PARENT,
                     ViewGroup.LayoutParams.MATCH_PARENT));
-            mView.getHolder().addCallback(new SurfaceListener());
+            mView.getHolder().addCallback(new SurfaceListener(mGeckoView));
         }
     }
 
-    private static class SurfaceListener implements SurfaceHolder.Callback {
+    private static final class SurfaceListener implements SurfaceHolder.Callback {
+        private GeckoView mGeckoView;
+
+        public SurfaceListener(GeckoView geckoView) {
+            mGeckoView = geckoView;
+        }
+
         @Override
         public void surfaceChanged(SurfaceHolder holder, int format, int width,
                                    int height) {
             // Surface changed so force a composite
-            GeckoAppShell.invalidateAndScheduleComposite();
+            invalidateAndScheduleComposite(mGeckoView);
         }
 
         @Override
         public void surfaceCreated(SurfaceHolder holder) {
-            GeckoAppShell.addPresentationSurface(holder.getSurface());
-            GeckoAppShell.invalidateAndScheduleComposite();
+            addPresentationSurface(mGeckoView, holder.getSurface());
         }
 
         @Override
         public void surfaceDestroyed(SurfaceHolder holder) {
-            GeckoAppShell.removePresentationSurface(holder.getSurface());
+            removePresentationSurface();
         }
     }
 }

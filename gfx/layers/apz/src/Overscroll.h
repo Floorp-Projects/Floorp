@@ -115,7 +115,7 @@ public:
                          bool aShouldOverscrollY) override {
     RefPtr<GeckoContentController> controller = mApzc.GetGeckoContentController();
     if (controller && (aShouldOverscrollX || aShouldOverscrollY)) {
-      controller->UpdateOverscrollOffset(aOverscroll.x, aOverscroll.y);
+      controller->UpdateOverscrollOffset(aOverscroll.x, aOverscroll.y, mApzc.IsRootContent());
       aOverscroll = ParentLayerPoint();
     }
   }
@@ -123,7 +123,7 @@ public:
   void HandleFlingOverscroll(const ParentLayerPoint& aVelocity) override {
     RefPtr<GeckoContentController> controller = mApzc.GetGeckoContentController();
     if (controller) {
-      controller->UpdateOverscrollVelocity(aVelocity.x, aVelocity.y);
+      controller->UpdateOverscrollVelocity(aVelocity.x, aVelocity.y, mApzc.IsRootContent());
     }
   }
 

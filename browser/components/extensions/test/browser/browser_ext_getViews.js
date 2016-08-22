@@ -137,6 +137,7 @@ add_task(function* () {
 
   function* triggerPopup(win, callback) {
     yield clickBrowserAction(extension, win);
+    yield awaitExtensionPanel(extension, win);
 
     yield extension.awaitMessage("popup-ready");
 

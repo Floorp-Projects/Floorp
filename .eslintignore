@@ -113,6 +113,7 @@ devtools/server/*.jsm
 !devtools/server/websocket-server.js
 devtools/server/actors/**
 !devtools/server/actors/inspector.js
+!devtools/server/actors/highlighters/css-grid.js
 !devtools/server/actors/highlighters/eye-dropper.js
 !devtools/server/actors/webbrowser.js
 !devtools/server/actors/webextension.js

@@ -563,6 +563,9 @@ public:
 
   virtual int32_t Pid() const override;
 
+  // Use the PHangMonitor channel to ask the child to repaint a tab.
+  void ForceTabPaint(TabParent* aTabParent, uint64_t aLayerObserverEpoch);
+
 protected:
   void OnChannelConnected(int32_t pid) override;
 
@@ -1104,7 +1107,7 @@ private:
 
   virtual bool RecvProfile(const nsCString& aProfile) override;
 
-  virtual bool RecvGetGraphicsDeviceInitData(DeviceInitData* aOut) override;
+  virtual bool RecvGetGraphicsDeviceInitData(ContentDeviceData* aOut) override;
 
   void StartProfiler(nsIProfilerStartParams* aParams);
 

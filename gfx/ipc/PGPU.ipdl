@@ -32,7 +32,9 @@ sync protocol PGPU
 {
 parent:
   // Sent by the UI process to initiate core settings.
-  async Init(GfxPrefSetting[] prefs, GfxVarUpdate[] vars);
+  async Init(GfxPrefSetting[] prefs,
+             GfxVarUpdate[] vars,
+             DevicePrefs devicePrefs);
 
   async InitVsyncBridge(Endpoint<PVsyncBridgeParent> endpoint);
   async InitImageBridge(Endpoint<PImageBridgeParent> endpoint);
@@ -55,6 +57,15 @@ parent:
   async NewContentVRManager(Endpoint<PVRManagerParent> endpoint);
 
   async DeallocateLayerTreeId(uint64_t layersId);
+
+  // Request the current DeviceStatus from the GPU process. This blocks until
+  // one is available (i.e., Init has completed).
+  sync GetDeviceStatus() returns (GPUDeviceData status);
+
+child:
+  // Sent when the GPU process has initialized devices. This occurs once, after
+  // Init().
+  async InitComplete(GPUDeviceData data);
 };
 
 } // namespace gfx

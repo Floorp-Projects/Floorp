@@ -41,30 +41,40 @@ HB_BEGIN_DECLS
 /* Object types */
 
 /**
+ * hb_gobject_blob_get_type:
+ *
  * Since: 0.9.2
  **/
 HB_EXTERN GType hb_gobject_blob_get_type (void);
 #define HB_GOBJECT_TYPE_BLOB (hb_gobject_blob_get_type ())
 
 /**
+ * hb_gobject_buffer_get_type:
+ *
  * Since: 0.9.2
  **/
 HB_EXTERN GType hb_gobject_buffer_get_type (void);
 #define HB_GOBJECT_TYPE_BUFFER (hb_gobject_buffer_get_type ())
 
 /**
+ * hb_gobject_face_get_type:
+ *
  * Since: 0.9.2
  **/
 HB_EXTERN GType hb_gobject_face_get_type (void);
 #define HB_GOBJECT_TYPE_FACE (hb_gobject_face_get_type ())
 
 /**
+ * hb_gobject_font_get_type:
+ *
  * Since: 0.9.2
  **/
 HB_EXTERN GType hb_gobject_font_get_type (void);
 #define HB_GOBJECT_TYPE_FONT (hb_gobject_font_get_type ())
 
 /**
+ * hb_gobject_font_funcs_get_type:
+ *
  * Since: 0.9.2
  **/
 HB_EXTERN GType hb_gobject_font_funcs_get_type (void);
@@ -77,6 +87,8 @@ HB_EXTERN GType hb_gobject_shape_plan_get_type (void);
 #define HB_GOBJECT_TYPE_SHAPE_PLAN (hb_gobject_shape_plan_get_type ())
 
 /**
+ * hb_gobject_unicode_funcs_get_type:
+ *
  * Since: 0.9.2
  **/
 HB_EXTERN GType hb_gobject_unicode_funcs_get_type (void);

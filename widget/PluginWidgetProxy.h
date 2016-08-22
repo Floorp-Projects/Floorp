@@ -40,7 +40,7 @@ public:
                                        const LayoutDeviceIntRect& aRect,
                                        nsWidgetInitData* aInitData = nullptr)
                                        override;
-  NS_IMETHOD Destroy() override;
+  virtual void Destroy() override;
   NS_IMETHOD SetFocus(bool aRaise = false) override;
   NS_IMETHOD SetParent(nsIWidget* aNewParent) override;
 
