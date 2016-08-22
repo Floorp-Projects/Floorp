@@ -1360,8 +1360,7 @@ Debugger::reportUncaughtException(Maybe<AutoCompartment>& ac)
 }
 
 JSTrapStatus
-Debugger::handleUncaughtExceptionHelper(Maybe<AutoCompartment>& ac,
-                                        MutableHandleValue* vp, bool callHook,
+Debugger::handleUncaughtExceptionHelper(Maybe<AutoCompartment>& ac, MutableHandleValue* vp,
                                         const Maybe<HandleValue>& thisVForCheck,
                                         AbstractFramePtr frame)
 {
@@ -1372,7 +1371,7 @@ Debugger::handleUncaughtExceptionHelper(Maybe<AutoCompartment>& ac,
     MOZ_ASSERT(EnterDebuggeeNoExecute::isLockedInStack(cx, *this));
 
     if (cx->isExceptionPending()) {
-        if (callHook && uncaughtExceptionHook) {
+        if (uncaughtExceptionHook) {
             RootedValue exc(cx);
             if (!cx->getPendingException(&exc))
                 return JSTRAP_ERROR;
@@ -1399,16 +1398,16 @@ Debugger::handleUncaughtExceptionHelper(Maybe<AutoCompartment>& ac,
 }
 
 JSTrapStatus
-Debugger::handleUncaughtException(Maybe<AutoCompartment>& ac, MutableHandleValue vp, bool callHook,
+Debugger::handleUncaughtException(Maybe<AutoCompartment>& ac, MutableHandleValue vp,
                                   const Maybe<HandleValue>& thisVForCheck, AbstractFramePtr frame)
 {
-    return handleUncaughtExceptionHelper(ac, &vp, callHook, thisVForCheck, frame);
+    return handleUncaughtExceptionHelper(ac, &vp, thisVForCheck, frame);
 }
 
 JSTrapStatus
-Debugger::handleUncaughtException(Maybe<AutoCompartment>& ac, bool callHook)
+Debugger::handleUncaughtException(Maybe<AutoCompartment>& ac)
 {
-    return handleUncaughtExceptionHelper(ac, nullptr, callHook, mozilla::Nothing(), NullFramePtr());
+    return handleUncaughtExceptionHelper(ac, nullptr, mozilla::Nothing(), NullFramePtr());
 }
 
 /* static */ void
@@ -1592,14 +1591,14 @@ Debugger::processHandlerResultHelper(Maybe<AutoCompartment>& ac, bool ok, const 
                                      MutableHandleValue vp)
 {
     if (!ok)
-        return handleUncaughtException(ac, vp, true, thisVForCheck, frame);
+        return handleUncaughtException(ac, vp, thisVForCheck, frame);
 
     JSContext* cx = ac->context()->asJSContext();
     RootedValue rvRoot(cx, rv);
     JSTrapStatus status = JSTRAP_CONTINUE;
     RootedValue v(cx);
     if (!processResumptionValue(ac, frame, thisVForCheck, rvRoot, status, &v))
-        return handleUncaughtException(ac, vp, true, thisVForCheck, frame);
+        return handleUncaughtException(ac, vp, thisVForCheck, frame);
     vp.set(v);
     return status;
 }
@@ -1761,7 +1760,7 @@ Debugger::fireNewScript(JSContext* cx, Handle<DebuggerScriptReferent> scriptRefe
     RootedValue dsval(cx, ObjectValue(*dsobj));
     RootedValue rv(cx);
     if (!js::Call(cx, fval, object, dsval, &rv))
-        handleUncaughtException(ac, true);
+        handleUncaughtException(ac);
 }
 
 void
@@ -1788,7 +1787,7 @@ Debugger::fireOnGarbageCollectionHook(JSContext* cx,
     RootedValue dataVal(cx, ObjectValue(*dataObj));
     RootedValue rv(cx);
     if (!js::Call(cx, fval, object, dataVal, &rv))
-        handleUncaughtException(ac, true);
+        handleUncaughtException(ac);
 }
 
 template <typename HookIsEnabledFun /* bool (Debugger*) */,
@@ -2055,7 +2054,7 @@ Debugger::fireNewGlobalObject(JSContext* cx, Handle<GlobalObject*> global, Mutab
     // uncaughtExceptionHook and tells the caller whether we should execute the
     // rest of the onNewGlobalObject hooks or not.
     JSTrapStatus status = ok ? JSTRAP_CONTINUE
-                             : handleUncaughtException(ac, vp, true);
+                             : handleUncaughtException(ac, vp);
     MOZ_ASSERT(!cx->isExceptionPending());
     return status;
 }
@@ -2222,7 +2221,7 @@ Debugger::firePromiseHook(JSContext* cx, Hook hook, HandleObject promise, Mutabl
     }
 
     JSTrapStatus status = ok ? JSTRAP_CONTINUE
-                             : handleUncaughtException(ac, vp, true);
+                             : handleUncaughtException(ac, vp);
     MOZ_ASSERT(!cx->isExceptionPending());
     return status;
 }
