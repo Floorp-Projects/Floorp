@@ -21,7 +21,7 @@ startTest({
     // Gizmo.mp4 is about 5.6s
     [ 'media.suspend-bkgnd-video.delay-ms', 10000 ]
   ],
-  tests: [ { name: "gizmo.mp4" } ],
+  tests: gDecodeSuspendTests,
   runTest: (test, token) => {
     let v = appendVideoToDoc(test.name, token);
     manager.started(token);
