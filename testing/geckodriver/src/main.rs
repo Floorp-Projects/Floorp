@@ -164,15 +164,13 @@ fn main() {
 #[cfg(test)]
 mod tests {
     use std::collections::BTreeMap;
-    use marionette::{MarionetteSettings, MarionetteHandler};
+    use marionette::{FirefoxOptions};
     use webdriver::command::NewSessionParameters;
     use rustc_serialize::json::Json;
     use std::fs::File;
     use rustc_serialize::base64::{ToBase64, Config, CharacterSet, Newline};
     use mozprofile::preferences::Pref;
     use std::io::Read;
-
-    const MARIONETTE_PORT: u16 = 2828;
 
     #[test]
     fn test_profile() {
@@ -189,31 +187,22 @@ mod tests {
 
         let desired: BTreeMap<String, Json> = BTreeMap::new();
         let mut required: BTreeMap<String, Json> = BTreeMap::new();
-        required.insert("firefox_profile".into(), encoded_profile);
-        let capabilities = NewSessionParameters {
+        let mut firefox_options: BTreeMap<String, Json> = BTreeMap::new();
+        firefox_options.insert("profile".into(), encoded_profile);
+        required.insert("firefoxOptions".into(), Json::Object(firefox_options));
+        let mut capabilities = NewSessionParameters {
             desired: desired,
             required: required
         };
 
-        let settings = MarionetteSettings {
-            port: None,
-            binary: None,
-            connect_existing: false,
-            log_level: None,
-        };
-        let handler = MarionetteHandler::new(settings);
-
-        let mut gecko_profile = handler.load_profile(&capabilities).unwrap().unwrap();
-        handler.set_prefs(MARIONETTE_PORT, &mut gecko_profile, true).unwrap();
-
-        let prefs = gecko_profile.user_prefs().unwrap();
+        let options = FirefoxOptions::from_capabilities(&mut capabilities).unwrap();
+        let mut profile = options.profile.unwrap();
+        let prefs = profile.user_prefs().unwrap();
 
         println!("{:?}",prefs.prefs);
 
         assert_eq!(prefs.get("startup.homepage_welcome_url"),
                    Some(&Pref::new("data:text/html,PASS")));
-        assert_eq!(prefs.get("marionette.defaultPrefs.enabled"),
-                   Some(&Pref::new(true)));
     }
 
 }

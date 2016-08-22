@@ -221,11 +221,6 @@ impl ToMarionette for GeckoContextParameters {
     }
 }
 
-pub enum BrowserLauncher {
-    None,
-    BinaryLauncher(PathBuf),
-}
-
 /// Logger levels from [Log.jsm]
 /// (https://developer.mozilla.org/en/docs/Mozilla/JavaScript_code_modules/Log.jsm).
 #[derive(Debug)]
@@ -271,156 +266,75 @@ impl FromStr for LogLevel {
     }
 }
 
-pub struct MarionetteSettings {
-    pub port: Option<u16>,
+#[derive(Default)]
+pub struct FirefoxOptions {
     pub binary: Option<PathBuf>,
-    pub connect_existing: bool,
-
-    /// Optionally increase Marionette's verbosity by providing a log
-    /// level. The Gecko default is LogLevel::Info for optimised
-    /// builds and LogLevel::Debug for debug builds.
-    pub log_level: Option<LogLevel>,
+    pub profile: Option<Profile>,
+    pub args: Option<Vec<String>>,
 }
 
-pub struct MarionetteHandler {
-    connection: Mutex<Option<MarionetteConnection>>,
-    binary: Option<PathBuf>,
-    connect_existing: bool,
-    browser: Option<FirefoxRunner>,
-    port: Option<u16>,
-    log_level: Option<LogLevel>,
-}
 
-impl MarionetteHandler {
-    pub fn new(settings: MarionetteSettings) -> MarionetteHandler {
-        MarionetteHandler {
-            connection: Mutex::new(None),
-            binary: settings.binary,
-            connect_existing: settings.connect_existing,
-            browser: None,
-            port: settings.port,
-            log_level: settings.log_level,
-        }
-    }
-
-    fn create_connection(&mut self, session_id: &Option<String>,
-                         capabilities: &NewSessionParameters) -> WebDriverResult<()> {
-        let profile = try!(self.load_profile(capabilities));
-        let args = try!(self.load_browser_args(capabilities));
-        let port = match self.port {
-            Some(x) => x,
-            None => try!(get_free_port())
-        };
-
-        let launcher = if self.connect_existing {
-            BrowserLauncher::None
+impl FirefoxOptions {
+    pub fn from_capabilities(capabilities: &mut NewSessionParameters) -> WebDriverResult<FirefoxOptions> {
+        if let Some(options) = capabilities.consume("firefoxOptions") {
+            let firefox_options = try!(options
+                                       .as_object()
+                                       .ok_or(WebDriverError::new(
+                                           ErrorStatus::InvalidArgument,
+                                           "'firefoxOptions' capability was not an object")));
+            let binary = try!(FirefoxOptions::load_binary(&firefox_options));
+            let profile = try!(FirefoxOptions::load_profile(&firefox_options));
+            let args = try!(FirefoxOptions::load_args(&firefox_options));
+            Ok(FirefoxOptions {
+                binary: binary,
+                profile: profile,
+                args: args,
+            })
         } else {
-            let binary = try!(self.binary_path(capabilities));
-            if let Some(path) = binary {
-                BrowserLauncher::BinaryLauncher(path)
-            } else {
-                return Err(WebDriverError::new(ErrorStatus::UnknownError,
-                                               "Expected browser binary location, \
-                                               but unable to find binary in default location, \
-                                               no 'firefox_binary' capability provided, \
-                                               and no binary flag set on the command line"));
-            }
-        };
-        match self.start_browser(launcher, port, profile, args) {
-            Err(e) => {
-                return Err(WebDriverError::new(ErrorStatus::UnknownError,
-                                               e.description().to_owned()));
-            },
-            Ok(_) => {}
+            Ok(Default::default())
         }
-
-        let mut connection = MarionetteConnection::new(port, session_id.clone());
-        try!(connection.connect());
-        self.connection = Mutex::new(Some(connection));
-
-        Ok(())
     }
 
-    fn start_browser(&mut self, launcher: BrowserLauncher, port: u16, profile: Option<Profile>, args: Option<Vec<String>>) -> Result<(), RunnerError> {
-        let custom_profile = profile.is_some();
-
-        match launcher {
-            BrowserLauncher::BinaryLauncher(ref binary) => {
-                let mut runner = try!(FirefoxRunner::new(&binary, profile));
-                if let Some(cmd_args) = args {
-                    runner.args().extend(cmd_args);
-                };
-
-                try!(self.set_prefs(port, &mut runner.profile, custom_profile));
-
-                info!("Starting browser {}", binary.to_string_lossy());
-                try!(runner.start());
-
-                self.browser = Some(runner);
-            },
-            BrowserLauncher::None => {}
-        }
-
-        Ok(())
-    }
-
-    pub fn set_prefs(&self, port: u16, profile: &mut Profile, custom_profile: bool)
-                 -> Result<(), RunnerError> {
-        let prefs = try!(profile.user_prefs());
-        prefs.insert("marionette.defaultPrefs.port", Pref::new(port as i64));
-
-        prefs.insert_slice(&FIREFOX_REQUIRED_PREFERENCES[..]);
-        if !custom_profile {
-            prefs.insert_slice(&FIREFOX_DEFAULT_PREFERENCES[..]);
-        };
-        if let Some(ref l) = self.log_level {
-            prefs.insert("marionette.logging", Pref::new(l.to_string()));
-        };
-
-        try!(prefs.write());
-        Ok(())
-    }
-
-    fn binary_path(&self, capabilities: &NewSessionParameters) -> WebDriverResult<Option<PathBuf>> {
-        if let Some(binary_capability) = capabilities.get("firefox_binary") {
-            Ok(Some(PathBuf::from(try!(binary_capability
+    fn load_binary(options: &BTreeMap<String, Json>) -> WebDriverResult<Option<PathBuf>> {
+        if let Some(path) = options.get("binary") {
+            Ok(Some(PathBuf::from(try!(path
                                        .as_string()
                                        .ok_or(WebDriverError::new(
                                            ErrorStatus::InvalidArgument,
-                                           "'firefox_binary' capability was not a string"))))))
-        } else if self.binary.is_some() {
-            Ok(self.binary.as_ref().map(|x| x.clone()))
+                                           "'binary' capability was not a string"))))))
         } else {
-            Ok(firefox_default_path())
+            Ok(None)
         }
     }
 
-    pub fn load_profile(&self, capabilities: &NewSessionParameters) -> WebDriverResult<Option<Profile>> {
-        let profile_opt = capabilities.get("firefox_profile");
-        if profile_opt.is_none() {
-            return Ok(None);
+    fn load_profile(options: &BTreeMap<String, Json>) -> WebDriverResult<Option<Profile>> {
+        if let Some(profile_json) = options.get("profile") {
+            let profile_base64 = try!(profile_json
+                                      .as_string()
+                                      .ok_or(
+                                          WebDriverError::new(ErrorStatus::UnknownError,
+                                                              "Profile was not a string")));
+            let profile_zip = &*try!(profile_base64.from_base64());
+
+            // Create an emtpy profile directory
+            let profile = try!(Profile::new(None));
+            try!(unzip_buffer(profile_zip,
+                              profile.temp_dir
+                              .as_ref()
+                              .expect("Profile doesn't have a path")
+                              .path()));
+
+            Ok(Some(profile))
+        } else {
+            Ok(None)
         }
-
-        debug!("Using custom profile");
-
-        let profile_json = profile_opt.unwrap();
-        let profile_base64 = try!(profile_json.as_string().ok_or(
-            WebDriverError::new(ErrorStatus::UnknownError,"Profile was not a string")));
-        let profile_zip = &*try!(profile_base64.from_base64());
-
-        // Create an emtpy profile directory
-        let profile = try!(Profile::new(None));
-        try!(unzip_buffer(profile_zip,
-                          profile.temp_dir.as_ref().expect("Profile doesn't have a path").path()));
-
-        Ok(Some(profile))
     }
 
-    pub fn load_browser_args(&self, capabilities: &NewSessionParameters) -> WebDriverResult<Option<Vec<String>>> {
-        if let Some(args_json) = capabilities.get("firefox_args") {
+    fn load_args(options: &BTreeMap<String, Json>) -> WebDriverResult<Option<Vec<String>>> {
+        if let Some(args_json) = options.get("args") {
             let args_array = try!(args_json.as_array()
                                   .ok_or(WebDriverError::new(ErrorStatus::UnknownError,
-                                                             "Arguments was not an array")));
+                                                             "Arguments were not an array")));
             let args = try!(args_array
                             .iter()
                             .map(|x| x.as_string().map(|x| x.to_owned()))
@@ -432,6 +346,118 @@ impl MarionetteHandler {
         } else {
             Ok(None)
         }
+    }
+}
+
+pub struct MarionetteSettings {
+    pub port: Option<u16>,
+    pub binary: Option<PathBuf>,
+    pub connect_existing: bool,
+
+    /// Optionally increase Marionette's verbosity by providing a log
+    /// level. The Gecko default is LogLevel::Info for optimised
+    /// builds and LogLevel::Debug for debug builds.
+    pub log_level: Option<LogLevel>,
+}
+
+impl Default for MarionetteSettings {
+    fn default() -> MarionetteSettings {
+        MarionetteSettings {
+            port: None,
+            binary: None,
+            connect_existing: false,
+            log_level: Some(LogLevel::Info),
+        }
+    }
+}
+
+pub struct MarionetteHandler {
+    connection: Mutex<Option<MarionetteConnection>>,
+    settings: MarionetteSettings,
+    browser: Option<FirefoxRunner>,
+}
+
+impl MarionetteHandler {
+    pub fn new(settings: MarionetteSettings) -> MarionetteHandler {
+        MarionetteHandler {
+            connection: Mutex::new(None),
+            settings: settings,
+            browser: None,
+        }
+    }
+
+    fn create_connection(&mut self, session_id: &Option<String>,
+                         capabilities: &mut NewSessionParameters) -> WebDriverResult<()> {
+
+        let options = try!(FirefoxOptions::from_capabilities(capabilities));
+
+        let port = self.settings.port.unwrap_or(try!(get_free_port()));
+
+        if !self.settings.connect_existing {
+            try!(self.start_browser(port, options));
+        };
+
+        let mut connection = MarionetteConnection::new(port, session_id.clone());
+        try!(connection.connect());
+        self.connection = Mutex::new(Some(connection));
+
+        Ok(())
+    }
+
+    fn start_browser(&mut self, port: u16, mut options: FirefoxOptions) -> WebDriverResult<()> {
+        let binary = try!(self.binary_path(&mut options)
+                          .ok_or(WebDriverError::new(ErrorStatus::UnknownError,
+                                                     "Expected browser binary location, \
+                                                      but unable to find binary in default location, \
+                                                      no 'firefoxOptions.binary' capability provided, \
+                                                      and no binary flag set on the command line")));
+
+        let custom_profile = options.profile.is_some();
+
+        let mut runner = try!(FirefoxRunner::new(&binary, options.profile.take())
+                              .map_err(|e| WebDriverError::new(ErrorStatus::UnknownError,
+                                                               e.description().to_owned())));
+        if let Some(args) = options.args.take() {
+            runner.args().extend(args);
+        };
+
+        try!(self.set_prefs(port, &mut runner.profile, custom_profile)
+             .map_err(|e| WebDriverError::new(ErrorStatus::UnknownError,
+                                              format!("Failed to set preferences:\n{}",
+                                                      e.description()))));
+
+        info!("Starting browser {}", binary.to_string_lossy());
+        try!(runner.start()
+             .map_err(|e| WebDriverError::new(ErrorStatus::UnknownError,
+                                              format!("Failed to start browser:\n{}",
+                                                      e.description()))));
+
+        self.browser = Some(runner);
+
+        Ok(())
+    }
+
+    fn binary_path(&self, options: &mut FirefoxOptions) -> Option<PathBuf> {
+        options.binary.take()
+            .or_else(|| self.settings.binary.as_ref().map(|x| x.clone()))
+            .or_else(|| firefox_default_path())
+    }
+
+    pub fn set_prefs(&self, port: u16, profile: &mut Profile, custom_profile: bool)
+                 -> Result<(), RunnerError> {
+        let prefs = try!(profile.user_prefs());
+        prefs.insert("marionette.defaultPrefs.port", Pref::new(port as i64));
+
+        prefs.insert_slice(&FIREFOX_REQUIRED_PREFERENCES[..]);
+        if !custom_profile {
+            prefs.insert_slice(&FIREFOX_DEFAULT_PREFERENCES[..]);
+        };
+        if let Some(ref l) = self.settings.log_level {
+            prefs.insert("marionette.logging", Pref::new(l.to_string()));
+        };
+
+        try!(prefs.write());
+        Ok(())
     }
 }
 
@@ -484,37 +510,39 @@ fn unzip_buffer(buf: &[u8], dest_dir: &Path) -> WebDriverResult<()> {
 }
 
 impl WebDriverHandler<GeckoExtensionRoute> for MarionetteHandler {
-    fn handle_command(&mut self, _: &Option<Session>, msg: &WebDriverMessage<GeckoExtensionRoute>) -> WebDriverResult<WebDriverResponse> {
-        let mut new_capabilities = None;
-        match self.connection.lock() {
-            Ok(ref mut connection) => {
-                if connection.is_none() {
-                    match msg.command {
-                        NewSession(ref capabilities) => {
-                            new_capabilities = Some(capabilities)
-                        },
-                        _ => {
-                            return Err(WebDriverError::new(
-                                ErrorStatus::UnknownError,
-                                "Tried to run command without establishing a connection"));
+    fn handle_command(&mut self, _: &Option<Session>, mut msg: WebDriverMessage<GeckoExtensionRoute>) -> WebDriverResult<WebDriverResponse> {
+        {
+            let mut new_capabilities = None;
+            match self.connection.lock() {
+                Ok(ref connection) => {
+                    if connection.is_none() {
+                        match msg.command {
+                            NewSession(ref mut capabilities) => {
+                                new_capabilities = Some(capabilities);
+                            },
+                            _ => {
+                                return Err(WebDriverError::new(
+                                    ErrorStatus::UnknownError,
+                                    "Tried to run command without establishing a connection"));
+                            }
                         }
                     }
+                },
+                Err(_) => {
+                    return Err(WebDriverError::new(
+                        ErrorStatus::UnknownError,
+                        "Failed to aquire Marionette connection"))
                 }
-            },
-            Err(_) => {
-                return Err(WebDriverError::new(
-                    ErrorStatus::UnknownError,
-                    "Failed to aquire Marionette connection"))
+            }
+            if let Some(capabilities) = new_capabilities {
+                try!(self.create_connection(&msg.session_id, capabilities));
             }
         }
 
-        if let Some(capabilities) = new_capabilities {
-            try!(self.create_connection(&msg.session_id, &capabilities));
-        }
         match self.connection.lock() {
             Ok(ref mut connection) => {
                 match connection.as_mut() {
-                    Some(conn) => conn.send_command(msg),
+                    Some(conn) => conn.send_command(&msg),
                     None => panic!()
                 }
             },
@@ -606,7 +634,7 @@ impl MarionetteSession {
         self.command_id
     }
 
-    pub fn response(&mut self, message: &WebDriverMessage<GeckoExtensionRoute>,
+    pub fn response(&mut self, msg: &WebDriverMessage<GeckoExtensionRoute>,
                     resp: MarionetteResponse) -> WebDriverResult<WebDriverResponse> {
 
         if resp.id != self.command_id {
@@ -621,9 +649,9 @@ impl MarionetteSession {
             return Err(WebDriverError::new(status, error.message));
         }
 
-        try!(self.update(message, &resp));
+        try!(self.update(msg, &resp));
 
-        Ok(match message.command {
+        Ok(match msg.command {
             //Everything that doesn't have a response value
             Get(_) | GoBack | GoForward | Refresh | Close | SetTimeouts(_) |
             SetWindowSize(_) | MaximizeWindow | SwitchToWindow(_) | SwitchToFrame(_) |
