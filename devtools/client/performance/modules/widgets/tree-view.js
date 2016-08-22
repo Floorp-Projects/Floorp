@@ -21,7 +21,7 @@ const CALL_TREE_INDENTATION = 16;
 // Used for rendering values in cells
 const FORMATTERS = {
   TIME: (value) => L10N.getFormatStr("table.ms2", L10N.numberWithDecimals(value, 2)),
-  PERCENT: (value) => L10N.getFormatStr("table.percentage2",
+  PERCENT: (value) => L10N.getFormatStr("table.percentage3",
                                         L10N.numberWithDecimals(value, 2)),
   NUMBER: (value) => value || 0,
   BYTESIZE: (value) => L10N.getFormatStr("table.bytes", (value || 0))
