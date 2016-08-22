@@ -191,6 +191,9 @@
 #define NS_CRASHREPORTER_CONTRACTID "@mozilla.org/toolkit/crash-reporter;1"
 #include "nsIPrefService.h"
 #include "nsIMemoryInfoDumper.h"
+#if defined(XP_LINUX) && !defined(ANDROID)
+#include "mozilla/widget/LSBUtils.h"
+#endif
 #endif
 
 #include "base/command_line.h"
@@ -203,7 +206,6 @@
 #if defined(MOZ_SANDBOX)
 #if defined(XP_LINUX) && !defined(ANDROID)
 #include "mozilla/SandboxInfo.h"
-#include "mozilla/widget/LSBUtils.h"
 #elif defined(XP_WIN)
 #include "SandboxBroker.h"
 #endif
