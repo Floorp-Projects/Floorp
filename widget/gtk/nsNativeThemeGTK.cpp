@@ -638,17 +638,17 @@ nsNativeThemeGTK::GetGtkWidgetAndState(uint8_t aWidgetType, nsIFrame* aFrame,
     break;
   case NS_THEME_TAB:
     {
+      if (IsBottomTab(aFrame)) {
+        aGtkWidgetType = MOZ_GTK_TAB_BOTTOM;
+      } else {
+        aGtkWidgetType = MOZ_GTK_TAB_TOP;
+      }
+
       if (aWidgetFlags) {
         /* First bits will be used to store max(0,-bmargin) where bmargin
          * is the bottom margin of the tab in pixels  (resp. top margin,
          * for bottom tabs). */
-        if (IsBottomTab(aFrame)) {
-            *aWidgetFlags = MOZ_GTK_TAB_BOTTOM;
-        } else {
-            *aWidgetFlags = 0;
-        }
-
-        *aWidgetFlags |= GetTabMarginPixels(aFrame);
+        *aWidgetFlags = GetTabMarginPixels(aFrame);
 
         if (IsSelectedTab(aFrame))
           *aWidgetFlags |= MOZ_GTK_TAB_SELECTED;
@@ -656,8 +656,6 @@ nsNativeThemeGTK::GetGtkWidgetAndState(uint8_t aWidgetType, nsIFrame* aFrame,
         if (IsFirstTab(aFrame))
           *aWidgetFlags |= MOZ_GTK_TAB_FIRST;
       }
-
-      aGtkWidgetType = MOZ_GTK_TAB;
     }
     break;
   case NS_THEME_SPLITTER:
@@ -1071,7 +1069,8 @@ nsNativeThemeGTK::GetExtraSizeForWidget(nsIFrame* aFrame, uint8_t aWidgetType,
       if (!IsSelectedTab(aFrame))
         return false;
 
-      gint gap_height = moz_gtk_get_tab_thickness();
+      gint gap_height = moz_gtk_get_tab_thickness(IsBottomTab(aFrame) ?
+                            MOZ_GTK_TAB_BOTTOM : MOZ_GTK_TAB_TOP);
       if (!gap_height)
         return false;
 
@@ -1298,7 +1297,7 @@ nsNativeThemeGTK::GetWidgetBorder(nsDeviceContext* aContext, nsIFrame* aFrame,
 
       moz_gtk_get_tab_border(&aResult->left, &aResult->top,
                              &aResult->right, &aResult->bottom, direction,
-                             (GtkTabFlags)flags);
+                             (GtkTabFlags)flags, gtkWidgetType);
     }
     break;
   case NS_THEME_MENUITEM:

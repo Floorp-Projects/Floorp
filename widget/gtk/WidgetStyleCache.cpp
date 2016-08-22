@@ -339,6 +339,14 @@ CreateScaleWidget(GtkOrientation aOrientation)
 }
 
 static GtkWidget*
+CreateNotebookWidget()
+{
+  GtkWidget* widget = gtk_notebook_new();
+  AddToWindowContainer(widget);
+  return widget;
+}
+
+static GtkWidget*
 CreateWidget(WidgetNodeType aWidgetType)
 {
   switch (aWidgetType) {
@@ -414,6 +422,8 @@ CreateWidget(WidgetNodeType aWidgetType)
       return CreateScaleWidget(GTK_ORIENTATION_HORIZONTAL);
     case MOZ_GTK_SCALE_VERTICAL:
       return CreateScaleWidget(GTK_ORIENTATION_VERTICAL);
+    case MOZ_GTK_NOTEBOOK:
+      return CreateNotebookWidget();
     default:
       /* Not implemented */
       return nullptr;
@@ -621,6 +631,33 @@ GetCssNodeStyleInternal(WidgetNodeType aNodeType)
       style = CreateChildCSSNode(GTK_STYLE_CLASS_SLIDER,
                                  MOZ_GTK_SCALE_TROUGH_VERTICAL);
       break;
+    case MOZ_GTK_TAB_TOP:
+    {
+      // TODO - create from CSS node
+      style = GetWidgetStyleWithClass(MOZ_GTK_NOTEBOOK,
+                                      GTK_STYLE_CLASS_TOP);
+      gtk_style_context_add_region(style, GTK_STYLE_REGION_TAB,
+                                   static_cast<GtkRegionFlags>(0));
+      return style;
+    }
+    case MOZ_GTK_TAB_BOTTOM:
+    {
+      // TODO - create from CSS node
+      style = GetWidgetStyleWithClass(MOZ_GTK_NOTEBOOK,
+                                      GTK_STYLE_CLASS_BOTTOM);
+      gtk_style_context_add_region(style, GTK_STYLE_REGION_TAB,
+                                   static_cast<GtkRegionFlags>(0));
+      return style;
+    }
+    case MOZ_GTK_NOTEBOOK:
+    case MOZ_GTK_NOTEBOOK_HEADER:
+    case MOZ_GTK_TABPANELS:
+    case MOZ_GTK_TAB_SCROLLARROW:
+    { 
+      // TODO - create from CSS node
+      GtkWidget* widget = GetWidget(MOZ_GTK_NOTEBOOK);
+      return gtk_widget_get_style_context(widget);
+    }
     default:
       // TODO - create style from style path
       GtkWidget* widget = GetWidget(aNodeType);
@@ -719,6 +756,30 @@ GetWidgetStyleInternal(WidgetNodeType aNodeType)
     case MOZ_GTK_SCALE_THUMB_VERTICAL:
       return GetWidgetStyleWithClass(MOZ_GTK_SCALE_VERTICAL,
                                      GTK_STYLE_CLASS_SLIDER);
+    case MOZ_GTK_TAB_TOP:
+    {
+      GtkStyleContext* style = GetWidgetStyleWithClass(MOZ_GTK_NOTEBOOK,
+                                                       GTK_STYLE_CLASS_TOP);
+      gtk_style_context_add_region(style, GTK_STYLE_REGION_TAB,
+                                   static_cast<GtkRegionFlags>(0));
+      return style;
+    }
+    case MOZ_GTK_TAB_BOTTOM:
+    {
+      GtkStyleContext* style = GetWidgetStyleWithClass(MOZ_GTK_NOTEBOOK,
+                                                       GTK_STYLE_CLASS_BOTTOM);
+      gtk_style_context_add_region(style, GTK_STYLE_REGION_TAB,
+                                   static_cast<GtkRegionFlags>(0));
+      return style;
+    }
+    case MOZ_GTK_NOTEBOOK:
+    case MOZ_GTK_NOTEBOOK_HEADER:
+    case MOZ_GTK_TABPANELS:
+    case MOZ_GTK_TAB_SCROLLARROW:
+    { 
+      GtkWidget* widget = GetWidget(MOZ_GTK_NOTEBOOK);
+      return gtk_widget_get_style_context(widget);
+    }
     default:
       GtkWidget* widget = GetWidget(aNodeType);
       MOZ_ASSERT(widget);
