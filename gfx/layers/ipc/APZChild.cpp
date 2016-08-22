@@ -150,6 +150,7 @@ APZChild::RecvDestroy()
     mBrowser->SetAPZChild(nullptr);
     mBrowser = nullptr;
   }
+  PAPZChild::Send__delete__(this);
   return true;
 }
 
