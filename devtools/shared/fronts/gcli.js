@@ -3,13 +3,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { Front, FrontClass } = require("devtools/shared/protocol");
+const { Front, FrontClassWithSpec } = require("devtools/shared/protocol");
 const { gcliSpec } = require("devtools/shared/specs/gcli");
 
 /**
  *
  */
-const GcliFront = exports.GcliFront = FrontClass(gcliSpec, {
+const GcliFront = exports.GcliFront = FrontClassWithSpec(gcliSpec, {
   initialize: function (client, tabForm) {
     Front.prototype.initialize.call(this, client);
     this.actorID = tabForm.gcliActor;

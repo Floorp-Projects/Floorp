@@ -4,7 +4,7 @@
 "use strict";
 
 const { Cu } = require("chrome");
-const { Front, FrontClass, custom, preEvent } = require("devtools/shared/protocol");
+const { Front, FrontClassWithSpec, custom, preEvent } = require("devtools/shared/protocol");
 const { PerformanceRecordingFront } = require("devtools/shared/fronts/performance-recording");
 const { performanceSpec } = require("devtools/shared/specs/performance");
 const { Task } = require("devtools/shared/task");
@@ -16,7 +16,7 @@ loader.lazyRequireGetter(this, "LegacyPerformanceFront",
 loader.lazyRequireGetter(this, "getSystemInfo",
   "devtools/shared/system", true);
 
-const PerformanceFront = FrontClass(performanceSpec, {
+const PerformanceFront = FrontClassWithSpec(performanceSpec, {
   initialize: function (client, form) {
     Front.prototype.initialize.call(this, client, form);
     this.actorID = form.performanceActor;

@@ -8,7 +8,7 @@ const {deviceSpec} = require("devtools/shared/specs/device");
 const protocol = require("devtools/shared/protocol");
 const defer = require("devtools/shared/defer");
 
-const DeviceFront = protocol.FrontClass(deviceSpec, {
+const DeviceFront = protocol.FrontClassWithSpec(deviceSpec, {
   initialize: function (client, form) {
     protocol.Front.prototype.initialize.call(this, client);
     this.actorID = form.deviceActor;

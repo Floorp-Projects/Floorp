@@ -82,7 +82,7 @@ exports.register = register;
 /**
  * The HighlighterActor class
  */
-var HighlighterActor = exports.HighlighterActor = protocol.ActorClass(highlighterSpec, {
+var HighlighterActor = exports.HighlighterActor = protocol.ActorClassWithSpec(highlighterSpec, {
   initialize: function (inspector, autohide) {
     protocol.Actor.prototype.initialize.call(this, null);
 
@@ -407,7 +407,7 @@ var HighlighterActor = exports.HighlighterActor = protocol.ActorClass(highlighte
  * A generic highlighter actor class that instantiate a highlighter given its
  * type name and allows to show/hide it.
  */
-var CustomHighlighterActor = exports.CustomHighlighterActor = protocol.ActorClass(customHighlighterSpec, {
+var CustomHighlighterActor = exports.CustomHighlighterActor = protocol.ActorClassWithSpec(customHighlighterSpec, {
   /**
    * Create a highlighter instance given its typename
    * The typename must be one of HIGHLIGHTER_CLASSES and the class must

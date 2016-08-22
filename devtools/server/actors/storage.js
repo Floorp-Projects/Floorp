@@ -377,7 +377,7 @@ StorageActors.createActor = function (options = {}, overrides = {}) {
   }
 
   let actorSpec = specs.childSpecs[options.typeName];
-  let actor = protocol.ActorClass(actorSpec, actorObject);
+  let actor = protocol.ActorClassWithSpec(actorSpec, actorObject);
   storageTypePool.set(actorObject.typeName, actor);
 };
 
@@ -2162,7 +2162,7 @@ exports.setupParentProcessForIndexedDB = function ({ mm, prefix }) {
 /**
  * The main Storage Actor.
  */
-let StorageActor = protocol.ActorClass(specs.storageSpec, {
+let StorageActor = protocol.ActorClassWithSpec(specs.storageSpec, {
   typeName: "storage",
 
   get window() {

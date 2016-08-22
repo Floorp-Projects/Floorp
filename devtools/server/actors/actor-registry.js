@@ -17,7 +17,7 @@ const { actorActorSpec, actorRegistrySpec } = require("devtools/shared/specs/act
  * The ActorActor gives you a handle to an actor you've dynamically
  * registered and allows you to unregister it.
  */
-const ActorActor = protocol.ActorClass(actorActorSpec, {
+const ActorActor = protocol.ActorClassWithSpec(actorActorSpec, {
   initialize: function (conn, options) {
     protocol.Actor.prototype.initialize.call(this, conn);
 
@@ -33,7 +33,7 @@ const ActorActor = protocol.ActorClass(actorActorSpec, {
  * The ActorRegistryActor allows clients to define new actors on the
  * server. This is particularly useful for addons.
  */
-const ActorRegistryActor = protocol.ActorClass(actorRegistrySpec, {
+const ActorRegistryActor = protocol.ActorClassWithSpec(actorRegistrySpec, {
   initialize: function (conn) {
     protocol.Actor.prototype.initialize.call(this, conn);
   },
