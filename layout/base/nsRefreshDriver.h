@@ -329,6 +329,47 @@ public:
   NS_IMETHOD_(MozExternalRefCountType) Release(void) override { return TransactionIdAllocator::Release(); }
   virtual void WillRefresh(mozilla::TimeStamp aTime) override;
 
+  /**
+   * Compute the time when the currently active refresh driver timer
+   * will start its next tick.
+   *
+   * Returns 'Nothing' if the refresh driver timer hasn't been
+   * initialized or if we can't tell when the next tick will happen.
+   *
+   * Returns Some(TimeStamp()), i.e. the null time, if the next tick is late.
+   *
+   * Otherwise returns Some(TimeStamp(t)), where t is the time of the next tick.
+   *
+   * Using these three types of return values it is possible to
+   * estimate three different things about the idleness of the
+   * currently active group of refresh drivers. This information is
+   * used by nsThread to schedule lower priority "idle tasks".
+   *
+   * The 'Nothing' return value indicates to nsThread that the
+   * currently active refresh drivers will be idle for a time
+   * significantly longer than the current refresh rate and that it is
+   * free to schedule longer periods for executing idle tasks. This is the
+   * expected result when we aren't animating.
+
+   * Returning the null time indicates to nsThread that we are very
+   * busy and that it should definitely not schedule idle tasks at
+   * all. This is the expected result when we are animating, but
+   * aren't able to keep up with the animation and hence need to skip
+   * paints. Since catching up to missed paints will happen as soon as
+   * possible, this is the expected result if any of the refresh
+   * drivers attached to the current refresh driver misses a paint.
+   *
+   * Returning Some(TimeStamp(t)) indicates to nsThread that we will
+   * be idle until. This is usually the case when we're animating
+   * without skipping paints.
+   */
+  static mozilla::Maybe<mozilla::TimeStamp> GetIdleDeadlineHint();
+
+  bool SkippedPaints() const
+  {
+    return mSkippedPaints;
+  }
+
 private:
   typedef nsTObserverArray<nsARefreshObserver*> ObserverArray;
   typedef nsTHashtable<nsISupportsHashKey> RequestTable;
@@ -345,7 +386,6 @@ private:
   void DispatchPendingEvents();
   void DispatchAnimationEvents();
   void RunFrameRequestCallbacks(mozilla::TimeStamp aNowTime);
-
   void Tick(int64_t aNowEpoch, mozilla::TimeStamp aNowTime);
 
   enum EnsureTimerStartedFlags {

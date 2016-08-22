@@ -23,6 +23,7 @@
 #include "mozilla/IndexSequence.h"
 #include "mozilla/Likely.h"
 #include "mozilla/Move.h"
+#include "mozilla/TimeStamp.h"
 #include "mozilla/Tuple.h"
 #include "mozilla/TypeTraits.h"
 
@@ -131,6 +132,10 @@ NS_DispatchToMainThread(nsIRunnable* aEvent,
 extern nsresult
 NS_DispatchToMainThread(already_AddRefed<nsIRunnable>&& aEvent,
                         uint32_t aDispatchFlags = NS_DISPATCH_NORMAL);
+
+extern nsresult
+NS_DelayedDispatchToCurrentThread(
+  already_AddRefed<nsIRunnable>&& aEvent, uint32_t aDelayMs);
 
 extern nsresult
 NS_IdleDispatchToCurrentThread(already_AddRefed<nsIRunnable>&& aEvent);
