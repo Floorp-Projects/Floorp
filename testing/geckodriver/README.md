@@ -81,7 +81,7 @@ contain any of the following fields:
 ## Building
 
 geckodriver is written in [Rust](https://www.rust-lang.org/)
-and you need the Rust toolchain to compile it.
+and you need the [Rust toolchain](https://rustup.rs/) to compile it.
 
 To build the project for release,
 ensure you do a compilation with optimisations:
