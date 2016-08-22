@@ -10,7 +10,7 @@
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "nsPIDOMWindow.h"
-#include "DeviceChangeCallback.h"
+#include "mozilla/media/DeviceChangeCallback.h"
 
 namespace mozilla {
 namespace dom {
