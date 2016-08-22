@@ -165,7 +165,7 @@ add_task(function* checkUndoPreconditions() {
             "Should have set start time pref");
   Assert.ok(Preferences.has("browser.migrate.automigrate.finished"),
             "Should have set finish time pref");
-  Assert.ok((yield AutoMigrate.canUndo()), "Should be able to undo migration");
+  Assert.ok(AutoMigrate.canUndo(), "Should be able to undo migration");
 
   let [beginRange, endRange] = AutoMigrate.getUndoRange();
   let stringRange = `beginRange: ${beginRange}; endRange: ${endRange}`;
@@ -226,7 +226,7 @@ add_task(function* checkUndoRemoval() {
   Preferences.set("browser.migrate.automigrate.finished", endTime);
 
   // Verify that we can undo, then undo:
-  Assert.ok(yield AutoMigrate.canUndo(), "Should be possible to undo migration");
+  Assert.ok(AutoMigrate.canUndo(), "Should be possible to undo migration");
   yield AutoMigrate.undo();
 
   // Check that the undo removed the history visits:
@@ -259,17 +259,17 @@ add_task(function* checkUndoDisablingByBookmarksAndPasswords() {
   Services.prefs.setCharPref("browser.migrate.automigrate.finished", endTime);
   AutoMigrate.maybeInitUndoObserver();
 
-  ok((yield AutoMigrate.canUndo()), "Should be able to undo.");
+  ok(AutoMigrate.canUndo(), "Should be able to undo.");
 
   // Insert a login and check that that disabled undo.
   let login = Cc["@mozilla.org/login-manager/loginInfo;1"].createInstance(Ci.nsILoginInfo);
   login.init("www.mozilla.org", "http://www.mozilla.org", null, "user", "pass", "userEl", "passEl");
   Services.logins.addLogin(login);
 
-  ok(!(yield AutoMigrate.canUndo()), "Should no longer be able to undo.");
+  ok(!AutoMigrate.canUndo(), "Should no longer be able to undo.");
   Services.prefs.setCharPref("browser.migrate.automigrate.started", startTime);
   Services.prefs.setCharPref("browser.migrate.automigrate.finished", endTime);
-  ok((yield AutoMigrate.canUndo()), "Should be able to undo.");
+  ok(AutoMigrate.canUndo(), "Should be able to undo.");
   AutoMigrate.maybeInitUndoObserver();
 
   // Insert a bookmark and check that that disabled undo.
@@ -278,7 +278,7 @@ add_task(function* checkUndoDisablingByBookmarksAndPasswords() {
     url: "http://www.example.org/",
     title: "Some example bookmark",
   });
-  ok(!(yield AutoMigrate.canUndo()), "Should no longer be able to undo.");
+  ok(!AutoMigrate.canUndo(), "Should no longer be able to undo.");
 
   try {
     Services.logins.removeAllLogins();
