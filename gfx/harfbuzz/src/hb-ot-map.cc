@@ -193,7 +193,8 @@ hb_ot_map_builder_t::compile (hb_ot_map_t &m)
       /* Uses the global bit */
       bits_needed = 0;
     else
-      bits_needed = _hb_bit_storage (info->max_value);
+      /* Limit to 8 bits per feature. */
+      bits_needed = MIN(8u, _hb_bit_storage (info->max_value));
 
     if (!info->max_value || next_bit + bits_needed > 8 * sizeof (hb_mask_t))
       continue; /* Feature disabled, or not enough bits. */
@@ -243,11 +244,11 @@ hb_ot_map_builder_t::compile (hb_ot_map_t &m)
       map->mask = 1;
     } else {
       map->shift = next_bit;
-      map->mask = (1 << (next_bit + bits_needed)) - (1 << next_bit);
+      map->mask = (1u << (next_bit + bits_needed)) - (1u << next_bit);
       next_bit += bits_needed;
       m.global_mask |= (info->default_value << map->shift) & map->mask;
     }
-    map->_1_mask = (1 << map->shift) & map->mask;
+    map->_1_mask = (1u << map->shift) & map->mask;
     map->needs_fallback = !found;
 
   }

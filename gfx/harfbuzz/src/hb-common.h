@@ -304,12 +304,22 @@ typedef enum
   /*7.0*/ HB_SCRIPT_TIRHUTA			= HB_TAG ('T','i','r','h'),
   /*7.0*/ HB_SCRIPT_WARANG_CITI			= HB_TAG ('W','a','r','a'),
 
-  /*8.0*/ HB_SCRIPT_AHOM                        = HB_TAG ('A','h','o','m'),
-  /*8.0*/ HB_SCRIPT_ANATOLIAN_HIEROGLYPHS       = HB_TAG ('H','l','u','w'),
-  /*8.0*/ HB_SCRIPT_HATRAN                      = HB_TAG ('H','a','t','r'),
-  /*8.0*/ HB_SCRIPT_MULTANI                     = HB_TAG ('M','u','l','t'),
-  /*8.0*/ HB_SCRIPT_OLD_HUNGARIAN               = HB_TAG ('H','u','n','g'),
-  /*8.0*/ HB_SCRIPT_SIGNWRITING                 = HB_TAG ('S','g','n','w'),
+  /*8.0*/ HB_SCRIPT_AHOM			= HB_TAG ('A','h','o','m'),
+  /*8.0*/ HB_SCRIPT_ANATOLIAN_HIEROGLYPHS	= HB_TAG ('H','l','u','w'),
+  /*8.0*/ HB_SCRIPT_HATRAN			= HB_TAG ('H','a','t','r'),
+  /*8.0*/ HB_SCRIPT_MULTANI			= HB_TAG ('M','u','l','t'),
+  /*8.0*/ HB_SCRIPT_OLD_HUNGARIAN		= HB_TAG ('H','u','n','g'),
+  /*8.0*/ HB_SCRIPT_SIGNWRITING			= HB_TAG ('S','g','n','w'),
+
+  /*
+   * Since 1.3.0
+   */
+  /*9.0*/ HB_SCRIPT_ADLAM			= HB_TAG ('A','d','l','m'),
+  /*9.0*/ HB_SCRIPT_BHAIKSUKI			= HB_TAG ('B','h','k','s'),
+  /*9.0*/ HB_SCRIPT_MARCHEN			= HB_TAG ('M','a','r','c'),
+  /*9.0*/ HB_SCRIPT_OSAGE			= HB_TAG ('O','s','g','e'),
+  /*9.0*/ HB_SCRIPT_TANGUT			= HB_TAG ('T','a','n','g'),
+  /*9.0*/ HB_SCRIPT_NEWA			= HB_TAG ('N','e','w','a'),
 
   /* No script set. */
   HB_SCRIPT_INVALID				= HB_TAG_NONE,
