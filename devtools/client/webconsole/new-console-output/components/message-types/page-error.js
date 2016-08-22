@@ -52,13 +52,14 @@ function PageError(props) {
     className: classes.join(" ")
   },
     icon,
-    dom.span(
-      {className: "message-body-wrapper message-body devtools-monospace"},
-      dom.span({},
-        message.messageText
+    dom.span({ className: "message-body-wrapper" },
+      dom.span({ className: "message-flex-body" },
+        dom.span({ className: "message-body devtools-monospace" },
+          message.messageText
+        ),
+        repeat
       )
-    ),
-    repeat
+    )
   );
 }
 
