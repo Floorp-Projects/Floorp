@@ -128,7 +128,8 @@ var PrefObserver = {
 
 PrefObserver.register({
   // prefName: defaultValue
-  animateNotifications: true
+  animateNotifications: true,
+  showPanelDropmarker: true,
 });
 
 
@@ -216,6 +217,13 @@ this.DownloadsCommon = {
    */
   get animateNotifications() {
     return PrefObserver.animateNotifications;
+  },
+
+  /**
+   * Indicates whether we should show the dropmarker in the Downloads Panel.
+   */
+  get showPanelDropmarker() {
+    return PrefObserver.showPanelDropmarker;
   },
 
   /**
