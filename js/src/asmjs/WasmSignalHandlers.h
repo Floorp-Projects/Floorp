@@ -23,7 +23,6 @@
 
 #if defined(XP_DARWIN) && defined(ASMJS_MAY_USE_SIGNAL_HANDLERS)
 # include <mach/mach.h>
-# include "jslock.h"
 #endif
 #include "threading/Thread.h"
 
