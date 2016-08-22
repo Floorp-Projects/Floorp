@@ -172,7 +172,8 @@ public:
 
     RefPtr<MediaStreamTrack> newTrack =
       mStream->CreateDOMTrack(aTrackID, aType, source);
-    mStream->AddTrackInternal(newTrack);
+    NS_DispatchToMainThread(NewRunnableMethod<RefPtr<MediaStreamTrack>>(
+        mStream, &DOMMediaStream::AddTrackInternal, newTrack));
   }
 
   void DoNotifyTrackEnded(MediaStream* aInputStream, TrackID aInputTrackID,
@@ -279,7 +280,11 @@ public:
       return;
     }
 
-    mStream->NotifyTracksCreated();
+    // The owned stream listener adds its tracks after another main thread
+    // dispatch. We have to do the same to notify of created tracks to stay
+    // in sync. (Or NotifyTracksCreated is called before tracks are added).
+    NS_DispatchToMainThread(
+        NewRunnableMethod(mStream, &DOMMediaStream::NotifyTracksCreated));
   }
 
   // The methods below are called on the MediaStreamGraph thread.
