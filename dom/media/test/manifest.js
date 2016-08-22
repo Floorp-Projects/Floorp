@@ -1411,7 +1411,8 @@ var gEMENonMSEFailTests = [
 // These are files that are used for video decode suspend in
 // background tabs tests.
 var gDecodeSuspendTests = [
-  { name:"gizmo.mp4", type:"video/mp4", duration:5.56 }
+  { name:"gizmo.mp4", type:"video/mp4", duration:5.56 },
+  { name:"gizmo-noaudio.mp4", type:"video/mp4", duration:5.56 }
 ];
 
 function checkMetadata(msg, e, test) {
