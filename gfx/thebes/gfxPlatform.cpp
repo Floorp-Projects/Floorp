@@ -503,7 +503,10 @@ gfxPlatform::gfxPlatform()
 
     mSkiaGlue = nullptr;
 
-    uint32_t canvasMask = BackendTypeBit(BackendType::CAIRO) | BackendTypeBit(BackendType::SKIA);
+    uint32_t canvasMask = BackendTypeBit(BackendType::CAIRO);
+#ifdef USE_SKIA
+    canvasMask |= BackendTypeBit(BackendType::SKIA);
+#endif
     uint32_t contentMask = BackendTypeBit(BackendType::CAIRO);
     InitBackendPrefs(canvasMask, BackendType::CAIRO,
                      contentMask, BackendType::CAIRO);
