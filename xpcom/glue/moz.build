@@ -44,6 +44,7 @@ EXPORTS += [
     'nsIWeakReferenceUtils.h',
     'nsJSThingHashtable.h',
     'nsMemory.h',
+    'nsPointerHashKeys.h',
     'nsProxyRelease.h',
     'nsQuickSort.h',
     'nsRefPtrHashtable.h',
