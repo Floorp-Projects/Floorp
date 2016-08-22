@@ -20,6 +20,7 @@
 
 #include "js/UniquePtr.h"
 #include "threading/LockGuard.h"
+#include "threading/Thread.h"
 #include "vm/TraceLogging.h"
 
 #ifndef DEFAULT_TRACE_LOG_DIR
@@ -156,7 +157,7 @@ TraceLoggerGraphState::nextLoggerId()
 
     if (written > 0) {
         char threadName[16];
-        ThisThread::GetName(threadName, sizeof(threadName));
+        js::ThisThread::GetName(threadName, sizeof(threadName));
         if (threadName[0])
             written = fprintf(out, ", \"threadName\":\"%s\"", threadName);
     }
