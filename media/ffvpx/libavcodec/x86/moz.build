@@ -6,6 +6,8 @@
 
 SOURCES += [
     'constants.c',
+    'flacdsp.asm',
+    'flacdsp_init.c',
     'h264_intrapred.asm',
     'h264_intrapred_10bit.asm',
     'h264_intrapred_init.c',

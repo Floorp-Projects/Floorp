@@ -12,6 +12,7 @@
 #include "mozilla/ModuleUtils.h"
 #include "mp3sniff.h"
 #include "nestegg/nestegg.h"
+#include "FlacDemuxer.h"
 
 #include "nsIClassInfoImpl.h"
 #include <algorithm>
@@ -33,7 +34,9 @@ nsMediaSnifferEntry nsMediaSniffer::sSnifferEntries[] = {
   // The string RIFF, followed by four bytes, followed by the string WAVE
   PATTERN_ENTRY("\xFF\xFF\xFF\xFF\x00\x00\x00\x00\xFF\xFF\xFF\xFF", "RIFF\x00\x00\x00\x00WAVE", AUDIO_WAV),
   // mp3 with ID3 tags, the string "ID3".
-  PATTERN_ENTRY("\xFF\xFF\xFF", "ID3", AUDIO_MP3)
+  PATTERN_ENTRY("\xFF\xFF\xFF", "ID3", AUDIO_MP3),
+  // FLAC with standard header
+  PATTERN_ENTRY("\xFF\xFF\xFF\xFF", "fLaC", AUDIO_FLAC)
 };
 
 // For a complete list of file types, see http://www.ftyps.com/index.html
@@ -118,6 +121,11 @@ static bool MatchesMP3(const uint8_t* aData, const uint32_t aLength)
   return mp3_sniff(aData, (long)aLength);
 }
 
+static bool MatchesFLAC(const uint8_t* aData, const uint32_t aLength)
+{
+  return mozilla::FlacDemuxer::FlacSniffer(aData, aLength);
+}
+
 NS_IMETHODIMP
 nsMediaSniffer::GetMIMETypeFromContent(nsIRequest* aRequest,
                                        const uint8_t* aData,
@@ -174,6 +182,14 @@ nsMediaSniffer::GetMIMETypeFromContent(nsIRequest* aRequest,
   // Bug 950023: 512 bytes are often not enough to sniff for mp3.
   if (MatchesMP3(aData, std::min(aLength, MAX_BYTES_SNIFFED_MP3))) {
     aSniffedType.AssignLiteral(AUDIO_MP3);
+    return NS_OK;
+  }
+
+  // Flac frames are generally big, often in excess of 24kB.
+  // Using a size of MAX_BYTES_SNIFFED effectively means that we will only
+  // recognize flac content if it starts with a frame.
+  if (MatchesFLAC(aData, clampedLength)) {
+    aSniffedType.AssignLiteral(AUDIO_FLAC);
     return NS_OK;
   }
 

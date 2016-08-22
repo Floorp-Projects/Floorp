@@ -517,7 +517,11 @@ this.MessageChannel = {
     };
     deferred.promise.then(cleanup, cleanup);
 
-    target.sendAsyncMessage(MESSAGE_MESSAGE, message);
+    try {
+      target.sendAsyncMessage(MESSAGE_MESSAGE, message);
+    } catch (e) {
+      deferred.reject(e);
+    }
     return deferred.promise;
   },
 

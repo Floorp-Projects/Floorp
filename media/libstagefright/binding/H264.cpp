@@ -5,6 +5,7 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/PodOperations.h"
 #include "mp4_demuxer/AnnexB.h"
+#include "mp4_demuxer/BitReader.h"
 #include "mp4_demuxer/ByteReader.h"
 #include "mp4_demuxer/ByteWriter.h"
 #include "mp4_demuxer/H264.h"
@@ -15,63 +16,6 @@ using namespace mozilla;
 
 namespace mp4_demuxer
 {
-
-class BitReader
-{
-public:
-  explicit BitReader(const mozilla::MediaByteBuffer* aBuffer)
-    : mBitReader(aBuffer->Elements(), aBuffer->Length())
-  {
-  }
-
-  uint32_t ReadBits(size_t aNum)
-  {
-    MOZ_ASSERT(aNum <= 32);
-    if (mBitReader.numBitsLeft() < aNum) {
-      return 0;
-    }
-    return mBitReader.getBits(aNum);
-  }
-
-  uint32_t ReadBit()
-  {
-    return ReadBits(1);
-  }
-
-  // Read unsigned integer Exp-Golomb-coded.
-  uint32_t ReadUE()
-  {
-    uint32_t i = 0;
-
-    while (ReadBit() == 0 && i < 32) {
-      i++;
-    }
-    if (i == 32) {
-      // This can happen if the data is invalid, or if it's
-      // short, since ReadBit() will return 0 when it runs
-      // off the end of the buffer.
-      NS_WARNING("Invalid H.264 data");
-      return 0;
-    }
-    uint32_t r = ReadBits(i);
-    r += (1 << i) - 1;
-    return r;
-  }
-
-  // Read signed integer Exp-Golomb-coded.
-  int32_t ReadSE()
-  {
-    int32_t r = ReadUE();
-    if (r & 1) {
-      return (r+1) / 2;
-    } else {
-      return -r / 2;
-    }
-  }
-
-private:
-  stagefright::ABitReader mBitReader;
-};
 
 SPSData::SPSData()
 {

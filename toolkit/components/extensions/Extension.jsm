@@ -145,10 +145,8 @@ var Management = {
     for (let [/* name */, value] of XPCOMUtils.enumerateCategoryEntries(CATEGORY_EXTENSION_SCRIPTS)) {
       let scope = {
         get console() { return console; },
-        ExtensionContext,
         extensions: this,
         global: scriptScope,
-        GlobalManager,
         require,
       };
       Services.scriptloader.loadSubScript(value, scope, "UTF-8");

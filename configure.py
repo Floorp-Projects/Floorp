@@ -10,6 +10,8 @@ import os
 import subprocess
 import sys
 
+from collections import Iterable
+
 
 base_dir = os.path.abspath(os.path.dirname(__file__))
 sys.path.insert(0, os.path.join(base_dir, 'python', 'mozbuild'))
@@ -79,14 +81,36 @@ if __name__ == '__main__':
     config_status(**args)
 ''')
 
+    # Running config.status standalone uses byte literals for all the config,
+    # instead of the unicode literals we have in sanitized_config right now.
+    # Some values in sanitized_config also have more complex types, such as
+    # EnumString, which using when calling config_status would currently break
+    # the build, as well as making it inconsistent with re-running
+    # config.status. Fortunately, EnumString derives from unicode, so it's
+    # covered by converting unicode strings.
+    # Moreover, a lot of the build backend code is currently expecting byte
+    # strings and breaks in subtle ways with unicode strings.
+    def encode(v):
+        if isinstance(v, dict):
+            return {
+                encode(k): encode(val)
+                for k, val in v.iteritems()
+            }
+        if isinstance(v, str):
+            return v
+        if isinstance(v, unicode):
+            return v.encode(encoding)
+        if isinstance(v, Iterable):
+            return [encode(i) for i in v]
+        return v
+
     # Other things than us are going to run this file, so we need to give it
     # executable permissions.
     os.chmod('config.status', 0o755)
     if config.get('MOZ_BUILD_APP') != 'js' or config.get('JS_STANDALONE'):
-        os.environ['WRITE_MOZINFO'] = '1'
-        # Until we have access to the virtualenv from this script, execute
-        # config.status externally, with the virtualenv python.
-        return subprocess.call([config['PYTHON'], 'config.status'])
+        os.environ[b'WRITE_MOZINFO'] = b'1'
+        from mozbuild.config_status import config_status
+        return config_status(args=[], **encode(sanitized_config))
     return 0
 
 

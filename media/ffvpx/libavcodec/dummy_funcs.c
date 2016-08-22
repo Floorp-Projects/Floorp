@@ -10,6 +10,7 @@ typedef struct H264PredContext H264PredContext;
 typedef struct VideoDSPContext VideoDSPContext;
 typedef struct VP8DSPContext VP8DSPContext;
 typedef struct VP9DSPContext VP9DSPContext;
+typedef struct FLACDSPContext FLACDSPContext;
 
 AVHWAccel ff_h263_vaapi_hwaccel;
 AVHWAccel ff_h263_vdpau_hwaccel;
@@ -400,7 +401,6 @@ AVCodec ff_eac3_decoder;
 AVCodec ff_evrc_decoder;
 AVCodec ff_ffwavesynth_decoder;
 AVCodec ff_flac_encoder;
-AVCodec ff_flac_decoder;
 AVCodec ff_g723_1_encoder;
 AVCodec ff_g723_1_decoder;
 AVCodec ff_g729_decoder;
@@ -729,7 +729,6 @@ AVCodecParser ff_dvaudio_parser;
 AVCodecParser ff_dvbsub_parser;
 AVCodecParser ff_dvdsub_parser;
 AVCodecParser ff_dvd_nav_parser;
-AVCodecParser ff_flac_parser;
 AVCodecParser ff_g729_parser;
 AVCodecParser ff_gsm_parser;
 AVCodecParser ff_h261_parser;
@@ -785,7 +784,13 @@ void ff_vp78dsp_init_ppc(VP8DSPContext *c) {}
 void ff_vp8dsp_init_arm(VP8DSPContext *c) {}
 void ff_vp8dsp_init_mips(VP8DSPContext *c) {}
 void ff_vp9dsp_init_mips(VP9DSPContext *dsp, int bpp) {}
-
+void ff_flacdsp_init_arm(FLACDSPContext *c, enum AVSampleFormat fmt, int channels, int bps) {}
+#if !defined(HAVE_64BIT_BUILD)
+void ff_flac_decorrelate_indep8_16_sse2(uint8_t **out, int32_t **in, int channels, int len, int shift) {}
+void ff_flac_decorrelate_indep8_32_avx(uint8_t **out, int32_t **in, int channels, int len, int shift) {}
+void ff_flac_decorrelate_indep8_16_avx(uint8_t **out, int32_t **in, int channels, int len, int shift) {}
+void ff_flac_decorrelate_indep8_32_sse2(uint8_t **out, int32_t **in, int channels, int len, int shift) {}
+#endif
 void av_bitstream_filter_close(AVBitStreamFilterContext *bsf) {}
 int av_bitstream_filter_filter(AVBitStreamFilterContext *bsfc,
                                AVCodecContext *avctx, const char *args,
