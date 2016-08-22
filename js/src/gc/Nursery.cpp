@@ -158,8 +158,8 @@ js::Nursery::init(uint32_t maxNurseryBytes, AutoLockGC& lock)
     char* env = getenv("JS_GC_PROFILE_NURSERY");
     if (env) {
         if (0 == strcmp(env, "help")) {
-            fprintf(stderr, "JS_GC_PROFILE_NURSERY=N\n\n"
-                    "\tReport minor GC's taking more than N microseconds.");
+            fprintf(stderr, "JS_GC_PROFILE_NURSERY=N\n"
+                    "\tReport minor GC's taking more than N microseconds.\n");
             exit(0);
         }
         enableProfiling_ = true;
