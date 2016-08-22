@@ -733,19 +733,9 @@ class AutoLockFutexAPI
     AutoLockFutexAPI() {
         js::Mutex* lock = FutexRuntime::lock_;
         unique_.emplace(*lock);
-
-#ifdef DEBUG
-        MOZ_ASSERT(!FutexRuntime::lockHolder_);
-        FutexRuntime::lockHolder_ = PR_GetCurrentThread();
-#endif
     }
 
     ~AutoLockFutexAPI() {
-#ifdef DEBUG
-        MOZ_ASSERT(FutexRuntime::lockHolder_ == PR_GetCurrentThread());
-        FutexRuntime::lockHolder_ = nullptr;
-#endif
-
         unique_.reset();
     }
 
@@ -928,25 +918,13 @@ js::FutexRuntime::lock()
     js::Mutex* lock = lock_;
 
     lock->lock();
-#ifdef DEBUG
-    MOZ_ASSERT(!lockHolder_);
-    lockHolder_ = PR_GetCurrentThread();
-#endif
 }
 
 /* static */ mozilla::Atomic<js::Mutex*> FutexRuntime::lock_;
 
-#ifdef DEBUG
-/* static */ mozilla::Atomic<PRThread*> FutexRuntime::lockHolder_;
-#endif
-
 /* static */ void
 js::FutexRuntime::unlock()
 {
-#ifdef DEBUG
-    MOZ_ASSERT(lockHolder_ == PR_GetCurrentThread());
-    lockHolder_ = nullptr;
-#endif
     // Load the atomic pointer.
     js::Mutex* lock = lock_;
 
@@ -993,7 +971,6 @@ js::FutexRuntime::wait(JSContext* cx, js::UniqueLock<js::Mutex>& locked,
 {
     MOZ_ASSERT(&cx->runtime()->fx == this);
     MOZ_ASSERT(cx->runtime()->fx.canWait());
-    MOZ_ASSERT(lockHolder_ == PR_GetCurrentThread());
     MOZ_ASSERT(state_ == Idle || state_ == WaitingInterrupted);
 
     // Disallow waiting when a runtime is processing an interrupt.
@@ -1029,20 +1006,11 @@ js::FutexRuntime::wait(JSContext* cx, js::UniqueLock<js::Mutex>& locked,
 
         state_ = Waiting;
 
-#ifdef DEBUG
-        PRThread* holder = lockHolder_;
-        lockHolder_ = nullptr;
-#endif
-
         if (isTimed) {
             mozilla::Unused << cond_->wait_until(locked, *sliceEnd);
         } else {
             cond_->wait(locked);
         }
-
-#ifdef DEBUG
-        lockHolder_ = holder;
-#endif
 
         switch (state_) {
           case FutexRuntime::Waiting:
@@ -1115,7 +1083,6 @@ finished:
 void
 js::FutexRuntime::wake(WakeReason reason)
 {
-    MOZ_ASSERT(lockHolder_ == PR_GetCurrentThread());
     MOZ_ASSERT(isWaiting());
 
     if ((state_ == WaitingInterrupted || state_ == WaitingNotifiedForInterrupt) && reason == WakeExplicit) {
