@@ -60,9 +60,6 @@
 #include "Connection.h"
 #include "mozilla/dom/Event.h" // for nsIDOMEvent::InternalDOMEvent()
 #include "nsGlobalWindow.h"
-#ifdef MOZ_B2G
-#include "nsIMobileIdentityService.h"
-#endif
 #ifdef MOZ_B2G_RIL
 #include "mozilla/dom/MobileConnectionArray.h"
 #endif
@@ -125,11 +122,6 @@
 
 #ifdef MOZ_WIDGET_GONK
 #include <cutils/properties.h>
-#endif
-
-#ifdef MOZ_PAY
-#include "nsIPaymentContentHelperService.h"
-#include "mozilla/dom/DOMRequest.h"
 #endif
 
 namespace mozilla {
@@ -1783,13 +1775,6 @@ Navigator::HasFeature(const nsAString& aName, ErrorResult& aRv)
       return p.forget();
     }
 
-#ifdef MOZ_B2G
-    if (featureName.EqualsLiteral("Navigator.getMobileIdAssertion")) {
-      p->MaybeResolve(true);
-      return p.forget();
-    }
-#endif
-
     if (featureName.EqualsLiteral("XMLHttpRequest.mozSystem")) {
       p->MaybeResolve(true);
       return p.forget();
@@ -1908,45 +1893,6 @@ Navigator::MozTCPSocket()
   RefPtr<LegacyMozTCPSocket> socket = new LegacyMozTCPSocket(GetWindow());
   return socket.forget();
 }
-
-#ifdef MOZ_B2G
-already_AddRefed<Promise>
-Navigator::GetMobileIdAssertion(const MobileIdOptions& aOptions,
-                                ErrorResult& aRv)
-{
-  if (!mWindow || !mWindow->GetDocShell()) {
-    aRv.Throw(NS_ERROR_UNEXPECTED);
-    return nullptr;
-  }
-
-  nsCOMPtr<nsIMobileIdentityService> service =
-    do_GetService("@mozilla.org/mobileidentity-service;1");
-  if (!service) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
-  }
-
-  JSContext *cx = nsContentUtils::GetCurrentJSContext();
-  if (!cx) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
-  }
-
-  JS::Rooted<JS::Value> optionsValue(cx);
-  if (!ToJSValue(cx, aOptions, &optionsValue)) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
-  }
-
-  nsCOMPtr<nsISupports> promise;
-  aRv = service->GetMobileIdAssertion(mWindow,
-                                      optionsValue,
-                                      getter_AddRefs(promise));
-
-  RefPtr<Promise> p = static_cast<Promise*>(promise.get());
-  return p.forget();
-}
-#endif // MOZ_B2G
 
 #ifdef MOZ_B2G_RIL
 
@@ -2308,29 +2254,6 @@ Navigator::HasUserMediaSupport(JSContext* /* unused */,
          Preferences::GetBool("media.peerconnection.enabled", false);
 }
 
-#ifdef MOZ_B2G
-/* static */
-bool
-Navigator::HasMobileIdSupport(JSContext* aCx, JSObject* aGlobal)
-{
-  nsCOMPtr<nsPIDOMWindowInner> win = GetWindowFromGlobal(aGlobal);
-  if (!win) {
-    return false;
-  }
-
-  nsIDocument* doc = win->GetExtantDoc();
-  if (!doc) {
-    return false;
-  }
-
-  nsIPrincipal* principal = doc->NodePrincipal();
-  uint32_t permission = GetPermission(principal, "mobileid");
-
-  return permission == nsIPermissionManager::PROMPT_ACTION ||
-         permission == nsIPermissionManager::ALLOW_ACTION;
-}
-#endif
-
 /* static */
 bool
 Navigator::IsE10sEnabled(JSContext* aCx, JSObject* aGlobal)
@@ -2344,36 +2267,6 @@ Navigator::MozE10sEnabled()
   // This will only be called if IsE10sEnabled() is true.
   return true;
 }
-
-#ifdef MOZ_PAY
-already_AddRefed<DOMRequest>
-Navigator::MozPay(JSContext* aCx,
-                  JS::Handle<JS::Value> aJwts,
-                  ErrorResult& aRv)
-{
-  if (!mWindow || !mWindow->GetDocShell()) {
-    aRv.Throw(NS_ERROR_UNEXPECTED);
-    return nullptr;
-  }
-
-  nsresult rv;
-  nsCOMPtr<nsIPaymentContentHelperService> service =
-    do_GetService("@mozilla.org/payment/content-helper-service;1", &rv);
-  if (!service) {
-    aRv.Throw(rv);
-    return nullptr;
-  }
-
-  RefPtr<nsIDOMDOMRequest> request;
-  rv = service->Pay(mWindow, aJwts, getter_AddRefs(request));
-  if (NS_FAILED(rv)) {
-    aRv.Throw(rv);
-    return nullptr;
-  }
-
-  return request.forget().downcast<DOMRequest>();
-}
-#endif // MOZ_PAY
 
 /* static */
 already_AddRefed<nsPIDOMWindowInner>

@@ -2124,7 +2124,7 @@ RuntimeService::CancelWorkersForWindow(nsPIDOMWindowInner* aWindow)
 {
   AssertIsOnMainThread();
 
-  AutoTArray<WorkerPrivate*, MAX_WORKERS_PER_DOMAIN> workers;
+  nsTArray<WorkerPrivate*> workers;
   GetWorkersForWindow(aWindow, workers);
 
   if (!workers.IsEmpty()) {
@@ -2146,7 +2146,7 @@ RuntimeService::FreezeWorkersForWindow(nsPIDOMWindowInner* aWindow)
   AssertIsOnMainThread();
   MOZ_ASSERT(aWindow);
 
-  AutoTArray<WorkerPrivate*, MAX_WORKERS_PER_DOMAIN> workers;
+  nsTArray<WorkerPrivate*> workers;
   GetWorkersForWindow(aWindow, workers);
 
   for (uint32_t index = 0; index < workers.Length(); index++) {
@@ -2160,7 +2160,7 @@ RuntimeService::ThawWorkersForWindow(nsPIDOMWindowInner* aWindow)
   AssertIsOnMainThread();
   MOZ_ASSERT(aWindow);
 
-  AutoTArray<WorkerPrivate*, MAX_WORKERS_PER_DOMAIN> workers;
+  nsTArray<WorkerPrivate*> workers;
   GetWorkersForWindow(aWindow, workers);
 
   for (uint32_t index = 0; index < workers.Length(); index++) {
@@ -2174,7 +2174,7 @@ RuntimeService::SuspendWorkersForWindow(nsPIDOMWindowInner* aWindow)
   AssertIsOnMainThread();
   MOZ_ASSERT(aWindow);
 
-  AutoTArray<WorkerPrivate*, MAX_WORKERS_PER_DOMAIN> workers;
+  nsTArray<WorkerPrivate*> workers;
   GetWorkersForWindow(aWindow, workers);
 
   for (uint32_t index = 0; index < workers.Length(); index++) {
@@ -2188,7 +2188,7 @@ RuntimeService::ResumeWorkersForWindow(nsPIDOMWindowInner* aWindow)
   AssertIsOnMainThread();
   MOZ_ASSERT(aWindow);
 
-  AutoTArray<WorkerPrivate*, MAX_WORKERS_PER_DOMAIN> workers;
+  nsTArray<WorkerPrivate*> workers;
   GetWorkersForWindow(aWindow, workers);
 
   for (uint32_t index = 0; index < workers.Length(); index++) {

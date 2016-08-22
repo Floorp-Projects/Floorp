@@ -121,22 +121,20 @@ class FreeOp : public JSFreeOp
 {
     Vector<void*, 0, SystemAllocPolicy> freeLaterList;
     jit::JitPoisonRangeVector jitPoisonRanges;
-    ThreadType threadType;
 
   public:
     static FreeOp* get(JSFreeOp* fop) {
         return static_cast<FreeOp*>(fop);
     }
 
-    explicit FreeOp(JSRuntime* rt, ThreadType thread = MainThread)
-      : JSFreeOp(rt), threadType(thread)
-    {}
-
+    explicit FreeOp(JSRuntime* maybeRuntime);
     ~FreeOp();
 
-    bool onBackgroundThread() {
-        return threadType == BackgroundThread;
+    bool onMainThread() const {
+        return runtime_ != nullptr;
     }
+
+    bool isDefaultFreeOp() const;
 
     inline void free_(void* p);
     inline void freeLater(void* p);
@@ -922,11 +920,12 @@ struct JSRuntime : public JS::shadow::Runtime,
 #endif
 
   private:
-    js::FreeOp          defaultFreeOp_;
+    js::FreeOp*         defaultFreeOp_;
 
   public:
     js::FreeOp* defaultFreeOp() {
-        return &defaultFreeOp_;
+        MOZ_ASSERT(defaultFreeOp_);
+        return defaultFreeOp_;
     }
 
     uint32_t            debuggerMutations;
@@ -1343,7 +1342,7 @@ FreeOp::freeLater(void* p)
 {
     // FreeOps other than the defaultFreeOp() are constructed on the stack,
     // and won't hold onto the pointers to free indefinitely.
-    MOZ_ASSERT(this != runtime()->defaultFreeOp());
+    MOZ_ASSERT(!isDefaultFreeOp());
 
     AutoEnterOOMUnsafeRegion oomUnsafe;
     if (!freeLaterList.append(p))
@@ -1355,7 +1354,7 @@ FreeOp::appendJitPoisonRange(const jit::JitPoisonRange& range)
 {
     // FreeOps other than the defaultFreeOp() are constructed on the stack,
     // and won't hold onto the pointers to free indefinitely.
-    MOZ_ASSERT(this != runtime()->defaultFreeOp());
+    MOZ_ASSERT(!isDefaultFreeOp());
 
     return jitPoisonRanges.append(range);
 }
