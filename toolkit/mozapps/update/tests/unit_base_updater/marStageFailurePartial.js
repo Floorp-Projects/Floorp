@@ -5,7 +5,8 @@
 
 /* General Partial MAR File Staged Patch Apply Failure Test */
 
-const STATE_AFTER_STAGE = IS_SERVICE_TEST ? STATE_PENDING : STATE_APPLYING;
+const STATE_AFTER_STAGE = STATE_FAILED;
+gStagingRemovedUpdate = true;
 
 function run_test() {
   if (!setupTestCommon()) {
@@ -29,7 +30,10 @@ function setupUpdaterTestFinished() {
  * Called after the call to stageUpdate finishes.
  */
 function stageUpdateFinished() {
-  standardInit();
+  Assert.equal(readStatusState(), STATE_NONE,
+               "the status file state" + MSG_SHOULD_EQUAL);
+  Assert.equal(gUpdateManager.getUpdateAt(0).errorCode, LOADSOURCE_ERROR_WRONG_SIZE,
+               "the update errorCode" + MSG_SHOULD_EQUAL);
   checkPostUpdateRunningFile(false);
   checkFilesAfterUpdateFailure(getApplyDirFile);
   checkUpdateLogContains(ERR_LOADSOURCEFILE_FAILED);
