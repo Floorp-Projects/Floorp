@@ -836,7 +836,9 @@ function DownloadURL(aURL, aFileName, aInitiatingDocument) {
       target: { path: file.path, partFilePath: file.path + ".part" }
     });
     download.tryToKeepPartialData = true;
-    download.start();
+
+    // Ignore errors because failures are reported through the download list.
+    download.start().catch(() => {});
 
     // Add the download to the list, allowing it to be managed.
     let list = yield Downloads.getList(Downloads.ALL);
