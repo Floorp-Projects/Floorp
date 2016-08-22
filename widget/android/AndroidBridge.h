@@ -193,10 +193,6 @@ public:
     // DeleteGlobalRef() when the context is no longer needed.
     jobject GetGlobalContextRef(void);
 
-    void *AcquireNativeWindow(JNIEnv* aEnv, jobject aSurface);
-    void ReleaseNativeWindow(void *window);
-    mozilla::gfx::IntSize GetNativeWindowSize(void* window);
-
     void HandleGeckoMessage(JSContext* cx, JS::HandleObject message);
 
     bool InitCamera(const nsCString& contentType, uint32_t camera, uint32_t *width, uint32_t *height, uint32_t *fps);
@@ -256,8 +252,6 @@ public:
     uint16_t GetScreenAngle();
 
     int GetAPIVersion() { return mAPIVersion; }
-
-    void InvalidateAndScheduleComposite();
 
     nsresult GetProxyForURI(const nsACString & aSpec,
                             const nsACString & aScheme,
@@ -342,15 +336,6 @@ private:
 public:
     void PostTaskToUiThread(already_AddRefed<Runnable> aTask, int aDelayMs);
     int64_t RunDelayedUiThreadTasks();
-
-    void* GetPresentationWindow();
-    void SetPresentationWindow(void* aPresentationWindow);
-
-    EGLSurface GetPresentationSurface();
-    void SetPresentationSurface(EGLSurface aPresentationSurface);
-private:
-    void* mPresentationWindow;
-    EGLSurface mPresentationSurface;
 };
 
 class AutoJNIClass {

@@ -703,11 +703,11 @@ nsWindow::DestroyChildWindows()
     }
 }
 
-NS_IMETHODIMP
-nsWindow::Destroy(void)
+void
+nsWindow::Destroy()
 {
     if (mIsDestroyed || !mCreated)
-        return NS_OK;
+        return;
 
     LOG(("nsWindow::Destroy [%p]\n", (void *)this));
     mIsDestroyed = true;
@@ -804,8 +804,6 @@ nsWindow::Destroy(void)
 
     // Save until last because OnDestroy() may cause us to be deleted.
     OnDestroy();
-
-    return NS_OK;
 }
 
 nsIWidget *
@@ -1280,20 +1278,18 @@ nsWindow::SetZIndex(int32_t aZIndex)
     }
 }
 
-NS_IMETHODIMP
+void
 nsWindow::SetSizeMode(nsSizeMode aMode)
 {
-    nsresult rv;
-
     LOG(("nsWindow::SetSizeMode [%p] %d\n", (void *)this, aMode));
 
     // Save the requested state.
-    rv = nsBaseWidget::SetSizeMode(aMode);
+    nsBaseWidget::SetSizeMode(aMode);
 
     // return if there's no shell or our current state is the same as
     // the mode we were just set to.
     if (!mShell || mSizeState == mSizeMode) {
-        return rv;
+        return;
     }
 
     switch (aMode) {
@@ -1317,8 +1313,6 @@ nsWindow::SetSizeMode(nsSizeMode aMode)
     }
 
     mSizeState = mSizeMode;
-
-    return rv;
 }
 
 typedef void (* SetUserTimeFunc)(GdkWindow* aWindow, guint32 aTimestamp);
@@ -1883,12 +1877,6 @@ nsWindow::WidgetToScreenOffset()
     }
 
     return GdkPointToDevicePixels({ x, y });
-}
-
-NS_IMETHODIMP
-nsWindow::EnableDragDrop(bool aEnable)
-{
-    return NS_OK;
 }
 
 NS_IMETHODIMP

@@ -56,7 +56,7 @@
 #include "nsRegion.h"                   // for nsIntRegion, etc
 #ifdef MOZ_WIDGET_ANDROID
 #include <android/log.h>
-#include "AndroidBridge.h"
+#include <android/native_window.h>
 #endif
 #if defined(MOZ_WIDGET_ANDROID) || defined(MOZ_WIDGET_GONK)
 #include "opengl/CompositorOGL.h"
@@ -1086,17 +1086,15 @@ void
 LayerManagerComposite::RenderToPresentationSurface()
 {
 #ifdef MOZ_WIDGET_ANDROID
-  if (!AndroidBridge::Bridge()) {
-    return;
-  }
-
-  void* window = AndroidBridge::Bridge()->GetPresentationWindow();
+  nsIWidget* const widget = mCompositor->GetWidget()->RealWidget();
+  auto window = static_cast<ANativeWindow*>(
+      widget->GetNativeData(NS_PRESENTATION_WINDOW));
 
   if (!window) {
     return;
   }
 
-  EGLSurface surface = AndroidBridge::Bridge()->GetPresentationSurface();
+  EGLSurface surface = widget->GetNativeData(NS_PRESENTATION_SURFACE);
 
   if (!surface) {
     //create surface;
@@ -1105,7 +1103,8 @@ LayerManagerComposite::RenderToPresentationSurface()
       return;
     }
 
-    AndroidBridge::Bridge()->SetPresentationSurface(surface);
+    widget->SetNativeData(NS_PRESENTATION_SURFACE,
+                          reinterpret_cast<uintptr_t>(surface));
   }
 
   CompositorOGL* compositor = mCompositor->AsCompositorOGL();
@@ -1116,7 +1115,8 @@ LayerManagerComposite::RenderToPresentationSurface()
     return;
   }
 
-  const IntSize windowSize = AndroidBridge::Bridge()->GetNativeWindowSize(window);
+  const IntSize windowSize(ANativeWindow_getWidth(window),
+                           ANativeWindow_getHeight(window));
 
 #elif defined(MOZ_WIDGET_GONK)
   CompositorOGL* compositor = mCompositor->AsCompositorOGL();

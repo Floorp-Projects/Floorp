@@ -1,0 +1,31 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+GARBAGE += $(MIDL_GENERATED_FILES) done_gen dlldata.c
+
+MIDL_GENERATED_FILES = \
+  Accessible.h \
+  Accessible_i.c \
+  Accessible_p.c \
+  Accessible.tlb \
+  $(NULL)
+
+$(MIDL_GENERATED_FILES): done_gen
+
+done_gen: Accessible.idl
+	$(MIDL) $(MIDL_FLAGS) -Oicf $(srcdir)/Accessible.idl
+	touch $@
+
+export:: done_gen
+
+midl_exports := \
+  Accessible.tlb \
+  $(NULL)
+
+INSTALL_TARGETS += midl_exports
+midl_exports_FILES := $(midl_exports)
+midl_exports_DEST = $(DIST)/bin
+midl_exports_TARGET := export
+
+include $(topsrcdir)/config/rules.mk

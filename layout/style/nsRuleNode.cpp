@@ -8882,10 +8882,9 @@ nsRuleNode::ComputeContentData(void* aStartStruct,
   case eCSSUnit_Inherit:
     conditions.SetUncacheable();
     count = parentContent->ContentCount();
-    if (NS_SUCCEEDED(content->AllocateContents(count))) {
-      while (0 < count--) {
-        content->ContentAt(count) = parentContent->ContentAt(count);
-      }
+    content->AllocateContents(count);
+    while (0 < count--) {
+      content->ContentAt(count) = parentContent->ContentAt(count);
     }
     break;
 
@@ -8902,66 +8901,62 @@ nsRuleNode::ComputeContentData(void* aStartStruct,
   case eCSSUnit_List:
   case eCSSUnit_ListDep: {
     const nsCSSValueList* contentValueList = contentValue->GetListValue();
-      count = 0;
-      while (contentValueList) {
-        count++;
-        contentValueList = contentValueList->mNext;
-      }
-      if (NS_SUCCEEDED(content->AllocateContents(count))) {
-        const nsAutoString  nullStr;
-        count = 0;
-        contentValueList = contentValue->GetListValue();
-        while (contentValueList) {
-          const nsCSSValue& value = contentValueList->mValue;
-          nsCSSUnit unit = value.GetUnit();
-          nsStyleContentType type;
-          nsStyleContentData &data = content->ContentAt(count++);
-          switch (unit) {
-          case eCSSUnit_String:   type = eStyleContentType_String;    break;
-          case eCSSUnit_Image:    type = eStyleContentType_Image;     break;
-          case eCSSUnit_Attr:     type = eStyleContentType_Attr;      break;
-          case eCSSUnit_Counter:  type = eStyleContentType_Counter;   break;
-          case eCSSUnit_Counters: type = eStyleContentType_Counters;  break;
-          case eCSSUnit_Enumerated:
-            switch (value.GetIntValue()) {
-            case NS_STYLE_CONTENT_OPEN_QUOTE:
-              type = eStyleContentType_OpenQuote;     break;
-            case NS_STYLE_CONTENT_CLOSE_QUOTE:
-              type = eStyleContentType_CloseQuote;    break;
-            case NS_STYLE_CONTENT_NO_OPEN_QUOTE:
-              type = eStyleContentType_NoOpenQuote;   break;
-            case NS_STYLE_CONTENT_NO_CLOSE_QUOTE:
-              type = eStyleContentType_NoCloseQuote;  break;
-            default:
-              NS_ERROR("bad content value");
-              type = eStyleContentType_Uninitialized;
-            }
-            break;
-          default:
-            NS_ERROR("bad content type");
-            type = eStyleContentType_Uninitialized;
-          }
-          data.mType = type;
-          if (type == eStyleContentType_Image) {
-            SetImageRequest([&](imgRequestProxy* req) {
-              data.SetImage(req);
-            }, mPresContext, value);
-          }
-          else if (type <= eStyleContentType_Attr) {
-            value.GetStringValue(buffer);
-            data.mContent.mString = NS_strdup(buffer.get());
-          }
-          else if (type <= eStyleContentType_Counters) {
-            data.mContent.mCounters = value.GetArrayValue();
-            data.mContent.mCounters->AddRef();
-          }
-          else {
-            data.mContent.mString = nullptr;
-          }
-          contentValueList = contentValueList->mNext;
+    count = 0;
+    while (contentValueList) {
+      count++;
+      contentValueList = contentValueList->mNext;
+    }
+    content->AllocateContents(count);
+    const nsAutoString nullStr;
+    count = 0;
+    contentValueList = contentValue->GetListValue();
+    while (contentValueList) {
+      const nsCSSValue& value = contentValueList->mValue;
+      nsCSSUnit unit = value.GetUnit();
+      nsStyleContentType type;
+      nsStyleContentData &data = content->ContentAt(count++);
+      switch (unit) {
+      case eCSSUnit_String:   type = eStyleContentType_String;    break;
+      case eCSSUnit_Image:    type = eStyleContentType_Image;     break;
+      case eCSSUnit_Attr:     type = eStyleContentType_Attr;      break;
+      case eCSSUnit_Counter:  type = eStyleContentType_Counter;   break;
+      case eCSSUnit_Counters: type = eStyleContentType_Counters;  break;
+      case eCSSUnit_Enumerated:
+        switch (value.GetIntValue()) {
+        case NS_STYLE_CONTENT_OPEN_QUOTE:
+          type = eStyleContentType_OpenQuote;     break;
+        case NS_STYLE_CONTENT_CLOSE_QUOTE:
+          type = eStyleContentType_CloseQuote;    break;
+        case NS_STYLE_CONTENT_NO_OPEN_QUOTE:
+          type = eStyleContentType_NoOpenQuote;   break;
+        case NS_STYLE_CONTENT_NO_CLOSE_QUOTE:
+          type = eStyleContentType_NoCloseQuote;  break;
+        default:
+          NS_ERROR("bad content value");
+          type = eStyleContentType_Uninitialized;
         }
+        break;
+      default:
+        NS_ERROR("bad content type");
+        type = eStyleContentType_Uninitialized;
       }
-      break;
+      data.mType = type;
+      if (type == eStyleContentType_Image) {
+        SetImageRequest([&](imgRequestProxy* req) {
+          data.SetImage(req);
+        }, mPresContext, value);
+      } else if (type <= eStyleContentType_Attr) {
+        value.GetStringValue(buffer);
+        data.mContent.mString = NS_strdup(buffer.get());
+      } else if (type <= eStyleContentType_Counters) {
+        data.mContent.mCounters = value.GetArrayValue();
+        data.mContent.mCounters->AddRef();
+      } else {
+        data.mContent.mString = nullptr;
+      }
+      contentValueList = contentValueList->mNext;
+    }
+    break;
   }
 
   default:
@@ -8984,12 +8979,10 @@ nsRuleNode::ComputeContentData(void* aStartStruct,
   case eCSSUnit_Inherit:
     conditions.SetUncacheable();
     count = parentContent->CounterIncrementCount();
-    if (NS_SUCCEEDED(content->AllocateCounterIncrements(count))) {
-      while (0 < count--) {
-        const nsStyleCounterData *data =
-          parentContent->GetCounterIncrementAt(count);
-        content->SetCounterIncrementAt(count, data->mCounter, data->mValue);
-      }
+    content->AllocateCounterIncrements(count);
+    while (count--) {
+      const nsStyleCounterData& data = parentContent->CounterIncrementAt(count);
+      content->SetCounterIncrementAt(count, data.mCounter, data.mValue);
     }
     break;
 
@@ -9000,9 +8993,7 @@ nsRuleNode::ComputeContentData(void* aStartStruct,
     MOZ_ASSERT(ourIncrement->mXValue.GetUnit() == eCSSUnit_Ident,
                "unexpected value unit");
     count = ListLength(ourIncrement);
-    if (NS_FAILED(content->AllocateCounterIncrements(count))) {
-      break;
-    }
+    content->AllocateCounterIncrements(count);
 
     count = 0;
     for (const nsCSSValuePairList* p = ourIncrement; p; p = p->mNext, count++) {
@@ -9037,12 +9028,10 @@ nsRuleNode::ComputeContentData(void* aStartStruct,
   case eCSSUnit_Inherit:
     conditions.SetUncacheable();
     count = parentContent->CounterResetCount();
-    if (NS_SUCCEEDED(content->AllocateCounterResets(count))) {
-      while (0 < count--) {
-        const nsStyleCounterData *data =
-          parentContent->GetCounterResetAt(count);
-        content->SetCounterResetAt(count, data->mCounter, data->mValue);
-      }
+    content->AllocateCounterResets(count);
+    while (0 < count--) {
+      const nsStyleCounterData& data = parentContent->CounterResetAt(count);
+      content->SetCounterResetAt(count, data.mCounter, data.mValue);
     }
     break;
 
@@ -9053,10 +9042,7 @@ nsRuleNode::ComputeContentData(void* aStartStruct,
     MOZ_ASSERT(ourReset->mXValue.GetUnit() == eCSSUnit_Ident,
                "unexpected value unit");
     count = ListLength(ourReset);
-    if (NS_FAILED(content->AllocateCounterResets(count))) {
-      break;
-    }
-
+    content->AllocateCounterResets(count);
     count = 0;
     for (const nsCSSValuePairList* p = ourReset; p; p = p->mNext, count++) {
       int32_t reset;

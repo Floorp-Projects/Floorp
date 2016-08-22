@@ -1187,6 +1187,18 @@ auto PrefsHelper::OnPrefChange(mozilla::jni::String::Param a0, int32_t a1, bool 
     return mozilla::jni::Method<OnPrefChange_t>::Call(PrefsHelper::Context(), nullptr, a0, a1, a2, a3, a4);
 }
 
+const char PresentationMediaPlayerManager::name[] =
+        "org/mozilla/gecko/PresentationMediaPlayerManager";
+
+constexpr char PresentationMediaPlayerManager::AddPresentationSurface_t::name[];
+constexpr char PresentationMediaPlayerManager::AddPresentationSurface_t::signature[];
+
+constexpr char PresentationMediaPlayerManager::InvalidateAndScheduleComposite_t::name[];
+constexpr char PresentationMediaPlayerManager::InvalidateAndScheduleComposite_t::signature[];
+
+constexpr char PresentationMediaPlayerManager::RemovePresentationSurface_t::name[];
+constexpr char PresentationMediaPlayerManager::RemovePresentationSurface_t::signature[];
+
 const char Telemetry::name[] =
         "org/mozilla/gecko/Telemetry";
 
@@ -1390,12 +1402,33 @@ auto LayerRenderer::Frame::EndDrawing() const -> void
 const char LayerView::name[] =
         "org/mozilla/gecko/gfx/LayerView";
 
+constexpr char LayerView::GetCompositor_t::name[];
+constexpr char LayerView::GetCompositor_t::signature[];
+
+auto LayerView::GetCompositor() const -> mozilla::jni::Object::LocalRef
+{
+    return mozilla::jni::Method<GetCompositor_t>::Call(LayerView::mCtx, nullptr);
+}
+
 constexpr char LayerView::UpdateZoomedView_t::name[];
 constexpr char LayerView::UpdateZoomedView_t::signature[];
 
 auto LayerView::UpdateZoomedView(mozilla::jni::ByteBuffer::Param a0) -> void
 {
     return mozilla::jni::Method<UpdateZoomedView_t>::Call(LayerView::Context(), nullptr, a0);
+}
+
+constexpr char LayerView::CompositorCreated_t::name[];
+constexpr char LayerView::CompositorCreated_t::signature[];
+
+auto LayerView::CompositorCreated() const -> bool
+{
+    return mozilla::jni::Field<CompositorCreated_t>::Get(LayerView::mCtx, nullptr);
+}
+
+auto LayerView::CompositorCreated(bool a0) const -> void
+{
+    return mozilla::jni::Field<CompositorCreated_t>::Set(LayerView::mCtx, nullptr, a0);
 }
 
 const char LayerView::Compositor::name[] =

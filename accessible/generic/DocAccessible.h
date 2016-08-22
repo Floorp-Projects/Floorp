@@ -577,7 +577,7 @@ protected:
    */
   void SetIPCDoc(DocAccessibleChild* aIPCDoc) { mIPCDoc = aIPCDoc; }
 
-  friend class DocAccessibleChild;
+  friend class DocAccessibleChildBase;
 
   /**
    * Used to fire scrolling end event after page scroll.

@@ -10,6 +10,7 @@
 #include "mozilla/layers/ISurfaceAllocator.h"     // for GfxMemoryImageReporter
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/gfx/GPUProcessManager.h"
+#include "mozilla/gfx/GraphicsMessages.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/TimeStamp.h"
@@ -173,10 +174,6 @@ static qcms_transform *gCMSRGBATransform = nullptr;
 
 static bool gCMSInitialized = false;
 static eCMSMode gCMSMode = eCMSMode_Off;
-
-// Device init data should only be used on child processes, so we protect it
-// behind a getter here.
-static DeviceInitData sDeviceInitDataDoNotUseDirectly;
 
 static void ShutdownCMS();
 
@@ -875,6 +872,8 @@ gfxPlatform::Shutdown()
 
     gfxConfig::Shutdown();
 
+    gPlatform->WillShutdown();
+
     delete gPlatform;
     gPlatform = nullptr;
 }
@@ -928,11 +927,18 @@ gfxPlatform::ShutdownLayersIPC()
     }
 }
 
-gfxPlatform::~gfxPlatform()
+void
+gfxPlatform::WillShutdown()
 {
+    // Destoy these first in case they depend on backend-specific resources.
+    // Otherwise, the backend's destructor would be called before the
+    // base gfxPlatform destructor.
     mScreenReferenceSurface = nullptr;
     mScreenReferenceDrawTarget = nullptr;
+}
 
+gfxPlatform::~gfxPlatform()
+{
     // The cairo folks think we should only clean up in debug builds,
     // but we're generally in the habit of trying to shut down as
     // cleanly as possible even in production code, so call this
@@ -2237,13 +2243,6 @@ gfxPlatform::GetScaledFontForFontWithCairoSkia(DrawTarget* aTarget, gfxFont* aFo
     return nullptr;
 }
 
-/* static */ DeviceInitData&
-gfxPlatform::GetParentDevicePrefs()
-{
-  MOZ_ASSERT(XRE_IsContentProcess());
-  return sDeviceInitDataDoNotUseDirectly;
-}
-
 /* static */ bool
 gfxPlatform::UsesOffMainThreadCompositing()
 {
@@ -2422,32 +2421,46 @@ gfxPlatform::NotifyCompositorCreated(LayersBackend aBackend)
 }
 
 void
-gfxPlatform::GetDeviceInitData(mozilla::gfx::DeviceInitData* aOut)
+gfxPlatform::FetchAndImportContentDeviceData()
 {
-  MOZ_ASSERT(XRE_IsParentProcess());
-  aOut->useHwCompositing() = gfxConfig::IsEnabled(Feature::HW_COMPOSITING);
+  MOZ_ASSERT(XRE_IsContentProcess());
+
+  mozilla::dom::ContentChild* cc = mozilla::dom::ContentChild::GetSingleton();
+
+  mozilla::gfx::ContentDeviceData data;
+  cc->SendGetGraphicsDeviceInitData(&data);
+
+  ImportContentDeviceData(data);
 }
 
-bool
-gfxPlatform::UpdateDeviceInitData()
+void
+gfxPlatform::ImportContentDeviceData(const mozilla::gfx::ContentDeviceData& aData)
 {
-  if (XRE_IsParentProcess()) {
-    // The parent process figures out device initialization on its own.
-    return false;
-  }
+  MOZ_ASSERT(XRE_IsContentProcess());
 
-  mozilla::gfx::DeviceInitData data;
-  mozilla::dom::ContentChild::GetSingleton()->SendGetGraphicsDeviceInitData(&data);
+  const DevicePrefs& prefs = aData.prefs();
+  gfxConfig::Inherit(Feature::HW_COMPOSITING, prefs.hwCompositing());
+  gfxConfig::Inherit(Feature::OPENGL_COMPOSITING, prefs.oglCompositing());
+}
 
-  sDeviceInitDataDoNotUseDirectly = data;
+void
+gfxPlatform::BuildContentDeviceData(mozilla::gfx::ContentDeviceData* aOut)
+{
+  MOZ_ASSERT(XRE_IsParentProcess());
 
-  // Ensure that child processes have inherited the HW_COMPOSITING pref.
-  gfxConfig::InitOrUpdate(
-    Feature::HW_COMPOSITING,
-    GetParentDevicePrefs().useHwCompositing(),
-    FeatureStatus::Blocked,
-    "Hardware-accelerated compositing disabled in parent process");
-  return true;
+  // Make sure our settings are synchronized from the GPU process.
+  GPUProcessManager::Get()->EnsureGPUReady();
+
+  aOut->prefs().hwCompositing() = gfxConfig::GetValue(Feature::HW_COMPOSITING);
+  aOut->prefs().oglCompositing() = gfxConfig::GetValue(Feature::OPENGL_COMPOSITING);
+}
+
+void
+gfxPlatform::ImportGPUDeviceData(const mozilla::gfx::GPUDeviceData& aData)
+{
+  MOZ_ASSERT(XRE_IsParentProcess());
+
+  gfxConfig::ImportChange(Feature::OPENGL_COMPOSITING, aData.oglCompositing());
 }
 
 bool

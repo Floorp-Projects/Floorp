@@ -64,12 +64,23 @@ add_task(function* testWebExtensionsToolboxSwitchToPopup() {
     /* eslint-disable no-undef */
 
     let jsterm;
+    let popupFramePromise;
 
     toolbox.selectTool("webconsole")
       .then(console => {
         dump(`Clicking the noautohide button\n`);
         toolbox.doc.getElementById("command-button-noautohide").click();
         dump(`Clicked the noautohide button\n`);
+
+        popupFramePromise = new Promise(resolve => {
+          let listener = (event, data) => {
+            if (data.frames.some(({url}) => url && url.endsWith("popup.html"))) {
+              toolbox.target.off("frame-update", listener);
+              resolve();
+            }
+          };
+          toolbox.target.on("frame-update", listener);
+        });
 
         let waitForFrameListUpdate = new Promise((done) => {
           toolbox.target.once("frame-update", () => {
@@ -85,9 +96,7 @@ add_task(function* testWebExtensionsToolboxSwitchToPopup() {
       })
       .then((console) => {
         // Wait the new frame update (once the extension popup has been opened).
-        return new Promise((done) => {
-          toolbox.target.once("frame-update", done);
-        });
+        return popupFramePromise;
       })
       .then(() => {
         dump(`Clicking the frame list button\n`);

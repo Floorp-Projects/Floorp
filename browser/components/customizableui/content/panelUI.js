@@ -303,7 +303,7 @@ const PanelUI = {
    * @param aAnchor the element that spawned the subview.
    * @param aPlacementArea the CustomizableUI area that aAnchor is in.
    */
-  showSubView: function(aViewId, aAnchor, aPlacementArea) {
+  showSubView: Task.async(function*(aViewId, aAnchor, aPlacementArea) {
     this._ensureEventListenersAdded();
     let viewNode = document.getElementById(aViewId);
     if (!viewNode) {
@@ -320,15 +320,6 @@ const PanelUI = {
       this.multiView.showSubView(aViewId, aAnchor);
     } else if (!aAnchor.open) {
       aAnchor.open = true;
-      // Emit the ViewShowing event so that the widget definition has a chance
-      // to lazily populate the subview with things.
-      let evt = document.createEvent("CustomEvent");
-      evt.initCustomEvent("ViewShowing", true, true, viewNode);
-      viewNode.dispatchEvent(evt);
-      if (evt.defaultPrevented) {
-        aAnchor.open = false;
-        return;
-      }
 
       let tempPanel = document.createElement("panel");
       tempPanel.setAttribute("type", "arrow");
@@ -354,19 +345,53 @@ const PanelUI = {
       multiView.setAttribute("mainViewIsSubView", "true");
       multiView.setMainView(viewNode);
       viewNode.classList.add("cui-widget-panelview");
-      CustomizableUI.addPanelCloseListeners(tempPanel);
 
-      let panelRemover = function() {
-        tempPanel.removeEventListener("popuphidden", panelRemover);
+      let viewShown = false;
+      let panelRemover = () => {
         viewNode.classList.remove("cui-widget-panelview");
-        CustomizableUI.removePanelCloseListeners(tempPanel);
-        let evt = new CustomEvent("ViewHiding", {detail: viewNode});
-        viewNode.dispatchEvent(evt);
+        if (viewShown) {
+          CustomizableUI.removePanelCloseListeners(tempPanel);
+          tempPanel.removeEventListener("popuphidden", panelRemover);
+
+          let evt = new CustomEvent("ViewHiding", {detail: viewNode});
+          viewNode.dispatchEvent(evt);
+        }
         aAnchor.open = false;
 
         this.multiView.appendChild(viewNode);
-        tempPanel.parentElement.removeChild(tempPanel);
-      }.bind(this);
+        tempPanel.remove();
+      };
+
+      // Emit the ViewShowing event so that the widget definition has a chance
+      // to lazily populate the subview with things.
+      let detail = {
+        blockers: new Set(),
+        addBlocker(aPromise) {
+          this.blockers.add(aPromise);
+        },
+      };
+
+      let evt = new CustomEvent("ViewShowing", { bubbles: true, cancelable: true, detail });
+      viewNode.dispatchEvent(evt);
+
+      let cancel = evt.defaultPrevented;
+      if (detail.blockers.size) {
+        try {
+          let results = yield Promise.all(detail.blockers);
+          cancel = cancel || results.some(val => val === false);
+        } catch (e) {
+          Components.utils.reportError(e);
+          cancel = true;
+        }
+      }
+
+      if (cancel) {
+        panelRemover();
+        return;
+      }
+
+      viewShown = true;
+      CustomizableUI.addPanelCloseListeners(tempPanel);
       tempPanel.addEventListener("popuphidden", panelRemover);
 
       let iconAnchor =
@@ -378,7 +403,7 @@ const PanelUI = {
       }
       tempPanel.openPopup(iconAnchor || aAnchor, "bottomcenter topright");
     }
-  },
+  }),
 
   /**
    * NB: The enable- and disableSingleSubviewPanelAnimations methods only

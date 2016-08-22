@@ -12,6 +12,7 @@
 #include "mozilla/StyleSheetHandle.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsIContentInlines.h"
 #include "nsTHashtable.h"
 #include "nsDocument.h"
 

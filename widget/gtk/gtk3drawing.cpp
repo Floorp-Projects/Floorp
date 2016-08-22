@@ -19,8 +19,6 @@
 #include <math.h>
 
 static GtkWidget* gProtoLayout;
-static GtkWidget* gHScaleWidget;
-static GtkWidget* gVScaleWidget;
 static GtkWidget* gComboBoxWidget;
 static GtkWidget* gComboBoxButtonWidget;
 static GtkWidget* gComboBoxArrowWidget;
@@ -80,20 +78,6 @@ setup_widget_prototype(GtkWidget* widget)
     }
     gtk_container_add(GTK_CONTAINER(gProtoLayout), widget);
     return MOZ_GTK_SUCCESS;
-}
-
-static gint
-ensure_scale_widget()
-{
-  if (!gHScaleWidget) {
-    gHScaleWidget = gtk_scale_new(GTK_ORIENTATION_HORIZONTAL, NULL);
-    setup_widget_prototype(gHScaleWidget);
-  }
-  if (!gVScaleWidget) {
-    gVScaleWidget = gtk_scale_new(GTK_ORIENTATION_VERTICAL, NULL);
-    setup_widget_prototype(gVScaleWidget);
-  }
-  return MOZ_GTK_SUCCESS;
 }
 
 /* We need to have pointers to the inner widgets (button, separator, arrow)
@@ -879,18 +863,15 @@ moz_gtk_scale_paint(cairo_t *cr, GdkRectangle* rect,
   GtkStateFlags state_flags = GetStateFlagsFromGtkWidgetState(state);
   gint x, y, width, height, min_width, min_height;
   GtkStyleContext* style;
-  GtkWidget* widget;
   GtkBorder margin;
 
-  ensure_scale_widget();
-  widget = ((flags == GTK_ORIENTATION_HORIZONTAL) ? gHScaleWidget : gVScaleWidget);
-  gtk_widget_set_direction(widget, direction);
   moz_gtk_get_scale_metrics(flags, &min_width, &min_height);
 
-  style = gtk_widget_get_style_context(widget);
-  gtk_style_context_save(style);
-  gtk_style_context_add_class(style, GTK_STYLE_CLASS_TROUGH);
-  gtk_style_context_get_margin(style, state_flags, &margin); 
+  WidgetNodeType widget = (flags == GTK_ORIENTATION_HORIZONTAL) ?
+                          MOZ_GTK_SCALE_TROUGH_HORIZONTAL :
+                          MOZ_GTK_SCALE_TROUGH_VERTICAL;
+  style = ClaimStyleContext(widget, direction, state_flags);
+  gtk_style_context_get_margin(style, state_flags, &margin);
 
   // Clamp the dimension perpendicular to the direction that the slider crosses
   // to the minimum size.
@@ -912,7 +893,8 @@ moz_gtk_scale_paint(cairo_t *cr, GdkRectangle* rect,
   if (state->focused)
     gtk_render_focus(style, cr, 
                     rect->x, rect->y, rect->width, rect->height);
-  gtk_style_context_restore(style);
+
+  ReleaseStyleContext(style);
   return MOZ_GTK_SUCCESS;
 }
 
@@ -923,17 +905,8 @@ moz_gtk_scale_thumb_paint(cairo_t *cr, GdkRectangle* rect,
 {
   GtkStateFlags state_flags = GetStateFlagsFromGtkWidgetState(state);
   GtkStyleContext* style;
-  GtkWidget* widget;
   gint thumb_width, thumb_height, x, y;
 
-  ensure_scale_widget();
-  widget = ((flags == GTK_ORIENTATION_HORIZONTAL) ? gHScaleWidget : gVScaleWidget);
-  gtk_widget_set_direction(widget, direction);
-
-  style = gtk_widget_get_style_context(widget);
-  gtk_style_context_save(style);
-  gtk_style_context_add_class(style, GTK_STYLE_CLASS_SLIDER);
-  gtk_style_context_set_state(style, state_flags);
   /* determine the thumb size, and position the thumb in the center in the opposite axis 
   */
   if (flags == GTK_ORIENTATION_HORIZONTAL) {
@@ -947,8 +920,13 @@ moz_gtk_scale_thumb_paint(cairo_t *cr, GdkRectangle* rect,
     y = rect->y;
   }
 
+  WidgetNodeType widget = (flags == GTK_ORIENTATION_HORIZONTAL) ?
+                          MOZ_GTK_SCALE_THUMB_HORIZONTAL :
+                          MOZ_GTK_SCALE_THUMB_VERTICAL;
+  style = ClaimStyleContext(widget, direction, state_flags);
   gtk_render_slider(style, cr, x, y, thumb_width, thumb_height, flags);
-  gtk_style_context_restore(style);
+  ReleaseStyleContext(style);
+
   return MOZ_GTK_SUCCESS;
 }
 
@@ -2303,12 +2281,8 @@ moz_gtk_get_widget_border(WidgetNodeType widget, gint* left, gint* top,
         w = GetWidget(MOZ_GTK_SPINBUTTON);
         break;
     case MOZ_GTK_SCALE_HORIZONTAL:
-        ensure_scale_widget();
-        w = gHScaleWidget;
-        break;
     case MOZ_GTK_SCALE_VERTICAL:
-        ensure_scale_widget();
-        w = gVScaleWidget;
+        w = GetWidget(widget);
         break;
     case MOZ_GTK_FRAME:
         w = GetWidget(MOZ_GTK_FRAME);
@@ -2586,34 +2560,60 @@ void
 moz_gtk_get_scale_metrics(GtkOrientation orient, gint* scale_width,
                           gint* scale_height)
 {
-  gint thumb_length, thumb_height, trough_border;
-  GtkWidget* widget = orient == GTK_ORIENTATION_HORIZONTAL ?
-                      gHScaleWidget : gVScaleWidget;
-  moz_gtk_get_scalethumb_metrics(orient, &thumb_length, &thumb_height);
-  gtk_style_context_get_style(gtk_widget_get_style_context(widget),
-                              "trough-border", &trough_border, NULL);
+  WidgetNodeType widget = (orient == GTK_ORIENTATION_HORIZONTAL) ?
+                           MOZ_GTK_SCALE_HORIZONTAL :
+                           MOZ_GTK_SCALE_VERTICAL;
 
-  if (orient == GTK_ORIENTATION_HORIZONTAL) {
-      *scale_width = thumb_length + trough_border * 2;
-      *scale_height = thumb_height + trough_border * 2;
+  if (gtk_check_version(3, 20, 0) != nullptr) {
+      gint thumb_length, thumb_height, trough_border;
+      moz_gtk_get_scalethumb_metrics(orient, &thumb_length, &thumb_height);
+
+      GtkStyleContext* style = ClaimStyleContext(widget);
+      gtk_style_context_get_style(style, "trough-border", &trough_border, NULL);
+
+      if (orient == GTK_ORIENTATION_HORIZONTAL) {
+          *scale_width = thumb_length + trough_border * 2;
+          *scale_height = thumb_height + trough_border * 2;
+      } else {
+          *scale_width = thumb_height + trough_border * 2;
+          *scale_height = thumb_length + trough_border * 2;
+      }
+      ReleaseStyleContext(style);
   } else {
-      *scale_width = thumb_height + trough_border * 2;
-      *scale_height = thumb_length + trough_border * 2;
+      GtkStyleContext* style = ClaimStyleContext(widget);
+      gtk_style_context_get(style, gtk_style_context_get_state(style),
+                            "min-width", scale_width,
+                            "min-height", scale_height,
+                            nullptr);
+      ReleaseStyleContext(style);
   }
 }
 
 gint
 moz_gtk_get_scalethumb_metrics(GtkOrientation orient, gint* thumb_length, gint* thumb_height)
 {
-  GtkWidget* widget;
 
-  ensure_scale_widget();
-  widget = ((orient == GTK_ORIENTATION_HORIZONTAL) ? gHScaleWidget : gVScaleWidget);
-
-  gtk_style_context_get_style(gtk_widget_get_style_context(widget),
-                              "slider_length", thumb_length,
-                              "slider_width", thumb_height,
-                              NULL);
+  if (gtk_check_version(3, 20, 0) != nullptr) {
+      WidgetNodeType widget = (orient == GTK_ORIENTATION_HORIZONTAL) ?
+                               MOZ_GTK_SCALE_HORIZONTAL:
+                               MOZ_GTK_SCALE_VERTICAL;
+      GtkStyleContext* style = ClaimStyleContext(widget);
+      gtk_style_context_get_style(style,
+                                  "slider_length", thumb_length,
+                                  "slider_width", thumb_height,
+                                  NULL);
+      ReleaseStyleContext(style);
+  } else {
+      WidgetNodeType widget = (orient == GTK_ORIENTATION_HORIZONTAL) ?
+                               MOZ_GTK_SCALE_THUMB_HORIZONTAL:
+                               MOZ_GTK_SCALE_THUMB_VERTICAL;
+      GtkStyleContext* style = ClaimStyleContext(widget);
+      gtk_style_context_get(style, gtk_style_context_get_state(style),
+                            "min-width", thumb_length,
+                            "min-height", thumb_height,
+                             nullptr);
+      ReleaseStyleContext(style);
+  }
 
   return MOZ_GTK_SUCCESS;
 }
@@ -2903,8 +2903,6 @@ moz_gtk_shutdown()
     ResetWidgetCache();
 
     gProtoLayout = NULL;
-    gHScaleWidget = NULL;
-    gVScaleWidget = NULL;
     gComboBoxWidget = NULL;
     gComboBoxButtonWidget = NULL;
     gComboBoxSeparatorWidget = NULL;
