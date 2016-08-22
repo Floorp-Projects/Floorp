@@ -547,7 +547,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
      *     anything else - Make a new TypeError the pending exception and
      *         return handleUncaughtException(ac, vp, callHook).
      */
-    JSTrapStatus parseResumptionValue(mozilla::Maybe<AutoCompartment>& ac, bool OK, const Value& rv,
+    JSTrapStatus processHandlerResult(mozilla::Maybe<AutoCompartment>& ac, bool OK, const Value& rv,
                                       AbstractFramePtr frame, jsbytecode* pc, MutableHandleValue vp);
 
     /*
@@ -557,11 +557,11 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
      * check directly. When bug 1249193 is fixed, this overload should be
      * removed.
      */
-    JSTrapStatus parseResumptionValue(mozilla::Maybe<AutoCompartment>& ac, bool OK, const Value& rv,
+    JSTrapStatus processHandlerResult(mozilla::Maybe<AutoCompartment>& ac, bool OK, const Value& rv,
                                       const Value& thisVForCheck, AbstractFramePtr frame,
                                       MutableHandleValue vp);
 
-    JSTrapStatus parseResumptionValueHelper(mozilla::Maybe<AutoCompartment>& ac, bool ok, const Value& rv,
+    JSTrapStatus processHandlerResultHelper(mozilla::Maybe<AutoCompartment>& ac, bool ok, const Value& rv,
                                             const mozilla::Maybe<HandleValue>& thisVForCheck, AbstractFramePtr frame,
                                             MutableHandleValue vp);
 
