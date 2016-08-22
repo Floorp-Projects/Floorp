@@ -242,7 +242,8 @@ gfxDWriteFontFamily::FindStyleVariations(FontInfoData *aFontInfoData)
 
 void
 gfxDWriteFontFamily::ReadFaceNames(gfxPlatformFontList *aPlatformFontList,
-                                   bool aNeedFullnamePostscriptNames)
+                                   bool aNeedFullnamePostscriptNames,
+                                   FontInfoData *aFontInfoData)
 {
     // if all needed names have already been read, skip
     if (mOtherFamilyNamesInitialized &&
@@ -250,14 +251,19 @@ gfxDWriteFontFamily::ReadFaceNames(gfxPlatformFontList *aPlatformFontList,
         return;
     }
 
-    // DirectWrite version of this will try to read
-    // postscript/fullnames via DirectWrite API
-    FindStyleVariations();
+    // If we've been passed a FontInfoData, we skip the DWrite implementation
+    // here and fall back to the generic code which will use that info.
+    if (!aFontInfoData) {
+        // DirectWrite version of this will try to read
+        // postscript/fullnames via DirectWrite API
+        FindStyleVariations();
+    }
 
     // fallback to looking up via name table
     if (!mOtherFamilyNamesInitialized || !mFaceNamesInitialized) {
         gfxFontFamily::ReadFaceNames(aPlatformFontList,
-                                     aNeedFullnamePostscriptNames);
+                                     aNeedFullnamePostscriptNames,
+                                     aFontInfoData);
     }
 }
 
