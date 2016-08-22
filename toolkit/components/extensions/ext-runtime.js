@@ -74,20 +74,38 @@ extensions.registerSchemaAPI("runtime", context => {
       sendMessage: function(...args) {
         let options; // eslint-disable-line no-unused-vars
         let extensionId, message, responseCallback;
-        if (args.length == 1) {
+        if (typeof args[args.length - 1] == "function") {
+          responseCallback = args.pop();
+        }
+        if (!args.length) {
+          return Promise.reject({message: "runtime.sendMessage's message argument is missing"});
+        } else if (args.length == 1) {
           message = args[0];
         } else if (args.length == 2) {
-          [message, responseCallback] = args;
+          if (typeof args[0] == "string" && args[0]) {
+            [extensionId, message] = args;
+          } else {
+            [message, options] = args;
+          }
+        } else if (args.length == 3) {
+          [extensionId, message, options] = args;
+        } else if (args.length == 4 && !responseCallback) {
+          return Promise.reject({message: "runtime.sendMessage's last argument is not a function"});
         } else {
-          [extensionId, message, options, responseCallback] = args;
+          return Promise.reject({message: "runtime.sendMessage received too many arguments"});
         }
+
+        if (extensionId != null && typeof extensionId != "string") {
+          return Promise.reject({message: "runtime.sendMessage's extensionId argument is invalid"});
+        }
+        if (options != null && typeof options != "object") {
+          return Promise.reject({message: "runtime.sendMessage's options argument is invalid"});
+        }
+        // TODO(robwu): Validate option keys and values when we support it.
+
         extensionId = extensionId || extension.id;
         let recipient = {extensionId};
 
-        if (!GlobalManager.extensionMap.has(recipient.extensionId)) {
-          return context.wrapPromise(Promise.reject({message: "Invalid extension ID"}),
-                                     responseCallback);
-        }
         return context.messenger.sendMessage(Services.cpmm, message, recipient, responseCallback);
       },
 

@@ -8,7 +8,7 @@ ac_add_options --target=arm-linux-androideabi
 
 ac_add_options --with-branding=mobile/android/branding/nightly
 
-ac_add_options --with-gradle="$topsrcdir/gradle/bin/gradle"
+ac_add_options --with-gradle="$topsrcdir/gradle-dist/bin/gradle"
 export GRADLE_MAVEN_REPOSITORY="file://$topsrcdir/jcentral"
 
 # From here on, just like ../android-api-15/nightly.

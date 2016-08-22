@@ -80,6 +80,11 @@ AudioSampleToFloat(int16_t aValue)
 {
   return aValue/32768.0f;
 }
+inline float
+AudioSampleToFloat(int32_t aValue)
+{
+  return aValue/(float)(1U<<31);
+}
 
 template <typename T> T FloatToAudioSample(float aValue);
 
