@@ -215,6 +215,7 @@ function run_test()
     testURI("moz-icon://.extension", "moz-icon resource", "moz-icon resource");
   }
   testURI("about:config", "about resource", "about resource");
+  testURI("invalid.uri", "", "");
 
   testAllGetReadableDates();
 }
