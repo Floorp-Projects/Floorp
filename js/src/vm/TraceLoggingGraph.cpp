@@ -20,6 +20,7 @@
 
 #include "js/UniquePtr.h"
 #include "threading/LockGuard.h"
+#include "threading/Thread.h"
 #include "vm/TraceLogging.h"
 
 #ifndef DEFAULT_TRACE_LOG_DIR
@@ -155,8 +156,19 @@ TraceLoggerGraphState::nextLoggerId()
     }
 
     int written = fprintf(out, "{\"tree\":\"tl-tree.%u.%d.tl\", \"events\":\"tl-event.%u.%d.tl\", "
-                               "\"dict\":\"tl-dict.%u.%d.json\", \"treeFormat\":\"64,64,31,1,32\"}",
+                               "\"dict\":\"tl-dict.%u.%d.json\", \"treeFormat\":\"64,64,31,1,32\"",
                           pid_, numLoggers, pid_, numLoggers, pid_, numLoggers);
+
+    if (written > 0) {
+        char threadName[16];
+        js::ThisThread::GetName(threadName, sizeof(threadName));
+        if (threadName[0])
+            written = fprintf(out, ", \"threadName\":\"%s\"", threadName);
+    }
+
+    if (written > 0)
+        written = fprintf(out, "}");
+
     if (written < 0) {
         fprintf(stderr, "TraceLogging: Error while writing.\n");
         return uint32_t(-1);
