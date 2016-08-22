@@ -7,6 +7,7 @@
 #ifndef gc_Statistics_h
 #define gc_Statistics_h
 
+#include "mozilla/EnumeratedArray.h"
 #include "mozilla/IntegerRange.h"
 #include "mozilla/PodOperations.h"
 
@@ -133,6 +134,18 @@ struct ZoneGCStats
         collectedCompartmentCount(0), compartmentCount(0), sweptCompartmentCount(0)
     {}
 };
+
+#define FOR_EACH_GC_PROFILE_TIME(_)                                           \
+    _(BeginCallback, "beginCB",  PHASE_GC_BEGIN)                              \
+    _(WaitBgThread,  "waitBG",   PHASE_WAIT_BACKGROUND_THREAD)                \
+    _(DiscardCode,   "discard",  PHASE_MARK_DISCARD_CODE)                     \
+    _(RelazifyFunc,  "relazify", PHASE_RELAZIFY_FUNCTIONS)                    \
+    _(Purge,         "purge",    PHASE_PURGE)                                 \
+    _(Mark,          "mark",     PHASE_MARK)                                  \
+    _(Sweep,         "sweep",    PHASE_SWEEP)                                 \
+    _(Compact,       "compact",  PHASE_COMPACT)                               \
+    _(EndCallback,   "endCB",    PHASE_GC_END)                                \
+    _(Barriers,      "barriers", PHASE_BARRIER)
 
 /*
  * Struct for collecting timing statistics on a "phase tree". The tree is
@@ -280,6 +293,9 @@ struct Statistics
     SliceRange sliceRange() const { return slices.all(); }
     size_t slicesLength() const { return slices.length(); }
 
+    /* Print total profile times on shutdown. */
+    void printTotalProfileTimes();
+
   private:
     JSRuntime* runtime;
 
@@ -351,6 +367,25 @@ struct Statistics
      */
     bool aborted;
 
+    /* Profiling data. */
+
+    enum class ProfileKey
+    {
+        Total,
+#define DEFINE_TIME_KEY(name, text, phase)                                    \
+        name,
+FOR_EACH_GC_PROFILE_TIME(DEFINE_TIME_KEY)
+#undef DEFINE_TIME_KEY
+        KeyCount
+    };
+
+    using ProfileTimes = mozilla::EnumeratedArray<ProfileKey, ProfileKey::KeyCount, int64_t>;
+
+    int64_t profileThreshold_;
+    bool enableProfiling_;
+    ProfileTimes totalTimes_;
+    uint64_t sliceCount_;
+
     void beginGC(JSGCInvocationKind kind);
     void endGC();
 
@@ -372,6 +407,10 @@ struct Statistics
     UniqueChars formatJsonPhaseTimes(const PhaseTimeTable phaseTimes);
 
     double computeMMU(int64_t resolution) const;
+
+    void printSliceProfile();
+    static void printProfileHeader();
+    static void printProfileTimes(const ProfileTimes& times);
 };
 
 struct MOZ_RAII AutoGCSlice

@@ -1074,11 +1074,6 @@ interface nsIDocShell : nsIDocShellTreeItem
   [infallible] readonly attribute boolean hasLoadedNonBlankURI;
 
   /**
-   * Holds the id of the payment request associated with this docshell if any.
-   */
-  attribute DOMString paymentRequestId;
-
-  /**
    * Allow usage of -moz-window-dragging:drag for content docshells.
    * True for top level chrome docshells. Throws if set to false with
    * top level chrome docshell.
