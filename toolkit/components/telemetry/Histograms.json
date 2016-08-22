@@ -5477,6 +5477,14 @@
     "n_values": 3,
     "description": "Whether the user is in safe mode (No, Yes, Forced)"
   },
+  "SCRIPT_BLOCK_WRONG_MIME": {
+    "alert_emails": ["ckerschbaumer@mozilla.com"],
+    "bug_numbers": [1288361],
+    "expires_in_version": "56",
+    "kind": "enumerated",
+    "n_values": 10,
+    "description": "Whether the script load has a MIME type of ...?  (0=unknown, 1=js, 2=image, 3=audio, 4=video, 5=text/plain, 6=text/csv, 7=text/xml, 8=application/octet-stream, 9=application/xml)"
+  },
   "NEWTAB_PAGE_ENABLED": {
     "expires_in_version": "default",
     "kind": "boolean",
