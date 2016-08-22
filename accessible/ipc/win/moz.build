@@ -6,13 +6,13 @@
 
 DIRS += ['typelib']
 
+# With --disable-accessibility, we need to compile PDocAccessible.ipdl (which
+# also depends on COMPtrTypes.h), but not the C++.
 IPDL_SOURCES += ['PDocAccessible.ipdl']
+EXPORTS.mozilla.a11y += ['COMPtrTypes.h']
 
-# with --disable-accessibility we need to compile PDocAccessible.ipdl, but not
-# the C++.
 if CONFIG['ACCESSIBILITY']:
     EXPORTS.mozilla.a11y += [
-        'COMPtrTypes.h',
         'DocAccessibleChild.h',
         'PlatformChild.h',
         'ProxyAccessible.h'
