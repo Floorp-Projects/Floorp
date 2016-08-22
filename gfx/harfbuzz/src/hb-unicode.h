@@ -449,33 +449,18 @@ HB_EXTERN hb_script_t
 hb_unicode_script (hb_unicode_funcs_t *ufuncs,
 		   hb_codepoint_t unicode);
 
-/**
- * hb_unicode_compose:
- *
- * Since: 0.9.2
- **/
 HB_EXTERN hb_bool_t
 hb_unicode_compose (hb_unicode_funcs_t *ufuncs,
 		    hb_codepoint_t      a,
 		    hb_codepoint_t      b,
 		    hb_codepoint_t     *ab);
 
-/**
- * hb_unicode_decompose:
- *
- * Since: 0.9.2
- **/
 HB_EXTERN hb_bool_t
 hb_unicode_decompose (hb_unicode_funcs_t *ufuncs,
 		      hb_codepoint_t      ab,
 		      hb_codepoint_t     *a,
 		      hb_codepoint_t     *b);
 
-/**
- * hb_unicode_decompose_compatibility:
- *
- * Since: 0.9.2
- **/
 HB_EXTERN unsigned int
 hb_unicode_decompose_compatibility (hb_unicode_funcs_t *ufuncs,
 				    hb_codepoint_t      u,
