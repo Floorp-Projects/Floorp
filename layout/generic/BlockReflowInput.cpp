@@ -356,7 +356,7 @@ BlockReflowInput::GetFloatAvailableSpaceWithState(
 #ifdef DEBUG
   if (nsBlockFrame::gNoisyReflow) {
     nsFrame::IndentBy(stdout, nsBlockFrame::gNoiseIndent);
-    printf("GetAvailableSpace: band=%d,%d,%d,%d hasfloats=%d\n",
+    printf("%s: band=%d,%d,%d,%d hasfloats=%d\n", __func__,
            result.mRect.IStart(wm), result.mRect.BStart(wm),
            result.mRect.ISize(wm), result.mRect.BSize(wm), result.mHasFloats);
   }
@@ -389,7 +389,7 @@ BlockReflowInput::GetFloatAvailableSpaceForBSize(
 #ifdef DEBUG
   if (nsBlockFrame::gNoisyReflow) {
     nsFrame::IndentBy(stdout, nsBlockFrame::gNoiseIndent);
-    printf("GetAvailableSpaceForHeight: space=%d,%d,%d,%d hasfloats=%d\n",
+    printf("%s: space=%d,%d,%d,%d hasfloats=%d\n", __func__,
            result.mRect.IStart(wm), result.mRect.BStart(wm),
            result.mRect.ISize(wm), result.mRect.BSize(wm), result.mHasFloats);
   }
@@ -614,7 +614,7 @@ BlockReflowInput::AddFloat(nsLineLayout*       aLineLayout,
   bool placed;
 
   // Now place the float immediately if possible. Otherwise stash it
-  // away in mPendingFloats and place it later.
+  // away in mBelowCurrentLineFloats and place it later.
   // If one or more floats has already been pushed to the next line,
   // don't let this one go on the current line, since that would violate
   // float ordering.
