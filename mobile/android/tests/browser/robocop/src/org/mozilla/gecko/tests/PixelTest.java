@@ -51,24 +51,6 @@ abstract class PixelTest extends BaseTest {
         painted.close();
     }
 
-    public void addTab(String url, String title, boolean isPrivate) {
-        Actions.EventExpecter tabEventExpecter = mActions.expectGeckoEvent("Tab:Added");
-        Actions.EventExpecter contentEventExpecter = mActions.expectGeckoEvent("DOMContentLoaded");
-
-        if (isPrivate) {
-            selectMenuItem(mStringHelper.NEW_PRIVATE_TAB_LABEL);
-        } else {
-            selectMenuItem(mStringHelper.NEW_TAB_LABEL);
-        }
-        tabEventExpecter.blockForEvent();
-        contentEventExpecter.blockForEvent();
-
-        waitForText(mStringHelper.TITLE_PLACE_HOLDER);
-        loadAndPaint(url);
-        tabEventExpecter.unregisterListener();
-        contentEventExpecter.unregisterListener();
-    }
-
     protected final PaintedSurface waitForPaint(Actions.RepeatedEventExpecter expecter) {
         expecter.blockUntilClear(PAINT_CLEAR_DELAY);
         PaintedSurface p = mDriver.getPaintedSurface();
