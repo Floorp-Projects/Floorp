@@ -37656,6 +37656,12 @@
             "url": "/domparsing/style_attribute_html.html"
           }
         ],
+        "editing/other/delete.html": [
+          {
+            "path": "editing/other/delete.html",
+            "url": "/editing/other/delete.html"
+          }
+        ],
         "html/semantics/forms/the-form-element/form-submission-sandbox.html": [
           {
             "path": "html/semantics/forms/the-form-element/form-submission-sandbox.html",

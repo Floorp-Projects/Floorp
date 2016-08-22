@@ -1,8 +1,0 @@
-component {80035846-6732-4fcc-961b-f336b65218f4} Payment.js
-contract @mozilla.org/payment/content-helper-service;1 {80035846-6732-4fcc-961b-f336b65218f4}
-
-component {b8bce4e7-fbf0-4719-a634-b1bf9018657c} PaymentFlowInfo.js
-contract @mozilla.org/payment/flow-info;1 {b8bce4e7-fbf0-4719-a634-b1bf9018657c}
-
-component {82144756-72ab-45b7-8621-f3dad431dd2f} PaymentProvider.js
-contract @mozilla.org/payment/provider;1 {82144756-72ab-45b7-8621-f3dad431dd2f}
