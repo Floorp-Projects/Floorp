@@ -9,9 +9,11 @@
 
 const { ConsoleMessage } = require("devtools/client/webconsole/new-console-output/types");
 
-let stubConsoleMessages = new Map();
+let stubPreparedMessages = new Map();
+let stubPackets = new Map();
 
-stubConsoleMessages.set("new Date(0)", new ConsoleMessage({
+
+stubPreparedMessages.set("new Date(0)", new ConsoleMessage({
 	"id": "1",
 	"allowRepeating": true,
 	"source": "javascript",
@@ -20,7 +22,7 @@ stubConsoleMessages.set("new Date(0)", new ConsoleMessage({
 	"messageText": null,
 	"parameters": {
 		"type": "object",
-		"actor": "server1.conn0.child1/obj29",
+		"actor": "server1.conn0.child1/obj30",
 		"class": "Date",
 		"extensible": true,
 		"frozen": false,
@@ -31,10 +33,34 @@ stubConsoleMessages.set("new Date(0)", new ConsoleMessage({
 		}
 	},
 	"repeat": 1,
-	"repeatId": "{\"id\":null,\"allowRepeating\":true,\"source\":\"javascript\",\"type\":\"result\",\"level\":\"log\",\"messageText\":null,\"parameters\":{\"type\":\"object\",\"actor\":\"server1.conn0.child1/obj29\",\"class\":\"Date\",\"extensible\":true,\"frozen\":false,\"sealed\":false,\"ownPropertyLength\":0,\"preview\":{\"timestamp\":0}},\"repeatId\":null,\"stacktrace\":null,\"frame\":null}",
+	"repeatId": "{\"id\":null,\"allowRepeating\":true,\"source\":\"javascript\",\"type\":\"result\",\"level\":\"log\",\"messageText\":null,\"parameters\":{\"type\":\"object\",\"actor\":\"server1.conn0.child1/obj30\",\"class\":\"Date\",\"extensible\":true,\"frozen\":false,\"sealed\":false,\"ownPropertyLength\":0,\"preview\":{\"timestamp\":0}},\"repeatId\":null,\"stacktrace\":null,\"frame\":null}",
 	"stacktrace": null,
 	"frame": null
 }));
 
 
-module.exports = stubConsoleMessages
+stubPackets.set("new Date(0)", {
+	"from": "server1.conn0.child1/consoleActor2",
+	"input": "new Date(0)",
+	"result": {
+		"type": "object",
+		"actor": "server1.conn0.child1/obj30",
+		"class": "Date",
+		"extensible": true,
+		"frozen": false,
+		"sealed": false,
+		"ownPropertyLength": 0,
+		"preview": {
+			"timestamp": 0
+		}
+	},
+	"timestamp": 1471886229652,
+	"exception": null,
+	"helperResult": null
+});
+
+
+module.exports = {
+  stubPreparedMessages,
+  stubPackets,
+}

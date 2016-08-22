@@ -9,6 +9,8 @@ class L10n {
     switch (str) {
       case "level.error":
         return "Error";
+      case "consoleCleared":
+        return "Console was cleared.";
     }
     return str;
   }

@@ -10,7 +10,10 @@ const TEST_URI = "data:text/html;charset=utf-8,stub generation";
 
 const { evaluationResult: snippets} = require("devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/stub-snippets.js");
 
-let stubs = [];
+let stubs = {
+  preparedMessages: [],
+  packets: [],
+};
 
 add_task(function* () {
   let toolbox = yield openNewTabAndToolbox(TEST_URI, "webconsole");
@@ -20,10 +23,10 @@ add_task(function* () {
     const packet = yield new Promise(resolve => {
       toolbox.target.activeConsole.evaluateJS(code, resolve);
     });
-    stubs.push(formatStub(key, packet));
-    if (stubs.length == snippets.size) {
-      let filePath = OS.Path.join(`${BASE_PATH}/stubs`, "evaluationResult.js");
-      OS.File.writeAtomic(filePath, formatFile(stubs));
-    }
+    stubs.packets.push(formatPacket(key, packet));
+    stubs.preparedMessages.push(formatStub(key, packet));
   }
+
+  let filePath = OS.Path.join(`${BASE_PATH}/stubs`, "evaluationResult.js");
+  OS.File.writeAtomic(filePath, formatFile(stubs));
 });
