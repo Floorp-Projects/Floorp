@@ -5,6 +5,7 @@
 #ifndef __nsWifiAccessPoint__
 #define __nsWifiAccessPoint__
 
+#include <algorithm>
 #include "nsWifiMonitor.h"
 #include "nsIWifiAccessPoint.h"
 
@@ -58,9 +59,9 @@ public:
     mMac[17] = 0;
   }
 
-  void setSSIDRaw(const char* aSSID, unsigned long len) {
-    memcpy(mSsid, aSSID, mozilla::ArrayLength(mSsid));
-    mSsidLen = PR_MIN(len, mozilla::ArrayLength(mSsid));
+  void setSSIDRaw(const char* aSSID, size_t len) {
+    mSsidLen = std::min(len, mozilla::ArrayLength(mSsid));
+    memcpy(mSsid, aSSID, mSsidLen);
   }
 
   void setSSID(const char* aSSID, unsigned long len) {
