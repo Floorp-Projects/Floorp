@@ -409,7 +409,12 @@ this.DownloadUtils = {
                      getService(Ci.nsIIDNService);
 
     // Get a URI that knows about its components
-    let uri = ioService.newURI(aURIString, null, null);
+    let uri;
+    try {
+      uri = ioService.newURI(aURIString, null, null);
+    } catch (ex) {
+      return ["", ""];
+    }
 
     // Get the inner-most uri for schemes like jar:
     if (uri instanceof Ci.nsINestedURI)
