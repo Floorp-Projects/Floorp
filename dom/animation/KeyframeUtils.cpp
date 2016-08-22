@@ -1543,6 +1543,13 @@ GetCumulativeDistances(const nsTArray<ComputedKeyframeValues>& aValues,
       continue;
     }
 
+    // Sort the pacedValues first, so the order of subproperties of
+    // pacedValues is always the same as that of prevPacedValues.
+    if (isShorthand) {
+      pacedValues.Sort(
+        TPropertyPriorityComparator<PropertyStyleAnimationValuePair>());
+    }
+
     if (prevPacedValues.IsEmpty()) {
       // This is the first paceable keyframe so its cumulative distance is 0.0.
       cumulativeDistances[i] = 0.0;

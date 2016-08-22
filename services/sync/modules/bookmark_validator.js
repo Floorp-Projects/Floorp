@@ -321,7 +321,7 @@ class BookmarkValidator {
       }
 
       record.parent = parent;
-      if (parent !== root) {
+      if (parent !== root || problemData.rootOnServer) {
         let childIndex = parent.children.indexOf(id);
         if (childIndex < 0) {
           problemData.parentChildMismatches.push({parent: parent.id, child: record.id});

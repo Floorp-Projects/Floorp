@@ -49,10 +49,12 @@ OggCodecState::Create(ogg_page* aPage)
     codecState = new OpusState(aPage);
   } else if (aPage->body_len > 8 && memcmp(aPage->body, "fishead\0", 8) == 0) {
     codecState = new SkeletonState(aPage);
+  } else if (aPage->body_len > 5 && memcmp(aPage->body, "\177FLAC", 5) == 0) {
+    codecState = new FlacState(aPage);
   } else {
     codecState = new OggCodecState(aPage, false);
   }
-  return codecState->OggCodecState::Init() ? codecState.forget() : nullptr;
+  return codecState->OggCodecState::InternalInit() ? codecState.forget() : nullptr;
 }
 
 OggCodecState::OggCodecState(ogg_page* aBosPage, bool aActive)
@@ -97,7 +99,7 @@ OggCodecState::ClearUnstamped()
 }
 
 bool
-OggCodecState::Init()
+OggCodecState::InternalInit()
 {
   int ret = ogg_stream_init(&mState, mSerial);
   return ret == 0;
@@ -830,7 +832,7 @@ VorbisState::ReconstructVorbisGranulepos()
   // each packet.
 
   NS_ASSERTION(mUnstamped.Length() > 0, "Length must be > 0");
-  ogg_packet* last = mUnstamped[mUnstamped.Length()-1];
+  ogg_packet* last = mUnstamped.LastElement();
   NS_ASSERTION(last->e_o_s || last->granulepos >= 0,
     "Must know last granulepos!");
   if (mUnstamped.Length() == 1) {
@@ -1144,7 +1146,7 @@ bool
 OpusState::ReconstructOpusGranulepos(void)
 {
   NS_ASSERTION(mUnstamped.Length() > 0, "Must have unstamped packets");
-  ogg_packet* last = mUnstamped[mUnstamped.Length()-1];
+  ogg_packet* last = mUnstamped.LastElement();
   NS_ASSERTION(last->e_o_s || last->granulepos > 0,
       "Must know last granulepos!");
   int64_t gp;
@@ -1227,6 +1229,134 @@ OpusState::ReconstructOpusGranulepos(void)
     return false;
   }
   mPrevPageGranulepos = last->granulepos;
+  return true;
+}
+
+FlacState::FlacState(ogg_page* aBosPage)
+  : OggCodecState(aBosPage, true)
+{
+}
+
+bool
+FlacState::DecodeHeader(ogg_packet* aPacket)
+{
+  nsAutoRef<ogg_packet> autoRelease(aPacket);
+
+  if (!mParser.DecodeHeaderBlock(aPacket->packet, aPacket->bytes)) {
+    return false;
+  }
+  if (mParser.HasFullMetadata()) {
+    mDoneReadingHeaders = true;
+  }
+  return true;
+}
+
+int64_t
+FlacState::Time(int64_t granulepos)
+{
+  if (!mParser.mInfo.IsValid()) {
+    return -1;
+  }
+  CheckedInt64 t =
+      SaferMultDiv(granulepos, USECS_PER_S, mParser.mInfo.mRate);
+  if (!t.isValid()) {
+    return -1;
+  }
+  return t.value();
+}
+
+int64_t
+FlacState::PacketDuration(ogg_packet* aPacket)
+{
+  return mParser.BlockDuration(aPacket->packet, aPacket->bytes);
+}
+
+bool
+FlacState::IsHeader(ogg_packet* aPacket)
+{
+  return mParser.IsHeaderBlock(aPacket->packet, aPacket->bytes);
+}
+
+nsresult
+FlacState::PageIn(ogg_page* aPage)
+{
+  if (!mActive) {
+    return NS_OK;
+  }
+  NS_ASSERTION(static_cast<uint32_t>(ogg_page_serialno(aPage)) == mSerial,
+               "Page must be for this stream!");
+  if (ogg_stream_pagein(&mState, aPage) == -1)
+    return NS_ERROR_FAILURE;
+  bool foundGp;
+  nsresult res = PacketOutUntilGranulepos(foundGp);
+  if (NS_FAILED(res)) {
+    return res;
+  }
+  if (foundGp && mDoneReadingHeaders) {
+    // We've found a packet with a granulepos, and we've loaded our metadata
+    // and initialized our decoder. Determine granulepos of buffered packets.
+    ReconstructFlacGranulepos();
+    for (uint32_t i = 0; i < mUnstamped.Length(); ++i) {
+      ogg_packet* packet = mUnstamped[i];
+      NS_ASSERTION(!IsHeader(packet), "Don't try to recover header packet gp");
+      NS_ASSERTION(packet->granulepos != -1, "Packet must have gp by now");
+      mPackets.Append(packet);
+    }
+    mUnstamped.Clear();
+  }
+  return NS_OK;
+}
+
+// Return a hash table with tag metadata.
+MetadataTags*
+FlacState::GetTags()
+{
+  return mParser.GetTags();
+}
+
+const AudioInfo&
+FlacState::Info()
+{
+  return mParser.mInfo;
+}
+
+bool
+FlacState::ReconstructFlacGranulepos(void)
+{
+  NS_ASSERTION(mUnstamped.Length() > 0, "Must have unstamped packets");
+  ogg_packet* last = mUnstamped.LastElement();
+  NS_ASSERTION(last->e_o_s || last->granulepos > 0,
+      "Must know last granulepos!");
+  int64_t gp;
+
+  gp = last->granulepos;
+  // Loop through the packets backwards, subtracting the next
+  // packet's duration from its granulepos to get the value
+  // for the current packet.
+  for (uint32_t i = mUnstamped.Length() - 1; i > 0; i--) {
+    int offset =
+        mParser.BlockDuration(mUnstamped[i]->packet, mUnstamped[i]->bytes);
+    // Check for error (negative offset) and overflow.
+    if (offset >= 0) {
+      if (offset <= gp) {
+        gp -= offset;
+      } else {
+        // If the granule position of the first data page is smaller than the
+        // number of decodable audio samples on that page, then we MUST reject
+        // the stream.
+        if (!mDoneReadingHeaders) {
+          return false;
+        }
+        // It's too late to reject the stream.
+        // If we get here, this almost certainly means the file has screwed-up
+        // timestamps somewhere after the first page.
+        NS_WARNING("Clamping negative granulepos to zero.");
+        gp = 0;
+      }
+    }
+    mUnstamped[i - 1]->granulepos = gp;
+  }
+
   return true;
 }
 
@@ -1665,7 +1795,6 @@ SkeletonState::DecodeHeader(ogg_packet* aPacket)
   }
   return true;
 }
-
 
 } // namespace mozilla
 

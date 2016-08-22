@@ -862,10 +862,23 @@ MediaDevice::GetId(nsAString& aID)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+MediaDevice::GetRawId(nsAString& aID)
+{
+  aID.Assign(mRawID);
+  return NS_OK;
+}
+
 void
 MediaDevice::SetId(const nsAString& aID)
 {
   mID.Assign(aID);
+}
+
+void
+MediaDevice::SetRawId(const nsAString& aID)
+{
+  mRawID.Assign(aID);
 }
 
 NS_IMETHODIMP
@@ -2465,6 +2478,7 @@ MediaManager::AnonymizeDevices(SourceSet& aDevices, const nsACString& aOriginKey
     for (auto& device : aDevices) {
       nsString id;
       device->GetId(id);
+      device->SetRawId(id);
       AnonymizeId(id, aOriginKey);
       device->SetId(id);
     }
