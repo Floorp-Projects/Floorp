@@ -10,13 +10,13 @@
 #include "OggDemuxer.h"
 #include "OggCodecState.h"
 #include "mozilla/PodOperations.h"
+#include "mozilla/Preferences.h"
 #include "mozilla/SharedThreadPool.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/TimeStamp.h"
 #include "MediaDataDemuxer.h"
 #include "nsAutoRef.h"
 #include "XiphExtradata.h"
-#include "MediaPrefs.h"
 
 #include <algorithm>
 
@@ -127,7 +127,6 @@ OggDemuxer::OggDemuxer(MediaResource* aResource)
   : mTheoraState(nullptr)
   , mVorbisState(nullptr)
   , mOpusState(nullptr)
-  , mFlacState(nullptr)
   , mOpusEnabled(MediaDecoder::IsOpusEnabled())
   , mSkeletonState(nullptr)
   , mAudioOggState(aResource)
@@ -135,7 +134,6 @@ OggDemuxer::OggDemuxer(MediaResource* aResource)
   , mVorbisSerial(0)
   , mOpusSerial(0)
   , mTheoraSerial(0)
-  , mFlacSerial(0)
   , mOpusPreSkip(0)
   , mIsChained(false)
   , mTimedMetadataEvent(nullptr)
@@ -175,7 +173,7 @@ bool
 OggDemuxer::HasAudio()
 const
 {
-  return mVorbisState || mOpusState || mFlacState;
+  return mVorbisState || mOpusState;
 }
 
 bool
@@ -251,10 +249,8 @@ OggDemuxer::GetTrackCodecState(TrackInfo::TrackType aType) const
     case TrackInfo::kAudioTrack:
       if (mVorbisState) {
         return mVorbisState;
-      } else if (mOpusState) {
-        return mOpusState;
       } else {
-        return mFlacState;
+        return mOpusState;
       }
     case TrackInfo::kVideoTrack:
       return mTheoraState;
@@ -271,7 +267,6 @@ OggDemuxer::GetCodecStateType(OggCodecState* aState) const
       return TrackInfo::kVideoTrack;
     case OggCodecState::TYPE_OPUS:
     case OggCodecState::TYPE_VORBIS:
-    case OggCodecState::TYPE_FLAC:
       return TrackInfo::kAudioTrack;
     default:
       return TrackInfo::kUndefinedTrack;
@@ -467,18 +462,6 @@ OggDemuxer::SetupTargetOpus(OpusState* aOpusState, OggHeaders& aHeaders)
 }
 
 void
-OggDemuxer::SetupTargetFlac(FlacState* aFlacState, OggHeaders& aHeaders)
-{
-  if (mFlacState) {
-    mFlacState->Reset();
-  }
-
-  mInfo.mAudio = aFlacState->Info();
-  mFlacState = aFlacState;
-  mFlacSerial = aFlacState->mSerial;
-}
-
-void
 OggDemuxer::SetupTargetSkeleton()
 {
   // Setup skeleton related information after mVorbisState & mTheroState
@@ -574,18 +557,6 @@ OggDemuxer::SetupMediaTracksInfo(const nsTArray<uint32_t>& aSerials)
       mInfo.mAudio.mRate = opusState->mRate;
       mInfo.mAudio.mChannels = opusState->mChannels;
       FillTags(&mInfo.mAudio, opusState->GetTags());
-    } else if (codecState->GetType() == OggCodecState::TYPE_FLAC) {
-      FlacState* flacState = static_cast<FlacState*>(codecState);
-      if (!(mFlacState && mFlacState->mSerial == flacState->mSerial)) {
-        continue;
-      }
-
-      if (msgInfo) {
-        InitTrack(msgInfo, &mInfo.mAudio, mFlacState == flacState);
-      }
-
-      mInfo.mAudio = flacState->Info();
-      FillTags(&mInfo.mAudio, flacState->GetTags());
     }
   }
 }
@@ -691,15 +662,6 @@ OggDemuxer::ReadMetadata()
           NS_WARNING("Opus decoding disabled."
                      " See media.opus.enabled in about:config");
         }
-      } else if (MediaPrefs::FlacInOgg() &&
-                 s->GetType() == OggCodecState::TYPE_FLAC &&
-                 ReadHeaders(TrackInfo::kAudioTrack, s, headers)) {
-        if (!mFlacState) {
-          FlacState* flacState = static_cast<FlacState*>(s);
-          SetupTargetFlac(flacState, headers);
-        } else {
-          s->Deactivate();
-        }
       } else if (s->GetType() == OggCodecState::TYPE_SKELETON && !mSkeletonState) {
         mSkeletonState = static_cast<SkeletonState*>(s);
       } else {
@@ -773,7 +735,6 @@ OggDemuxer::ReadOggChain(const media::TimeUnit& aLastEndTime)
   bool chained = false;
   OpusState* newOpusState = nullptr;
   VorbisState* newVorbisState = nullptr;
-  FlacState* newFlacState = nullptr;
   nsAutoPtr<MetadataTags> tags;
 
   if (HasVideo() || HasSkeleton() || !HasAudio()) {
@@ -801,8 +762,6 @@ OggDemuxer::ReadOggChain(const media::TimeUnit& aLastEndTime)
     newVorbisState = static_cast<VorbisState*>(codecState.get());
   } else if (mOpusState && (codecState->GetType() == OggCodecState::TYPE_OPUS)) {
     newOpusState = static_cast<OpusState*>(codecState.get());
-  } else if (mFlacState && (codecState->GetType() == OggCodecState::TYPE_FLAC)) {
-    newFlacState = static_cast<FlacState*>(codecState.get());
   } else {
     return false;
   }
@@ -860,24 +819,6 @@ OggDemuxer::ReadOggChain(const media::TimeUnit& aLastEndTime)
 
     chained = true;
     tags = newOpusState->GetTags();
-  }
-
-  OggHeaders flacHeaders;
-  if ((newFlacState &&
-       ReadHeaders(TrackInfo::kAudioTrack, newFlacState, flacHeaders)) &&
-      (mFlacState->Info().mRate == newFlacState->Info().mRate) &&
-      (mFlacState->Info().mChannels == newFlacState->Info().mChannels)) {
-
-    SetupTargetFlac(newFlacState, flacHeaders);
-    LOG(LogLevel::Debug, ("New flac ogg link, serial=%d\n", mFlacSerial));
-
-    if (msgInfo) {
-      InitTrack(msgInfo, &mInfo.mAudio, true);
-    }
-
-    mInfo.mAudio = newFlacState->Info();
-    chained = true;
-    tags = newFlacState->GetTags();
   }
 
   if (chained) {
@@ -1115,10 +1056,6 @@ OggDemuxer::GetBuffered(TrackInfo::TrackType aType)
       } else if (aType == TrackInfo::kAudioTrack && mOpusState &&
                  serial == mOpusSerial) {
         startTime = OpusState::Time(mOpusPreSkip, granulepos);
-        NS_ASSERTION(startTime > 0, "Must have positive start time");
-      } else if (aType == TrackInfo::kAudioTrack && mFlacState &&
-                 serial == mFlacSerial) {
-        startTime = mFlacState->Time(granulepos);
         NS_ASSERTION(startTime > 0, "Must have positive start time");
       } else if (aType == TrackInfo::kVideoTrack && mTheoraState &&
                  serial == mTheoraSerial) {
@@ -2075,8 +2012,6 @@ OggDemuxer::SeekBisection(TrackInfo::TrackType aType,
               audioTime = mVorbisState->Time(granulepos);
             } else if (mOpusState && serial == mOpusState->mSerial) {
               audioTime = mOpusState->Time(granulepos);
-            } else if (mFlacState && serial == mFlacState->mSerial) {
-              audioTime = mFlacState->Time(granulepos);
             }
           }
 
