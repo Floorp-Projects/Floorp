@@ -132,9 +132,6 @@ if CONFIG['MOZ_B2G_RIL']:
         'wappush',
     ]
 
-if CONFIG['MOZ_PAY']:
-    DIRS += ['payment']
-
 if CONFIG['MOZ_NFC']:
     DIRS += ['nfc']
 
@@ -149,8 +146,7 @@ if CONFIG['MOZ_SECUREELEMENT']:
 if CONFIG['MOZ_B2G']:
     DIRS += [
         'downloads',
-        'identity',
-        'mobileid'
+        'identity'
     ]
 
 DIRS += ['presentation']

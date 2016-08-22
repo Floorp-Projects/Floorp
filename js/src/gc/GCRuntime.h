@@ -459,14 +459,6 @@ class GCSchedulingTunables
  *            -> Responsiveness is proportional to t[marking] + t[sweeping].
  *            -> size[retained] is proportional only to GC allocations.
  *
- *      PERIODIC_FULL_GC
- *      ----------------
- *      When we return to the event loop and it has been 20 seconds since we've
- *      done a GC, we start an incremenal, all-zones, shrinking GC.
- *
- *          Assumptions:
- *            -> Our triggers are incomplete.
- *
  *      ALLOC_TRIGGER (non-incremental)
  *      -------------------------------
  *      If we do not return to the event loop before getting all the way to our
@@ -623,8 +615,7 @@ class GCRuntime
     void maybeAllocTriggerZoneGC(Zone* zone, const AutoLockGC& lock);
     // The return value indicates if we were able to do the GC.
     bool triggerZoneGC(Zone* zone, JS::gcreason::Reason reason);
-    MOZ_MUST_USE bool maybeGC(Zone* zone);
-    void maybePeriodicFullGC();
+    void maybeGC(Zone* zone);
     void minorGC(JS::gcreason::Reason reason,
                  gcstats::Phase phase = gcstats::PHASE_MINOR_GC) JS_HAZ_GC_CALL;
     void evictNursery(JS::gcreason::Reason reason = JS::gcreason::EVICT_NURSERY) {
@@ -1072,7 +1063,6 @@ class GCRuntime
 
   private:
     bool chunkAllocationSinceLastGC;
-    int64_t nextFullGCTime;
     int64_t lastGCTime;
 
     JSGCMode mode;

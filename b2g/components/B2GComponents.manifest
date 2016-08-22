@@ -37,12 +37,6 @@ component {a6b2ab13-9037-423a-9897-dde1081be323} OMAContentHandler.js
 contract @mozilla.org/uriloader/content-handler;1?type=application/vnd.oma.drm.message {a6b2ab13-9037-423a-9897-dde1081be323}
 contract @mozilla.org/uriloader/content-handler;1?type=application/vnd.oma.dd+xml {a6b2ab13-9037-423a-9897-dde1081be323}
 
-# Payments
-component {8b83eabc-7929-47f4-8b48-4dea8d887e4b} PaymentGlue.js
-contract @mozilla.org/payment/ui-glue;1 {8b83eabc-7929-47f4-8b48-4dea8d887e4b}
-component {4834b2e1-2c91-44ea-b020-e2581ed279a4} PaymentProviderStrategy.js
-contract @mozilla.org/payment/provider-strategy;1 {4834b2e1-2c91-44ea-b020-e2581ed279a4}
-
 # TelProtocolHandler.js
 component {782775dd-7351-45ea-aff1-0ffa872cfdd2} TelProtocolHandler.js
 contract @mozilla.org/network/protocol;1?name=tel {782775dd-7351-45ea-aff1-0ffa872cfdd2}
@@ -101,10 +95,6 @@ category command-line-handler m-b2gcmds @mozilla.org/commandlinehandler/general-
 component {fd663ec8-cf3f-4c2b-aacb-17a6915ccb44} BootstrapCommandLine.js
 contract @mozilla.org/commandlinehandler/general-startup;1?type=b2gbootstrap {fd663ec8-cf3f-4c2b-aacb-17a6915ccb44}
 category command-line-handler m-b2gbootstrap @mozilla.org/commandlinehandler/general-startup;1?type=b2gbootstrap
-
-# MobileIdentityUIGlue.js
-component {83dbe26a-81f3-4a75-9541-3d0b7ca496b5} MobileIdentityUIGlue.js
-contract @mozilla.org/services/mobileid-ui-glue;1 {83dbe26a-81f3-4a75-9541-3d0b7ca496b5}
 
 # B2GAppMigrator.js
 component {7211ece0-b458-4635-9afc-f8d7f376ee95} B2GAppMigrator.js

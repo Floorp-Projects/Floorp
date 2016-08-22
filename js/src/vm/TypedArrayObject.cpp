@@ -155,10 +155,8 @@ TypedArrayObject::finalize(FreeOp* fop, JSObject* obj)
         return;
 
     // Free the data slot pointer if it does not point into the old JSObject.
-    Nursery& nursery = fop->runtime()->gc.nursery;
-    if (!curObj->hasInlineElements() && !nursery.isInside(curObj->elements())) {
+    if (!curObj->hasInlineElements())
         js_free(curObj->elements());
-    }
 }
 
 /* static */ void

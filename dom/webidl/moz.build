@@ -918,11 +918,6 @@ if CONFIG['MOZ_EME']:
         'WidevineCDMManifest.webidl',
     ]
 
-if CONFIG['MOZ_PAY']:
-    WEBIDL_FILES += [
-        'MozPaymentProvider.webidl'
-    ]
-
 if CONFIG['MOZ_B2G']:
     WEBIDL_FILES += [
         'Apps.webidl',
