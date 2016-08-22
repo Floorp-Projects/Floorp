@@ -18,6 +18,7 @@
 #include "nsDOMNavigationTiming.h"
 #include "nsIDOMStorageManager.h"
 #include "mozilla/dom/DOMStorage.h"
+#include "mozilla/dom/IdleRequest.h"
 #include "mozilla/dom/Performance.h"
 #include "mozilla/dom/StorageEvent.h"
 #include "mozilla/dom/StorageEventBinding.h"
@@ -326,6 +327,11 @@ nsGlobalWindow::DOMMinTimeoutValue() const {
 // nsTimerImpl.h for details.
 #define DOM_MAX_TIMEOUT_VALUE    DELAY_INTERVAL_LIMIT
 
+// The interval at which we execute idle callbacks
+static uint32_t gThrottledIdlePeriodLength;
+
+#define DEFAULT_THROTTLED_IDLE_PERIOD_LENGTH 10000
+
 #define FORWARD_TO_OUTER(method, args, err_rval)                              \
   PR_BEGIN_MACRO                                                              \
   if (IsInnerWindow()) {                                                      \
@@ -538,6 +544,109 @@ DialogValueHolder::Get(JSContext* aCx, JS::Handle<JSObject*> aScope,
     aResult.setUndefined();
   }
 }
+
+void
+nsGlobalWindow::PostThrottledIdleCallback()
+{
+  AssertIsOnMainThread();
+
+  if (mThrottledIdleRequestCallbacks.isEmpty())
+    return;
+
+  RefPtr<IdleRequest> request(mThrottledIdleRequestCallbacks.popFirst());
+  // ownership transferred from mThrottledIdleRequestCallbacks to
+  // mIdleRequestCallbacks
+  mIdleRequestCallbacks.insertBack(request);
+  NS_IdleDispatchToCurrentThread(request.forget());
+}
+
+/* static */ void
+nsGlobalWindow::InsertIdleCallbackIntoList(IdleRequest* aRequest,
+                                           IdleRequests& aList)
+{
+  aList.insertBack(aRequest);
+  aRequest->AddRef();
+}
+
+uint32_t
+nsGlobalWindow::RequestIdleCallback(JSContext* aCx,
+                                    IdleRequestCallback& aCallback,
+                                    const IdleRequestOptions& aOptions,
+                                    ErrorResult& aError)
+{
+  MOZ_RELEASE_ASSERT(IsInnerWindow());
+  AssertIsOnMainThread();
+
+  uint32_t handle = ++mIdleRequestCallbackCounter;
+
+  RefPtr<IdleRequest> request =
+    new IdleRequest(aCx, AsInner(), aCallback, handle);
+
+  if (aOptions.mTimeout.WasPassed()) {
+    aError = request->SetTimeout(aOptions.mTimeout.Value());
+    if (NS_WARN_IF(aError.Failed())) {
+      return 0;
+    }
+  }
+
+  nsGlobalWindow* outer = GetOuterWindowInternal();
+  if (outer && outer->AsOuter()->IsBackground()) {
+    // mThrottledIdleRequestCallbacks now owns request
+    InsertIdleCallbackIntoList(request, mThrottledIdleRequestCallbacks);
+
+    NS_DelayedDispatchToCurrentThread(
+      NewRunnableMethod(this, &nsGlobalWindow::PostThrottledIdleCallback),
+      10000);
+  } else {
+    MOZ_ASSERT(mThrottledIdleRequestCallbacks.isEmpty());
+
+    // mIdleRequestCallbacks now owns request
+    InsertIdleCallbackIntoList(request, mIdleRequestCallbacks);
+
+    NS_IdleDispatchToCurrentThread(request.forget());
+  }
+
+  return handle;
+}
+
+void
+nsGlobalWindow::CancelIdleCallback(uint32_t aHandle)
+{
+  MOZ_RELEASE_ASSERT(IsInnerWindow());
+
+  for (IdleRequest* r : mIdleRequestCallbacks) {
+    if (r->Handle() == aHandle) {
+      r->Cancel();
+      break;
+    }
+  }
+}
+
+void
+nsGlobalWindow::DisableIdleCallbackRequests()
+{
+  while (!mIdleRequestCallbacks.isEmpty()) {
+    RefPtr<IdleRequest> request = mIdleRequestCallbacks.popFirst();
+    request->Cancel();
+  }
+
+  while (!mThrottledIdleRequestCallbacks.isEmpty()) {
+    RefPtr<IdleRequest> request = mThrottledIdleRequestCallbacks.popFirst();
+    request->Cancel();
+  }
+}
+
+void nsGlobalWindow::UnthrottleIdleCallbackRequests()
+{
+  AssertIsOnMainThread();
+
+  while (!mThrottledIdleRequestCallbacks.isEmpty()) {
+    RefPtr<IdleRequest> request(mThrottledIdleRequestCallbacks.popFirst());
+    mIdleRequestCallbacks.insertBack(request);
+    NS_IdleDispatchToCurrentThread(request.forget());
+  }
+}
+
 
 namespace mozilla {
 namespace dom {
@@ -1154,6 +1263,7 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
     mFocusMethod(0),
     mSerial(0),
     mIdleCallbackTimeoutCounter(1),
+    mIdleRequestCallbackCounter(1),
 #ifdef DEBUG
     mSetOpenerWindowCalled(false),
 #endif
@@ -1224,6 +1334,10 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
     Preferences::AddBoolVarCache(&sIdleObserversAPIFuzzTimeDisabled,
                                  "dom.idle-observers-api.fuzz_time.disabled",
                                  false);
+
+    Preferences::AddUintVarCache(&gThrottledIdlePeriodLength,
+                                 "dom.idle_period.throttled_length",
+                                 DEFAULT_THROTTLED_IDLE_PERIOD_LENGTH);
   }
 
   if (gDumpFile == nullptr) {
@@ -1565,6 +1679,7 @@ nsGlobalWindow::CleanUp()
 #ifdef MOZ_B2G
     DisableTimeChangeNotifications();
 #endif
+    DisableIdleCallbackRequests();
   } else {
     MOZ_ASSERT(!mHasGamepad);
     MOZ_ASSERT(!mHasVREvents);
@@ -1643,6 +1758,8 @@ nsGlobalWindow::FreeInnerObjects()
   }
 
   mIdleObservers.Clear();
+
+  DisableIdleCallbackRequests();
 
   mChromeEventHandler = nullptr;
 
@@ -1853,6 +1970,15 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsGlobalWindow)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mIdleService)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mWakeLock)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPendingStorageEvents)
+
+  for (IdleRequest* request : tmp->mIdleRequestCallbacks) {
+    cb.NoteNativeChild(request, NS_CYCLE_COLLECTION_PARTICIPANT(IdleRequest));
+  }
+
+  for (IdleRequest* request : tmp->mThrottledIdleRequestCallbacks) {
+    cb.NoteNativeChild(request, NS_CYCLE_COLLECTION_PARTICIPANT(IdleRequest));
+  }
+
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mIdleObservers)
 
 #ifdef MOZ_GAMEPAD
@@ -1913,6 +2039,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGlobalWindow)
     tmp->mListenerManager->Disconnect();
     NS_IMPL_CYCLE_COLLECTION_UNLINK(mListenerManager)
   }
+
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mLocation)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mHistory)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mCustomElements)
@@ -1957,6 +2084,8 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGlobalWindow)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mMozSelfSupport)
 
   tmp->UnlinkHostObjectURIs();
+
+  tmp->DisableIdleCallbackRequests();
 
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
@@ -9879,6 +10008,13 @@ void nsGlobalWindow::SetIsBackground(bool aIsBackground)
   if (resetTimers) {
     ResetTimersForNonBackgroundWindow();
   }
+
+  if (!aIsBackground) {
+    nsGlobalWindow* inner = GetCurrentInnerWindowInternal();
+    if (inner) {
+      inner->UnthrottleIdleCallbackRequests();
+    }
+  }
 #ifdef MOZ_GAMEPAD
   if (!aIsBackground) {
     nsGlobalWindow* inner = GetCurrentInnerWindowInternal();
@@ -12271,8 +12407,7 @@ nsGlobalWindow::RunTimeoutHandler(Timeout* aTimeout,
   }
 
   bool abortIntervalHandler = false;
-  nsCOMPtr<nsITimeoutHandler> basicHandler(timeout->mScriptHandler);
-  nsCOMPtr<nsIScriptTimeoutHandler> handler(do_QueryInterface(basicHandler));
+  nsCOMPtr<nsIScriptTimeoutHandler> handler(do_QueryInterface(timeout->mScriptHandler));
   if (handler) {
     RefPtr<Function> callback = handler->GetCallback();
 
@@ -12309,7 +12444,9 @@ nsGlobalWindow::RunTimeoutHandler(Timeout* aTimeout,
       rv.SuppressException();
     }
   } else {
+    nsCOMPtr<nsITimeoutHandler> basicHandler(timeout->mScriptHandler);
     nsCOMPtr<nsISupports> kungFuDeathGrip(static_cast<nsIDOMWindow*>(this));
+    mozilla::Unused << kungFuDeathGrip;
     basicHandler->Call();
   }
 
