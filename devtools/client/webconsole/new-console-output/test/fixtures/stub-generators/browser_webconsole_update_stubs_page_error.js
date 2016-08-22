@@ -10,7 +10,10 @@ const TEST_URI = "data:text/html;charset=utf-8,stub generation";
 
 const { pageError: snippets} = require("devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/stub-snippets.js");
 
-let stubs = [];
+let stubs = {
+  preparedMessages: [],
+  packets: [],
+};
 
 add_task(function* () {
   let toolbox = yield openNewTabAndToolbox(TEST_URI, "webconsole");
@@ -23,7 +26,8 @@ add_task(function* () {
         info("Received page error:" + e + " " + JSON.stringify(packet, null, "\t"));
 
         let message = prepareMessage(packet, {getNextId: () => 1});
-        stubs.push(formatStub(message.messageText, packet));
+        stubs.packets.push(formatPacket(message.messageText, packet));
+        stubs.preparedMessages.push(formatStub(message.messageText, packet));
         resolve();
       });
     });
