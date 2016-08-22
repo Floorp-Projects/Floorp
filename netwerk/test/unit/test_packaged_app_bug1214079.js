@@ -153,11 +153,7 @@ function getChannelForURL(url) {
       contentPolicyType: Ci.nsIContentPolicy.TYPE_OTHER
     });
 
-  tmpChannel.notificationCallbacks =
-    new LoadContextCallback(principal.appId,
-                            principal.isInIsolatedMozBrowserElement,
-                            false,
-                            false);
+  tmpChannel.loadInfo.originAttributes = principal.originAttributes;
 
   return tmpChannel;
 }
