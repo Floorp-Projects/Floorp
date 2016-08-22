@@ -88,7 +88,7 @@ const childSpec = protocol.generateActorSpec({
   }
 });
 
-var ChildActor = protocol.ActorClass(childSpec, {
+var ChildActor = protocol.ActorClassWithSpec(childSpec, {
   // Actors returned by this actor should be owned by the root actor.
   marshallPool: function () { return this.parent(); },
 
@@ -156,7 +156,7 @@ var ChildActor = protocol.ActorClass(childSpec, {
   release: function () { },
 });
 
-var ChildFront = protocol.FrontClass(childSpec, {
+var ChildFront = protocol.FrontClassWithSpec(childSpec, {
   initialize: function (client, form) {
     protocol.Front.prototype.initialize.call(this, client, form);
   },
@@ -226,7 +226,7 @@ const rootSpec = protocol.generateActorSpec({
 });
 
 var rootActor = null;
-var RootActor = protocol.ActorClass(rootSpec, {
+var RootActor = protocol.ActorClassWithSpec(rootSpec, {
   toString: function () { return "[root actor]"; },
 
   initialize: function (conn) {
@@ -287,7 +287,7 @@ var RootActor = protocol.ActorClass(rootSpec, {
   }
 });
 
-var RootFront = protocol.FrontClass(rootSpec, {
+var RootFront = protocol.FrontClassWithSpec(rootSpec, {
   toString: function () { return "[root front]"; },
   initialize: function (client) {
     this.actorID = "root";

@@ -15,7 +15,7 @@ const childSpec = protocol.generateActorSpec({
 });
 
 // The child actor doesn't provide a form description
-var ChildActor = protocol.ActorClass(childSpec, {
+var ChildActor = protocol.ActorClassWithSpec(childSpec, {
   initialize(conn) {
     protocol.Actor.prototype.initialize.call(this, conn);
   },
@@ -32,7 +32,7 @@ var ChildActor = protocol.ActorClass(childSpec, {
   }
 });
 
-var ChildFront = protocol.FrontClass(childSpec, {
+var ChildFront = protocol.FrontClassWithSpec(childSpec, {
   initialize(client) {
     protocol.Front.prototype.initialize.call(this, client);
   },
@@ -77,7 +77,7 @@ const rootSpec = protocol.generateActorSpec({
 });
 
 // The root actor does provide a form description.
-var RootActor = protocol.ActorClass(rootSpec, {
+var RootActor = protocol.ActorClassWithSpec(rootSpec, {
   initialize(conn) {
     protocol.Actor.prototype.initialize.call(this, conn);
     this.manage(this);
@@ -125,7 +125,7 @@ var RootActor = protocol.ActorClass(rootSpec, {
   }
 });
 
-var RootFront = protocol.FrontClass(rootSpec, {
+var RootFront = protocol.FrontClassWithSpec(rootSpec, {
   initialize(client) {
     this.actorID = "root";
     protocol.Front.prototype.initialize.call(this, client);

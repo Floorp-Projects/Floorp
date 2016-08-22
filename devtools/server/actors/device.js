@@ -15,7 +15,7 @@ const {deviceSpec} = require("devtools/shared/specs/device");
 const FileReader = require("FileReader");
 const {PermissionsTable} = require("resource://gre/modules/PermissionsTable.jsm");
 
-var DeviceActor = exports.DeviceActor = protocol.ActorClass(deviceSpec, {
+var DeviceActor = exports.DeviceActor = protocol.ActorClassWithSpec(deviceSpec, {
   _desc: null,
 
   getDescription: function () {

@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-var {method, RetVal, Actor, ActorClass, Front, FrontClass,
+var {method, RetVal, Actor, ActorClassWithSpec, Front, FrontClassWithSpec,
      generateActorSpec} = require("devtools/shared/protocol");
 var Services = require("Services");
 
@@ -15,7 +15,7 @@ const lazySpec = generateActorSpec({
   }
 });
 
-exports.LazyActor = ActorClass(lazySpec, {
+exports.LazyActor = ActorClassWithSpec(lazySpec, {
   initialize: function (conn, id) {
     Actor.prototype.initialize.call(this, conn);
 
@@ -29,7 +29,7 @@ exports.LazyActor = ActorClass(lazySpec, {
 
 Services.obs.notifyObservers(null, "actor", "loaded");
 
-exports.LazyFront = FrontClass(lazySpec, {
+exports.LazyFront = FrontClassWithSpec(lazySpec, {
   initialize: function (client, form) {
     Front.prototype.initialize.call(this, client);
     this.actorID = form.lazyActor;

@@ -60,7 +60,7 @@ let modifiedStyleSheets = new WeakMap();
  * Actor representing an original source of a style sheet that was specified
  * in a source map.
  */
-var OriginalSourceActor = protocol.ActorClass(originalSourceSpec, {
+var OriginalSourceActor = protocol.ActorClassWithSpec(originalSourceSpec, {
   initialize: function (aUrl, aSourceMap, aParentActor) {
     protocol.Actor.prototype.initialize.call(this, null);
 
@@ -113,7 +113,7 @@ var OriginalSourceActor = protocol.ActorClass(originalSourceSpec, {
  * A MediaRuleActor lives on the server and provides access to properties
  * of a DOM @media rule and emits events when it changes.
  */
-var MediaRuleActor = protocol.ActorClass(mediaRuleSpec, {
+var MediaRuleActor = protocol.ActorClassWithSpec(mediaRuleSpec, {
   get window() {
     return this.parentActor.window;
   },
@@ -183,7 +183,7 @@ var MediaRuleActor = protocol.ActorClass(mediaRuleSpec, {
 /**
  * A StyleSheetActor represents a stylesheet on the server.
  */
-var StyleSheetActor = protocol.ActorClass(styleSheetSpec, {
+var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
   /* List of original sources that generated this stylesheet */
   _originalSources: null,
 
@@ -786,7 +786,7 @@ exports.StyleSheetActor = StyleSheetActor;
  * Creates a StyleSheetsActor. StyleSheetsActor provides remote access to the
  * stylesheets of a document.
  */
-var StyleSheetsActor = protocol.ActorClass(styleSheetsSpec, {
+var StyleSheetsActor = protocol.ActorClassWithSpec(styleSheetsSpec, {
   /**
    * The window we work with, taken from the parent actor.
    */

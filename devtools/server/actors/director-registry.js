@@ -148,7 +148,7 @@ exports.setupParentProcess = function setupParentProcess({ mm, prefix }) {
  * The DirectorRegistry Actor is a global actor which manages install/uninstall of
  * director scripts definitions.
  */
-const DirectorRegistryActor = exports.DirectorRegistryActor = protocol.ActorClass(directorRegistrySpec, {
+const DirectorRegistryActor = exports.DirectorRegistryActor = protocol.ActorClassWithSpec(directorRegistrySpec, {
   /* init & destroy methods */
   initialize: function (conn, parentActor) {
     protocol.Actor.prototype.initialize.call(this, conn);

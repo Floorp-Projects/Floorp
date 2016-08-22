@@ -3,13 +3,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { FrontClass } = require("devtools/shared/protocol");
+const { FrontClassWithSpec } = require("devtools/shared/protocol");
 const {
   customHighlighterSpec,
   highlighterSpec
 } = require("devtools/shared/specs/highlighters");
 
-const HighlighterFront = FrontClass(highlighterSpec, {
+const HighlighterFront = FrontClassWithSpec(highlighterSpec, {
   // Update the object given a form representation off the wire.
   form: function (json) {
     this.actorID = json.actor;
@@ -20,6 +20,6 @@ const HighlighterFront = FrontClass(highlighterSpec, {
 
 exports.HighlighterFront = HighlighterFront;
 
-const CustomHighlighterFront = FrontClass(customHighlighterSpec, {});
+const CustomHighlighterFront = FrontClassWithSpec(customHighlighterSpec, {});
 
 exports.CustomHighlighterFront = CustomHighlighterFront;

@@ -39,7 +39,7 @@ const rootSpec = protocol.generateActorSpec({
   }
 });
 
-var RootActor = protocol.ActorClass(rootSpec, {
+var RootActor = protocol.ActorClassWithSpec(rootSpec, {
   initialize: function (conn) {
     protocol.Actor.prototype.initialize.call(this, conn);
     // Root actor owns itself.
@@ -89,7 +89,7 @@ var RootActor = protocol.ActorClass(rootSpec, {
   }
 });
 
-var RootFront = protocol.FrontClass(rootSpec, {
+var RootFront = protocol.FrontClassWithSpec(rootSpec, {
   initialize: function (client) {
     this.actorID = "root";
     protocol.Front.prototype.initialize.call(this, client);
