@@ -57,7 +57,6 @@ Repha = 15;
 Ra    = 16;
 CM    = 17;
 Symbol= 18;
-CM2   = 31;
 
 c = (C | Ra);			# is_consonant
 n = ((ZWNJ?.RS)? (N.N?)?);	# is_consonant_modifier
@@ -73,7 +72,7 @@ syllable_tail = (z?.SM.SM?.ZWNJ?)? A{0,3}? VD{0,2};
 place_holder = PLACEHOLDER | DOTTEDCIRCLE;
 halant_group = (z?.h.(ZWJ.N?)?);
 final_halant_group = halant_group | h.ZWNJ;
-medial_group = CM?.CM2?;
+medial_group = CM?;
 halant_or_matra_group = (final_halant_group | (h.ZWJ)? matra_group{0,4}) (Coeng (cn|V))?;
 
 

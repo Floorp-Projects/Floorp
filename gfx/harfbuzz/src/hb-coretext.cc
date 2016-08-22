@@ -146,6 +146,15 @@ create_ct_font (CGFontRef cg_font, CGFloat font_size)
     return NULL;
   }
 
+  /* crbug.com/576941 and crbug.com/625902 and the investigation in the latter
+   * bug indicate that the cascade list reconfiguration occasionally causes
+   * crashes in CoreText on OS X 10.9, thus let's skip this step on older
+   * operating system versions. */
+  if (&CTGetCoreTextVersion != NULL && CTGetCoreTextVersion() <= kCTVersionNumber10_9)
+    return ct_font;
+
+  CFURLRef original_url = (CFURLRef)CTFontCopyAttribute(ct_font, kCTFontURLAttribute);
+
   /* Create font copy with cascade list that has LastResort first; this speeds up CoreText
    * font fallback which we don't need anyway. */
   {
@@ -154,14 +163,35 @@ create_ct_font (CGFontRef cg_font, CGFloat font_size)
     CFRelease (last_resort_font_desc);
     if (new_ct_font)
     {
-      CFRelease (ct_font);
-      ct_font = new_ct_font;
+      /* The CTFontCreateCopyWithAttributes call fails to stay on the same font
+       * when reconfiguring the cascade list and may switch to a different font
+       * when there are fonts that go by the same name, since the descriptor is
+       * just name and size.
+       *
+       * Avoid reconfiguring the cascade lists if the new font is outside the
+       * system locations that we cannot access from the sandboxed renderer
+       * process in Blink. This can be detected by the new file URL location
+       * that the newly found font points to. */
+      CFURLRef new_url = (CFURLRef) CTFontCopyAttribute (new_ct_font, kCTFontURLAttribute);
+      // Keep reconfigured font if URL cannot be retrieved (seems to be the case
+      // on Mac OS 10.12 Sierra), speculative fix for crbug.com/625606
+      if (!original_url || !new_url || CFEqual (original_url, new_url)) {
+        CFRelease (ct_font);
+        ct_font = new_ct_font;
+      } else {
+        CFRelease (new_ct_font);
+        DEBUG_MSG (CORETEXT, ct_font, "Discarding reconfigured CTFont, location changed.");
+      }
+      if (new_url)
+        CFRelease (new_url);
     }
     else
       DEBUG_MSG (CORETEXT, ct_font, "Font copy with empty cascade list failed");
   }
 
- return ct_font;
+  if (original_url)
+    CFRelease (original_url);
+  return ct_font;
 }
 
 struct hb_coretext_shaper_face_data_t {
@@ -695,7 +725,7 @@ _hb_coretext_shape (hb_shape_plan_t    *shape_plan,
       pchars[chars_len++] = 0xFFFDu;
     else {
       pchars[chars_len++] = 0xD800u + ((c - 0x10000u) >> 10);
-      pchars[chars_len++] = 0xDC00u + ((c - 0x10000u) & ((1 << 10) - 1));
+      pchars[chars_len++] = 0xDC00u + ((c - 0x10000u) & ((1u << 10) - 1));
     }
   }
 
