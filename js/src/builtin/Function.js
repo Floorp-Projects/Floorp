@@ -86,21 +86,24 @@ function FunctionBind(thisArg, ...boundArgs) {
 function bind_bindFunction0(fun, thisArg, boundArgs) {
     return function bound() {
         var a = arguments;
-        var constructing = _IsConstructing();
-        if (constructing) {
+        var newTarget;
+        if (_IsConstructing()) {
+            newTarget = new.target;
+            if (newTarget === bound)
+                newTarget = fun;
             switch (a.length) {
               case 0:
-                return new fun();
+                return constructContentFunction(fun, newTarget);
               case 1:
-                return new fun(a[0]);
+                return constructContentFunction(fun, newTarget, a[0]);
               case 2:
-                return new fun(a[0], a[1]);
+                return constructContentFunction(fun, newTarget, a[0], a[1]);
               case 3:
-                return new fun(a[0], a[1], a[2]);
+                return constructContentFunction(fun, newTarget, a[0], a[1], a[2]);
               case 4:
-                return new fun(a[0], a[1], a[2], a[3]);
+                return constructContentFunction(fun, newTarget, a[0], a[1], a[2], a[3]);
               case 5:
-                return new fun(a[0], a[1], a[2], a[3], a[4]);
+                return constructContentFunction(fun, newTarget, a[0], a[1], a[2], a[3], a[4]);
             }
         } else {
             switch (a.length) {
@@ -119,7 +122,7 @@ function bind_bindFunction0(fun, thisArg, boundArgs) {
             }
         }
         var callArgs = FUN_APPLY(bind_mapArguments, null, arguments);
-        return bind_invokeFunctionN(fun, thisArg, constructing, boundArgs, callArgs);
+        return bind_invokeFunctionN(fun, thisArg, newTarget, boundArgs, callArgs);
     };
 }
 
@@ -127,21 +130,24 @@ function bind_bindFunction1(fun, thisArg, boundArgs) {
     var bound1 = boundArgs[0];
     return function bound() {
         var a = arguments;
-        var constructing = _IsConstructing();
-        if (constructing) {
+        var newTarget;
+        if (_IsConstructing()) {
+            newTarget = new.target;
+            if (newTarget === bound)
+                newTarget = fun;
             switch (a.length) {
               case 0:
-                return new fun(bound1);
+                return constructContentFunction(fun, newTarget, bound1);
               case 1:
-                return new fun(bound1, a[0]);
+                return constructContentFunction(fun, newTarget, bound1, a[0]);
               case 2:
-                return new fun(bound1, a[0], a[1]);
+                return constructContentFunction(fun, newTarget, bound1, a[0], a[1]);
               case 3:
-                return new fun(bound1, a[0], a[1], a[2]);
+                return constructContentFunction(fun, newTarget, bound1, a[0], a[1], a[2]);
               case 4:
-                return new fun(bound1, a[0], a[1], a[2], a[3]);
+                return constructContentFunction(fun, newTarget, bound1, a[0], a[1], a[2], a[3]);
               case 5:
-                return new fun(bound1, a[0], a[1], a[2], a[3], a[4]);
+                return constructContentFunction(fun, newTarget, bound1, a[0], a[1], a[2], a[3], a[4]);
             }
         } else {
             switch (a.length) {
@@ -160,7 +166,7 @@ function bind_bindFunction1(fun, thisArg, boundArgs) {
             }
         }
         var callArgs = FUN_APPLY(bind_mapArguments, null, arguments);
-        return bind_invokeFunctionN(fun, thisArg, constructing, boundArgs, callArgs);
+        return bind_invokeFunctionN(fun, thisArg, newTarget, boundArgs, callArgs);
     };
 }
 
@@ -169,21 +175,24 @@ function bind_bindFunction2(fun, thisArg, boundArgs) {
     var bound2 = boundArgs[1];
     return function bound() {
         var a = arguments;
-        var constructing = _IsConstructing();
-        if (constructing) {
+        var newTarget;
+        if (_IsConstructing()) {
+            newTarget = new.target;
+            if (newTarget === bound)
+                newTarget = fun;
             switch (a.length) {
               case 0:
-                return new fun(bound1, bound2);
+                return constructContentFunction(fun, newTarget, bound1, bound2);
               case 1:
-                return new fun(bound1, bound2, a[0]);
+                return constructContentFunction(fun, newTarget, bound1, bound2, a[0]);
               case 2:
-                return new fun(bound1, bound2, a[0], a[1]);
+                return constructContentFunction(fun, newTarget, bound1, bound2, a[0], a[1]);
               case 3:
-                return new fun(bound1, bound2, a[0], a[1], a[2]);
+                return constructContentFunction(fun, newTarget, bound1, bound2, a[0], a[1], a[2]);
               case 4:
-                return new fun(bound1, bound2, a[0], a[1], a[2], a[3]);
+                return constructContentFunction(fun, newTarget, bound1, bound2, a[0], a[1], a[2], a[3]);
               case 5:
-                return new fun(bound1, bound2, a[0], a[1], a[2], a[3], a[4]);
+                return constructContentFunction(fun, newTarget, bound1, bound2, a[0], a[1], a[2], a[3], a[4]);
             }
         } else {
             switch (a.length) {
@@ -202,21 +211,27 @@ function bind_bindFunction2(fun, thisArg, boundArgs) {
             }
         }
         var callArgs = FUN_APPLY(bind_mapArguments, null, arguments);
-        return bind_invokeFunctionN(fun, thisArg, constructing, boundArgs, callArgs);
+        return bind_invokeFunctionN(fun, thisArg, newTarget, boundArgs, callArgs);
     };
 }
 
 function bind_bindFunctionN(fun, thisArg, boundArgs) {
     assert(boundArgs.length > 2, "Fast paths should be used for few-bound-args cases.");
     return function bound() {
+        var newTarget;
+        if (_IsConstructing()) {
+            newTarget = new.target;
+            if (newTarget === bound)
+                newTarget = fun;
+        }
         if (arguments.length === 0) {
-            if (_IsConstructing())
-                return bind_constructFunctionN(fun, boundArgs);
+            if (newTarget !== undefined)
+                return bind_constructFunctionN(fun, newTarget, boundArgs);
             else
                 return bind_applyFunctionN(fun, thisArg, boundArgs);
         }
         var callArgs = FUN_APPLY(bind_mapArguments, null, arguments);
-        return bind_invokeFunctionN(fun, thisArg, _IsConstructing(), boundArgs, callArgs);
+        return bind_invokeFunctionN(fun, thisArg, newTarget, boundArgs, callArgs);
     };
 }
 
@@ -228,7 +243,7 @@ function bind_mapArguments() {
     return args;
 }
 
-function bind_invokeFunctionN(fun, thisArg, constructing, boundArgs, callArgs) {
+function bind_invokeFunctionN(fun, thisArg, newTarget, boundArgs, callArgs) {
     var boundArgsCount = boundArgs.length;
     var callArgsCount = callArgs.length;
     var args = std_Array(boundArgsCount + callArgsCount);
@@ -236,8 +251,8 @@ function bind_invokeFunctionN(fun, thisArg, constructing, boundArgs, callArgs) {
         _DefineDataProperty(args, i, boundArgs[i]);
     for (var i = 0; i < callArgsCount; i++)
         _DefineDataProperty(args, i + boundArgsCount, callArgs[i]);
-    if (constructing)
-        return bind_constructFunctionN(fun, args);
+    if (newTarget !== undefined)
+        return bind_constructFunctionN(fun, newTarget, args);
     return bind_applyFunctionN(fun, thisArg, args);
 }
 
@@ -268,35 +283,35 @@ function bind_applyFunctionN(fun, thisArg, a) {
     }
 }
 
-function bind_constructFunctionN(fun, a) {
+function bind_constructFunctionN(fun, newTarget, a) {
     switch (a.length) {
       case 1:
-        return new fun(a[0]);
+        return constructContentFunction(fun, newTarget, a[0]);
       case 2:
-        return new fun(a[0], a[1]);
+        return constructContentFunction(fun, newTarget, a[0], a[1]);
       case 3:
-        return new fun(a[0], a[1], a[2]);
+        return constructContentFunction(fun, newTarget, a[0], a[1], a[2]);
       case 4:
-        return new fun(a[0], a[1], a[2], a[3]);
+        return constructContentFunction(fun, newTarget, a[0], a[1], a[2], a[3]);
       case 5:
-        return new fun(a[0], a[1], a[2], a[3], a[4]);
+        return constructContentFunction(fun, newTarget, a[0], a[1], a[2], a[3], a[4]);
       case 6:
-        return new fun(a[0], a[1], a[2], a[3], a[4], a[5]);
+        return constructContentFunction(fun, newTarget, a[0], a[1], a[2], a[3], a[4], a[5]);
       case 7:
-        return new fun(a[0], a[1], a[2], a[3], a[4], a[5], a[6]);
+        return constructContentFunction(fun, newTarget, a[0], a[1], a[2], a[3], a[4], a[5], a[6]);
       case 8:
-        return new fun(a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7]);
+        return constructContentFunction(fun, newTarget, a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7]);
       case 9:
-        return new fun(a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8]);
+        return constructContentFunction(fun, newTarget, a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8]);
       case 10:
-        return new fun(a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8], a[9]);
+        return constructContentFunction(fun, newTarget, a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8], a[9]);
       case 11:
-        return new fun(a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8], a[9], a[10]);
+        return constructContentFunction(fun, newTarget, a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8], a[9], a[10]);
       case 12:
-        return new fun(a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8], a[9], a[10], a[11]);
+        return constructContentFunction(fun, newTarget, a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8], a[9], a[10], a[11]);
       default:
         assert(a.length !== 0,
                "bound function construction without args should be handled by caller");
-        return _ConstructFunction(fun, a);
+        return _ConstructFunction(fun, newTarget, a);
     }
 }
