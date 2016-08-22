@@ -222,10 +222,9 @@ GetBEndMarginClone(nsIFrame* aFrame,
 // GetAvailableSpace has already been called.
 void
 BlockReflowInput::ComputeBlockAvailSpace(nsIFrame* aFrame,
-                                           const nsStyleDisplay* aDisplay,
-                                           const nsFlowAreaRect& aFloatAvailableSpace,
-                                           bool aBlockAvoidsFloats,
-                                           LogicalRect& aResult)
+                                         const nsFlowAreaRect& aFloatAvailableSpace,
+                                         bool aBlockAvoidsFloats,
+                                         LogicalRect& aResult)
 {
 #ifdef REALLY_NOISY_REFLOW
   printf("CBAS frame=%p has floats %d\n",
