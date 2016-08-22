@@ -5,13 +5,14 @@
 #include "nsISupports.idl"
 #include "nsIVariant.idl"
 
-[scriptable, builtinclass, uuid(cebcefca-2de1-460d-b253-d0582c50b40f)]
+[scriptable, builtinclass, uuid(ba3b2e08-1c07-4cd3-8822-f4d7e35ff2ae)]
 interface nsIMediaDevice : nsISupports
 {
   readonly attribute DOMString type;
   readonly attribute DOMString name;
   readonly attribute DOMString id;
   readonly attribute DOMString mediaSource;
+  readonly attribute DOMString rawId;
 };
 
 [scriptable, function, uuid(24544878-d35e-4962-8c5f-fb84e97bdfee)]

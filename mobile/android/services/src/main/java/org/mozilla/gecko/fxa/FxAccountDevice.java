@@ -12,25 +12,37 @@ public class FxAccountDevice {
   public static final String JSON_KEY_ID = "id";
   public static final String JSON_KEY_TYPE = "type";
   public static final String JSON_KEY_ISCURRENTDEVICE = "isCurrentDevice";
+  public static final String JSON_KEY_PUSH_CALLBACK = "pushCallback";
+  public static final String JSON_KEY_PUSH_PUBLICKEY = "pushPublicKey";
+  public static final String JSON_KEY_PUSH_AUTHKEY = "pushAuthKey";
 
-  public String id;
-  public String name;
-  public String type;
-  public Boolean isCurrentDevice;
+  public final String id;
+  public final String name;
+  public final String type;
+  public final Boolean isCurrentDevice;
+  public final String pushCallback;
+  public final String pushPublicKey;
+  public final String pushAuthKey;
 
-  public FxAccountDevice(String name, String id, String type, Boolean isCurrentDevice) {
+  public FxAccountDevice(String name, String id, String type, Boolean isCurrentDevice,
+                         String pushCallback, String pushPublicKey, String pushAuthKey) {
     this.name = name;
     this.id = id;
     this.type = type;
     this.isCurrentDevice = isCurrentDevice;
+    this.pushCallback = pushCallback;
+    this.pushPublicKey = pushPublicKey;
+    this.pushAuthKey = pushAuthKey;
   }
 
-  public static FxAccountDevice forRegister(String name, String type) {
-    return new FxAccountDevice(name, null, type, null);
+  public static FxAccountDevice forRegister(String name, String type, String pushCallback,
+                                            String pushPublicKey, String pushAuthKey) {
+    return new FxAccountDevice(name, null, type, null, pushCallback, pushPublicKey, pushAuthKey);
   }
 
-  public static FxAccountDevice forUpdate(String id, String name) {
-    return new FxAccountDevice(name, id, null, null);
+  public static FxAccountDevice forUpdate(String id, String name, String pushCallback,
+                                          String pushPublicKey, String pushAuthKey) {
+    return new FxAccountDevice(name, id, null, null, pushCallback, pushPublicKey, pushAuthKey);
   }
 
   public static FxAccountDevice fromJson(ExtendedJSONObject json) {
@@ -38,7 +50,10 @@ public class FxAccountDevice {
     String id = json.getString(JSON_KEY_ID);
     String type = json.getString(JSON_KEY_TYPE);
     Boolean isCurrentDevice = json.getBoolean(JSON_KEY_ISCURRENTDEVICE);
-    return new FxAccountDevice(name, id, type, isCurrentDevice);
+    String pushCallback = json.getString(JSON_KEY_PUSH_CALLBACK);
+    String pushPublicKey = json.getString(JSON_KEY_PUSH_PUBLICKEY);
+    String pushAuthKey = json.getString(JSON_KEY_PUSH_AUTHKEY);
+    return new FxAccountDevice(name, id, type, isCurrentDevice, pushCallback, pushPublicKey, pushAuthKey);
   }
 
   public ExtendedJSONObject toJson() {
@@ -51,6 +66,15 @@ public class FxAccountDevice {
     }
     if (this.type != null) {
       body.put(JSON_KEY_TYPE, this.type);
+    }
+    if (this.pushCallback != null) {
+      body.put(JSON_KEY_PUSH_CALLBACK, this.pushCallback);
+    }
+    if (this.pushPublicKey != null) {
+      body.put(JSON_KEY_PUSH_PUBLICKEY, this.pushPublicKey);
+    }
+    if (this.pushAuthKey != null) {
+      body.put(JSON_KEY_PUSH_AUTHKEY, this.pushAuthKey);
     }
     return body;
   }

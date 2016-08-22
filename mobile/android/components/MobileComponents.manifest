@@ -96,6 +96,11 @@ contract @mozilla.org/dom/site-specific-user-agent;1 {d5234c9d-0ee2-4b3c-9da3-18
 component {18a4e042-7c7c-424b-a583-354e68553a7f} FilePicker.js
 contract @mozilla.org/filepicker;1 {18a4e042-7c7c-424b-a583-354e68553a7f}
 
+# FxAccountsPush.js
+component {d1bbb0fd-1d47-4134-9c12-d7b1be20b721} FxAccountsPush.js
+contract @mozilla.org/fxa-push;1 {d1bbb0fd-1d47-4134-9c12-d7b1be20b721}
+category android-push-service FxAccountsPush @mozilla.org/fxa-push;1
+
 #ifndef RELEASE_BUILD
 # TabSource.js
 component {5850c76e-b916-4218-b99a-31f004e0a7e7} TabSource.js

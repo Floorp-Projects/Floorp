@@ -241,7 +241,10 @@ class BuildBackend(LoggingMixin):
         in the current environment.'''
         pp = Preprocessor()
         srcdir = mozpath.dirname(obj.input_path)
-        pp.context.update(obj.config.substs)
+        pp.context.update({
+            k: ' '.join(v) if isinstance(v, list) else v
+            for k, v in obj.config.substs.iteritems()
+        })
         pp.context.update(
             top_srcdir=obj.topsrcdir,
             topobjdir=obj.topobjdir,

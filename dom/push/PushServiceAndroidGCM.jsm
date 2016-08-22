@@ -12,19 +12,17 @@ const Cr = Components.results;
 
 const {PushDB} = Cu.import("resource://gre/modules/PushDB.jsm");
 const {PushRecord} = Cu.import("resource://gre/modules/PushRecord.jsm");
-Cu.import("resource://gre/modules/Messaging.jsm"); /*global: Services */
+const {
+  PushCrypto,
+  getCryptoParams,
+} = Cu.import("resource://gre/modules/PushCrypto.jsm");
+Cu.import("resource://gre/modules/Messaging.jsm"); /*global: Messaging */
 Cu.import("resource://gre/modules/Services.jsm"); /*global: Services */
 Cu.import("resource://gre/modules/Preferences.jsm"); /*global: Preferences */
 Cu.import("resource://gre/modules/Promise.jsm"); /*global: Promise */
 Cu.import("resource://gre/modules/XPCOMUtils.jsm"); /*global: XPCOMUtils */
 
 const Log = Cu.import("resource://gre/modules/AndroidLog.jsm", {}).AndroidLog.bind("Push");
-
-const {
-  PushCrypto,
-  concatArray,
-  getCryptoParams,
-} = Cu.import("resource://gre/modules/PushCrypto.jsm");
 
 this.EXPORTED_SYMBOLS = ["PushServiceAndroidGCM"];
 
@@ -40,6 +38,8 @@ XPCOMUtils.defineLazyGetter(this, "console", () => {
 const kPUSHANDROIDGCMDB_DB_NAME = "pushAndroidGCM";
 const kPUSHANDROIDGCMDB_DB_VERSION = 5; // Change this if the IndexedDB format changes
 const kPUSHANDROIDGCMDB_STORE_NAME = "pushAndroidGCM";
+
+const FXA_PUSH_SCOPE = "chrome://fxa-push";
 
 const prefs = new Preferences("dom.push.");
 
@@ -76,57 +76,67 @@ this.PushServiceAndroidGCM = {
   },
 
   observe: function(subject, topic, data) {
-    if (topic == "nsPref:changed") {
-      if (data == "dom.push.debug") {
-        // Reconfigure.
-        let debug = !!prefs.get("debug");
-        console.info("Debug parameter changed; updating configuration with new debug", debug);
-        this._configure(this._serverURI, debug);
-      }
+    switch (topic) {
+      case "nsPref:changed":
+        if (data == "dom.push.debug") {
+          // Reconfigure.
+          let debug = !!prefs.get("debug");
+          console.info("Debug parameter changed; updating configuration with new debug", debug);
+          this._configure(this._serverURI, debug);
+        }
+        break;
+      case "PushServiceAndroidGCM:ReceivedPushMessage":
+        this._onPushMessageReceived(data);
+        break;
+      default:
+        break;
+    }
+  },
+
+  _onPushMessageReceived(data) {
+    // TODO: Use Messaging.jsm for this.
+    if (this._mainPushService == null) {
+      // Shouldn't ever happen, but let's be careful.
+      console.error("No main PushService!  Dropping message.");
       return;
     }
-
-    if (topic == "PushServiceAndroidGCM:ReceivedPushMessage") {
-      // TODO: Use Messaging.jsm for this.
-      if (this._mainPushService == null) {
-        // Shouldn't ever happen, but let's be careful.
-        console.error("No main PushService!  Dropping message.");
-        return;
-      }
-      if (!data) {
-        console.error("No data from Java!  Dropping message.");
-        return;
-      }
-      data = JSON.parse(data);
-      console.debug("ReceivedPushMessage with data", data);
-
-      // Default is no data (and no encryption).
-      let message = null;
-      let cryptoParams = null;
-
-      if (data.message && data.enc && (data.enckey || data.cryptokey)) {
-        let headers = {
-          encryption_key: data.enckey,
-          crypto_key: data.cryptokey,
-          encryption: data.enc,
-          encoding: data.con,
-        };
-        cryptoParams = getCryptoParams(headers);
-        // Ciphertext is (urlsafe) Base 64 encoded.
-        message = ChromeUtils.base64URLDecode(data.message, {
-          // The Push server may append padding.
-          padding: "ignore",
-        });
-      }
-
-      console.debug("Delivering message to main PushService:", message, cryptoParams);
-      this._mainPushService.receivedPushMessage(
-        data.channelID, "", message, cryptoParams, (record) => {
-          // Always update the stored record.
-          return record;
-        });
+    if (!data) {
+      console.error("No data from Java!  Dropping message.");
       return;
     }
+    data = JSON.parse(data);
+    console.debug("ReceivedPushMessage with data", data);
+
+    let { message, cryptoParams } = this._messageAndCryptoParams(data);
+
+    console.debug("Delivering message to main PushService:", message, cryptoParams);
+    this._mainPushService.receivedPushMessage(
+      data.channelID, "", message, cryptoParams, (record) => {
+        // Always update the stored record.
+        return record;
+      });
+  },
+
+  _messageAndCryptoParams(data) {
+    // Default is no data (and no encryption).
+    let message = null;
+    let cryptoParams = null;
+
+    if (data.message && data.enc && (data.enckey || data.cryptokey)) {
+      let headers = {
+        encryption_key: data.enckey,
+        crypto_key: data.cryptokey,
+        encryption: data.enc,
+        encoding: data.con,
+      };
+      cryptoParams = getCryptoParams(headers);
+      // Ciphertext is (urlsafe) Base 64 encoded.
+      message = ChromeUtils.base64URLDecode(data.message, {
+        // The Push server may append padding.
+        padding: "ignore",
+      });
+    }
+    return { message, cryptoParams };
   },
 
   _configure: function(serverURL, debug) {
@@ -209,11 +219,16 @@ this.PushServiceAndroidGCM = {
         // The Push server requires padding.
         pad: true,
       }) : null;
-    // Caller handles errors.
-    return Messaging.sendRequestForResult({
+    let message = {
       type: "PushServiceAndroidGCM:SubscribeChannel",
       appServerKey: appServerKey,
-    }).then(data => {
+    }
+    if (record.scope == FXA_PUSH_SCOPE) {
+      message.service = "fxa";
+    }
+    // Caller handles errors.
+    return Messaging.sendRequestForResult(message)
+    .then(data => {
       console.debug("Got data:", data);
       return PushCrypto.generateKeys()
         .then(exportedKeys =>
@@ -225,6 +240,7 @@ this.PushServiceAndroidGCM = {
             scope: record.scope,
             originAttributes: record.originAttributes,
             ctime: ctime,
+            systemRecord: record.systemRecord,
             // Cryptography!
             p256dhPublicKey: exportedKeys[0],
             p256dhPrivateKey: exportedKeys[1],
