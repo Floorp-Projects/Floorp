@@ -52,7 +52,8 @@ contain any of the following fields:
     <tr>
         <td><code>binary</code>
         <td>String
-        <td>Taken from geckodriver command line or system defaults.
+        <td>Taken from <code>-b</code> argument
+          or system default location
         <td>Absolute path of the Firefox binary,
     e.g. <code>/usr/bin/firefox</code> or <code>/Applications/Firefox.app/Contents/MacOS/firefox</code>,
     to select which custom browser binary to use.
@@ -70,7 +71,7 @@ contain any of the following fields:
     <tr>
         <td><code>profile</code>
         <td>String
-        <td>New empty profile
+        <td>New, empty profile
         <td>Base64-encoded zip of a profile directory
           to use as the profile for the Firefox instance.
           This may be used to e.g. install extensions or custom certificates.
