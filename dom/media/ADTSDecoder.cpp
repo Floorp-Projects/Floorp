@@ -41,8 +41,7 @@ ADTSDecoder::IsEnabled()
 ADTSDecoder::CanHandleMediaType(const nsACString& aType,
                                 const nsAString& aCodecs)
 {
-  if (aType.EqualsASCII("audio/aac") || aType.EqualsASCII("audio/aacp") ||
-      aType.EqualsASCII("audio/x-aac")) {
+  if (aType.EqualsASCII("audio/aac") || aType.EqualsASCII("audio/aacp")) {
     return IsEnabled() && (aCodecs.IsEmpty() || aCodecs.EqualsASCII("aac"));
   }
 
