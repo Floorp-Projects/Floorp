@@ -153,7 +153,6 @@ TextureClientPool::AllocateTextureClient()
       TextureClient::CreateForRawBufferAccess(mSurfaceAllocator,
                                               mFormat, mSize,
                                               gfx::BackendType::NONE,
-                                              mBackend,
                                               mFlags, ALLOC_DEFAULT);
   } else {
     newClient =
