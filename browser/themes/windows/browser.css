@@ -50,6 +50,12 @@
   --urlbar-separator-color: ThreeDLightShadow;
 }
 
+@media (-moz-windows-default-theme) {
+  :root {
+    --panel-separator-color: hsla(210,4%,10%,.14);
+  }
+}
+
 #nav-bar[brighttext] {
   --toolbarbutton-hover-background: rgba(255,255,255,.25);
   --toolbarbutton-hover-bordercolor: rgba(255,255,255,.5);
