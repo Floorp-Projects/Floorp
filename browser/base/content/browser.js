@@ -979,7 +979,6 @@ var gBrowserInit = {
       // adjust browser UI for popups
       gURLBar.setAttribute("readonly", "true");
       gURLBar.setAttribute("enablehistory", "false");
-      goSetCommandEnabled("cmd_newNavigatorTab", false);
     }
 
     // Misc. inits.
@@ -1901,16 +1900,8 @@ function BrowserOpenTab(event) {
       case "tab":
       case "tabshifted":
         // When accel-click or middle-click are used, open the new tab as
-        // related to the current tab. We need to exclude key events here,
-        // where the accel key is required for the shortcut.
-        // 'event' and its sourceEvent are command events, the latter of which
-        // doesn't have its own sourceEvent. These events don't indicate how
-        // they were invoked, except that the sourceEvent for keyboard
-        // shortcuts have <key> targets, and those for clicking a toolbar
-        // button or activating a menu item have that button or menuitem as
-        // their target.
-        relatedToCurrent = !event.sourceEvent ||
-                           event.sourceEvent.target.localName != "key";
+        // related to the current tab.
+        relatedToCurrent = true;
         break;
       case "current":
         where = "tab";

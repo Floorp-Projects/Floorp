@@ -44,6 +44,8 @@ function testPopupUI(win) {
 
   EventUtils.synthesizeKey("t", { accelKey: true }, win);
   is(win.gBrowser.browsers.length, 1, "Accel+T doesn't open a new tab in the popup");
+  is(gBrowser.browsers.length, 2, "Accel+T opened a new tab in the parent window");
+  gBrowser.removeCurrentTab();
 
   EventUtils.synthesizeKey("w", { accelKey: true }, win);
   ok(win.closed, "Accel+W closes the popup");
