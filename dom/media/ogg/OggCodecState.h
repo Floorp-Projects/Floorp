@@ -25,7 +25,6 @@
 #include <nsTArray.h>
 #include <nsClassHashtable.h>
 #include "VideoUtils.h"
-#include "FlacFrameParser.h"
 
 #include <stdint.h>
 
@@ -86,11 +85,10 @@ public:
   enum CodecType
   {
     TYPE_VORBIS=0,
-    TYPE_THEORA,
-    TYPE_OPUS,
-    TYPE_SKELETON,
-    TYPE_FLAC,
-    TYPE_UNKNOWN
+    TYPE_THEORA=1,
+    TYPE_OPUS=2,
+    TYPE_SKELETON=3,
+    TYPE_UNKNOWN=4
   };
 
   virtual ~OggCodecState();
@@ -143,7 +141,7 @@ public:
   }
 
   // Initializes the codec state.
-  virtual bool Init() { return true; }
+  virtual bool Init();
 
   // Returns true when this bitstream has finished reading all its
   // header packets.
@@ -228,16 +226,6 @@ public:
   // True when all headers packets have been read.
   bool mDoneReadingHeaders;
 
-  // Validation utility for vorbis-style tag names.
-  static bool IsValidVorbisTagName(nsCString& aName);
-
-  // Utility method to parse and add a vorbis-style comment
-  // to a metadata hash table. Most Ogg-encapsulated codecs
-  // use the vorbis comment format for metadata.
-  static bool AddVorbisComment(MetadataTags* aTags,
-                        const char* aComment,
-                        uint32_t aLength);
-
 protected:
   // Constructs a new OggCodecState. aActive denotes whether the stream is
   // active. For streams of unsupported or unknown types, aActive should be
@@ -260,8 +248,15 @@ protected:
   // in order to capture granulepos.
   nsTArray<ogg_packet*> mUnstamped;
 
-private:
-  bool InternalInit();
+  // Validation utility for vorbis-style tag names.
+  static bool IsValidVorbisTagName(nsCString& aName);
+
+  // Utility method to parse and add a vorbis-style comment
+  // to a metadata hash table. Most Ogg-encapsulated codecs
+  // use the vorbis comment format for metadata.
+  static bool AddVorbisComment(MetadataTags* aTags,
+                        const char* aComment,
+                        uint32_t aLength);
 };
 
 class VorbisState : public OggCodecState
@@ -475,6 +470,7 @@ public:
   CodecType GetType() override { return TYPE_SKELETON; }
   bool DecodeHeader(ogg_packet* aPacket) override;
   int64_t Time(int64_t granulepos) override { return -1; }
+  bool Init() override { return true; }
   bool IsHeader(ogg_packet* aPacket) override { return true; }
 
   // Return true if the given time (in milliseconds) is within
@@ -605,29 +601,6 @@ private:
 
   // Maps Ogg serialnos to the index-keypoint list.
   nsClassHashtable<nsUint32HashKey, nsKeyFrameIndex> mIndex;
-};
-
-class FlacState : public OggCodecState
-{
-public:
-  explicit FlacState(ogg_page* aBosPage);
-
-  CodecType GetType() override { return TYPE_FLAC; }
-  bool DecodeHeader(ogg_packet* aPacket) override;
-  int64_t Time(int64_t granulepos) override;
-  int64_t PacketDuration(ogg_packet* aPacket) override;
-  bool IsHeader(ogg_packet* aPacket) override;
-  nsresult PageIn(ogg_page* aPage) override;
-
-  // Return a hash table with tag metadata.
-  MetadataTags* GetTags() override;
-
-  const AudioInfo& Info();
-
-private:
-  bool ReconstructFlacGranulepos(void);
-
-  FlacFrameParser mParser;
 };
 
 } // namespace mozilla
