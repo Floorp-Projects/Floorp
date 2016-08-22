@@ -1029,8 +1029,9 @@ NativeKey::InitWithAppCommand()
       GetScanCodeWithExtendedFlag());
 }
 
+// static
 bool
-NativeKey::IsControlChar(char16_t aChar) const
+NativeKey::IsControlChar(char16_t aChar)
 {
   static const char16_t U_SPACE = 0x20;
   return aChar < U_SPACE;
@@ -2533,15 +2534,15 @@ KeyboardLayout::InitNativeKey(NativeKey& aNativeKey,
   // should be discarded because mKeyValue should have the string to be
   // inputted.
   if (aNativeKey.mMsg.message == WM_CHAR) {
-    aNativeKey.mKeyNameIndex = KEY_NAME_INDEX_USE_STRING;
-    if (aNativeKey.mMsg.wParam) {
-      aNativeKey.mCommittedCharsAndModifiers.Append(
-        static_cast<char16_t>(aNativeKey.mMsg.wParam),
-        aModKeyState.GetModifiers());
-    } else {
-      aNativeKey.mCommittedCharsAndModifiers.Clear();
+    char16_t ch = static_cast<char16_t>(aNativeKey.mMsg.wParam);
+    // But don't set key value as printable key if the character is a control
+    // character such as 0x0D at pressing Enter key.
+    if (!NativeKey::IsControlChar(ch)) {
+      aNativeKey.mKeyNameIndex = KEY_NAME_INDEX_USE_STRING;
+      aNativeKey.mCommittedCharsAndModifiers.
+        Append(ch, aModKeyState.GetModifiers());
+      return;
     }
-    return;
   }
 
   uint8_t virtualKey = aNativeKey.mOriginalVirtualKeyCode;
