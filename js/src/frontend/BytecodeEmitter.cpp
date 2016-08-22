@@ -7405,6 +7405,19 @@ BytecodeEmitter::emitDeleteExpression(ParseNode* node)
     return emit1(JSOP_TRUE);
 }
 
+static const char *
+SelfHostedCallFunctionName(JSAtom* name, ExclusiveContext* cx)
+{
+    if (name == cx->names().callFunction)
+        return "callFunction";
+    if (name == cx->names().callContentFunction)
+        return "callContentFunction";
+    if (name == cx->names().constructContentFunction)
+        return "constructContentFunction";
+
+    MOZ_CRASH("Unknown self-hosted call function name");
+}
+
 bool
 BytecodeEmitter::emitSelfHostedCallFunction(ParseNode* pn)
 {
@@ -7418,8 +7431,8 @@ BytecodeEmitter::emitSelfHostedCallFunction(ParseNode* pn)
     // argc is set to the amount of actually emitted args and the
     // emitting of args below is disabled by setting emitArgs to false.
     ParseNode* pn2 = pn->pn_head;
-    const char* errorName = pn2->name() == cx->names().callFunction ?
-                            "callFunction" : "callContentFunction";
+    const char* errorName = SelfHostedCallFunctionName(pn2->name(), cx);
+
     if (pn->pn_count < 3) {
         reportError(pn, JSMSG_MORE_ARGS_NEEDED, errorName, "2", "s");
         return false;
@@ -7431,30 +7444,47 @@ BytecodeEmitter::emitSelfHostedCallFunction(ParseNode* pn)
         return false;
     }
 
+    bool constructing = pn2->name() == cx->names().constructContentFunction;
     ParseNode* funNode = pn2->pn_next;
-    if (funNode->getKind() == PNK_NAME && funNode->name() == cx->names().std_Function_apply)
+    if (constructing)
+        callOp = JSOP_NEW;
+    else if (funNode->getKind() == PNK_NAME && funNode->name() == cx->names().std_Function_apply)
         callOp = JSOP_FUNAPPLY;
+
     if (!emitTree(funNode))
         return false;
 
 #ifdef DEBUG
     if (emitterMode == BytecodeEmitter::SelfHosting &&
-        pn2->name() != cx->names().callContentFunction)
+        pn2->name() == cx->names().callFunction)
     {
         if (!emit1(JSOP_DEBUGCHECKSELFHOSTED))
             return false;
     }
 #endif
 
-    ParseNode* thisArg = funNode->pn_next;
-    if (!emitTree(thisArg))
-        return false;
-
     bool oldEmittingForInit = emittingForInit;
     emittingForInit = false;
 
-    for (ParseNode* argpn = thisArg->pn_next; argpn; argpn = argpn->pn_next) {
+    ParseNode* thisOrNewTarget = funNode->pn_next;
+    if (constructing) {
+        // Save off the new.target value, but here emit a proper |this| for a
+        // constructing call.
+        if (!emit1(JSOP_IS_CONSTRUCTING))
+            return false;
+    } else {
+        // It's |this|, emit it.
+        if (!emitTree(thisOrNewTarget))
+            return false;
+    }
+
+    for (ParseNode* argpn = thisOrNewTarget->pn_next; argpn; argpn = argpn->pn_next) {
         if (!emitTree(argpn))
+            return false;
+    }
+
+    if (constructing) {
+        if (!emitTree(thisOrNewTarget))
             return false;
     }
 
@@ -7630,7 +7660,8 @@ BytecodeEmitter::emitCallOrNew(ParseNode* pn)
             // "callContentFunction", or "resumeGenerator" in self-hosted
             // code generate inline bytecode.
             if (pn2->name() == cx->names().callFunction ||
-                pn2->name() == cx->names().callContentFunction)
+                pn2->name() == cx->names().callContentFunction ||
+                pn2->name() == cx->names().constructContentFunction)
             {
                 return emitSelfHostedCallFunction(pn);
             }
