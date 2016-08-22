@@ -43,19 +43,20 @@ public:
       : gfxFontFamily(aName), mDWFamily(aFamily), mForceGDIClassic(false) {}
     virtual ~gfxDWriteFontFamily();
     
-    virtual void FindStyleVariations(FontInfoData *aFontInfoData = nullptr);
+    void FindStyleVariations(FontInfoData *aFontInfoData = nullptr) final;
 
-    virtual void LocalizedName(nsAString& aLocalizedName);
+    void LocalizedName(nsAString& aLocalizedName) final;
 
-    virtual void ReadFaceNames(gfxPlatformFontList *aPlatformFontList,
-                               bool aNeedFullnamePostscriptNames);
+    void ReadFaceNames(gfxPlatformFontList *aPlatformFontList,
+                       bool aNeedFullnamePostscriptNames,
+                       FontInfoData *aFontInfoData = nullptr) final;
 
     void SetForceGDIClassic(bool aForce) { mForceGDIClassic = aForce; }
 
-    virtual void AddSizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf,
-                                        FontListSizes* aSizes) const;
-    virtual void AddSizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf,
-                                        FontListSizes* aSizes) const;
+    void AddSizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf,
+                                FontListSizes* aSizes) const final;
+    void AddSizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf,
+                                FontListSizes* aSizes) const final;
 
     already_AddRefed<IDWriteFont> GetDefaultFont();
 protected:
