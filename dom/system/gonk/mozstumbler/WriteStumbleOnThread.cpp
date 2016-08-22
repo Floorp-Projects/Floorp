@@ -103,7 +103,11 @@ WriteStumbleOnThread::WriteJSON(Partition aPart)
 
   // Need to add "]}" after the last item
   if (aPart == Partition::End) {
-    gzWriter->Write("]}");
+    rv = gzWriter->Write("]}");
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      STUMBLER_ERR("gzWriter Write failed");
+    }
+
     rv = gzWriter->Finish();
     if (NS_WARN_IF(NS_FAILED(rv))) {
       STUMBLER_ERR("ostream finish failed");
@@ -134,13 +138,26 @@ WriteStumbleOnThread::WriteJSON(Partition aPart)
 
   // Need to add "{items:[" before the first item
   if (aPart == Partition::Begining) {
-    gzWriter->Write("{\"items\":[{");
+    rv = gzWriter->Write("{\"items\":[{");
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      STUMBLER_ERR("ostream write begining failed");
+    }
   } else if (aPart == Partition::Middle) {
-    gzWriter->Write(",{");
+    rv = gzWriter->Write(",{");
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      STUMBLER_ERR("ostream write middle failed");
+    }
   }
-  gzWriter->Write(mDesc.get());
+  rv = gzWriter->Write(mDesc.get());
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    STUMBLER_ERR("ostream write mDesc failed");
+  }
   //  one item is ended with '}' (e.g. {item})
-  gzWriter->Write("}");
+  rv = gzWriter->Write("}");
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    STUMBLER_ERR("ostream write end failed");
+  }
+
   rv = gzWriter->Finish();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     STUMBLER_ERR("ostream finish failed");
