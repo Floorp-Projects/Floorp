@@ -186,7 +186,6 @@
 @RESPATH@/components/dom_notification.xpt
 @RESPATH@/components/dom_html.xpt
 @RESPATH@/components/dom_offline.xpt
-@RESPATH@/components/dom_payment.xpt
 @RESPATH@/components/dom_json.xpt
 @RESPATH@/components/dom_messages.xpt
 @RESPATH@/components/dom_power.xpt
@@ -627,11 +626,6 @@
 @RESPATH@/components/ActivityWrapper.js
 @RESPATH@/components/ActivityMessageConfigurator.js
 
-@RESPATH@/components/Payment.js
-@RESPATH@/components/PaymentFlowInfo.js
-@RESPATH@/components/PaymentProvider.js
-@RESPATH@/components/Payment.manifest
-
 @RESPATH@/components/DownloadsAPI.js
 @RESPATH@/components/DownloadsAPI.manifest
 
@@ -873,8 +867,6 @@ bin/libfreebl_32int64_3.so
 @RESPATH@/components/DirectoryProvider.js
 @RESPATH@/components/ProcessGlobal.js
 @RESPATH@/components/OMAContentHandler.js
-@RESPATH@/components/PaymentGlue.js
-@RESPATH@/components/PaymentProviderStrategy.js
 @RESPATH@/components/RecoveryService.js
 @RESPATH@/components/MailtoProtocolHandler.js
 @RESPATH@/components/SmsProtocolHandler.js
@@ -894,12 +886,6 @@ bin/libfreebl_32int64_3.so
 
 @RESPATH@/components/FxAccountsUIGlue.js
 @RESPATH@/components/services_fxaccounts.xpt
-
-@RESPATH@/components/MobileIdentity.manifest
-@RESPATH@/components/MobileIdentity.js
-@RESPATH@/components/dom_mobileidentity.xpt
-@RESPATH@/components/MobileIdentityUIGlue.js
-@RESPATH@/components/services_mobileidentity.xpt
 
 #ifdef MOZ_WEBSPEECH
 @RESPATH@/components/dom_webspeechsynth.xpt

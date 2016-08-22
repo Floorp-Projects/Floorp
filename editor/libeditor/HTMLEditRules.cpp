@@ -2294,24 +2294,11 @@ HTMLEditRules::WillDeleteSelection(Selection* aSelection,
         NS_ENSURE_STATE(mHTMLEditor);
         if (leftBlockParent == rightBlockParent &&
             mHTMLEditor->NodesSameType(GetAsDOMNode(leftParent),
-                                       GetAsDOMNode(rightParent))) {
-          if (leftParent->IsHTMLElement(nsGkAtoms::p)) {
-            // First delete the selection
-            NS_ENSURE_STATE(mHTMLEditor);
-            res = mHTMLEditor->DeleteSelectionImpl(aAction, aStripWrappers);
-            NS_ENSURE_SUCCESS(res, res);
-            // Then join paragraphs, insert break
-            NS_ENSURE_STATE(mHTMLEditor);
-            EditorDOMPoint pt =
-              mHTMLEditor->JoinNodeDeep(*leftParent, *rightParent);
-            NS_ENSURE_STATE(pt.node);
-            // Fix up selection
-            res = aSelection->Collapse(pt.node, pt.offset);
-            NS_ENSURE_SUCCESS(res, res);
-            return NS_OK;
-          }
-          if (HTMLEditUtils::IsListItem(leftParent) ||
-              HTMLEditUtils::IsHeader(*leftParent)) {
+                                       GetAsDOMNode(rightParent)) &&
+            // XXX What's special about these three types of block?
+            (leftParent->IsHTMLElement(nsGkAtoms::p) ||
+             HTMLEditUtils::IsListItem(leftParent) ||
+             HTMLEditUtils::IsHeader(*leftParent))) {
             // First delete the selection
             NS_ENSURE_STATE(mHTMLEditor);
             res = mHTMLEditor->DeleteSelectionImpl(aAction, aStripWrappers);
@@ -2325,7 +2312,6 @@ HTMLEditRules::WillDeleteSelection(Selection* aSelection,
             res = aSelection->Collapse(pt.node, pt.offset);
             NS_ENSURE_SUCCESS(res, res);
             return NS_OK;
-          }
         }
 
         // Else blocks not same type, or not siblings.  Delete everything
@@ -2500,7 +2486,8 @@ HTMLEditRules::InsertBRIfNeeded(Selection* aSelection)
 
 /**
  * GetGoodSelPointForNode() finds where at a node you would want to set the
- * selection if you were trying to have a caret next to it.
+ * selection if you were trying to have a caret next to it.  Always returns a
+ * valid value (unless mHTMLEditor has gone away).
  *
  * @param aNode         The node
  * @param aAction       Which edge to find: eNext indicates beginning,
@@ -2511,7 +2498,8 @@ HTMLEditRules::GetGoodSelPointForNode(nsINode& aNode,
                                       nsIEditor::EDirection aAction)
 {
   NS_ENSURE_TRUE(mHTMLEditor, EditorDOMPoint());
-  if (aNode.GetAsText() || mHTMLEditor->IsContainer(&aNode)) {
+  if (aNode.GetAsText() || mHTMLEditor->IsContainer(&aNode) ||
+      NS_WARN_IF(!aNode.GetParentNode())) {
     return EditorDOMPoint(&aNode,
                           aAction == nsIEditor::ePrevious ? aNode.Length() : 0);
   }
@@ -4836,24 +4824,26 @@ HTMLEditRules::CheckForEmptyBlock(nsINode* aStartNode,
       }
     } else {
       if (aAction == nsIEditor::eNext) {
-        // Adjust selection to be right after it.
-        res = aSelection->Collapse(blockParent, offset + 1);
-        NS_ENSURE_SUCCESS(res, res);
-
-        // Move to the start of the next node if it's a text.
+        // Move to the start of the next node, if any
         nsCOMPtr<nsIContent> nextNode = mHTMLEditor->GetNextNode(blockParent,
                                                                  offset + 1, true);
-        if (nextNode && mHTMLEditor->IsTextNode(nextNode)) {
-          res = aSelection->Collapse(nextNode, 0);
+        if (nextNode) {
+          EditorDOMPoint pt = GetGoodSelPointForNode(*nextNode, aAction);
+          res = aSelection->Collapse(pt.node, pt.offset);
+          NS_ENSURE_SUCCESS(res, res);
+        } else {
+          // Adjust selection to be right after it.
+          res = aSelection->Collapse(blockParent, offset + 1);
           NS_ENSURE_SUCCESS(res, res);
         }
       } else {
-        // Move to the end of the previous node if it's a text.
+        // Move to the end of the previous node
         nsCOMPtr<nsIContent> priorNode = mHTMLEditor->GetPriorNode(blockParent,
                                                                    offset,
                                                                    true);
-        if (priorNode && mHTMLEditor->IsTextNode(priorNode)) {
-          res = aSelection->Collapse(priorNode, priorNode->TextLength());
+        if (priorNode) {
+          EditorDOMPoint pt = GetGoodSelPointForNode(*priorNode, aAction);
+          res = aSelection->Collapse(pt.node, pt.offset);
           NS_ENSURE_SUCCESS(res, res);
         } else {
           res = aSelection->Collapse(blockParent, offset + 1);
@@ -7372,26 +7362,15 @@ HTMLEditRules::AdjustSelection(Selection* aSelection,
   NS_ENSURE_SUCCESS(res, res);
   nearNode = do_QueryInterface(nearNodeDOM);
 
-  if (nearNode)
-  {
-    // is the nearnode a text node?
-    textNode = do_QueryInterface(nearNode);
-    if (textNode)
-    {
-      int32_t offset = 0;
-      // put selection in right place:
-      if (aAction == nsIEditor::ePrevious)
-        textNode->GetLength((uint32_t*)&offset);
-      res = aSelection->Collapse(nearNode,offset);
-    }
-    else  // must be break or image
-    {
-      selNode = EditorBase::GetNodeLocation(nearNode, &selOffset);
-      if (aAction == nsIEditor::ePrevious) selOffset++;  // want to be beyond it if we backed up to it
-      res = aSelection->Collapse(selNode, selOffset);
-    }
+  if (!nearNode) {
+    return NS_OK;
   }
-  return res;
+  EditorDOMPoint pt = GetGoodSelPointForNode(*nearNode, aAction);
+  res = aSelection->Collapse(pt.node, pt.offset);
+  if (NS_WARN_IF(NS_FAILED(res))) {
+    return res;
+  }
+  return NS_OK;
 }
 
 
