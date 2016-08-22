@@ -57,6 +57,7 @@
     macro(compare, compare, "compare") \
     macro(configurable, configurable, "configurable") \
     macro(construct, construct, "construct") \
+    macro(constructContentFunction, constructContentFunction, "constructContentFunction") \
     macro(constructor, constructor, "constructor") \
     macro(ConvertAndCopyTo, ConvertAndCopyTo, "ConvertAndCopyTo") \
     macro(copyWithin, copyWithin, "copyWithin") \
