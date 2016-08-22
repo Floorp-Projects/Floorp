@@ -2114,6 +2114,9 @@ pref("security.mixed_content.block_display_content", false);
 // Sub-resource integrity
 pref("security.sri.enable", true);
 
+// Block scripts with MIME type 'image/'
+pref("security.block_script_with_mime_image", true);
+
 // OCSP must-staple
 pref("security.ssl.enable_ocsp_must_staple", true);
 
