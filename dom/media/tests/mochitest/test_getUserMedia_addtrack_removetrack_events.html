@@ -50,9 +50,8 @@ runTest(() => getUserMedia({audio: true, video: true})
   })
   .then(s => {
     newStream = s;
-// TODO: Uncomment once bug 1294605 is fixed
-//    info("Stopping an original track");
-//    stopTrack(stream.getTracks()[0]);
+    info("Stopping an original track");
+    stopTrack(stream.getTracks()[0]);
 
     return spinEventLoop();
   })
