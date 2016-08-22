@@ -55,6 +55,8 @@ enum PluginQuirks {
   QUIRK_UNITY_FIXUP_MOUSE_CAPTURE                 = 1 << 11,
   // Win: Hook IMM32 API to handle IME event on windowless plugin
   QUIRK_WINLESS_HOOK_IME                          = 1 << 12,
+  // Win: Hook GetKeyState to get keyboard state on sandbox process
+  QUIRK_FLASH_HOOK_GETKEYSTATE                    = 1 << 13,
 };
 
 int GetQuirksFromMimeTypeAndFilename(const nsCString& aMimeType,
