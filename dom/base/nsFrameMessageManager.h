@@ -109,6 +109,11 @@ public:
     return false;
   }
 
+  virtual nsIMessageSender* GetProcessMessageManager() const
+  {
+    return nullptr;
+  }
+
 protected:
   bool BuildClonedMessageDataForParent(nsIContentParent* aParent,
                                        StructuredCloneData& aData,
@@ -207,6 +212,7 @@ public:
 
   void InitWithCallback(mozilla::dom::ipc::MessageManagerCallback* aCallback);
   void SetCallback(mozilla::dom::ipc::MessageManagerCallback* aCallback);
+
   mozilla::dom::ipc::MessageManagerCallback* GetCallback()
   {
     return mCallback;
