@@ -56,7 +56,7 @@ richlistitem.download button {
 .download-state:not(:-moz-any([state="6"], /* Blocked (parental) */
                               [state="8"], /* Blocked (dirty)    */
                               [state="9"]) /* Blocked (policy)   */)
-                                           .downloadTypeIcon.blockedIcon,
+                                           .downloadBlockedBadge,
 
 .download-state:not(:-moz-any([state="-1"],/* Starting (initial) */
                               [state="5"], /* Starting (queued)  */
