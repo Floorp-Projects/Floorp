@@ -41,6 +41,7 @@ ID2D1Factory1 *D2DFactory1()
 DrawTargetD2D1::DrawTargetD2D1()
   : mPushedLayers(1)
   , mUsedCommandListsSincePurge(0)
+  , mDidComplexBlendWithListInList(false)
 {
 }
 
@@ -1320,6 +1321,13 @@ DrawTargetD2D1::FinalizeDrawing(CompositionOp aOp, const Pattern &aPattern)
     blendEffect->SetValue(D2D1_BLEND_PROP_MODE, D2DBlendMode(aOp));
 
     mDC->DrawImage(blendEffect, D2D1_INTERPOLATION_MODE_NEAREST_NEIGHBOR, D2D1_COMPOSITE_MODE_BOUNDED_SOURCE_COPY);
+
+    // This may seem a little counter intuitive. If this is false, we go through the regular
+    // codepaths and set it to true. When this was true, GetImageForLayerContent will return
+    // a bitmap for the current command list and we will no longer have a complex blend
+    // with a list for tmpImage. Therefore we can set it to false again.
+    mDidComplexBlendWithListInList = !mDidComplexBlendWithListInList;
+
     return;
   }
 
@@ -1418,10 +1426,23 @@ DrawTargetD2D1::GetImageForLayerContent()
     mDC->SetTarget(CurrentTarget());
     list->Close();
 
+    RefPtr<ID2D1Bitmap1> tmpBitmap;
+    if (mDidComplexBlendWithListInList) {
+      mDC->CreateBitmap(mBitmap->GetPixelSize(), nullptr, 0, &D2D1::BitmapProperties1(D2D1_BITMAP_OPTIONS_TARGET, D2D1::PixelFormat(DXGI_FORMAT_B8G8R8A8_UNORM, D2D1_ALPHA_MODE_PREMULTIPLIED)), getter_AddRefs(tmpBitmap));
+      mDC->SetTransform(D2D1::IdentityMatrix());
+      mDC->SetTarget(tmpBitmap);
+      mDC->DrawImage(list, D2D1_INTERPOLATION_MODE_NEAREST_NEIGHBOR, D2D1_COMPOSITE_MODE_BOUNDED_SOURCE_COPY);
+      mDC->SetTarget(CurrentTarget());
+    }
+
     DCCommandSink sink(mDC);
     list->Stream(&sink);
 
     PushAllClips();
+
+    if (mDidComplexBlendWithListInList) {
+      return tmpBitmap.forget();
+    }
 
     return list.forget();
   }
