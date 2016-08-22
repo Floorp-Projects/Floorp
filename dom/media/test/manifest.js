@@ -1408,6 +1408,12 @@ var gEMENonMSEFailTests = [
   },
 ];
 
+// These are files that are used for video decode suspend in
+// background tabs tests.
+var gDecodeSuspendTests = [
+  { name:"gizmo.mp4", type:"video/mp4", duration:5.56 }
+];
+
 function checkMetadata(msg, e, test) {
   if (test.width) {
     is(e.videoWidth, test.width, msg + " video width");
