@@ -5,9 +5,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1140105
 -->
 <head>
   <title>Test for Bug 1140105</title>
-  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
-  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
-  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css">
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
 </head>
 <body>
 <div id="display">
@@ -38,7 +38,7 @@ SimpleTest.waitForFocus(function() {
   var allHas = {};
   var editor = getEditor();
 
-  var atomService = Components.classes["@mozilla.org/atom-service;1"].getService(Components.interfaces.nsIAtomService);
+  var atomService = SpecialPowers.Cc["@mozilla.org/atom-service;1"].getService(SpecialPowers.Ci.nsIAtomService);
   var propAtom = atomService.getAtom("font");
   editor.getInlineProperty(propAtom, "face", "Arial", firstHas, anyHas, allHas);
   is(firstHas.value, true, "Test for Arial: firstHas: true expected");
@@ -54,8 +54,9 @@ SimpleTest.waitForFocus(function() {
 });
 
 function getEditor() {
-  var Ci = Components.interfaces;
-  var editingSession = window.QueryInterface(Ci.nsIInterfaceRequestor)
+  var Ci = SpecialPowers.Ci;
+  var editingSession = SpecialPowers.wrap(window)
+                             .QueryInterface(Ci.nsIInterfaceRequestor)
                              .getInterface(Ci.nsIWebNavigation)
                              .QueryInterface(Ci.nsIInterfaceRequestor)
                              .getInterface(Ci.nsIEditingSession);
