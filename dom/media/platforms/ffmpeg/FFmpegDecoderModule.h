@@ -45,35 +45,24 @@ public:
   already_AddRefed<MediaDataDecoder>
   CreateAudioDecoder(const CreateDecoderParams& aParams) override
   {
-#ifdef USING_MOZFFVPX
-    return nullptr;
-#else
     RefPtr<MediaDataDecoder> decoder =
       new FFmpegAudioDecoder<V>(mLib,
                                 aParams.mTaskQueue,
                                 aParams.mCallback,
                                 aParams.AudioConfig());
     return decoder.forget();
-#endif
   }
 
   bool SupportsMimeType(const nsACString& aMimeType,
                         DecoderDoctorDiagnostics* aDiagnostics) const override
   {
     AVCodecID videoCodec = FFmpegVideoDecoder<V>::GetCodecId(aMimeType);
-#ifdef USING_MOZFFVPX
-    if (videoCodec == AV_CODEC_ID_NONE) {
-        return false;
-    }
-    return !!FFmpegDataDecoder<V>::FindAVCodec(mLib, videoCodec);
-#else
     AVCodecID audioCodec = FFmpegAudioDecoder<V>::GetCodecId(aMimeType);
     if (audioCodec == AV_CODEC_ID_NONE && videoCodec == AV_CODEC_ID_NONE) {
       return false;
     }
     AVCodecID codec = audioCodec != AV_CODEC_ID_NONE ? audioCodec : videoCodec;
     return !!FFmpegDataDecoder<V>::FindAVCodec(mLib, codec);
-#endif
   }
 
   ConversionRequired

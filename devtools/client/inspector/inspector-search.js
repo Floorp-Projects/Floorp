@@ -8,9 +8,9 @@ const promise = require("promise");
 const {Task} = require("devtools/shared/task");
 const {KeyCodes} = require("devtools/client/shared/keycodes");
 
-const system = require("devtools/shared/system");
 const EventEmitter = require("devtools/shared/event-emitter");
 const {AutocompletePopup} = require("devtools/client/shared/autocomplete-popup");
+const Services = require("Services");
 
 // Maximum number of selector suggestions shown in the panel.
 const MAX_SUGGESTIONS = 15;
@@ -130,7 +130,7 @@ InspectorSearch.prototype = {
       this._onSearch(event.shiftKey);
     }
 
-    const modifierKey = system.constants.platform === "macosx"
+    const modifierKey = Services.appinfo.OS === "Darwin"
                         ? event.metaKey : event.ctrlKey;
     if (event.keyCode === KeyCodes.DOM_VK_G && modifierKey) {
       this._onSearch(event.shiftKey);

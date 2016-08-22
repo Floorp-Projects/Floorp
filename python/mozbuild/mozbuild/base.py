@@ -308,6 +308,7 @@ class MozbuildObject(ProcessExecutionMixin):
         """
         # Top-level files and directories to not clobber by default.
         no_clobber = {
+            '.mozbuild',
             'msvc',
         }
 

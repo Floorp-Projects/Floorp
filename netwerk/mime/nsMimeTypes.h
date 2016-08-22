@@ -87,6 +87,7 @@
 #define AUDIO_3GPP2                         "audio/3gpp2"
 #define AUDIO_MIDI                          "audio/x-midi"
 #define AUDIO_MATROSKA                      "audio/x-matroska"
+#define AUDIO_FLAC                          "audio/flac"
 
 #define BINARY_OCTET_STREAM                 "binary/octet-stream"
 
