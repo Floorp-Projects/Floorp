@@ -6112,12 +6112,6 @@ JS_IsStopIteration(Value v)
     return v.isObject() && v.toObject().is<StopIterationObject>();
 }
 
-JS_PUBLIC_API(intptr_t)
-JS_GetCurrentThread()
-{
-    return reinterpret_cast<intptr_t>(PR_GetCurrentThread());
-}
-
 extern MOZ_NEVER_INLINE JS_PUBLIC_API(void)
 JS_AbortIfWrongThread(JSContext* cx)
 {
