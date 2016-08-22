@@ -467,9 +467,6 @@ pref("media.realtime_decoder.enabled", true);
 // TCPSocket
 pref("dom.mozTCPSocket.enabled", true);
 
-// WebPayment
-pref("dom.mozPay.enabled", true);
-
 // "Preview" landing of bug 710563, which is bogged down in analysis
 // of talos regression.  This is a needed change for higher-framerate
 // CSS animations, and incidentally works around an apparent bug in
@@ -1010,9 +1007,6 @@ pref("layout.accessiblecaret.always_show_when_scrolling", false);
 // Enable sync and mozId with Firefox Accounts.
 pref("services.sync.fxaccounts.enabled", true);
 pref("identity.fxaccounts.enabled", true);
-
-// Mobile Identity API.
-pref("services.mobileid.server.uri", "https://msisdn.services.mozilla.com");
 
 pref("identity.fxaccounts.remote.oauth.uri", "https://oauth.accounts.firefox.com/v1");
 pref("identity.fxaccounts.remote.profile.uri", "https://profile.accounts.firefox.com/v1");
