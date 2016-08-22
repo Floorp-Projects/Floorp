@@ -5174,9 +5174,9 @@ ContentParent::RecvProfile(const nsCString& aProfile)
 }
 
 bool
-ContentParent::RecvGetGraphicsDeviceInitData(DeviceInitData* aOut)
+ContentParent::RecvGetGraphicsDeviceInitData(ContentDeviceData* aOut)
 {
-  gfxPlatform::GetPlatform()->GetDeviceInitData(aOut);
+  gfxPlatform::GetPlatform()->BuildContentDeviceData(aOut);
   return true;
 }
 
@@ -5500,4 +5500,13 @@ ContentParent::SendGetFilesResponseAndForget(const nsID& aUUID,
     mGetFilesPendingRequests.Remove(aUUID);
     Unused << SendGetFilesResponse(aUUID, aResult);
   }
+}
+
+void
+ContentParent::ForceTabPaint(TabParent* aTabParent, uint64_t aLayerObserverEpoch)
+{
+  if (!mHangMonitorActor) {
+    return;
+  }
+  ProcessHangMonitor::ForcePaint(mHangMonitorActor, aTabParent, aLayerObserverEpoch);
 }

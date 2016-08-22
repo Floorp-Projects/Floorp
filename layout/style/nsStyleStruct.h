@@ -3164,7 +3164,11 @@ struct nsStyleContentData
 #ifdef DEBUG
     , mImageTracked(false)
 #endif
-  { mContent.mString = nullptr; }
+  {
+    MOZ_COUNT_CTOR(nsStyleContentData);
+    mContent.mString = nullptr;
+  }
+  nsStyleContentData(const nsStyleContentData&);
 
   ~nsStyleContentData();
   nsStyleContentData& operator=(const nsStyleContentData& aOther);
@@ -3184,18 +3188,21 @@ struct nsStyleContentData
     MOZ_ASSERT(mType == eStyleContentType_Image, "Wrong type!");
     NS_IF_ADDREF(mContent.mImage = aRequest);
   }
-private:
-  nsStyleContentData(const nsStyleContentData&); // not to be implemented
 };
 
 struct nsStyleCounterData
 {
   nsString  mCounter;
   int32_t   mValue;
+
+  bool operator==(const nsStyleCounterData& aOther) const {
+    return mValue == aOther.mValue && mCounter == aOther.mCounter;
+  }
+
+  bool operator!=(const nsStyleCounterData& aOther) const {
+    return !(*this == aOther);
+  }
 };
-
-
-#define DELETE_ARRAY_IF(array)  if (array) { delete[] array; array = nullptr; }
 
 struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleContent
 {
@@ -3223,90 +3230,60 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleContent
            nsChangeHint_ClearAncestorIntrinsics;
   }
 
-  uint32_t  ContentCount() const  { return mContentCount; } // [reset]
+  uint32_t ContentCount() const { return mContents.Length(); } // [reset]
 
   const nsStyleContentData& ContentAt(uint32_t aIndex) const {
-    NS_ASSERTION(aIndex < mContentCount, "out of range");
     return mContents[aIndex];
   }
 
-  nsStyleContentData& ContentAt(uint32_t aIndex) {
-    NS_ASSERTION(aIndex < mContentCount, "out of range");
-    return mContents[aIndex];
+  nsStyleContentData& ContentAt(uint32_t aIndex) { return mContents[aIndex]; }
+
+  void AllocateContents(uint32_t aCount) {
+    // We need to run the destructors of the elements of mContents, so we
+    // delete and reallocate even if aCount == mContentCount.  (If
+    // nsStyleContentData had its members private and managed their
+    // ownership on setting, we wouldn't need this, but that seems
+    // unnecessary at this point.)
+    mContents.Clear();
+    mContents.SetLength(aCount);
   }
 
-  nsresult AllocateContents(uint32_t aCount);
-
-  uint32_t  CounterIncrementCount() const { return mIncrementCount; }  // [reset]
-  const nsStyleCounterData* GetCounterIncrementAt(uint32_t aIndex) const {
-    NS_ASSERTION(aIndex < mIncrementCount, "out of range");
-    return &mIncrements[aIndex];
+  uint32_t CounterIncrementCount() const { return mIncrements.Length(); }  // [reset]
+  const nsStyleCounterData& CounterIncrementAt(uint32_t aIndex) const {
+    return mIncrements[aIndex];
   }
 
-  nsresult  AllocateCounterIncrements(uint32_t aCount) {
-    if (aCount != mIncrementCount) {
-      DELETE_ARRAY_IF(mIncrements);
-      if (aCount) {
-        mIncrements = new nsStyleCounterData[aCount];
-        if (! mIncrements) {
-          mIncrementCount = 0;
-          return NS_ERROR_OUT_OF_MEMORY;
-        }
-      }
-      mIncrementCount = aCount;
-    }
-    return NS_OK;
+  void AllocateCounterIncrements(uint32_t aCount) {
+    mIncrements.Clear();
+    mIncrements.SetLength(aCount);
   }
 
-  nsresult  SetCounterIncrementAt(uint32_t aIndex, const nsString& aCounter, int32_t aIncrement) {
-    if (aIndex < mIncrementCount) {
-      mIncrements[aIndex].mCounter = aCounter;
-      mIncrements[aIndex].mValue = aIncrement;
-      return NS_OK;
-    }
-    return NS_ERROR_ILLEGAL_VALUE;
+  void SetCounterIncrementAt(uint32_t aIndex, const nsString& aCounter, int32_t aIncrement) {
+    mIncrements[aIndex].mCounter = aCounter;
+    mIncrements[aIndex].mValue = aIncrement;
   }
 
-  uint32_t  CounterResetCount() const { return mResetCount; }  // [reset]
-  const nsStyleCounterData* GetCounterResetAt(uint32_t aIndex) const {
-    NS_ASSERTION(aIndex < mResetCount, "out of range");
-    return &mResets[aIndex];
+  uint32_t CounterResetCount() const { return mResets.Length(); }  // [reset]
+  const nsStyleCounterData& CounterResetAt(uint32_t aIndex) const {
+    return mResets[aIndex];
   }
 
-  nsresult  AllocateCounterResets(uint32_t aCount) {
-    if (aCount != mResetCount) {
-      DELETE_ARRAY_IF(mResets);
-      if (aCount) {
-        mResets = new nsStyleCounterData[aCount];
-        if (! mResets) {
-          mResetCount = 0;
-          return NS_ERROR_OUT_OF_MEMORY;
-        }
-      }
-      mResetCount = aCount;
-    }
-    return NS_OK;
+  void AllocateCounterResets(uint32_t aCount) {
+    mResets.Clear();
+    mResets.SetLength(aCount);
   }
 
-  nsresult  SetCounterResetAt(uint32_t aIndex, const nsString& aCounter, int32_t aValue) {
-    if (aIndex < mResetCount) {
-      mResets[aIndex].mCounter = aCounter;
-      mResets[aIndex].mValue = aValue;
-      return NS_OK;
-    }
-    return NS_ERROR_ILLEGAL_VALUE;
+  void SetCounterResetAt(uint32_t aIndex, const nsString& aCounter, int32_t aValue) {
+    mResets[aIndex].mCounter = aCounter;
+    mResets[aIndex].mValue = aValue;
   }
 
   nsStyleCoord  mMarkerOffset;  // [reset] coord, auto
 
 protected:
-  nsStyleContentData* mContents;
-  nsStyleCounterData* mIncrements;
-  nsStyleCounterData* mResets;
-
-  uint32_t            mContentCount;
-  uint32_t            mIncrementCount;
-  uint32_t            mResetCount;
+  nsTArray<nsStyleContentData> mContents;
+  nsTArray<nsStyleCounterData> mIncrements;
+  nsTArray<nsStyleCounterData> mResets;
 };
 
 struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleUIReset
@@ -3356,14 +3333,11 @@ struct nsCursorImage
   ~nsCursorImage();
 
   nsCursorImage& operator=(const nsCursorImage& aOther);
-  /*
-   * We hide mImage and force access through the getter and setter so that we
-   * can lock the images we use. Cursor images are likely to be small, so we
-   * don't care about discarding them. See bug 512260.
-   * */
+
   void SetImage(imgIRequest *aImage) {
     if (mImage) {
       mImage->UnlockImage();
+      mImage->RequestDiscard();
     }
     mImage = aImage;
     if (mImage) {

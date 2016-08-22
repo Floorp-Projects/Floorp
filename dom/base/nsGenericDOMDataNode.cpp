@@ -710,12 +710,6 @@ nsGenericDOMDataNode::GetBindingParent() const
 }
 
 ShadowRoot *
-nsGenericDOMDataNode::GetShadowRoot() const
-{
-  return nullptr;
-}
-
-ShadowRoot *
 nsGenericDOMDataNode::GetContainingShadow() const
 {
   nsDataSlots *slots = GetExistingDataSlots();

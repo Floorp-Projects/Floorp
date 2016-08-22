@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include "gfxConfig.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/gfx/GraphicsMessages.h"
 #include "plstr.h"
 
 namespace mozilla {
@@ -141,6 +142,33 @@ gfxConfig::Reenable(Feature aFeature, Fallback aFallback)
   state.SetRuntime(FeatureStatus::Available, nullptr);
 }
 
+/* static */ void
+gfxConfig::Inherit(Feature aFeature, FeatureStatus aStatus)
+{
+  FeatureState& state = sConfig->GetState(aFeature);
+
+  state.Reset();
+
+  switch (aStatus) {
+  case FeatureStatus::Unused:
+    break;
+  case FeatureStatus::Available:
+    gfxConfig::EnableByDefault(aFeature);
+    break;
+  case FeatureStatus::ForceEnabled:
+    gfxConfig::EnableByDefault(aFeature);
+    gfxConfig::UserForceEnable(aFeature, "Inherited from parent process");
+    break;
+  default:
+    gfxConfig::SetDefault(
+      aFeature,
+      false,
+      aStatus,
+      "Disabled in parent process");
+    break;
+  }
+}
+
 /* static */ bool
 gfxConfig::UseFallback(Fallback aFallback)
 {
@@ -223,11 +251,26 @@ gfxConfig::ForEachFallbackImpl(const FallbackIterCallback& aCallback)
   }
 }
 
-/* static */ const nsACString&
+/* static */ const nsCString&
 gfxConfig::GetFailureId(Feature aFeature)
 {
   const FeatureState& state = sConfig->GetState(aFeature);
   return state.GetFailureId();
+}
+
+/* static */ void
+gfxConfig::ImportChange(Feature aFeature, const FeatureChange& aChange)
+{
+  if (aChange.type() == FeatureChange::Tnull_t) {
+    return;
+  }
+
+  const FeatureFailure& failure = aChange.get_FeatureFailure();
+  gfxConfig::SetFailed(
+    aFeature,
+    failure.status(),
+    failure.message().get(),
+    failure.failureId());
 }
 
 /* static */ void

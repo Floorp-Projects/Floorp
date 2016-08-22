@@ -2,16 +2,6 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-function* awaitPanel(extension, win = window) {
-  let {target} = yield BrowserTestUtils.waitForEvent(win.document, "load", true, (event) => {
-    return event.target.location && event.target.location.href.endsWith("popup.html");
-  });
-
-  return target.defaultView
-               .QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDocShell)
-               .chromeEventHandler;
-}
-
 function* awaitResize(browser) {
   // Debouncing code makes this a bit racy.
   // Try to skip the first, early resize, and catch the resize event we're
@@ -117,7 +107,7 @@ add_task(function* testPopupBackground() {
     info("Test stand-alone browserAction popup");
 
     clickBrowserAction(extension);
-    let browser = yield awaitPanel(extension);
+    let browser = yield awaitExtensionPanel(extension);
     yield testPanel(browser, true);
     yield closeBrowserAction(extension);
   }
@@ -129,7 +119,7 @@ add_task(function* testPopupBackground() {
     CustomizableUI.addWidgetToArea(widget.id, CustomizableUI.AREA_PANEL);
 
     clickBrowserAction(extension);
-    let browser = yield awaitPanel(extension);
+    let browser = yield awaitExtensionPanel(extension);
     yield testPanel(browser, false);
     yield closeBrowserAction(extension);
   }
@@ -138,7 +128,7 @@ add_task(function* testPopupBackground() {
     info("Test pageAction popup");
 
     clickPageAction(extension);
-    let browser = yield awaitPanel(extension);
+    let browser = yield awaitExtensionPanel(extension);
     yield testPanel(browser, true);
     yield closePageAction(extension);
   }

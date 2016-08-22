@@ -109,6 +109,9 @@ private:
     // keep it last in the list, so its destructor is called first.
     mozilla::UniquePtr<GeckoViewSupport> mGeckoViewSupport;
 
+    // Class that implements native PresentationMediaPlayerManager calls.
+    class PMPMSupport;
+
 public:
     static nsWindow* TopWindow();
 
@@ -130,7 +133,7 @@ public:
                                          nsNativeWidget aNativeParent,
                                          const LayoutDeviceIntRect& aRect,
                                          nsWidgetInitData* aInitData) override;
-    NS_IMETHOD Destroy(void) override;
+    virtual void Destroy() override;
     NS_IMETHOD ConfigureChildren(const nsTArray<nsIWidget::Configuration>&) override;
     NS_IMETHOD SetParent(nsIWidget* aNewParent) override;
     virtual nsIWidget *GetParent(void) override;
@@ -156,7 +159,7 @@ public:
     NS_IMETHOD PlaceBehind(nsTopLevelWidgetZPlacement aPlacement,
                            nsIWidget *aWidget,
                            bool aActivate) override;
-    NS_IMETHOD SetSizeMode(nsSizeMode aMode) override;
+    virtual void SetSizeMode(nsSizeMode aMode) override;
     NS_IMETHOD Enable(bool aState) override;
     virtual bool IsEnabled() const override;
     NS_IMETHOD Invalidate(const LayoutDeviceIntRect& aRect) override;
@@ -180,10 +183,10 @@ public:
     NS_IMETHOD SetHasTransparentBackground(bool aTransparent) { return NS_OK; }
     NS_IMETHOD GetHasTransparentBackground(bool& aTransparent) { aTransparent = false; return NS_OK; }
     NS_IMETHOD HideWindowChrome(bool aShouldHide) override { return NS_ERROR_NOT_IMPLEMENTED; }
-    virtual void* GetNativeData(uint32_t aDataType) override;
+    void* GetNativeData(uint32_t aDataType) override;
+    void SetNativeData(uint32_t aDataType, uintptr_t aVal) override;
     NS_IMETHOD SetTitle(const nsAString& aTitle) override { return NS_OK; }
     NS_IMETHOD SetIcon(const nsAString& aIconSpec) override { return NS_OK; }
-    NS_IMETHOD EnableDragDrop(bool aEnable) override { return NS_OK; }
     NS_IMETHOD CaptureMouse(bool aCapture) override { return NS_ERROR_NOT_IMPLEMENTED; }
     NS_IMETHOD CaptureRollupEvents(nsIRollupListener *aListener,
                                    bool aDoCapture) override { return NS_ERROR_NOT_IMPLEMENTED; }
@@ -211,11 +214,6 @@ public:
     virtual bool NeedsPaint() override;
     virtual void DrawWindowUnderlay(LayerManagerComposite* aManager, LayoutDeviceIntRect aRect) override;
     virtual void DrawWindowOverlay(LayerManagerComposite* aManager, LayoutDeviceIntRect aRect) override;
-
-    static bool IsCompositionPaused();
-    static void InvalidateAndScheduleComposite();
-    static void SchedulePauseComposition();
-    static void ScheduleResumeComposition();
 
     virtual bool WidgetPaintsBackground() override;
 

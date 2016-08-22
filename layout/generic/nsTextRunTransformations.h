@@ -103,7 +103,8 @@ public:
                               const nsIAtom* aLanguage,
                               nsTArray<bool>& aCharsToMergeArray,
                               nsTArray<bool>& aDeletedCharsArray,
-                              nsTransformedTextRun* aTextRun = nullptr,
+                              const nsTransformedTextRun* aTextRun = nullptr,
+                              uint32_t aOffsetInTextRun = 0,
                               nsTArray<uint8_t>* aCanBreakBeforeArray = nullptr,
                               nsTArray<RefPtr<nsTransformedCharStyle>>* aStyleArray = nullptr);
 

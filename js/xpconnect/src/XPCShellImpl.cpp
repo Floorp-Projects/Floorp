@@ -1421,7 +1421,7 @@ XRE_XPCShellMain(int argc, char** argv, char** envp,
         sScriptedInterruptCallback = new PersistentRootedValue;
         sScriptedInterruptCallback->init(cx, UndefinedValue());
 
-        JS_SetInterruptCallback(cx, XPCShellInterruptCallback);
+        JS_AddInterruptCallback(cx, XPCShellInterruptCallback);
 
         argc--;
         argv++;

@@ -580,6 +580,9 @@ nsPipe::Init(bool aNonBlockingIn,
 NS_IMETHODIMP
 nsPipe::GetInputStream(nsIAsyncInputStream** aInputStream)
 {
+  if (NS_WARN_IF(!mInited)) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
   RefPtr<nsPipeInputStream> ref = mOriginalInput;
   ref.forget(aInputStream);
   return NS_OK;
@@ -1857,21 +1860,20 @@ NS_NewPipe2(nsIAsyncInputStream** aPipeIn,
             uint32_t aSegmentSize,
             uint32_t aSegmentCount)
 {
-  nsresult rv;
-
   nsPipe* pipe = new nsPipe();
-  rv = pipe->Init(aNonBlockingInput,
-                  aNonBlockingOutput,
-                  aSegmentSize,
-                  aSegmentCount);
+  nsresult rv = pipe->Init(aNonBlockingInput,
+                           aNonBlockingOutput,
+                           aSegmentSize,
+                           aSegmentCount);
   if (NS_FAILED(rv)) {
     NS_ADDREF(pipe);
     NS_RELEASE(pipe);
     return rv;
   }
 
-  pipe->GetInputStream(aPipeIn);
-  pipe->GetOutputStream(aPipeOut);
+  // These always succeed because the pipe is initialized above.
+  MOZ_ALWAYS_SUCCEEDS(pipe->GetInputStream(aPipeIn));
+  MOZ_ALWAYS_SUCCEEDS(pipe->GetOutputStream(aPipeOut));
   return NS_OK;
 }
 

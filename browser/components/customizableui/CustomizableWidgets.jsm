@@ -181,7 +181,7 @@ const CustomizableWidgets = [
     onViewShowing: function(aEvent) {
       // Populate our list of history
       const kMaxResults = 15;
-      let doc = aEvent.detail.ownerDocument;
+      let doc = aEvent.target.ownerDocument;
       let win = doc.defaultView;
 
       let options = PlacesUtils.history.getNewQueryOptions();
@@ -909,7 +909,7 @@ const CustomizableWidgets = [
       }
     },
     onViewShowing: function(aEvent) {
-      let doc = aEvent.detail.ownerDocument;
+      let doc = aEvent.target.ownerDocument;
       let container = doc.getElementById("PanelUI-feeds");
       let gotView = doc.defaultView.FeedHandler.buildFeedList(container, true);
 
@@ -1128,7 +1128,7 @@ const CustomizableWidgets = [
       }
     },
     onViewShowing: function(aEvent) {
-      let doc = aEvent.detail.ownerDocument;
+      let doc = aEvent.target.ownerDocument;
 
       let items = doc.getElementById("PanelUI-containersItems");
 

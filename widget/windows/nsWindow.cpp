@@ -737,17 +737,17 @@ nsWindow::Create(nsIWidget* aParent,
 }
 
 // Close this nsWindow
-NS_IMETHODIMP nsWindow::Destroy()
+void nsWindow::Destroy()
 {
   // WM_DESTROY has already fired, avoid calling it twice
   if (mOnDestroyCalled)
-    return NS_OK;
+    return;
 
   // Don't destroy windows that have file pickers open, we'll tear these down
   // later once the picker is closed.
   mDestroyCalled = true;
   if (mPickerDisplayCount)
-    return NS_OK;
+    return;
 
   // During the destruction of all of our children, make sure we don't get deleted.
   nsCOMPtr<nsIWidget> kungFuDeathGrip(this);
@@ -781,8 +781,6 @@ NS_IMETHODIMP nsWindow::Destroy()
     mWindowHook.Notify(mWnd, WM_DESTROY, 0, 0, msgResult);
     OnDestroy();
   }
-
-  return NS_OK;
 }
 
 /**************************************************************
@@ -1857,21 +1855,19 @@ GetCurrentShowCmd(HWND aWnd)
 }
 
 // Maximize, minimize or restore the window.
-NS_IMETHODIMP
-nsWindow::SetSizeMode(nsSizeMode aMode) {
-
-  nsresult rv;
-
+void
+nsWindow::SetSizeMode(nsSizeMode aMode)
+{
   // Let's not try and do anything if we're already in that state.
   // (This is needed to prevent problems when calling window.minimize(), which
   // calls us directly, and then the OS triggers another call to us.)
   if (aMode == mSizeMode)
-    return NS_OK;
+    return;
 
   // save the requested state
   mLastSizeMode = mSizeMode;
-  rv = nsBaseWidget::SetSizeMode(aMode);
-  if (NS_SUCCEEDED(rv) && mIsVisible) {
+  nsBaseWidget::SetSizeMode(aMode);
+  if (mIsVisible) {
     int mode;
 
     switch (aMode) {
@@ -1908,7 +1904,6 @@ nsWindow::SetSizeMode(nsSizeMode aMode) {
     if (mode == SW_MAXIMIZE || mode == SW_SHOW)
       DispatchFocusToTopLevelWindow(true);
   }
-  return rv;
 }
 
 // Constrain a potential move to fit onscreen
@@ -3512,34 +3507,29 @@ nsWindow::ClientToWindowSize(const LayoutDeviceIntSize& aClientSize)
  *
  **************************************************************/
 
-NS_IMETHODIMP nsWindow::EnableDragDrop(bool aEnable)
+void
+nsWindow::EnableDragDrop(bool aEnable)
 {
   NS_ASSERTION(mWnd, "nsWindow::EnableDragDrop() called after Destroy()");
 
   nsresult rv = NS_ERROR_FAILURE;
   if (aEnable) {
-    if (nullptr == mNativeDragTarget) {
-       mNativeDragTarget = new nsNativeDragTarget(this);
-       if (nullptr != mNativeDragTarget) {
-         mNativeDragTarget->AddRef();
-         if (S_OK == ::CoLockObjectExternal((LPUNKNOWN)mNativeDragTarget,TRUE,FALSE)) {
-           if (S_OK == ::RegisterDragDrop(mWnd, (LPDROPTARGET)mNativeDragTarget)) {
-             rv = NS_OK;
-           }
-         }
-       }
+    if (!mNativeDragTarget) {
+      mNativeDragTarget = new nsNativeDragTarget(this);
+      mNativeDragTarget->AddRef();
+      if (SUCCEEDED(::CoLockObjectExternal((LPUNKNOWN)mNativeDragTarget,
+                                           TRUE, FALSE))) {
+        ::RegisterDragDrop(mWnd, (LPDROPTARGET)mNativeDragTarget);
+      }
     }
   } else {
-    if (nullptr != mWnd && nullptr != mNativeDragTarget) {
+    if (mWnd && mNativeDragTarget) {
       ::RevokeDragDrop(mWnd);
-      if (S_OK == ::CoLockObjectExternal((LPUNKNOWN)mNativeDragTarget, FALSE, TRUE)) {
-        rv = NS_OK;
-      }
+      ::CoLockObjectExternal((LPUNKNOWN)mNativeDragTarget, FALSE, TRUE);
       mNativeDragTarget->DragCancel();
       NS_RELEASE(mNativeDragTarget);
     }
   }
-  return rv;
 }
 
 /**************************************************************
