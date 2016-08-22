@@ -1148,12 +1148,13 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
     mNotifiedIDDestroyed(false),
     mAllowScriptsToClose(false),
     mTimeoutInsertionPoint(nullptr),
-    mTimeoutPublicIdCounter(1),
+    mTimeoutIdCounter(1),
     mTimeoutFiringDepth(0),
     mSuspendDepth(0),
     mFreezeDepth(0),
     mFocusMethod(0),
     mSerial(0),
+    mIdleCallbackTimeoutCounter(1),
 #ifdef DEBUG
     mSetOpenerWindowCalled(false),
 #endif
@@ -7892,7 +7893,7 @@ nsGlobalWindow::ClearTimeout(int32_t aHandle)
   MOZ_RELEASE_ASSERT(IsInnerWindow());
 
   if (aHandle > 0) {
-    ClearTimeoutOrInterval(aHandle);
+    ClearTimeoutOrInterval(aHandle, Timeout::Reason::eTimeoutOrInterval);
   }
 }
 
@@ -7900,7 +7901,7 @@ void
 nsGlobalWindow::ClearInterval(int32_t aHandle)
 {
   if (aHandle > 0) {
-    ClearTimeoutOrInterval(aHandle);
+    ClearTimeoutOrInterval(aHandle, Timeout::Reason::eTimeoutOrInterval);
   }
 }
 
@@ -12262,6 +12263,18 @@ nsGlobalWindow::OpenInternal(const nsAString& aUrl, const nsAString& aName,
 
 uint32_t sNestingLevel;
 
+uint32_t
+nsGlobalWindow::GetTimeoutId(Timeout::Reason aReason)
+{
+  switch (aReason) {
+    case Timeout::Reason::eIdleCallbackTimeout:
+      return ++mIdleCallbackTimeoutCounter;
+    case Timeout::Reason::eTimeoutOrInterval:
+    default:
+      return ++mTimeoutIdCounter;
+  }
+}
+
 nsGlobalWindow*
 nsGlobalWindow::InnerForSetTimeoutOrInterval(ErrorResult& aError)
 {
@@ -12371,7 +12384,7 @@ nsGlobalWindow::SetInterval(JSContext* aCx, const nsAString& aHandler,
 nsresult
 nsGlobalWindow::SetTimeoutOrInterval(nsITimeoutHandler* aHandler,
                                      int32_t interval, bool aIsInterval,
-                                     int32_t* aReturn)
+                                     Timeout::Reason aReason, int32_t* aReturn)
 {
   MOZ_ASSERT(IsInnerWindow());
 
@@ -12397,6 +12410,7 @@ nsGlobalWindow::SetTimeoutOrInterval(nsITimeoutHandler* aHandler,
   timeout->mIsInterval = aIsInterval;
   timeout->mInterval = interval;
   timeout->mScriptHandler = aHandler;
+  timeout->mReason = aReason;
 
   // Now clamp the actual interval we will use for the timer based on
   uint32_t nestingLevel = sNestingLevel + 1;
@@ -12471,8 +12485,8 @@ nsGlobalWindow::SetTimeoutOrInterval(nsITimeoutHandler* aHandler,
 
   InsertTimeoutIntoList(timeout);
 
-  timeout->mPublicId = ++mTimeoutPublicIdCounter;
-  *aReturn = timeout->mPublicId;
+  timeout->mTimeoutId = GetTimeoutId(aReason);
+  *aReturn = timeout->mTimeoutId;
 
   return NS_OK;
 }
@@ -12500,7 +12514,8 @@ nsGlobalWindow::SetTimeoutOrInterval(JSContext *aCx, Function& aFunction,
   }
 
   int32_t result;
-  aError = SetTimeoutOrInterval(handler, aTimeout, aIsInterval, &result);
+  aError = SetTimeoutOrInterval(handler, aTimeout, aIsInterval,
+                                Timeout::Reason::eTimeoutOrInterval, &result);
   return result;
 }
 
@@ -12526,7 +12541,8 @@ nsGlobalWindow::SetTimeoutOrInterval(JSContext* aCx, const nsAString& aHandler,
   }
 
   int32_t result;
-  aError = SetTimeoutOrInterval(handler, aTimeout, aIsInterval, &result);
+  aError = SetTimeoutOrInterval(handler, aTimeout, aIsInterval,
+                                Timeout::Reason::eTimeoutOrInterval, &result);
   return result;
 }
 
@@ -12889,7 +12905,7 @@ nsGlobalWindow::RunTimeout(Timeout* aTimeout)
 }
 
 void
-nsGlobalWindow::ClearTimeoutOrInterval(int32_t aTimerId)
+nsGlobalWindow::ClearTimeoutOrInterval(int32_t aTimerId, Timeout::Reason aReason)
 {
   MOZ_RELEASE_ASSERT(IsInnerWindow());
 
@@ -12897,7 +12913,7 @@ nsGlobalWindow::ClearTimeoutOrInterval(int32_t aTimerId)
   Timeout* timeout;
 
   for (timeout = mTimeouts.getFirst(); timeout; timeout = timeout->getNext()) {
-    if (timeout->mPublicId == timerId) {
+    if (timeout->mTimeoutId == timerId && timeout->mReason == aReason) {
       if (timeout->mRunning) {
         /* We're running from inside the timeout. Mark this
            timeout for deferred deletion by the code in
