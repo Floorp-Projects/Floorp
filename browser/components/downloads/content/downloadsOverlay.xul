@@ -135,7 +135,9 @@
                   onkeydown="DownloadsSummary.onKeyDown(event);"
                   onclick="DownloadsSummary.onClick(event);">
               <image class="downloadTypeIcon" />
-              <vbox id="downloadsSummaryChildBox">
+              <vbox pack="center"
+                    class="downloadContainer"
+                    style="width: &downloadDetails.width;">
                 <description id="downloadsSummaryDescription"
                              style="min-width: &downloadsSummary.minWidth2;"/>
                 <progressmeter id="downloadsSummaryProgress"
@@ -144,7 +146,6 @@
                                max="100"
                                mode="normal" />
                 <description id="downloadsSummaryDetails"
-                             style="width: &downloadDetails.width;"
                              crop="end"/>
               </vbox>
             </hbox>
