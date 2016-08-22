@@ -758,7 +758,9 @@ Statistics::Statistics(JSRuntime* rt)
     suspended(0),
     sliceCallback(nullptr),
     nurseryCollectionCallback(nullptr),
-    aborted(false)
+    aborted(false),
+    enableProfiling_(false),
+    sliceCount_(0)
 {
     PodArrayZero(phaseTotals);
     PodArrayZero(counts);
@@ -766,7 +768,7 @@ Statistics::Statistics(JSRuntime* rt)
     for (auto d : MakeRange(NumTimingArrays))
         PodArrayZero(phaseTimes[d]);
 
-    char* env = getenv("MOZ_GCTIMER");
+    const char* env = getenv("MOZ_GCTIMER");
     if (env) {
         if (strcmp(env, "none") == 0) {
             fp = nullptr;
@@ -780,6 +782,19 @@ Statistics::Statistics(JSRuntime* rt)
                 MOZ_CRASH("Failed to open MOZ_GCTIMER log file.");
         }
     }
+
+    env = getenv("JS_GC_PROFILE");
+    if (env) {
+        if (0 == strcmp(env, "help")) {
+            fprintf(stderr, "JS_GC_PROFILE=N\n"
+                    "\tReport major GC's taking more than N milliseconds.\n");
+            exit(0);
+        }
+        enableProfiling_ = true;
+        profileThreshold_ = atoi(env);
+    }
+
+    PodZero(&totalTimes_);
 }
 
 Statistics::~Statistics()
@@ -1046,11 +1061,16 @@ Statistics::endSlice()
                 runtime->addTelemetry(JS_TELEMETRY_GC_SLOW_PHASE, phases[longest].telemetryBucket);
             }
         }
+
+        sliceCount_++;
     }
 
     bool last = !runtime->gc.isIncrementalGCInProgress();
     if (last)
         endGC();
+
+    if (enableProfiling_ && !aborted && slices.back().duration() >= profileThreshold_)
+        printSliceProfile();
 
     // Slice callbacks should only fire for the outermost level.
     if (gcDepth == 1 && !aborted) {
@@ -1259,3 +1279,59 @@ Statistics::computeMMU(int64_t window) const
 
     return double(window - gcMax) / window;
 }
+
+/* static */ void
+Statistics::printProfileHeader()
+{
+    fprintf(stderr, " %6s", "total");
+#define PRINT_PROFILE_HEADER(name, text, phase)                               \
+    fprintf(stderr, " %6s", text);
+FOR_EACH_GC_PROFILE_TIME(PRINT_PROFILE_HEADER)
+#undef PRINT_PROFILE_HEADER
+    fprintf(stderr, "\n");
+}
+
+/* static */ void
+Statistics::printProfileTimes(const ProfileTimes& times)
+{
+    for (auto time : times)
+        fprintf(stderr, " %6" PRIi64, time / PRMJ_USEC_PER_MSEC);
+    fprintf(stderr, "\n");
+}
+
+void
+Statistics::printSliceProfile()
+{
+    const SliceData& slice = slices.back();
+
+    static int printedHeader = 0;
+    if ((printedHeader++ % 200) == 0) {
+        fprintf(stderr, "MajorGC:               Reason States      ");
+        printProfileHeader();
+    }
+
+    fprintf(stderr, "MajorGC: %20s %1d -> %1d      ",
+            ExplainReason(slice.reason), slice.initialState, slice.finalState);
+
+    ProfileTimes times;
+    times[ProfileKey::Total] = slice.duration();
+    totalTimes_[ProfileKey::Total] += times[ProfileKey::Total];
+
+#define GET_PROFILE_TIME(name, text, phase)                                   \
+    times[ProfileKey::name] = slice.phaseTimes[PHASE_DAG_NONE][phase];                     \
+    totalTimes_[ProfileKey::name] += times[ProfileKey::name];
+FOR_EACH_GC_PROFILE_TIME(GET_PROFILE_TIME)
+#undef GET_PROFILE_TIME
+
+    printProfileTimes(times);
+}
+
+void
+Statistics::printTotalProfileTimes()
+{
+    if (enableProfiling_) {
+        fprintf(stderr, "MajorGC TOTALS: %7" PRIu64 " slices:           ", sliceCount_);
+        printProfileTimes(totalTimes_);
+    }
+}
+
