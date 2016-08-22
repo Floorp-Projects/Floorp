@@ -5,9 +5,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1154791
 -->
 <head>
   <title>Test for Bug 1154791</title>
-  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
-  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
-  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css">
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
 </head>
 <body>
 <div id="display">
@@ -50,8 +50,9 @@ SimpleTest.waitForFocus(function() {
 });
 
 function getSpellCheckSelection() {
-  var Ci = Components.interfaces;
-  var editingSession = window.QueryInterface(Ci.nsIInterfaceRequestor)
+  var Ci = SpecialPowers.Ci;
+  var editingSession = SpecialPowers.wrap(window)
+                             .QueryInterface(Ci.nsIInterfaceRequestor)
                              .getInterface(Ci.nsIWebNavigation)
                              .QueryInterface(Ci.nsIInterfaceRequestor)
                              .getInterface(Ci.nsIEditingSession);
