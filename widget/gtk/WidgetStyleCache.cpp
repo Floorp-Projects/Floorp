@@ -331,6 +331,14 @@ CreateRadioMenuItemWidget()
 }
 
 static GtkWidget*
+CreateScaleWidget(GtkOrientation aOrientation)
+{
+  GtkWidget* widget = gtk_scale_new(aOrientation, nullptr);
+  AddToWindowContainer(widget);
+  return widget;
+}
+
+static GtkWidget*
 CreateWidget(WidgetNodeType aWidgetType)
 {
   switch (aWidgetType) {
@@ -402,6 +410,10 @@ CreateWidget(WidgetNodeType aWidgetType)
       return CreateCheckMenuItemWidget();
     case MOZ_GTK_RADIOMENUITEM_CONTAINER:
       return CreateRadioMenuItemWidget();
+    case MOZ_GTK_SCALE_HORIZONTAL:
+      return CreateScaleWidget(GTK_ORIENTATION_HORIZONTAL);
+    case MOZ_GTK_SCALE_VERTICAL:
+      return CreateScaleWidget(GTK_ORIENTATION_VERTICAL);
     default:
       /* Not implemented */
       return nullptr;
@@ -585,6 +597,30 @@ GetCssNodeStyleInternal(WidgetNodeType aNodeType)
       style = CreateChildCSSNode("separator",
                                  MOZ_GTK_SPLITTER_VERTICAL);
       break;
+    case MOZ_GTK_SCALE_CONTENTS_HORIZONTAL:
+      style = CreateChildCSSNode("contents",
+                                 MOZ_GTK_SCALE_HORIZONTAL);
+      break;
+    case MOZ_GTK_SCALE_CONTENTS_VERTICAL:
+      style = CreateChildCSSNode("contents",
+                                 MOZ_GTK_SCALE_VERTICAL);
+      break; 
+    case MOZ_GTK_SCALE_TROUGH_HORIZONTAL:
+      style = CreateChildCSSNode(GTK_STYLE_CLASS_TROUGH,
+                                 MOZ_GTK_SCALE_CONTENTS_HORIZONTAL);
+      break; 
+    case MOZ_GTK_SCALE_TROUGH_VERTICAL:
+      style = CreateChildCSSNode(GTK_STYLE_CLASS_TROUGH,
+                                 MOZ_GTK_SCALE_CONTENTS_VERTICAL);
+      break;
+    case MOZ_GTK_SCALE_THUMB_HORIZONTAL:
+      style = CreateChildCSSNode(GTK_STYLE_CLASS_SLIDER,
+                                 MOZ_GTK_SCALE_TROUGH_HORIZONTAL);
+      break;
+    case MOZ_GTK_SCALE_THUMB_VERTICAL:
+      style = CreateChildCSSNode(GTK_STYLE_CLASS_SLIDER,
+                                 MOZ_GTK_SCALE_TROUGH_VERTICAL);
+      break;
     default:
       // TODO - create style from style path
       GtkWidget* widget = GetWidget(aNodeType);
@@ -671,6 +707,18 @@ GetWidgetStyleInternal(WidgetNodeType aNodeType)
     case MOZ_GTK_SPLITTER_SEPARATOR_VERTICAL:
       return GetWidgetStyleWithClass(MOZ_GTK_SPLITTER_VERTICAL,
                                      GTK_STYLE_CLASS_PANE_SEPARATOR);
+    case MOZ_GTK_SCALE_TROUGH_HORIZONTAL:
+      return GetWidgetStyleWithClass(MOZ_GTK_SCALE_HORIZONTAL,
+                                     GTK_STYLE_CLASS_TROUGH);
+    case MOZ_GTK_SCALE_TROUGH_VERTICAL:
+      return GetWidgetStyleWithClass(MOZ_GTK_SCALE_VERTICAL,
+                                     GTK_STYLE_CLASS_TROUGH);
+    case MOZ_GTK_SCALE_THUMB_HORIZONTAL:
+      return GetWidgetStyleWithClass(MOZ_GTK_SCALE_HORIZONTAL,
+                                     GTK_STYLE_CLASS_SLIDER);
+    case MOZ_GTK_SCALE_THUMB_VERTICAL:
+      return GetWidgetStyleWithClass(MOZ_GTK_SCALE_VERTICAL,
+                                     GTK_STYLE_CLASS_SLIDER);
     default:
       GtkWidget* widget = GetWidget(aNodeType);
       MOZ_ASSERT(widget);
@@ -750,4 +798,3 @@ ReleaseStyleContext(GtkStyleContext* aStyleContext)
   sCurrentStyleContext = nullptr;
 #endif
 }
-

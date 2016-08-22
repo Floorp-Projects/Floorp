@@ -26915,7 +26915,7 @@ var Debugger =
 	  {
 	    if (aRequest instanceof Ci.nsIChannel) {
 	      let loadInfo = aRequest.loadInfo;
-	      if (loadInfo && loadInfo.parentOuterWindowID == loadInfo.outerWindowID) {
+	      if (loadInfo && loadInfo.isTopLevelLoad) {
 	        return (aRequest.loadFlags & Ci.nsIChannel.LOAD_DOCUMENT_URI);
 	      }
 	    }

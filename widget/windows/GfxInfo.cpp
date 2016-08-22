@@ -1354,7 +1354,7 @@ GfxInfo::DescribeFeatures(JSContext* aCx, JS::Handle<JSObject*> aObj)
   }
   if (d3d11 == gfx::FeatureStatus::Available) {
     DeviceManagerD3D11* dm = DeviceManagerD3D11::Get();
-    JS::Rooted<JS::Value> val(aCx, JS::Int32Value(dm->GetD3D11Version()));
+    JS::Rooted<JS::Value> val(aCx, JS::Int32Value(dm->GetCompositorFeatureLevel()));
     JS_SetProperty(aCx, obj, "version", val);
 
     val = JS::BooleanValue(dm->IsWARP());

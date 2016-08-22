@@ -23,7 +23,8 @@
     #endif
 
     #ifdef MOZ_WIDGET_ANDROID
-        #include "AndroidBridge.h"
+        #include <android/native_window.h>
+        #include <android/native_window_jni.h>
     #endif
 
     #ifdef ANDROID
@@ -183,10 +184,12 @@ CreateSurfaceForWindow(nsIWidget* widget, const EGLConfig& config) {
         MOZ_CRASH("GFX: Failed to get Java surface.\n");
     }
     JNIEnv* const env = jni::GetEnvForThread();
-    void* nativeWindow = AndroidBridge::Bridge()->AcquireNativeWindow(env, reinterpret_cast<jobject>(javaSurface));
-    newSurface = sEGLLibrary.fCreateWindowSurface(sEGLLibrary.fGetDisplay(EGL_DEFAULT_DISPLAY), config,
-                                                  nativeWindow, 0);
-    AndroidBridge::Bridge()->ReleaseNativeWindow(nativeWindow);
+    ANativeWindow* const nativeWindow = ANativeWindow_fromSurface(
+            env, reinterpret_cast<jobject>(javaSurface));
+    newSurface = sEGLLibrary.fCreateWindowSurface(
+            sEGLLibrary.fGetDisplay(EGL_DEFAULT_DISPLAY),
+            config, nativeWindow, 0);
+    ANativeWindow_release(nativeWindow);
 #else
     newSurface = sEGLLibrary.fCreateWindowSurface(EGL_DISPLAY(), config,
                                                   GET_NATIVE_WINDOW(widget), 0);

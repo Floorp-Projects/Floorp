@@ -135,8 +135,9 @@ typedef void* nsNativeWidget;
 #endif // MOZ_X11
 #endif
 #ifdef MOZ_WIDGET_ANDROID
-#define NS_NATIVE_NEW_EGL_SURFACE      100
-#define NS_JAVA_SURFACE                101
+#define NS_JAVA_SURFACE                100
+#define NS_PRESENTATION_WINDOW         101
+#define NS_PRESENTATION_SURFACE        102
 #endif
 
 #define NS_IWIDGET_IID \
@@ -506,7 +507,7 @@ class nsIWidget : public nsISupports
      * This method does not delete the widget.
      */
 
-    NS_IMETHOD Destroy(void) = 0;
+    virtual void Destroy() = 0;
 
     /**
      * Destroyed() returns true if Destroy() has been called already.
@@ -827,7 +828,7 @@ class nsIWidget : public nsISupports
      * Minimize, maximize or normalize the window size.
      * Takes a value from nsSizeMode (see nsIWidgetListener.h)
      */
-    NS_IMETHOD SetSizeMode(nsSizeMode aMode) = 0;
+    virtual void SetSizeMode(nsSizeMode aMode) = 0;
 
     /**
      * Return size mode (minimized, maximized, normalized).
@@ -1373,10 +1374,9 @@ class nsIWidget : public nsISupports
     virtual bool AsyncPanZoomEnabled() const = 0;
 
     /**
-     * Enables the dropping of files to a widget (XXX this is temporary)
-     *
+     * Enables the dropping of files to a widget.
      */
-    NS_IMETHOD EnableDragDrop(bool aEnable) = 0;
+    virtual void EnableDragDrop(bool aEnable) = 0;
 
     /**
      * Enables/Disables system mouse capture.

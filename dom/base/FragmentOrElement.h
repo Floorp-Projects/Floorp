@@ -148,7 +148,6 @@ public:
   virtual nsXBLBinding *GetXBLBinding() const override;
   virtual void SetXBLBinding(nsXBLBinding* aBinding,
                              nsBindingManager* aOldBindingManager = nullptr) override;
-  virtual ShadowRoot *GetShadowRoot() const override;
   virtual ShadowRoot *GetContainingShadow() const override;
   virtual nsTArray<nsIContent*> &DestInsertionPoints() override;
   virtual nsTArray<nsIContent*> *GetExistingDestInsertionPoints() const override;

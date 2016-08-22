@@ -394,8 +394,6 @@ hb_shape_full (hb_font_t          *font,
  * positioned glyphs. If @features is not %NULL, it will be used to control the
  * features applied during shaping.
  *
- * Return value: %FALSE if all shapers failed, %TRUE otherwise
- *
  * Since: 0.9.2
  **/
 void

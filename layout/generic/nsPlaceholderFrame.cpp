@@ -18,6 +18,7 @@
 #include "nsPresContext.h"
 #include "nsRenderingContext.h"
 #include "nsIFrameInlines.h"
+#include "nsIContentInlines.h"
 
 using namespace mozilla;
 using namespace mozilla::gfx;

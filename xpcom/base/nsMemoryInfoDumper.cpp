@@ -448,7 +448,9 @@ public:
 
   void Write(const char* aStr)
   {
-    (void)mGZWriter->Write(aStr);
+    // Ignore any failure because JSONWriteFunc doesn't have a mechanism for
+    // handling errors.
+    Unused << mGZWriter->Write(aStr);
   }
 
   nsresult Finish() { return mGZWriter->Finish(); }

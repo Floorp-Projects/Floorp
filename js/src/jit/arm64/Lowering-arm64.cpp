@@ -30,6 +30,12 @@ LIRGeneratorARM64::useByteOpRegister(MDefinition* mir)
 }
 
 LAllocation
+LIRGeneratorARM64::useByteOpRegisterAtStart(MDefinition* mir)
+{
+    MOZ_CRASH("useByteOpRegister");
+}
+
+LAllocation
 LIRGeneratorARM64::useByteOpRegisterOrNonDoubleConstant(MDefinition* mir)
 {
     MOZ_CRASH("useByteOpRegisterOrNonDoubleConstant");

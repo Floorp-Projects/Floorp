@@ -1197,11 +1197,11 @@ nsComputedDOMStyle::DoGetCounterIncrement()
     RefPtr<nsROCSSPrimitiveValue> name = new nsROCSSPrimitiveValue;
     RefPtr<nsROCSSPrimitiveValue> value = new nsROCSSPrimitiveValue;
 
-    const nsStyleCounterData *data = content->GetCounterIncrementAt(i);
+    const nsStyleCounterData& data = content->CounterIncrementAt(i);
     nsAutoString escaped;
-    nsStyleUtil::AppendEscapedCSSIdent(data->mCounter, escaped);
+    nsStyleUtil::AppendEscapedCSSIdent(data.mCounter, escaped);
     name->SetString(escaped);
-    value->SetNumber(data->mValue); // XXX This should really be integer
+    value->SetNumber(data.mValue); // XXX This should really be integer
 
     valueList->AppendCSSValue(name.forget());
     valueList->AppendCSSValue(value.forget());
@@ -1441,11 +1441,11 @@ nsComputedDOMStyle::DoGetCounterReset()
     RefPtr<nsROCSSPrimitiveValue> name = new nsROCSSPrimitiveValue;
     RefPtr<nsROCSSPrimitiveValue> value = new nsROCSSPrimitiveValue;
 
-    const nsStyleCounterData *data = content->GetCounterResetAt(i);
+    const nsStyleCounterData& data = content->CounterResetAt(i);
     nsAutoString escaped;
-    nsStyleUtil::AppendEscapedCSSIdent(data->mCounter, escaped);
+    nsStyleUtil::AppendEscapedCSSIdent(data.mCounter, escaped);
     name->SetString(escaped);
-    value->SetNumber(data->mValue); // XXX This should really be integer
+    value->SetNumber(data.mValue); // XXX This should really be integer
 
     valueList->AppendCSSValue(name.forget());
     valueList->AppendCSSValue(value.forget());

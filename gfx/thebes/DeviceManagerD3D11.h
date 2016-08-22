@@ -8,10 +8,13 @@
 
 #include "gfxPlatform.h"
 #include "gfxTelemetry.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/StaticPtr.h"
+#include "mozilla/gfx/GraphicsMessages.h"
 #include "nsTArray.h"
+#include "nsWindowsHelpers.h"
 
 #include <windows.h>
 #include <objbase.h>
@@ -51,11 +54,16 @@ public:
   RefPtr<ID3D11Device> GetContentDevice();
   RefPtr<ID3D11Device> CreateDecoderDevice();
 
-  unsigned GetD3D11Version() const;
-  bool TextureSharingWorks() const;
-  bool IsWARP() const;
+  unsigned GetCompositorFeatureLevel() const;
+  bool TextureSharingWorks();
+  bool IsWARP();
 
-  void CreateDevices();
+  bool CreateCompositorDevices();
+  void CreateContentDevices();
+
+  void ImportDeviceInfo(const D3D11DeviceStatus& aDeviceStatus);
+  void ExportDeviceInfo(D3D11DeviceStatus* aOut);
+
   void ResetDevices();
 
   // Call GetDeviceRemovedReason on each device until one returns
@@ -67,16 +75,16 @@ private:
 
   void DisableD3D11AfterCrash();
 
-  void AttemptD3D11DeviceCreation(mozilla::gfx::FeatureState& d3d11);
-  bool AttemptD3D11DeviceCreationHelper(
+  void CreateCompositorDevice(mozilla::gfx::FeatureState& d3d11);
+  bool CreateCompositorDeviceHelper(
       mozilla::gfx::FeatureState& aD3d11,
       IDXGIAdapter1* aAdapter,
       bool aAttemptVideoSupport,
       RefPtr<ID3D11Device>& aOutDevice);
 
-  void AttemptWARPDeviceCreation();
+  void CreateWARPCompositorDevice();
 
-  mozilla::gfx::FeatureStatus AttemptD3D11ContentDeviceCreation();
+  mozilla::gfx::FeatureStatus CreateContentDevice();
 
   bool CreateDevice(IDXGIAdapter* aAdapter,
                     D3D_DRIVER_TYPE aDriverType,
@@ -86,8 +94,16 @@ private:
 
   bool ContentAdapterIsParentAdapter(ID3D11Device* device);
 
+  bool LoadD3D11();
+  void ReleaseD3D11();
+
 private:
   static StaticAutoPtr<DeviceManagerD3D11> sInstance;
+
+  // This is assigned during device creation. Afterwards, it is released if
+  // devices failed, and "forgotten" if devices succeeded (meaning, we leak
+  // the ref and unassign the module).
+  nsModuleHandle mD3D11Module;
 
   mozilla::Mutex mDeviceLock;
   nsTArray<D3D_FEATURE_LEVEL> mFeatureLevels;
@@ -95,9 +111,9 @@ private:
   RefPtr<ID3D11Device> mCompositorDevice;
   RefPtr<ID3D11Device> mContentDevice;
   RefPtr<ID3D11Device> mDecoderDevice;
-  mozilla::Atomic<bool> mIsWARP;
-  mozilla::Atomic<bool> mTextureSharingWorks;
   bool mCompositorDeviceSupportsVideo;
+
+  Maybe<D3D11DeviceStatus> mDeviceStatus;
 };
 
 } // namespace gfx

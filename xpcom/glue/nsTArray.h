@@ -328,7 +328,13 @@ struct nsTArray_SafeElementAtHelper<mozilla::OwningNonNull<E>, Derived>
   }
 };
 
-extern "C" void Gecko_EnsureTArrayCapacity(void* aArray, size_t aCapacity, size_t aElemSize);
+// Servo bindings.
+extern "C" void Gecko_EnsureTArrayCapacity(void* aArray,
+                                           size_t aCapacity,
+                                           size_t aElementSize);
+extern "C" void Gecko_ClearPODTArray(void* aArray,
+                                     size_t aElementSize,
+                                     size_t aElementAlign);
 
 MOZ_NORETURN MOZ_COLD void
 InvalidArrayIndex_CRASH(size_t aIndex, size_t aLength);
@@ -346,7 +352,10 @@ class nsTArray_base
   // the same free().
   template<class Allocator, class Copier>
   friend class nsTArray_base;
-  friend void Gecko_EnsureTArrayCapacity(void* aArray, size_t aCapacity, size_t aElemSize);
+  friend void Gecko_EnsureTArrayCapacity(void* aArray, size_t aCapacity,
+                                         size_t aElemSize);
+  friend void Gecko_ClearPODTArray(void* aTArray, size_t aElementSize,
+                                   size_t aElementAlign);
 
 protected:
   typedef nsTArrayHeader Header;

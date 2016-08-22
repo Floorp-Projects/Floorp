@@ -265,21 +265,18 @@ struct Sequence
     TRACE_APPLY (this);
     unsigned int count = substitute.len;
 
-    /* TODO:
-     * Testing shows that Uniscribe actually allows zero-len susbstitute,
-     * which essentially deletes a glyph.  We don't allow for now.  It
-     * can be confusing to the client since the cluster from the deleted
-     * glyph won't be merged with any output cluster...  Also, currently
-     * buffer->move_to() makes assumptions about this too.  Perhaps fix
-     * in the future after figuring out what to do with the clusters.
-     */
-    if (unlikely (!count)) return_trace (false);
-
     /* Special-case to make it in-place and not consider this
      * as a "multiplied" substitution. */
     if (unlikely (count == 1))
     {
       c->replace_glyph (substitute.array[0]);
+      return_trace (true);
+    }
+    /* Spec disallows this, but Uniscribe allows it.
+     * https://github.com/behdad/harfbuzz/issues/253 */
+    else if (unlikely (count == 0))
+    {
+      c->buffer->delete_glyph ();
       return_trace (true);
     }
 

@@ -505,7 +505,13 @@ struct hb_font_t {
   }
 
   private:
-  inline hb_position_t em_scale (int16_t v, int scale) { return (hb_position_t) (v * (int64_t) scale / face->get_upem ()); }
+  inline hb_position_t em_scale (int16_t v, int scale)
+  {
+    int upem = face->get_upem ();
+    int64_t scaled = v * (int64_t) scale;
+    scaled += scaled >= 0 ? upem/2 : -upem/2; /* Round. */
+    return (hb_position_t) (scaled / upem);
+  }
 };
 
 #define HB_SHAPER_DATA_CREATE_FUNC_EXTRA_ARGS

@@ -20,7 +20,9 @@ add_task(function* () {
       `,
 
       "popup.js": function() {
-        browser.runtime.sendMessage("from-popup");
+        window.onload = () => {
+          browser.runtime.sendMessage("from-popup");
+        };
       },
     },
 

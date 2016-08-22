@@ -152,7 +152,6 @@ post-build:
   upload-symbols:
     allowed_build_tasks:
       - tasks/builds/opt_linux64.yml
-      - tasks/builds/opt_linux64_st-an.yml
       - tasks/builds/dbg_linux64.yml
       - tasks/builds/android_api_15.yml
     task: tasks/post-builds/upload_symbols.yml

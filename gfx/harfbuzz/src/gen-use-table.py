@@ -144,36 +144,38 @@ globals().update(property_values)
 
 def is_BASE(U, UISC, UGC):
 	return (UISC in [Number, Consonant, Consonant_Head_Letter,
-			#SPEC-OUTDATED Consonant_Placeholder,
-			Tone_Letter] or
+			#SPEC-DRAFT Consonant_Placeholder,
+			Tone_Letter,
+			Vowel_Independent #SPEC-DRAFT
+			] or
 		(UGC == Lo and UISC in [Avagraha, Bindu, Consonant_Final, Consonant_Medial,
 					Consonant_Subjoined, Vowel, Vowel_Dependent]))
-def is_BASE_VOWEL(U, UISC, UGC):
-	return UISC == Vowel_Independent
 def is_BASE_IND(U, UISC, UGC):
-	#SPEC-BROKEN return (UISC in [Consonant_Dead, Modifying_Letter] or UGC == Po)
+	#SPEC-DRAFT return (UISC in [Consonant_Dead, Modifying_Letter] or UGC == Po)
 	return (UISC in [Consonant_Dead, Modifying_Letter] or
-		(UGC == Po and not is_BASE_OTHER(U, UISC, UGC))) # for 104E
+		(UGC == Po and not U in [0x104E, 0x2022]) or
+		False # SPEC-DRAFT-OUTDATED! U == 0x002D
+		)
 def is_BASE_NUM(U, UISC, UGC):
 	return UISC == Brahmi_Joining_Number
 def is_BASE_OTHER(U, UISC, UGC):
-	if UISC == Consonant_Placeholder: return True #SPEC-OUTDATED
-	return U in [0x00A0, 0x00D7, 0x2015, 0x2022, 0x25CC,
-		     0x25FB, 0x25FC, 0x25FD, 0x25FE]
+	if UISC == Consonant_Placeholder: return True #SPEC-DRAFT
+	#SPEC-DRAFT return U in [0x00A0, 0x00D7, 0x2015, 0x2022, 0x25CC, 0x25FB, 0x25FC, 0x25FD, 0x25FE]
+	return U in [0x2015, 0x2022, 0x25FB, 0x25FC, 0x25FD, 0x25FE]
 def is_CGJ(U, UISC, UGC):
 	return U == 0x034F
 def is_CONS_FINAL(U, UISC, UGC):
 	return ((UISC == Consonant_Final and UGC != Lo) or
 		UISC == Consonant_Succeeding_Repha)
 def is_CONS_FINAL_MOD(U, UISC, UGC):
-	#SPEC-OUTDATED return  UISC in [Consonant_Final_Modifier, Syllable_Modifier]
+	#SPEC-DRAFT return  UISC in [Consonant_Final_Modifier, Syllable_Modifier]
 	return  UISC == Syllable_Modifier
 def is_CONS_MED(U, UISC, UGC):
 	return UISC == Consonant_Medial and UGC != Lo
 def is_CONS_MOD(U, UISC, UGC):
 	return UISC in [Nukta, Gemination_Mark, Consonant_Killer]
 def is_CONS_SUB(U, UISC, UGC):
-	#SPEC-OUTDATED return UISC == Consonant_Subjoined
+	#SPEC-DRAFT return UISC == Consonant_Subjoined
 	return UISC == Consonant_Subjoined and UGC != Lo
 def is_HALANT(U, UISC, UGC):
 	return UISC in [Virama, Invisible_Stacker]
@@ -200,8 +202,8 @@ def is_REPHA(U, UISC, UGC):
 	#SPEC-OUTDATED hack to categorize Consonant_With_Stacker and Consonant_Prefixed
 	return UISC in [Consonant_Preceding_Repha, Consonant_With_Stacker, Consonant_Prefixed]
 def is_SYM(U, UISC, UGC):
-	if U == 0x25CC: return False #SPEC-OUTDATED
-	#SPEC-OUTDATED return UGC in [So, Sc] or UISC == Symbol_Letter
+	if U == 0x25CC: return False #SPEC-DRAFT
+	#SPEC-DRAFT return UGC in [So, Sc] or UISC == Symbol_Letter
 	return UGC in [So, Sc]
 def is_SYM_MOD(U, UISC, UGC):
 	return U in [0x1B6B, 0x1B6C, 0x1B6D, 0x1B6E, 0x1B6F, 0x1B70, 0x1B71, 0x1B72, 0x1B73]
@@ -216,7 +218,6 @@ def is_VOWEL_MOD(U, UISC, UGC):
 
 use_mapping = {
 	'B':	is_BASE,
-	'IV':	is_BASE_VOWEL,
 	'IND':	is_BASE_IND,
 	'N':	is_BASE_NUM,
 	'GB':	is_BASE_OTHER,

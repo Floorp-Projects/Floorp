@@ -37,8 +37,8 @@ public:
     void HandleTap(TapType aType, const LayoutDevicePoint& aPoint, Modifiers aModifiers,
                    const ScrollableLayerGuid& aGuid, uint64_t aInputBlockId) override;
     void PostDelayedTask(already_AddRefed<Runnable> aTask, int aDelayMs) override;
-    void UpdateOverscrollVelocity(const float aX, const float aY) override;
-    void UpdateOverscrollOffset(const float aX, const float aY) override;
+    void UpdateOverscrollVelocity(const float aX, const float aY, const bool aIsRootContent) override;
+    void UpdateOverscrollOffset(const float aX, const float aY, const bool aIsRootContent) override;
     void SetScrollingRootContent(const bool isRootContent) override;
     void NotifyAPZStateChange(const ScrollableLayerGuid& aGuid,
                               APZStateChange aChange,

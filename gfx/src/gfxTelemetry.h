@@ -48,7 +48,10 @@ enum class FeatureStatus
   CrashedOnStartup,
 
   // This feature was attempted but later determined to be broken.
-  Broken
+  Broken,
+
+  // Add new entries above here.
+  LAST
 };
 
 const char* FeatureStatusToString(FeatureStatus aStatus);

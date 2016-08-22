@@ -38,6 +38,18 @@ MacroAssembler::moveGPRToFloat32(Register src, FloatRegister dest)
     MOZ_CRASH("NYI: moveGPRToFloat32");
 }
 
+void
+MacroAssembler::move8SignExtend(Register src, Register dest)
+{
+    MOZ_CRASH("NYI: move8SignExtend");
+}
+
+void
+MacroAssembler::move16SignExtend(Register src, Register dest)
+{
+    MOZ_CRASH("NYI: move16SignExtend");
+}
+
 // ===============================================================
 // Logical instructions
 
