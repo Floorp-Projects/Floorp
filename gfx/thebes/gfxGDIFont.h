@@ -26,15 +26,7 @@ public:
 
     virtual ~gfxGDIFont();
 
-    HFONT GetHFONT() { if (!mMetrics) Initialize(); return mFont; }
-
-    virtual gfxFloat GetAdjustedSize()
-    {
-        if (!mMetrics) {
-            Initialize();
-        }
-        return mAdjustedSize;
-    }
+    HFONT GetHFONT() { return mFont; }
 
     cairo_font_face_t   *CairoFontFace() { return mFontFace; }
     cairo_scaled_font_t *CairoScaledFont() { return mScaledFont; }
