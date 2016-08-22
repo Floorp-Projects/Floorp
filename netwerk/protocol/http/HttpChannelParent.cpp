@@ -39,7 +39,6 @@
 #include "nsIWindowWatcher.h"
 #include "nsIDocument.h"
 #include "nsStringStream.h"
-#include "nsIExternalHelperAppService.h"
 
 using mozilla::BasePrincipal;
 using namespace mozilla::dom;
@@ -1030,47 +1029,8 @@ HttpChannelParent::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
   }
 
   nsCOMPtr<nsIEncodedChannel> encodedChannel = do_QueryInterface(aRequest);
-  if (encodedChannel) {
-    if (!mChannel->HaveListenerForTraceableChannel()) {
-      encodedChannel->SetApplyConversion(false);
-    } else {
-      // We have a traceableChannel listener so we need to do a conversion on
-      // the parent. But first we need to check with
-      // external-helper-app-service, e.g. we do not ungzip if url has a gz
-      // extention.
-      // This code is a copy of
-      // nsExternalAppHandler::MaybeApplyDecodingForExtension and should be
-      // kept in sync with it.
-      nsCOMPtr<nsIURI> uri;
-      chan->GetURI(getter_AddRefs(uri));
-      nsCOMPtr<nsIURL> url(do_QueryInterface(uri));
-      if (url) {
-        nsAutoCString extension;
-        url->GetFileExtension(extension);
-        if (!extension.IsEmpty()) {
-          nsCOMPtr<nsIUTF8StringEnumerator> encEnum;
-          encodedChannel->GetContentEncodings(getter_AddRefs(encEnum));
-          if (encEnum) {
-            bool hasMore;
-            nsresult rv = encEnum->HasMore(&hasMore);
-            if (NS_SUCCEEDED(rv) && hasMore) {
-              nsAutoCString encType;
-              rv = encEnum->GetNext(encType);
-              if (NS_SUCCEEDED(rv) && !encType.IsEmpty()) {
-                nsCOMPtr<nsIExternalHelperAppService> helperAppService =
-                  do_GetService("@mozilla.org/uriloader/external-helper-app-service;1");
-                MOZ_ASSERT(helperAppService);
-                bool applyConversion;
-                helperAppService->ApplyDecodingForExtension(extension, encType,
-                                                            &applyConversion);
-                encodedChannel->SetApplyConversion(applyConversion);
-              }
-            }
-          }
-        }
-      }
-    }
-  }
+  if (encodedChannel)
+    encodedChannel->SetApplyConversion(false);
 
   // Keep the cache entry for future use in RecvSetCacheTokenCachedCharset().
   // It could be already released by nsHttpChannel at that time.
@@ -1115,8 +1075,7 @@ HttpChannelParent::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
                           expirationTime, cachedCharset, secInfoSerialization,
                           mChannel->GetSelfAddr(), mChannel->GetPeerAddr(),
                           redirectCount,
-                          cacheKeyValue,
-                          mChannel->HaveListenerForTraceableChannel()))
+                          cacheKeyValue))
   {
     rv = NS_ERROR_UNEXPECTED;
   }
@@ -1531,14 +1490,11 @@ HttpChannelParent::StartDiversion()
   //
   // Create a content conversion chain based on mDivertListener and update
   // mDivertListener.
-  // If nsITraceableChannel is added the conversion will be already done.
-  if (!mChannel->HaveListenerForTraceableChannel()) {
-    nsCOMPtr<nsIStreamListener> converterListener;
-    mChannel->DoApplyContentConversions(mDivertListener,
-                                        getter_AddRefs(converterListener));
-    if (converterListener) {
-      mDivertListener = converterListener.forget();
-    }
+  nsCOMPtr<nsIStreamListener> converterListener;
+  mChannel->DoApplyContentConversions(mDivertListener,
+                                      getter_AddRefs(converterListener));
+  if (converterListener) {
+    mDivertListener = converterListener.forget();
   }
 
   // Now mParentListener can be diverted to mDivertListener.
