@@ -22,6 +22,12 @@ from mozharness.mozilla.vcstools import VCSToolsScript
 
 # General command line arguments for Firefox ui tests
 firefox_ui_tests_config_options = [
+    [["--allow-software-gl-layers"], {
+        "action": "store_true",
+        "dest": "allow_software_gl_layers",
+        "default": False,
+        "help": "Permits a software GL implementation (such as LLVMPipe) to use the GL compositor.",
+    }],
     [['--dry-run'], {
         'dest': 'dry_run',
         'default': False,
@@ -33,15 +39,6 @@ firefox_ui_tests_config_options = [
         'default': False,
         'help': 'Enable multi-process (e10s) mode when running tests.',
     }],
-    [['--firefox-ui-branch'], {
-        'dest': 'firefox_ui_branch',
-        'help': 'which branch to use for firefox_ui_tests',
-    }],
-    [['--firefox-ui-repo'], {
-        'dest': 'firefox_ui_repo',
-        'default': 'https://github.com/mozilla/firefox-ui-tests.git',
-        'help': 'which firefox_ui_tests repo to use',
-    }],
     [['--symbols-path=SYMBOLS_PATH'], {
         'dest': 'symbols_path',
         'help': 'absolute path to directory containing breakpad '
@@ -50,12 +47,6 @@ firefox_ui_tests_config_options = [
     [['--tag=TAG'], {
         'dest': 'tag',
         'help': 'Subset of tests to run (local, remote).',
-    }],
-    [["--allow-software-gl-layers"], {
-        "action": "store_true",
-        "dest": "allow_software_gl_layers",
-        "default": False,
-        "help": "Permits a software GL implementation (such as LLVMPipe) to use the GL compositor.",
     }],
 ] + copy.deepcopy(testing_config_options)
 

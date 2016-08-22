@@ -38,6 +38,8 @@ all-tests:
 asan-tests:
     - cppunit
     - crashtest
+    - firefox-ui-functional-local
+    - firefox-ui-functional-remote
     - gtest
     - jittests
     - jsreftest
