@@ -3789,6 +3789,73 @@ public:
     template<class Impl> class Natives;
 };
 
+class PresentationMediaPlayerManager : public mozilla::jni::ObjectBase<PresentationMediaPlayerManager>
+{
+public:
+    static const char name[];
+
+    explicit PresentationMediaPlayerManager(const Context& ctx) : ObjectBase<PresentationMediaPlayerManager>(ctx) {}
+
+    struct AddPresentationSurface_t {
+        typedef PresentationMediaPlayerManager Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<
+                mozilla::jni::Object::Param,
+                mozilla::jni::Object::Param> Args;
+        static constexpr char name[] = "addPresentationSurface";
+        static constexpr char signature[] =
+                "(Lorg/mozilla/gecko/GeckoView;Landroid/view/Surface;)V";
+        static const bool isStatic = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+        static const mozilla::jni::CallingThread callingThread =
+                mozilla::jni::CallingThread::UI;
+        static const mozilla::jni::DispatchTarget dispatchTarget =
+                mozilla::jni::DispatchTarget::CURRENT;
+    };
+
+    struct InvalidateAndScheduleComposite_t {
+        typedef PresentationMediaPlayerManager Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<
+                mozilla::jni::Object::Param> Args;
+        static constexpr char name[] = "invalidateAndScheduleComposite";
+        static constexpr char signature[] =
+                "(Lorg/mozilla/gecko/GeckoView;)V";
+        static const bool isStatic = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+        static const mozilla::jni::CallingThread callingThread =
+                mozilla::jni::CallingThread::UI;
+        static const mozilla::jni::DispatchTarget dispatchTarget =
+                mozilla::jni::DispatchTarget::CURRENT;
+    };
+
+    struct RemovePresentationSurface_t {
+        typedef PresentationMediaPlayerManager Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<> Args;
+        static constexpr char name[] = "removePresentationSurface";
+        static constexpr char signature[] =
+                "()V";
+        static const bool isStatic = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+        static const mozilla::jni::CallingThread callingThread =
+                mozilla::jni::CallingThread::UI;
+        static const mozilla::jni::DispatchTarget dispatchTarget =
+                mozilla::jni::DispatchTarget::CURRENT;
+    };
+
+    static const mozilla::jni::CallingThread callingThread =
+            mozilla::jni::CallingThread::UI;
+
+    template<class Impl> class Natives;
+};
+
 class Telemetry : public mozilla::jni::ObjectBase<Telemetry>
 {
 public:
@@ -4486,6 +4553,25 @@ public:
 
     class Compositor;
 
+    struct GetCompositor_t {
+        typedef LayerView Owner;
+        typedef mozilla::jni::Object::LocalRef ReturnType;
+        typedef mozilla::jni::Object::Param SetterType;
+        typedef mozilla::jni::Args<> Args;
+        static constexpr char name[] = "getCompositor";
+        static constexpr char signature[] =
+                "()Ljava/lang/Object;";
+        static const bool isStatic = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+        static const mozilla::jni::CallingThread callingThread =
+                mozilla::jni::CallingThread::UI;
+        static const mozilla::jni::DispatchTarget dispatchTarget =
+                mozilla::jni::DispatchTarget::CURRENT;
+    };
+
+    auto GetCompositor() const -> mozilla::jni::Object::LocalRef;
+
     struct UpdateZoomedView_t {
         typedef LayerView Owner;
         typedef void ReturnType;
@@ -4506,8 +4592,29 @@ public:
 
     static auto UpdateZoomedView(mozilla::jni::ByteBuffer::Param) -> void;
 
+    struct CompositorCreated_t {
+        typedef LayerView Owner;
+        typedef bool ReturnType;
+        typedef bool SetterType;
+        typedef mozilla::jni::Args<> Args;
+        static constexpr char name[] = "mCompositorCreated";
+        static constexpr char signature[] =
+                "Z";
+        static const bool isStatic = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+        static const mozilla::jni::CallingThread callingThread =
+                mozilla::jni::CallingThread::UI;
+        static const mozilla::jni::DispatchTarget dispatchTarget =
+                mozilla::jni::DispatchTarget::CURRENT;
+    };
+
+    auto CompositorCreated() const -> bool;
+
+    auto CompositorCreated(bool) const -> void;
+
     static const mozilla::jni::CallingThread callingThread =
-            mozilla::jni::CallingThread::GECKO;
+            mozilla::jni::CallingThread::ANY;
 
 };
 

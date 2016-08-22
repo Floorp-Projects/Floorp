@@ -249,6 +249,11 @@ set_myanmar_properties (hb_glyph_info_t &info)
     case 0x104Au: case 0x104Bu:
       cat = (indic_category_t) OT_P;
       break;
+
+    case 0xAA74u: case 0xAA75u: case 0xAA76u:
+      /* https://github.com/roozbehp/unicode-data/issues/3 */
+      cat = (indic_category_t) OT_C;
+      break;
   }
 
   if (cat == OT_M)

@@ -26,16 +26,20 @@ public:
 
   void Init();
 
+  void EnsureGPUReady();
+
   // gfxVarReceiver overrides.
   void OnVarChanged(const GfxVarUpdate& aVar) override;
 
   // PGPUChild overrides.
+  bool RecvInitComplete(const GPUDeviceData& aData) override;
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
   static void Destroy(UniquePtr<GPUChild>&& aChild);
 
 private:
   GPUProcessHost* mHost;
+  bool mGPUReady;
 };
 
 } // namespace gfx

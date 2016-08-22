@@ -409,12 +409,13 @@ GetCompileArgs(JSContext* cx, CallArgs callArgs, const char* name, MutableBytes*
     if (!*bytecode)
         return false;
 
-    if (callArgs[0].toObject().is<TypedArrayObject>()) {
-        TypedArrayObject& view = callArgs[0].toObject().as<TypedArrayObject>();
+    JSObject* unwrapped = CheckedUnwrap(&callArgs[0].toObject());
+    if (unwrapped && unwrapped->is<TypedArrayObject>()) {
+        TypedArrayObject& view = unwrapped->as<TypedArrayObject>();
         if (!(*bytecode)->append((uint8_t*)view.viewDataEither().unwrap(), view.byteLength()))
             return false;
-    } else if (callArgs[0].toObject().is<ArrayBufferObject>()) {
-        ArrayBufferObject& buffer = callArgs[0].toObject().as<ArrayBufferObject>();
+    } else if (unwrapped && unwrapped->is<ArrayBufferObject>()) {
+        ArrayBufferObject& buffer = unwrapped->as<ArrayBufferObject>();
         if (!(*bytecode)->append(buffer.dataPointer(), buffer.byteLength()))
             return false;
     } else {

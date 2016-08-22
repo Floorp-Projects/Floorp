@@ -4,6 +4,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include <android/log.h>
+#include <android/native_window.h>
+#include <android/native_window_jni.h>
 #include <math.h>
 #include <unistd.h>
 
@@ -102,10 +104,6 @@ NS_IMPL_ISUPPORTS_INHERITED0(nsWindow, nsBaseWidget)
 // stacking order, so the window at gTopLevelWindows[0] is the topmost
 // one.
 static nsTArray<nsWindow*> gTopLevelWindows;
-
-// FIXME: because we don't support multiple GeckoViews for every feature
-// yet, we have to default to a particular GeckoView for certain calls.
-static nsWindow* gGeckoViewWindow;
 
 static bool sFailedToCreateGLContext = false;
 
@@ -1036,6 +1034,12 @@ public:
                 mozilla::Move(aCall)));
     }
 
+    static LayerViewSupport*
+    FromNative(const LayerView::Compositor::LocalRef& instance)
+    {
+        return GetNative(instance);
+    }
+
     LayerViewSupport(NativePtr<LayerViewSupport>* aPtr, nsWindow* aWindow,
                      const LayerView::Compositor::LocalRef& aInstance)
         : mWindow(aPtr, aWindow)
@@ -1210,6 +1214,92 @@ public:
 template<> const char
 nsWindow::NativePtr<nsWindow::LayerViewSupport>::sName[] = "LayerViewSupport";
 
+/* PresentationMediaPlayerManager native calls access inner nsWindow functionality so PMPMSupport is a child class of nsWindow */
+class nsWindow::PMPMSupport final
+    : public PresentationMediaPlayerManager::Natives<PMPMSupport>
+{
+    PMPMSupport() = delete;
+
+    static LayerViewSupport* GetLayerViewSupport(jni::Object::Param aView)
+    {
+        const auto& layerView = LayerView::Ref::From(aView);
+
+        LayerView::Compositor::LocalRef compositor = layerView->GetCompositor();
+        if (!layerView->CompositorCreated() || !compositor) {
+            return nullptr;
+        }
+
+        LayerViewSupport* const lvs = LayerViewSupport::FromNative(compositor);
+        if (!lvs) {
+            // There is a pending exception whenever FromNative returns nullptr.
+            compositor.Env()->ExceptionClear();
+        }
+        return lvs;
+    }
+
+public:
+    static ANativeWindow* sWindow;
+    static EGLSurface sSurface;
+
+    static void InvalidateAndScheduleComposite(jni::Object::Param aView)
+    {
+        LayerViewSupport* const lvs = GetLayerViewSupport(aView);
+        if (lvs) {
+            lvs->SyncInvalidateAndScheduleComposite();
+        }
+    }
+
+    static void AddPresentationSurface(const jni::Class::LocalRef& aCls,
+                                       jni::Object::Param aView,
+                                       jni::Object::Param aSurface)
+    {
+        RemovePresentationSurface();
+
+        LayerViewSupport* const lvs = GetLayerViewSupport(aView);
+        if (!lvs) {
+            return;
+        }
+
+        ANativeWindow* const window = ANativeWindow_fromSurface(
+                aCls.Env(), aSurface.Get());
+        if (!window) {
+            return;
+        }
+
+        sWindow = window;
+
+        const bool wasAlreadyPaused = lvs->CompositorPaused();
+        if (!wasAlreadyPaused) {
+            lvs->SyncPauseCompositor();
+        }
+
+        if (sSurface) {
+            // Destroy the EGL surface! The compositor is paused so it should
+            // be okay to destroy the surface here.
+            mozilla::gl::GLContextProvider::DestroyEGLSurface(sSurface);
+            sSurface = nullptr;
+        }
+
+        if (!wasAlreadyPaused) {
+            lvs->SyncResumeCompositor();
+        }
+
+        lvs->SyncInvalidateAndScheduleComposite();
+    }
+
+    static void RemovePresentationSurface()
+    {
+        if (sWindow) {
+            ANativeWindow_release(sWindow);
+            sWindow = nullptr;
+        }
+    }
+};
+
+ANativeWindow* nsWindow::PMPMSupport::sWindow;
+EGLSurface nsWindow::PMPMSupport::sSurface;
+
+
 nsWindow::GeckoViewSupport::~GeckoViewSupport()
 {
     // Disassociate our GeckoEditable instance with our native object.
@@ -1291,8 +1381,6 @@ nsWindow::GeckoViewSupport::Open(const jni::Class::LocalRef& aCls,
     auto compositor = LayerView::Compositor::LocalRef(
             aCls.Env(), LayerView::Compositor::Ref::From(aCompositor));
     window->mLayerViewSupport.Attach(compositor, window, compositor);
-
-    gGeckoViewWindow = window;
 
     if (window->mWidgetListener) {
         nsCOMPtr<nsIXULWindow> xulWindow(
@@ -1379,6 +1467,7 @@ nsWindow::InitNatives()
     nsWindow::GeckoViewSupport::EditableBase::Init();
     nsWindow::LayerViewSupport::Init();
     nsWindow::NPZCSupport::Init();
+    nsWindow::PMPMSupport::Init();
 }
 
 nsWindow*
@@ -1431,10 +1520,6 @@ nsWindow::~nsWindow()
 {
     gTopLevelWindows.RemoveElement(this);
     ALOG("nsWindow %p destructor", (void*)this);
-
-    if (gGeckoViewWindow == this) {
-        gGeckoViewWindow = nullptr;
-    }
 }
 
 bool
@@ -1487,8 +1572,8 @@ nsWindow::Create(nsIWidget* aParent,
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsWindow::Destroy(void)
+void
+nsWindow::Destroy()
 {
     nsBaseWidget::mOnDestroyCalled = true;
 
@@ -1518,8 +1603,6 @@ nsWindow::Destroy(void)
 #ifdef DEBUG_ANDROID_WIDGET
     DumpWindows();
 #endif
-
-    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1763,7 +1846,7 @@ nsWindow::PlaceBehind(nsTopLevelWidgetZPlacement aPlacement,
     return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsWindow::SetSizeMode(nsSizeMode aMode)
 {
     switch (aMode) {
@@ -1776,7 +1859,6 @@ nsWindow::SetSizeMode(nsSizeMode aMode)
         default:
             break;
     }
-    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -2050,9 +2132,25 @@ nsWindow::GetNativeData(uint32_t aDataType)
                 return lvs->GetSurface().Get();
             }
             return nullptr;
+
+        case NS_PRESENTATION_WINDOW:
+            return PMPMSupport::sWindow;
+
+        case NS_PRESENTATION_SURFACE:
+            return PMPMSupport::sSurface;
     }
 
     return nullptr;
+}
+
+void
+nsWindow::SetNativeData(uint32_t aDataType, uintptr_t aVal)
+{
+    switch (aDataType) {
+        case NS_PRESENTATION_SURFACE:
+            PMPMSupport::sSurface = reinterpret_cast<EGLSurface>(aVal);
+            break;
+    }
 }
 
 void
@@ -3462,42 +3560,6 @@ nsWindow::DrawWindowOverlay(LayerManagerComposite* aManager,
 
     mLayerRendererFrame->EndDrawing();
     mLayerRendererFrame = nullptr;
-}
-
-// off-main-thread compositor fields and functions
-
-void
-nsWindow::InvalidateAndScheduleComposite()
-{
-    if (gGeckoViewWindow && gGeckoViewWindow->mLayerViewSupport) {
-        gGeckoViewWindow->mLayerViewSupport->
-                SyncInvalidateAndScheduleComposite();
-    }
-}
-
-bool
-nsWindow::IsCompositionPaused()
-{
-    if (gGeckoViewWindow && gGeckoViewWindow->mLayerViewSupport) {
-        return gGeckoViewWindow->mLayerViewSupport->CompositorPaused();
-    }
-    return false;
-}
-
-void
-nsWindow::SchedulePauseComposition()
-{
-    if (gGeckoViewWindow && gGeckoViewWindow->mLayerViewSupport) {
-        return gGeckoViewWindow->mLayerViewSupport->SyncPauseCompositor();
-    }
-}
-
-void
-nsWindow::ScheduleResumeComposition()
-{
-    if (gGeckoViewWindow && gGeckoViewWindow->mLayerViewSupport) {
-        return gGeckoViewWindow->mLayerViewSupport->SyncResumeCompositor();
-    }
 }
 
 bool

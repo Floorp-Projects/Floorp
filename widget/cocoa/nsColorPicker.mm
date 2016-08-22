@@ -136,7 +136,14 @@ nsColorPicker::GetNSColorFromHexString(const nsAString& aColor)
 nsColorPicker::GetHexStringFromNSColor(NSColor* aColor, nsAString& aResult)
 {
   CGFloat redFloat, greenFloat, blueFloat;
-  [aColor getRed: &redFloat green: &greenFloat blue: &blueFloat alpha: nil];
+
+  NSColor* color = aColor;
+  @try {
+    [color getRed:&redFloat green:&greenFloat blue:&blueFloat alpha: nil];
+  } @catch (NSException* e) {
+    color = [color colorUsingColorSpace:[NSColorSpace genericRGBColorSpace]];
+    [color getRed:&redFloat green:&greenFloat blue:&blueFloat alpha: nil];
+  }
 
   nsCocoaUtils::GetStringForNSString([NSString stringWithFormat:@"#%02x%02x%02x",
                                        (int)(redFloat * 255),
@@ -162,10 +169,6 @@ nsColorPicker::Open(nsIColorPickerShownCallback* aCallback)
 void
 nsColorPicker::Update(NSColor* aColor)
 {
-  NSColor *color = aColor;
-  if ([[aColor colorSpaceName] isEqualToString:NSNamedColorSpace]) {
-    color = [aColor colorUsingColorSpace:[NSColorSpace genericRGBColorSpace]];
-  }
   GetHexStringFromNSColor(aColor, mColor);
   mCallback->Update(mColor);
 }

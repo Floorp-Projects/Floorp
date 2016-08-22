@@ -31,4 +31,4 @@ HB_BEGIN_DECLS
 
 HB_END_DECLS
 
-#endif /* HB_UNISCRIBE_H */
+#endif /* HB_DIRECTWRITE_H */

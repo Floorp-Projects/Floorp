@@ -14,6 +14,9 @@
 namespace mozilla {
 namespace gfx {
 
+// Defined in GraphicsMessages.ipdlh.
+class FeatureChange;
+
 // Manages the history and state of a graphics feature. The flow of a feature
 // is:
 //   - A default value, set by all.js, gfxPrefs, or gfxPlatform.
@@ -44,6 +47,9 @@ public:
   // IsDisabledByDefault returns whether or not the initial status of the
   // feature, before adding user prefs and runtime decisions, was disabled.
   static bool IsForcedOnByUser(Feature aFeature);
+
+  // This returns true if the feature was disabled by default, or was never
+  // initialized to begin with.
   static bool IsDisabledByDefault(Feature aFeature);
 
   // Query the status value of a parameter. This is computed similar to
@@ -66,6 +72,9 @@ public:
                                const char* aDisableMessage,
                                const nsACString& aFailureId = EmptyCString());
   static void EnableByDefault(Feature aFeature);
+
+  // Inherit a computed value from another process.
+  static void Inherit(Feature aFeature, FeatureStatus aStatus);
 
   // Set a environment status that overrides both the default and user
   // statuses; this should be used to disable features based on system
@@ -170,7 +179,9 @@ public:
   static void ForEachFallback(const FallbackIterCallback& aCallback);
 
   // Get the most descriptive failure id message for this feature.
-  static const nsACString& GetFailureId(Feature aFeature);
+  static const nsCString& GetFailureId(Feature aFeature);
+
+  static void ImportChange(Feature aFeature, const FeatureChange& aChange);
 
   static void Init();
   static void Shutdown();

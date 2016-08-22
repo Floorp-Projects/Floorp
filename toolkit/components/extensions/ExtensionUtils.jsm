@@ -227,6 +227,8 @@ class BaseContext {
   runSafe(...args) {
     if (this.unloaded) {
       Cu.reportError("context.runSafe called after context unloaded");
+    } else if (!this.active) {
+      Cu.reportError("context.runSafe called while context is inactive");
     } else {
       return runSafeSync(this, ...args);
     }
@@ -235,6 +237,8 @@ class BaseContext {
   runSafeWithoutClone(...args) {
     if (this.unloaded) {
       Cu.reportError("context.runSafeWithoutClone called after context unloaded");
+    } else if (!this.active) {
+      Cu.reportError("context.runSafeWithoutClone called while context is inactive");
     } else {
       return runSafeSyncWithoutClone(...args);
     }
@@ -404,6 +408,8 @@ class BaseContext {
         args => {
           if (this.unloaded) {
             dump(`Promise resolved after context unloaded\n`);
+          } else if (!this.active) {
+            dump(`Promise resolved while context is inactive\n`);
           } else if (args instanceof SpreadArgs) {
             runSafe(callback, ...args);
           } else {
@@ -414,6 +420,8 @@ class BaseContext {
           this.withLastError(error, () => {
             if (this.unloaded) {
               dump(`Promise rejected after context unloaded\n`);
+            } else if (!this.active) {
+              dump(`Promise rejected while context is inactive\n`);
             } else {
               this.runSafeWithoutClone(callback);
             }
@@ -425,13 +433,17 @@ class BaseContext {
           value => {
             if (this.unloaded) {
               dump(`Promise resolved after context unloaded\n`);
+            } else if (!this.active) {
+              dump(`Promise resolved while context is inactive\n`);
             } else {
               runSafe(resolve, value);
             }
           },
           value => {
             if (this.unloaded) {
-              dump(`Promise rejected after context unloaded\n`);
+              dump(`Promise rejected after context unloaded: ${value && value.message}\n`);
+            } else if (!this.active) {
+              dump(`Promise rejected while context is inactive: ${value && value.message}\n`);
             } else {
               this.runSafeWithoutClone(reject, this.normalizeError(value));
             }

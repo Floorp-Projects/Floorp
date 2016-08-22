@@ -22,7 +22,9 @@ FeatureState::IsEnabled() const
 FeatureStatus
 FeatureState::GetValue() const
 {
-  AssertInitialized();
+  if (!IsInitialized()) {
+    return FeatureStatus::Unused;
+  }
 
   if (mRuntime.mStatus != FeatureStatus::Unused) {
     return mRuntime.mStatus;
@@ -158,7 +160,6 @@ FeatureState::MaybeSetFailed(FeatureStatus aStatus, const char* aMessage,
 bool
 FeatureState::DisabledByDefault() const
 {
-  AssertInitialized();
   return mDefault.mStatus != FeatureStatus::Available;
 }
 
@@ -254,11 +255,47 @@ FeatureState::SetFailureId(const nsACString& aFailureId)
   }
 }
 
-const nsACString&
+const char*
+FeatureState::GetFailureMessage() const
+{
+  AssertInitialized();
+  MOZ_ASSERT(!IsEnabled());
+
+  if (mRuntime.mStatus != FeatureStatus::Unused &&
+      IsFeatureStatusFailure(mRuntime.mStatus))
+  {
+    return mRuntime.mMessage;
+  }
+  if (mEnvironment.mStatus != FeatureStatus::Unused &&
+      IsFeatureStatusFailure(mEnvironment.mStatus))
+  {
+    return mEnvironment.mMessage;
+  }
+  if (mUser.mStatus != FeatureStatus::Unused &&
+      IsFeatureStatusFailure(mUser.mStatus))
+  {
+    return mUser.mMessage;
+  }
+
+  MOZ_ASSERT(IsFeatureStatusFailure(mDefault.mStatus));
+  return mDefault.mMessage;
+}
+
+const nsCString&
 FeatureState::GetFailureId() const
 {
   MOZ_ASSERT(!IsEnabled());
   return mFailureId;
+}
+
+void
+FeatureState::Reset()
+{
+  mDefault.Set(FeatureStatus::Unused);
+  mUser.Set(FeatureStatus::Unused);
+  mEnvironment.Set(FeatureStatus::Unused);
+  mRuntime.Set(FeatureStatus::Unused);
+  mFailureId = nsCString();
 }
 
 void
@@ -267,6 +304,8 @@ FeatureState::Instance::Set(FeatureStatus aStatus, const char* aMessage /* = nul
   mStatus = aStatus;
   if (aMessage) {
     SprintfLiteral(mMessage, "%s", aMessage);
+  } else {
+    mMessage[0] = '\0';
   }
 }
 

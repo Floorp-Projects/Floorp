@@ -4,15 +4,20 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include "GPUChild.h"
+#include "gfxConfig.h"
 #include "gfxPrefs.h"
 #include "GPUProcessHost.h"
 #include "mozilla/gfx/gfxVars.h"
+#if defined(XP_WIN)
+# include "mozilla/gfx/DeviceManagerD3D11.h"
+#endif
 
 namespace mozilla {
 namespace gfx {
 
 GPUChild::GPUChild(GPUProcessHost* aHost)
- : mHost(aHost)
+ : mHost(aHost),
+   mGPUReady(false)
 {
   MOZ_COUNT_CTOR(GPUChild);
 }
@@ -42,7 +47,15 @@ GPUChild::Init()
   }
 
   nsTArray<GfxVarUpdate> updates = gfxVars::FetchNonDefaultVars();
-  SendInit(prefs, updates);
+
+  DevicePrefs devicePrefs;
+  devicePrefs.hwCompositing() = gfxConfig::GetValue(Feature::HW_COMPOSITING);
+  devicePrefs.d3d11Compositing() = gfxConfig::GetValue(Feature::D3D11_COMPOSITING);
+  devicePrefs.d3d9Compositing() = gfxConfig::GetValue(Feature::D3D9_COMPOSITING);
+  devicePrefs.oglCompositing() = gfxConfig::GetValue(Feature::OPENGL_COMPOSITING);
+  devicePrefs.useD2D1() = gfxConfig::GetValue(Feature::DIRECT2D);
+
+  SendInit(prefs, updates, devicePrefs);
 
   gfxVars::AddReceiver(this);
 }
@@ -51,6 +64,33 @@ void
 GPUChild::OnVarChanged(const GfxVarUpdate& aVar)
 {
   SendUpdateVar(aVar);
+}
+
+void
+GPUChild::EnsureGPUReady()
+{
+  if (mGPUReady) {
+    return;
+  }
+
+  GPUDeviceData data;
+  SendGetDeviceStatus(&data);
+
+  gfxPlatform::GetPlatform()->ImportGPUDeviceData(data);
+  mGPUReady = true;
+}
+
+bool
+GPUChild::RecvInitComplete(const GPUDeviceData& aData)
+{
+  // We synchronously requested GPU parameters before this arrived.
+  if (mGPUReady) {
+    return true;
+  }
+
+  gfxPlatform::GetPlatform()->ImportGPUDeviceData(aData);
+  mGPUReady = true;
+  return true;
 }
 
 void

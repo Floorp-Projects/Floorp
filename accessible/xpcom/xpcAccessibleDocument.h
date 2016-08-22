@@ -96,6 +96,7 @@ private:
   friend class DocManager;
   friend class DocAccessible;
   friend class ProxyAccessible;
+  friend class ProxyAccessibleBase<ProxyAccessible>;
 
   xpcAccessibleDocument(const xpcAccessibleDocument&) = delete;
   xpcAccessibleDocument& operator =(const xpcAccessibleDocument&) = delete;

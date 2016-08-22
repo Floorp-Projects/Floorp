@@ -2,16 +2,6 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-function* awaitPanel(extension, win = window) {
-  let {target} = yield BrowserTestUtils.waitForEvent(win.document, "load", true, (event) => {
-    return event.target.location && event.target.location.href.endsWith("popup.html");
-  });
-
-  return target.defaultView
-               .QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDocShell)
-               .chromeEventHandler;
-}
-
 add_task(function* testPopupBorderRadius() {
   let extension = ExtensionTestUtils.loadExtension({
     background() {
@@ -71,7 +61,7 @@ add_task(function* testPopupBorderRadius() {
     info("Test stand-alone browserAction popup");
 
     clickBrowserAction(extension);
-    let browser = yield awaitPanel(extension);
+    let browser = yield awaitExtensionPanel(extension);
     yield testPanel(browser);
     yield closeBrowserAction(extension);
   }
@@ -83,7 +73,7 @@ add_task(function* testPopupBorderRadius() {
     CustomizableUI.addWidgetToArea(widget.id, CustomizableUI.AREA_PANEL);
 
     clickBrowserAction(extension);
-    let browser = yield awaitPanel(extension);
+    let browser = yield awaitExtensionPanel(extension);
     yield testPanel(browser, false);
     yield closeBrowserAction(extension);
   }
@@ -92,7 +82,7 @@ add_task(function* testPopupBorderRadius() {
     info("Test pageAction popup");
 
     clickPageAction(extension);
-    let browser = yield awaitPanel(extension);
+    let browser = yield awaitExtensionPanel(extension);
     yield testPanel(browser);
     yield closePageAction(extension);
   }

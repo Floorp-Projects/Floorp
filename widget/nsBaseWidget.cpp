@@ -512,7 +512,7 @@ void nsBaseWidget::SetAttachedWidgetListener(nsIWidgetListener* aListener)
 // Close this nsBaseWidget
 //
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsBaseWidget::Destroy()
+void nsBaseWidget::Destroy()
 {
   // Just in case our parent is the only ref to us
   nsCOMPtr<nsIWidget> kungFuDeathGrip(this);
@@ -526,8 +526,6 @@ NS_IMETHODIMP nsBaseWidget::Destroy()
   // Allow our scroll capture container to be cleaned up, if we have one.
   mScrollCaptureContainer = nullptr;
 #endif
-
-  return NS_OK;
 }
 
 
@@ -736,7 +734,7 @@ NS_IMETHODIMP nsBaseWidget::PlaceBehind(nsTopLevelWidgetZPlacement aPlacement,
 // merely stores the state.
 //
 //-------------------------------------------------------------------------
-NS_IMETHODIMP
+void
 nsBaseWidget::SetSizeMode(nsSizeMode aMode)
 {
   MOZ_ASSERT(aMode == nsSizeMode_Normal ||
@@ -744,7 +742,6 @@ nsBaseWidget::SetSizeMode(nsSizeMode aMode)
              aMode == nsSizeMode_Maximized ||
              aMode == nsSizeMode_Fullscreen);
   mSizeMode = aMode;
-  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -1600,11 +1597,6 @@ NS_IMETHODIMP
 nsBaseWidget::SetNonClientMargins(LayoutDeviceIntMargin &margins)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP nsBaseWidget::EnableDragDrop(bool aEnable)
-{
-  return NS_OK;
 }
 
 uint32_t nsBaseWidget::GetMaxTouchPoints() const

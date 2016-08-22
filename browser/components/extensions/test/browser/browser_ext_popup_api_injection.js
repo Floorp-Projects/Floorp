@@ -61,6 +61,7 @@ add_task(function* testPageActionPopup() {
   let awaitMessage = promiseConsoleMessage(/WebExt Privilege Escalation: BrowserAction/);
   SimpleTest.expectUncaughtException();
   yield clickBrowserAction(extension);
+  yield promisePopupShown(getBrowserActionPopup(extension));
 
   let message = yield awaitMessage;
   ok(message.includes("WebExt Privilege Escalation: BrowserAction: typeof(browser) = undefined"),
@@ -89,6 +90,7 @@ add_task(function* testPageActionPopup() {
 
   yield clickBrowserAction(extension);
   yield extension.awaitMessage("from-popup-a");
+  yield promisePopupShown(getBrowserActionPopup(extension));
   yield closeBrowserAction(extension);
 
   yield clickPageAction(extension);

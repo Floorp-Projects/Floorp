@@ -241,9 +241,6 @@ hb_ot_shape_complex_categorize (const hb_ot_shape_planner_t *planner)
     /* Unicode-3.0 additions */
     case HB_SCRIPT_SINHALA:
 
-    /* Unicode-5.2 additions */
-    case HB_SCRIPT_JAVANESE:
-
       /* If the designer designed the font for the 'DFLT' script,
        * use the default shaper.  Otherwise, use the specific shaper.
        * Note that for some simple scripts, there may not be *any*
@@ -316,7 +313,7 @@ hb_ot_shape_complex_categorize (const hb_ot_shape_planner_t *planner)
 
     /* Unicode-5.2 additions */
     case HB_SCRIPT_EGYPTIAN_HIEROGLYPHS:
-    //case HB_SCRIPT_JAVANESE:
+    case HB_SCRIPT_JAVANESE:
     case HB_SCRIPT_KAITHI:
     case HB_SCRIPT_MEETEI_MAYEK:
     case HB_SCRIPT_TAI_THAM:
@@ -344,6 +341,15 @@ hb_ot_shape_complex_categorize (const hb_ot_shape_planner_t *planner)
     //case HB_SCRIPT_PSALTER_PAHLAVI:
     case HB_SCRIPT_SIDDHAM:
     case HB_SCRIPT_TIRHUTA:
+
+    /* Unicode-8.0 additions */
+    case HB_SCRIPT_AHOM:
+    //case HB_SCRIPT_MULTANI:
+
+    /* Unicode-9.0 additions */
+    case HB_SCRIPT_BHAIKSUKI:
+    case HB_SCRIPT_MARCHEN:
+    case HB_SCRIPT_NEWA:
 
       /* If the designer designed the font for the 'DFLT' script,
        * use the default shaper.  Otherwise, use the specific shaper.

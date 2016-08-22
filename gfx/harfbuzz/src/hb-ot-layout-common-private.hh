@@ -770,7 +770,11 @@ struct CoverageFormat2
     TRACE_SERIALIZE (this);
     if (unlikely (!c->extend_min (*this))) return_trace (false);
 
-    if (unlikely (!num_glyphs)) return_trace (true);
+    if (unlikely (!num_glyphs))
+    {
+      rangeRecord.len.set (0);
+      return_trace (true);
+    }
 
     unsigned int num_ranges = 1;
     for (unsigned int i = 1; i < num_glyphs; i++)
