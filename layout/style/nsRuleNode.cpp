@@ -7188,6 +7188,45 @@ FillBackgroundPositionCoordList(
   }
 }
 
+/* static */
+void
+nsRuleNode::FillAllBackgroundLists(nsStyleImageLayers& aImage,
+                                   uint32_t aMaxItemCount)
+{
+  // Delete any extra items.  We need to keep layers in which any
+  // property was specified.
+  aImage.mLayers.TruncateLengthNonZero(aMaxItemCount);
+
+  uint32_t fillCount = aImage.mImageCount;
+  FillBackgroundList(aImage.mLayers,
+                     &nsStyleImageLayers::Layer::mImage,
+                     aImage.mImageCount, fillCount);
+  FillBackgroundList(aImage.mLayers,
+                     &nsStyleImageLayers::Layer::mRepeat,
+                     aImage.mRepeatCount, fillCount);
+  FillBackgroundList(aImage.mLayers,
+                     &nsStyleImageLayers::Layer::mAttachment,
+                     aImage.mAttachmentCount, fillCount);
+  FillBackgroundList(aImage.mLayers,
+                     &nsStyleImageLayers::Layer::mClip,
+                     aImage.mClipCount, fillCount);
+  FillBackgroundList(aImage.mLayers,
+                     &nsStyleImageLayers::Layer::mBlendMode,
+                     aImage.mBlendModeCount, fillCount);
+  FillBackgroundList(aImage.mLayers,
+                     &nsStyleImageLayers::Layer::mOrigin,
+                     aImage.mOriginCount, fillCount);
+  FillBackgroundPositionCoordList(aImage.mLayers,
+                                  &Position::mXPosition,
+                                  aImage.mPositionXCount, fillCount);
+  FillBackgroundPositionCoordList(aImage.mLayers,
+                                  &Position::mYPosition,
+                                  aImage.mPositionYCount, fillCount);
+  FillBackgroundList(aImage.mLayers,
+                     &nsStyleImageLayers::Layer::mSize,
+                     aImage.mSizeCount, fillCount);
+}
+
 const void*
 nsRuleNode::ComputeBackgroundData(void* aStartStruct,
                                   const nsRuleData* aRuleData,
@@ -7309,38 +7348,7 @@ nsRuleNode::ComputeBackgroundData(void* aStartStruct,
                         conditions);
 
   if (rebuild) {
-    // Delete any extra items.  We need to keep layers in which any
-    // property was specified.
-    bg->mImage.mLayers.TruncateLengthNonZero(maxItemCount);
-
-    uint32_t fillCount = bg->mImage.mImageCount;
-    FillBackgroundList(bg->mImage.mLayers,
-                       &nsStyleImageLayers::Layer::mImage,
-                       bg->mImage.mImageCount, fillCount);
-    FillBackgroundList(bg->mImage.mLayers,
-                       &nsStyleImageLayers::Layer::mRepeat,
-                       bg->mImage.mRepeatCount, fillCount);
-    FillBackgroundList(bg->mImage.mLayers,
-                       &nsStyleImageLayers::Layer::mAttachment,
-                       bg->mImage.mAttachmentCount, fillCount);
-    FillBackgroundList(bg->mImage.mLayers,
-                       &nsStyleImageLayers::Layer::mClip,
-                       bg->mImage.mClipCount, fillCount);
-    FillBackgroundList(bg->mImage.mLayers,
-                       &nsStyleImageLayers::Layer::mBlendMode,
-                       bg->mImage.mBlendModeCount, fillCount);
-    FillBackgroundList(bg->mImage.mLayers,
-                       &nsStyleImageLayers::Layer::mOrigin,
-                       bg->mImage.mOriginCount, fillCount);
-    FillBackgroundPositionCoordList(bg->mImage.mLayers,
-                                    &Position::mXPosition,
-                                    bg->mImage.mPositionXCount, fillCount);
-    FillBackgroundPositionCoordList(bg->mImage.mLayers,
-                                    &Position::mYPosition,
-                                    bg->mImage.mPositionYCount, fillCount);
-    FillBackgroundList(bg->mImage.mLayers,
-                       &nsStyleImageLayers::Layer::mSize,
-                       bg->mImage.mSizeCount, fillCount);
+    FillAllBackgroundLists(bg->mImage, maxItemCount);
   }
 
   // Now that the dust has settled, register the images with the document
