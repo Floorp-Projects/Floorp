@@ -25,7 +25,7 @@ function run_test() {
 function setupUpdaterTestFinished() {
   // If execv is used the updater process will turn into the callback process
   // and the updater's return code will be that of the callback process.
-  runUpdateUsingUpdater(STATE_FAILED_CHANNEL_MISMATCH_ERROR, false,
+  runUpdateUsingUpdater(STATE_FAILED_MAR_CHANNEL_MISMATCH_ERROR, false,
                         (USE_EXECV ? 0 : 1));
 }
 
@@ -34,8 +34,18 @@ function setupUpdaterTestFinished() {
  */
 function runUpdateFinished() {
   standardInit();
+  Assert.equal(readStatusState(), STATE_NONE,
+               "the status file state" + MSG_SHOULD_EQUAL);
+  Assert.ok(!gUpdateManager.activeUpdate,
+            "the active update should not be defined");
+  Assert.equal(gUpdateManager.updateCount, 1,
+               "the update manager updateCount attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(gUpdateManager.getUpdateAt(0).state, STATE_FAILED,
+               "the update state" + MSG_SHOULD_EQUAL);
+  Assert.equal(gUpdateManager.getUpdateAt(0).errorCode, MAR_CHANNEL_MISMATCH_ERROR,
+               "the update errorCode" + MSG_SHOULD_EQUAL);
   checkPostUpdateRunningFile(false);
   checkFilesAfterUpdateFailure(getApplyDirFile);
-  checkUpdateLogContains(STATE_FAILED_CHANNEL_MISMATCH_ERROR);
+  checkUpdateLogContains(STATE_FAILED_MAR_CHANNEL_MISMATCH_ERROR);
   waitForFilesInUse();
 }

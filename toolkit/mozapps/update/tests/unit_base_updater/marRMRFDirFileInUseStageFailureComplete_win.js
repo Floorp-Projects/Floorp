@@ -6,6 +6,7 @@
    test */
 
 const STATE_AFTER_STAGE = IS_SERVICE_TEST ? STATE_APPLIED_SVC : STATE_APPLIED;
+const STATE_AFTER_RUNUPDATE = IS_SERVICE_TEST ? STATE_PENDING_SVC : STATE_PENDING;
 
 function run_test() {
   if (!setupTestCommon()) {
@@ -54,10 +55,18 @@ function runUpdateFinished() {
  */
 function waitForHelperExitFinished() {
   standardInit();
+  Assert.equal(readStatusState(), STATE_NONE,
+               "the status file state" + MSG_SHOULD_EQUAL);
+  Assert.ok(!gUpdateManager.activeUpdate,
+            "the active update should not be defined");
+  Assert.equal(gUpdateManager.updateCount, 1,
+               "the update manager updateCount attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(gUpdateManager.getUpdateAt(0).state, STATE_AFTER_RUNUPDATE,
+               "the update state" + MSG_SHOULD_EQUAL);
   checkPostUpdateRunningFile(false);
   setTestFilesAndDirsForFailure();
   checkFilesAfterUpdateFailure(getApplyDirFile);
   checkUpdateLogContains(ERR_RENAME_FILE);
-  checkUpdateLogContains(ERR_MOVE_DESTDIR_7);
+  checkUpdateLogContains(ERR_MOVE_DESTDIR_7 + "\n" + CALL_QUIT);
   checkCallbackLog();
 }
