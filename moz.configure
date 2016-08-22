@@ -125,6 +125,12 @@ set_config('JS_HAS_CTYPES', js_has_ctypes)
 set_define('JS_HAS_CTYPES', js_has_ctypes)
 add_old_configure_assignment('JS_HAS_CTYPES', js_has_ctypes)
 
+@depends('--enable-ctypes', '--enable-compile-environment', '--help')
+def ctypes_and_compile_environment(ctypes, compile_environment, _):
+    return ctypes and compile_environment
+
+include_when('build/moz.configure/ffi.configure',
+             when=ctypes_and_compile_environment)
 
 @dependable
 @imports(_from='mozbuild.backend', _import='backends')
