@@ -36,6 +36,8 @@ class ProcessGlobal :
 public:
   explicit ProcessGlobal(nsFrameMessageManager* aMessageManager);
 
+  using mozilla::dom::ipc::MessageManagerCallback::GetProcessMessageManager;
+
   bool Init();
 
   static ProcessGlobal* Get();
