@@ -15,17 +15,36 @@
 #include "AndroidBridge.h"
 #include "nsThreadUtils.h"
 #include "mozilla/gfx/Matrix.h"
-#include "GeneratedJNIWrappers.h"
-#include "SurfaceTexture.h"
+#include "GeneratedJNINatives.h"
 #include "GLContext.h"
 
 using namespace mozilla;
-using namespace mozilla::jni;
-using namespace mozilla::java;
-using namespace mozilla::java::sdk;
 
 namespace mozilla {
 namespace gl {
+
+class AndroidSurfaceTexture::Listener
+  : public java::SurfaceTextureListener::Natives<Listener>
+{
+  using Base = java::SurfaceTextureListener::Natives<Listener>;
+
+  const nsCOMPtr<nsIRunnable> mCallback;
+
+public:
+  using Base::AttachNative;
+  using Base::DisposeNative;
+
+  Listener(nsIRunnable* aCallback) : mCallback(aCallback) {}
+
+  void OnFrameAvailable()
+  {
+    if (NS_IsMainThread()) {
+      mCallback->Run();
+      return;
+    }
+    NS_DispatchToMainThread(mCallback);
+  }
+};
 
 static bool
 IsSTSupported()
@@ -133,7 +152,7 @@ AndroidSurfaceTexture::Init(GLContext* aContext, GLuint aTexture)
   }
 
   if (NS_WARN_IF(NS_FAILED(
-      SurfaceTexture::New(aTexture, ReturnTo(&mSurfaceTexture))))) {
+      java::sdk::SurfaceTexture::New(aTexture, ReturnTo(&mSurfaceTexture))))) {
     return false;
   }
 
@@ -144,7 +163,7 @@ AndroidSurfaceTexture::Init(GLContext* aContext, GLuint aTexture)
   mAttachedContext = aContext;
 
   if (NS_WARN_IF(NS_FAILED(
-      Surface::New(mSurfaceTexture, ReturnTo(&mSurface))))) {
+      java::sdk::Surface::New(mSurfaceTexture, ReturnTo(&mSurface))))) {
     return false;
   }
 
@@ -160,13 +179,14 @@ AndroidSurfaceTexture::AndroidSurfaceTexture()
   , mSurfaceTexture()
   , mSurface()
   , mAttachedContext(nullptr)
-  , mMonitor("AndroidSurfaceTexture::mContextMonitor")
+  , mMonitor("AndroidSurfaceTexture")
 {
 }
 
 AndroidSurfaceTexture::~AndroidSurfaceTexture()
 {
   if (mSurfaceTexture) {
+    SetFrameAvailableCallback(nullptr);
     mSurfaceTexture = nullptr;
   }
 
@@ -187,7 +207,7 @@ AndroidSurfaceTexture::GetTransformMatrix(gfx::Matrix4x4& aMatrix) const
 {
   JNIEnv* const env = jni::GetEnvForThread();
 
-  auto jarray = FloatArray::LocalRef::Adopt(env, env->NewFloatArray(16));
+  auto jarray = jni::FloatArray::LocalRef::Adopt(env, env->NewFloatArray(16));
   mSurfaceTexture->GetTransformMatrix(jarray);
 
   jfloat* array = env->GetFloatArrayElements(jarray.Get(), nullptr);
@@ -218,6 +238,24 @@ AndroidSurfaceTexture::GetTransformMatrix(gfx::Matrix4x4& aMatrix) const
 void
 AndroidSurfaceTexture::SetFrameAvailableCallback(nsIRunnable* aRunnable)
 {
+  java::SurfaceTextureListener::LocalRef newListener;
+
+  if (aRunnable) {
+    newListener = java::SurfaceTextureListener::New();
+    Listener::AttachNative(newListener, MakeUnique<Listener>(aRunnable));
+  }
+
+  if (aRunnable || mListener) {
+    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
+        mSurfaceTexture->SetOnFrameAvailableListener(newListener)));
+  }
+
+  if (mListener) {
+    Listener::DisposeNative(java::SurfaceTextureListener::LocalRef(
+        newListener.Env(), mListener));
+  }
+
+  mListener = newListener;
 }
 
 void

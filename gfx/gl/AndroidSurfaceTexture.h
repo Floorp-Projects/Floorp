@@ -17,6 +17,7 @@
 #include "mozilla/gfx/MatrixFwd.h"
 #include "mozilla/Monitor.h"
 
+#include "GeneratedJNIWrappers.h"
 #include "SurfaceTexture.h"
 
 namespace mozilla {
@@ -79,6 +80,8 @@ public:
   const java::sdk::Surface::Ref& JavaSurface() const { return mSurface; }
 
 private:
+  class Listener;
+
   AndroidSurfaceTexture();
   ~AndroidSurfaceTexture();
 
@@ -87,12 +90,13 @@ private:
   GLuint mTexture;
   java::sdk::SurfaceTexture::GlobalRef mSurfaceTexture;
   java::sdk::Surface::GlobalRef mSurface;
+  java::SurfaceTextureListener::GlobalRef mListener;
 
   GLContext* mAttachedContext;
 
   ANativeWindow* mNativeWindow;
 
-  mutable Monitor mMonitor;
+  Monitor mMonitor;
 };
 
 }
