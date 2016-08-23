@@ -289,8 +289,13 @@ function runTest() {
 }
 
 SimpleTest.waitForExplicitFinish();
+
+// 'network.predictor.enabled' is disabled because if other testcase load
+// evil.js, evil.css ...etc resources, it may cause we load them from cache
+// directly and bypass classifier check
 SpecialPowers.pushPrefEnv({"set": [
-  ["browser.safebrowsing.malware.enabled", true]
+  ["browser.safebrowsing.malware.enabled", true],
+  ["network.predictor.enabled", false],
 ]}, runTest);
 
 </script>
