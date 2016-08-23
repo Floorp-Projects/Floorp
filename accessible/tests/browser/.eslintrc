@@ -7,6 +7,8 @@
     // Content scripts have global 'content' object
     "content": true,
 
+    "add_task": true,
+
     // Defined in accessible/tests/mochitest/ common.js, name.js, states.js
     "prettyName": true,
     "statesToString": true,
@@ -22,13 +24,21 @@
     "isAccessible": true,
     "getAccessibleDOMNodeID": true,
 
-    // Defined for all accessibility browser tests.
+    // Defined for all top level accessibility browser tests.
+    "setE10sPrefs": true,
+    "unsetE10sPrefs": true,
+    "initPromise": true,
+    "shutdownPromise": true,
+    "forceGC": true,
+
+    // Defined for all e10s accessibility browser tests.
     "addAccessibleTask": true,
     "BrowserTestUtils": true,
     "ContentTask": true,
     "gBrowser": true,
     "isDefunct": true,
     "loadScripts": true,
+    "loadFrameScripts": true,
     "Logger": true,
     "MOCHITESTS_DIR": true,
     "waitForEvent": true,
@@ -36,7 +46,7 @@
     "invokeSetAttribute": true,
     "invokeSetStyle": true,
     "invokeFocus": true,
-    "findAccessibleChildByID": true
+    "findAccessibleChildByID": true,
   },
   "rules": {
     "mozilla/mark-test-function-used": 1,
@@ -68,7 +78,7 @@
     "key-spacing": [2, {"beforeColon": false, "afterColon": true}],
     "linebreak-style": 0,
     "max-depth": 0,
-    "max-nested-callbacks": [2, 3],
+    "max-nested-callbacks": [2, 4],
     "max-params": 0,
     "max-statements": 0,
     "new-cap": [2, {"capIsNew": false}],
