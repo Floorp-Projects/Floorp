@@ -27,7 +27,6 @@ function VariablesViewLink(props) {
       onClick: openVariablesView.bind(null, object),
       className: "cm-variable",
       draggable: false,
-      href: "#"
     }, children)
   );
 }

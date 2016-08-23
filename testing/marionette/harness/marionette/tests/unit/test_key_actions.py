@@ -69,8 +69,11 @@ class TestKeyActions(MarionetteTestCase):
         self.assertEqual(self.key_reporter_value, "")
 
     def test_open_in_new_window_shortcut(self):
-        el = self.marionette.find_element(By.ID, "updatediv")
         start_win = self.marionette.current_chrome_window_handle
+        el = self.marionette.find_element(By.ID, "updatediv")
+        # Ensure that the element is in the current view port because press() doesn't
+        # handle that inside the action chain (bug 1295538).
+        self.marionette.execute_script('arguments[0].scrollIntoView()', script_args=[el])
         (self.key_action.key_down(Keys.SHIFT)
                         .press(el)
                         .release()
