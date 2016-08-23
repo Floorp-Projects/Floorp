@@ -8,7 +8,6 @@ EXTRA_JS_MODULES += [
     'Extension.jsm',
     'ExtensionAPI.jsm',
     'ExtensionContent.jsm',
-    'ExtensionGlobalScope.jsm',
     'ExtensionManagement.jsm',
     'ExtensionStorage.jsm',
     'ExtensionUtils.jsm',
