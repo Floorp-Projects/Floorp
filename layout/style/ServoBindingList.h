@@ -49,17 +49,19 @@ SERVO_BINDING_FUNC(Servo_InitStyleSet, RawServoStyleSet*)
 SERVO_BINDING_FUNC(Servo_DropStyleSet, void, RawServoStyleSet* set)
 
 // Style attribute
-SERVO_BINDING_FUNC(Servo_ParseStyleAttribute, ServoDeclarationBlock*,
+SERVO_BINDING_FUNC(Servo_ParseStyleAttribute, ServoDeclarationBlockStrong,
                    const uint8_t* bytes, uint32_t length,
                    nsHTMLCSSStyleSheet* cache)
-SERVO_BINDING_FUNC(Servo_DropDeclarationBlock, void,
-                   ServoDeclarationBlock* declarations)
+SERVO_BINDING_FUNC(Servo_DeclarationBlock_AddRef, void,
+                   ServoDeclarationBlockBorrowed declarations)
+SERVO_BINDING_FUNC(Servo_DeclarationBlock_Release, void,
+                   ServoDeclarationBlockBorrowed declarations)
 SERVO_BINDING_FUNC(Servo_GetDeclarationBlockCache, nsHTMLCSSStyleSheet*,
-                   ServoDeclarationBlock* declarations)
+                   ServoDeclarationBlockBorrowed declarations)
 SERVO_BINDING_FUNC(Servo_SetDeclarationBlockImmutable, void,
-                   ServoDeclarationBlock* declarations)
+                   ServoDeclarationBlockBorrowed declarations)
 SERVO_BINDING_FUNC(Servo_ClearDeclarationBlockCachePointer, void,
-                   ServoDeclarationBlock* declarations)
+                   ServoDeclarationBlockBorrowed declarations)
 
 // CSS supports()
 SERVO_BINDING_FUNC(Servo_CSSSupports, bool,

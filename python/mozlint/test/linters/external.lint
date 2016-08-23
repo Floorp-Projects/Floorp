@@ -22,9 +22,9 @@ LINTER = {
     'name': "ExternalLinter",
     'description': "It's bad to have the string foobar in js files.",
     'include': [
-        '**/*.js',
-        '**/*.jsm',
+        'python/mozlint/test/files',
     ],
     'type': 'external',
+    'extensions': ['.js', '.jsm'],
     'payload': lint,
 }

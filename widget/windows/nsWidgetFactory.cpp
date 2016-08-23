@@ -171,7 +171,7 @@ static const mozilla::Module::CIDEntry kWidgetCIDs[] = {
   { &kNS_CHILD_CID, false, nullptr, ChildWindowConstructor },
   { &kNS_FILEPICKER_CID, false, nullptr, FilePickerConstructor, Module::MAIN_PROCESS_ONLY },
   { &kNS_COLORPICKER_CID, false, nullptr, ColorPickerConstructor, Module::MAIN_PROCESS_ONLY },
-  { &kNS_APPSHELL_CID, false, nullptr, nsAppShellConstructor },
+  { &kNS_APPSHELL_CID, false, nullptr, nsAppShellConstructor, Module::ALLOW_IN_GPU_PROCESS },
   { &kNS_SCREENMANAGER_CID, false, nullptr, nsScreenManagerWinConstructor,
     Module::MAIN_PROCESS_ONLY },
   { &kNS_GFXINFO_CID, false, nullptr, GfxInfoConstructor },
@@ -206,7 +206,7 @@ static const mozilla::Module::ContractIDEntry kWidgetContracts[] = {
   { "@mozilla.org/widgets/child_window/win;1", &kNS_CHILD_CID },
   { "@mozilla.org/filepicker;1", &kNS_FILEPICKER_CID, Module::MAIN_PROCESS_ONLY },
   { "@mozilla.org/colorpicker;1", &kNS_COLORPICKER_CID, Module::MAIN_PROCESS_ONLY },
-  { "@mozilla.org/widget/appshell/win;1", &kNS_APPSHELL_CID },
+  { "@mozilla.org/widget/appshell/win;1", &kNS_APPSHELL_CID, Module::ALLOW_IN_GPU_PROCESS },
   { "@mozilla.org/gfx/screenmanager;1", &kNS_SCREENMANAGER_CID, Module::MAIN_PROCESS_ONLY },
   { "@mozilla.org/gfx/info;1", &kNS_GFXINFO_CID },
   { "@mozilla.org/chrome/chrome-native-theme;1", &kNS_THEMERENDERER_CID },
@@ -255,7 +255,8 @@ static const mozilla::Module kWidgetModule = {
   nullptr,
   nullptr,
   nsAppShellInit,
-  nsWidgetWindowsModuleDtor
+  nsWidgetWindowsModuleDtor,
+  Module::ALLOW_IN_GPU_PROCESS
 };
 
 NSMODULE_DEFN(nsWidgetModule) = &kWidgetModule;

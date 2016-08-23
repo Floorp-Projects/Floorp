@@ -32,8 +32,6 @@ else:
 if CONFIG['GNU_CXX']:
     CXXFLAGS += ['-Wno-error=shadow']
 
-# with --disable-accessibility we need to compile PDocAccessible.ipdl, but not
-# the C++.
 if CONFIG['ACCESSIBILITY']:
     EXPORTS.mozilla.a11y += [
         'DocAccessibleChildBase.h',

@@ -59,7 +59,7 @@ DragEvent::InitDragEvent(const nsAString& aType,
                              aView, aDetail, aScreenX, aScreenY,
                              aClientX, aClientY, aCtrlKey, aAltKey,
                              aShiftKey, aMetaKey, aButton, aRelatedTarget);
-  if (mEventIsInternal && mEvent) {
+  if (mEventIsInternal) {
     mEvent->AsDragEvent()->mDataTransfer = aDataTransfer;
   }
 }

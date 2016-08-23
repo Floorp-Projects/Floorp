@@ -2069,7 +2069,7 @@ UpdateAltSvcEvent(const nsCString &header,
 
     AltSvcMapping::ProcessHeader(mHeader, originScheme, originHost, originPort,
                                  mCI->GetUsername(), mCI->GetPrivate(), mCallbacks,
-                                 mCI->ProxyInfo(), 0);
+                                 mCI->ProxyInfo(), 0, mCI->GetOriginAttributes());
     return NS_OK;
   }
 

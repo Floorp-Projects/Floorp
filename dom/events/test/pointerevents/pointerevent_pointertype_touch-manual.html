@@ -24,8 +24,6 @@
             function eventHandler(event) {
                 detected_pointertypes[event.pointerType] = true;
                 if(!eventTested) {
-                    if("touch" != event.pointerType)
-                        return;
                     check_PointerEvent(event);
                     test_pointerEvent.step(function () {
                         assert_equals(event.pointerType, "touch", "Verify event.pointerType is 'touch'.");
