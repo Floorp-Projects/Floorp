@@ -144,28 +144,35 @@ public:
 
     MediaStreamTrack* track =
       mStream->FindOwnedDOMTrack(aInputStream, aInputTrackID, aTrackID);
-    if (!track) {
-      // Track had not been created on main thread before, create it now.
-      NS_WARN_IF_FALSE(!mStream->mTracks.IsEmpty(),
-                       "A new track was detected on the input stream; creating "
-                       "a corresponding MediaStreamTrack. Initial tracks "
-                       "should be added manually to immediately and "
-                       "synchronously be available to JS.");
-      RefPtr<MediaStreamTrackSource> source;
-      if (mStream->mTrackSourceGetter) {
-        source = mStream->mTrackSourceGetter->GetMediaStreamTrackSource(aTrackID);
-      }
-      if (!source) {
-        NS_ASSERTION(false, "Dynamic track created without an explicit TrackSource");
-        nsPIDOMWindowInner* window = mStream->GetParentObject();
-        nsIDocument* doc = window ? window->GetExtantDoc() : nullptr;
-        nsIPrincipal* principal = doc ? doc->NodePrincipal() : nullptr;
-        source = new BasicUnstoppableTrackSource(principal);
-      }
-      RefPtr<MediaStreamTrack> newTrack =
-        mStream->CreateDOMTrack(aTrackID, aType, source);
-      mStream->AddTrackInternal(newTrack);
+
+    if (track) {
+      LOG(LogLevel::Debug, ("DOMMediaStream %p Track %d from owned stream %p "
+                            "bound to MediaStreamTrack %p.",
+                            mStream, aTrackID, aInputStream, track));
+      return;
     }
+
+    // Track had not been created on main thread before, create it now.
+    NS_WARN_IF_FALSE(!mStream->mTracks.IsEmpty(),
+                     "A new track was detected on the input stream; creating "
+                     "a corresponding MediaStreamTrack. Initial tracks "
+                     "should be added manually to immediately and "
+                     "synchronously be available to JS.");
+    RefPtr<MediaStreamTrackSource> source;
+    if (mStream->mTrackSourceGetter) {
+      source = mStream->mTrackSourceGetter->GetMediaStreamTrackSource(aTrackID);
+    }
+    if (!source) {
+      NS_ASSERTION(false, "Dynamic track created without an explicit TrackSource");
+      nsPIDOMWindowInner* window = mStream->GetParentObject();
+      nsIDocument* doc = window ? window->GetExtantDoc() : nullptr;
+      nsIPrincipal* principal = doc ? doc->NodePrincipal() : nullptr;
+      source = new BasicUnstoppableTrackSource(principal);
+    }
+
+    RefPtr<MediaStreamTrack> newTrack =
+      mStream->CreateDOMTrack(aTrackID, aType, source);
+    mStream->AddTrackInternal(newTrack);
   }
 
   void DoNotifyTrackEnded(MediaStream* aInputStream, TrackID aInputTrackID,
@@ -1321,6 +1328,7 @@ DOMLocalMediaStream::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProt
 void
 DOMLocalMediaStream::Stop()
 {
+  LOG(LogLevel::Debug, ("DOMMediaStream %p Stop()", this));
   nsCOMPtr<nsPIDOMWindowInner> pWindow = GetParentObject();
   nsIDocument* document = pWindow ? pWindow->GetExtantDoc() : nullptr;
   nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,

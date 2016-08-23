@@ -316,6 +316,7 @@ public:
    */
   bool RemoveDecoderPrincipalChangeObserver(DecoderPrincipalChangeObserver* aObserver);
 
+  class StreamCaptureTrackSource;
   class DecoderCaptureTrackSource;
   class CaptureStreamTrackSourceGetter;
 
@@ -658,6 +659,9 @@ public:
     return mAutoplayEnabled;
   }
 
+  already_AddRefed<DOMMediaStream> CaptureAudio(ErrorResult& aRv,
+                                                MediaStreamGraph* aGraph = nullptr);
+
   already_AddRefed<DOMMediaStream> MozCaptureStream(ErrorResult& aRv,
                                                     MediaStreamGraph* aGraph = nullptr);
 
@@ -784,6 +788,23 @@ protected:
     nsCOMPtr<nsITimer> mTimer;
   };
 
+  // Holds references to the DOM wrappers for the MediaStreams that we're
+  // writing to.
+  struct OutputMediaStream {
+    OutputMediaStream();
+    ~OutputMediaStream();
+
+    RefPtr<DOMMediaStream> mStream;
+    bool mFinishWhenEnded;
+    bool mCapturingAudioOnly;
+    bool mCapturingDecoder;
+    bool mCapturingMediaStream;
+
+    // The following members are keeping state for a captured MediaStream.
+    TrackID mNextAvailableTrackID;
+    nsTArray<Pair<nsString, RefPtr<MediaInputPort>>> mTrackPorts;
+  };
+
   nsresult PlayInternal(bool aCallerIsChrome);
 
   /** Use this method to change the mReadyState member, so required
@@ -837,13 +858,6 @@ protected:
   void UpdateSrcMediaStreamPlaying(uint32_t aFlags = 0);
 
   /**
-   * If loading and playing a MediaStream, for each MediaStreamTrack in the
-   * MediaStream, create a corresponding AudioTrack or VideoTrack during the
-   * phase of resource fetching.
-   */
-  void ConstructMediaTracks();
-
-  /**
    * Called by our DOMMediaStream::TrackListener when a new MediaStreamTrack has
    * been added to the playback stream of |mSrcStream|.
    */
@@ -856,13 +870,36 @@ protected:
   void NotifyMediaStreamTrackRemoved(const RefPtr<MediaStreamTrack>& aTrack);
 
   /**
-   * Returns an nsDOMMediaStream containing the played contents of this
+   * Enables or disables all tracks forwarded from mSrcStream to all
+   * OutputMediaStreams. We do this for muting the tracks when pausing,
+   * and unmuting when playing the media element again.
+   *
+   * If mSrcStream is unset, this does nothing.
+   */
+  void SetCapturedOutputStreamsEnabled(bool aEnabled);
+
+  /**
+   * Create a new MediaStreamTrack for aTrack and add it to the DOMMediaStream
+   * in aOutputStream. This automatically sets the output track to enabled or
+   * disabled depending on our current playing state.
+   */
+  void AddCaptureMediaTrackToOutputStream(MediaTrack* aTrack,
+                                          OutputMediaStream& aOutputStream,
+                                          bool aAsyncAddtrack = true);
+
+  /**
+   * Returns an DOMMediaStream containing the played contents of this
    * element. When aFinishWhenEnded is true, when this element ends playback
    * we will finish the stream and not play any more into it.
    * When aFinishWhenEnded is false, ending playback does not finish the stream.
    * The stream will never finish.
+   *
+   * When aCaptureAudio is true, we stop playout of audio and instead route it
+   * to the DOMMediaStream. Volume and mute state will be applied to the audio
+   * reaching the stream. No video tracks will be captured in this case.
    */
   already_AddRefed<DOMMediaStream> CaptureStreamInternal(bool aFinishWhenEnded,
+                                                         bool aCaptureAudio,
                                                          MediaStreamGraph* aGraph = nullptr);
 
   /**
@@ -1259,10 +1296,6 @@ protected:
 
   // Holds references to the DOM wrappers for the MediaStreams that we're
   // writing to.
-  struct OutputMediaStream {
-    RefPtr<DOMMediaStream> mStream;
-    bool mFinishWhenEnded;
-  };
   nsTArray<OutputMediaStream> mOutputStreams;
 
   // Holds a reference to the MediaStreamListener attached to mSrcStream's
