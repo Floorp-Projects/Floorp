@@ -10,7 +10,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/plugins/PluginTypes.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "nsNPAPIPlugin.h"
 #include "PluginAsyncSurrogate.h"
 #include "PluginScriptableObjectUtils.h"

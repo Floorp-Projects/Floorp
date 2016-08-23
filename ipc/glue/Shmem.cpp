@@ -9,7 +9,7 @@
 #include "ProtocolUtils.h"
 #include "SharedMemoryBasic.h"
 
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 
 
 namespace mozilla {

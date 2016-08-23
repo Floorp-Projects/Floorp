@@ -12,7 +12,7 @@
 #include "mozilla/ipc/ProtocolUtils.h"       // for IToplevelProtocol
 #include "mozilla/TimeStamp.h"               // for TimeStamp
 #include "mozilla/layers/CompositorThread.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "VRManager.h"
 
 namespace mozilla {

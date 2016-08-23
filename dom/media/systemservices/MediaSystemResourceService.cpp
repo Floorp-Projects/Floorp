@@ -6,7 +6,7 @@
 
 #include "MediaSystemResourceManagerParent.h"
 #include "mozilla/layers/CompositorThread.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 
 #include "MediaSystemResourceService.h"
 

@@ -14,7 +14,7 @@
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/ipc/BlobParent.h"
 #include "mozilla/ipc/BackgroundParent.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "nsProxyRelease.h"
 
 namespace mozilla {

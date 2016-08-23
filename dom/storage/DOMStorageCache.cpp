@@ -14,7 +14,7 @@
 #include "nsAutoPtr.h"
 #include "nsDOMString.h"
 #include "nsXULAppAPI.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "nsProxyRelease.h"
 #include "nsThreadUtils.h"
 

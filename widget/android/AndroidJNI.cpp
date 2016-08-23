@@ -24,7 +24,7 @@
 #include "mozilla/Services.h"
 #include "nsThreadUtils.h"
 
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/UniquePtr.h"
 

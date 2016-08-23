@@ -59,7 +59,7 @@
 #include "mozilla/net/NeckoParent.h"
 #include "mozilla/ipc/URIUtils.h"
 #include "mozilla/Telemetry.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "mozilla/BasePrincipal.h"
 
 #if defined(XP_UNIX)

@@ -13,7 +13,7 @@
 #include "mozilla/StateWatching.h" // We initialize the StateWatching logging in this file.
 #include "mozilla/TaskQueue.h"
 #include "mozilla/TaskDispatcher.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 
 #include "nsThreadUtils.h"
 #include "nsContentUtils.h"

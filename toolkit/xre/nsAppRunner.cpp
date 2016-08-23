@@ -89,7 +89,7 @@
 #include "mozilla/scache/StartupCache.h"
 #include "gfxPrefs.h"
 
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 
 #ifdef XP_WIN
 #include "nsIWinAppHelper.h"

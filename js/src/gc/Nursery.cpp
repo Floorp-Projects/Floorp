@@ -10,7 +10,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Move.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 
 #include "jscompartment.h"
 #include "jsfriendapi.h"

@@ -8,7 +8,7 @@
 #include "jsapi.h"
 #include "jsfriendapi.h"
 #include "nsJSUtils.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "mozilla/AppProcessChecker.h"
 #include "mozilla/net/NeckoCommon.h"
 #include "mozilla/net/PNeckoParent.h"

@@ -13,7 +13,7 @@
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "AudioChannelService.h"
 #include "mozilla/Logging.h"
 #include "nsPrintfCString.h"

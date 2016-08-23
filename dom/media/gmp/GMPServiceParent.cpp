@@ -20,7 +20,7 @@
 #include "mozilla/Services.h"
 #include "nsNativeCharsetUtils.h"
 #include "nsIConsoleService.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "GMPDecryptorParent.h"
 #include "GMPAudioDecoderParent.h"
 #include "nsComponentManagerUtils.h"

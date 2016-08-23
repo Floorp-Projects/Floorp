@@ -16,7 +16,7 @@
 #include "mozilla/Likely.h"
 #include "mozilla/Move.h"
 #include "mozilla/TypeTraits.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 
 #ifdef XPCOM_GLUE_AVOID_NSPR
 #error NS_ProxyRelease implementation depends on NSPR.

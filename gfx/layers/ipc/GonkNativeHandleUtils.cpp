@@ -7,7 +7,7 @@
 
 #include "GonkNativeHandleUtils.h"
 #include "mozilla/UniquePtr.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 
 using namespace mozilla::layers;
 

@@ -60,7 +60,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/Likely.h"
 #include "mozilla/Sprintf.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 
 // Other Classes
 #include "mozilla/dom/BarProps.h"

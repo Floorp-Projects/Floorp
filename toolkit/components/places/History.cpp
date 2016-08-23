@@ -30,7 +30,7 @@
 #include "nsNetUtil.h"
 #include "nsIFileURL.h"
 #include "nsIXPConnect.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "nsContentUtils.h" // for nsAutoScriptBlocker
 #include "nsJSUtils.h"
 #include "mozilla/ipc/URIUtils.h"

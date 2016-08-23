@@ -21,7 +21,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/WindowsVersion.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "nsIContentPolicy.h"
 #include "nsContentUtils.h"
 

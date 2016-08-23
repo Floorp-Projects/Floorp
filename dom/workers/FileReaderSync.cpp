@@ -7,7 +7,7 @@
 #include "FileReaderSync.h"
 
 #include "jsfriendapi.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "mozilla/Base64.h"
 #include "mozilla/dom/EncodingUtils.h"
 #include "mozilla/dom/File.h"

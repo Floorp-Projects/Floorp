@@ -5,7 +5,7 @@
 
 #include "VRDisplayPresentation.h"
 
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "VRDisplayClient.h"
 #include "VRLayerChild.h"
 
