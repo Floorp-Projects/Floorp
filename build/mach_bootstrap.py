@@ -53,6 +53,7 @@ SEARCH_PATHS = [
     'python/slugid',
     'python/py',
     'python/pytest',
+    'python/redo',
     'python/voluptuous',
     'build',
     'build/pymake',
