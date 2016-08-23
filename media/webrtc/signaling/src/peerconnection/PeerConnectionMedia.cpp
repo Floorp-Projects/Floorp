@@ -790,6 +790,18 @@ PeerConnectionMedia::GetPrefDefaultAddressOnly() const
   return default_address_only;
 }
 
+bool
+PeerConnectionMedia::GetPrefProxyOnly() const
+{
+  ASSERT_ON_THREAD(mMainThread); // will crash on STS thread
+
+#if !defined(MOZILLA_EXTERNAL_LINKAGE)
+  return Preferences::GetBool("media.peerconnection.ice.proxy_only", false);
+#else
+  return false;
+#endif
+}
+
 void
 PeerConnectionMedia::ConnectSignals(NrIceCtx *aCtx, NrIceCtx *aOldCtx)
 {
@@ -887,21 +899,27 @@ PeerConnectionMedia::GatherIfReady() {
   nsCOMPtr<nsIRunnable> runnable(WrapRunnable(
         RefPtr<PeerConnectionMedia>(this),
         &PeerConnectionMedia::EnsureIceGathering_s,
-        GetPrefDefaultAddressOnly()));
+        GetPrefDefaultAddressOnly(),
+        GetPrefProxyOnly()));
 
   PerformOrEnqueueIceCtxOperation(runnable);
 }
 
 void
-PeerConnectionMedia::EnsureIceGathering_s(bool aDefaultRouteOnly) {
+PeerConnectionMedia::EnsureIceGathering_s(bool aDefaultRouteOnly,
+                                          bool aProxyOnly) {
   if (mProxyServer) {
     mIceCtxHdlr->ctx()->SetProxyServer(*mProxyServer);
+  } else if (aProxyOnly) {
+    IceGatheringStateChange_s(mIceCtxHdlr->ctx().get(),
+                              NrIceCtx::ICE_CTX_GATHER_COMPLETE);
+    return;
   }
 
   // Start gathering, but only if there are streams
   for (size_t i = 0; i < mIceCtxHdlr->ctx()->GetStreamCount(); ++i) {
     if (mIceCtxHdlr->ctx()->GetStream(i)) {
-      mIceCtxHdlr->ctx()->StartGathering(aDefaultRouteOnly);
+      mIceCtxHdlr->ctx()->StartGathering(aDefaultRouteOnly, aProxyOnly);
       return;
     }
   }

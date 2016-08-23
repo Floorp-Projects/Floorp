@@ -165,6 +165,7 @@ int nr_ice_ctx_create_with_credentials(char *label, UINT4 flags, char* ufrag, ch
 #define NR_ICE_CTX_FLAGS_RELAY_ONLY                        (1<<4)
 #define NR_ICE_CTX_FLAGS_HIDE_HOST_CANDIDATES              (1<<5)
 #define NR_ICE_CTX_FLAGS_ONLY_DEFAULT_ADDRS                (1<<6)
+#define NR_ICE_CTX_FLAGS_ONLY_PROXY                        (1<<7)
 
 void nr_ice_ctx_add_flags(nr_ice_ctx *ctx, UINT4 flags);
 void nr_ice_ctx_remove_flags(nr_ice_ctx *ctx, UINT4 flags);

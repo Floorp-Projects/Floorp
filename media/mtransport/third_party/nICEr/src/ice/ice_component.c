@@ -207,6 +207,11 @@ static int nr_ice_component_initialize_udp(struct nr_ice_ctx_ *ctx,nr_ice_compon
     int j;
     int r,_status;
 
+    if(ctx->flags & NR_ICE_CTX_FLAGS_ONLY_PROXY) {
+      /* No UDP support if we must use a proxy */
+      return 0;
+    }
+
     /* Now one ice_socket for each address */
     for(i=0;i<addr_ct;i++){
       char suppress;
@@ -429,8 +434,9 @@ static int nr_ice_component_initialize_tcp(struct nr_ice_ctx_ *ctx,nr_ice_compon
       if (r != R_NOT_FOUND)
         ABORT(r);
     }
-    if (ctx->flags & NR_ICE_CTX_FLAGS_RELAY_ONLY) {
-      r_log(LOG_ICE,LOG_WARNING,"ICE(%s): relay only option results in ICE TCP being disabled",ctx->label);
+    if ((ctx->flags & NR_ICE_CTX_FLAGS_RELAY_ONLY) ||
+        (ctx->flags & NR_ICE_CTX_FLAGS_ONLY_PROXY)) {
+      r_log(LOG_ICE,LOG_WARNING,"ICE(%s): relay/proxy only option results in ICE TCP being disabled",ctx->label);
       ice_tcp_disabled = 1;
     }
 
@@ -1089,6 +1095,12 @@ int nr_ice_component_pair_candidates(nr_ice_peer_ctx *pctx, nr_ice_component *lc
 
     /* Create the candidate pairs */
     lcand=TAILQ_FIRST(&lcomp->candidates);
+
+    if (!lcand) {
+      /* No local candidates, initialized or not! */
+      ABORT(R_FAILED);
+    }
+
     while(lcand){
       if (lcand->state == NR_ICE_CAND_STATE_INITIALIZED) {
         if ((r = nr_ice_component_pair_candidate(pctx, pcomp, lcand, 0)))
