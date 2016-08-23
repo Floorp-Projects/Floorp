@@ -102,8 +102,14 @@ public:
   static bool NodeAfter(const nsGenConNode* aNode1,
                           const nsGenConNode* aNode2);
 
-  void Remove(nsGenConNode* aNode) { PR_REMOVE_LINK(aNode); mSize--; }
   bool IsLast(nsGenConNode* aNode) { return (Next(aNode) == mFirstNode); }
+private:
+  void Destroy(nsGenConNode* aNode)
+  {
+    PR_REMOVE_LINK(aNode);
+    delete aNode;
+    mSize--;
+  }
 };
 
 #endif /* nsGenConList_h___ */
