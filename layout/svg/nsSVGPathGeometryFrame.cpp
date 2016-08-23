@@ -676,7 +676,8 @@ nsSVGPathGeometryFrame::GetBBoxContribution(const Matrix &aToBBoxUserspace,
         properties.GetMarkerMidFrame(),
         properties.GetMarkerEndFrame(),
       };
-      PR_STATIC_ASSERT(MOZ_ARRAY_LENGTH(markerFrames) == nsSVGMark::eTypeCount);
+      static_assert(MOZ_ARRAY_LENGTH(markerFrames) == nsSVGMark::eTypeCount,
+                    "Number of Marker frames should be equal to eTypeCount");
 
       for (uint32_t i = 0; i < num; i++) {
         nsSVGMark& mark = marks[i];
@@ -898,7 +899,8 @@ nsSVGPathGeometryFrame::PaintMarkers(gfxContext& aContext,
           properties.GetMarkerMidFrame(),
           properties.GetMarkerEndFrame(),
         };
-        PR_STATIC_ASSERT(MOZ_ARRAY_LENGTH(markerFrames) == nsSVGMark::eTypeCount);
+        static_assert(MOZ_ARRAY_LENGTH(markerFrames) == nsSVGMark::eTypeCount,
+                      "Number of Marker frames should be equal to eTypeCount");
 
         for (uint32_t i = 0; i < num; i++) {
           nsSVGMark& mark = marks[i];
