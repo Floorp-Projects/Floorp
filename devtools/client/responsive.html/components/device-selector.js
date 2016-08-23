@@ -36,17 +36,15 @@ module.exports = createClass({
       onUpdateDeviceModalOpen(true);
       return;
     }
-
     for (let type of devices.types) {
       for (let device of devices[type]) {
         if (device.name === target.value) {
           onResizeViewport(device.width, device.height);
-          break;
+          onChangeViewportDevice(device);
+          return;
         }
       }
     }
-
-    onChangeViewportDevice(target.value);
   },
 
   render() {
