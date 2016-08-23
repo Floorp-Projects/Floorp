@@ -474,6 +474,8 @@ TimeSinceProcessCreation()
   return (TimeStamp::Now() - TimeStamp::ProcessCreation(ignore)).ToMilliseconds();
 }
 
+static bool sInitializedJS = false;
+
 // Note that on OSX, aBinDirectory will point to .app/Contents/Resources/browser
 EXPORT_XPCOM_API(nsresult)
 NS_InitXPCOM2(nsIServiceManager** aResult,
@@ -709,6 +711,7 @@ NS_InitXPCOM2(nsIServiceManager** aResult,
   if (jsInitFailureReason) {
     NS_RUNTIMEABORT(jsInitFailureReason);
   }
+  sInitializedJS = true;
 
   rv = nsComponentManagerImpl::gComponentManager->Init();
   if (NS_FAILED(rv)) {
@@ -782,6 +785,37 @@ NS_InitXPCOM2(nsIServiceManager** aResult,
   return NS_OK;
 }
 
+EXPORT_XPCOM_API(nsresult)
+NS_InitMinimalXPCOM()
+{
+  mozPoisonValueInit();
+  NS_SetMainThread();
+  mozilla::TimeStamp::Startup();
+  NS_LogInit();
+  NS_InitAtomTable();
+  mozilla::LogModule::Init();
+
+  char aLocal;
+  profiler_init(&aLocal);
+
+  nsresult rv = nsThreadManager::get()->Init();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  // Set up the timer globals/timer thread.
+  rv = nsTimerImpl::Startup();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  // Global cycle collector initialization.
+  if (!nsCycleCollector_init()) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  return NS_OK;
+}
 
 //
 // NS_ShutdownXPCOM()
@@ -1003,8 +1037,11 @@ ShutdownXPCOM(nsIServiceManager* aServMgr)
   }
 #endif
 
-  // Shut down the JS engine.
-  JS_ShutDown();
+  if (sInitializedJS) {
+    // Shut down the JS engine.
+    JS_ShutDown();
+    sInitializedJS = false;
+  }
 
   // Release our own singletons
   // Do this _after_ shutting down the component manager, because the

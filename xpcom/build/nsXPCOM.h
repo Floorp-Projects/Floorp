@@ -76,6 +76,13 @@ NS_InitXPCOM2(nsIServiceManager** aResult,
               nsIDirectoryServiceProvider* aAppFileLocationProvider);
 
 /**
+ * Initialize only minimal components of XPCOM. This ensures nsThreadManager,
+ * logging, and timers will work.
+ */
+XPCOM_API(nsresult)
+NS_InitMinimalXPCOM();
+
+/**
  * Shutdown XPCOM. You must call this method after you are finished
  * using xpcom.
  *
