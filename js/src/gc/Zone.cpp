@@ -36,6 +36,9 @@ JS::Zone::Zone(JSRuntime* rt)
     gcMallocGCTriggered(false),
     usage(&rt->gc.usage),
     gcDelayBytes(0),
+    propertyTree(this),
+    baseShapes(this, BaseShapeSet()),
+    initialShapes(this, InitialShapeSet()),
     data(nullptr),
     isSystem(false),
     usedByExclusiveThread(false),
@@ -344,6 +347,21 @@ Zone::nextZone() const
 {
     MOZ_ASSERT(isOnList());
     return listNext_;
+}
+
+void
+Zone::clearTables()
+{
+    if (baseShapes.initialized())
+        baseShapes.clear();
+    if (initialShapes.initialized())
+        initialShapes.clear();
+}
+
+void
+Zone::fixupAfterMovingGC()
+{
+    fixupInitialShapeTable();
 }
 
 ZoneList::ZoneList()

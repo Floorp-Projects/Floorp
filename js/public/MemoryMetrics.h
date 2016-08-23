@@ -172,14 +172,7 @@ struct ClassInfo
     macro(Objects, NonHeap,    objectsNonHeapElementsAsmJS) \
     macro(Objects, NonHeap,    objectsNonHeapElementsShared) \
     macro(Objects, NonHeap,    objectsNonHeapCodeAsmJS) \
-    macro(Objects, MallocHeap, objectsMallocHeapMisc) \
-    \
-    macro(Other,   GCHeapUsed, shapesGCHeapTree) \
-    macro(Other,   GCHeapUsed, shapesGCHeapDict) \
-    macro(Other,   GCHeapUsed, shapesGCHeapBase) \
-    macro(Other,   MallocHeap, shapesMallocHeapTreeTables) \
-    macro(Other,   MallocHeap, shapesMallocHeapDictTables) \
-    macro(Other,   MallocHeap, shapesMallocHeapTreeKids)
+    macro(Objects, MallocHeap, objectsMallocHeapMisc)
 
     ClassInfo()
       : FOR_EACH_SIZE(ZERO_SIZE)
@@ -203,6 +196,55 @@ struct ClassInfo
     bool isNotable() const {
         static const size_t NotabilityThreshold = 16 * 1024;
         return sizeOfAllThings() >= NotabilityThreshold;
+    }
+
+    size_t sizeOfLiveGCThings() const {
+        size_t n = 0;
+        FOR_EACH_SIZE(ADD_SIZE_TO_N_IF_LIVE_GC_THING)
+        return n;
+    }
+
+    void addToTabSizes(TabSizes* sizes) const {
+        FOR_EACH_SIZE(ADD_TO_TAB_SIZES)
+    }
+
+    void addToServoSizes(ServoSizes *sizes) const {
+        FOR_EACH_SIZE(ADD_TO_SERVO_SIZES)
+    }
+
+    FOR_EACH_SIZE(DECL_SIZE)
+    int dummy;  // present just to absorb the trailing comma from FOR_EACH_SIZE(ZERO_SIZE)
+
+#undef FOR_EACH_SIZE
+};
+
+struct ShapeInfo
+{
+#define FOR_EACH_SIZE(macro) \
+    macro(Other,   GCHeapUsed, shapesGCHeapTree) \
+    macro(Other,   GCHeapUsed, shapesGCHeapDict) \
+    macro(Other,   GCHeapUsed, shapesGCHeapBase) \
+    macro(Other,   MallocHeap, shapesMallocHeapTreeTables) \
+    macro(Other,   MallocHeap, shapesMallocHeapDictTables) \
+    macro(Other,   MallocHeap, shapesMallocHeapTreeKids)
+
+    ShapeInfo()
+      : FOR_EACH_SIZE(ZERO_SIZE)
+        dummy()
+    {}
+
+    void add(const ShapeInfo& other) {
+        FOR_EACH_SIZE(ADD_OTHER_SIZE)
+    }
+
+    void subtract(const ShapeInfo& other) {
+        FOR_EACH_SIZE(SUB_OTHER_SIZE)
+    }
+
+    size_t sizeOfAllThings() const {
+        size_t n = 0;
+        FOR_EACH_SIZE(ADD_SIZE_TO_N)
+        return n;
     }
 
     size_t sizeOfLiveGCThings() const {
@@ -597,12 +639,14 @@ struct ZoneStats
     macro(Other,   MallocHeap,  objectGroupsMallocHeap) \
     macro(Other,   MallocHeap,  typePool) \
     macro(Other,   MallocHeap,  baselineStubsOptimized) \
-    macro(Other,   MallocHeap,  uniqueIdMap)
+    macro(Other,   MallocHeap,  uniqueIdMap) \
+    macro(Other,   MallocHeap,  shapeTables)
 
     ZoneStats()
       : FOR_EACH_SIZE(ZERO_SIZE)
         unusedGCThings(),
         stringInfo(),
+        shapeInfo(),
         extra(),
         allStrings(nullptr),
         notableStrings(),
@@ -613,6 +657,7 @@ struct ZoneStats
       : FOR_EACH_SIZE(COPY_OTHER_SIZE)
         unusedGCThings(mozilla::Move(other.unusedGCThings)),
         stringInfo(mozilla::Move(other.stringInfo)),
+        shapeInfo(mozilla::Move(other.shapeInfo)),
         extra(other.extra),
         allStrings(other.allStrings),
         notableStrings(mozilla::Move(other.notableStrings)),
@@ -636,6 +681,7 @@ struct ZoneStats
         FOR_EACH_SIZE(ADD_OTHER_SIZE)
         unusedGCThings.addSizes(other.unusedGCThings);
         stringInfo.add(other.stringInfo);
+        shapeInfo.add(other.shapeInfo);
     }
 
     size_t sizeOfLiveGCThings() const {
@@ -643,6 +689,7 @@ struct ZoneStats
         size_t n = 0;
         FOR_EACH_SIZE(ADD_SIZE_TO_N_IF_LIVE_GC_THING)
         n += stringInfo.sizeOfLiveGCThings();
+        n += shapeInfo.sizeOfLiveGCThings();
         return n;
     }
 
@@ -651,6 +698,7 @@ struct ZoneStats
         FOR_EACH_SIZE(ADD_TO_TAB_SIZES)
         unusedGCThings.addToTabSizes(sizes);
         stringInfo.addToTabSizes(sizes);
+        shapeInfo.addToTabSizes(sizes);
     }
 
     void addToServoSizes(JS::ServoSizes *sizes) const {
@@ -658,6 +706,7 @@ struct ZoneStats
         FOR_EACH_SIZE(ADD_TO_SERVO_SIZES)
         unusedGCThings.addToServoSizes(sizes);
         stringInfo.addToServoSizes(sizes);
+        shapeInfo.addToServoSizes(sizes);
     }
 
     // These string measurements are initially for all strings.  At the end,
@@ -667,6 +716,7 @@ struct ZoneStats
     FOR_EACH_SIZE(DECL_SIZE)
     UnusedGCThingSizes unusedGCThings;
     StringInfo stringInfo;
+    ShapeInfo shapeInfo;
     void* extra;    // This field can be used by embedders.
 
     typedef js::HashMap<JSString*, StringInfo,

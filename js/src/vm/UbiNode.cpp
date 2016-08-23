@@ -341,8 +341,6 @@ TracerConcreteWithCompartment<Referent>::compartment() const
 }
 
 template JSCompartment* TracerConcreteWithCompartment<JSScript>::compartment() const;
-template JSCompartment* TracerConcreteWithCompartment<js::Shape>::compartment() const;
-template JSCompartment* TracerConcreteWithCompartment<js::BaseShape>::compartment() const;
 
 bool
 Concrete<JSObject>::hasAllocationStack() const

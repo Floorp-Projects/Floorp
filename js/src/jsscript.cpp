@@ -203,7 +203,7 @@ Bindings::initWithTemporaryStorage(ExclusiveContext* cx, MutableHandle<Bindings>
                          (bi->kind() == Binding::CONSTANT ? JSPROP_READONLY : 0);
         Rooted<StackShape> child(cx, StackShape(base, NameToId(bi->name()), slot, attrs, 0));
 
-        shape = cx->compartment()->propertyTree.getChild(cx, shape, child);
+        shape = cx->zone()->propertyTree.getChild(cx, shape, child);
         if (!shape)
             return false;
 

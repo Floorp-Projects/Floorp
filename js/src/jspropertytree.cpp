@@ -54,8 +54,8 @@ PropertyTree::insertChild(ExclusiveContext* cx, Shape* parent, Shape* child)
     MOZ_ASSERT(!parent->inDictionary());
     MOZ_ASSERT(!child->parent);
     MOZ_ASSERT(!child->inDictionary());
-    MOZ_ASSERT(child->compartment() == parent->compartment());
-    MOZ_ASSERT(cx->isInsideCurrentCompartment(this));
+    MOZ_ASSERT(child->zone() == parent->zone());
+    MOZ_ASSERT(cx->zone() == zone_);
 
     KidsPointer* kidp = &parent->kids;
 
