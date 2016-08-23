@@ -17,6 +17,10 @@
   @hudButtonFocused@
 }
 
+.identity-popup-permission-remove-button:-moz-focusring {
+  box-shadow: @focusRingShadow@;
+}
+
 #identity-popup-multiView > .panel-viewcontainer > .panel-viewstack > .panel-subviews {
   border-bottom-right-radius: 3.5px;
 }
