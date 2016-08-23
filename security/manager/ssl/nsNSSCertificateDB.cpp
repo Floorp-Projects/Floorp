@@ -9,6 +9,7 @@
 #include "ExtendedValidation.h"
 #include "NSSCertDBTrustDomain.h"
 #include "SharedSSLState.h"
+#include "certdb.h"
 #include "mozilla/Base64.h"
 #include "mozilla/Casting.h"
 #include "mozilla/unused.h"
@@ -32,20 +33,17 @@
 #include "nsNSSShutDown.h"
 #include "nsPK11TokenDB.h"
 #include "nsPKCS12Blob.h"
+#include "nsPromiseFlatString.h"
 #include "nsProxyRelease.h"
 #include "nsReadableUtils.h"
 #include "nsThreadUtils.h"
+#include "nspr.h"
 #include "pkix/Time.h"
 #include "pkix/pkixtypes.h"
-
-#include "nspr.h"
-#include "certdb.h"
-#include "secerr.h"
-#include "nssb64.h"
 #include "secasn1.h"
 #include "secder.h"
+#include "secerr.h"
 #include "ssl.h"
-#include "plbase64.h"
 
 #ifdef XP_WIN
 #include <winsock.h> // for ntohl
@@ -1168,41 +1166,31 @@ nsNSSCertificateDB::FindCertByEmailAddress(const char* aEmailAddress,
 }
 
 NS_IMETHODIMP
-nsNSSCertificateDB::ConstructX509FromBase64(const char *base64,
-                                            nsIX509Cert **_retval)
+nsNSSCertificateDB::ConstructX509FromBase64(const nsACString& base64,
+                                    /*out*/ nsIX509Cert** _retval)
 {
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
-  if (NS_WARN_IF(!_retval)) {
+  if (!_retval) {
     return NS_ERROR_INVALID_POINTER;
   }
 
-  // sure would be nice to have a smart pointer class for PL_ allocations
-  // unfortunately, we cannot distinguish out-of-memory from bad-input here
-  uint32_t len = base64 ? strlen(base64) : 0;
-  char *certDER = PL_Base64Decode(base64, len, nullptr);
-  if (!certDER)
-    return NS_ERROR_ILLEGAL_VALUE;
-  if (!*certDER) {
-    PL_strfree(certDER);
+  // Base64Decode() doesn't consider a zero length input as an error, and just
+  // returns the empty string. We don't want this behavior, so the below check
+  // catches this case.
+  if (base64.Length() < 1) {
     return NS_ERROR_ILLEGAL_VALUE;
   }
 
-  // If we get to this point, we know we had well-formed base64 input;
-  // therefore the input string cannot have been less than two
-  // characters long.  Compute the unpadded length of the decoded data.
-  uint32_t lengthDER = (len * 3) / 4;
-  if (base64[len-1] == '=') {
-    lengthDER--;
-    if (base64[len-2] == '=')
-      lengthDER--;
+  nsAutoCString certDER;
+  nsresult rv = Base64Decode(base64, certDER);
+  if (NS_FAILED(rv)) {
+    return rv;
   }
 
-  nsresult rv = ConstructX509(certDER, lengthDER, _retval);
-  PL_strfree(certDER);
-  return rv;
+  return ConstructX509(certDER.get(), certDER.Length(), _retval);
 }
 
 NS_IMETHODIMP
@@ -1341,25 +1329,26 @@ nsNSSCertificateDB::get_default_nickname(CERTCertificate *cert,
 }
 
 NS_IMETHODIMP
-nsNSSCertificateDB::AddCertFromBase64(const char* aBase64, const char* aTrust,
-                                      const char* /*aName*/)
+nsNSSCertificateDB::AddCertFromBase64(const nsACString& aBase64,
+                                      const nsACString& aTrust,
+                                      const nsACString& /*aName*/)
 {
-  NS_ENSURE_ARG_POINTER(aBase64);
-  NS_ENSURE_ARG_POINTER(aTrust);
-
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
   nsNSSCertTrust trust;
-  if (CERT_DecodeTrustString(trust.GetTrust(), aTrust) != SECSuccess) {
+  if (CERT_DecodeTrustString(trust.GetTrust(), PromiseFlatCString(aTrust).get())
+        != SECSuccess) {
     return NS_ERROR_FAILURE;
   }
 
   nsCOMPtr<nsIX509Cert> newCert;
   nsresult rv = ConstructX509FromBase64(aBase64, getter_AddRefs(newCert));
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
   UniqueCERTCertificate tmpCert(newCert->GetCert());
   if (!tmpCert) {
@@ -1387,26 +1376,26 @@ nsNSSCertificateDB::AddCertFromBase64(const char* aBase64, const char* aTrust,
 }
 
 NS_IMETHODIMP
-nsNSSCertificateDB::AddCert(const nsACString & aCertDER, const char *aTrust,
-                            const char *aName)
+nsNSSCertificateDB::AddCert(const nsACString& aCertDER, const nsACString& aTrust,
+                            const nsACString& aName)
 {
   nsCString base64;
   nsresult rv = Base64Encode(aCertDER, base64);
   NS_ENSURE_SUCCESS(rv, rv);
-  return AddCertFromBase64(base64.get(), aTrust, aName);
+  return AddCertFromBase64(base64, aTrust, aName);
 }
 
 NS_IMETHODIMP
 nsNSSCertificateDB::SetCertTrustFromString(nsIX509Cert* cert,
-                                           const char* trustString)
+                                           const nsACString& trustString)
 {
-  CERTCertTrust trust;
+  NS_ENSURE_ARG(cert);
 
-  // need to calculate the trust bits from the aTrust string.
+  CERTCertTrust trust;
   SECStatus srv = CERT_DecodeTrustString(&trust,
-                                         const_cast<char *>(trustString));
+                                         PromiseFlatCString(trustString).get());
   if (srv != SECSuccess) {
-    return MapSECStatus(SECFailure);
+    return MapSECStatus(srv);
   }
   UniqueCERTCertificate nssCert(cert->GetCert());
 
