@@ -39,13 +39,11 @@ if CONFIG['OS_ARCH'] == 'WINNT':
         '360seProfileMigrator.js',
         'EdgeProfileMigrator.js',
         'IEProfileMigrator.js',
-        'SafariProfileMigrator.js',
     ]
     EXTRA_JS_MODULES += [
         'ESEDBReader.jsm',
         'MSMigrationUtils.jsm',
     ]
-    DEFINES['HAS_SAFARI_MIGRATOR'] = True
     DEFINES['HAS_360SE_MIGRATOR'] = True
     DEFINES['HAS_IE_MIGRATOR'] = True
     DEFINES['HAS_EDGE_MIGRATOR'] = True

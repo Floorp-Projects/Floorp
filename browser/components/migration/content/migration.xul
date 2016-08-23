@@ -39,7 +39,6 @@
       <radio id="ie"        label="&importFromIE.label;"        accesskey="&importFromIE.accesskey;"/>
       <radio id="chrome"    label="&importFromChrome.label;"    accesskey="&importFromChrome.accesskey;"/>
       <radio id="chromium"  label="&importFromChromium.label;"  accesskey="&importFromChromium.accesskey;"/>
-      <radio id="safari"    label="&importFromSafari.label;"    accesskey="&importFromSafari.accesskey;"/>
       <radio id="canary"    label="&importFromCanary.label;"    accesskey="&importFromCanary.accesskey;"/>
       <radio id="360se"     label="&importFrom360se.label;"     accesskey="&importFrom360se.accesskey;"/>
 #elifdef XP_MACOSX
