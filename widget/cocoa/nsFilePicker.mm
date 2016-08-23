@@ -565,6 +565,10 @@ nsFilePicker::SetDialogTitle(const nsString& inTitle, id aPanel)
 
   [aPanel setTitle:[NSString stringWithCharacters:(const unichar*)inTitle.get() length:inTitle.Length()]];
 
+  if (!mOkButtonLabel.IsEmpty()) {
+    [aPanel setPrompt:[NSString stringWithCharacters:(const unichar*)mOkButtonLabel.get() length:mOkButtonLabel.Length()]];
+  }
+
   NS_OBJC_END_TRY_ABORT_BLOCK;
 } 
 

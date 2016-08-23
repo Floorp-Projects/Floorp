@@ -51,7 +51,8 @@ class FilePickerParent : public PFilePickerParent
                         const nsString& aDefaultExtension,
                         InfallibleTArray<nsString>&& aFilters,
                         InfallibleTArray<nsString>&& aFilterNames,
-                        const nsString& aDisplayDirectory) override;
+                        const nsString& aDisplayDirectory,
+                        const nsString& aOkButtonLabel) override;
 
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 

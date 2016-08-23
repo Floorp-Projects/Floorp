@@ -12,6 +12,7 @@
 #include "nsISimpleEnumerator.h"
 #include "nsArrayEnumerator.h"
 #include "nsCOMPtr.h"
+#include "nsString.h"
 
 class nsPIDOMWindowOuter;
 class nsIWidget;
@@ -36,6 +37,8 @@ public:
   NS_IMETHOD GetAddToRecentDocs(bool *aFlag);
   NS_IMETHOD SetAddToRecentDocs(bool aFlag);
   NS_IMETHOD GetMode(int16_t *aMode);
+  NS_IMETHOD SetOkButtonLabel(const nsAString& aLabel);
+  NS_IMETHOD GetOkButtonLabel(nsAString& aLabel);
 
   NS_IMETHOD GetDomFileOrDirectory(nsISupports** aValue);
   NS_IMETHOD GetDomFileOrDirectoryEnumerator(nsISimpleEnumerator** aValue);
@@ -49,6 +52,7 @@ protected:
 
   nsCOMPtr<nsPIDOMWindowOuter> mParent;
   int16_t mMode;
+  nsString mOkButtonLabel;
 };
 
 #endif // nsBaseFilePicker_h__
