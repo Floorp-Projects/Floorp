@@ -2875,6 +2875,7 @@ var gCSSProperties = {
     domProp: "font",
     inherited: true,
     type: CSS_TYPE_TRUE_SHORTHAND,
+    prerequisites: { "writing-mode": "initial" },
     subproperties: [ "font-style", "font-variant", "font-weight", "font-size", "line-height", "font-family", "font-stretch",
                      "font-size-adjust", "font-feature-settings", "font-language-override",
                      "font-kerning", "font-synthesis", "font-variant-alternates", "font-variant-caps", "font-variant-east-asian",
@@ -3157,7 +3158,7 @@ var gCSSProperties = {
      * computation of 'normal'.   -moz-block-height requires height
      * on a block.
      */
-    prerequisites: { "font-size": "19px", "font-size-adjust": "none", "font-family": "serif", "font-weight": "normal", "font-style": "normal", "height": "18px", "display": "block"},
+    prerequisites: { "font-size": "19px", "font-size-adjust": "none", "font-family": "serif", "font-weight": "normal", "font-style": "normal", "height": "18px", "display": "block", "writing-mode": "initial" },
     initial_values: [ "normal" ],
     other_values: [ "1.0", "1", "1em", "47px", "-moz-block-height", "calc(2px)", "calc(50%)", "calc(3*25px)", "calc(25px*3)", "calc(3*25px + 50%)", "calc(1 + 2*3/4)" ],
     invalid_values: [ "calc(1 + 2px)", "calc(100% + 0.1)" ]
@@ -4888,164 +4889,7 @@ var gCSSProperties = {
     alias_for: "text-align-last",
     subproperties: [ "text-align-last" ],
   },
-}
-
-function logical_axis_prop_get_computed(cs, property)
-{
-  // Use defaults for these two properties in case the vertical text
-  // pref (which they live behind) is turned off.
-  var writingMode = cs.getPropertyValue("writing-mode") || "horizontal-tb";
-  var orientation = writingMode.substring(0, writingMode.indexOf("-"));
-
-  var mappings = {
-    "block-size":      { horizontal: "height",
-                         vertical:   "width",
-                         sideways:   "width"      },
-    "inline-size":     { horizontal: "width",
-                         vertical:   "height",
-                         sideways:   "height"     },
-    "max-block-size":  { horizontal: "max-height",
-                         vertical:   "max-width",
-                         sideways:   "max-width"  },
-    "max-inline-size": { horizontal: "max-width",
-                         vertical:   "max-height",
-                         sideways:   "max-height" },
-    "min-block-size":  { horizontal: "min-height",
-                         vertical:   "min-width",
-                         sideways:   "min-width"  },
-    "min-inline-size": { horizontal: "min-width",
-                         vertical:   "min-height",
-                         sideways:   "min-height" },
-  };
-
-  if (!mappings[property]) {
-    throw "unexpected property " + property;
-  }
-
-  var prop = mappings[property][orientation];
-  if (!prop) {
-    throw "unexpected writing mode " + writingMode;
-  }
-
-  return cs.getPropertyValue(prop);
-}
-
-function logical_box_prop_get_computed(cs, property)
-{
-  // http://dev.w3.org/csswg/css-writing-modes-3/#logical-to-physical
-
-  // Use default for writing-mode in case the vertical text
-  // pref (which it lives behind) is turned off.
-  var writingMode = cs.getPropertyValue("writing-mode") || "horizontal-tb";
-
-  var direction = cs.getPropertyValue("direction");
-
-  // keys in blockMappings are writing-mode values
-  var blockMappings = {
-    "horizontal-tb": { "start": "top",   "end": "bottom" },
-    "vertical-rl":   { "start": "right", "end": "left"   },
-    "vertical-lr":   { "start": "left",  "end": "right"  },
-    "sideways-rl":   { "start": "right", "end": "left"   },
-    "sideways-lr":   { "start": "left",  "end": "right"  },
-  };
-
-  // keys in inlineMappings are regular expressions that match against
-  // a {writing-mode,direction} pair as a space-separated string
-  var inlineMappings = {
-    "horizontal-tb ltr": { "start": "left",   "end": "right"  },
-    "horizontal-tb rtl": { "start": "right",  "end": "left"   },
-    "vertical-.. ltr":   { "start": "bottom", "end": "top"    },
-    "vertical-.. rtl":   { "start": "top",    "end": "bottom" },
-    "vertical-.. ltr":   { "start": "top",    "end": "bottom" },
-    "vertical-.. rtl":   { "start": "bottom", "end": "top"    },
-    "sideways-lr ltr":   { "start": "bottom", "end": "top"    },
-    "sideways-lr rtl":   { "start": "top",    "end": "bottom" },
-    "sideways-rl ltr":   { "start": "top",    "end": "bottom" },
-    "sideways-rl rtl":   { "start": "bottom", "end": "top"    },
-  };
-
-  var blockMapping = blockMappings[writingMode];
-  var inlineMapping;
-
-  // test each regular expression in inlineMappings against the
-  // {writing-mode,direction} pair
-  var key = `${writingMode} ${direction}`;
-  for (var k in inlineMappings) {
-    if (new RegExp(k).test(key)) {
-      inlineMapping = inlineMappings[k];
-      break;
-    }
-  }
-
-  if (!blockMapping || !inlineMapping) {
-    throw "Unexpected writing mode property values";
-  }
-
-  function physicalize(aProperty, aMapping, aLogicalPrefix) {
-    for (var logicalSide in aMapping) {
-      var physicalSide = aMapping[logicalSide];
-      logicalSide = aLogicalPrefix + logicalSide;
-      aProperty = aProperty.replace(logicalSide, physicalSide);
-    }
-    return aProperty;
-  }
-
-  if (/^-moz-/.test(property)) {
-    property = physicalize(property.substring(5), inlineMapping, "");
-  } else if (/^offset-(block|inline)-(start|end)/.test(property)) {
-    property = property.substring(7);  // we want "top" not "offset-top", e.g.
-    property = physicalize(property, blockMapping, "block-");
-    property = physicalize(property, inlineMapping, "inline-");
-  } else if (/-(block|inline)-(start|end)/.test(property)) {
-    property = physicalize(property, blockMapping, "block-");
-    property = physicalize(property, inlineMapping, "inline-");
-  } else {
-    throw "Unexpected property";
-  }
-  return cs.getPropertyValue(property);
-}
-
-// Get the computed value for a property.  For shorthands, return the
-// computed values of all the subproperties, delimited by " ; ".
-function get_computed_value(cs, property)
-{
-  var info = gCSSProperties[property];
-  if (info.type == CSS_TYPE_TRUE_SHORTHAND ||
-      (info.type == CSS_TYPE_SHORTHAND_AND_LONGHAND &&
-        (property == "text-decoration" || property == "mask"))) {
-    var results = [];
-    for (var idx in info.subproperties) {
-      var subprop = info.subproperties[idx];
-      results.push(get_computed_value(cs, subprop));
-    }
-    return results.join(" ; ");
-  }
-  if (info.get_computed)
-    return info.get_computed(cs, property);
-  return cs.getPropertyValue(property);
-}
-
-if (IsCSSPropertyPrefEnabled("layout.css.touch_action.enabled")) {
-    gCSSProperties["touch-action"] = {
-        domProp: "touchAction",
-        inherited: false,
-        type: CSS_TYPE_LONGHAND,
-        initial_values: ["auto"],
-        other_values: ["none", "pan-x", "pan-y", "pan-x pan-y", "pan-y pan-x", "manipulation"],
-        invalid_values: ["zoom", "pinch", "tap", "10px", "2", "auto pan-x", "pan-x auto", "none pan-x", "pan-x none",
-                 "auto pan-y", "pan-y auto", "none pan-y", "pan-y none", "pan-x pan-x", "pan-y pan-y",
-                 "pan-x pan-y none", "pan-x none pan-y", "none pan-x pan-y", "pan-y pan-x none", "pan-y none pan-x", "none pan-y pan-x",
-                 "pan-x pan-y auto", "pan-x auto pan-y", "auto pan-x pan-y", "pan-y pan-x auto", "pan-y auto pan-x", "auto pan-y pan-x",
-                 "pan-x pan-y zoom", "pan-x zoom pan-y", "zoom pan-x pan-y", "pan-y pan-x zoom", "pan-y zoom pan-x", "zoom pan-y pan-x",
-                 "pan-x pan-y pan-x", "pan-x pan-x pan-y", "pan-y pan-x pan-x", "pan-y pan-x pan-y", "pan-y pan-y pan-x", "pan-x pan-y pan-y",
-                 "manipulation none", "none manipulation", "manipulation auto", "auto manipulation", "manipulation zoom", "zoom manipulation",
-                 "manipulation manipulation", "manipulation pan-x", "pan-x manipulation", "manipulation pan-y", "pan-y manipulation",
-                 "manipulation pan-x pan-y", "pan-x manipulation pan-y", "pan-x pan-y manipulation",
-                 "manipulation pan-y pan-x", "pan-y manipulation pan-x", "pan-y pan-x manipulation"]
-    };
-}
-
-var verticalTextProperties = {
+  // vertical text properties
   "writing-mode": {
     domProp: "writingMode",
     inherited: true,
@@ -5513,7 +5357,7 @@ var verticalTextProperties = {
       "calc(3*25px + 50%)",
     ],
     invalid_values: [ ],
-},
+  },
   "-moz-padding-end": {
     domProp: "MozPaddingEnd",
     inherited: false,
@@ -5530,23 +5374,162 @@ var verticalTextProperties = {
     subproperties: [ "padding-inline-start" ],
     get_computed: logical_box_prop_get_computed,
   },
-};
-for (var prop in verticalTextProperties) {
-  gCSSProperties[prop] = verticalTextProperties[prop];
-}
-/*
- * Vertical vs horizontal writing-mode can affect line-height
- * because font metrics may not be symmetrical,
- * so we require writing-mode:initial to ensure consistency
- * in font shorthand and line-height tests.
- */
-["font", "line-height"].forEach(function(prop) {
-  var p = gCSSProperties[prop];
-  if (p.prerequisites === undefined) {
-    p.prerequisites = {};
+} // end of gCSSProperties
+
+function logical_axis_prop_get_computed(cs, property)
+{
+  // Use defaults for these two properties in case the vertical text
+  // pref (which they live behind) is turned off.
+  var writingMode = cs.getPropertyValue("writing-mode") || "horizontal-tb";
+  var orientation = writingMode.substring(0, writingMode.indexOf("-"));
+
+  var mappings = {
+    "block-size":      { horizontal: "height",
+                         vertical:   "width",
+                         sideways:   "width"      },
+    "inline-size":     { horizontal: "width",
+                         vertical:   "height",
+                         sideways:   "height"     },
+    "max-block-size":  { horizontal: "max-height",
+                         vertical:   "max-width",
+                         sideways:   "max-width"  },
+    "max-inline-size": { horizontal: "max-width",
+                         vertical:   "max-height",
+                         sideways:   "max-height" },
+    "min-block-size":  { horizontal: "min-height",
+                         vertical:   "min-width",
+                         sideways:   "min-width"  },
+    "min-inline-size": { horizontal: "min-width",
+                         vertical:   "min-height",
+                         sideways:   "min-height" },
+  };
+
+  if (!mappings[property]) {
+    throw "unexpected property " + property;
   }
-  p.prerequisites["writing-mode"] = "initial";
-});
+
+  var prop = mappings[property][orientation];
+  if (!prop) {
+    throw "unexpected writing mode " + writingMode;
+  }
+
+  return cs.getPropertyValue(prop);
+}
+
+function logical_box_prop_get_computed(cs, property)
+{
+  // http://dev.w3.org/csswg/css-writing-modes-3/#logical-to-physical
+
+  // Use default for writing-mode in case the vertical text
+  // pref (which it lives behind) is turned off.
+  var writingMode = cs.getPropertyValue("writing-mode") || "horizontal-tb";
+
+  var direction = cs.getPropertyValue("direction");
+
+  // keys in blockMappings are writing-mode values
+  var blockMappings = {
+    "horizontal-tb": { "start": "top",   "end": "bottom" },
+    "vertical-rl":   { "start": "right", "end": "left"   },
+    "vertical-lr":   { "start": "left",  "end": "right"  },
+    "sideways-rl":   { "start": "right", "end": "left"   },
+    "sideways-lr":   { "start": "left",  "end": "right"  },
+  };
+
+  // keys in inlineMappings are regular expressions that match against
+  // a {writing-mode,direction} pair as a space-separated string
+  var inlineMappings = {
+    "horizontal-tb ltr": { "start": "left",   "end": "right"  },
+    "horizontal-tb rtl": { "start": "right",  "end": "left"   },
+    "vertical-.. ltr":   { "start": "bottom", "end": "top"    },
+    "vertical-.. rtl":   { "start": "top",    "end": "bottom" },
+    "vertical-.. ltr":   { "start": "top",    "end": "bottom" },
+    "vertical-.. rtl":   { "start": "bottom", "end": "top"    },
+    "sideways-lr ltr":   { "start": "bottom", "end": "top"    },
+    "sideways-lr rtl":   { "start": "top",    "end": "bottom" },
+    "sideways-rl ltr":   { "start": "top",    "end": "bottom" },
+    "sideways-rl rtl":   { "start": "bottom", "end": "top"    },
+  };
+
+  var blockMapping = blockMappings[writingMode];
+  var inlineMapping;
+
+  // test each regular expression in inlineMappings against the
+  // {writing-mode,direction} pair
+  var key = `${writingMode} ${direction}`;
+  for (var k in inlineMappings) {
+    if (new RegExp(k).test(key)) {
+      inlineMapping = inlineMappings[k];
+      break;
+    }
+  }
+
+  if (!blockMapping || !inlineMapping) {
+    throw "Unexpected writing mode property values";
+  }
+
+  function physicalize(aProperty, aMapping, aLogicalPrefix) {
+    for (var logicalSide in aMapping) {
+      var physicalSide = aMapping[logicalSide];
+      logicalSide = aLogicalPrefix + logicalSide;
+      aProperty = aProperty.replace(logicalSide, physicalSide);
+    }
+    return aProperty;
+  }
+
+  if (/^-moz-/.test(property)) {
+    property = physicalize(property.substring(5), inlineMapping, "");
+  } else if (/^offset-(block|inline)-(start|end)/.test(property)) {
+    property = property.substring(7);  // we want "top" not "offset-top", e.g.
+    property = physicalize(property, blockMapping, "block-");
+    property = physicalize(property, inlineMapping, "inline-");
+  } else if (/-(block|inline)-(start|end)/.test(property)) {
+    property = physicalize(property, blockMapping, "block-");
+    property = physicalize(property, inlineMapping, "inline-");
+  } else {
+    throw "Unexpected property";
+  }
+  return cs.getPropertyValue(property);
+}
+
+// Get the computed value for a property.  For shorthands, return the
+// computed values of all the subproperties, delimited by " ; ".
+function get_computed_value(cs, property)
+{
+  var info = gCSSProperties[property];
+  if (info.type == CSS_TYPE_TRUE_SHORTHAND ||
+      (info.type == CSS_TYPE_SHORTHAND_AND_LONGHAND &&
+        (property == "text-decoration" || property == "mask"))) {
+    var results = [];
+    for (var idx in info.subproperties) {
+      var subprop = info.subproperties[idx];
+      results.push(get_computed_value(cs, subprop));
+    }
+    return results.join(" ; ");
+  }
+  if (info.get_computed)
+    return info.get_computed(cs, property);
+  return cs.getPropertyValue(property);
+}
+
+if (IsCSSPropertyPrefEnabled("layout.css.touch_action.enabled")) {
+    gCSSProperties["touch-action"] = {
+        domProp: "touchAction",
+        inherited: false,
+        type: CSS_TYPE_LONGHAND,
+        initial_values: ["auto"],
+        other_values: ["none", "pan-x", "pan-y", "pan-x pan-y", "pan-y pan-x", "manipulation"],
+        invalid_values: ["zoom", "pinch", "tap", "10px", "2", "auto pan-x", "pan-x auto", "none pan-x", "pan-x none",
+                 "auto pan-y", "pan-y auto", "none pan-y", "pan-y none", "pan-x pan-x", "pan-y pan-y",
+                 "pan-x pan-y none", "pan-x none pan-y", "none pan-x pan-y", "pan-y pan-x none", "pan-y none pan-x", "none pan-y pan-x",
+                 "pan-x pan-y auto", "pan-x auto pan-y", "auto pan-x pan-y", "pan-y pan-x auto", "pan-y auto pan-x", "auto pan-y pan-x",
+                 "pan-x pan-y zoom", "pan-x zoom pan-y", "zoom pan-x pan-y", "pan-y pan-x zoom", "pan-y zoom pan-x", "zoom pan-y pan-x",
+                 "pan-x pan-y pan-x", "pan-x pan-x pan-y", "pan-y pan-x pan-x", "pan-y pan-x pan-y", "pan-y pan-y pan-x", "pan-x pan-y pan-y",
+                 "manipulation none", "none manipulation", "manipulation auto", "auto manipulation", "manipulation zoom", "zoom manipulation",
+                 "manipulation manipulation", "manipulation pan-x", "pan-x manipulation", "manipulation pan-y", "pan-y manipulation",
+                 "manipulation pan-x pan-y", "pan-x manipulation pan-y", "pan-x pan-y manipulation",
+                 "manipulation pan-y pan-x", "pan-y manipulation pan-x", "pan-y pan-x manipulation"]
+    };
+}
 
 if (IsCSSPropertyPrefEnabled("layout.css.text-combine-upright.enabled")) {
   gCSSProperties["text-combine-upright"] = {
