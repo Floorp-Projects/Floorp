@@ -174,7 +174,7 @@ class ReftestResolver(object):
                     break
             if found:
                 rv = [(os.path.join(dirname, default_manifest),
-                       r".*(?:/|\\)%s$" % pathname)]
+                       r".*(?:/|\\)%s(?:[#?].*)?$" % pathname)]
 
         return rv
 
