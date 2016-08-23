@@ -302,12 +302,15 @@ CreateINIParserFactory(const mozilla::Module& aModule,
 }
 
 #define COMPONENT(NAME, Ctor) static NS_DEFINE_CID(kNS_##NAME##_CID, NS_##NAME##_CID);
+#define COMPONENT_M(NAME, Ctor, Selector) static NS_DEFINE_CID(kNS_##NAME##_CID, NS_##NAME##_CID);
 #include "XPCOMModule.inc"
 #undef COMPONENT
+#undef COMPONENT_M
 
 #define COMPONENT(NAME, Ctor) { &kNS_##NAME##_CID, false, nullptr, Ctor },
+#define COMPONENT_M(NAME, Ctor, Selector) { &kNS_##NAME##_CID, false, nullptr, Ctor, Selector },
 const mozilla::Module::CIDEntry kXPCOMCIDEntries[] = {
-  { &kComponentManagerCID, true, nullptr, nsComponentManagerImpl::Create },
+  { &kComponentManagerCID, true, nullptr, nsComponentManagerImpl::Create, Module::ALLOW_IN_GPU_PROCESS },
   { &kINIParserFactoryCID, false, CreateINIParserFactory },
 #include "XPCOMModule.inc"
   { &kNS_CHROMEREGISTRY_CID, false, nullptr, nsChromeRegistryConstructor },
@@ -316,8 +319,10 @@ const mozilla::Module::CIDEntry kXPCOMCIDEntries[] = {
   { nullptr }
 };
 #undef COMPONENT
+#undef COMPONENT_M
 
 #define COMPONENT(NAME, Ctor) { NS_##NAME##_CONTRACTID, &kNS_##NAME##_CID },
+#define COMPONENT_M(NAME, Ctor, Selector) { NS_##NAME##_CONTRACTID, &kNS_##NAME##_CID, Selector },
 const mozilla::Module::ContractIDEntry kXPCOMContracts[] = {
 #include "XPCOMModule.inc"
   { NS_CHROMEREGISTRY_CONTRACTID, &kNS_CHROMEREGISTRY_CID },
@@ -327,9 +332,15 @@ const mozilla::Module::ContractIDEntry kXPCOMContracts[] = {
   { nullptr }
 };
 #undef COMPONENT
+#undef COMPONENT_M
 
 const mozilla::Module kXPCOMModule = {
-  mozilla::Module::kVersion, kXPCOMCIDEntries, kXPCOMContracts
+  mozilla::Module::kVersion, kXPCOMCIDEntries, kXPCOMContracts,
+  nullptr,
+  nullptr,
+  nullptr,
+  nullptr,
+  Module::ALLOW_IN_GPU_PROCESS
 };
 
 // gDebug will be freed during shutdown.
