@@ -33,9 +33,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "Preferences",
 XPCOMUtils.defineLazyModuleGetter(this, "PromiseUtils",
                                   "resource://gre/modules/PromiseUtils.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "loadExtScriptInScope",
-                                  "resource://gre/modules/ExtensionGlobalScope.jsm");
-
 function getConsole() {
   return new ConsoleAPI({
     maxLogLevelPref: "extensions.webextensions.log.level",
@@ -1640,6 +1637,8 @@ class SchemaAPIManager extends EventEmitter {
   constructor(processType) {
     super();
     this.processType = processType;
+    this.global = this._createExtGlobal();
+    this._scriptScopes = [];
     this._schemaApis = {
       addon_parent: [],
       addon_child: [],
@@ -1648,8 +1647,46 @@ class SchemaAPIManager extends EventEmitter {
     };
   }
 
+  /**
+   * Create a global object that is used as the shared global for all ext-*.js
+   * scripts that are loaded via `loadScript`.
+   *
+   * @returns {object} A sandbox that is used as the global by `loadScript`.
+   */
+  _createExtGlobal() {
+    let global = Cu.Sandbox(Services.scriptSecurityManager.getSystemPrincipal(), {
+      wantXrays: false,
+      sandboxName: `Namespace of ext-*.js scripts for ${this.processType}`,
+    });
+    Object.defineProperty(global, "console", {get() { return console; }});
+    global.extensions = this;
+    global.global = global;
+    global.Cc = Cc;
+    global.Ci = Ci;
+    global.Cu = Cu;
+    global.Cr = Cr;
+    XPCOMUtils.defineLazyModuleGetter(global, "require",
+                                      "resource://devtools/shared/Loader.jsm");
+    global.XPCOMUtils = XPCOMUtils;
+    return global;
+  }
+
+  /**
+   * Load an ext-*.js script. The script runs in its own scope, if it wishes to
+   * share state with another script it can assign to the `global` variable. If
+   * it wishes to communicate with this API manager, use `extensions`.
+   *
+   * @param {string} scriptUrl The URL of the ext-*.js script.
+   */
   loadScript(scriptUrl) {
-    loadExtScriptInScope(scriptUrl, this);
+    // Create the object in the context of the sandbox so that the script runs
+    // in the sandbox's context instead of here.
+    let scope = this.global.Object.create(null);
+
+    Services.scriptloader.loadSubScript(scriptUrl, scope, "UTF-8");
+
+    // Save the scope to avoid it being garbage collected.
+    this._scriptScopes.push(scope);
   }
 
   /**
