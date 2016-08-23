@@ -1053,7 +1053,7 @@ gfxFT2FontList::AddFaceToList(const nsCString& aEntryName, uint32_t aIndex,
 
     // build the font entry name and create an FT2FontEntry,
     // but do -not- keep a reference to the FT_Face
-    FT2FontEntry* fe =
+    RefPtr<FT2FontEntry> fe =
         CreateNamedFontEntry(aFace, aEntryName.get(), aIndex);
 
     auto& fontFamilies =
@@ -1063,7 +1063,7 @@ gfxFT2FontList::AddFaceToList(const nsCString& aEntryName, uint32_t aIndex,
     if (fe) {
         NS_ConvertUTF8toUTF16 name(aFace->family_name);
         BuildKeyNameFromFontName(name);
-        gfxFontFamily *family = fontFamilies.GetWeak(name);
+        RefPtr<gfxFontFamily> family = fontFamilies.GetWeak(name);
         if (!family) {
             family = new FT2FontFamily(name);
             fontFamilies.Put(name, family);
@@ -1368,7 +1368,7 @@ gfxFT2FontList::AppendFaceFromFontListEntry(const FontListEntry& aFLE,
             aFLE.isHidden() ? mHiddenFontFamilies : mFontFamilies;
         fe->mStandardFace = (aStdFile == kStandard);
         nsAutoString name(aFLE.familyName());
-        gfxFontFamily *family = fontFamilies.GetWeak(name);
+        RefPtr<gfxFontFamily> family = fontFamilies.GetWeak(name);
         if (!family) {
             family = new FT2FontFamily(name);
             fontFamilies.Put(name, family);
@@ -1470,10 +1470,9 @@ PreloadAsUserFontFaces(nsStringHashKey::KeyType aKey,
 }
 
 nsresult
-gfxFT2FontList::InitFontList()
+gfxFT2FontList::InitFontListForPlatform()
 {
-    // reset font lists
-    gfxPlatformFontList::InitFontList();
+    // reset hidden font list
     mHiddenFontFamilies.Clear();
 
     LoadSkipSpaceLookupCheck(mSkipSpaceLookupCheckFamilies);
@@ -1562,7 +1561,7 @@ searchDone:
 }
 
 gfxFontFamily*
-gfxFT2FontList::GetDefaultFont(const gfxFontStyle* aStyle)
+gfxFT2FontList::GetDefaultFontForPlatform(const gfxFontStyle* aStyle)
 {
     gfxFontFamily *ff = nullptr;
 #ifdef MOZ_WIDGET_GONK
