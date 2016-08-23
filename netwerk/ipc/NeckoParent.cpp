@@ -213,7 +213,8 @@ NeckoParent::CreateChannelLoadContext(const PBrowserOrId& aBrowser,
 void
 NeckoParent::ActorDestroy(ActorDestroyReason aWhy)
 {
-  // Implement me! Bug 1005184
+  // Nothing needed here. Called right before destructor since this is a
+  // non-refcounted class.
 }
 
 PHttpChannelParent*
