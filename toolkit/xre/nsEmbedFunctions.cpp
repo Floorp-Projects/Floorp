@@ -567,14 +567,12 @@ XRE_InitChildProcess(int aArgc,
   MessageLoop::Type uiLoopType;
   switch (XRE_GetProcessType()) {
   case GeckoProcessType_Content:
+  case GeckoProcessType_GPU:
       // Content processes need the XPCOM/chromium frankenventloop
       uiLoopType = MessageLoop::TYPE_MOZILLA_CHILD;
       break;
   case GeckoProcessType_GMPlugin:
       uiLoopType = MessageLoop::TYPE_DEFAULT;
-      break;
-  case GeckoProcessType_GPU:
-      uiLoopType = MessageLoop::TYPE_UI;
       break;
   default:
       uiLoopType = MessageLoop::TYPE_UI;

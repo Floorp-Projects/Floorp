@@ -5589,9 +5589,6 @@ JS_ThrowStopIteration(JSContext* cx);
 extern JS_PUBLIC_API(bool)
 JS_IsStopIteration(JS::Value v);
 
-extern JS_PUBLIC_API(intptr_t)
-JS_GetCurrentThread();
-
 /**
  * A JS context always has an "owner thread". The owner thread is set when the
  * context is created (to the current thread) and practically all entry points

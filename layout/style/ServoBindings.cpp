@@ -30,16 +30,19 @@
 
 using namespace mozilla;
 
-#define IMPL_STRONG_REF_TYPE(name, T)           \
-  already_AddRefed<T> name::Consume() {         \
-    RefPtr<T> result = dont_AddRef(mPtr);       \
-    mPtr = nullptr;                             \
-    return result.forget();                     \
-  };
+#define IMPL_STRONG_REF_TYPE_FOR(type_) \
+  already_AddRefed<type_>               \
+  type_##Strong::Consume() {            \
+    RefPtr<type_> result;               \
+    result.swap(mPtr);                  \
+    return result.forget();             \
+  }
 
+IMPL_STRONG_REF_TYPE_FOR(ServoComputedValues)
+IMPL_STRONG_REF_TYPE_FOR(RawServoStyleSheet)
+IMPL_STRONG_REF_TYPE_FOR(ServoDeclarationBlock)
 
-IMPL_STRONG_REF_TYPE(ServoComputedValuesStrong, ServoComputedValues);
-IMPL_STRONG_REF_TYPE(RawServoStyleSheetStrong, RawServoStyleSheet);
+#undef IMPL_STRONG_REF_TYPE_FOR
 
 uint32_t
 Gecko_ChildrenCount(RawGeckoNode* aNode)

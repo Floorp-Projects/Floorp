@@ -11,9 +11,10 @@
 #include "keyhi.h"
 #include "nsError.h"
 #include "pk11pub.h"
-#include "prprf.h"
 #include "sechash.h"
 #include "ssl.h"
+
+#include "mozilla/Sprintf.h"
 
 namespace mozilla {
 
@@ -39,7 +40,7 @@ RefPtr<DtlsIdentity> DtlsIdentity::Generate() {
   std::string name;
   char chunk[3];
   for (size_t i = 0; i < sizeof(random_name); ++i) {
-    PR_snprintf(chunk, sizeof(chunk), "%.2x", random_name[i]);
+    SprintfLiteral(chunk, "%.2x", random_name[i]);
     name += chunk;
   }
 

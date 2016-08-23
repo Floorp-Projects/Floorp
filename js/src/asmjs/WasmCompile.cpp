@@ -64,12 +64,6 @@ class FunctionDecoder
     ValidatingExprIter& iter() { return iter_; }
     const ValTypeVector& locals() const { return locals_; }
 
-    bool checkI64Support() {
-        if (!IsI64Implemented())
-            return iter().notYetImplemented("i64 NYI on this platform");
-        return true;
-    }
-
     bool checkHasMemory() {
         if (!mg().usesMemory())
             return iter().fail("can't touch memory without memory");
@@ -86,10 +80,7 @@ CheckValType(Decoder& d, ValType type)
       case ValType::I32:
       case ValType::F32:
       case ValType::F64:
-        return true;
       case ValType::I64:
-        if (!IsI64Implemented())
-            return Fail(d, "i64 NYI on this platform");
         return true;
       default:
         // Note: it's important not to remove this default since readValType()
@@ -216,8 +207,7 @@ DecodeExpr(FunctionDecoder& f)
       case Expr::I32Const:
         return f.iter().readI32Const(nullptr);
       case Expr::I64Const:
-        return f.checkI64Support() &&
-               f.iter().readI64Const(nullptr);
+        return f.iter().readI64Const(nullptr);
       case Expr::F32Const:
         return f.iter().readF32Const(nullptr);
       case Expr::F64Const:
@@ -249,8 +239,7 @@ DecodeExpr(FunctionDecoder& f)
       case Expr::I64Clz:
       case Expr::I64Ctz:
       case Expr::I64Popcnt:
-        return f.checkI64Support() &&
-               f.iter().readUnary(ValType::I64, nullptr);
+        return f.iter().readUnary(ValType::I64, nullptr);
       case Expr::F32Abs:
       case Expr::F32Neg:
       case Expr::F32Ceil:
@@ -298,8 +287,7 @@ DecodeExpr(FunctionDecoder& f)
       case Expr::I64ShrU:
       case Expr::I64Rotl:
       case Expr::I64Rotr:
-        return f.checkI64Support() &&
-               f.iter().readBinary(ValType::I64, nullptr, nullptr);
+        return f.iter().readBinary(ValType::I64, nullptr, nullptr);
       case Expr::F32Add:
       case Expr::F32Sub:
       case Expr::F32Mul:
@@ -337,8 +325,7 @@ DecodeExpr(FunctionDecoder& f)
       case Expr::I64GtU:
       case Expr::I64GeS:
       case Expr::I64GeU:
-        return f.checkI64Support() &&
-               f.iter().readComparison(ValType::I64, nullptr, nullptr);
+        return f.iter().readComparison(ValType::I64, nullptr, nullptr);
       case Expr::F32Eq:
       case Expr::F32Ne:
       case Expr::F32Lt:
@@ -357,8 +344,7 @@ DecodeExpr(FunctionDecoder& f)
         return f.iter().readConversion(ValType::I32, ValType::I32, nullptr);
       case Expr::I64Eqz:
       case Expr::I32WrapI64:
-        return f.checkI64Support() &&
-               f.iter().readConversion(ValType::I64, ValType::I32, nullptr);
+        return f.iter().readConversion(ValType::I64, ValType::I32, nullptr);
       case Expr::I32TruncSF32:
       case Expr::I32TruncUF32:
       case Expr::I32ReinterpretF32:
@@ -368,25 +354,21 @@ DecodeExpr(FunctionDecoder& f)
         return f.iter().readConversion(ValType::F64, ValType::I32, nullptr);
       case Expr::I64ExtendSI32:
       case Expr::I64ExtendUI32:
-        return f.checkI64Support() &&
-               f.iter().readConversion(ValType::I32, ValType::I64, nullptr);
+        return f.iter().readConversion(ValType::I32, ValType::I64, nullptr);
       case Expr::I64TruncSF32:
       case Expr::I64TruncUF32:
-        return f.checkI64Support() &&
-               f.iter().readConversion(ValType::F32, ValType::I64, nullptr);
+        return f.iter().readConversion(ValType::F32, ValType::I64, nullptr);
       case Expr::I64TruncSF64:
       case Expr::I64TruncUF64:
       case Expr::I64ReinterpretF64:
-        return f.checkI64Support() &&
-               f.iter().readConversion(ValType::F64, ValType::I64, nullptr);
+        return f.iter().readConversion(ValType::F64, ValType::I64, nullptr);
       case Expr::F32ConvertSI32:
       case Expr::F32ConvertUI32:
       case Expr::F32ReinterpretI32:
         return f.iter().readConversion(ValType::I32, ValType::F32, nullptr);
       case Expr::F32ConvertSI64:
       case Expr::F32ConvertUI64:
-        return f.checkI64Support() &&
-               f.iter().readConversion(ValType::I64, ValType::F32, nullptr);
+        return f.iter().readConversion(ValType::I64, ValType::F32, nullptr);
       case Expr::F32DemoteF64:
         return f.iter().readConversion(ValType::F64, ValType::F32, nullptr);
       case Expr::F64ConvertSI32:
@@ -395,8 +377,7 @@ DecodeExpr(FunctionDecoder& f)
       case Expr::F64ConvertSI64:
       case Expr::F64ConvertUI64:
       case Expr::F64ReinterpretI64:
-        return f.checkI64Support() &&
-               f.iter().readConversion(ValType::I64, ValType::F64, nullptr);
+        return f.iter().readConversion(ValType::I64, ValType::F64, nullptr);
       case Expr::F64PromoteF32:
         return f.iter().readConversion(ValType::F32, ValType::F64, nullptr);
       case Expr::I32Load8S:
@@ -412,22 +393,18 @@ DecodeExpr(FunctionDecoder& f)
                f.iter().readLoad(ValType::I32, 4, nullptr);
       case Expr::I64Load8S:
       case Expr::I64Load8U:
-        return f.checkI64Support() &&
-               f.checkHasMemory() &&
+        return f.checkHasMemory() &&
                f.iter().readLoad(ValType::I64, 1, nullptr);
       case Expr::I64Load16S:
       case Expr::I64Load16U:
-        return f.checkI64Support() &&
-               f.checkHasMemory() &&
+        return f.checkHasMemory() &&
                f.iter().readLoad(ValType::I64, 2, nullptr);
       case Expr::I64Load32S:
       case Expr::I64Load32U:
-        return f.checkI64Support() &&
-               f.checkHasMemory() &&
+        return f.checkHasMemory() &&
                f.iter().readLoad(ValType::I64, 4, nullptr);
       case Expr::I64Load:
-        return f.checkI64Support() &&
-               f.checkHasMemory() &&
+        return f.checkHasMemory() &&
                f.iter().readLoad(ValType::I64, 8, nullptr);
       case Expr::F32Load:
         return f.checkHasMemory() &&
@@ -445,20 +422,16 @@ DecodeExpr(FunctionDecoder& f)
         return f.checkHasMemory() &&
                f.iter().readStore(ValType::I32, 4, nullptr, nullptr);
       case Expr::I64Store8:
-        return f.checkI64Support() &&
-               f.checkHasMemory() &&
+        return f.checkHasMemory() &&
                f.iter().readStore(ValType::I64, 1, nullptr, nullptr);
       case Expr::I64Store16:
-        return f.checkI64Support() &&
-               f.checkHasMemory() &&
+        return f.checkHasMemory() &&
                f.iter().readStore(ValType::I64, 2, nullptr, nullptr);
       case Expr::I64Store32:
-        return f.checkI64Support() &&
-               f.checkHasMemory() &&
+        return f.checkHasMemory() &&
                f.iter().readStore(ValType::I64, 4, nullptr, nullptr);
       case Expr::I64Store:
-        return f.checkI64Support() &&
-               f.checkHasMemory() &&
+        return f.checkHasMemory() &&
                f.iter().readStore(ValType::I64, 8, nullptr, nullptr);
       case Expr::F32Store:
         return f.checkHasMemory() &&
@@ -617,16 +590,14 @@ DecodeFunctionSection(Decoder& d, ModuleGeneratorData* init)
 static bool
 CheckTypeForJS(Decoder& d, const Sig& sig)
 {
-    bool allowI64 = IsI64Implemented() && JitOptions.wasmTestMode;
-
     for (ValType argType : sig.args()) {
-        if (argType == ValType::I64 && !allowI64)
+        if (argType == ValType::I64 && !JitOptions.wasmTestMode)
             return Fail(d, "cannot import/export i64 argument");
         if (IsSimdType(argType))
             return Fail(d, "cannot import/export SIMD argument");
     }
 
-    if (sig.ret() == ExprType::I64 && !allowI64)
+    if (sig.ret() == ExprType::I64 && !JitOptions.wasmTestMode)
         return Fail(d, "cannot import/export i64 return type");
     if (IsSimdType(sig.ret()))
         return Fail(d, "cannot import/export SIMD return type");
@@ -753,9 +724,6 @@ DecodeGlobalType(Decoder& d, ValType* type, bool* isMutable)
 {
     if (!d.readValType(type))
         return Fail(d, "bad global type");
-
-    if (*type == ValType::I64 && !IsI64Implemented())
-        return Fail(d, "int64 NYI");
 
     uint32_t flags;
     if (!d.readVarU32(&flags))

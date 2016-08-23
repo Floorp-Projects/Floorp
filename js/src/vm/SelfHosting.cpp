@@ -1924,11 +1924,12 @@ static bool
 intrinsic_ConstructFunction(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    MOZ_ASSERT(args.length() == 2);
+    MOZ_ASSERT(args.length() == 3);
     MOZ_ASSERT(args[0].toObject().is<JSFunction>());
-    MOZ_ASSERT(args[1].toObject().is<ArrayObject>());
+    MOZ_ASSERT(IsConstructor(args[1]));
+    MOZ_ASSERT(args[2].toObject().is<ArrayObject>());
 
-    RootedArrayObject argsList(cx, &args[1].toObject().as<ArrayObject>());
+    RootedArrayObject argsList(cx, &args[2].toObject().as<ArrayObject>());
     uint32_t len = argsList->length();
     ConstructArgs constructArgs(cx);
     if (!constructArgs.init(len))
@@ -1937,7 +1938,7 @@ intrinsic_ConstructFunction(JSContext* cx, unsigned argc, Value* vp)
         constructArgs[index].set(argsList->getDenseElement(index));
 
     RootedObject res(cx);
-    if (!Construct(cx, args[0], constructArgs, args[0], &res))
+    if (!Construct(cx, args[0], constructArgs, args[1], &res))
         return false;
 
     args.rval().setObject(*res);

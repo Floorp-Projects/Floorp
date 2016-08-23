@@ -464,9 +464,9 @@ nsDumpUtils::OpenTempFile(const nsACString& aFilename, nsIFile** aFile,
       return rv;
     }
 
-    // It's OK if this fails; that probably just means that the directory already
-    // exists.
-    (*aFile)->Create(nsIFile::DIRECTORY_TYPE, 0777);
+    // It's OK if this fails; that probably just means that the directory
+    // already exists.
+    Unused << (*aFile)->Create(nsIFile::DIRECTORY_TYPE, 0777);
 
     nsAutoCString dirPath;
     rv = (*aFile)->GetNativePath(dirPath);
@@ -488,11 +488,11 @@ nsDumpUtils::OpenTempFile(const nsACString& aFilename, nsIFile** aFile,
 
   if (aMode == CREATE_UNIQUE) {
     rv = file->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0666);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
   } else {
-    file->Create(nsIFile::NORMAL_FILE_TYPE, 0666);
+    rv = file->Create(nsIFile::NORMAL_FILE_TYPE, 0666);
+  }
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
   }
 
 #ifdef ANDROID
