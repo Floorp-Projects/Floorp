@@ -146,7 +146,7 @@ public:
   void ClearData(const mozilla::dom::Optional<nsAString>& aFormat,
                  mozilla::ErrorResult& aRv);
 
-  FileList* GetFiles(mozilla::ErrorResult& aRv);
+  already_AddRefed<FileList> GetFiles(mozilla::ErrorResult& aRv);
 
   already_AddRefed<Promise> GetFilesAndDirectories(ErrorResult& aRv);
 
@@ -270,6 +270,10 @@ public:
   // converts some formats used for compatibility in aInFormat into aOutFormat.
   // Text and text/unicode become text/plain, and URL becomes text/uri-list
   void GetRealFormat(const nsAString& aInFormat, nsAString& aOutFormat) const;
+
+  static bool PrincipalMaySetData(const nsAString& aFormat,
+                                  nsIVariant* aData,
+                                  nsIPrincipal* aPrincipal);
 
 protected:
 
