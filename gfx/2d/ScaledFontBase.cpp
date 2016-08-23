@@ -235,6 +235,7 @@ ScaledFontBase::GetGlyphDesignMetrics(const uint16_t* aGlyphs, uint32_t aNumGlyp
         }
 #endif
       }
+      cairo_font_options_destroy(options);
     }
 
   }

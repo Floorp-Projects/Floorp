@@ -139,7 +139,9 @@ ReadSuffixAndSpec(JSStructuredCloneReader* aReader,
         return false;
     }
 
-    aAttrs.PopulateFromSuffix(suffix);
+    if (!aAttrs.PopulateFromSuffix(suffix)) {
+        return false;
+    }
 
     aSpec.SetLength(specLength);
     if (!JS_ReadBytes(aReader, aSpec.BeginWriting(), specLength)) {
