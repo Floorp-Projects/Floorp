@@ -34,13 +34,16 @@ function SourceMapService(target) {
   target.on("source-updated", this._onSourceUpdated);
   target.on("navigate", this.reset);
   target.on("will-navigate", this.reset);
-  target.on("close", this.destroy);
 }
 
 /**
  * Clears the store containing the cached promised locations
  */
 SourceMapService.prototype.reset = function () {
+  // Guard to prevent clearing the store when it is not initialized yet.
+  if (!this._locationStore) {
+    return;
+  }
   this._locationStore.clear();
   this._isNotSourceMapped.clear();
 };
@@ -84,9 +87,10 @@ SourceMapService.prototype.unsubscribe = function (location, callback) {
   // Check to see if the store exists before attempting to clear a location
   // Sometimes un-subscribe happens during the destruction cascades and this
   // condition is to protect against that. Could be looked into in the future.
-  if (this._locationStore) {
-    this._locationStore.clearByURL(location.url);
+  if (!this._locationStore) {
+    return;
   }
+  this._locationStore.clearByURL(location.url);
 };
 
 /**
