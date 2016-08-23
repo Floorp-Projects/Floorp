@@ -6,12 +6,16 @@
 # concurrent access to a cache that it generates.
 .NOTPARALLEL:
 
-annotation_processor_jar_files := $(DEPTH)/build/annotationProcessors/annotationProcessors.jar:$(ANDROID_TOOLS)/lib/lint.jar:$(ANDROID_TOOLS)/lib/lint-checks.jar
+annotation_processor_jar_files := \
+  $(DEPTH)/build/annotationProcessors/annotationProcessors.jar \
+  $(ANDROID_TOOLS)/lib/lint.jar \
+  $(ANDROID_TOOLS)/lib/lint-checks.jar \
+  $(NULL)
 
 sdk_processor := \
   $(JAVA) \
   -Dcom.android.tools.lint.bindir='$(ANDROID_TOOLS)' \
-  -classpath $(annotation_processor_jar_files) \
+  -classpath $(subst $(NULL) ,:,$(strip $(annotation_processor_jar_files))) \
   org.mozilla.gecko.annotationProcessors.SDKProcessor
 
 # For the benefit of readers: the following pattern rule says that,
@@ -19,5 +23,5 @@ sdk_processor := \
 # MediaCodec-classes.txt.  This formulation invokes the SDK processor
 # at most once.
 
-%.cpp %.h: $(ANDROID_SDK)/android.jar %-classes.txt
+%.cpp %.h: $(ANDROID_SDK)/android.jar %-classes.txt $(annotation_processor_jar_files)
 	$(sdk_processor) $(ANDROID_SDK)/android.jar $(srcdir)/$*-classes.txt $(CURDIR) $* 16
