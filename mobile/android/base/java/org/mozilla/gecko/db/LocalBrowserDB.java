@@ -24,6 +24,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.mozilla.gecko.AppConstants;
+import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.db.BrowserContract.Bookmarks;
@@ -55,9 +56,11 @@ import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
+import android.os.SystemClock;
 import android.support.annotation.CheckResult;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v4.content.CursorLoader;
 import android.text.TextUtils;
 import android.util.Log;
 import org.mozilla.gecko.util.IOUtils;
@@ -97,6 +100,8 @@ public class LocalBrowserDB implements BrowserDB {
     public static String HISTORY_VISITS_DATE = "date";
     public static String HISTORY_VISITS_COUNT = "visits";
     public static String HISTORY_VISITS_URL = "url";
+
+    private static final String TELEMETRY_HISTOGRAM_ACITIVITY_STREAM_TOPSITES = "FENNEC_ACTIVITY_STREAM_TOPSITES_LOADER_TIME_MS";
 
     private final Uri mBookmarksUriWithProfile;
     private final Uri mParentsUriWithProfile;
@@ -1823,6 +1828,55 @@ public class LocalBrowserDB implements BrowserDB {
 
             urls.add(url);
         } while (c.moveToNext());
+    }
+
+
+    /**
+     * Internal CursorLoader that extends the framework CursorLoader in order to measure
+     * performance for telemetry purposes.
+     */
+    private static final class TelemetrisedCursorLoader extends CursorLoader {
+        final String mHistogramName;
+
+        public TelemetrisedCursorLoader(Context context, Uri uri, String[] projection, String selection,
+                                        String[] selectionArgs, String sortOrder,
+                                        final String histogramName) {
+            super(context, uri, projection, selection, selectionArgs, sortOrder);
+            mHistogramName = histogramName;
+        }
+
+        @Override
+        public Cursor loadInBackground() {
+            final long start = SystemClock.uptimeMillis();
+
+            final Cursor cursor = super.loadInBackground();
+
+            final long end = SystemClock.uptimeMillis();
+            final long took = end - start;
+
+            Telemetry.addToHistogram(mHistogramName, (int) Math.min(took, Integer.MAX_VALUE));
+            return cursor;
+        }
+    }
+
+    public CursorLoader getActivityStreamTopSites(Context context, int limit) {
+        final Uri uri = mTopSitesUriWithProfile.buildUpon()
+                .appendQueryParameter(BrowserContract.PARAM_LIMIT,
+                        String.valueOf(limit))
+                .appendQueryParameter(BrowserContract.PARAM_TOPSITES_DISABLE_PINNED, Boolean.TRUE.toString())
+                .build();
+
+        return new TelemetrisedCursorLoader(context,
+                uri,
+                new String[]{ Combined._ID,
+                        Combined.URL,
+                        Combined.TITLE,
+                        Combined.BOOKMARK_ID,
+                        Combined.HISTORY_ID },
+                null,
+                null,
+                null,
+                TELEMETRY_HISTOGRAM_ACITIVITY_STREAM_TOPSITES);
     }
 
     @Override
