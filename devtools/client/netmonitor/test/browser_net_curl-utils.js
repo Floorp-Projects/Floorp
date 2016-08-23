@@ -9,69 +9,64 @@
 
 const { CurlUtils } = require("devtools/client/shared/curl");
 
-function test() {
-  initNetMonitor(CURL_UTILS_URL).then(([aTab, aDebuggee, aMonitor]) => {
-    info("Starting test... ");
+add_task(function* () {
+  let [tab, , monitor] = yield initNetMonitor(CURL_UTILS_URL);
+  info("Starting test... ");
 
-    let { NetMonitorView, gNetwork } = aMonitor.panelWin;
-    let { RequestsMenu } = NetMonitorView;
+  let { NetMonitorView, gNetwork } = monitor.panelWin;
+  let { RequestsMenu } = NetMonitorView;
 
-    RequestsMenu.lazyUpdate = false;
+  RequestsMenu.lazyUpdate = false;
 
-    waitForNetworkEvents(aMonitor, 1, 3).then(() => {
-      let requests = {
-        get: RequestsMenu.getItemAtIndex(0),
-        post: RequestsMenu.getItemAtIndex(1),
-        multipart: RequestsMenu.getItemAtIndex(2),
-        multipartForm: RequestsMenu.getItemAtIndex(3)
-      };
-
-      Task.spawn(function* () {
-        yield createCurlData(requests.get.attachment, gNetwork).then((aData) => {
-          test_findHeader(aData);
-        });
-
-        yield createCurlData(requests.post.attachment, gNetwork).then((aData) => {
-          test_isUrlEncodedRequest(aData);
-          test_writePostDataTextParams(aData);
-        });
-
-        yield createCurlData(requests.multipart.attachment, gNetwork).then((aData) => {
-          test_isMultipartRequest(aData);
-          test_getMultipartBoundary(aData);
-          test_removeBinaryDataFromMultipartText(aData);
-        });
-
-        yield createCurlData(requests.multipartForm.attachment, gNetwork).then((aData) => {
-          test_getHeadersFromMultipartText(aData);
-        });
-
-        if (Services.appinfo.OS != "WINNT") {
-          test_escapeStringPosix();
-        } else {
-          test_escapeStringWin();
-        }
-
-        teardown(aMonitor).then(finish);
-      });
-    });
-
-    aDebuggee.performRequests(SIMPLE_SJS);
+  let wait = waitForNetworkEvents(monitor, 1, 3);
+  yield ContentTask.spawn(tab.linkedBrowser, SIMPLE_SJS, function* (url) {
+    content.wrappedJSObject.performRequests(url);
   });
-}
+  yield wait;
 
-function test_isUrlEncodedRequest(aData) {
-  let isUrlEncoded = CurlUtils.isUrlEncodedRequest(aData);
+  let requests = {
+    get: RequestsMenu.getItemAtIndex(0),
+    post: RequestsMenu.getItemAtIndex(1),
+    multipart: RequestsMenu.getItemAtIndex(2),
+    multipartForm: RequestsMenu.getItemAtIndex(3)
+  };
+
+  let data = yield createCurlData(requests.get.attachment, gNetwork);
+  testFindHeader(data);
+
+  data = yield createCurlData(requests.post.attachment, gNetwork);
+  testIsUrlEncodedRequest(data);
+  testWritePostDataTextParams(data);
+
+  data = yield createCurlData(requests.multipart.attachment, gNetwork);
+  testIsMultipartRequest(data);
+  testGetMultipartBoundary(data);
+  testRemoveBinaryDataFromMultipartText(data);
+
+  data = yield createCurlData(requests.multipartForm.attachment, gNetwork);
+  testGetHeadersFromMultipartText(data);
+
+  if (Services.appinfo.OS != "WINNT") {
+    testEscapeStringPosix();
+  } else {
+    testEscapeStringWin();
+  }
+
+  yield teardown(monitor);
+});
+
+function testIsUrlEncodedRequest(data) {
+  let isUrlEncoded = CurlUtils.isUrlEncodedRequest(data);
   ok(isUrlEncoded, "Should return true for url encoded requests.");
 }
 
-function test_isMultipartRequest(aData) {
-  let isMultipart = CurlUtils.isMultipartRequest(aData);
+function testIsMultipartRequest(data) {
+  let isMultipart = CurlUtils.isMultipartRequest(data);
   ok(isMultipart, "Should return true for multipart/form-data requests.");
 }
 
-function test_findHeader(aData) {
-  let headers = aData.headers;
+function testFindHeader(data) {
+  let headers = data.headers;
   let hostName = CurlUtils.findHeader(headers, "Host");
   let requestedWithLowerCased = CurlUtils.findHeader(headers, "x-requested-with");
   let doesNotExist = CurlUtils.findHeader(headers, "X-Does-Not-Exist");
@@ -84,21 +79,21 @@ function test_findHeader(aData) {
     "Should return null when a header is not found.");
 }
 
-function test_writePostDataTextParams(aData) {
-  let params = CurlUtils.writePostDataTextParams(aData.postDataText);
+function testWritePostDataTextParams(data) {
+  let params = CurlUtils.writePostDataTextParams(data.postDataText);
   is(params, "param1=value1&param2=value2&param3=value3",
     "Should return a serialized representation of the request parameters");
 }
 
-function test_getMultipartBoundary(aData) {
-  let boundary = CurlUtils.getMultipartBoundary(aData);
+function testGetMultipartBoundary(data) {
+  let boundary = CurlUtils.getMultipartBoundary(data);
   ok(/-{3,}\w+/.test(boundary),
     "A boundary string should be found in a multipart request.");
 }
 
-function test_removeBinaryDataFromMultipartText(aData) {
-  let generatedBoundary = CurlUtils.getMultipartBoundary(aData);
-  let text = aData.postDataText;
+function testRemoveBinaryDataFromMultipartText(data) {
+  let generatedBoundary = CurlUtils.getMultipartBoundary(data);
+  let text = data.postDataText;
   let binaryRemoved =
     CurlUtils.removeBinaryDataFromMultipartText(text, generatedBoundary);
   let boundary = "--" + generatedBoundary;
@@ -149,18 +144,15 @@ function test_removeBinaryDataFromMultipartText(aData) {
   }
 }
 
-function test_getHeadersFromMultipartText(aData) {
-  let headers = CurlUtils.getHeadersFromMultipartText(aData.postDataText);
+function testGetHeadersFromMultipartText(data) {
+  let headers = CurlUtils.getHeadersFromMultipartText(data.postDataText);
 
-  ok(Array.isArray(headers),
-    "Should return an array.");
-  ok(headers.length > 0,
-    "There should exist at least one request header.");
-  is(headers[0].name, "Content-Type",
-    "The first header name should be 'Content-Type'.");
+  ok(Array.isArray(headers), "Should return an array.");
+  ok(headers.length > 0, "There should exist at least one request header.");
+  is(headers[0].name, "Content-Type", "The first header name should be 'Content-Type'.");
 }
 
-function test_escapeStringPosix() {
+function testEscapeStringPosix() {
   let surroundedWithQuotes = "A simple string";
   is(CurlUtils.escapeStringPosix(surroundedWithQuotes), "'A simple string'",
     "The string should be surrounded with single quotes.");
@@ -184,7 +176,7 @@ function test_escapeStringPosix() {
     "Character codes outside of the decimal range 32 - 126 should be escaped.");
 }
 
-function test_escapeStringWin() {
+function testEscapeStringWin() {
   let surroundedWithDoubleQuotes = "A simple string";
   is(CurlUtils.escapeStringWin(surroundedWithDoubleQuotes), '"A simple string"',
     "The string should be surrounded with double quotes.");
@@ -208,29 +200,29 @@ function test_escapeStringWin() {
     "Newlines should be escaped.");
 }
 
-function createCurlData(aSelected, aNetwork) {
-  return Task.spawn(function* () {
-    // Create a sanitized object for the Curl command generator.
-    let data = {
-      url: aSelected.url,
-      method: aSelected.method,
-      headers: [],
-      httpVersion: aSelected.httpVersion,
-      postDataText: null
-    };
+function* createCurlData(selected, network, controller) {
+  let { url, method, httpVersion } = selected;
 
-    // Fetch header values.
-    for (let { name, value } of aSelected.requestHeaders.headers) {
-      let text = yield aNetwork.getString(value);
-      data.headers.push({ name: name, value: text });
-    }
+  // Create a sanitized object for the Curl command generator.
+  let data = {
+    url,
+    method,
+    headers: [],
+    httpVersion,
+    postDataText: null
+  };
 
-    // Fetch the request payload.
-    if (aSelected.requestPostData) {
-      let postData = aSelected.requestPostData.postData.text;
-      data.postDataText = yield aNetwork.getString(postData);
-    }
+  // Fetch header values.
+  for (let { name, value } of selected.requestHeaders.headers) {
+    let text = yield network.getString(value);
+    data.headers.push({ name: name, value: text });
+  }
 
-    return data;
-  });
+  // Fetch the request payload.
+  if (selected.requestPostData) {
+    let postData = selected.requestPostData.postData.text;
+    data.postDataText = yield network.getString(postData);
+  }
+
+  return data;
 }
