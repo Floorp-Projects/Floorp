@@ -2930,21 +2930,21 @@ SourceMediaStream::SetTrackEnabledImpl(TrackID aTrackID, DisabledTrackMode aMode
   {
     MutexAutoLock lock(mMutex);
     for (TrackBound<DirectMediaStreamTrackListener>& l: mDirectTrackListeners) {
-      if (l.mTrackID == aTrackID) {
-        MOZ_ASSERT(l.mListener->mMedia->GetType() == MediaSegment::AUDIO,
-                   "Must implement DisabledTrackMode support for MediaStreamTrackDirectListener for video");
-        bool oldEnabled = GetDisabledTrackMode(aTrackID) == DisabledTrackMode::ENABLED;
-        if (!oldEnabled && aMode == DisabledTrackMode::ENABLED) {
-          STREAM_LOG(LogLevel::Debug, ("SourceMediaStream %p track %d setting "
-                                       "direct listener enabled",
-                                       this, aTrackID));
-          l.mListener->DecreaseDisabled();
-        } else if (oldEnabled && aMode != DisabledTrackMode::ENABLED) {
-          STREAM_LOG(LogLevel::Debug, ("SourceMediaStream %p track %d setting "
-                                       "direct listener disabled",
-                                       this, aTrackID));
-          l.mListener->IncreaseDisabled();
-        }
+      if (l.mTrackID != aTrackID) {
+        continue;
+      }
+      DisabledTrackMode oldMode = GetDisabledTrackMode(aTrackID);
+      bool oldEnabled = oldMode == DisabledTrackMode::ENABLED;
+      if (!oldEnabled && aMode == DisabledTrackMode::ENABLED) {
+        STREAM_LOG(LogLevel::Debug, ("SourceMediaStream %p track %d setting "
+                                     "direct listener enabled",
+                                     this, aTrackID));
+        l.mListener->DecreaseDisabled(oldMode);
+      } else if (oldEnabled && aMode != DisabledTrackMode::ENABLED) {
+        STREAM_LOG(LogLevel::Debug, ("SourceMediaStream %p track %d setting "
+                                     "direct listener disabled",
+                                     this, aTrackID));
+        l.mListener->IncreaseDisabled(aMode);
       }
     }
   }
