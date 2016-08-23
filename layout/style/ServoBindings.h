@@ -65,6 +65,7 @@ struct ServoDeclarationBlock;
 
 DECL_REF_TYPE_FOR(ServoComputedValues)
 DECL_REF_TYPE_FOR(RawServoStyleSheet)
+DECL_REF_TYPE_FOR(ServoDeclarationBlock)
 
 #undef DECL_REF_TYPE_FOR
 
@@ -145,7 +146,7 @@ SERVO_DECLARE_ELEMENT_ATTR_MATCHING_FUNCTIONS(Gecko_Snapshot,
 #undef SERVO_DECLARE_ELEMENT_ATTR_MATCHING_FUNCTIONS
 
 // Style attributes.
-ServoDeclarationBlock* Gecko_GetServoDeclarationBlock(RawGeckoElement* element);
+ServoDeclarationBlockBorrowed Gecko_GetServoDeclarationBlock(RawGeckoElement* element);
 
 // Node data.
 ServoNodeData* Gecko_GetNodeData(RawGeckoNode* node);
