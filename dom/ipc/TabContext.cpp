@@ -369,7 +369,10 @@ MaybeInvalidTabContext::MaybeInvalidTabContext(const IPCTabContext& aParams)
       showAccelerators = ipcContext.showAccelerators();
       showFocusRings = ipcContext.showFocusRings();
       originSuffix = ipcContext.originSuffix();
-      originAttributes.PopulateFromSuffix(originSuffix);
+      if (!originAttributes.PopulateFromSuffix(originSuffix)) {
+        mInvalidReason = "Populate originAttributes from originSuffix failed.";
+        return;
+      }
       break;
     }
     case IPCTabContext::TUnsafeIPCTabContext: {
