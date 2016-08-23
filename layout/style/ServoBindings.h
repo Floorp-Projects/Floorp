@@ -16,24 +16,6 @@
 #include "nsStyleStruct.h"
 #include "stdint.h"
 
-#define DECL_STRONG_REF_TYPE(name, T)                   \
-  struct MOZ_MUST_USE_TYPE name {                         \
-    T* mPtr;                                              \
-    already_AddRefed<T> Consume();                        \
-  }
-
-#define DECL_BORROWED_REF_TYPE(name, T)                 \
-  struct name {                                           \
-    T* mPtr;                                              \
-    MOZ_IMPLICIT                                          \
-    name(T* x): mPtr(x) {};                               \
-    MOZ_IMPLICIT                                          \
-    name(const RefPtr<T>& aPtr) : mPtr(aPtr.get()) {};    \
-    operator T*() const & {                               \
-      return mPtr;                                        \
-    }                                                     \
-  }
-
 /*
  * API for Servo to access Gecko data structures. This file must compile as valid
  * C code in order for the binding generator to parse it.
@@ -62,11 +44,7 @@ class nsIDocument;
 typedef nsIDocument RawGeckoDocument;
 struct ServoNodeData;
 struct ServoComputedValues;
-DECL_STRONG_REF_TYPE(ServoComputedValuesStrong, ServoComputedValues);
-DECL_BORROWED_REF_TYPE(ServoComputedValuesBorrowed, ServoComputedValues);
 struct RawServoStyleSheet;
-DECL_STRONG_REF_TYPE(RawServoStyleSheetStrong, RawServoStyleSheet);
-DECL_BORROWED_REF_TYPE(RawServoStyleSheetBorrowed, RawServoStyleSheet);
 struct RawServoStyleSet;
 class nsHTMLCSSStyleSheet;
 struct nsStyleList;
@@ -76,6 +54,19 @@ class nsStyleGradient;
 class nsStyleCoord;
 struct nsStyleDisplay;
 struct ServoDeclarationBlock;
+
+#define DECL_REF_TYPE_FOR(type_)          \
+  typedef type_* type_##Borrowed;         \
+  struct MOZ_MUST_USE_TYPE type_##Strong  \
+  {                                       \
+    type_* mPtr;                          \
+    already_AddRefed<type_> Consume();    \
+  };
+
+DECL_REF_TYPE_FOR(ServoComputedValues)
+DECL_REF_TYPE_FOR(RawServoStyleSheet)
+
+#undef DECL_REF_TYPE_FOR
 
 #define NS_DECL_THREADSAFE_FFI_REFCOUNTING(class_, name_)                     \
   void Gecko_AddRef##name_##ArbitraryThread(class_* aPtr);                    \
