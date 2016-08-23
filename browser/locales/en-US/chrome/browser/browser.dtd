@@ -206,26 +206,31 @@ These should match what Safari and other Apple applications use on OS X Lion. --
 <!ENTITY printButton.tooltip          "Print this page">
 
 <!ENTITY urlbar.viewSiteInfo.label                      "View site information">
-<!-- LOCALIZATION NOTE: all of the following urlbar NotificationAnchor.label strings are
-     used to provide accessible labels to users of assistive technology like screenreaders.
-     It is not possible to see them visually in the UI. -->
-<!ENTITY urlbar.defaultNotificationAnchor.label         "View a notification">
-<!ENTITY urlbar.geolocationNotificationAnchor.label     "View the location request">
-<!ENTITY urlbar.addonsNotificationAnchor.label          "View the add-on install message">
-<!ENTITY urlbar.indexedDBNotificationAnchor.label       "View the app-offline storage message">
-<!ENTITY urlbar.loginFillNotificationAnchor.label       "Manage your login information">
-<!ENTITY urlbar.passwordNotificationAnchor.label        "Check if you want to save your password">
-<!ENTITY urlbar.pluginsNotificationAnchor.label         "Manage plugin usage on this page">
-<!ENTITY urlbar.webNotsNotificationAnchor3.label        "Change whether you can receive notifications from the site">
 
-<!ENTITY urlbar.webRTCShareDevicesNotificationAnchor.label      "Manage sharing your camera and/or microphone with the site">
-<!ENTITY urlbar.webRTCShareMicrophoneNotificationAnchor.label   "Manage sharing your microphone with the site">
-<!ENTITY urlbar.webRTCShareScreenNotificationAnchor.label       "Manage sharing your windows or screen with the site">
+<!ENTITY urlbar.defaultNotificationAnchor.tooltip         "Open message panel">
+<!ENTITY urlbar.geolocationNotificationAnchor.tooltip     "Open location request panel">
+<!ENTITY urlbar.addonsNotificationAnchor.tooltip          "Open add-on installation message panel">
+<!ENTITY urlbar.indexedDBNotificationAnchor.tooltip       "Open offline storage message panel">
+<!ENTITY urlbar.loginFillNotificationAnchor.tooltip       "Manage your login information">
+<!ENTITY urlbar.passwordNotificationAnchor.tooltip        "Open save password message panel">
+<!ENTITY urlbar.pluginsNotificationAnchor.tooltip         "Manage plug-in use">
+<!ENTITY urlbar.webNotificationAnchor.tooltip             "Change whether you can receive notifications from the site">
 
-<!ENTITY urlbar.servicesNotificationAnchor.label        "View the service install message">
-<!ENTITY urlbar.translateNotificationAnchor.label       "Translate this page">
-<!ENTITY urlbar.translatedNotificationAnchor.label      "Manage page translation">
-<!ENTITY urlbar.emeNotificationAnchor.label             "Manage use of DRM software">
+<!ENTITY urlbar.webRTCShareDevicesNotificationAnchor.tooltip      "Manage sharing your camera and/or microphone with the site">
+<!ENTITY urlbar.webRTCShareMicrophoneNotificationAnchor.tooltip   "Manage sharing your microphone with the site">
+<!ENTITY urlbar.webRTCShareScreenNotificationAnchor.tooltip       "Manage sharing your windows or screen with the site">
+
+<!ENTITY urlbar.servicesNotificationAnchor.tooltip        "Open install message panel">
+<!ENTITY urlbar.translateNotificationAnchor.tooltip       "Translate this page">
+<!ENTITY urlbar.translatedNotificationAnchor.tooltip      "Manage page translation">
+<!ENTITY urlbar.emeNotificationAnchor.tooltip             "Manage use of DRM software">
+
+<!ENTITY urlbar.cameraBlocked.tooltip            "You have blocked your camera for this website.">
+<!ENTITY urlbar.microphoneBlocked.tooltip        "You have blocked your microphone for this website.">
+<!ENTITY urlbar.screenBlocked.tooltip            "You have blocked this website from sharing your screen.">
+<!ENTITY urlbar.geolocationBlocked.tooltip       "You have blocked location information for this website.">
+<!ENTITY urlbar.indexedDBBlocked.tooltip         "You have blocked data storage for this website.">
+<!ENTITY urlbar.webNotificationsBlocked.tooltip  "You have blocked notifications for this website.">
 
 <!ENTITY urlbar.openHistoryPopup.tooltip                "Show history">
 

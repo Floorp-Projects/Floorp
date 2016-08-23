@@ -691,56 +691,55 @@
                        consumeanchor="identity-box"
                        onclick="PageProxyClickHandler(event);"/>
                 <image id="sharing-icon" mousethrough="always"/>
-                <box id="blocked-permissions-container" align="center" tooltiptext="">
+                <box id="blocked-permissions-container" align="center">
                   <image data-permission-id="geo" class="blocked-permission-icon geo-icon" role="button"
-                         aria-label="&urlbar.geolocationNotificationAnchor.label;"/>
+                         tooltiptext="&urlbar.geolocationBlocked.tooltip;"/>
                   <image data-permission-id="desktop-notification" class="blocked-permission-icon desktop-notification-icon" role="button"
-                         aria-label="&urlbar.webNotsNotificationAnchor3.label;"/>
+                         tooltiptext="&urlbar.webNotificationsBlocked.tooltip;"/>
                   <image data-permission-id="camera" class="blocked-permission-icon camera-icon" role="button"
-                         aria-label="&urlbar.webRTCShareDevicesNotificationAnchor.label;"/>
+                         tooltiptext="&urlbar.cameraBlocked.tooltip;"/>
                   <image data-permission-id="indexedDB" class="blocked-permission-icon indexedDB-icon" role="button"
-                         aria-label="&urlbar.indexedDBNotificationAnchor.label;"/>
+                         tooltiptext="&urlbar.indexedDBBlocked.tooltip;"/>
                   <image data-permission-id="microphone" class="blocked-permission-icon microphone-icon" role="button"
-                         aria-label="&urlbar.webRTCShareMicrophoneNotificationAnchor.label;"/>
+                         tooltiptext="&urlbar.microphoneBlocked.tooltip;"/>
                   <image data-permission-id="screen" class="blocked-permission-icon screen-icon" role="button"
-                         aria-label="&urlbar.webRTCShareScreenNotificationAnchor.label;"/>
+                         tooltiptext="&urlbar.screenBlocked.tooltip;"/>
                 </box>
                 <box id="notification-popup-box"
                      hidden="true"
-                     tooltiptext=""
                      onmouseover="document.getElementById('identity-icon').classList.add('no-hover');"
                      onmouseout="document.getElementById('identity-icon').classList.remove('no-hover');"
                      align="center">
                   <image id="default-notification-icon" class="notification-anchor-icon" role="button"
-                         aria-label="&urlbar.defaultNotificationAnchor.label;"/>
+                         tooltiptext="&urlbar.defaultNotificationAnchor.tooltip;"/>
                   <image id="geo-notification-icon" class="notification-anchor-icon geo-icon" role="button"
-                         aria-label="&urlbar.geolocationNotificationAnchor.label;"/>
+                         tooltiptext="&urlbar.geolocationNotificationAnchor.tooltip;"/>
                   <image id="addons-notification-icon" class="notification-anchor-icon install-icon" role="button"
-                         aria-label="&urlbar.addonsNotificationAnchor.label;"/>
+                         tooltiptext="&urlbar.addonsNotificationAnchor.tooltip;"/>
                   <image id="indexedDB-notification-icon" class="notification-anchor-icon indexedDB-icon" role="button"
-                         aria-label="&urlbar.indexedDBNotificationAnchor.label;"/>
+                         tooltiptext="&urlbar.indexedDBNotificationAnchor.tooltip;"/>
                   <image id="login-fill-notification-icon" class="notification-anchor-icon login-icon" role="button"
-                         aria-label="&urlbar.loginFillNotificationAnchor.label;"/>
+                         tooltiptext="&urlbar.loginFillNotificationAnchor.tooltip;"/>
                   <image id="password-notification-icon" class="notification-anchor-icon login-icon" role="button"
-                         aria-label="&urlbar.passwordNotificationAnchor.label;"/>
+                         tooltiptext="&urlbar.passwordNotificationAnchor.tooltip;"/>
                   <image id="plugins-notification-icon" class="notification-anchor-icon plugin-icon" role="button"
-                         aria-label="&urlbar.pluginsNotificationAnchor.label;"/>
+                         tooltiptext="&urlbar.pluginsNotificationAnchor.tooltip;"/>
                   <image id="web-notifications-notification-icon" class="notification-anchor-icon desktop-notification-icon" role="button"
-                         aria-label="&urlbar.webNotsNotificationAnchor3.label;"/>
+                         tooltiptext="&urlbar.webNotificationAnchor.tooltip;"/>
                   <image id="webRTC-shareDevices-notification-icon" class="notification-anchor-icon camera-icon" role="button"
-                         aria-label="&urlbar.webRTCShareDevicesNotificationAnchor.label;"/>
+                         tooltiptext="&urlbar.webRTCShareDevicesNotificationAnchor.tooltip;"/>
                   <image id="webRTC-shareMicrophone-notification-icon" class="notification-anchor-icon microphone-icon" role="button"
-                         aria-label="&urlbar.webRTCShareMicrophoneNotificationAnchor.label;"/>
+                         tooltiptext="&urlbar.webRTCShareMicrophoneNotificationAnchor.tooltip;"/>
                   <image id="webRTC-shareScreen-notification-icon" class="notification-anchor-icon screen-icon" role="button"
-                         aria-label="&urlbar.webRTCShareScreenNotificationAnchor.label;"/>
+                         tooltiptext="&urlbar.webRTCShareScreenNotificationAnchor.tooltip;"/>
                   <image id="servicesInstall-notification-icon" class="notification-anchor-icon service-icon" role="button"
-                         aria-label="&urlbar.servicesNotificationAnchor.label;"/>
+                         tooltiptext="&urlbar.servicesNotificationAnchor.tooltip;"/>
                   <image id="translate-notification-icon" class="notification-anchor-icon translation-icon" role="button"
-                         aria-label="&urlbar.translateNotificationAnchor.label;"/>
+                         tooltiptext="&urlbar.translateNotificationAnchor.tooltip;"/>
                   <image id="translated-notification-icon" class="notification-anchor-icon translation-icon in-use" role="button"
-                         aria-label="&urlbar.translatedNotificationAnchor.label;"/>
+                         tooltiptext="&urlbar.translatedNotificationAnchor.tooltip;"/>
                   <image id="eme-notification-icon" class="notification-anchor-icon drm-icon" role="button"
-                         aria-label="&urlbar.emeNotificationAnchor.label;"/>
+                         tooltiptext="&urlbar.emeNotificationAnchor.tooltip;"/>
                 </box>
                 <image id="tracking-protection-icon"/>
                 <image id="connection-icon"/>
