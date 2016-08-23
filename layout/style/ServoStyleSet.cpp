@@ -19,7 +19,7 @@ using namespace mozilla::dom;
 
 ServoStyleSet::ServoStyleSet()
   : mPresContext(nullptr)
-  , mRawSet(Servo_InitStyleSet())
+  , mRawSet(Servo_StyleSet_Init())
   , mBatching(0)
   , mStylingStarted(false)
 {
@@ -97,7 +97,7 @@ ServoStyleSet::GetContext(nsIContent* aContent,
                           CSSPseudoElementType aPseudoType)
 {
   RefPtr<ServoComputedValues> computedValues =
-    Servo_GetComputedValues(aContent).Consume();
+    Servo_ComputedValues_Get(aContent).Consume();
   MOZ_ASSERT(computedValues);
   return GetContext(computedValues.forget(), aParentContext, aPseudoTag, aPseudoType);
 }
@@ -159,9 +159,9 @@ ServoStyleSet::ResolveStyleForText(nsIContent* aTextNode,
     ServoComputedValues* parentComputedValues =
       aParentContext->StyleSource().AsServoComputedValues();
     computedValues =
-      Servo_InheritComputedValues(parentComputedValues).Consume();
+      Servo_ComputedValues_Inherit(parentComputedValues).Consume();
   } else {
-    computedValues = Servo_GetComputedValues(aTextNode).Consume();
+    computedValues = Servo_ComputedValues_Get(aTextNode).Consume();
   }
 
   return GetContext(computedValues.forget(), aParentContext,
@@ -176,7 +176,7 @@ ServoStyleSet::ResolveStyleForOtherNonElement(nsStyleContext* aParentContext)
   ServoComputedValues* parent =
     aParentContext ? aParentContext->StyleSource().AsServoComputedValues() : nullptr;
   RefPtr<ServoComputedValues> computedValues =
-    Servo_InheritComputedValues(parent).Consume();
+    Servo_ComputedValues_Inherit(parent).Consume();
   MOZ_ASSERT(computedValues);
 
   return GetContext(computedValues.forget(), aParentContext,
@@ -198,7 +198,7 @@ ServoStyleSet::ResolvePseudoElementStyle(Element* aParentElement,
   nsIAtom* pseudoTag = nsCSSPseudoElements::GetPseudoAtom(aType);
 
   RefPtr<ServoComputedValues> computedValues =
-    Servo_GetComputedValuesForPseudoElement(
+    Servo_ComputedValues_GetForPseudoElement(
       aParentContext->StyleSource().AsServoComputedValues(),
       aParentElement, pseudoTag, mRawSet.get(), /* is_probe = */ false).Consume();
   MOZ_ASSERT(computedValues);
@@ -222,8 +222,8 @@ ServoStyleSet::ResolveAnonymousBoxStyle(nsIAtom* aPseudoTag,
     aParentContext ? aParentContext->StyleSource().AsServoComputedValues()
                    : nullptr;
   RefPtr<ServoComputedValues> computedValues =
-    Servo_GetComputedValuesForAnonymousBox(parentStyle, aPseudoTag,
-                                                       mRawSet.get()).Consume();
+    Servo_ComputedValues_GetForAnonymousBox(parentStyle, aPseudoTag,
+                                            mRawSet.get()).Consume();
 #ifdef DEBUG
   if (!computedValues) {
     nsString pseudo;
@@ -393,7 +393,7 @@ ServoStyleSet::ProbePseudoElementStyle(Element* aParentElement,
   nsIAtom* pseudoTag = nsCSSPseudoElements::GetPseudoAtom(aType);
 
   RefPtr<ServoComputedValues> computedValues =
-    Servo_GetComputedValuesForPseudoElement(
+    Servo_ComputedValues_GetForPseudoElement(
       aParentContext->StyleSource().AsServoComputedValues(),
       aParentElement, pseudoTag, mRawSet.get(), /* is_probe = */ true).Consume();
 

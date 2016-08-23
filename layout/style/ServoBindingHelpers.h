@@ -13,27 +13,25 @@
 
 namespace mozilla {
 
-template<>
-struct RefPtrTraits<RawServoStyleSheet>
-{
-  static void AddRef(RawServoStyleSheet* aPtr) {
-    Servo_AddRefStyleSheet(aPtr);
+#define DEFINE_REFPTR_TRAITS(name_, type_)  \
+  template<>                                \
+  struct RefPtrTraits<type_>                \
+  {                                         \
+    static void AddRef(type_* aPtr)         \
+    {                                       \
+      Servo_##name_##_AddRef(aPtr);         \
+    }                                       \
+    static void Release(type_* aPtr)        \
+    {                                       \
+      Servo_##name_##_Release(aPtr);        \
+    }                                       \
   }
-  static void Release(RawServoStyleSheet* aPtr) {
-    Servo_ReleaseStyleSheet(aPtr);
-  }
-};
 
-template<>
-struct RefPtrTraits<ServoComputedValues>
-{
-  static void AddRef(ServoComputedValues* aPtr) {
-    Servo_AddRefComputedValues(aPtr);
-  }
-  static void Release(ServoComputedValues* aPtr) {
-    Servo_ReleaseComputedValues(aPtr);
-  }
-};
+DEFINE_REFPTR_TRAITS(StyleSheet, RawServoStyleSheet);
+DEFINE_REFPTR_TRAITS(ComputedValues, ServoComputedValues);
+DEFINE_REFPTR_TRAITS(DeclarationBlock, ServoDeclarationBlock);
+
+#undef DEFINE_REFPTR_TRAITS
 
 template<>
 class DefaultDelete<RawServoStyleSet>
@@ -41,20 +39,7 @@ class DefaultDelete<RawServoStyleSet>
 public:
   void operator()(RawServoStyleSet* aPtr) const
   {
-    Servo_DropStyleSet(aPtr);
-  }
-};
-
-template<>
-struct RefPtrTraits<ServoDeclarationBlock>
-{
-  static void AddRef(ServoDeclarationBlock* aPtr)
-  {
-    Servo_DeclarationBlock_AddRef(aPtr);
-  }
-  static void Release(ServoDeclarationBlock* aPtr)
-  {
-    Servo_DeclarationBlock_Release(aPtr);
+    Servo_StyleSet_Drop(aPtr);
   }
 };
 
