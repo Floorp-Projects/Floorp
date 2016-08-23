@@ -1,0 +1,33 @@
+--- markup.js
++++ markup.js
+@@ -2998,26 +2994,30 @@ function ElementEditor(container, node) 
+ 
+   // Make the tag name editable (unless this is a remote node or
+   // a document element)
+   if (!node.isDocumentElement) {
+     // Make the tag optionally tabbable but not by default.
+     this.tag.setAttribute("tabindex", "-1");
+     editableField({
+       element: this.tag,
++      multiline: true,
++      maxWidth: () => getAutocompleteMaxWidth(this.tag, this.container.elt),
+       trigger: "dblclick",
+       stopOnReturn: true,
+       done: this.onTagEdit.bind(this),
+       cssProperties: this._cssProperties
+     });
+   }
+ 
+   // Make the new attribute space editable.
+   this.newAttr.editMode = editableField({
+     element: this.newAttr,
++    multiline: true,
++    maxWidth: () => getAutocompleteMaxWidth(this.newAttr, this.container.elt),
+     trigger: "dblclick",
+     stopOnReturn: true,
+     contentType: InplaceEditor.CONTENT_TYPES.CSS_MIXED,
+     popup: this.markup.popup,
+     done: (val, commit) => {
+       if (!commit) {
+         return;
+       }
