@@ -14,6 +14,7 @@
 #include "vpx/vp8cx.h"
 #include "vpx/vpx_encoder.h"
 #include "WebMWriter.h"
+#include "mozilla/media/MediaUtils.h"
 
 namespace mozilla {
 
@@ -364,7 +365,7 @@ nsresult VP8TrackEncoder::PrepareRawFrame(VideoChunk &aChunk)
   } else {
     // Not YCbCr at all. Try to get access to the raw data and convert.
 
-    RefPtr<SourceSurface> surf = img->GetAsSourceSurface();
+    RefPtr<SourceSurface> surf = GetSourceSurface(img.forget());
     if (!surf) {
       VP8LOG("Getting surface from %s image failed\n", Stringify(format).c_str());
       return NS_ERROR_FAILURE;
@@ -430,6 +431,37 @@ nsresult VP8TrackEncoder::PrepareRawFrame(VideoChunk &aChunk)
   mVPXImageWrapper->stride[VPX_PLANE_V] = halfWidth;
 
   return NS_OK;
+}
+
+void
+VP8TrackEncoder::ReplyGetSourceSurface(already_AddRefed<gfx::SourceSurface> aSurf)
+{
+  mSourceSurface = aSurf;
+}
+
+already_AddRefed<gfx::SourceSurface>
+VP8TrackEncoder::GetSourceSurface(already_AddRefed<Image> aImg)
+{
+  RefPtr<Image> img = aImg;
+  mSourceSurface = nullptr;
+  if (img) {
+    if (img->AsGLImage() && !NS_IsMainThread()) {
+      // GLImage::GetAsSourceSurface() only support main thread
+      RefPtr<Runnable> getsourcesurface_runnable =
+        media::NewRunnableFrom([this, img]() -> nsresult {
+          // Due to the parameter DISPATCH_SYNC, encoder thread will stock at
+          // MediaRecorder::Session::Extract(bool). There is no chance
+          // that TrackEncoder will be destroyed during this period. So
+          // there is no need to use RefPtr to hold TrackEncoder.
+          ReplyGetSourceSurface(img->GetAsSourceSurface());
+          return NS_OK;
+        });
+      NS_DispatchToMainThread(getsourcesurface_runnable, NS_DISPATCH_SYNC);
+    } else {
+      mSourceSurface = img->GetAsSourceSurface();
+    }
+  }
+  return mSourceSurface.forget();
 }
 
 // These two define value used in GetNextEncodeOperation to determine the
