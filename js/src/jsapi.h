@@ -890,17 +890,6 @@ class MOZ_STACK_CLASS SourceBufferHolder final
                                             specified when passed to Object.defineProperty
                                             from script. */
 
-/**
- * The first call to JS_CallOnce by any thread in a process will call 'func'.
- * Later calls to JS_CallOnce with the same JSCallOnceType object will be
- * suppressed.
- *
- * Equivalently: each distinct JSCallOnceType object will allow one JS_CallOnce
- * to invoke its JSInitCallback.
- */
-extern JS_PUBLIC_API(bool)
-JS_CallOnce(JSCallOnceType* once, JSInitCallback func);
-
 /** Microseconds since the epoch, midnight, January 1, 1970 UTC. */
 extern JS_PUBLIC_API(int64_t)
 JS_Now(void);
