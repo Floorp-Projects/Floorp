@@ -632,14 +632,6 @@ auto GeckoAppShell::PerformHapticFeedback(bool a0) -> void
     return mozilla::jni::Method<PerformHapticFeedback_t>::Call(GeckoAppShell::Context(), nullptr, a0);
 }
 
-constexpr char GeckoAppShell::RegisterSurfaceTextureFrameListener_t::name[];
-constexpr char GeckoAppShell::RegisterSurfaceTextureFrameListener_t::signature[];
-
-auto GeckoAppShell::RegisterSurfaceTextureFrameListener(mozilla::jni::Object::Param a0, int32_t a1) -> void
-{
-    return mozilla::jni::Method<RegisterSurfaceTextureFrameListener_t>::Call(GeckoAppShell::Context(), nullptr, a0, a1);
-}
-
 constexpr char GeckoAppShell::RemoveFullScreenPluginView_t::name[];
 constexpr char GeckoAppShell::RemoveFullScreenPluginView_t::signature[];
 
@@ -732,14 +724,6 @@ constexpr char GeckoAppShell::UnlockScreenOrientation_t::signature[];
 auto GeckoAppShell::UnlockScreenOrientation() -> void
 {
     return mozilla::jni::Method<UnlockScreenOrientation_t>::Call(GeckoAppShell::Context(), nullptr);
-}
-
-constexpr char GeckoAppShell::UnregisterSurfaceTextureFrameListener_t::name[];
-constexpr char GeckoAppShell::UnregisterSurfaceTextureFrameListener_t::signature[];
-
-auto GeckoAppShell::UnregisterSurfaceTextureFrameListener(mozilla::jni::Object::Param a0) -> void
-{
-    return mozilla::jni::Method<UnregisterSurfaceTextureFrameListener_t>::Call(GeckoAppShell::Context(), nullptr, a0);
 }
 
 constexpr char GeckoAppShell::Vibrate_t::name[];
@@ -1198,6 +1182,20 @@ constexpr char PresentationMediaPlayerManager::InvalidateAndScheduleComposite_t:
 
 constexpr char PresentationMediaPlayerManager::RemovePresentationSurface_t::name[];
 constexpr char PresentationMediaPlayerManager::RemovePresentationSurface_t::signature[];
+
+const char SurfaceTextureListener::name[] =
+        "org/mozilla/gecko/SurfaceTextureListener";
+
+constexpr char SurfaceTextureListener::New_t::name[];
+constexpr char SurfaceTextureListener::New_t::signature[];
+
+auto SurfaceTextureListener::New() -> SurfaceTextureListener::LocalRef
+{
+    return mozilla::jni::Constructor<New_t>::Call(SurfaceTextureListener::Context(), nullptr);
+}
+
+constexpr char SurfaceTextureListener::OnFrameAvailable_t::name[];
+constexpr char SurfaceTextureListener::OnFrameAvailable_t::signature[];
 
 const char Telemetry::name[] =
         "org/mozilla/gecko/Telemetry";
