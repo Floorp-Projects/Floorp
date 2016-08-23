@@ -22,7 +22,9 @@ class BufferTextureData : public TextureData
 {
 public:
   static BufferTextureData* Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
-                                   gfx::BackendType aMoz2DBackend,TextureFlags aFlags,
+                                   gfx::BackendType aMoz2DBackend,
+                                   LayersBackend aLayersBackend,
+                                   TextureFlags aFlags,
                                    TextureAllocationFlags aAllocFlags,
                                    ClientIPCAllocator* aAllocator);
 
