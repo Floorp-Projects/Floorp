@@ -33,12 +33,13 @@ wrap(JSContext* cx, JS::HandleObject toWrap, JS::HandleObject target)
     return wrapper;
 }
 
-static JSObject*
+static void
 PreWrap(JSContext* cx, JS::HandleObject scope, JS::HandleObject obj,
-        JS::HandleObject objectPassedToWrap)
+        JS::HandleObject objectPassedToWrap,
+        JS::MutableHandleObject retObj)
 {
     JS_GC(cx);
-    return obj;
+    retObj.set(obj);
 }
 
 static JSObject*
