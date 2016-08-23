@@ -223,9 +223,9 @@
       }
     },
     "eslint-plugin-html": {
-      "version": "1.4.0",
-      "from": "eslint-plugin-html@1.4.0",
-      "resolved": "https://registry.npmjs.org/eslint-plugin-html/-/eslint-plugin-html-1.4.0.tgz"
+      "version": "1.5.2",
+      "from": "eslint-plugin-html@1.5.2",
+      "resolved": "https://registry.npmjs.org/eslint-plugin-html/-/eslint-plugin-html-1.5.2.tgz"
     },
     "eslint-plugin-react": {
       "version": "4.2.3",
