@@ -74,8 +74,10 @@ MediaEngineGonkVideoSource::NotifyPull(MediaStreamGraph* aGraph,
 
   MonitorAutoLock lock(mMonitor);
   // B2G does AddTrack, but holds kStarted until the hardware changes state.
-  // So mState could be kReleased here. We really don't care about the state,
-  // though.
+  // So mState could be kReleased here.
+  if (mState != kStarted) {
+    return;
+  }
 
   // Note: we're not giving up mImage here
   RefPtr<layers::Image> image = mImage;
