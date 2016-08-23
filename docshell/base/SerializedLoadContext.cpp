@@ -38,10 +38,9 @@ SerializedLoadContext::SerializedLoadContext(nsIChannel* aChannel)
         NS_SUCCEEDED(pbChannel->IsPrivateModeOverriden(&isPrivate,
                                                        &isOverriden)) &&
         isOverriden) {
-      mUsePrivateBrowsing = isPrivate;
       mIsPrivateBitValid = true;
     }
-    mOriginAttributes.SyncAttributesWithPrivateBrowsing(mUsePrivateBrowsing);
+    mOriginAttributes.SyncAttributesWithPrivateBrowsing(isPrivate);
   }
 }
 
@@ -61,8 +60,6 @@ SerializedLoadContext::Init(nsILoadContext* aLoadContext)
     mIsNotNull = true;
     mIsPrivateBitValid = true;
     aLoadContext->GetIsContent(&mIsContent);
-    aLoadContext->GetUsePrivateBrowsing(&mUsePrivateBrowsing);
-    mOriginAttributes.SyncAttributesWithPrivateBrowsing(mUsePrivateBrowsing);
     aLoadContext->GetUseRemoteTabs(&mUseRemoteTabs);
     if (!aLoadContext->GetOriginAttributes(mOriginAttributes)) {
       NS_WARNING("GetOriginAttributes failed");
@@ -73,7 +70,6 @@ SerializedLoadContext::Init(nsILoadContext* aLoadContext)
     // none of below values really matter when mIsNotNull == false:
     // we won't be GetInterfaced to nsILoadContext
     mIsContent = true;
-    mUsePrivateBrowsing = false;
     mUseRemoteTabs = false;
   }
 }
