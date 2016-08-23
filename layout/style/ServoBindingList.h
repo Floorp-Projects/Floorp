@@ -33,20 +33,19 @@ SERVO_BINDING_FUNC(Servo_AddRefStyleSheet, void,
                    RawServoStyleSheetBorrowed sheet)
 SERVO_BINDING_FUNC(Servo_ReleaseStyleSheet, void,
                    RawServoStyleSheetBorrowed sheet)
-SERVO_BINDING_FUNC(Servo_AppendStyleSheet, void,
-                   RawServoStyleSheetBorrowed sheet, RawServoStyleSet* set)
-SERVO_BINDING_FUNC(Servo_PrependStyleSheet, void,
-                   RawServoStyleSheetBorrowed sheet, RawServoStyleSet* set)
-SERVO_BINDING_FUNC(Servo_RemoveStyleSheet, void,
-                   RawServoStyleSheetBorrowed sheet, RawServoStyleSet* set)
-SERVO_BINDING_FUNC(Servo_InsertStyleSheetBefore, void,
-                   RawServoStyleSheetBorrowed sheet,
-                   RawServoStyleSheetBorrowed reference,
-                   RawServoStyleSet* set)
 SERVO_BINDING_FUNC(Servo_StyleSheetHasRules, bool,
                    RawServoStyleSheetBorrowed sheet)
 SERVO_BINDING_FUNC(Servo_InitStyleSet, RawServoStyleSet*)
 SERVO_BINDING_FUNC(Servo_DropStyleSet, void, RawServoStyleSet* set)
+SERVO_BINDING_FUNC(Servo_StyleSet_AppendStyleSheet, void,
+                   RawServoStyleSet* set, RawServoStyleSheetBorrowed sheet)
+SERVO_BINDING_FUNC(Servo_StyleSet_PrependStyleSheet, void,
+                   RawServoStyleSet* set, RawServoStyleSheetBorrowed sheet)
+SERVO_BINDING_FUNC(Servo_StyleSet_RemoveStyleSheet, void,
+                   RawServoStyleSet* set, RawServoStyleSheetBorrowed sheet)
+SERVO_BINDING_FUNC(Servo_StyleSet_InsertStyleSheetBefore, void,
+                   RawServoStyleSet* set, RawServoStyleSheetBorrowed sheet,
+                   RawServoStyleSheetBorrowed reference)
 
 // Style attribute
 SERVO_BINDING_FUNC(Servo_ParseStyleAttribute, ServoDeclarationBlockStrong,
