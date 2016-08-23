@@ -1535,7 +1535,9 @@ nsCSSFrameConstructor::nsCSSFrameConstructor(nsIDocument* aDocument,
   , mGfxScrollFrame(nullptr)
   , mPageSequenceFrame(nullptr)
   , mCurrentDepth(0)
+#ifdef DEBUG
   , mUpdateCount(0)
+#endif
   , mQuotesDirty(false)
   , mCountersDirty(false)
   , mIsDestroyingFrameTree(false)
@@ -8612,21 +8614,18 @@ nsCSSFrameConstructor::BeginUpdate() {
   }
 
   ++sGlobalGenerationNumber;
+#ifdef DEBUG
   ++mUpdateCount;
+#endif
 }
 
 void
 nsCSSFrameConstructor::EndUpdate()
 {
-  if (mUpdateCount == 1) {
-    // This is the end of our last update.  Before we decrement
-    // mUpdateCount, recalc quotes and counters as needed.
-
-    RecalcQuotesAndCounters();
-    NS_ASSERTION(mUpdateCount == 1, "Odd update count");
-  }
+#ifdef DEBUG
   NS_ASSERTION(mUpdateCount, "Negative mUpdateCount!");
   --mUpdateCount;
+#endif
 }
 
 void
