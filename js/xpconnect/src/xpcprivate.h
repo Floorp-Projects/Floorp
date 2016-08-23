@@ -1242,10 +1242,6 @@ class XPCNativeInterface final
 
     void DebugDump(int16_t depth);
 
-    void Mark() {}
-    void Unmark() {}
-    bool IsMarked() const { return false; }
-
     size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf);
 
   protected:
@@ -1363,11 +1359,6 @@ class XPCNativeSet final
     // NOP. This is just here to make the AutoMarkingPtr code compile.
     inline void TraceJS(JSTracer* trc) {}
     inline void AutoTrace(JSTracer* trc) {}
-
-  private:
-    void MarkSelfOnly() {
-        mMarked = 1;
-    }
 
   public:
     void Unmark() {

@@ -804,11 +804,6 @@ XPCJSRuntime::FinalizeCallback(JSFreeOp* fop,
                         if (set)
                             set->Mark();
                     }
-                    if (ccxp->CanGetInterface()) {
-                        XPCNativeInterface* iface = ccxp->GetInterface();
-                        if (iface)
-                            iface->Mark();
-                    }
                     ccxp = ccxp->GetPrevCallContext();
                 }
             }
