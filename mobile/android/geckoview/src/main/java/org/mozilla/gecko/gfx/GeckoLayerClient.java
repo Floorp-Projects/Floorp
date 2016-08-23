@@ -180,6 +180,7 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
         mPanZoomController.destroy();
         mToolbarAnimator.destroy();
         mDrawListeners.clear();
+        mGeckoIsReady = false;
     }
 
     /**
@@ -896,23 +897,6 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
     private void geometryChanged(DisplayPortMetrics displayPort) {
         /* Let Gecko know if the screensize has changed */
         sendResizeEventIfNecessary(false, null);
-    }
-
-    /** Implementation of LayerView.Listener */
-    @Override
-    public void renderRequested() {
-        if (mView != null) {
-            mView.invalidateAndScheduleComposite();
-        }
-    }
-
-    /** Implementation of LayerView.Listener */
-    @Override
-    public void sizeChanged(int width, int height) {
-        // We need to make sure a draw happens synchronously at this point,
-        // but resizing the surface before the SurfaceView has resized will
-        // cause a visible jump.
-        mView.resumeCompositor(width, height);
     }
 
     /** Implementation of LayerView.Listener */

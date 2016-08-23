@@ -1460,6 +1460,14 @@ auto LayerView::Compositor::GetSurface() const -> mozilla::jni::Object::LocalRef
 constexpr char LayerView::Compositor::OnSizeChanged_t::name[];
 constexpr char LayerView::Compositor::OnSizeChanged_t::signature[];
 
+constexpr char LayerView::Compositor::Reattach_t::name[];
+constexpr char LayerView::Compositor::Reattach_t::signature[];
+
+auto LayerView::Compositor::Reattach() const -> void
+{
+    return mozilla::jni::Method<Reattach_t>::Call(Compositor::mCtx, nullptr);
+}
+
 constexpr char LayerView::Compositor::SyncInvalidateAndScheduleComposite_t::name[];
 constexpr char LayerView::Compositor::SyncInvalidateAndScheduleComposite_t::signature[];
 
