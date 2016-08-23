@@ -32,6 +32,11 @@ public:
   void Reset();
 
   /**
+   * Clear In-Memory & On-Disk data for specific tables
+   */
+  void ResetTables(const nsTArray<nsCString>& aTables);
+
+  /**
    * Get the list of active tables and their chunks in a format
    * suitable for an update request.
    */
@@ -65,7 +70,7 @@ public:
    * Failed update. Spoil the entries so we don't block hosts
    * unnecessarily
    */
-  nsresult MarkSpoiled(nsTArray<nsCString>& aTables);
+  nsresult MarkSpoiled(const nsTArray<nsCString>& aTables);
   void SetLastUpdateTime(const nsACString& aTableName, uint64_t updateTime);
   int64_t GetLastUpdateTime(const nsACString& aTableName);
   nsresult CacheCompletions(const CacheResultArray& aResults);
@@ -82,6 +87,8 @@ public:
 
 private:
   void DropStores();
+  void DeleteTables(const nsTArray<nsCString>& aTables);
+
   nsresult CreateStoreDirectory();
   nsresult SetupPathNames();
   nsresult RecoverBackups();
