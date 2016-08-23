@@ -5302,15 +5302,6 @@
     "description": "Time for a URL bar DB search to return (ms)",
     "cpp_guard": "ANDROID"
   },
-  "FENNEC_RESTRICTED_PROFILE_RESTRICTIONS": {
-    "expires_in_version": "50",
-    "kind": "enumerated",
-    "n_values": 30,
-    "description": "Whether various restrictions are set, keyed by restiction name",
-    "keyed": true,
-    "bug_numbers": [1218942],
-    "alert_emails": ["mobile-frontend@mozilla.com"]
-  },
   "FENNEC_STARTUP_TIME_GECKOREADY": {
     "expires_in_version": "never",
     "kind": "exponential",
