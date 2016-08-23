@@ -46,6 +46,13 @@ var WebrtcUI = {
           this.notify();
           break;
       }
+    } else if (aTopic === "VideoCapture:Paused") {
+      if (this._notificationId) {
+        Notifications.cancel(this._notificationId);
+        this._notificationId = null;
+      }
+    } else if (aTopic === "VideoCapture:Resumed") {
+      this.notify();
     }
   },
 
