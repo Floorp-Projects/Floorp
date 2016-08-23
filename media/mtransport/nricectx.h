@@ -307,7 +307,7 @@ class NrIceCtx {
   nsresult SetProxyServer(const NrIceProxyServer& proxy_server);
 
   // Start ICE gathering
-  nsresult StartGathering(bool default_route_only);
+  nsresult StartGathering(bool default_route_only, bool proxy_only);
 
   // Start checking
   nsresult StartChecks();
