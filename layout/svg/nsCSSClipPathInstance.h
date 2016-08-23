@@ -45,6 +45,8 @@ private:
   already_AddRefed<Path> CreateClipPathPolygon(DrawTarget* aDrawTarget,
                                                const nsRect& aRefBox);
 
+  already_AddRefed<Path> CreateClipPathInset(DrawTarget* aDrawTarget,
+                                             const nsRect& aRefBox);
   /**
    * The frame for the element that is currently being clipped.
    */

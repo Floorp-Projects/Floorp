@@ -621,3 +621,68 @@ set_config('MOZ_IPDL_TESTS',
            depends_if('--enable-ipdl-tests')(lambda _: True))
 
 include('nss.configure')
+
+# Network protocol support
+# ==============================================================
+@depends(check_build_environment, '--help')
+@imports('os')
+@imports(_from='__builtin__', _import='sorted')
+def all_necko_protocols(build_env, _):
+    basedir = os.path.join(build_env.topsrcdir, 'netwerk', 'protocol')
+    return tuple(sorted(p for p in os.listdir(basedir)
+                        if os.path.isdir(os.path.join(basedir, p))))
+
+default_necko_protocols = all_necko_protocols
+
+@deprecated_option('--enable-necko-protocols', nargs='*')
+def necko_protocols(protocols):
+    return protocols
+
+@depends(necko_protocols, default_necko_protocols)
+def necko_protocols(protocols, default_protocols):
+    if protocols is None or (protocols and len(protocols) == 0):
+        return None
+    if len(protocols) == 1 and protocols[0] == '':
+        return False
+    result = set()
+    for p in protocols:
+        if p in ('yes', 'all', 'default'):
+            result |= set(default_protocols)
+            continue
+        if p in ('no', 'none'):
+            result = set()
+            continue
+        if p.startswith('-'):
+            if p[1:] in result:
+                result.remove(p[1:])
+        else:
+            result.add(p)
+    if result != set(default_protocols):
+        return tuple(result)
+
+imply_option('--enable-network-protocols', necko_protocols,
+             reason='--enable-necko-protocols')
+
+option('--enable-network-protocols', nargs='+', default=default_necko_protocols,
+       choices=all_necko_protocols,
+       help='Enable/disable specific protocol handlers')
+
+@depends('--enable-network-protocols')
+def necko_protocol_defines(protocols):
+    return tuple('NECKO_PROTOCOL_%s' % p for p in protocols)
+
+add_old_configure_assignment('_NON_GLOBAL_ACDEFINES', necko_protocol_defines)
+
+@depends(necko_protocol_defines)
+@imports('__sandbox__')
+def set_necko_protocol_defines(protocols):
+    for p in protocols:
+        __sandbox__.set_define_impl(p, True)
+
+@depends('--enable-network-protocols')
+@imports(_from='__builtin__', _import='sorted')
+def necko_protocols(protocols):
+    return tuple(sorted(protocols))
+
+set_config('NECKO_PROTOCOLS', necko_protocols)
+add_old_configure_assignment('NECKO_PROTOCOLS', necko_protocols)

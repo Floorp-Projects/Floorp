@@ -6,7 +6,7 @@
 const {addonsSpec} = require("devtools/shared/specs/addons");
 const protocol = require("devtools/shared/protocol");
 
-const AddonsFront = protocol.FrontClass(addonsSpec, {
+const AddonsFront = protocol.FrontClassWithSpec(addonsSpec, {
   initialize: function (client, {addonsActor}) {
     protocol.Front.prototype.initialize.call(this, client);
     this.actorID = addonsActor;

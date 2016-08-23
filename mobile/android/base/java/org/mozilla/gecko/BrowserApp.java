@@ -17,6 +17,7 @@ import android.graphics.Rect;
 import org.json.JSONArray;
 import org.mozilla.gecko.activitystream.ActivityStream;
 import org.mozilla.gecko.adjust.AdjustHelperInterface;
+import org.mozilla.gecko.adjust.AttributionHelperListener;
 import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.DynamicToolbar.VisibilityTransition;
@@ -313,6 +314,8 @@ public class BrowserApp extends GeckoApp
 
     private final DynamicToolbar mDynamicToolbar = new DynamicToolbar();
 
+    private final TelemetryCorePingDelegate mTelemetryCorePingDelegate = new TelemetryCorePingDelegate();
+
     private final List<BrowserAppDelegate> delegates = Collections.unmodifiableList(Arrays.asList(
             (BrowserAppDelegate) new AddToHomeScreenPromotion(),
             (BrowserAppDelegate) new ScreenshotDelegate(),
@@ -320,7 +323,7 @@ public class BrowserApp extends GeckoApp
             (BrowserAppDelegate) new ReaderViewBookmarkPromotion(),
             (BrowserAppDelegate) new ContentNotificationsDelegate(),
             (BrowserAppDelegate) new PostUpdateHandler(),
-            new TelemetryCorePingDelegate(),
+            mTelemetryCorePingDelegate,
             new OfflineTabStatusDelegate()
     ));
 
@@ -716,7 +719,7 @@ public class BrowserApp extends GeckoApp
         mReadingListHelper = new ReadingListHelper(appContext, profile);
         mAccountsHelper = new AccountsHelper(appContext, profile);
 
-        initAdjustSDK(this, isInAutomation);
+        initAdjustSDK(this, isInAutomation, mTelemetryCorePingDelegate);
 
         if (AppConstants.MOZ_ANDROID_BEAM) {
             NfcAdapter nfc = NfcAdapter.getDefaultAdapter(this);
@@ -814,9 +817,9 @@ public class BrowserApp extends GeckoApp
         TelemetryUploadService.setDisabled(isInAutomation);
     }
 
-    private static void initAdjustSDK(final Context context, final boolean isInAutomation) {
+    private static void initAdjustSDK(final Context context, final boolean isInAutomation, final AttributionHelperListener listener) {
         final AdjustHelperInterface adjustHelper = AdjustConstants.getAdjustHelper();
-        adjustHelper.onCreate(context, AdjustConstants.MOZ_INSTALL_TRACKING_ADJUST_SDK_APP_TOKEN);
+        adjustHelper.onCreate(context, AdjustConstants.MOZ_INSTALL_TRACKING_ADJUST_SDK_APP_TOKEN, listener);
 
         // Adjust stores enabled state so this is only necessary because users may have set
         // their data preferences before this feature was implemented and we need to respect

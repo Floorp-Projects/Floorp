@@ -6,7 +6,7 @@
 const { Cu } = require("chrome");
 const {
   Front,
-  FrontClass,
+  FrontClassWithSpec,
   custom
 } = require("devtools/shared/protocol");
 const { profilerSpec } = require("devtools/shared/specs/profiler");
@@ -18,7 +18,7 @@ loader.lazyRequireGetter(this, "extend", "sdk/util/object", true);
  * This can be used on older Profiler implementations, but the methods cannot
  * be changed -- you must introduce a new method, and detect the server.
  */
-exports.ProfilerFront = FrontClass(profilerSpec, {
+exports.ProfilerFront = FrontClassWithSpec(profilerSpec, {
   initialize: function (client, form) {
     Front.prototype.initialize.call(this, client, form);
     this.actorID = form.profilerActor;

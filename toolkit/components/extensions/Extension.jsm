@@ -989,7 +989,7 @@ this.ExtensionData = class {
       };
 
       if (this.localeData) {
-        context.preprocessors.localize = this.localize.bind(this);
+        context.preprocessors.localize = (value, context) => this.localize(value);
       }
 
       let normalized = Schemas.normalize(this.manifest, "manifest.WebExtensionManifest", context);
@@ -1700,6 +1700,6 @@ this.Extension = class extends ExtensionData {
   }
 
   get name() {
-    return this.localize(this.manifest.name);
+    return this.manifest.name;
   }
 };

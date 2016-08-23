@@ -6,6 +6,7 @@
 
 package org.mozilla.gecko.telemetry;
 
+import android.content.Context;
 import android.content.SharedPreferences;
 import android.support.annotation.Nullable;
 import android.support.annotation.WorkerThread;
@@ -13,6 +14,8 @@ import android.util.Log;
 import org.mozilla.gecko.BrowserApp;
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.GeckoSharedPrefs;
+import org.mozilla.gecko.adjust.AttributionHelperListener;
+import org.mozilla.gecko.telemetry.measurements.CampaignIdMeasurements;
 import org.mozilla.gecko.delegates.BrowserAppDelegateWithReference;
 import org.mozilla.gecko.distribution.DistributionStoreCallback;
 import org.mozilla.gecko.search.SearchEngineManager;
@@ -29,7 +32,7 @@ import java.io.IOException;
  * An activity-lifecycle delegate for uploading the core ping.
  */
 public class TelemetryCorePingDelegate extends BrowserAppDelegateWithReference
-        implements SearchEngineManager.SearchEngineCallback {
+        implements SearchEngineManager.SearchEngineCallback, AttributionHelperListener {
     private static final String LOGTAG = StringUtils.safeSubstring(
             "Gecko" + TelemetryCorePingDelegate.class.getSimpleName(), 0, 23);
 
@@ -153,14 +156,15 @@ public class TelemetryCorePingDelegate extends BrowserAppDelegateWithReference
                         .setSequenceNumber(TelemetryCorePingBuilder.getAndIncrementSequenceNumber(sharedPrefs))
                         .setSessionCount(sessionMeasurementsContainer.sessionCount)
                         .setSessionDuration(sessionMeasurementsContainer.elapsedSeconds);
-                maybeSetOptionalMeasurements(sharedPrefs, pingBuilder);
+                maybeSetOptionalMeasurements(activity, sharedPrefs, pingBuilder);
 
                 getTelemetryDispatcher(activity).queuePingForUpload(activity, pingBuilder);
             }
         });
     }
 
-    private void maybeSetOptionalMeasurements(final SharedPreferences sharedPrefs, final TelemetryCorePingBuilder pingBuilder) {
+    private void maybeSetOptionalMeasurements(final Context context, final SharedPreferences sharedPrefs,
+                                              final TelemetryCorePingBuilder pingBuilder) {
         final String distributionId = sharedPrefs.getString(DistributionStoreCallback.PREF_DISTRIBUTION_ID, null);
         if (distributionId != null) {
             pingBuilder.setOptDistributionID(distributionId);
@@ -170,5 +174,15 @@ public class TelemetryCorePingDelegate extends BrowserAppDelegateWithReference
         if (searchCounts.size() > 0) {
             pingBuilder.setOptSearchCounts(searchCounts);
         }
+
+        final String campaignId = CampaignIdMeasurements.getCampaignIdFromPrefs(context);
+        if (campaignId != null) {
+            pingBuilder.setOptCampaignId(campaignId);
+        }
+    }
+
+    @Override
+    public void onCampaignIdChanged(String campaignId) {
+        CampaignIdMeasurements.updateCampaignIdPref(getBrowserApp(), campaignId);
     }
 }

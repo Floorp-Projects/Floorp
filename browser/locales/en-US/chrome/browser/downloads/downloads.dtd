@@ -62,8 +62,8 @@
 <!ENTITY cmd.copyDownloadLink.accesskey   "L">
 <!ENTITY cmd.removeFromHistory.label      "Remove From History">
 <!ENTITY cmd.removeFromHistory.accesskey  "e">
-<!ENTITY cmd.clearList.label              "Clear List">
-<!ENTITY cmd.clearList.accesskey          "a">
+<!ENTITY cmd.clearList2.label             "Clear Preview Panel">
+<!ENTITY cmd.clearList2.accesskey         "a">
 <!ENTITY cmd.clearDownloads.label         "Clear Downloads">
 <!ENTITY cmd.clearDownloads.accesskey     "D">
 <!-- LOCALIZATION NOTE (cmd.unblock2.label):
@@ -108,6 +108,8 @@
      -->
 <!ENTITY downloadsHistory.label           "Show All Downloads">
 <!ENTITY downloadsHistory.accesskey       "S">
+
+<!ENTITY openDownloadsFolder.label       "Open Downloads Folder">
 
 <!ENTITY clearDownloadsButton.label       "Clear Downloads">
 <!ENTITY clearDownloadsButton.tooltip     "Clears completed, canceled and failed downloads">

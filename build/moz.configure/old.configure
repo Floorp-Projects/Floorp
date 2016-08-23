@@ -199,7 +199,6 @@ def old_configure_options(*options):
     '--enable-memory-sanitizer',
     '--enable-mobile-optimize',
     '--enable-mozril-geoloc',
-    '--enable-necko-protocols',
     '--enable-necko-wifi',
     '--enable-negotiateauth',
     '--enable-nfc',

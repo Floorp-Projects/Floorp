@@ -143,7 +143,7 @@ CssGridHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
   },
 
   clearCanvas() {
-    let ratio = this.win.devicePixelRatio || 1;
+    let ratio = parseFloat((this.win.devicePixelRatio || 1).toFixed(2));
     let width = this.win.innerWidth;
     let height = this.win.innerHeight;
 

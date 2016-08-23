@@ -12,7 +12,7 @@ loader.lazyRequireGetter(this, "FileUtils",
 loader.lazyRequireGetter(this, "HeapSnapshotFileUtils",
                          "devtools/shared/heapsnapshot/HeapSnapshotFileUtils");
 
-const MemoryFront = protocol.FrontClass(memorySpec, {
+const MemoryFront = protocol.FrontClassWithSpec(memorySpec, {
   initialize: function (client, form, rootForm = null) {
     protocol.Front.prototype.initialize.call(this, client, form);
     this._client = client;

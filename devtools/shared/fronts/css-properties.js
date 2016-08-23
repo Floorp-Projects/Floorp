@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { FrontClass, Front } = require("devtools/shared/protocol");
+const { FrontClassWithSpec, Front } = require("devtools/shared/protocol");
 const { cssPropertiesSpec } = require("devtools/shared/specs/css-properties");
 const { Task } = require("devtools/shared/task");
 const { CSS_PROPERTIES_DB } = require("devtools/shared/css-properties-db");
@@ -39,7 +39,7 @@ var cachedCssProperties = new WeakMap();
  * interface that provides synchronous methods for finding out what CSS
  * properties the current server supports.
  */
-const CssPropertiesFront = FrontClass(cssPropertiesSpec, {
+const CssPropertiesFront = FrontClassWithSpec(cssPropertiesSpec, {
   initialize: function (client, { cssPropertiesActor }) {
     Front.prototype.initialize.call(this, client, {actor: cssPropertiesActor});
     this.manage(this);

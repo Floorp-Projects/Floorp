@@ -15,10 +15,12 @@ const consoleApiCommands = [
   "console.count('bar')",
 ];
 
-let consoleApi = new Map(consoleApiCommands.map(cmd => [cmd, cmd]));
+let consoleApi = new Map(consoleApiCommands.map(
+  cmd => [cmd, {keys: [cmd], code: cmd}]));
 
-consoleApi.set("console.trace()",
-`
+consoleApi.set("console.trace()", {
+  keys: ["console.trace()"],
+  code: `
 function bar() {
   console.trace()
 }
@@ -27,13 +29,14 @@ function foo() {
 }
 
 foo()
-`);
+`});
 
-consoleApi.set("console.time()",
-`
-console.time()
-console.timeEnd()
-`);
+consoleApi.set("console.time('bar')", {
+  keys: ["console.time('bar')", "console.timeEnd('bar')"],
+  code: `
+console.time("bar");
+console.timeEnd("bar");
+`});
 
 // Evaluation Result
 
