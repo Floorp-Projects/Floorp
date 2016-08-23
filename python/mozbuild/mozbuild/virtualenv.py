@@ -487,6 +487,31 @@ class VirtualenvManager(object):
 
         return self._run_pip(args)
 
+    def install_pip_requirements(self, path, require_hashes=True):
+        """Install a pip requirements.txt file.
+
+        The supplied path is a text file containing pip requirement
+        specifiers.
+
+        If require_hashes is True, each specifier must contain the
+        expected hash of the downloaded package. See:
+        https://pip.pypa.io/en/stable/reference/pip_install/#hash-checking-mode
+        """
+
+        if not os.path.isabs(path):
+            path = os.path.join(self.topsrcdir, path)
+
+        args = [
+            'install',
+            '--requirement',
+            path,
+        ]
+
+        if require_hashes:
+            args.append('--require-hashes')
+
+        return self._run_pip(args)
+
     def _run_pip(self, args):
         # It's tempting to call pip natively via pip.main(). However,
         # the current Python interpreter may not be the virtualenv python.
