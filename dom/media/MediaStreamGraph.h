@@ -1252,7 +1252,7 @@ public:
     SYSTEM_THREAD_DRIVER,
     OFFLINE_THREAD_DRIVER
   };
-  static const uint32_t AUDIO_CALLBACK_DRIVER_SHUTDOWN_TIMEOUT = 15*1000;
+  static const uint32_t AUDIO_CALLBACK_DRIVER_SHUTDOWN_TIMEOUT = 45*1000;
 
   // Main thread only
   static MediaStreamGraph* GetInstance(GraphDriverType aGraphDriverRequested,
