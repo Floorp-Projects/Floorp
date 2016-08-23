@@ -69,7 +69,7 @@ RunTest (TestEntry *test, gfxContext *ctx) {
         fontGroup = gfxPlatform::GetPlatform()->CreateFontGroup(NS_ConvertUTF8toUTF16(test->mFamilies), &style_western_normal_16, nullptr, nullptr, 1.0);
     }
 
-    UniquePtr<gfxTextRun> textRun;
+    RefPtr<gfxTextRun> textRun;
     uint32_t i;
     bool isASCII = true;
     for (i = 0; test->mString[i]; ++i) {

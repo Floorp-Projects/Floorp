@@ -137,7 +137,6 @@ ServoStyleSet::ResolveStyleForText(nsIContent* aTextNode,
   MOZ_ASSERT(aTextNode->GetParent());
 
   nsIContent* parent = aTextNode->GetParent();
-  nsIAtom* parentName = parent->NodeInfo()->NameAtom();
 
   // If this text node is a child of a generated content node, it'll never have
   // been traversed by Servo, and thus isn't styled.
@@ -154,9 +153,8 @@ ServoStyleSet::ResolveStyleForText(nsIContent* aTextNode,
   // change-hints from children in the parent element just because of inherited
   // style struct changes.
   RefPtr<ServoComputedValues> computedValues;
-  if (parent->IsRootOfAnonymousSubtree() &&
-      (parentName == nsGkAtoms::mozgeneratedcontentbefore ||
-       parentName == nsGkAtoms::mozgeneratedcontentafter)) {
+  if (parent->IsGeneratedContentContainerForBefore() ||
+      parent->IsGeneratedContentContainerForAfter()) {
     MOZ_ASSERT(aParentContext);
     ServoComputedValues* parentComputedValues =
       aParentContext->StyleSource().AsServoComputedValues();

@@ -28,7 +28,7 @@ namespace ipc {
 bool
 StructuredCloneData::Copy(const StructuredCloneData& aData)
 {
-  if (!aData.Data()) {
+  if (!aData.mInitialized) {
     return true;
   }
 
@@ -36,8 +36,7 @@ StructuredCloneData::Copy(const StructuredCloneData& aData)
     mSharedData = aData.SharedData();
   } else {
     mSharedData =
-      SharedJSAllocatedData::CreateFromExternalData(aData.Data(),
-                                                    aData.DataLength());
+      SharedJSAllocatedData::CreateFromExternalData(aData.Data());
     NS_ENSURE_TRUE(mSharedData, false);
   }
 
@@ -48,6 +47,8 @@ StructuredCloneData::Copy(const StructuredCloneData& aData)
 
   MOZ_ASSERT(GetSurfaces().IsEmpty());
 
+  mInitialized = true;
+
   return true;
 }
 
@@ -56,12 +57,12 @@ StructuredCloneData::Read(JSContext* aCx,
                           JS::MutableHandle<JS::Value> aValue,
                           ErrorResult &aRv)
 {
-  MOZ_ASSERT(Data());
+  MOZ_ASSERT(mInitialized);
 
   nsIGlobalObject *global = xpc::NativeGlobal(JS::CurrentGlobalOrNull(aCx));
   MOZ_ASSERT(global);
 
-  ReadFromBuffer(global, aCx, Data(), DataLength(), aValue, aRv);
+  ReadFromBuffer(global, aCx, Data(), aValue, aRv);
 }
 
 void
@@ -78,64 +79,50 @@ StructuredCloneData::Write(JSContext* aCx,
                            JS::Handle<JS::Value> aTransfer,
                            ErrorResult &aRv)
 {
-  MOZ_ASSERT(!Data());
+  MOZ_ASSERT(!mInitialized);
 
   StructuredCloneHolder::Write(aCx, aValue, aTransfer, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return;
   }
 
-  uint64_t* data = nullptr;
-  size_t dataLength = 0;
-  mBuffer->steal(&data, &dataLength);
+  JSStructuredCloneData data;
+  mBuffer->abandon();
+  mBuffer->steal(&data);
   mBuffer = nullptr;
-  mSharedData = new SharedJSAllocatedData(data, dataLength);
+  mSharedData = new SharedJSAllocatedData(Move(data));
+  mInitialized = true;
 }
 
 void
 StructuredCloneData::WriteIPCParams(IPC::Message* aMsg) const
 {
-  WriteParam(aMsg, DataLength());
-
-  if (DataLength()) {
-    aMsg->WriteBytes(Data(), DataLength());
-  }
+  WriteParam(aMsg, Data());
 }
 
 bool
 StructuredCloneData::ReadIPCParams(const IPC::Message* aMsg,
                                    PickleIterator* aIter)
 {
-  MOZ_ASSERT(!Data());
-
-  size_t dataLength = 0;
-  if (!ReadParam(aMsg, aIter, &dataLength)) {
+  MOZ_ASSERT(!mInitialized);
+  JSStructuredCloneData data;
+  if (!ReadParam(aMsg, aIter, &data)) {
     return false;
   }
-
-  if (!dataLength) {
-    return true;
-  }
-
-  mSharedData = SharedJSAllocatedData::AllocateForExternalData(dataLength);
-  NS_ENSURE_TRUE(mSharedData, false);
-
-  if (!aMsg->ReadBytesInto(aIter, mSharedData->Data(), dataLength)) {
-    mSharedData = nullptr;
-    return false;
-  }
-
+  mSharedData = new SharedJSAllocatedData(Move(data));
+  mInitialized = true;
   return true;
 }
 
 bool
-StructuredCloneData::CopyExternalData(const void* aData,
+StructuredCloneData::CopyExternalData(const char* aData,
                                       size_t aDataLength)
 {
-  MOZ_ASSERT(!Data());
+  MOZ_ASSERT(!mInitialized);
   mSharedData = SharedJSAllocatedData::CreateFromExternalData(aData,
                                                               aDataLength);
   NS_ENSURE_TRUE(mSharedData, false);
+  mInitialized = true;
   return true;
 }
 

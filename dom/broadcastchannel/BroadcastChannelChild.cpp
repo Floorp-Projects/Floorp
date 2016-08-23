@@ -91,12 +91,11 @@ BroadcastChannelChild::RecvNotify(const ClonedMessageData& aData)
   cloneData.BlobImpls().AppendElements(blobs);
 
   const SerializedStructuredCloneBuffer& buffer = aData.data();
-  cloneData.UseExternalData(buffer.data, buffer.dataLength);
-
   JSContext* cx = jsapi.cx();
   JS::Rooted<JS::Value> value(cx, JS::NullValue());
-  if (buffer.dataLength) {
+  if (buffer.data.Size()) {
     ErrorResult rv;
+    cloneData.UseExternalData(buffer.data);
     cloneData.Read(cx, &value, rv);
     if (NS_WARN_IF(rv.Failed())) {
       rv.SuppressException();

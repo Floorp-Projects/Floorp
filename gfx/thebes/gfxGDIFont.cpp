@@ -52,6 +52,7 @@ gfxGDIFont::gfxGDIFont(GDIFontEntry *aFontEntry,
       mNeedsBold(aNeedsBold),
       mScriptCache(nullptr)
 {
+    Initialize();
 }
 
 gfxGDIFont::~gfxGDIFont()
@@ -87,9 +88,6 @@ gfxGDIFont::ShapeText(DrawTarget     *aDrawTarget,
                       bool            aVertical,
                       gfxShapedText  *aShapedText)
 {
-    if (!mMetrics) {
-        Initialize();
-    }
     if (!mIsValid) {
         NS_WARNING("invalid font! expect incorrect text rendering");
         return false;
@@ -110,27 +108,18 @@ gfxGDIFont::ShapeText(DrawTarget     *aDrawTarget,
 const gfxFont::Metrics&
 gfxGDIFont::GetHorizontalMetrics()
 {
-    if (!mMetrics) {
-        Initialize();
-    }
     return *mMetrics;
 }
 
 uint32_t
 gfxGDIFont::GetSpaceGlyph()
 {
-    if (!mMetrics) {
-        Initialize();
-    }
     return mSpaceGlyph;
 }
 
 bool
 gfxGDIFont::SetupCairoFont(DrawTarget* aDrawTarget)
 {
-    if (!mMetrics) {
-        Initialize();
-    }
     if (!mScaledFont ||
         cairo_scaled_font_status(mScaledFont) != CAIRO_STATUS_SUCCESS) {
         // Don't cairo_set_scaled_font as that would propagate the error to

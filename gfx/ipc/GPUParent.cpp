@@ -14,10 +14,12 @@
 #include "mozilla/layers/CompositorBridgeParent.h"
 #include "mozilla/layers/CompositorThread.h"
 #include "mozilla/layers/ImageBridgeParent.h"
+#include "nsDebugImpl.h"
 #include "VRManager.h"
 #include "VRManagerParent.h"
 #include "VsyncBridgeParent.h"
 #if defined(XP_WIN)
+# include "DeviceManagerD3D9.h"
 # include "mozilla/gfx/DeviceManagerD3D11.h"
 #endif
 
@@ -44,16 +46,22 @@ GPUParent::Init(base::ProcessId aParentPid,
     return false;
   }
 
+  nsDebugImpl::SetMultiprocessMode("GPU");
+
   // Ensure gfxPrefs are initialized.
   gfxPrefs::GetSingleton();
   gfxConfig::Init();
   gfxVars::Initialize();
+  gfxPlatform::InitNullMetadata();
 #if defined(XP_WIN)
   DeviceManagerD3D11::Init();
+  DeviceManagerD3D9::Init();
 #endif
+  if (NS_FAILED(NS_InitMinimalXPCOM())) {
+    return false;
+  }
   CompositorThreadHolder::Start();
   VRManager::ManagerInit();
-  gfxPlatform::InitNullMetadata();
   return true;
 }
 
@@ -224,8 +232,7 @@ GPUParent::ActorDestroy(ActorDestroyReason aWhy)
 
 #ifndef NS_FREE_PERMANENT_DATA
   // No point in going through XPCOM shutdown because we don't keep persistent
-  // state. Currently we quick-exit in RecvBeginShutdown so this should be
-  // unreachable.
+  // state.
   ProcessChild::QuickExit();
 #endif
 
@@ -235,10 +242,12 @@ GPUParent::ActorDestroy(ActorDestroyReason aWhy)
   CompositorThreadHolder::Shutdown();
 #if defined(XP_WIN)
   DeviceManagerD3D11::Shutdown();
+  DeviceManagerD3D9::Shutdown();
 #endif
   gfxVars::Shutdown();
   gfxConfig::Shutdown();
   gfxPrefs::DestroySingleton();
+  NS_ShutdownXPCOM(nullptr);
   XRE_ShutdownChildProcess();
 }
 

@@ -15,10 +15,6 @@ function mismatchError(actual, expect) {
     return RegExp(str);
 }
 
-function hasI64() {
-    return wasmInt64IsSupported();
-}
-
 function jsify(wasmVal) {
     if (wasmVal === 'nan')
         return NaN;

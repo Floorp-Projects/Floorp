@@ -356,46 +356,49 @@ nsComponentManagerImpl::Init()
     RegisterModule((*sStaticModules)[i], nullptr);
   }
 
-  // The overall order in which chrome.manifests are expected to be treated
-  // is the following:
-  // - greDir
-  // - greDir's omni.ja
-  // - appDir
-  // - appDir's omni.ja
+  bool loadChromeManifests = (XRE_GetProcessType() != GeckoProcessType_GPU);
+  if (loadChromeManifests) {
+    // The overall order in which chrome.manifests are expected to be treated
+    // is the following:
+    // - greDir
+    // - greDir's omni.ja
+    // - appDir
+    // - appDir's omni.ja
 
-  InitializeModuleLocations();
-  ComponentLocation* cl = sModuleLocations->AppendElement();
-  nsCOMPtr<nsIFile> lf = CloneAndAppend(greDir,
-                                        NS_LITERAL_CSTRING("chrome.manifest"));
-  cl->type = NS_APP_LOCATION;
-  cl->location.Init(lf);
-
-  RefPtr<nsZipArchive> greOmnijar =
-    mozilla::Omnijar::GetReader(mozilla::Omnijar::GRE);
-  if (greOmnijar) {
-    cl = sModuleLocations->AppendElement();
+    InitializeModuleLocations();
+    ComponentLocation* cl = sModuleLocations->AppendElement();
+    nsCOMPtr<nsIFile> lf = CloneAndAppend(greDir,
+                                          NS_LITERAL_CSTRING("chrome.manifest"));
     cl->type = NS_APP_LOCATION;
-    cl->location.Init(greOmnijar, "chrome.manifest");
-  }
-
-  bool equals = false;
-  appDir->Equals(greDir, &equals);
-  if (!equals) {
-    cl = sModuleLocations->AppendElement();
-    cl->type = NS_APP_LOCATION;
-    lf = CloneAndAppend(appDir, NS_LITERAL_CSTRING("chrome.manifest"));
     cl->location.Init(lf);
-  }
 
-  RefPtr<nsZipArchive> appOmnijar =
-    mozilla::Omnijar::GetReader(mozilla::Omnijar::APP);
-  if (appOmnijar) {
-    cl = sModuleLocations->AppendElement();
-    cl->type = NS_APP_LOCATION;
-    cl->location.Init(appOmnijar, "chrome.manifest");
-  }
+    RefPtr<nsZipArchive> greOmnijar =
+      mozilla::Omnijar::GetReader(mozilla::Omnijar::GRE);
+    if (greOmnijar) {
+      cl = sModuleLocations->AppendElement();
+      cl->type = NS_APP_LOCATION;
+      cl->location.Init(greOmnijar, "chrome.manifest");
+    }
 
-  RereadChromeManifests(false);
+    bool equals = false;
+    appDir->Equals(greDir, &equals);
+    if (!equals) {
+      cl = sModuleLocations->AppendElement();
+      cl->type = NS_APP_LOCATION;
+      lf = CloneAndAppend(appDir, NS_LITERAL_CSTRING("chrome.manifest"));
+      cl->location.Init(lf);
+    }
+
+    RefPtr<nsZipArchive> appOmnijar =
+      mozilla::Omnijar::GetReader(mozilla::Omnijar::APP);
+    if (appOmnijar) {
+      cl = sModuleLocations->AppendElement();
+      cl->type = NS_APP_LOCATION;
+      cl->location.Init(appOmnijar, "chrome.manifest");
+    }
+
+    RereadChromeManifests(false);
+  }
 
   nsCategoryManager::GetSingleton()->SuppressNotifications(false);
 
@@ -429,11 +432,36 @@ nsComponentManagerImpl::Init()
   return NS_OK;
 }
 
+static bool
+ProcessSelectorMatches(Module::ProcessSelector aSelector)
+{
+  GeckoProcessType type = XRE_GetProcessType();
+  if (type == GeckoProcessType_GPU) {
+    return !!(aSelector & Module::ALLOW_IN_GPU_PROCESS);
+  }
+
+  if (aSelector & Module::MAIN_PROCESS_ONLY) {
+    return type == GeckoProcessType_Default;
+  }
+  if (aSelector & Module::CONTENT_PROCESS_ONLY) {
+    return type == GeckoProcessType_Content;
+  }
+  return true;
+}
+
+static const int kModuleVersionWithSelector = 51;
+
 void
 nsComponentManagerImpl::RegisterModule(const mozilla::Module* aModule,
                                        FileLocation* aFile)
 {
   mLock.AssertNotCurrentThreadOwns();
+
+  if (aModule->mVersion >= kModuleVersionWithSelector &&
+      !ProcessSelectorMatches(aModule->selector))
+  {
+    return;
+  }
 
   {
     // Scope the monitor so that we don't hold it while calling into the
@@ -476,24 +504,6 @@ nsComponentManagerImpl::RegisterModule(const mozilla::Module* aModule,
       nsCategoryManager::GetSingleton()->AddCategoryEntry(entry->category,
                                                           entry->entry,
                                                           entry->value);
-  }
-}
-
-static bool
-ProcessSelectorMatches(Module::ProcessSelector aSelector)
-{
-  if (aSelector == Module::ANY_PROCESS) {
-    return true;
-  }
-
-  GeckoProcessType type = XRE_GetProcessType();
-  switch (aSelector) {
-    case Module::MAIN_PROCESS_ONLY:
-      return type == GeckoProcessType_Default;
-    case Module::CONTENT_PROCESS_ONLY:
-      return type == GeckoProcessType_Content;
-    default:
-      MOZ_CRASH("invalid process aSelector");
   }
 }
 

@@ -1761,8 +1761,10 @@ ChildImpl::SynchronouslyCreateForCurrentThread()
 void
 ChildImpl::CloseForCurrentThread()
 {
-  MOZ_ASSERT(sThreadLocalIndex != kBadThreadLocalIndex,
-             "BackgroundChild::Startup() was never called!");
+  if (sThreadLocalIndex == kBadThreadLocalIndex) {
+    return;
+  }
+
   auto threadLocalInfo =
     static_cast<ThreadLocalInfo*>(PR_GetThreadPrivate(sThreadLocalIndex));
 
