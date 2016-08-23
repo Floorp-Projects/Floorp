@@ -146,7 +146,7 @@ XPTInterfaceInfoManager::VerifyAndAddEntryIfNew(XPTInterfaceDirectoryEntry* ifac
         fprintf(stderr, "ignoring too large interface: %s\n", iface->name);
         return;
     }
-    
+
     mWorkingSet.mTableReentrantMonitor.AssertCurrentThreadIn();
     xptiInterfaceEntry* entry = mWorkingSet.mIIDTable.Get(iface->iid);
     if (entry) {
@@ -154,8 +154,8 @@ XPTInterfaceInfoManager::VerifyAndAddEntryIfNew(XPTInterfaceDirectoryEntry* ifac
         LOG_AUTOREG(("      ignoring repeated interface: %s\n", iface->name));
         return;
     }
-    
-    // Build a new xptiInterfaceEntry object and hook it up. 
+
+    // Build a new xptiInterfaceEntry object and hook it up.
 
     entry = xptiInterfaceEntry::Create(iface->name,
                                        iface->iid,
@@ -179,17 +179,17 @@ XPTInterfaceInfoManager::VerifyAndAddEntryIfNew(XPTInterfaceDirectoryEntry* ifac
 }
 
 // this is a private helper
-static nsresult 
+static nsresult
 EntryToInfo(xptiInterfaceEntry* entry, nsIInterfaceInfo **_retval)
 {
     if (!entry) {
         *_retval = nullptr;
-        return NS_ERROR_FAILURE;    
+        return NS_ERROR_FAILURE;
     }
 
     RefPtr<xptiInterfaceInfo> info = entry->InterfaceInfo();
     info.forget(_retval);
-    return NS_OK;    
+    return NS_OK;
 }
 
 xptiInterfaceEntry*
@@ -231,7 +231,7 @@ XPTInterfaceInfoManager::GetIIDForName(const char *name, nsIID * *_retval)
     xptiInterfaceEntry* entry = mWorkingSet.mNameTable.Get(name);
     if (!entry) {
         *_retval = nullptr;
-        return NS_ERROR_FAILURE;    
+        return NS_ERROR_FAILURE;
     }
 
     return entry->GetIID(_retval);
@@ -247,7 +247,7 @@ XPTInterfaceInfoManager::GetNameForIID(const nsIID * iid, char **_retval)
     xptiInterfaceEntry* entry = mWorkingSet.mIIDTable.Get(*iid);
     if (!entry) {
         *_retval = nullptr;
-        return NS_ERROR_FAILURE;    
+        return NS_ERROR_FAILURE;
     }
 
     return entry->GetName(_retval);
