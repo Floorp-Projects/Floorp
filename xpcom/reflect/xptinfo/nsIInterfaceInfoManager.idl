@@ -9,20 +9,12 @@
 #include "nsISupports.idl"
 
 interface nsIInterfaceInfo;
-interface nsIEnumerator;
 
 [builtinclass, uuid(1d53d8d9-1d92-428f-b5cc-198b55e897d7)]
 interface nsIInterfaceInfoManager : nsISupports
 {
     nsIInterfaceInfo getInfoForIID(in nsIIDPtr iid);
     nsIInterfaceInfo getInfoForName(in string name);
-
-    nsIIDPtr getIIDForName(in string name);
-    string   getNameForIID(in nsIIDPtr iid);
-
-    void autoRegisterInterfaces();
-
-    nsIEnumerator enumerateInterfacesWhoseNamesStartWith(in string prefix);
 };
 
 %{C++
