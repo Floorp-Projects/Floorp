@@ -375,7 +375,6 @@ class BaseShape : public gc::TenuredCell
 
   private:
     const Class*        clasp_;        /* Class of referring object. */
-    JSCompartment*      compartment_;  /* Compartment shape belongs to. */
     uint32_t            flags;          /* Vector of above flags. */
     uint32_t            slotSpan_;      /* Object slot span for BaseShapes at
                                          * dictionary last properties. */
@@ -385,6 +384,11 @@ class BaseShape : public gc::TenuredCell
 
     /* For owned BaseShapes, the shape's shape table. */
     ShapeTable*      table_;
+
+#if JS_BITS_PER_WORD == 32
+    // Ensure sizeof(BaseShape) is a multiple of gc::CellSize.
+    uint32_t padding_;
+#endif
 
     BaseShape(const BaseShape& base) = delete;
     BaseShape& operator=(const BaseShape& other) = delete;
@@ -398,7 +402,6 @@ class BaseShape : public gc::TenuredCell
         mozilla::PodZero(this);
         this->clasp_ = clasp;
         this->flags = objectFlags;
-        this->compartment_ = comp;
     }
 
     explicit inline BaseShape(const StackBaseShape& base);
@@ -426,9 +429,6 @@ class BaseShape : public gc::TenuredCell
 
     uint32_t slotSpan() const { MOZ_ASSERT(isOwned()); return slotSpan_; }
     void setSlotSpan(uint32_t slotSpan) { MOZ_ASSERT(isOwned()); slotSpan_ = slotSpan; }
-
-    JSCompartment* compartment() const { return compartment_; }
-    JSCompartment* maybeCompartment() const { return compartment(); }
 
     /*
      * Lookup base shapes from the compartment's baseShapes table, adding if
@@ -498,12 +498,10 @@ struct StackBaseShape : public DefaultHasher<ReadBarriered<UnownedBaseShape*>>
 {
     uint32_t flags;
     const Class* clasp;
-    JSCompartment* compartment;
 
     explicit StackBaseShape(BaseShape* base)
       : flags(base->flags & BaseShape::OBJECT_FLAG_MASK),
-        clasp(base->clasp_),
-        compartment(base->compartment())
+        clasp(base->clasp_)
     {}
 
     inline StackBaseShape(ExclusiveContext* cx, const Class* clasp, uint32_t objectFlags);
@@ -637,7 +635,7 @@ class Shape : public gc::TenuredCell
     ShapeTable& table() const { return base()->table(); }
 
     void addSizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf,
-                                JS::ClassInfo* info) const
+                                JS::ShapeInfo* info) const
     {
         if (hasTable()) {
             if (inDictionary())
@@ -660,8 +658,6 @@ class Shape : public gc::TenuredCell
     }
 
     const GCPtrShape& previous() const { return parent; }
-    JSCompartment* compartment() const { return base()->compartment(); }
-    JSCompartment* maybeCompartment() const { return compartment(); }
 
     template <AllowGC allowGC>
     class Range {
@@ -1011,8 +1007,7 @@ class AccessorShape : public Shape
 inline
 StackBaseShape::StackBaseShape(Shape* shape)
   : flags(shape->getObjectFlags()),
-    clasp(shape->getObjectClass()),
-    compartment(shape->compartment())
+    clasp(shape->getObjectClass())
 {}
 
 class MOZ_RAII AutoRooterGetterSetter
@@ -1466,9 +1461,9 @@ namespace JS {
 namespace ubi {
 
 template<>
-class Concrete<js::Shape> : TracerConcreteWithCompartment<js::Shape> {
+class Concrete<js::Shape> : TracerConcrete<js::Shape> {
   protected:
-    explicit Concrete(js::Shape *ptr) : TracerConcreteWithCompartment<js::Shape>(ptr) { }
+    explicit Concrete(js::Shape *ptr) : TracerConcrete<js::Shape>(ptr) { }
 
   public:
     static void construct(void *storage, js::Shape *ptr) { new (storage) Concrete(ptr); }
@@ -1480,9 +1475,9 @@ class Concrete<js::Shape> : TracerConcreteWithCompartment<js::Shape> {
 };
 
 template<>
-class Concrete<js::BaseShape> : TracerConcreteWithCompartment<js::BaseShape> {
+class Concrete<js::BaseShape> : TracerConcrete<js::BaseShape> {
   protected:
-    explicit Concrete(js::BaseShape *ptr) : TracerConcreteWithCompartment<js::BaseShape>(ptr) { }
+    explicit Concrete(js::BaseShape *ptr) : TracerConcrete<js::BaseShape>(ptr) { }
 
   public:
     static void construct(void *storage, js::BaseShape *ptr) { new (storage) Concrete(ptr); }
