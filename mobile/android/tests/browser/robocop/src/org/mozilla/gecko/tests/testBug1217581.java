@@ -11,7 +11,7 @@ import org.mozilla.gecko.Telemetry;
 public class testBug1217581 extends BaseTest {
     // Take arbitrary histogram names used by Fennec.
     private static final String TEST_HISTOGRAM_NAME = "FENNEC_SYNC_NUMBER_OF_SYNCS_COMPLETED";
-    private static final String TEST_KEYED_HISTOGRAM_NAME = "ABOUT_ACCOUNTS_CONTENT_SERVER_LOAD_STARTED_COUNT";
+    private static final String TEST_KEYED_HISTOGRAM_NAME = "FX_MIGRATION_ERRORS";
     private static final String TEST_KEY_NAME = "testBug1217581";
 
 
