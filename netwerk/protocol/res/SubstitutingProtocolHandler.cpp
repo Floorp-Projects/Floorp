@@ -6,7 +6,7 @@
 
 #include "mozilla/chrome/RegistryMessageUtils.h"
 #include "mozilla/dom/ContentParent.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 
 #include "SubstitutingProtocolHandler.h"
 #include "nsIChannel.h"

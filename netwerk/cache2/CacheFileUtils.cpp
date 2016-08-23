@@ -12,7 +12,7 @@
 #include "nsAutoPtr.h"
 #include "nsString.h"
 #include <algorithm>
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 
 
 namespace mozilla {

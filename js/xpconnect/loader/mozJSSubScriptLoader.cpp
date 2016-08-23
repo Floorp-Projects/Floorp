@@ -30,7 +30,7 @@
 #include "mozilla/HoldDropJSObjects.h"
 #include "mozilla/scache/StartupCache.h"
 #include "mozilla/scache/StartupCacheUtils.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "nsContentUtils.h"
 #include "nsStringGlue.h"
 #include "nsCycleCollectionParticipant.h"

@@ -6,7 +6,7 @@
 
 #include "mozilla/dom/cache/AutoUtils.h"
 
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "mozilla/dom/InternalHeaders.h"
 #include "mozilla/dom/InternalRequest.h"
 #include "mozilla/dom/cache/CacheParent.h"

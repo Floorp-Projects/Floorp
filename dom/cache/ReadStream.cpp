@@ -6,7 +6,7 @@
 
 #include "mozilla/dom/cache/ReadStream.h"
 
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "mozilla/dom/cache/CacheStreamControlChild.h"
 #include "mozilla/dom/cache/CacheStreamControlParent.h"
 #include "mozilla/dom/cache/CacheTypes.h"

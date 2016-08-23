@@ -5,7 +5,7 @@
 
 #include "mozilla/Logging.h"
 
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 
 #include "gfxPlatform.h"
 #include "nsCOMPtr.h"

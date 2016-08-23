@@ -39,7 +39,7 @@ using mozilla::plugins::PluginInstanceParent;
 #include "prmem.h"
 #include "WinUtils.h"
 #include "nsIWidgetListener.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "nsDebug.h"
 #include "nsIXULRuntime.h"
 

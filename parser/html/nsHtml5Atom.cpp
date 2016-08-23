@@ -4,7 +4,7 @@
 
 #include "nsHtml5Atom.h"
 #include "nsAutoPtr.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 
 nsHtml5Atom::nsHtml5Atom(const nsAString& aString)
 {

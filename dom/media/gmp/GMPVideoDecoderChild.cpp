@@ -7,7 +7,7 @@
 #include "GMPVideoi420FrameImpl.h"
 #include "GMPContentChild.h"
 #include <stdio.h>
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "GMPVideoEncodedFrameImpl.h"
 #include "runnable_utils.h"
 

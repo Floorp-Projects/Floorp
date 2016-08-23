@@ -10,7 +10,7 @@
 
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ContentParent.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "nsIDiskSpaceWatcher.h"
 #include "nsThreadUtils.h"
 

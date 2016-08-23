@@ -15,7 +15,7 @@
 #include "mozilla/ipc/FileDescriptorUtils.h"
 #include "mozilla/MediaManager.h"
 #include "mozilla/Services.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "nsIAppsService.h"
 #include "nsIObserverService.h"
 #include "nsIDOMEventListener.h"

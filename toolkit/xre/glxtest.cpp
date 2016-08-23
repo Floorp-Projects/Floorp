@@ -38,7 +38,7 @@
 #include "X11/Xlib.h"
 #include "X11/Xutil.h"
 
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 
 // stuff from glx.h
 typedef struct __GLXcontextRec *GLXContext;

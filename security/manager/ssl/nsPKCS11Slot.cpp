@@ -7,7 +7,7 @@
 #include "mozilla/Casting.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Telemetry.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "nsCOMPtr.h"
 #include "nsIMutableArray.h"
 #include "nsPK11TokenDB.h"

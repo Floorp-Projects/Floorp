@@ -10,7 +10,7 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/dom/VRDisplay.h"
 #include "mozilla/layers/TextureHost.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 
 #include "gfxPrefs.h"
 #include "gfxVR.h"

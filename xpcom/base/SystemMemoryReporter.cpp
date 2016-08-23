@@ -11,7 +11,7 @@
 #include "mozilla/PodOperations.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/TaggedAnonymousMemory.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 
 #include "nsDataHashtable.h"
 #include "nsIMemoryReporter.h"

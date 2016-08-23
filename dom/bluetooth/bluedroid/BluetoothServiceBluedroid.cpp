@@ -34,7 +34,7 @@
 #include "mozilla/ipc/SocketBase.h"
 #include "mozilla/StaticMutex.h"
 #include "mozilla/StaticPtr.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 
 #define ENSURE_BLUETOOTH_IS_ENABLED(runnable, result)                  \
   do {                                                                 \

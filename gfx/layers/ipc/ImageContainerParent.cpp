@@ -9,7 +9,7 @@
 
 #include "nsThreadUtils.h"
 #include "mozilla/layers/ImageHost.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 
 namespace mozilla {
 namespace layers {

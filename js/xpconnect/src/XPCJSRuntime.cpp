@@ -47,7 +47,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/ProcessHangMonitor.h"
 #include "mozilla/UniquePtrExtensions.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "AccessCheck.h"
 #include "nsGlobalWindow.h"
 #include "nsAboutProtocolUtils.h"

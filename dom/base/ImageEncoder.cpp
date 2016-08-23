@@ -11,7 +11,7 @@
 #include "mozilla/layers/AsyncCanvasRenderer.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/SyncRunnable.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "gfxUtils.h"
 #include "nsIThreadPool.h"
 #include "nsNetUtil.h"

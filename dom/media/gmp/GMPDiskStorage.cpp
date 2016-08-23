@@ -9,7 +9,7 @@
 #include "nsAppDirectoryServiceDefs.h"
 #include "GMPParent.h"
 #include "gmp-storage.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "mozilla/EndianUtils.h"
 #include "nsClassHashtable.h"
 #include "prio.h"

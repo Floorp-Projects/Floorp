@@ -7,7 +7,7 @@
 #include "BluetoothDaemonSocketInterface.h"
 #include "BluetoothSocketMessageWatcher.h"
 #include "mozilla/UniquePtr.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "nsXULAppAPI.h"
 
 BEGIN_BLUETOOTH_NAMESPACE

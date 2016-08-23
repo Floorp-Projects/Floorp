@@ -5,7 +5,7 @@
 
 #include "GMPVideoDecoderParent.h"
 #include "mozilla/Logging.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "nsAutoRef.h"
 #include "nsThreadUtils.h"
 #include "GMPUtils.h"

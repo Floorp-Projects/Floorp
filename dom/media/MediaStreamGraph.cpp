@@ -5,7 +5,7 @@
 
 #include "MediaStreamGraphImpl.h"
 #include "mozilla/MathAlgorithms.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 
 #include "AudioSegment.h"
 #include "VideoSegment.h"
@@ -29,7 +29,7 @@
 #include <algorithm>
 #include "GeckoProfiler.h"
 #include "VideoFrameContainer.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "mozilla/media/MediaUtils.h"
 #ifdef MOZ_WEBRTC
 #include "AudioOutputObserver.h"

@@ -25,7 +25,7 @@
 #include "nsIProgressEventSink.h"
 #include "nsIURI.h"
 #include "mozilla/DebugOnly.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "mozilla/BasePrincipal.h"
 #include "nsProxyRelease.h"
 #include "nsContentSecurityManager.h"

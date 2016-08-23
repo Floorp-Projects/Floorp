@@ -6,7 +6,7 @@
 
 #include "DataChannelChild.h"
 
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "mozilla/net/NeckoChild.h"
 
 namespace mozilla {

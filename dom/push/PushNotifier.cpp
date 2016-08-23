@@ -13,7 +13,7 @@
 #include "ServiceWorkerManager.h"
 
 #include "mozilla/Services.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 
 #include "mozilla/dom/BodyUtil.h"
 #include "mozilla/dom/ContentChild.h"

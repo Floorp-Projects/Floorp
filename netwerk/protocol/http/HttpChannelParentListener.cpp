@@ -9,7 +9,7 @@
 
 #include "HttpChannelParentListener.h"
 #include "mozilla/net/HttpChannelParent.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "nsIRedirectChannelRegistrar.h"
 #include "nsIHttpEventSink.h"
 #include "nsIHttpHeaderVisitor.h"

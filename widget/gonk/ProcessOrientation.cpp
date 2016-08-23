@@ -18,7 +18,7 @@
 
 #include "base/basictypes.h"
 #include "mozilla/Hal.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "nsIScreen.h"
 #include "nsIScreenManager.h"
 #include "OrientationObserver.h"
