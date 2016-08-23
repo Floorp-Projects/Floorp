@@ -1,0 +1,85 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1121643
+-->
+<head>
+  <title>Test for Bug 1121643</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1121643">Mozilla Bug 1121643</a>
+<span id="mono" style="font-family: monospace; font-size: 64px;">M</span>
+<span id="sans" style="font-family: sans-serif; font-size: 64px;">M</span>
+<span id="serif" style="font-family: serif; font-size: 64px;">M</span>
+<div id="content" style="display: none">
+
+</div>
+<script class="testbody" type="application/javascript;version=1.7">
+
+/** Test for Bug 1121643 **/
+
+const DOMUtils =  SpecialPowers.Cc["@mozilla.org/inspector/dom-utils;1"]
+                               .getService(SpecialPowers.Ci.inIDOMUtils);
+
+// Given an element id, returns the first font face name encountered.
+let fontUsed = id => {
+  let element = document.getElementById(id),
+      range = document.createRange();
+  range.selectNode(element);
+  return DOMUtils.getUsedFontFaces(range).item(0).CSSFamilyName;
+}
+
+// A map of the default mono, sans and serif fonts, obtained when
+// whitelisting is disabled.
+const fonts = { mono : fontUsed("mono"),
+                sans : fontUsed("sans"),
+                serif : fontUsed("serif") };
+
+// Set the font whitelist to contain none, some, or all of the
+// default mono, sans, and serif fonts. Check that the rendering
+// of our three test elements uses only fonts present in the
+// whitelist.
+let testFontWhitelist = function* (useMono, useSans, useSerif) {
+  let whitelist = [];
+  if (useMono) {
+    whitelist.push(fonts.mono);
+  }
+  if (useSans) {
+    whitelist.push(fonts.sans);
+  }
+  if (useSerif) {
+    whitelist.push(fonts.serif);
+  }
+  yield SpecialPowers.pushPrefEnv({"set": [["font.system.whitelist",
+                                            whitelist.join(", ")]]});
+  // If whitelist is empty, then whitelisting is considered disabled
+  // and all fonts are allowed.
+  info("font whitelist: " + JSON.stringify(whitelist));
+  let whitelistEmpty = whitelist.length === 0;
+  is(useMono || whitelistEmpty, fontUsed("mono") === fonts.mono,
+     "Correct mono whitelisting state; got " + fontUsed("mono") + ", requested " + fonts.mono);
+  is(useSans || whitelistEmpty, fontUsed("sans") === fonts.sans,
+     "Correct sans whitelisting state; got " + fontUsed("sans") + ", requested " + fonts.sans);
+  is(useSerif || whitelistEmpty, fontUsed("serif") === fonts.serif,
+     "Correct serif whitelisting state; got " + fontUsed("serif") + ", requested " + fonts.serif);
+}
+
+// Run tests to confirm that only whitelisting fonts are present in a
+// rendered page. Try turning mono, sans, and serif off and on in
+// every combination.
+add_task(function* () {
+  for (let useMono of [false, true]) {
+    for (let useSans of [false, true]) {
+      for (let useSerif of [false, true]) {
+        yield testFontWhitelist(useMono, useSans, useSerif);
+      }
+    }
+  }
+});
+
+</script>
+</body>
+</html>
