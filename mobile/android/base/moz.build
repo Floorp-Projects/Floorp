@@ -674,6 +674,7 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'widget/FadedSingleColorTextView.java',
     'widget/FadedTextView.java',
     'widget/FaviconView.java',
+    'widget/FilledCardView.java',
     'widget/FlowLayout.java',
     'widget/GeckoActionProvider.java',
     'widget/GeckoPopupMenu.java',
