@@ -229,8 +229,9 @@ TrackUnionStream::TrackUnionStream() :
       }
       MediaStream* source = map->mInputPort->GetSource();
       map->mOwnedDirectListeners.AppendElement(bound.mListener);
-      if (GetDisabledTrackMode(bound.mTrackID) != DisabledTrackMode::ENABLED) {
-        bound.mListener->IncreaseDisabled();
+      DisabledTrackMode currentMode = GetDisabledTrackMode(bound.mTrackID);
+      if (currentMode != DisabledTrackMode::ENABLED) {
+        bound.mListener->IncreaseDisabled(currentMode);
       }
       STREAM_LOG(LogLevel::Debug, ("TrackUnionStream %p adding direct listener "
                                    "%p for track %d. Forwarding to input "
@@ -352,17 +353,18 @@ TrackUnionStream::SetTrackEnabledImpl(TrackID aTrackID, DisabledTrackMode aMode)
       STREAM_LOG(LogLevel::Info, ("TrackUnionStream %p track %d was explicitly %s",
                                    this, aTrackID, enabled ? "enabled" : "disabled"));
       for (DirectMediaStreamTrackListener* listener : entry.mOwnedDirectListeners) {
-        bool oldEnabled = GetDisabledTrackMode(aTrackID) == DisabledTrackMode::ENABLED;
+        DisabledTrackMode oldMode = GetDisabledTrackMode(aTrackID);
+        bool oldEnabled = oldMode == DisabledTrackMode::ENABLED;
         if (!oldEnabled && enabled) {
           STREAM_LOG(LogLevel::Debug, ("TrackUnionStream %p track %d setting "
                                        "direct listener enabled",
                                        this, aTrackID));
-          listener->DecreaseDisabled();
+          listener->DecreaseDisabled(oldMode);
         } else if (oldEnabled && !enabled) {
           STREAM_LOG(LogLevel::Debug, ("TrackUnionStream %p track %d setting "
                                        "direct listener disabled",
                                        this, aTrackID));
-          listener->IncreaseDisabled();
+          listener->IncreaseDisabled(aMode);
         }
       }
     }
@@ -409,8 +411,9 @@ TrackUnionStream::AddDirectTrackListenerImpl(already_AddRefed<DirectMediaStreamT
                                    this, listener.get(), aTrackID, source,
                                    entry.mInputTrackID));
       entry.mOwnedDirectListeners.AppendElement(listener);
-      if (GetDisabledTrackMode(aTrackID) != DisabledTrackMode::ENABLED) {
-        listener->IncreaseDisabled();
+      DisabledTrackMode currentMode = GetDisabledTrackMode(aTrackID);
+      if (currentMode != DisabledTrackMode::ENABLED) {
+        listener->IncreaseDisabled(currentMode);
       }
       source->AddDirectTrackListenerImpl(listener.forget(),
                                          entry.mInputTrackID);
@@ -441,9 +444,10 @@ TrackUnionStream::RemoveDirectTrackListenerImpl(DirectMediaStreamTrackListener* 
                                      this, aListener, aTrackID,
                                      entry.mInputPort->GetSource(),
                                      entry.mInputTrackID));
-        if (GetDisabledTrackMode(aTrackID) != DisabledTrackMode::ENABLED) {
+        DisabledTrackMode currentMode = GetDisabledTrackMode(aTrackID);
+        if (currentMode != DisabledTrackMode::ENABLED) {
           // Reset the listener's state.
-          aListener->DecreaseDisabled();
+          aListener->DecreaseDisabled(currentMode);
         }
         entry.mOwnedDirectListeners.RemoveElementAt(i);
         break;

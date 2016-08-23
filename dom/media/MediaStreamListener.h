@@ -269,25 +269,21 @@ protected:
   virtual ~DirectMediaStreamTrackListener() {}
 
   void MirrorAndDisableSegment(AudioSegment& aFrom, AudioSegment& aTo);
-  void MirrorAndDisableSegment(VideoSegment& aFrom, VideoSegment& aTo);
+  void MirrorAndDisableSegment(VideoSegment& aFrom,
+                               VideoSegment& aTo,
+                               DisabledTrackMode aMode);
   void NotifyRealtimeTrackDataAndApplyTrackDisabling(MediaStreamGraph* aGraph,
                                                      StreamTime aTrackOffset,
                                                      MediaSegment& aMedia);
 
-  void IncreaseDisabled()
-  {
-    ++mDisabledCount;
-  }
-  void DecreaseDisabled()
-  {
-    --mDisabledCount;
-    MOZ_ASSERT(mDisabledCount >= 0, "Double decrease");
-  }
+  void IncreaseDisabled(DisabledTrackMode aMode);
+  void DecreaseDisabled(DisabledTrackMode aMode);
 
   // Matches the number of disabled streams to which this listener is attached.
   // The number of streams are those between the stream the listener was added
   // and the SourceMediaStream that is the input of the data.
-  Atomic<int32_t> mDisabledCount;
+  Atomic<int32_t> mDisabledFreezeCount;
+  Atomic<int32_t> mDisabledBlackCount;
 
   nsAutoPtr<MediaSegment> mMedia;
 };

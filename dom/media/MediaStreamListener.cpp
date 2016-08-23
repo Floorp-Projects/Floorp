@@ -11,9 +11,15 @@
 
 namespace mozilla {
 
+#ifdef LOG
+#undef LOG
+#endif
+
+#define LOG(type, msg) MOZ_LOG(gMediaStreamGraphLog, type, msg)
+
 void
 DirectMediaStreamTrackListener::MirrorAndDisableSegment(AudioSegment& aFrom,
-                                                       AudioSegment& aTo)
+                                                        AudioSegment& aTo)
 {
   aTo.Clear();
   aTo.AppendNullData(aFrom.GetDuration());
@@ -21,12 +27,20 @@ DirectMediaStreamTrackListener::MirrorAndDisableSegment(AudioSegment& aFrom,
 
 void
 DirectMediaStreamTrackListener::MirrorAndDisableSegment(VideoSegment& aFrom,
-                                                       VideoSegment& aTo)
+                                                        VideoSegment& aTo,
+                                                        DisabledTrackMode aMode)
 {
   aTo.Clear();
-  for (VideoSegment::ChunkIterator it(aFrom); !it.IsEnded(); it.Next()) {
-    aTo.AppendFrame(do_AddRef(it->mFrame.GetImage()), it->GetDuration(),
-                    it->mFrame.GetIntrinsicSize(), it->GetPrincipalHandle(), true);
+  if (aMode == DisabledTrackMode::SILENCE_BLACK) {
+    for (VideoSegment::ChunkIterator it(aFrom); !it.IsEnded(); it.Next()) {
+      aTo.AppendFrame(do_AddRef(it->mFrame.GetImage()),
+                      it->GetDuration(),
+                      it->mFrame.GetIntrinsicSize(),
+                      it->GetPrincipalHandle(),
+                      true);
+    }
+  } else if (aMode == DisabledTrackMode::SILENCE_FREEZE) {
+    aTo.AppendNullData(aFrom.GetDuration());
   }
 }
 
@@ -35,11 +49,14 @@ DirectMediaStreamTrackListener::NotifyRealtimeTrackDataAndApplyTrackDisabling(Me
                                                                              StreamTime aTrackOffset,
                                                                              MediaSegment& aMedia)
 {
-  if (mDisabledCount == 0) {
+  if (mDisabledFreezeCount == 0 && mDisabledBlackCount == 0) {
     NotifyRealtimeTrackData(aGraph, aTrackOffset, aMedia);
     return;
   }
 
+  DisabledTrackMode mode = mDisabledBlackCount > 0
+                         ? DisabledTrackMode::SILENCE_BLACK
+                         : DisabledTrackMode::SILENCE_FREEZE;
   if (!mMedia) {
     mMedia = aMedia.CreateEmptyClone();
   }
@@ -48,11 +65,52 @@ DirectMediaStreamTrackListener::NotifyRealtimeTrackDataAndApplyTrackDisabling(Me
                             static_cast<AudioSegment&>(*mMedia));
   } else if (aMedia.GetType() == MediaSegment::VIDEO) {
     MirrorAndDisableSegment(static_cast<VideoSegment&>(aMedia),
-                            static_cast<VideoSegment&>(*mMedia));
+                            static_cast<VideoSegment&>(*mMedia),
+                            mode);
   } else {
     MOZ_CRASH("Unsupported media type");
   }
   NotifyRealtimeTrackData(aGraph, aTrackOffset, *mMedia);
+}
+
+void
+DirectMediaStreamTrackListener::IncreaseDisabled(DisabledTrackMode aMode)
+{
+  if (aMode == DisabledTrackMode::SILENCE_FREEZE) {
+    ++mDisabledFreezeCount;
+  } else if (aMode == DisabledTrackMode::SILENCE_BLACK) {
+    ++mDisabledBlackCount;
+  } else {
+    MOZ_ASSERT(false, "Unknown disabled mode");
+  }
+
+  LOG(LogLevel::Debug, ("DirectMediaStreamTrackListener %p increased disabled "
+                        "mode %s. Current counts are: freeze=%d, black=%d",
+                        this,
+                        aMode == DisabledTrackMode::SILENCE_FREEZE ? "freeze" : "black",
+                        int32_t(mDisabledFreezeCount),
+                        int32_t(mDisabledBlackCount)));
+}
+
+void
+DirectMediaStreamTrackListener::DecreaseDisabled(DisabledTrackMode aMode)
+{
+  if (aMode == DisabledTrackMode::SILENCE_FREEZE) {
+    --mDisabledFreezeCount;
+    MOZ_ASSERT(mDisabledFreezeCount >= 0, "Double decrease");
+  } else if (aMode == DisabledTrackMode::SILENCE_BLACK) {
+    --mDisabledBlackCount;
+    MOZ_ASSERT(mDisabledBlackCount >= 0, "Double decrease");
+  } else {
+    MOZ_ASSERT(false, "Unknown disabled mode");
+  }
+
+  LOG(LogLevel::Debug, ("DirectMediaStreamTrackListener %p decreased disabled "
+                        "mode %s. Current counts are: freeze=%d, black=%d",
+                        this,
+                        aMode == DisabledTrackMode::SILENCE_FREEZE ? "freeze" : "black",
+                        int32_t(mDisabledFreezeCount),
+                        int32_t(mDisabledBlackCount)));
 }
 
 } // namespace mozilla
