@@ -5,9 +5,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1209414
 -->
 <head>
   <title>Test for Bug 1209414</title>
-  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
-  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css">
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1209414">Mozilla Bug 1209414</a>
@@ -22,14 +22,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1209414
 const Ci = SpecialPowers.Ci;
 
 function getMisspelledWords(editor) {
-  return editor.selectionController.getSelection(Components.interfaces.nsISelectionController.SELECTION_SPELLCHECK).toString();
+  return editor.selectionController.getSelection(Ci.nsISelectionController.SELECTION_SPELLCHECK).toString();
 }
 
 var elem_de;
 var editor_de;
-var de_DE;
-var hunspell;
-var chromeWin, contextMenu;
+var script;
 
 /** Test for Bug 1209414 **/
 /*
@@ -38,41 +36,67 @@ var chromeWin, contextMenu;
  * user behaviour.
  */
 
+var onSpellCheck =
+  SpecialPowers.Cu.import("resource://gre/modules/AsyncSpellCheckTestHelper.jsm")
+               .onSpellCheck;
+
 SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(function() {
-  Components.utils.import("resource://gre/modules/AsyncSpellCheckTestHelper.jsm");
+  script = SpecialPowers.loadChromeScript(function() {
+    const Ci = Components.interfaces;
+    var chromeWin = browserElement.ownerDocument.defaultView
+                    .QueryInterface(Ci.nsIInterfaceRequestor)
+                    .getInterface(Ci.nsIWebNavigation)
+                    .QueryInterface(Ci.nsIDocShellTreeItem)
+                    .rootTreeItem
+                    .QueryInterface(Ci.nsIInterfaceRequestor)
+                    .getInterface(Ci.nsIDOMWindow)
+                    .QueryInterface(Ci.nsIDOMChromeWindow);
+    var contextMenu = chromeWin.document.getElementById("contentAreaContextMenu");
+    contextMenu.addEventListener("popupshown",
+                                 () => sendAsyncMessage("popupshown"), false);
 
-  chromeWin = SpecialPowers.wrap(window)
-                  .QueryInterface(Ci.nsIInterfaceRequestor)
-                  .getInterface(Ci.nsIWebNavigation)
-                  .QueryInterface(Ci.nsIDocShellTreeItem)
-                  .rootTreeItem
-                  .QueryInterface(Ci.nsIInterfaceRequestor)
-                  .getInterface(Ci.nsIDOMWindow)
-                  .QueryInterface(Ci.nsIDOMChromeWindow);
-  contextMenu = chromeWin.document.getElementById("contentAreaContextMenu");
-  is(contextMenu!=null, true, "Got context menu XUL");
-  contextMenu.addEventListener("popupshown", handlePopup, false);
+    var dir = Components.classes["@mozilla.org/file/directory_service;1"]
+                        .getService(Ci.nsIProperties)
+                        .get("CurWorkD", Ci.nsIFile);
+    dir.append("tests");
+    dir.append("editor");
+    dir.append("composer");
+    dir.append("test");
 
-  var dir = Components.classes["@mozilla.org/file/directory_service;1"]
-                      .getService(Components.interfaces.nsIProperties)
-                      .get("CurWorkD", Components.interfaces.nsIFile);
-  dir.append("tests");
-  dir.append("editor");
-  dir.append("composer");
-  dir.append("test");
+    var hunspell = Components.classes["@mozilla.org/spellchecker/engine;1"]
+                             .getService(Ci.mozISpellCheckingEngine);
 
-  hunspell = Components.classes["@mozilla.org/spellchecker/engine;1"]
-                       .getService(Components.interfaces.mozISpellCheckingEngine);
+    // Install de-DE dictionary.
+    de_DE = dir.clone();
+    de_DE.append("de-DE");
+    hunspell.addDirectory(de_DE);
 
-  // Install de-DE dictionary.
-  de_DE = dir.clone();
-  de_DE.append("de-DE");
-  is(de_DE.exists(), true, "true expected (de_DE directory should exist)");
-  hunspell.addDirectory(de_DE);
+    addMessageListener("hidepopup", function() {
+      var state = contextMenu.state;
+
+      // Select Language from the menu.  Take a look at
+      // toolkit/modules/InlineSpellChecker.jsm to see how the menu works.
+
+      contextMenu.ownerDocument.getElementById("spell-check-dictionary-en-US")
+                 .doCommand();
+      contextMenu.hidePopup();
+
+      return state;
+    });
+    addMessageListener("destroy", () => hunspell.removeDirectory(de_DE));
+    addMessageListener("contextMenu-not-null", () => contextMenu != null);
+    addMessageListener("de_DE-exists", () => de_DE.exists());
+  });
+  is(script.sendSyncMessage("contextMenu-not-null")[0][0], true,
+     "Got context menu XUL");
+  is(script.sendSyncMessage("de_DE-exists")[0][0], true,
+     "true expected (de_DE directory should exist)");
+  script.addMessageListener("popupshown", handlePopup);
 
   elem_de = document.getElementById('de-DE');
-  editor_de = elem_de.QueryInterface(Components.interfaces.nsIDOMNSEditableElement).editor;
+  editor_de = SpecialPowers.wrap(elem_de)
+                           .QueryInterface(Ci.nsIDOMNSEditableElement).editor;
   editor_de.setSpellcheckUserOverride(true);
 
   onSpellCheck(elem_de, function () {
@@ -97,13 +121,8 @@ SimpleTest.waitForFocus(function() {
 });
 
 function handlePopup() {
-
-  is(contextMenu.state, "open", "checking if popup is open");
-
-  // Select Language from the menu.
-  // Take a look at toolkit/modules/InlineSpellChecker.jsm to see how the menu works.
-  contextMenu.ownerDocument.getElementById("spell-check-dictionary-en-US").doCommand();
-  contextMenu.hidePopup();
+  var state = script.sendSyncMessage("hidepopup")[0][0];
+  is(state, "open", "checking if popup is open");
 
   onSpellCheck(elem_de, function () {
     var inlineSpellChecker = editor_de.getInlineSpellChecker(true);
@@ -117,7 +136,7 @@ function handlePopup() {
     is(getMisspelledWords(editor_de), "heute" + "ist" + "ein" + "guter", "some misspelled words expected: heute ist ein guter");
 
     // Remove the fake de_DE dictionary again.
-    hunspell.removeDirectory(de_DE);
+    script.sendSyncMessage("destroy");
 
     // This will clear the content preferences and reset "spellchecker.dictionary".
     spellchecker.SetCurrentDictionary("");
