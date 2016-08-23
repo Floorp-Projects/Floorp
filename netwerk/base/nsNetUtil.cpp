@@ -1266,17 +1266,14 @@ NS_GetAppInfo(nsIChannel *aChannel,
               uint32_t *aAppID,
               bool *aIsInIsolatedMozBrowserElement)
 {
-    nsCOMPtr<nsILoadContext> loadContext;
-    NS_QueryNotificationCallbacks(aChannel, loadContext);
-    if (!loadContext) {
-        return false;
+    NeckoOriginAttributes attrs;
+
+    if (!NS_GetOriginAttributes(aChannel, attrs)) {
+      return false;
     }
 
-    nsresult rv = loadContext->GetAppId(aAppID);
-    NS_ENSURE_SUCCESS(rv, false);
-
-    rv = loadContext->GetIsInIsolatedMozBrowserElement(aIsInIsolatedMozBrowserElement);
-    NS_ENSURE_SUCCESS(rv, false);
+    *aAppID = attrs.mAppId;
+    *aIsInIsolatedMozBrowserElement = attrs.mInIsolatedMozBrowser;
 
     return true;
 }

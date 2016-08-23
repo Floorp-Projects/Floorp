@@ -76,9 +76,21 @@ WebSocketChannelParent::RecvAsyncOpen(const OptionalURIParams& aURI,
   nsresult rv;
   nsCOMPtr<nsIURI> uri;
   nsCOMPtr<nsILoadInfo> loadInfo;
-
   bool appOffline = false;
-  uint32_t appId = GetAppId();
+  uint32_t appId = NECKO_NO_APP_ID;
+  NeckoOriginAttributes attrs;
+
+  rv = LoadInfoArgsToLoadInfo(aLoadInfoArgs, getter_AddRefs(loadInfo));
+  if (NS_FAILED(rv)) {
+    goto fail;
+  }
+
+  rv = loadInfo->GetOriginAttributes(&attrs);
+  if (NS_FAILED(rv)) {
+    goto fail;
+  }
+
+  appId = attrs.mAppId;
   if (appId != NECKO_UNKNOWN_APP_ID &&
       appId != NECKO_NO_APP_ID) {
     gIOService->IsAppOffline(appId, &appOffline);
@@ -101,10 +113,6 @@ WebSocketChannelParent::RecvAsyncOpen(const OptionalURIParams& aURI,
   if (NS_WARN_IF(NS_FAILED(rv))) {
     goto fail;
   }
-
-  rv = LoadInfoArgsToLoadInfo(aLoadInfoArgs, getter_AddRefs(loadInfo));
-  if (NS_FAILED(rv))
-    goto fail;
 
   rv = mChannel->SetLoadInfo(loadInfo);
   if (NS_FAILED(rv)) {
@@ -328,9 +336,18 @@ WebSocketChannelParent::OfflineDisconnect()
 uint32_t
 WebSocketChannelParent::GetAppId()
 {
+  nsresult rv;
+
   uint32_t appId = NECKO_UNKNOWN_APP_ID;
-  if (mLoadContext) {
-    mLoadContext->GetAppId(&appId);
+  if (mChannel) {
+    nsCOMPtr<nsILoadInfo> loadInfo;
+    rv = mChannel->GetLoadInfo(getter_AddRefs(loadInfo));
+
+    if (NS_SUCCEEDED(rv) && loadInfo) {
+      NeckoOriginAttributes attrs;
+      loadInfo->GetOriginAttributes(&attrs);
+      appId = attrs.mAppId;
+    }
   }
   return appId;
 }
