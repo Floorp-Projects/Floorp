@@ -10,7 +10,7 @@ const {FileUtils} = require("resource://gre/modules/FileUtils.jsm");
 const {Task} = require("devtools/shared/task");
 const {addonsSpec} = require("devtools/shared/specs/addons");
 
-const AddonsActor = protocol.ActorClass(addonsSpec, {
+const AddonsActor = protocol.ActorClassWithSpec(addonsSpec, {
 
   initialize: function (conn) {
     protocol.Actor.prototype.initialize.call(this, conn);

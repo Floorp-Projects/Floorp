@@ -18,7 +18,7 @@ const { CallWatcherFront } = require("devtools/shared/fronts/call-watcher");
  * This actor contains information about a function call, like the function
  * type, name, stack, arguments, returned value etc.
  */
-var FunctionCallActor = protocol.ActorClass(functionCallSpec, {
+var FunctionCallActor = protocol.ActorClassWithSpec(functionCallSpec, {
   /**
    * Creates the function call actor.
    *
@@ -226,7 +226,7 @@ var FunctionCallActor = protocol.ActorClass(functionCallSpec, {
 /**
  * This actor observes function calls on certain objects or globals.
  */
-var CallWatcherActor = exports.CallWatcherActor = protocol.ActorClass(callWatcherSpec, {
+var CallWatcherActor = exports.CallWatcherActor = protocol.ActorClassWithSpec(callWatcherSpec, {
   initialize: function (conn, tabActor) {
     protocol.Actor.prototype.initialize.call(this, conn);
     this.tabActor = tabActor;
