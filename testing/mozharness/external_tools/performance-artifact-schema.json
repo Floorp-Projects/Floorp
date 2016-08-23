@@ -18,9 +18,7 @@
                 "value": {
                     "description": "Summary value for subtest",
                     "title": "Subtest value",
-                    "type": "number",
-                    "minimum": -1000000000000.0,
-                    "maximum": 1000000000000.0
+                    "type": "number"
                 },
                 "lowerIsBetter": {
                     "description": "Whether lower values are better for subtest",
@@ -35,30 +33,22 @@
                 "alertThreshold": {
                     "description": "% change threshold before alerting",
                     "title": "Alert threshold",
-                    "type": "number",
-                    "minimum": 0.0,
-                    "maximum": 1000.0
+                    "type": "number"
                 },
                 "minBackWindow": {
                     "description": "Minimum back window to use for alerting",
                     "title": "Minimum back window",
-                    "type": "number",
-                    "minimum": 1,
-                    "maximum": 255
+                    "type": "number"
                 },
                 "maxBackWindow": {
                     "description": "Maximum back window to use for alerting",
                     "title": "Maximum back window",
-                    "type": "number",
-                    "minimum": 1,
-                    "maximum": 255
+                    "type": "number"
                 },
                 "foreWindow": {
                     "description": "Fore window to use for alerting",
                     "title": "Fore window",
-                    "type": "number",
-                    "minimum": 1,
-                    "maximum": 255
+                    "type": "number"
                 }
             },
             "required": [
@@ -90,9 +80,7 @@
                 },
                 "value": {
                     "title": "Suite value",
-                    "type": "number",
-                    "minimum": -1000000000000.0,
-                    "maximum": 1000000000000.0
+                    "type": "number"
                 },
                 "lowerIsBetter": {
                     "description": "Whether lower values are better for suite",
@@ -107,30 +95,22 @@
                 "alertThreshold": {
                     "description": "% change threshold before alerting",
                     "title": "Alert threshold",
-                    "type": "number",
-                    "minimum": 0.0,
-                    "maximum": 1000.0
+                    "type": "number"
                 },
                 "minBackWindow": {
                     "description": "Minimum back window to use for alerting",
                     "title": "Minimum back window",
-                    "type": "integer",
-                    "minimum": 1,
-                    "maximum": 255
+                    "type": "number"
                 },
                 "maxBackWindow": {
                     "description": "Maximum back window to use for alerting",
                     "title": "Maximum back window",
-                    "type": "integer",
-                    "minimum": 1,
-                    "maximum": 255
+                    "type": "number"
                 },
                 "foreWindow": {
                     "description": "Fore window to use for alerting",
                     "title": "Fore window",
-                    "type": "integer",
-                    "minimum": 1,
-                    "maximum": 255
+                    "type": "number"
                 }
             },
             "required": [
