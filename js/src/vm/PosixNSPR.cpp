@@ -14,18 +14,6 @@
 #include <sys/time.h>
 #include <time.h>
 
-PRStatus
-PR_CallOnce(PRCallOnceType* once, PRCallOnceFN func)
-{
-    MOZ_CRASH("PR_CallOnce unimplemented");
-}
-
-PRStatus
-PR_CallOnceWithArg(PRCallOnceType* once, PRCallOnceWithArgFN func, void* arg)
-{
-    MOZ_CRASH("PR_CallOnceWithArg unimplemented");
-}
-
 int32_t
 PR_FileDesc2NativeHandle(PRFileDesc* fd)
 {
