@@ -1,41 +1,37 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
 /**
  * Tests if copying an image as data uri works.
  */
 
-function test() {
-  const SVG_URL = EXAMPLE_URL + "dropmarker.svg";
-  initNetMonitor(CURL_URL).then(([aTab, aDebuggee, aMonitor]) => {
-    info("Starting test... ");
+const SVG_URL = EXAMPLE_URL + "dropmarker.svg";
 
-    let { NetMonitorView } = aMonitor.panelWin;
-    let { RequestsMenu } = NetMonitorView;
+add_task(function* () {
+  let [tab, , monitor] = yield initNetMonitor(CURL_URL);
+  info("Starting test... ");
 
-    RequestsMenu.lazyUpdate = false;
+  let { NetMonitorView } = monitor.panelWin;
+  let { RequestsMenu } = NetMonitorView;
 
-    waitForNetworkEvents(aMonitor, 1).then(() => {
-      let requestItem = RequestsMenu.getItemAtIndex(0);
-      RequestsMenu.selectedItem = requestItem;
+  RequestsMenu.lazyUpdate = false;
 
-      waitForClipboard(function check(text) {
-        return text.startsWith("data:") && !/undefined/.test(text);
-      }, function setup() {
-        RequestsMenu.copyImageAsDataUri();
-      }, function onSuccess() {
-        ok(true, "Clipboard contains a valid data: URI");
-        cleanUp();
-      }, function onFailure() {
-        ok(false, "Clipboard contains an invalid data: URI");
-        cleanUp();
-      });
-    });
-
-    aDebuggee.performRequest(SVG_URL);
-
-    function cleanUp() {
-      teardown(aMonitor).then(finish);
-    }
+  let wait = waitForNetworkEvents(monitor, 1);
+  yield ContentTask.spawn(tab.linkedBrowser, SVG_URL, function* (url) {
+    content.wrappedJSObject.performRequest(url);
   });
-}
+  yield wait;
+
+  let requestItem = RequestsMenu.getItemAtIndex(0);
+  RequestsMenu.selectedItem = requestItem;
+
+  yield waitForClipboardPromise(function setup() {
+    RequestsMenu.copyImageAsDataUri();
+  }, function check(text) {
+    return text.startsWith("data:") && !/undefined/.test(text);
+  });
+
+  yield teardown(monitor);
+});
