@@ -14,10 +14,10 @@
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
   <script type="text/javascript">
   var numAssertions = 9;
-  if (SpecialPowers.getBoolPref("layout.css.vertical-text.enabled")) {
-    // these are from the additional margin-inline-{start,end} tests
-    numAssertions += 2;
-  }
+
+  // these are from the additional margin-inline-{start,end} tests
+  numAssertions += 2;
+
   SimpleTest.expectAssertions(numAssertions);
   SimpleTest.waitForExplicitFinish();
   SimpleTest.requestLongerTimeout(2);
