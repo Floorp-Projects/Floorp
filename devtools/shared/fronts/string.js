@@ -8,7 +8,7 @@ const promise = require("promise");
 const {longStringSpec, SimpleStringFront} = require("devtools/shared/specs/string");
 const protocol = require("devtools/shared/protocol");
 
-const LongStringFront = protocol.FrontClass(longStringSpec, {
+const LongStringFront = protocol.FrontClassWithSpec(longStringSpec, {
   initialize: function (client) {
     protocol.Front.prototype.initialize.call(this, client);
   },

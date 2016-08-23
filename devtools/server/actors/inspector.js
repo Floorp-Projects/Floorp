@@ -197,7 +197,7 @@ exports.getNodeDisplayName = getNodeDisplayName;
 /**
  * Server side of the node actor.
  */
-var NodeActor = exports.NodeActor = protocol.ActorClass(nodeSpec, {
+var NodeActor = exports.NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
   initialize: function (walker, node) {
     protocol.Actor.prototype.initialize.call(this, null);
     this.walker = walker;
@@ -708,7 +708,7 @@ var NodeActor = exports.NodeActor = protocol.ActorClass(nodeSpec, {
 /**
  * Server side of a node list as returned by querySelectorAll()
  */
-var NodeListActor = exports.NodeListActor = protocol.ActorClass(nodeListSpec, {
+var NodeListActor = exports.NodeListActor = protocol.ActorClassWithSpec(nodeListSpec, {
   typeName: "domnodelist",
 
   initialize: function (walker, nodeList) {
@@ -766,7 +766,7 @@ var NodeListActor = exports.NodeListActor = protocol.ActorClass(nodeListSpec, {
 /**
  * Server side of the DOM walker.
  */
-var WalkerActor = protocol.ActorClass(walkerSpec, {
+var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
   /**
    * Create the WalkerActor
    * @param DebuggerServerConnection conn
@@ -2578,7 +2578,7 @@ var WalkerActor = protocol.ActorClass(walkerSpec, {
  * Server side of the inspector actor, which is used to create
  * inspector-related actors, including the walker.
  */
-exports.InspectorActor = protocol.ActorClass(inspectorSpec, {
+exports.InspectorActor = protocol.ActorClassWithSpec(inspectorSpec, {
   initialize: function (conn, tabActor) {
     protocol.Actor.prototype.initialize.call(this, conn);
     this.tabActor = tabActor;

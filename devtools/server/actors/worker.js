@@ -55,7 +55,7 @@ function matchWorkerDebugger(dbg, options) {
   return true;
 }
 
-let WorkerActor = protocol.ActorClass(workerSpec, {
+let WorkerActor = protocol.ActorClassWithSpec(workerSpec, {
   initialize(conn, dbg) {
     protocol.Actor.prototype.initialize.call(this, conn);
     this._dbg = dbg;
@@ -313,7 +313,7 @@ WorkerActorList.prototype = {
 
 exports.WorkerActorList = WorkerActorList;
 
-let PushSubscriptionActor = protocol.ActorClass(pushSubscriptionSpec, {
+let PushSubscriptionActor = protocol.ActorClassWithSpec(pushSubscriptionSpec, {
   initialize(conn, subscription) {
     protocol.Actor.prototype.initialize.call(this, conn);
     this._subscription = subscription;
@@ -343,7 +343,7 @@ let PushSubscriptionActor = protocol.ActorClass(pushSubscriptionSpec, {
 let _serviceWorkerProcessScriptLoaded = false;
 
 let ServiceWorkerRegistrationActor =
-protocol.ActorClass(serviceWorkerRegistrationSpec, {
+protocol.ActorClassWithSpec(serviceWorkerRegistrationSpec, {
   /**
    * Create the ServiceWorkerRegistrationActor
    * @param DebuggerServerConnection conn
