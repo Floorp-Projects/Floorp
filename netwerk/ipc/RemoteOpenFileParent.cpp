@@ -20,7 +20,8 @@ namespace net {
 void
 RemoteOpenFileParent::ActorDestroy(ActorDestroyReason aWhy)
 {
-  // Implement me! Bug 1005186
+  // Nothing needed here. Called right before destructor since this is a
+  // non-refcounted class.
 }
 
 bool
