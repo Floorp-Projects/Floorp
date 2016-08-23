@@ -23,8 +23,7 @@ class nsXPTParamInfo;
 class nsXPTType;
 %}
 
-/* this is NOT intended to be scriptable */
-[uuid(3820e663-8e22-4789-b470-56bcf7083f2b)]
+[builtinclass, uuid(3820e663-8e22-4789-b470-56bcf7083f2b)]
 interface nsIInterfaceInfo : nsISupports
 {
     readonly attribute string   name;
