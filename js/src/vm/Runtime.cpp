@@ -166,7 +166,7 @@ JSRuntime::JSRuntime(JSRuntime* parentRuntime)
     localeCallbacks(nullptr),
     defaultLocale(nullptr),
     defaultVersion_(JSVERSION_DEFAULT),
-    ownerThread_(nullptr),
+    ownerThread_(js::ThisThread::GetId()),
     ownerThreadNative_(0),
     tempLifoAlloc(TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE),
     jitRuntime_(nullptr),
@@ -263,7 +263,7 @@ JSRuntime::JSRuntime(JSRuntime* parentRuntime)
 bool
 JSRuntime::init(uint32_t maxbytes, uint32_t maxNurseryBytes)
 {
-    ownerThread_ = PR_GetCurrentThread();
+    MOZ_ASSERT(ownerThread_ == js::ThisThread::GetId());
 
     // Get a platform-native handle for the owner thread, used by
     // js::InterruptRunningJitCode to halt the runtime's main thread.
@@ -844,7 +844,7 @@ JSRuntime::clearUsedByExclusiveThread(Zone* zone)
 bool
 js::CurrentThreadCanAccessRuntime(JSRuntime* rt)
 {
-    return rt->ownerThread_ == PR_GetCurrentThread();
+    return rt->ownerThread_ == js::ThisThread::GetId();
 }
 
 bool

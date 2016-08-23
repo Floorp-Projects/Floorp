@@ -258,7 +258,7 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
 
     def _verify_adb(self):
         self.info('Verifying adb connectivity')
-        self._run_with_timeout(300, [self.adb_path, 'wait-for-device'])
+        self._run_with_timeout(180, [self.adb_path, 'wait-for-device'])
         return True
 
     def _verify_adb_device(self):
@@ -285,13 +285,6 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
                 res = tn.read_until('OK', 10)
                 self.info(res)
                 self._telnet_cmd(tn, 'avd status')
-                if self.config["device_manager"] == "sut":
-                    sutport1 = self.emulator["sut_port1"]
-                    sutport2 = self.emulator["sut_port2"]
-                    cmd = 'redir add tcp:' + str(sutport1) + ':' + str(self.config["default_sut_port1"])
-                    self._telnet_cmd(tn, cmd)
-                    cmd = 'redir add tcp:' + str(sutport2) + ':' + str(self.config["default_sut_port2"])
-                    self._telnet_cmd(tn, cmd)
                 self._telnet_cmd(tn, 'redir list')
                 self._telnet_cmd(tn, 'network status')
                 tn.write('quit\n')
@@ -313,37 +306,6 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
                 tn.close()
         return telnet_ok
 
-    def _telnet_to_sut(self):
-        port = self.emulator["sut_port1"]
-        contacted_sut = False
-        try:
-            tn = telnetlib.Telnet('localhost', port, 10)
-            if tn is not None:
-                self.info('Connected to port %d' % port)
-                res = tn.read_until('$>', 10)
-                if res.find('$>') == -1:
-                    self.warning('Unexpected SUT response: %s' % res)
-                else:
-                    self.info('SUT response: %s' % res)
-                    contacted_sut = True
-                tn.write('quit\n')
-                tn.read_all()
-            else:
-                self.warning('Unable to connect to port %d' % port)
-        except socket.error, e:
-            self.info('Trying again after socket error: %s' % str(e))
-            pass
-        except EOFError:
-            self.info('Trying again after EOF')
-            pass
-        except:
-            self.info('Trying again after unexpected exception')
-            pass
-        finally:
-            if tn is not None:
-                tn.close()
-        return contacted_sut
-
     def _verify_emulator(self):
         adb_ok = self._verify_adb()
         if not adb_ok:
@@ -361,11 +323,6 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
         if not telnet_ok:
             self.warning('Unable to telnet to emulator on port %d' % self.emulator["emulator_port"])
             return False
-        if self.config["device_manager"] == "sut":
-            sut_ok = self._retry(8, 30, self._telnet_to_sut, "Verify telnet to SUT agent")
-            if not sut_ok:
-                self.warning('Unable to communicate with SUT agent on port %d' % self.emulator["sut_port1"])
-                return False
         return True
 
     def _verify_emulator_and_restart_on_fail(self):
@@ -374,8 +331,13 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
             self._dump_host_state()
             self._screenshot("emulator-startup-screenshot-")
             self._kill_processes(self.config["emulator_process_name"])
+            self._run_proc(['ps', '-ef'])
             self._dump_emulator_log()
+            # remove emulator tmp files
+            for dir in glob.glob("/tmp/android-*"):
+                self.rmtree(dir)
             self._restart_adbd()
+            time.sleep(5)
             self.emulator_proc = self._launch_emulator()
         return emulator_ok
 
@@ -498,11 +460,6 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
             'error_summary_file': error_summary_file,
             'dm_trans': c['device_manager'],
         }
-        if self.config["device_manager"] == "sut":
-            str_format_values.update({
-                'device_ip': c['device_ip'],
-                'device_port': str(self.emulator['sut_port1']),
-            })
         for option in self.config["suite_definitions"][self.test_suite]["options"]:
             opt = option.split('=')[0]
             # override configured chunk options with script args, if specified
@@ -641,12 +598,12 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
 
     def verify_emulator(self):
         '''
-        Check to see if the emulator can be contacted via adb, telnet, and sut, if configured.
+        Check to see if the emulator can be contacted via adb and telnet.
         If any communication attempt fails, kill the emulator, re-launch, and re-check.
         '''
         self.mkdir_p(self.query_abs_dirs()['abs_blob_upload_dir'])
-        max_restarts = 3
-        emulator_ok = self._retry(max_restarts, 30, self._verify_emulator_and_restart_on_fail, "Check emulator")
+        max_restarts = 5
+        emulator_ok = self._retry(max_restarts, 10, self._verify_emulator_and_restart_on_fail, "Check emulator")
         if not emulator_ok:
             self.fatal('INFRA-ERROR: Unable to start emulator after %d attempts' % max_restarts)
         # Start logcat for the emulator. The adb process runs until the

@@ -11626,33 +11626,41 @@ CodeGenerator::visitNewTarget(LNewTarget *ins)
 {
     ValueOperand output = GetValueOutput(ins);
 
-    // if (!isConstructing()) output = undefined
-    Label constructing, done;
+    // if (isConstructing) output = argv[Max(numActualArgs, numFormalArgs)]
+    Label notConstructing, done;
     Address calleeToken(masm.getStackPointer(), frameSize() + JitFrameLayout::offsetOfCalleeToken());
-    masm.branchTestPtr(Assembler::NonZero, calleeToken,
-                       Imm32(CalleeToken_FunctionConstructing), &constructing);
-    masm.moveValue(UndefinedValue(), output);
-    masm.jump(&done);
+    masm.branchTestPtr(Assembler::Zero, calleeToken,
+                       Imm32(CalleeToken_FunctionConstructing), &notConstructing);
 
-    masm.bind(&constructing);
-
-    // else output = argv[Max(numActualArgs, numFormalArgs)]
     Register argvLen = output.scratchReg();
 
     Address actualArgsPtr(masm.getStackPointer(), frameSize() + JitFrameLayout::offsetOfNumActualArgs());
     masm.loadPtr(actualArgsPtr, argvLen);
 
-    Label actualArgsSufficient;
+    Label useNFormals;
 
     size_t numFormalArgs = ins->mirRaw()->block()->info().funMaybeLazy()->nargs();
-    masm.branchPtr(Assembler::AboveOrEqual, argvLen, Imm32(numFormalArgs),
-                   &actualArgsSufficient);
-    masm.move32(Imm32(numFormalArgs), argvLen);
-    masm.bind(&actualArgsSufficient);
+    masm.branchPtr(Assembler::Below, argvLen, Imm32(numFormalArgs),
+                   &useNFormals);
 
-    BaseValueIndex newTarget(masm.getStackPointer(), argvLen, frameSize() + JitFrameLayout::offsetOfActualArgs());
-    masm.loadValue(newTarget, output);
+    size_t argsOffset = frameSize() + JitFrameLayout::offsetOfActualArgs();
+    {
+        BaseValueIndex newTarget(masm.getStackPointer(), argvLen, argsOffset);
+        masm.loadValue(newTarget, output);
+        masm.jump(&done);
+    }
 
+    masm.bind(&useNFormals);
+
+    {
+        Address newTarget(masm.getStackPointer(), argsOffset + (numFormalArgs * sizeof(Value)));
+        masm.loadValue(newTarget, output);
+        masm.jump(&done);
+    }
+
+    // else output = undefined
+    masm.bind(&notConstructing);
+    masm.moveValue(UndefinedValue(), output);
     masm.bind(&done);
 }
 

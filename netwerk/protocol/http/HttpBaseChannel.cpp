@@ -3516,5 +3516,15 @@ HttpBaseChannel::SetBlockAuthPrompt(bool aValue)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+HttpBaseChannel::GetConnectionInfoHashKey(nsACString& aConnectionInfoHashKey)
+{
+  if (!mConnectionInfo) {
+    return NS_ERROR_FAILURE;
+  }
+  aConnectionInfoHashKey.Assign(mConnectionInfo->HashKey());
+  return NS_OK;
+}
+
 } // namespace net
 } // namespace mozilla

@@ -362,11 +362,6 @@ for (var test of targets) {
         try {
             exec(e);
         } catch(err) {
-            if (err && err.message && err.message.indexOf("i64 NYI") !== -1) {
-                assert(!hasI64(), 'i64 NYI should happen only on platforms without i64');
-                warn(`Skipping test file ${test} as it contains int64, NYI.\n`)
-                continue top_loop;
-            }
             success = false;
             debug(`Error in ${test}:${e.lineno}: ${err.stack ? err.stack : ''}\n${err}`);
             if (!softFail) {

@@ -3166,7 +3166,21 @@ SetChildForceCharacterSet(nsIContentViewer* aChild, void* aClosure)
 NS_IMETHODIMP
 nsDocumentViewer::SetForceCharacterSet(const nsACString& aForceCharacterSet)
 {
-  mForceCharacterSet = aForceCharacterSet;
+  // This method is scriptable, so add-ons could pass in something other
+  // than a canonical name. However, in case where the input is a canonical
+  // name, "replacement" doesn't survive label resolution. Additionally, the
+  // empty string means no hint.
+  nsAutoCString encoding;
+  if (!aForceCharacterSet.IsEmpty()) {
+    if (aForceCharacterSet.EqualsLiteral("replacement")) {
+      encoding.AssignLiteral("replacement");
+    } else if (!EncodingUtils::FindEncodingForLabel(aForceCharacterSet,
+                                                    encoding)) {
+      // Reject unknown labels
+      return NS_ERROR_INVALID_ARG;
+    }
+  }
+  mForceCharacterSet = encoding;
   // now set the force char set on all children of mContainer
   CallChildren(SetChildForceCharacterSet, (void*) &aForceCharacterSet);
   return NS_OK;
@@ -3219,7 +3233,21 @@ SetChildHintCharacterSet(nsIContentViewer* aChild, void* aClosure)
 NS_IMETHODIMP
 nsDocumentViewer::SetHintCharacterSet(const nsACString& aHintCharacterSet)
 {
-  mHintCharset = aHintCharacterSet;
+  // This method is scriptable, so add-ons could pass in something other
+  // than a canonical name. However, in case where the input is a canonical
+  // name, "replacement" doesn't survive label resolution. Additionally, the
+  // empty string means no hint.
+  nsAutoCString encoding;
+  if (!aHintCharacterSet.IsEmpty()) {
+    if (aHintCharacterSet.EqualsLiteral("replacement")) {
+      encoding.AssignLiteral("replacement");
+    } else if (!EncodingUtils::FindEncodingForLabel(aHintCharacterSet,
+                                                    encoding)) {
+      // Reject unknown labels
+      return NS_ERROR_INVALID_ARG;
+    }
+  }
+  mHintCharset = encoding;
   // now set the hint char set on all children of mContainer
   CallChildren(SetChildHintCharacterSet, (void*) &aHintCharacterSet);
   return NS_OK;

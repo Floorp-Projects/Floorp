@@ -941,9 +941,9 @@ nsXULAppInfo::InvalidateCachesOnRestart()
   rv = parser.GetString("Compatibility", "InvalidateCaches", buf);
 
   if (NS_FAILED(rv)) {
-    PRFileDesc *fd = nullptr;
-    file->OpenNSPRFileDesc(PR_RDWR | PR_APPEND, 0600, &fd);
-    if (!fd) {
+    PRFileDesc *fd;
+    rv = file->OpenNSPRFileDesc(PR_RDWR | PR_APPEND, 0600, &fd);
+    if (NS_FAILED(rv)) {
       NS_ERROR("could not create output stream");
       return NS_ERROR_NOT_AVAILABLE;
     }
@@ -2310,8 +2310,10 @@ SelectProfile(nsIProfileLock* *aResult, nsIToolkitProfileService* aProfileSvc, n
     PR_fprintf(PR_STDERR, "Success: created profile '%s' at '%s'\n", arg, pathStr.get());
     bool exists;
     prefsJSFile->Exists(&exists);
-    if (!exists)
-      prefsJSFile->Create(nsIFile::NORMAL_FILE_TYPE, 0644);
+    if (!exists) {
+      // Ignore any errors; we're about to return NS_ERROR_ABORT anyway.
+      Unused << prefsJSFile->Create(nsIFile::NORMAL_FILE_TYPE, 0644);
+    }
     // XXXdarin perhaps 0600 would be better?
 
     return rv;
@@ -2618,9 +2620,10 @@ WriteVersion(nsIFile* aProfileDir, const nsCString& aVersion,
   if (aAppDir)
     aAppDir->GetNativePath(appDir);
 
-  PRFileDesc *fd = nullptr;
-  file->OpenNSPRFileDesc(PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE, 0600, &fd);
-  if (!fd) {
+  PRFileDesc *fd;
+  nsresult rv =
+    file->OpenNSPRFileDesc(PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE, 0600, &fd);
+  if (NS_FAILED(rv)) {
     NS_ERROR("could not create output stream");
     return;
   }
@@ -2735,17 +2738,18 @@ static void MakeOrSetMinidumpPath(nsIFile* profD)
   nsCOMPtr<nsIFile> dumpD;
   profD->Clone(getter_AddRefs(dumpD));
 
-  if(dumpD) {
+  if (dumpD) {
     bool fileExists;
     //XXX: do some more error checking here
     dumpD->Append(NS_LITERAL_STRING("minidumps"));
     dumpD->Exists(&fileExists);
-    if(!fileExists) {
-      dumpD->Create(nsIFile::DIRECTORY_TYPE, 0700);
+    if (!fileExists) {
+      nsresult rv = dumpD->Create(nsIFile::DIRECTORY_TYPE, 0700);
+      NS_ENSURE_SUCCESS_VOID(rv);
     }
 
     nsAutoString pathStr;
-    if(NS_SUCCEEDED(dumpD->GetPath(pathStr)))
+    if (NS_SUCCEEDED(dumpD->GetPath(pathStr)))
       CrashReporter::SetMinidumpPath(pathStr);
   }
 }

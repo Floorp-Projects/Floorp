@@ -1016,7 +1016,8 @@ nsHttpConnectionMgr::ReportFailedToProcess(nsIURI *uri)
     // report the event for all the permutations of anonymous and
     // private versions of this host
     RefPtr<nsHttpConnectionInfo> ci =
-        new nsHttpConnectionInfo(host, port, EmptyCString(), username, nullptr, usingSSL);
+        new nsHttpConnectionInfo(host, port, EmptyCString(), username, nullptr,
+                                 NeckoOriginAttributes(), usingSSL);
     ci->SetAnonymous(false);
     ci->SetPrivate(false);
     PipelineFeedbackInfo(ci, RedCorruptedContent, nullptr, 0);

@@ -11,6 +11,7 @@
 
 #include "nspr.h"
 #include "YuvStamper.h"
+#include "mozilla/Sprintf.h"
 
 typedef uint32_t UINT4; //Needed for r_crc32() call
 extern "C" {
@@ -415,7 +416,7 @@ static unsigned char *DIGITS[] = {
   bool YuvStamper::WriteDigits(uint32_t value)
   {
     char buf[20];
-    PR_snprintf(buf, sizeof(buf), "%.5u", value);
+    SprintfLiteral(buf, "%.5u", value);
     size_t size = strlen(buf);
 
     if (Capacity() < size) {

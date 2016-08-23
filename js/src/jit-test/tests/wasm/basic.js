@@ -67,23 +67,15 @@ wasmEvalText('(module (func (result i32) (param i32) (i32.const 42)))');
 wasmEvalText('(module (func (param f32)))');
 wasmEvalText('(module (func (param f64)))');
 
-if (!hasI64()) {
-    assertErrorMessage(() => wasmEvalText('(module (func (param i64)))'), TypeError, /NYI/);
-    assertErrorMessage(() => wasmEvalText('(module (func (result i64)))'), TypeError, /NYI/);
-    assertErrorMessage(() => wasmEvalText('(module (func (result i32) (i32.wrap/i64 (i64.add (i64.const 1) (i64.const 2)))))'), TypeError, /NYI/);
-} else {
-    assertErrorMessage(() => wasmEvalText('(module (func (param i64) (result i32) (i32.const 123)) (export "" 0))'), TypeError, /i64 argument/);
-    assertErrorMessage(() => wasmEvalText('(module (func (param i32) (result i64) (i64.const 123)) (export "" 0))'), TypeError, /i64 return type/);
+assertErrorMessage(() => wasmEvalText('(module (func (param i64) (result i32) (i32.const 123)) (export "" 0))'), TypeError, /i64 argument/);
+assertErrorMessage(() => wasmEvalText('(module (func (param i32) (result i64) (i64.const 123)) (export "" 0))'), TypeError, /i64 return type/);
 
-    setJitCompilerOption('wasm.test-mode', 1);
-
-    assertEqI64(wasmEvalText('(module (func (result i64) (i64.const 123)) (export "" 0))')(), {low: 123, high: 0});
-    assertEqI64(wasmEvalText('(module (func (param i64) (result i64) (get_local 0)) (export "" 0))')({ low: 0x7fffffff, high: 0x12340000}),
-                {low: 0x7fffffff, high: 0x12340000});
-    assertEqI64(wasmEvalText('(module (func (param i64) (result i64) (i64.add (get_local 0) (i64.const 1))) (export "" 0))')({ low: 0xffffffff, high: 0x12340000}), {low: 0x0, high: 0x12340001});
-
-    setJitCompilerOption('wasm.test-mode', 0);
-}
+setJitCompilerOption('wasm.test-mode', 1);
+assertEqI64(wasmEvalText('(module (func (result i64) (i64.const 123)) (export "" 0))')(), {low: 123, high: 0});
+assertEqI64(wasmEvalText('(module (func (param i64) (result i64) (get_local 0)) (export "" 0))')({ low: 0x7fffffff, high: 0x12340000}),
+            {low: 0x7fffffff, high: 0x12340000});
+assertEqI64(wasmEvalText('(module (func (param i64) (result i64) (i64.add (get_local 0) (i64.const 1))) (export "" 0))')({ low: 0xffffffff, high: 0x12340000}), {low: 0x0, high: 0x12340001});
+setJitCompilerOption('wasm.test-mode', 0);
 
 // ----------------------------------------------------------------------------
 // imports
@@ -249,9 +241,6 @@ wasmEvalText('(module (func (local i32) (local f32) (set_local 1 (get_local 1)))
 assertEq(wasmEvalText('(module (func (result i32) (local i32) (set_local 0 (i32.const 42))) (export "" 0))')(), 42);
 assertEq(wasmEvalText('(module (func (result i32) (local i32) (set_local 0 (get_local 0))) (export "" 0))')(), 0);
 
-if (!hasI64())
-    assertErrorMessage(() => wasmEvalText('(module (func (local i64)))'), TypeError, /NYI/);
-
 assertEq(wasmEvalText('(module (func (param $a i32) (result i32) (get_local $a)) (export "" 0))')(), 0);
 assertEq(wasmEvalText('(module (func (param $a i32) (local $b i32) (result i32) (block (set_local $b (get_local $a)) (get_local $b))) (export "" 0))')(42), 42);
 
@@ -337,7 +326,7 @@ assertEq(wasmEvalText(`(module (import "evalcx" "" (param i32) (result i32)) (fu
 if (typeof evaluate === 'function')
     evaluate(`Wasm.instantiateModule(wasmTextToBinary('(module)')) `, { fileName: null });
 
-if (hasI64()) {
+{
     assertErrorMessage(() => wasmEvalText('(module (import "a" "" (param i64) (result i32)))'), TypeError, /i64 argument/);
     assertErrorMessage(() => wasmEvalText('(module (import "a" "" (result i64)))'), TypeError, /i64 return type/);
 
@@ -398,9 +387,6 @@ if (hasI64()) {
     (export "" 0))`, imp)(), { low: 1337, high: 0x12345678 });
 
     setJitCompilerOption('wasm.test-mode', 0);
-} else {
-    assertErrorMessage(() => wasmEvalText('(module (import "a" "" (param i64) (result i32)))'), TypeError, /NYI/);
-    assertErrorMessage(() => wasmEvalText('(module (import "a" "" (result i64)))'), TypeError, /NYI/);
 }
 
 assertErrorMessage(() => wasmEvalText(`(module (type $t (func)) (func (call_indirect $t (i32.const 0))))`), TypeError, /can't call_indirect without a table/);
@@ -619,10 +605,7 @@ testSelect('f64', 13.37, 19.89);
 testSelect('f64', 'infinity', '-0');
 testSelect('f64', 'nan', Math.pow(2, -31));
 
-if (!hasI64()) {
-    assertErrorMessage(() => wasmEvalText('(module (func (select (i64.const 0) (i64.const 1) (i32.const 0))))'), TypeError, /NYI/);
-} else {
-
+{
     setJitCompilerOption('wasm.test-mode', 1);
 
     var f = wasmEvalText(`

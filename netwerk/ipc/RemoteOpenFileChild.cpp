@@ -371,6 +371,9 @@ RemoteOpenFileChild::OpenNSPRFileDesc(int32_t aFlags, int32_t aMode,
 
   PROsfd osfd = dup(PR_FileDesc2NativeHandle(mNSPRFileDesc));
   *aRetval = PR_ImportFile(osfd);
+  if (!*aRetval) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
 
   return NS_OK;
 #endif

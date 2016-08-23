@@ -60,6 +60,7 @@
 #include "mozilla/ipc/URIUtils.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/unused.h"
+#include "mozilla/BasePrincipal.h"
 
 #if defined(XP_UNIX)
 #include <sys/utsname.h>
@@ -2279,8 +2280,16 @@ nsHttpHandler::SpeculativeConnectInternal(nsIURI *aURI,
     nsAutoCString username;
     aURI->GetUsername(username);
 
+    NeckoOriginAttributes neckoOriginAttributes;
+    if (loadContext) {
+      DocShellOriginAttributes docshellOriginAttributes;
+      loadContext->GetOriginAttributes(docshellOriginAttributes);
+      neckoOriginAttributes.InheritFromDocShellToNecko(docshellOriginAttributes);
+    }
+
     nsHttpConnectionInfo *ci =
-        new nsHttpConnectionInfo(host, port, EmptyCString(), username, nullptr, usingSSL);
+        new nsHttpConnectionInfo(host, port, EmptyCString(), username, nullptr,
+                                 neckoOriginAttributes, usingSSL);
     ci->SetAnonymous(anonymous);
 
     return SpeculativeConnect(ci, aCallbacks);

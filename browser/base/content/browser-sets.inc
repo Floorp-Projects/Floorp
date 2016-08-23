@@ -21,6 +21,7 @@
     <command id="cmd_handleShiftBackspace" oncommand="BrowserHandleShiftBackspace();" />
 
     <command id="cmd_newNavigatorTab" oncommand="BrowserOpenTab(event);" reserved="true"/>
+    <command id="cmd_newNavigatorTabNoEvent" oncommand="BrowserOpenTab();" reserved="true"/>
     <command id="Browser:OpenFile"  oncommand="BrowserOpenFileWindow();"/>
     <command id="Browser:SavePage" oncommand="saveBrowser(gBrowser.selectedBrowser);"/>
 
@@ -196,7 +197,7 @@
          key="&newNavigatorCmd.key;"
          command="cmd_newNavigator"
          modifiers="accel"/>
-    <key id="key_newNavigatorTab" key="&tabCmd.commandkey;" modifiers="accel" command="cmd_newNavigatorTab"/>
+    <key id="key_newNavigatorTab" key="&tabCmd.commandkey;" modifiers="accel" command="cmd_newNavigatorTabNoEvent"/>
     <key id="focusURLBar" key="&openCmd.commandkey;" command="Browser:OpenLocation"
          modifiers="accel"/>
 #ifndef XP_MACOSX

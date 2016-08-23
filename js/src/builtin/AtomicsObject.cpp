@@ -49,6 +49,8 @@
 
 #include "mozilla/Atomics.h"
 #include "mozilla/FloatingPoint.h"
+#include "mozilla/Maybe.h"
+#include "mozilla/unused.h"
 
 #include "jsapi.h"
 #include "jsfriendapi.h"
@@ -723,13 +725,21 @@ class FutexWaiter
 
 class AutoLockFutexAPI
 {
+    // We have to wrap this in a Maybe because of the way loading
+    // mozilla::Atomic pointers works.
+    mozilla::Maybe<js::UniqueLock<js::Mutex>> unique_;
+
   public:
     AutoLockFutexAPI() {
-        FutexRuntime::lock();
+        js::Mutex* lock = FutexRuntime::lock_;
+        unique_.emplace(*lock);
     }
+
     ~AutoLockFutexAPI() {
-        FutexRuntime::unlock();
+        unique_.reset();
     }
+
+    js::UniqueLock<js::Mutex>& unique() { return *unique_; }
 };
 
 class AutoUnlockFutexAPI
@@ -768,16 +778,17 @@ js::atomics_wait(JSContext* cx, unsigned argc, Value* vp)
     int32_t value;
     if (!ToInt32(cx, valv, &value))
         return false;
-    double timeout_ms;
-    if (timeoutv.isUndefined()) {
-        timeout_ms = mozilla::PositiveInfinity<double>();
-    } else {
+    mozilla::Maybe<mozilla::TimeDuration> timeout;
+    if (!timeoutv.isUndefined()) {
+        double timeout_ms;
         if (!ToNumber(cx, timeoutv, &timeout_ms))
             return false;
-        if (mozilla::IsNaN(timeout_ms))
-            timeout_ms = mozilla::PositiveInfinity<double>();
-        else if (timeout_ms < 0)
-            timeout_ms = 0;
+        if (!mozilla::IsNaN(timeout_ms)) {
+            if (timeout_ms < 0)
+                timeout = mozilla::Some(mozilla::TimeDuration::FromSeconds(0.0));
+            else if (!mozilla::IsInfinite(timeout_ms))
+                timeout = mozilla::Some(mozilla::TimeDuration::FromMilliseconds(timeout_ms));
+        }
     }
 
     if (!rt->fx.canWait())
@@ -808,7 +819,7 @@ js::atomics_wait(JSContext* cx, unsigned argc, Value* vp)
     }
 
     FutexRuntime::WaitResult result = FutexRuntime::FutexOK;
-    bool retval = rt->fx.wait(cx, timeout_ms, &result);
+    bool retval = rt->fx.wait(cx, lock.unique(), timeout, &result);
     if (retval) {
         switch (result) {
           case FutexRuntime::FutexOK:
@@ -886,7 +897,7 @@ js::atomics_wake(JSContext* cx, unsigned argc, Value* vp)
 js::FutexRuntime::initialize()
 {
     MOZ_ASSERT(!lock_);
-    lock_ = PR_NewLock();
+    lock_ = js_new<js::Mutex>();
     return lock_ != nullptr;
 }
 
@@ -894,7 +905,8 @@ js::FutexRuntime::initialize()
 js::FutexRuntime::destroy()
 {
     if (lock_) {
-        PR_DestroyLock(lock_);
+        js::Mutex* lock = lock_;
+        js_delete(lock);
         lock_ = nullptr;
     }
 }
@@ -902,27 +914,21 @@ js::FutexRuntime::destroy()
 /* static */ void
 js::FutexRuntime::lock()
 {
-    PR_Lock(lock_);
-#ifdef DEBUG
-    MOZ_ASSERT(!lockHolder_);
-    lockHolder_ = PR_GetCurrentThread();
-#endif
+    // Load the atomic pointer.
+    js::Mutex* lock = lock_;
+
+    lock->lock();
 }
 
-/* static */ mozilla::Atomic<PRLock*> FutexRuntime::lock_;
-
-#ifdef DEBUG
-/* static */ mozilla::Atomic<PRThread*> FutexRuntime::lockHolder_;
-#endif
+/* static */ mozilla::Atomic<js::Mutex*> FutexRuntime::lock_;
 
 /* static */ void
 js::FutexRuntime::unlock()
 {
-#ifdef DEBUG
-    MOZ_ASSERT(lockHolder_ == PR_GetCurrentThread());
-    lockHolder_ = nullptr;
-#endif
-    PR_Unlock(lock_);
+    // Load the atomic pointer.
+    js::Mutex* lock = lock_;
+
+    lock->unlock();
 }
 
 js::FutexRuntime::FutexRuntime()
@@ -936,7 +942,7 @@ bool
 js::FutexRuntime::initInstance()
 {
     MOZ_ASSERT(lock_);
-    cond_ = PR_NewCondVar(lock_);
+    cond_ = js_new<js::ConditionVariable>();
     return cond_ != nullptr;
 }
 
@@ -944,7 +950,7 @@ void
 js::FutexRuntime::destroyInstance()
 {
     if (cond_)
-        PR_DestroyCondVar(cond_);
+        js_delete(cond_);
 }
 
 bool
@@ -960,11 +966,11 @@ js::FutexRuntime::isWaiting()
 }
 
 bool
-js::FutexRuntime::wait(JSContext* cx, double timeout_ms, WaitResult* result)
+js::FutexRuntime::wait(JSContext* cx, js::UniqueLock<js::Mutex>& locked,
+                       mozilla::Maybe<mozilla::TimeDuration>& timeout, WaitResult* result)
 {
     MOZ_ASSERT(&cx->runtime()->fx == this);
     MOZ_ASSERT(cx->runtime()->fx.canWait());
-    MOZ_ASSERT(lockHolder_ == PR_GetCurrentThread());
     MOZ_ASSERT(state_ == Idle || state_ == WaitingInterrupted);
 
     // Disallow waiting when a runtime is processing an interrupt.
@@ -975,48 +981,43 @@ js::FutexRuntime::wait(JSContext* cx, double timeout_ms, WaitResult* result)
         return false;
     }
 
-    const bool timed = !mozilla::IsInfinite(timeout_ms);
+    const bool isTimed = timeout.isSome();
 
-    // Reject the timeout if it is not exactly representable.  2e50 ms = 2e53 us = 6e39 years.
+    auto finalEnd = timeout.map([](mozilla::TimeDuration& timeout) {
+        return mozilla::TimeStamp::Now() + timeout;
+    });
 
-    if (timed && timeout_ms > 2e50) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_ATOMICS_TOO_LONG);
-        return false;
-    }
-
-    // Times and intervals are in microseconds.
-
-    const uint64_t finalEnd = timed ? PRMJ_Now() + (uint64_t)ceil(timeout_ms * 1000.0) : 0;
 
     // 4000s is about the longest timeout slice that is guaranteed to
     // work cross-platform.
+    auto maxSlice = mozilla::TimeDuration::FromSeconds(4000.0);
 
-    const uint64_t maxSlice = 4000000000LLU;
     bool retval = true;
 
     for (;;) {
-        uint64_t sliceStart = 0;
-        uint32_t timeout = PR_INTERVAL_NO_TIMEOUT;
-        if (timed) {
-            sliceStart = PRMJ_Now();
-            uint64_t timeLeft = finalEnd > sliceStart ? finalEnd - sliceStart : 0;
-            timeout = PR_MicrosecondsToInterval((uint32_t)Min(timeLeft, maxSlice));
-        }
+        // If we are doing a timed wait, calculate the end time for this wait
+        // slice.
+        auto sliceEnd = finalEnd.map([&](mozilla::TimeStamp& finalEnd) {
+            auto sliceEnd = mozilla::TimeStamp::Now() + maxSlice;
+            if (finalEnd < sliceEnd)
+                sliceEnd = finalEnd;
+            return sliceEnd;
+        });
+
         state_ = Waiting;
-#ifdef DEBUG
-        PRThread* holder = lockHolder_;
-        lockHolder_ = nullptr;
-#endif
-        JS_ALWAYS_TRUE(PR_WaitCondVar(cond_, timeout) == PR_SUCCESS);
-#ifdef DEBUG
-        lockHolder_ = holder;
-#endif
+
+        if (isTimed) {
+            mozilla::Unused << cond_->wait_until(locked, *sliceEnd);
+        } else {
+            cond_->wait(locked);
+        }
+
         switch (state_) {
           case FutexRuntime::Waiting:
             // Timeout or spurious wakeup.
-            if (timed) {
-                uint64_t now = PRMJ_Now();
-                if (now >= finalEnd) {
+            if (isTimed) {
+                auto now = mozilla::TimeStamp::Now();
+                if (now >= *finalEnd) {
                     *result = FutexTimedOut;
                     goto finished;
                 }
@@ -1071,7 +1072,7 @@ js::FutexRuntime::wait(JSContext* cx, double timeout_ms, WaitResult* result)
             break;
 
           default:
-            MOZ_CRASH();
+            MOZ_CRASH("Bad FutexState in wait()");
         }
     }
 finished:
@@ -1082,7 +1083,6 @@ finished:
 void
 js::FutexRuntime::wake(WakeReason reason)
 {
-    MOZ_ASSERT(lockHolder_ == PR_GetCurrentThread());
     MOZ_ASSERT(isWaiting());
 
     if ((state_ == WaitingInterrupted || state_ == WaitingNotifiedForInterrupt) && reason == WakeExplicit) {
@@ -1099,9 +1099,9 @@ js::FutexRuntime::wake(WakeReason reason)
         state_ = WaitingNotifiedForInterrupt;
         break;
       default:
-        MOZ_CRASH();
+        MOZ_CRASH("bad WakeReason in FutexRuntime::wake()");
     }
-    PR_NotifyCondVar(cond_);
+    cond_->notify_all();
 }
 
 const JSFunctionSpec AtomicsMethods[] = {

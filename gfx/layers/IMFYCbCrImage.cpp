@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "IMFYCbCrImage.h"
+#include "DeviceManagerD3D9.h"
 #include "mozilla/layers/TextureD3D11.h"
 #include "mozilla/layers/CompositableClient.h"
 #include "mozilla/layers/CompositableForwarder.h"
@@ -156,7 +157,7 @@ static bool UploadData(IDirect3DDevice9* aDevice,
 TextureClient*
 IMFYCbCrImage::GetD3D9TextureClient(CompositableClient* aClient)
 {
-  IDirect3DDevice9* device = gfxWindowsPlatform::GetPlatform()->GetD3D9Device();
+  RefPtr<IDirect3DDevice9> device = DeviceManagerD3D9::GetDevice();
   if (!device) {
     return nullptr;
   }
