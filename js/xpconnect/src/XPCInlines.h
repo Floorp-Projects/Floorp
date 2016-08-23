@@ -119,12 +119,6 @@ XPCCallContext::GetSet() const
     return mSet;
 }
 
-inline bool
-XPCCallContext::CanGetInterface() const
-{
-    return mState >= HAVE_NAME;
-}
-
 inline XPCNativeInterface*
 XPCCallContext::GetInterface() const
 {
@@ -442,26 +436,13 @@ XPCNativeSet::MatchesSetUpToInterface(const XPCNativeSet* other,
 
 inline void XPCNativeSet::Mark()
 {
-    if (IsMarked())
-        return;
-
-    XPCNativeInterface* const * pp = mInterfaces;
-
-    for (int i = (int) mInterfaceCount; i > 0; i--, pp++)
-        (*pp)->Mark();
-
-    MarkSelfOnly();
+    mMarked = 1;
 }
 
 #ifdef DEBUG
 inline void XPCNativeSet::ASSERT_NotMarked()
 {
     MOZ_ASSERT(!IsMarked(), "bad");
-
-    XPCNativeInterface* const * pp = mInterfaces;
-
-    for (int i = (int) mInterfaceCount; i > 0; i--, pp++)
-        MOZ_ASSERT(!(*pp)->IsMarked(), "bad");
 }
 #endif
 
