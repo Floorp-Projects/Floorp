@@ -2285,11 +2285,6 @@ MediaDecoderStateMachine::FinishShutdown()
   // Shut down the watch manager before shutting down our task queue.
   mWatchManager.Shutdown();
 
-  // Release all video buffers from graphics pipeline.
-  if (mVideoFrameContainer) {
-    mVideoFrameContainer->ClearCurrentFrame();
-  }
-
   MOZ_ASSERT(mState == DECODER_STATE_SHUTDOWN,
              "How did we escape from the shutdown state?");
   DECODER_LOG("Shutting down state machine task queue");
