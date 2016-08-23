@@ -31,6 +31,10 @@
 #include "mozilla/StyleSetHandle.h"
 #include "mozilla/StyleSetHandleInlines.h"
 
+#include "mozilla/ReflowInput.h"
+#include "nsLayoutUtils.h"
+#include "nsCoord.h"
+
 using namespace mozilla;
 
 //----------------------------------------------------------------------
@@ -506,6 +510,7 @@ nsStyleContext::GetUniqueStyleData(const nsStyleStructID& aSID)
       * static_cast<const nsStyle##c_ *>(current));                           \
     break;
 
+  UNIQUE_CASE(Font)
   UNIQUE_CASE(Display)
   UNIQUE_CASE(Text)
   UNIQUE_CASE(TextReset)
@@ -704,6 +709,42 @@ nsStyleContext::ApplyStyleFixups(bool aSkipParentDisplayBasedStyleFixup)
 
 #define GET_UNIQUE_STYLE_DATA(name_) \
   static_cast<nsStyle##name_*>(GetUniqueStyleData(eStyleStruct_##name_))
+
+  // CSS Inline Layout Level 3 - 3.5 Sizing Initial Letters:
+  // For an N-line drop initial in a Western script, the cap-height of the
+  // letter needs to be (N – 1) times the line-height, plus the cap-height
+  // of the surrounding text.
+  if (mPseudoTag == nsCSSPseudoElements::firstLetter) {
+    const nsStyleTextReset* textReset = StyleTextReset();
+    if (textReset->mInitialLetterSize != 0.0f) {
+      nsStyleContext* containerSC = mParent;
+      const nsStyleDisplay* containerDisp = containerSC->StyleDisplay();
+      while (containerDisp->mDisplay == NS_STYLE_DISPLAY_CONTENTS) {
+        if (!containerSC->GetParent()) {
+          break;
+        }
+        containerSC = containerSC->GetParent();
+        containerDisp = containerSC->StyleDisplay();
+      }
+      nscoord containerLH =
+        ReflowInput::CalcLineHeight(nullptr, containerSC, NS_AUTOHEIGHT, 1.0f);
+      RefPtr<nsFontMetrics> containerFM =
+        nsLayoutUtils::GetFontMetricsForStyleContext(containerSC);
+      MOZ_ASSERT(containerFM, "Should have fontMetrics!!");
+      nscoord containerCH = containerFM->CapHeight();
+      RefPtr<nsFontMetrics> firstLetterFM =
+        nsLayoutUtils::GetFontMetricsForStyleContext(this);
+      MOZ_ASSERT(firstLetterFM, "Should have fontMetrics!!");
+      nscoord firstLetterCH = firstLetterFM->CapHeight();
+      nsStyleFont* mutableStyleFont = GET_UNIQUE_STYLE_DATA(Font);
+      float invCapHeightRatio =
+        mutableStyleFont->mFont.size / NSCoordToFloat(firstLetterCH);
+      mutableStyleFont->mFont.size =
+        NSToCoordRound(((textReset->mInitialLetterSize - 1) * containerLH +
+                        containerCH) *
+                       invCapHeightRatio);
+    }
+  }
 
   // Change writing mode of text frame for text-combine-upright. We use
   // style structs of the parent to avoid triggering computation before
