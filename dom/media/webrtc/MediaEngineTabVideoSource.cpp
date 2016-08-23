@@ -213,6 +213,9 @@ MediaEngineTabVideoSource::NotifyPull(MediaStreamGraph*,
 {
   VideoSegment segment;
   MonitorAutoLock mon(mMonitor);
+  if (mState != kStarted) {
+    return;
+  }
 
   // Note: we're not giving up mImage here
   RefPtr<layers::SourceSurfaceImage> image = mImage;
