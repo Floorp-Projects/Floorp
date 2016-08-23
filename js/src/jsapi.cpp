@@ -29,7 +29,6 @@
 #include "jsgc.h"
 #include "jsiter.h"
 #include "jsmath.h"
-#include "jsnspr.h"
 #include "jsnum.h"
 #include "jsobj.h"
 #include "json.h"
@@ -6525,19 +6524,6 @@ UnhideScriptedCaller(JSContext* cx)
 }
 
 } /* namespace JS */
-
-static PRStatus
-CallOnce(void* func)
-{
-    JSInitCallback init = JS_DATA_TO_FUNC_PTR(JSInitCallback, func);
-    return init() ? PR_SUCCESS : PR_FAILURE;
-}
-
-JS_PUBLIC_API(bool)
-JS_CallOnce(JSCallOnceType* once, JSInitCallback func)
-{
-    return PR_CallOnceWithArg(once, CallOnce, JS_FUNC_TO_DATA_PTR(void*, func)) == PR_SUCCESS;
-}
 
 AutoGCRooter::AutoGCRooter(JSContext* cx, ptrdiff_t tag)
   : AutoGCRooter(JS::RootingContext::get(cx), tag)
