@@ -257,6 +257,7 @@ protected:
   nsresult WillMakeBasicBlock(Selection& aSelection,
                               const nsAString& aBlockType,
                               bool* aCancel, bool* aHandled);
+  nsresult MakeBasicBlock(Selection& aSelection, nsIAtom& aBlockType);
   nsresult DidMakeBasicBlock(Selection* aSelection, RulesInfo* aInfo,
                              nsresult aResult);
   nsresult DidAbsolutePosition();
