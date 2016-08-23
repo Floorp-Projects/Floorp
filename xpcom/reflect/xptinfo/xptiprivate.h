@@ -95,13 +95,13 @@ public:
 
     XPTHeader*          GetHeader()           {return mHeader;}
     uint16_t            GetEntryCount() const {return mHeader->num_interfaces;}
-    
+
     void                SetEntryAt(uint16_t i, xptiInterfaceEntry* ptr)
     {
         NS_ASSERTION(mHeader,"bad state!");
         NS_ASSERTION(i < GetEntryCount(),"bad param!");
         mEntryArray[i] = ptr;
-    }        
+    }
 
     xptiInterfaceEntry* GetEntryAt(uint16_t i);
     const char* GetEntryNameAt(uint16_t i);
@@ -121,7 +121,7 @@ private:
 
 /***************************************************************************/
 
-// This class exists to help xptiInterfaceInfo store a 4-state (2 bit) value 
+// This class exists to help xptiInterfaceInfo store a 4-state (2 bit) value
 // and a set of bitflags in one 8bit value. See below.
 
 class xptiInfoFlags
@@ -133,30 +133,30 @@ public:
 
     static uint8_t GetStateMask()
         {return uint8_t(STATE_MASK);}
-    
+
     void Clear()
         {mData = 0;}
 
     uint8_t GetData() const
         {return mData;}
 
-    uint8_t GetState() const 
+    uint8_t GetState() const
         {return mData & GetStateMask();}
 
-    void SetState(uint8_t state) 
-        {mData &= ~GetStateMask(); mData |= state;}                                   
+    void SetState(uint8_t state)
+        {mData &= ~GetStateMask(); mData |= state;}
 
-    void SetFlagBit(uint8_t flag, bool on) 
+    void SetFlagBit(uint8_t flag, bool on)
         {if(on)
             mData |= ~GetStateMask() & flag;
          else
             mData &= GetStateMask() | ~flag;}
 
-    bool GetFlagBit(uint8_t flag) const 
+    bool GetFlagBit(uint8_t flag) const
         {return (mData & flag) ? true : false;}
 
 private:
-    uint8_t mData;    
+    uint8_t mData;
 };
 
 /****************************************************/
@@ -178,14 +178,14 @@ public:
         FULLY_RESOLVED        = 2,
         RESOLVE_FAILED        = 3
     };
-    
+
     // Additional bit flags...
     enum {SCRIPTABLE = 4, BUILTINCLASS = 8, HASNOTXPCOM = 16,
           MAIN_PROCESS_SCRIPTABLE_ONLY = 32};
 
     uint8_t GetResolveState() const {return mFlags.GetState();}
-    
-    bool IsFullyResolved() const 
+
+    bool IsFullyResolved() const
         {return GetResolveState() == (uint8_t) FULLY_RESOLVED;}
 
     void SetScriptableFlag(bool on)
@@ -219,9 +219,9 @@ public:
         {return IsFullyResolved() ? true : Resolve();}
 
     already_AddRefed<xptiInterfaceInfo> InterfaceInfo();
-    bool     InterfaceInfoEquals(const xptiInterfaceInfo* info) const 
+    bool     InterfaceInfoEquals(const xptiInterfaceInfo* info) const
         {return info == mInfo;}
-    
+
     void     LockedInvalidateInterfaceInfo();
     void     LockedInterfaceInfoDeathNotification() {mInfo = nullptr;}
 
@@ -273,13 +273,13 @@ private:
                        xptiTypelibGuts* aTypelib);
     ~xptiInterfaceEntry();
 
-    void SetResolvedState(int state) 
+    void SetResolvedState(int state)
         {mFlags.SetState(uint8_t(state));}
 
     bool Resolve();
 
-    // We only call these "*Locked" variants after locking. This is done to 
-    // allow reentrace as files are loaded and various interfaces resolved 
+    // We only call these "*Locked" variants after locking. This is done to
+    // allow reentrace as files are loaded and various interfaces resolved
     // without having to worry about the locked state.
 
     bool EnsureResolvedLocked()
@@ -288,7 +288,7 @@ private:
 
     // private helpers
 
-    nsresult GetEntryForParam(uint16_t methodIndex, 
+    nsresult GetEntryForParam(uint16_t methodIndex,
                               const nsXPTParamInfo * param,
                               xptiInterfaceEntry** entry);
 
@@ -374,7 +374,7 @@ private:
         NS_ASSERTION(mEntry && mEntry->IsFullyResolved(), "bad EnsureParent call");
         return mParent || !mEntry->Parent() || BuildParent();
     }
-    
+
     bool EnsureResolved()
     {
         return mEntry && mEntry->EnsureResolved();
