@@ -938,8 +938,13 @@ HTMLInputElement::InitFilePicker(FilePickerType aType)
 
   // Get Loc title
   nsXPIDLString title;
-  nsContentUtils::GetLocalizedString(nsContentUtils::eFORMS_PROPERTIES,
-                                     "FileUpload", title);
+  if (aType == FILE_PICKER_DIRECTORY) {
+    nsContentUtils::GetLocalizedString(nsContentUtils::eFORMS_PROPERTIES,
+                                       "DirectoryUpload", title);
+  } else {
+    nsContentUtils::GetLocalizedString(nsContentUtils::eFORMS_PROPERTIES,
+                                       "FileUpload", title);
+  }
 
   nsCOMPtr<nsIFilePicker> filePicker = do_CreateInstance("@mozilla.org/filepicker;1");
   if (!filePicker)
