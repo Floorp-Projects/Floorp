@@ -102,8 +102,17 @@ public:
   static bool NodeAfter(const nsGenConNode* aNode1,
                           const nsGenConNode* aNode2);
 
-  void Remove(nsGenConNode* aNode) { PR_REMOVE_LINK(aNode); mSize--; }
   bool IsLast(nsGenConNode* aNode) { return (Next(aNode) == mFirstNode); }
+private:
+  void Destroy(nsGenConNode* aNode)
+  {
+    PR_REMOVE_LINK(aNode);
+    delete aNode;
+    mSize--;
+  }
+
+  // Map from frame to the first nsGenConNode of it in the list.
+  nsDataHashtable<nsPtrHashKey<nsIFrame>, nsGenConNode*> mNodes;
 };
 
 #endif /* nsGenConList_h___ */

@@ -15,21 +15,21 @@ interface nsIQuotaRequestBase : nsISupports
 {
   readonly attribute nsIPrincipal principal;
 
-  readonly attribute nsresult resultCode;
+  [must_use] readonly attribute nsresult resultCode;
 };
 
 [scriptable, uuid(166e28e6-cf6d-4927-a6d7-b51bca9d3469)]
 interface nsIQuotaUsageRequest : nsIQuotaRequestBase
 {
-  readonly attribute unsigned long long usage;
+  [must_use] readonly attribute unsigned long long usage;
 
-  readonly attribute unsigned long long fileUsage;
+  [must_use] readonly attribute unsigned long long fileUsage;
 
-  readonly attribute unsigned long long limit;
+  [must_use] readonly attribute unsigned long long limit;
 
   attribute nsIQuotaUsageCallback callback;
 
-  void
+  [must_use] void
   cancel();
 };
 

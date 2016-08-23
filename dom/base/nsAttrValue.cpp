@@ -17,7 +17,7 @@
 #include "nsIAtom.h"
 #include "nsUnicharUtils.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/ServoBindings.h"
+#include "mozilla/ServoBindingHelpers.h"
 #include "mozilla/css/Declaration.h"
 #include "nsContentUtils.h"
 #include "nsReadableUtils.h"
@@ -463,12 +463,12 @@ nsAttrValue::SetTo(css::Declaration* aValue, const nsAString* aSerialized)
 }
 
 void
-nsAttrValue::SetTo(ServoDeclarationBlock* aValue,
+nsAttrValue::SetTo(already_AddRefed<ServoDeclarationBlock> aValue,
                    const nsAString* aSerialized)
 {
   MiscContainer* cont = EnsureEmptyMiscContainer();
   MOZ_ASSERT(cont->mValue.mRefCount == 0);
-  cont->mValue.mServoCSSDeclaration = aValue;
+  cont->mValue.mServoCSSDeclaration = aValue.take();
   cont->mType = eServoCSSDeclaration;
   NS_ADDREF(cont);
   SetMiscAtomOrString(aSerialized);
@@ -1745,12 +1745,11 @@ nsAttrValue::ParseStyleAttribute(const nsAString& aString,
 
   if (ownerDoc->GetStyleBackendType() == StyleBackendType::Servo) {
     NS_ConvertUTF16toUTF8 value(aString);
-    ServoDeclarationBlock* decl = Servo_ParseStyleAttribute(
+    RefPtr<ServoDeclarationBlock> decl = Servo_ParseStyleAttribute(
         reinterpret_cast<const uint8_t*>(value.get()),
-        value.Length(),
-        sheet);
+        value.Length(), sheet).Consume();
     MOZ_ASSERT(decl);
-    SetTo(decl, &aString);
+    SetTo(decl.forget(), &aString);
   } else {
     css::Loader* cssLoader = ownerDoc->CSSLoader();
     nsCSSParser cssParser(cssLoader);
@@ -1862,7 +1861,7 @@ nsAttrValue::ClearMiscContainer()
           if (cont->mType == eGeckoCSSDeclaration) {
             NS_RELEASE(cont->mValue.mGeckoCSSDeclaration);
           } else {
-            Servo_DropDeclarationBlock(cont->mValue.mServoCSSDeclaration);
+            Servo_DeclarationBlock_Release(cont->mValue.mServoCSSDeclaration);
           }
           break;
         }

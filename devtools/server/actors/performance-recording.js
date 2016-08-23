@@ -5,7 +5,7 @@
 "use strict";
 
 const { Cu } = require("chrome");
-const { Actor, ActorClass } = require("devtools/shared/protocol");
+const { Actor, ActorClassWithSpec } = require("devtools/shared/protocol");
 const { performanceRecordingSpec } = require("devtools/shared/specs/performance-recording");
 
 loader.lazyRequireGetter(this, "merge", "sdk/util/object", true);
@@ -20,7 +20,7 @@ loader.lazyRequireGetter(this, "PerformanceRecordingCommon",
  *
  * @see devtools/shared/shared/performance.js for documentation.
  */
-const PerformanceRecordingActor = ActorClass(performanceRecordingSpec, merge({
+const PerformanceRecordingActor = ActorClassWithSpec(performanceRecordingSpec, merge({
   form: function (detail) {
     if (detail === "actorid") {
       return this.actorID;

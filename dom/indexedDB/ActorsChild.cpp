@@ -430,8 +430,6 @@ private:
   {
     bool ok = IDBObjectStore::DeserializeValue(aCx, *aCloneInfo, aResult);
 
-    aCloneInfo->mCloneBuffer.clear();
-
     if (NS_WARN_IF(!ok)) {
       return NS_ERROR_DOM_DATA_CLONE_ERR;
     }

@@ -117,7 +117,9 @@ DataStruct::GetFileSpec(const char* aFileName)
   // otherwise create a unique name
   if (!aFileName) {
     cacheFile->AppendNative(NS_LITERAL_CSTRING("clipboardcache"));
-    cacheFile->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0600);
+    nsresult rv = cacheFile->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0600);
+    if (NS_FAILED(rv))
+      return nullptr;
   } else {
     cacheFile->AppendNative(nsDependentCString(aFileName));
   }

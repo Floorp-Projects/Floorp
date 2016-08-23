@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/DebugOnly.h"
+#include "mozilla/unused.h"
 
 #include "mozIStorageService.h"
 #include "nsIAlertsService.h"
@@ -1615,7 +1616,7 @@ nsDownloadManager::AddDownload(DownloadType aDownloadType,
     if (locHandlerApp) {
       nsCOMPtr<nsIFile> executable;
       (void)locHandlerApp->GetExecutable(getter_AddRefs(executable));
-      (void)executable->GetPersistentDescriptor(persistentDescriptor);
+      Unused << executable->GetPersistentDescriptor(persistentDescriptor);
     }
 
     (void)aMIMEInfo->GetPreferredAction(&action);

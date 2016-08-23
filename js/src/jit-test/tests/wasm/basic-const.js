@@ -27,8 +27,7 @@ testConst('i32', '0x80000000', -2147483648);
 testConst('i32', '-0x80000000', -2147483648);
 testConst('i32', '0xffffffff', -1);
 
-if (hasI64()) {
-
+{
     assertErrorMessage(() => wasmEvalText('(module (func (result i64) (i64.const 0)) (export "" 0))'), TypeError, /cannot .* i64/);
 
     setJitCompilerOption('wasm.test-mode', 1);
@@ -77,8 +76,6 @@ if (hasI64()) {
     setJitCompilerOption('wasm.test-mode', 0);
 
     assertErrorMessage(() => wasmEvalText('(module (func (result i64) (i64.const 0)) (export "" 0))'), TypeError, /cannot .* i64/);
-} else {
-    assertErrorMessage(() => wasmEvalText('(module (func (result i64) (i64.const 0)) (export "" 0))'), TypeError, /NYI/);
 }
 
 testConst('f32', '0.0', 0.0);

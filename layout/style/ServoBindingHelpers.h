@@ -45,6 +45,19 @@ public:
   }
 };
 
+template<>
+struct RefPtrTraits<ServoDeclarationBlock>
+{
+  static void AddRef(ServoDeclarationBlock* aPtr)
+  {
+    Servo_DeclarationBlock_AddRef(aPtr);
+  }
+  static void Release(ServoDeclarationBlock* aPtr)
+  {
+    Servo_DeclarationBlock_Release(aPtr);
+  }
+};
+
 } // namespace mozilla
 
 #endif // mozilla_ServoBindingHelpers_h

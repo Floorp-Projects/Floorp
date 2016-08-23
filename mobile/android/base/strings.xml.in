@@ -634,4 +634,7 @@
   <string name="helper_triple_readerview_open_message">&helper_triple_readerview_open_message;</string>
   <string name="helper_triple_readerview_open_button">&helper_triple_readerview_open_button;</string>
 
+  <string name="activity_stream_topsites">&activity_stream_topsites;</string>
+  <string name="activity_stream_highlights">&activity_stream_highlights;</string>
+  <string name="activity_stream_more">&activity_stream_more;</string>
 </resources>

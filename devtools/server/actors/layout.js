@@ -36,7 +36,7 @@ const {reflowSpec} = require("devtools/shared/specs/layout");
 /**
  * The reflow actor tracks reflows and emits events about them.
  */
-var ReflowActor = exports.ReflowActor = protocol.ActorClass(reflowSpec, {
+var ReflowActor = exports.ReflowActor = protocol.ActorClassWithSpec(reflowSpec, {
   initialize: function (conn, tabActor) {
     protocol.Actor.prototype.initialize.call(this, conn);
 

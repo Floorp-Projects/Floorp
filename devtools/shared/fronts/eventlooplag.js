@@ -3,10 +3,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { Front, FrontClass } = require("devtools/shared/protocol");
+const { Front, FrontClassWithSpec } = require("devtools/shared/protocol");
 const { eventLoopLagSpec } = require("devtools/shared/specs/eventlooplag");
 
-exports.EventLoopLagFront = FrontClass(eventLoopLagSpec, {
+exports.EventLoopLagFront = FrontClassWithSpec(eventLoopLagSpec, {
   initialize: function (client, form) {
     Front.prototype.initialize.call(this, client);
     this.actorID = form.eventLoopLagActor;
