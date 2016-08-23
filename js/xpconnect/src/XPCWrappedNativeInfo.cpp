@@ -23,7 +23,7 @@ using namespace mozilla;
 // static
 bool
 XPCNativeMember::GetCallInfo(JSObject* funobj,
-                             XPCNativeInterface** pInterface,
+                             RefPtr<XPCNativeInterface>* pInterface,
                              XPCNativeMember**    pMember)
 {
     funobj = js::UncheckedUnwrap(funobj);
@@ -107,12 +107,16 @@ XPCNativeMember::Resolve(XPCCallContext& ccx, XPCNativeInterface* iface,
 /***************************************************************************/
 // XPCNativeInterface
 
+XPCNativeInterface::~XPCNativeInterface()
+{
+    XPCJSRuntime::Get()->GetIID2NativeInterfaceMap()->Remove(this);
+}
+
 // static
-XPCNativeInterface*
+already_AddRefed<XPCNativeInterface>
 XPCNativeInterface::GetNewOrUsed(const nsIID* iid)
 {
-    AutoJSContext cx;
-    AutoMarkingNativeInterfacePtr iface(cx);
+    RefPtr<XPCNativeInterface> iface;
     XPCJSRuntime* rt = XPCJSRuntime::Get();
 
     IID2NativeInterfaceMap* map = rt->GetIID2NativeInterfaceMap();
@@ -122,7 +126,7 @@ XPCNativeInterface::GetNewOrUsed(const nsIID* iid)
     iface = map->Find(*iid);
 
     if (iface)
-        return iface;
+        return iface.forget();
 
     nsCOMPtr<nsIInterfaceInfo> info;
     XPTInterfaceInfoManager::GetSingleton()->GetInfoForIID(iid, getter_AddRefs(info));
@@ -136,22 +140,19 @@ XPCNativeInterface::GetNewOrUsed(const nsIID* iid)
     XPCNativeInterface* iface2 = map->Add(iface);
     if (!iface2) {
         NS_ERROR("failed to add our interface!");
-        DestroyInstance(iface);
         iface = nullptr;
     } else if (iface2 != iface) {
-        DestroyInstance(iface);
         iface = iface2;
     }
 
-    return iface;
+    return iface.forget();
 }
 
 // static
-XPCNativeInterface*
+already_AddRefed<XPCNativeInterface>
 XPCNativeInterface::GetNewOrUsed(nsIInterfaceInfo* info)
 {
-    AutoJSContext cx;
-    AutoMarkingNativeInterfacePtr iface(cx);
+    RefPtr<XPCNativeInterface> iface;
 
     const nsIID* iid;
     if (NS_FAILED(info->GetIIDShared(&iid)) || !iid)
@@ -166,27 +167,25 @@ XPCNativeInterface::GetNewOrUsed(nsIInterfaceInfo* info)
     iface = map->Find(*iid);
 
     if (iface)
-        return iface;
+        return iface.forget();
 
     iface = NewInstance(info);
     if (!iface)
         return nullptr;
 
-    XPCNativeInterface* iface2 = map->Add(iface);
+    RefPtr<XPCNativeInterface> iface2 = map->Add(iface);
     if (!iface2) {
         NS_ERROR("failed to add our interface!");
-        DestroyInstance(iface);
         iface = nullptr;
     } else if (iface2 != iface) {
-        DestroyInstance(iface);
         iface = iface2;
     }
 
-    return iface;
+    return iface.forget();
 }
 
 // static
-XPCNativeInterface*
+already_AddRefed<XPCNativeInterface>
 XPCNativeInterface::GetNewOrUsed(const char* name)
 {
     nsCOMPtr<nsIInterfaceInfo> info;
@@ -195,7 +194,7 @@ XPCNativeInterface::GetNewOrUsed(const char* name)
 }
 
 // static
-XPCNativeInterface*
+already_AddRefed<XPCNativeInterface>
 XPCNativeInterface::GetISupports()
 {
     // XXX We should optimize this to cache this common XPCNativeInterface.
@@ -203,13 +202,13 @@ XPCNativeInterface::GetISupports()
 }
 
 // static
-XPCNativeInterface*
+already_AddRefed<XPCNativeInterface>
 XPCNativeInterface::NewInstance(nsIInterfaceInfo* aInfo)
 {
     AutoJSContext cx;
     static const uint16_t MAX_LOCAL_MEMBER_COUNT = 16;
     XPCNativeMember local_members[MAX_LOCAL_MEMBER_COUNT];
-    XPCNativeInterface* obj = nullptr;
+    RefPtr<XPCNativeInterface> obj;
     XPCNativeMember* members = nullptr;
 
     int i;
@@ -392,7 +391,7 @@ XPCNativeInterface::NewInstance(nsIInterfaceInfo* aInfo)
     if (members && members != local_members)
         delete [] members;
 
-    return obj;
+    return obj.forget();
 }
 
 // static
@@ -470,8 +469,8 @@ XPCNativeSet::GetNewOrUsed(const nsIID* iid)
     AutoJSContext cx;
     AutoMarkingNativeSetPtr set(cx);
 
-    AutoMarkingNativeInterfacePtr iface(cx);
-    iface = XPCNativeInterface::GetNewOrUsed(iid);
+    RefPtr<XPCNativeInterface> iface =
+        XPCNativeInterface::GetNewOrUsed(iid);
     if (!iface)
         return nullptr;
 
@@ -487,7 +486,7 @@ XPCNativeSet::GetNewOrUsed(const nsIID* iid)
     if (set)
         return set;
 
-    set = NewInstance({iface});
+    set = NewInstance({iface.forget()});
     if (!set)
         return nullptr;
 
@@ -539,8 +538,7 @@ XPCNativeSet::GetNewOrUsed(nsIClassInfo* classInfo)
     // !!! from here on we only exit through the 'out' label !!!
 
     if (iidCount) {
-        nsTArray<XPCNativeInterface*> interfaceArray(iidCount);
-        AutoMarkingNativeInterfacePtrArrayPtr arrayMarker(cx, interfaceArray);
+        nsTArray<RefPtr<XPCNativeInterface>> interfaceArray(iidCount);
         nsIID** currentIID = iidArray;
 
         for (uint32_t i = 0; i < iidCount; i++) {
@@ -550,7 +548,7 @@ XPCNativeSet::GetNewOrUsed(nsIClassInfo* classInfo)
                 continue;
             }
 
-            XPCNativeInterface* iface =
+            RefPtr<XPCNativeInterface> iface =
                 XPCNativeInterface::GetNewOrUsed(iid);
 
             if (!iface) {
@@ -558,7 +556,7 @@ XPCNativeSet::GetNewOrUsed(nsIClassInfo* classInfo)
                 continue;
             }
 
-            interfaceArray.AppendElement(iface);
+            interfaceArray.AppendElement(iface.forget());
         }
 
         if (interfaceArray.Length() > 0) {
@@ -703,7 +701,7 @@ XPCNativeSet::GetNewOrUsed(XPCNativeSet* firstSet,
 
 // static
 XPCNativeSet*
-XPCNativeSet::NewInstance(nsTArray<XPCNativeInterface*>&& array)
+XPCNativeSet::NewInstance(nsTArray<RefPtr<XPCNativeInterface>>&& array)
 {
     if (array.Length() == 0)
         return nullptr;
@@ -713,7 +711,7 @@ XPCNativeSet::NewInstance(nsTArray<XPCNativeInterface*>&& array)
     // This is the place where we impose that rule - even if given inputs
     // that don't exactly follow the rule.
 
-    XPCNativeInterface* isup = XPCNativeInterface::GetISupports();
+    RefPtr<XPCNativeInterface> isup = XPCNativeInterface::GetISupports();
     uint16_t slots = array.Length() + 1;
 
     for (auto key = array.begin(); key != array.end(); key++) {
@@ -733,14 +731,14 @@ XPCNativeSet::NewInstance(nsTArray<XPCNativeInterface*>&& array)
     XPCNativeInterface** outp = (XPCNativeInterface**) &obj->mInterfaces;
     uint16_t memberCount = 1;   // for the one member in nsISupports
 
-    *(outp++) = isup;
+    NS_ADDREF(*(outp++) = isup);
 
     for (auto key = array.begin(); key != array.end(); key++) {
-        XPCNativeInterface* cur = *key;
+        RefPtr<XPCNativeInterface> cur = key->forget();
         if (isup == cur)
             continue;
-        *(outp++) = cur;
         memberCount += cur->GetMemberCount();
+        *(outp++) = cur.forget().take();
     }
     obj->mMemberCount = memberCount;
     obj->mInterfaceCount = slots;
@@ -775,10 +773,7 @@ XPCNativeSet::NewInstanceMutate(XPCNativeSet* otherSet,
     XPCNativeInterface** src = otherSet->mInterfaces;
     XPCNativeInterface** dest = obj->mInterfaces;
     for (uint16_t i = 0; i < obj->mInterfaceCount; i++) {
-        if (i == position)
-            *dest++ = newInterface;
-        else
-            *dest++ = *src++;
+        NS_ADDREF(*dest++ = (i == position) ? newInterface : *src++);
     }
 
     return obj;
