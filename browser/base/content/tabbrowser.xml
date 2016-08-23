@@ -6245,44 +6245,44 @@
 
     <content context="tabContextMenu">
       <xul:stack class="tab-stack" flex="1">
-        <xul:hbox xbl:inherits="pinned,selected,visuallyselected,fadein"
+        <xul:hbox xbl:inherits="pinned,selected=visuallyselected,fadein"
                   class="tab-background">
-          <xul:hbox xbl:inherits="pinned,selected,visuallyselected"
+          <xul:hbox xbl:inherits="pinned,selected=visuallyselected"
                     class="tab-background-start"/>
-          <xul:hbox xbl:inherits="pinned,selected,visuallyselected"
+          <xul:hbox xbl:inherits="pinned,selected=visuallyselected"
                     class="tab-background-middle"/>
-          <xul:hbox xbl:inherits="pinned,selected,visuallyselected"
+          <xul:hbox xbl:inherits="pinned,selected=visuallyselected"
                     class="tab-background-end"/>
         </xul:hbox>
-        <xul:hbox xbl:inherits="pinned,selected,visuallyselected,titlechanged,attention"
+        <xul:hbox xbl:inherits="pinned,selected=visuallyselected,titlechanged,attention"
                   class="tab-content" align="center">
-          <xul:image xbl:inherits="fadein,pinned,busy,progress,selected,visuallyselected"
+          <xul:image xbl:inherits="fadein,pinned,busy,progress,selected=visuallyselected"
                      class="tab-throbber"
                      role="presentation"
                      layer="true" />
-          <xul:image xbl:inherits="src=image,fadein,pinned,selected,visuallyselected,busy,crashed,sharing"
+          <xul:image xbl:inherits="src=image,fadein,pinned,selected=visuallyselected,busy,crashed,sharing"
                      anonid="tab-icon-image"
                      class="tab-icon-image"
                      validate="never"
                      role="presentation"/>
-          <xul:image xbl:inherits="sharing,selected"
+          <xul:image xbl:inherits="sharing,selected=visuallyselected"
                      anonid="sharing-icon"
                      class="tab-sharing-icon-overlay"
                      role="presentation"/>
-          <xul:image xbl:inherits="crashed,busy,soundplaying,pinned,muted,visuallyselected"
+          <xul:image xbl:inherits="crashed,busy,soundplaying,pinned,muted,selected=visuallyselected"
                      anonid="overlay-icon"
                      class="tab-icon-overlay"
                      role="presentation"/>
           <xul:label flex="1"
-                     xbl:inherits="value=label,crop,accesskey,fadein,pinned,selected,visuallyselected,attention"
+                     xbl:inherits="value=label,crop,accesskey,fadein,pinned,selected=visuallyselected,attention"
                      class="tab-text tab-label"
                      role="presentation"/>
-          <xul:image xbl:inherits="soundplaying,pinned,muted,visuallyselected"
+          <xul:image xbl:inherits="soundplaying,pinned,muted,selected=visuallyselected"
                      anonid="soundplaying-icon"
                      class="tab-icon-sound"
                      role="presentation"/>
           <xul:toolbarbutton anonid="close-button"
-                             xbl:inherits="fadein,pinned,selected,visuallyselected"
+                             xbl:inherits="fadein,pinned,selected=visuallyselected"
                              class="tab-close-button close-icon"/>
         </xul:hbox>
       </xul:stack>

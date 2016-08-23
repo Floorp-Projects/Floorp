@@ -21,7 +21,7 @@
 
 :root[devtoolstheme="dark"] .findbar-closebutton:not(:hover),
 :root[devtoolstheme="dark"] #sidebar-header > .close-icon:not(:hover),
-.tab-close-button[visuallyselected]:not(:hover) {
+.tab-close-button[selected]:not(:hover) {
   background-image: -moz-image-rect(url("chrome://global/skin/icons/close.svg"), 0, 80, 16, 64);
 }
 
