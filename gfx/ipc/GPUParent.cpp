@@ -14,6 +14,7 @@
 #include "mozilla/layers/CompositorBridgeParent.h"
 #include "mozilla/layers/CompositorThread.h"
 #include "mozilla/layers/ImageBridgeParent.h"
+#include "nsDebugImpl.h"
 #include "VRManager.h"
 #include "VRManagerParent.h"
 #include "VsyncBridgeParent.h"
@@ -45,17 +46,22 @@ GPUParent::Init(base::ProcessId aParentPid,
     return false;
   }
 
+  nsDebugImpl::SetMultiprocessMode("GPU");
+
   // Ensure gfxPrefs are initialized.
   gfxPrefs::GetSingleton();
   gfxConfig::Init();
   gfxVars::Initialize();
+  gfxPlatform::InitNullMetadata();
 #if defined(XP_WIN)
   DeviceManagerD3D11::Init();
   DeviceManagerD3D9::Init();
 #endif
+  if (NS_FAILED(NS_InitMinimalXPCOM())) {
+    return false;
+  }
   CompositorThreadHolder::Start();
   VRManager::ManagerInit();
-  gfxPlatform::InitNullMetadata();
   return true;
 }
 
@@ -241,6 +247,7 @@ GPUParent::ActorDestroy(ActorDestroyReason aWhy)
   gfxVars::Shutdown();
   gfxConfig::Shutdown();
   gfxPrefs::DestroySingleton();
+  NS_ShutdownXPCOM(nullptr);
   XRE_ShutdownChildProcess();
 }
 
