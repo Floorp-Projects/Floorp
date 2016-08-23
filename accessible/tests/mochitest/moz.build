@@ -7,6 +7,7 @@
 A11Y_MANIFESTS += [
     'a11y.ini',
     'actions/a11y.ini',
+    'aom/a11y.ini',
     'attributes/a11y.ini',
     'bounds/a11y.ini',
     'editabletext/a11y.ini',
