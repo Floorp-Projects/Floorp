@@ -21,6 +21,7 @@ import android.content.Context;
 import android.database.ContentObserver;
 import android.database.Cursor;
 import android.graphics.drawable.BitmapDrawable;
+import android.support.v4.content.CursorLoader;
 
 /**
  * Interface for interactions with all databases. If you want an instance
@@ -78,6 +79,8 @@ public interface BrowserDB {
      * Suggested sites will be limited to being within the first <code>suggestedRangeLimit</code> results.
      */
     public abstract Cursor getTopSites(ContentResolver cr, int suggestedRangeLimit, int limit);
+
+    public abstract CursorLoader getActivityStreamTopSites(Context context, int limit);
 
     public abstract void updateVisitedHistory(ContentResolver cr, String uri);
 
