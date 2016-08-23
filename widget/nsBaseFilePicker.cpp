@@ -344,6 +344,20 @@ nsBaseFilePicker::GetMode(int16_t* aMode)
 }
 
 NS_IMETHODIMP
+nsBaseFilePicker::SetOkButtonLabel(const nsAString& aLabel)
+{
+  mOkButtonLabel = aLabel;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBaseFilePicker::GetOkButtonLabel(nsAString& aLabel)
+{
+  aLabel = mOkButtonLabel;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsBaseFilePicker::GetDomFileOrDirectory(nsISupports** aValue)
 {
   nsCOMPtr<nsIFile> localFile;
