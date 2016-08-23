@@ -20,6 +20,7 @@ WorkersView.prototype = Heritage.extend(WidgetMethods, {
     }
 
     document.getElementById("workers-pane").removeAttribute("hidden");
+    document.getElementById("workers-splitter").removeAttribute("hidden");
 
     this.widget = new SideMenuWidget(document.getElementById("workers"), {
       showArrows: true,
