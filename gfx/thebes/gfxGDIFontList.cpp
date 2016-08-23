@@ -652,13 +652,10 @@ gfxGDIFontList::GetFontSubstitutes()
 }
 
 nsresult
-gfxGDIFontList::InitFontList()
+gfxGDIFontList::InitFontListForPlatform()
 {
     Telemetry::AutoTimer<Telemetry::GDI_INITFONTLIST_TOTAL> timer;
 
-    // reset font lists
-    gfxPlatformFontList::InitFontList();
-    
     mFontSubstitutes.Clear();
     mNonExistingFonts.Clear();
 
@@ -920,7 +917,7 @@ gfxGDIFontList::FindAndAddFamilies(const nsAString& aFamily,
 }
 
 gfxFontFamily*
-gfxGDIFontList::GetDefaultFont(const gfxFontStyle* aStyle)
+gfxGDIFontList::GetDefaultFontForPlatform(const gfxFontStyle* aStyle)
 {
     gfxFontFamily *ff = nullptr;
 

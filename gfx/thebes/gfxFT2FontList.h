@@ -121,8 +121,6 @@ public:
     gfxFT2FontList();
     virtual ~gfxFT2FontList();
 
-    virtual gfxFontFamily* GetDefaultFont(const gfxFontStyle* aStyle);
-
     virtual gfxFontEntry* LookupLocalFont(const nsAString& aFontName,
                                           uint16_t aWeight,
                                           int16_t aStretch,
@@ -151,7 +149,8 @@ protected:
         kStandard
     } StandardFile;
 
-    virtual nsresult InitFontList();
+    // initialize font lists
+    virtual nsresult InitFontListForPlatform() override;
 
     void AppendFaceFromFontListEntry(const FontListEntry& aFLE,
                                      StandardFile aStdFile);
@@ -184,6 +183,9 @@ protected:
 
     void FindFontsInDir(const nsCString& aDir, FontNameCache* aFNC,
                         FT2FontFamily::Visibility aVisibility);
+
+    virtual gfxFontFamily*
+    GetDefaultFontForPlatform(const gfxFontStyle* aStyle) override;
 
     nsTHashtable<nsStringHashKey> mSkipSpaceLookupCheckFamilies;
 
