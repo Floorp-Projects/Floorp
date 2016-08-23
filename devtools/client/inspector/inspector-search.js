@@ -154,6 +154,7 @@ InspectorSearch.prototype = {
     this.searchBox.classList.remove("devtools-style-searchbox-no-match");
     this.searchBox.value = "";
     this.searchClearButton.hidden = true;
+    this.emit("search-cleared");
   }
 };
 

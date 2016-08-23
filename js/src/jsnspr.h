@@ -4,33 +4,19 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jslock_h
-#define jslock_h
-
-#include "mozilla/TimeStamp.h"
+#ifndef jsnspr_h
+#define jsnspr_h
 
 #ifdef JS_POSIX_NSPR
 
-#include "vm/PosixNSPR.h"
+# include "vm/PosixNSPR.h"
 
 #else /* JS_POSIX_NSPR */
 
-# include "prcvar.h"
 # include "prinit.h"
 # include "prio.h"
-# include "prlock.h"
-# include "prthread.h"
 # include "private/pprio.h"
 
-#endif
+#endif /* JS_POSIX_NSPR */
 
-inline PRIntervalTime
-DurationToPRInterval(mozilla::TimeDuration duration)
-{
-    double millis = duration.ToMilliseconds();
-    return millis < double(UINT32_MAX)
-           ? PR_MillisecondsToInterval(millis)
-           : PR_INTERVAL_NO_TIMEOUT;
-}
-
-#endif /* jslock_h */
+#endif /* jsnspr_h */

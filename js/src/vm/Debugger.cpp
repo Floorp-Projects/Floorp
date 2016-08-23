@@ -912,7 +912,7 @@ Debugger::slowPathOnLeaveFrame(JSContext* cx, AbstractFramePtr frame, jsbytecode
                 if (!dbg->wrapDebuggeeValue(cx, &wrappedValue) ||
                     !dbg->newCompletionValue(cx, status, wrappedValue, &completion))
                 {
-                    status = dbg->handleUncaughtException(ac, false);
+                    status = dbg->reportUncaughtException(ac);
                     break;
                 }
 
@@ -920,7 +920,7 @@ Debugger::slowPathOnLeaveFrame(JSContext* cx, AbstractFramePtr frame, jsbytecode
                 RootedValue rval(cx);
                 bool hookOk = js::Call(cx, handler, frameobj, completion, &rval);
                 RootedValue nextValue(cx);
-                JSTrapStatus nextStatus = dbg->parseResumptionValue(ac, hookOk, rval,
+                JSTrapStatus nextStatus = dbg->processHandlerResult(ac, hookOk, rval,
                                                                     frame, pc, &nextValue);
 
                 /*
@@ -1318,8 +1318,49 @@ private:
 } // anonymous namespace
 
 JSTrapStatus
-Debugger::handleUncaughtExceptionHelper(Maybe<AutoCompartment>& ac,
-                                        MutableHandleValue* vp, bool callHook,
+Debugger::reportUncaughtException(Maybe<AutoCompartment>& ac)
+{
+    JSContext* cx = ac->context()->asJSContext();
+
+    // Uncaught exceptions arise from Debugger code, and so we must already be
+    // in an NX section.
+    MOZ_ASSERT(EnterDebuggeeNoExecute::isLockedInStack(cx, *this));
+
+    if (cx->isExceptionPending()) {
+        /*
+         * We want to report the pending exception, but we want to let the
+         * embedding handle it however it wants to.  So pretend like we're
+         * starting a new script execution on our current compartment (which
+         * is the debugger compartment, so reported errors won't get
+         * reported to various onerror handlers in debuggees) and as part of
+         * that "execution" simply throw our exception so the embedding can
+         * deal.
+         */
+        RootedValue exn(cx);
+        if (cx->getPendingException(&exn)) {
+            /*
+             * Clear the exception, because
+             * PrepareScriptEnvironmentAndInvoke will assert that we don't
+             * have one.
+             */
+            cx->clearPendingException();
+            ReportExceptionClosure reportExn(exn);
+            PrepareScriptEnvironmentAndInvoke(cx, cx->global(), reportExn);
+        }
+        /*
+         * And if not, or if PrepareScriptEnvironmentAndInvoke somehow left
+         * an exception on cx (which it totally shouldn't do), just give
+         * up.
+         */
+        cx->clearPendingException();
+    }
+
+    ac.reset();
+    return JSTRAP_ERROR;
+}
+
+JSTrapStatus
+Debugger::handleUncaughtExceptionHelper(Maybe<AutoCompartment>& ac, MutableHandleValue* vp,
                                         const Maybe<HandleValue>& thisVForCheck,
                                         AbstractFramePtr frame)
 {
@@ -1330,7 +1371,7 @@ Debugger::handleUncaughtExceptionHelper(Maybe<AutoCompartment>& ac,
     MOZ_ASSERT(EnterDebuggeeNoExecute::isLockedInStack(cx, *this));
 
     if (cx->isExceptionPending()) {
-        if (callHook && uncaughtExceptionHook) {
+        if (uncaughtExceptionHook) {
             RootedValue exc(cx);
             if (!cx->getPendingException(&exc))
                 return JSTRAP_ERROR;
@@ -1341,7 +1382,7 @@ Debugger::handleUncaughtExceptionHelper(Maybe<AutoCompartment>& ac,
             if (js::Call(cx, fval, object, exc, &rv)) {
                 if (vp) {
                     JSTrapStatus status = JSTRAP_CONTINUE;
-                    if (processResumptionValue(ac, frame, thisVForCheck, rv, &status, *vp))
+                    if (processResumptionValue(ac, frame, thisVForCheck, rv, status, *vp))
                         return status;
                 } else {
                     return JSTRAP_CONTINUE;
@@ -1349,50 +1390,24 @@ Debugger::handleUncaughtExceptionHelper(Maybe<AutoCompartment>& ac,
             }
         }
 
-        if (cx->isExceptionPending()) {
-            /*
-             * We want to report the pending exception, but we want to let the
-             * embedding handle it however it wants to.  So pretend like we're
-             * starting a new script execution on our current compartment (which
-             * is the debugger compartment, so reported errors won't get
-             * reported to various onerror handlers in debuggees) and as part of
-             * that "execution" simply throw our exception so the embedding can
-             * deal.
-             */
-            RootedValue exn(cx);
-            if (cx->getPendingException(&exn)) {
-                /*
-                 * Clear the exception, because
-                 * PrepareScriptEnvironmentAndInvoke will assert that we don't
-                 * have one.
-                 */
-                cx->clearPendingException();
-                ReportExceptionClosure reportExn(exn);
-                PrepareScriptEnvironmentAndInvoke(cx, cx->global(), reportExn);
-            }
-            /*
-             * And if not, or if PrepareScriptEnvironmentAndInvoke somehow left
-             * an exception on cx (which it totally shouldn't do), just give
-             * up.
-             */
-            cx->clearPendingException();
-        }
+        return reportUncaughtException(ac);
     }
+
     ac.reset();
     return JSTRAP_ERROR;
 }
 
 JSTrapStatus
-Debugger::handleUncaughtException(Maybe<AutoCompartment>& ac, MutableHandleValue vp, bool callHook,
+Debugger::handleUncaughtException(Maybe<AutoCompartment>& ac, MutableHandleValue vp,
                                   const Maybe<HandleValue>& thisVForCheck, AbstractFramePtr frame)
 {
-    return handleUncaughtExceptionHelper(ac, &vp, callHook, thisVForCheck, frame);
+    return handleUncaughtExceptionHelper(ac, &vp, thisVForCheck, frame);
 }
 
 JSTrapStatus
-Debugger::handleUncaughtException(Maybe<AutoCompartment>& ac, bool callHook)
+Debugger::handleUncaughtException(Maybe<AutoCompartment>& ac)
 {
-    return handleUncaughtExceptionHelper(ac, nullptr, callHook, mozilla::Nothing(), NullFramePtr());
+    return handleUncaughtExceptionHelper(ac, nullptr, mozilla::Nothing(), NullFramePtr());
 }
 
 /* static */ void
@@ -1475,14 +1490,14 @@ Debugger::receiveCompletionValue(Maybe<AutoCompartment>& ac, bool ok,
 
 static bool
 GetStatusProperty(JSContext* cx, HandleObject obj, HandlePropertyName name, JSTrapStatus status,
-                  JSTrapStatus* statusOut, MutableHandleValue vp, int* hits)
+                  JSTrapStatus& statusp, MutableHandleValue vp, int* hits)
 {
     bool found;
     if (!HasProperty(cx, obj, name, &found))
         return false;
     if (found) {
         ++*hits;
-        *statusOut = status;
+        statusp = status;
         if (!GetProperty(cx, obj, obj, name, vp))
             return false;
     }
@@ -1490,7 +1505,7 @@ GetStatusProperty(JSContext* cx, HandleObject obj, HandlePropertyName name, JSTr
 }
 
 static bool
-ParseResumptionValueAsObject(JSContext* cx, HandleValue rv, JSTrapStatus* statusp,
+ParseResumptionValueAsObject(JSContext* cx, HandleValue rv, JSTrapStatus& statusp,
                              MutableHandleValue vp)
 {
     int hits = 0;
@@ -1510,15 +1525,15 @@ ParseResumptionValueAsObject(JSContext* cx, HandleValue rv, JSTrapStatus* status
 }
 
 static bool
-ParseResumptionValue(JSContext* cx, HandleValue rval, JSTrapStatus* statusp, MutableHandleValue vp)
+ParseResumptionValue(JSContext* cx, HandleValue rval, JSTrapStatus& statusp, MutableHandleValue vp)
 {
     if (rval.isUndefined()) {
-        *statusp = JSTRAP_CONTINUE;
+        statusp = JSTRAP_CONTINUE;
         vp.setUndefined();
         return true;
     }
     if (rval.isNull()) {
-        *statusp = JSTRAP_ERROR;
+        statusp = JSTRAP_ERROR;
         vp.setUndefined();
         return true;
     }
@@ -1550,20 +1565,20 @@ CheckResumptionValue(JSContext* cx, AbstractFramePtr frame, const Maybe<HandleVa
 bool
 Debugger::processResumptionValue(Maybe<AutoCompartment>& ac, AbstractFramePtr frame,
                                  const Maybe<HandleValue>& maybeThisv, HandleValue rval,
-                                 JSTrapStatus* statusp, MutableHandleValue vp)
+                                 JSTrapStatus& statusp, MutableHandleValue vp)
 {
     JSContext* cx = ac->context()->asJSContext();
 
     if (!ParseResumptionValue(cx, rval, statusp, vp) ||
         !unwrapDebuggeeValue(cx, vp) ||
-        !CheckResumptionValue(cx, frame, maybeThisv, *statusp, vp))
+        !CheckResumptionValue(cx, frame, maybeThisv, statusp, vp))
     {
         return false;
     }
 
     ac.reset();
     if (!cx->compartment()->wrap(cx, vp)) {
-        *statusp = JSTRAP_ERROR;
+        statusp = JSTRAP_ERROR;
         vp.setUndefined();
     }
 
@@ -1571,25 +1586,25 @@ Debugger::processResumptionValue(Maybe<AutoCompartment>& ac, AbstractFramePtr fr
 }
 
 JSTrapStatus
-Debugger::parseResumptionValueHelper(Maybe<AutoCompartment>& ac, bool ok, const Value& rv,
+Debugger::processHandlerResultHelper(Maybe<AutoCompartment>& ac, bool ok, const Value& rv,
                                      const Maybe<HandleValue>& thisVForCheck, AbstractFramePtr frame,
                                      MutableHandleValue vp)
 {
     if (!ok)
-        return handleUncaughtException(ac, vp, true, thisVForCheck, frame);
+        return handleUncaughtException(ac, vp, thisVForCheck, frame);
 
     JSContext* cx = ac->context()->asJSContext();
     RootedValue rvRoot(cx, rv);
     JSTrapStatus status = JSTRAP_CONTINUE;
     RootedValue v(cx);
-    if (!processResumptionValue(ac, frame, thisVForCheck, rvRoot, &status, &v))
-        return handleUncaughtException(ac, vp, true, thisVForCheck, frame);
+    if (!processResumptionValue(ac, frame, thisVForCheck, rvRoot, status, &v))
+        return handleUncaughtException(ac, vp, thisVForCheck, frame);
     vp.set(v);
     return status;
 }
 
 JSTrapStatus
-Debugger::parseResumptionValue(Maybe<AutoCompartment>& ac, bool ok, const Value& rv,
+Debugger::processHandlerResult(Maybe<AutoCompartment>& ac, bool ok, const Value& rv,
                                AbstractFramePtr frame, jsbytecode* pc, MutableHandleValue vp)
 {
     JSContext* cx = ac->context()->asJSContext();
@@ -1608,11 +1623,11 @@ Debugger::parseResumptionValue(Maybe<AutoCompartment>& ac, bool ok, const Value&
         MOZ_ASSERT_IF(rootThis.isMagic(), rootThis.isMagic(JS_UNINITIALIZED_LEXICAL));
         thisArg.emplace(HandleValue(rootThis));
     }
-    return parseResumptionValueHelper(ac, ok, rv, thisArg, frame, vp);
+    return processHandlerResultHelper(ac, ok, rv, thisArg, frame, vp);
 }
 
 JSTrapStatus
-Debugger::parseResumptionValue(Maybe<AutoCompartment>& ac, bool ok, const Value& rv,
+Debugger::processHandlerResult(Maybe<AutoCompartment>& ac, bool ok, const Value& rv,
                                const Value& thisV, AbstractFramePtr frame, MutableHandleValue vp)
 {
     JSContext* cx = ac->context()->asJSContext();
@@ -1621,7 +1636,7 @@ Debugger::parseResumptionValue(Maybe<AutoCompartment>& ac, bool ok, const Value&
     if (frame.debuggerNeedsCheckPrimitiveReturn())
         thisArg.emplace(rootThis);
 
-    return parseResumptionValueHelper(ac, ok, rv, thisArg, frame, vp);
+    return processHandlerResultHelper(ac, ok, rv, thisArg, frame, vp);
 }
 
 static bool
@@ -1665,12 +1680,12 @@ Debugger::fireDebuggerStatement(JSContext* cx, MutableHandleValue vp)
     ScriptFrameIter iter(cx);
     RootedValue scriptFrame(cx);
     if (!getScriptFrame(cx, iter, &scriptFrame))
-        return handleUncaughtException(ac, false);
+        return reportUncaughtException(ac);
 
     RootedValue fval(cx, ObjectValue(*hook));
     RootedValue rv(cx);
     bool ok = js::Call(cx, fval, object, scriptFrame, &rv);
-    return parseResumptionValue(ac, ok, rv, iter.abstractFramePtr(), iter.pc(), vp);
+    return processHandlerResult(ac, ok, rv, iter.abstractFramePtr(), iter.pc(), vp);
 }
 
 JSTrapStatus
@@ -1693,12 +1708,12 @@ Debugger::fireExceptionUnwind(JSContext* cx, MutableHandleValue vp)
 
     ScriptFrameIter iter(cx);
     if (!getScriptFrame(cx, iter, &scriptFrame) || !wrapDebuggeeValue(cx, &wrappedExc))
-        return handleUncaughtException(ac, false);
+        return reportUncaughtException(ac);
 
     RootedValue fval(cx, ObjectValue(*hook));
     RootedValue rv(cx);
     bool ok = js::Call(cx, fval, object, scriptFrame, wrappedExc, &rv);
-    JSTrapStatus st = parseResumptionValue(ac, ok, rv, iter.abstractFramePtr(), iter.pc(), vp);
+    JSTrapStatus st = processHandlerResult(ac, ok, rv, iter.abstractFramePtr(), iter.pc(), vp);
     if (st == JSTRAP_CONTINUE)
         cx->setPendingException(exc);
     return st;
@@ -1716,13 +1731,13 @@ Debugger::fireEnterFrame(JSContext* cx, AbstractFramePtr frame, MutableHandleVal
 
     RootedValue scriptFrame(cx);
     if (!getScriptFrame(cx, frame, &scriptFrame))
-        return handleUncaughtException(ac, false);
+        return reportUncaughtException(ac);
 
     RootedValue fval(cx, ObjectValue(*hook));
     RootedValue rv(cx);
     bool ok = js::Call(cx, fval, object, scriptFrame, &rv);
 
-    return parseResumptionValue(ac, ok, rv, MagicValue(JS_UNINITIALIZED_LEXICAL), frame, vp);
+    return processHandlerResult(ac, ok, rv, MagicValue(JS_UNINITIALIZED_LEXICAL), frame, vp);
 }
 
 void
@@ -1737,7 +1752,7 @@ Debugger::fireNewScript(JSContext* cx, Handle<DebuggerScriptReferent> scriptRefe
 
     JSObject* dsobj = wrapVariantReferent(cx, scriptReferent);
     if (!dsobj) {
-        handleUncaughtException(ac, false);
+        reportUncaughtException(ac);
         return;
     }
 
@@ -1745,7 +1760,7 @@ Debugger::fireNewScript(JSContext* cx, Handle<DebuggerScriptReferent> scriptRefe
     RootedValue dsval(cx, ObjectValue(*dsobj));
     RootedValue rv(cx);
     if (!js::Call(cx, fval, object, dsval, &rv))
-        handleUncaughtException(ac, true);
+        handleUncaughtException(ac);
 }
 
 void
@@ -1764,7 +1779,7 @@ Debugger::fireOnGarbageCollectionHook(JSContext* cx,
 
     JSObject* dataObj = gcData->toJSObject(cx);
     if (!dataObj) {
-        handleUncaughtException(ac, false);
+        reportUncaughtException(ac);
         return;
     }
 
@@ -1772,7 +1787,7 @@ Debugger::fireOnGarbageCollectionHook(JSContext* cx,
     RootedValue dataVal(cx, ObjectValue(*dataObj));
     RootedValue rv(cx);
     if (!js::Call(cx, fval, object, dataVal, &rv))
-        handleUncaughtException(ac, true);
+        handleUncaughtException(ac);
 }
 
 template <typename HookIsEnabledFun /* bool (Debugger*) */,
@@ -1901,11 +1916,11 @@ Debugger::onTrap(JSContext* cx, MutableHandleValue vp)
 
             RootedValue scriptFrame(cx);
             if (!dbg->getScriptFrame(cx, iter, &scriptFrame))
-                return dbg->handleUncaughtException(ac, false);
+                return dbg->reportUncaughtException(ac);
             RootedValue rv(cx);
             Rooted<JSObject*> handler(cx, bp->handler);
             bool ok = CallMethodIfPresent(cx, handler, "hit", 1, scriptFrame.address(), &rv);
-            JSTrapStatus st = dbg->parseResumptionValue(ac, ok, rv,  iter.abstractFramePtr(),
+            JSTrapStatus st = dbg->processHandlerResult(ac, ok, rv,  iter.abstractFramePtr(),
                                                         iter.pc(), vp);
             if (st != JSTRAP_CONTINUE)
                 return st;
@@ -1994,7 +2009,7 @@ Debugger::onSingleStep(JSContext* cx, MutableHandleValue vp)
         RootedValue fval(cx, frame->getReservedSlot(JSSLOT_DEBUGFRAME_ONSTEP_HANDLER));
         RootedValue rval(cx);
         bool ok = js::Call(cx, fval, frame, &rval);
-        JSTrapStatus st = dbg->parseResumptionValue(ac, ok, rval, iter.abstractFramePtr(),
+        JSTrapStatus st = dbg->processHandlerResult(ac, ok, rval, iter.abstractFramePtr(),
                                                     iter.pc(), vp);
         if (st != JSTRAP_CONTINUE)
             return st;
@@ -2018,7 +2033,7 @@ Debugger::fireNewGlobalObject(JSContext* cx, Handle<GlobalObject*> global, Mutab
 
     RootedValue wrappedGlobal(cx, ObjectValue(*global));
     if (!wrapDebuggeeValue(cx, &wrappedGlobal))
-        return handleUncaughtException(ac, false);
+        return reportUncaughtException(ac);
 
     // onNewGlobalObject is infallible, and thus is only allowed to return
     // undefined as a resumption value. If it returns anything else, we throw.
@@ -2039,7 +2054,7 @@ Debugger::fireNewGlobalObject(JSContext* cx, Handle<GlobalObject*> global, Mutab
     // uncaughtExceptionHook and tells the caller whether we should execute the
     // rest of the onNewGlobalObject hooks or not.
     JSTrapStatus status = ok ? JSTRAP_CONTINUE
-                             : handleUncaughtException(ac, vp, true);
+                             : handleUncaughtException(ac, vp);
     MOZ_ASSERT(!cx->isExceptionPending());
     return status;
 }
@@ -2192,7 +2207,7 @@ Debugger::firePromiseHook(JSContext* cx, Hook hook, HandleObject promise, Mutabl
 
     RootedValue dbgObj(cx, ObjectValue(*promise));
     if (!wrapDebuggeeValue(cx, &dbgObj))
-        return handleUncaughtException(ac, false);
+        return reportUncaughtException(ac);
 
     // Like onNewGlobalObject, the Promise hooks are infallible and the comments
     // in |Debugger::fireNewGlobalObject| apply here as well.
@@ -2206,7 +2221,7 @@ Debugger::firePromiseHook(JSContext* cx, Hook hook, HandleObject promise, Mutabl
     }
 
     JSTrapStatus status = ok ? JSTRAP_CONTINUE
-                             : handleUncaughtException(ac, vp, true);
+                             : handleUncaughtException(ac, vp);
     MOZ_ASSERT(!cx->isExceptionPending());
     return status;
 }

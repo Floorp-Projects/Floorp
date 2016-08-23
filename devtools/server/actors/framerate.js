@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { Actor, ActorClass } = require("devtools/shared/protocol");
+const { Actor, ActorClassWithSpec } = require("devtools/shared/protocol");
 const { actorBridgeWithSpec } = require("devtools/server/actors/common");
 const { on, once, off, emit } = require("sdk/event/core");
 const { Framerate } = require("devtools/server/performance/framerate");
@@ -15,7 +15,7 @@ const { framerateSpec } = require("devtools/shared/specs/framerate");
  *
  * @see devtools/server/performance/framerate.js for documentation.
  */
-var FramerateActor = exports.FramerateActor = ActorClass(framerateSpec, {
+var FramerateActor = exports.FramerateActor = ActorClassWithSpec(framerateSpec, {
   initialize: function (conn, tabActor) {
     Actor.prototype.initialize.call(this, conn);
     this.bridge = new Framerate(tabActor);

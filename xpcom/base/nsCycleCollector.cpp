@@ -719,7 +719,7 @@ public:
         block->mNext = nullptr;
         mNextBlock = &block->mNext;
       }
-      return new (mNext++) PtrInfo(aPointer, aParticipant);
+      return new (mozilla::KnownNotNull, mNext++) PtrInfo(aPointer, aParticipant);
     }
   private:
     NodeBlock** mNextBlock;
@@ -1676,8 +1676,8 @@ private:
     }
 
     MOZ_ASSERT(!aLog->mStream);
-    aLog->mFile->OpenANSIFileDesc("w", &aLog->mStream);
-    if (NS_WARN_IF(!aLog->mStream)) {
+    nsresult rv = aLog->mFile->OpenANSIFileDesc("w", &aLog->mStream);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
       return NS_ERROR_UNEXPECTED;
     }
     MozillaRegisterDebugFILE(aLog->mStream);

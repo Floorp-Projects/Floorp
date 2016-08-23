@@ -1,9 +1,6 @@
 // |jit-test| test-also-wasm-baseline
 load(libdir + "wasm.js");
 
-if (!hasI64())
-    quit(0);
-
 // Bug 1280933, excerpted from binary test case provided there.
 
 wasmEvalText(

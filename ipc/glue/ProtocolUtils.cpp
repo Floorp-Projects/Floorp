@@ -350,6 +350,16 @@ AnnotateSystemError()
 }
 #endif
 
+#if defined(MOZ_CRASHREPORTER) && defined(XP_MACOSX)
+void
+AnnotateCrashReportWithErrno(const char* tag, int error)
+{
+  CrashReporter::AnnotateCrashReport(
+    nsCString(tag),
+    nsPrintfCString("%d", error));
+}
+#endif
+
 void
 LogMessageForProtocol(const char* aTopLevelProtocol, base::ProcessId aOtherPid,
                       const char* aContextDescription,

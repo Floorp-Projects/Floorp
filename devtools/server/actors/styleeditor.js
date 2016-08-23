@@ -28,7 +28,7 @@ transition-property: all !important;\
 
 var LOAD_ERROR = "error-load";
 
-var OldStyleSheetActor = protocol.ActorClass(oldStyleSheetSpec, {
+var OldStyleSheetActor = protocol.ActorClassWithSpec(oldStyleSheetSpec, {
   toString: function() {
     return "[OldStyleSheetActor " + this.actorID + "]";
   },
@@ -321,7 +321,7 @@ exports.OldStyleSheetActor = OldStyleSheetActor;
  * Creates a StyleEditorActor. StyleEditorActor provides remote access to the
  * stylesheets of a document.
  */
-var StyleEditorActor = exports.StyleEditorActor = protocol.ActorClass(styleEditorSpec, {
+var StyleEditorActor = exports.StyleEditorActor = protocol.ActorClassWithSpec(styleEditorSpec, {
   /**
    * The window we work with, taken from the parent actor.
    */

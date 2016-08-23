@@ -94,7 +94,9 @@ public:
         return;
 
       // Create the log file and its parent directory (in case it doesn't exist)
-      logFile->Create(nsIFile::NORMAL_FILE_TYPE, 0644);
+      rv = logFile->Create(nsIFile::NORMAL_FILE_TYPE, 0644);
+      if (NS_FAILED(rv))
+        return;
 
       PRFileDesc* file;
 #ifdef XP_WIN

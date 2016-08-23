@@ -1066,6 +1066,14 @@ nsXULElement::BeforeSetAttr(int32_t aNamespaceID, nsIAtom* aName,
       if (!attrValue.ParseIntMarginValue(aValue->String())) {
         return NS_ERROR_INVALID_ARG;
       }
+    } else if (aNamespaceID == kNameSpaceID_None &&
+               aName == nsGkAtoms::usercontextid) {
+        nsAutoString oldValue;
+        bool hasAttribute = GetAttr(kNameSpaceID_None, nsGkAtoms::usercontextid, oldValue);
+        if (hasAttribute && (!aValue || !aValue->String().Equals(oldValue))) {
+          MOZ_ASSERT(false, "Changing usercontextid is not allowed.");
+          return NS_ERROR_INVALID_ARG;
+        }
     }
 
     return nsStyledElement::BeforeSetAttr(aNamespaceID, aName,

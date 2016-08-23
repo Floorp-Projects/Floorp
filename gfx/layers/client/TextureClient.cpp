@@ -34,6 +34,7 @@
 #include "mozilla/layers/ShadowLayers.h"
 
 #ifdef XP_WIN
+#include "DeviceManagerD3D9.h"
 #include "mozilla/gfx/DeviceManagerD3D11.h"
 #include "mozilla/layers/TextureD3D9.h"
 #include "mozilla/layers/TextureD3D11.h"
@@ -1055,7 +1056,7 @@ TextureClient::CreateForDrawing(TextureForwarder* aAllocator,
       aSize.width <= maxTextureSize &&
       aSize.height <= maxTextureSize &&
       NS_IsMainThread() &&
-      gfxWindowsPlatform::GetPlatform()->GetD3D9Device()) {
+      DeviceManagerD3D9::GetDevice()) {
     data = D3D9TextureData::Create(aSize, aFormat, aAllocFlags);
   }
 

@@ -6,6 +6,7 @@
 
 #include "XMLHttpRequestMainThread.h"
 
+#include <algorithm>
 #ifndef XP_WIN
 #include <unistd.h>
 #endif
@@ -89,12 +90,12 @@ namespace dom {
 
 // Maximum size that we'll grow an ArrayBuffer instead of doubling,
 // once doubling reaches this threshold
-#define XML_HTTP_REQUEST_ARRAYBUFFER_MAX_GROWTH (32*1024*1024)
+const uint32_t XML_HTTP_REQUEST_ARRAYBUFFER_MAX_GROWTH = 32*1024*1024;
 // start at 32k to avoid lots of doubling right at the start
-#define XML_HTTP_REQUEST_ARRAYBUFFER_MIN_SIZE (32*1024)
+const uint32_t XML_HTTP_REQUEST_ARRAYBUFFER_MIN_SIZE = 32*1024;
 // the maximum Content-Length that we'll preallocate.  1GB.  Must fit
 // in an int32_t!
-#define XML_HTTP_REQUEST_MAX_CONTENT_LENGTH_PREALLOCATE (1*1024*1024*1024LL)
+const int32_t XML_HTTP_REQUEST_MAX_CONTENT_LENGTH_PREALLOCATE = 1*1024*1024*1024LL;
 
 namespace {
   const nsLiteralString ProgressEventTypeStrings[] = {
@@ -1592,7 +1593,7 @@ XMLHttpRequestMainThread::StreamReaderFunc(nsIInputStream* in,
     // get the initial capacity to something reasonable to avoid a bunch of reallocs right
     // at the start
     if (xmlHttpRequest->mArrayBufferBuilder.capacity() == 0)
-      xmlHttpRequest->mArrayBufferBuilder.setCapacity(PR_MAX(count, XML_HTTP_REQUEST_ARRAYBUFFER_MIN_SIZE));
+      xmlHttpRequest->mArrayBufferBuilder.setCapacity(std::max(count, XML_HTTP_REQUEST_ARRAYBUFFER_MIN_SIZE));
 
     xmlHttpRequest->mArrayBufferBuilder.append(reinterpret_cast<const uint8_t*>(fromRawSegment), count,
                                                XML_HTTP_REQUEST_ARRAYBUFFER_MAX_GROWTH);

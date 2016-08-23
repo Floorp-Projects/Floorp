@@ -27,6 +27,7 @@ define(function (require, exports, module) {
     propTypes: {
       object: React.PropTypes.object.isRequired,
       mode: React.PropTypes.string,
+      isInterestingProp: React.PropTypes.func
     },
 
     getTitle: function (object) {
@@ -50,21 +51,21 @@ define(function (require, exports, module) {
 
     propIterator: function (object, max) {
       // Property filter. Show only interesting properties to the user.
-      let isInterestingProp = (type, value) => {
+      let isInterestingProp = this.props.isInterestingProp || ((type, value) => {
         return (
           type == "boolean" ||
           type == "number" ||
           (type == "string" && value.length != 0)
         );
-      };
+      });
 
       let ownProperties = object.preview ? object.preview.ownProperties : [];
       let indexes = this.getPropIndexes(ownProperties, max, isInterestingProp);
       if (indexes.length < max && indexes.length < object.ownPropertyLength) {
         // There are not enough props yet. Then add uninteresting props to display them.
         indexes = indexes.concat(
-          this.getPropIndexes(ownProperties, max - indexes.length, (t, value) => {
-            return !isInterestingProp(t, value);
+          this.getPropIndexes(ownProperties, max - indexes.length, (t, value, name) => {
+            return !isInterestingProp(t, value, name);
           })
         );
       }
@@ -152,7 +153,7 @@ define(function (require, exports, module) {
           let type = (value.class || typeof value);
           type = type.toLowerCase();
 
-          if (filter(type, value)) {
+          if (filter(type, value, name)) {
             indexes.push(i);
           }
           i++;
