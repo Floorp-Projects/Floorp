@@ -18,7 +18,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/TimeStamp.h"
-#include "mozilla/gfx/DeviceManagerD3D11.h"
+#include "mozilla/gfx/DeviceManagerDx.h"
 #include "ipc/VRLayerParent.h"
 
 #include "mozilla/gfx/Quaternion.h"
@@ -500,7 +500,7 @@ VRDisplayOculus::StartPresentation()
   desc.BindFlags = ovrTextureBind_DX_RenderTarget;
 
   if (!mDevice) {
-    mDevice = gfx::DeviceManagerD3D11::Get()->GetCompositorDevice();
+    mDevice = gfx::DeviceManagerDx::Get()->GetCompositorDevice();
     if (!mDevice) {
       NS_WARNING("Failed to get a D3D11Device for Oculus");
       return;

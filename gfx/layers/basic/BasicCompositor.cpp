@@ -201,6 +201,7 @@ public:
 BasicCompositor::BasicCompositor(CompositorBridgeParent* aParent, widget::CompositorWidget* aWidget)
   : Compositor(aWidget, aParent)
   , mDidExternalComposition(false)
+  , mIsPendingEndRemoteDrawing(false)
 {
   MOZ_COUNT_CTOR(BasicCompositor);
 
@@ -236,6 +237,11 @@ BasicCompositingRenderTarget::BindRenderTarget()
 void BasicCompositor::DetachWidget()
 {
   if (mWidget) {
+    if (mIsPendingEndRemoteDrawing) {
+      // Force to end previous remote drawing.
+      TryToEndRemoteDrawing(/* aForceToEnd */ true);
+      MOZ_ASSERT(!mIsPendingEndRemoteDrawing);
+    }
     mWidget->CleanupRemoteDrawing();
   }
   Compositor::DetachWidget();
@@ -765,6 +771,12 @@ BasicCompositor::BeginFrame(const nsIntRegion& aInvalidRegion,
                             gfx::IntRect *aClipRectOut /* = nullptr */,
                             gfx::IntRect *aRenderBoundsOut /* = nullptr */)
 {
+  if (mIsPendingEndRemoteDrawing) {
+    // Force to end previous remote drawing.
+    TryToEndRemoteDrawing(/* aForceToEnd */ true);
+    MOZ_ASSERT(!mIsPendingEndRemoteDrawing);
+  }
+
   LayoutDeviceIntRect intRect(LayoutDeviceIntPoint(), mWidget->GetClientSize());
   IntRect rect = IntRect(0, 0, intRect.width, intRect.height);
 
@@ -883,6 +895,29 @@ BasicCompositor::EndFrame()
   // Pop aInvalidregion
   mRenderTarget->mDrawTarget->PopClip();
 
+  TryToEndRemoteDrawing();
+}
+
+void
+BasicCompositor::TryToEndRemoteDrawing(bool aForceToEnd)
+{
+  if (mIsDestroyed || !mRenderTarget) {
+    return;
+  }
+
+  // It it is not a good timing for EndRemoteDrawing, defter to call it.
+  if (!aForceToEnd && !mTarget && NeedsToDeferEndRemoteDrawing()) {
+    mIsPendingEndRemoteDrawing = true;
+
+    const uint32_t retryMs = 2;
+    RefPtr<BasicCompositor> self = this;
+    RefPtr<Runnable> runnable = NS_NewRunnableFunction([self]() {
+      self->TryToEndRemoteDrawing();
+    });
+    MessageLoop::current()->PostDelayedTask(runnable.forget(), retryMs);
+    return;
+  }
+
   if (mRenderTarget->mDrawTarget != mDrawTarget) {
     // Note: Most platforms require us to buffer drawing to the widget surface.
     // That's why we don't draw to mDrawTarget directly.
@@ -907,12 +942,32 @@ BasicCompositor::EndFrame()
     }
   }
 
-  if (!mTarget) {
+  if (aForceToEnd || !mTarget) {
     mWidget->EndRemoteDrawingInRegion(mDrawTarget, mInvalidRegion);
   }
 
   mDrawTarget = nullptr;
   mRenderTarget = nullptr;
+  mIsPendingEndRemoteDrawing = false;
+}
+
+bool
+BasicCompositor::NeedsToDeferEndRemoteDrawing()
+{
+  MOZ_ASSERT(mDrawTarget);
+  MOZ_ASSERT(mRenderTarget);
+
+  if (mTarget || mRenderTarget->mDrawTarget == mDrawTarget) {
+    return false;
+  }
+
+  return mWidget->NeedsToDeferEndRemoteDrawing();
+}
+
+void
+BasicCompositor::FinishPendingComposite()
+{
+  TryToEndRemoteDrawing(/* aForceToEnd */ true);
 }
 
 void

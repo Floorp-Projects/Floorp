@@ -201,7 +201,7 @@
 #define WM_DPICHANGED 0x02E0
 #endif
 
-#include "mozilla/gfx/DeviceManagerD3D11.h"
+#include "mozilla/gfx/DeviceManagerDx.h"
 #include "mozilla/layers/APZCTreeManager.h"
 #include "mozilla/layers/InputAPZContext.h"
 #include "mozilla/layers/ScrollInputMethods.h"
@@ -7768,7 +7768,7 @@ nsWindow::ComputeShouldAccelerate()
   // on Windows 7 where presentation fails randomly for windows with drop
   // shadows.
   if (mTransparencyMode == eTransparencyTransparent ||
-      (IsPopup() && DeviceManagerD3D11::Get()->IsWARP()))
+      (IsPopup() && DeviceManagerDx::Get()->IsWARP()))
   {
     return false;
   }
