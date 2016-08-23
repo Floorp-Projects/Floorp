@@ -322,7 +322,9 @@
             </tabpanel>
           </tabpanels>
         </tabbox>
-        <splitter class="devtools-horizontal-splitter"/>
+        <splitter id="workers-splitter"
+                  class="devtools-horizontal-splitter"
+                  hidden="true" />
         <tabbox id="sources-pane"
                 class="devtools-sidebar-tabs"
                 flex="1">
