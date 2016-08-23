@@ -331,7 +331,7 @@ XPCNativeSet::FindMember(jsid name, XPCNativeMember** pMember,
 }
 
 inline bool
-XPCNativeSet::FindMember(jsid name,
+XPCNativeSet::FindMember(JS::HandleId name,
                          XPCNativeMember** pMember,
                          XPCNativeInterface** pInterface,
                          XPCNativeSet* protoSet,
