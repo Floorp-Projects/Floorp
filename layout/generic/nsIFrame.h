@@ -2878,20 +2878,18 @@ public:
   virtual bool SupportsVisibilityHidden() { return true; }
 
   /**
-   * Returns true if the frame has a valid clip rect set via the 'clip'
-   * property, and the 'clip' property applies to this frame. The 'clip'
-   * property applies to HTML frames if they are absolutely positioned. The
-   * 'clip' property applies to SVG frames regardless of the value of the
-   * 'position' property.
+   * Returns the clip rect set via the 'clip' property, if the 'clip' property
+   * applies to this frame; otherwise returns Nothing(). The 'clip' property
+   * applies to HTML frames if they are absolutely positioned. The 'clip'
+   * property applies to SVG frames regardless of the value of the 'position'
+   * property.
    *
-   * If this method returns true, then we also set aRect to the computed clip
-   * rect, with coordinates relative to this frame's origin. aRect must not be
-   * null!
+   * The coordinates of the returned rectangle are relative to this frame's
+   * origin.
    */
-  bool GetClipPropClipRect(const nsStyleDisplay* aDisp,
-                           const nsStyleEffects* aEffects,
-                           nsRect* aRect,
-                           const nsSize& aSize) const;
+  Maybe<nsRect> GetClipPropClipRect(const nsStyleDisplay* aDisp,
+                                    const nsStyleEffects* aEffects,
+                                    const nsSize& aSize) const;
 
   /**
    * Check if this frame is focusable and in the current tab order.
