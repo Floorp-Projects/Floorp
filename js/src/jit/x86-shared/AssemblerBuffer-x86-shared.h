@@ -35,7 +35,6 @@
 
 #include "ds/PageProtectingVector.h"
 #include "jit/ExecutableAllocator.h"
-#include "jit/JitAllocPolicy.h"
 #include "jit/JitSpewer.h"
 
 // Spew formatting helpers.
@@ -170,7 +169,7 @@ namespace jit {
             m_buffer.clear();
         }
 
-        PageProtectingVector<unsigned char, 256, ProtectedSystemAllocPolicy> m_buffer;
+        PageProtectingVector<unsigned char, 256, SystemAllocPolicy> m_buffer;
         bool m_oom;
     };
 
