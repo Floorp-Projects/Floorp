@@ -184,4 +184,11 @@ interface nsIFilePicker : nsISupports
   * (one of the modeOpen et. al. constants specified above).
   */
   readonly attribute short mode;
+
+  /**
+   * If set to non-empty string, the nsIFilePicker implementation
+   * may use okButtonLabel as the label for the button the user uses to accept
+   * file selection.
+   */
+  attribute AString okButtonLabel;
 };
