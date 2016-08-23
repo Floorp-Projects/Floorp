@@ -166,7 +166,9 @@ if (AppConstants.MOZ_WEBRTC) {
   lazilyLoadedObserverScripts.push(
     ["WebrtcUI", ["getUserMedia:request",
                   "PeerConnection:request",
-                  "recording-device-events"], "chrome://browser/content/WebrtcUI.js"])
+                  "recording-device-events",
+                  "VideoCapture:Paused",
+                  "VideoCapture:Resumed"], "chrome://browser/content/WebrtcUI.js"])
 }
 
 lazilyLoadedObserverScripts.forEach(function (aScript) {
