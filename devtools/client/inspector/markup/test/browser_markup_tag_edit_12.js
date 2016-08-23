@@ -69,7 +69,7 @@ function* testAttributeDeletion(inspector) {
   let focusedAttr = Services.focus.focusedElement;
   ok(focusedAttr.classList.contains("styleinspector-propertyeditor"),
      "in newattr");
-  is(focusedAttr.tagName, "input", "newattr is active");
+  is(focusedAttr.tagName, "textarea", "newattr is active");
 }
 
 function* editAttributeAndTab(newValue, inspector, goPrevious) {
