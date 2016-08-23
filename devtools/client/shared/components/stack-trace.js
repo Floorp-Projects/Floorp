@@ -50,7 +50,7 @@ const StackTrace = createClass({
       frames.push(Frame({
         frame: {
           functionDisplayName: s.functionName,
-          source: s.filename,
+          source: s.filename.split(" -> ").pop(),
           line: s.lineNumber,
           column: s.columnNumber,
         },
