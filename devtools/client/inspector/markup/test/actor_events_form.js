@@ -8,7 +8,7 @@
 // by NodeActor actor (see 'onNodeActorForm' method).
 
 const Events = require("sdk/event/core");
-const {ActorClass, Actor, FrontClass, Front, generateActorSpec} =
+const {ActorClassWithSpec, Actor, FrontClassWithSpec, Front, generateActorSpec} =
   require("devtools/shared/protocol");
 
 const {NodeActor} = require("devtools/server/actors/inspector");
@@ -28,7 +28,7 @@ var eventsSpec = generateActorSpec({
   }
 });
 
-var EventsFormActor = ActorClass(eventsSpec, {
+var EventsFormActor = ActorClassWithSpec(eventsSpec, {
   initialize: function () {
     Actor.prototype.initialize.apply(this, arguments);
   },
@@ -50,7 +50,7 @@ var EventsFormActor = ActorClass(eventsSpec, {
   }
 });
 
-var EventsFormFront = FrontClass(eventsSpec, {
+var EventsFormFront = FrontClassWithSpec(eventsSpec, {
   initialize: function (client, form) {
     Front.prototype.initialize.apply(this, arguments);
 

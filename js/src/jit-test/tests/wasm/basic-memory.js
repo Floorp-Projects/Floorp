@@ -130,8 +130,7 @@ for (let [type, ext] of [
     ['f64', ''],
 ])
 {
-    if (type !== 'i64' || hasI64())
-        assertErrorMessage(() => badLoadModule(type, ext), TypeError, /can't touch memory/);
+    assertErrorMessage(() => badLoadModule(type, ext), TypeError, /can't touch memory/);
 }
 
 for (let [type, ext] of [
@@ -146,8 +145,7 @@ for (let [type, ext] of [
     ['f64', ''],
 ])
 {
-    if (type !== 'i64' || hasI64())
-        assertErrorMessage(() => badStoreModule(type, ext), TypeError, /can't touch memory/);
+    assertErrorMessage(() => badStoreModule(type, ext), TypeError, /can't touch memory/);
 }
 
 for (var ind = 0; ind < 2; ind++) {
@@ -322,7 +320,7 @@ for (var ind = 0; ind < 2; ind++) {
 
     testRegisters();
 
-    if (hasI64()) {
+    {
         setJitCompilerOption('wasm.test-mode', 1);
 
         testLoad('i64', '', 0, 0, 0, '0x0706050403020100');

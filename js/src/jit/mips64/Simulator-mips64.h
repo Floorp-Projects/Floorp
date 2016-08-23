@@ -32,8 +32,6 @@
 
 #ifdef JS_SIMULATOR_MIPS64
 
-#include "jslock.h"
-
 #include "jit/IonTypes.h"
 #include "threading/Mutex.h"
 #include "threading/Thread.h"

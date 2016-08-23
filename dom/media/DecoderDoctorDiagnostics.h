@@ -69,6 +69,10 @@ public:
 
   void SetGMPPDMFailedToStartup() { mGMPPDMFailedToStartup = true; }
   bool DidGMPPDMFailToStartup() const { return mGMPPDMFailedToStartup; }
+
+  void SetVideoFormatNotSupport() { mVideoNotSupported = true; }
+  void SetAudioFormatNotSupport() { mAudioNotSupported = true; }
+
   void SetGMP(const nsACString& aGMP) { mGMP = aGMP; }
   const nsACString& GMP() const { return mGMP; }
 
@@ -100,6 +104,8 @@ private:
   bool mWMFFailedToLoad = false;
   bool mFFmpegFailedToLoad = false;
   bool mGMPPDMFailedToStartup = false;
+  bool mVideoNotSupported = false;
+  bool mAudioNotSupported = false;
   nsCString mGMP;
 
   nsString mKeySystem;

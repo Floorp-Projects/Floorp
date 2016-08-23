@@ -1,0 +1,37 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1000870
+-->
+  <head>
+    <meta charset="utf-8">
+    <title>Test for Bug 1000870</title>
+    <meta name="author" content="Maksim Lebedev" />
+    <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+    <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+    <script type="text/javascript" src="mochitest_support_external.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+    <script type="text/javascript">
+      SimpleTest.waitForExplicitFinish();
+      function startTest() {
+        var iframe = document.getElementById("testFrame");
+        iframe.src = "pointerevent_attributes_mouse-manual.html";
+      }
+      function executeTest(int_win) {
+        var square1 = int_win.document.getElementById("square1");
+        var rect = square1.getBoundingClientRect();
+        var x = rect.left + rect.width / 4;
+        var y = rect.top + rect.height / 2
+        synthesizeMouseAtPoint(x, y, {type: "mousemove", button:-1}, int_win);
+        synthesizeMouseAtPoint(x, y, {type: "mousedown", button:0},  int_win);
+        synthesizeMouseAtPoint(x, y, {type: "mouseup",   button:0},  int_win);
+        synthesizeMouseAtPoint(x, y, {type: "mousemove", button:-1}, int_win);
+        synthesizeMouseAtPoint(rect.left-1, rect.top-1, {type: "mousemove", button:-1}, int_win);
+      }
+    </script>
+  </head>
+  <body>
+    <iframe id="testFrame" height="800" width="1000"></iframe>
+  </body>
+</html>
+

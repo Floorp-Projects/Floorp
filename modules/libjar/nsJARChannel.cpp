@@ -1108,8 +1108,8 @@ nsJARChannel::OnRemoteFileOpenComplete(nsresult aOpenStatus)
         // Set file descriptor from Jar cache into remote Jar file, if it
         // has not been set previously.
         mozilla::AutoFDClose fd;
-        mJarFile->OpenNSPRFileDesc(PR_RDONLY, 0, &fd.rwget());
-        if (!fd) {
+        nsresult rv2 = mJarFile->OpenNSPRFileDesc(PR_RDONLY, 0, &fd.rwget());
+        if (NS_FAILED(rv2)) {
             nsIZipReaderCache *jarCache = gJarHandler->JarCache();
             if (!jarCache) {
                 rv = NS_ERROR_FAILURE;

@@ -61,8 +61,6 @@ typedef enum {
 typedef enum {
   /* first eight bits are used to pass a margin */
   MOZ_GTK_TAB_MARGIN_MASK     = 0xFF,
-  /* bottom tabs */
-  MOZ_GTK_TAB_BOTTOM          = 1 << 8,
   /* the first tab in the group */
   MOZ_GTK_TAB_FIRST           = 1 << 9,
   /* the selected tab */
@@ -178,8 +176,14 @@ typedef enum {
   MOZ_GTK_PROGRESS_CHUNK_INDETERMINATE,
   /* Paints a progress chunk of a vertical indeterminated GtkProgressBar. */
   MOZ_GTK_PROGRESS_CHUNK_VERTICAL_INDETERMINATE,
+  /* Used as root style of whole GtkNotebook widget */
+  MOZ_GTK_NOTEBOOK,
+  /* Used as root style of active GtkNotebook area which contains tabs and arrows. */
+  MOZ_GTK_NOTEBOOK_HEADER,
   /* Paints a tab of a GtkNotebook. flags is a GtkTabFlags, defined above. */
-  MOZ_GTK_TAB,
+  MOZ_GTK_TAB_TOP,
+  /* Paints a tab of a GtkNotebook. flags is a GtkTabFlags, defined above. */
+  MOZ_GTK_TAB_BOTTOM,
   /* Paints the background and border of a GtkNotebook. */
   MOZ_GTK_TABPANELS,
   /* Paints a GtkArrow for a GtkNotebook. flags is a GtkArrowType. */
@@ -314,12 +318,14 @@ gint moz_gtk_get_widget_border(WidgetNodeType widget, gint* left, gint* top,
  * top/bottom:  [OUT] the tab's top/bottom border
  * direction:   the text direction for the widget
  * flags:       tab-dependant flags; see the GtkTabFlags definition.
+ * widget:      tab widget
  *
  * returns:    MOZ_GTK_SUCCESS if there was no error, an error code otherwise
  */
 gint
 moz_gtk_get_tab_border(gint* left, gint* top, gint* right, gint* bottom, 
-                       GtkTextDirection direction, GtkTabFlags flags);
+                       GtkTextDirection direction, GtkTabFlags flags,
+                       WidgetNodeType widget);
 
 /**
  * Get the desired size of a GtkCheckButton
@@ -495,7 +501,8 @@ GtkWidget* moz_gtk_get_scrollbar_widget(void);
 /**
  * Get the YTHICKNESS of a tab (notebook extension).
  */
-gint moz_gtk_get_tab_thickness(void);
+gint
+moz_gtk_get_tab_thickness(WidgetNodeType aNodeType);
 
 /**
  * Get a boolean which indicates whether or not to use images in menus.

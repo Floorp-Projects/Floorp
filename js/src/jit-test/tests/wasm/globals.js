@@ -183,7 +183,7 @@ testInitExpr('f32', 13.37, 0.1989, Math.fround);
 testInitExpr('f64', 13.37, 0.1989, x => +x);
 
 // Int64.
-if (hasI64()) {
+{
     assertErrorMessage(() => evalText(`(module (import "globals" "x" (global i64 immutable)))`), TypeError, /can't import.* an Int64 global/);
     assertErrorMessage(() => evalText(`(module (global i64 immutable (i64.const 42)) (export "" global 0))`), TypeError, /can't .*export an Int64 global/);
 
@@ -202,8 +202,4 @@ if (hasI64()) {
     assertEqI64(module.defined, createI64('0xFAFADADABABA'));
 
     setJitCompilerOption('wasm.test-mode', 0);
-} else {
-    assertErrorMessage(() => evalText(`(module (global i64 (i64.const 0)))`), TypeError, /NYI/);
-    assertErrorMessage(() => evalText(`(module (import "globals" "x" (global i64 immutable)))`), TypeError, /NYI/);
 }
-

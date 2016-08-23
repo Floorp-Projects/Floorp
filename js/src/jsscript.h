@@ -15,7 +15,6 @@
 #include "mozilla/Variant.h"
 
 #include "jsatom.h"
-#include "jslock.h"
 #include "jsopcode.h"
 #include "jstypes.h"
 

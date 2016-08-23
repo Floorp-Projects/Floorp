@@ -40,7 +40,7 @@ AltSvcMapping::ProcessHeader(const nsCString &buf, const nsCString &originScheme
                              const nsCString &originHost, int32_t originPort,
                              const nsACString &username, bool privateBrowsing,
                              nsIInterfaceRequestor *callbacks, nsProxyInfo *proxyInfo,
-                             uint32_t caps)
+                             uint32_t caps, const NeckoOriginAttributes &originAttributes)
 {
   MOZ_ASSERT(NS_IsMainThread());
   LOG(("AltSvcMapping::ProcessHeader: %s\n", buf.get()));
@@ -135,7 +135,8 @@ AltSvcMapping::ProcessHeader(const nsCString &buf, const nsCString &originScheme
       // as that would have happened if we had accepted the parameters.
       gHttpHandler->ConnMgr()->ClearHostMapping(originHost, originPort);
     } else {
-      gHttpHandler->UpdateAltServiceMapping(mapping, proxyInfo, callbacks, caps);
+      gHttpHandler->UpdateAltServiceMapping(mapping, proxyInfo, callbacks, caps,
+                                            originAttributes);
     }
   }
 }
@@ -237,11 +238,13 @@ AltSvcMapping::RouteEquals(AltSvcMapping *map)
 
 void
 AltSvcMapping::GetConnectionInfo(nsHttpConnectionInfo **outCI,
-                                 nsProxyInfo *pi)
+                                 nsProxyInfo *pi,
+                                 const NeckoOriginAttributes &originAttributes)
 {
   RefPtr<nsHttpConnectionInfo> ci =
     new nsHttpConnectionInfo(mOriginHost, mOriginPort, mNPNToken,
-                             mUsername, pi, mAlternateHost, mAlternatePort);
+                             mUsername, pi, originAttributes,
+                             mAlternateHost, mAlternatePort);
   ci->SetInsecureScheme(!mHttps);
   ci->SetPrivate(mPrivate);
   ci.forget(outCI);
@@ -391,7 +394,8 @@ private:
 void
 AltSvcCache::UpdateAltServiceMapping(AltSvcMapping *map, nsProxyInfo *pi,
                                      nsIInterfaceRequestor *aCallbacks,
-                                     uint32_t caps)
+                                     uint32_t caps,
+                                     const NeckoOriginAttributes &originAttributes)
 {
   MOZ_ASSERT(NS_IsMainThread());
   AltSvcMapping *existing = mHash.GetWeak(map->mHashKey);
@@ -429,7 +433,7 @@ AltSvcCache::UpdateAltServiceMapping(AltSvcMapping *map, nsProxyInfo *pi,
   mHash.Put(map->mHashKey, map);
 
   RefPtr<nsHttpConnectionInfo> ci;
-  map->GetConnectionInfo(getter_AddRefs(ci), pi);
+  map->GetConnectionInfo(getter_AddRefs(ci), pi, originAttributes);
   caps |= ci->GetAnonymous() ? NS_HTTP_LOAD_ANONYMOUS : 0;
 
   nsCOMPtr<nsIInterfaceRequestor> callbacks = new AltSvcOverride(aCallbacks);

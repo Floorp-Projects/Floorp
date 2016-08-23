@@ -572,11 +572,7 @@ var PrintUtils = {
 
       // Set the original window as an active window so any mozPrintCallbacks can
       // run without delayed setTimeouts.
-      if (this._listener.activateBrowser) {
-        this._listener.activateBrowser(this._sourceBrowser);
-      } else {
-        this._sourceBrowser.docShellIsActive = true;
-      }
+      this._sourceBrowser.docShellIsActive = true;
 
       // show the toolbar after we go into print preview mode so
       // that we can initialize the toolbar with total num pages

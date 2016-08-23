@@ -14,7 +14,7 @@ const emulationSpec = generateActorSpec({
         flag: Arg(0, "number")
       },
       response: {
-        reload: RetVal("boolean")
+        valueChanged: RetVal("boolean")
       }
     },
 
@@ -27,7 +27,32 @@ const emulationSpec = generateActorSpec({
 
     clearTouchEventsOverride: {
       request: {},
-      response: {}
+      response: {
+        valueChanged: RetVal("boolean")
+      }
+    },
+
+    setUserAgentOverride: {
+      request: {
+        flag: Arg(0, "string")
+      },
+      response: {
+        valueChanged: RetVal("boolean")
+      }
+    },
+
+    getUserAgentOverride: {
+      request: {},
+      response: {
+        userAgent: RetVal("string")
+      }
+    },
+
+    clearUserAgentOverride: {
+      request: {},
+      response: {
+        valueChanged: RetVal("boolean")
+      }
     },
   }
 });

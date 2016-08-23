@@ -40,7 +40,7 @@ import org.mozilla.gecko.GeckoApplication;
  *             it'd be more efficient to do this over time, rather than all at once.
  */
 @Deprecated
-abstract class SimpleCursorLoader extends AsyncTaskLoader<Cursor> {
+public abstract class SimpleCursorLoader extends AsyncTaskLoader<Cursor> {
     final ForceLoadContentObserver mObserver;
     Cursor mCursor;
 

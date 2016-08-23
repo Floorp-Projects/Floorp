@@ -5,14 +5,14 @@
 
 const {
   Front,
-  FrontClass,
+  FrontClassWithSpec,
 } = require("devtools/shared/protocol");
 const { timelineSpec } = require("devtools/shared/specs/timeline");
 
 /**
  * TimelineFront, the front for the TimelineActor.
  */
-const TimelineFront = FrontClass(timelineSpec, {
+const TimelineFront = FrontClassWithSpec(timelineSpec, {
   initialize: function (client, { timelineActor }) {
     Front.prototype.initialize.call(this, client, { actor: timelineActor });
     this.manage(this);
