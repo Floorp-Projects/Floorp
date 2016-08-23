@@ -93,7 +93,7 @@ interface nsIFile : nsISupports
      *       be ignored on systems that do not need to do
      *       permissions.
      */
-    void create(in unsigned long type, in unsigned long permissions);
+    [must_use] void create(in unsigned long type, in unsigned long permissions);
 
     /**
      *  Accessor to the leaf name of the file itself.      
@@ -291,6 +291,7 @@ interface nsIFile : nsISupports
      *       be ignored on systems that do not need to do
      *       permissions.
      */
+    [must_use]
     void createUnique(in unsigned long type, in unsigned long permissions);
 
     /**
@@ -382,7 +383,8 @@ interface nsIFile : nsISupports
 
     /**
      * Return the result of PR_Open on the file.  The caller is
-     * responsible for calling PR_Close on the result.
+     * responsible for calling PR_Close on the result.  On success, the
+     * returned PRFileDescr must be non-null.
      *
      * @param flags the PR_Open flags from prio.h, plus optionally
      * OS_READAHEAD or DELETE_ON_CLOSE. OS_READAHEAD is a hint to the
@@ -391,22 +393,24 @@ interface nsIFile : nsISupports
      * Instead use NS_OpenAnonymousTemporaryFile() to create a temporary
      * file which will be deleted upon close.
      */
-    [noscript] PRFileDescStar openNSPRFileDesc(in long flags, in long mode);
+    [noscript, must_use] PRFileDescStar openNSPRFileDesc(in long flags,
+                                                         in long mode);
 
     /**
      * Return the result of fopen on the file.  The caller is
-     * responsible for calling fclose on the result.
+     * responsible for calling fclose on the result.  On success, the
+     * returned FILE pointer must be non-null.
      */
-    [noscript] FILE           openANSIFileDesc(in string mode);
+    [noscript, must_use] FILE openANSIFileDesc(in string mode);
 
     /**
      * Return the result of PR_LoadLibrary on the file.  The caller is
      * responsible for calling PR_UnloadLibrary on the result.
      */
-    [noscript] PRLibraryStar  load();
+    [noscript, must_use] PRLibraryStar  load();
 
     // number of bytes available on disk to non-superuser
-    readonly attribute int64_t diskSpaceAvailable;
+    [must_use] readonly attribute int64_t diskSpaceAvailable;
 
     /**
      *  appendRelative[Native]Path
@@ -429,29 +433,29 @@ interface nsIFile : nsISupports
      *  The character set of this attribute is undefined.  DO NOT TRY TO
      *  INTERPRET IT AS HUMAN READABLE TEXT!
      */
-    attribute ACString persistentDescriptor;
+    [must_use] attribute ACString persistentDescriptor;
 
-    /** 
+    /**
      *  reveal
      *
      *  Ask the operating system to open the folder which contains
-     *  this file or folder. This routine only works on platforms which 
-     *  support the ability to open a folder and is run async on Windows.  
-     *  This routine must be called on the main. 
+     *  this file or folder. This routine only works on platforms which
+     *  support the ability to open a folder and is run async on Windows.
+     *  This routine must be called on the main.
      */
-    void reveal();
-    
-    /** 
+    [must_use] void reveal();
+
+    /**
      *  launch
      *
-     *  Ask the operating system to attempt to open the file. 
+     *  Ask the operating system to attempt to open the file.
      *  this really just simulates "double clicking" the file on your platform.
      *  This routine only works on platforms which support this functionality
-     *  and is run async on Windows.  This routine must be called on the 
-     *  main thread. 
+     *  and is run async on Windows.  This routine must be called on the
+     *  main thread.
      */
-    void launch();
-    
+    [must_use] void launch();
+
     /**
      *  getRelativeDescriptor
      *
@@ -465,7 +469,7 @@ interface nsIFile : nsISupports
      *       the file from which the descriptor is relative.
      *       Throws if fromFile is null.
      */
-    ACString getRelativeDescriptor(in nsIFile fromFile);
+    [must_use] ACString getRelativeDescriptor(in nsIFile fromFile);
 
     /**
      *  setRelativeDescriptor
@@ -478,7 +482,8 @@ interface nsIFile : nsISupports
      *   @param relative
      *       the relative descriptor obtained from getRelativeDescriptor
      */
-    void setRelativeDescriptor(in nsIFile fromFile, in ACString relativeDesc);    
+    [must_use]
+    void setRelativeDescriptor(in nsIFile fromFile, in ACString relativeDesc);
 
     /**
      *  getRelativePath
@@ -492,7 +497,7 @@ interface nsIFile : nsISupports
      *       the file from which the path is relative.
      *       Throws if fromFile is null.
      */
-    AUTF8String getRelativePath(in nsIFile fromFile);
+    [must_use] AUTF8String getRelativePath(in nsIFile fromFile);
 
     /**
      *  setRelativePath
@@ -505,6 +510,7 @@ interface nsIFile : nsISupports
      *   @param relative
      *       the relative path obtained from getRelativePath
      */
+    [must_use]
     void setRelativePath(in nsIFile fromFile, in AUTF8String relativeDesc);
 };
 

@@ -46,6 +46,9 @@
 #include "signaling/src/jsep/JsepSession.h"
 #include "signaling/src/jsep/JsepSessionImpl.h"
 
+#include "mozilla/IntegerPrintfMacros.h"
+#include "mozilla/Sprintf.h"
+
 #if !defined(MOZILLA_EXTERNAL_LINKAGE)
 #ifdef XP_WIN
 // We need to undef the MS macro for nsIDocument::CreateEvent
@@ -643,16 +646,14 @@ PeerConnectionImpl::Initialize(PeerConnectionObserver& aObserver,
                        strlen(HELLO_INITIATOR_URL_START)) == 0);
   }
 
-  PR_snprintf(
-      temp,
-      sizeof(temp),
-      "%llu (id=%llu url=%s)",
-      static_cast<unsigned long long>(timestamp),
-      static_cast<unsigned long long>(mWindow ? mWindow->WindowID() : 0),
-      locationCStr.get() ? locationCStr.get() : "NULL");
+  SprintfLiteral(temp,
+                 "%" PRIu64 " (id=%" PRIu64 " url=%s)",
+                 static_cast<uint64_t>(timestamp),
+                 static_cast<uint64_t>(mWindow ? mWindow->WindowID() : 0),
+                 locationCStr.get() ? locationCStr.get() : "NULL");
 
 #else
-  PR_snprintf(temp, sizeof(temp), "%llu", (unsigned long long)timestamp);
+  SprintfLiteral(temp, "%" PRIu64, static_cast<uint64_t>(timestamp));
 #endif // MOZILLA_INTERNAL_API
 
   mName = temp;
@@ -667,15 +668,15 @@ PeerConnectionImpl::Initialize(PeerConnectionObserver& aObserver,
   }
 
   char hex[17];
-  PR_snprintf(hex,sizeof(hex),"%.2x%.2x%.2x%.2x%.2x%.2x%.2x%.2x",
-    handle_bin[0],
-    handle_bin[1],
-    handle_bin[2],
-    handle_bin[3],
-    handle_bin[4],
-    handle_bin[5],
-    handle_bin[6],
-    handle_bin[7]);
+  SprintfLiteral(hex, "%.2x%.2x%.2x%.2x%.2x%.2x%.2x%.2x",
+                 handle_bin[0],
+                 handle_bin[1],
+                 handle_bin[2],
+                 handle_bin[3],
+                 handle_bin[4],
+                 handle_bin[5],
+                 handle_bin[6],
+                 handle_bin[7]);
 
   mHandle = hex;
 

@@ -18,10 +18,16 @@ function startTest(test) {
  * @param {string} url video src.
  * @returns {HTMLMediaElement} The created video element.
  */
-function appendVideoToDoc(url, token) {
+function appendVideoToDoc(url, token, width, height) {
+  // Default size of (160, 120) is used by other media tests.
+  if (width === undefined) { width = 160; }
+  if (height === undefined) { height = 3*width/4; }
+
   let v = document.createElement('video');
   v.token = token;
   document.body.appendChild(v);
+  v.width = width;
+  v.height = height;
   v.src = url;
   return v;
 }

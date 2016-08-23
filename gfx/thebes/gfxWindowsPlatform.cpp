@@ -330,7 +330,6 @@ NS_IMPL_ISUPPORTS(D3DSharedTexturesReporter, nsIMemoryReporter)
 
 gfxWindowsPlatform::gfxWindowsPlatform()
   : mRenderMode(RENDER_GDI)
-  , mDeviceLock("gfxWindowsPlatform.mDeviceLock")
   , mHasDeviceReset(false)
   , mHasFakeDeviceReset(false)
   , mHasD3D9DeviceReset(false)
@@ -352,8 +351,8 @@ gfxWindowsPlatform::~gfxWindowsPlatform()
 {
   mozilla::gfx::Factory::D2DCleanup();
 
+  DeviceManagerD3D9::Shutdown();
   DeviceManagerD3D11::Shutdown();
-  mDeviceManager = nullptr;
 
   /*
    * Uninitialize COM
@@ -384,6 +383,7 @@ gfxWindowsPlatform::InitAcceleration()
   mFeatureLevels.AppendElement(D3D_FEATURE_LEVEL_9_3);
 
   DeviceManagerD3D11::Init();
+  DeviceManagerD3D9::Init();
 
   InitializeConfig();
   InitializeDevices();
@@ -1340,45 +1340,8 @@ gfxWindowsPlatform::SetupClearTypeParams()
 }
 
 void
-gfxWindowsPlatform::OnDeviceManagerDestroy(DeviceManagerD3D9* aDeviceManager)
-{
-  if (aDeviceManager == mDeviceManager) {
-    MutexAutoLock lock(mDeviceLock);
-    mDeviceManager = nullptr;
-  }
-}
-
-IDirect3DDevice9*
-gfxWindowsPlatform::GetD3D9Device()
-{
-  RefPtr<DeviceManagerD3D9> manager = GetD3D9DeviceManager();
-  return manager ? manager->device() : nullptr;
-}
-
-void
 gfxWindowsPlatform::D3D9DeviceReset() {
   mHasD3D9DeviceReset = true;
-}
-
-already_AddRefed<DeviceManagerD3D9>
-gfxWindowsPlatform::GetD3D9DeviceManager()
-{
-  // We should only create the d3d9 device on the compositor thread
-  // or we don't have a compositor thread.
-  RefPtr<DeviceManagerD3D9> result;
-  if (!mDeviceManager &&
-      (!gfxPlatform::UsesOffMainThreadCompositing() ||
-       CompositorThreadHolder::IsInCompositorThread())) {
-    mDeviceManager = new DeviceManagerD3D9();
-    if (!mDeviceManager->Init()) {
-      gfxCriticalError() << "[D3D9] Could not Initialize the DeviceManagerD3D9";
-      mDeviceManager = nullptr;
-    }
-  }
-
-  MutexAutoLock lock(mDeviceLock);
-  result = mDeviceManager;
-  return result.forget();
 }
 
 ReadbackManagerD3D11*

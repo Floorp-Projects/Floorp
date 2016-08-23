@@ -196,5 +196,41 @@ stubConsoleMessages.set("console.trace()", new ConsoleMessage({
 	}
 }));
 
+stubConsoleMessages.set("console.time('bar')", new ConsoleMessage({
+	"id": "1",
+	"allowRepeating": true,
+	"source": "console-api",
+	"type": "nullMessage",
+	"level": "log",
+	"messageText": null,
+	"parameters": null,
+	"repeat": 1,
+	"repeatId": "{\"id\":null,\"allowRepeating\":true,\"source\":\"console-api\",\"type\":\"nullMessage\",\"level\":\"log\",\"messageText\":null,\"parameters\":null,\"repeatId\":null,\"stacktrace\":null,\"frame\":{\"source\":\"http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-tempfile.js\",\"line\":2,\"column\":1}}",
+	"stacktrace": null,
+	"frame": {
+		"source": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-tempfile.js",
+		"line": 2,
+		"column": 1
+	}
+}));
+
+stubConsoleMessages.set("console.timeEnd('bar')", new ConsoleMessage({
+	"id": "1",
+	"allowRepeating": true,
+	"source": "console-api",
+	"type": "timeEnd",
+	"level": "log",
+	"messageText": "bar: 3.87ms",
+	"parameters": null,
+	"repeat": 1,
+	"repeatId": "{\"id\":null,\"allowRepeating\":true,\"source\":\"console-api\",\"type\":\"timeEnd\",\"level\":\"log\",\"messageText\":\"bar: 3.87ms\",\"parameters\":null,\"repeatId\":null,\"stacktrace\":null,\"frame\":{\"source\":\"http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-tempfile.js\",\"line\":3,\"column\":1}}",
+	"stacktrace": null,
+	"frame": {
+		"source": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-tempfile.js",
+		"line": 3,
+		"column": 1
+	}
+}));
+
 
 module.exports = stubConsoleMessages

@@ -302,12 +302,15 @@ CreateINIParserFactory(const mozilla::Module& aModule,
 }
 
 #define COMPONENT(NAME, Ctor) static NS_DEFINE_CID(kNS_##NAME##_CID, NS_##NAME##_CID);
+#define COMPONENT_M(NAME, Ctor, Selector) static NS_DEFINE_CID(kNS_##NAME##_CID, NS_##NAME##_CID);
 #include "XPCOMModule.inc"
 #undef COMPONENT
+#undef COMPONENT_M
 
 #define COMPONENT(NAME, Ctor) { &kNS_##NAME##_CID, false, nullptr, Ctor },
+#define COMPONENT_M(NAME, Ctor, Selector) { &kNS_##NAME##_CID, false, nullptr, Ctor, Selector },
 const mozilla::Module::CIDEntry kXPCOMCIDEntries[] = {
-  { &kComponentManagerCID, true, nullptr, nsComponentManagerImpl::Create },
+  { &kComponentManagerCID, true, nullptr, nsComponentManagerImpl::Create, Module::ALLOW_IN_GPU_PROCESS },
   { &kINIParserFactoryCID, false, CreateINIParserFactory },
 #include "XPCOMModule.inc"
   { &kNS_CHROMEREGISTRY_CID, false, nullptr, nsChromeRegistryConstructor },
@@ -316,8 +319,10 @@ const mozilla::Module::CIDEntry kXPCOMCIDEntries[] = {
   { nullptr }
 };
 #undef COMPONENT
+#undef COMPONENT_M
 
 #define COMPONENT(NAME, Ctor) { NS_##NAME##_CONTRACTID, &kNS_##NAME##_CID },
+#define COMPONENT_M(NAME, Ctor, Selector) { NS_##NAME##_CONTRACTID, &kNS_##NAME##_CID, Selector },
 const mozilla::Module::ContractIDEntry kXPCOMContracts[] = {
 #include "XPCOMModule.inc"
   { NS_CHROMEREGISTRY_CONTRACTID, &kNS_CHROMEREGISTRY_CID },
@@ -327,9 +332,15 @@ const mozilla::Module::ContractIDEntry kXPCOMContracts[] = {
   { nullptr }
 };
 #undef COMPONENT
+#undef COMPONENT_M
 
 const mozilla::Module kXPCOMModule = {
-  mozilla::Module::kVersion, kXPCOMCIDEntries, kXPCOMContracts
+  mozilla::Module::kVersion, kXPCOMCIDEntries, kXPCOMContracts,
+  nullptr,
+  nullptr,
+  nullptr,
+  nullptr,
+  Module::ALLOW_IN_GPU_PROCESS
 };
 
 // gDebug will be freed during shutdown.
@@ -473,6 +484,8 @@ TimeSinceProcessCreation()
   bool ignore;
   return (TimeStamp::Now() - TimeStamp::ProcessCreation(ignore)).ToMilliseconds();
 }
+
+static bool sInitializedJS = false;
 
 // Note that on OSX, aBinDirectory will point to .app/Contents/Resources/browser
 EXPORT_XPCOM_API(nsresult)
@@ -709,6 +722,7 @@ NS_InitXPCOM2(nsIServiceManager** aResult,
   if (jsInitFailureReason) {
     NS_RUNTIMEABORT(jsInitFailureReason);
   }
+  sInitializedJS = true;
 
   rv = nsComponentManagerImpl::gComponentManager->Init();
   if (NS_FAILED(rv)) {
@@ -782,6 +796,47 @@ NS_InitXPCOM2(nsIServiceManager** aResult,
   return NS_OK;
 }
 
+EXPORT_XPCOM_API(nsresult)
+NS_InitMinimalXPCOM()
+{
+  mozPoisonValueInit();
+  NS_SetMainThread();
+  mozilla::TimeStamp::Startup();
+  NS_LogInit();
+  NS_InitAtomTable();
+  mozilla::LogModule::Init();
+
+  char aLocal;
+  profiler_init(&aLocal);
+
+  nsresult rv = nsThreadManager::get()->Init();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  // Set up the timer globals/timer thread.
+  rv = nsTimerImpl::Startup();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  // Create the Component/Service Manager
+  nsComponentManagerImpl::gComponentManager = new nsComponentManagerImpl();
+  NS_ADDREF(nsComponentManagerImpl::gComponentManager);
+
+  rv = nsComponentManagerImpl::gComponentManager->Init();
+  if (NS_FAILED(rv)) {
+    NS_RELEASE(nsComponentManagerImpl::gComponentManager);
+    return rv;
+  }
+
+  // Global cycle collector initialization.
+  if (!nsCycleCollector_init()) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  return NS_OK;
+}
 
 //
 // NS_ShutdownXPCOM()
@@ -1003,8 +1058,11 @@ ShutdownXPCOM(nsIServiceManager* aServMgr)
   }
 #endif
 
-  // Shut down the JS engine.
-  JS_ShutDown();
+  if (sInitializedJS) {
+    // Shut down the JS engine.
+    JS_ShutDown();
+    sInitializedJS = false;
+  }
 
   // Release our own singletons
   // Do this _after_ shutting down the component manager, because the

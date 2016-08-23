@@ -3480,15 +3480,6 @@ function checkCallbackServiceLog() {
 // then calls doTestFinish to end the test.
 function waitForFilesInUse() {
   if (IS_WIN) {
-    if (isProcessRunning(FILE_UPDATER_BIN)) {
-      do_execute_soon(waitForFilesInUse);
-      return;
-    }
-    if (isProcessRunning(FILE_MAINTENANCE_SERVICE_INSTALLER_BIN)) {
-      do_execute_soon(waitForFilesInUse);
-      return;
-    }
-
     let appBin = getApplyDirFile(FILE_APP_BIN, true);
     let maintSvcInstaller = getApplyDirFile(FILE_MAINTENANCE_SERVICE_INSTALLER_BIN, true);
     let helper = getApplyDirFile("uninstall/helper.exe", true);

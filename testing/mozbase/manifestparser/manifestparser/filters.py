@@ -356,7 +356,12 @@ class pathprefix(InstanceFilter):
         for test in tests:
             for tp in self.paths:
                 tp = os.path.normpath(tp)
-                if not os.path.normpath(test['relpath']).startswith(tp):
+
+                path = test['relpath']
+                if os.path.isabs(tp):
+                    path = test['path']
+
+                if not os.path.normpath(path).startswith(tp):
                     continue
 
                 # any test path that points to a single file will be run no

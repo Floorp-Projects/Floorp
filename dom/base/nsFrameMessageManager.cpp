@@ -276,8 +276,13 @@ BuildClonedMessageData(typename BlobTraits<Flavor>::ConcreteContentManagerType* 
                        ClonedMessageData& aClonedData)
 {
   SerializedStructuredCloneBuffer& buffer = aClonedData.data();
-  buffer.data = aData.Data();
-  buffer.dataLength = aData.DataLength();
+  auto iter = aData.Data().Iter();
+  size_t size = aData.Data().Size();
+  bool success;
+  buffer.data = aData.Data().Borrow<js::SystemAllocPolicy>(iter, size, &success);
+  if (NS_WARN_IF(!success)) {
+    return false;
+  }
   aClonedData.identfiers().AppendElements(aData.PortIdentifiers());
 
   const nsTArray<RefPtr<BlobImpl>>& blobImpls = aData.BlobImpls();
@@ -325,7 +330,7 @@ UnpackClonedMessageData(const ClonedMessageData& aClonedData,
   const InfallibleTArray<ProtocolType*>& blobs = DataBlobs<Flavor>::Blobs(aClonedData);
   const InfallibleTArray<MessagePortIdentifier>& identifiers = aClonedData.identfiers();
 
-  aData.UseExternalData(buffer.data, buffer.dataLength);
+  aData.UseExternalData(buffer.data);
 
   aData.PortIdentifiers().AppendElements(identifiers);
 

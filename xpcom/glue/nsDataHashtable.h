@@ -9,6 +9,7 @@
 
 #include "nsHashKeys.h"
 #include "nsBaseHashtable.h"
+#include "mozilla/Maybe.h"
 
 /**
  * templated hashtable class maps keys to simple datatypes.
@@ -22,11 +23,35 @@ template<class KeyClass, class DataType>
 class nsDataHashtable
   : public nsBaseHashtable<KeyClass, DataType, DataType>
 {
+private:
+  typedef nsBaseHashtable<KeyClass, DataType, DataType> BaseClass;
+
 public:
+  using typename BaseClass::KeyType;
+  using typename BaseClass::EntryType;
+
   nsDataHashtable() {}
   explicit nsDataHashtable(uint32_t aInitLength)
-    : nsBaseHashtable<KeyClass, DataType, DataType>(aInitLength)
+    : BaseClass(aInitLength)
   {
+  }
+
+  /**
+   * Retrieve the value for a key and remove the corresponding entry at
+   * the same time.
+   *
+   * @param aKey the key to retrieve and remove
+   * @return the found value, or Nothing if no entry was found with the
+   *   given key.
+   */
+  mozilla::Maybe<DataType> GetAndRemove(KeyType aKey)
+  {
+    mozilla::Maybe<DataType> value;
+    if (EntryType* ent = this->GetEntry(aKey)) {
+      value.emplace(mozilla::Move(ent->mData));
+      this->RemoveEntry(ent);
+    }
+    return value;
   }
 };
 
