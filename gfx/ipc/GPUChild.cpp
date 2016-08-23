@@ -9,7 +9,7 @@
 #include "GPUProcessHost.h"
 #include "mozilla/gfx/gfxVars.h"
 #if defined(XP_WIN)
-# include "mozilla/gfx/DeviceManagerD3D11.h"
+# include "mozilla/gfx/DeviceManagerDx.h"
 #endif
 
 namespace mozilla {

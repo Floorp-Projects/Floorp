@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_gfx_thebes_DeviceManagerD3D11_h
-#define mozilla_gfx_thebes_DeviceManagerD3D11_h
+#ifndef mozilla_gfx_thebes_DeviceManagerDx_h
+#define mozilla_gfx_thebes_DeviceManagerDx_h
 
 #include "gfxPlatform.h"
 #include "gfxTelemetry.h"
@@ -31,6 +31,7 @@
 #endif
 
 struct ID3D11Device;
+struct IDirectDraw7;
 
 namespace mozilla {
 class ScopedGfxFeatureReporter;
@@ -38,21 +39,22 @@ class ScopedGfxFeatureReporter;
 namespace gfx {
 class FeatureState;
 
-class DeviceManagerD3D11 final
+class DeviceManagerDx final
 {
 public:
   static void Init();
   static void Shutdown();
 
-  DeviceManagerD3D11();
+  DeviceManagerDx();
 
-  static DeviceManagerD3D11* Get() {
+  static DeviceManagerDx* Get() {
     return sInstance;
   }
 
   RefPtr<ID3D11Device> GetCompositorDevice();
   RefPtr<ID3D11Device> GetContentDevice();
   RefPtr<ID3D11Device> CreateDecoderDevice();
+  IDirectDraw7* GetDirectDraw();
 
   unsigned GetCompositorFeatureLevel() const;
   bool TextureSharingWorks();
@@ -65,6 +67,7 @@ public:
   void ExportDeviceInfo(D3D11DeviceStatus* aOut);
 
   void ResetDevices();
+  void InitializeDirectDraw();
 
   // Call GetDeviceRemovedReason on each device until one returns
   // a failure.
@@ -98,7 +101,7 @@ private:
   void ReleaseD3D11();
 
 private:
-  static StaticAutoPtr<DeviceManagerD3D11> sInstance;
+  static StaticAutoPtr<DeviceManagerDx> sInstance;
 
   // This is assigned during device creation. Afterwards, it is released if
   // devices failed, and "forgotten" if devices succeeded (meaning, we leak
@@ -114,9 +117,12 @@ private:
   bool mCompositorDeviceSupportsVideo;
 
   Maybe<D3D11DeviceStatus> mDeviceStatus;
+
+  nsModuleHandle mDirectDrawDLL;
+  RefPtr<IDirectDraw7> mDirectDraw;
 };
 
 } // namespace gfx
 } // namespace mozilla
 
-#endif // mozilla_gfx_thebes_DeviceManagerD3D11_h
+#endif // mozilla_gfx_thebes_DeviceManagerDx_h

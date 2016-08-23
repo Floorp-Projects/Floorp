@@ -35,7 +35,7 @@
 
 #ifdef XP_WIN
 #include "DeviceManagerD3D9.h"
-#include "mozilla/gfx/DeviceManagerD3D11.h"
+#include "mozilla/gfx/DeviceManagerDx.h"
 #include "mozilla/layers/TextureD3D9.h"
 #include "mozilla/layers/TextureD3D11.h"
 #include "mozilla/layers/TextureDIB.h"
@@ -1044,7 +1044,7 @@ TextureClient::CreateForDrawing(TextureForwarder* aAllocator,
       (moz2DBackend == gfx::BackendType::DIRECT2D ||
        moz2DBackend == gfx::BackendType::DIRECT2D1_1 ||
        (!!(aAllocFlags & ALLOC_FOR_OUT_OF_BAND_CONTENT) &&
-        DeviceManagerD3D11::Get()->GetContentDevice())) &&
+        DeviceManagerDx::Get()->GetContentDevice())) &&
       aSize.width <= maxTextureSize &&
       aSize.height <= maxTextureSize)
   {
@@ -1148,7 +1148,7 @@ TextureClient::CreateFromSurface(TextureForwarder* aAllocator,
     (moz2DBackend == gfx::BackendType::DIRECT2D ||
       moz2DBackend == gfx::BackendType::DIRECT2D1_1 ||
       (!!(aAllocFlags & ALLOC_FOR_OUT_OF_BAND_CONTENT) &&
-       DeviceManagerD3D11::Get()->GetContentDevice())) &&
+       DeviceManagerDx::Get()->GetContentDevice())) &&
     size.width <= maxTextureSize &&
     size.height <= maxTextureSize)
   {

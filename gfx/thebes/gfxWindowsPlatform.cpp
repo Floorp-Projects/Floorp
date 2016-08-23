@@ -72,7 +72,7 @@
 #include "VsyncSource.h"
 #include "DriverCrashGuard.h"
 #include "mozilla/dom/ContentParent.h"
-#include "mozilla/gfx/DeviceManagerD3D11.h"
+#include "mozilla/gfx/DeviceManagerDx.h"
 #include "D3D11Checks.h"
 
 using namespace mozilla;
@@ -352,7 +352,7 @@ gfxWindowsPlatform::~gfxWindowsPlatform()
   mozilla::gfx::Factory::D2DCleanup();
 
   DeviceManagerD3D9::Shutdown();
-  DeviceManagerD3D11::Shutdown();
+  DeviceManagerDx::Shutdown();
 
   /*
    * Uninitialize COM
@@ -382,7 +382,7 @@ gfxWindowsPlatform::InitAcceleration()
   mFeatureLevels.AppendElement(D3D_FEATURE_LEVEL_10_0);
   mFeatureLevels.AppendElement(D3D_FEATURE_LEVEL_9_3);
 
-  DeviceManagerD3D11::Init();
+  DeviceManagerDx::Init();
   DeviceManagerD3D9::Init();
 
   InitializeConfig();
@@ -399,7 +399,7 @@ gfxWindowsPlatform::InitAcceleration()
 bool
 gfxWindowsPlatform::CanUseHardwareVideoDecoding()
 {
-  DeviceManagerD3D11* dm = DeviceManagerD3D11::Get();
+  DeviceManagerDx* dm = DeviceManagerDx::Get();
   if (!gfxPrefs::LayersPreferD3D9() && !dm->TextureSharingWorks()) {
     return false;
   }
@@ -457,7 +457,7 @@ gfxWindowsPlatform::HandleDeviceReset()
   }
 
   // Remove devices and adapters.
-  DeviceManagerD3D11::Get()->ResetDevices();
+  DeviceManagerDx::Get()->ResetDevices();
 
   // Reset local state. Note: we leave feature status variables as-is. They
   // will be recomputed by InitializeDevices().
@@ -956,7 +956,7 @@ gfxWindowsPlatform::DidRenderingDeviceReset(DeviceResetReason* aResetReason)
     *aResetReason = DeviceResetReason::OK;
   }
 
-  if (DeviceManagerD3D11::Get()->GetAnyDeviceRemovedReason(&mDeviceResetReason)) {
+  if (DeviceManagerDx::Get()->GetAnyDeviceRemovedReason(&mDeviceResetReason)) {
     mHasDeviceReset = true;
     if (aResetReason) {
       *aResetReason = mDeviceResetReason;
@@ -1404,6 +1404,15 @@ InitializeANGLEConfig()
 }
 
 void
+gfxWindowsPlatform::InitializeDirectDrawConfig()
+{
+  MOZ_ASSERT(XRE_IsParentProcess());
+
+  FeatureState& ddraw = gfxConfig::GetFeature(Feature::DIRECT_DRAW);
+  ddraw.EnableByDefault();
+}
+
+void
 gfxWindowsPlatform::InitializeConfig()
 {
   if (XRE_IsParentProcess()) {
@@ -1566,7 +1575,7 @@ gfxWindowsPlatform::InitializeD3D11()
     return;
   }
 
-  DeviceManagerD3D11* dm = DeviceManagerD3D11::Get();
+  DeviceManagerDx* dm = DeviceManagerDx::Get();
   if (XRE_IsParentProcess()) {
     if (!dm->CreateCompositorDevices()) {
       return;
@@ -1615,7 +1624,7 @@ gfxWindowsPlatform::InitializeD2D()
 
   FeatureState& d2d1 = gfxConfig::GetFeature(Feature::DIRECT2D);
 
-  DeviceManagerD3D11* dm = DeviceManagerD3D11::Get();
+  DeviceManagerDx* dm = DeviceManagerDx::Get();
 
   // We don't know this value ahead of time, but the user can force-override
   // it, so we use Disable instead of SetFailed.
@@ -2002,7 +2011,7 @@ gfxWindowsPlatform::ImportGPUDeviceData(const mozilla::gfx::GPUDeviceData& aData
   gfxConfig::ImportChange(Feature::D3D11_COMPOSITING, aData.d3d11Compositing());
   gfxConfig::ImportChange(Feature::D3D9_COMPOSITING, aData.d3d9Compositing());
 
-  DeviceManagerD3D11* dm = DeviceManagerD3D11::Get();
+  DeviceManagerDx* dm = DeviceManagerDx::Get();
   if (gfxConfig::IsEnabled(Feature::D3D11_COMPOSITING)) {
     dm->ImportDeviceInfo(aData.d3d11Device());
   } else {
@@ -2038,7 +2047,7 @@ gfxWindowsPlatform::ImportContentDeviceData(const mozilla::gfx::ContentDeviceDat
   gfxConfig::Inherit(Feature::DIRECT2D, prefs.useD2D1());
 
   if (gfxConfig::IsEnabled(Feature::D3D11_COMPOSITING)) {
-    DeviceManagerD3D11* dm = DeviceManagerD3D11::Get();
+    DeviceManagerDx* dm = DeviceManagerDx::Get();
     dm->ImportDeviceInfo(aData.d3d11());
   }
 }
@@ -2057,7 +2066,7 @@ gfxWindowsPlatform::BuildContentDeviceData(ContentDeviceData* aOut)
   aOut->prefs().useD2D1() = gfxConfig::GetValue(Feature::DIRECT2D);
 
   if (d3d11.IsEnabled()) {
-    DeviceManagerD3D11* dm = DeviceManagerD3D11::Get();
+    DeviceManagerDx* dm = DeviceManagerDx::Get();
     dm->ExportDeviceInfo(&aOut->d3d11());
   }
 }
@@ -2065,7 +2074,7 @@ gfxWindowsPlatform::BuildContentDeviceData(ContentDeviceData* aOut)
 bool
 gfxWindowsPlatform::SupportsPluginDirectDXGIDrawing()
 {
-  DeviceManagerD3D11* dm = DeviceManagerD3D11::Get();
+  DeviceManagerDx* dm = DeviceManagerDx::Get();
   if (!dm->GetContentDevice() || !dm->TextureSharingWorks()) {
     return false;
   }

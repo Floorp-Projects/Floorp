@@ -481,6 +481,10 @@ public:
 
   virtual void ForcePresent() { }
 
+  virtual bool IsPendingComposite() { return false; }
+
+  virtual void FinishPendingComposite() {}
+
   widget::CompositorWidget* GetWidget() const { return mWidget; }
 
   virtual bool HasImageHostOverlays() { return false; }

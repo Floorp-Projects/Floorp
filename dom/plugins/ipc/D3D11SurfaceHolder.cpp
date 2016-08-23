@@ -5,7 +5,7 @@
 #include "nsDebug.h"
 #include "D3D11SurfaceHolder.h"
 #include "mozilla/gfx/2D.h"
-#include "mozilla/gfx/DeviceManagerD3D11.h"
+#include "mozilla/gfx/DeviceManagerDx.h"
 #include "mozilla/layers/TextureD3D11.h"
 #include <d3d11.h>
 
@@ -18,7 +18,7 @@ using namespace mozilla::layers;
 D3D11SurfaceHolder::D3D11SurfaceHolder(ID3D11Texture2D* back,
                                        SurfaceFormat format,
                                        const IntSize& size)
- : mDevice11(DeviceManagerD3D11::Get()->GetContentDevice()),
+ : mDevice11(DeviceManagerDx::Get()->GetContentDevice()),
    mBack(back),
    mFormat(format),
    mSize(size)
@@ -33,7 +33,7 @@ bool
 D3D11SurfaceHolder::IsValid()
 {
   // If a TDR occurred, platform devices will be recreated.
-  if (DeviceManagerD3D11::Get()->GetContentDevice() != mDevice11) {
+  if (DeviceManagerDx::Get()->GetContentDevice() != mDevice11) {
      return false;
   }
   return true;
