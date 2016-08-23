@@ -81,7 +81,7 @@ function test() {
                     getCollectionForSchema("org.gnome.desktop.background");
     todo(false, "This test doesn't work when GSettings is available");
     return;
-  } catch(e) { }
+  } catch (e) { }
 
   gBrowser.selectedTab = gBrowser.addTab();
   gBrowser.selectedBrowser.addEventListener("load", onPageLoad, true);

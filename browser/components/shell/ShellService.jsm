@@ -90,6 +90,7 @@ let ShellServiceInternal = {
     if (this.shellService) {
       return this.shellService.isDefaultBrowser(startupCheck, forAllTypes);
     }
+    return false;
   }
 };
 
