@@ -26,9 +26,6 @@ function testConversion(resultType, opcode, paramType, op, expect) {
   let formerTestMode = getJitCompilerOptions()['wasm.test-mode'];
   setJitCompilerOption('wasm.test-mode', 1);
   for (var bad of ['i32', 'f32', 'f64', 'i64']) {
-      if (bad === 'i64' && !hasI64())
-          continue;
-
       if (bad != resultType) {
           assertErrorMessage(
               () => wasmEvalText(`(module (func (param ${paramType}) (result ${bad}) (${resultType}.${opcode}/${paramType} (get_local 0))))`),
@@ -49,9 +46,6 @@ function testConversion(resultType, opcode, paramType, op, expect) {
 }
 
 function testTrap(resultType, opcode, paramType, op, expect) {
-    if (resultType === 'i64' && !hasI64())
-        return;
-
     let func = wasmEvalText(`(module
         (func
             (param ${paramType})
@@ -66,7 +60,7 @@ function testTrap(resultType, opcode, paramType, op, expect) {
     assertErrorMessage(() => func(jsify(op)), Error, expectedError);
 }
 
-if (hasI64()) {
+{
     setJitCompilerOption('wasm.test-mode', 1);
 
     testConversion('i32', 'wrap', 'i64', '0x100000028', 40);
@@ -213,14 +207,6 @@ if (hasI64()) {
     testConversion('f64', 'reinterpret', 'i64', "0x40440ccccccccca0", 40.09999999999968);
 
     setJitCompilerOption('wasm.test-mode', 0);
-} else {
-    // Sleeper test: once i64 works on more platforms, remove this if-else.
-    try {
-        testConversion('i32', 'wrap', 'i64', 4294967336, 40);
-        throw new Error('hasI64() in wasm.js needs an update!');
-    } catch(e) {
-        assertEq(e.toString().indexOf("NYI on this platform") >= 0, true);
-    }
 }
 
 // i32.trunc_s* : all values in ] -2**31 - 1; 2**31 [ are acceptable.
