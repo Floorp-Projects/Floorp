@@ -490,7 +490,6 @@
 @RESPATH@/browser/components/360seProfileMigrator.js
 @RESPATH@/browser/components/EdgeProfileMigrator.js
 @RESPATH@/browser/components/IEProfileMigrator.js
-@RESPATH@/browser/components/SafariProfileMigrator.js
 #endif
 #ifdef XP_MACOSX
 @RESPATH@/browser/components/SafariProfileMigrator.js
@@ -723,7 +722,7 @@
 @RESPATH@/res/fonts/*
 @RESPATH@/res/dtd/*
 @RESPATH@/res/html/*
-#if defined(XP_MACOSX) || defined(XP_WIN)
+#if defined(XP_MACOSX)
 ; For SafariProfileMigrator.js.
 @RESPATH@/res/langGroups.properties
 #endif
