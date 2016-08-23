@@ -64,11 +64,15 @@ function cleanUp() {
   delFile("safebrowsing/test-block-simple.pset");
   delFile("safebrowsing/test-track-simple.pset");
   delFile("safebrowsing/test-trackwhite-simple.pset");
+  delFile("safebrowsing/moz-phish-simple.sbstore");
+  delFile("safebrowsing/moz-phish-simple.pset");
   delFile("testLarge.pset");
   delFile("testNoDelta.pset");
 }
 
+// Update uses allTables by default
 var allTables = "test-phish-simple,test-malware-simple,test-unwanted-simple,test-track-simple,test-trackwhite-simple,test-block-simple";
+var mozTables = "moz-phish-simple";
 
 var dbservice = Cc["@mozilla.org/url-classifier/dbservice;1"].getService(Ci.nsIUrlClassifierDBService);
 var streamUpdater = Cc["@mozilla.org/url-classifier/streamupdater;1"]
@@ -127,6 +131,10 @@ function buildUnwantedUpdate(chunks, hashSize) {
 
 function buildBlockedUpdate(chunks, hashSize) {
   return buildUpdate({"test-block-simple" : chunks}, hashSize);
+}
+
+function buildMozPhishingUpdate(chunks, hashSize) {
+  return buildUpdate({"moz-phish-simple" : chunks}, hashSize);
 }
 
 function buildBareUpdate(chunks, hashSize) {
@@ -216,15 +224,16 @@ tableData : function(expectedTables, cb)
     });
 },
 
-checkUrls: function(urls, expected, cb)
+checkUrls: function(urls, expected, cb, useMoz = false)
 {
   // work with a copy of the list.
   urls = urls.slice(0);
   var doLookup = function() {
     if (urls.length > 0) {
+      var tables = useMoz ? mozTables : allTables;
       var fragment = urls.shift();
       var principal = secMan.createCodebasePrincipal(iosvc.newURI("http://" + fragment, null, null), {});
-      dbservice.lookup(principal, allTables,
+      dbservice.lookup(principal, tables,
                                 function(arg) {
                                   do_check_eq(expected, arg);
                                   doLookup();
@@ -259,6 +268,11 @@ unwantedUrlsExist: function(urls, cb)
 blockedUrlsExist: function(urls, cb)
 {
   this.checkUrls(urls, 'test-block-simple', cb);
+},
+
+mozPhishingUrlsExist: function(urls, cb)
+{
+  this.checkUrls(urls, 'moz-phish-simple', cb, true);
 },
 
 subsDontExist: function(urls, cb)
