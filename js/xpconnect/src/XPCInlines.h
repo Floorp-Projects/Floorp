@@ -321,7 +321,7 @@ XPCNativeSet::FindMember(jsid name, XPCNativeMember** pMember,
 
 inline bool
 XPCNativeSet::FindMember(jsid name, XPCNativeMember** pMember,
-                         XPCNativeInterface** pInterface) const
+                         RefPtr<XPCNativeInterface>* pInterface) const
 {
     uint16_t index;
     if (!FindMember(name, pMember, &index))
@@ -333,19 +333,18 @@ XPCNativeSet::FindMember(jsid name, XPCNativeMember** pMember,
 inline bool
 XPCNativeSet::FindMember(JS::HandleId name,
                          XPCNativeMember** pMember,
-                         XPCNativeInterface** pInterface,
+                         RefPtr<XPCNativeInterface>* pInterface,
                          XPCNativeSet* protoSet,
                          bool* pIsLocal) const
 {
     XPCNativeMember* Member;
-    XPCNativeInterface* Interface;
+    RefPtr<XPCNativeInterface> Interface;
     XPCNativeMember* protoMember;
 
     if (!FindMember(name, &Member, &Interface))
         return false;
 
     *pMember = Member;
-    *pInterface = Interface;
 
     *pIsLocal =
         !Member ||
@@ -354,6 +353,8 @@ XPCNativeSet::FindMember(JS::HandleId name,
          !protoSet->MatchesSetUpToInterface(this, Interface) &&
          (!protoSet->FindMember(name, &protoMember, (uint16_t*)nullptr) ||
           protoMember != Member));
+
+    *pInterface = Interface.forget();
 
     return true;
 }

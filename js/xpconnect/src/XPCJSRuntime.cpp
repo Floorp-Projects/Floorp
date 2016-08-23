@@ -845,17 +845,6 @@ XPCJSRuntime::FinalizeCallback(JSFreeOp* fop,
                 }
             }
 
-            for (auto i = self->mIID2NativeInterfaceMap->Iter(); !i.Done(); i.Next()) {
-                auto entry = static_cast<IID2NativeInterfaceMap::Entry*>(i.Get());
-                XPCNativeInterface* iface = entry->value;
-                if (iface->IsMarked()) {
-                    iface->Unmark();
-                } else if (doSweep) {
-                    XPCNativeInterface::DestroyInstance(iface);
-                    i.Remove();
-                }
-            }
-
 #ifdef DEBUG
             XPCWrappedNativeScope::ASSERT_NoInterfaceSetsAreMarked();
 #endif
