@@ -104,11 +104,22 @@ MediaEngineDefaultVideoSource::Allocate(const dom::MediaTrackConstraints &aConst
   }
 
 
+  // emulator debug is very, very slow; reduce load on it with smaller/slower fake video
   mOpts = aPrefs;
   mOpts.mWidth = c.mWidth.Get(aPrefs.mWidth ? aPrefs.mWidth :
-                              MediaEngine::DEFAULT_43_VIDEO_WIDTH);
+#ifdef DEBUG
+                              MediaEngine::DEFAULT_43_VIDEO_WIDTH/2
+#else
+                              MediaEngine::DEFAULT_43_VIDEO_WIDTH
+#endif
+                              );
   mOpts.mHeight = c.mHeight.Get(aPrefs.mHeight ? aPrefs.mHeight :
-                                MediaEngine::DEFAULT_43_VIDEO_HEIGHT);
+#ifdef DEBUG
+                                MediaEngine::DEFAULT_43_VIDEO_HEIGHT/2
+#else
+                                MediaEngine::DEFAULT_43_VIDEO_HEIGHT
+#endif
+                                );
   mState = kAllocated;
   *aOutHandle = nullptr;
   return NS_OK;
@@ -178,8 +189,8 @@ MediaEngineDefaultVideoSource::Start(SourceMediaStream* aStream, TrackID aID,
   mTrackID = aID;
 
   // Start timer for subsequent frames
-#if defined(MOZ_WIDGET_GONK) && defined(DEBUG)
-// B2G emulator debug is very, very slow and has problems dealing with realtime audio inputs
+#if (defined(MOZ_WIDGET_GONK) || defined(MOZ_WIDGET_ANDROID)) && defined(DEBUG)
+// emulator debug is very, very slow and has problems dealing with realtime audio inputs
   mTimer->InitWithCallback(this, (1000 / mOpts.mFPS)*10, nsITimer::TYPE_REPEATING_SLACK);
 #else
   mTimer->InitWithCallback(this, 1000 / mOpts.mFPS, nsITimer::TYPE_REPEATING_SLACK);
@@ -467,8 +478,10 @@ MediaEngineDefaultAudioSource::Start(SourceMediaStream* aStream, TrackID aID,
   mLastNotify = TimeStamp::Now();
 
   // 1 Audio frame per 10ms
+  // We'd like to do this for Android Debug as well, but that breaks tests that check for
+  // audio frequency data.
 #if defined(MOZ_WIDGET_GONK) && defined(DEBUG)
-// B2G emulator debug is very, very slow and has problems dealing with realtime audio inputs
+// emulator debug is very, very slow and has problems dealing with realtime audio inputs
   mTimer->InitWithCallback(this, DEFAULT_AUDIO_TIMER_MS*10,
                            nsITimer::TYPE_REPEATING_PRECISE_CAN_SKIP);
 #else

@@ -8,12 +8,14 @@
 #define nsTHashtable_h__
 
 #include "PLDHashTable.h"
+#include "nsPointerHashKeys.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/fallible.h"
 #include "mozilla/MemoryChecking.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Move.h"
+#include "mozilla/OperatorNewExtensions.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/TypeTraits.h"
 
@@ -391,7 +393,7 @@ nsTHashtable<EntryType>::s_CopyEntry(PLDHashTable* aTable,
   EntryType* fromEntry =
     const_cast<EntryType*>(static_cast<const EntryType*>(aFrom));
 
-  new (aTo) EntryType(mozilla::Move(*fromEntry));
+  new (mozilla::KnownNotNull, aTo) EntryType(mozilla::Move(*fromEntry));
 
   fromEntry->~EntryType();
 }
@@ -409,7 +411,7 @@ void
 nsTHashtable<EntryType>::s_InitEntry(PLDHashEntryHdr* aEntry,
                                      const void* aKey)
 {
-  new (aEntry) EntryType(static_cast<KeyTypePointer>(aKey));
+  new (mozilla::KnownNotNull, aEntry) EntryType(static_cast<KeyTypePointer>(aKey));
 }
 
 class nsCycleCollectionTraversalCallback;
@@ -433,5 +435,143 @@ ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
     ImplCycleCollectionTraverse(aCallback, *entry, aName, aFlags);
   }
 }
+
+/**
+ * For nsTHashtable with pointer entries, we can have a template specialization
+ * that layers a typed T* interface on top of a common implementation that
+ * works internally with void pointers.  This arrangement saves code size and
+ * might slightly improve performance as well.
+ */
+
+/**
+ * We need a separate entry type class for the inheritance structure of the
+ * nsTHashtable specialization below; nsVoidPtrHashKey is simply typedefed to a
+ * specialization of nsPtrHashKey, and the formulation:
+ *
+ * class nsTHashtable<nsPtrHashKey<T>> : protected nsTHashtable<nsPtrHashKey<const void>
+ *
+ * is not going to turn out very well, since we'd wind up with an nsTHashtable
+ * instantiation that is its own base class.
+ */
+namespace detail {
+
+class VoidPtrHashKey : public nsPtrHashKey<const void>
+{
+  typedef nsPtrHashKey<const void> Base;
+
+public:
+  explicit VoidPtrHashKey(const void* aKey) : Base(aKey) {}
+};
+
+} // namespace detail
+
+/**
+ * See the main nsTHashtable documentation for descriptions of this class's
+ * methods.
+ */
+template<typename T>
+class nsTHashtable<nsPtrHashKey<T>> : protected nsTHashtable<::detail::VoidPtrHashKey>
+{
+  typedef nsTHashtable<::detail::VoidPtrHashKey> Base;
+  typedef nsPtrHashKey<T> EntryType;
+
+  // We play games with reinterpret_cast'ing between these two classes, so
+  // try to ensure that playing said games is reasonable.
+  static_assert(sizeof(nsPtrHashKey<T>) == sizeof(::detail::VoidPtrHashKey),
+                "hash keys must be the same size");
+
+  nsTHashtable(const nsTHashtable& aOther) = delete;
+  nsTHashtable& operator=(const nsTHashtable& aOther) = delete;
+
+public:
+  nsTHashtable() = default;
+  explicit nsTHashtable(uint32_t aInitLength)
+    : Base(aInitLength)
+  {}
+
+  ~nsTHashtable() = default;
+
+  nsTHashtable(nsTHashtable&&) = default;
+
+  /* Wrapper functions */
+  using Base::GetGeneration;
+  using Base::Count;
+  using Base::IsEmpty;
+  using Base::Clear;
+
+  using Base::ShallowSizeOfExcludingThis;
+  using Base::ShallowSizeOfIncludingThis;
+
+#ifdef DEBUG
+  using Base::MarkImmutable;
+#endif
+
+  EntryType* GetEntry(T* aKey) const
+  {
+    return reinterpret_cast<EntryType*>(Base::GetEntry(aKey));
+  }
+
+  bool Contains(T* aKey) const
+  {
+    return Base::Contains(aKey);
+  }
+
+  EntryType* PutEntry(T* aKey)
+  {
+    return reinterpret_cast<EntryType*>(Base::PutEntry(aKey));
+  }
+
+  MOZ_MUST_USE
+  EntryType* PutEntry(T* aKey, const mozilla::fallible_t&)
+  {
+    return reinterpret_cast<EntryType*>(
+      Base::PutEntry(aKey, mozilla::fallible));
+  }
+
+  void RemoveEntry(T* aKey)
+  {
+    Base::RemoveEntry(aKey);
+  }
+
+  void RemoveEntry(EntryType* aEntry)
+  {
+    Base::RemoveEntry(reinterpret_cast<::detail::VoidPtrHashKey*>(aEntry));
+  }
+
+  void RawRemoveEntry(EntryType* aEntry)
+  {
+    Base::RawRemoveEntry(reinterpret_cast<::detail::VoidPtrHashKey*>(aEntry));
+  }
+
+  class Iterator : public Base::Iterator
+  {
+  public:
+    typedef nsTHashtable::Base::Iterator Base;
+
+    explicit Iterator(nsTHashtable* aTable) : Base(aTable) {}
+    Iterator(Iterator&& aOther) : Base(mozilla::Move(aOther)) {}
+    ~Iterator() = default;
+
+    EntryType* Get() const { return reinterpret_cast<EntryType*>(Base::Get()); }
+
+  private:
+    Iterator() = delete;
+    Iterator(const Iterator&) = delete;
+    Iterator& operator=(const Iterator&) = delete;
+    Iterator& operator=(Iterator&&) = delete;
+  };
+
+  Iterator Iter() { return Iterator(this); }
+
+  Iterator ConstIter() const
+  {
+    return Iterator(const_cast<nsTHashtable*>(this));
+  }
+
+  void SwapElements(nsTHashtable& aOther)
+  {
+    Base::SwapElements(aOther);
+  }
+};
 
 #endif // nsTHashtable_h__

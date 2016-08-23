@@ -28,7 +28,7 @@ interface nsIQuotaManagerService : nsISupports
    * Note:  Origin usage here represents total usage of an origin. However,
    *        group usage here represents only non-persistent usage of a group.
    */
-  nsIQuotaUsageRequest
+  [must_use] nsIQuotaUsageRequest
   getUsageForPrincipal(in nsIPrincipal aPrincipal,
                        in nsIQuotaUsageCallback aCallback,
                        [optional] in boolean aGetGroupUsage);
@@ -41,7 +41,7 @@ interface nsIQuotaManagerService : nsISupports
    * If the dom.quotaManager.testing preference is not true the call will be
    * a no-op.
    */
-  nsIQuotaRequest
+  [must_use] nsIQuotaRequest
   clear();
 
   /**
@@ -51,7 +51,7 @@ interface nsIQuotaManagerService : nsISupports
    * @param aPrincipal
    *        A principal for the origin whose storages are to be cleared.
    */
-  nsIQuotaRequest
+  [must_use] nsIQuotaRequest
   clearStoragesForPrincipal(in nsIPrincipal aPrincipal,
                             [optional] in ACString aPersistenceType);
 
@@ -64,6 +64,6 @@ interface nsIQuotaManagerService : nsISupports
    * If the dom.quotaManager.testing preference is not true the call will be
    * a no-op.
    */
-  nsIQuotaRequest
+  [must_use] nsIQuotaRequest
   reset();
 };

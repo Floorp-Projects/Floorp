@@ -42,7 +42,7 @@ CompositorD3D9::Initialize(nsCString* const out_failureReason)
 {
   ScopedGfxFeatureReporter reporter("D3D9 Layers");
 
-  mDeviceManager = gfxWindowsPlatform::GetPlatform()->GetD3D9DeviceManager();
+  mDeviceManager = DeviceManagerD3D9::Get();
   if (!mDeviceManager) {
     *out_failureReason = "FEATURE_FAILURE_D3D9_DEVICE_MANAGER";
     return false;
@@ -648,7 +648,7 @@ CompositorD3D9::Ready()
                "Shouldn't have any render targets around, they must be released before our device");
   mSwapChain = nullptr;
 
-  mDeviceManager = gfxWindowsPlatform::GetPlatform()->GetD3D9DeviceManager();
+  mDeviceManager = DeviceManagerD3D9::Get();
   if (!mDeviceManager) {
     FailedToResetDevice();
     mParent->InvalidateRemoteLayers();

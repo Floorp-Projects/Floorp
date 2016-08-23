@@ -132,17 +132,21 @@ private:
 class DeviceManagerD3D9 final
 {
 public:
-  DeviceManagerD3D9();
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(DeviceManagerD3D9)
 
   /**
-   * Initialises the device manager, the underlying device, and everything else
-   * the manager needs.
-   * Returns true if initialisation succeeds, false otherwise.
-   * Note that if initisalisation fails, you cannot try again - you must throw
-   * away the DeviceManagerD3D9 and create a new one.
+   * Setup or tear down static resources needed for D3D9.
    */
-  bool Init();
+  static void Init();
+  static void Shutdown();
+
+  /**
+   * Static accessors and helpers for accessing the global DeviceManagerD3D9
+   * instance.
+   */
+  static RefPtr<DeviceManagerD3D9> Get();
+  static RefPtr<IDirect3DDevice9> GetDevice();
+  static void OnDeviceManagerDestroy(DeviceManagerD3D9* aDeviceManager);
 
   /**
    * Sets up the render state for the device for layer rendering.
@@ -216,7 +220,18 @@ public:
 private:
   friend class SwapChainD3D9;
 
+  DeviceManagerD3D9();
   ~DeviceManagerD3D9();
+
+  /**
+   * Initialises the device manager, the underlying device, and everything else
+   * the manager needs.
+   * Returns true if initialisation succeeds, false otherwise.
+   * Note that if initisalisation fails, you cannot try again - you must throw
+   * away the DeviceManagerD3D9 and create a new one.
+   */
+  bool Initialize();
+
   void DestroyDevice();
 
   /**

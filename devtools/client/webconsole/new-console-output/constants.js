@@ -44,7 +44,10 @@ const chromeRDPEnums = {
     // Undocumented in Chrome RDP, but is used for evaluation results.
     RESULT: "result",
     // Undocumented in Chrome RDP, but is used for input.
-    COMMAND: "command"
+    COMMAND: "command",
+    // Undocumented in Chrome RDP, but is used for messages that should not
+    // output anything (e.g. `console.time()` calls).
+    NULL_MESSAGE: "nullMessage",
   },
   MESSAGE_LEVEL: {
     LOG: "log",

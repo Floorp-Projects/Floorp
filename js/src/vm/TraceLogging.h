@@ -10,7 +10,6 @@
 #include "mozilla/GuardObjects.h"
 
 #include "jsalloc.h"
-#include "jslock.h"
 
 #include "js/HashTable.h"
 #include "js/TypeDecls.h"

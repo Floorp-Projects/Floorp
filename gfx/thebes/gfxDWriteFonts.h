@@ -41,10 +41,6 @@ public:
 
     bool IsValid() const;
 
-    virtual gfxFloat GetAdjustedSize() const override {
-        return mAdjustedSize;
-    }
-
     IDWriteFontFace *GetFontFace();
 
     /* override Measure to add padding for antialiasing */

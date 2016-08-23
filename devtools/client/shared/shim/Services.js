@@ -19,128 +19,10 @@ const NS_PREFBRANCH_PREFCHANGE_TOPIC_ID = "nsPref:changed";
 const PREFIX = "Services.prefs:";
 
 /**
- * Create a new preference object.
- *
- * @param {PrefBranch} branch the branch holding this preference
- * @param {String} name the base name of this preference
- * @param {String} fullName the fully-qualified name of this preference
- */
-function Preference(branch, name, fullName) {
-  this.branch = branch;
-  this.name = name;
-  this.fullName = fullName;
-  this.defaultValue = null;
-  this.hasUserValue = false;
-  this.userValue = null;
-  this.type = null;
-}
-
-Preference.prototype = {
-  /**
-   * Return this preference's current value.
-   *
-   * @return {Any} The current value of this preference.  This may
-   *         return a string, a number, or a boolean depending on the
-   *         preference's type.
-   */
-  get: function () {
-    if (this.hasUserValue) {
-      return this.userValue;
-    }
-    return this.defaultValue;
-  },
-
-  /**
-   * Set the preference's value.  The new value is assumed to be a
-   * user value.  After setting the value, this function emits a
-   * change notification.
-   *
-   * @param {Any} value the new value
-   */
-  set: function (value) {
-    if (!this.hasUserValue || value !== this.userValue) {
-      this.userValue = value;
-      this.hasUserValue = true;
-      this.saveAndNotify();
-    }
-  },
-
-  /**
-   * Set the default value for this preference, and emit a
-   * notification if this results in a visible change.
-   *
-   * @param {Any} value the new default value
-   */
-  setDefault: function (value) {
-    if (this.defaultValue !== value) {
-      this.defaultValue = value;
-      if (!this.hasUserValue) {
-        this.saveAndNotify();
-      }
-    }
-  },
-
-  /**
-   * If this preference has a user value, clear it.  If a change was
-   * made, emit a change notification.
-   */
-  clearUserValue: function () {
-    if (this.hasUserValue) {
-      this.userValue = null;
-      this.hasUserValue = false;
-      this.saveAndNotify();
-    }
-  },
-
-  /**
-   * Helper function to write the preference's value to local storage
-   * and then emit a change notification.
-   */
-  saveAndNotify: function () {
-    let store = {
-      type: this.type,
-      defaultValue: this.defaultValue,
-      hasUserValue: this.hasUserValue,
-      userValue: this.userValue,
-    };
-
-    localStorage.setItem(PREFIX + this.fullName, JSON.stringify(store));
-    this.branch._notify(this.name);
-  },
-
-  /**
-   * Change this preference's value without writing it back to local
-   * storage.  This is used to handle changes to local storage that
-   * were made externally.
-   *
-   * @param {Number} type one of the PREF_* values
-   * @param {Any} userValue the user value to use if the pref does not exist
-   * @param {Any} defaultValue the default value to use if the pref
-   *        does not exist
-   * @param {Boolean} hasUserValue if a new pref is created, whether
-   *        the default value is also a user value
-   * @param {Object} store the new value of the preference.  It should
-   *        be of the form {type, defaultValue, hasUserValue, userValue};
-   *        where |type| is one of the PREF_* type constants; |defaultValue|
-   *        and |userValue| are the default and user values, respectively;
-   *        and |hasUserValue| is a boolean indicating whether the user value
-   *        is valid
-   */
-  storageUpdated: function (type, userValue, hasUserValue, defaultValue) {
-    this.type = type;
-    this.defaultValue = defaultValue;
-    this.hasUserValue = hasUserValue;
-    this.userValue = userValue;
-    // There's no need to write this back to local storage, since it
-    // came from there; and this avoids infinite event loops.
-    this.branch._notify(this.name);
-  },
-};
-
-/**
  * Create a new preference branch.  This object conforms largely to
  * nsIPrefBranch and nsIPrefService, though it only implements the
- * subset needed by devtools.
+ * subset needed by devtools.  A preference branch can hold child
+ * preferences while also holding a preference value itself.
  *
  * @param {PrefBranch} parent the parent branch, or null for the root
  *        branch.
@@ -153,6 +35,12 @@ function PrefBranch(parent, name, fullName) {
   this._fullName = fullName;
   this._observers = {};
   this._children = {};
+
+  // Properties used when this branch has a value as well.
+  this._defaultValue = null;
+  this._hasUserValue = false;
+  this._userValue = null;
+  this._type = PREF_INVALID;
 
   if (!parent) {
     this._initializeRoot();
@@ -172,16 +60,16 @@ PrefBranch.prototype = {
 
   /** @see nsIPrefBranch.getPrefType.  */
   getPrefType: function (prefName) {
-    return this._findPref(prefName).type;
+    return this._findPref(prefName)._type;
   },
 
   /** @see nsIPrefBranch.getBoolPref.  */
   getBoolPref: function (prefName) {
     let thePref = this._findPref(prefName);
-    if (thePref.type !== PREF_BOOL) {
+    if (thePref._type !== PREF_BOOL) {
       throw new Error(`${prefName} does not have bool type`);
     }
-    return thePref.get();
+    return thePref._get();
   },
 
   /** @see nsIPrefBranch.setBoolPref.  */
@@ -190,19 +78,19 @@ PrefBranch.prototype = {
       throw new Error("non-bool passed to setBoolPref");
     }
     let thePref = this._findOrCreatePref(prefName, value, true, value);
-    if (thePref.type !== PREF_BOOL) {
+    if (thePref._type !== PREF_BOOL) {
       throw new Error(`${prefName} does not have bool type`);
     }
-    thePref.set(value);
+    thePref._set(value);
   },
 
   /** @see nsIPrefBranch.getCharPref.  */
   getCharPref: function (prefName) {
     let thePref = this._findPref(prefName);
-    if (thePref.type !== PREF_STRING) {
+    if (thePref._type !== PREF_STRING) {
       throw new Error(`${prefName} does not have string type`);
     }
-    return thePref.get();
+    return thePref._get();
   },
 
   /** @see nsIPrefBranch.setCharPref.  */
@@ -211,19 +99,19 @@ PrefBranch.prototype = {
       throw new Error("non-string passed to setCharPref");
     }
     let thePref = this._findOrCreatePref(prefName, value, true, value);
-    if (thePref.type !== PREF_STRING) {
+    if (thePref._type !== PREF_STRING) {
       throw new Error(`${prefName} does not have string type`);
     }
-    thePref.set(value);
+    thePref._set(value);
   },
 
   /** @see nsIPrefBranch.getIntPref.  */
   getIntPref: function (prefName) {
     let thePref = this._findPref(prefName);
-    if (thePref.type !== PREF_INT) {
+    if (thePref._type !== PREF_INT) {
       throw new Error(`${prefName} does not have int type`);
     }
-    return thePref.get();
+    return thePref._get();
   },
 
   /** @see nsIPrefBranch.setIntPref.  */
@@ -232,22 +120,22 @@ PrefBranch.prototype = {
       throw new Error("non-number passed to setIntPref");
     }
     let thePref = this._findOrCreatePref(prefName, value, true, value);
-    if (thePref.type !== PREF_INT) {
+    if (thePref._type !== PREF_INT) {
       throw new Error(`${prefName} does not have int type`);
     }
-    thePref.set(value);
+    thePref._set(value);
   },
 
   /** @see nsIPrefBranch.clearUserPref */
   clearUserPref: function (prefName) {
     let thePref = this._findPref(prefName);
-    thePref.clearUserValue();
+    thePref._clearUserValue();
   },
 
   /** @see nsIPrefBranch.prefHasUserValue */
   prefHasUserValue: function (prefName) {
     let thePref = this._findPref(prefName);
-    return thePref.hasUserValue;
+    return thePref._hasUserValue;
   },
 
   /** @see nsIPrefBranch.addObserver */
@@ -292,6 +180,106 @@ PrefBranch.prototype = {
     // This is a bit weird since it could erroneously return a pref,
     // not a pref branch.
     return this._findPref(prefRoot);
+  },
+
+  /**
+   * Return this preference's current value.
+   *
+   * @return {Any} The current value of this preference.  This may
+   *         return a string, a number, or a boolean depending on the
+   *         preference's type.
+   */
+  _get: function () {
+    if (this._hasUserValue) {
+      return this._userValue;
+    }
+    return this._defaultValue;
+  },
+
+  /**
+   * Set the preference's value.  The new value is assumed to be a
+   * user value.  After setting the value, this function emits a
+   * change notification.
+   *
+   * @param {Any} value the new value
+   */
+  _set: function (value) {
+    if (!this._hasUserValue || value !== this._userValue) {
+      this._userValue = value;
+      this._hasUserValue = true;
+      this._saveAndNotify();
+    }
+  },
+
+  /**
+   * Set the default value for this preference, and emit a
+   * notification if this results in a visible change.
+   *
+   * @param {Any} value the new default value
+   */
+  _setDefault: function (value) {
+    if (this._defaultValue !== value) {
+      this._defaultValue = value;
+      if (!this._hasUserValue) {
+        this._saveAndNotify();
+      }
+    }
+  },
+
+  /**
+   * If this preference has a user value, clear it.  If a change was
+   * made, emit a change notification.
+   */
+  _clearUserValue: function () {
+    if (this._hasUserValue) {
+      this._userValue = null;
+      this._hasUserValue = false;
+      this._saveAndNotify();
+    }
+  },
+
+  /**
+   * Helper function to write the preference's value to local storage
+   * and then emit a change notification.
+   */
+  _saveAndNotify: function () {
+    let store = {
+      type: this._type,
+      defaultValue: this._defaultValue,
+      hasUserValue: this._hasUserValue,
+      userValue: this._userValue,
+    };
+
+    localStorage.setItem(PREFIX + this.fullName, JSON.stringify(store));
+    this._parent._notify(this._name);
+  },
+
+  /**
+   * Change this preference's value without writing it back to local
+   * storage.  This is used to handle changes to local storage that
+   * were made externally.
+   *
+   * @param {Number} type one of the PREF_* values
+   * @param {Any} userValue the user value to use if the pref does not exist
+   * @param {Any} defaultValue the default value to use if the pref
+   *        does not exist
+   * @param {Boolean} hasUserValue if a new pref is created, whether
+   *        the default value is also a user value
+   * @param {Object} store the new value of the preference.  It should
+   *        be of the form {type, defaultValue, hasUserValue, userValue};
+   *        where |type| is one of the PREF_* type constants; |defaultValue|
+   *        and |userValue| are the default and user values, respectively;
+   *        and |hasUserValue| is a boolean indicating whether the user value
+   *        is valid
+   */
+  _storageUpdated: function (type, userValue, hasUserValue, defaultValue) {
+    this._type = type;
+    this._defaultValue = defaultValue;
+    this._hasUserValue = hasUserValue;
+    this._userValue = userValue;
+    // There's no need to write this back to local storage, since it
+    // came from there; and this avoids infinite event loops.
+    this._parent._notify(this._name);
   },
 
   /**
@@ -378,36 +366,34 @@ PrefBranch.prototype = {
    *        the default value is also a user value
    */
   _findOrCreatePref: function (keyName, userValue, hasUserValue, defaultValue) {
-    let branchName = keyName.split(".");
-    let prefName = branchName.pop();
+    let branch = this._createBranch(keyName.split("."));
 
-    let branch = this._createBranch(branchName);
-    if (!(prefName in branch._children)) {
-      if (hasUserValue && typeof (userValue) !== typeof (defaultValue)) {
-        throw new Error("inconsistent values when creating " + keyName);
-      }
-
-      let type;
-      switch (typeof (defaultValue)) {
-        case "boolean":
-          type = PREF_BOOL;
-          break;
-        case "number":
-          type = PREF_INT;
-          break;
-        case "string":
-          type = PREF_STRING;
-          break;
-        default:
-          throw new Error("unhandled argument type: " + typeof (defaultValue));
-      }
-
-      let thePref = new Preference(branch, prefName, keyName);
-      thePref.storageUpdated(type, userValue, hasUserValue, defaultValue);
-      branch._children[prefName] = thePref;
+    if (hasUserValue && typeof (userValue) !== typeof (defaultValue)) {
+      throw new Error("inconsistent values when creating " + keyName);
     }
 
-    return branch._children[prefName];
+    let type;
+    switch (typeof (defaultValue)) {
+      case "boolean":
+        type = PREF_BOOL;
+        break;
+      case "number":
+        type = PREF_INT;
+        break;
+      case "string":
+        type = PREF_STRING;
+        break;
+      default:
+        throw new Error("unhandled argument type: " + typeof (defaultValue));
+    }
+
+    if (branch._type === PREF_INVALID) {
+      branch._storageUpdated(type, userValue, hasUserValue, defaultValue);
+    } else if (branch._type !== type) {
+      throw new Error("attempt to change type of pref " + keyName);
+    }
+
+    return branch;
   },
 
   /**
@@ -432,7 +418,7 @@ PrefBranch.prototype = {
       this._findOrCreatePref(event.key, userValue, hasUserValue, defaultValue);
     } else {
       let thePref = this._findPref(event.key);
-      thePref.storageUpdated(type, userValue, hasUserValue, defaultValue);
+      thePref._storageUpdated(type, userValue, hasUserValue, defaultValue);
     }
   },
 
@@ -592,7 +578,7 @@ const Services = {
  */
 function pref(name, value) {
   let thePref = Services.prefs._findOrCreatePref(name, value, true, value);
-  thePref.setDefault(value);
+  thePref._setDefault(value);
 }
 
 module.exports = Services;

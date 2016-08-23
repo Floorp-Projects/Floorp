@@ -740,6 +740,12 @@ DecoderDoctorDiagnostics::GetDescription() const
       s = "format='";
       s += NS_ConvertUTF16toUTF8(mFormat).get();
       s += mCanPlay ? "', can play" : "', cannot play";
+      if (mVideoNotSupported) {
+        s+= ", but video format not supported";
+      }
+      if (mAudioNotSupported) {
+        s+= ", but audio format not supported";
+      }
       if (mWMFFailedToLoad) {
         s += ", Windows platform decoder failed to load";
       }

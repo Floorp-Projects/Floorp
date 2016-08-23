@@ -80,6 +80,10 @@ public:
   MediaDecoderOwner::NextFrameStatus NextFrameBufferedStatus() override;
   bool CanPlayThrough() override;
 
+  void NotifyWaitingForKey() override;
+
+  MediaEventSource<void>* WaitingForKeyEvent() override;
+
 private:
   void DoSetMediaSourceDuration(double aDuration);
   media::TimeInterval ClampIntervalToEnd(const media::TimeInterval& aInterval);
@@ -90,6 +94,7 @@ private:
   dom::MediaSource* mMediaSource;
   RefPtr<MediaSourceDemuxer> mDemuxer;
   RefPtr<MediaFormatReader> mReader;
+  MediaEventProducer<void> mWaitingForKeyEvent;
 
   bool mEnded;
 };
