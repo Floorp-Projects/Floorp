@@ -19,8 +19,7 @@ nsGenConList::Clear()
   for (nsGenConNode *node = Next(mFirstNode); node != mFirstNode;
        node = Next(mFirstNode))
   {
-    Remove(node);
-    delete node;
+    Destroy(node);
   }
   delete mFirstNode;
 
@@ -39,8 +38,7 @@ nsGenConList::DestroyNodesFor(nsIFrame* aFrame)
     destroyed = true;
     node = Next(mFirstNode);
     bool isLastNode = node == mFirstNode; // before they're dangling
-    Remove(mFirstNode);
-    delete mFirstNode;
+    Destroy(mFirstNode);
     if (isLastNode) {
       mFirstNode = nullptr;
       return true;
@@ -54,8 +52,7 @@ nsGenConList::DestroyNodesFor(nsIFrame* aFrame)
     if (node->mPseudoFrame == aFrame) {
       destroyed = true;
       nsGenConNode *nextNode = Next(node);
-      Remove(node);
-      delete node;
+      Destroy(node);
       node = nextNode;
     } else {
       node = Next(node);
