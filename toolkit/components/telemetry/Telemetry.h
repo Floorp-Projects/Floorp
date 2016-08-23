@@ -33,6 +33,9 @@ namespace HangMonitor {
 } // namespace HangMonitor
 namespace Telemetry {
 
+struct Accumulation;
+struct KeyedAccumulation;
+
 enum TimerResolution {
   Millisecond,
   Microsecond
@@ -124,6 +127,20 @@ void AccumulateCategorical(ID id, const nsCString& label);
  * @param end - end time
  */
 void AccumulateTimeDelta(ID id, TimeStamp start, TimeStamp end = TimeStamp::Now());
+
+/**
+ * Accumulate child data into child histograms
+ *
+ * @param aAccumulations - accumulation actions to perform
+ */
+void AccumulateChild(const nsTArray<Accumulation>& aAccumulations);
+
+/**
+ * Accumulate child data into child keyed histograms
+ *
+ * @param aAccumulations - accumulation actions to perform
+ */
+void AccumulateChildKeyed(const nsTArray<KeyedAccumulation>& aAccumulations);
 
 /**
  * This clears the data for a histogram in TelemetryHistogramEnums.h.
