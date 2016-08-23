@@ -1035,6 +1035,52 @@ struct TwoByteString::HashPolicy {
   }
 };
 
+// Returns whether `edge` should be included in a heap snapshot of
+// `compartments`. The optional `policy` out-param is set to INCLUDE_EDGES
+// if we want to include the referent's edges, or EXCLUDE_EDGES if we don't
+// want to include them.
+static bool
+ShouldIncludeEdge(JS::CompartmentSet* compartments,
+                  const ubi::Node& origin, const ubi::Edge& edge,
+                  CoreDumpWriter::EdgePolicy* policy = nullptr)
+{
+  if (policy) {
+    *policy = CoreDumpWriter::INCLUDE_EDGES;
+  }
+
+  if (!compartments) {
+    // We aren't targeting a particular set of compartments, so serialize all the
+    // things!
+    return true;
+  }
+
+  // We are targeting a particular set of compartments. If this node is in our target
+  // set, serialize it and all of its edges. If this node is _not_ in our
+  // target set, we also serialize under the assumption that it is a shared
+  // resource being used by something in our target compartments since we reached it
+  // by traversing the heap graph. However, we do not serialize its outgoing
+  // edges and we abandon further traversal from this node.
+  //
+  // If the node does not belong to any compartment, we also serialize its outgoing
+  // edges. This case is relevant for Shapes: they don't belong to a specific
+  // compartment and contain edges to parent/kids Shapes we want to include. Note
+  // that these Shapes may contain pointers into our target compartment (the
+  // Shape's getter/setter JSObjects). However, we do not serialize nodes in other
+  // compartments that are reachable from these non-compartment nodes.
+
+  JSCompartment* compartment = edge.referent.compartment();
+
+  if (!compartment || compartments->has(compartment)) {
+    return true;
+  }
+
+  if (policy) {
+    *policy = CoreDumpWriter::EXCLUDE_EDGES;
+  }
+
+  return !!origin.compartment();
+}
+
 // A `CoreDumpWriter` that serializes nodes to protobufs and writes them to the
 // given `ZeroCopyOutputStream`.
 class MOZ_STACK_CLASS StreamWriter : public CoreDumpWriter
@@ -1056,6 +1102,8 @@ class MOZ_STACK_CLASS StreamWriter : public CoreDumpWriter
   OneByteStringMap oneByteStringsAlreadySerialized;
 
   ::google::protobuf::io::ZeroCopyOutputStream& stream;
+
+  JS::CompartmentSet* compartments;
 
   bool writeMessage(const ::google::protobuf::MessageLite& message) {
     // We have to create a new CodedOutputStream when writing each message so
@@ -1187,13 +1235,15 @@ class MOZ_STACK_CLASS StreamWriter : public CoreDumpWriter
 public:
   StreamWriter(JSContext* cx,
                ::google::protobuf::io::ZeroCopyOutputStream& stream,
-               bool wantNames)
+               bool wantNames,
+               JS::CompartmentSet* compartments)
     : cx(cx)
     , wantNames(wantNames)
     , framesAlreadySerialized(cx)
     , twoByteStringsAlreadySerialized(cx)
     , oneByteStringsAlreadySerialized(cx)
     , stream(stream)
+    , compartments(compartments)
   { }
 
   bool init() {
@@ -1240,6 +1290,9 @@ public:
 
       for ( ; !edges->empty(); edges->popFront()) {
         ubi::Edge& ubiEdge = edges->front();
+        if (!ShouldIncludeEdge(compartments, ubiNode, ubiEdge)) {
+          continue;
+        }
 
         protobuf::Edge* protobufEdge = protobufNode.add_edges();
         if (NS_WARN_IF(!protobufEdge)) {
@@ -1329,29 +1382,16 @@ public:
     if (!first)
       return true;
 
+    CoreDumpWriter::EdgePolicy policy;
+    if (!ShouldIncludeEdge(compartments, origin, edge, &policy))
+      return true;
+
     nodeCount++;
 
-    const JS::ubi::Node& referent = edge.referent;
+    if (policy == CoreDumpWriter::EXCLUDE_EDGES)
+      traversal.abandonReferent();
 
-    if (!compartments)
-      // We aren't targeting a particular set of compartments, so serialize all the
-      // things!
-      return writer.writeNode(referent, CoreDumpWriter::INCLUDE_EDGES);
-
-    // We are targeting a particular set of compartments. If this node is in our target
-    // set, serialize it and all of its edges. If this node is _not_ in our
-    // target set, we also serialize under the assumption that it is a shared
-    // resource being used by something in our target compartments since we reached it
-    // by traversing the heap graph. However, we do not serialize its outgoing
-    // edges and we abandon further traversal from this node.
-
-    JSCompartment* compartment = referent.compartment();
-
-    if (compartments->has(compartment))
-      return writer.writeNode(referent, CoreDumpWriter::INCLUDE_EDGES);
-
-    traversal.abandonReferent();
-    return writer.writeNode(referent, CoreDumpWriter::EXCLUDE_EDGES);
+    return writer.writeNode(edge.referent, policy);
   }
 };
 
@@ -1533,17 +1573,19 @@ ThreadSafeChromeUtils::SaveHeapSnapshot(GlobalObject& global,
   ::google::protobuf::io::GzipOutputStream gzipStream(&zeroCopyStream);
 
   JSContext* cx = global.Context();
-  StreamWriter writer(cx, gzipStream, wantNames);
-  if (NS_WARN_IF(!writer.init())) {
-    rv.Throw(NS_ERROR_OUT_OF_MEMORY);
-    return;
-  }
 
   {
     Maybe<AutoCheckCannotGC> maybeNoGC;
     ubi::RootList rootList(cx, maybeNoGC, wantNames);
     if (!EstablishBoundaries(cx, rv, boundaries, rootList, compartments))
       return;
+
+    StreamWriter writer(cx, gzipStream, wantNames,
+                        compartments.initialized() ? &compartments : nullptr);
+    if (NS_WARN_IF(!writer.init())) {
+      rv.Throw(NS_ERROR_OUT_OF_MEMORY);
+      return;
+    }
 
     MOZ_ASSERT(maybeNoGC.isSome());
     ubi::Node roots(&rootList);

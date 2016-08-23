@@ -58,8 +58,9 @@ DEF_TEST(DoesCrossCompartmentBoundaries, {
     // different compartment than A.
     ExpectWriteNode(writer, nodeC);
 
-    // However, should not serialize nodeD because nodeB doesn't belong to one
-    // of our target compartments and so its edges are excluded from serialization.
+    // Should serialize nodeD because it's reachable via B and both nodes B and D
+    // don't belong to a specific compartment.
+    ExpectWriteNode(writer, nodeD);
 
     JS::AutoCheckCannotGC noGC(cx);
 

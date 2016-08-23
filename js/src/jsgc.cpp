@@ -2507,6 +2507,8 @@ GCRuntime::updatePointersToRelocatedCells(Zone* zone, AutoLockForExclusiveAccess
     gcstats::AutoPhase ap(stats, gcstats::PHASE_COMPACT_UPDATE);
     MovingTracer trc(rt);
 
+    zone->fixupAfterMovingGC();
+
     // Fixup compartment global pointers as these get accessed during marking.
     for (CompartmentsInZoneIter comp(zone); !comp.done(); comp.next())
         comp->fixupAfterMovingGC();
@@ -6574,6 +6576,7 @@ gc::MergeCompartments(JSCompartment* source, JSCompartment* target)
     // meaningless after merging into the target compartment.
 
     source->clearTables();
+    source->zone()->clearTables();
     source->unsetIsDebuggee();
 
     // The delazification flag indicates the presence of LazyScripts in a
@@ -6624,11 +6627,6 @@ gc::MergeCompartments(JSCompartment* source, JSCompartment* target)
                 }
             }
         }
-    }
-
-    for (auto base = source->zone()->cellIter<BaseShape>(); !base.done(); base.next()) {
-        MOZ_ASSERT(base->compartment() == source);
-        base->compartment_ = target;
     }
 
     for (auto group = source->zone()->cellIter<ObjectGroup>(); !group.done(); group.next()) {
@@ -7058,6 +7056,8 @@ js::gc::CheckHashTablesAfterMovingGC(JSRuntime* rt)
     rt->spsProfiler.checkStringsMapAfterMovingGC();
     for (ZonesIter zone(rt, SkipAtoms); !zone.done(); zone.next()) {
         zone->checkUniqueIdTableAfterMovingGC();
+        zone->checkInitialShapesTableAfterMovingGC();
+        zone->checkBaseShapeTableAfterMovingGC();
 
         for (auto baseShape = zone->cellIter<BaseShape>(); !baseShape.done(); baseShape.next()) {
             if (baseShape->hasTable())
@@ -7067,9 +7067,7 @@ js::gc::CheckHashTablesAfterMovingGC(JSRuntime* rt)
     for (CompartmentsIter c(rt, SkipAtoms); !c.done(); c.next()) {
         c->objectGroups.checkTablesAfterMovingGC();
         c->dtoaCache.checkCacheAfterMovingGC();
-        c->checkInitialShapesTableAfterMovingGC();
         c->checkWrapperMapAfterMovingGC();
-        c->checkBaseShapeTableAfterMovingGC();
         c->checkScriptMapsAfterMovingGC();
         if (c->debugScopes)
             c->debugScopes->checkHashTablesAfterMovingGC(rt);

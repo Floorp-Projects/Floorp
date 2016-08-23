@@ -521,7 +521,7 @@ js::SetIntegrityLevel(JSContext* cx, HandleObject obj, IntegrityLevel level)
             if (!JSID_IS_EMPTY(child.get().propid) && level == IntegrityLevel::Frozen)
                 MarkTypePropertyNonWritable(cx, nobj, child.get().propid);
 
-            last = cx->compartment()->propertyTree.getChild(cx, last, child);
+            last = cx->zone()->propertyTree.getChild(cx, last, child);
             if (!last)
                 return false;
         }
@@ -1353,7 +1353,7 @@ InitializePropertiesFromCompatibleNativeObject(JSContext* cx,
 
         for (Shape* shape : shapes) {
             Rooted<StackShape> child(cx, StackShape(shape));
-            shape = cx->compartment()->propertyTree.getChild(cx, shape, child);
+            shape = cx->zone()->propertyTree.getChild(cx, shape, child);
             if (!shape)
                 return false;
         }

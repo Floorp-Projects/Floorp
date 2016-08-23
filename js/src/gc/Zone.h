@@ -148,7 +148,8 @@ struct Zone : public JS::shadow::Zone,
     void addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
                                 size_t* typePool,
                                 size_t* baselineStubsOptimized,
-                                size_t* uniqueIdMap);
+                                size_t* uniqueIdMap,
+                                size_t* shapeTables);
 
     void resetGCMallocBytes();
     void setGCMaxMallocBytes(size_t value);
@@ -297,6 +298,8 @@ struct Zone : public JS::shadow::Zone,
     DebuggerVector* getDebuggers() const { return debuggers; }
     DebuggerVector* getOrCreateDebuggers(JSContext* cx);
 
+    void clearTables();
+
     /*
      * When true, skip calling the metadata callback. We use this:
      * - to avoid invoking the callback recursively;
@@ -379,6 +382,22 @@ struct Zone : public JS::shadow::Zone,
     // Amount of data to allocate before triggering a new incremental slice for
     // the current GC.
     size_t gcDelayBytes;
+
+    // Shared Shape property tree.
+    js::PropertyTree propertyTree;
+
+    // Set of all unowned base shapes in the Zone.
+    JS::WeakCache<js::BaseShapeSet> baseShapes;
+
+    // Set of initial shapes in the Zone.
+    JS::WeakCache<js::InitialShapeSet> initialShapes;
+
+#ifdef JSGC_HASH_TABLE_CHECKS
+    void checkInitialShapesTableAfterMovingGC();
+    void checkBaseShapeTableAfterMovingGC();
+#endif
+    void fixupInitialShapeTable();
+    void fixupAfterMovingGC();
 
     // Per-zone data for use by an embedder.
     void* data;

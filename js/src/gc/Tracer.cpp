@@ -179,16 +179,7 @@ JS::TraceIncomingCCWs(JSTracer* trc, const JS::CompartmentSet& compartments)
 void
 gc::TraceCycleCollectorChildren(JS::CallbackTracer* trc, Shape* shape)
 {
-    // We need to mark the global, but it's OK to only do this once instead of
-    // doing it for every Shape in our lineage, since it's always the same
-    // global.
-    JSObject* global = shape->compartment()->unsafeUnbarrieredMaybeGlobal();
-    MOZ_ASSERT(global);
-    DoCallback(trc, &global, "global");
-
     do {
-        MOZ_ASSERT(global == shape->compartment()->unsafeUnbarrieredMaybeGlobal());
-
         MOZ_ASSERT(shape->base());
         shape->base()->assertConsistency();
 
