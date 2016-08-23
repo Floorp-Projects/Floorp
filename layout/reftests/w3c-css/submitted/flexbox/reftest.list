@@ -193,15 +193,15 @@ fails == flexbox-min-height-auto-002b.html flexbox-min-height-auto-002-ref.html 
 == flexbox-with-pseudo-elements-003.html flexbox-with-pseudo-elements-003-ref.html
 
 # Tests for combined influence of 'writing-mode' & 'direction' on flex axes
-test-pref(layout.css.vertical-text.enabled,true) == flexbox-writing-mode-001.html flexbox-writing-mode-001-ref.html
-test-pref(layout.css.vertical-text.enabled,true) == flexbox-writing-mode-002.html flexbox-writing-mode-002-ref.html
-test-pref(layout.css.vertical-text.enabled,true) == flexbox-writing-mode-003.html flexbox-writing-mode-003-ref.html
-test-pref(layout.css.vertical-text.enabled,true) == flexbox-writing-mode-004.html flexbox-writing-mode-004-ref.html
-test-pref(layout.css.vertical-text.enabled,true) == flexbox-writing-mode-005.html flexbox-writing-mode-005-ref.html
-test-pref(layout.css.vertical-text.enabled,true) == flexbox-writing-mode-006.html flexbox-writing-mode-006-ref.html
-test-pref(layout.css.vertical-text.enabled,true) == flexbox-writing-mode-007.html flexbox-writing-mode-007-ref.html
-test-pref(layout.css.vertical-text.enabled,true) == flexbox-writing-mode-008.html flexbox-writing-mode-008-ref.html
-test-pref(layout.css.vertical-text.enabled,true) == flexbox-writing-mode-009.html flexbox-writing-mode-009-ref.html
+== flexbox-writing-mode-001.html flexbox-writing-mode-001-ref.html
+== flexbox-writing-mode-002.html flexbox-writing-mode-002-ref.html
+== flexbox-writing-mode-003.html flexbox-writing-mode-003-ref.html
+== flexbox-writing-mode-004.html flexbox-writing-mode-004-ref.html
+== flexbox-writing-mode-005.html flexbox-writing-mode-005-ref.html
+== flexbox-writing-mode-006.html flexbox-writing-mode-006-ref.html
+== flexbox-writing-mode-007.html flexbox-writing-mode-007-ref.html
+== flexbox-writing-mode-008.html flexbox-writing-mode-008-ref.html
+== flexbox-writing-mode-009.html flexbox-writing-mode-009-ref.html
 
 # Single-line size clamping
 == flexbox-single-line-clamp-1.html flexbox-single-line-clamp-1-ref.html
