@@ -228,7 +228,7 @@ NS_DEFINE_NAMED_CID(NS_GFXINFO_CID);
 static const mozilla::Module::CIDEntry kWidgetCIDs[] = {
     { &kNS_WINDOW_CID, false, nullptr, nsWindowConstructor },
     { &kNS_CHILD_CID, false, nullptr, nsChildWindowConstructor },
-    { &kNS_APPSHELL_CID, false, nullptr, nsAppShellConstructor },
+    { &kNS_APPSHELL_CID, false, nullptr, nsAppShellConstructor, Module::ALLOW_IN_GPU_PROCESS },
     { &kNS_COLORPICKER_CID, false, nullptr, nsColorPickerConstructor, Module::MAIN_PROCESS_ONLY },
     { &kNS_FILEPICKER_CID, false, nullptr, nsFilePickerConstructor, Module::MAIN_PROCESS_ONLY },
 #if (MOZ_WIDGET_GTK == 3)
@@ -264,7 +264,7 @@ static const mozilla::Module::CIDEntry kWidgetCIDs[] = {
 static const mozilla::Module::ContractIDEntry kWidgetContracts[] = {
     { "@mozilla.org/widget/window/gtk;1", &kNS_WINDOW_CID },
     { "@mozilla.org/widgets/child_window/gtk;1", &kNS_CHILD_CID },
-    { "@mozilla.org/widget/appshell/gtk;1", &kNS_APPSHELL_CID },
+    { "@mozilla.org/widget/appshell/gtk;1", &kNS_APPSHELL_CID, Module::ALLOW_IN_GPU_PROCESS },
     { "@mozilla.org/colorpicker;1", &kNS_COLORPICKER_CID, Module::MAIN_PROCESS_ONLY },
     { "@mozilla.org/filepicker;1", &kNS_FILEPICKER_CID, Module::MAIN_PROCESS_ONLY },
 #if (MOZ_WIDGET_GTK == 3)
@@ -324,7 +324,8 @@ static const mozilla::Module kWidgetModule = {
     nullptr,
     nullptr,
     nsAppShellInit,
-    nsWidgetGtk2ModuleDtor
+    nsWidgetGtk2ModuleDtor,
+    Module::ALLOW_IN_GPU_PROCESS
 };
 
 NSMODULE_DEFN(nsWidgetGtk2Module) = &kWidgetModule;
