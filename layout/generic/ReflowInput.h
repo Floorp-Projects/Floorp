@@ -327,10 +327,12 @@ struct ReflowInput : public SizeComputationInput {
 
   // The appropriate reflow state for the containing block (for
   // percentage widths, etc.) of this reflow state's frame.
+  MOZ_INIT_OUTSIDE_CTOR
   const ReflowInput *mCBReflowInput;
 
   // The type of frame, from css's perspective. This value is
   // initialized by the Init method below.
+  MOZ_INIT_OUTSIDE_CTOR
   nsCSSFrameType   mFrameType;
 
   // The amount the in-flow position of the block is moving vertically relative
@@ -536,6 +538,7 @@ private:
   //
   // For block-level frames, the computed width is based on the width of the
   // containing block, the margin/border/padding areas, and the min/max width.
+  MOZ_INIT_OUTSIDE_CTOR
   nscoord          mComputedWidth; 
 
   // The computed height specifies the frame's content height, and it does
@@ -551,6 +554,7 @@ private:
   //
   // For replaced block-level frames, a value of NS_INTRINSICSIZE
   // means you use your intrinsic height as the computed height
+  MOZ_INIT_OUTSIDE_CTOR
   nscoord          mComputedHeight;
 
   // Computed values for 'left/top/right/bottom' offsets. Only applies to
@@ -560,17 +564,26 @@ private:
   // Computed values for 'min-width/max-width' and 'min-height/max-height'
   // XXXldb The width ones here should go; they should be needed only
   // internally.
+  MOZ_INIT_OUTSIDE_CTOR
   nscoord          mComputedMinWidth, mComputedMaxWidth;
+  MOZ_INIT_OUTSIDE_CTOR
   nscoord          mComputedMinHeight, mComputedMaxHeight;
 
 public:
   // Cached pointers to the various style structs used during intialization
+  MOZ_INIT_OUTSIDE_CTOR
   const nsStyleDisplay*    mStyleDisplay;
+  MOZ_INIT_OUTSIDE_CTOR
   const nsStyleVisibility* mStyleVisibility;
+  MOZ_INIT_OUTSIDE_CTOR
   const nsStylePosition*   mStylePosition;
+  MOZ_INIT_OUTSIDE_CTOR
   const nsStyleBorder*     mStyleBorder;
+  MOZ_INIT_OUTSIDE_CTOR
   const nsStyleMargin*     mStyleMargin;
+  MOZ_INIT_OUTSIDE_CTOR
   const nsStylePadding*    mStylePadding;
+  MOZ_INIT_OUTSIDE_CTOR
   const nsStyleText*       mStyleText;
 
   bool IsFloating() const;
