@@ -78,7 +78,7 @@
 #include "mozilla/EventStates.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/MouseEvents.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/CanvasRenderingContext2D.h"
 #include "mozilla/dom/Element.h"

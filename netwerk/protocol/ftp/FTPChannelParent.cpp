@@ -21,7 +21,7 @@
 #include "nsIForcePendingChannel.h"
 #include "mozilla/ipc/InputStreamUtils.h"
 #include "mozilla/ipc/URIUtils.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "SerializedLoadContext.h"
 #include "nsIContentPolicy.h"
 #include "mozilla/ipc/BackgroundUtils.h"

@@ -49,7 +49,7 @@
 #include "nsIWritablePropertyBag2.h"
 #include "nsITimedChannel.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "nsIScriptSecurityManager.h"
 
 #include "nsISimpleEnumerator.h"

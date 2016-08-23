@@ -12,7 +12,7 @@
 #include "mozilla/gfx/PrintTargetThebes.h"
 #include "mozilla/layout/RemotePrintJobChild.h"
 #include "mozilla/RefPtr.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "nsComponentManagerUtils.h"
 #include "nsIPrintSession.h"
 #include "nsIPrintSettings.h"

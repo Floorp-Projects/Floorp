@@ -5,7 +5,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "DBusWatcher.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "nsThreadUtils.h"
 
 namespace mozilla {

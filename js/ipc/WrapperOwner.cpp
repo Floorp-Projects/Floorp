@@ -7,7 +7,7 @@
 
 #include "WrapperOwner.h"
 #include "JavaScriptLogging.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "jsfriendapi.h"
 #include "js/CharacterEncoding.h"

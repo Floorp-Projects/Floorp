@@ -10,7 +10,7 @@
 #include "mozilla/Mutex.h"
 #include "mozilla/StaticMutex.h"
 #include "mozilla/StaticPtr.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "mozilla/dom/cache/Context.h"
 #include "mozilla/dom/cache/DBAction.h"
 #include "mozilla/dom/cache/DBSchema.h"

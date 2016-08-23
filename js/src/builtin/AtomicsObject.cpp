@@ -50,7 +50,7 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/Maybe.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 
 #include "jsapi.h"
 #include "jsfriendapi.h"

@@ -7,7 +7,7 @@
 #include "DeviceStorageRequestParent.h"
 #include "nsIMIMEService.h"
 #include "nsCExternalHandlerService.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/ipc/BlobParent.h"
 #include "ContentParent.h"

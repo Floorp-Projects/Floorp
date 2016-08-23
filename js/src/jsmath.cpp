@@ -13,7 +13,7 @@
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 
 #include <algorithm>  // for std::max
 #include <fcntl.h>

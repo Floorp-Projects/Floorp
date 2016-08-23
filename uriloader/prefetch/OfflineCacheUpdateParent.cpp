@@ -9,7 +9,7 @@
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/dom/TabParent.h"
 #include "mozilla/ipc/URIUtils.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "nsContentUtils.h"
 #include "nsOfflineCacheUpdate.h"
 #include "nsIApplicationCache.h"

@@ -23,7 +23,7 @@
 #include "nsGlobalWindow.h"
 #include "nsRefreshDriver.h"
 
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/EventStateManager.h"
 #include "mozilla/Services.h"

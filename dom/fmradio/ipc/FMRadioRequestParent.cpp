@@ -6,7 +6,7 @@
 
 #include "FMRadioRequestParent.h"
 #include "FMRadioService.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "mozilla/dom/PFMRadio.h"
 
 BEGIN_FMRADIO_NAMESPACE

@@ -9,7 +9,7 @@
 #include "mozilla/TypeTraits.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/WeakPtr.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "mozilla/jni/Accessors.h"
 #include "mozilla/jni/Refs.h"
 #include "mozilla/jni/Types.h"

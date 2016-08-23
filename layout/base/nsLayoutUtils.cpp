@@ -20,7 +20,7 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/dom/ContentChild.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "nsCharTraits.h"
 #include "nsFontMetrics.h"
 #include "nsPresContext.h"

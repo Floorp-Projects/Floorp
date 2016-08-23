@@ -10,7 +10,7 @@
 #include "mozilla/dom/TabChild.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/UniquePtr.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "nsContentUtils.h"
 
 using mozilla::ipc::Shmem;

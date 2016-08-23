@@ -13,7 +13,7 @@
 #include "mozilla/dom/ServiceWorkerRegistrationBinding.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsNetUtil.h"
 #include "nsServiceManagerUtils.h"

@@ -12,7 +12,7 @@
 
 #include "HalLog.h"
 #include "nsITimer.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 
 namespace mozilla {
 namespace hal_impl {

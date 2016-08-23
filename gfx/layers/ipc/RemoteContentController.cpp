@@ -16,7 +16,7 @@
 #include "mozilla/layers/APZThreadUtils.h"
 #include "mozilla/layout/RenderFrameParent.h"
 #include "mozilla/gfx/GPUProcessManager.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "Units.h"
 #ifdef MOZ_WIDGET_ANDROID
 #include "AndroidBridge.h"

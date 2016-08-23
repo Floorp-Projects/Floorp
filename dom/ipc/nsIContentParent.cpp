@@ -17,7 +17,7 @@
 #include "mozilla/dom/ipc/BlobParent.h"
 #include "mozilla/dom/ipc/StructuredCloneData.h"
 #include "mozilla/jsipc/CrossProcessObjectWrappers.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 
 #include "nsFrameMessageManager.h"
 #include "nsIWebBrowserChrome.h"

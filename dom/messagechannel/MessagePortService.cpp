@@ -9,7 +9,7 @@
 #include "SharedMessagePortMessage.h"
 #include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/StaticPtr.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "nsTArray.h"
 
 using mozilla::ipc::AssertIsOnBackgroundThread;

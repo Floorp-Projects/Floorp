@@ -10,7 +10,7 @@
 #include "MediaDataDecoderProxy.h"
 #include "mozIGeckoMediaPluginService.h"
 #include "mozilla/CDMProxy.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "nsAutoPtr.h"
 #include "nsServiceManagerUtils.h"
 #include "MediaInfo.h"

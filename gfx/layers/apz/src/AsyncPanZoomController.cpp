@@ -57,7 +57,7 @@
 #include "mozilla/layers/LayerTransactionParent.h" // for LayerTransactionParent
 #include "mozilla/layers/ScrollInputMethods.h" // for ScrollInputMethod
 #include "mozilla/mozalloc.h"           // for operator new, etc
-#include "mozilla/unused.h"             // for unused
+#include "mozilla/Unused.h"             // for unused
 #include "mozilla/FloatingPoint.h"      // for FuzzyEquals*
 #include "nsAlgorithm.h"                // for clamped
 #include "nsCOMPtr.h"                   // for already_AddRefed

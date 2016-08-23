@@ -33,7 +33,7 @@
 #include "nsISocketTransportService.h"
 #include <algorithm>
 #include "mozilla/ChaosMode.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "nsIURI.h"
 
 #include "mozilla/Telemetry.h"

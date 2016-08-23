@@ -6,7 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/net/RemoteOpenFileParent.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "nsEscape.h"
 
 #if !defined(XP_WIN) && !defined(MOZ_WIDGET_COCOA)

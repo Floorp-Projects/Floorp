@@ -20,7 +20,7 @@
 #include "mozilla/StaticPtr.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ContentParent.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 
 #include "SpeechSynthesisChild.h"
 #include "SpeechSynthesisParent.h"

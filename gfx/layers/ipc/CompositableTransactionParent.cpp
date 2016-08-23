@@ -25,7 +25,7 @@
 #include "mozilla/layers/TiledContentHost.h"
 #include "mozilla/layers/PaintedLayerComposite.h"
 #include "mozilla/mozalloc.h"           // for operator delete
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "nsDebug.h"                    // for NS_WARNING, NS_ASSERTION
 #include "nsRegion.h"                   // for nsIntRegion
 

@@ -6,7 +6,7 @@
 #include "MessagePortParent.h"
 #include "MessagePortService.h"
 #include "SharedMessagePortMessage.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 
 namespace mozilla {
 namespace dom {

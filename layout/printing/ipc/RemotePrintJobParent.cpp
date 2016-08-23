@@ -10,7 +10,7 @@
 
 #include "gfxContext.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "nsComponentManagerUtils.h"
 #include "nsDeviceContext.h"
 #include "nsIDeviceContextSpec.h"

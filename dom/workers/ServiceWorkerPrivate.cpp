@@ -27,7 +27,7 @@
 #include "mozilla/dom/NotificationEvent.h"
 #include "mozilla/dom/PromiseNativeHandler.h"
 #include "mozilla/dom/RequestBinding.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 
 #ifndef MOZ_SIMPLEPUSH
 #include "nsIPushErrorReporter.h"

@@ -64,7 +64,7 @@
 #include "VsyncSource.h"
 #include "mozilla/VsyncDispatcher.h"
 #include "nsThreadUtils.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "mozilla/TimelineConsumers.h"
 #include "nsAnimationManager.h"
 #include "nsIDOMEvent.h"

@@ -17,7 +17,7 @@
 #include "nsNPAPIPlugin.h"
 #include "nsCharSeparatedTokenizer.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "nsNetUtil.h"
 #include <cctype>
 #include "mozilla/dom/EncodingUtils.h"

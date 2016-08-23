@@ -6,7 +6,7 @@
 #include "GMPAudioDecoderChild.h"
 #include "GMPContentChild.h"
 #include "GMPAudioHost.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include <stdio.h>
 
 namespace mozilla {

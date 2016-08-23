@@ -10,7 +10,7 @@
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/TabChild.h"
 #include "mozilla/layout/RemotePrintJobChild.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeOwner.h"
 #include "nsIPrintingPromptService.h"

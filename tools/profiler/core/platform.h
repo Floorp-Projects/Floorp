@@ -53,7 +53,7 @@
 #endif
 #include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "PlatformMacros.h"
 #include "v8-support.h"
 #include <vector>

@@ -15,7 +15,7 @@
 #include "mozilla/Logging.h"
 #include "prenv.h"
 #include "mozilla/HangMonitor.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "GeckoProfiler.h"
 #include "nsIPowerManagerService.h"
 #ifdef MOZ_ENABLE_DBUS

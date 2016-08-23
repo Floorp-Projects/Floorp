@@ -40,7 +40,7 @@
 #include "mozilla/TextEvents.h"
 #include "mozilla/TouchEvents.h"
 #include "mozilla/UniquePtr.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "BlobParent.h"
 #include "nsCOMPtr.h"
 #include "nsContentAreaDragDrop.h"

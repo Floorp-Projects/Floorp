@@ -13,7 +13,7 @@
 #include "mozilla/PodOperations.h"
 #include "mozilla/Range.h"
 #include "mozilla/TypeTraits.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 
 #include <ctype.h>
 #include <limits>

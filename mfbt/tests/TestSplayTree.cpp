@@ -7,7 +7,7 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/SplayTree.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 
 using mozilla::SplayTree;
 using mozilla::SplayTreeNode;

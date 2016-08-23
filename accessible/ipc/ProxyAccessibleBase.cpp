@@ -13,7 +13,7 @@
 #include "mozilla/a11y/Role.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/TabParent.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "RelationType.h"
 #include "xpcAccessibleDocument.h"
 

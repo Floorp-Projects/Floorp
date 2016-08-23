@@ -12,7 +12,7 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/TabParent.h"
 #include "mozilla/net/NeckoParent.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "HttpChannelParentListener.h"
 #include "nsHttpHandler.h"
 #include "nsNetUtil.h"
