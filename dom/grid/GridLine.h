@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_GridLine_h
 #define mozilla_dom_GridLine_h
 
+#include "mozilla/dom/GridBinding.h"
 #include "nsString.h"
 #include "nsTArray.h"
 #include "nsWrapperCache.h"
@@ -39,19 +40,22 @@ public:
 
   double Start() const;
   double Breadth() const;
+  GridDeclaration Type() const;
   uint32_t Number() const;
 
-  void SetLineValues(double aStart,
+  void SetLineValues(const nsTArray<nsString>& aNames,
+                     double aStart,
                      double aBreadth,
                      uint32_t aNumber,
-                     const nsTArray<nsString>& aNames);
+                     GridDeclaration aType);
 
 protected:
   RefPtr<GridLines> mParent;
+  nsTArray<nsString> mNames;
   double mStart;
   double mBreadth;
+  GridDeclaration mType;
   uint32_t mNumber;
-  nsTArray<nsString> mNames;
 };
 
 } // namespace dom

@@ -5764,6 +5764,16 @@ nsGridContainerFrame::Reflow(nsPresContext*           aPresContext,
     ComputedGridLineInfo* rowLineInfo = new ComputedGridLineInfo(
       Move(rowLineNames));
     Properties().Set(GridRowLineInfo(), rowLineInfo);
+
+    // Generate area info for explicit areas. Implicit areas are handled
+    // elsewhere.
+    if (gridReflowInput.mGridStyle->mGridTemplateAreas) {
+      nsTArray<css::GridNamedArea>* areas = new nsTArray<css::GridNamedArea>(
+          gridReflowInput.mGridStyle->mGridTemplateAreas->mNamedAreas);
+      Properties().Set(ExplicitNamedAreasProperty(), areas);
+    } else {
+      Properties().Delete(ExplicitNamedAreasProperty());
+    }
   }
 
   if (!prevInFlow) {
