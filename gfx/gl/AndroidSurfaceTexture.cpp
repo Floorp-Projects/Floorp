@@ -27,58 +27,6 @@ using namespace mozilla::java::sdk;
 namespace mozilla {
 namespace gl {
 
-// Maintains a mapping between AndroidSurfaceTexture instances and their
-// unique numerical IDs. [thread-safe]
-class InstanceMap
-{
-  typedef AndroidSurfaceTexture* InstancePtr;
-  typedef std::map<int, InstancePtr> MapType;
-
-public:
-  InstanceMap()
-    : mNextId(0)
-    , mMonitor("AndroidSurfaceTexture::InstanceMap::mMonitor")
-  {}
-
-  int Add(InstancePtr aInstance)
-  {
-    MonitorAutoLock lock(mMonitor);
-    mInstances.insert({++mNextId, aInstance});
-    return mNextId;
-  }
-
-  void Remove(int aId)
-  {
-    MonitorAutoLock lock(mMonitor);
-    mInstances.erase(aId);
-  }
-
-  InstancePtr Get(int aId) const
-  {
-    MonitorAutoLock lock(mMonitor);
-
-    auto it = mInstances.find(aId);
-    if (it == mInstances.end()) {
-      return nullptr;
-    }
-    return it->second;
-  }
-
-private:
-  MapType mInstances;
-  int mNextId;
-
-  mutable Monitor mMonitor;
-};
-
-static InstanceMap sInstances;
-
-AndroidSurfaceTexture*
-AndroidSurfaceTexture::Find(int aId)
-{
-  return sInstances.Get(aId);
-}
-
 static bool
 IsSTSupported()
 {
@@ -204,8 +152,6 @@ AndroidSurfaceTexture::Init(GLContext* aContext, GLuint aTexture)
                                             mSurface.Get());
   MOZ_ASSERT(mNativeWindow, "Failed to create native window from surface");
 
-  mID = sInstances.Add(this);
-
   return true;
 }
 
@@ -220,12 +166,7 @@ AndroidSurfaceTexture::AndroidSurfaceTexture()
 
 AndroidSurfaceTexture::~AndroidSurfaceTexture()
 {
-  sInstances.Remove(mID);
-
-  mFrameAvailableCallback = nullptr;
-
   if (mSurfaceTexture) {
-    GeckoAppShell::UnregisterSurfaceTextureFrameListener(mSurfaceTexture);
     mSurfaceTexture = nullptr;
   }
 
@@ -277,33 +218,12 @@ AndroidSurfaceTexture::GetTransformMatrix(gfx::Matrix4x4& aMatrix) const
 void
 AndroidSurfaceTexture::SetFrameAvailableCallback(nsIRunnable* aRunnable)
 {
-  if (aRunnable) {
-    GeckoAppShell::RegisterSurfaceTextureFrameListener(mSurfaceTexture, mID);
-  } else {
-     GeckoAppShell::UnregisterSurfaceTextureFrameListener(mSurfaceTexture);
-  }
-
-  mFrameAvailableCallback = aRunnable;
 }
 
 void
 AndroidSurfaceTexture::SetDefaultSize(mozilla::gfx::IntSize size)
 {
   mSurfaceTexture->SetDefaultBufferSize(size.width, size.height);
-}
-
-void
-AndroidSurfaceTexture::NotifyFrameAvailable()
-{
-  if (mFrameAvailableCallback) {
-    // Proxy to main thread if we aren't on it
-    if (!NS_IsMainThread()) {
-      // Proxy to main thread
-      NS_DispatchToCurrentThread(NewRunnableMethod(this, &AndroidSurfaceTexture::NotifyFrameAvailable));
-    } else {
-      mFrameAvailableCallback->Run();
-    }
-  }
 }
 
 } // gl
