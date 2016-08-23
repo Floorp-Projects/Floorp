@@ -224,13 +224,20 @@ function openLinkIn(url, where, params) {
   var aIndicateErrorPageLoad = params.indicateErrorPageLoad;
 
   if (where == "save") {
-    if (!aInitiatingDoc) {
-      Components.utils.reportError("openUILink/openLinkIn was called with " +
-        "where == 'save' but without initiatingDoc.  See bug 814264.");
-      return;
-    }
     // TODO(1073187): propagate referrerPolicy.
-    saveURL(url, null, null, true, null, aNoReferrer ? null : aReferrerURI, aInitiatingDoc);
+
+    // ContentClick.jsm passes isContentWindowPrivate for saveURL instead of passing a CPOW initiatingDoc
+    if ("isContentWindowPrivate" in params) {
+      saveURL(url, null, null, true, true, aNoReferrer ? null : aReferrerURI, null, params.isContentWindowPrivate);
+    }
+    else {
+      if (!aInitiatingDoc) {
+        Components.utils.reportError("openUILink/openLinkIn was called with " +
+          "where == 'save' but without initiatingDoc.  See bug 814264.");
+        return;
+      }
+      saveURL(url, null, null, true, true, aNoReferrer ? null : aReferrerURI, aInitiatingDoc);
+    }
     return;
   }
 

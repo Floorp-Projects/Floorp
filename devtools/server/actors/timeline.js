@@ -26,7 +26,7 @@ const events = require("sdk/event/core");
 /**
  * The timeline actor pops and forwards timeline markers registered in docshells.
  */
-var TimelineActor = exports.TimelineActor = protocol.ActorClass(timelineSpec, {
+var TimelineActor = exports.TimelineActor = protocol.ActorClassWithSpec(timelineSpec, {
   /**
    * Initializes this actor with the provided connection and tab actor.
    */

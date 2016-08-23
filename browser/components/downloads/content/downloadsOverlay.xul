@@ -104,8 +104,8 @@
         <menuseparator/>
 
         <menuitem command="downloadsCmd_clearList"
-                  label="&cmd.clearList.label;"
-                  accesskey="&cmd.clearList.accesskey;"/>
+                  label="&cmd.clearList2.label;"
+                  accesskey="&cmd.clearList2.accesskey;"/>
       </menupopup>
 
       <panelmultiview id="downloadsPanel-multiView"
@@ -148,11 +148,31 @@
                              crop="end"/>
               </vbox>
             </hbox>
-            <button id="downloadsHistory"
-                    class="plain downloadsPanelFooterButton"
-                    label="&downloadsHistory.label;"
-                    accesskey="&downloadsHistory.accesskey;"
-                    oncommand="DownloadsPanel.showDownloadsHistory();"/>
+            <hbox id="downloadsFooterButtons">
+              <button id="downloadsHistory"
+                      class="plain downloadsPanelFooterButton"
+                      label="&downloadsHistory.label;"
+                      accesskey="&downloadsHistory.accesskey;"
+                      flex="1"
+                      oncommand="DownloadsPanel.showDownloadsHistory();"/>
+              <toolbarseparator id="downloadsFooterButtonsSplitter"
+                      class="downloadsDropmarkerSplitter"/>
+              <button id="downloadsFooterDropmarker"
+                      class="plain downloadsPanelFooterButton downloadsDropmarker"
+                      type="menu">
+                <menupopup id="downloadSubPanel"
+                           onpopupshowing="DownloadsPanel.onFooterPopupShowing(event);"
+                           onpopuphidden="DownloadsPanel.onFooterPopupHidden(event);"
+                           position="after_end">
+                  <menuitem id="downloadsDropdownItemClearList"
+                            command="downloadsCmd_clearList"
+                            label="&cmd.clearList2.label;"/>
+                  <menuitem id="downloadsDropdownItemOpenDownloadsFolder"
+                            oncommand="DownloadsPanel.openDownloadsFolder();"
+                            label="&openDownloadsFolder.label;"/>
+                </menupopup>
+              </button>
+            </hbox>
           </vbox>
         </panelview>
 

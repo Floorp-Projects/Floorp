@@ -26,6 +26,10 @@ class FilterPath(object):
         return self._finder
 
     @property
+    def ext(self):
+        return os.path.splitext(self.path)[1]
+
+    @property
     def exists(self):
         return os.path.exists(self.path)
 
@@ -93,9 +97,17 @@ def filterpaths(paths, linter, **lintargs):
     includeglobs = [p for p in include if not p.exists]
     excludeglobs = [p for p in exclude if not p.exists]
 
+    extensions = linter.get('extensions')
     keep = set()
     discard = set()
     for path in map(FilterPath, paths):
+        # Exclude bad file extensions
+        if extensions and path.isfile and path.ext not in extensions:
+            continue
+
+        if path.match(excludeglobs):
+            continue
+
         # First handle include/exclude directives
         # that exist (i.e don't have globs)
         for inc in includepaths:
@@ -129,13 +141,12 @@ def filterpaths(paths, linter, **lintargs):
             # by an exclude directive.
             if not path.match(includeglobs):
                 continue
-            elif path.match(excludeglobs):
-                continue
+
             keep.add(path)
         elif path.isdir:
             # If the specified path is a directory, use a
             # FileFinder to resolve all relevant globs.
-            path.exclude = excludeglobs
+            path.exclude = [e.path for e in excludeglobs]
             for pattern in includeglobs:
                 for p, f in path.finder.find(pattern.path):
                     keep.add(path.join(p))

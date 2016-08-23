@@ -96,4 +96,14 @@ describe("Message reducer:", () => {
     expect(messages.first().parameters[0]).toBe(`message num 2`);
     expect(messages.last().parameters[0]).toBe(`message num ${logLimit + 1}`);
   });
+
+  it("does not add null messages to the store", () => {
+    const { dispatch, getState } = setupStore([]);
+
+    const message = stubConsoleMessages.get("console.time('bar')");
+    dispatch(actions.messageAdd(message));
+
+    const messages = getAllMessages(getState());
+    expect(messages.size).toBe(0);
+  });
 });

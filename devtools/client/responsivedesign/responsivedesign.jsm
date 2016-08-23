@@ -19,6 +19,7 @@ var Services = require("Services");
 var EventEmitter = require("devtools/shared/event-emitter");
 var {ViewHelpers} = require("devtools/client/shared/widgets/view-helpers");
 var { LocalizationHelper } = require("devtools/client/shared/l10n");
+var { EmulationFront } = require("devtools/shared/fronts/emulation");
 
 loader.lazyImporter(this, "SystemAppProxy",
                     "resource://gre/modules/SystemAppProxy.jsm");
@@ -274,11 +275,8 @@ ResponsiveUI.prototype = {
     this.client = new DebuggerClient(DebuggerServer.connectPipe());
     yield this.client.connect();
     let {tab} = yield this.client.getTab();
-    let [response, tabClient] = yield this.client.attachTab(tab.actor);
-    this.tabClient = tabClient;
-    if (!tabClient) {
-      console.error(new Error("Responsive Mode: failed to attach tab"));
-    }
+    yield this.client.attachTab(tab.actor);
+    this.emulationFront = EmulationFront(this.client, tab);
   }),
 
   loadPresets: function () {
@@ -392,7 +390,7 @@ ResponsiveUI.prototype = {
 
     yield new Promise((resolve, reject) => {
       this.client.close(resolve);
-      this.client = this.tabClient = null;
+      this.client = this.emulationFront = null;
     });
 
     this._telemetry.toolClosed("responsive");
@@ -974,18 +972,19 @@ ResponsiveUI.prototype = {
    */
   changeUA: Task.async(function* () {
     let value = this.userAgentInput.value;
+    let changed;
     if (value) {
+      changed = yield this.emulationFront.setUserAgentOverride(value);
       this.userAgentInput.setAttribute("attention", "true");
     } else {
+      changed = yield this.emulationFront.clearUserAgentOverride();
       this.userAgentInput.removeAttribute("attention");
     }
-
-    // Changing the UA triggers an automatic reload.  Ensure we wait for this to
-    // complete before emitting the changed event, so that tests wait for the
-    // reload.
-    let reloaded = this.waitForReload();
-    yield this.tabClient.reconfigure({customUserAgent: value});
-    yield reloaded;
+    if (changed) {
+      let reloaded = this.waitForReload();
+      this.tab.linkedBrowser.reload();
+      yield reloaded;
+    }
     ResponsiveUIManager.emit("userAgentChanged", { tab: this.tab });
   }),
 

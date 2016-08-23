@@ -125,7 +125,6 @@ WebGLContext::WebGLContext()
     , mNeedsFakeNoDepth(false)
     , mNeedsFakeNoStencil(false)
     , mNeedsEmulatedLoneDepthStencil(false)
-    , mVRPresentationActive(false)
 {
     mGeneration = 0;
     mInvalidated = false;
@@ -1307,9 +1306,8 @@ public:
         HTMLCanvasElement* canvas = userdata->mCanvas;
         WebGLContext* webgl = static_cast<WebGLContext*>(canvas->GetContextAtIndex(0));
 
-        // Present our screenbuffer, if needed.
-        webgl->PresentScreenBuffer();
-        webgl->mDrawCallsSinceLastFlush = 0;
+        // Prepare the context for composition
+        webgl->BeginComposition();
     }
 
     /** DidTransactionCallback gets called by the Layers code everytime the WebGL canvas gets composite,
@@ -1320,10 +1318,8 @@ public:
         HTMLCanvasElement* canvas = userdata->mCanvas;
         WebGLContext* webgl = static_cast<WebGLContext*>(canvas->GetContextAtIndex(0));
 
-        // Mark ourselves as no longer invalidated.
-        webgl->MarkContextClean();
-
-        webgl->UpdateLastUseIndex();
+        // Clean up the context after composition
+        webgl->EndComposition();
     }
 
 private:
@@ -1610,6 +1606,24 @@ WebGLContext::PresentScreenBuffer()
     mShouldPresent = false;
 
     return true;
+}
+
+// Prepare the context for capture before compositing
+void
+WebGLContext::BeginComposition()
+{
+    // Present our screenbuffer, if needed.
+    PresentScreenBuffer();
+    mDrawCallsSinceLastFlush = 0;
+}
+
+// Clean up the context after captured for compositing
+void
+WebGLContext::EndComposition()
+{
+    // Mark ourselves as no longer invalidated.
+    MarkContextClean();
+    UpdateLastUseIndex();
 }
 
 void
@@ -2340,40 +2354,43 @@ WebGLContext::GetUnpackSize(bool isFunc3D, uint32_t width, uint32_t height,
 already_AddRefed<layers::SharedSurfaceTextureClient>
 WebGLContext::GetVRFrame()
 {
-  VRManagerChild *vrmc = VRManagerChild::Get();
-  if (!vrmc) {
-    return nullptr;
-  }
-
-  PresentScreenBuffer();
-  mDrawCallsSinceLastFlush = 0;
-
-  MarkContextClean();
-  UpdateLastUseIndex();
-
-  gl::GLScreenBuffer* screen = gl->Screen();
-  if (!screen) {
-    return nullptr;
-  }
-
-  RefPtr<SharedSurfaceTextureClient> sharedSurface = screen->Front();
-  if (!sharedSurface) {
-    return nullptr;
-  }
-
-  if (sharedSurface && sharedSurface->GetAllocator() != vrmc) {
-    RefPtr<SharedSurfaceTextureClient> dest =
-      screen->Factory()->NewTexClient(sharedSurface->GetSize());
-    if (!dest) {
-      return nullptr;
+    VRManagerChild* vrmc = VRManagerChild::Get();
+    if (!vrmc) {
+        return nullptr;
     }
-    gl::SharedSurface* destSurf = dest->Surf();
-    destSurf->ProducerAcquire();
-    SharedSurface::ProdCopy(sharedSurface->Surf(), dest->Surf(), screen->Factory());
-    destSurf->ProducerRelease();
 
-    return dest.forget();
-  }
+    /**
+     * Swap buffers as though composition has occurred.
+     * We will then share the resulting front buffer to be submitted to the VR
+     * compositor.
+     */
+    BeginComposition();
+    EndComposition();
+
+    gl::GLScreenBuffer* screen = gl->Screen();
+    if (!screen) {
+        return nullptr;
+    }
+
+    RefPtr<SharedSurfaceTextureClient> sharedSurface = screen->Front();
+    if (!sharedSurface) {
+        return nullptr;
+    }
+
+    if (sharedSurface && sharedSurface->GetAllocator() != vrmc) {
+        RefPtr<SharedSurfaceTextureClient> dest =
+        screen->Factory()->NewTexClient(sharedSurface->GetSize());
+        if (!dest) {
+            return nullptr;
+        }
+        gl::SharedSurface* destSurf = dest->Surf();
+        destSurf->ProducerAcquire();
+        SharedSurface::ProdCopy(sharedSurface->Surf(), dest->Surf(),
+                                screen->Factory());
+        destSurf->ProducerRelease();
+
+        return dest.forget();
+    }
 
   return sharedSurface.forget();
 }
@@ -2381,26 +2398,25 @@ WebGLContext::GetVRFrame()
 bool
 WebGLContext::StartVRPresentation()
 {
-  VRManagerChild *vrmc = VRManagerChild::Get();
-  if (!vrmc) {
-    return false;
-  }
-  gl::GLScreenBuffer* screen = gl->Screen();
-  if (!screen) {
-    return false;
-  }
-  gl::SurfaceCaps caps = screen->mCaps;
+    VRManagerChild* vrmc = VRManagerChild::Get();
+    if (!vrmc) {
+        return false;
+    }
+    gl::GLScreenBuffer* screen = gl->Screen();
+    if (!screen) {
+        return false;
+    }
+    gl::SurfaceCaps caps = screen->mCaps;
 
-  UniquePtr<gl::SurfaceFactory> factory =
-    gl::GLScreenBuffer::CreateFactory(gl,
-      caps,
-      vrmc,
-      vrmc->GetBackendType(),
-      TextureFlags::ORIGIN_BOTTOM_LEFT);
+    UniquePtr<gl::SurfaceFactory> factory =
+        gl::GLScreenBuffer::CreateFactory(gl,
+            caps,
+            vrmc,
+            vrmc->GetBackendType(),
+            TextureFlags::ORIGIN_BOTTOM_LEFT);
 
-  screen->Morph(Move(factory));
-  mVRPresentationActive = true;
-  return true;
+    screen->Morph(Move(factory));
+    return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

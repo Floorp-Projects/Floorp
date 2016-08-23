@@ -43,7 +43,11 @@ let App = createClass({
   },
 
   onChangeViewportDevice(id, device) {
-    this.props.dispatch(changeDevice(id, device));
+    window.postMessage({
+      type: "update-user-agent",
+      userAgent: device.userAgent
+    }, "*");
+    this.props.dispatch(changeDevice(id, device.name));
   },
 
   onContentResize({ width, height }) {

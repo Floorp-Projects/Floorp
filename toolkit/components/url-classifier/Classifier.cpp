@@ -12,6 +12,7 @@
 #include "nsISeekableStream.h"
 #include "nsIFile.h"
 #include "nsNetCID.h"
+#include "nsPrintfCString.h"
 #include "nsThreadUtils.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/Logging.h"
@@ -169,6 +170,49 @@ Classifier::Reset()
 
   mTableFreshness.Clear();
   RegenActiveTables();
+}
+
+void
+Classifier::ResetTables(const nsTArray<nsCString>& aTables)
+{
+  // Clear lookup cache
+  MarkSpoiled(aTables);
+
+  // Clear on-disk database
+  DeleteTables(aTables);
+
+  RegenActiveTables();
+}
+
+void
+Classifier::DeleteTables(const nsTArray<nsCString>& aTables)
+{
+  nsCOMPtr<nsISimpleEnumerator> entries;
+  nsresult rv = mStoreDirectory->GetDirectoryEntries(getter_AddRefs(entries));
+  NS_ENSURE_SUCCESS_VOID(rv);
+
+  bool hasMore;
+  while (NS_SUCCEEDED(rv = entries->HasMoreElements(&hasMore)) && hasMore) {
+    nsCOMPtr<nsISupports> supports;
+    rv = entries->GetNext(getter_AddRefs(supports));
+    NS_ENSURE_SUCCESS_VOID(rv);
+
+    nsCOMPtr<nsIFile> file = do_QueryInterface(supports);
+    NS_ENSURE_TRUE_VOID(file);
+
+    nsCString leafName;
+    rv = file->GetNativeLeafName(leafName);
+    NS_ENSURE_SUCCESS_VOID(rv);
+
+    leafName.Truncate(leafName.RFind("."));
+    if (aTables.Contains(leafName)) {
+      if (NS_FAILED(file->Remove(false))) {
+        NS_WARNING(nsPrintfCString("Fail to remove file %s from the disk",
+                                   leafName.get()).get());
+      }
+    }
+  }
+  NS_ENSURE_SUCCESS_VOID(rv);
 }
 
 void
@@ -364,7 +408,7 @@ Classifier::ApplyFullHashes(nsTArray<TableUpdate*>* aUpdates)
 }
 
 nsresult
-Classifier::MarkSpoiled(nsTArray<nsCString>& aTables)
+Classifier::MarkSpoiled(const nsTArray<nsCString>& aTables)
 {
   for (uint32_t i = 0; i < aTables.Length(); i++) {
     LOG(("Spoiling table: %s", aTables[i].get()));

@@ -9,12 +9,14 @@ const protocol = require("devtools/shared/protocol");
 const { emulationSpec } = require("devtools/shared/specs/emulation");
 const { SimulatorCore } = require("devtools/shared/touch/simulator-core");
 
-let EmulationActor = protocol.ActorClass(emulationSpec, {
+let EmulationActor = protocol.ActorClassWithSpec(emulationSpec, {
   initialize(conn, tabActor) {
     protocol.Actor.prototype.initialize.call(this, conn);
     this.docShell = tabActor.docShell;
     this.simulatorCore = new SimulatorCore(tabActor.chromeEventHandler);
   },
+
+  /* Touch events override */
 
   _previousTouchEventsOverride: null,
 
@@ -43,8 +45,35 @@ let EmulationActor = protocol.ActorClass(emulationSpec, {
 
   clearTouchEventsOverride() {
     if (this._previousTouchEventsOverride !== null) {
-      this.setTouchEventsOverride(this._previousTouchEventsOverride);
+      return this.setTouchEventsOverride(this._previousTouchEventsOverride);
     }
+    return false;
+  },
+
+  /* User agent override */
+
+  _previousUserAgentOverride: null,
+
+  setUserAgentOverride(userAgent) {
+    if (this.docShell.customUserAgent == userAgent) {
+      return false;
+    }
+    if (this._previousUserAgentOverride === null) {
+      this._previousUserAgentOverride = this.docShell.customUserAgent;
+    }
+    this.docShell.customUserAgent = userAgent;
+    return true;
+  },
+
+  getUserAgentOverride() {
+    return this.docShell.customUserAgent;
+  },
+
+  clearUserAgentOverride() {
+    if (this._previousUserAgentOverride !== null) {
+      return this.setUserAgentOverride(this._previousUserAgentOverride);
+    }
+    return false;
   },
 
   disconnect() {
@@ -53,6 +82,7 @@ let EmulationActor = protocol.ActorClass(emulationSpec, {
 
   destroy() {
     this.clearTouchEventsOverride();
+    this.clearUserAgentOverride();
     this.docShell = null;
     this.simulatorCore = null;
     protocol.Actor.prototype.destroy.call(this);

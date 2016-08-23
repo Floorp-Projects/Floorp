@@ -1,0 +1,111 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test Encrypted Media Extensions</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+  <script type="text/javascript" src="http://test1.mochi.test:8888/tests/dom/media/test/eme.js"></script>
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+var manager = new MediaTestManager;
+
+function startTest(test, token)
+{
+  // Test if the appropriate preconditions are met such that we can start
+  // prcoessing delayed sessions.
+  function TestIfDoneDelaying()
+  {
+    var got = "Got:";
+    if (loaded) { got += " loaded,"; }
+    got += " " + gotEncrypted + "/" + test.sessionCount + " sessions,";
+    got += " " + gotWaitingForKey + " waiting for key events"
+    if (loaded && gotEncrypted == test.sessionCount && gotWaitingForKey > 0) {
+      Log(token, got + " -> Update sessions with keys");
+      params.ProcessSessions();
+    } else {
+      Log(token, got + " -> Wait for more...");
+    }
+  }
+
+  manager.started(token);
+
+  var updatedSessionsCount = 0;
+  var loaded = false;
+
+  var params = {
+    // params will be populated with a ProcessSessions() callback, that can be
+    // called to process delayed sessions.
+    delaySessions: true,
+    // Function to be called once we start processing and updating sessions.
+    // This should only be called once the preconditions in TestIfDoneDealying
+    // are met.
+    onsessionupdated: function(session) {
+      updatedSessionsCount += 1;
+      if (updatedSessionsCount == test.sessionCount) {
+          info(TimeStamp(token) + " Updated all sessions, loading complete -> Play");
+          v.play();
+      } else {
+         info(TimeStamp(token) + " Updated " + updatedSessionsCount + "/" + test.sessionCount + " sessions so far");
+      }
+    },
+  };
+  var v = SetupEME(test, token, params);
+
+  document.body.appendChild(v);
+
+  var gotEncrypted = 0;
+  var gotWaitingForKey = 0;
+
+  v.addEventListener("encrypted", function() {
+    gotEncrypted += 1;
+    TestIfDoneDelaying();
+  });
+
+  v.addEventListener("waitingforkey", function() {
+    gotWaitingForKey += 1;
+    TestIfDoneDelaying()
+  });
+
+  v.addEventListener("loadedmetadata", function() {
+    ok(SpecialPowers.do_lookupGetter(v, "isEncrypted").apply(v),
+       TimeStamp(token) + " isEncrypted should be true");
+    is(v.isEncrypted, undefined, "isEncrypted should not be accessible from content");
+  });
+
+  v.addEventListener("ended", function() {
+    ok(true, TimeStamp(token) + " got ended event");
+    // We expect only one waitingForKey as we delay until all sessions are ready.
+    // I.e. one waitingForKey should be fired, after which, we process all sessions,
+    // so it should not be possible to be blocked by a key after that point.
+    ok(gotWaitingForKey == 1,  "Expected number 1 wait, got: " + gotWaitingForKey);
+
+    v.closeSessions().then(() => manager.finished(token));
+  });
+
+  LoadTest(test, v, token)
+  .then(function() {
+    loaded = true;
+    TestIfDoneDelaying();
+  }).catch(function() {
+    ok(false, token + " failed to load");
+    manager.finished(token);
+  });
+}
+
+function beginTest() {
+  manager.runTests(gEMETests, startTest);
+}
+
+if (!IsMacOSSnowLeopardOrEarlier()) {
+  SimpleTest.waitForExplicitFinish();
+  SetupEMEPref(beginTest);
+} else {
+  todo(false, "Test disabled on this platform.");
+}
+</script>
+</pre>
+</body>
+</html>

@@ -185,6 +185,7 @@ private:
   void Reset(TrackType aTrack);
   void DrainComplete(TrackType aTrack);
   void DropDecodedSamples(TrackType aTrack);
+  void WaitingForKey(TrackType aTrack);
 
   bool ShouldSkip(bool aSkipToNextKeyframe, media::TimeUnit aTimeThreshold);
 
@@ -218,6 +219,9 @@ private:
     }
     bool OnReaderTaskQueue() override {
       return mReader->OnTaskQueue();
+    }
+    void WaitingForKey() override {
+      mReader->WaitingForKey(mType);
     }
 
   private:

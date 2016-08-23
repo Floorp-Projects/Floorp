@@ -1063,21 +1063,46 @@ MediaDecoderStateMachine::ToStateStr()
   return ToStateStr(mState);
 }
 
-void MediaDecoderStateMachine::SetState(State aState)
+void
+MediaDecoderStateMachine::SetState(State aState)
 {
   MOZ_ASSERT(OnTaskQueue());
   if (mState == aState) {
     return;
   }
-  DECODER_LOG("Change machine state from %s to %s",
-              ToStateStr(), ToStateStr(aState));
 
+  DECODER_LOG("MDSM state: %s -> %s", ToStateStr(), ToStateStr(aState));
+
+  ExitState(mState);
   mState = aState;
+  EnterState(mState);
+}
 
-  mIsShutdown = mState == DECODER_STATE_ERROR || mState == DECODER_STATE_SHUTDOWN;
+void
+MediaDecoderStateMachine::ExitState(State aState)
+{
+  MOZ_ASSERT(OnTaskQueue());
+  switch (aState) {
+    case DECODER_STATE_COMPLETED:
+      mSentPlaybackEndedEvent = false;
+      break;
+    default:
+      break;
+  }
+}
 
-  // Clear state-scoped state.
-  mSentPlaybackEndedEvent = false;
+void
+MediaDecoderStateMachine::EnterState(State aState)
+{
+  MOZ_ASSERT(OnTaskQueue());
+  switch (aState) {
+    case DECODER_STATE_ERROR:
+    case DECODER_STATE_SHUTDOWN:
+      mIsShutdown = true;
+      break;
+    default:
+      break;
+  }
 }
 
 void MediaDecoderStateMachine::VolumeChanged()

@@ -6,7 +6,7 @@
 
 const { Task } = require("devtools/shared/task");
 const {
-  method, Arg, Option, RetVal, Actor, ActorClass
+  method, Arg, Option, RetVal, Actor, ActorClassWithSpec
 } = require("devtools/shared/protocol");
 const { gcliSpec } = require("devtools/shared/specs/gcli");
 const events = require("sdk/event/core");
@@ -15,7 +15,7 @@ const { createSystem } = require("gcli/system");
 /**
  * Manage remote connections that want to talk to GCLI
  */
-const GcliActor = ActorClass(gcliSpec, {
+const GcliActor = ActorClassWithSpec(gcliSpec, {
   initialize: function (conn, tabActor) {
     Actor.prototype.initialize.call(this, conn);
 

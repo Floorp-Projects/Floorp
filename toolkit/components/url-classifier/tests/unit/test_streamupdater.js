@@ -195,6 +195,21 @@ QueryInterface: function(iid)
 
 // Tests a database reset request.
 function testReset() {
+  // The moz-phish-simple table is populated separately from the other update in
+  // a separate update request. Therefore it should not be reset when we run the
+  // updates later in this function.
+  var mozAddUrls = [ "moz-reset.com/a" ];
+  var mozUpdate = buildMozPhishingUpdate(
+    [
+      { "chunkNum" : 1,
+        "urls" : mozAddUrls
+      }]);
+
+  var dataUpdate = "data:," + encodeURIComponent(mozUpdate);
+
+  streamUpdater.downloadUpdates(mozTables, "", true,
+                                dataUpdate, () => {}, updateError, updateError);
+
   var addUrls1 = [ "foo-reset.com/a", "foo-reset.com/b" ];
   var update1 = buildPhishingUpdate(
     [
@@ -212,11 +227,15 @@ function testReset() {
       }]);
 
   var assertions = {
-    "tableData" : "test-phish-simple;a:3",
-    "urlsExist" : addUrls3,
-    "urlsDontExist" : addUrls1
+    "tableData" : "moz-phish-simple;a:1\ntest-phish-simple;a:3", // tables that should still be there.
+    "mozPhishingUrlsExist" : mozAddUrls,                         // mozAddUrls added prior to the reset
+                                                                 // but it should still exist after reset.
+    "urlsExist" : addUrls3,                                      // addUrls3 added after the reset.
+    "urlsDontExist" : addUrls1                                   // addUrls1 added prior to the reset
   };
 
+  // Use these update responses in order. The update request only
+  // contains test-*-simple tables so the reset will only apply to these.
   doTest([update1, update2, update3], assertions, false);
 }
 

@@ -101,7 +101,7 @@ nsCSSClipPathInstance::CreateClipPath(DrawTarget* aDrawTarget)
     case StyleBasicShapeType::Polygon:
       return CreateClipPathPolygon(aDrawTarget, r);
     case StyleBasicShapeType::Inset:
-      // XXXkrit support all basic shapes
+      return CreateClipPathInset(aDrawTarget, r);
       break;
     default:
       MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("Unexpected shape type");
@@ -237,5 +237,43 @@ nsCSSClipPathInstance::CreateClipPathPolygon(DrawTarget* aDrawTarget,
     builder->LineTo(Point(aRefBox.x + x, aRefBox.y + y) / appUnitsPerDevPixel);
   }
   builder->Close();
+  return builder->Finish();
+}
+
+already_AddRefed<Path>
+nsCSSClipPathInstance::CreateClipPathInset(DrawTarget* aDrawTarget,
+                                           const nsRect& aRefBox)
+{
+  StyleBasicShape* basicShape = mClipPathStyle.GetBasicShape();
+  const nsTArray<nsStyleCoord>& coords = basicShape->Coordinates();
+  MOZ_ASSERT(coords.Length() == 4, "wrong number of arguments");
+
+  RefPtr<PathBuilder> builder = aDrawTarget->CreatePathBuilder();
+
+  nscoord appUnitsPerDevPixel =
+    mTargetFrame->PresContext()->AppUnitsPerDevPixel();
+
+  nsMargin inset(nsRuleNode::ComputeCoordPercentCalc(coords[0], aRefBox.height),
+                 nsRuleNode::ComputeCoordPercentCalc(coords[1], aRefBox.width),
+                 nsRuleNode::ComputeCoordPercentCalc(coords[2], aRefBox.height),
+                 nsRuleNode::ComputeCoordPercentCalc(coords[3], aRefBox.width));
+
+  nsRect insetRect(aRefBox);
+  insetRect.Deflate(inset);
+  const Rect insetRectPixels = NSRectToRect(insetRect, appUnitsPerDevPixel);
+  const nsStyleCorners& radius = basicShape->GetRadius();
+
+  nscoord appUnitsRadii[8];
+
+  if (nsIFrame::ComputeBorderRadii(radius, insetRect.Size(), aRefBox.Size(),
+                                   Sides(), appUnitsRadii)) {
+    RectCornerRadii corners;
+    nsCSSRendering::ComputePixelRadii(appUnitsRadii,
+                                      appUnitsPerDevPixel, &corners);
+
+    AppendRoundedRectToPath(builder, insetRectPixels, corners, true);
+  } else {
+    AppendRectToPath(builder, insetRectPixels, true);
+  }
   return builder->Finish();
 }

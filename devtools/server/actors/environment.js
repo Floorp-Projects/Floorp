@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { ActorClass } = require("devtools/shared/protocol");
+const { ActorClassWithSpec } = require("devtools/shared/protocol");
 const { createValueGrip } = require("devtools/server/actors/object");
 const { environmentSpec } = require("devtools/shared/specs/environment");
 
@@ -19,7 +19,7 @@ const { environmentSpec } = require("devtools/shared/specs/environment");
  * @param ThreadActor aThreadActor
  *        The parent thread actor that contains this environment.
  */
-let EnvironmentActor = ActorClass(environmentSpec, {
+let EnvironmentActor = ActorClassWithSpec(environmentSpec, {
   initialize: function (environment, threadActor) {
     this.obj = environment;
     this.threadActor = threadActor;

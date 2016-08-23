@@ -36,50 +36,6 @@ SourceBufferResource::Close()
 }
 
 nsresult
-SourceBufferResource::ReadInternal(char* aBuffer, uint32_t aCount, uint32_t* aBytes, bool aMayBlock)
-{
-  mMonitor.AssertCurrentThreadIn();
-  MOZ_ASSERT_IF(!aMayBlock, aBytes);
-
-  // Cache the offset for the read in case mOffset changes while waiting on the
-  // monitor below. It's basically impossible to implement these API semantics
-  // sanely. :-(
-  uint64_t readOffset = mOffset;
-
-  while (aMayBlock &&
-         !mEnded &&
-         readOffset + aCount > static_cast<uint64_t>(GetLength())) {
-    SBR_DEBUGV("waiting for data");
-    mMonitor.Wait();
-    // The callers of this function should have checked this, but it's
-    // possible that we had an eviction while waiting on the monitor.
-    if (readOffset < mInputBuffer.GetOffset()) {
-      return NS_ERROR_FAILURE;
-    }
-  }
-
-  uint32_t available = GetLength() - readOffset;
-  uint32_t count = std::min(aCount, available);
-  SBR_DEBUGV("readOffset=%llu GetLength()=%u available=%u count=%u mEnded=%d",
-             readOffset, GetLength(), available, count, mEnded);
-  if (available == 0) {
-    SBR_DEBUGV("reached EOF");
-    *aBytes = 0;
-    return NS_OK;
-  }
-
-  mInputBuffer.CopyData(readOffset, count, aBuffer);
-  *aBytes = count;
-
-  // From IRC:
-  // <@cpearce>bholley: *this* is why there should only every be a ReadAt() and
-  // no Read() on a Stream abstraction! there's no good answer, they all suck.
-  mOffset = readOffset + count;
-
-  return NS_OK;
-}
-
-nsresult
 SourceBufferResource::ReadAt(int64_t aOffset, char* aBuffer, uint32_t aCount, uint32_t* aBytes)
 {
   SBR_DEBUG("ReadAt(aOffset=%lld, aBuffer=%p, aCount=%u, aBytes=%p)",
@@ -93,18 +49,8 @@ SourceBufferResource::ReadAtInternal(int64_t aOffset, char* aBuffer, uint32_t aC
                                      bool aMayBlock)
 {
   mMonitor.AssertCurrentThreadIn();
-  nsresult rv = SeekInternal(aOffset);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
 
-  return ReadInternal(aBuffer, aCount, aBytes, aMayBlock);
-}
-
-nsresult
-SourceBufferResource::SeekInternal(int64_t aOffset)
-{
-  mMonitor.AssertCurrentThreadIn();
+  MOZ_ASSERT_IF(!aMayBlock, aBytes);
 
   if (mClosed ||
       aOffset < 0 ||
@@ -113,7 +59,36 @@ SourceBufferResource::SeekInternal(int64_t aOffset)
     return NS_ERROR_FAILURE;
   }
 
-  mOffset = aOffset;
+  while (aMayBlock &&
+         !mEnded &&
+         aOffset + aCount > GetLength()) {
+    SBR_DEBUGV("waiting for data");
+    mMonitor.Wait();
+    // The callers of this function should have checked this, but it's
+    // possible that we had an eviction while waiting on the monitor.
+    if (uint64_t(aOffset) < mInputBuffer.GetOffset()) {
+      return NS_ERROR_FAILURE;
+    }
+  }
+
+  uint32_t available = GetLength() - aOffset;
+  uint32_t count = std::min(aCount, available);
+
+  // Keep the position of the last read to have Tell() approximately give us
+  // the position we're up to in the stream.
+  mOffset = aOffset + count;
+
+  SBR_DEBUGV("offset=%llu GetLength()=%u available=%u count=%u mEnded=%d",
+             aOffset, GetLength(), available, count, mEnded);
+  if (available == 0) {
+    SBR_DEBUGV("reached EOF");
+    *aBytes = 0;
+    return NS_OK;
+  }
+
+  mInputBuffer.CopyData(aOffset, count, aBuffer);
+  *aBytes = count;
+
   return NS_OK;
 }
 
@@ -124,9 +99,7 @@ SourceBufferResource::ReadFromCache(char* aBuffer, int64_t aOffset, uint32_t aCo
             aBuffer, aOffset, aCount);
   ReentrantMonitorAutoEnter mon(mMonitor);
   uint32_t bytesRead;
-  int64_t oldOffset = mOffset;
   nsresult rv = ReadAtInternal(aOffset, aBuffer, aCount, &bytesRead, /* aMayBlock = */ false);
-  mOffset = oldOffset; // ReadFromCache isn't supposed to affect the seek position.
   NS_ENSURE_SUCCESS(rv, rv);
 
   // ReadFromCache return failure if not all the data is cached.
@@ -154,10 +127,9 @@ SourceBufferResource::EvictBefore(uint64_t aOffset, ErrorResult& aRv)
 {
   SBR_DEBUG("EvictBefore(aOffset=%llu)", aOffset);
   ReentrantMonitorAutoEnter mon(mMonitor);
-  // If aOffset is past the current playback offset we don't evict.
-  if (aOffset < mOffset) {
-    mInputBuffer.EvictBefore(aOffset, aRv);
-  }
+
+  mInputBuffer.EvictBefore(aOffset, aRv);
+
   // Wake up any waiting threads in case a ReadInternal call
   // is now invalid.
   mon.NotifyAll();

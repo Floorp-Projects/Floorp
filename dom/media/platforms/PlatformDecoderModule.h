@@ -179,9 +179,15 @@ public:
 
   virtual void DrainComplete() = 0;
 
-  virtual void ReleaseMediaResources() {};
+  virtual void ReleaseMediaResources() {}
 
   virtual bool OnReaderTaskQueue() = 0;
+
+  // Denotes that a pending encryption key is preventing more input being fed
+  // into the decoder. This only needs to be overridden for callbacks that
+  // handle encryption. E.g. benchmarking does not use eme, so this need
+  // not be overridden in that case.
+  virtual void WaitingForKey() {}
 };
 
 // MediaDataDecoder is the interface exposed by decoders created by the
