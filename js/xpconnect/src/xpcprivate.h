@@ -1342,11 +1342,11 @@ class XPCNativeSet final
     inline bool FindMember(jsid name, XPCNativeMember** pMember,
                              XPCNativeInterface** pInterface) const;
 
-    inline bool FindMember(jsid name,
-                             XPCNativeMember** pMember,
-                             XPCNativeInterface** pInterface,
-                             XPCNativeSet* protoSet,
-                             bool* pIsLocal) const;
+    inline bool FindMember(JS::HandleId name,
+                           XPCNativeMember** pMember,
+                           XPCNativeInterface** pInterface,
+                           XPCNativeSet* protoSet,
+                           bool* pIsLocal) const;
 
     inline bool HasInterface(XPCNativeInterface* aInterface) const;
     inline bool HasInterfaceWithAncestor(XPCNativeInterface* aInterface) const;
