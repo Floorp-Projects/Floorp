@@ -3,13 +3,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { Front, FrontClass } = require("devtools/shared/protocol");
+const { Front, FrontClassWithSpec } = require("devtools/shared/protocol");
 const { emulationSpec } = require("devtools/shared/specs/emulation");
 
 /**
  * The corresponding Front object for the EmulationActor.
  */
-const EmulationFront = FrontClass(emulationSpec, {
+const EmulationFront = FrontClassWithSpec(emulationSpec, {
   initialize: function (client, form) {
     Front.prototype.initialize.call(this, client);
     this.actorID = form.emulationActor;

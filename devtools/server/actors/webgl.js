@@ -28,7 +28,7 @@ const PROGRAM_HIGHLIGHT_TRAIT = 2;
  * You can either retrieve, or compile the source of a shader, which will
  * automatically inflict the necessary changes to the WebGL state.
  */
-var ShaderActor = protocol.ActorClass(shaderSpec, {
+var ShaderActor = protocol.ActorClassWithSpec(shaderSpec, {
   /**
    * Create the shader actor.
    *
@@ -83,7 +83,7 @@ var ShaderActor = protocol.ActorClass(shaderSpec, {
  * A WebGL program is composed (at the moment, analogue to OpenGL ES 2.0)
  * of two shaders: a vertex shader and a fragment shader.
  */
-var ProgramActor = protocol.ActorClass(programSpec, {
+var ProgramActor = protocol.ActorClassWithSpec(programSpec, {
   /**
    * Create the program actor.
    *
@@ -184,7 +184,7 @@ var ProgramActor = protocol.ActorClass(programSpec, {
  * high-level methods. After instantiating this actor, you'll need to set it
  * up by calling setup().
  */
-var WebGLActor = exports.WebGLActor = protocol.ActorClass(webGLSpec, {
+var WebGLActor = exports.WebGLActor = protocol.ActorClassWithSpec(webGLSpec, {
   initialize: function (conn, tabActor) {
     protocol.Actor.prototype.initialize.call(this, conn);
     this.tabActor = tabActor;
