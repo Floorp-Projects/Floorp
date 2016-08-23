@@ -11,6 +11,7 @@ import android.os.Environment;
 import android.support.annotation.CheckResult;
 import android.support.annotation.NonNull;
 
+import android.widget.VideoView;
 import android.graphics.Rect;
 
 import org.json.JSONArray;
@@ -57,8 +58,6 @@ import org.mozilla.gecko.home.HomeScreen;
 import org.mozilla.gecko.home.SearchEngine;
 import org.mozilla.gecko.javaaddons.JavaAddonManager;
 import org.mozilla.gecko.media.AudioFocusAgent;
-import org.mozilla.gecko.media.FullScreenMediaController;
-import org.mozilla.gecko.media.VideoFrameLayout;
 import org.mozilla.gecko.menu.GeckoMenu;
 import org.mozilla.gecko.menu.GeckoMenuItem;
 import org.mozilla.gecko.mozglue.SafeIntent;
@@ -129,7 +128,6 @@ import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
-import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.nfc.NdefMessage;
@@ -164,10 +162,8 @@ import android.view.ViewTreeObserver;
 import android.view.Window;
 import android.view.animation.Interpolator;
 import android.widget.Button;
-import android.widget.FrameLayout;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
-import android.widget.VideoView;
 import android.widget.ViewFlipper;
 import com.keepsafe.switchboard.AsyncConfigLoader;
 import com.keepsafe.switchboard.SwitchBoard;
@@ -240,7 +236,6 @@ public class BrowserApp extends GeckoApp
     public ViewGroup mBrowserChrome;
     public ViewFlipper mActionBarFlipper;
     public ActionModeCompatView mActionBar;
-    private VideoFrameLayout mVideoLayout;
     private BrowserToolbar mBrowserToolbar;
     private View mDoorhangerOverlay;
     // We can't name the TabStrip class because it's not included on API 9.
@@ -586,8 +581,6 @@ public class BrowserApp extends GeckoApp
         mBrowserChrome = (ViewGroup) findViewById(R.id.browser_chrome);
         mActionBarFlipper = (ViewFlipper) findViewById(R.id.browser_actionbar);
         mActionBar = (ActionModeCompatView) findViewById(R.id.actionbar);
-
-        mVideoLayout = (VideoFrameLayout) findViewById(R.id.video_layout);
 
         mBrowserToolbar = (BrowserToolbar) findViewById(R.id.browser_toolbar);
         mBrowserToolbar.setTouchEventInterceptor(new TouchEventInterceptor() {
@@ -968,17 +961,6 @@ public class BrowserApp extends GeckoApp
         }
 
         if (hideFirstrunPager(TelemetryContract.Method.BACK)) {
-            return;
-        }
-
-        if (mVideoLayout.isFullScreen()) {
-            mVideoLayout.setFullScreen(false);
-            setFullScreen(false);
-            return;
-        }
-
-        if (mVideoLayout.hasVideo()) {
-            mVideoLayout.removeVideo();
             return;
         }
 
@@ -2005,21 +1987,11 @@ public class BrowserApp extends GeckoApp
                     @Override
                     public void run() {
                         VideoView view = new VideoView(BrowserApp.this);
-                        FullScreenMediaController mediaController = new FullScreenMediaController(BrowserApp.this);
-                        mediaController.setFullScreenListener(new FullScreenMediaController.FullScreenListener() {
-                            @Override
-                            public void onFullScreenClicked() {
-                                boolean fullScreen = !BrowserApp.this.mVideoLayout.isFullScreen();
-                                BrowserApp.this.setFullScreen(fullScreen);
-                                BrowserApp.this.mVideoLayout.setFullScreen(fullScreen);
-                            }
-                        });
+                        android.widget.MediaController mediaController = new android.widget.MediaController(BrowserApp.this);
                         view.setMediaController(mediaController);
-                        mediaController.setAnchorView(view);
                         view.setVideoURI(Uri.parse(uri));
+                        BrowserApp.this.addFullScreenPluginView(view);
                         view.start();
-
-                        mVideoLayout.setVideo(view);
 
                         Telemetry.sendUIEvent(TelemetryContract.Event.SHOW, TelemetryContract.Method.CONTENT, "playhls");
                     }
