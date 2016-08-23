@@ -83,7 +83,7 @@ ImageBitmapRenderingContext::SetDimensions(int32_t aWidth, int32_t aHeight)
 
 NS_IMETHODIMP
 ImageBitmapRenderingContext::InitializeWithDrawTarget(nsIDocShell* aDocShell,
-                                                      gfx::DrawTarget* aTarget)
+                                                      NotNull<gfx::DrawTarget*> aTarget)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

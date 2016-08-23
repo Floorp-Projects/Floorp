@@ -15,6 +15,7 @@
 #include "mozilla/dom/OffscreenCanvas.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/NotNull.h"
 
 #define NS_ICANVASRENDERINGCONTEXTINTERNAL_IID \
 { 0xb84f2fed, 0x9d4b, 0x430b, \
@@ -98,7 +99,7 @@ public:
   // Initializes with an nsIDocShell and DrawTarget. The size is taken from the
   // DrawTarget.
   NS_IMETHOD InitializeWithDrawTarget(nsIDocShell *aDocShell,
-                                      mozilla::gfx::DrawTarget* aTarget) = 0;
+                                      mozilla::NotNull<mozilla::gfx::DrawTarget*> aTarget) = 0;
 
   // Creates an image buffer. Returns null on failure.
   virtual mozilla::UniquePtr<uint8_t[]> GetImageBuffer(int32_t* format) = 0;
