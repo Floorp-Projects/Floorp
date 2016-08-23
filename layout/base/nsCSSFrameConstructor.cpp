@@ -4641,7 +4641,8 @@ nsCSSFrameConstructor::FindDisplayData(const nsStyleDisplay* aDisplay,
                                        Element* aElement,
                                        nsStyleContext* aStyleContext)
 {
-  PR_STATIC_ASSERT(eParentTypeCount < (1 << (32 - FCDATA_PARENT_TYPE_OFFSET)));
+  static_assert(eParentTypeCount < (1 << (32 - FCDATA_PARENT_TYPE_OFFSET)),
+                "Check eParentTypeCount should not overflow");
 
   // The style system ensures that floated and positioned frames are
   // block-level.

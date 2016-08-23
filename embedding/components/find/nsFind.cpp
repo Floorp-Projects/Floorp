@@ -49,7 +49,7 @@ static NS_DEFINE_CID(kCPreContentIteratorCID, NS_PRECONTENTITERATOR_CID);
 
 // nsFind::Find casts CH_SHY to char before calling StripChars
 // This works correctly if and only if CH_SHY <= 255
-PR_STATIC_ASSERT(CH_SHY <= 255);
+static_assert(CH_SHY <= 255, "CH_SHY is not an ascii character");
 
 // nsFindContentIterator is a special iterator that also goes through any
 // existing <textarea>'s or text <input>'s editor to lookup the anonymous DOM

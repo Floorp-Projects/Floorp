@@ -457,10 +457,10 @@ static const SurfaceMemoryReporterAttrs sSurfaceMemoryReporterAttrs[] = {
     {"gfx-surface-subsurface", nullptr},
 };
 
-PR_STATIC_ASSERT(MOZ_ARRAY_LENGTH(sSurfaceMemoryReporterAttrs) ==
-                 size_t(gfxSurfaceType::Max));
-PR_STATIC_ASSERT(uint32_t(CAIRO_SURFACE_TYPE_SKIA) ==
-                 uint32_t(gfxSurfaceType::Skia));
+static_assert(MOZ_ARRAY_LENGTH(sSurfaceMemoryReporterAttrs) ==
+                 size_t(gfxSurfaceType::Max), "sSurfaceMemoryReporterAttrs exceeds max capacity");
+static_assert(uint32_t(CAIRO_SURFACE_TYPE_SKIA) ==
+                 uint32_t(gfxSurfaceType::Skia), "CAIRO_SURFACE_TYPE_SKIA not equal to gfxSurfaceType::Skia");
 
 /* Surface size memory reporting */
 

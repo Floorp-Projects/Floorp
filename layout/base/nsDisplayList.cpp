@@ -765,7 +765,8 @@ nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
   mFrameToAnimatedGeometryRootMap.Put(aReferenceFrame, &mRootAGR);
 
   nsCSSRendering::BeginFrameTreesLocked();
-  PR_STATIC_ASSERT(nsDisplayItem::TYPE_MAX < (1 << nsDisplayItem::TYPE_BITS));
+  static_assert(nsDisplayItem::TYPE_MAX < (1 << nsDisplayItem::TYPE_BITS),
+                "Check nsDisplayItem::TYPE_MAX should not overflow");
 }
 
 static void MarkFrameForDisplay(nsIFrame* aFrame, nsIFrame* aStopAtFrame) {
