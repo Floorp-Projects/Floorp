@@ -427,7 +427,7 @@ JSCompartment::wrap(JSContext* cx, MutableHandleObject obj, HandleObject existin
     // recursion here, so we do a check - see bug 809295.
     JS_CHECK_SYSTEM_RECURSION(cx, return false);
     if (cb->preWrap) {
-        obj.set(cb->preWrap(cx, global, obj, objectPassedToWrap));
+        cb->preWrap(cx, global, obj, objectPassedToWrap, obj);
         if (!obj)
             return false;
         MOZ_ASSERT_IF(!existingArg, !ObjectIsMarkedGray(obj));

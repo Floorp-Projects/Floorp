@@ -45,10 +45,11 @@ class WrapperFactory {
     static bool AllowWaiver(JSObject* wrapper);
 
     // Prepare a given object for wrapping in a new compartment.
-    static JSObject* PrepareForWrapping(JSContext* cx,
-                                        JS::HandleObject scope,
-                                        JS::HandleObject obj,
-                                        JS::HandleObject objectPassedToWrap);
+    static void PrepareForWrapping(JSContext* cx,
+                                   JS::HandleObject scope,
+                                   JS::HandleObject obj,
+                                   JS::HandleObject objectPassedToWrap,
+                                   JS::MutableHandleObject retObj);
 
     // Rewrap an object that is about to cross compartment boundaries.
     static JSObject* Rewrap(JSContext* cx,
