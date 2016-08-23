@@ -17,7 +17,7 @@ var snippet =
 '         "iconURL": "chrome://branding/content/icon16.png",' +
 '         "icon32URL": "chrome://branding/content/icon32.png",' +
 '         "icon64URL": "chrome://branding/content/icon64.png",' +
-'         "sidebarURL": "https://example.com/browser/browser/base/content/test/social/social_sidebar_empty.html",' +
+'         "shareURL": "https://example.com/browser/browser/base/content/test/social/social_share.html",' +
 '         "postActivationURL": "https://example.com/browser/browser/base/content/test/social/social_postActivation.html",' +
 '       };' +
 '       function activateProvider(node) {' +
@@ -39,7 +39,7 @@ var snippet2 =
 '         "iconURL": "chrome://branding/content/icon16.png",' +
 '         "icon32URL": "chrome://branding/content/icon32.png",' +
 '         "icon64URL": "chrome://branding/content/icon64.png",' +
-'         "sidebarURL": "https://example.com/browser/browser/base/content/test/social/social_sidebar_empty.html",' +
+'         "shareURL": "https://example.com/browser/browser/base/content/test/social/social_share.html",' +
 '         "postActivationURL": "https://example.com/browser/browser/base/content/test/social/social_postActivation.html",' +
 '         "oneclick": true' +
 '       };' +
@@ -101,10 +101,8 @@ function test()
 
       yield new Promise(resolve => {
         activateProvider(tab, test.panel).then(() => {
-          ok(SocialSidebar.provider, "provider activated");
           checkSocialUI();
-          is(gBrowser.currentURI.spec, SocialSidebar.provider.manifest.postActivationURL, "postActivationURL was loaded");
-          SocialService.uninstallProvider(SocialSidebar.provider.origin, function () {
+          SocialService.uninstallProvider("https://example.com", function () {
             info("provider uninstalled");
             resolve();
           });
@@ -210,14 +208,12 @@ function sendActivationEvent(tab) {
 function activateProvider(tab, expectPanel, aCallback) {
   return new Promise(resolve => {
     if (expectPanel) {
-      ensureEventFired(PopupNotifications.panel, "popupshown").then(() => {
+      BrowserTestUtils.waitForEvent(PopupNotifications.panel, "popupshown").then(() => {
         let panel = document.getElementById("servicesInstall-notification");
         panel.button.click();
       });
     }
     waitForProviderLoad().then(() => {
-      ok(SocialSidebar.provider, "new provider is active");
-      ok(SocialSidebar.opened, "sidebar is open");
       checkSocialUI();
       resolve();
     });
@@ -229,6 +225,5 @@ function waitForProviderLoad(cb) {
   return Promise.all([
     promiseObserverNotified("social:provider-enabled"),
     ensureFrameLoaded(gBrowser, "https://example.com/browser/browser/base/content/test/social/social_postActivation.html"),
-    ensureFrameLoaded(SocialSidebar.browser)
   ]);
 }
