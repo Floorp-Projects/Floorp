@@ -44,8 +44,6 @@ public:
   // Android Jelly Bean.
   static already_AddRefed<AndroidSurfaceTexture> Create();
 
-  static AndroidSurfaceTexture* Find(int aId);
-
   // If we are on Jelly Bean, the SurfaceTexture can be detached and reattached
   // to allow consumption from different GLContexts. It is recommended to only
   // attach while you are consuming in order to allow this.
@@ -70,17 +68,12 @@ public:
   void UpdateTexImage();
 
   void GetTransformMatrix(mozilla::gfx::Matrix4x4& aMatrix) const;
-  int ID() const { return mID; }
 
   void SetDefaultSize(mozilla::gfx::IntSize size);
 
   // The callback is guaranteed to be called on the main thread even
   // if the upstream callback is received on a different thread
   void SetFrameAvailableCallback(nsIRunnable* aRunnable);
-
-  // Only should be called by AndroidJNI when we get a
-  // callback from the underlying SurfaceTexture instance
-  void NotifyFrameAvailable();
 
   GLuint Texture() const { return mTexture; }
   const java::sdk::Surface::Ref& JavaSurface() const { return mSurface; }
@@ -98,8 +91,6 @@ private:
   GLContext* mAttachedContext;
 
   ANativeWindow* mNativeWindow;
-  int mID;
-  nsCOMPtr<nsIRunnable> mFrameAvailableCallback;
 
   mutable Monitor mMonitor;
 };

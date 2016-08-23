@@ -238,8 +238,6 @@ public class GeckoAppShell
     /* The Android-side API: API methods that Android calls */
 
     // helper methods
-    public static native void onSurfaceTextureFrameAvailable(Object surfaceTexture, int id);
-
     @WrapForJNI
     private static native void reportJavaCrash(String stackTrace);
 
@@ -2188,21 +2186,6 @@ public class GeckoAppShell
     public static void notifyWakeLockChanged(String topic, String state) {
         if (getGeckoInterface() != null)
             getGeckoInterface().notifyWakeLockChanged(topic, state);
-    }
-
-    @WrapForJNI
-    public static void registerSurfaceTextureFrameListener(Object surfaceTexture, final int id) {
-        ((SurfaceTexture)surfaceTexture).setOnFrameAvailableListener(new SurfaceTexture.OnFrameAvailableListener() {
-            @Override
-            public void onFrameAvailable(SurfaceTexture surfaceTexture) {
-                GeckoAppShell.onSurfaceTextureFrameAvailable(surfaceTexture, id);
-            }
-        });
-    }
-
-    @WrapForJNI
-    public static void unregisterSurfaceTextureFrameListener(Object surfaceTexture) {
-        ((SurfaceTexture)surfaceTexture).setOnFrameAvailableListener(null);
     }
 
     @WrapForJNI(calledFrom = "gecko")
