@@ -11,8 +11,7 @@
 interface nsIInterfaceInfo;
 interface nsIEnumerator;
 
-/* this is NOT intended to be scriptable */
-[uuid(1d53d8d9-1d92-428f-b5cc-198b55e897d7)]
+[builtinclass, uuid(1d53d8d9-1d92-428f-b5cc-198b55e897d7)]
 interface nsIInterfaceInfoManager : nsISupports
 {
     nsIInterfaceInfo getInfoForIID(in nsIIDPtr iid);
