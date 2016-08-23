@@ -36,16 +36,19 @@ public:
 
   double Start() const;
   double Breadth() const;
-  GridTrackType Type() const;
+  GridDeclaration Type() const;
   GridTrackState State() const;
 
-  void SetTrackValues(double aStart, double aBreadth, GridTrackType aType, GridTrackState aState);
+  void SetTrackValues(double aStart,
+                      double aBreadth,
+                      GridDeclaration aType,
+                      GridTrackState aState);
 
 protected:
   RefPtr<GridTracks> mParent;
   double mStart;
   double mBreadth;
-  GridTrackType mType;
+  GridDeclaration mType;
   GridTrackState mState;
 };
 
