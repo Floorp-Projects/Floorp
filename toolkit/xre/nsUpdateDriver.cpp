@@ -213,8 +213,7 @@ template <size_t Size>
 static bool
 GetStatusFileContents(nsIFile *statusFile, char (&buf)[Size])
 {
-  // The buffer needs to be large enough to hold the known status codes
-  PR_STATIC_ASSERT(Size > 16);
+  static_assert(Size > 16, "Buffer needs to be large enough to hold the known status codes");
 
   PRFileDesc *fd = nullptr;
   nsresult rv = statusFile->OpenNSPRFileDesc(PR_RDONLY, 0660, &fd);

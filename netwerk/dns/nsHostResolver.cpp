@@ -64,7 +64,8 @@ static const unsigned int NEGATIVE_RECORD_LIFETIME = 60;
 #define LongIdleTimeoutSeconds  300           // for threads 1 -> HighThreadThreshold
 #define ShortIdleTimeoutSeconds 60            // for threads HighThreadThreshold+1 -> MAX_RESOLVER_THREADS
 
-PR_STATIC_ASSERT (HighThreadThreshold <= MAX_RESOLVER_THREADS);
+static_assert(HighThreadThreshold <= MAX_RESOLVER_THREADS,
+              "High Thread Threshold should be less equal Maximum allowed thread");
 
 //----------------------------------------------------------------------------
 
