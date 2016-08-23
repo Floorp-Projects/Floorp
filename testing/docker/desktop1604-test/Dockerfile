@@ -14,6 +14,10 @@ ADD topsrcdir/testing/docker/recipes/install-mercurial.sh /setup/install-mercuri
 ADD topsrcdir/testing/docker/recipes/ubuntu1604-test-system-setup.sh /setup/system-setup.sh
 RUN           bash /setup/system-setup.sh
 
+# Add wrapper scripts for xvfb allowing tasks to easily retry starting up xvfb
+# %include testing/docker/recipes/xvfb.sh
+ADD topsrcdir/testing/docker/recipes/xvfb.sh /home/worker/scripts/xvfb.sh
+
 # %include testing/docker/recipes/run-task
 ADD topsrcdir/testing/docker/recipes/run-task /home/worker/bin/run-task
 
