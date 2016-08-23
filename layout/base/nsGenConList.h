@@ -110,6 +110,9 @@ private:
     delete aNode;
     mSize--;
   }
+
+  // Map from frame to the first nsGenConNode of it in the list.
+  nsDataHashtable<nsPtrHashKey<nsIFrame>, nsGenConNode*> mNodes;
 };
 
 #endif /* nsGenConList_h___ */
