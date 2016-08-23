@@ -12,10 +12,9 @@ assert.ok(gAutocompletePopup, "Got autocomplete popup");
 var ParentUtils = {
   getMenuEntries() {
     let entries = [];
-    let column = gAutocompletePopup.tree.columns[0];
-    let numRows = gAutocompletePopup.tree.view.rowCount;
+    let numRows = gAutocompletePopup.view.matchCount;
     for (let i = 0; i < numRows; i++) {
-      entries.push(gAutocompletePopup.tree.view.getCellText(i, column));
+      entries.push(gAutocompletePopup.view.getValueAt(i));
     }
     return entries;
   },
@@ -69,11 +68,10 @@ var ParentUtils = {
 
   checkRowCount(expectedCount, expectedFirstValue = null) {
     ContentTaskUtils.waitForCondition(() => {
-      return gAutocompletePopup.tree.view.rowCount === expectedCount &&
+      return gAutocompletePopup.view.matchCount === expectedCount &&
         (!expectedFirstValue ||
           expectedCount <= 1 ||
-          gAutocompletePopup.tree.view.getCellText(0, gAutocompletePopup.tree.columns[0]) ===
-          expectedFirstValue);
+          gAutocompletePopup.view.getValueAt(0) === expectedFirstValue);
     }, "Waiting for row count change: " + expectedCount + " First value: " + expectedFirstValue).then(() => {
       let results = this.getMenuEntries();
       sendAsyncMessage("gotMenuChange", { results });
