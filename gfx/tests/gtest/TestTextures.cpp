@@ -225,7 +225,8 @@ TEST(Layers, TextureSerialization) {
 
     auto texData = BufferTextureData::Create(surface->GetSize(),
       gfx::ImageFormatToSurfaceFormat(surface->Format()),
-      gfx::BackendType::CAIRO, TextureFlags::DEALLOCATE_CLIENT, ALLOC_DEFAULT, nullptr
+      gfx::BackendType::CAIRO, LayersBackend::LAYERS_NONE,
+      TextureFlags::DEALLOCATE_CLIENT, ALLOC_DEFAULT, nullptr
     );
     ASSERT_TRUE(!!texData);
 
