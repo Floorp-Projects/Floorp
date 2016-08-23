@@ -17,8 +17,8 @@ class MOZ_NEEDS_NO_VTABLE_TYPE CheckNoVTable
 };
 CheckNoVTable<xptiTypelibGuts> gChecker;
 
-// static 
-xptiTypelibGuts* 
+// static
+xptiTypelibGuts*
 xptiTypelibGuts::Create(XPTHeader* aHeader)
 {
     NS_ASSERTION(aHeader, "bad param");
