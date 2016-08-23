@@ -118,17 +118,17 @@
   padding-inline-start: 0;
 }
 
-.tab-background-start[visuallyselected=true]::after,
-.tab-background-start[visuallyselected=true]::before,
+.tab-background-start[selected=true]::after,
+.tab-background-start[selected=true]::before,
 .tab-background-start,
 .tab-background-end,
-.tab-background-end[visuallyselected=true]::after,
-.tab-background-end[visuallyselected=true]::before {
+.tab-background-end[selected=true]::after,
+.tab-background-end[selected=true]::before {
   width: 0;
 }
 
-.tab-background-start[visuallyselected=true]::after,
-.tab-background-end[visuallyselected=true]::after {
+.tab-background-start[selected=true]::after,
+.tab-background-end[selected=true]::after {
   margin-inline-start: 0;
 }
 /* End override @tabCurveHalfWidth@ and @tabCurveWidth@ */
@@ -256,14 +256,14 @@ window:not([chromehidden~="toolbar"]) #urlbar-wrapper {
   pointer-events: auto;
 }
 
-.tabbrowser-tab:-moz-any([image], [pinned]) > .tab-stack > .tab-content[attention]:not([visuallyselected="true"]),
-.tabbrowser-tab > .tab-stack > .tab-content[pinned][titlechanged]:not([visuallyselected="true"]) {
+.tabbrowser-tab:-moz-any([image], [pinned]) > .tab-stack > .tab-content[attention]:not([selected="true"]),
+.tabbrowser-tab > .tab-stack > .tab-content[pinned][titlechanged]:not([selected="true"]) {
   background-image: var(--pinned-tab-glow);
   background-position: center;
   background-size: 100%;
 }
 
-.tabbrowser-tab[image] > .tab-stack > .tab-content[attention]:not([pinned]):not([visuallyselected="true"]) {
+.tabbrowser-tab[image] > .tab-stack > .tab-content[attention]:not([pinned]):not([selected="true"]) {
   background-position: left bottom var(--tab-toolbar-navbar-overlap);
   background-size: 34px 100%;
 }
