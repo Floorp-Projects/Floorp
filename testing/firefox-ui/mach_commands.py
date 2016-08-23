@@ -20,12 +20,18 @@ from mach.decorators import (
 
 def setup_argument_parser_functional():
     from firefox_ui_harness.arguments.base import FirefoxUIArguments
-    return FirefoxUIArguments()
+    from mozlog.structured import commandline
+    parser = FirefoxUIArguments()
+    commandline.add_logging_group(parser)
+    return parser
 
 
 def setup_argument_parser_update():
     from firefox_ui_harness.arguments.update import UpdateArguments
-    return UpdateArguments()
+    from mozlog.structured import commandline
+    parser = UpdateArguments()
+    commandline.add_logging_group(parser)
+    return parser
 
 
 def run_firefox_ui_test(testtype=None, topsrcdir=None, **kwargs):

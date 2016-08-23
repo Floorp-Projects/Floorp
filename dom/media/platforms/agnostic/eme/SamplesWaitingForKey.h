@@ -18,13 +18,14 @@ typedef nsTArray<uint8_t> CencKeyId;
 class CDMProxy;
 
 // Encapsulates the task of waiting for the CDMProxy to have the necessary
-// keys to decypt a given sample.
+// keys to decrypt a given sample.
 class SamplesWaitingForKey {
 public:
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(SamplesWaitingForKey)
 
   explicit SamplesWaitingForKey(MediaDataDecoder* aDecoder,
+                                MediaDataDecoderCallback* aCallback,
                                 TaskQueue* aTaskQueue,
                                 CDMProxy* aProxy);
 
@@ -46,6 +47,7 @@ protected:
 private:
   Mutex mMutex;
   RefPtr<MediaDataDecoder> mDecoder;
+  MediaDataDecoderCallback* mDecoderCallback;
   RefPtr<TaskQueue> mTaskQueue;
   RefPtr<CDMProxy> mProxy;
   nsTArray<RefPtr<MediaRawData>> mSamples;

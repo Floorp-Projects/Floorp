@@ -5,9 +5,6 @@
 <script src="manifest.js"></script>
 <script src="background_video.js"></script>
 <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
-<p id="display">
-<div id="content" style="display:none"></div>
-<pre id="test">
 <script>
 "use strict";
 
@@ -21,7 +18,7 @@ startTest({
     // Gizmo.mp4 is about 5.6s
     [ 'media.suspend-bkgnd-video.delay-ms', 10000 ]
   ],
-  tests: [ { name: "gizmo.mp4" } ],
+  tests: gDecodeSuspendTests,
   runTest: (test, token) => {
     let v = appendVideoToDoc(test.name, token);
     manager.started(token);
@@ -39,4 +36,3 @@ startTest({
   }
 });
 </script>
-</pre>
