@@ -511,7 +511,7 @@ exports.actorBridge = actorBridge;
 
 /**
  * Like `actorBridge`, but without a spec definition, for when the actor is
- * created with `ActorClass` rather than vanilla `ActorClass`.
+ * created with `ActorClassWithSpec` rather than vanilla `ActorClass`.
  */
 function actorBridgeWithSpec (methodName) {
   return method(function () {

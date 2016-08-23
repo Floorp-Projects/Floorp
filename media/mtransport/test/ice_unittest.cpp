@@ -390,6 +390,7 @@ class IceTestPeer : public sigslot::has_slots<> {
                                        enable_tcp, allow_link_local,
                                        hide_non_default)),
       candidates_(),
+      shutting_down_(false),
       gathering_complete_(false),
       ready_ct_(0),
       ice_complete_(false),
@@ -970,6 +971,7 @@ class IceTestPeer : public sigslot::has_slots<> {
 
   void Shutdown() {
     std::cerr << name_ << " Shutdown" << std::endl;
+    shutting_down_ = true;
     for (auto s = controlled_trickle_candidates_.begin();
          s != controlled_trickle_candidates_.end();
          ++s) {
@@ -1004,7 +1006,9 @@ class IceTestPeer : public sigslot::has_slots<> {
   // Handle events
   void GatheringStateChange(NrIceCtx* ctx,
                             NrIceCtx::GatheringState state) {
-    (void)ctx;
+    if (shutting_down_) {
+      return;
+    }
     if (state != NrIceCtx::ICE_CTX_GATHER_COMPLETE) {
       return;
     }
@@ -1399,6 +1403,7 @@ class IceTestPeer : public sigslot::has_slots<> {
   // Maps from stream id to list of remote trickle candidates
   std::map<size_t, std::vector<SchedulableTrickleCandidate*> >
     controlled_trickle_candidates_;
+  bool shutting_down_;
   bool gathering_complete_;
   int ready_ct_;
   bool ice_complete_;

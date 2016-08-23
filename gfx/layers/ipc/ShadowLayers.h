@@ -376,8 +376,6 @@ public:
 
   void SetPaintSyncId(int32_t aSyncId) { mPaintSyncId = aSyncId; }
 
-  void SetLayerObserverEpoch(uint64_t aLayerObserverEpoch);
-
   static void PlatformSyncBeforeUpdate();
 
   virtual bool AllocSurfaceDescriptor(const gfx::IntSize& aSize,

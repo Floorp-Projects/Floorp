@@ -30,7 +30,8 @@
 }
 
 #emptyDownloads {
-  padding: 10px 20px;
+  padding: 16px 25px;
+  margin: 0;
   /* The panel can be wider than this description after the blocked subview is
      shown, so center the text. */
   text-align: center;
@@ -41,7 +42,7 @@
   border-top: 1px solid var(--panel-separator-color);
 }
 
-.downloadsPanelFooter > toolbarseparator {
+.downloadsPanelFooter toolbarseparator {
   margin: 0;
   border: 0;
   min-width: 0;
@@ -55,6 +56,7 @@
   color: inherit;
   margin: 0;
   padding: 0;
+  min-width: 0;
   min-height: 40px;
 }
 
@@ -63,7 +65,8 @@
   background-color: hsla(210,4%,10%,.07);
 }
 
-.downloadsPanelFooterButton:hover:active {
+.downloadsPanelFooterButton:hover:active,
+.downloadsPanelFooterButton[open="true"] {
   outline: 1px solid hsla(210,4%,10%,.12);
   background-color: hsla(210,4%,10%,.12);
   box-shadow: 0 1px 0 hsla(210,4%,10%,.05) inset;
@@ -80,6 +83,47 @@
 
 .downloadsPanelFooterButton[default]:hover:active {
   background-color: #0568ba;
+}
+
+#downloadsPanel[hasdownloads] #downloadsHistory {
+  padding-left: 58px !important;
+}
+
+toolbarseparator.downloadsDropmarkerSplitter {
+  margin: 7px 0;
+}
+
+#downloadsFooter:hover toolbarseparator.downloadsDropmarkerSplitter,
+#downloadsFooter toolbarseparator.downloadsDropmarkerSplitterExtend {
+  margin: 0;
+}
+
+.downloadsDropmarker {
+  padding: 0 19px !important;
+}
+
+.downloadsDropmarker > .button-box > hbox {
+  display: none;
+}
+
+.downloadsDropmarker > .button-box > .button-menu-dropmarker {
+  /* This is to override the linux !important */
+  -moz-appearance: none !important;
+  display: -moz-box;
+}
+
+.downloadsDropmarker > .button-box > .button-menu-dropmarker > .dropmarker-icon {
+  width: 16px;
+  height: 16px;
+  list-style-image: url("chrome://browser/skin/downloads/menubutton-dropmarker.svg");
+  filter: url("chrome://browser/skin/filters.svg#fill");
+  fill: currentColor;
+}
+
+/* Override default icon size which is too small for this dropdown */
+.downloadsDropmarker > .button-box > .button-menu-dropmarker {
+  width: 16px;
+  height: 16px;
 }
 
 #downloadsSummary {

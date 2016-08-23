@@ -12,10 +12,12 @@
 namespace mozilla {
 
 SamplesWaitingForKey::SamplesWaitingForKey(MediaDataDecoder* aDecoder,
+                                           MediaDataDecoderCallback* aCallback,
                                            TaskQueue* aTaskQueue,
                                            CDMProxy* aProxy)
   : mMutex("SamplesWaitingForKey")
   , mDecoder(aDecoder)
+  , mDecoderCallback(aCallback)
   , mTaskQueue(aTaskQueue)
   , mProxy(aProxy)
 {
@@ -38,6 +40,7 @@ SamplesWaitingForKey::WaitIfKeyNotUsable(MediaRawData* aSample)
       MutexAutoLock lock(mMutex);
       mSamples.AppendElement(aSample);
     }
+    mDecoderCallback->WaitingForKey();
     caps.NotifyWhenKeyIdUsable(aSample->mCrypto.mKeyId, this);
     return true;
   }

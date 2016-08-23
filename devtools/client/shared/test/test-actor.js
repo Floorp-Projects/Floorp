@@ -264,7 +264,7 @@ var testSpec = protocol.generateActorSpec({
   }
 });
 
-var TestActor = exports.TestActor = protocol.ActorClass(testSpec, {
+var TestActor = exports.TestActor = protocol.ActorClassWithSpec(testSpec, {
   initialize: function (conn, tabActor, options) {
     this.conn = conn;
     this.tabActor = tabActor;
@@ -728,7 +728,7 @@ var TestActor = exports.TestActor = protocol.ActorClass(testSpec, {
   }
 });
 
-var TestActorFront = exports.TestActorFront = protocol.FrontClass(testSpec, {
+var TestActorFront = exports.TestActorFront = protocol.FrontClassWithSpec(testSpec, {
   initialize: function (client, { testActor }, toolbox) {
     protocol.Front.prototype.initialize.call(this, client, { actor: testActor });
     this.manage(this);

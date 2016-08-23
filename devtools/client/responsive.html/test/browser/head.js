@@ -147,6 +147,42 @@ var setViewportSize = Task.async(function* (ui, manager, width, height) {
   }
 });
 
+function getElRect(selector, win) {
+  let el = win.document.querySelector(selector);
+  return el.getBoundingClientRect();
+}
+
+/**
+ * Drag an element identified by 'selector' by [x,y] amount. Returns
+ * the rect of the dragged element as it was before drag.
+ */
+function dragElementBy(selector, x, y, win) {
+  let rect = getElRect(selector, win);
+  let startPoint = [ rect.left + rect.width / 2, rect.top + rect.height / 2 ];
+  let endPoint = [ startPoint[0] + x, startPoint[1] + y ];
+
+  EventUtils.synthesizeMouseAtPoint(...startPoint, { type: "mousedown" }, win);
+  EventUtils.synthesizeMouseAtPoint(...endPoint, { type: "mousemove" }, win);
+  EventUtils.synthesizeMouseAtPoint(...endPoint, { type: "mouseup" }, win);
+
+  return rect;
+}
+
+function* testViewportResize(ui, selector, moveBy,
+                             expectedViewportSize, expectedHandleMove) {
+  let win = ui.toolWindow;
+
+  let resized = waitForViewportResizeTo(ui, ...expectedViewportSize);
+  let startRect = dragElementBy(selector, ...moveBy, win);
+  yield resized;
+
+  let endRect = getElRect(selector, win);
+  is(endRect.left - startRect.left, expectedHandleMove[0],
+    `The x move of ${selector} is as expected`);
+  is(endRect.top - startRect.top, expectedHandleMove[1],
+    `The y move of ${selector} is as expected`);
+}
+
 function openDeviceModal(ui) {
   let { document } = ui.toolWindow;
   let select = document.querySelector(".viewport-device-selector");
@@ -167,6 +203,20 @@ function openDeviceModal(ui) {
 
   ok(modal.classList.contains("opened") && !modal.classList.contains("closed"),
     "The device modal is displayed.");
+}
+
+function switchDevice(ui, device) {
+  let { document } = ui.toolWindow;
+  let select = document.querySelector(".viewport-device-selector");
+  select.scrollIntoView();
+  let deviceOption = [...select.options].filter(o => {
+    return o.value === device;
+  })[0];
+  EventUtils.synthesizeMouseAtCenter(select, {type: "mousedown"},
+    ui.toolWindow);
+  EventUtils.synthesizeMouseAtCenter(deviceOption, {type: "mouseup"},
+    ui.toolWindow);
+  is(select.selectedOptions[0], deviceOption, "Device should be selected");
 }
 
 function getSessionHistory(browser) {

@@ -39,7 +39,7 @@ const FONT_PREVIEW_OFFSET = 4;
  * The PageStyle actor lets the client look at the styles on a page, as
  * they are applied to a given node.
  */
-var PageStyleActor = protocol.ActorClass(pageStyleSpec, {
+var PageStyleActor = protocol.ActorClassWithSpec(pageStyleSpec, {
   /**
    * Create a PageStyleActor.
    *
@@ -925,7 +925,7 @@ exports.PageStyleActor = PageStyleActor;
  * (which have a CSSStyle but no CSSRule) we create a StyleRuleActor
  * with a special rule type (100).
  */
-var StyleRuleActor = protocol.ActorClass(styleRuleSpec, {
+var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
   initialize: function (pageStyle, item) {
     protocol.Actor.prototype.initialize.call(this, null);
     this.pageStyle = pageStyle;

@@ -38,7 +38,7 @@ const AUDIO_GLOBALS = [
  * An Audio Node actor allowing communication to a specific audio node in the
  * Audio Context graph.
  */
-var AudioNodeActor = exports.AudioNodeActor = protocol.ActorClass(audionodeSpec, {
+var AudioNodeActor = exports.AudioNodeActor = protocol.ActorClassWithSpec(audionodeSpec, {
   form: function (detail) {
     if (detail === "actorid") {
       return this.actorID;
@@ -404,7 +404,7 @@ var AudioNodeActor = exports.AudioNodeActor = protocol.ActorClass(audionodeSpec,
  * high-level methods. After instantiating this actor, you'll need to set it
  * up by calling setup().
  */
-var WebAudioActor = exports.WebAudioActor = protocol.ActorClass(webAudioSpec, {
+var WebAudioActor = exports.WebAudioActor = protocol.ActorClassWithSpec(webAudioSpec, {
   initialize: function (conn, tabActor) {
     protocol.Actor.prototype.initialize.call(this, conn);
     this.tabActor = tabActor;

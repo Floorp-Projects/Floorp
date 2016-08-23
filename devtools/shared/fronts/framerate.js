@@ -3,13 +3,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { Front, FrontClass } = require("devtools/shared/protocol");
+const { Front, FrontClassWithSpec } = require("devtools/shared/protocol");
 const { framerateSpec } = require("devtools/shared/specs/framerate");
 
 /**
  * The corresponding Front object for the FramerateActor.
  */
-var FramerateFront = exports.FramerateFront = FrontClass(framerateSpec, {
+var FramerateFront = exports.FramerateFront = FrontClassWithSpec(framerateSpec, {
   initialize: function (client, { framerateActor }) {
     Front.prototype.initialize.call(this, client, { actor: framerateActor });
     this.manage(this);

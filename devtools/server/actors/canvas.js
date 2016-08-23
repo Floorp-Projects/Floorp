@@ -30,7 +30,7 @@ const {method, custom, Arg, Option, RetVal} = protocol;
  * all the corresponding canvas' context methods invoked in that frame,
  * thumbnails for each draw call and a screenshot of the end result.
  */
-var FrameSnapshotActor = protocol.ActorClass(frameSnapshotSpec, {
+var FrameSnapshotActor = protocol.ActorClassWithSpec(frameSnapshotSpec, {
   /**
    * Creates the frame snapshot call actor.
    *
@@ -120,7 +120,7 @@ var FrameSnapshotActor = protocol.ActorClass(frameSnapshotSpec, {
  * of a 2D or WebGL context, to provide information regarding all the calls
  * made when drawing frame inside an animation loop.
  */
-var CanvasActor = exports.CanvasActor = protocol.ActorClass(canvasSpec, {
+var CanvasActor = exports.CanvasActor = protocol.ActorClassWithSpec(canvasSpec, {
   // Reset for each recording, boolean indicating whether or not
   // any draw calls were called for a recording.
   _animationContainsDrawCall: false,

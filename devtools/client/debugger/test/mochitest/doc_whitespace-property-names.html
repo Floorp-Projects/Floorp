@@ -10,17 +10,17 @@
 
   <body>
     <script>
-    window.obj = {
-      " ": 0,
-      "\r": 1,
-      "\n": 2,
-      "\t": 3,
-      "\f": 4,
-      "\uFEFF": 5,
-      "\xA0": 6
-    };
     window.doPause = function () {
-      var obj = window.obj;
+      var obj = {
+        "": 0,
+        " ": 1,
+        "\r": 2,
+        "\n": 3,
+        "\t": 4,
+        "\f": 5,
+        "\uFEFF": 6,
+        "\xA0": 7
+      };
       debugger;
     };
     </script>

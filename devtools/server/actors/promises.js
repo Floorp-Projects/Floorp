@@ -15,7 +15,7 @@ loader.lazyRequireGetter(this, "events", "sdk/event/core");
  * The Promises Actor provides support for getting the list of live promises and
  * observing changes to their settlement state.
  */
-var PromisesActor = protocol.ActorClass(promisesSpec, {
+var PromisesActor = protocol.ActorClassWithSpec(promisesSpec, {
   /**
    * @param conn DebuggerServerConnection.
    * @param parent TabActor|RootActor

@@ -4,7 +4,7 @@
 "use strict";
 
 const { SimpleStringFront } = require("devtools/shared/fronts/string");
-const { Front, FrontClass } = require("devtools/shared/protocol");
+const { Front, FrontClassWithSpec } = require("devtools/shared/protocol");
 const {
   oldStyleSheetSpec,
   styleEditorSpec
@@ -16,7 +16,7 @@ const events = require("sdk/event/core");
 /**
  * StyleSheetFront is the client-side counterpart to a StyleSheetActor.
  */
-const OldStyleSheetFront = FrontClass(oldStyleSheetSpec, {
+const OldStyleSheetFront = FrontClassWithSpec(oldStyleSheetSpec, {
   initialize: function (conn, form, ctx, detail) {
     Front.prototype.initialize.call(this, conn, form, ctx, detail);
 
@@ -87,7 +87,7 @@ exports.OldStyleSheetFront = OldStyleSheetFront;
 /**
  * The corresponding Front object for the StyleEditorActor.
  */
-const StyleEditorFront = FrontClass(styleEditorSpec, {
+const StyleEditorFront = FrontClassWithSpec(styleEditorSpec, {
   initialize: function (client, tabForm) {
     Front.prototype.initialize.call(this, client);
     this.actorID = tabForm.styleEditorActor;
