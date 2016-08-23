@@ -148,7 +148,7 @@ public:
   void SetTo(int32_t aInt, const nsAString* aSerialized);
   void SetTo(double aValue, const nsAString* aSerialized);
   void SetTo(mozilla::css::Declaration* aValue, const nsAString* aSerialized);
-  void SetTo(ServoDeclarationBlock* aDeclarationBlock,
+  void SetTo(already_AddRefed<ServoDeclarationBlock> aDeclarationBlock,
              const nsAString* aSerialized);
   void SetTo(mozilla::css::URLValue* aValue, const nsAString* aSerialized);
   void SetTo(const nsIntMargin& aValue);
