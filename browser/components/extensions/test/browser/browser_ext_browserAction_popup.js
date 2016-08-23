@@ -210,8 +210,7 @@ add_task(function* testBrowserActionClickCanceled() {
 
   yield extension.startup();
 
-  const {GlobalManager} = Cu.import("resource://gre/modules/Extension.jsm", {});
-  const {browserActionFor} = Cu.import("resource://gre/modules/ExtensionGlobalScope.jsm", {}).getGlobalForTesting("chrome");
+  const {GlobalManager, Management: {global: {browserActionFor}}} = Cu.import("resource://gre/modules/Extension.jsm", {});
 
   let ext = GlobalManager.extensionMap.get(extension.id);
   let browserAction = browserActionFor(ext);
