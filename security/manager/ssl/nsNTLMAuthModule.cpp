@@ -9,6 +9,7 @@
 
 #include "ScopedNSSTypes.h"
 #include "md4.h"
+#include "mozilla/Base64.h"
 #include "mozilla/Casting.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/EndianUtils.h"
@@ -208,25 +209,27 @@ LogBuf(const char *tag, const uint8_t *buf, uint32_t bufLen)
   }
 }
 
-#include "plbase64.h"
-#include "prmem.h"
 /**
  * Print base64-encoded token to the NSPR Log.
  * @param name Description of the token, will be printed in front
  * @param token The token to print
  * @param tokenLen length of the data in token
  */
-static void LogToken(const char *name, const void *token, uint32_t tokenLen)
+static void
+LogToken(const char* name, const void* token, uint32_t tokenLen)
 {
-  if (!LOG_ENABLED())
+  if (!LOG_ENABLED()) {
     return;
-
-  char *b64data = PL_Base64Encode((const char *) token, tokenLen, nullptr);
-  if (b64data)
-  {
-    PR_LogPrint("%s: %s\n", name, b64data);
-    PR_Free(b64data);
   }
+
+  nsDependentCSubstring tokenString(static_cast<const char*>(token), tokenLen);
+  nsAutoCString base64Token;
+  nsresult rv = mozilla::Base64Encode(tokenString, base64Token);
+  if (NS_FAILED(rv)) {
+    return;
+  }
+
+  PR_LogPrint("%s: %s\n", name, base64Token.get());
 }
 
 //-----------------------------------------------------------------------------
