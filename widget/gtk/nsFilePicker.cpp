@@ -383,8 +383,16 @@ nsFilePicker::Open(nsIFilePickerShownCallback *aCallback)
     GTK_WINDOW(mParentWidget->GetNativeData(NS_NATIVE_SHELLWIDGET));
 
   GtkFileChooserAction action = GetGtkFileChooserAction(mMode);
-  const gchar *accept_button = (action == GTK_FILE_CHOOSER_ACTION_SAVE)
-                               ? GTK_STOCK_SAVE : GTK_STOCK_OPEN;
+
+  const gchar* accept_button;
+  NS_ConvertUTF16toUTF8 buttonLabel(mOkButtonLabel);
+  if (!mOkButtonLabel.IsEmpty()) {
+    accept_button = buttonLabel.get();
+  } else {
+    accept_button = (action == GTK_FILE_CHOOSER_ACTION_SAVE) ?
+                    GTK_STOCK_SAVE : GTK_STOCK_OPEN;
+  }
+
   GtkWidget *file_chooser =
       gtk_file_chooser_dialog_new(title, parent_widget, action,
                                   GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
