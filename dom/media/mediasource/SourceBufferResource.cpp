@@ -154,10 +154,9 @@ SourceBufferResource::EvictBefore(uint64_t aOffset, ErrorResult& aRv)
 {
   SBR_DEBUG("EvictBefore(aOffset=%llu)", aOffset);
   ReentrantMonitorAutoEnter mon(mMonitor);
-  // If aOffset is past the current playback offset we don't evict.
-  if (aOffset < mOffset) {
-    mInputBuffer.EvictBefore(aOffset, aRv);
-  }
+
+  mInputBuffer.EvictBefore(aOffset, aRv);
+
   // Wake up any waiting threads in case a ReadInternal call
   // is now invalid.
   mon.NotifyAll();
