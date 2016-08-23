@@ -1,0 +1,56 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=277178
+-->
+<head>
+<meta charset="utf-8">
+<title>Test for Bug 277178</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+</head>
+<body onload="test()">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=277178">Mozilla Bug 277178</a>
+<p id="display"></p>
+<div id="content">
+<label>#anchor01<input id="anchor01"></label>
+<div id="anchor02" tabindex="0">#anchor02</div>
+<div id="anchor03">#anchor03</div>
+</div>
+<pre id="test">
+<script>
+
+/** Test for Bug 277178 **/
+
+SimpleTest.waitForExplicitFinish();
+function test() {
+  SimpleTest.waitForFocus(function() {
+    var targets = [
+      {
+        fragment: "#anchor01",
+        activeElement: $("anchor01")
+      },
+      {
+        fragment: "#anchor02",
+        activeElement: $("anchor02")
+      },
+      {
+        fragment: "#anchor03",
+        activeElement: document.body
+      }
+    ];
+
+    for (var target of targets) {
+      location.hash = target.fragment;
+      is(document.activeElement, target.activeElement,
+        "The focus should be moved to " + target.activeElement);
+    }
+
+    SimpleTest.finish();
+  });
+}
+</script>
+</pre>
+</body>
+</html>
+
