@@ -399,8 +399,8 @@ description#identity-popup-content-verifier,
 }
 
 .identity-popup-permission-remove-button > .button-box {
-  border-width: 0;
   padding: 0;
+  -moz-appearance: none;
 }
 
 .identity-popup-permission-remove-button > .button-box > .button-icon {
@@ -416,14 +416,14 @@ description#identity-popup-content-verifier,
   display: none;
 }
 
-.identity-popup-permission-remove-button:hover {
+.identity-popup-permission-remove-button:not(:-moz-focusring):hover {
   background-color: #999;
 }
 
-.identity-popup-permission-remove-button:hover > .button-box > .button-icon {
+.identity-popup-permission-remove-button:not(:-moz-focusring):hover > .button-box > .button-icon {
   fill: #fff;
 }
 
-.identity-popup-permission-remove-button:hover:active {
+.identity-popup-permission-remove-button:not(:-moz-focusring):hover:active {
   background-color: #808080;
 }
