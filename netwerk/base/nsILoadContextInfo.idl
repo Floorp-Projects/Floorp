@@ -64,8 +64,7 @@ interface nsILoadContextInfo : nsISupports
 
   bool Equals(nsILoadContextInfo *aOther)
   {
-    return IsPrivate() == aOther->IsPrivate() &&
-           IsAnonymous() == aOther->IsAnonymous() &&
+    return IsAnonymous() == aOther->IsAnonymous() &&
            *OriginAttributesPtr() == *aOther->OriginAttributesPtr();
   }
 %}
@@ -84,7 +83,7 @@ interface nsILoadContextInfoFactory : nsISupports
   readonly attribute nsILoadContextInfo private;
   readonly attribute nsILoadContextInfo anonymous;
   [implicit_jscontext]
-  nsILoadContextInfo custom(in boolean aPrivate, in boolean aAnonymous, in jsval aOriginAttributes);
+  nsILoadContextInfo custom(in boolean aAnonymous, in jsval aOriginAttributes);
   nsILoadContextInfo fromLoadContext(in nsILoadContext aLoadContext, in boolean aAnonymous);
   nsILoadContextInfo fromWindow(in nsIDOMWindow aWindow, in boolean aAnonymous);
 };

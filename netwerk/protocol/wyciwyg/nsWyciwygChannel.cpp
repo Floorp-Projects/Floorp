@@ -788,8 +788,8 @@ nsWyciwygChannel::OpenCacheEntry(nsIURI *aURI,
   NS_ENSURE_SUCCESS(rv, rv);
 
   bool anonymous = mLoadFlags & LOAD_ANONYMOUS;
-  RefPtr<LoadContextInfo> loadInfo = mozilla::net::GetLoadContextInfo(
-    mPrivateBrowsing, anonymous, mOriginAttributes);
+  mOriginAttributes.SyncAttributesWithPrivateBrowsing(mPrivateBrowsing);
+  RefPtr<LoadContextInfo> loadInfo = mozilla::net::GetLoadContextInfo(anonymous, mOriginAttributes);
 
   nsCOMPtr<nsICacheStorage> cacheStorage;
   if (mLoadFlags & INHIBIT_PERSISTENT_CACHING)
