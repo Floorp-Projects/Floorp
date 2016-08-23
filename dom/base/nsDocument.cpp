@@ -267,6 +267,33 @@ typedef nsTArray<Link*> LinkArray;
 static LazyLogModule gDocumentLeakPRLog("DocumentLeak");
 static LazyLogModule gCspPRLog("CSP");
 
+static nsresult
+GetHttpChannelHelper(nsIChannel* aChannel, nsIHttpChannel** aHttpChannel)
+{
+  nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel);
+  if (httpChannel) {
+    httpChannel.forget(aHttpChannel);
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIMultiPartChannel> multipart = do_QueryInterface(aChannel);
+  if (!multipart) {
+    *aHttpChannel = nullptr;
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIChannel> baseChannel;
+  nsresult rv = multipart->GetBaseChannel(getter_AddRefs(baseChannel));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  httpChannel = do_QueryInterface(baseChannel);
+  httpChannel.forget(aHttpChannel);
+
+  return NS_OK;
+}
+
 #define NAME_NOT_VALID ((nsSimpleContentList*)1)
 
 nsIdentifierMapEntry::~nsIdentifierMapEntry()
@@ -2692,15 +2719,10 @@ nsDocument::InitCSP(nsIChannel* aChannel)
 
   nsAutoCString tCspHeaderValue, tCspROHeaderValue;
 
-  nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel);
-  if (!httpChannel) {
-    // check baseChannel for CSP when loading a multipart channel
-    nsCOMPtr<nsIMultiPartChannel> multipart = do_QueryInterface(aChannel);
-    if (multipart) {
-      nsCOMPtr<nsIChannel> baseChannel;
-      multipart->GetBaseChannel(getter_AddRefs(baseChannel));
-      httpChannel = do_QueryInterface(baseChannel);
-    }
+  nsCOMPtr<nsIHttpChannel> httpChannel;
+  nsresult rv = GetHttpChannelHelper(aChannel, getter_AddRefs(httpChannel));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
   }
 
   if (httpChannel) {
@@ -2773,8 +2795,6 @@ nsDocument::InitCSP(nsIChannel* aChannel)
   }
 
   MOZ_LOG(gCspPRLog, LogLevel::Debug, ("Document is an app or CSP header specified %p", this));
-
-  nsresult rv;
 
   // If Document is an app check to see if we already set CSP and return early
   // if that is indeed the case.
@@ -8603,9 +8623,14 @@ nsDocument::SetValueMissingState(const nsAString& aName, bool aValue)
 void
 nsDocument::RetrieveRelevantHeaders(nsIChannel *aChannel)
 {
-  nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel);
   PRTime modDate = 0;
   nsresult rv;
+
+  nsCOMPtr<nsIHttpChannel> httpChannel;
+  rv = GetHttpChannelHelper(aChannel, getter_AddRefs(httpChannel));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
 
   if (httpChannel) {
     nsAutoCString tmp;
