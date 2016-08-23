@@ -934,7 +934,7 @@ GfxInfo::GetGfxDriverInfo()
     // Bug 1198815
     APPEND_TO_DRIVER_BLOCKLIST_RANGE(OperatingSystem::Windows,
       (nsAString&) GfxDriverInfo::GetDeviceVendor(VendorATI), GfxDriverInfo::allDevices,
-      GfxDriverInfo::allFeatures, nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION,
+      nsIGfxInfo::FEATURE_HARDWARE_VIDEO_DECODING, nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION,
       DRIVER_BETWEEN_INCLUSIVE, V(15,200,0,0), V(15,200,1062,1004),
       "FEATURE_FAILURE_BUG_1198815", "15.200.0.0-15.200.1062.1004");
 

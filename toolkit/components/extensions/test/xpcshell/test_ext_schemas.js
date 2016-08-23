@@ -342,6 +342,12 @@ let json = [
    ],
   },
   {
+    namespace: "foreign",
+    properties: {
+      foreignRef: {$ref: "testing.submodule"},
+    },
+  },
+  {
     namespace: "inject",
     properties: {
       PROP1: {value: "should inject"},
@@ -781,6 +787,10 @@ add_task(function* () {
   Assert.throws(() => root.testing.prop4.sub_foo(),
                 /root.testing.prop4 is undefined/,
                 "should throw for unsupported submodule");
+
+  root.foreign.foreignRef.sub_foo();
+  verify("call", "foreign.foreignRef", "sub_foo", []);
+  tallied = null;
 });
 
 let deprecatedJson = [

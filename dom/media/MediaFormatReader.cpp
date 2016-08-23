@@ -1543,6 +1543,14 @@ MediaFormatReader::DropDecodedSamples(TrackType aTrack)
 }
 
 void
+MediaFormatReader::WaitingForKey(TrackType aTrack)
+{
+  if (mDecoder) {
+    mDecoder->NotifyWaitingForKey();
+  }
+}
+
+void
 MediaFormatReader::SkipVideoDemuxToNextKeyFrame(media::TimeUnit aTimeThreshold)
 {
   MOZ_ASSERT(OnTaskQueue());

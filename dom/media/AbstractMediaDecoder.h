@@ -72,6 +72,18 @@ public:
     return nullptr;
   }
 
+  // Notify the media decoder that a decryption key is required before emitting
+  // further output. This only needs to be overridden for decoders that expect
+  // encryption, such as the MediaSource decoder.
+  virtual void NotifyWaitingForKey() {}
+
+  // Return an event that will be notified when a decoder is waiting for a
+  // decryption key before it can return more output.
+  virtual MediaEventSource<void>* WaitingForKeyEvent()
+  {
+    return nullptr;
+  }
+
 protected:
   virtual void UpdateEstimatedMediaDuration(int64_t aDuration) {};
 public:

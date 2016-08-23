@@ -45,6 +45,7 @@ function transformPacket(packet) {
       let type = message.level;
       let level = getLevelFromType(type);
       let messageText = null;
+      const timer = message.timer;
 
       // Special per-type conversion.
       switch (type) {
@@ -59,6 +60,23 @@ function transformPacket(packet) {
           let label = counter.label ? counter.label : l10n.getStr("noCounterLabel");
           messageText = `${label}: ${counter.count}`;
           parameters = null;
+          break;
+        case "time":
+          // We don't show anything for console.time calls to match Chrome's behaviour.
+          parameters = null;
+          type = MESSAGE_TYPE.NULL_MESSAGE;
+          break;
+        case "timeEnd":
+          parameters = null;
+          if (timer) {
+            // We show the duration to users when calls console.timeEnd() is called,
+            // if corresponding console.time() was called before.
+            let duration = Math.round(timer.duration * 100) / 100;
+            messageText = l10n.getFormatStr("timeEnd", [timer.name, duration]);
+          } else {
+            // If the `timer` property does not exists, we don't output anything.
+            type = MESSAGE_TYPE.NULL_MESSAGE;
+          }
           break;
       }
 
