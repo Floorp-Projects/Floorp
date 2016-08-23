@@ -96,7 +96,10 @@ TabListView.prototype = {
       }
     }
     if (this.list.firstChild) {
-      this.list.firstChild.querySelector(".item.tab:first-child .item-title").setAttribute("tabindex", 2);
+      const firstTab = this.list.firstChild.querySelector(".item.tab:first-child .item-title");
+      if (firstTab) {
+        firstTab.setAttribute("tabindex", 2);
+      }
     }
   },
 
