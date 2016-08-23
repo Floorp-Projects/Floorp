@@ -25,7 +25,7 @@ function run_test() {
     }
   ];
 
-  Cu.import("resource://gre/modules/SocialService.jsm");
+  Cu.import("resource:///modules/SocialService.jsm");
 
   let runner = new AsyncRunner();
   let next = runner.next.bind(runner);
