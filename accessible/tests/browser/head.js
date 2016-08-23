@@ -4,300 +4,113 @@
 
 'use strict';
 
-/* global EVENT_DOCUMENT_LOAD_COMPLETE */
-
-/* exported Logger, MOCHITESTS_DIR, isDefunct, addAccessibleTask,
-            invokeSetAttribute, invokeFocus, invokeSetStyle,
-            findAccessibleChildByID, getAccessibleDOMNodeID */
-
-const { interfaces: Ci, utils: Cu } = Components;
-
-Cu.import('resource://gre/modules/Services.jsm');
+/* exported initPromise, shutdownPromise,
+            setE10sPrefs, unsetE10sPrefs, forceGC */
 
 /**
- * Current browser test directory path used to load subscripts.
+ * Set e10s related preferences in the test environment.
+ * @return {Promise} promise that resolves when preferences are set.
  */
-const CURRENT_DIR =
-  'chrome://mochitests/content/browser/accessible/tests/browser/';
-/**
- * A11y mochitest directory where we find common files used in both browser and
- * plain tests.
- */
-const MOCHITESTS_DIR =
-  'chrome://mochitests/content/a11y/accessible/tests/mochitest/';
-/**
- * A base URL for test files used in content.
- */
-const CURRENT_CONTENT_DIR =
-  'http://example.com/browser/accessible/tests/browser/';
-
-/**
- * Used to dump debug information.
- */
-let Logger = {
-  /**
-   * Set up this variable to dump log messages into console.
-   */
-  dumpToConsole: false,
-
-  /**
-   * Set up this variable to dump log messages into error console.
-   */
-  dumpToAppConsole: false,
-
-  /**
-   * Return true if dump is enabled.
-   */
-  get enabled() {
-    return this.dumpToConsole || this.dumpToAppConsole;
-  },
-
-  /**
-   * Dump information into console if applicable.
-   */
-  log(msg) {
-    if (this.enabled) {
-      this.logToConsole(msg);
-      this.logToAppConsole(msg);
-    }
-  },
-
-  /**
-   * Log message to console.
-   */
-  logToConsole(msg) {
-    if (this.dumpToConsole) {
-      dump(`\n${msg}\n`);
-    }
-  },
-
-  /**
-   * Log message to error console.
-   */
-  logToAppConsole(msg) {
-    if (this.dumpToAppConsole) {
-      Services.console.logStringMessage(`${msg}`);
-    }
-  }
-};
-
-/**
- * Check if an accessible object has a defunct test.
- * @param  {nsIAccessible}  accessible object to test defunct state for
- * @return {Boolean}        flag indicating defunct state
- */
-function isDefunct(accessible) {
-  let defunct = false;
-  try {
-    let extState = {};
-    accessible.getState({}, extState);
-    defunct = extState.value & Ci.nsIAccessibleStates.EXT_STATE_DEFUNCT;
-  } catch (x) {
-    defunct = true;
-  } finally {
-    if (defunct) {
-      Logger.log(`Defunct accessible: ${prettyName(accessible)}`);
-    }
-  }
-  return defunct;
+function setE10sPrefs() {
+  return new Promise(resolve =>
+    SpecialPowers.pushPrefEnv({
+      set: [
+        ['browser.tabs.remote.autostart', true],
+        ['browser.tabs.remote.force-enable', true],
+        ['extensions.e10sBlocksEnabling', false]
+      ]
+    }, resolve));
 }
 
 /**
- * Asynchronously set or remove content element's attribute (in content process
- * if e10s is enabled).
- * @param  {Object}  browser  current "tabbrowser" element
- * @param  {String}  id       content element id
- * @param  {String}  attr     attribute name
- * @param  {String?} value    optional attribute value, if not present, remove
- *                            attribute
- * @return {Promise}          promise indicating that attribute is set/removed
+ * Unset e10s related preferences in the test environment.
+ * @return {Promise} promise that resolves when preferences are unset.
  */
-function invokeSetAttribute(browser, id, attr, value) {
-  if (value) {
-    Logger.log(`Setting ${attr} attribute to ${value} for node with id: ${id}`);
-  } else {
-    Logger.log(`Removing ${attr} attribute from node with id: ${id}`);
-  }
-  return ContentTask.spawn(browser, { id, attr, value },
-    ({ id, attr, value }) => {
-      let elm = content.document.getElementById(id);
-      if (value) {
-        elm.setAttribute(attr, value);
-      } else {
-        elm.removeAttribute(attr);
-      }
-    });
+function unsetE10sPrefs() {
+  return new Promise(resolve => {
+    SpecialPowers.popPrefEnv(resolve);
+  });
 }
 
-/**
- * Asynchronously set or remove content element's style (in content process if
- * e10s is enabled).
- * @param  {Object}  browser  current "tabbrowser" element
- * @param  {String}  id       content element id
- * @param  {String}  aStyle   style property name
- * @param  {String?} aValue   optional style property value, if not present,
- *                            remove style
- * @return {Promise}          promise indicating that style is set/removed
- */
-function invokeSetStyle(browser, id, style, value) {
-  if (value) {
-    Logger.log(`Setting ${style} style to ${value} for node with id: ${id}`);
-  } else {
-    Logger.log(`Removing ${style} style from node with id: ${id}`);
-  }
-  return ContentTask.spawn(browser, { id, style, value },
-    ({ id, style, value }) => {
-      let elm = content.document.getElementById(id);
-      if (value) {
-        elm.style[style] = value;
-      } else {
-        delete elm.style[style];
-      }
-    });
-}
+// Load the shared-head file first.
+Services.scriptloader.loadSubScript(
+  'chrome://mochitests/content/browser/accessible/tests/browser/shared-head.js',
+  this);
 
 /**
- * Asynchronously set focus on a content element (in content process if e10s is
- * enabled).
- * @param  {Object}  browser  current "tabbrowser" element
- * @param  {String}  id       content element id
- * @return {Promise} promise  indicating that focus is set
+ * Returns a promise that resolves when 'a11y-init-or-shutdown' event is fired.
+ * @return {Promise} event promise evaluating to event's data
  */
-function invokeFocus(browser, id) {
-  Logger.log(`Setting focus on a node with id: ${id}`);
-  return ContentTask.spawn(browser, id, id => {
-    let elm = content.document.getElementById(id);
-    if (elm instanceof Ci.nsIDOMNSEditableElement && elm.editor ||
-        elm instanceof Ci.nsIDOMXULTextBoxElement) {
-      elm.selectionStart = elm.selectionEnd = elm.value.length;
-    }
-    elm.focus();
+function a11yInitOrShutdownPromise() {
+  return new Promise(resolve => {
+    let observe = (subject, topic, data) => {
+      Services.obs.removeObserver(observe, 'a11y-init-or-shutdown');
+      resolve(data);
+    };
+    Services.obs.addObserver(observe, 'a11y-init-or-shutdown', false);
   });
 }
 
 /**
- * Traverses the accessible tree starting from a given accessible as a root and
- * looks for an accessible that matches based on its DOMNode id.
- * @param  {nsIAccessible}  accessible root accessible
- * @param  {String}         id         id to look up accessible for
- * @return {nsIAccessible?}            found accessible if any
+ * Returns a promise that resolves when 'a11y-init-or-shutdown' event is fired
+ * in content.
+ * @param  {Object}   browser  current "tabbrowser" element
+ * @return {Promise}  event    promise evaluating to event's data
  */
-function findAccessibleChildByID(accessible, id) {
-  if (getAccessibleDOMNodeID(accessible) === id) {
-    return accessible;
-  }
-  for (let i = 0; i < accessible.children.length; ++i) {
-    let found = findAccessibleChildByID(accessible.getChildAt(i), id);
-    if (found) {
-      return found;
-    }
-  }
+function contentA11yInitOrShutdownPromise(browser) {
+  return ContentTask.spawn(browser, {}, a11yInitOrShutdownPromise);
 }
 
 /**
- * Load a list of scripts into the test
- * @param {Array} scripts  a list of scripts to load
+ * A helper function that maps 'a11y-init-or-shutdown' event to a promise that
+ * resovles or rejects depending on whether accessibility service is expected to
+ * be initialized or shut down.
  */
-function loadScripts(...scripts) {
-  for (let script of scripts) {
-    let path = typeof script === 'string' ? `${CURRENT_DIR}${script}` :
-      `${script.dir}${script.name}`;
-    Services.scriptloader.loadSubScript(path, this);
-  }
+function promiseOK(promise, expected) {
+  return promise.then(flag =>
+    flag === expected ? Promise.resolve() : Promise.reject());
 }
 
 /**
- * Load a list of frame scripts into test's content.
- * @param {Object} browser   browser element that content belongs to
- * @param {Array}  scripts   a list of scripts to load into content
+ * Checks and returns a promise that resolves when accessibility service is
+ * initialized with the correct flag.
+ * @param  {?Object} contentBrowser optinal remove browser object that indicates
+ *                                  that accessibility service is expected to be
+ *                                  initialized in content process.
+ * @return {Promise}                promise that resolves when the accessibility
+ *                                  service initialized correctly.
  */
-function loadFrameScripts(browser, ...scripts) {
-  let mm = browser.messageManager;
-  for (let script of scripts) {
-    let frameScript;
-    if (typeof script === 'string') {
-      if (script.includes('.js')) {
-        // If script string includes a .js extention, assume it is a script
-        // path.
-        frameScript = `${CURRENT_DIR}${script}`;
-      } else {
-        // Otherwise it is a serealized script.
-        frameScript = `data:,${script}`;
-      }
-    } else {
-      // Script is a object that has { dir, name } format.
-      frameScript = `${script.dir}${script.name}`;
-    }
-    mm.loadFrameScript(frameScript, false, true);
-  }
+function initPromise(contentBrowser) {
+  let a11yInitPromise = contentBrowser ?
+    contentA11yInitOrShutdownPromise(contentBrowser) :
+    a11yInitOrShutdownPromise();
+  return promiseOK(a11yInitPromise, '1').then(
+    () => ok(true, 'Service initialized correctly'),
+    () => ok(false, 'Service shutdown incorrectly'));
 }
 
 /**
- * A wrapper around browser test add_task that triggers an accessible test task
- * as a new browser test task with given document, data URL or markup snippet.
- * @param  {String}             doc    URL (relative to current directory) or
- *                                     data URL or markup snippet that is used
- *                                     to test content with
- * @param  {Function|Function*} task   a generator or a function with tests to
- *                                     run
+ * Checks and returns a promise that resolves when accessibility service is
+ * shut down with the correct flag.
+ * @param  {?Object} contentBrowser optinal remove browser object that indicates
+ *                                  that accessibility service is expected to be
+ *                                  shut down in content process.
+ * @return {Promise}                promise that resolves when the accessibility
+ *                                  service shuts down correctly.
  */
-function addAccessibleTask(doc, task) {
-  add_task(function*() {
-    let url;
-    if (doc.includes('doc_')) {
-      url = `${CURRENT_CONTENT_DIR}${doc}`;
-    } else {
-      // Assume it's a markup snippet.
-      url = `data:text/html,
-        <html>
-          <head>
-            <meta charset="utf-8"/>
-            <title>Accessibility Test</title>
-          </head>
-          <body id="body">${doc}</body>
-        </html>`;
-    }
-
-    registerCleanupFunction(() => {
-      let observers = Services.obs.enumerateObservers('accessible-event');
-      while (observers.hasMoreElements()) {
-        Services.obs.removeObserver(
-          observers.getNext().QueryInterface(Ci.nsIObserver),
-          'accessible-event');
-      }
-    });
-
-    let onDocLoad = waitForEvent(EVENT_DOCUMENT_LOAD_COMPLETE, 'body');
-
-    yield BrowserTestUtils.withNewTab({
-      gBrowser,
-      url: url
-    }, function*(browser) {
-      registerCleanupFunction(() => {
-        if (browser) {
-          let tab = gBrowser.getTabForBrowser(browser);
-          if (tab && !tab.closing && tab.linkedBrowser) {
-            gBrowser.removeTab(tab);
-          }
-        }
-      });
-
-      yield SimpleTest.promiseFocus(browser);
-
-      loadFrameScripts(browser,
-        'let { document, window, navigator } = content;',
-        { name: 'common.js', dir: MOCHITESTS_DIR });
-
-      Logger.log(
-        `e10s enabled: ${Services.appinfo.browserTabsRemoteAutostart}`);
-      Logger.log(`Actually remote browser: ${browser.isRemoteBrowser}`);
-
-      let event = yield onDocLoad;
-      yield task(browser, event.accessible);
-    });
-  });
+function shutdownPromise(contentBrowser) {
+  let a11yShutdownPromise = contentBrowser ?
+    contentA11yInitOrShutdownPromise(contentBrowser) :
+    a11yInitOrShutdownPromise();
+  return promiseOK(a11yShutdownPromise, '0').then(
+    () => ok(true, 'Service shutdown correctly'),
+    () => ok(false, 'Service initialized incorrectly'));
 }
 
-// Loading and common.js from accessible/tests/mochitest/ for all tests, as well
-// as events.js.
-loadScripts({ name: 'common.js', dir: MOCHITESTS_DIR }, 'events.js');
+/**
+ * Force garbage collection.
+ */
+function forceGC() {
+  Cu.forceCC();
+  Cu.forceGC();
+}
