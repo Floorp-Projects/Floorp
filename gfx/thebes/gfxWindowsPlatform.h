@@ -211,9 +211,6 @@ public:
     { return mRenderingParams[aRenderMode]; }
 
 public:
-    void OnDeviceManagerDestroy(mozilla::layers::DeviceManagerD3D9* aDeviceManager);
-    already_AddRefed<mozilla::layers::DeviceManagerD3D9> GetD3D9DeviceManager();
-    IDirect3DDevice9* GetD3D9Device();
     void D3D9DeviceReset();
 
     bool DwmCompositionEnabled();
@@ -283,8 +280,6 @@ private:
     RefPtr<IDWriteRenderingParams> mRenderingParams[TEXT_RENDERING_COUNT];
     DWRITE_MEASURING_MODE mMeasuringMode;
 
-    mozilla::Mutex mDeviceLock;
-    RefPtr<mozilla::layers::DeviceManagerD3D9> mDeviceManager;
     bool mHasDeviceReset;
     bool mHasFakeDeviceReset;
     mozilla::Atomic<bool> mHasD3D9DeviceReset;
