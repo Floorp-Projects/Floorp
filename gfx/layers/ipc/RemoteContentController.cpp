@@ -26,6 +26,8 @@ namespace layers {
 
 using namespace mozilla::gfx;
 
+static std::map<uint64_t, RefPtr<RemoteContentController>> sDestroyedControllers;
+
 RemoteContentController::RemoteContentController(uint64_t aLayersId)
   : mCompositorThread(MessageLoop::current())
   , mLayersId(aLayersId)
@@ -167,15 +169,24 @@ RemoteContentController::RecvUpdateHitRegion(const nsRegion& aRegion)
 void
 RemoteContentController::ActorDestroy(ActorDestroyReason aWhy)
 {
-  // This controller could possibly be kept alive longer after this
-  // by a RefPtr, but it is no longer valid to send messages.
   mCanSend = false;
+
+  // sDestroyedControllers may or may not contain the key, depending on
+  // whether or not SendDestroy() was successfully sent out or not.
+  sDestroyedControllers.erase(mLayersId);
 }
 
 void
 RemoteContentController::Destroy()
 {
   if (mCanSend) {
+    // Gfx code is done with this object, and it will probably get destroyed
+    // soon. However, if mCanSend is true, ActorDestroy has not yet been
+    // called, which means IPC code still has a handle to this object. We need
+    // to keep it alive until we get the ActorDestroy call, either via the
+    // __delete__ message or via IPC shutdown on our end.
+    MOZ_ASSERT(sDestroyedControllers.find(mLayersId) == sDestroyedControllers.end());
+    sDestroyedControllers[mLayersId] = this;
     Unused << SendDestroy();
   }
 }
