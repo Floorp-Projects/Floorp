@@ -504,11 +504,13 @@
 
 /* Network request details */
 
-#details-pane-toggle {
+#details-pane-toggle:-moz-locale-dir(ltr),
+#details-pane-toggle.pane-collapsed:-moz-locale-dir(rtl) {
   list-style-image: var(--theme-pane-collapse-image);
 }
 
-#details-pane-toggle.pane-collapsed {
+#details-pane-toggle.pane-collapsed:-moz-locale-dir(ltr),
+#details-pane-toggle:-moz-locale-dir(rtl) {
   list-style-image: var(--theme-pane-expand-image);
 }
 

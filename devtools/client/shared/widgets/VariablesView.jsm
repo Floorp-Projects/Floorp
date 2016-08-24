@@ -29,6 +29,7 @@ const { Heritage, ViewHelpers, setNamedTimeout } =
 const { Task } = require("devtools/shared/task");
 const nodeConstants = require("devtools/shared/dom-node-constants");
 const {KeyCodes} = require("devtools/client/shared/keycodes");
+const {ELLIPSIS} = require("devtools/client/shared/l10n");
 
 XPCOMUtils.defineLazyModuleGetter(this, "PluralForm",
   "resource://gre/modules/PluralForm.jsm");
@@ -2151,10 +2152,6 @@ DevToolsUtils.defineLazyPrototypeGetter(Scope.prototype, "_store", () => new Map
 DevToolsUtils.defineLazyPrototypeGetter(Scope.prototype, "_enumItems", Array);
 DevToolsUtils.defineLazyPrototypeGetter(Scope.prototype, "_nonEnumItems", Array);
 
-// An ellipsis symbol (usually "…") used for localization.
-XPCOMUtils.defineLazyGetter(Scope, "ellipsis", () =>
-  Services.prefs.getComplexValue("intl.ellipsis", Ci.nsIPrefLocalizedString).data);
-
 /**
  * A Variable is a Scope holding Property instances.
  * Iterable via "for (let [name, property] of instance) { }".
@@ -3463,7 +3460,7 @@ VariablesView.stringifiers.byType = {
   },
 
   longString: function ({initial}, {noStringQuotes, noEllipsis}) {
-    let ellipsis = noEllipsis ? "" : Scope.ellipsis;
+    let ellipsis = noEllipsis ? "" : ELLIPSIS;
     if (noStringQuotes) {
       return initial + ellipsis;
     }
@@ -3814,7 +3811,7 @@ VariablesView.stringifiers.byObjectKind = {
             n++;
           }
           if (preview.attributesLength > n) {
-            result += " " + Scope.ellipsis;
+            result += " " + ELLIPSIS;
           }
           return result + ">";
         }

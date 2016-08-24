@@ -13,6 +13,9 @@ const { startup } = require("sdk/window/helpers");
 const message = require("./utils/message");
 const { swapToInnerBrowser } = require("./browser/swap");
 const { EmulationFront } = require("devtools/shared/fronts/emulation");
+const { getStr } = require("./utils/l10n");
+const { TargetFactory } = require("devtools/client/framework/target");
+const { gDevTools } = require("devtools/client/framework/devtools");
 
 const TOOL_URL = "chrome://devtools/content/responsive.html/index.xhtml";
 
@@ -39,14 +42,17 @@ const ResponsiveUIManager = exports.ResponsiveUIManager = {
    *        The main browser chrome window.
    * @param tab
    *        The browser tab.
+   * @param options
+   *        Other options associated with toggling.  Currently includes:
+   *        - `command`: Whether initiated via GCLI command bar or toolbox button
    * @return Promise
    *         Resolved when the toggling has completed.  If the UI has opened,
    *         it is resolved to the ResponsiveUI instance for this tab.  If the
    *         the UI has closed, there is no resolution value.
    */
-  toggle(window, tab) {
+  toggle(window, tab, options) {
     let action = this.isActiveForTab(tab) ? "close" : "open";
-    let completed = this[action + "IfNeeded"](window, tab);
+    let completed = this[action + "IfNeeded"](window, tab, options);
     completed.catch(console.error);
     return completed;
   },
@@ -58,12 +64,16 @@ const ResponsiveUIManager = exports.ResponsiveUIManager = {
    *        The main browser chrome window.
    * @param tab
    *        The browser tab.
+   * @param options
+   *        Other options associated with opening.  Currently includes:
+   *        - `command`: Whether initiated via GCLI command bar or toolbox button
    * @return Promise
    *         Resolved to the ResponsiveUI instance for this tab when opening is
    *         complete.
    */
-  openIfNeeded: Task.async(function* (window, tab) {
+  openIfNeeded: Task.async(function* (window, tab, options) {
     if (!tab.linkedBrowser.isRemoteBrowser) {
+      this.showRemoteOnlyNotification(window, tab, options);
       return promise.reject(new Error("RDM only available for remote tabs."));
     }
     if (!this.isActiveForTab(tab)) {
@@ -86,8 +96,10 @@ const ResponsiveUIManager = exports.ResponsiveUIManager = {
    *        The main browser chrome window.
    * @param tab
    *        The browser tab.
-   * @param object
-   *        Close options, which currently includes a `reason` string.
+   * @param options
+   *        Other options associated with closing.  Currently includes:
+   *        - `command`: Whether initiated via GCLI command bar or toolbox button
+   *        - `reason`: String detailing the specific cause for closing
    * @return Promise
    *         Resolved (with no value) when closing is complete.
    */
@@ -159,17 +171,17 @@ const ResponsiveUIManager = exports.ResponsiveUIManager = {
     let completed;
     switch (command) {
       case "resize to":
-        completed = this.openIfNeeded(window, tab);
+        completed = this.openIfNeeded(window, tab, { command: true });
         this.activeTabs.get(tab).setViewportSize(args.width, args.height);
         break;
       case "resize on":
-        completed = this.openIfNeeded(window, tab);
+        completed = this.openIfNeeded(window, tab, { command: true });
         break;
       case "resize off":
-        completed = this.closeIfNeeded(window, tab);
+        completed = this.closeIfNeeded(window, tab, { command: true });
         break;
       case "resize toggle":
-        completed = this.toggle(window, tab);
+        completed = this.toggle(window, tab, { command: true });
         break;
       default:
     }
@@ -199,7 +211,36 @@ const ResponsiveUIManager = exports.ResponsiveUIManager = {
     if (menu) {
       menu.setAttribute("checked", this.isActiveForTab(tab));
     }
-  })
+  }),
+
+  showRemoteOnlyNotification(window, tab, { command } = {}) {
+    // Default to using the browser's per-tab notification box
+    let nbox = window.gBrowser.getNotificationBox(tab.linkedBrowser);
+
+    // If opening was initiated by GCLI command bar or toolbox button, check for an open
+    // toolbox for the tab.  If one exists, use the toolbox's notification box so that the
+    // message is placed closer to the action taken by the user.
+    if (command) {
+      let target = TargetFactory.forTab(tab);
+      let toolbox = gDevTools.getToolbox(target);
+      if (toolbox) {
+        nbox = toolbox.notificationBox;
+      }
+    }
+
+    let value = "devtools-responsive-remote-only";
+    if (nbox.getNotificationWithValue(value)) {
+      // Notification already displayed
+      return;
+    }
+
+    nbox.appendNotification(
+       getStr("responsive.remoteOnly"),
+       value,
+       null,
+       nbox.PRIORITY_CRITICAL_MEDIUM,
+       []);
+  },
 };
 
 // GCLI commands in ../responsivedesign/resize-commands.js listen for events

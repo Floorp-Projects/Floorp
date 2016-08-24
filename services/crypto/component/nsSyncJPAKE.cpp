@@ -447,7 +447,7 @@ nsSyncJPAKE::~nsSyncJPAKE()
     return;
   }
   destructorSafeDestroyNSSReference();
-  shutdown(calledFromObject);
+  shutdown(ShutdownCalledFrom::Object);
 }
 
 void

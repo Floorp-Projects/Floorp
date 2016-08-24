@@ -3,8 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { Ci } = require("chrome");
-const Services = require("Services");
+const parsePropertiesFile = require("devtools/client/shared/vendor/node-properties");
+const { sprintf } = require("devtools/client/shared/vendor/sprintf");
 
 /**
  * Localization convenience methods.
@@ -13,14 +13,18 @@ const Services = require("Services");
  *        The desired string bundle's name.
  */
 function LocalizationHelper(stringBundleName) {
-  loader.lazyGetter(this, "stringBundle", () =>
-    Services.strings.createBundle(stringBundleName));
-  loader.lazyGetter(this, "ellipsis", () =>
-    Services.prefs.getComplexValue("intl.ellipsis", Ci.nsIPrefLocalizedString)
-                  .data);
+  this.stringBundleName = stringBundleName;
 }
 
 LocalizationHelper.prototype = {
+  get properties() {
+    if (!this._properties) {
+      this._properties = parsePropertiesFile(require(`raw!${this.stringBundleName}`));
+    }
+
+    return this._properties;
+  },
+
   /**
    * L10N shortcut function.
    *
@@ -28,7 +32,11 @@ LocalizationHelper.prototype = {
    * @return string
    */
   getStr: function (name) {
-    return this.stringBundle.GetStringFromName(name);
+    if (name in this.properties) {
+      return this.properties[name];
+    }
+
+    throw new Error("No localization found for [" + name + "]");
   },
 
   /**
@@ -39,7 +47,7 @@ LocalizationHelper.prototype = {
    * @return string
    */
   getFormatStr: function (name, ...args) {
-    return this.stringBundle.formatStringFromName(name, args, args.length);
+    return sprintf(this.getStr(name), ...args);
   },
 
   /**
@@ -55,9 +63,8 @@ LocalizationHelper.prototype = {
     let newArgs = args.map(x => {
       return typeof x == "number" ? this.numberWithDecimals(x, 2) : x;
     });
-    return this.stringBundle.formatStringFromName(name,
-                                                  newArgs,
-                                                  newArgs.length);
+
+    return this.getFormatStr(name, ...newArgs);
   },
 
   /**
@@ -96,6 +103,9 @@ LocalizationHelper.prototype = {
   }
 };
 
+const sharedL10N = new LocalizationHelper("devtools/locale/shared.properties");
+const ELLIPSIS = sharedL10N.getStr("ellipsis");
+
 /**
  * A helper for having the same interface as LocalizationHelper, but for more
  * than one file. Useful for abstracting l10n string locations.
@@ -131,3 +141,4 @@ function MultiLocalizationHelper(...stringBundleNames) {
 
 exports.LocalizationHelper = LocalizationHelper;
 exports.MultiLocalizationHelper = MultiLocalizationHelper;
+exports.ELLIPSIS = ELLIPSIS;

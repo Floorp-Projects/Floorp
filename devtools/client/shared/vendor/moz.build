@@ -6,20 +6,23 @@
 modules = []
 modules += [
     'immutable.js',
-    'jsol.js'
+    'jsol.js',
+    'node-properties.js',
 ]
 
 # react-dev is used if either debug mode is enabled,
 # so include it for both
 if CONFIG['DEBUG_JS_MODULES'] or CONFIG['MOZ_DEBUG']:
     modules += ['react-dev.js']
+
 modules += [
     'react-dom.js',
     'react-proxy.js',
     'react-redux.js',
     'react.js',
     'redux.js',
-    'seamless-immutable.js'
+    'seamless-immutable.js',
+    'sprintf.js',
 ]
 
 DevToolsModules(*modules)

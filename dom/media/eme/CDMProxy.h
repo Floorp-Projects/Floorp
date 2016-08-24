@@ -34,6 +34,8 @@ struct DecryptResult {
   RefPtr<MediaRawData> mSample;
 };
 
+typedef int64_t UnixTime;
+
 // Proxies calls CDM, and proxies calls back.
 // Note: Promises are passed in via a PromiseId, so that the ID can be
 // passed via IPC to the CDM, which can then signal when to reject or
@@ -142,7 +144,7 @@ public:
 
   // Main thread only.
   virtual void OnExpirationChange(const nsAString& aSessionId,
-                                  int64_t aExpiryTime) = 0;
+                                  UnixTime aExpiryTime) = 0;
 
   // Main thread only.
   virtual void OnSessionClosed(const nsAString& aSessionId) = 0;

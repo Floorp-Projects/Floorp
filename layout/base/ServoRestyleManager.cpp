@@ -79,7 +79,7 @@ ServoRestyleManager::RecreateStyleContexts(nsIContent* aContent,
 
   if (aContent->IsDirtyForServo()) {
     RefPtr<ServoComputedValues> computedValues =
-      Servo_GetComputedValues(aContent).Consume();
+      Servo_ComputedValues_Get(aContent).Consume();
     MOZ_ASSERT(computedValues);
 
     nsChangeHint changeHint = nsChangeHint(0);

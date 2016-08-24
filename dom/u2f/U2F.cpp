@@ -104,7 +104,7 @@ U2FRegisterTask::~U2FRegisterTask()
   if (isAlreadyShutDown()) {
     return;
   }
-  shutdown(calledFromObject);
+  shutdown(ShutdownCalledFrom::Object);
 }
 
 void
@@ -307,7 +307,7 @@ U2FSignTask::~U2FSignTask()
   if (isAlreadyShutDown()) {
     return;
   }
-  shutdown(calledFromObject);
+  shutdown(ShutdownCalledFrom::Object);
 }
 
 void
@@ -555,7 +555,7 @@ U2F::~U2F()
   if (isAlreadyShutDown()) {
     return;
   }
-  shutdown(calledFromObject);
+  shutdown(ShutdownCalledFrom::Object);
 }
 
 /* virtual */ JSObject*

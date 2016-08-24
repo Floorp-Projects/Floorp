@@ -1596,7 +1596,7 @@ CanvasRenderingContext2D::EnsureTarget(const gfx::Rect* aCoveredRect,
             mBufferProvider = new PersistentBufferProviderBasic(mTarget);
             mIsSkiaGL = true;
           } else {
-            gfxCriticalNote << "Failed to create a SkiaGL DrawTarget, falling back to software\n";
+            gfxCriticalNote << "Failed to create a SkiaGL DrawTarget, falling back to software " << size << ", " << format;
             mode = RenderingMode::SoftwareBackendMode;
           }
         }
