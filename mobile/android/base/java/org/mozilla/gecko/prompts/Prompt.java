@@ -179,10 +179,6 @@ public class Prompt implements OnClickListener, OnCancelListener, OnItemClickLis
 
     private void create(String title, String text, PromptListItem[] listItems, int choiceMode)
             throws IllegalStateException {
-        final LayerView view = GeckoAppShell.getLayerView();
-        if (view != null) {
-            view.abortPanning();
-        }
 
         AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
         if (!TextUtils.isEmpty(title)) {
