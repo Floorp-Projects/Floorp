@@ -9,7 +9,6 @@
 
 #include "mozStorageService.h"
 #include "mozStorageConnection.h"
-#include "prinit.h"
 #include "nsAutoPtr.h"
 #include "nsCollationCID.h"
 #include "nsEmbedCID.h"
@@ -228,7 +227,7 @@ Service::getSingleton()
                           "run.");
       (void)ps->Alert(nullptr, title.get(), message.get());
     }
-    ::PR_Abort();
+    MOZ_CRASH("SQLite Version Error");
   }
 
   // The first reference to the storage service must be obtained on the
