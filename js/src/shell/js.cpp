@@ -162,6 +162,91 @@ struct ShellAsyncTasks
 };
 #endif // SPIDERMONKEY_PROMISE
 
+enum class ScriptKind
+{
+    Script,
+    Module
+};
+
+class OffThreadState {
+    enum State {
+        IDLE,           /* ready to work; no token, no source */
+        COMPILING,      /* working; no token, have source */
+        DONE            /* compilation done: have token and source */
+    };
+
+  public:
+    OffThreadState() : monitor(), state(IDLE), token(), source(nullptr) { }
+
+    bool startIfIdle(JSContext* cx, ScriptKind kind,
+                     ScopedJSFreePtr<char16_t>& newSource)
+    {
+        AutoLockMonitor alm(monitor);
+        if (state != IDLE)
+            return false;
+
+        MOZ_ASSERT(!token);
+
+        source = newSource.forget();
+
+        scriptKind = kind;
+        state = COMPILING;
+        return true;
+    }
+
+    void abandon(JSContext* cx) {
+        AutoLockMonitor alm(monitor);
+        MOZ_ASSERT(state == COMPILING);
+        MOZ_ASSERT(!token);
+        MOZ_ASSERT(source);
+
+        js_free(source);
+        source = nullptr;
+
+        state = IDLE;
+    }
+
+    void markDone(void* newToken) {
+        AutoLockMonitor alm(monitor);
+        MOZ_ASSERT(state == COMPILING);
+        MOZ_ASSERT(!token);
+        MOZ_ASSERT(source);
+        MOZ_ASSERT(newToken);
+
+        token = newToken;
+        state = DONE;
+        alm.notify();
+    }
+
+    void* waitUntilDone(JSContext* cx, ScriptKind kind) {
+        AutoLockMonitor alm(monitor);
+        if (state == IDLE || scriptKind != kind)
+            return nullptr;
+
+        if (state == COMPILING) {
+            while (state != DONE)
+                alm.wait();
+        }
+
+        MOZ_ASSERT(source);
+        js_free(source);
+        source = nullptr;
+
+        MOZ_ASSERT(token);
+        void* holdToken = token;
+        token = nullptr;
+        state = IDLE;
+        return holdToken;
+    }
+
+  private:
+    Monitor monitor;
+    ScriptKind scriptKind;
+    State state;
+    void* token;
+    char16_t* source;
+};
+
 // Per-context shell state.
 struct ShellContext
 {
@@ -200,6 +285,8 @@ struct ShellContext
     static const uint32_t SpsProfilingMaxStackSize = 1000;
     ProfileEntry spsProfilingStack[SpsProfilingMaxStackSize];
     uint32_t spsProfilingStackSize;
+
+    OffThreadState offThreadState;
 };
 
 struct MOZ_STACK_CLASS EnvironmentPreparer : public js::ScriptEnvironmentPreparer {
@@ -3811,97 +3898,11 @@ SyntaxParse(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
-enum class ScriptKind
-{
-    Script,
-    Module
-};
-
-class OffThreadState {
-    enum State {
-        IDLE,           /* ready to work; no token, no source */
-        COMPILING,      /* working; no token, have source */
-        DONE            /* compilation done: have token and source */
-    };
-
-  public:
-    OffThreadState() : monitor(), state(IDLE), token(), source(nullptr) { }
-
-    bool startIfIdle(JSContext* cx, ScriptKind kind,
-                     ScopedJSFreePtr<char16_t>& newSource)
-    {
-        AutoLockMonitor alm(monitor);
-        if (state != IDLE)
-            return false;
-
-        MOZ_ASSERT(!token);
-
-        source = newSource.forget();
-
-        scriptKind = kind;
-        state = COMPILING;
-        return true;
-    }
-
-    void abandon(JSContext* cx) {
-        AutoLockMonitor alm(monitor);
-        MOZ_ASSERT(state == COMPILING);
-        MOZ_ASSERT(!token);
-        MOZ_ASSERT(source);
-
-        js_free(source);
-        source = nullptr;
-
-        state = IDLE;
-    }
-
-    void markDone(void* newToken) {
-        AutoLockMonitor alm(monitor);
-        MOZ_ASSERT(state == COMPILING);
-        MOZ_ASSERT(!token);
-        MOZ_ASSERT(source);
-        MOZ_ASSERT(newToken);
-
-        token = newToken;
-        state = DONE;
-        alm.notify();
-    }
-
-    void* waitUntilDone(JSContext* cx, ScriptKind kind) {
-        AutoLockMonitor alm(monitor);
-        if (state == IDLE || scriptKind != kind)
-            return nullptr;
-
-        if (state == COMPILING) {
-            while (state != DONE)
-                alm.wait();
-        }
-
-        MOZ_ASSERT(source);
-        js_free(source);
-        source = nullptr;
-
-        MOZ_ASSERT(token);
-        void* holdToken = token;
-        token = nullptr;
-        state = IDLE;
-        return holdToken;
-    }
-
-  private:
-    Monitor monitor;
-    ScriptKind scriptKind;
-    State state;
-    void* token;
-    char16_t* source;
-};
-
-static OffThreadState offThreadState;
-
 static void
 OffThreadCompileScriptCallback(void* token, void* callbackData)
 {
-    offThreadState.markDone(token);
+    ShellContext* sc = static_cast<ShellContext*>(callbackData);
+    sc->offThreadState.markDone(token);
 }
 
 static bool
@@ -3977,16 +3978,17 @@ OffThreadCompileScript(JSContext* cx, unsigned argc, Value* vp)
         return false;
     }
 
-    if (!offThreadState.startIfIdle(cx, ScriptKind::Script, ownedChars)) {
+    ShellContext* sc = GetShellContext(cx);
+    if (!sc->offThreadState.startIfIdle(cx, ScriptKind::Script, ownedChars)) {
         JS_ReportError(cx, "called offThreadCompileScript without calling runOffThreadScript"
                        " to receive prior off-thread compilation");
         return false;
     }
 
     if (!JS::CompileOffThread(cx, options, chars, length,
-                              OffThreadCompileScriptCallback, nullptr))
+                              OffThreadCompileScriptCallback, sc))
     {
-        offThreadState.abandon(cx);
+        sc->offThreadState.abandon(cx);
         return false;
     }
 
@@ -4002,7 +4004,8 @@ runOffThreadScript(JSContext* cx, unsigned argc, Value* vp)
     if (OffThreadParsingMustWaitForGC(cx))
         gc::FinishGC(cx);
 
-    void* token = offThreadState.waitUntilDone(cx, ScriptKind::Script);
+    ShellContext* sc = GetShellContext(cx);
+    void* token = sc->offThreadState.waitUntilDone(cx, ScriptKind::Script);
     if (!token) {
         JS_ReportError(cx, "called runOffThreadScript when no compilation is pending");
         return false;
@@ -4062,16 +4065,17 @@ OffThreadCompileModule(JSContext* cx, unsigned argc, Value* vp)
         return false;
     }
 
-    if (!offThreadState.startIfIdle(cx, ScriptKind::Module, ownedChars)) {
+    ShellContext* sc = GetShellContext(cx);
+    if (!sc->offThreadState.startIfIdle(cx, ScriptKind::Module, ownedChars)) {
         JS_ReportError(cx, "called offThreadCompileModule without receiving prior off-thread "
                        "compilation");
         return false;
     }
 
     if (!JS::CompileOffThreadModule(cx, options, chars, length,
-                                    OffThreadCompileScriptCallback, nullptr))
+                                    OffThreadCompileScriptCallback, sc))
     {
-        offThreadState.abandon(cx);
+        sc->offThreadState.abandon(cx);
         return false;
     }
 
@@ -4087,7 +4091,8 @@ FinishOffThreadModule(JSContext* cx, unsigned argc, Value* vp)
     if (OffThreadParsingMustWaitForGC(cx))
         gc::FinishGC(cx);
 
-    void* token = offThreadState.waitUntilDone(cx, ScriptKind::Module);
+    ShellContext* sc = GetShellContext(cx);
+    void* token = sc->offThreadState.waitUntilDone(cx, ScriptKind::Module);
     if (!token) {
         JS_ReportError(cx, "called finishOffThreadModule when no compilation is pending");
         return false;
