@@ -11,6 +11,10 @@ VOLUME /home/worker/tooltool-cache
 ADD             bin /home/worker/bin
 RUN             chmod +x /home/worker/bin/*
 
+# Add wrapper scripts for xvfb allowing tasks to easily retry starting up xvfb
+# %include testing/docker/recipes/xvfb.sh
+ADD topsrcdir/testing/docker/recipes/xvfb.sh /home/worker/scripts/xvfb.sh
+
 # Add configuration
 COPY            dot-config                    /home/worker/.config
 
@@ -32,6 +36,10 @@ ADD           buildprops.json /home/worker/
 # to find it
 RUN wget -O /builds/tooltool.py https://raw.githubusercontent.com/mozilla/build-tooltool/master/tooltool.py
 RUN chmod +x /builds/tooltool.py
+
+# Move installation to base centos6-build image once Bug 1272629 is fixed
+# Install the screen package here to use with xvfb.
+RUN yum install -y screen
 
 # Set a default command useful for debugging
 CMD ["/bin/bash", "--login"]
