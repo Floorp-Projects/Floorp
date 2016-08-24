@@ -61,6 +61,13 @@ Structure:
           "pref.name.url": "<user-set>" // For some privacy-sensitive prefs
             // only the fact that the value has been changed is recorded
         },
+        attribution: { // optional, only present if the installation has attribution data
+          // all of these values are optional.
+          source: <string>, // referring partner domain, when install happens via a known partner
+          medium: <string>, // category of the source, such as "organic" for a search engine
+          campaign: <string>, // identifier of the particular campaign that led to the download of the product
+          content: <string>, // identifier to indicate the particular link within a campaign
+        },
       },
       profile: {
         creationDate: <integer>, // integer days since UNIX epoch, e.g. 16446
@@ -317,6 +324,15 @@ The following is a partial list of collected preferences.
 - ``browser.zoom.full``: True if zoom is enabled for both text and images, that is if "Zoom Text Only" is not enabled. Defaults to true. Collection of this preference has been enabled in Firefox 50 and will be disabled again in Firefox 53 (`Bug 979323 <https://bugzilla.mozilla.org/show_bug.cgi?id=979323>`_).
 
 - ``security.sandbox.content.level``: The meanings of the values are OS dependent, but 0 means not sandboxed for all OS. Details of the meanings can be found in the `Firefox prefs file <http://hg.mozilla.org/mozilla-central/file/tip/browser/app/profile/firefox.js>`_.
+
+attribution
+~~~~~~~~~~~
+
+This object contains the attribution data for the product installation.
+
+Attribution data is used to link installations of Firefox with the source that the user arrived at the Firefox download page from. It would indicate, for instance, when a user executed a web search for Firefox and arrived at the download page from there, directly navigated to the site, clicked on a link from a particular social media campaign, etc.
+
+The attribution data is included in some versions of the default Firefox installer for Windows (the "stub" installer) and stored as part of the installation. All platforms other than Windows and also Windows installations that did not use the stub installer do not have this data and will not include the ``attribution`` object.
 
 partner
 -------
