@@ -715,12 +715,12 @@ nsDefaultCommandLineHandler.prototype = {
     // instances where users explicitly decide to "open with" the browser.
     // Note that users who launch firefox manually with the -url flag will
     // get erroneously counted.
-    if (cmdLine.findFlag("url", false) &&
-        ShellService.isDefaultBrowser(false, false)) {
-      try {
+    try {
+      if (cmdLine.findFlag("url", false) &&
+          ShellService.isDefaultBrowser(false, false)) {
         Services.telemetry.getHistogramById("FX_STARTUP_EXTERNAL_CONTENT_HANDLER").add();
-      } catch (e) {}
-    }
+      }
+    } catch (e) {}
 
     var urilist = [];
 

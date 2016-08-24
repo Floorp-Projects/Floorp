@@ -52,6 +52,9 @@ localStorage.setItem("Services.prefs:devtools.branch2.someint", JSON.stringify({
 "use strict";
 
 function do_tests() {
+  // We can't load the defaults in this context.
+  Services._defaultPrefsEnabled = false;
+
   is(Services.prefs.getBoolPref("devtools.branch1.somebool"), false,
     "bool pref value");
   Services.prefs.setBoolPref("devtools.branch1.somebool", true);

@@ -2218,7 +2218,7 @@ nsStyleImage::IsOpaque() const
   MOZ_ASSERT(imageContainer, "IsComplete() said image container is ready");
 
   // Check if the crop region of the image is opaque.
-  if (imageContainer->WillDrawOpaqueNow()) {
+  if (imageContainer->IsOpaque()) {
     if (!mCropRect) {
       return true;
     }

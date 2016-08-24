@@ -10,6 +10,10 @@ ADD topsrcdir/testing/docker/recipes/tooltool.py /setup/tooltool.py
 # %include testing/docker/recipes/install-mercurial.sh
 ADD topsrcdir/testing/docker/recipes/install-mercurial.sh /tmp/install-mercurial.sh
 
+# Add wrapper scripts for xvfb allowing tasks to easily retry starting up xvfb
+# %include testing/docker/recipes/xvfb.sh
+ADD topsrcdir/testing/docker/recipes/xvfb.sh /home/worker/scripts/xvfb.sh
+
 # %include testing/docker/recipes/ubuntu1204-test-system-setup.sh
 ADD topsrcdir/testing/docker/recipes/ubuntu1204-test-system-setup.sh /setup/system-setup.sh
 RUN bash /setup/system-setup.sh
