@@ -13,8 +13,6 @@ let log = Cu.import("resource://gre/modules/Log.jsm", {})
 
 XPCOMUtils.defineLazyModuleGetter(this, "BrowserUITelemetry",
   "resource:///modules/BrowserUITelemetry.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "PlacesUIUtils",
-  "resource:///modules/PlacesUIUtils.jsm");
 
 this.EXPORTED_SYMBOLS = [
   "TabListComponent"
@@ -49,7 +47,6 @@ TabListComponent.prototype = {
     this._view = new this._View(this._window, {
       onSelectRow: (...args) => this.onSelectRow(...args),
       onOpenTab: (...args) => this.onOpenTab(...args),
-      onOpenTabs: (...args) => this.onOpenTabs(...args),
       onMoveSelectionDown: (...args) => this.onMoveSelectionDown(...args),
       onMoveSelectionUp: (...args) => this.onMoveSelectionUp(...args),
       onToggleBranch: (...args) => this.onToggleBranch(...args),
@@ -114,21 +111,6 @@ TabListComponent.prototype = {
   onOpenTab(url, where, params) {
     this._window.openUILinkIn(url, where, params);
     BrowserUITelemetry.countSyncedTabEvent("open", "sidebar");
-  },
-
-  onOpenTabs(urls, where, params) {
-    if(!PlacesUIUtils.confirmOpenInTabs(urls.length, this._window)) {
-      return;
-    }
-    if (where == "window") {
-      this._window.openDialog(this._window.getBrowserURL(), "_blank",
-                              "chrome,dialog=no,all", urls.join("|"));
-    } else {
-      for (let url of urls) {
-        this._window.openUILinkIn(url, where, params);
-      }
-    }
-    BrowserUITelemetry.countSyncedTabEvent("openmultiple", "sidebar");
   },
 
   onCopyTabLocation(url) {
