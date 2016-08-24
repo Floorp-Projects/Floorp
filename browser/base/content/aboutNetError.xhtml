@@ -392,7 +392,7 @@
           // The order of these links in the description is fixed in
           // TransportSecurityInfo.cpp:formatOverridableCertErrorMessage.
           var firstResult = domainResult;
-          if(!domainResult)
+          if (!domainResult)
             firstResult = codeResult;
           if (!firstResult)
             return;
@@ -655,7 +655,9 @@
     - an onload handler. This is because error pages are loaded as
     - LOAD_BACKGROUND, which means that onload handlers will not be executed.
     -->
-    <script type="application/javascript">initPage();</script>
+    <script type="application/javascript">
+      initPage();
+    </script>
 
   </body>
 </html>

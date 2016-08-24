@@ -1236,6 +1236,11 @@ DownloadsPlacesView.prototype = {
 
   // nsIController
   doCommand(aCommand) {
+    // Commands may be invoked with keyboard shortcuts even if disabled.
+    if (!this.isCommandEnabled(aCommand)) {
+      return;
+    }
+
     // If this command is not selection-specific, execute it.
     if (aCommand in this) {
       this[aCommand]();
