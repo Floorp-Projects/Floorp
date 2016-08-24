@@ -281,6 +281,7 @@ Http2BaseCompressor::Http2BaseCompressor()
   : mOutput(nullptr)
   , mMaxBuffer(kDefaultMaxBuffer)
   , mMaxBufferSetting(kDefaultMaxBuffer)
+  , mSetInitialMaxBufferSizeAllowed(true)
   , mPeakSize(0)
   , mPeakCount(0)
 {
@@ -384,9 +385,23 @@ Http2BaseCompressor::SetMaxBufferSizeInternal(uint32_t maxBufferSize)
 }
 
 nsresult
+Http2BaseCompressor::SetInitialMaxBufferSize(uint32_t maxBufferSize)
+{
+  MOZ_ASSERT(mSetInitialMaxBufferSizeAllowed);
+
+  if (mSetInitialMaxBufferSizeAllowed) {
+    mMaxBufferSetting = maxBufferSize;
+    return NS_OK;
+  }
+
+  return NS_ERROR_FAILURE;
+}
+
+nsresult
 Http2Decompressor::DecodeHeaderBlock(const uint8_t *data, uint32_t datalen,
                                      nsACString &output, bool isPush)
 {
+  mSetInitialMaxBufferSizeAllowed = false;
   mOffset = 0;
   mData = data;
   mDataLen = datalen;
@@ -1035,6 +1050,7 @@ Http2Compressor::EncodeHeaderBlock(const nsCString &nvInput,
                                    const nsACString &host, const nsACString &scheme,
                                    bool connectForm, nsACString &output)
 {
+  mSetInitialMaxBufferSizeAllowed = false;
   mOutput = &output;
   output.SetCapacity(1024);
   output.Truncate();

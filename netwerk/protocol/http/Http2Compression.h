@@ -66,6 +66,7 @@ public:
   Http2BaseCompressor();
   virtual ~Http2BaseCompressor();
   size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
+  nsresult SetInitialMaxBufferSize(uint32_t maxBufferSize);
 
 protected:
   const static uint32_t kDefaultMaxBuffer = 4096;
@@ -80,6 +81,7 @@ protected:
 
   uint32_t mMaxBuffer;
   uint32_t mMaxBufferSetting;
+  bool mSetInitialMaxBufferSizeAllowed;
 
   uint32_t mPeakSize;
   uint32_t mPeakCount;
