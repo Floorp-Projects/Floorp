@@ -6324,6 +6324,16 @@ HTMLEditRules::IsInListItem(nsINode* aNode)
   return nullptr;
 }
 
+nsIAtom&
+HTMLEditRules::DefaultParagraphSeparator()
+{
+  MOZ_ASSERT(mHTMLEditor);
+  if (!mHTMLEditor) {
+    return *nsGkAtoms::div;
+  }
+  return ParagraphSeparatorElement(mHTMLEditor->GetDefaultParagraphSeparator());
+}
+
 /**
  * ReturnInHeader: do the right thing for returns pressed in headers
  */
@@ -6379,8 +6389,12 @@ HTMLEditRules::ReturnInHeader(Selection& aSelection,
       htmlEditor->mTypeInState->ClearAllProps();
 
       // Create a paragraph
+      nsIAtom& paraAtom = DefaultParagraphSeparator();
+      // We want a wrapper element even if we separate with <br>
       nsCOMPtr<Element> pNode =
-        htmlEditor->CreateNode(nsGkAtoms::p, headerParent, offset + 1);
+        htmlEditor->CreateNode(&paraAtom == nsGkAtoms::br ? nsGkAtoms::p
+                                                           : &paraAtom,
+                                headerParent, offset + 1);
       NS_ENSURE_STATE(pNode);
 
       // Append a <br> to it
@@ -6651,8 +6665,12 @@ HTMLEditRules::ReturnInListItem(Selection& aSelection,
       NS_ENSURE_SUCCESS(rv, rv);
 
       // Time to insert a paragraph
+      nsIAtom& paraAtom = DefaultParagraphSeparator();
+      // We want a wrapper even if we separate with <br>
       nsCOMPtr<Element> pNode =
-        htmlEditor->CreateNode(nsGkAtoms::p, listParent, offset + 1);
+        htmlEditor->CreateNode(&paraAtom == nsGkAtoms::br ? nsGkAtoms::p
+                                                           : &paraAtom,
+                                listParent, offset + 1);
       NS_ENSURE_STATE(pNode);
 
       // Append a <br> to it
