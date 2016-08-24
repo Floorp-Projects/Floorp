@@ -95,15 +95,7 @@ const CONTEXT_FOR_VALIDATION = [
 const CONTEXT_FOR_INJECTION = [
   ...CONTEXT_FOR_VALIDATION,
   "shouldInject",
-  "callFunction",
-  "callFunctionNoReturn",
-  "callAsyncFunction",
-  "getProperty",
-  "setProperty",
-
-  "addListener",
-  "hasListener",
-  "removeListener",
+  "getImplementation",
 ];
 
 /**
@@ -124,6 +116,7 @@ class Context {
         return value;
       },
     };
+    this.isChromeCompat = false;
 
     this.currentChoices = new Set();
     this.choicePathIndex = 0;
@@ -134,7 +127,7 @@ class Context {
       }
     }
 
-    let props = ["preprocessors"];
+    let props = ["preprocessors", "isChromeCompat"];
     for (let prop of props) {
       if (prop in params) {
         if (prop in this && typeof this[prop] == "object") {
@@ -341,22 +334,7 @@ class InjectionContext extends Context {
   }
 
   /**
-   * Called before injecting an API. The return value is used to determine
-   * whether to inject the API, and if so what the value of the `pathObj`
-   * parameter should be when the methods of this interface are called.
-   * - If falsey, the API is not injected.
-   * - If `true`, the API is injected and the `pathObj` parameter is `null`.
-   * - If an object, the `pathObj` parameter is this object. The object SHOULD
-   *   have a property `name`.
-   *
-   * With the above contract, a local API implementation can simply be
-   * implemented as follows:
-   *
-   *    callFunction(pathObj, path, name, args) {
-   *      if (pathObj)
-   *        return pathObj[name];
-   *      // else the local API does not exist, so fall back or throw an error.
-   *    }
+   * Check whether the API should be injected.
    *
    * @abstract
    * @param {string} namespace The namespace of the API. This may contain dots,
@@ -365,127 +343,25 @@ class InjectionContext extends Context {
    *     `null` if we are checking whether the namespace should be injected.
    * @param {Array} restrictions An arbitrary list of restrictions as declared
    *     by the schema for a given API node.
-   * @returns {*} An object with the property `name`, `true` or a falsey value.
+   * @returns {boolean} Whether the API should be injected.
    */
   shouldInject(namespace, name, restrictions) {
     throw new Error("Not implemented");
   }
 
   /**
-   * Calls function `path`.`name` and returns its return value.
+   * Generate the implementation for `namespace`.`name`.
    *
    * @abstract
-   * @param {*} pathObj See `shouldInject`.
-   * @param {Array<string>} path The API path, e.g. `["storage", "local"]`.
-   * @param {string} name The method name, e.g. "get".
-   * @param {Array} args The parameters for the function.
-   * @returns {*} The return value of the invoked function.
+   * @param {string} namespace The full path to the namespace of the API, minus
+   *     the name of the method or property. E.g. "storage.local".
+   * @param {string} name The name of the method, property or event.
+   * @returns {SchemaAPIInterface} The implementation of the API.
    */
-  callFunction(pathObj, path, name, args) {
-    throw new Error("Not implemented");
-  }
-
-  /**
-   * Calls function `path`.`name` and ignores its return value.
-   *
-   * @abstract
-   * @param {*} pathObj See `shouldInject`.
-   * @param {Array<string>} path The API path, e.g. `["storage", "local"]`.
-   * @param {string} name The method name, e.g. "get".
-   * @param {Array} args The parameters for the function.
-   */
-  callFunctionNoReturn(pathObj, path, name, args) {
-    throw new Error("Not implemented");
-  }
-
-  /**
-   * Call function `path`.`name` that completes asynchronously.
-   *
-   * @abstract
-   * @param {*} pathObj See `shouldInject`.
-   * @param {Array<string>} path The API path, e.g. `["storage", "local"]`.
-   * @param {string} name The method name, e.g. "get".
-   * @param {Array} args The parameters for the function.
-   * @param {function(*)} [callback] The callback to be called when the function
-   *     completes.
-   * @returns {Promise|undefined} Must be void if `callback` is set, and a
-   *     promise otherwise. The promise is resolved when the function completes.
-   */
-  callAsyncFunction(pathObj, path, name, args, callback) {
-    throw new Error("Not implemented");
-  }
-
-  /**
-   * Retrieves the value of property `path`.`name`.
-   *
-   * @abstract
-   * @param {*} pathObj See `shouldInject`.
-   * @param {Array<string>} path The API path, e.g. `["storage", "local"]`.
-   * @param {string} name The property name.
-   * @returns {*} The value of the property.
-   */
-  getProperty(pathObj, path, name) {
-    throw new Error("Not implemented");
-  }
-
-  /**
-   * Assigns the value of property `path`.`name`.
-   *
-   * @abstract
-   * @param {*} pathObj See `shouldInject`.
-   * @param {Array<string>} path The API path, e.g. `["storage", "local"]`.
-   * @param {string} name The property name.
-   * @param {string} value The new value of the property.
-   */
-  setProperty(pathObj, path, name, value) {
-    throw new Error("Not implemented");
-  }
-
-  /**
-   * Registers `listener` for event `path`.`name`.
-   *
-   * @abstract
-   * @param {*} pathObj See `shouldInject`.
-   * @param {Array<string>} path The API path, e.g. `["storage", "local"]`.
-   * @param {string} name The event name, e.g. "onChanged"
-   * @param {function} listener The callback to be called when the event fires.
-   * @param {Array} args Extra parameters for EventManager.addListener.
-   * @see EventManager.addListener
-   */
-  addListener(pathObj, path, name, listener, args) {
-    throw new Error("Not implemented");
-  }
-
-  /**
-   * Checks whether `listener` is listening to event `path`.`name`.
-   *
-   * @abstract
-   * @param {*} pathObj See `shouldInject`.
-   * @param {Array<string>} path The API path, e.g. `["storage", "local"]`.
-   * @param {string} name The event name, e.g. "onChanged"
-   * @param {function} listener The event listener.
-   * @returns {boolean} Whether `listener` was added to event `path`.`name`.
-   * @see EventManager.hasListener
-   */
-  hasListener(pathObj, path, name, listener) {
-    throw new Error("Not implemented");
-  }
-
-  /**
-   * Unregisters `listener` from event `path`.`name`.
-   *
-   * @abstract
-   * @param {*} pathObj See `shouldInject`.
-   * @param {Array<string>} path The API path, e.g. `["storage", "local"]`.
-   * @param {string} name The event name, e.g. "onChanged"
-   * @param {function} listener The event listener.
-   * @see EventManager.removeListener
-   */
-  removeListener(pathObj, path, name, listener) {
+  getImplementation(namespace, name) {
     throw new Error("Not implemented");
   }
 }
-
 
 /**
  * The methods in this singleton represent the "format" specifier for
@@ -659,13 +535,13 @@ class Entry {
    * `context` is used to call the actual implementation
    * of a given function or event.
    *
-   * @param {*} pathObj See `shouldInject`.
+   * @param {SchemaAPIInterface} apiImpl The implementation of the API.
    * @param {Array<string>} path The API path, e.g. `["storage", "local"]`.
    * @param {string} name The method name, e.g. "get".
    * @param {object} dest The object where `path`.`name` should be stored.
    * @param {InjectionContext} context
    */
-  inject(pathObj, path, name, dest, context) {
+  inject(apiImpl, path, name, dest, context) {
   }
 }
 
@@ -856,7 +732,7 @@ class StringType extends Type {
     return baseType == "string";
   }
 
-  inject(pathObj, path, name, dest, context) {
+  inject(apiImpl, path, name, dest, context) {
     if (this.enumeration) {
       let obj = Cu.createObjectIn(dest, {defineAs: name});
       for (let e of this.enumeration) {
@@ -1173,7 +1049,7 @@ class ValueProperty extends Entry {
     this.value = value;
   }
 
-  inject(pathObj, path, name, dest, context) {
+  inject(apiImpl, path, name, dest, context) {
     dest[name] = this.value;
   }
 }
@@ -1193,14 +1069,14 @@ class TypeProperty extends Entry {
     throw context.makeError(`${msg} for ${this.namespaceName}.${this.name}.`);
   }
 
-  inject(pathObj, path, name, dest, context) {
+  inject(apiImpl, path, name, dest, context) {
     if (this.unsupported) {
       return;
     }
 
     let getStub = () => {
       this.checkDeprecated(context);
-      return context.getProperty(pathObj, path, name);
+      return apiImpl.getProperty();
     };
 
     let desc = {
@@ -1217,7 +1093,7 @@ class TypeProperty extends Entry {
           this.throwError(context, normalized.error);
         }
 
-        context.setProperty(pathObj, path, name, normalized.value);
+        apiImpl.setProperty(normalized.value);
       };
 
       desc.set = Cu.exportFunction(setStub, dest);
@@ -1246,7 +1122,7 @@ class SubModuleProperty extends Entry {
     this.properties = properties;
   }
 
-  inject(pathObj, path, name, dest, context) {
+  inject(apiImpl, path, name, dest, context) {
     let obj = Cu.createObjectIn(dest, {defineAs: name});
 
     let ns = Schemas.namespaces.get(this.namespaceName);
@@ -1263,10 +1139,10 @@ class SubModuleProperty extends Entry {
     let functions = type.functions;
     for (let fun of functions) {
       let subpath = path.concat(name);
-      let pathObj = context.shouldInject(subpath.join("."), fun.name, fun.restrictions || ns.defaultRestrictions);
-      if (pathObj) {
-        pathObj = pathObj === true ? null : pathObj;
-        fun.inject(pathObj, subpath, fun.name, obj, context);
+      let namespace = subpath.join(".");
+      if (context.shouldInject(namespace, fun.name, fun.restrictions || ns.defaultRestrictions)) {
+        let apiImpl = context.getImplementation(namespace, fun.name);
+        fun.inject(apiImpl, subpath, fun.name, obj, context);
       }
     }
 
@@ -1375,7 +1251,7 @@ class FunctionEntry extends CallEntry {
     this.hasAsyncCallback = type.hasAsyncCallback;
   }
 
-  inject(pathObj, path, name, dest, context) {
+  inject(apiImpl, path, name, dest, context) {
     if (this.unsupported) {
       return;
     }
@@ -1393,19 +1269,25 @@ class FunctionEntry extends CallEntry {
         if (this.hasAsyncCallback) {
           callback = actuals.pop();
         }
-        return context.callAsyncFunction(pathObj, path, name, actuals, callback);
+        if (callback === null && context.isChromeCompat) {
+          // We pass an empty stub function as a default callback for
+          // the `chrome` API, so promise objects are not returned,
+          // and lastError values are reported immediately.
+          callback = () => {};
+        }
+        return apiImpl.callAsyncFunction(actuals, callback);
       };
     } else if (!this.returns) {
       stub = (...args) => {
         this.checkDeprecated(context);
         let actuals = this.checkParameters(args, context);
-        return context.callFunctionNoReturn(pathObj, path, name, actuals);
+        return apiImpl.callFunctionNoReturn(actuals);
       };
     } else {
       stub = (...args) => {
         this.checkDeprecated(context);
         let actuals = this.checkParameters(args, context);
-        return context.callFunction(pathObj, path, name, actuals);
+        return apiImpl.callFunction(actuals);
       };
     }
     Cu.exportFunction(stub, dest, {defineAs: name});
@@ -1429,7 +1311,7 @@ class Event extends CallEntry {
     return r.value;
   }
 
-  inject(pathObj, path, name, dest, context) {
+  inject(apiImpl, path, name, dest, context) {
     if (this.unsupported) {
       return;
     }
@@ -1441,17 +1323,17 @@ class Event extends CallEntry {
     let addStub = (listener, ...args) => {
       listener = this.checkListener(listener, context);
       let actuals = this.checkParameters(args, context);
-      context.addListener(pathObj, this.path, name, listener, actuals);
+      apiImpl.addListener(listener, actuals);
     };
 
     let removeStub = (listener) => {
       listener = this.checkListener(listener, context);
-      context.removeListener(pathObj, this.path, name, listener);
+      apiImpl.removeListener(listener);
     };
 
     let hasStub = (listener) => {
       listener = this.checkListener(listener, context);
-      return context.hasListener(pathObj, this.path, name, listener);
+      return apiImpl.hasListener(listener);
     };
 
     let obj = Cu.createObjectIn(dest, {defineAs: name});
@@ -1886,10 +1768,9 @@ this.Schemas = {
 
       let obj = Cu.createObjectIn(dest, {defineAs: namespace});
       for (let [name, entry] of ns) {
-        let pathObj = context.shouldInject(namespace, name, entry.restrictions || ns.defaultRestrictions);
-        if (pathObj) {
-          pathObj = pathObj === true ? null : pathObj;
-          entry.inject(pathObj, [namespace], name, obj, context);
+        if (context.shouldInject(namespace, name, entry.restrictions || ns.defaultRestrictions)) {
+          let apiImpl = context.getImplementation(namespace, name);
+          entry.inject(apiImpl, [namespace], name, obj, context);
         }
       }
 

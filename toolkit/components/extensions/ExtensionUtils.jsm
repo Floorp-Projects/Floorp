@@ -1416,7 +1416,242 @@ function detectLanguage(text) {
   }));
 }
 
+/**
+ * An object that runs the implementation of a schema API. Instantiations of
+ * this interfaces are used by Schemas.jsm.
+ *
+ * @interface
+ */
+class SchemaAPIInterface {
+  /**
+   * Calls this as a function that returns its return value.
+   *
+   * @abstract
+   * @param {Array} args The parameters for the function.
+   * @returns {*} The return value of the invoked function.
+   */
+  callFunction(args) {
+    throw new Error("Not implemented");
+  }
+
+  /**
+   * Calls this as a function and ignores its return value.
+   *
+   * @abstract
+   * @param {Array} args The parameters for the function.
+   */
+  callFunctionNoReturn(args) {
+    throw new Error("Not implemented");
+  }
+
+  /**
+   * Calls this as a function that completes asynchronously.
+   *
+   * @abstract
+   * @param {Array} args The parameters for the function.
+   * @param {function(*)} [callback] The callback to be called when the function
+   *     completes.
+   * @returns {Promise|undefined} Must be void if `callback` is set, and a
+   *     promise otherwise. The promise is resolved when the function completes.
+   */
+  callAsyncFunction(args, callback) {
+    throw new Error("Not implemented");
+  }
+
+  /**
+   * Retrieves the value of this as a property.
+   *
+   * @abstract
+   * @returns {*} The value of the property.
+   */
+  getProperty() {
+    throw new Error("Not implemented");
+  }
+
+  /**
+   * Assigns the value to this as property.
+   *
+   * @abstract
+   * @param {string} value The new value of the property.
+   */
+  setProperty(value) {
+    throw new Error("Not implemented");
+  }
+
+  /**
+   * Registers a `listener` to this as an event.
+   *
+   * @abstract
+   * @param {function} listener The callback to be called when the event fires.
+   * @param {Array} args Extra parameters for EventManager.addListener.
+   * @see EventManager.addListener
+   */
+  addListener(listener, args) {
+    throw new Error("Not implemented");
+  }
+
+  /**
+   * Checks whether `listener` is listening to this as an event.
+   *
+   * @abstract
+   * @param {function} listener The event listener.
+   * @returns {boolean} Whether `listener` is registered with this as an event.
+   * @see EventManager.hasListener
+   */
+  hasListener(listener) {
+    throw new Error("Not implemented");
+  }
+
+  /**
+   * Unregisters `listener` from this as an event.
+   *
+   * @abstract
+   * @param {function} listener The event listener.
+   * @see EventManager.removeListener
+   */
+  removeListener(listener) {
+    throw new Error("Not implemented");
+  }
+}
+
+/**
+ * An object that runs a locally implemented API.
+ */
+class LocalAPIImplementation extends SchemaAPIInterface {
+  /**
+   * Constructs an implementation of the `name` method or property of `pathObj`.
+   *
+   * @param {object} pathObj The object containing the member with name `name`.
+   * @param {string} name The name of the implemented member.
+   * @param {BaseContext} context The context in which the schema is injected.
+   */
+  constructor(pathObj, name, context) {
+    super();
+    this.pathObj = pathObj;
+    this.name = name;
+    this.context = context;
+  }
+
+  callFunction(args) {
+    return this.pathObj[this.name](...args);
+  }
+
+  callFunctionNoReturn(args) {
+    this.pathObj[this.name](...args);
+  }
+
+  callAsyncFunction(args, callback) {
+    let promise;
+    try {
+      promise = this.pathObj[this.name](...args) || Promise.resolve();
+    } catch (e) {
+      promise = Promise.reject(e);
+    }
+    return this.context.wrapPromise(promise, callback);
+  }
+
+  getProperty() {
+    return this.pathObj[this.name];
+  }
+
+  setProperty(value) {
+    this.pathObj[this.name] = value;
+  }
+
+  addListener(listener, args) {
+    this.pathObj[this.name].addListener.call(null, listener, ...args);
+  }
+
+  hasListener(listener) {
+    return this.pathObj[this.name].hasListener.call(null, listener);
+  }
+
+  removeListener(listener) {
+    this.pathObj[this.name].removeListener.call(null, listener);
+  }
+}
+
 let nextId = 1;
+
+/**
+ * An object that runs an remote implementation of an API.
+ */
+class ProxyAPIImplementation extends SchemaAPIInterface {
+  /**
+   * @param {string} namespace The full path to the namespace that contains the
+   *     `name` member. This may contain dots, e.g. "storage.local".
+   * @param {string} name The name of the method or property.
+   * @param {ChildAPIManager} childApiManager The owner of this implementation.
+   */
+  constructor(namespace, name, childApiManager) {
+    super();
+    this.path = `${namespace}.${name}`;
+    this.childApiManager = childApiManager;
+  }
+
+  callFunctionNoReturn(args) {
+    this.childApiManager.messageManager.sendAsyncMessage("API:Call", {
+      childId: this.childApiManager.id,
+      path: this.path,
+      args,
+    });
+  }
+
+  callAsyncFunction(args, callback) {
+    let callId = nextId++;
+    let deferred = PromiseUtils.defer();
+    this.childApiManager.callPromises.set(callId, deferred);
+
+    this.childApiManager.messageManager.sendAsyncMessage("API:Call", {
+      childId: this.childApiManager.id,
+      callId,
+      path: this.path,
+      args,
+    });
+
+    return this.childApiManager.context.wrapPromise(deferred.promise, callback);
+  }
+
+  addListener(listener, args) {
+    let set = this.childApiManager.listeners.get(this.path);
+    if (!set) {
+      set = new Set();
+      this.childApiManager.listeners.set(this.path, set);
+    }
+
+    set.add(listener);
+
+    if (set.size == 1) {
+      args = args.slice(1);
+
+      this.childApiManager.messageManager.sendAsyncMessage("API:AddListener", {
+        childId: this.childApiManager.id,
+        path: this.path,
+        args,
+      });
+    }
+  }
+
+  removeListener(listener) {
+    let set = this.childApiManager.listeners.get(this.path);
+    if (!set) {
+      return;
+    }
+    set.remove(listener);
+
+    if (set.size == 0) {
+      this.childApiManager.messageManager.sendAsyncMessage("Extension:RemoveListener", {
+        childId: this.childApiManager.id,
+        path: this.path,
+      });
+    }
+  }
+
+  hasListener(listener) {
+    let set = this.childApiManager.listeners.get(this.path);
+    return set ? set.has(listener) : false;
+  }
+}
 
 // We create one instance of this class for every extension context
 // that needs to use remote APIs. It uses the message manager to
@@ -1458,8 +1693,7 @@ class ChildAPIManager {
 
     switch (name) {
       case "API:RunListener":
-        let ref = data.path.concat(data.name).join(".");
-        let listeners = this.listeners.get(ref);
+        let listeners = this.listeners.get(data.path);
         for (let callback of listeners) {
           runSafe(this.context, callback, ...data.args);
         }
@@ -1485,53 +1719,16 @@ class ChildAPIManager {
     return this.context.cloneScope;
   }
 
-  callFunction(pathObj, path, name, args) {
-    if (pathObj) {
-      return pathObj[name](...args);
-    }
-    throw new Error("Not implemented");
-  }
-
-  callFunctionNoReturn(pathObj, path, name, args) {
-    if (pathObj) {
-      pathObj[name](...args);
-      return;
-    }
-    this.messageManager.sendAsyncMessage("API:Call", {
-      childId: this.id,
-      path, name, args,
-    });
-  }
-
-  callAsyncFunction(pathObj, path, name, args, callback) {
-    if (pathObj) {
-      let promise;
-      try {
-        promise = pathObj[name](...args) || Promise.resolve();
-      } catch (e) {
-        promise = Promise.reject(e);
-      }
-      return this.context.wrapPromise(promise, callback);
-    }
-    let callId = nextId++;
-    let deferred = PromiseUtils.defer();
-    this.callPromises.set(callId, deferred);
-
-    this.messageManager.sendAsyncMessage("API:Call", {
-      childId: this.id,
-      callId,
-      path, name, args,
-    });
-
-    return this.context.wrapPromise(deferred.promise, callback);
-  }
-
   shouldInject(namespace, name, restrictions) {
     // Do not generate content script APIs, unless explicitly allowed.
     if (this.context.envType === "content_child" &&
         (!restrictions || !restrictions.includes("content"))) {
       return false;
     }
+    return true;
+  }
+
+  getImplementation(namespace, name) {
     let pathObj = this.localApis;
     if (pathObj) {
       for (let part of namespace.split(".")) {
@@ -1540,84 +1737,17 @@ class ChildAPIManager {
           break;
         }
       }
-      if (pathObj && (name === null || name in pathObj)) {
-        return pathObj;
+      if (pathObj && name in pathObj) {
+        return new LocalAPIImplementation(pathObj, name, this.context);
       }
     }
 
     // No local API found, defer implementation to the parent.
-    return true;
+    return new ProxyAPIImplementation(namespace, name, this);
   }
 
   hasPermission(permission) {
     return this.context.extension.permissions.has(permission);
-  }
-
-  getProperty(pathObj, path, name) {
-    if (pathObj) {
-      return pathObj[name];
-    }
-    throw new Error("Not implemented");
-  }
-
-  setProperty(pathObj, path, name, value) {
-    if (pathObj) {
-      pathObj[name] = value;
-      return;
-    }
-    throw new Error("Not implemented");
-  }
-
-  addListener(pathObj, path, name, listener, args) {
-    if (pathObj) {
-      pathObj[name].addListener(listener, ...args);
-      return;
-    }
-    let ref = path.concat(name).join(".");
-    let set;
-    if (this.listeners.has(ref)) {
-      set = this.listeners.get(ref);
-    } else {
-      set = new Set();
-      this.listeners.set(ref, set);
-    }
-
-    set.add(listener);
-
-    if (set.size == 1) {
-      args = args.slice(1);
-
-      this.messageManager.sendAsyncMessage("API:AddListener", {
-        childId: this.id,
-        path, name, args,
-      });
-    }
-  }
-
-  removeListener(pathObj, path, name, listener) {
-    if (pathObj) {
-      pathObj[name].removeListener(listener);
-      return;
-    }
-    let ref = path.concat(name).join(".");
-    let set = this.listeners.get(ref) || new Set();
-    set.remove(listener);
-
-    if (set.size == 0) {
-      this.messageManager.sendAsyncMessage("Extension:RemoveListener", {
-        childId: this.id,
-        path, name,
-      });
-    }
-  }
-
-  hasListener(pathObj, path, name, listener) {
-    if (pathObj) {
-      return pathObj[name].hasListener(listener);
-    }
-    let ref = path.concat(name).join(".");
-    let set = this.listeners.get(ref) || new Set();
-    return set.has(listener);
   }
 }
 
@@ -1803,9 +1933,11 @@ this.ExtensionUtils = {
   EventEmitter,
   EventManager,
   IconDetails,
+  LocalAPIImplementation,
   LocaleData,
   Messenger,
   PlatformInfo,
+  SchemaAPIInterface,
   SingletonEventManager,
   SpreadArgs,
   ChildAPIManager,
