@@ -60,6 +60,10 @@ public:
                     // the scroll position based on user action (the alternative
                     // is eNone which means it's just request a repaint because
                     // it got a scroll update from the main thread).
+    eRestore,       // The scroll offset was updated by the main thread, but as
+                    // a restore from history or after a frame reconstruction.
+                    // In this case, APZ can ignore the offset change if the
+                    // user has done an APZ scroll already.
 
     eSentinel       // For IPC use only
   };
@@ -359,6 +363,12 @@ public:
   void SetScrollOffsetUpdated(uint32_t aScrollGeneration)
   {
     mScrollUpdateType = eMainThread;
+    mScrollGeneration = aScrollGeneration;
+  }
+
+  void SetScrollOffsetRestored(uint32_t aScrollGeneration)
+  {
+    mScrollUpdateType = eRestore;
     mScrollGeneration = aScrollGeneration;
   }
 
