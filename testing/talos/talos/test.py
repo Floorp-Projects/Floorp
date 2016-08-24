@@ -557,7 +557,8 @@ class basic_compositor_video(PageloaderTest):
                    'layers.acceleration.disabled': True,
                    'layout.frame_rate': 0,
                    'docshell.event_starvation_delay_hint': 1,
-                   'full-screen-api.warning.timeout': 500}
+                   'full-screen-api.warning.timeout': 500,
+                   'media.ruin-av-sync.enabled': True}
     filters = filter.ignore_first.prepare(1) + filter.median.prepare()
     unit = 'ms/frame'
     lower_is_better = True
