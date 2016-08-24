@@ -346,11 +346,9 @@ public:
   NS_IMETHOD CollectReports(nsIHandleReportCallback* aHandleReport,
                             nsISupports* aData, bool aAnonymize) override
   {
-    nsresult rv;
-
     // We only do virtual-memory tracking on 32-bit builds.
     if (sizeof(void*) == 4) {
-      rv = MOZ_COLLECT_REPORT(
+      MOZ_COLLECT_REPORT(
         "low-memory-events/virtual", KIND_OTHER, UNITS_COUNT_CUMULATIVE,
         LowMemoryEventsVirtualDistinguishedAmount(),
 "Number of low-virtual-memory events fired since startup. We fire such an "
@@ -358,10 +356,9 @@ public:
 "virtual address space available (if zero, this behavior is disabled). The "
 "process will probably crash if it runs out of virtual address space, so "
 "this event is dire.");
-      NS_ENSURE_SUCCESS(rv, rv);
     }
 
-    rv = MOZ_COLLECT_REPORT(
+    MOZ_COLLECT_REPORT(
       "low-commit-space-events", KIND_OTHER, UNITS_COUNT_CUMULATIVE,
       sNumLowCommitSpaceEvents,
 "Number of low-commit-space events fired since startup. We fire such an "
@@ -369,9 +366,8 @@ public:
 "commit space available (if zero, this behavior is disabled). Windows will "
 "likely kill the process if it runs out of commit space, so this event is "
 "dire.");
-    NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = MOZ_COLLECT_REPORT(
+    MOZ_COLLECT_REPORT(
       "low-memory-events/physical", KIND_OTHER, UNITS_COUNT_CUMULATIVE,
       LowMemoryEventsPhysicalDistinguishedAmount(),
 "Number of low-physical-memory events fired since startup. We fire such an "
@@ -379,7 +375,6 @@ public:
 "of physical memory available (if zero, this behavior is disabled).  The "
 "machine will start to page if it runs out of physical memory.  This may "
 "cause it to run slowly, but it shouldn't cause it to crash.");
-    NS_ENSURE_SUCCESS(rv, rv);
 
     return NS_OK;
   }

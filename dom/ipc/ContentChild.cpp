@@ -980,12 +980,12 @@ ContentChild::AllocPMemoryReportRequestChild(const uint32_t& aGeneration,
   return actor;
 }
 
-class MemoryReportCallback final : public nsIMemoryReporterCallback
+class HandleReportCallback final : public nsIHandleReportCallback
 {
 public:
   NS_DECL_ISUPPORTS
 
-  explicit MemoryReportCallback(MemoryReportRequestChild* aActor,
+  explicit HandleReportCallback(MemoryReportRequestChild* aActor,
                                 const nsACString& aProcess)
   : mActor(aActor)
   , mProcess(aProcess)
@@ -1002,23 +1002,23 @@ public:
     return NS_OK;
   }
 private:
-  ~MemoryReportCallback() {}
+  ~HandleReportCallback() {}
 
   RefPtr<MemoryReportRequestChild> mActor;
   const nsCString mProcess;
 };
 
 NS_IMPL_ISUPPORTS(
-  MemoryReportCallback
-, nsIMemoryReporterCallback
+  HandleReportCallback
+, nsIHandleReportCallback
 )
 
-class MemoryReportFinishedCallback final : public nsIFinishReportingCallback
+class FinishReportingCallback final : public nsIFinishReportingCallback
 {
 public:
   NS_DECL_ISUPPORTS
 
-  explicit MemoryReportFinishedCallback(MemoryReportRequestChild* aActor)
+  explicit FinishReportingCallback(MemoryReportRequestChild* aActor)
   : mActor(aActor)
   {
   }
@@ -1030,13 +1030,13 @@ public:
   }
 
 private:
-  ~MemoryReportFinishedCallback() {}
+  ~FinishReportingCallback() {}
 
   RefPtr<MemoryReportRequestChild> mActor;
 };
 
 NS_IMPL_ISUPPORTS(
-  MemoryReportFinishedCallback
+  FinishReportingCallback
 , nsIFinishReportingCallback
 )
 
@@ -1076,14 +1076,15 @@ NS_IMETHODIMP MemoryReportRequestChild::Run()
 
   // Run the reporters.  The callback will turn each measurement into a
   // MemoryReport.
-  RefPtr<MemoryReportCallback> cb =
-    new MemoryReportCallback(this, process);
-  RefPtr<MemoryReportFinishedCallback> finished =
-    new MemoryReportFinishedCallback(this);
+  RefPtr<HandleReportCallback> handleReport =
+    new HandleReportCallback(this, process);
+  RefPtr<FinishReportingCallback> finishReporting =
+    new FinishReportingCallback(this);
 
-  return mgr->GetReportsForThisProcessExtended(cb, nullptr, mAnonymize,
+  return mgr->GetReportsForThisProcessExtended(handleReport, nullptr,
+                                               mAnonymize,
                                                FileDescriptorToFILE(mDMDFile, "wb"),
-                                               finished, nullptr);
+                                               finishReporting, nullptr);
 }
 
 bool
@@ -2701,7 +2702,7 @@ ContentChild::RecvMinimizeMemoryUsage()
     do_GetService("@mozilla.org/memory-reporter-manager;1");
   NS_ENSURE_TRUE(mgr, true);
 
-  mgr->MinimizeMemoryUsage(/* callback = */ nullptr);
+  Unused << mgr->MinimizeMemoryUsage(/* callback = */ nullptr);
   return true;
 }
 

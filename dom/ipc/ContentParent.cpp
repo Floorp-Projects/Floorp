@@ -482,9 +482,10 @@ public:
 NS_IMPL_ISUPPORTS(ContentParentsMemoryReporter, nsIMemoryReporter)
 
 NS_IMETHODIMP
-ContentParentsMemoryReporter::CollectReports(nsIMemoryReporterCallback* cb,
-                                             nsISupports* aClosure,
-                                             bool aAnonymize)
+ContentParentsMemoryReporter::CollectReports(
+  nsIHandleReportCallback* aHandleReport,
+  nsISupports* aData,
+  bool aAnonymize)
 {
   AutoTArray<ContentParent*, 16> cps;
   ContentParent::GetAllEvenIfDead(cps);
@@ -522,15 +523,9 @@ ContentParentsMemoryReporter::CollectReports(nsIMemoryReporterCallback* cb,
       "messages.  Similarly, a ContentParent object for a process that's no "
       "longer running could indicate that we're leaking ContentParents.");
 
-    nsresult rv = cb->Callback(/* process */ EmptyCString(),
-                               path,
-                               KIND_OTHER,
-                               UNITS_COUNT,
-                               numQueuedMessages,
-                               desc,
-                               aClosure);
-
-    NS_ENSURE_SUCCESS(rv, rv);
+    aHandleReport->Callback(/* process */ EmptyCString(), path,
+                            KIND_OTHER, UNITS_COUNT,
+                            numQueuedMessages, desc, aData);
   }
 
   return NS_OK;

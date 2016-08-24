@@ -362,10 +362,12 @@ NS_IMETHODIMP
 nsStyleSheetService::CollectReports(nsIHandleReportCallback* aHandleReport,
                                     nsISupports* aData, bool aAnonymize)
 {
-  return MOZ_COLLECT_REPORT(
+  MOZ_COLLECT_REPORT(
     "explicit/layout/style-sheet-service", KIND_HEAP, UNITS_BYTES,
     SizeOfIncludingThis(StyleSheetServiceMallocSizeOf),
     "Memory used for style sheets held by the style sheet service.");
+
+  return NS_OK;
 }
 
 size_t

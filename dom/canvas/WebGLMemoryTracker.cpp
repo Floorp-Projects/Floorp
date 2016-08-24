@@ -17,76 +17,64 @@
 namespace mozilla {
 
 NS_IMETHODIMP
-WebGLMemoryTracker::CollectReports(nsIHandleReportCallback* handleReport,
-                                   nsISupports* data, bool)
+WebGLMemoryTracker::CollectReports(nsIHandleReportCallback* aHandleReport,
+                                   nsISupports* aData, bool)
 {
-#define REPORT(_path, _kind, _units, _amount, _desc)                         \
-    do {                                                                     \
-      nsresult rv;                                                           \
-      rv = handleReport->Callback(EmptyCString(), NS_LITERAL_CSTRING(_path), \
-                                   _kind, _units, _amount,                   \
-                                   NS_LITERAL_CSTRING(_desc), data);         \
-      NS_ENSURE_SUCCESS(rv, rv);                                             \
-    } while (0)
+    MOZ_COLLECT_REPORT(
+        "webgl-texture-memory", KIND_OTHER, UNITS_BYTES, GetTextureMemoryUsed(),
+        "Memory used by WebGL textures. The OpenGL implementation is free to "
+        "store these textures in either video memory or main memory. This "
+        "measurement is only a lower bound, actual memory usage may be higher "
+        "for example if the storage is strided.");
 
-    REPORT("webgl-texture-memory",
-           KIND_OTHER, UNITS_BYTES, GetTextureMemoryUsed(),
-           "Memory used by WebGL textures.The OpenGL"
-           " implementation is free to store these textures in either video"
-           " memory or main memory. This measurement is only a lower bound,"
-           " actual memory usage may be higher for example if the storage"
-           " is strided.");
+    MOZ_COLLECT_REPORT(
+        "webgl-texture-count", KIND_OTHER, UNITS_COUNT, GetTextureCount(),
+        "Number of WebGL textures.");
 
-    REPORT("webgl-texture-count",
-           KIND_OTHER, UNITS_COUNT, GetTextureCount(),
-           "Number of WebGL textures.");
+    MOZ_COLLECT_REPORT(
+        "webgl-buffer-memory", KIND_OTHER, UNITS_BYTES, GetBufferMemoryUsed(),
+        "Memory used by WebGL buffers. The OpenGL implementation is free to "
+        "store these buffers in either video memory or main memory. This "
+        "measurement is only a lower bound, actual memory usage may be higher "
+        "for example if the storage is strided.");
 
-    REPORT("webgl-buffer-memory",
-           KIND_OTHER, UNITS_BYTES, GetBufferMemoryUsed(),
-           "Memory used by WebGL buffers. The OpenGL"
-           " implementation is free to store these buffers in either video"
-           " memory or main memory. This measurement is only a lower bound,"
-           " actual memory usage may be higher for example if the storage"
-           " is strided.");
+    MOZ_COLLECT_REPORT(
+        "explicit/webgl/buffer-cache-memory", KIND_HEAP, UNITS_BYTES,
+        GetBufferCacheMemoryUsed(),
+        "Memory used by WebGL buffer caches. The WebGL implementation caches "
+        "the contents of element array buffers only. This adds up with the "
+        "'webgl-buffer-memory' value, but contrary to it, this one represents "
+        "bytes on the heap, not managed by OpenGL.");
 
-    REPORT("explicit/webgl/buffer-cache-memory",
-           KIND_HEAP, UNITS_BYTES, GetBufferCacheMemoryUsed(),
-           "Memory used by WebGL buffer caches. The WebGL"
-           " implementation caches the contents of element array buffers"
-           " only.This adds up with the webgl-buffer-memory value, but"
-           " contrary to it, this one represents bytes on the heap,"
-           " not managed by OpenGL.");
+    MOZ_COLLECT_REPORT(
+        "webgl-buffer-count", KIND_OTHER, UNITS_COUNT, GetBufferCount(),
+        "Number of WebGL buffers.");
 
-    REPORT("webgl-buffer-count",
-           KIND_OTHER, UNITS_COUNT, GetBufferCount(),
-           "Number of WebGL buffers.");
+    MOZ_COLLECT_REPORT(
+        "webgl-renderbuffer-memory", KIND_OTHER, UNITS_BYTES,
+        GetRenderbufferMemoryUsed(),
+        "Memory used by WebGL renderbuffers. The OpenGL implementation is free "
+        "to store these renderbuffers in either video memory or main memory. "
+        "This measurement is only a lower bound, actual memory usage may be "
+        "higher, for example if the storage is strided.");
 
-    REPORT("webgl-renderbuffer-memory",
-           KIND_OTHER, UNITS_BYTES, GetRenderbufferMemoryUsed(),
-           "Memory used by WebGL renderbuffers. The OpenGL"
-           " implementation is free to store these renderbuffers in either"
-           " video memory or main memory. This measurement is only a lower"
-           " bound, actual memory usage may be higher for example if the"
-           " storage is strided.");
+    MOZ_COLLECT_REPORT(
+        "webgl-renderbuffer-count", KIND_OTHER, UNITS_COUNT,
+        GetRenderbufferCount(),
+        "Number of WebGL renderbuffers.");
 
-    REPORT("webgl-renderbuffer-count",
-           KIND_OTHER, UNITS_COUNT, GetRenderbufferCount(),
-           "Number of WebGL renderbuffers.");
+    MOZ_COLLECT_REPORT(
+        "explicit/webgl/shader", KIND_HEAP, UNITS_BYTES, GetShaderSize(),
+        "Combined size of WebGL shader ASCII sources and translation logs "
+        "cached on the heap.");
 
-    REPORT("explicit/webgl/shader",
-           KIND_HEAP, UNITS_BYTES, GetShaderSize(),
-           "Combined size of WebGL shader ASCII sources and translation"
-           " logs cached on the heap.");
+    MOZ_COLLECT_REPORT(
+        "webgl-shader-count", KIND_OTHER, UNITS_COUNT, GetShaderCount(),
+        "Number of WebGL shaders.");
 
-    REPORT("webgl-shader-count",
-           KIND_OTHER, UNITS_COUNT, GetShaderCount(),
-           "Number of WebGL shaders.");
-
-    REPORT("webgl-context-count",
-           KIND_OTHER, UNITS_COUNT, GetContextCount(),
-           "Number of WebGL contexts.");
-
-#undef REPORT
+    MOZ_COLLECT_REPORT(
+        "webgl-context-count", KIND_OTHER, UNITS_COUNT, GetContextCount(),
+        "Number of WebGL contexts.");
 
     return NS_OK;
 }

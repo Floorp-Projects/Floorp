@@ -448,9 +448,8 @@ public:
             bool IsPersistent() const { return mPersistence == kPersistent; }
             bool IsPrivate() const { return mPrivate; }
 
-            nsresult ReportMemory(nsIMemoryReporterCallback* aCb,
-                                  nsISupports* aClosure,
-                                  bool aAnonymize);
+            void ReportMemory(nsIHandleReportCallback* aHandleReport,
+                              nsISupports* aData, bool aAnonymize);
 
 #ifdef DEBUG_USERFONT_CACHE
             void Dump();
