@@ -196,6 +196,7 @@ CreateException(JSContext* aCx, nsresult aRv, const nsACString& aMessage)
   case NS_ERROR_MODULE_DOM_BLUETOOTH:
   case NS_ERROR_MODULE_DOM_ANIM:
   case NS_ERROR_MODULE_DOM_PUSH:
+  case NS_ERROR_MODULE_DOM_MEDIA:
     if (aMessage.IsEmpty()) {
       return DOMException::Create(aRv);
     }
