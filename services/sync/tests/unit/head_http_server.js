@@ -394,7 +394,7 @@ ServerCollection.prototype = {
 
       switch(request.method) {
         case "GET":
-          body = self.get(options);
+          body = self.get(options, request);
           // "If supported by the db, this header will return the number of
           // records total in the request body of any multiple-record GET
           // request."
@@ -406,14 +406,14 @@ ServerCollection.prototype = {
           break;
 
         case "POST":
-          let res = self.post(readBytesFromInputStream(request.bodyInputStream));
+          let res = self.post(readBytesFromInputStream(request.bodyInputStream), request);
           body = JSON.stringify(res);
           response.newModified = res.modified;
           break;
 
         case "DELETE":
           self._log.debug("Invoking ServerCollection.DELETE.");
-          let deleted = self.delete(options);
+          let deleted = self.delete(options, request);
           let ts = new_timestamp();
           body = JSON.stringify(ts);
           response.newModified = ts;

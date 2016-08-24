@@ -633,6 +633,12 @@ Engine.prototype = {
   // Signal to the engine that processing further records is pointless.
   eEngineAbortApplyIncoming: "error.engine.abort.applyincoming",
 
+  // Should we keep syncing if we find a record that cannot be uploaded (ever)?
+  // If this is false, we'll throw, otherwise, we'll ignore the record and
+  // continue. This currently can only happen due to the record being larger
+  // than the record upload limit.
+  allowSkippedRecord: false,
+
   get prefName() {
     return this.name;
   },
@@ -1463,35 +1469,52 @@ SyncEngine.prototype = {
 
       // collection we'll upload
       let up = new Collection(this.engineURL, null, this.service);
-      let handleResponse = resp => {
+
+      let failed = [];
+      let successful = [];
+      let handleResponse = (resp, batchOngoing = false) => {
+        // Note: We don't want to update this.lastSync, or this._modified until
+        // the batch is complete, however we want to remember success/failure
+        // indicators for when that happens.
         if (!resp.success) {
           this._log.debug("Uploading records failed: " + resp);
-          resp.failureCode = ENGINE_UPLOAD_FAIL;
+          resp.failureCode = resp.status == 412 ? ENGINE_BATCH_INTERRUPTED : ENGINE_UPLOAD_FAIL;
           throw resp;
         }
 
         // Update server timestamp from the upload.
-        let modified = resp.headers["x-weave-timestamp"];
-        if (modified > this.lastSync)
-          this.lastSync = modified;
+        failed = failed.concat(Object.keys(resp.obj.failed));
+        successful = successful.concat(resp.obj.success);
 
-        let failed_ids = Object.keys(resp.obj.failed);
-        counts.failed += failed_ids.length;
-        if (failed_ids.length)
+        if (batchOngoing) {
+          // Nothing to do yet
+          return;
+        }
+        // Advance lastSync since we've finished the batch.
+        let modified = resp.headers["x-weave-timestamp"];
+        if (modified > this.lastSync) {
+          this.lastSync = modified;
+        }
+        if (failed.length && this._log.level <= Log.Level.Debug) {
           this._log.debug("Records that will be uploaded again because "
                           + "the server couldn't store them: "
-                          + failed_ids.join(", "));
+                          + failed.join(", "));
+        }
 
-        // Clear successfully uploaded objects.
-        const succeeded_ids = Object.values(resp.obj.success);
-        for (let id of succeeded_ids) {
+        counts.failed += failed.length;
+
+        for (let id of successful) {
           delete this._modified[id];
         }
 
-        this._onRecordsWritten(succeeded_ids, failed_ids);
-      }
+        this._onRecordsWritten(successful, failed);
 
-      let postQueue = up.newPostQueue(this._log, handleResponse);
+        // clear for next batch
+        failed.length = 0;
+        successful.length = 0;
+      };
+
+      let postQueue = up.newPostQueue(this._log, this.lastSync, handleResponse);
 
       for (let id of modifiedIDs) {
         let out;
@@ -1510,11 +1533,17 @@ SyncEngine.prototype = {
           this._log.warn("Error creating record", ex);
         }
         if (ok) {
-          postQueue.enqueue(out);
+          let { enqueued, error } = postQueue.enqueue(out);
+          if (!enqueued) {
+            ++counts.failed;
+            if (!this.allowSkippedRecord) {
+              throw error;
+            }
+          }
         }
         this._store._sleep(0);
       }
-      postQueue.flush();
+      postQueue.flush(true);
       Observers.notify("weave:engine:sync:uploaded", counts, this.name);
     }
   },
