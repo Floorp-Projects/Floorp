@@ -8,6 +8,7 @@
 #define nsThread_h__
 
 #include "mozilla/Mutex.h"
+#include "nsIIdlePeriod.h"
 #include "nsIThreadInternal.h"
 #include "nsISupportsPriority.h"
 #include "nsEventQueue.h"
@@ -94,6 +95,10 @@ public:
 private:
   void DoMainThreadSpecificProcessing(bool aReallyWait);
 
+  void GetIdleEvent(nsIRunnable** aEvent, mozilla::MutexAutoLock& aProofOfLock);
+  void GetEvent(bool aWait, nsIRunnable** aEvent,
+                mozilla::MutexAutoLock& aProofOfLock);
+
 protected:
   class nsChainedEventQueue;
 
@@ -178,6 +183,9 @@ protected:
                         NotNull<nsChainedEventQueue*> aQueue)
       : mThread(aThread)
       , mQueue(aQueue)
+
+
+
     {
     }
 
@@ -192,7 +200,7 @@ protected:
     }
   };
 
-  // This lock protects access to mObserver, mEvents and mEventsAreDoomed.
+  // This lock protects access to mObserver, mEvents, mIdleEvents,
   // All of those fields are only modified on the thread itself (never from
   // another thread).  This means that we can avoid holding the lock while
   // using mObserver and mEvents on the thread itself.  When calling PutEvent
@@ -207,6 +215,13 @@ protected:
 
   NotNull<nsChainedEventQueue*> mEvents;  // never null
   nsChainedEventQueue mEventsRoot;
+
+  // mIdlePeriod keeps track of the current idle period. If at any
+  // time the main event queue is empty, calling
+  // mIdlePeriod->GetIdlePeriodHint() will give an estimate of when
+  // the current idle period will end.
+  nsCOMPtr<nsIIdlePeriod> mIdlePeriod;
+  nsEventQueue mIdleEvents;
 
   int32_t   mPriority;
   PRThread* mThread;
