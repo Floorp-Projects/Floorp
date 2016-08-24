@@ -1177,6 +1177,10 @@ TEST_P(NewSdpTest, CheckMediaSectionGetBandwidth) {
 #define ID_B ID_A ID_A ID_A ID_A
 #define LONG_IDENTITY ID_B ID_B ID_B ID_B "xx"
 
+#define BASE64_DTLS_HELLO "FgEAAAAAAAAAAAAAagEAAF4AAAAAAAAAXgEARI11KHx3QB6Ky" \
+  "CKgoBj/kwjKrApkL8kiZLwIqBaJGT8AAAA2ADkAOAA1ABYAEwAKADMAMgAvAAcAZgAFAAQAYw" \
+  "BiAGEAFQASAAkAZQBkAGAAFAARAAgABgADAQA="
+
 // SDP from a basic A/V apprtc call FFX/FFX
 const std::string kBasicAudioVideoOffer =
 "v=0" CRLF
@@ -1184,6 +1188,7 @@ const std::string kBasicAudioVideoOffer =
 "s=SIP Call" CRLF
 "c=IN IP4 224.0.0.1/100/12" CRLF
 "t=0 0" CRLF
+"a=dtls-message:client " BASE64_DTLS_HELLO CRLF
 "a=ice-ufrag:4a799b2e" CRLF
 "a=ice-pwd:e4cc12a910f106a0a744719425510e17" CRLF
 "a=ice-lite" CRLF
@@ -1389,6 +1394,18 @@ TEST_P(NewSdpTest, CheckIdentity) {
         SdpAttribute::kIdentityAttribute));
   auto identity = mSdp->GetAttributeList().GetIdentity();
   ASSERT_EQ(LONG_IDENTITY, identity) << "Wrong identity assertion";
+}
+
+TEST_P(NewSdpTest, CheckDtlsMessage) {
+  ParseSdp(kBasicAudioVideoOffer);
+  ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
+  ASSERT_TRUE(mSdp->GetAttributeList().HasAttribute(
+        SdpAttribute::kDtlsMessageAttribute));
+  auto dtls_message = mSdp->GetAttributeList().GetDtlsMessage();
+  ASSERT_EQ(SdpDtlsMessageAttribute::kClient, dtls_message.mRole)
+    << "Wrong dtls-message role";
+  ASSERT_EQ(BASE64_DTLS_HELLO, dtls_message.mValue)
+    << "Wrong dtls-message value";
 }
 
 TEST_P(NewSdpTest, CheckNumberOfMediaSections) {
@@ -2909,6 +2926,29 @@ TEST_P(NewSdpTest, CheckNoAttributes) {
   ASSERT_EQ(SdpDirectionAttribute::kSendrecv,
       mSdp->GetAttributeList().GetDirection());
 }
+
+
+const std::string kMediaLevelDtlsMessage =
+"v=0" CRLF
+"o=Mozilla-SIPUA-35.0a1 5184 0 IN IP4 0.0.0.0" CRLF
+"s=SIP Call" CRLF
+"c=IN IP4 224.0.0.1/100/12" CRLF
+"t=0 0" CRLF
+"m=video 9 RTP/SAVPF 120" CRLF
+"c=IN IP4 0.0.0.0" CRLF
+"a=dtls-message:client " BASE64_DTLS_HELLO CRLF
+"a=rtpmap:120 VP8/90000" CRLF;
+
+TEST_P(NewSdpTest, CheckMediaLevelDtlsMessage) {
+  ParseSdp(kMediaLevelDtlsMessage);
+  ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
+
+  // dtls-message is not defined for use at the media level; we don't
+  // parse it
+  ASSERT_FALSE(mSdp->GetMediaSection(0).GetAttributeList().HasAttribute(
+        SdpAttribute::kDtlsMessageAttribute));
+}
+
 
 TEST(NewSdpTestNoFixture, CheckAttributeTypeSerialize) {
   for (auto a = static_cast<size_t>(SdpAttribute::kFirstAttribute);
