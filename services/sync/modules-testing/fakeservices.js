@@ -36,6 +36,18 @@ this.FakeFilesystemService = function FakeFilesystemService(contents) {
     }
     cb.call(that, obj);
   };
+
+  Utils.jsonMove = function jsonMove(aFrom, aTo, that) {
+    const fromPath = "weave/" + aFrom + ".json";
+    self.fakeContents["weave/" + aTo + ".json"] = self.fakeContents[fromPath];
+    delete self.fakeContents[fromPath];
+    return Promise.resolve();
+  };
+
+  Utils.jsonRemove = function jsonRemove(filePath, that) {
+    delete self.fakeContents["weave/" + filePath + ".json"];
+    return Promise.resolve();
+  };
 };
 
 this.fakeSHA256HMAC = function fakeSHA256HMAC(message) {

@@ -13,7 +13,7 @@ var {VariablesView} = require("resource://devtools/client/shared/widgets/Variabl
 var Services = require("Services");
 var promise = require("promise");
 var defer = require("devtools/shared/defer");
-var {LocalizationHelper} = require("devtools/client/shared/l10n");
+var {LocalizationHelper, ELLIPSIS} = require("devtools/client/shared/l10n");
 
 Object.defineProperty(this, "WebConsoleUtils", {
   get: function () {
@@ -32,7 +32,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "console",
 
 const MAX_LONG_STRING_LENGTH = 200000;
 const MAX_PROPERTY_ITEMS = 2000;
-const DBG_STRINGS_URI = "chrome://devtools/locale/debugger.properties";
+const DBG_STRINGS_URI = "devtools/locale/debugger.properties";
 
 this.EXPORTED_SYMBOLS = ["VariablesViewController", "StackFrameUtils"];
 
@@ -196,7 +196,7 @@ VariablesViewController.prototype = {
       // Query the name of the first and last items for this slice
       let deferred = defer();
       iterator.names([start, start + count - 1], ({ names }) => {
-        let label = "[" + names[0] + L10N.ellipsis + names[1] + "]";
+          let label = "[" + names[0] + ELLIPSIS + names[1] + "]";
         let item = aTarget.addItem(label, {}, { internalItem: true });
         item.showArrow();
         this.addExpander(item, sliceGrip);

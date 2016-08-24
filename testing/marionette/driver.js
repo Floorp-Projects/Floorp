@@ -333,8 +333,15 @@ GeckoDriver.prototype.whenBrowserStarted = function(win, isNewSession) {
       // with no children, we don't have a hope of coming back from this call,
       // so send the ack here. Otherwise, make a note of how many child scripts
       // will be loaded so we known when it's safe to return.
+      // Child managers may not have child scripts yet (e.g. socialapi), only
+      // count child managers that have children, but only count the top level
+      // children as they are the ones that we expect a response from.
       if (mm.childCount !== 0) {
-        this.curBrowser.frameRegsPending = mm.childCount;
+        this.curBrowser.frameRegsPending = 0;
+        for (let i = 0; i < mm.childCount; i++) {
+          if (mm.getChildAt(i).childCount !== 0)
+            this.curBrowser.frameRegsPending += 1;
+        }
       }
     }
 

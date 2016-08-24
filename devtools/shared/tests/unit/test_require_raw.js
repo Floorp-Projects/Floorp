@@ -9,4 +9,11 @@ function run_test() {
 
   let variableFileContents = require("raw!devtools/client/themes/variables.css");
   ok(variableFileContents.length > 0, "raw browserRequire worked");
+
+  let propertiesFileContents = require("raw!devtools/locale/shared.properties");
+  ok(propertiesFileContents.length > 0, "unprefixed properties raw require worked");
+
+  let chromePropertiesFileContents =
+    require("raw!chrome://devtools/locale/shared.properties");
+  ok(chromePropertiesFileContents.length > 0, "prefixed properties raw require worked");
 }

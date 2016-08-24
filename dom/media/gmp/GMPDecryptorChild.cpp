@@ -161,9 +161,16 @@ GMPDecryptorChild::KeyStatusChanged(const char* aSessionId,
 {
   AutoTArray<uint8_t, 16> kid;
   kid.AppendElements(aKeyId, aKeyIdLength);
-  CALL_ON_GMP_THREAD(SendKeyStatusChanged,
-                     nsCString(aSessionId, aSessionIdLength), kid,
-                     aStatus);
+  if (aStatus == kGMPUnknown) {
+    CALL_ON_GMP_THREAD(SendForgetKeyStatus,
+                       nsCString(aSessionId, aSessionIdLength),
+                       kid);
+  } else {
+    CALL_ON_GMP_THREAD(SendKeyStatusChanged,
+                       nsCString(aSessionId, aSessionIdLength),
+                       kid,
+                       aStatus);
+  }
 }
 
 void

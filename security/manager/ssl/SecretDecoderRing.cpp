@@ -38,7 +38,7 @@ SecretDecoderRing::~SecretDecoderRing()
     return;
   }
 
-  shutdown(calledFromObject);
+  shutdown(ShutdownCalledFrom::Object);
 }
 
 nsresult

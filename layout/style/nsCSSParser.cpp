@@ -1044,7 +1044,7 @@ protected:
   bool ParseListStyle();
   bool ParseListStyleType(nsCSSValue& aValue);
   bool ParseMargin();
-  bool ParseClipPath();
+  bool ParseClipPath(nsCSSValue& aValue);
   bool ParseTransform(bool aIsPrefixed, bool aDisallowRelativeValues = false);
   bool ParseObjectPosition();
   bool ParseOutline();
@@ -11657,8 +11657,6 @@ CSSParserImpl::ParsePropertyByFunction(nsCSSPropertyID aPropID)
     return ParseMarker();
   case eCSSProperty_paint_order:
     return ParsePaintOrder();
-  case eCSSProperty_clip_path:
-    return ParseClipPath();
   case eCSSProperty_scroll_snap_type:
     return ParseScrollSnapType();
 #ifdef MOZ_ENABLE_MASK_AS_SHORTHAND
@@ -11732,6 +11730,10 @@ CSSParserImpl::ParseSingleValuePropertyByFunction(nsCSSValue& aValue,
                                                   nsCSSPropertyID aPropID)
 {
   switch (aPropID) {
+    case eCSSProperty_clip_path:
+      return ParseClipPath(aValue);
+    case eCSSProperty_contain:
+      return ParseContain(aValue);
     case eCSSProperty_font_family:
       return ParseFamily(aValue);
     case eCSSProperty_font_synthesis:
@@ -11778,8 +11780,6 @@ CSSParserImpl::ParseSingleValuePropertyByFunction(nsCSSValue& aValue,
       return ParseTextOverflow(aValue);
     case eCSSProperty_touch_action:
       return ParseTouchAction(aValue);
-    case eCSSProperty_contain:
-      return ParseContain(aValue);
     default:
       MOZ_ASSERT(false, "should not reach here");
       return false;
@@ -16219,26 +16219,23 @@ CSSParserImpl::ParseReferenceBoxAndBasicShape(
   return true;
 }
 
-/* Parse a clip-path url to a <clipPath> element or a basic shape. */
-bool CSSParserImpl::ParseClipPath()
+// Parse a clip-path url to a <clipPath> element or a basic shape.
+bool
+CSSParserImpl::ParseClipPath(nsCSSValue& aValue)
 {
-  nsCSSValue value;
-  if (!ParseSingleTokenVariant(value, VARIANT_HUO, nullptr)) {
-    if (!nsLayoutUtils::CSSClipPathShapesEnabled()) {
-      // With CSS Clip Path Shapes disabled, we should only accept
-      // SVG clipPath reference and none.
-      REPORT_UNEXPECTED_TOKEN(PEExpectedNoneOrURL);
-      return false;
-    }
-
-    if (!ParseReferenceBoxAndBasicShape(
-          value, nsCSSProps::kClipPathGeometryBoxKTable)) {
-      return false;
-    }
+  if (ParseSingleTokenVariant(aValue, VARIANT_HUO, nullptr)) {
+    return true;
   }
 
-  AppendValue(eCSSProperty_clip_path, value);
-  return true;
+  if (!nsLayoutUtils::CSSClipPathShapesEnabled()) {
+    // With CSS Clip Path Shapes disabled, we should only accept
+    // SVG clipPath reference and none.
+    REPORT_UNEXPECTED_TOKEN(PEExpectedNoneOrURL);
+    return false;
+  }
+
+  return ParseReferenceBoxAndBasicShape(
+    aValue, nsCSSProps::kClipPathGeometryBoxKTable);
 }
 
 // none | [ <basic-shape> || <shape-box> ] | <image>

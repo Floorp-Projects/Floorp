@@ -50,3 +50,20 @@ add_task(function* test_background() {
   yield extension.awaitFinish();
   yield extension.unload();
 });
+
+add_task(function* test_extensionTypes() {
+  let extensionData = {
+    background: function() {
+      browser.test.assertEq(typeof browser.extensionTypes, "object", "browser.extensionTypes exists");
+      browser.test.assertEq(typeof browser.extensionTypes.RunAt, "object", "browser.extensionTypes.RunAt exists");
+      browser.test.notifyPass("extentionTypes test passed");
+    },
+  };
+
+  let extension = ExtensionTestUtils.loadExtension(extensionData);
+
+  yield extension.startup();
+  yield extension.awaitFinish();
+  yield extension.unload();
+});
+

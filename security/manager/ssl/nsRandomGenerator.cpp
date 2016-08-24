@@ -51,5 +51,5 @@ nsRandomGenerator::~nsRandomGenerator()
   if (isAlreadyShutDown()) {
     return;
   }
-  shutdown(calledFromObject);
+  shutdown(ShutdownCalledFrom::Object);
 }

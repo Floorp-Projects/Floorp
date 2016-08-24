@@ -2,6 +2,24 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/**
+ * How does the clients engine work?
+ *
+ * - We use 2 files - commands.json and commands-syncing.json.
+ *
+ * - At sync upload time, we attempt a rename of commands.json to
+ *   commands-syncing.json, and ignore errors (helps for crash during sync!).
+ * - We load commands-syncing.json and stash the contents in
+ *   _currentlySyncingCommands which lives for the duration of the upload process.
+ * - We use _currentlySyncingCommands to build the outgoing records
+ * - Immediately after successful upload, we delete commands-syncing.json from
+ *   disk (and clear _currentlySyncingCommands). We reconcile our local records
+ *   with what we just wrote in the server, and add failed IDs commands
+ *   back in commands.json
+ * - Any time we need to "save" a command for future syncs, we load
+ *   commands.json, update it, and write it back out.
+ */
+
 this.EXPORTED_SYMBOLS = [
   "ClientEngine",
   "ClientsRec"
@@ -55,8 +73,8 @@ Utils.deferGetSet(ClientsRec,
 this.ClientEngine = function ClientEngine(service) {
   SyncEngine.call(this, "Clients", service);
 
-  // Reset the client on every startup so that we fetch recent clients
-  this._resetClient();
+  // Reset the last sync timestamp on every startup so that we fetch all clients
+  this.resetLastSync();
 }
 ClientEngine.prototype = {
   __proto__: SyncEngine.prototype,
@@ -190,6 +208,54 @@ ClientEngine.prototype = {
     return false;
   },
 
+  _readCommands() {
+    let cb = Async.makeSpinningCallback();
+    Utils.jsonLoad("commands", this, commands => cb(null, commands));
+    return cb.wait() || {};
+  },
+
+  /**
+   * Low level function, do not use directly (use _addClientCommand instead).
+   */
+  _saveCommands(commands) {
+    let cb = Async.makeSpinningCallback();
+    Utils.jsonSave("commands", this, commands, error => {
+      if (error) {
+        this._log.error("Failed to save JSON outgoing commands", error);
+      }
+      cb();
+    });
+    cb.wait();
+  },
+
+  _prepareCommandsForUpload() {
+    let cb = Async.makeSpinningCallback();
+    Utils.jsonMove("commands", "commands-syncing", this).catch(() => {}) // Ignore errors
+      .then(() => {
+        Utils.jsonLoad("commands-syncing", this, commands => cb(null, commands));
+      });
+    return cb.wait() || {};
+  },
+
+  _deleteUploadedCommands() {
+    delete this._currentlySyncingCommands;
+    Async.promiseSpinningly(
+      Utils.jsonRemove("commands-syncing", this).catch(err => {
+        this._log.error("Failed to delete syncing-commands file", err);
+      })
+    );
+  },
+
+  _addClientCommand(clientId, command) {
+    const allCommands = this._readCommands();
+    const clientCommands = allCommands[clientId] || [];
+    if (hasDupeCommand(clientCommands, command)) {
+      return;
+    }
+    allCommands[clientId] = clientCommands.concat(command);
+    this._saveCommands(allCommands);
+  },
+
   _syncStartup: function _syncStartup() {
     // Reupload new client record periodically.
     if (Date.now() / 1000 - this.lastRecordUpload > CLIENTS_TTL_REFRESH) {
@@ -241,11 +307,50 @@ ClientEngine.prototype = {
   },
 
   _uploadOutgoing() {
-    this._clearedCommands = null;
+    this._currentlySyncingCommands = this._prepareCommandsForUpload();
+    const clientWithPendingCommands = Object.keys(this._currentlySyncingCommands);
+    for (let clientId of clientWithPendingCommands) {
+      if (this._store._remoteClients[clientId] || this.localID == clientId) {
+        this._modified[clientId] = 0;
+      }
+    }
     SyncEngine.prototype._uploadOutgoing.call(this);
   },
 
   _onRecordsWritten(succeeded, failed) {
+    // Reconcile the status of the local records with what we just wrote on the
+    // server
+    for (let id of succeeded) {
+      const commandChanges = this._currentlySyncingCommands[id];
+      if (id == this.localID) {
+        if (this.localCommands) {
+          this.localCommands = this.localCommands.filter(command => !hasDupeCommand(commandChanges, command));
+        }
+      } else {
+        const clientRecord = this._store._remoteClients[id];
+        if (!commandChanges || !clientRecord) {
+          // should be impossible, else we wouldn't have been writing it.
+          this._log.warn("No command/No record changes for a client we uploaded");
+          continue;
+        }
+        // fixup the client record, so our copy of _remoteClients matches what we uploaded.
+        clientRecord.commands = this._store.createRecord(id);
+        // we could do better and pass the reference to the record we just uploaded,
+        // but this will do for now
+      }
+    }
+
+    // Re-add failed commands
+    for (let id of failed) {
+      const commandChanges = this._currentlySyncingCommands[id];
+      if (!commandChanges) {
+        continue;
+      }
+      this._addClientCommand(id, commandChanges);
+    }
+
+    this._deleteUploadedCommands();
+
     // Notify other devices that their own client collection changed
     const idsToNotify = succeeded.reduce((acc, id) => {
       if (id == this.localID) {
@@ -322,6 +427,11 @@ ClientEngine.prototype = {
     SyncEngine.prototype._resetClient.call(this);
     delete this.localCommands;
     this._store.wipe();
+    const logRemoveError = err => this._log.warn("Could not delete json file", err);
+    Async.promiseSpinningly(
+      Utils.jsonRemove("commands", this).catch(logRemoveError)
+        .then(Utils.jsonRemove("commands-syncing", this).catch(logRemoveError))
+    );
   },
 
   removeClientData: function removeClientData() {
@@ -360,20 +470,6 @@ ClientEngine.prototype = {
   },
 
   /**
-   * Remove any commands for the local client and mark it for upload.
-   */
-  clearCommands: function clearCommands() {
-    if (!this._clearedCommands) {
-      this._clearedCommands = [];
-    }
-    // Keep track of cleared local commands until the next sync, so that we
-    // don't reupload them.
-    this._clearedCommands = this._clearedCommands.concat(this.localCommands);
-    delete this.localCommands;
-    this._tracker.addChangedID(this.localID);
-  },
-
-  /**
    * Sends a command+args pair to a specific client.
    *
    * @param command Command string
@@ -396,19 +492,8 @@ ClientEngine.prototype = {
       args: args,
     };
 
-    if (!client.commands) {
-      client.commands = [action];
-    }
-    // Add the new action if there are no duplicates.
-    else if (!hasDupeCommand(client.commands, action)) {
-      client.commands.push(action);
-    }
-    // It must be a dupe. Skip.
-    else {
-      return;
-    }
-
     this._log.trace("Client " + clientId + " got a new action: " + [command, args]);
+    this._addClientCommand(clientId, action);
     this._tracker.addChangedID(clientId);
   },
 
@@ -419,18 +504,17 @@ ClientEngine.prototype = {
    */
   processIncomingCommands: function processIncomingCommands() {
     return this._notify("clients:process-commands", "", function() {
-      let commands = this.localCommands;
-
-      // Immediately clear out the commands as we've got them locally.
-      this.clearCommands();
-
-      // Process each command in order.
-      if (!commands) {
+      if (!this.localCommands) {
         return true;
       }
+
+      const clearedCommands = this._readCommands()[this.localID];
+      const commands = this.localCommands.filter(command => !hasDupeCommand(clearedCommands, command));
+
       let URIsToDisplay = [];
-      for (let key in commands) {
-        let {command, args} = commands[key];
+      // Process each command in order.
+      for (let rawCommand of commands) {
+        let {command, args} = rawCommand;
         this._log.debug("Processing command: " + command + "(" + args + ")");
 
         let engines = [args[0]];
@@ -458,7 +542,11 @@ ClientEngine.prototype = {
             this._log.debug("Received an unknown command: " + command);
             break;
         }
+        // Add the command to the "cleared" commands list
+        this._addClientCommand(this.localID, rawCommand)
       }
+      this._tracker.addChangedID(this.localID);
+
       if (URIsToDisplay.length) {
         this._handleDisplayURIs(URIsToDisplay);
       }
@@ -571,65 +659,27 @@ function ClientStore(name, engine) {
 ClientStore.prototype = {
   __proto__: Store.prototype,
 
+  _remoteClients: {},
+
   create(record) {
-    this.update(record)
+    this.update(record);
   },
 
   update: function update(record) {
     if (record.id == this.engine.localID) {
-      this._updateLocalRecord(record);
+      // Only grab commands from the server; local name/type always wins
+      this.engine.localCommands = record.commands;
     } else {
-      this._updateRemoteRecord(record);
-    }
-  },
-
-  _updateLocalRecord(record) {
-    // Local changes for our client means we're clearing commands or
-    // uploading a new record.
-    let incomingCommands = record.commands;
-    if (incomingCommands) {
-      // Filter out incoming commands that we've cleared.
-      incomingCommands = incomingCommands.filter(action =>
-        !hasDupeCommand(this.engine._clearedCommands, action));
-      if (!incomingCommands.length) {
-        // Use `undefined` instead of `null` to avoid creating a null field
-        // in the uploaded record.
-        incomingCommands = undefined;
-      }
-    }
-    // Only grab commands from the server; local name/type always wins
-    this.engine.localCommands = incomingCommands;
-  },
-
-  _updateRemoteRecord(record) {
-    let currentRecord = this._remoteClients[record.id];
-    if (!currentRecord || !currentRecord.commands ||
-        !(record.id in this.engine._modified)) {
-
-      // If we have a new incoming record or no outgoing commands, use the
-      // full incoming record from the server.
       this._remoteClients[record.id] = record.cleartext;
-      return;
     }
-
-    // Otherwise, we have outgoing commands for a client, so merge them
-    // with the commands that we downloaded from the server.
-    for (let action of currentRecord.commands) {
-      if (hasDupeCommand(record.cleartext.commands, action)) {
-        // Ignore commands the server already knows about.
-        continue;
-      }
-      if (record.cleartext.commands) {
-        record.cleartext.commands.push(action);
-      } else {
-        record.cleartext.commands = [action];
-      }
-    }
-    this._remoteClients[record.id] = record.cleartext;
   },
 
   createRecord: function createRecord(id, collection) {
     let record = new ClientsRec(collection, id);
+
+    const commandsChanges = this.engine._currentlySyncingCommands ?
+                            this.engine._currentlySyncingCommands[id] :
+                            [];
 
     // Package the individual components into a record for the local client
     if (id == this.engine.localID) {
@@ -642,9 +692,14 @@ ClientStore.prototype = {
       }
       record.name = this.engine.localName;
       record.type = this.engine.localType;
-      record.commands = this.engine.localCommands;
       record.version = Services.appinfo.version;
       record.protocols = SUPPORTED_PROTOCOL_VERSIONS;
+
+      // Substract the commands we recorded that we've already executed
+      if (commandsChanges && commandsChanges.length &&
+          this.engine.localCommands && this.engine.localCommands.length) {
+        record.commands = this.engine.localCommands.filter(command => !hasDupeCommand(commandsChanges, command));
+      }
 
       // Optional fields.
       record.os = Services.appinfo.OS;             // "Darwin"
@@ -656,6 +711,14 @@ ClientStore.prototype = {
       // record.formfactor = "";        // Bug 1100722
     } else {
       record.cleartext = this._remoteClients[id];
+
+      // Add the commands we have to send
+      if (commandsChanges && commandsChanges.length) {
+        const recordCommands = record.cleartext.commands || [];
+        const newCommands = commandsChanges.filter(command => !hasDupeCommand(recordCommands, command));
+        record.cleartext.commands = recordCommands.concat(newCommands);
+      }
+
       if (record.cleartext.stale) {
         // It's almost certainly a logic error for us to upload a record we
         // consider stale, so make log noise, but still remove the flag.
