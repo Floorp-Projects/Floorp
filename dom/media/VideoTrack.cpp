@@ -78,19 +78,24 @@ VideoTrack::SetEnabledInternal(bool aEnabled, int aFlags)
 
     // Set the index of selected video track to the current's index.
     list.mSelectedIndex = curIndex;
+
+    HTMLMediaElement* element = mList->GetMediaElement();
+    if (element) {
+      element->NotifyMediaTrackEnabled(this);
+    }
   } else {
     list.mSelectedIndex = -1;
+
+    HTMLMediaElement* element = mList->GetMediaElement();
+    if (element) {
+      element->NotifyMediaTrackDisabled(this);
+    }
   }
 
   // Fire the change event at selection changes on this video track, shall
   // propose a spec change later.
   if (!(aFlags & MediaTrack::FIRE_NO_EVENTS)) {
     list.CreateAndDispatchChangeEvent();
-
-    HTMLMediaElement* element = mList->GetMediaElement();
-    if (element) {
-      element->NotifyMediaTrackEnabled(this);
-    }
   }
 }
 

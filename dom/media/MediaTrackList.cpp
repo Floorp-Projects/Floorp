@@ -72,12 +72,23 @@ MediaTrackList::AddTrack(MediaTrack* aTrack)
   aTrack->Init(GetOwner());
   aTrack->SetTrackList(this);
   CreateAndDispatchTrackEventRunner(aTrack, NS_LITERAL_STRING("addtrack"));
+
+  if ((!aTrack->AsAudioTrack() || !aTrack->AsAudioTrack()->Enabled()) &&
+      (!aTrack->AsVideoTrack() || !aTrack->AsVideoTrack()->Selected())) {
+    // Track not enabled, no need to notify media element.
+    return;
+  }
+
+  if (HTMLMediaElement* element = GetMediaElement()) {
+    element->NotifyMediaTrackEnabled(aTrack);
+  }
 }
 
 void
 MediaTrackList::RemoveTrack(const RefPtr<MediaTrack>& aTrack)
 {
   mTracks.RemoveElement(aTrack);
+  aTrack->SetEnabledInternal(false, MediaTrack::FIRE_NO_EVENTS);
   aTrack->SetTrackList(nullptr);
   CreateAndDispatchTrackEventRunner(aTrack, NS_LITERAL_STRING("removetrack"));
 }
@@ -118,6 +129,7 @@ void
 MediaTrackList::EmptyTracks()
 {
   for (uint32_t i = 0; i < mTracks.Length(); ++i) {
+    mTracks[i]->SetEnabledInternal(false, MediaTrack::FIRE_NO_EVENTS);
     mTracks[i]->SetTrackList(nullptr);
   }
   mTracks.Clear();

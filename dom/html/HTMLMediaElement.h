@@ -343,7 +343,17 @@ public:
    */
   void NotifyLoadError();
 
+  /**
+   * Called by one of our associated MediaTrackLists (audio/video) when an
+   * AudioTrack is enabled or a VideoTrack is selected.
+   */
   void NotifyMediaTrackEnabled(MediaTrack* aTrack);
+
+  /**
+   * Called by one of our associated MediaTrackLists (audio/video) when an
+   * AudioTrack is disabled or a VideoTrack is unselected.
+   */
+  void NotifyMediaTrackDisabled(MediaTrack* aTrack);
 
   /**
    * Called when tracks become available to the source media stream.
