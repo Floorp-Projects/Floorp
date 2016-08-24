@@ -2058,6 +2058,25 @@ IsScrollFrameActive(nsDisplayListBuilder* aBuilder, nsIScrollableFrame* aScrolla
   return aScrollableFrame && aScrollableFrame->IsScrollingActive(aBuilder);
 }
 
+/**
+ * Returns whether a display item that gets created with the builder's current
+ * state will have a scrolled clip, i.e. a clip that is scrolled by a scroll
+ * frame which does not move the item itself.
+ */
+static bool
+BuilderHasScrolledClip(nsDisplayListBuilder* aBuilder)
+{
+  const DisplayItemClipChain* currentClip =
+    aBuilder->ClipState().GetCurrentCombinedClipChain(aBuilder);
+  if (!currentClip) {
+    return false;
+  }
+
+  const ActiveScrolledRoot* currentClipASR = currentClip->mASR;
+  const ActiveScrolledRoot* currentASR = aBuilder->CurrentActiveScrolledRoot();
+  return ActiveScrolledRoot::PickDescendant(currentClipASR, currentASR) != currentASR;
+}
+
 class AutoSaveRestoreContainsBlendMode
 {
   nsDisplayListBuilder& mBuilder;
@@ -2261,7 +2280,8 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
                         nsLayoutUtils::GetNearestScrollableFrame(GetParent(),
                         nsLayoutUtils::SCROLLABLE_SAME_DOC |
                         nsLayoutUtils::SCROLLABLE_INCLUDE_HIDDEN));
-  bool useFixedPosition = nsLayoutUtils::IsFixedPosFrameInDisplayPort(this);
+  bool useFixedPosition = disp->mPosition == NS_STYLE_POSITION_FIXED &&
+    (nsLayoutUtils::IsFixedPosFrameInDisplayPort(this) || BuilderHasScrolledClip(aBuilder));
 
   nsDisplayListBuilder::AutoBuildingDisplayList
     buildingDisplayList(aBuilder, this, dirtyRect, true);
