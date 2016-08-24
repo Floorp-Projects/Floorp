@@ -87,6 +87,9 @@ config = {
             'linux64-tsan': {
                 'update_channel': 'default',
             },
+            'linux64-add-on-devel': {
+                'update_channel': 'default',
+            },
             'macosx64-debug': {
                 'update_channel': 'default',
             },
@@ -99,13 +102,22 @@ config = {
             'macosx64-st-an-debug': {
                 'update_channel': 'default',
             },
+            'macosx64-add-on-devel': {
+                'update_channel': 'default',
+            },
             'win32-debug': {
                 'update_channel': 'default',
             },
             'win32-mulet': {
                 'update_channel': 'default',
             },
+            'win32-add-on-devel': {
+                'update_channel': 'default',
+            },
             'win64-debug': {
+                'update_channel': 'default',
+            },
+            'win64-add-on-devel': {
                 'update_channel': 'default',
             },
         },
@@ -161,6 +173,9 @@ config = {
             'linux64-tsan': {
                 'update_channel': 'default',
             },
+            'linux64-add-on-devel': {
+                'update_channel': 'default',
+            },
             'macosx64-debug': {
                 'update_channel': 'default',
             },
@@ -173,13 +188,22 @@ config = {
             'macosx64-st-an-debug': {
                 'update_channel': 'default',
             },
+            'macosx64-add-on-devel': {
+                'update_channel': 'default',
+            },
             'win32-debug': {
                 'update_channel': 'default',
             },
             'win32-mulet': {
                 'update_channel': 'default',
             },
+            'win32-add-on-devel': {
+                'update_channel': 'default',
+            },
             'win64-debug': {
+                'update_channel': 'default',
+            },
+            'win64-add-on-devel': {
                 'update_channel': 'default',
             },
         },
