@@ -6291,22 +6291,34 @@ var PDFViewer = (function pdfViewer() {
       return this._pages[index];
     },
 
+    /**
+     * @returns {number}
+     */
     get currentPageNumber() {
       return this._currentPageNumber;
     },
 
+    /**
+     * @param {number} val - The page number.
+     */
     set currentPageNumber(val) {
       if (!this.pdfDocument) {
         this._currentPageNumber = val;
         return;
       }
-      this._setCurrentPageNumber(val);
       // The intent can be to just reset a scroll position and/or scale.
-      this._resetCurrentPageView();
+      this._setCurrentPageNumber(val, /* resetCurrentPageView = */ true);
     },
 
-    _setCurrentPageNumber: function pdfViewer_setCurrentPageNumber(val) {
+    /**
+     * @private
+     */
+    _setCurrentPageNumber:
+        function pdfViewer_setCurrentPageNumber(val, resetCurrentPageView) {
       if (this._currentPageNumber === val) {
+        if (resetCurrentPageView) {
+          this._resetCurrentPageView();
+        }
         return;
       }
       var arg;
@@ -6329,6 +6341,10 @@ var PDFViewer = (function pdfViewer() {
       this._currentPageNumber = val;
       this.eventBus.dispatch('pagechanging', arg);
       this.eventBus.dispatch('pagechange', arg);
+
+      if (resetCurrentPageView) {
+        this._resetCurrentPageView();
+      }
     },
 
     /**
@@ -6367,7 +6383,7 @@ var PDFViewer = (function pdfViewer() {
     set currentScaleValue(val) {
       if (!this.pdfDocument) {
         this._currentScale = isNaN(val) ? UNKNOWN_SCALE : val;
-        this._currentScaleValue = val;
+        this._currentScaleValue = val.toString();
         return;
       }
       this._setScale(val, false);
@@ -6554,7 +6570,7 @@ var PDFViewer = (function pdfViewer() {
 
     _setScaleUpdatePages: function pdfViewer_setScaleUpdatePages(
         newScale, newValue, noScroll, preset) {
-      this._currentScaleValue = newValue;
+      this._currentScaleValue = newValue.toString();
 
       if (isSameScale(this._currentScale, newScale)) {
         if (preset) {
@@ -6636,6 +6652,7 @@ var PDFViewer = (function pdfViewer() {
 
     /**
      * Refreshes page view: scrolls to the current page and updates the scale.
+     * @private
      */
     _resetCurrentPageView: function () {
       if (this.isInPresentationMode) {
@@ -6660,8 +6677,7 @@ var PDFViewer = (function pdfViewer() {
       }
 
       if (this.isInPresentationMode || !dest) {
-        this._setCurrentPageNumber(pageNumber);
-        this._resetCurrentPageView();
+        this._setCurrentPageNumber(pageNumber, /* resetCurrentPageView */ true);
         return;
       }
 
@@ -7315,7 +7331,8 @@ var PDFViewerApplication = {
   },
 
   get supportsFullscreen() {
-    var support = document.fullscreenEnabled === true;
+    var support = document.fullscreenEnabled === true ||
+                  document.mozFullScreenEnabled === true;
     if (support && pdfjsLib.PDFJS.disableFullscreen === true) {
       support = false;
     }
@@ -7675,11 +7692,9 @@ var PDFViewerApplication = {
       self.loadingBar.hide();
     });
 
-    var pagesCount = pdfDocument.numPages;
-    var toolbarConfig = this.appConfig.toolbar;
-    toolbarConfig.numPages.textContent =
-      mozL10n.get('page_of', {pageCount: pagesCount}, 'of {{pageCount}}');
-    toolbarConfig.pageNumber.max = pagesCount;
+    this._updateUIToolbar({
+      resetNumPages: true,
+    });
 
     var id = this.documentFingerprint = pdfDocument.fingerprint;
     var store = this.store = new ViewHistory(id);
@@ -7877,10 +7892,6 @@ var PDFViewerApplication = {
 
     this.isInitialViewSet = true;
 
-    // When opening a new file, when one is already loaded in the viewer,
-    // ensure that the 'pageNumber' element displays the correct value.
-    this.appConfig.toolbar.pageNumber.value = this.pdfViewer.currentPageNumber;
-
     this.pdfSidebar.setInitialView(this.preferenceSidebarViewOnLoad ||
                                    (sidebarView | 0));
 
@@ -8042,6 +8053,67 @@ var PDFViewerApplication = {
       return;
     }
     this.pdfPresentationMode.mouseScroll(delta);
+  },
+
+  /**
+   * @typedef UpdateUIToolbarParameters
+   * @property {number} pageNumber
+   * @property {string} scaleValue
+   * @property {scale} scale
+   * @property {boolean} resetNumPages
+   */
+
+  /**
+   * @param {Object} UpdateUIToolbarParameters
+   * @private
+   */
+  _updateUIToolbar: function (params) {
+    function selectScaleOption(value, scale) {
+      var options = toolbarConfig.scaleSelect.options;
+      var predefinedValueFound = false;
+      for (var i = 0, ii = options.length; i < ii; i++) {
+        var option = options[i];
+        if (option.value !== value) {
+          option.selected = false;
+          continue;
+        }
+        option.selected = true;
+        predefinedValueFound = true;
+      }
+      if (!predefinedValueFound) {
+        var customScale = Math.round(scale * 10000) / 100;
+        toolbarConfig.customScaleOption.textContent =
+          mozL10n.get('page_scale_percent', {scale: customScale}, '{{scale}}%');
+        toolbarConfig.customScaleOption.selected = true;
+      }
+    }
+
+    var pageNumber = params.pageNumber || this.pdfViewer.currentPageNumber;
+    var scaleValue = (params.scaleValue || params.scale ||
+      this.pdfViewer.currentScaleValue || DEFAULT_SCALE_VALUE).toString();
+    var scale = params.scale || this.pdfViewer.currentScale;
+    var resetNumPages = params.resetNumPages || false;
+
+    var toolbarConfig = this.appConfig.toolbar;
+    var pagesCount = this.pagesCount;
+
+    if (resetNumPages) {
+      toolbarConfig.numPages.textContent =
+        mozL10n.get('page_of', { pageCount: pagesCount }, 'of {{pageCount}}');
+      toolbarConfig.pageNumber.max = pagesCount;
+    }
+    toolbarConfig.pageNumber.value = pageNumber;
+
+    toolbarConfig.previous.disabled = (pageNumber <= 1);
+    toolbarConfig.next.disabled = (pageNumber >= pagesCount);
+
+    toolbarConfig.firstPage.disabled = (pageNumber <= 1);
+    toolbarConfig.lastPage.disabled = (pageNumber >= pagesCount);
+
+    toolbarConfig.zoomOut.disabled = (scale === MIN_SCALE);
+    toolbarConfig.zoomIn.disabled = (scale === MAX_SCALE);
+
+    selectScaleOption(scaleValue, scale);
   },
 
   bindEvents: function pdfViewBindEvents() {
@@ -8479,21 +8551,6 @@ function webViewerHashchange(e) {
 }
 
 
-function selectScaleOption(value) {
-  var options = PDFViewerApplication.appConfig.toolbar.scaleSelect.options;
-  var predefinedValueFound = false;
-  for (var i = 0, ii = options.length; i < ii; i++) {
-    var option = options[i];
-    if (option.value !== value) {
-      option.selected = false;
-      continue;
-    }
-    option.selected = true;
-    predefinedValueFound = true;
-  }
-  return predefinedValueFound;
-}
-
 window.addEventListener('localized', function localized(evt) {
   PDFViewerApplication.eventBus.dispatch('localized');
 });
@@ -8579,20 +8636,11 @@ function webViewerFindFromUrlHash(e) {
 }
 
 function webViewerScaleChanging(e) {
-  var appConfig = PDFViewerApplication.appConfig;
-  appConfig.toolbar.zoomOut.disabled = (e.scale === MIN_SCALE);
-  appConfig.toolbar.zoomIn.disabled = (e.scale === MAX_SCALE);
+  PDFViewerApplication._updateUIToolbar({
+    scaleValue: e.presetValue,
+    scale: e.scale,
+  });
 
-  // Update the 'scaleSelect' DOM element.
-  var predefinedValueFound = selectScaleOption(e.presetValue ||
-                                               '' + e.scale);
-  if (!predefinedValueFound) {
-    var customScaleOption = appConfig.toolbar.customScaleOption;
-    var customScale = Math.round(e.scale * 10000) / 100;
-    customScaleOption.textContent =
-      mozL10n.get('page_scale_percent', { scale: customScale }, '{{scale}}%');
-    customScaleOption.selected = true;
-  }
   if (!PDFViewerApplication.initialized) {
     return;
   }
@@ -8601,20 +8649,14 @@ function webViewerScaleChanging(e) {
 
 function webViewerPageChanging(e) {
   var page = e.pageNumber;
-  if (e.previousPageNumber !== page) {
-    PDFViewerApplication.appConfig.toolbar.pageNumber.value = page;
 
-    if (PDFViewerApplication.pdfSidebar.isThumbnailViewVisible) {
-      PDFViewerApplication.pdfThumbnailViewer.scrollThumbnailIntoView(page);
-    }
+  PDFViewerApplication._updateUIToolbar({
+    pageNumber: page,
+  });
+  if (e.previousPageNumber !== page &&
+      PDFViewerApplication.pdfSidebar.isThumbnailViewVisible) {
+    PDFViewerApplication.pdfThumbnailViewer.scrollThumbnailIntoView(page);
   }
-  var numPages = PDFViewerApplication.pagesCount;
-
-  PDFViewerApplication.appConfig.toolbar.previous.disabled = (page <= 1);
-  PDFViewerApplication.appConfig.toolbar.next.disabled = (page >= numPages);
-
-  PDFViewerApplication.appConfig.toolbar.firstPage.disabled = (page <= 1);
-  PDFViewerApplication.appConfig.toolbar.lastPage.disabled = (page >= numPages);
 
   // we need to update stats
   if (pdfjsLib.PDFJS.pdfBug && Stats.enabled) {
