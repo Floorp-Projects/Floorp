@@ -27,6 +27,7 @@ class gfxVarReceiver;
   _(ContentBackend,             BackendType,      BackendType::NONE)    \
   _(TileSize,                   IntSize,          IntSize(-1, -1))      \
   _(UseXRender,                 bool,             false)                \
+  _(OffscreenFormat,            gfxImageFormat,   mozilla::gfx::SurfaceFormat::X8R8G8B8_UINT32) \
   /* Add new entries above this line. */
 
 // Some graphics settings are computed on the UI process and must be
