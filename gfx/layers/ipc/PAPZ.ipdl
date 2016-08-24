@@ -7,7 +7,7 @@
 
 include "mozilla/GfxMessageUtils.h";
 
-include protocol PCompositorBridge;
+include protocol PContent;
 
 using mozilla::LayoutDevicePoint from "Units.h";
 using CSSRect from "Units.h";
@@ -39,7 +39,7 @@ namespace layers {
  */
 sync protocol PAPZ
 {
-  manager PCompositorBridge;
+  manager PContent;
 
 parent:
 
@@ -56,8 +56,6 @@ child:
   async HandleTap(TapType aType, LayoutDevicePoint point, Modifiers aModifiers,
                   ScrollableLayerGuid aGuid, uint64_t aInputBlockId,
                   bool aCallTakeFocusForClickFromTap);
-
-  async NotifyMozMouseScrollEvent(uint64_t aLayersId, ViewID aScrollId, nsString aEvent);
 
   async NotifyAPZStateChange(ViewID aViewId, APZStateChange aChange, int aArg);
 

@@ -107,19 +107,8 @@ APZChild::RecvHandleTap(const TapType& aType,
                         const uint64_t& aInputBlockId,
                         const bool& aCallTakeFocusForClickFromTap)
 {
-  mBrowser->HandleTap(aType, aPoint - mBrowser->GetChromeDisplacement(), aModifiers, aGuid,
+  mBrowser->HandleTap(aType, aPoint, aModifiers, aGuid,
       aInputBlockId, aCallTakeFocusForClickFromTap);
-  return true;
-}
-
-bool
-APZChild::RecvNotifyMozMouseScrollEvent(const uint64_t& aLayersId,
-                                        const ViewID& aScrollId,
-                                        const nsString& aEvent)
-{
-  if (mBrowser) {
-    mBrowser->RecvMouseScrollTestEvent(aLayersId, aScrollId, aEvent);
-  }
   return true;
 }
 
@@ -150,6 +139,7 @@ APZChild::RecvDestroy()
     mBrowser->SetAPZChild(nullptr);
     mBrowser = nullptr;
   }
+  PAPZChild::Send__delete__(this);
   return true;
 }
 

@@ -82,12 +82,6 @@ public:
   void PostDelayedTask(already_AddRefed<Runnable> aTask, int aDelayMs) {
     RefPtr<Runnable> task = aTask;
   }
-  bool IsRepaintThread() {
-    return NS_IsMainThread();
-  }
-  void DispatchToRepaintThread(already_AddRefed<Runnable> aTask) {
-    NS_DispatchToMainThread(Move(aTask));
-  }
   MOCK_METHOD3(NotifyAPZStateChange, void(const ScrollableLayerGuid& aGuid, APZStateChange aChange, int aArg));
   MOCK_METHOD0(NotifyFlushComplete, void());
 };

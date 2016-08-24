@@ -13,7 +13,6 @@
 #include "base/task.h"                  // for NewRunnableMethod, etc
 #include "gfxPrefs.h"
 #include "mozilla/layers/ImageBridgeChild.h"
-#include "mozilla/layers/APZChild.h"
 #include "mozilla/layers/IAPZCTreeManager.h"
 #include "mozilla/layers/APZCTreeManagerChild.h"
 #include "mozilla/layers/LayerTransactionChild.h"
@@ -1035,21 +1034,6 @@ CompositorBridgeChild::AllocPAPZCTreeManagerChild(const uint64_t& aLayersId)
   APZCTreeManagerChild* child = new APZCTreeManagerChild();
   child->AddRef();
   return child;
-}
-
-PAPZChild*
-CompositorBridgeChild::AllocPAPZChild(const uint64_t& aLayersId)
-{
-  // We send the constructor manually.
-  MOZ_CRASH("Should not be called");
-  return nullptr;
-}
-
-bool
-CompositorBridgeChild::DeallocPAPZChild(PAPZChild* aActor)
-{
-  delete aActor;
-  return true;
 }
 
 bool
