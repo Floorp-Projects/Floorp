@@ -66,7 +66,7 @@ let schemaJson = [
     },
   },
 ];
-add_task(function* testPathObj() {
+add_task(function* testRestrictions() {
   let url = "data:," + JSON.stringify(schemaJson);
   yield Schemas.load(url);
   let results = {};
@@ -76,6 +76,12 @@ add_task(function* testPathObj() {
       name = name === null ? ns : ns + "." + name;
       results[name] = restrictions;
       return true;
+    },
+    getImplementation() {
+      // The actual implementation is not significant for this test.
+      // Let's take this opportunity to see if schema generation is free of
+      // exceptions even when somehow getImplementation does not return an
+      // implementation.
     },
   };
 
@@ -121,5 +127,13 @@ add_task(function* testPathObj() {
   // complicate things.
   verify("with_submodule.prop1.restrictNo", "test_nine");
   verify("with_submodule.prop1.restrictYes", "test_ten");
+
+  // This is a constant, so it does not matter that getImplementation does not
+  // return an implementation since the API injector should take care of it.
+  do_check_eq(root.noRestrict.prop3, 1);
+
+  Assert.throws(() => root.noRestrict.prop1,
+                /undefined/,
+                "Should throw when the implementation is absent.");
 });
 
