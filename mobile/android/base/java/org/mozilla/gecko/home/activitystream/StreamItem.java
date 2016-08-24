@@ -15,6 +15,7 @@ import android.widget.TextView;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.home.HomePager;
+import org.mozilla.gecko.home.activitystream.topsites.CirclePageIndicator;
 import org.mozilla.gecko.home.activitystream.topsites.TopSitesPagerAdapter;
 
 public abstract class StreamItem extends RecyclerView.ViewHolder {
@@ -35,6 +36,9 @@ public abstract class StreamItem extends RecyclerView.ViewHolder {
 
             topSitesPager = (ViewPager) itemView.findViewById(R.id.topsites_pager);
             topSitesPager.setAdapter(new TopSitesPagerAdapter(itemView.getContext(), onUrlOpenListener));
+
+            CirclePageIndicator indicator = (CirclePageIndicator) itemView.findViewById(R.id.topsites_indicator);
+            indicator.setViewPager(topSitesPager);
         }
 
         @Override
