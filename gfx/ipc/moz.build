@@ -64,6 +64,8 @@ IPDL_SOURCES = [
     'PVsyncBridge.ipdl',
 ]
 
+LOCAL_INCLUDES += ['/dom/ipc']
+
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'
