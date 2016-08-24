@@ -579,10 +579,19 @@ StyleChildrenIterator::IsNeeded(Element* aElement)
     }
   }
 
-  // If the node has native anonymous content, return true. Otherwise, return
-  // false.
+  // If the node has native anonymous content, return true.
   nsIAnonymousContentCreator* ac = do_QueryFrame(aElement->GetPrimaryFrame());
-  return !!ac;
+  if (ac) {
+    return true;
+  }
+
+  // The root element has a scroll frame that is not the primary frame, so we
+  // need to do special checking for that case.
+  if (aElement == aElement->OwnerDoc()->GetRootElement()) {
+    return true;
+  }
+
+  return false;
 }
 
 
