@@ -1767,10 +1767,12 @@ NS_IMETHODIMP
 nsComponentManagerImpl::CollectReports(nsIHandleReportCallback* aHandleReport,
                                        nsISupports* aData, bool aAnonymize)
 {
-  return MOZ_COLLECT_REPORT("explicit/xpcom/component-manager",
-                            KIND_HEAP, UNITS_BYTES,
-                            SizeOfIncludingThis(ComponentManagerMallocSizeOf),
-                            "Memory used for the XPCOM component manager.");
+  MOZ_COLLECT_REPORT(
+    "explicit/xpcom/component-manager", KIND_HEAP, UNITS_BYTES,
+    SizeOfIncludingThis(ComponentManagerMallocSizeOf),
+    "Memory used for the XPCOM component manager.");
+
+  return NS_OK;
 }
 
 size_t

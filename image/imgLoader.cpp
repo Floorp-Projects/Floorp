@@ -73,7 +73,6 @@ public:
   NS_IMETHOD CollectReports(nsIHandleReportCallback* aHandleReport,
                             nsISupports* aData, bool aAnonymize) override
   {
-    nsresult rv;
     nsTArray<ImageMemoryCounter> chrome;
     nsTArray<ImageMemoryCounter> content;
     nsTArray<ImageMemoryCounter> uncached;
@@ -101,17 +100,14 @@ public:
 
     // Note that we only need to anonymize content image URIs.
 
-    rv = ReportCounterArray(aHandleReport, aData, chrome, "images/chrome");
-    NS_ENSURE_SUCCESS(rv, rv);
+    ReportCounterArray(aHandleReport, aData, chrome, "images/chrome");
 
-    rv = ReportCounterArray(aHandleReport, aData, content,
-                            "images/content", aAnonymize);
-    NS_ENSURE_SUCCESS(rv, rv);
+    ReportCounterArray(aHandleReport, aData, content, "images/content",
+                       aAnonymize);
 
     // Uncached images may be content or chrome, so anonymize them.
-    rv = ReportCounterArray(aHandleReport, aData, uncached,
-                            "images/uncached", aAnonymize);
-    NS_ENSURE_SUCCESS(rv, rv);
+    ReportCounterArray(aHandleReport, aData, uncached, "images/uncached",
+                       aAnonymize);
 
     return NS_OK;
   }
@@ -197,13 +193,12 @@ private:
   };
 
   // Reports all images of a single kind, e.g. all used chrome images.
-  nsresult ReportCounterArray(nsIHandleReportCallback* aHandleReport,
-                              nsISupports* aData,
-                              nsTArray<ImageMemoryCounter>& aCounterArray,
-                              const char* aPathPrefix,
-                              bool aAnonymize = false)
+  void ReportCounterArray(nsIHandleReportCallback* aHandleReport,
+                          nsISupports* aData,
+                          nsTArray<ImageMemoryCounter>& aCounterArray,
+                          const char* aPathPrefix,
+                          bool aAnonymize = false)
   {
-    nsresult rv;
     MemoryTotal summaryTotal;
     MemoryTotal nonNotableTotal;
 
@@ -227,33 +222,26 @@ private:
       summaryTotal += counter;
 
       if (counter.IsNotable()) {
-        rv = ReportImage(aHandleReport, aData, aPathPrefix, counter);
-        NS_ENSURE_SUCCESS(rv, rv);
+        ReportImage(aHandleReport, aData, aPathPrefix, counter);
       } else {
         nonNotableTotal += counter;
       }
     }
 
     // Report non-notable images in aggregate.
-    rv = ReportTotal(aHandleReport, aData, /* aExplicit = */ true,
-                     aPathPrefix, "<non-notable images>/", nonNotableTotal);
-    NS_ENSURE_SUCCESS(rv, rv);
+    ReportTotal(aHandleReport, aData, /* aExplicit = */ true,
+                aPathPrefix, "<non-notable images>/", nonNotableTotal);
 
     // Report a summary in aggregate, outside of the explicit tree.
-    rv = ReportTotal(aHandleReport, aData, /* aExplicit = */ false,
-                     aPathPrefix, "", summaryTotal);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    return NS_OK;
+    ReportTotal(aHandleReport, aData, /* aExplicit = */ false,
+                aPathPrefix, "", summaryTotal);
   }
 
-  static nsresult ReportImage(nsIHandleReportCallback* aHandleReport,
-                              nsISupports* aData,
-                              const char* aPathPrefix,
-                              const ImageMemoryCounter& aCounter)
+  static void ReportImage(nsIHandleReportCallback* aHandleReport,
+                          nsISupports* aData,
+                          const char* aPathPrefix,
+                          const ImageMemoryCounter& aCounter)
   {
-    nsresult rv;
-
     nsAutoCString pathPrefix(NS_LITERAL_CSTRING("explicit/"));
     pathPrefix.Append(aPathPrefix);
     pathPrefix.Append(aCounter.Type() == imgIContainer::TYPE_RASTER
@@ -274,19 +262,15 @@ private:
 
     pathPrefix.Append(")/");
 
-    rv = ReportSurfaces(aHandleReport, aData, pathPrefix, aCounter);
-    NS_ENSURE_SUCCESS(rv, rv);
+    ReportSurfaces(aHandleReport, aData, pathPrefix, aCounter);
 
-    rv = ReportSourceValue(aHandleReport, aData, pathPrefix, aCounter.Values());
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    return NS_OK;
+    ReportSourceValue(aHandleReport, aData, pathPrefix, aCounter.Values());
   }
 
-  static nsresult ReportSurfaces(nsIHandleReportCallback* aHandleReport,
-                                 nsISupports* aData,
-                                 const nsACString& aPathPrefix,
-                                 const ImageMemoryCounter& aCounter)
+  static void ReportSurfaces(nsIHandleReportCallback* aHandleReport,
+                             nsISupports* aData,
+                             const nsACString& aPathPrefix,
+                             const ImageMemoryCounter& aCounter)
   {
     for (const SurfaceMemoryCounter& counter : aCounter.Surfaces()) {
       nsAutoCString surfacePathPrefix(aPathPrefix);
@@ -317,23 +301,17 @@ private:
 
       surfacePathPrefix.Append(")/");
 
-      nsresult rv = ReportValues(aHandleReport, aData, surfacePathPrefix,
-                                 counter.Values());
-      NS_ENSURE_SUCCESS(rv, rv);
+      ReportValues(aHandleReport, aData, surfacePathPrefix, counter.Values());
     }
-
-    return NS_OK;
   }
 
-  static nsresult ReportTotal(nsIHandleReportCallback* aHandleReport,
-                              nsISupports* aData,
-                              bool aExplicit,
-                              const char* aPathPrefix,
-                              const char* aPathInfix,
-                              const MemoryTotal& aTotal)
+  static void ReportTotal(nsIHandleReportCallback* aHandleReport,
+                          nsISupports* aData,
+                          bool aExplicit,
+                          const char* aPathPrefix,
+                          const char* aPathInfix,
+                          const MemoryTotal& aTotal)
   {
-    nsresult rv;
-
     nsAutoCString pathPrefix;
     if (aExplicit) {
       pathPrefix.Append("explicit/");
@@ -343,92 +321,73 @@ private:
     nsAutoCString rasterUsedPrefix(pathPrefix);
     rasterUsedPrefix.Append("/raster/used/");
     rasterUsedPrefix.Append(aPathInfix);
-    rv = ReportValues(aHandleReport, aData, rasterUsedPrefix,
-                      aTotal.UsedRaster());
-    NS_ENSURE_SUCCESS(rv, rv);
+    ReportValues(aHandleReport, aData, rasterUsedPrefix, aTotal.UsedRaster());
 
     nsAutoCString rasterUnusedPrefix(pathPrefix);
     rasterUnusedPrefix.Append("/raster/unused/");
     rasterUnusedPrefix.Append(aPathInfix);
-    rv = ReportValues(aHandleReport, aData, rasterUnusedPrefix,
-                      aTotal.UnusedRaster());
-    NS_ENSURE_SUCCESS(rv, rv);
+    ReportValues(aHandleReport, aData, rasterUnusedPrefix,
+                 aTotal.UnusedRaster());
 
     nsAutoCString vectorUsedPrefix(pathPrefix);
     vectorUsedPrefix.Append("/vector/used/");
     vectorUsedPrefix.Append(aPathInfix);
-    rv = ReportValues(aHandleReport, aData, vectorUsedPrefix,
-                      aTotal.UsedVector());
-    NS_ENSURE_SUCCESS(rv, rv);
+    ReportValues(aHandleReport, aData, vectorUsedPrefix, aTotal.UsedVector());
 
     nsAutoCString vectorUnusedPrefix(pathPrefix);
     vectorUnusedPrefix.Append("/vector/unused/");
     vectorUnusedPrefix.Append(aPathInfix);
-    rv = ReportValues(aHandleReport, aData, vectorUnusedPrefix,
-                      aTotal.UnusedVector());
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    return NS_OK;
+    ReportValues(aHandleReport, aData, vectorUnusedPrefix,
+                 aTotal.UnusedVector());
   }
 
-  static nsresult ReportValues(nsIHandleReportCallback* aHandleReport,
-                               nsISupports* aData,
-                               const nsACString& aPathPrefix,
-                               const MemoryCounter& aCounter)
+  static void ReportValues(nsIHandleReportCallback* aHandleReport,
+                           nsISupports* aData,
+                           const nsACString& aPathPrefix,
+                           const MemoryCounter& aCounter)
   {
-    nsresult rv;
+    ReportSourceValue(aHandleReport, aData, aPathPrefix, aCounter);
 
-    rv = ReportSourceValue(aHandleReport, aData, aPathPrefix, aCounter);
-    NS_ENSURE_SUCCESS(rv, rv);
+    ReportValue(aHandleReport, aData, KIND_HEAP, aPathPrefix,
+                "decoded-heap",
+                "Decoded image data which is stored on the heap.",
+                aCounter.DecodedHeap());
 
-    rv = ReportValue(aHandleReport, aData, KIND_HEAP, aPathPrefix,
-                     "decoded-heap",
-                     "Decoded image data which is stored on the heap.",
-                     aCounter.DecodedHeap());
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = ReportValue(aHandleReport, aData, KIND_NONHEAP, aPathPrefix,
-                     "decoded-nonheap",
-                     "Decoded image data which isn't stored on the heap.",
-                     aCounter.DecodedNonHeap());
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    return NS_OK;
+    ReportValue(aHandleReport, aData, KIND_NONHEAP, aPathPrefix,
+                "decoded-nonheap",
+                "Decoded image data which isn't stored on the heap.",
+                aCounter.DecodedNonHeap());
   }
 
-  static nsresult ReportSourceValue(nsIHandleReportCallback* aHandleReport,
-                                    nsISupports* aData,
-                                    const nsACString& aPathPrefix,
-                                    const MemoryCounter& aCounter)
+  static void ReportSourceValue(nsIHandleReportCallback* aHandleReport,
+                                nsISupports* aData,
+                                const nsACString& aPathPrefix,
+                                const MemoryCounter& aCounter)
   {
-    nsresult rv;
-
-    rv = ReportValue(aHandleReport, aData, KIND_HEAP, aPathPrefix,
-                     "source",
-                     "Raster image source data and vector image documents.",
-                     aCounter.Source());
-
-    return rv;
+    ReportValue(aHandleReport, aData, KIND_HEAP, aPathPrefix,
+                "source",
+                "Raster image source data and vector image documents.",
+                aCounter.Source());
   }
 
-  static nsresult ReportValue(nsIHandleReportCallback* aHandleReport,
-                              nsISupports* aData,
-                              int32_t aKind,
-                              const nsACString& aPathPrefix,
-                              const char* aPathSuffix,
-                              const char* aDescription,
-                              size_t aValue)
+  static void ReportValue(nsIHandleReportCallback* aHandleReport,
+                          nsISupports* aData,
+                          int32_t aKind,
+                          const nsACString& aPathPrefix,
+                          const char* aPathSuffix,
+                          const char* aDescription,
+                          size_t aValue)
   {
     if (aValue == 0) {
-      return NS_OK;
+      return;
     }
 
     nsAutoCString desc(aDescription);
     nsAutoCString path(aPathPrefix);
     path.Append(aPathSuffix);
 
-    return aHandleReport->Callback(EmptyCString(), path, aKind, UNITS_BYTES,
-                                   aValue, desc, aData);
+    aHandleReport->Callback(EmptyCString(), path, aKind, UNITS_BYTES,
+                            aValue, desc, aData);
   }
 
   static void RecordCounterForRequest(imgRequest* aRequest,

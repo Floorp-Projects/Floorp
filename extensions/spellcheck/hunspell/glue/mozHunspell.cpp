@@ -481,9 +481,12 @@ NS_IMETHODIMP
 mozHunspell::CollectReports(nsIHandleReportCallback* aHandleReport,
                             nsISupports* aData, bool aAnonymize)
 {
-  return MOZ_COLLECT_REPORT("explicit/spell-check", KIND_HEAP, UNITS_BYTES,
-                            HunspellAllocator::MemoryAllocated(),
-                            "Memory used by the spell-checking engine.");
+  MOZ_COLLECT_REPORT(
+    "explicit/spell-check", KIND_HEAP, UNITS_BYTES,
+    HunspellAllocator::MemoryAllocated(),
+    "Memory used by the spell-checking engine.");
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP mozHunspell::Check(const char16_t *aWord, bool *aResult)

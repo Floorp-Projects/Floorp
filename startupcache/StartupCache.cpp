@@ -58,25 +58,16 @@ NS_IMETHODIMP
 StartupCache::CollectReports(nsIHandleReportCallback* aHandleReport,
                              nsISupports* aData, bool aAnonymize)
 {
-#define REPORT(_path, _kind, _amount, _desc)                                \
-  do {                                                                      \
-    nsresult rv =                                                           \
-      aHandleReport->Callback(EmptyCString(),                               \
-                              NS_LITERAL_CSTRING(_path),                    \
-                              _kind, UNITS_BYTES, _amount,                  \
-                              NS_LITERAL_CSTRING(_desc), aData);            \
-    NS_ENSURE_SUCCESS(rv, rv);                                              \
-  } while (0)
+  MOZ_COLLECT_REPORT(
+    "explicit/startup-cache/mapping", KIND_NONHEAP, UNITS_BYTES,
+    SizeOfMapping(),
+    "Memory used to hold the mapping of the startup cache from file. "
+    "This memory is likely to be swapped out shortly after start-up.");
 
-  REPORT("explicit/startup-cache/mapping", KIND_NONHEAP,
-         SizeOfMapping(),
-         "Memory used to hold the mapping of the startup cache from file. "
-         "This memory is likely to be swapped out shortly after start-up.");
-
-  REPORT("explicit/startup-cache/data", KIND_HEAP,
-         HeapSizeOfIncludingThis(StartupCacheMallocSizeOf),
-         "Memory used by the startup cache for things other than the file "
-         "mapping.");
+  MOZ_COLLECT_REPORT(
+    "explicit/startup-cache/data", KIND_HEAP, UNITS_BYTES,
+    HeapSizeOfIncludingThis(StartupCacheMallocSizeOf),
+    "Memory used by the startup cache for things other than the file mapping.");
 
   return NS_OK;
 }

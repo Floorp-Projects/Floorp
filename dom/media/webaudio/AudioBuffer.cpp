@@ -141,25 +141,20 @@ AudioBufferMemoryTracker::UnregisterAudioBufferInternal(const AudioBuffer* aAudi
 MOZ_DEFINE_MALLOC_SIZE_OF(AudioBufferMemoryTrackerMallocSizeOf)
 
 NS_IMETHODIMP
-AudioBufferMemoryTracker::CollectReports(nsIHandleReportCallback* handleReport,
-                                         nsISupports* data, bool)
+AudioBufferMemoryTracker::CollectReports(nsIHandleReportCallback* aHandleReport,
+                                         nsISupports* aData, bool)
 {
- size_t amount = 0;
- nsresult rv;
+  size_t amount = 0;
 
- for (auto iter = mBuffers.Iter(); !iter.Done(); iter.Next()) {
-   amount += iter.Get()->GetKey()->SizeOfIncludingThis(AudioBufferMemoryTrackerMallocSizeOf);
- }
+  for (auto iter = mBuffers.Iter(); !iter.Done(); iter.Next()) {
+    amount += iter.Get()->GetKey()->SizeOfIncludingThis(AudioBufferMemoryTrackerMallocSizeOf);
+  }
 
- rv = handleReport->Callback(EmptyCString(),
-                             NS_LITERAL_CSTRING("explicit/webaudio/audiobuffer"),
-                             KIND_HEAP, UNITS_BYTES, amount,
-                             NS_LITERAL_CSTRING("Memory used by AudioBuffer"
-                                                " objects (Web Audio)"),
-                             data);
- NS_ENSURE_SUCCESS(rv, rv);
+  MOZ_COLLECT_REPORT(
+    "explicit/webaudio/audiobuffer", KIND_HEAP, UNITS_BYTES, amount,
+    "Memory used by AudioBuffer objects (Web Audio).");
 
- return NS_OK;
+  return NS_OK;
 }
 
 AudioBuffer::AudioBuffer(AudioContext* aContext, uint32_t aNumberOfChannels,

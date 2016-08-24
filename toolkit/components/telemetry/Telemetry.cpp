@@ -756,10 +756,12 @@ NS_IMETHODIMP
 TelemetryImpl::CollectReports(nsIHandleReportCallback* aHandleReport,
                               nsISupports* aData, bool aAnonymize)
 {
-  return MOZ_COLLECT_REPORT(
+  MOZ_COLLECT_REPORT(
     "explicit/telemetry", KIND_HEAP, UNITS_BYTES,
     SizeOfIncludingThis(TelemetryMallocSizeOf),
     "Memory used by the telemetry system.");
+
+  return NS_OK;
 }
 
 void

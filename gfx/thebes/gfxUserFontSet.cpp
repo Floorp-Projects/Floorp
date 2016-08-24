@@ -1300,10 +1300,9 @@ gfxUserFontSet::UserFontCache::Shutdown()
 
 MOZ_DEFINE_MALLOC_SIZE_OF(UserFontsMallocSizeOf)
 
-nsresult
-gfxUserFontSet::UserFontCache::Entry::ReportMemory(nsIMemoryReporterCallback* aCb,
-                                                   nsISupports* aClosure,
-                                                   bool aAnonymize)
+void
+gfxUserFontSet::UserFontCache::Entry::ReportMemory(
+    nsIHandleReportCallback* aHandleReport, nsISupports* aData, bool aAnonymize)
 {
     MOZ_ASSERT(mFontEntry);
     nsAutoCString path("explicit/gfx/user-fonts/font(");
@@ -1346,12 +1345,12 @@ gfxUserFontSet::UserFontCache::Entry::ReportMemory(nsIMemoryReporterCallback* aC
     }
     path.Append(')');
 
-    return aCb->
-        Callback(EmptyCString(), path,
-                 nsIMemoryReporter::KIND_HEAP, nsIMemoryReporter::UNITS_BYTES,
-                 mFontEntry->ComputedSizeOfExcludingThis(UserFontsMallocSizeOf),
-                 NS_LITERAL_CSTRING("Memory used by @font-face resource."),
-                 aClosure);
+    aHandleReport->Callback(
+        EmptyCString(), path,
+        nsIMemoryReporter::KIND_HEAP, nsIMemoryReporter::UNITS_BYTES,
+        mFontEntry->ComputedSizeOfExcludingThis(UserFontsMallocSizeOf),
+        NS_LITERAL_CSTRING("Memory used by @font-face resource."),
+        aData);
 }
 
 NS_IMPL_ISUPPORTS(gfxUserFontSet::UserFontCache::MemoryReporter,
@@ -1359,27 +1358,23 @@ NS_IMPL_ISUPPORTS(gfxUserFontSet::UserFontCache::MemoryReporter,
 
 NS_IMETHODIMP
 gfxUserFontSet::UserFontCache::MemoryReporter::CollectReports(
-    nsIMemoryReporterCallback* aCb, nsISupports* aClosure, bool aAnonymize)
+    nsIHandleReportCallback* aHandleReport, nsISupports* aData, bool aAnonymize)
 {
     if (!sUserFonts) {
         return NS_OK;
     }
 
     for (auto it = sUserFonts->Iter(); !it.Done(); it.Next()) {
-        nsresult rv = it.Get()->ReportMemory(aCb, aClosure, aAnonymize);
-        if (NS_FAILED(rv)) {
-            return rv;
-        }
+        it.Get()->ReportMemory(aHandleReport, aData, aAnonymize);
     }
 
-    return aCb->
-        Callback(EmptyCString(),
-                 NS_LITERAL_CSTRING("explicit/gfx/user-fonts/cache-overhead"),
-                 nsIMemoryReporter::KIND_HEAP, nsIMemoryReporter::UNITS_BYTES,
-                 sUserFonts->ShallowSizeOfIncludingThis(UserFontsMallocSizeOf),
-                 NS_LITERAL_CSTRING("Memory used by the @font-face cache, "
-                                    "not counting the actual font resources."),
-                 aClosure);
+    MOZ_COLLECT_REPORT(
+        "explicit/gfx/user-fonts/cache-overhead", KIND_HEAP, UNITS_BYTES,
+        sUserFonts->ShallowSizeOfIncludingThis(UserFontsMallocSizeOf),
+        "Memory used by the @font-face cache, not counting the actual font "
+        "resources.");
+
+    return NS_OK;
 }
 
 #ifdef DEBUG_USERFONT_CACHE

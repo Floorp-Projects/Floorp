@@ -96,24 +96,22 @@ NS_IMPL_ISUPPORTS(gfxFontCache::MemoryReporter, nsIMemoryReporter)
 
 NS_IMETHODIMP
 gfxFontCache::MemoryReporter::CollectReports(
-    nsIMemoryReporterCallback* aCb, nsISupports* aClosure, bool aAnonymize)
+    nsIHandleReportCallback* aHandleReport, nsISupports* aData, bool aAnonymize)
 {
     FontCacheSizes sizes;
 
     gfxFontCache::GetCache()->AddSizeOfIncludingThis(&FontCacheMallocSizeOf,
                                                      &sizes);
 
-    aCb->Callback(EmptyCString(),
-                  NS_LITERAL_CSTRING("explicit/gfx/font-cache"),
-                  KIND_HEAP, UNITS_BYTES, sizes.mFontInstances,
-                  NS_LITERAL_CSTRING("Memory used for active font instances."),
-                  aClosure);
+    MOZ_COLLECT_REPORT(
+        "explicit/gfx/font-cache", KIND_HEAP, UNITS_BYTES,
+        sizes.mFontInstances,
+        "Memory used for active font instances.");
 
-    aCb->Callback(EmptyCString(),
-                  NS_LITERAL_CSTRING("explicit/gfx/font-shaped-words"),
-                  KIND_HEAP, UNITS_BYTES, sizes.mShapedWords,
-                  NS_LITERAL_CSTRING("Memory used to cache shaped glyph data."),
-                  aClosure);
+    MOZ_COLLECT_REPORT(
+        "explicit/gfx/font-shaped-words", KIND_HEAP, UNITS_BYTES,
+        sizes.mShapedWords,
+        "Memory used to cache shaped glyph data.");
 
     return NS_OK;
 }

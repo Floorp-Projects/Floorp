@@ -1057,9 +1057,11 @@ NS_IMETHODIMP
 nsDNSService::CollectReports(nsIHandleReportCallback* aHandleReport,
                              nsISupports* aData, bool aAnonymize)
 {
-    return MOZ_COLLECT_REPORT(
+    MOZ_COLLECT_REPORT(
         "explicit/network/dns-service", KIND_HEAP, UNITS_BYTES,
         SizeOfIncludingThis(DNSServiceMallocSizeOf),
         "Memory used for the DNS service.");
+
+    return NS_OK;
 }
 

@@ -482,11 +482,11 @@ public:
         // ordering.  So separate out the read and write operations.
         sSurfaceMemoryUsed[size_t(aType)] = sSurfaceMemoryUsed[size_t(aType)] + aBytes;
     };
-    
+
     NS_DECL_ISUPPORTS
 
-    NS_IMETHOD CollectReports(nsIMemoryReporterCallback *aCb,
-                              nsISupports *aClosure, bool aAnonymize) override
+    NS_IMETHOD CollectReports(nsIHandleReportCallback *aHandleReport,
+                              nsISupports *aData, bool aAnonymize) override
     {
         const size_t len = ArrayLength(sSurfaceMemoryReporterAttrs);
         for (size_t i = 0; i < len; i++) {
@@ -499,11 +499,9 @@ public:
                     desc = sDefaultSurfaceDescription;
                 }
 
-                nsresult rv = aCb->Callback(EmptyCString(), nsCString(path),
-                                            KIND_OTHER, UNITS_BYTES,
-                                            amount,
-                                            nsCString(desc), aClosure);
-                NS_ENSURE_SUCCESS(rv, rv);
+                aHandleReport->Callback(
+                    EmptyCString(), nsCString(path), KIND_OTHER, UNITS_BYTES,
+                    amount, nsCString(desc), aData);
             }
         }
 
