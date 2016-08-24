@@ -383,9 +383,11 @@ private:
   CollectReports(nsIHandleReportCallback* aHandleReport, nsISupports* aData,
                  bool aAnonymize) override
   {
-    return MOZ_COLLECT_REPORT(
+    MOZ_COLLECT_REPORT(
       "explicit/icu", KIND_HEAP, UNITS_BYTES, MemoryAllocated(),
       "Memory used by ICU, a Unicode and globalization support library.");
+
+    return NS_OK;
   }
 
   ~ICUReporter() {}
@@ -408,9 +410,12 @@ private:
   CollectReports(nsIHandleReportCallback* aHandleReport, nsISupports* aData,
                  bool aAnonymize) override
   {
-    return MOZ_COLLECT_REPORT(
+    MOZ_COLLECT_REPORT(
       "explicit/media/libogg", KIND_HEAP, UNITS_BYTES, MemoryAllocated(),
-      "Memory allocated through libogg for Ogg, Theora, and related media files.");
+      "Memory allocated through libogg for Ogg, Theora, and related media "
+      "files.");
+
+    return NS_OK;
   }
 
   ~OggReporter() {}
@@ -434,9 +439,11 @@ private:
   CollectReports(nsIHandleReportCallback* aHandleReport, nsISupports* aData,
                  bool aAnonymize) override
   {
-    return MOZ_COLLECT_REPORT(
+    MOZ_COLLECT_REPORT(
       "explicit/media/libvpx", KIND_HEAP, UNITS_BYTES, MemoryAllocated(),
       "Memory allocated through libvpx for WebM media files.");
+
+    return NS_OK;
   }
 
   ~VPXReporter() {}

@@ -35,10 +35,12 @@ public:
   CollectReports(nsIHandleReportCallback* aHandleReport, nsISupports* aData,
                  bool aAnonymize) override
   {
-    return MOZ_COLLECT_REPORT(
+    MOZ_COLLECT_REPORT(
       "explicit/network/hpack/static-table", KIND_HEAP, UNITS_BYTES,
       gStaticHeaders->SizeOfIncludingThis(MallocSizeOf),
       "Memory usage of HPACK static table.");
+
+    return NS_OK;
   }
 
 private:
@@ -62,14 +64,13 @@ public:
   CollectReports(nsIHandleReportCallback* aHandleReport, nsISupports* aData,
                  bool aAnonymize) override
   {
-    if (!mCompressor) {
-      return NS_OK;
+    if (mCompressor) {
+      MOZ_COLLECT_REPORT(
+        "explicit/network/hpack/dynamic-tables", KIND_HEAP, UNITS_BYTES,
+        mCompressor->SizeOfExcludingThis(MallocSizeOf),
+        "Aggregate memory usage of HPACK dynamic tables.");
     }
-
-    return MOZ_COLLECT_REPORT(
-      "explicit/network/hpack/dynamic-tables", KIND_HEAP, UNITS_BYTES,
-      mCompressor->SizeOfExcludingThis(MallocSizeOf),
-      "Aggregate memory usage of HPACK dynamic tables.");
+    return NS_OK;
   }
 
 private:

@@ -123,10 +123,11 @@ public:
       sWebIDLGlobalNames ?
       sWebIDLGlobalNames->ShallowSizeOfIncludingThis(MallocSizeOf) : 0;
 
-    return MOZ_COLLECT_REPORT("explicit/dom/webidl-globalnames", KIND_HEAP,
-                              UNITS_BYTES, amount,
-                              "Memory used by the hash table for WebIDL's "
-                              "global names.");
+    MOZ_COLLECT_REPORT(
+      "explicit/dom/webidl-globalnames", KIND_HEAP, UNITS_BYTES, amount,
+      "Memory used by the hash table for WebIDL's global names.");
+
+    return NS_OK;
   }
 };
 

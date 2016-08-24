@@ -453,10 +453,12 @@ NS_IMETHODIMP
 nsCategoryManager::CollectReports(nsIHandleReportCallback* aHandleReport,
                                   nsISupports* aData, bool aAnonymize)
 {
-  return MOZ_COLLECT_REPORT("explicit/xpcom/category-manager",
-                            KIND_HEAP, UNITS_BYTES,
-                            SizeOfIncludingThis(CategoryManagerMallocSizeOf),
-                            "Memory used for the XPCOM category manager.");
+  MOZ_COLLECT_REPORT(
+    "explicit/xpcom/category-manager", KIND_HEAP, UNITS_BYTES,
+    SizeOfIncludingThis(CategoryManagerMallocSizeOf),
+    "Memory used for the XPCOM category manager.");
+
+  return NS_OK;
 }
 
 size_t
