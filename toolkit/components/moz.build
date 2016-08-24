@@ -75,9 +75,6 @@ if CONFIG['MOZ_BUILD_APP'] != 'mobile/android':
 if CONFIG['MOZ_CRASHREPORTER']:
     DIRS += ['crashes']
 
-if CONFIG['MOZ_SOCIAL']:
-    DIRS += ['social']
-
 if CONFIG['BUILD_CTYPES']:
     DIRS += ['ctypes']
 

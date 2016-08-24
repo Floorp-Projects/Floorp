@@ -750,7 +750,7 @@ PK11PasswordPromptRunnable::~PK11PasswordPromptRunnable()
     return;
   }
 
-  shutdown(calledFromObject);
+  shutdown(ShutdownCalledFrom::Object);
 }
 
 void

@@ -191,7 +191,7 @@ interface nsIX509CertDB : nsISupports {
    *                    characters, indicating SSL, Email, and Obj signing
    *                    trust.
    */
-  void setCertTrustFromString(in nsIX509Cert cert, in string trustString);
+  void setCertTrustFromString(in nsIX509Cert cert, in ACString trustString);
 
   /**
    *  Query whether a certificate is trusted for a particular use.
@@ -253,7 +253,7 @@ interface nsIX509CertDB : nsISupports {
    *                encoded as Base 64.
    *  @return The new certificate object.
    */
-  nsIX509Cert constructX509FromBase64(in string base64);
+  nsIX509Cert constructX509FromBase64(in ACString base64);
 
   /*
    *  Decode a raw data presentation and instantiate an object in memory.
@@ -341,8 +341,10 @@ interface nsIX509CertDB : nsISupports {
    * @param aTrust decoded by CERT_DecodeTrustString. 3 comma separated characters,
    *                indicating SSL, Email, and Obj signing trust
    * @param aName name of the cert for display purposes.
+   *              TODO(bug 857627): aName is currently ignored. It should either
+   *              not be ignored, or be removed.
    */
-  void addCert(in ACString certDER, in string aTrust, in string aName);
+  void addCert(in ACString certDER, in ACString aTrust, in AUTF8String aName);
 
   // Flags for verifyCertNow (these must match the values in CertVerifier.cpp):
   // Prevent network traffic. Doesn't work with classic verification.
@@ -410,8 +412,11 @@ interface nsIX509CertDB : nsISupports {
    * @param aTrust decoded by CERT_DecodeTrustString. 3 comma separated characters,
    *                indicating SSL, Email, and Obj signing trust
    * @param aName name of the cert for display purposes.
+   *              TODO(bug 857627): aName is currently ignored. It should either
+   *              not be ignored, or be removed.
    */
-  void addCertFromBase64(in string base64, in string aTrust, in string aName);
+  void addCertFromBase64(in ACString base64, in ACString aTrust,
+                         in AUTF8String aName);
 
   /*
    * Get all the known certs in the database

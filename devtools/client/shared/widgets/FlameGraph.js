@@ -5,7 +5,7 @@
 
 const { Task } = require("devtools/shared/task");
 const { ViewHelpers, setNamedTimeout } = require("devtools/client/shared/widgets/view-helpers");
-const { LocalizationHelper } = require("devtools/client/shared/l10n");
+const { ELLIPSIS } = require("devtools/client/shared/l10n");
 
 loader.lazyRequireGetter(this, "defer", "devtools/shared/defer");
 loader.lazyRequireGetter(this, "EventEmitter",
@@ -29,8 +29,6 @@ loader.lazyRequireGetter(this, "GraphAreaDragger",
   "devtools/client/shared/widgets/Graphs", true);
 
 const GRAPH_SRC = "chrome://devtools/content/shared/widgets/graphs-frame.xhtml";
-
-const L10N = new LocalizationHelper();
 
 // ms
 const GRAPH_RESIZE_EVENTS_DRAIN = 100;
@@ -301,7 +299,7 @@ FlameGraph.prototype = {
    * Character used when a block's text is overflowing.
    * Defaults to an ellipsis.
    */
-  overflowChar: L10N.ellipsis,
+  overflowChar: ELLIPSIS,
 
   /**
    * Sets the data source for this graph.

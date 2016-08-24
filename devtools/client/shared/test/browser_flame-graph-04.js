@@ -4,12 +4,10 @@
 // Tests that text metrics in the flame graph widget work properly.
 
 var HTML_NS = "http://www.w3.org/1999/xhtml";
-var {LocalizationHelper} = require("devtools/client/shared/l10n");
+var {ELLIPSIS} = require("devtools/client/shared/l10n");
 var {FlameGraph} = require("devtools/client/shared/widgets/FlameGraph");
 var {FLAME_GRAPH_BLOCK_TEXT_FONT_SIZE} = require("devtools/client/shared/widgets/FlameGraph");
 var {FLAME_GRAPH_BLOCK_TEXT_FONT_FAMILY} = require("devtools/client/shared/widgets/FlameGraph");
-
-var L10N = new LocalizationHelper();
 
 add_task(function* () {
   yield addTab("about:blank");
@@ -31,7 +29,7 @@ function* performTest() {
 function testGraph(graph) {
   is(graph._averageCharWidth, getAverageCharWidth(),
     "The average char width was calculated correctly.");
-  is(graph._overflowCharWidth, getCharWidth(L10N.ellipsis),
+  is(graph._overflowCharWidth, getCharWidth(ELLIPSIS),
     "The ellipsis char width was calculated correctly.");
 
   let text = "This text is maybe overflowing";
@@ -54,10 +52,10 @@ function testGraph(graph) {
   isnot(text50px, text,
     "The fitted text for 50px width is correct (1).");
 
-  ok(text50px.includes(L10N.ellipsis),
+  ok(text50px.includes(ELLIPSIS),
     "The fitted text for 50px width is correct (2).");
 
-  is(graph._getFittedText(text, FLAME_GRAPH_BLOCK_TEXT_FONT_SIZE + 1), L10N.ellipsis,
+  is(graph._getFittedText(text, FLAME_GRAPH_BLOCK_TEXT_FONT_SIZE + 1), ELLIPSIS,
     "The fitted text for text font size width is correct.");
 
   is(graph._getFittedText(text, 1), "",

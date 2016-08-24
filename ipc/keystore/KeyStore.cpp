@@ -282,7 +282,7 @@ private:
     if (isAlreadyShutDown()) {
       return;
     }
-    shutdown(calledFromObject);
+    shutdown(ShutdownCalledFrom::Object);
   }
 };
 
@@ -693,7 +693,7 @@ KeyStore::~KeyStore()
     return;
   }
 
-  shutdown(calledFromObject);
+  shutdown(ShutdownCalledFrom::Object);
 
   MOZ_ASSERT(!mListenSocket);
   MOZ_ASSERT(!mStreamSocket);

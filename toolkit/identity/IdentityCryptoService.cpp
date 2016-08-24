@@ -63,7 +63,7 @@ private:
       return;
     }
     destructorSafeDestroyNSSReference();
-    shutdown(calledFromObject);
+    shutdown(ShutdownCalledFrom::Object);
   }
 
   void virtualDestroyNSSReference() override
@@ -103,7 +103,7 @@ private:
       return;
     }
     destructorSafeDestroyNSSReference();
-    shutdown(calledFromObject);
+    shutdown(ShutdownCalledFrom::Object);
   }
 
   virtual void virtualDestroyNSSReference() override
@@ -140,7 +140,7 @@ private:
       return;
     }
     destructorSafeDestroyNSSReference();
-    shutdown(calledFromObject);
+    shutdown(ShutdownCalledFrom::Object);
   }
 
   void virtualDestroyNSSReference() override
