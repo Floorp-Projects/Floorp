@@ -20,10 +20,6 @@ if CONFIG['OS_ARCH'] == 'Darwin':
         ]
     if '86' in CONFIG['OS_TEST'] and CONFIG['OS_TEST'] != 'x86_64':
         DEFINES['MOZ_NEED_LEADING_UNDERSCORE'] = True
-    if CONFIG['CLANG_CXX']:
-        ASFLAGS += [
-            '-no-integrated-as',
-        ]
 
 if CONFIG['OS_ARCH'] == 'GNU':
     if CONFIG['CPU_ARCH'] == 'x86':
