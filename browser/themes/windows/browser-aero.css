@@ -64,7 +64,7 @@
       background-color: @customToolbarColor@;
     }
 
-    .tab-background-middle[visuallyselected=true]:not(:-moz-lwtheme) {
+    .tab-background-middle[selected=true]:not(:-moz-lwtheme) {
       background-color: @customToolbarColor@;
     }
   }

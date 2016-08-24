@@ -104,14 +104,14 @@
 :root[devtoolstheme="dark"] #sidebar-header > .close-icon,
 /* Tab styling - make sure to use an inverted icon for the selected tab
    (brighttext only covers the unselected tabs) */
-.tab-close-button[visuallyselected=true] {
+.tab-close-button[selected=true] {
   list-style-image: url("chrome://global/skin/icons/close-inverted.png");
 }
 
 @media (min-resolution: 1.1dppx) {
   :root[devtoolstheme="dark"] .findbar-closebutton,
   :root[devtoolstheme="dark"] #sidebar-header > .close-icon,
-  .tab-close-button[visuallyselected=true] {
+  .tab-close-button[selected=true] {
     list-style-image: url("chrome://global/skin/icons/close-inverted@2x.png");
   }
 }
