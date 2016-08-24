@@ -3229,18 +3229,18 @@ HTMLEditRules::WillMakeList(Selection* aSelection,
       curList = nullptr;
     }
 
-    // if curNode is a Break, delete it, and quit remembering prev list item
-    if (TextEditUtils::IsBreak(curNode)) {
+    // If curNode is a break, delete it, and quit remembering prev list item.
+    // If an empty inline container, delete it, but still remember the previous
+    // item.
+    NS_ENSURE_STATE(mHTMLEditor);
+    if (mHTMLEditor->IsEditable(curNode) && (TextEditUtils::IsBreak(curNode) ||
+                                             IsEmptyInline(curNode))) {
       NS_ENSURE_STATE(mHTMLEditor);
       rv = mHTMLEditor->DeleteNode(curNode);
       NS_ENSURE_SUCCESS(rv, rv);
-      prevListItem = nullptr;
-      continue;
-    } else if (IsEmptyInline(curNode)) {
-      // if curNode is an empty inline container, delete it
-      NS_ENSURE_STATE(mHTMLEditor);
-      rv = mHTMLEditor->DeleteNode(curNode);
-      NS_ENSURE_SUCCESS(rv, rv);
+      if (TextEditUtils::IsBreak(curNode)) {
+        prevListItem = nullptr;
+      }
       continue;
     }
 
@@ -3504,13 +3504,6 @@ HTMLEditRules::WillMakeBasicBlock(Selection& aSelection,
   rv = GetNodesFromSelection(aSelection, EditAction::makeBasicBlock,
                              arrayOfNodes);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  // Remove all non-editable nodes.  Leave them be.
-  for (int32_t i = arrayOfNodes.Length() - 1; i >= 0; i--) {
-    if (!htmlEditor->IsEditable(arrayOfNodes[i])) {
-      arrayOfNodes.RemoveElementAt(i);
-    }
-  }
 
   // If nothing visible in list, make an empty block
   if (ListIsEmptyLine(arrayOfNodes)) {
@@ -6781,6 +6774,9 @@ HTMLEditRules::RemoveBlockStyle(nsTArray<OwningNonNull<nsINode>>& aNodeArray)
         NS_ENSURE_SUCCESS(rv, rv);
         firstNode = lastNode = curBlock = nullptr;
       }
+      if (!mHTMLEditor->IsEditable(curNode)) {
+        continue;
+      }
       // Remove current block
       nsresult rv = htmlEditor->RemoveBlockContainer(*curNode->AsContent());
       NS_ENSURE_SUCCESS(rv, rv);
@@ -6797,6 +6793,9 @@ HTMLEditRules::RemoveBlockStyle(nsTArray<OwningNonNull<nsINode>>& aNodeArray)
         nsresult rv = RemovePartOfBlock(*curBlock, *firstNode, *lastNode);
         NS_ENSURE_SUCCESS(rv, rv);
         firstNode = lastNode = curBlock = nullptr;
+      }
+      if (!mHTMLEditor->IsEditable(curNode)) {
+        continue;
       }
       // Recursion time
       nsTArray<OwningNonNull<nsINode>> childArray;
@@ -6820,11 +6819,12 @@ HTMLEditRules::RemoveBlockStyle(nsTArray<OwningNonNull<nsINode>>& aNodeArray)
         // Fall out and handle curNode
       }
       curBlock = htmlEditor->GetBlockNodeParent(curNode);
-      if (curBlock && HTMLEditUtils::IsFormatNode(curBlock)) {
-        firstNode = lastNode = curNode->AsContent();
-      } else {
+      if (!curBlock || !HTMLEditUtils::IsFormatNode(curBlock) ||
+          !mHTMLEditor->IsEditable(curBlock)) {
         // Not a block kind that we care about.
         curBlock = nullptr;
+      } else {
+        firstNode = lastNode = curNode->AsContent();
       }
     } else if (curBlock) {
       // Some node that is already sans block style.  Skip over it and process
@@ -6857,13 +6857,6 @@ HTMLEditRules::ApplyBlockStyle(nsTArray<OwningNonNull<nsINode>>& aNodeArray,
   NS_ENSURE_STATE(mHTMLEditor);
   RefPtr<HTMLEditor> htmlEditor(mHTMLEditor);
 
-  // Remove all non-editable nodes.  Leave them be.
-  for (int32_t i = aNodeArray.Length() - 1; i >= 0; i--) {
-    if (!htmlEditor->IsEditable(aNodeArray[i])) {
-      aNodeArray.RemoveElementAt(i);
-    }
-  }
-
   nsCOMPtr<Element> newBlock;
 
   nsCOMPtr<Element> curBlock;
@@ -6871,8 +6864,9 @@ HTMLEditRules::ApplyBlockStyle(nsTArray<OwningNonNull<nsINode>>& aNodeArray,
     nsCOMPtr<nsINode> curParent = curNode->GetParentNode();
     int32_t offset = curParent ? curParent->IndexOf(curNode) : -1;
 
-    // Is it already the right kind of block?
-    if (curNode->IsHTMLElement(&aBlockTag)) {
+    // Is it already the right kind of block, or an uneditable block?
+    if (curNode->IsHTMLElement(&aBlockTag) ||
+        (!mHTMLEditor->IsEditable(curNode) && IsBlockNode(curNode))) {
       // Forget any previous block used for previous inline nodes
       curBlock = nullptr;
       // Do nothing to this block
