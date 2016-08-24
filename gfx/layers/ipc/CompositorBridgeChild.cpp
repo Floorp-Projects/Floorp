@@ -13,8 +13,6 @@
 #include "base/task.h"                  // for NewRunnableMethod, etc
 #include "gfxPrefs.h"
 #include "mozilla/layers/ImageBridgeChild.h"
-#include "mozilla/layers/IAPZCTreeManager.h"
-#include "mozilla/layers/APZCTreeManagerChild.h"
 #include "mozilla/layers/LayerTransactionChild.h"
 #include "mozilla/layers/PLayerTransactionChild.h"
 #include "mozilla/layers/TextureClient.h"// for TextureClient
@@ -1007,41 +1005,6 @@ CompositorBridgeChild::DeallocPCompositorWidgetChild(PCompositorWidgetChild* aAc
 #else
   return false;
 #endif
-}
-
-RefPtr<IAPZCTreeManager>
-CompositorBridgeChild::GetAPZCTreeManager(uint64_t aLayerTreeId)
-{
-  bool apzEnabled = false;
-  Unused << SendAsyncPanZoomEnabled(aLayerTreeId, &apzEnabled);
-
-  if (!apzEnabled) {
-    return nullptr;
-  }
-
-  PAPZCTreeManagerChild* child = SendPAPZCTreeManagerConstructor(aLayerTreeId);
-  if (!child) {
-    return nullptr;
-  }
-  APZCTreeManagerChild* parent = static_cast<APZCTreeManagerChild*>(child);
-
-  return RefPtr<IAPZCTreeManager>(parent);
-}
-
-PAPZCTreeManagerChild*
-CompositorBridgeChild::AllocPAPZCTreeManagerChild(const uint64_t& aLayersId)
-{
-  APZCTreeManagerChild* child = new APZCTreeManagerChild();
-  child->AddRef();
-  return child;
-}
-
-bool
-CompositorBridgeChild::DeallocPAPZCTreeManagerChild(PAPZCTreeManagerChild* aActor)
-{
-  APZCTreeManagerChild* parent = static_cast<APZCTreeManagerChild*>(aActor);
-  parent->Release();
-  return true;
 }
 
 void

@@ -34,8 +34,6 @@ namespace layers {
 
 using mozilla::dom::TabChild;
 
-class IAPZCTreeManager;
-class APZCTreeManagerChild;
 class ClientLayerManager;
 class CompositorBridgeParent;
 class TextureClient;
@@ -210,11 +208,6 @@ public:
 
   PCompositorWidgetChild* AllocPCompositorWidgetChild(const CompositorWidgetInitData& aInitData) override;
   bool DeallocPCompositorWidgetChild(PCompositorWidgetChild* aActor) override;
-
-  RefPtr<IAPZCTreeManager> GetAPZCTreeManager(uint64_t aLayerTreeId);
-
-  PAPZCTreeManagerChild* AllocPAPZCTreeManagerChild(const uint64_t& aLayersId) override;
-  bool DeallocPAPZCTreeManagerChild(PAPZCTreeManagerChild* aActor) override;
 
   virtual ShmemAllocator* AsShmemAllocator() override { return this; }
 

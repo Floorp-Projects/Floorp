@@ -489,13 +489,6 @@ public:
 
   void ForceComposeToTarget(gfx::DrawTarget* aTarget, const gfx::IntRect* aRect = nullptr);
 
-  PAPZCTreeManagerParent* AllocPAPZCTreeManagerParent(const uint64_t& aLayersId) override;
-  bool DeallocPAPZCTreeManagerParent(PAPZCTreeManagerParent* aActor) override;
-
-  bool RecvAsyncPanZoomEnabled(const uint64_t& aLayersId, bool* aHasAPZ) override;
-
-  RefPtr<APZCTreeManager> GetAPZCTreeManager();
-
   bool AsyncPanZoomEnabled() const {
     return !!mApzcTreeManager;
   }
