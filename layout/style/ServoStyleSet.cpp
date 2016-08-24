@@ -459,8 +459,7 @@ static void
 ClearDirtyBits(nsIContent* aContent)
 {
   bool traverseDescendants = aContent->HasDirtyDescendantsForServo();
-  aContent->UnsetFlags(NODE_IS_DIRTY_FOR_SERVO |
-                       NODE_HAS_DIRTY_DESCENDANTS_FOR_SERVO);
+  aContent->UnsetIsDirtyAndHasDirtyDescendantsForServo();
   if (!traverseDescendants) {
     return;
   }
@@ -477,7 +476,7 @@ ServoStyleSet::StyleDocument(bool aLeaveDirtyBits)
   // Unconditionally clear the flag on the document so that HasPendingRestyles
   // returns false.
   nsIDocument* doc = mPresContext->Document();
-  doc->UnsetFlags(NODE_HAS_DIRTY_DESCENDANTS_FOR_SERVO);
+  doc->UnsetHasDirtyDescendantsForServo();
 
   // Grab the root.
   nsIContent* root = mPresContext->Document()->GetRootElement();

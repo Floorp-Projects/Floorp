@@ -118,7 +118,7 @@ ServoRestyleManager::RecreateStyleContexts(nsIContent* aContent,
     // The frame reconstruction step (if needed) will ask for the descendants'
     // style correctly. If not needed, we're done too.
     if (!primaryFrame) {
-      aContent->UnsetFlags(NODE_IS_DIRTY_FOR_SERVO);
+      aContent->UnsetIsDirtyForServo();
       return;
     }
 
@@ -175,7 +175,7 @@ ServoRestyleManager::RecreateStyleContexts(nsIContent* aContent,
 
     // TODO: There are other continuations we still haven't restyled, mostly
     // pseudo-elements. We have to deal with those, and with anonymous boxes.
-    aContent->UnsetFlags(NODE_IS_DIRTY_FOR_SERVO);
+    aContent->UnsetIsDirtyForServo();
   }
 
   if (aContent->HasDirtyDescendantsForServo()) {
@@ -187,7 +187,7 @@ ServoRestyleManager::RecreateStyleContexts(nsIContent* aContent,
       RecreateStyleContexts(n, primaryFrame->StyleContext(),
                             aStyleSet, aChangeListToProcess);
     }
-    aContent->UnsetFlags(NODE_HAS_DIRTY_DESCENDANTS_FOR_SERVO);
+    aContent->UnsetHasDirtyDescendantsForServo();
   }
 }
 
