@@ -424,9 +424,9 @@ nsSMILAnimationController::DoSample(bool aSkipUnchangedContainers)
     return;
   }
 
-  nsCOMPtr<nsIDocument> kungFuDeathGrip(mDocument);  // keeps 'this' alive too
+  nsCOMPtr<nsIDocument> document(mDocument);  // keeps 'this' alive too
   if (isStyleFlushNeeded) {
-    mDocument->FlushPendingNotifications(Flush_Style);
+    document->FlushPendingNotifications(Flush_Style);
   }
 
   // WARNING:
