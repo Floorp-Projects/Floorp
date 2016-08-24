@@ -15,13 +15,6 @@ Deck
    :members:
    :inherited-members:
 
-ApplyBillboardPanel
--------------------
-
-.. autoclass:: firefox_puppeteer.ui.about_window.deck.ApplyBillboardPanel
-   :members:
-   :inherited-members:
-
 ApplyPanel
 ----------
 
