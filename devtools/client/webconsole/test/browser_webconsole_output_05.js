@@ -8,8 +8,7 @@
 "use strict";
 
 const TEST_URI = "data:text/html;charset=utf8,test for console output - 05";
-const ELLIPSIS = Services.prefs.getComplexValue("intl.ellipsis",
-  Ci.nsIPrefLocalizedString).data;
+const {ELLIPSIS} = require("devtools/client/shared/l10n");
 
 // March, 1960: The first implementation of Lisp. From Wikipedia:
 //

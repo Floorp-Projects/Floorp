@@ -11,9 +11,10 @@
 "use strict";
 
 const TAB_URL = EXAMPLE_URL + "doc_large-array-buffer.html";
+const {ELLIPSIS} = require("devtools/client/shared/l10n");
 
-var gTab, gPanel, gDebugger;
-var gVariables, gEllipsis;
+
+var gTab, gPanel, gDebugger, gVariables;
 
 function test() {
   // this test does a lot of work on large objects, default 45s is not enough
@@ -28,7 +29,6 @@ function test() {
     gPanel = aPanel;
     gDebugger = gPanel.panelWin;
     gVariables = gDebugger.DebuggerView.Variables;
-    gEllipsis = Services.prefs.getComplexValue("intl.ellipsis", Ci.nsIPrefLocalizedString).data;
 
     waitForCaretAndScopes(gPanel, 28, 1)
       .then(() => performTests())
@@ -90,7 +90,7 @@ const PAGE_RANGES = [
 ];
 
 function toPageNames(ranges) {
-  return ranges.map(([ from, to ]) => "[" + from + gEllipsis + to + "]");
+  return ranges.map(([ from, to ]) => "[" + from + ELLIPSIS + to + "]");
 }
 
 function performTests() {
@@ -250,5 +250,4 @@ registerCleanupFunction(function () {
   gPanel = null;
   gDebugger = null;
   gVariables = null;
-  gEllipsis = null;
 });

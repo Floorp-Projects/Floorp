@@ -24,7 +24,7 @@ nsKeyObject::~nsKeyObject()
     return;
   }
   destructorSafeDestroyNSSReference();
-  shutdown(calledFromObject);
+  shutdown(ShutdownCalledFrom::Object);
 }
 
 void
@@ -105,7 +105,7 @@ nsKeyObjectFactory::~nsKeyObjectFactory()
   if (isAlreadyShutDown()) {
     return;
   }
-  shutdown(calledFromObject);
+  shutdown(ShutdownCalledFrom::Object);
 }
 
 NS_IMETHODIMP

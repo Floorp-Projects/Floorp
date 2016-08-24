@@ -5,7 +5,7 @@
 "use strict";
 
 const { LocalizationHelper } = require("devtools/client/shared/l10n");
-const STRINGS_URI = "chrome://devtools/locale/responsive.properties";
+const STRINGS_URI = "devtools/locale/responsive.properties";
 const L10N = new LocalizationHelper(STRINGS_URI);
 
 module.exports = {

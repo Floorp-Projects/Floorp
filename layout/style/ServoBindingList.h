@@ -19,34 +19,33 @@
  */
 
 // Node data
-SERVO_BINDING_FUNC(Servo_DropNodeData, void, ServoNodeData* data)
+SERVO_BINDING_FUNC(Servo_NodeData_Drop, void, ServoNodeData* data)
 
 // Styleset and Stylesheet management
-SERVO_BINDING_FUNC(Servo_StylesheetFromUTF8Bytes, RawServoStyleSheetStrong,
+SERVO_BINDING_FUNC(Servo_StyleSheet_FromUTF8Bytes, RawServoStyleSheetStrong,
                    const uint8_t* bytes, uint32_t length,
                    mozilla::css::SheetParsingMode parsing_mode,
                    const uint8_t* base_bytes, uint32_t base_length,
                    ThreadSafeURIHolder* base,
                    ThreadSafeURIHolder* referrer,
                    ThreadSafePrincipalHolder* principal)
-SERVO_BINDING_FUNC(Servo_AddRefStyleSheet, void,
+SERVO_BINDING_FUNC(Servo_StyleSheet_AddRef, void,
                    RawServoStyleSheetBorrowed sheet)
-SERVO_BINDING_FUNC(Servo_ReleaseStyleSheet, void,
+SERVO_BINDING_FUNC(Servo_StyleSheet_Release, void,
                    RawServoStyleSheetBorrowed sheet)
-SERVO_BINDING_FUNC(Servo_AppendStyleSheet, void,
-                   RawServoStyleSheetBorrowed sheet, RawServoStyleSet* set)
-SERVO_BINDING_FUNC(Servo_PrependStyleSheet, void,
-                   RawServoStyleSheetBorrowed sheet, RawServoStyleSet* set)
-SERVO_BINDING_FUNC(Servo_RemoveStyleSheet, void,
-                   RawServoStyleSheetBorrowed sheet, RawServoStyleSet* set)
-SERVO_BINDING_FUNC(Servo_InsertStyleSheetBefore, void,
-                   RawServoStyleSheetBorrowed sheet,
-                   RawServoStyleSheetBorrowed reference,
-                   RawServoStyleSet* set)
-SERVO_BINDING_FUNC(Servo_StyleSheetHasRules, bool,
+SERVO_BINDING_FUNC(Servo_StyleSheet_HasRules, bool,
                    RawServoStyleSheetBorrowed sheet)
-SERVO_BINDING_FUNC(Servo_InitStyleSet, RawServoStyleSet*)
-SERVO_BINDING_FUNC(Servo_DropStyleSet, void, RawServoStyleSet* set)
+SERVO_BINDING_FUNC(Servo_StyleSet_Init, RawServoStyleSet*)
+SERVO_BINDING_FUNC(Servo_StyleSet_Drop, void, RawServoStyleSet* set)
+SERVO_BINDING_FUNC(Servo_StyleSet_AppendStyleSheet, void,
+                   RawServoStyleSet* set, RawServoStyleSheetBorrowed sheet)
+SERVO_BINDING_FUNC(Servo_StyleSet_PrependStyleSheet, void,
+                   RawServoStyleSet* set, RawServoStyleSheetBorrowed sheet)
+SERVO_BINDING_FUNC(Servo_StyleSet_RemoveStyleSheet, void,
+                   RawServoStyleSet* set, RawServoStyleSheetBorrowed sheet)
+SERVO_BINDING_FUNC(Servo_StyleSet_InsertStyleSheetBefore, void,
+                   RawServoStyleSet* set, RawServoStyleSheetBorrowed sheet,
+                   RawServoStyleSheetBorrowed reference)
 
 // Style attribute
 SERVO_BINDING_FUNC(Servo_ParseStyleAttribute, ServoDeclarationBlockStrong,
@@ -56,11 +55,11 @@ SERVO_BINDING_FUNC(Servo_DeclarationBlock_AddRef, void,
                    ServoDeclarationBlockBorrowed declarations)
 SERVO_BINDING_FUNC(Servo_DeclarationBlock_Release, void,
                    ServoDeclarationBlockBorrowed declarations)
-SERVO_BINDING_FUNC(Servo_GetDeclarationBlockCache, nsHTMLCSSStyleSheet*,
+SERVO_BINDING_FUNC(Servo_DeclarationBlock_GetCache, nsHTMLCSSStyleSheet*,
                    ServoDeclarationBlockBorrowed declarations)
-SERVO_BINDING_FUNC(Servo_SetDeclarationBlockImmutable, void,
+SERVO_BINDING_FUNC(Servo_DeclarationBlock_SetImmutable, void,
                    ServoDeclarationBlockBorrowed declarations)
-SERVO_BINDING_FUNC(Servo_ClearDeclarationBlockCachePointer, void,
+SERVO_BINDING_FUNC(Servo_DeclarationBlock_ClearCachePointer, void,
                    ServoDeclarationBlockBorrowed declarations)
 
 // CSS supports()
@@ -69,22 +68,22 @@ SERVO_BINDING_FUNC(Servo_CSSSupports, bool,
                    const uint8_t* value, uint32_t value_length)
 
 // Computed style data
-SERVO_BINDING_FUNC(Servo_GetComputedValues, ServoComputedValuesStrong,
+SERVO_BINDING_FUNC(Servo_ComputedValues_Get, ServoComputedValuesStrong,
                    RawGeckoNode* node)
-SERVO_BINDING_FUNC(Servo_GetComputedValuesForAnonymousBox,
+SERVO_BINDING_FUNC(Servo_ComputedValues_GetForAnonymousBox,
                    ServoComputedValuesStrong,
                    ServoComputedValuesBorrowed parent_style_or_null,
                    nsIAtom* pseudoTag, RawServoStyleSet* set)
-SERVO_BINDING_FUNC(Servo_GetComputedValuesForPseudoElement,
+SERVO_BINDING_FUNC(Servo_ComputedValues_GetForPseudoElement,
                    ServoComputedValuesStrong,
                    ServoComputedValuesBorrowed parent_style,
                    RawGeckoElement* match_element, nsIAtom* pseudo_tag,
                    RawServoStyleSet* set, bool is_probe)
-SERVO_BINDING_FUNC(Servo_InheritComputedValues, ServoComputedValuesStrong,
+SERVO_BINDING_FUNC(Servo_ComputedValues_Inherit, ServoComputedValuesStrong,
                    ServoComputedValuesBorrowed parent_style)
-SERVO_BINDING_FUNC(Servo_AddRefComputedValues, void,
+SERVO_BINDING_FUNC(Servo_ComputedValues_AddRef, void,
                    ServoComputedValuesBorrowed computed_values)
-SERVO_BINDING_FUNC(Servo_ReleaseComputedValues, void,
+SERVO_BINDING_FUNC(Servo_ComputedValues_Release, void,
                    ServoComputedValuesBorrowed computed_values)
 
 // Initialize Servo components. Should be called exactly once at startup.
@@ -97,7 +96,7 @@ SERVO_BINDING_FUNC(Servo_ComputeRestyleHint, nsRestyleHint,
                    RawGeckoElement* element, ServoElementSnapshot* snapshot,
                    RawServoStyleSet* set)
 
-  // Restyle the given document or subtree
+// Restyle the given document or subtree
 SERVO_BINDING_FUNC(Servo_RestyleDocument, void,
                    RawGeckoDocument* doc, RawServoStyleSet* set)
 SERVO_BINDING_FUNC(Servo_RestyleSubtree, void,

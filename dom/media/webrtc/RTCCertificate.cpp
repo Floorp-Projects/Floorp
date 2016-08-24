@@ -299,7 +299,7 @@ RTCCertificate::~RTCCertificate()
     return;
   }
   destructorSafeDestroyNSSReference();
-  shutdown(calledFromObject);
+  shutdown(ShutdownCalledFrom::Object);
 }
 
 // This creates some interesting lifecycle consequences, since the DtlsIdentity

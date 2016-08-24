@@ -82,8 +82,9 @@ class MachCommands(MachCommandBase):
              description='Run eslint or help configure eslint for optimal development.')
     @CommandArgument('-s', '--setup', default=False, action='store_true',
                      help='Configure eslint for optimal development.')
-    @CommandArgument('-e', '--ext', default='[.js,.jsm,.jsx,.xml,.html]',
-                     help='Filename extensions to lint, default: "[.js,.jsm,.jsx,.xml,.html]".')
+    @CommandArgument('-e', '--ext', default='[.js,.jsm,.jsx,.xml,.html,.xhtml]',
+                     help='Filename extensions to lint, default: ' +
+                     '"[.js,.jsm,.jsx,.xml,.html,.xhtml]".')
     @CommandArgument('-b', '--binary', default=None,
                      help='Path to eslint binary.')
     @CommandArgument('--fix', default=False, action='store_true',

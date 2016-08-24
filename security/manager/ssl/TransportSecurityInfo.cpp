@@ -54,7 +54,7 @@ TransportSecurityInfo::~TransportSecurityInfo()
   if (isAlreadyShutDown())
     return;
 
-  shutdown(calledFromObject);
+  shutdown(ShutdownCalledFrom::Object);
 }
 
 void

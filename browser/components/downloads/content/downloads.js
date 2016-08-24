@@ -226,6 +226,14 @@ const DownloadsPanel = {
     }
 
     this.initialize(() => {
+      let downloadsFooterButtons =
+        document.getElementById("downloadsFooterButtons");
+      if (DownloadsCommon.showPanelDropmarker) {
+        downloadsFooterButtons.classList.remove("downloadsHideDropmarker");
+      } else {
+        downloadsFooterButtons.classList.add("downloadsHideDropmarker");
+      }
+
       // Delay displaying the panel because this function will sometimes be
       // called while another window is closing (like the window for selecting
       // whether to save or open the file), and that would cause the panel to

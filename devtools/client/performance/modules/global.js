@@ -10,8 +10,8 @@ const { PrefsHelper } = require("devtools/client/shared/prefs");
  * Localization convenience methods.
  */
 exports.L10N = new MultiLocalizationHelper(
-  "chrome://devtools/locale/markers.properties",
-  "chrome://devtools/locale/performance.properties"
+  "devtools/locale/markers.properties",
+  "devtools/locale/performance.properties"
 );
 
 /**
