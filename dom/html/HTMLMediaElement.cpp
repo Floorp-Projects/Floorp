@@ -1240,6 +1240,7 @@ void HTMLMediaElement::NotifyLoadError()
 
 void HTMLMediaElement::NotifyMediaTrackEnabled(MediaTrack* aTrack)
 {
+  MOZ_ASSERT(aTrack);
   if (!aTrack) {
     return;
   }
@@ -1247,19 +1248,53 @@ void HTMLMediaElement::NotifyMediaTrackEnabled(MediaTrack* aTrack)
   nsString id;
   aTrack->GetId(id);
 
-  LOG(LogLevel::Debug, ("MediaElement %p MediaStreamTrack enabled with id %s",
+  LOG(LogLevel::Debug, ("MediaElement %p MediaTrack with id %s enabled",
                         this, NS_ConvertUTF16toUTF8(id).get()));
 #endif
 
-  // TODO: We are dealing with single audio track and video track for now.
-  if (AudioTrack* track = aTrack->AsAudioTrack()) {
-    if (!track->Enabled()) {
-      SetMutedInternal(mMuted | MUTED_BY_AUDIO_TRACK);
-    } else {
-      SetMutedInternal(mMuted & ~MUTED_BY_AUDIO_TRACK);
+  MOZ_ASSERT((aTrack->AsAudioTrack() && aTrack->AsAudioTrack()->Enabled()) ||
+             (aTrack->AsVideoTrack() && aTrack->AsVideoTrack()->Selected()));
+
+  if (aTrack->AsAudioTrack()) {
+    SetMutedInternal(mMuted & ~MUTED_BY_AUDIO_TRACK);
+  } else if (aTrack->AsVideoTrack()) {
+    mDisableVideo = false;
+  }
+}
+
+void HTMLMediaElement::NotifyMediaTrackDisabled(MediaTrack* aTrack)
+{
+  MOZ_ASSERT(aTrack);
+  if (!aTrack) {
+    return;
+  }
+#ifdef DEBUG
+  nsString id;
+  aTrack->GetId(id);
+
+  LOG(LogLevel::Debug, ("MediaElement %p MediaTrack with id %s disabled",
+                        this, NS_ConvertUTF16toUTF8(id).get()));
+#endif
+
+  MOZ_ASSERT((!aTrack->AsAudioTrack() || !aTrack->AsAudioTrack()->Enabled()) &&
+             (!aTrack->AsVideoTrack() || !aTrack->AsVideoTrack()->Selected()));
+
+
+  if (aTrack->AsAudioTrack()) {
+    bool shouldMute = true;
+    for (uint32_t i = 0; i < AudioTracks()->Length(); ++i) {
+      if ((*AudioTracks())[i]->Enabled()) {
+        shouldMute = false;
+        break;
+      }
     }
-  } else if (VideoTrack* track = aTrack->AsVideoTrack()) {
-    mDisableVideo = !track->Selected();
+    if (shouldMute) {
+      SetMutedInternal(mMuted | MUTED_BY_AUDIO_TRACK);
+    }
+  } else if (aTrack->AsVideoTrack()) {
+    if (VideoTracks()->SelectedIndex() == -1) {
+      mDisableVideo = false;
+    }
   }
 }
 
