@@ -484,8 +484,6 @@ private: // data
   // Helpers
   bool CanDiscard();
 
-  bool IsOpaque();
-
 protected:
   explicit RasterImage(ImageURL* aURI = nullptr);
 

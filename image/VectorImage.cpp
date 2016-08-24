@@ -678,7 +678,7 @@ VectorImage::GetFirstFrameDelay()
 }
 
 NS_IMETHODIMP_(bool)
-VectorImage::WillDrawOpaqueNow()
+VectorImage::IsOpaque()
 {
   return false; // In general, SVG content is not opaque.
 }

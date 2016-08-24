@@ -4,6 +4,8 @@ set -x -e
 
 echo "running as" $(id)
 
+. /home/worker/scripts/xvfb.sh
+
 ####
 # Taskcluster friendly wrapper for performing fx desktop builds via mozharness.
 ####
@@ -54,37 +56,14 @@ if [[ -z ${MOZHARNESS_CONFIG} ]]; then fail "MOZHARNESS_CONFIG is not set"; fi
 
 cleanup() {
     local rv=$?
-    if [ -n "$xvfb_pid" ]; then
-        kill $xvfb_pid || true
-    fi
+    cleanup_xvfb
     exit $rv
 }
 trap cleanup EXIT INT
 
-# run mozharness in XVfb, if necessary; this is an array to maintain the quoting in the -s argument
+# run XVfb in the background, if necessary
 if $NEED_XVFB; then
-    # Some mozharness scripts set DISPLAY=:2
-    Xvfb :2 -screen 0 1024x768x24 &
-    export DISPLAY=:2
-    xvfb_pid=$!
-    # Only error code 255 matters, because it signifies that no
-    # display could be opened. As long as we can open the display
-    # tests should work. We'll retry a few times with a sleep before
-    # failing.
-    retry_count=0
-    max_retries=2
-    xvfb_test=0
-    until [ $retry_count -gt $max_retries ]; do
-        xvinfo || xvfb_test=$?
-        if [ $xvfb_test != 255 ]; then
-            retry_count=$(($max_retries + 1))
-        else
-            retry_count=$(($retry_count + 1))
-            echo "Failed to start Xvfb, retry: $retry_count"
-            sleep 2
-        fi
-    done
-    if [ $xvfb_test == 255 ]; then fail "xvfb did not start properly"; fi
+    start_xvfb '1024x768x24' 2
 fi
 
 # set up mozharness configuration, via command line, env, etc.

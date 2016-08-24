@@ -13,7 +13,8 @@ TestSuffix(const PrincipalOriginAttributes& attrs)
   attrs.CreateSuffix(suffix);
 
   PrincipalOriginAttributes attrsFromSuffix;
-  attrsFromSuffix.PopulateFromSuffix(suffix);
+  bool success = attrsFromSuffix.PopulateFromSuffix(suffix);
+  EXPECT_TRUE(success);
 
   EXPECT_EQ(attrs, attrsFromSuffix);
 }
