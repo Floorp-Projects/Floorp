@@ -85,8 +85,8 @@
 
   <string name="url_bar_default_text">&url_bar_default_text2;</string>
 
-  <!-- https://support.mozilla.org/1/mobile/%VERSION%/%OS%/%LOCALE%/ -->
-  <string name="help_link">https://support.mozilla.org/1/mobile/&formatS1;/&formatS2;/&formatS3;/</string>
+  <!-- https://support.mozilla.org/1/mobile/%VERSION%/%OS%/%LOCALE%/mobile-help -->
+  <string name="help_link">https://support.mozilla.org/1/mobile/&formatS1;/&formatS2;/&formatS3;/mobile-help</string>
   <string name="help_menu">&help_menu;</string>
 
   <string name="quit">&quit;</string>
