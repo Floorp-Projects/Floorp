@@ -22,6 +22,7 @@ loader.lazyImporter(this, "NetUtil", "resource://gre/modules/NetUtil.jsm");
 loader.lazyServiceGetter(this, "gActivityDistributor",
                          "@mozilla.org/network/http-activity-distributor;1",
                          "nsIHttpActivityDistributor");
+const {NetworkThrottleManager} = require("devtools/shared/webconsole/throttle");
 
 // /////////////////////////////////////////////////////////////////////////////
 // Network logging
@@ -271,50 +272,12 @@ function NetworkResponseListener(owner, httpActivity) {
   this.receivedData = "";
   this.httpActivity = httpActivity;
   this.bodySize = 0;
-  let channel = this.httpActivity.channel;
-  this._wrappedNotificationCallbacks = channel.notificationCallbacks;
-  channel.notificationCallbacks = this;
 }
 
 NetworkResponseListener.prototype = {
   QueryInterface:
     XPCOMUtils.generateQI([Ci.nsIStreamListener, Ci.nsIInputStreamCallback,
-                           Ci.nsIRequestObserver, Ci.nsIInterfaceRequestor,
-                           Ci.nsISupports]),
-
-  // nsIInterfaceRequestor implementation
-
-  /**
-   * This object implements nsIProgressEventSink, but also needs to forward
-   * interface requests to the notification callbacks of other objects.
-   */
-  getInterface(iid) {
-    if (iid.equals(Ci.nsIProgressEventSink)) {
-      return this;
-    }
-    if (this._wrappedNotificationCallbacks) {
-      return this._wrappedNotificationCallbacks.getInterface(iid);
-    }
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  },
-
-  /**
-   * Forward notifications for interfaces this object implements, in case other
-   * objects also implemented them.
-   */
-  _forwardNotification(iid, method, args) {
-    if (!this._wrappedNotificationCallbacks) {
-      return;
-    }
-    try {
-      let impl = this._wrappedNotificationCallbacks.getInterface(iid);
-      impl[method].apply(impl, args);
-    } catch (e) {
-      if (e.result != Cr.NS_ERROR_NO_INTERFACE) {
-        throw e;
-      }
-    }
-  },
+                           Ci.nsIRequestObserver, Ci.nsISupports]),
 
   /**
    * This NetworkResponseListener tracks the NetworkMonitor.openResponses object
@@ -322,12 +285,6 @@ NetworkResponseListener.prototype = {
    * @private
    */
   _foundOpenResponse: false,
-
-  /**
-   * If the channel already had notificationCallbacks, hold them here internally
-   * so that we can forward getInterface requests to that object.
-   */
-  _wrappedNotificationCallbacks: null,
 
   /**
    * The response listener owner.
@@ -425,9 +382,6 @@ NetworkResponseListener.prototype = {
     this.request = request;
     this._getSecurityInfo();
     this._findOpenResponse();
-    // We need to track the offset for the onDataAvailable calls where
-    // we pass the data from our pipe to the coverter.
-    this.offset = 0;
 
     // In the multi-process mode, the conversion happens on the child
     // side while we can only monitor the channel on the parent
@@ -494,23 +448,6 @@ NetworkResponseListener.prototype = {
   onStopRequest: function () {
     this._findOpenResponse();
     this.sink.outputStream.close();
-  },
-
-  // nsIProgressEventSink implementation
-
-  /**
-   * Handle progress event as data is transferred.  This is used to record the
-   * size on the wire, which may be compressed / encoded.
-   */
-  onProgress: function (request, context, progress, progressMax) {
-    this.transferredSize = progress;
-    // Need to forward as well to keep things like Download Manager's progress
-    // bar working properly.
-    this._forwardNotification(Ci.nsIProgressEventSink, "onProgress", arguments);
-  },
-
-  onStatus: function () {
-    this._forwardNotification(Ci.nsIProgressEventSink, "onStatus", arguments);
   },
 
   /**
@@ -620,9 +557,6 @@ NetworkResponseListener.prototype = {
       this.httpActivity.discardResponseBody
     );
 
-    this._wrappedNotificationCallbacks = null;
-    this.httpActivity.channel = null;
-    this.httpActivity.owner = null;
     this.httpActivity = null;
     this.sink = null;
     this.inputStream = null;
@@ -653,20 +587,23 @@ NetworkResponseListener.prototype = {
     }
 
     if (available != -1) {
+      if (this.transferredSize === null) {
+        this.transferredSize = 0;
+      }
+
       if (available != 0) {
         if (this.converter) {
           this.converter.onDataAvailable(this.request, null, stream,
-                                         this.offset, available);
+                                         this.transferredSize, available);
         } else {
-          this.onDataAvailable(this.request, null, stream, this.offset,
+          this.onDataAvailable(this.request, null, stream, this.transferredSize,
                                available);
         }
       }
-      this.offset += available;
+      this.transferredSize += available;
       this.setAsyncListener(stream, this);
     } else {
       this.onStreamClose();
-      this.offset = 0;
     }
   },
 };
@@ -705,7 +642,11 @@ function NetworkMonitor(filters, owner) {
   this.openResponses = {};
   this._httpResponseExaminer =
     DevToolsUtils.makeInfallible(this._httpResponseExaminer).bind(this);
+  this._httpModifyExaminer =
+    DevToolsUtils.makeInfallible(this._httpModifyExaminer).bind(this);
   this._serviceWorkerRequest = this._serviceWorkerRequest.bind(this);
+  this.throttleData = null;
+  this._throttler = null;
 }
 
 exports.NetworkMonitor = NetworkMonitor;
@@ -729,6 +670,13 @@ NetworkMonitor.prototype = {
     0x804b000a: "STATUS_WAITING_FOR",
     0x804b0006: "STATUS_RECEIVING_FROM"
   },
+
+  httpDownloadActivities: [
+    gActivityDistributor.ACTIVITY_SUBTYPE_RESPONSE_START,
+    gActivityDistributor.ACTIVITY_SUBTYPE_RESPONSE_HEADER,
+    gActivityDistributor.ACTIVITY_SUBTYPE_RESPONSE_COMPLETE,
+    gActivityDistributor.ACTIVITY_SUBTYPE_TRANSACTION_CLOSE
+  ],
 
   // Network response bodies are piped through a buffer of the given size (in
   // bytes).
@@ -766,11 +714,20 @@ NetworkMonitor.prototype = {
                                "http-on-examine-response", false);
       Services.obs.addObserver(this._httpResponseExaminer,
                                "http-on-examine-cached-response", false);
+      Services.obs.addObserver(this._httpModifyExaminer,
+                               "http-on-modify-request", false);
     }
     // In child processes, only watch for service worker requests
     // everything else only happens in the parent process
     Services.obs.addObserver(this._serviceWorkerRequest,
                              "service-worker-synthesized-response", false);
+  },
+
+  _getThrottler: function () {
+    if (this.throttleData !== null && this._throttler === null) {
+      this._throttler = new NetworkThrottleManager(this.throttleData);
+    }
+    return this._throttler;
   },
 
   _serviceWorkerRequest: function (subject, topic, data) {
@@ -888,6 +845,69 @@ NetworkMonitor.prototype = {
   },
 
   /**
+   * Observe notifications for the http-on-modify-request topic, coming from
+   * the nsIObserverService.
+   *
+   * @private
+   * @param nsIHttpChannel aSubject
+   * @returns void
+   */
+  _httpModifyExaminer: function (subject) {
+    let throttler = this._getThrottler();
+    if (throttler) {
+      let channel = subject.QueryInterface(Ci.nsIHttpChannel);
+      if (matchRequest(channel, this.filters)) {
+        // Read any request body here, before it is throttled.
+        let httpActivity = this.createOrGetActivityObject(channel);
+        this._onRequestBodySent(httpActivity);
+        throttler.manageUpload(channel);
+      }
+    }
+  },
+
+  /**
+   * A helper function for observeActivity.  This does whatever work
+   * is required by a particular http activity event.  Arguments are
+   * the same as for observeActivity.
+   */
+  _dispatchActivity: function (httpActivity, channel, activityType,
+                               activitySubtype, timestamp, extraSizeData,
+                               extraStringData) {
+    let transCodes = this.httpTransactionCodes;
+
+    // Store the time information for this activity subtype.
+    if (activitySubtype in transCodes) {
+      let stage = transCodes[activitySubtype];
+      if (stage in httpActivity.timings) {
+        httpActivity.timings[stage].last = timestamp;
+      } else {
+        httpActivity.timings[stage] = {
+          first: timestamp,
+          last: timestamp,
+        };
+      }
+    }
+
+    switch (activitySubtype) {
+      case gActivityDistributor.ACTIVITY_SUBTYPE_REQUEST_BODY_SENT:
+        this._onRequestBodySent(httpActivity);
+        if (httpActivity.sentBody !== null) {
+          httpActivity.owner.addRequestPostData({ text: httpActivity.sentBody });
+          httpActivity.sentBody = null;
+        }
+        break;
+      case gActivityDistributor.ACTIVITY_SUBTYPE_RESPONSE_HEADER:
+        this._onResponseHeader(httpActivity, extraStringData);
+        break;
+      case gActivityDistributor.ACTIVITY_SUBTYPE_TRANSACTION_CLOSE:
+        this._onTransactionClose(httpActivity);
+        break;
+      default:
+        break;
+    }
+  },
+
+  /**
    * Begin observing HTTP traffic that originates inside the current tab.
    *
    * @see https://developer.mozilla.org/en/XPCOM_Interface_Reference/nsIHttpActivityObserver
@@ -923,46 +943,25 @@ NetworkMonitor.prototype = {
 
     // Iterate over all currently ongoing requests. If channel can't
     // be found within them, then exit this function.
-    let httpActivity = null;
-    for (let id in this.openRequests) {
-      let item = this.openRequests[id];
-      if (item.channel === channel) {
-        httpActivity = item;
-        break;
-      }
-    }
-
+    let httpActivity = this._findActivityObject(channel);
     if (!httpActivity) {
       return;
     }
 
-    let transCodes = this.httpTransactionCodes;
-
-    // Store the time information for this activity subtype.
-    if (activitySubtype in transCodes) {
-      let stage = transCodes[activitySubtype];
-      if (stage in httpActivity.timings) {
-        httpActivity.timings[stage].last = timestamp;
-      } else {
-        httpActivity.timings[stage] = {
-          first: timestamp,
-          last: timestamp,
-        };
-      }
-    }
-
-    switch (activitySubtype) {
-      case gActivityDistributor.ACTIVITY_SUBTYPE_REQUEST_BODY_SENT:
-        this._onRequestBodySent(httpActivity);
-        break;
-      case gActivityDistributor.ACTIVITY_SUBTYPE_RESPONSE_HEADER:
-        this._onResponseHeader(httpActivity, extraStringData);
-        break;
-      case gActivityDistributor.ACTIVITY_SUBTYPE_TRANSACTION_CLOSE:
-        this._onTransactionClose(httpActivity);
-        break;
-      default:
-        break;
+    // If we're throttling, we must not report events as they arrive
+    // from platform, but instead let the throttler emit the events
+    // after some time has elapsed.
+    if (httpActivity.downloadThrottle &&
+        this.httpDownloadActivities.indexOf(activitySubtype) >= 0) {
+      let callback = this._dispatchActivity.bind(this);
+      httpActivity.downloadThrottle
+        .addActivityCallback(callback, httpActivity, channel, activityType,
+                             activitySubtype, timestamp, extraSizeData,
+                             extraStringData);
+    } else {
+      this._dispatchActivity(httpActivity, channel, activityType,
+                             activitySubtype, timestamp, extraSizeData,
+                             extraStringData);
     }
   }),
 
@@ -971,11 +970,7 @@ NetworkMonitor.prototype = {
    */
   _createNetworkEvent: function (channel, { timestamp, extraStringData,
                                            fromCache, fromServiceWorker }) {
-    let win = NetworkHelper.getWindowForRequest(channel);
-    let httpActivity = this.createActivityObject(channel);
-
-    // see _onRequestBodySent()
-    httpActivity.charset = win ? win.document.characterSet : null;
+    let httpActivity = this.createOrGetActivityObject(channel);
 
     channel.QueryInterface(Ci.nsIPrivateBrowsingChannel);
     httpActivity.private = channel.isChannelPrivate;
@@ -1057,12 +1052,11 @@ NetworkMonitor.prototype = {
 
     httpActivity.owner = this.owner.onNetworkEvent(event);
 
-    this._setupResponseListener(httpActivity);
+    this._setupResponseListener(httpActivity, fromCache);
 
     httpActivity.owner.addRequestHeaders(headers, extraStringData);
     httpActivity.owner.addRequestCookies(cookies);
 
-    this.openRequests[httpActivity.id] = httpActivity;
     return httpActivity;
   },
 
@@ -1087,8 +1081,27 @@ NetworkMonitor.prototype = {
   },
 
   /**
-   * Create the empty HTTP activity object. This object is used for storing all
-   * the request and response information.
+   * Find an HTTP activity object for the channel.
+   *
+   * @param nsIHttpChannel channel
+   *        The HTTP channel whose activity object we want to find.
+   * @return object
+   *        The HTTP activity object, or null if it is not found.
+   */
+  _findActivityObject: function (channel) {
+    for (let id in this.openRequests) {
+      let item = this.openRequests[id];
+      if (item.channel === channel) {
+        return item;
+      }
+    }
+    return null;
+  },
+
+  /**
+   * Find an existing HTTP activity object, or create a new one. This
+   * object is used for storing all the request and response
+   * information.
    *
    * This is a HAR-like object. Conformance to the spec is not guaranteed at
    * this point.
@@ -1099,24 +1112,35 @@ NetworkMonitor.prototype = {
    * @return object
    *         The new HTTP activity object.
    */
-  createActivityObject: function (channel) {
-    return {
-      id: gSequenceId(),
-      channel: channel,
-      // see _onRequestHeader()
-      charset: null,
-      url: channel.URI.spec,
-      // needed for host specific security info
-      hostname: channel.URI.host,
-      discardRequestBody: !this.saveRequestAndResponseBodies,
-      discardResponseBody: !this.saveRequestAndResponseBodies,
-      // internal timing information, see observeActivity()
-      timings: {},
-      // see _onResponseHeader()
-      responseStatus: null,
-      // the activity owner which is notified when changes happen
-      owner: null,
-    };
+  createOrGetActivityObject: function (channel) {
+    let httpActivity = this._findActivityObject(channel);
+    if (!httpActivity) {
+      let win = NetworkHelper.getWindowForRequest(channel);
+      let charset = win ? win.document.characterSet : null;
+
+      httpActivity = {
+        id: gSequenceId(),
+        channel: channel,
+        // see _onRequestBodySent()
+        charset: charset,
+        sentBody: null,
+        url: channel.URI.spec,
+        // needed for host specific security info
+        hostname: channel.URI.host,
+        discardRequestBody: !this.saveRequestAndResponseBodies,
+        discardResponseBody: !this.saveRequestAndResponseBodies,
+        // internal timing information, see observeActivity()
+        timings: {},
+        // see _onResponseHeader()
+        responseStatus: null,
+        // the activity owner which is notified when changes happen
+        owner: null,
+      };
+
+      this.openRequests[httpActivity.id] = httpActivity;
+    }
+
+    return httpActivity;
   },
 
   /**
@@ -1127,9 +1151,16 @@ NetworkMonitor.prototype = {
    * @param object httpActivity
    *        The HTTP activity object we are tracking.
    */
-  _setupResponseListener: function (httpActivity) {
+  _setupResponseListener: function (httpActivity, fromCache) {
     let channel = httpActivity.channel;
     channel.QueryInterface(Ci.nsITraceableChannel);
+
+    if (!fromCache) {
+      let throttler = this._getThrottler();
+      if (throttler) {
+        httpActivity.downloadThrottle = throttler.manage(channel);
+      }
+    }
 
     // The response will be written into the outputStream of this pipe.
     // This allows us to buffer the data we are receiving and read it
@@ -1165,14 +1196,16 @@ NetworkMonitor.prototype = {
    *        The HTTP activity object we are working with.
    */
   _onRequestBodySent: function (httpActivity) {
-    if (httpActivity.discardRequestBody) {
+    // Return early if we don't need the request body, or if we've
+    // already found it.
+    if (httpActivity.discardRequestBody || httpActivity.sentBody !== null) {
       return;
     }
 
     let sentBody = NetworkHelper.readPostTextFromRequest(httpActivity.channel,
                                                          httpActivity.charset);
 
-    if (!sentBody && this.window &&
+    if (sentBody !== null && this.window &&
         httpActivity.url == this.window.location.href) {
       // If the request URL is the same as the current page URL, then
       // we can try to get the posted text from the page directly.
@@ -1187,8 +1220,8 @@ NetworkMonitor.prototype = {
                  .readPostTextFromPageViaWebNav(webNav, httpActivity.charset);
     }
 
-    if (sentBody) {
-      httpActivity.owner.addRequestPostData({ text: sentBody });
+    if (sentBody !== null) {
+      httpActivity.sentBody = sentBody;
     }
   },
 
@@ -1294,8 +1327,15 @@ NetworkMonitor.prototype = {
     let timings = httpActivity.timings;
     let harTimings = {};
 
-    // Not clear how we can determine "blocked" time.
-    harTimings.blocked = -1;
+    if (timings.STATUS_RESOLVING && timings.STATUS_CONNECTING_TO) {
+      harTimings.blocked = timings.STATUS_RESOLVING.first -
+                           timings.REQUEST_HEADER.first;
+    } else if (timings.STATUS_SENDING_TO) {
+      harTimings.blocked = timings.STATUS_SENDING_TO.first -
+                           timings.REQUEST_HEADER.first;
+    } else {
+      harTimings.blocked = -1;
+    }
 
     // DNS timing information is available only in when the DNS record is not
     // cached.
@@ -1306,19 +1346,14 @@ NetworkMonitor.prototype = {
     if (timings.STATUS_CONNECTING_TO && timings.STATUS_CONNECTED_TO) {
       harTimings.connect = timings.STATUS_CONNECTED_TO.last -
                            timings.STATUS_CONNECTING_TO.first;
-    } else if (timings.STATUS_SENDING_TO) {
-      harTimings.connect = timings.STATUS_SENDING_TO.first -
-                           timings.REQUEST_HEADER.first;
     } else {
       harTimings.connect = -1;
     }
 
-    if ((timings.STATUS_WAITING_FOR || timings.STATUS_RECEIVING_FROM) &&
-        (timings.STATUS_CONNECTED_TO || timings.STATUS_SENDING_TO)) {
-      harTimings.send = (timings.STATUS_WAITING_FOR ||
-                         timings.STATUS_RECEIVING_FROM).first -
-                        (timings.STATUS_CONNECTED_TO ||
-                         timings.STATUS_SENDING_TO).last;
+    if (timings.STATUS_SENDING_TO) {
+      harTimings.send = timings.STATUS_SENDING_TO.last - timings.STATUS_SENDING_TO.first;
+    } else if (timings.REQUEST_HEADER && timings.REQUEST_BODY_SENT) {
+      harTimings.send = timings.REQUEST_BODY_SENT.last - timings.REQUEST_HEADER.first;
     } else {
       harTimings.send = -1;
     }
@@ -1364,6 +1399,8 @@ NetworkMonitor.prototype = {
                                   "http-on-examine-response");
       Services.obs.removeObserver(this._httpResponseExaminer,
                                   "http-on-examine-cached-response");
+      Services.obs.removeObserver(this._httpModifyExaminer,
+                                  "http-on-modify-request", false);
     }
 
     Services.obs.removeObserver(this._serviceWorkerRequest,
@@ -1374,6 +1411,7 @@ NetworkMonitor.prototype = {
     this.openResponses = {};
     this.owner = null;
     this.filters = null;
+    this._throttler = null;
   },
 };
 
@@ -1420,6 +1458,7 @@ NetworkMonitorChild.prototype = {
   owner: null,
   _netEvents: null,
   _saveRequestAndResponseBodies: true,
+  _throttleData: null,
 
   get saveRequestAndResponseBodies() {
     return this._saveRequestAndResponseBodies;
@@ -1432,6 +1471,21 @@ NetworkMonitorChild.prototype = {
       action: "setPreferences",
       preferences: {
         saveRequestAndResponseBodies: this._saveRequestAndResponseBodies,
+      },
+    });
+  },
+
+  get throttleData() {
+    return this._throttleData;
+  },
+
+  set throttleData(val) {
+    this._throttleData = val;
+
+    this._messageManager.sendAsyncMessage("debug:netmonitor", {
+      action: "setPreferences",
+      preferences: {
+        throttleData: this._throttleData,
       },
     });
   },
@@ -1642,8 +1696,9 @@ NetworkMonitorParent.prototype = {
       case "setPreferences": {
         let {preferences} = msg.json;
         for (let key of Object.keys(preferences)) {
-          if (key == "saveRequestAndResponseBodies" && this.netMonitor) {
-            this.netMonitor.saveRequestAndResponseBodies = preferences[key];
+          if ((key == "saveRequestAndResponseBodies" ||
+               key == "throttleData") && this.netMonitor) {
+            this.netMonitor[key] = preferences[key];
           }
         }
         break;
