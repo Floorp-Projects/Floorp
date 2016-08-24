@@ -123,6 +123,7 @@ function dumpSHistory(theWindow)
 
 var popup = window.open('file_bug590573_1.html');
 
+var gTestContinuation = null;
 var loads = 0;
 function pageLoad()
 {
@@ -131,94 +132,99 @@ function pageLoad()
 
   dumpSHistory(window);
 
-  if (loads == 1) {
-    is(popup.scrollY, 0, "test 1");
-    popup.scroll(0, 100);
-
-    popup.history.pushState('', '', '?pushed');
-    is(popup.scrollY, 100, "test 2");
-    popup.scroll(0, 200); // set state-2's position to 200
-
-    popup.history.back();
-    is(popup.scrollY, 100, "test 3");
-    popup.scroll(0, 150); // set original page's position to 150
-
-    popup.history.forward();
-    is(popup.scrollY, 200, "test 4");
-
-    popup.history.back();
-    is(popup.scrollY, 150, "test 5");
-
-    popup.history.forward();
-    is(popup.scrollY, 200, "test 6");
-
-    // At this point, the history looks like:
-    //   PATH                         POSITION
-    //   file_bug590573_1.html        150       <-- oldest
-    //   file_bug590573_1.html?pushed 200       <-- newest, current
-
-    // Now test that the scroll position is persisted when we have real
-    // navigations involved.  First, we need to spin the event loop so that the
-    // navigation doesn't replace our current history entry.
-
-    setTimeout(pageLoad, 0);
+  if (!gTestContinuation) {
+    gTestContinuation = testBody();
   }
-  else if (loads == 2) {
-    page2LoadCallbackEnabled = true;
-    popup.location = 'file_bug590573_2.html';
-  }
-  else if (loads == 3) {
-    ok(popup.location.href.match('file_bug590573_2.html$'),
-       "Location was " + popup.location +
-       " but should end with file_bug590573_2.html");
-
-    is(popup.scrollY, 0, "test 7");
-    popup.scroll(0, 300);
-
-    // We need to spin the event loop again before we go back, otherwise the
-    // scroll positions don't get updated properly.
-    setTimeout(pageLoad, 0);
-  }
-  else if (loads == 4) {
-    page1PageShowCallbackEnabled = true;
-    popup.history.back();
-  }
-  else if (loads == 5) {
-    // Spin the event loop again so that we get the right scroll positions.
-    setTimeout(pageLoad, 0);
-  }
-  else if (loads == 6) {
-    is(popup.location.search, "?pushed");
-    ok(popup.document.getElementById('div1'), 'page should have div1.');
-
-    is(popup.scrollY, 200, "test 8");
-
-    popup.history.back();
-    is(popup.scrollY, 150, "test 9");
-    popup.history.forward();
-
-    is(popup.scrollY, 200, "test 10");
-
-    // Spin one last time...
-    setTimeout(pageLoad, 0);
-  }
-  else if (loads == 7) {
-    page2PageShowCallbackEnabled = true;
-    popup.history.forward();
-  }
-  else if (loads == 8) {
-    // Bug 821821, on Android tegras we get 299 instead of 300 sometimes
-    if (popup.scrollY >= 299 && popup.scrollY <= 300) {
-      is(1, 1, "test 11");
-    } else {
-      is(1, 0, "test 11, got " + popup.scrollY + " for popup.scrollY instead of 299|300");
-    }
-    popup.close();
+  var ret = gTestContinuation.next();
+  if (ret.done) {
     SimpleTest.finish();
   }
-  else {
-    ok(false, "Got extra load!");
+}
+
+function* testBody()
+{
+  is(popup.scrollY, 0, "test 1");
+  popup.scroll(0, 100);
+
+  popup.history.pushState('', '', '?pushed');
+  is(popup.scrollY, 100, "test 2");
+  popup.scroll(0, 200); // set state-2's position to 200
+
+  popup.history.back();
+  is(popup.scrollY, 100, "test 3");
+  popup.scroll(0, 150); // set original page's position to 150
+
+  popup.history.forward();
+  is(popup.scrollY, 200, "test 4");
+
+  popup.history.back();
+  is(popup.scrollY, 150, "test 5");
+
+  popup.history.forward();
+  is(popup.scrollY, 200, "test 6");
+
+  // At this point, the history looks like:
+  //   PATH                         POSITION
+  //   file_bug590573_1.html        150       <-- oldest
+  //   file_bug590573_1.html?pushed 200       <-- newest, current
+
+  // Now test that the scroll position is persisted when we have real
+  // navigations involved.  First, we need to spin the event loop so that the
+  // navigation doesn't replace our current history entry.
+
+  setTimeout(pageLoad, 0);
+  yield;
+
+  page2LoadCallbackEnabled = true;
+  popup.location = 'file_bug590573_2.html';
+  yield;
+
+  ok(popup.location.href.match('file_bug590573_2.html$'),
+     "Location was " + popup.location +
+     " but should end with file_bug590573_2.html");
+
+  is(popup.scrollY, 0, "test 7");
+  popup.scroll(0, 300);
+
+  // We need to spin the event loop again before we go back, otherwise the
+  // scroll positions don't get updated properly.
+  setTimeout(pageLoad, 0);
+  yield;
+
+  page1PageShowCallbackEnabled = true;
+  popup.history.back();
+  yield;
+
+  // Spin the event loop again so that we get the right scroll positions.
+  setTimeout(pageLoad, 0);
+  yield;
+
+  is(popup.location.search, "?pushed");
+  ok(popup.document.getElementById('div1'), 'page should have div1.');
+
+  is(popup.scrollY, 200, "test 8");
+
+  popup.history.back();
+  is(popup.scrollY, 150, "test 9");
+  popup.history.forward();
+
+  is(popup.scrollY, 200, "test 10");
+
+  // Spin one last time...
+  setTimeout(pageLoad, 0);
+  yield;
+
+  page2PageShowCallbackEnabled = true;
+  popup.history.forward();
+  yield;
+
+  // Bug 821821, on Android tegras we get 299 instead of 300 sometimes
+  if (popup.scrollY >= 299 && popup.scrollY <= 300) {
+    is(1, 1, "test 11");
+  } else {
+    is(1, 0, "test 11, got " + popup.scrollY + " for popup.scrollY instead of 299|300");
   }
+  popup.close();
 }
 </script>
 
