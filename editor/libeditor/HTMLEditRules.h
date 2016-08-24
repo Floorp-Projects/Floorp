@@ -273,6 +273,7 @@ protected:
                        int32_t* aIndex, Lists aLists = Lists::yes,
                        Tables aTables = Tables::yes);
   Element* IsInListItem(nsINode* aNode);
+  nsIAtom& DefaultParagraphSeparator();
   nsresult ReturnInHeader(Selection& aSelection, Element& aHeader,
                           nsINode& aNode, int32_t aOffset);
   nsresult ReturnInParagraph(Selection* aSelection, nsIDOMNode* aHeader,
