@@ -6103,19 +6103,13 @@ fi
 MOZ_CONFIG_ICU()
 
 dnl ========================================================
-dnl mask as shorthand property
+dnl mask as short hand property
 dnl ========================================================
-
-# The control structure code will be removed as soon as the feature is stable
-# Refer to bug 1281101 for more details.
-
-# Enable mask-as-shorthand property by default for nightly and aurora channels
-if test -z "$RELEASE_BUILD"; then
-  dnl mask as shorthand property enabled
-  MOZ_ENABLE_MASK_AS_SHORTHAND=1
+dnl Uncommenting the next line would enable mask-as-shorthand feature.
+dnl MOZ_ENABLE_MASK_AS_SHORTHAND=1
+if test "$MOZ_ENABLE_MASK_AS_SHORTHAND"; then
   AC_DEFINE(MOZ_ENABLE_MASK_AS_SHORTHAND)
 fi
-
 AC_SUBST(MOZ_ENABLE_MASK_AS_SHORTHAND)
 
 # Avoid using obsolete NSPR features
