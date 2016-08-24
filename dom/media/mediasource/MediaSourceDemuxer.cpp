@@ -29,9 +29,8 @@ MediaSourceDemuxer::MediaSourceDemuxer()
 }
 
 // Due to inaccuracies in determining buffer end
-// frames (Bug 1065207). This value is based on the end of frame
-// default value used in Blink, kDefaultBufferDurationInMs.
-const TimeUnit MediaSourceDemuxer::EOS_FUZZ = media::TimeUnit::FromMicroseconds(125000);
+// frames (Bug 1065207). This value is based on videos seen in the wild.
+const TimeUnit MediaSourceDemuxer::EOS_FUZZ = media::TimeUnit::FromMicroseconds(500000);
 
 RefPtr<MediaSourceDemuxer::InitPromise>
 MediaSourceDemuxer::Init()
