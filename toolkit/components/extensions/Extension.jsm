@@ -91,6 +91,7 @@ var {
   LocaleData,
   Messenger,
   instanceOf,
+  LocalAPIImplementation,
   flushJarCache,
 } = ExtensionUtils;
 
@@ -265,7 +266,7 @@ class ProxyContext extends ExtensionContext {
     this.principal_ = principal;
 
     this.apiObj = {};
-    GlobalManager.injectInObject(this, null, this.apiObj);
+    GlobalManager.injectInObject(this, false, this.apiObj);
 
     this.listenerProxies = new Map();
 
@@ -286,19 +287,22 @@ class ProxyContext extends ExtensionContext {
 }
 
 function findPathInObject(obj, path) {
-  // Split any nested namespace (e.g devtools.inspectedWindow) element
-  // and concatenate them into a flatten array.
-  path = path.reduce((acc, el) => {
-    return acc.concat(el.split("."));
-  }, []);
-
-  for (let elt of path) {
+  for (let elt of path.split(".")) {
     // If we get a null object before reaching the requested path
     // (e.g. the API object is returned only on particular kind of contexts instead
     // of based on WebExtensions permissions, like it happens for the devtools APIs),
     // stop searching and return undefined.
+    // TODO(robwu): This should never be reached. If an API is not available for
+    // a context, it should be declared as such in the schema and enforced by
+    // `shouldInject`, for instance using the same logic that is used to opt-in
+    // to APIs in content scripts.
+    // If this check is kept, then there is a discrepancy between APIs depending
+    // on whether it is generated locally or remotely: Non-existing local APIs
+    // are excluded in `shouldInject` by this check, but remote APIs do not have
+    // this information and will therefore cause the schema API generator to
+    // create an API that proxies to a non-existing API implementation.
     if (!obj || !(elt in obj)) {
-      return undefined;
+      return null;
     }
 
     obj = obj[elt];
@@ -390,7 +394,7 @@ let ParentAPIManager = {
       args = args.concat(callback);
     }
     try {
-      findPathInObject(context.apiObj, data.path)[data.name](...args);
+      findPathInObject(context.apiObj, data.path)(...args);
     } catch (e) {
       let msg = e.message || "API failed";
       target.messageManager.sendAsyncMessage("API:CallResult", {
@@ -408,23 +412,20 @@ let ParentAPIManager = {
       target.messageManager.sendAsyncMessage("API:RunListener", {
         childId: data.childId,
         path: data.path,
-        name: data.name,
         args: listenerArgs,
       });
     }
 
-    let ref = data.path.concat(data.name).join(".");
-    context.listenerProxies.set(ref, listener);
+    context.listenerProxies.set(data.path, listener);
 
     let args = Cu.cloneInto(data.args, context.sandbox);
-    findPathInObject(context.apiObj, data.path)[data.name].addListener(listener, ...args);
+    findPathInObject(context.apiObj, data.path).addListener(listener, ...args);
   },
 
   removeListener(data) {
     let context = this.proxyContexts.get(data.childId);
-    let ref = data.path.concat(data.name).join(".");
-    let listener = context.listenerProxies.get(ref);
-    findPathInObject(context.apiObj, data.path)[data.name].removeListener(listener);
+    let listener = context.listenerProxies.get(data.path);
+    findPathInObject(context.apiObj, data.path).removeListener(listener);
   },
 };
 
@@ -565,7 +566,7 @@ GlobalManager = {
     return this.extensionMap.get(extensionId);
   },
 
-  injectInObject(context, defaultCallback, dest) {
+  injectInObject(context, isChromeCompat, dest) {
     let apis = {
       extensionTypes: {},
     };
@@ -573,6 +574,8 @@ GlobalManager = {
     SchemaAPIManager.generateAPIs(context, context.extension.apis, apis);
 
     let schemaWrapper = {
+      isChromeCompat,
+
       get principal() {
         return context.principal;
       },
@@ -585,57 +588,18 @@ GlobalManager = {
         return context.extension.hasPermission(permission);
       },
 
-      callFunction(pathObj, path, name, args) {
-        return pathObj[name](...args);
-      },
-
-      callFunctionNoReturn(pathObj, path, name, args) {
-        pathObj[name](...args);
-      },
-
-      callAsyncFunction(pathObj, path, name, args, callback) {
-        // We pass an empty stub function as a default callback for
-        // the `chrome` API, so promise objects are not returned,
-        // and lastError values are reported immediately.
-        if (callback === null) {
-          callback = defaultCallback;
-        }
-
-        let promise;
-        try {
-          promise = pathObj[name](...args) || Promise.resolve();
-        } catch (e) {
-          promise = Promise.reject(e);
-        }
-
-        return context.wrapPromise(promise, callback);
-      },
-
       shouldInject(namespace, name, restrictions) {
         // Do not generate content script APIs, unless explicitly allowed.
         if (context.envType === "content_parent" &&
             (!restrictions || !restrictions.includes("content"))) {
           return false;
         }
-        return findPathInObject(apis, [namespace]);
+        return findPathInObject(apis, namespace) !== null;
       },
 
-      getProperty(pathObj, path, name) {
-        return pathObj[name];
-      },
-
-      setProperty(pathObj, path, name, value) {
-        pathObj[name] = value;
-      },
-
-      addListener(pathObj, path, name, listener, args) {
-        pathObj[name].addListener.call(null, listener, ...args);
-      },
-      removeListener(pathObj, path, name, listener) {
-        pathObj[name].removeListener.call(null, listener);
-      },
-      hasListener(pathObj, path, name, listener) {
-        return pathObj[name].hasListener.call(null, listener);
+      getImplementation(namespace, name) {
+        let pathObj = findPathInObject(apis, namespace);
+        return new LocalAPIImplementation(pathObj, name, context);
       },
     };
     Schemas.inject(dest, schemaWrapper);
@@ -648,17 +612,13 @@ GlobalManager = {
     }
 
     let inject = context => {
-      // We create two separate sets of bindings, one for the `chrome`
-      // global, and one for the `browser` global. The latter returns
-      // Promise objects if a callback is not passed, while the former
-      // does not.
-      let injectObject = (name, defaultCallback) => {
+      let injectObject = (name, isChromeCompat) => {
         let browserObj = Cu.createObjectIn(contentWindow, {defineAs: name});
-        this.injectInObject(context, defaultCallback, browserObj);
+        this.injectInObject(context, isChromeCompat, browserObj);
       };
 
-      injectObject("browser", null);
-      injectObject("chrome", () => {});
+      injectObject("browser", false);
+      injectObject("chrome", true);
     };
 
     let id = ExtensionManagement.getAddonIdForWindow(contentWindow);
