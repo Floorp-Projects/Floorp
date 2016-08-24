@@ -32,7 +32,7 @@ task:
           rm eslint.tar.gz &&
           ln -s ../eslint-plugin-mozilla node_modules &&
           cd ../../.. &&
-          tools/lint/eslint/node_modules/.bin/eslint --quiet --plugin html --ext [.js,.jsm,.jsx,.xml,.html] -f tools/lint/eslint-formatter .
+          tools/lint/eslint/node_modules/.bin/eslint --quiet --plugin html --ext [.js,.jsm,.jsx,.xml,.html,.xhtml] -f tools/lint/eslint-formatter .
 
   extra:
     locations:

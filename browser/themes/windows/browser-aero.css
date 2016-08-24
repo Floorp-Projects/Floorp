@@ -54,9 +54,7 @@
     }
 
     .sidebar-splitter,
-    #appcontent ~ .sidebar-splitter,
-    .chatbar-button,
-    chatbar > chatbox {
+    #appcontent ~ .sidebar-splitter {
       border-color: #A9B7C9;
     }
 
