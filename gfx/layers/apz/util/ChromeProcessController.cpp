@@ -88,6 +88,7 @@ ChromeProcessController::Destroy()
 
   MOZ_ASSERT(MessageLoop::current() == mUILoop);
   mWidget = nullptr;
+  mAPZEventState = nullptr;
 }
 
 nsIPresShell*
