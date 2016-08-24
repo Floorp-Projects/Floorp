@@ -1,13 +1,13 @@
 /* vim: set ft=javascript ts=2 et sw=2 tw=80: */
 /* Any copyright is dedicated to the Public Domain.
  http://creativecommons.org/publicdomain/zero/1.0/ */
+
 "use strict";
 
 // A test to ensure that the content in details pane is not duplicated.
 
-var test = Task.async(function* () {
-  info("Initializing test");
-  let [tab, debuggee, monitor] = yield initNetMonitor(CUSTOM_GET_URL);
+add_task(function* () {
+  let [tab, , monitor] = yield initNetMonitor(CUSTOM_GET_URL);
   let panel = monitor.panelWin;
   let { NetMonitorView, EVENTS } = panel;
   let { RequestsMenu, NetworkDetails } = NetMonitorView;
@@ -45,7 +45,7 @@ var test = Task.async(function* () {
   ];
 
   info("Adding a cookie for the \"Cookie\" tab test");
-  debuggee.document.cookie = "a=b; path=" + COOKIE_UNIQUE_PATH;
+  yield setDocCookie("a=b; path=" + COOKIE_UNIQUE_PATH);
 
   info("Running tests");
   for (let spec of TEST_CASES) {
@@ -55,20 +55,29 @@ var test = Task.async(function* () {
   // Remove the cookie. If an error occurs the path of the cookie ensures it
   // doesn't mess with the other tests.
   info("Removing the added cookie.");
-  debuggee.document.cookie = "a=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=" +
-    COOKIE_UNIQUE_PATH;
+  yield setDocCookie(
+    "a=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=" + COOKIE_UNIQUE_PATH);
 
   yield teardown(monitor);
-  finish();
+
+  /**
+   * Set a content document cookie
+   */
+  function setDocCookie(cookie) {
+    return ContentTask.spawn(tab.linkedBrowser, cookie, function* (cookieArg) {
+      content.document.cookie = cookieArg;
+    });
+  }
 
   /**
    * A helper that handles the execution of each case.
    */
   function* runTestCase(spec) {
     info("Running case: " + spec.desc);
-    debuggee.content.location = spec.pageURI;
+    let wait = waitForNetworkEvents(monitor, 1);
+    tab.linkedBrowser.loadURI(spec.pageURI);
+    yield wait;
 
-    yield waitForNetworkEvents(monitor, 1);
     RequestsMenu.clear();
     yield waitForFinalDetailTabUpdate(spec.tabIndex, spec.isPost, spec.requestURI);
 
@@ -84,20 +93,23 @@ var test = Task.async(function* () {
    * - waits for the final update to happen
    */
   function* waitForFinalDetailTabUpdate(tabIndex, isPost, uri) {
-    let onNetworkEvent = waitFor(panel, EVENTS.NETWORK_EVENT);
-    let onDetailsPopulated = waitFor(panel, EVENTS.NETWORKDETAILSVIEW_POPULATED);
+    let onNetworkEvent = panel.once(EVENTS.NETWORK_EVENT);
+    let onDetailsPopulated = panel.once(EVENTS.NETWORKDETAILSVIEW_POPULATED);
     let onRequestFinished = isPost ?
-      waitForNetworkEvents(monitor, 0, 1) : waitForNetworkEvents(monitor, 1);
+      waitForNetworkEvents(monitor, 0, 1) :
+      waitForNetworkEvents(monitor, 1);
 
     info("Performing a request");
-    debuggee.performRequests(1, uri);
+    yield ContentTask.spawn(tab.linkedBrowser, uri, function* (url) {
+      content.wrappedJSObject.performRequests(1, url);
+    });
 
     info("Waiting for NETWORK_EVENT");
     yield onNetworkEvent;
 
     if (!RequestsMenu.getItemAtIndex(0)) {
       info("Waiting for the request to be added to the view");
-      yield monitor.panelWin.once(monitor.panelWin.EVENTS.REQUEST_ADDED);
+      yield monitor.panelWin.once(EVENTS.REQUEST_ADDED);
     }
 
     ok(true, "Received NETWORK_EVENT. Selecting the item.");
@@ -146,7 +158,7 @@ var test = Task.async(function* () {
       if (hasQueuedUpdates && hasRunningTabUpdate) {
         info("Waiting for updates to be flushed.");
         // _flushRequests calls .populate which emits the following event
-        yield waitFor(panel, EVENTS.NETWORKDETAILSVIEW_POPULATED);
+        yield panel.once(EVENTS.NETWORKDETAILSVIEW_POPULATED);
 
         info("Requests flushed.");
       }
