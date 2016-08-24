@@ -1634,7 +1634,7 @@ nsDisplayImage::GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
                                 bool* aSnap)
 {
   *aSnap = false;
-  if (mImage && mImage->IsOpaque()) {
+  if (mImage && mImage->WillDrawOpaqueNow()) {
     const nsRect frameContentBox = GetBounds(aSnap);
     return GetDestRect().Intersect(frameContentBox);
   }

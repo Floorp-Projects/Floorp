@@ -185,9 +185,9 @@ ImageWrapper::GetFrameAtSize(const IntSize& aSize,
 }
 
 NS_IMETHODIMP_(bool)
-ImageWrapper::IsOpaque()
+ImageWrapper::WillDrawOpaqueNow()
 {
-  return mInnerImage->IsOpaque();
+  return mInnerImage->WillDrawOpaqueNow();
 }
 
 NS_IMETHODIMP_(bool)
