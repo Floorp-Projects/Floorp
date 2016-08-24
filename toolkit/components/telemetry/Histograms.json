@@ -2014,6 +2014,96 @@
     "n_values": 32,
     "description": "H2: goaway reason from peer from rfc 7540. 31 is none received."
   },
+  "HPACK_ELEMENTS_EVICTED_DECOMPRESSOR": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 256,
+    "n_buckets": 50,
+    "description": "HPACK: Number of items removed from dynamic table to make room for 1 new item",
+    "alert_emails": ["necko@mozilla.com", "hurley@mozilla.com"],
+    "bug_numbers": [1296280]
+  },
+  "HPACK_BYTES_EVICTED_DECOMPRESSOR": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 8192,
+    "n_buckets": 50,
+    "description": "HPACK: Number of bytes removed from dynamic table to make room for 1 new item",
+    "alert_emails": ["necko@mozilla.com", "hurley@mozilla.com"],
+    "bug_numbers": [1296280]
+  },
+  "HPACK_BYTES_EVICTED_RATIO_DECOMPRESSOR": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 256,
+    "n_buckets": 50,
+    "description": "HPACK: Ratio of bytes evicted to bytes added (* 100)",
+    "alert_emails": ["necko@mozilla.com", "hurley@mozilla.com"],
+    "bug_numbers": [1296280]
+  },
+  "HPACK_PEAK_COUNT_DECOMPRESSOR": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 1024,
+    "n_buckets": 50,
+    "description": "HPACK: peak number of items in the dynamic table",
+    "alert_emails": ["necko@mozilla.com", "hurley@mozilla.com"],
+    "bug_numbers": [1296280]
+  },
+  "HPACK_PEAK_SIZE_DECOMPRESSOR": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 16384,
+    "n_buckets": 100,
+    "description": "HPACK: peak size in bytes of the table",
+    "alert_emails": ["necko@mozilla.com", "hurley@mozilla.com"],
+    "bug_numbers": [1296280]
+  },
+  "HPACK_ELEMENTS_EVICTED_COMPRESSOR": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 256,
+    "n_buckets": 50,
+    "description": "HPACK: Number of items removed from dynamic table to make room for 1 new item",
+    "alert_emails": ["necko@mozilla.com", "hurley@mozilla.com"],
+    "bug_numbers": [1296280]
+  },
+  "HPACK_BYTES_EVICTED_COMPRESSOR": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 8192,
+    "n_buckets": 50,
+    "description": "HPACK: Number of bytes removed from dynamic table to make room for 1 new item",
+    "alert_emails": ["necko@mozilla.com", "hurley@mozilla.com"],
+    "bug_numbers": [1296280]
+  },
+  "HPACK_BYTES_EVICTED_RATIO_COMPRESSOR": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 256,
+    "n_buckets": 50,
+    "description": "HPACK: Ratio of bytes evicted to bytes added (* 100)",
+    "alert_emails": ["necko@mozilla.com", "hurley@mozilla.com"],
+    "bug_numbers": [1296280]
+  },
+  "HPACK_PEAK_COUNT_COMPRESSOR": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 1024,
+    "n_buckets": 50,
+    "description": "HPACK: peak number of items in the dynamic table",
+    "alert_emails": ["necko@mozilla.com", "hurley@mozilla.com"],
+    "bug_numbers": [1296280]
+  },
+  "HPACK_PEAK_SIZE_COMPRESSOR": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 16384,
+    "n_buckets": 100,
+    "description": "HPACK: peak size in bytes of the table",
+    "alert_emails": ["necko@mozilla.com", "hurley@mozilla.com"],
+    "bug_numbers": [1296280]
+  },
   "HTTP_CONNECTION_ENTRY_CACHE_HIT_1" : {
     "expires_in_version": "never",
     "kind": "boolean",
