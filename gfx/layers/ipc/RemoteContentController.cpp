@@ -12,6 +12,7 @@
 #include "MainThreadUtils.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/TabParent.h"
+#include "mozilla/layers/IAPZCTreeManager.h"
 #include "mozilla/layers/APZThreadUtils.h"
 #include "mozilla/layout/RenderFrameParent.h"
 #include "mozilla/gfx/GPUProcessManager.h"
@@ -47,7 +48,7 @@ RemoteContentController::RequestContentRepaint(const FrameMetrics& aFrameMetrics
 {
   MOZ_ASSERT(NS_IsMainThread());
   if (CanSend()) {
-    Unused << SendRequestContentRepaint(aFrameMetrics);
+    Unused << SendUpdateFrame(aFrameMetrics);
   }
 }
 
@@ -161,9 +162,113 @@ RemoteContentController::RecvUpdateHitRegion(const nsRegion& aRegion)
   return true;
 }
 
+bool
+RemoteContentController::RecvZoomToRect(const uint32_t& aPresShellId,
+                                        const ViewID& aViewId,
+                                        const CSSRect& aRect,
+                                        const uint32_t& aFlags)
+{
+  if (RefPtr<IAPZCTreeManager> apzcTreeManager = GetApzcTreeManager()) {
+    apzcTreeManager->ZoomToRect(ScrollableLayerGuid(mLayersId, aPresShellId, aViewId),
+                                aRect, aFlags);
+  }
+  return true;
+}
+
+bool
+RemoteContentController::RecvContentReceivedInputBlock(const ScrollableLayerGuid& aGuid,
+                                                       const uint64_t& aInputBlockId,
+                                                       const bool& aPreventDefault)
+{
+  if (aGuid.mLayersId != mLayersId) {
+    // Guard against bad data from hijacked child processes
+    NS_ERROR("Unexpected layers id in RecvContentReceivedInputBlock; dropping message...");
+    return false;
+  }
+  if (RefPtr<IAPZCTreeManager> apzcTreeManager = GetApzcTreeManager()) {
+    APZThreadUtils::RunOnControllerThread(NewRunnableMethod<uint64_t,
+                                                            bool>(apzcTreeManager,
+                                                                  &IAPZCTreeManager::ContentReceivedInputBlock,
+                                                                  aInputBlockId, aPreventDefault));
+
+  }
+  return true;
+}
+
+bool
+RemoteContentController::RecvStartScrollbarDrag(const AsyncDragMetrics& aDragMetrics)
+{
+  if (RefPtr<IAPZCTreeManager> apzcTreeManager = GetApzcTreeManager()) {
+    ScrollableLayerGuid guid(mLayersId, aDragMetrics.mPresShellId,
+                             aDragMetrics.mViewId);
+
+    APZThreadUtils::RunOnControllerThread(NewRunnableMethod
+                                          <ScrollableLayerGuid,
+                                           AsyncDragMetrics>(apzcTreeManager,
+                                                             &IAPZCTreeManager::StartScrollbarDrag,
+                                                             guid, aDragMetrics));
+  }
+  return true;
+}
+
+bool
+RemoteContentController::RecvSetTargetAPZC(const uint64_t& aInputBlockId,
+                                           nsTArray<ScrollableLayerGuid>&& aTargets)
+{
+  for (size_t i = 0; i < aTargets.Length(); i++) {
+    if (aTargets[i].mLayersId != mLayersId) {
+      // Guard against bad data from hijacked child processes
+      NS_ERROR("Unexpected layers id in SetTargetAPZC; dropping message...");
+      return false;
+    }
+  }
+  if (RefPtr<IAPZCTreeManager> apzcTreeManager = GetApzcTreeManager()) {
+    // need a local var to disambiguate between the SetTargetAPZC overloads.
+    void (IAPZCTreeManager::*setTargetApzcFunc)(uint64_t, const nsTArray<ScrollableLayerGuid>&)
+        = &IAPZCTreeManager::SetTargetAPZC;
+    APZThreadUtils::RunOnControllerThread(NewRunnableMethod
+                                          <uint64_t,
+                                           StoreCopyPassByRRef<nsTArray<ScrollableLayerGuid>>>
+                                          (apzcTreeManager, setTargetApzcFunc, aInputBlockId, aTargets));
+
+  }
+  return true;
+}
+
+bool
+RemoteContentController::RecvSetAllowedTouchBehavior(const uint64_t& aInputBlockId,
+                                                     nsTArray<TouchBehaviorFlags>&& aFlags)
+{
+  if (RefPtr<IAPZCTreeManager> apzcTreeManager = GetApzcTreeManager()) {
+    APZThreadUtils::RunOnControllerThread(NewRunnableMethod
+                                          <uint64_t,
+                                           StoreCopyPassByRRef<nsTArray<TouchBehaviorFlags>>>
+                                          (apzcTreeManager,
+                                           &IAPZCTreeManager::SetAllowedTouchBehavior,
+                                           aInputBlockId, Move(aFlags)));
+  }
+  return true;
+}
+
+bool
+RemoteContentController::RecvUpdateZoomConstraints(const uint32_t& aPresShellId,
+                                                   const ViewID& aViewId,
+                                                   const MaybeZoomConstraints& aConstraints)
+{
+  if (RefPtr<IAPZCTreeManager> apzcTreeManager = GetApzcTreeManager()) {
+    apzcTreeManager->UpdateZoomConstraints(ScrollableLayerGuid(mLayersId, aPresShellId, aViewId),
+                                           aConstraints);
+  }
+  return true;
+}
+
 void
 RemoteContentController::ActorDestroy(ActorDestroyReason aWhy)
 {
+  {
+    MutexAutoLock lock(mMutex);
+    mApzcTreeManager = nullptr;
+  }
   mBrowserParent = nullptr;
 
   uint64_t key = mLayersId;
@@ -191,6 +296,29 @@ RemoteContentController::Destroy()
       Unused << controller->SendDestroy();
     }
   }));
+}
+
+void
+RemoteContentController::ChildAdopted()
+{
+  // Clear the cached APZCTreeManager.
+  MutexAutoLock lock(mMutex);
+  mApzcTreeManager = nullptr;
+}
+
+already_AddRefed<IAPZCTreeManager>
+RemoteContentController::GetApzcTreeManager()
+{
+  // We can't get a ref to the APZCTreeManager until after the child is
+  // created and the static getter knows which CompositorBridgeParent is
+  // instantiated with this layers ID. That's why try to fetch it when
+  // we first need it and cache the result.
+  MutexAutoLock lock(mMutex);
+  if (!mApzcTreeManager) {
+    mApzcTreeManager = GPUProcessManager::Get()->GetAPZCTreeManagerForLayers(mLayersId);
+  }
+  RefPtr<IAPZCTreeManager> apzcTreeManager(mApzcTreeManager);
+  return apzcTreeManager.forget();
 }
 
 } // namespace layers

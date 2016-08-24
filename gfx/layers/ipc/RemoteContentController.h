@@ -19,6 +19,8 @@ class TabParent;
 
 namespace layers {
 
+class IAPZCTreeManager;
+
 /**
  * RemoteContentController uses the PAPZ protocol to implement a
  * GeckoContentController for a browser living in a remote process.
@@ -63,9 +65,32 @@ public:
 
   virtual bool RecvUpdateHitRegion(const nsRegion& aRegion) override;
 
+  virtual bool RecvZoomToRect(const uint32_t& aPresShellId,
+                              const ViewID& aViewId,
+                              const CSSRect& aRect,
+                              const uint32_t& aFlags) override;
+
+  virtual bool RecvContentReceivedInputBlock(const ScrollableLayerGuid& aGuid,
+                                             const uint64_t& aInputBlockId,
+                                             const bool& aPreventDefault) override;
+
+  virtual bool RecvStartScrollbarDrag(const AsyncDragMetrics& aDragMetrics) override;
+
+  virtual bool RecvSetTargetAPZC(const uint64_t& aInputBlockId,
+                                 nsTArray<ScrollableLayerGuid>&& aTargets) override;
+
+  virtual bool RecvSetAllowedTouchBehavior(const uint64_t& aInputBlockId,
+                                           nsTArray<TouchBehaviorFlags>&& aFlags) override;
+
+  virtual bool RecvUpdateZoomConstraints(const uint32_t& aPresShellId,
+                                         const ViewID& aViewId,
+                                         const MaybeZoomConstraints& aConstraints) override;
+
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
   virtual void Destroy() override;
+
+  virtual void ChildAdopted() override;
 
 private:
   bool CanSend()
@@ -73,6 +98,7 @@ private:
     MOZ_ASSERT(NS_IsMainThread());
     return !!mBrowserParent;
   }
+  already_AddRefed<IAPZCTreeManager> GetApzcTreeManager();
 
   MessageLoop* mUILoop;
   uint64_t mLayersId;
@@ -80,6 +106,8 @@ private:
 
   // Mutex protecting members below accessed from multiple threads.
   mozilla::Mutex mMutex;
+
+  RefPtr<IAPZCTreeManager> mApzcTreeManager;
   nsRegion mTouchSensitiveRegion;
 };
 

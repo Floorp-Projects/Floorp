@@ -670,8 +670,9 @@ TabChild::ContentReceivedInputBlock(const ScrollableLayerGuid& aGuid,
                                     uint64_t aInputBlockId,
                                     bool aPreventDefault) const
 {
-  if (mApzcTreeManager) {
-    mApzcTreeManager->ContentReceivedInputBlock(aInputBlockId, aPreventDefault);
+  if (mAPZChild) {
+    mAPZChild->SendContentReceivedInputBlock(aGuid, aInputBlockId,
+                                             aPreventDefault);
   }
 }
 
@@ -679,8 +680,8 @@ void
 TabChild::SetTargetAPZC(uint64_t aInputBlockId,
                         const nsTArray<ScrollableLayerGuid>& aTargets) const
 {
-  if (mApzcTreeManager) {
-    mApzcTreeManager->SetTargetAPZC(aInputBlockId, aTargets);
+  if (mAPZChild) {
+    mAPZChild->SendSetTargetAPZC(aInputBlockId, aTargets);
   }
 }
 
@@ -688,8 +689,8 @@ void
 TabChild::SetAllowedTouchBehavior(uint64_t aInputBlockId,
                                   const nsTArray<TouchBehaviorFlags>& aTargets) const
 {
-  if (mApzcTreeManager) {
-    mApzcTreeManager->SetAllowedTouchBehavior(aInputBlockId, aTargets);
+  if (mAPZChild) {
+    mAPZChild->SendSetAllowedTouchBehavior(aInputBlockId, aTargets);
   }
 }
 
@@ -705,14 +706,12 @@ TabChild::DoUpdateZoomConstraints(const uint32_t& aPresShellId,
     return true;
   }
 
-  if (!mApzcTreeManager) {
+  if (!mAPZChild) {
     return false;
   }
 
-  ScrollableLayerGuid guid = ScrollableLayerGuid(mLayersId, aPresShellId, aViewId);
-
-  mApzcTreeManager->UpdateZoomConstraints(guid, aConstraints);
-  return true;
+  return mAPZChild->SendUpdateZoomConstraints(aPresShellId, aViewId,
+                                              aConstraints);
 }
 
 nsresult
@@ -1705,10 +1704,10 @@ TabChild::HandleDoubleTap(const CSSPoint& aPoint, const Modifiers& aModifiers,
   uint32_t presShellId;
   ViewID viewId;
   if (APZCCallbackHelper::GetOrCreateScrollIdentifiers(
-      document->GetDocumentElement(), &presShellId, &viewId) && mApzcTreeManager) {
-    ScrollableLayerGuid guid(mLayersId, presShellId, viewId);
-
-    mApzcTreeManager->ZoomToRect(guid, zoomToRect, DEFAULT_BEHAVIOR);
+      document->GetDocumentElement(), &presShellId, &viewId) &&
+      mAPZChild) {
+    mAPZChild->SendZoomToRect(presShellId, viewId, zoomToRect,
+                              DEFAULT_BEHAVIOR);
   }
 }
 
@@ -1777,11 +1776,8 @@ TabChild::NotifyAPZStateChange(const ViewID& aViewId,
 void
 TabChild::StartScrollbarDrag(const layers::AsyncDragMetrics& aDragMetrics)
 {
-  ScrollableLayerGuid guid(mLayersId, aDragMetrics.mPresShellId,
-                           aDragMetrics.mViewId);
-
-  if (mApzcTreeManager) {
-    mApzcTreeManager->StartScrollbarDrag(guid, aDragMetrics);
+  if (mAPZChild) {
+    mAPZChild->SendStartScrollbarDrag(aDragMetrics);
   }
 }
 
@@ -1791,10 +1787,8 @@ TabChild::ZoomToRect(const uint32_t& aPresShellId,
                      const CSSRect& aRect,
                      const uint32_t& aFlags)
 {
-  ScrollableLayerGuid guid(mLayersId, aPresShellId, aViewId);
-
-  if (mApzcTreeManager) {
-    mApzcTreeManager->ZoomToRect(guid, aRect, aFlags);
+  if (mAPZChild) {
+    mAPZChild->SendZoomToRect(aPresShellId, aViewId, aRect, aFlags);
   }
 }
 
@@ -2757,8 +2751,6 @@ TabChild::InitRenderingState(const TextureFactoryIdentifier& aTextureFactoryIden
       sTabChildren->Put(aLayersId, this);
       mLayersId = aLayersId;
     }
-
-    mApzcTreeManager = CompositorBridgeChild::Get()->GetAPZCTreeManager(mLayersId);
 
     nsCOMPtr<nsIObserverService> observerService =
         mozilla::services::GetObserverService();

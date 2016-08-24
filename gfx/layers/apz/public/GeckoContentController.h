@@ -143,7 +143,7 @@ public:
   virtual void SetScrollingRootContent(bool isRootContent) {}
 
   GeckoContentController() {}
-
+  virtual void ChildAdopted() {}
   /**
    * Needs to be called on the main thread.
    */

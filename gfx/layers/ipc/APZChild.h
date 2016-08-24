@@ -26,24 +26,24 @@ public:
 
   ~APZChild();
 
+  virtual bool RecvUpdateFrame(const FrameMetrics& frame) override;
+
+  virtual bool RecvHandleTap(const TapType& aType,
+                             const LayoutDevicePoint& aPoint,
+                             const Modifiers& aModifiers,
+                             const ScrollableLayerGuid& aGuid,
+                             const uint64_t& aInputBlockId,
+                             const bool& aCallTakeFocusForClickFromTap) override;
+
+  virtual bool RecvNotifyAPZStateChange(const ViewID& aViewId,
+                                        const APZStateChange& aChange,
+                                        const int& aArg) override;
+
+  virtual bool RecvNotifyFlushComplete() override;
+
+  virtual bool RecvDestroy() override;
+
   void SetBrowser(dom::TabChild* aBrowser);
-
-  bool RecvRequestContentRepaint(const FrameMetrics& frame) override;
-
-  bool RecvHandleTap(const TapType& aType,
-                     const LayoutDevicePoint& aPoint,
-                     const Modifiers& aModifiers,
-                     const ScrollableLayerGuid& aGuid,
-                     const uint64_t& aInputBlockId,
-                     const bool& aCallTakeFocusForClickFromTap) override;
-
-  bool RecvNotifyAPZStateChange(const ViewID& aViewId,
-                                const APZStateChange& aChange,
-                                const int& aArg) override;
-
-  bool RecvNotifyFlushComplete() override;
-
-  bool RecvDestroy() override;
 
 private:
   APZChild();

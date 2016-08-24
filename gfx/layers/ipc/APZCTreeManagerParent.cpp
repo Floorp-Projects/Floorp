@@ -19,13 +19,6 @@ APZCTreeManagerParent::APZCTreeManagerParent(uint64_t aLayersId, RefPtr<APZCTree
   MOZ_ASSERT(aAPZCTreeManager != nullptr);
 }
 
-void
-APZCTreeManagerParent::ChildAdopted(RefPtr<APZCTreeManager> aAPZCTreeManager)
-{
-  MOZ_ASSERT(aAPZCTreeManager != nullptr);
-  mTreeManager = aAPZCTreeManager;
-}
-
 bool
 APZCTreeManagerParent::RecvReceiveMultiTouchInputEvent(
     const MultiTouchInput& aEvent,
@@ -161,12 +154,7 @@ APZCTreeManagerParent::RecvContentReceivedInputBlock(
     const uint64_t& aInputBlockId,
     const bool& aPreventDefault)
 {
-  APZThreadUtils::RunOnControllerThread(
-    NewRunnableMethod<uint64_t, bool>(mTreeManager,
-      &IAPZCTreeManager::ContentReceivedInputBlock,
-      aInputBlockId,
-      aPreventDefault));
-
+  mTreeManager->ContentReceivedInputBlock(aInputBlockId, aPreventDefault);
   return true;
 }
 
@@ -183,14 +171,7 @@ APZCTreeManagerParent::RecvSetTargetAPZC(
     }
   }
 
-  void (IAPZCTreeManager::*setTargetApzcFunc)(uint64_t, const nsTArray<ScrollableLayerGuid>&)
-      = &IAPZCTreeManager::SetTargetAPZC;
-
-  APZThreadUtils::RunOnControllerThread(NewRunnableMethod
-                                        <uint64_t,
-                                         StoreCopyPassByRRef<nsTArray<ScrollableLayerGuid>>>
-                                        (mTreeManager, setTargetApzcFunc, aInputBlockId, aTargets));
-
+  mTreeManager->SetTargetAPZC(aInputBlockId, aTargets);
   return true;
 }
 
@@ -241,13 +222,7 @@ APZCTreeManagerParent::RecvSetAllowedTouchBehavior(
     const uint64_t& aInputBlockId,
     nsTArray<TouchBehaviorFlags>&& aValues)
 {
-  APZThreadUtils::RunOnControllerThread(NewRunnableMethod
-                                        <uint64_t,
-                                         StoreCopyPassByRRef<nsTArray<TouchBehaviorFlags>>>
-                                        (mTreeManager,
-                                         &IAPZCTreeManager::SetAllowedTouchBehavior,
-                                         aInputBlockId, Move(aValues)));
-
+  mTreeManager->SetAllowedTouchBehavior(aInputBlockId, aValues);
   return true;
 }
 
@@ -262,12 +237,7 @@ APZCTreeManagerParent::RecvStartScrollbarDrag(
     return false;
   }
 
-    APZThreadUtils::RunOnControllerThread(
-        NewRunnableMethod<ScrollableLayerGuid, AsyncDragMetrics>(
-          mTreeManager,
-          &IAPZCTreeManager::StartScrollbarDrag,
-          aGuid, aDragMetrics));
-
+  mTreeManager->StartScrollbarDrag(aGuid, aDragMetrics);
   return true;
 }
 

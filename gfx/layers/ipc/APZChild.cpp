@@ -94,7 +94,7 @@ APZChild::~APZChild()
 }
 
 bool
-APZChild::RecvRequestContentRepaint(const FrameMetrics& aFrameMetrics)
+APZChild::RecvUpdateFrame(const FrameMetrics& aFrameMetrics)
 {
   return mBrowser->UpdateFrame(aFrameMetrics);
 }

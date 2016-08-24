@@ -22,14 +22,6 @@ public:
   explicit APZCTreeManagerParent(uint64_t aLayersId, RefPtr<APZCTreeManager> aAPZCTreeManager);
   virtual ~APZCTreeManagerParent() { }
 
-  uint64_t LayersId() const { return mLayersId; }
-
-  /**
-   * Called when the layer tree that this protocol is connected to
-   * is adopted by another compositor, and we need to switch APZCTreeManagers.
-   */
-  void ChildAdopted(RefPtr<APZCTreeManager> aAPZCTreeManager);
-
   bool
   RecvReceiveMultiTouchInputEvent(
           const MultiTouchInput& aEvent,
