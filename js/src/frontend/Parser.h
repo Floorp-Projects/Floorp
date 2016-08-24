@@ -1017,7 +1017,8 @@ class Parser final : private JS::AutoGCRooter, public StrictModeGetter
      */
     Node functionStmt(YieldHandling yieldHandling, DefaultHandling defaultHandling);
     Node functionExpr(InvokedPrediction invoked = PredictUninvoked);
-    Node statements(YieldHandling yieldHandling);
+
+    Node statementList(YieldHandling yieldHandling);
 
     Node blockStatement(YieldHandling yieldHandling,
                         unsigned errorNumber = JSMSG_CURLY_IN_COMPOUND);
