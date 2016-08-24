@@ -56,6 +56,11 @@ const tests = [
     expected: "img-blocked",
     description: "(csp-block) block-all-mixed content should block insecure cache loads"
   },
+  { // Test 5
+    query: "cspro-block",
+    expected: "img-loaded",
+    description: "(cspro-block) block-all-mixed in report only mode should not block"
+  },
 ];
 
 var curTest;
