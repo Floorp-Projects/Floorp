@@ -225,6 +225,10 @@ public:
   IteratorPhase Phase() const { return mPhase; }
 
 private:
+  // Helpers.
+  void AppendNativeAnonymousChildren();
+  void AppendNativeAnonymousChildrenFromFrame(nsIFrame* aFrame);
+
   nsIContent* mOriginalContent;
 
   // mAnonKids is an array of native anonymous children, mAnonKidsIdx is index
