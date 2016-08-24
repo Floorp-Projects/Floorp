@@ -195,8 +195,10 @@ DynamicImage::GetFrameAtSize(const IntSize& aSize,
 }
 
 NS_IMETHODIMP_(bool)
-DynamicImage::WillDrawOpaqueNow()
+DynamicImage::IsOpaque()
 {
+  // XXX(seth): For performance reasons it'd be better to return true here, but
+  // I'm not sure how we can guarantee it for an arbitrary gfxDrawable.
   return false;
 }
 
