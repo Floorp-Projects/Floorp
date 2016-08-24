@@ -354,7 +354,8 @@ const Class WasmModuleObject::class_ =
 {
     "WebAssembly.Module",
     JSCLASS_DELAY_METADATA_BUILDER |
-    JSCLASS_HAS_RESERVED_SLOTS(WasmModuleObject::RESERVED_SLOTS),
+    JSCLASS_HAS_RESERVED_SLOTS(WasmModuleObject::RESERVED_SLOTS) |
+    JSCLASS_FOREGROUND_FINALIZE,
     &WasmModuleObject::classOps_,
 };
 
@@ -487,7 +488,8 @@ const Class WasmInstanceObject::class_ =
 {
     "WebAssembly.Instance",
     JSCLASS_DELAY_METADATA_BUILDER |
-    JSCLASS_HAS_RESERVED_SLOTS(WasmInstanceObject::RESERVED_SLOTS),
+    JSCLASS_HAS_RESERVED_SLOTS(WasmInstanceObject::RESERVED_SLOTS) |
+    JSCLASS_FOREGROUND_FINALIZE,
     &WasmInstanceObject::classOps_,
 };
 
@@ -833,7 +835,8 @@ const Class WasmTableObject::class_ =
 {
     "WebAssembly.Table",
     JSCLASS_DELAY_METADATA_BUILDER |
-    JSCLASS_HAS_RESERVED_SLOTS(WasmTableObject::RESERVED_SLOTS),
+    JSCLASS_HAS_RESERVED_SLOTS(WasmTableObject::RESERVED_SLOTS) |
+    JSCLASS_FOREGROUND_FINALIZE,
     &WasmTableObject::classOps_
 };
 

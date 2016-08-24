@@ -554,7 +554,8 @@ static const js::ClassExtension SandboxClassExtension = {
 
 static const js::Class SandboxClass = {
     "Sandbox",
-    XPCONNECT_GLOBAL_FLAGS_WITH_EXTRA_SLOTS(1),
+    XPCONNECT_GLOBAL_FLAGS_WITH_EXTRA_SLOTS(1) |
+    JSCLASS_FOREGROUND_FINALIZE,
     &SandboxClassOps,
     JS_NULL_CLASS_SPEC,
     &SandboxClassExtension,
@@ -573,7 +574,8 @@ static const js::ClassOps SandboxWriteToProtoClassOps = {
 
 static const js::Class SandboxWriteToProtoClass = {
     "Sandbox",
-    XPCONNECT_GLOBAL_FLAGS_WITH_EXTRA_SLOTS(1),
+    XPCONNECT_GLOBAL_FLAGS_WITH_EXTRA_SLOTS(1) |
+    JSCLASS_FOREGROUND_FINALIZE,
     &SandboxWriteToProtoClassOps,
     JS_NULL_CLASS_SPEC,
     &SandboxClassExtension,

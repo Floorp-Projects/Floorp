@@ -117,7 +117,8 @@ static const ClassOps MapIteratorObjectClassOps = {
 
 const Class MapIteratorObject::class_ = {
     "Map Iterator",
-    JSCLASS_HAS_RESERVED_SLOTS(MapIteratorObject::SlotCount),
+    JSCLASS_HAS_RESERVED_SLOTS(MapIteratorObject::SlotCount) |
+    JSCLASS_FOREGROUND_FINALIZE,
     &MapIteratorObjectClassOps
 };
 
@@ -269,7 +270,8 @@ const ClassOps MapObject::classOps_ = {
 const Class MapObject::class_ = {
     "Map",
     JSCLASS_HAS_PRIVATE |
-    JSCLASS_HAS_CACHED_PROTO(JSProto_Map),
+    JSCLASS_HAS_CACHED_PROTO(JSProto_Map) |
+    JSCLASS_FOREGROUND_FINALIZE,
     &MapObject::classOps_
 };
 
@@ -856,7 +858,8 @@ static const ClassOps SetIteratorObjectClassOps = {
 
 const Class SetIteratorObject::class_ = {
     "Set Iterator",
-    JSCLASS_HAS_RESERVED_SLOTS(SetIteratorObject::SlotCount),
+    JSCLASS_HAS_RESERVED_SLOTS(SetIteratorObject::SlotCount) |
+    JSCLASS_FOREGROUND_FINALIZE,
     &SetIteratorObjectClassOps
 };
 
@@ -1001,7 +1004,8 @@ const ClassOps SetObject::classOps_ = {
 const Class SetObject::class_ = {
     "Set",
     JSCLASS_HAS_PRIVATE |
-    JSCLASS_HAS_CACHED_PROTO(JSProto_Set),
+    JSCLASS_HAS_CACHED_PROTO(JSProto_Set) |
+    JSCLASS_FOREGROUND_FINALIZE,
     &SetObject::classOps_
 };
 

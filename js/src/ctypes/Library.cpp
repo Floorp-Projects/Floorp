@@ -39,7 +39,8 @@ static const JSClassOps sLibraryClassOps = {
 
 static const JSClass sLibraryClass = {
   "Library",
-  JSCLASS_HAS_RESERVED_SLOTS(LIBRARY_SLOTS),
+  JSCLASS_HAS_RESERVED_SLOTS(LIBRARY_SLOTS) |
+  JSCLASS_FOREGROUND_FINALIZE,
   &sLibraryClassOps
 };
 

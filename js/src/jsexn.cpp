@@ -84,7 +84,8 @@ static const ClassOps ErrorObjectClassOps = {
     { \
         js_Error_str, /* yes, really */ \
         JSCLASS_HAS_CACHED_PROTO(JSProto_##name) | \
-        JSCLASS_HAS_RESERVED_SLOTS(ErrorObject::RESERVED_SLOTS), \
+        JSCLASS_HAS_RESERVED_SLOTS(ErrorObject::RESERVED_SLOTS) | \
+        JSCLASS_FOREGROUND_FINALIZE, \
         &ErrorObjectClassOps, \
         classSpecPtr \
     }

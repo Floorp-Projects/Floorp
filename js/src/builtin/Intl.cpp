@@ -658,7 +658,8 @@ static const ClassOps CollatorClassOps = {
 
 static const Class CollatorClass = {
     js_Object_str,
-    JSCLASS_HAS_RESERVED_SLOTS(COLLATOR_SLOTS_COUNT),
+    JSCLASS_HAS_RESERVED_SLOTS(COLLATOR_SLOTS_COUNT) |
+    JSCLASS_FOREGROUND_FINALIZE,
     &CollatorClassOps
 };
 
@@ -1147,7 +1148,8 @@ static const ClassOps NumberFormatClassOps = {
 
 static const Class NumberFormatClass = {
     js_Object_str,
-    JSCLASS_HAS_RESERVED_SLOTS(NUMBER_FORMAT_SLOTS_COUNT),
+    JSCLASS_HAS_RESERVED_SLOTS(NUMBER_FORMAT_SLOTS_COUNT) |
+    JSCLASS_FOREGROUND_FINALIZE,
     &NumberFormatClassOps
 };
 
@@ -1611,7 +1613,8 @@ static const ClassOps DateTimeFormatClassOps = {
 
 static const Class DateTimeFormatClass = {
     js_Object_str,
-    JSCLASS_HAS_RESERVED_SLOTS(DATE_TIME_FORMAT_SLOTS_COUNT),
+    JSCLASS_HAS_RESERVED_SLOTS(DATE_TIME_FORMAT_SLOTS_COUNT) |
+    JSCLASS_FOREGROUND_FINALIZE,
     &DateTimeFormatClassOps
 };
 
