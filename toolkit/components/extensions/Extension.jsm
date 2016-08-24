@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["Extension", "ExtensionData"];
+this.EXPORTED_SYMBOLS = ["Extension", "ExtensionData", "ExtensionContext"];
 
 /* globals Extension ExtensionData */
 
