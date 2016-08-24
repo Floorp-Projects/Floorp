@@ -74,32 +74,32 @@ public:
       return;
     case PatternType::SURFACE:
     {
-      SurfacePattern* surfPat = new (mColor)SurfacePattern(*static_cast<const SurfacePattern*>(&aPattern));
+      SurfacePattern* surfPat = new (mSurface)SurfacePattern(*static_cast<const SurfacePattern*>(&aPattern));
       surfPat->mSurface->GuaranteePersistance();
       return;
     }
     case PatternType::LINEAR_GRADIENT:
-      new (mColor)LinearGradientPattern(*static_cast<const LinearGradientPattern*>(&aPattern));
+      new (mLinear)LinearGradientPattern(*static_cast<const LinearGradientPattern*>(&aPattern));
       return;
     case PatternType::RADIAL_GRADIENT:
-      new (mColor)RadialGradientPattern(*static_cast<const RadialGradientPattern*>(&aPattern));
+      new (mRadial)RadialGradientPattern(*static_cast<const RadialGradientPattern*>(&aPattern));
       return;
     }
   }
 
   ~StoredPattern()
   {
-    reinterpret_cast<Pattern*>(mColor)->~Pattern();
+    reinterpret_cast<Pattern*>(mPattern)->~Pattern();
   }
 
   operator Pattern&()
   {
-    return *reinterpret_cast<Pattern*>(mColor);
+    return *reinterpret_cast<Pattern*>(mPattern);
   }
 
   operator const Pattern&() const
   {
-    return *reinterpret_cast<const Pattern*>(mColor);
+    return *reinterpret_cast<const Pattern*>(mPattern);
   }
 
   StoredPattern(const StoredPattern& aPattern)
@@ -115,6 +115,7 @@ private:
   }
 
   union {
+    char mPattern[sizeof(Pattern)];
     char mColor[sizeof(ColorPattern)];
     char mLinear[sizeof(LinearGradientPattern)];
     char mRadial[sizeof(RadialGradientPattern)];
