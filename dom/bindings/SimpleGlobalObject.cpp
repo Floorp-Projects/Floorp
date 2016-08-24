@@ -81,7 +81,10 @@ static const js::ClassExtension SimpleGlobalClassExtension = {
 
 const js::Class SimpleGlobalClass = {
     "",
-    JSCLASS_GLOBAL_FLAGS | JSCLASS_HAS_PRIVATE | JSCLASS_PRIVATE_IS_NSISUPPORTS,
+    JSCLASS_GLOBAL_FLAGS |
+    JSCLASS_HAS_PRIVATE |
+    JSCLASS_PRIVATE_IS_NSISUPPORTS |
+    JSCLASS_FOREGROUND_FINALIZE,
     &SimpleGlobalClassOps,
     JS_NULL_CLASS_SPEC,
     &SimpleGlobalClassExtension,

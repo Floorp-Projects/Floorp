@@ -1387,30 +1387,10 @@ nsXPCWrappedJSClass::GetInterfaceName()
     return mName;
 }
 
-static void
-FinalizeStub(JSFreeOp* fop, JSObject* obj)
-{
-}
-
-static const JSClassOps XPCOutParamClassOps = {
-    nullptr,   /* addProperty */
-    nullptr,   /* delProperty */
-    nullptr,   /* getProperty */
-    nullptr,   /* setProperty */
-    nullptr,   /* enumerate */
-    nullptr,   /* resolve */
-    nullptr,   /* mayResolve */
-    FinalizeStub,
-    nullptr,   /* call */
-    nullptr,   /* hasInstance */
-    nullptr,   /* construct */
-    nullptr    /* trace */
-};
-
 static const JSClass XPCOutParamClass = {
     "XPCOutParam",
     0,
-    &XPCOutParamClassOps
+    JS_NULL_CLASS_OPS
 };
 
 bool
