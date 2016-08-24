@@ -13,6 +13,7 @@
 #include "nsDeque.h"
 #include "nsString.h"
 #include "nsIMemoryReporter.h"
+#include "mozilla/Telemetry.h"
 
 namespace mozilla {
 namespace net {
@@ -80,6 +81,11 @@ protected:
   uint32_t mMaxBuffer;
   uint32_t mMaxBufferSetting;
 
+  uint32_t mPeakSize;
+  uint32_t mPeakCount;
+  Telemetry::ID mPeakSizeID;
+  Telemetry::ID mPeakCountID;
+
 private:
   RefPtr<HpackDynamicTableReporter> mDynamicReporter;
 };
@@ -89,7 +95,11 @@ class Http2Compressor;
 class Http2Decompressor final : public Http2BaseCompressor
 {
 public:
-  Http2Decompressor() { };
+  Http2Decompressor()
+  {
+    mPeakSizeID = Telemetry::HPACK_PEAK_SIZE_DECOMPRESSOR;
+    mPeakCountID = Telemetry::HPACK_PEAK_COUNT_DECOMPRESSOR;
+  };
   virtual ~Http2Decompressor() { } ;
 
   // NS_OK: Produces the working set of HTTP/1 formatted headers
@@ -144,7 +154,10 @@ public:
   Http2Compressor() : mParsedContentLength(-1),
                       mBufferSizeChangeWaiting(false),
                       mLowestBufferSizeWaiting(0)
-  { };
+  {
+    mPeakSizeID = Telemetry::HPACK_PEAK_SIZE_COMPRESSOR;
+    mPeakCountID = Telemetry::HPACK_PEAK_COUNT_COMPRESSOR;
+  };
   virtual ~Http2Compressor() { }
 
   // HTTP/1 formatted header block as input - HTTP/2 formatted

@@ -281,6 +281,8 @@ Http2BaseCompressor::Http2BaseCompressor()
   : mOutput(nullptr)
   , mMaxBuffer(kDefaultMaxBuffer)
   , mMaxBufferSetting(kDefaultMaxBuffer)
+  , mPeakSize(0)
+  , mPeakCount(0)
 {
   mDynamicReporter = new HpackDynamicTableReporter(this);
   RegisterStrongMemoryReporter(mDynamicReporter);
@@ -288,6 +290,12 @@ Http2BaseCompressor::Http2BaseCompressor()
 
 Http2BaseCompressor::~Http2BaseCompressor()
 {
+  if (mPeakSize) {
+    Telemetry::Accumulate(mPeakSizeID, mPeakSize);
+  }
+  if (mPeakCount) {
+    Telemetry::Accumulate(mPeakCountID, mPeakCount);
+  }
   UnregisterStrongMemoryReporter(mDynamicReporter);
   mDynamicReporter->mCompressor = nullptr;
   mDynamicReporter = nullptr;
@@ -312,6 +320,9 @@ Http2BaseCompressor::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) co
 void
 Http2BaseCompressor::MakeRoom(uint32_t amount, const char *direction)
 {
+  uint32_t countEvicted = 0;
+  uint32_t bytesEvicted = 0;
+
   // make room in the header table
   while (mHeaderTable.VariableLength() && ((mHeaderTable.ByteCount() + amount) > mMaxBuffer)) {
     // NWGH - remove the "- 1" here
@@ -319,7 +330,19 @@ Http2BaseCompressor::MakeRoom(uint32_t amount, const char *direction)
     LOG(("HTTP %s header table index %u %s %s removed for size.\n",
          direction, index, mHeaderTable[index]->mName.get(),
          mHeaderTable[index]->mValue.get()));
+    ++countEvicted;
+    bytesEvicted += mHeaderTable[index]->Size();
     mHeaderTable.RemoveElement();
+  }
+
+  if (!strcmp(direction, "decompressor")) {
+    Telemetry::Accumulate(Telemetry::HPACK_ELEMENTS_EVICTED_DECOMPRESSOR, countEvicted);
+    Telemetry::Accumulate(Telemetry::HPACK_BYTES_EVICTED_DECOMPRESSOR, bytesEvicted);
+    Telemetry::Accumulate(Telemetry::HPACK_BYTES_EVICTED_RATIO_DECOMPRESSOR, (uint32_t)((100.0 * (double)bytesEvicted) / (double)amount));
+  } else {
+    Telemetry::Accumulate(Telemetry::HPACK_ELEMENTS_EVICTED_COMPRESSOR, countEvicted);
+    Telemetry::Accumulate(Telemetry::HPACK_BYTES_EVICTED_COMPRESSOR, bytesEvicted);
+    Telemetry::Accumulate(Telemetry::HPACK_BYTES_EVICTED_RATIO_COMPRESSOR, (uint32_t)((100.0 * (double)bytesEvicted) / (double)amount));
   }
 }
 
@@ -552,7 +575,8 @@ Http2Decompressor::OutputHeader(const nsACString &name, const nsACString &value)
       break;
     }
   }
-  if(isColonHeader) {
+
+  if (isColonHeader) {
     // :status is the only pseudo-header field allowed in received HEADERS frames, PUSH_PROMISE allows the other pseudo-header fields
     if (!name.EqualsLiteral(":status") && !mIsPush) {
       LOG(("HTTP Decompressor found illegal response pseudo-header %s", name.BeginReading()));
@@ -936,6 +960,16 @@ Http2Decompressor::DoLiteralWithIncremental()
 
   // Incremental Indexing implicitly adds a row to the header table.
   mHeaderTable.AddElement(name, value);
+
+  uint32_t currentSize = mHeaderTable.ByteCount();
+  if (currentSize > mPeakSize) {
+    mPeakSize = currentSize;
+  }
+
+  uint32_t currentCount = mHeaderTable.VariableLength();
+  if (currentCount > mPeakCount) {
+    mPeakCount = currentCount;
+  }
 
   LOG(("HTTP decompressor literal with index 0 %s %s\n",
        name.get(), value.get()));
