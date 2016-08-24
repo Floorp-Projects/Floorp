@@ -155,22 +155,6 @@ public:
   // Disable component alpha layers with the software compositor.
   virtual bool ShouldAvoidComponentAlphaLayers() override { return !IsCompositingCheap(); }
 
-  /**
-   * Called for each iteration of a progressive tile update. Updates
-   * aMetrics with the current scroll offset and scale being used to composite
-   * the primary scrollable layer in this manager, to determine what area
-   * intersects with the target composition bounds.
-   * aDrawingCritical will be true if the current drawing operation is using
-   * the critical displayport.
-   * Returns true if the update should continue, or false if it should be
-   * cancelled.
-   * This is only called if gfxPlatform::UseProgressiveTilePainting() returns
-   * true.
-   */
-  bool ProgressiveUpdateCallback(bool aHasPendingNewThebesContent,
-                                 FrameMetrics& aMetrics,
-                                 bool aDrawingCritical);
-
   bool InConstruction() { return mPhase == PHASE_CONSTRUCTION; }
 #ifdef DEBUG
   bool InDrawing() { return mPhase == PHASE_DRAWING; }
