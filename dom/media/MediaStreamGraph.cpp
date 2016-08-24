@@ -1907,6 +1907,30 @@ MediaStream::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
   return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
 }
 
+void
+MediaStream::IncrementSuspendCount()
+{
+  ++mSuspendedCount;
+  if (mSuspendedCount == 1) {
+    for (uint32_t i = 0; i < mConsumers.Length(); ++i) {
+      mConsumers[i]->Suspended();
+    }
+  }
+}
+
+void
+MediaStream::DecrementSuspendCount()
+{
+    NS_ASSERTION(mSuspendedCount > 0, "Suspend count underrun");
+    --mSuspendedCount;
+
+  if (mSuspendedCount == 0) {
+    for (uint32_t i = 0; i < mConsumers.Length(); ++i) {
+      mConsumers[i]->Resumed();
+    }
+  }
+}
+
 MediaStreamGraphImpl*
 MediaStream::GraphImpl()
 {
@@ -3137,6 +3161,18 @@ MediaInputPort::GetNextInputInterval(GraphTime aTime)
 }
 
 void
+MediaInputPort::Suspended()
+{
+  mDest->InputSuspended(this);
+}
+
+void
+MediaInputPort::Resumed()
+{
+  mDest->InputResumed(this);
+}
+
+void
 MediaInputPort::Destroy()
 {
   class Message : public ControlMessage {
@@ -3310,6 +3346,11 @@ ProcessedMediaStream::DestroyImpl()
   for (int32_t i = mInputs.Length() - 1; i >= 0; --i) {
     mInputs[i]->Disconnect();
   }
+
+  for (int32_t i = mSuspendedInputs.Length() - 1; i >= 0; --i) {
+    mSuspendedInputs[i]->Disconnect();
+  }
+
   MediaStream::DestroyImpl();
   // The stream order is only important if there are connections, in which
   // case MediaInputPort::Disconnect() called SetStreamOrderDirty().
@@ -3942,6 +3983,29 @@ MediaStreamGraph::StartNonRealtimeProcessing(uint32_t aTicksToProcess)
 void
 ProcessedMediaStream::AddInput(MediaInputPort* aPort)
 {
+  MediaStream* s = aPort->GetSource();
+  if (!s->IsSuspended()) {
+    mInputs.AppendElement(aPort);
+  } else {
+    mSuspendedInputs.AppendElement(aPort);
+  }
+  GraphImpl()->SetStreamOrderDirty();
+}
+
+void
+ProcessedMediaStream::InputSuspended(MediaInputPort* aPort)
+{
+  GraphImpl()->AssertOnGraphThreadOrNotRunning();
+  mInputs.RemoveElement(aPort);
+  mSuspendedInputs.AppendElement(aPort);
+  GraphImpl()->SetStreamOrderDirty();
+}
+
+void
+ProcessedMediaStream::InputResumed(MediaInputPort* aPort)
+{
+  GraphImpl()->AssertOnGraphThreadOrNotRunning();
+  mSuspendedInputs.RemoveElement(aPort);
   mInputs.AppendElement(aPort);
   GraphImpl()->SetStreamOrderDirty();
 }
