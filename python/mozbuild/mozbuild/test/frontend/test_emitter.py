@@ -833,8 +833,9 @@ class TestEmitterBasic(unittest.TestCase):
         reader = self.reader('sources')
         objs = self.read_topsrcdir(reader)
 
-        # The last object is a Linkable, ignore it
-        objs = objs[:-1]
+        # The last object is a Linkable.
+        linkable = objs.pop()
+        self.assertTrue(linkable.cxx_link)
         self.assertEqual(len(objs), 6)
         for o in objs:
             self.assertIsInstance(o, Sources)
@@ -856,13 +857,37 @@ class TestEmitterBasic(unittest.TestCase):
                 sources.files,
                 [mozpath.join(reader.config.topsrcdir, f) for f in files])
 
+    def test_sources_just_c(self):
+        """Test that a linkable with no C++ sources doesn't have cxx_link set."""
+        reader = self.reader('sources-just-c')
+        objs = self.read_topsrcdir(reader)
+
+        # The last object is a Linkable.
+        linkable = objs.pop()
+        self.assertFalse(linkable.cxx_link)
+
+    def test_linkables_cxx_link(self):
+        """Test that linkables transitively set cxx_link properly."""
+        reader = self.reader('test-linkables-cxx-link')
+        got_results = 0
+        for obj in self.read_topsrcdir(reader):
+            if isinstance(obj, SharedLibrary):
+                if obj.basename == 'cxx_shared':
+                    self.assertTrue(obj.cxx_link)
+                    got_results += 1
+                elif obj.basename == 'just_c_shared':
+                    self.assertFalse(obj.cxx_link)
+                    got_results += 1
+        self.assertEqual(got_results, 2)
+
     def test_generated_sources(self):
         """Test that GENERATED_SOURCES works properly."""
         reader = self.reader('generated-sources')
         objs = self.read_topsrcdir(reader)
 
-        # The last object is a Linkable, ignore it
-        objs = objs[:-1]
+        # The last object is a Linkable.
+        linkable = objs.pop()
+        self.assertTrue(linkable.cxx_link)
         self.assertEqual(len(objs), 6)
 
         generated_sources = [o for o in objs if isinstance(o, GeneratedSources)]
@@ -890,8 +915,9 @@ class TestEmitterBasic(unittest.TestCase):
         reader = self.reader('host-sources')
         objs = self.read_topsrcdir(reader)
 
-        # The last object is a Linkable, ignore it
-        objs = objs[:-1]
+        # The last object is a Linkable
+        linkable = objs.pop()
+        self.assertTrue(linkable.cxx_link)
         self.assertEqual(len(objs), 3)
         for o in objs:
             self.assertIsInstance(o, HostSources)

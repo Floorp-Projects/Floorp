@@ -1,0 +1,9 @@
+# Any copyright is dedicated to the Public Domain.
+# http://creativecommons.org/publicdomain/zero/1.0/
+
+@template
+def Library(name):
+    LIBRARY_NAME = name
+
+Library('just_c_static')
+SOURCES += ['foo.c']
