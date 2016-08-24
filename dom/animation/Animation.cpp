@@ -108,7 +108,7 @@ Animation::Constructor(const GlobalObject& aGlobal,
   }
 
   animation->SetTimelineNoUpdate(timeline);
-  animation->SetEffect(aEffect);
+  animation->SetEffectNoUpdate(aEffect);
 
   return animation.forget();
 }
@@ -125,6 +125,13 @@ Animation::SetId(const nsAString& aId)
 
 void
 Animation::SetEffect(AnimationEffectReadOnly* aEffect)
+{
+  SetEffectNoUpdate(aEffect);
+  PostUpdate();
+}
+
+void
+Animation::SetEffectNoUpdate(AnimationEffectReadOnly* aEffect)
 {
   RefPtr<Animation> kungFuDeathGrip(this);
 

@@ -268,9 +268,9 @@ CSSTransition::GetCurrentTimeAt(const DocumentTimeline& aTimeline,
 }
 
 void
-CSSTransition::SetEffect(AnimationEffectReadOnly* aEffect)
+CSSTransition::SetEffectFromStyle(AnimationEffectReadOnly* aEffect)
 {
-  Animation::SetEffect(aEffect);
+  Animation::SetEffectNoUpdate(aEffect);
 
   // Initialize transition property.
   ElementPropertyTransition* pt = aEffect ? aEffect->AsTransition() : nullptr;
@@ -802,7 +802,7 @@ nsTransitionManager::ConsiderStartingTransition(
   // will add the animation to the PendingAnimationTracker of its effect's
   // document. When we come to make effect writeable (bug 1049975) we should
   // remove this dependency.
-  animation->SetEffect(pt);
+  animation->SetEffectFromStyle(pt);
   animation->PlayFromStyle();
 
   if (!aElementTransitions) {

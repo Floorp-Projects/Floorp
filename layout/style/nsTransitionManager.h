@@ -169,6 +169,8 @@ public:
     mOwningElement = OwningElementRef();
   }
 
+  void SetEffectFromStyle(AnimationEffectReadOnly* aEffect);
+
   void Tick() override;
 
   nsCSSPropertyID TransitionProperty() const;
@@ -210,8 +212,6 @@ public:
       const TimeStamp& aBaseTime,
       const TimeDuration& aStartTime,
       double aPlaybackRate);
-
-  void SetEffect(AnimationEffectReadOnly* aEffect) override;
 
 protected:
   virtual ~CSSTransition()
