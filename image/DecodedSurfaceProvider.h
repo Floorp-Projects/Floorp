@@ -29,8 +29,8 @@ public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(DecodedSurfaceProvider, override)
 
   DecodedSurfaceProvider(NotNull<RasterImage*> aImage,
-                         NotNull<Decoder*> aDecoder,
-                         const SurfaceKey& aSurfaceKey);
+                         const SurfaceKey& aSurfaceKey,
+                         NotNull<Decoder*> aDecoder);
 
 
   //////////////////////////////////////////////////////////////////////////////
@@ -81,9 +81,6 @@ private:
 
   /// A drawable reference to our service; used for locking.
   DrawableFrameRef mLockRef;
-
-  /// The key under which we're stored as a cache entry in the surface cache.
-  SurfaceKey mSurfaceKey;
 };
 
 } // namespace image

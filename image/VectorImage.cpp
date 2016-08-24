@@ -962,10 +962,10 @@ VectorImage::CreateSurfaceAndShow(const SVGDrawingParameters& aParams)
   }
 
   // Attempt to cache the frame.
+  SurfaceKey surfaceKey = VectorSurfaceKey(aParams.size, aParams.svgContext);
   NotNull<RefPtr<ISurfaceProvider>> provider =
-    WrapNotNull(new SimpleSurfaceProvider(frame));
-  SurfaceCache::Insert(provider, ImageKey(this),
-                       VectorSurfaceKey(aParams.size, aParams.svgContext));
+    WrapNotNull(new SimpleSurfaceProvider(ImageKey(this), surfaceKey, frame));
+  SurfaceCache::Insert(provider, ImageKey(this), surfaceKey);
 
   // Draw.
   RefPtr<gfxDrawable> drawable =

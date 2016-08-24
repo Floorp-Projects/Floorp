@@ -16,13 +16,13 @@ namespace mozilla {
 namespace image {
 
 DecodedSurfaceProvider::DecodedSurfaceProvider(NotNull<RasterImage*> aImage,
-                                               NotNull<Decoder*> aDecoder,
-                                               const SurfaceKey& aSurfaceKey)
-  : ISurfaceProvider(AvailabilityState::StartAsPlaceholder())
+                                               const SurfaceKey& aSurfaceKey,
+                                               NotNull<Decoder*> aDecoder)
+  : ISurfaceProvider(ImageKey(aImage.get()), aSurfaceKey,
+                     AvailabilityState::StartAsPlaceholder())
   , mImage(aImage.get())
   , mMutex("mozilla::image::DecodedSurfaceProvider")
   , mDecoder(aDecoder.get())
-  , mSurfaceKey(aSurfaceKey)
 {
   MOZ_ASSERT(!mDecoder->IsMetadataDecode(),
              "Use MetadataDecodingTask for metadata decodes");
@@ -121,7 +121,7 @@ size_t
 DecodedSurfaceProvider::LogicalSizeInBytes() const
 {
   // Single frame images are always 32bpp.
-  IntSize size = mSurfaceKey.Size();
+  IntSize size = GetSurfaceKey().Size();
   return size.width * size.height * sizeof(uint32_t);
 }
 
@@ -188,8 +188,8 @@ DecodedSurfaceProvider::CheckForNewSurface()
   // We just got a surface for the first time; let the surface cache know.
   MOZ_ASSERT(mImage);
   SurfaceCache::SurfaceAvailable(WrapNotNull(this),
-                                 ImageKey(mImage.get()),
-                                 mSurfaceKey);
+                                 GetImageKey(),
+                                 GetSurfaceKey());
 }
 
 void

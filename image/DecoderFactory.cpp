@@ -145,8 +145,8 @@ DecoderFactory::CreateDecoder(DecoderType aType,
     RasterSurfaceKey(aOutputSize, aSurfaceFlags, PlaybackType::eStatic);
   NotNull<RefPtr<DecodedSurfaceProvider>> provider =
     WrapNotNull(new DecodedSurfaceProvider(aImage,
-                                           WrapNotNull(decoder),
-                                           surfaceKey));
+                                           surfaceKey,
+                                           WrapNotNull(decoder)));
 
   // Attempt to insert the surface provider into the surface cache right away so
   // we won't trigger any more decoders with the same parameters.
@@ -197,8 +197,8 @@ DecoderFactory::CreateAnimationDecoder(DecoderType aType,
     RasterSurfaceKey(aIntrinsicSize, aSurfaceFlags, PlaybackType::eAnimated);
   NotNull<RefPtr<AnimationSurfaceProvider>> provider =
     WrapNotNull(new AnimationSurfaceProvider(aImage,
-                                             WrapNotNull(decoder),
-                                             surfaceKey));
+                                             surfaceKey,
+                                             WrapNotNull(decoder)));
 
   // Attempt to insert the surface provider into the surface cache right away so
   // we won't trigger any more decoders with the same parameters.
