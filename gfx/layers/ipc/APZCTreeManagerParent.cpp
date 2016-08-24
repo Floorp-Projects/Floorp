@@ -12,9 +12,8 @@
 namespace mozilla {
 namespace layers {
 
-APZCTreeManagerParent::APZCTreeManagerParent(uint64_t aLayersId, RefPtr<APZCTreeManager> aAPZCTreeManager)
-  : mLayersId(aLayersId)
-  , mTreeManager(aAPZCTreeManager)
+APZCTreeManagerParent::APZCTreeManagerParent(RefPtr<APZCTreeManager> aAPZCTreeManager)
+  : mTreeManager(aAPZCTreeManager)
 {
   MOZ_ASSERT(aAPZCTreeManager != nullptr);
 }
@@ -139,12 +138,6 @@ APZCTreeManagerParent::RecvZoomToRect(
     const CSSRect& aRect,
     const uint32_t& aFlags)
 {
-  if (aGuid.mLayersId != mLayersId) {
-    // Guard against bad data from hijacked child processes
-    NS_ERROR("Unexpected layers id in RecvZoomToRect; dropping message...");
-    return false;
-  }
-
   mTreeManager->ZoomToRect(aGuid, aRect, aFlags);
   return true;
 }
@@ -163,14 +156,6 @@ APZCTreeManagerParent::RecvSetTargetAPZC(
     const uint64_t& aInputBlockId,
     nsTArray<ScrollableLayerGuid>&& aTargets)
 {
-  for (size_t i = 0; i < aTargets.Length(); i++) {
-    if (aTargets[i].mLayersId != mLayersId) {
-      // Guard against bad data from hijacked child processes
-      NS_ERROR("Unexpected layers id in RecvSetTargetAPZC; dropping message...");
-      return false;
-    }
-  }
-
   mTreeManager->SetTargetAPZC(aInputBlockId, aTargets);
   return true;
 }
@@ -180,12 +165,6 @@ APZCTreeManagerParent::RecvUpdateZoomConstraints(
     const ScrollableLayerGuid& aGuid,
     const MaybeZoomConstraints& aConstraints)
 {
-  if (aGuid.mLayersId != mLayersId) {
-    // Guard against bad data from hijacked child processes
-    NS_ERROR("Unexpected layers id in RecvUpdateZoomConstraints; dropping message...");
-    return false;
-  }
-
   mTreeManager->UpdateZoomConstraints(aGuid, aConstraints);
   return true;
 }
@@ -193,12 +172,6 @@ APZCTreeManagerParent::RecvUpdateZoomConstraints(
 bool
 APZCTreeManagerParent::RecvCancelAnimation(const ScrollableLayerGuid& aGuid)
 {
-  if (aGuid.mLayersId != mLayersId) {
-    // Guard against bad data from hijacked child processes
-    NS_ERROR("Unexpected layers id in RecvCancelAnimation; dropping message...");
-    return false;
-  }
-
   mTreeManager->CancelAnimation(aGuid);
   return true;
 }
@@ -231,12 +204,6 @@ APZCTreeManagerParent::RecvStartScrollbarDrag(
     const ScrollableLayerGuid& aGuid,
     const AsyncDragMetrics& aDragMetrics)
 {
-  if (aGuid.mLayersId != mLayersId) {
-    // Guard against bad data from hijacked child processes
-    NS_ERROR("Unexpected layers id in RecvStartScrollbarDrag; dropping message...");
-    return false;
-  }
-
   mTreeManager->StartScrollbarDrag(aGuid, aDragMetrics);
   return true;
 }

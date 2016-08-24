@@ -23,6 +23,8 @@
 
 #include "chrome/common/process_watcher.h"
 
+#include <set>
+
 #include "mozilla/a11y/PDocAccessible.h"
 #include "AppProcessChecker.h"
 #include "AudioChannelService.h"
@@ -88,7 +90,6 @@
 #include "mozilla/layers/PAPZParent.h"
 #include "mozilla/layers/CompositorThread.h"
 #include "mozilla/layers/ImageBridgeParent.h"
-#include "mozilla/layers/LayerTreeOwnerTracker.h"
 #include "mozilla/layers/SharedBufferManagerParent.h"
 #include "mozilla/layout/RenderFrameParent.h"
 #include "mozilla/LookAndFeel.h"
@@ -1689,6 +1690,18 @@ ContentParent::ProcessingError(Result aCode, const char* aReason)
   KillHard(aReason);
 }
 
+typedef std::pair<ContentParent*, std::set<uint64_t> > IDPair;
+
+namespace {
+std::map<ContentParent*, std::set<uint64_t> >&
+NestedBrowserLayerIds()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  static std::map<ContentParent*, std::set<uint64_t> > sNestedBrowserIds;
+  return sNestedBrowserIds;
+}
+} // namespace
+
 /* static */
 bool
 ContentParent::AllocateLayerTreeId(TabParent* aTabParent, uint64_t* aId)
@@ -1704,9 +1717,7 @@ ContentParent::AllocateLayerTreeId(ContentParent* aContent,
                                    uint64_t* aId)
 {
   GPUProcessManager* gpu = GPUProcessManager::Get();
-
   *aId = gpu->AllocateLayerTreeId();
-  gpu->MapLayerTreeId(*aId, aContent->OtherPid());
 
   if (!gfxPlatform::AsyncPanZoomEnabled()) {
     return true;
@@ -1742,22 +1753,33 @@ ContentParent::RecvAllocateLayerTreeId(const ContentParentId& aCpId,
     cpm->GetTopLevelTabParentByProcessAndTabId(aCpId, aTabId);
   MOZ_ASSERT(contentParent && browserParent);
 
-  return AllocateLayerTreeId(contentParent, browserParent, aTabId, aId);
+  if (!AllocateLayerTreeId(contentParent, browserParent, aTabId, aId)) {
+    return false;
+  }
+
+  auto iter = NestedBrowserLayerIds().find(this);
+  if (iter == NestedBrowserLayerIds().end()) {
+    std::set<uint64_t> ids;
+    ids.insert(*aId);
+    NestedBrowserLayerIds().insert(IDPair(this, ids));
+  } else {
+    iter->second.insert(*aId);
+  }
+  return true;
 }
 
 bool
 ContentParent::RecvDeallocateLayerTreeId(const uint64_t& aId)
 {
-  GPUProcessManager* gpu = GPUProcessManager::Get();
-
-  if (!gpu->IsLayerTreeIdMapped(aId, this->OtherPid()))
+  auto iter = NestedBrowserLayerIds().find(this);
+  if (iter != NestedBrowserLayerIds().end() &&
+      iter->second.find(aId) != iter->second.end())
   {
+    GPUProcessManager::Get()->DeallocateLayerTreeId(aId);
+  } else {
     // You can't deallocate layer tree ids that you didn't allocate
     KillHard("DeallocateLayerTreeId");
   }
-
-  gpu->DeallocateLayerTreeId(aId);
-
   return true;
 }
 

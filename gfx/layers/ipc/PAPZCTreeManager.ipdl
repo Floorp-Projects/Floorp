@@ -6,8 +6,6 @@
 include "mozilla/GfxMessageUtils.h";
 include "ipc/nsGUIEventIPC.h";
 
-include protocol PCompositorBridge;
-
 using CSSRect from "Units.h";
 using LayoutDeviceIntPoint from "Units.h";
 using ScreenPoint from "Units.h";
@@ -36,8 +34,6 @@ namespace layers {
 
 sync protocol PAPZCTreeManager
 {
-manager PCompositorBridge;
-
 parent:
 
   sync ReceiveMultiTouchInputEvent(MultiTouchInput aEvent)
