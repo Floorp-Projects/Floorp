@@ -255,12 +255,9 @@ interface imgIContainer : nsISupports
                                                            in uint32_t aFlags);
 
   /**
-   * Returns true if this image will draw opaquely right now if asked to draw
-   * with FLAG_HIGH_QUALITY_SCALING and otherwise default flags. If this image
-   * (when decoded) is opaque but no decoded frames are available then
-   * willDrawOpaqueNow will return false.
+   * Whether this image is opaque (i.e., needs a background painted behind it).
    */
-  [noscript, notxpcom] boolean willDrawOpaqueNow();
+  [notxpcom] boolean isOpaque();
 
   /**
    * @return true if getImageContainer() is expected to return a valid
