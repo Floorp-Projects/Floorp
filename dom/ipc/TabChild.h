@@ -388,6 +388,10 @@ public:
                             const int32_t& aModifiers,
                             const bool& aPreventDefault) override;
 
+  virtual bool RecvMouseScrollTestEvent(const uint64_t& aLayersId,
+                                        const FrameMetrics::ViewID& aScrollId,
+                                        const nsString& aEvent) override;
+
   virtual bool RecvNativeSynthesisResponse(const uint64_t& aObserverId,
                                            const nsCString& aResponse) override;
 

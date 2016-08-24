@@ -2584,7 +2584,7 @@ CrossProcessCompositorBridgeParent::AllocPAPZParent(const uint64_t& aLayersId)
     return nullptr;
   }
 
-  RemoteContentController* controller = new RemoteContentController();
+  RemoteContentController* controller = new RemoteContentController(aLayersId);
 
   // Increment the controller's refcount before we return it. This will keep the
   // controller alive until it is released by IPDL in DeallocPAPZParent.

@@ -26,8 +26,9 @@ namespace layers {
 
 using namespace mozilla::gfx;
 
-RemoteContentController::RemoteContentController()
+RemoteContentController::RemoteContentController(uint64_t aLayersId)
   : mCompositorThread(MessageLoop::current())
+  , mLayersId(aLayersId)
   , mCanSend(true)
   , mMutex("RemoteContentController")
 {
@@ -123,46 +124,8 @@ RemoteContentController::NotifyAPZStateChange(const ScrollableLayerGuid& aGuid,
   }
 
   if (mCanSend) {
-    Unused << SendNotifyAPZStateChange(aGuid, aChange, aArg);
+    Unused << SendNotifyAPZStateChange(aGuid.mScrollId, aChange, aArg);
   }
-}
-
-void
-RemoteContentController::UpdateOverscrollVelocity(float aX, float aY, bool aIsRootContent)
-{
-  if (MessageLoop::current() != mCompositorThread) {
-    mCompositorThread->PostTask(NewRunnableMethod<float,
-                                        float, bool>(this,
-                                             &RemoteContentController::UpdateOverscrollVelocity,
-                                             aX, aY, aIsRootContent));
-    return;
-  }
-  Unused << SendUpdateOverscrollVelocity(aX, aY, aIsRootContent);
-}
-
-void
-RemoteContentController::UpdateOverscrollOffset(float aX, float aY, bool aIsRootContent)
-{
-  if (MessageLoop::current() != mCompositorThread) {
-    mCompositorThread->PostTask(NewRunnableMethod<float,
-                                        float, bool>(this,
-                                             &RemoteContentController::UpdateOverscrollOffset,
-                                             aX, aY, aIsRootContent));
-    return;
-  }
-  Unused << SendUpdateOverscrollOffset(aX, aY, aIsRootContent);
-}
-
-void
-RemoteContentController::SetScrollingRootContent(bool aIsRootContent)
-{
-  if (MessageLoop::current() != mCompositorThread) {
-    mCompositorThread->PostTask(NewRunnableMethod<bool>(this,
-                                             &RemoteContentController::SetScrollingRootContent,
-                                             aIsRootContent));
-    return;
-  }
-  Unused << SendSetScrollingRootContent(aIsRootContent);
 }
 
 void
@@ -179,7 +142,7 @@ RemoteContentController::NotifyMozMouseScrollEvent(const FrameMetrics::ViewID& a
   }
 
   if (mCanSend) {
-    Unused << SendNotifyMozMouseScrollEvent(aScrollId, aEvent);
+    Unused << SendNotifyMozMouseScrollEvent(mLayersId, aScrollId, aEvent);
   }
 }
 

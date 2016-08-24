@@ -29,7 +29,6 @@
 #include "mozilla/layers/APZCCallbackHelper.h"
 #include "mozilla/layers/APZCTreeManager.h"
 #include "mozilla/layers/APZEventState.h"
-#include "mozilla/layers/ContentProcessController.h"
 #include "mozilla/layers/CompositorBridgeChild.h"
 #include "mozilla/layers/DoubleTapToZoom.h"
 #include "mozilla/layers/ImageBridgeChild.h"
@@ -1936,6 +1935,26 @@ TabChild::RecvMouseWheelEvent(const WidgetWheelEvent& aEvent,
   if (aInputBlockId && aEvent.mFlags.mHandledByAPZ) {
     mAPZEventState->ProcessWheelEvent(localEvent, aGuid, aInputBlockId);
   }
+  return true;
+}
+
+bool
+TabChild::RecvMouseScrollTestEvent(const uint64_t& aLayersId,
+                                   const FrameMetrics::ViewID& aScrollId, const nsString& aEvent)
+{
+  if (aLayersId != mLayersId) {
+    RefPtr<TabParent> browser = TabParent::GetTabParentFromLayersId(aLayersId);
+    if (!browser) {
+      return false;
+    }
+    NS_DispatchToMainThread(NS_NewRunnableFunction(
+      [aLayersId, browser, aScrollId, aEvent] () -> void {
+        Unused << browser->SendMouseScrollTestEvent(aLayersId, aScrollId, aEvent);
+      }));
+    return true;
+  }
+
+  APZCCallbackHelper::NotifyMozMouseScrollEvent(aScrollId, aEvent);
   return true;
 }
 

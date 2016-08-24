@@ -670,6 +670,11 @@ child:
                    int32_t aModifiers,
                    bool aPreventDefault);
 
+    /**
+     * APZ notification for mouse scroll testing events.
+     */
+    async MouseScrollTestEvent(uint64_t aLayersId, ViewID aScrollId, nsString aEvent);
+
     async CompositionEvent(WidgetCompositionEvent event);
 
     async SelectionEvent(WidgetSelectionEvent event);
