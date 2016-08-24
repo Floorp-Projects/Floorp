@@ -1811,7 +1811,7 @@ class SchemaAPIManager extends EventEmitter {
   loadScript(scriptUrl) {
     // Create the object in the context of the sandbox so that the script runs
     // in the sandbox's context instead of here.
-    let scope = this.global.Object.create(null);
+    let scope = Cu.createObjectIn(this.global);
 
     Services.scriptloader.loadSubScript(scriptUrl, scope, "UTF-8");
 
