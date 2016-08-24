@@ -8863,10 +8863,15 @@ nsLayoutUtils::ComputeScrollMetadata(nsIFrame* aForFrame,
 
     // If the frame was scrolled since the last layers update, and by something
     // that is higher priority than APZ, we want to tell the APZ to update
-    // its scroll offset.
-    if (CanScrollOriginClobberApz(scrollableFrame->LastScrollOrigin())) {
+    // its scroll offset. We want to distinguish the case where the scroll offset
+    // was "restored" because in that case the restored scroll position should
+    // not overwrite a user-driven scroll.
+    if (scrollableFrame->LastScrollOrigin() == nsGkAtoms::restore) {
+      metrics.SetScrollOffsetRestored(scrollableFrame->CurrentScrollGeneration());
+    } else if (CanScrollOriginClobberApz(scrollableFrame->LastScrollOrigin())) {
       metrics.SetScrollOffsetUpdated(scrollableFrame->CurrentScrollGeneration());
     }
+
     nsIAtom* lastSmoothScrollOrigin = scrollableFrame->LastSmoothScrollOrigin();
     if (lastSmoothScrollOrigin) {
       metrics.SetSmoothScrollOffsetUpdated(scrollableFrame->CurrentScrollGeneration());
