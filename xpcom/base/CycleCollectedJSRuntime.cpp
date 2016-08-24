@@ -274,7 +274,7 @@ struct FixWeakMappingGrayBitsTracer : public js::WeakMapTracer
     }
   }
 
-  bool mAnyMarked;
+  MOZ_INIT_OUTSIDE_CTOR bool mAnyMarked;
 };
 
 static void
