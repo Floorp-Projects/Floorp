@@ -104,8 +104,7 @@ using base::ProcessId;
 using base::Thread;
 
 CompositorBridgeParent::LayerTreeState::LayerTreeState()
-  : mApzcTreeManagerParent(nullptr)
-  , mParent(nullptr)
+  : mParent(nullptr)
   , mLayerManager(nullptr)
   , mCrossProcessParent(nullptr)
   , mLayerTree(nullptr)
@@ -1802,7 +1801,7 @@ CompositorBridgeParent::UpdateRemoteContentController(uint64_t aLayersId,
 bool
 CompositorBridgeParent::RecvAdoptChild(const uint64_t& child)
 {
-  APZCTreeManagerParent* parent;
+  RefPtr<GeckoContentController> controller;
   {
     MonitorAutoLock lock(*sIndirectLayerTreesLock);
     NotifyChildCreated(child);
@@ -1812,11 +1811,14 @@ CompositorBridgeParent::RecvAdoptChild(const uint64_t& child)
     if (sIndirectLayerTrees[child].mRoot) {
       sIndirectLayerTrees[child].mRoot->AsLayerComposite()->SetLayerManager(mLayerManager);
     }
-    parent = sIndirectLayerTrees[child].mApzcTreeManagerParent;
+    controller = sIndirectLayerTrees[child].mController;
   }
 
-  if (mApzcTreeManager && parent) {
-    parent->ChildAdopted(mApzcTreeManager);
+  // Calling ChildAdopted on controller will acquire a lock, to avoid a
+  // potential deadlock between that lock and sIndirectLayerTreesLock we
+  // release sIndirectLayerTreesLock first before calling ChildAdopted.
+  if (mApzcTreeManager && controller) {
+    controller->ChildAdopted();
   }
   return true;
 }
@@ -2559,27 +2561,14 @@ CrossProcessCompositorBridgeParent::AllocPAPZCTreeManagerParent(const uint64_t& 
 
   MonitorAutoLock lock(*sIndirectLayerTreesLock);
   CompositorBridgeParent::LayerTreeState& state = sIndirectLayerTrees[aLayersId];
-  MOZ_ASSERT(state.mParent);
-  MOZ_ASSERT(!state.mApzcTreeManagerParent);
-  state.mApzcTreeManagerParent = new APZCTreeManagerParent(aLayersId, state.mParent->GetAPZCTreeManager());
 
-  return state.mApzcTreeManagerParent;
+  MOZ_ASSERT(state.mParent);
+  return new APZCTreeManagerParent(aLayersId, state.mParent->GetAPZCTreeManager());
 }
 bool
 CrossProcessCompositorBridgeParent::DeallocPAPZCTreeManagerParent(PAPZCTreeManagerParent* aActor)
 {
-  APZCTreeManagerParent* parent = static_cast<APZCTreeManagerParent*>(aActor);
-
-  MonitorAutoLock lock(*sIndirectLayerTreesLock);
-  auto iter = sIndirectLayerTrees.find(parent->LayersId());
-  if (iter != sIndirectLayerTrees.end()) {
-    CompositorBridgeParent::LayerTreeState& state = iter->second;
-    MOZ_ASSERT(state.mApzcTreeManagerParent == parent);
-    state.mApzcTreeManagerParent = nullptr;
-  }
-
-  delete parent;
-
+  delete aActor;
   return true;
 }
 
