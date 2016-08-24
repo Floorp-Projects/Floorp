@@ -1062,7 +1062,8 @@ static const JSClassOps ExpandoObjectClassOps = {
 
 const JSClass ExpandoObjectClass = {
     "XrayExpandoObject",
-    JSCLASS_HAS_RESERVED_SLOTS(JSSLOT_EXPANDO_COUNT),
+    JSCLASS_HAS_RESERVED_SLOTS(JSSLOT_EXPANDO_COUNT) |
+    JSCLASS_FOREGROUND_FINALIZE,
     &ExpandoObjectClassOps
 };
 

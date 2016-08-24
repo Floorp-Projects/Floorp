@@ -573,7 +573,8 @@ static const JSClassOps sCTypeClassOps = {
 };
 static const JSClass sCTypeClass = {
   "CType",
-  JSCLASS_HAS_RESERVED_SLOTS(CTYPE_SLOTS),
+  JSCLASS_HAS_RESERVED_SLOTS(CTYPE_SLOTS) |
+  JSCLASS_FOREGROUND_FINALIZE,
   &sCTypeClassOps
 };
 
@@ -584,7 +585,8 @@ static const JSClassOps sCDataClassOps = {
 };
 static const JSClass sCDataClass = {
   "CData",
-  JSCLASS_HAS_RESERVED_SLOTS(CDATA_SLOTS),
+  JSCLASS_HAS_RESERVED_SLOTS(CDATA_SLOTS) |
+  JSCLASS_FOREGROUND_FINALIZE,
   &sCDataClassOps
 };
 
@@ -595,7 +597,8 @@ static const JSClassOps sCClosureClassOps = {
 };
 static const JSClass sCClosureClass = {
   "CClosure",
-  JSCLASS_HAS_RESERVED_SLOTS(CCLOSURE_SLOTS),
+  JSCLASS_HAS_RESERVED_SLOTS(CCLOSURE_SLOTS) |
+  JSCLASS_FOREGROUND_FINALIZE,
   &sCClosureClassOps
 };
 
@@ -619,7 +622,9 @@ static const JSClassOps sCDataFinalizerClassOps = {
 };
 static const JSClass sCDataFinalizerClass = {
   "CDataFinalizer",
-  JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(CDATAFINALIZER_SLOTS),
+  JSCLASS_HAS_PRIVATE |
+  JSCLASS_HAS_RESERVED_SLOTS(CDATAFINALIZER_SLOTS) |
+  JSCLASS_FOREGROUND_FINALIZE,
   &sCDataFinalizerClassOps
 };
 
@@ -809,13 +814,15 @@ static const JSClassOps sInt64ClassOps = {
 
 static const JSClass sInt64Class = {
   "Int64",
-  JSCLASS_HAS_RESERVED_SLOTS(INT64_SLOTS),
+  JSCLASS_HAS_RESERVED_SLOTS(INT64_SLOTS) |
+  JSCLASS_FOREGROUND_FINALIZE,
   &sInt64ClassOps
 };
 
 static const JSClass sUInt64Class = {
   "UInt64",
-  JSCLASS_HAS_RESERVED_SLOTS(INT64_SLOTS),
+  JSCLASS_HAS_RESERVED_SLOTS(INT64_SLOTS) |
+  JSCLASS_FOREGROUND_FINALIZE,
   &sInt64ClassOps
 };
 

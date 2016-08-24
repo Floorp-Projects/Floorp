@@ -1508,7 +1508,9 @@ static const JSClassOps FinalizeCounterClassOps = {
 };
 
 static const JSClass FinalizeCounterClass = {
-    "FinalizeCounter", JSCLASS_IS_ANONYMOUS,
+    "FinalizeCounter",
+    JSCLASS_IS_ANONYMOUS |
+    JSCLASS_FOREGROUND_FINALIZE,
     &FinalizeCounterClassOps
 };
 
@@ -2192,7 +2194,9 @@ static const ClassOps CloneBufferObjectClassOps = {
 };
 
 const Class CloneBufferObject::class_ = {
-    "CloneBuffer", JSCLASS_HAS_RESERVED_SLOTS(CloneBufferObject::NUM_SLOTS),
+    "CloneBuffer",
+    JSCLASS_HAS_RESERVED_SLOTS(CloneBufferObject::NUM_SLOTS) |
+    JSCLASS_FOREGROUND_FINALIZE,
     &CloneBufferObjectClassOps
 };
 

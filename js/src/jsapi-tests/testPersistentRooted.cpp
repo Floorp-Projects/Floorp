@@ -37,7 +37,7 @@ static const JSClassOps BarkWhenTracedClassClassOps = {
 
 const JSClass BarkWhenTracedClass::class_ = {
     "BarkWhenTracedClass",
-    0,
+    JSCLASS_FOREGROUND_FINALIZE,
     &BarkWhenTracedClassClassOps
 };
 

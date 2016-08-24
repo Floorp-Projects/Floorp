@@ -399,7 +399,8 @@ static const ClassOps WeakMapObjectClassOps = {
 const Class WeakMapObject::class_ = {
     "WeakMap",
     JSCLASS_HAS_PRIVATE |
-    JSCLASS_HAS_CACHED_PROTO(JSProto_WeakMap),
+    JSCLASS_HAS_CACHED_PROTO(JSProto_WeakMap) |
+    JSCLASS_FOREGROUND_FINALIZE,
     &WeakMapObjectClassOps
 };
 
