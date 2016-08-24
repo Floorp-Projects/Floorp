@@ -55,7 +55,6 @@ public class LayerView extends ScrollView implements Tabs.OnTabsChangedListener 
     private LayerRenderer mRenderer;
     /* Must be a PAINT_xxx constant */
     private int mPaintState;
-    private int mBackgroundColor;
     private FullScreenState mFullScreenState;
 
     private SurfaceView mSurfaceView;
@@ -171,7 +170,6 @@ public class LayerView extends ScrollView implements Tabs.OnTabsChangedListener 
         super(context, attrs);
 
         mPaintState = PAINT_START;
-        mBackgroundColor = Color.WHITE;
         mFullScreenState = FullScreenState.NONE;
 
         if (Versions.feature14Plus) {
@@ -383,16 +381,6 @@ public class LayerView extends ScrollView implements Tabs.OnTabsChangedListener 
 
     public Matrix getMatrixForLayerRectToViewRect() {
         return mLayerClient.getMatrixForLayerRectToViewRect();
-    }
-
-    int getBackgroundColor() {
-        return mBackgroundColor;
-    }
-
-    @Override
-    public void setBackgroundColor(int newColor) {
-        mBackgroundColor = newColor;
-        requestRender();
     }
 
     void setSurfaceBackgroundColor(int newColor) {

@@ -362,10 +362,6 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
 
             setViewportMetrics(newMetrics);
 
-            if (tab != null) {
-                mView.setBackgroundColor(tab.getBackgroundColor());
-            }
-
             // Indicate that the document is about to be composited so the
             // LayerView background can be removed.
             if (mView.getPaintState() == LayerView.PAINT_START) {
