@@ -111,7 +111,6 @@ public class Tabs implements GeckoEventListener {
             "Content:StateChange",
             "Content:LoadError",
             "Content:PageShow",
-            "DOMContentLoaded",
             "DOMTitleChanged",
             "Link:Favicon",
             "Link:Feed",
@@ -518,18 +517,6 @@ public class Tabs implements GeckoEventListener {
                 tab.setLoadedFromCache(message.getBoolean("fromCache"));
                 tab.updateUserRequested(message.getString("userRequested"));
                 notifyListeners(tab, TabEvents.PAGE_SHOW);
-            } else if (event.equals("DOMContentLoaded")) {
-                tab.handleContentLoaded();
-                String backgroundColor = message.getString("bgColor");
-                if (backgroundColor != null) {
-                    tab.setBackgroundColor(backgroundColor);
-                } else {
-                    // Default to white if no color is given
-                    tab.setBackgroundColor(Color.WHITE);
-                }
-                tab.setErrorType(message.optString("errorType"));
-                tab.setMetadata(message.optJSONObject("metadata"));
-                notifyListeners(tab, Tabs.TabEvents.LOADED);
             } else if (event.equals("DOMTitleChanged")) {
                 tab.updateTitle(message.getString("title"));
             } else if (event.equals("Link:Favicon")) {
