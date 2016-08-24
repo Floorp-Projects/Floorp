@@ -396,7 +396,7 @@ RasterImage::GetRequestedFrameIndex(uint32_t aWhichFrame) const
   return aWhichFrame == FRAME_FIRST ? 0 : GetCurrentFrameIndex();
 }
 
-NS_IMETHODIMP_(bool)
+bool
 RasterImage::IsOpaque()
 {
   if (mError) {
@@ -412,6 +412,39 @@ RasterImage::IsOpaque()
 
   // Other, we're opaque if FLAG_HAS_TRANSPARENCY is not set.
   return !(progress & FLAG_HAS_TRANSPARENCY);
+}
+
+NS_IMETHODIMP_(bool)
+RasterImage::WillDrawOpaqueNow()
+{
+  if (!IsOpaque()) {
+    return false;
+  }
+
+  if (mAnimationState) {
+    // We never discard frames of animated images.
+    return true;
+  }
+
+  // If we are not locked our decoded data could get discard at any time (ie
+  // between the call to this function and when we are asked to draw), so we
+  // have to return false if we are unlocked.
+  if (IsUnlocked()) {
+    return false;
+  }
+
+  LookupResult result =
+    SurfaceCache::LookupBestMatch(ImageKey(this),
+                                  RasterSurfaceKey(mSize,
+                                                   DefaultSurfaceFlags(),
+                                                   /* aFrameNum */ 0));
+  MatchType matchType = result.Type();
+  if (matchType == MatchType::NOT_FOUND || matchType == MatchType::PENDING ||
+      !result.DrawableRef()->IsFinished()) {
+    return false;
+  }
+
+  return true;
 }
 
 void
