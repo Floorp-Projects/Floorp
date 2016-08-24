@@ -29,7 +29,7 @@ class TestLintRoller(TestCase):
 
     def setUp(self):
         TestCase.setUp(self)
-        self.lint = LintRoller()
+        self.lint = LintRoller(root=here)
 
     def test_roll_no_linters_configured(self):
         with self.assertRaises(LintersNotConfigured):
