@@ -720,21 +720,6 @@ XPCJSRuntime::GCSliceCallback(JSContext* cx,
         (*self->mPrevGCSliceCallback)(cx, progress, desc);
 }
 
-/* static */ void
-XPCJSRuntime::DoCycleCollectionCallback(JSContext* cx)
-{
-    XPCJSRuntime* self = nsXPConnect::GetRuntimeInstance();
-    if (!self)
-        return;
-
-    // The GC has detected that a CC at this point would collect a tremendous
-    // amount of garbage that is being revivified unnecessarily.
-    nsJSContext::CycleCollectNow();
-
-    if (self->mPrevDoCycleCollectionCallback)
-        (*self->mPrevDoCycleCollectionCallback)(cx);
-}
-
 void
 XPCJSRuntime::CustomGCCallback(JSGCStatus status)
 {
@@ -3517,8 +3502,6 @@ XPCJSRuntime::Initialize()
     JS_SetSizeOfIncludingThisCompartmentCallback(cx, CompartmentSizeOfIncludingThisCallback);
     JS_SetCompartmentNameCallback(cx, CompartmentNameCallback);
     mPrevGCSliceCallback = JS::SetGCSliceCallback(cx, GCSliceCallback);
-    mPrevDoCycleCollectionCallback = JS::SetDoCycleCollectionCallback(cx,
-            DoCycleCollectionCallback);
     JS_AddFinalizeCallback(cx, FinalizeCallback, nullptr);
     JS_AddWeakPointerZoneGroupCallback(cx, WeakPointerZoneGroupCallback, this);
     JS_AddWeakPointerCompartmentCallback(cx, WeakPointerCompartmentCallback, this);
