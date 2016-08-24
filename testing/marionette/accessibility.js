@@ -41,12 +41,23 @@ this.accessibility = {};
 /**
  * Accessible states used to check element"s state from the accessiblity API
  * perspective.
+ * Note: if gecko is built with --disable-accessibility, the interfaces are not
+ * defined. This is why we use getters instead to be able to use these
+ * statically.
  */
 accessibility.State = {
-  Unavailable: Ci.nsIAccessibleStates.STATE_UNAVAILABLE,
-  Focusable: Ci.nsIAccessibleStates.STATE_FOCUSABLE,
-  Selectable: Ci.nsIAccessibleStates.STATE_SELECTABLE,
-  Selected: Ci.nsIAccessibleStates.STATE_SELECTED,
+  get Unavailable() {
+    return Ci.nsIAccessibleStates.STATE_UNAVAILABLE;
+  },
+  get Focusable() {
+    return Ci.nsIAccessibleStates.STATE_FOCUSABLE;
+  },
+  get Selectable() {
+    return Ci.nsIAccessibleStates.STATE_SELECTABLE;
+  },
+  get Selected() {
+    return Ci.nsIAccessibleStates.STATE_SELECTED;
+  }
 };
 
 /**
