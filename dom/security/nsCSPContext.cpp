@@ -323,7 +323,8 @@ nsCSPContext::GetBlockAllMixedContent(bool *outBlockAllMixedContent)
 {
   *outBlockAllMixedContent = false;
   for (uint32_t i = 0; i < mPolicies.Length(); i++) {
-    if (mPolicies[i]->hasDirective(nsIContentSecurityPolicy::BLOCK_ALL_MIXED_CONTENT)) {
+     if (!mPolicies[i]->getReportOnlyFlag() &&
+        mPolicies[i]->hasDirective(nsIContentSecurityPolicy::BLOCK_ALL_MIXED_CONTENT)) {
       *outBlockAllMixedContent = true;
       return NS_OK;
     }
