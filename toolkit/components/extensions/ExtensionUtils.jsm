@@ -1640,7 +1640,7 @@ class ProxyAPIImplementation extends SchemaAPIInterface {
     set.remove(listener);
 
     if (set.size == 0) {
-      this.childApiManager.messageManager.sendAsyncMessage("Extension:RemoveListener", {
+      this.childApiManager.messageManager.sendAsyncMessage("API:RemoveListener", {
         childId: this.childApiManager.id,
         path: this.path,
       });
