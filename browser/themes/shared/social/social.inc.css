@@ -1,0 +1,23 @@
+%if 0
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+%endif
+
+#manage-share-providers {
+  list-style-image: url("chrome://browser/skin/Toolbar.png");
+  -moz-image-region: rect(0, 468px, 18px, 450px);
+}
+
+#manage-share-providers > .toolbarbutton-icon {
+  min-height: 18px;
+  min-width: 18px;
+}
+
+.social-panel > .panel-arrowcontainer > .panel-arrowcontent {
+  padding: 0;
+}
+/* fixup corners for share panel */
+.social-panel > .social-panel-frame {
+  border-radius: inherit;
+}
