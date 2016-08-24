@@ -98,7 +98,7 @@ public:
   void GetId(nsAString& aResult) const { aResult = mId; }
   void SetId(const nsAString& aId);
   AnimationEffectReadOnly* GetEffect() const { return mEffect; }
-  virtual void SetEffect(AnimationEffectReadOnly* aEffect);
+  void SetEffect(AnimationEffectReadOnly* aEffect);
   AnimationTimeline* GetTimeline() const { return mTimeline; }
   void SetTimeline(AnimationTimeline* aTimeline);
   Nullable<TimeDuration> GetStartTime() const { return mStartTime; }
@@ -146,6 +146,7 @@ public:
 
   virtual void CancelFromStyle() { CancelNoUpdate(); }
   void SetTimelineNoUpdate(AnimationTimeline* aTimeline);
+  void SetEffectNoUpdate(AnimationEffectReadOnly* aEffect);
 
   virtual void Tick();
   bool NeedsTicks() const
