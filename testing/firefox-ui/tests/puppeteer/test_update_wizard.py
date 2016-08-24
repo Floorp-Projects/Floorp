@@ -45,9 +45,8 @@ class TestUpdateWizard(FirefoxTestCase):
                              'button')
 
         panels = ('checking', 'downloading', 'dummy', 'error_patching', 'error',
-                  'error_extra', 'finished', 'finished_background', 'installed',
-                  'manual_update', 'no_updates_found', 'plugin_updates_found',
-                  'updates_found_basic', 'updates_found_billboard',
+                  'error_extra', 'finished', 'finished_background',
+                  'manual_update', 'no_updates_found', 'updates_found_basic',
                   )
         for panel in panels:
             self.assertEqual(getattr(self.wizard, panel).element.get_attribute('localName'),
