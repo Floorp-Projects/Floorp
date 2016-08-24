@@ -975,10 +975,14 @@ toolbarpaletteitem[place="palette"] > #downloads-button[indicator] > #downloads-
   display: none;
 }
 
-#downloads-button:-moz-any([progress], [counter], [paused]) #downloads-indicator-icon,
-#downloads-button:not(:-moz-any([progress], [counter], [paused]))
-                                                   #downloads-indicator-progress-area
-{
+#downloads-button.withProgressBar:-moz-any([progress], [counter], [paused]) #downloads-indicator-icon,
+#downloads-button:not(:-moz-any([progress], [counter], [paused])) #downloads-indicator-progress-area {
+  visibility: hidden;
+}
+
+/* Hide elements for another type of progressmeter if it's not in use. */
+#downloads-button.withProgressBar #downloads-indicator-progress-icon,
+#downloads-button:not(.withProgressBar) #downloads-indicator-progress-area {
   visibility: hidden;
 }
 

@@ -217,8 +217,19 @@ const DownloadsIndicatorView = {
     }
     this._initialized = true;
 
+    this._setIndicatorType();
     window.addEventListener("unload", this.onWindowUnload);
     DownloadsCommon.getIndicatorData(window).addView(this);
+  },
+
+  _setIndicatorType() {
+    // We keep a killerswitch for old-styled progressbar for now. Corresponding
+    // css class is added here to reflect the type chosen for showing progress.
+    let node = CustomizableUI.getWidget("downloads-button")
+                             .forWindow(window).node;
+
+    node.classList.toggle("withProgressBar",
+                          !DownloadsCommon.arrowStyledIndicator);
   },
 
   /**
@@ -411,21 +422,40 @@ const DownloadsIndicatorView = {
   _counter: null,
 
   /**
-   * Progress indication to display, from 0 to 100, or -1 if unknown.  The
-   * progress bar is hidden if the current progress is unknown and no status
-   * text is set in the "counter" property.
+   * Progress indication to display, from 0 to 100, or -1 if unknown.
+   * Bar-type:
+   *   The progress bar is hidden if the current progress is unknown and no
+   *   status text is set in the "counter" property.
+   * Arrow-type:
+   *   progress is not visible if the current progress is unknown.
    */
   set percentComplete(aValue) {
+    // For arrow type only:
+    // We show portion of the success icon in propotional with the download
+    // progress as an indicator. the PROGRESS_ICON_EMPTY_HEIGHT_PERCENT and
+    // PROGRESS_ICON_FULL_HEIGHT_PERCENT correspond to how much portion of the
+    // icon should be displayed in 0% and 100%.
+    const PROGRESS_ICON_EMPTY_HEIGHT_PERCENT = 35;
+    const PROGRESS_ICON_FULL_HEIGHT_PERCENT = 87;
+
     if (!this._operational) {
       return this._percentComplete;
     }
 
     if (this._percentComplete !== aValue) {
       this._percentComplete = aValue;
-      if (this._percentComplete >= 0)
+      this._refreshAttention();
+
+      if (this._percentComplete >= 0) {
         this.indicator.setAttribute("progress", "true");
-      else
+        this._progressIcon.style.height = (this._percentComplete *
+          (PROGRESS_ICON_FULL_HEIGHT_PERCENT -
+           PROGRESS_ICON_EMPTY_HEIGHT_PERCENT) / 100 +
+           PROGRESS_ICON_EMPTY_HEIGHT_PERCENT) + "%";
+      } else {
         this.indicator.removeAttribute("progress");
+        this._progressIcon.style.height = "0";
+      }
       // We have to set the attribute instead of using the property because the
       // XBL binding isn't applied if the element is invisible for any reason.
       this._indicatorProgress.setAttribute("value", Math.max(aValue, 0));
@@ -463,29 +493,39 @@ const DownloadsIndicatorView = {
     if (!this._operational) {
       return this._attention;
     }
-
     if (this._attention != aValue) {
       this._attention = aValue;
+      this._refreshAttention();
+    }
+    return this._attention;
+  },
 
-      // Check if the downloads button is in the menu panel, to determine which
-      // button needs to get a badge.
-      let widgetGroup = CustomizableUI.getWidget("downloads-button");
-      let inMenu = widgetGroup.areaType == CustomizableUI.TYPE_MENU_PANEL;
+  _refreshAttention() {
+    // Check if the downloads button is in the menu panel, to determine which
+    // button needs to get a badge.
+    let widgetGroup = CustomizableUI.getWidget("downloads-button");
+    let inMenu = widgetGroup.areaType == CustomizableUI.TYPE_MENU_PANEL;
 
-      if (aValue == DownloadsCommon.ATTENTION_NONE) {
-        this.indicator.removeAttribute("attention");
-        if (inMenu) {
-          gMenuButtonBadgeManager.removeBadge(gMenuButtonBadgeManager.BADGEID_DOWNLOAD);
-        }
-      } else {
-        this.indicator.setAttribute("attention", aValue);
-        if (inMenu) {
-          let badgeClass = "download-" + aValue;
-          gMenuButtonBadgeManager.addBadge(gMenuButtonBadgeManager.BADGEID_DOWNLOAD, badgeClass);
-        }
+    // For arrow-Styled indicator, suppress success attention if we have
+    // progress in toolbar
+    let suppressAttention = DownloadsCommon.arrowStyledIndicator && !inMenu &&
+      this._attention == DownloadsCommon.ATTENTION_SUCCESS &&
+      this._percentComplete >= 0;
+
+    if (suppressAttention || this._attention == DownloadsCommon.ATTENTION_NONE) {
+      this.indicator.removeAttribute("attention");
+      if (inMenu) {
+        gMenuButtonBadgeManager.removeBadge(
+                                      gMenuButtonBadgeManager.BADGEID_DOWNLOAD);
+      }
+    } else {
+      this.indicator.setAttribute("attention", this._attention);
+      if (inMenu) {
+        let badgeClass = "download-" + this._attention;
+        gMenuButtonBadgeManager.addBadge(
+                          gMenuButtonBadgeManager.BADGEID_DOWNLOAD, badgeClass);
       }
     }
-    return aValue;
   },
   _attention: DownloadsCommon.ATTENTION_NONE,
 
@@ -539,6 +579,7 @@ const DownloadsIndicatorView = {
   _indicator: null,
   __indicatorCounter: null,
   __indicatorProgress: null,
+  __progressIcon: null,
 
   /**
    * Returns a reference to the main indicator element, or null if the element
@@ -576,6 +617,11 @@ const DownloadsIndicatorView = {
       (this.__indicatorProgress = document.getElementById("downloads-indicator-progress"));
   },
 
+  get _progressIcon() {
+    return this.__progressIcon ||
+      (this.__progressIcon = document.getElementById("downloads-indicator-progress-icon"));
+  },
+
   get notifier() {
     return this._notifier ||
       (this._notifier = document.getElementById("downloads-notification-anchor"));
@@ -583,6 +629,7 @@ const DownloadsIndicatorView = {
 
   _onCustomizedAway() {
     this._indicator = null;
+    this.__progressIcon = null;
     this.__indicatorCounter = null;
     this.__indicatorProgress = null;
   },
