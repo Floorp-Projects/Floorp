@@ -2,6 +2,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 Cu.import("resource://gre/modules/AddonManager.jsm");
+Cu.import("resource:///modules/AttributionCode.jsm");
 Cu.import("resource://gre/modules/TelemetryEnvironment.jsm", this);
 Cu.import("resource://gre/modules/Preferences.jsm", this);
 Cu.import("resource://gre/modules/PromiseUtils.jsm", this);
@@ -70,6 +71,9 @@ const PLUGIN_UPDATED_TOPIC     = "plugins-list-updated";
 
 // system add-ons are enabled at startup, so record date when the test starts
 const SYSTEM_ADDON_INSTALL_DATE = Date.now();
+
+// Valid attribution code to write so that settings.attribution can be tested.
+const ATTRIBUTION_CODE = "source%3Dgoogle.com";
 
 /**
  * Used to mock plugin tags in our fake plugin host.
@@ -268,6 +272,31 @@ function spoofPartnerInfo() {
   }
 }
 
+function getAttributionFile() {
+  let file = Services.dirsvc.get("LocalAppData", Ci.nsIFile);
+  file.append("mozilla");
+  file.append(AppConstants.MOZ_APP_NAME);
+  file.append("postSigningData");
+  return file;
+}
+
+function spoofAttributionData() {
+  if (gIsWindows) {
+    AttributionCode._clearCache();
+    let stream = Cc["@mozilla.org/network/file-output-stream;1"].
+                 createInstance(Ci.nsIFileOutputStream);
+    stream.init(getAttributionFile(), -1, -1, 0);
+    stream.write(ATTRIBUTION_CODE, ATTRIBUTION_CODE.length);
+  }
+}
+
+function cleanupAttributionData() {
+  if (gIsWindows) {
+    getAttributionFile().remove(false);
+    AttributionCode._clearCache();
+  }
+}
+
 /**
  * Check that a value is a string and not empty.
  *
@@ -381,6 +410,11 @@ function checkSettingsSection(data) {
   if ("defaultSearchEngine" in data.settings) {
     checkString(data.settings.defaultSearchEngine);
     Assert.equal(typeof data.settings.defaultSearchEngineData, "object");
+  }
+
+  if ("attribution" in data.settings) {
+    Assert.equal(typeof data.settings.attribution, "object");
+    Assert.equal(data.settings.attribution.source, "google.com");
   }
 }
 
@@ -766,6 +800,10 @@ function run_test() {
 
   // Spoof the the hotfixVersion
   Preferences.set("extensions.hotfix.lastVersion", APP_HOTFIX_VERSION);
+
+  // Create the attribution data file, so that settings.attribution will exist.
+  spoofAttributionData();
+  do_register_cleanup(cleanupAttributionData);
 
   run_next_test();
 }
