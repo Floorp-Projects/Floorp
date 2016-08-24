@@ -1,6 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
 /**
  * Tests if invalid filter types are sanitized when loaded from the preferences.
  */
@@ -27,38 +29,35 @@ const REQUESTS_WITH_MEDIA_AND_FLASH_AND_WS = REQUESTS_WITH_MEDIA_AND_FLASH.conca
   { url: "sjs_content-type-test-server.sjs?fmt=ws" },
 ]);
 
-function test() {
+add_task(function* () {
   Services.prefs.setCharPref("devtools.netmonitor.filters", '["js", "bogus"]');
 
-  initNetMonitor(FILTERING_URL).then(([aTab, aDebuggee, aMonitor]) => {
-    info("Starting test... ");
+  let [,, monitor] = yield initNetMonitor(FILTERING_URL);
+  info("Starting test... ");
 
-    let { Prefs, NetMonitorView } = aMonitor.panelWin;
-    let { RequestsMenu } = NetMonitorView;
+  let { Prefs, NetMonitorView } = monitor.panelWin;
+  let { RequestsMenu } = NetMonitorView;
 
-    RequestsMenu.lazyUpdate = false;
+  RequestsMenu.lazyUpdate = false;
 
-    is(Prefs.filters.length, 2,
-      "All filter types were loaded as an array from the preferences.");
-    is(Prefs.filters[0], "js",
-      "The first filter type is correct.");
-    is(Prefs.filters[1], "bogus",
-      "The second filter type is invalid, but loaded anyway.");
+  is(Prefs.filters.length, 2,
+    "All filter types were loaded as an array from the preferences.");
+  is(Prefs.filters[0], "js",
+    "The first filter type is correct.");
+  is(Prefs.filters[1], "bogus",
+    "The second filter type is invalid, but loaded anyway.");
 
-    waitForNetworkEvents(aMonitor, 9).then(() => {
-      testFilterButtons(aMonitor, "js");
-      ok(true, "Only the correct filter type was taken into consideration.");
+  let wait = waitForNetworkEvents(monitor, 9);
+  loadCommonFrameScript();
+  yield performRequestsInContent(REQUESTS_WITH_MEDIA_AND_FLASH_AND_WS);
+  yield wait;
 
-      teardown(aMonitor).then(() => {
-        let filters = Services.prefs.getCharPref("devtools.netmonitor.filters");
-        is(filters, '["js"]',
-          "The bogus filter type was ignored and removed from the preferences.");
+  testFilterButtons(monitor, "js");
+  ok(true, "Only the correct filter type was taken into consideration.");
 
-        finish();
-      });
-    });
+  yield teardown(monitor);
 
-    loadCommonFrameScript();
-    performRequestsInContent(REQUESTS_WITH_MEDIA_AND_FLASH_AND_WS);
-  });
-}
+  let filters = Services.prefs.getCharPref("devtools.netmonitor.filters");
+  is(filters, '["js"]',
+    "The bogus filter type was ignored and removed from the preferences.");
+});
