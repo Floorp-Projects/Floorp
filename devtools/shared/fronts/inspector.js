@@ -26,6 +26,8 @@ const { Class } = require("sdk/core/heritage");
 const events = require("sdk/event/core");
 const object = require("sdk/util/object");
 const nodeConstants = require("devtools/shared/dom-node-constants.js");
+loader.lazyRequireGetter(this, "CommandUtils",
+  "devtools/client/shared/developer-toolbar", true);
 
 const HIDDEN_CLASS = "__fx-devtools-hide-shortcut__";
 
@@ -977,6 +979,22 @@ var InspectorFront = FrontClassWithSpec(inspectorSpec, {
     });
   }, {
     impl: "_getPageStyle"
+  }),
+
+  pickColorFromPage: custom(Task.async(function* (toolbox, options) {
+    if (toolbox) {
+      // If the eyedropper was already started using the gcli command, hide it so we don't
+      // end up with 2 instances of the eyedropper on the page.
+      let {target} = toolbox;
+      let requisition = yield CommandUtils.createRequisition(target, {
+        environment: CommandUtils.createEnvironment({target})
+      });
+      yield requisition.updateExec("eyedropper --hide");
+    }
+
+    yield this._pickColorFromPage(options);
+  }), {
+    impl: "_pickColorFromPage"
   })
 });
 

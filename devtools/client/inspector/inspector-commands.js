@@ -11,6 +11,8 @@ const {EyeDropper, HighlighterEnvironment} = require("devtools/server/actors/hig
 /* eslint-enable mozilla/reject-some-requires */
 const Telemetry = require("devtools/client/shared/telemetry");
 
+const windowEyeDroppers = new WeakMap();
+
 exports.items = [{
   item: "command",
   runAt: "client",
@@ -48,9 +50,28 @@ exports.items = [{
       name: "frommenu",
       type: "boolean",
       hidden: true
+    }, {
+      name: "hide",
+      type: "boolean",
+      hidden: true
     }]
   }],
-  exec: function (args, context) {
+  exec: function* (args, context) {
+    if (args.hide) {
+      context.updateExec("eyedropper_server_hide").catch(e => console.error(e));
+      return;
+    }
+
+    // If the inspector is already picking a color from the page, cancel it.
+    let target = context.environment.target;
+    let toolbox = gDevTools.getToolbox(target);
+    if (toolbox) {
+      let inspector = toolbox.getPanel("inspector");
+      if (inspector) {
+        yield inspector.hideEyeDropper();
+      }
+    }
+
     let telemetry = new Telemetry();
     telemetry.toolOpened(args.frommenu ? "menueyedropper" : "eyedropper");
     context.updateExec("eyedropper_server").catch(e => console.error(e));
@@ -61,15 +82,33 @@ exports.items = [{
   name: "eyedropper_server",
   hidden: true,
   exec: function (args, {environment}) {
-    let env = new HighlighterEnvironment();
-    env.initFromWindow(environment.window);
-    let eyeDropper = new EyeDropper(env);
+    let eyeDropper = windowEyeDroppers.get(environment.window);
+
+    if (!eyeDropper) {
+      let env = new HighlighterEnvironment();
+      env.initFromWindow(environment.window);
+
+      eyeDropper = new EyeDropper(env);
+      eyeDropper.once("hidden", () => {
+        eyeDropper.destroy();
+        env.destroy();
+        windowEyeDroppers.delete(environment.window);
+      });
+
+      windowEyeDroppers.set(environment.window, eyeDropper);
+    }
 
     eyeDropper.show(environment.document.documentElement, {copyOnSelect: true});
-
-    eyeDropper.once("hidden", () => {
-      eyeDropper.destroy();
-      env.destroy();
-    });
+  }
+}, {
+  item: "command",
+  runAt: "server",
+  name: "eyedropper_server_hide",
+  hidden: true,
+  exec: function (args, {environment}) {
+    let eyeDropper = windowEyeDroppers.get(environment.window);
+    if (eyeDropper) {
+      eyeDropper.hide();
+    }
   }
 }];
