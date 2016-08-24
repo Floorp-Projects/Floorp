@@ -285,7 +285,7 @@
   -moz-appearance: none;
   margin: 0;
   border: none;
-  border-top: 1px solid #ccc;
+  border-top: 1px solid var(--panel-separator-color);
   padding: 8px 20px;
   color: ButtonText;
   background-color: transparent;
