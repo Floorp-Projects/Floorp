@@ -6,13 +6,10 @@
 #include "GPUProcessManager.h"
 #include "GPUProcessHost.h"
 #include "mozilla/StaticPtr.h"
-#include "mozilla/dom/ContentParent.h"
-#include "mozilla/layers/APZCTreeManager.h"
 #include "mozilla/layers/CompositorBridgeParent.h"
 #include "mozilla/layers/ImageBridgeChild.h"
 #include "mozilla/layers/ImageBridgeParent.h"
 #include "mozilla/layers/InProcessCompositorSession.h"
-#include "mozilla/layers/LayerTreeOwnerTracker.h"
 #include "mozilla/layers/RemoteCompositorSession.h"
 #include "mozilla/widget/PlatformWidgetTypes.h"
 #ifdef MOZ_WIDGET_SUPPORTS_OOP_COMPOSITING
@@ -60,14 +57,10 @@ GPUProcessManager::GPUProcessManager()
 {
   mObserver = new Observer(this);
   nsContentUtils::RegisterShutdownObserver(mObserver);
-
-  LayerTreeOwnerTracker::Initialize();
 }
 
 GPUProcessManager::~GPUProcessManager()
 {
-  LayerTreeOwnerTracker::Shutdown();
-
   // The GPU process should have already been shut down.
   MOZ_ASSERT(!mProcess && !mGPUChild);
 
@@ -510,24 +503,6 @@ already_AddRefed<IAPZCTreeManager>
 GPUProcessManager::GetAPZCTreeManagerForLayers(uint64_t aLayersId)
 {
   return CompositorBridgeParent::GetAPZCTreeManager(aLayersId);
-}
-
-void
-GPUProcessManager::MapLayerTreeId(uint64_t aLayersId, base::ProcessId aOwningId)
-{
-  LayerTreeOwnerTracker::Get()->Map(aLayersId, aOwningId);
-
-  if (mGPUChild) {
-    mGPUChild->SendAddLayerTreeIdMapping(
-        aLayersId,
-        aOwningId);
-  }
-}
-
-bool
-GPUProcessManager::IsLayerTreeIdMapped(uint64_t aLayersId, base::ProcessId aRequestingId)
-{
-  return LayerTreeOwnerTracker::Get()->IsMapped(aLayersId, aRequestingId);
 }
 
 uint64_t

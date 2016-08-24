@@ -93,13 +93,6 @@ public:
   // pan/zoom-related events can be sent.
   already_AddRefed<IAPZCTreeManager> GetAPZCTreeManagerForLayers(uint64_t aLayersId);
 
-  // Maps the layer tree and process together so that aOwningPID is allowed
-  // to access aLayersId across process.
-  void MapLayerTreeId(uint64_t aLayersId, base::ProcessId aOwningId);
-
-  // Checks to see if aLayersId and aRequestingPID have been mapped by MapLayerTreeId
-  bool IsLayerTreeIdMapped(uint64_t aLayersId, base::ProcessId aRequestingId);
-
   // Allocate an ID that can be used to refer to a layer tree and
   // associated resources that live only on the compositor thread.
   //

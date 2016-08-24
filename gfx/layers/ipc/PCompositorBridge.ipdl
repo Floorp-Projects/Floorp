@@ -8,7 +8,6 @@
 include LayersSurfaces;
 include LayersMessages;
 include PlatformWidgetTypes;
-include protocol PAPZCTreeManager;
 include protocol PBrowser;
 include protocol PCompositable;
 include protocol PCompositorWidget;
@@ -47,7 +46,6 @@ namespace layers {
  */
 sync protocol PCompositorBridge
 {
-  manages PAPZCTreeManager;
   // A Compositor manages a single Layer Manager (PLayerTransaction)
   manages PLayerTransaction;
   manages PTexture;
@@ -120,12 +118,6 @@ parent:
 
   // When out-of-process, this must be called to finish initialization.
   sync Initialize(uint64_t rootLayerTreeId);
-
-  // Returns whether this Compositor has APZ enabled or not.
-  sync AsyncPanZoomEnabled(uint64_t layersId) returns (bool aHasAPZ);
-
-  // Must be called after Initialize(), and only succeeds if AsyncPanZoomEnabled() is true.
-  async PAPZCTreeManager(uint64_t layersId);
 
   /**
    * Confirmation callback for UpdatePluginConfigurations and HideAllPlugins.
