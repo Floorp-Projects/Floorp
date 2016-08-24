@@ -117,7 +117,7 @@ TabListComponent.prototype = {
   },
 
   onOpenTabs(urls, where, params) {
-    if (!PlacesUIUtils.confirmOpenInTabs(urls.length, this._window)) {
+    if(!PlacesUIUtils.confirmOpenInTabs(urls.length, this._window)) {
       return;
     }
     if (where == "window") {
