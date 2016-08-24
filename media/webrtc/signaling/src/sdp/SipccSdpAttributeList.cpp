@@ -660,6 +660,19 @@ SipccSdpAttributeList::LoadIdentity(sdp_t* sdp, uint16_t level)
 }
 
 void
+SipccSdpAttributeList::LoadDtlsMessage(sdp_t* sdp, uint16_t level)
+{
+  const char* val = sdp_attr_get_long_string(sdp, SDP_ATTR_DTLS_MESSAGE, level,
+                                             0, 1);
+  if (val) {
+    // sipcc does not expose parse code for this, so we use a SDParta-provided
+    // parser
+    std::string strval(val);
+    SetAttribute(new SdpDtlsMessageAttribute(strval));
+  }
+}
+
+void
 SipccSdpAttributeList::LoadFmtp(sdp_t* sdp, uint16_t level)
 {
   auto fmtps = MakeUnique<SdpFmtpAttributeList>();
@@ -1025,6 +1038,7 @@ SipccSdpAttributeList::Load(sdp_t* sdp, uint16_t level,
     }
 
     LoadIdentity(sdp, level);
+    LoadDtlsMessage(sdp, level);
   } else {
     sdp_media_e mtype = sdp_get_media_type(sdp, level);
     if (mtype == SDP_MEDIA_APPLICATION) {
@@ -1119,6 +1133,16 @@ SipccSdpAttributeList::GetDirection() const
 
   const SdpAttribute* attr = GetAttribute(SdpAttribute::kDirectionAttribute);
   return static_cast<const SdpDirectionAttribute*>(attr)->mValue;
+}
+
+const SdpDtlsMessageAttribute&
+SipccSdpAttributeList::GetDtlsMessage() const
+{
+  if (!HasAttribute(SdpAttribute::kDtlsMessageAttribute)) {
+    MOZ_CRASH();
+  }
+  const SdpAttribute* attr = GetAttribute(SdpAttribute::kDtlsMessageAttribute);
+  return *static_cast<const SdpDtlsMessageAttribute*>(attr);
 }
 
 const SdpExtmapAttributeList&
