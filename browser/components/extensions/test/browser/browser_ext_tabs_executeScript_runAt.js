@@ -31,9 +31,11 @@ add_task(function* testExecuteScript() {
         return Promise.reject(new Error("Max tries exceeded"));
       }
 
+      let url = `${URL}?r=${Math.random()}`;
+
       let loadingPromise = new Promise(resolve => {
         browser.tabs.onUpdated.addListener(function listener(tabId, changed, tab_) {
-          if (tabId == tab.id && changed.status == "loading" && tab_.url == URL) {
+          if (tabId == tab.id && changed.status == "loading" && tab_.url == url) {
             browser.tabs.onUpdated.removeListener(listener);
             resolve();
           }
@@ -42,7 +44,7 @@ add_task(function* testExecuteScript() {
 
       // TODO: Test allFrames and frameId.
 
-      return browser.tabs.update({url: URL}).then(() => {
+      return browser.tabs.update({url}).then(() => {
         return loadingPromise;
       }).then(() => {
         return Promise.all([
