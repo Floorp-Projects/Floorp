@@ -226,13 +226,13 @@ Animation::SetTimeline(AnimationTimeline* aTimeline)
 void
 Animation::SetTimelineNoUpdate(AnimationTimeline* aTimeline)
 {
-  RefPtr<AnimationTimeline> oldTimeline = mTimeline;
   if (mTimeline == aTimeline) {
     return;
   }
 
-  if (mTimeline) {
-    mTimeline->RemoveAnimation(this);
+  RefPtr<AnimationTimeline> oldTimeline = mTimeline;
+  if (oldTimeline) {
+    oldTimeline->RemoveAnimation(this);
   }
 
   mTimeline = aTimeline;
