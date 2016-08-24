@@ -506,15 +506,9 @@ var dataProviders = {
 
   accessibility: function accessibility(done) {
     let data = {};
-    try {
-      data.isActive = Components.manager.QueryInterface(Ci.nsIServiceManager).
-                      isServiceInstantiatedByContractID(
-                        "@mozilla.org/accessibilityService;1",
-                        Ci.nsISupports);
-    }
-    catch (e) {
-      data.isActive = false;
-    }
+    data.isActive = Cc["@mozilla.org/xre/app-info;1"].
+                    getService(Ci.nsIXULRuntime).
+                    accessibilityEnabled;
     try {
       data.forceDisabled =
         Services.prefs.getIntPref("accessibility.force_disabled");
