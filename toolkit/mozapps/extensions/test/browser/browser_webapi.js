@@ -17,7 +17,7 @@ function testWithAPI(task) {
 
 let gProvider = new MockProvider();
 
-gProvider.createAddons([{
+let addons = gProvider.createAddons([{
   id: "addon1@tests.mozilla.org",
   name: "Test add-on 1",
   version: "2.1",
@@ -41,7 +41,17 @@ gProvider.createAddons([{
   type: "extension",
   userDisabled: true,
   isActive: false,
+}, {
+  id: "addon4@tests.mozilla.org",
+  name: "Test add-on 4",
+  version: "1",
+  description: "Longer description",
+  type: "extension",
+  userDisabled: false,
+  isActive: true,
 }]);
+
+addons[3].permissions &= ~AddonManager.PERM_CAN_UNINSTALL;
 
 function API_getAddonByID(browser, id) {
   return ContentTask.spawn(browser, id, function*(id) {
@@ -66,6 +76,10 @@ add_task(testWithAPI(function*(browser) {
       switch (prop) {
         case "isEnabled":
           realVal = !real.userDisabled;
+          break;
+
+        case "canUninstall":
+          realVal = Boolean(real.permissions & AddonManager.PERM_CAN_UNINSTALL);
           break;
       }
 
