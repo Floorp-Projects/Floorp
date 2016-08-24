@@ -377,6 +377,12 @@ nsPluginArray::EnsurePlugins()
     }
   }
 
+  if (mPlugins.Length() == 0 && mCTPPlugins.Length() != 0) {
+    nsCOMPtr<nsPluginTag> hiddenTag = new nsPluginTag("Hidden Plugin", NULL, NULL, NULL, NULL,
+                                                      NULL, NULL, NULL, 0, 0, false);
+    mPlugins.AppendElement(new nsPluginElement(mWindow, hiddenTag));
+  }
+
   // Alphabetize the enumeration order of non-hidden plugins to reduce
   // fingerprintable entropy based on plugins' installation file times.
   mPlugins.Sort();
