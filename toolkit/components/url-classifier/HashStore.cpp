@@ -551,7 +551,9 @@ Merge(ChunkSet* aStoreChunks,
   // to make the chunkranges continuous.
   aStoreChunks->Merge(aUpdateChunks);
 
-  aStorePrefixes->AppendElements(adds, fallible);
+  if (!aStorePrefixes->AppendElements(adds, fallible))
+    return NS_ERROR_OUT_OF_MEMORY;
+
   EntrySort(*aStorePrefixes);
 
   return NS_OK;
