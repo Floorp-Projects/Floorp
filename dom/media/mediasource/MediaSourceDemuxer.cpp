@@ -381,7 +381,9 @@ RefPtr<MediaSourceTrackDemuxer::SeekPromise>
 MediaSourceTrackDemuxer::DoSeek(media::TimeUnit aTime)
 {
   TimeIntervals buffered = mManager->Buffered(mType);
-  buffered.SetFuzz(MediaSourceDemuxer::EOS_FUZZ);
+  // Fuzz factor represents a +/- threshold. So when seeking it allows the gap
+  // to be twice as big as the fuzz value. We only want to allow EOS_FUZZ gap.
+  buffered.SetFuzz(MediaSourceDemuxer::EOS_FUZZ / 2);
   TimeUnit seekTime = std::max(aTime - mPreRoll, TimeUnit::FromMicroseconds(0));
 
   if (!buffered.Contains(seekTime)) {
@@ -400,7 +402,7 @@ MediaSourceTrackDemuxer::DoSeek(media::TimeUnit aTime)
     MOZ_ASSERT(index != TimeIntervals::NoIndex);
     seekTime = buffered[index].mStart;
   }
-  seekTime = mManager->Seek(mType, seekTime, MediaSourceDemuxer::EOS_FUZZ);
+  seekTime = mManager->Seek(mType, seekTime, MediaSourceDemuxer::EOS_FUZZ / 2);
   bool error;
   RefPtr<MediaRawData> sample =
     mManager->GetSample(mType,
