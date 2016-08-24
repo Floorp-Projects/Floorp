@@ -32,7 +32,7 @@ ServoStyleSheet::IsApplicable() const
 bool
 ServoStyleSheet::HasRules() const
 {
-  return Servo_StyleSheetHasRules(RawSheet());
+  return Servo_StyleSheet_HasRules(RawSheet());
 }
 
 nsIDocument*
@@ -86,7 +86,7 @@ ServoStyleSheet::ParseSheet(const nsAString& aInput,
   aBaseURI->GetSpec(baseString);
 
   NS_ConvertUTF16toUTF8 input(aInput);
-  mSheet = Servo_StylesheetFromUTF8Bytes(
+  mSheet = Servo_StyleSheet_FromUTF8Bytes(
       reinterpret_cast<const uint8_t*>(input.get()), input.Length(),
       mParsingMode,
       reinterpret_cast<const uint8_t*>(baseString.get()), baseString.Length(),

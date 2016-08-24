@@ -19,7 +19,7 @@ using namespace mozilla::dom;
 
 ServoStyleSet::ServoStyleSet()
   : mPresContext(nullptr)
-  , mRawSet(Servo_InitStyleSet())
+  , mRawSet(Servo_StyleSet_Init())
   , mBatching(0)
   , mStylingStarted(false)
 {
@@ -97,7 +97,7 @@ ServoStyleSet::GetContext(nsIContent* aContent,
                           CSSPseudoElementType aPseudoType)
 {
   RefPtr<ServoComputedValues> computedValues =
-    Servo_GetComputedValues(aContent).Consume();
+    Servo_ComputedValues_Get(aContent).Consume();
   MOZ_ASSERT(computedValues);
   return GetContext(computedValues.forget(), aParentContext, aPseudoTag, aPseudoType);
 }
@@ -159,9 +159,9 @@ ServoStyleSet::ResolveStyleForText(nsIContent* aTextNode,
     ServoComputedValues* parentComputedValues =
       aParentContext->StyleSource().AsServoComputedValues();
     computedValues =
-      Servo_InheritComputedValues(parentComputedValues).Consume();
+      Servo_ComputedValues_Inherit(parentComputedValues).Consume();
   } else {
-    computedValues = Servo_GetComputedValues(aTextNode).Consume();
+    computedValues = Servo_ComputedValues_Get(aTextNode).Consume();
   }
 
   return GetContext(computedValues.forget(), aParentContext,
@@ -176,7 +176,7 @@ ServoStyleSet::ResolveStyleForOtherNonElement(nsStyleContext* aParentContext)
   ServoComputedValues* parent =
     aParentContext ? aParentContext->StyleSource().AsServoComputedValues() : nullptr;
   RefPtr<ServoComputedValues> computedValues =
-    Servo_InheritComputedValues(parent).Consume();
+    Servo_ComputedValues_Inherit(parent).Consume();
   MOZ_ASSERT(computedValues);
 
   return GetContext(computedValues.forget(), aParentContext,
@@ -198,7 +198,7 @@ ServoStyleSet::ResolvePseudoElementStyle(Element* aParentElement,
   nsIAtom* pseudoTag = nsCSSPseudoElements::GetPseudoAtom(aType);
 
   RefPtr<ServoComputedValues> computedValues =
-    Servo_GetComputedValuesForPseudoElement(
+    Servo_ComputedValues_GetForPseudoElement(
       aParentContext->StyleSource().AsServoComputedValues(),
       aParentElement, pseudoTag, mRawSet.get(), /* is_probe = */ false).Consume();
   MOZ_ASSERT(computedValues);
@@ -222,8 +222,8 @@ ServoStyleSet::ResolveAnonymousBoxStyle(nsIAtom* aPseudoTag,
     aParentContext ? aParentContext->StyleSource().AsServoComputedValues()
                    : nullptr;
   RefPtr<ServoComputedValues> computedValues =
-    Servo_GetComputedValuesForAnonymousBox(parentStyle, aPseudoTag,
-                                                       mRawSet.get()).Consume();
+    Servo_ComputedValues_GetForAnonymousBox(parentStyle, aPseudoTag,
+                                            mRawSet.get()).Consume();
 #ifdef DEBUG
   if (!computedValues) {
     nsString pseudo;
@@ -252,7 +252,7 @@ ServoStyleSet::AppendStyleSheet(SheetType aType,
   mSheets[aType].AppendElement(aSheet);
 
   // Maintain a mirrored list of sheets on the servo side.
-  Servo_AppendStyleSheet(aSheet->RawSheet(), mRawSet.get());
+  Servo_StyleSet_AppendStyleSheet(mRawSet.get(), aSheet->RawSheet());
 
   return NS_OK;
 }
@@ -269,7 +269,7 @@ ServoStyleSet::PrependStyleSheet(SheetType aType,
   mSheets[aType].InsertElementAt(0, aSheet);
 
   // Maintain a mirrored list of sheets on the servo side.
-  Servo_PrependStyleSheet(aSheet->RawSheet(), mRawSet.get());
+  Servo_StyleSet_PrependStyleSheet(mRawSet.get(), aSheet->RawSheet());
 
   return NS_OK;
 }
@@ -285,7 +285,7 @@ ServoStyleSet::RemoveStyleSheet(SheetType aType,
   mSheets[aType].RemoveElement(aSheet);
 
   // Maintain a mirrored list of sheets on the servo side.
-  Servo_RemoveStyleSheet(aSheet->RawSheet(), mRawSet.get());
+  Servo_StyleSet_RemoveStyleSheet(mRawSet.get(), aSheet->RawSheet());
 
   return NS_OK;
 }
@@ -300,14 +300,14 @@ ServoStyleSet::ReplaceSheets(SheetType aType,
   // probably by aligning the representations better between engines.
 
   for (ServoStyleSheet* sheet : mSheets[aType]) {
-    Servo_RemoveStyleSheet(sheet->RawSheet(), mRawSet.get());
+    Servo_StyleSet_RemoveStyleSheet(mRawSet.get(), sheet->RawSheet());
   }
 
   mSheets[aType].Clear();
   mSheets[aType].AppendElements(aNewSheets);
 
   for (ServoStyleSheet* sheet : mSheets[aType]) {
-    Servo_AppendStyleSheet(sheet->RawSheet(), mRawSet.get());
+    Servo_StyleSet_AppendStyleSheet(mRawSet.get(), sheet->RawSheet());
   }
 
   return NS_OK;
@@ -331,8 +331,8 @@ ServoStyleSet::InsertStyleSheetBefore(SheetType aType,
   mSheets[aType].InsertElementAt(idx, aNewSheet);
 
   // Maintain a mirrored list of sheets on the servo side.
-  Servo_InsertStyleSheetBefore(aNewSheet->RawSheet(),
-                               aReferenceSheet->RawSheet(), mRawSet.get());
+  Servo_StyleSet_InsertStyleSheetBefore(mRawSet.get(), aNewSheet->RawSheet(),
+                                        aReferenceSheet->RawSheet());
 
   return NS_OK;
 }
@@ -374,10 +374,10 @@ ServoStyleSet::AddDocStyleSheet(ServoStyleSheet* aSheet,
   ServoStyleSheet* followingSheet =
     mSheets[SheetType::Doc].SafeElementAt(index + 1);
   if (followingSheet) {
-    Servo_InsertStyleSheetBefore(aSheet->RawSheet(), followingSheet->RawSheet(),
-                                 mRawSet.get());
+    Servo_StyleSet_InsertStyleSheetBefore(mRawSet.get(), aSheet->RawSheet(),
+                                          followingSheet->RawSheet());
   } else {
-    Servo_AppendStyleSheet(aSheet->RawSheet(), mRawSet.get());
+    Servo_StyleSet_AppendStyleSheet(mRawSet.get(), aSheet->RawSheet());
   }
 
   return NS_OK;
@@ -393,7 +393,7 @@ ServoStyleSet::ProbePseudoElementStyle(Element* aParentElement,
   nsIAtom* pseudoTag = nsCSSPseudoElements::GetPseudoAtom(aType);
 
   RefPtr<ServoComputedValues> computedValues =
-    Servo_GetComputedValuesForPseudoElement(
+    Servo_ComputedValues_GetForPseudoElement(
       aParentContext->StyleSource().AsServoComputedValues(),
       aParentElement, pseudoTag, mRawSet.get(), /* is_probe = */ true).Consume();
 

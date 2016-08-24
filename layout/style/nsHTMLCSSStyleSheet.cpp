@@ -47,7 +47,7 @@ nsHTMLCSSStyleSheet::~nsHTMLCSSStyleSheet()
       case nsAttrValue::eServoCSSDeclaration: {
         ServoDeclarationBlock* declarations =
           value->mValue.mServoCSSDeclaration;
-        Servo_ClearDeclarationBlockCachePointer(declarations);
+        Servo_DeclarationBlock_ClearCachePointer(declarations);
         break;
       }
       default:

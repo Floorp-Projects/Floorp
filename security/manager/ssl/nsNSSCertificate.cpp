@@ -36,11 +36,9 @@
 #include "nsUnicharUtils.h"
 #include "nsXULAppAPI.h"
 #include "nspr.h"
-#include "nssb64.h"
 #include "pkix/pkixnss.h"
 #include "pkix/pkixtypes.h"
 #include "pkix/Result.h"
-#include "plbase64.h"
 #include "prerror.h"
 #include "prmem.h"
 #include "prprf.h"
@@ -171,7 +169,7 @@ nsNSSCertificate::~nsNSSCertificate()
     return;
   }
   destructorSafeDestroyNSSReference();
-  shutdown(calledFromObject);
+  shutdown(ShutdownCalledFrom::Object);
 }
 
 void nsNSSCertificate::virtualDestroyNSSReference()
@@ -1448,7 +1446,7 @@ nsNSSCertList::~nsNSSCertList()
     return;
   }
   destructorSafeDestroyNSSReference();
-  shutdown(calledFromObject);
+  shutdown(ShutdownCalledFrom::Object);
 }
 
 void nsNSSCertList::virtualDestroyNSSReference()
@@ -1735,7 +1733,7 @@ nsNSSCertListEnumerator::~nsNSSCertListEnumerator()
     return;
   }
   destructorSafeDestroyNSSReference();
-  shutdown(calledFromObject);
+  shutdown(ShutdownCalledFrom::Object);
 }
 
 void nsNSSCertListEnumerator::virtualDestroyNSSReference()

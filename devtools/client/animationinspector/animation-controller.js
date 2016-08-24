@@ -23,7 +23,7 @@ loader.lazyRequireGetter(this, "AnimationsFront", "devtools/shared/fronts/animat
 
 const { LocalizationHelper } = require("devtools/client/shared/l10n");
 
-const STRINGS_URI = "chrome://devtools/locale/animationinspector.properties";
+const STRINGS_URI = "devtools/locale/animationinspector.properties";
 const L10N = new LocalizationHelper(STRINGS_URI);
 
 // Global toolbox/inspector, set when startup is called.

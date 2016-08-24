@@ -6,6 +6,7 @@
 #ifndef GMPDecryptorProxy_h_
 #define GMPDecryptorProxy_h_
 
+#include "mozilla/DecryptorProxyCallback.h"
 #include "GMPCallbackBase.h"
 #include "gmp-decryption.h"
 #include "nsString.h"
@@ -14,43 +15,10 @@ namespace mozilla {
 class CryptoSample;
 } // namespace mozilla
 
-class GMPDecryptorProxyCallback : public GMPCallbackBase {
+class GMPDecryptorProxyCallback : public DecryptorProxyCallback,
+                                  public GMPCallbackBase {
 public:
-  ~GMPDecryptorProxyCallback() {}
-
-  virtual void SetSessionId(uint32_t aCreateSessionId,
-                            const nsCString& aSessionId) = 0;
-
-  virtual void ResolveLoadSessionPromise(uint32_t aPromiseId,
-                                         bool aSuccess) = 0;
-
-  virtual void ResolvePromise(uint32_t aPromiseId) = 0;
-
-  virtual void RejectPromise(uint32_t aPromiseId,
-                             nsresult aException,
-                             const nsCString& aSessionId) = 0;
-
-  virtual void SessionMessage(const nsCString& aSessionId,
-                              GMPSessionMessageType aMessageType,
-                              const nsTArray<uint8_t>& aMessage) = 0;
-
-  virtual void ExpirationChange(const nsCString& aSessionId,
-                                GMPTimestamp aExpiryTime) = 0;
-
-  virtual void SessionClosed(const nsCString& aSessionId) = 0;
-
-  virtual void SessionError(const nsCString& aSessionId,
-                            nsresult aException,
-                            uint32_t aSystemCode,
-                            const nsCString& aMessage) = 0;
-
-  virtual void KeyStatusChanged(const nsCString& aSessionId,
-                                const nsTArray<uint8_t>& aKeyId,
-                                GMPMediaKeyStatus aStatus) = 0;
-
-  virtual void Decrypted(uint32_t aId,
-                         GMPErr aResult,
-                         const nsTArray<uint8_t>& aDecryptedData) = 0;
+  virtual ~GMPDecryptorProxyCallback() {}
 };
 
 class GMPDecryptorProxy {

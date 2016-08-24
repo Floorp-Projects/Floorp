@@ -36,7 +36,7 @@ nsCryptoHash::~nsCryptoHash()
     return;
   }
   destructorSafeDestroyNSSReference();
-  shutdown(calledFromObject);
+  shutdown(ShutdownCalledFrom::Object);
 }
 
 void
@@ -238,7 +238,7 @@ nsCryptoHMAC::~nsCryptoHMAC()
     return;
   }
   destructorSafeDestroyNSSReference();
-  shutdown(calledFromObject);
+  shutdown(ShutdownCalledFrom::Object);
 }
 
 void

@@ -207,13 +207,13 @@ var SourceUtils = {
     if (aUrl.length > aLength) {
       switch (aSection) {
         case "start":
-          return L10N.ellipsis + aUrl.slice(-aLength);
+          return ELLIPSIS + aUrl.slice(-aLength);
           break;
         case "center":
-          return aUrl.substr(0, aLength / 2 - 1) + L10N.ellipsis + aUrl.slice(-aLength / 2 + 1);
+          return aUrl.substr(0, aLength / 2 - 1) + ELLIPSIS + aUrl.slice(-aLength / 2 + 1);
           break;
         case "end":
-          return aUrl.substr(0, aLength) + L10N.ellipsis;
+          return aUrl.substr(0, aLength) + ELLIPSIS;
           break;
       }
     }

@@ -13,6 +13,11 @@ richlistitem[type="download"]:not([selected]) button {
   -moz-user-focus: none;
 }
 
+.downloadsHideDropmarker > #downloadsFooterButtonsSplitter,
+.downloadsHideDropmarker > #downloadsFooterDropmarker {
+  display: none;
+}
+
 richlistitem[type="download"].download-state[state="1"]:not([exists]) .downloadShow {
   display: none;
 }

@@ -985,7 +985,6 @@ GLContextGLX::SwapBuffers()
     if (!mDoubleBuffered)
         return false;
     mGLX->xSwapBuffers(mDisplay, mDrawable);
-    mGLX->xWaitGL();
     return true;
 }
 

@@ -5,7 +5,7 @@
 const { Cu, Cc, Ci } = require("chrome");
 
 const { LocalizationHelper } = require("devtools/client/shared/l10n");
-const STRINGS_URI = "chrome://devtools/locale/memory.properties";
+const STRINGS_URI = "devtools/locale/memory.properties";
 const L10N = exports.L10N = new LocalizationHelper(STRINGS_URI);
 
 const { OS } = require("resource://gre/modules/osfile.jsm");
@@ -473,7 +473,7 @@ exports.formatNumber = function (number, showSign = false) {
  * @param {Boolean} showSign (defaults to false)
  */
 exports.formatPercent = function (percent, showSign = false) {
-  return exports.L10N.getFormatStr("tree-item.percent",
+  return exports.L10N.getFormatStr("tree-item.percent2",
                            exports.formatNumber(percent, showSign));
 };
 
