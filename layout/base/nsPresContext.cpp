@@ -2681,6 +2681,12 @@ nsPresContext::CheckForInterrupt(nsIFrame* aFrame)
     TimeStamp::Now() - mReflowStartTime > sInterruptTimeout &&
     HavePendingInputEvent() &&
     !IsChrome();
+
+  if (mPendingInterruptFromTest) {
+    mPendingInterruptFromTest = false;
+    mHasPendingInterrupt = true;
+  }
+
   if (mHasPendingInterrupt) {
 #ifdef NOISY_INTERRUPTIBLE_REFLOW
     printf("*** DETECTED pending interrupt (time=%lld)\n", PR_Now());
