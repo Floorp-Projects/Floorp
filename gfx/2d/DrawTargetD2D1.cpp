@@ -750,6 +750,10 @@ void
 DrawTargetD2D1::PopClip()
 {
   mCurrentClippedGeometry = nullptr;
+  if (CurrentLayer().mPushedClips.empty()) {
+    gfxDevCrash(LogReason::UnbalancedClipStack) << "DrawTargetD2D1::PopClip: No clip to pop.";
+    return;
+  }
 
   if (CurrentLayer().mClipsArePushed) {
     if (CurrentLayer().mPushedClips.back().mPath) {
