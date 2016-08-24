@@ -1,0 +1,27 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# Any copyright is dedicated to the Public Domain.
+# http://creativecommons.org/publicdomain/zero/1.0/
+
+@template
+def Library(name):
+    '''Template for libraries.'''
+    LIBRARY_NAME = name
+
+Library('dummy')
+
+SOURCES += [
+    'd.c',
+]
+
+SOURCES += [
+    'e.m',
+]
+
+SOURCES += [
+    'g.S',
+]
+
+SOURCES += [
+    'h.s',
+    'i.asm',
+]

@@ -1,0 +1,11 @@
+# Any copyright is dedicated to the Public Domain.
+# http://creativecommons.org/publicdomain/zero/1.0/
+
+DIRS = ['one','two','three']
+@template
+def SharedLibrary(name):
+    LIBRARY_NAME = name
+    FORCE_SHARED_LIB = True
+
+SharedLibrary('cxx_shared')
+USE_LIBS += ['cxx_static']
