@@ -611,7 +611,6 @@ WebConsole.prototype = {
   },
 };
 
-
 /**
  * A BrowserConsole instance is an interactive console initialized *per target*
  * that displays console log data as well as provides an interactive terminal to

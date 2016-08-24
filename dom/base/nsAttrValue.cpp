@@ -85,7 +85,7 @@ MiscContainer::Cache()
       sheet = mValue.mGeckoCSSDeclaration->GetHTMLCSSStyleSheet();
       break;
     case nsAttrValue::eServoCSSDeclaration:
-      sheet = Servo_GetDeclarationBlockCache(mValue.mServoCSSDeclaration);
+      sheet = Servo_DeclarationBlock_GetCache(mValue.mServoCSSDeclaration);
       break;
     default:
       MOZ_ASSERT_UNREACHABLE("unexpected cached nsAttrValue type");
@@ -112,7 +112,7 @@ MiscContainer::Cache()
       mValue.mGeckoCSSDeclaration->SetImmutable();
       break;
     case nsAttrValue::eServoCSSDeclaration:
-      Servo_SetDeclarationBlockImmutable(mValue.mServoCSSDeclaration);
+      Servo_DeclarationBlock_SetImmutable(mValue.mServoCSSDeclaration);
       break;
     default:
       MOZ_ASSERT_UNREACHABLE("unexpected cached nsAttrValue type");
@@ -139,7 +139,7 @@ MiscContainer::Evict()
       sheet = mValue.mGeckoCSSDeclaration->GetHTMLCSSStyleSheet();
       break;
     case nsAttrValue::eServoCSSDeclaration:
-      sheet = Servo_GetDeclarationBlockCache(mValue.mServoCSSDeclaration);
+      sheet = Servo_DeclarationBlock_GetCache(mValue.mServoCSSDeclaration);
       break;
     default:
       MOZ_ASSERT_UNREACHABLE("unexpected cached nsAttrValue type");

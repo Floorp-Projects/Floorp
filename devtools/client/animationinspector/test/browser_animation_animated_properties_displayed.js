@@ -5,7 +5,7 @@
 "use strict";
 
 const { LocalizationHelper } = require("devtools/client/shared/l10n");
-const STRINGS_URI = "chrome://global/locale/layout_errors.properties";
+const STRINGS_URI = "global/locale/layout_errors.properties";
 const L10N = new LocalizationHelper(STRINGS_URI);
 
 // Test that when an animation is selected, its list of animated properties is

@@ -37,7 +37,7 @@ nsX509CertValidity::~nsX509CertValidity()
     return;
   }
 
-  shutdown(calledFromObject);
+  shutdown(ShutdownCalledFrom::Object);
 }
 
 NS_IMETHODIMP
