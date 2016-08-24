@@ -494,9 +494,6 @@ public:
   PAPZCTreeManagerParent* AllocPAPZCTreeManagerParent(const uint64_t& aLayersId) override;
   bool DeallocPAPZCTreeManagerParent(PAPZCTreeManagerParent* aActor) override;
 
-  PAPZParent* AllocPAPZParent(const uint64_t& aLayersId) override;
-  bool DeallocPAPZParent(PAPZParent* aActor) override;
-
   bool RecvAsyncPanZoomEnabled(const uint64_t& aLayersId, bool* aHasAPZ) override;
 
   RefPtr<APZCTreeManager> GetAPZCTreeManager();
@@ -530,6 +527,20 @@ private:
   static void RequestNotifyLayerTreeReady(uint64_t aLayersId, CompositorUpdateObserver* aObserver);
   static void RequestNotifyLayerTreeCleared(uint64_t aLayersId, CompositorUpdateObserver* aObserver);
   static void SwapLayerTreeObservers(uint64_t aLayer, uint64_t aOtherLayer);
+
+  /**
+   * Creates a new RemoteContentController for aTabId. Should only be called on
+   * the main thread.
+   *
+   * aLayersId The layers id for the browser corresponding to aTabId.
+   * aContentParent The ContentParent for the process that the TabChild for
+   *                aTabId lives in.
+   * aBrowserParent The toplevel TabParent for aTabId.
+   */
+  static bool UpdateRemoteContentController(uint64_t aLayersId,
+                                            dom::ContentParent* aContentParent,
+                                            const dom::TabId& aTabId,
+                                            dom::TabParent* aBrowserParent);
 
 protected:
   // Protected destructor, to discourage deletion outside of Release():

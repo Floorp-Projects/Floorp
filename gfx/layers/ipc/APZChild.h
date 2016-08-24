@@ -37,10 +37,6 @@ public:
                      const uint64_t& aInputBlockId,
                      const bool& aCallTakeFocusForClickFromTap) override;
 
-  bool RecvNotifyMozMouseScrollEvent(const uint64_t& aLayersId,
-                                     const ViewID& aScrollId,
-                                     const nsString& aEvent) override;
-
   bool RecvNotifyAPZStateChange(const ViewID& aViewId,
                                 const APZStateChange& aChange,
                                 const int& aArg) override;

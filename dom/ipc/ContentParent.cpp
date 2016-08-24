@@ -1716,7 +1716,7 @@ ContentParent::AllocateLayerTreeId(ContentParent* aContent,
     return false;
   }
 
-  return aContent->SendNotifyLayerAllocated(aTabId, *aId);
+  return gpu->UpdateRemoteContentController(*aId, aContent, aTabId, aTopLevel);
 }
 
 bool
@@ -2895,6 +2895,21 @@ ContentParent::AllocPGMPServiceParent(mozilla::ipc::Transport* aTransport,
                                       base::ProcessId aOtherProcess)
 {
   return GMPServiceParent::Create(aTransport, aOtherProcess);
+}
+
+PAPZParent*
+ContentParent::AllocPAPZParent(const TabId& aTabId)
+{
+  // The PAPZParent should just be created in the main process and then an IPDL
+  // constructor message sent to hook it up.
+  MOZ_CRASH("This shouldn't be called");
+  return nullptr;
+}
+
+bool
+ContentParent::DeallocPAPZParent(PAPZParent* aActor)
+{
+  return true;
 }
 
 PBackgroundParent*

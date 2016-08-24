@@ -115,6 +115,18 @@ public:
   void RequestNotifyLayerTreeCleared(uint64_t aLayersId, CompositorUpdateObserver* aObserver);
   void SwapLayerTreeObservers(uint64_t aLayer, uint64_t aOtherLayer);
 
+  // Creates a new RemoteContentController for aTabId. Should only be called on
+  // the main thread.
+  //
+  // aLayersId      The layers id for the browser corresponding to aTabId.
+  // aContentParent The ContentParent for the process that the TabChild for
+  //                aTabId lives in.
+  // aBrowserParent The toplevel TabParent for aTabId.
+  bool UpdateRemoteContentController(uint64_t aLayersId,
+                                     dom::ContentParent* aContentParent,
+                                     const dom::TabId& aTabId,
+                                     dom::TabParent* aBrowserParent);
+
   void OnProcessLaunchComplete(GPUProcessHost* aHost) override;
   void OnProcessUnexpectedShutdown(GPUProcessHost* aHost) override;
 

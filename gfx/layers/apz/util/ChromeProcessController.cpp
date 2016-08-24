@@ -50,7 +50,7 @@ ChromeProcessController::InitializeRoot()
 void
 ChromeProcessController::RequestContentRepaint(const FrameMetrics& aFrameMetrics)
 {
-  MOZ_ASSERT(IsRepaintThread());
+  MOZ_ASSERT(NS_IsMainThread());
 
   FrameMetrics metrics = aFrameMetrics;
   if (metrics.IsRootContent()) {
@@ -64,18 +64,6 @@ void
 ChromeProcessController::PostDelayedTask(already_AddRefed<Runnable> aTask, int aDelayMs)
 {
   MessageLoop::current()->PostDelayedTask(Move(aTask), aDelayMs);
-}
-
-bool
-ChromeProcessController::IsRepaintThread()
-{
-  return NS_IsMainThread();
-}
-
-void
-ChromeProcessController::DispatchToRepaintThread(already_AddRefed<Runnable> aTask)
-{
-  NS_DispatchToMainThread(Move(aTask));
 }
 
 void
@@ -236,7 +224,6 @@ ChromeProcessController::NotifyMozMouseScrollEvent(const FrameMetrics::ViewID& a
 void
 ChromeProcessController::NotifyFlushComplete()
 {
-  MOZ_ASSERT(IsRepaintThread());
-
+  MOZ_ASSERT(NS_IsMainThread());
   APZCCallbackHelper::NotifyFlushComplete(GetPresShell());
 }
