@@ -179,3 +179,55 @@ add_task(function* testTabSwitchContext() {
     },
   });
 });
+
+add_task(function* testDefaultTitle() {
+  yield runTests({
+    manifest: {
+      "name": "Foo Extension",
+
+      "page_action": {
+        "default_icon": "icon.png",
+      },
+
+      "permissions": ["tabs"],
+    },
+
+    files: {
+      "icon.png": imageBuffer,
+    },
+
+    getTests(tabs) {
+      let details = [
+        {"title": "Foo Extension",
+         "popup": "",
+         "icon": browser.runtime.getURL("icon.png")},
+        {"title": "Foo Title",
+         "popup": "",
+         "icon": browser.runtime.getURL("icon.png")},
+      ];
+
+      return [
+        expect => {
+          browser.test.log("Initial state. No icon visible.");
+          expect(null);
+        },
+        expect => {
+          browser.test.log("Show the icon on the first tab, expect extension title as default title.");
+          browser.pageAction.show(tabs[0]).then(() => {
+            expect(details[0]);
+          });
+        },
+        expect => {
+          browser.test.log("Change the title. Expect new title.");
+          browser.pageAction.setTitle({tabId: tabs[0], title: "Foo Title"});
+          expect(details[1]);
+        },
+        expect => {
+          browser.test.log("Clear the title. Expect extension title.");
+          browser.pageAction.setTitle({tabId: tabs[0], title: ""});
+          expect(details[0]);
+        },
+      ];
+    },
+  });
+});
