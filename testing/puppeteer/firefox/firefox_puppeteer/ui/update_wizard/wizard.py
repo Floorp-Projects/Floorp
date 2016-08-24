@@ -32,12 +32,9 @@ class Wizard(UIBaseLib):
                    'errorextra': ErrorExtraPanel,
                    'finished': FinishedPanel,
                    'finishedBackground': FinishedBackgroundPanel,
-                   'installed': InstalledPanel,
                    'manualUpdate': ManualUpdatePanel,
                    'noupdatesfound': NoUpdatesFoundPanel,
-                   'pluginupdatesfound': PluginUpdatesFoundPanel,
                    'updatesfoundbasic': UpdatesFoundBasicPanel,
-                   'updatesfoundbillboard': UpdatesFoundBillboardPanel,
 
                    # TODO: Remove once we no longer support version Firefox 45.0ESR
                    'incompatibleCheck': IncompatibleCheckPanel,
@@ -160,14 +157,6 @@ class Wizard(UIBaseLib):
         return self._create_panel_for_id('incompatibleList')
 
     @property
-    def installed(self):
-        """The installed panel.
-
-        :returns: :class:`InstalledPanel` instance.
-        """
-        return self._create_panel_for_id('installed')
-
-    @property
     def manual_update(self):
         """The manual update panel.
 
@@ -184,28 +173,12 @@ class Wizard(UIBaseLib):
         return self._create_panel_for_id('noupdatesfound')
 
     @property
-    def plugin_updates_found(self):
-        """The plugin updates found panel.
-
-        :returns: :class:`PluginUpdatesFoundPanel` instance.
-        """
-        return self._create_panel_for_id('pluginupdatesfound')
-
-    @property
     def updates_found_basic(self):
         """The updates found panel.
 
         :returns: :class:`UpdatesFoundPanel` instance.
         """
         return self._create_panel_for_id('updatesfoundbasic')
-
-    @property
-    def updates_found_billboard(self):
-        """The billboard panel shown if an update has been found.
-
-        :returns: :class:`UpdatesFoundBillboardPanel` instance.
-        """
-        return self._create_panel_for_id('updatesfoundbillboard')
 
     @property
     def panels(self):
@@ -306,10 +279,6 @@ class IncompatibleListPanel(Panel):
     pass
 
 
-class InstalledPanel(Panel):
-    pass
-
-
 class ManualUpdatePanel(Panel):
     pass
 
@@ -318,13 +287,5 @@ class NoUpdatesFoundPanel(Panel):
     pass
 
 
-class PluginUpdatesFoundPanel(Panel):
-    pass
-
-
 class UpdatesFoundBasicPanel(Panel):
-    pass
-
-
-class UpdatesFoundBillboardPanel(Panel):
     pass
