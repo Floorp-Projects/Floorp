@@ -3289,7 +3289,7 @@ HTMLInputElement::GetRadioGroupContainer() const
 }
 
 already_AddRefed<nsIDOMHTMLInputElement>
-HTMLInputElement::GetSelectedRadioButton()
+HTMLInputElement::GetSelectedRadioButton() const
 {
   nsIRadioGroupContainer* container = GetRadioGroupContainer();
   if (!container) {
@@ -3360,6 +3360,13 @@ HTMLInputElement::SetCheckedInternal(bool aChecked, bool aNotify)
   // Notify the document that the CSS :checked pseudoclass for this element
   // has changed state.
   UpdateState(aNotify);
+
+  // Notify all radios in the group that value has changed, this is to let
+  // radios to have the chance to update its states, e.g., :indeterminate.
+  if (mType == NS_FORM_INPUT_RADIO) {
+    nsCOMPtr<nsIRadioVisitor> visitor = new nsRadioUpdateStateVisitor(this);
+    VisitGroup(visitor, aNotify);
+  }
 }
 
 void
@@ -6420,6 +6427,15 @@ HTMLInputElement::IntrinsicState() const
       state |= NS_EVENT_STATE_INDETERMINATE;
     }
 
+    if (mType == NS_FORM_INPUT_RADIO) {
+      nsCOMPtr<nsIDOMHTMLInputElement> selected = GetSelectedRadioButton();
+      bool indeterminate = !selected && !mChecked;
+
+      if (indeterminate) {
+        state |= NS_EVENT_STATE_INDETERMINATE;
+      }
+    }
+
     // Check whether we are the default checked element (:default)
     if (DefaultChecked()) {
       state |= NS_EVENT_STATE_DEFAULT;
@@ -6643,6 +6659,9 @@ HTMLInputElement::WillRemoveFromRadioGroup()
   // longer a selected radio button
   if (mChecked) {
     container->SetCurrentRadioButton(name, nullptr);
+
+    nsCOMPtr<nsIRadioVisitor> visitor = new nsRadioUpdateStateVisitor(this);
+    VisitGroup(visitor, true);
   }
 
   // Remove this radio from its group in the container.
