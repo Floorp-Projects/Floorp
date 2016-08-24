@@ -766,7 +766,7 @@ Parser<ParseHandler>::parse()
     if (!varScope.init(pc))
         return null();
 
-    Node pn = statements(YieldIsName);
+    Node pn = statementList(YieldIsName);
     if (!pn)
         return null();
 
@@ -1296,7 +1296,7 @@ Parser<FullParseHandler>::checkStatementsEOF()
     // This is designed to be paired with parsing a statement list at the top
     // level.
     //
-    // The statements() call breaks on TOK_RC, so make sure we've
+    // The statementList() call breaks on TOK_RC, so make sure we've
     // reached EOF here.
     TokenKind tt;
     if (!tokenStream.peekToken(&tt, TokenStream::Operand))
@@ -1732,7 +1732,7 @@ Parser<FullParseHandler>::evalBody(EvalSharedContext* evalsc)
     if (!lexicalScope.init(pc))
         return nullptr;
 
-    ParseNode* body = statements(YieldIsName);
+    ParseNode* body = statementList(YieldIsName);
     if (!body)
         return nullptr;
 
@@ -1805,7 +1805,7 @@ Parser<FullParseHandler>::globalBody(GlobalSharedContext* globalsc)
     if (!varScope.init(pc))
         return nullptr;
 
-    ParseNode* body = statements(YieldIsName);
+    ParseNode* body = statementList(YieldIsName);
     if (!body)
         return nullptr;
 
@@ -1844,7 +1844,7 @@ Parser<FullParseHandler>::moduleBody(ModuleSharedContext* modulesc)
     if (!mn)
         return null();
 
-    ParseNode* pn = statements(YieldIsKeyword);
+    ParseNode* pn = statementList(YieldIsKeyword);
     if (!pn)
         return null();
 
@@ -2249,7 +2249,7 @@ Parser<ParseHandler>::functionBody(InHandling inHandling, YieldHandling yieldHan
 
     Node pn;
     if (type == StatementListBody) {
-        pn = statements(yieldHandling);
+        pn = statementList(yieldHandling);
         if (!pn)
             return null();
     } else {
@@ -3528,14 +3528,9 @@ Parser<ParseHandler>::maybeParseDirective(Node list, Node pn, bool* cont)
     return true;
 }
 
-/*
- * Parse the statements in a block, creating a StatementList node that lists
- * the statements.  If called from block-parsing code, the caller must match
- * '{' before and '}' after.
- */
 template <typename ParseHandler>
 typename ParseHandler::Node
-Parser<ParseHandler>::statements(YieldHandling yieldHandling)
+Parser<ParseHandler>::statementList(YieldHandling yieldHandling)
 {
     JS_CHECK_RECURSION(context, return null());
 
@@ -3957,7 +3952,7 @@ Parser<ParseHandler>::blockStatement(YieldHandling yieldHandling, unsigned error
     if (!scope.init(pc))
         return null();
 
-    Node list = statements(yieldHandling);
+    Node list = statementList(yieldHandling);
     if (!list)
         return null();
 
@@ -5865,7 +5860,7 @@ Parser<ParseHandler>::tryStatement(YieldHandling yieldHandling)
         if (!scope.init(pc))
             return null();
 
-        innerBlock = statements(yieldHandling);
+        innerBlock = statementList(yieldHandling);
         if (!innerBlock)
             return null();
 
@@ -6005,7 +6000,7 @@ Parser<ParseHandler>::tryStatement(YieldHandling yieldHandling)
         if (!scope.init(pc))
             return null();
 
-        finallyBlock = statements(yieldHandling);
+        finallyBlock = statementList(yieldHandling);
         if (!finallyBlock)
             return null();
 
@@ -6047,7 +6042,7 @@ Parser<ParseHandler>::catchBlockStatement(YieldHandling yieldHandling,
         if (!noteDeclaredName(simpleCatchParam, DeclarationKind::SimpleCatchParameter, pos()))
             return null();
 
-        Node list = statements(yieldHandling);
+        Node list = statementList(yieldHandling);
         if (!list)
             return null();
 
@@ -6057,7 +6052,7 @@ Parser<ParseHandler>::catchBlockStatement(YieldHandling yieldHandling,
 
         body = finishLexicalScope(scope, list);
     } else {
-        body = statements(yieldHandling);
+        body = statementList(yieldHandling);
     }
     if (!body)
         return null();
