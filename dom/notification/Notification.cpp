@@ -2528,7 +2528,7 @@ NotificationWorkerHolder::Notify(Status aStatus)
 
     // Dispatched to main thread, blocks on closing the Notification.
     RefPtr<CloseNotificationRunnable> r =
-      new CloseNotificationRunnable(mNotification);
+      new CloseNotificationRunnable(kungFuDeathGrip);
     ErrorResult rv;
     r->Dispatch(rv);
     // XXXbz I'm told throwing and returning false from here is pointless (and
@@ -2540,7 +2540,7 @@ NotificationWorkerHolder::Notify(Status aStatus)
     // ownership (since CloseNotificationRunnable asked the observer to drop the
     // reference to the notification).
     if (r->HadObserver()) {
-      mNotification->ReleaseObject();
+      kungFuDeathGrip->ReleaseObject();
     }
 
     // From this point we cannot touch properties of this feature because

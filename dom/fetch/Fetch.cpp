@@ -1049,7 +1049,7 @@ FetchBody<Derived>::ContinueConsumeBody(nsresult aStatus, uint32_t aResultLength
   MOZ_ASSERT(mConsumePromise);
   RefPtr<Promise> localPromise = mConsumePromise.forget();
 
-  RefPtr<Derived> kungfuDeathGrip = DerivedClass();
+  RefPtr<Derived> derivedClass = DerivedClass();
   ReleaseObject();
 
   if (NS_WARN_IF(NS_FAILED(aStatus))) {
@@ -1098,7 +1098,7 @@ FetchBody<Derived>::ContinueConsumeBody(nsresult aStatus, uint32_t aResultLength
   MOZ_ASSERT(aResult);
 
   AutoJSAPI jsapi;
-  if (!jsapi.Init(DerivedClass()->GetParentObject())) {
+  if (!jsapi.Init(derivedClass->GetParentObject())) {
     localPromise->MaybeReject(NS_ERROR_UNEXPECTED);
     return;
   }
@@ -1124,7 +1124,7 @@ FetchBody<Derived>::ContinueConsumeBody(nsresult aStatus, uint32_t aResultLength
     }
     case CONSUME_BLOB: {
       RefPtr<dom::Blob> blob = BodyUtil::ConsumeBlob(
-        DerivedClass()->GetParentObject(), NS_ConvertUTF8toUTF16(mMimeType),
+        derivedClass->GetParentObject(), NS_ConvertUTF8toUTF16(mMimeType),
         aResultLength, aResult, error);
       if (!error.Failed()) {
         localPromise->MaybeResolve(blob);
@@ -1139,7 +1139,7 @@ FetchBody<Derived>::ContinueConsumeBody(nsresult aStatus, uint32_t aResultLength
       autoFree.Reset();
 
       RefPtr<dom::FormData> fd = BodyUtil::ConsumeFormData(
-        DerivedClass()->GetParentObject(),
+        derivedClass->GetParentObject(),
         mMimeType, data, error);
       if (!error.Failed()) {
         localPromise->MaybeResolve(fd);
