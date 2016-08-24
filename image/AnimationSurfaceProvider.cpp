@@ -16,14 +16,14 @@ namespace mozilla {
 namespace image {
 
 AnimationSurfaceProvider::AnimationSurfaceProvider(NotNull<RasterImage*> aImage,
-                                                   NotNull<Decoder*> aDecoder,
-                                                   const SurfaceKey& aSurfaceKey)
-  : ISurfaceProvider(AvailabilityState::StartAsPlaceholder())
+                                                   const SurfaceKey& aSurfaceKey,
+                                                   NotNull<Decoder*> aDecoder)
+  : ISurfaceProvider(ImageKey(aImage.get()), aSurfaceKey,
+                     AvailabilityState::StartAsPlaceholder())
   , mImage(aImage.get())
   , mDecodingMutex("AnimationSurfaceProvider::mDecoder")
   , mDecoder(aDecoder.get())
   , mFramesMutex("AnimationSurfaceProvider::mFrames")
-  , mSurfaceKey(aSurfaceKey)
 {
   MOZ_ASSERT(!mDecoder->IsMetadataDecode(),
              "Use MetadataDecodingTask for metadata decodes");
@@ -111,7 +111,7 @@ AnimationSurfaceProvider::LogicalSizeInBytes() const
   // Unfortunately there's no way to know in advance how many frames an
   // animation has, so we really can't do better here. This will become correct
   // once bug 1289954 is complete.
-  IntSize size = mSurfaceKey.Size();
+  IntSize size = GetSurfaceKey().Size();
   return 3 * size.width * size.height * sizeof(uint32_t);
 }
 
@@ -254,8 +254,8 @@ AnimationSurfaceProvider::AnnounceSurfaceAvailable()
   // and then the surface cache lock, while the memory reporting code would
   // acquire the surface cache lock and then mFramesMutex.
   SurfaceCache::SurfaceAvailable(WrapNotNull(this),
-                                 ImageKey(mImage.get()),
-                                 mSurfaceKey);
+                                 GetImageKey(),
+                                 GetSurfaceKey());
 }
 
 void
