@@ -258,6 +258,7 @@ Importing css-multicol-1/multicol-rule-ridge-000.xht to css-multicol-1/multicol-
 Importing css-multicol-1/multicol-rule-samelength-001.xht to css-multicol-1/multicol-rule-samelength-001.xht
 Importing css-multicol-1/multicol-rule-samelength-001-ref.xht to css-multicol-1/multicol-rule-samelength-001-ref.xht
 Importing css-multicol-1/multicol-rule-shorthand-001.xht to css-multicol-1/multicol-rule-shorthand-001.xht
+Warning: href attribute found empty in /Users/npancholi/builds/CSSWGTests/test/css-multicol-1/multicol-rule-shorthand-2.xht
 Importing css-multicol-1/multicol-rule-solid-000.xht to css-multicol-1/multicol-rule-solid-000.xht
 Importing css-multicol-1/multicol-rule-solid-000-ref.xht to css-multicol-1/multicol-rule-solid-000-ref.xht
 Importing css-multicol-1/multicol-rule-stacking-001.xht to css-multicol-1/multicol-rule-stacking-001.xht
