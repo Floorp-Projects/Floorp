@@ -216,9 +216,6 @@ public:
   PAPZCTreeManagerChild* AllocPAPZCTreeManagerChild(const uint64_t& aLayersId) override;
   bool DeallocPAPZCTreeManagerChild(PAPZCTreeManagerChild* aActor) override;
 
-  PAPZChild* AllocPAPZChild(const uint64_t& aLayersId) override;
-  bool DeallocPAPZChild(PAPZChild* aActor) override;
-
   virtual ShmemAllocator* AsShmemAllocator() override { return this; }
 
   void ProcessingError(Result aCode, const char* aReason) override;
