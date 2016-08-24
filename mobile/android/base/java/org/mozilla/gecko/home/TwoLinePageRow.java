@@ -296,7 +296,7 @@ public class TwoLinePageRow extends LinearLayout
 
         // Displayed RecentTabsPanel URLs may refer to pages opened in reader mode, so we
         // remove the about:reader prefix to ensure the Favicon loads properly.
-        final String pageURL = AboutPages.isAboutReader(url) ? ReaderModeUtils.getUrlFromAboutReader(url) : url;
+        final String pageURL = ReaderModeUtils.stripAboutReaderUrl(url);
 
         if (bookmarkId < BrowserContract.Bookmarks.FAKE_PARTNER_BOOKMARKS_START) {
             mLoadFaviconJobId = Favicons.getSizedFavicon(
