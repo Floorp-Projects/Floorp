@@ -1,0 +1,129 @@
+<html>
+
+<head>
+  <title>Aria-owns targets shouldn't be on invalidation list so shouldn't have
+         show/hide events</title>
+
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../states.js"></script>
+  <script type="application/javascript"
+          src="../events.js"></script>
+
+  <script type="application/javascript">
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Do tests.
+
+    //gA11yEventDumpToConsole = true; // debug stuff
+    //enableLogging("tree,eventTree,verbose");
+
+    /**
+     * Aria-owns target shouldn't have a show event.
+     * Markup:
+     * <div id="t1_fc" aria-owns="t1_owns"></div>
+     * <span id="t1_owns"></div>
+     */
+    function testAriaOwns()
+    {
+      this.parent = getNode("t1");
+      this.fc = document.createElement("div");
+      this.fc.setAttribute("id", "t1_fc");
+      this.owns = document.createElement("span");
+      this.owns.setAttribute("id", "t1_owns");
+
+      this.eventSeq = [
+        new invokerChecker(EVENT_SHOW, this.fc),
+        new unexpectedInvokerChecker(EVENT_SHOW, this.owns)
+      ];
+
+      this.invoke = function testAriaOwns_invoke()
+      {
+        getNode("t1").appendChild(this.fc);
+        getNode("t1").appendChild(this.owns);
+        getNode("t1_fc").setAttribute("aria-owns", "t1_owns");
+      };
+
+      this.getID = function testAriaOwns_getID() {
+        return "Aria-owns target shouldn't have show event";
+      };
+    }
+
+    /**
+     * Target of both aria-owns and other aria attribute like aria-labelledby
+     * shouldn't have a show event.
+     * Markup:
+     * <div id="t2_fc" aria-owns="t1_owns"></div>
+     * <div id="t2_sc" aria-labelledby="t2_owns"></div>
+     * <span id="t2_owns"></div>
+     */
+    function testAriaOwnsAndLabelledBy()
+    {
+      this.parent = getNode("t2");
+      this.fc = document.createElement("div");
+      this.fc.setAttribute("id", "t2_fc");
+      this.sc = document.createElement("div");
+      this.sc.setAttribute("id", "t2_sc");
+      this.owns = document.createElement("span");
+      this.owns.setAttribute("id", "t2_owns");
+
+      this.eventSeq = [
+        new invokerChecker(EVENT_SHOW, this.fc),
+        new invokerChecker(EVENT_SHOW, this.sc),
+        new unexpectedInvokerChecker(EVENT_SHOW, this.owns)
+      ];
+
+      this.invoke = function testAriaOwns_invoke()
+      {
+        getNode("t2").appendChild(this.fc);
+        getNode("t2").appendChild(this.sc);
+        getNode("t2").appendChild(this.owns);
+        getNode("t2_fc").setAttribute("aria-owns", "t2_owns");
+        getNode("t2_sc").setAttribute("aria-labelledby", "t2_owns");
+      };
+
+      this.getID = function testAriaOwns_getID() {
+        return "Aria-owns and aria-labelledby target shouldn't have show event";
+      };
+    }
+
+    var gQueue = null;
+    function doTests()
+    {
+      gQueue = new eventQueue();
+      gQueue.push(new testAriaOwns());
+      gQueue.push(new testAriaOwnsAndLabelledBy());
+
+      gQueue.invoke(); // Will call SimpleTest.finish();
+    }
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTests);
+  </script>
+</head>
+
+<body>
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=1296420"
+     title="Aria-owns targets shouldn't be on invalidation list so shouldn't
+            have show/hide events">
+    Mozilla Bug 1296420
+  </a><br>
+
+  <div id="testContainer">
+    <div id="t1"></div>
+
+    <div id="t2"></div>
+  </div>
+
+</body>
+</html>
