@@ -30,7 +30,7 @@ NS_InvokeByIndex:
   lea eax, [edx * 8]
   sub rsp, rax
 
-# If there is an odd number of args the stack can be misaligned so realign it.
+# if there is an odd number of args the stack can be misaligned so realign it.
   and rsp, 0xffffffffffffff00
 
 # pass the stack slot area to InvokeCopyToStack.
