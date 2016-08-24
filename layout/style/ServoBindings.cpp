@@ -298,6 +298,14 @@ Gecko_StoreStyleDifference(RawGeckoNode* aNode, nsChangeHint aChangeHintToStore)
     return;
   }
 
+  if ((aChangeHintToStore & nsChangeHint_ReconstructFrame) &&
+      aNode->IsInNativeAnonymousSubtree())
+  {
+    NS_WARNING("stylo: Removing forbidden frame reconstruction hint on native "
+               "anonymous content. Fix this in bug 1297857!");
+    aChangeHintToStore &= ~nsChangeHint_ReconstructFrame;
+  }
+
   primaryFrame->StyleContext()->StoreChangeHint(aChangeHintToStore);
 #else
   MOZ_CRASH("stylo: Shouldn't call Gecko_StoreStyleDifference in "
