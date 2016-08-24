@@ -7,6 +7,7 @@
 XPIDL_SOURCES += [
     'nsIEnvironment.idl',
     'nsIEventTarget.idl',
+    'nsIIdlePeriod.idl',
     'nsIProcess.idl',
     'nsIRunnable.idl',
     'nsISupportsPriority.idl',
@@ -22,6 +23,7 @@ XPIDL_MODULE = 'xpcom_threads'
 EXPORTS += [
     'nsEventQueue.h',
     'nsICancelableRunnable.h',
+    'nsIIncrementalRunnable.h',
     'nsMemoryPressure.h',
     'nsProcess.h',
     'nsThread.h',
@@ -33,6 +35,7 @@ EXPORTS.mozilla += [
     'HangAnnotations.h',
     'HangMonitor.h',
     'LazyIdleThread.h',
+    'MainThreadIdlePeriod.h',
     'MozPromise.h',
     'SharedThreadPool.h',
     'StateMirroring.h',
@@ -48,6 +51,7 @@ UNIFIED_SOURCES += [
     'HangAnnotations.cpp',
     'HangMonitor.cpp',
     'LazyIdleThread.cpp',
+    'MainThreadIdlePeriod.cpp',
     'nsEnvironment.cpp',
     'nsEventQueue.cpp',
     'nsMemoryPressure.cpp',
