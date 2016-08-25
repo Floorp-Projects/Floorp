@@ -1663,7 +1663,7 @@ public:
   {}
   NS_DECL_ISUPPORTS_INHERITED
 
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     NS_ASSERTION(mGraph->mDetectedNotRunning,
                  "We should know the graph thread control loop isn't running!");
