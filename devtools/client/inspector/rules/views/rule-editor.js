@@ -4,6 +4,9 @@
 
 "use strict";
 
+/* eslint-disable mozilla/reject-some-requires */
+const {XPCOMUtils} = require("resource://gre/modules/XPCOMUtils.jsm");
+/* eslint-enable mozilla/reject-some-requires */
 const {l10n} = require("devtools/shared/inspector/css-logic");
 const {ELEMENT_STYLE} = require("devtools/shared/specs/styles");
 const {PREF_ORIG_SOURCES} = require("devtools/client/styleeditor/utils");
@@ -28,9 +31,10 @@ const promise = require("promise");
 const Services = require("Services");
 const EventEmitter = require("devtools/shared/event-emitter");
 
-const STYLE_INSPECTOR_PROPERTIES = "devtools-shared/locale/styleinspector.properties";
-const {LocalizationHelper} = require("devtools/client/shared/l10n");
-const STYLE_INSPECTOR_L10N = new LocalizationHelper(STYLE_INSPECTOR_PROPERTIES);
+XPCOMUtils.defineLazyGetter(this, "_strings", function () {
+  return Services.strings.createBundle(
+    "chrome://devtools-shared/locale/styleinspector.properties");
+});
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
@@ -235,7 +239,7 @@ RuleEditor.prototype = {
     }
 
     if (this.rule.isSystem) {
-      let uaLabel = STYLE_INSPECTOR_L10N.getStr("rule.userAgentStyles");
+      let uaLabel = _strings.GetStringFromName("rule.userAgentStyles");
       sourceLabel.setAttribute("value", uaLabel + " " + title);
 
       // Special case about:PreferenceStyleSheet, as it is generated on the
