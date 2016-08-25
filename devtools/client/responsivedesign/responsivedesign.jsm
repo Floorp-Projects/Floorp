@@ -18,7 +18,7 @@ var flags = require("devtools/shared/flags");
 var Services = require("Services");
 var EventEmitter = require("devtools/shared/event-emitter");
 var {ViewHelpers} = require("devtools/client/shared/widgets/view-helpers");
-var { LocalizationHelper } = require("devtools/client/shared/l10n");
+var { LocalizationHelper } = require("devtools/shared/l10n");
 var { EmulationFront } = require("devtools/shared/fronts/emulation");
 
 loader.lazyImporter(this, "SystemAppProxy",

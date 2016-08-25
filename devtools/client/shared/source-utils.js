@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { LocalizationHelper } = require("devtools/client/shared/l10n");
+const { LocalizationHelper } = require("devtools/shared/l10n");
 
 const l10n = new LocalizationHelper("devtools/locale/components.properties");
 const UNKNOWN_SOURCE_STRING = l10n.getStr("frame.unknownSource");

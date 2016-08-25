@@ -29,7 +29,7 @@ const l10n = new WebConsoleUtils.L10n(STRINGS_URI);
 const nodeConstants = require("devtools/shared/dom-node-constants");
 
 const MAX_STRING_GRIP_LENGTH = 36;
-const {ELLIPSIS} = require("devtools/client/shared/l10n");
+const {ELLIPSIS} = require("devtools/shared/l10n");
 
 const validProtocols = /^(http|https|ftp|data|javascript|resource|chrome):/i;
 
