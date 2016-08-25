@@ -33,6 +33,10 @@ var _fromToTestLists = {
     new AnimTestcaseFromTo("currentColor", "rgb(100, 100, 100)",
                            { fromComp: "rgb(50, 50, 50)",
                              midComp: "rgb(75, 75, 75)" }),
+    new AnimTestcaseFromTo("rgba(10, 20, 30, 0.2)", "rgba(50, 50, 50, 1)",
+                             // (rgb(10, 20, 30) * 0.2 * 0.5 + rgb(50, 50, 50) * 1.0 * 0.5) * (1 / 0.6)
+                           { midComp: "rgba(43, 45, 47, 0.6)",
+                             toComp:  "rgb(50, 50, 50)"}),
   ],
   colorFromInheritBlack: [
     new AnimTestcaseFromTo("inherit", "rgb(200, 200, 200)",
