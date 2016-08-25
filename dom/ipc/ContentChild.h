@@ -21,6 +21,9 @@
 #include "nsWeakPtr.h"
 #include "nsIWindowProvider.h"
 
+#if defined(XP_MACOSX) && defined(MOZ_CONTENT_SANDBOX)
+#include "nsIFile.h"
+#endif
 
 struct ChromePackage;
 class nsIObserver;
@@ -113,6 +116,19 @@ public:
   void GetProcessName(nsAString& aName) const;
 
   void GetProcessName(nsACString& aName) const;
+
+#if defined(XP_MACOSX) && defined(MOZ_CONTENT_SANDBOX)
+  void GetProfileDir(nsIFile** aProfileDir) const
+  {
+    *aProfileDir = mProfileDir;
+    NS_IF_ADDREF(*aProfileDir);
+  }
+
+  void SetProfileDir(nsIFile* aProfileDir)
+  {
+    mProfileDir = aProfileDir;
+  }
+#endif
 
   bool IsAlive() const;
 
@@ -680,6 +696,10 @@ private:
 
   nsCOMPtr<nsIDomainPolicy> mPolicy;
   nsCOMPtr<nsITimer> mForceKillTimer;
+
+#if defined(XP_MACOSX) && defined(MOZ_CONTENT_SANDBOX)
+  nsCOMPtr<nsIFile> mProfileDir;
+#endif
 
   // Hashtable to keep track of the pending GetFilesHelper objects.
   // This GetFilesHelperChild objects are removed when RecvGetFilesResponse is
