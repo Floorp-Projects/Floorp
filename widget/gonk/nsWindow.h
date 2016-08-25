@@ -92,12 +92,6 @@ public:
                                                 uint32_t aPointerOrientation,
                                                 nsIObserver* aObserver) override;
 
-    NS_IMETHOD CaptureRollupEvents(nsIRollupListener *aListener,
-                                   bool aDoCapture)
-    {
-        return NS_ERROR_NOT_IMPLEMENTED;
-    }
-
     virtual nsresult MakeFullScreen(
         bool aFullScreen, nsIScreen* aTargetScreen = nullptr) override;
 

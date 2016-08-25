@@ -362,7 +362,6 @@ public:
   NS_IMETHOD        SetCursor(nsCursor aCursor) override;
   NS_IMETHOD        SetCursor(imgIContainer* aCursor, uint32_t aHotspotX, uint32_t aHotspotY) override;
 
-  NS_IMETHOD        CaptureRollupEvents(nsIRollupListener * aListener, bool aDoCapture) override;
   NS_IMETHOD        SetTitle(const nsAString& title) override;
 
   NS_IMETHOD        GetAttention(int32_t aCycleCount) override;

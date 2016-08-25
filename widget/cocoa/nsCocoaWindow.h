@@ -305,7 +305,8 @@ public:
                                           LayerManagerPersistence aPersistence = LAYER_MANAGER_CURRENT) override;
     NS_IMETHOD DispatchEvent(mozilla::WidgetGUIEvent* aEvent,
                              nsEventStatus& aStatus) override;
-    NS_IMETHOD CaptureRollupEvents(nsIRollupListener * aListener, bool aDoCapture) override;
+    virtual void CaptureRollupEvents(nsIRollupListener * aListener,
+                                     bool aDoCapture) override;
     NS_IMETHOD GetAttention(int32_t aCycleCount) override;
     virtual bool HasPendingInputEvent() override;
     virtual nsTransparencyMode GetTransparencyMode() override;

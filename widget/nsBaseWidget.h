@@ -141,6 +141,8 @@ public:
 
   // nsIWidget interface
   NS_IMETHOD              CaptureMouse(bool aCapture) override;
+  virtual void            CaptureRollupEvents(nsIRollupListener* aListener,
+                                              bool aDoCapture) override {}
   virtual nsIWidgetListener*  GetWidgetListener() override;
   virtual void            SetWidgetListener(nsIWidgetListener* alistener) override;
   virtual void            Destroy() override;
