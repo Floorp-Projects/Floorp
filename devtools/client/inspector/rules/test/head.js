@@ -19,8 +19,8 @@ var {getInplaceEditorForSpan: inplaceEditor} =
 
 const ROOT_TEST_DIR = getRootDirectory(gTestPath);
 const FRAME_SCRIPT_URL = ROOT_TEST_DIR + "doc_frame_script.js";
-const _STRINGS = Services.strings.createBundle(
-  "chrome://devtools-shared/locale/styleinspector.properties");
+
+const STYLE_INSPECTOR_L10N = new LocalizationHelper("chrome://devtools-shared/locale/styleinspector.properties");
 
 registerCleanupFunction(() => {
   Services.prefs.clearUserPref("devtools.defaultColorUnit");
