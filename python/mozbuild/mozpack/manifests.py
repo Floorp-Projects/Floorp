@@ -397,3 +397,16 @@ class InstallManifest(object):
 
             raise Exception('Unknown install type defined in manifest: %d' %
                 install_type)
+
+
+class InstallManifestNoSymlinks(InstallManifest):
+    """Like InstallManifest, but files are never installed as symbolic links.
+    Instead, they are always copied.
+    """
+
+    def add_symlink(self, source, dest):
+        """A wrapper that accept symlink entries and install file copies.
+
+        source will be copied to dest.
+        """
+        self.add_copy(source, dest)
