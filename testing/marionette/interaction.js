@@ -222,6 +222,33 @@ interaction.selectOption = function(el) {
 };
 
 /**
+ * Appends |path| to an <input type=file>'s file list.
+ *
+ * @param {HTMLInputElement} el
+ *     An <input type=file> element.
+ * @param {File} file
+ *     File object to assign to |el|.
+ */
+interaction.uploadFile = function(el, file) {
+  let fs = Array.prototype.slice.call(el.files);
+  fs.push(file);
+
+  // <input type=file> opens OS widget dialogue
+  // which means the mousedown/focus/mouseup/click events
+  // occur before the change event
+  event.mouseover(el);
+  event.mousemove(el);
+  event.mousedown(el);
+  event.focus(el);
+  event.mouseup(el);
+  event.click(el);
+
+  el.mozSetFileArray(fs);
+
+  event.change(el);
+};
+
+/**
  * Locate the <select> element that encapsulate an <option> element.
  *
  * @param {HTMLOptionElement} optionEl
