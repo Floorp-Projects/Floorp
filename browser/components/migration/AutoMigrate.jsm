@@ -9,10 +9,14 @@ this.EXPORTED_SYMBOLS = ["AutoMigrate"];
 const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
 
 const kAutoMigrateEnabledPref = "browser.migrate.automigrate.enabled";
+const kUndoUIEnabledPref = "browser.migrate.automigrate.ui.enabled";
 
 const kAutoMigrateStartedPref = "browser.migrate.automigrate.started";
 const kAutoMigrateFinishedPref = "browser.migrate.automigrate.finished";
 const kAutoMigrateBrowserPref = "browser.migrate.automigrate.browser";
+
+const kAutoMigrateLastUndoPromptDateMsPref = "browser.migrate.automigrate.lastUndoPromptDateMs";
+const kAutoMigrateDaysToOfferUndoPref = "browser.migrate.automigrate.daysToOfferUndo";
 
 const kPasswordManagerTopic = "passwordmgr-storage-changed";
 const kPasswordManagerTopicTypes = new Set([
@@ -46,7 +50,10 @@ const AutoMigrate = {
   },
 
   init() {
-    this.enabled = Preferences.get(kAutoMigrateEnabledPref, false);
+    this.enabled = Preferences.get(kAutoMigrateEnabledPref, false) &&
+                   Cc["@mozilla.org/chrome/chrome-registry;1"].
+                     getService(Ci.nsIXULChromeRegistry).
+                     getSelectedLocale("browser") == "en-US";
     if (this.enabled) {
       this.maybeInitUndoObserver();
     }
@@ -295,12 +302,21 @@ const AutoMigrate = {
   maybeShowUndoNotification(target) {
     this.canUndo().then(canUndo => {
       // The tab might have navigated since we requested the undo state:
-      if (!canUndo || target.currentURI.spec != "about:home") {
+      if (!canUndo || target.currentURI.spec != "about:home" ||
+          !Preferences.get(kUndoUIEnabledPref, false)) {
         return;
       }
       let win = target.ownerGlobal;
       let notificationBox = win.gBrowser.getNotificationBox(target);
       if (!notificationBox || notificationBox.getNotificationWithValue("abouthome-automigration-undo")) {
+        return;
+      }
+
+      // At this stage we're committed to show the prompt - unless we shouldn't,
+      // in which case we remove the undo prefs (which will cause canUndo() to
+      // return false from now on.):
+      if (!this.shouldStillShowUndoPrompt()) {
+        this.removeUndoOption();
         return;
       }
 
@@ -333,6 +349,27 @@ const AutoMigrate = {
         message, kNotificationId, null, notificationBox.PRIORITY_INFO_HIGH, buttons
       );
     });
+  },
+
+  shouldStillShowUndoPrompt() {
+    let today = new Date();
+    // Round down to midnight:
+    today = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    // We store the unix timestamp corresponding to midnight on the last day
+    // on which we prompted. Fetch that and compare it to today's date.
+    // (NB: stored as a string because int prefs are too small for unix
+    // timestamps.)
+    let previousPromptDateMsStr = Preferences.get(kAutoMigrateLastUndoPromptDateMsPref, "0");
+    let previousPromptDate = new Date(parseInt(previousPromptDateMsStr, 10));
+    if (previousPromptDate < today) {
+      let remainingDays = Preferences.get(kAutoMigrateDaysToOfferUndoPref, 4) - 1;
+      Preferences.set(kAutoMigrateDaysToOfferUndoPref, remainingDays);
+      Preferences.set(kAutoMigrateLastUndoPromptDateMsPref, today.valueOf().toString());
+      if (remainingDays <= 0) {
+        return false;
+      }
+    }
+    return true;
   },
 
   QueryInterface: XPCOMUtils.generateQI(
