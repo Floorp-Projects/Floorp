@@ -26,12 +26,6 @@ namespace js {
 class AutoLockHelperThreadState;
 unsigned GetCPUCount();
 
-enum ThreadType
-{
-    MainThread,
-    BackgroundThread
-};
-
 namespace gcstats {
 struct Statistics;
 } // namespace gcstats

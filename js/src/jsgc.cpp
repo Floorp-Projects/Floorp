@@ -3161,7 +3161,7 @@ js::gc::BackgroundDecommitTask::run()
 }
 
 void
-GCRuntime::sweepBackgroundThings(ZoneList& zones, LifoAlloc& freeBlocks, ThreadType threadType)
+GCRuntime::sweepBackgroundThings(ZoneList& zones, LifoAlloc& freeBlocks)
 {
     freeBlocks.freeAll();
 
@@ -3170,7 +3170,7 @@ GCRuntime::sweepBackgroundThings(ZoneList& zones, LifoAlloc& freeBlocks, ThreadT
 
     // We must finalize thing kinds in the order specified by BackgroundFinalizePhases.
     Arena* emptyArenas = nullptr;
-    FreeOp fop(threadType == MainThread ? rt : nullptr);
+    FreeOp fop(nullptr);
     for (unsigned phase = 0 ; phase < ArrayLength(BackgroundFinalizePhases) ; ++phase) {
         for (Zone* zone = zones.front(); zone; zone = zone->nextZone()) {
             for (auto kind : BackgroundFinalizePhases[phase].kinds) {
@@ -3377,7 +3377,7 @@ GCHelperState::doSweep(AutoLockGC& lock)
             freeLifoAlloc.transferFrom(&rt->gc.blocksToFreeAfterSweeping);
 
             AutoUnlockGC unlock(lock);
-            rt->gc.sweepBackgroundThings(zones, freeLifoAlloc, BackgroundThread);
+            rt->gc.sweepBackgroundThings(zones, freeLifoAlloc);
         }
     } while (!rt->gc.backgroundSweepZones.isEmpty());
 }
@@ -5123,7 +5123,7 @@ GCRuntime::endSweepingZoneGroup()
     if (sweepOnBackgroundThread)
         queueZonesForBackgroundSweep(zones);
     else
-        sweepBackgroundThings(zones, blocksToFreeAfterSweeping, MainThread);
+        sweepBackgroundThings(zones, blocksToFreeAfterSweeping);
 
     /* Reset the list of arenas marked as being allocated during sweep phase. */
     while (Arena* arena = arenasAllocatedDuringSweep) {
