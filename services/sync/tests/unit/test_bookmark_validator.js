@@ -42,13 +42,23 @@ add_test(function test_isr_orphansMultiParents() {
     { id: 'A', type: 'bookmark', parentid: 'D' },
     { id: 'B', type: 'folder', parentid: 'places', children: ['A']},
     { id: 'C', type: 'folder', parentid: 'places', children: ['A']},
+
+  ]).problemData;
+  deepEqual(c.orphans, [{ id: "A", parent: "D" }]);
+  equal(c.multipleParents.length, 1)
+  ok(c.multipleParents[0].parents.indexOf('B') >= 0);
+  ok(c.multipleParents[0].parents.indexOf('C') >= 0);
+  run_next_test();
+});
+
+add_test(function test_isr_orphansMultiParents2() {
+  let c = inspectServerRecords([
+    { id: 'A', type: 'bookmark', parentid: 'D' },
+    { id: 'B', type: 'folder', parentid: 'places', children: ['A']},
   ]).problemData;
   equal(c.orphans.length, 1);
   equal(c.orphans[0].id, 'A');
-  equal(c.multipleParents.length, 1);
-  equal(c.multipleParents[0].child, 'A');
-  ok(c.multipleParents[0].parents.indexOf('B') >= 0);
-  ok(c.multipleParents[0].parents.indexOf('C') >= 0);
+  equal(c.multipleParents.length, 0);
   run_next_test();
 });
 

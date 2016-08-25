@@ -26,6 +26,9 @@ this.EXPORTED_SYMBOLS = ["BookmarkValidator", "BookmarkProblemData"];
  *   either no parentid, or where the parent could not be found.
  * - missingChildren (array of {parent: id, child: id}):
  *   List of parent/children where the child id couldn't be found
+ * - deletedChildren (array of { parent: id, child: id }):
+ *   List of parent/children where child id was a deleted item (but still showed up
+ *   in the children array)
  * - multipleParents (array of {child: id, parents: array of ids}):
  *   List of children that were part of multiple parent arrays
  * - deletedParents (array of ids) : List of records that aren't deleted but
@@ -60,6 +63,7 @@ class BookmarkProblemData {
     this.cycles = [];
     this.orphans = [];
     this.missingChildren = [];
+    this.deletedChildren = [];
     this.multipleParents = [];
     this.deletedParents = [];
     this.childrenOnNonFolder = [];
@@ -100,6 +104,7 @@ class BookmarkProblemData {
       { name: "cycles", count: this.cycles.length },
       { name: "orphans", count: this.orphans.length },
       { name: "missingChildren", count: this.missingChildren.length },
+      { name: "deletedChildren", count: this.deletedChildren.length },
       { name: "multipleParents", count: this.multipleParents.length },
       { name: "deletedParents", count: this.deletedParents.length },
       { name: "childrenOnNonFolder", count: this.childrenOnNonFolder.length },
@@ -231,10 +236,18 @@ class BookmarkValidator {
           problemData.duplicates.push(record.id);
           continue;
         }
-        idToRecord.set(record.id, record);
       }
-      if (record.children && record.type !== "livemark") {
-        if (record.type !== 'folder') {
+      idToRecord.set(record.id, record);
+
+      if (record.children) {
+        if (record.type !== "folder") {
+          // Due to implementation details in engines/bookmarks.js, (Livemark
+          // subclassing BookmarkFolder) Livemarks will have a children array,
+          // but it should still be empty.
+          if (!record.children.length) {
+            continue;
+          }
+          // Otherwise we mark it as an error and still try to resolve the children
           problemData.childrenOnNonFolder.push(record.id);
         }
         folders.push(record);
@@ -300,6 +313,10 @@ class BookmarkValidator {
         continue;
       }
 
+      if (record.isDeleted) {
+        continue;
+      }
+
       let parentID = record.parentid;
       if (!parentID) {
         problemData.orphans.push({id: record.id, parent: parentID});
@@ -314,6 +331,12 @@ class BookmarkValidator {
 
       if (parent.type !== 'folder') {
         problemData.parentNotFolder.push(record.id);
+        if (!parent.children) {
+          parent.children = [];
+        }
+        if (!parent.childGUIDs) {
+          parent.childGUIDs = [];
+        }
       }
 
       if (!record.isDeleted) {
@@ -343,34 +366,86 @@ class BookmarkValidator {
 
     // Check that we aren't missing any children.
     for (let folder of folders) {
-      for (let ci = 0; ci < folder.children.length; ++ci) {
-        let child = folder.children[ci];
-        if (typeof child === 'string') {
-          let childObject = idToRecord.get(child);
+      folder.unfilteredChildren = folder.children;
+      folder.children = [];
+      for (let ci = 0; ci < folder.unfilteredChildren.length; ++ci) {
+        let child = folder.unfilteredChildren[ci];
+        let childObject;
+        if (typeof child == "string") {
+          // This can happen the parent refers to a child that has a different
+          // parentid, or if it refers to a missing or deleted child. It shouldn't
+          // be possible with totally valid bookmarks.
+          childObject = idToRecord.get(child);
           if (!childObject) {
             problemData.missingChildren.push({parent: folder.id, child});
           } else {
-            if (childObject.parentid === folder.id) {
-              // Probably impossible, would have been caught in the loop above.
-              continue;
-            }
-
-            // The child is in multiple `children` arrays.
-            let currentProblemRecord = problemData.multipleParents.find(pr =>
-              pr.child === child);
-
-            if (currentProblemRecord) {
-              currentProblemRecord.parents.push(folder.id);
-            } else {
-              problemData.multipleParents.push({ child, parents: [childObject.parentid, folder.id] });
+            folder.unfilteredChildren[ci] = childObject;
+            if (childObject.isDeleted) {
+              problemData.deletedChildren.push({ parent: folder.id, child });
             }
           }
-          // Remove it from the array to avoid needing to special case this later.
-          folder.children.splice(ci, 1);
-          --ci;
+        } else {
+          childObject = child;
         }
+
+        if (!childObject) {
+          continue;
+        }
+
+        if (childObject.parentid === folder.id) {
+          folder.children.push(childObject);
+          continue;
+        }
+
+        // The child is very probably in multiple `children` arrays --
+        // see if we already have a problem record about it.
+        let currentProblemRecord = problemData.multipleParents.find(pr =>
+          pr.child === child);
+
+        if (currentProblemRecord) {
+          currentProblemRecord.parents.push(folder.id);
+          continue;
+        }
+
+        let otherParent = idToRecord.get(childObject.parentid);
+        // it's really an ... orphan ... sort of.
+        if (!otherParent) {
+          // if we never end up adding to this parent's list, we filter it out after this loop.
+          problemData.multipleParents.push({
+            child,
+            parents: [folder.id]
+          });
+          if (!problemData.orphans.some(r => r.id === child)) {
+            problemData.orphans.push({
+              id: child,
+              parent: childObject.parentid
+            });
+          }
+          continue;
+        }
+
+        if (otherParent.isDeleted) {
+          if (!problemData.deletedParents.includes(child)) {
+            problemData.deletedParents.push(child);
+          }
+          continue;
+        }
+
+        if (otherParent.childGUIDs && !otherParent.childGUIDs.includes(child)) {
+          if (!problemData.parentChildMismatches.some(r => r.child === child)) {
+            // Might not be possible to get here.
+            problemData.parentChildMismatches.push({ child, parent: folder.id });
+          }
+        }
+
+        problemData.multipleParents.push({
+          child,
+          parents: [childObject.parentid, folder.id]
+        });
       }
     }
+    problemData.multipleParents = problemData.multipleParents.filter(record =>
+      record.parents.length >= 2);
 
     problemData.cycles = this._detectCycles(resultRecords);
 
