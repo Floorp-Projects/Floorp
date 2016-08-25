@@ -253,15 +253,14 @@ ExtensionContext = class extends BaseContext {
   }
 };
 
-class ProxyContext extends ExtensionContext {
+class ProxyContext extends BaseContext {
   constructor(extension, params, messageManager, principal) {
-    params.contentWindow = null;
-    params.uri = NetUtil.newURI(params.url);
+    // TODO(robwu): Let callers specify the environment type once we start
+    // re-using this implementation for addon_parent.
+    super("content_parent", extension);
 
-    super(extension, params);
-    // TODO(robwu): Get ProxyContext to inherit from BaseContext instead of
-    // ExtensionContext and let callers specify the environment type.
-    this.envType = "content_parent";
+    this.uri = NetUtil.newURI(params.url);
+
     this.messageManager = messageManager;
     this.principal_ = principal;
 
@@ -271,6 +270,8 @@ class ProxyContext extends ExtensionContext {
     this.listenerProxies = new Map();
 
     this.sandbox = Cu.Sandbox(principal, {});
+
+    Management.emit("proxy-context-load", this);
   }
 
   get principal() {
@@ -281,8 +282,12 @@ class ProxyContext extends ExtensionContext {
     return this.sandbox;
   }
 
-  get externallyVisible() {
-    return false;
+  unload() {
+    if (this.unloaded) {
+      return;
+    }
+    super.unload();
+    Management.emit("proxy-context-unload", this);
   }
 }
 
