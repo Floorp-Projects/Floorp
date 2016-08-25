@@ -310,14 +310,14 @@ public:
     virtual bool HasPendingInputEvent() override;
     virtual nsTransparencyMode GetTransparencyMode() override;
     virtual void SetTransparencyMode(nsTransparencyMode aMode) override;
-    NS_IMETHOD SetWindowShadowStyle(int32_t aStyle) override;
+    virtual void SetWindowShadowStyle(int32_t aStyle) override;
     virtual void SetShowsToolbarButton(bool aShow) override;
     virtual void SetShowsFullScreenButton(bool aShow) override;
     virtual void SetWindowAnimationType(WindowAnimationType aType) override;
     virtual void SetDrawsTitle(bool aDrawTitle) override;
     virtual void SetUseBrightTitlebarForeground(bool aBrightForeground) override;
     NS_IMETHOD SetNonClientMargins(LayoutDeviceIntMargin& aMargins) override;
-    NS_IMETHOD SetWindowTitlebarColor(nscolor aColor, bool aActive) override;
+    virtual void SetWindowTitlebarColor(nscolor aColor, bool aActive) override;
     virtual void SetDrawsInTitlebar(bool aState) override;
     virtual void UpdateThemeGeometries(const nsTArray<ThemeGeometry>& aThemeGeometries) override;
     virtual nsresult SynthesizeNativeMouseEvent(LayoutDeviceIntPoint aPoint,

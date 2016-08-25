@@ -4000,19 +4000,19 @@ nsWindow::Create(nsIWidget* aParent,
     return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsWindow::SetWindowClass(const nsAString &xulWinType)
 {
   if (!mShell)
-    return NS_ERROR_FAILURE;
+    return;
 
   const char *res_class = gdk_get_program_class();
   if (!res_class)
-    return NS_ERROR_FAILURE;
+    return;
 
   char *res_name = ToNewCString(xulWinType);
   if (!res_name)
-    return NS_ERROR_OUT_OF_MEMORY;
+    return;
 
   const char *role = nullptr;
 
@@ -4038,7 +4038,7 @@ nsWindow::SetWindowClass(const nsAString &xulWinType)
       XClassHint *class_hint = XAllocClassHint();
       if (!class_hint) {
         free(res_name);
-        return NS_ERROR_OUT_OF_MEMORY;
+        return;
       }
       class_hint->res_name = res_name;
       class_hint->res_class = const_cast<char*>(res_class);
@@ -4054,8 +4054,6 @@ nsWindow::SetWindowClass(const nsAString &xulWinType)
 #endif /* MOZ_X11 */
 
   free(res_name);
-
-  return NS_OK;
 }
 
 void

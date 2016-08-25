@@ -142,7 +142,7 @@ public:
     void               SetNativeData(uint32_t aDataType, uintptr_t aVal) override;
     NS_IMETHOD         SetTitle(const nsAString& aTitle) override;
     NS_IMETHOD         SetIcon(const nsAString& aIconSpec) override;
-    NS_IMETHOD         SetWindowClass(const nsAString& xulWinType) override;
+    virtual void       SetWindowClass(const nsAString& xulWinType) override;
     virtual LayoutDeviceIntPoint WidgetToScreenOffset() override;
     NS_IMETHOD         CaptureMouse(bool aCapture) override;
     NS_IMETHOD         CaptureRollupEvents(nsIRollupListener *aListener,
