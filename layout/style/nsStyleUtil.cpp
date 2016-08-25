@@ -686,9 +686,8 @@ nsStyleUtil::IsSignificantChild(nsIContent* aChild, bool aTextIsSignificant,
 // For a replaced element whose concrete object size is no larger than the
 // element's content-box, this method checks whether the given
 // "object-position" coordinate might cause overflow in its dimension.
-typedef nsStyleImageLayers::Position::PositionCoord PositionCoord;
 static bool
-ObjectPositionCoordMightCauseOverflow(const PositionCoord& aCoord)
+ObjectPositionCoordMightCauseOverflow(const Position::PositionCoord& aCoord)
 {
   // Any nonzero length in "object-position" can push us to overflow
   // (particularly if our concrete object size is exactly the same size as the
@@ -724,7 +723,7 @@ nsStyleUtil::ObjectPropsMightCauseOverflow(const nsStylePosition* aStylePos)
 
   // Check each of our "object-position" coords to see if it could cause
   // overflow in its dimension:
-  const nsStyleImageLayers::Position& objectPosistion = aStylePos->mObjectPosition;
+  const Position& objectPosistion = aStylePos->mObjectPosition;
   if (ObjectPositionCoordMightCauseOverflow(objectPosistion.mXPosition) ||
       ObjectPositionCoordMightCauseOverflow(objectPosistion.mYPosition)) {
     return true;
