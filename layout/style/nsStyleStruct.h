@@ -110,6 +110,8 @@ static_assert(NS_STYLE_INHERIT_MASK == (1 << nsStyleStructID_Length) - 1,
 static_assert((NS_RULE_NODE_IS_ANIMATION_RULE & NS_STYLE_INHERIT_MASK) == 0,
   "NS_RULE_NODE_IS_ANIMATION_RULE must not overlap the style struct bits.");
 
+namespace mozilla {
+
 struct FragmentOrURL
 {
   FragmentOrURL() : mIsLocalRef(false) {}
@@ -142,6 +144,8 @@ private:
   nsCOMPtr<nsIURI> mURL;
   bool    mIsLocalRef;
 };
+
+} // namespace mozilla
 
 // The lifetime of these objects is managed by the presshell's arena.
 struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleFont
@@ -689,7 +693,7 @@ struct nsStyleImageLayers {
   friend struct Layer;
   struct Layer {
     nsStyleImage  mImage;         // [reset]
-    FragmentOrURL mSourceURI;     // [reset]
+    mozilla::FragmentOrURL mSourceURI;  // [reset]
                                   // mask-only property
                                   // This property is used for mask layer only.
                                   // For a background layer, it should always
@@ -3523,7 +3527,7 @@ struct nsStyleSVGPaint
 {
   union {
     nscolor mColor;
-    FragmentOrURL* mPaintServer;
+    mozilla::FragmentOrURL* mPaintServer;
   } mPaint;
   nsStyleSVGPaintType mType;
   nscolor mFallbackColor;
@@ -3574,9 +3578,9 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleSVG
 
   nsStyleSVGPaint  mFill;             // [inherited]
   nsStyleSVGPaint  mStroke;           // [inherited]
-  FragmentOrURL    mMarkerEnd;        // [inherited]
-  FragmentOrURL    mMarkerMid;        // [inherited]
-  FragmentOrURL    mMarkerStart;      // [inherited]
+  mozilla::FragmentOrURL mMarkerEnd;        // [inherited]
+  mozilla::FragmentOrURL mMarkerMid;        // [inherited]
+  mozilla::FragmentOrURL mMarkerStart;      // [inherited]
   nsTArray<nsStyleCoord> mStrokeDasharray;  // [inherited] coord, percent, factor
 
   nsStyleCoord     mStrokeDashoffset; // [inherited] coord, percent, factor
@@ -3701,7 +3705,7 @@ struct nsStyleFilter
   void SetFilterParameter(const nsStyleCoord& aFilterParameter,
                           int32_t aType);
 
-  FragmentOrURL* GetURL() const {
+  mozilla::FragmentOrURL* GetURL() const {
     NS_ASSERTION(mType == NS_STYLE_FILTER_URL, "wrong filter type");
     return mURL;
   }
@@ -3721,7 +3725,7 @@ private:
   int32_t mType; // see NS_STYLE_FILTER_* constants in nsStyleConsts.h
   nsStyleCoord mFilterParameter; // coord, percent, factor, angle
   union {
-    FragmentOrURL* mURL;
+    mozilla::FragmentOrURL* mURL;
     nsCSSShadowArray* mDropShadow;
   };
 };
