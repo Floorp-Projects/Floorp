@@ -15,6 +15,10 @@ const {promiseWarn} = require("devtools/client/inspector/shared/utils");
 const {parseDeclarations} = require("devtools/shared/css-parsing-utils");
 const Services = require("Services");
 
+const STYLE_INSPECTOR_PROPERTIES = "devtools-shared/locale/styleinspector.properties";
+const {LocalizationHelper} = require("devtools/shared/l10n");
+const STYLE_INSPECTOR_L10N = new LocalizationHelper(STYLE_INSPECTOR_PROPERTIES);
+
 /**
  * Rule is responsible for the following:
  *   Manages a single style declaration or rule.
@@ -80,8 +84,7 @@ Rule.prototype = {
         eltText += "#" + this.inherited.id;
       }
       this._inheritedSource =
-        CssLogic._strings.formatStringFromName("rule.inheritedFrom",
-                                               [eltText], 1);
+        STYLE_INSPECTOR_L10N.getFormatStr("rule.inheritedFrom", eltText);
     }
     return this._inheritedSource;
   },
@@ -93,8 +96,7 @@ Rule.prototype = {
     this._keyframesName = "";
     if (this.keyframes) {
       this._keyframesName =
-        CssLogic._strings.formatStringFromName("rule.keyframe",
-                                               [this.keyframes.name], 1);
+        STYLE_INSPECTOR_L10N.getFormatStr("rule.keyframe", this.keyframes.name);
     }
     return this._keyframesName;
   },
