@@ -40,15 +40,7 @@ window.onload = function() {
         client: attachmentA.client,
         form: attachmentA.tab,
       },
-      _host: { frame: { contentWindow: window } }
-    };
-    const toolboxUnknownVersions = {
-      target: {
-        hasActor: () => true,
-        client: attachmentB.client,
-        form: attachmentB.tab
-      }
-      // Don't add a host here.
+      win: window
     };
     const toolboxDifferentVersions = {
       target: {
@@ -56,9 +48,9 @@ window.onload = function() {
         client: attachmentB.client,
         form: attachmentB.tab
       },
-      _host: { frame: { contentWindow: { navigator: { userAgent:
-               "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.11; rv:49.0) Gecko/20100101 " +
-               "Firefox/30.0" }}}}
+      win: { navigator: { userAgent:
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.11; rv:49.0) Gecko/20100101 " +
+        "Firefox/30.0" }}
     };
 
     // Modify a property on the static database, to differentiate between a generated
@@ -66,17 +58,13 @@ window.onload = function() {
     CSS_PROPERTIES_DB.properties.color.isStatic = true;
 
     yield initCssProperties(toolboxMatchingVersions);
-    yield initCssProperties(toolboxUnknownVersions);
     yield initCssProperties(toolboxDifferentVersions);
 
     const cssPropertiesMatching = getCssProperties(toolboxMatchingVersions);
-    const cssPropertiesUnknown = getCssProperties(toolboxUnknownVersions);
     const cssPropertiesDifferent = getCssProperties(toolboxDifferentVersions);
 
     is(cssPropertiesMatching.properties.color.isStatic, true,
        "The static CSS database is used when the client and platform versions match.");
-    is(cssPropertiesUnknown.properties.color.isStatic, true,
-       "The static CSS database is used when the client is not a known Firefox.");
     isnot(cssPropertiesDifferent.properties.color.isStatic, undefined,
        "The generated CSS database is used when the client and platform versions do " +
        "not match, but the client is a Firefox.");

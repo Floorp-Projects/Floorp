@@ -201,7 +201,7 @@ function destroyToolbox(toolbox) {
   toolbox.destroy().then(function () {
     let target = TargetFactory.forTab(gBrowser.selectedTab);
     ok(gDevTools._toolboxes.get(target) == null, "gDevTools doesn't know about target");
-    ok(toolbox._target == null, "toolbox doesn't know about target.");
+    ok(toolbox.target == null, "toolbox doesn't know about target.");
     finishUp();
   });
 }
