@@ -165,6 +165,7 @@ function make_declaration(aObject) {
 }
 
 function start() {
+  // load property_database.js once the pref change has gone into effect
   var script = document.createElement("script");
   script.src = "property_database.js";
   script.onload = function() {
@@ -418,5 +419,5 @@ function run_tests() {
 }
 
 SimpleTest.waitForExplicitFinish();
-start();
+SpecialPowers.pushPrefEnv({ "set": [["layout.css.vertical-text.enabled", true]] }, start);
 </script>
