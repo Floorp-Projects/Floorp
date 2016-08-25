@@ -34,7 +34,7 @@ function getInitData(initDataType)
 
   if (initDataType == 'cenc') {
       return new Uint8Array([
-          0x00, 0x00, 0x00, 0x00,                          // size = 0
+          0x00, 0x00, 0x00, 0x34,                          // size = 52
           0x70, 0x73, 0x73, 0x68,                          // 'pssh'
           0x01,                                            // version = 1
           0x00, 0x00, 0x00,                                // flags
