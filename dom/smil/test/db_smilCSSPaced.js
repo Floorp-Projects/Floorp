@@ -37,6 +37,17 @@ var _pacedTestLists =
                             comp2_3: "rgb(128, 100, 128)",
                             comp1:   "rgb(206, 150, 206)"
                           }),
+                          // Use the same RGB component values to make
+                          // premultication effect easier to compute.
+    new AnimTestcasePaced("rgba(20, 40, 60, 0.2); " +
+                          "rgba(20, 40, 60, 0.4); " +
+                          "rgba(20, 40, 60, 0.8)",
+                          { comp0: "rgba(20, 40, 60, 0.2)",
+                            comp1_6: "rgba(20, 40, 60, 0.3)",
+                            comp1_3: "rgba(20, 40, 60, 0.4)",
+                            comp2_3: "rgba(20, 40, 60, 0.6)",
+                            comp1:   "rgba(20, 40, 60, 0.8)"
+                          }),
   ],
   paintServer : [
     // Sanity check: These aren't interpolatable -- they should end up
