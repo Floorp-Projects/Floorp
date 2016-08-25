@@ -760,7 +760,7 @@ void SkScalerContext_CairoFT::generatePath(const SkGlyph& glyph, SkPath* path)
     CairoLockedFTFace faceLock(fScaledFont);
     FT_Face face = faceLock.getFace();
 
-    SkASSERT(&glyph && path);
+    SkASSERT(path);
 
     uint32_t flags = fLoadGlyphFlags;
     flags |= FT_LOAD_NO_BITMAP; // ignore embedded bitmaps so we're sure to get the outline
