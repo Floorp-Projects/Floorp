@@ -459,7 +459,6 @@ MediaDecoderReader::RequestVideoData(bool aSkipToNextKeyframe,
   if (VideoQueue().GetSize() > 0) {
     RefPtr<VideoData> v = VideoQueue().PopFront();
     if (v && mVideoDiscontinuity) {
-      v->mDiscontinuity = true;
       mVideoDiscontinuity = false;
     }
     mBaseVideoPromise.Resolve(v, __func__);
@@ -495,7 +494,6 @@ MediaDecoderReader::RequestAudioData()
   if (AudioQueue().GetSize() > 0) {
     RefPtr<AudioData> a = AudioQueue().PopFront();
     if (mAudioDiscontinuity) {
-      a->mDiscontinuity = true;
       mAudioDiscontinuity = false;
     }
     mBaseAudioPromise.Resolve(a, __func__);
