@@ -105,7 +105,7 @@ function* testMdnContextMenuItemVisibility(view, shouldBeVisible) {
   let node = root.querySelector("." + PROPERTY_NAME_CLASS).firstChild;
   let allMenuItems = openStyleContextMenuAndGetAllItems(view, node);
   let menuitemShowMdnDocs = allMenuItems.find(item => item.label ===
-    STYLE_INSPECTOR_L10N.getStr("styleinspector.contextmenu.showMdnDocs"));
+    _STRINGS.GetStringFromName("styleinspector.contextmenu.showMdnDocs"));
 
   let isVisible = menuitemShowMdnDocs.visible;
   is(isVisible, shouldBeVisible,
