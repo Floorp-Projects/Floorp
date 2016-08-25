@@ -1463,7 +1463,7 @@ JS_SetGCParametersBasedOnAvailableMemory(JSContext* cx, uint32_t availMem)
             {JSGC_HIGH_FREQUENCY_TIME_LIMIT, 1500},
             {JSGC_HIGH_FREQUENCY_TIME_LIMIT, 1500},
             {JSGC_ALLOCATION_THRESHOLD, 30},
-            {JSGC_MODE, JSGC_MODE_COMPARTMENT}
+            {JSGC_MODE, JSGC_MODE_ZONE}
         };
 
         config = nominal;
