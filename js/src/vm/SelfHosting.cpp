@@ -2246,7 +2246,8 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("std_String_normalize",                str_normalize,                0,0),
 #endif
     JS_FN("std_String_concat",                   str_concat,                   1,0),
-
+    
+    JS_FN("std_TypedArray_buffer",               js::TypedArray_bufferGetter,  1,0),
 
     JS_FN("std_WeakMap_has",                     WeakMap_has,                  1,0),
     JS_FN("std_WeakMap_get",                     WeakMap_get,                  2,0),
