@@ -1867,16 +1867,16 @@ nsWindow::WidgetToScreenOffset()
     return GdkPointToDevicePixels({ x, y });
 }
 
-NS_IMETHODIMP
+void
 nsWindow::CaptureMouse(bool aCapture)
 {
     LOG(("CaptureMouse %p\n", (void *)this));
 
     if (!mGdkWindow)
-        return NS_OK;
+        return;
 
     if (!mContainer)
-        return NS_ERROR_FAILURE;
+        return;
 
     if (aCapture) {
         gtk_grab_add(GTK_WIDGET(mContainer));
@@ -1886,8 +1886,6 @@ nsWindow::CaptureMouse(bool aCapture)
         ReleaseGrabs();
         gtk_grab_remove(GTK_WIDGET(mContainer));
     }
-
-    return NS_OK;
 }
 
 void
