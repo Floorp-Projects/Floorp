@@ -654,14 +654,6 @@ NS_IMETHODIMP nsWindow::Resize(double aWidth, double aHeight, bool aRepaint)
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsWindow::PlaceBehind(nsTopLevelWidgetZPlacement aPlacement,
-                      nsIWidget *aWidget,
-                      bool aActivate)
-{
-  return NS_OK;
-}
-
 void
 nsWindow::SetSizeMode(nsSizeMode aMode)
 {
