@@ -1425,6 +1425,12 @@ media::TimeIntervals
 MediaDecoder::GetSeekable()
 {
   MOZ_ASSERT(NS_IsMainThread());
+
+  if (IsNaN(GetDuration())) {
+    // We do not have a duration yet, we can't determine the seekable range.
+    return TimeIntervals();
+  }
+
   // We can seek in buffered range if the media is seekable. Also, we can seek
   // in unbuffered ranges if the transport level is seekable (local file or the
   // server supports range requests, etc.) or in cue-less WebMs
