@@ -199,14 +199,7 @@ class TraceLoggerGraph
     };
 
   public:
-    TraceLoggerGraph()
-      : failed(false)
-      , enabled(false)
-#ifdef DEBUG
-      , nextTextId(0)
-#endif
-      , treeOffset(0)
-    { }
+    TraceLoggerGraph() {}
     ~TraceLoggerGraph();
 
     bool init(uint64_t timestamp);
@@ -223,19 +216,19 @@ class TraceLoggerGraph
     }
 
   private:
-    bool failed;
-    bool enabled;
+    bool failed = false;
+    bool enabled = false;
 #ifdef DEBUG
-    uint32_t nextTextId;
+    uint32_t nextTextId = 0;
 #endif
 
-    FILE* dictFile;
-    FILE* treeFile;
-    FILE* eventFile;
+    FILE* dictFile = nullptr;
+    FILE* treeFile = nullptr;
+    FILE* eventFile = nullptr;
 
     ContinuousSpace<TreeEntry> tree;
     ContinuousSpace<StackEntry> stack;
-    uint32_t treeOffset;
+    uint32_t treeOffset = 0;
 
     // Helper functions that convert a TreeEntry in different endianness
     // in place.
