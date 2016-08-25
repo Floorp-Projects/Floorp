@@ -155,9 +155,6 @@ public:
                       double aHeight,
                       bool aRepaint) override;
     void SetZIndex(int32_t aZIndex) override;
-    NS_IMETHOD PlaceBehind(nsTopLevelWidgetZPlacement aPlacement,
-                           nsIWidget *aWidget,
-                           bool aActivate) override;
     virtual void SetSizeMode(nsSizeMode aMode) override;
     NS_IMETHOD Enable(bool aState) override;
     virtual bool IsEnabled() const override;
