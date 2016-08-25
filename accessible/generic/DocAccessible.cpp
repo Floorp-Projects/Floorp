@@ -129,6 +129,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(DocAccessible, Accessible)
   }
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mAccessibleCache)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mAnchorJumpElm)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mInvalidationList)
   for (auto it = tmp->mARIAOwnsHash.ConstIter(); !it.Done(); it.Next()) {
     nsTArray<RefPtr<Accessible> >* ar = it.UserData();
     for (uint32_t i = 0; i < ar->Length(); i++) {
@@ -147,6 +148,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(DocAccessible, Accessible)
   tmp->mNodeToAccessibleMap.Clear();
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mAccessibleCache)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mAnchorJumpElm)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mInvalidationList)
   tmp->mARIAOwnsHash.Clear();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
