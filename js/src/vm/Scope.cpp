@@ -384,6 +384,14 @@ Scope::finalize(FreeOp* fop)
     }
 }
 
+size_t
+Scope::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const
+{
+    if (data_)
+        return mallocSizeOf(reinterpret_cast<void*>(data_));
+    return 0;
+}
+
 void
 Scope::dump()
 {

@@ -589,6 +589,13 @@ StatsCellCallback(JSRuntime* rt, void* data, void* thing, JS::TraceKind traceKin
         break;
       }
 
+      case JS::TraceKind::Scope: {
+        Scope* scope = static_cast<Scope*>(thing);
+        zStats->scopesGCHeap += thingSize;
+        zStats->scopesMallocHeap += scope->sizeOfExcludingThis(rtStats->mallocSizeOf_);
+        break;
+      }
+
       default:
         MOZ_CRASH("invalid traceKind in StatsCellCallback");
     }
