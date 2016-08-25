@@ -29,13 +29,19 @@ namespace layers {
 
 
 /**
- * If APZ is enabled then one PAPZ will be opened per PBrowser between the
- * process where the PBrowser child actor lives and the main process (the
- * PBrowser parent actor doesn't necessarily live in the main process, for
- * example with nested browsers). This will typically be set up when the layers
- * id is allocated for the PBrowser.
+ * PAPZ is a protocol for remoting a GeckoContentController. PAPZ lives on the
+ * PCompositorBridge protocol which either connects to the compositor thread
+ * in the main process, or to the compositor thread in the gpu processs.
  *
- * Opened through PContent and runs on the main thread in both parent and child.
+ * PAPZParent lives in the compositor thread, while PAPZChild lives wherever the remoted
+ * GeckoContentController lives (generally the main thread of the main or content process).
+ * RemoteContentController implements PAPZParent, while APZChild implements PAPZChild.
+ *
+ * PAPZ is always used for ContentProcessController and only used for ChromeProcessController
+ * when there is a gpu process, otherwhise ChromeProcessController is used directly on the
+ * compositor thread. Only the methods that are used by the [Chrome,Content]ProcessController
+ * are implemented. If a new method is needed then PAPZ, APZChild, and RemoteContentController
+ * must be updated to handle it.
  */
 sync protocol PAPZ
 {
@@ -48,6 +54,7 @@ parent:
   async __delete__();
 
 child:
+
   async RequestContentRepaint(FrameMetrics frame);
 
   // The aCallTakeFocusForClickFromTap argument is used for eSingleTap types,
