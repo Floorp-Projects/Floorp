@@ -40,14 +40,17 @@ window.onload = function() {
         hasActor: () => useActor,
         client: attachmentA.client,
         form: attachmentA.tab
-      }
+      },
+      // Fake the window for css-properties.js's getClientBrowserVersion to work
+      win: window
     };
     const toolboxMockB = {
       target: {
         hasActor: () => useActor,
         client: attachmentB.client,
         form: attachmentB.tab
-      }
+      },
+      win: window
     };
 
     yield initCssProperties(toolboxMockA);
