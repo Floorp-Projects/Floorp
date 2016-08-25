@@ -499,9 +499,7 @@ LookupCache::ConstructPrefixSet(AddPrefixArray& aAddPrefixes)
 
   // construct new one, replace old entries
   nsresult rv = mPrefixSet->SetPrefixes(array.Elements(), array.Length());
-  if (NS_FAILED(rv)) {
-    goto error_bailout;
-  }
+  NS_ENSURE_SUCCESS(rv, rv);
 
 #ifdef DEBUG
   uint32_t size;
@@ -512,10 +510,6 @@ LookupCache::ConstructPrefixSet(AddPrefixArray& aAddPrefixes)
   mPrimed = true;
 
   return NS_OK;
-
- error_bailout:
-  Telemetry::Accumulate(Telemetry::URLCLASSIFIER_PS_FAILURE, 1);
-  return rv;
 }
 
 nsresult

@@ -3653,11 +3653,6 @@
     "n_buckets": 10,
     "description": "Size of the completion cache in entries"
   },
-  "URLCLASSIFIER_PS_FAILURE": {
-    "expires_in_version": "default",
-    "kind": "boolean",
-    "description": "Did UrlClassifier fail to construct the PrefixSet?"
-  },
   "URLCLASSIFIER_UPDATE_REMOTE_STATUS": {
     "alert_emails": ["gcp@mozilla.com", "francois@mozilla.com"],
     "expires_in_version": "never",
