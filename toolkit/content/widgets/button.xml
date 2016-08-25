@@ -143,7 +143,13 @@
            and then they would see the incorrect value of checked. Additionally
            a command attribute would redirect the command events anyway.-->
       <handler event="click" button="0" action="this._handleClick();"/>
-      <handler event="keypress" key=" " action="this._handleClick();"/>
+      <handler event="keypress" key=" ">
+      <![CDATA[
+        this._handleClick();
+        // Prevent page from scrolling on the space key.
+        event.preventDefault();
+      ]]>
+      </handler>
 
       <handler event="keypress">
       <![CDATA[
@@ -246,7 +252,13 @@
 
     <handlers>
       <handler event="keypress" keycode="VK_RETURN" action="this.open = true;"/>
-      <handler event="keypress" key=" " action="this.open = true;"/>
+      <handler event="keypress" key=" ">
+      <![CDATA[
+        this.open = true;
+        // Prevent page from scrolling on the space key.
+        event.preventDefault();
+      ]]>
+      </handler>
     </handlers>
   </binding>
 
@@ -337,8 +349,11 @@
           this.open = true;
       </handler>
       <handler event="keypress" key=" ">
-        if (event.originalTarget == this)
+        if (event.originalTarget == this) {
           this.open = true;
+          // Prevent page from scrolling on the space key.
+          event.preventDefault();
+        }
       </handler>
     </handlers>
   </binding>
