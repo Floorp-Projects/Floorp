@@ -21,6 +21,7 @@
 #include "js/GCPolicyAPI.h"
 #include "js/HeapAPI.h"
 #include "js/TypeDecls.h"
+#include "js/UniquePtr.h"
 #include "js/Utility.h"
 
 /*
@@ -1123,6 +1124,45 @@ class JS_PUBLIC_API(ObjectPtr)
 } /* namespace JS */
 
 namespace js {
+
+template <typename Outer, typename T, typename D>
+class UniquePtrOperations
+{
+    const UniquePtr<T, D>& uniquePtr() const { return static_cast<const Outer*>(this)->get(); }
+
+  public:
+    explicit operator bool() const { return !!uniquePtr(); }
+};
+
+template <typename Outer, typename T, typename D>
+class MutableUniquePtrOperations : public UniquePtrOperations<Outer, T, D>
+{
+    UniquePtr<T, D>& uniquePtr() { return static_cast<Outer*>(this)->get(); }
+
+  public:
+    MOZ_MUST_USE typename UniquePtr<T, D>::Pointer release() { return uniquePtr().release(); }
+};
+
+template <typename T, typename D>
+class RootedBase<UniquePtr<T, D>>
+  : public MutableUniquePtrOperations<JS::Rooted<UniquePtr<T, D>>, T, D>
+{ };
+
+template <typename T, typename D>
+class MutableHandleBase<UniquePtr<T, D>>
+  : public MutableUniquePtrOperations<JS::MutableHandle<UniquePtr<T, D>>, T, D>
+{ };
+
+template <typename T, typename D>
+class HandleBase<UniquePtr<T, D>>
+  : public UniquePtrOperations<JS::Handle<UniquePtr<T, D>>, T, D>
+{ };
+
+template <typename T, typename D>
+class PersistentRootedBase<UniquePtr<T, D>>
+  : public MutableUniquePtrOperations<JS::PersistentRooted<UniquePtr<T, D>>, T, D>
+{ };
+
 namespace gc {
 
 template <typename T, typename TraceCallbacks>

@@ -237,7 +237,7 @@ namespace JS {
 
 // A GCHashSet is a HashSet with an additional trace method that knows
 // be traced to be kept alive will generally want to use this GCHashSet
-// specializeation in lieu of HashSet.
+// specialization in lieu of HashSet.
 //
 // Most types of GC pointers can be traced with no extra infrastructure. For
 // structs and non-gc-pointer members, ensure that there is a specialization of

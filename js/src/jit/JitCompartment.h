@@ -34,7 +34,7 @@ enum EnterJitType {
 struct EnterJitData
 {
     explicit EnterJitData(JSContext* cx)
-      : scopeChain(cx),
+      : envChain(cx),
         result(cx)
     {}
 
@@ -48,14 +48,14 @@ struct EnterJitData
     unsigned numActualArgs;
     unsigned osrNumStackValues;
 
-    RootedObject scopeChain;
+    RootedObject envChain;
     RootedValue result;
 
     bool constructing;
 };
 
 typedef void (*EnterJitCode)(void* code, unsigned argc, Value* argv, InterpreterFrame* fp,
-                             CalleeToken calleeToken, JSObject* scopeChain,
+                             CalleeToken calleeToken, JSObject* envChain,
                              size_t numStackValues, Value* vp);
 
 class JitcodeGlobalTable;

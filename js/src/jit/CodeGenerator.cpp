@@ -2411,7 +2411,7 @@ static const VMFunction LambdaInfo = FunctionInfo<LambdaFn>(js::Lambda, "Lambda"
 void
 CodeGenerator::visitLambdaForSingleton(LLambdaForSingleton* lir)
 {
-    pushArg(ToRegister(lir->scopeChain()));
+    pushArg(ToRegister(lir->environmentChain()));
     pushArg(ImmGCPtr(lir->mir()->info().fun));
     callVM(LambdaInfo, lir);
 }
@@ -2419,19 +2419,19 @@ CodeGenerator::visitLambdaForSingleton(LLambdaForSingleton* lir)
 void
 CodeGenerator::visitLambda(LLambda* lir)
 {
-    Register scopeChain = ToRegister(lir->scopeChain());
+    Register envChain = ToRegister(lir->environmentChain());
     Register output = ToRegister(lir->output());
     Register tempReg = ToRegister(lir->temp());
     const LambdaFunctionInfo& info = lir->mir()->info();
 
-    OutOfLineCode* ool = oolCallVM(LambdaInfo, lir, ArgList(ImmGCPtr(info.fun), scopeChain),
+    OutOfLineCode* ool = oolCallVM(LambdaInfo, lir, ArgList(ImmGCPtr(info.fun), envChain),
                                    StoreRegisterTo(output));
 
     MOZ_ASSERT(!info.singletonType);
 
     masm.createGCObject(output, tempReg, info.fun, gc::DefaultHeap, ool->entry());
 
-    emitLambdaInit(output, scopeChain, info);
+    emitLambdaInit(output, envChain, info);
 
     if (info.flags & JSFunction::EXTENDED) {
         MOZ_ASSERT(info.fun->allowSuperProperty() || info.fun->isSelfHostedBuiltin());
@@ -2469,7 +2469,7 @@ static const VMFunction LambdaArrowInfo =
 void
 CodeGenerator::visitOutOfLineLambdaArrow(OutOfLineLambdaArrow* ool)
 {
-    Register scopeChain = ToRegister(ool->lir->scopeChain());
+    Register envChain = ToRegister(ool->lir->environmentChain());
     ValueOperand newTarget = ToValue(ool->lir, LLambdaArrow::NewTargetValue);
     Register output = ToRegister(ool->lir->output());
     const LambdaFunctionInfo& info = ool->lir->mir()->info();
@@ -2483,7 +2483,7 @@ CodeGenerator::visitOutOfLineLambdaArrow(OutOfLineLambdaArrow* ool)
     saveLive(ool->lir);
 
     pushArg(newTarget);
-    pushArg(scopeChain);
+    pushArg(envChain);
     pushArg(ImmGCPtr(info.fun));
 
     callVM(LambdaArrowInfo, ool->lir);
@@ -2497,7 +2497,7 @@ CodeGenerator::visitOutOfLineLambdaArrow(OutOfLineLambdaArrow* ool)
 void
 CodeGenerator::visitLambdaArrow(LLambdaArrow* lir)
 {
-    Register scopeChain = ToRegister(lir->scopeChain());
+    Register envChain = ToRegister(lir->environmentChain());
     ValueOperand newTarget = ToValue(lir, LLambdaArrow::NewTargetValue);
     Register output = ToRegister(lir->output());
     const LambdaFunctionInfo& info = lir->mir()->info();
@@ -2525,7 +2525,7 @@ CodeGenerator::visitLambdaArrow(LLambdaArrow* lir)
 
     masm.pop(newTarget.scratchReg());
 
-    emitLambdaInit(output, scopeChain, info);
+    emitLambdaInit(output, envChain, info);
 
     // Initialize extended slots. Lexical |this| is stored in the first one.
     MOZ_ASSERT(info.flags & JSFunction::EXTENDED);
@@ -2539,7 +2539,7 @@ CodeGenerator::visitLambdaArrow(LLambdaArrow* lir)
 }
 
 void
-CodeGenerator::emitLambdaInit(Register output, Register scopeChain,
+CodeGenerator::emitLambdaInit(Register output, Register envChain,
                               const LambdaFunctionInfo& info)
 {
     // Initialize nargs and flags. We do this with a single uint32 to avoid
@@ -2558,7 +2558,7 @@ CodeGenerator::emitLambdaInit(Register output, Register scopeChain,
     masm.store32(Imm32(u.word), Address(output, JSFunction::offsetOfNargs()));
     masm.storePtr(ImmGCPtr(info.scriptOrLazyScript),
                   Address(output, JSFunction::offsetOfNativeOrScript()));
-    masm.storePtr(scopeChain, Address(output, JSFunction::offsetOfEnvironment()));
+    masm.storePtr(envChain, Address(output, JSFunction::offsetOfEnvironment()));
     masm.storePtr(ImmGCPtr(info.fun->displayAtom()), Address(output, JSFunction::offsetOfAtom()));
 }
 
@@ -2796,12 +2796,12 @@ CodeGenerator::visitOsrEntry(LOsrEntry* lir)
 }
 
 void
-CodeGenerator::visitOsrScopeChain(LOsrScopeChain* lir)
+CodeGenerator::visitOsrEnvironmentChain(LOsrEnvironmentChain* lir)
 {
     const LAllocation* frame   = lir->getOperand(0);
     const LDefinition* object  = lir->getDef(0);
 
-    const ptrdiff_t frameOffset = BaselineFrame::reverseOffsetOfScopeChain();
+    const ptrdiff_t frameOffset = BaselineFrame::reverseOffsetOfEnvironmentChain();
 
     masm.loadPtr(Address(ToRegister(frame), frameOffset), ToRegister(object));
 }
@@ -4492,7 +4492,7 @@ CodeGenerator::visitEncodeSnapshot(LEncodeSnapshot* lir)
 void
 CodeGenerator::visitGetDynamicName(LGetDynamicName* lir)
 {
-    Register scopeChain = ToRegister(lir->getScopeChain());
+    Register envChain = ToRegister(lir->getEnvironmentChain());
     Register name = ToRegister(lir->getName());
     Register temp1 = ToRegister(lir->temp1());
     Register temp2 = ToRegister(lir->temp2());
@@ -4506,7 +4506,7 @@ CodeGenerator::visitGetDynamicName(LGetDynamicName* lir)
 
     masm.setupUnalignedABICall(temp1);
     masm.passABIArg(temp3);
-    masm.passABIArg(scopeChain);
+    masm.passABIArg(envChain);
     masm.passABIArg(name);
     masm.passABIArg(temp2);
     masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, GetDynamicName));
@@ -4529,14 +4529,14 @@ static const VMFunction DirectEvalStringInfo =
 void
 CodeGenerator::visitCallDirectEval(LCallDirectEval* lir)
 {
-    Register scopeChain = ToRegister(lir->getScopeChain());
+    Register envChain = ToRegister(lir->getEnvironmentChain());
     Register string = ToRegister(lir->getString());
 
     pushArg(ImmPtr(lir->mir()->pc()));
     pushArg(string);
     pushArg(ToValue(lir, LCallDirectEval::NewTarget));
     pushArg(ImmGCPtr(current->mir()->info().script()));
-    pushArg(scopeChain);
+    pushArg(envChain);
 
     callVM(DirectEvalStringInfo, lir);
 }
@@ -4659,9 +4659,9 @@ static const VMFunction DefVarInfo = FunctionInfo<DefVarFn>(DefVar, "DefVar");
 void
 CodeGenerator::visitDefVar(LDefVar* lir)
 {
-    Register scopeChain = ToRegister(lir->scopeChain());
+    Register envChain = ToRegister(lir->environmentChain());
 
-    pushArg(scopeChain); // JSObject*
+    pushArg(envChain); // JSObject*
     pushArg(Imm32(lir->mir()->attrs())); // unsigned
     pushArg(ImmGCPtr(lir->mir()->name())); // PropertyName*
 
@@ -4688,10 +4688,10 @@ static const VMFunction DefFunOperationInfo =
 void
 CodeGenerator::visitDefFun(LDefFun* lir)
 {
-    Register scopeChain = ToRegister(lir->scopeChain());
+    Register envChain = ToRegister(lir->environmentChain());
 
     pushArg(ImmGCPtr(lir->mir()->fun()));
-    pushArg(scopeChain);
+    pushArg(envChain);
     pushArg(ImmGCPtr(current->mir()->info().script()));
 
     callVM(DefFunOperationInfo, lir);
@@ -5789,22 +5789,22 @@ CodeGenerator::visitSimdUnbox(LSimdUnbox* lir)
     bailoutFrom(&bail, lir->snapshot());
 }
 
-typedef js::DeclEnvObject* (*NewDeclEnvObjectFn)(JSContext*, HandleFunction, NewObjectKind);
-static const VMFunction NewDeclEnvObjectInfo =
-    FunctionInfo<NewDeclEnvObjectFn>(DeclEnvObject::createTemplateObject,
-                                     "DeclEnvObject::createTemplateObject");
+typedef js::NamedLambdaObject* (*NewNamedLambdaObjectFn)(JSContext*, HandleFunction, gc::InitialHeap);
+static const VMFunction NewNamedLambdaObjectInfo =
+    FunctionInfo<NewNamedLambdaObjectFn>(NamedLambdaObject::createTemplateObject,
+                                         "NamedLambdaObject::createTemplateObject");
 
 void
-CodeGenerator::visitNewDeclEnvObject(LNewDeclEnvObject* lir)
+CodeGenerator::visitNewNamedLambdaObject(LNewNamedLambdaObject* lir)
 {
     Register objReg = ToRegister(lir->output());
     Register tempReg = ToRegister(lir->temp());
-    DeclEnvObject* templateObj = lir->mir()->templateObj();
+    EnvironmentObject* templateObj = lir->mir()->templateObj();
     const CompileInfo& info = lir->mir()->block()->info();
 
     // If we have a template object, we can inline call object creation.
-    OutOfLineCode* ool = oolCallVM(NewDeclEnvObjectInfo, lir,
-                                   ArgList(ImmGCPtr(info.funMaybeLazy()), Imm32(GenericObject)),
+    OutOfLineCode* ool = oolCallVM(NewNamedLambdaObjectInfo, lir,
+                                   ArgList(ImmGCPtr(info.funMaybeLazy()), Imm32(gc::DefaultHeap)),
                                    StoreRegisterTo(objReg));
 
     bool initContents = ShouldInitFixedSlots(lir, templateObj);
@@ -5814,7 +5814,7 @@ CodeGenerator::visitNewDeclEnvObject(LNewDeclEnvObject* lir)
     masm.bind(ool->rejoin());
 }
 
-typedef JSObject* (*NewCallObjectFn)(JSContext*, HandleShape, HandleObjectGroup, uint32_t);
+typedef JSObject* (*NewCallObjectFn)(JSContext*, HandleShape, HandleObjectGroup);
 static const VMFunction NewCallObjectInfo =
     FunctionInfo<NewCallObjectFn>(NewCallObject, "NewCallObject");
 
@@ -5826,12 +5826,9 @@ CodeGenerator::visitNewCallObject(LNewCallObject* lir)
 
     CallObject* templateObj = lir->mir()->templateObject();
 
-    JSScript* script = lir->mir()->block()->info().script();
-    uint32_t lexicalBegin = script->bindings.aliasedBodyLevelLexicalBegin();
     OutOfLineCode* ool = oolCallVM(NewCallObjectInfo, lir,
                                    ArgList(ImmGCPtr(templateObj->lastProperty()),
-                                           ImmGCPtr(templateObj->group()),
-                                           Imm32(lexicalBegin)),
+                                           ImmGCPtr(templateObj->group())),
                                    StoreRegisterTo(objReg));
 
     // Inline call object creation, using the OOL path only for tricky cases.
@@ -5842,7 +5839,7 @@ CodeGenerator::visitNewCallObject(LNewCallObject* lir)
     masm.bind(ool->rejoin());
 }
 
-typedef JSObject* (*NewSingletonCallObjectFn)(JSContext*, HandleShape, uint32_t);
+typedef JSObject* (*NewSingletonCallObjectFn)(JSContext*, HandleShape);
 static const VMFunction NewSingletonCallObjectInfo =
     FunctionInfo<NewSingletonCallObjectFn>(NewSingletonCallObject, "NewSingletonCallObject");
 
@@ -5853,12 +5850,9 @@ CodeGenerator::visitNewSingletonCallObject(LNewSingletonCallObject* lir)
 
     JSObject* templateObj = lir->mir()->templateObject();
 
-    JSScript* script = lir->mir()->block()->info().script();
-    uint32_t lexicalBegin = script->bindings.aliasedBodyLevelLexicalBegin();
     OutOfLineCode* ool;
     ool = oolCallVM(NewSingletonCallObjectInfo, lir,
-                    ArgList(ImmGCPtr(templateObj->as<CallObject>().lastProperty()),
-                            Imm32(lexicalBegin)),
+                    ArgList(ImmGCPtr(templateObj->as<CallObject>().lastProperty())),
                     StoreRegisterTo(objReg));
 
     // Objects can only be given singleton types in VM calls.  We make the call
@@ -9603,7 +9597,7 @@ static const VMFunction BindVarInfo = FunctionInfo<BindVarFn>(jit::BindVar, "Bin
 void
 CodeGenerator::visitCallBindVar(LCallBindVar* lir)
 {
-    pushArg(ToRegister(lir->scopeChain()));
+    pushArg(ToRegister(lir->environmentChain()));
     callVM(BindVarInfo, lir);
 }
 
@@ -9768,11 +9762,11 @@ void
 CodeGenerator::visitGetNameCache(LGetNameCache* ins)
 {
     LiveRegisterSet liveRegs = ins->safepoint()->liveRegs();
-    Register scopeChain = ToRegister(ins->scopeObj());
+    Register envChain = ToRegister(ins->envObj());
     TypedOrValueRegister output(GetValueOutput(ins));
     bool isTypeOf = ins->mir()->accessKind() != MGetNameCache::NAME;
 
-    NameIC cache(liveRegs, isTypeOf, scopeChain, ins->mir()->name(), output);
+    NameIC cache(liveRegs, isTypeOf, envChain, ins->mir()->name(), output);
     cache.setProfilerLeavePC(ins->mir()->profilerLeavePc());
     addCache(ins, allocateCache(cache));
 }
@@ -9786,7 +9780,7 @@ CodeGenerator::visitNameIC(OutOfLineUpdateCache* ool, DataPtr<NameIC>& ic)
     LInstruction* lir = ool->lir();
     saveLive(lir);
 
-    pushArg(ic->scopeChainReg());
+    pushArg(ic->environmentChainReg());
     pushArg(Imm32(ool->getCacheIndex()));
     pushArg(ImmGCPtr(gen->info().script()));
     callVM(NameIC::UpdateInfo, lir);
@@ -9894,9 +9888,9 @@ CodeGenerator::visitGetPropertyIC(OutOfLineUpdateCache* ool, DataPtr<GetProperty
 void
 CodeGenerator::visitBindNameCache(LBindNameCache* ins)
 {
-    Register scopeChain = ToRegister(ins->scopeChain());
+    Register envChain = ToRegister(ins->environmentChain());
     Register output = ToRegister(ins->output());
-    BindNameIC cache(scopeChain, ins->mir()->name(), output);
+    BindNameIC cache(envChain, ins->mir()->name(), output);
     cache.setProfilerLeavePC(ins->mir()->profilerLeavePc());
 
     addCache(ins, allocateCache(cache));
@@ -9912,7 +9906,7 @@ CodeGenerator::visitBindNameIC(OutOfLineUpdateCache* ool, DataPtr<BindNameIC>& i
     LInstruction* lir = ool->lir();
     saveLive(lir);
 
-    pushArg(ic->scopeChainReg());
+    pushArg(ic->environmentChainReg());
     pushArg(Imm32(ool->getCacheIndex()));
     pushArg(ImmGCPtr(gen->info().script()));
     callVM(BindNameIC::UpdateInfo, lir);

@@ -49,7 +49,7 @@ GeneratorObject::create(JSContext* cx, AbstractFramePtr frame)
     GeneratorObject* genObj = &obj->as<GeneratorObject>();
     genObj->setCallee(*frame.callee());
     genObj->setNewTarget(frame.newTarget());
-    genObj->setScopeChain(*frame.scopeChain());
+    genObj->setEnvironmentChain(*frame.environmentChain());
     if (frame.script()->needsArgsObj())
         genObj->setArgsObj(frame.argsObj());
     genObj->clearExpressionStack();
@@ -74,7 +74,7 @@ GeneratorObject::suspend(JSContext* cx, HandleObject obj, AbstractFramePtr frame
 
     uint32_t yieldIndex = GET_UINT24(pc);
     genObj->setYieldIndex(yieldIndex);
-    genObj->setScopeChain(*frame.scopeChain());
+    genObj->setEnvironmentChain(*frame.environmentChain());
 
     if (nvalues) {
         ArrayObject* stack = NewDenseCopiedArray(cx, nvalues, vp);
@@ -152,8 +152,8 @@ GeneratorObject::resume(JSContext* cx, InterpreterActivation& activation,
 
     RootedFunction callee(cx, &genObj->callee());
     RootedValue newTarget(cx, genObj->newTarget());
-    RootedObject scopeChain(cx, &genObj->scopeChain());
-    if (!activation.resumeGeneratorFrame(callee, newTarget, scopeChain))
+    RootedObject envChain(cx, &genObj->environmentChain());
+    if (!activation.resumeGeneratorFrame(callee, newTarget, envChain))
         return false;
     activation.regs().fp()->setResumedGenerator();
 

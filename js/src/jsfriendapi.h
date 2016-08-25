@@ -2820,12 +2820,12 @@ SetJitExceptionHandler(JitExceptionHandler handler);
 #endif
 
 /**
- * Get the nearest enclosing with scope object for a given function. If the
- * function is not scripted or is not enclosed by a with scope, returns the
- * global.
+ * Get the nearest enclosing with environment object for a given function. If
+ * the function is not scripted or is not enclosed by a with scope, returns
+ * the global.
  */
 extern JS_FRIEND_API(JSObject*)
-GetNearestEnclosingWithScopeObjectForFunction(JSFunction* fun);
+GetNearestEnclosingWithEnvironmentObjectForFunction(JSFunction* fun);
 
 /**
  * Get the first SavedFrame object in this SavedFrame stack whose principals are
@@ -2851,7 +2851,7 @@ ConvertArgsToArray(JSContext* cx, const JS::CallArgs& args);
  * invariant that actual Window objects (the global objects of web pages) are
  * never directly exposed to script. Instead we often substitute a WindowProxy.
  *
- * The scope chain, on the other hand, contains the Window and never its
+ * The environment chain, on the other hand, contains the Window and never its
  * WindowProxy.
  *
  * As a result, we have calls to these "substitute-this-object-for-that-object"
