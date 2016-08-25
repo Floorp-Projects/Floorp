@@ -291,7 +291,7 @@ public:
   }
   void SetTaskbarPreview(nsITaskbarWindowPreview *preview) { mTaskbarPreview = do_GetWeakReference(preview); }
 
-  NS_IMETHOD              ReparentNativeWidget(nsIWidget* aNewParent) override;
+  virtual void            ReparentNativeWidget(nsIWidget* aNewParent) override;
 
   // Open file picker tracking
   void                    PickerOpen();

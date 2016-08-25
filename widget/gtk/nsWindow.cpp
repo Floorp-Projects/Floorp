@@ -870,7 +870,7 @@ nsWindow::SetParent(nsIWidget *aNewParent)
     return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsWindow::ReparentNativeWidget(nsIWidget* aNewParent)
 {
     NS_PRECONDITION(aNewParent, "");
@@ -883,7 +883,7 @@ nsWindow::ReparentNativeWidget(nsIWidget* aNewParent)
         // reparent.
         MOZ_ASSERT(gdk_window_is_destroyed(mGdkWindow),
                    "live GdkWindow with no widget");
-        return NS_OK;
+        return;
     }
     MOZ_ASSERT(!gdk_window_is_destroyed(mGdkWindow),
                "destroyed GdkWindow with widget");
@@ -901,7 +901,6 @@ nsWindow::ReparentNativeWidget(nsIWidget* aNewParent)
 
     ReparentNativeWidgetInternal(aNewParent, newContainer, newParentWindow,
                                  oldContainer);
-    return NS_OK;
 }
 
 void

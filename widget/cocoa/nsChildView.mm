@@ -770,27 +770,26 @@ nsChildView::SetParent(nsIWidget* aNewParent)
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-NS_IMETHODIMP
+void
 nsChildView::ReparentNativeWidget(nsIWidget* aNewParent)
 {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   NS_PRECONDITION(aNewParent, "");
 
   if (mOnDestroyCalled)
-    return NS_OK;
+    return;
 
   NSView<mozView>* newParentView =
    (NSView<mozView>*)aNewParent->GetNativeData(NS_NATIVE_WIDGET);
-  NS_ENSURE_TRUE(newParentView, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE_VOID(newParentView);
 
   // we hold a ref to mView, so this is safe
   [mView removeFromSuperview];
   mParentView = newParentView;
   [mParentView addSubview:mView];
-  return NS_OK;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 void nsChildView::ResetParent()

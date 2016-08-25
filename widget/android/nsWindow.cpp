@@ -1653,13 +1653,6 @@ nsWindow::SetParent(nsIWidget *aNewParent)
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsWindow::ReparentNativeWidget(nsIWidget *aNewParent)
-{
-    NS_PRECONDITION(aNewParent, "");
-    return NS_OK;
-}
-
 nsIWidget*
 nsWindow::GetParent()
 {
