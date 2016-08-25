@@ -22,7 +22,7 @@ function* addNewRuleFromContextMenu(inspector, view) {
 
   let allMenuItems = openStyleContextMenuAndGetAllItems(view, view.element);
   let menuitemAddRule = allMenuItems.find(item => item.label ===
-    _STRINGS.GetStringFromName("styleinspector.contextmenu.addNewRule"));
+    STYLE_INSPECTOR_L10N.getStr("styleinspector.contextmenu.addNewRule"));
 
   ok(menuitemAddRule.visible, "Add rule is visible");
 

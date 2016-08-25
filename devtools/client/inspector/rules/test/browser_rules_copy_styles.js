@@ -215,21 +215,21 @@ add_task(function* () {
 function* checkCopyStyle(view, node, menuItemLabel, expectedPattern, visible) {
   let allMenuItems = openStyleContextMenuAndGetAllItems(view, node);
   let menuItem = allMenuItems.find(item =>
-    item.label === _STRINGS.GetStringFromName(menuItemLabel));
+    item.label === STYLE_INSPECTOR_L10N.getStr(menuItemLabel));
   let menuitemCopy = allMenuItems.find(item => item.label ===
-    _STRINGS.GetStringFromName("styleinspector.contextmenu.copy"));
+    STYLE_INSPECTOR_L10N.getStr("styleinspector.contextmenu.copy"));
   let menuitemCopyLocation = allMenuItems.find(item => item.label ===
-    _STRINGS.GetStringFromName("styleinspector.contextmenu.copyLocation"));
+    STYLE_INSPECTOR_L10N.getStr("styleinspector.contextmenu.copyLocation"));
   let menuitemCopyPropertyDeclaration = allMenuItems.find(item => item.label ===
-    _STRINGS.GetStringFromName("styleinspector.contextmenu.copyPropertyDeclaration"));
+    STYLE_INSPECTOR_L10N.getStr("styleinspector.contextmenu.copyPropertyDeclaration"));
   let menuitemCopyPropertyName = allMenuItems.find(item => item.label ===
-    _STRINGS.GetStringFromName("styleinspector.contextmenu.copyPropertyName"));
+    STYLE_INSPECTOR_L10N.getStr("styleinspector.contextmenu.copyPropertyName"));
   let menuitemCopyPropertyValue = allMenuItems.find(item => item.label ===
-    _STRINGS.GetStringFromName("styleinspector.contextmenu.copyPropertyValue"));
+    STYLE_INSPECTOR_L10N.getStr("styleinspector.contextmenu.copyPropertyValue"));
   let menuitemCopySelector = allMenuItems.find(item => item.label ===
-    _STRINGS.GetStringFromName("styleinspector.contextmenu.copySelector"));
+    STYLE_INSPECTOR_L10N.getStr("styleinspector.contextmenu.copySelector"));
   let menuitemCopyRule = allMenuItems.find(item => item.label ===
-    _STRINGS.GetStringFromName("styleinspector.contextmenu.copyRule"));
+    STYLE_INSPECTOR_L10N.getStr("styleinspector.contextmenu.copyRule"));
 
   ok(menuitemCopy.disabled,
     "Copy disabled is as expected: true");

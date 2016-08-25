@@ -7,11 +7,6 @@ requestLongerTimeout(2);
 
 // Test that the panel shows no animation data for invalid or not animated nodes
 
-const { LocalizationHelper } = require("devtools/shared/l10n");
-
-const STRINGS_URI = "devtools/locale/animationinspector.properties";
-const L10N = new LocalizationHelper(STRINGS_URI);
-
 add_task(function* () {
   yield addTab(URL_ROOT + "doc_simple_animation.html");
   let {inspector, panel, window} = yield openAnimationInspector();
@@ -28,7 +23,7 @@ add_task(function* () {
   is(panel.animationsTimelineComponent.animationsEl.childNodes.length, 0,
      "No animation displayed in the timeline component for a still node");
   is(document.querySelector("#error-type").textContent,
-     L10N.getStr("panel.invalidElementSelected"),
+     ANIMATION_L10N.getStr("panel.invalidElementSelected"),
      "The correct error message is displayed");
 
   info("Select the comment text node and check that the panel is empty");
@@ -42,6 +37,6 @@ add_task(function* () {
   is(panel.animationsTimelineComponent.animationsEl.childNodes.length, 0,
      "No animation displayed in the timeline component for a text node");
   is(document.querySelector("#error-type").textContent,
-     L10N.getStr("panel.invalidElementSelected"),
+     ANIMATION_L10N.getStr("panel.invalidElementSelected"),
      "The correct error message is displayed");
 });

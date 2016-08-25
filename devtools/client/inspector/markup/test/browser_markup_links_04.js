@@ -8,10 +8,8 @@
 // in an attribute.
 
 const TEST_URL = URL_ROOT + "doc_markup_links.html";
-const STRINGS = Services.strings
-  .createBundle("chrome://devtools/locale/inspector.properties");
-const TOOLBOX_STRINGS = Services.strings
-  .createBundle("chrome://devtools/locale/toolbox.properties");
+
+const TOOLBOX_L10N = new LocalizationHelper("devtools/locale/toolbox.properties");
 
 // The test case array contains objects with the following properties:
 // - selector: css selector for the node to select in the inspector
@@ -28,9 +26,9 @@ const TEST_DATA = [{
   popupNodeSelector: ".link",
   isLinkFollowItemVisible: true,
   isLinkCopyItemVisible: true,
-  linkFollowItemLabel: TOOLBOX_STRINGS.GetStringFromName(
+  linkFollowItemLabel: TOOLBOX_L10N.getStr(
     "toolbox.viewCssSourceInStyleEditor.label"),
-  linkCopyItemLabel: STRINGS.GetStringFromName(
+  linkCopyItemLabel: INSPECTOR_L10N.getStr(
     "inspector.menu.copyUrlToClipboard.label")
 }, {
   selector: "link[rel=icon]",
@@ -38,9 +36,9 @@ const TEST_DATA = [{
   popupNodeSelector: ".link",
   isLinkFollowItemVisible: true,
   isLinkCopyItemVisible: true,
-  linkFollowItemLabel: STRINGS.GetStringFromName(
+  linkFollowItemLabel: INSPECTOR_L10N.getStr(
     "inspector.menu.openUrlInNewTab.label"),
-  linkCopyItemLabel: STRINGS.GetStringFromName(
+  linkCopyItemLabel: INSPECTOR_L10N.getStr(
     "inspector.menu.copyUrlToClipboard.label")
 }, {
   selector: "link",
@@ -54,17 +52,17 @@ const TEST_DATA = [{
   popupNodeSelector: ".link",
   isLinkFollowItemVisible: true,
   isLinkCopyItemVisible: false,
-  linkFollowItemLabel: STRINGS.formatStringFromName(
-    "inspector.menu.selectElement.label", ["name"], 1)
+  linkFollowItemLabel: INSPECTOR_L10N.getFormatStr(
+    "inspector.menu.selectElement.label", "name")
 }, {
   selector: "script",
   attributeName: "src",
   popupNodeSelector: ".link",
   isLinkFollowItemVisible: true,
   isLinkCopyItemVisible: true,
-  linkFollowItemLabel: TOOLBOX_STRINGS.GetStringFromName(
+  linkFollowItemLabel: TOOLBOX_L10N.getStr(
     "toolbox.viewJsSourceInDebugger.label"),
-  linkCopyItemLabel: STRINGS.GetStringFromName(
+  linkCopyItemLabel: INSPECTOR_L10N.getStr(
     "inspector.menu.copyUrlToClipboard.label")
 }, {
   selector: "p[for]",
