@@ -713,8 +713,11 @@ MediaDecoderStateMachine::OnNotDecoded(MediaData::Type aType,
       if (MaybeFinishDecodeFirstFrame()) {
         return;
       }
-      CheckIfDecodeComplete();
-
+      if (CheckIfDecodeComplete()) {
+        SetState(DECODER_STATE_COMPLETED);
+        ScheduleStateMachine();
+        return;
+      }
       // Schedule next cycle to see if we can leave buffering state.
       if (mState == DECODER_STATE_BUFFERING) {
         ScheduleStateMachine();
@@ -822,21 +825,13 @@ MediaDecoderStateMachine::IsVideoDecoding()
   return HasVideo() && !VideoQueue().IsFinished();
 }
 
-void
+bool
 MediaDecoderStateMachine::CheckIfDecodeComplete()
 {
   MOZ_ASSERT(OnTaskQueue());
   MOZ_ASSERT(mState == DECODER_STATE_DECODING ||
              mState == DECODER_STATE_BUFFERING);
-
-  if (!IsVideoDecoding() && !IsAudioDecoding()) {
-    // We've finished decoding all active streams,
-    // so move to COMPLETED state.
-    SetState(DECODER_STATE_COMPLETED);
-    ScheduleStateMachine();
-  }
-  DECODER_LOG("CheckIfDecodeComplete %scompleted",
-              ((mState == DECODER_STATE_COMPLETED) ? "" : "NOT "));
+  return !IsVideoDecoding() && !IsAudioDecoding();
 }
 
 bool MediaDecoderStateMachine::IsPlaying() const
@@ -1280,12 +1275,13 @@ void MediaDecoderStateMachine::StartDecoding()
     }
   }
 
-  mDecodeStartTime = TimeStamp::Now();
-
-  CheckIfDecodeComplete();
-  if (mState == DECODER_STATE_COMPLETED) {
+  if (CheckIfDecodeComplete()) {
+    SetState(DECODER_STATE_COMPLETED);
+    ScheduleStateMachine();
     return;
   }
+
+  mDecodeStartTime = TimeStamp::Now();
 
   // Reset other state to pristine values before starting decode.
   mIsAudioPrerolling = !DonePrerollingAudio() && !mReader->IsWaitingAudioData();

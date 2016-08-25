@@ -576,10 +576,7 @@ protected:
   void SeekCompleted();
 
   // Queries our state to see whether the decode has finished for all streams.
-  // If so, we move into DECODER_STATE_COMPLETED and schedule the state machine
-  // to run.
-  // The decoder monitor must be held.
-  void CheckIfDecodeComplete();
+  bool CheckIfDecodeComplete();
 
   // Performs one "cycle" of the state machine. Polls the state, and may send
   // a video frame to be displayed, and generally manages the decode. Called
