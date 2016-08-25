@@ -3537,7 +3537,7 @@ nsWindow::EnableDragDrop(bool aEnable)
  *
  **************************************************************/
 
-NS_IMETHODIMP nsWindow::CaptureMouse(bool aCapture)
+void nsWindow::CaptureMouse(bool aCapture)
 {
   TRACKMOUSEEVENT mTrack;
   mTrack.cbSize = sizeof(TRACKMOUSEEVENT);
@@ -3552,7 +3552,6 @@ NS_IMETHODIMP nsWindow::CaptureMouse(bool aCapture)
   }
   sIsInMouseCapture = aCapture;
   TrackMouseEvent(&mTrack);
-  return NS_OK;
 }
 
 /**************************************************************
