@@ -35,9 +35,10 @@
 
     <script>
         var contentitem = content['mp4-av-multikey'],
+            handler = new MessageHandler( 'org.w3.clearkey', contentitem ),
             config = {  video:              document.getElementById('videoelement'),
                         keysystem:          'org.w3.clearkey',
-                        messagehandler:     messagehandler.bind( contentitem ),
+                        messagehandler:     handler.messagehandler,
                         audioPath:          contentitem.audio.path,
                         videoPath:          contentitem.video.path,
                         audioType:          contentitem.audio.type,
