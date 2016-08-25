@@ -1304,7 +1304,7 @@ InspectorPanel.prototype = {
     this.telemetry.toolOpened("toolbareyedropper");
     this.eyeDropperButton.setAttribute("checked", "true");
     this.startEyeDropperListeners();
-    return this.inspector.pickColorFromPage({copyOnSelect: true})
+    return this.inspector.pickColorFromPage(this.toolbox, {copyOnSelect: true})
                          .catch(e => console.error(e));
   },
 

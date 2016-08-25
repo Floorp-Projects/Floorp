@@ -10,7 +10,7 @@ namespace mozilla {
 
 MediaDecoderStateMachine* RawDecoder::CreateStateMachine()
 {
-  return new MediaDecoderStateMachine(this, new RawReader(this), true);
+  return new MediaDecoderStateMachine(this, new RawReader(this));
 }
 
 } // namespace mozilla

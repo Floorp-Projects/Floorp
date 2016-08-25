@@ -1428,7 +1428,7 @@ Column.prototype = {
         return;
       }
 
-      let dataid = target.getAttribute("data-id");
+      let dataid = closest.getAttribute("data-id");
       this.table.emit(EVENTS.ROW_SELECTED, dataid);
     }
   },

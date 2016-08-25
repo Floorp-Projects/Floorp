@@ -8,7 +8,6 @@ if CONFIG['MOZ_WEBRTC']:
     EXPORTS += [
         'CamerasChild.h',
         'CamerasParent.h',
-        'DeviceChangeCallback.h',
         'LoadManager.h',
         'LoadManagerFactory.h',
         'LoadMonitor.h',
@@ -63,7 +62,8 @@ if CONFIG['_MSC_VER']:
 
 EXPORTS.mozilla += ['ShmemPool.h',]
 
-EXPORTS.mozilla.media += ['MediaChild.h',
+EXPORTS.mozilla.media += ['DeviceChangeCallback.h',
+                          'MediaChild.h',
                           'MediaParent.h',
                           'MediaSystemResourceClient.h',
                           'MediaSystemResourceManager.h',

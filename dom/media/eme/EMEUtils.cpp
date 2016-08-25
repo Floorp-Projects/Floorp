@@ -135,13 +135,13 @@ CopyArrayBufferViewOrArrayBufferData(const dom::ArrayBufferViewOrArrayBuffer& aB
 nsString
 KeySystemToGMPName(const nsAString& aKeySystem)
 {
-  if (aKeySystem.EqualsASCII(kEMEKeySystemPrimetime)) {
+  if (!CompareUTF8toUTF16(kEMEKeySystemPrimetime, aKeySystem)) {
     return NS_LITERAL_STRING("gmp-eme-adobe");
   }
-  if (aKeySystem.EqualsASCII(kEMEKeySystemClearkey)) {
+  if (!CompareUTF8toUTF16(kEMEKeySystemClearkey, aKeySystem)) {
     return NS_LITERAL_STRING("gmp-clearkey");
   }
-  if (aKeySystem.EqualsASCII(kEMEKeySystemWidevine)) {
+  if (!CompareUTF8toUTF16(kEMEKeySystemWidevine, aKeySystem)) {
     return NS_LITERAL_STRING("gmp-widevinecdm");
   }
   MOZ_ASSERT(false, "We should only call this for known GMPs");
@@ -151,7 +151,7 @@ KeySystemToGMPName(const nsAString& aKeySystem)
 bool
 IsClearkeyKeySystem(const nsAString& aKeySystem)
 {
-  return aKeySystem.EqualsASCII(kEMEKeySystemClearkey);
+  return !CompareUTF8toUTF16(kEMEKeySystemClearkey, aKeySystem);
 }
 
 } // namespace mozilla

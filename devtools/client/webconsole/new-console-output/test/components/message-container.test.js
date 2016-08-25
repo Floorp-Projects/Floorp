@@ -16,12 +16,12 @@ const { EvaluationResult } = require("devtools/client/webconsole/new-console-out
 const { PageError } = require("devtools/client/webconsole/new-console-output/components/message-types/page-error");
 
 // Test fakes.
-const stubConsoleMessages = require("devtools/client/webconsole/new-console-output/test/fixtures/stubs/index");
+const { stubPreparedMessages } = require("devtools/client/webconsole/new-console-output/test/fixtures/stubs/index");
 const onViewSourceInDebugger = () => {};
 
 describe("MessageContainer component:", () => {
   it("pipes data to children as expected", () => {
-    const message = stubConsoleMessages.get("console.log('foobar', 'test')");
+    const message = stubPreparedMessages.get("console.log('foobar', 'test')");
     const rendered = renderComponent(MessageContainer, {message, onViewSourceInDebugger});
 
     expect(rendered.textContent.includes("foobar")).toBe(true);
@@ -30,15 +30,15 @@ describe("MessageContainer component:", () => {
     const messageTypes = [
       {
         component: ConsoleApiCall,
-        message: stubConsoleMessages.get("console.log('foobar', 'test')")
+        message: stubPreparedMessages.get("console.log('foobar', 'test')")
       },
       {
         component: EvaluationResult,
-        message: stubConsoleMessages.get("new Date(0)")
+        message: stubPreparedMessages.get("new Date(0)")
       },
       {
         component: PageError,
-        message: stubConsoleMessages.get("ReferenceError: asdf is not defined")
+        message: stubPreparedMessages.get("ReferenceError: asdf is not defined")
       }
     ];
 

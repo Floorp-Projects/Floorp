@@ -143,6 +143,7 @@ public:
     bool SupportsVideoSync();
     bool SupportsSwapControl() const { return bool(xSwapIntervalInternal); }
     bool IsATI() { return mIsATI; }
+    bool IsMesa() { return mClientIsMesa; }
     bool GLXVersionCheck(int aMajor, int aMinor);
 
 private:

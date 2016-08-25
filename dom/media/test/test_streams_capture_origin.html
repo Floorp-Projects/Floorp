@@ -24,10 +24,13 @@ SimpleTest.waitForExplicitFinish();
 var resource = getPlayableVideo(gSmallTests).name;
 
 vin.src = "http://example.org:8000/tests/dom/media/test/" + resource;
-var stream = vin.mozCaptureStreamUntilEnded();
-vout.srcObject = stream;
-vin.play();
-vout.play();
+vin.preload = "metadata";
+
+vin.onloadedmetadata = function () {
+  vout.srcObject = vin.mozCaptureStreamUntilEnded();
+  vin.play();
+  vout.play();
+};
 
 vout.onended = function() {
   var ctx = SpecialPowers.wrap(c.getContext("2d"));

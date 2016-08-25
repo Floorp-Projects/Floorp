@@ -24,6 +24,7 @@ GridLine::GridLine(GridLines *aParent)
   : mParent(aParent)
   , mStart(0.0)
   , mBreadth(0.0)
+  , mType(GridDeclaration::Implicit)
   , mNumber(0)
 {
   MOZ_ASSERT(aParent, "Should never be instantiated with a null GridLines");
@@ -57,6 +58,12 @@ GridLine::Breadth() const
   return mBreadth;
 }
 
+GridDeclaration
+GridLine::Type() const
+{
+  return mType;
+}
+
 uint32_t
 GridLine::Number() const
 {
@@ -64,15 +71,17 @@ GridLine::Number() const
 }
 
 void
-GridLine::SetLineValues(double aStart,
+GridLine::SetLineValues(const nsTArray<nsString>& aNames,
+                        double aStart,
                         double aBreadth,
                         uint32_t aNumber,
-                        const nsTArray<nsString>& aNames)
+                        GridDeclaration aType)
 {
+  mNames = aNames;
   mStart = aStart;
   mBreadth = aBreadth;
   mNumber = aNumber;
-  mNames = aNames;
+  mType = aType;
 }
 
 } // namespace dom

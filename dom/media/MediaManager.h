@@ -6,7 +6,7 @@
 #define MOZILLA_MEDIAMANAGER_H
 
 #include "MediaEngine.h"
-#include "DeviceChangeCallback.h"
+#include "mozilla/media/DeviceChangeCallback.h"
 #include "mozilla/Services.h"
 #include "mozilla/Unused.h"
 #include "nsAutoPtr.h"

@@ -42,7 +42,9 @@ const GRID_LINES_PROPERTIES = {
  * h.destroy();
  *
  * Available Options:
- * - infiniteLines {Boolean}
+ * - showGridLineNumbers {Boolean}
+ *   Displays the grid line numbers
+ * - showInfiniteLines {Boolean}
  *   Displays an infinite line to represent the grid lines
  */
 function CssGridHighlighter(highlighterEnv) {
@@ -243,7 +245,7 @@ CssGridHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
     let lineStartPos = (bounds[crossSide] / getCurrentZoom(this.win)) + startPos;
     let lineEndPos = (bounds[crossSide] / getCurrentZoom(this.win)) + endPos;
 
-    if (this.options.infiniteLines) {
+    if (this.options.showInfiniteLines) {
       lineStartPos = 0;
       lineEndPos = parseInt(this.canvas.getAttribute(mainSize), 10);
     }
@@ -253,6 +255,10 @@ CssGridHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
     for (let i = 0; i < gridDimension.lines.length; i++) {
       let line = gridDimension.lines[i];
       let linePos = (bounds[mainSide] / getCurrentZoom(this.win)) + line.start;
+
+      if (this.options.showGridLineNumbers) {
+        this.renderGridLineNumber(line.number, linePos, lineStartPos, dimensionType);
+      }
 
       if (i == 0 || i == lastEdgeLineIndex) {
         this.renderLine(linePos, lineStartPos, lineEndPos, dimensionType, "edge");
@@ -291,7 +297,7 @@ CssGridHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
     this.ctx.beginPath();
     this.ctx.translate(.5, .5);
 
-    if (dimensionType == COLUMNS) {
+    if (dimensionType === COLUMNS) {
       this.ctx.moveTo(linePos, startPos);
       this.ctx.lineTo(linePos, endPos);
     } else {
@@ -302,6 +308,28 @@ CssGridHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
     this.ctx.strokeStyle = GRID_LINES_PROPERTIES[lineType].strokeStyle;
     this.ctx.stroke();
     this.ctx.restore();
+  },
+
+  /**
+   * Render the grid line number on the css grid highlighter canvas.
+   *
+   * @param  {Number} lineNumber
+   *         The grid line number.
+   * @param  {Number} linePos
+   *         The line position along the x-axis for a column grid line and
+   *         y-axis for a row grid line.
+   * @param  {Number} startPos
+   *         The start position of the cross side of the grid line.
+   * @param  {String} dimensionType
+   *         The grid dimension type which is either the constant COLUMNS or ROWS.
+   */
+  renderGridLineNumber(lineNumber, linePos, startPos, dimensionType) {
+    if (dimensionType === COLUMNS) {
+      this.ctx.fillText(lineNumber, linePos, startPos);
+    } else {
+      let textWidth = this.ctx.measureText(lineNumber).width;
+      this.ctx.fillText(lineNumber, startPos - textWidth, linePos);
+    }
   },
 
   _hide() {

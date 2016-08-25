@@ -659,7 +659,7 @@ nsSimplePageSequenceFrame::PrePrintNextPage(nsITimerCallback* aCallback, bool* a
         }
 
         // Initialize the context with the new DrawTarget.
-        ctx->InitializeWithDrawTarget(nullptr, canvasTarget);
+        ctx->InitializeWithDrawTarget(nullptr, WrapNotNull(canvasTarget));
 
         // Start the rendering process.
         nsWeakFrame weakFrame = this;

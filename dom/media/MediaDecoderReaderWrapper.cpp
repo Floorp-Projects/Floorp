@@ -138,10 +138,9 @@ private:
   Maybe<int64_t> mVideoStartTime;
 };
 
-MediaDecoderReaderWrapper::MediaDecoderReaderWrapper(bool aIsRealTime,
-                                                     AbstractThread* aOwnerThread,
+MediaDecoderReaderWrapper::MediaDecoderReaderWrapper(AbstractThread* aOwnerThread,
                                                      MediaDecoderReader* aReader)
-  : mForceZeroStartTime(aIsRealTime || aReader->ForceZeroStartTime())
+  : mForceZeroStartTime(aReader->ForceZeroStartTime())
   , mOwnerThread(aOwnerThread)
   , mReader(aReader)
 {}
