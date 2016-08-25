@@ -13,7 +13,6 @@
           'rule_name': 'generate_file',
           'extension': 'blah',
           'inputs': [
-            '<(RULE_INPUT_PATH)',
             'do_stuff.py',
           ],
           'outputs': [

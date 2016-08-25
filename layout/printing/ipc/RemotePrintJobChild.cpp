@@ -6,7 +6,7 @@
 
 #include "RemotePrintJobChild.h"
 
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "nsPagePrintTimer.h"
 #include "nsPrintEngine.h"
 

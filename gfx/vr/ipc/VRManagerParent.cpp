@@ -12,7 +12,7 @@
 #include "mozilla/ipc/ProtocolUtils.h"       // for IToplevelProtocol
 #include "mozilla/TimeStamp.h"               // for TimeStamp
 #include "mozilla/layers/CompositorThread.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "VRManager.h"
 
 namespace mozilla {
@@ -242,6 +242,14 @@ VRManagerParent::RecvRefreshDisplays()
   VRManager* vm = VRManager::Get();
   vm->RefreshVRDisplays(true);
 
+  return true;
+}
+
+bool
+VRManagerParent::RecvGetDisplays(nsTArray<VRDisplayInfo> *aDisplays)
+{
+  VRManager* vm = VRManager::Get();
+  vm->GetVRDisplayInfo(*aDisplays);
   return true;
 }
 

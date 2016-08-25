@@ -146,7 +146,7 @@ XPTInterfaceInfoManager::VerifyAndAddEntryIfNew(XPTInterfaceDirectoryEntry* ifac
         fprintf(stderr, "ignoring too large interface: %s\n", iface->name);
         return;
     }
-    
+
     mWorkingSet.mTableReentrantMonitor.AssertCurrentThreadIn();
     xptiInterfaceEntry* entry = mWorkingSet.mIIDTable.Get(iface->iid);
     if (entry) {
@@ -154,8 +154,8 @@ XPTInterfaceInfoManager::VerifyAndAddEntryIfNew(XPTInterfaceDirectoryEntry* ifac
         LOG_AUTOREG(("      ignoring repeated interface: %s\n", iface->name));
         return;
     }
-    
-    // Build a new xptiInterfaceEntry object and hook it up. 
+
+    // Build a new xptiInterfaceEntry object and hook it up.
 
     entry = xptiInterfaceEntry::Create(iface->name,
                                        iface->iid,
@@ -179,17 +179,17 @@ XPTInterfaceInfoManager::VerifyAndAddEntryIfNew(XPTInterfaceDirectoryEntry* ifac
 }
 
 // this is a private helper
-static nsresult 
+static nsresult
 EntryToInfo(xptiInterfaceEntry* entry, nsIInterfaceInfo **_retval)
 {
     if (!entry) {
         *_retval = nullptr;
-        return NS_ERROR_FAILURE;    
+        return NS_ERROR_FAILURE;
     }
 
     RefPtr<xptiInterfaceInfo> info = entry->InterfaceInfo();
     info.forget(_retval);
-    return NS_OK;    
+    return NS_OK;
 }
 
 xptiInterfaceEntry*
@@ -221,38 +221,6 @@ XPTInterfaceInfoManager::GetInfoForName(const char *name, nsIInterfaceInfo **_re
     return EntryToInfo(entry, _retval);
 }
 
-NS_IMETHODIMP
-XPTInterfaceInfoManager::GetIIDForName(const char *name, nsIID * *_retval)
-{
-    NS_ASSERTION(name, "bad param");
-    NS_ASSERTION(_retval, "bad param");
-
-    ReentrantMonitorAutoEnter monitor(mWorkingSet.mTableReentrantMonitor);
-    xptiInterfaceEntry* entry = mWorkingSet.mNameTable.Get(name);
-    if (!entry) {
-        *_retval = nullptr;
-        return NS_ERROR_FAILURE;    
-    }
-
-    return entry->GetIID(_retval);
-}
-
-NS_IMETHODIMP
-XPTInterfaceInfoManager::GetNameForIID(const nsIID * iid, char **_retval)
-{
-    NS_ASSERTION(iid, "bad param");
-    NS_ASSERTION(_retval, "bad param");
-
-    ReentrantMonitorAutoEnter monitor(mWorkingSet.mTableReentrantMonitor);
-    xptiInterfaceEntry* entry = mWorkingSet.mIIDTable.Get(*iid);
-    if (!entry) {
-        *_retval = nullptr;
-        return NS_ERROR_FAILURE;    
-    }
-
-    return entry->GetName(_retval);
-}
-
 void
 XPTInterfaceInfoManager::GetScriptableInterfaces(nsCOMArray<nsIInterfaceInfo>& aInterfaces)
 {
@@ -270,35 +238,4 @@ XPTInterfaceInfoManager::GetScriptableInterfaces(nsCOMArray<nsIInterfaceInfo>& a
             aInterfaces.AppendElement(ii);
         }
     }
-}
-
-NS_IMETHODIMP
-XPTInterfaceInfoManager::EnumerateInterfacesWhoseNamesStartWith(const char *prefix, nsIEnumerator **_retval)
-{
-    nsCOMPtr<nsISupportsArray> array;
-    nsresult rv = NS_NewISupportsArray(getter_AddRefs(array));
-    if (NS_FAILED(rv)) {
-        return rv;
-    }
-
-    ReentrantMonitorAutoEnter monitor(mWorkingSet.mTableReentrantMonitor);
-    uint32_t length = static_cast<uint32_t>(strlen(prefix));
-    for (auto iter = mWorkingSet.mNameTable.Iter(); !iter.Done(); iter.Next()) {
-        xptiInterfaceEntry* entry = iter.UserData();
-        const char* name = entry->GetTheName();
-        if (name != PL_strnstr(name, prefix, length)) {
-            continue;
-        }
-        nsCOMPtr<nsIInterfaceInfo> ii;
-        if (NS_SUCCEEDED(EntryToInfo(entry, getter_AddRefs(ii)))) {
-            array->AppendElement(ii);
-        }
-    }
-    return array->Enumerate(_retval);
-}
-
-NS_IMETHODIMP
-XPTInterfaceInfoManager::AutoRegisterInterfaces()
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
 }

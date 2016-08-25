@@ -9,7 +9,7 @@
 #include "mozilla/dom/MozNDEFRecordBinding.h"
 #include "nsDebug.h"
 #include "NfcOptions.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 
 #include <android/log.h>
 #define NMH_LOG(args...)  __android_log_print(ANDROID_LOG_INFO, "NfcMessageHandler", args)

@@ -31,7 +31,7 @@
 #include "mozilla/layers/PaintedLayerComposite.h"
 #include "mozilla/layers/ShadowLayersManager.h" // for ShadowLayersManager
 #include "mozilla/mozalloc.h"           // for operator delete, etc
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "nsCoord.h"                    // for NSAppUnitsToFloatPixels
 #include "nsDebug.h"                    // for NS_RUNTIMEABORT
 #include "nsDeviceContext.h"            // for AppUnitsPerCSSPixel

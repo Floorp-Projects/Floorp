@@ -477,24 +477,11 @@ struct JSCompartment
                                 size_t* jitCompartment,
                                 size_t* privateData);
 
-    /*
-     * Shared scope property tree, and arena-pool for allocating its nodes.
-     */
-    js::PropertyTree             propertyTree;
-
-    /* Set of all unowned base shapes in the compartment. */
-    JS::WeakCache<js::BaseShapeSet> baseShapes;
-
-    /* Set of initial shapes in the compartment. */
-    JS::WeakCache<js::InitialShapeSet> initialShapes;
-
     // Object group tables and other state in the compartment.
     js::ObjectGroupCompartment   objectGroups;
 
 #ifdef JSGC_HASH_TABLE_CHECKS
-    void checkInitialShapesTableAfterMovingGC();
     void checkWrapperMapAfterMovingGC();
-    void checkBaseShapeTableAfterMovingGC();
     void checkScriptMapsAfterMovingGC();
 #endif
 
@@ -636,7 +623,6 @@ struct JSCompartment
     void clearTables();
 
     static void fixupCrossCompartmentWrappersAfterMovingGC(JSTracer* trc);
-    void fixupInitialShapeTable();
     void fixupAfterMovingGC();
     void fixupGlobal();
     void fixupScriptMapsAfterMovingGC();

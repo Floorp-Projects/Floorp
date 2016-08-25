@@ -8,7 +8,7 @@
 #include "nsComponentManagerUtils.h"
 #include "nsWidgetsCID.h"
 
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "mozilla/DebugOnly.h"
 #include "nsDebug.h"
 

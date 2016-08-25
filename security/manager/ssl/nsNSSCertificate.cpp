@@ -12,7 +12,7 @@
 #include "mozilla/Base64.h"
 #include "mozilla/Casting.h"
 #include "mozilla/NotNull.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "nsArray.h"
 #include "nsCOMPtr.h"
 #include "nsCRT.h"

@@ -30,6 +30,7 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsILoadContext.h"
 #include "nsITextControlFrame.h"
+#include "nsNumberControlFrame.h"
 #include "nsUnicharUtils.h"
 #include "nsContentList.h"
 #include "nsCSSPseudoElements.h"
@@ -266,6 +267,33 @@ typedef nsTArray<Link*> LinkArray;
 
 static LazyLogModule gDocumentLeakPRLog("DocumentLeak");
 static LazyLogModule gCspPRLog("CSP");
+
+static nsresult
+GetHttpChannelHelper(nsIChannel* aChannel, nsIHttpChannel** aHttpChannel)
+{
+  nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel);
+  if (httpChannel) {
+    httpChannel.forget(aHttpChannel);
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIMultiPartChannel> multipart = do_QueryInterface(aChannel);
+  if (!multipart) {
+    *aHttpChannel = nullptr;
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIChannel> baseChannel;
+  nsresult rv = multipart->GetBaseChannel(getter_AddRefs(baseChannel));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  httpChannel = do_QueryInterface(baseChannel);
+  httpChannel.forget(aHttpChannel);
+
+  return NS_OK;
+}
 
 #define NAME_NOT_VALID ((nsSimpleContentList*)1)
 
@@ -2692,15 +2720,10 @@ nsDocument::InitCSP(nsIChannel* aChannel)
 
   nsAutoCString tCspHeaderValue, tCspROHeaderValue;
 
-  nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel);
-  if (!httpChannel) {
-    // check baseChannel for CSP when loading a multipart channel
-    nsCOMPtr<nsIMultiPartChannel> multipart = do_QueryInterface(aChannel);
-    if (multipart) {
-      nsCOMPtr<nsIChannel> baseChannel;
-      multipart->GetBaseChannel(getter_AddRefs(baseChannel));
-      httpChannel = do_QueryInterface(baseChannel);
-    }
+  nsCOMPtr<nsIHttpChannel> httpChannel;
+  nsresult rv = GetHttpChannelHelper(aChannel, getter_AddRefs(httpChannel));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
   }
 
   if (httpChannel) {
@@ -2773,8 +2796,6 @@ nsDocument::InitCSP(nsIChannel* aChannel)
   }
 
   MOZ_LOG(gCspPRLog, LogLevel::Debug, ("Document is an app or CSP header specified %p", this));
-
-  nsresult rv;
 
   // If Document is an app check to see if we already set CSP and return early
   // if that is indeed the case.
@@ -8603,9 +8624,14 @@ nsDocument::SetValueMissingState(const nsAString& aName, bool aValue)
 void
 nsDocument::RetrieveRelevantHeaders(nsIChannel *aChannel)
 {
-  nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel);
   PRTime modDate = 0;
   nsresult rv;
+
+  nsCOMPtr<nsIHttpChannel> httpChannel;
+  rv = GetHttpChannelHelper(aChannel, getter_AddRefs(httpChannel));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
 
   if (httpChannel) {
     nsAutoCString tmp;
@@ -10855,7 +10881,8 @@ nsIDocument::CaretPositionFromPoint(float aX, float aY)
     nsCOMPtr<nsIDOMHTMLInputElement> input = do_QueryInterface(nonanon);
     nsCOMPtr<nsIDOMHTMLTextAreaElement> textArea = do_QueryInterface(nonanon);
     nsITextControlFrame* textFrame = do_QueryFrame(nonanon->GetPrimaryFrame());
-    if (!!textFrame) {
+    nsNumberControlFrame* numberFrame = do_QueryFrame(nonanon->GetPrimaryFrame());
+    if (textFrame || numberFrame) {
       // If the anonymous content node has a child, then we need to make sure
       // that we get the appropriate child, as otherwise the offset may not be
       // correct when we construct a range for it.

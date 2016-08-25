@@ -21,7 +21,7 @@
 #ifdef XP_WIN
 #include "SharedSurfaceANGLE.h"         // for SurfaceFactory_ANGLEShareHandle
 #include "SharedSurfaceD3D11Interop.h"  // for SurfaceFactory_D3D11Interop
-#include "mozilla/gfx/DeviceManagerD3D11.h"
+#include "mozilla/gfx/DeviceManagerDx.h"
 #endif
 
 #ifdef MOZ_WIDGET_GONK
@@ -108,7 +108,7 @@ GLScreenBuffer::CreateFactory(GLContext* gl,
 #ifdef XP_WIN
                 // Enable surface sharing only if ANGLE and compositing devices
                 // are both WARP or both not WARP
-                gfx::DeviceManagerD3D11* dm = gfx::DeviceManagerD3D11::Get();
+                gfx::DeviceManagerDx* dm = gfx::DeviceManagerDx::Get();
                 if (gl->IsANGLE() &&
                     (gl->IsWARP() == dm->IsWARP()) &&
                     dm->TextureSharingWorks())

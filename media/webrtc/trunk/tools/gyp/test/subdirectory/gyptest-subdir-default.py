@@ -13,8 +13,9 @@ and using the subdirectory's solution or project file as the entry point.
 import TestGyp
 import errno
 
-# Ninja and Android don't support running from subdirectories.
-test = TestGyp.TestGyp(formats=['!ninja', '!android'])
+# Ninja doesn't support relocation.
+# CMake produces a single CMakeLists.txt in the output directory.
+test = TestGyp.TestGyp(formats=['!ninja', '!cmake'])
 
 test.run_gyp('prog1.gyp', chdir='src')
 

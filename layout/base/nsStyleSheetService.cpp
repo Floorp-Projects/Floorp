@@ -11,7 +11,7 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/StyleSheetHandle.h"
 #include "mozilla/StyleSheetHandleInlines.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "mozilla/css/Loader.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/ipc/URIUtils.h"
@@ -30,7 +30,8 @@ nsStyleSheetService *nsStyleSheetService::gInstance = nullptr;
 
 nsStyleSheetService::nsStyleSheetService()
 {
-  PR_STATIC_ASSERT(0 == AGENT_SHEET && 1 == USER_SHEET && 2 == AUTHOR_SHEET);
+  static_assert(0 == AGENT_SHEET && 1 == USER_SHEET && 2 == AUTHOR_SHEET,
+                "Convention for Style Sheet");
   NS_ASSERTION(!gInstance, "Someone is using CreateInstance instead of GetService");
   gInstance = this;
   nsLayoutStatics::AddRef();

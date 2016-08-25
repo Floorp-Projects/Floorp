@@ -8,7 +8,7 @@
 #include <d3d11.h>
 #include "GLContextEGL.h"
 #include "GLLibraryEGL.h"
-#include "mozilla/gfx/DeviceManagerD3D11.h"
+#include "mozilla/gfx/DeviceManagerDx.h"
 #include "mozilla/layers/LayersSurfaces.h"  // for SurfaceDescriptor, etc
 
 namespace mozilla {
@@ -198,7 +198,7 @@ public:
         }
 
         RefPtr<ID3D11Device> device =
-          gfx::DeviceManagerD3D11::Get()->GetContentDevice();
+          gfx::DeviceManagerDx::Get()->GetContentDevice();
         if (!device) {
             return;
         }
@@ -255,7 +255,7 @@ SharedSurface_ANGLEShareHandle::ReadbackBySharedHandle(gfx::DataSourceSurface* o
     MOZ_ASSERT(out_surface);
 
     RefPtr<ID3D11Device> device =
-      gfx::DeviceManagerD3D11::Get()->GetContentDevice();
+      gfx::DeviceManagerDx::Get()->GetContentDevice();
     if (!device) {
         return false;
     }

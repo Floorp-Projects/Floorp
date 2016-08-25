@@ -31,16 +31,6 @@ struct PRFileInfo
 
 typedef enum { PR_FAILURE = -1, PR_SUCCESS = 0 } PRStatus;
 
-typedef PRStatus (*PRCallOnceFN)();
-
-PRStatus
-PR_CallOnce(PRCallOnceType* once, PRCallOnceFN func);
-
-typedef PRStatus (*PRCallOnceWithArgFN)(void*);
-
-PRStatus
-PR_CallOnceWithArg(PRCallOnceType* once, PRCallOnceWithArgFN func, void* arg);
-
 PRStatus
 PR_GetOpenFileInfo(PRFileDesc *fd, PRFileInfo *info);
 

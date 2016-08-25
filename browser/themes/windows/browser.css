@@ -2063,8 +2063,8 @@ html|span.ac-emphasize-text-url {
     @media not all and (-moz-os-version: windows-win7) {
       @media not all and (-moz-os-version: windows-win8) {
         @media (-moz-windows-default-theme) {
-          .tab-background-end[visuallyselected=true]::after,
-          .tab-background-start[visuallyselected=true]::after {
+          .tab-background-end[selected=true]::after,
+          .tab-background-start[selected=true]::after {
             content: none;
           }
 
@@ -2089,14 +2089,14 @@ html|span.ac-emphasize-text-url {
 /* Invert the unhovered close tab icons on bright-text tabs */
 @media not all and (min-resolution: 1.1dppx) {
   .tab-close-button:-moz-lwtheme-brighttext,
-  #TabsToolbar[brighttext] .tab-close-button:not([visuallyselected="true"]) {
+  #TabsToolbar[brighttext] .tab-close-button:not([selected="true"]) {
     list-style-image: url("chrome://global/skin/icons/close-inverted.png");
   }
 }
 
 @media (min-resolution: 1.1dppx) {
   .tab-close-button:-moz-lwtheme-brighttext,
-  #TabsToolbar[brighttext] .tab-close-button:not([visuallyselected="true"]) {
+  #TabsToolbar[brighttext] .tab-close-button:not([selected="true"]) {
     list-style-image: url("chrome://global/skin/icons/close-inverted@2x.png");
   }
 }

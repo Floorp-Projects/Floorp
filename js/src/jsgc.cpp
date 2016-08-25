@@ -807,7 +807,6 @@ GCRuntime::GCRuntime(JSRuntime* rt) :
     lastGCTime(PRMJ_Now()),
     mode(JSGC_MODE_INCREMENTAL),
     numActiveZoneIters(0),
-    decommitThreshold(32 * 1024 * 1024),
     cleanUpEverything(false),
     grayBufferState(GCRuntime::GrayBufferState::Unused),
     grayBitsValid(false),
@@ -1131,9 +1130,6 @@ GCRuntime::setParameter(JSGCParamKey key, uint32_t value, AutoLockGC& lock)
             return false;
         setMarkStackLimit(value, lock);
         break;
-      case JSGC_DECOMMIT_THRESHOLD:
-        decommitThreshold = (uint64_t)value * 1024 * 1024;
-        break;
       case JSGC_MODE:
         if (mode != JSGC_MODE_GLOBAL &&
             mode != JSGC_MODE_COMPARTMENT &&
@@ -1292,8 +1288,6 @@ GCRuntime::getParameter(JSGCParamKey key, const AutoLockGC& lock)
         return tunables.isDynamicMarkSliceEnabled();
       case JSGC_ALLOCATION_THRESHOLD:
         return tunables.gcZoneAllocThresholdBase() / 1024 / 1024;
-      case JSGC_DECOMMIT_THRESHOLD:
-        return decommitThreshold / 1024 / 1024;
       case JSGC_MIN_EMPTY_CHUNK_COUNT:
         return tunables.minEmptyChunkCount(lock);
       case JSGC_MAX_EMPTY_CHUNK_COUNT:
@@ -2506,6 +2500,8 @@ GCRuntime::updatePointersToRelocatedCells(Zone* zone, AutoLockForExclusiveAccess
 
     gcstats::AutoPhase ap(stats, gcstats::PHASE_COMPACT_UPDATE);
     MovingTracer trc(rt);
+
+    zone->fixupAfterMovingGC();
 
     // Fixup compartment global pointers as these get accessed during marking.
     for (CompartmentsInZoneIter comp(zone); !comp.done(); comp.next())
@@ -6574,6 +6570,7 @@ gc::MergeCompartments(JSCompartment* source, JSCompartment* target)
     // meaningless after merging into the target compartment.
 
     source->clearTables();
+    source->zone()->clearTables();
     source->unsetIsDebuggee();
 
     // The delazification flag indicates the presence of LazyScripts in a
@@ -6624,11 +6621,6 @@ gc::MergeCompartments(JSCompartment* source, JSCompartment* target)
                 }
             }
         }
-    }
-
-    for (auto base = source->zone()->cellIter<BaseShape>(); !base.done(); base.next()) {
-        MOZ_ASSERT(base->compartment() == source);
-        base->compartment_ = target;
     }
 
     for (auto group = source->zone()->cellIter<ObjectGroup>(); !group.done(); group.next()) {
@@ -7058,6 +7050,8 @@ js::gc::CheckHashTablesAfterMovingGC(JSRuntime* rt)
     rt->spsProfiler.checkStringsMapAfterMovingGC();
     for (ZonesIter zone(rt, SkipAtoms); !zone.done(); zone.next()) {
         zone->checkUniqueIdTableAfterMovingGC();
+        zone->checkInitialShapesTableAfterMovingGC();
+        zone->checkBaseShapeTableAfterMovingGC();
 
         for (auto baseShape = zone->cellIter<BaseShape>(); !baseShape.done(); baseShape.next()) {
             if (baseShape->hasTable())
@@ -7067,9 +7061,7 @@ js::gc::CheckHashTablesAfterMovingGC(JSRuntime* rt)
     for (CompartmentsIter c(rt, SkipAtoms); !c.done(); c.next()) {
         c->objectGroups.checkTablesAfterMovingGC();
         c->dtoaCache.checkCacheAfterMovingGC();
-        c->checkInitialShapesTableAfterMovingGC();
         c->checkWrapperMapAfterMovingGC();
-        c->checkBaseShapeTableAfterMovingGC();
         c->checkScriptMapsAfterMovingGC();
         if (c->debugScopes)
             c->debugScopes->checkHashTablesAfterMovingGC(rt);

@@ -7,7 +7,7 @@
 #include "vm/HelperThreads.h"
 
 #include "mozilla/DebugOnly.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 
 #include "jsnativestack.h"
 #include "jsnum.h" // For FIX_FPU()

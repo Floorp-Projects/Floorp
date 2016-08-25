@@ -12,7 +12,7 @@
 #include "nsICancelable.h"
 #include "nsIDNSRecord.h"
 #include "nsHostResolver.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 
 using namespace mozilla::ipc;
 

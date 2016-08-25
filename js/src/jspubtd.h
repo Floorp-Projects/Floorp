@@ -110,7 +110,6 @@ class JS_PUBLIC_API(JSTracer);
 
 class JSFlatString;
 
-typedef struct PRCallOnceType   JSCallOnceType;
 typedef bool                    (*JSInitCallback)(void);
 
 template<typename T> struct JSConstScalarSpec;

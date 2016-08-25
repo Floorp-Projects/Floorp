@@ -17,6 +17,9 @@ import TestGyp
 import sys
 
 if sys.platform == 'win32':
+  print "This test is currently disabled: https://crbug.com/483696."
+  sys.exit(0)
+
   test = TestGyp.TestGyp(formats=['msvs', 'ninja'])
   CHDIR = 'command-quote'
   test.run_gyp('command-quote.gyp', chdir=CHDIR)

@@ -11,7 +11,7 @@
 #include "mozilla/PodOperations.h"
 #include "mozilla/RangedPtr.h"
 #include "mozilla/TypeTraits.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 
 #include "gc/Marking.h"
 #include "js/UbiNode.h"

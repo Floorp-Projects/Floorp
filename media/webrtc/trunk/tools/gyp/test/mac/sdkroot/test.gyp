@@ -8,7 +8,21 @@
       'type': 'executable',
       'sources': [ 'file.cc', ],
       'xcode_settings': {
-        'SDKROOT': 'macosx10.6',
+        'SDKROOT': 'macosx%s',
+      },
+      'postbuilds': [
+        {
+          'postbuild_name': 'envtest',
+          'action': [ './test_shorthand.sh', ],
+        },
+      ],
+    },
+    {
+      'target_name': 'absolute',
+      'type': 'executable',
+      'sources': [ 'file.cc', ],
+      'xcode_settings': {
+        'SDKROOT': '<(sdk_path)',
       },
       'postbuilds': [
         {

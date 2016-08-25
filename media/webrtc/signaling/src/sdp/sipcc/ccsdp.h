@@ -189,6 +189,7 @@ typedef enum {
     SDP_ATTR_IMAGEATTR,
     SDP_ATTR_SIMULCAST,
     SDP_ATTR_RID,
+    SDP_ATTR_DTLS_MESSAGE,
     SDP_MAX_ATTR_TYPES,
     SDP_ATTR_INVALID
 } sdp_attr_e;

@@ -676,9 +676,10 @@ typedef JSObject*
  * for wrapping in a context. This might include unwrapping other wrappers
  * or even finding a more suitable object for the new compartment.
  */
-typedef JSObject*
+typedef void
 (* JSPreWrapCallback)(JSContext* cx, JS::HandleObject scope, JS::HandleObject obj,
-                      JS::HandleObject objectPassedToWrap);
+                      JS::HandleObject objectPassedToWrap,
+                      JS::MutableHandleObject retObj);
 
 struct JSWrapObjectCallbacks
 {
@@ -888,17 +889,6 @@ class MOZ_STACK_CLASS SourceBufferHolder final
 #define JSPROP_IGNORE_VALUE     0x20000  /* ignore the Value in the descriptor. Nothing was
                                             specified when passed to Object.defineProperty
                                             from script. */
-
-/**
- * The first call to JS_CallOnce by any thread in a process will call 'func'.
- * Later calls to JS_CallOnce with the same JSCallOnceType object will be
- * suppressed.
- *
- * Equivalently: each distinct JSCallOnceType object will allow one JS_CallOnce
- * to invoke its JSInitCallback.
- */
-extern JS_PUBLIC_API(bool)
-JS_CallOnce(JSCallOnceType* once, JSInitCallback func);
 
 /** Microseconds since the epoch, midnight, January 1, 1970 UTC. */
 extern JS_PUBLIC_API(int64_t)
@@ -1731,13 +1721,6 @@ typedef enum JSGCParamKey {
 
     /** Lower limit after which we limit the heap growth. */
     JSGC_ALLOCATION_THRESHOLD = 19,
-
-    /**
-     * We decommit memory lazily. If more than this number of megabytes is
-     * available to be decommitted, then JS_MaybeGC will trigger a shrinking GC
-     * to decommit it.
-     */
-    JSGC_DECOMMIT_THRESHOLD = 20,
 
     /**
      * We try to keep at least this many unused chunks in the free chunk pool at

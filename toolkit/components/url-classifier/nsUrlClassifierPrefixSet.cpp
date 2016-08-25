@@ -23,7 +23,7 @@
 #include "mozilla/Telemetry.h"
 #include "mozilla/FileUtils.h"
 #include "mozilla/Logging.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include <algorithm>
 
 using namespace mozilla;

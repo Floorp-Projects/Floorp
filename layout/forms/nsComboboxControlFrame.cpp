@@ -46,7 +46,7 @@
 #include "mozilla/EventStates.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/MouseEvents.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "gfx2DGlue.h"
 
 #ifdef XP_WIN

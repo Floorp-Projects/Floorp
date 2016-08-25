@@ -4657,13 +4657,15 @@
     "releaseChannelCollection": "opt-out",
     "description": "Where undo of the automatic migration was attempted, indicates to what degree we succeeded to undo. 0 means we started to undo, 5 means we bailed out from the undo because it was not possible to complete it (there was nothing to undo or the user was signed in to sync). All higher values indicate progression through the undo sequence, with 30 indicating we finished the undo without exceptions in the middle."
   },
-  "FX_STARTUP_MIGRATION_CANT_UNDO_BECAUSE_SYNC": {
-    "bug_numbers": [1283565],
+  "FX_STARTUP_MIGRATION_UNDO_REASON": {
+    "bug_numbers": [1289906],
     "alert_emails": ["gijs@mozilla.com"],
-    "expires_in_version": "53",
-    "kind": "boolean",
+    "expires_in_version": "54",
+    "keyed": true,
+    "kind": "enumerated",
+    "n_values": 10,
     "releaseChannelCollection": "opt-out",
-    "description": "Where undo of the automatic migration was requested and denied because the user was logged into sync."
+    "description": "Why the undo functionality of an automatic migration was disabled: 0 means we used undo, 1 means the user signed in to sync, 2 means the user created/modified a password, 3 means the user created/modified a bookmark (item or folder), 4 means we showed an undo option repeatedly and the user did not use it, 5 means we showed an undo option and the user actively elected to keep the data. The whole thing is keyed to the identifiers of different browsers (so 'chrome', 'ie', 'edge', 'safari', etc.)."
   },
   "FX_STARTUP_MIGRATION_DATA_RECENCY": {
     "bug_numbers": [1276694],

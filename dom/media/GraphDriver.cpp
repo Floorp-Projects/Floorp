@@ -7,7 +7,7 @@
 #include "mozilla/dom/AudioContext.h"
 #include "mozilla/SharedThreadPool.h"
 #include "mozilla/ClearOnShutdown.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "CubebUtils.h"
 
 #ifdef MOZ_WEBRTC

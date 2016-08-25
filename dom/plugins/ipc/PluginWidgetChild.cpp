@@ -8,7 +8,7 @@
 #include "mozilla/plugins/PluginWidgetParent.h"
 #include "PluginWidgetProxy.h"
 
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "mozilla/DebugOnly.h"
 #include "nsDebug.h"
 

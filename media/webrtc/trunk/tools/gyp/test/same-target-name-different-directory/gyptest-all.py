@@ -10,7 +10,12 @@ Test cases when multiple targets in different directories have the same name.
 
 import TestGyp
 
-test = TestGyp.TestGyp(formats=['android', 'ninja', 'make'])
+test = TestGyp.TestGyp(formats=['ninja', 'make'])
+
+# xcode-ninja fails to generate a project due to id collisions
+# cf. https://code.google.com/p/gyp/issues/detail?id=461
+if test.format == 'xcode-ninja':
+  test.skip_test()
 
 test.run_gyp('subdirs.gyp', chdir='src')
 

@@ -255,7 +255,8 @@ const static js::ObjectOps sNPObjectJSWrapperObjectOps = {
 
 const static js::Class sNPObjectJSWrapperClass = {
     NPRUNTIME_JSCLASS_NAME,
-    JSCLASS_HAS_PRIVATE,
+    JSCLASS_HAS_PRIVATE |
+    JSCLASS_FOREGROUND_FINALIZE,
     &sNPObjectJSWrapperClassOps,
     JS_NULL_CLASS_SPEC,
     &sNPObjectJSWrapperClassExtension,
@@ -293,7 +294,9 @@ static const JSClassOps sNPObjectMemberClassOps = {
 };
 
 static const JSClass sNPObjectMemberClass = {
-  "NPObject Ambiguous Member class", JSCLASS_HAS_PRIVATE,
+  "NPObject Ambiguous Member class",
+  JSCLASS_HAS_PRIVATE |
+  JSCLASS_FOREGROUND_FINALIZE,
   &sNPObjectMemberClassOps
 };
 

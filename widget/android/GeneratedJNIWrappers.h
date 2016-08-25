@@ -1741,27 +1741,6 @@ public:
 
     static auto PerformHapticFeedback(bool) -> void;
 
-    struct RegisterSurfaceTextureFrameListener_t {
-        typedef GeckoAppShell Owner;
-        typedef void ReturnType;
-        typedef void SetterType;
-        typedef mozilla::jni::Args<
-                mozilla::jni::Object::Param,
-                int32_t> Args;
-        static constexpr char name[] = "registerSurfaceTextureFrameListener";
-        static constexpr char signature[] =
-                "(Ljava/lang/Object;I)V";
-        static const bool isStatic = true;
-        static const mozilla::jni::ExceptionMode exceptionMode =
-                mozilla::jni::ExceptionMode::ABORT;
-        static const mozilla::jni::CallingThread callingThread =
-                mozilla::jni::CallingThread::ANY;
-        static const mozilla::jni::DispatchTarget dispatchTarget =
-                mozilla::jni::DispatchTarget::CURRENT;
-    };
-
-    static auto RegisterSurfaceTextureFrameListener(mozilla::jni::Object::Param, int32_t) -> void;
-
     struct RemoveFullScreenPluginView_t {
         typedef GeckoAppShell Owner;
         typedef void ReturnType;
@@ -2025,26 +2004,6 @@ public:
     };
 
     static auto UnlockScreenOrientation() -> void;
-
-    struct UnregisterSurfaceTextureFrameListener_t {
-        typedef GeckoAppShell Owner;
-        typedef void ReturnType;
-        typedef void SetterType;
-        typedef mozilla::jni::Args<
-                mozilla::jni::Object::Param> Args;
-        static constexpr char name[] = "unregisterSurfaceTextureFrameListener";
-        static constexpr char signature[] =
-                "(Ljava/lang/Object;)V";
-        static const bool isStatic = true;
-        static const mozilla::jni::ExceptionMode exceptionMode =
-                mozilla::jni::ExceptionMode::ABORT;
-        static const mozilla::jni::CallingThread callingThread =
-                mozilla::jni::CallingThread::ANY;
-        static const mozilla::jni::DispatchTarget dispatchTarget =
-                mozilla::jni::DispatchTarget::CURRENT;
-    };
-
-    static auto UnregisterSurfaceTextureFrameListener(mozilla::jni::Object::Param) -> void;
 
     struct Vibrate_t {
         typedef GeckoAppShell Owner;
@@ -3856,6 +3815,55 @@ public:
     template<class Impl> class Natives;
 };
 
+class SurfaceTextureListener : public mozilla::jni::ObjectBase<SurfaceTextureListener>
+{
+public:
+    static const char name[];
+
+    explicit SurfaceTextureListener(const Context& ctx) : ObjectBase<SurfaceTextureListener>(ctx) {}
+
+    struct New_t {
+        typedef SurfaceTextureListener Owner;
+        typedef SurfaceTextureListener::LocalRef ReturnType;
+        typedef SurfaceTextureListener::Param SetterType;
+        typedef mozilla::jni::Args<> Args;
+        static constexpr char name[] = "<init>";
+        static constexpr char signature[] =
+                "()V";
+        static const bool isStatic = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+        static const mozilla::jni::CallingThread callingThread =
+                mozilla::jni::CallingThread::GECKO;
+        static const mozilla::jni::DispatchTarget dispatchTarget =
+                mozilla::jni::DispatchTarget::CURRENT;
+    };
+
+    static auto New() -> SurfaceTextureListener::LocalRef;
+
+    struct OnFrameAvailable_t {
+        typedef SurfaceTextureListener Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<> Args;
+        static constexpr char name[] = "nativeOnFrameAvailable";
+        static constexpr char signature[] =
+                "()V";
+        static const bool isStatic = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+        static const mozilla::jni::CallingThread callingThread =
+                mozilla::jni::CallingThread::ANY;
+        static const mozilla::jni::DispatchTarget dispatchTarget =
+                mozilla::jni::DispatchTarget::CURRENT;
+    };
+
+    static const mozilla::jni::CallingThread callingThread =
+            mozilla::jni::CallingThread::ANY;
+
+    template<class Impl> class Natives;
+};
+
 class Telemetry : public mozilla::jni::ObjectBase<Telemetry>
 {
 public:
@@ -4738,6 +4746,25 @@ public:
         static const mozilla::jni::DispatchTarget dispatchTarget =
                 mozilla::jni::DispatchTarget::PROXY;
     };
+
+    struct Reattach_t {
+        typedef Compositor Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<> Args;
+        static constexpr char name[] = "reattach";
+        static constexpr char signature[] =
+                "()V";
+        static const bool isStatic = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+        static const mozilla::jni::CallingThread callingThread =
+                mozilla::jni::CallingThread::GECKO;
+        static const mozilla::jni::DispatchTarget dispatchTarget =
+                mozilla::jni::DispatchTarget::CURRENT;
+    };
+
+    auto Reattach() const -> void;
 
     struct SyncInvalidateAndScheduleComposite_t {
         typedef Compositor Owner;

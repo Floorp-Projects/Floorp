@@ -279,7 +279,7 @@ GLContextEGL::Init()
         return false;
     }
 
-    PR_STATIC_ASSERT(sizeof(GLint) >= sizeof(int32_t));
+    static_assert(sizeof(GLint) >= sizeof(int32_t), "GLint is smaller than int32_t");
     mMaxTextureImageSize = INT32_MAX;
 
     mShareWithEGLImage = sEGLLibrary.HasKHRImageBase() &&

@@ -938,8 +938,18 @@ HTMLInputElement::InitFilePicker(FilePickerType aType)
 
   // Get Loc title
   nsXPIDLString title;
-  nsContentUtils::GetLocalizedString(nsContentUtils::eFORMS_PROPERTIES,
-                                     "FileUpload", title);
+  nsXPIDLString okButtonLabel;
+  if (aType == FILE_PICKER_DIRECTORY) {
+    nsContentUtils::GetLocalizedString(nsContentUtils::eFORMS_PROPERTIES,
+                                       "DirectoryUpload", title);
+
+    nsContentUtils::GetLocalizedString(nsContentUtils::eFORMS_PROPERTIES,
+                                       "DirectoryPickerOkButtonLabel",
+                                       okButtonLabel);
+  } else {
+    nsContentUtils::GetLocalizedString(nsContentUtils::eFORMS_PROPERTIES,
+                                       "FileUpload", title);
+  }
 
   nsCOMPtr<nsIFilePicker> filePicker = do_CreateInstance("@mozilla.org/filepicker;1");
   if (!filePicker)
@@ -957,6 +967,10 @@ HTMLInputElement::InitFilePicker(FilePickerType aType)
 
   nsresult rv = filePicker->Init(win, title, mode);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!okButtonLabel.IsEmpty()) {
+    filePicker->SetOkButtonLabel(okButtonLabel);
+  }
 
   // Native directory pickers ignore file type filters, so we don't spend
   // cycles adding them for FILE_PICKER_DIRECTORY.
