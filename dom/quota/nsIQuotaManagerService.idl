@@ -100,4 +100,22 @@ interface nsIQuotaManagerService : nsISupports
    */
   [must_use] nsIQuotaRequest
   reset();
+
+  /**
+   * Check if given origin is persisted.
+   *
+   * @param aPrincipal
+   *        A principal for the origin which we want to check.
+   */
+  [must_use] nsIQuotaRequest
+  persisted(in nsIPrincipal aPrincipal);
+
+  /**
+   * Persist given origin.
+   *
+   * @param aPrincipal
+   *        A principal for the origin which we want to persist.
+   */
+  [must_use] nsIQuotaRequest
+  persist(in nsIPrincipal aPrincipal);
 };
