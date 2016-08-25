@@ -420,10 +420,11 @@
       };
 
       function test(testdat) {
-        for (let from_state of testdat['from_states']) {
-          for (let to_state of testdat['to_states']) {
-            for (let mode of testdat['test_modes']) {
-              for (let type of testdat['tag_types']) {
+        // FIXME bug 1291854: Change back to lets when the test is fixed.
+        for (var from_state of testdat['from_states']) {
+          for (var to_state of testdat['to_states']) {
+            for (var mode of testdat['test_modes']) {
+              for (var type of testdat['tag_types']) {
                 runSoon(function () {
                   let obj = document.createElement(type);
                   obj.width = 1; obj.height = 1;
