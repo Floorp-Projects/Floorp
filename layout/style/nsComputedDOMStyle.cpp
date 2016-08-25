@@ -2359,7 +2359,7 @@ nsComputedDOMStyle::DoGetBackgroundOrigin()
 
 void
 nsComputedDOMStyle::SetValueToPositionCoord(
-    const Position::PositionCoord& aCoord,
+    const Position::Coord& aCoord,
     nsROCSSPrimitiveValue* aValue)
 {
   if (!aCoord.mHasPercent) {
