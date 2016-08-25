@@ -5703,6 +5703,14 @@ nsDisplayStickyPosition::nsDisplayStickyPosition(nsDisplayListBuilder* aBuilder,
   : nsDisplayOwnLayer(aBuilder, aFrame, aList, aActiveScrolledRoot)
 {
   MOZ_COUNT_CTOR(nsDisplayStickyPosition);
+  mClip = nullptr;
+}
+
+void
+nsDisplayStickyPosition::SetClipChain(const DisplayItemClipChain* aClipChain)
+{
+  mClipChain = aClipChain;
+  MOZ_ASSERT(!mClip, "There should never be a clip on this item because no clip moves with it.");
 }
 
 #ifdef NS_BUILD_REFCNT_LOGGING

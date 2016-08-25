@@ -4032,7 +4032,8 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
         animatedGeometryRoot = item->GetAnimatedGeometryRoot();
         itemASR = item->GetActiveScrolledRoot();
         const DisplayItemClipChain* itemClipChain = item->GetClipChain();
-        if (itemClipChain && itemClipChain->mASR == itemASR) {
+        if (itemClipChain && itemClipChain->mASR == itemASR &&
+            itemType != nsDisplayItem::TYPE_STICKY_POSITION) {
           layerClipChain = itemClipChain->mParent;
         } else {
           layerClipChain = itemClipChain;
@@ -4159,7 +4160,8 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
       }
 
       bool hasScrolledClip = layerClipChain && layerClipChain->mClip.HasClip() &&
-        !ActiveScrolledRoot::IsAncestor(layerClipChain->mASR, itemASR);
+        (!ActiveScrolledRoot::IsAncestor(layerClipChain->mASR, itemASR) ||
+         itemType == nsDisplayItem::TYPE_STICKY_POSITION);
 
       if (hasScrolledClip) {
         // If the clip is scrolled, reserve just the area of the clip for
