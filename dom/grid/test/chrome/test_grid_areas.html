@@ -1,0 +1,96 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+<style>
+body {
+	margin: 40px;
+}
+.wrapper {
+	display: grid;
+	width: 600px;
+	height: 600px;
+	grid-gap: 20px;
+	grid-template-columns: 50px 1fr 50px;
+	grid-template-rows: 1fr 1fr 1fr;
+	grid-template-areas: "areaA areaA ....."
+						 "areaB areaC areaC"
+						 "areaB areaC areaC";
+	background-color: #f00;
+}
+.box {
+	background-color: #444;
+	color: #fff;
+}
+.a {
+	grid-area: areaA;
+}
+.b {
+	grid-area: areaB;
+}
+.c {
+	grid-area: areaC;
+}
+</style>
+
+<script>
+'use strict';
+
+SimpleTest.waitForExplicitFinish();
+
+function runTests() {
+	var wrapper = document.getElementById("wrapper");
+	var grid = wrapper.getGridFragments()[0];
+
+	// test existence of property
+	isnot(typeof(grid.areas), "undefined", "Grid.areas property exists.");
+
+	if (typeof(grid.areas) != "undefined") {
+		// test that the right number of areas are reported
+		is(grid.areas.length, 3, "3 areas are reported.");
+
+		if (grid.areas.length == 3) {
+			// test area names
+			is(grid.areas[0].name, "areaA", "Area 0 has proper name.");
+			is(grid.areas[1].name, "areaB", "Area 1 has proper name.");
+			is(grid.areas[2].name, "areaC", "Area 2 has proper name.");
+
+			// test area types
+			is(grid.areas[0].type, "explicit", "Area 0 is explicit.");
+			is(grid.areas[1].type, "explicit", "Area 1 is explicit.");
+			is(grid.areas[2].type, "explicit", "Area 2 is explicit.");
+
+			// test start and end lines
+			is(grid.areas[0].rowStart, 1, "Area 0 has start row line of 1.");
+			is(grid.areas[0].rowEnd, 2, "Area 0 has end row line of 2.");
+			is(grid.areas[0].columnStart, 1, "Area 0 has start column line of 1.");
+			is(grid.areas[0].columnEnd, 3, "Area 0 has end column line of 3.");
+
+			is(grid.areas[1].rowStart, 2, "Area 1 has start row line of 2.");
+			is(grid.areas[1].rowEnd, 4, "Area 1 has end row line of 4.");
+			is(grid.areas[1].columnStart, 1, "Area 1 has start column line of 1.");
+			is(grid.areas[1].columnEnd, 2, "Area 1 has end column line of 2.");
+
+			is(grid.areas[2].rowStart, 2, "Area 2 has start row line of 2.");
+			is(grid.areas[2].rowEnd, 4, "Area 2 has end row line of 4.");
+			is(grid.areas[2].columnStart, 2, "Area 2 has start column line of 2.");
+			is(grid.areas[2].columnEnd, 4, "Area 2 has end column line of 4.");
+		}
+	}
+
+	SimpleTest.finish();
+}
+</script>
+</head>
+<body onLoad="runTests();">
+
+	<div id="wrapper" class="wrapper">
+		<div id="boxA" class="box a">A</div>
+		<div id="boxB" class="box b">B</div>
+		<div id="boxC" class="box c">C</div>
+	</div>
+
+</body>
+</html>
