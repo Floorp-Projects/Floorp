@@ -141,9 +141,9 @@ public:
     virtual double GetDefaultScaleInternal() override;
     NS_IMETHOD Show(bool aState) override;
     virtual bool IsVisible() const override;
-    NS_IMETHOD ConstrainPosition(bool aAllowSlop,
-                                 int32_t *aX,
-                                 int32_t *aY) override;
+    virtual void ConstrainPosition(bool aAllowSlop,
+                                   int32_t *aX,
+                                   int32_t *aY) override;
     NS_IMETHOD Move(double aX,
                     double aY) override;
     NS_IMETHOD Resize(double aWidth,

@@ -583,14 +583,6 @@ nsWindow::Show(bool aState)
 }
 
 NS_IMETHODIMP
-nsWindow::ConstrainPosition(bool aAllowSlop,
-                            int32_t *aX,
-                            int32_t *aY)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsWindow::Move(double aX, double aY)
 {
   if (!mNativeView || (mBounds.x == aX && mBounds.y == aY))

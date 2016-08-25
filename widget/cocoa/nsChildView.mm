@@ -948,12 +948,6 @@ nsChildView::RoundsWidgetCoordinatesTo()
   return 1;
 }
 
-NS_IMETHODIMP nsChildView::ConstrainPosition(bool aAllowSlop,
-                                             int32_t *aX, int32_t *aY)
-{
-  return NS_OK;
-}
-
 // Move this component, aX and aY are in the parent widget coordinate system
 NS_IMETHODIMP nsChildView::Move(double aX, double aY)
 {

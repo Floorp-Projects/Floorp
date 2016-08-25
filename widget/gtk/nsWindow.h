@@ -109,7 +109,7 @@ public:
     virtual nsresult   SetParent(nsIWidget* aNewParent) override;
     virtual void       SetModal(bool aModal) override;
     virtual bool       IsVisible() const override;
-    NS_IMETHOD         ConstrainPosition(bool aAllowSlop,
+    virtual void       ConstrainPosition(bool aAllowSlop,
                                          int32_t *aX,
                                          int32_t *aY) override;
     virtual void       SetSizeConstraints(const SizeConstraints& aConstraints) override;

@@ -1742,7 +1742,7 @@ nsWindow::IsVisible() const
     return mIsVisible;
 }
 
-NS_IMETHODIMP
+void
 nsWindow::ConstrainPosition(bool aAllowSlop,
                             int32_t *aX,
                             int32_t *aY)
@@ -1754,8 +1754,6 @@ nsWindow::ConstrainPosition(bool aAllowSlop,
         *aX = 0;
         *aY = 0;
     }
-
-    return NS_OK;
 }
 
 NS_IMETHODIMP

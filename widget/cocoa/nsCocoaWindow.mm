@@ -1112,11 +1112,13 @@ bool nsCocoaWindow::IsEnabled() const
 
 #define kWindowPositionSlop 20
 
-NS_IMETHODIMP nsCocoaWindow::ConstrainPosition(bool aAllowSlop,
-                                               int32_t *aX, int32_t *aY)
+void
+nsCocoaWindow::ConstrainPosition(bool aAllowSlop, int32_t *aX, int32_t *aY)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   if (!mWindow || ![mWindow screen]) {
-    return NS_OK;
+    return;
   }
 
   nsIntRect screenBounds;
@@ -1166,7 +1168,7 @@ NS_IMETHODIMP nsCocoaWindow::ConstrainPosition(bool aAllowSlop,
     }
   }
 
-  return NS_OK;
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 void nsCocoaWindow::SetSizeConstraints(const SizeConstraints& aConstraints)
