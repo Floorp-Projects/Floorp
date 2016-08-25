@@ -5459,6 +5459,12 @@ nsGlobalWindow::GetDevicePixelRatioOuter()
     return 1.0;
   }
 
+  float overrideDPPX = presContext->GetOverrideDPPX();
+
+  if (overrideDPPX > 0) {
+    return overrideDPPX;
+  }
+
   return float(nsPresContext::AppUnitsPerCSSPixel())/
       presContext->AppUnitsPerDevPixel();
 }
