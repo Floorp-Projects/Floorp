@@ -25,8 +25,8 @@
              oncommand="goDoCommand('downloadsCmd_unblock')"/>
     <command id="downloadsCmd_chooseUnblock"
              oncommand="goDoCommand('downloadsCmd_chooseUnblock')"/>
-    <command id="downloadsCmd_chooseOpen"
-             oncommand="goDoCommand('downloadsCmd_chooseOpen')"/>
+    <command id="downloadsCmd_unblockAndOpen"
+             oncommand="goDoCommand('downloadsCmd_unblockAndOpen')"/>
     <command id="downloadsCmd_confirmBlock"
              oncommand="goDoCommand('downloadsCmd_confirmBlock')"/>
     <command id="downloadsCmd_open"
@@ -189,7 +189,7 @@
                 align="stretch">
             <button id="downloadsPanel-blockedSubview-openButton"
                     class="plain downloadsPanelFooterButton"
-                    command="downloadsCmd_chooseOpen"
+                    command="downloadsCmd_unblockAndOpen"
                     flex="1"/>
             <toolbarseparator/>
             <button id="downloadsPanel-blockedSubview-deleteButton"

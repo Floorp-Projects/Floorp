@@ -1145,9 +1145,9 @@ DownloadsViewItem.prototype = {
     this.confirmUnblock(window, "chooseUnblock");
   },
 
-  downloadsCmd_chooseOpen() {
+  downloadsCmd_unblockAndOpen() {
     DownloadsPanel.hidePanel();
-    this.confirmUnblock(window, "chooseOpen");
+    this.unblockAndOpenDownload().catch(Cu.reportError);
   },
 
   downloadsCmd_open() {
@@ -1235,7 +1235,7 @@ const DownloadsViewController = {
     // showing.  If it is, then take the following path.
     if (DownloadsBlockedSubview.view.showingSubView) {
       let blockedSubviewCmds = [
-        "downloadsCmd_chooseOpen",
+        "downloadsCmd_unblockAndOpen",
         "cmd_delete",
       ];
       return blockedSubviewCmds.indexOf(aCommand) >= 0;
