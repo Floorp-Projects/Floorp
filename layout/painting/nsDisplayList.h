@@ -3994,6 +3994,7 @@ public:
   virtual ~nsDisplayStickyPosition();
 #endif
 
+  void SetClipChain(const DisplayItemClipChain* aClipChain) override;
   virtual already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,
                                              LayerManager* aManager,
                                              const ContainerLayerParameters& aContainerParameters) override;
