@@ -1395,7 +1395,8 @@ class nsIWidget : public nsISupports
      * @param aDoCapture true enables capture, false disables capture
      *
      */
-    NS_IMETHOD CaptureRollupEvents(nsIRollupListener* aListener, bool aDoCapture) = 0;
+    virtual void CaptureRollupEvents(nsIRollupListener* aListener,
+                                     bool aDoCapture) = 0;
 
     /**
      * Bring this window to the user's attention.  This is intended to be a more

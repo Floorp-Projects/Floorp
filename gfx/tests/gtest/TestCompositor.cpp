@@ -82,7 +82,6 @@ public:
   virtual LayoutDeviceIntPoint WidgetToScreenOffset() override { return LayoutDeviceIntPoint(0, 0); }
   NS_IMETHOD              DispatchEvent(mozilla::WidgetGUIEvent* aEvent,
                                         nsEventStatus& aStatus) override { return NS_OK; }
-  NS_IMETHOD              CaptureRollupEvents(nsIRollupListener * aListener, bool aDoCapture) override { return NS_OK; }
   NS_IMETHOD_(void)       SetInputContext(const InputContext& aContext,
                                           const InputContextAction& aAction) override {}
   NS_IMETHOD_(InputContext) GetInputContext() override { abort(); }

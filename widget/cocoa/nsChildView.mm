@@ -1613,13 +1613,6 @@ LayoutDeviceIntPoint nsChildView::WidgetToScreenOffset()
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(LayoutDeviceIntPoint(0,0));
 }
 
-NS_IMETHODIMP nsChildView::CaptureRollupEvents(nsIRollupListener * aListener,
-                                               bool aDoCapture)
-{
-  // this never gets called, only top-level windows can be rollup widgets
-  return NS_OK;
-}
-
 NS_IMETHODIMP nsChildView::SetTitle(const nsAString& title)
 {
   // child views don't have titles

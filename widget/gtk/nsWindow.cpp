@@ -1890,15 +1890,15 @@ nsWindow::CaptureMouse(bool aCapture)
     return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsWindow::CaptureRollupEvents(nsIRollupListener *aListener,
                               bool               aDoCapture)
 {
     if (!mGdkWindow)
-        return NS_OK;
+        return;
 
     if (!mContainer)
-        return NS_ERROR_FAILURE;
+        return;
 
     LOG(("CaptureRollupEvents %p %i\n", this, int(aDoCapture)));
 
@@ -1921,8 +1921,6 @@ nsWindow::CaptureRollupEvents(nsIRollupListener *aListener,
         gtk_grab_remove(GTK_WIDGET(mContainer));
         gRollupListener = nullptr;
     }
-
-    return NS_OK;
 }
 
 NS_IMETHODIMP

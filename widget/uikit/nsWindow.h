@@ -80,10 +80,6 @@ public:
     virtual nsresult ConfigureChildren(const nsTArray<Configuration>& aConfigurations) override;
     NS_IMETHOD DispatchEvent(mozilla::WidgetGUIEvent* aEvent,
                              nsEventStatus& aStatus) override;
-    NS_IMETHOD CaptureRollupEvents(nsIRollupListener * aListener,
-                                   bool aDoCapture) override {
-        return NS_ERROR_NOT_IMPLEMENTED;
-    }
 
     void WillPaintWindow();
     bool PaintWindow(LayoutDeviceIntRegion aRegion);
