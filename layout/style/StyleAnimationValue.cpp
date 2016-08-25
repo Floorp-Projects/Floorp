@@ -1160,42 +1160,6 @@ AddCSSValuePercentNumber(const uint32_t aValueRestrictions,
                         eCSSUnit_Number);
 }
 
-static nscolor
-AddWeightedColors(double aCoeff1, nscolor aColor1,
-                  double aCoeff2, nscolor aColor2)
-{
-  // FIXME (spec): The CSS transitions spec doesn't say whether
-  // colors are premultiplied, but things work better when they are,
-  // so use premultiplication.  Spec issue is still open per
-  // http://lists.w3.org/Archives/Public/www-style/2009Jul/0050.html
-
-  // To save some math, scale the alpha down to a 0-1 scale, but
-  // leave the color components on a 0-255 scale.
-  double A1 = NS_GET_A(aColor1) * (1.0 / 255.0);
-  double R1 = NS_GET_R(aColor1) * A1;
-  double G1 = NS_GET_G(aColor1) * A1;
-  double B1 = NS_GET_B(aColor1) * A1;
-  double A2 = NS_GET_A(aColor2) * (1.0 / 255.0);
-  double R2 = NS_GET_R(aColor2) * A2;
-  double G2 = NS_GET_G(aColor2) * A2;
-  double B2 = NS_GET_B(aColor2) * A2;
-  double Aresf = (A1 * aCoeff1 + A2 * aCoeff2);
-  if (Aresf <= 0.0) {
-    return NS_RGBA(0, 0, 0, 0);
-  }
-
-  if (Aresf > 1.0) {
-    Aresf = 1.0;
-  }
-
-  double factor = 1.0 / Aresf;
-  uint8_t Ares = NSToIntRound(Aresf * 255.0);
-  uint8_t Rres = ClampColor((R1 * aCoeff1 + R2 * aCoeff2) * factor);
-  uint8_t Gres = ClampColor((G1 * aCoeff1 + G2 * aCoeff2) * factor);
-  uint8_t Bres = ClampColor((B1 * aCoeff1 + B2 * aCoeff2) * factor);
-  return NS_RGBA(Rres, Gres, Bres, Ares);
-}
-
 static bool
 AddShadowItems(double aCoeff1, const nsCSSValue &aValue1,
                double aCoeff2, const nsCSSValue &aValue2,
@@ -2384,8 +2348,36 @@ StyleAnimationValue::AddWeighted(nsCSSPropertyID aProperty,
     case eUnit_Color: {
       nscolor color1 = aValue1.GetColorValue();
       nscolor color2 = aValue2.GetColorValue();
-      nscolor resultColor =
-        AddWeightedColors(aCoeff1, color1, aCoeff2, color2);
+      // FIXME (spec): The CSS transitions spec doesn't say whether
+      // colors are premultiplied, but things work better when they are,
+      // so use premultiplication.  Spec issue is still open per
+      // http://lists.w3.org/Archives/Public/www-style/2009Jul/0050.html
+
+      // To save some math, scale the alpha down to a 0-1 scale, but
+      // leave the color components on a 0-255 scale.
+      double A1 = NS_GET_A(color1) * (1.0 / 255.0);
+      double R1 = NS_GET_R(color1) * A1;
+      double G1 = NS_GET_G(color1) * A1;
+      double B1 = NS_GET_B(color1) * A1;
+      double A2 = NS_GET_A(color2) * (1.0 / 255.0);
+      double R2 = NS_GET_R(color2) * A2;
+      double G2 = NS_GET_G(color2) * A2;
+      double B2 = NS_GET_B(color2) * A2;
+      double Aresf = (A1 * aCoeff1 + A2 * aCoeff2);
+      nscolor resultColor;
+      if (Aresf <= 0.0) {
+        resultColor = NS_RGBA(0, 0, 0, 0);
+      } else {
+        if (Aresf > 1.0) {
+          Aresf = 1.0;
+        }
+        double factor = 1.0 / Aresf;
+        uint8_t Ares = NSToIntRound(Aresf * 255.0);
+        uint8_t Rres = ClampColor((R1 * aCoeff1 + R2 * aCoeff2) * factor);
+        uint8_t Gres = ClampColor((G1 * aCoeff1 + G2 * aCoeff2) * factor);
+        uint8_t Bres = ClampColor((B1 * aCoeff1 + B2 * aCoeff2) * factor);
+        resultColor = NS_RGBA(Rres, Gres, Bres, Ares);
+      }
       aResultValue.SetColorValue(resultColor);
       return true;
     }
