@@ -363,14 +363,15 @@ add_task(function* eraseEverything_notification() {
   let observer = expectNotifications();
   yield PlacesUtils.bookmarks.eraseEverything();
 
+  // Bookmarks should always be notified before their parents.
   observer.check([ { name: "onItemRemoved",
+                     arguments: [ itemId, parentId, bm.index, bm.type,
+                                  bm.url, bm.guid, bm.parentGuid,
+                                  Ci.nsINavBookmarksService.SOURCE_DEFAULT ] },
+                   { name: "onItemRemoved",
                      arguments: [ folder2Id, folder2ParentId, folder2.index,
                                   folder2.type, null, folder2.guid,
                                   folder2.parentGuid,
-                                  Ci.nsINavBookmarksService.SOURCE_DEFAULT ] },
-                   { name: "onItemRemoved",
-                     arguments: [ itemId, parentId, bm.index, bm.type,
-                                  bm.url, bm.guid, bm.parentGuid,
                                   Ci.nsINavBookmarksService.SOURCE_DEFAULT ] },
                    { name: "onItemRemoved",
                      arguments: [ folder1Id, folder1ParentId, folder1.index,
@@ -388,7 +389,51 @@ add_task(function* eraseEverything_notification() {
                                   toolbarBm.index, toolbarBm.type,
                                   toolbarBm.url, toolbarBm.guid,
                                   toolbarBm.parentGuid,
-                                  Ci.nsINavBookmarksService.SOURCE_DEFAULT ] }
+                                  Ci.nsINavBookmarksService.SOURCE_DEFAULT ] },
+                 ]);
+});
+
+add_task(function* eraseEverything_reparented_notification() {
+  // Let's start from a clean situation.
+  yield PlacesUtils.bookmarks.eraseEverything();
+
+  let folder1 = yield PlacesUtils.bookmarks.insert({ type: PlacesUtils.bookmarks.TYPE_FOLDER,
+                                                     parentGuid: PlacesUtils.bookmarks.unfiledGuid });
+  let folder1Id = yield PlacesUtils.promiseItemId(folder1.guid);
+  let folder1ParentId = yield PlacesUtils.promiseItemId(folder1.parentGuid);
+
+  let bm = yield PlacesUtils.bookmarks.insert({ type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+                                                parentGuid: folder1.guid,
+                                                url: new URL("http://example.com/") });
+  let itemId = yield PlacesUtils.promiseItemId(bm.guid);
+
+  let folder2 = yield PlacesUtils.bookmarks.insert({ type: PlacesUtils.bookmarks.TYPE_FOLDER,
+                                                     parentGuid: PlacesUtils.bookmarks.unfiledGuid });
+  let folder2Id = yield PlacesUtils.promiseItemId(folder2.guid);
+  let folder2ParentId = yield PlacesUtils.promiseItemId(folder2.parentGuid);
+
+  bm.parentGuid = folder2.guid;
+  bm = yield PlacesUtils.bookmarks.update(bm);
+  let parentId = yield PlacesUtils.promiseItemId(bm.parentGuid);
+
+  let observer = expectNotifications();
+  yield PlacesUtils.bookmarks.eraseEverything();
+
+  // Bookmarks should always be notified before their parents.
+  observer.check([ { name: "onItemRemoved",
+                     arguments: [ itemId, parentId, bm.index, bm.type,
+                                  bm.url, bm.guid, bm.parentGuid,
+                                  Ci.nsINavBookmarksService.SOURCE_DEFAULT ] },
+                   { name: "onItemRemoved",
+                     arguments: [ folder2Id, folder2ParentId, folder2.index,
+                                  folder2.type, null, folder2.guid,
+                                  folder2.parentGuid,
+                                  Ci.nsINavBookmarksService.SOURCE_DEFAULT ] },
+                   { name: "onItemRemoved",
+                     arguments: [ folder1Id, folder1ParentId, folder1.index,
+                                  folder1.type, null, folder1.guid,
+                                  folder1.parentGuid,
+                                  Ci.nsINavBookmarksService.SOURCE_DEFAULT ] },
                  ]);
 });
 
