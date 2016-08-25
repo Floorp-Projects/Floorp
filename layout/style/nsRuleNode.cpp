@@ -10394,6 +10394,13 @@ nsRuleNode::HasAuthorSpecifiedRules(nsStyleContext* aStyleContext,
                                     uint32_t ruleTypeMask,
                                     bool aAuthorColorsAllowed)
 {
+#ifdef MOZ_STYLO
+  if (aStyleContext->StyleSource().IsServoComputedValues()) {
+    NS_WARNING("stylo: nsRuleNode::HasAuthorSpecifiedRules not implemented");
+    return true;
+  }
+#endif
+
   uint32_t inheritBits = 0;
   if (ruleTypeMask & NS_AUTHOR_SPECIFIED_BACKGROUND)
     inheritBits |= NS_STYLE_INHERIT_BIT(Background);
