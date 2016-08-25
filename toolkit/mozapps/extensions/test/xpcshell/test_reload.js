@@ -20,6 +20,19 @@ const manifestSample = {
   }],
 };
 
+const { Management } = Components.utils.import("resource://gre/modules/Extension.jsm", {});
+
+function promiseAddonStartup() {
+  return new Promise(resolve => {
+    let listener = (extension) => {
+      Management.off("startup", listener);
+      resolve(extension);
+    };
+
+    Management.on("startup", listener);
+  });
+}
+
 function* installAddon(fixtureName, addonID) {
   yield promiseInstallAllFiles([do_get_addon(fixtureName)]);
   return promiseAddonByID(addonID);
@@ -110,38 +123,58 @@ add_task(function* test_can_reload_permanent_addon() {
   yield tearDownAddon(addon);
 });
 
-add_task(function* test_disabled_addon_can_be_enabled_after_reload() {
+add_task(function* test_reload_to_invalid_version_fails() {
   yield promiseRestartManager();
   let tempdir = gTmpD.clone();
 
-  // Create an add-on with strictCompatibility which should cause it
-  // to be appDisabled.
-  const unpackedAddon = writeInstallRDFToDir(
-    Object.assign({}, manifestSample, {
-      strictCompatibility: true,
-      targetApplications: [{
-        id: "xpcshell@tests.mozilla.org",
-        minVersion: "0.1",
-        maxVersion: "0.1"
-      }],
-    }), tempdir, manifestSample.id, "bootstrap.js");
+  // The initial version of the add-on will be compatible, and will therefore load
+  const addonId = "invalid_version_cannot_be_reloaded@tests.mozilla.org";
+  let manifest = {
+    name: "invalid_version_cannot_be_reloaded",
+    description: "test invalid_version_cannot_be_reloaded",
+    manifest_version: 2,
+    version: "1.0",
+    applications: {
+      gecko: {
+        id: addonId,
+      }
+    },
+  };
 
-  yield AddonManager.installTemporaryAddon(unpackedAddon);
-  const addon = yield promiseAddonByID(manifestSample.id);
+  let addonDir = yield promiseWriteWebManifestForExtension(manifest, tempdir, "invalid_version");
+  yield AddonManager.installTemporaryAddon(addonDir);
+  yield promiseAddonStartup();
+
+  let addon = yield promiseAddonByID(addonId);
   notEqual(addon, null);
-  equal(addon.appDisabled, true);
+  equal(addon.id, addonId);
+  equal(addon.version, "1.0");
+  equal(addon.appDisabled, false);
+  equal(addon.userDisabled, false);
+  addonDir.remove(true);
 
-  // Remove strictCompatibility from the manifest.
-  writeInstallRDFToDir(manifestSample, tempdir, manifestSample.id);
+  // update the manifest to make the add-on version incompatible, so the reload will reject
+  manifest.applications.gecko.strict_min_version = "1";
+  manifest.applications.gecko.strict_max_version = "1";
+  manifest.version = "2.0";
 
-  yield addon.reload();
+  addonDir = yield promiseWriteWebManifestForExtension(manifest, tempdir, "invalid_version", false);
+  let expectedMsg = new RegExp("Add-on invalid_version_cannot_be_reloaded@tests.mozilla.org is not compatible with application version. " +
+                               "add-on minVersion: 1, add-on maxVersion: 1");
 
-  const reloadedAddon = yield promiseAddonByID(manifestSample.id);
+  yield Assert.rejects(addon.reload(),
+                       expectedMsg,
+                       "Reload rejects when application version does not fall between minVersion and maxVersion");
+
+  let reloadedAddon = yield promiseAddonByID(addonId);
   notEqual(reloadedAddon, null);
+  equal(reloadedAddon.id, addonId);
+  equal(reloadedAddon.version, "1.0");
   equal(reloadedAddon.appDisabled, false);
+  equal(reloadedAddon.userDisabled, false);
 
   yield tearDownAddon(reloadedAddon);
-  unpackedAddon.remove(true);
+  addonDir.remove(true);
 });
 
 add_task(function* test_manifest_changes_are_refreshed() {
