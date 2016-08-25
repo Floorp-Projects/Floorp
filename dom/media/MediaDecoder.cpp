@@ -508,6 +508,8 @@ MediaDecoder::MediaDecoder(MediaDecoderOwner* aOwner)
   , mMinimizePreroll(false)
   , mMediaTracksConstructed(false)
   , mFiredMetadataLoaded(false)
+  , mElementVisible(!aOwner->IsHidden())
+  , mForcedHidden(false)
   , mIsDormant(false)
   , mIsHeuristicDormantSupported(
       Preferences::GetBool("media.decoder.heuristic.dormant.enabled", false))
@@ -1363,7 +1365,16 @@ void
 MediaDecoder::SetElementVisibility(bool aIsVisible)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  mIsVisible = aIsVisible;
+  mElementVisible = aIsVisible;
+  mIsVisible = !mForcedHidden && mElementVisible;
+}
+
+void
+MediaDecoder::SetForcedHidden(bool aForcedHidden)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  mForcedHidden = aForcedHidden;
+  SetElementVisibility(mElementVisible);
 }
 
 void
