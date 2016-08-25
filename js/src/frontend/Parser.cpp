@@ -2714,12 +2714,12 @@ Parser<ParseHandler>::checkFunctionDefinition(HandleAtom funAtom, Node pn, Funct
         // declarations. Otherwise it is a parse error.
         ParseContext::Statement* declaredInStmt = pc->innermostStatement();
         if (declaredInStmt && declaredInStmt->kind() == StatementKind::Label) {
-            if (pc->sc()->strict()) {
-                reportWithOffset(ParseError, false, pos.begin, JSMSG_FUNCTION_LABEL);
-                return false;
-            }
+            MOZ_ASSERT(!pc->sc()->strict(),
+                       "labeled functions shouldn't be parsed in strict mode");
 
-            // Find the innermost non-label statement.
+            // Find the innermost non-label statement.  Report an error if it's
+            // unbraced: functions can't appear in it.  Otherwise the statement
+            // (or its absence) determines the scope the function's bound in.
             while (declaredInStmt && declaredInStmt->kind() == StatementKind::Label)
                 declaredInStmt = declaredInStmt->enclosing();
 
@@ -2730,9 +2730,8 @@ Parser<ParseHandler>::checkFunctionDefinition(HandleAtom funAtom, Node pn, Funct
         }
 
         if (declaredInStmt) {
-            DeclarationKind declKind = DeclarationKind::LexicalFunction;
-            if (!checkLexicalDeclarationDirectlyWithinBlock(*declaredInStmt, declKind, pos))
-                return false;
+            MOZ_ASSERT(declaredInStmt->kind() != StatementKind::Label);
+            MOZ_ASSERT(StatementKindIsBraced(declaredInStmt->kind()));
 
             if (!pc->sc()->strict()) {
                 // Under sloppy mode, try Annex B.3.3 semantics. If making an
@@ -2745,7 +2744,7 @@ Parser<ParseHandler>::checkFunctionDefinition(HandleAtom funAtom, Node pn, Funct
                     return false;
             }
 
-            if (!noteDeclaredName(funName, declKind, pos))
+            if (!noteDeclaredName(funName, DeclarationKind::LexicalFunction, pos))
                 return false;
         } else {
             if (!noteDeclaredName(funName, DeclarationKind::BodyLevelFunction, pos))
@@ -5809,8 +5808,17 @@ Parser<ParseHandler>::labeledItem(YieldHandling yieldHandling)
     if (!tokenStream.getToken(&tt, TokenStream::Operand))
         return null();
 
-    if (tt == TOK_FUNCTION)
+    if (tt == TOK_FUNCTION) {
+        // Per 13.13.1 it's a syntax error if LabelledItem: FunctionDeclaration
+        // is ever matched.  Per Annex B.3.2 that modifies this text, this
+        // applies only to strict mode code.
+        if (pc->sc()->strict()) {
+            report(ParseError, false, null(), JSMSG_FUNCTION_LABEL);
+            return null();
+        }
+
         return functionStmt(yieldHandling, NameRequired);
+    }
 
     tokenStream.ungetToken();
     return statement(yieldHandling);
