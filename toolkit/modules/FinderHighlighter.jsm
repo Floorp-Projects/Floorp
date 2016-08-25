@@ -19,7 +19,7 @@ XPCOMUtils.defineLazyGetter(this, "kDebug", () => {
 });
 
 const kContentChangeThresholdPx = 5;
-const kModalHighlightRepaintFreqMs = 10;
+const kModalHighlightRepaintFreqMs = 100;
 const kHighlightAllPref = "findbar.highlightAll";
 const kModalHighlightPref = "findbar.modalHighlight";
 const kFontPropsCSS = ["color", "font-family", "font-kerning", "font-size",
@@ -219,6 +219,7 @@ FinderHighlighter.prototype = {
 
     if (highlight) {
       let params = {
+        allowDistance: 1,
         caseSensitive: this.finder._fastFind.caseSensitive,
         entireWord: this.finder._fastFind.entireWord,
         linksOnly, word,
@@ -473,12 +474,14 @@ FinderHighlighter.prototype = {
     if (!this._modalHighlightOutline)
       return;
 
-    if (kDebug)
+    if (kDebug) {
       this._modalHighlightOutline.remove();
-    try {
-      this.finder._getWindow().document
-        .removeAnonymousContent(this._modalHighlightOutline);
-    } catch (ex) {}
+    } else {
+      try {
+        this.finder._getWindow().document
+            .removeAnonymousContent(this._modalHighlightOutline);
+      } catch (ex) {}
+    }
 
     this._modalHighlightOutline = null;
   },
@@ -796,16 +799,19 @@ FinderHighlighter.prototype = {
    * @param {nsIDOMWindow} window
    */
   _removeHighlightAllMask(window) {
-    if (this._modalHighlightAllMask) {
-      // If the current window isn't the one the content was inserted into, this
-      // will fail, but that's fine.
-      if (kDebug)
-        this._modalHighlightAllMask.remove();
+    if (!this._modalHighlightAllMask)
+      return;
+
+    // If the current window isn't the one the content was inserted into, this
+    // will fail, but that's fine.
+    if (kDebug) {
+      this._modalHighlightAllMask.remove();
+    } else {
       try {
         window.document.removeAnonymousContent(this._modalHighlightAllMask);
       } catch (ex) {}
-      this._modalHighlightAllMask = null;
     }
+    this._modalHighlightAllMask = null;
   },
 
   /**
