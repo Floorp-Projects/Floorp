@@ -1046,6 +1046,8 @@ class Parser final : private JS::AutoGCRooter, public StrictModeGetter
     Node catchBlockStatement(YieldHandling yieldHandling, HandlePropertyName simpleCatchParam);
     Node debuggerStatement();
 
+    Node variableStatement(YieldHandling yieldHandling);
+
     Node lexicalDeclaration(YieldHandling yieldHandling, bool isConst);
     Node importDeclaration();
     Node exportDeclaration();
