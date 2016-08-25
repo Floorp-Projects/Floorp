@@ -11,8 +11,6 @@ const Services = require("Services");
 const { TargetFactory } = require("devtools/client/framework/target");
 const Telemetry = require("devtools/client/shared/telemetry");
 const {ViewHelpers} = require("devtools/client/shared/widgets/view-helpers");
-const {LocalizationHelper} = require("devtools/client/shared/l10n");
-const L10N = new LocalizationHelper("devtools/locale/toolbox.properties");
 
 const NS_XHTML = "http://www.w3.org/1999/xhtml";
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
@@ -22,6 +20,9 @@ loader.lazyImporter(this, "PluralForm", "resource://gre/modules/PluralForm.jsm")
 loader.lazyGetter(this, "prefBranch", function () {
   return Services.prefs.getBranch(null)
                     .QueryInterface(Ci.nsIPrefBranch2);
+});
+loader.lazyGetter(this, "toolboxStrings", function () {
+  return Services.strings.createBundle("chrome://devtools/locale/toolbox.properties");
 });
 
 loader.lazyRequireGetter(this, "gcliInit", "devtools/shared/gcli/commands/index");
@@ -310,7 +311,7 @@ DeveloperToolbar.prototype.createToolbar = function () {
   close.setAttribute("id", "developer-toolbar-closebutton");
   close.setAttribute("class", "close-icon");
   close.setAttribute("oncommand", "DeveloperToolbar.hide();");
-  let closeTooltip = L10N.getStr("toolbar.closeButton.tooltip");
+  let closeTooltip = toolboxStrings.GetStringFromName("toolbar.closeButton.tooltip");
   close.setAttribute("tooltiptext", closeTooltip);
 
   let stack = this._doc.createElement("stack");
@@ -328,7 +329,7 @@ DeveloperToolbar.prototype.createToolbar = function () {
   let toolboxBtn = this._doc.createElement("toolbarbutton");
   toolboxBtn.setAttribute("id", "developer-toolbar-toolbox-button");
   toolboxBtn.setAttribute("class", "developer-toolbar-button");
-  let toolboxTooltip = L10N.getStr("toolbar.toolsButton.tooltip");
+  let toolboxTooltip = toolboxStrings.GetStringFromName("toolbar.toolsButton.tooltip");
   toolboxBtn.setAttribute("tooltiptext", toolboxTooltip);
   toolboxBtn.addEventListener("command", function (event) {
     let window = event.target.ownerDocument.defaultView;
@@ -804,14 +805,17 @@ DeveloperToolbar.prototype._updateErrorsCount = function (changedTabId) {
   let warnings = this._warningsCount[tabId];
   let btn = this._errorCounterButton;
   if (errors) {
-    let errorsText = L10N.getStr("toolboxToggleButton.errors");
+    let errorsText = toolboxStrings
+                     .GetStringFromName("toolboxToggleButton.errors");
     errorsText = PluralForm.get(errors, errorsText).replace("#1", errors);
 
-    let warningsText = L10N.getStr("toolboxToggleButton.warnings");
+    let warningsText = toolboxStrings
+                       .GetStringFromName("toolboxToggleButton.warnings");
     warningsText = PluralForm.get(warnings, warningsText).replace("#1", warnings);
 
-    let tooltiptext = L10N.getFormatStr("toolboxToggleButton.tooltip",
-                                            errorsText, warningsText);
+    let tooltiptext = toolboxStrings
+                      .formatStringFromName("toolboxToggleButton.tooltip",
+                                            [errorsText, warningsText], 2);
 
     btn.setAttribute("error-count", errors);
     btn.setAttribute("tooltiptext", tooltiptext);
