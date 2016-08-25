@@ -725,9 +725,11 @@ LayerTransactionParent::RecvLeaveTestMode()
 }
 
 bool
-LayerTransactionParent::RecvGetOpacity(PLayerParent* aParent,
-                                       float* aOpacity)
+LayerTransactionParent::RecvGetAnimationOpacity(PLayerParent* aParent,
+                                                float* aOpacity,
+                                                bool* aHasAnimationOpacity)
 {
+  *aHasAnimationOpacity = false;
   if (mDestroyed || !layer_manager() || layer_manager()->IsDestroyed()) {
     return false;
   }
@@ -739,7 +741,12 @@ LayerTransactionParent::RecvGetOpacity(PLayerParent* aParent,
 
   mShadowLayersManager->ApplyAsyncProperties(this);
 
+  if (!layer->AsLayerComposite()->GetShadowOpacitySetByAnimation()) {
+    return true;
+  }
+
   *aOpacity = layer->GetLocalOpacity();
+  *aHasAnimationOpacity = true;
   return true;
 }
 

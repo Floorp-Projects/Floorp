@@ -143,8 +143,9 @@ protected:
   virtual bool RecvForceComposite() override;
   virtual bool RecvSetTestSampleTime(const TimeStamp& aTime) override;
   virtual bool RecvLeaveTestMode() override;
-  virtual bool RecvGetOpacity(PLayerParent* aParent,
-                              float* aOpacity) override;
+  virtual bool RecvGetAnimationOpacity(PLayerParent* aParent,
+                                       float* aOpacity,
+                                       bool* aHasAnimationOpacity) override;
   virtual bool RecvGetAnimationTransform(PLayerParent* aParent,
                                          MaybeTransform* aTransform)
                                          override;
