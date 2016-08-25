@@ -298,7 +298,7 @@ Shape*
 Scope::maybeCloneEnvironmentShape(JSContext* cx)
 {
     // Clone the environment shape if cloning into a different zone.
-    if (environmentShape_ && environmentShape_->zone() != cx->zone()) {
+    if (environmentShape_ && environmentShape_->zoneFromAnyThread() != cx->zone()) {
         BindingIter bi(this);
         return CreateEnvironmentShape(cx, bi,
                                       environmentShape_->getObjectClass(),
