@@ -968,11 +968,11 @@ nsWindow::RegisterTouchWindow()
 #endif
 }
 
-NS_IMETHODIMP
+void
 nsWindow::ConstrainPosition(bool aAllowSlop, int32_t *aX, int32_t *aY)
 {
     if (!mIsTopLevel || !mShell)
-      return NS_OK;
+      return;
 
     double dpiScale = GetDefaultScale().scale;
 
@@ -991,7 +991,7 @@ nsWindow::ConstrainPosition(bool aAllowSlop, int32_t *aX, int32_t *aY)
 
     // We don't have any screen so leave the coordinates as is
     if (!screen)
-      return NS_OK;
+      return;
 
     nsIntRect screenRect;
     if (mSizeMode != nsSizeMode_Fullscreen) {
@@ -1025,8 +1025,6 @@ nsWindow::ConstrainPosition(bool aAllowSlop, int32_t *aX, int32_t *aY)
       else if (*aY >= screenRect.YMost() - logHeight)
           *aY = screenRect.YMost() - logHeight;
     }
-
-    return NS_OK;
 }
 
 void nsWindow::SetSizeConstraints(const SizeConstraints& aConstraints)

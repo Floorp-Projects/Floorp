@@ -83,10 +83,10 @@ public:
   virtual bool IsVisible() const override
   { return mVisible; }
 
-  NS_IMETHOD ConstrainPosition(bool     /*ignored aAllowSlop*/,
-                               int32_t* aX,
-                               int32_t* aY) override
-  { *aX = kMaxDimension;  *aY = kMaxDimension;  return NS_OK; }
+  virtual void ConstrainPosition(bool     /*ignored aAllowSlop*/,
+                                 int32_t* aX,
+                                 int32_t* aY) override
+  { *aX = kMaxDimension; *aY = kMaxDimension; }
 
   // Widget position is controlled by the parent process via TabChild.
   NS_IMETHOD Move(double aX, double aY) override
