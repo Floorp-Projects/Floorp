@@ -30,7 +30,7 @@
 #include "nsThreadUtils.h"
 #include "mozilla/Logging.h"
 #include "nsServiceManagerUtils.h"
-#include "gfxPlatform.h"
+#include "mozilla/gfx/gfxVars.h"
 #include "mozilla/Sprintf.h"
 
 struct JSContext;
@@ -78,7 +78,7 @@ IsWebMForced(DecoderDoctorDiagnostics* aDiagnostics)
   bool mp4supported =
     DecoderTraits::IsMP4TypeAndEnabled(NS_LITERAL_CSTRING("video/mp4"),
                                        aDiagnostics);
-  bool hwsupported = gfxPlatform::GetPlatform()->CanUseHardwareVideoDecoding();
+  bool hwsupported = gfx::gfxVars::CanUseHardwareVideoDecoding();
   return !mp4supported || !hwsupported || VP9Benchmark::IsVP9DecodeFast();
 }
 
