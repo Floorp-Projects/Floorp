@@ -1874,7 +1874,6 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
   }
   mPresShellsToInvalidateIfHidden.Clear();
 
-  bool notifyGC = false;
   if (mViewManagerFlushIsPending) {
     RefPtr<TimelineConsumers> timelines = TimelineConsumers::Get();
 
@@ -1910,7 +1909,10 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
       timelines->AddMarkerForDocShell(docShell, "Paint",  MarkerTracingType::END);
     }
 
-    notifyGC = true;
+    if (nsContentUtils::XPConnect()) {
+      nsContentUtils::XPConnect()->NotifyDidPaint();
+      nsJSContext::NotifyDidPaint();
+    }
   }
 
 #ifndef ANDROID  /* bug 1142079 */
@@ -1929,11 +1931,6 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
 
   if (mPresContext->IsRoot() && XRE_IsContentProcess() && gfxPrefs::AlwaysPaint()) {
     ScheduleViewManagerFlush();
-  }
-
-  if (notifyGC && nsContentUtils::XPConnect()) {
-    nsContentUtils::XPConnect()->NotifyDidPaint();
-    nsJSContext::NotifyDidPaint();
   }
 }
 
