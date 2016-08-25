@@ -33,7 +33,11 @@ var gMyDecoderObserver; // value will be set in main()
 var gReferenceSnapshot; // value will be set in takeReferenceSnapshot()
 var gPollCounter = 0;
 var gIsTestFinished = false;
-
+var gSVGImages = [
+  "lime-anim-100x100.svg",    // SMIL animation
+  "lime-css-anim-100x100.svg" // CSS animation
+]
+var gSVGCurrentImage = 0;
 
 function takeReferenceSnapshot() {
   // Take a snapshot of the initial (essentially blank) page
@@ -53,6 +57,13 @@ function takeReferenceSnapshot() {
      "reference div should disappear when it becomes display:none");
 }
 
+function loadNextImageAndPoll()
+{
+  setTimeout(myPoll, 1);
+  // kick off image-loading! myPoll handles the rest.
+  gImg.setAttribute("src", gSVGImages[gSVGCurrentImage]);
+}
+
 function myPoll() {
   gPollCounter++;
   ok(true, "myPoll called");
@@ -61,7 +72,12 @@ function myPoll() {
     // SUCCESS!
     ok(true, "Animated image looks correct, " +
              "at call #" + gPollCounter + " to myPoll");
-    cleanUpAndFinish();
+
+    if (++gSVGCurrentImage > gSVGImages.length) {
+      cleanUpAndFinish();
+    } else {
+      loadNextImageAndPoll();
+    }
   }
   else
     setTimeout(myPoll, 1);
@@ -91,10 +107,7 @@ function main() {
   // earlier test got our image in there already.
   clearAllImageCaches();
 
-  setTimeout(myPoll, 1);
-
-  // kick off image-loading! myPoll handles the rest.
-  gImg.setAttribute("src", "lime-anim-100x100.svg");
+  loadNextImageAndPoll();
 
   // In case something goes wrong, fail earlier than mochitest timeout,
   // and with more information.
