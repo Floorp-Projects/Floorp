@@ -42,6 +42,7 @@ pref(dom.details_element.enabled,false) == no-summary.html disabled-no-summary-r
 # With 'overflow' property
 == overflow-hidden-open-details.html overflow-hidden-open-details-ref.html
 == overflow-auto-open-details.html overflow-auto-open-details-ref.html
+== overflow-scroll-details.html overflow-scroll-details-ref.html
 
 # With pagination property
 == details-page-break-after-1.html details-two-pages.html
@@ -84,3 +85,9 @@ pref(dom.details_element.enabled,false) == no-summary.html disabled-no-summary-r
 == key-enter-open-second-summary.html open-multiple-summary.html
 == key-enter-prevent-default.html single-summary.html
 == key-space-single-summary.html open-single-summary.html
+
+# Generated content bits
+== details-after.html single-summary.html
+== details-before.html single-summary.html
+== open-details-after.html open-single-summary.html
+== open-details-before.html open-single-summary.html
