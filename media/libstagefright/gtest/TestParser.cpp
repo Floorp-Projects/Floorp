@@ -160,20 +160,22 @@ struct TestFileData
   int32_t mWidth;
   int32_t mHeight;
   uint32_t mNumberAudioTracks;
+  bool mHasCrypto;
 };
 static const TestFileData testFiles[] = {
-  { "test_case_1156505.mp4", 0,   0,   0, 0 },
-  { "test_case_1181213.mp4", 0,   0,   0, 0 },
-  { "test_case_1181215.mp4", 0,   0,   0, 0 },
-  { "test_case_1181220.mp4", 0,   0,   0, 0 },
-  { "test_case_1181223.mp4", 0,   0,   0, 0 },
-  { "test_case_1181719.mp4", 0,   0,   0, 0 },
-  { "test_case_1185230.mp4", 1, 320, 240, 1 },
-  { "test_case_1187067.mp4", 1, 160,  90, 0 },
-  { "test_case_1200326.mp4", 0,   0,   0, 0 },
-  { "test_case_1204580.mp4", 1, 320, 180, 0 },
-  { "test_case_1216748.mp4", 0,   0,   0, 0 },
-  { "test_case_1296473.mp4", 0,   0,   0, 0 }
+  // filename               #V   w    h  #A  crypt
+  { "test_case_1156505.mp4", 0,   0,   0, 0, false },
+  { "test_case_1181213.mp4", 0,   0,   0, 0, false },
+  { "test_case_1181215.mp4", 0,   0,   0, 0, false },
+  { "test_case_1181220.mp4", 0,   0,   0, 0, false },
+  { "test_case_1181223.mp4", 0,   0,   0, 0, false },
+  { "test_case_1181719.mp4", 0,   0,   0, 0, false },
+  { "test_case_1185230.mp4", 1, 320, 240, 1, false },
+  { "test_case_1187067.mp4", 1, 160,  90, 0, false },
+  { "test_case_1200326.mp4", 0,   0,   0, 0, false },
+  { "test_case_1204580.mp4", 1, 320, 180, 0, false },
+  { "test_case_1216748.mp4", 0,   0,   0, 0, false },
+  { "test_case_1296473.mp4", 0,   0,   0, 0, false }
 };
 
 TEST(stagefright_MPEG4Metadata, test_case_mp4)
@@ -234,7 +236,7 @@ TEST(stagefright_MPEG4Metadata, test_case_mp4)
     EXPECT_FALSE(metadata.GetTrackInfo(static_cast<TrackInfo::TrackType>(-1), 0));
     // We can see anywhere in any MPEG4.
     EXPECT_TRUE(metadata.CanSeek());
-    EXPECT_FALSE(metadata.Crypto().valid);
+    EXPECT_EQ(testFiles[test].mHasCrypto, metadata.Crypto().valid);
   }
 }
 
