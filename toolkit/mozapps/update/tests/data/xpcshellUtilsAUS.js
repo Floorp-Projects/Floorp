@@ -1827,8 +1827,7 @@ function setupActiveUpdate() {
   let patches = getLocalPatchString(null, null, null, null, null, "true",
                                     state);
   let updates = getLocalUpdateString(patches, null, null, null, null, null,
-                                     null, null, null, null, null, null,
-                                     "true", channel);
+                                     null, null, null, null, "true", channel);
   writeUpdatesToXMLFile(getLocalUpdatesXMLString(updates), true);
   writeVersionFile(DEFAULT_UPDATE_VERSION);
   writeStatusFile(state);
