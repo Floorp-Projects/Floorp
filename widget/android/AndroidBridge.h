@@ -151,6 +151,9 @@ public:
     void ContentDocumentChanged();
     bool IsContentDocumentDisplayed();
 
+    bool ProgressiveUpdateCallback(bool aHasPendingNewThebesContent, const LayerRect& aDisplayPort, float aDisplayResolution, bool aDrawingCritical,
+                                   mozilla::ParentLayerPoint& aScrollOffset, mozilla::CSSToParentLayerScale& aZoom);
+
     void SetLayerClient(java::GeckoLayerClient::Param jobj);
     const java::GeckoLayerClient::Ref& GetLayerClient() { return mLayerClient; }
 
