@@ -42,7 +42,6 @@ public:
     virtual bool            IsEnabled() const override {
         return true;
     }
-    NS_IMETHOD              SetModal(bool aState) override;
     virtual bool            IsVisible() const override {
         return mVisible;
     }

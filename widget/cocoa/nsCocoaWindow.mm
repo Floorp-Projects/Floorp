@@ -641,10 +641,13 @@ bool nsCocoaWindow::IsVisible() const
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(false);
 }
 
-NS_IMETHODIMP nsCocoaWindow::SetModal(bool aState)
+void
+nsCocoaWindow::SetModal(bool aState)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   if (!mWindow)
-    return NS_OK;
+    return;
 
   // This is used during startup (outside the event loop) when creating
   // the add-ons compatibility checking dialog and the profile manager UI;
@@ -712,13 +715,15 @@ NS_IMETHODIMP nsCocoaWindow::SetModal(bool aState)
         [mWindow setLevel:NSNormalWindowLevel];
     }
   }
-  return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-NS_IMETHODIMP nsCocoaWindow::SetFakeModal(bool aState)
+void
+nsCocoaWindow::SetFakeModal(bool aState)
 {
     mFakeModal = aState;
-    return SetModal(aState);
+    SetModal(aState);
 }
 
 // Hide or show this window

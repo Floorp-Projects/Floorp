@@ -195,7 +195,7 @@ public:
   virtual void            CreateCompositor(int aWidth, int aHeight);
   virtual void            PrepareWindowEffects() override {}
   virtual void            UpdateThemeGeometries(const nsTArray<ThemeGeometry>& aThemeGeometries) override {}
-  NS_IMETHOD              SetModal(bool aModal) override;
+  virtual void            SetModal(bool aModal) override {}
   virtual uint32_t        GetMaxTouchPoints() const override;
   NS_IMETHOD              SetWindowClass(const nsAString& xulWinType) override;
   virtual nsresult        SetWindowClipRegion(const nsTArray<LayoutDeviceIntRect>& aRects, bool aIntersectWithExisting) override;

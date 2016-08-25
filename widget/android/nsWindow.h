@@ -140,7 +140,6 @@ public:
     virtual float GetDPI() override;
     virtual double GetDefaultScaleInternal() override;
     NS_IMETHOD Show(bool aState) override;
-    NS_IMETHOD SetModal(bool aModal) override;
     virtual bool IsVisible() const override;
     NS_IMETHOD ConstrainPosition(bool aAllowSlop,
                                  int32_t *aX,

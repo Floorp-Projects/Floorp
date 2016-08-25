@@ -941,16 +941,15 @@ nsWindow::ReparentNativeWidgetInternal(nsIWidget* aNewParent,
     }
 }
 
-NS_IMETHODIMP
+void
 nsWindow::SetModal(bool aModal)
 {
     LOG(("nsWindow::SetModal [%p] %d\n", (void *)this, aModal));
     if (mIsDestroyed)
-        return aModal ? NS_ERROR_NOT_AVAILABLE : NS_OK;
+        return;
     if (!mIsTopLevel || !mShell)
-        return NS_ERROR_FAILURE;
+        return;
     gtk_window_set_modal(GTK_WINDOW(mShell), aModal ? TRUE : FALSE);
-    return NS_OK;
 }
 
 // nsIWidget method, which means IsShown.

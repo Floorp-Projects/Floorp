@@ -1604,11 +1604,6 @@ uint32_t nsBaseWidget::GetMaxTouchPoints() const
   return 0;
 }
 
-NS_IMETHODIMP nsBaseWidget::SetModal(bool aModal)
-{
-  return NS_ERROR_FAILURE;
-}
-
 NS_IMETHODIMP
 nsBaseWidget::GetAttention(int32_t aCycleCount) {
     return NS_OK;

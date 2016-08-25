@@ -241,8 +241,8 @@ public:
     virtual nsIWidget*      GetSheetWindowParent(void) override;
     NS_IMETHOD              Enable(bool aState) override;
     virtual bool            IsEnabled() const override;
-    NS_IMETHOD              SetModal(bool aState) override;
-    NS_IMETHOD              SetFakeModal(bool aState) override;
+    virtual void            SetModal(bool aState) override;
+    virtual void            SetFakeModal(bool aState) override;
     virtual bool            IsVisible() const override;
     NS_IMETHOD              SetFocus(bool aState=false) override;
     virtual LayoutDeviceIntPoint WidgetToScreenOffset() override;
