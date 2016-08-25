@@ -6668,6 +6668,197 @@ Parser<ParseHandler>::statement(YieldHandling yieldHandling, bool canHaveDirecti
 
 template <typename ParseHandler>
 typename ParseHandler::Node
+Parser<ParseHandler>::statementListItem(YieldHandling yieldHandling, bool canHaveDirectives)
+{
+    MOZ_ASSERT(checkOptionsCalled);
+
+    JS_CHECK_RECURSION(context, return null());
+
+    TokenKind tt;
+    if (!tokenStream.getToken(&tt, TokenStream::Operand))
+        return null();
+
+    switch (tt) {
+      // BlockStatement[?Yield, ?Return]
+      case TOK_LC:
+        return blockStatement(yieldHandling);
+
+      // VariableStatement[?Yield]
+      case TOK_VAR:
+        return variableStatement(yieldHandling);
+
+      // EmptyStatement
+      case TOK_SEMI:
+        return handler.newEmptyStatement(pos());
+
+      // ExpressionStatement[?Yield].
+      //
+      // These should probably be handled by a single ExpressionStatement
+      // function in a default, not split up this way.
+      case TOK_STRING:
+        if (!canHaveDirectives && tokenStream.currentToken().atom() == context->names().useAsm) {
+            if (!abortIfSyntaxParser())
+                return null();
+            if (!report(ParseWarning, false, null(), JSMSG_USE_ASM_DIRECTIVE_FAIL))
+                return null();
+        }
+        return expressionStatement(yieldHandling);
+
+      case TOK_YIELD: {
+        // Don't use a ternary operator here due to obscure linker issues
+        // around using static consts in the arms of a ternary.
+        TokenStream::Modifier modifier;
+        if (yieldExpressionsSupported())
+            modifier = TokenStream::Operand;
+        else
+            modifier = TokenStream::None;
+
+        TokenKind next;
+        if (!tokenStream.peekToken(&next, modifier))
+            return null();
+        if (next == TOK_COLON) {
+            if (!checkYieldNameValidity())
+                return null();
+            return labeledStatement(yieldHandling);
+        }
+        return expressionStatement(yieldHandling);
+      }
+
+      case TOK_NAME: {
+        // 'let' is a contextual keyword outside strict mode.  In strict mode
+        // it's always tokenized as TOK_LET except in this one weird case:
+        //
+        //   "use strict" // ExpressionStatement, terminated by ASI
+        //   let a = 1;   // LexicalDeclaration
+        //
+        // We can't apply strict mode until we know "use strict" is the entire
+        // statement, but we can't know "use strict" is the entire statement
+        // until we see the next token.  So 'let' is still TOK_NAME here.
+        if (tokenStream.currentName() == context->names().let) {
+            bool parseDecl;
+            if (!shouldParseLetDeclaration(&parseDecl))
+                return null();
+
+            if (parseDecl)
+                return lexicalDeclaration(yieldHandling, /* isConst = */ false);
+        }
+
+        TokenKind next;
+        if (!tokenStream.peekToken(&next))
+            return null();
+        if (next == TOK_COLON)
+            return labeledStatement(yieldHandling);
+        return expressionStatement(yieldHandling);
+      }
+
+      case TOK_NEW:
+        return expressionStatement(yieldHandling, PredictInvoked);
+
+      default:
+        return expressionStatement(yieldHandling);
+
+      // IfStatement[?Yield, ?Return]
+      case TOK_IF:
+        return ifStatement(yieldHandling);
+
+      // BreakableStatement[?Yield, ?Return]
+      //
+      // BreakableStatement[Yield, Return]:
+      //   IterationStatement[?Yield, ?Return]
+      //   SwitchStatement[?Yield, ?Return]
+      case TOK_DO:
+        return doWhileStatement(yieldHandling);
+
+      case TOK_WHILE:
+        return whileStatement(yieldHandling);
+
+      case TOK_FOR:
+        return forStatement(yieldHandling);
+
+      case TOK_SWITCH:
+        return switchStatement(yieldHandling);
+
+      // ContinueStatement[?Yield]
+      case TOK_CONTINUE:
+        return continueStatement(yieldHandling);
+
+      // BreakStatement[?Yield]
+      case TOK_BREAK:
+        return breakStatement(yieldHandling);
+
+      // [+Return] ReturnStatement[?Yield]
+      case TOK_RETURN:
+        // The Return parameter is only used here, and the effect is easily
+        // detected this way, so don't bother passing around an extra parameter
+        // everywhere.
+        if (!pc->isFunctionBox()) {
+            report(ParseError, false, null(), JSMSG_BAD_RETURN_OR_YIELD, js_return_str);
+            return null();
+        }
+        return returnStatement(yieldHandling);
+
+      // WithStatement[?Yield, ?Return]
+      case TOK_WITH:
+        return withStatement(yieldHandling);
+
+      // LabelledStatement[?Yield, ?Return]
+      // This is really handled by TOK_NAME and TOK_YIELD cases above.
+
+      // ThrowStatement[?Yield]
+      case TOK_THROW:
+        return throwStatement(yieldHandling);
+
+      // TryStatement[?Yield, ?Return]
+      case TOK_TRY:
+        return tryStatement(yieldHandling);
+
+      // DebuggerStatement
+      case TOK_DEBUGGER:
+        return debuggerStatement();
+
+      // HoistableDeclaration[?Yield]
+      case TOK_FUNCTION:
+        return functionStmt(yieldHandling, NameRequired);
+
+      // ClassDeclaration[?Yield]
+      case TOK_CLASS:
+        if (!abortIfSyntaxParser())
+            return null();
+        return classDefinition(yieldHandling, ClassStatement, NameRequired);
+
+      // LexicalDeclaration[In, ?Yield]
+      case TOK_LET:
+      case TOK_CONST:
+        if (!abortIfSyntaxParser())
+            return null();
+        // [In] is the default behavior, because for-loops currently specially
+        // parse their heads to handle |in| in this situation.
+        return lexicalDeclaration(yieldHandling, /* isConst = */ tt == TOK_CONST);
+
+      // ImportDeclaration (only inside modules)
+      case TOK_IMPORT:
+        return importDeclaration();
+
+      // ExportDeclaration (only inside modules)
+      case TOK_EXPORT:
+        return exportDeclaration();
+
+      // Miscellaneous error cases arguably better caught here than elsewhere.
+
+      case TOK_CATCH:
+        report(ParseError, false, null(), JSMSG_CATCH_WITHOUT_TRY);
+        return null();
+
+      case TOK_FINALLY:
+        report(ParseError, false, null(), JSMSG_FINALLY_WITHOUT_TRY);
+        return null();
+
+      // NOTE: default case handled in the ExpressionStatement section.
+    }
+}
+
+template <typename ParseHandler>
+typename ParseHandler::Node
 Parser<ParseHandler>::expr(InHandling inHandling, YieldHandling yieldHandling,
                            TripledotHandling tripledotHandling,
                            PossibleError* possibleError,
