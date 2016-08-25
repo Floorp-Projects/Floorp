@@ -585,7 +585,7 @@ private:
   void SetToRGBAColor(nsROCSSPrimitiveValue* aValue, nscolor aColor);
   void SetValueToStyleImage(const nsStyleImage& aStyleImage,
                             nsROCSSPrimitiveValue* aValue);
-  void SetValueToPositionCoord(const mozilla::Position::PositionCoord& aCoord,
+  void SetValueToPositionCoord(const mozilla::Position::Coord& aCoord,
                                nsROCSSPrimitiveValue* aValue);
   void SetValueToPosition(const mozilla::Position& aPosition,
                           nsDOMCSSValueList* aValueList);

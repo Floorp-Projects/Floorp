@@ -3372,7 +3372,7 @@ SetPositionValue(const Position& aPos, nsCSSValue& aCSSValue)
 }
 
 static void
-SetPositionCoordValue(const Position::PositionCoord& aPosCoord,
+SetPositionCoordValue(const Position::Coord& aPosCoord,
                       nsCSSValue& aCSSValue)
 {
   RefPtr<nsCSSValue::Array> posArray = nsCSSValue::Array::Create(2);
