@@ -4581,7 +4581,7 @@
     "releaseChannelCollection": "opt-out",
     "description": "Usage of migration for each datatype when migration is run through the post-firstrun flow which allows individual datatypes, keyed by the string description of the browser."
   },
-  "FX_MIGRATION_IMPORTED_HOMEPAGE": {
+  "FX_MIGRATION_HOMEPAGE_IMPORTED": {
     "expires_in_version": "53",
     "kind": "boolean",
     "keyed": true,
