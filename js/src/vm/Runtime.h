@@ -26,6 +26,7 @@
 # include "asmjs/WasmSignalHandlers.h"
 #endif
 #include "builtin/AtomicsObject.h"
+#include "builtin/Promise.h"
 #include "ds/FixedSizeHash.h"
 #include "frontend/NameCollections.h"
 #include "gc/GCRuntime.h"
@@ -66,8 +67,7 @@ class EnterDebuggeeNoExecute;
 class TraceLoggerThread;
 #endif
 
-class PromiseTask;
-typedef Vector<PromiseTask*, 0, SystemAllocPolicy> PromiseTaskPtrVector;
+typedef Vector<UniquePtr<PromiseTask>, 0, SystemAllocPolicy> PromiseTaskPtrVector;
 
 /* Thread Local Storage slot for storing the runtime for a thread. */
 extern MOZ_THREAD_LOCAL(PerThreadData*) TlsPerThreadData;
