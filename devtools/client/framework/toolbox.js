@@ -40,8 +40,6 @@ loader.lazyRequireGetter(this, "CommandUtils",
   "devtools/client/shared/developer-toolbar", true);
 loader.lazyRequireGetter(this, "getHighlighterUtils",
   "devtools/client/framework/toolbox-highlighter-utils", true);
-loader.lazyRequireGetter(this, "Hosts",
-  "devtools/client/framework/toolbox-hosts", true);
 loader.lazyRequireGetter(this, "Selection",
   "devtools/client/framework/selection", true);
 loader.lazyRequireGetter(this, "InspectorFront",
@@ -80,12 +78,17 @@ loader.lazyGetter(this, "registerHarOverlay", () => {
  *        Tool to select initially
  * @param {Toolbox.HostType} hostType
  *        Type of host that will host the toolbox (e.g. sidebar, window)
- * @param {object} hostOptions
- *        Options for host specifically
+ * @param {DOMWindow} contentWindow
+ *        The window object of the toolbox document
+ * @param {string} frameId
+ *        A unique identifier to differentiate toolbox documents from the
+ *        chrome codebase when passing DOM messages
  */
-function Toolbox(target, selectedTool, hostType, hostOptions) {
+function Toolbox(target, selectedTool, hostType, contentWindow, frameId) {
   this._target = target;
-  this._win = null;
+  this._win = contentWindow;
+  this.frameId = frameId;
+
   this._toolPanels = new Map();
   this._telemetry = new Telemetry();
   if (Services.prefs.getBoolPref("devtools.sourcemap.locations.enabled")) {
@@ -113,6 +116,7 @@ function Toolbox(target, selectedTool, hostType, hostOptions) {
   this._prefChanged = this._prefChanged.bind(this);
   this._saveSplitConsoleHeight = this._saveSplitConsoleHeight.bind(this);
   this._onFocus = this._onFocus.bind(this);
+  this._onBrowserMessage = this._onBrowserMessage.bind(this);
   this._showDevEditionPromo = this._showDevEditionPromo.bind(this);
   this._updateTextBoxMenuItems = this._updateTextBoxMenuItems.bind(this);
   this._onBottomHostMinimized = this._onBottomHostMinimized.bind(this);
@@ -130,16 +134,12 @@ function Toolbox(target, selectedTool, hostType, hostOptions) {
 
   this._target.on("close", this.destroy);
 
-  if (!hostType) {
-    hostType = Services.prefs.getCharPref(this._prefs.LAST_HOST);
-  }
   if (!selectedTool) {
     selectedTool = Services.prefs.getCharPref(this._prefs.LAST_TOOL);
   }
   this._defaultToolId = selectedTool;
 
-  this._hostOptions = hostOptions;
-  this._host = this._createHost(hostType, hostOptions);
+  this._hostType = hostType;
 
   EventEmitter.decorate(this);
 
@@ -174,10 +174,8 @@ Toolbox.prototype = {
   _URL: "about:devtools-toolbox",
 
   _prefs: {
-    LAST_HOST: "devtools.toolbox.host",
     LAST_TOOL: "devtools.toolbox.selectedTool",
     SIDE_ENABLED: "devtools.toolbox.sideEnabled",
-    PREVIOUS_HOST: "devtools.toolbox.previousHost"
   },
 
   currentToolId: null,
@@ -254,7 +252,7 @@ Toolbox.prototype = {
    * tab. See HostType for more details.
    */
   get hostType() {
-    return this._host.type;
+    return this._hostType;
   },
 
   /**
@@ -337,27 +335,18 @@ Toolbox.prototype = {
    */
   open: function () {
     return Task.spawn(function* () {
-      let iframe = yield this._host.create();
-      this._win = iframe.contentWindow;
-
-      let domReady = defer();
-
-      // Prevent reloading the document when the toolbox is opened in a tab
-      let location = iframe.contentWindow.location.href;
-      if (!location.startsWith(this._URL)) {
-        iframe.setAttribute("src", this._URL);
-      } else {
-        // Update the URL so that onceDOMReady watch for the right url.
-        this._URL = location;
-      }
-
       this.browserRequire = BrowserLoader({
         window: this.doc.defaultView,
         useOnlyShared: true
       }).require;
 
-      iframe.setAttribute("aria-label", L10N.getStr("toolbox.label"));
-      let domHelper = new DOMHelpers(iframe.contentWindow);
+      if (this.win.location.href.startsWith(this._URL)) {
+        // Update the URL so that onceDOMReady watch for the right url.
+        this._URL = this.win.location.href;
+      }
+
+      let domReady = defer();
+      let domHelper = new DOMHelpers(this.win);
       domHelper.onceDOMReady(() => {
         domReady.resolve();
       }, this._URL);
@@ -610,6 +599,7 @@ Toolbox.prototype = {
     this.doc.addEventListener("keypress", this._splitConsoleOnKeypress, false);
     this.doc.addEventListener("focus", this._onFocus, true);
     this.win.addEventListener("unload", this.destroy);
+    this.win.addEventListener("message", this._onBrowserMessage, true);
   },
 
   _removeHostListeners: function () {
@@ -618,6 +608,29 @@ Toolbox.prototype = {
       this.doc.removeEventListener("keypress", this._splitConsoleOnKeypress, false);
       this.doc.removeEventListener("focus", this._onFocus, true);
       this.win.removeEventListener("unload", this.destroy);
+      this.win.removeEventListener("message", this._onBrowserMessage, true);
+    }
+  },
+
+  // Called whenever the chrome send a message
+  _onBrowserMessage: function (event) {
+    if (!event.data) {
+      return;
+    }
+    switch (event.data.name) {
+      case "switched-host":
+        this._onSwitchedHost(event.data);
+        break;
+      case "host-minimized":
+        if (this.hostType == Toolbox.HostType.BOTTOM) {
+          this._onBottomHostMinimized();
+        }
+        break;
+      case "host-maximized":
+        if (this.hostType == Toolbox.HostType.BOTTOM) {
+          this._onBottomHostMaximized();
+        }
+        break;
     }
   },
 
@@ -781,9 +794,6 @@ Toolbox.prototype = {
       // Show the button in its maximized state.
       this._onBottomHostMaximized();
 
-      // Update the label and icon when the state changes.
-      this._host.on("minimized", this._onBottomHostMinimized);
-      this._host.on("maximized", this._onBottomHostMaximized);
       // Maximize again when a tool gets selected.
       this.on("before-select", this._onToolSelectWhileMinimized);
       // Maximize and stop listening before the host type changes.
@@ -842,14 +852,27 @@ Toolbox.prototype = {
   },
 
   _onToolSelectWhileMinimized: function () {
-    this._host.maximize();
+    this.postMessage({
+      name: "maximize-host"
+    });
+  },
+
+  postMessage: function (msg) {
+    // We sometime try to send messages in middle of destroy(), where the
+    // toolbox iframe may already be detached and no longer have a parent.
+    if (this.win.parent) {
+      // Toolbox document is still chrome and disallow identifying message
+      // origin via event.source as it is null. So use a custom id.
+      msg.frameId = this.frameId;
+      this.win.parent.postMessage(msg, "*");
+    }
   },
 
   _onBottomHostWillChange: function () {
-    this._host.maximize();
+    this.postMessage({
+      name: "maximize-host"
+    });
 
-    this._host.off("minimized", this._onBottomHostMinimized);
-    this._host.off("maximized", this._onBottomHostMaximized);
     this.off("before-select", this._onToolSelectWhileMinimized);
   },
 
@@ -862,7 +885,10 @@ Toolbox.prototype = {
     // tabbar is still visible.
     let toolbarHeight = this.tabbar.getBoxQuads({box: "content"})[0].bounds
                                                                     .height;
-    this._host.toggleMinimizeMode(toolbarHeight);
+    this.postMessage({
+      name: "toggle-minimize-mode",
+      toolbarHeight
+    });
   },
 
   /**
@@ -1625,7 +1651,9 @@ Toolbox.prototype = {
    * Raise the toolbox host.
    */
   raise: function () {
-    this._host.raise();
+    this.postMessage({
+      name: "raise-host"
+    });
   },
 
   /**
@@ -1639,7 +1667,10 @@ Toolbox.prototype = {
     } else {
       title = L10N.getFormatStr("toolbox.titleTemplate1", this.target.url);
     }
-    this._host.setTitle(title);
+    this.postMessage({
+      name: "set-host-title",
+      title
+    });
   },
 
   // Returns an instance of the preference actor
@@ -1818,47 +1849,10 @@ Toolbox.prototype = {
   },
 
   /**
-   * Create a host object based on the given host type.
-   *
-   * Warning: some hosts require that the toolbox target provides a reference to
-   * the attached tab. Not all Targets have a tab property - make sure you
-   * correctly mix and match hosts and targets.
-   *
-   * @param {string} hostType
-   *        The host type of the new host object
-   *
-   * @return {Host} host
-   *        The created host object
-   */
-  _createHost: function (hostType, options) {
-    if (!Hosts[hostType]) {
-      throw new Error("Unknown hostType: " + hostType);
-    }
-
-    // clean up the toolbox if its window is closed
-    let newHost = new Hosts[hostType](this.target.tab, options);
-    newHost.on("window-closed", this.destroy);
-    return newHost;
-  },
-
-  /**
    * Switch to the last used host for the toolbox UI.
-   * This is determined by the devtools.toolbox.previousHost pref.
    */
   switchToPreviousHost: function () {
-    let hostType = Services.prefs.getCharPref(this._prefs.PREVIOUS_HOST);
-
-    // Handle the case where the previous host happens to match the current
-    // host. If so, switch to bottom if it's not already used, and side if not.
-    if (hostType === this.hostType) {
-      if (hostType === Toolbox.HostType.BOTTOM) {
-        hostType = Toolbox.HostType.SIDE;
-      } else {
-        hostType = Toolbox.HostType.BOTTOM;
-      }
-    }
-
-    return this.switchHost(hostType);
+    return this.switchHost("previous");
   },
 
   /**
@@ -1875,39 +1869,33 @@ Toolbox.prototype = {
 
     this.emit("host-will-change", hostType);
 
-    // If we call swapFrameLoaders() when a tool if focused it leaves the
-    // browser in a state where it thinks that the tool is focused but in
-    // reality the content area is focused. Blurring the tool before calling
-    // swapFrameLoaders() works around this issue.
+    // ToolboxHostManager is going to call swapFrameLoaders which mess up with
+    // focus. We have to blur before calling it in order to be able to restore
+    // the focus after, in _onSwitchedHost.
     this.focusTool(this.currentToolId, false);
 
-    let newHost = this._createHost(hostType);
-    return newHost.create().then(iframe => {
-      // change toolbox document's parent to the new host
-      iframe.QueryInterface(Ci.nsIFrameLoaderOwner);
-      iframe.swapFrameLoaders(this._host.frame);
-
-      this._host.off("window-closed", this.destroy);
-      this.destroyHost();
-
-      let prevHostType = this._host.type;
-      this._host = newHost;
-
-      if (this.hostType != Toolbox.HostType.CUSTOM) {
-        Services.prefs.setCharPref(this._prefs.LAST_HOST, this._host.type);
-        Services.prefs.setCharPref(this._prefs.PREVIOUS_HOST, prevHostType);
-      }
-
-      this._buildDockButtons();
-      this._addKeysToWindow();
-
-      // Focus the tool to make sure keyboard shortcuts work straight away.
-      this.focusTool(this.currentToolId, true);
-
-      this.emit("host-changed");
-
-      this._telemetry.log(HOST_HISTOGRAM, this._getTelemetryHostId());
+    // Host code on the chrome side will send back a message once the host
+    // switched
+    this.postMessage({
+      name: "switch-host",
+      hostType
     });
+
+    return this.once("host-changed");
+  },
+
+  _onSwitchedHost: function ({ hostType }) {
+    this._hostType = hostType;
+
+    this._buildDockButtons();
+    this._addKeysToWindow();
+
+    // We blurred the tools at start of switchHost, but also when clicking on
+    // host switching button. We now have to restore the focus.
+    this.focusTool(this.currentToolId, true);
+
+    this.emit("host-changed");
+    this._telemetry.log(HOST_HISTOGRAM, this._getTelemetryHostId());
   },
 
   /**
@@ -2080,16 +2068,6 @@ Toolbox.prototype = {
   },
 
   /**
-   * Destroy the current host, and remove event listeners from its frame.
-   *
-   * @return {promise} to be resolved when the host is destroyed.
-   */
-  destroyHost: function () {
-    this._removeHostListeners();
-    return this._host.destroy();
-  },
-
-  /**
    * Remove all UI elements, detach from target and clear up
    */
   destroy: function () {
@@ -2197,10 +2175,18 @@ Toolbox.prototype = {
     // target.
     deferred.resolve(settleAll(outstanding)
         .catch(console.error)
-        .then(() => this.destroyHost())
-        .catch(console.error)
         .then(() => {
-          this._win = null;
+          this._removeHostListeners();
+
+          // `location` may already be null if the toolbox document is already
+          // in process of destruction. Otherwise if it is still around, ensure
+          // releasing toolbox document and triggering cleanup thanks to unload
+          // event. We do that precisely here, before nullifying the target as
+          // various cleanup code depends on the target attribute to be still
+          // defined.
+          if (win.location) {
+            win.location.replace("about:blank");
+          }
 
           // Targets need to be notified that the toolbox is being torn down.
           // This is done after other destruction tasks since it may tear down
@@ -2220,6 +2206,7 @@ Toolbox.prototype = {
           // Free _host after the call to destroyed in order to let a chance
           // to destroyed listeners to still query toolbox attributes
           this._host = null;
+          this._win = null;
           this._toolPanels.clear();
 
           // Force GC to prevent long GC pauses when running tests and to free up
