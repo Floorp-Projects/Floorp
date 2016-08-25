@@ -214,6 +214,9 @@ public:
   mozilla::DesktopToLayoutDeviceScale GetDesktopToDeviceScale() override {
     return mozilla::DesktopToLayoutDeviceScale(1.0);
   }
+  virtual void            ConstrainPosition(bool aAllowSlop,
+                                            int32_t *aX,
+                                            int32_t *aY) override {}
   NS_IMETHOD              MoveClient(double aX, double aY) override;
   NS_IMETHOD              ResizeClient(double aWidth, double aHeight, bool aRepaint) override;
   NS_IMETHOD              ResizeClient(double aX, double aY, double aWidth, double aHeight, bool aRepaint) override;

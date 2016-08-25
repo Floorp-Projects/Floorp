@@ -56,9 +56,6 @@ public:
 
     NS_IMETHOD Show(bool aState);
     virtual bool IsVisible() const;
-    NS_IMETHOD ConstrainPosition(bool aAllowSlop,
-                                 int32_t *aX,
-                                 int32_t *aY);
     NS_IMETHOD Move(double aX,
                     double aY);
     NS_IMETHOD Resize(double aWidth,

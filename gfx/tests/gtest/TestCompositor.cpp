@@ -68,8 +68,6 @@ public:
                                  nsWidgetInitData* aInitData = nullptr) override { return NS_OK; }
   NS_IMETHOD              Show(bool aState) override { return NS_OK; }
   virtual bool            IsVisible() const override { return true; }
-  NS_IMETHOD              ConstrainPosition(bool aAllowSlop,
-                                            int32_t *aX, int32_t *aY) override { return NS_OK; }
   NS_IMETHOD              Move(double aX, double aY) override { return NS_OK; }
   NS_IMETHOD              Resize(double aWidth, double aHeight, bool aRepaint) override { return NS_OK; }
   NS_IMETHOD              Resize(double aX, double aY,

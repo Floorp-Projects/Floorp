@@ -252,7 +252,7 @@ public:
 
     virtual void* GetNativeData(uint32_t aDataType) override;
 
-    NS_IMETHOD              ConstrainPosition(bool aAllowSlop,
+    virtual void            ConstrainPosition(bool aAllowSlop,
                                               int32_t *aX, int32_t *aY) override;
     virtual void            SetSizeConstraints(const SizeConstraints& aConstraints) override;
     NS_IMETHOD              Move(double aX, double aY) override;

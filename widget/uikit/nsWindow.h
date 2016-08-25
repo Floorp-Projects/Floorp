@@ -51,8 +51,6 @@ public:
     virtual void SetBackgroundColor(const nscolor &aColor) override;
     virtual void* GetNativeData(uint32_t aDataType) override;
 
-    NS_IMETHOD              ConstrainPosition(bool aAllowSlop,
-                                              int32_t *aX, int32_t *aY) override;
     NS_IMETHOD              Move(double aX, double aY) override;
     NS_IMETHOD              PlaceBehind(nsTopLevelWidgetZPlacement aPlacement,
                                         nsIWidget *aWidget, bool aActivate) override;
