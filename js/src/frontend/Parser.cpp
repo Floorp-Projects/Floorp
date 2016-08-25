@@ -5771,6 +5771,21 @@ Parser<SyntaxParseHandler>::withStatement(YieldHandling yieldHandling)
 
 template <typename ParseHandler>
 typename ParseHandler::Node
+Parser<ParseHandler>::labeledItem(YieldHandling yieldHandling)
+{
+    TokenKind tt;
+    if (!tokenStream.getToken(&tt, TokenStream::Operand))
+        return null();
+
+    if (tt == TOK_FUNCTION)
+        return functionStmt(yieldHandling, NameRequired);
+
+    tokenStream.ungetToken();
+    return statement(yieldHandling);
+}
+
+template <typename ParseHandler>
+typename ParseHandler::Node
 Parser<ParseHandler>::labeledStatement(YieldHandling yieldHandling)
 {
     uint32_t begin = pos().begin;
@@ -5789,7 +5804,7 @@ Parser<ParseHandler>::labeledStatement(YieldHandling yieldHandling)
 
     /* Push a label struct and parse the statement. */
     ParseContext::LabelStatement stmt(pc, label);
-    Node pn = statement(yieldHandling);
+    Node pn = labeledItem(yieldHandling);
     if (!pn)
         return null();
 
