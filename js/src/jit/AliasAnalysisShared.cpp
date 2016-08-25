@@ -90,6 +90,7 @@ GetObject(const MDefinition* ins)
       case MDefinition::Op_ArrayLength:
       case MDefinition::Op_SetArrayLength:
       case MDefinition::Op_StoreElementHole:
+      case MDefinition::Op_FallibleStoreElement:
       case MDefinition::Op_TypedObjectDescr:
       case MDefinition::Op_Slots:
       case MDefinition::Op_Elements:
