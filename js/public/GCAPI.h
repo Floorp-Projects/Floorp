@@ -26,12 +26,12 @@ typedef enum JSGCMode {
     /** Perform only global GCs. */
     JSGC_MODE_GLOBAL = 0,
 
-    /** Perform per-compartment GCs until too much garbage has accumulated. */
-    JSGC_MODE_COMPARTMENT = 1,
+    /** Perform per-zone GCs until too much garbage has accumulated. */
+    JSGC_MODE_ZONE = 1,
 
     /**
      * Collect in short time slices rather than all at once. Implies
-     * JSGC_MODE_COMPARTMENT.
+     * JSGC_MODE_ZONE.
      */
     JSGC_MODE_INCREMENTAL = 2
 } JSGCMode;
@@ -333,12 +333,12 @@ enum GCProgress {
 };
 
 struct JS_PUBLIC_API(GCDescription) {
-    bool isCompartment_;
+    bool isZone_;
     JSGCInvocationKind invocationKind_;
     gcreason::Reason reason_;
 
-    GCDescription(bool isCompartment, JSGCInvocationKind kind, gcreason::Reason reason)
-      : isCompartment_(isCompartment), invocationKind_(kind), reason_(reason) {}
+    GCDescription(bool isZone, JSGCInvocationKind kind, gcreason::Reason reason)
+      : isZone_(isZone), invocationKind_(kind), reason_(reason) {}
 
     char16_t* formatSliceMessage(JSContext* cx) const;
     char16_t* formatSummaryMessage(JSContext* cx) const;

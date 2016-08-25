@@ -1898,7 +1898,7 @@ MarkStack::setBaseCapacity(JSGCMode mode)
 {
     switch (mode) {
       case JSGC_MODE_GLOBAL:
-      case JSGC_MODE_COMPARTMENT:
+      case JSGC_MODE_ZONE:
         baseCapacity_ = NON_INCREMENTAL_MARK_STACK_BASE_CAPACITY;
         break;
       case JSGC_MODE_INCREMENTAL:
