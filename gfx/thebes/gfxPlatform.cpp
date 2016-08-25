@@ -2092,6 +2092,18 @@ static bool sBufferRotationCheckPref = true;
 
 static mozilla::Atomic<bool> sLayersAccelerationPrefsInitialized(false);
 
+void VideoDecodingFailedChangedCallback(const char* aPref, void*)
+{
+  sLayersHardwareVideoDecodingFailed = Preferences::GetBool(aPref, false);
+  gfxPlatform::GetPlatform()->UpdateCanUseHardareVideoDecoding();
+}
+
+void
+gfxPlatform::UpdateCanUseHardareVideoDecoding()
+{
+  gfxVars::SetCanUseHardwareVideoDecoding(CanUseHardwareVideoDecoding());
+}
+
 void
 gfxPlatform::InitAcceleration()
 {
@@ -2131,11 +2143,14 @@ gfxPlatform::InitAcceleration()
     }
   }
 
-  Preferences::AddBoolVarCache(&sLayersHardwareVideoDecodingFailed,
-                               "media.hardware-video-decoding.failed",
-                               false);
+  sLayersAccelerationPrefsInitialized = true;
 
   if (XRE_IsParentProcess()) {
+    Preferences::RegisterCallbackAndCall(VideoDecodingFailedChangedCallback,
+                                         "media.hardware-video-decoding.failed",
+                                         nullptr,
+                                         Preferences::ExactMatch);
+
     FeatureState& gpuProc = gfxConfig::GetFeature(Feature::GPU_PROCESS);
     if (gfxPrefs::GPUProcessDevEnabled()) {
       // We want to hide this from about:support, so only set a default if the
@@ -2161,8 +2176,6 @@ gfxPlatform::InitAcceleration()
       gpu->EnableGPUProcess();
     }
   }
-
-  sLayersAccelerationPrefsInitialized = true;
 }
 
 void
