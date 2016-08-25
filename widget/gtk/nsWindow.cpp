@@ -1236,14 +1236,6 @@ nsWindow::NativeMove()
     }
 }
 
-NS_IMETHODIMP
-nsWindow::PlaceBehind(nsTopLevelWidgetZPlacement  aPlacement,
-                      nsIWidget                  *aWidget,
-                      bool                        aActivate)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 void
 nsWindow::SetZIndex(int32_t aZIndex)
 {

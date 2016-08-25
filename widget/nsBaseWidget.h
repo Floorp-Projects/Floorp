@@ -153,8 +153,9 @@ public:
   virtual void            RemoveChild(nsIWidget* aChild) override;
 
   void                    SetZIndex(int32_t aZIndex) override;
-  NS_IMETHOD              PlaceBehind(nsTopLevelWidgetZPlacement aPlacement,
-                                      nsIWidget *aWidget, bool aActivate) override;
+  virtual void            PlaceBehind(nsTopLevelWidgetZPlacement aPlacement,
+                                      nsIWidget *aWidget, bool aActivate)
+                                      override {}
 
   virtual void            SetSizeMode(nsSizeMode aMode) override;
   virtual nsSizeMode      SizeMode() override

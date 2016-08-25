@@ -52,8 +52,6 @@ public:
     virtual void* GetNativeData(uint32_t aDataType) override;
 
     NS_IMETHOD              Move(double aX, double aY) override;
-    NS_IMETHOD              PlaceBehind(nsTopLevelWidgetZPlacement aPlacement,
-                                        nsIWidget *aWidget, bool aActivate) override;
     virtual void            SetSizeMode(nsSizeMode aMode) override;
     void                    EnteredFullScreen(bool aFullScreen);
     NS_IMETHOD              Resize(double aWidth, double aHeight, bool aRepaint) override;

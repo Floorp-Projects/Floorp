@@ -129,7 +129,7 @@ public:
   NS_IMETHOD              BeginResizeDrag(mozilla::WidgetGUIEvent* aEvent,
                                           int32_t aHorizontal,
                                           int32_t aVertical) override;
-  NS_IMETHOD              PlaceBehind(nsTopLevelWidgetZPlacement aPlacement, nsIWidget *aWidget, bool aActivate) override;
+  virtual void            PlaceBehind(nsTopLevelWidgetZPlacement aPlacement, nsIWidget *aWidget, bool aActivate) override;
   virtual void            SetSizeMode(nsSizeMode aMode) override;
   NS_IMETHOD              Enable(bool aState) override;
   virtual bool            IsEnabled() const override;

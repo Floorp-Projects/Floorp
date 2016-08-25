@@ -1821,14 +1821,6 @@ nsWindow::SetZIndex(int32_t aZIndex)
     ALOG("nsWindow[%p]::SetZIndex %d ignored", (void*)this, aZIndex);
 }
 
-NS_IMETHODIMP
-nsWindow::PlaceBehind(nsTopLevelWidgetZPlacement aPlacement,
-                      nsIWidget *aWidget,
-                      bool aActivate)
-{
-    return NS_OK;
-}
-
 void
 nsWindow::SetSizeMode(nsSizeMode aMode)
 {
