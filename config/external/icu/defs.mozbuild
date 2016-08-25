@@ -36,5 +36,17 @@ elif CONFIG['OS_TARGET'] == 'WINNT':
 DISABLE_STL_WRAPPING = True
 ALLOW_COMPILER_WARNINGS = True
 
+# We allow compiler warnings, but we can at least cut down on spammy
+# warnings that get triggered for every file.
+if CONFIG['CLANG_CL']:
+    CFLAGS += [
+        '-Wno-macro-redefined',
+        '-Wno-microsoft-include',
+    ]
+    CXXFLAGS += [
+        '-Wno-macro-redefined',
+        '-Wno-microsoft-include',
+    ]
+
 if CONFIG['OS_TARGET'] == 'Android' and CONFIG['MOZ_ANDROID_CXX_STL'] == 'mozstlport':
     LOCAL_INCLUDES += ['/build/gabi++/include']
