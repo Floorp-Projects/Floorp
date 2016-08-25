@@ -568,12 +568,6 @@ nsWindow::ConfigureChildren(const nsTArray<nsIWidget::Configuration>& config)
 }
 
 NS_IMETHODIMP
-nsWindow::ReparentNativeWidget(nsIWidget* aNewParent)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
 nsWindow::Show(bool aState)
 {
   if (aState != mVisible) {

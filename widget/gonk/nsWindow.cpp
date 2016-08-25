@@ -557,12 +557,6 @@ nsWindow::GetInputContext()
     return mInputContext;
 }
 
-NS_IMETHODIMP
-nsWindow::ReparentNativeWidget(nsIWidget* aNewParent)
-{
-    return NS_OK;
-}
-
 nsresult
 nsWindow::MakeFullScreen(bool aFullScreen, nsIScreen*)
 {

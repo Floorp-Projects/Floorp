@@ -88,7 +88,6 @@ public:
   NS_IMETHOD_(void)       SetInputContext(const InputContext& aContext,
                                           const InputContextAction& aAction) override {}
   NS_IMETHOD_(InputContext) GetInputContext() override { abort(); }
-  NS_IMETHOD              ReparentNativeWidget(nsIWidget* aNewParent) override { return NS_OK; }
 
 private:
   ~MockWidget() {}

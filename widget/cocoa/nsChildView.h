@@ -472,7 +472,7 @@ public:
 
   nsCocoaWindow*    GetXULWindowWidget();
 
-  NS_IMETHOD        ReparentNativeWidget(nsIWidget* aNewParent) override;
+  virtual void      ReparentNativeWidget(nsIWidget* aNewParent) override;
 
   mozilla::widget::TextInputHandler* GetTextInputHandler()
   {

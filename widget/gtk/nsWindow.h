@@ -320,7 +320,7 @@ public:
     static already_AddRefed<DrawTarget> GetDrawTargetForGdkDrawable(GdkDrawable* aDrawable,
                                                                     const mozilla::gfx::IntSize& aSize);
 #endif
-    NS_IMETHOD         ReparentNativeWidget(nsIWidget* aNewParent) override;
+    virtual void       ReparentNativeWidget(nsIWidget* aNewParent) override;
 
     virtual nsresult SynthesizeNativeMouseEvent(LayoutDeviceIntPoint aPoint,
                                                 uint32_t aNativeMessage,

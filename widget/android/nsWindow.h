@@ -209,8 +209,6 @@ public:
                                   LayersBackend aBackendHint = mozilla::layers::LayersBackend::LAYERS_NONE,
                                   LayerManagerPersistence aPersistence = LAYER_MANAGER_CURRENT) override;
 
-    NS_IMETHOD ReparentNativeWidget(nsIWidget* aNewParent) override;
-
     virtual bool NeedsPaint() override;
     virtual void DrawWindowUnderlay(LayerManagerComposite* aManager, LayoutDeviceIntRect aRect) override;
     virtual void DrawWindowOverlay(LayerManagerComposite* aManager, LayoutDeviceIntRect aRect) override;
