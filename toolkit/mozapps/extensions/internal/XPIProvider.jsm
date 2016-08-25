@@ -3056,7 +3056,6 @@ this.XPIProvider = {
     }
 
     // Download all the add-ons
-    // Bug 1204158: If we already have some of these locally then just use those
     let downloadAddon = Task.async(function*(item) {
       try {
         let sourceAddon = updatedAddons.get(item.spec.id);
