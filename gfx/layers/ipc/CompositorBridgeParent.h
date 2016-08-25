@@ -203,10 +203,31 @@ protected:
   virtual ~CompositorUpdateObserver() {}
 };
 
-class CompositorBridgeParent final : public PCompositorBridgeParent,
-                                     public ShadowLayersManager,
-                                     public CompositorBridgeParentIPCAllocator,
-                                     public ShmemAllocator
+class CompositorBridgeParentBase : public PCompositorBridgeParent,
+                                   public ShadowLayersManager,
+                                   public HostIPCAllocator,
+                                   public ShmemAllocator
+{
+
+  virtual ShmemAllocator* AsShmemAllocator() override { return this; }
+  virtual HostIPCAllocator* GetIPCAllocator() override { return this; }
+
+  // HostIPCAllocator
+  virtual base::ProcessId GetChildProcessId() override;
+  virtual void NotifyNotUsed(PTextureParent* aTexture, uint64_t aTransactionId) override;
+  virtual void SendAsyncMessage(const InfallibleTArray<AsyncParentMessageData>& aMessage) override;
+
+  // ShmemAllocator
+  virtual bool AllocShmem(size_t aSize,
+                          mozilla::ipc::SharedMemory::SharedMemoryType aType,
+                          mozilla::ipc::Shmem* aShmem) override;
+  virtual bool AllocUnsafeShmem(size_t aSize,
+                                mozilla::ipc::SharedMemory::SharedMemoryType aType,
+                                mozilla::ipc::Shmem* aShmem) override;
+  virtual void DeallocShmem(mozilla::ipc::Shmem& aShmem) override;
+};
+
+class CompositorBridgeParent final : public CompositorBridgeParentBase
 {
   friend class CompositorVsyncScheduler;
   friend class CompositorThreadHolder;
@@ -306,29 +327,9 @@ public:
 
   virtual bool IsSameProcess() const override;
 
-  virtual ShmemAllocator* AsShmemAllocator() override { return this; }
-
-  virtual bool AllocShmem(size_t aSize,
-                          mozilla::ipc::SharedMemory::SharedMemoryType aType,
-                          mozilla::ipc::Shmem* aShmem) override;
-
-  virtual bool AllocUnsafeShmem(size_t aSize,
-                                mozilla::ipc::SharedMemory::SharedMemoryType aType,
-                                mozilla::ipc::Shmem* aShmem) override;
-
-  virtual void DeallocShmem(mozilla::ipc::Shmem& aShmem) override;
 
   PCompositorWidgetParent* AllocPCompositorWidgetParent(const CompositorWidgetInitData& aInitData) override;
   bool DeallocPCompositorWidgetParent(PCompositorWidgetParent* aActor) override;
-
-  virtual base::ProcessId GetChildProcessId() override
-  {
-    return OtherPid();
-  }
-
-  virtual void SendAsyncMessage(const InfallibleTArray<AsyncParentMessageData>& aMessage) override;
-
-  virtual CompositorBridgeParentIPCAllocator* AsCompositorBridgeParentIPCAllocator() override { return this; }
 
   /**
    * Request that the compositor be recreated due to a shared device reset.

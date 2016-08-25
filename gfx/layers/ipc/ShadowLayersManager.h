@@ -45,7 +45,7 @@ public:
     virtual void SetConfirmedTargetAPZC(const LayerTransactionParent* aLayerTree,
                                         const uint64_t& aInputBlockId,
                                         const nsTArray<ScrollableLayerGuid>& aTargets) = 0;
-    virtual CompositorBridgeParentIPCAllocator* AsCompositorBridgeParentIPCAllocator() { return nullptr; }
+    virtual HostIPCAllocator* GetIPCAllocator() { return nullptr; }
     virtual void UpdatePaintTime(LayerTransactionParent* aLayerTree, const TimeDuration& aPaintTime) {}
 };
 
