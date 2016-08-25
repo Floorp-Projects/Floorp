@@ -14,5 +14,4 @@ add_task(function* () {
   let [,, monitor] = yield initNetMonitor("about:config", null, true);
   ok(monitor, "The network monitor was opened");
   yield teardown(monitor);
-  finish();
 });

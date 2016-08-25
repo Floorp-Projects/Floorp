@@ -29,9 +29,7 @@ add_task(function* () {
     "There should be no selected item in the requests menu.");
 
   let networkEvent = monitor.panelWin.once(NETWORK_EVENT);
-  yield ContentTask.spawn(tab.linkedBrowser, {}, function* () {
-    content.location.reload();
-  });
+  tab.linkedBrowser.reload();
   yield networkEvent;
 
   is(toggleButton.hasAttribute("disabled"), false,

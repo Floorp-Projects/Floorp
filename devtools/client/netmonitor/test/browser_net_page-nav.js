@@ -1,68 +1,69 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
 /**
  * Tests if page navigation ("close", "navigate", etc.) triggers an appropriate
  * action in the network monitor.
  */
 
-function test() {
-  initNetMonitor(SIMPLE_URL).then(([aTab, aDebuggee, aMonitor]) => {
-    info("Starting test... ");
+add_task(function* () {
+  let [tab, , monitor] = yield initNetMonitor(SIMPLE_URL);
+  info("Starting test... ");
 
-    testNavigate(() => testNavigateBack(() => testClose(() => finish())));
+  let { EVENTS } = monitor.panelWin;
 
-    function testNavigate(aCallback) {
-      info("Navigating forward...");
+  yield testNavigate();
+  yield testNavigateBack();
+  yield testClose();
 
-      aMonitor.panelWin.once(aMonitor.panelWin.EVENTS.TARGET_WILL_NAVIGATE, () => {
-        is(aDebuggee.location, SIMPLE_URL,
-          "Target started navigating to the correct location.");
+  function* testNavigate() {
+    info("Navigating forward...");
 
-        aMonitor.panelWin.once(aMonitor.panelWin.EVENTS.TARGET_DID_NAVIGATE, () => {
-          is(aDebuggee.location, NAVIGATE_URL,
-            "Target finished navigating to the correct location.");
+    let onWillNav = monitor.panelWin.once(EVENTS.TARGET_WILL_NAVIGATE);
+    let onDidNav = monitor.panelWin.once(EVENTS.TARGET_DID_NAVIGATE);
 
-          aCallback();
-        });
-      });
+    tab.linkedBrowser.loadURI(NAVIGATE_URL);
+    yield onWillNav;
 
-      aDebuggee.location = NAVIGATE_URL;
-    }
+    is(tab.linkedBrowser.currentURI.spec, SIMPLE_URL,
+      "Target started navigating to the correct location.");
 
-    function testNavigateBack(aCallback) {
-      info("Navigating backward...");
+    yield onDidNav;
+    is(tab.linkedBrowser.currentURI.spec, NAVIGATE_URL,
+      "Target finished navigating to the correct location.");
+  }
 
-      aMonitor.panelWin.once(aMonitor.panelWin.EVENTS.TARGET_WILL_NAVIGATE, () => {
-        is(aDebuggee.location, NAVIGATE_URL,
-          "Target started navigating back to the previous location.");
+  function* testNavigateBack() {
+    info("Navigating backward...");
 
-        aMonitor.panelWin.once(aMonitor.panelWin.EVENTS.TARGET_DID_NAVIGATE, () => {
-          is(aDebuggee.location, SIMPLE_URL,
-            "Target finished navigating back to the previous location.");
+    let onWillNav = monitor.panelWin.once(EVENTS.TARGET_WILL_NAVIGATE);
+    let onDidNav = monitor.panelWin.once(EVENTS.TARGET_DID_NAVIGATE);
 
-          aCallback();
-        });
-      });
+    tab.linkedBrowser.loadURI(SIMPLE_URL);
+    yield onWillNav;
 
-      aDebuggee.location = SIMPLE_URL;
-    }
+    is(tab.linkedBrowser.currentURI.spec, NAVIGATE_URL,
+      "Target started navigating back to the previous location.");
 
-    function testClose(aCallback) {
-      info("Closing...");
+    yield onDidNav;
+    is(tab.linkedBrowser.currentURI.spec, SIMPLE_URL,
+      "Target finished navigating back to the previous location.");
+  }
 
-      aMonitor.once("destroyed", () => {
-        ok(!aMonitor._controller.client,
-          "There shouldn't be a client available after destruction.");
-        ok(!aMonitor._controller.tabClient,
-          "There shouldn't be a tabClient available after destruction.");
-        ok(!aMonitor._controller.webConsoleClient,
-          "There shouldn't be a webConsoleClient available after destruction.");
+  function* testClose() {
+    info("Closing...");
 
-        aCallback();
-      });
+    let onDestroyed = monitor.once("destroyed");
+    removeTab(tab);
+    yield onDestroyed;
 
-      removeTab(aTab);
-    }
-  });
-}
+    ok(!monitor._controller.client,
+      "There shouldn't be a client available after destruction.");
+    ok(!monitor._controller.tabClient,
+      "There shouldn't be a tabClient available after destruction.");
+    ok(!monitor._controller.webConsoleClient,
+      "There shouldn't be a webConsoleClient available after destruction.");
+  }
+});
