@@ -147,7 +147,7 @@ public:
 
   AtomType mAuxInfoType;
   uint32_t mAuxInfoTypeParameter;
-  nsTArray<uint8_t> mSampleInfoSize;
+  FallibleTArray<uint8_t> mSampleInfoSize;
 };
 
 class Saio final : public Atom
@@ -157,7 +157,7 @@ public:
 
   AtomType mAuxInfoType;
   uint32_t mAuxInfoTypeParameter;
-  nsTArray<uint64_t> mOffsets;
+  FallibleTArray<uint64_t> mOffsets;
 };
 
 class AuxInfo {
