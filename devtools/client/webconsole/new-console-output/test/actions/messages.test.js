@@ -3,7 +3,7 @@
 "use strict";
 
 const { getRepeatId } = require("devtools/client/webconsole/new-console-output/utils/messages");
-const stubConsoleMessages = require("devtools/client/webconsole/new-console-output/test/fixtures/stubs/index");
+const { stubPreparedMessages } = require("devtools/client/webconsole/new-console-output/test/fixtures/stubs/index");
 const { setupActions } = require("devtools/client/webconsole/new-console-output/test/helpers");
 const constants = require("devtools/client/webconsole/new-console-output/constants");
 
@@ -44,7 +44,7 @@ describe("Message actions:", () => {
       const action = actions.messageAdd(packet);
       const expected = {
         type: constants.MESSAGE_ADD,
-        message: stubConsoleMessages.get("console.log('foobar', 'test')")
+        message: stubPreparedMessages.get("console.log('foobar', 'test')")
       };
 
       expect(action.message.toJS()).toEqual(expected.message.toJS());

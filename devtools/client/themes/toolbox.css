@@ -55,6 +55,16 @@
   margin: 0;
 }
 
+/* Set flex attribute to Toolbox buttons and Picker container so,
+   they don't overlapp with the tab bar */
+#toolbox-buttons {
+  display: flex;
+}
+
+#toolbox-picker-container {
+  display: flex;
+}
+
 /* Toolbox tabs */
 
 .devtools-tab {

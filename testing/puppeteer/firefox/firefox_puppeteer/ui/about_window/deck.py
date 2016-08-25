@@ -18,7 +18,6 @@ class Deck(UIBaseLib):
         :returns: :class:`Panel` instance
         """
         mapping = {'apply': ApplyPanel,
-                   'applyBillboard': ApplyBillboardPanel,
                    'checkForUpdates': CheckForUpdatesPanel,
                    'checkingForUpdates': CheckingForUpdatesPanel,
                    'downloadAndInstall': DownloadAndInstallPanel,
@@ -39,14 +38,6 @@ class Deck(UIBaseLib):
         :returns: :class:`ApplyPanel` instance.
         """
         return self._create_panel_for_id('apply')
-
-    @property
-    def apply_billboard(self):
-        """The :class:`ApplyBillboardPanel` instance for the apply billboard panel.
-
-        :returns: :class:`ApplyBillboardPanel` instance.
-        """
-        return self._create_panel_for_id('applyBillboard')
 
     @property
     def check_for_updates(self):
@@ -132,17 +123,6 @@ class Deck(UIBaseLib):
         :returns: :class:`Panel` instance.
         """
         return self.panels[self.selected_index]
-
-
-class ApplyBillboardPanel(Panel):
-
-    @property
-    def button(self):
-        """The DOM element which represents the Apply Billboard button.
-
-        :returns: Reference to the button element.
-        """
-        return self.element.find_element(By.ID, 'applyButtonBillboard')
 
 
 class ApplyPanel(Panel):

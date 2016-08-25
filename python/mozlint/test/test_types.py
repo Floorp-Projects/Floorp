@@ -25,7 +25,7 @@ class TestLinterTypes(TestCase):
 
     def setUp(self):
         TestCase.setUp(self)
-        self.lint = LintRoller()
+        self.lint = LintRoller(root=here)
 
     def path(self, name):
         return os.path.join(self.filedir, name)

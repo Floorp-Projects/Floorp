@@ -49,10 +49,10 @@ struct SurfaceDescriptorX11 {
 
   already_AddRefed<gfxXlibSurface> OpenForeign() const;
 
-  Drawable mId;
-  XID mFormat; // either a PictFormat or VisualID
+  MOZ_INIT_OUTSIDE_CTOR Drawable mId;
+  MOZ_INIT_OUTSIDE_CTOR XID mFormat; // either a PictFormat or VisualID
   gfx::IntSize mSize;
-  Drawable mGLXPixmap; // used to prevent multiple bindings to the same GLXPixmap in-process
+  MOZ_INIT_OUTSIDE_CTOR Drawable mGLXPixmap; // used to prevent multiple bindings to the same GLXPixmap in-process
 };
 
 } // namespace layers

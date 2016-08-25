@@ -126,11 +126,3 @@ UpdatesFoundBasicPanel
 .. autoclass:: firefox_puppeteer.ui.update_wizard.wizard.UpdatesFoundBasicPanel
    :members:
    :inherited-members:
-
-
-UpdatesFoundBillboardPanel
---------------------------
-
-.. autoclass:: firefox_puppeteer.ui.update_wizard.wizard.UpdatesFoundBillboardPanel
-   :members:
-   :inherited-members:

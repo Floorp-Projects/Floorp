@@ -37,7 +37,7 @@ add_task(function* test_bad_unpacked_path() {
 
   for (let dir of directories) {
     try {
-      writeWebManifestForExtension(manifest, profileDir, dir);
+      yield promiseWriteWebManifestForExtension(manifest, profileDir, dir);
     } catch (ex) {
       // This can fail if the underlying filesystem (looking at you windows)
       // doesn't handle some of the characters in the ID.  In that case,

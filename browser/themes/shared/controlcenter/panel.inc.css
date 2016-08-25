@@ -372,10 +372,6 @@ description#identity-popup-content-verifier,
   margin-top: 5px;
 }
 
-#identity-popup-permission-list:not(:empty) + description {
-  display: none;
-}
-
 .identity-popup-permission-icon {
   width: 16px;
   height: 16px;

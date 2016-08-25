@@ -290,7 +290,7 @@ this.CurlUtils = {
         }
       }
     }
-    result += aBoundary + "--\r\n";
+    result += boundary + "--\r\n";
 
     return result;
   },

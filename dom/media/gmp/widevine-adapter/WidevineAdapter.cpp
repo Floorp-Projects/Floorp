@@ -110,8 +110,8 @@ WidevineAdapter::GMPGetAPI(const char* aAPIName,
 
     auto cdm = reinterpret_cast<cdm::ContentDecryptionModule*>(
       create(cdm::ContentDecryptionModule::kVersion,
-             kEMEKeySystemWidevine,
-             strlen(kEMEKeySystemWidevine),
+             kEMEKeySystemWidevine.get(),
+             kEMEKeySystemWidevine.Length(),
              &GetCdmHost,
              decryptor));
     if (!cdm) {

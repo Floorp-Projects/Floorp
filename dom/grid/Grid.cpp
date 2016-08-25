@@ -6,6 +6,7 @@
 
 #include "Grid.h"
 
+#include "GridArea.h"
 #include "GridDimension.h"
 #include "mozilla/dom/GridBinding.h"
 #include "nsGridContainerFrame.h"
@@ -13,7 +14,7 @@
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(Grid, mParent, mRows, mCols)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(Grid, mParent, mRows, mCols, mAreas)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(Grid)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(Grid)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(Grid)
@@ -43,6 +44,40 @@ Grid::Grid(nsISupports* aParent,
     aFrame->GetComputedTemplateColumnLines();
   mCols->SetTrackInfo(columnTrackInfo);
   mCols->SetLineInfo(columnTrackInfo, columnLineInfo);
+
+  // Add implicit areas first.
+  nsGridContainerFrame::ImplicitNamedAreas* implicitAreas =
+    aFrame->GetImplicitNamedAreas();
+  if (implicitAreas) {
+    for (auto iter = implicitAreas->Iter(); !iter.Done(); iter.Next()) {
+      nsStringHashKey* entry = iter.Get();
+
+      GridArea* area = new GridArea(this,
+                                    nsString(entry->GetKey()),
+                                    GridDeclaration::Implicit,
+                                    0,
+                                    0,
+                                    0,
+                                    0);
+      mAreas.AppendElement(area);
+    }
+  }
+
+  // Add explicit areas next.
+  nsGridContainerFrame::ExplicitNamedAreas* explicitAreas =
+    aFrame->GetExplicitNamedAreas();
+  if (explicitAreas) {
+    for (auto areaInfo : *explicitAreas) {
+      GridArea* area = new GridArea(this,
+                                    areaInfo.mName,
+                                    GridDeclaration::Explicit,
+                                    areaInfo.mRowStart,
+                                    areaInfo.mRowEnd,
+                                    areaInfo.mColumnStart,
+                                    areaInfo.mColumnEnd);
+      mAreas.AppendElement(area);
+    }
+  }
 }
 
 Grid::~Grid()
@@ -65,6 +100,12 @@ GridDimension*
 Grid::Cols() const
 {
   return mCols;
+}
+
+void
+Grid::GetAreas(nsTArray<RefPtr<GridArea>>& aAreas) const
+{
+  aAreas = mAreas;
 }
 
 } // namespace dom

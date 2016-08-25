@@ -9,9 +9,11 @@
 
 const { ConsoleMessage } = require("devtools/client/webconsole/new-console-output/types");
 
-let stubConsoleMessages = new Map();
+let stubPreparedMessages = new Map();
+let stubPackets = new Map();
 
-stubConsoleMessages.set("ReferenceError: asdf is not defined", new ConsoleMessage({
+
+stubPreparedMessages.set("ReferenceError: asdf is not defined", new ConsoleMessage({
 	"id": "1",
 	"allowRepeating": true,
 	"source": "javascript",
@@ -26,4 +28,50 @@ stubConsoleMessages.set("ReferenceError: asdf is not defined", new ConsoleMessag
 }));
 
 
-module.exports = stubConsoleMessages
+stubPackets.set("ReferenceError: asdf is not defined", {
+	"from": "server1.conn0.child1/consoleActor2",
+	"type": "pageError",
+	"pageError": {
+		"errorMessage": "ReferenceError: asdf is not defined",
+		"errorMessageName": "JSMSG_NOT_DEFINED",
+		"exceptionDocURL": "https://developer.mozilla.org/docs/Web/JavaScript/Reference/Errors/Not_defined?utm_source=mozilla&utm_medium=firefox-console-errors&utm_campaign=default",
+		"sourceName": "data:text/html;charset=utf-8,stub%20generation",
+		"lineText": "",
+		"lineNumber": 1,
+		"columnNumber": 1,
+		"category": "content javascript",
+		"timeStamp": 1471886066466,
+		"warning": false,
+		"error": false,
+		"exception": true,
+		"strict": false,
+		"info": false,
+		"private": false,
+		"stacktrace": [
+			{
+				"filename": "data:text/html;charset=utf-8,stub%20generation",
+				"lineNumber": 1,
+				"columnNumber": 1,
+				"functionName": null
+			},
+			{
+				"filename": "chrome://mochikit/content/tests/BrowserTestUtils/content-task.js line 52 > eval",
+				"lineNumber": 6,
+				"columnNumber": 7,
+				"functionName": null
+			},
+			{
+				"filename": "chrome://mochikit/content/tests/BrowserTestUtils/content-task.js",
+				"lineNumber": 53,
+				"columnNumber": 20,
+				"functionName": null
+			}
+		]
+	}
+});
+
+
+module.exports = {
+  stubPreparedMessages,
+  stubPackets,
+}

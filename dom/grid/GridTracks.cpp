@@ -86,8 +86,8 @@ GridTracks::SetTrackInfo(const ComputedGridTrackInfo* aTrackInfo)
         (i < aTrackInfo->mNumLeadingImplicitTracks) ||
         (i >= aTrackInfo->mNumLeadingImplicitTracks +
               aTrackInfo->mNumExplicitTracks) ?
-          GridTrackType::Implicit :
-          GridTrackType::Explicit
+          GridDeclaration::Implicit :
+          GridDeclaration::Explicit
       ),
       GridTrackState(aTrackInfo->mStates[i])
     );

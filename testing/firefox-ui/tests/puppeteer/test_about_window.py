@@ -33,11 +33,6 @@ class TestAboutWindow(FirefoxTestCase):
         self.assertEqual(panel.element.get_attribute('localName'), 'hbox')
         self.assertEqual(panel.button.get_attribute('localName'), 'button')
 
-        # apply_billboard panel
-        panel = self.deck.apply_billboard
-        self.assertEqual(panel.element.get_attribute('localName'), 'hbox')
-        self.assertEqual(panel.button.get_attribute('localName'), 'button')
-
         # check_for_updates panel
         panel = self.deck.check_for_updates
         self.assertEqual(panel.element.get_attribute('localName'), 'hbox')

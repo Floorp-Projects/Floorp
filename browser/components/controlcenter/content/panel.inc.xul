@@ -91,7 +91,8 @@
                  class="identity-popup-headline"
                  value="&identity.permissions;"/>
           <vbox id="identity-popup-permission-list"/>
-          <description>&identity.permissionsEmpty;</description>
+          <description id="identity-popup-permission-empty-hint">&identity.permissionsEmpty;</description>
+          <description id="identity-popup-permission-reload-hint">&identity.permissionsReloadHint;</description>
         </vbox>
       </hbox>
     </panelview>
