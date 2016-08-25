@@ -2490,12 +2490,15 @@ nsStyleImageLayers::HasLayerWithImage() const
 }
 
 bool
-nsStyleImageLayers::Position::IsInitialValue(LayerType aType) const
+nsStyleImageLayers::IsInitialPositionForLayerType(Position aPosition, LayerType aType)
 {
-  float intialValue = nsStyleImageLayers::Position::GetInitialValue(aType);
-  if (mXPosition.mPercent == intialValue && mXPosition.mLength == 0 &&
-      mXPosition.mHasPercent && mYPosition.mPercent == intialValue &&
-      mYPosition.mLength == 0 && mYPosition.mHasPercent) {
+  float intialValue = nsStyleImageLayers::GetInitialPositionForLayerType(aType);
+  if (aPosition.mXPosition.mPercent == intialValue &&
+      aPosition.mXPosition.mLength == 0 &&
+      aPosition.mXPosition.mHasPercent &&
+      aPosition.mYPosition.mPercent == intialValue &&
+      aPosition.mYPosition.mLength == 0 &&
+      aPosition.mYPosition.mHasPercent) {
     return true;
   }
 
@@ -2675,7 +2678,7 @@ nsStyleImageLayers::Layer::Initialize(nsStyleImageLayers::LayerType aType)
   mRepeat.SetInitialValues(aType);
 
   float initialPositionValue =
-    nsStyleImageLayers::Position::GetInitialValue(aType);
+    nsStyleImageLayers::GetInitialPositionForLayerType(aType);
   mPosition.SetInitialPercentValues(initialPositionValue);
 
   if (aType == LayerType::Background) {
