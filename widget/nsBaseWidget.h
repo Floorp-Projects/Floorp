@@ -248,8 +248,7 @@ public:
                                          int32_t aPanelX, int32_t aPanelY,
                                          nsString& aCommitted) override
                           { return NS_ERROR_NOT_IMPLEMENTED; }
-  NS_IMETHOD              SetPluginFocused(bool& aFocused) override
-                          { return NS_ERROR_NOT_IMPLEMENTED; }
+  virtual void            SetPluginFocused(bool& aFocused) override {}
   virtual void            SetCandidateWindowForPlugin(
                             const mozilla::widget::CandidateWindowPosition&
                               aPosition) override
