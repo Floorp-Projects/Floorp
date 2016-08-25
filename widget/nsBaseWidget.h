@@ -171,7 +171,7 @@ public:
   virtual void            SetTransparencyMode(nsTransparencyMode aMode) override;
   virtual nsTransparencyMode GetTransparencyMode() override;
   virtual void            GetWindowClipRegion(nsTArray<LayoutDeviceIntRect>* aRects) override;
-  NS_IMETHOD              SetWindowShadowStyle(int32_t aStyle) override;
+  virtual void            SetWindowShadowStyle(int32_t aStyle) override {}
   virtual void            SetShowsToolbarButton(bool aShow) override {}
   virtual void            SetShowsFullScreenButton(bool aShow) override {}
   virtual void            SetWindowAnimationType(WindowAnimationType aType) override {}
@@ -198,7 +198,8 @@ public:
   virtual void            UpdateThemeGeometries(const nsTArray<ThemeGeometry>& aThemeGeometries) override {}
   virtual void            SetModal(bool aModal) override {}
   virtual uint32_t        GetMaxTouchPoints() const override;
-  NS_IMETHOD              SetWindowClass(const nsAString& xulWinType) override;
+  virtual void            SetWindowClass(const nsAString& xulWinType)
+                            override {}
   virtual nsresult        SetWindowClipRegion(const nsTArray<LayoutDeviceIntRect>& aRects, bool aIntersectWithExisting) override;
   // Return whether this widget interprets parameters to Move and Resize APIs
   // as "desktop pixels" rather than "device pixels", and therefore
@@ -231,7 +232,8 @@ public:
   NS_IMETHOD              GetAttention(int32_t aCycleCount) override;
   virtual bool            HasPendingInputEvent() override;
   NS_IMETHOD              SetIcon(const nsAString &anIconSpec) override;
-  NS_IMETHOD              SetWindowTitlebarColor(nscolor aColor, bool aActive) override;
+  virtual void            SetWindowTitlebarColor(nscolor aColor, bool aActive)
+                            override {}
   virtual void            SetDrawsInTitlebar(bool aState) override {}
   virtual bool            ShowsResizeIndicator(LayoutDeviceIntRect* aResizerRect) override;
   virtual void            FreeNativeData(void * data, uint32_t aDataType) override {}
