@@ -1040,13 +1040,15 @@ class Parser final : private JS::AutoGCRooter, public StrictModeGetter
     Node breakStatement(YieldHandling yieldHandling);
     Node returnStatement(YieldHandling yieldHandling);
     Node withStatement(YieldHandling yieldHandling);
-    Node labeledStatement(YieldHandling yieldHandling);
     Node throwStatement(YieldHandling yieldHandling);
     Node tryStatement(YieldHandling yieldHandling);
     Node catchBlockStatement(YieldHandling yieldHandling, HandlePropertyName simpleCatchParam);
     Node debuggerStatement();
 
     Node variableStatement(YieldHandling yieldHandling);
+
+    Node labeledStatement(YieldHandling yieldHandling);
+    Node labeledItem(YieldHandling yieldHandling);
 
     Node lexicalDeclaration(YieldHandling yieldHandling, bool isConst);
     Node importDeclaration();
