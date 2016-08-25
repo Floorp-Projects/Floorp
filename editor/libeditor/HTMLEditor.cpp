@@ -676,7 +676,7 @@ HTMLEditor::HandleKeyPressEvent(WidgetKeyboardEvent* aKeyboardEvent)
         return NS_OK;
       }
       aKeyboardEvent->PreventDefault(); // consumed
-      if (aKeyboardEvent->IsShift() && !IsPlaintextEditor()) {
+      if (aKeyboardEvent->IsShift()) {
         // only inserts a br node
         return TypedText(EmptyString(), eTypedBR);
       }
