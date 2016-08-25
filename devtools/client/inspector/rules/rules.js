@@ -10,6 +10,9 @@
 const promise = require("promise");
 const defer = require("devtools/shared/defer");
 const Services = require("Services");
+/* eslint-disable mozilla/reject-some-requires */
+const {XPCOMUtils} = require("resource://gre/modules/XPCOMUtils.jsm");
+/* eslint-enable mozilla/reject-some-requires */
 const {Task} = require("devtools/shared/task");
 const {Tools} = require("devtools/client/definitions");
 const {l10n} = require("devtools/shared/inspector/css-logic");
@@ -28,6 +31,11 @@ const EventEmitter = require("devtools/shared/event-emitter");
 const StyleInspectorMenu = require("devtools/client/inspector/shared/style-inspector-menu");
 const {KeyShortcuts} = require("devtools/client/shared/key-shortcuts");
 const clipboardHelper = require("devtools/shared/platform/clipboard");
+
+XPCOMUtils.defineLazyGetter(this, "_strings", function () {
+  return Services.strings.createBundle(
+    "chrome://devtools-shared/locale/styleinspector.properties");
+});
 
 const {AutocompletePopup} = require("devtools/client/shared/autocomplete-popup");
 
