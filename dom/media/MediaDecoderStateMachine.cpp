@@ -879,7 +879,8 @@ nsresult MediaDecoderStateMachine::Init(MediaDecoder* aDecoder)
   nsresult rv = mReader->Init();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  OwnerThread()->Dispatch(NewRunnableMethod(this, &MediaDecoderStateMachine::ReadMetadata));
+  OwnerThread()->Dispatch(NewRunnableMethod<State>(
+    this, &MediaDecoderStateMachine::EnterState, mState.Ref()));
 
   return NS_OK;
 }
@@ -1092,6 +1093,10 @@ MediaDecoderStateMachine::EnterState(State aState)
 {
   MOZ_ASSERT(OnTaskQueue());
   switch (aState) {
+    case DECODER_STATE_DECODING_METADATA:
+      mDecodingFirstFrame = true;
+      ReadMetadata();
+      break;
     case DECODER_STATE_ERROR:
     case DECODER_STATE_SHUTDOWN:
       mIsShutdown = true;
@@ -1219,8 +1224,6 @@ MediaDecoderStateMachine::SetDormant(bool aDormant)
 
   // Exit dormant state.
   SetState(DECODER_STATE_DECODING_METADATA);
-  mDecodingFirstFrame = true;
-  ReadMetadata();
 }
 
 RefPtr<ShutdownPromise>
