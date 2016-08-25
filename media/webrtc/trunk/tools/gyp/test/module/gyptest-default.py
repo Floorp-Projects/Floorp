@@ -12,8 +12,7 @@ path as the executable.
 
 import TestGyp
 
-# Android doesn't support loadable modules
-test = TestGyp.TestGyp(formats=['!android'])
+test = TestGyp.TestGyp()
 
 test.run_gyp('module.gyp', chdir='src')
 

@@ -18,7 +18,7 @@
 #include "ssl.h"
 #include "nsNetCID.h"
 #include "mozilla/Atomics.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 
 using mozilla::psm::SyncRunnableBase;
 using mozilla::Atomic;

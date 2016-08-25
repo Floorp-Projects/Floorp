@@ -1211,6 +1211,13 @@ js::ObjectGroup::traceChildren(JSTracer* trc)
     if (proto().isObject())
         TraceEdge(trc, &proto(), "group_proto");
 
+    if (trc->isMarkingTracer())
+        compartment()->mark();
+
+    if (JSObject* global = compartment()->unsafeUnbarrieredMaybeGlobal())
+        TraceManuallyBarrieredEdge(trc, &global, "group_global");
+
+
     if (newScript())
         newScript()->trace(trc);
 

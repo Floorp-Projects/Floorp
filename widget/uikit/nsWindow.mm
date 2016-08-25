@@ -33,7 +33,7 @@
 
 #include "mozilla/BasicEvents.h"
 #include "mozilla/TouchEvents.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 
 #include "GeckoProfiler.h"
 

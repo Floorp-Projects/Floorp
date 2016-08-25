@@ -36,7 +36,7 @@
 #include "mozilla/MouseEvents.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/gfx/2D.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "nsFrameLoader.h"
 #include "TabParent.h"
 

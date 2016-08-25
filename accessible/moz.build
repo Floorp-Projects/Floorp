@@ -15,11 +15,22 @@ elif toolkit == 'cocoa':
 else:
     DIRS += ['other']
 
-DIRS += ['base', 'generic', 'html', 'interfaces', 'ipc', 'jsat', 'xpcom']
+DIRS += [ 'aom',
+          'base',
+          'generic',
+          'html',
+          'interfaces',
+          'ipc',
+          'jsat',
+          'xpcom'
+]
 
 if CONFIG['MOZ_XUL']:
     DIRS += ['xul']
 
 TEST_DIRS += ['tests/mochitest']
 
-BROWSER_CHROME_MANIFESTS += ['tests/browser/browser.ini']
+BROWSER_CHROME_MANIFESTS += [
+  'tests/browser/browser.ini',
+  'tests/browser/e10s/browser.ini'
+]

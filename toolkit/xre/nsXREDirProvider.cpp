@@ -64,7 +64,7 @@
 
 #if (defined(XP_WIN) || defined(XP_MACOSX)) && defined(MOZ_CONTENT_SANDBOX)
 #include "nsIUUIDGenerator.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #endif
 
 #if defined(XP_MACOSX)

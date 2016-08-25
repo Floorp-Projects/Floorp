@@ -18,7 +18,7 @@
 #include "mozilla/ipc/PBackgroundChild.h"
 #include "mozilla/ipc/PBackgroundParent.h"
 #include "mozilla/ipc/SendStream.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "nsIAsyncInputStream.h"
 
 namespace mozilla {

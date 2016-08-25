@@ -14,7 +14,7 @@
 [ptr] native nsXPTParamInfoPtr(nsXPTParamInfo);
       native nsXPTType(nsXPTType);
 
-// We bend the rules to do a [shared] nsIID (but this is never scriptable)  
+// We bend the rules to do a [shared] nsIID (but this is never scriptable)
 [ptr] native nsIIDPtrShared(nsIID);
 
 %{C++
@@ -23,8 +23,7 @@ class nsXPTParamInfo;
 class nsXPTType;
 %}
 
-/* this is NOT intended to be scriptable */
-[uuid(3820e663-8e22-4789-b470-56bcf7083f2b)]
+[builtinclass, uuid(3820e663-8e22-4789-b470-56bcf7083f2b)]
 interface nsIInterfaceInfo : nsISupports
 {
     readonly attribute string   name;
@@ -43,14 +42,14 @@ interface nsIInterfaceInfo : nsISupports
 
     /**
     * These include methods and constants for parent (and all ancestors).
-    * 
+    *
     * These do *not* make copies ***explicit bending of XPCOM rules***.
     */
-    
-    void getMethodInfo(in uint16_t index, 
+
+    void getMethodInfo(in uint16_t index,
                        [shared, retval] out nsXPTMethodInfoPtr info);
 
-    void getMethodInfoForName(in string methodName, out uint16_t index, 
+    void getMethodInfoForName(in string methodName, out uint16_t index,
                        [shared, retval] out nsXPTMethodInfoPtr info);
 
     void getConstant(in uint16_t index,
@@ -63,10 +62,10 @@ interface nsIInterfaceInfo : nsISupports
     * method in this interface.
     */
 
-    nsIInterfaceInfo getInfoForParam(in uint16_t methodIndex, 
+    nsIInterfaceInfo getInfoForParam(in uint16_t methodIndex,
                                      [const] in nsXPTParamInfoPtr param);
 
-    nsIIDPtr getIIDForParam(in uint16_t methodIndex, 
+    nsIIDPtr getIIDForParam(in uint16_t methodIndex,
                             [const] in nsXPTParamInfoPtr param);
 
 
@@ -74,15 +73,15 @@ interface nsIInterfaceInfo : nsISupports
     * These do *not* make copies ***explicit bending of XPCOM rules***.
     */
 
-    nsXPTType getTypeForParam(in uint16_t methodIndex, 
+    nsXPTType getTypeForParam(in uint16_t methodIndex,
                               [const] in nsXPTParamInfoPtr param,
                               in uint16_t dimension);
 
-    uint8_t getSizeIsArgNumberForParam(in uint16_t methodIndex, 
+    uint8_t getSizeIsArgNumberForParam(in uint16_t methodIndex,
                                        [const] in nsXPTParamInfoPtr param,
                                        in uint16_t dimension);
 
-    uint8_t getInterfaceIsArgNumberForParam(in uint16_t methodIndex, 
+    uint8_t getInterfaceIsArgNumberForParam(in uint16_t methodIndex,
                                             [const] in nsXPTParamInfoPtr param);
 
     boolean isIID(in nsIIDPtr IID);
@@ -94,10 +93,9 @@ interface nsIInterfaceInfo : nsISupports
 
     boolean hasAncestor(in nsIIDPtr iid);
 
-    [notxpcom] nsresult getIIDForParamNoAlloc(in uint16_t methodIndex, 
+    [notxpcom] nsresult getIIDForParamNoAlloc(in uint16_t methodIndex,
                                               [const] in nsXPTParamInfoPtr param,
                                               out nsIID iid);
 
     boolean isMainProcessScriptableOnly();
 };
-

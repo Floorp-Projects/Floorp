@@ -112,7 +112,8 @@ enum nsIgnoreKeys {
 #define NS_DIRECTION_IS_BLOCK_TO_EDGE(dir) (dir == eNavigationDirection_First ||    \
                                             dir == eNavigationDirection_Last)
 
-PR_STATIC_ASSERT(NS_STYLE_DIRECTION_LTR == 0 && NS_STYLE_DIRECTION_RTL == 1);
+static_assert(NS_STYLE_DIRECTION_LTR == 0 && NS_STYLE_DIRECTION_RTL == 1,
+              "Left to Right should be 0 and Right to Left should be 1");
 
 /**
  * DirectionFromKeyCodeTable: two arrays, the first for left-to-right and the

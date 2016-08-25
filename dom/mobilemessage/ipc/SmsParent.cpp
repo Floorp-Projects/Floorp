@@ -12,7 +12,7 @@
 #include "mozilla/Services.h"
 #include "nsISmsMessage.h"
 #include "nsIMmsMessage.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "SmsMessageInternal.h"
 #include "MmsMessageInternal.h"
 #include "nsIMobileMessageDatabaseService.h"

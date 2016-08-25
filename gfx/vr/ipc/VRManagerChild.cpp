@@ -35,6 +35,7 @@ void ReleaseVRManagerParentSingleton() {
 
 VRManagerChild::VRManagerChild()
   : TextureForwarder()
+  , mDisplaysInitialized(false)
   , mInputFrameID(-1)
   , mMessageLoop(MessageLoop::current())
   , mFrameRequestCallbackCounter(0)
@@ -188,8 +189,8 @@ VRManagerChild::DeallocPVRLayerChild(PVRLayerChild* actor)
   return true;
 }
 
-bool
-VRManagerChild::RecvUpdateDisplayInfo(nsTArray<VRDisplayInfo>&& aDisplayUpdates)
+void
+VRManagerChild::UpdateDisplayInfo(nsTArray<VRDisplayInfo>& aDisplayUpdates)
 {
   bool bDisplayConnected = false;
   bool bDisplayDisconnected = false;
@@ -212,9 +213,9 @@ VRManagerChild::RecvUpdateDisplayInfo(nsTArray<VRDisplayInfo>&& aDisplayUpdates)
   // mDisplays could be a hashed container for more scalability, but not worth
   // it now as we expect < 10 entries.
   nsTArray<RefPtr<VRDisplayClient>> displays;
-  for (VRDisplayInfo& displayUpdate: aDisplayUpdates) {
+  for (VRDisplayInfo& displayUpdate : aDisplayUpdates) {
     bool isNewDisplay = true;
-    for (auto& display: mDisplays) {
+    for (auto& display : mDisplays) {
       const VRDisplayInfo& prevInfo = display->GetDisplayInfo();
       if (prevInfo.GetDisplayID() == displayUpdate.GetDisplayID()) {
         if (displayUpdate.GetIsConnected() && !prevInfo.GetIsConnected()) {
@@ -237,16 +238,6 @@ VRManagerChild::RecvUpdateDisplayInfo(nsTArray<VRDisplayInfo>&& aDisplayUpdates)
 
   mDisplays = displays;
 
-  for (auto& nav: mNavigatorCallbacks) {
-    // We must call NotifyVRDisplaysUpdated for every
-    // Navigator in mNavigatorCallbacks to ensure that
-    // the promise returned by Navigator.GetVRDevices
-    // can resolve.  This must happen even if no changes
-    // to VRDisplays have been detected here.
-    nav->NotifyVRDisplaysUpdated();
-  }
-  mNavigatorCallbacks.Clear();
-
   if (bDisplayConnected) {
     FireDOMVRDisplayConnectEvent();
   }
@@ -254,12 +245,39 @@ VRManagerChild::RecvUpdateDisplayInfo(nsTArray<VRDisplayInfo>&& aDisplayUpdates)
     FireDOMVRDisplayDisconnectEvent();
   }
 
+  mDisplaysInitialized = true;
+}
+
+bool
+VRManagerChild::RecvUpdateDisplayInfo(nsTArray<VRDisplayInfo>&& aDisplayUpdates)
+{
+  UpdateDisplayInfo(aDisplayUpdates);
+  for (auto& nav : mNavigatorCallbacks) {
+    /** We must call NotifyVRDisplaysUpdated for every
+     * Navigator in mNavigatorCallbacks to ensure that
+     * the promise returned by Navigator.GetVRDevices
+     * can resolve.  This must happen even if no changes
+     * to VRDisplays have been detected here.
+     */
+    nav->NotifyVRDisplaysUpdated();
+  }
+  mNavigatorCallbacks.Clear();
   return true;
 }
 
 bool
 VRManagerChild::GetVRDisplays(nsTArray<RefPtr<VRDisplayClient>>& aDisplays)
 {
+  if (!mDisplaysInitialized) {
+    /**
+     * If we haven't received any asynchronous callback after requesting
+     * display enumeration with RefreshDisplays, get the existing displays
+     * that have already been enumerated by other VRManagerChild instances.
+     */
+    nsTArray<VRDisplayInfo> displays;
+    Unused << SendGetDisplays(&displays);
+    UpdateDisplayInfo(displays);
+  }
   aDisplays = mDisplays;
   return true;
 }

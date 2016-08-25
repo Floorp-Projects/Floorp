@@ -32,7 +32,7 @@
 #include "mozilla/plugins/BrowserStreamChild.h"
 #include "mozilla/plugins/PluginStreamChild.h"
 #include "mozilla/dom/CrashReporterChild.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 
 #include "nsNPAPIPlugin.h"
 

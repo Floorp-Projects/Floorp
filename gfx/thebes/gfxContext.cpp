@@ -26,7 +26,7 @@
 
 #if XP_WIN
 #include "gfxWindowsPlatform.h"
-#include "mozilla/gfx/DeviceManagerD3D11.h"
+#include "mozilla/gfx/DeviceManagerDx.h"
 #endif
 
 using namespace mozilla;
@@ -1244,7 +1244,7 @@ gfxContext::PushNewDT(gfxContentType content)
       if (!gfxPlatform::GetPlatform()->DidRenderingDeviceReset()
 #ifdef XP_WIN
           && !(mDT->GetBackendType() == BackendType::DIRECT2D1_1 &&
-               !DeviceManagerD3D11::Get()->GetContentDevice())
+               !DeviceManagerDx::Get()->GetContentDevice())
 #endif
           ) {
         // If even this fails.. we're most likely just out of memory!

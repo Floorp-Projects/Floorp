@@ -464,7 +464,7 @@ private:
           if (NS_FAILED(rv))
             break; // done (or error?)
 
-          // This synchronously invokes onCacheEntryInfo on this class where we
+          // This synchronously invokes OnEntryInfo on this class where we
           // redispatch to the main thread for the consumer callback.
           CacheFileIOManager::GetEntryInfo(&hash, this);
         }

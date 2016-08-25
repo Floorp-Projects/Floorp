@@ -21,7 +21,7 @@
 #include "nsIForcePendingChannel.h"
 #include "mozilla/ipc/InputStreamUtils.h"
 #include "mozilla/ipc/URIUtils.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "SerializedLoadContext.h"
 #include "nsIContentPolicy.h"
 #include "mozilla/ipc/BackgroundUtils.h"
@@ -126,6 +126,8 @@ FTPChannelParent::DoAsyncOpen(const URIParams& aURI,
                               const OptionalInputStreamParams& aUploadStream,
                               const OptionalLoadInfoArgs& aLoadInfoArgs)
 {
+  nsresult rv;
+
   nsCOMPtr<nsIURI> uri = DeserializeURI(aURI);
   if (!uri)
       return false;
@@ -137,8 +139,26 @@ FTPChannelParent::DoAsyncOpen(const URIParams& aURI,
        this, uriSpec.get()));
 #endif
 
+  nsCOMPtr<nsIIOService> ios(do_GetIOService(&rv));
+  if (NS_FAILED(rv)) {
+    return SendFailedAsyncOpen(rv);
+  }
+
+  nsCOMPtr<nsILoadInfo> loadInfo;
+  rv = mozilla::ipc::LoadInfoArgsToLoadInfo(aLoadInfoArgs,
+                                            getter_AddRefs(loadInfo));
+  if (NS_FAILED(rv)) {
+    return SendFailedAsyncOpen(rv);
+  }
+
+  NeckoOriginAttributes attrs;
+  rv = loadInfo->GetOriginAttributes(&attrs);
+  if (NS_FAILED(rv)) {
+    return SendFailedAsyncOpen(rv);
+  }
+
   bool app_offline = false;
-  uint32_t appId = GetAppId();
+  uint32_t appId = attrs.mAppId;
   if (appId != NECKO_UNKNOWN_APP_ID &&
       appId != NECKO_NO_APP_ID) {
     gIOService->IsAppOffline(appId, &app_offline);
@@ -147,18 +167,6 @@ FTPChannelParent::DoAsyncOpen(const URIParams& aURI,
 
   if (app_offline)
     return SendFailedAsyncOpen(NS_ERROR_OFFLINE);
-
-  nsresult rv;
-  nsCOMPtr<nsIIOService> ios(do_GetIOService(&rv));
-  if (NS_FAILED(rv))
-    return SendFailedAsyncOpen(rv);
-
-  nsCOMPtr<nsILoadInfo> loadInfo;
-  rv = mozilla::ipc::LoadInfoArgsToLoadInfo(aLoadInfoArgs,
-                                            getter_AddRefs(loadInfo));
-  if (NS_FAILED(rv)) {
-    return SendFailedAsyncOpen(rv);
-  }
 
   nsCOMPtr<nsIChannel> chan;
   rv = NS_NewChannelInternal(getter_AddRefs(chan), uri, loadInfo,
@@ -883,8 +891,11 @@ uint32_t
 FTPChannelParent::GetAppId()
 {
   uint32_t appId = NECKO_UNKNOWN_APP_ID;
-  if (mLoadContext) {
-    mLoadContext->GetAppId(&appId);
+  if (mChannel) {
+    NeckoOriginAttributes attrs;
+    if (NS_GetOriginAttributes(mChannel, attrs)) {
+      appId = attrs.mAppId;
+    }
   }
   return appId;
 }

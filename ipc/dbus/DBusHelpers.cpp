@@ -10,7 +10,7 @@
 #include "mozilla/ipc/DBusWatcher.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/UniquePtr.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "nsThreadUtils.h"
 
 #undef CHROMIUM_LOG

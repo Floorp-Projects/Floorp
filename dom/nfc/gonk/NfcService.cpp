@@ -19,7 +19,7 @@
 #include "mozilla/ipc/StreamSocketConsumer.h"
 #include "mozilla/ModuleUtils.h"
 #include "mozilla/UniquePtr.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "NfcMessageHandler.h"
 #include "NfcOptions.h"
 #include "nsString.h"

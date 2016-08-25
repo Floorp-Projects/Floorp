@@ -16,7 +16,7 @@
 #include "mozilla/Services.h"
 #include "mozilla/TextComposition.h"
 #include "mozilla/TextEvents.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "mozilla/dom/HTMLFormElement.h"
 #include "mozilla/dom/TabParent.h"
 

@@ -284,6 +284,15 @@ interface nsIMessageSender : nsIMessageListenerManager
                         [optional] in jsval objects,
                         [optional] in nsIPrincipal principal,
                         [optional] in jsval transfers);
+
+ /**
+  * For remote browsers there is always a corresponding process message
+  * manager. The intention of this attribute is to link leaf level frame
+  * message managers on the parent side with the corresponding process
+  * message managers (if there is one). For any other cases this property
+  * is null.
+  */
+  readonly attribute nsIMessageSender processMessageManager;
 };
 
 /**

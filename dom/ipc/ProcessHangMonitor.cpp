@@ -15,7 +15,7 @@
 #include "mozilla/Monitor.h"
 #include "mozilla/plugins/PluginBridge.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 
 #include "nsIFrameLoader.h"
 #include "nsIHangReport.h"

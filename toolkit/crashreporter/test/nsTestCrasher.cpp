@@ -5,7 +5,7 @@
 #include "nscore.h"
 #include "nsXULAppAPI.h"
 #include "nsExceptionHandler.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 
 /*
  * This pure virtual call example is from MSDN

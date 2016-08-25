@@ -10,7 +10,7 @@
 #include "mozilla/DebugOnly.h"
 #include "nsDumpUtils.h"
 
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/ContentChild.h"
 #include "nsIConsoleService.h"

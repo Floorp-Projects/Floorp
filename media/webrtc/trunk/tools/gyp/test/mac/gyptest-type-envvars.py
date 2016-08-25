@@ -15,7 +15,9 @@ import sys
 if sys.platform == 'darwin':
   test = TestGyp.TestGyp(formats=['ninja', 'make', 'xcode'])
 
-  test.run_gyp('test.gyp', chdir='type_envvars')
+  test.run_gyp('test.gyp',
+               '-G', 'xcode_ninja_target_pattern=^(?!nonbundle_none).*$',
+               chdir='type_envvars')
 
   test.build('test.gyp', test.ALL, chdir='type_envvars')
 

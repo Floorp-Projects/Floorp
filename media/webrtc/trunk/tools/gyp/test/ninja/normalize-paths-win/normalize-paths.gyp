@@ -30,6 +30,18 @@
       ],
     },
     {
+      'target_name': 'Copy_Target',
+      'type': 'none',
+      'copies': [
+        {
+          'destination': '<(PRODUCT_DIR)',
+          'files': [
+            '$(VSInstallDir)\\bin\\cl.exe',
+          ],
+        },
+      ],
+    },
+    {
       'target_name': 'action',
       'type': 'none',
       'msvs_cygwin_shell': '0',
