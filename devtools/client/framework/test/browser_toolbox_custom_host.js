@@ -24,6 +24,9 @@ function test() {
   });
 
   function onMessage(event) {
+    if (typeof(event.data) !== "string") {
+      return;
+    }
     info("onMessage: " + event.data);
     let json = JSON.parse(event.data);
     if (json.name == "toolbox-close") {
