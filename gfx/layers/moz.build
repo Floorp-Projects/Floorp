@@ -178,7 +178,6 @@ EXPORTS.mozilla.layers += [
     'ipc/RemoteContentController.h',
     'ipc/ShadowLayerChild.h',
     'ipc/ShadowLayers.h',
-    'ipc/ShadowLayersManager.h',
     'ipc/SharedBufferManagerChild.h',
     'ipc/SharedBufferManagerParent.h',
     'ipc/SharedPlanarYCbCrImage.h',
