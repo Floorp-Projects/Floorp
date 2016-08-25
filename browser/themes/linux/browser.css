@@ -1178,11 +1178,11 @@ notification[value="translation"] menulist > .menulist-dropmarker {
 }
 
 .ac-title {
-  font-size: 14px;
+  font-size: 1.05em;
 }
 
 .ac-tags {
-  font-size: 12px;
+  font-size: 0.9em;
 }
 
 html|span.ac-tag {
@@ -1196,7 +1196,7 @@ html|span.ac-tag {
 .ac-separator,
 .ac-url,
 .ac-action {
-  font-size: 12px;
+  font-size: 0.9em;
   color: -moz-nativehyperlinktext;
 }
 
