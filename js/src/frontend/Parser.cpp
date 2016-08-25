@@ -3557,7 +3557,7 @@ Parser<ParseHandler>::statementList(YieldHandling yieldHandling)
                 return null();
             statementBegin = pos.begin;
         }
-        Node next = statement(yieldHandling, canHaveDirectives);
+        Node next = statementListItem(yieldHandling, canHaveDirectives);
         if (!next) {
             if (tokenStream.isEOF())
                 isUnexpectedEOF_ = true;
@@ -5405,7 +5405,7 @@ Parser<ParseHandler>::switchStatement(YieldHandling yieldHandling)
                     return null();
                 statementBegin = pos.begin;
             }
-            Node stmt = statement(yieldHandling);
+            Node stmt = statementListItem(yieldHandling);
             if (!stmt)
                 return null();
             if (!warnedAboutStatementsAfterReturn) {
