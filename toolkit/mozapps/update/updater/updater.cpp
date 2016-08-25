@@ -59,6 +59,7 @@
 
 #include "mozilla/Compiler.h"
 #include "mozilla/Types.h"
+#include "mozilla/UniquePtr.h"
 
 // Amount of the progress bar to use in each of the 3 update stages,
 // should total 100.0.
@@ -320,6 +321,7 @@ static bool sIsOSUpdate = false;
 static NS_tchar* gDestPath;
 static NS_tchar gCallbackRelPath[MAXPATHLEN];
 static NS_tchar gCallbackBackupPath[MAXPATHLEN];
+static NS_tchar gDeleteDirPath[MAXPATHLEN];
 #endif
 
 static const NS_tchar kWhitespace[] = NS_T(" \t");
@@ -380,9 +382,8 @@ EnvHasValue(const char *name)
   return (val && *val);
 }
 
-#ifdef XP_WIN
 /**
- * Coverts a relative update path to a full path for Windows.
+ * Coverts a relative update path to a full path.
  *
  * @param  relpath
  *         The relative path to convert to a full path.
@@ -391,23 +392,56 @@ EnvHasValue(const char *name)
 static NS_tchar*
 get_full_path(const NS_tchar *relpath)
 {
-  size_t lendestpath = NS_tstrlen(gDestPath);
+  NS_tchar *destpath = sStagedUpdate ? gWorkingDirPath : gInstallDirPath;
+  size_t lendestpath = NS_tstrlen(destpath);
   size_t lenrelpath = NS_tstrlen(relpath);
-  NS_tchar *s = (NS_tchar *) malloc((lendestpath + lenrelpath + 1) * sizeof(NS_tchar));
-  if (!s)
+  NS_tchar *s = new NS_tchar[lendestpath + lenrelpath + 2];
+  if (!s) {
     return nullptr;
+  }
 
   NS_tchar *c = s;
 
-  NS_tstrcpy(c, gDestPath);
+  NS_tstrcpy(c, destpath);
   c += lendestpath;
+  NS_tstrcat(c, NS_T("/"));
+  c++;
+
   NS_tstrcat(c, relpath);
   c += lenrelpath;
   *c = NS_T('\0');
-  c++;
   return s;
 }
+
+/**
+ * Converts a full update path into a relative path; reverses get_full_path.
+ *
+ * @param  fullpath
+ *         The absolute path to convert into a relative path.
+ * return pointer to the location within fullpath where the relative path starts
+ *        or fullpath itself if it already looks relative.
+ */
+static const NS_tchar*
+get_relative_path(const NS_tchar *fullpath)
+{
+  // If the path isn't absolute, just return it as-is.
+#ifdef XP_WIN
+  if (fullpath[1] != ':' && fullpath[2] != '\\') {
+#else
+  if (fullpath[0] != '/') {
 #endif
+    return fullpath;
+  }
+
+  NS_tchar *prefix = sStagedUpdate ? gWorkingDirPath : gInstallDirPath;
+
+  // If the path isn't long enough to be absolute, return it as-is.
+  if (NS_tstrlen(fullpath) <= NS_tstrlen(prefix)) {
+    return fullpath;
+  }
+
+  return fullpath + NS_tstrlen(prefix) + 1;
+}
 
 /**
  * Gets the platform specific path and performs simple checks to the path. If
@@ -968,14 +1002,18 @@ static int backup_create(const NS_tchar *path)
 
 // Rename the backup of the specified file that was created by renaming it back
 // to the original file.
-static int backup_restore(const NS_tchar *path)
+static int backup_restore(const NS_tchar *path, const NS_tchar *relPath)
 {
   NS_tchar backup[MAXPATHLEN];
   NS_tsnprintf(backup, sizeof(backup)/sizeof(backup[0]),
                NS_T("%s") BACKUP_EXT, path);
 
+  NS_tchar relBackup[MAXPATHLEN];
+  NS_tsnprintf(relBackup, sizeof(relBackup) / sizeof(relBackup[0]),
+    NS_T("%s") BACKUP_EXT, relPath);
+
   if (NS_taccess(backup, F_OK)) {
-    LOG(("backup_restore: backup file doesn't exist: " LOG_S, backup));
+    LOG(("backup_restore: backup file doesn't exist: " LOG_S, relBackup));
     return OK;
   }
 
@@ -983,11 +1021,15 @@ static int backup_restore(const NS_tchar *path)
 }
 
 // Discard the backup of the specified file that was created by renaming it.
-static int backup_discard(const NS_tchar *path)
+static int backup_discard(const NS_tchar *path, const NS_tchar *relPath)
 {
   NS_tchar backup[MAXPATHLEN];
   NS_tsnprintf(backup, sizeof(backup)/sizeof(backup[0]),
                NS_T("%s") BACKUP_EXT, path);
+
+  NS_tchar relBackup[MAXPATHLEN];
+  NS_tsnprintf(relBackup, sizeof(relBackup) / sizeof(relBackup[0]),
+    NS_T("%s") BACKUP_EXT, relPath);
 
   // Nothing to discard
   if (NS_taccess(backup, F_OK)) {
@@ -997,12 +1039,12 @@ static int backup_discard(const NS_tchar *path)
   int rv = ensure_remove(backup);
 #if defined(XP_WIN)
   if (rv && !sStagedUpdate && !sReplaceRequest) {
-    LOG(("backup_discard: unable to remove: " LOG_S, backup));
+    LOG(("backup_discard: unable to remove: " LOG_S, relBackup));
     NS_tchar path[MAXPATHLEN];
-    GetTempFileNameW(DELETE_DIR, L"moz", 0, path);
+    GetTempFileNameW(gDeleteDirPath, L"moz", 0, path);
     if (rename_file(backup, path)) {
       LOG(("backup_discard: failed to rename file:" LOG_S ", dst:" LOG_S,
-           backup, path));
+           relBackup, relPath));
       return WRITE_ERROR_DELETE_BACKUP;
     }
     // The MoveFileEx call to remove the file on OS reboot will fail if the
@@ -1012,10 +1054,10 @@ static int backup_discard(const NS_tchar *path)
     // applied, on reinstall, and on uninstall.
     if (MoveFileEx(path, nullptr, MOVEFILE_DELAY_UNTIL_REBOOT)) {
       LOG(("backup_discard: file renamed and will be removed on OS " \
-           "reboot: " LOG_S, path));
+           "reboot: " LOG_S, relPath));
     } else {
       LOG(("backup_discard: failed to schedule OS reboot removal of " \
-           "file: " LOG_S, path));
+           "file: " LOG_S, relPath));
     }
   }
 #else
@@ -1027,12 +1069,13 @@ static int backup_discard(const NS_tchar *path)
 }
 
 // Helper function for post-processing a temporary backup.
-static void backup_finish(const NS_tchar *path, int status)
+static void backup_finish(const NS_tchar *path, const NS_tchar *relPath,
+                          int status)
 {
   if (status == OK)
-    backup_discard(path);
+    backup_discard(path, relPath);
   else
-    backup_restore(path);
+    backup_restore(path, relPath);
 }
 
 //-----------------------------------------------------------------------------
@@ -1070,7 +1113,7 @@ private:
 class RemoveFile : public Action
 {
 public:
-  RemoveFile() : mFile(nullptr), mSkip(0) { }
+  RemoveFile() : mSkip(0) { }
 
   int Parse(NS_tchar *line);
   int Prepare();
@@ -1078,7 +1121,8 @@ public:
   void Finish(int status);
 
 private:
-  const NS_tchar *mFile;
+  mozilla::UniquePtr<NS_tchar[]> mFile;
+  mozilla::UniquePtr<NS_tchar[]> mRelPath;
   int mSkip;
 };
 
@@ -1087,9 +1131,18 @@ RemoveFile::Parse(NS_tchar *line)
 {
   // format "<deadfile>"
 
-  mFile = get_valid_path(&line);
-  if (!mFile)
+  NS_tchar * validPath = get_valid_path(&line);
+  if (!validPath) {
     return PARSE_ERROR;
+  }
+
+  mRelPath = mozilla::MakeUnique<NS_tchar[]>(MAXPATHLEN);
+  NS_tstrcpy(mRelPath.get(), validPath);
+
+  mFile.reset(get_full_path(validPath));
+  if (!mFile) {
+    return PARSE_ERROR;
+  }
 
   return OK;
 }
@@ -1098,33 +1151,33 @@ int
 RemoveFile::Prepare()
 {
   // Skip the file if it already doesn't exist.
-  int rv = NS_taccess(mFile, F_OK);
+  int rv = NS_taccess(mFile.get(), F_OK);
   if (rv) {
     mSkip = 1;
     mProgressCost = 0;
     return OK;
   }
 
-  LOG(("PREPARE REMOVEFILE " LOG_S, mFile));
+  LOG(("PREPARE REMOVEFILE " LOG_S, mRelPath.get()));
 
   // Make sure that we're actually a file...
   struct NS_tstat_t fileInfo;
-  rv = NS_tstat(mFile, &fileInfo);
+  rv = NS_tstat(mFile.get(), &fileInfo);
   if (rv) {
-    LOG(("failed to read file status info: " LOG_S ", err: %d", mFile,
+    LOG(("failed to read file status info: " LOG_S ", err: %d", mFile.get(),
          errno));
     return READ_ERROR;
   }
 
   if (!S_ISREG(fileInfo.st_mode)) {
-    LOG(("path present, but not a file: " LOG_S, mFile));
+    LOG(("path present, but not a file: " LOG_S, mFile.get()));
     return DELETE_ERROR_EXPECTED_FILE;
   }
 
-  NS_tchar *slash = (NS_tchar *) NS_tstrrchr(mFile, NS_T('/'));
+  NS_tchar *slash = (NS_tchar *) NS_tstrrchr(mFile.get(), NS_T('/'));
   if (slash) {
     *slash = NS_T('\0');
-    rv = NS_taccess(mFile, W_OK);
+    rv = NS_taccess(mFile.get(), W_OK);
     *slash = NS_T('/');
   } else {
     rv = NS_taccess(NS_T("."), W_OK);
@@ -1144,11 +1197,11 @@ RemoveFile::Execute()
   if (mSkip)
     return OK;
 
-  LOG(("EXECUTE REMOVEFILE " LOG_S, mFile));
+  LOG(("EXECUTE REMOVEFILE " LOG_S, mRelPath.get()));
 
   // The file is checked for existence here and in Prepare since it might have
   // been removed by a separate instruction: bug 311099.
-  int rv = NS_taccess(mFile, F_OK);
+  int rv = NS_taccess(mFile.get(), F_OK);
   if (rv) {
     LOG(("file cannot be removed because it does not exist; skipping"));
     mSkip = 1;
@@ -1156,7 +1209,7 @@ RemoveFile::Execute()
   }
 
   // Rename the old file. It will be removed in Finish.
-  rv = backup_create(mFile);
+  rv = backup_create(mFile.get());
   if (rv) {
     LOG(("backup_create failed: %d", rv));
     return rv;
@@ -1171,15 +1224,15 @@ RemoveFile::Finish(int status)
   if (mSkip)
     return;
 
-  LOG(("FINISH REMOVEFILE " LOG_S, mFile));
+  LOG(("FINISH REMOVEFILE " LOG_S, mRelPath.get()));
 
-  backup_finish(mFile, status);
+  backup_finish(mFile.get(), mRelPath.get(), status);
 }
 
 class RemoveDir : public Action
 {
 public:
-  RemoveDir() : mDir(nullptr), mSkip(0) { }
+  RemoveDir() : mSkip(0) { }
 
   virtual int Parse(NS_tchar *line);
   virtual int Prepare(); // check that the source dir exists
@@ -1187,7 +1240,8 @@ public:
   virtual void Finish(int status);
 
 private:
-  const NS_tchar *mDir;
+  mozilla::UniquePtr<NS_tchar[]> mDir;
+  mozilla::UniquePtr<NS_tchar[]> mRelPath;
   int mSkip;
 };
 
@@ -1196,9 +1250,18 @@ RemoveDir::Parse(NS_tchar *line)
 {
   // format "<deaddir>/"
 
-  mDir = get_valid_path(&line, true);
-  if (!mDir)
+  NS_tchar * validPath = get_valid_path(&line, true);
+  if (!validPath) {
     return PARSE_ERROR;
+  }
+
+  mRelPath = mozilla::MakeUnique<NS_tchar[]>(MAXPATHLEN);
+  NS_tstrcpy(mRelPath.get(), validPath);
+
+  mDir.reset(get_full_path(validPath));
+  if (!mDir) {
+    return PARSE_ERROR;
+  }
 
   return OK;
 }
@@ -1207,30 +1270,30 @@ int
 RemoveDir::Prepare()
 {
   // We expect the directory to exist if we are to remove it.
-  int rv = NS_taccess(mDir, F_OK);
+  int rv = NS_taccess(mDir.get(), F_OK);
   if (rv) {
     mSkip = 1;
     mProgressCost = 0;
     return OK;
   }
 
-  LOG(("PREPARE REMOVEDIR " LOG_S "/", mDir));
+  LOG(("PREPARE REMOVEDIR " LOG_S "/", mRelPath.get()));
 
   // Make sure that we're actually a dir.
   struct NS_tstat_t dirInfo;
-  rv = NS_tstat(mDir, &dirInfo);
+  rv = NS_tstat(mDir.get(), &dirInfo);
   if (rv) {
-    LOG(("failed to read directory status info: " LOG_S ", err: %d", mDir,
+    LOG(("failed to read directory status info: " LOG_S ", err: %d", mRelPath.get(),
          errno));
     return READ_ERROR;
   }
 
   if (!S_ISDIR(dirInfo.st_mode)) {
-    LOG(("path present, but not a directory: " LOG_S, mDir));
+    LOG(("path present, but not a directory: " LOG_S, mRelPath.get()));
     return DELETE_ERROR_EXPECTED_DIR;
   }
 
-  rv = NS_taccess(mDir, W_OK);
+  rv = NS_taccess(mDir.get(), W_OK);
   if (rv) {
     LOG(("access failed: %d, %d", rv, errno));
     return WRITE_ERROR_DIR_ACCESS_DENIED;
@@ -1245,11 +1308,11 @@ RemoveDir::Execute()
   if (mSkip)
     return OK;
 
-  LOG(("EXECUTE REMOVEDIR " LOG_S "/", mDir));
+  LOG(("EXECUTE REMOVEDIR " LOG_S "/", mRelPath.get()));
 
   // The directory is checked for existence at every step since it might have
   // been removed by a separate instruction: bug 311099.
-  int rv = NS_taccess(mDir, F_OK);
+  int rv = NS_taccess(mDir.get(), F_OK);
   if (rv) {
     LOG(("directory no longer exists; skipping"));
     mSkip = 1;
@@ -1264,11 +1327,11 @@ RemoveDir::Finish(int status)
   if (mSkip || status != OK)
     return;
 
-  LOG(("FINISH REMOVEDIR " LOG_S "/", mDir));
+  LOG(("FINISH REMOVEDIR " LOG_S "/", mRelPath.get()));
 
   // The directory is checked for existence at every step since it might have
   // been removed by a separate instruction: bug 311099.
-  int rv = NS_taccess(mDir, F_OK);
+  int rv = NS_taccess(mDir.get(), F_OK);
   if (rv) {
     LOG(("directory no longer exists; skipping"));
     return;
@@ -1276,9 +1339,9 @@ RemoveDir::Finish(int status)
 
 
   if (status == OK) {
-    if (NS_trmdir(mDir)) {
+    if (NS_trmdir(mDir.get())) {
       LOG(("non-fatal error removing directory: " LOG_S "/, rv: %d, err: %d",
-           mDir, rv, errno));
+           mRelPath.get(), rv, errno));
     }
   }
 }
@@ -1286,9 +1349,7 @@ RemoveDir::Finish(int status)
 class AddFile : public Action
 {
 public:
-  AddFile() : mFile(nullptr)
-            , mAdded(false)
-            { }
+  AddFile() : mAdded(false) { }
 
   virtual int Parse(NS_tchar *line);
   virtual int Prepare();
@@ -1296,7 +1357,8 @@ public:
   virtual void Finish(int status);
 
 private:
-  const NS_tchar *mFile;
+  mozilla::UniquePtr<NS_tchar[]> mFile;
+  mozilla::UniquePtr<NS_tchar[]> mRelPath;
   bool mAdded;
 };
 
@@ -1305,9 +1367,18 @@ AddFile::Parse(NS_tchar *line)
 {
   // format "<newfile>"
 
-  mFile = get_valid_path(&line);
-  if (!mFile)
+  NS_tchar * validPath = get_valid_path(&line);
+  if (!validPath) {
     return PARSE_ERROR;
+  }
+
+  mRelPath = mozilla::MakeUnique<NS_tchar[]>(MAXPATHLEN);
+  NS_tstrcpy(mRelPath.get(), validPath);
+
+  mFile.reset(get_full_path(validPath));
+  if (!mFile) {
+    return PARSE_ERROR;
+  }
 
   return OK;
 }
@@ -1315,7 +1386,7 @@ AddFile::Parse(NS_tchar *line)
 int
 AddFile::Prepare()
 {
-  LOG(("PREPARE ADD " LOG_S, mFile));
+  LOG(("PREPARE ADD " LOG_S, mRelPath.get()));
 
   return OK;
 }
@@ -1323,33 +1394,33 @@ AddFile::Prepare()
 int
 AddFile::Execute()
 {
-  LOG(("EXECUTE ADD " LOG_S, mFile));
+  LOG(("EXECUTE ADD " LOG_S, mRelPath.get()));
 
   int rv;
 
   // First make sure that we can actually get rid of any existing file.
-  rv = NS_taccess(mFile, F_OK);
+  rv = NS_taccess(mFile.get(), F_OK);
   if (rv == 0) {
-    rv = backup_create(mFile);
+    rv = backup_create(mFile.get());
     if (rv)
       return rv;
   } else {
-    rv = ensure_parent_dir(mFile);
+    rv = ensure_parent_dir(mFile.get());
     if (rv)
       return rv;
   }
 
 #ifdef XP_WIN
   char sourcefile[MAXPATHLEN];
-  if (!WideCharToMultiByte(CP_UTF8, 0, mFile, -1, sourcefile, MAXPATHLEN,
-                           nullptr, nullptr)) {
+  if (!WideCharToMultiByte(CP_UTF8, 0, mRelPath.get(), -1, sourcefile,
+                           MAXPATHLEN, nullptr, nullptr)) {
     LOG(("error converting wchar to utf8: %d", GetLastError()));
     return STRING_CONVERSION_ERROR;
   }
 
-  rv = gArchiveReader.ExtractFile(sourcefile, mFile);
+  rv = gArchiveReader.ExtractFile(sourcefile, mFile.get());
 #else
-  rv = gArchiveReader.ExtractFile(mFile, mFile);
+  rv = gArchiveReader.ExtractFile(mRelPath.get(), mFile.get());
 #endif
   if (!rv) {
     mAdded = true;
@@ -1360,18 +1431,18 @@ AddFile::Execute()
 void
 AddFile::Finish(int status)
 {
-  LOG(("FINISH ADD " LOG_S, mFile));
+  LOG(("FINISH ADD " LOG_S, mRelPath.get()));
   // When there is an update failure and a file has been added it is removed
   // here since there might not be a backup to replace it.
   if (status && mAdded)
-    NS_tremove(mFile);
-  backup_finish(mFile, status);
+    NS_tremove(mFile.get());
+  backup_finish(mFile.get(), mRelPath.get(), status);
 }
 
 class PatchFile : public Action
 {
 public:
-  PatchFile() : mPatchIndex(-1), buf(nullptr) { }
+  PatchFile() : mPatchFile(nullptr), mPatchIndex(-1), buf(nullptr) { }
 
   virtual ~PatchFile();
 
@@ -1386,7 +1457,8 @@ private:
   static int sPatchIndex;
 
   const NS_tchar *mPatchFile;
-  const NS_tchar *mFile;
+  mozilla::UniquePtr<NS_tchar[]> mFile;
+  mozilla::UniquePtr<NS_tchar[]> mFileRelPath;
   int mPatchIndex;
   MBSPatchHeader header;
   unsigned char *buf;
@@ -1425,7 +1497,7 @@ PatchFile::LoadSourceFile(FILE* ofile)
   int rv = fstat(fileno((FILE *)ofile), &os);
   if (rv) {
     LOG(("LoadSourceFile: unable to stat destination file: " LOG_S ", " \
-         "err: %d", mFile, errno));
+         "err: %d", mFileRelPath.get(), errno));
     return READ_ERROR;
   }
 
@@ -1447,7 +1519,7 @@ PatchFile::LoadSourceFile(FILE* ofile)
     size_t c = fread(rb, 1, count, ofile);
     if (c != count) {
       LOG(("LoadSourceFile: error reading destination file: " LOG_S,
-           mFile));
+           mFileRelPath.get()));
       return READ_ERROR;
     }
 
@@ -1485,7 +1557,15 @@ PatchFile::Parse(NS_tchar *line)
     return PARSE_ERROR;
   }
 
-  mFile = get_valid_path(&line);
+  NS_tchar * validPath = get_valid_path(&line);
+  if (!validPath) {
+    return PARSE_ERROR;
+  }
+
+  mFileRelPath = mozilla::MakeUnique<NS_tchar[]>(MAXPATHLEN);
+  NS_tstrcpy(mFileRelPath.get(), validPath);
+
+  mFile.reset(get_full_path(validPath));
   if (!mFile) {
     return PARSE_ERROR;
   }
@@ -1496,7 +1576,7 @@ PatchFile::Parse(NS_tchar *line)
 int
 PatchFile::Prepare()
 {
-  LOG(("PREPARE PATCH " LOG_S, mFile));
+  LOG(("PREPARE PATCH " LOG_S, mFileRelPath.get()));
 
   // extract the patch to a temporary file
   mPatchIndex = sPatchIndex++;
@@ -1537,7 +1617,7 @@ PatchFile::Prepare()
 int
 PatchFile::Execute()
 {
-  LOG(("EXECUTE PATCH " LOG_S, mFile));
+  LOG(("EXECUTE PATCH " LOG_S, mFileRelPath.get()));
 
   fseek(mPatchStream, 0, SEEK_SET);
 
@@ -1548,20 +1628,20 @@ PatchFile::Execute()
 
   FILE *origfile = nullptr;
 #ifdef XP_WIN
-  if (NS_tstrcmp(mFile, gCallbackRelPath) == 0) {
+  if (NS_tstrcmp(mFileRelPath.get(), gCallbackRelPath) == 0) {
     // Read from the copy of the callback when patching since the callback can't
     // be opened for reading to prevent the application from being launched.
     origfile = NS_tfopen(gCallbackBackupPath, NS_T("rb"));
   } else {
-    origfile = NS_tfopen(mFile, NS_T("rb"));
+    origfile = NS_tfopen(mFile.get(), NS_T("rb"));
   }
 #else
-  origfile = NS_tfopen(mFile, NS_T("rb"));
+  origfile = NS_tfopen(mFile.get(), NS_T("rb"));
 #endif
 
   if (!origfile) {
-    LOG(("unable to open destination file: " LOG_S ", err: %d", mFile,
-         errno));
+    LOG(("unable to open destination file: " LOG_S ", err: %d",
+         mFileRelPath.get(), errno));
     return READ_ERROR;
   }
 
@@ -1575,20 +1655,20 @@ PatchFile::Execute()
   // Rename the destination file if it exists before proceeding so it can be
   // used to restore the file to its original state if there is an error.
   struct NS_tstat_t ss;
-  rv = NS_tstat(mFile, &ss);
+  rv = NS_tstat(mFile.get(), &ss);
   if (rv) {
-    LOG(("failed to read file status info: " LOG_S ", err: %d", mFile,
-         errno));
+    LOG(("failed to read file status info: " LOG_S ", err: %d",
+         mFileRelPath.get(), errno));
     return READ_ERROR;
   }
 
-  rv = backup_create(mFile);
+  rv = backup_create(mFile.get());
   if (rv) {
     return rv;
   }
 
 #if defined(HAVE_POSIX_FALLOCATE)
-  AutoFile ofile(ensure_open(mFile, NS_T("wb+"), ss.st_mode));
+  AutoFile ofile(ensure_open(mFile.get(), NS_T("wb+"), ss.st_mode));
   posix_fallocate(fileno((FILE *)ofile), 0, header.dlen);
 #elif defined(XP_WIN)
   bool shouldTruncate = true;
@@ -1599,7 +1679,7 @@ PatchFile::Execute()
   // 2. _get_osfhandle and then setting the size reduced fragmentation though
   //    not completely. There are also reports of _get_osfhandle failing on
   //    mingw.
-  HANDLE hfile = CreateFileW(mFile,
+  HANDLE hfile = CreateFileW(mFile.get(),
                              GENERIC_WRITE,
                              0,
                              nullptr,
@@ -1616,10 +1696,10 @@ PatchFile::Execute()
     CloseHandle(hfile);
   }
 
-  AutoFile ofile(ensure_open(mFile, shouldTruncate ? NS_T("wb+") : NS_T("rb+"),
+  AutoFile ofile(ensure_open(mFile.get(), shouldTruncate ? NS_T("wb+") : NS_T("rb+"),
                              ss.st_mode));
 #elif defined(XP_MACOSX)
-  AutoFile ofile(ensure_open(mFile, NS_T("wb+"), ss.st_mode));
+  AutoFile ofile(ensure_open(mFile.get(), NS_T("wb+"), ss.st_mode));
   // Modified code from FileUtils.cpp
   fstore_t store = {F_ALLOCATECONTIG, F_PEOFPOSMODE, 0, header.dlen};
   // Try to get a continous chunk of disk space
@@ -1634,11 +1714,12 @@ PatchFile::Execute()
     ftruncate(fileno((FILE *)ofile), header.dlen);
   }
 #else
-  AutoFile ofile(ensure_open(mFile, NS_T("wb+"), ss.st_mode));
+  AutoFile ofile(ensure_open(mFile.get(), NS_T("wb+"), ss.st_mode));
 #endif
 
   if (ofile == nullptr) {
-    LOG(("unable to create new file: " LOG_S ", err: %d", mFile, errno));
+    LOG(("unable to create new file: " LOG_S ", err: %d", mFileRelPath.get(),
+         errno));
     return WRITE_ERROR_OPEN_PATCH_FILE;
   }
 
@@ -1670,23 +1751,21 @@ PatchFile::Execute()
 void
 PatchFile::Finish(int status)
 {
-  LOG(("FINISH PATCH " LOG_S, mFile));
+  LOG(("FINISH PATCH " LOG_S, mFileRelPath.get()));
 
-  backup_finish(mFile, status);
+  backup_finish(mFile.get(), mFileRelPath.get(), status);
 }
 
 class AddIfFile : public AddFile
 {
 public:
-  AddIfFile() : mTestFile(nullptr) { }
-
   virtual int Parse(NS_tchar *line);
   virtual int Prepare();
   virtual int Execute();
   virtual void Finish(int status);
 
 protected:
-  const NS_tchar *mTestFile;
+  mozilla::UniquePtr<NS_tchar[]> mTestFile;
 };
 
 int
@@ -1694,14 +1773,16 @@ AddIfFile::Parse(NS_tchar *line)
 {
   // format "<testfile>" "<newfile>"
 
-  mTestFile = get_valid_path(&line);
-  if (!mTestFile)
+  mTestFile.reset(get_full_path(get_valid_path(&line)));
+  if (!mTestFile) {
     return PARSE_ERROR;
+  }
 
   // consume whitespace between args
   NS_tchar *q = mstrtok(kQuote, &line);
-  if (!q)
+  if (!q) {
     return PARSE_ERROR;
+  }
 
   return AddFile::Parse(line);
 }
@@ -1710,7 +1791,7 @@ int
 AddIfFile::Prepare()
 {
   // If the test file does not exist, then skip this action.
-  if (NS_taccess(mTestFile, F_OK)) {
+  if (NS_taccess(mTestFile.get(), F_OK)) {
     mTestFile = nullptr;
     return OK;
   }
@@ -1739,15 +1820,13 @@ AddIfFile::Finish(int status)
 class AddIfNotFile : public AddFile
 {
 public:
-  AddIfNotFile() : mTestFile(NULL) { }
-
   virtual int Parse(NS_tchar *line);
   virtual int Prepare();
   virtual int Execute();
   virtual void Finish(int status);
 
 protected:
-  const NS_tchar *mTestFile;
+  mozilla::UniquePtr<NS_tchar[]> mTestFile;
 };
 
 int
@@ -1755,14 +1834,16 @@ AddIfNotFile::Parse(NS_tchar *line)
 {
   // format "<testfile>" "<newfile>"
 
-  mTestFile = get_valid_path(&line);
-  if (!mTestFile)
+  mTestFile.reset(get_full_path(get_valid_path(&line)));
+  if (!mTestFile) {
     return PARSE_ERROR;
+  }
 
   // consume whitespace between args
   NS_tchar *q = mstrtok(kQuote, &line);
-  if (!q)
+  if (!q) {
     return PARSE_ERROR;
+  }
 
   return AddFile::Parse(line);
 }
@@ -1771,7 +1852,7 @@ int
 AddIfNotFile::Prepare()
 {
   // If the test file exists, then skip this action.
-  if (!NS_taccess(mTestFile, F_OK)) {
+  if (!NS_taccess(mTestFile.get(), F_OK)) {
     mTestFile = NULL;
     return OK;
   }
@@ -1800,15 +1881,13 @@ AddIfNotFile::Finish(int status)
 class PatchIfFile : public PatchFile
 {
 public:
-  PatchIfFile() : mTestFile(nullptr) { }
-
   virtual int Parse(NS_tchar *line);
   virtual int Prepare(); // should check for patch file and for checksum here
   virtual int Execute();
   virtual void Finish(int status);
 
 private:
-  const NS_tchar *mTestFile;
+  mozilla::UniquePtr<NS_tchar[]> mTestFile;
 };
 
 int
@@ -1816,14 +1895,16 @@ PatchIfFile::Parse(NS_tchar *line)
 {
   // format "<testfile>" "<patchfile>" "<filetopatch>"
 
-  mTestFile = get_valid_path(&line);
-  if (!mTestFile)
+  mTestFile.reset(get_full_path(get_valid_path(&line)));
+  if (!mTestFile) {
     return PARSE_ERROR;
+  }
 
   // consume whitespace between args
   NS_tchar *q = mstrtok(kQuote, &line);
-  if (!q)
+  if (!q) {
     return PARSE_ERROR;
+  }
 
   return PatchFile::Parse(line);
 }
@@ -1832,7 +1913,7 @@ int
 PatchIfFile::Prepare()
 {
   // If the test file does not exist, then skip this action.
-  if (NS_taccess(mTestFile, F_OK)) {
+  if (NS_taccess(mTestFile.get(), F_OK)) {
     mTestFile = nullptr;
     return OK;
   }
@@ -2515,8 +2596,7 @@ UpdateThreadFunc(void *param)
   if (rv && (sReplaceRequest || sStagedUpdate)) {
 #ifdef XP_WIN
     // On Windows, the current working directory of the process should be changed
-    // so that it's not locked. The working directory for staging an update was
-    // already changed earlier.
+    // so that it's not locked.
     if (sStagedUpdate) {
       NS_tchar sysDir[MAX_PATH + 1] = { L'\0' };
       if (GetSystemDirectoryW(sysDir, MAX_PATH + 1)) {
@@ -2851,21 +2931,30 @@ int NS_main(int argc, NS_tchar **argv)
   LOG(("WORKING DIRECTORY " LOG_S, gWorkingDirPath));
 
 #if defined(XP_WIN)
-  if (sReplaceRequest || sStagedUpdate) {
-    NS_tchar stagedParent[MAX_PATH];
-    NS_tsnprintf(stagedParent, sizeof(stagedParent)/sizeof(stagedParent[0]),
+  if (_wcsnicmp(gWorkingDirPath, gInstallDirPath, MAX_PATH) != 0) {
+    if (!sStagedUpdate && !sReplaceRequest) {
+      WriteStatusFile(INVALID_APPLYTO_DIR_ERROR);
+      LOG(("Installation directory and working directory must be the same "
+           "for non-staged updates. Exiting."));
+      LogFinish();
+      return 1;
+    }
+
+    NS_tchar workingDirParent[MAX_PATH];
+    NS_tsnprintf(workingDirParent,
+                 sizeof(workingDirParent) / sizeof(workingDirParent[0]),
                  NS_T("%s"), gWorkingDirPath);
-    if (!PathRemoveFileSpecW(stagedParent)) {
+    if (!PathRemoveFileSpecW(workingDirParent)) {
       WriteStatusFile(REMOVE_FILE_SPEC_ERROR);
       LOG(("Error calling PathRemoveFileSpecW: %d", GetLastError()));
       LogFinish();
       return 1;
     }
 
-    if (_wcsnicmp(stagedParent, gInstallDirPath, MAX_PATH) != 0) {
-      WriteStatusFile(INVALID_STAGED_PARENT_ERROR);
-      LOG(("Stage and Replace requests require that the working directory " \
-           "is a sub-directory of the installation directory! Exiting"));
+    if (_wcsnicmp(workingDirParent, gInstallDirPath, MAX_PATH) != 0) {
+      WriteStatusFile(INVALID_APPLYTO_DIR_STAGED_ERROR);
+      LOG(("The apply-to directory must be the same as or "
+           "a child of the installation directory! Exiting."));
       LogFinish();
       return 1;
     }
@@ -2923,15 +3012,6 @@ int NS_main(int argc, NS_tchar **argv)
 #endif
 
 #ifdef XP_WIN
-  if (sReplaceRequest) {
-    // On Windows, the current working directory of the process should be changed
-    // so that it's not locked.
-    NS_tchar sysDir[MAX_PATH + 1] = { L'\0' };
-    if (GetSystemDirectoryW(sysDir, MAX_PATH + 1)) {
-      NS_tchdir(sysDir);
-    }
-  }
-
 #ifdef MOZ_MAINTENANCE_SERVICE
   sUsingService = EnvHasValue("MOZ_USING_SERVICE");
   putenv(const_cast<char*>("MOZ_USING_SERVICE="));
@@ -3262,32 +3342,16 @@ int NS_main(int argc, NS_tchar **argv)
     ensure_remove_recursive(gWorkingDirPath);
   }
   if (!sReplaceRequest) {
-    // Change current directory to the directory where we need to apply the update.
-    if (NS_tchdir(gWorkingDirPath) != 0) {
-      // Try to create the destination directory if it doesn't exist
-      int rv = NS_tmkdir(gWorkingDirPath, 0755);
-      if (rv == OK && errno != EEXIST) {
-        // Try changing the current directory again
-        if (NS_tchdir(gWorkingDirPath) != 0) {
-          // OK, time to give up!
+    // Try to create the destination directory if it doesn't exist
+    int rv = NS_tmkdir(gWorkingDirPath, 0755);
+    if (rv != OK && errno != EEXIST) {
 #ifdef XP_MACOSX
-          if (isElevated) {
-            freeArguments(argc, argv);
-            CleanupElevatedMacUpdate(true);
-          }
-#endif
-          return 1;
-        }
-      } else {
-        // Failed to create the directory, bail out
-#ifdef XP_MACOSX
-        if (isElevated) {
-          freeArguments(argc, argv);
-          CleanupElevatedMacUpdate(true);
-        }
-#endif
-        return 1;
+      if (isElevated) {
+        freeArguments(argc, argv);
+        CleanupElevatedMacUpdate(true);
       }
+#endif
+      return 1;
     }
   }
 
@@ -3318,7 +3382,7 @@ int NS_main(int argc, NS_tchar **argv)
 
   NS_tchar applyDirLongPath[MAXPATHLEN];
   if (!GetLongPathNameW(gWorkingDirPath, applyDirLongPath,
-                        sizeof(applyDirLongPath)/sizeof(applyDirLongPath[0]))) {
+                        sizeof(applyDirLongPath) / sizeof(applyDirLongPath[0]))) {
     LOG(("NS_main: unable to find apply to dir: " LOG_S, gWorkingDirPath));
     LogFinish();
     WriteStatusFile(WRITE_ERROR_APPLY_DIR_PATH);
@@ -3488,13 +3552,23 @@ int NS_main(int argc, NS_tchar **argv)
     }
   }
 
-  // DELETE_DIR is not required when staging an update.
+  // DELETE_DIR is not required when performing a staged update or replace
+  // request; it can be used during a replace request but then it doesn't
+  // use gDeleteDirPath.
   if (!sStagedUpdate && !sReplaceRequest) {
     // The directory to move files that are in use to on Windows. This directory
-    // will be deleted after the update is finished or on OS reboot using
-    // MoveFileEx if it contains files that are in use.
-    if (NS_taccess(DELETE_DIR, F_OK)) {
-      NS_tmkdir(DELETE_DIR, 0755);
+    // will be deleted after the update is finished, on OS reboot using
+    // MoveFileEx if it contains files that are in use, or by the post update
+    // process after the update finishes. On Windows when performing a normal
+    // update (e.g. the update is not a staged update and is not a replace
+    // request) gWorkingDirPath is the same as gInstallDirPath and
+    // gWorkingDirPath is used because it is the destination directory.
+    NS_tsnprintf(gDeleteDirPath,
+      sizeof(gDeleteDirPath) / sizeof(gDeleteDirPath[0]),
+      NS_T("%s/%s"), gWorkingDirPath, DELETE_DIR);
+
+    if (NS_taccess(gDeleteDirPath, F_OK)) {
+      NS_tmkdir(gDeleteDirPath, 0755);
     }
   }
 #endif /* XP_WIN */
@@ -3524,7 +3598,7 @@ int NS_main(int argc, NS_tchar **argv)
     NS_tremove(gCallbackBackupPath);
   }
 
-  if (!sStagedUpdate && !sReplaceRequest && _wrmdir(DELETE_DIR)) {
+  if (!sStagedUpdate && !sReplaceRequest && _wrmdir(gDeleteDirPath)) {
     LOG(("NS_main: unable to remove directory: " LOG_S ", err: %d",
          DELETE_DIR, errno));
     // The directory probably couldn't be removed due to it containing files
@@ -3536,7 +3610,7 @@ int NS_main(int argc, NS_tchar **argv)
     // access to the HKEY_LOCAL_MACHINE registry key but this is ok since the
     // installer / uninstaller will delete the directory along with its contents
     // after an update is applied, on reinstall, and on uninstall.
-    if (MoveFileEx(DELETE_DIR, nullptr, MOVEFILE_DELAY_UNTIL_REBOOT)) {
+    if (MoveFileEx(gDeleteDirPath, nullptr, MOVEFILE_DELAY_UNTIL_REBOOT)) {
       LOG(("NS_main: directory will be removed on OS reboot: " LOG_S,
            DELETE_DIR));
     } else {
@@ -3743,9 +3817,9 @@ int add_dir_entries(const NS_tchar *dirpath, ActionList *list)
 
   NS_tsnprintf(searchspec, sizeof(searchspec)/sizeof(searchspec[0]),
                NS_T("%s*"), dirpath);
-  const NS_tchar *pszSpec = get_full_path(searchspec);
+  mozilla::UniquePtr<const NS_tchar> pszSpec(get_full_path(searchspec));
 
-  hFindFile = FindFirstFileW(pszSpec, &finddata);
+  hFindFile = FindFirstFileW(pszSpec.get(), &finddata);
   if (hFindFile != INVALID_HANDLE_VALUE) {
     do {
       // Don't process the current or parent directory.
@@ -3777,6 +3851,7 @@ int add_dir_entries(const NS_tchar *dirpath, ActionList *list)
                quotedpath, rv));
           return rv;
         }
+        free(quotedpath);
 
         list->Append(action);
       }
@@ -3791,11 +3866,13 @@ int add_dir_entries(const NS_tchar *dirpath, ActionList *list)
 
       Action *action = new RemoveDir();
       rv = action->Parse(quotedpath);
-      if (rv)
+      if (rv) {
         LOG(("add_dir_entries Parse error on close: " LOG_S ", err: %d",
              quotedpath, rv));
-      else
+      } else {
         list->Append(action);
+      }
+      free(quotedpath);
     }
   }
 
@@ -3806,24 +3883,17 @@ int add_dir_entries(const NS_tchar *dirpath, ActionList *list)
 int add_dir_entries(const NS_tchar *dirpath, ActionList *list)
 {
   int rv = OK;
-  NS_tchar searchpath[MAXPATHLEN];
   NS_tchar foundpath[MAXPATHLEN];
   struct {
     dirent dent_buffer;
     char chars[MAXNAMLEN];
   } ent_buf;
   struct dirent* ent;
+  mozilla::UniquePtr<NS_tchar[]> searchpath(get_full_path(dirpath));
 
-
-  NS_tsnprintf(searchpath, sizeof(searchpath)/sizeof(searchpath[0]), NS_T("%s"),
-               dirpath);
-  // Remove the trailing slash so the paths don't contain double slashes. The
-  // existence of the slash has already been checked in DoUpdate.
-  searchpath[NS_tstrlen(searchpath) - 1] = NS_T('\0');
-
-  DIR* dir = opendir(searchpath);
+  DIR* dir = opendir(searchpath.get());
   if (!dir) {
-    LOG(("add_dir_entries error on opendir: " LOG_S ", err: %d", searchpath,
+    LOG(("add_dir_entries error on opendir: " LOG_S ", err: %d", searchpath.get(),
          errno));
     return UNEXPECTED_FILE_OPERATION_ERROR;
   }
@@ -3834,7 +3904,7 @@ int add_dir_entries(const NS_tchar *dirpath, ActionList *list)
       continue;
 
     NS_tsnprintf(foundpath, sizeof(foundpath)/sizeof(foundpath[0]),
-                 NS_T("%s%s"), dirpath, ent->d_name);
+                 NS_T("%s%s"), searchpath.get(), ent->d_name);
     struct stat64 st_buf;
     int test = stat64(foundpath, &st_buf);
     if (test) {
@@ -3853,7 +3923,7 @@ int add_dir_entries(const NS_tchar *dirpath, ActionList *list)
       }
     } else {
       // Add the file to be removed to the ActionList.
-      NS_tchar *quotedpath = get_quoted_path(foundpath);
+      NS_tchar *quotedpath = get_quoted_path(get_relative_path(foundpath));
       if (!quotedpath) {
         closedir(dir);
         return PARSE_ERROR;
@@ -3874,7 +3944,7 @@ int add_dir_entries(const NS_tchar *dirpath, ActionList *list)
   closedir(dir);
 
   // Add the directory to be removed to the ActionList.
-  NS_tchar *quotedpath = get_quoted_path(dirpath);
+  NS_tchar *quotedpath = get_quoted_path(get_relative_path(dirpath));
   if (!quotedpath)
     return PARSE_ERROR;
 
@@ -3898,14 +3968,12 @@ int add_dir_entries(const NS_tchar *dirpath, ActionList *list)
   int rv = OK;
   FTS *ftsdir;
   FTSENT *ftsdirEntry;
-  NS_tchar searchpath[MAXPATHLEN];
+  mozilla::UniquePtr<NS_tchar[]> searchpath(get_full_path(dirpath));
 
-  NS_tsnprintf(searchpath, sizeof(searchpath)/sizeof(searchpath[0]), NS_T("%s"),
-               dirpath);
   // Remove the trailing slash so the paths don't contain double slashes. The
   // existence of the slash has already been checked in DoUpdate.
-  searchpath[NS_tstrlen(searchpath) - 1] = NS_T('\0');
-  char* const pathargv[] = {searchpath, nullptr};
+  searchpath[NS_tstrlen(searchpath.get()) - 1] = NS_T('\0');
+  char* const pathargv[] = {searchpath.get(), nullptr};
 
   // FTS_NOCHDIR is used so relative paths from the destination directory are
   // returned.
@@ -3916,7 +3984,7 @@ int add_dir_entries(const NS_tchar *dirpath, ActionList *list)
 
   while ((ftsdirEntry = fts_read(ftsdir)) != nullptr) {
     NS_tchar foundpath[MAXPATHLEN];
-    NS_tchar *quotedpath;
+    NS_tchar *quotedpath = nullptr;
     Action *action = nullptr;
 
     switch (ftsdirEntry->fts_info) {
@@ -3935,13 +4003,14 @@ int add_dir_entries(const NS_tchar *dirpath, ActionList *list)
         // Add the file to be removed to the ActionList.
         NS_tsnprintf(foundpath, sizeof(foundpath)/sizeof(foundpath[0]),
                      NS_T("%s"), ftsdirEntry->fts_accpath);
-        quotedpath = get_quoted_path(foundpath);
+        quotedpath = get_quoted_path(get_relative_path(foundpath));
         if (!quotedpath) {
           rv = UPDATER_QUOTED_PATH_MEM_ERROR;
           break;
         }
         action = new RemoveFile();
         rv = action->Parse(quotedpath);
+        free(quotedpath);
         if (!rv)
           list->Append(action);
         break;
@@ -3952,7 +4021,7 @@ int add_dir_entries(const NS_tchar *dirpath, ActionList *list)
         // Add the directory to be removed to the ActionList.
         NS_tsnprintf(foundpath, sizeof(foundpath)/sizeof(foundpath[0]),
                      NS_T("%s/"), ftsdirEntry->fts_accpath);
-        quotedpath = get_quoted_path(foundpath);
+        quotedpath = get_quoted_path(get_relative_path(foundpath));
         if (!quotedpath) {
           rv = UPDATER_QUOTED_PATH_MEM_ERROR;
           break;
@@ -3960,6 +4029,7 @@ int add_dir_entries(const NS_tchar *dirpath, ActionList *list)
 
         action = new RemoveDir();
         rv = action->Parse(quotedpath);
+        free(quotedpath);
         if (!rv)
           list->Append(action);
         break;
@@ -4070,10 +4140,14 @@ int AddPreCompleteActions(ActionList *list)
   }
 
 #ifdef XP_MACOSX
-  NS_tchar *rb = GetManifestContents(NS_T("Contents/Resources/precomplete"));
+  mozilla::UniquePtr<NS_tchar[]> manifestPath(get_full_path(
+    NS_T("Contents/Resources/precomplete")));
 #else
-  NS_tchar *rb = GetManifestContents(NS_T("precomplete"));
+  mozilla::UniquePtr<NS_tchar[]> manifestPath(get_full_path(
+    NS_T("precomplete")));
 #endif
+
+  NS_tchar *rb = GetManifestContents(manifestPath.get());
   if (rb == nullptr) {
     LOG(("AddPreCompleteActions: error getting contents of precomplete " \
          "manifest"));

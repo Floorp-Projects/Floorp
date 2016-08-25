@@ -155,6 +155,8 @@ var gGREDirOrig;
 var gGREBinDirOrig;
 var gAppDirOrig;
 
+var gApplyToDirOverride;
+
 var gServiceLaunchedCallbackLog = null;
 var gServiceLaunchedCallbackArgs = null;
 
@@ -1138,6 +1140,18 @@ function getAppVersion() {
 }
 
 /**
+ * Override the apply-to directory parameter to be passed to the updater.
+ * This ought to cause the updater to fail when using any value that isn't the
+ * default, automatically computed one.
+ *
+ * @param dir
+ *        Complete string to use as the apply-to directory parameter.
+ */
+function overrideApplyToDir(dir) {
+  gApplyToDirOverride = dir;
+}
+
+/**
  * Helper function for getting the relative path to the directory where the
  * application binary is located (e.g. <test_file_leafname>/dir.app/).
  *
@@ -1706,10 +1720,10 @@ function runUpdateUsingUpdater(aExpectedStatus, aSwitchApp, aExpectedExitValue) 
 
   let args = [updatesDirPath, applyToDirPath];
   if (aSwitchApp) {
-    args[2] = stageDirPath;
+    args[2] = gApplyToDirOverride || stageDirPath;
     args[3] = "0/replace";
   } else {
-    args[2] = applyToDirPath;
+    args[2] = gApplyToDirOverride || applyToDirPath;
     args[3] = "0";
   }
   args = args.concat([callbackApp.parent.path, callbackApp.path]);
