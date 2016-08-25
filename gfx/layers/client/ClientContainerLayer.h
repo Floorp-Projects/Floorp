@@ -133,11 +133,6 @@ public:
 
   void SetSupportsComponentAlphaChildren(bool aSupports) { mSupportsComponentAlphaChildren = aSupports; }
 
-  virtual void Disconnect()
-  {
-    ClientLayer::Disconnect();
-  }
-
 protected:
   ClientLayerManager* ClientManager()
   {
