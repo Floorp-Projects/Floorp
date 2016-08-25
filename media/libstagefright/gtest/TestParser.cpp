@@ -178,7 +178,8 @@ static const TestFileData testFiles[] = {
   { "test_case_1200326.mp4", 0,   0,   0, 0, false,   0, false, false },
   { "test_case_1204580.mp4", 1, 320, 180, 0, false,   0, false, false },
   { "test_case_1216748.mp4", 0,   0,   0, 0, false, 152, false, false },
-  { "test_case_1296473.mp4", 0,   0,   0, 0, false,   0, false, false }
+  { "test_case_1296473.mp4", 0,   0,   0, 0, false,   0, false, false },
+  { "test_case_1296532.mp4", 1, 560, 320, 1, true,    0, true,  true  }
 };
 
 TEST(stagefright_MPEG4Metadata, test_case_mp4)
