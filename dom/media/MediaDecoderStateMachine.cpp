@@ -1097,6 +1097,14 @@ MediaDecoderStateMachine::EnterState(State aState)
       mDecodingFirstFrame = true;
       ReadMetadata();
       break;
+    case DECODER_STATE_DORMANT:
+      DiscardSeekTaskIfExist();
+      if (IsPlaying()) {
+        StopPlayback();
+      }
+      Reset();
+      mReader->ReleaseResources();
+      break;
     case DECODER_STATE_ERROR:
     case DECODER_STATE_SHUTDOWN:
       mIsShutdown = true;
@@ -1201,24 +1209,6 @@ MediaDecoderStateMachine::SetDormant(bool aDormant)
     }
 
     SetState(DECODER_STATE_DORMANT);
-
-    // Discard the current seek task.
-    DiscardSeekTaskIfExist();
-
-    if (IsPlaying()) {
-      StopPlayback();
-    }
-
-    Reset();
-
-    // Note that we do not wait for the decode task queue to go idle before
-    // queuing the ReleaseResources task - instead, we disconnect promises,
-    // reset state, and put a ResetDecode in the decode task queue. Any tasks
-    // that run after ResetDecode are supposed to run with a clean slate. We
-    // rely on that in other places (i.e. seeking), so it seems reasonable to
-    // rely on it here as well.
-    mReader->ReleaseResources();
-
     return;
   }
 
