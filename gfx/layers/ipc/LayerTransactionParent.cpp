@@ -1040,13 +1040,13 @@ LayerTransactionParent::SendAsyncMessage(const InfallibleTArray<AsyncParentMessa
 void
 LayerTransactionParent::SendPendingAsyncMessages()
 {
-  mShadowLayersManager->AsCompositorBridgeParentIPCAllocator()->SendPendingAsyncMessages();
+  mShadowLayersManager->GetIPCAllocator()->SendPendingAsyncMessages();
 }
 
 void
 LayerTransactionParent::SetAboutToSendAsyncMessages()
 {
-  mShadowLayersManager->AsCompositorBridgeParentIPCAllocator()->SetAboutToSendAsyncMessages();
+  mShadowLayersManager->GetIPCAllocator()->SetAboutToSendAsyncMessages();
 }
 
 void
