@@ -224,7 +224,6 @@ MediaDecoderReader::MediaDecoderReader(AbstractMediaDecoder* aDecoder)
   , mIgnoreAudioOutputFormat(false)
   , mHitAudioDecodeError(false)
   , mShutdown(false)
-  , mVideoDiscontinuity(false)
   , mIsSuspended(mTaskQueue, true,
                  "MediaDecoderReader::mIsSuspended (Canonical)")
 {
@@ -290,7 +289,6 @@ nsresult MediaDecoderReader::ResetDecode(TrackSet aTracks)
 {
   if (aTracks.contains(TrackInfo::kVideoTrack)) {
     VideoQueue().Reset();
-    mVideoDiscontinuity = true;
     mBaseVideoPromise.RejectIfExists(CANCELED, __func__);
   }
 
@@ -456,9 +454,6 @@ MediaDecoderReader::RequestVideoData(bool aSkipToNextKeyframe,
   }
   if (VideoQueue().GetSize() > 0) {
     RefPtr<VideoData> v = VideoQueue().PopFront();
-    if (v && mVideoDiscontinuity) {
-      mVideoDiscontinuity = false;
-    }
     mBaseVideoPromise.Resolve(v, __func__);
   } else if (VideoQueue().IsFinished()) {
     mBaseVideoPromise.Reject(END_OF_STREAM, __func__);
