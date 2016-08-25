@@ -2941,6 +2941,15 @@ JS_FreezeObject(JSContext* cx, HandleObject obj)
     return FreezeObject(cx, obj);
 }
 
+static bool
+DeepFreezeSlot(JSContext* cx, const Value& v)
+{
+    if (v.isPrimitive())
+        return true;
+    RootedObject obj(cx, &v.toObject());
+    return JS_DeepFreezeObject(cx, obj);
+}
+
 JS_PUBLIC_API(bool)
 JS_DeepFreezeObject(JSContext* cx, HandleObject obj)
 {
@@ -2960,12 +2969,13 @@ JS_DeepFreezeObject(JSContext* cx, HandleObject obj)
 
     /* Walk slots in obj and if any value is a non-null object, seal it. */
     if (obj->isNative()) {
-        for (uint32_t i = 0, n = obj->as<NativeObject>().slotSpan(); i < n; ++i) {
-            const Value& v = obj->as<NativeObject>().getSlot(i);
-            if (v.isPrimitive())
-                continue;
-            RootedObject obj(cx, &v.toObject());
-            if (!JS_DeepFreezeObject(cx, obj))
+        NativeObject* nobj = &obj->as<NativeObject>();
+        for (uint32_t i = 0, n = nobj->slotSpan(); i < n; ++i) {
+            if (!DeepFreezeSlot(cx, nobj->getSlot(i)))
+                return false;
+        }
+        for (uint32_t i = 0, n = nobj->getDenseInitializedLength(); i < n; ++i) {
+            if (!DeepFreezeSlot(cx, nobj->getDenseElement(i)))
                 return false;
         }
     }
