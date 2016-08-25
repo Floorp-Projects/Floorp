@@ -6,8 +6,14 @@
 
 "use strict";
 
-const {LocalizationHelper} = require("devtools/client/shared/l10n");
-const L10N = new LocalizationHelper("devtools/locale/inspector.properties");
+const Services = require("Services");
+loader.lazyGetter(this, "GetStringFromName", () => {
+  let bundle = Services.strings.createBundle(
+    "chrome://devtools/locale/inspector.properties");
+  return key => {
+    return bundle.GetStringFromName(key);
+  };
+});
 
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
 
@@ -125,7 +131,7 @@ function setBrokenImageTooltip(tooltip, doc) {
     text-align: center;
     line-height: 30px;`;
 
-  let message = L10N.getStr("previewTooltip.image.brokenImage");
+  let message = GetStringFromName("previewTooltip.image.brokenImage");
   div.textContent = message;
   tooltip.setContent(div, {width: 150, height: 30});
 }
