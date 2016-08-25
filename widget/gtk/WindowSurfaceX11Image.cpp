@@ -38,7 +38,10 @@ WindowSurfaceX11Image::Lock(const LayoutDeviceIntRegion& aRegion)
     if (mImage)
       XDestroyImage(mImage);
 
-    int stride = gfx::GetAlignedStride<16>(gfx::BytesPerPixel(mFormat) * size.width);
+    int stride = gfx::GetAlignedStride<16>(size.width, gfx::BytesPerPixel(mFormat));
+    if (stride == 0) {
+        return nullptr;
+    }
     char* data = static_cast<char*>(malloc(stride * size.height));
     if (!data)
       return nullptr;
