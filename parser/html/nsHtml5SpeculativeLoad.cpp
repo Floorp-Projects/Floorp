@@ -43,15 +43,15 @@ nsHtml5SpeculativeLoad::Perform(nsHtml5TreeOpExecutor* aExecutor)
       aExecutor->PreloadEndPicture();
       break;
     case eSpeculativeLoadPictureSource:
-      aExecutor->PreloadPictureSource(mSrcset, mSizes, mTypeOrCharsetSource,
+      aExecutor->PreloadPictureSource(mSrcset, mSizes, mTypeOrCharsetSourceOrDocumentMode,
                                       mMedia);
       break;
     case eSpeculativeLoadScript:
-      aExecutor->PreloadScript(mUrl, mCharset, mTypeOrCharsetSource,
+      aExecutor->PreloadScript(mUrl, mCharset, mTypeOrCharsetSourceOrDocumentMode,
                                mCrossOrigin, mIntegrity, false);
       break;
     case eSpeculativeLoadScriptFromHead:
-      aExecutor->PreloadScript(mUrl, mCharset, mTypeOrCharsetSource,
+      aExecutor->PreloadScript(mUrl, mCharset, mTypeOrCharsetSourceOrDocumentMode,
                                mCrossOrigin, mIntegrity, true);
       break;
     case eSpeculativeLoadStyle:
@@ -63,11 +63,19 @@ nsHtml5SpeculativeLoad::Perform(nsHtml5TreeOpExecutor* aExecutor)
     case eSpeculativeLoadSetDocumentCharset: {
         nsAutoCString narrowName;
         CopyUTF16toUTF8(mCharset, narrowName);
-        NS_ASSERTION(mTypeOrCharsetSource.Length() == 1,
+        NS_ASSERTION(mTypeOrCharsetSourceOrDocumentMode.Length() == 1,
             "Unexpected charset source string");
-        int32_t intSource = (int32_t)mTypeOrCharsetSource.First();
+        int32_t intSource = (int32_t)mTypeOrCharsetSourceOrDocumentMode.First();
         aExecutor->SetDocumentCharsetAndSource(narrowName,
                                                intSource);
+      }
+      break;
+    case eSpeculativeLoadSetDocumentMode: {
+        NS_ASSERTION(mTypeOrCharsetSourceOrDocumentMode.Length() == 1,
+            "Unexpected document mode string");
+        nsHtml5DocumentMode mode =
+            (nsHtml5DocumentMode)mTypeOrCharsetSourceOrDocumentMode.First();
+        aExecutor->SetDocumentMode(mode);
       }
       break;
     case eSpeculativeLoadPreconnect:
