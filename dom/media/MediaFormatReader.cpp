@@ -1326,7 +1326,6 @@ MediaFormatReader::ReturnOutput(MediaData* aData, TrackType aTrack)
   if (decoder.mDiscontinuity) {
     LOGV("Setting discontinuity flag");
     decoder.mDiscontinuity = false;
-    aData->mDiscontinuity = true;
   }
 
   LOG("Resolved data promise for %s [%lld, %lld]", TrackTypeToStr(aTrack),
