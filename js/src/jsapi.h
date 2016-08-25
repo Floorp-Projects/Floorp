@@ -554,15 +554,15 @@ typedef void
 
 typedef enum JSFinalizeStatus {
     /**
-     * Called when preparing to sweep a group of compartments, before anything
-     * has been swept.  The collector will not yield to the mutator before
-     * calling the callback with JSFINALIZE_GROUP_END status.
+     * Called when preparing to sweep a group of zones, before anything has been
+     * swept.  The collector will not yield to the mutator before calling the
+     * callback with JSFINALIZE_GROUP_END status.
      */
     JSFINALIZE_GROUP_START,
 
     /**
-     * Called when preparing to sweep a group of compartments. Weak references
-     * to unmarked things have been removed and things that are not swept
+     * Called when preparing to sweep a group of zones. Weak references to
+     * unmarked things have been removed and things that are not swept
      * incrementally have been finalized at this point.  The collector may yield
      * to the mutator after this point.
      */
@@ -575,7 +575,7 @@ typedef enum JSFinalizeStatus {
 } JSFinalizeStatus;
 
 typedef void
-(* JSFinalizeCallback)(JSFreeOp* fop, JSFinalizeStatus status, bool isCompartment, void* data);
+(* JSFinalizeCallback)(JSFreeOp* fop, JSFinalizeStatus status, bool isZoneGC, void* data);
 
 typedef void
 (* JSWeakPointerZoneGroupCallback)(JSContext* cx, void* data);

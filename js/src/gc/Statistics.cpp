@@ -948,7 +948,7 @@ Statistics::endGC()
     int64_t sccTotal, sccLongest;
     sccDurations(&sccTotal, &sccLongest);
 
-    runtime->addTelemetry(JS_TELEMETRY_GC_IS_COMPARTMENTAL, !zoneStats.isCollectingAllZones());
+    runtime->addTelemetry(JS_TELEMETRY_GC_IS_ZONE_GC, !zoneStats.isCollectingAllZones());
     runtime->addTelemetry(JS_TELEMETRY_GC_MS, t(total));
     runtime->addTelemetry(JS_TELEMETRY_GC_MAX_PAUSE_MS, t(longest));
     int64_t markTotal = SumPhase(PHASE_MARK, phaseTimes);
