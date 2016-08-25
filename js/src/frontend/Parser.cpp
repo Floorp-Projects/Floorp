@@ -6426,6 +6426,18 @@ Parser<ParseHandler>::peekShouldParseLetDeclaration(bool* parseDeclOut,
 
 template <typename ParseHandler>
 typename ParseHandler::Node
+Parser<ParseHandler>::variableStatement(YieldHandling yieldHandling)
+{
+    Node vars = declarationList(yieldHandling, PNK_VAR);
+    if (!vars)
+        return null();
+    if (!MatchOrInsertSemicolonAfterExpression(tokenStream))
+        return null();
+    return vars;
+}
+
+template <typename ParseHandler>
+typename ParseHandler::Node
 Parser<ParseHandler>::statement(YieldHandling yieldHandling, bool canHaveDirectives)
 {
     MOZ_ASSERT(checkOptionsCalled);
@@ -6442,14 +6454,8 @@ Parser<ParseHandler>::statement(YieldHandling yieldHandling, bool canHaveDirecti
         return blockStatement(yieldHandling);
 
       // VariableStatement[?Yield]
-      case TOK_VAR: {
-        Node pn = declarationList(yieldHandling, PNK_VAR);
-        if (!pn)
-            return null();
-        if (!MatchOrInsertSemicolonAfterExpression(tokenStream))
-            return null();
-        return pn;
-      }
+      case TOK_VAR:
+        return variableStatement(yieldHandling);
 
       // EmptyStatement
       case TOK_SEMI:
