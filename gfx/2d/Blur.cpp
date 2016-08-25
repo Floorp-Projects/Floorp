@@ -532,7 +532,10 @@ AlphaBoxBlur::Blur(uint8_t* aData)
       }
       delete [] tmpData;
     } else {
-      size_t integralImageStride = GetAlignedStride<16>(integralImageSize.width * 4);
+      size_t integralImageStride = GetAlignedStride<16>(integralImageSize.width, 4);
+      if (integralImageStride == 0) {
+        return;
+      }
 
       // We need to leave room for an additional 12 bytes for a maximum overrun
       // of 3 pixels in the blurring code.

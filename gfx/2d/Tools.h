@@ -220,20 +220,24 @@ private:
 };
 
 /**
- * Returns aStride increased, if necessary, so that it divides exactly into
- * |alignment|.
+ * Returns aWidth * aBytesPerPixel increased, if necessary, so that it divides
+ * exactly into |alignment|.
  *
  * Note that currently |alignment| must be a power-of-2. If for some reason we
  * want to support NPOT alignment we can revert back to this functions old
  * implementation.
  */
 template<int alignment>
-int32_t GetAlignedStride(int32_t aStride)
+int32_t GetAlignedStride(int32_t aWidth, int32_t aBytesPerPixel)
 {
   static_assert(alignment > 0 && (alignment & (alignment-1)) == 0,
                 "This implementation currently require power-of-two alignment");
   const int32_t mask = alignment - 1;
-  return (aStride + mask) & ~mask;
+  CheckedInt32 stride = CheckedInt32(aWidth) * CheckedInt32(aBytesPerPixel) + CheckedInt32(mask);
+  if (stride.isValid()) {
+    return stride.value() & ~mask;
+  }
+  return 0;
 }
 
 } // namespace gfx

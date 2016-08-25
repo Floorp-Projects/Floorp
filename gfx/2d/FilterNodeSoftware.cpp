@@ -752,7 +752,7 @@ FilterNodeSoftware::GetInputDataSourceSurface(uint32_t aInputEnumIndex,
        // to use the Map API yet. We can still read the stride/data
        // values as long as we don't try to dereference them.
       result->Unmap();
-      if (map.mStride != GetAlignedStride<16>(map.mStride) ||
+      if (map.mStride != GetAlignedStride<16>(map.mStride, 1) ||
           reinterpret_cast<uintptr_t>(map.mData) % 16 != 0) {
         // Align unaligned surface.
         result = CloneAligned(result);
