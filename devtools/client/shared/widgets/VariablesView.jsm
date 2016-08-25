@@ -8,7 +8,7 @@
 const Ci = Components.interfaces;
 const Cu = Components.utils;
 
-const DBG_STRINGS_URI = "chrome://devtools/locale/debugger.properties";
+const DBG_STRINGS_URI = "devtools/locale/debugger.properties";
 const LAZY_EMPTY_DELAY = 150; // ms
 const SCROLL_PAGE_SIZE_DEFAULT = 0;
 const PAGE_SIZE_SCROLL_HEIGHT_RATIO = 100;
@@ -29,7 +29,8 @@ const { Heritage, ViewHelpers, setNamedTimeout } =
 const { Task } = require("devtools/shared/task");
 const nodeConstants = require("devtools/shared/dom-node-constants");
 const {KeyCodes} = require("devtools/client/shared/keycodes");
-const {ELLIPSIS} = require("devtools/shared/l10n");
+const {LocalizationHelper, ELLIPSIS} = require("devtools/shared/l10n");
+const L10N = new LocalizationHelper(DBG_STRINGS_URI);
 
 XPCOMUtils.defineLazyModuleGetter(this, "PluralForm",
   "resource://gre/modules/PluralForm.jsm");
@@ -55,11 +56,6 @@ Object.defineProperty(this, "NetworkHelper", {
 });
 
 this.EXPORTED_SYMBOLS = ["VariablesView", "escapeHTML"];
-
-/**
- * Debugger localization strings.
- */
-const STR = Services.strings.createBundle(DBG_STRINGS_URI);
 
 /**
  * A tree view for inspecting scopes, objects and properties.
@@ -309,7 +305,7 @@ VariablesView.prototype = {
    * This flag is applied recursively onto each scope in this view and
    * affects only the child nodes when they're created.
    */
-  editableValueTooltip: STR.GetStringFromName("variablesEditableValueTooltip"),
+  editableValueTooltip: L10N.getStr("variablesEditableValueTooltip"),
 
   /**
    * The tooltip text shown on a variable or property's name if a |switch|
@@ -318,7 +314,7 @@ VariablesView.prototype = {
    * This flag is applied recursively onto each scope in this view and
    * affects only the child nodes when they're created.
    */
-  editableNameTooltip: STR.GetStringFromName("variablesEditableNameTooltip"),
+  editableNameTooltip: L10N.getStr("variablesEditableNameTooltip"),
 
   /**
    * The tooltip text shown on a variable or property's edit button if an
@@ -328,7 +324,7 @@ VariablesView.prototype = {
    * This flag is applied recursively onto each scope in this view and
    * affects only the child nodes when they're created.
    */
-  editButtonTooltip: STR.GetStringFromName("variablesEditButtonTooltip"),
+  editButtonTooltip: L10N.getStr("variablesEditButtonTooltip"),
 
   /**
    * The tooltip text shown on a variable or property's value if that value is
@@ -337,7 +333,7 @@ VariablesView.prototype = {
    * This flag is applied recursively onto each scope in this view and
    * affects only the child nodes when they're created.
    */
-  domNodeValueTooltip: STR.GetStringFromName("variablesDomNodeValueTooltip"),
+  domNodeValueTooltip: L10N.getStr("variablesDomNodeValueTooltip"),
 
   /**
    * The tooltip text shown on a variable or property's delete button if a
@@ -346,7 +342,7 @@ VariablesView.prototype = {
    * This flag is applied recursively onto each scope in this view and
    * affects only the child nodes when they're created.
    */
-  deleteButtonTooltip: STR.GetStringFromName("variablesCloseButtonTooltip"),
+  deleteButtonTooltip: L10N.getStr("variablesCloseButtonTooltip"),
 
   /**
    * Specifies the context menu attribute set on variables and properties.
@@ -362,7 +358,7 @@ VariablesView.prototype = {
    * This flag is applied recursively onto each scope in this view and
    * affects only the child nodes when they're created.
    */
-  separatorStr: STR.GetStringFromName("variablesSeparatorLabel"),
+  separatorStr: L10N.getStr("variablesSeparatorLabel"),
 
   /**
    * Specifies if enumerable properties and variables should be displayed.
@@ -2462,13 +2458,13 @@ Variable.prototype = Heritage.extend(Scope.prototype, {
 
     if (aGrip && (aGrip.optimizedOut || aGrip.uninitialized || aGrip.missingArguments)) {
       if (aGrip.optimizedOut) {
-        this._valueString = STR.GetStringFromName("variablesViewOptimizedOut");
+        this._valueString = L10N.getStr("variablesViewOptimizedOut");
       }
       else if (aGrip.uninitialized) {
-        this._valueString = STR.GetStringFromName("variablesViewUninitialized");
+        this._valueString = L10N.getStr("variablesViewUninitialized");
       }
       else if (aGrip.missingArguments) {
-        this._valueString = STR.GetStringFromName("variablesViewMissingArgs");
+        this._valueString = L10N.getStr("variablesViewMissingArgs");
       }
       this.eval = null;
     }
@@ -2713,7 +2709,7 @@ Variable.prototype = Heritage.extend(Scope.prototype, {
     for (let type of labels) {
       let labelElement = this.document.createElement("label");
       labelElement.className = type;
-      labelElement.setAttribute("value", STR.GetStringFromName(type + "Tooltip"));
+      labelElement.setAttribute("value", L10N.getStr(type + "Tooltip"));
       tooltip.appendChild(labelElement);
     }
 
@@ -3698,7 +3694,7 @@ VariablesView.stringifiers.byObjectKind = {
               VariablesView.getString(preview.message, { noStringQuotes: true });
 
     if (!VariablesView.isFalsy({ value: preview.stack })) {
-      msg += "\n" + STR.GetStringFromName("variablesViewErrorStacktrace") +
+      msg += "\n" + L10N.getStr("variablesViewErrorStacktrace") +
              "\n" + preview.stack;
     }
 
@@ -3843,7 +3839,7 @@ VariablesView.stringifiers.byObjectKind = {
  * @return string
  */
 VariablesView.stringifiers._getNMoreString = function (aNumber) {
-  let str = STR.GetStringFromName("variablesViewMoreObjects");
+  let str = L10N.getStr("variablesViewMoreObjects");
   return PluralForm.get(aNumber, str).replace("#1", aNumber);
 };
 
