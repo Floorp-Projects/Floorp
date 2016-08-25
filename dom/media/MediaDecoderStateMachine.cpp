@@ -826,14 +826,9 @@ void
 MediaDecoderStateMachine::CheckIfDecodeComplete()
 {
   MOZ_ASSERT(OnTaskQueue());
+  MOZ_ASSERT(mState == DECODER_STATE_DECODING ||
+             mState == DECODER_STATE_BUFFERING);
 
-  if (IsShutdown() ||
-      mState == DECODER_STATE_SEEKING ||
-      mState == DECODER_STATE_COMPLETED) {
-    // Don't change our state if we've already been shutdown, or we're seeking,
-    // since we don't want to abort the shutdown or seek processes.
-    return;
-  }
   if (!IsVideoDecoding() && !IsAudioDecoding()) {
     // We've finished decoding all active streams,
     // so move to COMPLETED state.
