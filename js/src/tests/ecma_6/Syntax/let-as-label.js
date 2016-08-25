@@ -19,9 +19,7 @@ assertThrowsInstanceOf(() => Function(" 'use strict' \n let: 42"), SyntaxError);
 
 eval("let: 42")
 assertThrowsInstanceOf(() => eval(" 'use strict'; let: 42"), SyntaxError);
-
-// XXX This will be fixed later in bug 1288459's patch stack.
-assertThrowsInstanceOf(() => eval(" 'use strict' \n let: 42; /*XXX*/throw new SyntaxError();"), SyntaxError);
+assertThrowsInstanceOf(() => eval(" 'use strict' \n let: 42;"), SyntaxError);
 
 /******************************************************************************/
 
