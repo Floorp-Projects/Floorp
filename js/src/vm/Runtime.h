@@ -135,6 +135,12 @@ class FreeOp : public JSFreeOp
         return runtime_ != nullptr;
     }
 
+    bool maybeOffMainThread() const {
+        // Sometimes background finalization happens on the main thread so
+        // runtime_ being null doesn't always mean we are off the main thread.
+        return !runtime_;
+    }
+
     bool isDefaultFreeOp() const;
 
     inline void free_(void* p);
