@@ -2036,7 +2036,7 @@ nsPresContext::UpdateIsChrome()
               nsIDocShellTreeItem::typeChrome == mContainer->ItemType();
 }
 
-/* virtual */ bool
+bool
 nsPresContext::HasAuthorSpecifiedRules(const nsIFrame *aFrame,
                                        uint32_t ruleTypeMask) const
 {
