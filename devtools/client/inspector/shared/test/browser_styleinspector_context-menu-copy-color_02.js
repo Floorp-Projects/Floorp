@@ -35,7 +35,7 @@ function* testCopyToClipboard(inspector, view) {
 
   let allMenuItems = openStyleContextMenuAndGetAllItems(view, element);
   let menuitemCopyColor = allMenuItems.find(item => item.label ===
-    STYLE_INSPECTOR_L10N.getStr("styleinspector.contextmenu.copyColor"));
+    _STRINGS.GetStringFromName("styleinspector.contextmenu.copyColor"));
 
   ok(menuitemCopyColor.visible, "Copy color is visible");
 

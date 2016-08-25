@@ -45,7 +45,7 @@ add_task(function* () {
 
   let allMenuItems = openStyleContextMenuAndGetAllItems(view, nameSpan.firstChild);
   let menuitemShowMdnDocs = allMenuItems.find(item => item.label ===
-    STYLE_INSPECTOR_L10N.getStr("styleinspector.contextmenu.showMdnDocs"));
+    _STRINGS.GetStringFromName("styleinspector.contextmenu.showMdnDocs"));
 
   let cssDocs = view.tooltips.cssDocs;
 
