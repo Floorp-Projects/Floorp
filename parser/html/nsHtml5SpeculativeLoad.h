@@ -26,6 +26,7 @@ enum eHtml5SpeculativeLoad {
   eSpeculativeLoadStyle,
   eSpeculativeLoadManifest,
   eSpeculativeLoadSetDocumentCharset,
+  eSpeculativeLoadSetDocumentMode,
   eSpeculativeLoadPreconnect
 };
 
@@ -106,7 +107,7 @@ class nsHtml5SpeculativeLoad {
       mOpCode = eSpeculativeLoadPictureSource;
       mSrcset.Assign(aSrcset);
       mSizes.Assign(aSizes);
-      mTypeOrCharsetSource.Assign(aType);
+      mTypeOrCharsetSourceOrDocumentMode.Assign(aType);
       mMedia.Assign(aMedia);
     }
 
@@ -123,7 +124,7 @@ class nsHtml5SpeculativeLoad {
           eSpeculativeLoadScriptFromHead : eSpeculativeLoadScript;
       mUrl.Assign(aUrl);
       mCharset.Assign(aCharset);
-      mTypeOrCharsetSource.Assign(aType);
+      mTypeOrCharsetSourceOrDocumentMode.Assign(aType);
       mCrossOrigin.Assign(aCrossOrigin);
       mIntegrity.Assign(aIntegrity);
     }
@@ -177,7 +178,21 @@ class nsHtml5SpeculativeLoad {
                       "Trying to reinitialize a speculative load!");
       mOpCode = eSpeculativeLoadSetDocumentCharset;
       CopyUTF8toUTF16(aCharset, mCharset);
-      mTypeOrCharsetSource.Assign((char16_t)aCharsetSource);
+      mTypeOrCharsetSourceOrDocumentMode.Assign((char16_t)aCharsetSource);
+    }
+
+    /**
+     * Speculative document mode setting isn't really speculative. Once it
+     * happens, we are committed to it. However, this information needs to
+     * travel in the speculation queue in order to have this information
+     * available before parsing the speculatively loaded style sheets.
+     */
+    inline void InitSetDocumentMode(nsHtml5DocumentMode aMode)
+    {
+      NS_PRECONDITION(mOpCode == eSpeculativeLoadUninitialized,
+                      "Trying to reinitialize a speculative load!");
+      mOpCode = eSpeculativeLoadSetDocumentMode;
+      mTypeOrCharsetSourceOrDocumentMode.Assign((char16_t)aMode);
     }
 
     inline void InitPreconnect(const nsAString& aUrl,
@@ -208,10 +223,13 @@ class nsHtml5SpeculativeLoad {
     /**
      * If mOpCode is eSpeculativeLoadSetDocumentCharset, this is a
      * one-character string whose single character's code point is to be
-     * interpreted as a charset source integer. Otherwise, it is empty or
-     * the value of the type attribute.
+     * interpreted as a charset source integer. If mOpCode is
+     * eSpeculativeLoadSetDocumentMode, this is a one-character string whose
+     * single character's code point is to be interpreted as an
+     * nsHtml5DocumentMode. Otherwise, it is empty or the value of the type
+     * attribute.
      */
-    nsString mTypeOrCharsetSource;
+    nsString mTypeOrCharsetSourceOrDocumentMode;
     /**
      * If mOpCode is eSpeculativeLoadImage or eSpeculativeLoadScript[FromHead]
      * or eSpeculativeLoadPreconnect this is the value of the "crossorigin"
