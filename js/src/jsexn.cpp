@@ -85,7 +85,7 @@ static const ClassOps ErrorObjectClassOps = {
         js_Error_str, /* yes, really */ \
         JSCLASS_HAS_CACHED_PROTO(JSProto_##name) | \
         JSCLASS_HAS_RESERVED_SLOTS(ErrorObject::RESERVED_SLOTS) | \
-        JSCLASS_FOREGROUND_FINALIZE, \
+        JSCLASS_BACKGROUND_FINALIZE, \
         &ErrorObjectClassOps, \
         classSpecPtr \
     }
@@ -261,6 +261,7 @@ js::ComputeStackString(JSContext* cx)
 static void
 exn_finalize(FreeOp* fop, JSObject* obj)
 {
+    MOZ_ASSERT(fop->maybeOffMainThread());
     if (JSErrorReport* report = obj->as<ErrorObject>().getErrorReport())
         fop->free_(report);
 }

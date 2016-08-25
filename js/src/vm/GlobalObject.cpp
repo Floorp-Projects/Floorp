@@ -660,6 +660,7 @@ js::DefinePropertiesAndFunctions(JSContext* cx, HandleObject obj,
 static void
 GlobalDebuggees_finalize(FreeOp* fop, JSObject* obj)
 {
+    MOZ_ASSERT(fop->maybeOffMainThread());
     fop->delete_((GlobalObject::DebuggerVector*) obj->as<NativeObject>().getPrivate());
 }
 
@@ -679,7 +680,7 @@ static const Class
 GlobalDebuggees_class = {
     "GlobalDebuggee",
     JSCLASS_HAS_PRIVATE |
-    JSCLASS_FOREGROUND_FINALIZE,
+    JSCLASS_BACKGROUND_FINALIZE,
     &GlobalDebuggees_classOps
 };
 
