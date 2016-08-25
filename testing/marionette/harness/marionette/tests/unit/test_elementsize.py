@@ -14,30 +14,3 @@ class TestElementSize(MarionetteTestCase):
         size = shrinko.rect
         self.assertTrue(size['width'] > 0)
         self.assertTrue(size['height'] > 0)
-
-
-class TestElementSizeChrome(MarionetteTestCase):
-    def setUp(self):
-        MarionetteTestCase.setUp(self)
-        self.marionette.set_context("chrome")
-        self.win = self.marionette.current_window_handle
-        self.marionette.execute_script(
-            "window.open('chrome://marionette/content/test2.xul', 'foo', 'chrome,centerscreen');")
-        self.marionette.switch_to_window('foo')
-        self.assertNotEqual(self.win, self.marionette.current_window_handle)
-
-    def tearDown(self):
-        self.assertNotEqual(self.win, self.marionette.current_window_handle)
-        self.marionette.execute_script("window.close();")
-        self.marionette.switch_to_window(self.win)
-        MarionetteTestCase.tearDown(self)
-
-    def testShouldReturnTheSizeOfAnInput(self):
-        wins = self.marionette.window_handles
-        wins.remove(self.win)
-        newWin = wins.pop()
-        self.marionette.switch_to_window(newWin)
-        shrinko = self.marionette.find_element(By.ID, 'textInput')
-        size = shrinko.rect
-        self.assertTrue(size['width'] > 0)
-        self.assertTrue(size['height'] > 0)
