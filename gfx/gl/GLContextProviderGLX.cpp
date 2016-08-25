@@ -15,6 +15,7 @@
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/widget/CompositorWidget.h"
+#include "mozilla/unused.h"
 
 #include "prenv.h"
 #include "GLContextProvider.h"
@@ -940,6 +941,12 @@ GLContextGLX::MakeCurrentImpl(bool aForce)
     //      It does not make a round trip to the server."
     // I assume that it's not worth using our own TLS slot here.
     if (aForce || mGLX->xGetCurrentContext() != mContext) {
+        if (mGLX->IsMesa()) {
+          // Read into the event queue to ensure that Mesa receives a
+          // DRI2InvalidateBuffers event before drawing. See bug 1280653.
+          Unused << XPending(mDisplay);
+        }
+
         succeeded = mGLX->xMakeCurrent(mDisplay, mDrawable, mContext);
         NS_ASSERTION(succeeded, "Failed to make GL context current!");
 
