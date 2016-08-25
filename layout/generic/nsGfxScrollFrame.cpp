@@ -1034,16 +1034,6 @@ nsHTMLScrollFrame::Reflow(nsPresContext*           aPresContext,
 
   ReflowContents(&state, aDesiredSize);
 
-  aDesiredSize.Width() = state.mInsideBorderSize.width +
-    state.mComputedBorder.LeftRight();
-  aDesiredSize.Height() = state.mInsideBorderSize.height +
-    state.mComputedBorder.TopBottom();
-
-  // Set the size of the frame now since computing the perspective-correct
-  // overflow (within PlaceScrollArea) can rely on it.
-  SetSize(aDesiredSize.GetWritingMode(),
-          aDesiredSize.Size(aDesiredSize.GetWritingMode()));
-
   // Restore the old scroll position, for now, even if that's not valid anymore
   // because we changed size. We'll fix it up in a post-reflow callback, because
   // our current size may only be temporary (e.g. we're compute XUL desired sizes).
@@ -1082,6 +1072,11 @@ nsHTMLScrollFrame::Reflow(nsPresContext*           aPresContext,
       mHelper.mSkippedScrollbarLayout = true;
     }
   }
+
+  aDesiredSize.Width() = state.mInsideBorderSize.width +
+    state.mComputedBorder.LeftRight();
+  aDesiredSize.Height() = state.mInsideBorderSize.height +
+    state.mComputedBorder.TopBottom();
 
   aDesiredSize.SetOverflowAreasToDesiredBounds();
   if (mHelper.IsIgnoringViewportClipping()) {
