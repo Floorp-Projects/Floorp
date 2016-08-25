@@ -35,9 +35,8 @@ Match.Pattern([{node: gc, edge: "fun_environment"},
   .assert(findPath(gc, o));
 print(uneval(findPath(gc, o)));
 
-Match.Pattern([{node: {}, edge: "shape"},
-               {node: Match.Pattern.ANY, edge: "base"},
-               {node: Match.Pattern.ANY, edge: "global"},
+Match.Pattern([{node: {}, edge: "group"},
+               {node: Match.Pattern.ANY, edge: "group_global"},
                {node: {}, edge: "o"}])
   .assert(findPath(o, o));
 print(findPath(o, o).map((e) => e.edge).toString());

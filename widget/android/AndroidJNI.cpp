@@ -24,7 +24,7 @@
 #include "mozilla/Services.h"
 #include "nsThreadUtils.h"
 
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/UniquePtr.h"
 
@@ -43,16 +43,5 @@ extern "C" {
 /*
  * Incoming JNI methods
  */
-NS_EXPORT void JNICALL
-Java_org_mozilla_gecko_GeckoAppShell_onSurfaceTextureFrameAvailable(JNIEnv* jenv, jclass, jobject surfaceTexture, jint id)
-{
-  mozilla::gl::AndroidSurfaceTexture* st = mozilla::gl::AndroidSurfaceTexture::Find(id);
-  if (!st) {
-    __android_log_print(ANDROID_LOG_ERROR, "GeckoJNI", "Failed to find AndroidSurfaceTexture with id %d", id);
-    return;
-  }
-
-  st->NotifyFrameAvailable();
-}
 
 }

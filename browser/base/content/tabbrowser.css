@@ -19,7 +19,7 @@
 }
 
 .tab-close-button[pinned],
-.tabbrowser-tabs[closebuttons="activetab"] > * > * > * > .tab-close-button:not([visuallyselected="true"]),
+.tabbrowser-tabs[closebuttons="activetab"] > * > * > * > .tab-close-button:not([selected="true"]),
 .tab-icon-image:not([src]):not([pinned]):not([crashed])[selected],
 .tab-icon-image:not([src]):not([pinned]):not([crashed]):not([sharing]),
 .tab-icon-image[busy],

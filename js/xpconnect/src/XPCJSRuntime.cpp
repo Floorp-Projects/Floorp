@@ -47,7 +47,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/ProcessHangMonitor.h"
 #include "mozilla/UniquePtrExtensions.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "AccessCheck.h"
 #include "nsGlobalWindow.h"
 #include "nsAboutProtocolUtils.h"
@@ -804,11 +804,6 @@ XPCJSRuntime::FinalizeCallback(JSFreeOp* fop,
                         if (set)
                             set->Mark();
                     }
-                    if (ccxp->CanGetInterface()) {
-                        XPCNativeInterface* iface = ccxp->GetInterface();
-                        if (iface)
-                            iface->Mark();
-                    }
                     ccxp = ccxp->GetPrevCallContext();
                 }
             }
@@ -841,17 +836,6 @@ XPCJSRuntime::FinalizeCallback(JSFreeOp* fop,
                     set->Unmark();
                 } else if (doSweep) {
                     XPCNativeSet::DestroyInstance(set);
-                    i.Remove();
-                }
-            }
-
-            for (auto i = self->mIID2NativeInterfaceMap->Iter(); !i.Done(); i.Next()) {
-                auto entry = static_cast<IID2NativeInterfaceMap::Entry*>(i.Get());
-                XPCNativeInterface* iface = entry->value;
-                if (iface->IsMarked()) {
-                    iface->Unmark();
-                } else if (doSweep) {
-                    XPCNativeInterface::DestroyInstance(iface);
                     i.Remove();
                 }
             }
@@ -1964,6 +1948,10 @@ ReportZoneStats(const JS::ZoneStats& zStats,
         zStats.uniqueIdMap,
         "Address-independent cell identities.");
 
+    ZCREPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("shape-tables"),
+        zStats.shapeTables,
+        "Tables storing shape information.");
+
     ZCREPORT_GC_BYTES(pathPrefix + NS_LITERAL_CSTRING("lazy-scripts/gc-heap"),
         zStats.lazyScriptsGCHeap,
         "Scripts that haven't executed yet.");
@@ -2118,6 +2106,43 @@ ReportZoneStats(const JS::ZoneStats& zStats,
             "is refreshed.");
     }
 
+    const JS::ShapeInfo& shapeInfo = zStats.shapeInfo;
+    if (shapeInfo.shapesGCHeapTree > 0) {
+        REPORT_GC_BYTES(pathPrefix + NS_LITERAL_CSTRING("shapes/gc-heap/tree"),
+            shapeInfo.shapesGCHeapTree,
+        "Shapes in a property tree.");
+    }
+
+    if (shapeInfo.shapesGCHeapDict > 0) {
+        REPORT_GC_BYTES(pathPrefix + NS_LITERAL_CSTRING("shapes/gc-heap/dict"),
+            shapeInfo.shapesGCHeapDict,
+        "Shapes in dictionary mode.");
+    }
+
+    if (shapeInfo.shapesGCHeapBase > 0) {
+        REPORT_GC_BYTES(pathPrefix + NS_LITERAL_CSTRING("shapes/gc-heap/base"),
+            shapeInfo.shapesGCHeapBase,
+            "Base shapes, which collate data common to many shapes.");
+    }
+
+    if (shapeInfo.shapesMallocHeapTreeTables > 0) {
+        REPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("shapes/malloc-heap/tree-tables"),
+            KIND_HEAP, shapeInfo.shapesMallocHeapTreeTables,
+            "Property tables of shapes in a property tree.");
+    }
+
+    if (shapeInfo.shapesMallocHeapDictTables > 0) {
+        REPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("shapes/malloc-heap/dict-tables"),
+            KIND_HEAP, shapeInfo.shapesMallocHeapDictTables,
+            "Property tables of shapes in dictionary mode.");
+    }
+
+    if (shapeInfo.shapesMallocHeapTreeKids > 0) {
+        REPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("shapes/malloc-heap/tree-kids"),
+            KIND_HEAP, shapeInfo.shapesMallocHeapTreeKids,
+            "Kid hashes of shapes in a property tree.");
+    }
+
     if (sundriesGCHeap > 0) {
         // We deliberately don't use ZCREPORT_GC_BYTES here.
         REPORT_GC_BYTES(pathPrefix + NS_LITERAL_CSTRING("sundries/gc-heap"),
@@ -2144,7 +2169,7 @@ ReportZoneStats(const JS::ZoneStats& zStats,
 
 static nsresult
 ReportClassStats(const ClassInfo& classInfo, const nsACString& path,
-                 const nsACString& shapesPath, nsIHandleReportCallback* cb,
+                 nsIHandleReportCallback* cb,
                  nsISupports* closure, size_t& gcTotal)
 {
     // We deliberately don't use ZCREPORT_BYTES, so that these per-class values
@@ -2214,42 +2239,6 @@ ReportClassStats(const ClassInfo& classInfo, const nsACString& path,
             "Miscellaneous object data.");
     }
 
-    if (classInfo.shapesGCHeapTree > 0) {
-        REPORT_GC_BYTES(shapesPath + NS_LITERAL_CSTRING("shapes/gc-heap/tree"),
-            classInfo.shapesGCHeapTree,
-        "Shapes in a property tree.");
-    }
-
-    if (classInfo.shapesGCHeapDict > 0) {
-        REPORT_GC_BYTES(shapesPath + NS_LITERAL_CSTRING("shapes/gc-heap/dict"),
-            classInfo.shapesGCHeapDict,
-        "Shapes in dictionary mode.");
-    }
-
-    if (classInfo.shapesGCHeapBase > 0) {
-        REPORT_GC_BYTES(shapesPath + NS_LITERAL_CSTRING("shapes/gc-heap/base"),
-            classInfo.shapesGCHeapBase,
-            "Base shapes, which collate data common to many shapes.");
-    }
-
-    if (classInfo.shapesMallocHeapTreeTables > 0) {
-        REPORT_BYTES(shapesPath + NS_LITERAL_CSTRING("shapes/malloc-heap/tree-tables"),
-            KIND_HEAP, classInfo.shapesMallocHeapTreeTables,
-            "Property tables of shapes in a property tree.");
-    }
-
-    if (classInfo.shapesMallocHeapDictTables > 0) {
-        REPORT_BYTES(shapesPath + NS_LITERAL_CSTRING("shapes/malloc-heap/dict-tables"),
-            KIND_HEAP, classInfo.shapesMallocHeapDictTables,
-            "Property tables of shapes in dictionary mode.");
-    }
-
-    if (classInfo.shapesMallocHeapTreeKids > 0) {
-        REPORT_BYTES(shapesPath + NS_LITERAL_CSTRING("shapes/malloc-heap/tree-kids"),
-            KIND_HEAP, classInfo.shapesMallocHeapTreeKids,
-            "Kid hashes of shapes in a property tree.");
-    }
-
     return NS_OK;
 }
 
@@ -2293,12 +2282,8 @@ ReportCompartmentStats(const JS::CompartmentStats& cStats,
                     ? NS_LITERAL_CSTRING("classes/")
                     : NS_LITERAL_CSTRING("classes/class(<non-notable classes>)/");
 
-    // XXX: shapes need special treatment until bug 1265271 is fixed.
-    nsCString shapesPath = cJSPathPrefix;
-    shapesPath += NS_LITERAL_CSTRING("classes/");
-
-    rv = ReportClassStats(cStats.classInfo, nonNotablePath, shapesPath, cb,
-                          closure, gcTotal);
+    rv = ReportClassStats(cStats.classInfo, nonNotablePath, cb, closure,
+                          gcTotal);
     NS_ENSURE_SUCCESS(rv, rv);
 
     for (size_t i = 0; i < cStats.notableClasses.length(); i++) {
@@ -2308,8 +2293,7 @@ ReportCompartmentStats(const JS::CompartmentStats& cStats,
         nsCString classPath = cJSPathPrefix +
             nsPrintfCString("classes/class(%s)/", classInfo.className_);
 
-        rv = ReportClassStats(classInfo, classPath, shapesPath, cb, closure,
-                              gcTotal);
+        rv = ReportClassStats(classInfo, classPath, cb, closure, gcTotal);
         NS_ENSURE_SUCCESS(rv, rv);
     }
 
@@ -2364,7 +2348,7 @@ ReportCompartmentStats(const JS::CompartmentStats& cStats,
 
     ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("compartment-tables"),
         cStats.compartmentTables,
-        "Compartment-wide tables storing shape and type object information.");
+        "Compartment-wide tables storing object group information and wasm instances.");
 
     ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("inner-views"),
         cStats.innerViewsTable,
@@ -3043,11 +3027,11 @@ JSReporter::CollectReports(WindowPaths* windowPaths,
 
     MREPORT_BYTES(NS_LITERAL_CSTRING("js-main-runtime-gc-heap-committed/used/gc-things/shapes"),
         KIND_OTHER,
-        rtStats.cTotals.classInfo.shapesGCHeapTree + rtStats.cTotals.classInfo.shapesGCHeapDict,
+        rtStats.zTotals.shapeInfo.shapesGCHeapTree + rtStats.zTotals.shapeInfo.shapesGCHeapDict,
         "Used shape cells.");
 
     MREPORT_BYTES(NS_LITERAL_CSTRING("js-main-runtime-gc-heap-committed/used/gc-things/base-shapes"),
-        KIND_OTHER, rtStats.cTotals.classInfo.shapesGCHeapBase,
+        KIND_OTHER, rtStats.zTotals.shapeInfo.shapesGCHeapBase,
         "Used base shape cells.");
 
     MREPORT_BYTES(NS_LITERAL_CSTRING("js-main-runtime-gc-heap-committed/used/gc-things/object-groups"),

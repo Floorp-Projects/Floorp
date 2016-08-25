@@ -10,7 +10,7 @@
 #include "nsPackageKitService.h"
 #include "nsString.h"
 #include "prlink.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "mozilla/UniquePtr.h"
 
 #include <glib.h>

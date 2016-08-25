@@ -113,6 +113,15 @@ figure,
   border-radius: 5px;
 }
 
+li {
+  margin-bottom: 0;
+}
+
+li > ul,
+li > ol {
+  margin-bottom: -10px;
+}
+
 p > img:only-child,
 p > a:only-child > img:only-child,
 .wp-caption img,

@@ -412,7 +412,8 @@ static const js::ClassOps FileObjectClassOps = {
 
 const js::Class FileObject::class_ = {
     "File",
-    JSCLASS_HAS_RESERVED_SLOTS(FileObject::NUM_SLOTS),
+    JSCLASS_HAS_RESERVED_SLOTS(FileObject::NUM_SLOTS) |
+    JSCLASS_FOREGROUND_FINALIZE,
     &FileObjectClassOps
 };
 

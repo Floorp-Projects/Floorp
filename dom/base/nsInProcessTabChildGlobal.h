@@ -37,6 +37,8 @@ class nsInProcessTabChildGlobal : public mozilla::DOMEventTargetHelper,
 {
   typedef mozilla::dom::ipc::StructuredCloneData StructuredCloneData;
 
+  using mozilla::dom::ipc::MessageManagerCallback::GetProcessMessageManager;
+
 public:
   nsInProcessTabChildGlobal(nsIDocShell* aShell, nsIContent* aOwner,
                             nsFrameMessageManager* aChrome);

@@ -137,7 +137,7 @@ nsFilePickerProxy::Open(nsIFilePickerShownCallback* aCallback)
   }
 
   SendOpen(mSelectedType, mAddToRecentDocs, mDefault, mDefaultExtension,
-           mFilters, mFilterNames, displayDirectory);
+           mFilters, mFilterNames, displayDirectory, mOkButtonLabel);
 
   return NS_OK;
 }

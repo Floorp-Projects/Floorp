@@ -9,10 +9,15 @@ Verifies that dependent Xcode settings are processed correctly.
 """
 
 import TestGyp
+import TestMac
 
+import subprocess
 import sys
 
 if sys.platform == 'darwin':
+  print "This test is currently disabled: https://crbug.com/483696."
+  sys.exit(0)
+
   test = TestGyp.TestGyp(formats=['ninja', 'make', 'xcode'])
 
   CHDIR = 'xcode-env-order'
@@ -71,10 +76,15 @@ if sys.platform == 'darwin':
   # if it's not right at the start of the string (e.g. ':$PRODUCT_TYPE'), so
   # this looks like an Xcode bug. This bug isn't emulated (yet?), so check this
   # only for Xcode.
-  if test.format == 'xcode':
+  if test.format == 'xcode' and TestMac.Xcode.Version() < '0500':
     test.must_contain(info_plist, '''\
 \t<key>BareProcessedKey3</key>
 \t<string>$PRODUCT_TYPE:D:/Source/Project/Test</string>''')
+  else:
+    # The bug has been fixed by Xcode version 5.0.0.
+    test.must_contain(info_plist, '''\
+\t<key>BareProcessedKey3</key>
+\t<string>com.apple.product-type.application:D:/Source/Project/Test</string>''')
 
   test.must_contain(info_plist, '''\
 \t<key>MixedProcessedKey</key>

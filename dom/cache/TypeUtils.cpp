@@ -6,7 +6,7 @@
 
 #include "mozilla/dom/cache/TypeUtils.h"
 
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "mozilla/dom/CacheBinding.h"
 #include "mozilla/dom/InternalRequest.h"
 #include "mozilla/dom/Request.h"

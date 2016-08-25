@@ -3,8 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /*
- *  Test that channels with different
- *  AppIds/inBrowserElements/usePrivateBrowsing (from nsILoadContext callback)
+ *  Test that channels with different LoadInfo
  *  are stored in separate namespaces ("cookie jars")
  */ 
 
@@ -29,20 +28,20 @@ function inChildProcess() {
 
 // Test array:
 //  - element 0: name for cookie, used both to set and later to check 
-//  - element 1: loadContext (determines cookie namespace)
+//  - element 1: loadInfo (determines cookie namespace)
 //
 // TODO: bug 722850: make private browsing work per-app, and add tests.  For now
 // all values are 'false' for PB.
 
 var tests = [
   { cookieName: 'LCC_App0_BrowF_PrivF', 
-    loadContext: new LoadContextCallback(0, false, false, 1) }, 
+    originAttributes: new OriginAttributes(0, false, 0) },
   { cookieName: 'LCC_App0_BrowT_PrivF', 
-    loadContext: new LoadContextCallback(0, true,  false, 1) }, 
+    originAttributes: new OriginAttributes(0, true, 0) },
   { cookieName: 'LCC_App1_BrowF_PrivF', 
-    loadContext: new LoadContextCallback(1, false, false, 1) }, 
+    originAttributes: new OriginAttributes(1, false, 0) },
   { cookieName: 'LCC_App1_BrowT_PrivF', 
-    loadContext: new LoadContextCallback(1, true,  false, 1) }, 
+    originAttributes: new OriginAttributes(1, true, 0) },
 ];
 
 // test number: index into 'tests' array
@@ -51,10 +50,7 @@ var i = 0;
 function setupChannel(path)
 {
   var chan = NetUtil.newChannel({uri: URL + path, loadUsingSystemPrincipal: true});
-  chan.loadInfo.originAttributes = { appId: tests[i].loadContext.appId,
-                                     inIsolatedMozBrowser: tests[i].loadContext.isInIsolatedMozBrowserElement
-                                   };
-  chan.notificationCallbacks = tests[i].loadContext;
+  chan.loadInfo.originAttributes = tests[i].originAttributes;
   chan.QueryInterface(Ci.nsIHttpChannel);
   return chan;
 }

@@ -49,11 +49,13 @@ public:
   void PostRender(layers::LayerManagerComposite*) override;
   already_AddRefed<gfx::DrawTarget> StartRemoteDrawing() override;
   void EndRemoteDrawing() override;
+  bool NeedsToDeferEndRemoteDrawing() override;
   LayoutDeviceIntSize GetClientSize() override;
   already_AddRefed<gfx::DrawTarget> GetBackBufferDrawTarget(gfx::DrawTarget* aScreenTarget,
                                                             const LayoutDeviceIntRect& aRect,
                                                             const LayoutDeviceIntRect& aClearRect) override;
   already_AddRefed<gfx::SourceSurface> EndBackBufferDrawing() override;
+  bool InitCompositor(layers::Compositor* aCompositor) override;
   uintptr_t GetWidgetKey() override;
   WinCompositorWidget* AsWindows() override {
     return this;
@@ -100,6 +102,8 @@ private:
 
   // Locked back buffer of BasicCompositor
   uint8_t* mLockedBackBufferData;
+
+  bool mNotDeferEndRemoteDrawing;
 };
 
 } // namespace widget

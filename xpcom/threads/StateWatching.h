@@ -10,7 +10,7 @@
 #include "mozilla/AbstractThread.h"
 #include "mozilla/TaskDispatcher.h"
 #include "mozilla/UniquePtr.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 
 #include "nsISupportsImpl.h"
 

@@ -6,7 +6,7 @@
 
 #include "mozilla/ipc/SendStream.h"
 
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "mozilla/dom/PContentChild.h"
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/dom/workers/bindings/WorkerHolder.h"

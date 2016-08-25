@@ -5,7 +5,7 @@
 #include "CameraControlImpl.h"
 #include "base/basictypes.h"
 #include "mozilla/Assertions.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "nsPrintfCString.h"
 #include "nsIWeakReferenceUtils.h"
 #include "CameraCommon.h"

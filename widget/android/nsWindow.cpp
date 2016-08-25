@@ -20,7 +20,7 @@
 
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/ContentChild.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/layers/RenderTrace.h"
 #include <algorithm>
@@ -1110,6 +1110,14 @@ public:
         const bool resetting = !!mLayerClient;
         mLayerClient = layerClient;
 
+        MOZ_ASSERT(aNPZC);
+        auto npzc = NativePanZoomController::LocalRef(
+                jni::GetGeckoThreadEnv(),
+                NativePanZoomController::Ref::From(aNPZC));
+        mWindow->mNPZCSupport.Attach(npzc, mWindow, npzc);
+
+        layerClient->OnGeckoReady();
+
         if (resetting) {
             // Since we are re-linking the new java objects to Gecko, we need
             // to get the viewport from the compositor (since the Java copy was
@@ -1118,14 +1126,6 @@ public:
                 bridge->ForceIsFirstPaint();
             }
         }
-
-        MOZ_ASSERT(aNPZC);
-        auto npzc = NativePanZoomController::LocalRef(
-                jni::GetGeckoThreadEnv(),
-                NativePanZoomController::Ref::From(aNPZC));
-        mWindow->mNPZCSupport.Attach(npzc, mWindow, npzc);
-
-        layerClient->OnGeckoReady();
     }
 
     void OnSizeChanged(int32_t aWindowWidth, int32_t aWindowHeight,
@@ -1424,6 +1424,7 @@ nsWindow::GeckoViewSupport::Reattach(const GeckoView::Window::LocalRef& inst,
     auto compositor = LayerView::Compositor::LocalRef(
             inst.Env(), LayerView::Compositor::Ref::From(aCompositor));
     window.mLayerViewSupport.Attach(compositor, &window, compositor);
+    compositor->Reattach();
 }
 
 void

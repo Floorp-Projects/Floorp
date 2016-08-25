@@ -57,7 +57,7 @@
 #include "mozilla/layers/LayerTransactionParent.h" // for LayerTransactionParent
 #include "mozilla/layers/ScrollInputMethods.h" // for ScrollInputMethod
 #include "mozilla/mozalloc.h"           // for operator new, etc
-#include "mozilla/unused.h"             // for unused
+#include "mozilla/Unused.h"             // for unused
 #include "mozilla/FloatingPoint.h"      // for FuzzyEquals*
 #include "nsAlgorithm.h"                // for clamped
 #include "nsCOMPtr.h"                   // for already_AddRefed
@@ -3226,6 +3226,20 @@ void AsyncPanZoomController::NotifyLayersUpdated(const ScrollMetadata& aScrollMe
     APZC_LOG("%p NotifyLayersUpdated short-circuit\n", this);
     return;
   }
+
+  // If the mFrameMetrics scroll offset is different from the last scroll offset
+  // that the main-thread sent us, then we know that the user has been doing
+  // something that triggers a scroll. This check is the APZ equivalent of the
+  // check on the main-thread at
+  // https://hg.mozilla.org/mozilla-central/file/97a52326b06a/layout/generic/nsGfxScrollFrame.cpp#l4050
+  // There is code below (the use site of userScrolled) that prevents a restored-
+  // scroll-position update from overwriting a user scroll, again equivalent to
+  // how the main thread code does the same thing.
+  CSSPoint lastScrollOffset = mLastContentPaintMetadata.GetMetrics().GetScrollOffset();
+  bool userScrolled =
+    !FuzzyEqualsAdditive(mFrameMetrics.GetScrollOffset().x, lastScrollOffset.x) ||
+    !FuzzyEqualsAdditive(mFrameMetrics.GetScrollOffset().y, lastScrollOffset.y);
+
   if (aLayerMetrics.GetScrollUpdateType() != FrameMetrics::ScrollOffsetUpdateType::ePending) {
     mLastContentPaintMetadata = aScrollMetadata;
   }
@@ -3290,6 +3304,12 @@ void AsyncPanZoomController::NotifyLayersUpdated(const ScrollMetadata& aScrollMe
   // update message.
   bool scrollOffsetUpdated = aLayerMetrics.GetScrollOffsetUpdated()
         && (aLayerMetrics.GetScrollGeneration() != mFrameMetrics.GetScrollGeneration());
+
+  if (scrollOffsetUpdated && userScrolled &&
+      aLayerMetrics.GetScrollUpdateType() == FrameMetrics::ScrollOffsetUpdateType::eRestore) {
+    APZC_LOG("%p dropping scroll update of type eRestore because of user scroll\n", this);
+    scrollOffsetUpdated = false;
+  }
 
   bool smoothScrollRequested = aLayerMetrics.GetDoSmoothScroll()
        && (aLayerMetrics.GetScrollGeneration() != mFrameMetrics.GetScrollGeneration());

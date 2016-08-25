@@ -692,19 +692,19 @@
                        onclick="PageProxyClickHandler(event);"/>
                 <image id="sharing-icon" mousethrough="always"/>
                 <box id="blocked-permissions-container" align="center" tooltiptext="">
-                  <image data-permission-id="geo" class="notification-anchor-icon geo-icon blocked" role="button"
+                  <image data-permission-id="geo" class="blocked-permission-icon geo-icon" role="button"
                          aria-label="&urlbar.geolocationNotificationAnchor.label;"/>
-                  <image data-permission-id="desktop-notification" class="notification-anchor-icon desktop-notification-icon blocked" role="button"
+                  <image data-permission-id="desktop-notification" class="blocked-permission-icon desktop-notification-icon" role="button"
                          aria-label="&urlbar.webNotsNotificationAnchor3.label;"/>
-                  <image data-permission-id="camera" class="notification-anchor-icon camera-icon blocked" role="button"
+                  <image data-permission-id="camera" class="blocked-permission-icon camera-icon" role="button"
                          aria-label="&urlbar.webRTCShareDevicesNotificationAnchor.label;"/>
-                  <image data-permission-id="indexedDB" class="notification-anchor-icon indexedDB-icon blocked" role="button"
+                  <image data-permission-id="indexedDB" class="blocked-permission-icon indexedDB-icon" role="button"
                          aria-label="&urlbar.indexedDBNotificationAnchor.label;"/>
-                  <image data-permission-id="microphone" class="notification-anchor-icon microphone-icon blocked" role="button"
+                  <image data-permission-id="microphone" class="blocked-permission-icon microphone-icon" role="button"
                          aria-label="&urlbar.webRTCShareMicrophoneNotificationAnchor.label;"/>
-                  <image data-permission-id="screen" class="notification-anchor-icon screen-icon blocked" role="button"
+                  <image data-permission-id="screen" class="blocked-permission-icon screen-icon" role="button"
                          aria-label="&urlbar.webRTCShareScreenNotificationAnchor.label;"/>
-                  <image data-permission-id="pointerLock" class="notification-anchor-icon pointerLock-icon blocked" role="button"
+                  <image data-permission-id="pointerLock" class="blocked-permission-icon pointerLock-icon" role="button"
                          aria-label="&urlbar.pointerLockNotificationAnchor.label;"/>
                 </box>
                 <box id="notification-popup-box"

@@ -18,6 +18,10 @@ import TestGyp
 # - it relies on a ninja-specific output file path.
 
 test = TestGyp.TestGyp(formats=['ninja'])
+# xcode-ninja doesn't support building single object files by design.
+if test.format == 'xcode-ninja':
+  test.skip_test()
+
 test.run_gyp('chained-dependency.gyp')
 objext = '.obj' if sys.platform == 'win32' else '.o'
 test.build('chained-dependency.gyp',

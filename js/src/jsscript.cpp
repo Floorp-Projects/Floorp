@@ -15,7 +15,7 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/ScopeExit.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "mozilla/Vector.h"
 
 #include <algorithm>
@@ -203,7 +203,7 @@ Bindings::initWithTemporaryStorage(ExclusiveContext* cx, MutableHandle<Bindings>
                          (bi->kind() == Binding::CONSTANT ? JSPROP_READONLY : 0);
         Rooted<StackShape> child(cx, StackShape(base, NameToId(bi->name()), slot, attrs, 0));
 
-        shape = cx->compartment()->propertyTree.getChild(cx, shape, child);
+        shape = cx->zone()->propertyTree.getChild(cx, shape, child);
         if (!shape)
             return false;
 
@@ -1649,7 +1649,8 @@ static const ClassOps ScriptSourceObjectClassOps = {
 const Class ScriptSourceObject::class_ = {
     "ScriptSource",
     JSCLASS_HAS_RESERVED_SLOTS(RESERVED_SLOTS) |
-    JSCLASS_IS_ANONYMOUS,
+    JSCLASS_IS_ANONYMOUS |
+    JSCLASS_FOREGROUND_FINALIZE,
     &ScriptSourceObjectClassOps
 };
 

@@ -9,7 +9,7 @@
 
 #include "mozilla/AbstractThread.h"
 #include "mozilla/UniquePtr.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 
 #include "nsISupportsImpl.h"
 #include "nsTArray.h"

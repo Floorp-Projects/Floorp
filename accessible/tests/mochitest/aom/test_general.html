@@ -1,0 +1,55 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Accessibility API: generic</title>
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script>
+  'use strict';
+
+  SimpleTest.waitForExplicitFinish();
+  const finish = SimpleTest.finish.bind(SimpleTest);
+  enablePref()
+    .then(createIframe)
+    .then(checkImplementation)
+    .catch(err => {
+      dump(`${err}: ${err.stack}`);
+      finish();
+    });
+
+  function enablePref() {
+    const ops = {
+      "set": [
+        [ "accessibility.AOM.enabled", true ],
+      ],
+    };
+    return SpecialPowers.pushPrefEnv(ops);
+  }
+
+  // WebIDL conditional annotations for an interface are evaluated once per
+  // global, so we need to create an iframe to see the effects of calling
+  // enablePref().
+  function createIframe() {
+    return new Promise((resolve) => {
+      let iframe = document.createElement("iframe");
+      iframe.src = "about:blank";
+      iframe.onload = () => resolve(iframe.contentDocument);
+      document.body.appendChild(iframe);
+    });
+  }
+
+  // Check that the WebIDL is as expected.
+  function checkImplementation(ifrDoc) {
+    let anode = ifrDoc.accessibleNode;
+    ok(anode, "DOM document has accessible node");
+
+    is(anode.role, 'document', 'correct role of a document accessible node');
+    is(anode.DOMNode, ifrDoc, 'correct DOM Node of a document accessible node');
+
+    finish();
+  }
+  </script>
+</head>

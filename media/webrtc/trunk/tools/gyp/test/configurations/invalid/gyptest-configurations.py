@@ -27,9 +27,6 @@ invalid_configuration_keys = [
 
 test = TestGyp.TestGyp()
 
-if test.format == 'scons':
-  test.skip_test('TODO: http://code.google.com/p/gyp/issues/detail?id=176\n')
-
 for test_key in invalid_configuration_keys:
   test.run_gyp('%s.gyp' % test_key, status=1, stderr=None)
   expect = ['%s not allowed in the Debug configuration, found in target '

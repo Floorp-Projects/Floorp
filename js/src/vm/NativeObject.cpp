@@ -294,7 +294,7 @@ NativeObject::setLastProperty(ExclusiveContext* cx, Shape* shape)
 {
     MOZ_ASSERT(!inDictionaryMode());
     MOZ_ASSERT(!shape->inDictionary());
-    MOZ_ASSERT(shape->compartment() == compartment());
+    MOZ_ASSERT(shape->zone() == zone());
     MOZ_ASSERT(shape->numFixedSlots() == numFixedSlots());
     MOZ_ASSERT(shape->getObjectClass() == getClass());
 
@@ -318,7 +318,7 @@ NativeObject::setLastPropertyShrinkFixedSlots(Shape* shape)
 {
     MOZ_ASSERT(!inDictionaryMode());
     MOZ_ASSERT(!shape->inDictionary());
-    MOZ_ASSERT(shape->compartment() == compartment());
+    MOZ_ASSERT(shape->zone() == zone());
     MOZ_ASSERT(lastProperty()->slotSpan() == shape->slotSpan());
     MOZ_ASSERT(shape->getObjectClass() == getClass());
 
@@ -338,7 +338,7 @@ NativeObject::setLastPropertyMakeNonNative(Shape* shape)
 {
     MOZ_ASSERT(!inDictionaryMode());
     MOZ_ASSERT(!shape->getObjectClass()->isNative());
-    MOZ_ASSERT(shape->compartment() == compartment());
+    MOZ_ASSERT(shape->zone() == zone());
     MOZ_ASSERT(shape->slotSpan() == 0);
     MOZ_ASSERT(shape->numFixedSlots() == 0);
 

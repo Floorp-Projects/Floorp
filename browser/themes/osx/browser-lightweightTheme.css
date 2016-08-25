@@ -10,8 +10,8 @@
  */
 
 /* Lightweight theme on tabs */
-#tabbrowser-tabs:not([movingtab]) > .tabbrowser-tab > .tab-stack > .tab-background > .tab-background-start[visuallyselected=true]:-moz-lwtheme::before,
-#tabbrowser-tabs:not([movingtab]) > .tabbrowser-tab > .tab-stack > .tab-background > .tab-background-end[visuallyselected=true]:-moz-lwtheme::before {
+#tabbrowser-tabs:not([movingtab]) > .tabbrowser-tab > .tab-stack > .tab-background > .tab-background-start[selected=true]:-moz-lwtheme::before,
+#tabbrowser-tabs:not([movingtab]) > .tabbrowser-tab > .tab-stack > .tab-background > .tab-background-end[selected=true]:-moz-lwtheme::before {
   background-attachment: scroll, fixed;
   background-color: transparent;
   background-image: @fgTabTextureLWT@;/*, lwtHeader;*/
@@ -19,7 +19,7 @@
   background-repeat: repeat-x, no-repeat;
 }
 
-#tabbrowser-tabs:not([movingtab]) > .tabbrowser-tab > .tab-stack > .tab-background > .tab-background-middle[visuallyselected=true]:-moz-lwtheme {
+#tabbrowser-tabs:not([movingtab]) > .tabbrowser-tab > .tab-stack > .tab-background > .tab-background-middle[selected=true]:-moz-lwtheme {
   background-attachment: scroll, scroll, fixed;
   background-color: transparent;
   background-image: url(chrome://browser/skin/tabbrowser/tab-active-middle.png),
@@ -30,7 +30,7 @@
 }
 
 @media (min-resolution: 2dppx) {
-  #tabbrowser-tabs:not([movingtab]) > .tabbrowser-tab > .tab-stack > .tab-background > .tab-background-middle[visuallyselected=true]:-moz-lwtheme {
+  #tabbrowser-tabs:not([movingtab]) > .tabbrowser-tab > .tab-stack > .tab-background > .tab-background-middle[selected=true]:-moz-lwtheme {
     background-image: url(chrome://browser/skin/tabbrowser/tab-active-middle@2x.png),
                       @fgTabTextureLWT@;/*,
                       lwtHeader;*/

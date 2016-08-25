@@ -423,6 +423,21 @@ const JNINativeMethod PresentationMediaPlayerManager::Natives<Impl>::methods[] =
 };
 
 template<class Impl>
+class SurfaceTextureListener::Natives : public mozilla::jni::NativeImpl<SurfaceTextureListener, Impl>
+{
+public:
+    static const JNINativeMethod methods[1];
+};
+
+template<class Impl>
+const JNINativeMethod SurfaceTextureListener::Natives<Impl>::methods[] = {
+
+    mozilla::jni::MakeNativeMethod<SurfaceTextureListener::OnFrameAvailable_t>(
+            mozilla::jni::NativeStub<SurfaceTextureListener::OnFrameAvailable_t, Impl>
+            ::template Wrap<&Impl::OnFrameAvailable>)
+};
+
+template<class Impl>
 class Telemetry::Natives : public mozilla::jni::NativeImpl<Telemetry, Impl>
 {
 public:

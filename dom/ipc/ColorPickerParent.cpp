@@ -8,7 +8,7 @@
 #include "nsComponentManagerUtils.h"
 #include "nsIDocument.h"
 #include "nsIDOMWindow.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/TabParent.h"
 

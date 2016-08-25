@@ -83,7 +83,7 @@
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/GuardObjects.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/jsipc/CrossProcessObjectWrappers.h"
 #include "mozilla/layout/RenderFrameParent.h"
@@ -3526,3 +3526,10 @@ nsFrameLoader::PopulateUserContextIdFromAttribute(DocShellOriginAttributes& aAtt
 
   return NS_OK;
 }
+
+nsIMessageSender*
+nsFrameLoader::GetProcessMessageManager() const
+{
+  return mRemoteBrowser ? mRemoteBrowser->Manager()->GetMessageManager()
+                        : nullptr;
+};

@@ -208,7 +208,9 @@ nsAboutCacheEntry::Channel::OpenCacheEntry()
 
     // Invokes OnCacheEntryAvailable()
     rv = storage->AsyncOpenURI(mCacheURI, mEnhanceId,
-                               nsICacheStorage::OPEN_READONLY, this);
+                               nsICacheStorage::OPEN_READONLY |
+                               nsICacheStorage::OPEN_SECRETLY,
+                               this);
     if (NS_FAILED(rv)) return rv;
 
     return NS_OK;

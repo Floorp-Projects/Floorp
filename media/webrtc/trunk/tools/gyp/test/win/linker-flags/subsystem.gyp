@@ -44,5 +44,27 @@
       },
       'sources': ['hello.cc'],
     },
+    {
+      'target_name': 'test_console_xp',
+      'type': 'executable',
+      'msvs_settings': {
+        'VCLinkerTool': {
+          'SubSystem': '1',
+          'MinimumRequiredVersion': '5.01',  # XP.
+        }
+      },
+      'sources': ['hello.cc'],
+    },
+    {
+      'target_name': 'test_windows_xp',
+      'type': 'executable',
+      'msvs_settings': {
+        'VCLinkerTool': {
+          'SubSystem': '2',
+          'MinimumRequiredVersion': '5.01',  # XP.
+        }
+      },
+      'sources': ['subsystem-windows.cc'],
+    },
   ]
 }

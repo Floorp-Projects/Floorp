@@ -59,7 +59,7 @@
 #include "mozilla/net/NeckoParent.h"
 #include "mozilla/ipc/URIUtils.h"
 #include "mozilla/Telemetry.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "mozilla/BasePrincipal.h"
 
 #if defined(XP_UNIX)
@@ -597,7 +597,7 @@ nsHttpHandler::Get32BitsOfPseudoRandom()
     // rand() provides different amounts of PRNG on different platforms.
     // 15 or 31 bits are common amounts.
 
-    PR_STATIC_ASSERT(RAND_MAX >= 0xfff);
+    static_assert(RAND_MAX >= 0xfff, "RAND_MAX should be >= 12 bits");
 
 #if RAND_MAX < 0xffffU
     return ((uint16_t) rand() << 20) |

@@ -12,7 +12,9 @@ import TestGyp
 
 test = TestGyp.TestGyp()
 
-test.run_gyp('copies.gyp', chdir='src')
+test.run_gyp('copies.gyp',
+             '-G', 'xcode_ninja_target_pattern=^(?!copies_null)',
+             chdir='src')
 
 test.relocate('src', 'relocate/src')
 

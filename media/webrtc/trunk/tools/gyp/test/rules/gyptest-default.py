@@ -8,11 +8,20 @@
 Verifies simple rules when using an explicit build target of 'all'.
 """
 
+import sys
+
+if sys.platform == 'win32':
+  print "This test is currently disabled: https://crbug.com/483696."
+  sys.exit(0)
+
+
 import TestGyp
 
 test = TestGyp.TestGyp()
 
-test.run_gyp('actions.gyp', chdir='src')
+test.run_gyp('actions.gyp',
+             '-G', 'xcode_ninja_target_pattern=^pull_in_all_actions$',
+             chdir='src')
 
 test.relocate('src', 'relocate/src')
 
@@ -46,6 +55,10 @@ test.must_match('relocate/src/subdir2/file2.out', 'Hello from file2.in\n')
 
 test.must_match('relocate/src/subdir2/file1.out2', 'Hello from file1.in\n')
 test.must_match('relocate/src/subdir2/file2.out2', 'Hello from file2.in\n')
+
+test.must_match('relocate/src/subdir2/file1.out4', 'Hello from file1.in\n')
+test.must_match('relocate/src/subdir2/file2.out4', 'Hello from file2.in\n')
+test.must_match('relocate/src/subdir2/file1.copy', 'Hello from file1.in\n')
 
 test.must_match('relocate/src/external/file1.external_rules.out',
                 'Hello from file1.in\n')

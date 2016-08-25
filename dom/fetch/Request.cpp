@@ -16,7 +16,7 @@
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/URL.h"
 #include "mozilla/dom/WorkerPrivate.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 
 #include "WorkerPrivate.h"
 

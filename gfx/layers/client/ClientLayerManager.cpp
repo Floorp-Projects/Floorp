@@ -35,7 +35,7 @@
 #include "LayerMetricsWrapper.h"
 #endif
 #ifdef XP_WIN
-#include "mozilla/gfx/DeviceManagerD3D11.h"
+#include "mozilla/gfx/DeviceManagerDx.h"
 #endif
 
 namespace mozilla {
@@ -783,7 +783,7 @@ ClientLayerManager::GetBackendName(nsAString& aName)
     case LayersBackend::LAYERS_D3D9: aName.AssignLiteral("Direct3D 9"); return;
     case LayersBackend::LAYERS_D3D11: {
 #ifdef XP_WIN
-      if (DeviceManagerD3D11::Get()->IsWARP()) {
+      if (DeviceManagerDx::Get()->IsWARP()) {
         aName.AssignLiteral("Direct3D 11 WARP");
       } else {
         aName.AssignLiteral("Direct3D 11");

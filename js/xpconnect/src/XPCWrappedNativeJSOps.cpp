@@ -222,7 +222,7 @@ DefinePropertyIfFound(XPCCallContext& ccx,
                       HandleObject obj,
                       HandleId idArg,
                       XPCNativeSet* set,
-                      XPCNativeInterface* iface,
+                      XPCNativeInterface* ifaceArg,
                       XPCNativeMember* member,
                       XPCWrappedNativeScope* scope,
                       bool reflectToStringAndToSource,
@@ -233,6 +233,7 @@ DefinePropertyIfFound(XPCCallContext& ccx,
                       bool* resolved)
 {
     RootedId id(ccx, idArg);
+    RefPtr<XPCNativeInterface> iface = ifaceArg;
     XPCJSRuntime* rt = ccx.GetRuntime();
     bool found;
     const char* name;
@@ -305,7 +306,7 @@ DefinePropertyIfFound(XPCCallContext& ccx,
 
         if (wrapperToReflectInterfaceNames) {
             JSAutoByteString name;
-            AutoMarkingNativeInterfacePtr iface2(ccx);
+            RefPtr<XPCNativeInterface> iface2;
             XPCWrappedNativeTearOff* to;
             RootedObject jso(ccx);
             nsresult rv = NS_OK;
@@ -644,7 +645,8 @@ const js::Class XPC_WN_NoHelper_JSClass = {
     "XPCWrappedNative_NoHelper",
     WRAPPER_FLAGS |
     JSCLASS_IS_WRAPPED_NATIVE |
-    JSCLASS_PRIVATE_IS_NSISUPPORTS,
+    JSCLASS_PRIVATE_IS_NSISUPPORTS |
+    JSCLASS_FOREGROUND_FINALIZE,
     &XPC_WN_NoHelper_JSClassOps,
     JS_NULL_CLASS_SPEC,
     &XPC_WN_JSClassExtension,
@@ -834,7 +836,7 @@ XPC_WN_Helper_Resolve(JSContext* cx, HandleObject obj, HandleId id, bool* resolv
         XPCNativeSet* protoSet = wrapper->HasProto() ?
                                     wrapper->GetProto()->GetSet() : nullptr;
         XPCNativeMember* member;
-        XPCNativeInterface* iface;
+        RefPtr<XPCNativeInterface> iface;
         bool IsLocal;
 
         if (set->FindMember(id, &member, &iface, protoSet, &IsLocal) &&
@@ -1132,7 +1134,7 @@ XPC_WN_CallMethod(JSContext* cx, unsigned argc, Value* vp)
     XPCWrappedNative* wrapper = ccx.GetWrapper();
     THROW_AND_RETURN_IF_BAD_WRAPPER(cx, wrapper);
 
-    XPCNativeInterface* iface;
+    RefPtr<XPCNativeInterface> iface;
     XPCNativeMember*    member;
 
     if (!XPCNativeMember::GetCallInfo(funobj, &iface, &member))
@@ -1158,7 +1160,7 @@ XPC_WN_GetterSetter(JSContext* cx, unsigned argc, Value* vp)
     XPCWrappedNative* wrapper = ccx.GetWrapper();
     THROW_AND_RETURN_IF_BAD_WRAPPER(cx, wrapper);
 
-    XPCNativeInterface* iface;
+    RefPtr<XPCNativeInterface> iface;
     XPCNativeMember*    member;
 
     if (!XPCNativeMember::GetCallInfo(funobj, &iface, &member))

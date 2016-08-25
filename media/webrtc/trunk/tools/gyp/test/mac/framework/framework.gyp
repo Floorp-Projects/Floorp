@@ -21,9 +21,6 @@
         'TestFramework/ObjCVectorInternal.h',
         'TestFramework/ObjCVector.mm',
       ],
-      'mac_framework_headers': [
-        'TestFramework/ObjCVector.h',
-      ],
       'mac_bundle_resources': [
         'TestFramework/English.lproj/InfoPlist.strings',
       ],
@@ -59,6 +56,43 @@
           'files': [
             '<(PRODUCT_DIR)/Dependency Bundle.framework',
           ],
+        },
+      ],
+      'actions': [
+        {
+          'action_name': 'aektschn',
+          'inputs': [],
+          'outputs': ['<(PRODUCT_DIR)/touched_file'],
+          'action': ['touch', '${BUILT_PRODUCTS_DIR}/action_file'],
+        },
+      ],
+    },
+    {
+      'target_name': 'copy_embedded',
+      'type': 'none',
+      'dependencies': [ 'test_framework' ],
+      'copies': [
+        # Test copying framework to FRAMEWORK directory.
+        {
+          'destination': '$(BUILT_FRAMEWORKS_DIR)/Embedded',
+          'files': [
+            '<(PRODUCT_DIR)/Test Framework.framework',
+          ],
+        },
+      ],
+    },
+    {
+      'target_name': 'copy_target_code_sign',
+      'type': 'none',
+      'dependencies': [ 'test_framework', 'dep_framework', ],
+      'copies': [
+        # Test copying directories with spaces in src and dest paths.
+        {
+          'destination': '<(PRODUCT_DIR)/Test Framework.framework/foo',
+          'files': [
+            '<(PRODUCT_DIR)/Dependency Bundle.framework',
+          ],
+         'xcode_code_sign': 1,
         },
       ],
       'actions': [

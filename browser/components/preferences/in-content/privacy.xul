@@ -73,12 +73,6 @@
   <preference id="browser.privatebrowsing.autostart"
               name="browser.privatebrowsing.autostart"
               type="bool"/>
-
-  <!-- Containers -->
-  <preference id="privacy.userContext.enabled"
-              name="privacy.userContext.enabled"
-              type="bool"/>
-
 </preferences>
 
 <hbox id="header-privacy"
@@ -298,7 +292,6 @@
     </label></caption>
     <checkbox id="browserContainersCheckbox"
               label="&browserContainersEnabled.label;"
-              accesskey="&browserContainersEnabled.accesskey;"
-              preference="privacy.userContext.enabled"/>
+              accesskey="&browserContainersEnabled.accesskey;" />
   </vbox>
 </groupbox>

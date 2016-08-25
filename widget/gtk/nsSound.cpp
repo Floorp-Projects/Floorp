@@ -23,7 +23,7 @@
 #include "nsDirectoryServiceDefs.h"
 #include "mozilla/FileUtils.h"
 #include "mozilla/Services.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "nsIStringBundle.h"
 #include "nsIXULAppInfo.h"
 #include "nsContentUtils.h"

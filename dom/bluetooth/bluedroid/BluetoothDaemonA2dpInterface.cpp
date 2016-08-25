@@ -6,7 +6,7 @@
 
 #include "BluetoothDaemonA2dpInterface.h"
 #include "mozilla/UniquePtr.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 
 BEGIN_BLUETOOTH_NAMESPACE
 

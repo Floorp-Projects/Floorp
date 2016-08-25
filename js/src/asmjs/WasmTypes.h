@@ -25,7 +25,7 @@
 #include "mozilla/Move.h"
 #include "mozilla/RefCounted.h"
 #include "mozilla/RefPtr.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 
 #include "NamespaceImports.h"
 

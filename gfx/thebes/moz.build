@@ -52,7 +52,7 @@ EXPORTS += [
 
 EXPORTS.mozilla.gfx += [
     'D3D11Checks.h',
-    'DeviceManagerD3D11.h',
+    'DeviceManagerDx.h',
     'PrintTarget.h',
     'PrintTargetThebes.h',
 ]
@@ -237,7 +237,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     UNIFIED_SOURCES += [
         'D3D11Checks.cpp',
-        'DeviceManagerD3D11.cpp',
+        'DeviceManagerDx.cpp',
     ]
 
 # We prefer to use ICU for normalization functions, but currently it is only

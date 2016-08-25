@@ -85,6 +85,7 @@ protected:
   void OnChannelConnected(int32_t pid) override;
 
   virtual bool RecvRefreshDisplays() override;
+  virtual bool RecvGetDisplays(nsTArray<VRDisplayInfo> *aDisplays) override;
   virtual bool RecvResetSensor(const uint32_t& aDisplayID) override;
   virtual bool RecvGetSensorState(const uint32_t& aDisplayID, VRHMDSensorState* aState) override;
   virtual bool RecvGetImmediateSensorState(const uint32_t& aDisplayID, VRHMDSensorState* aState) override;
