@@ -976,9 +976,9 @@ void
 MediaDecoderStateMachine::MaybeStartBuffering()
 {
   MOZ_ASSERT(OnTaskQueue());
+  MOZ_ASSERT(mState == DECODER_STATE_DECODING);
 
-  if (mState == DECODER_STATE_DECODING &&
-      mPlayState == MediaDecoder::PLAY_STATE_PLAYING &&
+  if (mPlayState == MediaDecoder::PLAY_STATE_PLAYING &&
       mResource->IsExpectingMoreData()) {
     bool shouldBuffer;
     if (mReader->UseBufferingHeuristics()) {
