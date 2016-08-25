@@ -939,6 +939,7 @@ class Parser final : private JS::AutoGCRooter, public StrictModeGetter
   public:
     /* Public entry points for parsing. */
     Node statement(YieldHandling yieldHandling, bool canHaveDirectives = false);
+    Node statementListItem(YieldHandling yieldHandling, bool canHaveDirectives = false);
 
     bool maybeParseDirective(Node list, Node pn, bool* cont);
 
