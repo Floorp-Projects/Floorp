@@ -456,7 +456,7 @@ public:
 
     static bool OffMainThreadCompositingEnabled();
 
-    virtual bool CanUseHardwareVideoDecoding();
+    void UpdateCanUseHardareVideoDecoding();
 
     // Returns a prioritized list of all available compositor backends.
     void GetCompositorBackends(bool useAcceleration, nsTArray<mozilla::layers::LayersBackend>& aBackends);
@@ -751,6 +751,8 @@ protected:
 
     static already_AddRefed<mozilla::gfx::ScaledFont>
       GetScaledFontForFontWithCairoSkia(mozilla::gfx::DrawTarget* aTarget, gfxFont* aFont);
+
+    virtual bool CanUseHardwareVideoDecoding();
 
     int8_t  mAllowDownloadableFonts;
     int8_t  mGraphiteShapingEnabled;
