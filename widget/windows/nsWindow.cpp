@@ -3565,8 +3565,8 @@ NS_IMETHODIMP nsWindow::CaptureMouse(bool aCapture)
  *
  **************************************************************/
 
-NS_IMETHODIMP nsWindow::CaptureRollupEvents(nsIRollupListener * aListener,
-                                            bool aDoCapture)
+void
+nsWindow::CaptureRollupEvents(nsIRollupListener* aListener, bool aDoCapture)
 {
   if (aDoCapture) {
     gRollupListener = aListener;
@@ -3579,8 +3579,6 @@ NS_IMETHODIMP nsWindow::CaptureRollupEvents(nsIRollupListener * aListener,
     sProcessHook = false;
     UnregisterSpecialDropdownHooks();
   }
-
-  return NS_OK;
 }
 
 /**************************************************************

@@ -167,7 +167,7 @@ public:
                                         nsEventStatus& aStatus) override;
   virtual void            EnableDragDrop(bool aEnable) override;
   NS_IMETHOD              CaptureMouse(bool aCapture) override;
-  NS_IMETHOD              CaptureRollupEvents(nsIRollupListener * aListener,
+  virtual void            CaptureRollupEvents(nsIRollupListener* aListener,
                                               bool aDoCapture) override;
   NS_IMETHOD              GetAttention(int32_t aCycleCount) override;
   virtual bool            HasPendingInputEvent() override;
