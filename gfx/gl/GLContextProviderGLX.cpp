@@ -15,7 +15,7 @@
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/widget/CompositorWidget.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 
 #include "prenv.h"
 #include "GLContextProvider.h"
