@@ -1299,6 +1299,15 @@ ThrowRuntimeLexicalError(JSContext* cx, unsigned errorNumber)
 }
 
 bool
+ThrowReadOnlyError(JSContext* cx, HandleObject handle)
+{
+    HandleNativeObject obj = handle.as<NativeObject>();
+    RootedValue val(cx, ObjectValue(*obj));
+    ReportValueError(cx, JSMSG_READ_ONLY, JSDVG_IGNORE_STACK, val, nullptr);
+    return false;
+}
+
+bool
 ThrowBadDerivedReturn(JSContext* cx, HandleValue v)
 {
     ReportValueError(cx, JSMSG_BAD_DERIVED_RETURN, JSDVG_IGNORE_STACK, v, nullptr);
