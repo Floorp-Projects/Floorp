@@ -224,7 +224,6 @@ MediaDecoderReader::MediaDecoderReader(AbstractMediaDecoder* aDecoder)
   , mIgnoreAudioOutputFormat(false)
   , mHitAudioDecodeError(false)
   , mShutdown(false)
-  , mAudioDiscontinuity(false)
   , mVideoDiscontinuity(false)
   , mIsSuspended(mTaskQueue, true,
                  "MediaDecoderReader::mIsSuspended (Canonical)")
@@ -297,7 +296,6 @@ nsresult MediaDecoderReader::ResetDecode(TrackSet aTracks)
 
   if (aTracks.contains(TrackInfo::kAudioTrack)) {
     AudioQueue().Reset();
-    mAudioDiscontinuity = true;
     mBaseAudioPromise.RejectIfExists(CANCELED, __func__);
   }
 
@@ -493,9 +491,6 @@ MediaDecoderReader::RequestAudioData()
   }
   if (AudioQueue().GetSize() > 0) {
     RefPtr<AudioData> a = AudioQueue().PopFront();
-    if (mAudioDiscontinuity) {
-      mAudioDiscontinuity = false;
-    }
     mBaseAudioPromise.Resolve(a, __func__);
   } else if (AudioQueue().IsFinished()) {
     mBaseAudioPromise.Reject(mHitAudioDecodeError ? DECODE_ERROR : END_OF_STREAM, __func__);
