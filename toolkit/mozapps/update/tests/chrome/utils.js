@@ -747,7 +747,7 @@ function verifyTestsRan() {
  */
 function setupFiles() {
   // Backup the updater-settings.ini file if it exists by moving it.
-  let baseAppDir = getGREDir();
+  let baseAppDir = getAppBaseDir();
   let updateSettingsIni = baseAppDir.clone();
   updateSettingsIni.append(FILE_UPDATE_SETTINGS_INI);
   if (updateSettingsIni.exists()) {
@@ -902,7 +902,7 @@ function setupPrefs() {
  */
 function resetFiles() {
   // Restore the backed up updater-settings.ini if it exists.
-  let baseAppDir = getGREDir();
+  let baseAppDir = getAppBaseDir();
   let updateSettingsIni = baseAppDir.clone();
   updateSettingsIni.append(FILE_UPDATE_SETTINGS_INI_BAK);
   if (updateSettingsIni.exists()) {
