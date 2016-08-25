@@ -639,18 +639,17 @@ class nsIWidget : public nsISupports
     NS_IMETHOD Show(bool aState) = 0;
 
     /**
-     * Make the window modal
-     *
+     * Make the window modal.
      */
-    NS_IMETHOD SetModal(bool aModal) = 0;
+    virtual void SetModal(bool aModal) = 0;
 
     /**
      * Make the non-modal window opened by modal window fake-modal, that will
      * call SetFakeModal(false) on destroy on Cocoa.
      */
-    NS_IMETHOD SetFakeModal(bool aModal)
+    virtual void SetFakeModal(bool aModal)
     {
-        return SetModal(aModal);
+        SetModal(aModal);
     }
 
     /**

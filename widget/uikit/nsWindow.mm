@@ -583,12 +583,6 @@ nsWindow::Show(bool aState)
 }
 
 NS_IMETHODIMP
-nsWindow::SetModal(bool aModal)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsWindow::ConstrainPosition(bool aAllowSlop,
                             int32_t *aX,
                             int32_t *aY)

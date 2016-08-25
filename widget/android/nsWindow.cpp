@@ -1736,14 +1736,6 @@ nsWindow::Show(bool aState)
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsWindow::SetModal(bool aState)
-{
-    ALOG("nsWindow[%p]::SetModal %d ignored", (void*)this, aState);
-
-    return NS_OK;
-}
-
 bool
 nsWindow::IsVisible() const
 {

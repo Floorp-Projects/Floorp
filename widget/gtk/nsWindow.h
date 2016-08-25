@@ -107,7 +107,7 @@ public:
         return mozilla::DesktopToLayoutDeviceScale(1.0);
     }
     virtual nsresult   SetParent(nsIWidget* aNewParent) override;
-    NS_IMETHOD         SetModal(bool aModal) override;
+    virtual void       SetModal(bool aModal) override;
     virtual bool       IsVisible() const override;
     NS_IMETHOD         ConstrainPosition(bool aAllowSlop,
                                          int32_t *aX,
