@@ -8741,6 +8741,38 @@
     "kind": "count",
     "description": "Counts the number of times that a sync has failed because of trying to sync before server backoff interval has passed."
   },
+  "ABOUT_ACCOUNTS_CONTENT_SERVER_LOAD_STARTED_COUNT": {
+    "alert_emails": ["mobile-frontend@mozilla.com"],
+    "expires_in_version": "50",
+    "kind": "count",
+    "keyed": true,
+    "description": "The number of remote content loads started. Keyed on fxa-content-server endpoint, like '/signin' or '/settings'."
+  },
+  "ABOUT_ACCOUNTS_CONTENT_SERVER_LOADED_RATE": {
+    "alert_emails": ["mobile-frontend@mozilla.com"],
+    "expires_in_version": "50",
+    "kind": "boolean",
+    "keyed": true,
+    "description": "The number of remote content loads that fail (0) vs. receive the remote 'LOADED' message (1). Keyed on fxa-content-server endpoint path, like '/signin' or '/settings'."
+  },
+  "ABOUT_ACCOUNTS_CONTENT_SERVER_LOADED_TIME_MS": {
+    "alert_emails": ["mobile-frontend@mozilla.com"],
+    "expires_in_version": "50",
+    "keyed": true,
+    "kind": "exponential",
+    "high": 60000,
+    "n_buckets": 50,
+    "description": "The length of time (in milliseconds) between starting remote content load and receiving the remote 'LOADED' message. Keyed on fxa-content-server endpoint path, like '/signin' or '/settings'."
+  },
+  "ABOUT_ACCOUNTS_CONTENT_SERVER_FAILURE_TIME_MS": {
+    "alert_emails": ["mobile-frontend@mozilla.com"],
+    "expires_in_version": "50",
+    "keyed": true,
+    "kind": "exponential",
+    "high": 60000,
+    "n_buckets": 50,
+    "description": "The length of time (in milliseconds) between starting remote content load and failing with a connection error. Keyed on fxa-content-server endpoint path, like '/signin' or '/settings'."
+  },
   "SLOW_SCRIPT_NOTICE_COUNT": {
     "alert_emails": ["perf-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
