@@ -353,8 +353,6 @@ public:
 
     void SetPopupWindowLevel();
 
-    NS_IMETHOD         ReparentNativeWidget(nsIWidget* aNewParent) override;
-
 protected:
   virtual ~nsCocoaWindow();
 

@@ -1873,7 +1873,7 @@ public:
      * @param aNewParent the native widget of aNewParent is the new native
      *                   parent widget
      */
-    NS_IMETHOD ReparentNativeWidget(nsIWidget* aNewParent) = 0;
+    virtual void ReparentNativeWidget(nsIWidget* aNewParent) = 0;
 
     /**
      * Return true if widget has it's own GL context
