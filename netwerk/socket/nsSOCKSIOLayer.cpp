@@ -22,7 +22,7 @@
 #include "nsIURL.h"
 #include "mozilla/Logging.h"
 #include "mozilla/net/DNS.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 
 using mozilla::LogLevel;
 using namespace mozilla::net;
