@@ -5,10 +5,10 @@
  * accompanying file LICENSE for details.
  */
 #include <assert.h>
+#include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include "halloc.h"
 #include "nestegg/nestegg.h"
 
 /* EBML Elements */
@@ -312,8 +312,13 @@ struct segment {
 };
 
 /* Misc. */
+struct pool_node {
+  struct pool_node * next;
+  void * data;
+};
+
 struct pool_ctx {
-  char dummy;
+  struct pool_node * head;
 };
 
 struct list_node {
@@ -551,26 +556,41 @@ static struct ebml_element_desc ne_top_level_elements[] = {
 static struct pool_ctx *
 ne_pool_init(void)
 {
-  return h_malloc(sizeof(struct pool_ctx));
+  return calloc(1, sizeof(struct pool_ctx));
 }
 
 static void
 ne_pool_destroy(struct pool_ctx * pool)
 {
-  h_free(pool);
+  struct pool_node * node = pool->head;
+  while (node) {
+    struct pool_node * old = node;
+    node = node->next;
+    free(old->data);
+    free(old);
+  }
+  free(pool);
 }
 
 static void *
 ne_pool_alloc(size_t size, struct pool_ctx * pool)
 {
-  void * p;
+  struct pool_node * node;
 
-  p = h_malloc(size);
-  if (!p)
+  node = calloc(1, sizeof(*node));
+  if (!node)
     return NULL;
-  hattach(p, pool);
-  memset(p, 0, size);
-  return p;
+
+  node->data = calloc(1, size);
+  if (!node->data) {
+    free(node);
+    return NULL;
+  }
+
+  node->next = pool->head;
+  pool->head = node;
+
+  return node->data;
 }
 
 static void *
@@ -1462,6 +1482,8 @@ ne_read_block(nestegg * ctx, uint64_t block_id, uint64_t block_size, nestegg_pac
   track_scale = 1.0;
 
   tc_scale = ne_get_timecode_scale(ctx);
+  if (tc_scale == 0)
+    return -1;
 
   if (!ctx->read_cluster_timecode)
     return -1;
@@ -1517,6 +1539,7 @@ ne_read_block(nestegg * ctx, uint64_t block_id, uint64_t block_size, nestegg_pac
         }
         r = ne_io_read(ctx->io, f->frame_encryption->iv, IV_SIZE);
         if (r != 1) {
+          free(f->frame_encryption->iv);
           free(f->frame_encryption);
           free(f);
           nestegg_free_packet(pkt);
@@ -1898,11 +1921,8 @@ ne_buffer_tell(void * userdata)
 }
 
 static int
-ne_match_webm(nestegg_io io, int64_t max_offset)
+ne_context_new(nestegg ** context, nestegg_io io, nestegg_log callback)
 {
-  int r;
-  uint64_t id;
-  char * doctype;
   nestegg * ctx;
 
   if (!(io.read && io.seek && io.tell))
@@ -1918,12 +1938,30 @@ ne_match_webm(nestegg_io io, int64_t max_offset)
     return -1;
   }
   *ctx->io = io;
+  ctx->log = callback;
   ctx->alloc_pool = ne_pool_init();
   if (!ctx->alloc_pool) {
     nestegg_destroy(ctx);
     return -1;
   }
-  ctx->log = ne_null_log_callback;
+
+  if (!ctx->log)
+    ctx->log = ne_null_log_callback;
+
+  *context = ctx;
+  return 0;
+}
+
+static int
+ne_match_webm(nestegg_io io, int64_t max_offset)
+{
+  int r;
+  uint64_t id;
+  char * doctype;
+  nestegg * ctx;
+
+  if (ne_context_new(&ctx, io, NULL) != 0)
+    return -1;
 
   r = ne_peek_element(ctx, &id, NULL);
   if (r != 1) {
@@ -1965,28 +2003,8 @@ nestegg_init(nestegg ** context, nestegg_io io, nestegg_log callback, int64_t ma
   char * doctype;
   nestegg * ctx;
 
-  if (!(io.read && io.seek && io.tell))
+  if (ne_context_new(&ctx, io, callback) != 0)
     return -1;
-
-  ctx = ne_alloc(sizeof(*ctx));
-  if (!ctx)
-    return -1;
-
-  ctx->io = ne_alloc(sizeof(*ctx->io));
-  if (!ctx->io) {
-    nestegg_destroy(ctx);
-    return -1;
-  }
-  *ctx->io = io;
-  ctx->log = callback;
-  ctx->alloc_pool = ne_pool_init();
-  if (!ctx->alloc_pool) {
-    nestegg_destroy(ctx);
-    return -1;
-  }
-
-  if (!ctx->log)
-    ctx->log = ne_null_log_callback;
 
   r = ne_peek_element(ctx, &id, NULL);
   if (r != 1) {
@@ -2076,8 +2094,12 @@ nestegg_duration(nestegg * ctx, uint64_t * duration)
     return -1;
 
   tc_scale = ne_get_timecode_scale(ctx);
+  if (tc_scale == 0)
+    return -1;
 
-  if (unscaled_duration < 0 || unscaled_duration > UINT64_MAX / tc_scale)
+  if (unscaled_duration != unscaled_duration ||
+      unscaled_duration < 0 || unscaled_duration > (double) UINT64_MAX ||
+      (uint64_t) unscaled_duration > UINT64_MAX / tc_scale)
     return -1;
 
   *duration = (uint64_t) (unscaled_duration * tc_scale);
@@ -2088,6 +2110,8 @@ int
 nestegg_tstamp_scale(nestegg * ctx, uint64_t * scale)
 {
   *scale = ne_get_timecode_scale(ctx);
+  if (*scale == 0)
+    return -1;
   return 0;
 }
 
@@ -2130,6 +2154,8 @@ nestegg_get_cue_point(nestegg * ctx, unsigned int cluster_num, int64_t max_offse
   nestegg_track_count(ctx, &track_count);
 
   tc_scale = ne_get_timecode_scale(ctx);
+  if (tc_scale == 0)
+    return -1;
 
   while (cues_node && !range_obtained) {
     assert(cues_node->id == ID_CUE_POINT);
@@ -2205,6 +2231,8 @@ nestegg_track_seek(nestegg * ctx, unsigned int track, uint64_t tstamp)
   }
 
   tc_scale = ne_get_timecode_scale(ctx);
+  if (tc_scale == 0)
+    return -1;
 
   cue_point = ne_find_cue_point_for_tstamp(ctx, ctx->segment.cues.cue_point.head,
                                            track, tc_scale, tstamp);
@@ -2664,52 +2692,104 @@ nestegg_read_packet(nestegg * ctx, nestegg_packet ** pkt)
       int64_t reference_block = 0;
       int read_reference_block = 0;
       struct block_additional * block_additional = NULL;
+      uint64_t tc_scale;
 
       block_group_end = ne_io_tell(ctx->io) + size;
 
       /* Read the entire BlockGroup manually. */
       while (ne_io_tell(ctx->io) < block_group_end) {
         r = ne_read_element(ctx, &id, &size);
-        if (r != 1)
+        if (r != 1) {
+          free(block_additional);
+          if (*pkt) {
+            nestegg_free_packet(*pkt);
+            *pkt = NULL;
+          }
           return r;
+        }
 
         switch (id) {
         case ID_BLOCK: {
           r = ne_read_block(ctx, id, size, pkt);
-          if (r != 1)
+          if (r != 1) {
+            free(block_additional);
+            if (*pkt) {
+              nestegg_free_packet(*pkt);
+              *pkt = NULL;
+            }
             return r;
+          }
 
           read_block = 1;
           break;
         }
         case ID_BLOCK_DURATION: {
           r = ne_read_uint(ctx->io, &block_duration, size);
-          if (r != 1)
+          if (r != 1) {
+            free(block_additional);
+            if (*pkt) {
+              nestegg_free_packet(*pkt);
+              *pkt = NULL;
+            }
             return r;
-          block_duration *= ne_get_timecode_scale(ctx);
+          }
+          tc_scale = ne_get_timecode_scale(ctx);
+          if (tc_scale == 0) {
+            free(block_additional);
+            if (*pkt) {
+              nestegg_free_packet(*pkt);
+              *pkt = NULL;
+            }
+            return -1;
+          }
+          block_duration *= tc_scale;
           read_block_duration = 1;
           break;
         }
         case ID_DISCARD_PADDING: {
           r = ne_read_int(ctx->io, &discard_padding, size);
-          if (r != 1)
+          if (r != 1) {
+            free(block_additional);
+            if (*pkt) {
+              nestegg_free_packet(*pkt);
+              *pkt = NULL;
+            }
             return r;
+          }
           read_discard_padding = 1;
           break;
         }
         case ID_BLOCK_ADDITIONS: {
           /* There should only be one BlockAdditions; treat multiple as an error. */
-          if (block_additional)
+          if (block_additional) {
+            free(block_additional);
+            if (*pkt) {
+              nestegg_free_packet(*pkt);
+              *pkt = NULL;
+            }
             return -1;
+          }
           r = ne_read_block_additions(ctx, size, &block_additional);
-          if (r != 1)
+          if (r != 1) {
+            free(block_additional);
+            if (*pkt) {
+              nestegg_free_packet(*pkt);
+              *pkt = NULL;
+            }
             return r;
+          }
           break;
         }
         case ID_REFERENCE_BLOCK: {
           r = ne_read_int(ctx->io, &reference_block, size);
-          if (r != 1)
+          if (r != 1) {
+            free(block_additional);
+            if (*pkt) {
+              nestegg_free_packet(*pkt);
+              *pkt = NULL;
+            }
             return r;
+          }
           read_reference_block = 1;
           break;
         }
@@ -2719,8 +2799,14 @@ nestegg_read_packet(nestegg * ctx, nestegg_packet ** pkt)
             ctx->log(ctx, NESTEGG_LOG_DEBUG,
                      "read_packet: unknown element %llx in BlockGroup", id);
           r = ne_io_read_skip(ctx->io, size);
-          if (r != 1)
+          if (r != 1) {
+            free(block_additional);
+            if (*pkt) {
+              nestegg_free_packet(*pkt);
+              *pkt = NULL;
+            }
             return r;
+          }
         }
       }
 
@@ -2952,13 +3038,4 @@ nestegg_sniff(unsigned char const * buffer, size_t length)
   io.tell = ne_buffer_tell;
   io.userdata = &userdata;
   return ne_match_webm(io, length);
-}
-
-/* From halloc.c */
-int halloc_set_allocator(realloc_t realloc_func);
-
-int
-nestegg_set_halloc_func(void * (* realloc_func)(void *, size_t))
-{
-  return halloc_set_allocator(realloc_func);
 }
