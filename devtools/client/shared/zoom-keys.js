@@ -12,11 +12,8 @@ const ZOOM_PREF = "devtools.toolbox.zoomValue";
 const MIN_ZOOM = 0.5;
 const MAX_ZOOM = 2;
 
-const properties = "chrome://devtools/locale/toolbox.properties";
-const bundle = Services.strings.createBundle(properties);
-function l10n(key) {
-  return bundle.GetStringFromName(key);
-}
+const {LocalizationHelper} = require("devtools/shared/l10n");
+const L10N = new LocalizationHelper("devtools/locale/toolbox.properties");
 
 /**
  * Register generic keys to control zoom level of the given document.
@@ -62,26 +59,26 @@ exports.register = function (window) {
   // Set zoom to whatever the last setting was.
   setZoom(zoomValue);
 
-  shortcuts.on(l10n("toolbox.zoomIn.key"), zoomIn);
-  let zoomIn2 = l10n("toolbox.zoomIn2.key");
+  shortcuts.on(L10N.getStr("toolbox.zoomIn.key"), zoomIn);
+  let zoomIn2 = L10N.getStr("toolbox.zoomIn2.key");
   if (zoomIn2) {
     shortcuts.on(zoomIn2, zoomIn);
   }
-  let zoomIn3 = l10n("toolbox.zoomIn2.key");
+  let zoomIn3 = L10N.getStr("toolbox.zoomIn2.key");
   if (zoomIn3) {
     shortcuts.on(zoomIn3, zoomIn);
   }
 
-  shortcuts.on(l10n("toolbox.zoomOut.key"),
+  shortcuts.on(L10N.getStr("toolbox.zoomOut.key"),
                zoomOut);
-  let zoomOut2 = l10n("toolbox.zoomOut2.key");
+  let zoomOut2 = L10N.getStr("toolbox.zoomOut2.key");
   if (zoomOut2) {
     shortcuts.on(zoomOut2, zoomOut);
   }
 
-  shortcuts.on(l10n("toolbox.zoomReset.key"),
+  shortcuts.on(L10N.getStr("toolbox.zoomReset.key"),
                zoomReset);
-  let zoomReset2 = l10n("toolbox.zoomReset2.key");
+  let zoomReset2 = L10N.getStr("toolbox.zoomReset2.key");
   if (zoomReset2) {
     shortcuts.on(zoomReset2, zoomReset);
   }
