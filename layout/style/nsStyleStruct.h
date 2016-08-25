@@ -145,6 +145,36 @@ private:
   bool    mIsLocalRef;
 };
 
+struct Position {
+  typedef nsStyleCoord::CalcValue PositionCoord;
+  PositionCoord mXPosition, mYPosition;
+
+  // Initialize nothing
+  Position() {}
+
+  // Sets both mXPosition and mYPosition to the given percent value for the
+  // initial property-value (e.g. 0.0f for "0% 0%", or 0.5f for "50% 50%")
+  void SetInitialPercentValues(float aPercentVal);
+
+  // Sets both mXPosition and mYPosition to 0 (app units) for the
+  // initial property-value as a length with no percentage component.
+  void SetInitialZeroValues();
+
+  // True if the effective background image position described by this depends
+  // on the size of the corresponding frame.
+  bool DependsOnPositioningAreaSize() const {
+    return mXPosition.mPercent != 0.0f || mYPosition.mPercent != 0.0f;
+  }
+
+  bool operator==(const Position& aOther) const {
+    return mXPosition == aOther.mXPosition &&
+      mYPosition == aOther.mYPosition;
+  }
+  bool operator!=(const Position& aOther) const {
+    return !(*this == aOther);
+  }
+};
+
 } // namespace mozilla
 
 // The lifetime of these objects is managed by the presshell's arena.
@@ -561,39 +591,7 @@ struct nsStyleImageLayers {
     MOZ_COUNT_DTOR(nsStyleImageLayers);
   }
 
-  struct Position;
-  friend struct Position;
-  struct Position {
-    typedef nsStyleCoord::CalcValue PositionCoord;
-    PositionCoord mXPosition, mYPosition;
-
-    // Initialize nothing
-    Position() {}
-
-    // Sets both mXPosition and mYPosition to the given percent value for the
-    // initial property-value (e.g. 0.0f for "0% 0%", or 0.5f for "50% 50%")
-    void SetInitialPercentValues(float aPercentVal);
-
-    // Sets both mXPosition and mYPosition to 0 (app units) for the
-    // initial property-value as a length with no percentage component.
-    void SetInitialZeroValues();
-
-    // True if the effective background image position described by this depends
-    // on the size of the corresponding frame.
-    bool DependsOnPositioningAreaSize() const {
-      return mXPosition.mPercent != 0.0f || mYPosition.mPercent != 0.0f;
-    }
-
-    bool operator==(const Position& aOther) const {
-      return mXPosition == aOther.mXPosition &&
-             mYPosition == aOther.mYPosition;
-    }
-    bool operator!=(const Position& aOther) const {
-      return !(*this == aOther);
-    }
-  };
-
-  static bool IsInitialPositionForLayerType(Position aPosition, LayerType aType);
+  static bool IsInitialPositionForLayerType(mozilla::Position aPosition, LayerType aType);
 
   static float GetInitialPositionForLayerType(LayerType aType) {
     return (aType == LayerType::Background) ? 0.0f : 0.5f;
@@ -700,7 +698,7 @@ struct nsStyleImageLayers {
                                   // be the initial value, which is nullptr.
                                   // Store mask-image URI so that we can resolve
                                   // SVG mask path later.
-    Position      mPosition;      // [reset] See nsStyleConsts.h
+    mozilla::Position mPosition;  // [reset]
     Size          mSize;          // [reset]
     uint8_t       mClip;          // [reset] See nsStyleConsts.h
     MOZ_INIT_OUTSIDE_CTOR
@@ -1745,10 +1743,6 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStylePosition
     return nsChangeHint(0);
   }
 
-  // XXXdholbert nsStyleImageLayers::Position should probably be moved to a
-  // different scope, since we're now using it in multiple style structs.
-  typedef nsStyleImageLayers::Position Position;
-
   /**
    * Return the computed value for 'align-content'.
    */
@@ -1782,7 +1776,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStylePosition
    */
   uint8_t ComputedJustifySelf(nsStyleContext* aParent) const;
 
-  Position      mObjectPosition;        // [reset]
+  mozilla::Position mObjectPosition;    // [reset]
   nsStyleSides  mOffset;                // [reset] coord, percent, calc, auto
   nsStyleCoord  mWidth;                 // [reset] coord, percent, enum, calc, auto
   nsStyleCoord  mMinWidth;              // [reset] coord, percent, enum, calc
@@ -2551,7 +2545,6 @@ public:
     mFillRule = aFillRule;
   }
 
-  typedef nsStyleImageLayers::Position Position;
   Position& GetPosition() {
     MOZ_ASSERT(mType == StyleBasicShapeType::Circle ||
                mType == StyleBasicShapeType::Ellipse,
@@ -2826,11 +2819,6 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay
     return nsChangeHint(0);
   }
 
-  // XXXdholbert, XXXkgilbert nsStyleImageLayers::Position should probably be
-  // moved to a different scope, since we're now using it in multiple style
-  // structs.
-  typedef nsStyleImageLayers::Position Position;
-
   // We guarantee that if mBinding is non-null, so are mBinding->GetURI() and
   // mBinding->mOriginPrincipal.
   RefPtr<mozilla::css::URLValue> mBinding;    // [reset]
@@ -2872,8 +2860,8 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay
   uint8_t mScrollSnapTypeY;     // [reset] see nsStyleConsts.h NS_STYLE_SCROLL_SNAP_TYPE_*
   nsStyleCoord mScrollSnapPointsX; // [reset]
   nsStyleCoord mScrollSnapPointsY; // [reset]
-  Position mScrollSnapDestination; // [reset]
-  nsTArray<Position> mScrollSnapCoordinate; // [reset]
+  mozilla::Position mScrollSnapDestination; // [reset]
+  nsTArray<mozilla::Position> mScrollSnapCoordinate; // [reset]
 
   // mSpecifiedTransform is the list of transform functions as
   // specified, or null to indicate there is no transform.  (inherit or

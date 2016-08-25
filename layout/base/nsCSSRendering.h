@@ -175,7 +175,7 @@ public:
    *
    * Points are returned relative to aOriginBounds.
    */
-  static void ComputeObjectAnchorPoint(const nsStyleImageLayers::Position& aPos,
+  static void ComputeObjectAnchorPoint(const mozilla::Position& aPos,
                                        const nsSize& aOriginBounds,
                                        const nsSize& aImageSize,
                                        nsPoint* aTopLeft,
