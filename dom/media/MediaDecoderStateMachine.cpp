@@ -1123,12 +1123,7 @@ void MediaDecoderStateMachine::RecomputeDuration()
     return;
   }
 
-  // Only adjust the duration when an explicit duration isn't set (MSE).
-  // The duration is always exactly known with MSE and there's no need to adjust
-  // it based on what may have been seen in the past; in particular as this data
-  // may no longer exist such as when the mediasource duration was reduced.
-  if (mExplicitDuration.Ref().isNothing() &&
-      duration < mObservedDuration.Ref()) {
+  if (duration < mObservedDuration.Ref()) {
     duration = mObservedDuration;
   }
 
