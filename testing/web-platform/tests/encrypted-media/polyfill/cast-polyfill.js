@@ -29,7 +29,7 @@
             return this._mediaKeys.setServerCertificate( certificate );
         };
 
-        MediaKeys.prototype.createSession function createSession( sessionType ) {
+        MediaKeys.prototype.createSession = function createSession( sessionType ) {
 
             if ( sessionType === 'persistent-usage-record' )
             {

@@ -29,7 +29,7 @@
                                 sessionTypes: [ 'persistent-usage-record' ] },
             assertions = [ ];
 
-            config.messagehandler = messagehandler;
+            config.messagehandler = (new MessageHandler('org.w3.keysystem')).messagehandler;
 
         function onMessage( event )
         {
@@ -49,7 +49,7 @@
             assertions.push( { expected: true, actual: ( duration >= 2000 ), message: "duration >= 2s" } );
             assertions.push( { expected: true, actual: ( duration < 4000 ), message: "duration < 4s" } );
 
-            config.messagehandler( config.keysystem, event.messageType, event.message )
+            config.messagehandler( event.messageType, event.message )
             .then( function( response ) {
 
                 event.target.update( response ).catch(function(error) {
