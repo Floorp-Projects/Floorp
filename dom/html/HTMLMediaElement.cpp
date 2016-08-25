@@ -798,8 +798,7 @@ HTMLMediaElement::SetVisible(bool aVisible)
     return;
   }
 
-  mDecoder->NotifyOwnerActivityChanged(aVisible);
-
+  mDecoder->SetForcedHidden(!aVisible);
 }
 
 already_AddRefed<DOMMediaStream>
