@@ -1717,7 +1717,7 @@ function runUpdateUsingUpdater(aExpectedStatus, aSwitchApp, aExpectedExitValue) 
   callbackApp.permissions = PERMS_DIRECTORY;
 
   setAppBundleModTime();
-  
+
   let args = [updatesDirPath, applyToDirPath];
   if (aSwitchApp) {
     args[2] = gApplyToDirOverride || stageDirPath;
