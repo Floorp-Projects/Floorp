@@ -23,7 +23,7 @@
 #include "vm/ArrayObject.h"
 #include "vm/Debugger.h"
 #if defined(DEBUG)
-#include "vm/ScopeObject.h"
+#include "vm/EnvironmentObject.h"
 #endif
 #include "vm/Time.h"
 #include "vm/TypedArrayObject.h"

@@ -54,8 +54,8 @@ f1(()=>42, 42, ()=>43, 43, ()=>44, 44);
 function f2(a, aIs,
             // call before body
             b=(function() { assertEq(a(), aIs); })(),
-            // call inside body
-            c=function() { assertEq(a(), 52); }) {
+            // a inside body not accessible from defaults
+            c=function() { assertEq(a(), 42); }) {
   function a() {
     return 52;
   }
@@ -74,8 +74,8 @@ function f3(a, aIs,
             // call before body
             // close here
             b=(function() { assertEq(a(), aIs); })(),
-            // call inside body
-            c=function() { assertEq(a(), 52); }) {
+            // a inside body not accessible from defaults
+            c=function() { assertEq(a(), 42); }) {
   function a() {
     return 52;
   }
@@ -89,9 +89,9 @@ function f4(a,
             // assignment before body
             b=a=()=>62,
             c=(assertEq(a(), 62)),
-            // function declaration before body
+            // eval in defaults exprs get own var envs
             d=eval("function a() { return 72; }"),
-            e=(assertEq(a(), 72))) {
+            e=(assertEq(a(), 62))) {
   function a() {
     return 52;
   }

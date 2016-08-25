@@ -152,13 +152,13 @@ PrepareScript(nsIURI* uri,
             else
                 JS::CompileForNonSyntacticScope(cx, options, srcBuf, script);
         } else {
-            AutoObjectVector scopeChain(cx);
+            AutoObjectVector envChain(cx);
             if (!JS_IsGlobalObject(targetObj) &&
-                !scopeChain.append(targetObj)) {
+                !envChain.append(targetObj)) {
                 return NS_ERROR_OUT_OF_MEMORY;
             }
             // XXXbz do we really not care if the compile fails???
-            JS::CompileFunction(cx, scopeChain, options, nullptr, 0, nullptr,
+            JS::CompileFunction(cx, envChain, options, nullptr, 0, nullptr,
                                 srcBuf, function);
         }
     } else {
@@ -171,13 +171,13 @@ PrepareScript(nsIURI* uri,
             else
                 JS::CompileForNonSyntacticScope(cx, options, buf, len, script);
         } else {
-            AutoObjectVector scopeChain(cx);
+            AutoObjectVector envChain(cx);
             if (!JS_IsGlobalObject(targetObj) &&
-                !scopeChain.append(targetObj)) {
+                !envChain.append(targetObj)) {
                 return NS_ERROR_OUT_OF_MEMORY;
             }
             // XXXbz do we really not care if the compile fails???
-            JS::CompileFunction(cx, scopeChain, options, nullptr, 0, nullptr,
+            JS::CompileFunction(cx, envChain, options, nullptr, 0, nullptr,
                                 buf, len, function);
         }
     }
@@ -205,9 +205,9 @@ EvalScript(JSContext* cx,
         if (JS_IsGlobalObject(target_obj)) {
             ok = JS_ExecuteScript(cx, script, retval);
         } else {
-            JS::AutoObjectVector scopeChain(cx);
-            ok = scopeChain.append(target_obj) &&
-                 JS_ExecuteScript(cx, scopeChain, script, retval);
+            JS::AutoObjectVector envChain(cx);
+            ok = envChain.append(target_obj) &&
+                 JS_ExecuteScript(cx, envChain, script, retval);
         }
     }
 

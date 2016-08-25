@@ -27,7 +27,7 @@
 #include "jit/TypedObjectPrediction.h"
 #include "jit/TypePolicy.h"
 #include "vm/ArrayObject.h"
-#include "vm/ScopeObject.h"
+#include "vm/EnvironmentObject.h"
 #include "vm/SharedMem.h"
 #include "vm/TypedArrayCommon.h"
 #include "vm/UnboxedObject.h"
@@ -4314,20 +4314,20 @@ class MGetDynamicName
     public MixPolicy<ObjectPolicy<0>, ConvertToStringPolicy<1> >::Data
 {
   protected:
-    MGetDynamicName(MDefinition* scopeChain, MDefinition* name)
+    MGetDynamicName(MDefinition* envChain, MDefinition* name)
     {
-        initOperand(0, scopeChain);
+        initOperand(0, envChain);
         initOperand(1, name);
         setResultType(MIRType::Value);
     }
 
   public:
     INSTRUCTION_HEADER(GetDynamicName)
-    NAMED_OPERANDS((0, getScopeChain), (1, getName))
+    NAMED_OPERANDS((0, getEnvironmentChain), (1, getName))
 
     static MGetDynamicName*
-    New(TempAllocator& alloc, MDefinition* scopeChain, MDefinition* name) {
-        return new(alloc) MGetDynamicName(scopeChain, name);
+    New(TempAllocator& alloc, MDefinition* envChain, MDefinition* name) {
+        return new(alloc) MGetDynamicName(envChain, name);
     }
 
     bool possiblyCalls() const override {
@@ -4342,11 +4342,11 @@ class MCallDirectEval
                       BoxPolicy<2> >::Data
 {
   protected:
-    MCallDirectEval(MDefinition* scopeChain, MDefinition* string,
+    MCallDirectEval(MDefinition* envChain, MDefinition* string,
                     MDefinition* newTargetValue, jsbytecode* pc)
         : pc_(pc)
     {
-        initOperand(0, scopeChain);
+        initOperand(0, envChain);
         initOperand(1, string);
         initOperand(2, newTargetValue);
         setResultType(MIRType::Value);
@@ -4354,13 +4354,13 @@ class MCallDirectEval
 
   public:
     INSTRUCTION_HEADER(CallDirectEval)
-    NAMED_OPERANDS((0, getScopeChain), (1, getString), (2, getNewTargetValue))
+    NAMED_OPERANDS((0, getEnvironmentChain), (1, getString), (2, getNewTargetValue))
 
     static MCallDirectEval*
-    New(TempAllocator& alloc, MDefinition* scopeChain, MDefinition* string,
+    New(TempAllocator& alloc, MDefinition* envChain, MDefinition* string,
         MDefinition* newTargetValue, jsbytecode* pc)
     {
-        return new(alloc) MCallDirectEval(scopeChain, string, newTargetValue, pc);
+        return new(alloc) MCallDirectEval(envChain, string, newTargetValue, pc);
     }
 
     jsbytecode* pc() const {
@@ -7589,19 +7589,19 @@ class MOsrValue
 
 // MIR representation of a JSObject scope chain pointer on the OSR BaselineFrame.
 // The pointer is indexed off of OsrFrameReg.
-class MOsrScopeChain
+class MOsrEnvironmentChain
   : public MUnaryInstruction,
     public NoTypePolicy::Data
 {
   private:
-    explicit MOsrScopeChain(MOsrEntry* entry)
+    explicit MOsrEnvironmentChain(MOsrEntry* entry)
       : MUnaryInstruction(entry)
     {
         setResultType(MIRType::Object);
     }
 
   public:
-    INSTRUCTION_HEADER(OsrScopeChain)
+    INSTRUCTION_HEADER(OsrEnvironmentChain)
     TRIVIAL_NEW_WRAPPERS
 
     MOsrEntry* entry() {
@@ -7832,8 +7832,8 @@ class MDefVar
     unsigned attrs_; // Attributes to be set.
 
   private:
-    MDefVar(PropertyName* name, unsigned attrs, MDefinition* scopeChain)
-      : MUnaryInstruction(scopeChain),
+    MDefVar(PropertyName* name, unsigned attrs, MDefinition* envChain)
+      : MUnaryInstruction(envChain),
         name_(name),
         attrs_(attrs)
     {
@@ -7842,7 +7842,7 @@ class MDefVar
   public:
     INSTRUCTION_HEADER(DefVar)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, scopeChain))
+    NAMED_OPERANDS((0, environmentChain))
 
     PropertyName* name() const {
         return name_;
@@ -7850,6 +7850,7 @@ class MDefVar
     unsigned attrs() const {
         return attrs_;
     }
+
     bool possiblyCalls() const override {
         return true;
     }
@@ -7886,15 +7887,15 @@ class MDefFun
     CompilerFunction fun_;
 
   private:
-    MDefFun(JSFunction* fun, MDefinition* scopeChain)
-      : MUnaryInstruction(scopeChain),
+    MDefFun(JSFunction* fun, MDefinition* envChain)
+      : MUnaryInstruction(envChain),
         fun_(fun)
     {}
 
   public:
     INSTRUCTION_HEADER(DefFun)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, scopeChain))
+    NAMED_OPERANDS((0, environmentChain))
 
     JSFunction* fun() const {
         return fun_;
@@ -8218,8 +8219,8 @@ class MLambda
 {
     const LambdaFunctionInfo info_;
 
-    MLambda(CompilerConstraintList* constraints, MDefinition* scopeChain, MConstant* cst)
-      : MBinaryInstruction(scopeChain, cst), info_(&cst->toObject().as<JSFunction>())
+    MLambda(CompilerConstraintList* constraints, MDefinition* envChain, MConstant* cst)
+      : MBinaryInstruction(envChain, cst), info_(&cst->toObject().as<JSFunction>())
     {
         setResultType(MIRType::Object);
         if (!info().fun->isSingleton() && !ObjectGroup::useSingletonForClone(info().fun))
@@ -8229,7 +8230,7 @@ class MLambda
   public:
     INSTRUCTION_HEADER(Lambda)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, scopeChain))
+    NAMED_OPERANDS((0, environmentChain))
 
     MConstant* functionOperand() const {
         return getOperand(1)->toConstant();
@@ -8249,9 +8250,9 @@ class MLambdaArrow
 {
     const LambdaFunctionInfo info_;
 
-    MLambdaArrow(CompilerConstraintList* constraints, MDefinition* scopeChain,
+    MLambdaArrow(CompilerConstraintList* constraints, MDefinition* envChain,
                  MDefinition* newTarget_, JSFunction* fun)
-      : MBinaryInstruction(scopeChain, newTarget_), info_(fun)
+      : MBinaryInstruction(envChain, newTarget_), info_(fun)
     {
         setResultType(MIRType::Object);
         MOZ_ASSERT(!ObjectGroup::useSingletonForClone(fun));
@@ -8262,7 +8263,7 @@ class MLambdaArrow
   public:
     INSTRUCTION_HEADER(LambdaArrow)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, scopeChain), (1, newTargetDef))
+    NAMED_OPERANDS((0, environmentChain), (1, newTargetDef))
 
     const LambdaFunctionInfo& info() const {
         return info_;
@@ -10793,8 +10794,8 @@ class MBindNameCache
     CompilerScript script_;
     jsbytecode* pc_;
 
-    MBindNameCache(MDefinition* scopeChain, PropertyName* name, JSScript* script, jsbytecode* pc)
-      : MUnaryInstruction(scopeChain), name_(name), script_(script), pc_(pc)
+    MBindNameCache(MDefinition* envChain, PropertyName* name, JSScript* script, jsbytecode* pc)
+      : MUnaryInstruction(envChain), name_(name), script_(script), pc_(pc)
     {
         setResultType(MIRType::Object);
     }
@@ -10802,7 +10803,7 @@ class MBindNameCache
   public:
     INSTRUCTION_HEADER(BindNameCache)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, scopeChain))
+    NAMED_OPERANDS((0, environmentChain))
 
     PropertyName* name() const {
         return name_;
@@ -10819,8 +10820,8 @@ class MCallBindVar
   : public MUnaryInstruction,
     public SingleObjectPolicy::Data
 {
-    explicit MCallBindVar(MDefinition* scopeChain)
-      : MUnaryInstruction(scopeChain)
+    explicit MCallBindVar(MDefinition* envChain)
+      : MUnaryInstruction(envChain)
     {
         setResultType(MIRType::Object);
         setMovable();
@@ -10829,7 +10830,7 @@ class MCallBindVar
   public:
     INSTRUCTION_HEADER(CallBindVar)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, scopeChain))
+    NAMED_OPERANDS((0, environmentChain))
 
     bool congruentTo(const MDefinition* ins) const override {
         if (!ins->isCallBindVar())
@@ -11280,7 +11281,7 @@ class MGetNameCache
   public:
     INSTRUCTION_HEADER(GetNameCache)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, scopeObj))
+    NAMED_OPERANDS((0, envObj))
 
     PropertyName* name() const {
         return name_;
@@ -12453,11 +12454,11 @@ class MPostWriteElementBarrier : public MTernaryInstruction
     ALLOW_CLONE(MPostWriteElementBarrier)
 };
 
-class MNewDeclEnvObject : public MNullaryInstruction
+class MNewNamedLambdaObject : public MNullaryInstruction
 {
-    CompilerGCPointer<DeclEnvObject*> templateObj_;
+    CompilerGCPointer<LexicalEnvironmentObject*> templateObj_;
 
-    explicit MNewDeclEnvObject(DeclEnvObject* templateObj)
+    explicit MNewNamedLambdaObject(LexicalEnvironmentObject* templateObj)
       : MNullaryInstruction(),
         templateObj_(templateObj)
     {
@@ -12465,10 +12466,10 @@ class MNewDeclEnvObject : public MNullaryInstruction
     }
 
   public:
-    INSTRUCTION_HEADER(NewDeclEnvObject)
+    INSTRUCTION_HEADER(NewNamedLambdaObject)
     TRIVIAL_NEW_WRAPPERS
 
-    DeclEnvObject* templateObj() {
+    LexicalEnvironmentObject* templateObj() {
         return templateObj_;
     }
     AliasSet getAliasSet() const override {
@@ -12552,21 +12553,21 @@ class MNewStringObject :
 };
 
 // This is an alias for MLoadFixedSlot.
-class MEnclosingScope : public MLoadFixedSlot
+class MEnclosingEnvironment : public MLoadFixedSlot
 {
-    explicit MEnclosingScope(MDefinition* obj)
-      : MLoadFixedSlot(obj, ScopeObject::enclosingScopeSlot())
+    explicit MEnclosingEnvironment(MDefinition* obj)
+      : MLoadFixedSlot(obj, EnvironmentObject::enclosingEnvironmentSlot())
     {
         setResultType(MIRType::Object);
     }
 
   public:
-    static MEnclosingScope* New(TempAllocator& alloc, MDefinition* obj) {
-        return new(alloc) MEnclosingScope(obj);
+    static MEnclosingEnvironment* New(TempAllocator& alloc, MDefinition* obj) {
+        return new(alloc) MEnclosingEnvironment(obj);
     }
 
     AliasSet getAliasSet() const override {
-        // ScopeObject reserved slots are immutable.
+        // EnvironmentObject reserved slots are immutable.
         return AliasSet::None();
     }
 };

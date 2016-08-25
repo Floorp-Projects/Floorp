@@ -759,6 +759,7 @@ struct CompartmentStats
     macro(Other,   MallocHeap, crossCompartmentWrappersTable) \
     macro(Other,   MallocHeap, regexpCompartment) \
     macro(Other,   MallocHeap, savedStacksSet) \
+    macro(Other,   MallocHeap, varNamesSet) \
     macro(Other,   MallocHeap, nonSyntacticLexicalScopesTable) \
     macro(Other,   MallocHeap, jitCompartment) \
     macro(Other,   MallocHeap, privateData)

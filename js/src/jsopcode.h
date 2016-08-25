@@ -49,12 +49,12 @@ enum {
                                        atom index */
     JOF_INT32           = 14,       /* int32_t immediate operand */
     JOF_UINT32          = 15,       /* uint32_t immediate operand */
-    JOF_OBJECT          = 16,       /* unsigned 16-bit object index */
+    JOF_OBJECT          = 16,       /* unsigned 32-bit object index */
     JOF_REGEXP          = 17,       /* unsigned 32-bit regexp index */
     JOF_INT8            = 18,       /* int8_t immediate operand */
     JOF_ATOMOBJECT      = 19,       /* uint16_t constant index + object index */
-    /* 20 is unused */
-    JOF_SCOPECOORD      = 21,       /* embedded ScopeCoordinate immediate */
+    JOF_SCOPE           = 20,       /* unsigned 32-bit scope index */
+    JOF_ENVCOORD        = 21,       /* embedded ScopeCoordinate immediate */
     JOF_TYPEMASK        = 0x001f,   /* mask for above immediate types */
 
     JOF_NAME            = 1 << 5,   /* name operation */
@@ -328,7 +328,7 @@ PackLoopEntryDepthHintAndFlags(unsigned loopDepth, bool canIonOsr)
 }
 
 /*
- * Describes the 'hops' component of a JOF_SCOPECOORD opcode.
+ * Describes the 'hops' component of a JOF_ENVCOORD opcode.
  *
  * Note: this component is only 8 bits wide, limiting the maximum number of
  * scopes between a use and def to roughly 255. This is a pretty small limit but
@@ -338,37 +338,37 @@ PackLoopEntryDepthHintAndFlags(unsigned loopDepth, bool canIonOsr)
  */
 
 static inline uint8_t
-GET_SCOPECOORD_HOPS(jsbytecode* pc)
+GET_ENVCOORD_HOPS(jsbytecode* pc)
 {
     return GET_UINT8(pc);
 }
 
 static inline void
-SET_SCOPECOORD_HOPS(jsbytecode* pc, uint8_t hops)
+SET_ENVCOORD_HOPS(jsbytecode* pc, uint8_t hops)
 {
     SET_UINT8(pc, hops);
 }
 
-static const unsigned SCOPECOORD_HOPS_LEN   = 1;
-static const unsigned SCOPECOORD_HOPS_BITS  = 8;
-static const unsigned SCOPECOORD_HOPS_LIMIT = 1 << SCOPECOORD_HOPS_BITS;
+static const unsigned ENVCOORD_HOPS_LEN   = 1;
+static const unsigned ENVCOORD_HOPS_BITS  = 8;
+static const unsigned ENVCOORD_HOPS_LIMIT = 1 << ENVCOORD_HOPS_BITS;
 
-/* Describes the 'slot' component of a JOF_SCOPECOORD opcode. */
+/* Describes the 'slot' component of a JOF_ENVCOORD opcode. */
 static inline uint32_t
-GET_SCOPECOORD_SLOT(const jsbytecode* pc)
+GET_ENVCOORD_SLOT(const jsbytecode* pc)
 {
     return GET_UINT24(pc);
 }
 
 static inline void
-SET_SCOPECOORD_SLOT(jsbytecode* pc, uint32_t slot)
+SET_ENVCOORD_SLOT(jsbytecode* pc, uint32_t slot)
 {
     SET_UINT24(pc, slot);
 }
 
-static const unsigned SCOPECOORD_SLOT_LEN   = 3;
-static const unsigned SCOPECOORD_SLOT_BITS  = 24;
-static const uint32_t SCOPECOORD_SLOT_LIMIT = 1 << SCOPECOORD_SLOT_BITS;
+static const unsigned ENVCOORD_SLOT_LEN   = 3;
+static const unsigned ENVCOORD_SLOT_BITS  = 24;
+static const uint32_t ENVCOORD_SLOT_LIMIT = 1 << ENVCOORD_SLOT_BITS;
 
 struct JSCodeSpec {
     int8_t              length;         /* length including opcode byte */
@@ -681,7 +681,7 @@ IsLocalOp(JSOp op)
 inline bool
 IsAliasedVarOp(JSOp op)
 {
-    return JOF_OPTYPE(op) == JOF_SCOPECOORD;
+    return JOF_OPTYPE(op) == JOF_ENVCOORD;
 }
 
 inline bool

@@ -40,8 +40,8 @@
 #include "jit/JitFrames-inl.h"
 #include "jit/MacroAssembler-inl.h"
 #include "jit/shared/Lowering-shared-inl.h"
+#include "vm/EnvironmentObject-inl.h"
 #include "vm/Interpreter-inl.h"
-#include "vm/ScopeObject-inl.h"
 #include "vm/StringObject-inl.h"
 #include "vm/UnboxedObject-inl.h"
 
@@ -292,7 +292,7 @@ DoTypeUpdateFallback(JSContext* cx, BaselineFrame* frame, ICUpdatedStub* stub, H
         MOZ_ASSERT(obj->isNative() || obj->is<UnboxedPlainObject>());
         jsbytecode* pc = stub->getChainFallback()->icEntry()->pc(script);
         if (*pc == JSOP_SETALIASEDVAR || *pc == JSOP_INITALIASEDLEXICAL)
-            id = NameToId(ScopeCoordinateName(cx->caches.scopeCoordinateNameCache, script, pc));
+            id = NameToId(EnvironmentCoordinateName(cx->caches.envCoordinateNameCache, script, pc));
         else
             id = NameToId(script->getName(pc));
         AddTypePropertyId(cx, obj, id, value);
@@ -3681,7 +3681,8 @@ UpdateExistingSetPropCallStubs(ICSetProp_Fallback* fallbackStub,
 // Attach an optimized stub for a GETGNAME/CALLGNAME slot-read op.
 static bool
 TryAttachGlobalNameValueStub(JSContext* cx, HandleScript script, jsbytecode* pc,
-                             ICGetName_Fallback* stub, Handle<ClonedBlockObject*> globalLexical,
+                             ICGetName_Fallback* stub,
+                             Handle<LexicalEnvironmentObject*> globalLexical,
                              HandlePropertyName name, bool* attached)
 {
     MOZ_ASSERT(globalLexical->isGlobal());
@@ -3754,7 +3755,8 @@ TryAttachGlobalNameValueStub(JSContext* cx, HandleScript script, jsbytecode* pc,
 // Attach an optimized stub for a GETGNAME/CALLGNAME getter op.
 static bool
 TryAttachGlobalNameAccessorStub(JSContext* cx, HandleScript script, jsbytecode* pc,
-                                ICGetName_Fallback* stub, Handle<ClonedBlockObject*> globalLexical,
+                                ICGetName_Fallback* stub,
+                                Handle<LexicalEnvironmentObject*> globalLexical,
                                 HandlePropertyName name, bool* attached,
                                 bool* isTemporarilyUnoptimizable)
 {
@@ -3831,45 +3833,45 @@ TryAttachGlobalNameAccessorStub(JSContext* cx, HandleScript script, jsbytecode* 
 }
 
 static bool
-TryAttachScopeNameStub(JSContext* cx, HandleScript script, ICGetName_Fallback* stub,
-                       HandleObject initialScopeChain, HandlePropertyName name, bool* attached)
+TryAttachEnvNameStub(JSContext* cx, HandleScript script, ICGetName_Fallback* stub,
+                     HandleObject initialEnvChain, HandlePropertyName name, bool* attached)
 {
     MOZ_ASSERT(!*attached);
 
     Rooted<ShapeVector> shapes(cx, ShapeVector(cx));
     RootedId id(cx, NameToId(name));
-    RootedObject scopeChain(cx, initialScopeChain);
+    RootedObject envChain(cx, initialEnvChain);
 
     Shape* shape = nullptr;
-    while (scopeChain) {
-        if (!shapes.append(scopeChain->maybeShape()))
+    while (envChain) {
+        if (!shapes.append(envChain->maybeShape()))
             return false;
 
-        if (scopeChain->is<GlobalObject>()) {
-            shape = scopeChain->as<GlobalObject>().lookup(cx, id);
+        if (envChain->is<GlobalObject>()) {
+            shape = envChain->as<GlobalObject>().lookup(cx, id);
             if (shape)
                 break;
             return true;
         }
 
-        if (!scopeChain->is<ScopeObject>() || scopeChain->is<DynamicWithObject>())
+        if (!envChain->is<EnvironmentObject>() || envChain->is<WithEnvironmentObject>())
             return true;
 
-        // Check for an 'own' property on the scope. There is no need to
+        // Check for an 'own' property on the env. There is no need to
         // check the prototype as non-with scopes do not inherit properties
         // from any prototype.
-        shape = scopeChain->as<NativeObject>().lookup(cx, id);
+        shape = envChain->as<NativeObject>().lookup(cx, id);
         if (shape)
             break;
 
-        scopeChain = scopeChain->enclosingScope();
+        envChain = envChain->enclosingEnvironment();
     }
 
     // We don't handle getters here. When this changes, we need to make sure
     // IonBuilder::getPropTryCommonGetter (which requires a Baseline stub to
     // work) handles non-outerized this objects correctly.
 
-    if (!IsCacheableGetPropReadSlot(scopeChain, scopeChain, shape))
+    if (!IsCacheableGetPropReadSlot(envChain, envChain, shape))
         return true;
 
     bool isFixedSlot;
@@ -3881,44 +3883,44 @@ TryAttachScopeNameStub(JSContext* cx, HandleScript script, ICGetName_Fallback* s
 
     switch (shapes.length()) {
       case 1: {
-        ICGetName_Scope<0>::Compiler compiler(cx, monitorStub, Move(shapes.get()), isFixedSlot,
-                                              offset);
+        ICGetName_Env<0>::Compiler compiler(cx, monitorStub, Move(shapes.get()), isFixedSlot,
+                                            offset);
         newStub = compiler.getStub(compiler.getStubSpace(script));
         break;
       }
       case 2: {
-        ICGetName_Scope<1>::Compiler compiler(cx, monitorStub, Move(shapes.get()), isFixedSlot,
-                                              offset);
+        ICGetName_Env<1>::Compiler compiler(cx, monitorStub, Move(shapes.get()), isFixedSlot,
+                                            offset);
         newStub = compiler.getStub(compiler.getStubSpace(script));
         break;
       }
       case 3: {
-        ICGetName_Scope<2>::Compiler compiler(cx, monitorStub, Move(shapes.get()), isFixedSlot,
-                                              offset);
+        ICGetName_Env<2>::Compiler compiler(cx, monitorStub, Move(shapes.get()), isFixedSlot,
+                                            offset);
         newStub = compiler.getStub(compiler.getStubSpace(script));
         break;
       }
       case 4: {
-        ICGetName_Scope<3>::Compiler compiler(cx, monitorStub, Move(shapes.get()), isFixedSlot,
-                                              offset);
+        ICGetName_Env<3>::Compiler compiler(cx, monitorStub, Move(shapes.get()), isFixedSlot,
+                                            offset);
         newStub = compiler.getStub(compiler.getStubSpace(script));
         break;
       }
       case 5: {
-        ICGetName_Scope<4>::Compiler compiler(cx, monitorStub, Move(shapes.get()), isFixedSlot,
-                                              offset);
+        ICGetName_Env<4>::Compiler compiler(cx, monitorStub, Move(shapes.get()), isFixedSlot,
+                                            offset);
         newStub = compiler.getStub(compiler.getStubSpace(script));
         break;
       }
       case 6: {
-        ICGetName_Scope<5>::Compiler compiler(cx, monitorStub, Move(shapes.get()), isFixedSlot,
-                                              offset);
+        ICGetName_Env<5>::Compiler compiler(cx, monitorStub, Move(shapes.get()), isFixedSlot,
+                                            offset);
         newStub = compiler.getStub(compiler.getStubSpace(script));
         break;
       }
       case 7: {
-        ICGetName_Scope<6>::Compiler compiler(cx, monitorStub, Move(shapes.get()), isFixedSlot,
-                                              offset);
+        ICGetName_Env<6>::Compiler compiler(cx, monitorStub, Move(shapes.get()), isFixedSlot,
+                                            offset);
         newStub = compiler.getStub(compiler.getStubSpace(script));
         break;
       }
@@ -3936,7 +3938,7 @@ TryAttachScopeNameStub(JSContext* cx, HandleScript script, ICGetName_Fallback* s
 
 static bool
 DoGetNameFallback(JSContext* cx, BaselineFrame* frame, ICGetName_Fallback* stub_,
-                  HandleObject scopeChain, MutableHandleValue res)
+                  HandleObject envChain, MutableHandleValue res)
 {
     SharedStubInfo info(cx, frame, stub_->icEntry());
 
@@ -3962,7 +3964,7 @@ DoGetNameFallback(JSContext* cx, BaselineFrame* frame, ICGetName_Fallback* stub_
 
     if (!attached && IsGlobalOp(JSOp(*pc)) && !script->hasNonSyntacticScope()) {
         if (!TryAttachGlobalNameAccessorStub(cx, script, pc, stub,
-                                             scopeChain.as<ClonedBlockObject>(),
+                                             envChain.as<LexicalEnvironmentObject>(),
                                              name, &attached, &isTemporarilyUnoptimizable))
         {
             return false;
@@ -3972,10 +3974,10 @@ DoGetNameFallback(JSContext* cx, BaselineFrame* frame, ICGetName_Fallback* stub_
     static_assert(JSOP_GETGNAME_LENGTH == JSOP_GETNAME_LENGTH,
                   "Otherwise our check for JSOP_TYPEOF isn't ok");
     if (JSOp(pc[JSOP_GETGNAME_LENGTH]) == JSOP_TYPEOF) {
-        if (!GetScopeNameForTypeOf(cx, scopeChain, name, res))
+        if (!GetEnvironmentNameForTypeOf(cx, envChain, name, res))
             return false;
     } else {
-        if (!GetScopeName(cx, scopeChain, name, res))
+        if (!GetEnvironmentName(cx, envChain, name, res))
             return false;
     }
 
@@ -3992,11 +3994,11 @@ DoGetNameFallback(JSContext* cx, BaselineFrame* frame, ICGetName_Fallback* stub_
         return true;
 
     if (IsGlobalOp(JSOp(*pc)) && !script->hasNonSyntacticScope()) {
-        Handle<ClonedBlockObject*> globalLexical = scopeChain.as<ClonedBlockObject>();
+        Handle<LexicalEnvironmentObject*> globalLexical = envChain.as<LexicalEnvironmentObject>();
         if (!TryAttachGlobalNameValueStub(cx, script, pc, stub, globalLexical, name, &attached))
             return false;
     } else {
-        if (!TryAttachScopeNameStub(cx, script, stub, scopeChain, name, &attached))
+        if (!TryAttachEnvNameStub(cx, script, stub, envChain, name, &attached))
             return false;
     }
 
@@ -4053,7 +4055,7 @@ ICGetName_GlobalLexical::Compiler::generateStubCode(MacroAssembler& masm)
 
 template <size_t NumHops>
 bool
-ICGetName_Scope<NumHops>::Compiler::generateStubCode(MacroAssembler& masm)
+ICGetName_Env<NumHops>::Compiler::generateStubCode(MacroAssembler& masm)
 {
     MOZ_ASSERT(engine_ == Engine::Baseline);
 
@@ -4070,11 +4072,13 @@ ICGetName_Scope<NumHops>::Compiler::generateStubCode(MacroAssembler& masm)
         Register scope = index ? walker : obj;
 
         // Shape guard.
-        masm.loadPtr(Address(ICStubReg, ICGetName_Scope::offsetOfShape(index)), scratch);
+        masm.loadPtr(Address(ICStubReg, ICGetName_Env::offsetOfShape(index)), scratch);
         masm.branchTestObjShape(Assembler::NotEqual, scope, scratch, &failure);
 
-        if (index < numHops)
-            masm.extractObject(Address(scope, ScopeObject::offsetOfEnclosingScope()), walker);
+        if (index < numHops) {
+            masm.extractObject(Address(scope, EnvironmentObject::offsetOfEnclosingEnvironment()),
+                               walker);
+        }
     }
 
     Register scope = NumHops ? walker : obj;
@@ -4084,7 +4088,7 @@ ICGetName_Scope<NumHops>::Compiler::generateStubCode(MacroAssembler& masm)
         scope = walker;
     }
 
-    masm.load32(Address(ICStubReg, ICGetName_Scope::offsetOfOffset()), scratch);
+    masm.load32(Address(ICStubReg, ICGetName_Env::offsetOfOffset()), scratch);
 
     // GETNAME needs to check for uninitialized lexicals.
     BaseIndex slot(scope, scratch, TimesOne);
@@ -4106,7 +4110,7 @@ ICGetName_Scope<NumHops>::Compiler::generateStubCode(MacroAssembler& masm)
 
 static bool
 DoBindNameFallback(JSContext* cx, BaselineFrame* frame, ICBindName_Fallback* stub,
-                   HandleObject scopeChain, MutableHandleValue res)
+                   HandleObject envChain, MutableHandleValue res)
 {
     jsbytecode* pc = stub->icEntry()->pc(frame->script());
     mozilla::DebugOnly<JSOp> op = JSOp(*pc);
@@ -4117,7 +4121,7 @@ DoBindNameFallback(JSContext* cx, BaselineFrame* frame, ICBindName_Fallback* stu
     RootedPropertyName name(cx, frame->script()->getName(pc));
 
     RootedObject scope(cx);
-    if (!LookupNameUnqualified(cx, name, scopeChain, &scope))
+    if (!LookupNameUnqualified(cx, name, envChain, &scope))
         return false;
 
     res.setObject(*scope);
@@ -4503,7 +4507,7 @@ DoSetPropFallback(JSContext* cx, BaselineFrame* frame, ICSetProp_Fallback* stub_
 
     RootedPropertyName name(cx);
     if (op == JSOP_SETALIASEDVAR || op == JSOP_INITALIASEDLEXICAL)
-        name = ScopeCoordinateName(cx->caches.scopeCoordinateNameCache, script, pc);
+        name = EnvironmentCoordinateName(cx->caches.envCoordinateNameCache, script, pc);
     else
         name = script->getName(pc);
     RootedId id(cx, NameToId(name));
@@ -4551,15 +4555,15 @@ DoSetPropFallback(JSContext* cx, BaselineFrame* frame, ICSetProp_Fallback* stub_
         if (!SetNameOperation(cx, script, pc, obj, rhs))
             return false;
     } else if (op == JSOP_SETALIASEDVAR || op == JSOP_INITALIASEDLEXICAL) {
-        obj->as<ScopeObject>().setAliasedVar(cx, ScopeCoordinate(pc), name, rhs);
+        obj->as<EnvironmentObject>().setAliasedBinding(cx, EnvironmentCoordinate(pc), name, rhs);
     } else if (op == JSOP_INITGLEXICAL) {
         RootedValue v(cx, rhs);
-        ClonedBlockObject* lexicalScope;
+        LexicalEnvironmentObject* lexicalEnv;
         if (script->hasNonSyntacticScope())
-            lexicalScope = &NearestEnclosingExtensibleLexicalScope(frame->scopeChain());
+            lexicalEnv = &NearestEnclosingExtensibleLexicalEnvironment(frame->environmentChain());
         else
-            lexicalScope = &cx->global()->lexicalScope();
-        InitGlobalLexicalOperation(cx, lexicalScope, script, pc, v);
+            lexicalEnv = &cx->global()->lexicalEnvironment();
+        InitGlobalLexicalOperation(cx, lexicalEnv, script, pc, v);
     } else {
         MOZ_ASSERT(op == JSOP_SETPROP || op == JSOP_STRICTSETPROP);
 
@@ -5969,7 +5973,7 @@ DoCallFallback(JSContext* cx, BaselineFrame* frame, ICCall_Fallback* stub_, uint
             return false;
         res.set(callArgs.rval());
     } else if ((op == JSOP_EVAL || op == JSOP_STRICTEVAL) &&
-               frame->scopeChain()->global().valueIsEval(callee))
+               frame->environmentChain()->global().valueIsEval(callee))
     {
         if (!DirectEval(cx, callArgs.get(0), res))
             return false;
@@ -8390,8 +8394,8 @@ ICGetName_GlobalLexical::ICGetName_GlobalLexical(JitCode* stubCode, ICStub* firs
 { }
 
 template <size_t NumHops>
-ICGetName_Scope<NumHops>::ICGetName_Scope(JitCode* stubCode, ICStub* firstMonitorStub,
-                                          Handle<ShapeVector> shapes, uint32_t offset)
+ICGetName_Env<NumHops>::ICGetName_Env(JitCode* stubCode, ICStub* firstMonitorStub,
+                                      Handle<ShapeVector> shapes, uint32_t offset)
   : ICMonitoredStub(GetStubKind(), stubCode, firstMonitorStub),
     offset_(offset)
 {

@@ -920,7 +920,7 @@ ReadEvalPrintLoop(JSContext* cx, FILE* in, bool compileOnly)
          */
         int startline = lineno;
         typedef Vector<char, 32> CharBuffer;
-        RootedObject globalLexical(cx, &cx->global()->lexicalScope());
+        RootedObject globalLexical(cx, &cx->global()->lexicalEnvironment());
         CharBuffer buffer(cx);
         do {
             ScheduleWatchdog(cx, -1);
@@ -2438,21 +2438,21 @@ TryNotes(JSContext* cx, HandleScript script, Sprinter* sp)
 }
 
 static bool
-BlockNotes(JSContext* cx, HandleScript script, Sprinter* sp)
+ScopeNotes(JSContext* cx, HandleScript script, Sprinter* sp)
 {
-    if (!script->hasBlockScopes())
+    if (!script->hasScopeNotes())
         return true;
 
-    Sprint(sp, "\nBlock table:\n   index   parent    start      end\n");
+    Sprint(sp, "\nScope notes:\n   index   parent    start      end\n");
 
-    BlockScopeArray* scopes = script->blockScopes();
-    for (uint32_t i = 0; i < scopes->length; i++) {
-        const BlockScopeNote* note = &scopes->vector[i];
-        if (note->index == BlockScopeNote::NoBlockScopeIndex)
+    ScopeNoteArray* notes = script->scopeNotes();
+    for (uint32_t i = 0; i < notes->length; i++) {
+        const ScopeNote* note = &notes->vector[i];
+        if (note->index == ScopeNote::NoScopeIndex)
             Sprint(sp, "%8s ", "(none)");
         else
             Sprint(sp, "%8u ", note->index);
-        if (note->parent == BlockScopeNote::NoBlockScopeIndex)
+        if (note->parent == ScopeNote::NoScopeIndex)
             Sprint(sp, "%8s ", "(none)");
         else
             Sprint(sp, "%8u ", note->parent);
@@ -2471,6 +2471,10 @@ DisassembleScript(JSContext* cx, HandleScript script, HandleFunction fun,
             Sprint(sp, " LAMBDA");
         if (fun->needsCallObject())
             Sprint(sp, " NEEDS_CALLOBJECT");
+        if (fun->needsExtraBodyVarEnvironment())
+            Sprint(sp, " NEEDS_EXTRABODYVARENV");
+        if (fun->needsNamedLambdaEnvironment())
+            Sprint(sp, " NEEDS_NAMEDLAMBDAENV");
         if (fun->isConstructor())
             Sprint(sp, " CONSTRUCTOR");
         if (fun->isExprBody())
@@ -2487,7 +2491,7 @@ DisassembleScript(JSContext* cx, HandleScript script, HandleFunction fun,
     if (sourceNotes)
         SrcNotes(cx, script, sp);
     TryNotes(cx, script, sp);
-    BlockNotes(cx, script, sp);
+    ScopeNotes(cx, script, sp);
 
     if (recursive && script->hasObjects()) {
         ObjectArray* objects = script->objects();
@@ -2563,7 +2567,7 @@ DisassembleToSprinter(JSContext* cx, unsigned argc, Value* vp, Sprinter* sprinte
                 return false;
             SrcNotes(cx, script, sprinter);
             TryNotes(cx, script, sprinter);
-            BlockNotes(cx, script, sprinter);
+            ScopeNotes(cx, script, sprinter);
         }
     } else {
         for (unsigned i = 0; i < p.argc; i++) {
@@ -3831,8 +3835,11 @@ Parse(JSContext* cx, unsigned argc, Value* vp)
     CompileOptions options(cx);
     options.setIntroductionType("js shell parse")
            .setFileAndLine("<string>", 1);
-    Parser<FullParseHandler> parser(cx, &cx->tempLifoAlloc(), options, chars, length,
-                                    /* foldConstants = */ true, nullptr, nullptr);
+    UsedNameTracker usedNames(cx);
+    if (!usedNames.init())
+        return false;
+    Parser<FullParseHandler> parser(cx, cx->tempLifoAlloc(), options, chars, length,
+                                    /* foldConstants = */ true, usedNames, nullptr, nullptr);
     if (!parser.checkOptions())
         return false;
 
@@ -3878,8 +3885,12 @@ SyntaxParse(JSContext* cx, unsigned argc, Value* vp)
 
     const char16_t* chars = stableChars.twoByteRange().start().get();
     size_t length = scriptContents->length();
-    Parser<frontend::SyntaxParseHandler> parser(cx, &cx->tempLifoAlloc(),
-                                                options, chars, length, false, nullptr, nullptr);
+    UsedNameTracker usedNames(cx);
+    if (!usedNames.init())
+        return false;
+    Parser<frontend::SyntaxParseHandler> parser(cx, cx->tempLifoAlloc(),
+                                                options, chars, length, false,
+                                                usedNames, nullptr, nullptr);
     if (!parser.checkOptions())
         return false;
 
@@ -5027,9 +5038,8 @@ ReflectTrackedOptimizations(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
-#ifdef DEBUG
 static bool
-DumpStaticScopeChain(JSContext* cx, unsigned argc, Value* vp)
+DumpScopeChain(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     RootedObject callee(cx, &args.callee());
@@ -5060,12 +5070,11 @@ DumpStaticScopeChain(JSContext* cx, unsigned argc, Value* vp)
         script = obj->as<ModuleObject>().script();
     }
 
-    js::DumpStaticScopeChain(script);
+    script->bodyScope()->dump();
 
     args.rval().setUndefined();
     return true;
 }
-#endif
 
 namespace js {
 namespace shell {
@@ -5853,11 +5862,9 @@ TestAssertRecoveredOnBailout,
 "  any. If |fun| is not a scripted function or has not been compiled by\n"
 "  Ion, null is returned."),
 
-#ifdef DEBUG
-    JS_FN_HELP("dumpStaticScopeChain", DumpStaticScopeChain, 1, 0,
-"dumpStaticScopeChain(obj)",
-"  Prints the static scope chain of an interpreted function or a module."),
-#endif
+    JS_FN_HELP("dumpScopeChain", DumpScopeChain, 1, 0,
+"dumpScopeChain(obj)",
+"  Prints the scope chain of an interpreted function or a module."),
 
     JS_FN_HELP("crash", Crash, 0, 0,
 "crash([message])",

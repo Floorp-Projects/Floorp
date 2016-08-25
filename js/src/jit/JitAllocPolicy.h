@@ -14,7 +14,7 @@
 
 #include "jscntxt.h"
 
-#include "ds/InlineMap.h"
+#include "ds/InlineTable.h"
 #include "ds/LifoAlloc.h"
 #include "jit/InlineList.h"
 #include "jit/Ion.h"
@@ -140,7 +140,7 @@ class JitAllocPolicy
  */
 class ProtectedSystemAllocPolicy
 {
-    InlineMap<void*, uint32_t, 2> allocIDs;
+    InlineMap<void*, uint32_t, 2, DefaultHasher<void*>, SystemAllocPolicy> allocIDs;
 
   public:
     ProtectedSystemAllocPolicy() {}
@@ -182,7 +182,7 @@ class ProtectedSystemAllocPolicy
         if (p) {
             auto entry = allocIDs.lookup(p);
             MOZ_RELEASE_ASSERT(entry.found());
-            allocID = entry.value();
+            allocID = entry->value();
             allocIDs.remove(entry);
         }
         T* ret = js_pod_realloc_protected<T>(p, oldSize, newSize, &allocID);
@@ -205,7 +205,7 @@ class ProtectedSystemAllocPolicy
         if (p) {
             auto entry = allocIDs.lookup(p);
             MOZ_RELEASE_ASSERT(entry.found());
-            allocID = entry.value();
+            allocID = entry->value();
             allocIDs.remove(entry);
         }
         js_free_protected(p, &allocID);
