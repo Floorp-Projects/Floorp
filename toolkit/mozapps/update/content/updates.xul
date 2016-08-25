@@ -106,17 +106,6 @@
     </vbox>
   </wizardpage>
 
-  <wizardpage id="updatesfoundbillboard" pageid="updatesfoundbillboard"
-              object="gUpdatesFoundBillboardPage" next="downloading"
-              onpageshow="gUpdatesFoundBillboardPage.onPageShow();"
-              onextra1="gUpdatesFoundBillboardPage.onExtra1();"
-              onextra2="gUpdatesFoundBillboardPage.onExtra2();">
-    <!-- note: the localized strings used by remotecontent are prefixed by the
-               id for the remotecontent (e.g. updateMoreInfoContentNotFound,
-               updateMoreInfoContentDownloading, etc.) -->
-    <remotecontent id="updateMoreInfoContent" flex="1" remotetype="billboard"/>
-  </wizardpage>
-
   <wizardpage id="downloading" pageid="downloading"
               object="gDownloadingPage" onextra1="gDownloadingPage.onHide();"
               onpageshow="gDownloadingPage.onPageShow();">

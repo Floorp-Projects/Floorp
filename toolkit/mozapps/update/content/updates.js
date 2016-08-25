@@ -16,7 +16,6 @@ CoU.import("resource://gre/modules/UpdateTelemetry.jsm", this);
 const XMLNS_XUL = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
 const PREF_APP_UPDATE_BACKGROUNDERRORS    = "app.update.backgroundErrors";
-const PREF_APP_UPDATE_BILLBOARD_TEST_URL  = "app.update.billboard.test_url";
 const PREF_APP_UPDATE_CERT_ERRORS         = "app.update.cert.errors";
 const PREF_APP_UPDATE_ELEVATE_NEVER       = "app.update.elevate.never";
 const PREF_APP_UPDATE_ENABLED             = "app.update.enabled";
@@ -363,16 +362,12 @@ var gUpdates = {
    * This is determined by how we were called by the update prompt:
    *
    * Prompt Method:       Arg0:         Update State: Src Event:  Failed:   Result:
-   * showUpdateAvailable  nsIUpdate obj --            background  --        see Note below
+   * showUpdateAvailable  nsIUpdate obj --            background  --        updatesfoundbasic
    * showUpdateDownloaded nsIUpdate obj pending       background  --        finishedBackground
    * showUpdateError      nsIUpdate obj failed        either      partial   errorpatching
    * showUpdateError      nsIUpdate obj failed        either      complete  errors
    * checkForUpdates      null          --            foreground  --        checking
    * checkForUpdates      null          downloading   foreground  --        downloading
-   *
-   * Note: the page returned (e.g. Result) for showUpdateAvailable is either
-   *       updatesfoundbasic or updatesfoundbillboard which is determined by the
-   *       value of updatesFoundPageId.
    *
    * @param   aCallback
    *          A callback to pass the <wizardpage> object to be displayed first to.
@@ -459,25 +454,7 @@ var gUpdates = {
         return;
       }
     }
-
-    // Provide the ability to test the billboard html
-    var billboardTestURL = getPref("getCharPref", PREF_APP_UPDATE_BILLBOARD_TEST_URL, null);
-    if (billboardTestURL) {
-      var updatesFoundBillboardPage = document.getElementById("updatesfoundbillboard");
-      updatesFoundBillboardPage.setAttribute("next", "dummy");
-      gUpdatesFoundBillboardPage.onExtra1 = function() { gUpdates.wiz.cancel(); };
-      gUpdatesFoundBillboardPage.onExtra2 = function() { gUpdates.wiz.cancel(); };
-      this.onWizardNext = function() { gUpdates.wiz.cancel(); };
-      this.update = { billboardURL        : billboardTestURL,
-                      brandName           : this.brandName,
-                      displayVersion      : "Billboard Test 1.0",
-                      showNeverForVersion : true,
-                      type                : "major" };
-      aCallback(updatesFoundBillboardPage.id);
-    }
-    else {
-      aCallback("checking");
-    }
+    aCallback("checking");
   },
 
   /**
@@ -487,8 +464,7 @@ var gUpdates = {
   get updatesFoundPageId() {
     if (gUpdatesFoundPageId)
       return gUpdatesFoundPageId;
-    return gUpdatesFoundPageId = this.update.billboardURL ? "updatesfoundbillboard"
-                                                          : "updatesfoundbasic";
+    return gUpdatesFoundPageId = "updatesfoundbasic";
   },
 
   /**
@@ -716,101 +692,6 @@ var gUpdatesFoundBasicPage = {
   onExtra2: function() {
     gUpdates.never();
     gUpdates.wiz.cancel();
-  }
-};
-
-/**
- * The "Updates Are Available" page with a billboard. Provides the user
- * information about the available update.
- */
-var gUpdatesFoundBillboardPage = {
-  /**
-   * If this page has been previously loaded
-   */
-  _billboardLoaded: false,
-
-  /**
-   * Initialize
-   */
-  onPageShow: function() {
-    var update = gUpdates.update;
-    gUpdates.setButtons("askLaterButton",
-                        update.showNeverForVersion ? "noThanksButton" : null,
-                        "updateButton_" + update.type, true);
-    gUpdates.wiz.getButton("next").focus();
-
-    if (this._billboardLoaded)
-      return;
-
-    var remoteContent = document.getElementById("updateMoreInfoContent");
-    remoteContent.addEventListener("load",
-                                   gUpdatesFoundBillboardPage.onBillboardLoad,
-                                   false);
-    // update_name and update_version need to be set before url
-    // so that when attempting to download the url, we can show
-    // the formatted "Download..." string
-    remoteContent.update_name = gUpdates.brandName;
-    remoteContent.update_version = update.displayVersion;
-
-    var billboardTestURL = getPref("getCharPref", PREF_APP_UPDATE_BILLBOARD_TEST_URL, null);
-    if (billboardTestURL) {
-      // Allow file urls when testing the billboard and fallback to the
-      // normal method if the URL isn't a file.
-      var scheme = Services.io.newURI(billboardTestURL, null, null).scheme;
-      if (scheme == "file")
-        remoteContent.testFileUrl = update.billboardURL;
-      else
-        remoteContent.url = update.billboardURL;
-    }
-    else
-      remoteContent.url = update.billboardURL;
-
-    this._billboardLoaded = true;
-  },
-
-  /**
-   * When the billboard document has loaded
-   */
-  onBillboardLoad: function(aEvent) {
-    var remoteContent = document.getElementById("updateMoreInfoContent");
-    // Note: may be called multiple times due to multiple onLoad events.
-    var state = remoteContent.getAttribute("state");
-    if (state == "loading" || aEvent.originalTarget != remoteContent)
-      return;
-
-    remoteContent.removeEventListener("load", gUpdatesFoundBillboardPage.onBillboardLoad, false);
-    if (state == "error") {
-      gUpdatesFoundPageId = "updatesfoundbasic";
-      var next = gUpdates.wiz.getPageById("updatesfoundbillboard").getAttribute("next");
-      gUpdates.wiz.getPageById(gUpdates.updatesFoundPageId).setAttribute("next", next);
-      gUpdates.wiz.goTo(gUpdates.updatesFoundPageId);
-    }
-  },
-
-  onExtra1: function() {
-    this.onWizardCancel();
-    gUpdates.wiz.cancel();
-  },
-
-  onExtra2: function() {
-    this.onWizardCancel();
-    gUpdates.never();
-    gUpdates.wiz.cancel();
-  },
-
-  /**
-   * When the user cancels the wizard
-   */
-  onWizardCancel: function() {
-    try {
-      var remoteContent = document.getElementById("updateMoreInfoContent");
-      if (remoteContent)
-        remoteContent.stopDownloading();
-    }
-    catch (e) {
-      LOG("gUpdatesFoundBillboardPage", "onWizardCancel - " +
-          "moreInfoContent.stopDownloading() failed: " + e);
-    }
   }
 };
 
