@@ -27,6 +27,9 @@
   background: transparent;
   padding: 4px;
   color: inherit;
+  -moz-appearance: none;
+  margin: 0;
+  border: none;
 }
 
 #emptyDownloads {
@@ -58,6 +61,7 @@
   padding: 0;
   min-width: 0;
   min-height: 40px;
+  border: none;
 }
 
 .downloadsPanelFooterButton:hover {
@@ -85,8 +89,19 @@
   background-color: #0568ba;
 }
 
-#downloadsPanel[hasdownloads] #downloadsHistory {
-  padding-left: 58px !important;
+.downloadsPanelFooterButton > .button-box {
+  padding: 0;
+  margin: 0;
+  border: none;
+}
+
+#downloadsHistory {
+  padding-inline-start: 10px;
+  padding-inline-end: 10px;
+}
+
+#downloadsPanel[hasdownloads] #downloadsFooterButtons:not(.downloadsHideDropmarker) > #downloadsHistory {
+  padding-inline-start: 68px;
 }
 
 toolbarseparator.downloadsDropmarkerSplitter {
@@ -99,7 +114,7 @@ toolbarseparator.downloadsDropmarkerSplitter {
 }
 
 .downloadsDropmarker {
-  padding: 0 19px !important;
+  padding: 0 21px;
 }
 
 .downloadsDropmarker > .button-box > hbox {
@@ -110,6 +125,8 @@ toolbarseparator.downloadsDropmarkerSplitter {
   /* This is to override the linux !important */
   -moz-appearance: none !important;
   display: -moz-box;
+  padding: 0;
+  margin: 0;
 }
 
 .downloadsDropmarker > .button-box > .button-menu-dropmarker > .dropmarker-icon {
