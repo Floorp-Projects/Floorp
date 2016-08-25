@@ -814,29 +814,21 @@ public:
     // We have explicit memory reporting for the surface cache which is more
     // accurate than the cost metrics we report here, but these metrics are
     // still useful to report, since they control the cache's behavior.
-    nsresult rv;
+    MOZ_COLLECT_REPORT(
+      "imagelib-surface-cache-estimated-total",
+      KIND_OTHER, UNITS_BYTES, (mMaxCost - mAvailableCost),
+"Estimated total memory used by the imagelib surface cache.");
 
-    rv = MOZ_COLLECT_REPORT("imagelib-surface-cache-estimated-total",
-                            KIND_OTHER, UNITS_BYTES,
-                            (mMaxCost - mAvailableCost),
-                            "Estimated total memory used by the imagelib "
-                            "surface cache.");
-    NS_ENSURE_SUCCESS(rv, rv);
+    MOZ_COLLECT_REPORT(
+      "imagelib-surface-cache-estimated-locked",
+      KIND_OTHER, UNITS_BYTES, mLockedCost,
+"Estimated memory used by locked surfaces in the imagelib surface cache.");
 
-    rv = MOZ_COLLECT_REPORT("imagelib-surface-cache-estimated-locked",
-                            KIND_OTHER, UNITS_BYTES,
-                            mLockedCost,
-                            "Estimated memory used by locked surfaces in the "
-                            "imagelib surface cache.");
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = MOZ_COLLECT_REPORT("imagelib-surface-cache-overflow-count",
-                            KIND_OTHER, UNITS_COUNT,
-                            mOverflowCount,
-                            "Count of how many times the surface cache has hit "
-                            "its capacity and been unable to insert a new "
-                            "surface.");
-    NS_ENSURE_SUCCESS(rv, rv);
+    MOZ_COLLECT_REPORT(
+      "imagelib-surface-cache-overflow-count",
+      KIND_OTHER, UNITS_COUNT, mOverflowCount,
+"Count of how many times the surface cache has hit its capacity and been "
+"unable to insert a new surface.");
 
     return NS_OK;
   }

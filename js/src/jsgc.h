@@ -26,12 +26,6 @@ namespace js {
 class AutoLockHelperThreadState;
 unsigned GetCPUCount();
 
-enum ThreadType
-{
-    MainThread,
-    BackgroundThread
-};
-
 namespace gcstats {
 struct Statistics;
 } // namespace gcstats
@@ -106,6 +100,7 @@ IsNurseryAllocable(AllocKind kind)
         false,     /* AllocKind::EXTERNAL_STRING */
         false,     /* AllocKind::SYMBOL */
         false,     /* AllocKind::JITCODE */
+        false,     /* AllocKind::SCOPE */
     };
     JS_STATIC_ASSERT(JS_ARRAY_LENGTH(map) == size_t(AllocKind::LIMIT));
     return map[size_t(kind)];
@@ -141,6 +136,7 @@ IsBackgroundFinalized(AllocKind kind)
         false,     /* AllocKind::EXTERNAL_STRING */
         true,      /* AllocKind::SYMBOL */
         false,     /* AllocKind::JITCODE */
+        true,      /* AllocKind::SCOPE */
     };
     JS_STATIC_ASSERT(JS_ARRAY_LENGTH(map) == size_t(AllocKind::LIMIT));
     return map[size_t(kind)];
@@ -1117,7 +1113,8 @@ struct MightBeForwarded
                               mozilla::IsBaseOf<BaseShape, T>::value ||
                               mozilla::IsBaseOf<JSString, T>::value ||
                               mozilla::IsBaseOf<JSScript, T>::value ||
-                              mozilla::IsBaseOf<js::LazyScript, T>::value;
+                              mozilla::IsBaseOf<js::LazyScript, T>::value ||
+                              mozilla::IsBaseOf<js::Scope, T>::value;
 };
 
 template <typename T>

@@ -635,7 +635,7 @@ ObjectMemoryView::visitFunctionEnvironment(MFunctionEnvironment* ins)
 {
     // Skip function environment which are not aliases of the NewCallObject.
     MDefinition* input = ins->input();
-    if (!input->isLambda() || input->toLambda()->scopeChain() != obj_)
+    if (!input->isLambda() || input->toLambda()->environmentChain() != obj_)
         return;
 
     // Replace the function environment by the scope chain of the lambda.
@@ -648,7 +648,7 @@ ObjectMemoryView::visitFunctionEnvironment(MFunctionEnvironment* ins)
 void
 ObjectMemoryView::visitLambda(MLambda* ins)
 {
-    if (ins->scopeChain() != obj_)
+    if (ins->environmentChain() != obj_)
         return;
 
     // In order to recover the lambda we need to recover the scope chain, as the

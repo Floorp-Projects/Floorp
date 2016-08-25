@@ -9,11 +9,11 @@
 
 #include "vm/ArgumentsObject.h"
 
-#include "vm/ScopeObject.h"
+#include "vm/EnvironmentObject.h"
 
 #include "jsscriptinlines.h"
 
-#include "vm/ScopeObject-inl.h"
+#include "vm/EnvironmentObject-inl.h"
 
 namespace js {
 
@@ -24,7 +24,7 @@ ArgumentsObject::element(uint32_t i) const
     const Value& v = data()->args[i];
     if (IsMagicScopeSlotValue(v)) {
         CallObject& callobj = getFixedSlot(MAYBE_CALL_SLOT).toObject().as<CallObject>();
-        return callobj.aliasedVarFromArguments(v);
+        return callobj.aliasedFormalFromArguments(v);
     }
     return v;
 }
@@ -39,7 +39,7 @@ ArgumentsObject::setElement(JSContext* cx, uint32_t i, const Value& v)
         CallObject& callobj = getFixedSlot(MAYBE_CALL_SLOT).toObject().as<CallObject>();
         for (Shape::Range<NoGC> r(callobj.lastProperty()); !r.empty(); r.popFront()) {
             if (r.front().slot() == slot) {
-                callobj.setAliasedVarFromArguments(cx, lhs, r.front().propid(), v);
+                callobj.setAliasedFormalFromArguments(cx, lhs, r.front().propid(), v);
                 return;
             }
         }

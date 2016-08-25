@@ -5,7 +5,6 @@
 #ifndef Mappable_h
 #define Mappable_h
 
-#include <sys/types.h>
 #include <pthread.h>
 #include "Zip.h"
 #include "SeekableZStream.h"
@@ -110,7 +109,7 @@ private:
 class MappableExtractFile: public MappableFile
 {
 public:
-  ~MappableExtractFile();
+  ~MappableExtractFile() = default;
 
   /**
    * Create a MappableExtractFile instance for the given Zip stream. The name
@@ -136,14 +135,11 @@ private:
   };
   typedef mozilla::UniquePtr<char[], UnlinkFile> AutoUnlinkFile;
 
-  MappableExtractFile(int fd, AutoUnlinkFile path)
-  : MappableFile(fd), path(Move(path)), pid(getpid()) { }
+  MappableExtractFile(int fd, const char* path)
+  : MappableFile(fd), path(path) { }
 
-  /* Extracted file */
-  AutoUnlinkFile path;
-
-  /* Id of the process that initialized the instance */
-  pid_t pid;
+  /* Extracted file path */
+  mozilla::UniquePtr<const char[]> path;
 };
 
 class _MappableBuffer;

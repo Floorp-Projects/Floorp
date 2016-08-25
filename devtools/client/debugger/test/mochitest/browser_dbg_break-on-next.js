@@ -53,15 +53,13 @@ function test() {
     yield waitForDebuggerEvents(gPanel, gDebugger.EVENTS.SOURCE_SHOWN);
     let variables = gDebugger.DebuggerView.Variables;
 
-    is(variables._store.length, 4, "Correct number of scopes available");
+    is(variables._store.length, 3, "Correct number of scopes available");
     is(variables.getScopeAtIndex(0).name, "Function scope [interval<]",
         "Paused with correct scope (0)");
     is(variables.getScopeAtIndex(1).name, "Block scope",
         "Paused with correct scope (1)");
-    is(variables.getScopeAtIndex(2).name, "Block scope",
+    is(variables.getScopeAtIndex(2).name, "Global scope [Window]",
         "Paused with correct scope (2)");
-    is(variables.getScopeAtIndex(3).name, "Global scope [Window]",
-        "Paused with correct scope (3)");
 
     yield evalInTab(gTab, "clearInterval(interval)");
     let onceResumed = gTarget.once("thread-resumed");

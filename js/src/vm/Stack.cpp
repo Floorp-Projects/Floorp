@@ -17,12 +17,11 @@
 #include "js/GCAPI.h"
 #include "vm/Debugger.h"
 #include "vm/Opcodes.h"
-#include "vm/ScopeObject.h"
 
 #include "jit/JitFrameIterator-inl.h"
+#include "vm/EnvironmentObject-inl.h"
 #include "vm/Interpreter-inl.h"
 #include "vm/Probes-inl.h"
-#include "vm/ScopeObject-inl.h"
 
 using namespace js;
 
@@ -32,8 +31,9 @@ using mozilla::PodCopy;
 /*****************************************************************************/
 
 void
-InterpreterFrame::initExecuteFrame(JSContext* cx, HandleScript script, AbstractFramePtr evalInFramePrev,
-                                   const Value& newTargetValue, HandleObject scopeChain)
+InterpreterFrame::initExecuteFrame(JSContext* cx, HandleScript script,
+                                   AbstractFramePtr evalInFramePrev,
+                                   const Value& newTargetValue, HandleObject envChain)
 {
     flags_ = 0;
     script_ = script;
@@ -43,20 +43,26 @@ InterpreterFrame::initExecuteFrame(JSContext* cx, HandleScript script, AbstractF
     RootedValue newTarget(cx, newTargetValue);
     if (script->isDirectEvalInFunction()) {
         if (evalInFramePrev) {
-            if (newTarget.isNull() && evalInFramePrev.script()->functionOrCallerFunction())
+            if (newTarget.isNull() &&
+                evalInFramePrev.script()->bodyScope()->hasOnChain(ScopeKind::Function))
+            {
                 newTarget = evalInFramePrev.newTarget();
+            }
         } else {
             FrameIter iter(cx);
             MOZ_ASSERT(!iter.isWasm());
-            if (newTarget.isNull() && iter.script()->functionOrCallerFunction())
+            if (newTarget.isNull() &&
+                iter.script()->bodyScope()->hasOnChain(ScopeKind::Function))
+            {
                 newTarget = iter.newTarget();
+            }
         }
     }
 
     Value* dstvp = (Value*)this - 1;
     dstvp[0] = newTarget;
 
-    scopeChain_ = scopeChain.get();
+    envChain_ = envChain.get();
     prev_ = nullptr;
     prevpc_ = nullptr;
     prevsp_ = nullptr;
@@ -75,18 +81,7 @@ InterpreterFrame::initExecuteFrame(JSContext* cx, HandleScript script, AbstractF
 bool
 InterpreterFrame::isNonGlobalEvalFrame() const
 {
-    return isEvalFrame() &&
-           script()->enclosingStaticScope()->as<StaticEvalScope>().isNonGlobal();
-}
-
-bool
-InterpreterFrame::copyRawFrameSlots(MutableHandle<GCVector<Value>> vec)
-{
-    if (!vec.resize(numFormalArgs() + script()->nfixed()))
-        return false;
-    PodCopy(vec.begin(), argv(), numFormalArgs());
-    PodCopy(vec.begin() + numFormalArgs(), slots(), script()->nfixed());
-    return true;
+    return isEvalFrame() && script()->bodyScope()->as<EvalScope>().isNonGlobal();
 }
 
 JSObject*
@@ -101,72 +96,97 @@ InterpreterFrame::createRestParameter(JSContext* cx)
 }
 
 static inline void
-AssertDynamicScopeMatchesStaticScope(JSContext* cx, JSScript* script, JSObject* scope)
+AssertScopeMatchesEnvironment(Scope* scope, JSObject* originalEnv)
 {
 #ifdef DEBUG
-    RootedObject originalScope(cx, scope);
-    RootedObject enclosingScope(cx, script->enclosingStaticScope());
-    for (StaticScopeIter<NoGC> i(enclosingScope); !i.done(); i++) {
-        if (i.type() == StaticScopeIter<NoGC>::NonSyntactic) {
-            while (scope->is<DynamicWithObject>() ||
-                   scope->is<NonSyntacticVariablesObject>() ||
-                   (scope->is<ClonedBlockObject>() &&
-                    !scope->as<ClonedBlockObject>().isSyntactic()))
+    JSObject* env = originalEnv;
+    for (ScopeIter si(scope); si; si++) {
+        if (si.kind() == ScopeKind::NonSyntactic) {
+            while (env->is<WithEnvironmentObject>() ||
+                   env->is<NonSyntacticVariablesObject>() ||
+                   (env->is<LexicalEnvironmentObject>() &&
+                    !env->as<LexicalEnvironmentObject>().isSyntactic()))
             {
-                MOZ_ASSERT(!IsSyntacticScope(scope));
-                scope = &scope->as<ScopeObject>().enclosingScope();
+                MOZ_ASSERT(!IsSyntacticEnvironment(env));
+                env = &env->as<EnvironmentObject>().enclosingEnvironment();
             }
-        } else if (i.hasSyntacticDynamicScopeObject()) {
-            switch (i.type()) {
-              case StaticScopeIter<NoGC>::Module:
-                MOZ_ASSERT(scope->as<ModuleEnvironmentObject>().module().script() == i.moduleScript());
-                scope = &scope->as<ModuleEnvironmentObject>().enclosingScope();
+        } else if (si.hasSyntacticEnvironment()) {
+            switch (si.kind()) {
+              case ScopeKind::Function:
+                MOZ_ASSERT(env->as<CallObject>().callee().nonLazyScript() ==
+                           si.scope()->as<FunctionScope>().script());
+                env = &env->as<CallObject>().enclosingEnvironment();
                 break;
-              case StaticScopeIter<NoGC>::Function:
-                MOZ_ASSERT(scope->as<CallObject>().callee().nonLazyScript() == i.funScript());
-                scope = &scope->as<CallObject>().enclosingScope();
+
+              case ScopeKind::FunctionBodyVar:
+              case ScopeKind::ParameterExpressionVar:
+                MOZ_ASSERT(&env->as<VarEnvironmentObject>().scope() == si.scope());
+                env = &env->as<VarEnvironmentObject>().enclosingEnvironment();
                 break;
-              case StaticScopeIter<NoGC>::Block:
-                MOZ_ASSERT(&i.block() == scope->as<ClonedBlockObject>().staticScope());
-                scope = &scope->as<ClonedBlockObject>().enclosingScope();
+
+              case ScopeKind::Lexical:
+              case ScopeKind::Catch:
+              case ScopeKind::NamedLambda:
+              case ScopeKind::StrictNamedLambda:
+                MOZ_ASSERT(&env->as<LexicalEnvironmentObject>().scope() == si.scope());
+                env = &env->as<LexicalEnvironmentObject>().enclosingEnvironment();
                 break;
-              case StaticScopeIter<NoGC>::With:
-                MOZ_ASSERT(&i.staticWith() == scope->as<DynamicWithObject>().staticScope());
-                scope = &scope->as<DynamicWithObject>().enclosingScope();
+
+              case ScopeKind::With:
+                MOZ_ASSERT(&env->as<WithEnvironmentObject>().scope() == si.scope());
+                env = &env->as<WithEnvironmentObject>().enclosingEnvironment();
                 break;
-              case StaticScopeIter<NoGC>::NamedLambda:
-                scope = &scope->as<DeclEnvObject>().enclosingScope();
+
+              case ScopeKind::Eval:
+              case ScopeKind::StrictEval:
+                env = &env->as<VarEnvironmentObject>().enclosingEnvironment();
                 break;
-              case StaticScopeIter<NoGC>::Eval:
-                scope = &scope->as<CallObject>().enclosingScope();
+
+              case ScopeKind::Global:
+                MOZ_ASSERT(env->as<LexicalEnvironmentObject>().isGlobal());
+                env = &env->as<LexicalEnvironmentObject>().enclosingEnvironment();
+                MOZ_ASSERT(env->is<GlobalObject>());
                 break;
-              case StaticScopeIter<NoGC>::NonSyntactic:
-                MOZ_CRASH("NonSyntactic should not have a syntactic scope");
+
+              case ScopeKind::NonSyntactic:
+                MOZ_CRASH("NonSyntactic should not have a syntactic environment");
+                break;
+
+              case ScopeKind::Module:
+                MOZ_ASSERT(env->as<ModuleEnvironmentObject>().module().script() ==
+                           si.scope()->as<ModuleScope>().script());
+                env = &env->as<ModuleEnvironmentObject>().enclosingEnvironment();
                 break;
             }
         }
     }
 
-    // In the case of a non-syntactic scope chain, the immediate parent of the
-    // outermost non-syntactic scope may be the global lexical scope, or, if
-    // called from Debugger, a DebugScopeObject.
+    // In the case of a non-syntactic env chain, the immediate parent of the
+    // outermost non-syntactic env may be the global lexical env, or, if
+    // called from Debugger, a DebugEnvironmentProxy.
     //
-    // In the case of a syntactic scope chain, the outermost scope is always a
+    // In the case of a syntactic env chain, the outermost env is always a
     // GlobalObject.
-    MOZ_ASSERT(scope->is<GlobalObject>() || IsGlobalLexicalScope(scope) ||
-               scope->is<DebugScopeObject>());
+    MOZ_ASSERT(env->is<GlobalObject>() || IsGlobalLexicalEnvironment(env) ||
+               env->is<DebugEnvironmentProxy>());
+#endif
+}
+
+static inline void
+AssertScopeMatchesEnvironment(InterpreterFrame* fp, jsbytecode* pc)
+{
+#ifdef DEBUG
+    // If we OOMed before fully initializing the environment chain, the scope
+    // and environment will definitely mismatch.
+    if (fp->script()->initialEnvironmentShape() && fp->hasInitialEnvironment())
+        AssertScopeMatchesEnvironment(fp->script()->innermostScope(pc), fp->environmentChain());
 #endif
 }
 
 bool
-InterpreterFrame::initFunctionScopeObjects(JSContext* cx)
+InterpreterFrame::initFunctionEnvironmentObjects(JSContext* cx)
 {
-    CallObject* callobj = CallObject::createForFunction(cx, this);
-    if (!callobj)
-        return false;
-    pushOnScopeChain(*callobj);
-    flags_ |= HAS_CALL_OBJ;
-    return true;
+    return js::InitFunctionEnvironmentObjects(cx, this);
 }
 
 bool
@@ -177,44 +197,41 @@ InterpreterFrame::prologue(JSContext* cx)
     MOZ_ASSERT(cx->interpreterRegs().pc == script->code());
 
     if (isEvalFrame()) {
-        if (script->strict()) {
-            CallObject* callobj = CallObject::createForStrictEval(cx, this);
-            if (!callobj)
-                return false;
-            pushOnScopeChain(*callobj);
-            flags_ |= HAS_CALL_OBJ;
-        } else {
+        if (!script->bodyScope()->hasEnvironment()) {
+            MOZ_ASSERT(!script->strict());
             // Non-strict eval may introduce var bindings that conflict with
             // lexical bindings in an enclosing lexical scope.
             RootedObject varObjRoot(cx, &varObj());
-            if (!CheckEvalDeclarationConflicts(cx, script, scopeChain(), varObjRoot))
+            if (!CheckEvalDeclarationConflicts(cx, script, environmentChain(), varObjRoot))
                 return false;
         }
         return probes::EnterScript(cx, script, nullptr, this);
     }
 
     if (isGlobalFrame()) {
-        Rooted<ClonedBlockObject*> lexicalScope(cx);
+        Rooted<LexicalEnvironmentObject*> lexicalEnv(cx);
         RootedObject varObjRoot(cx);
         if (script->hasNonSyntacticScope()) {
-            lexicalScope = &extensibleLexicalScope();
+            lexicalEnv = &extensibleLexicalEnvironment();
             varObjRoot = &varObj();
         } else {
-            lexicalScope = &cx->global()->lexicalScope();
+            lexicalEnv = &cx->global()->lexicalEnvironment();
             varObjRoot = cx->global();
         }
-        if (!CheckGlobalDeclarationConflicts(cx, script, lexicalScope, varObjRoot))
+        if (!CheckGlobalDeclarationConflicts(cx, script, lexicalEnv, varObjRoot))
             return false;
         return probes::EnterScript(cx, script, nullptr, this);
     }
 
-    AssertDynamicScopeMatchesStaticScope(cx, script, scopeChain());
-
     if (isModuleFrame())
         return probes::EnterScript(cx, script, nullptr, this);
 
+    // At this point, we've yet to push any environments. Check that they
+    // match the enclosing scope.
+    AssertScopeMatchesEnvironment(script->enclosingScope(), environmentChain());
+
     MOZ_ASSERT(isFunctionFrame());
-    if (callee().needsCallObject() && !initFunctionScopeObjects(cx))
+    if (callee().needsFunctionEnvironmentObjects() && !initFunctionEnvironmentObjects(cx))
         return false;
 
     if (isConstructing()) {
@@ -241,54 +258,31 @@ InterpreterFrame::prologue(JSContext* cx)
 }
 
 void
-InterpreterFrame::epilogue(JSContext* cx)
+InterpreterFrame::epilogue(JSContext* cx, jsbytecode* pc)
 {
     RootedScript script(cx, this->script());
     probes::ExitScript(cx, script, script->functionNonDelazifying(), hasPushedSPSFrame());
 
-    if (isEvalFrame()) {
-        if (isStrictEvalFrame()) {
-            MOZ_ASSERT_IF(hasCallObj(), scopeChain()->as<CallObject>().isForEval());
-            if (MOZ_UNLIKELY(cx->compartment()->isDebuggee()))
-                DebugScopes::onPopStrictEvalScope(this);
-        } else if (isNonGlobalEvalFrame()) {
-            MOZ_ASSERT_IF(isDebuggerEvalFrame(), !IsSyntacticScope(scopeChain()));
+    // Check that the scope matches the environment at the point of leaving
+    // the frame.
+    AssertScopeMatchesEnvironment(this, pc);
+
+    EnvironmentIter ei(cx, this, pc);
+    UnwindAllEnvironmentsInFrame(cx, ei);
+
+    if (isFunctionFrame()) {
+        if (!callee().isGenerator() &&
+            isConstructing() &&
+            thisArgument().isObject() &&
+            returnValue().isPrimitive())
+        {
+            setReturnValue(thisArgument());
         }
+
         return;
     }
 
-    if (isGlobalFrame()) {
-        // Confusingly, global frames may run in non-global scopes (that is,
-        // not directly under the GlobalObject and its lexical scope).
-        //
-        // Gecko often runs global scripts under custom scopes. See users of
-        // CreateNonSyntacticScopeChain.
-        MOZ_ASSERT(IsGlobalLexicalScope(scopeChain()) || !IsSyntacticScope(scopeChain()));
-        return;
-    }
-
-    if (isModuleFrame())
-        return;
-
-    MOZ_ASSERT(isFunctionFrame());
-
-    if (callee().needsCallObject()) {
-        MOZ_ASSERT_IF(hasCallObj() && !callee().isGenerator(),
-                      scopeChain()->as<CallObject>().callee().nonLazyScript() == script);
-    } else {
-        AssertDynamicScopeMatchesStaticScope(cx, script, scopeChain());
-    }
-
-    if (MOZ_UNLIKELY(cx->compartment()->isDebuggee()))
-        DebugScopes::onPopCall(this, cx);
-
-    if (!callee().isGenerator() &&
-        isConstructing() &&
-        thisArgument().isObject() &&
-        returnValue().isPrimitive())
-    {
-        setReturnValue(thisArgument());
-    }
+    MOZ_ASSERT(isEvalFrame() || isGlobalFrame() || isModuleFrame());
 }
 
 bool
@@ -315,53 +309,50 @@ InterpreterFrame::checkReturn(JSContext* cx, HandleValue thisv)
 }
 
 bool
-InterpreterFrame::pushBlock(JSContext* cx, StaticBlockScope& block)
+InterpreterFrame::pushVarEnvironment(JSContext* cx, HandleScope scope)
 {
-    MOZ_ASSERT(block.needsClone());
+    return js::PushVarEnvironmentObject(cx, scope, this);
+}
 
-    Rooted<StaticBlockScope*> blockHandle(cx, &block);
-    ClonedBlockObject* clone = ClonedBlockObject::create(cx, blockHandle, this);
-    if (!clone)
+bool
+InterpreterFrame::pushLexicalEnvironment(JSContext* cx, Handle<LexicalScope*> scope)
+{
+    LexicalEnvironmentObject* env = LexicalEnvironmentObject::create(cx, scope, this);
+    if (!env)
         return false;
 
-    pushOnScopeChain(*clone);
-
+    pushOnEnvironmentChain(*env);
     return true;
 }
 
 bool
-InterpreterFrame::freshenBlock(JSContext* cx)
+InterpreterFrame::freshenLexicalEnvironment(JSContext* cx)
 {
-    Rooted<ClonedBlockObject*> block(cx, &scopeChain_->as<ClonedBlockObject>());
-    ClonedBlockObject* fresh = ClonedBlockObject::clone(cx, block);
+    Rooted<LexicalEnvironmentObject*> env(cx, &envChain_->as<LexicalEnvironmentObject>());
+    LexicalEnvironmentObject* fresh = LexicalEnvironmentObject::clone(cx, env);
     if (!fresh)
         return false;
 
-    replaceInnermostScope(*fresh);
+    replaceInnermostEnvironment(*fresh);
     return true;
 }
 
-void
-InterpreterFrame::popBlock(JSContext* cx)
+bool
+InterpreterFrame::recreateLexicalEnvironment(JSContext* cx)
 {
-    MOZ_ASSERT(scopeChain_->is<ClonedBlockObject>());
-    popOffScopeChain();
-}
+    Rooted<LexicalEnvironmentObject*> env(cx, &envChain_->as<LexicalEnvironmentObject>());
+    LexicalEnvironmentObject* fresh = LexicalEnvironmentObject::recreate(cx, env);
+    if (!fresh)
+        return false;
 
-void
-InterpreterFrame::popWith(JSContext* cx)
-{
-    if (MOZ_UNLIKELY(cx->compartment()->isDebuggee()))
-        DebugScopes::onPopWith(this);
-
-    MOZ_ASSERT(scopeChain()->is<DynamicWithObject>());
-    popOffScopeChain();
+    replaceInnermostEnvironment(*fresh);
+    return true;
 }
 
 void
 InterpreterFrame::trace(JSTracer* trc, Value* sp, jsbytecode* pc)
 {
-    TraceRoot(trc, &scopeChain_, "scope chain");
+    TraceRoot(trc, &envChain_, "env chain");
     TraceRoot(trc, &script_, "script");
 
     if (flags_ & HAS_ARGS_OBJ)
@@ -399,11 +390,14 @@ InterpreterFrame::trace(JSTracer* trc, Value* sp, jsbytecode* pc)
 
         // Clear dead block-scoped locals.
         while (nfixed > nlivefixed)
-            unaliasedLocal(--nfixed).setMagic(JS_UNINITIALIZED_LEXICAL);
+            unaliasedLocal(--nfixed).setUndefined();
 
         // Mark live locals.
         traceValues(trc, 0, nlivefixed);
     }
+
+    if (script->compartment()->debugEnvs)
+        script->compartment()->debugEnvs->markLiveFrame(trc, this);
 
     if (trc->isMarkingTracer())
         script->compartment()->zone()->active = true;
@@ -443,7 +437,6 @@ void
 InterpreterRegs::setToEndOfScript()
 {
     sp = fp()->base();
-    pc = fp()->script()->lastPC();
 }
 
 /*****************************************************************************/
@@ -469,7 +462,7 @@ InterpreterStack::pushInvokeFrame(JSContext* cx, const CallArgs& args, MaybeCons
 
 InterpreterFrame*
 InterpreterStack::pushExecuteFrame(JSContext* cx, HandleScript script, const Value& newTargetValue,
-                                   HandleObject scopeChain, AbstractFramePtr evalInFrame)
+                                   HandleObject envChain, AbstractFramePtr evalInFrame)
 {
     LifoAlloc::Mark mark = allocator_.mark();
 
@@ -480,7 +473,7 @@ InterpreterStack::pushExecuteFrame(JSContext* cx, HandleScript script, const Val
 
     InterpreterFrame* fp = reinterpret_cast<InterpreterFrame*>(buffer + 1 * sizeof(Value));
     fp->mark_ = mark;
-    fp->initExecuteFrame(cx, script, evalInFrame, newTargetValue, scopeChain);
+    fp->initExecuteFrame(cx, script, evalInFrame, newTargetValue, envChain);
     fp->initLocals();
 
     return fp;
@@ -1145,7 +1138,7 @@ FrameIter::unaliasedActual(unsigned i, MaybeCheckAliasing checkAliasing) const
 }
 
 JSObject*
-FrameIter::scopeChain(JSContext* cx) const
+FrameIter::environmentChain(JSContext* cx) const
 {
     switch (data_.state_) {
       case DONE:
@@ -1154,11 +1147,11 @@ FrameIter::scopeChain(JSContext* cx) const
       case JIT:
         if (data_.jitFrames_.isIonScripted()) {
             jit::MaybeReadFallback recover(cx, activation()->asJit(), &data_.jitFrames_);
-            return ionInlineFrames_.scopeChain(recover);
+            return ionInlineFrames_.environmentChain(recover);
         }
-        return data_.jitFrames_.baselineFrame()->scopeChain();
+        return data_.jitFrames_.baselineFrame()->environmentChain();
       case INTERP:
-        return interpFrame()->scopeChain();
+        return interpFrame()->environmentChain();
     }
     MOZ_CRASH("Unexpected state");
 }
@@ -1168,9 +1161,9 @@ FrameIter::callObj(JSContext* cx) const
 {
     MOZ_ASSERT(calleeTemplate()->needsCallObject());
 
-    JSObject* pobj = scopeChain(cx);
+    JSObject* pobj = environmentChain(cx);
     while (!pobj->is<CallObject>())
-        pobj = pobj->enclosingScope();
+        pobj = pobj->enclosingEnvironment();
     return pobj->as<CallObject>();
 }
 
@@ -1505,7 +1498,8 @@ jit::JitActivation::clearRematerializedFrames()
 }
 
 jit::RematerializedFrame*
-jit::JitActivation::getRematerializedFrame(JSContext* cx, const JitFrameIterator& iter, size_t inlineDepth)
+jit::JitActivation::getRematerializedFrame(JSContext* cx, const JitFrameIterator& iter,
+                                           size_t inlineDepth)
 {
     MOZ_ASSERT(iter.activation() == this);
     MOZ_ASSERT(iter.isIonScripted());
@@ -1550,7 +1544,7 @@ jit::JitActivation::getRematerializedFrame(JSContext* cx, const JitFrameIterator
         }
 
         // See comment in unsetPrevUpToDateUntil.
-        DebugScopes::unsetPrevUpToDateUntil(cx, p->value()[inlineDepth]);
+        DebugEnvironments::unsetPrevUpToDateUntil(cx, p->value()[inlineDepth]);
     }
 
     return p->value()[inlineDepth];
@@ -1586,7 +1580,7 @@ jit::JitActivation::markRematerializedFrames(JSTracer* trc)
     if (!rematerializedFrames_)
         return;
     for (RematerializedFrameTable::Enum e(*rematerializedFrames_); !e.empty(); e.popFront())
-        RematerializedFrame::MarkInVector(trc, e.front().value());
+        e.front().value().trace(trc);
 }
 
 bool

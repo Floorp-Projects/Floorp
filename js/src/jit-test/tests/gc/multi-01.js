@@ -5,5 +5,5 @@ g.eval("var x = 'some-atom';");
 
 schedulegc(this);
 schedulegc('atoms');
-gc('compartment');
+gc('zone');
 print(g.x);

@@ -27,7 +27,8 @@ public:
   }
   void SetSpan(uint32_t aSpan, ErrorResult& aError)
   {
-    SetHTMLIntAttr(nsGkAtoms::span, aSpan, aError);
+    uint32_t span = aSpan ? aSpan : 1;
+    SetUnsignedIntAttr(nsGkAtoms::span, span, 1, aError);
   }
 
   void GetAlign(DOMString& aAlign)

@@ -83,17 +83,9 @@ public:
       amount += recorders[i]->SizeOfExcludingThis(MallocSizeOf);
     }
 
-  #define MEMREPORT(_path, _amount, _desc)                                    \
-    do {                                                                      \
-      nsresult rv;                                                            \
-      rv = aHandleReport->Callback(EmptyCString(), NS_LITERAL_CSTRING(_path), \
-                                   KIND_HEAP, UNITS_BYTES, _amount,           \
-                                   NS_LITERAL_CSTRING(_desc), aData);         \
-      NS_ENSURE_SUCCESS(rv, rv);                                              \
-    } while (0)
-
-    MEMREPORT("explicit/media/recorder", amount,
-              "Memory used by media recorder.");
+    MOZ_COLLECT_REPORT(
+      "explicit/media/recorder", KIND_HEAP, UNITS_BYTES, amount,
+      "Memory used by media recorder.");
 
     return NS_OK;
   }

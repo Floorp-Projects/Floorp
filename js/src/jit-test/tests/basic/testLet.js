@@ -179,16 +179,16 @@ isParseError('for (let [x, y, x] in o) {}');
 isParseError('for (let [x, [y, [x]]] in o) {}');
 
 // for(let ... in ...) scoping bugs (bug 1069480)
-test('for each (let [x, y] in x) {return x + y;}', [['ponies', '']], undefined);
-test('for each (let [{0: x, 1: y}, z] in x) {return x + y + z;}', [[['po','nies'], '']], undefined);
-test('for (let x in eval("x")) {return x;}', {ponies:true}, undefined);
-test('for (let x in x) {return eval("x");}', {ponies:true}, undefined);
-test('for (let x in eval("x")) {return eval("x");}', {ponies:true}, undefined);
-test('for (let x in x) {break;}return x;');
-test('for (let x in x) {break;}return eval("x");');
-test('try {for (let x in eval("throw x")) {}} catch (e) {return e;}', undefined, undefined);
-test('try {for each (let x in x) {eval("throw x");}} catch (e) {return e;}', ['ponies'], undefined);
-test('for each (let {x: y, y: x} in [{x: x, y: x}]) {return y;}', undefined, undefined);
+isReferenceError('for each (let [x, y] in x) {return x + y;}', [['ponies', '']]);
+isReferenceError('for each (let [{0: x, 1: y}, z] in x) {return x + y + z;}', [[['po','nies'], '']], undefined);
+isReferenceError('for (let x in eval("x")) {return x;}', {ponies:true}, undefined);
+isReferenceError('for (let x in x) {return eval("x");}', {ponies:true}, undefined);
+isReferenceError('for (let x in eval("x")) {return eval("x");}', {ponies:true}, undefined);
+isReferenceError('for (let x in x) {break;}return x;');
+isReferenceError('for (let x in x) {break;}return eval("x");');
+isReferenceError('for (let x in eval("throw x")) {}', undefined, undefined);
+isReferenceError('for each (let x in x) {eval("throw x");}', ['ponies'], undefined);
+isReferenceError('for each (let {x: y, y: x} in [{x: x, y: x}]) {return y;}', undefined, undefined);
 
 // don't forget about switch craziness
 test('var y = 3;switch (function () {return eval("y");}()) {case 3:let y;return x;default:;}');

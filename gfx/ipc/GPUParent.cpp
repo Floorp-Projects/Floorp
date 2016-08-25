@@ -15,6 +15,7 @@
 #include "mozilla/layers/CompositorThread.h"
 #include "mozilla/layers/ImageBridgeParent.h"
 #include "nsDebugImpl.h"
+#include "mozilla/layers/LayerTreeOwnerTracker.h"
 #include "VRManager.h"
 #include "VRManagerParent.h"
 #include "VsyncBridgeParent.h"
@@ -62,6 +63,7 @@ GPUParent::Init(base::ProcessId aParentPid,
   }
   CompositorThreadHolder::Start();
   VRManager::ManagerInit();
+  LayerTreeOwnerTracker::Initialize();
   return true;
 }
 
@@ -222,6 +224,13 @@ GPUParent::RecvDeallocateLayerTreeId(const uint64_t& aLayersId)
   return true;
 }
 
+bool
+GPUParent::RecvAddLayerTreeIdMapping(const uint64_t& aLayersId, const ProcessId& aOwnerId)
+{
+  LayerTreeOwnerTracker::Get()->Map(aLayersId, aOwnerId);
+  return true;
+}
+
 void
 GPUParent::ActorDestroy(ActorDestroyReason aWhy)
 {
@@ -244,6 +253,7 @@ GPUParent::ActorDestroy(ActorDestroyReason aWhy)
   DeviceManagerDx::Shutdown();
   DeviceManagerD3D9::Shutdown();
 #endif
+  LayerTreeOwnerTracker::Shutdown();
   gfxVars::Shutdown();
   gfxConfig::Shutdown();
   gfxPrefs::DestroySingleton();
