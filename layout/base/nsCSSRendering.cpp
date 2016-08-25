@@ -1054,7 +1054,7 @@ nsCSSRendering::PaintFocus(nsPresContext* aPresContext,
  * dimension. (so, x/width vs. y/height)
  */
 static void
-ComputeObjectAnchorCoord(const Position::PositionCoord& aCoord,
+ComputeObjectAnchorCoord(const Position::Coord& aCoord,
                          const nscoord aOriginBounds,
                          const nscoord aImageSize,
                          nscoord* aTopLeftCoord,

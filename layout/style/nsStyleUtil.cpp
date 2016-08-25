@@ -687,7 +687,7 @@ nsStyleUtil::IsSignificantChild(nsIContent* aChild, bool aTextIsSignificant,
 // element's content-box, this method checks whether the given
 // "object-position" coordinate might cause overflow in its dimension.
 static bool
-ObjectPositionCoordMightCauseOverflow(const Position::PositionCoord& aCoord)
+ObjectPositionCoordMightCauseOverflow(const Position::Coord& aCoord)
 {
   // Any nonzero length in "object-position" can push us to overflow
   // (particularly if our concrete object size is exactly the same size as the

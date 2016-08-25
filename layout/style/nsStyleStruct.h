@@ -146,8 +146,9 @@ private:
 };
 
 struct Position {
-  typedef nsStyleCoord::CalcValue PositionCoord;
-  PositionCoord mXPosition, mYPosition;
+  using Coord = nsStyleCoord::CalcValue;
+
+  Coord mXPosition, mYPosition;
 
   // Initialize nothing
   Position() {}

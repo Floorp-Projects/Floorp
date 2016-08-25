@@ -4151,7 +4151,7 @@ ComputeConcreteObjectSize(const nsSize& aConstraintSize,
 // (Helper for HasInitialObjectFitAndPosition, to check
 // each "object-position" coord.)
 static bool
-IsCoord50Pct(const mozilla::Position::PositionCoord& aCoord)
+IsCoord50Pct(const mozilla::Position::Coord& aCoord)
 {
   return (aCoord.mLength == 0 &&
           aCoord.mHasPercent &&
