@@ -191,7 +191,7 @@ LIRGenerator::visitCheckOverRecursed(MCheckOverRecursed* ins)
 void
 LIRGenerator::visitDefVar(MDefVar* ins)
 {
-    LDefVar* lir = new(alloc()) LDefVar(useRegisterAtStart(ins->scopeChain()));
+    LDefVar* lir = new(alloc()) LDefVar(useRegisterAtStart(ins->environmentChain()));
     add(lir, ins);
     assignSafepoint(lir, ins);
 }
@@ -207,7 +207,7 @@ LIRGenerator::visitDefLexical(MDefLexical* ins)
 void
 LIRGenerator::visitDefFun(MDefFun* ins)
 {
-    LDefFun* lir = new(alloc()) LDefFun(useRegisterAtStart(ins->scopeChain()));
+    LDefFun* lir = new(alloc()) LDefFun(useRegisterAtStart(ins->environmentChain()));
     add(lir, ins);
     assignSafepoint(lir, ins);
 }
@@ -275,9 +275,9 @@ LIRGenerator::visitNewTypedObject(MNewTypedObject* ins)
 }
 
 void
-LIRGenerator::visitNewDeclEnvObject(MNewDeclEnvObject* ins)
+LIRGenerator::visitNewNamedLambdaObject(MNewNamedLambdaObject* ins)
 {
-    LNewDeclEnvObject* lir = new(alloc()) LNewDeclEnvObject(temp());
+    LNewNamedLambdaObject* lir = new(alloc()) LNewNamedLambdaObject(temp());
     define(lir, ins);
     assignSafepoint(lir, ins);
 }
@@ -664,13 +664,13 @@ LIRGenerator::visitArraySplice(MArraySplice* ins)
 void
 LIRGenerator::visitGetDynamicName(MGetDynamicName* ins)
 {
-    MDefinition* scopeChain = ins->getScopeChain();
-    MOZ_ASSERT(scopeChain->type() == MIRType::Object);
+    MDefinition* envChain = ins->getEnvironmentChain();
+    MOZ_ASSERT(envChain->type() == MIRType::Object);
 
     MDefinition* name = ins->getName();
     MOZ_ASSERT(name->type() == MIRType::String);
 
-    LGetDynamicName* lir = new(alloc()) LGetDynamicName(useFixed(scopeChain, CallTempReg0),
+    LGetDynamicName* lir = new(alloc()) LGetDynamicName(useFixed(envChain, CallTempReg0),
                                                         useFixed(name, CallTempReg1),
                                                         tempFixed(CallTempReg2),
                                                         tempFixed(CallTempReg3),
@@ -683,15 +683,15 @@ LIRGenerator::visitGetDynamicName(MGetDynamicName* ins)
 void
 LIRGenerator::visitCallDirectEval(MCallDirectEval* ins)
 {
-    MDefinition* scopeChain = ins->getScopeChain();
-    MOZ_ASSERT(scopeChain->type() == MIRType::Object);
+    MDefinition* envChain = ins->getEnvironmentChain();
+    MOZ_ASSERT(envChain->type() == MIRType::Object);
 
     MDefinition* string = ins->getString();
     MOZ_ASSERT(string->type() == MIRType::String);
 
     MDefinition* newTargetValue = ins->getNewTargetValue();
 
-    LInstruction* lir = new(alloc()) LCallDirectEval(useRegisterAtStart(scopeChain),
+    LInstruction* lir = new(alloc()) LCallDirectEval(useRegisterAtStart(envChain),
                                                      useRegisterAtStart(string),
                                                      useBoxAtStart(newTargetValue));
     defineReturn(lir, ins);
@@ -1946,9 +1946,9 @@ LIRGenerator::visitOsrReturnValue(MOsrReturnValue* value)
 }
 
 void
-LIRGenerator::visitOsrScopeChain(MOsrScopeChain* object)
+LIRGenerator::visitOsrEnvironmentChain(MOsrEnvironmentChain* object)
 {
-    LOsrScopeChain* lir = new(alloc()) LOsrScopeChain(useRegister(object->entry()));
+    LOsrEnvironmentChain* lir = new(alloc()) LOsrEnvironmentChain(useRegister(object->entry()));
     define(lir, object);
 }
 
@@ -2410,11 +2410,12 @@ LIRGenerator::visitLambda(MLambda* ins)
         //
         // If UseSingletonForClone is true, we will assign a singleton type to
         // the clone and we have to clone the script, we can't do that inline.
-        LLambdaForSingleton* lir = new(alloc()) LLambdaForSingleton(useRegisterAtStart(ins->scopeChain()));
+        LLambdaForSingleton* lir = new(alloc())
+            LLambdaForSingleton(useRegisterAtStart(ins->environmentChain()));
         defineReturn(lir, ins);
         assignSafepoint(lir, ins);
     } else {
-        LLambda* lir = new(alloc()) LLambda(useRegister(ins->scopeChain()), temp());
+        LLambda* lir = new(alloc()) LLambda(useRegister(ins->environmentChain()), temp());
         define(lir, ins);
         assignSafepoint(lir, ins);
     }
@@ -2423,10 +2424,10 @@ LIRGenerator::visitLambda(MLambda* ins)
 void
 LIRGenerator::visitLambdaArrow(MLambdaArrow* ins)
 {
-    MOZ_ASSERT(ins->scopeChain()->type() == MIRType::Object);
+    MOZ_ASSERT(ins->environmentChain()->type() == MIRType::Object);
     MOZ_ASSERT(ins->newTargetDef()->type() == MIRType::Value);
 
-    LLambdaArrow* lir = new(alloc()) LLambdaArrow(useRegister(ins->scopeChain()),
+    LLambdaArrow* lir = new(alloc()) LLambdaArrow(useRegister(ins->environmentChain()),
                                                   useBox(ins->newTargetDef()));
     define(lir, ins);
     assignSafepoint(lir, ins);
@@ -3526,14 +3527,14 @@ LIRGenerator::visitStoreFixedSlot(MStoreFixedSlot* ins)
 void
 LIRGenerator::visitGetNameCache(MGetNameCache* ins)
 {
-    MOZ_ASSERT(ins->scopeObj()->type() == MIRType::Object);
+    MOZ_ASSERT(ins->envObj()->type() == MIRType::Object);
 
     // Set the performs-call flag so that we don't omit the overrecursed check.
     // This is necessary because the cache can attach a scripted getter stub
     // that calls this script recursively.
     gen->setPerformsCall();
 
-    LGetNameCache* lir = new(alloc()) LGetNameCache(useRegister(ins->scopeObj()));
+    LGetNameCache* lir = new(alloc()) LGetNameCache(useRegister(ins->envObj()));
     defineBox(lir, ins);
     assignSafepoint(lir, ins);
 }
@@ -3627,10 +3628,10 @@ LIRGenerator::visitSetPropertyPolymorphic(MSetPropertyPolymorphic* ins)
 void
 LIRGenerator::visitBindNameCache(MBindNameCache* ins)
 {
-    MOZ_ASSERT(ins->scopeChain()->type() == MIRType::Object);
+    MOZ_ASSERT(ins->environmentChain()->type() == MIRType::Object);
     MOZ_ASSERT(ins->type() == MIRType::Object);
 
-    LBindNameCache* lir = new(alloc()) LBindNameCache(useRegister(ins->scopeChain()));
+    LBindNameCache* lir = new(alloc()) LBindNameCache(useRegister(ins->environmentChain()));
     define(lir, ins);
     assignSafepoint(lir, ins);
 }
@@ -3638,10 +3639,10 @@ LIRGenerator::visitBindNameCache(MBindNameCache* ins)
 void
 LIRGenerator::visitCallBindVar(MCallBindVar* ins)
 {
-    MOZ_ASSERT(ins->scopeChain()->type() == MIRType::Object);
+    MOZ_ASSERT(ins->environmentChain()->type() == MIRType::Object);
     MOZ_ASSERT(ins->type() == MIRType::Object);
 
-    LCallBindVar* lir = new(alloc()) LCallBindVar(useRegister(ins->scopeChain()));
+    LCallBindVar* lir = new(alloc()) LCallBindVar(useRegister(ins->environmentChain()));
     define(lir, ins);
 }
 

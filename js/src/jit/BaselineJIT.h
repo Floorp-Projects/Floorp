@@ -132,7 +132,7 @@ struct BaselineScript
     // For functions with a call object, template objects to use for the call
     // object and decl env object (linked via the call object's enclosing
     // scope).
-    HeapPtr<JSObject*> templateScope_;
+    HeapPtr<EnvironmentObject*> templateEnv_;
 
     // Allocated space for fallback stubs.
     FallbackICStubSpace fallbackStubSpace_;
@@ -364,12 +364,12 @@ struct BaselineScript
         method_ = code;
     }
 
-    JSObject* templateScope() const {
-        return templateScope_;
+    EnvironmentObject* templateEnvironment() const {
+        return templateEnv_;
     }
-    void setTemplateScope(JSObject* templateScope) {
-        MOZ_ASSERT(!templateScope_);
-        templateScope_ = templateScope;
+    void setTemplateEnvironment(EnvironmentObject* templateEnv) {
+        MOZ_ASSERT(!templateEnv_);
+        templateEnv_ = templateEnv;
     }
 
     void toggleBarriers(bool enabled, ReprotectCode reprotect = Reprotect) {

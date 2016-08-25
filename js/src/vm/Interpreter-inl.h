@@ -19,7 +19,7 @@
 #include "jsatominlines.h"
 #include "jsobjinlines.h"
 
-#include "vm/ScopeObject-inl.h"
+#include "vm/EnvironmentObject-inl.h"
 #include "vm/Stack-inl.h"
 #include "vm/String-inl.h"
 #include "vm/UnboxedObject-inl.h"
@@ -81,7 +81,7 @@ IsUninitializedLexical(const Value& val)
 static inline bool
 IsUninitializedLexicalSlot(HandleObject obj, HandleShape shape)
 {
-    if (obj->is<DynamicWithObject>())
+    if (obj->is<WithEnvironmentObject>())
         return false;
     // We check for IsImplicitDenseOrTypedArrayElement even though the shape
     // is always a non-indexed property because proxy hooks may return a
@@ -192,8 +192,8 @@ FetchName(JSContext* cx, HandleObject obj, HandleObject obj2, HandlePropertyName
             return false;
     } else {
         RootedObject normalized(cx, obj);
-        if (normalized->is<DynamicWithObject>() && !shape->hasDefaultGetter())
-            normalized = &normalized->as<DynamicWithObject>().object();
+        if (normalized->is<WithEnvironmentObject>() && !shape->hasDefaultGetter())
+            normalized = &normalized->as<WithEnvironmentObject>().object();
         if (shape->isDataDescriptor() && shape->hasDefaultGetter()) {
             /* Fast path for Object instance properties. */
             MOZ_ASSERT(shape->hasSlot());
@@ -239,22 +239,22 @@ SetIntrinsicOperation(JSContext* cx, JSScript* script, jsbytecode* pc, HandleVal
 
 inline void
 SetAliasedVarOperation(JSContext* cx, JSScript* script, jsbytecode* pc,
-                       ScopeObject& obj, ScopeCoordinate sc, const Value& val,
-                       MaybeCheckLexical checkLexical)
+                       EnvironmentObject& obj, EnvironmentCoordinate ec, const Value& val,
+                       MaybeCheckTDZ checkTDZ)
 {
-    MOZ_ASSERT_IF(checkLexical, !IsUninitializedLexical(obj.aliasedVar(sc)));
+    MOZ_ASSERT_IF(checkTDZ, !IsUninitializedLexical(obj.aliasedBinding(ec)));
 
     // Avoid computing the name if no type updates are needed, as this may be
     // expensive on scopes with large numbers of variables.
     PropertyName* name = obj.isSingleton()
-                         ? ScopeCoordinateName(cx->caches.scopeCoordinateNameCache, script, pc)
+                         ? EnvironmentCoordinateName(cx->caches.envCoordinateNameCache, script, pc)
                          : nullptr;
 
-    obj.setAliasedVar(cx, sc, name, val);
+    obj.setAliasedBinding(cx, ec, name, val);
 }
 
 inline bool
-SetNameOperation(JSContext* cx, JSScript* script, jsbytecode* pc, HandleObject scope,
+SetNameOperation(JSContext* cx, JSScript* script, jsbytecode* pc, HandleObject env,
                  HandleValue val)
 {
     MOZ_ASSERT(*pc == JSOP_SETNAME ||
@@ -263,9 +263,9 @@ SetNameOperation(JSContext* cx, JSScript* script, jsbytecode* pc, HandleObject s
                *pc == JSOP_STRICTSETGNAME);
     MOZ_ASSERT_IF((*pc == JSOP_SETGNAME || *pc == JSOP_STRICTSETGNAME) &&
                   !script->hasNonSyntacticScope(),
-                  scope == cx->global() ||
-                  scope == &cx->global()->lexicalScope() ||
-                  scope->is<RuntimeLexicalErrorObject>());
+                  env == cx->global() ||
+                  env == &cx->global()->lexicalEnvironment() ||
+                  env->is<RuntimeLexicalErrorObject>());
 
     bool strict = *pc == JSOP_STRICTSETNAME || *pc == JSOP_STRICTSETGNAME;
     RootedPropertyName name(cx, script->getName(pc));
@@ -276,34 +276,34 @@ SetNameOperation(JSContext* cx, JSScript* script, jsbytecode* pc, HandleObject s
     bool ok;
     ObjectOpResult result;
     RootedId id(cx, NameToId(name));
-    RootedValue receiver(cx, ObjectValue(*scope));
-    if (scope->isUnqualifiedVarObj()) {
+    RootedValue receiver(cx, ObjectValue(*env));
+    if (env->isUnqualifiedVarObj()) {
         RootedNativeObject varobj(cx);
-        if (scope->is<DebugScopeObject>())
-            varobj = &scope->as<DebugScopeObject>().scope().as<NativeObject>();
+        if (env->is<DebugEnvironmentProxy>())
+            varobj = &env->as<DebugEnvironmentProxy>().environment().as<NativeObject>();
         else
-            varobj = &scope->as<NativeObject>();
+            varobj = &env->as<NativeObject>();
         MOZ_ASSERT(!varobj->getOpsSetProperty());
         ok = NativeSetProperty(cx, varobj, id, val, receiver, Unqualified, result);
     } else {
-        ok = SetProperty(cx, scope, id, val, receiver, result);
+        ok = SetProperty(cx, env, id, val, receiver, result);
     }
-    return ok && result.checkStrictErrorOrWarning(cx, scope, id, strict);
+    return ok && result.checkStrictErrorOrWarning(cx, env, id, strict);
 }
 
 inline bool
-DefLexicalOperation(JSContext* cx, Handle<ClonedBlockObject*> lexicalScope,
+DefLexicalOperation(JSContext* cx, Handle<LexicalEnvironmentObject*> lexicalEnv,
                     HandleObject varObj, HandlePropertyName name, unsigned attrs)
 {
     // Redeclaration checks should have already been done.
-    MOZ_ASSERT(CheckLexicalNameConflict(cx, lexicalScope, varObj, name));
+    MOZ_ASSERT(CheckLexicalNameConflict(cx, lexicalEnv, varObj, name));
     RootedId id(cx, NameToId(name));
     RootedValue uninitialized(cx, MagicValue(JS_UNINITIALIZED_LEXICAL));
-    return NativeDefineProperty(cx, lexicalScope, id, uninitialized, nullptr, nullptr, attrs);
+    return NativeDefineProperty(cx, lexicalEnv, id, uninitialized, nullptr, nullptr, attrs);
 }
 
 inline bool
-DefLexicalOperation(JSContext* cx, ClonedBlockObject* lexicalScopeArg,
+DefLexicalOperation(JSContext* cx, LexicalEnvironmentObject* lexicalEnvArg,
                     JSObject* varObjArg, JSScript* script, jsbytecode* pc)
 {
     MOZ_ASSERT(*pc == JSOP_DEFLET || *pc == JSOP_DEFCONST);
@@ -313,25 +313,25 @@ DefLexicalOperation(JSContext* cx, ClonedBlockObject* lexicalScopeArg,
     if (*pc == JSOP_DEFCONST)
         attrs |= JSPROP_READONLY;
 
-    Rooted<ClonedBlockObject*> lexicalScope(cx, lexicalScopeArg);
+    Rooted<LexicalEnvironmentObject*> lexicalEnv(cx, lexicalEnvArg);
     RootedObject varObj(cx, varObjArg);
     MOZ_ASSERT_IF(!script->hasNonSyntacticScope(),
-                  lexicalScope == &cx->global()->lexicalScope() && varObj == cx->global());
+                  lexicalEnv == &cx->global()->lexicalEnvironment() && varObj == cx->global());
 
-    return DefLexicalOperation(cx, lexicalScope, varObj, name, attrs);
+    return DefLexicalOperation(cx, lexicalEnv, varObj, name, attrs);
 }
 
 inline void
-InitGlobalLexicalOperation(JSContext* cx, ClonedBlockObject* lexicalScopeArg,
+InitGlobalLexicalOperation(JSContext* cx, LexicalEnvironmentObject* lexicalEnvArg,
                            JSScript* script, jsbytecode* pc, HandleValue value)
 {
     MOZ_ASSERT_IF(!script->hasNonSyntacticScope(),
-                  lexicalScopeArg == &cx->global()->lexicalScope());
+                  lexicalEnvArg == &cx->global()->lexicalEnvironment());
     MOZ_ASSERT(*pc == JSOP_INITGLEXICAL);
-    Rooted<ClonedBlockObject*> lexicalScope(cx, lexicalScopeArg);
-    RootedShape shape(cx, lexicalScope->lookup(cx, script->getName(pc)));
+    Rooted<LexicalEnvironmentObject*> lexicalEnv(cx, lexicalEnvArg);
+    RootedShape shape(cx, lexicalEnv->lookup(cx, script->getName(pc)));
     MOZ_ASSERT(shape);
-    lexicalScope->setSlot(shape->slot(), value);
+    lexicalEnv->setSlot(shape->slot(), value);
 }
 
 inline bool
@@ -355,10 +355,10 @@ DefVarOperation(JSContext* cx, HandleObject varobj, HandlePropertyName dn, unsig
 #ifdef DEBUG
     // Per spec, it is an error to redeclare a lexical binding. This should
     // have already been checked.
-    if (JS_HasExtensibleLexicalScope(varobj)) {
-        Rooted<ClonedBlockObject*> lexicalScope(cx);
-        lexicalScope = &JS_ExtensibleLexicalScope(varobj)->as<ClonedBlockObject>();
-        MOZ_ASSERT(CheckVarNameConflict(cx, lexicalScope, dn));
+    if (JS_HasExtensibleLexicalEnvironment(varobj)) {
+        Rooted<LexicalEnvironmentObject*> lexicalEnv(cx);
+        lexicalEnv = &JS_ExtensibleLexicalEnvironment(varobj)->as<LexicalEnvironmentObject>();
+        MOZ_ASSERT(CheckVarNameConflict(cx, lexicalEnv, dn));
     }
 #endif
 
@@ -370,6 +370,11 @@ DefVarOperation(JSContext* cx, HandleObject varobj, HandlePropertyName dn, unsig
     /* Steps 8c, 8d. */
     if (!prop || (obj2 != varobj && varobj->is<GlobalObject>())) {
         if (!DefineProperty(cx, varobj, dn, UndefinedHandleValue, nullptr, nullptr, attrs))
+            return false;
+    }
+
+    if (varobj->is<GlobalObject>()) {
+        if (!varobj->compartment()->addToVarNames(cx, dn))
             return false;
     }
 
