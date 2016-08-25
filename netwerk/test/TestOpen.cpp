@@ -12,7 +12,7 @@
 #include "nsIInputStream.h"
 #include "nsNetUtil.h"
 #include "nsServiceManagerUtils.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "nsIScriptSecurityManager.h"
 
 #include <stdio.h>

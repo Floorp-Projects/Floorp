@@ -90,6 +90,7 @@ static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 #ifdef MOZ_WIDGET_ANDROID
 #include "ANPBase.h"
 #include "AndroidBridge.h"
+#include "ClientLayerManager.h"
 #include "nsWindow.h"
 
 static nsPluginInstanceOwner* sFullScreenInstance = nullptr;
@@ -1604,7 +1605,12 @@ void nsPluginInstanceOwner::Recomposite() {
   LayerManager* const lm = widget->GetLayerManager();
   NS_ENSURE_TRUE_VOID(lm);
 
-  lm->Composite();
+  ClientLayerManager* const clm = lm->AsClientLayerManager();
+  NS_ENSURE_TRUE_VOID(clm && clm->GetRoot());
+
+  clm->SendInvalidRegion(
+      clm->GetRoot()->GetLocalVisibleRegion().ToUnknownRegion().GetBounds());
+  clm->Composite();
 }
 
 void nsPluginInstanceOwner::RequestFullScreen() {

@@ -14,7 +14,7 @@
 #include "nsNetUtil.h"
 #include "nsServiceManagerUtils.h"
 
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 
 namespace mozilla {
 

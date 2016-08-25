@@ -12,7 +12,10 @@ import TestGyp
 
 test = TestGyp.TestGyp()
 
-test.run_gyp('all.gyp', chdir='src')
+test.run_gyp('all.gyp',
+             '-G', 'xcode_ninja_target_pattern=^all_targets$',
+             chdir='src')
+
 test.relocate('src', 'relocate/src')
 
 # Build all.
@@ -32,8 +35,12 @@ test.built_file_must_not_exist('foolib1',
                                type=test.SHARED_LIB,
                                chdir=chdir)
 
-# TODO(mmoss) Make consistent with scons, with 'dir1' before 'out/Default'?
-if test.format in ('make', 'ninja', 'android'):
+# xcode-ninja doesn't generate separate workspaces for sub-gyps by design
+if test.format == 'xcode-ninja':
+  test.pass_test()
+
+# TODO(mmoss) Make consistent with msvs, with 'dir1' before 'out/Default'?
+if test.format in ('make', 'ninja', 'cmake'):
   chdir='relocate/src'
 else:
   chdir='relocate/src/dir1'

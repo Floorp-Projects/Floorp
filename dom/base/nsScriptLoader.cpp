@@ -53,7 +53,7 @@
 #include "mozilla/dom/EncodingUtils.h"
 
 #include "mozilla/Attributes.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "nsIScriptError.h"
 
 using namespace mozilla;

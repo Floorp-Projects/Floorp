@@ -11,7 +11,7 @@
 #include "gfxPrefs.h"
 #include "nsString.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "nsServiceManagerUtils.h"
 #include "nsIScreenManager.h"
 

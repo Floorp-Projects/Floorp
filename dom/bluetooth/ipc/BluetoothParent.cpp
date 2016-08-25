@@ -9,7 +9,7 @@
 #include "BluetoothParent.h"
 
 #include "mozilla/Assertions.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "nsDebug.h"
 #include "nsISupportsImpl.h"
 #include "nsThreadUtils.h"

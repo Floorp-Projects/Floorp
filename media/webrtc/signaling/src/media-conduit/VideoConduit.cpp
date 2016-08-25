@@ -742,7 +742,16 @@ WebrtcVideoConduit::ConfigureSendMediaCodec(const VideoCodecConfig* codecConfig)
   mSendingHeight = 0;
   mSendingFramerate = video_codec.maxFramerate;
 
-  if (codecConfig->RtcpFbFECIsSet())
+  // See Bug 1297058, enabling FEC when NACK is set on H.264 is problematic
+  bool use_fec = codecConfig->RtcpFbFECIsSet();
+  if (mExternalSendCodec && codecConfig->mType == mExternalSendCodec->mType
+      || codecConfig->mType == webrtc::kVideoCodecH264) {
+    if(codecConfig->RtcpFbNackIsSet("")) {
+      use_fec = false;
+    }
+  }
+
+  if (use_fec)
   {
     uint8_t payload_type_red = INVALID_RTP_PAYLOAD;
     uint8_t payload_type_ulpfec = INVALID_RTP_PAYLOAD;

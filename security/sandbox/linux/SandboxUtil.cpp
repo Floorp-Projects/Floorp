@@ -17,7 +17,7 @@
 #include <unistd.h>
 
 #include "mozilla/Assertions.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "sandbox/linux/services/linux_syscalls.h"
 
 namespace mozilla {

@@ -10,7 +10,7 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/dom/Notification.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "nsIServiceManager.h"
 #include "nsISupportsArray.h"
 #include "nsISupportsPrimitives.h"

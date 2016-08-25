@@ -255,6 +255,7 @@ geckoview_java_files = [
     'gfx/SimpleScaleGestureDetector.java',
     'gfx/StackScroller.java',
     'gfx/SubdocumentScrollHelper.java',
+    'gfx/SurfaceTextureListener.java',
     'gfx/ViewTransform.java',
     'InputConnectionListener.java',
     'InputMethods.java',

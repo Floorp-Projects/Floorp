@@ -12,20 +12,6 @@ function makeChan(url, appId, inIsolatedMozBrowser) {
   chan.loadInfo.originAttributes = { appId: appId,
                                      inIsolatedMozBrowser: inIsolatedMozBrowser
                                    };
-  chan.notificationCallbacks = {
-    appId: appId,
-    isInIsolatedMozBrowserElement: inIsolatedMozBrowser,
-    originAttributes: {
-      appId: appId,
-      inIsolatedMozBrowser: inIsolatedMozBrowser,
-    },
-    QueryInterface: function(iid) {
-      if (iid.equals(Ci.nsILoadContext))
-        return this;
-      throw Cr.NS_ERROR_NO_INTERFACE;
-    },
-    getInterface: function(iid) { return this.QueryInterface(iid); }
-  };
   return chan;
 }
 

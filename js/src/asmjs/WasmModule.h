@@ -161,9 +161,9 @@ typedef Vector<DataSegment, 0, SystemAllocPolicy> DataSegmentVector;
 
 struct ElemSegment
 {
-    uint32_t tableIndex;
-    InitExpr offset;
-    Uint32Vector elems;
+    MOZ_INIT_OUTSIDE_CTOR uint32_t tableIndex;
+    MOZ_INIT_OUTSIDE_CTOR InitExpr offset;
+    MOZ_INIT_OUTSIDE_CTOR Uint32Vector elems;
 
     ElemSegment() = default;
     ElemSegment(uint32_t tableIndex, InitExpr offset, Uint32Vector&& elems)

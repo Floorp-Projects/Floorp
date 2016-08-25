@@ -615,6 +615,38 @@ DrawTargetSkia::FillRect(const Rect &aRect,
                          const Pattern &aPattern,
                          const DrawOptions &aOptions)
 {
+  // The sprite blitting path in Skia can be faster than the shader blitter for
+  // operators other than source (or source-over with opaque surface). So, when
+  // possible/beneficial, route to DrawSurface which will use the sprite blitter.
+  if (aPattern.GetType() == PatternType::SURFACE &&
+      aOptions.mCompositionOp != CompositionOp::OP_SOURCE) {
+    const SurfacePattern& pat = static_cast<const SurfacePattern&>(aPattern);
+    // Verify there is a valid surface and a pattern matrix without skew.
+    if (pat.mSurface &&
+        (aOptions.mCompositionOp != CompositionOp::OP_OVER ||
+         GfxFormatToSkiaAlphaType(pat.mSurface->GetFormat()) != kOpaque_SkAlphaType) &&
+        !pat.mMatrix.HasNonAxisAlignedTransform()) {
+      // Bound the sampling to smaller of the bounds or the sampling rect.
+      IntRect srcRect(IntPoint(0, 0), pat.mSurface->GetSize());
+      if (!pat.mSamplingRect.IsEmpty()) {
+        srcRect = srcRect.Intersect(pat.mSamplingRect);
+      }
+      // Transform the destination rectangle by the inverse of the pattern
+      // matrix so that it is in pattern space like the source rectangle.
+      Rect patRect = aRect - pat.mMatrix.GetTranslation();
+      patRect.Scale(1.0f / pat.mMatrix._11, 1.0f / pat.mMatrix._22);
+      // Verify the pattern rectangle will not tile or clamp.
+      if (!patRect.IsEmpty() && srcRect.Contains(RoundedOut(patRect))) {
+        // The pattern is a surface with an axis-aligned source rectangle
+        // fitting entirely in its bounds, so just treat it as a DrawSurface.
+        DrawSurface(pat.mSurface, aRect, patRect,
+                    DrawSurfaceOptions(pat.mSamplingFilter),
+                    aOptions);
+        return;
+      }
+    }
+  }
+
   MarkChanged();
   SkRect rect = RectToSkRect(aRect);
   AutoPaintSetup paint(mCanvas.get(), aOptions, aPattern, &aRect);

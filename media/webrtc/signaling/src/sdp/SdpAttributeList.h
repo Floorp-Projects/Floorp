@@ -47,6 +47,7 @@ public:
   virtual const SdpRtcpAttribute& GetRtcp() const = 0;
   virtual const SdpRemoteCandidatesAttribute& GetRemoteCandidates() const = 0;
   virtual const SdpSetupAttribute& GetSetup() const = 0;
+  virtual const SdpDtlsMessageAttribute& GetDtlsMessage() const = 0;
 
   // These attributes can appear multiple times, so the returned
   // classes actually represent a collection of values.

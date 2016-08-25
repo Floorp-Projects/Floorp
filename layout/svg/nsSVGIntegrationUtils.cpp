@@ -25,7 +25,7 @@
 #include "BasicLayers.h"
 #include "mozilla/gfx/Point.h"
 #include "nsCSSRendering.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 
 using namespace mozilla;
 using namespace mozilla::layers;

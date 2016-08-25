@@ -23,7 +23,7 @@
 #include "nsRect.h"
 #include "PluginDataResolver.h"
 
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "mozilla/EventForwards.h"
 
 class gfxASurface;

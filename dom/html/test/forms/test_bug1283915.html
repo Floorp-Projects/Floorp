@@ -42,16 +42,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1283915
 
     synthesizeKey("1", {});
     is(nField.value, "1");
-    isCursorAtEnd(nField);
     document.body.offsetWidth;
 
     synthesizeKey("2", {});
     is(nField.value, "12");
-    isCursorAtEnd(nField);
 
     synthesizeKey("3", {});
     is(nField.value, "123");
-    isCursorAtEnd(nField);
 
     SimpleTest.finish();
   }

@@ -29,7 +29,7 @@
 #include "nsIServiceManager.h"
 #include "nsThreadUtils.h"
 #include "mozilla/Services.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 
 #include <cstddef>
 

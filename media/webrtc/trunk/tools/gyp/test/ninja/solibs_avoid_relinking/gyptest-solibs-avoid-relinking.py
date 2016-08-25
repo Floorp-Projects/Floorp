@@ -22,6 +22,11 @@ import TestGyp
 # if this was extended to other generators).
 test = TestGyp.TestGyp(formats=['ninja'])
 
+if not os.environ.get('ProgramFiles(x86)'):
+  # TODO(scottmg)
+  print 'Skipping test on x86, http://crbug.com/365833'
+  test.pass_test()
+
 test.run_gyp('solibs_avoid_relinking.gyp')
 
 # Build the executable, grab its timestamp, touch the solib's source, rebuild

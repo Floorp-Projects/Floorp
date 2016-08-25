@@ -498,7 +498,7 @@ UnboxedLayout::makeNativeGroup(JSContext* cx, ObjectGroup* group)
 
         Rooted<StackShape> child(cx, StackShape(shape->base()->unowned(), NameToId(property.name),
                                                 i, JSPROP_ENUMERATE, 0));
-        shape = cx->compartment()->propertyTree.getChild(cx, shape, child);
+        shape = cx->zone()->propertyTree.getChild(cx, shape, child);
         if (!shape)
             return false;
     }

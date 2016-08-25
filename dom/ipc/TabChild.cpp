@@ -43,7 +43,7 @@
 #include "mozilla/StaticPtr.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/TouchEvents.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "mozIApplication.h"
 #include "nsContentUtils.h"
 #include "nsDocShell.h"

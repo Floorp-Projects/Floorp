@@ -736,8 +736,8 @@ nsXPConnect::GetWrappedNativeOfNativeObject(JSContext * aJSContext,
     if (!scope)
         return UnexpectedFailure(NS_ERROR_FAILURE);
 
-    AutoMarkingNativeInterfacePtr iface(aJSContext);
-    iface = XPCNativeInterface::GetNewOrUsed(&aIID);
+    RefPtr<XPCNativeInterface> iface =
+        XPCNativeInterface::GetNewOrUsed(&aIID);
     if (!iface)
         return NS_ERROR_FAILURE;
 

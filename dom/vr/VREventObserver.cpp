@@ -41,6 +41,11 @@ VREventObserver::~VREventObserver()
 void
 VREventObserver::NotifyVRDisplayConnect()
 {
+  /**
+   * We do not call nsGlobalWindow::NotifyActiveVRDisplaysChanged here, as we
+   * can assume that a newly enumerated display is not presenting WebVR
+   * content.
+   */
   if (mWindow->AsInner()->IsCurrentInnerWindow()) {
     MOZ_ASSERT(nsContentUtils::IsSafeToRunScript());
     mWindow->GetOuterWindow()->DispatchCustomEvent(
@@ -52,6 +57,7 @@ void
 VREventObserver::NotifyVRDisplayDisconnect()
 {
   if (mWindow->AsInner()->IsCurrentInnerWindow()) {
+    mWindow->NotifyActiveVRDisplaysChanged();
     MOZ_ASSERT(nsContentUtils::IsSafeToRunScript());
     mWindow->GetOuterWindow()->DispatchCustomEvent(
       NS_LITERAL_STRING("vrdisplaydisconnected"));
@@ -62,6 +68,7 @@ void
 VREventObserver::NotifyVRDisplayPresentChange()
 {
   if (mWindow->AsInner()->IsCurrentInnerWindow()) {
+    mWindow->NotifyActiveVRDisplaysChanged();
     MOZ_ASSERT(nsContentUtils::IsSafeToRunScript());
     mWindow->GetOuterWindow()->DispatchCustomEvent(
       NS_LITERAL_STRING("vrdisplaypresentchange"));

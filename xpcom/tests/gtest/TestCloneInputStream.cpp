@@ -6,7 +6,7 @@
 
 #include "gtest/gtest.h"
 #include "Helpers.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "nsICloneableInputStream.h"
 #include "nsIMultiplexInputStream.h"
 #include "nsNetUtil.h"

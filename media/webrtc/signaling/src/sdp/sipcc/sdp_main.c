@@ -200,6 +200,8 @@ const sdp_attrarray_t sdp_attr[SDP_MAX_ATTR_TYPES] =
       sdp_parse_attr_complete_line, sdp_build_attr_simple_string},
     {"rid", sizeof("rid"),
       sdp_parse_attr_complete_line, sdp_build_attr_simple_string},
+    {"dtls-message", sizeof("dtls-message"),
+      sdp_parse_attr_long_line, sdp_build_attr_long_line},
 };
 
 /* Note: These *must* be in the same order as the enum types. */
