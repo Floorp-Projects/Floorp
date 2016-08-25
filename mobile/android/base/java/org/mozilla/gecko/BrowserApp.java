@@ -1761,13 +1761,6 @@ public class BrowserApp extends GeckoApp
             if (Versions.feature16Plus) {
                 Telemetry.addToHistogram("BROWSER_IS_ASSIST_DEFAULT", (isDefaultBrowser(Intent.ACTION_ASSIST) ? 1 : 0));
             }
-
-            if (Restrictions.isRestrictedProfile(this)) {
-                for (Restrictable rest : RestrictedProfileConfiguration.getVisibleRestrictions()) {
-                    int value = Restrictions.isAllowed(this, rest) ? 1 : 0;
-                    Telemetry.addToKeyedHistogram("FENNEC_RESTRICTED_PROFILE_RESTRICTIONS", rest.name(), value);
-                }
-            }
         } else if ("Updater:Launch".equals(event)) {
             handleUpdaterLaunch();
         } else if ("Download:AndroidDownloadManager".equals(event)) {

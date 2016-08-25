@@ -106,7 +106,7 @@ function setup404() {
   ]);
 }
 
-function setupCompletion() {
+function setup() {
   classifierHelper.allowCompletion([MALWARE_LIST, UNWANTED_LIST], GETHASH_URL);
 
   return Promise.all([
@@ -125,7 +125,8 @@ function reset() {
 function runTest() {
   Promise.resolve()
     // This test resources get blocked when gethash returns successfully
-    .then(setupCompletion)
+    .then(classifierHelper.waitForInit)
+    .then(setup)
     .then(() => loadTestFrame("testFrame1"))
     .then(reset)
     // This test resources are not blocked when gethash returns an error
@@ -140,8 +141,13 @@ function runTest() {
 }
 
 SimpleTest.waitForExplicitFinish();
+
+// 'network.predictor.enabled' is disabled because if other testcase load
+// evil.js, evil.css ...etc resources, it may cause we load them from cache
+// directly and bypass classifier check
 SpecialPowers.pushPrefEnv({"set": [
-  ["browser.safebrowsing.malware.enabled", true]
+  ["browser.safebrowsing.malware.enabled", true],
+  ["network.predictor.enabled", false],
 ]}, runTest);
 
 </script>

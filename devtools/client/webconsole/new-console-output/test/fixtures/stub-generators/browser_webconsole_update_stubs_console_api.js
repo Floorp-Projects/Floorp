@@ -10,7 +10,10 @@ const { consoleApi: snippets } = require("devtools/client/webconsole/new-console
 
 const TEST_URI = "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-console-api.html";
 
-let stubs = [];
+let stubs = {
+  preparedMessages: [],
+  packets: [],
+};
 
 add_task(function* () {
   let tempFilePath = OS.Path.join(`${BASE_PATH}/stub-generators`, "test-tempfile.js");
@@ -26,7 +29,8 @@ add_task(function* () {
     let received = new Promise(resolve => {
       let i = 0;
       toolbox.target.client.addListener("consoleAPICall", (type, res) => {
-        stubs.push(formatStub(keys[i], res));
+        stubs.packets.push(formatPacket(keys[i], res));
+        stubs.preparedMessages.push(formatStub(keys[i], res));
         if(++i === keys.length ){
           resolve();
         }

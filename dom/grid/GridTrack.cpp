@@ -24,7 +24,7 @@ GridTrack::GridTrack(GridTracks* aParent)
   : mParent(aParent)
   , mStart(0.0)
   , mBreadth(0.0)
-  , mType(GridTrackType::Implicit)
+  , mType(GridDeclaration::Implicit)
   , mState(GridTrackState::Static)
 {
   MOZ_ASSERT(aParent, "Should never be instantiated with a null GridTracks");
@@ -52,7 +52,7 @@ GridTrack::Breadth() const
   return mBreadth;
 }
 
-GridTrackType
+GridDeclaration
 GridTrack::Type() const
 {
   return mType;
@@ -67,7 +67,7 @@ GridTrack::State() const
 void
 GridTrack::SetTrackValues(double aStart,
                           double aBreadth,
-                          GridTrackType aType,
+                          GridDeclaration aType,
                           GridTrackState aState)
 {
   mStart = aStart;

@@ -64,16 +64,19 @@ def _run_worker(*args, **lintargs):
 class LintRoller(object):
     """Registers and runs linters.
 
+    :param root: Path to which relative paths will be joined. If
+                 unspecified, root will either be determined from
+                 version control or cwd.
     :param lintargs: Arguments to pass to the underlying linter(s).
     """
 
-    def __init__(self, **lintargs):
+    def __init__(self, root=None, **lintargs):
         self.parse = Parser()
         self.vcs = VCSFiles()
 
         self.linters = []
         self.lintargs = lintargs
-        self.lintargs['root'] = self.vcs.root or os.getcwd()
+        self.lintargs['root'] = root or self.vcs.root or os.getcwd()
 
     def read(self, paths):
         """Parse one or more linters and add them to the registry.

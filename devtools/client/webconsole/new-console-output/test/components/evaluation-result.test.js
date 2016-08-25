@@ -2,7 +2,7 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
-const stubConsoleMessages = require("devtools/client/webconsole/new-console-output/test/fixtures/stubs/index");
+const { stubPreparedMessages } = require("devtools/client/webconsole/new-console-output/test/fixtures/stubs/index");
 const { EvaluationResult } = require("devtools/client/webconsole/new-console-output/components/message-types/evaluation-result");
 
 const expect = require("expect");
@@ -13,7 +13,7 @@ const {
 
 describe("EvaluationResult component:", () => {
   it("renders a grip result", () => {
-    const message = stubConsoleMessages.get("new Date(0)");
+    const message = stubPreparedMessages.get("new Date(0)");
     const props = {
       message
     };

@@ -97,11 +97,22 @@ GridLines::SetLineInfo(const ComputedGridTrackInfo* aTrackInfo,
       }
 
       line->SetLineValues(
+        lineNames,
         nsPresContext::AppUnitsToDoubleCSSPixels(endOfLastTrack),
         nsPresContext::AppUnitsToDoubleCSSPixels(startOfNextTrack -
                                                  endOfLastTrack),
         i + 1,
-        lineNames
+        (
+          // Implicit if there are no explicit tracks, or if the index
+          // is before the first explicit track, or after
+          // a track beyond the last explicit track.
+          (aTrackInfo->mNumExplicitTracks == 0) ||
+          (i < aTrackInfo->mNumLeadingImplicitTracks) ||
+          (i > aTrackInfo->mNumLeadingImplicitTracks +
+               aTrackInfo->mNumExplicitTracks) ?
+            GridDeclaration::Implicit :
+            GridDeclaration::Explicit
+        )
       );
 
       if (i < aTrackInfo->mEndFragmentTrack) {

@@ -131,6 +131,7 @@ function CSSFilterEditorWidget(el, value = "") {
   this._presetClick = this._presetClick.bind(this);
   this._savePreset = this._savePreset.bind(this);
   this._togglePresets = this._togglePresets.bind(this);
+  this._resetFocus = this._resetFocus.bind(this);
 
   // Passed to asyncStorage, requires binding
   this.renderPresets = this.renderPresets.bind(this);
@@ -279,6 +280,7 @@ CSSFilterEditorWidget.prototype = {
     this.filtersList.addEventListener("click", this._removeButtonClick);
     this.filtersList.addEventListener("mousedown", this._mouseDown);
     this.filtersList.addEventListener("keydown", this._keyDown);
+    this.el.addEventListener("mousedown", this._resetFocus);
 
     this.presetsList.addEventListener("click", this._presetClick);
     this.togglePresets.addEventListener("click", this._togglePresets);
@@ -298,6 +300,7 @@ CSSFilterEditorWidget.prototype = {
     this.filtersList.removeEventListener("click", this._removeButtonClick);
     this.filtersList.removeEventListener("mousedown", this._mouseDown);
     this.filtersList.removeEventListener("keydown", this._keyDown);
+    this.el.removeEventListener("mousedown", this._resetFocus);
 
     this.presetsList.removeEventListener("click", this._presetClick);
     this.togglePresets.removeEventListener("click", this._togglePresets);
@@ -606,6 +609,14 @@ CSSFilterEditorWidget.prototype = {
       this.setPresets(presets).then(this.renderPresets,
                                     ex => console.error(ex));
     }, ex => console.error(ex));
+  },
+
+  /**
+   * Workaround needed to reset the focus when using a HTML select inside a XUL panel.
+   * See Bug 1294366.
+   */
+  _resetFocus: function () {
+    this.filterSelect.ownerDocument.defaultView.focus();
   },
 
   /**

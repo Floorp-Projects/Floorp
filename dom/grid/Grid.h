@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_Grid_h
 #define mozilla_dom_Grid_h
 
+#include "GridArea.h"
 #include "mozilla/dom/Element.h"
 #include "nsGridContainerFrame.h"
 #include "nsISupports.h"
@@ -38,11 +39,13 @@ public:
 
   GridDimension* Rows() const;
   GridDimension* Cols() const;
+  void GetAreas(nsTArray<RefPtr<GridArea>>& aAreas) const;
 
 protected:
   nsCOMPtr<Element> mParent;
   RefPtr<GridDimension> mRows;
   RefPtr<GridDimension> mCols;
+  nsTArray<RefPtr<GridArea>> mAreas;
 };
 
 } // namespace dom

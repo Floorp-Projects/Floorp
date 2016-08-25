@@ -178,6 +178,8 @@ EyeDropper.prototype = {
 
     this.getElement("root").setAttribute("hidden", "true");
     this.getElement("root").removeAttribute("drawn");
+
+    this.emit("hidden");
   },
 
   prepareImageCapture() {

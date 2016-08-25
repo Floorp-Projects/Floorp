@@ -762,6 +762,7 @@ html|*#fullscreen-exit-button {
   -moz-user-focus: normal;
 }
 
+.blocked-permission-icon:not([showing]),
 .notification-anchor-icon:not([showing]) {
   display: none;
 }

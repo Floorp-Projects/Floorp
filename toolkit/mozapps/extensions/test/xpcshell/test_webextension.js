@@ -124,7 +124,7 @@ add_task(function*() {
 
 // Writing the manifest direct to the profile should work
 add_task(function*() {
-  writeWebManifestForExtension({
+  yield promiseWriteWebManifestForExtension({
     name: "Web Extension Name",
     version: "1.0",
     manifest_version: 2,
@@ -190,7 +190,7 @@ add_task(function* test_manifest_localization() {
 
 // Missing version should cause a failure
 add_task(function*() {
-  writeWebManifestForExtension({
+  yield promiseWriteWebManifestForExtension({
     name: "Web Extension Name",
     manifest_version: 2,
     applications: {
@@ -213,7 +213,7 @@ add_task(function*() {
 
 // Incorrect manifest version should cause a failure
 add_task(function*() {
-  writeWebManifestForExtension({
+  yield promiseWriteWebManifestForExtension({
     name: "Web Extension Name",
     version: "1.0",
     manifest_version: 1,
