@@ -109,7 +109,8 @@ CompositorOGL::CreateContext()
   RefPtr<GLContext> context;
 
   // Used by mock widget to create an offscreen context
-  void* widgetOpenGLContext = mWidget->RealWidget()->GetNativeData(NS_NATIVE_OPENGL_CONTEXT);
+  nsIWidget* widget = mWidget->RealWidget();
+  void* widgetOpenGLContext = widget ? widget->GetNativeData(NS_NATIVE_OPENGL_CONTEXT) : nullptr;
   if (widgetOpenGLContext) {
     GLContext* alreadyRefed = reinterpret_cast<GLContext*>(widgetOpenGLContext);
     return already_AddRefed<GLContext>(alreadyRefed);
@@ -144,7 +145,8 @@ CompositorOGL::CreateContext()
   }
 
 #ifdef MOZ_WIDGET_GONK
-  mWidget->RealWidget()->SetNativeData(
+  MOZ_ASSERT(widget);
+  widget->SetNativeData(
     NS_NATIVE_OPENGL_CONTEXT, reinterpret_cast<uintptr_t>(context.get()));
 #endif
 
