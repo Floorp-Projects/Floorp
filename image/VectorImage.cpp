@@ -525,6 +525,12 @@ VectorImage::RequestRefresh(const TimeStamp& aTime)
     return;
   }
 
+  PendingAnimationTracker* tracker =
+    mSVGDocumentWrapper->GetDocument()->GetPendingAnimationTracker();
+  if (tracker && ShouldAnimate()) {
+    tracker->TriggerPendingAnimationsOnNextTick(aTime);
+  }
+
   EvaluateAnimation();
 
   mSVGDocumentWrapper->TickRefreshDriver();
