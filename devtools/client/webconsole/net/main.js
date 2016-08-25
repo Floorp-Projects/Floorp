@@ -19,7 +19,7 @@ const NetRequest = require("./net-request");
 const { loadSheet } = require("sdk/stylesheet/utils");
 
 // Localization
-const {LocalizationHelper} = require("devtools/client/shared/l10n");
+const {LocalizationHelper} = require("devtools/shared/l10n");
 const L10N = new LocalizationHelper("devtools/locale/netmonitor.properties");
 
 // Stylesheets
