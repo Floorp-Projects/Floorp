@@ -46,6 +46,12 @@ browser.Context = class {
     this.setBrowser(win);
 
     // A reference to the tab corresponding to the current window handle, if any.
+    // Specifically, this.tab refers to the last tab that Marionette switched
+    // to in this browser window. Note that this may not equal the currently
+    // selected tab. For example, if Marionette switches to tab A, and then
+    // clicks on a button that opens a new tab B in the same browser window,
+    // this.tab will still point to tab A, despite tab B being the currently
+    // selected tab.
     this.tab = null;
     this.pendingCommands = [];
 
@@ -214,7 +220,9 @@ browser.Context = class {
   hasRemotenessChange() {
     // None of these checks are relevant on b2g or if we don't have a tab yet,
     // and may not apply on Fennec.
-    if (this.driver.appName != "Firefox" || this.tab === null) {
+    if (this.driver.appName != "Firefox" ||
+        this.tab === null ||
+        this.browserForTab === null) {
       return false;
     }
 
@@ -222,9 +230,7 @@ browser.Context = class {
       return true;
     }
 
-    // this.tab can potentially get stale and cause problems, see bug 1227252
-    let currentTab = this.browser.selectedTab;
-    let currentIsRemote = this.browser.getBrowserForTab(currentTab).isRemoteBrowser;
+    let currentIsRemote = this.browserForTab.isRemoteBrowser;
     this._hasRemotenessChange = this._browserWasRemote !== currentIsRemote;
     this._browserWasRemote = currentIsRemote;
     return this._hasRemotenessChange;
