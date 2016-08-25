@@ -50,15 +50,21 @@ public:
     NS_IMETHOD CollectReports(nsIHandleReportCallback* aHandleReport,
                               nsISupports* aData, bool aAnonymize) override
     {
-        MOZ_COLLECT_REPORT("gfx-tiles-waste", KIND_OTHER, UNITS_BYTES,
+        MOZ_COLLECT_REPORT(
+            "gfx-tiles-waste", KIND_OTHER, UNITS_BYTES,
             int64_t(sTileWasteAmount),
             "Memory lost due to tiles extending past content boundaries");
+
         MOZ_COLLECT_REPORT(
-            "gfx-textures", KIND_OTHER, UNITS_BYTES, int64_t(sAmount),
+            "gfx-textures", KIND_OTHER, UNITS_BYTES,
+            int64_t(sAmount),
             "Memory used for storing GL textures.");
+
         MOZ_COLLECT_REPORT(
-            "gfx-textures-peak", KIND_OTHER, UNITS_BYTES, int64_t(sPeakAmount),
+            "gfx-textures-peak", KIND_OTHER, UNITS_BYTES,
+            int64_t(sPeakAmount),
             "Peak memory used for storing GL textures.");
+
         return NS_OK;
     }
 

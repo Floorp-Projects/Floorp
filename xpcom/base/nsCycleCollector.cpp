@@ -3377,32 +3377,27 @@ nsCycleCollector::CollectReports(nsIHandleReportCallback* aHandleReport,
                       &objectSize, &graphSize,
                       &purpleBufferSize);
 
-#define REPORT(_path, _amount, _desc)                                     \
-    do {                                                                  \
-        size_t amount = _amount;  /* evaluate |_amount| only once */      \
-        if (amount > 0) {                                                 \
-            nsresult rv;                                                  \
-            rv = aHandleReport->Callback(EmptyCString(),                  \
-                                         NS_LITERAL_CSTRING(_path),       \
-                                         KIND_HEAP, UNITS_BYTES, _amount, \
-                                         NS_LITERAL_CSTRING(_desc),       \
-                                         aData);                          \
-            if (NS_WARN_IF(NS_FAILED(rv)))                                \
-                return rv;                                                \
-        }                                                                 \
-    } while (0)
+  if (objectSize > 0) {
+    MOZ_COLLECT_REPORT(
+      "explicit/cycle-collector/collector-object", KIND_HEAP, UNITS_BYTES,
+      objectSize,
+      "Memory used for the cycle collector object itself.");
+  }
 
-  REPORT("explicit/cycle-collector/collector-object", objectSize,
-         "Memory used for the cycle collector object itself.");
+  if (graphSize > 0) {
+    MOZ_COLLECT_REPORT(
+      "explicit/cycle-collector/graph", KIND_HEAP, UNITS_BYTES,
+      graphSize,
+      "Memory used for the cycle collector's graph. This should be zero when "
+      "the collector is idle.");
+  }
 
-  REPORT("explicit/cycle-collector/graph", graphSize,
-         "Memory used for the cycle collector's graph. "
-         "This should be zero when the collector is idle.");
-
-  REPORT("explicit/cycle-collector/purple-buffer", purpleBufferSize,
-         "Memory used for the cycle collector's purple buffer.");
-
-#undef REPORT
+  if (purpleBufferSize > 0) {
+    MOZ_COLLECT_REPORT(
+      "explicit/cycle-collector/purple-buffer", KIND_HEAP, UNITS_BYTES,
+      purpleBufferSize,
+      "Memory used for the cycle collector's purple buffer.");
+  }
 
   return NS_OK;
 };

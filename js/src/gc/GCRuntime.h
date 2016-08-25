@@ -971,7 +971,7 @@ class GCRuntime
     void decommitAllWithoutUnlocking(const AutoLockGC& lock);
     void startDecommit();
     void queueZonesForBackgroundSweep(ZoneList& zones);
-    void sweepBackgroundThings(ZoneList& zones, LifoAlloc& freeBlocks, ThreadType threadType);
+    void sweepBackgroundThings(ZoneList& zones, LifoAlloc& freeBlocks);
     void assertBackgroundSweepingFinished();
     bool shouldCompact();
     void beginCompactPhase();
@@ -1126,7 +1126,7 @@ class GCRuntime
     /* Whether the currently running GC can finish in multiple slices. */
     bool isIncremental;
 
-    /* Whether all compartments are being collected in first GC slice. */
+    /* Whether all zones are being collected in first GC slice. */
     bool isFull;
 
     /* Whether the heap will be compacted at the end of GC. */
@@ -1269,10 +1269,8 @@ class GCRuntime
     bool poked;
 
     /*
-     * These options control the zealousness of the GC. The fundamental values
-     * are nextScheduled and gcDebugCompartmentGC. At every allocation,
-     * nextScheduled is decremented. When it reaches zero, we do either a full
-     * or a compartmental GC, based on debugCompartmentGC.
+     * These options control the zealousness of the GC. At every allocation,
+     * nextScheduled is decremented. When it reaches zero we do a full GC.
      *
      * At this point, if zeal_ is one of the types that trigger periodic
      * collection, then nextScheduled is reset to the value of zealFrequency.

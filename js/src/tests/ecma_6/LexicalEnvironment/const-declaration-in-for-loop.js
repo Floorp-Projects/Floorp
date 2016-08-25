@@ -44,13 +44,6 @@ Function(`if (true)
               continue;
           }`)();
 
-// We don't support for (const ... in ...) or for (const ... of ...) yet.  When
-// we do, these all should start passing without throwing a syntax error, and
-// we can remove the try/catch here, and the ultimate throw-canary forcing this
-// test to be updated.
-try
-{
-
 executeGlobalScript(`for (const a5 of [])
                        continue;`);
 
@@ -86,15 +79,6 @@ Function(`if (true)
             for (const a12 in {})
               continue;
           }`)();
-
-throw new Error("Congratulations on making for (const … in/of …) work!  " +
-                "Please remove the try/catch and this throw.");
-}
-catch (e)
-{
-  assertEq(e instanceof SyntaxError, true,
-           "unexpected error: expected SyntaxError, got " + e);
-}
 
 /******************************************************************************/
 

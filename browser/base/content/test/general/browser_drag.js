@@ -4,8 +4,8 @@ function test()
 
   let scriptLoader = Cc["@mozilla.org/moz/jssubscript-loader;1"].
                      getService(Ci.mozIJSSubScriptLoader);
-  let ChromeUtils = {};
-  scriptLoader.loadSubScript("chrome://mochikit/content/tests/SimpleTest/ChromeUtils.js", ChromeUtils);
+  let EventUtils = {};
+  scriptLoader.loadSubScript("chrome://mochikit/content/tests/SimpleTest/EventUtils.js", EventUtils);
 
   // ---- Test dragging the proxy icon ---
   var value = content.location.href;
@@ -41,5 +41,5 @@ function test()
     finish();
   }, true);
 
-  ChromeUtils.synthesizeDrop(tab, tab, [[{type: "text/uri-list", data: "http://mochi.test:8888/"}]], "copy", window);
+  EventUtils.synthesizeDrop(tab, tab, [[{type: "text/uri-list", data: "http://mochi.test:8888/"}]], "copy", window);
 }

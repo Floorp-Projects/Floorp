@@ -37664,6 +37664,12 @@
             "url": "/domparsing/style_attribute_html.html"
           }
         ],
+        "editing/other/restoration.html": [
+          {
+            "path": "editing/other/restoration.html",
+            "url": "/editing/other/restoration.html"
+          }
+        ],
         "editing/other/delete.html": [
           {
             "path": "editing/other/delete.html",

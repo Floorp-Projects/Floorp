@@ -6969,6 +6969,17 @@ HTMLEditRules::CacheInlineStyles(nsIDOMNode* aNode)
 
   for (int32_t j = 0; j < SIZE_STYLE_TABLE; ++j)
   {
+    // If type-in state is set, don't intervene
+    bool typeInSet, unused;
+    if (NS_WARN_IF(!mHTMLEditor)) {
+      return NS_ERROR_UNEXPECTED;
+    }
+    mHTMLEditor->mTypeInState->GetTypingState(typeInSet, unused,
+      mCachedStyles[j].tag, mCachedStyles[j].attr, nullptr);
+    if (typeInSet) {
+      continue;
+    }
+
     bool isSet = false;
     nsAutoString outValue;
     // Don't use CSS for <font size>, we don't support it usefully (bug 780035)

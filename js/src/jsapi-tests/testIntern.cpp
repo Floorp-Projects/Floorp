@@ -40,7 +40,7 @@ BEGIN_TEST(testPinAcrossGC)
 }
 
 static void
-FinalizeCallback(JSFreeOp* fop, JSFinalizeStatus status, bool isCompartmentGC, void* data)
+FinalizeCallback(JSFreeOp* fop, JSFinalizeStatus status, bool isZoneGC, void* data)
 {
     if (status == JSFINALIZE_GROUP_START)
         sw.strOk = js::gc::IsMarkedUnbarriered(&sw.str);

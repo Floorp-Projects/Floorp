@@ -276,6 +276,7 @@ js::ForOfPIC::Chain::sweep(FreeOp* fop)
 static void
 ForOfPIC_finalize(FreeOp* fop, JSObject* obj)
 {
+    MOZ_ASSERT(fop->maybeOffMainThread());
     if (ForOfPIC::Chain* chain = ForOfPIC::fromJSObject(&obj->as<NativeObject>()))
         chain->sweep(fop);
 }
@@ -299,7 +300,7 @@ static const ClassOps ForOfPICClassOps = {
 const Class ForOfPIC::class_ = {
     "ForOfPIC",
     JSCLASS_HAS_PRIVATE |
-    JSCLASS_FOREGROUND_FINALIZE,
+    JSCLASS_BACKGROUND_FINALIZE,
     &ForOfPICClassOps
 };
 

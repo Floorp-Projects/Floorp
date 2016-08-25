@@ -50,8 +50,8 @@
 #include "jscntxtinlines.h"
 #include "jsobjinlines.h"
 
+#include "vm/EnvironmentObject-inl.h"
 #include "vm/NativeObject-inl.h"
-#include "vm/ScopeObject-inl.h"
 
 using namespace js;
 
@@ -279,20 +279,20 @@ GC(JSContext* cx, unsigned argc, Value* vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     /*
-     * If the first argument is 'compartment', we collect any compartments
-     * previously scheduled for GC via schedulegc. If the first argument is an
-     * object, we collect the object's compartment (and any other compartments
-     * scheduled for GC). Otherwise, we collect all compartments.
+     * If the first argument is 'zone', we collect any zones previously
+     * scheduled for GC via schedulegc. If the first argument is an object, we
+     * collect the object's zone (and any other zones scheduled for
+     * GC). Otherwise, we collect all zones.
      */
-    bool compartment = false;
+    bool zone = false;
     if (args.length() >= 1) {
         Value arg = args[0];
         if (arg.isString()) {
-            if (!JS_StringEqualsAscii(cx, arg.toString(), "compartment", &compartment))
+            if (!JS_StringEqualsAscii(cx, arg.toString(), "zone", &zone))
                 return false;
         } else if (arg.isObject()) {
             PrepareZoneForGC(UncheckedUnwrap(&arg.toObject())->zone());
-            compartment = true;
+            zone = true;
         }
     }
 
@@ -309,7 +309,7 @@ GC(JSContext* cx, unsigned argc, Value* vp)
     size_t preBytes = cx->runtime()->gc.usage.gcBytes();
 #endif
 
-    if (compartment)
+    if (zone)
         PrepareForDebugGC(cx->runtime());
     else
         JS::PrepareForFullGC(cx);
@@ -787,7 +787,7 @@ ScheduleGC(JSContext* cx, unsigned argc, Value* vp)
         Zone* zone = UncheckedUnwrap(&args[0].toObject())->zone();
         PrepareZoneForGC(zone);
     } else if (args[0].isString()) {
-        /* This allows us to schedule atomsCompartment for GC. */
+        /* This allows us to schedule the atoms zone for GC. */
         PrepareZoneForGC(args[0].toString()->zone());
     }
 
@@ -2982,7 +2982,7 @@ EvalReturningScope(JSContext* cx, unsigned argc, Value* vp)
         if (!js::ExecuteInGlobalAndReturnScope(cx, global, script, &lexicalScope))
             return false;
 
-        varObj = lexicalScope->enclosingScope();
+        varObj = lexicalScope->enclosingEnvironment();
     }
 
     RootedObject rv(cx, JS_NewPlainObject(cx));
@@ -3564,9 +3564,9 @@ GetModuleEnvironmentValue(JSContext* cx, unsigned argc, Value* vp)
 
 static const JSFunctionSpecWithHelp TestingFunctions[] = {
     JS_FN_HELP("gc", ::GC, 0, 0,
-"gc([obj] | 'compartment' [, 'shrinking'])",
-"  Run the garbage collector. When obj is given, GC only its compartment.\n"
-"  If 'compartment' is given, GC any compartments that were scheduled for\n"
+"gc([obj] | 'zone' [, 'shrinking'])",
+"  Run the garbage collector. When obj is given, GC only its zone.\n"
+"  If 'zone' is given, GC any zones that were scheduled for\n"
 "  GC via schedulegc.\n"
 "  If 'shrinking' is passed as the optional second argument, perform a\n"
 "  shrinking GC rather than a normal GC."),
@@ -3719,7 +3719,7 @@ gc::ZealModeHelpText),
     JS_FN_HELP("schedulegc", ScheduleGC, 1, 0,
 "schedulegc([num | obj])",
 "  If num is given, schedule a GC after num allocations.\n"
-"  If obj is given, schedule a GC of obj's compartment.\n"
+"  If obj is given, schedule a GC of obj's zone.\n"
 "  Returns the number of allocations before the next trigger."),
 
     JS_FN_HELP("selectforgc", SelectForGC, 0, 0,
