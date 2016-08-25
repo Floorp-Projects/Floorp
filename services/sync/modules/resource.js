@@ -306,6 +306,9 @@ AsyncResource.prototype = {
     ret.success = success;
     ret.headers = headers;
 
+    if (!success) {
+      this._log.warn(`${action} request to ${ret.url} failed with status ${status}`);
+    }
     // Make a lazy getter to convert the json response into an object.
     // Note that this can cause a parse error to be thrown far away from the
     // actual fetch, so be warned!
@@ -385,6 +388,8 @@ Resource.prototype = {
       if (Async.isShutdownException(ex)) {
         throw ex;
       }
+      this._log.warn("${action} request to ${url} failed: ${ex}",
+                     { action, url: this.uri.spec, ex });
       // Combine the channel stack with this request stack.  Need to create
       // a new error object for that.
       let error = Error(ex.message);
