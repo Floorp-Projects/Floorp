@@ -1160,6 +1160,7 @@ CompositorBridgeParent::SetShadowProperties(Layer* aLayer)
         layerComposite->SetShadowVisibleRegion(layer->GetVisibleRegion());
         layerComposite->SetShadowClipRect(layer->GetClipRect());
         layerComposite->SetShadowOpacity(layer->GetOpacity());
+        layerComposite->SetShadowOpacitySetByAnimation(false);
       }
     );
 }

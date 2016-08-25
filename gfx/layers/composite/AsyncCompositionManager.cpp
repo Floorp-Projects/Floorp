@@ -685,6 +685,7 @@ SampleAnimations(Layer* aLayer, TimeStamp aPoint)
           case eCSSProperty_opacity:
           {
             layerComposite->SetShadowOpacity(interpolatedValue.get_float());
+            layerComposite->SetShadowOpacitySetByAnimation(true);
             break;
           }
           case eCSSProperty_transform:
