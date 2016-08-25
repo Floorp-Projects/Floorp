@@ -41,7 +41,8 @@ typedef struct _MacSandboxInfo {
   _MacSandboxInfo(const struct _MacSandboxInfo& other)
     : type(other.type), level(other.level), pluginInfo(other.pluginInfo),
       appPath(other.appPath), appBinaryPath(other.appBinaryPath),
-      appDir(other.appDir), appTempDir(other.appTempDir) {}
+      appDir(other.appDir), appTempDir(other.appTempDir),
+      profileDir(other.profileDir) {}
   MacSandboxType type;
   int32_t level;
   MacSandboxPluginInfo pluginInfo;
@@ -49,6 +50,7 @@ typedef struct _MacSandboxInfo {
   std::string appBinaryPath;
   std::string appDir;
   std::string appTempDir;
+  std::string profileDir;
 } MacSandboxInfo;
 
 namespace mozilla {
