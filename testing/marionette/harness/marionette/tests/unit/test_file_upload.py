@@ -105,6 +105,22 @@ class TestFileUpload(MarionetteTestCase):
         Wait(self.marionette).until(lambda m: m.get_url() != url)
         self.assertIn("multipart/form-data", self.body.text)
 
+    def test_change_event(self):
+        self.marionette.navigate(single)
+        self.marionette.execute_script("""
+            window.changeEvs = [];
+            let el = arguments[arguments.length - 1];
+            el.addEventListener("change", ev => window.changeEvs.push(ev));
+            console.log(window.changeEvs.length);
+            """, script_args=(self.input,), sandbox=None)
+
+        with tempfile() as f:
+            self.input.send_keys(f.name)
+
+        nevs = self.marionette.execute_script(
+            "return window.changeEvs.length", sandbox=None)
+        self.assertEqual(1, nevs)
+
     def find_inputs(self):
         return self.marionette.find_elements(By.TAG_NAME, "input")
 
