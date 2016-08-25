@@ -1756,7 +1756,7 @@ public:
      *
      * aFocused  Whether or not a plugin is focused
      */
-    NS_IMETHOD SetPluginFocused(bool& aFocused) = 0;
+    virtual void SetPluginFocused(bool& aFocused) = 0;
 
     /*
      * Tell the plugin has focus.  It is unnecessary to use IPC
