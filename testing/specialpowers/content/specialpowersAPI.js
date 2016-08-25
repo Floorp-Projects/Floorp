@@ -1429,6 +1429,13 @@ SpecialPowersAPI.prototype = {
     this._getMUDV(window).textZoom = zoom;
   },
 
+  getOverrideDPPX: function(window) {
+    return this._getMUDV(window).overrideDPPX;
+  },
+  setOverrideDPPX: function(window, dppx) {
+    this._getMUDV(window).overrideDPPX = dppx;
+  },
+
   emulateMedium: function(window, mediaType) {
     this._getMUDV(window).emulateMedium(mediaType);
   },
