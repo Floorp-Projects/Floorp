@@ -77,7 +77,7 @@
     "description": "Application reputation remote status (0=OK, 1=FAIL, 2=INVALID)"
   },
   "APPLICATION_REPUTATION_SERVER_VERDICT": {
-    "expires_in_version": "52",
+    "expires_in_version": "56",
     "releaseChannelCollection": "opt-out",
     "bug_numbers": [1272788],
     "kind": "enumerated",
@@ -91,7 +91,7 @@
   },
   "APPLICATION_REPUTATION_REMOTE_LOOKUP_TIMEOUT": {
     "alert_emails": ["gcp@mozilla.com", "francois@mozilla.com"],
-    "expires_in_version": "55",
+    "expires_in_version": "56",
     "kind": "boolean",
     "bug_numbers": [1172689],
     "description": "Recorded when application reputation remote lookup is performed, `true` is recorded if the lookup times out."
@@ -3626,7 +3626,7 @@
     "description": "Time spent loading PrefixSet from file (ms)"
   },
   "URLCLASSIFIER_PS_FALLOCATE_TIME": {
-    "expires_in_version": "default",
+    "expires_in_version": "never",
     "kind": "exponential",
     "high": 1000,
     "n_buckets": 10,
@@ -3671,7 +3671,7 @@
   },
   "URLCLASSIFIER_COMPLETE_TIMEOUT": {
     "alert_emails": ["gcp@mozilla.com", "francois@mozilla.com"],
-    "expires_in_version": "52",
+    "expires_in_version": "56",
     "kind": "boolean",
     "bug_numbers": [1172688],
     "description": "This metric is recorded every time a gethash lookup is performed, `true` is recorded if the lookup times out."
