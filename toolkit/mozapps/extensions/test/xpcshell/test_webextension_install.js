@@ -79,7 +79,7 @@ add_task(function* test_unsigned_no_id_temp_install() {
     version: "1.0"
   };
 
-  const addonDir = writeWebManifestForExtension(manifest, gTmpD,
+  const addonDir = yield promiseWriteWebManifestForExtension(manifest, gTmpD,
                                                 "the-addon-sub-dir");
   const addon = yield AddonManager.installTemporaryAddon(addonDir);
   ok(addon.id, "ID should have been auto-generated");
@@ -112,9 +112,9 @@ add_task(function* test_multiple_no_id_extensions() {
     version: "1.0"
   };
 
-  const firstAddonDir = writeWebManifestForExtension(manifest, gTmpD,
+  const firstAddonDir = yield promiseWriteWebManifestForExtension(manifest, gTmpD,
                                                      "addon-sub-dir-one");
-  const secondAddonDir = writeWebManifestForExtension(manifest, gTmpD,
+  const secondAddonDir = yield promiseWriteWebManifestForExtension(manifest, gTmpD,
                                                       "addon-sub-dir-two");
   const [firstAddon, secondAddon] = yield Promise.all([
     AddonManager.installTemporaryAddon(firstAddonDir),
@@ -155,7 +155,7 @@ add_task(function* test_bss_id() {
   let addon = yield promiseAddonByID(ID);
   do_check_eq(addon, null);
 
-  writeWebManifestForExtension(manifest, profileDir, ID);
+  yield promiseWriteWebManifestForExtension(manifest, profileDir, ID);
   yield promiseRestartManager();
 
   addon = yield promiseAddonByID(ID);
@@ -189,7 +189,7 @@ add_task(function* test_two_ids() {
     }
   }
 
-  writeWebManifestForExtension(manifest, profileDir, GOOD_ID);
+  yield promiseWriteWebManifestForExtension(manifest, profileDir, GOOD_ID);
   yield promiseRestartManager();
 
   let addon = yield promiseAddonByID(BAD_ID);
@@ -198,4 +198,169 @@ add_task(function* test_two_ids() {
   do_check_neq(addon, null);
 
   addon.uninstall();
+});
+
+// Test that strict_min_version and strict_max_version are enforced for
+// loading temporary extension.
+add_task(function* test_strict_min_max() {
+  // the app version being compared to is 1.9.2
+  const addonId = "strict_min_max@tests.mozilla.org";
+  const MANIFEST = {
+    name: "strict min max test",
+    description: "test strict min and max with temporary loading",
+    manifest_version: 2,
+    version: "1.0",
+  };
+
+  function flushAndRemove(file) {
+    // flush JAR cache and remove the file
+    Services.obs.notifyObservers(file, "flush-cache-entry", null);
+    file.remove(true);
+  }
+
+  // bad max good min
+  let apps = {
+    applications: {
+      gecko: {
+        id: addonId,
+        strict_min_version: "1",
+        strict_max_version: "1"
+      },
+    },
+  }
+  let testManifest = Object.assign(apps, MANIFEST);
+
+  let addonDir = yield promiseWriteWebManifestForExtension(testManifest, gTmpD,
+                                              "the-addon-sub-dir");
+
+  let expectedMsg = new RegExp("Add-on strict_min_max@tests.mozilla.org is not compatible with application version. " +
+                               "add-on minVersion: 1, add-on maxVersion: 1");
+  yield Assert.rejects(AddonManager.installTemporaryAddon(addonDir),
+                       expectedMsg,
+                       "Install rejects when specified maxVersion is not valid");
+
+  let addon = yield promiseAddonByID(addonId);
+  do_check_eq(addon, null);
+  flushAndRemove(addonDir);
+
+  // bad min good max
+  apps = {
+    applications: {
+      gecko: {
+        id: addonId,
+        strict_min_version: "2",
+        strict_max_version: "2"
+      },
+    },
+  }
+  testManifest = Object.assign(apps, MANIFEST);
+
+  addonDir = yield promiseWriteWebManifestForExtension(testManifest, gTmpD,
+                                          "the-addon-sub-dir");
+
+  expectedMsg = new RegExp("Add-on strict_min_max@tests.mozilla.org is not compatible with application version. " +
+                               "add-on minVersion: 2, add-on maxVersion: 2");
+  yield Assert.rejects(AddonManager.installTemporaryAddon(addonDir),
+                       expectedMsg,
+                       "Install rejects when specified minVersion is not valid");
+
+  addon = yield promiseAddonByID(addonId);
+  do_check_eq(addon, null);
+  flushAndRemove(addonDir);
+
+  // bad both
+  apps = {
+    applications: {
+      gecko: {
+        id: addonId,
+        strict_min_version: "2",
+        strict_max_version: "1"
+      },
+    },
+  }
+  testManifest = Object.assign(apps, MANIFEST);
+
+  addonDir = yield promiseWriteWebManifestForExtension(testManifest, gTmpD,
+                                          "the-addon-sub-dir");
+
+  expectedMsg = new RegExp("Add-on strict_min_max@tests.mozilla.org is not compatible with application version. " +
+                               "add-on minVersion: 2, add-on maxVersion: 1");
+  yield Assert.rejects(AddonManager.installTemporaryAddon(addonDir),
+                       expectedMsg,
+                       "Install rejects when specified minVersion and maxVersion are not valid");
+
+  addon = yield promiseAddonByID(addonId);
+  do_check_eq(addon, null);
+  flushAndRemove(addonDir);
+
+  // good both
+  apps = {
+    applications: {
+      gecko: {
+        id: addonId,
+        strict_min_version: "1",
+        strict_max_version: "2"
+      },
+    },
+  }
+  testManifest = Object.assign(apps, MANIFEST);
+
+  addonDir = yield promiseWriteWebManifestForExtension(testManifest, gTmpD,
+                                          "strict_min_max");
+
+  yield AddonManager.installTemporaryAddon(addonDir);
+  addon = yield promiseAddonByID(addonId);
+
+  do_check_neq(addon, null);
+  do_check_eq(addon.id, addonId);
+  addon.uninstall();
+  flushAndRemove(addonDir);
+
+  // good only min
+  let newId = "strict_min_only@tests.mozilla.org";
+  apps = {
+    applications: {
+      gecko: {
+        id: newId,
+        strict_min_version: "1",
+      },
+    },
+  }
+  testManifest = Object.assign(apps, MANIFEST);
+
+  addonDir = yield promiseWriteWebManifestForExtension(testManifest, gTmpD,
+                                          "strict_min_only");
+
+  yield AddonManager.installTemporaryAddon(addonDir);
+  addon = yield promiseAddonByID(newId);
+
+  do_check_neq(addon, null);
+  do_check_eq(addon.id, newId);
+
+  addon.uninstall();
+  flushAndRemove(addonDir);
+
+  // good only max
+  newId = "strict_max_only@tests.mozilla.org";
+  apps = {
+    applications: {
+      gecko: {
+        id: newId,
+        strict_max_version: "2",
+      },
+    },
+  }
+  testManifest = Object.assign(apps, MANIFEST);
+
+  addonDir = yield promiseWriteWebManifestForExtension(testManifest, gTmpD,
+                                          "strict_max_only");
+
+  yield AddonManager.installTemporaryAddon(addonDir);
+  addon = yield promiseAddonByID(newId);
+
+  do_check_neq(addon, null);
+  do_check_eq(addon.id, newId);
+
+  addon.uninstall();
+  flushAndRemove(addonDir);
 });

@@ -17,7 +17,7 @@
 #include "certdb.h"
 #include "mozilla/Casting.h"
 #include "mozilla/UniquePtr.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "nsNSSCertificate.h"
 #include "nsServiceManagerUtils.h"
 #include "nss.h"

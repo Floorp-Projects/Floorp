@@ -172,7 +172,8 @@ static const JSClassOps pm_classOps = {
 
 static const JSClass pm_class = {
     "PerfMeasurement",
-    JSCLASS_HAS_PRIVATE,
+    JSCLASS_HAS_PRIVATE |
+    JSCLASS_FOREGROUND_FINALIZE,
     &pm_classOps
 };
 

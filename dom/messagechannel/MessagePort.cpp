@@ -25,7 +25,7 @@
 #include "mozilla/MessagePortTimelineMarker.h"
 #include "mozilla/TimelineConsumers.h"
 #include "mozilla/TimelineMarker.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "nsContentUtils.h"
 #include "nsGlobalWindow.h"
 #include "nsPresContext.h"

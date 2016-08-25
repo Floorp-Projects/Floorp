@@ -564,7 +564,8 @@ ModuleObject::classOps_ = {
 ModuleObject::class_ = {
     "Module",
     JSCLASS_HAS_RESERVED_SLOTS(ModuleObject::SlotCount) |
-    JSCLASS_IS_ANONYMOUS,
+    JSCLASS_IS_ANONYMOUS |
+    JSCLASS_FOREGROUND_FINALIZE,
     &ModuleObject::classOps_
 };
 

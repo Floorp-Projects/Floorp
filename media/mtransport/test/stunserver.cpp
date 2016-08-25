@@ -79,7 +79,7 @@ nrappkit copyright:
 */
 #include "logging.h"
 #include "mozilla/UniquePtr.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "databuffer.h"
 
 extern "C" {

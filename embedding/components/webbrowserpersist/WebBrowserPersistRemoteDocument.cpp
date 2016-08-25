@@ -8,7 +8,7 @@
 #include "WebBrowserPersistDocumentParent.h"
 #include "WebBrowserPersistResourcesParent.h"
 #include "WebBrowserPersistSerializeParent.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 
 namespace mozilla {
 

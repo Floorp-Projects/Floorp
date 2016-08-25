@@ -25,7 +25,7 @@
 #include "nsXPCOMCIDInternal.h"
 
 #include "mozilla/LookAndFeel.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 
 #include "nsICommandLine.h"
 #include "nsILocaleService.h"

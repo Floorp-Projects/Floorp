@@ -7,7 +7,7 @@
 
 #include "mozilla/WidgetUtils.h"
 #include "mozilla/dom/ContentParent.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "nsContentUtils.h"
 #include "nsIBidiKeyboard.h"
 #include "nsTArray.h"

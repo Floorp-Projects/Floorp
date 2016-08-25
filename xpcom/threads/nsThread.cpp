@@ -32,7 +32,7 @@
 #include "nsXPCOMPrivate.h"
 #include "mozilla/ChaosMode.h"
 #include "mozilla/TimeStamp.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "nsThreadSyncDispatch.h"
 #include "LeakRefPtr.h"

@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "CrossProcessMutex.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "nsDebug.h"
 #include "nsISupportsImpl.h"
 

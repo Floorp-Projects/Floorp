@@ -48,7 +48,7 @@
 #include "mozilla/Monitor.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/StaticMutex.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 
 #if defined(MOZ_WIDGET_GONK)
 #include "cutils/properties.h"

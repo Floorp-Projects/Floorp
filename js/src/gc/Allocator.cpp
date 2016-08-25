@@ -309,8 +309,10 @@ GCRuntime::refillFreeListOffMainThread(ExclusiveContext* cx, AllocKind thingKind
     // whatever value we get. We need to first ensure the main thread is not in
     // a GC session.
     AutoLockHelperThreadState lock;
-    while (rt->isHeapBusy())
+    while (rt->isHeapBusy()) {
         HelperThreadState().wait(lock, GlobalHelperThreadState::PRODUCER);
+        HelperThreadState().notifyOne(GlobalHelperThreadState::PRODUCER, lock);
+    }
 
     return arenas->allocateFromArena(zone, thingKind, maybeStartBGAlloc);
 }

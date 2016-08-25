@@ -47,7 +47,7 @@ namespace mozilla {
 namespace gfx {
 class DrawTarget;
 class FeatureState;
-class DeviceManagerD3D11;
+class DeviceManagerDx;
 }
 namespace layers {
 class DeviceManagerD3D9;
@@ -100,7 +100,7 @@ struct ClearTypeParameterInfo {
 
 class gfxWindowsPlatform : public gfxPlatform
 {
-  friend class mozilla::gfx::DeviceManagerD3D11;
+  friend class mozilla::gfx::DeviceManagerDx;
 
 public:
     enum TextRenderingMode {
@@ -275,6 +275,7 @@ private:
     void InitializeD3D9Config();
     void InitializeD3D11Config();
     void InitializeD2DConfig();
+    void InitializeDirectDrawConfig();
 
     RefPtr<IDWriteFactory> mDWriteFactory;
     RefPtr<IDWriteRenderingParams> mRenderingParams[TEXT_RENDERING_COUNT];

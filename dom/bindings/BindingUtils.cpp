@@ -14,7 +14,7 @@
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/SizePrintfMacros.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "mozilla/UseCounter.h"
 
 #include "AccessCheck.h"

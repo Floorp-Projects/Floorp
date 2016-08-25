@@ -65,7 +65,7 @@
 #include <mozilla/layers/AxisPhysicsMSDModel.h>
 #include "mozilla/layers/LayerTransactionChild.h"
 #include "mozilla/layers/ScrollLinkedEffectDetector.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "LayersLogging.h"  // for Stringify
 #include <algorithm>
 #include <cstdlib> // for std::abs(int/long)
@@ -2124,7 +2124,7 @@ ScrollFrameHelper::ScrollToWithOrigin(nsPoint aScrollPosition,
 
   nsRect scrollRange = GetScrollRangeForClamping();
   mDestination = scrollRange.ClampPoint(aScrollPosition);
-  if (mDestination != aScrollPosition && aOrigin == nsGkAtoms::restore) {
+  if (mDestination != aScrollPosition && aOrigin == nsGkAtoms::restore && !PageIsStillLoading()) {
     // If we're doing a restore but the scroll position is clamped, promote
     // the origin from one that APZ can clobber to one that it can't clobber.
     aOrigin = nsGkAtoms::other;

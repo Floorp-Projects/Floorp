@@ -13,6 +13,7 @@ import TestGyp
 test = TestGyp.TestGyp()
 
 test.run_gyp('test.gyp', chdir='src')
+
 test.build('test.gyp', 'target1', chdir='src')
 # Check stuff exists.
 intermediate_file1 = test.read('src/outfile.txt')
@@ -22,6 +23,7 @@ shared_intermediate_file1 = test.read('src/shared_outfile.txt')
 test.must_contain(shared_intermediate_file1, 'shared_target1')
 
 test.run_gyp('test2.gyp', chdir='src')
+
 # Force the shared intermediate to be rebuilt.
 test.sleep()
 test.touch('src/shared_infile.txt')

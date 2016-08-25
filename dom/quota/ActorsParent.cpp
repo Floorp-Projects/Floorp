@@ -44,7 +44,7 @@
 #include "mozilla/Services.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/TypeTraits.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "mozStorageCID.h"
 #include "mozStorageHelper.h"
 #include "nsAppDirectoryServiceDefs.h"

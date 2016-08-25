@@ -12,6 +12,7 @@ import TestGyp
 
 test = TestGyp.TestGyp()
 test.run_gyp('copies-slash.gyp', chdir='src')
+
 test.relocate('src', 'relocate/src')
 test.build('copies-slash.gyp', chdir='relocate/src')
 

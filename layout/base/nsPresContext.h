@@ -1024,6 +1024,12 @@ public:
    * ReflowStarted call. Cannot itself trigger an interrupt check.
    */
   bool HasPendingInterrupt() { return mHasPendingInterrupt; }
+  /**
+   * Sets a flag that will trip a reflow interrupt. This only bypasses the
+   * interrupt timeout and the pending event check; other checks such as whether
+   * interrupts are enabled and the interrupt check skipping still take effect.
+   */
+  void SetPendingInterruptFromTest() { mPendingInterruptFromTest = true; }
 
   /**
    * If we have a presshell, and if the given content's current
@@ -1317,6 +1323,7 @@ protected:
   mozilla::TimeStamp    mLastStyleUpdateForAllAnimations;
 
   unsigned              mHasPendingInterrupt : 1;
+  unsigned              mPendingInterruptFromTest : 1;
   unsigned              mInterruptsEnabled : 1;
   unsigned              mUseDocumentFonts : 1;
   unsigned              mUseDocumentColors : 1;

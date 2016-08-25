@@ -72,7 +72,9 @@ class PropertyTree
 {
     friend class ::JSFunction;
 
-    JSCompartment* compartment_;
+#ifdef DEBUG
+    JS::Zone* zone_;
+#endif
 
     bool insertChild(ExclusiveContext* cx, Shape* parent, Shape* child);
 
@@ -89,12 +91,12 @@ class PropertyTree
         MAX_HEIGHT_WITH_ELEMENTS_ACCESS = 128
     };
 
-    explicit PropertyTree(JSCompartment* comp)
-        : compartment_(comp)
+    explicit PropertyTree(JS::Zone* zone)
+#ifdef DEBUG
+      : zone_(zone)
+#endif
     {
     }
-
-    JSCompartment* compartment() { return compartment_; }
 
     Shape* getChild(ExclusiveContext* cx, Shape* parent, JS::Handle<StackShape> child);
 };

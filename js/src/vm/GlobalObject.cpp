@@ -663,7 +663,9 @@ GlobalDebuggees_classOps = {
 
 static const Class
 GlobalDebuggees_class = {
-    "GlobalDebuggee", JSCLASS_HAS_PRIVATE,
+    "GlobalDebuggee",
+    JSCLASS_HAS_PRIVATE |
+    JSCLASS_FOREGROUND_FINALIZE,
     &GlobalDebuggees_classOps
 };
 
@@ -840,7 +842,7 @@ GlobalObject::addIntrinsicValue(JSContext* cx, Handle<GlobalObject*> global,
 
     RootedId id(cx, NameToId(name));
     Rooted<StackShape> child(cx, StackShape(base, id, slot, 0, 0));
-    Shape* shape = cx->compartment()->propertyTree.getChild(cx, last, child);
+    Shape* shape = cx->zone()->propertyTree.getChild(cx, last, child);
     if (!shape)
         return false;
 

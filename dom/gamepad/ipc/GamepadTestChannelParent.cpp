@@ -5,7 +5,7 @@
 #include "GamepadTestChannelParent.h"
 
 #include "mozilla/dom/GamepadPlatformService.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 
 namespace mozilla {
 namespace dom {

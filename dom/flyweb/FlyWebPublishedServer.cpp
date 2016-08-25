@@ -17,7 +17,7 @@
 #include "mozilla/net/IPCTransportProvider.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "nsCharSeparatedTokenizer.h"
 #include "nsGlobalWindow.h"
 #include "WebSocketChannel.h"

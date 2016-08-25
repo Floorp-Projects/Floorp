@@ -7,7 +7,7 @@
 #include "UncensoredAllocator.h"
 
 #include "mozilla/Assertions.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 
 #include "MainThreadUtils.h"
 #include "jsfriendapi.h"

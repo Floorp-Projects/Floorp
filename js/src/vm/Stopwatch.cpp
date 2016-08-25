@@ -8,7 +8,7 @@
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/IntegerTypeTraits.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 
 #if defined(XP_WIN)
 #include <processthreadsapi.h>

@@ -99,8 +99,7 @@ NAME_##N##_END = NAME_##N##_START + LEN + FLAG,
   DUMMY_FINAL_NAME_VALUE
 };
 
-/* check that the start positions will fit in 16 bits */
-PR_STATIC_ASSERT(MOZ_ARRAY_LENGTH(ALL_NAMES) < 0x10000);
+static_assert(MOZ_ARRAY_LENGTH(ALL_NAMES) < 0x10000, "Start positions should fit in 16 bits");
 
 const nsHtml5CharacterName nsHtml5NamedCharacters::NAMES[] = {
 #ifdef DEBUG

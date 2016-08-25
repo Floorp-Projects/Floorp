@@ -1485,6 +1485,17 @@ nsFrameMessageManager::GetInitialProcessData(JSContext* aCx, JS::MutableHandleVa
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsFrameMessageManager::GetProcessMessageManager(nsIMessageSender** aPMM)
+{
+  *aPMM = nullptr;
+  if (mCallback) {
+    nsCOMPtr<nsIMessageSender> pmm = mCallback->GetProcessMessageManager();
+    pmm.swap(*aPMM);
+  }
+  return NS_OK;
+}
+
 namespace {
 
 struct MessageManagerReferentCount

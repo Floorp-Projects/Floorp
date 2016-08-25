@@ -6,7 +6,7 @@
 
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/TabParent.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "nsIWidget.h"
 #include "nsServiceManagerUtils.h"
 #include "ScreenManagerParent.h"

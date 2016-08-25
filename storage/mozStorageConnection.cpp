@@ -18,7 +18,7 @@
 #include "mozilla/CondVar.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/ErrorNames.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "mozilla/dom/quota/QuotaObject.h"
 
 #include "mozIStorageAggregateFunction.h"

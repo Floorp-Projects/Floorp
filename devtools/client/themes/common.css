@@ -232,3 +232,471 @@ input[type="checkbox"]:-moz-focusring,
 checkbox:-moz-focusring {
   outline: none;
 }
+
+/* Toolbar buttons */
+.devtools-menulist,
+.devtools-toolbarbutton,
+.devtools-button {
+  -moz-appearance: none;
+  background: transparent;
+  min-height: 18px;
+  text-shadow: none;
+  border: none;
+  border-radius: 0;
+  color: var(--theme-body-color);
+  transition: background 0.05s ease-in-out;
+}
+
+.devtools-menulist,
+.devtools-toolbarbutton {
+  -moz-box-align: center;
+  min-width: 78px;
+  padding: 1px;
+  margin: 2px 1px;
+}
+
+.devtools-toolbarbutton:not([label]) > .toolbarbutton-icon,
+.devtools-button::before {
+  width: 16px;
+  height: 16px;
+  transition: opacity 0.05s ease-in-out;
+}
+
+/* HTML buttons */
+.devtools-button {
+  margin: 2px 1px;
+  padding: 1px;
+  min-width: 32px;
+  /* The icon is absolutely positioned in the button using ::before */
+  position: relative;
+}
+
+.devtools-button::before {
+  content: "";
+  display: block;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  margin: -8px 0 0 -8px;
+  background-size: cover;
+  background-repeat: no-repeat;
+  transition: opacity 0.05s ease-in-out;
+}
+
+.devtools-button:-moz-focusring {
+  outline: none;
+}
+
+/* Standalone buttons */
+.devtools-button[standalone],
+.devtools-button[data-standalone],
+.devtools-toolbarbutton[standalone],
+.devtools-toolbarbutton[data-standalone] {
+  border-width: 1px;
+  border-style: solid;
+  min-height: 32px;
+  background-color: var(--theme-toolbar-background);
+}
+
+.devtools-toolbarbutton[standalone], .devtools-toolbarbutton[data-standalone] {
+  margin-inline-end: 5px;
+}
+
+.devtools-toolbarbutton[label][standalone] {
+  min-height: 2em;
+}
+
+.devtools-menulist,
+.devtools-toolbarbutton,
+.devtools-button {
+  border-color: var(--toolbar-button-border-color);
+}
+
+/* Icon button styles */
+.devtools-toolbarbutton:not([label]),
+.devtools-toolbarbutton[text-as-image] {
+  min-width: 32px;
+}
+
+.devtools-toolbarbutton:not([label]) > .toolbarbutton-text {
+  display: none;
+}
+
+.devtools-toolbarbutton > .toolbarbutton-icon {
+  margin: 0;
+}
+
+/* Menu button styles (eg. web console filters) */
+.devtools-toolbarbutton[type=menu-button] > .toolbarbutton-menubutton-button {
+  -moz-appearance: none;
+  color: inherit;
+  border-width: 0;
+  -moz-box-orient: horizontal;
+  padding: 0;
+}
+
+.devtools-toolbarbutton[type=menu-button] {
+  padding: 0 1px;
+  -moz-box-align: stretch;
+}
+
+.devtools-toolbarbutton > .toolbarbutton-menubutton-button > .toolbarbutton-icon {
+  margin-inline-end: 4px;
+}
+
+.devtools-menulist > .menulist-dropmarker {
+  -moz-appearance: none;
+  display: -moz-box;
+  list-style-image: url("chrome://devtools/skin/images/dropmarker.svg");
+  -moz-box-align: center;
+  min-width: 16px;
+}
+
+.devtools-toolbarbutton[type=menu] > .toolbarbutton-menu-dropmarker,
+.devtools-toolbarbutton[type=menu-button] > .toolbarbutton-menubutton-dropmarker {
+  -moz-appearance: none !important;
+  list-style-image: url("chrome://devtools/skin/images/dropmarker.svg");
+  -moz-box-align: center;
+  padding: 0 3px;
+}
+
+/* Icon-only buttons */
+.devtools-button:empty::before,
+.devtools-toolbarbutton:not([label]):not([disabled]) > image {
+  opacity: 0.8;
+}
+
+.devtools-button:hover:empty::before,
+.devtools-button[checked]:empty::before,
+.devtools-button[open]:empty::before,
+.devtools-toolbarbutton:not([label]):hover > image,
+.devtools-toolbarbutton:not([label])[checked=true] > image,
+.devtools-toolbarbutton:not([label])[open=true] > image {
+  opacity: 1;
+}
+
+.devtools-button:disabled,
+.devtools-button[disabled],
+.devtools-toolbarbutton[disabled] {
+  opacity: 0.5 !important;
+}
+
+.devtools-button[checked]:empty::before,
+.devtools-button[open]:empty::before,
+.devtools-button.checked::before,
+.devtools-toolbarbutton:not([label])[checked=true] > image,
+.devtools-toolbarbutton:not([label])[open=true] > image {
+  filter: var(--checked-icon-filter);
+}
+
+/* Icon-and-text buttons */
+.devtools-toolbarbutton.icon-and-text .toolbarbutton-text {
+  margin-inline-start: .5em !important;
+  font-weight: 600;
+}
+
+/* Text-only buttons */
+.theme-light .devtools-toolbarbutton[label]:not([text-as-image]):not([type=menu-button]),
+.theme-light .devtools-toolbarbutton[data-text-only] {
+  background-color: var(--toolbar-tab-hover);
+}
+.theme-dark .devtools-toolbarbutton[label]:not([text-as-image]):not([type=menu-button]),
+.theme-dark .devtools-toolbarbutton[data-text-only] {
+  background-color: rgba(0, 0, 0, .2); /* Splitter */
+}
+
+/* Text-only button states */
+.theme-dark .devtools-button:not(:empty):not([disabled]):hover,
+.theme-dark .devtools-toolbarbutton:not(:-moz-any([checked=true],[disabled],[text-as-image]))[label]:hover {
+  background: rgba(0, 0, 0, .3); /* Splitters */
+}
+.theme-light .devtools-button:not(:empty):not([disabled]):hover,
+.theme-light .devtools-toolbarbutton:not(:-moz-any([checked=true],[disabled],[text-as-image]))[label]:hover {
+  background: rgba(170, 170, 170, .3); /* Splitters */
+}
+
+.theme-dark .devtools-button:not(:empty):not([disabled]):hover:active,
+.theme-dark .devtools-toolbarbutton:not(:-moz-any([checked=true],[disabled],[text-as-image]))[label]:hover:active {
+  background: rgba(0, 0, 0, .4); /* Splitters */
+}
+.theme-light .devtools-button:not(:empty):not([disabled]):hover:active,
+.theme-light .devtools-toolbarbutton:not(:-moz-any([checked=true],[disabled],[text-as-image]))[label]:hover:active {
+  background: var(--toolbar-tab-hover-active);
+}
+
+.theme-dark .devtools-toolbarbutton:not([disabled])[label][checked=true],
+.theme-dark .devtools-toolbarbutton:not([disabled])[label][open],
+.theme-dark .devtools-button:not(:empty)[checked=true] {
+  background: var(--theme-selection-background-semitransparent);
+  color: var(--theme-selection-color);
+}
+.theme-light .devtools-toolbarbutton:not([disabled])[label][checked=true],
+.theme-light .devtools-toolbarbutton:not([disabled])[label][open],
+.theme-light .devtools-button:not(:empty)[checked=true] {
+  background: rgba(76, 158, 217, .3); /* Select highlight blue */
+}
+
+:root {
+  --clear-icon-url: url("chrome://devtools/skin/images/clear.svg");
+}
+
+.devtools-button.devtools-clear-icon::before {
+  background-image: var(--clear-icon-url);
+}
+
+.devtools-button.devtools-filter-icon::before {
+  background-image: var(--filter-image);
+}
+
+.devtools-toolbarbutton.devtools-clear-icon {
+  list-style-image: var(--clear-icon-url);
+}
+
+.devtools-option-toolbarbutton {
+  list-style-image: var(--tool-options-image);
+}
+
+.devtools-toolbarbutton-group > .devtools-toolbarbutton:last-child {
+  margin-inline-end: 0;
+}
+
+.devtools-toolbarbutton-group + .devtools-toolbarbutton {
+  margin-inline-start: 3px;
+}
+
+.devtools-separator + .devtools-toolbarbutton {
+  margin-inline-start: 1px;
+}
+
+/*
+ * Filter buttons
+ * @TODO : Fix when https://bugzilla.mozilla.org/show_bug.cgi?id=1255116 lands
+ */
+.menu-filter-button {
+  -moz-appearance: none;
+  background: rgba(128,128,128,0.1);
+  border: none;
+  border-radius: 2px;
+  min-width: 0;
+  padding: 0 5px;
+  margin: 2px;
+  color: var(--theme-body-color);
+}
+
+.menu-filter-button:hover {
+  background: rgba(128,128,128,0.2);
+}
+
+.menu-filter-button:hover:active {
+  background-color: var(--theme-selection-background-semitransparent);
+}
+
+.menu-filter-button:not(:active).checked {
+  background-color: var(--theme-selection-background);
+  color: var(--theme-selection-color);
+}
+
+/* Text input */
+
+.devtools-textinput,
+.devtools-searchinput,
+.devtools-filterinput {
+  -moz-appearance: none;
+  margin: 1px 3px;
+  border: 1px solid;
+  border-radius: 2px;
+  padding: 4px 6px;
+  border-color: var(--theme-splitter-color);
+  font: message-box;
+}
+
+:root[platform="mac"] .devtools-textinput,
+:root[platform="mac"] .devtools-searchinput,
+:root[platform="mac"] .devtools-filterinput {
+  border-radius: 20px;
+}
+
+.devtools-searchinput,
+.devtools-filterinput {
+  padding: 0;
+  padding-inline-start: 22px;
+  padding-inline-end: 4px;
+  background-position: 8px center;
+  background-size: 11px 11px;
+  background-repeat: no-repeat;
+  font-size: inherit;
+}
+
+.devtools-searchinput {
+  background-image: var(--magnifying-glass-image);
+}
+
+.devtools-filterinput {
+  background-image: url(images/filter.svg#filterinput);
+}
+
+.devtools-searchinput:-moz-locale-dir(rtl),
+.devtools-searchinput:dir(rtl),
+.devtools-filterinput:-moz-locale-dir(rtl),
+.devtools-filterinput:dir(rtl) {
+  background-position: calc(100% - 8px) center;
+}
+
+.devtools-searchinput > .textbox-input-box > .textbox-search-icons > .textbox-search-icon,
+.devtools-filterinput > .textbox-input-box > .textbox-search-icons > .textbox-search-icon {
+  visibility: hidden;
+}
+
+.devtools-searchinput .textbox-input::-moz-placeholder,
+.devtools-filterinput .textbox-input::-moz-placeholder {
+  font-style: normal;
+}
+
+.devtools-plaininput {
+  border-color: transparent;
+  background-color: transparent;
+}
+
+.theme-dark .devtools-plaininput {
+  color: var(--theme-highlight-gray);
+}
+
+/* Searchbox is a div container element for a search input element */
+.devtools-searchbox {
+  display: flex;
+  flex: 1;
+  height: 23px;
+  position: relative;
+  padding: 0 3px;
+}
+
+/* The spacing is accomplished with a padding on the searchbox */
+.devtools-searchbox > .devtools-textinput,
+.devtools-searchbox > .devtools-searchinput,
+.devtools-searchbox > .devtools-filterinput {
+  margin-left: 0;
+  margin-right: 0;
+}
+
+.devtools-searchbox > .devtools-textinput:-moz-focusring,
+.devtools-searchbox > .devtools-searchinput:-moz-focusring,
+.devtools-searchbox > .devtools-filterinput:-moz-focusring {
+  border-color: var(--theme-focus-border-color-textbox);
+  box-shadow: var(--theme-focus-box-shadow-textbox);
+  transition: all 0.2s ease-in-out;
+  outline: none;
+}
+
+/* Don't add 'double spacing' for inputs that are at beginning / end
+   of a toolbar (since the toolbar has it's own spacing). */
+.devtools-toolbar > .devtools-textinput:first-child,
+.devtools-toolbar > .devtools-searchinput:first-child,
+.devtools-toolbar > .devtools-filterinput:first-child {
+  margin-inline-start: 0;
+}
+.devtools-toolbar > .devtools-textinput:last-child,
+.devtools-toolbar > .devtools-searchinput:last-child,
+.devtools-toolbar > .devtools-filterinput:last-child {
+  margin-inline-end: 0;
+}
+.devtools-toolbar > .devtools-searchbox:first-child {
+  padding-inline-start: 0;
+}
+.devtools-toolbar > .devtools-searchbox:last-child {
+  padding-inline-end: 0;
+}
+
+.devtools-rule-searchbox {
+  -moz-box-flex: 1;
+  width: 100%;
+}
+
+.devtools-rule-searchbox[filled] {
+  background-color: var(--searchbox-background-color);
+  border-color: var(--searchbox-border-color);
+  padding-inline-end: 23px;
+}
+
+.devtools-style-searchbox-no-match {
+  background-color: var(--searcbox-no-match-background-color) !important;
+  border-color: var(--searcbox-no-match-border-color) !important;
+}
+
+.devtools-searchinput-clear {
+  position: absolute;
+  top: 3.5px;
+  offset-inline-end: 7px;
+  padding: 0;
+  border: 0;
+  width: 16px;
+  height: 16px;
+  background-position: 0 0;
+  background-repeat: no-repeat;
+  background-color: transparent;
+}
+
+.devtools-searchinput-clear:dir(rtl) {
+  right: unset;
+  left: 7px;
+}
+
+.theme-dark .devtools-searchinput-clear {
+  background-image: url("chrome://devtools/skin/images/search-clear-dark.svg");
+}
+
+.theme-light .devtools-searchinput-clear {
+  background-image: url("chrome://devtools/skin/images/search-clear-light.svg");
+}
+
+.devtools-style-searchbox-no-match + .devtools-searchinput-clear {
+  background-image: url("chrome://devtools/skin/images/search-clear-failed.svg") !important;
+}
+
+.devtools-searchinput-clear:hover {
+  background-position: -16px 0;
+}
+
+.theme-dark .devtools-searchinput > .textbox-input-box > .textbox-search-icons > .textbox-search-clear,
+.theme-dark .devtools-filterinput > .textbox-input-box > .textbox-search-icons > .textbox-search-clear {
+  list-style-image: url("chrome://devtools/skin/images/search-clear-dark.svg");
+  -moz-image-region: rect(0, 16px, 16px, 0);
+}
+
+.theme-light .devtools-searchinput > .textbox-input-box > .textbox-search-icons > .textbox-search-clear,
+.theme-light .devtools-filterinput > .textbox-input-box > .textbox-search-icons > .textbox-search-clear {
+  list-style-image: url("chrome://devtools/skin/images/search-clear-light.svg");
+  -moz-image-region: rect(0, 16px, 16px, 0);
+}
+
+.devtools-searchinput > .textbox-input-box > .textbox-search-icons > .textbox-search-clear,
+.devtools-filterinput > .textbox-input-box > .textbox-search-icons > .textbox-search-clear {
+  margin-bottom: 0;
+}
+
+.devtools-searchinput > .textbox-input-box > .textbox-search-icons > .textbox-search-clear:hover,
+.devtools-filterinput > .textbox-input-box > .textbox-search-icons > .textbox-search-clear:hover {
+  -moz-image-region: rect(0, 32px, 16px, 16px);
+}
+
+/* Throbbers */
+.devtools-throbber::before {
+  content: "";
+  display: inline-block;
+  vertical-align: bottom;
+  margin-inline-end: 0.5em;
+  width: 1em;
+  height: 1em;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: 1.1s linear throbber-spin infinite;
+}
+
+@keyframes throbber-spin {
+  from {
+    transform: none;
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}

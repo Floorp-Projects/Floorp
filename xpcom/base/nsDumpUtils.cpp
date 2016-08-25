@@ -12,7 +12,7 @@
 #include "mozilla/Services.h"
 #include "nsIObserverService.h"
 #include "mozilla/ClearOnShutdown.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 
 #ifdef XP_UNIX // {
 #include "mozilla/Preferences.h"

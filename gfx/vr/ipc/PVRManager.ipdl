@@ -44,6 +44,10 @@ parent:
   // asynchronously to children via UpdateDisplayInfo.
   async RefreshDisplays();
 
+  // GetDisplays synchronously returns the VR displays that have already been
+  // enumerated by RefreshDisplays() but does not enumerate new ones.
+  sync GetDisplays() returns(VRDisplayInfo[] aDisplayInfo);
+
   // Reset the sensor of the display identified by aDisplayID so that the current
   // sensor state is the "Zero" position.
   async ResetSensor(uint32_t aDisplayID);

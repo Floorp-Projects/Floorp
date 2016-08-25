@@ -143,8 +143,9 @@ function test_resolve_type(type, host, callback) {
     uri: type + "://" + host + "/",
     loadUsingSystemPrincipal: true
   });
-  channel.notificationCallbacks =
-    AppsUtils.createLoadContext(MY_APP_ID, true);
+  channel.loadInfo.originAttributes = { appId: MY_APP_ID,
+                                        inIsolatedMozBrowser: true
+                                      };
 
   let req = pps.asyncResolve(channel, 0, new TestResolveCallback(type, host, callback));
 }

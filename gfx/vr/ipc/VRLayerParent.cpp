@@ -5,7 +5,7 @@
 
 
 #include "VRLayerParent.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 
 namespace mozilla {
 namespace gfx {

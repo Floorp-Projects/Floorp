@@ -127,6 +127,7 @@ enum class LogReason : int {
   TextureCreation,
   InvalidCacheSurface,
   AlphaWithBasicClient,
+  UnbalancedClipStack,
   // End
   MustBeLessThanThis = 101,
 };

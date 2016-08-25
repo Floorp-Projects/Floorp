@@ -10,7 +10,7 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/DebugOnly.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 
 #include "nsAtomTable.h"
 #include "nsStaticAtom.h"
