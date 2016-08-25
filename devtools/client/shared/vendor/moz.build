@@ -7,7 +7,6 @@ modules = []
 modules += [
     'immutable.js',
     'jsol.js',
-    'node-properties.js',
 ]
 
 # react-dev is used if either debug mode is enabled,
@@ -22,7 +21,6 @@ modules += [
     'react.js',
     'redux.js',
     'seamless-immutable.js',
-    'sprintf.js',
 ]
 
 DevToolsModules(*modules)

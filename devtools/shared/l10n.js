@@ -3,8 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const parsePropertiesFile = require("devtools/client/shared/vendor/node-properties");
-const { sprintf } = require("devtools/client/shared/vendor/sprintf");
+const parsePropertiesFile = require("devtools/shared/node-properties/node-properties");
+const { sprintf } = require("devtools/shared/sprintfjs/sprintf");
 
 /**
  * Localization convenience methods.
