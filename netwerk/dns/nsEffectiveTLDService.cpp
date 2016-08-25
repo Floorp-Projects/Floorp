@@ -127,10 +127,12 @@ NS_IMETHODIMP
 nsEffectiveTLDService::CollectReports(nsIHandleReportCallback* aHandleReport,
                                       nsISupports* aData, bool aAnonymize)
 {
-  return MOZ_COLLECT_REPORT(
+  MOZ_COLLECT_REPORT(
     "explicit/network/effective-TLD-service", KIND_HEAP, UNITS_BYTES,
     SizeOfIncludingThis(EffectiveTLDServiceMallocSizeOf),
     "Memory used by the effective TLD service.");
+
+  return NS_OK;
 }
 
 size_t

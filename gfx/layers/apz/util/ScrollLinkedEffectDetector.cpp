@@ -6,6 +6,7 @@
 #include "ScrollLinkedEffectDetector.h"
 
 #include "nsIDocument.h"
+#include "nsThreadUtils.h"
 
 namespace mozilla {
 namespace layers {

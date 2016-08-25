@@ -143,11 +143,6 @@ public:
   AllocPGMPServiceChild(mozilla::ipc::Transport* transport,
                         base::ProcessId otherProcess) override;
 
-  PAPZChild*
-  AllocPAPZChild(const TabId& aTabId) override;
-  bool
-  DeallocPAPZChild(PAPZChild* aActor) override;
-
   bool
   RecvInitCompositor(Endpoint<PCompositorBridgeChild>&& aEndpoint) override;
   bool
@@ -396,6 +391,8 @@ public:
   virtual bool RecvSetOffline(const bool& offline) override;
 
   virtual bool RecvSetConnectivity(const bool& connectivity) override;
+
+  virtual bool RecvNotifyLayerAllocated(const dom::TabId& aTabId, const uint64_t& aLayersId) override;
 
   virtual bool RecvSpeakerManagerNotify() override;
 

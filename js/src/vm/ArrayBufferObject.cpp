@@ -1180,6 +1180,10 @@ JS_GetArrayBufferData(JSObject* obj, bool* isSharedMemory, const JS::AutoCheckCa
 JS_FRIEND_API(bool)
 JS_DetachArrayBuffer(JSContext* cx, HandleObject obj)
 {
+    AssertHeapIsIdle(cx);
+    CHECK_REQUEST(cx);
+    assertSameCompartment(cx, obj);
+
     if (!obj->is<ArrayBufferObject>()) {
         JS_ReportError(cx, "ArrayBuffer object required");
         return false;
@@ -1214,6 +1218,8 @@ JS_IsDetachedArrayBufferObject(JSObject* obj)
 JS_FRIEND_API(JSObject*)
 JS_NewArrayBuffer(JSContext* cx, uint32_t nbytes)
 {
+    AssertHeapIsIdle(cx);
+    CHECK_REQUEST(cx);
     MOZ_ASSERT(nbytes <= INT32_MAX);
     return ArrayBufferObject::create(cx, nbytes);
 }
@@ -1221,6 +1227,8 @@ JS_NewArrayBuffer(JSContext* cx, uint32_t nbytes)
 JS_PUBLIC_API(JSObject*)
 JS_NewArrayBufferWithContents(JSContext* cx, size_t nbytes, void* data)
 {
+    AssertHeapIsIdle(cx);
+    CHECK_REQUEST(cx);
     MOZ_ASSERT_IF(!data, nbytes == 0);
     ArrayBufferObject::BufferContents contents =
         ArrayBufferObject::BufferContents::create<ArrayBufferObject::PLAIN>(data);
@@ -1231,6 +1239,8 @@ JS_NewArrayBufferWithContents(JSContext* cx, size_t nbytes, void* data)
 JS_PUBLIC_API(JSObject*)
 JS_NewArrayBufferWithExternalContents(JSContext* cx, size_t nbytes, void* data)
 {
+    AssertHeapIsIdle(cx);
+    CHECK_REQUEST(cx);
     MOZ_ASSERT_IF(!data, nbytes == 0);
     ArrayBufferObject::BufferContents contents =
         ArrayBufferObject::BufferContents::create<ArrayBufferObject::PLAIN>(data);
@@ -1270,6 +1280,10 @@ js::UnwrapSharedArrayBuffer(JSObject* obj)
 JS_PUBLIC_API(void*)
 JS_StealArrayBufferContents(JSContext* cx, HandleObject objArg)
 {
+    AssertHeapIsIdle(cx);
+    CHECK_REQUEST(cx);
+    assertSameCompartment(cx, objArg);
+
     JSObject* obj = CheckedUnwrap(objArg);
     if (!obj)
         return nullptr;
@@ -1291,12 +1305,16 @@ JS_StealArrayBufferContents(JSContext* cx, HandleObject objArg)
     // returning something that handles releasing the memory.
     bool hasStealableContents = buffer->hasStealableContents() && buffer->hasMallocedContents();
 
+    AutoCompartment ac(cx, buffer);
     return ArrayBufferObject::stealContents(cx, buffer, hasStealableContents).data();
 }
 
 JS_PUBLIC_API(JSObject*)
 JS_NewMappedArrayBufferWithContents(JSContext* cx, size_t nbytes, void* data)
 {
+    AssertHeapIsIdle(cx);
+    CHECK_REQUEST(cx);
+
     MOZ_ASSERT(data);
     ArrayBufferObject::BufferContents contents =
         ArrayBufferObject::BufferContents::create<ArrayBufferObject::MAPPED>(data);
@@ -1345,6 +1363,10 @@ JS_GetArrayBufferViewData(JSObject* obj, bool* isSharedMemory, const JS::AutoChe
 JS_FRIEND_API(JSObject*)
 JS_GetArrayBufferViewBuffer(JSContext* cx, HandleObject objArg, bool* isSharedMemory)
 {
+    AssertHeapIsIdle(cx);
+    CHECK_REQUEST(cx);
+    assertSameCompartment(cx, objArg);
+
     JSObject* obj = CheckedUnwrap(objArg);
     if (!obj)
         return nullptr;
@@ -1425,6 +1447,10 @@ js::GetArrayBufferLengthAndData(JSObject* obj, uint32_t* length, bool* isSharedM
 JSObject*
 js::InitArrayBufferClass(JSContext* cx, HandleObject obj)
 {
+    AssertHeapIsIdle(cx);
+    CHECK_REQUEST(cx);
+    assertSameCompartment(cx, obj);
+
     Rooted<GlobalObject*> global(cx, cx->compartment()->maybeGlobal());
     if (global->isStandardClassResolved(JSProto_ArrayBuffer))
         return &global->getPrototype(JSProto_ArrayBuffer).toObject();

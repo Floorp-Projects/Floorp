@@ -301,6 +301,8 @@ SharedArrayBufferObject::rawBufferObject() const
 void
 SharedArrayBufferObject::Finalize(FreeOp* fop, JSObject* obj)
 {
+    MOZ_ASSERT(fop->maybeOffMainThread());
+
     SharedArrayBufferObject& buf = obj->as<SharedArrayBufferObject>();
 
     // Detect the case of failure during SharedArrayBufferObject creation,
@@ -352,7 +354,7 @@ const Class SharedArrayBufferObject::class_ = {
     JSCLASS_DELAY_METADATA_BUILDER |
     JSCLASS_HAS_RESERVED_SLOTS(SharedArrayBufferObject::RESERVED_SLOTS) |
     JSCLASS_HAS_CACHED_PROTO(JSProto_SharedArrayBuffer) |
-    JSCLASS_FOREGROUND_FINALIZE,
+    JSCLASS_BACKGROUND_FINALIZE,
     &SharedArrayBufferObjectClassOps,
     JS_NULL_CLASS_SPEC,
     JS_NULL_CLASS_EXT

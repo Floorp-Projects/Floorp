@@ -48,12 +48,6 @@ JS_Assert(const char* s, const char* file, int ln);
 # include "jscustomallocator.h"
 #else
 
-#include "mozilla/Types.h"
-MOZ_BEGIN_EXTERN_C
-MFBT_API void malloc_protect(void* ptr, uint32_t* id);
-MFBT_API void malloc_unprotect(void* ptr, uint32_t* id);
-MOZ_END_EXTERN_C
-
 namespace js {
 namespace oom {
 
@@ -263,63 +257,6 @@ static inline void js_free(void* p)
     free(p);
 }
 
-/*
- * js_malloc_protect marks the region referenced by |ptr| as protected in
- * jemalloc by a unique ID. As a result, the region cannot be modified through
- * calls to allocation functions (realloc and free). Note that this only
- * protects against access through jemalloc - the memory can still be written
- * to by anyone.
- */
-static inline void js_malloc_protect(void* ptr, uint32_t* id)
-{
-    malloc_protect(ptr, id);
-}
-
-/*
- * js_malloc_unprotect must be called with the correct ID to release a
- * protected region before anyone can modify it. The |_protected| allocation
- * functions below automate this process of protecting and unprotecting memory.
- */
-static inline void js_malloc_unprotect(void* ptr, uint32_t* id)
-{
-    malloc_unprotect(ptr, id);
-}
-
-static inline void* js_malloc_protected(size_t bytes, uint32_t* id)
-{
-    void* ret = js_malloc(bytes);
-    js_malloc_protect(ret, id);
-    return ret;
-}
-
-static inline void* js_calloc_protected(size_t bytes, uint32_t* id)
-{
-    void* ret = js_calloc(bytes);
-    js_malloc_protect(ret, id);
-    return ret;
-}
-
-static inline void* js_calloc_protected(size_t nmemb, size_t size, uint32_t* id)
-{
-    void* ret = js_calloc(nmemb, size);
-    js_malloc_protect(ret, id);
-    return ret;
-}
-
-static inline void* js_realloc_protected(void* p, size_t bytes, uint32_t* id)
-{
-    js_malloc_unprotect(p, id);
-    void* ret = js_realloc(p, bytes);
-    js_malloc_protect(ret ? ret : p, id);
-    return ret;
-}
-
-static inline void js_free_protected(void* p, uint32_t* id)
-{
-    js_malloc_unprotect(p, id);
-    js_free(p);
-}
-
 static inline char* js_strdup(const char* s)
 {
     JS_OOM_POSSIBLY_FAIL();
@@ -502,34 +439,6 @@ js_pod_realloc(T* prior, size_t oldSize, size_t newSize)
     if (MOZ_UNLIKELY(!js::CalculateAllocSize<T>(newSize, &bytes)))
         return nullptr;
     return static_cast<T*>(js_realloc(prior, bytes));
-}
-
-template <class T>
-static MOZ_ALWAYS_INLINE T*
-js_pod_malloc_protected(size_t numElems, uint32_t* id)
-{
-    T* ret = js_pod_malloc<T>(numElems);
-    js_malloc_protect(ret, id);
-    return ret;
-}
-
-template <class T>
-static MOZ_ALWAYS_INLINE T*
-js_pod_calloc_protected(size_t numElems, uint32_t* id)
-{
-    T* ret = js_pod_calloc<T>(numElems);
-    js_malloc_protect(ret, id);
-    return ret;
-}
-
-template <class T>
-static MOZ_ALWAYS_INLINE T*
-js_pod_realloc_protected(T* prior, size_t oldSize, size_t newSize, uint32_t* id)
-{
-    js_malloc_unprotect(prior, id);
-    T* ret = js_pod_realloc<T>(prior, oldSize, newSize);
-    js_malloc_protect(ret ? ret : prior, id);
-    return ret;
 }
 
 namespace js {

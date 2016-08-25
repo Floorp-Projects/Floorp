@@ -12,10 +12,18 @@
 namespace mozilla {
 namespace layers {
 
-APZCTreeManagerParent::APZCTreeManagerParent(RefPtr<APZCTreeManager> aAPZCTreeManager)
-  : mTreeManager(aAPZCTreeManager)
+APZCTreeManagerParent::APZCTreeManagerParent(uint64_t aLayersId, RefPtr<APZCTreeManager> aAPZCTreeManager)
+  : mLayersId(aLayersId)
+  , mTreeManager(aAPZCTreeManager)
 {
   MOZ_ASSERT(aAPZCTreeManager != nullptr);
+}
+
+void
+APZCTreeManagerParent::ChildAdopted(RefPtr<APZCTreeManager> aAPZCTreeManager)
+{
+  MOZ_ASSERT(aAPZCTreeManager != nullptr);
+  mTreeManager = aAPZCTreeManager;
 }
 
 bool
@@ -138,6 +146,12 @@ APZCTreeManagerParent::RecvZoomToRect(
     const CSSRect& aRect,
     const uint32_t& aFlags)
 {
+  if (aGuid.mLayersId != mLayersId) {
+    // Guard against bad data from hijacked child processes
+    NS_ERROR("Unexpected layers id in RecvZoomToRect; dropping message...");
+    return false;
+  }
+
   mTreeManager->ZoomToRect(aGuid, aRect, aFlags);
   return true;
 }
@@ -147,7 +161,12 @@ APZCTreeManagerParent::RecvContentReceivedInputBlock(
     const uint64_t& aInputBlockId,
     const bool& aPreventDefault)
 {
-  mTreeManager->ContentReceivedInputBlock(aInputBlockId, aPreventDefault);
+  APZThreadUtils::RunOnControllerThread(
+    NewRunnableMethod<uint64_t, bool>(mTreeManager,
+      &IAPZCTreeManager::ContentReceivedInputBlock,
+      aInputBlockId,
+      aPreventDefault));
+
   return true;
 }
 
@@ -156,7 +175,22 @@ APZCTreeManagerParent::RecvSetTargetAPZC(
     const uint64_t& aInputBlockId,
     nsTArray<ScrollableLayerGuid>&& aTargets)
 {
-  mTreeManager->SetTargetAPZC(aInputBlockId, aTargets);
+  for (size_t i = 0; i < aTargets.Length(); i++) {
+    if (aTargets[i].mLayersId != mLayersId) {
+      // Guard against bad data from hijacked child processes
+      NS_ERROR("Unexpected layers id in RecvSetTargetAPZC; dropping message...");
+      return false;
+    }
+  }
+
+  void (IAPZCTreeManager::*setTargetApzcFunc)(uint64_t, const nsTArray<ScrollableLayerGuid>&)
+      = &IAPZCTreeManager::SetTargetAPZC;
+
+  APZThreadUtils::RunOnControllerThread(NewRunnableMethod
+                                        <uint64_t,
+                                         StoreCopyPassByRRef<nsTArray<ScrollableLayerGuid>>>
+                                        (mTreeManager, setTargetApzcFunc, aInputBlockId, aTargets));
+
   return true;
 }
 
@@ -165,6 +199,12 @@ APZCTreeManagerParent::RecvUpdateZoomConstraints(
     const ScrollableLayerGuid& aGuid,
     const MaybeZoomConstraints& aConstraints)
 {
+  if (aGuid.mLayersId != mLayersId) {
+    // Guard against bad data from hijacked child processes
+    NS_ERROR("Unexpected layers id in RecvUpdateZoomConstraints; dropping message...");
+    return false;
+  }
+
   mTreeManager->UpdateZoomConstraints(aGuid, aConstraints);
   return true;
 }
@@ -172,6 +212,12 @@ APZCTreeManagerParent::RecvUpdateZoomConstraints(
 bool
 APZCTreeManagerParent::RecvCancelAnimation(const ScrollableLayerGuid& aGuid)
 {
+  if (aGuid.mLayersId != mLayersId) {
+    // Guard against bad data from hijacked child processes
+    NS_ERROR("Unexpected layers id in RecvCancelAnimation; dropping message...");
+    return false;
+  }
+
   mTreeManager->CancelAnimation(aGuid);
   return true;
 }
@@ -195,7 +241,13 @@ APZCTreeManagerParent::RecvSetAllowedTouchBehavior(
     const uint64_t& aInputBlockId,
     nsTArray<TouchBehaviorFlags>&& aValues)
 {
-  mTreeManager->SetAllowedTouchBehavior(aInputBlockId, aValues);
+  APZThreadUtils::RunOnControllerThread(NewRunnableMethod
+                                        <uint64_t,
+                                         StoreCopyPassByRRef<nsTArray<TouchBehaviorFlags>>>
+                                        (mTreeManager,
+                                         &IAPZCTreeManager::SetAllowedTouchBehavior,
+                                         aInputBlockId, Move(aValues)));
+
   return true;
 }
 
@@ -204,7 +256,18 @@ APZCTreeManagerParent::RecvStartScrollbarDrag(
     const ScrollableLayerGuid& aGuid,
     const AsyncDragMetrics& aDragMetrics)
 {
-  mTreeManager->StartScrollbarDrag(aGuid, aDragMetrics);
+  if (aGuid.mLayersId != mLayersId) {
+    // Guard against bad data from hijacked child processes
+    NS_ERROR("Unexpected layers id in RecvStartScrollbarDrag; dropping message...");
+    return false;
+  }
+
+    APZThreadUtils::RunOnControllerThread(
+        NewRunnableMethod<ScrollableLayerGuid, AsyncDragMetrics>(
+          mTreeManager,
+          &IAPZCTreeManager::StartScrollbarDrag,
+          aGuid, aDragMetrics));
+
   return true;
 }
 

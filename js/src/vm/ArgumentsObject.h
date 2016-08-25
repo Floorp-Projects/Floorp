@@ -360,7 +360,7 @@ class ArgumentsObject : public NativeObject
         return getFixedSlotOffset(INITIAL_LENGTH_SLOT);
     }
 
-    static Value MagicScopeSlotValue(uint32_t slot) {
+    static Value MagicEnvSlotValue(uint32_t slot) {
         // When forwarding slots to a backing CallObject, the slot numbers are
         // stored as uint32 magic values. This raises an ambiguity if we have
         // also copied JS_OPTIMIZED_OUT magic from a JIT frame or

@@ -277,12 +277,13 @@ nsUrlClassifierPrefixSet::CollectReports(nsIHandleReportCallback* aHandleReport,
   // No need to get mLock here because this function does not directly touch
   // the class's data members. (SizeOfIncludingThis() will get mLock, however.)
 
-  size_t amount = SizeOfIncludingThis(UrlClassifierMallocSizeOf);
-
-  return aHandleReport->Callback(
-    EmptyCString(), mMemoryReportPath, KIND_HEAP, UNITS_BYTES, amount,
+  aHandleReport->Callback(
+    EmptyCString(), mMemoryReportPath, KIND_HEAP, UNITS_BYTES,
+    SizeOfIncludingThis(UrlClassifierMallocSizeOf),
     NS_LITERAL_CSTRING("Memory used by the prefix set for a URL classifier."),
     aData);
+
+  return NS_OK;
 }
 
 size_t

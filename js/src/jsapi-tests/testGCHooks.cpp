@@ -15,7 +15,7 @@ NonIncrementalGCSliceCallback(JSContext* cx, JS::GCProgress progress, const JS::
 {
     ++gSliceCallbackCount;
     MOZ_RELEASE_ASSERT(progress == JS::GC_CYCLE_BEGIN || progress == JS::GC_CYCLE_END);
-    MOZ_RELEASE_ASSERT(desc.isCompartment_ == false);
+    MOZ_RELEASE_ASSERT(desc.isZone_ == false);
     MOZ_RELEASE_ASSERT(desc.invocationKind_ == GC_NORMAL);
     MOZ_RELEASE_ASSERT(desc.reason_ == JS::gcreason::API);
     if (progress == JS::GC_CYCLE_END) {

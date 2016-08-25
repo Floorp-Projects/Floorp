@@ -111,12 +111,6 @@ DCFromDrawTarget::DCFromDrawTarget(DrawTarget& aDrawTarget)
   }
 }
 
-static const char *kFeatureLevelPref =
-  "gfx.direct3d.last_used_feature_level_idx";
-static const int kSupportedFeatureLevels[] =
-  { D3D10_FEATURE_LEVEL_10_1, D3D10_FEATURE_LEVEL_10_0 };
-
-
 class GfxD2DVramReporter final : public nsIMemoryReporter
 {
     ~GfxD2DVramReporter() {}
@@ -127,19 +121,15 @@ public:
     NS_IMETHOD CollectReports(nsIHandleReportCallback* aHandleReport,
                               nsISupports* aData, bool aAnonymize) override
     {
-        nsresult rv;
-
-        rv = MOZ_COLLECT_REPORT(
+        MOZ_COLLECT_REPORT(
             "gfx-d2d-vram-draw-target", KIND_OTHER, UNITS_BYTES,
             Factory::GetD2DVRAMUsageDrawTarget(),
             "Video memory used by D2D DrawTargets.");
-        NS_ENSURE_SUCCESS(rv, rv);
 
-        rv = MOZ_COLLECT_REPORT(
+        MOZ_COLLECT_REPORT(
             "gfx-d2d-vram-source-surface", KIND_OTHER, UNITS_BYTES,
             Factory::GetD2DVRAMUsageSourceSurface(),
             "Video memory used by D2D SourceSurfaces.");
-        NS_ENSURE_SUCCESS(rv, rv);
 
         return NS_OK;
     }
@@ -182,8 +172,8 @@ public:
     NS_DECL_ISUPPORTS
 
     NS_IMETHOD
-    CollectReports(nsIMemoryReporterCallback* aCb,
-                   nsISupports* aClosure, bool aAnonymize) override
+    CollectReports(nsIHandleReportCallback* aHandleReport, nsISupports* aData,
+                   bool aAnonymize) override
     {
         HANDLE ProcessHandle = GetCurrentProcess();
 
@@ -264,26 +254,20 @@ public:
 
         FreeLibrary(gdi32Handle);
 
-#define REPORT(_path, _amount, _desc)                                         \
-    do {                                                                      \
-      nsresult rv;                                                            \
-      rv = aCb->Callback(EmptyCString(), NS_LITERAL_CSTRING(_path),           \
-                         KIND_OTHER, UNITS_BYTES, _amount,                    \
-                         NS_LITERAL_CSTRING(_desc), aClosure);                \
-      NS_ENSURE_SUCCESS(rv, rv);                                              \
-    } while (0)
+        MOZ_COLLECT_REPORT(
+            "gpu-committed", KIND_OTHER, UNITS_BYTES, committedBytesUsed,
+            "Memory committed by the Windows graphics system.");
 
-        REPORT("gpu-committed", committedBytesUsed,
-               "Memory committed by the Windows graphics system.");
+        MOZ_COLLECT_REPORT(
+            "gpu-dedicated", KIND_OTHER, UNITS_BYTES,
+            dedicatedBytesUsed,
+            "Out-of-process memory allocated for this process in a physical "
+            "GPU adapter's memory.");
 
-        REPORT("gpu-dedicated", dedicatedBytesUsed,
-               "Out-of-process memory allocated for this process in a "
-               "physical GPU adapter's memory.");
-
-        REPORT("gpu-shared", sharedBytesUsed,
-               "In-process memory that is shared with the GPU.");
-
-#undef REPORT
+        MOZ_COLLECT_REPORT(
+            "gpu-shared", KIND_OTHER, UNITS_BYTES,
+            sharedBytesUsed,
+            "In-process memory that is shared with the GPU.");
 
         return NS_OK;
     }
@@ -304,22 +288,18 @@ public:
   NS_IMETHOD CollectReports(nsIHandleReportCallback *aHandleReport,
                             nsISupports* aData, bool aAnonymize) override
   {
-    nsresult rv;
-
     if (gfxWindowsPlatform::sD3D11SharedTextures > 0) {
-      rv = MOZ_COLLECT_REPORT(
+      MOZ_COLLECT_REPORT(
         "d3d11-shared-textures", KIND_OTHER, UNITS_BYTES,
         gfxWindowsPlatform::sD3D11SharedTextures,
         "D3D11 shared textures.");
-      NS_ENSURE_SUCCESS(rv, rv);
     }
 
     if (gfxWindowsPlatform::sD3D9SharedTextures > 0) {
-      rv = MOZ_COLLECT_REPORT(
+      MOZ_COLLECT_REPORT(
         "d3d9-shared-textures", KIND_OTHER, UNITS_BYTES,
         gfxWindowsPlatform::sD3D9SharedTextures,
         "D3D9 shared textures.");
-      NS_ENSURE_SUCCESS(rv, rv);
     }
 
     return NS_OK;
@@ -1706,7 +1686,6 @@ public:
         , mVsyncEnabled(false)
       {
         mVsyncThread = new base::Thread("WindowsVsyncThread");
-        const double rate = 1000 / 60.0;
         MOZ_RELEASE_ASSERT(mVsyncThread->Start(), "GFX: Could not start Windows vsync thread");
         SetVsyncRate();
       }

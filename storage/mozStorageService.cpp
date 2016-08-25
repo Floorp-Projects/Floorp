@@ -90,7 +90,7 @@ StorageSQLiteDistinguishedAmount()
  * @param aTotal
  *        The accumulator for the measurement.
  */
-nsresult
+static void
 ReportConn(nsIHandleReportCallback *aHandleReport,
            nsISupports *aData,
            Connection *aConn,
@@ -105,14 +105,11 @@ ReportConn(nsIHandleReportCallback *aHandleReport,
   path.AppendLiteral("-used");
 
   int32_t val = aConn->getSqliteRuntimeStatus(aOption);
-  nsresult rv = aHandleReport->Callback(EmptyCString(), path,
-                                        nsIMemoryReporter::KIND_HEAP,
-                                        nsIMemoryReporter::UNITS_BYTES,
-                                        int64_t(val), aDesc, aData);
-  NS_ENSURE_SUCCESS(rv, rv);
+  aHandleReport->Callback(EmptyCString(), path,
+                          nsIMemoryReporter::KIND_HEAP,
+                          nsIMemoryReporter::UNITS_BYTES,
+                          int64_t(val), aDesc, aData);
   *aTotal += val;
-
-  return NS_OK;
 }
 
 // Warning: To get a Connection's measurements requires holding its lock.
@@ -125,7 +122,6 @@ NS_IMETHODIMP
 Service::CollectReports(nsIHandleReportCallback *aHandleReport,
                         nsISupports *aData, bool aAnonymize)
 {
-  nsresult rv;
   size_t totalConnSize = 0;
   {
     nsTArray<RefPtr<Connection> > connections;
@@ -151,26 +147,23 @@ Service::CollectReports(nsIHandleReportCallback *aHandleReport,
       NS_NAMED_LITERAL_CSTRING(stmtDesc,
         "Memory (approximate) used by all prepared statements used by "
         "connections to this database.");
-      rv = ReportConn(aHandleReport, aData, conn, pathHead,
-                      NS_LITERAL_CSTRING("stmt"), stmtDesc,
-                      SQLITE_DBSTATUS_STMT_USED, &totalConnSize);
-      NS_ENSURE_SUCCESS(rv, rv);
+      ReportConn(aHandleReport, aData, conn, pathHead,
+                 NS_LITERAL_CSTRING("stmt"), stmtDesc,
+                 SQLITE_DBSTATUS_STMT_USED, &totalConnSize);
 
       NS_NAMED_LITERAL_CSTRING(cacheDesc,
         "Memory (approximate) used by all pager caches used by connections "
         "to this database.");
-      rv = ReportConn(aHandleReport, aData, conn, pathHead,
-                      NS_LITERAL_CSTRING("cache"), cacheDesc,
-                      SQLITE_DBSTATUS_CACHE_USED, &totalConnSize);
-      NS_ENSURE_SUCCESS(rv, rv);
+      ReportConn(aHandleReport, aData, conn, pathHead,
+                 NS_LITERAL_CSTRING("cache"), cacheDesc,
+                 SQLITE_DBSTATUS_CACHE_USED, &totalConnSize);
 
       NS_NAMED_LITERAL_CSTRING(schemaDesc,
         "Memory (approximate) used to store the schema for all databases "
         "associated with connections to this database.");
-      rv = ReportConn(aHandleReport, aData, conn, pathHead,
-                      NS_LITERAL_CSTRING("schema"), schemaDesc,
-                      SQLITE_DBSTATUS_SCHEMA_USED, &totalConnSize);
-      NS_ENSURE_SUCCESS(rv, rv);
+      ReportConn(aHandleReport, aData, conn, pathHead,
+                 NS_LITERAL_CSTRING("schema"), schemaDesc,
+                 SQLITE_DBSTATUS_SCHEMA_USED, &totalConnSize);
     }
 
 #ifdef MOZ_DMD
@@ -183,13 +176,9 @@ Service::CollectReports(nsIHandleReportCallback *aHandleReport,
 
   int64_t other = ::sqlite3_memory_used() - totalConnSize;
 
-  rv = aHandleReport->Callback(
-          EmptyCString(),
-          NS_LITERAL_CSTRING("explicit/storage/sqlite/other"),
-          KIND_HEAP, UNITS_BYTES, other,
-          NS_LITERAL_CSTRING("All unclassified sqlite memory."),
-          aData);
-  NS_ENSURE_SUCCESS(rv, rv);
+  MOZ_COLLECT_REPORT(
+    "explicit/storage/sqlite/other", KIND_HEAP, UNITS_BYTES, other,
+    "All unclassified sqlite memory.");
 
   return NS_OK;
 }

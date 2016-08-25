@@ -208,7 +208,6 @@ class ModuleObject : public NativeObject
     enum
     {
         ScriptSlot = 0,
-        StaticScopeSlot,
         InitialEnvironmentSlot,
         EnvironmentSlot,
         NamespaceSlot,
@@ -233,7 +232,7 @@ class ModuleObject : public NativeObject
 
     static bool isInstance(HandleValue value);
 
-    static ModuleObject* create(ExclusiveContext* cx, HandleObject enclosingStaticScope);
+    static ModuleObject* create(ExclusiveContext* cx);
     void init(HandleScript script);
     void setInitialEnvironment(Handle<ModuleEnvironmentObject*> initialEnvironment);
     void initImportExportData(HandleArrayObject requestedModules,
@@ -245,10 +244,10 @@ class ModuleObject : public NativeObject
 #ifdef DEBUG
     static bool IsFrozen(JSContext* cx, HandleModuleObject self);
 #endif
-    void fixScopesAfterCompartmentMerge(JSContext* cx);
+    void fixEnvironmentsAfterCompartmentMerge(JSContext* cx);
 
     JSScript* script() const;
-    JSObject* enclosingStaticScope() const;
+    Scope* enclosingScope() const;
     ModuleEnvironmentObject& initialEnvironment() const;
     ModuleEnvironmentObject* environment() const;
     ModuleNamespaceObject* namespace_();
