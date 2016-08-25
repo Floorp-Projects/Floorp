@@ -1944,7 +1944,7 @@ ReportZoneStats(const JS::ZoneStats& zStats,
 
     ZCREPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("lazy-scripts/malloc-heap"),
         zStats.lazyScriptsMallocHeap,
-        "Lazy script tables containing free variables or inner functions.");
+        "Lazy script tables containing closed-over bindings or inner functions.");
 
     ZCREPORT_GC_BYTES(pathPrefix + NS_LITERAL_CSTRING("jit-codes-gc-heap"),
         zStats.jitCodesGCHeap,
@@ -1957,6 +1957,14 @@ ReportZoneStats(const JS::ZoneStats& zStats,
     ZCREPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("object-groups/malloc-heap"),
         zStats.objectGroupsMallocHeap,
         "Object group addenda.");
+
+    ZCREPORT_GC_BYTES(pathPrefix + NS_LITERAL_CSTRING("scopes/gc-heap"),
+        zStats.scopesGCHeap,
+        "Scope information for scripts.");
+
+    ZCREPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("scopes/malloc-heap"),
+        zStats.scopesMallocHeap,
+        "Arrays of binding names and other binding-related data.");
 
     ZCREPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("type-pool"),
         zStats.typePool,
@@ -2957,6 +2965,10 @@ JSReporter::CollectReports(WindowPaths* windowPaths,
         KIND_OTHER, rtStats.zTotals.unusedGCThings.objectGroup,
         "Unused object group cells within non-empty arenas.");
 
+    REPORT_BYTES(NS_LITERAL_CSTRING("js-main-runtime-gc-heap-committed/unused/gc-things/scopes"),
+        KIND_OTHER, rtStats.zTotals.unusedGCThings.scope,
+        "Unused scope cells within non-empty arenas.");
+
     REPORT_BYTES(NS_LITERAL_CSTRING("js-main-runtime-gc-heap-committed/unused/gc-things/scripts"),
         KIND_OTHER, rtStats.zTotals.unusedGCThings.script,
         "Unused script cells within non-empty arenas.");
@@ -3003,6 +3015,10 @@ JSReporter::CollectReports(WindowPaths* windowPaths,
     MREPORT_BYTES(NS_LITERAL_CSTRING("js-main-runtime-gc-heap-committed/used/gc-things/object-groups"),
         KIND_OTHER, rtStats.zTotals.objectGroupsGCHeap,
         "Used object group cells.");
+
+    MREPORT_BYTES(NS_LITERAL_CSTRING("js-main-runtime-gc-heap-committed/used/gc-things/scopes"),
+        KIND_OTHER, rtStats.zTotals.scopesGCHeap,
+        "Used scope cells.");
 
     MREPORT_BYTES(NS_LITERAL_CSTRING("js-main-runtime-gc-heap-committed/used/gc-things/scripts"),
         KIND_OTHER, rtStats.cTotals.scriptsGCHeap,
