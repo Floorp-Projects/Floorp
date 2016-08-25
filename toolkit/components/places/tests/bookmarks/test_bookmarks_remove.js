@@ -190,8 +190,8 @@ add_task(function* test_nested_content_fails_when_not_allowed() {
   let folder2 = yield PlacesUtils.bookmarks.insert({ parentGuid: folder1.guid,
                                                      type: PlacesUtils.bookmarks.TYPE_FOLDER,
                                                      title: "a folder" });
-  Assert.rejects(PlacesUtils.bookmarks.remove(folder1, {preventRemovalOfNonEmptyFolders: true}),
-                 /Cannot remove a non-empty folder./);
+  yield Assert.rejects(PlacesUtils.bookmarks.remove(folder1, {preventRemovalOfNonEmptyFolders: true}),
+                       /Cannot remove a non-empty folder./);
 });
 
 function run_test() {
