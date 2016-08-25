@@ -1971,12 +1971,6 @@ nsWindow::MakeFullScreen(bool aFullScreen, nsIScreen*)
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsWindow::SetWindowClass(const nsAString& xulWinType)
-{
-    return NS_OK;
-}
-
 mozilla::layers::LayerManager*
 nsWindow::GetLayerManager(PLayerTransactionChild*, LayersBackend, LayerManagerPersistence)
 {

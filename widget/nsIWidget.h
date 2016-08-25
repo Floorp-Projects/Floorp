@@ -1104,7 +1104,7 @@ class nsIWidget : public nsISupports
      *
      * Ignored on child widgets and on non-Mac platforms.
      */
-    NS_IMETHOD SetWindowShadowStyle(int32_t aStyle) = 0;
+    virtual void SetWindowShadowStyle(int32_t aStyle) = 0;
 
     /*
      * On Mac OS X, this method shows or hides the pill button in the titlebar
@@ -1386,7 +1386,7 @@ class nsIWidget : public nsISupports
     /**
      * Classify the window for the window manager. Mostly for X11.
      */
-    NS_IMETHOD SetWindowClass(const nsAString& xulWinType) = 0;
+    virtual void SetWindowClass(const nsAString& xulWinType) = 0;
 
     /**
      * Enables/Disables system capture of any and all events that would cause a
@@ -1432,7 +1432,7 @@ class nsIWidget : public nsISupports
      * @param aActive Whether the color should be applied to active or inactive
      *                windows.
      */
-    NS_IMETHOD SetWindowTitlebarColor(nscolor aColor, bool aActive) = 0;
+    virtual void SetWindowTitlebarColor(nscolor aColor, bool aActive) = 0;
 
     /**
      * If set to true, the window will draw its contents into the titlebar

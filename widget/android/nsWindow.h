@@ -168,9 +168,6 @@ public:
     virtual nsresult MakeFullScreen(bool aFullScreen,
                                     nsIScreen* aTargetScreen = nullptr)
                                     override;
-    NS_IMETHOD SetWindowClass(const nsAString& xulWinType) override;
-
-
 
     NS_IMETHOD SetCursor(nsCursor aCursor) override { return NS_ERROR_NOT_IMPLEMENTED; }
     NS_IMETHOD SetCursor(imgIContainer* aCursor,
