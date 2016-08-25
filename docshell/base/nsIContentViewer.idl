@@ -203,12 +203,19 @@ interface nsIContentViewer : nsISupports
   /** The amount by which to scale all lengths. Default is 1.0. */
   attribute float fullZoom;
 
+  /**
+   * The value used to override devicePixelRatio and media queries dppx.
+   * Default is 0.0, that means no overriding is done (only a positive value
+   * is applied).
+   */
+  attribute float overrideDPPX;
+
   /** Disable entire author style level (including HTML presentation hints) */
   attribute boolean authorStyleDisabled;
 
   /**
-   * XXX comm-central only: bug 829543. Not the Character Encoding menu in 
-     * browser!
+   * XXX comm-central only: bug 829543. Not the Character Encoding menu in
+   * browser!
    */
   attribute ACString forceCharacterSet;
 
