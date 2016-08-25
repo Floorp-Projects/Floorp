@@ -5,17 +5,13 @@
 
 /* Tests both Copy URL and Copy Data URL context menu items */
 
-const PROPERTIES_URL = "chrome://devtools-shared/locale/styleinspector.properties";
 const TEST_DATA_URI = "data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACwAAAAAAQABAAACAkQBADs=";
 
 // Invalid URL still needs to be reachable otherwise getImageDataUrl will
 // timeout.  DevTools chrome:// URLs aren't content accessible, so use some
 // random resource:// URL here.
 const INVALID_IMAGE_URI = "resource://devtools/client/definitions.js";
-
-const ERROR_MESSAGE = Services.strings
-  .createBundle(PROPERTIES_URL)
-  .GetStringFromName("styleinspector.copyImageDataUrlError");
+const ERROR_MESSAGE = STYLE_INSPECTOR_L10N.getStr("styleinspector.copyImageDataUrlError");
 
 add_task(function* () {
   const TEST_URI = `<style type="text/css">
@@ -79,9 +75,9 @@ function* testCopyUrlToClipboard({view, inspector}, type, selector, expected) {
   info("Simulate right click on the background-image URL");
   let allMenuItems = openStyleContextMenuAndGetAllItems(view, imageLink);
   let menuitemCopyUrl = allMenuItems.find(item => item.label ===
-    _STRINGS.GetStringFromName("styleinspector.contextmenu.copyUrl"));
+    STYLE_INSPECTOR_L10N.getStr("styleinspector.contextmenu.copyUrl"));
   let menuitemCopyImageDataUrl = allMenuItems.find(item => item.label ===
-    _STRINGS.GetStringFromName("styleinspector.contextmenu.copyImageDataUrl"));
+    STYLE_INSPECTOR_L10N.getStr("styleinspector.contextmenu.copyImageDataUrl"));
 
   info("Context menu is displayed");
   ok(menuitemCopyUrl.visible,
