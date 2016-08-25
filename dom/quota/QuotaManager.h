@@ -185,6 +185,14 @@ public:
                  const nsACString& aOrigin,
                  const nsAString& aPath);
 
+  Nullable<bool>
+  OriginPersisted(const nsACString& aGroup,
+                  const nsACString& aOrigin);
+
+  void
+  PersistOrigin(const nsACString& aGroup,
+                const nsACString& aOrigin);
+
   // Called when a process is being shot down. Aborts any running operations
   // for the given process.
   void
@@ -201,6 +209,7 @@ public:
   nsresult
   GetDirectoryMetadata2(nsIFile* aDirectory,
                         int64_t* aTimestamp,
+                        bool* aPersisted,
                         nsACString& aSuffix,
                         nsACString& aGroup,
                         nsACString& aOrigin);
@@ -209,17 +218,21 @@ public:
   GetDirectoryMetadata2WithRestore(nsIFile* aDirectory,
                                    bool aPersistent,
                                    int64_t* aTimestamp,
+                                   bool* aPersisted,
                                    nsACString& aSuffix,
                                    nsACString& aGroup,
                                    nsACString& aOrigin);
 
   nsresult
-  GetDirectoryMetadata2(nsIFile* aDirectory, int64_t* aTimestamp);
+  GetDirectoryMetadata2(nsIFile* aDirectory,
+                        int64_t* aTimestamp,
+                        bool* aPersisted);
 
   nsresult
   GetDirectoryMetadata2WithRestore(nsIFile* aDirectory,
                                    bool aPersistent,
-                                   int64_t* aTimestamp);
+                                   int64_t* aTimestamp,
+                                   bool* aPersisted);
 
   // This is the main entry point into the QuotaManager API.
   // Any storage API implementation (quota client) that participates in
@@ -437,6 +450,11 @@ private:
   LockedRemoveQuotaForOrigin(PersistenceType aPersistenceType,
                              const nsACString& aGroup,
                              const nsACString& aOrigin);
+
+  already_AddRefed<OriginInfo>
+  LockedGetOriginInfo(PersistenceType aPersistenceType,
+                      const nsACString& aGroup,
+                      const nsACString& aOrigin);
 
   nsresult
   MaybeUpgradeIndexedDBDirectory();
