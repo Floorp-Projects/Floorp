@@ -166,7 +166,7 @@ public:
   NS_IMETHOD              DispatchEvent(mozilla::WidgetGUIEvent* aEvent,
                                         nsEventStatus& aStatus) override;
   virtual void            EnableDragDrop(bool aEnable) override;
-  NS_IMETHOD              CaptureMouse(bool aCapture) override;
+  virtual void            CaptureMouse(bool aCapture) override;
   virtual void            CaptureRollupEvents(nsIRollupListener* aListener,
                                               bool aDoCapture) override;
   NS_IMETHOD              GetAttention(int32_t aCycleCount) override;

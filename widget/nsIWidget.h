@@ -1381,7 +1381,7 @@ class nsIWidget : public nsISupports
      * @param aCapture true enables mouse capture, false disables mouse capture
      *
      */
-    NS_IMETHOD CaptureMouse(bool aCapture) = 0;
+    virtual void CaptureMouse(bool aCapture) = 0;
 
     /**
      * Classify the window for the window manager. Mostly for X11.
