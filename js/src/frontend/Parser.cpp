@@ -4868,16 +4868,13 @@ Parser<ParseHandler>::consequentOrAlternative(YieldHandling yieldHandling)
         return null();
 
     if (next == TOK_FUNCTION) {
-        tokenStream.consumeKnownToken(next, TokenStream::Operand);
-
-        // In non-strict code, apply Annex B.3.4 to allow FunctionDeclaration
-        // as the consequent/alternative of an |if| or |else|.
-        if (!pc->sc()->strict())
+        // Apply Annex B.3.4 in non-strict code to allow FunctionDeclaration as
+        // the consequent/alternative of an |if| or |else|.  Parser::statement
+        // will report the strict mode error.
+        if (!pc->sc()->strict()) {
+            tokenStream.consumeKnownToken(next, TokenStream::Operand);
             return functionStmt(yieldHandling, NameRequired);
-
-        // Otherwise the FunctionDeclaration is in error.
-        report(ParseError, false, null(), JSMSG_FUNCTION_AS_IFELSE_KID);
-        return null();
+        }
     }
 
     return statement(yieldHandling);
@@ -5081,13 +5078,24 @@ Parser<ParseHandler>::forHeadStart(YieldHandling yieldHandling,
         parsingLexicalDeclaration = true;
         tokenStream.consumeKnownToken(tt, TokenStream::Operand);
     } else if (tt == TOK_NAME && tokenStream.nextName() == context->names().let) {
-        // Check for the backwards-compatibility corner case in sloppy
-        // mode like |for (let in e)| where the 'let' token should be
-        // parsed as an identifier.
-        if (!peekShouldParseLetDeclaration(&parsingLexicalDeclaration, TokenStream::Operand))
+        MOZ_ASSERT(!pc->sc()->strict(),
+                   "should parse |let| as TOK_LET in strict mode code");
+
+        // We could have a {For,Lexical}Declaration, or we could have a
+        // LeftHandSideExpression with lookahead restrictions so it's not
+        // ambiguous with the former.  Check for a continuation of the former
+        // to decide which we have.
+        tokenStream.consumeKnownToken(TOK_NAME, TokenStream::Operand);
+
+        TokenKind next;
+        if (!tokenStream.peekToken(&next))
             return false;
 
-        letIsIdentifier = !parsingLexicalDeclaration;
+        parsingLexicalDeclaration = nextTokenContinuesLetDeclaration(next, yieldHandling);
+        if (!parsingLexicalDeclaration) {
+            tokenStream.ungetToken();
+            letIsIdentifier = true;
+        }
     }
 
     if (parsingLexicalDeclaration) {
@@ -6395,72 +6403,54 @@ Parser<SyntaxParseHandler>::classDefinition(YieldHandling yieldHandling,
     return SyntaxParseHandler::NodeFailure;
 }
 
-template <typename ParseHandler>
+template <class ParseHandler>
 bool
-Parser<ParseHandler>::shouldParseLetDeclaration(bool* parseDeclOut)
+Parser<ParseHandler>::nextTokenContinuesLetDeclaration(TokenKind next, YieldHandling yieldHandling)
 {
-    TokenKind tt;
-    if (!tokenStream.peekToken(&tt))
-        return false;
-
-    if (tt == TOK_NAME) {
-        // |let| followed by a name is a lexical declaration.  This is so even
-        // if the name is on a new line.  ASI applies *only* if an offending
-        // token not allowed by the grammar is encountered, and there's no
-        // [no LineTerminator here] restriction in LexicalDeclaration or
-        // ForDeclaration forbidding a line break.
-        //
-        // It's a tricky point, but this is true *even if* the name is "let", a
-        // name that can't be bound by LexicalDeclaration or ForDeclaration.
-        // Per ES6 5.3, static semantics early errors are validated *after*
-        // determining productions matching the source text.  So in this
-        // example:
-        //
-        //   let   // ASI opportunity...except not
-        //   let;
-        //
-        // the text matches LexicalDeclaration.  *Then* static semantics in
-        // ES6 13.3.1.1 (corresponding to the LexicalDeclaration production
-        // just chosen), per ES6 5.3, are validated to recognize the Script as
-        // invalid.  It can't be evaluated, so a SyntaxError is thrown.
-        *parseDeclOut = true;
-    } else if (tt == TOK_LB || tt == TOK_LC) {
-        *parseDeclOut = true;
-    } else {
-        // Whatever we have isn't a declaration.  Either it's an expression, or
-        // it's invalid: expression-parsing code will decide.
-        *parseDeclOut = false;
-    }
-
-    return true;
-}
-
-template <typename ParseHandler>
-bool
-Parser<ParseHandler>::peekShouldParseLetDeclaration(bool* parseDeclOut,
-                                                    TokenStream::Modifier modifier)
-{
-    // 'let' is a reserved keyword in strict mode and we shouldn't get here.
-    MOZ_ASSERT(!pc->sc()->strict());
-
-    *parseDeclOut = false;
+    MOZ_ASSERT(tokenStream.isCurrentTokenType(TOK_NAME),
+               "TOK_LET should have been summarily considered a "
+               "LexicalDeclaration");
+    MOZ_ASSERT(tokenStream.currentName() == context->names().let);
 
 #ifdef DEBUG
-    TokenKind tt;
-    if (!tokenStream.peekToken(&tt, modifier))
-        return false;
-    MOZ_ASSERT(tt == TOK_NAME && tokenStream.nextName() == context->names().let);
+    TokenKind verify;
+    MOZ_ALWAYS_TRUE(tokenStream.peekToken(&verify));
+    MOZ_ASSERT(next == verify);
 #endif
 
-    tokenStream.consumeKnownToken(TOK_NAME, modifier);
-    if (!shouldParseLetDeclaration(parseDeclOut))
+    // Destructuring is (for once) the easy case.
+    if (next == TOK_LB || next == TOK_LC)
+        return true;
+
+    // Otherwise a let declaration must have a name.
+    if (next == TOK_NAME) {
+        // One non-"yield" TOK_NAME edge case deserves special comment.
+        // Consider this:
+        //
+        //   let     // not an ASI opportunity
+        //   let;
+        //
+        // Static semantics in §13.3.1.1 turn a LexicalDeclaration that binds
+        // "let" into an early error.  Does this retroactively permit ASI so
+        // that we should parse this as two ExpressionStatements?   No.  ASI
+        // resolves during parsing.  Static semantics only apply to the full
+        // parse tree with ASI applied.  No backsies!
+        if (tokenStream.nextName() != context->names().yield)
+            return true;
+    } else if (next != TOK_YIELD) {
         return false;
+    }
 
-    // Unget the TOK_NAME of 'let' if not parsing a declaration.
-    if (!*parseDeclOut)
-        tokenStream.ungetToken();
-
-    return true;
+    // We have the name "yield": the grammar parameter exactly states whether
+    // this is okay.  Even if YieldIsKeyword, the code might be valid if ASI
+    // induces a preceding semicolon.  If YieldIsName, the code is valid
+    // outside strict mode, and declaration-parsing code will enforce strict
+    // mode restrictions.
+    //
+    // No checkYieldNameValidity for TOK_YIELD is needed here.  It'll happen
+    // when TOK_YIELD is consumed as BindingIdentifier or as start of a fresh
+    // Statement.
+    return yieldHandling == YieldIsName;
 }
 
 template <typename ParseHandler>
@@ -6477,7 +6467,7 @@ Parser<ParseHandler>::variableStatement(YieldHandling yieldHandling)
 
 template <typename ParseHandler>
 typename ParseHandler::Node
-Parser<ParseHandler>::statement(YieldHandling yieldHandling, bool canHaveDirectives)
+Parser<ParseHandler>::statement(YieldHandling yieldHandling)
 {
     MOZ_ASSERT(checkOptionsCalled);
 
@@ -6501,17 +6491,6 @@ Parser<ParseHandler>::statement(YieldHandling yieldHandling, bool canHaveDirecti
         return handler.newEmptyStatement(pos());
 
       // ExpressionStatement[?Yield].
-      //
-      // These should probably be handled by a single ExpressionStatement
-      // function in a default, not split up this way.
-      case TOK_STRING:
-        if (!canHaveDirectives && tokenStream.currentToken().atom() == context->names().useAsm) {
-            if (!abortIfSyntaxParser())
-                return null();
-            if (!report(ParseWarning, false, null(), JSMSG_USE_ASM_DIRECTIVE_FAIL))
-                return null();
-        }
-        return expressionStatement(yieldHandling);
 
       case TOK_YIELD: {
         // Don't use a ternary operator here due to obscure linker issues
@@ -6534,29 +6513,58 @@ Parser<ParseHandler>::statement(YieldHandling yieldHandling, bool canHaveDirecti
       }
 
       case TOK_NAME: {
-        // 'let' is a contextual keyword outside strict mode.  In strict mode
-        // it's always tokenized as TOK_LET except in this one weird case:
-        //
-        //   "use strict" // ExpressionStatement, terminated by ASI
-        //   let a = 1;   // LexicalDeclaration
-        //
-        // We can't apply strict mode until we know "use strict" is the entire
-        // statement, but we can't know "use strict" is the entire statement
-        // until we see the next token.  So 'let' is still TOK_NAME here.
-        if (tokenStream.currentName() == context->names().let) {
-            bool parseDecl;
-            if (!shouldParseLetDeclaration(&parseDecl))
-                return null();
-
-            if (parseDecl)
-                return lexicalDeclaration(yieldHandling, /* isConst = */ false);
-        }
-
         TokenKind next;
         if (!tokenStream.peekToken(&next))
             return null();
+
+#ifdef DEBUG
+        if (tokenStream.currentName() == context->names().let) {
+            MOZ_ASSERT(!pc->sc()->strict(),
+                       "observing |let| as TOK_NAME and not TOK_LET implies "
+                       "non-strict code (and the edge case of 'use strict' "
+                       "immediately followed by |let| on a new line only "
+                       "applies to StatementListItems, not to Statements)");
+        }
+#endif
+
+        // Statement context forbids LexicalDeclaration.
+        if ((next == TOK_LB || next == TOK_LC || next == TOK_NAME) &&
+            tokenStream.currentName() == context->names().let)
+        {
+            bool forbiddenLetDeclaration = false;
+            if (next == TOK_LB) {
+                // ExpressionStatement has a 'let [' lookahead restriction.
+                forbiddenLetDeclaration = true;
+            } else {
+                // 'let {' and 'let foo' aren't completely forbidden, if ASI
+                // causes 'let' to be the entire Statement.  But if they're
+                // same-line, we can aggressively give a better error message.
+                //
+                // Note that this ignores 'yield' as TOK_YIELD: we'll handle it
+                // correctly but with a worse error message.
+                TokenKind nextSameLine;
+                if (!tokenStream.peekTokenSameLine(&nextSameLine))
+                    return null();
+
+                MOZ_ASSERT(nextSameLine == TOK_NAME ||
+                           nextSameLine == TOK_LC ||
+                           nextSameLine == TOK_EOL);
+
+                forbiddenLetDeclaration = nextSameLine != TOK_EOL;
+            }
+
+            if (forbiddenLetDeclaration) {
+                report(ParseError, false, null(), JSMSG_FORBIDDEN_AS_STATEMENT,
+                       "lexical declarations");
+                return null();
+            }
+        }
+
+        // NOTE: It's unfortunately allowed to have a label named 'let' in
+        //       non-strict code.  💯
         if (next == TOK_COLON)
             return labeledStatement(yieldHandling);
+
         return expressionStatement(yieldHandling);
       }
 
@@ -6625,24 +6633,17 @@ Parser<ParseHandler>::statement(YieldHandling yieldHandling, bool canHaveDirecti
       case TOK_DEBUGGER:
         return debuggerStatement();
 
-      // HoistableDeclaration[?Yield]
+      // |function| is forbidden by lookahead restriction (unless as child
+      // statement of |if| or |else|, but Parser::consequentOrAlternative
+      // handles that).
       case TOK_FUNCTION:
-        return functionStmt(yieldHandling, NameRequired);
+        report(ParseError, false, null(), JSMSG_FORBIDDEN_AS_STATEMENT, "function declarations");
+        return null();
 
-      // ClassDeclaration[?Yield]
+      // |class| is also forbidden by lookahead restriction.
       case TOK_CLASS:
-        if (!abortIfSyntaxParser())
-            return null();
-        return classDefinition(yieldHandling, ClassStatement, NameRequired);
-
-      // LexicalDeclaration[In, ?Yield]
-      case TOK_LET:
-      case TOK_CONST:
-        if (!abortIfSyntaxParser())
-            return null();
-        // [In] is the default behavior, because for-loops currently specially
-        // parse their heads to handle |in| in this situation.
-        return lexicalDeclaration(yieldHandling, /* isConst = */ tt == TOK_CONST);
+        report(ParseError, false, null(), JSMSG_FORBIDDEN_AS_STATEMENT, "classes");
+        return null();
 
       // ImportDeclaration (only inside modules)
       case TOK_IMPORT:
@@ -6662,13 +6663,22 @@ Parser<ParseHandler>::statement(YieldHandling yieldHandling, bool canHaveDirecti
         report(ParseError, false, null(), JSMSG_FINALLY_WITHOUT_TRY);
         return null();
 
+      // TOK_LET implies we're in strict mode code where static semantics
+      // forbid IdentifierName to be "let": a stronger restriction than
+      // Statement's lookahead restriction on |let [|.  Provide a better error
+      // message here than the default case would.
+      case TOK_LET:
+        report(ParseError, false, null(), JSMSG_FORBIDDEN_AS_STATEMENT, "let declarations");
+        return null();
+
       // NOTE: default case handled in the ExpressionStatement section.
     }
 }
 
 template <typename ParseHandler>
 typename ParseHandler::Node
-Parser<ParseHandler>::statementListItem(YieldHandling yieldHandling, bool canHaveDirectives)
+Parser<ParseHandler>::statementListItem(YieldHandling yieldHandling,
+                                        bool canHaveDirectives /* = false */)
 {
     MOZ_ASSERT(checkOptionsCalled);
 
@@ -6725,29 +6735,32 @@ Parser<ParseHandler>::statementListItem(YieldHandling yieldHandling, bool canHav
       }
 
       case TOK_NAME: {
-        // 'let' is a contextual keyword outside strict mode.  In strict mode
-        // it's always tokenized as TOK_LET except in this one weird case:
-        //
-        //   "use strict" // ExpressionStatement, terminated by ASI
-        //   let a = 1;   // LexicalDeclaration
-        //
-        // We can't apply strict mode until we know "use strict" is the entire
-        // statement, but we can't know "use strict" is the entire statement
-        // until we see the next token.  So 'let' is still TOK_NAME here.
-        if (tokenStream.currentName() == context->names().let) {
-            bool parseDecl;
-            if (!shouldParseLetDeclaration(&parseDecl))
-                return null();
-
-            if (parseDecl)
-                return lexicalDeclaration(yieldHandling, /* isConst = */ false);
-        }
-
         TokenKind next;
         if (!tokenStream.peekToken(&next))
             return null();
+
+        if (tokenStream.currentName() == context->names().let) {
+            if (nextTokenContinuesLetDeclaration(next, yieldHandling))
+                return lexicalDeclaration(yieldHandling, /* isConst = */ false);
+
+            // IdentifierName can't be "let" in strict mode code.  |let| in
+            // strict mode code is usually TOK_LET, but in this one weird case
+            // in global code it's TOK_NAME:
+            //
+            //   "use strict"              // ExpressionStatement ended by ASI
+            //   let <...whatever else...> // a fresh StatementListItem
+            //
+            // Carefully reject strict mode |let| non-declarations.
+            if (pc->sc()->strict()) {
+                report(ParseError, false, null(), JSMSG_UNEXPECTED_TOKEN,
+                       "declaration pattern", TokenKindToDesc(next));
+                return null();
+            }
+        }
+
         if (next == TOK_COLON)
             return labeledStatement(yieldHandling);
+
         return expressionStatement(yieldHandling);
       }
 
@@ -6816,23 +6829,26 @@ Parser<ParseHandler>::statementListItem(YieldHandling yieldHandling, bool canHav
       case TOK_DEBUGGER:
         return debuggerStatement();
 
-      // HoistableDeclaration[?Yield]
+      // Declaration[Yield]:
+
+      //   HoistableDeclaration[?Yield, ~Default]
       case TOK_FUNCTION:
         return functionStmt(yieldHandling, NameRequired);
 
-      // ClassDeclaration[?Yield]
+      //   ClassDeclaration[?Yield, ~Default]
       case TOK_CLASS:
         if (!abortIfSyntaxParser())
             return null();
         return classDefinition(yieldHandling, ClassStatement, NameRequired);
 
-      // LexicalDeclaration[In, ?Yield]
+      //   LexicalDeclaration[In, ?Yield]
+      //     LetOrConst BindingList[?In, ?Yield]
       case TOK_LET:
       case TOK_CONST:
         if (!abortIfSyntaxParser())
             return null();
-        // [In] is the default behavior, because for-loops currently specially
-        // parse their heads to handle |in| in this situation.
+        // [In] is the default behavior, because for-loops specially parse
+        // their heads to handle |in| in this situation.
         return lexicalDeclaration(yieldHandling, /* isConst = */ tt == TOK_CONST);
 
       // ImportDeclaration (only inside modules)
