@@ -2581,25 +2581,6 @@ void
 nsJSContext::NotifyDidPaint()
 {
   sDidPaintAfterPreviousICCSlice = true;
-  if (sICCTimer) {
-    sICCTimer->Cancel();
-    ICCTimerFired(nullptr, nullptr);
-    if (sICCTimer) {
-      sICCTimer->InitWithNamedFuncCallback(ICCTimerFired, nullptr,
-                                           kICCIntersliceDelay,
-                                           nsITimer::TYPE_REPEATING_SLACK,
-                                           "ICCTimerFired");
-    }
-  } else if (sCCTimer) {
-    sCCTimer->Cancel();
-    CCTimerFired(nullptr, nullptr);
-    if (sCCTimer) {
-      sCCTimer->InitWithNamedFuncCallback(CCTimerFired, nullptr,
-                                          NS_CC_SKIPPABLE_DELAY,
-                                          nsITimer::TYPE_REPEATING_SLACK,
-                                          "CCTimerFired");
-    }
-  }
 }
 
 nsScriptNameSpaceManager*
