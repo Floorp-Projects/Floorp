@@ -262,6 +262,7 @@ class GeckoInputConnection
                     v.clearFocus();
                     v.requestFocus();
                 }
+                GeckoAppShell.getLayerView().getDynamicToolbarAnimator().showToolbar(/*immediately*/true);
                 mSoftInputReentrancyGuard = true;
                 imm.showSoftInput(v, 0);
                 mSoftInputReentrancyGuard = false;

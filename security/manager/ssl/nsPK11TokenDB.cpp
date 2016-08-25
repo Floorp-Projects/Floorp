@@ -6,7 +6,7 @@
 #include "nsPK11TokenDB.h"
 
 #include "mozilla/Casting.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "nsIMutableArray.h"
 #include "nsISupports.h"
 #include "nsNSSComponent.h"

@@ -20,6 +20,7 @@ if sys.platform == 'darwin':
 
   CHDIR = 'rpath'
   test.run_gyp('test.gyp', chdir=CHDIR)
+
   test.build('test.gyp', test.ALL, chdir=CHDIR)
 
   def GetRpaths(p):
@@ -30,20 +31,20 @@ if sys.platform == 'darwin':
     assert not proc.returncode
     return r.findall(o)
 
-  if (GetRpaths('libdefault_rpath.dylib') != []):
+  if GetRpaths('libdefault_rpath.dylib') != []:
     test.fail_test()
 
-  if (GetRpaths('libexplicit_rpath.dylib') != ['@executable_path/.']):
+  if GetRpaths('libexplicit_rpath.dylib') != ['@executable_path/.']:
     test.fail_test()
 
   if (GetRpaths('libexplicit_rpaths_escaped.dylib') !=
       ['First rpath', 'Second rpath']):
     test.fail_test()
 
-  if (GetRpaths('My Framework.framework/My Framework') != ['@loader_path/.']):
+  if GetRpaths('My Framework.framework/My Framework') != ['@loader_path/.']:
     test.fail_test()
 
-  if (GetRpaths('executable') != ['@executable_path/.']):
+  if GetRpaths('executable') != ['@executable_path/.']:
     test.fail_test()
 
   test.pass_test()

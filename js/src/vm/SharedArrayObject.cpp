@@ -351,7 +351,8 @@ const Class SharedArrayBufferObject::class_ = {
     "SharedArrayBuffer",
     JSCLASS_DELAY_METADATA_BUILDER |
     JSCLASS_HAS_RESERVED_SLOTS(SharedArrayBufferObject::RESERVED_SLOTS) |
-    JSCLASS_HAS_CACHED_PROTO(JSProto_SharedArrayBuffer),
+    JSCLASS_HAS_CACHED_PROTO(JSProto_SharedArrayBuffer) |
+    JSCLASS_FOREGROUND_FINALIZE,
     &SharedArrayBufferObjectClassOps,
     JS_NULL_CLASS_SPEC,
     JS_NULL_CLASS_EXT

@@ -10,7 +10,7 @@
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/Services.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "nsPermissionManager.h"
 #include "nsPermission.h"
 #include "nsCRT.h"

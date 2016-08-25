@@ -4,9 +4,6 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-"""
-"""
-
 import TestGyp
 
 test = TestGyp.TestGyp()
@@ -15,8 +12,6 @@ test.run_gyp('multiple.gyp', chdir='src')
 
 test.relocate('src', 'relocate/src')
 
-# TODO(sgk):  remove stderr=None when the --generator-output= support
-# gets rid of the scons warning
 test.build('multiple.gyp', test.ALL, chdir='relocate/src', stderr=None)
 
 expect1 = """\

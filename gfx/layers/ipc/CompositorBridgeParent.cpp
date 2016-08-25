@@ -66,7 +66,7 @@
 #endif
 #include "GeckoProfiler.h"
 #include "mozilla/ipc/ProtocolTypes.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "mozilla/Hal.h"
 #include "mozilla/HalTypes.h"
 #include "mozilla/StaticPtr.h"
@@ -478,6 +478,14 @@ CompositorVsyncScheduler::Composite(TimeStamp aVsyncTimestamp)
     // We can sometimes get vsync timestamps that are in the past
     // compared to the last compose with force composites.
     // In those cases, wait until the next vsync;
+    return;
+  }
+
+  MOZ_ASSERT(mCompositorBridgeParent);
+  if (!mAsapScheduling && mCompositorBridgeParent->IsPendingComposite()) {
+    // If previous composite is still on going, finish it and does a next
+    // composite in a next vsync.
+    mCompositorBridgeParent->FinishPendingComposite();
     return;
   }
 
@@ -1955,6 +1963,26 @@ CompositorBridgeParent::DeallocPCompositorWidgetParent(PCompositorWidgetParent* 
 #else
   return false;
 #endif
+}
+
+bool
+CompositorBridgeParent::IsPendingComposite()
+{
+  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
+  if (!mCompositor) {
+    return false;
+  }
+  return mCompositor->IsPendingComposite();
+}
+
+void
+CompositorBridgeParent::FinishPendingComposite()
+{
+  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
+  if (!mCompositor) {
+    return;
+  }
+  return mCompositor->FinishPendingComposite();
 }
 
 /**

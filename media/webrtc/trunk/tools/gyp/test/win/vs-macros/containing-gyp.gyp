@@ -16,7 +16,6 @@
           'extension': 'S',
           'inputs': [
             'as.py',
-            '$(InputPath)'
           ],
           'outputs': [
             '$(IntDir)/$(InputName).obj',

@@ -98,7 +98,7 @@
 #include "mozilla/Telemetry.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "nsCCUncollectableMarker.h"
 #include "nsWrapperCacheInlines.h"
 #include "mozilla/dom/CanvasRenderingContext2DBinding.h"
@@ -5296,12 +5296,6 @@ CanvasRenderingContext2D::GetImageData(JSContext* aCx, double aSx,
     mDrawObserver->DidDrawCall(CanvasDrawObserver::DrawCallType::GetImageData);
   }
 
-  EnsureTarget();
-  if (!IsTargetValid()) {
-    aError.Throw(NS_ERROR_FAILURE);
-    return nullptr;
-  }
-
   if (!mCanvasElement && !mDocShell) {
     NS_ERROR("No canvas element and no docshell in GetImageData!!!");
     aError.Throw(NS_ERROR_DOM_SECURITY_ERR);
@@ -5410,10 +5404,24 @@ CanvasRenderingContext2D::GetImageDataArray(JSContext* aCx,
   RefPtr<DataSourceSurface> readback;
   DataSourceSurface::MappedSurface rawData;
   if (!srcReadRect.IsEmpty()) {
-    RefPtr<SourceSurface> snapshot = mTarget->Snapshot();
+    RefPtr<SourceSurface> snapshot;
+    if (mTarget) {
+      snapshot = mTarget->Snapshot();
+    } else if (mBufferProvider) {
+      snapshot = mBufferProvider->BorrowSnapshot();
+    } else {
+      EnsureTarget();
+      snapshot = mTarget->Snapshot();
+    }
+
     if (snapshot) {
       readback = snapshot->GetDataSurface();
     }
+
+    if (!mTarget && mBufferProvider) {
+      mBufferProvider->ReturnSnapshot(snapshot.forget());
+    }
+
     if (!readback || !readback->Map(DataSourceSurface::READ, &rawData)) {
       return NS_ERROR_OUT_OF_MEMORY;
     }

@@ -297,7 +297,9 @@ static const ClassOps ForOfPICClassOps = {
 };
 
 const Class ForOfPIC::class_ = {
-    "ForOfPIC", JSCLASS_HAS_PRIVATE,
+    "ForOfPIC",
+    JSCLASS_HAS_PRIVATE |
+    JSCLASS_FOREGROUND_FINALIZE,
     &ForOfPICClassOps
 };
 

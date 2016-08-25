@@ -7,7 +7,7 @@
 #include "DomainPolicy.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/ipc/URIUtils.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "nsIMessageManager.h"
 #include "nsScriptSecurityManager.h"
 

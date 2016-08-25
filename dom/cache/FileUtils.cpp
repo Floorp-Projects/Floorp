@@ -8,7 +8,7 @@
 
 #include "mozilla/dom/quota/FileStreams.h"
 #include "mozilla/SnappyCompressOutputStream.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "nsIFile.h"
 #include "nsIUUIDGenerator.h"
 #include "nsNetCID.h"

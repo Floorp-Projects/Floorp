@@ -16,7 +16,7 @@
 #include "nsIScriptError.h"
 #include "nsThreadUtils.h"
 #include "mozilla/StaticMutex.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 
 #include "TelemetryCommon.h"
 #include "TelemetryScalar.h"

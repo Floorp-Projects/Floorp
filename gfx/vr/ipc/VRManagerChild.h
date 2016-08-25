@@ -72,6 +72,7 @@ public:
   void CancelFrameRequestCallback(int32_t aHandle);
   void RunFrameRequestCallbacks();
 
+  void UpdateDisplayInfo(nsTArray<VRDisplayInfo>& aDisplayUpdates);
   void FireDOMVRDisplayConnectEvent();
   void FireDOMVRDisplayDisconnectEvent();
   void FireDOMVRDisplayPresentChangeEvent();
@@ -142,6 +143,7 @@ private:
   void NotifyNotUsed(uint64_t aTextureId, uint64_t aFwdTransactionId);
 
   nsTArray<RefPtr<VRDisplayClient> > mDisplays;
+  bool mDisplaysInitialized;
   nsTArray<dom::Navigator*> mNavigatorCallbacks;
 
   int32_t mInputFrameID;

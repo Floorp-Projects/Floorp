@@ -21,7 +21,7 @@
 #include "nsReadLine.h"
 #include "nsIClassInfoImpl.h"
 #include "mozilla/ipc/InputStreamUtils.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "mozilla/FileUtils.h"
 #include "nsNetCID.h"
 #include "nsXULAppAPI.h"

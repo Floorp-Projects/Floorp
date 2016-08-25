@@ -12,7 +12,7 @@
 #include "mozilla/StateWatching.h"
 #include "mozilla/TaskDispatcher.h"
 #include "mozilla/UniquePtr.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 
 #include "mozilla/Logging.h"
 #include "nsISupportsImpl.h"

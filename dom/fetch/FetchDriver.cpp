@@ -31,7 +31,7 @@
 
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/workers/Workers.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 
 #include "Fetch.h"
 #include "InternalRequest.h"

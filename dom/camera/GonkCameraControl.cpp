@@ -38,7 +38,7 @@
 #include "nsITimer.h"
 #include "mozilla/FileUtils.h"
 #include "mozilla/Services.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "mozilla/ipc/FileDescriptorUtils.h"
 #include "nsAlgorithm.h"
 #include "nsPrintfCString.h"

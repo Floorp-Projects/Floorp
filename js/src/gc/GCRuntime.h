@@ -1069,8 +1069,6 @@ class GCRuntime
 
     mozilla::Atomic<size_t, mozilla::ReleaseAcquire> numActiveZoneIters;
 
-    uint64_t decommitThreshold;
-
     /* During shutdown, the GC needs to clean up every possible object. */
     bool cleanUpEverything;
 

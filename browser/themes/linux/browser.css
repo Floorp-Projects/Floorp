@@ -1592,12 +1592,12 @@ html|span.ac-emphasize-text-url {
 }
 
 /* Tab close button */
-.tab-close-button:not([visuallyselected]):not(:hover) {
+.tab-close-button:not([selected]):not(:hover) {
   background-image: -moz-image-rect(url("chrome://global/skin/icons/close.svg"), 0, 64, 16, 48);
 }
 
 .tab-close-button:not(:hover):-moz-lwtheme-brighttext,
-#TabsToolbar[brighttext] .tab-close-button:not([visuallyselected]):not(:hover) {
+#TabsToolbar[brighttext] .tab-close-button:not([selected]):not(:hover) {
   background-image: -moz-image-rect(url("chrome://global/skin/icons/close.svg"), 0, 80, 16, 64);
 }
 

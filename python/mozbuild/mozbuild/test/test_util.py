@@ -1,3 +1,4 @@
+# coding: utf-8
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -12,6 +13,7 @@ import shutil
 import string
 import sys
 import tempfile
+import textwrap
 
 from mozfile.mozfile import NamedTemporaryFile
 from mozunit import (
@@ -24,6 +26,7 @@ from mozbuild.util import (
     FileAvoidWrite,
     group_unified_files,
     hash_file,
+    indented_repr,
     memoize,
     memoized_property,
     pair,
@@ -886,6 +889,36 @@ class TestEnumString(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             type = CompilerType('foo')
+
+
+class TestIndentedRepr(unittest.TestCase):
+    def test_indented_repr(self):
+        data = textwrap.dedent(r'''
+        {
+            'a': 1,
+            'b': b'abc',
+            b'c': 'xyz',
+            'd': False,
+            'e': {
+                'a': 1,
+                'b': b'2',
+                'c': '3',
+            },
+            'f': [
+                1,
+                b'2',
+                '3',
+            ],
+            'pile_of_bytes': b'\xf0\x9f\x92\xa9',
+            'pile_of_poo': '💩',
+            'special_chars': '\\\'"\x08\n\t',
+            'with_accents': 'éàñ',
+        }''').lstrip()
+
+        obj = eval(data)
+
+        self.assertEqual(indented_repr(obj), data)
+
 
 if __name__ == '__main__':
     main()

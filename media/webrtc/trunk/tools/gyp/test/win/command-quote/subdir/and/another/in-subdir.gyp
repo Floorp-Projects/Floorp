@@ -18,7 +18,6 @@
         'rule_name': 'build_with_batch4',
         'msvs_cygwin_shell': 0,
         'extension': 'S',
-        'inputs': ['<(RULE_INPUT_PATH)'],
         'outputs': ['output4.obj'],
         'action': ['<@(filepath)', '<(RULE_INPUT_PATH)', 'output4.obj'],
       },],

@@ -1251,25 +1251,12 @@ bool
 NS_GetOriginAttributes(nsIChannel *aChannel,
                        mozilla::NeckoOriginAttributes &aAttributes)
 {
-    nsCOMPtr<nsILoadContext> loadContext;
     nsCOMPtr<nsILoadInfo> loadInfo = aChannel->GetLoadInfo();
-    NS_QueryNotificationCallbacks(aChannel, loadContext);
-
-    if (!loadContext && !loadInfo) {
+    if (!loadInfo) {
         return false;
     }
 
-    // Bug 1270678 - By default, we would acquire the originAttributes from
-    // the loadContext. But in some cases, say, loading the favicon, that the
-    // loadContext is not available. We would use the loadInfo to get
-    // originAttributes instead.
-    if (loadContext) {
-        DocShellOriginAttributes doa;
-        loadContext->GetOriginAttributes(doa);
-        aAttributes.InheritFromDocShellToNecko(doa);
-    } else {
-        loadInfo->GetOriginAttributes(&aAttributes);
-    }
+    loadInfo->GetOriginAttributes(&aAttributes);
     aAttributes.SyncAttributesWithPrivateBrowsing(NS_UsePrivateBrowsing(aChannel));
     return true;
 }
@@ -1279,17 +1266,14 @@ NS_GetAppInfo(nsIChannel *aChannel,
               uint32_t *aAppID,
               bool *aIsInIsolatedMozBrowserElement)
 {
-    nsCOMPtr<nsILoadContext> loadContext;
-    NS_QueryNotificationCallbacks(aChannel, loadContext);
-    if (!loadContext) {
-        return false;
+    NeckoOriginAttributes attrs;
+
+    if (!NS_GetOriginAttributes(aChannel, attrs)) {
+      return false;
     }
 
-    nsresult rv = loadContext->GetAppId(aAppID);
-    NS_ENSURE_SUCCESS(rv, false);
-
-    rv = loadContext->GetIsInIsolatedMozBrowserElement(aIsInIsolatedMozBrowserElement);
-    NS_ENSURE_SUCCESS(rv, false);
+    *aAppID = attrs.mAppId;
+    *aIsInIsolatedMozBrowserElement = attrs.mInIsolatedMozBrowser;
 
     return true;
 }

@@ -186,8 +186,6 @@ add_task(function* testPermissionIcons() {
 
   let geoIcon = gIdentityHandler._identityBox.querySelector("[data-permission-id='geo']");
   ok(geoIcon.hasAttribute("showing"), "blocked permission icon is shown");
-  ok(geoIcon.classList.contains("blocked"),
-    "blocked permission icon is shown as blocked");
 
   let cameraIcon = gIdentityHandler._identityBox.querySelector("[data-permission-id='camera']");
   ok(!cameraIcon.hasAttribute("showing"),

@@ -8,7 +8,7 @@
 #include "MainThreadUtils.h"
 #include "nsXULAppAPI.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/gfx/GPUChild.h"
 #include "mozilla/gfx/GPUProcessManager.h"

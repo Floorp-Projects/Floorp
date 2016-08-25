@@ -12,7 +12,8 @@ import TestGyp
 
 test = TestGyp.TestGyp()
 
-test.run_gyp('extra_targets.gyp')
+test.run_gyp('extra_targets.gyp',
+             '-G', 'xcode_ninja_target_pattern=^a$')
 
 # This should fail if it tries to build 'c_unused' since 'c/c.c' has a syntax
 # error and won't compile.

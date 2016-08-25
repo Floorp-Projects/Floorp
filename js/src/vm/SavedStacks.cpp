@@ -334,7 +334,8 @@ const ClassSpec SavedFrame::classSpec_ = {
     JSCLASS_HAS_PRIVATE |
     JSCLASS_HAS_RESERVED_SLOTS(SavedFrame::JSSLOT_COUNT) |
     JSCLASS_HAS_CACHED_PROTO(JSProto_SavedFrame) |
-    JSCLASS_IS_ANONYMOUS,
+    JSCLASS_IS_ANONYMOUS |
+    JSCLASS_FOREGROUND_FINALIZE,
     &SavedFrameClassOps,
     &SavedFrame::classSpec_
 };

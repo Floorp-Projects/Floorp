@@ -11,7 +11,7 @@
 #include "mozilla/Casting.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/TimeStamp.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "nsContentUtils.h"
 #include "nsICertOverrideService.h"
 #include "nsIHttpChannelInternal.h"

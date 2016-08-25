@@ -7,7 +7,7 @@
 #ifndef mozilla_ipc_DaemonRunnables_h
 #define mozilla_ipc_DaemonRunnables_h
 
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "mozilla/UniquePtr.h"
 #include "nsThreadUtils.h"
 

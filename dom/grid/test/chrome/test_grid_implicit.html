@@ -1,0 +1,129 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+<style>
+body {
+	margin: 40px;
+}
+.wrapper {
+	display: grid;
+	grid-gap: 10px;
+	grid-template-columns: 100px 50px 100px;
+	grid-template-rows: 50px [areaD-start] 50px [areaD-end];
+	grid-template-areas: "areaA areaA ....."
+						 "..... areaC areaC";
+	grid-auto-columns: 20px;
+	grid-auto-rows: 20px;
+	background-color: #f00;
+}
+.box {
+	background-color: #444;
+	color: #fff;
+}
+.a {
+	grid-area: areaA;
+}
+.b {
+	grid-row: span 2 / 2;
+	grid-column: areaA-end / span 2;
+}
+.c {
+	grid-area: areaC;
+}
+.d {
+	grid-area: areaD;
+}
+</style>
+
+<script>
+'use strict';
+
+SimpleTest.waitForExplicitFinish();
+
+function runTests() {
+	var wrapper = document.getElementById("wrapper");
+	var grid = wrapper.getGridFragments()[0];
+	var boxA = document.getElementById("boxA");
+	var boxB = document.getElementById("boxB");
+	var boxC = document.getElementById("boxC");
+
+	// test column and row line counts
+	is(grid.cols.lines.length, 6,
+		"Grid.cols.lines property has length that respects implicit expansion."
+	);
+	is(grid.rows.lines.length, 4,
+		"Grid.rows.lines property has length that respects implicit expansion."
+	);
+
+	if((grid.cols.lines.length == 6) &&
+	   (grid.rows.lines.length == 4)) {
+
+		// test explicit / implicit lines
+		is(grid.cols.lines[0].type, "explicit", "Grid column line 1 is explicit.");
+		is(grid.cols.lines[4].type, "implicit", "Grid column line 5 is implicit.");
+		is(grid.cols.lines[5].type, "implicit", "Grid column line 6 is implicit.");
+
+		is(grid.rows.lines[0].type, "implicit", "Grid row line 1 is implicit.");
+		is(grid.rows.lines[1].type, "explicit", "Grid row line 2 is explicit.");
+		is(grid.rows.lines[3].type, "explicit", "Grid row line 4 is explicit.");
+	}
+
+	// test column and row track counts
+	is(grid.cols.tracks.length, 5,
+		"Grid.cols.tracks property has length that respects implicit expansion."
+	);
+	is(grid.rows.tracks.length, 3,
+		"Grid.rows.tracks property has length that respects implicit expansion."
+	);
+
+	if((grid.cols.tracks.length == 5) &&
+	   (grid.rows.tracks.length == 3)) {
+
+		// test explicit / implicit tracks
+		is(grid.cols.tracks[0].type, "explicit", "Grid column track 1 is explicit.");
+		is(grid.cols.tracks[3].type, "implicit", "Grid column track 4 is implicit.");
+		is(grid.cols.tracks[4].type, "implicit", "Grid column track 5 is implicit.");
+
+		is(grid.rows.tracks[0].type, "implicit", "Grid row track 1 is implicit.");
+		is(grid.rows.tracks[1].type, "explicit", "Grid row track 2 is explicit.");
+		is(grid.rows.tracks[2].type, "explicit", "Grid row track 3 is explicit.");
+	}
+
+	// test area count
+	is(grid.areas.length, 3,
+		"Grid.areas property has length that respects implicit expansion."
+	);
+
+	for(var i = 0; i < grid.areas.length; i++) {
+		var area = grid.areas[i];
+		if(area.name == "areaD") {
+			is(area.type, "implicit", area.name + " is implicit.");
+
+			// test lines of implicit areas
+			todo_is(area.rowStart, 2, area.name + " has start row line of 2.");
+			todo_is(area.rowEnd, 3, area.name + " has end row line of 3.");
+			todo_is(area.columnStart, 4, area.name + " has start column line of 4.");
+			todo_is(area.columnEnd, 5, area.name + " has end column line of 5.");
+		} else {
+			is(area.type, "explicit", area.name + " is explicit.");
+		}
+	}
+
+	SimpleTest.finish();
+}
+</script>
+</head>
+<body onLoad="runTests();">
+
+	<div id="wrapper" class="wrapper">
+		<div id="boxA" class="box a">A</div>
+		<div id="boxB" class="box b">B</div>
+		<div id="boxC" class="box c">C</div>
+		<div id="boxD" class="box d">D</div>
+	</div>
+
+</body>
+</html>

@@ -11,7 +11,7 @@
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/Scoped.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "ScopedGLHelpers.h"
 #include "WebGLContext.h"
 #include "WebGLContextUtils.h"

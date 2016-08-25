@@ -26,7 +26,7 @@
 #include "mozilla/Vector.h"
 #include "nsProxyRelease.h"
 #include "mozilla/Telemetry.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "mozilla/StaticMutex.h"
 #include "mozilla/RefPtr.h"
 

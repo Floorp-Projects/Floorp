@@ -9,7 +9,7 @@ Verifies building a target and a subsidiary dependent target from a
 .gyp file in a subdirectory, without specifying an explicit output build
 directory, and using the generated solution or project file at the top
 of the tree as the entry point.
-                                 
+
 The configuration sets the Xcode SYMROOT variable and uses --depth=
 to make Xcode behave like the other build tools--that is, put all
 built targets in a single output build directory at the top of the tree.

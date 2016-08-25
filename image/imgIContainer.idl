@@ -195,6 +195,15 @@ interface imgIContainer : nsISupports
    * the given image non-uniformly if necessary such that the image's
    * viewBox (if specified or implied by height/width attributes) exactly
    * matches the viewport rectangle.
+   *
+   * FLAG_FORCE_UNIFORM_SCALING: Signal to ClippedImage::OptimalSizeForDest that
+   * its returned size can only scale the image's size *uniformly* (by the same
+   * factor in each dimension). We need this flag when painting border-image
+   * section with SVG image source-data, if the SVG image has no viewBox and no
+   * intrinsic size. In such a case, we synthesize a viewport for the SVG image
+   * (a "window into SVG space") based on the border image area, and we need to
+   * be sure we don't subsequently scale that viewport in a way that distorts
+   * its contents by stretching them more in one dimension than the other.
    */
   const unsigned long FLAG_NONE                            = 0x0;
   const unsigned long FLAG_SYNC_DECODE                     = 0x1;
@@ -255,9 +264,12 @@ interface imgIContainer : nsISupports
                                                            in uint32_t aFlags);
 
   /**
-   * Whether this image is opaque (i.e., needs a background painted behind it).
+   * Returns true if this image will draw opaquely right now if asked to draw
+   * with FLAG_HIGH_QUALITY_SCALING and otherwise default flags. If this image
+   * (when decoded) is opaque but no decoded frames are available then
+   * willDrawOpaqueNow will return false.
    */
-  [notxpcom] boolean isOpaque();
+  [noscript, notxpcom] boolean willDrawOpaqueNow();
 
   /**
    * @return true if getImageContainer() is expected to return a valid

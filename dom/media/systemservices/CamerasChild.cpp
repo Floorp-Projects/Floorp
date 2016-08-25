@@ -15,7 +15,7 @@
 #include "mozilla/Logging.h"
 #include "mozilla/SyncRunnable.h"
 #include "mozilla/WeakPtr.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 #include "MediaUtils.h"
 #include "nsThreadUtils.h"
 

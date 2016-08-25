@@ -105,16 +105,18 @@ LogDocShellState(nsIDocument* aDocumentNode)
   nsCOMPtr<nsIDocShell> docShell = aDocumentNode->GetDocShell();
   uint32_t busyFlags = nsIDocShell::BUSY_FLAGS_NONE;
   docShell->GetBusyFlags(&busyFlags);
-  if (busyFlags == nsIDocShell::BUSY_FLAGS_NONE)
+  if (busyFlags == nsIDocShell::BUSY_FLAGS_NONE) {
     printf("'none'");
-  if (busyFlags & nsIDocShell::BUSY_FLAGS_BUSY)
+  }
+  if (busyFlags & nsIDocShell::BUSY_FLAGS_BUSY) {
     printf("'busy'");
-  if (busyFlags & nsIDocShell::BUSY_FLAGS_BEFORE_PAGE_LOAD)
+  }
+  if (busyFlags & nsIDocShell::BUSY_FLAGS_BEFORE_PAGE_LOAD) {
     printf(", 'before page load'");
-  if (busyFlags & nsIDocShell::BUSY_FLAGS_PAGE_LOADING)
+  }
+  if (busyFlags & nsIDocShell::BUSY_FLAGS_PAGE_LOADING) {
     printf(", 'page loading'");
-
-    printf("[failed]");
+  }
 }
 
 static void

@@ -11,7 +11,7 @@
 #include "nsString.h"
 
 #include "mozilla/dom/ContentChild.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 
 #include "keythi.h"
 #include "nss.h"
