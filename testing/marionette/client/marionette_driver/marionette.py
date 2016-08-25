@@ -1500,15 +1500,15 @@ class Marionette(object):
         """Causes the browser to perform to refresh the current page."""
         self._send_message("refresh")
 
-    def wrapArguments(self, args):
-        if isinstance(args, list):
+    def _to_json(self, args):
+        if isinstance(args, list) or isinstance(args, tuple):
             wrapped = []
             for arg in args:
-                wrapped.append(self.wrapArguments(arg))
+                wrapped.append(self._to_json(arg))
         elif isinstance(args, dict):
             wrapped = {}
             for arg in args:
-                wrapped[arg] = self.wrapArguments(args[arg])
+                wrapped[arg] = self._to_json(args[arg])
         elif type(args) == HTMLElement:
             wrapped = {W3C_WEBELEMENT_KEY: args.id,
                        WEBELEMENT_KEY: args.id}
@@ -1517,11 +1517,11 @@ class Marionette(object):
             wrapped = args
         return wrapped
 
-    def unwrapValue(self, value):
+    def _from_json(self, value):
         if isinstance(value, list):
             unwrapped = []
             for item in value:
-                unwrapped.append(self.unwrapValue(item))
+                unwrapped.append(self._from_json(item))
         elif isinstance(value, dict):
             unwrapped = {}
             for key in value:
@@ -1532,7 +1532,7 @@ class Marionette(object):
                     unwrapped = HTMLElement(self, value[key])
                     break
                 else:
-                    unwrapped[key] = self.unwrapValue(value[key])
+                    unwrapped[key] = self._from_json(value[key])
         else:
             unwrapped = value
         return unwrapped
@@ -1543,7 +1543,7 @@ class Marionette(object):
                           sandbox='default'):
         if script_args is None:
             script_args = []
-        args = self.wrapArguments(script_args)
+        args = self._to_json(script_args)
         body = {"script": script,
                 "args": args,
                 "async": async,
@@ -1553,7 +1553,7 @@ class Marionette(object):
                 "filename": filename,
                 "line": None}
         rv = self._send_message("executeJSScript", body, key="value")
-        return self.unwrapValue(rv)
+        return self._from_json(rv)
 
     def execute_script(self, script, script_args=None, new_sandbox=True,
                        sandbox="default", script_timeout=None):
@@ -1620,7 +1620,7 @@ class Marionette(object):
         """
         if script_args is None:
             script_args = []
-        args = self.wrapArguments(script_args)
+        args = self._to_json(script_args)
         stack = traceback.extract_stack()
         frame = stack[-2:-1][0]  # grab the second-to-last frame
         body = {"script": script,
@@ -1631,7 +1631,7 @@ class Marionette(object):
                 "line": int(frame[1]),
                 "filename": os.path.basename(frame[0])}
         rv = self._send_message("executeScript", body, key="value")
-        return self.unwrapValue(rv)
+        return self._from_json(rv)
 
     def execute_async_script(self, script, script_args=None, new_sandbox=True,
                              sandbox="default", script_timeout=None,
@@ -1670,7 +1670,7 @@ class Marionette(object):
         """
         if script_args is None:
             script_args = []
-        args = self.wrapArguments(script_args)
+        args = self._to_json(script_args)
         stack = traceback.extract_stack()
         frame = stack[-2:-1][0]  # grab the second-to-last frame
         body = {"script": script,
@@ -1682,7 +1682,7 @@ class Marionette(object):
                 "filename": os.path.basename(frame[0]),
                 "debug_script": debug_script}
         rv = self._send_message("executeAsyncScript", body, key="value")
-        return self.unwrapValue(rv)
+        return self._from_json(rv)
 
     def find_element(self, method, target, id=None):
         """Returns an HTMLElement instances that matches the specified
