@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+
+    <script>
+    function boom()
+    {
+        document.getElementById("u").setAttribute("width", "30");
+        document.getElementById("p").remove();
+    }
+    window.addEventListener("load", boom, false);
+    </script>
+
+    <symbol id="p" viewBox="0 0 100 20"/>
+
+    <use id="u" xlink:href="#p"/>
+
+</svg>
