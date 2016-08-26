@@ -2164,9 +2164,7 @@ bool NS_IsAboutBlank(nsIURI *uri)
         return false;
     }
 
-    nsAutoCString str;
-    uri->GetSpec(str);
-    return str.EqualsLiteral("about:blank");
+    return uri->GetSpecOrDefault().EqualsLiteral("about:blank");
 }
 
 nsresult
@@ -2400,8 +2398,7 @@ NS_CompareLoadInfoAndLoadContext(nsIChannel *aChannel)
     nsIDocument* doc = node->OwnerDoc();
     if (doc) {
       nsIURI* uri = doc->GetDocumentURI();
-      nsAutoCString spec;
-      uri->GetSpec(spec);
+      nsCString spec = uri->GetSpecOrDefault();
       isAboutPage = spec.EqualsLiteral("about:newtab") ||
                     spec.EqualsLiteral("about:sync-tabs");
     }
