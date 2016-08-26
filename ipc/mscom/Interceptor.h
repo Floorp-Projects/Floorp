@@ -60,7 +60,7 @@ class Interceptor final : public WeakReferenceSupport
                         , public IInterceptor
 {
 public:
-  static HRESULT Create(STAUniquePtr<IUnknown>& aTarget, IInterceptorSink* aSink,
+  static HRESULT Create(STAUniquePtr<IUnknown> aTarget, IInterceptorSink* aSink,
                         REFIID aIid, void** aOutput);
 
   // IUnknown
@@ -86,7 +86,7 @@ private:
   };
 
 private:
-  Interceptor(STAUniquePtr<IUnknown>& aTarget, IInterceptorSink* aSink);
+  Interceptor(STAUniquePtr<IUnknown> aTarget, IInterceptorSink* aSink);
   ~Interceptor();
   MapEntry* Lookup(REFIID aIid);
   HRESULT QueryInterfaceTarget(REFIID aIid, void** aOutput);
@@ -104,7 +104,7 @@ private:
 
 template <typename InterfaceT>
 inline HRESULT
-CreateInterceptor(STAUniquePtr<InterfaceT>& aTargetInterface,
+CreateInterceptor(STAUniquePtr<InterfaceT> aTargetInterface,
                   IInterceptorSink* aEventSink,
                   InterfaceT** aOutInterface)
 {
@@ -115,7 +115,7 @@ CreateInterceptor(STAUniquePtr<InterfaceT>& aTargetInterface,
   REFIID iidTarget = __uuidof(aTargetInterface);
 
   STAUniquePtr<IUnknown> targetUnknown(aTargetInterface.release());
-  return Interceptor::Create(targetUnknown, aEventSink, iidTarget,
+  return Interceptor::Create(Move(targetUnknown), aEventSink, iidTarget,
                              (void**)aOutInterface);
 }
 
