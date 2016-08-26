@@ -9,13 +9,16 @@
  */
 
 add_task(function* () {
-  let [tab, debuggee, monitor] = yield initNetMonitor(CUSTOM_GET_URL);
+  let [tab, , monitor] = yield initNetMonitor(CUSTOM_GET_URL);
   let { $, NetMonitorView } = monitor.panelWin;
   let { RequestsMenu } = NetMonitorView;
   RequestsMenu.lazyUpdate = false;
 
-  debuggee.performRequests(1, HTTPS_REDIRECT_SJS);
-  yield waitForNetworkEvents(monitor, 2);
+  let wait = waitForNetworkEvents(monitor, 2);
+  yield ContentTask.spawn(tab.linkedBrowser, HTTPS_REDIRECT_SJS, function* (url) {
+    content.wrappedJSObject.performRequests(1, url);
+  });
+  yield wait;
 
   is(RequestsMenu.itemCount, 2, "There were two requests due to redirect.");
 

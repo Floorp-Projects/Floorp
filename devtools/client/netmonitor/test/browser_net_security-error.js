@@ -8,15 +8,18 @@
  */
 
 add_task(function* () {
-  let [tab, debuggee, monitor] = yield initNetMonitor(CUSTOM_GET_URL);
+  let [tab, , monitor] = yield initNetMonitor(CUSTOM_GET_URL);
   let { $, EVENTS, NetMonitorView } = monitor.panelWin;
   let { RequestsMenu, NetworkDetails } = NetMonitorView;
   RequestsMenu.lazyUpdate = false;
 
   info("Requesting a resource that has a certificate problem.");
-  debuggee.performRequests(1, "https://nocert.example.com");
 
-  yield waitForSecurityBrokenNetworkEvent();
+  let wait = waitForSecurityBrokenNetworkEvent();
+  yield ContentTask.spawn(tab.linkedBrowser, {}, function* () {
+    content.wrappedJSObject.performRequests(1, "https://nocert.example.com");
+  });
+  yield wait;
 
   info("Selecting the request.");
   RequestsMenu.selectedIndex = 0;
@@ -39,7 +42,7 @@ add_task(function* () {
 
   isnot(errormsg.value, "", "Error message is not empty.");
 
-  yield teardown(monitor);
+  return teardown(monitor);
 
   /**
    * Returns a promise that's resolved once a request with security issues is

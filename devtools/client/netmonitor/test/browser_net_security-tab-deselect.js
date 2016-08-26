@@ -9,15 +9,23 @@
  */
 
 add_task(function* () {
-  let [tab, debuggee, monitor] = yield initNetMonitor(CUSTOM_GET_URL);
-  let { $, EVENTS, NetMonitorView } = monitor.panelWin;
+  let [tab, , monitor] = yield initNetMonitor(CUSTOM_GET_URL);
+  let { EVENTS, NetMonitorView } = monitor.panelWin;
   let { RequestsMenu, NetworkDetails } = NetMonitorView;
   RequestsMenu.lazyUpdate = false;
 
   info("Performing requests.");
-  debuggee.performRequests(1, "https://example.com" + CORS_SJS_PATH);
-  debuggee.performRequests(1, "http://example.com" + CORS_SJS_PATH);
-  yield waitForNetworkEvents(monitor, 2);
+  let wait = waitForNetworkEvents(monitor, 2);
+  const REQUEST_URLS = [
+    "https://example.com" + CORS_SJS_PATH,
+    "http://example.com" + CORS_SJS_PATH,
+  ];
+  yield ContentTask.spawn(tab.linkedBrowser, REQUEST_URLS, function* (urls) {
+    for (let url of urls) {
+      content.wrappedJSObject.performRequests(1, url);
+    }
+  });
+  yield wait;
 
   info("Selecting secure request.");
   RequestsMenu.selectedIndex = 0;
@@ -34,5 +42,5 @@ add_task(function* () {
   is(NetworkDetails.widget.selectedIndex, 0,
     "Selected tab was reset when selected security tab was hidden.");
 
-  yield teardown(monitor);
+  return teardown(monitor);
 });

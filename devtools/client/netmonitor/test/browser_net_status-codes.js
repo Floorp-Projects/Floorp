@@ -7,12 +7,12 @@
  * Tests if requests display the correct status code and text in the UI.
  */
 
-var test = Task.async(function* () {
-  let [tab, debuggee, monitor] = yield initNetMonitor(STATUS_CODES_URL);
+add_task(function* () {
+  let [tab, , monitor] = yield initNetMonitor(STATUS_CODES_URL);
 
   info("Starting test... ");
 
-  let { document, L10N, NetMonitorView } = monitor.panelWin;
+  let { document, EVENTS, L10N, NetMonitorView } = monitor.panelWin;
   let { RequestsMenu, NetworkDetails } = NetMonitorView;
   let requestItems = [];
 
@@ -20,7 +20,8 @@ var test = Task.async(function* () {
   NetworkDetails._params.lazyEmpty = false;
 
   const REQUEST_DATA = [
-    { // request #0
+    {
+      // request #0
       method: "GET",
       uri: STATUS_CODES_SJS + "?sts=100",
       details: {
@@ -32,7 +33,8 @@ var test = Task.async(function* () {
         time: true
       }
     },
-    { // request #1
+    {
+      // request #1
       method: "GET",
       uri: STATUS_CODES_SJS + "?sts=200",
       details: {
@@ -44,7 +46,8 @@ var test = Task.async(function* () {
         time: true
       }
     },
-    { // request #2
+    {
+      // request #2
       method: "GET",
       uri: STATUS_CODES_SJS + "?sts=300",
       details: {
@@ -56,7 +59,8 @@ var test = Task.async(function* () {
         time: true
       }
     },
-    { // request #3
+    {
+      // request #3
       method: "GET",
       uri: STATUS_CODES_SJS + "?sts=400",
       details: {
@@ -68,7 +72,8 @@ var test = Task.async(function* () {
         time: true
       }
     },
-    { // request #4
+    {
+      // request #4
       method: "GET",
       uri: STATUS_CODES_SJS + "?sts=500",
       details: {
@@ -82,15 +87,18 @@ var test = Task.async(function* () {
     }
   ];
 
-  debuggee.performRequests();
-  yield waitForNetworkEvents(monitor, 5);
+  let wait = waitForNetworkEvents(monitor, 5);
+  yield ContentTask.spawn(tab.linkedBrowser, {}, function* () {
+    content.wrappedJSObject.performRequests();
+  });
+  yield wait;
+
   info("Performing tests");
   yield verifyRequests();
   yield testTab(0, testSummary);
   yield testTab(2, testParams);
 
-  yield teardown(monitor);
-  finish();
+  return teardown(monitor);
 
   /**
    * A helper that verifies all requests show the correct information and caches
@@ -114,21 +122,21 @@ var test = Task.async(function* () {
    * A helper that opens a given tab of request details pane, selects and passes
    * all requests to the given test function.
    *
-   * @param Number tab
+   * @param Number tabIdx
    *               The index of NetworkDetails tab to activate.
    * @param Function testFn(requestItem)
    *        A function that should perform all necessary tests. It's called once
    *        for every item of REQUEST_DATA with that item being selected in the
    *        NetworkMonitor.
    */
-  function* testTab(tab, testFn) {
-    info("Testing tab #" + tab);
+  function* testTab(tabIdx, testFn) {
+    info("Testing tab #" + tabIdx);
     EventUtils.sendMouseEvent({ type: "mousedown" },
-          document.querySelectorAll("#details-pane tab")[tab]);
+          document.querySelectorAll("#details-pane tab")[tabIdx]);
 
     let counter = 0;
     for (let item of REQUEST_DATA) {
-      info("Waiting tab #" + tab + " to update with request #" + counter);
+      info("Waiting tab #" + tabIdx + " to update with request #" + counter);
       yield chooseRequest(counter);
 
       info("Tab updated. Performing checks");
@@ -142,7 +150,6 @@ var test = Task.async(function* () {
    * A function that tests "Summary" contains correct information.
    */
   function* testSummary(data) {
-    let tab = document.querySelectorAll("#details-pane tab")[0];
     let tabpanel = document.querySelectorAll("#details-pane tabpanel")[0];
 
     let { method, uri, details: { status, statusText } } = data;
@@ -160,7 +167,6 @@ var test = Task.async(function* () {
    * A function that tests "Params" tab contains correct information.
    */
   function* testParams(data) {
-    let tab = document.querySelectorAll("#details-pane tab")[2];
     let tabpanel = document.querySelectorAll("#details-pane tabpanel")[2];
     let statusParamValue = data.uri.split("=").pop();
     let statusParamShownValue = "\"" + statusParamValue + "\"";
@@ -178,9 +184,11 @@ var test = Task.async(function* () {
       L10N.getStr("paramsQueryString"),
       "The params scope doesn't have the correct title.");
 
-    is(paramsScope.querySelectorAll(".variables-view-variable .name")[0].getAttribute("value"),
+    is(paramsScope.querySelectorAll(".variables-view-variable .name")[0]
+      .getAttribute("value"),
       "sts", "The param name was incorrect.");
-    is(paramsScope.querySelectorAll(".variables-view-variable .value")[0].getAttribute("value"),
+    is(paramsScope.querySelectorAll(".variables-view-variable .value")[0]
+      .getAttribute("value"),
       statusParamShownValue, "The param value was incorrect.");
 
     is(tabpanel.querySelector("#request-params-box")
@@ -196,7 +204,8 @@ var test = Task.async(function* () {
    * when NetworkDetails has been populated with the data of the given request.
    */
   function chooseRequest(index) {
+    let onTabUpdated = monitor.panelWin.once(EVENTS.TAB_UPDATED);
     EventUtils.sendMouseEvent({ type: "mousedown" }, requestItems[index].target);
-    return waitFor(monitor.panelWin, monitor.panelWin.EVENTS.TAB_UPDATED);
+    return onTabUpdated;
   }
 });
