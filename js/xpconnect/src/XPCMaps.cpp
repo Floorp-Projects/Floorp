@@ -278,24 +278,17 @@ NativeSetMap::Entry::Match(const PLDHashEntryHdr* entry, const void* key)
     if (!Addition && Set == SetInTable)
         return true;
 
-    uint16_t count = Set->GetInterfaceCount() + (Addition ? 1 : 0);
-    if (count != SetInTable->GetInterfaceCount())
+    uint16_t count = Set->GetInterfaceCount();
+    if (count + (Addition ? 1 : 0) != SetInTable->GetInterfaceCount())
         return false;
 
-    uint16_t Position = Key->GetPosition();
     XPCNativeInterface** CurrentInTable = SetInTable->GetInterfaceArray();
     XPCNativeInterface** Current = Set->GetInterfaceArray();
     for (uint16_t i = 0; i < count; i++) {
-        if (Addition && i == Position) {
-            if (Addition != *(CurrentInTable++))
-                return false;
-        } else {
-            if (*(Current++) != *(CurrentInTable++))
-                return false;
-        }
+        if (*(Current++) != *(CurrentInTable++))
+            return false;
     }
-
-    return true;
+    return !Addition || Addition == *(CurrentInTable++);
 }
 
 const struct PLDHashTableOps NativeSetMap::Entry::sOps =

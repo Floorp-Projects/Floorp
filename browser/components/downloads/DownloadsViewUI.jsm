@@ -295,13 +295,22 @@ this.DownloadsViewUI.DownloadElementShell.prototype = {
       dialogType,
     }).then(action => {
       if (action == "open") {
-        return this.download.unblock().then(() => this.downloadsCmd_open());
+        return this.unblockAndOpenDownload();
       } else if (action == "unblock") {
         return this.download.unblock();
       } else if (action == "confirmBlock") {
         return this.download.confirmBlock();
       }
     }).catch(Cu.reportError);
+  },
+
+  /**
+   * Unblocks the downloaded file and opens it.
+   *
+   * @return A promise that's resolved after the file has been opened.
+   */
+  unblockAndOpenDownload() {
+    return this.download.unblock().then(() => this.downloadsCmd_open());
   },
 
   /**
@@ -348,6 +357,7 @@ this.DownloadsViewUI.DownloadElementShell.prototype = {
       case "downloadsCmd_chooseUnblock":
       case "downloadsCmd_chooseOpen":
       case "downloadsCmd_unblock":
+      case "downloadsCmd_unblockAndOpen":
         return this.download.hasBlockedData;
     }
     return false;

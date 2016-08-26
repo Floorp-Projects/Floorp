@@ -11,6 +11,7 @@
 #include "mozIApplication.h"
 #include "nsGlobalWindow.h"
 #include "nsIAppsService.h"
+#include "nsIMutableArray.h"
 #include "nsIObserverService.h"
 #include "nsIPresentationControlChannel.h"
 #include "nsIPresentationDeviceManager.h"
@@ -19,9 +20,11 @@
 #include "nsIPresentationRequestUIGlue.h"
 #include "nsIPresentationSessionRequest.h"
 #include "nsIPresentationTerminateRequest.h"
+#include "nsISupportsPrimitives.h"
 #include "nsNetUtil.h"
 #include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
+#include "nsXPCOMCID.h"
 #include "nsXULAppAPI.h"
 #include "PresentationLog.h"
 
@@ -612,8 +615,18 @@ PresentationService::StartSession(const nsAString& aUrl,
     return aCallback->NotifyError(NS_ERROR_DOM_OPERATION_ERR);
   }
 
+  nsCOMPtr<nsIMutableArray> presentationUrls
+    = do_CreateInstance(NS_ARRAY_CONTRACTID);
+  if (!presentationUrls) {
+    return aCallback->NotifyError(NS_ERROR_DOM_OPERATION_ERR);
+  }
+  nsCOMPtr<nsISupportsString> supportsStr =
+    do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID);
+  supportsStr->SetData(aUrl);
+  presentationUrls->AppendElement(supportsStr, false);
+
   nsCOMPtr<nsIArray> devices;
-  nsresult rv = deviceManager->GetAvailableDevices(getter_AddRefs(devices));
+  nsresult rv = deviceManager->GetAvailableDevices(presentationUrls, getter_AddRefs(devices));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return aCallback->NotifyError(NS_ERROR_DOM_OPERATION_ERR);
   }

@@ -124,12 +124,6 @@ XPCOMUtils.defineConstant(this, "Editor", Editor);
 XPCOMUtils.defineLazyModuleGetter(this, "Chart",
   "resource://devtools/client/shared/widgets/Chart.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "Curl",
-  "resource://devtools/client/shared/Curl.jsm");
-
-XPCOMUtils.defineLazyModuleGetter(this, "CurlUtils",
-  "resource://devtools/client/shared/Curl.jsm");
-
 XPCOMUtils.defineLazyModuleGetter(this, "PluralForm",
   "resource://gre/modules/PluralForm.jsm");
 

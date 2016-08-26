@@ -31,6 +31,13 @@ interface nsIPresentationDevice : nsISupports
 
   // Do something when presentation session is disconnected.
   void disconnect();
+
+  /*
+   * Query if requested presentation URL is supported.
+   * @params requestedUrl the designated URL for a presentation request.
+   * @returns true if designated URL is supported.
+   */
+  boolean isRequestedUrlSupported(in DOMString requestedUrl);
 };
 
 

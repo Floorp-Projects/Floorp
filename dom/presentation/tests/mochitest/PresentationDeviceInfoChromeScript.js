@@ -22,8 +22,12 @@ var testProvider = {
 
 var testDevice = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIPresentationDevice]),
-  establishSessionTransport: function(url, presentationId) {
+  establishControlChannel: function() {
     return null;
+  },
+  disconnect: function() {},
+  isRequestedUrlSupported: function(requestedUrl) {
+    return true;
   },
   id: null,
   name: null,

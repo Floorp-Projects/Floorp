@@ -360,7 +360,7 @@ e.g. --branch-order v2.0,master"""
             repos=[{
                 "vcs": "hg",
                 "repo": self.config["tools_repo_url"],
-                "revision": self.config["tools_repo_revision"],
+                "branch": self.config["tools_repo_revision"],
                 "dest": "tools",
             }, {
                 "vcs": "gittool",

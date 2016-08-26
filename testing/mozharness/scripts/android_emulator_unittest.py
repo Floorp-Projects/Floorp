@@ -154,6 +154,11 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
             abs_dirs['abs_work_dir'], 'emulator')
         dirs['abs_mochitest_dir'] = os.path.join(
             dirs['abs_test_install_dir'], 'mochitest')
+        dirs['abs_marionette_dir'] = os.path.join(
+            dirs['abs_test_install_dir'], 'marionette', 'marionette')
+        dirs['abs_marionette_tests_dir'] = os.path.join(
+            dirs['abs_test_install_dir'], 'marionette', 'tests', 'testing',
+            'marionette', 'harness', 'marionette', 'tests')
         dirs['abs_avds_dir'] = self.config.get("avds_dir", "/home/cltbld/.android")
 
         for key in dirs.keys():
@@ -171,6 +176,9 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
             requirements = os.path.join(dirs['abs_mochitest_dir'],
                         'websocketprocessbridge',
                         'websocketprocessbridge_requirements.txt')
+        elif self.test_suite == 'marionette':
+            requirements = os.path.join(dirs['abs_test_install_dir'],
+                                    'config', 'marionette_requirements.txt')
 
             self.register_virtualenv_module(requirements=[requirements],
                                             two_pass=True)
@@ -459,6 +467,13 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
             'raw_log_file': raw_log_file,
             'error_summary_file': error_summary_file,
             'dm_trans': c['device_manager'],
+            # marionette options
+            'address': c.get('marionette_address'),
+            'gecko_log': os.path.join(dirs["abs_blob_upload_dir"], 'gecko.log'),
+            'test_manifest': os.path.join(
+                dirs['abs_marionette_tests_dir'],
+                self.config.get('marionette_test_manifest', '')
+            ),
         }
         for option in self.config["suite_definitions"][self.test_suite]["options"]:
             opt = option.split('=')[0]

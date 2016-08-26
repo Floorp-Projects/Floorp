@@ -37,29 +37,27 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["Curl", "CurlUtils"];
-
-Components.utils.import("resource://gre/modules/Services.jsm");
+const Services = require("Services");
 
 const DEFAULT_HTTP_VERSION = "HTTP/1.1";
 
-this.Curl = {
+const Curl = {
   /**
    * Generates a cURL command string which can be used from the command line etc.
    *
-   * @param object aData
+   * @param object data
    *        Datasource to create the command from.
    *        The object must contain the following properties:
-   *          - url:string, the URL of the request.
-   *          - method:string, the request method upper cased. HEAD / GET / POST etc.
-   *          - headers:array, an array of request headers {name:x, value:x} tuples.
-   *          - httpVersion:string, http protocol version rfc2616 formatted. Eg. "HTTP/1.1"
-   *          - postDataText:string, optional - the request payload.
+   *        - url:string, the URL of the request.
+   *        - method:string, the request method upper cased. HEAD / GET / POST etc.
+   *        - headers:array, an array of request headers {name:x, value:x} tuples.
+   *        - httpVersion:string, http protocol version rfc2616 formatted. Eg. "HTTP/1.1"
+   *        - postDataText:string, optional - the request payload.
    *
    * @return string
    *         A cURL command.
    */
-  generateCommand: function (aData) {
+  generateCommand: function (data) {
     let utils = CurlUtils;
 
     let command = ["curl"];
@@ -71,49 +69,49 @@ this.Curl = {
                        utils.escapeStringWin : utils.escapeStringPosix;
 
     // Add URL.
-    command.push(escapeString(aData.url));
+    command.push(escapeString(data.url));
 
     let postDataText = null;
-    let multipartRequest = utils.isMultipartRequest(aData);
+    let multipartRequest = utils.isMultipartRequest(data);
 
     // Create post data.
-    let data = [];
-    if (utils.isUrlEncodedRequest(aData) || aData.method == "PUT") {
-      postDataText = aData.postDataText;
-      data.push("--data");
-      data.push(escapeString(utils.writePostDataTextParams(postDataText)));
+    let postData = [];
+    if (utils.isUrlEncodedRequest(data) || data.method == "PUT") {
+      postDataText = data.postDataText;
+      postData.push("--data");
+      postData.push(escapeString(utils.writePostDataTextParams(postDataText)));
       ignoredHeaders.add("Content-Length");
     } else if (multipartRequest) {
-      postDataText = aData.postDataText;
-      data.push("--data-binary");
-      let boundary = utils.getMultipartBoundary(aData);
+      postDataText = data.postDataText;
+      postData.push("--data-binary");
+      let boundary = utils.getMultipartBoundary(data);
       let text = utils.removeBinaryDataFromMultipartText(postDataText, boundary);
-      data.push(escapeString(text));
+      postData.push(escapeString(text));
       ignoredHeaders.add("Content-Length");
     }
 
     // Add method.
     // For GET and POST requests this is not necessary as GET is the
     // default. If --data or --binary is added POST is the default.
-    if (!(aData.method == "GET" || aData.method == "POST")) {
+    if (!(data.method == "GET" || data.method == "POST")) {
       command.push("-X");
-      command.push(aData.method);
+      command.push(data.method);
     }
 
     // Add -I (HEAD)
     // For servers that supports HEAD.
     // This will fetch the header of a document only.
-    if (aData.method == "HEAD") {
+    if (data.method == "HEAD") {
       command.push("-I");
     }
 
     // Add http version.
-    if (aData.httpVersion && aData.httpVersion != DEFAULT_HTTP_VERSION) {
-      command.push("--" + aData.httpVersion.split("/")[1]);
+    if (data.httpVersion && data.httpVersion != DEFAULT_HTTP_VERSION) {
+      command.push("--" + data.httpVersion.split("/")[1]);
     }
 
     // Add request headers.
-    let headers = aData.headers;
+    let headers = data.headers;
     if (multipartRequest) {
       let multipartHeaders = utils.getHeadersFromMultipartText(postDataText);
       headers = headers.concat(multipartHeaders);
@@ -132,26 +130,28 @@ this.Curl = {
     }
 
     // Add post data.
-    command = command.concat(data);
+    command = command.concat(postData);
 
     return command.join(" ");
   }
 };
 
+exports.Curl = Curl;
+
 /**
  * Utility functions for the Curl command generator.
  */
-this.CurlUtils = {
+const CurlUtils = {
   /**
    * Check if the request is an URL encoded request.
    *
-   * @param object aData
+   * @param object data
    *        The data source. See the description in the Curl object.
    * @return boolean
    *         True if the request is URL encoded, false otherwise.
    */
-  isUrlEncodedRequest: function (aData) {
-    let postDataText = aData.postDataText;
+  isUrlEncodedRequest: function (data) {
+    let postDataText = data.postDataText;
     if (!postDataText) {
       return false;
     }
@@ -161,7 +161,7 @@ this.CurlUtils = {
       return true;
     }
 
-    let contentType = this.findHeader(aData.headers, "content-type");
+    let contentType = this.findHeader(data.headers, "content-type");
 
     return (contentType &&
       contentType.toLowerCase().includes("application/x-www-form-urlencoded"));
@@ -170,13 +170,13 @@ this.CurlUtils = {
   /**
    * Check if the request is a multipart request.
    *
-   * @param object aData
+   * @param object data
    *        The data source.
    * @return boolean
    *         True if the request is multipart reqeust, false otherwise.
    */
-  isMultipartRequest: function (aData) {
-    let postDataText = aData.postDataText;
+  isMultipartRequest: function (data) {
+    let postDataText = data.postDataText;
     if (!postDataText) {
       return false;
     }
@@ -186,7 +186,7 @@ this.CurlUtils = {
       return true;
     }
 
-    let contentType = this.findHeader(aData.headers, "content-type");
+    let contentType = this.findHeader(data.headers, "content-type");
 
     return (contentType &&
       contentType.toLowerCase().includes("multipart/form-data;"));
@@ -195,33 +195,33 @@ this.CurlUtils = {
   /**
    * Write out paramters from post data text.
    *
-   * @param object aPostDataText
+   * @param object postDataText
    *        Post data text.
    * @return string
    *         Post data parameters.
    */
-  writePostDataTextParams: function (aPostDataText) {
-    let lines = aPostDataText.split("\r\n");
+  writePostDataTextParams: function (postDataText) {
+    let lines = postDataText.split("\r\n");
     return lines[lines.length - 1];
   },
 
   /**
    * Finds the header with the given name in the headers array.
    *
-   * @param array aHeaders
+   * @param array headers
    *        Array of headers info {name:x, value:x}.
-   * @param string aName
+   * @param string name
    *        The header name to find.
    * @return string
    *         The found header value or null if not found.
    */
-  findHeader: function (aHeaders, aName) {
-    if (!aHeaders) {
+  findHeader: function (headers, name) {
+    if (!headers) {
       return null;
     }
 
-    let name = aName.toLowerCase();
-    for (let header of aHeaders) {
+    name = name.toLowerCase();
+    for (let header of headers) {
       if (name == header.name.toLowerCase()) {
         return header.value;
       }
@@ -233,23 +233,23 @@ this.CurlUtils = {
   /**
    * Returns the boundary string for a multipart request.
    *
-   * @param string aData
+   * @param string data
    *        The data source. See the description in the Curl object.
    * @return string
    *         The boundary string for the request.
    */
-  getMultipartBoundary: function (aData) {
+  getMultipartBoundary: function (data) {
     let boundaryRe = /\bboundary=(-{3,}\w+)/i;
 
     // Get the boundary string from the Content-Type request header.
-    let contentType = this.findHeader(aData.headers, "Content-Type");
+    let contentType = this.findHeader(data.headers, "Content-Type");
     if (boundaryRe.test(contentType)) {
       return contentType.match(boundaryRe)[1];
     }
     // Temporary workaround. As of 2014-03-11 the requestHeaders array does not
     // always contain the Content-Type header for mulitpart requests. See bug 978144.
     // Find the header from the request payload.
-    let boundaryString = aData.postDataText.match(boundaryRe)[1];
+    let boundaryString = data.postDataText.match(boundaryRe)[1];
     if (boundaryString) {
       return boundaryString;
     }
@@ -258,19 +258,19 @@ this.CurlUtils = {
   },
 
   /**
-   * Removes the binary data from mulitpart text.
+   * Removes the binary data from multipart text.
    *
-   * @param string aMultipartText
+   * @param string multipartText
    *        Multipart form data text.
-   * @param string aBoundary
+   * @param string boundary
    *        The boundary string.
    * @return string
-   *         The mulitpart text without the binary data.
+   *         The multipart text without the binary data.
    */
-  removeBinaryDataFromMultipartText: function (aMultipartText, aBoundary) {
+  removeBinaryDataFromMultipartText: function (multipartText, boundary) {
     let result = "";
-    let boundary = "--" + aBoundary;
-    let parts = aMultipartText.split(boundary);
+    boundary = "--" + boundary;
+    let parts = multipartText.split(boundary);
     for (let part of parts) {
       // Each part is expected to have a content disposition line.
       let contentDispositionLine = part.trimLeft().split("\r\n")[0];
@@ -284,8 +284,7 @@ this.CurlUtils = {
           // Add only the headers to the result.
           let headers = part.split("\r\n\r\n")[0];
           result += boundary + "\r\n" + headers + "\r\n\r\n";
-        }
-        else {
+        } else {
           result += boundary + "\r\n" + part;
         }
       }
@@ -298,25 +297,25 @@ this.CurlUtils = {
   /**
    * Get the headers from a multipart post data text.
    *
-   * @param string aMultipartText
+   * @param string multipartText
    *        Multipart post text.
    * @return array
    *         An array of header objects {name:x, value:x}
    */
-  getHeadersFromMultipartText: function (aMultipartText) {
+  getHeadersFromMultipartText: function (multipartText) {
     let headers = [];
-    if (!aMultipartText || aMultipartText.startsWith("---")) {
+    if (!multipartText || multipartText.startsWith("---")) {
       return headers;
     }
 
     // Get the header section.
-    let index = aMultipartText.indexOf("\r\n\r\n");
+    let index = multipartText.indexOf("\r\n\r\n");
     if (index == -1) {
       return headers;
     }
 
     // Parse the header lines.
-    let headersText = aMultipartText.substring(0, index);
+    let headersText = multipartText.substring(0, index);
     let headerLines = headersText.split("\r\n");
     let lastHeaderName = null;
 
@@ -367,10 +366,10 @@ this.CurlUtils = {
                         .replace(/\n/g, "\\n")
                         .replace(/\r/g, "\\r")
                         .replace(/[^\x20-\x7E]/g, escapeCharacter) + "'";
-    } else {
-      // Use single quote syntax.
-      return "'" + str + "'";
     }
+
+    // Use single quote syntax.
+    return "'" + str + "'";
   },
 
   /**
@@ -398,3 +397,5 @@ this.CurlUtils = {
                      .replace(/[\r\n]+/g, "\"^$&\"") + "\"";
   }
 };
+
+exports.CurlUtils = CurlUtils;

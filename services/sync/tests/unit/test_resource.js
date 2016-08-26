@@ -442,6 +442,8 @@ function run_test() {
   // It throws and logs.
   do_check_eq(error.result, Cr.NS_ERROR_MALFORMED_URI);
   do_check_eq(error, "Error: NS_ERROR_MALFORMED_URI");
+  // Note the strings haven't been formatted yet, but that's OK for this test.
+  do_check_eq(warnings.pop(), "${action} request to ${url} failed: ${ex}");
   do_check_eq(warnings.pop(),
               "Got exception calling onProgress handler during fetch of " +
               server.baseURI + "/json");
@@ -465,6 +467,7 @@ function run_test() {
   // It throws and logs.
   do_check_eq(error.result, Cr.NS_ERROR_XPC_JS_THREW_STRING);
   do_check_eq(error, "Error: NS_ERROR_XPC_JS_THREW_STRING");
+  do_check_eq(warnings.pop(), "${action} request to ${url} failed: ${ex}");
   do_check_eq(warnings.pop(),
               "Got exception calling onProgress handler during fetch of " +
               server.baseURI + "/json");

@@ -432,7 +432,8 @@ XPCWrappedNative::GetNewOrUsed(xpcObjectHelper& helper,
             iface = XPCNativeInterface::GetISupports();
 
         AutoMarkingNativeSetPtr set(cx);
-        set = XPCNativeSet::GetNewOrUsed(nullptr, iface, 0);
+        XPCNativeSetKey key(iface);
+        set = XPCNativeSet::GetNewOrUsed(&key);
 
         if (!set)
             return NS_ERROR_FAILURE;
@@ -1017,8 +1018,8 @@ XPCWrappedNative::ExtendSet(XPCNativeInterface* aInterface)
 
     if (!mSet->HasInterface(aInterface)) {
         AutoMarkingNativeSetPtr newSet(cx);
-        newSet = XPCNativeSet::GetNewOrUsed(mSet, aInterface,
-                                            mSet->GetInterfaceCount());
+        XPCNativeSetKey key(mSet, aInterface);
+        newSet = XPCNativeSet::GetNewOrUsed(&key);
         if (!newSet)
             return false;
 
