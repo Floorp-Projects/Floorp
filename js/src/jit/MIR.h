@@ -6584,6 +6584,16 @@ class MRandom : public MNullaryInstruction
 
     void computeRange(TempAllocator& alloc) override;
 
+    MOZ_MUST_USE bool writeRecoverData(CompactBufferWriter& writer) const override;
+
+    bool canRecoverOnBailout() const override {
+#ifdef JS_MORE_DETERMINISTIC
+        return false;
+#else
+        return true;
+#endif
+    }
+
     ALLOW_CLONE(MRandom)
 };
 
