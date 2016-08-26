@@ -13,11 +13,10 @@
   runTest(() => {
     var testAudio = createMediaElement('audio', 'testAudio');
     return new Promise((resolve, reject) => {
-      navigator.mozGetUserMedia({ audio: true }, stream => {
+      navigator.mozGetUserMedia({ audio: true }, () => {
         SpecialPowers.spinEventLoop(window);
-        ok(true, "Didn't crash");
-        stream.getTracks().forEach(t => t.stop());
-        resolve();
+               ok(true, "Didn't crash");
+               resolve();
       }, () => {});
     });
   });
