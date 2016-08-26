@@ -4809,7 +4809,7 @@ nsGridContainerFrame::ReflowInFragmentainer(GridReflowInput&     aState,
   const uint32_t startRow = aState.mStartRow;
   const uint32_t numRows = aState.mRows.mSizes.Length();
   bool isBDBClone = aState.mReflowInput->mStyleBorder->mBoxDecorationBreak ==
-                      NS_STYLE_BOX_DECORATION_BREAK_CLONE;
+                      StyleBoxDecorationBreak::Clone;
   nscoord bpBEnd = aState.mBorderPadding.BEnd(aState.mWM);
 
   // Set |endRow| to the first row that doesn't fit.
@@ -4999,7 +4999,7 @@ nsGridContainerFrame::ReflowRowsInFragmentainer(
   FrameHashtable incompleteItems;
   FrameHashtable overflowIncompleteItems;
   bool isBDBClone = aState.mReflowInput->mStyleBorder->mBoxDecorationBreak ==
-                      NS_STYLE_BOX_DECORATION_BREAK_CLONE;
+                      StyleBoxDecorationBreak::Clone;
   bool didGrowRow = false;
   // As we walk across rows, we track whether the current row is at the top
   // of its grid-fragment, to help decide whether we can break before it. When
@@ -5614,7 +5614,7 @@ nsGridContainerFrame::Reflow(nsPresContext*           aPresContext,
   if (!NS_FRAME_IS_COMPLETE(aStatus) &&
       !gridReflowInput.mSkipSides.BEnd() &&
       StyleBorder()->mBoxDecorationBreak !=
-        NS_STYLE_BOX_DECORATION_BREAK_CLONE) {
+        StyleBoxDecorationBreak::Clone) {
     bp.BEnd(wm) = nscoord(0);
   }
 
