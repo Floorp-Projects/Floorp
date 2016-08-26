@@ -175,6 +175,18 @@ var grid_template_test_cases = [
         gridTemplateColumns: isGridTemplateSubgridValueEnabled ? "subgrid [] [foo]" : "none",
         gridTemplateRows: isGridTemplateSubgridValueEnabled ? "subgrid [bar]" : "none",
     },
+    {
+        specified: "'fizz' repeat(1, 100px)",
+    },
+    {
+        specified: "'fizz' repeat(auto-fill, 100px)",
+    },
+    {
+        specified: "'fizz' / repeat(1, 100px)",
+    },
+    {
+        specified: "'fizz' / repeat(auto-fill, 100px)",
+    },
 ];
 
 grid_test_cases = grid_template_test_cases.concat([
