@@ -385,6 +385,13 @@ MediaSourceTrackDemuxer::DoSeek(media::TimeUnit aTime)
   buffered.SetFuzz(MediaSourceDemuxer::EOS_FUZZ / 2);
   TimeUnit seekTime = std::max(aTime - mPreRoll, TimeUnit::FromMicroseconds(0));
 
+  if (mManager->IsEnded() && seekTime >= buffered.GetEnd()) {
+    // We're attempting to seek past the end time. Cap seekTime so that we seek
+    // to the last sample instead.
+    seekTime =
+      std::max(mManager->HighestStartTime(mType) - mPreRoll,
+               TimeUnit::FromMicroseconds(0));
+  }
   if (!buffered.Contains(seekTime)) {
     if (!buffered.Contains(aTime)) {
       // We don't have the data to seek to.
@@ -392,7 +399,7 @@ MediaSourceTrackDemuxer::DoSeek(media::TimeUnit aTime)
         mManager->IsEnded() ? DemuxerFailureReason::END_OF_STREAM :
                               DemuxerFailureReason::WAITING_FOR_DATA, __func__);
     }
-    // Theorically we should reject the promise with WAITING_FOR_DATA,
+    // Theoretically we should reject the promise with WAITING_FOR_DATA,
     // however, to avoid unwanted regressions we assume that if at this time
     // we don't have the wanted data it won't come later.
     // Instead of using the pre-rolled time, use the earliest time available in
