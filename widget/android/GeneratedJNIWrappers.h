@@ -875,6 +875,26 @@ public:
 
     static auto GetDpi() -> int32_t;
 
+    struct GetExceptionStackTrace_t {
+        typedef GeckoAppShell Owner;
+        typedef mozilla::jni::String::LocalRef ReturnType;
+        typedef mozilla::jni::String::Param SetterType;
+        typedef mozilla::jni::Args<
+                mozilla::jni::Throwable::Param> Args;
+        static constexpr char name[] = "getExceptionStackTrace";
+        static constexpr char signature[] =
+                "(Ljava/lang/Throwable;)Ljava/lang/String;";
+        static const bool isStatic = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::IGNORE;
+        static const mozilla::jni::CallingThread callingThread =
+                mozilla::jni::CallingThread::ANY;
+        static const mozilla::jni::DispatchTarget dispatchTarget =
+                mozilla::jni::DispatchTarget::CURRENT;
+    };
+
+    static auto GetExceptionStackTrace(mozilla::jni::Throwable::Param) -> mozilla::jni::String::LocalRef;
+
     struct GetExtensionFromMimeType_t {
         typedef GeckoAppShell Owner;
         typedef mozilla::jni::String::LocalRef ReturnType;
@@ -1294,13 +1314,13 @@ public:
 
     struct HandleUncaughtException_t {
         typedef GeckoAppShell Owner;
-        typedef mozilla::jni::String::LocalRef ReturnType;
-        typedef mozilla::jni::String::Param SetterType;
+        typedef void ReturnType;
+        typedef void SetterType;
         typedef mozilla::jni::Args<
                 mozilla::jni::Throwable::Param> Args;
         static constexpr char name[] = "handleUncaughtException";
         static constexpr char signature[] =
-                "(Ljava/lang/Throwable;)Ljava/lang/String;";
+                "(Ljava/lang/Throwable;)V";
         static const bool isStatic = true;
         static const mozilla::jni::ExceptionMode exceptionMode =
                 mozilla::jni::ExceptionMode::IGNORE;
@@ -1310,7 +1330,7 @@ public:
                 mozilla::jni::DispatchTarget::CURRENT;
     };
 
-    static auto HandleUncaughtException(mozilla::jni::Throwable::Param) -> mozilla::jni::String::LocalRef;
+    static auto HandleUncaughtException(mozilla::jni::Throwable::Param) -> void;
 
     struct HideProgressDialog_t {
         typedef GeckoAppShell Owner;

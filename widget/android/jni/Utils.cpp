@@ -149,19 +149,23 @@ bool HandleUncaughtException(JNIEnv* aEnv)
 #endif
 
     Throwable::LocalRef e =
-            Throwable::LocalRef::Adopt(aEnv->ExceptionOccurred());
+            Throwable::LocalRef::Adopt(aEnv, aEnv->ExceptionOccurred());
     MOZ_ASSERT(e);
+    aEnv->ExceptionClear();
+
+    String::LocalRef stack = java::GeckoAppShell::GetExceptionStackTrace(e);
+    if (stack && NS_SUCCEEDED(CrashReporter::AnnotateCrashReport(
+            NS_LITERAL_CSTRING("JavaStackTrace"), stack->ToCString());
+        return true;
+    }
 
     aEnv->ExceptionClear();
-    String::LocalRef stack = java::GeckoAppShell::HandleUncaughtException(e);
+    java::GeckoAppShell::HandleUncaughtException(e);
 
-#ifdef MOZ_CRASHREPORTER
-    if (stack) {
-        // GeckoAppShell wants us to annotate and trigger the crash reporter.
-        CrashReporter::AnnotateCrashReport(
-                NS_LITERAL_CSTRING("AuxiliaryJavaStack"), stack->ToCString());
+    if (NS_WARN_IF(aEnv->ExceptionCheck())) {
+        aEnv->ExceptionDescribe();
+        aEnv->ExceptionClear();
     }
-#endif // MOZ_CRASHREPORTER
 
     return true;
 }
