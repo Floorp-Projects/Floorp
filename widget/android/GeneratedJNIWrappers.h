@@ -4624,7 +4624,7 @@ public:
         static const mozilla::jni::CallingThread callingThread =
                 mozilla::jni::CallingThread::ANY;
         static const mozilla::jni::DispatchTarget dispatchTarget =
-                mozilla::jni::DispatchTarget::PROXY;
+                mozilla::jni::DispatchTarget::GECKO;
     };
 
     struct CreateCompositor_t {
@@ -4679,7 +4679,7 @@ public:
         static const mozilla::jni::CallingThread callingThread =
                 mozilla::jni::CallingThread::UI;
         static const mozilla::jni::DispatchTarget dispatchTarget =
-                mozilla::jni::DispatchTarget::PROXY;
+                mozilla::jni::DispatchTarget::GECKO;
     };
 
     struct GetSurface_t {
@@ -4719,7 +4719,7 @@ public:
         static const mozilla::jni::CallingThread callingThread =
                 mozilla::jni::CallingThread::ANY;
         static const mozilla::jni::DispatchTarget dispatchTarget =
-                mozilla::jni::DispatchTarget::PROXY;
+                mozilla::jni::DispatchTarget::GECKO;
     };
 
     struct Reattach_t {
@@ -4791,7 +4791,7 @@ public:
         static const mozilla::jni::CallingThread callingThread =
                 mozilla::jni::CallingThread::UI;
         static const mozilla::jni::DispatchTarget dispatchTarget =
-                mozilla::jni::DispatchTarget::PROXY;
+                mozilla::jni::DispatchTarget::CURRENT;
     };
 
     static const mozilla::jni::CallingThread callingThread =
