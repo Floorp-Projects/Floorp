@@ -428,12 +428,12 @@ NeckoChild::RecvAppOfflineStatus(const uint32_t& aId, const bool& aOffline)
 }
 
 bool
-NeckoChild::RecvSpeculativeConnectRequest(const nsCString& aNotificationData)
+NeckoChild::RecvSpeculativeConnectRequest()
 {
   nsCOMPtr<nsIObserverService> obsService = services::GetObserverService();
   if (obsService) {
     obsService->NotifyObservers(nullptr, "speculative-connect-request",
-                                NS_ConvertUTF8toUTF16(aNotificationData).get());
+                                nullptr);
   }
   return true;
 }

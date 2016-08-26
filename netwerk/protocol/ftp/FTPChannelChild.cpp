@@ -320,11 +320,18 @@ FTPChannelChild::DoOnStartRequest(const nsresult& aChannelStatus,
 
   nsCString spec;
   nsCOMPtr<nsIURI> uri = DeserializeURI(aURI);
-  uri->GetSpec(spec);
-  nsBaseChannel::URI()->SetSpec(spec);
+  nsresult rv = uri->GetSpec(spec);
+  if (NS_SUCCEEDED(rv)) {
+    rv = nsBaseChannel::URI()->SetSpec(spec);
+    if (NS_FAILED(rv)) {
+      Cancel(rv);
+    }
+  } else {
+    Cancel(rv);
+  }
 
   AutoEventEnqueuer ensureSerialDispatch(mEventQ);
-  nsresult rv = mListener->OnStartRequest(this, mListenerContext);
+  rv = mListener->OnStartRequest(this, mListenerContext);
   if (NS_FAILED(rv))
     Cancel(rv);
 
