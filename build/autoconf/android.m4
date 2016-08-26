@@ -221,8 +221,8 @@ fi
 ])
 
 dnl Configure an Android SDK.
-dnl Arg 1: target SDK version, like 22.
-dnl Arg 2: build tools version, like 22.0.1.
+dnl Arg 1: target SDK version, like 23.
+dnl Arg 2: list of build-tools versions, like "23.0.3 23.0.1".
 AC_DEFUN([MOZ_ANDROID_SDK],
 [
 
@@ -254,12 +254,20 @@ case "$target" in
     fi
     AC_MSG_RESULT([$android_sdk])
 
-    android_build_tools="$android_sdk_root"/build-tools/$2
-    AC_MSG_CHECKING([for Android build-tools version $2])
-    if test -d "$android_build_tools" -a -f "$android_build_tools/aapt"; then
-        AC_MSG_RESULT([$android_build_tools])
-    else
-        AC_MSG_ERROR([You must install the Android build-tools version $2.  Try |mach bootstrap|.  (Looked for $android_build_tools)])
+    AC_MSG_CHECKING([for Android build-tools])
+    android_build_tools_base="$android_sdk_root"/build-tools
+    android_build_tools_version=""
+    for version in $2; do
+        android_build_tools="$android_build_tools_base"/$version
+        if test -d "$android_build_tools" -a -f "$android_build_tools/aapt"; then
+            android_build_tools_version=$version
+            AC_MSG_RESULT([$android_build_tools])
+            break
+        fi
+    done
+    if test "$android_build_tools_version" == ""; then
+        version=$(echo $2 | cut -d" " -f1)
+        AC_MSG_ERROR([You must install the Android build-tools version $version.  Try |mach bootstrap|.  (Looked for "$android_build_tools_base"/$version)])
     fi
 
     MOZ_PATH_PROG(ZIPALIGN, zipalign, :, [$android_build_tools])
@@ -309,7 +317,7 @@ case "$target" in
     ANDROID_SDK="${android_sdk}"
     ANDROID_SDK_ROOT="${android_sdk_root}"
     ANDROID_TOOLS="${android_tools}"
-    ANDROID_BUILD_TOOLS_VERSION="$2"
+    ANDROID_BUILD_TOOLS_VERSION="$android_build_tools_version"
     AC_DEFINE_UNQUOTED(ANDROID_TARGET_SDK,$ANDROID_TARGET_SDK)
     AC_SUBST(ANDROID_TARGET_SDK)
     AC_SUBST(ANDROID_SDK_ROOT)
