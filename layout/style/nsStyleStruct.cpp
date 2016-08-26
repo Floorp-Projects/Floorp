@@ -828,7 +828,7 @@ nsStyleList::sNoneQuotes;
 nsStyleXUL::nsStyleXUL(StyleStructContext aContext)
   : mBoxFlex(0.0f)
   , mBoxOrdinal(1)
-  , mBoxAlign(NS_STYLE_BOX_ALIGN_STRETCH)
+  , mBoxAlign(StyleBoxAlign::Stretch)
   , mBoxDirection(NS_STYLE_BOX_DIRECTION_NORMAL)
   , mBoxOrient(NS_STYLE_BOX_ORIENT_HORIZONTAL)
   , mBoxPack(NS_STYLE_BOX_PACK_START)

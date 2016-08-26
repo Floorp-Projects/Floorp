@@ -62,6 +62,15 @@ enum class StyleBasicShapeType : uint8_t {
   Inset,
 };
 
+// box-align
+enum class StyleBoxAlign : uint8_t {
+  Stretch,
+  Start,
+  Center,
+  Baseline,
+  End,
+};
+
 // box-sizing
 enum class StyleBoxSizing : uint8_t {
   Content,
@@ -167,13 +176,6 @@ enum class StyleUserSelect : uint8_t {
 #define NS_STYLE_WINDOW_DRAGGING_DEFAULT 0
 #define NS_STYLE_WINDOW_DRAGGING_DRAG    1
 #define NS_STYLE_WINDOW_DRAGGING_NO_DRAG 2
-
-// box-align
-#define NS_STYLE_BOX_ALIGN_STRETCH     0
-#define NS_STYLE_BOX_ALIGN_START       1
-#define NS_STYLE_BOX_ALIGN_CENTER      2
-#define NS_STYLE_BOX_ALIGN_BASELINE    3
-#define NS_STYLE_BOX_ALIGN_END         4
 
 // box-pack
 #define NS_STYLE_BOX_PACK_START        0
