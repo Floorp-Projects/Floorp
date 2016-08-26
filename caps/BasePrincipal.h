@@ -66,6 +66,9 @@ protected:
   OriginAttributes() {}
   explicit OriginAttributes(const OriginAttributesDictionary& aOther)
     : OriginAttributesDictionary(aOther) {}
+
+  // check if "privacy.firstparty.isolate" is enabled.
+  bool IsFirstPartyEnabled();
 };
 
 class PrincipalOriginAttributes;
@@ -137,7 +140,11 @@ public:
   // is made.
   void InheritFromDocToNecko(const PrincipalOriginAttributes& aAttrs);
 
-  void InheritFromDocShellToNecko(const DocShellOriginAttributes& aAttrs);
+  // Inheriting OriginAttributes from a docshell when loading a top-level
+  // document.
+  void InheritFromDocShellToNecko(const DocShellOriginAttributes& aAttrs,
+                                  const bool aIsTopLevelDocument = false,
+                                  nsIURI* aURI = nullptr);
 };
 
 // For operating on OriginAttributes not associated with any data structure.
