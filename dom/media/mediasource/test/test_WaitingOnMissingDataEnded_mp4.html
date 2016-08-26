@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html><head>
+<meta http-equiv="content-type" content="text/html; charset=windows-1252">
+  <title>MSE: |waiting| event when source data is missing</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="mediasource.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test"><script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+runWithMSE(function(ms, el) {
+  el.controls = true;
+  once(ms, 'sourceopen').then(function() {
+    ok(true, "Receive a sourceopen event");
+    el.addEventListener("ended", function () {
+      ok(false, "ended should never fire");
+      SimpleTest.finish();
+    });
+    var videosb = ms.addSourceBuffer("video/mp4");
+    fetchAndLoad(videosb, 'bipbop/bipbop_video', ['init'], '.mp4')
+    .then(fetchAndLoad.bind(null, videosb, 'bipbop/bipbop_video', range(1, 5), '.m4s'))
+    .then(fetchAndLoad.bind(null, videosb, 'bipbop/bipbop_video', range(6, 8), '.m4s'))
+    .then(function() {
+      is(el.buffered.length, 2, "discontinuous buffered range");
+      ms.endOfStream();
+      return Promise.all([once(el, "durationchange"), once(ms, "sourceended")]);
+    }).then(function() {
+      // HTMLMediaElement fires 'waiting' if somebody invokes |play()| before the MDSM
+      // has notified it of available data. Make sure that we get 'playing' before
+      // we starting waiting for 'waiting'.
+      info("Invoking play()");
+      el.play();
+      return once(el, 'playing');
+    }).then(function() {
+      ok(true, "Video playing. It should play for a bit, then fire 'waiting'");
+      return once(el, 'waiting');
+    }).then(function() {
+      // waiting is fired when we start to play the last frame.
+      // 0.033334 is the duration of the last frame, + 0.000001 of fuzz.
+      // the next video frame, currentTime can be up to 1 frame's worth earlier than end of video.
+      isfuzzy(el.currentTime, videosb.buffered.end(0), 0.033334, "waiting was fired on gap");
+      SimpleTest.finish();
+    });
+  });
+});
+
+</script>
+</pre>
+</body>
+</html>
