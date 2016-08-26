@@ -34,7 +34,7 @@ fuzzy-if(Android,255,147) == pre-line-1.html pre-line-1-ref.html
 == pre-line-3.html pre-line-3-ref.html
 == pre-line-4.html pre-line-4-ref.html
 == pre-space-1.html pre-space-1-ref.html
-== pre-wrap-1.html pre-wrap-1-ref.html
+fails == pre-wrap-1.html pre-wrap-1-ref.html # bug 1008019
 == soft-hyphens-1a.html soft-hyphens-1-ref.html
 == soft-hyphens-1b.html soft-hyphens-1-ref.html
 == soft-hyphens-1c.html soft-hyphens-1-ref.html
