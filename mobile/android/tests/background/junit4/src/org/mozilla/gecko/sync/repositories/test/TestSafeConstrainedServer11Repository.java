@@ -11,6 +11,7 @@ import org.mozilla.android.sync.test.helpers.MockServer;
 import org.mozilla.gecko.background.testhelpers.TestRunner;
 import org.mozilla.gecko.background.testhelpers.WaitHelper;
 import org.mozilla.gecko.sync.InfoCollections;
+import org.mozilla.gecko.sync.InfoConfiguration;
 import org.mozilla.gecko.sync.JSONRecordFetcher;
 import org.mozilla.gecko.sync.net.AuthHeaderProvider;
 import org.mozilla.gecko.sync.repositories.RepositorySession;
@@ -35,6 +36,7 @@ public class TestSafeConstrainedServer11Repository {
   }
 
   protected final InfoCollections infoCollections = new InfoCollections();
+  protected final InfoConfiguration infoConfiguration = new InfoConfiguration();
 
   private class CountsMockServer extends MockServer {
     public final AtomicInteger count = new AtomicInteger(0);
@@ -85,7 +87,7 @@ public class TestSafeConstrainedServer11Repository {
 
       final int TEST_LIMIT = 1000;
       final SafeConstrainedServer11Repository repo = new SafeConstrainedServer11Repository(
-          collection, getCollectionURL(collection), null, infoCollections,
+          collection, getCollectionURL(collection), null, infoCollections, infoConfiguration,
           TEST_LIMIT, sort, countFetcher);
 
       final AtomicBoolean shouldSkipLots = new AtomicBoolean(false);
