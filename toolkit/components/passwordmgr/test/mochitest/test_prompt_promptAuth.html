@@ -22,13 +22,6 @@
 var state, action;
 var isOk;
 
-var ioService = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
-
-// popupNotifications (not *popup*) is a constant, per-tab container. So, we
-// only need to fetch it once.
-var popupNotifications = getPopupNotifications(window.top);
-ok(popupNotifications, "Got popupNotifications");
-
 var level = Ci.nsIAuthPrompt2.LEVEL_NONE;
 var authinfo = {
   username : "",
@@ -45,27 +38,6 @@ var iframe = document.getElementById("iframe");
 // Force parent to not look for tab-modal prompts, as they're not used for auth prompts.
 isTabModal = false;
 
-var channel1 = ioService.newChannel2("http://example.com",
-                                     null,
-                                     null,
-                                     null,      // aLoadingNode
-                                     SpecialPowers.Services.
-                                     scriptSecurityManager.getSystemPrincipal(),
-                                     null,      // aTriggeringPrincipal
-                                     Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
-                                     Ci.nsIContentPolicy.TYPE_OTHER);
-
-var channel2 = ioService.newChannel2("http://example2.com",
-                                     null,
-                                     null,
-                                     null,      // aLoadingNode
-                                     SpecialPowers.Services.
-                                     scriptSecurityManager.getSystemPrincipal(),
-                                     null,      // aTriggeringPrincipal
-                                     Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
-                                     Ci.nsIContentPolicy.TYPE_OTHER);
-
-
 let chromeScript = runInParent(SimpleTest.getTestFileURL("pwmgr_common.js"));
 
 let prompterParent = runInParent(() => {
@@ -73,11 +45,39 @@ let prompterParent = runInParent(() => {
   const promptFac = Cc["@mozilla.org/passwordmanager/authpromptfactory;1"].
                     getService(Ci.nsIPromptFactory);
 
+  Cu.import("resource://gre/modules/Services.jsm");
   let chromeWin = Services.wm.getMostRecentWindow("navigator:browser");
   let prompter2 = promptFac.getPrompt(chromeWin, Ci.nsIAuthPrompt2);
 
+  let ioService = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
+  let channels = {};
+  channels.channel1 = ioService.newChannel2("http://example.com",
+                                            null,
+                                            null,
+                                            null,      // aLoadingNode
+                                            Services.
+                                            scriptSecurityManager.getSystemPrincipal(),
+                                            null,      // aTriggeringPrincipal
+                                            Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
+                                            Ci.nsIContentPolicy.TYPE_OTHER);
+
+  channels.channel2 = ioService.newChannel2("http://example2.com",
+                                            null,
+                                            null,
+                                            null,      // aLoadingNode
+                                            Services.
+                                            scriptSecurityManager.getSystemPrincipal(),
+                                            null,      // aTriggeringPrincipal
+                                            Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
+                                            Ci.nsIContentPolicy.TYPE_OTHER);
+
   addMessageListener("proxyPrompter", function onMessage(msg) {
-    let rv = prompter1[msg.methodName](...msg.args);
+    let args = [...msg.args];
+    let channelName = args.shift();
+    // Replace the channel name string (arg. 0) with the channel by that name.
+    args.unshift(channels[channelName]);
+
+    let rv = prompter2[msg.methodName](...args);
     return {
       rv,
       // Send the args back to content so out/inout args can be checked.
@@ -168,7 +168,10 @@ add_task(function* test_accept() {
   authinfo.realm    = "some realm";
 
   promptDone = handlePrompt(state, action);
-  isOk = prompter2.promptAuth(channel1, level, authinfo);
+  // Since prompter2 is actually a proxy to send a message to a chrome script and
+  // we can't send a channel in a message, we instead send the channel name that
+  // already exists in the chromeScript.
+  isOk = prompter2.promptAuth("channel1", level, authinfo);
   yield promptDone;
 
   ok(isOk, "Checking dialog return value (accept)");
@@ -196,7 +199,7 @@ add_task(function* test_cancel() {
     buttonClick : "cancel",
   };
   promptDone = handlePrompt(state, action);
-  isOk = prompter2.promptAuth(channel1, level, authinfo);
+  isOk = prompter2.promptAuth("channel1", level, authinfo);
   yield promptDone;
 
   ok(!isOk, "Checking dialog return value (cancel)");
@@ -227,7 +230,7 @@ add_task(function* test_pwonly() {
   authinfo.realm    = "http://example.com";
 
   promptDone = handlePrompt(state, action);
-  isOk = prompter2.promptAuth(channel1, level, authinfo);
+  isOk = prompter2.promptAuth("channel1", level, authinfo);
   yield promptDone;
 
   ok(isOk, "Checking dialog return value (accept)");
@@ -261,7 +264,7 @@ add_task(function* test_multipleExisting() {
   authinfo.realm    = "http://example2.com";
 
   promptDone = handlePrompt(state, action);
-  isOk = prompter2.promptAuth(channel2, level, authinfo);
+  isOk = prompter2.promptAuth("channel2", level, authinfo);
   yield promptDone;
 
   ok(isOk, "Checking dialog return value (accept)");
@@ -298,7 +301,7 @@ add_task(function* test_multipleExisting2() {
   authinfo.realm    = "http://example2.com";
 
   promptDone = handlePrompt(state, action);
-  isOk = prompter2.promptAuth(channel2, level, authinfo);
+  isOk = prompter2.promptAuth("channel2", level, authinfo);
   yield promptDone;
 
   ok(isOk, "Checking dialog return value (accept)");
@@ -334,9 +337,8 @@ add_task(function* test_multipleExisting3() {
   authinfo.password = "";
   authinfo.realm    = "http://example2.com";
 
-  dumpNotifications();
   promptDone = handlePrompt(state, action);
-  isOk = prompter2.promptAuth(channel2, level, authinfo);
+  isOk = prompter2.promptAuth("channel2", level, authinfo);
   yield promptDone;
 
   ok(isOk, "Checking dialog return value (accept)");
@@ -372,9 +374,8 @@ add_task(function* test_changingMultiple() {
   authinfo.password = "";
   authinfo.realm    = "http://example2.com";
 
-  dumpNotifications();
   promptDone = handlePrompt(state, action);
-  isOk = prompter2.promptAuth(channel2, level, authinfo);
+  isOk = prompter2.promptAuth("channel2", level, authinfo);
   yield promptDone;
 
   ok(isOk, "Checking dialog return value (accept)");
@@ -410,9 +411,8 @@ add_task(function* test_changingMultiple2() {
   authinfo.password = "";
   authinfo.realm    = "http://example2.com";
 
-  dumpNotifications();
   promptDone = handlePrompt(state, action);
-  isOk = prompter2.promptAuth(channel2, level, authinfo);
+  isOk = prompter2.promptAuth("channel2", level, authinfo);
   yield promptDone;
 
   ok(isOk, "Checking dialog return value (accept)");
@@ -522,7 +522,7 @@ add_task(function* test_iframe() {
   var pwchanged = promiseStorageChanged(["modifyLogin"]);
 
   // Check for the popup notification, and change the password.
-  popupNotifications = getPopupNotifications(window.top);
+  var popupNotifications = getPopupNotifications(window.top);
   popup = getPopup(popupNotifications, "password-change");
   ok(popup, "got popup notification");
   clickPopupButton(popup, kChangeButton);
