@@ -176,7 +176,7 @@ add_task(function* () {
   });
 
   extension.onMessage("change-tab", (tabId, attr, on) => {
-    let {TabManager} = Cu.import("resource://gre/modules/Extension.jsm", {});
+    let {Management: {global: {TabManager}}} = Cu.import("resource://gre/modules/Extension.jsm", {});
 
     let tab = TabManager.getTab(tabId);
 

@@ -9,6 +9,7 @@ this.EXPORTED_SYMBOLS = ["AutoMigrate"];
 const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
 
 const kAutoMigrateEnabledPref = "browser.migrate.automigrate.enabled";
+const kUndoUIEnabledPref = "browser.migrate.automigrate.ui.enabled";
 
 const kAutoMigrateStartedPref = "browser.migrate.automigrate.started";
 const kAutoMigrateFinishedPref = "browser.migrate.automigrate.finished";
@@ -286,7 +287,8 @@ const AutoMigrate = {
 
   maybeShowUndoNotification(target) {
     // The tab might have navigated since we requested the undo state:
-    if (!this.canUndo() || target.currentURI.spec != "about:home") {
+    if (!this.canUndo() || target.currentURI.spec != "about:home" ||
+        !Preferences.get(kUndoUIEnabledPref, false)) {
       return;
     }
 

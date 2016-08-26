@@ -1972,11 +1972,6 @@ MediaFormatReader::UpdateBufferedWithPromise() {
 
 void MediaFormatReader::ReleaseResources()
 {
-  // Before freeing a video codec, all video buffers needed to be released
-  // even from graphics pipeline.
-  if (mVideoFrameContainer) {
-    mVideoFrameContainer->ClearCurrentFrame();
-  }
   mVideo.ShutdownDecoder();
   mAudio.ShutdownDecoder();
 }

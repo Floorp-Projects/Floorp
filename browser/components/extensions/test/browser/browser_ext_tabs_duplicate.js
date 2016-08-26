@@ -98,7 +98,7 @@ add_task(function* testDuplicateTabLazily() {
   });
 
   extension.onMessage("duplicate-tab", tabId => {
-    let {TabManager} = Cu.import("resource://gre/modules/Extension.jsm", {});
+    let {Management: {global: {TabManager}}} = Cu.import("resource://gre/modules/Extension.jsm", {});
 
     let tab = TabManager.getTab(tabId);
     // This is a bit of a hack to load a tab in the background.

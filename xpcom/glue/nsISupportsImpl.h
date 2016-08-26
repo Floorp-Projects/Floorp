@@ -20,9 +20,7 @@
 
 #include "nsDebug.h"
 #include "nsXPCOM.h"
-#ifndef XPCOM_GLUE
 #include "mozilla/Atomics.h"
-#endif
 #include "mozilla/Attributes.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Compiler.h"
@@ -331,7 +329,6 @@ private:
   nsrefcnt mValue;
 };
 
-#ifndef XPCOM_GLUE
 namespace mozilla {
 class ThreadSafeAutoRefCnt
 {
@@ -360,7 +357,6 @@ private:
   Atomic<nsrefcnt> mValue;
 };
 } // namespace mozilla
-#endif
 
 ///////////////////////////////////////////////////////////////////////////////
 

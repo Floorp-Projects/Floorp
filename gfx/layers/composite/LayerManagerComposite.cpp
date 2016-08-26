@@ -1333,6 +1333,7 @@ LayerComposite::LayerComposite(LayerManagerComposite *aManager)
   , mCompositor(aManager->GetCompositor())
   , mShadowOpacity(1.0)
   , mShadowTransformSetByAnimation(false)
+  , mShadowOpacitySetByAnimation(false)
   , mDestroyed(false)
   , mLayerComposited(false)
 { }

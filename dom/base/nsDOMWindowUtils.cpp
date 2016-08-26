@@ -3637,13 +3637,18 @@ nsDOMWindowUtils::GetOMTAStyle(nsIDOMElement* aElement,
         FrameLayerBuilder::GetDedicatedLayer(frame,
                                              nsDisplayItem::TYPE_OPACITY);
       if (layer) {
-        float value;
         ShadowLayerForwarder* forwarder = layer->Manager()->AsShadowForwarder();
         if (forwarder && forwarder->HasShadowManager()) {
-          forwarder->GetShadowManager()->SendGetOpacity(
-            layer->AsShadowableLayer()->GetShadow(), &value);
-          cssValue = new nsROCSSPrimitiveValue;
-          cssValue->SetNumber(value);
+          float value;
+          bool hadAnimatedOpacity;
+          forwarder->GetShadowManager()->SendGetAnimationOpacity(
+            layer->AsShadowableLayer()->GetShadow(),
+            &value, &hadAnimatedOpacity);
+
+          if (hadAnimatedOpacity) {
+            cssValue = new nsROCSSPrimitiveValue;
+            cssValue->SetNumber(value);
+          }
         }
       }
     } else if (aProperty.EqualsLiteral("transform")) {
