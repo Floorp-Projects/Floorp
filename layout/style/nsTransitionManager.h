@@ -121,6 +121,7 @@ public:
     : dom::Animation(aGlobal)
     , mWasFinishedOnLastTick(false)
     , mNeedsNewAnimationIndexWhenRun(false)
+    , mTransitionProperty(eCSSProperty_UNKNOWN)
   {
   }
 
@@ -167,6 +168,8 @@ public:
     // returning CascadeLevel::Animations.
     mOwningElement = OwningElementRef();
   }
+
+  void SetEffectFromStyle(AnimationEffectReadOnly* aEffect);
 
   void Tick() override;
 
@@ -247,6 +250,14 @@ protected:
   // When true, indicates that when this transition next leaves the idle state,
   // its animation index should be updated.
   bool mNeedsNewAnimationIndexWhenRun;
+
+  // Store the transition property and to-value here since we need that
+  // information in order to determine if there is an existing transition
+  // for a given style change. We can't store that information on the
+  // ElementPropertyTransition (effect) however since it can be replaced
+  // using the Web Animations API.
+  nsCSSPropertyID mTransitionProperty;
+  StyleAnimationValue mTransitionToValue;
 };
 
 } // namespace dom

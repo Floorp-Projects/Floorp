@@ -2113,34 +2113,26 @@ CacheStorageService::SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) con
 }
 
 NS_IMETHODIMP
-CacheStorageService::CollectReports(nsIMemoryReporterCallback* aHandleReport,
+CacheStorageService::CollectReports(nsIHandleReportCallback* aHandleReport,
                                     nsISupports* aData, bool aAnonymize)
 {
-  nsresult rv;
-
-  rv = MOZ_COLLECT_REPORT(
+  MOZ_COLLECT_REPORT(
     "explicit/network/cache2/io", KIND_HEAP, UNITS_BYTES,
     CacheFileIOManager::SizeOfIncludingThis(MallocSizeOf),
     "Memory used by the cache IO manager.");
-  if (NS_WARN_IF(NS_FAILED(rv)))
-    return rv;
 
-  rv = MOZ_COLLECT_REPORT(
+  MOZ_COLLECT_REPORT(
     "explicit/network/cache2/index", KIND_HEAP, UNITS_BYTES,
     CacheIndex::SizeOfIncludingThis(MallocSizeOf),
     "Memory used by the cache index.");
-  if (NS_WARN_IF(NS_FAILED(rv)))
-    return rv;
 
   MutexAutoLock lock(mLock);
 
   // Report the service instance, this doesn't report entries, done lower
-  rv = MOZ_COLLECT_REPORT(
+  MOZ_COLLECT_REPORT(
     "explicit/network/cache2/service", KIND_HEAP, UNITS_BYTES,
     SizeOfIncludingThis(MallocSizeOf),
     "Memory used by the cache storage service.");
-  if (NS_WARN_IF(NS_FAILED(rv)))
-    return rv;
 
   // Report all entries, each storage separately (by the context key)
   //
@@ -2182,9 +2174,7 @@ CacheStorageService::CollectReports(nsIMemoryReporterCallback* aHandleReport,
         nsPrintfCString("explicit/network/cache2/%s-storage(%s)",
           table->Type() == CacheEntryTable::MEMORY_ONLY ? "memory" : "disk",
           iter1.Key().BeginReading()),
-        nsIMemoryReporter::KIND_HEAP,
-        nsIMemoryReporter::UNITS_BYTES,
-        size,
+        nsIMemoryReporter::KIND_HEAP, nsIMemoryReporter::UNITS_BYTES, size,
         NS_LITERAL_CSTRING("Memory used by the cache storage."),
         aData);
     }

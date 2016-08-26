@@ -1,7 +1,7 @@
 "use strict";
 
-let ChromeUtils = {};
-Services.scriptloader.loadSubScript("chrome://mochikit/content/tests/SimpleTest/ChromeUtils.js", ChromeUtils);
+let EventUtils = {};
+Services.scriptloader.loadSubScript("chrome://mochikit/content/tests/SimpleTest/EventUtils.js", EventUtils);
 
 /**
  * Dragging an URL to a tab without userContextId set.
@@ -25,7 +25,7 @@ add_task(function* () {
     screenX: 0,
     screenY: 0,
   };
-  ChromeUtils.synthesizeDrop(tab, tab, [[{type: "text/plain", data: "http://test1.example.com/"}]], "link", window, undefined, event);
+  EventUtils.synthesizeDrop(tab, tab, [[{type: "text/plain", data: "http://test1.example.com/"}]], "link", window, undefined, event);
 
   yield awaitDrop;
 
@@ -72,7 +72,7 @@ add_task(function* () {
     screenX: 0,
     screenY: 0,
   };
-  ChromeUtils.synthesizeDrop(tab, tab, [[{type: "text/plain", data: "http://test1.example.com/"}]], "link", window, undefined, event);
+  EventUtils.synthesizeDrop(tab, tab, [[{type: "text/plain", data: "http://test1.example.com/"}]], "link", window, undefined, event);
 
   yield awaitDrop;
 
@@ -111,7 +111,7 @@ add_task(function* () {
 
   let awaitDrop = BrowserTestUtils.waitForEvent(gBrowser.tabContainer, "drop");
 
-  ChromeUtils.synthesizeDrop(tab, tab2, [[{type: "text/plain", data: "http://test1.example.com/"}]], "link", window);
+  EventUtils.synthesizeDrop(tab, tab2, [[{type: "text/plain", data: "http://test1.example.com/"}]], "link", window);
 
   yield awaitDrop;
   Assert.equal(tab2.getAttribute("usercontextid"), 2);

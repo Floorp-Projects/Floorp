@@ -226,7 +226,7 @@ class MOZ_RAII EvalOptions {
 /*
  * Env is the type of what ES5 calls "lexical environments" (runtime activations
  * of lexical scopes). This is currently just JSObject, and is implemented by
- * CallObject, ClonedBlockObject, DynamicWithObject, and DeclEnvObject, among
+ * CallObject, LexicalEnvironmentObject, and WithEnvironmentObject, among
  * others--but environments and objects are really two different concepts.
  */
 typedef JSObject Env;

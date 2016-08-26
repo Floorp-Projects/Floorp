@@ -19,8 +19,10 @@
 #include "nsIDNSListener.h"
 #include "nsICancelable.h"
 #include "nsThreadUtils.h"
+#include "nsIURL.h"
 #include "mozilla/Logging.h"
 #include "mozilla/net/DNS.h"
+#include "mozilla/Unused.h"
 
 using mozilla::LogLevel;
 using namespace mozilla::net;
@@ -110,6 +112,54 @@ private:
     void WantRead(uint32_t sz);
     PRStatus ReadFromSocket(PRFileDesc *fd);
     PRStatus WriteToSocket(PRFileDesc *fd);
+
+    bool IsHostDomainSocket()
+    {
+#ifdef XP_UNIX
+        nsAutoCString proxyHost;
+        mProxy->GetHost(proxyHost);
+        return Substring(proxyHost, 0, 5) == "file:";
+#else
+        return false;
+#endif // XP_UNIX
+    }
+
+    nsresult SetDomainSocketPath(const nsACString& aDomainSocketPath,
+                             NetAddr* aProxyAddr)
+    {
+#ifdef XP_UNIX
+        nsresult rv;
+        MOZ_ASSERT(aProxyAddr);
+
+        nsCOMPtr<nsIURL> url = do_CreateInstance(NS_STANDARDURL_CONTRACTID, &rv);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+            return rv;
+        }
+
+        if (NS_WARN_IF(NS_FAILED(rv = url->SetSpec(aDomainSocketPath)))) {
+            return rv;
+        }
+
+        nsAutoCString path;
+        if (NS_WARN_IF(NS_FAILED(rv = url->GetPath(path)))) {
+            return rv;
+        }
+
+        if (sizeof(aProxyAddr->local.path) <= path.Length()) {
+            NS_WARNING("domain socket path too long.");
+            return NS_ERROR_FAILURE;
+        }
+
+        aProxyAddr->raw.family = AF_UNIX;
+        strcpy(aProxyAddr->local.path, path.get());
+
+        return NS_OK;
+#else
+        mozilla::Unused << aProxyAddr;
+        mozilla::Unused << aDomainSocketPath;
+        return NS_ERROR_NOT_IMPLEMENTED;
+#endif
+    }
 
 private:
     State     mState;
@@ -420,29 +470,40 @@ nsSOCKSSocketInfo::ConnectToProxy(PRFileDesc *fd)
         mVersion = 5;
     }
 
+    nsAutoCString proxyHost;
+    mProxy->GetHost(proxyHost);
+
     int32_t proxyPort;
     mProxy->GetPort(&proxyPort);
 
     int32_t addresses = 0;
     do {
-        if (addresses++)
-            mDnsRec->ReportUnusable(proxyPort);
-        
-        rv = mDnsRec->GetNextAddr(proxyPort, &mInternalProxyAddr);
-        // No more addresses to try? If so, we'll need to bail
-        if (NS_FAILED(rv)) {
-            nsCString proxyHost;
-            mProxy->GetHost(proxyHost);
-            LOGERROR(("socks: unable to connect to SOCKS proxy, %s",
-                     proxyHost.get()));
-            return PR_FAILURE;
-        }
+        if (IsHostDomainSocket()) {
+            rv = SetDomainSocketPath(proxyHost, &mInternalProxyAddr);
+            if (NS_FAILED(rv)) {
+                LOGERROR(("socks: unable to connect to SOCKS proxy, %s",
+                         proxyHost.get()));
+              return PR_FAILURE;
+            }
+        } else {
+            if (addresses++) {
+                mDnsRec->ReportUnusable(proxyPort);
+            }
 
-        if (MOZ_LOG_TEST(gSOCKSLog, LogLevel::Debug)) {
-          char buf[kIPv6CStrBufSize];
-          NetAddrToString(&mInternalProxyAddr, buf, sizeof(buf));
-          LOGDEBUG(("socks: trying proxy server, %s:%hu",
-                   buf, ntohs(mInternalProxyAddr.inet.port)));
+            rv = mDnsRec->GetNextAddr(proxyPort, &mInternalProxyAddr);
+            // No more addresses to try? If so, we'll need to bail
+            if (NS_FAILED(rv)) {
+                LOGERROR(("socks: unable to connect to SOCKS proxy, %s",
+                         proxyHost.get()));
+                return PR_FAILURE;
+            }
+
+            if (MOZ_LOG_TEST(gSOCKSLog, LogLevel::Debug)) {
+              char buf[kIPv6CStrBufSize];
+              NetAddrToString(&mInternalProxyAddr, buf, sizeof(buf));
+              LOGDEBUG(("socks: trying proxy server, %s:%hu",
+                       buf, ntohs(mInternalProxyAddr.inet.port)));
+            }
         }
 
         NetAddr proxy = mInternalProxyAddr;
@@ -971,6 +1032,12 @@ nsSOCKSSocketInfo::DoHandshake(PRFileDesc *fd, int16_t oflags)
 
     switch (mState) {
         case SOCKS_INITIAL:
+            if (IsHostDomainSocket()) {
+                mState = SOCKS_DNS_COMPLETE;
+                mLookupStatus = NS_OK;
+                return ConnectToProxy(fd);
+            }
+
             return StartDNS(fd);
         case SOCKS_DNS_IN_PROGRESS:
             PR_SetError(PR_IN_PROGRESS_ERROR, 0);

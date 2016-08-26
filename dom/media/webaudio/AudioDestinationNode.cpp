@@ -524,7 +524,9 @@ AudioDestinationNode::WindowSuspendChanged(nsSuspendedTypes aSuspend)
     NS_LITERAL_STRING("mozinterruptend") :
     NS_LITERAL_STRING("mozinterruptbegin"));
 
-  mStream->SetTrackEnabled(AudioNodeStream::AUDIO_TRACK, !suspended);
+  DisabledTrackMode disabledMode = suspended ? DisabledTrackMode::SILENCE_BLACK
+                                             : DisabledTrackMode::ENABLED;
+  mStream->SetTrackEnabled(AudioNodeStream::AUDIO_TRACK, disabledMode);
   return NS_OK;
 }
 

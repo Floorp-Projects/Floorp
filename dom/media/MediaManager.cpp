@@ -1207,8 +1207,10 @@ public:
           new LocalTrackSource(principal, audioDeviceName, mListener, source,
                                kAudioTrack, mPeerIdentity);
         MOZ_ASSERT(IsOn(mConstraints.mAudio));
-        domStream->CreateDOMTrack(kAudioTrack, MediaSegment::AUDIO, audioSource,
-                                  GetInvariant(mConstraints.mAudio));
+        RefPtr<MediaStreamTrack> track =
+          domStream->CreateDOMTrack(kAudioTrack, MediaSegment::AUDIO, audioSource,
+                                    GetInvariant(mConstraints.mAudio));
+        domStream->AddTrackInternal(track);
       }
       if (mVideoDevice) {
         nsString videoDeviceName;
@@ -1219,8 +1221,10 @@ public:
           new LocalTrackSource(principal, videoDeviceName, mListener, source,
                                kVideoTrack, mPeerIdentity);
         MOZ_ASSERT(IsOn(mConstraints.mVideo));
-        domStream->CreateDOMTrack(kVideoTrack, MediaSegment::VIDEO, videoSource,
-                                  GetInvariant(mConstraints.mVideo));
+        RefPtr<MediaStreamTrack> track =
+          domStream->CreateDOMTrack(kVideoTrack, MediaSegment::VIDEO, videoSource,
+                                    GetInvariant(mConstraints.mVideo));
+        domStream->AddTrackInternal(track);
       }
       stream = domStream->GetInputStream()->AsSourceStream();
     }

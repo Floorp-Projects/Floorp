@@ -32,6 +32,11 @@ public:
 
   virtual void SetCurrentTable(const nsACString& aTable) = 0;
 
+  void SetRequestedTables(const nsTArray<nsCString>& aRequestTables)
+  {
+    mRequestedTables = aRequestTables;
+  }
+
   nsresult Begin();
   virtual nsresult AppendStream(const nsACString& aData) = 0;
 
@@ -47,8 +52,8 @@ public:
 
   // These are only meaningful to V2. Since they were originally public,
   // moving them to ProtocolParserV2 requires a dymamic cast in the call
-  // sites. As a result, we will leave them until retirely removing V2
-  // codes.
+  // sites. As a result, we will leave them until we remove support 
+  // for V2 entirely..
   virtual const nsTArray<ForwardedUpdate> &Forwards() const { return mForwards; }
   virtual int32_t UpdateWait() { return 0; }
   virtual bool ResetRequested() { return false; }
@@ -64,6 +69,9 @@ protected:
 
   nsTArray<ForwardedUpdate> mForwards;
   nsCOMPtr<nsICryptoHash> mCryptoHash;
+
+  // The table names that were requested from the client.
+  nsTArray<nsCString> mRequestedTables;
 
 private:
   void CleanupUpdates();

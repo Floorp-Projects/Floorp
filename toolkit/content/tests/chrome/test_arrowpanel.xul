@@ -25,12 +25,12 @@
 
 <panel id="panel" type="arrow" animate="false"
        onpopupshown="checkPanelPosition(this)" onpopuphidden="runNextTest.next()">
-  <label id="panellabel" value="This is some text..." height="65"/>
+  <box width="115" height="65"/>
 </panel>
 
 <panel id="bigpanel" type="arrow" animate="false"
        onpopupshown="checkBigPanel(this)" onpopuphidden="runNextTest.next()">
-  <button label="This is some text..." height="3000"/>
+  <box width="125" height="3000"/>
 </panel>
 
 <panel id="animatepanel" type="arrow"
@@ -245,23 +245,23 @@ function checkPanelPosition(panel)
 
   var panelRect = panel.getBoundingClientRect();
   var anchorRect = anchor.getBoundingClientRect();
-  var labelBO = $("panellabel").boxObject;
-  var labelRect = { top: labelBO.y,
-                    left: labelBO.x,
-                    bottom: labelBO.y + labelBO.height,
-                    right: labelBO.x + labelBO.width };
+  var contentBO = panel.firstChild.boxObject;
+  var contentRect = { top: contentBO.y,
+                      left: contentBO.x,
+                      bottom: contentBO.y + contentBO.height,
+                      right: contentBO.x + contentBO.width };
   switch (expectedSide) {
     case "top":
-      ok(labelRect.top > vwinpos + anchorRect.bottom * zoomFactor + 5, "panel label is below");
+      ok(contentRect.top > vwinpos + anchorRect.bottom * zoomFactor + 5, "panel content is below");
       break;
     case "bottom":
-      ok(labelRect.bottom < vwinpos + anchorRect.top * zoomFactor - 5, "panel label is above");
+      ok(contentRect.bottom < vwinpos + anchorRect.top * zoomFactor - 5, "panel content is above");
       break;
     case "left":
-      ok(labelRect.left > hwinpos + anchorRect.right * zoomFactor + 5, "panel label is right");
+      ok(contentRect.left > hwinpos + anchorRect.right * zoomFactor + 5, "panel content is right");
       break;
     case "right":
-      ok(labelRect.right < hwinpos + anchorRect.left * zoomFactor - 5, "panel label is left");
+      ok(contentRect.right < hwinpos + anchorRect.left * zoomFactor - 5, "panel content is left");
       break;
   }
 

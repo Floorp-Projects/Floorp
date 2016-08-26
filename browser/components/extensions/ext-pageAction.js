@@ -217,7 +217,7 @@ PageAction.for = extension => {
 
 global.pageActionFor = PageAction.for;
 
-extensions.registerSchemaAPI("pageAction", context => {
+extensions.registerSchemaAPI("pageAction", "addon_parent", context => {
   let {extension} = context;
   return {
     pageAction: {

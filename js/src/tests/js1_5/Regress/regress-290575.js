@@ -38,7 +38,7 @@ function crashMe2(n) {
 
 printStatus('crashMe2(0x10000)');
 
-summary = 'Syntax Error Function to string when more than 65536 arguments';
+summary = 'No Syntax Error Function to string when more than 65536 arguments';
 expect = 'Error';
 try
 {

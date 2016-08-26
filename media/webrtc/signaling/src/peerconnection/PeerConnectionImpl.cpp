@@ -1993,12 +1993,14 @@ PeerConnectionImpl::CreateNewRemoteTracks(RefPtr<PeerConnectionObserver>& aPco)
             info->GetMediaStream()->CreateDOMTrack(trackID,
                                                    MediaSegment::AUDIO,
                                                    source);
+          info->GetMediaStream()->AddTrackInternal(domTrack);
           segment = new AudioSegment;
         } else {
           domTrack =
             info->GetMediaStream()->CreateDOMTrack(trackID,
                                                    MediaSegment::VIDEO,
                                                    source);
+          info->GetMediaStream()->AddTrackInternal(domTrack);
 #if !defined(MOZILLA_EXTERNAL_LINKAGE)
           segment = new VideoSegment;
 #endif

@@ -173,7 +173,7 @@ LocationEvent::OnLocationChanged(REFIID aReportType,
 
   RefPtr<nsGeoPosition> position =
     new nsGeoPosition(latitude, longitude, alt, herror, verror, 0.0, 0.0,
-                      PR_Now());
+                      PR_Now() / PR_USEC_PER_MSEC);
   mCallback->Update(position);
 
   Telemetry::Accumulate(Telemetry::GEOLOCATION_WIN8_SOURCE_IS_MLS, false);

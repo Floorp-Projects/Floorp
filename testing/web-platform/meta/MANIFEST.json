@@ -37664,6 +37664,12 @@
             "url": "/domparsing/style_attribute_html.html"
           }
         ],
+        "editing/other/restoration.html": [
+          {
+            "path": "editing/other/restoration.html",
+            "url": "/editing/other/restoration.html"
+          }
+        ],
         "editing/other/delete.html": [
           {
             "path": "editing/other/delete.html",
@@ -37676,10 +37682,22 @@
             "url": "/html/semantics/forms/the-form-element/form-submission-sandbox.html"
           }
         ],
+        "web-animations/interfaces/Animation/effect.html": [
+          {
+            "path": "web-animations/interfaces/Animation/effect.html",
+            "url": "/web-animations/interfaces/Animation/effect.html"
+          }
+        ],
         "web-animations/timing-model/animation-effects/phases-and-states.html": [
           {
             "path": "web-animations/timing-model/animation-effects/phases-and-states.html",
             "url": "/web-animations/timing-model/animation-effects/phases-and-states.html"
+          }
+        ],
+        "web-animations/timing-model/animations/set-the-target-effect-of-an-animation.html": [
+          {
+            "path": "web-animations/timing-model/animations/set-the-target-effect-of-an-animation.html",
+            "url": "/web-animations/timing-model/animations/set-the-target-effect-of-an-animation.html"
           }
         ],
         "web-animations/timing-model/animations/updating-the-finished-state.html": [

@@ -1205,14 +1205,14 @@ addAsyncAnimTest(function *() {
   // As noted with the tests for animation-iteration-count, for opacity
   // animations we don't strictly check the finished animation is being animated
   // on the main thread, but simply that it is producing the correct result.
-  omta_is_approx("opacity", gTF.ease_out(0.25), 0.01, RunningOn.Either,
-                 "animation-play-state test 2 at 250ms");
+  omta_is_approx("opacity", gTF.ease_out(0.25), 0.01, RunningOn.MainThread,
+                 "animation-play-state test 2 at 250ms"); // paused
   omta_is_approx("transform", { ty: 100 * gTF.ease_in(0.125) }, 0.01,
                  RunningOn.Compositor,
                  "animation-play-state test 3 at 250ms");
   advance_clock(250);
-  omta_is_approx("opacity", gTF.ease_out(0.25), 0.01, RunningOn.Either,
-                 "animation-play-state test 2 at 500ms");
+  omta_is_approx("opacity", gTF.ease_out(0.25), 0.01, RunningOn.MainThread,
+                 "animation-play-state test 2 at 500ms"); // paused
   omta_is_approx("transform", { ty: 100 * gTF.ease_in(0.25) }, 0.01,
                  RunningOn.Compositor,
                  "animation-play-state test 3 at 500ms");
@@ -1224,15 +1224,15 @@ addAsyncAnimTest(function *() {
                  "animation-play-state test 2 at 1000ms");
   omta_is_approx("transform", { ty: 100 * gTF.ease_in(0.375) }, 0.01,
                  RunningOn.MainThread,
-                 "animation-play-state test 3 at 1000ms");
+                 "animation-play-state test 3 at 1000ms"); // paused
   gDiv.style.animationPlayState = "paused"; // pause all
   yield waitForPaintsFlushed();
   advance_clock(3000);
-  omta_is_approx("opacity", gTF.ease_out(0.5), 0.01, RunningOn.Either,
-                 "animation-play-state test 2 at 4000ms");
+  omta_is_approx("opacity", gTF.ease_out(0.5), 0.01, RunningOn.MainThread,
+                 "animation-play-state test 2 at 4000ms"); // paused
   omta_is_approx("transform", { ty: 100 * gTF.ease_in(0.375) }, 0.01,
                  RunningOn.MainThread,
-                 "animation-play-state test 3 at 4000ms");
+                 "animation-play-state test 3 at 4000ms"); // paused
   gDiv.style.animationPlayState = "running, paused"; // pause 2
   yield waitForPaintsFlushed();
   advance_clock(850);
@@ -1362,10 +1362,10 @@ addAsyncAnimTest(function *() {
   gDiv.style.animationPlayState = "paused";
   yield waitForPaintsFlushed();
   advance_clock(100);
-  omta_is("opacity", 1, RunningOn.Either,
+  omta_is("opacity", 1, RunningOn.MainThread, // paused
           "delay and play-state delay test at 500ms");
   advance_clock(500);
-  omta_is("opacity", 1, RunningOn.Either,
+  omta_is("opacity", 1, RunningOn.MainThread, // paused
           "delay and play-state delay test at 1000ms");
   gDiv.style.animationPlayState = "running";
   yield waitForPaintsFlushed();

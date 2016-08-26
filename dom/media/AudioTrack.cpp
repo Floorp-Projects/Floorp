@@ -48,13 +48,20 @@ AudioTrack::SetEnabledInternal(bool aEnabled, int aFlags)
     return;
   }
 
-  if (!(aFlags & MediaTrack::FIRE_NO_EVENTS)) {
-    mList->CreateAndDispatchChangeEvent();
-
+  if (mEnabled) {
     HTMLMediaElement* element = mList->GetMediaElement();
     if (element) {
       element->NotifyMediaTrackEnabled(this);
     }
+  } else {
+    HTMLMediaElement* element = mList->GetMediaElement();
+    if (element) {
+      element->NotifyMediaTrackDisabled(this);
+    }
+  }
+
+  if (!(aFlags & MediaTrack::FIRE_NO_EVENTS)) {
+    mList->CreateAndDispatchChangeEvent();
   }
 }
 
