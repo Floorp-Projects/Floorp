@@ -124,15 +124,15 @@ ConvertLegacyStyleToAlignItems(const nsStyleXUL* aStyleXUL)
 {
   // -[moz|webkit]-box-align corresponds to modern "align-items"
   switch (aStyleXUL->mBoxAlign) {
-    case NS_STYLE_BOX_ALIGN_STRETCH:
+    case StyleBoxAlign::Stretch:
       return NS_STYLE_ALIGN_STRETCH;
-    case NS_STYLE_BOX_ALIGN_START:
+    case StyleBoxAlign::Start:
       return NS_STYLE_ALIGN_FLEX_START;
-    case NS_STYLE_BOX_ALIGN_CENTER:
+    case StyleBoxAlign::Center:
       return NS_STYLE_ALIGN_CENTER;
-    case NS_STYLE_BOX_ALIGN_BASELINE:
+    case StyleBoxAlign::Baseline:
       return NS_STYLE_ALIGN_BASELINE;
-    case NS_STYLE_BOX_ALIGN_END:
+    case StyleBoxAlign::End:
       return NS_STYLE_ALIGN_FLEX_END;
   }
 

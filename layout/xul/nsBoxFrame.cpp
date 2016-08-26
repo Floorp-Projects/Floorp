@@ -353,13 +353,13 @@ nsBoxFrame::GetInitialHAlignment(nsBoxFrame::Halignment& aHalign)
   }
   else {
     switch (boxInfo->mBoxAlign) {
-      case NS_STYLE_BOX_ALIGN_START:
+      case StyleBoxAlign::Start:
         aHalign = nsBoxFrame::hAlign_Left;
         return true;
-      case NS_STYLE_BOX_ALIGN_CENTER:
+      case StyleBoxAlign::Center:
         aHalign = nsBoxFrame::hAlign_Center;
         return true;
-      case NS_STYLE_BOX_ALIGN_END:
+      case StyleBoxAlign::End:
         aHalign = nsBoxFrame::hAlign_Right;
         return true;
       default: // Nonsensical value. Just bail.
@@ -413,16 +413,16 @@ nsBoxFrame::GetInitialVAlignment(nsBoxFrame::Valignment& aValign)
   const nsStyleXUL* boxInfo = StyleXUL();
   if (IsXULHorizontal()) {
     switch (boxInfo->mBoxAlign) {
-      case NS_STYLE_BOX_ALIGN_START:
+      case StyleBoxAlign::Start:
         aValign = nsBoxFrame::vAlign_Top;
         return true;
-      case NS_STYLE_BOX_ALIGN_CENTER:
+      case StyleBoxAlign::Center:
         aValign = nsBoxFrame::vAlign_Middle;
         return true;
-      case NS_STYLE_BOX_ALIGN_BASELINE:
+      case StyleBoxAlign::Baseline:
         aValign = nsBoxFrame::vAlign_BaseLine;
         return true;
-      case NS_STYLE_BOX_ALIGN_END:
+      case StyleBoxAlign::End:
         aValign = nsBoxFrame::vAlign_Bottom;
         return true;
       default: // Nonsensical value. Just bail.
@@ -547,7 +547,7 @@ nsBoxFrame::GetInitialAutoStretch(bool& aStretch)
 
   // Check the CSS box-align property.
   const nsStyleXUL* boxInfo = StyleXUL();
-  aStretch = (boxInfo->mBoxAlign == NS_STYLE_BOX_ALIGN_STRETCH);
+  aStretch = (boxInfo->mBoxAlign == StyleBoxAlign::Stretch);
 
   return true;
 }
