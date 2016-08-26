@@ -58,23 +58,6 @@ class JitCode;
 } // namespace jit
 } // namespace js
 
-// Expand the given macro D for each public GC pointer.
-#define FOR_EACH_PUBLIC_GC_POINTER_TYPE(D) \
-    D(JS::Symbol*) \
-    D(JSAtom*) \
-    D(JSFunction*) \
-    D(JSObject*) \
-    D(JSScript*) \
-    D(JSString*)
-
-// Expand the given macro D for each public tagged GC pointer type.
-#define FOR_EACH_PUBLIC_TAGGED_GC_POINTER_TYPE(D) \
-    D(JS::Value) \
-    D(jsid)
-
-#define FOR_EACH_PUBLIC_AGGREGATE_GC_POINTER_TYPE(D) \
-    D(JSPropertyDescriptor)
-
 // Expand the given macro D for each valid GC reference type.
 #define FOR_EACH_INTERNAL_GC_POINTER_TYPE(D) \
     D(JSFlatString*) \

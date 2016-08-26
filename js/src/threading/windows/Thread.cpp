@@ -155,3 +155,10 @@ js::ThisThread::SetName(const char* name)
   }
 #endif
 }
+
+void
+js::ThisThread::GetName(char* nameBuffer, size_t len)
+{
+  MOZ_RELEASE_ASSERT(len > 0);
+  *nameBuffer = '\0';
+}

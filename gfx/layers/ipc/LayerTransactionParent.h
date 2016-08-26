@@ -32,7 +32,7 @@ class Layer;
 class LayerManagerComposite;
 class ShadowLayerParent;
 class CompositableParent;
-class ShadowLayersManager;
+class CompositorBridgeParentBase;
 
 class LayerTransactionParent final : public PLayerTransactionParent,
                                      public CompositableParentManager,
@@ -46,7 +46,7 @@ class LayerTransactionParent final : public PLayerTransactionParent,
 
 public:
   LayerTransactionParent(LayerManagerComposite* aManager,
-                         ShadowLayersManager* aLayersManager,
+                         CompositorBridgeParentBase* aBridge,
                          uint64_t aId);
 
 protected:
@@ -187,7 +187,7 @@ protected:
 
 private:
   RefPtr<LayerManagerComposite> mLayerManager;
-  ShadowLayersManager* mShadowLayersManager;
+  CompositorBridgeParentBase* mCompositorBridge;
   // Hold the root because it might be grafted under various
   // containers in the "real" layer tree
   RefPtr<Layer> mRoot;

@@ -31,7 +31,7 @@ wizardpage {
   padding: 15px 12px;
 }
 
-/* Don't use top margin - it can cause a scrollbar on the incompatible page */
+/* Don't use top margin - it can cause a scrollbar on some pages */
 .wizard-buttons {
   padding: 0;
   -moz-appearance: statusbar;
@@ -47,36 +47,8 @@ wizardpage {
   text-shadow: @loweredShadow@;
 }
 
-.loadingBox {
-  padding: 3px 5px 3px 5px;
-}
-
-.remoteLoadingThrobber {
-  margin-top: 3px;
-}
-
-.remoteLoadingThrobber[state="loading"] {
-  list-style-image: url("chrome://global/skin/icons/loading.png");
-}
-
-@media (min-resolution: 2dppx) {
-  .remoteLoadingThrobber[state="loading"] {
-    width: 16px;
-    list-style-image: url("chrome://global/skin/icons/loading@2x.png");
-  }
-}
-
-.remoteLoadingThrobber[state="error"] {
-  list-style-image: url("chrome://global/skin/icons/notfound.png");
-}
-
-#incompatibleListbox, #finishedBackgroundMore, #acceptDeclineLicense {
+#finishedBackgroundMore {
   margin-bottom: 6px;
-}
-
-#licenseContent, #incompatibleListbox {
-  margin-inline-start: 6px;
-  margin-inline-end: 6px;
 }
 
 .inline-link {
@@ -98,11 +70,6 @@ wizardpage {
 #updateName, #updateFinishedName {
   font-weight: bold;
   font-size: larger;
-}
-
-/* License Page */
-#licenseContent {
-  -moz-appearance: listbox;
 }
 
 /* Downloading Page */

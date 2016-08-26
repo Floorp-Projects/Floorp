@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+<head>
+  <style>
+    details::before {
+      content: "This is the details.";
+      /* Match the margins and display of <p> */
+      display: block;
+      margin-block-start: 1em;
+      margin-block-end: 1em;
+    }
+  </style>
+</head>
+<html>
+  <body>
+    <details>
+      <summary>Summary</summary>
+    </details>
+  </body>
+</html>

@@ -24,7 +24,7 @@ HTTP(..) load ligature-with-space-1.html
 == line-editing-1c.html line-editing-1-ref.html
 == line-editing-1d.html line-editing-1-ref.html
 == line-editing-1e.html line-editing-1-ref.html
-fails-if(cocoaWidget||(winWidget&&d2d&&layersGPUAccelerated)||(winWidget&&skiaContent&&layersGPUAccelerated)) HTTP(..) == lineheight-metrics-1.html lineheight-metrics-1-ref.html # bug 657864
+fails-if(cocoaWidget||(winWidget&&dwrite)) HTTP(..) == lineheight-metrics-1.html lineheight-metrics-1-ref.html # bug 657864
 HTTP(..) == lineheight-metrics-2a.html lineheight-metrics-2-ref.html
 HTTP(..) == lineheight-metrics-2b.html lineheight-metrics-2-ref.html
 == lineheight-percentage-1.html lineheight-percentage-1-ref.html

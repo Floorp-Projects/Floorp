@@ -5,7 +5,7 @@
 == simple-anchor-end-bidi.svg simple-anchor-end-bidi-ref.html
 == simple-anchor-end-rtl.svg simple-anchor-end-rtl-ref.html
 == simple-anchor-end.svg simple-anchor-end-ref.html
-== simple-anchor-middle-bidi.svg simple-anchor-middle-bidi-ref.html
+fuzzy-if(skiaContent&&dwrite,103,131) == simple-anchor-middle-bidi.svg simple-anchor-middle-bidi-ref.html
 == simple-anchor-middle-rtl.svg simple-anchor-middle-rtl-ref.html
 fuzzy-if(skiaContent,111,81) == simple-anchor-middle.svg simple-anchor-middle-ref.html
 == simple-bidi.svg simple-bidi-ref.html
@@ -171,20 +171,20 @@ fuzzy-if(!d2d,14,2) fuzzy-if(azureQuartz,1,6) fuzzy-if(skiaContent,1,200) == dyn
 == dynamic-text-shadow.svg text-shadow-ref.svg
 
 # text and masks
-fuzzy-if(skiaContent&&winWidget,39,224) HTTP(../..)  == mask-applied.svg mask-applied-ref.svg
+fuzzy-if(skiaContent&&winWidget,50,224) HTTP(../..)  == mask-applied.svg mask-applied-ref.svg
 fuzzy-if(skiaContent&&winWidget,77,56) HTTP(../..) == mask-content.svg mask-content-ref.svg
-fuzzy-if(skiaContent&&winWidget,39,112) HTTP(../..) == mask-content-2.svg mask-content-2-ref.svg
+fuzzy-if(skiaContent&&winWidget,50,112) HTTP(../..) == mask-content-2.svg mask-content-2-ref.svg
 
 # text and clipPaths
 HTTP(../..) == clipPath-applied.svg clipPath-applied-ref.svg
 fuzzy-if(skiaContent&&winWidget,77,56) HTTP(../..) == clipPath-content.svg clipPath-content-ref.svg
-fuzzy-if(skiaContent&&winWidget,39,112) HTTP(../..) == clipPath-content-2.svg clipPath-content-2-ref.svg
+fuzzy-if(skiaContent&&winWidget,50,112) HTTP(../..) == clipPath-content-2.svg clipPath-content-2-ref.svg
 
 # text and patterns
 fuzzy-if(cocoaWidget,1,6) == pattern-content.svg pattern-content-ref.svg
 
 # text and filters
-fuzzy-if(skiaContent&&winWidget,109,336) HTTP(../..) == filter-applied.svg filter-applied-ref.svg
+fuzzy-if(skiaContent&&winWidget,122,336) HTTP(../..) == filter-applied.svg filter-applied-ref.svg
 
 # vertical text
 fuzzy-if(skiaContent,1,80) == textpath-vertical-dx.svg textpath-vertical-dx-ref.svg

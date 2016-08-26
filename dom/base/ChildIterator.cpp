@@ -12,6 +12,7 @@
 #include "mozilla/dom/ShadowRoot.h"
 #include "nsIAnonymousContentCreator.h"
 #include "nsIFrame.h"
+#include "nsCSSAnonBoxes.h"
 
 namespace mozilla {
 namespace dom {
@@ -375,6 +376,31 @@ AllChildrenIterator::Seek(nsIContent* aChildToFind)
   return child == aChildToFind;
 }
 
+void
+AllChildrenIterator::AppendNativeAnonymousChildren()
+{
+  AppendNativeAnonymousChildrenFromFrame(mOriginalContent->GetPrimaryFrame());
+
+  // The root scroll frame is not the primary frame of the root element.
+  // Detect and handle this case.
+  if (mOriginalContent == mOriginalContent->OwnerDoc()->GetRootElement()) {
+    nsIPresShell* presShell = mOriginalContent->OwnerDoc()->GetShell();
+    nsIFrame* scrollFrame = presShell ? presShell->GetRootScrollFrame() : nullptr;
+    if (scrollFrame) {
+      AppendNativeAnonymousChildrenFromFrame(scrollFrame);
+    }
+  }
+}
+
+void
+AllChildrenIterator::AppendNativeAnonymousChildrenFromFrame(nsIFrame* aFrame)
+{
+  nsIAnonymousContentCreator* ac = do_QueryFrame(aFrame);
+  if (ac) {
+    ac->AppendAnonymousContentTo(mAnonKids, mFlags);
+  }
+}
+
 nsIContent*
 AllChildrenIterator::GetNextChild()
 {
@@ -406,11 +432,7 @@ AllChildrenIterator::GetNextChild()
   if (mPhase == eAtAnonKids) {
     if (mAnonKids.IsEmpty()) {
       MOZ_ASSERT(mAnonKidsIdx == UINT32_MAX);
-      nsIAnonymousContentCreator* ac =
-        do_QueryFrame(mOriginalContent->GetPrimaryFrame());
-      if (ac) {
-        ac->AppendAnonymousContentTo(mAnonKids, mFlags);
-      }
+      AppendNativeAnonymousChildren();
       mAnonKidsIdx = 0;
     }
     else {
@@ -462,12 +484,8 @@ AllChildrenIterator::GetPreviousChild()
 
   if (mPhase == eAtAnonKids) {
     if (mAnonKids.IsEmpty()) {
-      nsIAnonymousContentCreator* ac =
-        do_QueryFrame(mOriginalContent->GetPrimaryFrame());
-      if (ac) {
-        ac->AppendAnonymousContentTo(mAnonKids, mFlags);
-        mAnonKidsIdx = mAnonKids.Length();
-      }
+      AppendNativeAnonymousChildren();
+      mAnonKidsIdx = mAnonKids.Length();
     }
 
     // If 0 then it turns into UINT32_MAX, which indicates the iterator is
@@ -496,6 +514,101 @@ AllChildrenIterator::GetPreviousChild()
   }
 
   mPhase = eAtBegin;
+  return nullptr;
+}
+
+static bool
+IsNativeAnonymousImplementationOfPseudoElement(nsIContent* aContent)
+{
+  // First, we need a frame. This leads to the tricky issue of what we can
+  // infer if the frame is null.
+  //
+  // Unlike regular nodes, native anonymous content (NAC) gets created during
+  // frame construction, which happens after the main style traversal. This
+  // means that we have to manually resolve style for those nodes shortly after
+  // they're created, either by (a) invoking ResolvePseudoElementStyle (for PE
+  // NAC), or (b) handing the subtree off to Servo for a mini-traversal (for
+  // non-PE NAC). We have assertions in nsCSSFrameConstructor that we don't do
+  // both.
+  //
+  // Once that happens, the NAC has a frame. So if we have no frame here,
+  // we're either not NAC, or in the process of doing (b). Either way, this
+  // isn't a PE.
+  nsIFrame* f = aContent->GetPrimaryFrame();
+  if (!f) {
+    return false;
+  }
+
+  // Get the pseudo type.
+  CSSPseudoElementType pseudoType = f->StyleContext()->GetPseudoType();
+
+  // In general nodes never get anonymous box style. However, there are a few
+  // special cases:
+  //
+  // * We somewhat-confusingly give text nodes a style context tagged with
+  //   ":-moz-text", so we need to check for the anonymous box case here.
+  // * The primary frame for table elements is an anonymous box that inherits
+  //   from the table's style.
+  if (pseudoType == CSSPseudoElementType::AnonBox) {
+    MOZ_ASSERT(f->StyleContext()->GetPseudo() == nsCSSAnonBoxes::mozText ||
+               f->StyleContext()->GetPseudo() == nsCSSAnonBoxes::tableWrapper);
+    return false;
+  }
+
+  // Finally check the actual pseudo type.
+  bool isImpl = pseudoType != CSSPseudoElementType::NotPseudo;
+  MOZ_ASSERT_IF(isImpl, aContent->IsRootOfNativeAnonymousSubtree());
+  return isImpl;
+}
+
+/* static */ bool
+StyleChildrenIterator::IsNeeded(Element* aElement)
+{
+  // If the node is in an anonymous subtree, we conservatively return true to
+  // handle insertion points.
+  if (aElement->IsInAnonymousSubtree()) {
+    return true;
+  }
+
+  // If the node has an XBL binding with anonymous content return true.
+  if (aElement->HasFlag(NODE_MAY_BE_IN_BINDING_MNGR)) {
+    nsBindingManager* manager = aElement->OwnerDoc()->BindingManager();
+    nsXBLBinding* binding = manager->GetBindingWithContent(aElement);
+    if (binding && binding->GetAnonymousContent()) {
+      return true;
+    }
+  }
+
+  // If the node has native anonymous content, return true.
+  nsIAnonymousContentCreator* ac = do_QueryFrame(aElement->GetPrimaryFrame());
+  if (ac) {
+    return true;
+  }
+
+  // The root element has a scroll frame that is not the primary frame, so we
+  // need to do special checking for that case.
+  if (aElement == aElement->OwnerDoc()->GetRootElement()) {
+    return true;
+  }
+
+  return false;
+}
+
+
+nsIContent*
+StyleChildrenIterator::GetNextChild()
+{
+  while (nsIContent* child = AllChildrenIterator::GetNextChild()) {
+    if (IsNativeAnonymousImplementationOfPseudoElement(child)) {
+      // Skip any native-anonymous children that are used to implement pseudo-
+      // elements. These match pseudo-element selectors instead of being
+      // considered a child of their host, and thus the style system needs to
+      // handle them separately.
+    } else {
+      return child;
+    }
+  }
+
   return nullptr;
 }
 

@@ -12,7 +12,6 @@ import android.graphics.PointF;
 
 public interface PanZoomTarget {
     public ImmutableViewportMetrics getViewportMetrics();
-    public ZoomConstraints getZoomConstraints();
     public FullScreenState getFullScreenState();
     public PointF getVisibleEndOfLayerView();
 

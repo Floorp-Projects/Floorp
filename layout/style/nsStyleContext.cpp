@@ -689,7 +689,7 @@ nsStyleContext::SetStyleBits()
     }
   }
 
-  if ((mParent && mParent->HasPseudoElementData()) || mPseudoTag) {
+  if ((mParent && mParent->HasPseudoElementData()) || IsPseudoElement()) {
     mBits |= NS_STYLE_HAS_PSEUDO_ELEMENT_DATA;
   }
 

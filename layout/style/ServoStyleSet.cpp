@@ -7,6 +7,7 @@
 #include "mozilla/ServoStyleSet.h"
 
 #include "mozilla/ServoRestyleManager.h"
+#include "mozilla/dom/ChildIterator.h"
 #include "nsCSSAnonBoxes.h"
 #include "nsCSSPseudoElements.h"
 #include "nsIDocumentInlines.h"
@@ -75,10 +76,7 @@ ServoStyleSet::EndUpdate()
 void
 ServoStyleSet::StartStyling(nsPresContext* aPresContext)
 {
-  Element* root = aPresContext->Document()->GetRootElement();
-  if (root) {
-    RestyleSubtree(root);
-  }
+  StyleDocument(/* aLeaveDirtyBits = */ false);
   mStylingStarted = true;
 }
 
@@ -457,9 +455,54 @@ ServoStyleSet::ComputeRestyleHint(dom::Element* aElement,
   return Servo_ComputeRestyleHint(aElement, aSnapshot, mRawSet.get());
 }
 
-void
-ServoStyleSet::RestyleSubtree(nsINode* aNode)
+static void
+ClearDirtyBits(nsIContent* aContent)
 {
-  MOZ_ASSERT(aNode->IsDirtyForServo() || aNode->HasDirtyDescendantsForServo());
-  Servo_RestyleSubtree(aNode, mRawSet.get());
+  bool traverseDescendants = aContent->HasDirtyDescendantsForServo();
+  aContent->UnsetIsDirtyAndHasDirtyDescendantsForServo();
+  if (!traverseDescendants) {
+    return;
+  }
+
+  StyleChildrenIterator it(aContent);
+  for (nsIContent* n = it.GetNextChild(); n; n = it.GetNextChild()) {
+    ClearDirtyBits(n);
+  }
+}
+
+void
+ServoStyleSet::StyleDocument(bool aLeaveDirtyBits)
+{
+  // Unconditionally clear the flag on the document so that HasPendingRestyles
+  // returns false.
+  nsIDocument* doc = mPresContext->Document();
+  doc->UnsetHasDirtyDescendantsForServo();
+
+  // Grab the root.
+  nsIContent* root = mPresContext->Document()->GetRootElement();
+  if (!root) {
+    return;
+  }
+
+  // Restyle the document, clearing the dirty bits if requested.
+  Servo_RestyleSubtree(root, mRawSet.get());
+  if (!aLeaveDirtyBits) {
+    ClearDirtyBits(root);
+  }
+}
+
+void
+ServoStyleSet::StyleNewSubtree(nsIContent* aContent)
+{
+  MOZ_ASSERT(aContent->IsDirtyForServo());
+  Servo_RestyleSubtree(aContent, mRawSet.get());
+  ClearDirtyBits(aContent);
+}
+
+void
+ServoStyleSet::StyleNewChildren(nsIContent* aParent)
+{
+  MOZ_ASSERT(aParent->HasDirtyDescendantsForServo());
+  Servo_RestyleSubtree(aParent, mRawSet.get());
+  ClearDirtyBits(aParent);
 }

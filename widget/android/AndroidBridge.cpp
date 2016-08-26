@@ -1402,33 +1402,6 @@ AndroidBridge::IsContentDocumentDisplayed()
     return mLayerClient->IsContentDocumentDisplayed();
 }
 
-bool
-AndroidBridge::ProgressiveUpdateCallback(bool aHasPendingNewThebesContent,
-                                         const LayerRect& aDisplayPort, float aDisplayResolution,
-                                         bool aDrawingCritical, ParentLayerPoint& aScrollOffset,
-                                         CSSToParentLayerScale& aZoom)
-{
-    if (!mLayerClient) {
-        ALOG_BRIDGE("Exceptional Exit: %s", __PRETTY_FUNCTION__);
-        return false;
-    }
-
-    ProgressiveUpdateData::LocalRef progressiveUpdateData =
-            mLayerClient->ProgressiveUpdateCallback(aHasPendingNewThebesContent,
-                                                    (float)aDisplayPort.x,
-                                                    (float)aDisplayPort.y,
-                                                    (float)aDisplayPort.width,
-                                                    (float)aDisplayPort.height,
-                                                           aDisplayResolution,
-                                                          !aDrawingCritical);
-
-    aScrollOffset.x = progressiveUpdateData->X();
-    aScrollOffset.y = progressiveUpdateData->Y();
-    aZoom.scale = progressiveUpdateData->Scale();
-
-    return progressiveUpdateData->Abort();
-}
-
 class AndroidBridge::DelayedTask
 {
     using TimeStamp = mozilla::TimeStamp;

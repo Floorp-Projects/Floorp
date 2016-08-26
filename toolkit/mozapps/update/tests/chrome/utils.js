@@ -65,11 +65,6 @@
  *   For comparing the expected value defined by this property with the return
  *   value of prefHasUserValue using gPrefToCheck for the preference name in the
  *   checkPrefHasUserValue function.
- *
- * expectedRemoteContentState (optional)
- *   For comparing the expected remotecontent state attribute value of the
- *   wizard's billboard page in the checkRemoteContentState and
- *   waitForRemoteContentLoaded functions.
  */
 
 'use strict';
@@ -90,7 +85,6 @@ const PAGEID_NO_UPDATES_FOUND = "noupdatesfound";        // Done
 const PAGEID_MANUAL_UPDATE    = "manualUpdate";          // Done
 const PAGEID_UNSUPPORTED      = "unsupported";           // Done
 const PAGEID_FOUND_BASIC      = "updatesfoundbasic";     // Done
-const PAGEID_FOUND_BILLBOARD  = "updatesfoundbillboard"; // Done
 const PAGEID_DOWNLOADING      = "downloading";           // Done
 const PAGEID_ERRORS           = "errors";                // Done
 const PAGEID_ERROR_EXTRA      = "errorextra";            // Done
@@ -149,7 +143,7 @@ var gUseTestUpdater = false;
 // Set to true to log additional information for debugging. To log additional
 // information for an individual test set DEBUG_AUS_TEST to true in the test's
 // onload function.
-var DEBUG_AUS_TEST = false;
+var DEBUG_AUS_TEST = true;
 
 const DATA_URI_SPEC = "chrome://mochitests/content/chrome/toolkit/mozapps/update/tests/data/";
 Services.scriptloader.loadSubScript(DATA_URI_SPEC + "shared.js", this);
@@ -169,28 +163,6 @@ this.__defineGetter__("gTest", function() {
 this.__defineGetter__("gCallback", function() {
   return gTest.overrideCallback ? gTest.overrideCallback
                                 : defaultCallback;
-});
-
-/**
- * The remotecontent element for the current page if one exists or null if a
- * remotecontent element doesn't exist.
- */
-this.__defineGetter__("gRemoteContent", function() {
-  if (gTest.pageid == PAGEID_FOUND_BILLBOARD) {
-      return gWin.document.getElementById("updateMoreInfoContent");
-  }
-  return null;
-});
-
-/**
- * The state for the remotecontent element if one exists or null if a
- * remotecontent element doesn't exist.
- */
-this.__defineGetter__("gRemoteContentState", function() {
-  if (gRemoteContent) {
-    return gRemoteContent.getAttribute("state");
-  }
-  return null;
 });
 
 /**
@@ -537,7 +509,6 @@ function getExpectedButtonStates() {
     case PAGEID_CHECKING:
       return { cancel: { disabled: false, hidden: false } };
     case PAGEID_FOUND_BASIC:
-    case PAGEID_FOUND_BILLBOARD:
       if (gTest.neverButton) {
         return { extra1: { disabled: false, hidden: false },
                  extra2: { disabled: false, hidden: false },
@@ -561,72 +532,6 @@ function getExpectedButtonStates() {
                finish: { disabled: false, hidden: false } };
   }
   return null;
-}
-
-/**
- * Adds a load event listener to the current remotecontent element.
- */
-function addRemoteContentLoadListener() {
-  debugDump("entering - TESTS[" + gTestCounter + "], pageid: " + gTest.pageid);
-
-  gRemoteContent.addEventListener("load", remoteContentLoadListener, false);
-}
-
-/**
- * The nsIDOMEventListener for a remotecontent load event.
- */
-function remoteContentLoadListener(aEvent) {
-  // Return early if the event's original target's nodeName isn't remotecontent.
-  if (aEvent.originalTarget.nodeName != "remotecontent") {
-    debugDump("only handles events with an originalTarget nodeName of " +
-              "|remotecontent|. aEvent.originalTarget.nodeName = " +
-              aEvent.originalTarget.nodeName);
-    return;
-  }
-
-  gTestCounter++;
-  gCallback(aEvent);
-}
-
-/**
- * Waits until a remotecontent element to finish loading which is determined
- * by the current test's expectedRemoteContentState property and then removes
- * the event listener.
- *
- * Note: tests that use this function should not test the state of the
- *      remotecontent since this will check the expected state.
- *
- * @return false if the remotecontent has loaded and its state is the state
- *         specified in the current test's expectedRemoteContentState
- *         property... otherwise true.
- */
-function waitForRemoteContentLoaded(aEvent) {
-  // Return early until the remotecontent has loaded with the state that is
-  // expected or isn't the event's originalTarget.
-  if (gRemoteContentState != gTest.expectedRemoteContentState ||
-      aEvent.originalTarget != gRemoteContent) {
-    debugDump("returning early. " +
-              "gRemoteContentState: " +
-              gRemoteContentState + ", " +
-              "expectedRemoteContentState: " +
-              gTest.expectedRemoteContentState + ", " +
-              "aEvent.originalTarget.nodeName: " +
-              aEvent.originalTarget.nodeName);
-    return true;
-  }
-
-  gRemoteContent.removeEventListener("load", remoteContentLoadListener, false);
-  return false;
-}
-
-/**
- * Compares the value of the remotecontent state attribute with the value
- * specified in the test's expectedRemoteContentState property.
- */
-function checkRemoteContentState() {
-  is(gRemoteContentState, gTest.expectedRemoteContentState, "Checking remote " +
-     "content state equals " + gTest.expectedRemoteContentState + " - pageid " +
-     gTest.pageid);
 }
 
 /**
@@ -680,43 +585,12 @@ function checkErrorExtraPage(aShouldBeHidden) {
  * @param  aAppVersion (optional)
  *         The application version for the update snippet. If not specified the
  *         current application version will be used.
- * @param  aPlatformVersion (optional)
- *         The platform version for the update snippet. If not specified the
- *         current platform version will be used.
  * @return The url parameters for the application and platform version to send
  *         to update.sjs.
  */
-function getVersionParams(aAppVersion, aPlatformVersion) {
+function getVersionParams(aAppVersion) {
   let appInfo = Services.appinfo;
-  return "&appVersion=" + (aAppVersion ? aAppVersion : appInfo.version) +
-         "&platformVersion=" + (aPlatformVersion ? aPlatformVersion
-                                                 : appInfo.platformVersion);
-}
-
-/**
- * Gets an application version that is greater than the current application
- * version. The version is created by taking the first sequence from the current
- * application version and adding 1 to it.
- *
- * @return A version string greater than the current application version string.
- */
-function getNewerAppVersion() {
-  let appVersion = Services.appinfo.version.split(".")[0];
-  appVersion++;
-  return appVersion;
-}
-
-/**
- * Gets a platform version that is greater than the current platform version.
- * The version is created by taking the first sequence from the current platform
- * version and adding 1 to it.
- *
- * @return A version string greater than the current platform version string.
- */
-function getNewerPlatformVersion() {
-  let platformVersion = Services.appinfo.platformVersion.split(".")[0];
-  platformVersion++;
-  return platformVersion;
+  return "&appVersion=" + (aAppVersion ? aAppVersion : appInfo.version);
 }
 
 /**

@@ -91,6 +91,14 @@ XPCOMUtils.defineLazyGetter(this, "standaloneStylesheets", () => {
   return stylesheets;
 });
 
+/* eslint-disable mozilla/balanced-listeners */
+extensions.on("page-shutdown", (type, context) => {
+  if (context.type == "popup" && context.active) {
+    context.contentWindow.close();
+  }
+});
+/* eslint-enable mozilla/balanced-listeners */
+
 class BasePopup {
   constructor(extension, viewNode, popupURL, browserStyle, fixedWidth = false) {
     this.extension = extension;
@@ -129,8 +137,10 @@ class BasePopup {
       this.viewNode.removeEventListener(this.DESTROY_EVENT, this);
       this.viewNode.style.maxHeight = "";
 
-      this.panel.style.removeProperty("--panel-arrowcontent-background");
-      this.panel.style.removeProperty("--panel-arrow-image-vertical");
+      if (this.panel) {
+        this.panel.style.removeProperty("--panel-arrowcontent-background");
+        this.panel.style.removeProperty("--panel-arrow-image-vertical");
+      }
 
       this.browser = null;
       this.viewNode = null;
@@ -154,7 +164,7 @@ class BasePopup {
 
   get panel() {
     let panel = this.viewNode;
-    while (panel.localName != "panel") {
+    while (panel && panel.localName != "panel") {
       panel = panel.parentNode;
     }
     return panel;

@@ -796,34 +796,6 @@ ClientLayerManager::GetBackendName(nsAString& aName)
 }
 
 bool
-ClientLayerManager::ProgressiveUpdateCallback(bool aHasPendingNewThebesContent,
-                                              FrameMetrics& aMetrics,
-                                              bool aDrawingCritical)
-{
-#ifdef MOZ_WIDGET_ANDROID
-  MOZ_ASSERT(aMetrics.IsScrollable());
-  // This is derived from the code in
-  // gfx/layers/ipc/CompositorBridgeParent.cpp::TransformShadowTree.
-  CSSToLayerScale paintScale = aMetrics.LayersPixelsPerCSSPixel().ToScaleFactor();
-  const CSSRect& metricsDisplayPort =
-    (aDrawingCritical && !aMetrics.GetCriticalDisplayPort().IsEmpty()) ?
-      aMetrics.GetCriticalDisplayPort() : aMetrics.GetDisplayPort();
-  LayerRect displayPort = (metricsDisplayPort + aMetrics.GetScrollOffset()) * paintScale;
-
-  ParentLayerPoint scrollOffset;
-  CSSToParentLayerScale zoom;
-  bool ret = AndroidBridge::Bridge()->ProgressiveUpdateCallback(
-    aHasPendingNewThebesContent, displayPort, paintScale.scale, aDrawingCritical,
-    scrollOffset, zoom);
-  aMetrics.SetScrollOffset(scrollOffset / zoom);
-  aMetrics.SetZoom(CSSToParentLayerScale2D(zoom));
-  return ret;
-#else
-  return false;
-#endif
-}
-
-bool
 ClientLayerManager::AsyncPanZoomEnabled() const
 {
   return mWidget && mWidget->AsyncPanZoomEnabled();

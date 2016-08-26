@@ -264,6 +264,7 @@ struct ShellContext
     JS::PersistentRootedValue promiseRejectionTrackerCallback;
     JS::PersistentRooted<JobQueue> jobQueue;
     ExclusiveData<ShellAsyncTasks> asyncTasks;
+    bool drainingJobQueue;
 #endif // SPIDERMONKEY_PROMISE
 
     /*
@@ -428,6 +429,7 @@ ShellContext::ShellContext(JSContext* cx)
 #ifdef SPIDERMONKEY_PROMISE
     promiseRejectionTrackerCallback(cx, NullValue()),
     asyncTasks(cx),
+    drainingJobQueue(false),
 #endif // SPIDERMONKEY_PROMISE
     exitCode(0),
     quitting(false),
@@ -771,7 +773,7 @@ DrainJobQueue(JSContext* cx)
 {
 #ifdef SPIDERMONKEY_PROMISE
     ShellContext* sc = GetShellContext(cx);
-    if (sc->quitting)
+    if (sc->quitting || sc->drainingJobQueue)
         return true;
 
     // Wait for any outstanding async tasks to finish so that the
@@ -792,6 +794,12 @@ DrainJobQueue(JSContext* cx)
         asyncTasks->finished.clear();
     }
 
+    // It doesn't make sense for job queue draining to be reentrant. At the
+    // same time we don't want to assert against it, because that'd make
+    // drainJobQueue unsafe for fuzzers. We do want fuzzers to test this, so
+    // we simply ignore nested calls of drainJobQueue.
+    sc->drainingJobQueue = true;
+
     RootedObject job(cx);
     JS::HandleValueArray args(JS::HandleValueArray::empty());
     RootedValue rval(cx);
@@ -808,6 +816,7 @@ DrainJobQueue(JSContext* cx)
         sc->jobQueue[i].set(nullptr);
     }
     sc->jobQueue.clear();
+    sc->drainingJobQueue = false;
 #endif // SPIDERMONKEY_PROMISE
     return true;
 }

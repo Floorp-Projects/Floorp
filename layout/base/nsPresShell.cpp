@@ -4303,6 +4303,26 @@ PresShell::AttributeChanged(nsIDocument* aDocument,
   }
 }
 
+// nsIMutationObserver callbacks have this terrible API where aContainer is
+// null in the case that the container is the document (since nsIDocument is
+// not an nsIContent), and callees are supposed to figure this out and use the
+// document instead. It would be nice to fix that API to just pass a single
+// nsINode* parameter in place of the nsIDocument*, nsIContent* pair, but
+// there are quite a lot of consumers. So we fix things up locally with this
+// routine for now.
+static inline nsINode*
+RealContainer(nsIDocument* aDocument, nsIContent* aContainer, nsIContent* aContent)
+{
+  MOZ_ASSERT(aDocument);
+  MOZ_ASSERT_IF(aContainer, aContainer->OwnerDoc() == aDocument);
+  MOZ_ASSERT(aContent->OwnerDoc() == aDocument);
+  MOZ_ASSERT_IF(!aContainer, aContent->GetParentNode() == aDocument);
+  if (!aContainer) {
+    return aDocument;
+  }
+  return aContainer;
+}
+
 void
 PresShell::ContentAppended(nsIDocument *aDocument,
                            nsIContent* aContainer,
@@ -4311,8 +4331,12 @@ PresShell::ContentAppended(nsIDocument *aDocument,
 {
   NS_PRECONDITION(!mIsDocumentGone, "Unexpected ContentAppended");
   NS_PRECONDITION(aDocument == mDocument, "Unexpected aDocument");
-  NS_PRECONDITION(aContainer, "must have container");
 
+  // We never call ContentAppended with a document as the container, so we can
+  // assert that we have an nsIContent container.
+  MOZ_ASSERT(aContainer);
+  MOZ_ASSERT(aContainer->IsElement() ||
+             aContainer->IsNodeOfType(nsINode::eDOCUMENT_FRAGMENT));
   if (!mDidInitialize) {
     return;
   }
@@ -4322,32 +4346,22 @@ PresShell::ContentAppended(nsIDocument *aDocument,
   // Call this here so it only happens for real content mutations and
   // not cases when the frame constructor calls its own methods to force
   // frame reconstruction.
-  if (aContainer->IsElement()) {
-    // Ensure the container is an element before trying to restyle
-    // because it can be the case that the container is a ShadowRoot
-    // which is a document fragment.
-    mPresContext->RestyleManager()->
-      RestyleForAppend(aContainer->AsElement(), aFirstNewContent);
-  }
+  mPresContext->RestyleManager()->ContentAppended(aContainer, aFirstNewContent);
 
   mFrameConstructor->ContentAppended(aContainer, aFirstNewContent, true);
-
-  if (static_cast<nsINode*>(aContainer) == static_cast<nsINode*>(aDocument) &&
-      aFirstNewContent->NodeType() == nsIDOMNode::DOCUMENT_TYPE_NODE) {
-    NotifyFontSizeInflationEnabledIsDirty();
-  }
 
   VERIFY_STYLE_TREE;
 }
 
 void
 PresShell::ContentInserted(nsIDocument* aDocument,
-                           nsIContent*  aContainer,
+                           nsIContent*  aMaybeContainer,
                            nsIContent*  aChild,
                            int32_t      aIndexInContainer)
 {
   NS_PRECONDITION(!mIsDocumentGone, "Unexpected ContentInserted");
   NS_PRECONDITION(aDocument == mDocument, "Unexpected aDocument");
+  nsINode* container = RealContainer(aDocument, aMaybeContainer, aChild);
 
   if (!mDidInitialize) {
     return;
@@ -4358,19 +4372,12 @@ PresShell::ContentInserted(nsIDocument* aDocument,
   // Call this here so it only happens for real content mutations and
   // not cases when the frame constructor calls its own methods to force
   // frame reconstruction.
-  if (aContainer && aContainer->IsElement()) {
-    // Ensure the container is an element before trying to restyle
-    // because it can be the case that the container is a ShadowRoot
-    // which is a document fragment.
-    mPresContext->RestyleManager()->
-      RestyleForInsertOrChange(aContainer->AsElement(), aChild);
-  }
+  mPresContext->RestyleManager()->ContentInserted(container, aChild);
 
-  mFrameConstructor->ContentInserted(aContainer, aChild, nullptr, true);
+  mFrameConstructor->ContentInserted(aMaybeContainer, aChild, nullptr, true);
 
-  if (((!aContainer && aDocument) ||
-      (static_cast<nsINode*>(aContainer) == static_cast<nsINode*>(aDocument))) &&
-      aChild->NodeType() == nsIDOMNode::DOCUMENT_TYPE_NODE) {
+  if (aChild->NodeType() == nsIDOMNode::DOCUMENT_TYPE_NODE) {
+    MOZ_ASSERT(container == aDocument);
     NotifyFontSizeInflationEnabledIsDirty();
   }
 
@@ -4379,13 +4386,14 @@ PresShell::ContentInserted(nsIDocument* aDocument,
 
 void
 PresShell::ContentRemoved(nsIDocument *aDocument,
-                          nsIContent* aContainer,
+                          nsIContent* aMaybeContainer,
                           nsIContent* aChild,
                           int32_t     aIndexInContainer,
                           nsIContent* aPreviousSibling)
 {
   NS_PRECONDITION(!mIsDocumentGone, "Unexpected ContentRemoved");
   NS_PRECONDITION(aDocument == mDocument, "Unexpected aDocument");
+  nsINode* container = RealContainer(aDocument, aMaybeContainer, aChild);
 
   // Notify the ESM that the content has been removed, so that
   // it can clean up any state related to the content.
@@ -4402,22 +4410,14 @@ PresShell::ContentRemoved(nsIDocument *aDocument,
   // Call this here so it only happens for real content mutations and
   // not cases when the frame constructor calls its own methods to force
   // frame reconstruction.
-  nsIContent* oldNextSibling;
-  if (aContainer) {
-    oldNextSibling = aContainer->GetChildAt(aIndexInContainer);
-  } else {
-    oldNextSibling = nullptr;
-  }
+  nsIContent* oldNextSibling = container->GetChildAt(aIndexInContainer);
 
-  if (aContainer && aContainer->IsElement()) {
-    mPresContext->RestyleManager()->
-      RestyleForRemove(aContainer->AsElement(), aChild, oldNextSibling);
-  }
+  mPresContext->RestyleManager()->ContentRemoved(container, aChild, oldNextSibling);
 
   // After removing aChild from tree we should save information about live ancestor
   if (mPointerEventTarget) {
     if (nsContentUtils::ContentIsDescendantOf(mPointerEventTarget, aChild)) {
-      mPointerEventTarget = aContainer;
+      mPointerEventTarget = aMaybeContainer;
     }
   }
 
@@ -4433,14 +4433,13 @@ PresShell::ContentRemoved(nsIDocument *aDocument,
   }
 
   bool didReconstruct;
-  mFrameConstructor->ContentRemoved(aContainer, aChild, oldNextSibling,
+  mFrameConstructor->ContentRemoved(aMaybeContainer, aChild, oldNextSibling,
                                     nsCSSFrameConstructor::REMOVE_CONTENT,
                                     &didReconstruct);
 
 
-  if (((aContainer &&
-      static_cast<nsINode*>(aContainer) == static_cast<nsINode*>(aDocument)) ||
-      aDocument) && aChild->NodeType() == nsIDOMNode::DOCUMENT_TYPE_NODE) {
+  if (aChild->NodeType() == nsIDOMNode::DOCUMENT_TYPE_NODE) {
+    MOZ_ASSERT(container == aDocument);
     NotifyFontSizeInflationEnabledIsDirty();
   }
 

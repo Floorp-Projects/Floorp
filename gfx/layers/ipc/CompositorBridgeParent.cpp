@@ -47,7 +47,6 @@
 #include "mozilla/layers/LayersTypes.h"
 #include "mozilla/layers/PLayerTransactionParent.h"
 #include "mozilla/layers/RemoteContentController.h"
-#include "mozilla/layers/ShadowLayersManager.h" // for ShadowLayersManager
 #include "mozilla/layout/RenderFrameParent.h"
 #include "mozilla/media/MediaSystemResourceService.h" // for MediaSystemResourceService
 #include "mozilla/mozalloc.h"           // for operator new, etc
@@ -102,6 +101,82 @@ using namespace std;
 
 using base::ProcessId;
 using base::Thread;
+
+ProcessId
+CompositorBridgeParentBase::GetChildProcessId()
+{
+  return OtherPid();
+}
+
+void
+CompositorBridgeParentBase::NotifyNotUsed(PTextureParent* aTexture, uint64_t aTransactionId)
+{
+  RefPtr<TextureHost> texture = TextureHost::AsTextureHost(aTexture);
+  if (!texture) {
+    return;
+  }
+
+  if (!(texture->GetFlags() & TextureFlags::RECYCLE) &&
+     !texture->NeedsFenceHandle()) {
+    return;
+  }
+
+  if (texture->GetFlags() & TextureFlags::RECYCLE) {
+    SendFenceHandleIfPresent(aTexture);
+    uint64_t textureId = TextureHost::GetTextureSerial(aTexture);
+    mPendingAsyncMessage.push_back(
+      OpNotifyNotUsed(textureId, aTransactionId));
+    return;
+  }
+
+  // Gralloc requests to deliver fence to client side.
+  // If client side does not use TextureFlags::RECYCLE flag,
+  // The fence can not be delivered via LayerTransactionParent.
+  // TextureClient might wait the fence delivery on main thread.
+
+  MOZ_ASSERT(ImageBridgeParent::GetInstance(GetChildProcessId()));
+  if (ImageBridgeParent::GetInstance(GetChildProcessId())) {
+    // Send message back via PImageBridge.
+    ImageBridgeParent::NotifyNotUsedToNonRecycle(
+      GetChildProcessId(),
+      aTexture,
+      aTransactionId);
+   } else {
+     NS_ERROR("ImageBridgeParent should exist");
+   }
+
+   if (!IsAboutToSendAsyncMessages()) {
+     SendPendingAsyncMessages();
+   }
+}
+
+void
+CompositorBridgeParentBase::SendAsyncMessage(const InfallibleTArray<AsyncParentMessageData>& aMessage)
+{
+  Unused << SendParentAsyncMessages(aMessage);
+}
+
+bool
+CompositorBridgeParentBase::AllocShmem(size_t aSize,
+                                   ipc::SharedMemory::SharedMemoryType aType,
+                                   ipc::Shmem* aShmem)
+{
+  return PCompositorBridgeParent::AllocShmem(aSize, aType, aShmem);
+}
+
+bool
+CompositorBridgeParentBase::AllocUnsafeShmem(size_t aSize,
+                                         ipc::SharedMemory::SharedMemoryType aType,
+                                         ipc::Shmem* aShmem)
+{
+  return PCompositorBridgeParent::AllocUnsafeShmem(aSize, aType, aShmem);
+}
+
+void
+CompositorBridgeParentBase::DeallocShmem(ipc::Shmem& aShmem)
+{
+  PCompositorBridgeParent::DeallocShmem(aShmem);
+}
 
 CompositorBridgeParent::LayerTreeState::LayerTreeState()
   : mApzcTreeManagerParent(nullptr)
@@ -2005,10 +2080,7 @@ CompositorBridgeParent::FinishPendingComposite()
  * these updates, it doesn't actually drive compositing itself. For that it
  * hands off work to the CompositorBridgeParent it's associated with.
  */
-class CrossProcessCompositorBridgeParent final : public PCompositorBridgeParent,
-                                                 public ShadowLayersManager,
-                                                 public CompositorBridgeParentIPCAllocator,
-                                                 public ShmemAllocator
+class CrossProcessCompositorBridgeParent final : public CompositorBridgeParentBase
 {
   friend class CompositorBridgeParent;
 
@@ -2152,28 +2224,6 @@ public:
 
   virtual bool IsSameProcess() const override;
 
-  virtual ShmemAllocator* AsShmemAllocator() override { return this; }
-
-  virtual bool AllocShmem(size_t aSize,
-                          mozilla::ipc::SharedMemory::SharedMemoryType aType,
-                          mozilla::ipc::Shmem* aShmem) override;
-
-  virtual bool AllocUnsafeShmem(size_t aSize,
-                                mozilla::ipc::SharedMemory::SharedMemoryType aType,
-                                mozilla::ipc::Shmem* aShmem) override;
-
-  virtual void DeallocShmem(mozilla::ipc::Shmem& aShmem) override;
-
-  virtual base::ProcessId GetChildProcessId() override
-  {
-    return OtherPid();
-  }
-
-  virtual void SendAsyncMessage(const InfallibleTArray<AsyncParentMessageData>& aMessage) override
-  {
-    Unused << SendParentAsyncMessages(aMessage);
-  }
-
   PCompositorWidgetParent* AllocPCompositorWidgetParent(const CompositorWidgetInitData& aInitData) override {
     // Not allowed.
     return nullptr;
@@ -2190,8 +2240,6 @@ public:
 
   virtual PAPZParent* AllocPAPZParent(const uint64_t& aLayersId) override;
   virtual bool DeallocPAPZParent(PAPZParent* aActor) override;
-
-  virtual CompositorBridgeParentIPCAllocator* AsCompositorBridgeParentIPCAllocator() override { return this; }
 
   virtual void UpdatePaintTime(LayerTransactionParent* aLayerTree, const TimeDuration& aPaintTime) override {
     uint64_t id = aLayerTree->GetId();
@@ -2421,34 +2469,6 @@ bool
 CompositorBridgeParent::DeallocPTextureParent(PTextureParent* actor)
 {
   return TextureHost::DestroyIPDLActor(actor);
-}
-
-bool
-CompositorBridgeParent::AllocShmem(size_t aSize,
-                                   ipc::SharedMemory::SharedMemoryType aType,
-                                   ipc::Shmem* aShmem)
-{
-  return PCompositorBridgeParent::AllocShmem(aSize, aType, aShmem);
-}
-
-bool
-CompositorBridgeParent::AllocUnsafeShmem(size_t aSize,
-                                         ipc::SharedMemory::SharedMemoryType aType,
-                                         ipc::Shmem* aShmem)
-{
-  return PCompositorBridgeParent::AllocUnsafeShmem(aSize, aType, aShmem);
-}
-
-void
-CompositorBridgeParent::DeallocShmem(ipc::Shmem& aShmem)
-{
-  PCompositorBridgeParent::DeallocShmem(aShmem);
-}
-
-void
-CompositorBridgeParent::SendAsyncMessage(const InfallibleTArray<AsyncParentMessageData>& aMessage)
-{
-  Unused << SendParentAsyncMessages(aMessage);
 }
 
 bool
@@ -3085,28 +3105,6 @@ bool
 CrossProcessCompositorBridgeParent::DeallocPTextureParent(PTextureParent* actor)
 {
   return TextureHost::DestroyIPDLActor(actor);
-}
-
-bool
-CrossProcessCompositorBridgeParent::AllocShmem(size_t aSize,
-                                               ipc::SharedMemory::SharedMemoryType aType,
-                                               ipc::Shmem* aShmem)
-{
-  return PCompositorBridgeParent::AllocShmem(aSize, aType, aShmem);
-}
-
-bool
-CrossProcessCompositorBridgeParent::AllocUnsafeShmem(size_t aSize,
-                                                     ipc::SharedMemory::SharedMemoryType aType,
-                                                     ipc::Shmem* aShmem)
-{
-  return PCompositorBridgeParent::AllocUnsafeShmem(aSize, aType, aShmem);
-}
-
-void
-CrossProcessCompositorBridgeParent::DeallocShmem(ipc::Shmem& aShmem)
-{
-  PCompositorBridgeParent::DeallocShmem(aShmem);
 }
 
 bool

@@ -2230,7 +2230,22 @@ js::LookupNameUnqualified(JSContext* cx, HandlePropertyName name, HandleObject e
 
     // See note above RuntimeLexicalErrorObject.
     if (pobj == env) {
-        if (name != cx->names().dotThis && IsUninitializedLexicalSlot(env, shape)) {
+        bool isTDZ = false;
+        if (shape && name != cx->names().dotThis) {
+            // Treat Debugger environments specially for TDZ checks, as they
+            // look like non-native environments but in fact wrap native
+            // environments.
+            if (env->is<DebugEnvironmentProxy>()) {
+                RootedValue v(cx);
+                if (!env->as<DebugEnvironmentProxy>().getMaybeSentinelValue(cx, id, &v))
+                    return false;
+                isTDZ = IsUninitializedLexical(v);
+            } else {
+                isTDZ = IsUninitializedLexicalSlot(env, shape);
+            }
+        }
+
+        if (isTDZ) {
             env = RuntimeLexicalErrorObject::create(cx, env, JSMSG_UNINITIALIZED_LEXICAL);
             if (!env)
                 return false;

@@ -35,10 +35,9 @@ namespace jit {
 /*
  * Tracelogging overview.
  *
- * Tracelogging makes it possible to trace the occurrence of a single event and/or
- * the start and stop of an event. This is implemented to give an as low overhead as
- * possible so it doesn't interfere with running.
- *
+ * Tracelogging makes it possible to trace the occurrence of a single event
+ * and/or the start and stop of an event. This is implemented with as low
+ * overhead as possible to not interfere with running.
  *
  * Logging something is done in 3 stages.
  * 1) Get the tracelogger of the current thread.
@@ -54,6 +53,7 @@ namespace jit {
  *    There are also some predefined events. They are located in
  *    TraceLoggerTextId. They don't require to create an TraceLoggerEvent and
  *    can also be used as an argument to these functions.
+ *
  * 3) Log the occurrence of a single event:
  *    - TraceLogTimestamp(logger, TraceLoggerTextId);
  *      Note: it is temporarily not supported to provide an TraceLoggerEvent as
@@ -66,8 +66,8 @@ namespace jit {
  *    - TraceLogStopEvent(logger, TraceLoggerEvent);
  *
  *    or the start/stop of an event with a RAII class:
- *    - AutoTraceLog logger(logger, TraceLoggerTextId);
- *    - AutoTraceLog logger(logger, TraceLoggerEvent);
+ *    - AutoTraceLog atl(logger, TraceLoggerTextId);
+ *    - AutoTraceLog atl(logger, TraceLoggerEvent);
  */
 
 class AutoTraceLog;
@@ -75,11 +75,10 @@ class TraceLoggerEventPayload;
 class TraceLoggerThread;
 
 /**
- * An event that can be used to report start/stop events to TraceLogger.
- * It prepares the given info, by requesting a TraceLoggerEventPayload for the
- * given info. (Which contains the string that needs to get reported and an
- * unique id). It also increases the useCount of this payload, so it cannot
- * get removed.
+ * An event that can be used to report start/stop events to TraceLogger. It
+ * prepares the given info by requesting a TraceLoggerEventPayload containing
+ * the string to report and an unique id. It also increases the useCount of
+ * this payload, so it cannot get removed.
  */
 class TraceLoggerEvent {
   private:
@@ -117,10 +116,10 @@ class TraceLoggerEvent {
 };
 
 /**
- * An internal class holding the to-report string information, together with an
+ * An internal class holding the string information to report, together with an
  * unique id and a useCount. Whenever this useCount reaches 0, this event
- * cannot get started/stopped anymore. Though consumers might still request the
- * to-report string information.
+ * cannot get started/stopped anymore. Consumers may still request the
+ * string information.
  */
 class TraceLoggerEventPayload {
     uint32_t textId_;
@@ -180,7 +179,8 @@ class TraceLoggerThread
     ContinuousSpace<EventEntry> events;
 
     // Every time the events get flushed, this count is increased by one.
-    // This together with events.lastEntryId(), gives an unique position.
+    // Together with events.lastEntryId(), this gives an unique id for every
+    // event.
     uint32_t iteration_;
 
   public:
@@ -241,8 +241,9 @@ class TraceLoggerThread
             return false;
         }
 
-        // If we are in a consecutive iteration we are only sure we didn't lose any events,
-        // when the lastSize equals the maximum size 'events' can get.
+        // If we are in the next consecutive iteration we are only sure we
+        // didn't lose any events when the lastSize equals the maximum size
+        // 'events' can get.
         if (lastIteration == iteration_ - 1 && lastSize == events.maxSize())
             return false;
 
@@ -276,7 +277,7 @@ class TraceLoggerThread
     void stopEvent(const TraceLoggerEvent& event);
 
     // These functions are actually private and shouldn't be used in normal
-    // code. They are made public so they can get used in assembly.
+    // code. They are made public so they can be used in assembly.
     void logTimestamp(uint32_t id);
     void startEvent(uint32_t id);
     void stopEvent(uint32_t id);

@@ -1,6 +1,5 @@
-/* Stop animations when the page they are on are not displayed (bug 341749). */
+/* Stop animations on pages that aren't on the current page (bug 341749). */
 #updates:not([currentpageid="checking"]) #checkingProgress,
-#updates:not([currentpageid="incompatibleCheck"]) #incompatibleCheckProgress,
 #updates:not([currentpageid="downloading"]) #downloadProgress {
   display: none;
 }
@@ -26,16 +25,9 @@ updateheader {
   -moz-box-orient: horizontal;
 }
 
-/* Remote content displayed in the billboard page. */
-remotecontent {
-  -moz-binding: url("chrome://mozapps/content/update/updates.xml#remotecontent");
-  display: -moz-deck;
-}
-
 /* Update History Window */
 update {
   -moz-binding: url("chrome://mozapps/content/update/updates.xml#update");
   display: -moz-box;
   -moz-box-orient: vertical;
 }
-

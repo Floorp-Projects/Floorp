@@ -31,7 +31,6 @@
 #include "mozilla/layers/ISurfaceAllocator.h" // for ShmemAllocator
 #include "mozilla/layers/LayersMessages.h"  // for TargetConfig
 #include "mozilla/layers/PCompositorBridgeParent.h"
-#include "mozilla/layers/ShadowLayersManager.h" // for ShadowLayersManager
 #include "mozilla/layers/APZTestData.h"
 #include "mozilla/widget/CompositorWidget.h"
 #include "nsISupportsImpl.h"
@@ -203,10 +202,57 @@ protected:
   virtual ~CompositorUpdateObserver() {}
 };
 
-class CompositorBridgeParent final : public PCompositorBridgeParent,
-                                     public ShadowLayersManager,
-                                     public CompositorBridgeParentIPCAllocator,
-                                     public ShmemAllocator
+class CompositorBridgeParentBase : public PCompositorBridgeParent,
+                                   public HostIPCAllocator,
+                                   public ShmemAllocator
+{
+public:
+  virtual void ShadowLayersUpdated(LayerTransactionParent* aLayerTree,
+                                   const uint64_t& aTransactionId,
+                                   const TargetConfig& aTargetConfig,
+                                   const InfallibleTArray<PluginWindowData>& aPlugins,
+                                   bool aIsFirstPaint,
+                                   bool aScheduleComposite,
+                                   uint32_t aPaintSequenceNumber,
+                                   bool aIsRepeatTransaction,
+                                   int32_t aPaintSyncId,
+                                   bool aHitTestUpdate) = 0;
+
+  virtual AsyncCompositionManager* GetCompositionManager(LayerTransactionParent* aLayerTree) { return nullptr; }
+
+  virtual void NotifyClearCachedResources(LayerTransactionParent* aLayerTree) { }
+
+  virtual void ForceComposite(LayerTransactionParent* aLayerTree) { }
+  virtual bool SetTestSampleTime(LayerTransactionParent* aLayerTree,
+                                 const TimeStamp& aTime) { return true; }
+  virtual void LeaveTestMode(LayerTransactionParent* aLayerTree) { }
+  virtual void ApplyAsyncProperties(LayerTransactionParent* aLayerTree) = 0;
+  virtual void FlushApzRepaints(const LayerTransactionParent* aLayerTree) = 0;
+  virtual void GetAPZTestData(const LayerTransactionParent* aLayerTree,
+                              APZTestData* aOutData) { }
+  virtual void SetConfirmedTargetAPZC(const LayerTransactionParent* aLayerTree,
+                                      const uint64_t& aInputBlockId,
+                                      const nsTArray<ScrollableLayerGuid>& aTargets) = 0;
+  virtual void UpdatePaintTime(LayerTransactionParent* aLayerTree, const TimeDuration& aPaintTime) {}
+
+  virtual ShmemAllocator* AsShmemAllocator() override { return this; }
+
+  // HostIPCAllocator
+  virtual base::ProcessId GetChildProcessId() override;
+  virtual void NotifyNotUsed(PTextureParent* aTexture, uint64_t aTransactionId) override;
+  virtual void SendAsyncMessage(const InfallibleTArray<AsyncParentMessageData>& aMessage) override;
+
+  // ShmemAllocator
+  virtual bool AllocShmem(size_t aSize,
+                          mozilla::ipc::SharedMemory::SharedMemoryType aType,
+                          mozilla::ipc::Shmem* aShmem) override;
+  virtual bool AllocUnsafeShmem(size_t aSize,
+                                mozilla::ipc::SharedMemory::SharedMemoryType aType,
+                                mozilla::ipc::Shmem* aShmem) override;
+  virtual void DeallocShmem(mozilla::ipc::Shmem& aShmem) override;
+};
+
+class CompositorBridgeParent final : public CompositorBridgeParentBase
 {
   friend class CompositorVsyncScheduler;
   friend class CompositorThreadHolder;
@@ -306,29 +352,9 @@ public:
 
   virtual bool IsSameProcess() const override;
 
-  virtual ShmemAllocator* AsShmemAllocator() override { return this; }
-
-  virtual bool AllocShmem(size_t aSize,
-                          mozilla::ipc::SharedMemory::SharedMemoryType aType,
-                          mozilla::ipc::Shmem* aShmem) override;
-
-  virtual bool AllocUnsafeShmem(size_t aSize,
-                                mozilla::ipc::SharedMemory::SharedMemoryType aType,
-                                mozilla::ipc::Shmem* aShmem) override;
-
-  virtual void DeallocShmem(mozilla::ipc::Shmem& aShmem) override;
 
   PCompositorWidgetParent* AllocPCompositorWidgetParent(const CompositorWidgetInitData& aInitData) override;
   bool DeallocPCompositorWidgetParent(PCompositorWidgetParent* aActor) override;
-
-  virtual base::ProcessId GetChildProcessId() override
-  {
-    return OtherPid();
-  }
-
-  virtual void SendAsyncMessage(const InfallibleTArray<AsyncParentMessageData>& aMessage) override;
-
-  virtual CompositorBridgeParentIPCAllocator* AsCompositorBridgeParentIPCAllocator() override { return this; }
 
   /**
    * Request that the compositor be recreated due to a shared device reset.

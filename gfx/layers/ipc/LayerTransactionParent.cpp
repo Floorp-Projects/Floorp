@@ -13,6 +13,7 @@
 #include "Layers.h"                     // for Layer, ContainerLayer, etc
 #include "ShadowLayerParent.h"          // for ShadowLayerParent
 #include "CompositableTransactionParent.h"  // for EditReplyVector
+#include "CompositorBridgeParent.h"
 #include "gfxPrefs.h"
 #include "mozilla/gfx/BasePoint3D.h"    // for BasePoint3D
 #include "mozilla/layers/CanvasLayerComposite.h"
@@ -29,7 +30,6 @@
 #include "mozilla/layers/PLayerParent.h"  // for PLayerParent
 #include "mozilla/layers/TextureHostOGL.h"  // for TextureHostOGL
 #include "mozilla/layers/PaintedLayerComposite.h"
-#include "mozilla/layers/ShadowLayersManager.h" // for ShadowLayersManager
 #include "mozilla/mozalloc.h"           // for operator delete, etc
 #include "mozilla/Unused.h"
 #include "nsCoord.h"                    // for NSAppUnitsToFloatPixels
@@ -144,10 +144,10 @@ ShadowChild(const OpRaiseToTopChild& op)
 //--------------------------------------------------
 // LayerTransactionParent
 LayerTransactionParent::LayerTransactionParent(LayerManagerComposite* aManager,
-                                               ShadowLayersManager* aLayersManager,
+                                               CompositorBridgeParentBase* aBridge,
                                                uint64_t aId)
   : mLayerManager(aManager)
-  , mShadowLayersManager(aLayersManager)
+  , mCompositorBridge(aBridge)
   , mId(aId)
   , mPendingTransaction(0)
   , mPendingCompositorUpdates(0)
@@ -232,7 +232,7 @@ bool
 LayerTransactionParent::RecvPaintTime(const uint64_t& aTransactionId,
                                       const TimeDuration& aPaintTime)
 {
-  mShadowLayersManager->UpdatePaintTime(this, aPaintTime);
+  mCompositorBridge->UpdatePaintTime(this, aPaintTime);
   return true;
 }
 
@@ -274,7 +274,7 @@ LayerTransactionParent::RecvUpdate(InfallibleTArray<Edit>&& cset,
   EditReplyVector replyv;
 
   {
-    AutoResolveRefLayers resolve(mShadowLayersManager->GetCompositionManager(this));
+    AutoResolveRefLayers resolve(mCompositorBridge->GetCompositionManager(this));
     layer_manager()->BeginTransaction();
   }
 
@@ -657,13 +657,13 @@ LayerTransactionParent::RecvUpdate(InfallibleTArray<Edit>&& cset,
     }
   }
 
-  mShadowLayersManager->ShadowLayersUpdated(this, aTransactionId, targetConfig,
-                                            aPlugins, isFirstPaint, scheduleComposite,
-                                            paintSequenceNumber, isRepeatTransaction,
-                                            aPaintSyncId, updateHitTestingTree);
+  mCompositorBridge->ShadowLayersUpdated(this, aTransactionId, targetConfig,
+                                         aPlugins, isFirstPaint, scheduleComposite,
+                                         paintSequenceNumber, isRepeatTransaction,
+                                         aPaintSyncId, updateHitTestingTree);
 
   {
-    AutoResolveRefLayers resolve(mShadowLayersManager->GetCompositionManager(this));
+    AutoResolveRefLayers resolve(mCompositorBridge->GetCompositionManager(this));
     layer_manager()->EndTransaction(TimeStamp(), LayerManager::END_NO_IMMEDIATE_REDRAW);
   }
 
@@ -714,13 +714,13 @@ LayerTransactionParent::RecvUpdate(InfallibleTArray<Edit>&& cset,
 bool
 LayerTransactionParent::RecvSetTestSampleTime(const TimeStamp& aTime)
 {
-  return mShadowLayersManager->SetTestSampleTime(this, aTime);
+  return mCompositorBridge->SetTestSampleTime(this, aTime);
 }
 
 bool
 LayerTransactionParent::RecvLeaveTestMode()
 {
-  mShadowLayersManager->LeaveTestMode(this);
+  mCompositorBridge->LeaveTestMode(this);
   return true;
 }
 
@@ -739,7 +739,7 @@ LayerTransactionParent::RecvGetAnimationOpacity(PLayerParent* aParent,
     return false;
   }
 
-  mShadowLayersManager->ApplyAsyncProperties(this);
+  mCompositorBridge->ApplyAsyncProperties(this);
 
   if (!layer->AsLayerComposite()->GetShadowOpacitySetByAnimation()) {
     return true;
@@ -767,7 +767,7 @@ LayerTransactionParent::RecvGetAnimationTransform(PLayerParent* aParent,
   // a race between when we temporarily clear the animation transform (in
   // CompositorBridgeParent::SetShadowProperties) and when animation recalculates
   // the value.
-  mShadowLayersManager->ApplyAsyncProperties(this);
+  mCompositorBridge->ApplyAsyncProperties(this);
 
   // This method is specific to transforms applied by animation.
   // This is because this method uses the information stored with an animation
@@ -885,14 +885,14 @@ LayerTransactionParent::RecvSetAsyncZoom(const FrameMetrics::ViewID& aScrollID,
 bool
 LayerTransactionParent::RecvFlushApzRepaints()
 {
-  mShadowLayersManager->FlushApzRepaints(this);
+  mCompositorBridge->FlushApzRepaints(this);
   return true;
 }
 
 bool
 LayerTransactionParent::RecvGetAPZTestData(APZTestData* aOutData)
 {
-  mShadowLayersManager->GetAPZTestData(this, aOutData);
+  mCompositorBridge->GetAPZTestData(this, aOutData);
   return true;
 }
 
@@ -913,7 +913,7 @@ bool
 LayerTransactionParent::RecvSetConfirmedTargetAPZC(const uint64_t& aBlockId,
                                                    nsTArray<ScrollableLayerGuid>&& aTargets)
 {
-  mShadowLayersManager->SetConfirmedTargetAPZC(this, aBlockId, aTargets);
+  mCompositorBridge->SetConfirmedTargetAPZC(this, aBlockId, aTargets);
   return true;
 }
 
@@ -960,14 +960,14 @@ LayerTransactionParent::RecvClearCachedResources()
     // of resources to exactly that subtree, so we specify it here.
     mLayerManager->ClearCachedResources(mRoot);
   }
-  mShadowLayersManager->NotifyClearCachedResources(this);
+  mCompositorBridge->NotifyClearCachedResources(this);
   return true;
 }
 
 bool
 LayerTransactionParent::RecvForceComposite()
 {
-  mShadowLayersManager->ForceComposite(this);
+  mCompositorBridge->ForceComposite(this);
   return true;
 }
 
@@ -1047,13 +1047,13 @@ LayerTransactionParent::SendAsyncMessage(const InfallibleTArray<AsyncParentMessa
 void
 LayerTransactionParent::SendPendingAsyncMessages()
 {
-  mShadowLayersManager->AsCompositorBridgeParentIPCAllocator()->SendPendingAsyncMessages();
+  mCompositorBridge->SendPendingAsyncMessages();
 }
 
 void
 LayerTransactionParent::SetAboutToSendAsyncMessages()
 {
-  mShadowLayersManager->AsCompositorBridgeParentIPCAllocator()->SetAboutToSendAsyncMessages();
+  mCompositorBridge->SetAboutToSendAsyncMessages();
 }
 
 void

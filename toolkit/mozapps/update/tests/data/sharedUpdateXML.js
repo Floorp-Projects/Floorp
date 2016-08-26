@@ -80,16 +80,13 @@ function getRemoteUpdatesXMLString(aUpdates) {
  * @return The string representing an update element for an update xml file.
  */
 function getRemoteUpdateString(aPatches, aType, aName, aDisplayVersion,
-                               aAppVersion, aPlatformVersion, aBuildID,
-                               aDetailsURL, aBillboardURL, aShowPrompt,
+                               aAppVersion, aBuildID, aDetailsURL, aShowPrompt,
                                aShowNeverForVersion, aPromptWaitTime,
-                               aShowSurvey, aVersion, aExtensionVersion,
                                aCustom1, aCustom2) {
   return getUpdateString(aType, aName, aDisplayVersion, aAppVersion,
-                         aPlatformVersion, aBuildID, aDetailsURL,
-                         aBillboardURL, aShowPrompt, aShowNeverForVersion,
-                         aPromptWaitTime, aShowSurvey, aVersion,
-                         aExtensionVersion, aCustom1, aCustom2) + ">\n" +
+                         aBuildID, aDetailsURL, aShowPrompt,
+                         aShowNeverForVersion, aPromptWaitTime,
+                         aCustom1, aCustom2) + ">\n" +
               aPatches +
          "  </update>\n";
 }
@@ -148,12 +145,10 @@ function getLocalUpdatesXMLString(aUpdates) {
  * @return The string representing an update element for an update xml file.
  */
 function getLocalUpdateString(aPatches, aType, aName, aDisplayVersion,
-                              aAppVersion, aPlatformVersion, aBuildID,
-                              aDetailsURL, aBillboardURL, aServiceURL,
+                              aAppVersion, aBuildID, aDetailsURL, aServiceURL,
                               aInstallDate, aStatusText, aIsCompleteUpdate,
                               aChannel, aForegroundDownload, aShowPrompt,
                               aShowNeverForVersion, aPromptWaitTime,
-                              aShowSurvey, aVersion, aExtensionVersion,
                               aPreviousAppVersion, aCustom1, aCustom2) {
   let serviceURL = aServiceURL ? aServiceURL : "http://test_service/";
   let installDate = aInstallDate ? aInstallDate : "1238441400314";
@@ -167,11 +162,9 @@ function getLocalUpdateString(aPatches, aType, aName, aDisplayVersion,
   let previousAppVersion = aPreviousAppVersion ? "previousAppVersion=\"" +
                                                  aPreviousAppVersion + "\" "
                                                : "";
-  return getUpdateString(aType, aName, aDisplayVersion, aAppVersion,
-                         aPlatformVersion, aBuildID, aDetailsURL, aBillboardURL,
-                         aShowPrompt, aShowNeverForVersion, aPromptWaitTime,
-                         aShowSurvey, aVersion, aExtensionVersion,
-                         aCustom1, aCustom2) +
+  return getUpdateString(aType, aName, aDisplayVersion, aAppVersion, aBuildID,
+                         aDetailsURL, aShowPrompt, aShowNeverForVersion,
+                         aPromptWaitTime, aCustom1, aCustom2) +
                    " " +
                    previousAppVersion +
                    "serviceURL=\"" + serviceURL + "\" " +
@@ -224,10 +217,6 @@ function getLocalPatchString(aType, aURL, aHashFunction, aHashValue, aSize,
  *         The update's application version.
  *         If not specified it will default to the value of
  *         DEFAULT_UPDATE_VERSION.
- * @param  aPlatformVersion (optional)
- *         The update's platform version.
- *         If not specified it will default to the value of
- *         DEFAULT_UPDATE_VERSION.
  * @param  aBuildID (optional)
  *         The update's build id.
  *         If not specified it will default to '20080811053724'.
@@ -235,9 +224,6 @@ function getLocalPatchString(aType, aURL, aHashFunction, aHashValue, aSize,
  *         The update's details url.
  *         If not specified it will default to 'http://test_details/' due to due
  *         to bug 470244.
- * @param  aBillboardURL (optional)
- *         The update's billboard url.
- *         If not specified it will not be present.
  * @param  aShowPrompt (optional)
  *         Whether to show the prompt for the update when auto update is
  *         enabled.
@@ -249,16 +235,6 @@ function getLocalPatchString(aType, aURL, aHashFunction, aHashValue, aSize,
  *         default to false.
  * @param  aPromptWaitTime (optional)
  *         Override for the app.update.promptWaitTime preference.
- * @param  aShowSurvey (optional)
- *         Whether to show the 'No Thanks' button in the update prompt.
- *         If not specified it will not be present and the update service will
- *         default to false.
- * @param  aVersion (optional)
- *         The update's application version from 1.9.2.
- *         If not specified it will not be present.
- * @param  aExtensionVersion (optional)
- *         The update's application version from 1.9.2.
- *         If not specified it will not be present.
  * @param  aCustom1 (optional)
  *         A custom attribute name and attribute value to add to the xml.
  *         Example: custom1_attribute="custom1 value"
@@ -269,48 +245,23 @@ function getLocalPatchString(aType, aURL, aHashFunction, aHashValue, aSize,
  *         If not specified it will not be present.
  * @return The string representing an update element for an update xml file.
  */
-function getUpdateString(aType, aName, aDisplayVersion, aAppVersion,
-                         aPlatformVersion, aBuildID, aDetailsURL, aBillboardURL,
-                         aShowPrompt, aShowNeverForVersion, aPromptWaitTime,
-                         aShowSurvey, aVersion, aExtensionVersion,
-                         aCustom1, aCustom2) {
+function getUpdateString(aType, aName, aDisplayVersion, aAppVersion, aBuildID,
+                         aDetailsURL, aShowPrompt, aShowNeverForVersion,
+                         aPromptWaitTime, aCustom1, aCustom2) {
   let type = aType ? aType : "major";
   let name = aName ? aName : "App Update Test";
-  let displayVersion = "";
-  if (aDisplayVersion || !aVersion) {
-    displayVersion = "displayVersion=\"" +
-                     (aDisplayVersion ? aDisplayVersion
-                                      : "version " + DEFAULT_UPDATE_VERSION) +
-                     "\" ";
-  }
-  // version has been deprecated in favor of displayVersion but it still needs
-  // to be tested for forward compatibility.
-  let version = aVersion ? "version=\"" + aVersion + "\" " : "";
-  let appVersion = "";
-  if (aAppVersion || !aExtensionVersion) {
-    appVersion = "appVersion=\"" +
-                 (aAppVersion ? aAppVersion : DEFAULT_UPDATE_VERSION) +
-                 "\" ";
-  }
-  // extensionVersion has been deprecated in favor of appVersion but it still
-  // needs to be tested for forward compatibility.
-  let extensionVersion = aExtensionVersion ? "extensionVersion=\"" +
-                                             aExtensionVersion + "\" "
-                                           : "";
-  let platformVersion = "";
-  if (aPlatformVersion) {
-    platformVersion = "platformVersion=\"" +
-                      (aPlatformVersion ? aPlatformVersion
-                                        : DEFAULT_UPDATE_VERSION) + "\" ";
-  }
+  let displayVersion = aDisplayVersion ? "displayVersion=\"" +
+                                         aDisplayVersion + "\" "
+                                       : "";
+  let appVersion = "appVersion=\"" +
+                   (aAppVersion ? aAppVersion : DEFAULT_UPDATE_VERSION) +
+                   "\" ";
   let buildID = aBuildID ? aBuildID : "20080811053724";
   // XXXrstrong - not specifying a detailsURL will cause a leak due to bug 470244
 //   let detailsURL = aDetailsURL ? "detailsURL=\"" + aDetailsURL + "\" " : "";
   let detailsURL = "detailsURL=\"" +
                    (aDetailsURL ? aDetailsURL
                                 : "http://test_details/") + "\" ";
-  let billboardURL = aBillboardURL ? "billboardURL=\"" + aBillboardURL + "\" "
-                                   : "";
   let showPrompt = aShowPrompt ? "showPrompt=\"" + aShowPrompt + "\" " : "";
   let showNeverForVersion = aShowNeverForVersion ? "showNeverForVersion=\"" +
                                                    aShowNeverForVersion + "\" "
@@ -323,12 +274,8 @@ function getUpdateString(aType, aName, aDisplayVersion, aAppVersion,
   return "  <update type=\"" + type + "\" " +
                    "name=\"" + name + "\" " +
                     displayVersion +
-                    version +
                     appVersion +
-                    extensionVersion +
-                    platformVersion +
                     detailsURL +
-                    billboardURL +
                     showPrompt +
                     showNeverForVersion +
                     promptWaitTime +

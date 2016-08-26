@@ -588,14 +588,6 @@ constexpr char GeckoAppShell::NotifyObservers_t::signature[];
 constexpr char GeckoAppShell::NotifyAlertListener_t::name[];
 constexpr char GeckoAppShell::NotifyAlertListener_t::signature[];
 
-constexpr char GeckoAppShell::NotifyDefaultPrevented_t::name[];
-constexpr char GeckoAppShell::NotifyDefaultPrevented_t::signature[];
-
-auto GeckoAppShell::NotifyDefaultPrevented(bool a0) -> void
-{
-    return mozilla::jni::Method<NotifyDefaultPrevented_t>::Call(GeckoAppShell::Context(), nullptr, a0);
-}
-
 constexpr char GeckoAppShell::NotifyUriVisited_t::name[];
 constexpr char GeckoAppShell::NotifyUriVisited_t::signature[];
 
@@ -1308,14 +1300,6 @@ auto GeckoLayerClient::OnGeckoReady() const -> void
     return mozilla::jni::Method<OnGeckoReady_t>::Call(GeckoLayerClient::mCtx, nullptr);
 }
 
-constexpr char GeckoLayerClient::ProgressiveUpdateCallback_t::name[];
-constexpr char GeckoLayerClient::ProgressiveUpdateCallback_t::signature[];
-
-auto GeckoLayerClient::ProgressiveUpdateCallback(bool a0, float a1, float a2, float a3, float a4, float a5, bool a6) const -> mozilla::jni::Object::LocalRef
-{
-    return mozilla::jni::Method<ProgressiveUpdateCallback_t>::Call(GeckoLayerClient::mCtx, nullptr, a0, a1, a2, a3, a4, a5, a6);
-}
-
 constexpr char GeckoLayerClient::SetFirstPaintViewport_t::name[];
 constexpr char GeckoLayerClient::SetFirstPaintViewport_t::signature[];
 
@@ -1505,9 +1489,6 @@ constexpr char NativePanZoomController::HandleMouseEvent_t::signature[];
 
 constexpr char NativePanZoomController::HandleScrollEvent_t::name[];
 constexpr char NativePanZoomController::HandleScrollEvent_t::signature[];
-
-constexpr char NativePanZoomController::AbortAnimation_t::name[];
-constexpr char NativePanZoomController::AbortAnimation_t::signature[];
 
 constexpr char NativePanZoomController::SetIsLongpressEnabled_t::name[];
 constexpr char NativePanZoomController::SetIsLongpressEnabled_t::signature[];
