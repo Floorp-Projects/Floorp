@@ -1490,6 +1490,10 @@ const DownloadsFooter = {
       } else {
         this._footerNode.removeAttribute("showingsummary");
       }
+      if (!aValue && this._showingSummary) {
+        // Make sure the panel's height shrinks when the summary is hidden.
+        DownloadsBlockedSubview.view.setHeightToFit();
+      }
       this._showingSummary = aValue;
     }
     return aValue;
