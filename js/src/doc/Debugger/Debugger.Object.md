@@ -205,32 +205,30 @@ from its prototype:
     If the referent is not a (scripted) proxy, return `undefined`.
 
 `promiseState`
-:   If the referent is a [`Promise`][promise], this is an object describing
-    the Promise's current state, with the following properties:
+:   If the referent is a [`Promise`][promise], return a string indicating
+    whether the [`Promise`][promise] is pending, or has been fulfilled or
+    rejected. This string takes one of the following values:
 
-    `state`
-    :   A string indicating whether the [`Promise`][promise] is pending or
-        has been fulfilled or rejected.
-        This accessor returns one of the following values:
+    * `"pending"`, if the [`Promise`][promise] is pending.
 
-        * `"pending"`, if the [`Promise`][promise] hasn't been resolved.
+    * `"fulfilled"`, if the [`Promise`][promise] has been fulfilled.
 
-        * `"fulfilled"`, if the [`Promise`][promise] has been fulfilled.
+    * `"rejected"`, if the [`Promise`][promise] has been rejected.
 
-        * `"rejected"`, if the [`Promise`][promise] has been rejected.
+    If the referent is not a [`Promise`][promise], throw a `TypeError`.
 
-    `value`
-    :   If the [`Promise`][promise] has been *fulfilled*, this is a
-        `Debugger.Object` referring to the value it was fulfilled with,
-        `undefined` otherwise.
+`promiseValue`
+:   If the referent is a [`Promise`][promise] that has been fulfilled, return
+    a debuggee value representing the value the [`Promise`][promise] has been
+    fulfilled with.
 
-    `reason`
-    :   If the [`Promise`][promise] has been *rejected*, this is a
-        `Debugger.Object` referring to the value it was rejected with,
-        `undefined` otherwise.
+    If the [`Promise`][promise] has not been fulfilled, return `undefined`. If
+    the referent is not a [`Promise`][promise], throw a `TypeError`.
 
-    If the referent is not a [`Promise`][promise], throw a `TypeError`
-    exception.
+`promiseReason`
+:   If the referent is a [`Promise`][promise] that has been rejected, return a
+    debuggee value representing the value the [`Promise`][promise] has been
+    rejected with.
 
 `promiseAllocationSite`
 :   If the referent is a [`Promise`][promise], this is the
