@@ -6086,6 +6086,9 @@ if (IsCSSPropertyPrefEnabled("layout.css.grid.enabled")) {
       "minmax(auto, max-content)",
       "m\\69nmax(20px, 4Fr)",
       "MinMax(min-content, calc(20px + 10%))",
+      "fit-content(1px)",
+      "fit-content(calc(1px - 99%))",
+      "fit-content(10%)",
     ],
     invalid_values: [
       "",
@@ -6101,6 +6104,9 @@ if (IsCSSPropertyPrefEnabled("layout.css.grid.enabled")) {
       "minmax(20px, 100px, 200px)",
       "maxmin(100px, 20px)",
       "minmax(min-content, minmax(30px, max-content))",
+      "fit-content(-1px)",
+      "fit-content(auto)",
+      "fit-content(min-content)",
     ]
   };
   gCSSProperties["grid-auto-rows"] = {
@@ -6149,6 +6155,9 @@ if (IsCSSPropertyPrefEnabled("layout.css.grid.enabled")) {
       "repeat(auto-fill,minmax(1%,auto))",
       "repeat(auto-fill,minmax(1em,min-content)) minmax(min-content,0)",
       "repeat(auto-fill,minmax(max-content,1mm))",
+      "fit-content(1px) 1fr",
+      "[a] fit-content(calc(1px - 99%)) [b]",
+      "[a] fit-content(10%) [b c] fit-content(1em)",
     ],
     invalid_values: [
       "",
@@ -6208,6 +6217,9 @@ if (IsCSSPropertyPrefEnabled("layout.css.grid.enabled")) {
       "auto repeat(auto-fit, 10px)",
       "minmax(min-content,max-content) repeat(auto-fit, 0)",
       "10px [a] 10px [b a] 1fr [b] repeat(auto-fill, 0)",
+      "fit-content(-1px)",
+      "fit-content(auto)",
+      "fit-content(min-content)",
     ],
     unbalanced_values: [
       "(foo] 40px",
@@ -6554,7 +6566,7 @@ if (IsCSSPropertyPrefEnabled("layout.css.grid.enabled")) {
     initial_values: [ "0" ],
     other_values: [ "2px", "2%", "1em", "calc(1px + 1em)", "calc(1%)",
                     "calc(1% + 1ch)" , "calc(1px - 99%)" ],
-    invalid_values: [ "-1px", "auto", "none", "1px 1px", "-1%" ],
+    invalid_values: [ "-1px", "auto", "none", "1px 1px", "-1%", "fit-content(1px)" ],
   };
   gCSSProperties["grid-row-gap"] = {
     domProp: "gridRowGap",
@@ -6563,7 +6575,7 @@ if (IsCSSPropertyPrefEnabled("layout.css.grid.enabled")) {
     initial_values: [ "0" ],
     other_values: [ "2px", "2%", "1em", "calc(1px + 1em)", "calc(1%)",
                     "calc(1% + 1ch)" , "calc(1px - 99%)" ],
-    invalid_values: [ "-1px", "auto", "none", "1px 1px", "-1%" ],
+    invalid_values: [ "-1px", "auto", "none", "1px 1px", "-1%", "min-content" ],
   };
   gCSSProperties["grid-gap"] = {
     domProp: "gridGap",
