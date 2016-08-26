@@ -84,7 +84,7 @@ var LoginManagerParent = {
                           data.usernameField,
                           data.newPasswordField,
                           data.oldPasswordField,
-                          msg.objects.openerWin,
+                          msg.objects.openerTopWindow,
                           msg.target);
         break;
       }
@@ -287,14 +287,14 @@ var LoginManagerParent = {
 
   onFormSubmit: function(hostname, formSubmitURL,
                          usernameField, newPasswordField,
-                         oldPasswordField, opener,
+                         oldPasswordField, openerTopWindow,
                          target) {
     function getPrompter() {
       var prompterSvc = Cc["@mozilla.org/login-manager/prompter;1"].
                         createInstance(Ci.nsILoginManagerPrompter);
       prompterSvc.init(target.ownerDocument.defaultView);
       prompterSvc.browser = target;
-      prompterSvc.opener = opener;
+      prompterSvc.opener = openerTopWindow;
       return prompterSvc;
     }
 
