@@ -25,7 +25,7 @@ config = {
     "ignore_locales": ["en-US", "multi"],
     "repos": [{
         "repo": "https://hg.mozilla.org/%s" % REPO_PATH,
-        "tag": "default",
+        "branch": "default",
         "dest": BUILD_DIR,
     }],
     "vcs_share_base": "/builds/hg-shared",

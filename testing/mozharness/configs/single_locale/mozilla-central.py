@@ -19,9 +19,9 @@ config = {
         "branch": "default",
         "dest": "tools",
     }, {
-        "vcs": "hgtool",
+        "vcs": "hg",
         "repo": "https://hg.mozilla.org/mozilla-central",
-        "revision": "default",
+        "revision": "%(revision)s",
         "dest": "mozilla-central",
     }],
     # purge options

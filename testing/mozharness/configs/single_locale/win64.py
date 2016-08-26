@@ -69,12 +69,6 @@ config = {
     "enable_mozmake": True,
     'exes': {
         'python2.7': sys.executable,
-        'hgtool.py': [
-            sys.executable,
-            os.path.join(
-                os.getcwd(), 'build', 'tools', 'buildfarm', 'utils', 'hgtool.py'
-            )
-        ],
         'virtualenv': [
             sys.executable,
             'c:/mozilla-build/buildbotve/virtualenv.py'

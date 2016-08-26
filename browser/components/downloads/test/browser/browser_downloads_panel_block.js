@@ -36,12 +36,15 @@ add_task(function* mainTest() {
     EventUtils.sendMouseEvent({ type: "click" }, item);
     yield promiseSubviewShown(true);
 
-    // Click the Open button.  The alert blocked-download dialog should be
-    // shown.
-    let dialogPromise = promiseAlertDialogOpen("cancel");
+    // Click the Open button.  The download should be unblocked and then opened,
+    // i.e., unblockAndOpenDownload() should be called on the item.  The panel
+    // should also be closed as a result, so wait for that too.
+    let unblockOpenPromise = promiseUnblockAndOpenDownloadCalled(item);
+    let hidePromise = promisePanelHidden();
     EventUtils.synthesizeMouse(DownloadsBlockedSubview.elements.openButton,
                                10, 10, {}, window);
-    yield dialogPromise;
+    yield unblockOpenPromise;
+    yield hidePromise;
 
     window.focus();
     yield SimpleTest.promiseFocus(window);
@@ -163,5 +166,18 @@ function promiseSubviewShown(shown) {
         return;
       }
     }, 0);
+  });
+}
+
+function promiseUnblockAndOpenDownloadCalled(item) {
+  return new Promise(resolve => {
+    let realFn = item._shell.unblockAndOpenDownload;
+    item._shell.unblockAndOpenDownload = () => {
+      item._shell.unblockAndOpenDownload = realFn;
+      resolve();
+      // unblockAndOpenDownload returns a promise (that's resolved when the file
+      // is opened).
+      return Promise.resolve();
+    };
   });
 }

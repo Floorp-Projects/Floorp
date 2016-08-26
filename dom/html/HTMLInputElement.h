@@ -646,13 +646,6 @@ public:
   void SetType(const nsAString& aValue, ErrorResult& aRv)
   {
     SetHTMLAttr(nsGkAtoms::type, aValue, aRv);
-    if (aValue.EqualsLiteral("number")) {
-      // For NS_FORM_INPUT_NUMBER we rely on having frames to process key
-      // events. Make sure we have them in case someone changes the type of
-      // this element to "number" and then expects to be able to send key
-      // events to it (type changes are rare, so not a big perf issue):
-      FlushFrames();
-    }
   }
 
   // XPCOM GetDefaultValue() is OK

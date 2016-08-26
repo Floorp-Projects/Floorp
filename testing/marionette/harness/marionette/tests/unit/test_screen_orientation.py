@@ -3,7 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from marionette_driver import errors
-from marionette import MarionetteTestCase, skip_if_desktop
+from marionette import MarionetteTestCase, skip_if_desktop, skip_if_mobile
 from mozrunner.devices.emulator_screen import EmulatorScreen
 
 default_orientation = "portrait-primary"
@@ -26,19 +26,11 @@ class TestScreenOrientation(MarionetteTestCase):
         new_orientation = self.marionette.orientation
         self.assertEqual(new_orientation, "portrait-primary")
 
-        if self.marionette.emulator:
-            emulator_orientation = self.marionette.emulator.screen.orientation
-            self.assertEqual(emulator_orientation, EmulatorScreen.SO_PORTRAIT_PRIMARY)
-
     @skip_if_desktop
     def test_set_orientation_to_landscape_primary(self):
         self.marionette.set_orientation("landscape-primary")
         new_orientation = self.marionette.orientation
         self.assertEqual(new_orientation, "landscape-primary")
-
-        if self.marionette.emulator:
-            emulator_orientation = self.marionette.emulator.screen.orientation
-            self.assertEqual(emulator_orientation, EmulatorScreen.SO_LANDSCAPE_PRIMARY)
 
     @skip_if_desktop
     def test_set_orientation_to_portrait_secondary(self):
@@ -46,19 +38,11 @@ class TestScreenOrientation(MarionetteTestCase):
         new_orientation = self.marionette.orientation
         self.assertEqual(new_orientation, "portrait-secondary")
 
-        if self.marionette.emulator:
-            emulator_orientation = self.marionette.emulator.screen.orientation
-            self.assertEqual(emulator_orientation, EmulatorScreen.SO_PORTRAIT_SECONDARY)
-
     @skip_if_desktop
     def test_set_orientation_to_landscape_secondary(self):
         self.marionette.set_orientation("landscape-secondary")
         new_orientation = self.marionette.orientation
         self.assertEqual(new_orientation, "landscape-secondary")
-
-        if self.marionette.emulator:
-            emulator_orientation = self.marionette.emulator.screen.orientation
-            self.assertEqual(emulator_orientation, EmulatorScreen.SO_LANDSCAPE_SECONDARY)
 
     @skip_if_desktop
     def test_set_orientation_to_shorthand_portrait(self):
@@ -71,19 +55,11 @@ class TestScreenOrientation(MarionetteTestCase):
         new_orientation = self.marionette.orientation
         self.assertEqual(new_orientation, "portrait-primary")
 
-        if self.marionette.emulator:
-            emulator_orientation = self.marionette.emulator.screen.orientation
-            self.assertEqual(emulator_orientation, EmulatorScreen.SO_PORTRAIT_PRIMARY)
-
     @skip_if_desktop
     def test_set_orientation_to_shorthand_landscape(self):
         self.marionette.set_orientation("landscape")
         new_orientation = self.marionette.orientation
         self.assertEqual(new_orientation, "landscape-primary")
-
-        if self.marionette.emulator:
-            emulator_orientation = self.marionette.emulator.screen.orientation
-            self.assertEqual(emulator_orientation, EmulatorScreen.SO_LANDSCAPE_PRIMARY)
 
     @skip_if_desktop
     def test_set_orientation_with_mixed_casing(self):
@@ -101,6 +77,7 @@ class TestScreenOrientation(MarionetteTestCase):
         with self.assertRaisesRegexp(errors.MarionetteException, unknown_orientation % "null"):
             self.marionette.set_orientation(None)
 
+    @skip_if_mobile
     def test_unsupported_operation_on_desktop(self):
         with self.assertRaises(errors.UnsupportedOperationException):
             self.marionette.set_orientation("landscape-primary")

@@ -1053,9 +1053,8 @@ nsCSSRendering::PaintFocus(nsPresContext* aPresContext,
  * that function, except they're for a single coordinate / a single size
  * dimension. (so, x/width vs. y/height)
  */
-typedef nsStyleImageLayers::Position::PositionCoord PositionCoord;
 static void
-ComputeObjectAnchorCoord(const PositionCoord& aCoord,
+ComputeObjectAnchorCoord(const Position::Coord& aCoord,
                          const nscoord aOriginBounds,
                          const nscoord aImageSize,
                          nscoord* aTopLeftCoord,
@@ -1077,7 +1076,7 @@ ComputeObjectAnchorCoord(const PositionCoord& aCoord,
 
 void
 nsImageRenderer::ComputeObjectAnchorPoint(
-  const nsStyleImageLayers::Position& aPos,
+  const Position& aPos,
   const nsSize& aOriginBounds,
   const nsSize& aImageSize,
   nsPoint* aTopLeft,

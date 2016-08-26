@@ -31,6 +31,7 @@ const {PrefsHelper} = require("devtools/client/shared/prefs");
 const {ViewHelpers, Heritage, WidgetMethods, setNamedTimeout} =
   require("devtools/client/shared/widgets/view-helpers");
 const {gDevTools} = require("devtools/client/framework/devtools");
+const {Curl, CurlUtils} = require("devtools/client/shared/curl");
 
 /**
  * Localization convenience methods.

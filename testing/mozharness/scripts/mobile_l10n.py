@@ -495,7 +495,7 @@ class MobileSingleLocale(MockMixin, LocalesMixin, ReleaseMixin,
         branch = self.config['branch']
         revision = self.query_revision()
         repo = self.query_l10n_repo()
-        pushinfo = self.vcs_query_pushinfo(repo, revision, vcs='hgtool')
+        pushinfo = self.vcs_query_pushinfo(repo, revision, vcs='hg')
         pushdate = time.strftime('%Y%m%d%H%M%S', time.gmtime(pushinfo.pushdate))
         routes_json = os.path.join(self.query_abs_dirs()['abs_mozilla_dir'],
                                    'taskcluster/ci/legacy/routes.json')
@@ -601,7 +601,8 @@ class MobileSingleLocale(MockMixin, LocalesMixin, ReleaseMixin,
         self.info("Checking out tools")
         repos = [{
             'repo': self.config['tools_repo'],
-            'vcs': "hg",  # May not have hgtool yet
+            'vcs': "hg",
+            'branch': "default",
             'dest': dirs['abs_tools_dir'],
         }]
         rev = self.vcs_checkout(**repos[0])
