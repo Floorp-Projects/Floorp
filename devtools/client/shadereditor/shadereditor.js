@@ -13,7 +13,7 @@ const Services = require("Services");
 const EventEmitter = require("devtools/shared/event-emitter");
 const {Tooltip} = require("devtools/client/shared/widgets/Tooltip");
 const Editor = require("devtools/client/sourceeditor/editor");
-const {LocalizationHelper} = require("devtools/client/shared/l10n");
+const {LocalizationHelper} = require("devtools/shared/l10n");
 const {Heritage, WidgetMethods, setNamedTimeout} =
   require("devtools/client/shared/widgets/view-helpers");
 const {Task} = require("devtools/shared/task");

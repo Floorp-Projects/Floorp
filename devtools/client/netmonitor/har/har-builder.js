@@ -4,7 +4,7 @@
 "use strict";
 
 const { defer, all } = require("promise");
-const { LocalizationHelper } = require("devtools/client/shared/l10n");
+const { LocalizationHelper } = require("devtools/shared/l10n");
 const Services = require("Services");
 const appInfo = Services.appinfo;
 const { CurlUtils } = require("devtools/client/shared/curl");

@@ -13,7 +13,7 @@ var {VariablesView} = require("resource://devtools/client/shared/widgets/Variabl
 var Services = require("Services");
 var promise = require("promise");
 var defer = require("devtools/shared/defer");
-var {LocalizationHelper, ELLIPSIS} = require("devtools/client/shared/l10n");
+var {LocalizationHelper, ELLIPSIS} = require("devtools/shared/l10n");
 
 Object.defineProperty(this, "WebConsoleUtils", {
   get: function () {

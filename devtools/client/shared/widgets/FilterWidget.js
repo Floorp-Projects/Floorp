@@ -13,7 +13,7 @@ const EventEmitter = require("devtools/shared/event-emitter");
 const { Cc, Ci } = require("chrome");
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
 
-const { LocalizationHelper } = require("devtools/client/shared/l10n");
+const { LocalizationHelper } = require("devtools/shared/l10n");
 const STRINGS_URI = "devtools/locale/filterwidget.properties";
 const L10N = new LocalizationHelper(STRINGS_URI);
 

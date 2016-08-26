@@ -10,7 +10,7 @@ const {Task} = require("devtools/shared/task");
 const {InplaceEditor, editableItem} =
       require("devtools/client/shared/inplace-editor");
 const {ReflowFront} = require("devtools/shared/fronts/layout");
-const {LocalizationHelper} = require("devtools/client/shared/l10n");
+const {LocalizationHelper} = require("devtools/shared/l10n");
 const {getCssProperties} = require("devtools/shared/fronts/css-properties");
 
 const STRINGS_URI = "devtools/locale/shared.properties";

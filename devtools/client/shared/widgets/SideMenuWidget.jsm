@@ -12,7 +12,7 @@ const SHARED_STRINGS_URI = "devtools/locale/shared.properties";
 
 const { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
 const EventEmitter = require("devtools/shared/event-emitter");
-const { LocalizationHelper } = require("devtools/client/shared/l10n");
+const { LocalizationHelper } = require("devtools/shared/l10n");
 const { ViewHelpers } = require("devtools/client/shared/widgets/view-helpers");
 
 this.EXPORTED_SYMBOLS = ["SideMenuWidget"];
