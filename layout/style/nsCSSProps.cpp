@@ -2257,10 +2257,10 @@ const KTableEntry nsCSSProps::kBoxDirectionKTable[] = {
 };
 
 const KTableEntry nsCSSProps::kBoxOrientKTable[] = {
-  { eCSSKeyword_horizontal, NS_STYLE_BOX_ORIENT_HORIZONTAL },
-  { eCSSKeyword_vertical, NS_STYLE_BOX_ORIENT_VERTICAL },
-  { eCSSKeyword_inline_axis, NS_STYLE_BOX_ORIENT_HORIZONTAL },
-  { eCSSKeyword_block_axis, NS_STYLE_BOX_ORIENT_VERTICAL },
+  { eCSSKeyword_horizontal, StyleBoxOrient::Horizontal },
+  { eCSSKeyword_vertical, StyleBoxOrient::Vertical },
+  { eCSSKeyword_inline_axis, StyleBoxOrient::Horizontal },
+  { eCSSKeyword_block_axis, StyleBoxOrient::Vertical },
   { eCSSKeyword_UNKNOWN, -1 }
 };
 

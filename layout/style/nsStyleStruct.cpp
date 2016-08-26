@@ -830,7 +830,7 @@ nsStyleXUL::nsStyleXUL(StyleStructContext aContext)
   , mBoxOrdinal(1)
   , mBoxAlign(StyleBoxAlign::Stretch)
   , mBoxDirection(StyleBoxDirection::Normal)
-  , mBoxOrient(NS_STYLE_BOX_ORIENT_HORIZONTAL)
+  , mBoxOrient(StyleBoxOrient::Horizontal)
   , mBoxPack(StyleBoxPack::Start)
   , mStretchStack(true)
 {

@@ -83,6 +83,12 @@ enum class StyleBoxDirection : uint8_t {
   Reverse,
 };
 
+// box-orient
+enum class StyleBoxOrient : uint8_t {
+  Horizontal,
+  Vertical,
+};
+
 // box-pack
 enum class StyleBoxPack : uint8_t {
   Start,
@@ -196,10 +202,6 @@ enum class StyleUserSelect : uint8_t {
 #define NS_STYLE_WINDOW_DRAGGING_DEFAULT 0
 #define NS_STYLE_WINDOW_DRAGGING_DRAG    1
 #define NS_STYLE_WINDOW_DRAGGING_NO_DRAG 2
-
-// box-orient
-#define NS_STYLE_BOX_ORIENT_HORIZONTAL 0
-#define NS_STYLE_BOX_ORIENT_VERTICAL   1
 
 // orient
 #define NS_STYLE_ORIENT_INLINE     0
