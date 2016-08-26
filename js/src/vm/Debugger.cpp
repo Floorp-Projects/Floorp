@@ -8649,19 +8649,17 @@ DebuggerObject::promiseValueGetter(JSContext* cx, unsigned argc, Value* vp)
 /* static */ bool
 DebuggerObject::promiseReasonGetter(JSContext* cx, unsigned argc, Value* vp)
 {
-    THIS_DEBUGOBJECT_OWNER_PROMISE(cx, argc, vp, "get promiseReason", args, dbg, refobj);
+    THIS_DEBUGOBJECT(cx, argc, vp, "get promiseReason", args, object);
 
-    if (promise->state() != JS::PromiseState::Rejected) {
+    if (!DebuggerObject::requirePromise(cx, object))
+        return false;
+
+    if (object->promiseState() != JS::PromiseState::Rejected) {
         args.rval().setUndefined();
         return true;
     }
 
-    RootedValue result(cx, promise->reason());
-    if (!dbg->wrapDebuggeeValue(cx, &result))
-        return false;
-
-    args.rval().set(result);
-    return true;
+    return DebuggerObject::getPromiseReason(cx, object, args.rval());;
 }
 
 /* static */ bool
@@ -9536,6 +9534,16 @@ DebuggerObject::getPromiseValue(JSContext* cx, HandleDebuggerObject object,
     MOZ_ASSERT(object->promiseState() == JS::PromiseState::Fulfilled);
 
     result.set(object->promise()->value());
+    return object->owner()->wrapDebuggeeValue(cx, result);
+}
+
+/* static */ bool
+DebuggerObject::getPromiseReason(JSContext* cx, HandleDebuggerObject object,
+                                 MutableHandleValue result)
+{
+    MOZ_ASSERT(object->promiseState() == JS::PromiseState::Rejected);
+
+    result.set(object->promise()->reason());
     return object->owner()->wrapDebuggeeValue(cx, result);
 }
 #endif // SPIDERMONKEY_PROMISE
