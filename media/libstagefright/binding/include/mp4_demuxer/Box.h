@@ -48,7 +48,7 @@ public:
 
   Box Next() const;
   Box FirstChild() const;
-  bool Read(nsTArray<uint8_t>* aDest);
+  nsTArray<uint8_t> Read();
   bool Read(nsTArray<uint8_t>* aDest, const MediaByteRange& aRange);
 
   static const uint64_t kMAX_BOX_READ;
@@ -63,19 +63,21 @@ private:
   const Box* mParent;
 };
 
+// BoxReader takes a copy of a box contents and serves through an AutoByteReader.
+MOZ_RAII
 class BoxReader
 {
 public:
   explicit BoxReader(Box& aBox)
+    : mBuffer(aBox.Read())
+    , mReader(mBuffer.Elements(), mBuffer.Length())
   {
-    aBox.Read(&mBuffer);
-    mReader.SetData(mBuffer);
   }
-  ByteReader* operator->() { return &mReader; }
-  ByteReader mReader;
+  AutoByteReader* operator->() { return &mReader; }
 
 private:
   nsTArray<uint8_t> mBuffer;
+  AutoByteReader mReader;
 };
 }
 
