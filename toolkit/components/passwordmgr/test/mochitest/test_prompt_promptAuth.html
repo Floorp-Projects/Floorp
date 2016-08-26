@@ -20,8 +20,6 @@
 <pre id="test">
 <script class="testbody" type="text/javascript">
 var state, action;
-var pwmgr, observerService;
-var tmpLogin, login1, login2A, login2B, login2C, login2D, login2E, login3A, login3B, login4;
 var isOk;
 
 var ioService = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
@@ -68,29 +66,32 @@ var channel2 = ioService.newChannel2("http://example2.com",
                                      Ci.nsIContentPolicy.TYPE_OTHER);
 
 
-const Cc_promptFac= Cc["@mozilla.org/passwordmanager/authpromptfactory;1"];
-ok(Cc_promptFac != null, "Access Cc[@mozilla.org/passwordmanager/authpromptfactory;1]");
+let chromeScript = runInParent(SimpleTest.getTestFileURL("pwmgr_common.js"));
 
-const Ci_promptFac = Ci.nsIPromptFactory;
-ok(Ci_promptFac != null, "Access Ci.nsIPromptFactory");
+let prompterParent = runInParent(() => {
+  const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
+  const promptFac = Cc["@mozilla.org/passwordmanager/authpromptfactory;1"].
+                    getService(Ci.nsIPromptFactory);
 
-const promptFac = Cc_promptFac.getService(Ci_promptFac);
-ok(promptFac != null, "promptFac getService()");
+  let chromeWin = Services.wm.getMostRecentWindow("navigator:browser");
+  let prompter2 = promptFac.getPrompt(chromeWin, Ci.nsIAuthPrompt2);
 
-var prompter2 = promptFac.getPrompt(window, Ci.nsIAuthPrompt2);
+  addMessageListener("proxyPrompter", function onMessage(msg) {
+    let rv = prompter1[msg.methodName](...msg.args);
+    return {
+      rv,
+      // Send the args back to content so out/inout args can be checked.
+      args: msg.args,
+    };
+  });
 
-function initLogins() {
-  observerService = Cc["@mozilla.org/observer-service;1"].
-                      getService(Ci.nsIObserverService);
-  observerService.addObserver(storageObserver, "passwordmgr-storage-changed", false);
+  Cu.import("resource://gre/modules/Services.jsm");
 
-  pwmgr = Cc["@mozilla.org/login-manager;1"].
-          getService(Ci.nsILoginManager);
+  let pwmgr = Cc["@mozilla.org/login-manager;1"].
+              getService(Ci.nsILoginManager);
 
-  tmpLogin = Cc["@mozilla.org/login-manager/loginInfo;1"].
-             createInstance(Ci.nsILoginInfo);
-
-  login1  = Cc["@mozilla.org/login-manager/loginInfo;1"]. // TODO
+  let login1, login2A, login2B, login2C, login2D, login2E, login3A, login3B, login4;
+  login1  = Cc["@mozilla.org/login-manager/loginInfo;1"].
             createInstance(Ci.nsILoginInfo);
   login2A = Cc["@mozilla.org/login-manager/loginInfo;1"].
             createInstance(Ci.nsILoginInfo);
@@ -137,86 +138,9 @@ function initLogins() {
   pwmgr.addLogin(login3A);
   pwmgr.addLogin(login3B);
   pwmgr.addLogin(login4);
-}
-
-function finishTest() {
-  try {
-    observerService.removeObserver(storageObserver, "passwordmgr-storage-changed");
-
-    dumpLogins(pwmgr);
-  } catch (e) {
-    ok(false, "finishTest FAILED: " + e);
-  }
-  ok(true, "whee, done!");
-}
-
-function addNotificationCallback(cb) {
-  storageObserver.notificationCallbacks.push(cb);
-}
-
-var storageObserver = SpecialPowers.wrapCallbackObject({
-  notificationCallbacks: [],
-
-  QueryInterface : function (iid) {
-    const interfaces = [Ci.nsIObserver,
-                        Ci.nsISupports, Ci.nsISupportsWeakReference];
-
-    if (!interfaces.some( function(v) { return iid.equals(v) } ))
-      throw SpecialPowers.Cr.NS_ERROR_NO_INTERFACE;
-    return this;
-  },
-
-  observe : function (subject, topic, data) {
-    ok(true, ".");
-    ok(true, "observer for " + topic + " / " + data);
-    ok(true, "Time is " + (new Date()).toUTCString());
-    var wrapped = SpecialPowers.wrap(subject);
-    try {
-      switch (data) {
-        case "addLogin":
-          ok(wrapped.QueryInterface(Ci.nsILoginInfo), "subject QI 1");
-          ok(wrapped.QueryInterface(Ci.nsILoginMetaInfo), "subject QI 2");
-          dumpLogin("added: ", subject);
-          break;
-        case "modifyLogin":
-          var arr = wrapped.QueryInterface(Ci.nsIArray);
-          ok(arr, "subject QI");
-          is(arr.length, 2, "should be 2 items");
-          var oldLogin = arr.queryElementAt(0, Ci.nsILoginInfo);
-          var newLogin = arr.queryElementAt(1, Ci.nsILoginInfo);
-          dumpLogin("oldLogin: ", oldLogin);
-          dumpLogin("newLogin: ", newLogin);
-          break;
-        case "removeLogin":
-          ok(wrapped.QueryInterface(Ci.nsILoginInfo), "subject QI 1");
-          ok(wrapped.QueryInterface(Ci.nsILoginMetaInfo), "subject QI 2");
-          dumpLogin("removed: ", subject);
-          break;
-        case "removeAllLogins":
-          is(subject, null, "no subject");
-          break;
-        case "hostSavingEnabled":
-        case "hostSavingDisabled":
-          ok(subject instanceof Ci.nsISupportsString, "subject QI");
-          ok(true, "state is: " + subject.data);
-          break;
-        default:
-          do_throw("Unhandled notification: " + data + " / " + topic);
-      }
-
-      if (this.notificationCallbacks.length)
-        this.notificationCallbacks.splice(0, 1)[0]();
-    } catch (e) {
-      ok(false, "OBSERVER FAILED: " + e);
-    }
-  }
 });
 
-
-add_task(function* setup() {
-  info("Waiting for startup to complete...");
-  initLogins();
-});
+let prompter2 = new PrompterProxy(prompterParent);
 
 add_task(function* test_accept() {
   state = {
@@ -594,16 +518,8 @@ add_task(function* test_iframe() {
   checkEchoedAuthInfo({user: "mochiuser1", pass: "mochipass1-new"},
                       iframe.contentDocument);
 
-  // Housekeeping: change it back
-  var pwchanged = new Promise(resolve => {
-    function resetIt() {
-      tmpLogin.init("http://mochi.test:8888", null, "mochitest",
-                    "mochiuser1", "mochipass1-new", "", "");
-      pwmgr.modifyLogin(tmpLogin, login3A);
-      resolve(true);
-    }
-    addNotificationCallback(resetIt);
-  });
+
+  var pwchanged = promiseStorageChanged(["modifyLogin"]);
 
   // Check for the popup notification, and change the password.
   popupNotifications = getPopupNotifications(window.top);
@@ -613,6 +529,23 @@ add_task(function* test_iframe() {
   popup.remove();
 
   yield pwchanged;
+
+  // Housekeeping: change it back
+  runInParent(() => {
+    const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
+    Cu.import("resource://gre/modules/Services.jsm");
+
+    var tmpLogin = Cc["@mozilla.org/login-manager/loginInfo;1"].
+                   createInstance(Ci.nsILoginInfo);
+    tmpLogin.init("http://mochi.test:8888", null, "mochitest",
+                  "mochiuser1", "mochipass1-new", "", "");
+    var login3A = Cc["@mozilla.org/login-manager/loginInfo;1"].
+                  createInstance(Ci.nsILoginInfo);
+    login3A.init("http://mochi.test:8888", null, "mochitest",
+                 "mochiuser1", "mochipass1", "", "");
+
+    Services.logins.modifyLogin(tmpLogin, login3A);
+  });
 
   // Same as last test, but for a realm we haven't already authenticated
   // to (but have an existing saved login for, so that we'll trigger
@@ -644,20 +577,7 @@ add_task(function* test_iframe() {
   checkEchoedAuthInfo({user: "mochiuser3", pass: "mochipass3-new"},
                       iframe.contentDocument);
 
-  // Housekeeping: change it back to the original login4. Actually,
-  // just delete it and we'll re-add it as the next test.
-  pwchanged = new Promise(resolve => {
-    function clearIt() {
-      ok(true, "1004's clearIt() called.");
-      try {
-        tmpLogin.init("http://mochi.test:8888", null, "mochitest3",
-                      "mochiuser3", "mochipass3-new", "", "");
-        pwmgr.removeLogin(tmpLogin);
-      } catch (e) { ok(false, "clearIt GOT EXCEPTION: " + e); }
-      resolve(true);
-    }
-    addNotificationCallback(clearIt);
-  });
+  pwchanged = promiseStorageChanged(["modifyLogin"]);
 
   // Check for the popup notification, and change the password.
   popup = getPopup(popupNotifications, "password-change");
@@ -667,12 +587,23 @@ add_task(function* test_iframe() {
 
   yield pwchanged;
 
+  // Housekeeping: change it back to the original login4. Actually,
+  // just delete it and we'll re-add it as the next test.
+  runInParent(() => {
+    const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
+    Cu.import("resource://gre/modules/Services.jsm");
 
-  // Clear cached auth from this subtest, and avoid leaking due to bug 459620.
-  var authMgr = Cc['@mozilla.org/network/http-auth-manager;1'].
-                getService(Ci.nsIHttpAuthManager);
-  authMgr.clearAll();
-  ok(true, "authMgr cleared cached auth");
+    var tmpLogin = Cc["@mozilla.org/login-manager/loginInfo;1"].
+                   createInstance(Ci.nsILoginInfo);
+    tmpLogin.init("http://mochi.test:8888", null, "mochitest3",
+                  "mochiuser3", "mochipass3-new", "", "");
+    Services.logins.removeLogin(tmpLogin);
+
+    // Clear cached auth from this subtest, and avoid leaking due to bug 459620.
+    var authMgr = Cc['@mozilla.org/network/http-auth-manager;1'].
+                  getService(Ci.nsIHttpAuthManager);
+    authMgr.clearAll();
+  });
 
   state = {
     msg         : "http://mochi.test:8888 is requesting your username and password.\n\nThe site says: “mochitest3”",
@@ -704,13 +635,7 @@ add_task(function* test_iframe() {
   checkEchoedAuthInfo({user: "mochiuser3", pass: "mochipass3-old"},
                       iframe.contentDocument);
 
-  var pwsaved = new Promise(resolve => {
-    function finishIt() {
-      finishTest();
-      resolve(true);
-    }
-    addNotificationCallback(finishIt);
-  });
+  var pwsaved = promiseStorageChanged(["addLogin"]);
 
   // Check for the popup notification, and change the password.
   popup = getPopup(popupNotifications, "password-save");
