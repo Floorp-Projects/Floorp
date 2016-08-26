@@ -10,8 +10,15 @@ const DEFAULT_UA = Cc["@mozilla.org/network/protocol;1?name=http"]
   .userAgent;
 const NOKIA_UA = "Mozilla/5.0 (compatible; MSIE 10.0; Windows Phone 8.0; " +
   "Trident/6.0; IEMobile/10.0; ARM; Touch; NOKIA; Lumia 520)";
+const Types = require("devtools/client/responsive.html/types");
 
 addRDMTask(TEST_URL, function* ({ ui, manager }) {
+  let { store } = ui.toolWindow;
+
+  // Wait until the viewport has been added and the device list has been loaded
+  yield waitUntilState(store, state => state.viewports.length == 1
+    && state.devices.listState == Types.deviceListState.LOADED);
+
   // Test defaults
   testViewportDimensions(ui, 320, 480);
   yield testUserAgent(ui, DEFAULT_UA);
