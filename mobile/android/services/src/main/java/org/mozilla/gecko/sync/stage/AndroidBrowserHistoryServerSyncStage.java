@@ -50,6 +50,7 @@ public class AndroidBrowserHistoryServerSyncStage extends ServerSyncStage {
                                              session.config.storageURL(),
                                              session.getAuthHeaderProvider(),
                                              session.config.infoCollections,
+                                             session.config.infoConfiguration,
                                              HISTORY_REQUEST_LIMIT,
                                              HISTORY_SORT);
   }
