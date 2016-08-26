@@ -168,7 +168,6 @@ wasm::GenerateEntry(MacroAssembler& masm, const FuncExport& fe)
         unsigned argOffset = iter.index() * sizeof(ExportArg);
         Address src(argv, argOffset);
         MIRType type = iter.mirType();
-        MOZ_ASSERT_IF(type == MIRType::Int64, JitOptions.wasmTestMode);
         switch (iter->kind()) {
           case ABIArg::GPR:
             if (type == MIRType::Int32)
@@ -283,7 +282,6 @@ wasm::GenerateEntry(MacroAssembler& masm, const FuncExport& fe)
         masm.store32(ReturnReg, Address(argv, 0));
         break;
       case ExprType::I64:
-        MOZ_ASSERT(JitOptions.wasmTestMode, "no int64 in asm.js/wasm");
         masm.store64(ReturnReg64, Address(argv, 0));
         break;
       case ExprType::F32:
@@ -334,8 +332,6 @@ FillArgumentArray(MacroAssembler& masm, const ValTypeVector& args, unsigned argO
         Address dstAddr(masm.getStackPointer(), argOffset + i.index() * sizeof(Value));
 
         MIRType type = i.mirType();
-        MOZ_ASSERT_IF(type == MIRType::Int64, JitOptions.wasmTestMode);
-
         switch (i->kind()) {
           case ABIArg::GPR:
             if (type == MIRType::Int32) {
@@ -520,7 +516,6 @@ wasm::GenerateInterpExit(MacroAssembler& masm, const FuncImport& fi, uint32_t fu
         masm.load32(argv, ReturnReg);
         break;
       case ExprType::I64:
-        MOZ_ASSERT(JitOptions.wasmTestMode);
         masm.call(SymbolicAddress::CallImport_I64);
         masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, JumpTarget::Throw);
         masm.load64(argv, ReturnReg64);
@@ -716,7 +711,6 @@ wasm::GenerateJitExit(MacroAssembler& masm, const FuncImport& fi)
                                  /* -0 check */ false);
         break;
       case ExprType::I64:
-        MOZ_ASSERT(JitOptions.wasmTestMode, "no int64 in asm.js/wasm");
         // We don't expect int64 to be returned from Ion yet, because of a
         // guard in callImport.
         masm.breakpoint();
