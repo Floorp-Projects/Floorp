@@ -2282,12 +2282,11 @@ NS_ShouldSecureUpgrade(nsIURI* aURI,
 
       if (aLoadInfo->GetUpgradeInsecureRequests() && !crossOriginNavigation) {
         // let's log a message to the console that we are upgrading a request
-        nsAutoCString spec, scheme;
-        aURI->GetSpec(spec);
+        nsAutoCString scheme;
         aURI->GetScheme(scheme);
         // append the additional 's' for security to the scheme :-)
         scheme.AppendASCII("s");
-        NS_ConvertUTF8toUTF16 reportSpec(spec);
+        NS_ConvertUTF8toUTF16 reportSpec(aURI->GetSpecOrDefault());
         NS_ConvertUTF8toUTF16 reportScheme(scheme);
 
         const char16_t* params[] = { reportSpec.get(), reportScheme.get() };
