@@ -1335,6 +1335,7 @@ struct SetEnumValueHelper
   }
 
   DEFINE_ENUM_CLASS_SETTER(StyleBoxAlign, Stretch, End)
+  DEFINE_ENUM_CLASS_SETTER(StyleBoxPack, Start, Justify)
   DEFINE_ENUM_CLASS_SETTER(StyleBoxSizing, Content, Border)
   DEFINE_ENUM_CLASS_SETTER(StyleFillRule, Nonzero, Evenodd)
   DEFINE_ENUM_CLASS_SETTER(StyleFloat, None_, InlineEnd)
@@ -9118,7 +9119,7 @@ nsRuleNode::ComputeXULData(void* aStartStruct,
            xul->mBoxPack, conditions,
            SETVAL_ENUMERATED | SETVAL_UNSET_INITIAL,
            parentXUL->mBoxPack,
-           NS_STYLE_BOX_PACK_START);
+           StyleBoxPack::Start);
 
   // box-ordinal-group: integer, inherit, initial
   SetValue(*aRuleData->ValueForBoxOrdinalGroup(),

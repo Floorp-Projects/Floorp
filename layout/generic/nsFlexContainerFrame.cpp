@@ -148,13 +148,13 @@ ConvertLegacyStyleToJustifyContent(const nsStyleXUL* aStyleXUL)
 {
   // -[moz|webkit]-box-pack corresponds to modern "justify-content"
   switch (aStyleXUL->mBoxPack) {
-    case NS_STYLE_BOX_PACK_START:
+    case StyleBoxPack::Start:
       return NS_STYLE_ALIGN_FLEX_START;
-    case NS_STYLE_BOX_PACK_CENTER:
+    case StyleBoxPack::Center:
       return NS_STYLE_ALIGN_CENTER;
-    case NS_STYLE_BOX_PACK_END:
+    case StyleBoxPack::End:
       return NS_STYLE_ALIGN_FLEX_END;
-    case NS_STYLE_BOX_PACK_JUSTIFY:
+    case StyleBoxPack::Justify:
       return NS_STYLE_ALIGN_SPACE_BETWEEN;
   }
 
