@@ -753,7 +753,7 @@ pref("gfx.font_rendering.opentype_svg.enabled", true);
 // comma separated list of backends to use in order of preference
 // e.g., pref("gfx.canvas.azure.backends", "direct2d,skia,cairo");
 pref("gfx.canvas.azure.backends", "direct2d1.1,skia,cairo");
-pref("gfx.content.azure.backends", "direct2d1.1,cairo");
+pref("gfx.content.azure.backends", "direct2d1.1,skia,cairo");
 #else
 #ifdef XP_MACOSX
 pref("gfx.content.azure.backends", "skia");
@@ -4937,11 +4937,15 @@ pref("dom.vr.enabled", true);
 pref("dom.vr.oculus.enabled", true);
 // OSVR device
 pref("dom.vr.osvr.enabled", false);
+// OpenVR device
+pref("dom.vr.openvr.enabled", false);
 // Pose prediction reduces latency effects by returning future predicted HMD
 // poses to callers of the WebVR API.  This currently only has an effect for
 // Oculus Rift on SDK 0.8 or greater.  It is disabled by default for now due to
 // frame uniformity issues with e10s.
 pref("dom.vr.poseprediction.enabled", false);
+// path to openvr DLL
+pref("gfx.vr.openvr-runtime", "");
 // path to OSVR DLLs
 pref("gfx.vr.osvr.utilLibPath", "");
 pref("gfx.vr.osvr.commonLibPath", "");

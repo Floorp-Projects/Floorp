@@ -240,8 +240,8 @@ struct SurfaceCache
   /**
    * Insert an ISurfaceProvider into the cache. If an entry with the same
    * ImageKey and SurfaceKey is already in the cache, Insert returns
-   * FAILURE_ALREADY_PRESENT. If a matching placeholder is already present, the
-   * placeholder is removed.
+   * FAILURE_ALREADY_PRESENT. If a matching placeholder is already present, it
+   * is replaced.
    *
    * Cache entries will never expire as long as they remain locked, but if they
    * become unlocked, they can expire either because the SurfaceCache runs out
@@ -286,33 +286,6 @@ struct SurfaceCache
                               const SurfaceKey& aSurfaceKey);
 
   /**
-   * Insert a placeholder entry into the cache. If an entry with the same
-   * ImageKey and SurfaceKey is already in the cache, InsertPlaceholder()
-   * returns FAILURE_ALREADY_PRESENT.
-   *
-   * Placeholders exist to allow lazy allocation of surfaces. The Lookup*()
-   * methods will report whether a placeholder for an exactly matching cache
-   * entry existed by returning a MatchType of PENDING or
-   * SUBSTITUTE_BECAUSE_PENDING, but they will never return a placeholder
-   * directly. (They couldn't, since placeholders don't have an associated
-   * surface.)
-   *
-   * Placeholders are automatically removed when a real entry that matches the
-   * placeholder is inserted with Insert(), or when RemoveImage() is called.
-   *
-   * @param aImageKey       Key data identifying which image the cache entry
-   *                        belongs to.
-   * @param aSurfaceKey     Key data which uniquely identifies the requested
-   *                        cache entry.
-   * @return SUCCESS if the placeholder was inserted successfully.
-   *         FAILURE if the placeholder could not be inserted for some reason.
-   *         FAILURE_ALREADY_PRESENT if an entry with the same ImageKey and
-   *           SurfaceKey already exists in the cache.
-   */
-  static InsertOutcome InsertPlaceholder(const ImageKey    aImageKey,
-                                         const SurfaceKey& aSurfaceKey);
-
-  /**
    * Mark the cache entry @aProvider as having an available surface. This turns
    * a placeholder cache entry into a normal cache entry. The cache entry
    * becomes locked if the associated image is locked; otherwise, it starts in
@@ -324,14 +297,6 @@ struct SurfaceCache
    * It's illegal to call this function if @aProvider is not a placeholder; by
    * definition, non-placeholder ISurfaceProviders should have a surface
    * available already.
-   *
-   * XXX(seth): We're currently in a transitional state where two notions of
-   * placeholder exist: the old one (placeholders are an "empty" cache entry
-   * inserted via InsertPlaceholder(), which then gets replaced by inserting a
-   * real cache entry with the same keys via Insert()) and the new one (where
-   * the same cache entry, inserted via Insert(), starts in a placeholder state
-   * and then transitions to being a normal cache entry via this function). The
-   * old mechanism will be removed in bug 1292392.
    *
    * @param aProvider       The cache entry that now has a surface available.
    * @param aImageKey       Key data identifying which image the cache entry
@@ -423,7 +388,7 @@ struct SurfaceCache
   static void UnlockEntries(const ImageKey aImageKey);
 
   /**
-   * Removes all cache entries (both real and placeholder) associated with the
+   * Removes all cache entries (including placeholders) associated with the
    * given image from the cache.  If the image is locked, it is automatically
    * unlocked.
    *

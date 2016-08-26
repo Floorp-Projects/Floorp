@@ -51,13 +51,18 @@ public:
   void PostRebuildAllStyleDataEvent(nsChangeHint aExtraHint,
                                     nsRestyleHint aRestyleHint);
   void ProcessPendingRestyles();
-  void RestyleForInsertOrChange(dom::Element* aContainer,
+
+  void ContentInserted(nsINode* aContainer, nsIContent* aChild);
+  void ContentAppended(nsIContent* aContainer,
+                       nsIContent* aFirstNewContent);
+  void ContentRemoved(nsINode* aContainer,
+                      nsIContent* aOldChild,
+                      nsIContent* aFollowingSibling);
+
+  void RestyleForInsertOrChange(nsINode* aContainer,
                                 nsIContent* aChild);
-  void RestyleForAppend(dom::Element* aContainer,
+  void RestyleForAppend(nsIContent* aContainer,
                         nsIContent* aFirstNewContent);
-  void RestyleForRemove(dom::Element* aContainer,
-                        nsIContent* aOldChild,
-                        nsIContent* aFollowingSibling);
   nsresult ContentStateChanged(nsIContent* aContent,
                                EventStates aStateMask);
   void AttributeWillChange(dom::Element* aElement,
@@ -75,7 +80,12 @@ public:
 
   nsresult ReparentStyleContext(nsIFrame* aFrame);
 
-  bool HasPendingRestyles() { return !mModifiedElements.IsEmpty(); }
+  bool HasPendingRestyles()
+  {
+    return !mModifiedElements.IsEmpty() ||
+           PresContext()->Document()->HasDirtyDescendantsForServo();
+  }
+
 
   /**
    * Gets the appropriate frame given a content and a pseudo-element tag.

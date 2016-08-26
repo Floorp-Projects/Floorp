@@ -537,25 +537,6 @@ public:
     }
 
 public:
-    void AbortAnimation()
-    {
-        MOZ_ASSERT(AndroidBridge::IsJavaUiThread());
-
-        RefPtr<IAPZCTreeManager> controller;
-        RefPtr<CompositorBridgeParent> compositor;
-
-        if (LockedWindowPtr window{mWindow}) {
-            controller = window->mAPZC;
-            compositor = window->GetCompositorBridgeParent();
-        }
-
-        if (controller && compositor) {
-            // TODO: Pass in correct values for presShellId and viewId.
-            controller->CancelAnimation(ScrollableLayerGuid(
-                    compositor->RootLayerTreeId(), 0, 0));
-        }
-    }
-
     void AdjustScrollForSurfaceShift(float aX, float aY)
     {
         MOZ_ASSERT(AndroidBridge::IsJavaUiThread());

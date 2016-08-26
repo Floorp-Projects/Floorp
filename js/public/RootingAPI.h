@@ -14,6 +14,8 @@
 #include "mozilla/Move.h"
 #include "mozilla/TypeTraits.h"
 
+#include <type_traits>
+
 #include "jspubtd.h"
 
 #include "js/GCAnnotations.h"
@@ -123,6 +125,14 @@ class MutableHandleBase {};
 template <typename T>
 class HeapBase {};
 
+// Cannot use FOR_EACH_HEAP_ABLE_GC_POINTER_TYPE, as this would import too many macros into scope
+template <typename T> struct IsHeapConstructibleType    { static constexpr bool value = false; };
+#define DECLARE_IS_HEAP_CONSTRUCTIBLE_TYPE(T) \
+    template <> struct IsHeapConstructibleType<T> { static constexpr bool value = true; };
+FOR_EACH_PUBLIC_GC_POINTER_TYPE(DECLARE_IS_HEAP_CONSTRUCTIBLE_TYPE)
+FOR_EACH_PUBLIC_TAGGED_GC_POINTER_TYPE(DECLARE_IS_HEAP_CONSTRUCTIBLE_TYPE)
+#undef DECLARE_IS_HEAP_CONSTRUCTIBLE_TYPE
+
 template <typename T>
 class PersistentRootedBase {};
 
@@ -214,11 +224,14 @@ AssertGCThingIsNotAnObjectSubclass(js::gc::Cell* cell) {}
  * Heap<T> objects should only be used on the heap. GC references stored on the
  * C/C++ stack must use Rooted/Handle/MutableHandle instead.
  *
- * Type T must be one of: JS::Value, jsid, JSObject*, JSString*, JSScript*
+ * Type T must be a public GC pointer type.
  */
 template <typename T>
 class Heap : public js::HeapBase<T>
 {
+    // Please note: this can actually also be used by nsXBLMaybeCompiled<T>, for legacy reasons.
+    static_assert(js::IsHeapConstructibleType<T>::value,
+                  "Type T must be a public GC pointer type");
   public:
     Heap() {
         static_assert(sizeof(T) == sizeof(Heap<T>),

@@ -367,14 +367,6 @@ public abstract class GeckoApp
                     mFormAssistPopup.hide();
                 break;
 
-            case LOADED:
-                // Sync up the layer view and the tab if the tab is
-                // currently displayed.
-                LayerView layerView = mLayerView;
-                if (layerView != null && Tabs.getInstance().isSelectedTab(tab))
-                    layerView.setBackgroundColor(tab.getBackgroundColor());
-                break;
-
             case DESKTOP_MODE_CHANGE:
                 if (Tabs.getInstance().isSelectedTab(tab))
                     invalidateOptionsMenu();

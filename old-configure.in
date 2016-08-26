@@ -2207,8 +2207,6 @@ if test "$MOZ_LINKER" = 1 -a "$MOZ_SYSTEM_ZLIB" != 1; then
     AC_MSG_ERROR([Custom dynamic linker requires --with-system-zlib])
 fi
 
-MOZ_PNG_ARM_NEON=
-
 if test -z "$SKIP_LIBRARY_CHECKS"; then
 dnl system BZIP2 Support
 dnl ========================================================
@@ -2284,31 +2282,7 @@ if test "${PNG_DIR}" -a -d "${PNG_DIR}" -a "$MOZ_SYSTEM_PNG" = 1; then
     MOZ_PNG_LIBS="-L${PNG_DIR}/lib ${MOZ_PNG_LIBS}"
 fi
 
-if test "$MOZ_SYSTEM_PNG" != 1 -a "$CPU_ARCH" = "arm" ; then
-    MOZ_ARG_ENABLE_STRING(png-arm-neon-support,
-        [  --enable-png-arm-neon-support=TYPE
-             Options include:
-                 no
-                 check (default)
-                 nocheck (faster but unsafe)],
-        [MOZ_PNG_ARM_NEON_SUPPORT=$enableval ] )
-    case "$MOZ_PNG_ARM_NEON_SUPPORT" in
-        no)
-            # enable-png-arm-neon-support = no
-            ;;
-        nocheck)
-            # enable-png-arm-neon-support = nocheck
-            MOZ_PNG_ARM_NEON=1
-            ;;
-        *)
-            MOZ_PNG_ARM_NEON=1
-            ;;
-    esac
-fi
-
 fi # SKIP_LIBRARY_CHECKS
-
-AC_SUBST(MOZ_PNG_ARM_NEON)
 
 dnl ========================================================
 dnl =
@@ -6103,13 +6077,19 @@ fi
 MOZ_CONFIG_ICU()
 
 dnl ========================================================
-dnl mask as short hand property
+dnl mask as shorthand property
 dnl ========================================================
-dnl Uncommenting the next line would enable mask-as-shorthand feature.
-dnl MOZ_ENABLE_MASK_AS_SHORTHAND=1
-if test "$MOZ_ENABLE_MASK_AS_SHORTHAND"; then
+
+# The control structure code will be removed as soon as the feature is stable
+# Refer to bug 1281101 for more details.
+
+# Enable mask-as-shorthand property by default for nightly and aurora channels
+if test -z "$RELEASE_BUILD"; then
+  dnl mask as shorthand property enabled
+  MOZ_ENABLE_MASK_AS_SHORTHAND=1
   AC_DEFINE(MOZ_ENABLE_MASK_AS_SHORTHAND)
 fi
+
 AC_SUBST(MOZ_ENABLE_MASK_AS_SHORTHAND)
 
 # Avoid using obsolete NSPR features

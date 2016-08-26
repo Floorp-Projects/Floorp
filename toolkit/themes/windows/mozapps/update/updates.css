@@ -21,36 +21,8 @@ wizardpage {
   padding: 10px;
 }
 
-.loadingBox {
-  padding: 3px 5px 3px 5px;
-}
-
-.remoteLoadingThrobber {
-  margin-top: 3px;
-}
-
-.remoteLoadingThrobber[state="loading"] {
-  list-style-image: url("chrome://global/skin/icons/loading.png");
-}
-
-@media (min-resolution: 1.1dppx) {
-  .remoteLoadingThrobber[state="loading"] {
-    width: 16px;
-    list-style-image: url("chrome://global/skin/icons/loading@2x.png");
-  }
-}
-
-.remoteLoadingThrobber[state="error"] {
-  list-style-image: url("chrome://global/skin/icons/information-16.png");
-}
-
 .wizard-buttons-separator {
   margin-top: 0 !important;
-}
-
-#licenseContent, #incompatibleListbox {
-  margin-inline-start: 6px;
-  margin-inline-end: 6px;
 }
 
 .inline-link {
@@ -72,16 +44,6 @@ wizardpage {
 #updateName, #updateFinishedName {
   font-weight: bold;
   font-size: larger;
-}
-
-/* License Page */
-#licenseContent {
-  -moz-appearance: listbox;
-}
-
-/* Incompatible List Page */
-#incompatibleListbox {
-  margin-bottom: 6px;
 }
 
 /* Downloading Page */

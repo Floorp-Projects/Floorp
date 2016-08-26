@@ -16,6 +16,7 @@
 #include "mozilla/layers/ImageBridgeParent.h"
 #include "nsDebugImpl.h"
 #include "mozilla/layers/LayerTreeOwnerTracker.h"
+#include "ProcessUtils.h"
 #include "VRManager.h"
 #include "VRManagerParent.h"
 #include "VsyncBridgeParent.h"
@@ -64,6 +65,7 @@ GPUParent::Init(base::ProcessId aParentPid,
   CompositorThreadHolder::Start();
   VRManager::ManagerInit();
   LayerTreeOwnerTracker::Initialize();
+  mozilla::ipc::SetThisProcessName("GPU Process");
   return true;
 }
 

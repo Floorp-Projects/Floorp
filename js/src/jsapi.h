@@ -4518,7 +4518,8 @@ struct JS_PUBLIC_API(AsyncTask)
  *
  * If this function succeeds, SpiderMonkey will call the FinishAsyncTaskCallback
  * at some point in the future. Otherwise, FinishAsyncTaskCallback will *not*
- * be called.
+ * be called. SpiderMonkey assumes that, if StartAsyncTaskCallback fails, it is
+ * because the JSContext is being shut down.
  */
 typedef bool
 (*StartAsyncTaskCallback)(JSContext* cx, AsyncTask* task);
