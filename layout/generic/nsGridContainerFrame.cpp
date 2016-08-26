@@ -202,7 +202,7 @@ nsGridContainerFrame::TrackSize::Initialize(nscoord aPercentageBasis,
                                        : eMaxContentMinSizing;
       break;
     default:
-      mBase = nsRuleNode::ComputeCoordPercentCalc(aMinCoord, aPercentageBasis);
+      mBase = ::ResolveToDefiniteSize(aMinCoord, aPercentageBasis);
   }
   switch (maxSizeUnit) {
     case eStyleUnit_Auto:
@@ -219,7 +219,7 @@ nsGridContainerFrame::TrackSize::Initialize(nscoord aPercentageBasis,
       mLimit = mBase;
       break;
     default:
-      mLimit = nsRuleNode::ComputeCoordPercentCalc(aMaxCoord, aPercentageBasis);
+      mLimit = ::ResolveToDefiniteSize(aMaxCoord, aPercentageBasis);
       if (mLimit < mBase) {
         mLimit = mBase;
       }
