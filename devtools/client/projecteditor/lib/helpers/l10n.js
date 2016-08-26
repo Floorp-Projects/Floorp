@@ -10,7 +10,7 @@
  * This file contains helper functions for internationalizing projecteditor strings
  */
 
-const { LocalizationHelper } = require("devtools/client/shared/l10n");
+const { LocalizationHelper } = require("devtools/shared/l10n");
 const ITCHPAD_STRINGS_URI = "devtools/locale/projecteditor.properties";
 const L10N = new LocalizationHelper(ITCHPAD_STRINGS_URI);
 

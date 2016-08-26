@@ -26,7 +26,7 @@ const {HTMLTooltip} = require("devtools/client/shared/widgets/HTMLTooltip");
 const {setImageTooltip, getImageDimensions} =
   require("devtools/client/shared/widgets/tooltip/ImageTooltipHelper");
 const { testing: isTesting } = require("devtools/shared/flags");
-const {LocalizationHelper} = require("devtools/client/shared/l10n");
+const {LocalizationHelper} = require("devtools/shared/l10n");
 const {PrefsHelper} = require("devtools/client/shared/prefs");
 const {ViewHelpers, Heritage, WidgetMethods, setNamedTimeout} =
   require("devtools/client/shared/widgets/view-helpers");
