@@ -126,6 +126,10 @@ EyeDropper.prototype = {
    * - {Boolean} copyOnSelect Whether selecting a color should copy it to the clipboard.
    */
   show(node, options = {}) {
+    if (this.highlighterEnv.isXUL) {
+      return false;
+    }
+
     this.options = options;
 
     // Get the page's current zoom level.
@@ -167,6 +171,10 @@ EyeDropper.prototype = {
    * Hide the eye-dropper highlighter.
    */
   hide() {
+    if (this.highlighterEnv.isXUL) {
+      return;
+    }
+
     this.pageImage = null;
 
     let {pageListenerTarget} = this.highlighterEnv;
