@@ -489,9 +489,10 @@ nsBoxFrame::GetInitialDirection(bool& aIsNormal)
 
   // Now check the style system to see if we should invert aIsNormal.
   const nsStyleXUL* boxInfo = StyleXUL();
-  if (boxInfo->mBoxDirection == NS_STYLE_BOX_DIRECTION_REVERSE)
+  if (boxInfo->mBoxDirection == StyleBoxDirection::Reverse) {
     aIsNormal = !aIsNormal; // Invert our direction.
-  
+  }
+
   // Now see if we have an attribute.  The attribute overrides
   // the style system value.
   if (IsXULHorizontal()) {

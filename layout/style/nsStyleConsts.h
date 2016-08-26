@@ -77,6 +77,12 @@ enum class StyleBoxDecorationBreak : uint8_t {
   Clone,
 };
 
+// box-direction
+enum class StyleBoxDirection : uint8_t {
+  Normal,
+  Reverse,
+};
+
 // box-pack
 enum class StyleBoxPack : uint8_t {
   Start,
@@ -190,10 +196,6 @@ enum class StyleUserSelect : uint8_t {
 #define NS_STYLE_WINDOW_DRAGGING_DEFAULT 0
 #define NS_STYLE_WINDOW_DRAGGING_DRAG    1
 #define NS_STYLE_WINDOW_DRAGGING_NO_DRAG 2
-
-// box-direction
-#define NS_STYLE_BOX_DIRECTION_NORMAL    0
-#define NS_STYLE_BOX_DIRECTION_REVERSE   1
 
 // box-orient
 #define NS_STYLE_BOX_ORIENT_HORIZONTAL 0

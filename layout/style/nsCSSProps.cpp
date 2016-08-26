@@ -2251,8 +2251,8 @@ const KTableEntry nsCSSProps::kBoxAlignKTable[] = {
 };
 
 const KTableEntry nsCSSProps::kBoxDirectionKTable[] = {
-  { eCSSKeyword_normal, NS_STYLE_BOX_DIRECTION_NORMAL },
-  { eCSSKeyword_reverse, NS_STYLE_BOX_DIRECTION_REVERSE },
+  { eCSSKeyword_normal, StyleBoxDirection::Normal },
+  { eCSSKeyword_reverse, StyleBoxDirection::Reverse },
   { eCSSKeyword_UNKNOWN, -1 }
 };
 
