@@ -421,14 +421,14 @@ struct AutoPaintSetup {
   AutoPaintSetup(SkCanvas *aCanvas, const DrawOptions& aOptions, const Pattern& aPattern, const Rect* aMaskBounds = nullptr, Point aOffset = Point(0, 0))
     : mNeedsRestore(false), mAlpha(1.0)
   {
-    Init(aCanvas, aOptions, aMaskBounds);
+    Init(aCanvas, aOptions, aMaskBounds, false);
     SetPaintPattern(mPaint, aPattern, mAlpha, aOffset);
   }
 
-  AutoPaintSetup(SkCanvas *aCanvas, const DrawOptions& aOptions, const Rect* aMaskBounds = nullptr)
+  AutoPaintSetup(SkCanvas *aCanvas, const DrawOptions& aOptions, const Rect* aMaskBounds = nullptr, bool aForceGroup = false)
     : mNeedsRestore(false), mAlpha(1.0)
   {
-    Init(aCanvas, aOptions, aMaskBounds);
+    Init(aCanvas, aOptions, aMaskBounds, aForceGroup);
   }
 
   ~AutoPaintSetup()
@@ -438,7 +438,7 @@ struct AutoPaintSetup {
     }
   }
 
-  void Init(SkCanvas *aCanvas, const DrawOptions& aOptions, const Rect* aMaskBounds)
+  void Init(SkCanvas *aCanvas, const DrawOptions& aOptions, const Rect* aMaskBounds, bool aForceGroup)
   {
     mPaint.setXfermodeMode(GfxOpToSkiaOp(aOptions.mCompositionOp));
     mCanvas = aCanvas;
@@ -450,8 +450,9 @@ struct AutoPaintSetup {
       mPaint.setAntiAlias(false);
     }
 
-    bool needsGroup = !IsOperatorBoundByMask(aOptions.mCompositionOp) &&
-                      (!aMaskBounds || !aMaskBounds->Contains(GetClipBounds(aCanvas)));
+    bool needsGroup = aForceGroup ||
+                      (!IsOperatorBoundByMask(aOptions.mCompositionOp) &&
+                       (!aMaskBounds || !aMaskBounds->Contains(GetClipBounds(aCanvas))));
 
     // TODO: We could skip the temporary for operator_source and just
     // clear the clip rect. The other operators would be harder
@@ -510,10 +511,11 @@ DrawTargetSkia::DrawSurface(SourceSurface *aSurface,
 
   SkRect destRect = RectToSkRect(aDest);
   SkRect sourceRect = RectToSkRect(aSource);
-
   SkBitmap bitmap = GetBitmapForSurface(aSurface);
+  bool forceGroup = bitmap.colorType() == kAlpha_8_SkColorType &&
+                    aOptions.mCompositionOp != CompositionOp::OP_OVER;
 
-  AutoPaintSetup paint(mCanvas.get(), aOptions, &aDest);
+  AutoPaintSetup paint(mCanvas.get(), aOptions, &aDest, forceGroup);
   if (aSurfOptions.mSamplingFilter == SamplingFilter::POINT) {
     paint.mPaint.setFilterQuality(kNone_SkFilterQuality);
   }
