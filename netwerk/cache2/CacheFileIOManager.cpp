@@ -45,7 +45,7 @@
 namespace mozilla {
 namespace net {
 
-#define kOpenHandlesLimit        64
+#define kOpenHandlesLimit        128
 #define kMetadataWriteDelay      5000
 #define kRemoveTrashStartDelay   60000 // in milliseconds
 #define kSmartSizeUpdateInterval 60000 // in milliseconds
@@ -119,6 +119,7 @@ CacheFileHandle::CacheFileHandle(const SHA1Sum::Hash *aHash, bool aPriority, Pin
   , mFileExists(false)
   , mDoomWhenFoundPinned(false)
   , mDoomWhenFoundNonPinned(false)
+  , mKilled(false)
   , mPinning(aPinning)
   , mFileSize(-1)
   , mFD(nullptr)
@@ -142,6 +143,7 @@ CacheFileHandle::CacheFileHandle(const nsACString &aKey, bool aPriority, Pinning
   , mFileExists(false)
   , mDoomWhenFoundPinned(false)
   , mDoomWhenFoundNonPinned(false)
+  , mKilled(false)
   , mPinning(aPinning)
   , mFileSize(-1)
   , mFD(nullptr)
@@ -1951,6 +1953,17 @@ CacheFileIOManager::WriteInternal(CacheFileHandle *aHandle, int64_t aOffset,
 
   nsresult rv;
 
+  if (aHandle->mKilled) {
+    LOG(("  handle already killed, nothing written"));
+    return NS_OK;
+  }
+
+  if (CacheObserver::ShuttingDown() && (!aValidate || !aHandle->mFD)) {
+    aHandle->mKilled = true;
+    LOG(("  killing the handle, nothing written"));
+    return NS_OK;
+  }
+
   if (CacheObserver::IsPastShutdownIOLag()) {
     LOG(("  past the shutdown I/O lag, nothing written"));
     // Pretend the write has succeeded, otherwise upper layers will doom
@@ -2460,6 +2473,17 @@ CacheFileIOManager::TruncateSeekSetEOFInternal(CacheFileHandle *aHandle,
        "truncatePos=%lld, EOFPos=%lld]", aHandle, aTruncatePos, aEOFPos));
 
   nsresult rv;
+
+  if (aHandle->mKilled) {
+    LOG(("  handle already killed, file not truncated"));
+    return NS_OK;
+  }
+
+  if (CacheObserver::ShuttingDown() && !aHandle->mFD) {
+    aHandle->mKilled = true;
+    LOG(("  killing the handle, file not truncated"));
+    return NS_OK;
+  }
 
   if (!aHandle->mFileExists) {
     rv = CreateFile(aHandle);
