@@ -298,6 +298,8 @@ public:
 
     explicit GeckoAppShell(const Context& ctx) : ObjectBase<GeckoAppShell>(ctx) {}
 
+    class CameraCallback;
+
     struct AddFullScreenPluginView_t {
         typedef GeckoAppShell Owner;
         typedef void ReturnType;
@@ -2049,6 +2051,38 @@ public:
 
     static const mozilla::jni::CallingThread callingThread =
             mozilla::jni::CallingThread::ANY;
+
+    template<class Impl> class Natives;
+};
+
+class GeckoAppShell::CameraCallback : public mozilla::jni::ObjectBase<CameraCallback>
+{
+public:
+    static const char name[];
+
+    explicit CameraCallback(const Context& ctx) : ObjectBase<CameraCallback>(ctx) {}
+
+    struct OnFrameData_t {
+        typedef CameraCallback Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<
+                int32_t,
+                mozilla::jni::ByteArray::Param> Args;
+        static constexpr char name[] = "onFrameData";
+        static constexpr char signature[] =
+                "(I[B)V";
+        static const bool isStatic = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+        static const mozilla::jni::CallingThread callingThread =
+                mozilla::jni::CallingThread::GECKO;
+        static const mozilla::jni::DispatchTarget dispatchTarget =
+                mozilla::jni::DispatchTarget::CURRENT;
+    };
+
+    static const mozilla::jni::CallingThread callingThread =
+            mozilla::jni::CallingThread::GECKO;
 
     template<class Impl> class Natives;
 };
