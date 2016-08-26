@@ -60,23 +60,27 @@
     "alert_emails": ["benjamin@smedbergs.us"]
   },
   "APPLICATION_REPUTATION_SHOULD_BLOCK": {
+    "alert_emails": ["safebrowsing-telemetry@mozilla.org"],
     "expires_in_version": "never",
     "kind": "boolean",
     "description": "Application reputation verdict (shouldBlock=false is OK)"
   },
   "APPLICATION_REPUTATION_LOCAL": {
+    "alert_emails": ["safebrowsing-telemetry@mozilla.org"],
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 3,
     "description": "Application reputation local results (0=ALLOW, 1=BLOCK, 2=NONE)"
   },
   "APPLICATION_REPUTATION_SERVER": {
+    "alert_emails": ["safebrowsing-telemetry@mozilla.org"],
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 3,
     "description": "Application reputation remote status (0=OK, 1=FAIL, 2=INVALID)"
   },
   "APPLICATION_REPUTATION_SERVER_VERDICT": {
+    "alert_emails": ["safebrowsing-telemetry@mozilla.org"],
     "expires_in_version": "56",
     "releaseChannelCollection": "opt-out",
     "bug_numbers": [1272788],
@@ -85,12 +89,13 @@
     "description": "Application reputation remote response (0=SAFE, 1=DANGEROUS, 2=UNCOMMON, 3=POTENTIALLY_UNWANTED, 4=DANGEROUS_HOST)"
   },
   "APPLICATION_REPUTATION_COUNT": {
+    "alert_emails": ["safebrowsing-telemetry@mozilla.org"],
     "expires_in_version": "never",
     "kind": "boolean",
     "description": "Application reputation query count (both local and remote)"
   },
   "APPLICATION_REPUTATION_REMOTE_LOOKUP_TIMEOUT": {
-    "alert_emails": ["gcp@mozilla.com", "francois@mozilla.com"],
+    "alert_emails": ["safebrowsing-telemetry@mozilla.org"],
     "expires_in_version": "56",
     "kind": "boolean",
     "bug_numbers": [1172689],
@@ -3597,6 +3602,7 @@
     "description": "Time spent checking for and notifying listeners that the user is idle (ms)"
   },
   "URLCLASSIFIER_LOOKUP_TIME": {
+    "alert_emails": ["safebrowsing-telemetry@mozilla.org"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": 500,
@@ -3604,6 +3610,7 @@
     "description": "Time spent per dbservice lookup (ms)"
   },
   "URLCLASSIFIER_CL_CHECK_TIME": {
+    "alert_emails": ["safebrowsing-telemetry@mozilla.org"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": 500,
@@ -3611,6 +3618,7 @@
     "description": "Time spent per classifier lookup (ms)"
   },
   "URLCLASSIFIER_CL_UPDATE_TIME": {
+    "alert_emails": ["safebrowsing-telemetry@mozilla.org"],
     "expires_in_version": "never",
     "kind": "exponential",
     "low": 20,
@@ -3619,6 +3627,7 @@
     "description": "Time spent per classifier update (ms)"
   },
   "URLCLASSIFIER_PS_FILELOAD_TIME": {
+    "alert_emails": ["safebrowsing-telemetry@mozilla.org"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": 1000,
@@ -3626,6 +3635,7 @@
     "description": "Time spent loading PrefixSet from file (ms)"
   },
   "URLCLASSIFIER_PS_FALLOCATE_TIME": {
+    "alert_emails": ["safebrowsing-telemetry@mozilla.org"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": 1000,
@@ -3633,6 +3643,7 @@
     "description": "Time spent fallocating PrefixSet (ms)"
   },
   "URLCLASSIFIER_PS_CONSTRUCT_TIME": {
+    "alert_emails": ["safebrowsing-telemetry@mozilla.org"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": 5000,
@@ -3640,6 +3651,7 @@
     "description": "Time spent constructing PrefixSet from DB (ms)"
   },
   "URLCLASSIFIER_LC_PREFIXES": {
+    "alert_emails": ["safebrowsing-telemetry@mozilla.org"],
     "expires_in_version": "never",
     "kind": "linear",
     "high": 1500000,
@@ -3647,6 +3659,7 @@
     "description": "Size of the prefix cache in entries"
   },
   "URLCLASSIFIER_LC_COMPLETIONS": {
+    "alert_emails": ["safebrowsing-telemetry@mozilla.org"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": 200,
@@ -3654,7 +3667,7 @@
     "description": "Size of the completion cache in entries"
   },
   "URLCLASSIFIER_UPDATE_REMOTE_STATUS": {
-    "alert_emails": ["gcp@mozilla.com", "francois@mozilla.com"],
+    "alert_emails": ["safebrowsing-telemetry@mozilla.org"],
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 16,
@@ -3662,7 +3675,7 @@
     "description": "Server HTTP status code from SafeBrowsing database updates. (0=1xx, 1=200, 2=2xx, 3=204, 4=3xx, 5=400, 6=4xx, 7=403, 8=404, 9=408, 10=413, 11=5xx, 12=502|504|511, 13=503, 14=505, 15=Other)"
   },
   "URLCLASSIFIER_COMPLETE_REMOTE_STATUS": {
-    "alert_emails": ["gcp@mozilla.com", "francois@mozilla.com"],
+    "alert_emails": ["safebrowsing-telemetry@mozilla.org"],
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 16,
@@ -3670,7 +3683,7 @@
     "description": "Server HTTP status code from remote SafeBrowsing gethash lookups. (0=1xx, 1=200, 2=2xx, 3=204, 4=3xx, 5=400, 6=4xx, 7=403, 8=404, 9=408, 10=413, 11=5xx, 12=502|504|511, 13=503, 14=505, 15=Other)"
   },
   "URLCLASSIFIER_COMPLETE_TIMEOUT": {
-    "alert_emails": ["gcp@mozilla.com", "francois@mozilla.com"],
+    "alert_emails": ["safebrowsing-telemetry@mozilla.org"],
     "expires_in_version": "56",
     "kind": "boolean",
     "bug_numbers": [1172688],
