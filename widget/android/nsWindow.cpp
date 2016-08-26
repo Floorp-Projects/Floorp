@@ -1029,7 +1029,6 @@ public:
 
     jni::Object::Param GetSurface()
     {
-        mSurface = mCompositor->GetSurface();
         return mSurface;
     }
 
@@ -1105,12 +1104,15 @@ public:
         }
     }
 
-    void CreateCompositor(int32_t aWidth, int32_t aHeight)
+    void CreateCompositor(int32_t aWidth, int32_t aHeight,
+                          jni::Object::Param aSurface)
     {
         MOZ_ASSERT(NS_IsMainThread());
         MOZ_ASSERT(mWindow);
 
+        mSurface = aSurface;
         mWindow->CreateLayerManager(aWidth, aHeight);
+
         mCompositorPaused = false;
         OnResumedCompositor();
     }
@@ -1147,7 +1149,8 @@ public:
     }
 
     void SyncResumeResizeCompositor(const LayerView::Compositor::LocalRef& aObj,
-                                    int32_t aWidth, int32_t aHeight)
+                                    int32_t aWidth, int32_t aHeight,
+                                    jni::Object::Param aSurface)
     {
         MOZ_ASSERT(AndroidBridge::IsJavaUiThread());
 
@@ -1156,6 +1159,8 @@ public:
         if (LockedWindowPtr window{mWindow}) {
             bridge = window->GetCompositorBridgeParent();
         }
+
+        mSurface = aSurface;
 
         if (!bridge || !bridge->ScheduleResumeOnCompositorThread(aWidth,
                                                                  aHeight)) {

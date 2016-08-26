@@ -1441,14 +1441,6 @@ auto LayerView::Compositor::Destroy() const -> void
 constexpr char LayerView::Compositor::DisposeNative_t::name[];
 constexpr char LayerView::Compositor::DisposeNative_t::signature[];
 
-constexpr char LayerView::Compositor::GetSurface_t::name[];
-constexpr char LayerView::Compositor::GetSurface_t::signature[];
-
-auto LayerView::Compositor::GetSurface() const -> mozilla::jni::Object::LocalRef
-{
-    return mozilla::jni::Method<GetSurface_t>::Call(Compositor::mCtx, nullptr);
-}
-
 constexpr char LayerView::Compositor::OnSizeChanged_t::name[];
 constexpr char LayerView::Compositor::OnSizeChanged_t::signature[];
 
