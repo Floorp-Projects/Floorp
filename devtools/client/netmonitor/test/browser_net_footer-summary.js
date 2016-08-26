@@ -12,7 +12,7 @@ add_task(function* () {
   requestLongerTimeout(2);
   let { PluralForm } = Cu.import("resource://gre/modules/PluralForm.jsm", {});
 
-  let [tab,, monitor] = yield initNetMonitor(FILTERING_URL);
+  let { tab, monitor } = yield initNetMonitor(FILTERING_URL);
   info("Starting test... ");
 
   let { $, L10N, NetMonitorView } = monitor.panelWin;

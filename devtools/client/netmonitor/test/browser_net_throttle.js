@@ -13,7 +13,7 @@ add_task(function* () {
 function* throttleTest(actuallyThrottle) {
   requestLongerTimeout(2);
 
-  let [, , monitor] = yield initNetMonitor(SIMPLE_URL);
+  let { monitor } = yield initNetMonitor(SIMPLE_URL);
   const {ACTIVITY_TYPE, EVENTS, NetMonitorController, NetMonitorView} = monitor.panelWin;
 
   info("Starting test... (actuallyThrottle = " + actuallyThrottle + ")");

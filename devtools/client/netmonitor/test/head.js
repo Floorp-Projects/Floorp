@@ -130,35 +130,36 @@ function initNetMonitor(aUrl, aWindow, aEnableCache) {
     let toolbox = yield gDevTools.showToolbox(target, "netmonitor");
     info("Network monitor pane shown successfully.");
 
-    let debuggee = tab.linkedBrowser.contentWindow.wrappedJSObject;
     let monitor = toolbox.getCurrentPanel();
-    return [tab, debuggee, monitor];
+    return {tab, monitor};
   });
 }
 
-function restartNetMonitor(aMonitor, aNewUrl) {
+function restartNetMonitor(monitor, newUrl) {
   info("Restarting the specified network monitor.");
 
-  let deferred = promise.defer();
-  let tab = aMonitor.target.tab;
-  let url = aNewUrl || tab.linkedBrowser.contentWindow.wrappedJSObject.location.href;
+  return Task.spawn(function* () {
+    let tab = monitor.target.tab;
+    let url = newUrl || tab.linkedBrowser.currentURI.spec;
 
-  aMonitor.once("destroyed", () => initNetMonitor(url).then(deferred.resolve));
-  removeTab(tab);
+    let onDestroyed = monitor.once("destroyed");
+    yield removeTab(tab);
+    yield onDestroyed;
 
-  return deferred.promise;
+    return initNetMonitor(url);
+  });
 }
 
-function teardown(aMonitor) {
+function teardown(monitor) {
   info("Destroying the specified network monitor.");
 
-  let deferred = promise.defer();
-  let tab = aMonitor.target.tab;
+  return Task.spawn(function* () {
+    let tab = monitor.target.tab;
 
-  aMonitor.once("destroyed", () => executeSoon(deferred.resolve));
-  removeTab(tab);
-
-  return deferred.promise;
+    let onDestroyed = monitor.once("destroyed");
+    yield removeTab(tab);
+    yield onDestroyed;
+  });
 }
 
 function waitForNetworkEvents(aMonitor, aGetRequests, aPostRequests = 0) {

@@ -7,7 +7,7 @@
  * Tests if image responses show a popup in the requests menu when hovered.
  */
 add_task(function* test() {
-  let [tab, , monitor] = yield initNetMonitor(CONTENT_TYPE_WITHOUT_CACHE_URL);
+  let { tab, monitor } = yield initNetMonitor(CONTENT_TYPE_WITHOUT_CACHE_URL);
   info("Starting test... ");
 
   let { $, EVENTS, ACTIVITY_TYPE, NetMonitorView, NetMonitorController } =

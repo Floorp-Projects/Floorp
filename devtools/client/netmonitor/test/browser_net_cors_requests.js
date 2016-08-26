@@ -9,7 +9,7 @@
  */
 
 add_task(function* () {
-  let [tab, , monitor] = yield initNetMonitor(CORS_URL);
+  let { tab, monitor } = yield initNetMonitor(CORS_URL);
   let { RequestsMenu } = monitor.panelWin.NetMonitorView;
   RequestsMenu.lazyUpdate = false;
 

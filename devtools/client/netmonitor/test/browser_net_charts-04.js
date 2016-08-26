@@ -9,7 +9,7 @@
  */
 
 add_task(function* () {
-  let [, , monitor] = yield initNetMonitor(SIMPLE_URL);
+  let { monitor } = yield initNetMonitor(SIMPLE_URL);
   info("Starting test... ");
 
   let { document, L10N, Chart } = monitor.panelWin;

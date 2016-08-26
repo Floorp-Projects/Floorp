@@ -8,7 +8,7 @@
  */
 
 function test() {
-  initNetMonitor(SIMPLE_SJS).then(([tab, , monitor]) => {
+  initNetMonitor(SIMPLE_SJS).then(({ tab, monitor }) => {
     info("Starting test... ");
 
     let { L10N, NetMonitorView } = monitor.panelWin;

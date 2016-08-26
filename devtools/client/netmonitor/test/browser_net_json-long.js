@@ -8,7 +8,7 @@
  */
 
 add_task(function* () {
-  let [tab, , monitor] = yield initNetMonitor(JSON_LONG_URL);
+  let { tab, monitor } = yield initNetMonitor(JSON_LONG_URL);
   info("Starting test... ");
 
   // This is receiving over 80 KB of json and will populate over 6000 items

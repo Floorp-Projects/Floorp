@@ -8,7 +8,7 @@
  */
 
 add_task(function* () {
-  let [tab, , monitor] = yield initNetMonitor(STATUS_CODES_URL);
+  let { tab, monitor } = yield initNetMonitor(STATUS_CODES_URL);
 
   info("Starting test... ");
 

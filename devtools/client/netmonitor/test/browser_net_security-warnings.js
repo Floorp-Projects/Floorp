@@ -16,7 +16,7 @@ const TEST_CASES = [
 ];
 
 add_task(function* () {
-  let [tab, , monitor] = yield initNetMonitor(CUSTOM_GET_URL);
+  let { tab, monitor } = yield initNetMonitor(CUSTOM_GET_URL);
   let { $, EVENTS, NetMonitorView } = monitor.panelWin;
   let { RequestsMenu, NetworkDetails } = NetMonitorView;
   RequestsMenu.lazyUpdate = false;

@@ -8,7 +8,7 @@
  */
 
 add_task(function* () {
-  let [tab, , monitor] = yield initNetMonitor(SEND_BEACON_URL);
+  let { tab, monitor } = yield initNetMonitor(SEND_BEACON_URL);
   let { RequestsMenu } = monitor.panelWin.NetMonitorView;
 
   RequestsMenu.lazyUpdate = false;

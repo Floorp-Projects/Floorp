@@ -12,7 +12,7 @@ const ADD_HEADER = "Test-header: true";
 const ADD_POSTDATA = "&t3=t4";
 
 add_task(function* () {
-  let [tab, , monitor] = yield initNetMonitor(POST_DATA_URL);
+  let { tab, monitor } = yield initNetMonitor(POST_DATA_URL);
   info("Starting test... ");
 
   let { panelWin } = monitor;
