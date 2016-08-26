@@ -38,7 +38,7 @@ struct user_state
 
 
 
-long data_cb(cubeb_stream *stream, void *user, const void * inputbuffer, void *outputbuffer, long nframes)
+long data_cb(cubeb_stream * stream, void * user, const void * inputbuffer, void * outputbuffer, long nframes)
 {
   user_state * u = reinterpret_cast<user_state*>(user);
 #if (defined(_WIN32) || defined(__WIN32__))
@@ -70,7 +70,7 @@ long data_cb(cubeb_stream *stream, void *user, const void * inputbuffer, void *o
   return nframes;
 }
 
-void state_cb(cubeb_stream *stream, void *user, cubeb_state state)
+void state_cb(cubeb_stream * stream, void * /*user*/, cubeb_state state)
 {
   if (stream == NULL)
     return;
@@ -89,7 +89,7 @@ void state_cb(cubeb_stream *stream, void *user, cubeb_state state)
   return;
 }
 
-int main(int argc, char *argv[])
+int main(int /*argc*/, char * /*argv*/[])
 {
 #ifdef CUBEB_GECKO_BUILD
   ScopedXPCOM xpcom("test_duplex");

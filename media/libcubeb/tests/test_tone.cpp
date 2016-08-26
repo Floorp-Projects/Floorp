@@ -34,7 +34,7 @@ struct cb_user_data {
   long position;
 };
 
-long data_cb(cubeb_stream *stream, void *user, const void* inputbuffer, void *outputbuffer, long nframes)
+long data_cb(cubeb_stream *stream, void *user, const void* /*inputbuffer*/, void *outputbuffer, long nframes)
 {
   struct cb_user_data *u = (struct cb_user_data *)user;
 #if (defined(_WIN32) || defined(__WIN32__))
@@ -98,7 +98,7 @@ void state_cb(cubeb_stream *stream, void *user, cubeb_state state)
   return;
 }
 
-int main(int argc, char *argv[])
+int main(int /*argc*/, char * /*argv*/[])
 {
 #ifdef CUBEB_GECKO_BUILD
   ScopedXPCOM xpcom("test_tone");

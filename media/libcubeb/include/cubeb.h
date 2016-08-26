@@ -396,7 +396,7 @@ void cubeb_destroy(cubeb * context);
     @param context A pointer to the cubeb context.
     @param stream An out parameter to be filled with the an opaque pointer to a
                   cubeb stream.
-    @param stream_name A name for this stream. 
+    @param stream_name A name for this stream.
     @param input_device Device for the input side of the stream. If NULL the
                         default input device is used.
     @param input_stream_params Parameters for the input side of the stream, or
@@ -405,8 +405,8 @@ void cubeb_destroy(cubeb * context);
                          default output device is used.
     @param output_stream_params Parameters for the output side of the stream, or
                                 NULL if this stream is input only.
-    @param latency Stream latency in frames.  Valid range
-                   is [1, 96000].
+    @param latency_frames Stream latency in frames.  Valid range
+                          is [1, 96000].
     @param data_callback Will be called to preroll data before playback is
                          started by cubeb_stream_start.
     @param state_callback A pointer to a state callback.
