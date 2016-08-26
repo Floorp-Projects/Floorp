@@ -778,8 +778,6 @@ class GCRuntime
     JS::GCSliceCallback setSliceCallback(JS::GCSliceCallback callback);
     JS::GCNurseryCollectionCallback setNurseryCollectionCallback(
         JS::GCNurseryCollectionCallback callback);
-    JS::DoCycleCollectionCallback setDoCycleCollectionCallback(JS::DoCycleCollectionCallback callback);
-    void callDoCycleCollectionCallback(JSContext* cx);
 
     void setFullCompartmentChecks(bool enable);
 
@@ -949,7 +947,6 @@ class GCRuntime
     void traceRuntimeCommon(JSTracer* trc, TraceOrMarkRuntime traceOrMark,
                             AutoLockForExclusiveAccess& lock);
     void bufferGrayRoots();
-    void maybeDoCycleCollection();
     void markCompartments();
     IncrementalProgress drainMarkStack(SliceBudget& sliceBudget, gcstats::Phase phase);
     template <class CompartmentIterT> void markWeakReferences(gcstats::Phase phase);
@@ -1308,7 +1305,6 @@ class GCRuntime
     bool fullCompartmentChecks;
 
     Callback<JSGCCallback> gcCallback;
-    Callback<JS::DoCycleCollectionCallback> gcDoCycleCollectionCallback;
     Callback<JSObjectsTenuredCallback> tenuredCallback;
     CallbackVector<JSFinalizeCallback> finalizeCallbacks;
     CallbackVector<JSWeakPointerZoneGroupCallback> updateWeakPointerZoneGroupCallbacks;
