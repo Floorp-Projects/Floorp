@@ -54,18 +54,12 @@ union FeatureChange
   FeatureFailure;
 };
 
-union GPUDeviceStatus
-{
-  null_t;
-  D3D11DeviceStatus;
-};
-
 struct GPUDeviceData
 {
   FeatureChange d3d11Compositing;
   FeatureChange d3d9Compositing;
   FeatureChange oglCompositing;
-  GPUDeviceStatus gpuDevice;
+  D3D11DeviceStatus d3d11Device;
 };
 
 union GfxVarValue

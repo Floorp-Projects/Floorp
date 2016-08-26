@@ -170,12 +170,8 @@ GPUParent::RecvGetDeviceStatus(GPUDeviceData* aOut)
 
 #if defined(XP_WIN)
   if (DeviceManagerDx* dm = DeviceManagerDx::Get()) {
-    D3D11DeviceStatus deviceStatus;
-    dm->ExportDeviceInfo(&deviceStatus);
-    aOut->gpuDevice() = deviceStatus;
+    dm->ExportDeviceInfo(&aOut->d3d11Device());
   }
-#else
-  aOut->gpuDevice() = null_t();
 #endif
 
   return true;
