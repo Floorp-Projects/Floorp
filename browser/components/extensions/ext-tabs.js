@@ -21,27 +21,36 @@ var {
 
 // This function is pretty tightly tied to Extension.jsm.
 // Its job is to fill in the |tab| property of the sender.
-function getSender(context, target, sender) {
-  // The message was sent from a content script to a <browser> element.
-  // We can just get the |tab| from |target|.
-  if (target instanceof Ci.nsIDOMXULElement) {
-    // The message came from a content script.
-    let tabbrowser = target.ownerGlobal.gBrowser;
-    if (!tabbrowser) {
-      return;
-    }
-    let tab = tabbrowser.getTabForBrowser(target);
-
-    sender.tab = TabManager.convert(context.extension, tab);
-  } else if ("tabId" in sender) {
+function getSender(extension, target, sender) {
+  if ("tabId" in sender) {
     // The message came from an ExtensionContext. In that case, it should
     // include a tabId property (which is filled in by the page-open
     // listener below).
-    sender.tab = TabManager.convert(context.extension,
-                                    TabManager.getTab(sender.tabId, context));
+    let tab = TabManager.getTab(sender.tabId, null, null);
     delete sender.tabId;
+    if (tab) {
+      sender.tab = TabManager.convert(extension, tab);
+      return;
+    }
+  }
+  if (target instanceof Ci.nsIDOMXULElement) {
+    // If the message was sent from a content script to a <browser> element,
+    // then we can just get the `tab` from `target`.
+    let tabbrowser = target.ownerGlobal.gBrowser;
+    if (tabbrowser) {
+      let tab = tabbrowser.getTabForBrowser(target);
+
+      // `tab` can be `undefined`, e.g. for extension popups. This condition is
+      // reached if `getSender` is called for a popup without a valid `tabId`.
+      if (tab) {
+        sender.tab = TabManager.convert(extension, tab);
+      }
+    }
   }
 }
+
+// Used by Extension.jsm
+global.tabGetSender = getSender;
 
 function getDocShellOwner(docShell) {
   let browser = docShell.chromeEventHandler;
@@ -63,7 +72,7 @@ function getDocShellOwner(docShell) {
 // (either initiated by the extension or the user). Its job is to fill
 // in some tab-specific details and keep data around about the
 // ExtensionContext.
-extensions.on("page-load", (type, context, params, sender, delegate) => {
+extensions.on("page-load", (type, context, params, sender) => {
   if (params.type == "tab" || params.type == "popup") {
     let {xulWindow, tab} = getDocShellOwner(params.docShell);
 
@@ -74,8 +83,6 @@ extensions.on("page-load", (type, context, params, sender, delegate) => {
       context.tabId = TabManager.getId(tab);
     }
   }
-
-  delegate.getSender = getSender;
 });
 
 extensions.on("page-shutdown", (type, context) => {

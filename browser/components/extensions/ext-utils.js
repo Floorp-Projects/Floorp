@@ -814,6 +814,7 @@ global.TabManager = {
    *        The ID of the tab to retrieve.
    * @param {ExtensionContext} context
    *        The context of the caller.
+   *        This value may be omitted if `default_` is not `undefined`.
    * @param {*} default_
    *        The value to return if no tab exists with the given ID.
    * @returns {Element<tab>}
