@@ -70,6 +70,7 @@ namespace {
 
 JavaVM* sJavaVM;
 pthread_key_t sThreadEnvKey;
+jclass sOOMErrorClass;
 
 void UnregisterThreadEnv(void* env)
 {
@@ -101,6 +102,10 @@ void SetGeckoThreadEnv(JNIEnv* aEnv)
 
     MOZ_ALWAYS_TRUE(!aEnv->GetJavaVM(&sJavaVM));
     MOZ_ASSERT(sJavaVM);
+
+    sOOMErrorClass = Class::GlobalRef(Class::LocalRef::Adopt(
+            aEnv->FindClass("java/lang/OutOfMemoryError"))).Forget();
+    aEnv->ExceptionClear();
 }
 
 JNIEnv* GetEnvForThread()
@@ -179,6 +184,9 @@ bool ReportException(JNIEnv* aEnv, jthrowable aExc, jstring aStack)
             String::Ref::From(aStack)->ToCString()));
 #endif // MOZ_CRASHREPORTER
 
+    if (sOOMErrorClass && aEnv->IsInstanceOf(aExc, sOOMErrorClass)) {
+        NS_ABORT_OOM(0); // Unknown OOM size
+    }
     return result;
 }
 
