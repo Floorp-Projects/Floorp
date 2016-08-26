@@ -95,13 +95,6 @@ Sanitizer.prototype = {
           .getService(Ci.nsIContentPrefService2)
           .removeAllDomains(null);
 
-        // Clear "Never remember passwords for this site", which is not handled by
-        // the permission manager
-        var hosts = Services.logins.getAllDisabledHosts({})
-        for (var host of hosts) {
-          Services.logins.setLoginSavingEnabled(host, true);
-        }
-
         // Clear site security settings
         var sss = Cc["@mozilla.org/ssservice;1"]
                     .getService(Ci.nsISiteSecurityService);
