@@ -79,7 +79,7 @@ LogBlockedRequest(nsIRequest* aRequest,
   channel->GetURI(getter_AddRefs(aUri));
   nsAutoCString spec;
   if (aUri) {
-    aUri->GetSpec(spec);
+    spec = aUri->GetSpecOrDefault();
   }
 
   // Generate the error message

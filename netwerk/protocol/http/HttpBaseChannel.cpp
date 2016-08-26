@@ -2206,7 +2206,7 @@ HttpBaseChannel::AddSecurityMessage(const nsAString &aMessageTag,
 
   nsAutoCString spec;
   if (mURI) {
-    mURI->GetSpec(spec);
+    spec = mURI->GetSpecOrDefault();
   }
 
   nsCOMPtr<nsIScriptError> error(do_CreateInstance(NS_SCRIPTERROR_CONTRACTID));
