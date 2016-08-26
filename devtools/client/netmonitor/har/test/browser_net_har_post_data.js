@@ -7,9 +7,7 @@
  * Tests for exporting POST data into HAR format.
  */
 add_task(function* () {
-  // The first 'tab' isn't necessary so, don't create a var for it
-  // to avoid eslint warning.
-  let [ , debuggee, monitor ] = yield initNetMonitor(
+  let [tab, , monitor ] = yield initNetMonitor(
     HAR_EXAMPLE_URL + "html_har_post-data-test-page.html");
 
   info("Starting test... ");
@@ -20,8 +18,11 @@ add_task(function* () {
   RequestsMenu.lazyUpdate = false;
 
   // Execute one POST request on the page and wait till its done.
-  debuggee.executeTest();
-  yield waitForNetworkEvents(monitor, 0, 1);
+  let wait = waitForNetworkEvents(monitor, 0, 1);
+  yield ContentTask.spawn(tab.linkedBrowser, {}, function* () {
+    content.wrappedJSObject.executeTest();
+  });
+  yield wait;
 
   // Copy HAR into the clipboard (asynchronous).
   let jsonString = yield RequestsMenu.copyAllAsHar();
@@ -39,5 +40,5 @@ add_task(function* () {
     "Check post data payload");
 
   // Clean up
-  teardown(monitor).then(finish);
+  return teardown(monitor);
 });
