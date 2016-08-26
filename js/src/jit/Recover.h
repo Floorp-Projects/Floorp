@@ -88,6 +88,7 @@ namespace jit {
     _(Atan2)                                    \
     _(Hypot)                                    \
     _(MathFunction)                             \
+    _(Random)                                   \
     _(StringSplit)                              \
     _(RegExpMatcher)                            \
     _(RegExpSearcher)                           \
@@ -459,6 +460,13 @@ class RMathFunction final : public RInstruction
   public:
     RINSTRUCTION_HEADER_NUM_OP_(MathFunction, 1)
 
+    MOZ_MUST_USE bool recover(JSContext* cx, SnapshotIterator& iter) const;
+};
+
+class RRandom final : public RInstruction
+{
+    RINSTRUCTION_HEADER_NUM_OP_(Random, 0)
+  public:
     MOZ_MUST_USE bool recover(JSContext* cx, SnapshotIterator& iter) const;
 };
 
