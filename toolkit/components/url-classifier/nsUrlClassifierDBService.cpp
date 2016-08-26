@@ -588,6 +588,11 @@ nsUrlClassifierDBServiceWorker::FinishUpdate()
   if (NS_SUCCEEDED(mUpdateStatus)) {
     LOG(("Notifying success: %d", mUpdateWait));
     mUpdateObserver->UpdateSuccess(mUpdateWait);
+  } else if (NS_ERROR_NOT_IMPLEMENTED == mUpdateStatus) {
+    LOG(("Treating NS_ERROR_NOT_IMPLEMENTED a successful update "
+         "but still mark it spoiled."));
+    mUpdateObserver->UpdateSuccess(0);
+    mClassifier->MarkSpoiled(mUpdateTables);
   } else {
     if (LOG_ENABLED()) {
       nsAutoCString errorName;
