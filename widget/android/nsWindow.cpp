@@ -987,32 +987,10 @@ public:
     {
         if (aCall.IsTarget(&LayerViewSupport::CreateCompositor)) {
             // This call is blocking.
-            nsAppShell::SyncRunEvent(WindowEvent<Functor>(
+            nsAppShell::SyncRunEvent(nsAppShell::LambdaEvent<Functor>(
                     mozilla::Move(aCall)), &LayerViewEvent::MakeEvent);
             return;
-
-        } else if (aCall.IsTarget(
-                &LayerViewSupport::SyncResumeResizeCompositor)) {
-            // This call is synchronous. Perform the original call using a copy
-            // of the lambda. Then redirect the original lambda to
-            // OnResumedCompositor, to be run on the Gecko thread. We use
-            // Functor instead of our own lambda so that Functor can handle
-            // object lifetimes for us.
-            (Functor(aCall))();
-            aCall.SetTarget(&LayerViewSupport::OnResumedCompositor);
-            nsAppShell::PostEvent(
-                    mozilla::MakeUnique<LayerViewEvent>(
-                    mozilla::MakeUnique<WindowEvent<Functor>>(
-                    mozilla::Move(aCall))));
-            return;
         }
-
-        // LayerViewEvent (i.e. prioritized event) applies to
-        // CreateCompositor, PauseCompositor, and OnResumedCompositor. For all
-        // other events, use regular WindowEvent.
-        nsAppShell::PostEvent(
-                mozilla::MakeUnique<WindowEvent<Functor>>(
-                mozilla::Move(aCall)));
     }
 
     static LayerViewSupport*
@@ -1056,7 +1034,7 @@ public:
     }
 
 private:
-    void OnResumedCompositor(int32_t aWidth, int32_t aHeight)
+    void OnResumedCompositor()
     {
         MOZ_ASSERT(NS_IsMainThread());
 
@@ -1079,6 +1057,9 @@ public:
     void AttachToJava(jni::Object::Param aClient, jni::Object::Param aNPZC)
     {
         MOZ_ASSERT(NS_IsMainThread());
+        if (!mWindow) {
+            return; // Already shut down.
+        }
 
         const auto& layerClient = GeckoLayerClient::Ref::From(aClient);
 
@@ -1113,6 +1094,9 @@ public:
                        int32_t aScreenWidth, int32_t aScreenHeight)
     {
         MOZ_ASSERT(NS_IsMainThread());
+        if (!mWindow) {
+            return; // Already shut down.
+        }
 
         if (aWindowWidth != mWindow->mBounds.width ||
             aWindowHeight != mWindow->mBounds.height) {
@@ -1124,10 +1108,11 @@ public:
     void CreateCompositor(int32_t aWidth, int32_t aHeight)
     {
         MOZ_ASSERT(NS_IsMainThread());
+        MOZ_ASSERT(mWindow);
 
         mWindow->CreateLayerManager(aWidth, aHeight);
         mCompositorPaused = false;
-        OnResumedCompositor(aWidth, aHeight);
+        OnResumedCompositor();
     }
 
     void SyncPauseCompositor()
@@ -1161,7 +1146,8 @@ public:
         }
     }
 
-    void SyncResumeResizeCompositor(int32_t aWidth, int32_t aHeight)
+    void SyncResumeResizeCompositor(const LayerView::Compositor::LocalRef& aObj,
+                                    int32_t aWidth, int32_t aHeight)
     {
         MOZ_ASSERT(AndroidBridge::IsJavaUiThread());
 
@@ -1171,10 +1157,37 @@ public:
             bridge = window->GetCompositorBridgeParent();
         }
 
-        if (bridge && bridge->ScheduleResumeOnCompositorThread(aWidth,
-                                                               aHeight)) {
-            mCompositorPaused = false;
+        if (!bridge || !bridge->ScheduleResumeOnCompositorThread(aWidth,
+                                                                 aHeight)) {
+            return;
         }
+
+        mCompositorPaused = false;
+
+        class OnResumedEvent : public nsAppShell::Event
+        {
+            LayerView::Compositor::GlobalRef mCompositor;
+
+        public:
+            OnResumedEvent(LayerView::Compositor::GlobalRef&& aCompositor)
+                : mCompositor(mozilla::Move(aCompositor))
+            {}
+
+            void Run() override
+            {
+                MOZ_ASSERT(NS_IsMainThread());
+
+                JNIEnv* const env = jni::GetGeckoThreadEnv();
+                LayerViewSupport* const lvs = GetNative(
+                        LayerView::Compositor::LocalRef(env, mCompositor));
+                MOZ_CATCH_JNI_EXCEPTION(env);
+
+                lvs->OnResumedCompositor();
+            }
+        };
+
+        nsAppShell::PostEvent(MakeUnique<LayerViewEvent>(
+                MakeUnique<OnResumedEvent>(aObj)));
     }
 
     void SyncInvalidateAndScheduleComposite()
