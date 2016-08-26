@@ -6362,21 +6362,32 @@ if (IsCSSPropertyPrefEnabled("layout.css.grid.enabled")) {
       "none / none",
     ],
     other_values: [
-      "column 40px",
-      "column dense auto",
-      "dense row minmax(min-content, 2fr)",
-      "row 40px / 100px",
+      "auto-flow 40px / none",
+      "auto-flow / 40px",
+      "auto-flow dense auto / auto",
+      "dense auto-flow minmax(min-content, 2fr) / auto",
+      "dense auto-flow / 100px",
+      "none / auto-flow 40px",
+      "40px / auto-flow",
+      "none / dense auto-flow auto",
     ].concat(
-      gCSSProperties["grid-template"].other_values,
-      gCSSProperties["grid-auto-flow"].other_values
+      gCSSProperties["grid-template"].other_values
     ),
     invalid_values: [
-      "row column 40px",
-      "row -20px",
-      "row 200ms",
-      "row 40px 100px",
+      "auto-flow",
+      " / auto-flow",
+      "dense 0 / 0",
+      "dense dense 40px / 0",
+      "auto-flow / auto-flow",
+      "auto-flow / dense",
+      "auto-flow [a] 0 / 0",
+      "0 / auto-flow [a] 0",
+      "auto-flow -20px / 0",
+      "auto-flow 200ms / 0",
+      "auto-flow 40px 100px / 0",
     ].concat(
       gCSSProperties["grid-template"].invalid_values,
+      gCSSProperties["grid-auto-flow"].other_values,
       gCSSProperties["grid-auto-flow"].invalid_values
         .filter((v) => v != 'none')
     )
