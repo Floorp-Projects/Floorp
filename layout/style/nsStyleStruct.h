@@ -1335,7 +1335,7 @@ public:
   uint8_t        mBorderImageRepeatH; // [reset] see nsStyleConsts.h
   uint8_t        mBorderImageRepeatV; // [reset]
   mozilla::StyleFloatEdge mFloatEdge; // [reset]
-  uint8_t        mBoxDecorationBreak; // [reset] see nsStyleConsts.h
+  mozilla::StyleBoxDecorationBreak mBoxDecorationBreak; // [reset]
 
 protected:
   // mComputedBorder holds the CSS2.1 computed border-width values.
