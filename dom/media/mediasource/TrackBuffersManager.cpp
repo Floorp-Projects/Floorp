@@ -300,20 +300,17 @@ TimeIntervals
 TrackBuffersManager::Buffered()
 {
   MSE_DEBUG("");
-  MonitorAutoLock mon(mMonitor);
   // http://w3c.github.io/media-source/index.html#widl-SourceBuffer-buffered
   // 2. Let highest end time be the largest track buffer ranges end time across all the track buffers managed by this SourceBuffer object.
-  TimeUnit highestEndTime;
+  TimeUnit highestEndTime = HighestEndTime();
 
+  MonitorAutoLock mon(mMonitor);
   nsTArray<TimeIntervals*> tracks;
   if (HasVideo()) {
     tracks.AppendElement(&mVideoBufferedRanges);
   }
   if (HasAudio()) {
     tracks.AppendElement(&mAudioBufferedRanges);
-  }
-  for (auto trackRanges : tracks) {
-    highestEndTime = std::max(trackRanges->GetEnd(), highestEndTime);
   }
 
   // 3. Let intersection ranges equal a TimeRange object containing a single range from 0 to highest end time.
@@ -1915,6 +1912,25 @@ TrackBuffersManager::HighestStartTime()
       std::max(track->mHighestStartTimestamp, highestStartTime);
   }
   return highestStartTime;
+}
+
+TimeUnit
+TrackBuffersManager::HighestEndTime()
+{
+  MonitorAutoLock mon(mMonitor);
+  TimeUnit highestEndTime;
+
+  nsTArray<TimeIntervals*> tracks;
+  if (HasVideo()) {
+    tracks.AppendElement(&mVideoBufferedRanges);
+  }
+  if (HasAudio()) {
+    tracks.AppendElement(&mAudioBufferedRanges);
+  }
+  for (auto trackRanges : tracks) {
+    highestEndTime = std::max(trackRanges->GetEnd(), highestEndTime);
+  }
+  return highestEndTime;
 }
 
 const TrackBuffersManager::TrackBuffer&
