@@ -18,7 +18,7 @@
 #undef LOG
 #endif
 
-static PRLogModuleInfo* gMediaStreamTrackLog;
+static mozilla::LazyLogModule gMediaStreamTrackLog("MediaStreamTrack");
 #define LOG(type, msg) MOZ_LOG(gMediaStreamTrackLog, type, msg)
 
 namespace mozilla {
@@ -120,10 +120,6 @@ MediaStreamTrack::MediaStreamTrack(DOMMediaStream* aStream, TrackID aTrackID,
     mConstraints(aConstraints)
 {
 
-  if (!gMediaStreamTrackLog) {
-    gMediaStreamTrackLog = PR_NewLogModule("MediaStreamTrack");
-  }
-
   GetSource().RegisterSink(this);
 
   mPrincipalHandleListener = new PrincipalHandleListener(this);
@@ -216,7 +212,8 @@ MediaStreamTrack::SetEnabled(bool aEnabled)
                        this, aEnabled ? "Enabled" : "Disabled"));
 
   mEnabled = aEnabled;
-  GetOwnedStream()->SetTrackEnabled(mTrackID, aEnabled);
+  GetOwnedStream()->SetTrackEnabled(mTrackID, mEnabled ? DisabledTrackMode::ENABLED
+                                                       : DisabledTrackMode::SILENCE_BLACK);
 }
 
 void
@@ -483,12 +480,13 @@ MediaStreamTrack::RemoveDirectListener(DirectMediaStreamTrackListener *aListener
 }
 
 already_AddRefed<MediaInputPort>
-MediaStreamTrack::ForwardTrackContentsTo(ProcessedMediaStream* aStream)
+MediaStreamTrack::ForwardTrackContentsTo(ProcessedMediaStream* aStream,
+                                         TrackID aDestinationTrackID)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_RELEASE_ASSERT(aStream);
   RefPtr<MediaInputPort> port =
-    aStream->AllocateInputPort(GetOwnedStream(), mTrackID);
+    aStream->AllocateInputPort(GetOwnedStream(), mTrackID, aDestinationTrackID);
   return port.forget();
 }
 

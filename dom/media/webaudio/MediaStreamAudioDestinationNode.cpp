@@ -39,9 +39,11 @@ MediaStreamAudioDestinationNode::MediaStreamAudioDestinationNode(AudioContext* a
   RefPtr<MediaStreamTrackSource> source =
     new BasicUnstoppableTrackSource(doc->NodePrincipal(),
                                     MediaSourceEnum::AudioCapture);
-  mDOMStream->CreateDOMTrack(AudioNodeStream::AUDIO_TRACK,
-                             MediaSegment::AUDIO, source,
-                             MediaTrackConstraints());
+  RefPtr<MediaStreamTrack> track =
+    mDOMStream->CreateDOMTrack(AudioNodeStream::AUDIO_TRACK,
+                               MediaSegment::AUDIO, source,
+                               MediaTrackConstraints());
+  mDOMStream->AddTrackInternal(track);
 
   ProcessedMediaStream* outputStream = mDOMStream->GetInputStream()->AsProcessedStream();
   MOZ_ASSERT(!!outputStream);

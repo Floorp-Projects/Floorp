@@ -78,7 +78,11 @@ parent:
   // Leave test mode and resume normal compositing
   sync LeaveTestMode();
 
-  sync GetOpacity(PLayer layer) returns (float opacity);
+  // Returns the value of the opacity applied to the layer by animation.
+  // |hasAnimationOpacity| is true if the layer has an opacity value
+  // specified by animation. If it's false, |opacity| value is indefinite.
+  sync GetAnimationOpacity(PLayer layer) returns (float opacity,
+                                                  bool hasAnimationOpacity);
 
   // Returns the value of the transform applied to the layer by animation after
   // factoring out translation components introduced to account for the offset

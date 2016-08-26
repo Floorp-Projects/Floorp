@@ -18,6 +18,8 @@
 #include "GeckoTaskTracer.h"
 #endif
 
+#include <algorithm>
+
 namespace mozilla {
 class ProfileGatherer;
 } // namespace mozilla
@@ -31,8 +33,15 @@ threadSelected(ThreadInfo* aInfo, const ThreadNameFilterList &aThreadNameFilters
     return true;
   }
 
+  std::string name = aInfo->Name();
+  std::transform(name.begin(), name.end(), name.begin(), ::tolower);
+
   for (uint32_t i = 0; i < aThreadNameFilters.length(); ++i) {
-    if (aThreadNameFilters[i] == aInfo->Name()) {
+    std::string filter = aThreadNameFilters[i];
+    std::transform(filter.begin(), filter.end(), filter.begin(), ::tolower);
+
+    // Crude, non UTF-8 compatible, case insensitive substring search
+    if (name.find(filter) != std::string::npos) {
       return true;
     }
   }

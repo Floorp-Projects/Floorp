@@ -33,13 +33,19 @@ try {
 function AudioStreamAnalyser(ac, stream) {
   this.audioContext = ac;
   this.stream = stream;
-  this.sourceNodes = this.stream.getAudioTracks().map(
-    t => this.audioContext.createMediaStreamSource(new MediaStream([t])));
+  this.sourceNodes = [];
   this.analyser = this.audioContext.createAnalyser();
   // Setting values lower than default for speedier testing on emulators
   this.analyser.smoothingTimeConstant = 0.2;
   this.analyser.fftSize = 1024;
-  this.sourceNodes.forEach(n => n.connect(this.analyser));
+  this.connectTrack = t => {
+    let source = this.audioContext.createMediaStreamSource(new MediaStream([t]));
+    this.sourceNodes.push(source);
+    source.connect(this.analyser);
+  };
+  this.stream.getAudioTracks().forEach(t => this.connectTrack(t));
+  this.onaddtrack = ev => this.connectTrack(ev.track);
+  this.stream.addEventListener("addtrack", this.onaddtrack);
   this.data = new Uint8Array(this.analyser.frequencyBinCount);
 }
 
@@ -75,7 +81,7 @@ AudioStreamAnalyser.prototype = {
       c.clearRect(0, 0, cvs.width, cvs.height);
       var array = self.getByteFrequencyData();
       for (var i = 0; i < array.length; i++) {
-        c.fillRect(i, (cvs.height - (array[i])), 1, cvs.height);
+        c.fillRect(i, (cvs.height - (array[i] / 2)), 1, cvs.height);
       }
       if (!cvs.stopDrawing) {
         requestAnimationFrame(render);
@@ -106,6 +112,7 @@ AudioStreamAnalyser.prototype = {
     this.disableDebugCanvas();
     this.sourceNodes.forEach(n => n.disconnect());
     this.sourceNodes = [];
+    this.stream.removeEventListener("addtrack", this.onaddtrack);
   },
 
   /**
@@ -593,6 +600,33 @@ function createOneShotEventWrapper(wrapper, obj, event) {
 
 /**
  * Returns a promise that resolves when `target` has raised an event with the
+ * given name the given number of times. Cancel the returned promise by passing
+ * in a `cancelPromise` and resolve it.
+ *
+ * @param {object} target
+ *        The target on which the event should occur.
+ * @param {string} name
+ *        The name of the event that should occur.
+ * @param {integer} count
+ *        Optional number of times the event should be raised before resolving.
+ * @param {promise} cancelPromise
+ *        Optional promise that on resolving rejects the returned promise,
+ *        so we can avoid logging results after a test has finished.
+ * @returns {promise} A promise that resolves to the last of the seen events.
+ */
+function haveEvents(target, name, count, cancelPromise) {
+  var listener;
+  var counter = count || 1;
+  return Promise.race([
+    (cancelPromise || new Promise(() => {})).then(e => Promise.reject(e)),
+    new Promise(resolve =>
+        target.addEventListener(name, listener = e => (--counter < 1 && resolve(e))))
+  ])
+  .then(e => (target.removeEventListener(name, listener), e));
+};
+
+/**
+ * Returns a promise that resolves when `target` has raised an event with the
  * given name. Cancel the returned promise by passing in a `cancelPromise` and
  * resolve it.
  *
@@ -601,16 +635,52 @@ function createOneShotEventWrapper(wrapper, obj, event) {
  * @param {string} name
  *        The name of the event that should occur.
  * @param {promise} cancelPromise
- *        A promise that on resolving rejects the returned promise,
+ *        Optional promise that on resolving rejects the returned promise,
  *        so we can avoid logging results after a test has finished.
+ * @returns {promise} A promise that resolves to the seen event.
  */
 function haveEvent(target, name, cancelPromise) {
-  var listener;
-  var p = Promise.race([
-    (cancelPromise || new Promise()).then(e => Promise.reject(e)),
-    new Promise(resolve => target.addEventListener(name, listener = resolve))
-  ]);
-  return p.then(event => (target.removeEventListener(name, listener), event));
+  return haveEvents(target, name, 1, cancelPromise);
+};
+
+/**
+ * Returns a promise that resolves if the target has not seen the given event
+ * after one crank (or until the given timeoutPromise resolves) of the event
+ * loop.
+ *
+ * @param {object} target
+ *        The target on which the event should not occur.
+ * @param {string} name
+ *        The name of the event that should not occur.
+ * @param {promise} timeoutPromise
+ *        Optional promise defining how long we should wait before resolving.
+ * @returns {promise} A promise that is rejected if we see the given event, or
+ *                    resolves after a timeout otherwise.
+ */
+function haveNoEvent(target, name, timeoutPromise) {
+  return haveEvent(target, name, timeoutPromise || wait(0))
+    .then(() => Promise.reject(new Error("Too many " + name + " events")),
+          () => {});
+};
+
+/**
+ * Returns a promise that resolves after the target has seen the given number
+ * of events but no such event in a following crank of the event loop.
+ *
+ * @param {object} target
+ *        The target on which the events should occur.
+ * @param {string} name
+ *        The name of the event that should occur.
+ * @param {integer} count
+ *        Optional number of times the event should be raised before resolving.
+ * @param {promise} cancelPromise
+ *        Optional promise that on resolving rejects the returned promise,
+ *        so we can avoid logging results after a test has finished.
+ * @returns {promise} A promise that resolves to the last of the seen events.
+ */
+function haveEventsButNoMore(target, name, count, cancelPromise) {
+  return haveEvents(target, name, count, cancelPromise)
+    .then(e => haveNoEvent(target, name).then(() => e));
 };
 
 /**

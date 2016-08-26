@@ -366,8 +366,8 @@ AudioContext::CreateMediaElementSource(HTMLMediaElement& aMediaElement,
     return nullptr;
   }
 
-  RefPtr<DOMMediaStream> stream = aMediaElement.MozCaptureStream(aRv,
-                                                                   mDestination->Stream()->Graph());
+  RefPtr<DOMMediaStream> stream =
+    aMediaElement.CaptureAudio(aRv, mDestination->Stream()->Graph());
   if (aRv.Failed()) {
     return nullptr;
   }

@@ -158,7 +158,7 @@ function convertGetFrameResult(tabId, data) {
   };
 }
 
-extensions.registerSchemaAPI("webNavigation", context => {
+extensions.registerSchemaAPI("webNavigation", "addon_parent", context => {
   return {
     webNavigation: {
       onBeforeNavigate: new WebNavigationEventManager(context, "onBeforeNavigate").api(),

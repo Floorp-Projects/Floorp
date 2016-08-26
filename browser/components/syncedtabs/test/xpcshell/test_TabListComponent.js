@@ -8,6 +8,7 @@ let { View } = Cu.import("resource:///modules/syncedtabs/TabListView.js", {});
 const ACTION_METHODS = [
   "onSelectRow",
   "onOpenTab",
+  "onOpenTabs",
   "onMoveSelectionDown",
   "onMoveSelectionUp",
   "onToggleBranch",
@@ -77,6 +78,8 @@ add_task(function* testActions() {
       },
       PlacesUtils: { bookmarksMenuFolderId: "id" }
     },
+    getBrowserURL() {},
+    openDialog() {},
     openUILinkIn() {}
   };
   let component = new TabListComponent({
@@ -123,6 +126,13 @@ add_task(function* testActions() {
   sinon.spy(windowMock, "openUILinkIn");
   component.onOpenTab("uri", "where", "params");
   Assert.ok(windowMock.openUILinkIn.calledWith("uri", "where", "params"));
+
+  component.onOpenTabs(["uri1", "uri2"], "where", "params");
+  Assert.ok(windowMock.openUILinkIn.calledWith("uri1", "where", "params"));
+  Assert.ok(windowMock.openUILinkIn.calledWith("uri2", "where", "params"));
+  sinon.spy(windowMock, "openDialog");
+  component.onOpenTabs(["uri1", "uri2"], "window", "params");
+  Assert.deepEqual(windowMock.openDialog.args[0][3], ["uri1", "uri2"].join("|"));
 
   sinon.spy(clipboardHelperMock, "copyString");
   component.onCopyTabLocation("uri");

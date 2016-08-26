@@ -378,6 +378,10 @@ private:
   // Called from HTMLMediaElement when owner document activity changes
   virtual void SetElementVisibility(bool aIsVisible);
 
+  // Force override the visible state to hidden.
+  // Called from HTMLMediaElement when testing of video decode suspend from mochitests.
+  void SetForcedHidden(bool aForcedHidden);
+
   /******
    * The following methods must only be called on the main
    * thread.
@@ -702,6 +706,12 @@ protected:
   // Stores media info, including info of audio tracks and video tracks, should
   // only be accessed from main thread.
   nsAutoPtr<MediaInfo> mInfo;
+
+  // Tracks the visiblity status from HTMLMediaElement
+  bool mElementVisible;
+
+  // If true, forces the decoder to be considered hidden.
+  bool mForcedHidden;
 
   // True if MediaDecoder is in dormant state.
   bool mIsDormant;

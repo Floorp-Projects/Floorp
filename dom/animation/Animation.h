@@ -92,13 +92,13 @@ public:
   // Animation interface methods
   static already_AddRefed<Animation>
   Constructor(const GlobalObject& aGlobal,
-              KeyframeEffectReadOnly* aEffect,
+              AnimationEffectReadOnly* aEffect,
               const Optional<AnimationTimeline*>& aTimeline,
               ErrorResult& aRv);
   void GetId(nsAString& aResult) const { aResult = mId; }
   void SetId(const nsAString& aId);
-  KeyframeEffectReadOnly* GetEffect() const { return mEffect; }
-  void SetEffect(KeyframeEffectReadOnly* aEffect);
+  AnimationEffectReadOnly* GetEffect() const { return mEffect; }
+  void SetEffect(AnimationEffectReadOnly* aEffect);
   AnimationTimeline* GetTimeline() const { return mTimeline; }
   void SetTimeline(AnimationTimeline* aTimeline);
   Nullable<TimeDuration> GetStartTime() const { return mStartTime; }
@@ -146,6 +146,7 @@ public:
 
   virtual void CancelFromStyle() { CancelNoUpdate(); }
   void SetTimelineNoUpdate(AnimationTimeline* aTimeline);
+  void SetEffectNoUpdate(AnimationEffectReadOnly* aEffect);
 
   virtual void Tick();
   bool NeedsTicks() const
@@ -370,14 +371,19 @@ protected:
    */
   void CancelPendingTasks();
 
+  /**
+   * Performs the same steps as CancelPendingTasks and also rejects and
+   * recreates the ready promise if the animation was pending.
+   */
+  void ResetPendingTasks();
+
   bool IsPossiblyOrphanedPendingAnimation() const;
   StickyTimeDuration EffectEnd() const;
 
   nsIDocument* GetRenderedDocument() const;
-  nsPresContext* GetPresContext() const;
 
   RefPtr<AnimationTimeline> mTimeline;
-  RefPtr<KeyframeEffectReadOnly> mEffect;
+  RefPtr<AnimationEffectReadOnly> mEffect;
   // The beginning of the delay period.
   Nullable<TimeDuration> mStartTime; // Timeline timescale
   Nullable<TimeDuration> mHoldTime;  // Animation timescale

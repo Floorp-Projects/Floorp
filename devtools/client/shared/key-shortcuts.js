@@ -143,6 +143,7 @@ KeyShortcuts.parseElectronKey = function (window, str) {
     shortcut.keyCode = KeyCodes[key];
     // Used only to stringify the shortcut
     shortcut.keyCodeString = key;
+    shortcut.key = key;
   } else {
     console.error("Unsupported key:", key);
     return null;
@@ -199,11 +200,17 @@ KeyShortcuts.prototype = {
     }
     if (shortcut.keyCode) {
       return event.keyCode == shortcut.keyCode;
+    } else if (event.key in ElectronKeysMapping) {
+      return ElectronKeysMapping[event.key] === shortcut.key;
     }
+
+    // get the key from the keyCode if key is not provided.
+    let key = event.key || String.fromCharCode(event.keyCode);
+
     // For character keys, we match if the final character is the expected one.
     // But for digits we also accept indirect match to please azerty keyboard,
     // which requires Shift to be pressed to get digits.
-    return event.key.toLowerCase() == shortcut.key ||
+    return key.toLowerCase() == shortcut.key ||
       (shortcut.key.match(/[0-9]/) &&
        event.keyCode == shortcut.key.charCodeAt(0));
   },
