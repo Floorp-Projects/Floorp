@@ -8,7 +8,7 @@
 
 const promise = require("promise");
 
-const {ELLIPSIS} = require("devtools/client/shared/l10n");
+const {ELLIPSIS} = require("devtools/shared/l10n");
 
 const MAX_LABEL_LENGTH = 40;
 

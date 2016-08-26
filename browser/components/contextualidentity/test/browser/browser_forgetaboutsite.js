@@ -169,12 +169,12 @@ function* test_cache_cleared() {
     yield OpenCacheEntry("http://" + TEST_HOST + "/",
                          "disk",
                          Ci.nsICacheStorage.OPEN_NORMALLY,
-                         LoadContextInfo.custom(false, false, {userContextId}));
+                         LoadContextInfo.custom(false, {userContextId}));
 
     yield OpenCacheEntry("http://" + TEST_HOST + "/",
                          "memory",
                          Ci.nsICacheStorage.OPEN_NORMALLY,
-                         LoadContextInfo.custom(false, false, {userContextId}));
+                         LoadContextInfo.custom(false, {userContextId}));
   }
 
 

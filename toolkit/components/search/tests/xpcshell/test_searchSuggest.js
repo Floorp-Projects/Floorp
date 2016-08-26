@@ -539,6 +539,15 @@ add_task(function* minus_one_results_requested() {
   }, /result/i);
 });
 
+add_task(function* test_userContextId() {
+  let controller = new SearchSuggestionController();
+  controller._fetchRemote = function(searchTerm, engine, privateMode, userContextId) {
+    Assert.equal(userContextId, 1);
+    return Promise.defer();
+  };
+
+  controller.fetch("test", false, getEngine, 1);
+});
 
 // Helpers
 

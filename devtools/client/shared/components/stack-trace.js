@@ -6,7 +6,7 @@
 
 const React = require("devtools/client/shared/vendor/react");
 const { DOM: dom, createClass, createFactory, PropTypes } = React;
-const { LocalizationHelper } = require("devtools/client/shared/l10n");
+const { LocalizationHelper } = require("devtools/shared/l10n");
 const Frame = createFactory(require("./frame"));
 
 const l10n = new LocalizationHelper("devtools/locale/webconsole.properties");

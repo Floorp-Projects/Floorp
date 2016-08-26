@@ -175,42 +175,64 @@ var grid_template_test_cases = [
         gridTemplateColumns: isGridTemplateSubgridValueEnabled ? "subgrid [] [foo]" : "none",
         gridTemplateRows: isGridTemplateSubgridValueEnabled ? "subgrid [bar]" : "none",
     },
+    {
+        specified: "'fizz' repeat(1, 100px)",
+    },
+    {
+        specified: "'fizz' repeat(auto-fill, 100px)",
+    },
+    {
+        specified: "'fizz' / repeat(1, 100px)",
+    },
+    {
+        specified: "'fizz' / repeat(auto-fill, 100px)",
+    },
 ];
 
 grid_test_cases = grid_template_test_cases.concat([
     {
-        specified: "row",
+        specified: "auto-flow / 0",
         gridAutoFlow: "row",
+        gridAutoRows: "auto",
+        gridTemplateColumns: "0px",
     },
     {
-        specified: "dense",
+        specified: "auto-flow dense / 0",
         gridAutoFlow: "row dense",
+        gridAutoRows: "auto",
+        gridTemplateColumns: "0px",
     },
     {
-        specified: "row 40px",
+        specified: "auto-flow 40px / none",
         gridAutoFlow: "row",
         gridAutoRows: "40px",
     },
     {
-        specified: "column 40px",
+        specified: "none / auto-flow 40px",
         gridAutoFlow: "column",
-        gridAutoRows: "40px",
+        gridAutoRows: "auto",
+        gridAutoColumns: "40px",
     },
     {
-        specified: "column dense auto",
+        specified: "0 / auto-flow dense auto",
         gridAutoFlow: "column dense",
         gridAutoRows: "auto",
+        gridAutoColumns: "auto",
+        gridTemplateRows: "0px",
     },
     {
-        specified: "dense row minmax(min-content, 2fr)",
+        specified: "dense auto-flow minmax(min-content, 2fr) / 0",
         gridAutoFlow: "row dense",
         gridAutoRows: "minmax(min-content, 2fr)",
+        gridAutoColumns: "auto",
+        gridTemplateColumns: "0px",
     },
     {
-        specified: "row 40px / 100px",
+        specified: "auto-flow 40px / 100px",
         gridAutoFlow: "row",
         gridAutoRows: "40px",
-        gridAutoColumns: "100px",
+        gridAutoColumns: "auto",
+        gridTemplateColumns: "100px",
     },
 ]);
 

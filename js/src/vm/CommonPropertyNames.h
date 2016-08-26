@@ -225,8 +225,13 @@
     macro(promise, promise, "promise") \
     macro(state, state, "state") \
     macro(pending, pending, "pending") \
+    macro(fulfillHandler, fulfillHandler, "fulfillHandler") \
     macro(fulfilled, fulfilled, "fulfilled") \
+    macro(reject, reject, "reject") \
     macro(rejected, rejected, "rejected") \
+    macro(rejectHandler, rejectHandler, "rejectHandler") \
+    macro(resolve, resolve, "resolve") \
+    macro(incumbentGlobal, incumbentGlobal, "incumbentGlobal") \
     macro(propertyIsEnumerable, propertyIsEnumerable, "propertyIsEnumerable") \
     macro(proto, proto, "__proto__") \
     macro(prototype, prototype, "prototype") \

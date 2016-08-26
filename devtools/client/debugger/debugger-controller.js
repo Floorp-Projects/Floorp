@@ -146,7 +146,7 @@ var Editor = require("devtools/client/sourceeditor/editor");
 var DebuggerEditor = require("devtools/client/sourceeditor/debugger");
 var {Tooltip} = require("devtools/client/shared/widgets/Tooltip");
 var FastListWidget = require("devtools/client/shared/widgets/FastListWidget");
-var {LocalizationHelper, ELLIPSIS} = require("devtools/client/shared/l10n");
+var {LocalizationHelper, ELLIPSIS} = require("devtools/shared/l10n");
 var {PrefsHelper} = require("devtools/client/shared/prefs");
 var {Task} = require("devtools/shared/task");
 
