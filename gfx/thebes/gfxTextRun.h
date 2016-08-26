@@ -395,7 +395,6 @@ public:
                                  PropertyProvider *aProvider,
                                  SuppressBreak aSuppressBreak,
                                  gfxFloat *aTrimWhitespace,
-                                 bool aHangWhitespace,
                                  Metrics *aMetrics,
                                  gfxFont::BoundingBoxType aBoundingBoxType,
                                  DrawTarget* aDrawTargetForTightBoundingBox,
