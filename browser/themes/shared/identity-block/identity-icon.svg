@@ -8,6 +8,7 @@
     <style>
       path {
         fill-rule: evenodd;
+        fill: -moz-fieldtext;
       }
     </style>
   </defs>
