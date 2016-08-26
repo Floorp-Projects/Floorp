@@ -25,36 +25,29 @@
 namespace mozilla {
 namespace dom {
 
-bool
+void
 ThrowExceptionObject(JSContext* aCx, nsIException* aException)
 {
   // See if we really have an Exception.
   nsCOMPtr<Exception> exception = do_QueryInterface(aException);
   if (exception) {
-    return ThrowExceptionObject(aCx, exception);
+    ThrowExceptionObject(aCx, exception);
+    return;
   }
 
   // We only have an nsIException (probably an XPCWrappedJS).  Fall back on old
   // wrapping.
   MOZ_ASSERT(NS_IsMainThread());
 
-  JS::Rooted<JSObject*> glob(aCx, JS::CurrentGlobalOrNull(aCx));
-  if (!glob) {
-    // XXXbz Can this really be null here?
-    return false;
-  }
-
   JS::Rooted<JS::Value> val(aCx);
   if (!WrapObject(aCx, aException, &NS_GET_IID(nsIException), &val)) {
-    return false;
+    return;
   }
 
   JS_SetPendingException(aCx, val);
-
-  return true;
 }
 
-bool
+void
 ThrowExceptionObject(JSContext* aCx, Exception* aException)
 {
   JS::Rooted<JS::Value> thrown(aCx);
@@ -76,33 +69,22 @@ ThrowExceptionObject(JSContext* aCx, Exception* aException)
       nsresult exceptionResult;
       if (NS_SUCCEEDED(aException->GetResult(&exceptionResult)) &&
           double(exceptionResult) == thrown.toNumber()) {
-        // The return value semantics here are a bit weird.  Throw() always
-        // returns false.  But we want to return true if we managed to throw an
-        // exception (otherwise our caller will assume OOM)... which Throw()
-        // always will.  So we just return true unconditionally.
         Throw(aCx, exceptionResult);
-        return true;
+        return;
       }
     }
     if (!JS_WrapValue(aCx, &thrown)) {
-      return false;
+      return;
     }
     JS_SetPendingException(aCx, thrown);
-    return true;
-  }
-
-  JS::Rooted<JSObject*> glob(aCx, JS::CurrentGlobalOrNull(aCx));
-  if (!glob) {
-    // XXXbz Can this actually be null here?
-    return false;
+    return;
   }
 
   if (!GetOrCreateDOMReflector(aCx, aException, &thrown)) {
-    return false;
+    return;
   }
 
   JS_SetPendingException(aCx, thrown);
-  return true;
 }
 
 bool
@@ -132,24 +114,15 @@ Throw(JSContext* aCx, nsresult aRv, const nsACString& aMessage)
     if (NS_SUCCEEDED(existingException->GetResult(&nr)) &&
         aRv == nr) {
       // Reuse the existing exception.
-      if (!ThrowExceptionObject(aCx, existingException)) {
-        // If we weren't able to throw an exception we're
-        // most likely out of memory
-        JS_ReportOutOfMemory(aCx);
-      }
+      ThrowExceptionObject(aCx, existingException);
       return false;
     }
   }
 
   RefPtr<Exception> finalException = CreateException(aCx, aRv, aMessage);
-
   MOZ_ASSERT(finalException);
-  if (!ThrowExceptionObject(aCx, finalException)) {
-    // If we weren't able to throw an exception we're
-    // most likely out of memory
-    JS_ReportOutOfMemory(aCx);
-  }
 
+  ThrowExceptionObject(aCx, finalException);
   return false;
 }
 
