@@ -193,7 +193,7 @@ public:
                                  nsRegion *aInvalidRegion) override;
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap) override;
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsRenderingContext* aCtx) override;
-  NS_DISPLAY_DECL_NAME("RangeFocusRing", TYPE_OUTLINE)
+  NS_DISPLAY_DECL_NAME("RangeFocusRing", TYPE_RANGE_FOCUS_RING)
 };
 
 nsDisplayItemGeometry*
