@@ -16,7 +16,7 @@ add_task(function* () {
     "localhost": "security-state-local",
   };
 
-  let [tab, debuggee, monitor] = yield initNetMonitor(CUSTOM_GET_URL);
+  let [tab, , monitor] = yield initNetMonitor(CUSTOM_GET_URL);
   let { $, EVENTS, NetMonitorView } = monitor.panelWin;
   let { RequestsMenu } = NetMonitorView;
   RequestsMenu.lazyUpdate = false;
@@ -37,7 +37,7 @@ add_task(function* () {
     ok(classes.contains(expectedClass), "Icon contained the correct class name.");
   }
 
-  yield teardown(monitor);
+  return teardown(monitor);
 
   /**
    * A helper that performs requests to
@@ -48,12 +48,18 @@ add_task(function* () {
    * and waits until NetworkMonitor has handled all packets sent by the server.
    */
   function* performRequests() {
+    function executeRequests(count, url) {
+      return ContentTask.spawn(tab.linkedBrowser, {count, url}, function* (args) {
+        content.wrappedJSObject.performRequests(args.count, args.url);
+      });
+    }
+
     // waitForNetworkEvents does not work for requests with security errors as
     // those only emit 9/13 events of a successful request.
     let done = waitForSecurityBrokenNetworkEvent();
 
     info("Requesting a resource that has a certificate problem.");
-    debuggee.performRequests(1, "https://nocert.example.com");
+    yield executeRequests(1, "https://nocert.example.com");
 
     // Wait for the request to complete before firing another request. Otherwise
     // the request with security issues interfere with waitForNetworkEvents.
@@ -64,17 +70,17 @@ add_task(function* () {
     // occasionally hangs waiting for event timings that don't seem to appear...
     done = waitForNetworkEvents(monitor, 1);
     info("Requesting a resource over HTTP.");
-    debuggee.performRequests(1, "http://test1.example.com" + CORS_SJS_PATH);
+    yield executeRequests(1, "http://test1.example.com" + CORS_SJS_PATH);
     yield done;
 
     done = waitForNetworkEvents(monitor, 1);
     info("Requesting a resource over HTTPS.");
-    debuggee.performRequests(1, "https://example.com" + CORS_SJS_PATH);
+    yield executeRequests(1, "https://example.com" + CORS_SJS_PATH);
     yield done;
 
     done = waitForSecurityBrokenNetworkEvent(true);
     info("Requesting a resource over HTTP to localhost.");
-    debuggee.performRequests(1, "http://localhost" + CORS_SJS_PATH);
+    yield executeRequests(1, "http://localhost" + CORS_SJS_PATH);
     yield done;
 
     const expectedCount = Object.keys(EXPECTED_SECURITY_STATES).length;
@@ -101,7 +107,7 @@ add_task(function* () {
     // If the reason for breakage is a network error, then the
     // STARTED_RECEIVING_RESPONSE event does not fire.
     if (networkError) {
-      awaitedEvents.splice(4, 1);
+      awaitedEvents = awaitedEvents.filter(e => e !== "STARTED_RECEIVING_RESPONSE");
     }
 
     let promises = awaitedEvents.map((event) => {

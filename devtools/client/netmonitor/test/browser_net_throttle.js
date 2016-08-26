@@ -14,8 +14,7 @@ function* throttleTest(actuallyThrottle) {
   requestLongerTimeout(2);
 
   let [, , monitor] = yield initNetMonitor(SIMPLE_URL);
-  const {ACTIVITY_TYPE, NetMonitorController, NetMonitorView} =
-        monitor.panelWin;
+  const {ACTIVITY_TYPE, EVENTS, NetMonitorController, NetMonitorView} = monitor.panelWin;
 
   info("Starting test... (actuallyThrottle = " + actuallyThrottle + ")");
 
@@ -42,12 +41,10 @@ function* throttleTest(actuallyThrottle) {
   });
   yield deferred.promise;
 
-  let eventPromise =
-      monitor.panelWin.once(monitor.panelWin.EVENTS.RECEIVED_EVENT_TIMINGS);
-  yield NetMonitorController
-    .triggerActivity(ACTIVITY_TYPE.RELOAD.WITH_CACHE_DISABLED);
-
+  let eventPromise = monitor.panelWin.once(EVENTS.RECEIVED_EVENT_TIMINGS);
+  yield NetMonitorController.triggerActivity(ACTIVITY_TYPE.RELOAD.WITH_CACHE_DISABLED);
   yield eventPromise;
+
   let requestItem = NetMonitorView.RequestsMenu.getItemAtIndex(0);
   const reportedOneSecond = requestItem.attachment.eventTimings.timings.receive > 1000;
   if (actuallyThrottle) {
