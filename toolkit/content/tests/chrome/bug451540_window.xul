@@ -22,6 +22,8 @@
     const SEARCH_TEXT = "minefield";
 
     let gFindBar = null;
+    let gPrefsvc = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
+    const kIteratorTimeout = gPrefsvc.getIntPref("findbar.iteratorTimeout") + 20;
     let gBrowser;
 
     let sendCtrl = true;
@@ -53,8 +55,10 @@
 
       // Turn off highlighting
       let highlightButton = gFindBar.getElement("highlight");
-      if (highlightButton.checked)
+      if (highlightButton.checked) {
         highlightButton.click();
+        yield new Promise(resolve => setTimeout(resolve, kIteratorTimeout));
+      }
 
       // Initialise input
       info(`setting element value to ${aText}`);
@@ -71,6 +75,7 @@
       // Perform search and turn on highlighting
       gFindBar._find();
       highlightButton.click();
+      yield new Promise(resolve => setTimeout(resolve, kIteratorTimeout));
 
       // Move caret to start of element
       info(`focusing element`);
@@ -110,8 +115,10 @@
 
       // Initialize the findbar
       let matchCase = gFindBar.getElement("find-case-sensitive");
-      if (matchCase.checked)
+      if (matchCase.checked) {
         matchCase.doCommand();
+        yield new Promise(resolve => setTimeout(resolve, kIteratorTimeout));
+      }
 
       // First check match has been correctly highlighted
       yield resetForNextTest(elementId);

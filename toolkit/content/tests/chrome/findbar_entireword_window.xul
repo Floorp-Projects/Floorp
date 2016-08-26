@@ -169,21 +169,31 @@
       return gFindBar._startFindDeferred && gFindBar._startFindDeferred.promise;
     }
 
-    function promiseFindResult() {
+    function promiseFindResult(searchString) {
       return new Promise(resolve => {
         let data = {};
         let listener = {
-          onFindResult: maybeResolve.bind(null, "find"),
-          onMatchesCountResult: maybeResolve.bind(null, "matches")
-        };
+          onFindResult: res => {
+            if (searchString && res.searchString != searchString)
+              return;
 
-        function maybeResolve(which, res) {
-          data[which] = res;
-          if (!data.find || !data.matches)
-            return;
-          gFindBar.browser.finder.removeResultListener(listener);
-          resolve(data);
-        }
+            gFindBar.browser.finder.removeResultListener(listener);
+            data.find = res;
+            if (res.result == Ci.nsITypeAheadFind.FIND_NOTFOUND) {
+              data.matches = { total: 0, current: 0 };
+              resolve(data);
+              return;
+            }
+            listener = {
+              onMatchesCountResult: res => {
+                gFindBar.browser.finder.removeResultListener(listener);
+                data.matches = res;
+                resolve(data);
+              }
+            };
+            gFindBar.browser.finder.addResultListener(listener);
+          }
+        };
 
         gFindBar.browser.finder.addResultListener(listener);
       });
@@ -193,11 +203,12 @@
       for (let searchString of Object.getOwnPropertyNames(tests)) {
         gFindBar.clear();
 
-        let promise = promiseFindResult();
+        let promise = promiseFindResult(searchString);
 
         yield enterStringIntoFindField(searchString, false);
 
-        tests[searchString](yield promise);
+        let result = yield promise;
+        tests[searchString](result);
       }
     }
 

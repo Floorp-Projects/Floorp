@@ -8,9 +8,16 @@ this.EXPORTED_SYMBOLS = ["FinderIterator"];
 
 const { interfaces: Ci, classes: Cc, utils: Cu } = Components;
 
+Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
+Cu.import("resource://gre/modules/Timer.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "NLP", "resource://gre/modules/NLP.jsm");
+
+const kDebug = false;
 const kIterationSizeMax = 100;
+const kTimeoutPref = "findbar.iteratorTimeout";
 
 /**
  * FinderIterator singleton. See the documentation for the `start()` method to
@@ -23,6 +30,8 @@ this.FinderIterator = {
   _previousParams: null,
   _previousRanges: [],
   _spawnId: 0,
+  _timeout: Services.prefs.getIntPref(kTimeoutPref),
+  _timer: null,
   ranges: [],
   running: false,
 
@@ -50,30 +59,35 @@ this.FinderIterator = {
    * The returned promise is resolved when 1) the limit is reached, 2) when all
    * the ranges have been found or 3) when `stop()` is called whilst iterating.
    *
-   * @param {Boolean}  options.caseSensitive Whether to search in case sensitive
-   *                                         mode
-   * @param {Boolean}  options.entireWord    Whether to search in entire-word mode
-   * @param {Finder}   options.finder        Currently active Finder instance
-   * @param {Number}   [options.limit]       Limit the amount of results to be
-   *                                         passed back. Optional, defaults to no
-   *                                         limit.
-   * @param {Boolean}  [options.linksOnly]   Only yield ranges that are inside a
-   *                                         hyperlink (used by QuickFind).
-   *                                         Optional, defaults to `false`.
-   * @param {Object}   options.listener    Listener object that implements the
-   *                                       following callback functions:
-   *                                        - onIteratorRangeFound({nsIDOMRange} range);
-   *                                        - onIteratorReset();
-   *                                        - onIteratorRestart({Object} iterParams);
-   *                                        - onIteratorStart({Object} iterParams);
-   * @param {Boolean}  [options.useCache]    Whether to allow results already
-   *                                         present in the cache or demand fresh.
-   *                                         Optional, defaults to `false`.
-   * @param {String}   options.word          Word to search for
+   * @param {Number}  [options.allowDistance] Allowed edit distance between the
+   *                                          current word and `options.word`
+   *                                          when the iterator is already running
+   * @param {Boolean} options.caseSensitive   Whether to search in case sensitive
+   *                                          mode
+   * @param {Boolean} options.entireWord      Whether to search in entire-word mode
+   * @param {Finder}  options.finder          Currently active Finder instance
+   * @param {Number}  [options.limit]         Limit the amount of results to be
+   *                                          passed back. Optional, defaults to no
+   *                                          limit.
+   * @param {Boolean} [options.linksOnly]     Only yield ranges that are inside a
+   *                                          hyperlink (used by QuickFind).
+   *                                          Optional, defaults to `false`.
+   * @param {Object}  options.listener        Listener object that implements the
+   *                                          following callback functions:
+   *                                           - onIteratorRangeFound({nsIDOMRange} range);
+   *                                           - onIteratorReset();
+   *                                           - onIteratorRestart({Object} iterParams);
+   *                                           - onIteratorStart({Object} iterParams);
+   * @param {Boolean} [options.useCache]        Whether to allow results already
+   *                                            present in the cache or demand fresh.
+   *                                            Optional, defaults to `false`.
+   * @param {String}  options.word              Word to search for
    * @return {Promise}
    */
-  start({ caseSensitive, entireWord, finder, limit, linksOnly, listener, useCache, word }) {
+  start({ allowDistance, caseSensitive, entireWord, finder, limit, linksOnly, listener, useCache, word }) {
     // Take care of default values for non-required options.
+    if (typeof allowDistance != "number")
+      allowDistance = 0;
     if (typeof limit != "number")
       limit = -1;
     if (typeof linksOnly != "boolean")
@@ -116,9 +130,16 @@ this.FinderIterator = {
 
     if (this.running) {
       // Double-check if we're not running the iterator with a different set of
-      // parameters, otherwise throw an error with the most common reason.
-      if (!this._areParamsEqual(this._currentParams, iterParams))
-        throw new Error(`We're currently iterating over '${this._currentParams.word}', not '${word}'`);
+      // parameters, otherwise report an error with the most common reason.
+      if (!this._areParamsEqual(this._currentParams, iterParams, allowDistance)) {
+        if (kDebug) {
+          Cu.reportError(`We're currently iterating over '${this._currentParams.word}', not '${word}'\n` +
+            new Error().stack);
+        }
+        this._listeners.delete(listener);
+        resolver();
+        return promise;
+      }
 
       // if we're still running, yield the set we have built up this far.
       this._yieldIntermediateResult(listener, window);
@@ -144,6 +165,11 @@ this.FinderIterator = {
   stop(cachePrevious = false) {
     if (!this.running)
       return;
+
+    if (this._timer) {
+      clearTimeout(this._timer);
+      this._timer = null;
+    }
 
     if (cachePrevious) {
       this._previousRanges = [].concat(this.ranges);
@@ -190,6 +216,11 @@ this.FinderIterator = {
    * If the iterator is running, it will be stopped as soon as possible.
    */
   reset() {
+    if (this._timer) {
+      clearTimeout(this._timer);
+      this._timer = null;
+    }
+
     this._catchingUp.clear();
     this._currentParams = this._previousParams = null;
     this._previousRanges = [];
@@ -266,16 +297,19 @@ this.FinderIterator = {
   /**
    * Internal; compare if two sets of iterator parameters are equivalent.
    *
-   * @param  {Object} paramSet1 First set of params (left hand side)
-   * @param  {Object} paramSet2 Second set of params (right hand side)
+   * @param  {Object} paramSet1       First set of params (left hand side)
+   * @param  {Object} paramSet2       Second set of params (right hand side)
+   * @param  {Number} [allowDistance] Allowed edit distance between the two words.
+   *                                  Optional, defaults to '0', which means 'no
+   *                                  distance'.
    * @return {Boolean}
    */
-  _areParamsEqual(paramSet1, paramSet2) {
+  _areParamsEqual(paramSet1, paramSet2, allowDistance = 0) {
     return (!!paramSet1 && !!paramSet2 &&
       paramSet1.caseSensitive === paramSet2.caseSensitive &&
       paramSet1.entireWord === paramSet2.entireWord &&
       paramSet1.linksOnly === paramSet2.linksOnly &&
-      paramSet1.word == paramSet2.word);
+      NLP.levenshtein(paramSet1.word, paramSet2.word) <= allowDistance);
   },
 
   /**
@@ -384,6 +418,17 @@ this.FinderIterator = {
    * @yield {nsIDOMRange}
    */
   _findAllRanges: Task.async(function* (finder, window, spawnId) {
+    if (this._timeout) {
+      if (this._timer)
+        clearTimeout(this._timer);
+      yield new Promise(resolve => this._timer = setTimeout(resolve, this._timeout));
+      this._timer = null;
+      // During the timeout, we could have gotten the signal to stop iterating.
+      // Make sure we do here.
+      if (!this.running || spawnId !== this._spawnId)
+        return;
+    }
+
     this._notifyListeners("start", this.params);
 
     // First we collect all frames we need to search through, whilst making sure

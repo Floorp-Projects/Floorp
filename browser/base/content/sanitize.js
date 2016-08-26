@@ -539,20 +539,6 @@ Sanitizer.prototype = {
         }
 
         try {
-          // Clear "Never remember passwords for this site", which is not handled by
-          // the permission manager
-          // (Note the login manager doesn't support date ranges yet, and bug
-          //  1058438 is calling for loginSaving stuff to end up in the
-          // permission manager)
-          let hosts = Services.logins.getAllDisabledHosts();
-          for (let host of hosts) {
-            Services.logins.setLoginSavingEnabled(host, true);
-          }
-        } catch (ex) {
-          seenException = ex;
-        }
-
-        try {
           // Clear site security settings - no support for ranges in this
           // interface either, so we clearAll().
           let sss = Cc["@mozilla.org/ssservice;1"]
