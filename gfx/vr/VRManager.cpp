@@ -7,6 +7,7 @@
 #include "VRManager.h"
 #include "VRManagerParent.h"
 #include "gfxVR.h"
+#include "gfxVROpenVR.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/dom/VRDisplay.h"
 #include "mozilla/layers/TextureHost.h"
@@ -51,6 +52,20 @@ VRManager::VRManager()
 
   RefPtr<VRDisplayManager> mgr;
 
+  /**
+   * We must add the VRDisplayManager's to mManagers in a careful order to
+   * ensure that we don't detect the same VRDisplay from multiple API's.
+   *
+   * Oculus comes first, as it will only enumerate Oculus HMD's and is the
+   * native interface for Oculus HMD's.
+   *
+   * OpenvR comes second, as it is the native interface for HTC Vive
+   * which is the most common HMD at this time.
+   *
+   * OSVR will be used if Oculus SDK and OpenVR don't detect any HMDS,
+   * to support everyone else.
+   */
+
 #if defined(XP_WIN)
   // The Oculus runtime is supported only on Windows
   mgr = VRDisplayManagerOculus::Create();
@@ -60,9 +75,15 @@ VRManager::VRManager()
 #endif
 
 #if defined(XP_WIN) || defined(XP_MACOSX) || defined(XP_LINUX)
+  // OpenVR is cross platform compatible
+  mgr = VRDisplayManagerOpenVR::Create();
+  if (mgr) {
+    mManagers.AppendElement(mgr);
+  }
+
   // OSVR is cross platform compatible
   mgr = VRDisplayManagerOSVR::Create();
-  if (mgr){
+  if (mgr) {
       mManagers.AppendElement(mgr);
   }
 #endif
@@ -172,7 +193,15 @@ VRManager::RefreshVRDisplays(bool aMustDispatch)
 {
   nsTArray<RefPtr<gfx::VRDisplayHost> > displays;
 
-  for (uint32_t i = 0; i < mManagers.Length(); ++i) {
+  /** We don't wish to enumerate the same display from multiple managers,
+   * so stop as soon as we get a display.
+   * It is still possible to get multiple displays from a single manager,
+   * but do not wish to mix-and-match for risk of reporting a duplicate.
+   *
+   * XXX - Perhaps there will be a better way to detect duplicate displays
+   *       in the future.
+   */
+  for (uint32_t i = 0; i < mManagers.Length() && displays.Length() == 0; ++i) {
     mManagers[i]->GetHMDs(displays);
   }
 

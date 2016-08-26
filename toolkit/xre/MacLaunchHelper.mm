@@ -149,11 +149,11 @@ void AbortElevatedUpdate()
   mozilla::MacAutoreleasePool pool;
 
   id updateServer = nil;
-  @try {
-    int currTry = 0;
-    const int numRetries = 10; // Number of IPC connection retries before
-                               // giving up.
-    while (currTry < numRetries) {
+  int currTry = 0;
+  const int numRetries = 10; // Number of IPC connection retries before
+                             // giving up.
+  while (currTry < numRetries) {
+    @try {
       updateServer = (id)[NSConnection
         rootProxyForConnectionWithRegisteredName:
           @"org.mozilla.updater.server"
@@ -167,9 +167,11 @@ void AbortElevatedUpdate()
       NSLog(@"Server doesn't exist or doesn't provide correct selectors.");
       sleep(1); // Wait 1 second.
       currTry++;
+    } @catch (NSException* e) {
+      NSLog(@"Encountered exception, retrying: %@: %@", e.name, e.reason);
+      sleep(1); // Wait 1 second.
+      currTry++;
     }
-  } @catch (NSException* e) {
-    NSLog(@"%@: %@", e.name, e.reason);
   }
   NSLog(@"Unable to clean up updater.");
 }

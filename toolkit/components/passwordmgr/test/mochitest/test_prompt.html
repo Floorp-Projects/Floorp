@@ -26,16 +26,26 @@ var isOk;
 // Force parent to not look for tab-modal prompts, as they're not used for auth prompts.
 isTabModal = false;
 
-const Cc_promptFac= Cc["@mozilla.org/passwordmanager/authpromptfactory;1"];
-ok(Cc_promptFac != null, "Access Cc[@mozilla.org/passwordmanager/authpromptfactory;1]");
+let prompterParent = runInParent(() => {
+  const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
+  const promptFac = Cc["@mozilla.org/passwordmanager/authpromptfactory;1"].
+                    getService(Ci.nsIPromptFactory);
 
-const Ci_promptFac = Ci.nsIPromptFactory;
-ok(Ci_promptFac != null, "Access Ci.nsIPromptFactory");
+  Cu.import("resource://gre/modules/Services.jsm");
+  let chromeWin = Services.wm.getMostRecentWindow("navigator:browser");
+  let prompter1 = promptFac.getPrompt(chromeWin, Ci.nsIAuthPrompt);
 
-const promptFac = Cc_promptFac.getService(Ci_promptFac);
-ok(promptFac != null, "promptFac getService()");
+  addMessageListener("proxyPrompter", function onMessage(msg) {
+    let rv = prompter1[msg.methodName](...msg.args);
+    return {
+      rv,
+      // Send the args back to content so out/inout args can be checked.
+      args: msg.args,
+    };
+  });
+});
 
-var prompter1 = promptFac.getPrompt(window, Ci.nsIAuthPrompt);
+let prompter1 = new PrompterProxy(prompterParent);
 
 const defaultTitle = "the title";
 const defaultMsg = "the message";
@@ -84,7 +94,7 @@ add_task(function* setup() {
   runInParent(initLogins);
 });
 
-add_task(function* test_1() {
+add_task(function* test_prompt_accept() {
   state = {
     msg         : "the message",
     title       : "the title",
@@ -113,7 +123,7 @@ add_task(function* test_1() {
   is(result.value, "xyz", "Checking prompt() returned value");
 });
 
-add_task(function* test_2() {
+add_task(function* test_prompt_cancel() {
   state = {
     msg         : "the message",
     title       : "the title",
@@ -139,7 +149,7 @@ add_task(function* test_2() {
   ok(!isOk, "Checking dialog return value (cancel)");
 });
 
-add_task(function* test_10() {
+add_task(function* test_promptPassword_defaultAccept() {
   // Default password provided, existing logins are ignored.
   state = {
     msg         : "the message",
@@ -169,7 +179,7 @@ add_task(function* test_10() {
   is(pword.value, "secret", "Checking returned password");
 });
 
-add_task(function* test_11() {
+add_task(function* test_promptPassword_defaultCancel() {
   // Default password provided, existing logins are ignored.
   state = {
     msg         : "the message",
@@ -197,7 +207,7 @@ add_task(function* test_11() {
   ok(!isOk, "Checking dialog return value (cancel)");
 });
 
-add_task(function* test_12() {
+add_task(function* test_promptPassword_emptyAccept() {
   // No default password provided, realm does not match existing login.
   state = {
     msg         : "the message",
@@ -227,7 +237,7 @@ add_task(function* test_12() {
   is(pword.value, "secret", "Checking returned password");
 });
 
-add_task(function* test_13() {
+add_task(function* test_promptPassword_saved() {
   // No default password provided, matching login is returned w/o prompting.
   pword.value = null;
   isOk = prompter1.promptPassword(defaultTitle, defaultMsg, "http://example.com",
@@ -236,7 +246,7 @@ add_task(function* test_13() {
   is(pword.value, "examplepass", "Checking returned password");
 });
 
-add_task(function* test_14() {
+add_task(function* test_promptPassword_noMatchingPasswordForEmptyUN() {
   // No default password provided, none of the logins from this host are
   // password-only so the user is prompted.
   state = {
@@ -267,7 +277,7 @@ add_task(function* test_14() {
   is(pword.value, "secret", "Checking returned password");
 });
 
-add_task(function* test_15() {
+add_task(function* test_promptPassword_matchingPWForUN() {
   // No default password provided, matching login is returned w/o prompting.
   pword.value = null;
   isOk = prompter1.promptPassword(defaultTitle, defaultMsg, "http://user1name@example2.com",
@@ -276,7 +286,7 @@ add_task(function* test_15() {
   is(pword.value, "user1pass", "Checking returned password");
 });
 
-add_task(function* test_16() {
+add_task(function* test_promptPassword_matchingPWForUN2() {
   // No default password provided, matching login is returned w/o prompting.
   pword.value = null;
   isOk = prompter1.promptPassword(defaultTitle, defaultMsg, "http://user2name@example2.com",
@@ -285,7 +295,7 @@ add_task(function* test_16() {
   is(pword.value, "user2pass", "Checking returned password");
 });
 
-add_task(function* test_17() {
+add_task(function* test_promptPassword_matchingPWForUN3() {
   // No default password provided, matching login is returned w/o prompting.
   pword.value = null;
   isOk = prompter1.promptPassword(defaultTitle, defaultMsg, "http://user3%2Ename%40host@example2.com",
@@ -294,7 +304,7 @@ add_task(function* test_17() {
   is(pword.value, "user3pass", "Checking returned password");
 });
 
-add_task(function* test_18() {
+add_task(function* test_promptPassword_extraAt() {
   // No default password provided, matching login is returned w/o prompting.
   pword.value = null;
   isOk = prompter1.promptPassword(defaultTitle, defaultMsg, "http://100@beef@example2.com",
@@ -303,7 +313,7 @@ add_task(function* test_18() {
   is(pword.value, "user3pass", "Checking returned password");
 });
 
-add_task(function* test_19() {
+add_task(function* test_promptPassword_usernameEncoding() {
   // No default password provided, matching login is returned w/o prompting.
   pword.value = null;
   isOk = prompter1.promptPassword(defaultTitle, defaultMsg, "http://100%25beef@example2.com",
@@ -314,7 +324,7 @@ add_task(function* test_19() {
   // XXX test saving a password with  Ci.nsIAuthPrompt.SAVE_PASSWORD_PERMANENTLY
 });
 
-add_task(function* test_30() {
+add_task(function* test_promptPassword_realm() {
   // We don't pre-fill or save for NS_GetAuthKey-generated realms, but we should still prompt
   state = {
     msg         : "the message",
@@ -344,7 +354,7 @@ add_task(function* test_30() {
   is(pword.value, "fill2pass", "Checking returned password");
 });
 
-add_task(function* test_31() {
+add_task(function* test_promptPassword_realm2() {
   // We don't pre-fill or save for NS_GetAuthKey-generated realms, but we should still prompt
   state = {
     msg         : "the message",
@@ -374,7 +384,7 @@ add_task(function* test_31() {
   is(pword.value, "fill2pass", "Checking returned password");
 });
 
-add_task(function* test_100() {
+add_task(function* test_promptUsernameAndPassword_accept() {
   state = {
     msg         : "the message",
     title       : "the title",
@@ -399,14 +409,14 @@ add_task(function* test_100() {
   pword.value = "inpass";
   promptDone = handlePrompt(state, action);
   isOk = prompter1.promptUsernameAndPassword(defaultTitle, defaultMsg, "http://nonexample.com",
-                                  Ci.nsIAuthPrompt.SAVE_PASSWORD_NEVER, uname, pword);
+                                             Ci.nsIAuthPrompt.SAVE_PASSWORD_NEVER, uname, pword);
   yield promptDone;
   ok(isOk, "Checking dialog return value (accept)");
   is(uname.value, "outuser", "Checking returned username");
   is(pword.value, "outpass", "Checking returned password");
 });
 
-add_task(function* test_101() {
+add_task(function* test_promptUsernameAndPassword_cancel() {
   state = {
     msg         : "the message",
     title       : "the title",
@@ -429,12 +439,12 @@ add_task(function* test_101() {
   pword.value = "inpass";
   promptDone = handlePrompt(state, action);
   isOk = prompter1.promptUsernameAndPassword(defaultTitle, defaultMsg, "http://nonexample.com",
-                                  Ci.nsIAuthPrompt.SAVE_PASSWORD_NEVER, uname, pword);
+                                             Ci.nsIAuthPrompt.SAVE_PASSWORD_NEVER, uname, pword);
   yield promptDone;
   ok(!isOk, "Checking dialog return value (cancel)");
 });
 
-add_task(function* test_102() {
+add_task(function* test_promptUsernameAndPassword_autofill() {
   // test filling in existing password-only login
   state = {
     msg         : "the message",
@@ -458,14 +468,14 @@ add_task(function* test_102() {
   pword.value = null;
   promptDone = handlePrompt(state, action);
   isOk = prompter1.promptUsernameAndPassword(defaultTitle, defaultMsg, "http://example.com",
-                                  Ci.nsIAuthPrompt.SAVE_PASSWORD_PERMANENTLY, uname, pword);
+                                             Ci.nsIAuthPrompt.SAVE_PASSWORD_PERMANENTLY, uname, pword);
   yield promptDone;
   ok(isOk, "Checking dialog return value (accept)");
   is(uname.value, "", "Checking returned username");
   is(pword.value, "examplepass", "Checking returned password");
 });
 
-add_task(function* test_103() {
+add_task(function* test_promptUsernameAndPassword_multipleExisting() {
   // test filling in existing login (undetermined from multiple selection)
   // user2name/user2pass would also be valid to fill here.
   state = {
@@ -490,14 +500,14 @@ add_task(function* test_103() {
   pword.value = null;
   promptDone = handlePrompt(state, action);
   isOk = prompter1.promptUsernameAndPassword(defaultTitle, defaultMsg, "http://example2.com",
-                                  Ci.nsIAuthPrompt.SAVE_PASSWORD_PERMANENTLY, uname, pword);
+                                             Ci.nsIAuthPrompt.SAVE_PASSWORD_PERMANENTLY, uname, pword);
   yield promptDone;
   ok(isOk, "Checking dialog return value (accept)");
   ok(uname.value == "user1name" || uname.value == "user2name", "Checking returned username");
   ok(pword.value == "user1pass" || uname.value == "user2pass", "Checking returned password");
 });
 
-add_task(function* test_104() {
+add_task(function* test_promptUsernameAndPassword_multipleExisting1() {
   // test filling in existing login (user1 from multiple selection)
   state = {
     msg         : "the message",
@@ -521,14 +531,14 @@ add_task(function* test_104() {
   pword.value = null;
   promptDone = handlePrompt(state, action);
   isOk = prompter1.promptUsernameAndPassword(defaultTitle, defaultMsg, "http://example2.com",
-                                  Ci.nsIAuthPrompt.SAVE_PASSWORD_PERMANENTLY, uname, pword);
+                                             Ci.nsIAuthPrompt.SAVE_PASSWORD_PERMANENTLY, uname, pword);
   yield promptDone;
   ok(isOk, "Checking dialog return value (accept)");
   is(uname.value, "user1name", "Checking returned username");
   is(pword.value, "user1pass", "Checking returned password");
 });
 
-add_task(function* test_105() {
+add_task(function* test_promptUsernameAndPassword_multipleExisting2() {
   // test filling in existing login (user2 from multiple selection)
   state = {
     msg         : "the message",
@@ -552,14 +562,14 @@ add_task(function* test_105() {
   pword.value = null;
   promptDone = handlePrompt(state, action);
   isOk = prompter1.promptUsernameAndPassword(defaultTitle, defaultMsg, "http://example2.com",
-                                  Ci.nsIAuthPrompt.SAVE_PASSWORD_PERMANENTLY, uname, pword);
+                                             Ci.nsIAuthPrompt.SAVE_PASSWORD_PERMANENTLY, uname, pword);
   yield promptDone;
   ok(isOk, "Checking dialog return value (accept)");
   is(uname.value, "user2name", "Checking returned username");
   is(pword.value, "user2pass", "Checking returned password");
 });
 
-add_task(function* test_106() {
+add_task(function* test_promptUsernameAndPassword_passwordChange() {
   // test changing password
   state = {
     msg         : "the message",
@@ -584,14 +594,14 @@ add_task(function* test_106() {
   pword.value = null;
   promptDone = handlePrompt(state, action);
   isOk = prompter1.promptUsernameAndPassword(defaultTitle, defaultMsg, "http://example2.com",
-                                  Ci.nsIAuthPrompt.SAVE_PASSWORD_PERMANENTLY, uname, pword);
+                                             Ci.nsIAuthPrompt.SAVE_PASSWORD_PERMANENTLY, uname, pword);
   yield promptDone;
   ok(isOk, "Checking dialog return value (accept)");
   is(uname.value, "user2name", "Checking returned username");
   is(pword.value, "NEWuser2pass", "Checking returned password");
 });
 
-add_task(function* test_107() {
+add_task(function* test_promptUsernameAndPassword_changePasswordBack() {
   // test changing password (back to original value)
   state = {
     msg         : "the message",
@@ -616,14 +626,14 @@ add_task(function* test_107() {
   pword.value = null;
   promptDone = handlePrompt(state, action);
   isOk = prompter1.promptUsernameAndPassword(defaultTitle, defaultMsg, "http://example2.com",
-                                  Ci.nsIAuthPrompt.SAVE_PASSWORD_PERMANENTLY, uname, pword);
+                                             Ci.nsIAuthPrompt.SAVE_PASSWORD_PERMANENTLY, uname, pword);
   yield promptDone;
   ok(isOk, "Checking dialog return value (accept)");
   is(uname.value, "user2name", "Checking returned username");
   is(pword.value, "user2pass", "Checking returned password");
 });
 
-add_task(function* test_120() {
+add_task(function* test_promptUsernameAndPassword_realm() {
   // We don't pre-fill or save for NS_GetAuthKey-generated realms, but we should still prompt
   state = {
     msg         : "the message",
@@ -649,14 +659,14 @@ add_task(function* test_120() {
   pword.value = null;
   promptDone = handlePrompt(state, action);
   isOk = prompter1.promptUsernameAndPassword(defaultTitle, defaultMsg, "example2.com:80 (somerealm)",
-                                  Ci.nsIAuthPrompt.SAVE_PASSWORD_NEVER, uname, pword);
+                                             Ci.nsIAuthPrompt.SAVE_PASSWORD_NEVER, uname, pword);
   yield promptDone;
   ok(isOk, "Checking dialog return value (accept)");
   is(uname.value, "fill2user", "Checking returned username");
   is(pword.value, "fill2pass", "Checking returned password");
 });
 
-add_task(function* test_121() {
+add_task(function* test_promptUsernameAndPassword_realm2() {
   // We don't pre-fill or save for NS_GetAuthKey-generated realms, but we should still prompt
   state = {
     msg         : "the message",
@@ -682,7 +692,7 @@ add_task(function* test_121() {
   pword.value = null;
   promptDone = handlePrompt(state, action);
   isOk = prompter1.promptUsernameAndPassword(defaultTitle, defaultMsg, "example2.com:80 (somerealm)",
-                                  Ci.nsIAuthPrompt.SAVE_PASSWORD_PERMANENTLY, uname, pword);
+                                             Ci.nsIAuthPrompt.SAVE_PASSWORD_PERMANENTLY, uname, pword);
   yield promptDone;
   ok(isOk, "Checking dialog return value (accept)");
   is(uname.value, "fill2user", "Checking returned username");

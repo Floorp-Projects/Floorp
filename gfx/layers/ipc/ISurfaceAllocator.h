@@ -169,14 +169,6 @@ protected:
   bool mAboutToSendAsyncMessages = false;
 };
 
-/// Specific to the CompositorBridgeParent/CrossProcessCompositorBridgeParent.
-class CompositorBridgeParentIPCAllocator : public HostIPCAllocator
-{
-public:
-  CompositorBridgeParentIPCAllocator() {}
-  virtual void NotifyNotUsed(PTextureParent* aTexture, uint64_t aTransactionId) override;
-};
-
 /// An allocator can provide shared memory.
 ///
 /// The allocated shmems can be deallocated on either process, as long as they

@@ -128,8 +128,11 @@ CommonDialog.prototype = {
             this.setLabelForNode(this.ui.button0, this.args.button0Label);
 
         // display the main text
-        // Bug 317334 - crop string length as a workaround.
-        let croppedMessage = this.args.text.substr(0, 10000);
+        let croppedMessage = "";
+        if (this.args.text) {
+            // Bug 317334 - crop string length as a workaround.
+            croppedMessage = this.args.text.substr(0, 10000);
+        }
         let infoBody = this.ui.infoBody;
         infoBody.appendChild(infoBody.ownerDocument.createTextNode(croppedMessage));
 

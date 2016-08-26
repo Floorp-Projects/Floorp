@@ -1587,13 +1587,19 @@ js::StartOffThreadCompression(ExclusiveContext* cx, SourceCompressionTask* task)
 bool
 js::StartPromiseTask(JSContext* cx, UniquePtr<PromiseTask> task)
 {
+    // If we fail to start, by interface contract, it is because the JSContext
+    // is in the process of shutting down. Since promise handlers are not
+    // necessarily run while shutting down *anyway*, we simply ignore the error.
+    // This is symmetric with the handling of errors in finishAsyncTaskCallback
+    // which, since it is off the JSContext's owner thread, cannot report an
+    // error anyway.
+    if (!cx->startAsyncTaskCallback(cx, task.get())) {
+        MOZ_ASSERT(!cx->isExceptionPending());
+        return true;
+    }
+
     // Per interface contract, after startAsyncTaskCallback succeeds,
     // finishAsyncTaskCallback *must* be called on all paths.
-
-    if (!cx->startAsyncTaskCallback(cx, task.get())) {
-        ReportOutOfMemory(cx);
-        return false;
-    }
 
     AutoLockHelperThreadState lock;
 
