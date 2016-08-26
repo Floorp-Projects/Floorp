@@ -40,7 +40,6 @@
       newStream.addTrack(videoTrack);
       is(newStream.getTrackById(videoTrack.id), videoTrack,
          "getTrackByid with matching id should return the track");
-      [audioTrack, videoTrack].forEach(t => t.stop());
     });
   });
 
