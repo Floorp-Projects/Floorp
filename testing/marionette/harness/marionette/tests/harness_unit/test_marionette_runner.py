@@ -6,7 +6,7 @@ import pytest
 from mock import Mock, patch, mock_open, sentinel, DEFAULT
 
 from marionette.runtests import MarionetteTestRunner
-from manifestparser import TestManifest
+import manifestparser
 
 
 @pytest.fixture
@@ -95,7 +95,8 @@ def manifest_fixture(request):
             self.filepath = "/path/to/fake/manifest.ini"
             self.n_disabled = len([t for t in tests if 'disabled' in t])
             self.n_enabled = len(tests) - self.n_disabled
-            mock_manifest = Mock(spec=TestManifest, active_tests=Mock(return_value=tests))
+            mock_manifest = Mock(spec=manifestparser.TestManifest,
+                                 active_tests=Mock(return_value=tests))
             self.mock_manifest = Mock(return_value=mock_manifest)
             self.__repr__ = lambda: "<ManifestFixture {}>".format(name)
 
