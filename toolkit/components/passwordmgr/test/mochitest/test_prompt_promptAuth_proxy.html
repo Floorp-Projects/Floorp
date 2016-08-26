@@ -257,12 +257,6 @@ add_task(function* test_autologin_private() {
   // XXX check for and kill popup notification??
   // XXX check for checkbox / checkstate on old prompts?
   // XXX check NTLM domain stuff
-
-  // clear plain HTTP auth sessions before the test, to allow
-  // running them more than once.
-  var authMgr = Cc['@mozilla.org/network/http-auth-manager;1'].
-                getService(Ci.nsIHttpAuthManager);
-  authMgr.clearAll();
 });
 </script>
 </pre>
