@@ -3277,7 +3277,7 @@ FlexboxAxisTracker::InitAxesFromLegacyProps(
 
   // Legacy flexbox can use "-webkit-box-direction: reverse" to reverse the
   // main axis (so it runs in the reverse direction of the inline axis):
-  if (styleXUL->mBoxDirection == NS_STYLE_BOX_DIRECTION_REVERSE) {
+  if (styleXUL->mBoxDirection == StyleBoxDirection::Reverse) {
     mMainAxis = GetReverseAxis(mMainAxis);
     mIsMainAxisReversed = true;
   } else {
