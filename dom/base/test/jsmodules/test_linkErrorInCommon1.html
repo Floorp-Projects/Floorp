@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<title>Test handling of a link error in a common module</title>
+<script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+<script>
+  var runCount = 0;
+  var hadSyntaxError = false;
+
+  SimpleTest.waitForExplicitFinish();
+  window.onerror = handleError;
+
+  function handleError(message, url, line, column, error) {
+    if (error instanceof SyntaxError) {
+      hadSyntaxError = true;
+    }
+  }
+
+  function testError() {
+    ok(runCount == 0, 'Check no modules were executed');
+    ok(hadSyntaxError, 'Check that an error was reported');
+    SimpleTest.finish();
+  }
+</script>
+<script type="module">
+  import { missing } from "./module_simple1.js";
+  runCount++;
+</script>
+<script type="module">
+  import { missing } from "./module_simple1.js";
+  runCount++;
+</script>
+<body onload='testError()'></body>
