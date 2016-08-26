@@ -831,7 +831,7 @@ nsStyleXUL::nsStyleXUL(StyleStructContext aContext)
   , mBoxAlign(StyleBoxAlign::Stretch)
   , mBoxDirection(NS_STYLE_BOX_DIRECTION_NORMAL)
   , mBoxOrient(NS_STYLE_BOX_ORIENT_HORIZONTAL)
-  , mBoxPack(NS_STYLE_BOX_PACK_START)
+  , mBoxPack(StyleBoxPack::Start)
   , mStretchStack(true)
 {
   MOZ_COUNT_CTOR(nsStyleXUL);
