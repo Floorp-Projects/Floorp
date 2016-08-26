@@ -763,6 +763,8 @@ js::intl_Collator(JSContext* cx, unsigned argc, Value* vp)
 static void
 collator_finalize(FreeOp* fop, JSObject* obj)
 {
+    MOZ_ASSERT(fop->onMainThread());
+
     // This is-undefined check shouldn't be necessary, but for internal
     // brokenness in object allocation code.  For the moment, hack around it by
     // explicitly guarding against the possibility of the reserved slot not
@@ -1254,6 +1256,8 @@ js::intl_NumberFormat(JSContext* cx, unsigned argc, Value* vp)
 static void
 numberFormat_finalize(FreeOp* fop, JSObject* obj)
 {
+    MOZ_ASSERT(fop->onMainThread());
+
     // This is-undefined check shouldn't be necessary, but for internal
     // brokenness in object allocation code.  For the moment, hack around it by
     // explicitly guarding against the possibility of the reserved slot not
@@ -1719,6 +1723,8 @@ js::intl_DateTimeFormat(JSContext* cx, unsigned argc, Value* vp)
 static void
 dateTimeFormat_finalize(FreeOp* fop, JSObject* obj)
 {
+    MOZ_ASSERT(fop->onMainThread());
+
     // This is-undefined check shouldn't be necessary, but for internal
     // brokenness in object allocation code.  For the moment, hack around it by
     // explicitly guarding against the possibility of the reserved slot not

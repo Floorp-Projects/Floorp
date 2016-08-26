@@ -23,10 +23,6 @@ Services.scriptloader.loadSubScript(
 var sharedUrl = SimpleTest.getTestFileURL("loader_common.js");
 Services.scriptloader.loadSubScript(sharedUrl, this);
 
-var ChromeUtils = {};
-Services.scriptloader.loadSubScript(
-  "chrome://mochikit/content/tests/SimpleTest/ChromeUtils.js", ChromeUtils);
-
 var parentScript = SpecialPowers.loadChromeScript(
                                  SimpleTest.getTestFileURL("loader_parent.js"));
 

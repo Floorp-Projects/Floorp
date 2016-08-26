@@ -204,9 +204,6 @@ mobile/android/chrome/content/about.js
 mobile/android/installer/
 mobile/android/locales/
 
-# Pretty sure we're disabling this one anyway
-mobile/android/modules/ContactService.jsm
-
 # Non-standard `(catch ex if ...)`
 mobile/android/components/Snippets.js
 

@@ -169,11 +169,13 @@ class HostObjectURLsReporter final : public nsIMemoryReporter
   NS_IMETHOD CollectReports(nsIHandleReportCallback* aHandleReport,
                             nsISupports* aData, bool aAnonymize) override
   {
-    return MOZ_COLLECT_REPORT(
+    MOZ_COLLECT_REPORT(
       "host-object-urls", KIND_OTHER, UNITS_COUNT,
       gDataTable ? gDataTable->Count() : 0,
       "The number of host objects stored for access via URLs "
       "(e.g. blobs passed to URL.createObjectURL).");
+
+    return NS_OK;
   }
 };
 

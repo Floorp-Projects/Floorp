@@ -176,7 +176,7 @@ function updateTitleMainAndFooter(aTitleNote, aMsg, aFooterAction, aClassName)
   switch (aFooterAction) {
    case HIDE_FOOTER:   gFooter.classList.add('hidden');    break;
    case SHOW_FOOTER:   gFooter.classList.remove('hidden'); break;
-   default: assertInput(false, "bad footer action in updateTitleMainAndFooter");
+   default: assert(false, "bad footer action in updateTitleMainAndFooter");
   }
   return msgElement;
 }

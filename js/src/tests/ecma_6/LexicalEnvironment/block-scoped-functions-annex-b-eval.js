@@ -35,4 +35,17 @@ function h() {
 
 h()();
 
+function f2() {
+  // Should not throw, just simply not synthesize an Annex B var in the eval
+  // because there's an outer const.
+  eval("{ function a() {} }");
+  const a = 1;
+}
+
+function f3() {
+  // As above, but for let.
+  eval("{ function a() {} }");
+  let a;
+}
+
 reportCompare(log, "outer-geval-gwith-gtruefalseq");

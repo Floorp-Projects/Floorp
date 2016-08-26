@@ -4,8 +4,7 @@ function f1(a=g()) {
   function g() {
   }
 }
-// FIXME Bug 1022967 - ES6 requires a ReferenceError for this case.
-assertThrowsInstanceOf(f1, TypeError);
+assertThrowsInstanceOf(f1, ReferenceError);
 
 function f2(a=g()) {
   function g() {

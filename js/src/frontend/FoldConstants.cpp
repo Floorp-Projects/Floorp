@@ -73,9 +73,6 @@ ContainsHoistedDeclaration(ExclusiveContext* cx, ParseNode* node, bool* result)
         return true;
 
       // Non-global lexical declarations are block-scoped (ergo not hoistable).
-      // (Global lexical declarations, in addition to being irrelevant here as
-      // ContainsHoistedDeclaration is only used on the arms of an |if|
-      // statement, are handled by PNK_VAR.)
       case PNK_LET:
       case PNK_CONST:
         MOZ_ASSERT(node->isArity(PN_LIST));
@@ -89,19 +86,13 @@ ContainsHoistedDeclaration(ExclusiveContext* cx, ParseNode* node, bool* result)
         *result = false;
         return true;
 
-      // ContainsHoistedDeclaration is only called on nested nodes, so any
-      // instance of this can't be function statements at body level.  In
-      // SpiderMonkey, a binding induced by a function statement is added when
-      // the function statement is evaluated.  Thus any declaration introduced
-      // by a function statement, as observed by this function, isn't a hoisted
-      // declaration.
+      // Function declarations *can* be hoisted declarations.  But in the
+      // magical world of the rewritten frontend, the declaration necessitated
+      // by a nested function statement, not at body level, doesn't require
+      // that we preserve an unreachable function declaration node against
+      // dead-code removal.
       case PNK_FUNCTION:
         MOZ_ASSERT(node->isArity(PN_CODE));
-        *result = false;
-        return true;
-
-      case PNK_ANNEXB_FUNCTION:
-        MOZ_ASSERT(node->isArity(PN_BINARY));
         *result = false;
         return true;
 
@@ -294,21 +285,11 @@ ContainsHoistedDeclaration(ExclusiveContext* cx, ParseNode* node, bool* result)
         return ContainsHoistedDeclaration(cx, loopBody, result);
       }
 
-      case PNK_LETBLOCK: {
-        MOZ_ASSERT(node->isArity(PN_BINARY));
-        MOZ_ASSERT(node->pn_right->isKind(PNK_LEXICALSCOPE));
-        MOZ_ASSERT(node->pn_left->isKind(PNK_LET) ||
-                   (node->pn_left->isKind(PNK_CONST) && node->pn_right->pn_expr->isKind(PNK_FOR)),
-                   "a let-block's left half is its declarations: ordinarily a PNK_LET node but "
-                   "PNK_CONST in the weird case of |for (const x ...)|");
-        return ContainsHoistedDeclaration(cx, node->pn_right, result);
-      }
-
       case PNK_LEXICALSCOPE: {
-        MOZ_ASSERT(node->isArity(PN_NAME));
+        MOZ_ASSERT(node->isArity(PN_SCOPE));
         ParseNode* expr = node->pn_expr;
 
-        if (expr->isKind(PNK_FOR))
+        if (expr->isKind(PNK_FOR) || expr->isKind(PNK_FUNCTION))
             return ContainsHoistedDeclaration(cx, expr, result);
 
         MOZ_ASSERT(expr->isKind(PNK_STATEMENTLIST));
@@ -403,7 +384,7 @@ ContainsHoistedDeclaration(ExclusiveContext* cx, ParseNode* node, bool* result)
       case PNK_GENERATOR:
       case PNK_GENEXP:
       case PNK_ARRAYCOMP:
-      case PNK_ARGSBODY:
+      case PNK_PARAMSBODY:
       case PNK_CATCHLIST:
       case PNK_CATCH:
       case PNK_FORIN:
@@ -901,28 +882,6 @@ FoldConditional(ExclusiveContext* cx, ParseNode** nodePtr, Parser<FullParseHandl
             discarded = ifTruthy;
         }
 
-        // Don't decay the overall expression if the replacement node is a
-        // a definition.
-        //
-        // The rationale for this pre-existing restriction is unclear; if you
-        // discover it, please document it!  Speculation is that it has
-        // something to do with constant-folding something like:
-        //
-        //   true ? function f() {} : false;
-        //
-        // into
-        //
-        //   function f() {}
-        //
-        // and worrying this might convert a function *expression* into a
-        // function *statement* that defined its name early.  But function
-        // expressions aren't isDefn(), so this can't be it.
-        //
-        // This lack of explanation is tolerated only because failing to
-        // optimize *should* always be okay.
-        if (replacement->isDefn())
-            continue;
-
         // Otherwise perform a replacement.  This invalidates |nextNode|, so
         // reset it (if the replacement requires folding) or clear it (if
         // |ifFalsy| is dead code) as needed.
@@ -1018,15 +977,6 @@ FoldIf(ExclusiveContext* cx, ParseNode** nodePtr, Parser<FullParseHandler>& pars
             node->setArity(PN_LIST);
             node->makeEmpty();
         } else {
-            // As with PNK_CONDITIONAL, replace only if the replacement isn't a
-            // definition.  As there, the rationale for this restriction is
-            // unclear and undocumented: tolerated only because a failure to
-            // optimize *should* be safe.  The best guess is that this test was
-            // an incomplete, buggy version of the |ContainsHoistedDeclaration|
-            // test.
-            if (replacement->isDefn())
-                continue;
-
             // Replacement invalidates |nextNode|, so reset it (if the
             // replacement requires folding) or clear it (if |alternative|
             // is dead code) as needed.
@@ -1063,7 +1013,7 @@ FoldFunction(ExclusiveContext* cx, ParseNode* node, Parser<FullParseHandler>& pa
 
     // Note: pn_body is null for lazily-parsed functions.
     if (ParseNode*& functionBody = node->pn_body) {
-        if (!Fold(cx, &functionBody, parser, node->pn_funbox->inGenexpLambda))
+        if (!Fold(cx, &functionBody, parser, node->pn_funbox->isGenexpLambda))
             return false;
     }
 
@@ -1611,13 +1561,9 @@ FoldForInOrOf(ExclusiveContext* cx, ParseNode* node, Parser<FullParseHandler>& p
 {
     MOZ_ASSERT(node->isKind(PNK_FORIN) || node->isKind(PNK_FOROF));
     MOZ_ASSERT(node->isArity(PN_TERNARY));
+    MOZ_ASSERT(!node->pn_kid2);
 
-    if (ParseNode*& decl = node->pn_kid1) {
-        if (!Fold(cx, &decl, parser, inGenexpLambda))
-            return false;
-    }
-
-    return Fold(cx, &node->pn_kid2, parser, inGenexpLambda) &&
+    return Fold(cx, &node->pn_kid1, parser, inGenexpLambda) &&
            Fold(cx, &node->pn_kid3, parser, inGenexpLambda);
 }
 
@@ -1676,12 +1622,6 @@ FoldName(ExclusiveContext* cx, ParseNode* node, Parser<FullParseHandler>& parser
     MOZ_ASSERT(node->isKind(PNK_NAME));
     MOZ_ASSERT(node->isArity(PN_NAME));
 
-    // Name nodes that are used, are in use-definition lists.  Such nodes store
-    // name analysis information and contain nothing foldable.
-    if (node->isUsed())
-        return true;
-
-    // Other names might have a foldable expression in pn_expr.
     if (!node->pn_expr)
         return true;
 
@@ -1719,7 +1659,7 @@ Fold(ExclusiveContext* cx, ParseNode** pnp, Parser<FullParseHandler>& parser, bo
       case PNK_TYPEOFNAME:
         MOZ_ASSERT(pn->isArity(PN_UNARY));
         MOZ_ASSERT(pn->pn_kid->isKind(PNK_NAME));
-        MOZ_ASSERT(!pn->pn_kid->maybeExpr());
+        MOZ_ASSERT(!pn->pn_kid->expr());
         return true;
 
       case PNK_TYPEOFEXPR:
@@ -1788,17 +1728,6 @@ Fold(ExclusiveContext* cx, ParseNode** pnp, Parser<FullParseHandler>& parser, bo
       case PNK_FUNCTION:
         return FoldFunction(cx, pn, parser, inGenexpLambda);
 
-      case PNK_ANNEXB_FUNCTION:
-        // XXXshu NOP check used only for phasing in block-scope function
-        // XXXshu early errors.
-        // XXXshu
-        // XXXshu Back out when major version >= 50. See [1].
-        // XXXshu
-        // XXXshu [1] https://bugzilla.mozilla.org/show_bug.cgi?id=1235590#c10
-        if (pn->pn_left->isKind(PNK_NOP))
-            return true;
-        return FoldFunction(cx, pn->pn_left, parser, inGenexpLambda);
-
       case PNK_MODULE:
         return FoldModule(cx, pn, parser);
 
@@ -1841,7 +1770,7 @@ Fold(ExclusiveContext* cx, ParseNode** pnp, Parser<FullParseHandler>& parser, bo
       case PNK_VAR:
       case PNK_CONST:
       case PNK_LET:
-      case PNK_ARGSBODY:
+      case PNK_PARAMSBODY:
       case PNK_CALLSITEOBJ:
       case PNK_EXPORT_SPEC_LIST:
       case PNK_IMPORT_SPEC_LIST:
@@ -1851,12 +1780,11 @@ Fold(ExclusiveContext* cx, ParseNode** pnp, Parser<FullParseHandler>& parser, bo
       case PNK_YIELD_STAR:
         MOZ_ASSERT(pn->isArity(PN_BINARY));
         MOZ_ASSERT(pn->pn_right->isKind(PNK_NAME));
-        MOZ_ASSERT(!pn->pn_right->isAssigned());
         return Fold(cx, &pn->pn_left, parser, inGenexpLambda);
 
       case PNK_YIELD:
         MOZ_ASSERT(pn->isArity(PN_BINARY));
-        MOZ_ASSERT((pn->pn_right->isKind(PNK_NAME) && !pn->pn_right->isAssigned()) ||
+        MOZ_ASSERT(pn->pn_right->isKind(PNK_NAME) ||
                    (pn->pn_right->isKind(PNK_ASSIGN) &&
                     pn->pn_right->pn_left->isKind(PNK_NAME) &&
                     pn->pn_right->pn_right->isKind(PNK_GENERATOR)));
@@ -1905,7 +1833,6 @@ Fold(ExclusiveContext* cx, ParseNode** pnp, Parser<FullParseHandler>& parser, bo
       case PNK_IMPORT:
       case PNK_EXPORT_FROM:
       case PNK_SHORTHAND:
-      case PNK_LETBLOCK:
       case PNK_FOR:
       case PNK_COMPREHENSIONFOR:
       case PNK_CLASSMETHOD:
@@ -1952,7 +1879,7 @@ Fold(ExclusiveContext* cx, ParseNode** pnp, Parser<FullParseHandler>& parser, bo
       }
 
       case PNK_WITH:
-        MOZ_ASSERT(pn->isArity(PN_BINARY_OBJ));
+        MOZ_ASSERT(pn->isArity(PN_BINARY));
         return Fold(cx, &pn->pn_left, parser, inGenexpLambda) &&
                Fold(cx, &pn->pn_right, parser, inGenexpLambda);
 
@@ -1971,10 +1898,10 @@ Fold(ExclusiveContext* cx, ParseNode** pnp, Parser<FullParseHandler>& parser, bo
         return FoldDottedProperty(cx, pn, parser, inGenexpLambda);
 
       case PNK_LEXICALSCOPE:
-        MOZ_ASSERT(pn->isArity(PN_NAME));
-        if (!pn->pn_expr)
+        MOZ_ASSERT(pn->isArity(PN_SCOPE));
+        if (!pn->scopeBody())
             return true;
-        return Fold(cx, &pn->pn_expr, parser, inGenexpLambda);
+        return Fold(cx, &pn->pn_u.scope.body, parser, inGenexpLambda);
 
       case PNK_NAME:
         return FoldName(cx, pn, parser, inGenexpLambda);

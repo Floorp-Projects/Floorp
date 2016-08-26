@@ -26,15 +26,27 @@ assertStmt("for each ({a:x,b:y,c:z} in foo);", forEachInStmt(axbycz, ident("foo"
 assertStmt("for each (var [x,y,z] in foo);", forEachInStmt(varDecl([{ id: xyz, init: null }]), ident("foo"), emptyStmt));
 assertStmt("for each (let [x,y,z] in foo);", forEachInStmt(letDecl([{ id: xyz, init: null }]), ident("foo"), emptyStmt));
 assertStmt("for each ([x,y,z] in foo);", forEachInStmt(xyz, ident("foo"), emptyStmt));
-assertError("for (const x in foo);", SyntaxError);
-assertError("for (const {a:x,b:y,c:z} in foo);", SyntaxError);
-assertError("for (const [x,y,z] in foo);", SyntaxError);
-assertError("for (const x of foo);", SyntaxError);
-assertError("for (const {a:x,b:y,c:z} of foo);", SyntaxError);
-assertError("for (const [x,y,z] of foo);", SyntaxError);
-assertError("for each (const x in foo);", SyntaxError);
-assertError("for each (const {a:x,b:y,c:z} in foo);", SyntaxError);
-assertError("for each (const [x,y,z] in foo);", SyntaxError);
+
+assertStmt("for (const x in foo);",
+           forInStmt(constDecl([{ id: ident("x"), init: null }]), ident("foo"), emptyStmt));
+assertStmt("for (const {a:x,b:y,c:z} in foo);",
+           forInStmt(constDecl([{ id: axbycz, init: null }]), ident("foo"), emptyStmt));
+assertStmt("for (const [x,y,z] in foo);",
+           forInStmt(constDecl([{ id: xyz, init: null }]), ident("foo"), emptyStmt));
+
+assertStmt("for (const x of foo);",
+           forOfStmt(constDecl([{id: ident("x"), init: null }]), ident("foo"), emptyStmt));
+assertStmt("for (const {a:x,b:y,c:z} of foo);",
+           forOfStmt(constDecl([{ id: axbycz, init: null }]), ident("foo"), emptyStmt));
+assertStmt("for (const [x,y,z] of foo);",
+           forOfStmt(constDecl([{ id: xyz, init: null }]), ident("foo"), emptyStmt));
+
+assertStmt("for each (const x in foo);",
+           forEachInStmt(constDecl([{ id: ident("x"), init: null }]), ident("foo"), emptyStmt));
+assertStmt("for each (const {a:x,b:y,c:z} in foo);",
+           forEachInStmt(constDecl([{ id: axbycz, init: null }]), ident("foo"), emptyStmt));
+assertStmt("for each (const [x,y,z] in foo);",
+           forEachInStmt(constDecl([{ id: xyz, init: null }]), ident("foo"), emptyStmt));
 
 assertError("for (x = 22 in foo);", SyntaxError);-
 assertError("for ({a:x,b:y,c:z} = 22 in foo);", SyntaxError);

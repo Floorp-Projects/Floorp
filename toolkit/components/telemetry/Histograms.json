@@ -703,7 +703,7 @@
     "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
     "expires_in_version": "never",
     "kind": "boolean",
-    "description": "Is it a compartmental GC?"
+    "description": "Is it a zone GC?"
   },
   "GC_MS": {
     "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],

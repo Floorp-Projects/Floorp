@@ -3200,21 +3200,13 @@ nsCacheService::CollectReports(nsIHandleReportCallback* aHandleReport,
 
     size_t memory = mMemoryDevice ? mMemoryDevice->TotalSize() : 0;
 
-#define REPORT(_path, _amount, _desc)                                         \
-    do {                                                                      \
-        nsresult rv;                                                          \
-        rv = aHandleReport->Callback(EmptyCString(),                          \
-                                     NS_LITERAL_CSTRING(_path),               \
-                                     KIND_HEAP, UNITS_BYTES, _amount,         \
-                                     NS_LITERAL_CSTRING(_desc), aData);       \
-        NS_ENSURE_SUCCESS(rv, rv);                                            \
-    } while (0)
+    MOZ_COLLECT_REPORT(
+        "explicit/network/disk-cache", KIND_HEAP, UNITS_BYTES, disk,
+        "Memory used by the network disk cache.");
 
-    REPORT("explicit/network/disk-cache", disk,
-           "Memory used by the network disk cache.");
-
-    REPORT("explicit/network/memory-cache", memory,
-           "Memory used by the network memory cache.");
+    MOZ_COLLECT_REPORT(
+        "explicit/network/memory-cache", KIND_HEAP, UNITS_BYTES, memory,
+        "Memory used by the network memory cache.");
 
     return NS_OK;
 }

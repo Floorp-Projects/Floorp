@@ -24,10 +24,12 @@ NS_IMETHODIMP
 RuleProcessorCache::CollectReports(nsIHandleReportCallback* aHandleReport,
                                    nsISupports* aData, bool aAnonymize)
 {
-  return MOZ_COLLECT_REPORT(
+  MOZ_COLLECT_REPORT(
     "explicit/layout/rule-processor-cache", KIND_HEAP, UNITS_BYTES,
     SizeOfIncludingThis(RuleProcessorCacheMallocSizeOf),
     "Memory used for cached rule processors.");
+
+  return NS_OK;
 }
 
 RuleProcessorCache::~RuleProcessorCache()

@@ -20,7 +20,7 @@
 
 #include "gc/Nursery-inl.h"
 #include "vm/ArrayObject-inl.h"
-#include "vm/ScopeObject-inl.h"
+#include "vm/EnvironmentObject-inl.h"
 #include "vm/Shape-inl.h"
 
 using namespace js;
@@ -1087,7 +1087,7 @@ PurgeProtoChain(ExclusiveContext* cx, JSObject* objArg, HandleId id)
 }
 
 static bool
-PurgeScopeChainHelper(ExclusiveContext* cx, HandleObject objArg, HandleId id)
+PurgeEnvironmentChainHelper(ExclusiveContext* cx, HandleObject objArg, HandleId id)
 {
     /* Re-root locally so we can re-assign. */
     RootedObject obj(cx, objArg);
@@ -1103,13 +1103,14 @@ PurgeScopeChainHelper(ExclusiveContext* cx, HandleObject objArg, HandleId id)
         return false;
 
     /*
-     * We must purge the scope chain only for Call objects as they are the only
-     * kind of cacheable non-global object that can gain properties after outer
-     * properties with the same names have been cached or traced. Call objects
-     * may gain such properties via eval introducing new vars; see bug 490364.
+     * We must purge the environment chain only for Call objects as they are
+     * the only kind of cacheable non-global object that can gain properties
+     * after outer properties with the same names have been cached or
+     * traced. Call objects may gain such properties via eval introducing new
+     * vars; see bug 490364.
      */
     if (obj->is<CallObject>()) {
-        while ((obj = obj->enclosingScope()) != nullptr) {
+        while ((obj = obj->enclosingEnvironment()) != nullptr) {
             if (!PurgeProtoChain(cx, obj, id))
                 return false;
         }
@@ -1119,16 +1120,17 @@ PurgeScopeChainHelper(ExclusiveContext* cx, HandleObject objArg, HandleId id)
 }
 
 /*
- * PurgeScopeChain does nothing if obj is not itself a prototype or parent
- * scope, else it reshapes the scope and prototype chains it links. It calls
- * PurgeScopeChainHelper, which asserts that obj is flagged as a delegate
- * (i.e., obj has ever been on a prototype or parent chain).
+ * PurgeEnvironmentChain does nothing if obj is not itself a prototype or
+ * parent environment, else it reshapes the scope and prototype chains it
+ * links. It calls PurgeEnvironmentChainHelper, which asserts that obj is
+ * flagged as a delegate (i.e., obj has ever been on a prototype or parent
+ * chain).
  */
 static inline bool
-PurgeScopeChain(ExclusiveContext* cx, HandleObject obj, HandleId id)
+PurgeEnvironmentChain(ExclusiveContext* cx, HandleObject obj, HandleId id)
 {
     if (obj->isDelegate() && obj->isNative())
-        return PurgeScopeChainHelper(cx, obj, id);
+        return PurgeEnvironmentChainHelper(cx, obj, id);
     return true;
 }
 
@@ -1138,7 +1140,7 @@ AddOrChangeProperty(ExclusiveContext* cx, HandleNativeObject obj, HandleId id,
 {
     desc.assertComplete();
 
-    if (!PurgeScopeChain(cx, obj, id))
+    if (!PurgeEnvironmentChain(cx, obj, id))
         return false;
 
     // Use dense storage for new indexed properties where possible.
@@ -1754,7 +1756,7 @@ GetExistingProperty(JSContext* cx,
         vp.set(obj->getSlot(shape->slot()));
         MOZ_ASSERT_IF(!vp.isMagic(JS_UNINITIALIZED_LEXICAL) &&
                       !obj->isSingleton() &&
-                      !obj->template is<ScopeObject>() &&
+                      !obj->template is<EnvironmentObject>() &&
                       shape->hasDefaultGetter(),
                       ObjectGroupHasProperty(cx, obj->group(), shape->propid(), vp));
     } else {
@@ -2120,7 +2122,7 @@ NativeSetExistingDataProperty(JSContext* cx, HandleNativeObject obj, HandleShape
         return result.fail(JSMSG_GETTER_ONLY);
     }
 
-    MOZ_ASSERT(!obj->is<DynamicWithObject>());  // See bug 1128681.
+    MOZ_ASSERT(!obj->is<WithEnvironmentObject>());  // See bug 1128681.
 
     uint32_t sample = cx->runtime()->propertyRemovals;
     RootedId id(cx, shape->propid());
@@ -2181,8 +2183,8 @@ js::SetPropertyByDefining(JSContext* cx, HandleId id, HandleValue v, HandleValue
     // Invalidate SpiderMonkey-specific caches or bail.
     const Class* clasp = receiver->getClass();
 
-    // Purge the property cache of now-shadowed id in receiver's scope chain.
-    if (!PurgeScopeChain(cx, receiver, id))
+    // Purge the property cache of now-shadowed id in receiver's environment chain.
+    if (!PurgeEnvironmentChain(cx, receiver, id))
         return false;
 
     // Steps 5.e.iii-iv. and 5.f.i. Define the new data property.
@@ -2248,9 +2250,6 @@ static bool
 SetNonexistentProperty(JSContext* cx, HandleId id, HandleValue v, HandleValue receiver,
                        QualifiedBool qualified, ObjectOpResult& result)
 {
-    // We should never add properties to lexical blocks.
-    MOZ_ASSERT_IF(receiver.isObject(), !receiver.toObject().is<ClonedBlockObject>());
-
     if (!qualified && receiver.isObject() && receiver.toObject().isUnqualifiedVarObj()) {
         if (!MaybeReportUndeclaredVarAssignment(cx, JSID_TO_STRING(id)))
             return false;

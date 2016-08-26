@@ -1,4 +1,3 @@
-// |jit-test| error: SyntaxError
 let s = "function foo() {\n";
 let max = 65536;
 for (let i = 0; i < max; i++)

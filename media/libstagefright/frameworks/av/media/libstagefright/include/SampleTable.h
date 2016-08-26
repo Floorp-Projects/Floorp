@@ -175,7 +175,7 @@ private:
 
     static int CompareIncreasingTime(const void *, const void *);
 
-    void buildSampleEntriesTable();
+    status_t buildSampleEntriesTable();
 
     status_t parseSampleCencInfo();
 

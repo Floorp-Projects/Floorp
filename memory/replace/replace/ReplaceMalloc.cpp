@@ -200,26 +200,6 @@ replace_valloc(size_t aSize)
   return ptr;
 }
 
-void
-replace_malloc_protect(void* aPtr, uint32_t* aID)
-{
-  gFuncs->malloc_protect(aPtr, aID);
-  const malloc_hook_table_t* hook_table = gHookTable;
-  if (hook_table && hook_table->malloc_protect_hook) {
-    hook_table->malloc_protect_hook(aPtr, aID);
-  }
-}
-
-void
-replace_malloc_unprotect(void* aPtr, uint32_t* aID)
-{
-  gFuncs->malloc_unprotect(aPtr, aID);
-  const malloc_hook_table_t* hook_table = gHookTable;
-  if (hook_table && hook_table->malloc_unprotect_hook) {
-    hook_table->malloc_unprotect_hook(aPtr, aID);
-  }
-}
-
 size_t
 replace_malloc_usable_size(usable_ptr_t aPtr)
 {

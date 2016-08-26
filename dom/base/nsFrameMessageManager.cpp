@@ -1578,20 +1578,18 @@ MessageManagerReporter::CountReferents(nsFrameMessageManager* aMessageManager,
   }
 }
 
-static nsresult
+static void
 ReportReferentCount(const char* aManagerType,
                     const MessageManagerReferentCount& aReferentCount,
-                    nsIMemoryReporterCallback* aCb,
-                    nsISupports* aClosure)
+                    nsIHandleReportCallback* aHandleReport,
+                    nsISupports* aData)
 {
-#define REPORT(_path, _amount, _desc)                                         \
-    do {                                                                      \
-      nsresult rv;                                                            \
-      rv = aCb->Callback(EmptyCString(), _path,                               \
-                         nsIMemoryReporter::KIND_OTHER,                       \
-                         nsIMemoryReporter::UNITS_COUNT, _amount,             \
-                         _desc, aClosure);                                    \
-      NS_ENSURE_SUCCESS(rv, rv);                                              \
+#define REPORT(_path, _amount, _desc) \
+    do { \
+      aHandleReport->Callback(EmptyCString(), _path, \
+                              nsIMemoryReporter::KIND_OTHER, \
+                              nsIMemoryReporter::UNITS_COUNT, _amount, \
+                              _desc, aData); \
     } while (0)
 
   REPORT(nsPrintfCString("message-manager/referent/%s/strong", aManagerType),
@@ -1622,16 +1620,12 @@ ReportReferentCount(const char* aManagerType,
   }
 
 #undef REPORT
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP
-MessageManagerReporter::CollectReports(nsIMemoryReporterCallback* aCb,
-                                       nsISupports* aClosure, bool aAnonymize)
+MessageManagerReporter::CollectReports(nsIHandleReportCallback* aHandleReport,
+                                       nsISupports* aData, bool aAnonymize)
 {
-  nsresult rv;
-
   if (XRE_IsParentProcess()) {
     nsCOMPtr<nsIMessageBroadcaster> globalmm =
       do_GetService("@mozilla.org/globalmessagemanager;1");
@@ -1640,23 +1634,20 @@ MessageManagerReporter::CollectReports(nsIMemoryReporterCallback* aCb,
         static_cast<nsFrameMessageManager*>(globalmm.get());
       MessageManagerReferentCount count;
       CountReferents(mm, &count);
-      rv = ReportReferentCount("global-manager", count, aCb, aClosure);
-      NS_ENSURE_SUCCESS(rv, rv);
+      ReportReferentCount("global-manager", count, aHandleReport, aData);
     }
   }
 
   if (nsFrameMessageManager::sParentProcessManager) {
     MessageManagerReferentCount count;
     CountReferents(nsFrameMessageManager::sParentProcessManager, &count);
-    rv = ReportReferentCount("parent-process-manager", count, aCb, aClosure);
-    NS_ENSURE_SUCCESS(rv, rv);
+    ReportReferentCount("parent-process-manager", count, aHandleReport, aData);
   }
 
   if (nsFrameMessageManager::sChildProcessManager) {
     MessageManagerReferentCount count;
     CountReferents(nsFrameMessageManager::sChildProcessManager, &count);
-    rv = ReportReferentCount("child-process-manager", count, aCb, aClosure);
-    NS_ENSURE_SUCCESS(rv, rv);
+    ReportReferentCount("child-process-manager", count, aHandleReport, aData);
   }
 
   return NS_OK;
