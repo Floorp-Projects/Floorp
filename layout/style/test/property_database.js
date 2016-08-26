@@ -6318,10 +6318,10 @@ if (IsCSSPropertyPrefEnabled("layout.css.grid.enabled")) {
     other_values: [
       // <'grid-template-rows'> / <'grid-template-columns'>
       "40px / 100px",
-      "[foo] 40px [bar] / [baz] 100px [fizz]",
+      "[foo] 40px [bar] / [baz] repeat(auto-fill,100px) [fizz]",
       " none/100px",
       "40px/none",
-      // [ <track-list> / ]? [ <line-names>? <string> <track-size>? <line-names>? ]+
+      // [ <line-names>? <string> <track-size>? <line-names>? ]+ [ / <explicit-track-list> ]?
       "'fizz'",
       "[bar] 'fizz'",
       "'fizz' / [foo] 40px",
@@ -6332,6 +6332,8 @@ if (IsCSSPropertyPrefEnabled("layout.css.grid.enabled")) {
       "[bar] 'fizz' 100px [buzz] \n [a] '.' 200px [b] / [foo] 40px",
     ],
     invalid_values: [
+      "'fizz' / repeat(1, 100px)",
+      "'fizz' repeat(1, 100px) / 0px",
       "[foo] [bar] 40px / 100px",
       "[fizz] [buzz] 100px / 40px",
       "[fizz] [buzz] 'foo' / 40px",
