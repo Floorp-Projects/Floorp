@@ -24,7 +24,6 @@
 
 #include "asmjs/WasmBinaryIterator.h"
 #include "asmjs/WasmGenerator.h"
-#include "asmjs/WasmSignalHandlers.h"
 
 using namespace js;
 using namespace js::jit;
@@ -198,7 +197,7 @@ DecodeExpr(FunctionDecoder& f)
 
     switch (expr) {
       case Expr::Nop:
-        return f.iter().readNullary(ExprType::Void);
+        return f.iter().readNullary();
       case Expr::Call:
         return DecodeCall(f);
       case Expr::CallIndirect:
@@ -440,12 +439,6 @@ DecodeExpr(FunctionDecoder& f)
       case Expr::F64Store:
         return f.checkHasMemory() &&
                f.iter().readStore(ValType::F64, 8, nullptr, nullptr);
-      case Expr::GrowMemory:
-        return f.checkHasMemory() &&
-               f.iter().readUnary(ValType::I32, nullptr);
-      case Expr::CurrentMemory:
-        return f.checkHasMemory() &&
-               f.iter().readNullary(ExprType::I32);
       case Expr::Br:
         return f.iter().readBr(nullptr, nullptr, nullptr);
       case Expr::BrIf:
@@ -694,7 +687,9 @@ DecodeResizableMemory(Decoder& d, ModuleGeneratorData* init)
         if (!maximumBytes.isValid())
             return Fail(d, "maximum memory size too big");
 
-        init->maxMemoryLength = Some(maximumBytes.value());
+        init->maxMemoryLength = maximumBytes.value();
+    } else {
+        init->maxMemoryLength = UINT32_MAX;
     }
 
     return true;
@@ -966,7 +961,7 @@ DecodeMemorySection(Decoder& d, bool newFormat, ModuleGeneratorData* init, bool*
         MOZ_ASSERT(init->memoryUsage == MemoryUsage::None);
         init->memoryUsage = MemoryUsage::Unshared;
         init->minMemoryLength = initialSize.value();
-        init->maxMemoryLength = Some(maxSize.value());
+        init->maxMemoryLength = maxSize.value();
     }
 
     if (!d.finishSection(sectionStart, sectionSize))
@@ -1568,11 +1563,9 @@ CompileArgs::initFromContext(ExclusiveContext* cx, ScriptedCaller&& scriptedCall
 SharedModule
 wasm::Compile(const ShareableBytes& bytecode, const CompileArgs& args, UniqueChars* error)
 {
-    MOZ_RELEASE_ASSERT(wasm::HaveSignalHandlers());
-
     bool newFormat = args.assumptions.newFormat;
 
-    auto init = js::MakeUnique<ModuleGeneratorData>();
+    auto init = js::MakeUnique<ModuleGeneratorData>(args.assumptions.usesSignal);
     if (!init)
         return nullptr;
 
