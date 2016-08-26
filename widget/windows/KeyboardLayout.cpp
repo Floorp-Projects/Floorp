@@ -303,6 +303,297 @@ private:
   }
 };
 
+static const nsCString
+GetMessageName(UINT aMessage)
+{
+  switch (aMessage) {
+    case WM_NULL:
+      return NS_LITERAL_CSTRING("WM_NULL");
+    case WM_KEYDOWN:
+      return NS_LITERAL_CSTRING("WM_KEYDOWN");
+    case WM_KEYUP:
+      return NS_LITERAL_CSTRING("WM_KEYUP");
+    case WM_SYSKEYDOWN:
+      return NS_LITERAL_CSTRING("WM_SYSKEYDOWN");
+    case WM_SYSKEYUP:
+      return NS_LITERAL_CSTRING("WM_SYSKEYUP");
+    case WM_CHAR:
+      return NS_LITERAL_CSTRING("WM_CHAR");
+    case WM_UNICHAR:
+      return NS_LITERAL_CSTRING("WM_UNICHAR");
+    case WM_SYSCHAR:
+      return NS_LITERAL_CSTRING("WM_SYSCHAR");
+    case WM_DEADCHAR:
+      return NS_LITERAL_CSTRING("WM_DEADCHAR");
+    case WM_SYSDEADCHAR:
+      return NS_LITERAL_CSTRING("WM_SYSDEADCHAR");
+    case MOZ_WM_KEYDOWN:
+      return NS_LITERAL_CSTRING("MOZ_WM_KEYDOWN");
+    case MOZ_WM_KEYUP:
+      return NS_LITERAL_CSTRING("MOZ_WM_KEYUP");
+    case WM_APPCOMMAND:
+      return NS_LITERAL_CSTRING("WM_APPCOMMAND");
+    case WM_QUIT:
+      return NS_LITERAL_CSTRING("WM_QUIT");
+    default:
+      return nsPrintfCString("Unknown Message (0x%04X)", aMessage);
+  }
+}
+
+static const nsCString
+GetVirtualKeyCodeName(WPARAM aVK)
+{
+  if (aVK >= ArrayLength(kVirtualKeyName)) {
+    return nsPrintfCString("Invalid (0x%08X)", aVK);
+  }
+  return nsCString(kVirtualKeyName[aVK]);
+}
+
+static const nsCString
+GetAppCommandName(WPARAM aCommand)
+{
+  switch (aCommand) {
+    case APPCOMMAND_BASS_BOOST:
+      return NS_LITERAL_CSTRING("APPCOMMAND_BASS_BOOST");
+    case APPCOMMAND_BASS_DOWN:
+      return NS_LITERAL_CSTRING("APPCOMMAND_BASS_DOWN");
+    case APPCOMMAND_BASS_UP:
+      return NS_LITERAL_CSTRING("APPCOMMAND_BASS_UP");
+    case APPCOMMAND_BROWSER_BACKWARD:
+      return NS_LITERAL_CSTRING("APPCOMMAND_BROWSER_BACKWARD");
+    case APPCOMMAND_BROWSER_FAVORITES:
+      return NS_LITERAL_CSTRING("APPCOMMAND_BROWSER_FAVORITES");
+    case APPCOMMAND_BROWSER_FORWARD:
+      return NS_LITERAL_CSTRING("APPCOMMAND_BROWSER_FORWARD");
+    case APPCOMMAND_BROWSER_HOME:
+      return NS_LITERAL_CSTRING("APPCOMMAND_BROWSER_HOME");
+    case APPCOMMAND_BROWSER_REFRESH:
+      return NS_LITERAL_CSTRING("APPCOMMAND_BROWSER_REFRESH");
+    case APPCOMMAND_BROWSER_SEARCH:
+      return NS_LITERAL_CSTRING("APPCOMMAND_BROWSER_SEARCH");
+    case APPCOMMAND_BROWSER_STOP:
+      return NS_LITERAL_CSTRING("APPCOMMAND_BROWSER_STOP");
+    case APPCOMMAND_CLOSE:
+      return NS_LITERAL_CSTRING("APPCOMMAND_CLOSE");
+    case APPCOMMAND_COPY:
+      return NS_LITERAL_CSTRING("APPCOMMAND_COPY");
+    case APPCOMMAND_CORRECTION_LIST:
+      return NS_LITERAL_CSTRING("APPCOMMAND_CORRECTION_LIST");
+    case APPCOMMAND_CUT:
+      return NS_LITERAL_CSTRING("APPCOMMAND_CUT");
+    case APPCOMMAND_DICTATE_OR_COMMAND_CONTROL_TOGGLE:
+      return NS_LITERAL_CSTRING("APPCOMMAND_DICTATE_OR_COMMAND_CONTROL_TOGGLE");
+    case APPCOMMAND_FIND:
+      return NS_LITERAL_CSTRING("APPCOMMAND_FIND");
+    case APPCOMMAND_FORWARD_MAIL:
+      return NS_LITERAL_CSTRING("APPCOMMAND_FORWARD_MAIL");
+    case APPCOMMAND_HELP:
+      return NS_LITERAL_CSTRING("APPCOMMAND_HELP");
+    case APPCOMMAND_LAUNCH_APP1:
+      return NS_LITERAL_CSTRING("APPCOMMAND_LAUNCH_APP1");
+    case APPCOMMAND_LAUNCH_APP2:
+      return NS_LITERAL_CSTRING("APPCOMMAND_LAUNCH_APP2");
+    case APPCOMMAND_LAUNCH_MAIL:
+      return NS_LITERAL_CSTRING("APPCOMMAND_LAUNCH_MAIL");
+    case APPCOMMAND_LAUNCH_MEDIA_SELECT:
+      return NS_LITERAL_CSTRING("APPCOMMAND_LAUNCH_MEDIA_SELECT");
+    case APPCOMMAND_MEDIA_CHANNEL_DOWN:
+      return NS_LITERAL_CSTRING("APPCOMMAND_MEDIA_CHANNEL_DOWN");
+    case APPCOMMAND_MEDIA_CHANNEL_UP:
+      return NS_LITERAL_CSTRING("APPCOMMAND_MEDIA_CHANNEL_UP");
+    case APPCOMMAND_MEDIA_FAST_FORWARD:
+      return NS_LITERAL_CSTRING("APPCOMMAND_MEDIA_FAST_FORWARD");
+    case APPCOMMAND_MEDIA_NEXTTRACK:
+      return NS_LITERAL_CSTRING("APPCOMMAND_MEDIA_NEXTTRACK");
+    case APPCOMMAND_MEDIA_PAUSE:
+      return NS_LITERAL_CSTRING("APPCOMMAND_MEDIA_PAUSE");
+    case APPCOMMAND_MEDIA_PLAY:
+      return NS_LITERAL_CSTRING("APPCOMMAND_MEDIA_PLAY");
+    case APPCOMMAND_MEDIA_PLAY_PAUSE:
+      return NS_LITERAL_CSTRING("APPCOMMAND_MEDIA_PLAY_PAUSE");
+    case APPCOMMAND_MEDIA_PREVIOUSTRACK:
+      return NS_LITERAL_CSTRING("APPCOMMAND_MEDIA_PREVIOUSTRACK");
+    case APPCOMMAND_MEDIA_RECORD:
+      return NS_LITERAL_CSTRING("APPCOMMAND_MEDIA_RECORD");
+    case APPCOMMAND_MEDIA_REWIND:
+      return NS_LITERAL_CSTRING("APPCOMMAND_MEDIA_REWIND");
+    case APPCOMMAND_MEDIA_STOP:
+      return NS_LITERAL_CSTRING("APPCOMMAND_MEDIA_STOP");
+    case APPCOMMAND_MIC_ON_OFF_TOGGLE:
+      return NS_LITERAL_CSTRING("APPCOMMAND_MIC_ON_OFF_TOGGLE");
+    case APPCOMMAND_MICROPHONE_VOLUME_DOWN:
+      return NS_LITERAL_CSTRING("APPCOMMAND_MICROPHONE_VOLUME_DOWN");
+    case APPCOMMAND_MICROPHONE_VOLUME_MUTE:
+      return NS_LITERAL_CSTRING("APPCOMMAND_MICROPHONE_VOLUME_MUTE");
+    case APPCOMMAND_MICROPHONE_VOLUME_UP:
+      return NS_LITERAL_CSTRING("APPCOMMAND_MICROPHONE_VOLUME_UP");
+    case APPCOMMAND_NEW:
+      return NS_LITERAL_CSTRING("APPCOMMAND_NEW");
+    case APPCOMMAND_OPEN:
+      return NS_LITERAL_CSTRING("APPCOMMAND_OPEN");
+    case APPCOMMAND_PASTE:
+      return NS_LITERAL_CSTRING("APPCOMMAND_PASTE");
+    case APPCOMMAND_PRINT:
+      return NS_LITERAL_CSTRING("APPCOMMAND_PRINT");
+    case APPCOMMAND_REDO:
+      return NS_LITERAL_CSTRING("APPCOMMAND_REDO");
+    case APPCOMMAND_REPLY_TO_MAIL:
+      return NS_LITERAL_CSTRING("APPCOMMAND_REPLY_TO_MAIL");
+    case APPCOMMAND_SAVE:
+      return NS_LITERAL_CSTRING("APPCOMMAND_SAVE");
+    case APPCOMMAND_SEND_MAIL:
+      return NS_LITERAL_CSTRING("APPCOMMAND_SEND_MAIL");
+    case APPCOMMAND_SPELL_CHECK:
+      return NS_LITERAL_CSTRING("APPCOMMAND_SPELL_CHECK");
+    case APPCOMMAND_TREBLE_DOWN:
+      return NS_LITERAL_CSTRING("APPCOMMAND_TREBLE_DOWN");
+    case APPCOMMAND_TREBLE_UP:
+      return NS_LITERAL_CSTRING("APPCOMMAND_TREBLE_UP");
+    case APPCOMMAND_UNDO:
+      return NS_LITERAL_CSTRING("APPCOMMAND_UNDO");
+    case APPCOMMAND_VOLUME_DOWN:
+      return NS_LITERAL_CSTRING("APPCOMMAND_VOLUME_DOWN");
+    case APPCOMMAND_VOLUME_MUTE:
+      return NS_LITERAL_CSTRING("APPCOMMAND_VOLUME_MUTE");
+    case APPCOMMAND_VOLUME_UP:
+      return NS_LITERAL_CSTRING("APPCOMMAND_VOLUME_UP");
+    default:
+      return nsPrintfCString("Unknown app command (0x%08X)", aCommand);
+  }
+}
+
+static const nsCString
+GetAppCommandDeviceName(LPARAM aDevice)
+{
+  switch (aDevice) {
+    case FAPPCOMMAND_KEY:
+      return NS_LITERAL_CSTRING("FAPPCOMMAND_KEY");
+    case FAPPCOMMAND_MOUSE:
+      return NS_LITERAL_CSTRING("FAPPCOMMAND_MOUSE");
+    case FAPPCOMMAND_OEM:
+      return NS_LITERAL_CSTRING("FAPPCOMMAND_OEM");
+    default:
+      return nsPrintfCString("Unknown app command device (0x%04X)", aDevice);
+  }
+};
+
+class MOZ_STACK_CLASS GetAppCommandKeysName final : public nsAutoCString
+{
+public:
+  GetAppCommandKeysName(WPARAM aKeys)
+  {
+    if (aKeys & MK_CONTROL) {
+      AppendLiteral("MK_CONTROL");
+      aKeys &= ~MK_CONTROL;
+    }
+    if (aKeys & MK_LBUTTON) {
+      MaybeAppendSeparator();
+      AppendLiteral("MK_LBUTTON");
+      aKeys &= ~MK_LBUTTON;
+    }
+    if (aKeys & MK_MBUTTON) {
+      MaybeAppendSeparator();
+      AppendLiteral("MK_MBUTTON");
+      aKeys &= ~MK_MBUTTON;
+    }
+    if (aKeys & MK_RBUTTON) {
+      MaybeAppendSeparator();
+      AppendLiteral("MK_RBUTTON");
+      aKeys &= ~MK_RBUTTON;
+    }
+    if (aKeys & MK_SHIFT) {
+      MaybeAppendSeparator();
+      AppendLiteral("MK_SHIFT");
+      aKeys &= ~MK_SHIFT;
+    }
+    if (aKeys & MK_XBUTTON1) {
+      MaybeAppendSeparator();
+      AppendLiteral("MK_XBUTTON1");
+      aKeys &= ~MK_XBUTTON1;
+    }
+    if (aKeys & MK_XBUTTON2) {
+      MaybeAppendSeparator();
+      AppendLiteral("MK_XBUTTON2");
+      aKeys &= ~MK_XBUTTON2;
+    }
+    if (aKeys) {
+      MaybeAppendSeparator();
+      AppendPrintf("Unknown Flags (0x%04X)", aKeys);
+    }
+    if (IsEmpty()) {
+      AssignLiteral("none (0x0000)");
+    }
+  }
+
+private:
+  void MaybeAppendSeparator()
+  {
+    if (!IsEmpty()) {
+      AppendLiteral(" | ");
+    }
+  }
+};
+
+static const nsCString
+ToString(const MSG& aMSG)
+{
+  nsAutoCString result;
+  result.AssignLiteral("{ message=");
+  result.Append(GetMessageName(aMSG.message).get());
+  result.AppendLiteral(", ");
+  switch (aMSG.message) {
+    case WM_KEYDOWN:
+    case WM_KEYUP:
+    case WM_SYSKEYDOWN:
+    case WM_SYSKEYUP:
+    case MOZ_WM_KEYDOWN:
+    case MOZ_WM_KEYUP:
+      result.AppendPrintf(
+               "virtual keycode=%s, repeat count=%d, "
+               "scancode=0x%02X, extended key=%s, "
+               "context code=%s, previous key state=%s, "
+               "transition state=%s",
+               GetVirtualKeyCodeName(aMSG.wParam).get(),
+               aMSG.lParam & 0xFFFF,
+               WinUtils::GetScanCode(aMSG.lParam),
+               GetBoolName(WinUtils::IsExtendedScanCode(aMSG.lParam)),
+               GetBoolName((aMSG.lParam & (1 << 29)) != 0),
+               GetBoolName((aMSG.lParam & (1 << 30)) != 0),
+               GetBoolName((aMSG.lParam & (1 << 31)) != 0));
+      break;
+    case WM_CHAR:
+    case WM_DEADCHAR:
+    case WM_SYSCHAR:
+    case WM_SYSDEADCHAR:
+      result.AppendPrintf(
+               "character code=%s, repeat count=%d, "
+               "scancode=0x%02X, extended key=%s, "
+               "context code=%s, previous key state=%s, "
+               "transition state=%s",
+               GetCharacterCodeName(aMSG.wParam).get(),
+               aMSG.lParam & 0xFFFF,
+               WinUtils::GetScanCode(aMSG.lParam),
+               GetBoolName(WinUtils::IsExtendedScanCode(aMSG.lParam)),
+               GetBoolName((aMSG.lParam & (1 << 29)) != 0),
+               GetBoolName((aMSG.lParam & (1 << 30)) != 0),
+               GetBoolName((aMSG.lParam & (1 << 31)) != 0));
+      break;
+    case WM_APPCOMMAND:
+      result.AppendPrintf(
+               "window handle=0x%p, app command=%s, device=%s, dwKeys=%s",
+               aMSG.wParam,
+               GetAppCommandName(GET_APPCOMMAND_LPARAM(aMSG.lParam)).get(),
+               GetAppCommandDeviceName(GET_DEVICE_LPARAM(aMSG.lParam)).get(),
+               GetAppCommandKeysName(GET_KEYSTATE_LPARAM(aMSG.lParam)).get());
+      break;
+    default:
+      result.AppendPrintf("wParam=%u, lParam=%u", aMSG.wParam, aMSG.lParam);
+      break;
+  }
+  result.AppendPrintf(", hwnd=0x%p", aMSG.hwnd);
+  return result;
+}
+
 // Unique id counter associated with a keydown / keypress events. Used in
 // identifing keypress events for removal from async event dispatch queue
 // in metrofx after preventDefault is called on keydown events.
@@ -2140,25 +2431,6 @@ GetResultOfInSendMessageEx()
   return result;
 }
 
-static const char*
-GetMessageName(UINT aMessage)
-{
-  switch (aMessage) {
-    case WM_KEYDOWN:     return "WM_KEYDOWN";
-    case WM_SYSKEYDOWN:  return "WM_SYSKEYDOWN";
-    case WM_KEYUP:       return "WM_KEYUP";
-    case WM_SYSKEYUP:    return "WM_SYSKEYUP";
-    case WM_CHAR:        return "WM_CHAR";
-    case WM_DEADCHAR:    return "WM_DEADCHAR";
-    case WM_SYSCHAR:     return "WM_SYSCHAR";
-    case WM_SYSDEADCHAR: return "WM_SYSDEADCHAR";
-    case WM_UNICHAR:     return "WM_UNICHAR";
-    case WM_QUIT:        return "WM_QUIT";
-    case WM_NULL:        return "WM_NULL";
-    default:             return "Unknown";
-  }
-}
-
 #endif // #ifdef MOZ_CRASHREPORTER
 
 bool
@@ -2253,37 +2525,22 @@ NativeKey::GetFollowingCharMessage(MSG& aCharMsg) const
     if (doCrash) {
 #ifdef MOZ_CRASHREPORTER
       nsPrintfCString info("\nPeekMessage() failed to remove char message! "
-                           "\nHandling message: %s (0x%08X), wParam: 0x%08X, "
-                           "lParam: 0x%08X, hwnd=0x%p, InSendMessageEx()=%s, \n"
-                           "Found message: %s (0x%08X), wParam: 0x%08X, "
-                           "lParam: 0x%08X, hwnd=0x%p, "
+                           "\nHandling message: %s, InSendMessageEx()=%s, "
+                           "\nFound message: %s, "
                            "\nWM_NULL has been removed: %d, "
-                           "\nNext key message in all windows: %s (0x%08X), "
-                           "wParam: 0x%08X, lParam: 0x%08X, hwnd=0x%p, "
+                           "\nNext key message in all windows: %s, "
                            "time=%d, ",
-                           GetMessageName(mMsg.message),
-                           mMsg.message, mMsg.wParam, mMsg.lParam,
-                           nextKeyMsg.hwnd,
+                           ToString(mMsg).get(),
                            GetResultOfInSendMessageEx().get(),
-                           GetMessageName(nextKeyMsg.message),
-                           nextKeyMsg.message, nextKeyMsg.wParam,
-                           nextKeyMsg.lParam, nextKeyMsg.hwnd, i,
-                           GetMessageName(nextKeyMsgInAllWindows.message),
-                           nextKeyMsgInAllWindows.message,
-                           nextKeyMsgInAllWindows.wParam,
-                           nextKeyMsgInAllWindows.lParam,
-                           nextKeyMsgInAllWindows.hwnd,
+                           ToString(nextKeyMsg).get(), i,
+                           ToString(nextKeyMsgInAllWindows).get(),
                            nextKeyMsgInAllWindows.time);
       CrashReporter::AppendAppNotesToCrashReport(info);
       MSG nextMsg;
       if (WinUtils::PeekMessage(&nextMsg, 0, 0, 0,
                                 PM_NOREMOVE | PM_NOYIELD)) {
-        nsPrintfCString info("\nNext message in all windows: %s (0x%08X), "
-                             "wParam: 0x%08X, lParam: 0x%08X, hwnd=0x%p, "
-                             "time=%d",
-                             GetMessageName(nextMsg.message),
-                             nextMsg.message, nextMsg.wParam, nextMsg.lParam,
-                             nextMsg.hwnd, nextMsg.time);
+        nsPrintfCString info("\nNext message in all windows: %s, time=%d",
+                             ToString(nextMsg).get(), nextMsg.time);
         CrashReporter::AppendAppNotesToCrashReport(info);
       } else {
         CrashReporter::AppendAppNotesToCrashReport(
@@ -2311,21 +2568,13 @@ NativeKey::GetFollowingCharMessage(MSG& aCharMsg) const
     if (!MayBeSameCharMessage(removedMsg, nextKeyMsg)) {
 #ifdef MOZ_CRASHREPORTER
       nsPrintfCString info("\nPeekMessage() removed unexpcted char message! "
-                           "\nHandling message: %s (0x%08X), wParam: 0x%08X, "
-                           "lParam: 0x%08X, hwnd=0x%p, InSendMessageEx()=%s, "
-                           "\nFound message: %s (0x%08X), wParam: 0x%08X, "
-                           "lParam: 0x%08X, hwnd=0x%p, "
-                           "\nRemoved message: %s (0x%08X), wParam: 0x%08X, "
-                           "lParam: 0x%08X, hwnd=0x%p, ",
-                           GetMessageName(mMsg.message),
-                           mMsg.message, mMsg.wParam, mMsg.lParam, mMsg.hwnd,
+                           "\nHandling message: %s, InSendMessageEx()=%s, "
+                           "\nFound message: %s, "
+                           "\nRemoved message: %s, ",
+                           ToString(mMsg).get(),
                            GetResultOfInSendMessageEx().get(),
-                           GetMessageName(nextKeyMsg.message),
-                           nextKeyMsg.message, nextKeyMsg.wParam,
-                           nextKeyMsg.lParam, nextKeyMsg.hwnd,
-                           GetMessageName(removedMsg.message),
-                           removedMsg.message, removedMsg.wParam,
-                           removedMsg.lParam, removedMsg.hwnd);
+                           ToString(nextKeyMsg).get(),
+                           ToString(removedMsg).get());
       CrashReporter::AppendAppNotesToCrashReport(info);
       // What's the next key message?
       MSG nextKeyMsgAfter;
@@ -2333,11 +2582,8 @@ NativeKey::GetFollowingCharMessage(MSG& aCharMsg) const
                                 WM_KEYFIRST, WM_KEYLAST,
                                 PM_NOREMOVE | PM_NOYIELD)) {
         nsPrintfCString info("\nNext key message after unexpected char message "
-                             "removed: %s (0x%08X), wParam: 0x%08X, "
-                             "lParam: 0x%08X, hwnd=0x%p, ",
-                             GetMessageName(nextKeyMsgAfter.message),
-                             nextKeyMsgAfter.message, nextKeyMsgAfter.wParam,
-                             nextKeyMsgAfter.lParam, nextKeyMsgAfter.hwnd);
+                             "removed: %s, ",
+                             ToString(nextKeyMsgAfter).get());
         CrashReporter::AppendAppNotesToCrashReport(info);
       } else {
         CrashReporter::AppendAppNotesToCrashReport(
@@ -2349,13 +2595,8 @@ NativeKey::GetFollowingCharMessage(MSG& aCharMsg) const
       if (WinUtils::PeekMessage(&nextKeyMsgInAllWindows, 0,
                                 WM_KEYFIRST, WM_KEYLAST,
                                 PM_NOREMOVE | PM_NOYIELD)) {
-        nsPrintfCString info("\nNext key message in all windows: %s (0x%08X), "
-                             "wParam: 0x%08X, lParam: 0x%08X, hwnd=0x%p.",
-                             GetMessageName(nextKeyMsgInAllWindows.message),
-                             nextKeyMsgInAllWindows.message,
-                             nextKeyMsgInAllWindows.wParam,
-                             nextKeyMsgInAllWindows.lParam,
-                             nextKeyMsgInAllWindows.hwnd);
+        nsPrintfCString info("\nNext key message in all windows: %s.",
+                             ToString(nextKeyMsgInAllWindows).get());
         CrashReporter::AppendAppNotesToCrashReport(info);
       } else {
         CrashReporter::AppendAppNotesToCrashReport(
@@ -2370,16 +2611,11 @@ NativeKey::GetFollowingCharMessage(MSG& aCharMsg) const
   }
 #ifdef MOZ_CRASHREPORTER
   nsPrintfCString info("\nWe lost following char message! "
-                       "\nHandling message: %s (0x%08X), wParam: 0x%08X, "
-                       "lParam: 0x%08X, InSendMessageEx()=%s, \n"
-                       "Found message: %s (0x%08X), wParam: 0x%08X, "
-                       "lParam: 0x%08X, removed a lot of WM_NULL",
-                       GetMessageName(mMsg.message),
-                       mMsg.message, mMsg.wParam, mMsg.lParam,
+                       "\nHandling message: %s, InSendMessageEx()=%s, \n"
+                       "Found message: %s, removed a lot of WM_NULL",
+                       ToString(mMsg).get(),
                        GetResultOfInSendMessageEx().get(),
-                       GetMessageName(nextKeyMsg.message),
-                       nextKeyMsg.message, nextKeyMsg.wParam,
-                       nextKeyMsg.lParam);
+                       ToString(nextKeyMsg).get());
   CrashReporter::AppendAppNotesToCrashReport(info);
 #endif // #ifdef MOZ_CRASHREPORTER
   MOZ_CRASH("We lost the following char message");
