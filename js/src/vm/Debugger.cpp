@@ -8572,7 +8572,7 @@ DebuggerObject::proxyTargetGetter(JSContext* cx, unsigned argc, Value* vp)
     }
 
     Rooted<DebuggerObject*> result(cx);
-    if (!DebuggerObject::scriptedProxyTarget(cx, object, &result))
+    if (!DebuggerObject::getScriptedProxyTarget(cx, object, &result))
         return false;
 
     args.rval().setObjectOrNull(result);
@@ -8589,7 +8589,7 @@ DebuggerObject::proxyHandlerGetter(JSContext* cx, unsigned argc, Value* vp)
         return true;
     }
     Rooted<DebuggerObject*> result(cx);
-    if (!DebuggerObject::scriptedProxyHandler(cx, object, &result))
+    if (!DebuggerObject::getScriptedProxyHandler(cx, object, &result))
         return false;
 
     args.rval().setObjectOrNull(result);
@@ -9978,8 +9978,8 @@ DebuggerObject::requireGlobal(JSContext* cx, HandleDebuggerObject object)
 }
 
 /* static */ bool
-DebuggerObject::scriptedProxyTarget(JSContext* cx, HandleDebuggerObject object,
-                                    MutableHandleDebuggerObject result)
+DebuggerObject::getScriptedProxyTarget(JSContext* cx, HandleDebuggerObject object,
+                                       MutableHandleDebuggerObject result)
 {
     MOZ_ASSERT(object->isScriptedProxy());
     RootedObject referent(cx, object->referent());
@@ -9993,8 +9993,8 @@ DebuggerObject::scriptedProxyTarget(JSContext* cx, HandleDebuggerObject object,
 }
 
 /* static */ bool
-DebuggerObject::scriptedProxyHandler(JSContext* cx, HandleDebuggerObject object,
-                                     MutableHandleDebuggerObject result)
+DebuggerObject::getScriptedProxyHandler(JSContext* cx, HandleDebuggerObject object,
+                                        MutableHandleDebuggerObject result)
 {
     MOZ_ASSERT(object->isScriptedProxy());
     RootedObject referent(cx, object->referent());
