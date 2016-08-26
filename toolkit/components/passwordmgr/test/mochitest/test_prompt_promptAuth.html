@@ -26,6 +26,11 @@ var isOk;
 
 var ioService = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
 
+// popupNotifications (not *popup*) is a constant, per-tab container. So, we
+// only need to fetch it once.
+var popupNotifications = getPopupNotifications(window.top);
+ok(popupNotifications, "Got popupNotifications");
+
 var level = Ci.nsIAuthPrompt2.LEVEL_NONE;
 var authinfo = {
   username : "",
@@ -211,11 +216,6 @@ var storageObserver = SpecialPowers.wrapCallbackObject({
 add_task(function* setup() {
   info("Waiting for startup to complete...");
   initLogins();
-
-  // popupNotifications (not *popup*) is a constant, per-tab container. So, we
-  // only need to fetch it once.
-  var popupNotifications = getPopupNotifications(window.top);
-  ok(popupNotifications, "Got popupNotifications");
 });
 
 add_task(function* test_accept() {
