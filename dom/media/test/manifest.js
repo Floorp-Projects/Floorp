@@ -1430,7 +1430,9 @@ var gEMENonMSEFailTests = [
 // background tabs tests.
 var gDecodeSuspendTests = [
   { name:"gizmo.mp4", type:"video/mp4", duration:5.56 },
-  { name:"gizmo-noaudio.mp4", type:"video/mp4", duration:5.56 }
+  { name:"gizmo-noaudio.mp4", type:"video/mp4", duration:5.56 },
+  { name:"gizmo.webm", type:'video/webm; codecs="vp9,opus"', duration:5.56 },
+  { name:"gizmo-noaudio.webm", type:'video/webm; codecs="vp9"', duration:5.56 }
 ];
 
 function checkMetadata(msg, e, test) {

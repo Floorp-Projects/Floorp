@@ -1794,6 +1794,108 @@ addAsyncAnimTest("set_redundant_animation_target",
   yield await_frame();
 });
 
+addAsyncAnimTest("set_null_animation_effect",
+                 { observe: div, subtree: true }, function*() {
+  var anim = div.animate({ opacity: [ 0, 1 ] },
+                         { duration: 100 * MS_PER_SEC });
+  yield await_frame();
+  assert_records([{ added: [anim], changed: [], removed: [] }],
+                 "records after animation is added");
+
+  anim.effect = null;
+  yield await_frame();
+  assert_records([{ added: [], changed: [], removed: [anim] }],
+                 "records after animation is removed");
+
+  anim.cancel();
+  yield await_frame();
+});
+
+addAsyncAnimTest("set_effect_on_null_effect_animation",
+                 { observe: div, subtree: true }, function*() {
+  var anim = new Animation();
+  anim.play();
+  anim.effect = new KeyframeEffect(div, { opacity: [ 0, 1 ] },
+                                   100 * MS_PER_SEC);
+  yield await_frame();
+  assert_records([{ added: [anim], changed: [], removed: [] }],
+                 "records after animation is added");
+
+  anim.cancel();
+  yield await_frame();
+});
+
+addAsyncAnimTest("replace_effect_targeting_on_the_same_element",
+                 { observe: div, subtree: true }, function*() {
+  var anim = div.animate({ marginLeft: [ "0px", "100px" ] },
+                         100 * MS_PER_SEC);
+  yield await_frame();
+  assert_records([{ added: [anim], changed: [], removed: [] }],
+                 "records after animation is added");
+
+  anim.effect = new KeyframeEffect(div, { opacity: [ 0, 1 ] },
+                                   100 * MS_PER_SEC);
+  yield await_frame();
+  assert_records([{ added: [], changed: [anim], removed: [] }],
+                 "records after replace effects");
+
+  anim.cancel();
+  yield await_frame();
+});
+
+addAsyncAnimTest("replace_effect_targeting_on_the_same_element_not_in_effect",
+                 { observe: div, subtree: true }, function*() {
+  var anim = div.animate({ marginLeft: [ "0px", "100px" ] },
+                         100 * MS_PER_SEC);
+  yield await_frame();
+  assert_records([{ added: [anim], changed: [], removed: [] }],
+                 "records after animation is added");
+
+  anim.currentTime = 60 * MS_PER_SEC;
+  yield await_frame();
+  assert_records([{ added: [], changed: [anim], removed: [] }],
+                 "records after animation is changed");
+
+  anim.effect = new KeyframeEffect(div, { opacity: [ 0, 1 ] },
+                                   50 * MS_PER_SEC);
+  yield await_frame();
+  assert_records([{ added: [], changed: [], removed: [anim] }],
+                 "records after replacing effects");
+
+  anim.cancel();
+  yield await_frame();
+});
+
+addAsyncAnimTest("set_effect_with_previous_animation",
+                 { observe: div, subtree: true }, function*() {
+  var child = document.createElement("div");
+  div.appendChild(child);
+
+  var anim1 = div.animate({ marginLeft: [ "0px", "50px" ] },
+                          100 * MS_PER_SEC);
+  var anim2 = child.animate({ marginLeft: [ "0px", "100px" ] },
+                              50 * MS_PER_SEC);
+  yield await_frame();
+  assert_records([{ added: [anim1], changed: [], removed: [] },
+                  { added: [anim2], changed: [], removed: [] }],
+                 "records after animation is added");
+
+  // After setting a new effect, we remove the current animation, anim1, because
+  // it is no longer attached to |div|, and then remove the previous animation,
+  // anim2. Finally, add back the anim1 which is in effect on |child| now.
+  // In addition, we sort them by tree order and they are batched.
+  anim1.effect = anim2.effect;
+  yield await_frame();
+  assert_records([{ added: [], changed: [], removed: [anim1] },       // div
+                  { added: [anim1], changed: [], removed: [anim2] }], // child
+                 "records after animation effects are changed");
+
+  anim1.cancel();
+  anim2.cancel();
+  child.remove();
+  yield await_frame();
+});
+
 // Run the tests.
 SimpleTest.requestLongerTimeout(2);
 SimpleTest.waitForExplicitFinish();

@@ -75,6 +75,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "uuidGen",
 const BASE_SCHEMA = "chrome://extensions/content/schemas/manifest.json";
 const CATEGORY_EXTENSION_SCHEMAS = "webextension-schemas";
 const CATEGORY_EXTENSION_SCRIPTS = "webextension-scripts";
+const CATEGORY_EXTENSION_SCRIPTS_CONTENT = "webextension-scripts-content";
 
 let schemaURLs = new Set();
 
@@ -86,13 +87,13 @@ Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 var {
   BaseContext,
   EventEmitter,
+  SchemaAPIManager,
   LocaleData,
   Messenger,
   instanceOf,
+  LocalAPIImplementation,
   flushJarCache,
 } = ExtensionUtils;
-
-XPCOMUtils.defineLazyGetter(this, "console", ExtensionUtils.getConsole);
 
 const LOGGER_ID_BASE = "addons.webextension.";
 const UUID_MAP_PREF = "extensions.webextensions.uuids";
@@ -111,16 +112,14 @@ const COMMENT_REGEXP = new RegExp(String.raw`
     //.*
   `.replace(/\s+/g, ""), "gm");
 
-var scriptScope = this;
-
 var ExtensionContext, GlobalManager;
 
 // This object loads the ext-*.js scripts that define the extension API.
-var Management = {
-  initialized: null,
-  scopes: [],
-  schemaApis: [],
-  emitter: new EventEmitter(),
+var Management = new class extends SchemaAPIManager {
+  constructor() {
+    super("main");
+    this.initialized = null;
+  }
 
   // Loads all the ext-*.js scripts currently registered.
   lazyInit() {
@@ -142,88 +141,33 @@ var Management = {
     });
 
     for (let [/* name */, value] of XPCOMUtils.enumerateCategoryEntries(CATEGORY_EXTENSION_SCRIPTS)) {
-      let scope = {
-        get console() { return console; },
-        extensions: this,
-        global: scriptScope,
-        require,
-      };
-      Services.scriptloader.loadSubScript(value, scope, "UTF-8");
+      this.loadScript(value);
+    }
 
-      // Save the scope to avoid it being garbage collected.
-      this.scopes.push(scope);
+    // TODO(robwu): This should be removed when addons can conceptually run in
+    // a separate process. This category should be used for content scripts only,
+    // but since the current content script API implementations (i18n, extension
+    // and runtime) are also needed in adddons, we re-use the category.
+    for (let [/* name */, value] of XPCOMUtils.enumerateCategoryEntries(CATEGORY_EXTENSION_SCRIPTS_CONTENT)) {
+      this.loadScript(value);
     }
 
     this.initialized = promise;
     return this.initialized;
-  },
+  }
 
-  /**
-   * Called by an ext-*.js script to register an API.
-   *
-   * @param {string} namespace The API namespace.
-   *     Used to determine whether the API should be generated when the caller
-   *     requests a subset of the available APIs (e.g. in content scripts).
-   * @param {function(BaseContext)} getAPI A function that returns an object
-   *     that will be merged with |chrome| and |browser|. The next example adds
-   *     the create, update and remove methods to the tabs API.
-   *
-   *     registerSchemaAPI("tabs", (context) => ({
-   *       tabs: { create, update },
-   *     }));
-   *     registerSchemaAPI("tabs", (context) => ({
-   *       tabs: { remove },
-   *     }));
-   */
-  registerSchemaAPI(namespace, getAPI) {
-    this.schemaApis.push({namespace, getAPI});
-  },
-
-  // Mash together all the APIs from apis into obj.
-  generateAPIs(context, apis, obj, namespaces = null) {
-    // Recursively copy properties from source to dest.
-    function copy(dest, source) {
-      for (let prop in source) {
-        let desc = Object.getOwnPropertyDescriptor(source, prop);
-        if (typeof(desc.value) == "object") {
-          if (!(prop in dest)) {
-            dest[prop] = {};
-          }
-          copy(dest[prop], source[prop]);
-        } else {
-          Object.defineProperty(dest, prop, desc);
-        }
-      }
+  registerSchemaAPI(namespace, envType, getAPI) {
+    if (envType == "addon_parent" || envType == "content_parent") {
+      super.registerSchemaAPI(namespace, envType, getAPI);
     }
-
-    for (let api of apis) {
-      if (namespaces && !namespaces.includes(api.namespace)) {
-        continue;
-      }
-      if (api.permission) {
-        if (!context.extension.hasPermission(api.permission)) {
-          continue;
-        }
-      }
-
-      api = api.getAPI(context);
-      copy(obj, api);
+    if (envType === "addon_child") {
+      // TODO(robwu): Remove this. It is a temporary hack to ease the transition
+      // from ext-*.js running in the parent to APIs running in a child process.
+      // This can be removed once there is a dedicated ExtensionContext with type
+      // "addon_child".
+      super.registerSchemaAPI(namespace, "addon_parent", getAPI);
     }
-  },
-
-  // The ext-*.js scripts can ask to be notified for certain hooks.
-  on(hook, callback) {
-    this.emitter.on(hook, callback);
-  },
-
-  // Ask to run all the callbacks that are registered for a given hook.
-  emit(hook, ...args) {
-    return this.emitter.emit(hook, ...args);
-  },
-
-  off(hook, callback) {
-    this.emitter.off(hook, callback);
-  },
+  }
 };
 
 // An extension page is an execution context for any extension content
@@ -236,15 +180,15 @@ var Management = {
 // |contentWindow| is the DOM window the content runs in.
 // |uri| is the URI of the content (optional).
 // |docShell| is the docshell the content runs in (optional).
-// |incognito| is the content running in a private context (default: false).
 ExtensionContext = class extends BaseContext {
   constructor(extension, params) {
-    super(extension);
+    // TODO(robwu): This should be addon_child once all ext- files are split.
+    // There should be a new ProxyContext instance with the "addon_parent" type.
+    super("addon_parent", extension);
 
     let {type, uri} = params;
     this.type = type;
     this.uri = uri || extension.baseURI;
-    this.incognito = params.incognito || false;
 
     if (params.contentWindow) {
       this.setContentWindow(params.contentWindow);
@@ -315,11 +259,14 @@ class ProxyContext extends ExtensionContext {
     params.uri = NetUtil.newURI(params.url);
 
     super(extension, params);
+    // TODO(robwu): Get ProxyContext to inherit from BaseContext instead of
+    // ExtensionContext and let callers specify the environment type.
+    this.envType = "content_parent";
     this.messageManager = messageManager;
     this.principal_ = principal;
 
     this.apiObj = {};
-    GlobalManager.injectInObject(this, null, this.apiObj, ["storage", "test"]);
+    GlobalManager.injectInObject(this, false, this.apiObj);
 
     this.listenerProxies = new Map();
 
@@ -340,19 +287,22 @@ class ProxyContext extends ExtensionContext {
 }
 
 function findPathInObject(obj, path) {
-  // Split any nested namespace (e.g devtools.inspectedWindow) element
-  // and concatenate them into a flatten array.
-  path = path.reduce((acc, el) => {
-    return acc.concat(el.split("."));
-  }, []);
-
-  for (let elt of path) {
+  for (let elt of path.split(".")) {
     // If we get a null object before reaching the requested path
     // (e.g. the API object is returned only on particular kind of contexts instead
     // of based on WebExtensions permissions, like it happens for the devtools APIs),
     // stop searching and return undefined.
+    // TODO(robwu): This should never be reached. If an API is not available for
+    // a context, it should be declared as such in the schema and enforced by
+    // `shouldInject`, for instance using the same logic that is used to opt-in
+    // to APIs in content scripts.
+    // If this check is kept, then there is a discrepancy between APIs depending
+    // on whether it is generated locally or remotely: Non-existing local APIs
+    // are excluded in `shouldInject` by this check, but remote APIs do not have
+    // this information and will therefore cause the schema API generator to
+    // create an API that proxies to a non-existing API implementation.
     if (!obj || !(elt in obj)) {
-      return undefined;
+      return null;
     }
 
     obj = obj[elt];
@@ -444,7 +394,7 @@ let ParentAPIManager = {
       args = args.concat(callback);
     }
     try {
-      findPathInObject(context.apiObj, data.path)[data.name](...args);
+      findPathInObject(context.apiObj, data.path)(...args);
     } catch (e) {
       let msg = e.message || "API failed";
       target.messageManager.sendAsyncMessage("API:CallResult", {
@@ -462,23 +412,20 @@ let ParentAPIManager = {
       target.messageManager.sendAsyncMessage("API:RunListener", {
         childId: data.childId,
         path: data.path,
-        name: data.name,
         args: listenerArgs,
       });
     }
 
-    let ref = data.path.concat(data.name).join(".");
-    context.listenerProxies.set(ref, listener);
+    context.listenerProxies.set(data.path, listener);
 
     let args = Cu.cloneInto(data.args, context.sandbox);
-    findPathInObject(context.apiObj, data.path)[data.name].addListener(listener, ...args);
+    findPathInObject(context.apiObj, data.path).addListener(listener, ...args);
   },
 
   removeListener(data) {
     let context = this.proxyContexts.get(data.childId);
-    let ref = data.path.concat(data.name).join(".");
-    let listener = context.listenerProxies.get(ref);
-    findPathInObject(context.apiObj, data.path)[data.name].removeListener(listener);
+    let listener = context.listenerProxies.get(data.path);
+    findPathInObject(context.apiObj, data.path).removeListener(listener);
   },
 };
 
@@ -619,14 +566,16 @@ GlobalManager = {
     return this.extensionMap.get(extensionId);
   },
 
-  injectInObject(context, defaultCallback, dest, namespaces = null) {
+  injectInObject(context, isChromeCompat, dest) {
     let apis = {
       extensionTypes: {},
     };
-    Management.generateAPIs(context, Management.schemaApis, apis, namespaces);
-    Management.generateAPIs(context, context.extension.apis, apis, namespaces);
+    Management.generateAPIs(context, apis);
+    SchemaAPIManager.generateAPIs(context, context.extension.apis, apis);
 
     let schemaWrapper = {
+      isChromeCompat,
+
       get principal() {
         return context.principal;
       },
@@ -639,55 +588,18 @@ GlobalManager = {
         return context.extension.hasPermission(permission);
       },
 
-      callFunction(path, name, args) {
-        return findPathInObject(apis, path)[name](...args);
-      },
-
-      callFunctionNoReturn(path, name, args) {
-        findPathInObject(apis, path)[name](...args);
-      },
-
-      callAsyncFunction(path, name, args, callback) {
-        // We pass an empty stub function as a default callback for
-        // the `chrome` API, so promise objects are not returned,
-        // and lastError values are reported immediately.
-        if (callback === null) {
-          callback = defaultCallback;
-        }
-
-        let promise;
-        try {
-          promise = findPathInObject(apis, path)[name](...args);
-        } catch (e) {
-          promise = Promise.reject(e);
-        }
-
-        return context.wrapPromise(promise || Promise.resolve(), callback);
-      },
-
-      shouldInject(namespace, name) {
-        if (namespaces && !namespaces.includes(namespace)) {
+      shouldInject(namespace, name, restrictions) {
+        // Do not generate content script APIs, unless explicitly allowed.
+        if (context.envType === "content_parent" &&
+            (!restrictions || !restrictions.includes("content"))) {
           return false;
         }
-        return findPathInObject(apis, [namespace]) != null;
+        return findPathInObject(apis, namespace) !== null;
       },
 
-      getProperty(path, name) {
-        return findPathInObject(apis, path)[name];
-      },
-
-      setProperty(path, name, value) {
-        findPathInObject(apis, path)[name] = value;
-      },
-
-      addListener(path, name, listener, args) {
-        findPathInObject(apis, path)[name].addListener.call(null, listener, ...args);
-      },
-      removeListener(path, name, listener) {
-        findPathInObject(apis, path)[name].removeListener.call(null, listener);
-      },
-      hasListener(path, name, listener) {
-        return findPathInObject(apis, path)[name].hasListener.call(null, listener);
+      getImplementation(namespace, name) {
+        let pathObj = findPathInObject(apis, namespace);
+        return new LocalAPIImplementation(pathObj, name, context);
       },
     };
     Schemas.inject(dest, schemaWrapper);
@@ -700,17 +612,13 @@ GlobalManager = {
     }
 
     let inject = context => {
-      // We create two separate sets of bindings, one for the `chrome`
-      // global, and one for the `browser` global. The latter returns
-      // Promise objects if a callback is not passed, while the former
-      // does not.
-      let injectObject = (name, defaultCallback) => {
+      let injectObject = (name, isChromeCompat) => {
         let browserObj = Cu.createObjectIn(contentWindow, {defineAs: name});
-        this.injectInObject(context, defaultCallback, browserObj);
+        this.injectInObject(context, isChromeCompat, browserObj);
       };
 
-      injectObject("browser", null);
-      injectObject("chrome", () => {});
+      injectObject("browser", false);
+      injectObject("chrome", true);
     };
 
     let id = ExtensionManagement.getAddonIdForWindow(contentWindow);
@@ -752,9 +660,8 @@ GlobalManager = {
 
     let extension = this.extensionMap.get(id);
     let uri = document.documentURIObject;
-    let incognito = PrivateBrowsingUtils.isContentWindowPrivate(contentWindow);
 
-    let context = new ExtensionContext(extension, {type, contentWindow, uri, docShell, incognito});
+    let context = new ExtensionContext(extension, {type, contentWindow, uri, docShell});
     inject(context);
     if (type == "background") {
       this._initializeBackgroundPage(contentWindow);

@@ -156,6 +156,12 @@ function testTransitionTakingOver() {
       // the compositor thread.
       todo_is(opacity, "0.4",
          "transition that interrupted animation is correct");
+
+      // Trigger to start the transition, without this the transition will
+      // be pending in advanceTimeAndRefresh(0) so the transition will not
+      // be sent to the compositor until we call advanceTimeAndRefresh with
+      // a positive time value.
+      getComputedStyle(child).opacity;
       gUtils.advanceTimeAndRefresh(0);
       waitForAllPaints(function() {
         var opacity = gUtils.getOMTAStyle(child, "opacity");

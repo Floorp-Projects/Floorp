@@ -1,0 +1,125 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset=utf-8>
+    <title>Tests for setting effects by using Animation.effect</title>
+    <script src='../testcommon.js'></script>
+  </head>
+  <body>
+    <script type='text/javascript'>
+
+'use strict';
+
+test(function(t) {
+  var target = addDiv(t);
+  var anim = new Animation();
+  anim.effect = new KeyframeEffectReadOnly(target,
+                                           { marginLeft: [ '0px', '100px' ] },
+                                           100 * MS_PER_SEC);
+  anim.currentTime = 50 * MS_PER_SEC;
+  assert_equals(getComputedStyle(target).marginLeft, '50px');
+}, 'After setting target effect on an animation with null effect, the ' +
+   'animation still works');
+
+test(function(t) {
+  var target = addDiv(t);
+  target.style.marginLeft = '10px';
+  var anim = target.animate({ marginLeft: [ '0px', '100px' ] },
+                            100 * MS_PER_SEC);
+  anim.currentTime = 50 * MS_PER_SEC;
+  assert_equals(getComputedStyle(target).marginLeft, '50px');
+
+  anim.effect = null;
+  assert_equals(getComputedStyle(target).marginLeft, '10px');
+}, 'After setting null target effect, the computed style of the target ' +
+   'element becomes the initial value');
+
+test(function(t) {
+  var target = addDiv(t);
+  var animA = target.animate({ marginLeft: [ '0px', '100px' ] },
+                             100 * MS_PER_SEC);
+  var animB = new Animation();
+  animA.currentTime = 50 * MS_PER_SEC;
+  animB.currentTime = 20 * MS_PER_SEC;
+  assert_equals(getComputedStyle(target).marginLeft, '50px',
+                'original computed style of the target element');
+
+  animB.effect = animA.effect;
+  assert_equals(getComputedStyle(target).marginLeft, '20px',
+                'new computed style of the target element');
+}, 'After setting the target effect from an existing animation, the computed ' +
+   'style of the target effect should reflect the time of the updated ' +
+   'animation.');
+
+test(function(t) {
+  var target = addDiv(t);
+  target.style.marginTop = '-10px';
+  var animA = target.animate({ marginLeft: [ '0px', '100px' ] },
+                             100 * MS_PER_SEC);
+  var animB = target.animate({ marginTop: [ '0px', '100px' ] },
+                             50 * MS_PER_SEC);
+  animA.currentTime = 50 * MS_PER_SEC;
+  animB.currentTime = 10 * MS_PER_SEC;
+  assert_equals(getComputedStyle(target).marginLeft, '50px',
+                'original margin-left of the target element');
+  assert_equals(getComputedStyle(target).marginTop, '20px',
+                'original margin-top of the target element');
+
+  animB.effect = animA.effect;
+  assert_equals(getComputedStyle(target).marginLeft, '10px',
+                'new margin-left of the target element');
+  assert_equals(getComputedStyle(target).marginTop, '-10px',
+                'new margin-top of the target element');
+}, 'After setting target effect with an animation to another animation which ' +
+   'also has an target effect and both animation effects target to the same ' +
+   'element, the computed style of this element should reflect the time and ' +
+   'effect of the animation that was set');
+
+test(function(t) {
+  var targetA = addDiv(t);
+  var targetB = addDiv(t);
+  targetB.style.marginLeft = '-10px';
+  var animA = targetA.animate({ marginLeft: [ '0px', '100px' ] },
+                              100 * MS_PER_SEC);
+  var animB = targetB.animate({ marginLeft: [ '0px', '100px' ] },
+                              50 * MS_PER_SEC);
+  animA.currentTime = 50 * MS_PER_SEC;
+  animB.currentTime = 10 * MS_PER_SEC;
+  assert_equals(getComputedStyle(targetA).marginLeft, '50px',
+                'original margin-left of the first element');
+  assert_equals(getComputedStyle(targetB).marginLeft, '20px',
+                'original margin-left of the second element');
+
+  animB.effect = animA.effect;
+  assert_equals(getComputedStyle(targetA).marginLeft, '10px',
+                'new margin-left of the first element');
+  assert_equals(getComputedStyle(targetB).marginLeft, '-10px',
+                'new margin-left of the second element');
+}, 'After setting target effect with an animation to another animation which ' +
+   'also has an target effect and these animation effects target to ' +
+   'different elements, the computed styles of the two elements should ' +
+   'reflect the time and effect of the animation that was set');
+
+test(function(t) {
+  var target = addDiv(t);
+  var animA = target.animate({ marginLeft: [ '0px', '100px' ] },
+                             50 * MS_PER_SEC);
+  var animB = target.animate({ marginTop: [ '0px', '50px' ] },
+                             100 * MS_PER_SEC);
+  animA.currentTime = 20 * MS_PER_SEC;
+  animB.currentTime = 30 * MS_PER_SEC;
+  assert_equals(getComputedStyle(target).marginLeft, '40px');
+  assert_equals(getComputedStyle(target).marginTop, '15px');
+
+  var effectA = animA.effect;
+  animA.effect = animB.effect;
+  animB.effect = effectA;
+  assert_equals(getComputedStyle(target).marginLeft, '60px');
+  assert_equals(getComputedStyle(target).marginTop, '10px');
+}, 'After swapping effects of two playing animations, both animations are ' +
+   'still running with the same current time');
+
+done();
+    </script>
+  </body>
+</html>

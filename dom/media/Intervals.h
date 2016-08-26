@@ -574,10 +574,6 @@ public:
 
   bool Contains(const ElemType& aInterval) const {
     for (const auto& interval : mIntervals) {
-      if (aInterval.LeftOf(interval)) {
-        // Will never succeed.
-        return false;
-      }
       if (interval.Contains(aInterval)) {
         return true;
       }

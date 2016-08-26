@@ -15,7 +15,7 @@ var {
   EventManager,
 } = ExtensionUtils;
 
-extensions.registerSchemaAPI("windows", context => {
+extensions.registerSchemaAPI("windows", "addon_parent", context => {
   let {extension} = context;
   return {
     windows: {

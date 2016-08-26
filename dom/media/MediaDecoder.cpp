@@ -508,6 +508,8 @@ MediaDecoder::MediaDecoder(MediaDecoderOwner* aOwner)
   , mMinimizePreroll(false)
   , mMediaTracksConstructed(false)
   , mFiredMetadataLoaded(false)
+  , mElementVisible(!aOwner->IsHidden())
+  , mForcedHidden(false)
   , mIsDormant(false)
   , mIsHeuristicDormantSupported(
       Preferences::GetBool("media.decoder.heuristic.dormant.enabled", false))
@@ -1363,7 +1365,16 @@ void
 MediaDecoder::SetElementVisibility(bool aIsVisible)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  mIsVisible = aIsVisible;
+  mElementVisible = aIsVisible;
+  mIsVisible = !mForcedHidden && mElementVisible;
+}
+
+void
+MediaDecoder::SetForcedHidden(bool aForcedHidden)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  mForcedHidden = aForcedHidden;
+  SetElementVisibility(mElementVisible);
 }
 
 void
@@ -1425,6 +1436,12 @@ media::TimeIntervals
 MediaDecoder::GetSeekable()
 {
   MOZ_ASSERT(NS_IsMainThread());
+
+  if (IsNaN(GetDuration())) {
+    // We do not have a duration yet, we can't determine the seekable range.
+    return TimeIntervals();
+  }
+
   // We can seek in buffered range if the media is seekable. Also, we can seek
   // in unbuffered ranges if the transport level is seekable (local file or the
   // server supports range requests, etc.) or in cue-less WebMs

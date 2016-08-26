@@ -14,7 +14,7 @@ var {
 class StubContext extends BaseContext {
   constructor() {
     let fakeExtension = {id: "test@web.extension"};
-    super(fakeExtension);
+    super("testEnv", fakeExtension);
     this.sandbox = Cu.Sandbox(global);
   }
 
@@ -128,7 +128,7 @@ add_task(function* test_post_unload_listeners() {
 class Context extends BaseContext {
   constructor(principal) {
     let fakeExtension = {id: "test@web.extension"};
-    super(fakeExtension);
+    super("testEnv", fakeExtension);
     Object.defineProperty(this, "principal", {
       value: principal,
       configurable: true,

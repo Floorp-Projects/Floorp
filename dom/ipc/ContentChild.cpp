@@ -811,13 +811,11 @@ ContentChild::ProvideWindowCommon(TabChild* aTabOpener,
 
     if (NS_FAILED(rv)) {
       PRenderFrameChild::Send__delete__(renderFrame);
-      PBrowserChild::Send__delete__(newChild);
       return rv;
     }
   }
   if (!*aWindowIsNew) {
     PRenderFrameChild::Send__delete__(renderFrame);
-    PBrowserChild::Send__delete__(newChild);
     return NS_ERROR_ABORT;
   }
 
