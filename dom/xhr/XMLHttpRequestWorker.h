@@ -248,6 +248,12 @@ public:
     aRv.Throw(NS_ERROR_FAILURE);
   }
 
+  virtual void
+  SetOriginAttributes(const mozilla::dom::OriginAttributesDictionary& aAttrs) override
+  {
+    MOZ_CRASH("This method cannot be called on workers.");
+  }
+
   XMLHttpRequestUpload*
   GetUploadObjectNoCreate() const
   {

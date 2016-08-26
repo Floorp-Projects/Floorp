@@ -160,20 +160,26 @@ struct TestFileData
   int32_t mWidth;
   int32_t mHeight;
   uint32_t mNumberAudioTracks;
+  bool mHasCrypto;
+  uint64_t mMoofReachedOffset; // or 0 for the end.
+  bool mValidMoof;
+  bool mHeader;
 };
 static const TestFileData testFiles[] = {
-  { "test_case_1156505.mp4", 0,   0,   0, 0 },
-  { "test_case_1181213.mp4", 0,   0,   0, 0 },
-  { "test_case_1181215.mp4", 0,   0,   0, 0 },
-  { "test_case_1181220.mp4", 0,   0,   0, 0 },
-  { "test_case_1181223.mp4", 0,   0,   0, 0 },
-  { "test_case_1181719.mp4", 0,   0,   0, 0 },
-  { "test_case_1185230.mp4", 1, 320, 240, 1 },
-  { "test_case_1187067.mp4", 1, 160,  90, 0 },
-  { "test_case_1200326.mp4", 0,   0,   0, 0 },
-  { "test_case_1204580.mp4", 1, 320, 180, 0 },
-  { "test_case_1216748.mp4", 0,   0,   0, 0 },
-  { "test_case_1296473.mp4", 0,   0,   0, 0 }
+  // filename               #V   w    h  #A  crypt  off   moof  headr
+  { "test_case_1156505.mp4", 0,   0,   0, 0, false, 152, false, false },
+  { "test_case_1181213.mp4", 0,   0,   0, 0, false,   0, false, false },
+  { "test_case_1181215.mp4", 0,   0,   0, 0, false,   0, false, false },
+  { "test_case_1181220.mp4", 0,   0,   0, 0, false,   0, false, false },
+  { "test_case_1181223.mp4", 0,   0,   0, 0, false,   0, false, false },
+  { "test_case_1181719.mp4", 0,   0,   0, 0, false,   0, false, false },
+  { "test_case_1185230.mp4", 1, 320, 240, 1, false,   0, false, false },
+  { "test_case_1187067.mp4", 1, 160,  90, 0, false,   0, false, false },
+  { "test_case_1200326.mp4", 0,   0,   0, 0, false,   0, false, false },
+  { "test_case_1204580.mp4", 1, 320, 180, 0, false,   0, false, false },
+  { "test_case_1216748.mp4", 0,   0,   0, 0, false, 152, false, false },
+  { "test_case_1296473.mp4", 0,   0,   0, 0, false,   0, false, false },
+  { "test_case_1296532.mp4", 1, 560, 320, 1, true,    0, true,  true  }
 };
 
 TEST(stagefright_MPEG4Metadata, test_case_mp4)
@@ -234,7 +240,7 @@ TEST(stagefright_MPEG4Metadata, test_case_mp4)
     EXPECT_FALSE(metadata.GetTrackInfo(static_cast<TrackInfo::TrackType>(-1), 0));
     // We can see anywhere in any MPEG4.
     EXPECT_TRUE(metadata.CanSeek());
-    EXPECT_FALSE(metadata.Crypto().valid);
+    EXPECT_EQ(testFiles[test].mHasCrypto, metadata.Crypto().valid);
   }
 }
 
@@ -287,19 +293,30 @@ TEST(stagefright_MoofParser, test_case_mp4)
     MoofParser parser(stream, 0, false);
     EXPECT_EQ(0u, parser.mOffset);
     EXPECT_FALSE(parser.ReachedEnd());
-
-    MediaByteRangeSet byteRanges;
-    EXPECT_FALSE(parser.RebuildFragmentedIndex(byteRanges));
-
-    EXPECT_TRUE(parser.GetCompositionRange(byteRanges).IsNull());
     EXPECT_TRUE(parser.mInitRange.IsEmpty());
-    EXPECT_EQ(0u, parser.mOffset);
-    EXPECT_FALSE(parser.ReachedEnd());
+
     EXPECT_TRUE(parser.HasMetadata());
     RefPtr<MediaByteBuffer> metadataBuffer = parser.Metadata();
     EXPECT_TRUE(metadataBuffer);
+
+    EXPECT_FALSE(parser.mInitRange.IsEmpty());
+    const MediaByteRangeSet byteRanges(
+      MediaByteRange(0, int64_t(buffer.Length())));
+    EXPECT_EQ(testFiles[test].mValidMoof,
+              parser.RebuildFragmentedIndex(byteRanges));
+    if (testFiles[test].mMoofReachedOffset == 0) {
+      EXPECT_EQ(buffer.Length(), parser.mOffset);
+      EXPECT_TRUE(parser.ReachedEnd());
+    } else {
+      EXPECT_EQ(testFiles[test].mMoofReachedOffset, parser.mOffset);
+      EXPECT_FALSE(parser.ReachedEnd());
+    }
+
+    EXPECT_FALSE(parser.mInitRange.IsEmpty());
+    EXPECT_TRUE(parser.GetCompositionRange(byteRanges).IsNull());
     EXPECT_TRUE(parser.FirstCompleteMediaSegment().IsEmpty());
-    EXPECT_TRUE(parser.FirstCompleteMediaHeader().IsEmpty());
+    EXPECT_EQ(testFiles[test].mHeader,
+              !parser.FirstCompleteMediaHeader().IsEmpty());
   }
 }
 

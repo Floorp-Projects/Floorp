@@ -20,6 +20,7 @@
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventListenerManager.h"
 #include "mozilla/LoadInfo.h"
+#include "mozilla/LoadContext.h"
 #include "mozilla/MemoryReporting.h"
 #include "nsIDOMDocument.h"
 #include "mozilla/dom/ProgressEvent.h"
@@ -1541,6 +1542,20 @@ XMLHttpRequestMainThread::OpenInternal(const nsACString& aMethod,
   }
 
   return NS_OK;
+}
+
+void
+XMLHttpRequestMainThread::SetOriginAttributes(const OriginAttributesDictionary& aAttrs)
+{
+  MOZ_ASSERT((mState == State::opened) && !mFlagSend);
+
+  GenericOriginAttributes attrs(aAttrs);
+  NeckoOriginAttributes neckoAttrs;
+  neckoAttrs.SetFromGenericAttributes(attrs);
+
+  nsCOMPtr<nsILoadInfo> loadInfo = mChannel->GetLoadInfo();
+  MOZ_ASSERT(loadInfo);
+  loadInfo->SetOriginAttributes(neckoAttrs);
 }
 
 void

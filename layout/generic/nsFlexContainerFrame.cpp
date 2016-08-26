@@ -124,15 +124,15 @@ ConvertLegacyStyleToAlignItems(const nsStyleXUL* aStyleXUL)
 {
   // -[moz|webkit]-box-align corresponds to modern "align-items"
   switch (aStyleXUL->mBoxAlign) {
-    case NS_STYLE_BOX_ALIGN_STRETCH:
+    case StyleBoxAlign::Stretch:
       return NS_STYLE_ALIGN_STRETCH;
-    case NS_STYLE_BOX_ALIGN_START:
+    case StyleBoxAlign::Start:
       return NS_STYLE_ALIGN_FLEX_START;
-    case NS_STYLE_BOX_ALIGN_CENTER:
+    case StyleBoxAlign::Center:
       return NS_STYLE_ALIGN_CENTER;
-    case NS_STYLE_BOX_ALIGN_BASELINE:
+    case StyleBoxAlign::Baseline:
       return NS_STYLE_ALIGN_BASELINE;
-    case NS_STYLE_BOX_ALIGN_END:
+    case StyleBoxAlign::End:
       return NS_STYLE_ALIGN_FLEX_END;
   }
 
@@ -148,13 +148,13 @@ ConvertLegacyStyleToJustifyContent(const nsStyleXUL* aStyleXUL)
 {
   // -[moz|webkit]-box-pack corresponds to modern "justify-content"
   switch (aStyleXUL->mBoxPack) {
-    case NS_STYLE_BOX_PACK_START:
+    case StyleBoxPack::Start:
       return NS_STYLE_ALIGN_FLEX_START;
-    case NS_STYLE_BOX_PACK_CENTER:
+    case StyleBoxPack::Center:
       return NS_STYLE_ALIGN_CENTER;
-    case NS_STYLE_BOX_PACK_END:
+    case StyleBoxPack::End:
       return NS_STYLE_ALIGN_FLEX_END;
-    case NS_STYLE_BOX_PACK_JUSTIFY:
+    case StyleBoxPack::Justify:
       return NS_STYLE_ALIGN_SPACE_BETWEEN;
   }
 
@@ -3248,7 +3248,7 @@ FlexboxAxisTracker::InitAxesFromLegacyProps(
   const nsStyleXUL* styleXUL = aFlexContainer->StyleXUL();
 
   const bool boxOrientIsVertical = (styleXUL->mBoxOrient ==
-                                    NS_STYLE_BOX_ORIENT_VERTICAL);
+                                    StyleBoxOrient::Vertical);
   const bool wmIsVertical = mWM.IsVertical();
 
   // If box-orient agrees with our writing-mode, then we're "row-oriented"
@@ -3277,7 +3277,7 @@ FlexboxAxisTracker::InitAxesFromLegacyProps(
 
   // Legacy flexbox can use "-webkit-box-direction: reverse" to reverse the
   // main axis (so it runs in the reverse direction of the inline axis):
-  if (styleXUL->mBoxDirection == NS_STYLE_BOX_DIRECTION_REVERSE) {
+  if (styleXUL->mBoxDirection == StyleBoxDirection::Reverse) {
     mMainAxis = GetReverseAxis(mMainAxis);
     mIsMainAxisReversed = true;
   } else {

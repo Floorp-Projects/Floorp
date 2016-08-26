@@ -3,25 +3,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "CameraStreamImpl.h"
+#include "GeneratedJNINatives.h"
 #include "nsCRTGlue.h"
 #include "nsThreadUtils.h"
 #include "nsXULAppAPI.h"
 #include "mozilla/Monitor.h"
-
-/**
- * JNI part & helper runnable
- */
-
-extern "C" {
-    NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_cameraCallbackBridge(JNIEnv *, jclass, jbyteArray data);
-}
-
-NS_EXPORT void JNICALL
-Java_org_mozilla_gecko_GeckoAppShell_cameraCallbackBridge(JNIEnv *env, jclass, jbyteArray data) {
-    mozilla::net::CameraStreamImpl* impl = mozilla::net::CameraStreamImpl::GetInstance(0);
-    
-    impl->transmitFrame(env, &data);
-}
 
 using namespace mozilla;
 
@@ -31,20 +17,40 @@ namespace net {
 static CameraStreamImpl* mCamera0 = nullptr;
 static CameraStreamImpl* mCamera1 = nullptr;
 
+class CameraStreamImpl::Callback
+    : public java::GeckoAppShell::CameraCallback::Natives<Callback>
+{
+public:
+    static void OnFrameData(int32_t aCamera, jni::ByteArray::Param aData)
+    {
+        MOZ_ASSERT(NS_IsMainThread());
+
+        CameraStreamImpl* impl = GetInstance(uint32_t(aCamera));
+        if (impl) {
+            impl->TransmitFrame(aData);
+        }
+    }
+};
+
 /**
  * CameraStreamImpl
  */
 
-void CameraStreamImpl::transmitFrame(JNIEnv *env, jbyteArray *data) {
-    if (!mCallback)
-      return;
-    jboolean isCopy;
-    jbyte* jFrame = env->GetByteArrayElements(*data, &isCopy);
-    uint32_t length = env->GetArrayLength(*data);
-    if (length > 0) {
-        mCallback->ReceiveFrame((char*)jFrame, length);
+void CameraStreamImpl::TransmitFrame(jni::ByteArray::Param aData) {
+    if (!mCallback) {
+        return;
     }
-    env->ReleaseByteArrayElements(*data, jFrame, 0);
+
+    JNIEnv* const env = jni::GetGeckoThreadEnv();
+    const size_t length = size_t(env->GetArrayLength(aData.Get()));
+
+    if (!length) {
+        return;
+    }
+
+    jbyte* const data = env->GetByteArrayElements(aData.Get(), nullptr);
+    mCallback->ReceiveFrame(reinterpret_cast<char*>(data), length);
+    env->ReleaseByteArrayElements(aData.Get(), data, JNI_ABORT);
 }
 
 CameraStreamImpl* CameraStreamImpl::GetInstance(uint32_t aCamera) {
@@ -86,7 +92,17 @@ bool CameraStreamImpl::Init(const nsCString& contentType, const uint32_t& camera
     mCallback = aCallback;
     mWidth = width;
     mHeight = height;
-    return AndroidBridge::Bridge()->InitCamera(contentType, camera, &mWidth, &mHeight, &mFps);
+
+    Callback::Init();
+    jni::IntArray::LocalRef retArray = java::GeckoAppShell::InitCamera(
+            contentType, int32_t(camera), int32_t(width), int32_t(height));
+    nsTArray<int32_t> ret = retArray->GetElements();
+
+    mWidth = uint32_t(ret[1]);
+    mHeight = uint32_t(ret[2]);
+    mFps = uint32_t(ret[3]);
+
+    return !!ret[0];
 }
 
 void CameraStreamImpl::Close() {

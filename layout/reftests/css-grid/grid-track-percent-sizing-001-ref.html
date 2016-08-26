@@ -75,6 +75,14 @@ x {
 .sz.t5 x { width: 10px }
 .sz.tA x { width: 160px }
 
+.tC {
+  grid-template-columns: 5px;
+  grid-template-rows: 5px;
+}
+.tD {
+  grid-template-columns: 0;
+  grid-template-rows: 0;
+}
   </style>
 </head>
 <body>
@@ -106,7 +114,9 @@ x {
 <div class="grid sz t9"><span><t></t></span><x></x></div>
 <div class="grid sz tA"><span><t></t></span><x></x></div>
 <div class="grid sz tB"><span><t></t></span><x></x></div>
-
+<div class="grid sz tC"><span><t></t></span><x style="grid-area:2/1;height:10px; width:5px"></x></div>
+<div class="grid sz tD"><span><t></t></span><x style="grid-area:1/1;height:10px; width:100px"></x></div>
+<div class="grid sz tD"><span><t></t></span><x style="grid-area:1/1;height:10px; width:100px"></x></div>
 
 </body>
 </html>
