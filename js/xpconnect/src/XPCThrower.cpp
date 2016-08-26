@@ -59,8 +59,7 @@ XPCThrower::CheckForPendingException(nsresult result, JSContext* cx)
     if (NS_FAILED(e->GetResult(&e_result)) || e_result != result)
         return false;
 
-    if (!ThrowExceptionObject(cx, e))
-        JS_ReportOutOfMemory(cx);
+    ThrowExceptionObject(cx, e);
     return true;
 }
 
