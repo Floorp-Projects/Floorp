@@ -1303,9 +1303,8 @@ nsCSPParser::parseContentSecurityPolicy(const nsAString& aPolicyString,
   if (CSPPARSERLOGENABLED()) {
     CSPPARSERLOG(("nsCSPParser::parseContentSecurityPolicy, policy: %s",
                  NS_ConvertUTF16toUTF8(aPolicyString).get()));
-    nsAutoCString spec;
-    aSelfURI->GetSpec(spec);
-    CSPPARSERLOG(("nsCSPParser::parseContentSecurityPolicy, selfURI: %s", spec.get()));
+    CSPPARSERLOG(("nsCSPParser::parseContentSecurityPolicy, selfURI: %s",
+                 aSelfURI->GetSpecOrDefault().get()));
     CSPPARSERLOG(("nsCSPParser::parseContentSecurityPolicy, reportOnly: %s",
                  (aReportOnly ? "true" : "false")));
     CSPPARSERLOG(("nsCSPParser::parseContentSecurityPolicy, deliveredViaMetaTag: %s",

@@ -432,9 +432,7 @@ InputTestConsumer::OnStartRequest(nsIRequest *request, nsISupports* context)
                                     NS_GET_IID(nsIURI),
                                     getter_AddRefs(foo));
       if (foo) {
-          nsAutoCString spec;
-          foo->GetSpec(spec);
-          LOG(("\ttest.foo: %s\n", spec.get()));
+          LOG(("\ttest.foo: %s\n", foo->GetSpecOrDefault().get()));
       }
   }
 

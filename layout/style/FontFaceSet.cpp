@@ -607,13 +607,12 @@ FontFaceSet::StartLoad(gfxUserFontEntry* aUserFontEntry,
     new nsFontFaceLoader(aUserFontEntry, aFontFaceSrc->mURI, this, channel);
 
   if (LOG_ENABLED()) {
-    nsAutoCString fontURI, referrerURI;
-    aFontFaceSrc->mURI->GetSpec(fontURI);
-    if (aFontFaceSrc->mReferrer)
-      aFontFaceSrc->mReferrer->GetSpec(referrerURI);
     LOG(("userfonts (%p) download start - font uri: (%s) "
          "referrer uri: (%s)\n",
-         fontLoader.get(), fontURI.get(), referrerURI.get()));
+         fontLoader.get(), aFontFaceSrc->mURI->GetSpecOrDefault().get(),
+         aFontFaceSrc->mReferrer
+         ? aFontFaceSrc->mReferrer->GetSpecOrDefault().get()
+         : ""));
   }
 
   nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel));

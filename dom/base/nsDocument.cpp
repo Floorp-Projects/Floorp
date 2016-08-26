@@ -1792,7 +1792,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsDocument)
     uint32_t nsid = tmp->GetDefaultNamespaceID();
     nsAutoCString uri;
     if (tmp->mDocumentURI)
-      tmp->mDocumentURI->GetSpec(uri);
+      uri = tmp->mDocumentURI->GetSpecOrDefault();
     if (nsid < ArrayLength(kNSURIs)) {
       SprintfLiteral(name, "nsDocument %s %s %s",
                      loadedAsData.get(), kNSURIs[nsid], uri.get());
@@ -2187,9 +2187,8 @@ nsDocument::ResetToURI(nsIURI *aURI, nsILoadGroup *aLoadGroup,
   NS_PRECONDITION(aURI, "Null URI passed to ResetToURI");
 
   if (gDocumentLeakPRLog && MOZ_LOG_TEST(gDocumentLeakPRLog, LogLevel::Debug)) {
-    nsAutoCString spec;
-    aURI->GetSpec(spec);
-    PR_LogPrint("DOCUMENT %p ResetToURI %s", this, spec.get());
+    PR_LogPrint("DOCUMENT %p ResetToURI %s", this,
+                aURI->GetSpecOrDefault().get());
   }
 
   mSecurityInfo = nullptr;
@@ -2528,10 +2527,8 @@ nsDocument::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
   if (gDocumentLeakPRLog && MOZ_LOG_TEST(gDocumentLeakPRLog, LogLevel::Debug)) {
     nsCOMPtr<nsIURI> uri;
     aChannel->GetURI(getter_AddRefs(uri));
-    nsAutoCString spec;
-    if (uri)
-      uri->GetSpec(spec);
-    PR_LogPrint("DOCUMENT %p StartDocumentLoad %s", this, spec.get());
+    PR_LogPrint("DOCUMENT %p StartDocumentLoad %s",
+                this, uri ? uri->GetSpecOrDefault().get() : "");
   }
 
   MOZ_ASSERT(NodePrincipal()->GetAppId() != nsIScriptSecurityManager::UNKNOWN_APP_ID,
@@ -13055,8 +13052,7 @@ nsDocument::ReportUseCounters()
     }
 
     if (sDebugUseCounters) {
-      nsCString spec;
-      uri->GetSpec(spec);
+      nsCString spec = uri->GetSpecOrDefault();
 
       // URIs can be rather long for data documents, so truncate them to
       // some reasonable length.

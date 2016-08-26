@@ -228,10 +228,7 @@ nsresult makeAbsTest(const char* i_BaseURI, const char* relativePortion,
     status = baseURL->Resolve(nsDependentCString(relativePortion), newURL);
     if (NS_FAILED(status)) return status;
 
-    nsAutoCString temp;
-    baseURL->GetSpec(temp);
-
-    printf("Analyzing %s\n", temp.get());
+    printf("Analyzing %s\n", baseURL->GetSpecOrDefault().get());
     printf("With      %s\n", relativePortion);
 
     printf("Got       %s\n", newURL.get());

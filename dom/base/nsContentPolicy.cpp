@@ -203,29 +203,25 @@ nsContentPolicy::CheckPolicy(CPMethod          policyMethod,
 
 //uses the parameters from ShouldXYZ to produce and log a message
 //logType must be a literal string constant
-#define LOG_CHECK(logType)                                                    \
-  PR_BEGIN_MACRO                                                              \
-    /* skip all this nonsense if the call failed or logging is disabled */    \
-    if (NS_SUCCEEDED(rv) && MOZ_LOG_TEST(gConPolLog, LogLevel::Debug)) {          \
-      const char *resultName;                                                 \
-      if (decision) {                                                         \
-        resultName = NS_CP_ResponseName(*decision);                           \
-      } else {                                                                \
-        resultName = "(null ptr)";                                            \
-      }                                                                       \
-      nsAutoCString spec("None");                                             \
-      if (contentLocation) {                                                  \
-          contentLocation->GetSpec(spec);                                     \
-      }                                                                       \
-      nsAutoCString refSpec("None");                                          \
-      if (requestingLocation) {                                               \
-          requestingLocation->GetSpec(refSpec);                               \
-      }                                                                       \
-      MOZ_LOG(gConPolLog, LogLevel::Debug,                                        \
-             ("Content Policy: " logType ": <%s> <Ref:%s> result=%s",         \
-              spec.get(), refSpec.get(), resultName)                          \
-             );                                                               \
-    }                                                                         \
+#define LOG_CHECK(logType)                                                     \
+  PR_BEGIN_MACRO                                                               \
+    /* skip all this nonsense if the call failed or logging is disabled */     \
+    if (NS_SUCCEEDED(rv) && MOZ_LOG_TEST(gConPolLog, LogLevel::Debug)) {       \
+      const char *resultName;                                                  \
+      if (decision) {                                                          \
+        resultName = NS_CP_ResponseName(*decision);                            \
+      } else {                                                                 \
+        resultName = "(null ptr)";                                             \
+      }                                                                        \
+      MOZ_LOG(gConPolLog, LogLevel::Debug,                                     \
+             ("Content Policy: " logType ": <%s> <Ref:%s> result=%s",          \
+              contentLocation ? contentLocation->GetSpecOrDefault().get()      \
+                              : "None",                                        \
+              requestingLocation ? requestingLocation->GetSpecOrDefault().get()\
+                                 : "None",                                     \
+              resultName)                                                      \
+             );                                                                \
+    }                                                                          \
   PR_END_MACRO
 
 NS_IMETHODIMP

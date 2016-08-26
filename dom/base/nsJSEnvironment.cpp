@@ -531,9 +531,7 @@ PrintWinURI(nsGlobalWindow *win)
     return;
   }
 
-  nsAutoCString spec;
-  uri->GetSpec(spec);
-  printf("%s\n", spec.get());
+  printf("%s\n", uri->GetSpecOrDefault().get());
 }
 
 void
@@ -557,9 +555,7 @@ PrintWinCodebase(nsGlobalWindow *win)
     return;
   }
 
-  nsAutoCString spec;
-  uri->GetSpec(spec);
-  printf("%s\n", spec.get());
+  printf("%s\n", uri->GetSpecOrDefault().get());
 }
 
 void
