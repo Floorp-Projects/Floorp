@@ -426,6 +426,68 @@ function addDevice() {
   run_next_test();
 }
 
+function filterDevice() {
+  Services.prefs.setBoolPref(PREF_DISCOVERY, true);
+
+  let mockDevice = createDevice("device.local",
+                                12345,
+                                "service.name",
+                                SERVICE_TYPE);
+  let mockObj = {
+    QueryInterface: XPCOMUtils.generateQI([Ci.nsIDNSServiceDiscovery]),
+    startDiscovery: function(serviceType, listener) {
+      listener.onDiscoveryStarted(serviceType);
+      listener.onServiceFound(createDevice("",
+                                           0,
+                                           mockDevice.serviceName,
+                                           mockDevice.serviceType));
+      return {
+        QueryInterface: XPCOMUtils.generateQI([Ci.nsICancelable]),
+        cancel: function() {}
+      };
+    },
+    registerService: function(serviceInfo, listener) {},
+    resolveService: function(serviceInfo, listener) {
+      Assert.equal(serviceInfo.serviceName, mockDevice.serviceName);
+      Assert.equal(serviceInfo.serviceType, mockDevice.serviceType);
+      listener.onServiceResolved(createDevice(mockDevice.host,
+                                              mockDevice.port,
+                                              mockDevice.serviceName,
+                                              mockDevice.serviceType));
+    }
+  };
+
+  let contractHook = new ContractHook(SD_CONTRACT_ID, mockObj);
+  let provider = Cc[PROVIDER_CONTRACT_ID].createInstance(Ci.nsIPresentationDeviceProvider);
+  let listener = {
+    QueryInterface: XPCOMUtils.generateQI([Ci.nsIPresentationDeviceListener,
+                                           Ci.nsISupportsWeakReference]),
+    addDevice: function(device) {
+      let tests = [
+        { requestedUrl: "app://fling-player.gaiamobile.org/index.html", supported: true },
+        { requestedUrl: "app://notification-receiver.gaiamobile.org/index.html", supported: true },
+        { requestedUrl: "http://example.com", supported: true },
+        { requestedUrl: "https://example.com", supported: true },
+        { requestedUrl: "ftp://example.com", supported: false },
+        { requestedUrl: "app://unknown-app-id", supported: false },
+        { requestedUrl: "unknowSchem://example.com", supported: false },
+      ];
+
+      for (let test of tests) {
+        Assert.equal(device.isRequestedUrlSupported(test.requestedUrl), test.supported);
+      }
+
+      provider.listener = null;
+      run_next_test();
+    },
+    updateDevice: function() {},
+    removeDevice: function() {},
+    onSessionRequest: function() {},
+  };
+
+  provider.listener = listener;
+}
+
 function handleSessionRequest() {
   Services.prefs.setBoolPref(PREF_DISCOVERY, true);
   Services.prefs.setBoolPref(PREF_DISCOVERABLE, false);
@@ -1239,6 +1301,7 @@ function run_test() {
   add_test(noRegisterService);
   add_test(registerServiceDynamically);
   add_test(addDevice);
+  add_test(filterDevice);
   add_test(handleSessionRequest);
   add_test(handleOnSessionRequest);
   add_test(handleOnSessionRequestFromUnknownDevice);
