@@ -18,6 +18,8 @@
 
 #include "asmjs/WasmJS.h"
 
+#include "mozilla/Maybe.h"
+
 #include "asmjs/WasmCompile.h"
 #include "asmjs/WasmInstance.h"
 #include "asmjs/WasmModule.h"
@@ -32,6 +34,7 @@
 using namespace js;
 using namespace js::jit;
 using namespace js::wasm;
+using mozilla::Nothing;
 
 bool
 wasm::HasCompilerSupport(ExclusiveContext* cx)
@@ -40,6 +43,9 @@ wasm::HasCompilerSupport(ExclusiveContext* cx)
         return false;
 
     if (!cx->jitSupportsUnalignedAccesses())
+        return false;
+
+    if (!wasm::HaveSignalHandlers())
         return false;
 
 #if defined(JS_CODEGEN_NONE) || defined(JS_CODEGEN_ARM64)
@@ -747,10 +753,14 @@ WasmMemoryObject::construct(JSContext* cx, unsigned argc, Value* vp)
     if (!initialAtom)
         return false;
 
+    JSAtom* maximumAtom = Atomize(cx, "maximum", strlen("maximum"));
+    if (!maximumAtom)
+        return false;
+
     RootedObject obj(cx, &args[0].toObject());
-    RootedId id(cx, AtomToId(initialAtom));
+    RootedId initialId(cx, AtomToId(initialAtom));
     RootedValue initialVal(cx);
-    if (!GetProperty(cx, obj, obj, id, &initialVal))
+    if (!GetProperty(cx, obj, obj, initialId, &initialVal))
         return false;
 
     double initialDbl;
@@ -762,9 +772,30 @@ WasmMemoryObject::construct(JSContext* cx, unsigned argc, Value* vp)
         return false;
     }
 
-    uint32_t bytes = uint32_t(initialDbl) * PageSize;
-    bool signalsForOOB = SignalUsage().forOOB;
-    RootedArrayBufferObject buffer(cx, ArrayBufferObject::createForWasm(cx, bytes, signalsForOOB));
+    bool found;
+    Maybe<uint32_t> maxSize;
+    RootedId maxId(cx, AtomToId(maximumAtom));
+
+    if (HasProperty(cx, obj, maxId, &found) && found) {
+        RootedValue maxVal(cx);
+        if (!GetProperty(cx, obj, obj, maxId, &maxVal))
+            return false;
+
+        double maxDbl;
+        if (!ToInteger(cx, maxVal, &maxDbl))
+            return false;
+
+        if (maxDbl < initialDbl || maxDbl > UINT32_MAX / PageSize) {
+            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_SIZE, "Memory",
+                                 "maximum");
+            return false;
+        }
+
+        maxSize = Some<uint32_t>(uint32_t(maxDbl) * PageSize);
+    }
+
+    uint32_t initialSize = uint32_t(initialDbl) * PageSize;
+    RootedArrayBufferObject buffer(cx, ArrayBufferObject::createForWasm(cx, initialSize, maxSize));
     if (!buffer)
         return false;
 
