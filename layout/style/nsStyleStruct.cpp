@@ -440,7 +440,7 @@ nsStyleBorder::nsStyleBorder(StyleStructContext aContext)
   , mBorderImageRepeatH(NS_STYLE_BORDER_IMAGE_REPEAT_STRETCH)
   , mBorderImageRepeatV(NS_STYLE_BORDER_IMAGE_REPEAT_STRETCH)
   , mFloatEdge(StyleFloatEdge::ContentBox)
-  , mBoxDecorationBreak(NS_STYLE_BOX_DECORATION_BREAK_SLICE)
+  , mBoxDecorationBreak(StyleBoxDecorationBreak::Slice)
   , mComputedBorder(0, 0, 0, 0)
 {
   MOZ_COUNT_CTOR(nsStyleBorder);

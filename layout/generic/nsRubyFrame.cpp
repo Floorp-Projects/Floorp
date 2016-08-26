@@ -118,7 +118,7 @@ nsRubyFrame::Reflow(nsPresContext* aPresContext,
   LogicalMargin borderPadding = aReflowInput.ComputedLogicalBorderPadding();
   nscoord startEdge = 0;
   const bool boxDecorationBreakClone =
-    StyleBorder()->mBoxDecorationBreak == NS_STYLE_BOX_DECORATION_BREAK_CLONE;
+    StyleBorder()->mBoxDecorationBreak == StyleBoxDecorationBreak::Clone;
   if (boxDecorationBreakClone || !GetPrevContinuation()) {
     startEdge = borderPadding.IStart(frameWM);
   }

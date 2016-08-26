@@ -852,7 +852,7 @@ nsContainerFrame::DoInlineIntrinsicISize(nsRenderingContext *aRenderingContext,
   // add that to each line.  For box-decoration-break:slice clonePBM is zero.
   nscoord clonePBM = 0; // PBM = PaddingBorderMargin
   const bool sliceBreak =
-    styleBorder->mBoxDecorationBreak == NS_STYLE_BOX_DECORATION_BREAK_SLICE;
+    styleBorder->mBoxDecorationBreak == StyleBoxDecorationBreak::Slice;
   if (!GetPrevContinuation()) {
     nscoord startPBM =
       // clamp negative calc() to 0
