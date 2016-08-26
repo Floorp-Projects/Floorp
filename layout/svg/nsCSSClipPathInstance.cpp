@@ -62,8 +62,9 @@ nsCSSClipPathInstance::HitTestBasicShapeClip(nsIFrame* aFrame,
   return path->ContainsPoint(ToPoint(aPoint) * pixelRatio, Matrix());
 }
 
-already_AddRefed<Path>
-nsCSSClipPathInstance::CreateClipPath(DrawTarget* aDrawTarget)
+
+nsRect
+nsCSSClipPathInstance::ComputeHTMLReferenceRect()
 {
   nsRect r;
   // XXXkrit SVG needs to use different boxes.
@@ -79,7 +80,16 @@ nsCSSClipPathInstance::CreateClipPath(DrawTarget* aDrawTarget)
       break;
     default: // Use the border box
       r = mTargetFrame->GetRectRelativeToSelf();
+      break;
   }
+
+  return r;
+}
+
+already_AddRefed<Path>
+nsCSSClipPathInstance::CreateClipPath(DrawTarget* aDrawTarget)
+{
+  nsRect r = ComputeHTMLReferenceRect();
 
   if (mClipPathStyle.GetType() != StyleShapeSourceType::Shape) {
     // TODO Clip to border-radius/reference box if no shape
