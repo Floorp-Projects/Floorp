@@ -1156,11 +1156,6 @@ notification[value="translation"] menulist > .menulist-dropmarker {
   max-width : 36px;
 }
 
-#PopupAutoCompleteRichResult {
-  /* The awesomebar popup should open just below the navbar bottom border. */
-  margin-top: 1px;
-}
-
 .autocomplete-richlistbox {
   padding: 4px;
 }
