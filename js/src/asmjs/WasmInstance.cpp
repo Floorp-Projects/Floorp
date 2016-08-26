@@ -271,6 +271,54 @@ Instance::callImport_f64(Instance* instance, int32_t funcImportIndex, int32_t ar
     return ToNumber(cx, rval, (double*)argv);
 }
 
+/* static */ uint32_t
+Instance::growMemory_i32(Instance* instance, uint32_t delta)
+{
+    return instance->growMemory(delta);
+}
+
+/* static */ uint32_t
+Instance::currentMemory_i32(Instance* instance)
+{
+    return instance->currentMemory();
+}
+
+uint32_t
+Instance::growMemory(uint32_t delta)
+{
+    MOZ_RELEASE_ASSERT(memory_);
+
+    // Using uint64_t to avoid worrying about overflows in safety comp.
+    uint64_t curNumPages = currentMemory();
+    uint64_t newNumPages = curNumPages + (uint64_t) delta;
+
+    if (metadata().maxMemoryLength) {
+        ArrayBufferObject &buf = memory_->buffer().as<ArrayBufferObject>();
+        // Guaranteed by instantiateMemory
+        MOZ_RELEASE_ASSERT(buf.wasmMaxSize() && buf.wasmMaxSize() <= metadata().maxMemoryLength);
+
+        if (newNumPages * wasm::PageSize > buf.wasmMaxSize().value())
+            return (uint32_t) -1;
+
+        // Try to grow the memory
+        if (!buf.growForWasm(delta))
+            return (uint32_t) -1;
+    } else {
+        return -1; // TODO: implement grow_memory w/o max when we add realloc
+    }
+
+    return curNumPages;
+}
+
+uint32_t
+Instance::currentMemory()
+{
+    MOZ_RELEASE_ASSERT(memory_);
+    uint32_t curMemByteLen = memory_->buffer().wasmActualByteLength();
+    MOZ_ASSERT(curMemByteLen % wasm::PageSize == 0);
+    return curMemByteLen / wasm::PageSize;
+}
+
 Instance::Instance(JSContext* cx,
                    Handle<WasmInstanceObject*> object,
                    UniqueCode code,
@@ -392,6 +440,12 @@ Instance::~Instance()
                 lockedSigIdSet->deallocateSigId(sig, sigId);
         }
     }
+}
+
+size_t
+Instance::memoryMappedSize() const
+{
+    return memory_->buffer().wasmMappedSize();
 }
 
 void

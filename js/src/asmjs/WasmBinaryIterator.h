@@ -454,7 +454,7 @@ class MOZ_STACK_CLASS ExprIter : private Policy
                                LinearMemoryAddress<Value>* addr);
     MOZ_MUST_USE bool readStore(ValType resultType, uint32_t byteSize,
                                 LinearMemoryAddress<Value>* addr, Value* value);
-    MOZ_MUST_USE bool readNullary();
+    MOZ_MUST_USE bool readNullary(ExprType retType);
     MOZ_MUST_USE bool readSelect(ExprType* type,
                                  Value* trueValue, Value* falseValue, Value* condition);
     MOZ_MUST_USE bool readGetLocal(const ValTypeVector& locals, uint32_t* id);
@@ -1118,11 +1118,11 @@ ExprIter<Policy>::readStore(ValType resultType, uint32_t byteSize,
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readNullary()
+ExprIter<Policy>::readNullary(ExprType retType)
 {
     MOZ_ASSERT(Classify(expr_) == ExprKind::Nullary);
 
-    return push(ExprType::Void);
+    return push(retType);
 }
 
 template <typename Policy>

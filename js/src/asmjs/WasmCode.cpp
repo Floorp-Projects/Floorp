@@ -108,8 +108,14 @@ StaticallyLink(CodeSegment& cs, const LinkData& linkData, ExclusiveContext* cx)
 static void
 SpecializeToMemory(CodeSegment& cs, const Metadata& metadata, HandleWasmMemoryObject memory)
 {
-    for (const BoundsCheck& check : metadata.boundsChecks)
-        Assembler::UpdateBoundsCheck(check.patchAt(cs.base()), memory->buffer().byteLength());
+    if (!metadata.boundsChecks.empty()) {
+        uint32_t length = memory->buffer().wasmBoundsCheckLimit();
+        MOZ_RELEASE_ASSERT(length == LegalizeMapLength(length));
+        MOZ_RELEASE_ASSERT(length >= memory->buffer().wasmActualByteLength());
+
+        for (const BoundsCheck& check : metadata.boundsChecks)
+            Assembler::UpdateBoundsCheck(check.patchAt(cs.base()), length);
+    }
 
 #if defined(JS_CODEGEN_X86)
     uint8_t* base = memory->buffer().dataPointerEither().unwrap();
@@ -601,7 +607,7 @@ Code::lookupRange(void* pc) const
     return &metadata_->codeRanges[match];
 }
 
-#ifdef ASMJS_MAY_USE_SIGNAL_HANDLERS
+#ifdef WASM_HUGE_MEMORY
 struct MemoryAccessOffset
 {
     const MemoryAccessVector& accesses;
@@ -626,7 +632,7 @@ Code::lookupMemoryAccess(void* pc) const
 
     return &metadata_->memoryAccesses[match];
 }
-#endif // ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_OOB
+#endif
 
 bool
 Code::getFuncName(JSContext* cx, uint32_t funcIndex, TwoByteName* name) const

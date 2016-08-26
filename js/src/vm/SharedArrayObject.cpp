@@ -73,7 +73,7 @@ MarkValidRegion(void* addr, size_t len)
 #endif
 }
 
-#if defined(ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_OOB)
+#if defined(WASM_HUGE_MEMORY)
 // Since this SharedArrayBuffer will likely be used for asm.js code, prepare it
 // for asm.js by mapping the 4gb protected zone described in WasmTypes.h.
 // Since we want to put the SharedArrayBuffer header immediately before the
@@ -113,13 +113,13 @@ SharedArrayRawBuffer::New(JSContext* cx, uint32_t length)
     uint32_t allocSize = SharedArrayAllocSize(length);
     if (allocSize <= length)
         return nullptr;
-#if defined(ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_OOB)
     void* p = nullptr;
     if (!IsValidAsmJSHeapLength(length)) {
         p = MapMemory(allocSize, true);
         if (!p)
             return nullptr;
     } else {
+#ifdef WASM_HUGE_MEMORY
         // Test >= to guard against the case where multiple extant runtimes
         // race to allocate.
         if (++numLive >= maxLive) {
@@ -148,12 +148,12 @@ SharedArrayRawBuffer::New(JSContext* cx, uint32_t length)
         VALGRIND_DISABLE_ADDR_ERROR_REPORTING_IN_RANGE((unsigned char*)p + allocSize,
                                                        SharedArrayMappedSize() - allocSize);
 #   endif
-    }
 #else
-    void* p = MapMemory(allocSize, true);
-    if (!p)
-        return nullptr;
+        p = MapMemory(allocSize, true);
+        if (!p)
+            return nullptr;
 #endif
+    }
     uint8_t* buffer = reinterpret_cast<uint8_t*>(p) + gc::SystemPageSize();
     uint8_t* base = buffer - sizeof(SharedArrayRawBuffer);
     SharedArrayRawBuffer* rawbuf = new (base) SharedArrayRawBuffer(buffer, length);
@@ -182,10 +182,10 @@ SharedArrayRawBuffer::dropReference()
 
         uint8_t* address = p.unwrap(/*safe - only reference*/);
         uint32_t allocSize = SharedArrayAllocSize(this->length);
-#if defined(ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_OOB)
         if (!IsValidAsmJSHeapLength(this->length)) {
             UnmapMemory(address, allocSize);
         } else {
+#if defined(WASM_HUGE_MEMORY)
             numLive--;
             UnmapMemory(address, SharedArrayMappedSize());
 #       if defined(MOZ_VALGRIND) \
@@ -195,10 +195,10 @@ SharedArrayRawBuffer::dropReference()
             VALGRIND_ENABLE_ADDR_ERROR_REPORTING_IN_RANGE(address,
                                                           SharedArrayMappedSize());
 #       endif
-        }
 #else
-        UnmapMemory(address, allocSize);
+            UnmapMemory(address, allocSize);
 #endif
+        }
     }
 }
 

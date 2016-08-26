@@ -222,12 +222,6 @@ RenderFullLine(WasmRenderContext& c, AstExpr& expr)
 // binary format parsing and rendering
 
 static bool
-RenderNop(WasmRenderContext& c, AstNop& nop)
-{
-    return c.buffer.append("(nop)");
-}
-
-static bool
 RenderUnreachable(WasmRenderContext& c, AstUnreachable& unreachable)
 {
     return c.buffer.append("(trap)");
@@ -411,6 +405,25 @@ RenderBlock(WasmRenderContext& c, AstBlock& block)
 }
 
 static bool
+RenderNullaryOperator(WasmRenderContext& c, AstNullaryOperator& op)
+{
+    if (!c.buffer.append("("))
+      return false;
+
+    const char* opStr;
+    switch (op.expr()) {
+      case Expr::Nop:               opStr = "nop"; break;
+      case Expr::CurrentMemory:     opStr = "current_memory"; break;
+      default: return false;
+    }
+
+    if (!c.buffer.append(opStr, strlen(opStr)))
+        return false;
+
+    return c.buffer.append(")");
+}
+
+static bool
 RenderUnaryOperator(WasmRenderContext& c, AstUnaryOperator& op)
 {
     if (!c.buffer.append("("))
@@ -437,6 +450,7 @@ RenderUnaryOperator(WasmRenderContext& c, AstUnaryOperator& op)
       case Expr::F64Ceil:    opStr = "f64.ceil"; break;
       case Expr::F64Floor:   opStr = "f64.floor"; break;
       case Expr::F64Sqrt:    opStr = "f64.sqrt"; break;
+      case Expr::GrowMemory: opStr = "grow_memory"; break;
       default: return false;
     }
     if (!c.buffer.append(opStr, strlen(opStr)))
@@ -955,8 +969,8 @@ static bool
 RenderExpr(WasmRenderContext& c, AstExpr& expr)
 {
     switch (expr.kind()) {
-      case AstExprKind::Nop:
-        return RenderNop(c, expr.as<AstNop>());
+      case AstExprKind::NullaryOperator:
+        return RenderNullaryOperator(c, expr.as<AstNullaryOperator>());
       case AstExprKind::Unreachable:
         return RenderUnreachable(c, expr.as<AstUnreachable>());
       case AstExprKind::Call:

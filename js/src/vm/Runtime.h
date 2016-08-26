@@ -920,7 +920,7 @@ struct JSRuntime : public JS::shadow::Runtime,
      */
     JSCList             onNewGlobalObjectWatchers;
 
-#if defined(XP_DARWIN) && defined(ASMJS_MAY_USE_SIGNAL_HANDLERS)
+#if defined(XP_DARWIN)
     js::wasm::MachExceptionHandler wasmMachExceptionHandler;
 #endif
 
