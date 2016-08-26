@@ -341,7 +341,7 @@ StringToJsval(JSContext* cx, const nsAString& str, JS::MutableHandleValue rval)
 /**
  * As above, but for mozilla::dom::DOMString.
  */
-MOZ_ALWAYS_INLINE
+inline
 bool NonVoidStringToJsval(JSContext* cx, mozilla::dom::DOMString& str,
                           JS::MutableHandleValue rval)
 {
