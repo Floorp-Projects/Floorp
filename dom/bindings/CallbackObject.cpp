@@ -273,9 +273,11 @@ CallbackObject::CallSetup::~CallSetup()
       // runs.  Note that we've already run ~mAc, effectively, so we don't have
       // to worry about ordering here.
       if (mErrorResult.IsJSContextException()) {
-        // XXXkhuey bug 1117269.
-        // This won't be true anymore because we will report the exception on
-        // the JSContext ... so throw something else.
+        // XXXkhuey bug 1117269.  When this is fixed, please consider fixing
+        // ThrowExceptionValueIfSafe over in Exceptions.cpp in the same way.
+
+        // IsJSContextException shouldn't be true anymore because we will report
+        // the exception on the JSContext ... so throw something else.
         mErrorResult.Throw(NS_ERROR_UNEXPECTED);
       }
     }
