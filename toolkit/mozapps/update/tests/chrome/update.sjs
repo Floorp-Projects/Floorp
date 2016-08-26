@@ -122,52 +122,21 @@ function handleRequest(aRequest, aResponse) {
 
   let type = params.type ? params.type : "major";
   let name = params.name ? params.name : "App Update Test";
-  let appVersion = params.appVersion ? params.appVersion : "99.9";
+  let appVersion = params.appVersion ? params.appVersion : "999999.9";
   let displayVersion = params.displayVersion ? params.displayVersion
                                              : "version " + appVersion;
-  let platformVersion = params.platformVersion ? params.platformVersion : "99.8";
   let buildID = params.buildID ? params.buildID : "01234567890123";
   // XXXrstrong - not specifying a detailsURL will cause a leak due to bug 470244
 //  let detailsURL = params.showDetails ? URL_HTTP_UPDATE_SJS + "?uiURL=DETAILS" : null;
   let detailsURL = URL_HTTP_UPDATE_SJS + "?uiURL=DETAILS";
-  let billboardURL = params.showBillboard ? URL_HTTP_UPDATE_SJS + "?uiURL=BILLBOARD" : null;
-  if (billboardURL && params.remoteNoTypeAttr) {
-    billboardURL += "&amp;remoteNoTypeAttr=1";
-  }
-  if (params.billboard404) {
-    billboardURL = URL_HOST + "/missing.html";
-  }
   let showPrompt = params.showPrompt ? "true" : null;
   let showNever = params.showNever ? "true" : null;
   let promptWaitTime = params.promptWaitTime ? params.promptWaitTime : null;
-  let showSurvey = params.showSurvey ? "true" : null;
-
-  let extensionVersion;
-  let version;
-  // For testing the deprecated update xml format
-  if (params.oldFormat) {
-    appVersion = null;
-    displayVersion = null;
-    billboardURL = null;
-    showPrompt = null;
-    showNever = null;
-    showSurvey = null;
-    detailsURL = URL_HTTP_UPDATE_SJS + "?uiURL=BILLBOARD";
-    if (params.remoteNoTypeAttr) {
-      detailsURL += "&amp;remoteNoTypeAttr=1";
-    }
-    extensionVersion = params.appVersion ? params.appVersion : "99.9";
-    version = params.displayVersion ? params.displayVersion
-                                    : "version " + extensionVersion;
-  }
 
   let updates = getRemoteUpdateString(patches, type, "App Update Test",
-                                      displayVersion, appVersion,
-                                      platformVersion, buildID, detailsURL,
-                                      billboardURL, showPrompt,
-                                      showNever, promptWaitTime, showSurvey,
-                                      version, extensionVersion);
-
+                                      displayVersion, appVersion, buildID,
+                                      detailsURL, showPrompt, showNever,
+                                      promptWaitTime);
   aResponse.write(getRemoteUpdatesXMLString(updates));
 }
 

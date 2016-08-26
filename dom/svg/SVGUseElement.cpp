@@ -269,16 +269,6 @@ SVGUseElement::CreateAnonymousContent()
   if (!newcontent)
     return nullptr;
 
-#ifdef DEBUG
-  // Our anonymous clone can get restyled by various things
-  // (e.g. SMIL).  Reconstructing its frame is OK, though, because
-  // it's going to be our _only_ child in the frame tree, so can't get
-  // mis-ordered with anything.
-  newcontent->SetProperty(nsGkAtoms::restylableAnonymousNode,
-                          reinterpret_cast<void*>(true));
-#endif // DEBUG
-
-
   if (newcontent->IsSVGElement(nsGkAtoms::symbol)) {
     nsIDocument *document = GetComposedDoc();
     if (!document)
@@ -341,6 +331,16 @@ SVGUseElement::CreateAnonymousContent()
 
   targetContent->AddMutationObserver(this);
   mClone = newcontent;
+
+#ifdef DEBUG
+  // Our anonymous clone can get restyled by various things
+  // (e.g. SMIL).  Reconstructing its frame is OK, though, because
+  // it's going to be our _only_ child in the frame tree, so can't get
+  // mis-ordered with anything.
+  mClone->SetProperty(nsGkAtoms::restylableAnonymousNode,
+                      reinterpret_cast<void*>(true));
+#endif // DEBUG
+
   return mClone;
 }
 

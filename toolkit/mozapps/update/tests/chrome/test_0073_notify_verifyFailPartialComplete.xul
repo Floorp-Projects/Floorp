@@ -32,9 +32,8 @@ function runTest() {
                 getLocalPatchString("complete", null, null, null, "1234",
                                     "false");
   let updates = getLocalUpdateString(patches, null, null, null,
-                                     Services.appinfo.version,
-                                     Services.appinfo.platformVersion, null,
-                                     null, null, null, null, null, "false");
+                                     Services.appinfo.version, null,
+                                     null, null, null, null, "false");
 
   writeUpdatesToXMLFile(getLocalUpdatesXMLString(updates), true);
 

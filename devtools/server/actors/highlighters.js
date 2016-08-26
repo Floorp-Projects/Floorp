@@ -580,6 +580,10 @@ HighlighterEnvironment.prototype = {
     return this._win || this._tabActor;
   },
 
+  get isXUL() {
+    return isXUL(this.window);
+  },
+
   get window() {
     if (!this.isInitialized) {
       throw new Error("Initialize HighlighterEnvironment with a tabActor " +

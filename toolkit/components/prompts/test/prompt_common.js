@@ -93,3 +93,57 @@ function checkEchoedAuthInfo(expectedState, doc) {
     is(username, expectedState.user, "Checking for echoed username");
     is(password, expectedState.pass, "Checking for echoed password");
 }
+
+/**
+ * Create a Proxy to relay method calls on an nsIAuthPrompt prompter to a chrome script which can
+ * perform the calls in the parent. Out and inout params will be copied back from the parent to
+ * content.
+ *
+ * @param chromeScript The reference to the chrome script that will listen to `proxyPrompter`
+ *                     messages in the parent and call the `methodName` method.
+ *                     The return value from the message handler should be an object with properties:
+ * `rv` - containing the return value of the method call.
+ * `args` - containing the array of arguments passed to the method since out or inout ones could have
+ *          been modified.
+ */
+function PrompterProxy(chromeScript) {
+  return new Proxy({}, {
+    get(target, prop, receiver) {
+      return (...args) => {
+        // Array of indices of out/inout params to copy from the parent back to the caller.
+        let outParams = [];
+
+        switch (prop) {
+          case "prompt": {
+            outParams = [/* result */ 5];
+            break;
+          }
+          case "promptPassword": {
+            outParams = [/* pwd */ 4];
+            break;
+          }
+          case "promptUsernameAndPassword": {
+            outParams = [/* user */ 4, /* pwd */ 5];
+            break;
+          }
+          default: {
+            throw new Error("Unknown nsIAuthPrompt method");
+            break;
+          }
+        }
+
+        let result = chromeScript.sendSyncMessage("proxyPrompter", {
+          args,
+          methodName: prop,
+        })[0][0];
+
+        for (let outParam of outParams) {
+          // Copy the out or inout param value over the original
+          args[outParam].value = result.args[outParam].value;
+        }
+
+        return result.rv;
+      };
+    },
+  });
+}

@@ -141,7 +141,7 @@ add_task(function* test_stop() {
 
   yield whenDone;
 
-  Assert.equal(count, 100, "Number of ranges should match `kIterationSizeMax`");
+  Assert.equal(count, 0, "Number of ranges should be 0");
 
   FinderIterator.reset();
 });
@@ -161,9 +161,8 @@ add_task(function* test_reset() {
   });
 
   Assert.ok(FinderIterator.running, "Yup, running we are");
-  Assert.equal(count, 100, "Number of ranges should match `kIterationSizeMax`");
-  Assert.equal(FinderIterator.ranges.length, 100,
-    "Number of ranges should match `kIterationSizeMax`");
+  Assert.equal(count, 0, "Number of ranges should match 0");
+  Assert.equal(FinderIterator.ranges.length, 0, "Number of ranges should match 0");
 
   FinderIterator.reset();
 
@@ -173,7 +172,7 @@ add_task(function* test_reset() {
 
   yield whenDone;
 
-  Assert.equal(count, 100, "Number of ranges should match `kIterationSizeMax`");
+  Assert.equal(count, 0, "Number of ranges should match 0");
 });
 
 add_task(function* test_parallel_starts() {
@@ -191,8 +190,7 @@ add_task(function* test_parallel_starts() {
     word: findText
   });
 
-  // Start again after a few milliseconds.
-  yield new Promise(resolve => gMockWindow.setTimeout(resolve, 20));
+  yield new Promise(resolve => gMockWindow.setTimeout(resolve, 120));
   Assert.ok(FinderIterator.running, "We ought to be running here");
 
   let count2 = 0;
@@ -219,4 +217,49 @@ add_task(function* test_parallel_starts() {
   Assert.less(count2, rangeCount, "Not all ranges should've been found");
 
   Assert.equal(count2, count, "The second start was later, but should have caught up");
+
+  FinderIterator.reset();
+});
+
+add_task(function* test_allowDistance() {
+  let findText = "gup";
+  let rangeCount = 20;
+  prepareIterator(findText, rangeCount);
+
+  // Start off the iterator.
+  let count = 0;
+  let whenDone = FinderIterator.start({
+    caseSensitive: false,
+    entireWord: false,
+    finder: gMockFinder,
+    listener: { onIteratorRangeFound(range) { ++count; } },
+    word: findText
+  });
+
+  let count2 = 0;
+  let whenDone2 = FinderIterator.start({
+    caseSensitive: false,
+    entireWord: false,
+    finder: gMockFinder,
+    listener: { onIteratorRangeFound(range) { ++count2; } },
+    word: "gu"
+  });
+
+  let count3 = 0;
+  let whenDone3 = FinderIterator.start({
+    allowDistance: 1,
+    caseSensitive: false,
+    entireWord: false,
+    finder: gMockFinder,
+    listener: { onIteratorRangeFound(range) { ++count3; } },
+    word: "gu"
+  });
+
+  yield Promise.all([whenDone, whenDone2, whenDone3]);
+
+  Assert.equal(count, rangeCount, "The first iterator invocation should yield all results");
+  Assert.equal(count2, 0, "The second iterator invocation should yield _no_ results");
+  Assert.equal(count3, rangeCount, "The first iterator invocation should yield all results");
+
+  FinderIterator.reset();
 });

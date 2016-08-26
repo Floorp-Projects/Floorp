@@ -1603,18 +1603,6 @@ function Update(update) {
     throw Cr.NS_ERROR_ILLEGAL_VALUE;
   }
 
-  // Fallback to the behavior prior to bug 530872 if the update does not have an
-  // appVersion attribute.
-  if (!update.hasAttribute("appVersion")) {
-    if (update.getAttribute("type") == "major") {
-      if (update.hasAttribute("detailsURL")) {
-        this.billboardURL = update.getAttribute("detailsURL");
-        this.showPrompt = true;
-        this.showNeverForVersion = true;
-      }
-    }
-  }
-
   // Set the installDate value with the current time. If the update has an
   // installDate attribute this will be replaced with that value if it doesn't
   // equal 0.
@@ -1627,12 +1615,6 @@ function Update(update) {
       continue;
     } else if (attr.name == "detailsURL") {
       this._detailsURL = attr.value;
-    } else if (attr.name == "extensionVersion") {
-      // Prevent extensionVersion from replacing appVersion if appVersion is
-      // present in the update xml.
-      if (!this.appVersion) {
-        this.appVersion = attr.value;
-      }
     } else if (attr.name == "installDate" && attr.value) {
       let val = parseInt(attr.value);
       if (val) {
@@ -1654,23 +1636,15 @@ function Update(update) {
       }
     } else if (attr.name == "unsupported") {
       this.unsupported = attr.value == "true";
-    } else if (attr.name == "version") {
-      // Prevent version from replacing displayVersion if displayVersion is
-      // present in the update xml.
-      if (!this.displayVersion) {
-        this.displayVersion = attr.value;
-      }
     } else {
       this[attr.name] = attr.value;
 
       switch (attr.name) {
         case "appVersion":
-        case "billboardURL":
         case "buildID":
         case "channel":
         case "displayVersion":
         case "name":
-        case "platformVersion":
         case "previousAppVersion":
         case "serviceURL":
         case "statusText":
@@ -1684,6 +1658,10 @@ function Update(update) {
           break;
       }
     }
+  }
+
+  if (!this.displayVersion) {
+    this.displayVersion = this.appVersion;
   }
 
   // The Update Name is either the string provided by the <update> element, or
@@ -1781,8 +1759,6 @@ Update.prototype = {
     update.setAttribute("buildID", this.buildID);
     update.setAttribute("channel", this.channel);
     update.setAttribute("displayVersion", this.displayVersion);
-    // for backwards compatibility in case the user downgrades
-    update.setAttribute("extensionVersion", this.appVersion);
     update.setAttribute("installDate", this.installDate);
     update.setAttribute("isCompleteUpdate", this.isCompleteUpdate);
     update.setAttribute("isOSUpdate", this.isOSUpdate);
@@ -1792,18 +1768,9 @@ Update.prototype = {
     update.setAttribute("showPrompt", this.showPrompt);
     update.setAttribute("promptWaitTime", this.promptWaitTime);
     update.setAttribute("type", this.type);
-    // for backwards compatibility in case the user downgrades
-    update.setAttribute("version", this.displayVersion);
 
-    // Optional attributes
-    if (this.billboardURL) {
-      update.setAttribute("billboardURL", this.billboardURL);
-    }
     if (this.detailsURL) {
       update.setAttribute("detailsURL", this.detailsURL);
-    }
-    if (this.platformVersion) {
-      update.setAttribute("platformVersion", this.platformVersion);
     }
     if (this.previousAppVersion) {
       update.setAttribute("previousAppVersion", this.previousAppVersion);

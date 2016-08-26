@@ -13,26 +13,29 @@ add_task(function* () {
   let finder = tab.linkedBrowser.finder;
   let listener = {
     onFindResult: function () {
-      ok(false, "callback wasn't replaced");
+      ok(false, "onFindResult callback wasn't replaced");
+    },
+    onHighlightFinished: function () {
+      ok(false, "onHighlightFinished callback wasn't replaced");
     }
   };
   finder.addResultListener(listener);
 
-  function waitForFind() {
+  function waitForFind(which = "onFindResult") {
     return new Promise(resolve => {
-      listener.onFindResult = resolve;
+      listener[which] = resolve;
     })
   }
 
-  let promiseFind = waitForFind();
+  let promiseFind = waitForFind("onHighlightFinished");
   finder.highlight(true, "content");
   let findResult = yield promiseFind;
-  is(findResult.result, Ci.nsITypeAheadFind.FIND_FOUND, "should find string");
+  Assert.ok(findResult.found, "should find string");
 
-  promiseFind = waitForFind();
+  promiseFind = waitForFind("onHighlightFinished");
   finder.highlight(true, "Bla");
   findResult = yield promiseFind;
-  is(findResult.result, Ci.nsITypeAheadFind.FIND_NOTFOUND, "should not find string");
+  Assert.ok(!findResult.found, "should not find string");
 
   // Search only for links and draw outlines.
   promiseFind = waitForFind();

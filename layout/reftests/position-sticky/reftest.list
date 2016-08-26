@@ -46,6 +46,6 @@ fails == column-contain-1a.html column-contain-1-ref.html
 == column-contain-2.html column-contain-2-ref.html
 == block-in-inline-1.html block-in-inline-1-ref.html
 fuzzy-if(skiaContent,1,22) fuzzy-if(winWidget&&!layersGPUAccelerated,116,1320) fuzzy-if(Android,8,1533) skip-if((B2G&&browserIsRemote)||Mulet) == block-in-inline-2.html block-in-inline-2-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
-fuzzy-if(winWidget&&!layersGPUAccelerated,116,1320) fuzzy-if(Android,8,630) fuzzy-if(OSX>=1008,1,11) skip-if((B2G&&browserIsRemote)||Mulet) fuzzy-if(skiaContent,1,124) == block-in-inline-3.html block-in-inline-3-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
+fuzzy-if(Android,8,630) fuzzy-if(OSX>=1008,1,11) skip-if((B2G&&browserIsRemote)||Mulet) fuzzy-if(skiaContent,1,124) fuzzy-if(winWidget&&!layersGPUAccelerated,116,1320) == block-in-inline-3.html block-in-inline-3-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 == block-in-inline-continuations.html block-in-inline-continuations-ref.html
-fuzzy-if(winWidget&&!layersGPUAccelerated,121,111) == inner-table-1.html inner-table-1-ref.html
+fuzzy-if(winWidget&&!layersGPUAccelerated,121,140) == inner-table-1.html inner-table-1-ref.html

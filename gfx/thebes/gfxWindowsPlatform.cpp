@@ -1816,16 +1816,22 @@ public:
           // In these error cases, normalize to Now();
           if (vsync >= now) {
             vsync = vsync - mVsyncRate;
-            return vsync <= now ? vsync : now;
           }
         }
 
         // On Windows 7 and 8, DwmFlush wakes up AFTER qpcVBlankTime
         // from DWMGetCompositionTimingInfo. We can return the adjusted vsync.
-        // If we got here on Windows 10, it means we got a weird timestamp.
         if (vsync >= now) {
             vsync = now;
         }
+
+        // Our vsync time is some time very far in the past, adjust to Now.
+        // 4 ms is arbitrary, so feel free to pick something else if this isn't
+        // working. See the comment above within IsWin10OrLater().
+        if ((now - vsync).ToMilliseconds() > 4.0) {
+            vsync = now;
+        }
+
         return vsync;
       }
 
@@ -1889,6 +1895,12 @@ public:
 
             if (vsync <= mPrevVsync) {
               vsync = TimeStamp::Now();
+            }
+
+            if ((now - vsync).ToMilliseconds() > 2.0) {
+              // Account for time drift here where vsync never quite catches up to
+              // Now and we'd fall ever so slightly further behind Now().
+              vsync = GetVBlankTime();
             }
 
             mPrevVsync = vsync;

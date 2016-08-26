@@ -745,7 +745,7 @@ Heritage.extend(SwatchBasedEditorTooltip.prototype, {
     target.actorHasMethod("inspector", "pickColorFromPage").then(value => {
       let tooltipDoc = this.tooltip.doc;
       let eyeButton = tooltipDoc.querySelector("#eyedropper-button");
-      if (value) {
+      if (value && this.inspector.selection.nodeFront.isInHTMLDocument) {
         eyeButton.addEventListener("click", this._openEyeDropper);
       } else {
         eyeButton.style.display = "none";
