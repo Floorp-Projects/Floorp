@@ -414,18 +414,26 @@
                             [ "words", "", 10, 15, { words: [ 10, 15 ] } ]
                           ] );
 
-      var line4 = [ // "riend "
+      var line2 = [ // " my "
+        [ "TextBeforeOffset", BOUNDARY_WORD_END, kTodo, kTodo, kTodo ],
+        [ "TextAfterOffset", BOUNDARY_WORD_END, kTodo, kTodo, kTodo ]
+      ];
+      var line4 = [ // "riend"
+        [ "TextBeforeOffset", BOUNDARY_WORD_END, kTodo, kTodo, kTodo ],
+        [ "TextAfterOffset", BOUNDARY_WORD_END, kTodo, kTodo, kTodo ]
+      ];
+      var line5 = [ // " t "
         [ "TextBeforeOffset", BOUNDARY_WORD_END, kTodo, kTodo, kTodo ],
         [ "TextAfterOffset", BOUNDARY_WORD_END, kTodo, kTodo, kTodo ]
       ];
       traverseTextByLines(gQueue, "ta_wrapped", 
                           [ [ "hi ", "", 0, 3, { words: [ 0, 2 ] } ],
-                            [ "hello ", "", 3, 9, { words: [ 3, 8 ] } ],
-                            [ "my ", "", 9, 12, { words: [ 9, 11 ] } ],
+                            [ "hello", "", 3, 8, { words: [ 3, 8 ] } ],
+                            [ " my ", "", 8, 12, { words: [ 9, 11 ], lsf: line2 } ],
                             [ "longf", "", 12, 17, { words: [ 12, 17 ] } ],
-                            [ "riend ", "", 17, 23, { words: [ 17, 22 ], lsf: line4 } ],
-                            [ "t sq ", "", 23, 28, { words: [ 23, 24, 25, 27 ] } ],
-                            [ "t", "", 28, 29, { words: [ 28, 29 ] } ]
+                            [ "riend", "", 17, 22, { words: [ 17, 22 ], lsf: line4 } ],
+                            [ " t ", "", 22, 25, { words: [ 23, 24 ], lsf: line5 } ],
+                            [ "sq t", "", 25, 29, { words: [ 25, 27, 28, 29 ] } ]
                           ] );
 
       gQueue.invoke(); // will call SimpleTest.finish();
