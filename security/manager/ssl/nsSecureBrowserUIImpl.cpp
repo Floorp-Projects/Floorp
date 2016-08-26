@@ -1154,11 +1154,9 @@ nsSecureBrowserUIImpl::OnSecurityChange(nsIWebProgress* aWebProgress,
   channel->GetURI(getter_AddRefs(aURI));
 
   if (aURI) {
-    nsAutoCString temp;
-    aURI->GetSpec(temp);
     MOZ_LOG(gSecureDocLog, LogLevel::Debug,
            ("SecureUI:%p: OnSecurityChange: (%x) %s\n", this,
-            state, temp.get()));
+            state, aURI->GetSpecOrDefault().get()));
   }
 #endif
 

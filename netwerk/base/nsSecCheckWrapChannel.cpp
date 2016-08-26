@@ -72,11 +72,8 @@ nsSecCheckWrapChannel::nsSecCheckWrapChannel(nsIChannel* aChannel,
   {
     nsCOMPtr<nsIURI> uri;
     mChannel->GetURI(getter_AddRefs(uri));
-    nsAutoCString spec;
-    if (uri) {
-      uri->GetSpec(spec);
-    }
-    CHANNELWRAPPERLOG(("nsSecCheckWrapChannel::nsSecCheckWrapChannel [%p] (%s)",this, spec.get()));
+    CHANNELWRAPPERLOG(("nsSecCheckWrapChannel::nsSecCheckWrapChannel [%p] (%s)",
+                       this, uri ? uri->GetSpecOrDefault().get() : ""));
   }
 }
 

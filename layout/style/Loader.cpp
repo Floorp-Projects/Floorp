@@ -277,9 +277,7 @@ static mozilla::LazyLogModule gSriPRLog("SRI");
   PR_BEGIN_MACRO                                    \
     NS_ASSERTION(uri, "Logging null uri");          \
     if (LOG_ENABLED()) {                            \
-      nsAutoCString _logURISpec;                    \
-      uri->GetSpec(_logURISpec);                    \
-      LOG((format, _logURISpec.get()));             \
+      LOG((format, uri->GetSpecOrDefault().get())); \
     }                                               \
   PR_END_MACRO
 
@@ -913,10 +911,8 @@ SheetLoadData::OnStreamComplete(nsIUnicharStreamLoader* aLoader,
       errorFlag = nsIScriptError::errorFlag;
     }
 
-    nsAutoCString spec;
-    channelURI->GetSpec(spec);
-
-    const nsAFlatString& specUTF16 = NS_ConvertUTF8toUTF16(spec);
+    const nsAFlatString& specUTF16 =
+      NS_ConvertUTF8toUTF16(channelURI->GetSpecOrDefault());
     const nsAFlatString& ctypeUTF16 = NS_ConvertASCIItoUTF16(contentType);
     const char16_t *strings[] = { specUTF16.get(), ctypeUTF16.get() };
 

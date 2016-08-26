@@ -86,9 +86,7 @@ IsAncestorBinding(nsIDocument* aDocument,
       if (bindingRecursion < NS_MAX_XBL_BINDING_RECURSION) {
         continue;
       }
-      nsAutoCString spec;
-      aChildBindingURI->GetSpec(spec);
-      NS_ConvertUTF8toUTF16 bindingURI(spec);
+      NS_ConvertUTF8toUTF16 bindingURI(aChildBindingURI->GetSpecOrDefault());
       const char16_t* params[] = { bindingURI.get() };
       nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
                                       NS_LITERAL_CSTRING("XBL"), aDocument,
@@ -457,9 +455,7 @@ nsXBLService::LoadBindings(nsIContent* aContent, nsIURI* aURL,
 
   if (!newBinding) {
 #ifdef DEBUG
-    nsAutoCString spec;
-    aURL->GetSpec(spec);
-    nsAutoCString str(NS_LITERAL_CSTRING("Failed to locate XBL binding. XBL is now using id instead of name to reference bindings. Make sure you have switched over.  The invalid binding name is: ") + spec);
+    nsAutoCString str(NS_LITERAL_CSTRING("Failed to locate XBL binding. XBL is now using id instead of name to reference bindings. Make sure you have switched over.  The invalid binding name is: ") + aURL->GetSpecOrDefault());
     NS_ERROR(str.get());
 #endif
     return NS_OK;
@@ -713,14 +709,10 @@ nsXBLService::GetBinding(nsIContent* aBoundElement, nsIURI* aURI,
 
   if (!protoBinding) {
 #ifdef DEBUG
-    nsAutoCString uriSpec;
-    aURI->GetSpec(uriSpec);
-    nsAutoCString doc;
-    boundDocument->GetDocumentURI()->GetSpec(doc);
     nsAutoCString message("Unable to locate an XBL binding for URI ");
-    message += uriSpec;
+    message += aURI->GetSpecOrDefault();
     message += " in document ";
-    message += doc;
+    message += boundDocument->GetDocumentURI()->GetSpecOrDefault();
     NS_WARNING(message.get());
 #endif
     return NS_ERROR_FAILURE;
@@ -730,10 +722,8 @@ nsXBLService::GetBinding(nsIContent* aBoundElement, nsIURI* aURI,
   // doesn't subsume it (modulo a few exceptions).
   if (!MayBindToContent(protoBinding, aBoundElement, aURI)) {
 #ifdef DEBUG
-    nsAutoCString uriSpec;
-    aURI->GetSpec(uriSpec);
     nsAutoCString message("Permission denied to apply binding ");
-    message += uriSpec;
+    message += aURI->GetSpecOrDefault();
     message += " to unprivileged content. Set bindToUntrustedContent=true on "
                "the binding to override this restriction.";
     NS_WARNING(message.get());
@@ -773,12 +763,10 @@ nsXBLService::GetBinding(nsIContent* aBoundElement, nsIURI* aURI,
         rv = aDontExtendURIs[index]->Equals(baseBindingURI, &equal);
         NS_ENSURE_SUCCESS(rv, rv);
         if (equal) {
-          nsAutoCString spec, basespec;
-          protoBinding->BindingURI()->GetSpec(spec);
-          NS_ConvertUTF8toUTF16 protoSpec(spec);
-          baseBindingURI->GetSpec(basespec);
-          NS_ConvertUTF8toUTF16 baseSpecUTF16(basespec);
-          const char16_t* params[] = { protoSpec.get(), baseSpecUTF16.get() };
+          NS_ConvertUTF8toUTF16
+            protoSpec(protoBinding->BindingURI()->GetSpecOrDefault());
+          NS_ConvertUTF8toUTF16 baseSpec(baseBindingURI->GetSpecOrDefault());
+          const char16_t* params[] = { protoSpec.get(), baseSpec.get() };
           nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
                                           NS_LITERAL_CSTRING("XBL"), nullptr,
                                           nsContentUtils::eXBL_PROPERTIES,

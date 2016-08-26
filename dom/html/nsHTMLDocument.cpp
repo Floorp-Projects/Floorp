@@ -1506,15 +1506,9 @@ nsHTMLDocument::Open(JSContext* cx,
 #ifdef DEBUG
     nsCOMPtr<nsIURI> callerDocURI = callerDoc->GetDocumentURI();
     nsCOMPtr<nsIURI> thisURI = nsIDocument::GetDocumentURI();
-    nsAutoCString callerSpec;
-    nsAutoCString thisSpec;
-    if (callerDocURI) {
-      callerDocURI->GetSpec(callerSpec);
-    }
-    if (thisURI) {
-      thisURI->GetSpec(thisSpec);
-    }
-    printf("nsHTMLDocument::Open callerDoc %s this %s\n", callerSpec.get(), thisSpec.get());
+    printf("nsHTMLDocument::Open callerDoc %s this %s\n",
+           callerDocURI ? callerDocURI->GetSpecOrDefault().get() : "",
+           thisURI ? thisURI->GetSpecOrDefault().get() : "");
 #endif
 
     rv.Throw(NS_ERROR_DOM_SECURITY_ERR);
