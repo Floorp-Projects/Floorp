@@ -8,7 +8,7 @@
 // Test the webconsole output for various arrays.
 
 const TEST_URI = "data:text/html;charset=utf8,test for console output - 06";
-const {ELLIPSIS} = require("devtools/client/shared/l10n");
+const {ELLIPSIS} = require("devtools/shared/l10n");
 
 const testStrIn = "SHOW\\nALL\\nOF\\nTHIS\\nON\\nA\\nSINGLE" +
                   "\\nLINE ONLY. ESCAPE ALL NEWLINE";

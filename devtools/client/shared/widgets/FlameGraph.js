@@ -5,7 +5,7 @@
 
 const { Task } = require("devtools/shared/task");
 const { ViewHelpers, setNamedTimeout } = require("devtools/client/shared/widgets/view-helpers");
-const { ELLIPSIS } = require("devtools/client/shared/l10n");
+const { ELLIPSIS } = require("devtools/shared/l10n");
 
 loader.lazyRequireGetter(this, "defer", "devtools/shared/defer");
 loader.lazyRequireGetter(this, "EventEmitter",

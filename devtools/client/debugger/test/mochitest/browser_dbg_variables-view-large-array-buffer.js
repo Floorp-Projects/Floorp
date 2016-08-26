@@ -11,7 +11,7 @@
 "use strict";
 
 const TAB_URL = EXAMPLE_URL + "doc_large-array-buffer.html";
-const {ELLIPSIS} = require("devtools/client/shared/l10n");
+const {ELLIPSIS} = require("devtools/shared/l10n");
 
 
 var gTab, gPanel, gDebugger, gVariables;

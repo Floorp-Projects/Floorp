@@ -19,7 +19,7 @@ const HOVERED_SLICE_TRANSLATE_DISTANCE_RATIO = 20;
 const { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
 const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
 const EventEmitter = require("devtools/shared/event-emitter");
-const { LocalizationHelper } = require("devtools/client/shared/l10n");
+const { LocalizationHelper } = require("devtools/shared/l10n");
 
 this.EXPORTED_SYMBOLS = ["Chart"];
 

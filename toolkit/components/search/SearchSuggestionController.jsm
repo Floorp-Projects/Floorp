@@ -106,10 +106,11 @@ this.SearchSuggestionController.prototype = {
    * @param {string} searchTerm - the term to provide suggestions for
    * @param {bool} privateMode - whether the request is being made in the context of private browsing
    * @param {nsISearchEngine} engine - search engine for the suggestions.
+   * @param {int} userContextId - the userContextId of the selected tab.
    *
    * @return {Promise} resolving to an object containing results or null.
    */
-  fetch: function(searchTerm, privateMode, engine) {
+  fetch: function(searchTerm, privateMode, engine, userContextId) {
     // There is no smart filtering from previous results here (as there is when looking through
     // history/form data) because the result set returned by the server is different for every typed
     // value - e.g. "ocean breathes" does not return a subset of the results returned for "ocean".
@@ -139,7 +140,7 @@ this.SearchSuggestionController.prototype = {
     // Remote results
     if (searchTerm && gRemoteSuggestionsEnabled && this.maxRemoteResults &&
         engine.supportsResponseType(SEARCH_RESPONSE_SUGGESTION_JSON)) {
-      this._deferredRemoteResult = this._fetchRemote(searchTerm, engine, privateMode);
+      this._deferredRemoteResult = this._fetchRemote(searchTerm, engine, privateMode, userContextId);
       promises.push(this._deferredRemoteResult.promise);
     }
 
@@ -230,7 +231,7 @@ this.SearchSuggestionController.prototype = {
   /**
    * Fetch suggestions from the search engine over the network.
    */
-  _fetchRemote: function(searchTerm, engine, privateMode) {
+  _fetchRemote: function(searchTerm, engine, privateMode, userContextId) {
     let deferredResponse = Promise.defer();
     this._request = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].
                     createInstance(Ci.nsIXMLHttpRequest);
@@ -238,9 +239,10 @@ this.SearchSuggestionController.prototype = {
                                           SEARCH_RESPONSE_SUGGESTION_JSON);
     let method = (submission.postData ? "POST" : "GET");
     this._request.open(method, submission.uri.spec, true);
-    if (this._request.channel instanceof Ci.nsIPrivateBrowsingChannel) {
-      this._request.channel.setPrivate(privateMode);
-    }
+
+    this._request.setOriginAttributes({userContextId,
+                                       privateBrowsingId: privateMode ? 1 : 0});
+
     this._request.mozBackgroundRequest = true; // suppress dialogs and fail silently
 
     this._request.addEventListener("load", this._onRemoteLoaded.bind(this, deferredResponse));

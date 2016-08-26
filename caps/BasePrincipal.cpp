@@ -298,6 +298,17 @@ OriginAttributes::SyncAttributesWithPrivateBrowsing(bool aInPrivateBrowsing)
   mPrivateBrowsingId = aInPrivateBrowsing ? 1 : 0;
 }
 
+void
+OriginAttributes::SetFromGenericAttributes(const GenericOriginAttributes& aAttrs)
+{
+  mAppId = aAttrs.mAppId;
+  mInIsolatedMozBrowser = aAttrs.mInIsolatedMozBrowser;
+  mAddonId = aAttrs.mAddonId;
+  mUserContextId = aAttrs.mUserContextId;
+  mSignedPkg = aAttrs.mSignedPkg;
+  mPrivateBrowsingId = aAttrs.mPrivateBrowsingId;
+}
+
 BasePrincipal::BasePrincipal()
 {}
 

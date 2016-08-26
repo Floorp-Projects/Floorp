@@ -8,7 +8,7 @@
  */
 
 const TAB_URL = EXAMPLE_URL + "doc_recursion-stack.html";
-const { ELLIPSIS } = require("devtools/client/shared/l10n");
+const { ELLIPSIS } = require("devtools/shared/l10n");
 
 function test() {
   let gTab, gPanel, gDebugger;

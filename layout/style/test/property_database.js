@@ -6080,12 +6080,15 @@ if (IsCSSPropertyPrefEnabled("layout.css.grid.enabled")) {
       "12%",
       "min-content",
       "max-content",
-      "calc(20px + 10%)",
+      "calc(2px - 99%)",
       "minmax(20px, max-content)",
       "minmax(min-content, auto)",
       "minmax(auto, max-content)",
       "m\\69nmax(20px, 4Fr)",
       "MinMax(min-content, calc(20px + 10%))",
+      "fit-content(1px)",
+      "fit-content(calc(1px - 99%))",
+      "fit-content(10%)",
     ],
     invalid_values: [
       "",
@@ -6101,6 +6104,9 @@ if (IsCSSPropertyPrefEnabled("layout.css.grid.enabled")) {
       "minmax(20px, 100px, 200px)",
       "maxmin(100px, 20px)",
       "minmax(min-content, minmax(30px, max-content))",
+      "fit-content(-1px)",
+      "fit-content(auto)",
+      "fit-content(min-content)",
     ]
   };
   gCSSProperties["grid-auto-rows"] = {
@@ -6122,7 +6128,7 @@ if (IsCSSPropertyPrefEnabled("layout.css.grid.enabled")) {
       "40px",
       "2.5fr",
       "[normal] 40px [] auto [ ] 12%",
-      "[foo] 40px min-content [ bar ] calc(20px + 10%) max-content",
+      "[foo] 40px min-content [ bar ] calc(2px - 99%) max-content",
       "40px min-content calc(20px + 10%) max-content",
       "minmax(min-content, auto)",
       "minmax(auto, max-content)",
@@ -6145,10 +6151,13 @@ if (IsCSSPropertyPrefEnabled("layout.css.grid.enabled")) {
       "minmax(calc(1% + 1px),auto) repeat(Auto-fit,[] 1%) minmax(auto,1%)",
       "[a] repeat( auto-fit,[a b] minmax(0,0) )",
       "[a] 40px repeat(auto-fit,[a b] minmax(1px, 0) [])",
-      "[a] calc(1%) [b] repeat(auto-fit,[a b] minmax(1mm, 1%) [c]) [c]",
+      "[a] calc(1px - 99%) [b] repeat(auto-fit,[a b] minmax(1mm, 1%) [c]) [c]",
       "repeat(auto-fill,minmax(1%,auto))",
       "repeat(auto-fill,minmax(1em,min-content)) minmax(min-content,0)",
       "repeat(auto-fill,minmax(max-content,1mm))",
+      "fit-content(1px) 1fr",
+      "[a] fit-content(calc(1px - 99%)) [b]",
+      "[a] fit-content(10%) [b c] fit-content(1em)",
     ],
     invalid_values: [
       "",
@@ -6208,6 +6217,9 @@ if (IsCSSPropertyPrefEnabled("layout.css.grid.enabled")) {
       "auto repeat(auto-fit, 10px)",
       "minmax(min-content,max-content) repeat(auto-fit, 0)",
       "10px [a] 10px [b a] 1fr [b] repeat(auto-fill, 0)",
+      "fit-content(-1px)",
+      "fit-content(auto)",
+      "fit-content(min-content)",
     ],
     unbalanced_values: [
       "(foo] 40px",
@@ -6306,10 +6318,10 @@ if (IsCSSPropertyPrefEnabled("layout.css.grid.enabled")) {
     other_values: [
       // <'grid-template-rows'> / <'grid-template-columns'>
       "40px / 100px",
-      "[foo] 40px [bar] / [baz] 100px [fizz]",
+      "[foo] 40px [bar] / [baz] repeat(auto-fill,100px) [fizz]",
       " none/100px",
       "40px/none",
-      // [ <track-list> / ]? [ <line-names>? <string> <track-size>? <line-names>? ]+
+      // [ <line-names>? <string> <track-size>? <line-names>? ]+ [ / <explicit-track-list> ]?
       "'fizz'",
       "[bar] 'fizz'",
       "'fizz' / [foo] 40px",
@@ -6320,6 +6332,8 @@ if (IsCSSPropertyPrefEnabled("layout.css.grid.enabled")) {
       "[bar] 'fizz' 100px [buzz] \n [a] '.' 200px [b] / [foo] 40px",
     ],
     invalid_values: [
+      "'fizz' / repeat(1, 100px)",
+      "'fizz' repeat(1, 100px) / 0px",
       "[foo] [bar] 40px / 100px",
       "[fizz] [buzz] 100px / 40px",
       "[fizz] [buzz] 'foo' / 40px",
@@ -6362,21 +6376,32 @@ if (IsCSSPropertyPrefEnabled("layout.css.grid.enabled")) {
       "none / none",
     ],
     other_values: [
-      "column 40px",
-      "column dense auto",
-      "dense row minmax(min-content, 2fr)",
-      "row 40px / 100px",
+      "auto-flow 40px / none",
+      "auto-flow / 40px",
+      "auto-flow dense auto / auto",
+      "dense auto-flow minmax(min-content, 2fr) / auto",
+      "dense auto-flow / 100px",
+      "none / auto-flow 40px",
+      "40px / auto-flow",
+      "none / dense auto-flow auto",
     ].concat(
-      gCSSProperties["grid-template"].other_values,
-      gCSSProperties["grid-auto-flow"].other_values
+      gCSSProperties["grid-template"].other_values
     ),
     invalid_values: [
-      "row column 40px",
-      "row -20px",
-      "row 200ms",
-      "row 40px 100px",
+      "auto-flow",
+      " / auto-flow",
+      "dense 0 / 0",
+      "dense dense 40px / 0",
+      "auto-flow / auto-flow",
+      "auto-flow / dense",
+      "auto-flow [a] 0 / 0",
+      "0 / auto-flow [a] 0",
+      "auto-flow -20px / 0",
+      "auto-flow 200ms / 0",
+      "auto-flow 40px 100px / 0",
     ].concat(
       gCSSProperties["grid-template"].invalid_values,
+      gCSSProperties["grid-auto-flow"].other_values,
       gCSSProperties["grid-auto-flow"].invalid_values
         .filter((v) => v != 'none')
     )
@@ -6542,8 +6567,8 @@ if (IsCSSPropertyPrefEnabled("layout.css.grid.enabled")) {
     type: CSS_TYPE_LONGHAND,
     initial_values: [ "0" ],
     other_values: [ "2px", "2%", "1em", "calc(1px + 1em)", "calc(1%)",
-                    "calc(1% + 1ch)" ],
-    invalid_values: [ "-1px", "auto", "none", "1px 1px", "-1%" ],
+                    "calc(1% + 1ch)" , "calc(1px - 99%)" ],
+    invalid_values: [ "-1px", "auto", "none", "1px 1px", "-1%", "fit-content(1px)" ],
   };
   gCSSProperties["grid-row-gap"] = {
     domProp: "gridRowGap",
@@ -6551,8 +6576,8 @@ if (IsCSSPropertyPrefEnabled("layout.css.grid.enabled")) {
     type: CSS_TYPE_LONGHAND,
     initial_values: [ "0" ],
     other_values: [ "2px", "2%", "1em", "calc(1px + 1em)", "calc(1%)",
-                    "calc(1% + 1ch)" ],
-    invalid_values: [ "-1px", "auto", "none", "1px 1px", "-1%" ],
+                    "calc(1% + 1ch)" , "calc(1px - 99%)" ],
+    invalid_values: [ "-1px", "auto", "none", "1px 1px", "-1%", "min-content" ],
   };
   gCSSProperties["grid-gap"] = {
     domProp: "gridGap",

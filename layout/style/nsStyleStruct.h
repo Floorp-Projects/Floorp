@@ -1653,6 +1653,8 @@ struct nsStyleGridLine
 //
 //   A <track-size> specified as a single <track-breadth> is represented
 //   as identical min and max sizing functions.
+//   A 'fit-content(size)' <track-size> is represented as eStyleUnit_None
+//   in the min sizing function and 'size' in the max sizing function.
 //
 //   The units for nsStyleCoord are:
 //   * eStyleUnit_Percent represents a <percentage>
