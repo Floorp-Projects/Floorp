@@ -103,7 +103,7 @@ LocalizationHelper.prototype = {
   }
 };
 
-const sharedL10N = new LocalizationHelper("devtools/locale/shared.properties");
+const sharedL10N = new LocalizationHelper("devtools-shared/locale/shared.properties");
 const ELLIPSIS = sharedL10N.getStr("ellipsis");
 
 /**
