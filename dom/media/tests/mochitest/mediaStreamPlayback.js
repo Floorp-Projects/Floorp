@@ -254,23 +254,6 @@ function createHTML(options) {
   return scriptsReady.then(() => realCreateHTML(options));
 }
 
-var pushPrefs = (...p) => new Promise(r => SpecialPowers.pushPrefEnv({set: p}, r));
-
-// noGum - Helper to detect whether active guM tracks still exist.
-//
-// It relies on the fact that, by spec, device labels from enumerateDevices are
-// only visible during active gum calls. They're also visible when persistent
-// permissions are granted, so turn off media.navigator.permission.disabled
-// (which is normally on otherwise in our tests). Lastly, we must turn on
-// media.navigator.permission.fake otherwise fake devices don't count as active.
-
-var noGum = () => pushPrefs(["media.navigator.permission.disabled", false],
-                            ["media.navigator.permission.fake", true])
-  .then(() => navigator.mediaDevices.enumerateDevices())
-  .then(([device]) => device &&
-      is(device.label, "", "Test must leave no active gUM streams behind."));
-
 var runTest = testFunction => scriptsReady
   .then(() => runTestWhenReady(testFunction))
-  .then(() => noGum())
   .then(() => finish());
