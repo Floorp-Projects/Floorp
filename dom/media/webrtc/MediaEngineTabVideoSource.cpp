@@ -149,12 +149,6 @@ MediaEngineTabVideoSource::Allocate(const dom::MediaTrackConstraints& aConstrain
   mWindowId = aConstraints.mBrowserWindow.WasPassed() ?
               aConstraints.mBrowserWindow.Value() : -1;
   *aOutHandle = nullptr;
-
-  {
-    MonitorAutoLock mon(mMonitor);
-    mState = kAllocated;
-  }
-
   return Restart(nullptr, aConstraints, aPrefs, aDeviceId, aOutBadConstraint);
 }
 
@@ -193,10 +187,6 @@ nsresult
 MediaEngineTabVideoSource::Deallocate(AllocationHandle* aHandle)
 {
   MOZ_ASSERT(!aHandle);
-  {
-    MonitorAutoLock mon(mMonitor);
-    mState = kReleased;
-  }
   return NS_OK;
 }
 
@@ -211,11 +201,6 @@ MediaEngineTabVideoSource::Start(SourceMediaStream* aStream, TrackID aID,
     runnable = new StartRunnable(this);
   NS_DispatchToMainThread(runnable);
   aStream->AddTrack(aID, 0, new VideoSegment());
-
-  {
-    MonitorAutoLock mon(mMonitor);
-    mState = kStarted;
-  }
 
   return NS_OK;
 }
@@ -353,8 +338,7 @@ MediaEngineTabVideoSource::Draw() {
 }
 
 nsresult
-MediaEngineTabVideoSource::Stop(mozilla::SourceMediaStream* aSource,
-                                mozilla::TrackID aID)
+MediaEngineTabVideoSource::Stop(mozilla::SourceMediaStream*, mozilla::TrackID)
 {
   // If mBlackedoutWindow is true, we may be running
   // despite mWindow == nullptr.
@@ -363,12 +347,6 @@ MediaEngineTabVideoSource::Stop(mozilla::SourceMediaStream* aSource,
   }
 
   NS_DispatchToMainThread(new StopRunnable(this));
-
-  {
-    MonitorAutoLock mon(mMonitor);
-    mState = kStopped;
-    aSource->EndTrack(aID);
-  }
   return NS_OK;
 }
 
