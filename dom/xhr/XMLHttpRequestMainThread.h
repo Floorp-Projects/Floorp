@@ -58,6 +58,7 @@ class BlobSet;
 class FormData;
 class URLSearchParams;
 class XMLHttpRequestUpload;
+struct OriginAttributesDictionary;
 
 // A helper for building up an ArrayBuffer object's data
 // before creating the ArrayBuffer itself.  Will do doubling
@@ -537,6 +538,10 @@ public:
   {
     return sDontWarnAboutSyncXHR;
   }
+
+  virtual void
+  SetOriginAttributes(const mozilla::dom::OriginAttributesDictionary& aAttrs) override;
+
 protected:
   // XHR states are meant to mirror the XHR2 spec:
   //   https://xhr.spec.whatwg.org/#states

@@ -5,165 +5,26 @@
 // ES6, 25.4.1.2.
 // This object is used to verify that an object is a PromiseReaction record.
 var PromiseReactionRecordProto = {__proto__: null};
-
-
-// ES6, 25.4.1.3.
-function CreateResolvingFunctions(promise) {
-    // The callbacks created here can deal with Promises wrapped in cross-
-    // compartment wrappers. That's required because in some circumstances,
-    // they're created in a higher-privileged compartment from the Promise,
-    // so they can be invoked seamlessly by code in that compartment.
-    //
-    // See the comment in PromiseConstructor (in builtin/Promise.cpp) for more
-    // details.
-    let unwrap = false;
-    if (!IsPromise(promise)) {
-        assert(IsWrappedPromise(promise),
-               "CreateResolvingFunctions expects arg0 to be a - maybe wrapped - promise");
-        unwrap = true;
-    }
-
-    // Step 1.
-    let alreadyResolved = false;
-
-    // Steps 2-4.
-    // ES6, 25.4.1.3.2. Inlined here so we can use an upvar instead of a slot to
-    // store promise and alreadyResolved, and share the latter with reject below.
-    function resolve(resolution) {
-        // Steps 1-3 (implicit).
-
-        // Step 4.
-        if (alreadyResolved)
-            return undefined;
-
-        // Step 5.
-        alreadyResolved = true;
-
-        // Step 6.
-        // We know |promise| is an object, so using strict equality instead of
-        // SameValue is fine.
-        if (resolution === promise) {
-            // Step 6.a.
-            let selfResolutionError = GetTypeError(JSMSG_CANNOT_RESOLVE_PROMISE_WITH_ITSELF);
-
-            // Step 6.b.
-            if (unwrap) {
-                return RejectUnwrappedPromise(promise, selfResolutionError);
-            }
-            return RejectPromise(promise, selfResolutionError);
-        }
-
-        // Step 7.
-        if (!IsObject(resolution)) {
-            if (unwrap) {
-                return callFunction(CallPromiseMethodIfWrapped, promise, resolution,
-                                    "FulfillUnwrappedPromise");
-            }
-            return FulfillPromise(promise, resolution);
-        }
-
-        // Steps 8-9.
-        let then;
-        try {
-            then = resolution.then;
-        } catch (e) {
-            if (unwrap) {
-                return RejectUnwrappedPromise(promise, e);
-            }
-            return RejectPromise(promise, e);
-        }
-
-        // Step 10 (implicit).
-
-        // Step 11.
-        if (!IsCallable(then)) {
-            if (unwrap) {
-                return callFunction(CallPromiseMethodIfWrapped, promise, resolution,
-                                    "FulfillUnwrappedPromise");
-            }
-            return FulfillPromise(promise, resolution);
-        }
-
-        // Step 12.
-        _EnqueuePromiseResolveThenableJob(promise, resolution, then);
-
-        // Step 13.
-        return undefined;
-    }
-
-    // Steps 5-7.
-    // ES6, 25.4.1.3.2.
-    function reject(reason) {
-        // Steps 1-3 (implicit).
-
-        // Step 4.
-        if (alreadyResolved)
-            return undefined;
-
-        // Step 5.
-        alreadyResolved = true;
-
-        // Step 6.
-        if (unwrap) {
-            return RejectUnwrappedPromise(promise, reason);
-        }
-        return RejectPromise(promise, reason);
-    }
-
-    // Return an array instead of an object with resolve/reject properties
-    // to make value extraction from C++ easier.
-    return [resolve, reject];
+function PromiseReactionRecord(promise, resolve, reject, fulfillHandler, rejectHandler,
+                               incumbentGlobal) {
+    this.promise = promise;
+    this.resolve = resolve;
+    this.reject = reject;
+    this.fulfillHandler = fulfillHandler;
+    this.rejectHandler = rejectHandler;
+    this.incumbentGlobal = incumbentGlobal;
 }
 
-// ES6, 25.4.1.4.
-function FulfillPromise(promise, value) {
-    return ResolvePromise(promise, value, PROMISE_FULFILL_REACTIONS_SLOT, PROMISE_STATE_FULFILLED);
-}
-function FulfillUnwrappedPromise(value) {
-    return ResolvePromise(this, value, PROMISE_FULFILL_REACTIONS_SLOT, PROMISE_STATE_FULFILLED);
-}
-
-// Commoned-out implementation of 25.4.1.4. and 25.4.1.7.
-// ES2016 February 12 draft.
-function ResolvePromise(promise, valueOrReason, reactionsSlot, state) {
-    // Step 1.
-    assert(GetPromiseState(promise) === PROMISE_STATE_PENDING,
-           "Can't resolve non-pending promise");
-    assert(state >= PROMISE_STATE_PENDING && state <= PROMISE_STATE_REJECTED,
-           `Invalid Promise state <${state}>`);
-
-    // Step 2.
-    var reactions = UnsafeGetObjectFromReservedSlot(promise, reactionsSlot);
-
-    // Step 3.
-    UnsafeSetReservedSlot(promise, PROMISE_RESULT_SLOT, valueOrReason);
-
-    // Step 4.
-    UnsafeSetReservedSlot(promise, PROMISE_FULFILL_REACTIONS_SLOT, null);
-
-    // Step 5.
-    UnsafeSetReservedSlot(promise, PROMISE_REJECT_REACTIONS_SLOT, null);
-
-    // Step 6.
-    UnsafeSetReservedSlot(promise, PROMISE_STATE_SLOT, state);
-
-    // Also null out the resolve/reject functions so they can be GC'd.
-    UnsafeSetReservedSlot(promise, PROMISE_RESOLVE_FUNCTION_SLOT, null);
-    UnsafeSetReservedSlot(promise, PROMISE_REJECT_FUNCTION_SLOT, null);
-
-    // Now that everything else is done, do the things the debugger needs.
-    // Step 7 of RejectPromise implemented in the debugger intrinsic.
-    _dbg_onPromiseSettled(promise);
-
-    // Step 7 of FulfillPromise.
-    // Step 8 of RejectPromise.
-    return TriggerPromiseReactions(reactions, valueOrReason);
-}
+MakeConstructible(PromiseReactionRecord, PromiseReactionRecordProto);
 
 // Used to verify that an object is a PromiseCapability record.
 var PromiseCapabilityRecordProto = {__proto__: null};
 
-// ES6, 25.4.1.5.
+// ES2016, 25.4.1.3, implemented in Promise.cpp.
+
+// ES2016, 25.4.1.4, implemented in Promise.cpp.
+
+// ES2016, 25.4.1.5.
 // Creates PromiseCapability records, see 25.4.1.1.
 function NewPromiseCapability(C) {
     // Steps 1-2.
@@ -207,31 +68,25 @@ function NewPromiseCapability(C) {
     };
 }
 
-// ES6, 25.4.1.6. is implemented as an intrinsic in SelfHosting.cpp.
+// ES2016, 25.4.1.6, implemented in SelfHosting.cpp.
 
-// ES2016, February 12 draft, 25.4.1.7.
-function RejectPromise(promise, reason) {
-    return ResolvePromise(promise, reason, PROMISE_REJECT_REACTIONS_SLOT, PROMISE_STATE_REJECTED);
-}
+// ES2016, 25.4.1.7, implemented in Promise.cpp.
 
-// ES6, 25.4.1.8.
-function TriggerPromiseReactions(reactions, argument) {
-    // Step 1.
-    for (var i = 0, len = reactions.length; i < len; i++)
-        EnqueuePromiseReactionJob(reactions[i], argument);
-    // Step 2 (implicit).
-}
+// ES2016, 25.4.1.8, implemented in Promise.cpp.
 
-// ES2016, February 12 draft 25.4.1.9, implemented in SelfHosting.cpp.
+// ES2016, 25.4.1.9, implemented in SelfHosting.cpp.
 
 // ES6, 25.4.2.1.
-function EnqueuePromiseReactionJob(reaction, argument) {
-    let capabilities = reaction.capabilities;
-    _EnqueuePromiseReactionJob(reaction.handler,
+function EnqueuePromiseReactionJob(reaction, jobType, argument) {
+    // Reaction records contain handlers for both fulfillment and rejection.
+    // The `jobType` parameter allows us to retrieves the right one.
+    assert(jobType === PROMISE_JOB_TYPE_FULFILL || jobType === PROMISE_JOB_TYPE_REJECT,
+           "Invalid job type");
+    _EnqueuePromiseReactionJob(reaction[jobType],
                                argument,
-                               capabilities.resolve,
-                               capabilities.reject,
-                               capabilities.promise,
+                               reaction.resolve,
+                               reaction.reject,
+                               reaction.promise,
                                reaction.incumbentGlobal || null);
 }
 
@@ -239,7 +94,7 @@ function EnqueuePromiseReactionJob(reaction, argument) {
 
 // ES6, 25.4.3.1. (Implemented in C++).
 
-// ES7 2016-01-21 draft, 25.4.4.1.
+// ES2016, 25.4.4.1.
 function Promise_static_all(iterable) {
     // Step 1.
     let C = this;
@@ -459,7 +314,7 @@ function CreatePromiseAllResolveElementFunction(index, values, promiseCapability
     };
 }
 
-// ES7, 2016-01-21 draft, 25.4.4.3.
+// ES2016, 25.4.4.3.
 function Promise_static_race(iterable) {
     // Step 1.
     let C = this;
@@ -497,7 +352,7 @@ function Promise_static_race(iterable) {
     }
 }
 
-// ES7, 2016-01-21 draft, 25.4.4.3.1.
+// ES2016, 25.4.4.3.1.
 function PerformPromiseRace(iteratorRecord, resultCapability, C) {
     assert(IsConstructor(C), "PerformPromiseRace called with non-constructor");
     assert(IsPromiseCapability(resultCapability), "Invalid promise capability record");
@@ -604,105 +459,47 @@ function BlockOnPromise(promise, blockedPromise, onResolve, onReject) {
     // If the object isn't a maybe-wrapped instance of |Promise|, we ignore
     // it. All this does is lose some small amount of debug information
     // in scenarios that are highly unlikely to occur in useful code.
-    if (IsPromise(promise)) {
-        return callFunction(AddPromiseReaction, promise, PROMISE_REJECT_REACTIONS_SLOT,
-                            blockedPromise);
-    }
+    if (IsPromise(promise))
+        return callFunction(AddDependentPromise, promise, blockedPromise);
 
-    if (IsWrappedPromise(promise)) {
-        callFunction(CallPromiseMethodIfWrapped, promise, PROMISE_REJECT_REACTIONS_SLOT,
-                     blockedPromise, "AddPromiseReaction");
-    }
+    if (IsWrappedPromise(promise))
+        callFunction(CallPromiseMethodIfWrapped, promise, blockedPromise, "AddDependentPromise");
 }
 
 /**
- * Invoked with a Promise as the receiver, AddPromiseReaction adds an entry to
- * the reactions list in `slot`, using the other parameters as values for that
- * reaction.
+ * Invoked with a Promise as the receiver, AddDependentPromise adds an entry
+ * to the reactions list.
  *
- * If any of the callback functions aren't specified, they're set to
- * NullFunction. Doing that here is useful in case the call is performed on an
- * unwrapped Promise. Passing in NullFunctions would cause useless compartment
- * switches.
+ * This is only used to make dependent promises visible in the devtools, so no
+ * callbacks are provided. To make handling that case easier elsewhere,
+ * they're all set to NullFunction.
  *
  * The reason for the target Promise to be passed as the receiver is so the
  * same function can be used for wrapped and unwrapped Promise objects.
  */
-function AddPromiseReaction(slot, dependentPromise, onResolve, onReject, handler) {
-    assert(IsPromise(this), "AddPromiseReaction expects an unwrapped Promise as the receiver");
-    assert(slot === PROMISE_FULFILL_REACTIONS_SLOT || slot === PROMISE_REJECT_REACTIONS_SLOT,
-           "Invalid slot");
+function AddDependentPromise(dependentPromise) {
+    assert(IsPromise(this), "AddDependentPromise expects an unwrapped Promise as the receiver");
 
-    if (!onResolve)
-        onResolve = NullFunction;
-    if (!onReject)
-        onReject = NullFunction;
-    if (!handler)
-        handler = NullFunction;
-
-    let reactions = UnsafeGetReservedSlot(this, slot);
-
-    // The reactions slot might've been reset because the Promise was resolved.
-    if (!reactions) {
-        assert(GetPromiseState(this) !== PROMISE_STATE_PENDING,
-               "Pending promises must have reactions lists.");
+    if (GetPromiseState(this) !== PROMISE_STATE_PENDING)
         return;
-    }
-    _DefineDataProperty(reactions, reactions.length, {
-                            __proto__: PromiseReactionRecordProto,
-                            capabilities: {
-                                __proto__: PromiseCapabilityRecordProto,
-                                promise: dependentPromise,
-                                reject: onReject,
-                                resolve: onResolve
-                            },
-                            handler: handler
-                        });
+
+    let reaction = new PromiseReactionRecord(dependentPromise, NullFunction, NullFunction,
+                                             NullFunction, NullFunction, null);
+
+    let reactions = UnsafeGetReservedSlot(this, PROMISE_REACTIONS_OR_RESULT_SLOT);
+
+    // The reactions list might not have been allocated yet.
+    if (!reactions)
+        UnsafeSetReservedSlot(dependentPromise, PROMISE_REACTIONS_OR_RESULT_SLOT, [reaction]);
+    else
+        _DefineDataProperty(reactions, reactions.length, reaction);
 }
 
-// ES6, 25.4.4.4.
-function Promise_static_reject(r) {
-    // Step 1.
-    let C = this;
+// ES2016, 25.4.4.4 (implemented in C++).
 
-    // Step 2.
-    if (!IsObject(C))
-        ThrowTypeError(JSMSG_NOT_NONNULL_OBJECT, "Receiver of Promise.reject call");
+// ES2016, 25.4.4.5 (implemented in C++).
 
-    // Steps 3-4.
-    let promiseCapability = NewPromiseCapability(C);
-
-    // Steps 5-6.
-    callContentFunction(promiseCapability.reject, undefined, r);
-
-    // Step 7.
-    return promiseCapability.promise;
-}
-
-// ES6, 25.4.4.5.
-function Promise_static_resolve(x) {
-    // Step 1.
-    let C = this;
-
-    // Step 2.
-    if (!IsObject(C))
-        ThrowTypeError(JSMSG_NOT_NONNULL_OBJECT, "Receiver of Promise.resolve call");
-
-    // Step 3.
-    if (IsObject(x) && (IsPromise(x) || IsWrappedPromise(x)) && x.constructor === C)
-        return x;
-
-    // Steps 4-5.
-    let promiseCapability = NewPromiseCapability(C);
-
-    // Steps 6-7.
-    callContentFunction(promiseCapability.resolve, undefined, x);
-
-    // Step 8.
-    return promiseCapability.promise;
-}
-
-//ES6, 25.4.4.6.
+// ES6, 25.4.4.6.
 function Promise_static_get_species() {
     // Step 1.
     return this;
@@ -753,9 +550,9 @@ function Promise_then(onFulfilled, onRejected) {
  *
  * Used internally to implement DOM functionality.
  *
- * Note: the reactions pushed using this function contain a `capabilities`
- * object whose `promise` field can contain null. That field is only ever used
- * by devtools, which have to treat these reactions specially.
+ * Note: the reactions pushed using this function contain a `promise` field
+ * that can contain null. That field is only ever used by devtools, which have
+ * to treat these reactions specially.
  */
 function EnqueuePromiseReactions(promise, dependentPromise, onFulfilled, onRejected) {
     let isWrappedPromise = false;
@@ -871,7 +668,7 @@ function UnwrappedPerformPromiseThen(fulfilledHandler, rejectedHandler, promise,
                               resultCapability);
 }
 
-// ES2016, March 1, 2016 draft, 25.4.5.3.1.
+// ES2016, 25.4.5.3.1.
 function PerformPromiseThen(promise, onFulfilled, onRejected, resultCapability) {
     // Step 1.
     assert(IsPromise(promise), "Can't call PerformPromiseThen on non-Promise objects");
@@ -888,43 +685,37 @@ function PerformPromiseThen(promise, onFulfilled, onRejected, resultCapability) 
         onRejected = PROMISE_HANDLER_THROWER;
 
     let incumbentGlobal = _GetObjectFromIncumbentGlobal();
-    // Step 5.
-    let fulfillReaction = {
-        __proto__: PromiseReactionRecordProto,
-        capabilities: resultCapability,
-        handler: onFulfilled,
-        incumbentGlobal
-    };
-
-    // Step 6.
-    let rejectReaction = {
-        __proto__: PromiseReactionRecordProto,
-        capabilities: resultCapability,
-        handler: onRejected,
-        incumbentGlobal
-    };
+    // Steps 5,6.
+    // Instead of creating separate reaction records for fulfillment and
+    // rejection, we create a combined record. All places we use the record
+    // can handle that.
+    let reaction = new PromiseReactionRecord(resultCapability.promise,
+                                             resultCapability.resolve,
+                                             resultCapability.reject,
+                                             onFulfilled,
+                                             onRejected,
+                                             incumbentGlobal);
 
     // Step 7.
     let state = GetPromiseState(promise);
+    let flags = UnsafeGetInt32FromReservedSlot(promise, PROMISE_FLAGS_SLOT);
     if (state === PROMISE_STATE_PENDING) {
-        // Step 7.a.
-        let fulfillReactions = UnsafeGetObjectFromReservedSlot(promise,
-                                                               PROMISE_FULFILL_REACTIONS_SLOT);
-        _DefineDataProperty(fulfillReactions, fulfillReactions.length, fulfillReaction);
-
-        // Step 7.b.
-        let rejectReactions = UnsafeGetObjectFromReservedSlot(promise,
-                                                              PROMISE_REJECT_REACTIONS_SLOT);
-        _DefineDataProperty(rejectReactions, rejectReactions.length, rejectReaction);
+        // Steps 7.a,b.
+        // We only have a single list for fulfill and reject reactions.
+        let reactions = UnsafeGetReservedSlot(promise, PROMISE_REACTIONS_OR_RESULT_SLOT);
+        if (!reactions)
+            UnsafeSetReservedSlot(promise, PROMISE_REACTIONS_OR_RESULT_SLOT, [reaction]);
+        else
+            _DefineDataProperty(reactions, reactions.length, reaction);
     }
 
     // Step 8.
     else if (state === PROMISE_STATE_FULFILLED) {
         // Step 8.a.
-        let value = UnsafeGetReservedSlot(promise, PROMISE_RESULT_SLOT);
+        let value = UnsafeGetReservedSlot(promise, PROMISE_REACTIONS_OR_RESULT_SLOT);
 
         // Step 8.b.
-        EnqueuePromiseReactionJob(fulfillReaction, value);
+        EnqueuePromiseReactionJob(reaction, PROMISE_JOB_TYPE_FULFILL, value);
     }
 
     // Step 9.
@@ -933,21 +724,18 @@ function PerformPromiseThen(promise, onFulfilled, onRejected, resultCapability) 
         assert(state === PROMISE_STATE_REJECTED, "Invalid Promise state " + state);
 
         // Step 9.b.
-        let reason = UnsafeGetReservedSlot(promise, PROMISE_RESULT_SLOT);
+        let reason = UnsafeGetReservedSlot(promise, PROMISE_REACTIONS_OR_RESULT_SLOT);
 
         // Step 9.c.
-        if (UnsafeGetInt32FromReservedSlot(promise, PROMISE_IS_HANDLED_SLOT) !==
-            PROMISE_IS_HANDLED_STATE_HANDLED)
-        {
+        if (!(flags & PROMISE_FLAG_HANDLED))
             HostPromiseRejectionTracker(promise, PROMISE_REJECTION_TRACKER_OPERATION_HANDLE);
-        }
 
         // Step 9.d.
-        EnqueuePromiseReactionJob(rejectReaction, reason);
+        EnqueuePromiseReactionJob(reaction, PROMISE_JOB_TYPE_REJECT, reason);
     }
 
     // Step 10.
-    UnsafeSetReservedSlot(promise, PROMISE_IS_HANDLED_SLOT, PROMISE_IS_HANDLED_STATE_HANDLED);
+    UnsafeSetReservedSlot(promise, PROMISE_FLAGS_SLOT, flags | PROMISE_FLAG_HANDLED);
 
     // Step 11.
     return resultCapability.promise;
@@ -963,5 +751,12 @@ function IsPromiseCapability(capability) {
 }
 
 function GetPromiseState(promise) {
-    return UnsafeGetInt32FromReservedSlot(promise, PROMISE_STATE_SLOT);
+    let flags = UnsafeGetInt32FromReservedSlot(promise, PROMISE_FLAGS_SLOT);
+    if (!(flags & PROMISE_FLAG_RESOLVED)) {
+        assert(!(flags & PROMISE_STATE_FULFILLED), "Fulfilled promises are resolved, too");
+        return PROMISE_STATE_PENDING;
+    }
+    if (flags & PROMISE_FLAG_FULFILLED)
+        return PROMISE_STATE_FULFILLED;
+    return PROMISE_STATE_REJECTED;
 }

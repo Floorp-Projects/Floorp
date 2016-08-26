@@ -386,6 +386,16 @@ using GCNurseryCollectionCallback = void(*)(JSContext* cx, GCNurseryProgress pro
 extern JS_PUBLIC_API(GCNurseryCollectionCallback)
 SetGCNurseryCollectionCallback(JSContext* cx, GCNurseryCollectionCallback callback);
 
+typedef void
+(* DoCycleCollectionCallback)(JSContext* cx);
+
+/**
+ * The purge gray callback is called after any COMPARTMENT_REVIVED GC in which
+ * the majority of compartments have been marked gray.
+ */
+extern JS_PUBLIC_API(DoCycleCollectionCallback)
+SetDoCycleCollectionCallback(JSContext* cx, DoCycleCollectionCallback callback);
+
 /**
  * Incremental GC defaults to enabled, but may be disabled for testing or in
  * embeddings that have not yet implemented barriers on their native classes.

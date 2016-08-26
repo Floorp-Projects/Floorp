@@ -62,6 +62,41 @@ enum class StyleBasicShapeType : uint8_t {
   Inset,
 };
 
+// box-align
+enum class StyleBoxAlign : uint8_t {
+  Stretch,
+  Start,
+  Center,
+  Baseline,
+  End,
+};
+
+// box-decoration-break
+enum class StyleBoxDecorationBreak : uint8_t {
+  Slice,
+  Clone,
+};
+
+// box-direction
+enum class StyleBoxDirection : uint8_t {
+  Normal,
+  Reverse,
+};
+
+// box-orient
+enum class StyleBoxOrient : uint8_t {
+  Horizontal,
+  Vertical,
+};
+
+// box-pack
+enum class StyleBoxPack : uint8_t {
+  Start,
+  Center,
+  End,
+  Justify,
+};
+
 // box-sizing
 enum class StyleBoxSizing : uint8_t {
   Content,
@@ -167,31 +202,6 @@ enum class StyleUserSelect : uint8_t {
 #define NS_STYLE_WINDOW_DRAGGING_DEFAULT 0
 #define NS_STYLE_WINDOW_DRAGGING_DRAG    1
 #define NS_STYLE_WINDOW_DRAGGING_NO_DRAG 2
-
-// box-align
-#define NS_STYLE_BOX_ALIGN_STRETCH     0
-#define NS_STYLE_BOX_ALIGN_START       1
-#define NS_STYLE_BOX_ALIGN_CENTER      2
-#define NS_STYLE_BOX_ALIGN_BASELINE    3
-#define NS_STYLE_BOX_ALIGN_END         4
-
-// box-pack
-#define NS_STYLE_BOX_PACK_START        0
-#define NS_STYLE_BOX_PACK_CENTER       1
-#define NS_STYLE_BOX_PACK_END          2
-#define NS_STYLE_BOX_PACK_JUSTIFY      3
-
-// box-decoration-break
-#define NS_STYLE_BOX_DECORATION_BREAK_SLICE  0
-#define NS_STYLE_BOX_DECORATION_BREAK_CLONE  1
-
-// box-direction
-#define NS_STYLE_BOX_DIRECTION_NORMAL    0
-#define NS_STYLE_BOX_DIRECTION_REVERSE   1
-
-// box-orient
-#define NS_STYLE_BOX_ORIENT_HORIZONTAL 0
-#define NS_STYLE_BOX_ORIENT_VERTICAL   1
 
 // orient
 #define NS_STYLE_ORIENT_INLINE     0

@@ -1,0 +1,104 @@
+---
+# For complete sample of all build and test jobs,
+# see <gecko>/testing/taskcluster/tasks/branches/base_job_flags.yml
+
+$inherits:
+  from: tasks/branches/base_jobs.yml
+
+flags:
+  post-build:
+    - upload-symbols
+
+builds:
+  linux:
+    platforms:
+      - Linux
+    types:
+      opt:
+        task: tasks/builds/opt_linux32.yml
+      debug:
+        task: tasks/builds/dbg_linux32.yml
+  linux64:
+    platforms:
+      - Linux64
+    extra-builds:  # see RIDEALONG_BUILDS in `mach taskgraph`
+      - linux64-l10n
+      - sm-plain
+      - sm-nonunified
+      - sm-arm-sim
+      - sm-arm64-sim
+      - sm-compacting
+      - sm-rootanalysis
+      - sm-package
+      - sm-tsan
+    types:
+      opt:
+        task: tasks/builds/opt_linux64.yml
+      debug:
+        task: tasks/builds/dbg_linux64.yml
+  linux64-st-an:
+    platforms:
+      - Linux64 Static Analysis
+    types:
+      opt:
+        task: tasks/builds/opt_linux64_st-an.yml
+  linux64-pgo:
+    platforms:
+      - Linux64 PGO
+    types:
+      opt:
+        task: tasks/builds/opt_linux64_pgo.yml
+  linux64-mulet:
+    platforms:
+      - Mulet Linux
+    types:
+      opt:
+        task: tasks/builds/mulet_linux.yml
+      debug:
+        task: tasks/builds/mulet_linux_dbg.yml
+  linux64-mulet-haz:
+    platforms:
+      - Mulet Linux
+    types:
+      debug:
+        task: tasks/builds/mulet_haz_linux.yml
+  macosx64:
+    platforms:
+      - MacOSX64
+    types:
+      opt:
+        task: tasks/builds/opt_macosx64.yml
+      debug:
+        task: tasks/builds/dbg_macosx64.yml
+  linux64-asan:
+    platforms:
+      - Linux64 ASan
+    types:
+      opt:
+        task: tasks/builds/opt_linux64_asan.yml
+      debug:
+        task: tasks/builds/dbg_linux64_asan.yml
+  macosx64-st-an:
+    platforms:
+      - MacOSX64 Static Analysis
+    types:
+      opt:
+        task: tasks/builds/opt_macosx64_st-an.yml
+  sm-tsan:
+    platforms:
+      - Linux64
+    types:
+      opt:
+        task: tasks/builds/sm_tsan.yml
+    when:
+      file_patterns:
+       - js/public/**
+       - js/src/**
+
+post-build:
+  upload-symbols:
+    allowed_build_tasks:
+      - tasks/builds/opt_linux64.yml
+      - tasks/builds/dbg_linux64.yml
+      - tasks/builds/android_api_15.yml
+    task: tasks/post-builds/upload_symbols.yml

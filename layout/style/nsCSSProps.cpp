@@ -1031,8 +1031,8 @@ const KTableEntry nsCSSProps::kBorderWidthKTable[] = {
 };
 
 const KTableEntry nsCSSProps::kBoxDecorationBreakKTable[] = {
-  { eCSSKeyword_slice, NS_STYLE_BOX_DECORATION_BREAK_SLICE },
-  { eCSSKeyword_clone, NS_STYLE_BOX_DECORATION_BREAK_CLONE },
+  { eCSSKeyword_slice, StyleBoxDecorationBreak::Slice },
+  { eCSSKeyword_clone, StyleBoxDecorationBreak::Clone },
   { eCSSKeyword_UNKNOWN, -1 }
 };
 
@@ -2242,33 +2242,33 @@ const KTableEntry nsCSSProps::kWritingModeKTable[] = {
 
 // Specific keyword tables for XUL.properties
 const KTableEntry nsCSSProps::kBoxAlignKTable[] = {
-  { eCSSKeyword_stretch, NS_STYLE_BOX_ALIGN_STRETCH },
-  { eCSSKeyword_start, NS_STYLE_BOX_ALIGN_START },
-  { eCSSKeyword_center, NS_STYLE_BOX_ALIGN_CENTER },
-  { eCSSKeyword_baseline, NS_STYLE_BOX_ALIGN_BASELINE },
-  { eCSSKeyword_end, NS_STYLE_BOX_ALIGN_END },
+  { eCSSKeyword_stretch, StyleBoxAlign::Stretch },
+  { eCSSKeyword_start, StyleBoxAlign::Start },
+  { eCSSKeyword_center, StyleBoxAlign::Center },
+  { eCSSKeyword_baseline, StyleBoxAlign::Baseline },
+  { eCSSKeyword_end, StyleBoxAlign::End },
   { eCSSKeyword_UNKNOWN, -1 }
 };
 
 const KTableEntry nsCSSProps::kBoxDirectionKTable[] = {
-  { eCSSKeyword_normal, NS_STYLE_BOX_DIRECTION_NORMAL },
-  { eCSSKeyword_reverse, NS_STYLE_BOX_DIRECTION_REVERSE },
+  { eCSSKeyword_normal, StyleBoxDirection::Normal },
+  { eCSSKeyword_reverse, StyleBoxDirection::Reverse },
   { eCSSKeyword_UNKNOWN, -1 }
 };
 
 const KTableEntry nsCSSProps::kBoxOrientKTable[] = {
-  { eCSSKeyword_horizontal, NS_STYLE_BOX_ORIENT_HORIZONTAL },
-  { eCSSKeyword_vertical, NS_STYLE_BOX_ORIENT_VERTICAL },
-  { eCSSKeyword_inline_axis, NS_STYLE_BOX_ORIENT_HORIZONTAL },
-  { eCSSKeyword_block_axis, NS_STYLE_BOX_ORIENT_VERTICAL },
+  { eCSSKeyword_horizontal, StyleBoxOrient::Horizontal },
+  { eCSSKeyword_vertical, StyleBoxOrient::Vertical },
+  { eCSSKeyword_inline_axis, StyleBoxOrient::Horizontal },
+  { eCSSKeyword_block_axis, StyleBoxOrient::Vertical },
   { eCSSKeyword_UNKNOWN, -1 }
 };
 
 const KTableEntry nsCSSProps::kBoxPackKTable[] = {
-  { eCSSKeyword_start, NS_STYLE_BOX_PACK_START },
-  { eCSSKeyword_center, NS_STYLE_BOX_PACK_CENTER },
-  { eCSSKeyword_end, NS_STYLE_BOX_PACK_END },
-  { eCSSKeyword_justify, NS_STYLE_BOX_PACK_JUSTIFY },
+  { eCSSKeyword_start, StyleBoxPack::Start },
+  { eCSSKeyword_center, StyleBoxPack::Center },
+  { eCSSKeyword_end, StyleBoxPack::End },
+  { eCSSKeyword_justify, StyleBoxPack::Justify },
   { eCSSKeyword_UNKNOWN, -1 }
 };
 

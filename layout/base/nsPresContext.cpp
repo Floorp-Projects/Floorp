@@ -2036,16 +2036,10 @@ nsPresContext::UpdateIsChrome()
               nsIDocShellTreeItem::typeChrome == mContainer->ItemType();
 }
 
-/* virtual */ bool
+bool
 nsPresContext::HasAuthorSpecifiedRules(const nsIFrame *aFrame,
                                        uint32_t ruleTypeMask) const
 {
-#ifdef MOZ_STYLO
-  if (!mShell || mShell->StyleSet()->IsServo()) {
-    NS_ERROR("stylo: nsPresContext::HasAuthorSpecifiedRules not implemented");
-    return true;
-  }
-#endif
   return
     nsRuleNode::HasAuthorSpecifiedRules(aFrame->StyleContext(),
                                         ruleTypeMask,

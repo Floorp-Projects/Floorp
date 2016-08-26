@@ -113,13 +113,14 @@ const SearchAutocompleteProviderInternal = {
     }
   },
 
-  getSuggestionController(searchToken, inPrivateContext, maxResults) {
+  getSuggestionController(searchToken, inPrivateContext, maxResults, userContextId) {
     let engine = Services.search.currentEngine;
     if (!engine) {
       return null;
     }
     return new SearchSuggestionControllerWrapper(engine, searchToken,
-                                                 inPrivateContext, maxResults);
+                                                 inPrivateContext, maxResults,
+                                                 userContextId);
   },
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
@@ -127,11 +128,12 @@ const SearchAutocompleteProviderInternal = {
 }
 
 function SearchSuggestionControllerWrapper(engine, searchToken,
-                                           inPrivateContext, maxResults) {
+                                           inPrivateContext, maxResults,
+                                           userContextId) {
   this._controller = new SearchSuggestionController();
   this._controller.maxLocalResults = 0;
   this._controller.maxRemoteResults = maxResults;
-  let promise = this._controller.fetch(searchToken, inPrivateContext, engine);
+  let promise = this._controller.fetch(searchToken, inPrivateContext, engine, userContextId);
   this._suggestions = [];
   this._success = false;
   this._promise = promise.then(results => {
@@ -283,11 +285,11 @@ this.PlacesSearchAutocompleteProvider = Object.freeze({
     };
   },
 
-  getSuggestionController(searchToken, inPrivateContext, maxResults) {
+  getSuggestionController(searchToken, inPrivateContext, maxResults, userContextId) {
     if (!SearchAutocompleteProviderInternal.initialized) {
       throw new Error("The component has not been initialized.");
     }
     return SearchAutocompleteProviderInternal.getSuggestionController(
-             searchToken, inPrivateContext, maxResults);
+             searchToken, inPrivateContext, maxResults, userContextId);
   },
 });

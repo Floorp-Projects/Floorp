@@ -682,29 +682,6 @@ namespace mozilla {
 }
 
 
-bool
-AndroidBridge::InitCamera(const nsCString& contentType, uint32_t camera, uint32_t *width, uint32_t *height, uint32_t *fps)
-{
-    auto arr = GeckoAppShell::InitCamera
-      (NS_ConvertUTF8toUTF16(contentType), (int32_t) camera, (int32_t) *width, (int32_t) *height);
-
-    if (!arr)
-        return false;
-
-    JNIEnv* const env = arr.Env();
-    jint *elements = env->GetIntArrayElements(arr.Get(), 0);
-
-    *width = elements[1];
-    *height = elements[2];
-    *fps = elements[3];
-
-    bool res = elements[0] == 1;
-
-    env->ReleaseIntArrayElements(arr.Get(), elements, 0);
-
-    return res;
-}
-
 void
 AndroidBridge::GetCurrentBatteryInformation(hal::BatteryInformation* aBatteryInfo)
 {

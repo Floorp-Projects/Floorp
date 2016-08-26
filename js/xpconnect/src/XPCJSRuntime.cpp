@@ -23,6 +23,7 @@
 #include "nsIObserverService.h"
 #include "nsIDebug2.h"
 #include "nsIDocShell.h"
+#include "nsIRunnable.h"
 #include "amIAddonManager.h"
 #include "nsPIDOMWindow.h"
 #include "nsPrintfCString.h"
@@ -718,6 +719,22 @@ XPCJSRuntime::GCSliceCallback(JSContext* cx,
 
     if (self->mPrevGCSliceCallback)
         (*self->mPrevGCSliceCallback)(cx, progress, desc);
+}
+
+/* static */ void
+XPCJSRuntime::DoCycleCollectionCallback(JSContext* cx)
+{
+    // The GC has detected that a CC at this point would collect a tremendous
+    // amount of garbage that is being revivified unnecessarily.
+    NS_DispatchToCurrentThread(
+            NS_NewRunnableFunction([](){nsJSContext::CycleCollectNow(nullptr);}));
+
+    XPCJSRuntime* self = nsXPConnect::GetRuntimeInstance();
+    if (!self)
+        return;
+
+    if (self->mPrevDoCycleCollectionCallback)
+        (*self->mPrevDoCycleCollectionCallback)(cx);
 }
 
 void
@@ -3481,6 +3498,8 @@ XPCJSRuntime::Initialize()
     JS_SetSizeOfIncludingThisCompartmentCallback(cx, CompartmentSizeOfIncludingThisCallback);
     JS_SetCompartmentNameCallback(cx, CompartmentNameCallback);
     mPrevGCSliceCallback = JS::SetGCSliceCallback(cx, GCSliceCallback);
+    mPrevDoCycleCollectionCallback = JS::SetDoCycleCollectionCallback(cx,
+            DoCycleCollectionCallback);
     JS_AddFinalizeCallback(cx, FinalizeCallback, nullptr);
     JS_AddWeakPointerZoneGroupCallback(cx, WeakPointerZoneGroupCallback, this);
     JS_AddWeakPointerCompartmentCallback(cx, WeakPointerCompartmentCallback, this);

@@ -118,6 +118,21 @@ const JNINativeMethod GeckoAppShell::Natives<Impl>::methods[] = {
 };
 
 template<class Impl>
+class GeckoAppShell::CameraCallback::Natives : public mozilla::jni::NativeImpl<CameraCallback, Impl>
+{
+public:
+    static const JNINativeMethod methods[1];
+};
+
+template<class Impl>
+const JNINativeMethod GeckoAppShell::CameraCallback::Natives<Impl>::methods[] = {
+
+    mozilla::jni::MakeNativeMethod<GeckoAppShell::CameraCallback::OnFrameData_t>(
+            mozilla::jni::NativeStub<GeckoAppShell::CameraCallback::OnFrameData_t, Impl>
+            ::template Wrap<&Impl::OnFrameData>)
+};
+
+template<class Impl>
 class GeckoBatteryManager::Natives : public mozilla::jni::NativeImpl<GeckoBatteryManager, Impl>
 {
 public:

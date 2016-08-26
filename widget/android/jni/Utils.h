@@ -111,6 +111,8 @@ inline bool ThrowException(const char *aMessage)
 
 bool HandleUncaughtException(JNIEnv* aEnv);
 
+bool ReportException(JNIEnv* aEnv, jthrowable aExc, jstring aStack);
+
 #define MOZ_CATCH_JNI_EXCEPTION(env) \
     do { \
         if (mozilla::jni::HandleUncaughtException((env))) { \

@@ -115,8 +115,9 @@ nsHTMLEntities::AddRefTable(void)
 void
 nsHTMLEntities::ReleaseTable(void)
 {
-  if (--gTableRefCnt != 0)
+  if (--gTableRefCnt != 0) {
     return;
+  }
 
   delete gEntityToUnicode;
   delete gUnicodeToEntity;
@@ -128,17 +129,18 @@ int32_t
 nsHTMLEntities::EntityToUnicode(const nsCString& aEntity)
 {
   NS_ASSERTION(gEntityToUnicode, "no lookup table, needs addref");
-  if (!gEntityToUnicode)
+  if (!gEntityToUnicode) {
     return -1;
+  }
 
-    //this little piece of code exists because entities may or may not have the terminating ';'.
-    //if we see it, strip if off for this test...
+  //this little piece of code exists because entities may or may not have the terminating ';'.
+  //if we see it, strip if off for this test...
 
-    if(';'==aEntity.Last()) {
-      nsAutoCString temp(aEntity);
-      temp.Truncate(aEntity.Length()-1);
-      return EntityToUnicode(temp);
-    }
+  if(';'==aEntity.Last()) {
+    nsAutoCString temp(aEntity);
+    temp.Truncate(aEntity.Length()-1);
+    return EntityToUnicode(temp);
+  }
 
   auto entry =
     static_cast<EntityNodeEntry*>(gEntityToUnicode->Search(aEntity.get()));

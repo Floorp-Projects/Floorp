@@ -85,7 +85,7 @@ tasks:
 
         # Note: This task is built server side without the context or tooling that
         # exist in tree so we must hard code the version
-        image: 'taskcluster/decision:0.1.4'
+        image: 'taskcluster/decision:0.1.5'
 
         maxRunTime: 1800
 

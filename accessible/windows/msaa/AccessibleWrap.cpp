@@ -1392,6 +1392,10 @@ AccessibleWrap::GetXPAccessibleFor(const VARIANT& aVarChild)
   if (aVarChild.lVal > 0) {
     // Gecko child indices are 0-based in contrast to indices used in MSAA.
     if (IsProxy()) {
+      if (static_cast<uint32_t>(aVarChild.lVal) > Proxy()->ChildrenCount()) {
+        return nullptr;
+      }
+
       return WrapperFor(Proxy()->ChildAt(aVarChild.lVal - 1));
     } else {
       return GetChildAt(aVarChild.lVal - 1);
