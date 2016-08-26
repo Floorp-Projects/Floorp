@@ -311,7 +311,7 @@ DrawTargetSkia::ReleaseBits(uint8_t* aData)
 }
 
 static void
-SetPaintPattern(SkPaint& aPaint, const Pattern& aPattern, Float aAlpha = 1.0)
+SetPaintPattern(SkPaint& aPaint, const Pattern& aPattern, Float aAlpha = 1.0, Point aOffset = Point(0, 0))
 {
   switch (aPattern.GetType()) {
     case PatternType::COLOR: {
@@ -333,6 +333,7 @@ SetPaintPattern(SkPaint& aPaint, const Pattern& aPattern, Float aAlpha = 1.0)
 
         SkMatrix mat;
         GfxMatrixToSkiaMatrix(pat.mMatrix, mat);
+        mat.postTranslate(SkFloatToScalar(aOffset.x), SkFloatToScalar(aOffset.y));
         sk_sp<SkShader> shader = SkGradientShader::MakeLinear(points,
                                                               &stops->mColors.front(),
                                                               &stops->mPositions.front(),
@@ -357,6 +358,7 @@ SetPaintPattern(SkPaint& aPaint, const Pattern& aPattern, Float aAlpha = 1.0)
 
         SkMatrix mat;
         GfxMatrixToSkiaMatrix(pat.mMatrix, mat);
+        mat.postTranslate(SkFloatToScalar(aOffset.x), SkFloatToScalar(aOffset.y));
         sk_sp<SkShader> shader = SkGradientShader::MakeTwoPointConical(points[0],
                                                                        SkFloatToScalar(pat.mRadius1),
                                                                        points[1],
@@ -375,6 +377,7 @@ SetPaintPattern(SkPaint& aPaint, const Pattern& aPattern, Float aAlpha = 1.0)
 
       SkMatrix mat;
       GfxMatrixToSkiaMatrix(pat.mMatrix, mat);
+      mat.postTranslate(SkFloatToScalar(aOffset.x), SkFloatToScalar(aOffset.y));
 
       if (!pat.mSamplingRect.IsEmpty()) {
         SkIRect rect = IntRectToSkIRect(pat.mSamplingRect);
@@ -415,17 +418,17 @@ GetClipBounds(SkCanvas *aCanvas)
 }
 
 struct AutoPaintSetup {
-  AutoPaintSetup(SkCanvas *aCanvas, const DrawOptions& aOptions, const Pattern& aPattern, const Rect* aMaskBounds = nullptr)
+  AutoPaintSetup(SkCanvas *aCanvas, const DrawOptions& aOptions, const Pattern& aPattern, const Rect* aMaskBounds = nullptr, Point aOffset = Point(0, 0))
     : mNeedsRestore(false), mAlpha(1.0)
   {
-    Init(aCanvas, aOptions, aMaskBounds);
-    SetPaintPattern(mPaint, aPattern, mAlpha);
+    Init(aCanvas, aOptions, aMaskBounds, false);
+    SetPaintPattern(mPaint, aPattern, mAlpha, aOffset);
   }
 
-  AutoPaintSetup(SkCanvas *aCanvas, const DrawOptions& aOptions, const Rect* aMaskBounds = nullptr)
+  AutoPaintSetup(SkCanvas *aCanvas, const DrawOptions& aOptions, const Rect* aMaskBounds = nullptr, bool aForceGroup = false)
     : mNeedsRestore(false), mAlpha(1.0)
   {
-    Init(aCanvas, aOptions, aMaskBounds);
+    Init(aCanvas, aOptions, aMaskBounds, aForceGroup);
   }
 
   ~AutoPaintSetup()
@@ -435,7 +438,7 @@ struct AutoPaintSetup {
     }
   }
 
-  void Init(SkCanvas *aCanvas, const DrawOptions& aOptions, const Rect* aMaskBounds)
+  void Init(SkCanvas *aCanvas, const DrawOptions& aOptions, const Rect* aMaskBounds, bool aForceGroup)
   {
     mPaint.setXfermodeMode(GfxOpToSkiaOp(aOptions.mCompositionOp));
     mCanvas = aCanvas;
@@ -447,8 +450,9 @@ struct AutoPaintSetup {
       mPaint.setAntiAlias(false);
     }
 
-    bool needsGroup = !IsOperatorBoundByMask(aOptions.mCompositionOp) &&
-                      (!aMaskBounds || !aMaskBounds->Contains(GetClipBounds(aCanvas)));
+    bool needsGroup = aForceGroup ||
+                      (!IsOperatorBoundByMask(aOptions.mCompositionOp) &&
+                       (!aMaskBounds || !aMaskBounds->Contains(GetClipBounds(aCanvas))));
 
     // TODO: We could skip the temporary for operator_source and just
     // clear the clip rect. The other operators would be harder
@@ -507,10 +511,11 @@ DrawTargetSkia::DrawSurface(SourceSurface *aSurface,
 
   SkRect destRect = RectToSkRect(aDest);
   SkRect sourceRect = RectToSkRect(aSource);
-
   SkBitmap bitmap = GetBitmapForSurface(aSurface);
+  bool forceGroup = bitmap.colorType() == kAlpha_8_SkColorType &&
+                    aOptions.mCompositionOp != CompositionOp::OP_OVER;
 
-  AutoPaintSetup paint(mCanvas.get(), aOptions, &aDest);
+  AutoPaintSetup paint(mCanvas.get(), aOptions, &aDest, forceGroup);
   if (aSurfOptions.mSamplingFilter == SamplingFilter::POINT) {
     paint.mPaint.setFilterQuality(kNone_SkFilterQuality);
   }
@@ -1311,21 +1316,13 @@ DrawTargetSkia::MaskSurface(const Pattern &aSource,
                             const DrawOptions &aOptions)
 {
   MarkChanged();
-  AutoPaintSetup paint(mCanvas.get(), aOptions, aSource);
+  AutoPaintSetup paint(mCanvas.get(), aOptions, aSource, nullptr, -aOffset);
 
   SkBitmap bitmap = GetBitmapForSurface(aMask);
   if (bitmap.colorType() != kAlpha_8_SkColorType &&
       !bitmap.extractAlpha(&bitmap)) {
     gfxDebug() << *this << ": MaskSurface() failed to extract alpha for mask";
     return;
-  }
-
-  if (aOffset != Point(0, 0) &&
-      paint.mPaint.getShader()) {
-    SkMatrix transform;
-    transform.setTranslate(PointToSkPoint(-aOffset));
-    sk_sp<SkShader> matrixShader = paint.mPaint.getShader()->makeWithLocalMatrix(transform);
-    paint.mPaint.setShader(matrixShader);
   }
 
   mCanvas->drawBitmap(bitmap, aOffset.x, aOffset.y, &paint.mPaint);

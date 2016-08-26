@@ -110,6 +110,41 @@ class UTF8CharsZ : public mozilla::RangedPtr<unsigned char>
 };
 
 /*
+ * A wrapper for a "const char*" that is encoded using UTF-8.
+ * This class does not manage ownership of the data; that is left
+ * to others.  This differs from UTF8CharsZ in that the chars are
+ * const and it allows assignment.
+ */
+class ConstUTF8CharsZ
+{
+    const char* data_;
+
+  public:
+    ConstUTF8CharsZ() : data_(nullptr)
+    {}
+
+    ConstUTF8CharsZ(const char* aBytes, size_t aLength)
+      : data_(aBytes)
+    {
+        MOZ_ASSERT(aBytes[aLength] == '\0');
+#ifdef DEBUG
+        validate(aLength);
+#endif
+    }
+
+    const void* get() const { return data_; }
+
+    const char* c_str() const { return data_; }
+
+    explicit operator bool() const { return data_ != nullptr; }
+
+  private:
+#ifdef DEBUG
+    void validate(size_t aLength);
+#endif
+};
+
+/*
  * SpiderMonkey uses a 2-byte character representation: it is a
  * 2-byte-at-a-time view of a UTF-16 byte stream. This is similar to UCS-2,
  * but unlike UCS-2, we do not strip UTF-16 extension bytes. This allows a
@@ -198,12 +233,21 @@ extern TwoByteCharsZ
 UTF8CharsToNewTwoByteCharsZ(JSContext* cx, const UTF8Chars utf8, size_t* outlen);
 
 /*
+ * Like UTF8CharsToNewTwoByteCharsZ, but for ConstUTF8CharsZ.
+ */
+extern TwoByteCharsZ
+UTF8CharsToNewTwoByteCharsZ(JSContext* cx, const ConstUTF8CharsZ& utf8, size_t* outlen);
+
+/*
  * The same as UTF8CharsToNewTwoByteCharsZ(), except that any malformed UTF-8 characters
  * will be replaced by \uFFFD. No exception will be thrown for malformed UTF-8
  * input.
  */
 extern TwoByteCharsZ
 LossyUTF8CharsToNewTwoByteCharsZ(JSContext* cx, const UTF8Chars utf8, size_t* outlen);
+
+extern TwoByteCharsZ
+LossyUTF8CharsToNewTwoByteCharsZ(JSContext* cx, const ConstUTF8CharsZ& utf8, size_t* outlen);
 
 /*
  * Returns the length of the char buffer required to encode |s| as UTF8.

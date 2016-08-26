@@ -26,6 +26,7 @@ class VRDisplayHost;
 
 enum class VRDisplayType : uint16_t {
   Oculus,
+  OpenVR,
   OSVR,
   NumVRDisplayTypes
 };
@@ -57,9 +58,24 @@ enum class VRDisplayCapabilityFlags : uint16_t {
    */
   Cap_External = 1 << 4,
   /**
+   * Cap_AngularAcceleration is set if the VRDisplay is capable of tracking its
+   * angular acceleration.
+   */
+  Cap_AngularAcceleration = 1 << 5,
+  /**
+   * Cap_LinearAcceleration is set if the VRDisplay is capable of tracking its
+   * linear acceleration.
+   */
+  Cap_LinearAcceleration = 1 << 6,
+  /**
+   * Cap_StageParameters is set if the VRDisplay is capable of room scale VR
+   * and can report the StageParameters to describe the space.
+   */
+  Cap_StageParameters = 1 << 7,
+  /**
    * Cap_All used for validity checking during IPC serialization
    */
-  Cap_All = (1 << 5) - 1
+  Cap_All = (1 << 8) - 1
 };
 
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(VRDisplayCapabilityFlags)
@@ -69,6 +85,14 @@ struct VRFieldOfView {
   VRFieldOfView(double up, double right, double down, double left)
     : upDegrees(up), rightDegrees(right), downDegrees(down), leftDegrees(left)
   {}
+
+  void SetFromTanRadians(double up, double right, double down, double left)
+  {
+    upDegrees = atan(up) * 180.0 / M_PI;
+    rightDegrees = atan(right) * 180.0 / M_PI;
+    downDegrees = atan(down) * 180.0 / M_PI;
+    leftDegrees = atan(left) * 180.0 / M_PI;
+  }
 
   bool operator==(const VRFieldOfView& other) const {
     return other.upDegrees == upDegrees &&
@@ -108,6 +132,8 @@ struct VRDisplayInfo
   const VRFieldOfView& GetEyeFOV(uint32_t whichEye) const { return mEyeFOV[whichEye]; }
   bool GetIsConnected() const { return mIsConnected; }
   bool GetIsPresenting() const { return mIsPresenting; }
+  const Size& GetStageSize() const { return mStageSize; }
+  const Matrix4x4& GetSittingToStandingTransform() const { return mSittingToStandingTransform; }
 
   enum Eye {
     Eye_Left,
@@ -124,6 +150,8 @@ struct VRDisplayInfo
   IntSize mEyeResolution;
   bool mIsConnected;
   bool mIsPresenting;
+  Size mStageSize;
+  Matrix4x4 mSittingToStandingTransform;
 
   bool operator==(const VRDisplayInfo& other) const {
     return mType == other.mType &&
@@ -136,7 +164,9 @@ struct VRDisplayInfo
            mEyeFOV[0] == other.mEyeFOV[0] &&
            mEyeFOV[1] == other.mEyeFOV[1] &&
            mEyeTranslation[0] == other.mEyeTranslation[0] &&
-           mEyeTranslation[1] == other.mEyeTranslation[1];
+           mEyeTranslation[1] == other.mEyeTranslation[1] &&
+           mStageSize == other.mStageSize &&
+           mSittingToStandingTransform == other.mSittingToStandingTransform;
   }
 
   bool operator!=(const VRDisplayInfo& other) const {

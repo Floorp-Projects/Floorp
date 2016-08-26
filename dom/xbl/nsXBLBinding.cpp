@@ -206,10 +206,6 @@ nsXBLBinding::InstallAnonymousContent(nsIContent* aAnonParent, nsIContent* aElem
   // (2) The children's parent back pointer should not be to this synthetic root
   // but should instead point to the enclosing parent element.
   nsIDocument* doc = aElement->GetUncomposedDoc();
-  ServoStyleSet* servoStyleSet = nullptr;
-  if (nsIPresShell* presShell = aElement->OwnerDoc()->GetShell()) {
-    servoStyleSet = presShell->StyleSet()->GetAsServo();
-  }
   bool allowScripts = AllowScripts();
 
   nsAutoScriptBlocker scriptBlocker;
@@ -240,10 +236,6 @@ nsXBLBinding::InstallAnonymousContent(nsIContent* aAnonParent, nsIContent* aElem
     if (xuldoc)
       xuldoc->AddSubtreeToDocument(child);
 #endif
-
-    if (servoStyleSet) {
-      servoStyleSet->RestyleSubtree(child);
-    }
   }
 }
 
@@ -427,6 +419,15 @@ nsXBLBinding::GenerateAnonymousContent()
     // Conserve space by wiping the attributes off the clone.
     if (mContent)
       mContent->UnsetAttr(namespaceID, name, false);
+  }
+
+  // Now that we've finished shuffling the tree around, go ahead and restyle it
+  // since frame construction is about to happen.
+  nsIPresShell* presShell = mBoundElement->OwnerDoc()->GetShell();
+  ServoStyleSet* servoSet = presShell->StyleSet()->GetAsServo();
+  if (servoSet) {
+    mBoundElement->SetHasDirtyDescendantsForServo();
+    servoSet->StyleNewChildren(mBoundElement);
   }
 }
 

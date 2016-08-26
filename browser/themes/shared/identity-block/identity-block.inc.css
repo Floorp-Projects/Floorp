@@ -64,8 +64,6 @@
   width: 16px;
   height: 16px;
   list-style-image: url(chrome://browser/skin/identity-icon.svg#normal);
-  filter: url(chrome://browser/skin/filters.svg#fill);
-  fill: currentColor;
   opacity: .5;
 }
 
@@ -151,8 +149,6 @@
   margin-inline-start: 2px;
   margin-inline-end: 0;
   list-style-image: url(chrome://browser/skin/tracking-protection-16.svg);
-  filter: url(chrome://browser/skin/filters.svg#fill);
-  fill: currentColor;
   opacity: .5;
 }
 

@@ -281,23 +281,37 @@ private:
   void RestyleForEmptyChange(Element* aContainer);
 
 public:
-  // Restyling for a ContentInserted (notification after insertion) or
-  // for a CharacterDataChanged.  |aContainer| must be non-null; when
-  // the container is null, no work is needed.
-  void RestyleForInsertOrChange(Element* aContainer, nsIContent* aChild);
+  // Handle ContentInserted notifications.
+  void ContentInserted(nsINode* aContainer, nsIContent* aChild)
+  {
+    RestyleForInsertOrChange(aContainer, aChild);
+  }
 
-  // This would be the same as RestyleForInsertOrChange if we got the
+  // Handle ContentAppended notifications.
+  void ContentAppended(nsIContent* aContainer, nsIContent* aFirstNewContent)
+  {
+    RestyleForAppend(aContainer, aFirstNewContent);
+  }
+
+  // Handle ContentRemoved notifications.
+  //
+  // This would be have the same logic as RestyleForInsertOrChange if we got the
   // notification before the removal.  However, we get it after, so we need the
   // following sibling in addition to the old child.  |aContainer| must be
   // non-null; when the container is null, no work is needed.  aFollowingSibling
   // is the sibling that used to come after aOldChild before the removal.
-  void RestyleForRemove(Element* aContainer,
-                        nsIContent* aOldChild,
-                        nsIContent* aFollowingSibling);
+  void ContentRemoved(nsINode* aContainer, nsIContent* aOldChild,
+                      nsIContent* aFollowingSibling);
 
-  // Same for a ContentAppended.  |aContainer| must be non-null; when
+  // Restyling for a ContentInserted (notification after insertion) or
+  // for a CharacterDataChanged.  |aContainer| must be non-null; when
   // the container is null, no work is needed.
-  void RestyleForAppend(Element* aContainer, nsIContent* aFirstNewContent);
+  void RestyleForInsertOrChange(nsINode* aContainer, nsIContent* aChild);
+
+  // Restyling for a ContentAppended (notification after insertion) or
+  // for a CharacterDataChanged.  |aContainer| must be non-null; when
+  // the container is null, no work is needed.
+  void RestyleForAppend(nsIContent* aContainer, nsIContent* aFirstNewContent);
 
   // Process any pending restyles. This should be called after
   // CreateNeededFrames.

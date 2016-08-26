@@ -249,6 +249,7 @@ ReportTooBigCharacter(JSContext* cx, uint32_t v)
 enum InflateUTF8Action {
     CountAndReportInvalids,
     CountAndIgnoreInvalids,
+    AssertNoInvalids,
     Copy
 };
 
@@ -256,12 +257,13 @@ static const uint32_t REPLACE_UTF8 = 0xFFFD;
 
 // If making changes to this algorithm, make sure to also update
 // LossyConvertUTF8toUTF16() in dom/wifi/WifiUtils.cpp
-template <InflateUTF8Action action>
+template <InflateUTF8Action Action>
 static bool
 InflateUTF8StringToBuffer(JSContext* cx, const UTF8Chars src, char16_t* dst, size_t* dstlenp,
                           bool* isAsciip)
 {
-    *isAsciip = true;
+    if (Action != AssertNoInvalids)
+        *isAsciip = true;
 
     // Count how many char16_t characters need to be in the inflated string.
     // |i| is the index into |src|, and |j| is the the index into |dst|.
@@ -271,26 +273,29 @@ InflateUTF8StringToBuffer(JSContext* cx, const UTF8Chars src, char16_t* dst, siz
         uint32_t v = uint32_t(src[i]);
         if (!(v & 0x80)) {
             // ASCII code unit.  Simple copy.
-            if (action == Copy)
+            if (Action == Copy)
                 dst[j] = char16_t(v);
 
         } else {
             // Non-ASCII code unit.  Determine its length in bytes (n).
-            *isAsciip = false;
+            if (Action != AssertNoInvalids)
+                *isAsciip = false;
             uint32_t n = 1;
             while (v & (0x80 >> n))
                 n++;
 
         #define INVALID(report, arg, n2)                                \
             do {                                                        \
-                if (action == CountAndReportInvalids) {                 \
+                if (Action == CountAndReportInvalids) {                 \
                     report(cx, arg);                                    \
                     return false;                                       \
+                } else if (Action == AssertNoInvalids) {                \
+                    MOZ_CRASH("invalid UTF-8 string: " # report);       \
                 } else {                                                \
-                    if (action == Copy)                                 \
+                    if (Action == Copy)                                 \
                         dst[j] = char16_t(REPLACE_UTF8);                \
                     else                                                \
-                        MOZ_ASSERT(action == CountAndIgnoreInvalids);   \
+                        MOZ_ASSERT(Action == CountAndIgnoreInvalids);   \
                     n = n2;                                             \
                     goto invalidMultiByteCodeUnit;                      \
                 }                                                       \
@@ -323,17 +328,17 @@ InflateUTF8StringToBuffer(JSContext* cx, const UTF8Chars src, char16_t* dst, siz
             v = JS::Utf8ToOneUcs4Char((uint8_t*)&src[i], n);
             if (v < 0x10000) {
                 // The n-byte UTF8 code unit will fit in a single char16_t.
-                if (action == Copy)
+                if (Action == Copy)
                     dst[j] = char16_t(v);
 
             } else {
                 v -= 0x10000;
                 if (v <= 0xFFFFF) {
                     // The n-byte UTF8 code unit will fit in two char16_t units.
-                    if (action == Copy)
+                    if (Action == Copy)
                         dst[j] = char16_t((v >> 10) + 0xD800);
                     j++;
-                    if (action == Copy)
+                    if (Action == Copy)
                         dst[j] = char16_t((v & 0x3FF) + 0xDC00);
 
                 } else {
@@ -350,20 +355,20 @@ InflateUTF8StringToBuffer(JSContext* cx, const UTF8Chars src, char16_t* dst, siz
         }
     }
 
-    *dstlenp = j;
+    if (Action != AssertNoInvalids)
+        *dstlenp = j;
 
     return true;
 }
 
-typedef bool (*CountAction)(JSContext*, const UTF8Chars, char16_t*, size_t*, bool* isAsciip);
-
+template <InflateUTF8Action Action>
 static TwoByteCharsZ
-InflateUTF8StringHelper(JSContext* cx, const UTF8Chars src, CountAction countAction, size_t* outlen)
+InflateUTF8StringHelper(JSContext* cx, const UTF8Chars src, size_t* outlen)
 {
     *outlen = 0;
 
     bool isAscii;
-    if (!countAction(cx, src, /* dst = */ nullptr, outlen, &isAscii))
+    if (!InflateUTF8StringToBuffer<Action>(cx, src, /* dst = */ nullptr, outlen, &isAscii))
         return TwoByteCharsZ();
 
     char16_t* dst = cx->pod_malloc<char16_t>(*outlen + 1);  // +1 for NUL
@@ -390,14 +395,35 @@ InflateUTF8StringHelper(JSContext* cx, const UTF8Chars src, CountAction countAct
 TwoByteCharsZ
 JS::UTF8CharsToNewTwoByteCharsZ(JSContext* cx, const UTF8Chars utf8, size_t* outlen)
 {
-    return InflateUTF8StringHelper(cx, utf8, InflateUTF8StringToBuffer<CountAndReportInvalids>,
-                                   outlen);
+    return InflateUTF8StringHelper<CountAndReportInvalids>(cx, utf8, outlen);
+}
+
+TwoByteCharsZ
+JS::UTF8CharsToNewTwoByteCharsZ(JSContext* cx, const ConstUTF8CharsZ& utf8, size_t* outlen)
+{
+    UTF8Chars chars(utf8.c_str(), strlen(utf8.c_str()));
+    return InflateUTF8StringHelper<CountAndReportInvalids>(cx, chars, outlen);
 }
 
 TwoByteCharsZ
 JS::LossyUTF8CharsToNewTwoByteCharsZ(JSContext* cx, const UTF8Chars utf8, size_t* outlen)
 {
-    return InflateUTF8StringHelper(cx, utf8, InflateUTF8StringToBuffer<CountAndIgnoreInvalids>,
-                                   outlen);
+    return InflateUTF8StringHelper<CountAndIgnoreInvalids>(cx, utf8, outlen);
 }
 
+TwoByteCharsZ
+JS::LossyUTF8CharsToNewTwoByteCharsZ(JSContext* cx, const ConstUTF8CharsZ& utf8, size_t* outlen)
+{
+    UTF8Chars chars(utf8.c_str(), strlen(utf8.c_str()));
+    return InflateUTF8StringHelper<CountAndIgnoreInvalids>(cx, chars, outlen);
+}
+
+#ifdef DEBUG
+void
+JS::ConstUTF8CharsZ::validate(size_t aLength)
+{
+    MOZ_ASSERT(data_);
+    UTF8Chars chars(data_, aLength);
+    InflateUTF8StringToBuffer<AssertNoInvalids>(nullptr, chars, nullptr, nullptr, nullptr);
+}
+#endif

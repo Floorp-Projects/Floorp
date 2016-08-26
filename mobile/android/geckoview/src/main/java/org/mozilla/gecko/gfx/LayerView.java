@@ -55,7 +55,6 @@ public class LayerView extends ScrollView implements Tabs.OnTabsChangedListener 
     private LayerRenderer mRenderer;
     /* Must be a PAINT_xxx constant */
     private int mPaintState;
-    private int mBackgroundColor;
     private FullScreenState mFullScreenState;
 
     private SurfaceView mSurfaceView;
@@ -171,7 +170,6 @@ public class LayerView extends ScrollView implements Tabs.OnTabsChangedListener 
         super(context, attrs);
 
         mPaintState = PAINT_START;
-        mBackgroundColor = Color.WHITE;
         mFullScreenState = FullScreenState.NONE;
 
         if (Versions.feature14Plus) {
@@ -377,12 +375,6 @@ public class LayerView extends ScrollView implements Tabs.OnTabsChangedListener 
         return mLayerClient.getViewportMetrics();
     }
 
-    public void abortPanning() {
-        if (mPanZoomController != null) {
-            mPanZoomController.abortPanning();
-        }
-    }
-
     public PointF convertViewPointToLayerPoint(PointF viewPoint) {
         return mLayerClient.convertViewPointToLayerPoint(viewPoint);
     }
@@ -391,41 +383,14 @@ public class LayerView extends ScrollView implements Tabs.OnTabsChangedListener 
         return mLayerClient.getMatrixForLayerRectToViewRect();
     }
 
-    int getBackgroundColor() {
-        return mBackgroundColor;
-    }
-
-    @Override
-    public void setBackgroundColor(int newColor) {
-        mBackgroundColor = newColor;
-        requestRender();
-    }
-
     void setSurfaceBackgroundColor(int newColor) {
         if (mSurfaceView != null) {
             mSurfaceView.setBackgroundColor(newColor);
         }
     }
 
-    public void setZoomConstraints(ZoomConstraints constraints) {
-        mLayerClient.setZoomConstraints(constraints);
-    }
-
     public void setIsRTL(boolean aIsRTL) {
         mLayerClient.setIsRTL(aIsRTL);
-    }
-
-    @Override
-    public boolean onKeyDown(int keyCode, KeyEvent event) {
-        if (!mLayerClient.isGeckoReady()) {
-            // If gecko isn't loaded yet, don't try sending events to the
-            // native code because it's just going to crash
-            return true;
-        }
-        if (mPanZoomController != null && mPanZoomController.onKeyEvent(event)) {
-            return true;
-        }
-        return false;
     }
 
     public void requestRender() {
@@ -795,7 +760,6 @@ public class LayerView extends ScrollView implements Tabs.OnTabsChangedListener 
     @Override
     public void onTabChanged(Tab tab, Tabs.TabEvents msg, String data) {
         if (msg == Tabs.TabEvents.VIEWPORT_CHANGE && Tabs.getInstance().isSelectedTab(tab) && mLayerClient != null) {
-            setZoomConstraints(tab.getZoomConstraints());
             setIsRTL(tab.getIsRTL());
         }
     }

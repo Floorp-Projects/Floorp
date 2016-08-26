@@ -78,13 +78,6 @@
                         oncommand="gAppUpdater.buttonRestartAfterDownload();"/>
                 <spacer flex="1"/>
               </hbox>
-              <hbox id="applyBillboard" align="center">
-                <button id="applyButtonBillboard" align="start"
-                        label="&update.applyButtonBillboard.label;"
-                        accesskey="&update.applyButtonBillboard.accesskey;"
-                        oncommand="gAppUpdater.buttonApplyBillboard();"/>
-                <spacer flex="1"/>
-              </hbox>
               <hbox id="checkingForUpdates" align="center">
                 <image class="update-throbber"/><label>&update.checkingForUpdates;</label>
               </hbox>
