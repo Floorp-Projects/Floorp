@@ -643,6 +643,8 @@ protected:
   RenderingMode EnsureTarget(const gfx::Rect* aCoveredRect = nullptr,
                              RenderingMode aRenderMode = RenderingMode::DefaultBackendMode);
 
+  void RestoreClipsAndTransformToTarget();
+
   /**
    * This method is run at the end of the event-loop spin where
    * ScheduleStableStateCallback was called.
