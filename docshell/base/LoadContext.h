@@ -47,14 +47,12 @@ public:
     : mTopFrameElement(do_GetWeakReference(aTopFrameElement))
     , mNestedFrameId(0)
     , mIsContent(aToCopy.mIsContent)
-    , mUsePrivateBrowsing(aToCopy.mUsePrivateBrowsing)
     , mUseRemoteTabs(aToCopy.mUseRemoteTabs)
     , mOriginAttributes(aAttrs)
 #ifdef DEBUG
     , mIsNotNull(aToCopy.mIsNotNull)
 #endif
   {
-    MOZ_ASSERT(aToCopy.mUsePrivateBrowsing == (aAttrs.mPrivateBrowsingId != 0));
   }
 
   // appId/inIsolatedMozBrowser arguments override those in SerializedLoadContext
@@ -65,14 +63,12 @@ public:
     : mTopFrameElement(nullptr)
     , mNestedFrameId(aNestedFrameId)
     , mIsContent(aToCopy.mIsContent)
-    , mUsePrivateBrowsing(aToCopy.mUsePrivateBrowsing)
     , mUseRemoteTabs(aToCopy.mUseRemoteTabs)
     , mOriginAttributes(aAttrs)
 #ifdef DEBUG
     , mIsNotNull(aToCopy.mIsNotNull)
 #endif
   {
-    MOZ_ASSERT(aToCopy.mUsePrivateBrowsing == (aAttrs.mPrivateBrowsingId != 0));
   }
 
   LoadContext(dom::Element* aTopFrameElement,
@@ -83,24 +79,21 @@ public:
     : mTopFrameElement(do_GetWeakReference(aTopFrameElement))
     , mNestedFrameId(0)
     , mIsContent(aIsContent)
-    , mUsePrivateBrowsing(aUsePrivateBrowsing)
     , mUseRemoteTabs(aUseRemoteTabs)
     , mOriginAttributes(aAttrs)
 #ifdef DEBUG
     , mIsNotNull(true)
 #endif
   {
-    MOZ_ASSERT(aUsePrivateBrowsing == (aAttrs.mPrivateBrowsingId != 0));
   }
 
-  // Constructor taking reserved appId for the safebrowsing cookie.
-  explicit LoadContext(uint32_t aAppId)
+  // Constructor taking reserved origin attributes.
+  explicit LoadContext(DocShellOriginAttributes& aAttrs)
     : mTopFrameElement(nullptr)
     , mNestedFrameId(0)
     , mIsContent(false)
-    , mUsePrivateBrowsing(false)
     , mUseRemoteTabs(false)
-    , mOriginAttributes(aAppId, false)
+    , mOriginAttributes(aAttrs)
 #ifdef DEBUG
     , mIsNotNull(true)
 #endif
@@ -118,7 +111,6 @@ private:
   nsWeakPtr mTopFrameElement;
   uint64_t mNestedFrameId;
   bool mIsContent;
-  bool mUsePrivateBrowsing;
   bool mUseRemoteTabs;
   DocShellOriginAttributes mOriginAttributes;
 #ifdef DEBUG

@@ -62,6 +62,7 @@ fuzzy-if(winWidget,1,36) == grid-auto-min-sizing-definite-001.html grid-auto-min
 == grid-track-intrinsic-sizing-003.html grid-track-intrinsic-sizing-003-ref.html
 == grid-track-intrinsic-sizing-004.html grid-track-intrinsic-sizing-004-ref.html
 == grid-track-percent-sizing-001.html grid-track-percent-sizing-001-ref.html
+== grid-track-fit-content-sizing-001.html grid-track-fit-content-sizing-001-ref.html
 == grid-max-sizing-flex-001.html grid-max-sizing-flex-001-ref.html
 == grid-max-sizing-flex-002.html grid-max-sizing-flex-002-ref.html
 == grid-max-sizing-flex-003.html grid-max-sizing-flex-003-ref.html
@@ -92,6 +93,7 @@ skip-if(Android&&isDebugBuild) == grid-column-gap-001.html grid-column-gap-001-r
 == grid-column-gap-003.html grid-column-gap-003-ref.html
 == grid-column-gap-004.html grid-column-gap-004-ref.html
 == grid-row-gap-001.html grid-row-gap-001-ref.html
+== grid-percent-grid-gap-001.html grid-percent-grid-gap-001-ref.html
 skip-if(Android&&isDebugBuild) == grid-row-gap-002.html grid-row-gap-002-ref.html # Bug 1245884 - slow
 skip-if(Android&&isDebugBuild) == grid-row-gap-003.html grid-row-gap-003-ref.html # Bug 1245884 - slow
 skip-if(Android&&isDebugBuild) == grid-row-gap-004.html grid-row-gap-004-ref.html # Bug 1245884 - slow

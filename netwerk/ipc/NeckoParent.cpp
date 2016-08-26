@@ -99,7 +99,7 @@ static PBOverrideStatus
 PBOverrideStatusFromLoadContext(const SerializedLoadContext& aSerialized)
 {
   if (!aSerialized.IsNotNull() && aSerialized.IsPrivateBitValid()) {
-    return aSerialized.mUsePrivateBrowsing ?
+    return (aSerialized.mOriginAttributes.mPrivateBrowsingId > 0) ?
       kPBOverride_Private :
       kPBOverride_NotPrivate;
   }
@@ -184,7 +184,7 @@ NeckoParent::CreateChannelLoadContext(const PBrowserOrId& aBrowser,
   // if !UsingNeckoIPCSecurity(), we may not have a LoadContext to set. This is
   // the common case for most xpcshell tests.
   if (aSerialized.IsNotNull()) {
-    attrs.SyncAttributesWithPrivateBrowsing(aSerialized.mUsePrivateBrowsing);
+    attrs.SyncAttributesWithPrivateBrowsing(aSerialized.mOriginAttributes.mPrivateBrowsingId > 0);
     switch (aBrowser.type()) {
       case PBrowserOrId::TPBrowserParent:
       {
@@ -825,7 +825,7 @@ NeckoParent::RecvPredPredict(const ipc::OptionalURIParams& aTargetURI,
   DocShellOriginAttributes attrs(NECKO_UNKNOWN_APP_ID, false);
   nsCOMPtr<nsILoadContext> loadContext;
   if (aLoadContext.IsNotNull()) {
-    attrs.SyncAttributesWithPrivateBrowsing(aLoadContext.mUsePrivateBrowsing);
+    attrs.SyncAttributesWithPrivateBrowsing(aLoadContext.mOriginAttributes.mPrivateBrowsingId > 0);
     loadContext = new LoadContext(aLoadContext, nestedFrameId, attrs);
   }
 
@@ -858,7 +858,7 @@ NeckoParent::RecvPredLearn(const ipc::URIParams& aTargetURI,
   DocShellOriginAttributes attrs(NECKO_UNKNOWN_APP_ID, false);
   nsCOMPtr<nsILoadContext> loadContext;
   if (aLoadContext.IsNotNull()) {
-    attrs.SyncAttributesWithPrivateBrowsing(aLoadContext.mUsePrivateBrowsing);
+    attrs.SyncAttributesWithPrivateBrowsing(aLoadContext.mOriginAttributes.mPrivateBrowsingId > 0);
     loadContext = new LoadContext(aLoadContext, nestedFrameId, attrs);
   }
 

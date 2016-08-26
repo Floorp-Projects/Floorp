@@ -70,6 +70,15 @@ body,html { color:black; background:white; font-family:monospace; font-size:32px
   grid-template-columns: minmax(60%, 0);
   grid-template-rows: minmax(40%, 0);
 }
+.tC {
+  grid-template-columns: calc(10px - 5%);
+  grid-template-rows: calc(10px - 5%);
+}
+.tD {
+  grid-template-columns: calc(10px - 40%);
+  grid-template-rows: calc(10px - 40%);
+}
+
 
 span {
   background: grey;
@@ -121,6 +130,9 @@ x {
 <div class="grid sz t9"><span><t></t></span><x></x></div>
 <div class="grid sz tA"><span><t></t></span><x></x></div>
 <div class="grid sz tB"><span><t></t></span><x></x></div>
+<div class="grid sz tC"><span><t></t></span><x></x></div>
+<div class="grid sz tD"><span><t></t></span><x style="grid-area:1/2;height:10px"></x></div>
+<div class="grid sz tD"><span><t></t></span><x style="grid-area:2/2;height:10px"></x></div>
 
 
 </body>

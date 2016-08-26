@@ -133,10 +133,10 @@ function run_test() {
             "the update isCompleteUpdate attribute" + MSG_SHOULD_EQUAL);
   Assert.equal(update.channel, "test_channel",
                "the update channel attribute" + MSG_SHOULD_EQUAL);
-//  Assert.ok(!!update.showPrompt,
-//            "the update showPrompt attribute" + MSG_SHOULD_EQUAL);
-//  Assert.ok(!!update.showNeverForVersion,
-//            "the update showNeverForVersion attribute" + MSG_SHOULD_EQUAL);
+  Assert.ok(!update.showPrompt,
+            "the update showPrompt attribute" + MSG_SHOULD_EQUAL);
+  Assert.ok(!update.showNeverForVersion,
+            "the update showNeverForVersion attribute" + MSG_SHOULD_EQUAL);
   Assert.equal(update.promptWaitTime, "691200",
                "the update promptWaitTime attribute" + MSG_SHOULD_EQUAL);
   Assert.equal(update.previousAppVersion, null,
