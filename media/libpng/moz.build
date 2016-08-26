@@ -27,7 +27,7 @@ UNIFIED_SOURCES += [
     'pngwutil.c'
 ]
 
-if CONFIG['CPU_ARCH'] == 'arm':
+if CONFIG['MOZ_PNG_ARM_NEON']:
     DEFINES['MOZ_PNG_HAVE_ARM_NEON'] = True
     UNIFIED_SOURCES += [
         'arm/arm_init.c',
