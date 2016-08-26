@@ -1979,9 +1979,8 @@ TrackBuffersManager::Seek(TrackInfo::TrackType aTrack,
   if (aTime != TimeUnit()) {
     // Determine the interval of samples we're attempting to seek to.
     TimeIntervals buffered = trackBuffer.mBufferedRanges;
-    TimeIntervals::IndexType index = buffered.Find(aTime);
     buffered.SetFuzz(aFuzz);
-    index = buffered.Find(aTime);
+    TimeIntervals::IndexType index = buffered.Find(aTime);
     MOZ_ASSERT(index != TimeIntervals::NoIndex);
 
     TimeInterval target = buffered[index];
