@@ -446,6 +446,10 @@ let ParentAPIManager = {
 
   createProxyContext(data, target) {
     let {extensionId, childId, principal} = data;
+    if (this.proxyContexts.has(childId)) {
+      Cu.reportError("A WebExtension context with the given ID already exists!");
+      return;
+    }
     let extension = GlobalManager.getExtension(extensionId);
 
     let context = new ProxyContext(extension, data, target.messageManager, principal);
@@ -453,16 +457,20 @@ let ParentAPIManager = {
   },
 
   closeProxyContext(childId) {
-    if (!this.proxyContexts.has(childId)) {
+    let context = this.proxyContexts.get(childId);
+    if (!context) {
       return;
     }
-    let context = this.proxyContexts.get(childId);
     context.unload();
     this.proxyContexts.delete(childId);
   },
 
   call(data, target) {
     let context = this.proxyContexts.get(data.childId);
+    if (!context) {
+      Cu.reportError("WebExtension context not found!");
+      return;
+    }
     function callback(...cbArgs) {
       let lastError = context.lastError;
 
@@ -493,6 +501,10 @@ let ParentAPIManager = {
 
   addListener(data, target) {
     let context = this.proxyContexts.get(data.childId);
+    if (!context) {
+      Cu.reportError("WebExtension context not found!");
+      return;
+    }
 
     function listener(...listenerArgs) {
       target.messageManager.sendAsyncMessage("API:RunListener", {
@@ -510,6 +522,9 @@ let ParentAPIManager = {
 
   removeListener(data) {
     let context = this.proxyContexts.get(data.childId);
+    if (!context) {
+      Cu.reportError("WebExtension context not found!");
+    }
     let listener = context.listenerProxies.get(data.path);
     findPathInObject(context.apiObj, data.path).removeListener(listener);
   },
