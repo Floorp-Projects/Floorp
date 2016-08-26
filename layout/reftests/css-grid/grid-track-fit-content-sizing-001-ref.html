@@ -1,0 +1,178 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html><head>
+  <meta charset="utf-8">
+  <title>Reference: fit-content() track sizing</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1281320">
+  <style type="text/css">
+body,html { color:black; background:white; font-size:1px; padding:0; margin:0; }
+
+.grid {
+  display: grid;
+  grid-template-rows: auto auto;
+  position: relative;
+  border: 1px solid;
+}
+
+.c1 { grid-template-columns: max-content minmax(100px, 1fr); }
+.c2 { grid: auto 10px / 200px 0 minmax(100px, 1fr); }
+.c3 { grid: auto 10px / 100px 100px minmax(0px, 1fr); }
+.c4 { grid: auto 10px / 100px 100px minmax(100px, 1fr); }
+.c5 { grid: auto 10px / 0px minmax(0, 1fr) minmax(100px, 1fr); }
+.c6 { grid: auto 10px / fit-content(0px) minmax(0, 1fr) minmax(100px, 1fr); }
+.c7 { grid: auto 10px / fit-content(40%) fit-content(40%); }
+
+span { line-height:0; grid-column:span 2; background: lime; }
+.c1 span { grid-column:span 1; }
+
+a {
+  display: inline-block;
+  width: 50px;
+  height: 1px;
+}
+
+y {
+  position: absolute;
+  left:0; right:0; top:0; bottom:0;
+  grid-area: 2/2/3/3;
+  height: 1px;
+  background: grey;
+}
+
+.w3 .c1 { grid-template-columns: 176px minmax(0px, 1fr); }
+.w3 .c2 { grid-template-columns: 176px 0 minmax(0px, 1fr); }
+
+.w4 .c1 { grid-template-columns: 152px minmax(0px, 1fr); }
+.w4 .c2 { grid-template-columns: 152px 0 minmax(0px, 1fr); }
+
+.w5 .c1 { grid-template-columns: 128px minmax(0px, 1fr); }
+.w5 .c2 { grid-template-columns: 128px 0 minmax(0px, 1fr); }
+
+.w6 .c1 { grid-template-columns: 104px minmax(0px, 1fr); }
+.w6 .c2 { grid-template-columns: 104px 0 minmax(0px, 1fr); }
+.w6 .c4 { grid-template-columns: 60px 100px minmax(0px, 1fr); }
+
+.w7 .c1 { grid-template-columns: 80px minmax(0px, 1fr); }
+.w7 .c2 { grid-template-columns: 80px 0 minmax(0px, 1fr); }
+.w7 .c3 { grid-template-columns: 80px 80px minmax(0px, 1fr); }
+.w7 .c4 { grid-template-columns: 0px 100px minmax(0px, 1fr); }
+
+.w8 .c1 { grid-template-columns: 50px minmax(100px, 1fr); }
+.w8 .c2 { grid-template-columns: 50px 0 minmax(100px, 1fr); }
+.w8 .c3 { grid-template-columns: 56px 56px minmax(0, 1fr); }
+.w8 .c4 { grid-template-columns: 0px 100px minmax(100px, 1fr); }
+
+.w9 .c1 { grid-template-columns: 50px minmax(100px, 1fr); }
+.w9 .c2 { grid-template-columns: 50px 0 minmax(100px, 1fr); }
+.w9 .c3 { grid-template-columns: 32px 32px minmax(0, 1fr); }
+.w9 .c4 { grid-template-columns: 0px 100px minmax(100px, 1fr); }
+
+.wA .c1 { grid-template-columns: 50px minmax(100px, 1fr); }
+.wA .c2 { grid-template-columns: 50px 0 minmax(100px, 1fr); }
+.wA .c3 { grid-template-columns: 25px 25px minmax(0, 1fr); }
+.wA .c4 { grid-template-columns: 0px 100px minmax(100px, 1fr); }
+
+.wB .c1 { grid-template-columns: 50px minmax(100px, 1fr); }
+.wB .c2 { grid-template-columns: 50px 0 minmax(100px, 1fr); }
+.wB .c3 { grid-template-columns: 25px 25px minmax(0, 1fr); }
+.wB .c4 { grid-template-columns: 0px 100px minmax(100px, 1fr); }
+
+  </style>
+</head>
+<body>
+
+<div class="grid c1"><span><a></a><a></a><a></a><a></a></span><y></y></div>
+<div class="grid c2"><span><a></a><a></a><a></a><a></a></span><y></y></div>
+<div class="grid c3"><span><a></a><a></a><a></a><a></a></span><y></y></div>
+<div class="grid c4"><span><a></a><a></a><a></a><a></a></span><y></y></div>
+<div class="grid c5"><span><a></a><a></a><a></a><a></a></span><y></y></div>
+<div class="grid c6"><span><a></a><a></a><a></a><a></a></span><y></y></div>
+
+<div class="w2" style="width:502px">
+<div class="grid c1"><span><a></a><a></a><a></a><a></a></span><y></y></div>
+<div class="grid c2"><span><a></a><a></a><a></a><a></a></span><y></y></div>
+<div class="grid c3"><span><a></a><a></a><a></a><a></a></span><y></y></div>
+<div class="grid c4"><span><a></a><a></a><a></a><a></a></span><y></y></div>
+<div class="grid c5"><span><a></a><a></a><a></a><a></a></span><y></y></div>
+<div class="grid c6"><span><a></a><a></a><a></a><a></a></span><y></y></div>
+</div>
+
+<div class="w3" style="width:442px">
+<div class="grid c1"><span><a></a><a></a><a></a><a></a></span><y></y></div>
+<div class="grid c2"><span><a></a><a></a><a></a><a></a></span><y></y></div>
+<div class="grid c3"><span><a></a><a></a><a></a><a></a></span><y></y></div>
+<div class="grid c4"><span><a></a><a></a><a></a><a></a></span><y></y></div>
+<div class="grid c5"><span><a></a><a></a><a></a><a></a></span><y></y></div>
+</div>
+
+<div class="w4" style="width:382px">
+<div class="grid c1"><span><a></a><a></a><a></a><a></a></span><y></y></div>
+<div class="grid c2"><span><a></a><a></a><a></a><a></a></span><y></y></div>
+<div class="grid c3"><span><a></a><a></a><a></a><a></a></span><y></y></div>
+<div class="grid c4"><span><a></a><a></a><a></a><a></a></span><y></y></div>
+<div class="grid c5"><span><a></a><a></a><a></a><a></a></span><y></y></div>
+</div>
+
+<div class="w5" style="width:322px">
+<div class="grid c1"><span><a></a><a></a><a></a><a></a></span><y></y></div>
+<div class="grid c2"><span><a></a><a></a><a></a><a></a></span><y></y></div>
+<div class="grid c3"><span><a></a><a></a><a></a><a></a></span><y></y></div>
+<div class="grid c4"><span><a></a><a></a><a></a><a></a></span><y></y></div>
+<div class="grid c5"><span><a></a><a></a><a></a><a></a></span><y></y></div>
+</div>
+
+<div class="w6" style="width:262px">
+<div class="grid c1"><span><a></a><a></a><a></a><a></a></span><y></y></div>
+<div class="grid c2"><span><a></a><a></a><a></a><a></a></span><y></y></div>
+<div class="grid c3"><span><a></a><a></a><a></a><a></a></span><y></y></div>
+<div class="grid c4"><span><a></a><a></a><a></a><a></a></span><y></y></div>
+<div class="grid c5"><span><a></a><a></a><a></a><a></a></span><y></y></div>
+</div>
+
+<div class="w7" style="width:202px">
+<div class="grid c1"><span><a></a><a></a><a></a><a></a></span><y></y></div>
+<div class="grid c2"><span><a></a><a></a><a></a><a></a></span><y></y></div>
+<div class="grid c3"><span><a></a><a></a><a></a><a></a></span><y></y></div>
+<div class="grid c4"><span><a></a><a></a><a></a><a></a></span><y></y></div>
+<div class="grid c5"><span><a></a><a></a><a></a><a></a></span><y></y></div>
+<div class="grid c7"><span><a></a><a></a><a></a><a></a></span><y></y></div>
+</div>
+
+<div class="w8" style="width:142px">
+<div class="grid c1"><span><a></a><a></a><a></a><a></a></span><y></y></div>
+<div class="grid c2"><span><a></a><a></a><a></a><a></a></span><y></y></div>
+<div class="grid c3"><span><a></a><a></a><a></a><a></a></span><y></y></div>
+<div class="grid c4"><span><a></a><a></a><a></a><a></a></span><y></y></div>
+<div class="grid c5"><span><a></a><a></a><a></a><a></a></span><y></y></div>
+</div>
+
+<div class="w9" style="width:82px">
+<div class="grid c1"><span><a></a><a></a><a></a><a></a></span><y></y></div>
+<div class="grid c2"><span><a></a><a></a><a></a><a></a></span><y></y></div>
+<div class="grid c3"><span><a></a><a></a><a></a><a></a></span><y></y></div>
+<div class="grid c4"><span><a></a><a></a><a></a><a></a></span><y></y></div>
+<div class="grid c5"><span><a></a><a></a><a></a><a></a></span><y></y></div>
+</div>
+
+<div class="wA" style="width:22px">
+<div class="grid c1"><span><a></a><a></a><a></a><a></a></span><y></y></div>
+<div class="grid c2"><span><a></a><a></a><a></a><a></a></span><y></y></div>
+<div class="grid c3"><span><a></a><a></a><a></a><a></a></span><y></y></div>
+<div class="grid c4"><span><a></a><a></a><a></a><a></a></span><y></y></div>
+<div class="grid c5"><span><a></a><a></a><a></a><a></a></span><y></y></div>
+<div class="grid c6"><span><a></a><a></a><a></a><a></a></span><y></y></div>
+</div>
+
+<div class="wB" style="width:2px">
+<div class="grid c1"><span><a></a><a></a><a></a><a></a></span><y></y></div>
+<div class="grid c2"><span><a></a><a></a><a></a><a></a></span><y></y></div>
+<div class="grid c3"><span><a></a><a></a><a></a><a></a></span><y></y></div>
+<div class="grid c4"><span><a></a><a></a><a></a><a></a></span><y></y></div>
+<div class="grid c5"><span><a></a><a></a><a></a><a></a></span><y></y></div>
+</div>
+
+</body>
+</html>

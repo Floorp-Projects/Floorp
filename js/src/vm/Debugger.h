@@ -1252,10 +1252,14 @@ class DebuggerObject : public NativeObject
                                             MutableHandleObject result);
     static MOZ_MUST_USE bool getErrorMessageName(JSContext* cx, HandleDebuggerObject object,
                                                  MutableHandleString result);
-    static MOZ_MUST_USE bool scriptedProxyTarget(JSContext* cx, HandleDebuggerObject object,
-                                                 MutableHandleDebuggerObject result);
-    static MOZ_MUST_USE bool scriptedProxyHandler(JSContext* cx, HandleDebuggerObject object,
-                                                  MutableHandleDebuggerObject result);
+    static MOZ_MUST_USE bool getScriptedProxyTarget(JSContext* cx, HandleDebuggerObject object,
+                                                    MutableHandleDebuggerObject result);
+    static MOZ_MUST_USE bool getScriptedProxyHandler(JSContext* cx, HandleDebuggerObject object,
+                                                     MutableHandleDebuggerObject result);
+#ifdef SPIDERMONKEY_PROMISE
+    static MOZ_MUST_USE bool getIsPromise(JSContext* cx, HandleDebuggerObject object,
+                                          bool& result);
+#endif // SPIDERMONKEY_PROMISE
 
     // Methods
     static MOZ_MUST_USE bool isExtensible(JSContext* cx, HandleDebuggerObject object,
@@ -1296,8 +1300,6 @@ class DebuggerObject : public NativeObject
                                                MutableHandleObject result);
     static MOZ_MUST_USE bool unwrap(JSContext* cx, HandleDebuggerObject object,
                                     MutableHandleDebuggerObject result);
-    static MOZ_MUST_USE bool isPromise(JSContext* cx, HandleDebuggerObject object,
-                                       bool& result);
 
     // Infallible properties
     bool isCallable() const;

@@ -410,11 +410,12 @@ namespace CacheStorageEvictHelper {
 
 nsresult ClearStorage(bool const aPrivate,
                       bool const aAnonymous,
-                      NeckoOriginAttributes const &aOa)
+                      NeckoOriginAttributes &aOa)
 {
   nsresult rv;
 
-  RefPtr<LoadContextInfo> info = GetLoadContextInfo(aPrivate, aAnonymous, aOa);
+  aOa.SyncAttributesWithPrivateBrowsing(aPrivate);
+  RefPtr<LoadContextInfo> info = GetLoadContextInfo(aAnonymous, aOa);
 
   nsCOMPtr<nsICacheStorage> storage;
   RefPtr<CacheStorageService> service = CacheStorageService::Self();
@@ -435,7 +436,7 @@ nsresult ClearStorage(bool const aPrivate,
   return NS_OK;
 }
 
-nsresult Run(NeckoOriginAttributes const &aOa)
+nsresult Run(NeckoOriginAttributes &aOa)
 {
   nsresult rv;
 

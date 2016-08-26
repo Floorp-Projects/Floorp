@@ -828,10 +828,10 @@ public:
   {
     Point4DTyped<TargetUnits, F> retPoint;
 
-    retPoint.x = aPoint.x * _11 + aPoint.y * _21 + aPoint.z * _31 + _41;
-    retPoint.y = aPoint.x * _12 + aPoint.y * _22 + aPoint.z * _32 + _42;
-    retPoint.z = aPoint.x * _13 + aPoint.y * _23 + aPoint.z * _33 + _43;
-    retPoint.w = aPoint.x * _14 + aPoint.y * _24 + aPoint.z * _34 + _44;
+    retPoint.x = aPoint.x * _11 + aPoint.y * _21 + aPoint.z * _31 + aPoint.w * _41;
+    retPoint.y = aPoint.x * _12 + aPoint.y * _22 + aPoint.z * _32 + aPoint.w * _42;
+    retPoint.z = aPoint.x * _13 + aPoint.y * _23 + aPoint.z * _33 + aPoint.w * _43;
+    retPoint.w = aPoint.x * _14 + aPoint.y * _24 + aPoint.z * _34 + aPoint.w * _44;
 
     return retPoint;
   }
@@ -839,12 +839,14 @@ public:
   template<class F>
   Point3DTyped<TargetUnits, F> operator *(const Point3DTyped<SourceUnits, F>& aPoint) const
   {
-    Point4DTyped<SourceUnits, F> temp(aPoint.x, aPoint.y, aPoint.z, 1);
+    Point3DTyped<TargetUnits, F> result;
+    result.x = aPoint.x * _11 + aPoint.y * _21 + aPoint.z * _31 + _41;
+    result.y = aPoint.x * _12 + aPoint.y * _22 + aPoint.z * _32 + _42;
+    result.z = aPoint.x * _13 + aPoint.y * _23 + aPoint.z * _33 + _43;
 
-    Point4DTyped<TargetUnits, F> result = *this * temp;
-    result /= result.w;
+    result /= (aPoint.x * _14 + aPoint.y * _24 + aPoint.z * _34 + _44);
 
-    return Point3DTyped<TargetUnits, F>(result.x, result.y, result.z);
+    return result;
   }
 
   template<class F>

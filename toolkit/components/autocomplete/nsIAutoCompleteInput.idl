@@ -154,4 +154,9 @@ interface nsIAutoCompleteInput : nsISupports
    * Don't rollup the popup when the caret is moved.
    */
   readonly attribute boolean noRollupOnCaretMove;
+
+  /**
+   * The userContextId of the current browser.
+   */
+  readonly attribute unsigned long userContextId;
 };

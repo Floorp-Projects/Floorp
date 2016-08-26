@@ -36,7 +36,6 @@ public:
     : Tokenizer(aInput)
     // Initialize attributes to their default values
     , originAttribs(0, false)
-    , isPrivate(false)
     , isAnonymous(false)
     // Initialize the cache key to a zero length by default
     , lastTag(0)
@@ -46,7 +45,6 @@ public:
 private:
   // Results
   NeckoOriginAttributes originAttribs;
-  bool isPrivate;
   bool isAnonymous;
   nsCString idEnhance;
   nsDependentCSubstring cacheKey;
@@ -92,7 +90,7 @@ private:
       break;
     }
     case 'p':
-      isPrivate = true;
+      originAttribs.SyncAttributesWithPrivateBrowsing(true);
       break;
     case 'b':
       // Leaving to be able to read and understand oldformatted entries
@@ -166,7 +164,7 @@ public:
   {
     RefPtr<LoadContextInfo> info;
     if (ParseTags()) {
-      info = GetLoadContextInfo(isPrivate, isAnonymous, originAttribs);
+      info = GetLoadContextInfo(isAnonymous, originAttribs);
     }
 
     return info.forget();

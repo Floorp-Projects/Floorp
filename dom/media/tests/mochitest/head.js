@@ -903,7 +903,7 @@ VideoStreamHelper.prototype = {
         // ignore; stream might have shut down, and we don't bother clearing
         // the setInterval.
       }
-    }, 100);
+    }, 500);
   },
 
   waitForFrames: function(canvas, timeout_value) {

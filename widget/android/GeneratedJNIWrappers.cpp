@@ -318,6 +318,14 @@ auto GeckoAppShell::GetDpi() -> int32_t
     return mozilla::jni::Method<GetDpi_t>::Call(GeckoAppShell::Context(), nullptr);
 }
 
+constexpr char GeckoAppShell::GetExceptionStackTrace_t::name[];
+constexpr char GeckoAppShell::GetExceptionStackTrace_t::signature[];
+
+auto GeckoAppShell::GetExceptionStackTrace(mozilla::jni::Throwable::Param a0) -> mozilla::jni::String::LocalRef
+{
+    return mozilla::jni::Method<GetExceptionStackTrace_t>::Call(GeckoAppShell::Context(), nullptr, a0);
+}
+
 constexpr char GeckoAppShell::GetExtensionFromMimeType_t::name[];
 constexpr char GeckoAppShell::GetExtensionFromMimeType_t::signature[];
 
@@ -489,7 +497,7 @@ auto GeckoAppShell::HandleGeckoMessage(mozilla::jni::Object::Param a0) -> void
 constexpr char GeckoAppShell::HandleUncaughtException_t::name[];
 constexpr char GeckoAppShell::HandleUncaughtException_t::signature[];
 
-auto GeckoAppShell::HandleUncaughtException(mozilla::jni::Throwable::Param a0) -> mozilla::jni::String::LocalRef
+auto GeckoAppShell::HandleUncaughtException(mozilla::jni::Throwable::Param a0) -> void
 {
     return mozilla::jni::Method<HandleUncaughtException_t>::Call(GeckoAppShell::Context(), nullptr, a0);
 }
@@ -733,6 +741,12 @@ auto GeckoAppShell::Vibrate(mozilla::jni::LongArray::Param a0, int32_t a1) -> vo
 {
     return mozilla::jni::Method<Vibrate2_t>::Call(GeckoAppShell::Context(), nullptr, a0, a1);
 }
+
+const char GeckoAppShell::CameraCallback::name[] =
+        "org/mozilla/gecko/GeckoAppShell$CameraCallback";
+
+constexpr char GeckoAppShell::CameraCallback::OnFrameData_t::name[];
+constexpr char GeckoAppShell::CameraCallback::OnFrameData_t::signature[];
 
 const char GeckoBatteryManager::name[] =
         "org/mozilla/gecko/GeckoBatteryManager";
@@ -1432,14 +1446,6 @@ auto LayerView::Compositor::Destroy() const -> void
 
 constexpr char LayerView::Compositor::DisposeNative_t::name[];
 constexpr char LayerView::Compositor::DisposeNative_t::signature[];
-
-constexpr char LayerView::Compositor::GetSurface_t::name[];
-constexpr char LayerView::Compositor::GetSurface_t::signature[];
-
-auto LayerView::Compositor::GetSurface() const -> mozilla::jni::Object::LocalRef
-{
-    return mozilla::jni::Method<GetSurface_t>::Call(Compositor::mCtx, nullptr);
-}
 
 constexpr char LayerView::Compositor::OnSizeChanged_t::name[];
 constexpr char LayerView::Compositor::OnSizeChanged_t::signature[];

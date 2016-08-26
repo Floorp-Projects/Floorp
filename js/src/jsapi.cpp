@@ -4725,26 +4725,9 @@ JS::CallOriginalPromiseResolve(JSContext* cx, JS::HandleValue resolutionValue)
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, resolutionValue);
 
-    RootedObject promiseCtor(cx, GetPromiseConstructor(cx));
-    if (!promiseCtor)
-        return nullptr;
-
-    JSObject* obj;
-    {
-        FixedInvokeArgs<1> args(cx);
-
-        args[0].set(resolutionValue);
-
-        RootedValue thisvOrRval(cx, ObjectValue(*promiseCtor));
-        if (!CallSelfHostedFunction(cx, "Promise_static_resolve", thisvOrRval, args, &thisvOrRval))
-            return nullptr;
-
-        MOZ_ASSERT(thisvOrRval.isObject());
-        obj = &thisvOrRval.toObject();
-    }
-
-    MOZ_ASSERT(obj->is<PromiseObject>());
-    return obj;
+    RootedObject promise(cx, PromiseObject::unforgeableResolve(cx, resolutionValue));
+    MOZ_ASSERT_IF(promise, promise->is<PromiseObject>());
+    return promise;
 }
 
 JS_PUBLIC_API(JSObject*)
@@ -4754,26 +4737,9 @@ JS::CallOriginalPromiseReject(JSContext* cx, JS::HandleValue rejectionValue)
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, rejectionValue);
 
-    RootedObject promiseCtor(cx, GetPromiseConstructor(cx));
-    if (!promiseCtor)
-        return nullptr;
-
-    JSObject* obj;
-    {
-        FixedInvokeArgs<1> args(cx);
-
-        args[0].set(rejectionValue);
-
-        RootedValue thisvOrRval(cx, ObjectValue(*promiseCtor));
-        if (!CallSelfHostedFunction(cx, "Promise_static_reject", thisvOrRval, args, &thisvOrRval))
-            return nullptr;
-
-        MOZ_ASSERT(thisvOrRval.isObject());
-        obj = &thisvOrRval.toObject();
-    }
-
-    MOZ_ASSERT(obj->is<PromiseObject>());
-    return obj;
+    RootedObject promise(cx, PromiseObject::unforgeableReject(cx, rejectionValue));
+    MOZ_ASSERT_IF(promise, promise->is<PromiseObject>());
+    return promise;
 }
 
 JS_PUBLIC_API(bool)

@@ -70,6 +70,7 @@ namespace {
 
 JavaVM* sJavaVM;
 pthread_key_t sThreadEnvKey;
+jclass sOOMErrorClass;
 
 void UnregisterThreadEnv(void* env)
 {
@@ -101,6 +102,10 @@ void SetGeckoThreadEnv(JNIEnv* aEnv)
 
     MOZ_ALWAYS_TRUE(!aEnv->GetJavaVM(&sJavaVM));
     MOZ_ASSERT(sJavaVM);
+
+    sOOMErrorClass = Class::GlobalRef(Class::LocalRef::Adopt(
+            aEnv->FindClass("java/lang/OutOfMemoryError"))).Forget();
+    aEnv->ExceptionClear();
 }
 
 JNIEnv* GetEnvForThread()
@@ -149,21 +154,40 @@ bool HandleUncaughtException(JNIEnv* aEnv)
 #endif
 
     Throwable::LocalRef e =
-            Throwable::LocalRef::Adopt(aEnv->ExceptionOccurred());
+            Throwable::LocalRef::Adopt(aEnv, aEnv->ExceptionOccurred());
     MOZ_ASSERT(e);
+    aEnv->ExceptionClear();
+
+    String::LocalRef stack = java::GeckoAppShell::GetExceptionStackTrace(e);
+    if (stack && ReportException(aEnv, e.Get(), stack.Get())) {
+        return true;
+    }
 
     aEnv->ExceptionClear();
-    String::LocalRef stack = java::GeckoAppShell::HandleUncaughtException(e);
+    java::GeckoAppShell::HandleUncaughtException(e);
 
-#ifdef MOZ_CRASHREPORTER
-    if (stack) {
-        // GeckoAppShell wants us to annotate and trigger the crash reporter.
-        CrashReporter::AnnotateCrashReport(
-                NS_LITERAL_CSTRING("AuxiliaryJavaStack"), stack->ToCString());
+    if (NS_WARN_IF(aEnv->ExceptionCheck())) {
+        aEnv->ExceptionDescribe();
+        aEnv->ExceptionClear();
     }
-#endif // MOZ_CRASHREPORTER
 
     return true;
+}
+
+bool ReportException(JNIEnv* aEnv, jthrowable aExc, jstring aStack)
+{
+    bool result = true;
+
+#ifdef MOZ_CRASHREPORTER
+    result &= NS_SUCCEEDED(CrashReporter::AnnotateCrashReport(
+            NS_LITERAL_CSTRING("JavaStackTrace"),
+            String::Ref::From(aStack)->ToCString()));
+#endif // MOZ_CRASHREPORTER
+
+    if (sOOMErrorClass && aEnv->IsInstanceOf(aExc, sOOMErrorClass)) {
+        NS_ABORT_OOM(0); // Unknown OOM size
+    }
+    return result;
 }
 
 namespace {

@@ -8572,7 +8572,7 @@ DebuggerObject::proxyTargetGetter(JSContext* cx, unsigned argc, Value* vp)
     }
 
     Rooted<DebuggerObject*> result(cx);
-    if (!DebuggerObject::scriptedProxyTarget(cx, object, &result))
+    if (!DebuggerObject::getScriptedProxyTarget(cx, object, &result))
         return false;
 
     args.rval().setObjectOrNull(result);
@@ -8589,7 +8589,7 @@ DebuggerObject::proxyHandlerGetter(JSContext* cx, unsigned argc, Value* vp)
         return true;
     }
     Rooted<DebuggerObject*> result(cx);
-    if (!DebuggerObject::scriptedProxyHandler(cx, object, &result))
+    if (!DebuggerObject::getScriptedProxyHandler(cx, object, &result))
         return false;
 
     args.rval().setObjectOrNull(result);
@@ -8603,7 +8603,7 @@ DebuggerObject::isPromiseGetter(JSContext* cx, unsigned argc, Value* vp)
     THIS_DEBUGOBJECT(cx, argc, vp, "get isPromise", args, object)
 
     bool result;
-    if (!DebuggerObject::isPromise(cx, object, result))
+    if (!DebuggerObject::getIsPromise(cx, object, result))
       return false;
 
     args.rval().setBoolean(result);
@@ -9304,8 +9304,9 @@ DebuggerObject::isScriptedProxy() const
     return js::IsScriptedProxy(referent());
 }
 
+#ifdef SPIDERMONKEY_PROMISE
 /* static */ bool
-DebuggerObject::isPromise(JSContext* cx, HandleDebuggerObject object,
+DebuggerObject::getIsPromise(JSContext* cx, HandleDebuggerObject object,
                           bool& result)
 {
     JSObject* referent = object->referent();
@@ -9321,6 +9322,7 @@ DebuggerObject::isPromise(JSContext* cx, HandleDebuggerObject object,
     result = referent->is<PromiseObject>();
     return true;
 }
+#endif // SPIDERMONKEY_PROMISE
 
 /* static */ bool
 DebuggerObject::getClassName(JSContext* cx, HandleDebuggerObject object,
@@ -9978,8 +9980,8 @@ DebuggerObject::requireGlobal(JSContext* cx, HandleDebuggerObject object)
 }
 
 /* static */ bool
-DebuggerObject::scriptedProxyTarget(JSContext* cx, HandleDebuggerObject object,
-                                    MutableHandleDebuggerObject result)
+DebuggerObject::getScriptedProxyTarget(JSContext* cx, HandleDebuggerObject object,
+                                       MutableHandleDebuggerObject result)
 {
     MOZ_ASSERT(object->isScriptedProxy());
     RootedObject referent(cx, object->referent());
@@ -9993,8 +9995,8 @@ DebuggerObject::scriptedProxyTarget(JSContext* cx, HandleDebuggerObject object,
 }
 
 /* static */ bool
-DebuggerObject::scriptedProxyHandler(JSContext* cx, HandleDebuggerObject object,
-                                     MutableHandleDebuggerObject result)
+DebuggerObject::getScriptedProxyHandler(JSContext* cx, HandleDebuggerObject object,
+                                        MutableHandleDebuggerObject result)
 {
     MOZ_ASSERT(object->isScriptedProxy());
     RootedObject referent(cx, object->referent());

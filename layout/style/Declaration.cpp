@@ -1212,8 +1212,10 @@ Declaration::GetValue(nsCSSPropertyID aProperty, nsAString& aValue,
       break;
     }
 
-    // This can express either grid-template-{areas,columns,rows}
-    // or grid-auto-{flow,columns,rows}, but not both.
+    // The 'grid' shorthand has 3 different possibilities for syntax:
+    // #1 <'grid-template'>
+    // #2 <'grid-template-rows'> / [ auto-flow && dense? ] <'grid-auto-columns'>?
+    // #3 [ auto-flow && dense? ] <'grid-auto-rows'>? / <'grid-template-columns'>
     case eCSSProperty_grid: {
       const nsCSSValue& columnGapValue =
         *data->ValueFor(eCSSProperty_grid_column_gap);
@@ -1241,26 +1243,60 @@ Declaration::GetValue(nsCSSPropertyID aProperty, nsAString& aValue,
       const nsCSSValue& autoRowsValue =
         *data->ValueFor(eCSSProperty_grid_auto_rows);
 
-      if (areasValue.GetUnit() == eCSSUnit_None &&
-          columnsValue.GetUnit() == eCSSUnit_None &&
-          rowsValue.GetUnit() == eCSSUnit_None) {
-        AppendValueToString(eCSSProperty_grid_auto_flow,
-                            aValue, aSerialization);
-        aValue.Append(char16_t(' '));
-        AppendValueToString(eCSSProperty_grid_auto_rows,
-                            aValue, aSerialization);
+      // grid-template-rows/areas:none + default grid-auto-columns +
+      // non-default row grid-auto-flow or grid-auto-rows.
+      // --> serialize as 'grid' syntax #3.
+      // (for default grid-auto-flow/rows we prefer to serialize to
+      // "none ['/' ...]" instead using syntax #2 or #1 below)
+      if (rowsValue.GetUnit() == eCSSUnit_None &&
+          areasValue.GetUnit() == eCSSUnit_None &&
+          autoColumnsValue.GetUnit() == eCSSUnit_Auto &&
+          autoFlowValue.GetUnit() == eCSSUnit_Enumerated &&
+          (autoFlowValue.GetIntValue() & NS_STYLE_GRID_AUTO_FLOW_ROW) &&
+          (autoFlowValue.GetIntValue() != NS_STYLE_GRID_AUTO_FLOW_ROW ||
+           autoRowsValue.GetUnit() != eCSSUnit_Auto)) {
+        aValue.AppendLiteral("auto-flow");
+        if (autoFlowValue.GetIntValue() & NS_STYLE_GRID_AUTO_FLOW_DENSE) {
+          aValue.AppendLiteral(" dense");
+        }
+        if (autoRowsValue.GetUnit() != eCSSUnit_Auto) {
+          aValue.Append(' ');
+          AppendValueToString(eCSSProperty_grid_auto_rows,
+                              aValue, aSerialization);
+        }
         aValue.AppendLiteral(" / ");
+        AppendValueToString(eCSSProperty_grid_template_columns,
+                            aValue, aSerialization);
+        break;
+      }
+
+      // grid-template-columns/areas:none + column grid-auto-flow +
+      // default grid-auto-rows.
+      // --> serialize as 'grid' syntax #2.
+      if (columnsValue.GetUnit() == eCSSUnit_None &&
+          areasValue.GetUnit() == eCSSUnit_None &&
+          autoRowsValue.GetUnit() == eCSSUnit_Auto &&
+          autoFlowValue.GetUnit() == eCSSUnit_Enumerated &&
+          (autoFlowValue.GetIntValue() & NS_STYLE_GRID_AUTO_FLOW_COLUMN)) {
+        AppendValueToString(eCSSProperty_grid_template_rows,
+                            aValue, aSerialization);
+        aValue.AppendLiteral(" / auto-flow ");
+        if (autoFlowValue.GetIntValue() & NS_STYLE_GRID_AUTO_FLOW_DENSE) {
+          aValue.AppendLiteral("dense ");
+        }
         AppendValueToString(eCSSProperty_grid_auto_columns,
                             aValue, aSerialization);
         break;
-      } else if (!(autoFlowValue.GetUnit() == eCSSUnit_Enumerated &&
-                   autoFlowValue.GetIntValue() == NS_STYLE_GRID_AUTO_FLOW_ROW &&
-                   autoColumnsValue.GetUnit() == eCSSUnit_Auto &&
-                   autoRowsValue.GetUnit() == eCSSUnit_Auto)) {
+      }
+
+      if (!(autoFlowValue.GetUnit() == eCSSUnit_Enumerated &&
+            autoFlowValue.GetIntValue() == NS_STYLE_GRID_AUTO_FLOW_ROW &&
+            autoColumnsValue.GetUnit() == eCSSUnit_Auto &&
+            autoRowsValue.GetUnit() == eCSSUnit_Auto)) {
         // Not serializable, bail.
         return;
       }
-      // Fall through to eCSSProperty_grid_template
+      // Fall through to eCSSProperty_grid_template (syntax #1)
       MOZ_FALLTHROUGH;
     }
     case eCSSProperty_grid_template: {
@@ -1334,6 +1370,11 @@ Declaration::GetValue(nsCSSPropertyID aProperty, nsAString& aValue,
           aValue.Append(char16_t(' '));
 
           // <track-size>
+          if (unit == eCSSUnit_Pair) {
+            // 'repeat()' isn't allowed with non-default 'grid-template-areas'.
+            aValue.Truncate();
+            return;
+          }
           rowsItem->mValue.AppendToString(eCSSProperty_grid_template_rows,
                                           aValue, aSerialization);
           if (rowsItem->mNext &&
@@ -1354,6 +1395,16 @@ Declaration::GetValue(nsCSSPropertyID aProperty, nsAString& aValue,
         }
       }
       if (columnsValue.GetUnit() != eCSSUnit_None) {
+        const nsCSSValueList* colsItem = columnsValue.GetListValue();
+        colsItem = colsItem->mNext; // first value is <line-names>
+        for (; colsItem; colsItem = colsItem->mNext) {
+          if (colsItem->mValue.GetUnit() == eCSSUnit_Pair) {
+            // 'repeat()' isn't allowed with non-default 'grid-template-areas'.
+            aValue.Truncate();
+            return;
+          }
+          colsItem = colsItem->mNext; // skip <line-names>
+        }
         aValue.AppendLiteral(" / ");
         AppendValueToString(eCSSProperty_grid_template_columns,
                             aValue, aSerialization);

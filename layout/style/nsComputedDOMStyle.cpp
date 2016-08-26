@@ -2531,6 +2531,21 @@ already_AddRefed<CSSValue>
 nsComputedDOMStyle::GetGridTrackSize(const nsStyleCoord& aMinValue,
                                      const nsStyleCoord& aMaxValue)
 {
+  if (aMinValue.GetUnit() == eStyleUnit_None) {
+    // A fit-content() function.
+    RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
+    nsAutoString argumentStr, fitContentStr;
+    fitContentStr.AppendLiteral("fit-content(");
+    MOZ_ASSERT(aMaxValue.IsCoordPercentCalcUnit(),
+               "unexpected unit for fit-content() argument value");
+    SetValueToCoord(val, aMaxValue, true);
+    val->GetCssText(argumentStr);
+    fitContentStr.Append(argumentStr);
+    fitContentStr.Append(char16_t(')'));
+    val->SetString(fitContentStr);
+    return val.forget();
+  }
+
   if (aMinValue == aMaxValue) {
     RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
     SetValueToCoord(val, aMinValue, true,

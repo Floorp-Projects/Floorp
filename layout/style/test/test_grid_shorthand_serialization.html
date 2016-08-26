@@ -57,6 +57,17 @@ var grid_template_test_cases = [
         gridTemplateRows: "[foo] 20px [bar]",
         shorthand: "[foo] \"a\" 20px [bar]",
     },
+    {
+        gridTemplateAreas: "\"a\"",
+        gridTemplateRows: "[foo] repeat(1, 20px) [bar]",
+        shorthand: "[foo] \"a\" 20px [bar]",
+    },
+    {
+        gridTemplateAreas: "\"a a\"",
+        gridTemplateColumns: "repeat(2, 100px)",
+        gridTemplateRows: "auto",
+        shorthand: "\"a a\" auto / 100px 100px",
+    },
     // Combinations of longhands that make the shorthand non-serializable:
     {
         gridTemplateAreas: "\"a\"",
@@ -84,37 +95,58 @@ var grid_template_test_cases = [
         gridTemplateColumns: "subgrid",
         shorthand: "",
     },
+    {
+        gridTemplateAreas: "\"a\"",
+        gridTemplateRows: "repeat(auto-fill, 20px)",
+        shorthand: "",
+    },
+    {
+        gridTemplateAreas: "\"a\"",
+        gridTemplateColumns: "repeat(auto-fill, 100px)",
+        gridTemplateRows: "auto",
+        shorthand: "",
+    },
 ];
 
 grid_test_cases = grid_template_test_cases.concat([
     {
         gridAutoFlow: "row",
-        shorthand: "row auto / auto",
+        shorthand: "none / none",
     },
     {
         gridAutoRows: "40px",
-        shorthand: "row 40px / auto",
+        shorthand: "auto-flow 40px / none",
     },
     {
         gridAutoFlow: "column dense",
         gridAutoRows: "minmax(min-content, max-content)",
-        shorthand: "column dense minmax(min-content, max-content) / auto",
+        shorthand: "",
+    },
+    {
+        gridAutoFlow: "column dense",
+        gridAutoColumns: "minmax(min-content, max-content)",
+        shorthand: "none / auto-flow dense minmax(min-content, max-content)",
     },
     {
         gridAutoFlow: "row dense",
         gridAutoColumns: "minmax(min-content, 2fr)",
-        shorthand: "row dense auto / minmax(min-content, 2fr)",
+        shorthand: "",
+    },
+    {
+        gridAutoFlow: "row dense",
+        gridAutoRows: "minmax(min-content, 2fr)",
+        shorthand: "auto-flow dense minmax(min-content, 2fr) / none",
     },
     {
         gridAutoFlow: "row",
         gridAutoRows: "40px",
-        gridAutoColumns: "100px",
-        shorthand: "row 40px / 100px",
+        gridTemplateColumns: "100px",
+        shorthand: "auto-flow 40px / 100px",
     },
     {
         gridAutoFlow: "row",
         gridRowGap: "0px",
-        shorthand: "row auto / auto",
+        shorthand: "none / none",
     },
     {
         gridAutoFlow: "row",

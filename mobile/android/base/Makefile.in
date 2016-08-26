@@ -37,8 +37,6 @@ GARBAGE += \
   res/raw/browsersearch.json \
   res/raw/suggestedsites.json \
   .aapt.deps \
-  javah.out \
-  jni-stubs.inc \
   GeneratedJNINatives.h \
   GeneratedJNIWrappers.cpp \
   GeneratedJNIWrappers.h \
@@ -291,16 +289,6 @@ classycle_jar := $(topsrcdir)/mobile/android/build/classycle/classycle-1.4.1.jar
 		-outjars jars-proguarded \
 		-libraryjars $(library_jars)
 
-CLASSES_WITH_JNI= \
-    org.mozilla.gecko.GeckoAppShell \
-    org.mozilla.gecko.GeckoJavaSampler \
-    org.mozilla.gecko.GeckoSmsManager \
-    $(NULL)
-
-jni-stubs.inc: gecko-browser.jar constants.jar gecko-mozglue.jar gecko-util.jar sync-thirdparty.jar
-	$(JAVAH) -o javah.out -bootclasspath $(JAVA_BOOTCLASSPATH) -classpath $(subst $(NULL) $(NULL),:,$^) $(CLASSES_WITH_JNI)
-	$(PYTHON) $(topsrcdir)/mobile/android/base/jni-generator.py javah.out $@
-
 ANNOTATION_PROCESSOR_JAR_FILES := $(DEPTH)/build/annotationProcessors/annotationProcessors.jar
 
 # This annotation processing step also generates
@@ -487,7 +475,6 @@ endif
 include $(topsrcdir)/config/android-common.mk
 
 update-generated-wrappers:
-	@cp $(CURDIR)/jni-stubs.inc $(topsrcdir)/mozglue/android
 	@cp $(CURDIR)/GeneratedJNIWrappers.cpp $(CURDIR)/GeneratedJNIWrappers.h $(CURDIR)/GeneratedJNINatives.h $(topsrcdir)/widget/android
 	@echo Updated generated JNI code
 
@@ -525,9 +512,8 @@ endif
 # GeneratedJNIWrappers.cpp target also generates
 # GeneratedJNIWrappers.h and GeneratedJNINatives.h
 ifndef MOZ_BUILD_MOBILE_ANDROID_WITH_GRADLE
-libs:: jni-stubs.inc GeneratedJNIWrappers.cpp
-	@(diff jni-stubs.inc $(topsrcdir)/mozglue/android/jni-stubs.inc >/dev/null && \
-	  diff GeneratedJNIWrappers.cpp $(topsrcdir)/widget/android/GeneratedJNIWrappers.cpp >/dev/null && \
+libs:: GeneratedJNIWrappers.cpp
+	@(diff GeneratedJNIWrappers.cpp $(topsrcdir)/widget/android/GeneratedJNIWrappers.cpp >/dev/null && \
 	  diff GeneratedJNIWrappers.h $(topsrcdir)/widget/android/GeneratedJNIWrappers.h >/dev/null && \
 	  diff GeneratedJNINatives.h $(topsrcdir)/widget/android/GeneratedJNINatives.h >/dev/null) || \
 	 (echo '*****************************************************' && \

@@ -13,6 +13,7 @@
 #include "nsIServiceManager.h"
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
+#include "nsIScriptSecurityManager.h"
 #include "nsITreeBoxObject.h"
 #include "nsITreeColumns.h"
 #include "nsIObserverService.h"
@@ -1199,6 +1200,14 @@ nsAutoCompleteController::StartSearch(uint16_t aSearchType)
     // for new consumers handling autoFill by themselves.
     if (mProhibitAutoFill && mClearingAutoFillSearchesAgain) {
       searchParam.AppendLiteral(" prohibit-autofill");
+    }
+
+    uint32_t userContextId;
+    rv = input->GetUserContextId(&userContextId);
+    if (NS_SUCCEEDED(rv) &&
+        userContextId != nsIScriptSecurityManager::DEFAULT_USER_CONTEXT_ID) {
+      searchParam.AppendLiteral(" user-context-id:");
+      searchParam.AppendInt(userContextId, 10);
     }
 
     rv = search->StartSearch(mSearchString, searchParam, result, static_cast<nsIAutoCompleteObserver *>(this));
