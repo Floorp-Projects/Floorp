@@ -159,7 +159,7 @@ public class GeckoAppShell
                     editor.commit();
                 }
 
-                reportJavaCrash(getExceptionStackTrace(exc));
+                reportJavaCrash(exc, getExceptionStackTrace(exc));
 
             } catch (final Throwable e) {
             }
@@ -239,7 +239,7 @@ public class GeckoAppShell
 
     // helper methods
     @WrapForJNI
-    private static native void reportJavaCrash(String stackTrace);
+    /* package */ static native void reportJavaCrash(Throwable exc, String stackTrace);
 
     @WrapForJNI(dispatchTo = "gecko")
     public static native void notifyUriVisited(String uri);
