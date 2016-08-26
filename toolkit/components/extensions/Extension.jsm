@@ -190,9 +190,7 @@ ExtensionContext = class extends BaseContext {
     this.type = type;
     this.uri = uri || extension.baseURI;
 
-    if (params.contentWindow) {
-      this.setContentWindow(params.contentWindow);
-    }
+    this.setContentWindow(params.contentWindow);
 
     // This is the MessageSender property passed to extension.
     // It can be augmented by the "page-open" hook.
@@ -200,15 +198,16 @@ ExtensionContext = class extends BaseContext {
     if (uri) {
       sender.url = uri.spec;
     }
-    let delegate = {
-      getSender() {},
-    };
-    Management.emit("page-load", this, params, sender, delegate);
+    Management.emit("page-load", this, params, sender);
 
     // Properties in |filter| must match those in the |recipient|
     // parameter of sendMessage.
     let filter = {extensionId: extension.id};
-    this.messenger = new Messenger(this, [Services.mm, Services.ppmm], sender, filter, delegate);
+    // Addon-generated messages (not necessarily from the same process as the
+    // addon itself) are sent to the main process, which forwards them via the
+    // parent process message manager. Specific replies can be sent to the frame
+    // message manager.
+    this.messenger = new Messenger(this, [Services.cpmm, this.messageManager], sender, filter);
 
     if (this.externallyVisible) {
       this.extension.views.add(this);
@@ -251,6 +250,86 @@ ExtensionContext = class extends BaseContext {
       this.extension.views.delete(this);
     }
   }
+};
+
+// Subscribes to messages related to the extension messaging API and forwards it
+// to the relevant message manager. The "sender" field for the `onMessage` and
+// `onConnect` events are updated if needed.
+let ProxyMessenger = {
+  _initialized: false,
+  init() {
+    if (this._initialized) {
+      return;
+    }
+    this._initialized = true;
+
+    // TODO(robwu): When addons move to a separate process, we should use the
+    // parent process manager(s) of the addon process(es) instead of the
+    // in-process one.
+    let pipmm = Services.ppmm.getChildAt(0);
+    // Listen on the global frame message manager because content scripts send
+    // and receive extension messages via their frame.
+    // Listen on the parent process message manager because `runtime.connect`
+    // and `runtime.sendMessage` requests must be delivered to all frames in an
+    // addon process (by the API contract).
+    let messageManagers = [Services.mm, pipmm];
+
+    MessageChannel.addListener(messageManagers, "Extension:Connect", this);
+    MessageChannel.addListener(messageManagers, "Extension:Message", this);
+    MessageChannel.addListener(messageManagers, "Extension:Port:Disconnect", this);
+    MessageChannel.addListener(messageManagers, "Extension:Port:PostMessage", this);
+  },
+
+  receiveMessage({target, messageName, channelId, sender, recipient, data, responseType}) {
+    let extension = GlobalManager.extensionMap.get(sender.extensionId);
+    let receiverMM = this._getMessageManagerForRecipient(recipient);
+    if (!extension || !receiverMM) {
+      return Promise.reject({
+        result: MessageChannel.RESULT_NO_HANDLER,
+        message: "No matching message handler for the given recipient.",
+      });
+    }
+
+    if ((messageName == "Extension:Message" ||
+         messageName == "Extension:Connect") &&
+        Management.global.tabGetSender) {
+      // From ext-tabs.js, undefined on Android.
+      Management.global.tabGetSender(extension, target, sender);
+    }
+    return MessageChannel.sendMessage(receiverMM, messageName, data, {
+      sender,
+      recipient,
+      responseType,
+    });
+  },
+
+  /**
+   * @param {object} recipient An object that was passed to
+   *     `MessageChannel.sendMessage`.
+   * @returns {object|null} The message manager matching the recipient if found.
+   */
+  _getMessageManagerForRecipient(recipient) {
+    let {extensionId, tabId} = recipient;
+    // tabs.sendMessage / tabs.connect
+    if (tabId) {
+      // `tabId` being set implies that the tabs API is supported, so we don't
+      // need to check whether `TabManager` exists.
+      let tab = Management.global.TabManager.getTab(tabId, null, null);
+      return tab && tab.linkedBrowser.messageManager;
+    }
+
+    // runtime.sendMessage / runtime.connect
+    if (extensionId) {
+      // TODO(robwu): map the extensionId to the addon parent process's message
+      // manager when they run in a separate process.
+      let pipmm = Services.ppmm.getChildAt(0);
+      return pipmm;
+    }
+
+    // Note: No special handling for sendNativeMessage / connectNative because
+    // native messaging runs in the chrome process, so it never needs a proxy.
+    return null;
+  },
 };
 
 class ProxyContext extends BaseContext {
@@ -552,6 +631,13 @@ GlobalManager = {
     if (this.extensionMap.size == 0) {
       Services.obs.addObserver(this, "document-element-inserted", false);
       UninstallObserver.init();
+      ProxyMessenger.init();
+      // This initializes the default message handler for messages targeted at
+      // an addon process, in case the addon process receives a message before
+      // its Messenger has been instantiated. For example, if a content script
+      // sends a message while there is no background page.
+      // TODO(robwu): Move this to the addon process once we have one.
+      MessageChannel.setupMessageManagers([Services.cpmm]);
       this.initialized = true;
     }
 

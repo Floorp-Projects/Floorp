@@ -145,7 +145,7 @@ class FilteringMessageManager {
     this.callback = callback;
     this.messageManager = messageManager;
 
-    this.messageManager.addMessageListener(this.messageName, this);
+    this.messageManager.addMessageListener(this.messageName, this, true);
 
     this.handlers = new Map();
   }
