@@ -133,7 +133,10 @@ Instance::callImport(JSContext* cx, uint32_t funcImportIndex, unsigned argc, con
             args[i].set(JS::CanonicalizedDoubleValue(*(double*)&argv[i]));
             break;
           case ValType::I64: {
-            MOZ_ASSERT(JitOptions.wasmTestMode, "no int64 in asm.js/wasm");
+            if (!JitOptions.wasmTestMode) {
+                JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_I64);
+                return false;
+            }
             RootedObject obj(cx, CreateI64Object(cx, *(int64_t*)&argv[i]));
             if (!obj)
                 return false;
@@ -159,6 +162,12 @@ Instance::callImport(JSContext* cx, uint32_t funcImportIndex, unsigned argc, con
     RootedValue thisv(cx, UndefinedValue());
     if (!Call(cx, fval, thisv, args, rval))
         return false;
+
+    // Throw an error if returning i64 and not in test mode.
+    if (!JitOptions.wasmTestMode && fi.sig().ret() == ExprType::I64) {
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_I64);
+        return false;
+    }
 
     // Don't try to optimize if the function has at least one i64 arg or if
     // it returns an int64. GenerateJitExit relies on this, as does the
@@ -539,7 +548,10 @@ Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args)
                 return false;
             break;
           case ValType::I64:
-            MOZ_ASSERT(JitOptions.wasmTestMode, "no int64 in asm.js/wasm");
+            if (!JitOptions.wasmTestMode) {
+                JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_I64);
+                return false;
+            }
             if (!ReadI64Object(cx, v, (int64_t*)&exportArgs[i]))
                 return false;
             break;
@@ -655,7 +667,10 @@ Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args)
         args.rval().set(Int32Value(*(int32_t*)retAddr));
         break;
       case ExprType::I64:
-        MOZ_ASSERT(JitOptions.wasmTestMode, "no int64 in asm.js/wasm");
+        if (!JitOptions.wasmTestMode) {
+            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_I64);
+            return false;
+        }
         retObj = CreateI64Object(cx, *(int64_t*)retAddr);
         if (!retObj)
             return false;
