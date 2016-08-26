@@ -93,12 +93,11 @@ nsObserverService::CollectReports(nsIHandleReportCallback* aHandleReport,
   }
 
   // These aren't privacy-sensitive and so don't need anonymizing.
-  nsresult rv;
   for (uint32_t i = 0; i < suspectObservers.Length(); i++) {
     SuspectObserver& suspect = suspectObservers[i];
     nsPrintfCString suspectPath("observer-service-suspect/referent(topic=%s)",
                                 suspect.mTopic);
-    rv = aHandleReport->Callback(
+    aHandleReport->Callback(
       /* process */ EmptyCString(),
       suspectPath, KIND_OTHER, UNITS_COUNT, suspect.mReferentCount,
       NS_LITERAL_CSTRING("A topic with a suspiciously large number of "
@@ -106,47 +105,24 @@ nsObserverService::CollectReports(nsIHandleReportCallback* aHandleReport,
                          "if the number of referents is high with "
                          "respect to the number of windows."),
       aData);
-
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
   }
 
-  rv = aHandleReport->Callback(
-         /* process */ EmptyCString(),
-         NS_LITERAL_CSTRING("observer-service/referent/strong"),
-         KIND_OTHER, UNITS_COUNT, totalNumStrong,
-         NS_LITERAL_CSTRING("The number of strong references held by the "
-                            "observer service."),
-         aData);
+  MOZ_COLLECT_REPORT(
+    "observer-service/referent/strong", KIND_OTHER, UNITS_COUNT,
+    totalNumStrong,
+    "The number of strong references held by the observer service.");
 
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  MOZ_COLLECT_REPORT(
+    "observer-service/referent/weak/alive", KIND_OTHER, UNITS_COUNT,
+    totalNumWeakAlive,
+    "The number of weak references held by the observer service that are "
+    "still alive.");
 
-  rv = aHandleReport->Callback(
-         /* process */ EmptyCString(),
-         NS_LITERAL_CSTRING("observer-service/referent/weak/alive"),
-         KIND_OTHER, UNITS_COUNT, totalNumWeakAlive,
-         NS_LITERAL_CSTRING("The number of weak references held by the "
-                            "observer service that are still alive."),
-         aData);
-
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  rv = aHandleReport->Callback(
-         /* process */ EmptyCString(),
-         NS_LITERAL_CSTRING("observer-service/referent/weak/dead"),
-         KIND_OTHER, UNITS_COUNT, totalNumWeakDead,
-         NS_LITERAL_CSTRING("The number of weak references held by the "
-                            "observer service that are dead."),
-         aData);
-
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  MOZ_COLLECT_REPORT(
+    "observer-service/referent/weak/dead", KIND_OTHER, UNITS_COUNT,
+    totalNumWeakDead,
+    "The number of weak references held by the observer service that are "
+    "dead.");
 
   return NS_OK;
 }

@@ -37,14 +37,18 @@ struct DependentAddPtr
 
     template <class KeyInput, class ValueInput>
     bool add(ExclusiveContext* cx, T& table, const KeyInput& key, const ValueInput& value) {
-        bool gcHappened = originalGcNumber != cx->zone()->gcNumber();
-        if (gcHappened)
-            addPtr = table.lookupForAdd(key);
+        refreshAddPtr(cx, table, key);
         if (!table.relookupOrAdd(addPtr, key, value)) {
             ReportOutOfMemory(cx);
             return false;
         }
         return true;
+    }
+
+    template <class KeyInput>
+    void remove(ExclusiveContext* cx, T& table, const KeyInput& key) {
+        refreshAddPtr(cx, table, key);
+        table.remove(addPtr);
     }
 
     bool found() const                 { return addPtr.found(); }
@@ -55,6 +59,13 @@ struct DependentAddPtr
   private:
     AddPtr addPtr ;
     const uint64_t originalGcNumber;
+
+    template <class KeyInput>
+    void refreshAddPtr(ExclusiveContext* cx, T& table, const KeyInput& key) {
+        bool gcHappened = originalGcNumber != cx->zone()->gcNumber();
+        if (gcHappened)
+            addPtr = table.lookupForAdd(key);
+    }
 
     DependentAddPtr() = delete;
     DependentAddPtr(const DependentAddPtr&) = delete;

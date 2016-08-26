@@ -111,6 +111,7 @@ enum class AllocKind {
     EXTERNAL_STRING,
     SYMBOL,
     JITCODE,
+    SCOPE,
     LIMIT,
     LAST = LIMIT - 1
 };
@@ -146,7 +147,8 @@ enum class AllocKind {
     D(STRING,              String,      JSString,          JSString) \
     D(EXTERNAL_STRING,     String,      JSExternalString,  JSExternalString) \
     D(SYMBOL,              Symbol,      JS::Symbol,        JS::Symbol) \
-    D(JITCODE,             JitCode,     js::jit::JitCode,  js::jit::JitCode)
+    D(JITCODE,             JitCode,     js::jit::JitCode,  js::jit::JitCode) \
+    D(SCOPE,               Scope,       js::Scope,         js::Scope)
 
 #define FOR_EACH_ALLOCKIND(D) \
     FOR_EACH_OBJECT_ALLOCKIND(D) \

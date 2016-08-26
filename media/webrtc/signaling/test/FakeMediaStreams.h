@@ -565,16 +565,18 @@ public:
 
   void SetTrackEnabled(mozilla::TrackID aTrackID, bool aEnabled) {}
 
-  Fake_MediaStreamTrack*
+  void AddTrackInternal(Fake_MediaStreamTrack* aTrack) {}
+
+  already_AddRefed<Fake_MediaStreamTrack>
   CreateDOMTrack(mozilla::TrackID aTrackID, mozilla::MediaSegment::Type aType,
                  Fake_MediaStreamTrackSource* aSource)
   {
     switch(aType) {
       case mozilla::MediaSegment::AUDIO: {
-        return mAudioTrack;
+        return do_AddRef(mAudioTrack);
       }
       case mozilla::MediaSegment::VIDEO: {
-        return mVideoTrack;
+        return do_AddRef(mVideoTrack);
       }
       default: {
         MOZ_CRASH("Unkown media type");

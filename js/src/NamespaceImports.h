@@ -69,6 +69,7 @@ using JS::ObjectOrNullValue;
 using JS::ObjectValue;
 using JS::PrivateUint32Value;
 using JS::PrivateValue;
+using JS::PrivateGCThingValue;
 using JS::StringValue;
 using JS::UndefinedValue;
 

@@ -40,6 +40,7 @@
 #include "vm/Debugger.h"
 #include "vm/GeneratorObject.h"
 #include "vm/Opcodes.h"
+#include "vm/Scope.h"
 #include "vm/Shape.h"
 #include "vm/Stopwatch.h"
 #include "vm/TraceLogging.h"
@@ -51,9 +52,9 @@
 
 #include "jit/JitFrames-inl.h"
 #include "vm/Debugger-inl.h"
+#include "vm/EnvironmentObject-inl.h"
 #include "vm/NativeObject-inl.h"
 #include "vm/Probes-inl.h"
-#include "vm/ScopeObject-inl.h"
 #include "vm/Stack-inl.h"
 
 using namespace js;
@@ -126,22 +127,22 @@ js::GetFunctionThis(JSContext* cx, AbstractFramePtr frame, MutableHandleValue re
 }
 
 bool
-js::GetNonSyntacticGlobalThis(JSContext* cx, HandleObject scopeChain, MutableHandleValue res)
+js::GetNonSyntacticGlobalThis(JSContext* cx, HandleObject envChain, MutableHandleValue res)
 {
-    RootedObject scope(cx, scopeChain);
+    RootedObject env(cx, envChain);
     while (true) {
-        if (IsExtensibleLexicalScope(scope)) {
-            res.set(scope->as<ClonedBlockObject>().thisValue());
+        if (IsExtensibleLexicalEnvironment(env)) {
+            res.set(env->as<LexicalEnvironmentObject>().thisValue());
             return true;
         }
-        if (!scope->enclosingScope()) {
+        if (!env->enclosingEnvironment()) {
             // This can only happen in Debugger eval frames: in that case we
-            // don't always have a global lexical scope, see EvaluateInEnv.
-            MOZ_ASSERT(scope->is<GlobalObject>());
-            res.set(GetThisValue(scope));
+            // don't always have a global lexical env, see EvaluateInEnv.
+            MOZ_ASSERT(env->is<GlobalObject>());
+            res.set(GetThisValue(env));
             return true;
         }
-        scope = scope->enclosingScope();
+        env = env->enclosingEnvironment();
     }
 
     return true;
@@ -192,55 +193,55 @@ GetPropertyOperation(JSContext* cx, InterpreterFrame* fp, HandleScript script, j
 static inline bool
 GetNameOperation(JSContext* cx, InterpreterFrame* fp, jsbytecode* pc, MutableHandleValue vp)
 {
-    JSObject* obj = fp->scopeChain();
+    JSObject* obj = fp->environmentChain();
     PropertyName* name = fp->script()->getName(pc);
 
     /*
-     * Skip along the scope chain to the enclosing global object. This is
+     * Skip along the env chain to the enclosing global object. This is
      * used for GNAME opcodes where the bytecode emitter has determined a
      * name access must be on the global. It also insulates us from bugs
      * in the emitter: type inference will assume that GNAME opcodes are
      * accessing the global object, and the inferred behavior should match
-     * the actual behavior even if the id could be found on the scope chain
+     * the actual behavior even if the id could be found on the env chain
      * before the global object.
      */
     if (IsGlobalOp(JSOp(*pc)) && !fp->script()->hasNonSyntacticScope())
-        obj = &obj->global().lexicalScope();
+        obj = &obj->global().lexicalEnvironment();
 
     Shape* shape = nullptr;
-    JSObject* scope = nullptr;
+    JSObject* env = nullptr;
     JSObject* pobj = nullptr;
-    if (LookupNameNoGC(cx, name, obj, &scope, &pobj, &shape)) {
+    if (LookupNameNoGC(cx, name, obj, &env, &pobj, &shape)) {
         if (FetchNameNoGC(pobj, shape, vp))
             return true;
     }
 
-    RootedObject objRoot(cx, obj), scopeRoot(cx), pobjRoot(cx);
+    RootedObject objRoot(cx, obj), envRoot(cx), pobjRoot(cx);
     RootedPropertyName nameRoot(cx, name);
     RootedShape shapeRoot(cx);
 
-    if (!LookupName(cx, nameRoot, objRoot, &scopeRoot, &pobjRoot, &shapeRoot))
+    if (!LookupName(cx, nameRoot, objRoot, &envRoot, &pobjRoot, &shapeRoot))
         return false;
 
     /* Kludge to allow (typeof foo == "undefined") tests. */
     JSOp op2 = JSOp(pc[JSOP_GETNAME_LENGTH]);
     if (op2 == JSOP_TYPEOF)
-        return FetchName<true>(cx, scopeRoot, pobjRoot, nameRoot, shapeRoot, vp);
+        return FetchName<true>(cx, envRoot, pobjRoot, nameRoot, shapeRoot, vp);
 
-    return FetchName<false>(cx, scopeRoot, pobjRoot, nameRoot, shapeRoot, vp);
+    return FetchName<false>(cx, envRoot, pobjRoot, nameRoot, shapeRoot, vp);
 }
 
 static inline bool
 GetImportOperation(JSContext* cx, InterpreterFrame* fp, jsbytecode* pc, MutableHandleValue vp)
 {
-    RootedObject obj(cx, fp->scopeChain()), scope(cx), pobj(cx);
+    RootedObject obj(cx, fp->environmentChain()), env(cx), pobj(cx);
     RootedPropertyName name(cx, fp->script()->getName(pc));
     RootedShape shape(cx);
 
-    MOZ_ALWAYS_TRUE(LookupName(cx, name, obj, &scope, &pobj, &shape));
-    MOZ_ASSERT(scope && scope->is<ModuleEnvironmentObject>());
-    MOZ_ASSERT(scope->as<ModuleEnvironmentObject>().hasImportBinding(name));
-    return FetchName<false>(cx, scope, pobj, name, shape, vp);
+    MOZ_ALWAYS_TRUE(LookupName(cx, name, obj, &env, &pobj, &shape));
+    MOZ_ASSERT(env && env->is<ModuleEnvironmentObject>());
+    MOZ_ASSERT(env->as<ModuleEnvironmentObject>().hasImportBinding(name));
+    return FetchName<false>(cx, env, pobj, name, shape, vp);
 }
 
 static bool
@@ -347,7 +348,7 @@ InterpreterFrame*
 ExecuteState::pushInterpreterFrame(JSContext* cx)
 {
     return cx->runtime()->interpreterStack().pushExecuteFrame(cx, script_, newTargetValue_,
-                                                              scopeChain_, evalInFrame_);
+                                                              envChain_, evalInFrame_);
 }
 // MSVC with PGO inlines a lot of functions in RunScript, resulting in large
 // stack frames and stack overflow issues, see bug 1167883. Turn off PGO to
@@ -645,17 +646,18 @@ js::CallSetter(JSContext* cx, HandleValue thisv, HandleValue setter, HandleValue
 }
 
 bool
-js::ExecuteKernel(JSContext* cx, HandleScript script, JSObject& scopeChainArg,
+js::ExecuteKernel(JSContext* cx, HandleScript script, JSObject& envChainArg,
                   const Value& newTargetValue, AbstractFramePtr evalInFrame,
                   Value* result)
 {
     MOZ_ASSERT_IF(script->isGlobalCode(),
-                  IsGlobalLexicalScope(&scopeChainArg) || !IsSyntacticScope(&scopeChainArg));
+                  IsGlobalLexicalEnvironment(&envChainArg) ||
+                  !IsSyntacticEnvironment(&envChainArg));
 #ifdef DEBUG
-    RootedObject terminatingScope(cx, &scopeChainArg);
-    while (IsSyntacticScope(terminatingScope))
-        terminatingScope = terminatingScope->enclosingScope();
-    MOZ_ASSERT(terminatingScope->is<GlobalObject>() ||
+    RootedObject terminatingEnv(cx, &envChainArg);
+    while (IsSyntacticEnvironment(terminatingEnv))
+        terminatingEnv = terminatingEnv->enclosingEnvironment();
+    MOZ_ASSERT(terminatingEnv->is<GlobalObject>() ||
                script->hasNonSyntacticScope());
 #endif
 
@@ -675,7 +677,7 @@ js::ExecuteKernel(JSContext* cx, HandleScript script, JSObject& scopeChainArg,
     }
 
     probes::StartExecution(script);
-    ExecuteState state(cx, script, newTargetValue, scopeChainArg, evalInFrame, result);
+    ExecuteState state(cx, script, newTargetValue, envChainArg, evalInFrame, result);
     bool ok = RunScript(cx, state);
     probes::StopExecution(script);
 
@@ -683,32 +685,32 @@ js::ExecuteKernel(JSContext* cx, HandleScript script, JSObject& scopeChainArg,
 }
 
 bool
-js::Execute(JSContext* cx, HandleScript script, JSObject& scopeChainArg, Value* rval)
+js::Execute(JSContext* cx, HandleScript script, JSObject& envChainArg, Value* rval)
 {
-    /* The scope chain is something we control, so we know it can't
+    /* The env chain is something we control, so we know it can't
        have any outer objects on it. */
-    RootedObject scopeChain(cx, &scopeChainArg);
-    MOZ_ASSERT(!IsWindowProxy(scopeChain));
+    RootedObject envChain(cx, &envChainArg);
+    MOZ_ASSERT(!IsWindowProxy(envChain));
 
     if (script->module()) {
-        MOZ_RELEASE_ASSERT(scopeChain == script->module()->environment(),
+        MOZ_RELEASE_ASSERT(envChain == script->module()->environment(),
                            "Module scripts can only be executed in the module's environment");
     } else {
-        MOZ_RELEASE_ASSERT(IsGlobalLexicalScope(scopeChain) || script->hasNonSyntacticScope(),
-                           "Only global scripts with non-syntactic scopes can be executed with "
-                           "interesting scopechains");
+        MOZ_RELEASE_ASSERT(IsGlobalLexicalEnvironment(envChain) || script->hasNonSyntacticScope(),
+                           "Only global scripts with non-syntactic envs can be executed with "
+                           "interesting envchains");
     }
 
-    /* Ensure the scope chain is all same-compartment and terminates in a global. */
+    /* Ensure the env chain is all same-compartment and terminates in a global. */
 #ifdef DEBUG
-    JSObject* s = scopeChain;
+    JSObject* s = envChain;
     do {
         assertSameCompartment(cx, s);
-        MOZ_ASSERT_IF(!s->enclosingScope(), s->is<GlobalObject>());
-    } while ((s = s->enclosingScope()));
+        MOZ_ASSERT_IF(!s->enclosingEnvironment(), s->is<GlobalObject>());
+    } while ((s = s->enclosingEnvironment()));
 #endif
 
-    return ExecuteKernel(cx, script, *scopeChain, NullValue(),
+    return ExecuteKernel(cx, script, *envChain, NullValue(),
                          NullFramePtr() /* evalInFrame */, rval);
 }
 
@@ -952,14 +954,13 @@ js::TypeOfValue(const Value& v)
 }
 
 /*
- * Enter the new with scope using an object at sp[-1] and associate the depth
- * of the with block with sp + stackIndex.
+ * Enter the new with environment using an object at sp[-1] and associate the
+ * depth of the with block with sp + stackIndex.
  */
 bool
 js::EnterWithOperation(JSContext* cx, AbstractFramePtr frame, HandleValue val,
-                       HandleObject staticWith)
+                       Handle<WithScope*> scope)
 {
-    MOZ_ASSERT(staticWith->is<StaticWithScope>());
     RootedObject obj(cx);
     if (val.isObject()) {
         obj = &val.toObject();
@@ -969,50 +970,84 @@ js::EnterWithOperation(JSContext* cx, AbstractFramePtr frame, HandleValue val,
             return false;
     }
 
-    RootedObject scopeChain(cx, frame.scopeChain());
-    DynamicWithObject* withobj = DynamicWithObject::create(cx, obj, scopeChain, staticWith);
+    RootedObject envChain(cx, frame.environmentChain());
+    WithEnvironmentObject* withobj = WithEnvironmentObject::create(cx, obj, envChain, scope);
     if (!withobj)
         return false;
 
-    frame.pushOnScopeChain(*withobj);
+    frame.pushOnEnvironmentChain(*withobj);
     return true;
 }
 
 static void
-PopScope(JSContext* cx, ScopeIter& si)
+PopEnvironment(JSContext* cx, EnvironmentIter& ei)
 {
-    switch (si.type()) {
-      case ScopeIter::Block:
-        if (cx->compartment()->isDebuggee())
-            DebugScopes::onPopBlock(cx, si);
-        if (si.staticBlock().needsClone())
-            si.initialFrame().popBlock(cx);
+    switch (ei.scope().kind()) {
+      case ScopeKind::Lexical:
+      case ScopeKind::Catch:
+        if (MOZ_UNLIKELY(cx->compartment()->isDebuggee()))
+            DebugEnvironments::onPopLexical(cx, ei);
+        if (ei.scope().hasEnvironment())
+            ei.initialFrame().popOffEnvironmentChain<LexicalEnvironmentObject>();
         break;
-      case ScopeIter::With:
-        si.initialFrame().popWith(cx);
+      case ScopeKind::With:
+        if (MOZ_UNLIKELY(cx->compartment()->isDebuggee()))
+            DebugEnvironments::onPopWith(ei.initialFrame());
+        ei.initialFrame().popOffEnvironmentChain<WithEnvironmentObject>();
         break;
-      case ScopeIter::Module:
-      case ScopeIter::Call:
-      case ScopeIter::Eval:
-      case ScopeIter::NonSyntactic:
+      case ScopeKind::Function:
+        if (MOZ_UNLIKELY(cx->compartment()->isDebuggee()))
+            DebugEnvironments::onPopCall(cx, ei.initialFrame());
+        if (ei.scope().hasEnvironment())
+            ei.initialFrame().popOffEnvironmentChain<CallObject>();
+        break;
+      case ScopeKind::FunctionBodyVar:
+      case ScopeKind::ParameterExpressionVar:
+      case ScopeKind::StrictEval:
+        if (MOZ_UNLIKELY(cx->compartment()->isDebuggee()))
+            DebugEnvironments::onPopVar(cx, ei);
+        if (ei.scope().hasEnvironment())
+            ei.initialFrame().popOffEnvironmentChain<VarEnvironmentObject>();
+        break;
+      case ScopeKind::Eval:
+      case ScopeKind::NamedLambda:
+      case ScopeKind::StrictNamedLambda:
+      case ScopeKind::Global:
+      case ScopeKind::NonSyntactic:
+      case ScopeKind::Module:
         break;
     }
 }
 
-// Unwind scope chain and iterator to match the static scope corresponding to
+// Unwind environment chain and iterator to match the env corresponding to
 // the given bytecode position.
 void
-js::UnwindScope(JSContext* cx, ScopeIter& si, jsbytecode* pc)
+js::UnwindEnvironment(JSContext* cx, EnvironmentIter& ei, jsbytecode* pc)
 {
-    if (!si.withinInitialFrame())
+    if (!ei.withinInitialFrame())
         return;
 
-    RootedObject staticScope(cx, si.initialFrame().script()->innermostStaticScope(pc));
-    for (; si.maybeStaticScope() != staticScope; ++si)
-        PopScope(cx, si);
+    RootedScope scope(cx, ei.initialFrame().script()->innermostScope(pc));
+
+#ifdef DEBUG
+    // A frame's environment chain cannot be unwound to anything enclosing the
+    // body scope of a script.  This includes the parameter defaults
+    // environment and the decl env object. These environments, once pushed
+    // onto the environment chain, are expected to be there for the duration
+    // of the frame.
+    //
+    // Attempting to unwind to the parameter defaults code in a script is a
+    // bug; that section of code has no try-catch blocks.
+    JSScript* script = ei.initialFrame().script();
+    for (uint32_t i = 0; i < script->bodyScopeIndex(); i++)
+        MOZ_ASSERT(scope != script->getScope(i));
+#endif
+
+    for (; ei.maybeScope() != scope; ei++)
+        PopEnvironment(cx, ei);
 }
 
-// Unwind all scopes. This is needed because block scopes may cover the
+// Unwind all environments. This is needed because block scopes may cover the
 // first bytecode at a script's main(). e.g.,
 //
 //     function f() { { let i = 0; } }
@@ -1020,13 +1055,13 @@ js::UnwindScope(JSContext* cx, ScopeIter& si, jsbytecode* pc)
 // will have no pc location distinguishing the first block scope from the
 // outermost function scope.
 void
-js::UnwindAllScopesInFrame(JSContext* cx, ScopeIter& si)
+js::UnwindAllEnvironmentsInFrame(JSContext* cx, EnvironmentIter& ei)
 {
-    for (; si.withinInitialFrame(); ++si)
-        PopScope(cx, si);
+    for (; ei.withinInitialFrame(); ei++)
+        PopEnvironment(cx, ei);
 }
 
-// Compute the pc needed to unwind the scope to the beginning of a try
+// Compute the pc needed to unwind the environment to the beginning of a try
 // block. We cannot unwind to *after* the JSOP_TRY, because that might be the
 // first opcode of an inner scope, with the same problem as above. e.g.,
 //
@@ -1035,7 +1070,7 @@ js::UnwindAllScopesInFrame(JSContext* cx, ScopeIter& si)
 // will have no pc location distinguishing the try block scope from the inner
 // let block scope.
 jsbytecode*
-js::UnwindScopeToTryPc(JSScript* script, JSTryNote* tn)
+js::UnwindEnvironmentToTryPc(JSScript* script, JSTryNote* tn)
 {
     jsbytecode* pc = script->main() + tn->start;
     if (tn->kind == JSTRY_CATCH || tn->kind == JSTRY_FINALLY) {
@@ -1046,10 +1081,9 @@ js::UnwindScopeToTryPc(JSScript* script, JSTryNote* tn)
 }
 
 static bool
-ForcedReturn(JSContext* cx, ScopeIter& si, InterpreterRegs& regs, bool frameOk = true)
+ForcedReturn(JSContext* cx, EnvironmentIter& ei, InterpreterRegs& regs, bool frameOk = true)
 {
     bool ok = Debugger::onLeaveFrame(cx, regs.fp(), regs.pc, frameOk);
-    UnwindAllScopesInFrame(cx, si);
     // Point the frame to the end of the script, regardless of error. The
     // caller must jump to the correct continuation depending on 'ok'.
     regs.setToEndOfScript();
@@ -1059,15 +1093,15 @@ ForcedReturn(JSContext* cx, ScopeIter& si, InterpreterRegs& regs, bool frameOk =
 static bool
 ForcedReturn(JSContext* cx, InterpreterRegs& regs)
 {
-    ScopeIter si(cx, regs.fp(), regs.pc);
-    return ForcedReturn(cx, si, regs);
+    EnvironmentIter ei(cx, regs.fp(), regs.pc);
+    return ForcedReturn(cx, ei, regs);
 }
 
 static void
-SettleOnTryNote(JSContext* cx, JSTryNote* tn, ScopeIter& si, InterpreterRegs& regs)
+SettleOnTryNote(JSContext* cx, JSTryNote* tn, EnvironmentIter& ei, InterpreterRegs& regs)
 {
-    // Unwind the scope to the beginning of the JSOP_TRY.
-    UnwindScope(cx, si, UnwindScopeToTryPc(regs.fp()->script(), tn));
+    // Unwind the environment to the beginning of the JSOP_TRY.
+    UnwindEnvironment(cx, ei, UnwindEnvironmentToTryPc(regs.fp()->script(), tn));
 
     // Set pc to the first bytecode after the the try note to point
     // to the beginning of catch or finally.
@@ -1116,7 +1150,7 @@ enum HandleErrorContinuation
 };
 
 static HandleErrorContinuation
-ProcessTryNotes(JSContext* cx, ScopeIter& si, InterpreterRegs& regs)
+ProcessTryNotes(JSContext* cx, EnvironmentIter& ei, InterpreterRegs& regs)
 {
     for (TryNoteIterInterpreter tni(cx, regs); !tni.done(); ++tni) {
         JSTryNote* tn = *tni;
@@ -1126,11 +1160,11 @@ ProcessTryNotes(JSContext* cx, ScopeIter& si, InterpreterRegs& regs)
             /* Catch cannot intercept the closing of a generator. */
             if (cx->isClosingGenerator())
                 break;
-            SettleOnTryNote(cx, tn, si, regs);
+            SettleOnTryNote(cx, tn, ei, regs);
             return CatchContinuation;
 
           case JSTRY_FINALLY:
-            SettleOnTryNote(cx, tn, si, regs);
+            SettleOnTryNote(cx, tn, ei, regs);
             return FinallyContinuation;
 
           case JSTRY_FOR_IN: {
@@ -1145,7 +1179,7 @@ ProcessTryNotes(JSContext* cx, ScopeIter& si, InterpreterRegs& regs)
                 // onExceptionUnwind should be called anew with the new
                 // location of the throw (the iterator). Indeed, we must
                 // settle to avoid infinitely handling the same exception.
-                SettleOnTryNote(cx, tn, si, regs);
+                SettleOnTryNote(cx, tn, ei, regs);
                 return ErrorReturnContinuation;
             }
             break;
@@ -1191,7 +1225,7 @@ HandleError(JSContext* cx, InterpreterRegs& regs)
             counts->numExec()++;
     }
 
-    ScopeIter si(cx, regs.fp(), regs.pc);
+    EnvironmentIter ei(cx, regs.fp(), regs.pc);
     bool ok = false;
 
   again:
@@ -1209,7 +1243,7 @@ HandleError(JSContext* cx, InterpreterRegs& regs)
 
               case JSTRAP_RETURN:
                 UnwindIteratorsForUncatchableException(cx, regs);
-                if (!ForcedReturn(cx, si, regs))
+                if (!ForcedReturn(cx, ei, regs))
                     return ErrorReturnContinuation;
                 return SuccessfulReturnContinuation;
 
@@ -1218,7 +1252,7 @@ HandleError(JSContext* cx, InterpreterRegs& regs)
             }
         }
 
-        HandleErrorContinuation res = ProcessTryNotes(cx, si, regs);
+        HandleErrorContinuation res = ProcessTryNotes(cx, ei, regs);
         switch (res) {
           case SuccessfulReturnContinuation:
             break;
@@ -1240,7 +1274,7 @@ HandleError(JSContext* cx, InterpreterRegs& regs)
         // callback, which cannot easily force a return.
         if (MOZ_UNLIKELY(cx->isPropagatingForcedReturn())) {
             cx->clearPropagatingForcedReturn();
-            if (!ForcedReturn(cx, si, regs))
+            if (!ForcedReturn(cx, ei, regs))
                 return ErrorReturnContinuation;
             return SuccessfulReturnContinuation;
         }
@@ -1250,7 +1284,6 @@ HandleError(JSContext* cx, InterpreterRegs& regs)
 
     // After this point, we will pop the frame regardless. Settle the frame on
     // the end of the script.
-    UnwindAllScopesInFrame(cx, si);
     regs.setToEndOfScript();
 
     return ok ? SuccessfulReturnContinuation : ErrorReturnContinuation;
@@ -1293,19 +1326,19 @@ JS_STATIC_ASSERT(JSOP_IFNE == JSOP_IFEQ + 1);
 /*
  * Compute the implicit |this| parameter for a call expression where the callee
  * funval was resolved from an unqualified name reference to a property on obj
- * (an object on the scope chain).
+ * (an object on the env chain).
  *
  * We can avoid computing |this| eagerly and push the implicit callee-coerced
  * |this| value, undefined, if either of these conditions hold:
  *
  * 1. The nominal |this|, obj, is a global object.
  *
- * 2. The nominal |this|, obj, has one of Block, Call, or DeclEnv class (this
- *    is what IsCacheableNonGlobalScope tests). Such objects-as-scopes must be
+ * 2. The nominal |this|, obj, has one of LexicalEnvironment or Call class (this
+ *    is what IsCacheableNonGlobalEnvironment tests). Such objects-as-envs must be
  *    censored with undefined.
  *
  * Otherwise, we bind |this| to the result of GetThisValue(). Only names inside
- * |with| statements and embedding-specific scope objects fall into this
+ * |with| statements and embedding-specific environment objects fall into this
  * category.
  *
  * If the callee is a strict mode function, then code implementing JSOP_THIS
@@ -1316,10 +1349,10 @@ JS_STATIC_ASSERT(JSOP_IFNE == JSOP_IFEQ + 1);
 static inline Value
 ComputeImplicitThis(JSObject* obj)
 {
-    if (IsGlobalLexicalScope(obj))
+    if (IsGlobalLexicalEnvironment(obj))
         return UndefinedValue();
 
-    if (IsCacheableNonGlobalScope(obj))
+    if (IsCacheableNonGlobalEnvironment(obj))
         return UndefinedValue();
 
     return GetThisValue(obj);
@@ -1466,12 +1499,13 @@ SetObjectElementOperation(JSContext* cx, HandleObject obj, HandleId id, HandleVa
  * ES6 12.3.5.3 MakeSuperPropertyReference() also uses this code.
  */
 static JSFunction&
-GetSuperEnvFunction(JSContext *cx, InterpreterRegs& regs)
+GetSuperEnvFunction(JSContext* cx, InterpreterRegs& regs)
 {
-    ScopeIter si(cx, regs.fp()->scopeChain(), regs.fp()->script()->innermostStaticScope(regs.pc));
-    for (; !si.done(); ++si) {
-        if (si.hasSyntacticScopeObject() && si.type() == ScopeIter::Call) {
-            JSFunction& callee = si.scope().as<CallObject>().callee();
+    JSObject* env = regs.fp()->environmentChain();
+    Scope* scope = regs.fp()->script()->innermostScope(regs.pc);
+    for (EnvironmentIter ei(cx, env, scope); ei; ei++) {
+        if (ei.hasSyntacticEnvironment() && ei.scope().is<FunctionScope>()) {
+            JSFunction& callee = ei.environment().as<CallObject>().callee();
 
             // Arrow functions don't have the information we're looking for,
             // their enclosing scopes do. Nevertheless, they might have call
@@ -1482,7 +1516,7 @@ GetSuperEnvFunction(JSContext *cx, InterpreterRegs& regs)
             return callee;
         }
     }
-    MOZ_CRASH("unexpected scope chain for GetSuperEnvFunction");
+    MOZ_CRASH("unexpected env chain for GetSuperEnvFunction");
 }
 
 
@@ -1531,6 +1565,10 @@ class ReservedRooted : public ReservedRootedBase<T>
 
 template <>
 class ReservedRootedBase<Value> : public ValueOperations<ReservedRooted<Value>>
+{};
+
+template <>
+class ReservedRootedBase<Scope*> : public ScopeCastOperation<ReservedRooted<Scope*>>
 {};
 
 static MOZ_NEVER_INLINE bool
@@ -1723,6 +1761,7 @@ Interpret(JSContext* cx, RunState& state)
     RootedId rootId0(cx);
     RootedShape rootShape0(cx);
     RootedScript rootScript0(cx);
+    Rooted<Scope*> rootScope0(cx);
     DebugOnly<uint32_t> blockDepth;
 
     /* State communicated between non-local jumps: */
@@ -1826,9 +1865,6 @@ CASE(EnableInterruptsPseudoOpcode)
 CASE(JSOP_NOP)
 CASE(JSOP_NOP_DESTRUCTURING)
 CASE(JSOP_UNUSED149)
-CASE(JSOP_UNUSED179)
-CASE(JSOP_UNUSED180)
-CASE(JSOP_UNUSED181)
 CASE(JSOP_UNUSED182)
 CASE(JSOP_UNUSED183)
 CASE(JSOP_UNUSED187)
@@ -1836,7 +1872,6 @@ CASE(JSOP_UNUSED192)
 CASE(JSOP_UNUSED209)
 CASE(JSOP_UNUSED210)
 CASE(JSOP_UNUSED211)
-CASE(JSOP_UNUSED212)
 CASE(JSOP_UNUSED219)
 CASE(JSOP_UNUSED220)
 CASE(JSOP_UNUSED221)
@@ -1935,15 +1970,15 @@ CASE(JSOP_ENTERWITH)
 {
     ReservedRooted<Value> val(&rootValue0, REGS.sp[-1]);
     REGS.sp--;
-    ReservedRooted<JSObject*> staticWith(&rootObject0, script->getObject(REGS.pc));
+    ReservedRooted<Scope*> scope(&rootScope0, script->getScope(REGS.pc));
 
-    if (!EnterWithOperation(cx, REGS.fp(), val, staticWith))
+    if (!EnterWithOperation(cx, REGS.fp(), val, scope.as<WithScope>()))
         goto error;
 }
 END_CASE(JSOP_ENTERWITH)
 
 CASE(JSOP_LEAVEWITH)
-    REGS.fp()->popWith(cx);
+    REGS.fp()->popOffEnvironmentChain<WithEnvironmentObject>();
 END_CASE(JSOP_LEAVEWITH)
 
 CASE(JSOP_RETURN)
@@ -1975,7 +2010,7 @@ CASE(JSOP_RETRVAL)
         if (MOZ_LIKELY(!frameHalfInitialized)) {
             interpReturnOK = Debugger::onLeaveFrame(cx, REGS.fp(), REGS.pc, interpReturnOK);
 
-            REGS.fp()->epilogue(cx);
+            REGS.fp()->epilogue(cx, REGS.pc);
         }
 
   jit_return_pop_frame:
@@ -2166,19 +2201,19 @@ CASE(JSOP_BINDGNAME)
 CASE(JSOP_BINDNAME)
 {
     JSOp op = JSOp(*REGS.pc);
-    ReservedRooted<JSObject*> scopeChain(&rootObject0);
+    ReservedRooted<JSObject*> envChain(&rootObject0);
     if (op == JSOP_BINDNAME || script->hasNonSyntacticScope())
-        scopeChain.set(REGS.fp()->scopeChain());
+        envChain.set(REGS.fp()->environmentChain());
     else
-        scopeChain.set(&REGS.fp()->global().lexicalScope());
+        envChain.set(&REGS.fp()->global().lexicalEnvironment());
     ReservedRooted<PropertyName*> name(&rootName0, script->getName(REGS.pc));
 
     /* Assigning to an undeclared name adds a property to the global object. */
-    ReservedRooted<JSObject*> scope(&rootObject1);
-    if (!LookupNameUnqualified(cx, name, scopeChain, &scope))
+    ReservedRooted<JSObject*> env(&rootObject1);
+    if (!LookupNameUnqualified(cx, name, envChain, &env))
         goto error;
 
-    PUSH_OBJECT(*scope);
+    PUSH_OBJECT(*env);
 
     static_assert(JSOP_BINDNAME_LENGTH == JSOP_BINDGNAME_LENGTH,
                   "We're sharing the END_CASE so the lengths better match");
@@ -2453,11 +2488,11 @@ END_CASE(JSOP_POS)
 CASE(JSOP_DELNAME)
 {
     ReservedRooted<PropertyName*> name(&rootName0, script->getName(REGS.pc));
-    ReservedRooted<JSObject*> scopeObj(&rootObject0, REGS.fp()->scopeChain());
+    ReservedRooted<JSObject*> envObj(&rootObject0, REGS.fp()->environmentChain());
 
     PUSH_BOOLEAN(true);
     MutableHandleValue res = REGS.stackHandleAt(-1);
-    if (!DeleteNameOperation(cx, name, scopeObj, res))
+    if (!DeleteNameOperation(cx, name, envObj, res))
         goto error;
 }
 END_CASE(JSOP_DELNAME)
@@ -2546,11 +2581,10 @@ CASE(JSOP_GLOBALTHIS)
 {
     if (script->hasNonSyntacticScope()) {
         PUSH_NULL();
-        if (!GetNonSyntacticGlobalThis(cx, REGS.fp()->scopeChain(), REGS.stackHandleAt(-1)))
+        if (!GetNonSyntacticGlobalThis(cx, REGS.fp()->environmentChain(), REGS.stackHandleAt(-1)))
             goto error;
     } else {
-        ClonedBlockObject* lexicalScope = &cx->global()->lexicalScope();
-        PUSH_COPY(lexicalScope->thisValue());
+        PUSH_COPY(cx->global()->lexicalEnvironment().thisValue());
     }
 }
 END_CASE(JSOP_GLOBALTHIS)
@@ -2651,10 +2685,10 @@ CASE(JSOP_STRICTSETNAME)
     static_assert(JSOP_SETNAME_LENGTH == JSOP_SETGNAME_LENGTH,
                   "We're sharing the END_CASE so the lengths better match");
 
-    ReservedRooted<JSObject*> scope(&rootObject0, &REGS.sp[-2].toObject());
+    ReservedRooted<JSObject*> env(&rootObject0, &REGS.sp[-2].toObject());
     HandleValue value = REGS.stackHandleAt(-1);
 
-    if (!SetNameOperation(cx, script, REGS.pc, scope, value))
+    if (!SetNameOperation(cx, script, REGS.pc, env, value))
         goto error;
 
     REGS.sp[-2] = REGS.sp[-1];
@@ -2792,7 +2826,7 @@ CASE(JSOP_STRICTEVAL)
                   "eval and stricteval must be the same size");
 
     CallArgs args = CallArgsFromSp(GET_ARGC(REGS.pc), REGS.sp);
-    if (REGS.fp()->scopeChain()->global().valueIsEval(args.calleev())) {
+    if (REGS.fp()->environmentChain()->global().valueIsEval(args.calleev())) {
         if (!DirectEval(cx, args.get(0), args.rval()))
             goto error;
     } else {
@@ -3000,12 +3034,12 @@ CASE(JSOP_GIMPLICITTHIS)
     JSOp op = JSOp(*REGS.pc);
     if (op == JSOP_IMPLICITTHIS || script->hasNonSyntacticScope()) {
         ReservedRooted<PropertyName*> name(&rootName0, script->getName(REGS.pc));
-        ReservedRooted<JSObject*> scopeObj(&rootObject0, REGS.fp()->scopeChain());
-        ReservedRooted<JSObject*> scope(&rootObject1);
-        if (!LookupNameWithGlobalDefault(cx, name, scopeObj, &scope))
+        ReservedRooted<JSObject*> envObj(&rootObject0, REGS.fp()->environmentChain());
+        ReservedRooted<JSObject*> env(&rootObject1);
+        if (!LookupNameWithGlobalDefault(cx, name, envObj, &env))
             goto error;
 
-        Value v = ComputeImplicitThis(scope);
+        Value v = ComputeImplicitThis(env);
         PUSH_COPY(v);
     } else {
         // Treat it like JSOP_UNDEFINED.
@@ -3225,13 +3259,13 @@ END_CASE(JSOP_REST)
 
 CASE(JSOP_GETALIASEDVAR)
 {
-    ScopeCoordinate sc = ScopeCoordinate(REGS.pc);
-    ReservedRooted<Value> val(&rootValue0, REGS.fp()->aliasedVarScope(sc).aliasedVar(sc));
+    EnvironmentCoordinate ec = EnvironmentCoordinate(REGS.pc);
+    ReservedRooted<Value> val(&rootValue0, REGS.fp()->aliasedEnvironment(ec).aliasedBinding(ec));
 #ifdef DEBUG
     // Only the .this slot can hold the TDZ MagicValue.
     if (IsUninitializedLexical(val)) {
-        PropertyName* name = ScopeCoordinateName(cx->caches.scopeCoordinateNameCache,
-                                                 script, REGS.pc);
+        PropertyName* name = EnvironmentCoordinateName(cx->caches.envCoordinateNameCache,
+                                                       script, REGS.pc);
         MOZ_ASSERT(name == cx->names().dotThis);
         JSOp next = JSOp(*GetNextPc(REGS.pc));
         MOZ_ASSERT(next == JSOP_CHECKTHIS || next == JSOP_CHECKRETURN || next == JSOP_CHECKTHISREINIT);
@@ -3244,14 +3278,15 @@ END_CASE(JSOP_GETALIASEDVAR)
 
 CASE(JSOP_SETALIASEDVAR)
 {
-    ScopeCoordinate sc = ScopeCoordinate(REGS.pc);
-    ScopeObject& obj = REGS.fp()->aliasedVarScope(sc);
-    SetAliasedVarOperation(cx, script, REGS.pc, obj, sc, REGS.sp[-1], CheckLexical);
+    EnvironmentCoordinate ec = EnvironmentCoordinate(REGS.pc);
+    EnvironmentObject& obj = REGS.fp()->aliasedEnvironment(ec);
+    SetAliasedVarOperation(cx, script, REGS.pc, obj, ec, REGS.sp[-1], CheckTDZ);
 }
 END_CASE(JSOP_SETALIASEDVAR)
 
 CASE(JSOP_THROWSETCONST)
 CASE(JSOP_THROWSETALIASEDCONST)
+CASE(JSOP_THROWSETCALLEE)
 {
     ReportRuntimeConstAssignment(cx, script, REGS.pc);
     goto error;
@@ -3276,8 +3311,8 @@ END_CASE(JSOP_INITLEXICAL)
 
 CASE(JSOP_CHECKALIASEDLEXICAL)
 {
-    ScopeCoordinate sc = ScopeCoordinate(REGS.pc);
-    ReservedRooted<Value> val(&rootValue0, REGS.fp()->aliasedVarScope(sc).aliasedVar(sc));
+    EnvironmentCoordinate ec = EnvironmentCoordinate(REGS.pc);
+    ReservedRooted<Value> val(&rootValue0, REGS.fp()->aliasedEnvironment(ec).aliasedBinding(ec));
     if (!CheckUninitializedLexical(cx, script, REGS.pc, val))
         goto error;
 }
@@ -3285,21 +3320,21 @@ END_CASE(JSOP_CHECKALIASEDLEXICAL)
 
 CASE(JSOP_INITALIASEDLEXICAL)
 {
-    ScopeCoordinate sc = ScopeCoordinate(REGS.pc);
-    ScopeObject& obj = REGS.fp()->aliasedVarScope(sc);
-    SetAliasedVarOperation(cx, script, REGS.pc, obj, sc, REGS.sp[-1], DontCheckLexical);
+    EnvironmentCoordinate ec = EnvironmentCoordinate(REGS.pc);
+    EnvironmentObject& obj = REGS.fp()->aliasedEnvironment(ec);
+    SetAliasedVarOperation(cx, script, REGS.pc, obj, ec, REGS.sp[-1], DontCheckTDZ);
 }
 END_CASE(JSOP_INITALIASEDLEXICAL)
 
 CASE(JSOP_INITGLEXICAL)
 {
-    ClonedBlockObject* lexicalScope;
+    LexicalEnvironmentObject* lexicalEnv;
     if (script->hasNonSyntacticScope())
-        lexicalScope = &REGS.fp()->extensibleLexicalScope();
+        lexicalEnv = &REGS.fp()->extensibleLexicalEnvironment();
     else
-        lexicalScope = &cx->global()->lexicalScope();
+        lexicalEnv = &cx->global()->lexicalEnvironment();
     HandleValue value = REGS.stackHandleAt(-1);
-    InitGlobalLexicalOperation(cx, lexicalScope, script, REGS.pc, value);
+    InitGlobalLexicalOperation(cx, lexicalEnv, script, REGS.pc, value);
 }
 END_CASE(JSOP_INITGLEXICAL)
 
@@ -3382,16 +3417,16 @@ END_CASE(JSOP_DEFVAR)
 CASE(JSOP_DEFCONST)
 CASE(JSOP_DEFLET)
 {
-    ClonedBlockObject* lexicalScope;
+    LexicalEnvironmentObject* lexicalEnv;
     JSObject* varObj;
     if (script->hasNonSyntacticScope()) {
-        lexicalScope = &REGS.fp()->extensibleLexicalScope();
+        lexicalEnv = &REGS.fp()->extensibleLexicalEnvironment();
         varObj = &REGS.fp()->varObj();
     } else {
-        lexicalScope = &cx->global()->lexicalScope();
+        lexicalEnv = &cx->global()->lexicalEnvironment();
         varObj = cx->global();
     }
-    if (!DefLexicalOperation(cx, lexicalScope, varObj, script, REGS.pc))
+    if (!DefLexicalOperation(cx, lexicalEnv, varObj, script, REGS.pc))
         goto error;
 }
 END_CASE(JSOP_DEFLET)
@@ -3405,7 +3440,7 @@ CASE(JSOP_DEFFUN)
      * at the top level of a function body).
      */
     ReservedRooted<JSFunction*> fun(&rootFunction0, script->getFunction(GET_UINT32_INDEX(REGS.pc)));
-    if (!DefFunOperation(cx, script, REGS.fp()->scopeChain(), fun))
+    if (!DefFunOperation(cx, script, REGS.fp()->environmentChain(), fun))
         goto error;
 }
 END_CASE(JSOP_DEFFUN)
@@ -3414,7 +3449,7 @@ CASE(JSOP_LAMBDA)
 {
     /* Load the specified function object literal. */
     ReservedRooted<JSFunction*> fun(&rootFunction0, script->getFunction(GET_UINT32_INDEX(REGS.pc)));
-    JSObject* obj = Lambda(cx, fun, REGS.fp()->scopeChain());
+    JSObject* obj = Lambda(cx, fun, REGS.fp()->environmentChain());
     if (!obj)
         goto error;
 
@@ -3428,7 +3463,7 @@ CASE(JSOP_LAMBDA_ARROW)
     /* Load the specified function object literal. */
     ReservedRooted<JSFunction*> fun(&rootFunction0, script->getFunction(GET_UINT32_INDEX(REGS.pc)));
     ReservedRooted<Value> newTarget(&rootValue1, REGS.sp[-1]);
-    JSObject* obj = LambdaArrow(cx, fun, REGS.fp()->scopeChain(), newTarget);
+    JSObject* obj = LambdaArrow(cx, fun, REGS.fp()->environmentChain(), newTarget);
     if (!obj)
         goto error;
 
@@ -3723,58 +3758,92 @@ CASE(JSOP_DEBUGGER)
 }
 END_CASE(JSOP_DEBUGGER)
 
-CASE(JSOP_PUSHBLOCKSCOPE)
+CASE(JSOP_PUSHLEXICALENV)
 {
-    StaticBlockScope& blockScope = script->getObject(REGS.pc)->as<StaticBlockScope>();
+    ReservedRooted<Scope*> scope(&rootScope0, script->getScope(REGS.pc));
 
-    MOZ_ASSERT(blockScope.needsClone());
-    // Clone block and push on scope chain.
-    if (!REGS.fp()->pushBlock(cx, blockScope))
+    // Create block environment and push on scope chain.
+    if (!REGS.fp()->pushLexicalEnvironment(cx, scope.as<LexicalScope>()))
         goto error;
 }
-END_CASE(JSOP_PUSHBLOCKSCOPE)
+END_CASE(JSOP_PUSHLEXICALENV)
 
-CASE(JSOP_POPBLOCKSCOPE)
+CASE(JSOP_POPLEXICALENV)
 {
 #ifdef DEBUG
     // Pop block from scope chain.
-    NestedStaticScope* scope = script->getStaticBlockScope(REGS.pc);
-    MOZ_ASSERT(scope && scope->is<StaticBlockScope>());
-    StaticBlockScope& blockScope = scope->as<StaticBlockScope>();
-    MOZ_ASSERT(blockScope.needsClone());
+    Scope* scope = script->lookupScope(REGS.pc);
+    MOZ_ASSERT(scope);
+    MOZ_ASSERT(scope->is<LexicalScope>());
+    MOZ_ASSERT(scope->as<LexicalScope>().hasEnvironment());
 #endif
 
     if (MOZ_UNLIKELY(cx->compartment()->isDebuggee()))
-        DebugScopes::onPopBlock(cx, REGS.fp(), REGS.pc);
+        DebugEnvironments::onPopLexical(cx, REGS.fp(), REGS.pc);
 
     // Pop block from scope chain.
-    REGS.fp()->popBlock(cx);
+    REGS.fp()->popOffEnvironmentChain<LexicalEnvironmentObject>();
 }
-END_CASE(JSOP_POPBLOCKSCOPE)
+END_CASE(JSOP_POPLEXICALENV)
 
-CASE(JSOP_DEBUGLEAVEBLOCK)
+CASE(JSOP_DEBUGLEAVELEXICALENV)
 {
-    MOZ_ASSERT(script->getStaticBlockScope(REGS.pc));
-    MOZ_ASSERT(script->getStaticBlockScope(REGS.pc)->is<StaticBlockScope>());
-    MOZ_ASSERT(!script->getStaticBlockScope(REGS.pc)->as<StaticBlockScope>().needsClone());
+    MOZ_ASSERT(script->lookupScope(REGS.pc));
+    MOZ_ASSERT(script->lookupScope(REGS.pc)->is<LexicalScope>());
+    MOZ_ASSERT(!script->lookupScope(REGS.pc)->as<LexicalScope>().hasEnvironment());
 
     // FIXME: This opcode should not be necessary.  The debugger shouldn't need
     // help from bytecode to do its job.  See bug 927782.
 
     if (MOZ_UNLIKELY(cx->compartment()->isDebuggee()))
-        DebugScopes::onPopBlock(cx, REGS.fp(), REGS.pc);
+        DebugEnvironments::onPopLexical(cx, REGS.fp(), REGS.pc);
 }
-END_CASE(JSOP_DEBUGLEAVEBLOCK)
+END_CASE(JSOP_DEBUGLEAVELEXICALENV)
 
-CASE(JSOP_FRESHENBLOCKSCOPE)
+CASE(JSOP_FRESHENLEXICALENV)
 {
     if (MOZ_UNLIKELY(cx->compartment()->isDebuggee()))
-        DebugScopes::onPopBlock(cx, REGS.fp(), REGS.pc);
+        DebugEnvironments::onPopLexical(cx, REGS.fp(), REGS.pc);
 
-    if (!REGS.fp()->freshenBlock(cx))
+    if (!REGS.fp()->freshenLexicalEnvironment(cx))
         goto error;
 }
-END_CASE(JSOP_FRESHENBLOCKSCOPE)
+END_CASE(JSOP_FRESHENLEXICALENV)
+
+CASE(JSOP_RECREATELEXICALENV)
+{
+    if (MOZ_UNLIKELY(cx->compartment()->isDebuggee()))
+        DebugEnvironments::onPopLexical(cx, REGS.fp(), REGS.pc);
+
+    if (!REGS.fp()->recreateLexicalEnvironment(cx))
+        goto error;
+}
+END_CASE(JSOP_RECREATELEXICALENV)
+
+CASE(JSOP_PUSHVARENV)
+{
+    ReservedRooted<Scope*> scope(&rootScope0, script->getScope(REGS.pc));
+
+    if (!REGS.fp()->pushVarEnvironment(cx, scope))
+        goto error;
+}
+END_CASE(JSOP_PUSHVARENV)
+
+CASE(JSOP_POPVARENV)
+{
+#ifdef DEBUG
+    Scope* scope = script->lookupScope(REGS.pc);
+    MOZ_ASSERT(scope);
+    MOZ_ASSERT(scope->is<VarScope>());
+    MOZ_ASSERT(scope->as<VarScope>().hasEnvironment());
+#endif
+
+    if (MOZ_UNLIKELY(cx->compartment()->isDebuggee()))
+        DebugEnvironments::onPopVar(cx, REGS.fp(), REGS.pc);
+
+    REGS.fp()->popOffEnvironmentChain<VarEnvironmentObject>();
+}
+END_CASE(JSOP_POPVARENV)
 
 CASE(JSOP_GENERATOR)
 {
@@ -3902,7 +3971,7 @@ CASE(JSOP_FUNWITHPROTO)
     /* Load the specified function object literal. */
     ReservedRooted<JSFunction*> fun(&rootFunction0, script->getFunction(GET_UINT32_INDEX(REGS.pc)));
 
-    JSObject* obj = CloneFunctionObjectIfNotSingleton(cx, fun, REGS.fp()->scopeChain(),
+    JSObject* obj = CloneFunctionObjectIfNotSingleton(cx, fun, REGS.fp()->environmentChain(),
                                                       proto, GenericObject);
     if (!obj)
         goto error;
@@ -4087,7 +4156,7 @@ DEFAULT()
     if (MOZ_LIKELY(!frameHalfInitialized)) {
         interpReturnOK = Debugger::onLeaveFrame(cx, REGS.fp(), REGS.pc, interpReturnOK);
 
-        REGS.fp()->epilogue(cx);
+        REGS.fp()->epilogue(cx, REGS.pc);
     }
 
     gc::MaybeVerifyBarriers(cx, true);
@@ -4170,11 +4239,12 @@ js::GetProperty(JSContext* cx, HandleValue v, HandlePropertyName name, MutableHa
 }
 
 bool
-js::GetScopeName(JSContext* cx, HandleObject scopeChain, HandlePropertyName name, MutableHandleValue vp)
+js::GetEnvironmentName(JSContext* cx, HandleObject envChain, HandlePropertyName name,
+                       MutableHandleValue vp)
 {
     RootedShape shape(cx);
     RootedObject obj(cx), pobj(cx);
-    if (!LookupName(cx, name, scopeChain, &obj, &pobj, &shape))
+    if (!LookupName(cx, name, envChain, &obj, &pobj, &shape))
         return false;
 
     if (!shape)
@@ -4196,12 +4266,12 @@ js::GetScopeName(JSContext* cx, HandleObject scopeChain, HandlePropertyName name
  * which do not report an exception on (typeof foo == "undefined") tests.
  */
 bool
-js::GetScopeNameForTypeOf(JSContext* cx, HandleObject scopeChain, HandlePropertyName name,
-                          MutableHandleValue vp)
+js::GetEnvironmentNameForTypeOf(JSContext* cx, HandleObject envChain, HandlePropertyName name,
+                                MutableHandleValue vp)
 {
     RootedShape shape(cx);
     RootedObject obj(cx), pobj(cx);
-    if (!LookupName(cx, name, scopeChain, &obj, &pobj, &shape))
+    if (!LookupName(cx, name, envChain, &obj, &pobj, &shape))
         return false;
 
     if (!shape) {
@@ -4247,7 +4317,7 @@ js::LambdaArrow(JSContext* cx, HandleFunction fun, HandleObject parent, HandleVa
 }
 
 bool
-js::DefFunOperation(JSContext* cx, HandleScript script, HandleObject scopeChain,
+js::DefFunOperation(JSContext* cx, HandleScript script, HandleObject envChain,
                     HandleFunction funArg)
 {
     /*
@@ -4260,8 +4330,8 @@ js::DefFunOperation(JSContext* cx, HandleScript script, HandleObject scopeChain,
      * requests in server-side JS.
      */
     RootedFunction fun(cx, funArg);
-    if (fun->isNative() || fun->environment() != scopeChain) {
-        fun = CloneFunctionObjectIfNotSingleton(cx, fun, scopeChain, nullptr, TenuredObject);
+    if (fun->isNative() || fun->environment() != envChain) {
+        fun = CloneFunctionObjectIfNotSingleton(cx, fun, envChain, nullptr, TenuredObject);
         if (!fun)
             return false;
     } else {
@@ -4274,9 +4344,9 @@ js::DefFunOperation(JSContext* cx, HandleScript script, HandleObject scopeChain,
      * current scope chain even for the case of function expression statements
      * and functions defined by eval inside let or with blocks.
      */
-    RootedObject parent(cx, scopeChain);
+    RootedObject parent(cx, envChain);
     while (!parent->isQualifiedVarObj())
-        parent = parent->enclosingScope();
+        parent = parent->enclosingEnvironment();
 
     /* ES5 10.5 (NB: with subsequent errata). */
     RootedPropertyName name(cx, fun->name()->asPropertyName());
@@ -4297,32 +4367,43 @@ js::DefFunOperation(JSContext* cx, HandleScript script, HandleObject scopeChain,
                      : JSPROP_ENUMERATE | JSPROP_PERMANENT;
 
     /* Steps 5d, 5f. */
-    if (!shape || pobj != parent)
-        return DefineProperty(cx, parent, name, rval, nullptr, nullptr, attrs);
+    if (!shape || pobj != parent) {
+        if (!DefineProperty(cx, parent, name, rval, nullptr, nullptr, attrs))
+            return false;
+
+        return parent->is<GlobalObject>() ? parent->compartment()->addToVarNames(cx, name) : true;
+    }
 
     /*
      * Step 5e.
      *
-     * A DebugScopeObject is okay here, and sometimes necessary. If
+     * A DebugEnvironmentProxy is okay here, and sometimes necessary. If
      * Debugger.Frame.prototype.eval defines a function with the same name as an
-     * extant variable in the frame, the DebugScopeObject takes care of storing
+     * extant variable in the frame, the DebugEnvironmentProxy takes care of storing
      * the function in the stack frame (for non-aliased variables) or on the
      * scope object (for aliased).
      */
-    MOZ_ASSERT(parent->isNative() || parent->is<DebugScopeObject>());
+    MOZ_ASSERT(parent->isNative() || parent->is<DebugEnvironmentProxy>());
     if (parent->is<GlobalObject>()) {
-        if (shape->configurable())
-            return DefineProperty(cx, parent, name, rval, nullptr, nullptr, attrs);
+        if (shape->configurable()) {
+            if (!DefineProperty(cx, parent, name, rval, nullptr, nullptr, attrs))
+                return false;
+        } else {
+            if (shape->isAccessorDescriptor() || !shape->writable() || !shape->enumerable()) {
+                JSAutoByteString bytes;
+                if (AtomToPrintableString(cx, name, &bytes)) {
+                    JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_CANT_REDEFINE_PROP,
+                                         bytes.ptr());
+                }
 
-        if (shape->isAccessorDescriptor() || !shape->writable() || !shape->enumerable()) {
-            JSAutoByteString bytes;
-            if (AtomToPrintableString(cx, name, &bytes)) {
-                JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_CANT_REDEFINE_PROP,
-                                     bytes.ptr());
+                return false;
             }
-
-            return false;
         }
+
+        // Careful: the presence of a shape, even one appearing to derive from
+        // a variable declaration, doesn't mean it's in [[VarNames]].
+        if (!parent->compartment()->addToVarNames(cx, name))
+            return false;
     }
 
     /*
@@ -4525,18 +4606,20 @@ js::DeleteNameOperation(JSContext* cx, HandlePropertyName name, HandleObject sco
         return true;
     }
 
-    // NAME operations are the slow paths already, so unconditionally check
-    // for uninitialized lets.
-    if (pobj == scope && IsUninitializedLexicalSlot(scope, shape)) {
-        ReportUninitializedLexical(cx, name);
-        return false;
-    }
-
     ObjectOpResult result;
     RootedId id(cx, NameToId(name));
     if (!DeleteProperty(cx, scope, id, result))
         return false;
-    res.setBoolean(result.ok());
+
+    bool status = result.ok();
+    res.setBoolean(status);
+
+    if (status) {
+        // Deleting a name from the global object removes it from [[VarNames]].
+        if (pobj == scope && scope->is<GlobalObject>())
+            scope->compartment()->removeFromVarNames(name);
+    }
+
     return true;
 }
 
@@ -4913,66 +4996,32 @@ js::ReportRuntimeLexicalError(JSContext* cx, unsigned errorNumber,
                op == JSOP_CHECKALIASEDLEXICAL ||
                op == JSOP_THROWSETCONST ||
                op == JSOP_THROWSETALIASEDCONST ||
+               op == JSOP_THROWSETCALLEE ||
                op == JSOP_GETIMPORT);
 
     RootedPropertyName name(cx);
 
-    if (IsLocalOp(op)) {
-        uint32_t slot = GET_LOCALNO(pc);
-
-        // First search for a name among body-level lets.
-        for (BindingIter bi(script); bi; bi++) {
-            if (bi->kind() != Binding::ARGUMENT && !bi->aliased() && bi.frameIndex() == slot) {
-                name = bi->name();
-                break;
-            }
-        }
-
-        // Failing that, it must be a block-local let.
-        if (!name) {
-            // Skip to the right scope.
-            Rooted<NestedStaticScope*> scope(cx, script->getStaticBlockScope(pc));
-            MOZ_ASSERT(scope && scope->is<StaticBlockScope>());
-            Rooted<StaticBlockScope*> block(cx, &scope->as<StaticBlockScope>());
-            while (slot < block->localOffset())
-                block = &block->enclosingNestedScope()->as<StaticBlockScope>();
-
-            // Translate the frame slot to the block slot, then find the name
-            // of the slot.
-            uint32_t blockSlot = block->localIndexToSlot(slot);
-            RootedShape shape(cx, block->lastProperty());
-            Shape::Range<CanGC> r(cx, shape);
-            while (r.front().slot() != blockSlot)
-                r.popFront();
-            jsid id = r.front().propidRaw();
-            MOZ_ASSERT(JSID_IS_ATOM(id));
-            name = JSID_TO_ATOM(id)->asPropertyName();
-        }
+    if (op == JSOP_THROWSETCALLEE) {
+        name = script->functionNonDelazifying()->name()->asPropertyName();
+    } else if (IsLocalOp(op)) {
+        name = FrameSlotName(script, pc)->asPropertyName();
     } else if (IsAtomOp(op)) {
         name = script->getName(pc);
     } else {
         MOZ_ASSERT(IsAliasedVarOp(op));
-        name = ScopeCoordinateName(cx->caches.scopeCoordinateNameCache, script, pc);
+        name = EnvironmentCoordinateName(cx->caches.envCoordinateNameCache, script, pc);
     }
 
     ReportRuntimeLexicalError(cx, errorNumber, name);
 }
 
 void
-js::ReportRuntimeRedeclaration(JSContext* cx, HandlePropertyName name,
-                               frontend::Definition::Kind declKind)
+js::ReportRuntimeRedeclaration(JSContext* cx, HandlePropertyName name, const char* redeclKind)
 {
     JSAutoByteString printable;
     if (AtomToPrintableString(cx, name, &printable)) {
-        // We cannot distinguish 'var' declarations from manually defined,
-        // non-configurable global properties.
-        const char* kindStr;
-        if (declKind == frontend::Definition::VAR)
-            kindStr = "non-configurable global property";
-        else
-            kindStr = frontend::Definition::kindString(declKind);
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_REDECLARED_VAR,
-                             kindStr, printable.ptr());
+                             redeclKind, printable.ptr());
     }
 }
 
@@ -4998,7 +5047,13 @@ js::ThrowUninitializedThis(JSContext* cx, AbstractFramePtr frame)
     } else {
         MOZ_ASSERT(frame.isEvalFrame());
         MOZ_ASSERT(frame.script()->isDirectEvalInFunction());
-        fun = frame.script()->getCallerFunction();
+        for (ScopeIter si(frame.script()->enclosingScope()); si; si++) {
+            if (si.scope()->is<FunctionScope>()) {
+                fun = si.scope()->as<FunctionScope>().canonicalFunction();
+                break;
+            }
+        }
+        MOZ_ASSERT(fun);
     }
 
     if (fun->isDerivedClassConstructor()) {

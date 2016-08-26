@@ -137,13 +137,10 @@ CSSTransition::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 void
 CSSTransition::GetTransitionProperty(nsString& aRetVal) const
 {
-  // Once we make the effect property settable (bug 1049975) we will need
-  // to store the transition property on the CSSTransition itself but for
-  // now we can just query the effect.
-  MOZ_ASSERT(mEffect && mEffect->AsTransition(),
-             "Transitions should have a transition effect");
-  nsCSSPropertyID prop = mEffect->AsTransition()->TransitionProperty();
-  aRetVal = NS_ConvertUTF8toUTF16(nsCSSProps::GetStringValue(prop));
+  MOZ_ASSERT(eCSSProperty_UNKNOWN != mTransitionProperty,
+             "Transition Property should be initialized");
+  aRetVal =
+    NS_ConvertUTF8toUTF16(nsCSSProps::GetStringValue(mTransitionProperty));
 }
 
 AnimationPlayState
@@ -213,24 +210,17 @@ CSSTransition::Tick()
 nsCSSPropertyID
 CSSTransition::TransitionProperty() const
 {
-  // FIXME: Once we support replacing/removing the effect (bug 1049975)
-  // we'll need to store the original transition property so we keep
-  // returning the same value in that case.
-  dom::KeyframeEffectReadOnly* effect = GetEffect();
-  MOZ_ASSERT(effect && effect->AsTransition(),
-             "Transition should have a transition effect");
-  return effect->AsTransition()->TransitionProperty();
+  MOZ_ASSERT(eCSSProperty_UNKNOWN != mTransitionProperty,
+             "Transition property should be initialized");
+  return mTransitionProperty;
 }
 
 StyleAnimationValue
 CSSTransition::ToValue() const
 {
-  // FIXME: Once we support replacing/removing the effect (bug 1049975)
-  // the following assertion will no longer hold.
-  dom::KeyframeEffectReadOnly* effect = GetEffect();
-  MOZ_ASSERT(effect && effect->AsTransition(),
-             "Transition should have a transition effect");
-  return effect->AsTransition()->ToValue();
+  MOZ_ASSERT(!mTransitionToValue.IsNull(),
+             "Transition ToValue should be initialized");
+  return mTransitionToValue;
 }
 
 bool
@@ -275,6 +265,19 @@ CSSTransition::GetCurrentTimeAt(const DocumentTimeline& aTimeline,
   }
 
   return result;
+}
+
+void
+CSSTransition::SetEffectFromStyle(AnimationEffectReadOnly* aEffect)
+{
+  Animation::SetEffectNoUpdate(aEffect);
+
+  // Initialize transition property.
+  ElementPropertyTransition* pt = aEffect ? aEffect->AsTransition() : nullptr;
+  if (eCSSProperty_UNKNOWN == mTransitionProperty && pt) {
+    mTransitionProperty = pt->TransitionProperty();
+    mTransitionToValue = pt->ToValue();
+  }
 }
 
 ////////////////////////// nsTransitionManager ////////////////////////////
@@ -650,12 +653,12 @@ nsTransitionManager::ConsiderStartingTransition(
   if (aElementTransitions) {
     OwningCSSTransitionPtrArray& animations = aElementTransitions->mAnimations;
     for (size_t i = 0, i_end = animations.Length(); i < i_end; ++i) {
-      const ElementPropertyTransition *iPt =
-        animations[i]->GetEffect()->AsTransition();
-      if (iPt->TransitionProperty() == aProperty) {
+      if (animations[i]->TransitionProperty() == aProperty) {
         haveCurrentTransition = true;
         currentIndex = i;
-        oldPT = iPt;
+        oldPT = animations[i]->GetEffect()
+                ? animations[i]->GetEffect()->AsTransition()
+                : nullptr;
         break;
       }
     }
@@ -675,7 +678,8 @@ nsTransitionManager::ConsiderStartingTransition(
   // endpoint of our finished transition, we also don't want to start
   // a new transition for the reasons described in
   // https://lists.w3.org/Archives/Public/www-style/2015Jan/0444.html .
-  if (haveCurrentTransition && haveValues && oldPT->ToValue() == endValue) {
+  if (haveCurrentTransition && haveValues &&
+      aElementTransitions->mAnimations[currentIndex]->ToValue() == endValue) {
     // GetAnimationRule already called RestyleForAnimation.
     return;
   }
@@ -722,8 +726,12 @@ nsTransitionManager::ConsiderStartingTransition(
 
   // If the new transition reverses an existing one, we'll need to
   // handle the timing differently.
+  // FIXME: Move mStartForReversingTest, mReversePortion to CSSTransition,
+  //        and set the timing function on transitions as an effect-level
+  //        easing (rather than keyframe-level easing). (Bug 1292001)
   if (haveCurrentTransition &&
       aElementTransitions->mAnimations[currentIndex]->HasCurrentEffect() &&
+      oldPT &&
       oldPT->mStartForReversingTest == endValue) {
     // Compute the appropriate negative transition-delay such that right
     // now we'd end up at the current position.
@@ -790,11 +798,7 @@ nsTransitionManager::ConsiderStartingTransition(
   animation->SetTimelineNoUpdate(timeline);
   animation->SetCreationSequence(
     mPresContext->RestyleManager()->AsGecko()->GetAnimationGeneration());
-  // The order of the following two calls is important since PlayFromStyle
-  // will add the animation to the PendingAnimationTracker of its effect's
-  // document. When we come to make effect writeable (bug 1049975) we should
-  // remove this dependency.
-  animation->SetEffect(pt);
+  animation->SetEffectFromStyle(pt);
   animation->PlayFromStyle();
 
   if (!aElementTransitions) {
@@ -817,10 +821,7 @@ nsTransitionManager::ConsiderStartingTransition(
 #ifdef DEBUG
   for (size_t i = 0, i_end = animations.Length(); i < i_end; ++i) {
     MOZ_ASSERT(
-      i == currentIndex ||
-      (animations[i]->GetEffect() &&
-       animations[i]->GetEffect()->AsTransition()->TransitionProperty()
-         != aProperty),
+      i == currentIndex || animations[i]->TransitionProperty() != aProperty,
       "duplicate transitions for property");
   }
 #endif
@@ -831,7 +832,8 @@ nsTransitionManager::ConsiderStartingTransition(
     // of the transition using TimeStamp::Now(). This allows us to avoid a
     // large jump when starting a new transition when the main thread lags behind
     // the compositor.
-    if (oldPT->IsCurrent() &&
+    if (oldPT &&
+        oldPT->IsCurrent() &&
         oldPT->IsRunningOnCompositor() &&
         !oldPT->GetAnimation()->GetStartTime().IsNull() &&
         timeline == oldPT->GetAnimation()->GetTimeline()) {

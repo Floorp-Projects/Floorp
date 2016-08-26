@@ -405,10 +405,10 @@ AddAnimationForProperty(nsIFrame* aFrame, const AnimationProperty& aProperty,
   // callbacks may run that introduce further lag between the main thread and
   // the compositor.
   if (aAnimation->AsCSSTransition() &&
-      aAnimation->GetEffect()) {
-    MOZ_ASSERT(aAnimation->GetEffect()->AsTransition(),
-               "CSSTransition' effect should be an ElementPropertyTransition "
-               "until we fix bug 1049975");
+      aAnimation->GetEffect() &&
+      aAnimation->GetEffect()->AsTransition()) {
+    // We update startValue from the replaced transition only if the effect is
+    // an ElementPropertyTransition.
     aAnimation->GetEffect()->AsTransition()->
       UpdateStartValueFromReplacedTransition();
   }
@@ -474,10 +474,13 @@ AddAnimationsForProperty(nsIFrame* aFrame, nsCSSPropertyID aProperty,
     if (!anim->IsPlaying()) {
       continue;
     }
-    dom::KeyframeEffectReadOnly* effect = anim->GetEffect();
-    MOZ_ASSERT(effect, "A playing animation should have an effect");
+
+    dom::KeyframeEffectReadOnly* keyframeEffect =
+      anim->GetEffect() ? anim->GetEffect()->AsKeyframeEffect() : nullptr;
+    MOZ_ASSERT(keyframeEffect,
+               "A playing animation should have a keyframe effect");
     const AnimationProperty* property =
-      effect->GetAnimationOfProperty(aProperty);
+      keyframeEffect->GetAnimationOfProperty(aProperty);
     if (!property) {
       continue;
     }
@@ -511,7 +514,7 @@ AddAnimationsForProperty(nsIFrame* aFrame, nsCSSPropertyID aProperty,
     }
 
     AddAnimationForProperty(aFrame, *property, anim, aLayer, aData, aPending);
-    effect->SetIsRunningOnCompositor(aProperty, true);
+    keyframeEffect->SetIsRunningOnCompositor(aProperty, true);
   }
 }
 

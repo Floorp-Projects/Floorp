@@ -14,11 +14,9 @@
 
 #include "jscntxt.h"
 
-#include "ds/InlineMap.h"
 #include "ds/LifoAlloc.h"
 #include "jit/InlineList.h"
 #include "jit/Ion.h"
-#include "js/Utility.h"
 
 namespace js {
 namespace jit {
@@ -129,89 +127,6 @@ class JitAllocPolicy
     }
     void reportAllocOverflow() const {
     }
-    MOZ_MUST_USE bool checkSimulatedOOM() const {
-        return !js::oom::ShouldFailWithOOM();
-    }
-};
-
-/*
- * A policy for using system memory functions that protects against
- * realloc-after-free and free-after-free from unrelated locations.
- */
-class ProtectedSystemAllocPolicy
-{
-    InlineMap<void*, uint32_t, 2> allocIDs;
-
-  public:
-    ProtectedSystemAllocPolicy() {}
-
-    /*
-     * While possible, copying protected allocations would defeat the purpose
-     * of this policy, so we only allow copy-constructing from vanilla policies.
-     */
-    ProtectedSystemAllocPolicy(const ProtectedSystemAllocPolicy& that) {
-        MOZ_RELEASE_ASSERT(that.allocIDs.empty());
-    }
-
-    ~ProtectedSystemAllocPolicy() { MOZ_RELEASE_ASSERT(allocIDs.empty()); }
-
-    template <typename T> T* maybe_pod_malloc(size_t numElems) {
-        uint32_t allocID;
-        T* ret = js_pod_malloc_protected<T>(numElems, &allocID);
-        if (ret) {
-            AutoEnterOOMUnsafeRegion oomUnsafe;
-            if (!allocIDs.put(ret, allocID))
-                oomUnsafe.crash("Failed to store allocation ID.");
-        }
-        return ret;
-    }
-
-    template <typename T> T* maybe_pod_calloc(size_t numElems) {
-        uint32_t allocID;
-        T* ret = js_pod_calloc_protected<T>(numElems, &allocID);
-        if (ret) {
-            AutoEnterOOMUnsafeRegion oomUnsafe;
-            if (!allocIDs.put(ret, allocID))
-                oomUnsafe.crash("Failed to store allocation ID.");
-        }
-        return ret;
-    }
-
-    template <typename T> T* maybe_pod_realloc(T* p, size_t oldSize, size_t newSize) {
-        uint32_t allocID = 0;
-        if (p) {
-            auto entry = allocIDs.lookup(p);
-            MOZ_RELEASE_ASSERT(entry.found());
-            allocID = entry.value();
-            allocIDs.remove(entry);
-        }
-        T* ret = js_pod_realloc_protected<T>(p, oldSize, newSize, &allocID);
-        if (ret || p) {
-            AutoEnterOOMUnsafeRegion oomUnsafe;
-            if (!allocIDs.put(ret ? ret : p, allocID))
-                oomUnsafe.crash("Failed to store allocation ID.");
-        }
-        return ret;
-    }
-
-    template <typename T> T* pod_malloc(size_t numElems) { return maybe_pod_malloc<T>(numElems); }
-    template <typename T> T* pod_calloc(size_t numElems) { return maybe_pod_calloc<T>(numElems); }
-    template <typename T> T* pod_realloc(T* p, size_t oldSize, size_t newSize) {
-        return maybe_pod_realloc<T>(p, oldSize, newSize);
-    }
-
-    void free_(void* p) {
-        uint32_t allocID = 0;
-        if (p) {
-            auto entry = allocIDs.lookup(p);
-            MOZ_RELEASE_ASSERT(entry.found());
-            allocID = entry.value();
-            allocIDs.remove(entry);
-        }
-        js_free_protected(p, &allocID);
-    }
-
-    void reportAllocOverflow() const {}
     MOZ_MUST_USE bool checkSimulatedOOM() const {
         return !js::oom::ShouldFailWithOOM();
     }

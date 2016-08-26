@@ -7,10 +7,9 @@
 var expect = "pass";
 var actual;
 
-/*
- * We hardcode here that a program is limited to 2^20 blocks. Start
- * with 2^19 blocks, then test 2^20 - 1 blocks, finally test the limit.
- */
+// Scripts used to be limited to 2**20 blocks, but no longer since the frontend
+// rewrite.  The exact limit-testing here should all pass now, not pass for
+// 2**20 - 1 and fail for 2**20.
 var s = "{}";
 for (var i = 0; i < 21; i++)
     s += s;
@@ -39,9 +38,9 @@ s += "{}";
 
 try {
     eval(s);
-    actual = "fail: expected InternalError: program too large";
+    actual = "pass";
 } catch (e) {
-    actual = (e.message == "program too large") ? "pass" : "fail: " + e;
+    actual = "fail: " + e;
 }
 
 assertEq(actual, expect);

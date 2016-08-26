@@ -185,6 +185,24 @@ struct TrackBound
 };
 
 /**
+ * Describes how a track should be disabled.
+ *
+ * ENABLED        Not disabled.
+ * SILENCE_BLACK  Audio data is turned into silence, video frames are made black.
+ * SILENCE_FREEZE Audio data is turned into silence, video freezes at last frame.
+ */
+enum class DisabledTrackMode
+{
+  ENABLED, SILENCE_BLACK, SILENCE_FREEZE
+};
+struct DisabledTrack {
+  DisabledTrack(TrackID aTrackID, DisabledTrackMode aMode)
+    : mTrackID(aTrackID), mMode(aMode) {}
+  TrackID mTrackID;
+  DisabledTrackMode mMode;
+};
+
+/**
  * A stream of synchronized audio and video data. All (not blocked) streams
  * progress at the same rate --- "real time". Streams cannot seek. The only
  * operation readers can perform on a stream is to read the next data.
@@ -338,7 +356,7 @@ public:
 
   // A disabled track has video replaced by black, and audio replaced by
   // silence.
-  void SetTrackEnabled(TrackID aTrackID, bool aEnabled);
+  void SetTrackEnabled(TrackID aTrackID, DisabledTrackMode aMode);
 
   // Finish event will be notified by calling methods of aListener. It is the
   // responsibility of the caller to remove aListener before it is destroyed.
@@ -442,7 +460,8 @@ public:
                                           TrackID aTrackID);
   virtual void RemoveDirectTrackListenerImpl(DirectMediaStreamTrackListener* aListener,
                                              TrackID aTrackID);
-  virtual void SetTrackEnabledImpl(TrackID aTrackID, bool aEnabled);
+  virtual void SetTrackEnabledImpl(TrackID aTrackID, DisabledTrackMode aMode);
+  DisabledTrackMode GetDisabledTrackMode(TrackID aTrackID);
 
   void AddConsumer(MediaInputPort* aPort)
   {
@@ -598,7 +617,10 @@ protected:
   nsTArray<RefPtr<MediaStreamListener> > mListeners;
   nsTArray<TrackBound<MediaStreamTrackListener>> mTrackListeners;
   nsTArray<MainThreadMediaStreamListener*> mMainThreadListeners;
-  nsTArray<TrackID> mDisabledTrackIDs;
+  // List of disabled TrackIDs and their associated disabled mode.
+  // They can either by disabled by frames being replaced by black, or by
+  // retaining the previous frame.
+  nsTArray<DisabledTrack> mDisabledTracks;
 
   // GraphTime at which this stream starts blocking.
   // This is only valid up to mStateComputedTime. The stream is considered to
@@ -782,7 +804,7 @@ public:
   }
 
   // Overriding allows us to hold the mMutex lock while changing the track enable status
-  void SetTrackEnabledImpl(TrackID aTrackID, bool aEnabled) override;
+  void SetTrackEnabledImpl(TrackID aTrackID, DisabledTrackMode aMode) override;
 
   // Overriding allows us to ensure mMutex is locked while changing the track enable status
   void

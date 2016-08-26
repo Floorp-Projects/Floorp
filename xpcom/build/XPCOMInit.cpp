@@ -147,9 +147,6 @@ extern nsresult nsStringInputStreamConstructor(nsISupports*, REFNSIID, void**);
 #endif
 #include "vpx_mem/vpx_mem.h"
 #endif
-#ifdef MOZ_WEBM
-#include "nestegg/nestegg.h"
-#endif
 
 #include "GeckoProfiler.h"
 
@@ -386,9 +383,11 @@ private:
   CollectReports(nsIHandleReportCallback* aHandleReport, nsISupports* aData,
                  bool aAnonymize) override
   {
-    return MOZ_COLLECT_REPORT(
+    MOZ_COLLECT_REPORT(
       "explicit/icu", KIND_HEAP, UNITS_BYTES, MemoryAllocated(),
       "Memory used by ICU, a Unicode and globalization support library.");
+
+    return NS_OK;
   }
 
   ~ICUReporter() {}
@@ -411,9 +410,12 @@ private:
   CollectReports(nsIHandleReportCallback* aHandleReport, nsISupports* aData,
                  bool aAnonymize) override
   {
-    return MOZ_COLLECT_REPORT(
+    MOZ_COLLECT_REPORT(
       "explicit/media/libogg", KIND_HEAP, UNITS_BYTES, MemoryAllocated(),
-      "Memory allocated through libogg for Ogg, Theora, and related media files.");
+      "Memory allocated through libogg for Ogg, Theora, and related media "
+      "files.");
+
+    return NS_OK;
   }
 
   ~OggReporter() {}
@@ -437,9 +439,11 @@ private:
   CollectReports(nsIHandleReportCallback* aHandleReport, nsISupports* aData,
                  bool aAnonymize) override
   {
-    return MOZ_COLLECT_REPORT(
+    MOZ_COLLECT_REPORT(
       "explicit/media/libvpx", KIND_HEAP, UNITS_BYTES, MemoryAllocated(),
       "Memory allocated through libvpx for WebM media files.");
+
+    return NS_OK;
   }
 
   ~VPXReporter() {}
@@ -450,33 +454,6 @@ NS_IMPL_ISUPPORTS(VPXReporter, nsIMemoryReporter)
 /* static */ template<> Atomic<size_t>
 CountingAllocatorBase<VPXReporter>::sAmount(0);
 #endif /* MOZ_VPX */
-
-#ifdef MOZ_WEBM
-class NesteggReporter final
-  : public nsIMemoryReporter
-  , public CountingAllocatorBase<NesteggReporter>
-{
-public:
-  NS_DECL_ISUPPORTS
-
-private:
-  NS_IMETHOD
-  CollectReports(nsIHandleReportCallback* aHandleReport, nsISupports* aData,
-                 bool aAnonymize) override
-  {
-    return MOZ_COLLECT_REPORT(
-      "explicit/media/libnestegg", KIND_HEAP, UNITS_BYTES, MemoryAllocated(),
-      "Memory allocated through libnestegg for WebM media files.");
-  }
-
-  ~NesteggReporter() {}
-};
-
-NS_IMPL_ISUPPORTS(NesteggReporter, nsIMemoryReporter)
-
-/* static */ template<> Atomic<size_t>
-CountingAllocatorBase<NesteggReporter>::sAmount(0);
-#endif /* MOZ_WEBM */
 
 static double
 TimeSinceProcessCreation()
@@ -698,14 +675,6 @@ NS_InitXPCOM2(nsIServiceManager** aResult,
                         memmove);
 #endif
 
-#ifdef MOZ_WEBM
-  // And for libnestegg.
-  // libnestegg expects that its realloc implementation will free
-  // the pointer argument when a size of 0 is passed in, so we need
-  // the special version of the counting realloc.
-  nestegg_set_halloc_func(NesteggReporter::CountingFreeingRealloc);
-#endif
-
 #if EXPOSE_INTL_API && defined(MOZ_ICU_DATA_ARCHIVE)
   nsCOMPtr<nsIFile> greDir;
   nsDirectoryService::gService->Get(NS_GRE_DIR,
@@ -777,9 +746,6 @@ NS_InitXPCOM2(nsIServiceManager** aResult,
   RegisterStrongMemoryReporter(new OggReporter());
 #ifdef MOZ_VPX
   RegisterStrongMemoryReporter(new VPXReporter());
-#endif
-#ifdef MOZ_WEBM
-  RegisterStrongMemoryReporter(new NesteggReporter());
 #endif
 
   mozilla::Telemetry::Init();

@@ -317,23 +317,13 @@ NS_IMPL_ISUPPORTS(PreferenceServiceReporter, nsIMemoryReporter)
 MOZ_DEFINE_MALLOC_SIZE_OF(PreferenceServiceMallocSizeOf)
 
 NS_IMETHODIMP
-PreferenceServiceReporter::CollectReports(nsIMemoryReporterCallback* aCb,
-                                          nsISupports* aClosure,
-                                          bool aAnonymize)
+PreferenceServiceReporter::CollectReports(
+  nsIHandleReportCallback* aHandleReport, nsISupports* aData, bool aAnonymize)
 {
-#define REPORT(_path, _kind, _units, _amount, _desc)                          \
-    do {                                                                      \
-      nsresult rv;                                                            \
-      rv = aCb->Callback(EmptyCString(), _path, _kind,                        \
-                         _units, _amount, NS_LITERAL_CSTRING(_desc),          \
-                         aClosure);                                           \
-      NS_ENSURE_SUCCESS(rv, rv);                                              \
-    } while (0)
-
-  REPORT(NS_LITERAL_CSTRING("explicit/preferences"),
-         KIND_HEAP, UNITS_BYTES,
-         Preferences::SizeOfIncludingThisAndOtherStuff(PreferenceServiceMallocSizeOf),
-         "Memory used by the preferences system.");
+  MOZ_COLLECT_REPORT(
+    "explicit/preferences", KIND_HEAP, UNITS_BYTES,
+    Preferences::SizeOfIncludingThisAndOtherStuff(PreferenceServiceMallocSizeOf),
+    "Memory used by the preferences system.");
 
   nsPrefBranch* rootBranch =
     static_cast<nsPrefBranch*>(Preferences::GetRootBranch());
@@ -385,27 +375,31 @@ PreferenceServiceReporter::CollectReports(nsIMemoryReporterCallback* aCb,
     nsPrintfCString suspectPath("preference-service-suspect/"
                                 "referent(pref=%s)", suspect.get());
 
-    REPORT(suspectPath,
-           KIND_OTHER, UNITS_COUNT, totalReferentCount,
-           "A preference with a suspiciously large number "
-           "referents (symptom of a leak).");
+    aHandleReport->Callback(
+      /* process = */ EmptyCString(),
+      suspectPath, KIND_OTHER, UNITS_COUNT, totalReferentCount,
+      NS_LITERAL_CSTRING(
+        "A preference with a suspiciously large number referents (symptom of a "
+        "leak)."),
+      aData);
   }
 
-  REPORT(NS_LITERAL_CSTRING("preference-service/referent/strong"),
-         KIND_OTHER, UNITS_COUNT, numStrong,
-         "The number of strong referents held by the preference service.");
+  MOZ_COLLECT_REPORT(
+    "preference-service/referent/strong", KIND_OTHER, UNITS_COUNT,
+    numStrong,
+    "The number of strong referents held by the preference service.");
 
-  REPORT(NS_LITERAL_CSTRING("preference-service/referent/weak/alive"),
-         KIND_OTHER, UNITS_COUNT, numWeakAlive,
-         "The number of weak referents held by the preference service "
-         "that are still alive.");
+  MOZ_COLLECT_REPORT(
+    "preference-service/referent/weak/alive", KIND_OTHER, UNITS_COUNT,
+    numWeakAlive,
+    "The number of weak referents held by the preference service that are "
+    "still alive.");
 
-  REPORT(NS_LITERAL_CSTRING("preference-service/referent/weak/dead"),
-         KIND_OTHER, UNITS_COUNT, numWeakDead,
-         "The number of weak referents held by the preference service "
-         "that are dead.");
-
-#undef REPORT
+  MOZ_COLLECT_REPORT(
+    "preference-service/referent/weak/dead", KIND_OTHER, UNITS_COUNT,
+    numWeakDead,
+    "The number of weak referents held by the preference service that are "
+    "dead.");
 
   return NS_OK;
 }

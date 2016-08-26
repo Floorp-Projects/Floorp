@@ -109,6 +109,7 @@ namespace JS {
 //   compartments. If an object needs to point to a JSObject in a different
 //   compartment, regardless of zone, it must go through a cross-compartment
 //   wrapper. Each compartment keeps track of its outgoing wrappers in a table.
+//   JSObjects find their compartment via their ObjectGroup.
 //
 // - JSStrings do not belong to any particular compartment, but they do belong
 //   to a zone. Thus, two different compartments in the same zone can point to a
@@ -116,16 +117,17 @@ namespace JS {
 //   different zone and do nothing if it's in the same zone. Thus, transferring
 //   strings within a zone is very efficient.
 //
-// - Shapes and base shapes belong to a compartment and cannot be shared between
-//   compartments. A base shape holds a pointer to its compartment. Shapes find
-//   their compartment via their base shape. JSObjects find their compartment
-//   via their shape.
+// - Shapes and base shapes belong to a zone and are shared between compartments
+//   in that zone where possible. Accessor shapes store getter and setter
+//   JSObjects which belong to a single compartment, so these shapes and all
+//   their descendants can't be shared with other compartments.
 //
 // - Scripts are also compartment-local and cannot be shared. A script points to
 //   its compartment.
 //
-// - Type objects and JitCode objects belong to a compartment and cannot be
-//   shared. However, there is no mechanism to obtain their compartments.
+// - ObjectGroup and JitCode objects belong to a compartment and cannot be
+//   shared. There is no mechanism to obtain the compartment from a JitCode
+//   object.
 //
 // A zone remains alive as long as any GC things in the zone are alive. A
 // compartment remains alive as long as any JSObjects, scripts, shapes, or base

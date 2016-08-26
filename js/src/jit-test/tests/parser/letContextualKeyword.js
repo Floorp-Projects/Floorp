@@ -18,16 +18,16 @@ eval(`let {x:x} = {x:42}; assertEq(x, 42);`);
 eval(`let [x] = [42]; assertEq(x, 42);`);
 
 eval(`for (let x in [1]) { assertEq(x, "0"); }`);
-expectError(`for (const x in [1]) { assertEq(x, "0"); }`); // XXX bug 449811
+eval(`for (const x in [1]) { assertEq(x, "0"); }`);
 
 eval(`for (let x of [1]) { assertEq(x, 1); }`);
-expectError(`for (const x of [1]) { assertEq(x, 1); }`); // XXX bug 449811
+eval(`for (const x of [1]) { assertEq(x, 1); }`);
 
 eval(`for (let i = 0; i < 1; i++) { assertEq(i, 0); }`);
 eval(`var done = false; for (const i = 0; !done; done = true) { assertEq(i, 0); }`);
 
 eval(`for (let of of [1]) { assertEq(of, 1); }`);
-expectError(`for (const of of [1]) { assertEq(of, 1); }`); // XXX bug 449811
+eval(`for (const of of [1]) { assertEq(of, 1); }`);
 
 eval(`try { throw 17; } catch (let) { assertEq(let, 17); }`);
 eval(`try { throw [17]; } catch ([let]) { assertEq(let, 17); }`);

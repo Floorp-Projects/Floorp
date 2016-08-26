@@ -1,11 +1,11 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
-// Instead of loading ChromeUtils.js into the test scope in browser-test.js for all tests,
-// we only need ChromeUtils.js for a few files which is why we are using loadSubScript.
-var ChromeUtils = {};
+// Instead of loading EventUtils.js into the test scope in browser-test.js for all tests,
+// we only need EventUtils.js for a few files which is why we are using loadSubScript.
+var EventUtils = {};
 this._scriptLoader = Cc["@mozilla.org/moz/jssubscript-loader;1"].
                      getService(Ci.mozIJSSubScriptLoader);
-this._scriptLoader.loadSubScript("chrome://mochikit/content/tests/SimpleTest/ChromeUtils.js", ChromeUtils);
+this._scriptLoader.loadSubScript("chrome://mochikit/content/tests/SimpleTest/EventUtils.js", EventUtils);
 
 add_task(function* test() {
   // Make sure the bookmarks bar is visible and restore its state on cleanup.
@@ -37,7 +37,7 @@ add_task(function* test() {
   let simulateDragDrop = function(aEffect, aMimeType) {
     const uriSpec = "http://www.mozilla.org/D1995729-A152-4e30-8329-469B01F30AA7";
     let uri = makeURI(uriSpec);
-    ChromeUtils.synthesizeDrop(placesItems.childNodes[0],
+    EventUtils.synthesizeDrop(placesItems.childNodes[0],
                               placesItems,
                               [[{type: aMimeType,
                                 data: uriSpec}]],

@@ -217,17 +217,19 @@ static const struct {
 };
 
 NS_IMETHODIMP
-nsUrlClassifierUtils::ConvertThreatTypeToListName(uint32_t aThreatType,
-                                                  nsACString& aListName)
+nsUrlClassifierUtils::ConvertThreatTypeToListNames(uint32_t aThreatType,
+                                                   nsACString& aListNames)
 {
   for (uint32_t i = 0; i < ArrayLength(THREAT_TYPE_CONV_TABLE); i++) {
     if (aThreatType == THREAT_TYPE_CONV_TABLE[i].mThreatType) {
-      aListName = THREAT_TYPE_CONV_TABLE[i].mListName;
-      return NS_OK;
+      if (!aListNames.IsEmpty()) {
+        aListNames.AppendLiteral(",");
+      }
+      aListNames += THREAT_TYPE_CONV_TABLE[i].mListName;
     }
   }
 
-  return NS_ERROR_FAILURE;
+  return aListNames.IsEmpty() ? NS_ERROR_FAILURE : NS_OK;
 }
 
 NS_IMETHODIMP

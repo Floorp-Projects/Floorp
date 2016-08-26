@@ -25,7 +25,7 @@ public:
   void RemoveInput(MediaInputPort* aPort) override;
   void ProcessInput(GraphTime aFrom, GraphTime aTo, uint32_t aFlags) override;
 
-  void SetTrackEnabledImpl(TrackID aTrackID, bool aEnabled) override;
+  void SetTrackEnabledImpl(TrackID aTrackID, DisabledTrackMode aMode) override;
 
   MediaStream* GetInputStreamFor(TrackID aTrackID) override;
   TrackID GetInputTrackIDFor(TrackID aTrackID) override;

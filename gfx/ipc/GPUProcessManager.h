@@ -93,6 +93,13 @@ public:
   // pan/zoom-related events can be sent.
   already_AddRefed<IAPZCTreeManager> GetAPZCTreeManagerForLayers(uint64_t aLayersId);
 
+  // Maps the layer tree and process together so that aOwningPID is allowed
+  // to access aLayersId across process.
+  void MapLayerTreeId(uint64_t aLayersId, base::ProcessId aOwningId);
+
+  // Checks to see if aLayersId and aRequestingPID have been mapped by MapLayerTreeId
+  bool IsLayerTreeIdMapped(uint64_t aLayersId, base::ProcessId aRequestingId);
+
   // Allocate an ID that can be used to refer to a layer tree and
   // associated resources that live only on the compositor thread.
   //
@@ -107,18 +114,6 @@ public:
   void RequestNotifyLayerTreeReady(uint64_t aLayersId, CompositorUpdateObserver* aObserver);
   void RequestNotifyLayerTreeCleared(uint64_t aLayersId, CompositorUpdateObserver* aObserver);
   void SwapLayerTreeObservers(uint64_t aLayer, uint64_t aOtherLayer);
-
-  // Creates a new RemoteContentController for aTabId. Should only be called on
-  // the main thread.
-  //
-  // aLayersId      The layers id for the browser corresponding to aTabId.
-  // aContentParent The ContentParent for the process that the TabChild for
-  //                aTabId lives in.
-  // aBrowserParent The toplevel TabParent for aTabId.
-  bool UpdateRemoteContentController(uint64_t aLayersId,
-                                     dom::ContentParent* aContentParent,
-                                     const dom::TabId& aTabId,
-                                     dom::TabParent* aBrowserParent);
 
   void OnProcessLaunchComplete(GPUProcessHost* aHost) override;
   void OnProcessUnexpectedShutdown(GPUProcessHost* aHost) override;
