@@ -25,7 +25,6 @@ mochikit.jar:
   content/tests/SimpleTest/ExtensionTestUtils.js (tests/SimpleTest/ExtensionTestUtils.js)
   content/tests/SimpleTest/SpawnTask.js (tests/SimpleTest/SpawnTask.js)
   content/tests/SimpleTest/AsyncUtilsContent.js (tests/SimpleTest/AsyncUtilsContent.js)
-  content/tests/SimpleTest/ChromeUtils.js (tests/SimpleTest/ChromeUtils.js)
   content/tests/SimpleTest/LogController.js (tests/SimpleTest/LogController.js)
   content/tests/SimpleTest/MemoryStats.js (tests/SimpleTest/MemoryStats.js)
   content/tests/SimpleTest/MozillaLogger.js (../specialpowers/content/MozillaLogger.js)

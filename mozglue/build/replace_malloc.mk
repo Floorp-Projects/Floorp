@@ -14,8 +14,6 @@ OS_LDFLAGS += \
   -Wl,-U,_replace_free \
   -Wl,-U,_replace_memalign \
   -Wl,-U,_replace_valloc \
-  -Wl,-U,_replace_malloc_protect \
-  -Wl,-U,_replace_malloc_unprotect \
   -Wl,-U,_replace_malloc_usable_size \
   -Wl,-U,_replace_malloc_good_size \
   -Wl,-U,_replace_jemalloc_stats \

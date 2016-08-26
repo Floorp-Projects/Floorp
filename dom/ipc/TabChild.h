@@ -51,6 +51,7 @@ namespace layers {
 class APZChild;
 class APZEventState;
 class AsyncDragMetrics;
+class IAPZCTreeManager;
 class ImageCompositeNotification;
 } // namespace layers
 
@@ -386,10 +387,6 @@ public:
                             const int32_t& aCharCode,
                             const int32_t& aModifiers,
                             const bool& aPreventDefault) override;
-
-  virtual bool RecvMouseScrollTestEvent(const uint64_t& aLayersId,
-                                        const FrameMetrics::ViewID& aScrollId,
-                                        const nsString& aEvent) override;
 
   virtual bool RecvNativeSynthesisResponse(const uint64_t& aObserverId,
                                            const nsCString& aResponse) override;
@@ -774,6 +771,7 @@ private:
 
   AutoTArray<bool, NUMBER_OF_AUDIO_CHANNELS> mAudioChannelsActive;
 
+  RefPtr<layers::IAPZCTreeManager> mApzcTreeManager;
   // APZChild clears this pointer from its destructor, so it shouldn't be a
   // dangling pointer.
   layers::APZChild* mAPZChild;

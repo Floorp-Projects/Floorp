@@ -676,9 +676,9 @@ MBasicBlock::linkOsrValues(MStart* start)
     for (uint32_t i = 0; i < stackDepth(); i++) {
         MDefinition* def = slots_[i];
         MInstruction* cloneRp = nullptr;
-        if (i == info().scopeChainSlot()) {
-            if (def->isOsrScopeChain())
-                cloneRp = def->toOsrScopeChain();
+        if (i == info().environmentChainSlot()) {
+            if (def->isOsrEnvironmentChain())
+                cloneRp = def->toOsrEnvironmentChain();
         } else if (i == info().returnValueSlot()) {
             if (def->isOsrReturnValue())
                 cloneRp = def->toOsrReturnValue();
@@ -807,9 +807,9 @@ MBasicBlock::popn(uint32_t n)
 }
 
 MDefinition*
-MBasicBlock::scopeChain()
+MBasicBlock::environmentChain()
 {
-    return getSlot(info().scopeChainSlot());
+    return getSlot(info().environmentChainSlot());
 }
 
 MDefinition*
@@ -819,9 +819,9 @@ MBasicBlock::argumentsObject()
 }
 
 void
-MBasicBlock::setScopeChain(MDefinition* scopeObj)
+MBasicBlock::setEnvironmentChain(MDefinition* scopeObj)
 {
-    setSlot(info().scopeChainSlot(), scopeObj);
+    setSlot(info().environmentChainSlot(), scopeObj);
 }
 
 void

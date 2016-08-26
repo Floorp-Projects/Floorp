@@ -180,7 +180,7 @@ private:
     CollectReports(nsIHandleReportCallback* aHandleReport, nsISupports* aData,
                    bool aAnonymize) override
     {
-      return MOZ_COLLECT_REPORT(
+      MOZ_COLLECT_REPORT(
         "ghost-windows", KIND_OTHER, UNITS_COUNT, DistinguishedAmount(),
 "The number of ghost windows present (the number of nodes underneath "
 "explicit/window-objects/top(none)/ghost, modulo race conditions).  A ghost "
@@ -190,6 +190,8 @@ private:
 "about:memory's minimize memory usage button.\n\n"
 "Ghost windows can happen legitimately, but they are often indicative of "
 "leaks in the browser or add-ons.");
+
+      return NS_OK;
     }
   };
 

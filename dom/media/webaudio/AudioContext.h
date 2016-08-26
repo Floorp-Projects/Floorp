@@ -326,8 +326,7 @@ private:
   void ShutdownDecoder();
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
-  NS_IMETHOD CollectReports(nsIHandleReportCallback* aHandleReport,
-                            nsISupports* aData, bool aAnonymize) override;
+  NS_DECL_NSIMEMORYREPORTER
 
   friend struct ::mozilla::WebAudioDecodeJob;
 

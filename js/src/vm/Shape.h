@@ -109,8 +109,6 @@
 
 namespace js {
 
-class Bindings;
-class StaticBlockScope;
 class TenuringTracer;
 
 typedef JSGetterOp GetterOp;
@@ -283,13 +281,13 @@ class ShapeTable {
  * whose entries are all owned by that dictionary. Unowned Shapes are all in
  * the property tree.
  *
- * Owned BaseShapes are used for shapes which have shape tables, including
- * the last properties in all dictionaries. Unowned BaseShapes compactly store
- * information common to many shapes. In a given compartment there is a single
- * BaseShape for each combination of BaseShape information. This information
- * is cloned in owned BaseShapes so that information can be quickly looked up
- * for a given object or shape without regard to whether the base shape is
- * owned or not.
+ * Owned BaseShapes are used for shapes which have shape tables, including the
+ * last properties in all dictionaries. Unowned BaseShapes compactly store
+ * information common to many shapes. In a given zone there is a single
+ * BaseShape for each combination of BaseShape information. This information is
+ * cloned in owned BaseShapes so that information can be quickly looked up for a
+ * given object or shape without regard to whether the base shape is owned or
+ * not.
  *
  * All combinations of owned/unowned Shapes/BaseShapes are possible:
  *
@@ -396,14 +394,6 @@ class BaseShape : public gc::TenuredCell
   public:
     void finalize(FreeOp* fop);
 
-    BaseShape(JSCompartment* comp, const Class* clasp, uint32_t objectFlags)
-    {
-        MOZ_ASSERT(!(objectFlags & ~OBJECT_FLAG_MASK));
-        mozilla::PodZero(this);
-        this->clasp_ = clasp;
-        this->flags = objectFlags;
-    }
-
     explicit inline BaseShape(const StackBaseShape& base);
 
     /* Not defined: BaseShapes must not be stack allocated. */
@@ -431,8 +421,8 @@ class BaseShape : public gc::TenuredCell
     void setSlotSpan(uint32_t slotSpan) { MOZ_ASSERT(isOwned()); slotSpan_ = slotSpan; }
 
     /*
-     * Lookup base shapes from the compartment's baseShapes table, adding if
-     * not already found.
+     * Lookup base shapes from the zone's baseShapes table, adding if not
+     * already found.
      */
     static UnownedBaseShape* getUnowned(ExclusiveContext* cx, StackBaseShape& base);
 
@@ -493,7 +483,7 @@ BaseShape::baseUnowned()
     return unowned_;
 }
 
-/* Entries for the per-compartment baseShapes set of unowned base shapes. */
+/* Entries for the per-zone baseShapes set of unowned base shapes. */
 struct StackBaseShape : public DefaultHasher<ReadBarriered<UnownedBaseShape*>>
 {
     uint32_t flags;
@@ -535,10 +525,8 @@ class Shape : public gc::TenuredCell
 {
     friend class ::JSObject;
     friend class ::JSFunction;
-    friend class Bindings;
     friend class NativeObject;
     friend class PropertyTree;
-    friend class StaticBlockScope;
     friend class TenuringTracer;
     friend struct StackBaseShape;
     friend struct StackShape;
@@ -1077,8 +1065,8 @@ struct EmptyShape : public js::Shape
 };
 
 /*
- * Entries for the per-compartment initialShapes set indexing initial shapes
- * for objects in the compartment and the associated types.
+ * Entries for the per-zone initialShapes set indexing initial shapes for
+ * objects in the zone and the associated types.
  */
 struct InitialShapeEntry
 {

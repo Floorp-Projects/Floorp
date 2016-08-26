@@ -14,7 +14,7 @@
 #include "jsscript.h"
 
 #include "vm/Debugger.h"
-#include "vm/ScopeObject.h"
+#include "vm/EnvironmentObject.h"
 
 using namespace js;
 using mozilla::PodEqual;
@@ -146,12 +146,14 @@ XDRState<mode>::codeFunction(MutableHandleFunction objp)
 {
     if (mode == XDR_DECODE)
         objp.set(nullptr);
+    else
+        MOZ_ASSERT(objp->nonLazyScript()->enclosingScope()->is<GlobalScope>());
 
     if (!VersionCheck(this))
         return false;
 
-    RootedObject staticLexical(cx(), &cx()->global()->lexicalScope().staticBlock());
-    return XDRInterpretedFunction(this, staticLexical, nullptr, objp);
+    RootedScope scope(cx(), &cx()->global()->emptyGlobalScope());
+    return XDRInterpretedFunction(this, scope, nullptr, objp);
 }
 
 template<XDRMode mode>
@@ -160,15 +162,13 @@ XDRState<mode>::codeScript(MutableHandleScript scriptp)
 {
     if (mode == XDR_DECODE)
         scriptp.set(nullptr);
+    else
+        MOZ_ASSERT(!scriptp->enclosingScope());
 
     if (!VersionCheck(this))
         return false;
 
-    RootedObject staticLexical(cx(), &cx()->global()->lexicalScope().staticBlock());
-    if (!XDRScript(this, staticLexical, nullptr, nullptr, scriptp))
-        return false;
-
-    return true;
+    return XDRScript(this, nullptr, nullptr, nullptr, scriptp);
 }
 
 template<XDRMode mode>

@@ -9,7 +9,7 @@
 #include "jit/BaselineJIT.h"
 #include "jit/Ion.h"
 #include "vm/Debugger.h"
-#include "vm/ScopeObject.h"
+#include "vm/EnvironmentObject.h"
 
 #include "jit/JitFrames-inl.h"
 #include "vm/Stack-inl.h"
@@ -40,9 +40,9 @@ BaselineFrame::trace(JSTracer* trc, JitFrameIterator& frameIterator)
         TraceRootRange(trc, numArgs + isConstructing(), argv(), "baseline-args");
     }
 
-    // Mark scope chain, if it exists.
-    if (scopeChain_)
-        TraceRoot(trc, &scopeChain_, "baseline-scopechain");
+    // Mark environment chain, if it exists.
+    if (envChain_)
+        TraceRoot(trc, &envChain_, "baseline-envchain");
 
     // Mark return value.
     if (hasReturnValue())
@@ -77,62 +77,32 @@ BaselineFrame::trace(JSTracer* trc, JitFrameIterator& frameIterator)
 
         // Clear dead block-scoped locals.
         while (nfixed > nlivefixed)
-            unaliasedLocal(--nfixed).setMagic(JS_UNINITIALIZED_LEXICAL);
+            unaliasedLocal(--nfixed).setUndefined();
 
         // Mark live locals.
         MarkLocals(this, trc, 0, nlivefixed);
     }
+
+    if (script->compartment()->debugEnvs)
+        script->compartment()->debugEnvs->markLiveFrame(trc, this);
 }
 
 bool
 BaselineFrame::isNonGlobalEvalFrame() const
 {
-    return isEvalFrame() &&
-           script()->enclosingStaticScope()->as<StaticEvalScope>().isNonGlobal();
+    return isEvalFrame() && script()->enclosingScope()->as<EvalScope>().isNonGlobal();
 }
 
 bool
-BaselineFrame::copyRawFrameSlots(MutableHandle<GCVector<Value>> vec) const
+BaselineFrame::initFunctionEnvironmentObjects(JSContext* cx)
 {
-    unsigned nfixed = script()->nfixed();
-    unsigned nformals = numFormalArgs();
-
-    if (!vec.resize(nformals + nfixed))
-        return false;
-
-    mozilla::PodCopy(vec.begin(), argv(), nformals);
-    for (unsigned i = 0; i < nfixed; i++)
-        vec[nformals + i].set(*valueSlot(i));
-    return true;
+    return js::InitFunctionEnvironmentObjects(cx, this);
 }
 
 bool
-BaselineFrame::initStrictEvalScopeObjects(JSContext* cx)
+BaselineFrame::pushVarEnvironment(JSContext* cx, HandleScope scope)
 {
-    MOZ_ASSERT(isStrictEvalFrame());
-
-    CallObject* callobj = CallObject::createForStrictEval(cx, this);
-    if (!callobj)
-        return false;
-
-    pushOnScopeChain(*callobj);
-    flags_ |= HAS_CALL_OBJ;
-    return true;
-}
-
-bool
-BaselineFrame::initFunctionScopeObjects(JSContext* cx)
-{
-    MOZ_ASSERT(isFunctionFrame());
-    MOZ_ASSERT(callee()->needsCallObject());
-
-    CallObject* callobj = CallObject::createForFunction(cx, this);
-    if (!callobj)
-        return false;
-
-    pushOnScopeChain(*callobj);
-    flags_ |= HAS_CALL_OBJ;
-    return true;
+    return js::PushVarEnvironmentObject(cx, scope, this);
 }
 
 bool
@@ -140,10 +110,10 @@ BaselineFrame::initForOsr(InterpreterFrame* fp, uint32_t numStackValues)
 {
     mozilla::PodZero(this);
 
-    scopeChain_ = fp->scopeChain();
+    envChain_ = fp->environmentChain();
 
-    if (fp->hasCallObjUnchecked())
-        flags_ |= BaselineFrame::HAS_CALL_OBJ;
+    if (fp->hasInitialEnvironmentUnchecked())
+        flags_ |= BaselineFrame::HAS_INITIAL_ENV;
 
     if (fp->script()->needsArgsObj() && fp->hasArgsObj()) {
         flags_ |= BaselineFrame::HAS_ARGS_OBJ;

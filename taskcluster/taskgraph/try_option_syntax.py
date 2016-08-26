@@ -105,7 +105,7 @@ UNITTEST_ALIASES = {
 # platforms should have their `test_platform` spelled out fully in try syntax.
 UNITTEST_PLATFORM_PRETTY_NAMES = {
     'Ubuntu': ['linux', 'linux64'],
-    'x64': ['linux64'],
+    'x64': ['linux64', 'linux64-asan'],
     # other commonly-used substrings for platforms not yet supported with
     # in-tree taskgraphs:
     # '10.10': [..TODO..],

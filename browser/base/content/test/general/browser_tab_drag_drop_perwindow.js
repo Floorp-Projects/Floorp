@@ -4,10 +4,10 @@
 
 requestLongerTimeout(2);
 
-const CHROMEUTILS_URL = "chrome://mochikit/content/tests/SimpleTest/ChromeUtils.js";
-var ChromeUtils = {};
+const EVENTUTILS_URL = "chrome://mochikit/content/tests/SimpleTest/EventUtils.js";
+var EventUtils = {};
 
-Services.scriptloader.loadSubScript(CHROMEUTILS_URL, ChromeUtils);
+Services.scriptloader.loadSubScript(EVENTUTILS_URL, EventUtils);
 
 /**
  * Tests that tabs from Private Browsing windows cannot be dragged
@@ -23,12 +23,12 @@ add_task(function* test_dragging_private_windows() {
   let privateTab =
     yield BrowserTestUtils.openNewForegroundTab(privateWin.gBrowser);
 
-  let effect = ChromeUtils.synthesizeDrop(normalTab, privateTab,
+  let effect = EventUtils.synthesizeDrop(normalTab, privateTab,
     [[{type: TAB_DROP_TYPE, data: normalTab}]],
     null, normalWin, privateWin);
   is(effect, "none", "Should not be able to drag a normal tab to a private window");
 
-  effect = ChromeUtils.synthesizeDrop(privateTab, normalTab,
+  effect = EventUtils.synthesizeDrop(privateTab, normalTab,
     [[{type: TAB_DROP_TYPE, data: privateTab}]],
     null, privateWin, normalWin);
   is(effect, "none", "Should not be able to drag a private tab to a normal window");
@@ -66,12 +66,12 @@ add_task(function* test_dragging_e10s_windows() {
   let nonRemoteTab =
     yield BrowserTestUtils.openNewForegroundTab(nonRemoteWin.gBrowser);
 
-  let effect = ChromeUtils.synthesizeDrop(remoteTab, nonRemoteTab,
+  let effect = EventUtils.synthesizeDrop(remoteTab, nonRemoteTab,
     [[{type: TAB_DROP_TYPE, data: remoteTab}]],
     null, remoteWin, nonRemoteWin);
   is(effect, "none", "Should not be able to drag a remote tab to a non-e10s window");
 
-  effect = ChromeUtils.synthesizeDrop(nonRemoteTab, remoteTab,
+  effect = EventUtils.synthesizeDrop(nonRemoteTab, remoteTab,
     [[{type: TAB_DROP_TYPE, data: nonRemoteTab}]],
     null, nonRemoteWin, remoteWin);
   is(effect, "none", "Should not be able to drag a non-remote tab to an e10s window");
@@ -122,7 +122,7 @@ add_task(function* test_dragging_blacklisted() {
   let otherTab =
     yield BrowserTestUtils.openNewForegroundTab(remoteWin2.gBrowser);
 
-  let effect = ChromeUtils.synthesizeDrop(blacklistedTab, otherTab,
+  let effect = EventUtils.synthesizeDrop(blacklistedTab, otherTab,
     [[{type: TAB_DROP_TYPE, data: blacklistedTab}]],
     null, remoteWin1, remoteWin2);
   is(effect, "move", "Should be able to drag the blacklisted tab.");
@@ -163,7 +163,7 @@ add_task(function* test_dragging_adoption_events() {
   let awaitCloseEvent = BrowserTestUtils.waitForEvent(tab1, "TabClose");
   let awaitOpenEvent = BrowserTestUtils.waitForEvent(win2, "TabOpen");
 
-  let effect = ChromeUtils.synthesizeDrop(tab1, tab2,
+  let effect = EventUtils.synthesizeDrop(tab1, tab2,
     [[{type: TAB_DROP_TYPE, data: tab1}]],
     null, win1, win2);
   is(effect, "move", "Tab should be moved from win1 to win2.");

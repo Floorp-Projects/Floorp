@@ -9,6 +9,7 @@ include protocol PImageBridge;
 include protocol PVRManager;
 include protocol PVsyncBridge;
 
+using base::ProcessId from "base/process.h";
 using mozilla::TimeDuration from "mozilla/TimeStamp.h";
 using mozilla::CSSToLayoutDeviceScale from "Units.h";
 using mozilla::gfx::IntSize from "mozilla/gfx/2D.h";
@@ -57,6 +58,9 @@ parent:
   async NewContentVRManager(Endpoint<PVRManagerParent> endpoint);
 
   async DeallocateLayerTreeId(uint64_t layersId);
+
+  // Called to notify the GPU process of who owns a layersId.
+  sync AddLayerTreeIdMapping(uint64_t layersId, ProcessId ownerId);
 
   // Request the current DeviceStatus from the GPU process. This blocks until
   // one is available (i.e., Init has completed).

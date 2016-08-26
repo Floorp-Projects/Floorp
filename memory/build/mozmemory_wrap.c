@@ -12,20 +12,6 @@
   MOZ_MEMORY_API return_type name ## _impl(__VA_ARGS__);
 #include "malloc_decls.h"
 
-#ifdef XP_DARWIN
-MFBT_API void
-malloc_protect(void* ptr, uint32_t* id)
-{
-  malloc_protect_impl(ptr, id);
-}
-
-MFBT_API void
-malloc_unprotect(void* ptr, uint32_t* id)
-{
-  malloc_unprotect_impl(ptr, id);
-}
-#endif
-
 #ifdef MOZ_WRAP_NEW_DELETE
 /* operator new(unsigned int) */
 MOZ_MEMORY_API void *

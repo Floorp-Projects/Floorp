@@ -25,8 +25,9 @@
 #include "js/Utility.h"
 #include "js/Vector.h"
 #include "vm/Debugger.h"
+#include "vm/EnvironmentObject.h"
 #include "vm/GlobalObject.h"
-#include "vm/ScopeObject.h"
+#include "vm/Scope.h"
 #include "vm/Shape.h"
 #include "vm/String.h"
 #include "vm/Symbol.h"
@@ -191,7 +192,7 @@ Node::exposeToJS() const
 
     if (is<JSObject>()) {
         JSObject& obj = *as<JSObject>();
-        if (obj.is<js::ScopeObject>()) {
+        if (obj.is<js::EnvironmentObject>()) {
             v.setUndefined();
         } else if (obj.is<JSFunction>() && js::IsInternalFunctionObject(obj)) {
             v.setUndefined();
@@ -309,6 +310,7 @@ template JS::Zone* TracerConcrete<js::LazyScript>::zone() const;
 template JS::Zone* TracerConcrete<js::Shape>::zone() const;
 template JS::Zone* TracerConcrete<js::BaseShape>::zone() const;
 template JS::Zone* TracerConcrete<js::ObjectGroup>::zone() const;
+template JS::Zone* TracerConcrete<js::Scope>::zone() const;
 template JS::Zone* TracerConcrete<JS::Symbol>::zone() const;
 template JS::Zone* TracerConcrete<JSString>::zone() const;
 
@@ -330,6 +332,7 @@ template UniquePtr<EdgeRange> TracerConcrete<js::LazyScript>::edges(JSContext* c
 template UniquePtr<EdgeRange> TracerConcrete<js::Shape>::edges(JSContext* cx, bool wantNames) const;
 template UniquePtr<EdgeRange> TracerConcrete<js::BaseShape>::edges(JSContext* cx, bool wantNames) const;
 template UniquePtr<EdgeRange> TracerConcrete<js::ObjectGroup>::edges(JSContext* cx, bool wantNames) const;
+template UniquePtr<EdgeRange> TracerConcrete<js::Scope>::edges(JSContext* cx, bool wantNames) const;
 template UniquePtr<EdgeRange> TracerConcrete<JS::Symbol>::edges(JSContext* cx, bool wantNames) const;
 template UniquePtr<EdgeRange> TracerConcrete<JSString>::edges(JSContext* cx, bool wantNames) const;
 
@@ -392,6 +395,7 @@ const char16_t Concrete<js::jit::JitCode>::concreteTypeName[] = u"js::jit::JitCo
 const char16_t Concrete<js::Shape>::concreteTypeName[] = u"js::Shape";
 const char16_t Concrete<js::BaseShape>::concreteTypeName[] = u"js::BaseShape";
 const char16_t Concrete<js::ObjectGroup>::concreteTypeName[] = u"js::ObjectGroup";
+const char16_t Concrete<js::Scope>::concreteTypeName[] = u"js::Scope";
 
 namespace JS {
 namespace ubi {

@@ -25,6 +25,7 @@ reflectUnsignedInt({
   attribute: "cols",
   nonZero: true,
   defaultValue: 20,
+  fallback: true,
 });
 
 todo("dirName" in document.createElement("textarea"),
@@ -77,6 +78,7 @@ reflectUnsignedInt({
   attribute: "rows",
   nonZero: true,
   defaultValue: 2,
+  fallback: true,
 });
 
 // .wrap

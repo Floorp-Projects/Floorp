@@ -442,28 +442,30 @@ class JSObject : public js::gc::Cell
     bool shouldSplicePrototype(JSContext* cx);
 
     /*
-     * Scope chains.
+     * Environment chains.
      *
-     * The scope chain of an object is the link in the search path when a script
-     * does a name lookup on a scope object. For JS internal scope objects ---
-     * Call, DeclEnv, Block, and With --- the chain is stored in the first fixed
-     * slot of the object.  For other scope objects, the chain goes directly to
-     * the global.
+     * The environment chain of an object is the link in the search path when
+     * a script does a name lookup on an environment object. For JS internal
+     * environment objects --- Call, LexicalEnvironment, and WithEnvironment
+     * --- the chain is stored in the first fixed slot of the object.  For
+     * other environment objects, the chain goes directly to the global.
      *
-     * In code which is not marked hasNonSyntacticScope, scope chains can
-     * contain only syntactic scope objects (see IsSyntacticScope) with a global
-     * object at the root as the scope of the outermost non-function script. In
-     * hasNonSyntacticScope code, the scope of the outermost non-function
-     * script might not be a global object, and can have a mix of other objects
-     * above it before the global object is reached.
+     * In code which is not marked hasNonSyntacticScope, environment chains
+     * can contain only syntactic environment objects (see
+     * IsSyntacticEnvironment) with a global object at the root as the
+     * environment of the outermost non-function script. In
+     * hasNonSyntacticScope code, the environment of the outermost
+     * non-function script might not be a global object, and can have a mix of
+     * other objects above it before the global object is reached.
      */
 
     /*
-     * Get the enclosing scope of an object. When called on non-scope object,
-     * this will just be the global (the name "enclosing scope" still applies
-     * in this situation because non-scope objects can be on the scope chain).
+     * Get the enclosing environment of an object. When called on a
+     * non-EnvironmentObject, this will just be the global (the name
+     * "enclosing environment" still applies in this situation because
+     * non-EnvironmentObjects can be on the environment chain).
      */
-    inline JSObject* enclosingScope() const;
+    inline JSObject* enclosingEnvironment() const;
 
     inline js::GlobalObject& global() const;
 
@@ -1066,9 +1068,9 @@ GetObjectClassName(JSContext* cx, HandleObject obj);
  * objects this just returns obj.
  *
  * Some JSObjects shouldn't be exposed directly to script. This includes (at
- * least) DynamicWithObjects and Window objects. However, since both of those
- * can be on scope chains, we sometimes would expose those as `this` if we
- * were not so vigilant about calling GetThisValue where appropriate.
+ * least) WithEnvironmentObjects and Window objects. However, since both of
+ * those can be on scope chains, we sometimes would expose those as `this` if
+ * we were not so vigilant about calling GetThisValue where appropriate.
  *
  * See comments at ComputeImplicitThis.
  */

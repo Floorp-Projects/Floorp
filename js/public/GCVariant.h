@@ -48,7 +48,7 @@ struct GCVariantImplementation<T>
     template <typename ConcreteVariant>
     static void trace(JSTracer* trc, ConcreteVariant* v, const char* name) {
         T& thing = v->template as<T>();
-        if (thing)
+        if (!mozilla::IsPointer<T>::value || thing)
             GCPolicy<T>::trace(trc, &thing, name);
     }
 
@@ -77,7 +77,7 @@ struct GCVariantImplementation<T, Ts...>
     static void trace(JSTracer* trc, ConcreteVariant* v, const char* name) {
         if (v->template is<T>()) {
             T& thing = v->template as<T>();
-            if (thing)
+            if (!mozilla::IsPointer<T>::value || thing)
                 GCPolicy<T>::trace(trc, &thing, name);
         } else {
             Next::trace(trc, v, name);

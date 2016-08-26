@@ -228,6 +228,10 @@ class ExclusiveContext : public ContextFriendFields,
         return perThreadData->dtoaState;
     }
 
+    frontend::NameCollectionPool& frontendCollectionPool() {
+        return perThreadData->frontendCollectionPool;
+    }
+
     /*
      * "Entering" a compartment changes cx->compartment (which changes
      * cx->global). Note that this does not push any InterpreterFrame which means
@@ -288,9 +292,6 @@ class ExclusiveContext : public ContextFriendFields,
     inline js::Handle<js::GlobalObject*> global() const;
 
     // Methods to access runtime data that must be protected by locks.
-    frontend::ParseMapPool& parseMapPool(AutoLockForExclusiveAccess& lock) {
-        return runtime_->parseMapPool(lock);
-    }
     AtomSet& atoms(js::AutoLockForExclusiveAccess& lock) {
         return runtime_->atoms(lock);
     }

@@ -4830,8 +4830,10 @@ NS_IMETHODIMP
 nsCookieService::CollectReports(nsIHandleReportCallback* aHandleReport,
                                 nsISupports* aData, bool aAnonymize)
 {
-  return MOZ_COLLECT_REPORT(
+  MOZ_COLLECT_REPORT(
     "explicit/cookie-service", KIND_HEAP, UNITS_BYTES,
     SizeOfIncludingThis(CookieServiceMallocSizeOf),
     "Memory used by the cookie service.");
+
+  return NS_OK;
 }

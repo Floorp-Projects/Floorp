@@ -25,13 +25,14 @@
 #include "mozilla/AutoRestore.h"        // for AutoRestore
 #include "mozilla/ClearOnShutdown.h"    // for ClearOnShutdown
 #include "mozilla/DebugOnly.h"          // for DebugOnly
-#include "mozilla/dom/ContentParent.h"
+#include "mozilla/dom/TabParent.h"
 #include "mozilla/gfx/2D.h"          // for DrawTarget
 #include "mozilla/gfx/Point.h"          // for IntSize
 #include "mozilla/gfx/Rect.h"          // for IntSize
 #include "VRManager.h"                  // for VRManager
 #include "mozilla/ipc/Transport.h"      // for Transport
 #include "mozilla/layers/APZCTreeManager.h"  // for APZCTreeManager
+#include "mozilla/layers/APZCTreeManagerParent.h"  // for APZCTreeManagerParent
 #include "mozilla/layers/APZThreadUtils.h"  // for APZCTreeManager
 #include "mozilla/layers/AsyncCompositionManager.h"
 #include "mozilla/layers/BasicCompositor.h"  // for BasicCompositor
@@ -42,6 +43,7 @@
 #include "mozilla/layers/FrameUniformityData.h"
 #include "mozilla/layers/ImageBridgeParent.h"
 #include "mozilla/layers/LayerManagerComposite.h"
+#include "mozilla/layers/LayerTreeOwnerTracker.h"
 #include "mozilla/layers/LayersTypes.h"
 #include "mozilla/layers/PLayerTransactionParent.h"
 #include "mozilla/layers/RemoteContentController.h"
@@ -102,7 +104,8 @@ using base::ProcessId;
 using base::Thread;
 
 CompositorBridgeParent::LayerTreeState::LayerTreeState()
-  : mParent(nullptr)
+  : mApzcTreeManagerParent(nullptr)
+  , mParent(nullptr)
   , mLayerManager(nullptr)
   , mCrossProcessParent(nullptr)
   , mLayerTree(nullptr)
@@ -1351,6 +1354,42 @@ CompositorBridgeParent::ForceComposeToTarget(DrawTarget* aTarget, const gfx::Int
   mCompositorScheduler->ForceComposeToTarget(aTarget, aRect);
 }
 
+PAPZCTreeManagerParent*
+CompositorBridgeParent::AllocPAPZCTreeManagerParent(const uint64_t& aLayersId)
+{
+  return nullptr;
+}
+
+bool
+CompositorBridgeParent::DeallocPAPZCTreeManagerParent(PAPZCTreeManagerParent* aActor)
+{
+  return false;
+}
+
+PAPZParent*
+CompositorBridgeParent::AllocPAPZParent(const uint64_t& aLayersId)
+{
+  return nullptr;
+}
+
+bool
+CompositorBridgeParent::DeallocPAPZParent(PAPZParent* aActor)
+{
+  return false;
+}
+
+bool
+CompositorBridgeParent::RecvAsyncPanZoomEnabled(const uint64_t& aLayersId, bool* aHasAPZ)
+{
+  return false;
+}
+
+RefPtr<APZCTreeManager>
+CompositorBridgeParent::GetAPZCTreeManager()
+{
+  return mApzcTreeManager;
+}
+
 bool
 CompositorBridgeParent::CanComposite()
 {
@@ -1750,33 +1789,10 @@ CompositorBridgeParent::NotifyChildCreated(uint64_t aChild)
   sIndirectLayerTrees[aChild].mLayerManager = mLayerManager;
 }
 
-/* static */ bool
-CompositorBridgeParent::UpdateRemoteContentController(uint64_t aLayersId,
-                                                      dom::ContentParent* aContent,
-                                                      const dom::TabId& aTabId,
-                                                      dom::TabParent* aTopLevel)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-
-  MonitorAutoLock lock(*sIndirectLayerTreesLock);
-  LayerTreeState& state = sIndirectLayerTrees[aLayersId];
-  // RemoteContentController needs to know the layers id and the top level
-  // TabParent, so we pass that to its constructor here and then set up the
-  // PAPZ protocol by calling SendPAPZConstructor (and pass in the tab id for
-  // the PBrowser that it corresponds to).
-  RefPtr<RemoteContentController> controller =
-    new RemoteContentController(aLayersId, aTopLevel);
-  if (!aContent->SendPAPZConstructor(controller, aTabId)) {
-    return false;
-  }
-  state.mController = controller;
-  return true;
-}
-
 bool
 CompositorBridgeParent::RecvAdoptChild(const uint64_t& child)
 {
-  RefPtr<GeckoContentController> controller;
+  APZCTreeManagerParent* parent;
   {
     MonitorAutoLock lock(*sIndirectLayerTreesLock);
     NotifyChildCreated(child);
@@ -1786,14 +1802,11 @@ CompositorBridgeParent::RecvAdoptChild(const uint64_t& child)
     if (sIndirectLayerTrees[child].mRoot) {
       sIndirectLayerTrees[child].mRoot->AsLayerComposite()->SetLayerManager(mLayerManager);
     }
-    controller = sIndirectLayerTrees[child].mController;
+    parent = sIndirectLayerTrees[child].mApzcTreeManagerParent;
   }
 
-  // Calling ChildAdopted on controller will acquire a lock, to avoid a
-  // potential deadlock between that lock and sIndirectLayerTreesLock we
-  // release sIndirectLayerTreesLock first before calling ChildAdopted.
-  if (mApzcTreeManager && controller) {
-    controller->ChildAdopted();
+  if (mApzcTreeManager && parent) {
+    parent->ChildAdopted(mApzcTreeManager);
   }
   return true;
 }
@@ -2170,6 +2183,14 @@ public:
     return false;
   }
 
+  virtual bool RecvAsyncPanZoomEnabled(const uint64_t& aLayersId, bool* aHasAPZ) override;
+
+  virtual PAPZCTreeManagerParent* AllocPAPZCTreeManagerParent(const uint64_t& aLayersId) override;
+  virtual bool DeallocPAPZCTreeManagerParent(PAPZCTreeManagerParent* aActor) override;
+
+  virtual PAPZParent* AllocPAPZParent(const uint64_t& aLayersId) override;
+  virtual bool DeallocPAPZParent(PAPZParent* aActor) override;
+
   virtual CompositorBridgeParentIPCAllocator* AsCompositorBridgeParentIPCAllocator() override { return this; }
 
   virtual void UpdatePaintTime(LayerTransactionParent* aLayerTree, const TimeDuration& aPaintTime) override {
@@ -2460,6 +2481,12 @@ CrossProcessCompositorBridgeParent::AllocPLayerTransactionParent(
 {
   MOZ_ASSERT(aId != 0);
 
+  // Check to see if this child process has access to this layer tree.
+  if (!LayerTreeOwnerTracker::Get()->IsMapped(aId, OtherPid())) {
+    NS_ERROR("Unexpected layers id in AllocPLayerTransactionParent; dropping message...");
+    return nullptr;
+  }
+
   MonitorAutoLock lock(*sIndirectLayerTreesLock);
 
   CompositorBridgeParent::LayerTreeState* state = nullptr;
@@ -2495,6 +2522,88 @@ CrossProcessCompositorBridgeParent::DeallocPLayerTransactionParent(PLayerTransac
   LayerTransactionParent* slp = static_cast<LayerTransactionParent*>(aLayers);
   EraseLayerState(slp->GetId());
   static_cast<LayerTransactionParent*>(aLayers)->ReleaseIPDLReference();
+  return true;
+}
+
+bool
+CrossProcessCompositorBridgeParent::RecvAsyncPanZoomEnabled(const uint64_t& aLayersId, bool* aHasAPZ)
+{
+  // Check to see if this child process has access to this layer tree.
+  if (!LayerTreeOwnerTracker::Get()->IsMapped(aLayersId, OtherPid())) {
+    NS_ERROR("Unexpected layers id in RecvAsyncPanZoomEnabled; dropping message...");
+    return false;
+  }
+
+  MonitorAutoLock lock(*sIndirectLayerTreesLock);
+  CompositorBridgeParent::LayerTreeState& state = sIndirectLayerTrees[aLayersId];
+
+  *aHasAPZ = state.mParent ? state.mParent->AsyncPanZoomEnabled() : false;
+  return true;
+}
+
+PAPZCTreeManagerParent*
+CrossProcessCompositorBridgeParent::AllocPAPZCTreeManagerParent(const uint64_t& aLayersId)
+{
+  // Check to see if this child process has access to this layer tree.
+  if (!LayerTreeOwnerTracker::Get()->IsMapped(aLayersId, OtherPid())) {
+    NS_ERROR("Unexpected layers id in AllocPAPZCTreeManagerParent; dropping message...");
+    return nullptr;
+  }
+
+  MonitorAutoLock lock(*sIndirectLayerTreesLock);
+  CompositorBridgeParent::LayerTreeState& state = sIndirectLayerTrees[aLayersId];
+  MOZ_ASSERT(state.mParent);
+  MOZ_ASSERT(!state.mApzcTreeManagerParent);
+  state.mApzcTreeManagerParent = new APZCTreeManagerParent(aLayersId, state.mParent->GetAPZCTreeManager());
+
+  return state.mApzcTreeManagerParent;
+}
+bool
+CrossProcessCompositorBridgeParent::DeallocPAPZCTreeManagerParent(PAPZCTreeManagerParent* aActor)
+{
+  APZCTreeManagerParent* parent = static_cast<APZCTreeManagerParent*>(aActor);
+
+  MonitorAutoLock lock(*sIndirectLayerTreesLock);
+  auto iter = sIndirectLayerTrees.find(parent->LayersId());
+  if (iter != sIndirectLayerTrees.end()) {
+    CompositorBridgeParent::LayerTreeState& state = iter->second;
+    MOZ_ASSERT(state.mApzcTreeManagerParent == parent);
+    state.mApzcTreeManagerParent = nullptr;
+  }
+
+  delete parent;
+
+  return true;
+}
+
+PAPZParent*
+CrossProcessCompositorBridgeParent::AllocPAPZParent(const uint64_t& aLayersId)
+{
+  // Check to see if this child process has access to this layer tree.
+  if (!LayerTreeOwnerTracker::Get()->IsMapped(aLayersId, OtherPid())) {
+    NS_ERROR("Unexpected layers id in AllocPAPZParent; dropping message...");
+    return nullptr;
+  }
+
+  RemoteContentController* controller = new RemoteContentController();
+
+  // Increment the controller's refcount before we return it. This will keep the
+  // controller alive until it is released by IPDL in DeallocPAPZParent.
+  controller->AddRef();
+
+  MonitorAutoLock lock(*sIndirectLayerTreesLock);
+  CompositorBridgeParent::LayerTreeState& state = sIndirectLayerTrees[aLayersId];
+  MOZ_ASSERT(!state.mController);
+  state.mController = controller;
+
+  return controller;
+}
+
+bool
+CrossProcessCompositorBridgeParent::DeallocPAPZParent(PAPZParent* aActor)
+{
+  RemoteContentController* controller = static_cast<RemoteContentController*>(aActor);
+  controller->Release();
   return true;
 }
 

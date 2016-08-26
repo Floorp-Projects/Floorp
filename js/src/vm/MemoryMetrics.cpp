@@ -354,6 +354,7 @@ StatsCompartmentCallback(JSContext* cx, void* data, JSCompartment* compartment)
                                         &cStats.crossCompartmentWrappersTable,
                                         &cStats.regexpCompartment,
                                         &cStats.savedStacksSet,
+                                        &cStats.varNamesSet,
                                         &cStats.nonSyntacticLexicalScopesTable,
                                         &cStats.jitCompartment,
                                         &cStats.privateData);
@@ -585,6 +586,13 @@ StatsCellCallback(JSRuntime* rt, void* data, void* thing, JS::TraceKind traceKin
         ObjectGroup* group = static_cast<ObjectGroup*>(thing);
         zStats->objectGroupsGCHeap += thingSize;
         zStats->objectGroupsMallocHeap += group->sizeOfExcludingThis(rtStats->mallocSizeOf_);
+        break;
+      }
+
+      case JS::TraceKind::Scope: {
+        Scope* scope = static_cast<Scope*>(thing);
+        zStats->scopesGCHeap += thingSize;
+        zStats->scopesMallocHeap += scope->sizeOfExcludingThis(rtStats->mallocSizeOf_);
         break;
       }
 

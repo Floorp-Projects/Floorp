@@ -140,6 +140,7 @@ function reflectUnsignedInt(aParameters)
   var attr = aParameters.attribute;
   var nonZero = aParameters.nonZero;
   var defaultValue = aParameters.defaultValue;
+  var fallback = aParameters.fallback;
 
   if (defaultValue === undefined) {
     if (nonZero) {
@@ -147,6 +148,10 @@ function reflectUnsignedInt(aParameters)
     } else {
       defaultValue = 0;
     }
+  }
+
+  if (fallback === undefined) {
+    fallback = false;
   }
 
   ok(attr in element, attr + " should be an IDL attribute of this element");
@@ -213,7 +218,7 @@ function reflectUnsignedInt(aParameters)
     is(e.code, DOMException.INDEX_SIZE_ERR, "exception code should be INDEX_SIZE_ERR");
   }
 
-  if (nonZero) {
+  if (nonZero && !fallback) {
     ok(caught, "an exception should have been caught");
   } else {
     ok(!caught, "no exception should have been caught");

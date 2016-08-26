@@ -78,13 +78,13 @@ namespace jit {
     _(GetName_Fallback)                          \
     _(GetName_GlobalLexical)                     \
     _(GetName_Global)                            \
-    _(GetName_Scope0)                            \
-    _(GetName_Scope1)                            \
-    _(GetName_Scope2)                            \
-    _(GetName_Scope3)                            \
-    _(GetName_Scope4)                            \
-    _(GetName_Scope5)                            \
-    _(GetName_Scope6)                            \
+    _(GetName_Env0)                              \
+    _(GetName_Env1)                              \
+    _(GetName_Env2)                              \
+    _(GetName_Env3)                              \
+    _(GetName_Env4)                              \
+    _(GetName_Env5)                              \
+    _(GetName_Env6)                              \
                                                  \
     _(BindName_Fallback)                         \
                                                  \

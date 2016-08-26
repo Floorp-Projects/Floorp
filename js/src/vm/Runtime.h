@@ -27,7 +27,7 @@
 #endif
 #include "builtin/AtomicsObject.h"
 #include "ds/FixedSizeHash.h"
-#include "frontend/ParseMaps.h"
+#include "frontend/NameCollections.h"
 #include "gc/GCRuntime.h"
 #include "gc/Tracer.h"
 #include "irregexp/RegExpStack.h"
@@ -44,6 +44,7 @@
 #include "vm/CommonPropertyNames.h"
 #include "vm/DateTime.h"
 #include "vm/MallocProvider.h"
+#include "vm/Scope.h"
 #include "vm/SharedImmutableStringsCache.h"
 #include "vm/SPSProfiler.h"
 #include "vm/Stack.h"
@@ -132,6 +133,12 @@ class FreeOp : public JSFreeOp
 
     bool onMainThread() const {
         return runtime_ != nullptr;
+    }
+
+    bool maybeOffMainThread() const {
+        // Sometimes background finalization happens on the main thread so
+        // runtime_ being null doesn't always mean we are off the main thread.
+        return !runtime_;
     }
 
     bool isDefaultFreeOp() const;
@@ -295,8 +302,10 @@ class PerThreadData
     bool gcSweeping;
 #endif
 
-    // Number of active bytecode compilation on this thread.
-    unsigned activeCompilations;
+    // Pools used for recycling name maps and vectors when parsing and
+    // emitting bytecode. Purged on GC when there are no active script
+    // compilations.
+    frontend::NameCollectionPool frontendCollectionPool;
 
     explicit PerThreadData(JSRuntime* runtime);
     ~PerThreadData();
@@ -310,8 +319,6 @@ class PerThreadData
     JSContext* contextFromMainThread();
 
     inline bool exclusiveThreadsPresent();
-    inline void addActiveCompilation(AutoLockForExclusiveAccess& lock);
-    inline void removeActiveCompilation(AutoLockForExclusiveAccess& lock);
 
     // For threads which may be associated with different runtimes, depending
     // on the work they are doing.
@@ -973,26 +980,6 @@ struct JSRuntime : public JS::shadow::Runtime,
         return parentRuntime ? parentRuntime->sharedImmutableStrings() : *sharedImmutableStrings_;
     }
 
-    // Pool of maps used during parse/emit. This may be modified by threads
-    // with an ExclusiveContext and requires a lock. Active compilations
-    // prevent the pool from being purged during GCs.
-  private:
-    js::frontend::ParseMapPool parseMapPool_;
-    unsigned activeCompilations_;
-  public:
-    js::frontend::ParseMapPool& parseMapPool(js::AutoLockForExclusiveAccess& lock) {
-        return parseMapPool_;
-    }
-    bool hasActiveCompilations() {
-        return activeCompilations_ != 0;
-    }
-    void addActiveCompilation(js::AutoLockForExclusiveAccess& lock) {
-        activeCompilations_++;
-    }
-    void removeActiveCompilation(js::AutoLockForExclusiveAccess& lock) {
-        activeCompilations_--;
-    }
-
     // Count of AutoKeepAtoms instances on the main thread's stack. When any
     // instances exist, atoms in the runtime will not be collected. Threads
     // with an ExclusiveContext do not increment this value, but the presence
@@ -1007,7 +994,6 @@ struct JSRuntime : public JS::shadow::Runtime,
     friend class js::AutoKeepAtoms;
   public:
     bool keepAtoms() {
-        MOZ_ASSERT(CurrentThreadCanAccessRuntime(this));
         return keepAtoms_ != 0 || exclusiveThreadsPresent();
     }
 
@@ -1472,21 +1458,6 @@ PerThreadData::exclusiveThreadsPresent()
     return runtime_->exclusiveThreadsPresent();
 }
 
-inline void
-PerThreadData::addActiveCompilation(AutoLockForExclusiveAccess& lock)
-{
-    activeCompilations++;
-    runtime_->addActiveCompilation(lock);
-}
-
-inline void
-PerThreadData::removeActiveCompilation(AutoLockForExclusiveAccess& lock)
-{
-    MOZ_ASSERT(activeCompilations);
-    activeCompilations--;
-    runtime_->removeActiveCompilation(lock);
-}
-
 /************************************************************************/
 
 static MOZ_ALWAYS_INLINE void
@@ -1709,6 +1680,20 @@ namespace JS {
 template <typename T>
 struct DeletePolicy<js::GCPtr<T>> : public js::GCManagedDeletePolicy<js::GCPtr<T>>
 {};
+
+// Scope data that contain GCPtrs must use the correct DeletePolicy.
+//
+// This is defined here because vm/Scope.h cannot #include "vm/Runtime.h"
+
+template <>
+struct DeletePolicy<js::FunctionScope::Data>
+  : public js::GCManagedDeletePolicy<js::FunctionScope::Data>
+{ };
+
+template <>
+struct DeletePolicy<js::ModuleScope::Data>
+  : public js::GCManagedDeletePolicy<js::ModuleScope::Data>
+{ };
 
 } /* namespace JS */
 

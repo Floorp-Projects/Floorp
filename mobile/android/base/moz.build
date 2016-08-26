@@ -311,7 +311,6 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'BrowserLocaleManager.java',
     'cleanup/FileCleanupController.java',
     'cleanup/FileCleanupService.java',
-    'ContactService.java',
     'CustomEditText.java',
     'customtabs/CustomTabsActivity.java',
     'customtabs/GeckoCustomTabsService.java',

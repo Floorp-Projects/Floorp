@@ -21,8 +21,6 @@
  *   - free
  *   - memalign
  *   - valloc
- *   - malloc_protect
- *   - malloc_unprotect
  *   - malloc_usable_size
  *   - malloc_good_size
  *   Some of these functions are specific to some systems, but for
@@ -194,19 +192,8 @@
 #define free_impl                mozmem_malloc_impl(free)
 #define memalign_impl            mozmem_malloc_impl(memalign)
 #define valloc_impl              mozmem_malloc_impl(valloc)
-#define malloc_protect_impl      mozmem_malloc_impl(malloc_protect)
-#define malloc_unprotect_impl    mozmem_malloc_impl(malloc_unprotect)
 #define malloc_usable_size_impl  mozmem_malloc_impl(malloc_usable_size)
 #define malloc_good_size_impl    mozmem_malloc_impl(malloc_good_size)
-
-#ifdef XP_DARWIN
-MOZ_BEGIN_EXTERN_C
-
-MFBT_API void malloc_protect(void* ptr, uint32_t* id);
-MFBT_API void malloc_unprotect(void* ptr, uint32_t* id);
-
-MOZ_END_EXTERN_C
-#endif
 
 /* Duplication functions */
 #define strndup_impl   mozmem_dup_impl(strndup)

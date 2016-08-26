@@ -158,6 +158,7 @@ static const PhaseInfo phases[] = {
         { PHASE_SWEEP_OBJECT, "Sweep Object", PHASE_SWEEP, 33 },
         { PHASE_SWEEP_STRING, "Sweep String", PHASE_SWEEP, 34 },
         { PHASE_SWEEP_SCRIPT, "Sweep Script", PHASE_SWEEP, 35 },
+        { PHASE_SWEEP_SCOPE, "Sweep Scope", PHASE_SWEEP, 59 },
         { PHASE_SWEEP_SHAPE, "Sweep Shape", PHASE_SWEEP, 36 },
         { PHASE_SWEEP_JITCODE, "Sweep JIT code", PHASE_SWEEP, 37 },
         { PHASE_FINALIZE_END, "Finalize End Callback", PHASE_SWEEP, 38 },
@@ -183,9 +184,9 @@ static const PhaseInfo phases[] = {
         { PHASE_MARK_RUNTIME_DATA, "Mark Runtime-wide Data", PHASE_MARK_ROOTS, 52 },
         { PHASE_MARK_EMBEDDING, "Mark Embedding", PHASE_MARK_ROOTS, 53 },
         { PHASE_MARK_COMPARTMENTS, "Mark Compartments", PHASE_MARK_ROOTS, 54 },
-    { PHASE_LIMIT, nullptr, PHASE_NO_PARENT, 58 }
+    { PHASE_LIMIT, nullptr, PHASE_NO_PARENT, 59 }
 
-    // Current number of telemetryBuckets is 58. If you insert new phases
+    // Current number of telemetryBuckets is 59. If you insert new phases
     // somewhere, start at that number and count up. Do not change any existing
     // numbers.
 };
@@ -947,7 +948,7 @@ Statistics::endGC()
     int64_t sccTotal, sccLongest;
     sccDurations(&sccTotal, &sccLongest);
 
-    runtime->addTelemetry(JS_TELEMETRY_GC_IS_COMPARTMENTAL, !zoneStats.isCollectingAllZones());
+    runtime->addTelemetry(JS_TELEMETRY_GC_IS_ZONE_GC, !zoneStats.isCollectingAllZones());
     runtime->addTelemetry(JS_TELEMETRY_GC_MS, t(total));
     runtime->addTelemetry(JS_TELEMETRY_GC_MAX_PAUSE_MS, t(longest));
     int64_t markTotal = SumPhase(PHASE_MARK, phaseTimes);

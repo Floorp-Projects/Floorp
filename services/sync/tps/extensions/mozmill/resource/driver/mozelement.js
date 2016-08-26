@@ -131,7 +131,7 @@ MozMillElement.prototype.__defineGetter__("element", function () {
 
 /**
  * Drag an element to the specified offset on another element, firing mouse and
- * drag events. Adapted from ChromeUtils.js synthesizeDrop()
+ * drag events. Adapted from EventUtils.js synthesizeDrop()
  *
  * By default it will drag the source element over the destination's element
  * center with a "move" dropEffect.

@@ -1573,7 +1573,7 @@ XRE_XPCShellMain(int argc, char** argv, char** envp,
 
             JS_DropPrincipals(cx, gJSPrincipals);
             JS_SetAllNonReservedSlotsToUndefined(cx, glob);
-            JS_SetAllNonReservedSlotsToUndefined(cx, JS_GlobalLexicalScope(glob));
+            JS_SetAllNonReservedSlotsToUndefined(cx, JS_GlobalLexicalEnvironment(glob));
             JS_GC(cx);
         }
         JS_GC(cx);

@@ -703,11 +703,6 @@ private:
   AllocPGMPServiceParent(mozilla::ipc::Transport* aTransport,
                          base::ProcessId aOtherProcess) override;
 
-  PAPZParent*
-  AllocPAPZParent(const TabId& aTabId) override;
-  bool
-  DeallocPAPZParent(PAPZParent* aActor) override;
-
   PSharedBufferManagerParent*
   AllocPSharedBufferManagerParent(mozilla::ipc::Transport* aTranport,
                                    base::ProcessId aOtherProcess) override;

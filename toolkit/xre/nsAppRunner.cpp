@@ -191,6 +191,9 @@
 #define NS_CRASHREPORTER_CONTRACTID "@mozilla.org/toolkit/crash-reporter;1"
 #include "nsIPrefService.h"
 #include "nsIMemoryInfoDumper.h"
+#if defined(XP_LINUX) && !defined(ANDROID)
+#include "mozilla/widget/LSBUtils.h"
+#endif
 #endif
 
 #include "base/command_line.h"
@@ -203,7 +206,6 @@
 #if defined(MOZ_SANDBOX)
 #if defined(XP_LINUX) && !defined(ANDROID)
 #include "mozilla/SandboxInfo.h"
-#include "mozilla/widget/LSBUtils.h"
 #elif defined(XP_WIN)
 #include "SandboxBroker.h"
 #endif
@@ -3195,6 +3197,10 @@ XREMain::XRE_mainInit(bool* aExitFlag)
     if (mAppData->crashReporterURL)
       CrashReporter::SetServerURL(nsDependentCString(mAppData->crashReporterURL));
 
+    // We overwrite this once we finish starting up.
+    CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("StartupCrash"),
+                                       NS_LITERAL_CSTRING("1"));
+
     // pass some basic info from the app data
     if (mAppData->vendor)
       CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("Vendor"),
@@ -4257,6 +4263,12 @@ XREMain::XRE_mainRun()
       obsService->NotifyObservers(nullptr, "final-ui-startup", nullptr);
 
     (void)appStartup->DoneStartingUp();
+
+#ifdef MOZ_CRASHREPORTER
+    CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("StartupCrash"),
+                                       NS_LITERAL_CSTRING("0"));
+#endif
+
     appStartup->GetShuttingDown(&mShuttingDown);
   }
 

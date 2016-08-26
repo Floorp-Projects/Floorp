@@ -25,10 +25,12 @@ namespace mozilla {
 //     CollectReports(nsIHandleReportCallback* aHandleReport,
 //                    nsISupports* aData, bool aAnonymize) override
 //     {
-//        return MOZ_COLLECT_REPORT(
+//        MOZ_COLLECT_REPORT(
 //          "explicit/path/to/somewhere", KIND_HEAP, UNITS_BYTES,
 //          MemoryAllocated(),
-//          "A description of what we are reporting."
+//          "A description of what we are reporting.");
+//
+//        return NS_OK;
 //     }
 //   };
 //

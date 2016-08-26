@@ -412,10 +412,12 @@ NS_IMETHODIMP
 nsScriptNameSpaceManager::CollectReports(
   nsIHandleReportCallback* aHandleReport, nsISupports* aData, bool aAnonymize)
 {
-  return MOZ_COLLECT_REPORT(
+  MOZ_COLLECT_REPORT(
     "explicit/script-namespace-manager", KIND_HEAP, UNITS_BYTES,
     SizeOfIncludingThis(ScriptNameSpaceManagerMallocSizeOf),
     "Memory used for the script namespace manager.");
+
+  return NS_OK;
 }
 
 size_t
