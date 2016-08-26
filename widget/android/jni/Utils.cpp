@@ -154,8 +154,7 @@ bool HandleUncaughtException(JNIEnv* aEnv)
     aEnv->ExceptionClear();
 
     String::LocalRef stack = java::GeckoAppShell::GetExceptionStackTrace(e);
-    if (stack && NS_SUCCEEDED(CrashReporter::AnnotateCrashReport(
-            NS_LITERAL_CSTRING("JavaStackTrace"), stack->ToCString());
+    if (stack && ReportException(aEnv, e.Get(), stack.Get())) {
         return true;
     }
 
@@ -168,6 +167,19 @@ bool HandleUncaughtException(JNIEnv* aEnv)
     }
 
     return true;
+}
+
+bool ReportException(JNIEnv* aEnv, jthrowable aExc, jstring aStack)
+{
+    bool result = true;
+
+#ifdef MOZ_CRASHREPORTER
+    result &= NS_SUCCEEDED(CrashReporter::AnnotateCrashReport(
+            NS_LITERAL_CSTRING("JavaStackTrace"),
+            String::Ref::From(aStack)->ToCString()));
+#endif // MOZ_CRASHREPORTER
+
+    return result;
 }
 
 namespace {
