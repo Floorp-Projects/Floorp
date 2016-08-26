@@ -113,45 +113,51 @@ SubstitutingProtocolHandler::ConstructInternal()
 // IPC marshalling.
 //
 
-void
+nsresult
 SubstitutingProtocolHandler::CollectSubstitutions(InfallibleTArray<SubstitutionMapping>& aMappings)
 {
   for (auto iter = mSubstitutions.ConstIter(); !iter.Done(); iter.Next()) {
     nsCOMPtr<nsIURI> uri = iter.Data();
     SerializedURI serialized;
     if (uri) {
-      uri->GetSpec(serialized.spec);
+      nsresult rv = uri->GetSpec(serialized.spec);
+      NS_ENSURE_SUCCESS(rv, rv);
       uri->GetOriginCharset(serialized.charset);
     }
     SubstitutionMapping substitution = { mScheme, nsCString(iter.Key()), serialized };
     aMappings.AppendElement(substitution);
   }
+
+  return NS_OK;
 }
 
-void
+nsresult
 SubstitutingProtocolHandler::SendSubstitution(const nsACString& aRoot, nsIURI* aBaseURI)
 {
   if (GeckoProcessType_Content == XRE_GetProcessType()) {
-    return;
+    return NS_OK;
   }
 
   nsTArray<ContentParent*> parents;
   ContentParent::GetAll(parents);
   if (!parents.Length()) {
-    return;
+    return NS_OK;
   }
 
   SubstitutionMapping mapping;
   mapping.scheme = mScheme;
   mapping.path = aRoot;
   if (aBaseURI) {
-    aBaseURI->GetSpec(mapping.resolvedURI.spec);
+    nsresult rv = aBaseURI->GetSpec(mapping.resolvedURI.spec);
+    NS_ENSURE_SUCCESS(rv, rv);
     aBaseURI->GetOriginCharset(mapping.resolvedURI.charset);
   }
 
   for (uint32_t i = 0; i < parents.Length(); i++) {
     Unused << parents[i]->SendRegisterChromeItem(mapping);
   }
+
+  return NS_OK;
 }
 
 //----------------------------------------------------------------------------
@@ -283,8 +289,7 @@ SubstitutingProtocolHandler::SetSubstitution(const nsACString& root, nsIURI *bas
 {
   if (!baseURI) {
     mSubstitutions.Remove(root);
-    SendSubstitution(root, baseURI);
-    return NS_OK;
+    return SendSubstitution(root, baseURI);
   }
 
   // If baseURI isn't a same-scheme URI, we can set the substitution immediately.
@@ -299,8 +304,7 @@ SubstitutingProtocolHandler::SetSubstitution(const nsACString& root, nsIURI *bas
     }
 
     mSubstitutions.Put(root, baseURI);
-    SendSubstitution(root, baseURI);
-    return NS_OK;
+    return SendSubstitution(root, baseURI);
   }
 
   // baseURI is a same-type substituting URI, let's resolve it first.
@@ -313,8 +317,7 @@ SubstitutingProtocolHandler::SetSubstitution(const nsACString& root, nsIURI *bas
   NS_ENSURE_SUCCESS(rv, rv);
 
   mSubstitutions.Put(root, newBaseURI);
-  SendSubstitution(root, newBaseURI);
-  return NS_OK;
+  return SendSubstitution(root, newBaseURI);
 }
 
 nsresult
