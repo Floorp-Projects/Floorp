@@ -11,7 +11,7 @@ add_task(function* () {
 });
 
 function* throttleUploadTest(actuallyThrottle) {
-  let [ , debuggee, monitor ] = yield initNetMonitor(
+  let [tab, , monitor ] = yield initNetMonitor(
     HAR_EXAMPLE_URL + "html_har_post-data-test-page.html");
 
   info("Starting test... (actuallyThrottle = " + actuallyThrottle + ")");
@@ -44,8 +44,11 @@ function* throttleUploadTest(actuallyThrottle) {
   RequestsMenu.lazyUpdate = false;
 
   // Execute one POST request on the page and wait till its done.
-  debuggee.executeTest2(size);
-  yield waitForNetworkEvents(monitor, 0, 1);
+  let wait = waitForNetworkEvents(monitor, 0, 1);
+  yield ContentTask.spawn(tab.linkedBrowser, { size }, function* (args) {
+    content.wrappedJSObject.executeTest2(args.size);
+  });
+  yield wait;
 
   // Copy HAR into the clipboard (asynchronous).
   let jsonString = yield RequestsMenu.copyAllAsHar();
