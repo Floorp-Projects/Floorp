@@ -91,7 +91,7 @@ CopyableCanvasLayer::GetTempSurface(const IntSize& aSize,
       aFormat != mCachedTempSurface->GetFormat())
   {
     // Create a surface aligned to 8 bytes since that's the highest alignment WebGL can handle.
-    uint32_t stride = GetAlignedStride<8>(aSize.width * BytesPerPixel(aFormat));
+    uint32_t stride = GetAlignedStride<8>(aSize.width, BytesPerPixel(aFormat));
     mCachedTempSurface = Factory::CreateDataSourceSurfaceWithStride(aSize, aFormat, stride);
   }
 

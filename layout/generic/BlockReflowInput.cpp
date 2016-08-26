@@ -207,7 +207,7 @@ GetBEndMarginClone(nsIFrame* aFrame,
                    WritingMode aWritingMode)
 {
   if (aFrame->StyleBorder()->mBoxDecorationBreak ==
-        NS_STYLE_BOX_DECORATION_BREAK_CLONE) {
+        StyleBoxDecorationBreak::Clone) {
     SizeComputationInput os(aFrame, aRenderingContext, aWritingMode,
                         aContentArea.ISize(aWritingMode));
     return os.ComputedLogicalMargin().

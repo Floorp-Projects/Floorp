@@ -182,6 +182,19 @@ function getHSTSStatus(host, resultList) {
   req.open("GET", uri, true);
   req.timeout = REQUEST_TIMEOUT;
   req.channel.notificationCallbacks = new RedirectAndAuthStopper();
+
+  let errorhandler = (evt) => {
+    dump(`ERROR: error making request to ${host.name} (type=${evt.type})\n`);
+    if (!inResultList) {
+      inResultList = true;
+      resultList.push(processStsHeader(host, null, req.status,
+                                       req.channel.securityInfo));
+    }
+  };
+  req.onerror = errorhandler;
+  req.ontimeout = errorhandler;
+  req.onabort = errorhandler;
+
   req.onload = function(event) {
     if (!inResultList) {
       inResultList = true;
@@ -190,9 +203,7 @@ function getHSTSStatus(host, resultList) {
                                        req.channel.securityInfo));
     }
   };
-  req.onerror = function(e) {
-    dump("ERROR: network error making request to " + host.name + ": " + e + "\n");
-  };
+
   try {
     req.send();
   }

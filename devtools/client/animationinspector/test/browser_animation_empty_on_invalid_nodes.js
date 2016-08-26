@@ -7,7 +7,7 @@ requestLongerTimeout(2);
 
 // Test that the panel shows no animation data for invalid or not animated nodes
 
-const { LocalizationHelper } = require("devtools/client/shared/l10n");
+const { LocalizationHelper } = require("devtools/shared/l10n");
 
 const STRINGS_URI = "devtools/locale/animationinspector.properties";
 const L10N = new LocalizationHelper(STRINGS_URI);

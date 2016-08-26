@@ -7,7 +7,7 @@
 const { DOM: dom, createClass, PropTypes } = require("devtools/client/shared/vendor/react");
 const { getSourceNames, parseURL,
         isScratchpadScheme, getSourceMappedFile } = require("devtools/client/shared/source-utils");
-const { LocalizationHelper } = require("devtools/client/shared/l10n");
+const { LocalizationHelper } = require("devtools/shared/l10n");
 
 const l10n = new LocalizationHelper("devtools/locale/components.properties");
 const webl10n = new LocalizationHelper("devtools/locale/webconsole.properties");
