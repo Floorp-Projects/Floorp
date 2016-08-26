@@ -153,21 +153,21 @@ Java_org_mozilla_gecko_GeckoAppShell_onFullScreenPluginHidden(JNIEnv * arg0, jcl
 
 #ifdef JNI_STUBS
 
-typedef void (*Java_org_mozilla_gecko_GeckoAppShell_cameraCallbackBridge_t)(JNIEnv *, jclass, jbyteArray);
-static Java_org_mozilla_gecko_GeckoAppShell_cameraCallbackBridge_t f_Java_org_mozilla_gecko_GeckoAppShell_cameraCallbackBridge;
+typedef void (*Java_org_mozilla_gecko_GeckoAppShell_00024CameraCallback_onFrameData_t)(JNIEnv *, jclass, jint, jbyteArray);
+static Java_org_mozilla_gecko_GeckoAppShell_00024CameraCallback_onFrameData_t f_Java_org_mozilla_gecko_GeckoAppShell_00024CameraCallback_onFrameData;
 extern "C" NS_EXPORT void MOZ_JNICALL
-Java_org_mozilla_gecko_GeckoAppShell_cameraCallbackBridge(JNIEnv * arg0, jclass arg1, jbyteArray arg2) {
-    if (!f_Java_org_mozilla_gecko_GeckoAppShell_cameraCallbackBridge) {
+Java_org_mozilla_gecko_GeckoAppShell_00024CameraCallback_onFrameData(JNIEnv * arg0, jclass arg1, jint arg2, jbyteArray arg3) {
+    if (!f_Java_org_mozilla_gecko_GeckoAppShell_00024CameraCallback_onFrameData) {
         arg0->ThrowNew(arg0->FindClass("java/lang/UnsupportedOperationException"),
                        "JNI Function called before it was loaded");
         return ;
     }
-     f_Java_org_mozilla_gecko_GeckoAppShell_cameraCallbackBridge(arg0, arg1, arg2);
+     f_Java_org_mozilla_gecko_GeckoAppShell_00024CameraCallback_onFrameData(arg0, arg1, arg2, arg3);
 }
 #endif
 
 #ifdef JNI_BINDINGS
-  xul_dlsym("Java_org_mozilla_gecko_GeckoAppShell_cameraCallbackBridge", &f_Java_org_mozilla_gecko_GeckoAppShell_cameraCallbackBridge);
+  xul_dlsym("Java_org_mozilla_gecko_GeckoAppShell_00024CameraCallback_onFrameData", &f_Java_org_mozilla_gecko_GeckoAppShell_00024CameraCallback_onFrameData);
 #endif
 
 #ifdef JNI_STUBS
