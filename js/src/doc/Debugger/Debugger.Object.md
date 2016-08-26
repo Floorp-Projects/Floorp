@@ -205,30 +205,32 @@ from its prototype:
     If the referent is not a (scripted) proxy, return `undefined`.
 
 `promiseState`
-:   If the referent is a [`Promise`][promise], return a string indicating
-    whether the [`Promise`][promise] is pending, or has been fulfilled or
-    rejected. This string takes one of the following values:
+:   If the referent is a [`Promise`][promise], this is an object describing
+    the Promise's current state, with the following properties:
 
-    * `"pending"`, if the [`Promise`][promise] is pending.
+    `state`
+    :   A string indicating whether the [`Promise`][promise] is pending or
+        has been fulfilled or rejected.
+        This accessor returns one of the following values:
 
-    * `"fulfilled"`, if the [`Promise`][promise] has been fulfilled.
+        * `"pending"`, if the [`Promise`][promise] hasn't been resolved.
 
-    * `"rejected"`, if the [`Promise`][promise] has been rejected.
+        * `"fulfilled"`, if the [`Promise`][promise] has been fulfilled.
 
-    If the referent is not a [`Promise`][promise], throw a `TypeError`.
+        * `"rejected"`, if the [`Promise`][promise] has been rejected.
 
-`promiseValue`
-:   If the referent is a [`Promise`][promise] that has been fulfilled, return
-    a debuggee value representing the value the [`Promise`][promise] has been
-    fulfilled with.
+    `value`
+    :   If the [`Promise`][promise] has been *fulfilled*, this is a
+        `Debugger.Object` referring to the value it was fulfilled with,
+        `undefined` otherwise.
 
-    If the [`Promise`][promise] has not been fulfilled, return `undefined`. If
-    the referent is not a [`Promise`][promise], throw a `TypeError`.
+    `reason`
+    :   If the [`Promise`][promise] has been *rejected*, this is a
+        `Debugger.Object` referring to the value it was rejected with,
+        `undefined` otherwise.
 
-`promiseReason`
-:   If the referent is a [`Promise`][promise] that has been rejected, return a
-    debuggee value representing the value the [`Promise`][promise] has been
-    rejected with.
+    If the referent is not a [`Promise`][promise], throw a `TypeError`
+    exception.
 
 `promiseAllocationSite`
 :   If the referent is a [`Promise`][promise], this is the
