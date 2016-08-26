@@ -123,6 +123,7 @@ public:
   // Buffered must conform to http://w3c.github.io/media-source/index.html#widl-SourceBuffer-buffered
   media::TimeIntervals Buffered();
   media::TimeUnit HighestStartTime();
+  media::TimeUnit HighestEndTime();
 
   // Return the size of the data managed by this SourceBufferContentManager.
   int64_t GetSize() const;
