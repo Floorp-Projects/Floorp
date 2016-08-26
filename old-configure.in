@@ -5174,46 +5174,6 @@ fi
 
 AC_SUBST_LIST(GLIB_GMODULE_LIBS)
 
-dnl ========================================================
-dnl Graphics checks.
-dnl ========================================================
-
-if test "${OS_TARGET}" = "WINNT" -o \
-        "${OS_ARCH}" = "Darwin" -o \
-        "${MOZ_WIDGET_TOOLKIT}" = "android" -o \
-        "${MOZ_WIDGET_TOOLKIT}" = "gonk" -o \
-        "${MOZ_WIDGET_TOOLKIT}" = "gtk2" -o \
-        "${MOZ_WIDGET_TOOLKIT}" = "gtk3"; then
-    case "${CPU_ARCH}" in
-    x86|x86_64|arm)
-        MOZ_ENABLE_SKIA=1
-        ;;
-    *)
-        MOZ_ENABLE_SKIA=
-        ;;
-    esac
-else
-MOZ_ENABLE_SKIA=
-fi
-
-MOZ_ARG_ENABLE_BOOL(skia,
-[  --enable-skia   Enable use of Skia],
-MOZ_ENABLE_SKIA=1,
-MOZ_ENABLE_SKIA=)
-
-dnl Skia GPU support may not reliably build on certain *BSDs (see bug 1234494).
-if test "${OS_TARGET}" = "OpenBSD" -o \
-        "${OS_TARGET}" = "NetBSD"; then \
-    MOZ_DISABLE_SKIA_GPU=1
-else
-    MOZ_DISABLE_SKIA_GPU=
-fi
-
-MOZ_ARG_DISABLE_BOOL(skia-gpu,
-[  --disable-skia-gpu  Disable use of Skia-GPU],
-MOZ_DISABLE_SKIA_GPU=1,
-MOZ_DISABLE_SKIA_GPU=)
-
 if test "$USE_FC_FREETYPE"; then
     if test "$COMPILE_ENVIRONMENT"; then
         dnl ========================================================
@@ -5414,27 +5374,6 @@ AC_SUBST_LIST(MOZ_CAIRO_CFLAGS)
 AC_SUBST_LIST(MOZ_CAIRO_LIBS)
 AC_SUBST_LIST(MOZ_CAIRO_OSLIBS)
 AC_SUBST(MOZ_TREE_PIXMAN)
-
-dnl ========================================================
-dnl Skia
-dnl ========================================================
-if test "$MOZ_ENABLE_SKIA"; then
-  SKIA_INCLUDES="/gfx/skia /gfx/skia/skia/include/config /gfx/skia/skia/include/core"
-  AC_DEFINE(MOZ_ENABLE_SKIA)
-  AC_DEFINE(USE_SKIA)
-  if test "${MOZ_WIDGET_TOOLKIT}" = "android" -o x"$MOZ_WIDGET_TOOLKIT" = x"gonk"; then
-    AC_DEFINE(SK_BUILD_FOR_ANDROID_NDK)
-  fi
-
-  if test "${CPU_ARCH}" != "ppc" -a "${CPU_ARCH}" != "ppc64" -a "${CPU_ARCH}" != "sparc" -a "${CPU_ARCH}" != "sparc64" -a -z "$MOZ_DISABLE_SKIA_GPU" ; then
-    SKIA_INCLUDES="$SKIA_INCLUDES /gfx/skia/skia/include/gpu /gfx/skia/skia/include/utils"
-    MOZ_ENABLE_SKIA_GPU=1
-    AC_DEFINE(USE_SKIA_GPU)
-    AC_SUBST(MOZ_ENABLE_SKIA_GPU)
-  fi
-fi
-AC_SUBST(MOZ_ENABLE_SKIA)
-AC_SUBST_LIST(SKIA_INCLUDES)
 
 dnl ========================================================
 dnl disable xul

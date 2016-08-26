@@ -8,7 +8,7 @@
 
 const EventEmitter = require("devtools/shared/event-emitter");
 const {createNode} = require("devtools/client/animationinspector/utils");
-const { LocalizationHelper } = require("devtools/client/shared/l10n");
+const { LocalizationHelper } = require("devtools/shared/l10n");
 
 const STRINGS_URI = "devtools/locale/animationinspector.properties";
 const L10N = new LocalizationHelper(STRINGS_URI);

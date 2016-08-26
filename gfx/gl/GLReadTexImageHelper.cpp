@@ -492,7 +492,7 @@ ReadBackSurface(GLContext* gl, GLuint aTexture, bool aYInvert, SurfaceFormat aFo
 
     RefPtr<DataSourceSurface> surf =
       Factory::CreateDataSourceSurfaceWithStride(size, SurfaceFormat::B8G8R8A8,
-                                                 GetAlignedStride<4>(size.width * BytesPerPixel(SurfaceFormat::B8G8R8A8)));
+                                                 GetAlignedStride<4>(size.width, BytesPerPixel(SurfaceFormat::B8G8R8A8)));
 
     if (NS_WARN_IF(!surf)) {
         return nullptr;

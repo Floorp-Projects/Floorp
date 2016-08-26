@@ -36,7 +36,6 @@ DevToolsModules(
     'Jsbeautify.jsm',
     'key-shortcuts.js',
     'keycodes.js',
-    'l10n.js',
     'node-attribute-parser.js',
     'options-view.js',
     'output-parser.js',

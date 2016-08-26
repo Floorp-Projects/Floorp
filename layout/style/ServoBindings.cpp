@@ -20,6 +20,7 @@
 #include "nsINode.h"
 #include "nsIPrincipal.h"
 #include "nsNameSpaceManager.h"
+#include "nsRuleNode.h"
 #include "nsString.h"
 #include "nsStyleStruct.h"
 #include "nsStyleUtil.h"
@@ -321,6 +322,12 @@ Gecko_GetServoDeclarationBlock(RawGeckoElement* aElement)
     return nullptr;
   }
   return attr->GetServoCSSDeclarationValue();
+}
+
+void
+Gecko_FillAllBackgroundLists(nsStyleImageLayers* aLayers, uint32_t aMaxLen)
+{
+  nsRuleNode::FillAllBackgroundLists(*aLayers, aMaxLen);
 }
 
 template <typename Implementor>

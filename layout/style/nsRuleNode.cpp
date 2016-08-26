@@ -1334,6 +1334,11 @@ struct SetEnumValueHelper
     aField = static_cast<type_>(value); \
   }
 
+  DEFINE_ENUM_CLASS_SETTER(StyleBoxAlign, Stretch, End)
+  DEFINE_ENUM_CLASS_SETTER(StyleBoxDecorationBreak, Slice, Clone)
+  DEFINE_ENUM_CLASS_SETTER(StyleBoxDirection, Normal, Reverse)
+  DEFINE_ENUM_CLASS_SETTER(StyleBoxOrient, Horizontal, Vertical)
+  DEFINE_ENUM_CLASS_SETTER(StyleBoxPack, Start, Justify)
   DEFINE_ENUM_CLASS_SETTER(StyleBoxSizing, Content, Border)
   DEFINE_ENUM_CLASS_SETTER(StyleFillRule, Nonzero, Evenodd)
   DEFINE_ENUM_CLASS_SETTER(StyleFloat, None_, InlineEnd)
@@ -7183,6 +7188,45 @@ FillBackgroundPositionCoordList(
   }
 }
 
+/* static */
+void
+nsRuleNode::FillAllBackgroundLists(nsStyleImageLayers& aImage,
+                                   uint32_t aMaxItemCount)
+{
+  // Delete any extra items.  We need to keep layers in which any
+  // property was specified.
+  aImage.mLayers.TruncateLengthNonZero(aMaxItemCount);
+
+  uint32_t fillCount = aImage.mImageCount;
+  FillBackgroundList(aImage.mLayers,
+                     &nsStyleImageLayers::Layer::mImage,
+                     aImage.mImageCount, fillCount);
+  FillBackgroundList(aImage.mLayers,
+                     &nsStyleImageLayers::Layer::mRepeat,
+                     aImage.mRepeatCount, fillCount);
+  FillBackgroundList(aImage.mLayers,
+                     &nsStyleImageLayers::Layer::mAttachment,
+                     aImage.mAttachmentCount, fillCount);
+  FillBackgroundList(aImage.mLayers,
+                     &nsStyleImageLayers::Layer::mClip,
+                     aImage.mClipCount, fillCount);
+  FillBackgroundList(aImage.mLayers,
+                     &nsStyleImageLayers::Layer::mBlendMode,
+                     aImage.mBlendModeCount, fillCount);
+  FillBackgroundList(aImage.mLayers,
+                     &nsStyleImageLayers::Layer::mOrigin,
+                     aImage.mOriginCount, fillCount);
+  FillBackgroundPositionCoordList(aImage.mLayers,
+                                  &Position::mXPosition,
+                                  aImage.mPositionXCount, fillCount);
+  FillBackgroundPositionCoordList(aImage.mLayers,
+                                  &Position::mYPosition,
+                                  aImage.mPositionYCount, fillCount);
+  FillBackgroundList(aImage.mLayers,
+                     &nsStyleImageLayers::Layer::mSize,
+                     aImage.mSizeCount, fillCount);
+}
+
 const void*
 nsRuleNode::ComputeBackgroundData(void* aStartStruct,
                                   const nsRuleData* aRuleData,
@@ -7304,38 +7348,7 @@ nsRuleNode::ComputeBackgroundData(void* aStartStruct,
                         conditions);
 
   if (rebuild) {
-    // Delete any extra items.  We need to keep layers in which any
-    // property was specified.
-    bg->mImage.mLayers.TruncateLengthNonZero(maxItemCount);
-
-    uint32_t fillCount = bg->mImage.mImageCount;
-    FillBackgroundList(bg->mImage.mLayers,
-                       &nsStyleImageLayers::Layer::mImage,
-                       bg->mImage.mImageCount, fillCount);
-    FillBackgroundList(bg->mImage.mLayers,
-                       &nsStyleImageLayers::Layer::mRepeat,
-                       bg->mImage.mRepeatCount, fillCount);
-    FillBackgroundList(bg->mImage.mLayers,
-                       &nsStyleImageLayers::Layer::mAttachment,
-                       bg->mImage.mAttachmentCount, fillCount);
-    FillBackgroundList(bg->mImage.mLayers,
-                       &nsStyleImageLayers::Layer::mClip,
-                       bg->mImage.mClipCount, fillCount);
-    FillBackgroundList(bg->mImage.mLayers,
-                       &nsStyleImageLayers::Layer::mBlendMode,
-                       bg->mImage.mBlendModeCount, fillCount);
-    FillBackgroundList(bg->mImage.mLayers,
-                       &nsStyleImageLayers::Layer::mOrigin,
-                       bg->mImage.mOriginCount, fillCount);
-    FillBackgroundPositionCoordList(bg->mImage.mLayers,
-                                    &Position::mXPosition,
-                                    bg->mImage.mPositionXCount, fillCount);
-    FillBackgroundPositionCoordList(bg->mImage.mLayers,
-                                    &Position::mYPosition,
-                                    bg->mImage.mPositionYCount, fillCount);
-    FillBackgroundList(bg->mImage.mLayers,
-                       &nsStyleImageLayers::Layer::mSize,
-                       bg->mImage.mSizeCount, fillCount);
+    FillAllBackgroundLists(bg->mImage, maxItemCount);
   }
 
   // Now that the dust has settled, register the images with the document
@@ -7464,7 +7477,7 @@ nsRuleNode::ComputeBorderData(void* aStartStruct,
            border->mBoxDecorationBreak, conditions,
            SETVAL_ENUMERATED | SETVAL_UNSET_INITIAL,
            parentBorder->mBoxDecorationBreak,
-           NS_STYLE_BOX_DECORATION_BREAK_SLICE);
+           StyleBoxDecorationBreak::Slice);
 
   // border-width, border-*-width: length, enum, inherit
   nsStyleCoord coord;
@@ -9101,14 +9114,14 @@ nsRuleNode::ComputeXULData(void* aStartStruct,
            xul->mBoxAlign, conditions,
            SETVAL_ENUMERATED | SETVAL_UNSET_INITIAL,
            parentXUL->mBoxAlign,
-           NS_STYLE_BOX_ALIGN_STRETCH);
+           StyleBoxAlign::Stretch);
 
   // box-direction: enum, inherit, initial
   SetValue(*aRuleData->ValueForBoxDirection(),
            xul->mBoxDirection, conditions,
            SETVAL_ENUMERATED | SETVAL_UNSET_INITIAL,
            parentXUL->mBoxDirection,
-           NS_STYLE_BOX_DIRECTION_NORMAL);
+           StyleBoxDirection::Normal);
 
   // box-flex: factor, inherit
   SetFactor(*aRuleData->ValueForBoxFlex(),
@@ -9121,14 +9134,14 @@ nsRuleNode::ComputeXULData(void* aStartStruct,
            xul->mBoxOrient, conditions,
            SETVAL_ENUMERATED | SETVAL_UNSET_INITIAL,
            parentXUL->mBoxOrient,
-           NS_STYLE_BOX_ORIENT_HORIZONTAL);
+           StyleBoxOrient::Horizontal);
 
   // box-pack: enum, inherit, initial
   SetValue(*aRuleData->ValueForBoxPack(),
            xul->mBoxPack, conditions,
            SETVAL_ENUMERATED | SETVAL_UNSET_INITIAL,
            parentXUL->mBoxPack,
-           NS_STYLE_BOX_PACK_START);
+           StyleBoxPack::Start);
 
   // box-ordinal-group: integer, inherit, initial
   SetValue(*aRuleData->ValueForBoxOrdinalGroup(),

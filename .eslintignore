@@ -165,8 +165,10 @@ devtools/client/preferences/**
 devtools/shared/jsbeautify/*
 devtools/shared/acorn/*
 devtools/client/sourceeditor/tern/*
+devtools/shared/node-properties/*
 devtools/shared/pretty-fast/*
 devtools/shared/sourcemap/*
+devtools/shared/sprintfjs/*
 devtools/shared/qrcode/decoder/*
 devtools/shared/qrcode/encoder/*
 devtools/client/shared/demangle.js

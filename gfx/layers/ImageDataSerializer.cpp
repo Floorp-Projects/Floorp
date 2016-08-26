@@ -20,19 +20,10 @@ namespace ImageDataSerializer {
 
 using namespace gfx;
 
-#define MOZ_ALIGN_WORD(x) (((x) + 3) & ~3)
-
 int32_t
 ComputeRGBStride(SurfaceFormat aFormat, int32_t aWidth)
 {
-  CheckedInt<int32_t> size = BytesPerPixel(aFormat);
-  size *= aWidth;
-  if (!size.isValid() || size.value() <= 0) {
-    gfxDebug() << "ComputeStride overflow " << aWidth;
-    return 0;
-  }
-
-  return GetAlignedStride<4>(size.value());
+  return GetAlignedStride<4>(aWidth, BytesPerPixel(aFormat));
 }
 
 int32_t
@@ -52,8 +43,11 @@ ComputeRGBBufferSize(IntSize aSize, SurfaceFormat aFormat)
     return 0;
   }
 
-  int32_t bufsize = GetAlignedStride<16>(ComputeRGBStride(aFormat, aSize.width)
-                                         * aSize.height);
+  // Note we're passing height instad of the bpp parameter, but the end
+  // result is the same - and the bpp was already taken care of in the
+  // ComputeRGBStride function.
+  int32_t bufsize = GetAlignedStride<16>(ComputeRGBStride(aFormat, aSize.width),
+                                         aSize.height);
 
   if (bufsize < 0) {
     // This should not be possible thanks to Factory::AllowedSurfaceSize
@@ -78,8 +72,8 @@ ComputeYCbCrBufferSize(const gfx::IntSize& aYSize, int32_t aYStride,
     return 0;
   }
   // Overflow checks are performed in AllowedSurfaceSize
-  return MOZ_ALIGN_WORD(aYSize.height * aYStride)
-         + 2 * MOZ_ALIGN_WORD(aCbCrSize.height * aCbCrStride);
+  return GetAlignedStride<4>(aYSize.height, aYStride) +
+         2 * GetAlignedStride<4>(aCbCrSize.height, aCbCrStride);
 }
 
 // Minimum required shmem size in bytes
@@ -92,16 +86,17 @@ ComputeYCbCrBufferSize(const gfx::IntSize& aYSize, const gfx::IntSize& aCbCrSize
 uint32_t
 ComputeYCbCrBufferSize(uint32_t aBufferSize)
 {
-  return MOZ_ALIGN_WORD(aBufferSize);
+  return GetAlignedStride<4>(aBufferSize, 1);
 }
 
 void ComputeYCbCrOffsets(int32_t yStride, int32_t yHeight,
                          int32_t cbCrStride, int32_t cbCrHeight,
-                         uint32_t& outYOffset, uint32_t& outCbOffset, uint32_t& outCrOffset)
+                         uint32_t& outYOffset, uint32_t& outCbOffset,
+                         uint32_t& outCrOffset)
 {
   outYOffset = 0;
-  outCbOffset = outYOffset + MOZ_ALIGN_WORD(yStride * yHeight);
-  outCrOffset = outCbOffset + MOZ_ALIGN_WORD(cbCrStride * cbCrHeight);
+  outCbOffset = outYOffset + GetAlignedStride<4>(yStride, yHeight);
+  outCrOffset = outCbOffset + GetAlignedStride<4>(cbCrStride, cbCrHeight);
 }
 
 gfx::SurfaceFormat FormatFromBufferDescriptor(const BufferDescriptor& aDescriptor)

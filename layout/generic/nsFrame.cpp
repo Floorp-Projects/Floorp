@@ -1049,7 +1049,7 @@ nsIFrame::Sides
 nsIFrame::GetSkipSides(const ReflowInput* aReflowInput) const
 {
   if (MOZ_UNLIKELY(StyleBorder()->mBoxDecorationBreak ==
-                     NS_STYLE_BOX_DECORATION_BREAK_CLONE) &&
+                     StyleBoxDecorationBreak::Clone) &&
       !(GetStateBits() & NS_FRAME_IS_OVERFLOW_CONTAINER)) {
     return Sides();
   }
@@ -1950,7 +1950,7 @@ nsIFrame::GetClipPropClipRect(const nsStyleDisplay* aDisp,
 
   *aRect = aEffects->mClip;
   if (MOZ_LIKELY(StyleBorder()->mBoxDecorationBreak ==
-                   NS_STYLE_BOX_DECORATION_BREAK_SLICE)) {
+                   StyleBoxDecorationBreak::Slice)) {
     // The clip applies to the joined boxes so it's relative the first
     // continuation.
     nscoord y = 0;

@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { MultiLocalizationHelper } = require("devtools/client/shared/l10n");
+const { MultiLocalizationHelper } = require("devtools/shared/l10n");
 const { PrefsHelper } = require("devtools/client/shared/prefs");
 
 /**

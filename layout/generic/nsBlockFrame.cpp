@@ -3083,7 +3083,7 @@ nsBlockFrame::ShouldApplyBStartMargin(BlockReflowInput& aState,
 
   if (!aState.IsAdjacentWithTop() ||
       aChildFrame->StyleBorder()->mBoxDecorationBreak ==
-        NS_STYLE_BOX_DECORATION_BREAK_CLONE) {
+        StyleBoxDecorationBreak::Clone) {
     // If we aren't at the start block-coordinate then something of non-zero
     // height must have been placed. Therefore the childs block-start margin
     // applies.
@@ -3149,7 +3149,7 @@ nsBlockFrame::ReflowBlockFrame(BlockReflowInput& aState,
   // apply its block-start margin because it's not significant unless it has
   // 'box-decoration-break:clone'.  Otherwise, dig deeper.
   bool applyBStartMargin = (frame->StyleBorder()->mBoxDecorationBreak ==
-                              NS_STYLE_BOX_DECORATION_BREAK_CLONE ||
+                              StyleBoxDecorationBreak::Clone ||
                             !frame->GetPrevInFlow()) &&
                            ShouldApplyBStartMargin(aState, aLine, frame);
   if (applyBStartMargin) {
