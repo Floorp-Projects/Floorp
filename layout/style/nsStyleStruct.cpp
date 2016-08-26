@@ -440,7 +440,7 @@ nsStyleBorder::nsStyleBorder(StyleStructContext aContext)
   , mBorderImageRepeatH(NS_STYLE_BORDER_IMAGE_REPEAT_STRETCH)
   , mBorderImageRepeatV(NS_STYLE_BORDER_IMAGE_REPEAT_STRETCH)
   , mFloatEdge(StyleFloatEdge::ContentBox)
-  , mBoxDecorationBreak(NS_STYLE_BOX_DECORATION_BREAK_SLICE)
+  , mBoxDecorationBreak(StyleBoxDecorationBreak::Slice)
   , mComputedBorder(0, 0, 0, 0)
 {
   MOZ_COUNT_CTOR(nsStyleBorder);
@@ -828,10 +828,10 @@ nsStyleList::sNoneQuotes;
 nsStyleXUL::nsStyleXUL(StyleStructContext aContext)
   : mBoxFlex(0.0f)
   , mBoxOrdinal(1)
-  , mBoxAlign(NS_STYLE_BOX_ALIGN_STRETCH)
-  , mBoxDirection(NS_STYLE_BOX_DIRECTION_NORMAL)
-  , mBoxOrient(NS_STYLE_BOX_ORIENT_HORIZONTAL)
-  , mBoxPack(NS_STYLE_BOX_PACK_START)
+  , mBoxAlign(StyleBoxAlign::Stretch)
+  , mBoxDirection(StyleBoxDirection::Normal)
+  , mBoxOrient(StyleBoxOrient::Horizontal)
+  , mBoxPack(StyleBoxPack::Start)
   , mStretchStack(true)
 {
   MOZ_COUNT_CTOR(nsStyleXUL);

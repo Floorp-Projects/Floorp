@@ -1335,7 +1335,7 @@ public:
   uint8_t        mBorderImageRepeatH; // [reset] see nsStyleConsts.h
   uint8_t        mBorderImageRepeatV; // [reset]
   mozilla::StyleFloatEdge mFloatEdge; // [reset]
-  uint8_t        mBoxDecorationBreak; // [reset] see nsStyleConsts.h
+  mozilla::StyleBoxDecorationBreak mBoxDecorationBreak; // [reset]
 
 protected:
   // mComputedBorder holds the CSS2.1 computed border-width values.
@@ -1653,6 +1653,8 @@ struct nsStyleGridLine
 //
 //   A <track-size> specified as a single <track-breadth> is represented
 //   as identical min and max sizing functions.
+//   A 'fit-content(size)' <track-size> is represented as eStyleUnit_None
+//   in the min sizing function and 'size' in the max sizing function.
 //
 //   The units for nsStyleCoord are:
 //   * eStyleUnit_Percent represents a <percentage>
@@ -3429,10 +3431,10 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleXUL
 
   float         mBoxFlex;               // [reset] see nsStyleConsts.h
   uint32_t      mBoxOrdinal;            // [reset] see nsStyleConsts.h
-  uint8_t       mBoxAlign;              // [reset] see nsStyleConsts.h
-  uint8_t       mBoxDirection;          // [reset] see nsStyleConsts.h
-  uint8_t       mBoxOrient;             // [reset] see nsStyleConsts.h
-  uint8_t       mBoxPack;               // [reset] see nsStyleConsts.h
+  mozilla::StyleBoxAlign mBoxAlign;         // [reset]
+  mozilla::StyleBoxDirection mBoxDirection; // [reset]
+  mozilla::StyleBoxOrient mBoxOrient;       // [reset]
+  mozilla::StyleBoxPack mBoxPack;           // [reset]
   bool          mStretchStack;          // [reset] see nsStyleConsts.h
 };
 

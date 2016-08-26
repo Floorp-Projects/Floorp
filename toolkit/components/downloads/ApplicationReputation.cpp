@@ -52,6 +52,7 @@
 #include "nsContentUtils.h"
 
 using mozilla::BasePrincipal;
+using mozilla::DocShellOriginAttributes;
 using mozilla::PrincipalOriginAttributes;
 using mozilla::Preferences;
 using mozilla::TimeStamp;
@@ -1282,8 +1283,9 @@ PendingLookup::SendRemoteQueryInternal()
 
   // Set the Safebrowsing cookie jar, so that the regular Google cookie is not
   // sent with this request. See bug 897516.
-  nsCOMPtr<nsIInterfaceRequestor> loadContext =
-    new mozilla::LoadContext(NECKO_SAFEBROWSING_APP_ID);
+  DocShellOriginAttributes attrs;
+  attrs.mAppId = NECKO_SAFEBROWSING_APP_ID;
+  nsCOMPtr<nsIInterfaceRequestor> loadContext = new mozilla::LoadContext(attrs);
   rv = mChannel->SetNotificationCallbacks(loadContext);
   NS_ENSURE_SUCCESS(rv, rv);
 

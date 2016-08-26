@@ -314,7 +314,7 @@ public:
   }
 
   template <typename T>
-  bool ReadArray(nsTArray<T>& aDest, size_t aLength)
+  MOZ_MUST_USE bool ReadArray(nsTArray<T>& aDest, size_t aLength)
   {
     auto ptr = Read(aLength * sizeof(T));
     if (!ptr) {
@@ -323,6 +323,24 @@ public:
 
     aDest.Clear();
     aDest.AppendElements(reinterpret_cast<const T*>(ptr), aLength);
+    return true;
+  }
+
+  template <typename T>
+  MOZ_MUST_USE bool ReadArray(FallibleTArray<T>& aDest, size_t aLength)
+  {
+    auto ptr = Read(aLength * sizeof(T));
+    if (!ptr) {
+      return false;
+    }
+
+    aDest.Clear();
+    if (!aDest.SetCapacity(aLength, mozilla::fallible)) {
+      return false;
+    }
+    MOZ_ALWAYS_TRUE(aDest.AppendElements(reinterpret_cast<const T*>(ptr),
+                                         aLength,
+                                         mozilla::fallible));
     return true;
   }
 

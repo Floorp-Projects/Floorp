@@ -38,6 +38,7 @@
 #include "nsContentUtils.h"
 #include "nsILoadContext.h"
 #include "nsIFrame.h"
+#include "nsIScriptSecurityManager.h"
 
 using namespace mozilla::dom;
 
@@ -622,6 +623,13 @@ NS_IMETHODIMP
 nsFormFillController::GetNoRollupOnCaretMove(bool *aNoRollupOnCaretMove)
 {
   *aNoRollupOnCaretMove = false;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFormFillController::GetUserContextId(uint32_t* aUserContextId)
+{
+  *aUserContextId = nsIScriptSecurityManager::DEFAULT_USER_CONTEXT_ID;
   return NS_OK;
 }
 

@@ -210,7 +210,7 @@ intrinsic_UnsafeCallWrappedFunction(JSContext* cx, unsigned argc, Value* vp)
     RootedObject wrappedFun(cx, &args[0].toObject());
     RootedObject fun(cx, UncheckedUnwrap(wrappedFun));
     MOZ_RELEASE_ASSERT(fun->is<JSFunction>());
-    MOZ_RELEASE_ASSERT(fun->as<JSFunction>().isSelfHostedBuiltin());
+    MOZ_RELEASE_ASSERT(fun->as<JSFunction>().isSelfHostedOrIntrinsic());
 
     InvokeArgs args2(cx);
     if (!args2.init(args.length() - 2))
@@ -1835,25 +1835,6 @@ intrinsic_EnqueuePromiseReactionJob(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
-static bool
-intrinsic_EnqueuePromiseResolveThenableJob(JSContext* cx, unsigned argc, Value* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-
-    MOZ_ASSERT(args.length() == 3);
-    MOZ_ASSERT(IsCallable(args[2]));
-
-    RootedValue promiseToResolve(cx, args[0]);
-    RootedValue thenable(cx, args[1]);
-    RootedValue then(cx, args[2]);
-
-    if (!EnqueuePromiseResolveThenableJob(cx, promiseToResolve, thenable, then))
-        return false;
-
-    args.rval().setUndefined();
-    return true;
-}
-
 // ES2016, February 12 draft, 25.4.1.9.
 static bool
 intrinsic_HostPromiseRejectionTracker(JSContext* cx, unsigned argc, Value* vp)
@@ -1989,20 +1970,6 @@ intrinsic_ConstructorForTypedArray(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
-static bool
-intrinsic_OriginalPromiseConstructor(JSContext* cx, unsigned argc, Value* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    MOZ_ASSERT(args.length() == 0);
-
-    JSObject* obj = GlobalObject::getOrCreatePromiseConstructor(cx, cx->global());
-    if (!obj)
-        return false;
-
-    args.rval().setObject(*obj);
-    return true;
-}
-
 /**
  * Returns an object created in the embedding-provided incumbent global.
  *
@@ -2043,47 +2010,6 @@ intrinsic_GetObjectFromIncumbentGlobal(JSContext* cx, unsigned argc, Value* vp)
 
     args.rval().set(objVal);
     return true;
-}
-
-static bool
-intrinsic_RejectUnwrappedPromise(JSContext* cx, unsigned argc, Value* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    MOZ_ASSERT(args.length() == 2);
-
-    RootedObject obj(cx, &args[0].toObject());
-    MOZ_ASSERT(IsWrapper(obj));
-    Rooted<PromiseObject*> promise(cx, &UncheckedUnwrap(obj)->as<PromiseObject>());
-    AutoCompartment ac(cx, promise);
-    RootedValue reasonVal(cx, args[1]);
-
-    // The rejection reason might've been created in a compartment with higher
-    // privileges than the Promise's. In that case, object-type rejection
-    // values might be wrapped into a wrapper that throws whenever the
-    // Promise's reaction handler wants to do anything useful with it. To
-    // avoid that situation, we synthesize a generic error that doesn't
-    // expose any privileged information but can safely be used in the
-    // rejection handler.
-    if (!promise->compartment()->wrap(cx, &reasonVal))
-        return false;
-    if (reasonVal.isObject() && !CheckedUnwrap(&reasonVal.toObject())) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
-                             JSMSG_PROMISE_ERROR_IN_WRAPPED_REJECTION_REASON);
-        if (!GetAndClearException(cx, &reasonVal))
-            return false;
-    }
-
-    RootedAtom atom(cx, Atomize(cx, "RejectPromise", strlen("RejectPromise")));
-    if (!atom)
-        return false;
-    RootedPropertyName name(cx, atom->asPropertyName());
-
-    FixedInvokeArgs<2> args2(cx);
-
-    args2[0].setObject(*promise);
-    args2[1].set(reasonVal);
-
-    return CallSelfHostedFunction(cx, name, UndefinedHandleValue, args2, args.rval());
 }
 
 static bool
@@ -2240,24 +2166,6 @@ intrinsic_ModuleNamespaceExports(JSContext* cx, unsigned argc, Value* vp)
     MOZ_ASSERT(args.length() == 1);
     RootedModuleNamespaceObject namespace_(cx, &args[0].toObject().as<ModuleNamespaceObject>());
     args.rval().setObject(namespace_->exports());
-    return true;
-}
-
-/**
- * Intrinsic used to tell the debugger about settled promises.
- *
- * This is invoked both when resolving and rejecting promises, after the
- * resulting state has been set on the promise, and it's up to the debugger
- * to act on this signal in whichever way it wants.
- */
-static bool
-intrinsic_onPromiseSettled(JSContext* cx, unsigned argc, Value* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    MOZ_ASSERT(args.length() == 1);
-    Rooted<PromiseObject*> promise(cx, &args[0].toObject().as<PromiseObject>());
-    promise->onSettled(cx);
-    args.rval().setUndefined();
     return true;
 }
 
@@ -2525,10 +2433,7 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("IsPromise",                      intrinsic_IsInstanceOfBuiltin<PromiseObject>, 1,0),
     JS_FN("IsWrappedPromise",               intrinsic_IsWrappedPromiseObject,     1, 0),
     JS_FN("_EnqueuePromiseReactionJob",     intrinsic_EnqueuePromiseReactionJob,  2, 0),
-    JS_FN("_EnqueuePromiseResolveThenableJob", intrinsic_EnqueuePromiseResolveThenableJob, 2, 0),
     JS_FN("HostPromiseRejectionTracker",    intrinsic_HostPromiseRejectionTracker,2, 0),
-    JS_FN("_GetOriginalPromiseConstructor", intrinsic_OriginalPromiseConstructor, 0, 0),
-    JS_FN("RejectUnwrappedPromise",         intrinsic_RejectUnwrappedPromise,     2, 0),
     JS_FN("CallPromiseMethodIfWrapped",
           CallNonGenericSelfhostedMethod<Is<PromiseObject>>,      2,0),
 
@@ -2637,8 +2542,6 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("NewModuleNamespace", intrinsic_NewModuleNamespace, 2, 0),
     JS_FN("AddModuleNamespaceBinding", intrinsic_AddModuleNamespaceBinding, 4, 0),
     JS_FN("ModuleNamespaceExports", intrinsic_ModuleNamespaceExports, 1, 0),
-
-    JS_FN("_dbg_onPromiseSettled", intrinsic_onPromiseSettled, 1, 0),
 
     JS_FS_END
 };

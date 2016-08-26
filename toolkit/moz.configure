@@ -507,6 +507,8 @@ option('--with-servo', env='SERVO_TARGET_DIR', nargs=1,
 def servo_target_dir(value):
     return value[0]
 
+imply_option('--enable-jemalloc', depends_if('--with-servo')(lambda _: 'moz'))
+
 set_define('MOZ_STYLO', depends_if(servo_target_dir)(lambda x: bool(x)))
 set_config('SERVO_TARGET_DIR', servo_target_dir)
 
@@ -694,3 +696,63 @@ def necko_protocols(protocols):
 
 set_config('NECKO_PROTOCOLS', necko_protocols)
 add_old_configure_assignment('NECKO_PROTOCOLS', necko_protocols)
+
+# Graphics
+# ==============================================================
+option('--disable-skia', help='Disable use of Skia')
+
+@depends('--disable-skia', target)
+def skia(value, target):
+    if value.origin == 'default' and target.endianness == 'big':
+        return False
+    if value:
+        return True
+
+set_config('MOZ_ENABLE_SKIA', skia)
+set_define('MOZ_ENABLE_SKIA', skia)
+set_define('USE_SKIA', skia)
+
+@depends(skia, target)
+def skia_android(skia, target):
+    if skia and target.os == 'Android':
+        return True
+
+set_define('SK_BUILD_FOR_ANDROID_NDK', skia_android)
+
+option('--disable-skia-gpu', help='Disable use of Skia-GPU')
+
+@depends('--disable-skia-gpu', skia, target)
+def skia_gpu(value, skia, target):
+    if value.origin == 'default':
+        if not skia:
+            return False
+        # Skia GPU support may not reliably build on certain *BSDs (see bug 1234494)
+        if target.os in ('NetBSD', 'OpenBSD'):
+            return False
+    elif value and not skia:
+        die('Cannot enable Skia-GPU without enabling Skia')
+    if skia and value:
+        return True
+
+set_config('MOZ_ENABLE_SKIA_GPU', skia_gpu)
+set_define('USE_SKIA_GPU', skia_gpu)
+
+@depends(skia, skia_gpu)
+def skia_includes(skia, skia_gpu):
+    includes = []
+    if skia:
+        includes += [
+            '/gfx/skia',
+            '/gfx/skia/skia/include/config',
+            '/gfx/skia/skia/include/core',
+        ]
+
+    if skia_gpu:
+        includes += [
+            '/gfx/skia/skia/include/gpu',
+            '/gfx/skia/skia/include/utils',
+        ]
+
+    return includes
+
+set_config('SKIA_INCLUDES', skia_includes)

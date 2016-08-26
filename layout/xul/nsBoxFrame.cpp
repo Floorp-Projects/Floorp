@@ -338,13 +338,13 @@ nsBoxFrame::GetInitialHAlignment(nsBoxFrame::Halignment& aHalign)
   const nsStyleXUL* boxInfo = StyleXUL();
   if (IsXULHorizontal()) {
     switch (boxInfo->mBoxPack) {
-      case NS_STYLE_BOX_PACK_START:
+      case StyleBoxPack::Start:
         aHalign = nsBoxFrame::hAlign_Left;
         return true;
-      case NS_STYLE_BOX_PACK_CENTER:
+      case StyleBoxPack::Center:
         aHalign = nsBoxFrame::hAlign_Center;
         return true;
-      case NS_STYLE_BOX_PACK_END:
+      case StyleBoxPack::End:
         aHalign = nsBoxFrame::hAlign_Right;
         return true;
       default: // Nonsensical value. Just bail.
@@ -353,13 +353,13 @@ nsBoxFrame::GetInitialHAlignment(nsBoxFrame::Halignment& aHalign)
   }
   else {
     switch (boxInfo->mBoxAlign) {
-      case NS_STYLE_BOX_ALIGN_START:
+      case StyleBoxAlign::Start:
         aHalign = nsBoxFrame::hAlign_Left;
         return true;
-      case NS_STYLE_BOX_ALIGN_CENTER:
+      case StyleBoxAlign::Center:
         aHalign = nsBoxFrame::hAlign_Center;
         return true;
-      case NS_STYLE_BOX_ALIGN_END:
+      case StyleBoxAlign::End:
         aHalign = nsBoxFrame::hAlign_Right;
         return true;
       default: // Nonsensical value. Just bail.
@@ -413,16 +413,16 @@ nsBoxFrame::GetInitialVAlignment(nsBoxFrame::Valignment& aValign)
   const nsStyleXUL* boxInfo = StyleXUL();
   if (IsXULHorizontal()) {
     switch (boxInfo->mBoxAlign) {
-      case NS_STYLE_BOX_ALIGN_START:
+      case StyleBoxAlign::Start:
         aValign = nsBoxFrame::vAlign_Top;
         return true;
-      case NS_STYLE_BOX_ALIGN_CENTER:
+      case StyleBoxAlign::Center:
         aValign = nsBoxFrame::vAlign_Middle;
         return true;
-      case NS_STYLE_BOX_ALIGN_BASELINE:
+      case StyleBoxAlign::Baseline:
         aValign = nsBoxFrame::vAlign_BaseLine;
         return true;
-      case NS_STYLE_BOX_ALIGN_END:
+      case StyleBoxAlign::End:
         aValign = nsBoxFrame::vAlign_Bottom;
         return true;
       default: // Nonsensical value. Just bail.
@@ -431,13 +431,13 @@ nsBoxFrame::GetInitialVAlignment(nsBoxFrame::Valignment& aValign)
   }
   else {
     switch (boxInfo->mBoxPack) {
-      case NS_STYLE_BOX_PACK_START:
+      case StyleBoxPack::Start:
         aValign = nsBoxFrame::vAlign_Top;
         return true;
-      case NS_STYLE_BOX_PACK_CENTER:
+      case StyleBoxPack::Center:
         aValign = nsBoxFrame::vAlign_Middle;
         return true;
-      case NS_STYLE_BOX_PACK_END:
+      case StyleBoxPack::End:
         aValign = nsBoxFrame::vAlign_Bottom;
         return true;
       default: // Nonsensical value. Just bail.
@@ -457,10 +457,11 @@ nsBoxFrame::GetInitialOrientation(bool& aIsHorizontal)
 
   // Check the style system first.
   const nsStyleXUL* boxInfo = StyleXUL();
-  if (boxInfo->mBoxOrient == NS_STYLE_BOX_ORIENT_HORIZONTAL)
+  if (boxInfo->mBoxOrient == StyleBoxOrient::Horizontal) {
     aIsHorizontal = true;
-  else 
+  } else {
     aIsHorizontal = false;
+  }
 
   // Now see if we have an attribute.  The attribute overrides
   // the style system value.
@@ -489,9 +490,10 @@ nsBoxFrame::GetInitialDirection(bool& aIsNormal)
 
   // Now check the style system to see if we should invert aIsNormal.
   const nsStyleXUL* boxInfo = StyleXUL();
-  if (boxInfo->mBoxDirection == NS_STYLE_BOX_DIRECTION_REVERSE)
+  if (boxInfo->mBoxDirection == StyleBoxDirection::Reverse) {
     aIsNormal = !aIsNormal; // Invert our direction.
-  
+  }
+
   // Now see if we have an attribute.  The attribute overrides
   // the style system value.
   if (IsXULHorizontal()) {
@@ -547,7 +549,7 @@ nsBoxFrame::GetInitialAutoStretch(bool& aStretch)
 
   // Check the CSS box-align property.
   const nsStyleXUL* boxInfo = StyleXUL();
-  aStretch = (boxInfo->mBoxAlign == NS_STYLE_BOX_ALIGN_STRETCH);
+  aStretch = (boxInfo->mBoxAlign == StyleBoxAlign::Stretch);
 
   return true;
 }

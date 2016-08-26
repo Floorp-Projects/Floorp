@@ -23,6 +23,8 @@ class nsExpandedPrincipal;
 
 namespace mozilla {
 
+class GenericOriginAttributes;
+
 // Base OriginAttributes class. This has several subclass flavors, and is not
 // directly constructable itself.
 class OriginAttributes : public dom::OriginAttributesDictionary
@@ -56,6 +58,8 @@ public:
   // Helper function to match mIsPrivateBrowsing to existing private browsing
   // flags. Once all other flags are removed, this can be removed too.
   void SyncAttributesWithPrivateBrowsing(bool aInPrivateBrowsing);
+
+  void SetFromGenericAttributes(const GenericOriginAttributes& aAttrs);
 
 protected:
   OriginAttributes() {}

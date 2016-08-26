@@ -1553,7 +1553,7 @@ nsBidiPresUtils::RepositionFrame(nsIFrame* aFrame,
   // We don't need to do that for 'box-decoration-break:clone' because then all
   // continuations have border/padding/margin applied.
   if (aFrame->StyleBorder()->mBoxDecorationBreak ==
-        NS_STYLE_BOX_DECORATION_BREAK_SLICE) {
+        StyleBoxDecorationBreak::Slice) {
     // First remove the border/padding that was applied based on logical order.
     if (!aFrame->GetPrevContinuation()) {
       frameISize -= borderPadding.IStart(frameWM);

@@ -396,8 +396,11 @@ ImageEncoder::ExtractDataInternal(const nsAString& aType,
       nsTArray<uint8_t> data;
       layers::PlanarYCbCrImage* ycbcrImage = static_cast<layers::PlanarYCbCrImage*> (aImage);
       gfxImageFormat format = SurfaceFormat::A8R8G8B8_UINT32;
-      uint32_t stride = GetAlignedStride<16>(aSize.width * 4);
+      uint32_t stride = GetAlignedStride<16>(aSize.width, 4);
       size_t length = BufferSizeFromStrideAndHeight(stride, aSize.height);
+      if (length == 0) {
+        return NS_ERROR_INVALID_ARG;
+      }
       data.SetCapacity(length);
 
       ConvertYCbCrToRGB(*ycbcrImage->GetData(),
