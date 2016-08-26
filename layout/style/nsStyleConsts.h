@@ -71,6 +71,12 @@ enum class StyleBoxAlign : uint8_t {
   End,
 };
 
+// box-decoration-break
+enum class StyleBoxDecorationBreak : uint8_t {
+  Slice,
+  Clone,
+};
+
 // box-pack
 enum class StyleBoxPack : uint8_t {
   Start,
@@ -184,10 +190,6 @@ enum class StyleUserSelect : uint8_t {
 #define NS_STYLE_WINDOW_DRAGGING_DEFAULT 0
 #define NS_STYLE_WINDOW_DRAGGING_DRAG    1
 #define NS_STYLE_WINDOW_DRAGGING_NO_DRAG 2
-
-// box-decoration-break
-#define NS_STYLE_BOX_DECORATION_BREAK_SLICE  0
-#define NS_STYLE_BOX_DECORATION_BREAK_CLONE  1
 
 // box-direction
 #define NS_STYLE_BOX_DIRECTION_NORMAL    0

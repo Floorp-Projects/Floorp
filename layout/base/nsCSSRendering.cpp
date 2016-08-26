@@ -584,8 +584,7 @@ JoinBoxesForSlice(nsIFrame* aFrame, const nsRect& aBorderArea,
 static bool
 IsBoxDecorationSlice(const nsStyleBorder& aStyleBorder)
 {
-  return aStyleBorder.mBoxDecorationBreak ==
-           NS_STYLE_BOX_DECORATION_BREAK_SLICE;
+  return aStyleBorder.mBoxDecorationBreak == StyleBoxDecorationBreak::Slice;
 }
 
 static nsRect

@@ -1031,8 +1031,8 @@ const KTableEntry nsCSSProps::kBorderWidthKTable[] = {
 };
 
 const KTableEntry nsCSSProps::kBoxDecorationBreakKTable[] = {
-  { eCSSKeyword_slice, NS_STYLE_BOX_DECORATION_BREAK_SLICE },
-  { eCSSKeyword_clone, NS_STYLE_BOX_DECORATION_BREAK_CLONE },
+  { eCSSKeyword_slice, StyleBoxDecorationBreak::Slice },
+  { eCSSKeyword_clone, StyleBoxDecorationBreak::Clone },
   { eCSSKeyword_UNKNOWN, -1 }
 };
 
