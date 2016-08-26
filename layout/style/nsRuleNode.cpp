@@ -1336,6 +1336,7 @@ struct SetEnumValueHelper
 
   DEFINE_ENUM_CLASS_SETTER(StyleBoxAlign, Stretch, End)
   DEFINE_ENUM_CLASS_SETTER(StyleBoxDecorationBreak, Slice, Clone)
+  DEFINE_ENUM_CLASS_SETTER(StyleBoxDirection, Normal, Reverse)
   DEFINE_ENUM_CLASS_SETTER(StyleBoxPack, Start, Justify)
   DEFINE_ENUM_CLASS_SETTER(StyleBoxSizing, Content, Border)
   DEFINE_ENUM_CLASS_SETTER(StyleFillRule, Nonzero, Evenodd)
@@ -9100,7 +9101,7 @@ nsRuleNode::ComputeXULData(void* aStartStruct,
            xul->mBoxDirection, conditions,
            SETVAL_ENUMERATED | SETVAL_UNSET_INITIAL,
            parentXUL->mBoxDirection,
-           NS_STYLE_BOX_DIRECTION_NORMAL);
+           StyleBoxDirection::Normal);
 
   // box-flex: factor, inherit
   SetFactor(*aRuleData->ValueForBoxFlex(),
