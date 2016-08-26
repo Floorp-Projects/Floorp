@@ -17,5 +17,5 @@
     </mask>
   </defs>
 
-  <use xlink:href="#shape-shield-outer" mask="url(#mask-shield-cutout)"/>
+  <use xlink:href="#shape-shield-outer" mask="url(#mask-shield-cutout)" fill="-moz-fieldtext"/>
 </svg>
