@@ -3493,7 +3493,7 @@ nsCookieService::AddInternal(const nsCookieKey             &aKey,
     nsCookieEntry *entry = mDBState->hostTable.GetEntry(aKey);
     if (entry && entry->GetCookies().Length() >= mMaxCookiesPerHost) {
       nsListIter iter;
-      FindStaleCookie(entry, currentTime, iter);
+      FindStaleCookie(entry, currentTime, aHostURI, iter);
       oldCookie = iter.Cookie();
 
       // remove the oldest cookie from the domain
@@ -4361,12 +4361,35 @@ nsCookieService::CookieExists(nsICookie2 *aCookie,
 void
 nsCookieService::FindStaleCookie(nsCookieEntry *aEntry,
                                  int64_t aCurrentTime,
+                                 nsIURI* aSource,
                                  nsListIter &aIter)
 {
-  aIter.entry = nullptr;
+  bool requireHostMatch = true;
+  nsAutoCString baseDomain, sourceHost, sourcePath;
+  if (aSource) {
+    GetBaseDomain(aSource, baseDomain, requireHostMatch);
+    aSource->GetAsciiHost(sourceHost);
+    aSource->GetPath(sourcePath);
+  }
 
-  int64_t oldestTime = 0;
   const nsCookieEntry::ArrayType &cookies = aEntry->GetCookies();
+
+  int64_t oldestNonMatchingSessionCookieTime = 0;
+  nsListIter oldestNonMatchingSessionCookie;
+  oldestNonMatchingSessionCookie.entry = nullptr;
+
+  int64_t oldestSessionCookieTime = 0;
+  nsListIter oldestSessionCookie;
+  oldestSessionCookie.entry = nullptr;
+
+  int64_t oldestNonMatchingNonSessionCookieTime = 0;
+  nsListIter oldestNonMatchingNonSessionCookie;
+  oldestNonMatchingNonSessionCookie.entry = nullptr;
+
+  int64_t oldestCookieTime = 0;
+  nsListIter oldestCookie;
+  oldestCookie.entry = nullptr;
+
   for (nsCookieEntry::IndexType i = 0; i < cookies.Length(); ++i) {
     nsCookie *cookie = cookies[i];
 
@@ -4377,12 +4400,69 @@ nsCookieService::FindStaleCookie(nsCookieEntry *aEntry,
       return;
     }
 
-    // Check if we've found the oldest cookie so far.
-    if (!aIter.entry || oldestTime > cookie->LastAccessed()) {
-      oldestTime = cookie->LastAccessed();
-      aIter.entry = aEntry;
-      aIter.index = i;
+    // Update our various records of oldest cookies fitting several restrictions:
+    // * session cookies
+    // * non-session cookies
+    // * cookies with paths and domains that don't match the cookie triggering this purge
+
+    uint32_t cookiePathLen = cookie->Path().Length();
+    if (cookiePathLen > 0 && cookie->Path().Last() == '/')
+      --cookiePathLen;
+
+    // This cookie is a candidate for eviction if we have no information about
+    // the source request, or if it is not a path or domain match against the
+    // source request.
+    bool isPrimaryEvictionCandidate = true;
+    if (aSource) {
+      bool pathMatches = StringBeginsWith(sourcePath, Substring(cookie->Path(), 0, cookiePathLen));
+      bool domainMatches = cookie->RawHost() == sourceHost ||
+          (cookie->IsDomain() && StringEndsWith(sourceHost, cookie->Host()));
+      isPrimaryEvictionCandidate = !pathMatches || !domainMatches;
     }
+
+    int64_t lastAccessed = cookie->LastAccessed();
+    if (cookie->IsSession()) {
+      if (!oldestSessionCookie.entry || oldestSessionCookieTime > lastAccessed) {
+        oldestSessionCookieTime = lastAccessed;
+        oldestSessionCookie.entry = aEntry;
+        oldestSessionCookie.index = i;
+      }
+
+      if (isPrimaryEvictionCandidate &&
+          (!oldestNonMatchingSessionCookie.entry ||
+           oldestNonMatchingSessionCookieTime > lastAccessed)) {
+        oldestNonMatchingSessionCookieTime = lastAccessed;
+        oldestNonMatchingSessionCookie.entry = aEntry;
+        oldestNonMatchingSessionCookie.index = i;
+      }
+    } else if (isPrimaryEvictionCandidate &&
+               (!oldestNonMatchingNonSessionCookie.entry ||
+                oldestNonMatchingNonSessionCookieTime > lastAccessed)) {
+      oldestNonMatchingNonSessionCookieTime = lastAccessed;
+      oldestNonMatchingNonSessionCookie.entry = aEntry;
+      oldestNonMatchingNonSessionCookie.index = i;
+    }
+
+    // Check if we've found the oldest cookie so far.
+    if (!oldestCookie.entry || oldestCookieTime > lastAccessed) {
+      oldestCookieTime = lastAccessed;
+      oldestCookie.entry = aEntry;
+      oldestCookie.index = i;
+    }
+  }
+
+  // Prefer to evict the oldest session cookies with a non-matching path/domain,
+  // followed by the oldest session cookie with a matching path/domain,
+  // followed by the oldest non-session cookie with a non-matching path/domain,
+  // resorting to the oldest non-session cookie with a matching path/domain.
+  if (oldestNonMatchingSessionCookie.entry) {
+    aIter = oldestNonMatchingSessionCookie;
+  } else if (oldestSessionCookie.entry) {
+    aIter = oldestSessionCookie;
+  } else if (oldestNonMatchingNonSessionCookie.entry) {
+    aIter = oldestNonMatchingNonSessionCookie;
+  } else {
+    aIter = oldestCookie;
   }
 }
 
