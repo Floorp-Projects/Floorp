@@ -8602,11 +8602,7 @@ DebuggerObject::isPromiseGetter(JSContext* cx, unsigned argc, Value* vp)
 {
     THIS_DEBUGOBJECT(cx, argc, vp, "get isPromise", args, object)
 
-    bool result;
-    if (!DebuggerObject::getIsPromise(cx, object, result))
-      return false;
-
-    args.rval().setBoolean(result);
+    args.rval().setBoolean(object->isPromise());
     return true;
 }
 
@@ -9325,22 +9321,18 @@ DebuggerObject::isScriptedProxy() const
 }
 
 #ifdef SPIDERMONKEY_PROMISE
-/* static */ bool
-DebuggerObject::getIsPromise(JSContext* cx, HandleDebuggerObject object,
-                          bool& result)
+bool
+DebuggerObject::isPromise() const
 {
-    JSObject* referent = object->referent();
+    JSObject* referent = this->referent();
+
     if (IsCrossCompartmentWrapper(referent)) {
         referent = CheckedUnwrap(referent);
-
-        if (!referent) {
-            JS_ReportError(cx, "Permission denied to access object");
+        if (!referent)
             return false;
-        }
       }
 
-    result = referent->is<PromiseObject>();
-    return true;
+    return referent->is<PromiseObject>();
 }
 #endif // SPIDERMONKEY_PROMISE
 
