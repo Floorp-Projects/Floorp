@@ -186,10 +186,11 @@ static void
 stream_drain_callback(pa_mainloop_api * a, pa_time_event * e, struct timeval const * tv, void * u)
 {
   cubeb_stream * stm = u;
+  stream_state_change_callback(stm, CUBEB_STATE_DRAINED);
   /* there's no pa_rttime_free, so use this instead. */
   a->time_free(stm->drain_timer);
   stm->drain_timer = NULL;
-  stream_state_change_callback(stm, CUBEB_STATE_DRAINED);
+  WRAP(pa_threaded_mainloop_signal)(stm->context->mainloop, 0);
 }
 
 static void
@@ -731,6 +732,7 @@ pulse_stream_init(cubeb * context,
   stm->user_ptr = user_ptr;
   stm->volume = PULSE_NO_GAIN;
   stm->state = -1;
+  assert(stm->shutdown == 0);
 
   WRAP(pa_threaded_mainloop_lock)(stm->context->mainloop);
   if (output_stream_params) {
@@ -853,6 +855,7 @@ pulse_defer_event_cb(pa_mainloop_api * a, void * userdata)
 static int
 pulse_stream_start(cubeb_stream * stm)
 {
+  stm->shutdown = 0;
   stream_cork(stm, UNCORK | NOTIFY);
 
   if (stm->output_stream && !stm->input_stream) {
@@ -871,6 +874,14 @@ pulse_stream_start(cubeb_stream * stm)
 static int
 pulse_stream_stop(cubeb_stream * stm)
 {
+  WRAP(pa_threaded_mainloop_lock)(stm->context->mainloop);
+  stm->shutdown = 1;
+  // If draining is taking place wait to finish
+  while (stm->drain_timer) {
+    WRAP(pa_threaded_mainloop_wait)(stm->context->mainloop);
+  }
+  WRAP(pa_threaded_mainloop_unlock)(stm->context->mainloop);
+
   stream_cork(stm, CORK | NOTIFY);
   return CUBEB_OK;
 }
