@@ -1081,8 +1081,8 @@ class BlobImplMemoryDataOwnerMemoryReporter final
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
 
-  NS_IMETHOD CollectReports(nsIMemoryReporterCallback *aCallback,
-                            nsISupports *aClosure, bool aAnonymize) override
+  NS_IMETHOD CollectReports(nsIHandleReportCallback* aHandleReport,
+                            nsISupports* aData, bool aAnonymize) override
   {
     typedef BlobImplMemory::DataOwner DataOwner;
 
@@ -1113,7 +1113,7 @@ public:
           digestString.AppendPrintf("%02x", digest[i]);
         }
 
-        nsresult rv = aCallback->Callback(
+        aHandleReport->Callback(
           /* process */ NS_LITERAL_CSTRING(""),
           nsPrintfCString(
             "explicit/dom/memory-file-data/large/file(length=%llu, sha1=%s)",
@@ -1126,13 +1126,12 @@ public:
             "that is, an N-byte memory file may take up more than N bytes of "
             "memory.",
             owner->mLength, digestString.get()),
-          aClosure);
-        NS_ENSURE_SUCCESS(rv, rv);
+          aData);
       }
     }
 
     if (smallObjectsTotal > 0) {
-      nsresult rv = aCallback->Callback(
+      aHandleReport->Callback(
         /* process */ NS_LITERAL_CSTRING(""),
         NS_LITERAL_CSTRING("explicit/dom/memory-file-data/small"),
         KIND_HEAP, UNITS_BYTES, smallObjectsTotal,
@@ -1141,8 +1140,7 @@ public:
           "Note that the allocator may round up a memory file's length -- "
           "that is, an N-byte memory file may take up more than N bytes of "
           "memory."),
-        aClosure);
-      NS_ENSURE_SUCCESS(rv, rv);
+        aData);
     }
 
     return NS_OK;

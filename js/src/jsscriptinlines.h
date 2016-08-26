@@ -12,23 +12,13 @@
 #include "asmjs/AsmJS.h"
 #include "jit/BaselineJIT.h"
 #include "jit/IonAnalysis.h"
-#include "vm/ScopeObject.h"
+#include "vm/EnvironmentObject.h"
 
 #include "jscompartmentinlines.h"
 
 #include "vm/Shape-inl.h"
 
 namespace js {
-
-inline
-AliasedFormalIter::AliasedFormalIter(JSScript* script)
-  : begin_(script->bindingArray()),
-    p_(begin_),
-    end_(begin_ + (script->funHasAnyAliasedFormal() ? script->numArgs() : 0)),
-    slot_(CallObject::RESERVED_SLOTS)
-{
-    settle();
-}
 
 ScriptCounts::ScriptCounts()
   : pcCounts_(),
@@ -98,36 +88,23 @@ LazyScript::functionDelazifying(JSContext* cx) const
 inline JSFunction*
 JSScript::functionDelazifying() const
 {
-    if (function_ && function_->isInterpretedLazy()) {
-        function_->setUnlazifiedScript(const_cast<JSScript*>(this));
+    JSFunction* fun = function();
+    if (fun && fun->isInterpretedLazy()) {
+        fun->setUnlazifiedScript(const_cast<JSScript*>(this));
         // If this script has a LazyScript, make sure the LazyScript has a
         // reference to the script when delazifying its canonical function.
         if (lazyScript && !lazyScript->maybeScript())
             lazyScript->initScript(const_cast<JSScript*>(this));
     }
-    return function_;
-}
-
-inline void
-JSScript::setFunction(JSFunction* fun)
-{
-    MOZ_ASSERT(!function_ && !module_);
-    MOZ_ASSERT(fun->isTenured());
-    function_ = fun;
-}
-
-inline void
-JSScript::setModule(js::ModuleObject* module)
-{
-    MOZ_ASSERT(!function_ && !module_);
-    module_ = module;
+    return fun;
 }
 
 inline void
 JSScript::ensureNonLazyCanonicalFunction(JSContext* cx)
 {
     // Infallibly delazify the canonical script.
-    if (function_ && function_->isInterpretedLazy())
+    JSFunction* fun = function();
+    if (fun && fun->isInterpretedLazy())
         functionDelazifying();
 }
 
@@ -137,23 +114,6 @@ JSScript::getFunction(size_t index)
     JSFunction* fun = &getObject(index)->as<JSFunction>();
     MOZ_ASSERT_IF(fun->isNative(), IsAsmJSModuleNative(fun->native()));
     return fun;
-}
-
-inline JSFunction*
-JSScript::getCallerFunction()
-{
-    MOZ_ASSERT(savedCallerFun());
-    return getFunction(0);
-}
-
-inline JSFunction*
-JSScript::functionOrCallerFunction()
-{
-    if (functionNonDelazifying())
-        return functionNonDelazifying();
-    if (savedCallerFun())
-        return getCallerFunction();
-    return nullptr;
 }
 
 inline js::RegExpObject*
@@ -176,6 +136,38 @@ JSScript::global() const
      * can assert that maybeGlobal is non-null here.
      */
     return *compartment()->maybeGlobal();
+}
+
+inline js::LexicalScope*
+JSScript::maybeNamedLambdaScope() const
+{
+    // Dynamically created Functions via the 'new Function' are considered
+    // named lambdas but they do not have the named lambda scope of
+    // textually-created named lambdas.
+    js::Scope* scope = outermostScope();
+    if (scope->kind() == js::ScopeKind::NamedLambda ||
+        scope->kind() == js::ScopeKind::StrictNamedLambda)
+    {
+        MOZ_ASSERT_IF(!strict(), scope->kind() == js::ScopeKind::NamedLambda);
+        MOZ_ASSERT_IF(strict(), scope->kind() == js::ScopeKind::StrictNamedLambda);
+        return &scope->as<js::LexicalScope>();
+    }
+    return nullptr;
+}
+
+inline js::Shape*
+JSScript::initialEnvironmentShape() const
+{
+    js::Scope* scope = bodyScope();
+    if (scope->is<js::FunctionScope>()) {
+        if (js::Shape* envShape = scope->environmentShape())
+            return envShape;
+        if (js::Scope* namedLambdaScope = maybeNamedLambdaScope())
+            return namedLambdaScope->environmentShape();
+    } else if (scope->is<js::EvalScope>()) {
+        return scope->environmentShape();
+    }
+    return nullptr;
 }
 
 inline JSPrincipals*

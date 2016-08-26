@@ -402,9 +402,12 @@ HTMLTextAreaElement::ParseAttribute(int32_t aNamespaceID,
     if (aAttribute == nsGkAtoms::maxlength ||
         aAttribute == nsGkAtoms::minlength) {
       return aResult.ParseNonNegativeIntValue(aValue);
-    } else if (aAttribute == nsGkAtoms::cols ||
-               aAttribute == nsGkAtoms::rows) {
-      return aResult.ParsePositiveIntValue(aValue);
+    } else if (aAttribute == nsGkAtoms::cols) {
+      aResult.ParseIntWithFallback(aValue, DEFAULT_COLS);
+      return true;
+    } else if (aAttribute == nsGkAtoms::rows) {
+      aResult.ParseIntWithFallback(aValue, DEFAULT_ROWS_TEXTAREA);
+      return true;
     }
   }
   return nsGenericHTMLElement::ParseAttribute(aNamespaceID, aAttribute, aValue,

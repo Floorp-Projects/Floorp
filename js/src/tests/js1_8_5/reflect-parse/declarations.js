@@ -58,7 +58,7 @@ assertDecl("function f(a,[x,y]) { function a() { } }",
 // redeclarations (TOK_NAME nodes with lexdef)
 
 assertStmt("function f() { function g() { } function g() { } }",
-           funDecl(ident("f"), [], blockStmt([emptyStmt,
+           funDecl(ident("f"), [], blockStmt([funDecl(ident("g"), [], blockStmt([])),
                                               funDecl(ident("g"), [], blockStmt([]))])));
 
 // Fails due to parser quirks (bug 638577)

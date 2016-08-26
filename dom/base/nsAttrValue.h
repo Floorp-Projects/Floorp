@@ -322,6 +322,18 @@ public:
                             int32_t aMax = INT32_MAX);
 
   /**
+   * Parse a string value into an integer with a fallback for invalid values.
+   * Also allows clamping to a maximum value to support col/colgroup.span (this
+   * is not per spec right now).
+   *
+   * @param aString the string to parse
+   * @param aDefault the default value
+   * @param aMax the maximum value (if value is greater it will be clamped)
+   */
+  void ParseIntWithFallback(const nsAString& aString, int32_t aDefault,
+                            int32_t aMax = INT32_MAX);
+
+  /**
    * Parse a string value into a non-negative integer.
    * This method follows the rules for parsing non-negative integer from:
    * http://dev.w3.org/html5/spec/infrastructure.html#rules-for-parsing-non-negative-integers

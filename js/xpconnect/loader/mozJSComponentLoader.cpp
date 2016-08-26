@@ -325,13 +325,13 @@ mozJSComponentLoader::ReallyInit()
 }
 
 // For terrible compatibility reasons, we need to consider both the global
-// lexical scope and the global of modules when searching for exported
+// lexical environment and the global of modules when searching for exported
 // symbols.
 static JSObject*
 ResolveModuleObjectProperty(JSContext* aCx, HandleObject aModObj, const char* name)
 {
-    if (JS_HasExtensibleLexicalScope(aModObj)) {
-        RootedObject lexical(aCx, JS_ExtensibleLexicalScope(aModObj));
+    if (JS_HasExtensibleLexicalEnvironment(aModObj)) {
+        RootedObject lexical(aCx, JS_ExtensibleLexicalEnvironment(aModObj));
         bool found;
         if (!JS_HasOwnProperty(aCx, lexical, name, &found)) {
             return nullptr;
@@ -449,7 +449,7 @@ mozJSComponentLoader::FindTargetObject(JSContext* aCx,
     if (mReuseLoaderGlobal) {
         JSFunction* fun = js::GetOutermostEnclosingFunctionOfScriptedCaller(aCx);
         if (fun) {
-            JSObject* funParent = js::GetNearestEnclosingWithScopeObjectForFunction(fun);
+            JSObject* funParent = js::GetNearestEnclosingWithEnvironmentObjectForFunction(fun);
             if (JS_GetClass(funParent) == &kFakeBackstagePassJSClass)
                 targetObject = funParent;
         }
@@ -776,9 +776,9 @@ mozJSComponentLoader::ObjectForLocation(ComponentLoaderInfo& aInfo,
             } else {
                 // Note: exceptions will get handled further down;
                 // don't early return for them here.
-                AutoObjectVector scopeChain(cx);
-                if (scopeChain.append(obj)) {
-                    CompileFunction(cx, scopeChain,
+                AutoObjectVector envChain(cx);
+                if (envChain.append(obj)) {
+                    CompileFunction(cx, envChain,
                                     options, nullptr, 0, nullptr,
                                     buf, fileSize32, &function);
                 }
@@ -826,9 +826,9 @@ mozJSComponentLoader::ObjectForLocation(ComponentLoaderInfo& aInfo,
             } else {
                 // Note: exceptions will get handled further down;
                 // don't early return for them here.
-                AutoObjectVector scopeChain(cx);
-                if (scopeChain.append(obj)) {
-                    CompileFunction(cx, scopeChain,
+                AutoObjectVector envChain(cx);
+                if (envChain.append(obj)) {
+                    CompileFunction(cx, envChain,
                                     options, nullptr, 0, nullptr,
                                     buf, fileSize32, &function);
                 }
@@ -872,9 +872,9 @@ mozJSComponentLoader::ObjectForLocation(ComponentLoaderInfo& aInfo,
             } else {
                 // Note: exceptions will get handled further down;
                 // don't early return for them here.
-                AutoObjectVector scopeChain(cx);
-                if (scopeChain.append(obj)) {
-                    CompileFunction(cx, scopeChain,
+                AutoObjectVector envChain(cx);
+                if (envChain.append(obj)) {
+                    CompileFunction(cx, envChain,
                                     options, nullptr, 0, nullptr,
                                     buf.get(), bytesRead, &function);
                 }
@@ -985,8 +985,8 @@ mozJSComponentLoader::UnloadModules()
         RootedObject global(cx, mLoaderGlobal->GetJSObject());
         if (global) {
             JSAutoCompartment ac(cx, global);
-            if (JS_HasExtensibleLexicalScope(global)) {
-                JS_SetAllNonReservedSlotsToUndefined(cx, JS_ExtensibleLexicalScope(global));
+            if (JS_HasExtensibleLexicalEnvironment(global)) {
+                JS_SetAllNonReservedSlotsToUndefined(cx, JS_ExtensibleLexicalEnvironment(global));
             }
             JS_SetAllNonReservedSlotsToUndefined(cx, global);
         } else {
@@ -1102,8 +1102,8 @@ mozJSComponentLoader::IsModuleLoaded(const nsACString& aLocation,
 static JSObject*
 ResolveModuleObjectPropertyById(JSContext* aCx, HandleObject aModObj, HandleId id)
 {
-    if (JS_HasExtensibleLexicalScope(aModObj)) {
-        RootedObject lexical(aCx, JS_ExtensibleLexicalScope(aModObj));
+    if (JS_HasExtensibleLexicalEnvironment(aModObj)) {
+        RootedObject lexical(aCx, JS_ExtensibleLexicalEnvironment(aModObj));
         bool found;
         if (!JS_HasOwnPropertyById(aCx, lexical, id, &found)) {
             return nullptr;

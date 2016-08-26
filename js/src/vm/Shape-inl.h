@@ -16,7 +16,6 @@
 
 #include "gc/Allocator.h"
 #include "vm/Interpreter.h"
-#include "vm/ScopeObject.h"
 #include "vm/TypedArrayCommon.h"
 
 #include "jsatominlines.h"

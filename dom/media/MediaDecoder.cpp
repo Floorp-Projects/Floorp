@@ -1779,22 +1779,13 @@ MediaMemoryTracker::CollectReports(nsIHandleReportCallback* aHandleReport,
     decoder->AddSizeOfResources(resourceSizes);
   }
 
-#define REPORT(_path, _amount, _desc)                                         \
-  do {                                                                        \
-      nsresult rv;                                                            \
-      rv = aHandleReport->Callback(EmptyCString(), NS_LITERAL_CSTRING(_path), \
-                                   KIND_HEAP, UNITS_BYTES, _amount,           \
-                                   NS_LITERAL_CSTRING(_desc), aData);         \
-      NS_ENSURE_SUCCESS(rv, rv);                                              \
-  } while (0)
+  MOZ_COLLECT_REPORT(
+    "explicit/media/decoded/video", KIND_HEAP, UNITS_BYTES, video,
+    "Memory used by decoded video frames.");
 
-  REPORT("explicit/media/decoded/video", video,
-         "Memory used by decoded video frames.");
-
-  REPORT("explicit/media/decoded/audio", audio,
-         "Memory used by decoded audio chunks.");
-
-#undef REPORT
+  MOZ_COLLECT_REPORT(
+    "explicit/media/decoded/audio", KIND_HEAP, UNITS_BYTES, audio,
+    "Memory used by decoded audio chunks.");
 
   return NS_OK;
 }

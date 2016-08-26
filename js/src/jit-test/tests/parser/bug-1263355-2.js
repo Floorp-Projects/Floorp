@@ -1,0 +1,2 @@
+eval();
+try {} catch (abc) {};

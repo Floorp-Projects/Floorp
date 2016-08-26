@@ -9,8 +9,8 @@ function simulateItemDragAndEnd(aToDrag, aTarget) {
 
   ds.startDragSession();
   try {
-    var [result, dataTransfer] = ChromeUtils.synthesizeDragOver(aToDrag.parentNode, aTarget);
-    ChromeUtils.synthesizeDropAfterDragOver(result, dataTransfer, aTarget);
+    var [result, dataTransfer] = EventUtils.synthesizeDragOver(aToDrag.parentNode, aTarget);
+    EventUtils.synthesizeDropAfterDragOver(result, dataTransfer, aTarget);
     // Send dragend to move dragging item back to initial place.
     EventUtils.sendDragEvent({ type: "dragend", dataTransfer: dataTransfer },
                              aToDrag.parentNode);

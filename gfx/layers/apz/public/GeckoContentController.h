@@ -12,7 +12,6 @@
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT_HELPER2
 #include "mozilla/EventForwards.h"      // for Modifiers
 #include "nsISupportsImpl.h"
-#include "ThreadSafeRefcountingWithMainThreadDestruction.h"
 
 namespace mozilla {
 
@@ -23,12 +22,7 @@ namespace layers {
 class GeckoContentController
 {
 public:
-  /**
-   * At least one class deriving from GeckoContentController needs to do
-   * synchronous cleanup on the main thread, so we use
-   * NS_INLINE_DECL_THREADSAFE_REFCOUNTING_WITH_MAIN_THREAD_DESTRUCTION.
-   */
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING_WITH_MAIN_THREAD_DESTRUCTION(GeckoContentController)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(GeckoContentController)
 
   /**
    * Requests a paint of the given FrameMetrics |aFrameMetrics| from Gecko.
@@ -70,6 +64,16 @@ public:
    * This method must always be called on the controller thread.
    */
   virtual void PostDelayedTask(already_AddRefed<Runnable> aRunnable, int aDelayMs) = 0;
+
+  /**
+   * Returns true if we are currently on the thread that can send repaint requests.
+   */
+  virtual bool IsRepaintThread() = 0;
+
+  /**
+   * Runs the given task on the "repaint" thread.
+   */
+  virtual void DispatchToRepaintThread(already_AddRefed<Runnable> aTask) = 0;
 
   /**
    * APZ uses |FrameMetrics::mCompositionBounds| for hit testing. Sometimes,
@@ -143,7 +147,7 @@ public:
   virtual void SetScrollingRootContent(bool isRootContent) {}
 
   GeckoContentController() {}
-  virtual void ChildAdopted() {}
+
   /**
    * Needs to be called on the main thread.
    */

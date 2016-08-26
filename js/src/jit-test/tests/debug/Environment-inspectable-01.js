@@ -46,8 +46,7 @@ function debuggerHandler(frame) {
   assertEq(ke.getVariable('xk'), 'value of xk');
   assertEq(ee.inspectable, true);
   assertEq(ee.type, 'declarative');
-  assertEq(ee.parent.type, 'declarative');
-  assertEq(ee.parent.parent.type, 'object');
+  assertEq(ee.parent.type, 'object');
 
   dbg.removeDebuggee(g2);
 
@@ -57,8 +56,7 @@ function debuggerHandler(frame) {
   assertThrowsInstanceOf(() => ke.getVariable('xk'), Error);
   assertEq(ee.inspectable, true);
   assertEq(ee.type, 'declarative');
-  assertEq(ee.parent.type, 'declarative');
-  assertEq(ee.parent.parent.type, 'object');
+  assertEq(ee.parent.type, 'object');
 
   dbg.removeDebuggee(g1);
 

@@ -211,7 +211,7 @@ interface nsIMemoryReporterManager : nsISupports
   /*
    * Initialize.
    */
-  void init();
+  [must_use] void init();
 
   /*
    * Register the given nsIMemoryReporter.  The Manager service will hold a
@@ -373,31 +373,31 @@ interface nsIMemoryReporterManager : nsISupports
    * |pageFaultsHard| (UNITS_COUNT_CUMULATIVE)  The number of hard (a.k.a.
    * major) page faults that have occurred since the process started.
    */
-  readonly attribute int64_t vsize;
-  readonly attribute int64_t vsizeMaxContiguous;
-  readonly attribute int64_t resident;
-  readonly attribute int64_t residentFast;
-  readonly attribute int64_t residentPeak;
-  readonly attribute int64_t residentUnique;
+  [must_use] readonly attribute int64_t vsize;
+  [must_use] readonly attribute int64_t vsizeMaxContiguous;
+  [must_use] readonly attribute int64_t resident;
+  [must_use] readonly attribute int64_t residentFast;
+  [must_use] readonly attribute int64_t residentPeak;
+  [must_use] readonly attribute int64_t residentUnique;
 
-  readonly attribute int64_t heapAllocated;
-  readonly attribute int64_t heapOverheadFraction;
+  [must_use] readonly attribute int64_t heapAllocated;
+  [must_use] readonly attribute int64_t heapOverheadFraction;
 
-  readonly attribute int64_t JSMainRuntimeGCHeap;
-  readonly attribute int64_t JSMainRuntimeTemporaryPeak;
-  readonly attribute int64_t JSMainRuntimeCompartmentsSystem;
-  readonly attribute int64_t JSMainRuntimeCompartmentsUser;
+  [must_use] readonly attribute int64_t JSMainRuntimeGCHeap;
+  [must_use] readonly attribute int64_t JSMainRuntimeTemporaryPeak;
+  [must_use] readonly attribute int64_t JSMainRuntimeCompartmentsSystem;
+  [must_use] readonly attribute int64_t JSMainRuntimeCompartmentsUser;
 
-  readonly attribute int64_t imagesContentUsedUncompressed;
+  [must_use] readonly attribute int64_t imagesContentUsedUncompressed;
 
-  readonly attribute int64_t storageSQLite;
+  [must_use] readonly attribute int64_t storageSQLite;
 
-  readonly attribute int64_t lowMemoryEventsVirtual;
-  readonly attribute int64_t lowMemoryEventsPhysical;
+  [must_use] readonly attribute int64_t lowMemoryEventsVirtual;
+  [must_use] readonly attribute int64_t lowMemoryEventsPhysical;
 
-  readonly attribute int64_t ghostWindows;
+  [must_use] readonly attribute int64_t ghostWindows;
 
-  readonly attribute int64_t pageFaultsHard;
+  [must_use] readonly attribute int64_t pageFaultsHard;
 
   /*
    * This attribute indicates if moz_malloc_usable_size() works.
@@ -416,7 +416,7 @@ interface nsIMemoryReporterManager : nsISupports
    * usage.  When we're finished, we invoke the given runnable if it's not
    * null.
    */
-  void minimizeMemoryUsage(in nsIRunnable callback);
+  [must_use] void minimizeMemoryUsage(in nsIRunnable callback);
 
   /*
    * Measure the memory that is known to be owned by this tab, split up into
@@ -428,6 +428,7 @@ interface nsIMemoryReporterManager : nsISupports
    * The time taken for the measurement (split into JS and non-JS parts) is
    * also returned.
    */
+  [must_use]
   void sizeOfTab(in mozIDOMWindowProxy window,
                  out int64_t jsObjectsSize, out int64_t jsStringsSize,
                  out int64_t jsOtherSize, out int64_t domSize,
@@ -502,15 +503,15 @@ DECL_REGISTER_DISTINGUISHED_AMOUNT(Infallible, GhostWindows)
 
 // Likewise for per-tab measurement.
 
-typedef nsresult (*JSSizeOfTabFn)(JSObject* aObj,
-                                  size_t* aJsObjectsSize,
-                                  size_t* aJsStringSize,
-                                  size_t* aJsPrivateSize,
-                                  size_t* aJsOtherSize);
-typedef nsresult (*NonJSSizeOfTabFn)(nsPIDOMWindowOuter* aWindow,
-                                     size_t* aDomSize,
-                                     size_t* aStyleSize,
-                                     size_t* aOtherSize);
+typedef MOZ_MUST_USE nsresult (*JSSizeOfTabFn)(JSObject* aObj,
+                                               size_t* aJsObjectsSize,
+                                               size_t* aJsStringSize,
+                                               size_t* aJsPrivateSize,
+                                               size_t* aJsOtherSize);
+typedef MOZ_MUST_USE nsresult (*NonJSSizeOfTabFn)(nsPIDOMWindowOuter* aWindow,
+                                                  size_t* aDomSize,
+                                                  size_t* aStyleSize,
+                                                  size_t* aOtherSize);
 
 nsresult RegisterJSSizeOfTab(JSSizeOfTabFn aSizeOfTabFn);
 nsresult RegisterNonJSSizeOfTab(NonJSSizeOfTabFn aSizeOfTabFn);
@@ -569,10 +570,11 @@ nsresult RegisterNonJSSizeOfTab(NonJSSizeOfTabFn aSizeOfTabFn);
   }
 
 // This macro assumes the presence of appropriate |aHandleReport| and |aData|
-// variables.
+// variables. The (void) is there because we should always ignore the return
+// value of the callback, because callback failures aren't fatal.
 #define MOZ_COLLECT_REPORT(path, kind, units, amount, description)            \
-  aHandleReport->Callback(EmptyCString(), NS_LITERAL_CSTRING(path),           \
-                          kind, units, amount,                                \
-                          NS_LITERAL_CSTRING(description), aData)
+  (void)aHandleReport->Callback(EmptyCString(), NS_LITERAL_CSTRING(path),     \
+                                kind, units, amount,                          \
+                                NS_LITERAL_CSTRING(description), aData)
 
 %}

@@ -113,8 +113,8 @@ class mozJSComponentLoader : public mozilla::ModuleLoader,
                 mozilla::AutoJSContext cx;
                 JSAutoCompartment ac(cx, obj);
 
-                if (JS_HasExtensibleLexicalScope(obj)) {
-                    JS_SetAllNonReservedSlotsToUndefined(cx, JS_ExtensibleLexicalScope(obj));
+                if (JS_HasExtensibleLexicalEnvironment(obj)) {
+                    JS_SetAllNonReservedSlotsToUndefined(cx, JS_ExtensibleLexicalEnvironment(obj));
                 }
                 JS_SetAllNonReservedSlotsToUndefined(cx, obj);
                 obj = nullptr;

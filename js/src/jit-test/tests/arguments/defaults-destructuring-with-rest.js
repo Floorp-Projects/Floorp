@@ -13,14 +13,17 @@ f1(1, 42, [42]);
 function f2([a]=[rest], ...rest) {
     assertEq(a, undefined);
 }
-f2();
+// TDZ
+assertThrowsInstanceOf(f2, ReferenceError);
 
 function f3([a]=[rest], ...rest) {
     assertEq(a, 1);
     assertEqArray(rest, [2, 3, 4]);
 }
-f3([1], 2, 3, 4);
+// TDZ
+assertThrowsInstanceOf(f3, ReferenceError);
 
 function f4([a]=rest, ...rest) {
 }
-assertThrowsInstanceOf(f4, TypeError);
+// TDZ
+assertThrowsInstanceOf(f4, ReferenceError);

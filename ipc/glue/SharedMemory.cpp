@@ -28,18 +28,15 @@ public:
   CollectReports(nsIHandleReportCallback* aHandleReport, nsISupports* aData,
                  bool aAnonymize) override
   {
-    nsresult rv;
-    rv = MOZ_COLLECT_REPORT(
+    MOZ_COLLECT_REPORT(
       "shmem-allocated", KIND_OTHER, UNITS_BYTES, gShmemAllocated,
       "Memory shared with other processes that is accessible (but not "
       "necessarily mapped).");
-    NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = MOZ_COLLECT_REPORT(
+    MOZ_COLLECT_REPORT(
       "shmem-mapped", KIND_OTHER, UNITS_BYTES, gShmemMapped,
       "Memory shared with other processes that is mapped into the address "
       "space.");
-    NS_ENSURE_SUCCESS(rv, rv);
 
     return NS_OK;
   }

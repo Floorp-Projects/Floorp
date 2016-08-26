@@ -7,7 +7,6 @@
 #define _LOADMANAGER_H_
 
 #include "LoadMonitor.h"
-#include "mozilla/WeakPtr.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Services.h"
@@ -24,14 +23,11 @@ namespace mozilla {
 class LoadManagerSingleton : public LoadNotificationCallback,
                              public webrtc::CPULoadStateCallbackInvoker,
                              public webrtc::CpuOveruseObserver,
-                             public SupportsWeakPtr<LoadManagerSingleton>,
                              public nsIObserver
 
 {
 public:
     static LoadManagerSingleton* Get();
-
-    MOZ_DECLARE_WEAKREFERENCE_TYPENAME(LoadManagerSingleton)
 
     NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSIOBSERVER
@@ -90,31 +86,23 @@ public:
 
     void AddObserver(webrtc::CPULoadStateObserver * aObserver) override
     {
-        if (mManager) {
-          mManager->AddObserver(aObserver);
-        }
+        mManager->AddObserver(aObserver);
     }
     void RemoveObserver(webrtc::CPULoadStateObserver * aObserver) override
     {
-        if (mManager) {
-          mManager->RemoveObserver(aObserver);
-        }
+        mManager->RemoveObserver(aObserver);
     }
     void OveruseDetected() override
     {
-        if (mManager) {
-          mManager->OveruseDetected();
-        }
+        mManager->OveruseDetected();
     }
     void NormalUsage() override
     {
-        if (mManager) {
-          mManager->NormalUsage();
-        }
+        mManager->NormalUsage();
     }
 
 private:
-    WeakPtr<LoadManagerSingleton> mManager;
+    RefPtr<LoadManagerSingleton> mManager;
 };
 
 } //namespace

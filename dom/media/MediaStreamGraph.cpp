@@ -3532,15 +3532,9 @@ FinishCollectReports(nsIHandleReportCallback* aHandleReport, nsISupports* aData,
   if (!manager)
     return;
 
-#define REPORT(_path, _amount, _desc)                                       \
-  do {                                                                      \
-    nsresult rv;                                                            \
-    rv = aHandleReport->Callback(EmptyCString(), _path,                     \
-                                 KIND_HEAP, UNITS_BYTES, _amount,           \
-                                 NS_LITERAL_CSTRING(_desc), aData);         \
-    if (NS_WARN_IF(NS_FAILED(rv)))                                          \
-      return;                                                               \
-  } while (0)
+#define REPORT(_path, _amount, _desc) \
+  aHandleReport->Callback(EmptyCString(), _path, KIND_HEAP, UNITS_BYTES, \
+                          _amount, NS_LITERAL_CSTRING(_desc), aData);
 
   for (size_t i = 0; i < aAudioStreamSizes.Length(); i++) {
     const AudioNodeSizes& usage = aAudioStreamSizes[i];
@@ -3561,9 +3555,8 @@ FinishCollectReports(nsIHandleReportCallback* aHandleReport, nsISupports* aData,
 
   size_t hrtfLoaders = WebCore::HRTFDatabaseLoader::sizeOfLoaders(MallocSizeOf);
   if (hrtfLoaders) {
-
     REPORT(NS_LITERAL_CSTRING(
-              "explicit/webaudio/audio-node/PannerNode/hrtf-databases"),
+             "explicit/webaudio/audio-node/PannerNode/hrtf-databases"),
            hrtfLoaders,
            "Memory used by PannerNode databases (Web Audio).");
   }

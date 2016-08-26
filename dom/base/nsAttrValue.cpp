@@ -1554,6 +1554,34 @@ nsAttrValue::ParseIntWithBounds(const nsAString& aString,
   return true;
 }
 
+void
+nsAttrValue::ParseIntWithFallback(const nsAString& aString, int32_t aDefault,
+                                  int32_t aMax)
+{
+  ResetIfSet();
+
+  nsContentUtils::ParseHTMLIntegerResultFlags result;
+  int32_t val = nsContentUtils::ParseHTMLInteger(aString, &result);
+  bool nonStrict = false;
+  if ((result & nsContentUtils::eParseHTMLInteger_Error) || val < 1) {
+    val = aDefault;
+    nonStrict = true;
+  }
+
+  if (val > aMax) {
+    val = aMax;
+    nonStrict = true;
+  }
+
+  if ((result & nsContentUtils::eParseHTMLInteger_IsPercent) ||
+      (result & nsContentUtils::eParseHTMLInteger_NonStandard) ||
+      (result & nsContentUtils::eParseHTMLInteger_DidNotConsumeAllInput)) {
+    nonStrict = true;
+  }
+
+  SetIntValueAndType(val, eInteger, nonStrict ? &aString : nullptr);
+}
+
 bool
 nsAttrValue::ParseNonNegativeIntValue(const nsAString& aString)
 {

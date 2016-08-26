@@ -101,7 +101,7 @@ if (save() !== "OUTER V IGNORE")
     if (i >= 3)
       break;
   }
-  t(0, "init", 2);
+  t(0, "init", 0);
   t(1, "test", 2);
   t(2, "body", 2);
   t(3, "incr", 5);

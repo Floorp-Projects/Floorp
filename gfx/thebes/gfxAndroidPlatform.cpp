@@ -69,9 +69,11 @@ public:
     NS_IMETHOD CollectReports(nsIHandleReportCallback* aHandleReport,
                               nsISupports* aData, bool aAnonymize) override
     {
-        return MOZ_COLLECT_REPORT(
+        MOZ_COLLECT_REPORT(
             "explicit/freetype", KIND_HEAP, UNITS_BYTES, MemoryAllocated(),
             "Memory used by Freetype.");
+
+        return NS_OK;
     }
 };
 

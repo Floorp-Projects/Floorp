@@ -2149,7 +2149,7 @@ DOMGCSliceCallback(JSContext* aCx, JS::GCProgress aProgress, const JS::GCDescrip
       sHasRunGC = true;
       nsJSContext::MaybePokeCC();
 
-      if (aDesc.isCompartment_) {
+      if (aDesc.isZone_) {
         if (!sFullGCTimer && !sShuttingDown) {
           CallCreateInstance("@mozilla.org/timer;1", &sFullGCTimer);
           sFullGCTimer->InitWithNamedFuncCallback(FullGCTimerFired,
@@ -2289,13 +2289,13 @@ SetMemoryMaxPrefChangedCallback(const char* aPrefName, void* aClosure)
 static void
 SetMemoryGCModePrefChangedCallback(const char* aPrefName, void* aClosure)
 {
-  bool enableCompartmentGC = Preferences::GetBool("javascript.options.mem.gc_per_compartment");
+  bool enableZoneGC = Preferences::GetBool("javascript.options.mem.gc_per_zone");
   bool enableIncrementalGC = Preferences::GetBool("javascript.options.mem.gc_incremental");
   JSGCMode mode;
   if (enableIncrementalGC) {
     mode = JSGC_MODE_INCREMENTAL;
-  } else if (enableCompartmentGC) {
-    mode = JSGC_MODE_COMPARTMENT;
+  } else if (enableZoneGC) {
+    mode = JSGC_MODE_ZONE;
   } else {
     mode = JSGC_MODE_GLOBAL;
   }
@@ -2486,7 +2486,7 @@ nsJSContext::EnsureStatics()
                                        "javascript.options.mem.max");
 
   Preferences::RegisterCallbackAndCall(SetMemoryGCModePrefChangedCallback,
-                                       "javascript.options.mem.gc_per_compartment");
+                                       "javascript.options.mem.gc_per_zone");
 
   Preferences::RegisterCallbackAndCall(SetMemoryGCModePrefChangedCallback,
                                        "javascript.options.mem.gc_incremental");

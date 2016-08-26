@@ -262,10 +262,12 @@ NS_IMETHODIMP
 nsLayoutStylesheetCache::CollectReports(nsIHandleReportCallback* aHandleReport,
                                         nsISupports* aData, bool aAnonymize)
 {
-  return MOZ_COLLECT_REPORT(
+  MOZ_COLLECT_REPORT(
     "explicit/layout/style-sheet-cache", KIND_HEAP, UNITS_BYTES,
     SizeOfIncludingThis(LayoutStylesheetCacheMallocSizeOf),
     "Memory used for some built-in style sheets.");
+
+  return NS_OK;
 }
 
 

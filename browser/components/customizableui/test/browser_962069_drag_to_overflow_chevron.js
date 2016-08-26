@@ -31,12 +31,12 @@ add_task(function*() {
 
   ds.startDragSession();
   try {
-    var [result, dataTransfer] = ChromeUtils.synthesizeDragOver(identityBox, overflowChevron);
+    var [result, dataTransfer] = EventUtils.synthesizeDragOver(identityBox, overflowChevron);
 
     // Wait for showing panel before ending drag session.
     yield panelShownPromise;
 
-    ChromeUtils.synthesizeDropAfterDragOver(result, dataTransfer, overflowChevron);
+    EventUtils.synthesizeDropAfterDragOver(result, dataTransfer, overflowChevron);
   } finally {
     ds.endDragSession(true);
   }

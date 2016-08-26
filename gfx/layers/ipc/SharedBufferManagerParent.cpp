@@ -13,6 +13,7 @@
 #include "mozilla/ipc/MessageChannel.h" // for MessageChannel, etc
 #include "mozilla/ipc/ProtocolUtils.h"
 #include "mozilla/ipc/Transport.h"      // for Transport
+#include "mozilla/Sprintf.h"
 #include "mozilla/UniquePtr.h"          // for UniquePtr
 #include "mozilla/Unused.h"
 #include "nsIMemoryReporter.h"
@@ -53,7 +54,7 @@ public:
       base::ProcessId pid = it->first;
       SharedBufferManagerParent *mgr = it->second;
       if (!mgr) {
-        printf_stderr("GrallocReporter::CollectReports() mgr is nullptr");
+        printf_stderr("GrallocReporter::CollectReports(): mgr is nullptr");
         continue;
       }
 
@@ -63,7 +64,6 @@ public:
       MutexAutoLock lock(mgr->mLock);
       std::map<int64_t, android::sp<android::GraphicBuffer> >::iterator buf_it;
       for (buf_it = mgr->mBuffers.begin(); buf_it != mgr->mBuffers.end(); buf_it++) {
-        nsresult rv;
         android::sp<android::GraphicBuffer> gb = buf_it->second;
         int bpp = android::bytesPerPixel(gb->getPixelFormat());
         int stride = gb->getStride();
@@ -76,20 +76,15 @@ public:
         nsPrintfCString gpath("gralloc/%s (pid=%d)/buffer(width=%d, height=%d, bpp=%d, stride=%d)",
             pidName.get(), pid, gb->getWidth(), height, bpp, stride);
 
-        rv = aHandleReport->Callback(EmptyCString(), gpath, KIND_OTHER, UNITS_BYTES, amount,
-            NS_LITERAL_CSTRING(
-              "Special RAM that can be shared between processes and directly accessed by "
-              "both the CPU and GPU. Gralloc memory is usually a relatively precious "
-              "resource, with much less available than generic RAM. When it's exhausted, "
-              "graphics performance can suffer. This value can be incorrect because of race "
-              "conditions."),
-            aData);
-        if (rv != NS_OK) {
-          if (SharedBufferManagerParent::sManagerMonitor) {
-            SharedBufferManagerParent::sManagerMonitor->Unlock();
-          }
-          return rv;
-        }
+        aHandleReport->Callback(
+          EmptyCString(), gpath, KIND_OTHER, UNITS_BYTES, amount,
+          NS_LITERAL_CSTRING(
+"Special RAM that can be shared between processes and directly accessed by "
+"both the CPU and GPU. Gralloc memory is usually a relatively precious "
+"resource, with much less available than generic RAM. When it's exhausted, "
+"graphics performance can suffer. This value can be incorrect because of race "
+"conditions."),
+          aData);
       }
     }
     if (SharedBufferManagerParent::sManagerMonitor) {

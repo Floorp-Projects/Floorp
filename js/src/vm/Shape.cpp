@@ -459,8 +459,6 @@ bool
 js::NativeObject::toDictionaryMode(ExclusiveContext* cx)
 {
     MOZ_ASSERT(!inDictionaryMode());
-
-    /* We allocate the shapes from cx->compartment(), so make sure it's right. */
     MOZ_ASSERT(cx->isInsideCurrentCompartment(this));
 
     uint32_t span = slotSpan();

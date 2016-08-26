@@ -1,12 +1,12 @@
-function f1(a, bIs, cIs, dIs, b=a, c=d, d=5) {
+function f1(a, bIs, cIs, dIs, b=a, c=5, d=c) {
     assertEq(a, 1);
     assertEq(b, bIs);
     assertEq(c, cIs);
     assertEq(d, dIs);
 }
-f1(1, 1, undefined, 5);
-f1(1, 42, undefined, 5, 42);
-f1(1, 42, 43, 5, 42, 43);
+f1(1, 1, 5, 5);
+f1(1, 42, 5, 5, 42);
+f1(1, 42, 43, 43, 42, 43);
 f1(1, 42, 43, 44, 42, 43, 44);
 function f2(a=[]) { return a; }
 assertEq(f2() !== f2(), true);
