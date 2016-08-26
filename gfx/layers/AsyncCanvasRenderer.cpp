@@ -168,7 +168,7 @@ AsyncCanvasRenderer::CopyFromTextureClient(TextureClient* aTextureClient)
       size != mSurfaceForBasic->GetSize() ||
       format != mSurfaceForBasic->GetFormat())
   {
-    uint32_t stride = gfx::GetAlignedStride<8>(size.width * BytesPerPixel(format));
+    uint32_t stride = gfx::GetAlignedStride<8>(size.width, BytesPerPixel(format));
     mSurfaceForBasic = gfx::Factory::CreateDataSourceSurfaceWithStride(size, format, stride);
   }
 
@@ -219,7 +219,7 @@ AsyncCanvasRenderer::UpdateTarget()
   // This buffer would be used later for content rendering. So we choose
   // B8G8R8A8 format here.
   const gfx::SurfaceFormat format = gfx::SurfaceFormat::B8G8R8A8;
-  uint32_t stride = gfx::GetAlignedStride<8>(size.width * BytesPerPixel(format));
+  uint32_t stride = gfx::GetAlignedStride<8>(size.width, BytesPerPixel(format));
   RefPtr<gfx::DataSourceSurface> surface =
     gfx::Factory::CreateDataSourceSurfaceWithStride(size, format, stride);
 

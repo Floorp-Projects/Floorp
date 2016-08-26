@@ -794,10 +794,10 @@ class Marionette(object):
           'type': arguments[0]
         };
         return value;"""
-        with self.using_context('content'):
-            value = self.execute_script(script, script_args=[perm], sandbox='system')
+        with self.using_context("content"):
+            value = self.execute_script(script, script_args=(perm,), sandbox="system")
 
-        with self.using_context('chrome'):
+        with self.using_context("chrome"):
             permission = self.execute_script("""
                 Components.utils.import("resource://gre/modules/Services.jsm");
                 let perm = arguments[0];
@@ -810,7 +810,7 @@ class Marionette(object):
                 let testPerm = Services.perms.testPermissionFromPrincipal(
                                principal, perm.type);
                 return testPerm;
-                """, script_args=[value])
+                """, script_args=(value,))
         return permission
 
     def push_permission(self, perm, allow):
@@ -850,20 +850,20 @@ class Marionette(object):
         };
         return value;
         """
-        with self.using_context('content'):
-            perm = self.execute_script(script, script_args=[allow, perm], sandbox='system')
+        with self.using_context("content"):
+            perm = self.execute_script(script, script_args=(allow, perm,), sandbox="system")
 
-        current_perm = self.get_permission(perm['type'])
-        if current_perm == perm['action']:
-            with self.using_context('content'):
+        current_perm = self.get_permission(perm["type"])
+        if current_perm == perm["action"]:
+            with self.using_context("content"):
                 self.execute_script("""
                     Components.utils.import("resource://gre/modules/Services.jsm");
                     Services.obs.removeObserver(window.wrappedJSObject.permObserver,
                                                 "perm-changed");
-                    """, sandbox='system')
+                    """, sandbox="system")
             return
 
-        with self.using_context('chrome'):
+        with self.using_context("chrome"):
             self.execute_script("""
                 Components.utils.import("resource://gre/modules/Services.jsm");
                 let perm = arguments[0];
@@ -875,7 +875,7 @@ class Marionette(object):
                                                                                   attrs);
                 Services.perms.addFromPrincipal(principal, perm.type, perm.action);
                 return true;
-                """, script_args=[perm])
+                """, script_args=(perm,))
 
         with self.using_context("content"):
             self.execute_async_script("""
@@ -928,7 +928,7 @@ class Marionette(object):
             pref_value = self.execute_script("""
                 Components.utils.import("resource://gre/modules/Preferences.jsm");
                 return Preferences.get(arguments[0], null);
-                """, script_args=[pref], sandbox="system")
+                """, script_args=(pref,), sandbox="system")
             return pref_value
 
     def clear_pref(self, pref):
@@ -936,7 +936,7 @@ class Marionette(object):
             self.execute_script("""
                Components.utils.import("resource://gre/modules/Preferences.jsm");
                Preferences.reset(arguments[0]);
-               """, script_args=[pref])
+               """, script_args=(pref,))
 
     def set_pref(self, pref, value):
         with self.using_context(self.CONTEXT_CHROME):
@@ -947,29 +947,29 @@ class Marionette(object):
             self.execute_script("""
                 Components.utils.import("resource://gre/modules/Preferences.jsm");
                 Preferences.set(arguments[0], arguments[1]);
-                """, script_args=[pref, value])
+                """, script_args=(pref, value,))
 
     def set_prefs(self, prefs):
-        '''Sets preferences.
+        """Sets preferences.
 
         If the value of the preference to be set is None, reset the preference
         to its default value. If no default value exists, the preference will
         cease to exist.
 
-        :param prefs: A dict containing one or more preferences and their values
-        to be set.
+        :param prefs: A dict containing one or more preferences and
+            their values to be set.
 
         Usage example::
 
-          marionette.set_prefs({'browser.tabs.warnOnClose': True})
+            marionette.set_prefs({"browser.tabs.warnOnClose": True})
 
-        '''
+        """
         for pref, value in prefs.items():
             self.set_pref(pref, value)
 
     @contextmanager
     def using_prefs(self, prefs):
-        '''Sets preferences for code being executed in a `with` block,
+        """Sets preferences for code being executed in a `with` block,
         and restores them on exit.
 
         :param prefs: A dict containing one or more preferences and their values
@@ -977,10 +977,10 @@ class Marionette(object):
 
         Usage example::
 
-          with marionette.using_prefs({'browser.tabs.warnOnClose': True}):
-              # ... do stuff ...
+            with marionette.using_prefs({"browser.tabs.warnOnClose": True}):
+                # ... do stuff ...
 
-        '''
+        """
         original_prefs = {p: self.get_pref(p) for p in prefs}
         self.set_prefs(prefs)
 
@@ -991,9 +991,9 @@ class Marionette(object):
 
     @do_process_check
     def enforce_gecko_prefs(self, prefs):
-        """
-        Checks if the running instance has the given prefs. If not, it will kill the
-        currently running instance, and spawn a new instance with the requested preferences.
+        """Checks if the running instance has the given prefs. If not,
+        it will kill the currently running instance, and spawn a new
+        instance with the requested preferences.
 
         : param prefs: A dictionary whose keys are preference names.
         """
@@ -1500,15 +1500,15 @@ class Marionette(object):
         """Causes the browser to perform to refresh the current page."""
         self._send_message("refresh")
 
-    def wrapArguments(self, args):
-        if isinstance(args, list):
+    def _to_json(self, args):
+        if isinstance(args, list) or isinstance(args, tuple):
             wrapped = []
             for arg in args:
-                wrapped.append(self.wrapArguments(arg))
+                wrapped.append(self._to_json(arg))
         elif isinstance(args, dict):
             wrapped = {}
             for arg in args:
-                wrapped[arg] = self.wrapArguments(args[arg])
+                wrapped[arg] = self._to_json(args[arg])
         elif type(args) == HTMLElement:
             wrapped = {W3C_WEBELEMENT_KEY: args.id,
                        WEBELEMENT_KEY: args.id}
@@ -1517,11 +1517,11 @@ class Marionette(object):
             wrapped = args
         return wrapped
 
-    def unwrapValue(self, value):
+    def _from_json(self, value):
         if isinstance(value, list):
             unwrapped = []
             for item in value:
-                unwrapped.append(self.unwrapValue(item))
+                unwrapped.append(self._from_json(item))
         elif isinstance(value, dict):
             unwrapped = {}
             for key in value:
@@ -1532,18 +1532,16 @@ class Marionette(object):
                     unwrapped = HTMLElement(self, value[key])
                     break
                 else:
-                    unwrapped[key] = self.unwrapValue(value[key])
+                    unwrapped[key] = self._from_json(value[key])
         else:
             unwrapped = value
         return unwrapped
 
-    def execute_js_script(self, script, script_args=None, async=True,
+    def execute_js_script(self, script, script_args=(), async=True,
                           new_sandbox=True, script_timeout=None,
                           inactivity_timeout=None, filename=None,
                           sandbox='default'):
-        if script_args is None:
-            script_args = []
-        args = self.wrapArguments(script_args)
+        args = self._to_json(script_args)
         body = {"script": script,
                 "args": args,
                 "async": async,
@@ -1553,9 +1551,9 @@ class Marionette(object):
                 "filename": filename,
                 "line": None}
         rv = self._send_message("executeJSScript", body, key="value")
-        return self.unwrapValue(rv)
+        return self._from_json(rv)
 
-    def execute_script(self, script, script_args=None, new_sandbox=True,
+    def execute_script(self, script, script_args=(), new_sandbox=True,
                        sandbox="default", script_timeout=None):
         """Executes a synchronous JavaScript script, and returns the
         result (or None if the script does return a value).
@@ -1565,7 +1563,7 @@ class Marionette(object):
         has not been called.
 
         :param script: A string containing the JavaScript to execute.
-        :param script_args: A list of arguments to pass to the script.
+        :param script_args: An interable of arguments to pass to the script.
         :param sandbox: A tag referring to the sandbox you wish to use;
             if you specify a new tag, a new sandbox will be created.
             If you use the special tag `system`, the sandbox will
@@ -1588,10 +1586,10 @@ class Marionette(object):
         ::
 
             result = marionette.execute_script("return arguments[0] + arguments[1];",
-                                               script_args=[2, 3])
+                                               script_args=(2, 3,))
             assert result == 5
             some_element = marionette.find_element(By.ID, "someElement")
-            sid = marionette.execute_script("return arguments[0].id;", script_args=[some_element])
+            sid = marionette.execute_script("return arguments[0].id;", script_args=(some_element,))
             assert some_element.get_attribute("id") == sid
 
         Scripts wishing to access non-standard properties of the window
@@ -1618,9 +1616,7 @@ class Marionette(object):
             assert result == "foo"
 
         """
-        if script_args is None:
-            script_args = []
-        args = self.wrapArguments(script_args)
+        args = self._to_json(script_args)
         stack = traceback.extract_stack()
         frame = stack[-2:-1][0]  # grab the second-to-last frame
         body = {"script": script,
@@ -1631,9 +1627,9 @@ class Marionette(object):
                 "line": int(frame[1]),
                 "filename": os.path.basename(frame[0])}
         rv = self._send_message("executeScript", body, key="value")
-        return self.unwrapValue(rv)
+        return self._from_json(rv)
 
-    def execute_async_script(self, script, script_args=None, new_sandbox=True,
+    def execute_async_script(self, script, script_args=(), new_sandbox=True,
                              sandbox="default", script_timeout=None,
                              debug_script=False):
         """Executes an asynchronous JavaScript script, and returns the
@@ -1644,7 +1640,7 @@ class Marionette(object):
         set_context() has not been called.
 
         :param script: A string containing the JavaScript to execute.
-        :param script_args: A list of arguments to pass to the script.
+        :param script_args: An interable of arguments to pass to the script.
         :param sandbox: A tag referring to the sandbox you wish to use; if
             you specify a new tag, a new sandbox will be created.  If you
             use the special tag `system`, the sandbox will be created
@@ -1668,9 +1664,7 @@ class Marionette(object):
             ''')
             assert result == 1
         """
-        if script_args is None:
-            script_args = []
-        args = self.wrapArguments(script_args)
+        args = self._to_json(script_args)
         stack = traceback.extract_stack()
         frame = stack[-2:-1][0]  # grab the second-to-last frame
         body = {"script": script,
@@ -1682,7 +1676,7 @@ class Marionette(object):
                 "filename": os.path.basename(frame[0]),
                 "debug_script": debug_script}
         rv = self._send_message("executeAsyncScript", body, key="value")
-        return self.unwrapValue(rv)
+        return self._from_json(rv)
 
     def find_element(self, method, target, id=None):
         """Returns an HTMLElement instances that matches the specified

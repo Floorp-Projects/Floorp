@@ -143,8 +143,14 @@
  * Use only one arena by default.  Mozilla does not currently make extensive
  * use of concurrent allocation, so the increased fragmentation associated with
  * multiple arenas is not warranted.
+ *
+ * When using the Servo style system, we do indeed make use of significant
+ * concurrent allocation, and the overhead matters. Bug 1291355 tracks
+ * investigating the fragmentation overhead of turning this on for users.
  */
-#define	MOZ_MEMORY_NARENAS_DEFAULT_ONE
+#ifndef MOZ_STYLO
+#define MOZ_MEMORY_NARENAS_DEFAULT_ONE
+#endif
 
 /*
  * Pass this set of options to jemalloc as its default. It does not override

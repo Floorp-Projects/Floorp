@@ -595,20 +595,21 @@ function setTestName(msg) {
  * sendKeysToElement action on a file input element.
  */
 function receiveFiles(msg) {
-  if ('error' in msg.json) {
+  if ("error" in msg.json) {
     let err = new InvalidArgumentError(msg.json.error);
     sendError(err, msg.json.command_id);
     return;
   }
+
   if (!fileInputElement) {
     let err = new InvalidElementStateError("receiveFiles called with no valid fileInputElement");
     sendError(err, msg.json.command_id);
     return;
   }
-  let fs = Array.prototype.slice.call(fileInputElement.files);
-  fs.push(msg.json.file);
-  fileInputElement.mozSetFileArray(fs);
+
+  interaction.uploadFile(fileInputElement, msg.json.file);
   fileInputElement = null;
+
   sendOk(msg.json.command_id);
 }
 

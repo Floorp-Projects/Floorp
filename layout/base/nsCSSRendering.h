@@ -609,12 +609,12 @@ struct nsCSSRendering {
     nsRect dirtyRect;
     nsRect borderArea;
     nsIFrame* frame;
-    uint32_t paintFlags = 0;
+    uint32_t paintFlags;
     nsRect* bgClipRect = nullptr;
     int32_t layer;                  // -1 means painting all layers; other
                                     // value means painting one specific
                                     // layer only.
-    CompositionOp compositionOp = CompositionOp::OP_OVER;
+    CompositionOp compositionOp;
 
     static PaintBGParams ForAllLayers(nsPresContext& aPresCtx,
                                       nsRenderingContext& aRenderingCtx,
@@ -635,11 +635,19 @@ struct nsCSSRendering {
     PaintBGParams(nsPresContext& aPresCtx,
                   nsRenderingContext& aRenderingCtx,
                   const nsRect& aDirtyRect,
-                  const nsRect& aBorderArea)
+                  const nsRect& aBorderArea,
+                  nsIFrame* aFrame,
+                  uint32_t aPaintFlags,
+                  int32_t aLayer,
+                  CompositionOp aCompositionOp)
      : presCtx(aPresCtx),
        renderingCtx(aRenderingCtx),
        dirtyRect(aDirtyRect),
-       borderArea(aBorderArea) { }
+       borderArea(aBorderArea),
+       frame(aFrame),
+       paintFlags(aPaintFlags),
+       layer(aLayer),
+       compositionOp(aCompositionOp) {}
   };
 
   static DrawResult PaintBackground(const PaintBGParams& aParams);
