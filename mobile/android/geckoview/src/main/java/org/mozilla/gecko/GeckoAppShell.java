@@ -1144,20 +1144,6 @@ public class GeckoAppShell
     }
 
     @WrapForJNI(calledFrom = "gecko")
-    public static void notifyDefaultPrevented(final boolean defaultPrevented) {
-        ThreadUtils.postToUiThread(new Runnable() {
-            @Override
-            public void run() {
-                LayerView view = getLayerView();
-                PanZoomController controller = (view == null ? null : view.getPanZoomController());
-                if (controller != null) {
-                    controller.notifyDefaultActionPrevented(defaultPrevented);
-                }
-            }
-        });
-    }
-
-    @WrapForJNI(calledFrom = "gecko")
     public static boolean isNetworkLinkUp() {
         ConnectivityManager cm = (ConnectivityManager)
            getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);

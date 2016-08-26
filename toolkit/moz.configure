@@ -356,7 +356,19 @@ option('--enable-eme',
        default=eme_default,
        help='Enable support for Encrypted Media Extensions')
 
-@depends('--enable-eme', fmp4)
+@depends('--enable-eme', target)
+def enable_eme(value, target):
+    # Widevine EME by default enabled on desktop Windows, MacOS and Linux,
+    # x86 and x64 builds.
+    if (target.kernel in ('Darwin', 'WINNT', 'Linux') and
+        target.os not in ('Android', 'iOS') and
+        target.cpu in ('x86', 'x86_64')):
+        return value
+    elif value and value.origin != 'default':
+        die('%s is not supported on %s' % (value.format('--enable-eme'), target.alias))
+    return value
+
+@depends(enable_eme, fmp4)
 def eme(value, fmp4):
     enabled = bool(value)
     if value.origin == 'default':
@@ -367,7 +379,7 @@ def eme(value, fmp4):
     if enabled:
         return True
 
-@depends('--enable-eme')
+@depends(enable_eme)
 def eme_modules(value):
     return value
 

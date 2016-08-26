@@ -23,7 +23,12 @@ add_task(function* () {
     let pageMenuSep = document.getElementById("page-menu-separator");
     ok(pageMenuSep && !pageMenuSep.hidden,
        "Page menu separator should be shown");
-    let testMenuItem = pageMenuSep.previousSibling;
+
+    let testMenuSep = pageMenuSep.previousSibling;
+    ok(testMenuSep && !testMenuSep.hidden,
+       "User-added menu separator should be shown");
+
+    let testMenuItem = testMenuSep.previousSibling;
     is(testMenuItem.label, "Test Context Menu Click", "Got context menu item");
 
     let promiseCtxMenuClick = ContentTask.spawn(aBrowser, null, function*() {

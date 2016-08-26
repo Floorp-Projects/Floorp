@@ -53,6 +53,7 @@ EXTRA_JS_MODULES += [
     'Locale.jsm',
     'Log.jsm',
     'NewTabUtils.jsm',
+    'NLP.jsm',
     'ObjectUtils.jsm',
     'PageMenu.jsm',
     'PageMetadata.jsm',

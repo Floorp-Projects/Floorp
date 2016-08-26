@@ -374,8 +374,6 @@
           prefsvc.getIntPref("accessibility.typeaheadfind.timeout");
         this._flashFindBar =
           prefsvc.getIntPref("accessibility.typeaheadfind.flashBar");
-        this._matchesCountTimeoutLength =
-          prefsvc.getIntPref("accessibility.typeaheadfind.matchesCountTimeout");
         this._matchesCountLimit =
           prefsvc.getIntPref("accessibility.typeaheadfind.matchesCountLimit");
         this._useModalHighlight = prefsvc.getBoolPref("findbar.modalHighlight");
@@ -456,17 +454,9 @@
             clearTimeout(this._quickFindTimeout);
             this._quickFindTimeout = null;
           }
-          if (this._highlightTimeout) {
-            clearTimeout(this._highlightTimeout);
-            this._highlightTimeout = null;
-          }
           if (this._findResetTimeout) {
             clearTimeout(this._findResetTimeout);
             this._findResetTimeout = null;
-          }
-          if (this._updateMatchesCountTimeout) {
-            clearTimeout(this._updateMatchesCountTimeout);
-            this._updateMatchesCountTimeout = null;
           }
         ]]></body>
       </method>
@@ -512,14 +502,8 @@
           if (this._matchesCountLimit == 0 || !this._dispatchFindEvent("matchescount"))
             return;
 
-          if (this._updateMatchesCountTimeout) {
-            window.clearTimeout(this._updateMatchesCountTimeout);
-          }
-          this._updateMatchesCountTimeout =
-            window.setTimeout(() => {
-              this.browser.finder.requestMatchesCount(this._findField.value, this._matchesCountLimit,
-                  this._findMode == this.FIND_LINKS);
-            }, this._matchesCountTimeoutLength);
+          this.browser.finder.requestMatchesCount(this._findField.value,
+            this._matchesCountLimit, this._findMode == this.FIND_LINKS);
         ]]></body>
       </method>
 
@@ -585,20 +569,15 @@
         ]]></body>
       </method>
 
-      <method name="_setHighlightTimeout">
+      <method name="_maybeHighlightAll">
         <body><![CDATA[
-          if (this._highlightTimeout)
-            clearTimeout(this._highlightTimeout);
-
           let word = this._findField.value;
           // Bug 429723. Don't attempt to highlight ""
           if (!this._highlightAll || !word)
             return;
 
-          this._highlightTimeout = setTimeout(() => {
-            this.browser.finder.highlight(true, word,
-              this._findMode == this.FIND_LINKS);
-          }, 500);
+          this.browser.finder.highlight(true, word,
+            this._findMode == this.FIND_LINKS);
         ]]></body>
       </method>
 
@@ -649,8 +628,7 @@
           this._updateCaseSensitivity();
           this._findFailedString = null;
           this._find();
-          if (this.getElement("highlight").checked)
-            this._setHighlightTimeout();
+          this._maybeHighlightAll();
 
           this._dispatchFindEvent("casesensitivitychange");
         ]]></body>
@@ -696,7 +674,7 @@
           // Just set the pref; our observer will change the find bar behavior.
           prefsvc.setBoolPref("findbar.entireword", aEntireWord);
 
-          this._setHighlightTimeout();
+          this._maybeHighlightAll();
         ]]></body>
       </method>
 
@@ -1042,7 +1020,7 @@
             }
 
             this._enableFindButtons(val);
-            this._setHighlightTimeout();
+            this._maybeHighlightAll();
 
             this._updateCaseSensitivity(val);
             this._updateEntireWord();

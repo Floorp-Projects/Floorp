@@ -81,14 +81,14 @@ IsUninitializedLexical(const Value& val)
 static inline bool
 IsUninitializedLexicalSlot(HandleObject obj, HandleShape shape)
 {
+    MOZ_ASSERT(shape);
     if (obj->is<WithEnvironmentObject>())
         return false;
     // We check for IsImplicitDenseOrTypedArrayElement even though the shape
     // is always a non-indexed property because proxy hooks may return a
     // "non-native property found" shape, which happens to be encoded in the
     // same way as the "dense element" shape. See MarkNonNativePropertyFound.
-    if (!shape ||
-        IsImplicitDenseOrTypedArrayElement(shape) ||
+    if (IsImplicitDenseOrTypedArrayElement(shape) ||
         !shape->hasSlot() ||
         !shape->hasDefaultGetter() ||
         !shape->hasDefaultSetter())

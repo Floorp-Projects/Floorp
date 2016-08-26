@@ -283,6 +283,7 @@ protected:
   nsString mDisplayName;
 
   RefPtr<VRDisplayCapabilities> mCapabilities;
+  RefPtr<VRStageParameters> mStageParameters;
 
   double mDepthNear;
   double mDepthFar;

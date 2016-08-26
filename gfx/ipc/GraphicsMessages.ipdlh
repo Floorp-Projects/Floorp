@@ -10,6 +10,7 @@ using struct mozilla::null_t from "ipc/IPCMessageUtils.h";
 using mozilla::gfx::FeatureStatus from "gfxTelemetry.h";
 using mozilla::gfx::BackendType from "mozilla/gfx/Types.h";
 using mozilla::gfx::IntSize from "mozilla/gfx/Point.h";
+using gfxImageFormat from "mozilla/gfx/Types.h";
 
 namespace mozilla {
 namespace gfx {
@@ -65,6 +66,7 @@ union GfxVarValue
 {
   BackendType;
   bool;
+  gfxImageFormat;
   IntSize;
 };
 

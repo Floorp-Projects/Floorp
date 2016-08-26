@@ -164,3 +164,24 @@ js::ThisThread::SetName(const char* name)
 #endif
   MOZ_RELEASE_ASSERT(!rv);
 }
+
+void
+js::ThisThread::GetName(char* nameBuffer, size_t len)
+{
+  MOZ_RELEASE_ASSERT(len >= 16);
+
+  int rv;
+#ifdef HAVE_PTHREAD_GETNAME_NP
+  rv = pthread_getname_np(pthread_self(), nameBuffer, len);
+#elif defined(__DragonFly__) || defined(__FreeBSD__) || defined(__OpenBSD__)
+  pthread_get_name_np(pthread_self(), nameBuffer, len);
+  rv = 0;
+#elif defined(__linux__)
+  rv = prctl(PR_GET_NAME, reinterpret_cast<unsigned long>(nameBuffer));
+#else
+# error "unsupported platform: no way to read thread name"
+#endif
+
+  if (rv)
+    nameBuffer[0] = '\0';
+}
