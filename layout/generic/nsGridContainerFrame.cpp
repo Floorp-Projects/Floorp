@@ -99,6 +99,23 @@ ClampToCSSMaxBSize(nscoord aSize, const ReflowInput* aReflowInput,
   return aSize;
 }
 
+static bool
+IsPercentOfIndefiniteSize(const nsStyleCoord& aCoord, nscoord aPercentBasis)
+{
+  return aPercentBasis == NS_UNCONSTRAINEDSIZE && aCoord.HasPercent();
+}
+
+static nscoord
+ResolveToDefiniteSize(const nsStyleCoord& aCoord, nscoord aPercentBasis)
+{
+  MOZ_ASSERT(aCoord.IsCoordPercentCalcUnit());
+  if (::IsPercentOfIndefiniteSize(aCoord, aPercentBasis)) {
+    return nscoord(0);
+  }
+  return std::max(nscoord(0),
+                  nsRuleNode::ComputeCoordPercentCalc(aCoord, aPercentBasis));
+}
+
 enum class GridLineSide
 {
   eBeforeGridGap,
@@ -164,17 +181,15 @@ nsGridContainerFrame::TrackSize::Initialize(nscoord aPercentageBasis,
   MOZ_ASSERT(mBase == 0 && mLimit == 0 && mState == 0,
              "track size data is expected to be initialized to zero");
   auto minSizeUnit = aMinCoord.GetUnit();
-  auto maxSizeUnit = aMaxCoord.GetUnit();
-  if (aPercentageBasis == NS_UNCONSTRAINEDSIZE) {
+  if (::IsPercentOfIndefiniteSize(aMinCoord, aPercentageBasis)) {
     // https://drafts.csswg.org/css-grid/#valdef-grid-template-columns-percentage
     // "If the inline or block size of the grid container is indefinite,
     //  <percentage> values relative to that size are treated as 'auto'."
-    if (aMinCoord.HasPercent()) {
-      minSizeUnit = eStyleUnit_Auto;
-    }
-    if (aMaxCoord.HasPercent()) {
-      maxSizeUnit = eStyleUnit_Auto;
-    }
+    minSizeUnit = eStyleUnit_Auto;
+  }
+  auto maxSizeUnit = aMaxCoord.GetUnit();
+  if (::IsPercentOfIndefiniteSize(aMaxCoord, aPercentageBasis)) {
+    maxSizeUnit = eStyleUnit_Auto;
   }
   // http://dev.w3.org/csswg/css-grid/#algo-init
   switch (minSizeUnit) {
@@ -962,7 +977,7 @@ struct nsGridContainerFrame::TrackSizingFunctions
           return 1;
         }
       }
-      nscoord trackSize = nsRuleNode::ComputeCoordPercentCalc(*coord, aSize);
+      nscoord trackSize = ::ResolveToDefiniteSize(*coord, aSize);
       if (i == mRepeatAutoStart) {
         // Use a minimum 1px for the repeat() track-size.
         if (trackSize < AppUnitsPerCSSPixel()) {
@@ -972,8 +987,7 @@ struct nsGridContainerFrame::TrackSizingFunctions
       }
       sum += trackSize;
     }
-    nscoord gridGap =
-      std::max(nscoord(0), nsRuleNode::ComputeCoordPercentCalc(aGridGap, aSize));
+    nscoord gridGap = ::ResolveToDefiniteSize(aGridGap, aSize);
     if (numTracks > 1) {
       // Add grid-gaps for all the tracks including the repeat() track.
       sum += gridGap * (numTracks - 1);
@@ -3412,8 +3426,7 @@ nsGridContainerFrame::Tracks::Initialize(
                          aFunctions.MinSizingFor(i),
                          aFunctions.MaxSizingFor(i));
   }
-  auto gap = nsRuleNode::ComputeCoordPercentCalc(aGridGap, aContentBoxSize);
-  mGridGap = std::max(nscoord(0), gap);
+  mGridGap = ::ResolveToDefiniteSize(aGridGap, aContentBoxSize);
   mContentBoxSize = aContentBoxSize;
 }
 
