@@ -557,7 +557,7 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
       mCompatMode = eCompatibility_FullStandards;
       loadAsHtml5 = false;
   }
-  
+
   // TODO: Proper about:blank treatment is bug 543435
   if (loadAsHtml5 && view) {
     // mDocumentURI hasn't been set, yet, so get the URI from the channel
@@ -567,16 +567,14 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
     // GetSpec can be expensive for some URIs, so check the scheme first.
     bool isAbout = false;
     if (uri && NS_SUCCEEDED(uri->SchemeIs("about", &isAbout)) && isAbout) {
-      nsAutoCString str;
-      uri->GetSpec(str);
-      if (str.EqualsLiteral("about:blank")) {
-        loadAsHtml5 = false;    
+      if (uri->GetSpecOrDefault().EqualsLiteral("about:blank")) {
+        loadAsHtml5 = false;
       }
     }
   }
-  
+
   CSSLoader()->SetCompatibilityMode(mCompatMode);
-  
+
   nsresult rv = nsDocument::StartDocumentLoad(aCommand,
                                               aChannel, aLoadGroup,
                                               aContainer,
