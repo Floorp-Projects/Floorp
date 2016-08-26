@@ -1257,6 +1257,11 @@ class DebuggerObject : public NativeObject
                                                     MutableHandleDebuggerObject result);
     static MOZ_MUST_USE bool getScriptedProxyHandler(JSContext* cx, HandleDebuggerObject object,
                                                      MutableHandleDebuggerObject result);
+#ifdef SPIDERMONKEY_PROMISE
+    static MOZ_MUST_USE bool getPromiseValue(JSContext* cx, HandleDebuggerObject object,
+                                             MutableHandleValue result);
+#endif // SPIDERMONKEY_PROMISE
+
     // Methods
     static MOZ_MUST_USE bool isExtensible(JSContext* cx, HandleDebuggerObject object,
                                           bool& result);
