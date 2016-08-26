@@ -235,3 +235,18 @@ richlistitem.download button {
      isn't wider than the panel. */
   -moz-margin-start: 38px !important;
 }
+
+/* Prevent keyboard interaction in the main view by preventing all elements in
+   the main view from being focused... */
+#downloadsPanel-multiView > .panel-viewcontainer > .panel-viewstack[viewtype="subview"] > .panel-mainview #downloadsListBox,
+#downloadsPanel-multiView > .panel-viewcontainer > .panel-viewstack[viewtype="subview"] > .panel-mainview richlistitem,
+#downloadsPanel-multiView > .panel-viewcontainer > .panel-viewstack[viewtype="subview"] > .panel-mainview .downloadButton,
+#downloadsPanel-multiView > .panel-viewcontainer > .panel-viewstack[viewtype="subview"] > .panel-mainview .downloadsPanelFooterButton,
+#downloadsPanel-multiView > .panel-viewcontainer > .panel-viewstack[viewtype="subview"] > .panel-mainview #downloadsSummary {
+  -moz-user-focus: ignore;
+}
+/* ... except for the downloadShowBlockedInfo button in the blocked download.
+   Selecting it with the keyboard should show the main view again. */
+#downloadsPanel-multiView > .panel-viewcontainer > .panel-viewstack[viewtype="subview"] .download-state[showingsubview] .downloadShowBlockedInfo {
+  -moz-user-focus: normal;
+}

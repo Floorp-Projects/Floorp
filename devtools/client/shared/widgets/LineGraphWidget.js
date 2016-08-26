@@ -3,7 +3,7 @@
 const { Task } = require("devtools/shared/task");
 const { Heritage } = require("devtools/client/shared/widgets/view-helpers");
 const { AbstractCanvasGraph, CanvasGraphUtils } = require("devtools/client/shared/widgets/Graphs");
-const { LocalizationHelper } = require("devtools/client/shared/l10n");
+const { LocalizationHelper } = require("devtools/shared/l10n");
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 const L10N = new LocalizationHelper("devtools/locale/graphs.properties");
