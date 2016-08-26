@@ -20,8 +20,8 @@ function test() {
 
   let scriptLoader = Cc["@mozilla.org/moz/jssubscript-loader;1"].
                      getService(Ci.mozIJSSubScriptLoader);
-  let ChromeUtils = {};
-  scriptLoader.loadSubScript("chrome://mochikit/content/tests/SimpleTest/ChromeUtils.js", ChromeUtils);
+  let EventUtils = {};
+  scriptLoader.loadSubScript("chrome://mochikit/content/tests/SimpleTest/EventUtils.js", EventUtils);
 
   function dragAndDrop(tab1, tab2, copy) {
     let rect = tab2.getBoundingClientRect();
@@ -32,7 +32,7 @@ function test() {
       clientY: rect.top + rect.height / 2,
     };
 
-    ChromeUtils.synthesizeDrop(tab1, tab2, null, copy ? "copy" : "move", window, window, event);
+    EventUtils.synthesizeDrop(tab1, tab2, null, copy ? "copy" : "move", window, window, event);
   }
 
   dragAndDrop(newTab1, newTab2, false);

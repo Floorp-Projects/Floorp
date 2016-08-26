@@ -87,18 +87,12 @@ namespace {
 // ---------------------------------------------------------------------------
 /* static */ already_AddRefed<Animation>
 Animation::Constructor(const GlobalObject& aGlobal,
-                       KeyframeEffectReadOnly* aEffect,
+                       AnimationEffectReadOnly* aEffect,
                        const Optional<AnimationTimeline*>& aTimeline,
                        ErrorResult& aRv)
 {
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
   RefPtr<Animation> animation = new Animation(global);
-
-  if (!aEffect) {
-    // Bug 1049975: We do not support null effect yet.
-    aRv.Throw(NS_ERROR_DOM_ANIM_NO_EFFECT_ERR);
-    return nullptr;
-  }
 
   AnimationTimeline* timeline;
   if (aTimeline.WasPassed()) {
@@ -114,7 +108,7 @@ Animation::Constructor(const GlobalObject& aGlobal,
   }
 
   animation->SetTimelineNoUpdate(timeline);
-  animation->SetEffect(aEffect);
+  animation->SetEffectNoUpdate(aEffect);
 
   return animation.forget();
 }
@@ -130,19 +124,90 @@ Animation::SetId(const nsAString& aId)
 }
 
 void
-Animation::SetEffect(KeyframeEffectReadOnly* aEffect)
+Animation::SetEffect(AnimationEffectReadOnly* aEffect)
+{
+  SetEffectNoUpdate(aEffect);
+  PostUpdate();
+}
+
+// https://w3c.github.io/web-animations/#setting-the-target-effect
+void
+Animation::SetEffectNoUpdate(AnimationEffectReadOnly* aEffect)
 {
   RefPtr<Animation> kungFuDeathGrip(this);
 
   if (mEffect == aEffect) {
     return;
   }
+
+  AutoMutationBatchForAnimation mb(*this);
+  bool wasRelevant = mIsRelevant;
+
   if (mEffect) {
-    mEffect->SetAnimation(nullptr);
+    if (!aEffect) {
+      // If the new effect is null, call ResetPendingTasks before clearing
+      // mEffect since ResetPendingTasks needs it to get the appropriate
+      // PendingAnimationTracker.
+      ResetPendingTasks();
+    }
+
+    // We need to notify observers now because once we set mEffect to null
+    // we won't be able to find the target element to notify.
+    if (mIsRelevant) {
+      nsNodeUtils::AnimationRemoved(this);
+    }
+
+    // Break links with the old effect and then drop it.
+    RefPtr<AnimationEffectReadOnly> oldEffect = mEffect;
+    mEffect = nullptr;
+    oldEffect->SetAnimation(nullptr);
+
+    // The following will not do any notification because mEffect is null.
+    UpdateRelevance();
   }
-  mEffect = aEffect;
-  if (mEffect) {
+
+  if (aEffect) {
+    // Break links from the new effect to its previous animation, if any.
+    RefPtr<AnimationEffectReadOnly> newEffect = aEffect;
+    Animation* prevAnim = aEffect->GetAnimation();
+    if (prevAnim) {
+      prevAnim->SetEffect(nullptr);
+    }
+
+    // Create links with the new effect.
+    mEffect = newEffect;
     mEffect->SetAnimation(this);
+
+    // Update relevance and then notify possible add or change.
+    // If the target is different, the change notification will be ignored by
+    // AutoMutationBatchForAnimation.
+    UpdateRelevance();
+    if (wasRelevant && mIsRelevant) {
+      nsNodeUtils::AnimationChanged(this);
+    }
+
+    // Reschedule pending pause or pending play tasks.
+    // If we have a pending animation, it will either be registered
+    // in the pending animation tracker and have a null pending ready time,
+    // or, after it has been painted, it will be removed from the tracker
+    // and assigned a pending ready time.
+    // After updating the effect we'll typically need to repaint so if we've
+    // already been assigned a pending ready time, we should clear it and put
+    // the animation back in the tracker.
+    if (!mPendingReadyTime.IsNull()) {
+      mPendingReadyTime.SetNull();
+
+      nsIDocument* doc = GetRenderedDocument();
+      if (doc) {
+        PendingAnimationTracker* tracker =
+          doc->GetOrCreatePendingAnimationTracker();
+        if (mPendingState == PendingState::PlayPending) {
+          tracker->AddPlayPending(*this);
+        } else {
+          tracker->AddPausePending(*this);
+        }
+      }
+    }
   }
 
   UpdateTiming(SeekFlag::NoSeek, SyncNotifyFlag::Async);
@@ -523,15 +588,20 @@ Animation::Tick()
 
   if (IsPossiblyOrphanedPendingAnimation()) {
     MOZ_ASSERT(mTimeline && !mTimeline->GetCurrentTime().IsNull(),
-               "Orphaned pending animtaions should have an active timeline");
+               "Orphaned pending animations should have an active timeline");
     FinishPendingAt(mTimeline->GetCurrentTime().Value());
   }
 
   UpdateTiming(SeekFlag::NoSeek, SyncNotifyFlag::Async);
 
+  if (!mEffect) {
+    return;
+  }
+
   // Update layers if we are newly finished.
-  if (mEffect &&
-      !mEffect->Properties().IsEmpty() &&
+  KeyframeEffectReadOnly* keyframeEffect = mEffect->AsKeyframeEffect();
+  if (keyframeEffect &&
+      !keyframeEffect->Properties().IsEmpty() &&
       !mFinishedAtLastComposeStyle &&
       PlayState() == AnimationPlayState::Finished) {
     PostUpdate();
@@ -671,12 +741,7 @@ Animation::SilentlySetPlaybackRate(double aPlaybackRate)
 void
 Animation::CancelNoUpdate()
 {
-  if (mPendingState != PendingState::NotPending) {
-    CancelPendingTasks();
-    if (mReady) {
-      mReady->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
-    }
-  }
+  ResetPendingTasks();
 
   if (mFinished) {
     mFinished->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
@@ -832,7 +897,10 @@ Animation::ComposeStyle(RefPtr<AnimValuesStyleRule>& aStyleRule,
       }
     }
 
-    mEffect->ComposeStyle(aStyleRule, aSetProperties);
+    KeyframeEffectReadOnly* keyframeEffect = mEffect->AsKeyframeEffect();
+    if (keyframeEffect) {
+      keyframeEffect->ComposeStyle(aStyleRule, aSetProperties);
+    }
   }
 
   MOZ_ASSERT(playState == PlayState(),
@@ -1105,7 +1173,11 @@ Animation::UpdateEffect()
 {
   if (mEffect) {
     UpdateRelevance();
-    mEffect->NotifyAnimationTimingUpdated();
+
+    KeyframeEffectReadOnly* keyframeEffect = mEffect->AsKeyframeEffect();
+    if (keyframeEffect) {
+      keyframeEffect->NotifyAnimationTimingUpdated();
+    }
   }
 }
 
@@ -1121,13 +1193,22 @@ Animation::FlushStyle() const
 void
 Animation::PostUpdate()
 {
-  nsPresContext* presContext = GetPresContext();
-  if (!presContext) {
+  if (!mEffect) {
     return;
   }
 
-  Maybe<NonOwningAnimationTarget> target = mEffect->GetTarget();
+  KeyframeEffectReadOnly* keyframeEffect = mEffect->AsKeyframeEffect();
+  if (!keyframeEffect) {
+    return;
+  }
+
+  Maybe<NonOwningAnimationTarget> target = keyframeEffect->GetTarget();
   if (!target) {
+    return;
+  }
+
+  nsPresContext* presContext = keyframeEffect->GetPresContext();
+  if (!presContext) {
     return;
   }
 
@@ -1159,6 +1240,20 @@ Animation::CancelPendingTasks()
 
   mPendingState = PendingState::NotPending;
   mPendingReadyTime.SetNull();
+}
+
+// https://w3c.github.io/web-animations/#reset-an-animations-pending-tasks
+void
+Animation::ResetPendingTasks()
+{
+  if (mPendingState == PendingState::NotPending) {
+    return;
+  }
+
+  CancelPendingTasks();
+  if (mReady) {
+    mReady->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
+  }
 }
 
 bool
@@ -1228,21 +1323,11 @@ Animation::EffectEnd() const
 nsIDocument*
 Animation::GetRenderedDocument() const
 {
-  if (!mEffect) {
+  if (!mEffect || !mEffect->AsKeyframeEffect()) {
     return nullptr;
   }
 
-  return mEffect->GetRenderedDocument();
-}
-
-nsPresContext*
-Animation::GetPresContext() const
-{
-  if (!mEffect) {
-    return nullptr;
-  }
-
-  return mEffect->GetPresContext();
+  return mEffect->AsKeyframeEffect()->GetRenderedDocument();
 }
 
 void
@@ -1314,7 +1399,9 @@ Animation::DispatchPlaybackEvent(const nsAString& aName)
 bool
 Animation::IsRunningOnCompositor() const
 {
-  return mEffect && mEffect->IsRunningOnCompositor();
+  return mEffect &&
+         mEffect->AsKeyframeEffect() &&
+         mEffect->AsKeyframeEffect()->IsRunningOnCompositor();
 }
 
 } // namespace dom

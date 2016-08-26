@@ -203,9 +203,8 @@ checkLcov(function () { //FN:$,top-level //FNDA:1,%
   }
   //FNF:1
   //FNH:1
-  //LF:9 // Expected LF:8 , Apparently if the first statement is a try, the
-         // statement following the "try{" statement is visited twice.
-  //LH:8 // Expected LH:7
+  //LF:8
+  //LH:7
   //BRF:2
   //BRH:1
 });

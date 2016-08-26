@@ -26,6 +26,76 @@
 using mozilla::MakeUnique;
 using mozilla::UniquePtr;
 
+class CacheValidator
+{
+public:
+  CacheValidator(const char* aCachedLibPath, Zip* aZip, Zip::Stream* aStream)
+  {
+    static const char kChecksumSuffix[] = ".crc";
+
+    mCachedChecksumPath =
+      MakeUnique<char[]>(strlen(aCachedLibPath) + sizeof(kChecksumSuffix));
+    sprintf(mCachedChecksumPath.get(), "%s%s", aCachedLibPath, kChecksumSuffix);
+    DEBUG_LOG("mCachedChecksumPath: %s", mCachedChecksumPath.get());
+
+    mChecksum = aStream->GetCRC32();
+    DEBUG_LOG("mChecksum: %x", mChecksum);
+  }
+
+  // Returns whether the cache is valid and up-to-date.
+  bool IsValid() const
+  {
+    // Validate based on checksum.
+    RefPtr<Mappable> checksumMap = MappableFile::Create(mCachedChecksumPath.get());
+    if (!checksumMap) {
+      // Force caching if checksum is missing in cache.
+      return false;
+    }
+
+    DEBUG_LOG("Comparing %x with %s", mChecksum, mCachedChecksumPath.get());
+    MappedPtr checksumBuf = checksumMap->mmap(nullptr, checksumMap->GetLength(),
+                                              PROT_READ, MAP_PRIVATE, 0);
+    if (checksumBuf == MAP_FAILED) {
+      WARN("Couldn't map %s to validate checksum", mCachedChecksumPath.get());
+      return false;
+    }
+    return !memcmp(checksumBuf, &mChecksum, sizeof(mChecksum));
+  }
+
+  // Caches the APK-provided checksum used in future cache validations.
+  void CacheChecksum() const
+  {
+    AutoCloseFD fd(open(mCachedChecksumPath.get(),
+                        O_TRUNC | O_RDWR | O_CREAT | O_NOATIME,
+                        S_IRUSR | S_IWUSR));
+    if (fd == -1) {
+      WARN("Couldn't open %s to update checksum", mCachedChecksumPath.get());
+      return;
+    }
+
+    DEBUG_LOG("Updating checksum %s", mCachedChecksumPath.get());
+
+    const size_t size = sizeof(mChecksum);
+    size_t written = 0;
+    while (written < size) {
+      ssize_t ret = write(fd,
+                          reinterpret_cast<const uint8_t*>(&mChecksum) + written,
+                          size - written);
+      if (ret >= 0) {
+        written += ret;
+      } else if (errno != EINTR) {
+        WARN("Writing checksum %s failed with errno %d",
+             mCachedChecksumPath.get(), errno);
+        break;
+      }
+    }
+  }
+
+private:
+  UniquePtr<char[]> mCachedChecksumPath;
+  uint32_t mChecksum;
+};
+
 Mappable *
 MappableFile::Create(const char *path)
 {
@@ -64,6 +134,8 @@ MappableFile::GetLength() const
 Mappable *
 MappableExtractFile::Create(const char *name, Zip *zip, Zip::Stream *stream)
 {
+  MOZ_ASSERT(zip && stream);
+
   const char *cachePath = getenv("MOZ_LINKER_CACHE");
   if (!cachePath || !*cachePath) {
     WARN("MOZ_LINKER_EXTRACT is set, but not MOZ_LINKER_CACHE; "
@@ -73,14 +145,11 @@ MappableExtractFile::Create(const char *name, Zip *zip, Zip::Stream *stream)
   UniquePtr<char[]> path =
     MakeUnique<char[]>(strlen(cachePath) + strlen(name) + 2);
   sprintf(path.get(), "%s/%s", cachePath, name);
-  struct stat cacheStat;
-  if (stat(path.get(), &cacheStat) == 0) {
-    struct stat zipStat;
-    stat(zip->GetName(), &zipStat);
-    if (cacheStat.st_mtime > zipStat.st_mtime) {
-      DEBUG_LOG("Reusing %s", static_cast<char *>(path.get()));
-      return MappableFile::Create(path.get());
-    }
+
+  CacheValidator validator(path.get(), zip, stream);
+  if (validator.IsValid()) {
+    DEBUG_LOG("Reusing %s", static_cast<char *>(path.get()));
+    return MappableFile::Create(path.get());
   }
   DEBUG_LOG("Extracting to %s", static_cast<char *>(path.get()));
   AutoCloseFD fd;
@@ -149,17 +218,8 @@ MappableExtractFile::Create(const char *name, Zip *zip, Zip::Stream *stream)
     return nullptr;
   }
 
-  return new MappableExtractFile(fd.forget(), Move(file));
-}
-
-MappableExtractFile::~MappableExtractFile()
-{
-  /* When destroying from a forked process, we don't want the file to be
-   * removed, as the main process is still using the file. Although it
-   * doesn't really matter, it helps e.g. valgrind that the file is there.
-   * The string still needs to be delete[]d, though */
-  if (pid != getpid())
-    delete [] path.release();
+  validator.CacheChecksum();
+  return new MappableExtractFile(fd.forget(), file.release());
 }
 
 /**

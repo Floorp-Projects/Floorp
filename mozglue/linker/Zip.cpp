@@ -103,6 +103,7 @@ Zip::GetStream(const char *path, Zip::Stream *out) const
     out->compressedBuf = data;
     out->compressedSize = nextFile->compressedSize;
     out->uncompressedSize = nextFile->uncompressedSize;
+    out->CRC32 = nextFile->CRC32;
     out->type = static_cast<Stream::Type>(uint16_t(nextFile->compression));
 
     /* Find the next Local File header. It is usually simply following the
@@ -145,6 +146,7 @@ Zip::GetStream(const char *path, Zip::Stream *out) const
   out->compressedBuf = data;
   out->compressedSize = nextDir->compressedSize;
   out->uncompressedSize = nextDir->uncompressedSize;
+  out->CRC32 = nextDir->CRC32;
   out->type = static_cast<Stream::Type>(uint16_t(nextDir->compression));
 
   /* Store the next directory entry */

@@ -180,11 +180,8 @@ public:
   }
   void SetCols(uint32_t aCols, ErrorResult& aError)
   {
-    if (aCols == 0) {
-      aError.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
-    } else {
-      SetUnsignedIntAttr(nsGkAtoms::cols, aCols, DEFAULT_COLS, aError);
-    }
+    uint32_t cols = aCols ? aCols : DEFAULT_COLS;
+    SetUnsignedIntAttr(nsGkAtoms::cols, cols, DEFAULT_COLS, aError);
   }
   bool Disabled()
   {
@@ -262,11 +259,8 @@ public:
   }
   void SetRows(uint32_t aRows, ErrorResult& aError)
   {
-    if (aRows == 0) {
-      aError.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
-    } else {
-      SetUnsignedIntAttr(nsGkAtoms::rows, aRows, DEFAULT_ROWS_TEXTAREA, aError);
-    }
+    uint32_t rows = aRows ? aRows : DEFAULT_ROWS_TEXTAREA;
+    SetUnsignedIntAttr(nsGkAtoms::rows, rows, DEFAULT_ROWS_TEXTAREA, aError);
   }
   // XPCOM GetWrap is fine
   void SetWrap(const nsAString& aWrap, ErrorResult& aError)

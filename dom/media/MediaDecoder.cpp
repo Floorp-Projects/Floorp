@@ -508,6 +508,8 @@ MediaDecoder::MediaDecoder(MediaDecoderOwner* aOwner)
   , mMinimizePreroll(false)
   , mMediaTracksConstructed(false)
   , mFiredMetadataLoaded(false)
+  , mElementVisible(!aOwner->IsHidden())
+  , mForcedHidden(false)
   , mIsDormant(false)
   , mIsHeuristicDormantSupported(
       Preferences::GetBool("media.decoder.heuristic.dormant.enabled", false))
@@ -1363,7 +1365,16 @@ void
 MediaDecoder::SetElementVisibility(bool aIsVisible)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  mIsVisible = aIsVisible;
+  mElementVisible = aIsVisible;
+  mIsVisible = !mForcedHidden && mElementVisible;
+}
+
+void
+MediaDecoder::SetForcedHidden(bool aForcedHidden)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  mForcedHidden = aForcedHidden;
+  SetElementVisibility(mElementVisible);
 }
 
 void
@@ -1425,6 +1436,12 @@ media::TimeIntervals
 MediaDecoder::GetSeekable()
 {
   MOZ_ASSERT(NS_IsMainThread());
+
+  if (IsNaN(GetDuration())) {
+    // We do not have a duration yet, we can't determine the seekable range.
+    return TimeIntervals();
+  }
+
   // We can seek in buffered range if the media is seekable. Also, we can seek
   // in unbuffered ranges if the transport level is seekable (local file or the
   // server supports range requests, etc.) or in cue-less WebMs
@@ -1762,22 +1779,13 @@ MediaMemoryTracker::CollectReports(nsIHandleReportCallback* aHandleReport,
     decoder->AddSizeOfResources(resourceSizes);
   }
 
-#define REPORT(_path, _amount, _desc)                                         \
-  do {                                                                        \
-      nsresult rv;                                                            \
-      rv = aHandleReport->Callback(EmptyCString(), NS_LITERAL_CSTRING(_path), \
-                                   KIND_HEAP, UNITS_BYTES, _amount,           \
-                                   NS_LITERAL_CSTRING(_desc), aData);         \
-      NS_ENSURE_SUCCESS(rv, rv);                                              \
-  } while (0)
+  MOZ_COLLECT_REPORT(
+    "explicit/media/decoded/video", KIND_HEAP, UNITS_BYTES, video,
+    "Memory used by decoded video frames.");
 
-  REPORT("explicit/media/decoded/video", video,
-         "Memory used by decoded video frames.");
-
-  REPORT("explicit/media/decoded/audio", audio,
-         "Memory used by decoded audio chunks.");
-
-#undef REPORT
+  MOZ_COLLECT_REPORT(
+    "explicit/media/decoded/audio", KIND_HEAP, UNITS_BYTES, audio,
+    "Memory used by decoded audio chunks.");
 
   return NS_OK;
 }

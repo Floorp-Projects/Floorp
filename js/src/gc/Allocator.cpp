@@ -195,7 +195,8 @@ GCRuntime::checkAllocatorState(JSContext* cx, AllocKind kind)
                   kind == AllocKind::STRING ||
                   kind == AllocKind::FAT_INLINE_STRING ||
                   kind == AllocKind::SYMBOL ||
-                  kind == AllocKind::JITCODE);
+                  kind == AllocKind::JITCODE ||
+                  kind == AllocKind::SCOPE);
     MOZ_ASSERT(!rt->isHeapBusy());
     MOZ_ASSERT(isAllocAllowed());
 #endif

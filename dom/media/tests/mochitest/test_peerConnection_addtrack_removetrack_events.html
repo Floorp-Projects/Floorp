@@ -32,7 +32,6 @@ runNetworkTest(function (options) {
           test.pcLocal.removeSender(videoSenderIndex);
           test.pcLocal.attachLocalTrack(stream.getTracks()[0], localStream);
 
-          let onNextLoop = wait(0);
           eventsPromise = haveEvent(remoteStream, "addtrack", wait(50000, "No addtrack event"))
             .then(trackEvent => {
               ok(trackEvent instanceof MediaStreamTrackEvent,
@@ -43,10 +42,7 @@ runNetworkTest(function (options) {
               is(trackEvent.track.readyState, "live",
                  "added track should be live");
             })
-            .then(() => haveEvent(remoteStream, "addtrack", onNextLoop)
-              .then(() => Promise.reject("Unexpected addtrack event for remote stream " + remoteStream.id),
-                    () => Promise.resolve())
-            );
+            .then(() => haveNoEvent(remoteStream, "addtrack"));
           remoteStream.addEventListener("removetrack",
                                         function onRemovetrack(trackEvent) {
             ok(false, "UA shouldn't raise 'removetrack' when receiving peer connection");

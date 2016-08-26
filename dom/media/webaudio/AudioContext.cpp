@@ -366,8 +366,8 @@ AudioContext::CreateMediaElementSource(HTMLMediaElement& aMediaElement,
     return nullptr;
   }
 
-  RefPtr<DOMMediaStream> stream = aMediaElement.MozCaptureStream(aRv,
-                                                                   mDestination->Stream()->Graph());
+  RefPtr<DOMMediaStream> stream =
+    aMediaElement.CaptureAudio(aRv, mDestination->Stream()->Graph());
   if (aRv.Failed()) {
     return nullptr;
   }
@@ -1145,17 +1145,16 @@ AudioContext::CollectReports(nsIHandleReportCallback* aHandleReport,
     int64_t amount = node->SizeOfIncludingThis(MallocSizeOf);
     nsPrintfCString domNodePath("explicit/webaudio/audio-node/%s/dom-nodes",
                                 node->NodeType());
-    nsresult rv =
-      aHandleReport->Callback(EmptyCString(), domNodePath, KIND_HEAP,
-                              UNITS_BYTES, amount, nodeDescription, aData);
-    if (NS_WARN_IF(NS_FAILED(rv)))
-      return rv;
+    aHandleReport->Callback(EmptyCString(), domNodePath, KIND_HEAP, UNITS_BYTES,
+                            amount, nodeDescription, aData);
   }
 
   int64_t amount = SizeOfIncludingThis(MallocSizeOf);
-  return MOZ_COLLECT_REPORT("explicit/webaudio/audiocontext",
-                            KIND_HEAP, UNITS_BYTES, amount,
-                            "Memory used by AudioContext objects (Web Audio).");
+  MOZ_COLLECT_REPORT(
+    "explicit/webaudio/audiocontext", KIND_HEAP, UNITS_BYTES, amount,
+    "Memory used by AudioContext objects (Web Audio).");
+
+  return NS_OK;
 }
 
 BasicWaveFormCache*

@@ -388,7 +388,8 @@ public:
    * Sets up a MediaInputPort from the underlying track that this
    * MediaStreamTrack represents, to aStream, and returns it.
    */
-  already_AddRefed<MediaInputPort> ForwardTrackContentsTo(ProcessedMediaStream* aStream);
+  already_AddRefed<MediaInputPort> ForwardTrackContentsTo(ProcessedMediaStream* aStream,
+                                                          TrackID aDestinationTrackID = TRACK_ANY);
 
   /**
    * Returns true if this track is connected to aPort and forwarded to aPort's

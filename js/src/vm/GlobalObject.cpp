@@ -34,11 +34,11 @@
 #include "builtin/WeakMapObject.h"
 #include "builtin/WeakSetObject.h"
 #include "vm/Debugger.h"
+#include "vm/EnvironmentObject.h"
 #include "vm/HelperThreads.h"
 #include "vm/PIC.h"
 #include "vm/RegExpStatics.h"
 #include "vm/RegExpStaticsObject.h"
-#include "vm/ScopeObject.h"
 #include "vm/StopIterationObject.h"
 
 #include "jscompartmentinlines.h"
@@ -328,10 +328,16 @@ GlobalObject::createInternal(JSContext* cx, const Class* clasp)
     if (clasp->flags & JSCLASS_HAS_PRIVATE)
         global->setPrivate(nullptr);
 
-    Rooted<ClonedBlockObject*> lexical(cx, ClonedBlockObject::createGlobal(cx, global));
+    Rooted<LexicalEnvironmentObject*> lexical(cx,
+        LexicalEnvironmentObject::createGlobal(cx, global));
     if (!lexical)
         return nullptr;
-    global->setReservedSlot(LEXICAL_SCOPE, ObjectValue(*lexical));
+    global->setReservedSlot(LEXICAL_ENVIRONMENT, ObjectValue(*lexical));
+
+    Rooted<GlobalScope*> emptyGlobalScope(cx, GlobalScope::createEmpty(cx, ScopeKind::Global));
+    if (!emptyGlobalScope)
+        return nullptr;
+    global->setReservedSlot(EMPTY_GLOBAL_SCOPE, PrivateGCThingValue(emptyGlobalScope));
 
     cx->compartment()->initGlobal(*global);
 
@@ -386,10 +392,18 @@ GlobalObject::new_(JSContext* cx, const Class* clasp, JSPrincipals* principals,
     return global;
 }
 
-ClonedBlockObject&
-GlobalObject::lexicalScope() const
+LexicalEnvironmentObject&
+GlobalObject::lexicalEnvironment() const
 {
-    return getReservedSlot(LEXICAL_SCOPE).toObject().as<ClonedBlockObject>();
+    return getReservedSlot(LEXICAL_ENVIRONMENT).toObject().as<LexicalEnvironmentObject>();
+}
+
+GlobalScope&
+GlobalObject::emptyGlobalScope() const
+{
+    const Value& v = getReservedSlot(EMPTY_GLOBAL_SCOPE);
+    MOZ_ASSERT(v.isPrivateGCThing() && v.traceKind() == JS::TraceKind::Scope);
+    return static_cast<Scope*>(v.toGCThing())->as<GlobalScope>();
 }
 
 /* static */ bool
@@ -646,6 +660,7 @@ js::DefinePropertiesAndFunctions(JSContext* cx, HandleObject obj,
 static void
 GlobalDebuggees_finalize(FreeOp* fop, JSObject* obj)
 {
+    MOZ_ASSERT(fop->maybeOffMainThread());
     fop->delete_((GlobalObject::DebuggerVector*) obj->as<NativeObject>().getPrivate());
 }
 
@@ -665,7 +680,7 @@ static const Class
 GlobalDebuggees_class = {
     "GlobalDebuggee",
     JSCLASS_HAS_PRIVATE |
-    JSCLASS_FOREGROUND_FINALIZE,
+    JSCLASS_BACKGROUND_FINALIZE,
     &GlobalDebuggees_classOps
 };
 

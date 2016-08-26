@@ -1681,16 +1681,16 @@ js::intrinsic_GetElemBaseForLambda(JSContext* cx, unsigned argc, Value* vp)
 
     /*
      * JSOP_GETALIASEDVAR tells us exactly where to find the base object 'b'.
-     * Rule out the (unlikely) possibility of a function with a call object
-     * since it would make our scope walk off by 1.
+     * Rule out the (unlikely) possibility of a function with environment
+     * objects since it would make our environment walk off.
      */
-    if (JSOp(*pc) != JSOP_GETALIASEDVAR || fun->needsCallObject())
+    if (JSOp(*pc) != JSOP_GETALIASEDVAR || fun->needsSomeEnvironmentObject())
         return true;
-    ScopeCoordinate sc(pc);
-    ScopeObject* scope = &fun->environment()->as<ScopeObject>();
-    for (unsigned i = 0; i < sc.hops(); ++i)
-        scope = &scope->enclosingScope().as<ScopeObject>();
-    Value b = scope->aliasedVar(sc);
+    EnvironmentCoordinate ec(pc);
+    EnvironmentObject* env = &fun->environment()->as<EnvironmentObject>();
+    for (unsigned i = 0; i < ec.hops(); ++i)
+        env = &env->enclosingEnvironment().as<EnvironmentObject>();
+    Value b = env->aliasedBinding(ec);
     pc += JSOP_GETALIASEDVAR_LENGTH;
 
     /* Look for 'a' to be the lambda's first argument. */

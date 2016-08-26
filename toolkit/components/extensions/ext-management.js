@@ -16,7 +16,7 @@ function installType(addon) {
   return "normal";
 }
 
-extensions.registerSchemaAPI("management", context => {
+extensions.registerSchemaAPI("management", "addon_parent", context => {
   let {extension} = context;
   return {
     management: {

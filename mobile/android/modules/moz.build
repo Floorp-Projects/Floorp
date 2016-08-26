@@ -7,7 +7,6 @@
 EXTRA_JS_MODULES += [
     'Accounts.jsm',
     'AndroidLog.jsm',
-    'ContactService.jsm',
     'dbg-browser-actors.js',
     'DelayedInit.jsm',
     'DownloadNotifications.jsm',

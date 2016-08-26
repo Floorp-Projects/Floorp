@@ -436,6 +436,12 @@ ImageEncoder::ExtractDataInternal(const nsAString& aType,
       imgStream = do_QueryInterface(aEncoder);
     }
   } else {
+    CheckedInt32 requiredBytes = CheckedInt32(aSize.width) * CheckedInt32(aSize.height) * 4;
+    if (MOZ_UNLIKELY(!requiredBytes.isValid())) {
+      return NS_ERROR_INVALID_ARG;
+    }
+
+
     // no context, so we have to encode an empty image
     // note that if we didn't have a current context, the spec says we're
     // supposed to just return transparent black pixels of the canvas

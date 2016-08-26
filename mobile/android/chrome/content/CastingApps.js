@@ -138,8 +138,10 @@ var CastingApps = {
     SimpleServiceDiscovery.registerDevice(mediaPlayerDevice);
 
     // Presentation Device will notify us any time the available device list changes.
-    fxOSTVDevice.init();
-    SimpleServiceDiscovery.registerDevice(fxOSTVDevice);
+    if (window.PresentationRequest) {
+      fxOSTVDevice.init();
+      SimpleServiceDiscovery.registerDevice(fxOSTVDevice);
+    }
 
     // Search for devices continuously
     SimpleServiceDiscovery.search(this._interval);

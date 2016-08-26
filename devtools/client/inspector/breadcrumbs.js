@@ -358,8 +358,8 @@ ArrowScrollBox.prototype = {
 function HTMLBreadcrumbs(inspector) {
   this.inspector = inspector;
   this.selection = this.inspector.selection;
-  this.chromeWin = this.inspector.panelWin;
-  this.chromeDoc = this.inspector.panelDoc;
+  this.win = this.inspector.panelWin;
+  this.doc = this.inspector.panelDoc;
   this._init();
 }
 
@@ -371,9 +371,9 @@ HTMLBreadcrumbs.prototype = {
   },
 
   _init: function () {
-    this.outer = this.chromeDoc.getElementById("inspector-breadcrumbs");
+    this.outer = this.doc.getElementById("inspector-breadcrumbs");
     this.arrowScrollBox = new ArrowScrollBox(
-        this.chromeWin,
+        this.win,
         this.outer);
 
     this.container = this.arrowScrollBox.inner;
@@ -382,7 +382,7 @@ HTMLBreadcrumbs.prototype = {
 
     // These separators are used for CSS purposes only, and are positioned
     // off screen, but displayed with -moz-element.
-    this.separators = this.chromeDoc.createElementNS(NS_XHTML, "div");
+    this.separators = this.doc.createElementNS(NS_XHTML, "div");
     this.separators.className = "breadcrumb-separator-container";
     this.separators.innerHTML =
                       "<div id='breadcrumb-separator-before'></div>" +
@@ -395,7 +395,7 @@ HTMLBreadcrumbs.prototype = {
     this.outer.addEventListener("mouseout", this, true);
     this.outer.addEventListener("focus", this, true);
 
-    this.shortcuts = new KeyShortcuts({ window: this.chromeWin, target: this.outer });
+    this.shortcuts = new KeyShortcuts({ window: this.win, target: this.outer });
     this.handleShortcut = this.handleShortcut.bind(this);
 
     this.shortcuts.on("Right", this.handleShortcut);
@@ -458,16 +458,16 @@ HTMLBreadcrumbs.prototype = {
    * @returns {DocumentFragment}
    */
   prettyPrintNodeAsXHTML: function (node) {
-    let tagLabel = this.chromeDoc.createElementNS(NS_XHTML, "span");
+    let tagLabel = this.doc.createElementNS(NS_XHTML, "span");
     tagLabel.className = "breadcrumbs-widget-item-tag plain";
 
-    let idLabel = this.chromeDoc.createElementNS(NS_XHTML, "span");
+    let idLabel = this.doc.createElementNS(NS_XHTML, "span");
     idLabel.className = "breadcrumbs-widget-item-id plain";
 
-    let classesLabel = this.chromeDoc.createElementNS(NS_XHTML, "span");
+    let classesLabel = this.doc.createElementNS(NS_XHTML, "span");
     classesLabel.className = "breadcrumbs-widget-item-classes plain";
 
-    let pseudosLabel = this.chromeDoc.createElementNS(NS_XHTML, "span");
+    let pseudosLabel = this.doc.createElementNS(NS_XHTML, "span");
     pseudosLabel.className = "breadcrumbs-widget-item-pseudo-classes plain";
 
     let tagText = node.displayName;
@@ -506,7 +506,7 @@ HTMLBreadcrumbs.prototype = {
     classesLabel.textContent = classesText;
     pseudosLabel.textContent = node.pseudoClassLocks.join("");
 
-    let fragment = this.chromeDoc.createDocumentFragment();
+    let fragment = this.doc.createDocumentFragment();
     fragment.appendChild(tagLabel);
     fragment.appendChild(idLabel);
     fragment.appendChild(classesLabel);
@@ -661,9 +661,6 @@ HTMLBreadcrumbs.prototype = {
     }
     if (index > -1) {
       this.nodeHierarchy[index].button.setAttribute("checked", "true");
-      if (this.hadFocus) {
-        this.nodeHierarchy[index].button.focus();
-      }
     } else {
       // Unset active active descendant when all buttons are unselected.
       this.outer.removeAttribute("aria-activedescendant");
@@ -703,7 +700,7 @@ HTMLBreadcrumbs.prototype = {
    * @return {DOMNode} The <button> for this node.
    */
   buildButton: function (node) {
-    let button = this.chromeDoc.createElementNS(NS_XHTML, "button");
+    let button = this.doc.createElementNS(NS_XHTML, "button");
     button.appendChild(this.prettyPrintNodeAsXHTML(node));
     button.className = "breadcrumbs-widget-item";
     button.id = "breadcrumbs-widget-item-" + this.breadcrumbsWidgetItemId++;
@@ -731,7 +728,7 @@ HTMLBreadcrumbs.prototype = {
    * @param {NodeFront} node The node to reach.
    */
   expand: function (node) {
-    let fragment = this.chromeDoc.createDocumentFragment();
+    let fragment = this.doc.createDocumentFragment();
     let lastButtonInserted = null;
     let originalLength = this.nodeHierarchy.length;
     let stopNode = null;
@@ -855,10 +852,6 @@ HTMLBreadcrumbs.prototype = {
     if (reason === "markupmutation" && !hasInterestingMutations) {
       return;
     }
-
-    let cmdDispatcher = this.chromeDoc.commandDispatcher;
-    this.hadFocus = (cmdDispatcher.focusedElement &&
-                     cmdDispatcher.focusedElement.parentNode == this.container);
 
     if (!this.selection.isConnected()) {
       // remove all the crumbs

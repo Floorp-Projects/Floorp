@@ -12,6 +12,7 @@
 
 #include "nsUrlClassifierUtils.h"
 #include "nsPrintfCString.h"
+#include "mozilla/Base64.h"
 
 // MOZ_LOG=UrlClassifierProtocolParser:5
 mozilla::LazyLogModule gUrlClassifierProtocolParserLog("UrlClassifierProtocolParser");
@@ -779,6 +780,27 @@ ProtocolParserProtobuf::End()
   }
 }
 
+// Save state of |aListName| to the following pref:
+//
+//   "browser.safebrowsing.provider.google4.state.[aListName]"
+//
+static nsresult
+SaveStateToPref(const nsACString& aListName, const nsACString& aState)
+{
+  nsresult rv;
+  nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCString prefName("browser.safebrowsing.provider.google4.state.");
+  prefName.Append(aListName);
+
+  nsCString stateBase64;
+  rv = Base64Encode(aState, stateBase64);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return prefs->SetCharPref(prefName.get(), stateBase64.get());
+}
+
 nsresult
 ProtocolParserProtobuf::ProcessOneResponse(const ListUpdateResponse& aResponse)
 {
@@ -791,12 +813,30 @@ ProtocolParserProtobuf::ProcessOneResponse(const ListUpdateResponse& aResponse)
   // Convert threat type to list name.
   nsCOMPtr<nsIUrlClassifierUtils> urlUtil =
     do_GetService(NS_URLCLASSIFIERUTILS_CONTRACTID);
-  nsCString listName;
-  nsresult rv = urlUtil->ConvertThreatTypeToListName(aResponse.threat_type(),
-                                                     listName);
+  nsCString possibleListNames;
+  nsresult rv = urlUtil->ConvertThreatTypeToListNames(aResponse.threat_type(),
+                                                      possibleListNames);
   if (NS_FAILED(rv)) {
     PARSER_LOG((nsPrintfCString("Threat type to list name conversion error: %d",
                                aResponse.threat_type())).get());
+    return NS_ERROR_FAILURE;
+  }
+
+  // Match the table name we received with one of the ones we requested.
+  // We ignore the case where a threat type matches more than one list
+  // per provider and return the first one. See bug 1287059."
+  nsCString listName;
+  nsTArray<nsCString> possibleListNameArray;
+  Classifier::SplitTables(possibleListNames, possibleListNameArray);
+  for (auto possibleName : possibleListNameArray) {
+    if (mRequestedTables.Contains(possibleName)) {
+      listName = possibleName;
+      break;
+    }
+  }
+
+  if (listName.IsEmpty()) {
+    PARSER_LOG(("We received an update for a list we didn't ask for. Ignoring it."));
     return NS_ERROR_FAILURE;
   }
 
@@ -819,6 +859,15 @@ ProtocolParserProtobuf::ProcessOneResponse(const ListUpdateResponse& aResponse)
   auto tu = GetTableUpdate(nsCString(listName.get()));
   auto tuV4 = TableUpdate::Cast<TableUpdateV4>(tu);
   NS_ENSURE_TRUE(tuV4, NS_ERROR_FAILURE);
+
+  // See Bug 1287059. We save the state to prefs until we support
+  // "saving states to HashStore".
+  nsCString state(aResponse.new_client_state().c_str(),
+                  aResponse.new_client_state().size());
+  NS_DispatchToMainThread(NS_NewRunnableFunction([listName, state] () {
+    nsresult rv = SaveStateToPref(listName, state);
+    NS_WARN_IF(NS_FAILED(rv));
+  }));
 
   PARSER_LOG(("==== Update for threat type '%d' ====", aResponse.threat_type()));
   PARSER_LOG(("* listName: %s\n", listName.get()));

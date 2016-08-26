@@ -192,55 +192,55 @@ MOZ_DEFINE_MALLOC_SIZE_OF(WindowsMallocSizeOf)
 // The key is the window ID.
 typedef nsDataHashtable<nsUint64HashKey, nsCString> WindowPaths;
 
-static nsresult
+static void
 ReportAmount(const nsCString& aBasePath, const char* aPathTail,
              size_t aAmount, const nsCString& aDescription,
              uint32_t aKind, uint32_t aUnits,
-             nsIMemoryReporterCallback* aCb,
-             nsISupports* aClosure)
+             nsIHandleReportCallback* aHandleReport,
+             nsISupports* aData)
 {
   if (aAmount == 0) {
-    return NS_OK;
+    return;
   }
 
   nsAutoCString path(aBasePath);
   path += aPathTail;
 
-  return aCb->Callback(EmptyCString(), path, aKind, aUnits,
-                       aAmount, aDescription, aClosure);
+  aHandleReport->Callback(
+    EmptyCString(), path, aKind, aUnits, aAmount, aDescription, aData);
 }
 
-static nsresult
+static void
 ReportSize(const nsCString& aBasePath, const char* aPathTail,
            size_t aAmount, const nsCString& aDescription,
-           nsIMemoryReporterCallback* aCb,
-           nsISupports* aClosure)
+           nsIHandleReportCallback* aHandleReport,
+           nsISupports* aData)
 {
-  return ReportAmount(aBasePath, aPathTail, aAmount, aDescription,
-                      nsIMemoryReporter::KIND_HEAP,
-                      nsIMemoryReporter::UNITS_BYTES, aCb, aClosure);
+  ReportAmount(aBasePath, aPathTail, aAmount, aDescription,
+               nsIMemoryReporter::KIND_HEAP, nsIMemoryReporter::UNITS_BYTES,
+               aHandleReport, aData);
 }
 
-static nsresult
+static void
 ReportCount(const nsCString& aBasePath, const char* aPathTail,
             size_t aAmount, const nsCString& aDescription,
-            nsIMemoryReporterCallback* aCb,
-            nsISupports* aClosure)
+            nsIHandleReportCallback* aHandleReport,
+            nsISupports* aData)
 {
-  return ReportAmount(aBasePath, aPathTail, aAmount, aDescription,
-                      nsIMemoryReporter::KIND_OTHER,
-                      nsIMemoryReporter::UNITS_COUNT, aCb, aClosure);
+  ReportAmount(aBasePath, aPathTail, aAmount, aDescription,
+               nsIMemoryReporter::KIND_OTHER, nsIMemoryReporter::UNITS_COUNT,
+               aHandleReport, aData);
 }
 
-static nsresult
+static void
 CollectWindowReports(nsGlobalWindow *aWindow,
                      amIAddonManager *addonManager,
                      nsWindowSizes *aWindowTotalSizes,
                      nsTHashtable<nsUint64HashKey> *aGhostWindowIDs,
                      WindowPaths *aWindowPaths,
                      WindowPaths *aTopWindowPaths,
-                     nsIMemoryReporterCallback *aCb,
-                     nsISupports *aClosure,
+                     nsIHandleReportCallback *aHandleReport,
+                     nsISupports *aData,
                      bool aAnonymize)
 {
   nsAutoCString windowPath("explicit/");
@@ -302,19 +302,13 @@ CollectWindowReports(nsGlobalWindow *aWindow,
   // Remember the path for later.
   aWindowPaths->Put(aWindow->WindowID(), windowPath);
 
-#define REPORT_SIZE(_pathTail, _amount, _desc)                                \
-  do {                                                                        \
-    nsresult rv = ReportSize(windowPath, _pathTail, _amount,                  \
-                             NS_LITERAL_CSTRING(_desc), aCb, aClosure);       \
-    NS_ENSURE_SUCCESS(rv, rv);                                                \
-  } while (0)
+#define REPORT_SIZE(_pathTail, _amount, _desc) \
+  ReportSize(windowPath, _pathTail, _amount, NS_LITERAL_CSTRING(_desc), \
+             aHandleReport, aData);
 
-#define REPORT_COUNT(_pathTail, _amount, _desc)                               \
-  do {                                                                        \
-    nsresult rv = ReportCount(censusWindowPath, _pathTail, _amount,           \
-                              NS_LITERAL_CSTRING(_desc), aCb, aClosure);      \
-    NS_ENSURE_SUCCESS(rv, rv);                                                \
-  } while (0)
+#define REPORT_COUNT(_pathTail, _amount, _desc) \
+  ReportCount(censusWindowPath, _pathTail, _amount, NS_LITERAL_CSTRING(_desc), \
+              aHandleReport, aData);
 
   nsWindowSizes windowSizes(WindowsMallocSizeOf);
   aWindow->AddSizeOfIncludingThis(&windowSizes);
@@ -439,15 +433,13 @@ CollectWindowReports(nsGlobalWindow *aWindow,
 
 #undef REPORT_SIZE
 #undef REPORT_COUNT
-
-  return NS_OK;
 }
 
 typedef nsTArray< RefPtr<nsGlobalWindow> > WindowArray;
 
 NS_IMETHODIMP
-nsWindowMemoryReporter::CollectReports(nsIMemoryReporterCallback* aCb,
-                                       nsISupports* aClosure, bool aAnonymize)
+nsWindowMemoryReporter::CollectReports(nsIHandleReportCallback* aHandleReport,
+                                       nsISupports* aData, bool aAnonymize)
 {
   nsGlobalWindow::WindowByIdTable* windowsById =
     nsGlobalWindow::GetWindowsTable();
@@ -460,11 +452,10 @@ nsWindowMemoryReporter::CollectReports(nsIMemoryReporterCallback* aCb,
     windows.AppendElement(iter.Data());
   }
 
-  // Get the IDs of all the "ghost" windows, and call aCb->Callback() for each
-  // one.
+  // Get the IDs of all the "ghost" windows, and call aHandleReport->Callback()
+  // for each one.
   nsTHashtable<nsUint64HashKey> ghostWindows;
   CheckForGhostWindows(&ghostWindows);
-  nsresult rv = NS_OK;
   for (auto iter = ghostWindows.ConstIter(); !iter.Done(); iter.Next()) {
     nsGlobalWindow::WindowByIdTable* windowsById =
       nsGlobalWindow::GetWindowsTable();
@@ -483,19 +474,15 @@ nsWindowMemoryReporter::CollectReports(nsIMemoryReporterCallback* aCb,
     path.AppendLiteral("ghost-windows/");
     AppendWindowURI(window, path, aAnonymize);
 
-    nsresult callbackRv = aCb->Callback(
+    aHandleReport->Callback(
       /* process = */ EmptyCString(),
       path,
       nsIMemoryReporter::KIND_OTHER,
       nsIMemoryReporter::UNITS_COUNT,
       /* amount = */ 1,
       /* description = */ NS_LITERAL_CSTRING("A ghost window."),
-      aClosure);
-    if (NS_FAILED(callbackRv) && NS_SUCCEEDED(rv)) {
-      rv = callbackRv;
-    }
+      aData);
   }
-  NS_ENSURE_SUCCESS(rv, rv);
 
   WindowPaths windowPaths;
   WindowPaths topWindowPaths;
@@ -508,27 +495,21 @@ nsWindowMemoryReporter::CollectReports(nsIMemoryReporterCallback* aCb,
     addonManager = do_GetService("@mozilla.org/addons/integration;1");
   }
   for (uint32_t i = 0; i < windows.Length(); i++) {
-    rv = CollectWindowReports(windows[i], addonManager,
-                              &windowTotalSizes, &ghostWindows,
-                              &windowPaths, &topWindowPaths, aCb,
-                              aClosure, aAnonymize);
-    NS_ENSURE_SUCCESS(rv, rv);
+    CollectWindowReports(windows[i], addonManager,
+                         &windowTotalSizes, &ghostWindows,
+                         &windowPaths, &topWindowPaths, aHandleReport,
+                         aData, aAnonymize);
   }
 
   // Report JS memory usage.  We do this from here because the JS memory
   // reporter needs to be passed |windowPaths|.
-  rv = xpc::JSReporter::CollectReports(&windowPaths, &topWindowPaths,
-                                       aCb, aClosure, aAnonymize);
-  NS_ENSURE_SUCCESS(rv, rv);
+  xpc::JSReporter::CollectReports(&windowPaths, &topWindowPaths,
+                                  aHandleReport, aData, aAnonymize);
 
-#define REPORT(_path, _amount, _desc)                                         \
-  do {                                                                        \
-    nsresult rv;                                                              \
-    rv = aCb->Callback(EmptyCString(), NS_LITERAL_CSTRING(_path),             \
-                       KIND_OTHER, UNITS_BYTES, _amount,                      \
-                       NS_LITERAL_CSTRING(_desc), aClosure);                  \
-    NS_ENSURE_SUCCESS(rv, rv);                                                \
-  } while (0)
+#define REPORT(_path, _amount, _desc) \
+  aHandleReport->Callback(EmptyCString(), NS_LITERAL_CSTRING(_path), \
+                          KIND_OTHER, UNITS_BYTES, _amount, \
+                          NS_LITERAL_CSTRING(_desc), aData);
 
   REPORT("window-objects/dom/element-nodes", windowTotalSizes.mDOMElementNodesSize,
          "This is the sum of all windows' 'dom/element-nodes' numbers.");
@@ -645,7 +626,7 @@ nsWindowMemoryReporter::ObserveDOMWindowDetached(nsGlobalWindow* aWindow)
 
 // static
 void
-nsWindowMemoryReporter::CheckTimerFired(nsITimer* aTimer, void* aClosure)
+nsWindowMemoryReporter::CheckTimerFired(nsITimer* aTimer, void* aData)
 {
   if (sWindowReporter) {
     MOZ_ASSERT(!sWindowReporter->mCycleCollectorIsRunning);

@@ -54,9 +54,11 @@ XPTInterfaceInfoManager::CollectReports(nsIHandleReportCallback* aHandleReport,
     // obviously better place to measure it.
     amount += XPT_SizeOfArenaIncludingThis(gXPTIStructArena, XPTIMallocSizeOf);
 
-    return MOZ_COLLECT_REPORT(
+    MOZ_COLLECT_REPORT(
         "explicit/xpti-working-set", KIND_HEAP, UNITS_BYTES, amount,
         "Memory used by the XPCOM typelib system.");
+
+    return NS_OK;
 }
 
 // static

@@ -548,7 +548,9 @@ GetMinAndMaxScaleForAnimationProperty(const nsIFrame* aFrame,
     // not yet finished or which are filling forwards).
     MOZ_ASSERT(anim->IsRelevant());
 
-    dom::KeyframeEffectReadOnly* effect = anim->GetEffect();
+    dom::KeyframeEffectReadOnly* effect =
+      anim->GetEffect() ? anim->GetEffect()->AsKeyframeEffect() : nullptr;
+    MOZ_ASSERT(effect, "A playing animation should have a keyframe effect");
     for (size_t propIdx = effect->Properties().Length(); propIdx-- != 0; ) {
       AnimationProperty& prop = effect->Properties()[propIdx];
       if (prop.mProperty == eCSSProperty_transform) {
@@ -9285,7 +9287,7 @@ nsLayoutUtils::UpdateDisplayPortMarginsFromPendingMessages() {
       mozilla::dom::ContentChild::GetSingleton()->GetIPCChannel()) {
     mozilla::dom::ContentChild::GetSingleton()->GetIPCChannel()->PeekMessages(
       [](const IPC::Message& aMsg) -> bool {
-        if (aMsg.type() == mozilla::layers::PAPZ::Msg_UpdateFrame__ID) {
+        if (aMsg.type() == mozilla::layers::PAPZ::Msg_RequestContentRepaint__ID) {
           PickleIterator iter(aMsg);
           FrameMetrics frame;
           if (!IPC::ReadParam(&aMsg, &iter, &frame)) {
