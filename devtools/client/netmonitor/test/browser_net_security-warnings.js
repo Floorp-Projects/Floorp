@@ -16,7 +16,7 @@ const TEST_CASES = [
 ];
 
 add_task(function* () {
-  let [tab, debuggee, monitor] = yield initNetMonitor(CUSTOM_GET_URL);
+  let [tab, , monitor] = yield initNetMonitor(CUSTOM_GET_URL);
   let { $, EVENTS, NetMonitorView } = monitor.panelWin;
   let { RequestsMenu, NetworkDetails } = NetMonitorView;
   RequestsMenu.lazyUpdate = false;
@@ -27,8 +27,11 @@ add_task(function* () {
     info("Testing site with " + test.desc);
 
     info("Performing request to " + test.uri);
-    debuggee.performRequests(1, test.uri);
-    yield waitForNetworkEvents(monitor, 1);
+    let wait = waitForNetworkEvents(monitor, 1);
+    yield ContentTask.spawn(tab.linkedBrowser, test.uri, function* (url) {
+      content.wrappedJSObject.performRequests(1, url);
+    });
+    yield wait;
 
     info("Selecting the request.");
     RequestsMenu.selectedIndex = 0;
@@ -47,9 +50,7 @@ add_task(function* () {
     is(cipher.hidden, !test.warnCipher, "Cipher suite warning is hidden.");
 
     RequestsMenu.clear();
-
   }
 
-  yield teardown(monitor);
-
+  return teardown(monitor);
 });

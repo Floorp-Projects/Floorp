@@ -8,15 +8,18 @@
  */
 
 add_task(function* () {
-  let [tab, debuggee, monitor] = yield initNetMonitor(CUSTOM_GET_URL);
+  let [tab, , monitor] = yield initNetMonitor(CUSTOM_GET_URL);
   let { $, EVENTS, NetMonitorView } = monitor.panelWin;
   let { RequestsMenu, NetworkDetails } = NetMonitorView;
   RequestsMenu.lazyUpdate = false;
 
   info("Performing a secure request.");
-  debuggee.performRequests(1, "https://example.com" + CORS_SJS_PATH);
-
-  yield waitForNetworkEvents(monitor, 1);
+  const REQUESTS_URL = "https://example.com" + CORS_SJS_PATH;
+  let wait = waitForNetworkEvents(monitor, 1);
+  yield ContentTask.spawn(tab.linkedBrowser, REQUESTS_URL, function* (url) {
+    content.wrappedJSObject.performRequests(1, url);
+  });
+  yield wait;
 
   info("Selecting the request.");
   RequestsMenu.selectedIndex = 0;

@@ -8,17 +8,14 @@
  */
 
 add_task(function* () {
-  let [tab, debuggee, monitor] = yield initNetMonitor(CUSTOM_GET_URL);
+  let [tab, , monitor] = yield initNetMonitor(CUSTOM_GET_URL);
   let { $, EVENTS, NetMonitorView } = monitor.panelWin;
   let { RequestsMenu, NetworkDetails } = NetMonitorView;
   RequestsMenu.lazyUpdate = false;
 
   info("Requesting a resource over HTTPS.");
-  debuggee.performRequests(1, "https://example.com" + CORS_SJS_PATH + "?request_2");
-  yield waitForNetworkEvents(monitor, 1);
-
-  debuggee.performRequests(1, "https://example.com" + CORS_SJS_PATH + "?request_1");
-  yield waitForNetworkEvents(monitor, 1);
+  yield performRequestAndWait("https://example.com" + CORS_SJS_PATH + "?request_2");
+  yield performRequestAndWait("https://example.com" + CORS_SJS_PATH + "?request_1");
 
   is(RequestsMenu.itemCount, 2, "Two events event logged.");
 
@@ -34,7 +31,15 @@ add_task(function* () {
   info("Testing that security icon can be clicked after the items were sorted.");
   yield clickAndTestSecurityIcon();
 
-  yield teardown(monitor);
+  return teardown(monitor);
+
+  function* performRequestAndWait(url) {
+    let wait = waitForNetworkEvents(monitor, 1);
+    yield ContentTask.spawn(tab.linkedBrowser, { url }, function* (args) {
+      content.wrappedJSObject.performRequests(1, args.url);
+    });
+    return wait;
+  }
 
   function* clickAndTestSecurityIcon() {
     let item = RequestsMenu.items[0];
@@ -49,5 +54,4 @@ add_task(function* () {
     is(NetworkDetails.widget.selectedPanel, $("#security-tabpanel"),
       "Security tab is selected.");
   }
-
 });

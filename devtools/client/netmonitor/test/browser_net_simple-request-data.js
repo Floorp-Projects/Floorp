@@ -1,24 +1,26 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
 /**
  * Tests if requests render correct information in the menu UI.
  */
 
 function test() {
-  initNetMonitor(SIMPLE_SJS).then(([aTab, aDebuggee, aMonitor]) => {
+  initNetMonitor(SIMPLE_SJS).then(([tab, , monitor]) => {
     info("Starting test... ");
 
-    let { L10N, NetMonitorView } = aMonitor.panelWin;
+    let { L10N, NetMonitorView } = monitor.panelWin;
     let { RequestsMenu } = NetMonitorView;
 
     RequestsMenu.lazyUpdate = false;
 
-    waitForNetworkEvents(aMonitor, 1)
-      .then(() => teardown(aMonitor))
+    waitForNetworkEvents(monitor, 1)
+      .then(() => teardown(monitor))
       .then(finish);
 
-    aMonitor.panelWin.once(aMonitor.panelWin.EVENTS.NETWORK_EVENT, () => {
+    monitor.panelWin.once(monitor.panelWin.EVENTS.NETWORK_EVENT, () => {
       is(RequestsMenu.selectedItem, null,
         "There shouldn't be any selected item in the requests menu.");
       is(RequestsMenu.itemCount, 1,
@@ -27,7 +29,6 @@ function test() {
         "The details pane should still be hidden after the first request.");
 
       let requestItem = RequestsMenu.getItemAtIndex(0);
-      let target = requestItem.target;
 
       is(typeof requestItem.value, "string",
         "The attached request id is incorrect.");
@@ -83,7 +84,7 @@ function test() {
       verifyRequestItemTarget(requestItem, "GET", SIMPLE_SJS);
     });
 
-    aMonitor.panelWin.once(aMonitor.panelWin.EVENTS.RECEIVED_REQUEST_HEADERS, () => {
+    monitor.panelWin.once(monitor.panelWin.EVENTS.RECEIVED_REQUEST_HEADERS, () => {
       let requestItem = RequestsMenu.getItemAtIndex(0);
 
       ok(requestItem.attachment.requestHeaders,
@@ -98,7 +99,7 @@ function test() {
       verifyRequestItemTarget(requestItem, "GET", SIMPLE_SJS);
     });
 
-    aMonitor.panelWin.once(aMonitor.panelWin.EVENTS.RECEIVED_REQUEST_COOKIES, () => {
+    monitor.panelWin.once(monitor.panelWin.EVENTS.RECEIVED_REQUEST_COOKIES, () => {
       let requestItem = RequestsMenu.getItemAtIndex(0);
 
       ok(requestItem.attachment.requestCookies,
@@ -109,11 +110,11 @@ function test() {
       verifyRequestItemTarget(requestItem, "GET", SIMPLE_SJS);
     });
 
-    aMonitor.panelWin.once(aMonitor.panelWin.EVENTS.RECEIVED_REQUEST_POST_DATA, () => {
+    monitor.panelWin.once(monitor.panelWin.EVENTS.RECEIVED_REQUEST_POST_DATA, () => {
       ok(false, "Trap listener: this request doesn't have any post data.");
     });
 
-    aMonitor.panelWin.once(aMonitor.panelWin.EVENTS.RECEIVED_RESPONSE_HEADERS, () => {
+    monitor.panelWin.once(monitor.panelWin.EVENTS.RECEIVED_RESPONSE_HEADERS, () => {
       let requestItem = RequestsMenu.getItemAtIndex(0);
 
       ok(requestItem.attachment.responseHeaders,
@@ -126,7 +127,7 @@ function test() {
       verifyRequestItemTarget(requestItem, "GET", SIMPLE_SJS);
     });
 
-    aMonitor.panelWin.once(aMonitor.panelWin.EVENTS.RECEIVED_RESPONSE_COOKIES, () => {
+    monitor.panelWin.once(monitor.panelWin.EVENTS.RECEIVED_RESPONSE_COOKIES, () => {
       let requestItem = RequestsMenu.getItemAtIndex(0);
 
       ok(requestItem.attachment.responseCookies,
@@ -137,7 +138,7 @@ function test() {
       verifyRequestItemTarget(requestItem, "GET", SIMPLE_SJS);
     });
 
-    aMonitor.panelWin.once(aMonitor.panelWin.EVENTS.STARTED_RECEIVING_RESPONSE, () => {
+    monitor.panelWin.once(monitor.panelWin.EVENTS.STARTED_RECEIVING_RESPONSE, () => {
       let requestItem = RequestsMenu.getItemAtIndex(0);
 
       is(requestItem.attachment.httpVersion, "HTTP/1.1",
@@ -155,7 +156,7 @@ function test() {
       });
     });
 
-    aMonitor.panelWin.once(aMonitor.panelWin.EVENTS.UPDATING_RESPONSE_CONTENT, () => {
+    monitor.panelWin.once(monitor.panelWin.EVENTS.UPDATING_RESPONSE_CONTENT, () => {
       let requestItem = RequestsMenu.getItemAtIndex(0);
 
       is(requestItem.attachment.transferredSize, "12",
@@ -173,16 +174,19 @@ function test() {
       });
     });
 
-    aMonitor.panelWin.once(aMonitor.panelWin.EVENTS.RECEIVED_RESPONSE_CONTENT, () => {
+    monitor.panelWin.once(monitor.panelWin.EVENTS.RECEIVED_RESPONSE_CONTENT, () => {
       let requestItem = RequestsMenu.getItemAtIndex(0);
 
       ok(requestItem.attachment.responseContent,
         "There should be a responseContent attachment available.");
-      is(requestItem.attachment.responseContent.content.mimeType, "text/plain; charset=utf-8",
+      is(requestItem.attachment.responseContent.content.mimeType,
+        "text/plain; charset=utf-8",
         "The responseContent attachment has an incorrect |content.mimeType| property.");
-      is(requestItem.attachment.responseContent.content.text, "Hello world!",
+      is(requestItem.attachment.responseContent.content.text,
+        "Hello world!",
         "The responseContent attachment has an incorrect |content.text| property.");
-      is(requestItem.attachment.responseContent.content.size, 12,
+      is(requestItem.attachment.responseContent.content.size,
+        12,
         "The responseContent attachment has an incorrect |content.size| property.");
 
       verifyRequestItemTarget(requestItem, "GET", SIMPLE_SJS, {
@@ -193,7 +197,7 @@ function test() {
       });
     });
 
-    aMonitor.panelWin.once(aMonitor.panelWin.EVENTS.UPDATING_EVENT_TIMINGS, () => {
+    monitor.panelWin.once(monitor.panelWin.EVENTS.UPDATING_EVENT_TIMINGS, () => {
       let requestItem = RequestsMenu.getItemAtIndex(0);
 
       is(typeof requestItem.attachment.totalTime, "number",
@@ -211,7 +215,7 @@ function test() {
       });
     });
 
-    aMonitor.panelWin.once(aMonitor.panelWin.EVENTS.RECEIVED_EVENT_TIMINGS, () => {
+    monitor.panelWin.once(monitor.panelWin.EVENTS.RECEIVED_EVENT_TIMINGS, () => {
       let requestItem = RequestsMenu.getItemAtIndex(0);
 
       ok(requestItem.attachment.eventTimings,
@@ -236,6 +240,6 @@ function test() {
       });
     });
 
-    aDebuggee.location.reload();
+    tab.linkedBrowser.reload();
   });
 }

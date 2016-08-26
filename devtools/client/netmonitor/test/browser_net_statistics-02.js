@@ -9,7 +9,7 @@
  */
 
 add_task(function* () {
-  let [, debuggee, monitor] = yield initNetMonitor(STATISTICS_URL);
+  let [tab, , monitor] = yield initNetMonitor(STATISTICS_URL);
   info("Starting test... ");
 
   let panel = monitor.panelWin;
@@ -18,8 +18,8 @@ add_task(function* () {
       "The initial frontend mode is correct.");
 
   let onChartDisplayed = Promise.all([
-    waitFor(panel, EVENTS.PRIMED_CACHE_CHART_DISPLAYED),
-    waitFor(panel, EVENTS.EMPTY_CACHE_CHART_DISPLAYED)
+    panel.once(EVENTS.PRIMED_CACHE_CHART_DISPLAYED),
+    panel.once(EVENTS.EMPTY_CACHE_CHART_DISPLAYED)
   ]);
 
   info("Displaying statistics view");
@@ -29,9 +29,9 @@ add_task(function* () {
         "The frontend mode is currently in the statistics view.");
 
   info("Reloading page");
-  let onWillNavigate = waitFor(panel, EVENTS.TARGET_WILL_NAVIGATE);
-  let onDidNavigate = waitFor(panel, EVENTS.TARGET_DID_NAVIGATE);
-  debuggee.location.reload();
+  let onWillNavigate = panel.once(EVENTS.TARGET_WILL_NAVIGATE);
+  let onDidNavigate = panel.once(EVENTS.TARGET_DID_NAVIGATE);
+  tab.linkedBrowser.reload();
   yield onWillNavigate;
   is(NetMonitorView.currentFrontendMode, "network-inspector-view",
           "The frontend mode switched back to the inspector view.");
