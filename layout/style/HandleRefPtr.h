@@ -64,6 +64,16 @@ public:
   operator T() const { return mHandle; }
   T operator->() const { return mHandle; }
 
+  bool operator==(const HandleRefPtr<T>& aOther) const
+  {
+    return mHandle == aOther.mHandle;
+  }
+
+  bool operator!=(const HandleRefPtr<T>& aOther) const
+  {
+    return !(*this == aOther);
+  }
+
   void swap(HandleRefPtr<T>& aOther)
   {
     std::swap(mHandle, aOther.mHandle);
@@ -91,42 +101,6 @@ private:
 
   T mHandle;
 };
-
-template<typename T>
-inline bool operator==(const HandleRefPtr<T>& aLHS, const HandleRefPtr<T>& aRHS)
-{
-  return static_cast<T>(aLHS) == static_cast<T>(aRHS);
-}
-
-template<typename T>
-inline bool operator==(const HandleRefPtr<T>& aLHS, T aRHS)
-{
-  return static_cast<T>(aLHS) == aRHS;
-}
-
-template<typename T>
-inline bool operator==(T aLHS, const HandleRefPtr<T>& aRHS)
-{
-  return aLHS == static_cast<T>(aRHS);
-}
-
-template<typename T>
-inline bool operator!=(const HandleRefPtr<T>& aLHS, const HandleRefPtr<T>& aRHS)
-{
-  return !(aLHS == aRHS);
-}
-
-template<typename T>
-inline bool operator!=(const HandleRefPtr<T>& aLHS, T aRHS)
-{
-  return !(aLHS == aRHS);
-}
-
-template<typename T>
-inline bool operator!=(T aLHS, const HandleRefPtr<T>& aRHS)
-{
-  return !(aLHS == aRHS);
-}
 
 } // namespace mozilla
 
