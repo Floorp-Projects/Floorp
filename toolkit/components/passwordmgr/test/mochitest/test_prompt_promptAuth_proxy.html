@@ -214,8 +214,9 @@ startup();
 add_task(function* setup() {
   info("Waiting for startup to complete...");
   yield startupComplete;
+})
 
-  info("===== test 508 =====");
+add_task(function* test_noAutologin() {
   // test proxy login (default = no autologin), make sure it prompts.
   state = {
     msg         : "The proxy moz-proxy://127.0.0.1:8888 is requesting a username and password.\n\nThe site says: “Proxy Realm”",
@@ -250,8 +251,9 @@ add_task(function* setup() {
   isnot(time1, time2, "Checking that timeLastUsed was updated");
   is(proxyAuthinfo.username, "proxuser", "Checking returned username");
   is(proxyAuthinfo.password, "proxpass", "Checking returned password");
+});
 
-  info("===== test 509 =====");
+add_task(function* test_autologin() {
   // test proxy login (with autologin)
 
   // Enable the autologin pref.
@@ -270,8 +272,9 @@ add_task(function* setup() {
   isnot(time1, time2, "Checking that timeLastUsed was updated");
   is(proxyAuthinfo.username, "proxuser", "Checking returned username");
   is(proxyAuthinfo.password, "proxpass", "Checking returned password");
+});
 
-  info("===== test 510 =====");
+add_task(function* test_autologin_incorrect() {
   // test proxy login (with autologin), ensure it prompts after a failed auth.
   state = {
     msg         : "The proxy moz-proxy://127.0.0.1:8888 is requesting a username and password.\n\nThe site says: “Proxy Realm”",
@@ -307,8 +310,9 @@ add_task(function* setup() {
   isnot(time1, time2, "Checking that timeLastUsed was updated");
   is(proxyAuthinfo.username, "proxuser", "Checking returned username");
   is(proxyAuthinfo.password, "proxpass", "Checking returned password");
+});
 
-  info("===== test 511 =====");
+add_task(function* test_autologin_private() {
   // test proxy login (with autologin), ensure it prompts in Private Browsing mode.
   state = {
     msg         : "the message",
