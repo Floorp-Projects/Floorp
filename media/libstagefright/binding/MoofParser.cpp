@@ -887,7 +887,7 @@ Saio::Saio(Box& aBox, AtomType aDefaultType)
   }
   size_t count = reader->ReadU32();
   need = (version ? sizeof(uint64_t) : sizeof(uint32_t)) * count;
-  if (reader->Remaining() < count) {
+  if (reader->Remaining() < need) {
     LOG(Saio, "Incomplete Box (have:%lld need:%lld)",
         (uint64_t)reader->Remaining(), (uint64_t)need);
     return;
