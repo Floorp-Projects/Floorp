@@ -140,6 +140,7 @@ public:
   MediaInfo GetMetadata();
   const TrackBuffer& GetTrackBuffer(TrackInfo::TrackType aTrack);
   const media::TimeIntervals& Buffered(TrackInfo::TrackType);
+  const media::TimeUnit& HighestStartTime(TrackInfo::TrackType);
   media::TimeIntervals SafeBuffered(TrackInfo::TrackType) const;
   bool IsEnded() const
   {

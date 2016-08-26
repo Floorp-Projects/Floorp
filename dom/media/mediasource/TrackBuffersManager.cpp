@@ -1893,6 +1893,13 @@ TrackBuffersManager::Buffered(TrackInfo::TrackType aTrack)
   return GetTracksData(aTrack).mBufferedRanges;
 }
 
+const media::TimeUnit&
+TrackBuffersManager::HighestStartTime(TrackInfo::TrackType aTrack)
+{
+  MOZ_ASSERT(OnTaskQueue());
+  return GetTracksData(aTrack).mHighestStartTimestamp;
+}
+
 TimeIntervals
 TrackBuffersManager::SafeBuffered(TrackInfo::TrackType aTrack) const
 {
@@ -1981,8 +1988,8 @@ TrackBuffersManager::Seek(TrackInfo::TrackType aTrack,
     TimeIntervals buffered = trackBuffer.mBufferedRanges;
     buffered.SetFuzz(aFuzz);
     TimeIntervals::IndexType index = buffered.Find(aTime);
-    MOZ_ASSERT(index != TimeIntervals::NoIndex);
-
+    MOZ_ASSERT(index != TimeIntervals::NoIndex,
+               "We shouldn't be called if aTime isn't buffered");
     TimeInterval target = buffered[index];
     i = FindSampleIndex(track, target);
   }
