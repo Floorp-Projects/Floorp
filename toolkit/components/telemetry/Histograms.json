@@ -63,7 +63,7 @@
     "alert_emails": ["safebrowsing-telemetry@mozilla.org"],
     "expires_in_version": "never",
     "kind": "boolean",
-    "description": "Application reputation verdict (shouldBlock=false is OK)"
+    "description": "Overall (local or remote) application reputation verdict (shouldBlock=false is OK)."
   },
   "APPLICATION_REPUTATION_LOCAL": {
     "alert_emails": ["safebrowsing-telemetry@mozilla.org"],
@@ -77,7 +77,7 @@
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 3,
-    "description": "Application reputation remote status (0=OK, 1=FAIL, 2=INVALID)"
+    "description": "Status of the application reputation remote lookup (0=OK, 1=failed, 2=invalid protobuf response)"
   },
   "APPLICATION_REPUTATION_SERVER_VERDICT": {
     "alert_emails": ["safebrowsing-telemetry@mozilla.org"],
@@ -86,7 +86,7 @@
     "bug_numbers": [1272788],
     "kind": "enumerated",
     "n_values": 8,
-    "description": "Application reputation remote response (0=SAFE, 1=DANGEROUS, 2=UNCOMMON, 3=POTENTIALLY_UNWANTED, 4=DANGEROUS_HOST)"
+    "description": "Application reputation remote verdict (0=SAFE, 1=DANGEROUS, 2=UNCOMMON, 3=POTENTIALLY_UNWANTED, 4=DANGEROUS_HOST, 5=UNKNOWN)"
   },
   "APPLICATION_REPUTATION_COUNT": {
     "alert_emails": ["safebrowsing-telemetry@mozilla.org"],
