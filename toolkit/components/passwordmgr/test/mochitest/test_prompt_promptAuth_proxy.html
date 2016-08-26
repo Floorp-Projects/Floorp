@@ -19,7 +19,7 @@
 <pre id="test">
 <script class="testbody" type="text/javascript">
 var state, action;
-var pwmgr, observerService;
+var pwmgr;
 var proxyLogin;
 var isOk;
 var mozproxy, proxiedHost = "http://mochi.test:8888";
@@ -56,11 +56,6 @@ ok(promptFac != null, "promptFac getService()");
 var prompter2 = promptFac.getPrompt(window, Ci.nsIAuthPrompt2);
 
 function initLogins(pi) {
-  observerService = Cc["@mozilla.org/observer-service;1"].
-                      getService(Ci.nsIObserverService);
-  observerService.addObserver(storageObserver, "passwordmgr-storage-changed", false);
-
-
   pwmgr = Cc["@mozilla.org/login-manager;1"].
           getService(Ci.nsILoginManager);
 
@@ -74,17 +69,6 @@ function initLogins(pi) {
                   "proxuser", "proxpass", "", "");
 
   pwmgr.addLogin(proxyLogin);
-}
-
-function finishTest() {
-  try {
-    observerService.removeObserver(storageObserver, "passwordmgr-storage-changed");
-
-    dumpLogins(pwmgr);
-  } catch (e) {
-    ok(false, "finishTest FAILED: " + e);
-  }
-  ok(true, "whee, done!");
 }
 
 var startupCompleteResolver;
@@ -147,64 +131,6 @@ function startup() {
                                 Ci.nsIContentPolicy.TYPE_OTHER);
   pps.asyncResolve(channel, 0, resolveCallback);
 }
-
-var storageObserver = SpecialPowers.wrapCallbackObject({
-  notificationCallbacks: [],
-
-  QueryInterface : function (iid) {
-    const interfaces = [Ci.nsIObserver,
-                        Ci.nsISupports, Ci.nsISupportsWeakReference];
-
-    if (!interfaces.some( function(v) { return iid.equals(v) } ))
-      throw SpecialPowers.Cr.NS_ERROR_NO_INTERFACE;
-    return this;
-  },
-
-  observe : function (subject, topic, data) {
-    ok(true, ".");
-    ok(true, "observer for " + topic + " / " + data);
-    ok(true, "Time is " + (new Date()).toUTCString());
-    var wrapped = SpecialPowers.wrap(subject);
-    try {
-      switch (data) {
-        case "addLogin":
-          ok(wrapped.QueryInterface(Ci.nsILoginInfo), "subject QI 1");
-          ok(wrapped.QueryInterface(Ci.nsILoginMetaInfo), "subject QI 2");
-          dumpLogin("added: ", subject);
-          break;
-        case "modifyLogin":
-          var arr = wrapped.QueryInterface(Ci.nsIArray);
-          ok(arr, "subject QI");
-          is(arr.length, 2, "should be 2 items");
-          var oldLogin = arr.queryElementAt(0, Ci.nsILoginInfo);
-          var newLogin = arr.queryElementAt(1, Ci.nsILoginInfo);
-          dumpLogin("oldLogin: ", oldLogin);
-          dumpLogin("newLogin: ", newLogin);
-          break;
-        case "removeLogin":
-          ok(wrapped.QueryInterface(Ci.nsILoginInfo), "subject QI 1");
-          ok(wrapped.QueryInterface(Ci.nsILoginMetaInfo), "subject QI 2");
-          dumpLogin("removed: ", subject);
-          break;
-        case "removeAllLogins":
-          is(subject, null, "no subject");
-          break;
-        case "hostSavingEnabled":
-        case "hostSavingDisabled":
-          ok(subject instanceof Ci.nsISupportsString, "subject QI");
-          ok(true, "state is: " + subject.data);
-          break;
-        default:
-          do_throw("Unhandled notification: " + data + " / " + topic);
-      }
-
-      if (this.notificationCallbacks.length)
-        this.notificationCallbacks.splice(0, 1)[0]();
-    } catch (e) {
-      ok(false, "OBSERVER FAILED: " + e);
-    }
-  }
-});
 
 startup();
 
@@ -337,8 +263,6 @@ add_task(function* test_autologin_private() {
   var authMgr = Cc['@mozilla.org/network/http-auth-manager;1'].
                 getService(Ci.nsIHttpAuthManager);
   authMgr.clearAll();
-
-  finishTest();
 });
 </script>
 </pre>
