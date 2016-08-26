@@ -10,6 +10,7 @@
 
 #include <algorithm> // for std::stable_sort
 #include <limits>
+#include "mozilla/Function.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/PodOperations.h" // for PodZero
 #include "nsAbsoluteContainingBlock.h"
@@ -99,6 +100,23 @@ ClampToCSSMaxBSize(nscoord aSize, const ReflowInput* aReflowInput,
   return aSize;
 }
 
+static bool
+IsPercentOfIndefiniteSize(const nsStyleCoord& aCoord, nscoord aPercentBasis)
+{
+  return aPercentBasis == NS_UNCONSTRAINEDSIZE && aCoord.HasPercent();
+}
+
+static nscoord
+ResolveToDefiniteSize(const nsStyleCoord& aCoord, nscoord aPercentBasis)
+{
+  MOZ_ASSERT(aCoord.IsCoordPercentCalcUnit());
+  if (::IsPercentOfIndefiniteSize(aCoord, aPercentBasis)) {
+    return nscoord(0);
+  }
+  return std::max(nscoord(0),
+                  nsRuleNode::ComputeCoordPercentCalc(aCoord, aPercentBasis));
+}
+
 enum class GridLineSide
 {
   eBeforeGridGap,
@@ -132,6 +150,7 @@ struct nsGridContainerFrame::TrackSize
     eSkipGrowUnlimited2 =    0x400,
     eSkipGrowUnlimited = eSkipGrowUnlimited1 | eSkipGrowUnlimited2,
     eBreakBefore =           0x800,
+    eFitContent =           0x1000,
   };
 
   static bool IsMinContent(const nsStyleCoord& aCoord)
@@ -165,29 +184,35 @@ nsGridContainerFrame::TrackSize::Initialize(nscoord aPercentageBasis,
              "track size data is expected to be initialized to zero");
   auto minSizeUnit = aMinCoord.GetUnit();
   auto maxSizeUnit = aMaxCoord.GetUnit();
-  if (aPercentageBasis == NS_UNCONSTRAINEDSIZE) {
+  if (minSizeUnit == eStyleUnit_None) {
+    // This track is sized using fit-content(size) (represented in style system
+    // with minCoord=None,maxCoord=size).  In layout, fit-content(size) behaves
+    // as minmax(auto, max-content), with 'size' as an additional upper-bound.
+    mState = eFitContent;
+    minSizeUnit = eStyleUnit_Auto;
+    maxSizeUnit = eStyleUnit_Enumerated; // triggers max-content sizing below
+  }
+  if (::IsPercentOfIndefiniteSize(aMinCoord, aPercentageBasis)) {
     // https://drafts.csswg.org/css-grid/#valdef-grid-template-columns-percentage
     // "If the inline or block size of the grid container is indefinite,
     //  <percentage> values relative to that size are treated as 'auto'."
-    if (aMinCoord.HasPercent()) {
-      minSizeUnit = eStyleUnit_Auto;
-    }
-    if (aMaxCoord.HasPercent()) {
-      maxSizeUnit = eStyleUnit_Auto;
-    }
+    minSizeUnit = eStyleUnit_Auto;
+  }
+  if (::IsPercentOfIndefiniteSize(aMaxCoord, aPercentageBasis)) {
+    maxSizeUnit = eStyleUnit_Auto;
   }
   // http://dev.w3.org/csswg/css-grid/#algo-init
   switch (minSizeUnit) {
     case eStyleUnit_FlexFraction:
     case eStyleUnit_Auto:
-      mState = eAutoMinSizing;
+      mState |= eAutoMinSizing;
       break;
     case eStyleUnit_Enumerated:
-      mState = IsMinContent(aMinCoord) ? eMinContentMinSizing
-                                       : eMaxContentMinSizing;
+      mState |= IsMinContent(aMinCoord) ? eMinContentMinSizing
+                                        : eMaxContentMinSizing;
       break;
     default:
-      mBase = nsRuleNode::ComputeCoordPercentCalc(aMinCoord, aPercentageBasis);
+      mBase = ::ResolveToDefiniteSize(aMinCoord, aPercentageBasis);
   }
   switch (maxSizeUnit) {
     case eStyleUnit_Auto:
@@ -204,7 +229,7 @@ nsGridContainerFrame::TrackSize::Initialize(nscoord aPercentageBasis,
       mLimit = mBase;
       break;
     default:
-      mLimit = nsRuleNode::ComputeCoordPercentCalc(aMaxCoord, aPercentageBasis);
+      mLimit = ::ResolveToDefiniteSize(aMaxCoord, aPercentageBasis);
       if (mLimit < mBase) {
         mLimit = mBase;
       }
@@ -962,7 +987,7 @@ struct nsGridContainerFrame::TrackSizingFunctions
           return 1;
         }
       }
-      nscoord trackSize = nsRuleNode::ComputeCoordPercentCalc(*coord, aSize);
+      nscoord trackSize = ::ResolveToDefiniteSize(*coord, aSize);
       if (i == mRepeatAutoStart) {
         // Use a minimum 1px for the repeat() track-size.
         if (trackSize < AppUnitsPerCSSPixel()) {
@@ -972,8 +997,7 @@ struct nsGridContainerFrame::TrackSizingFunctions
       }
       sum += trackSize;
     }
-    nscoord gridGap =
-      std::max(nscoord(0), nsRuleNode::ComputeCoordPercentCalc(aGridGap, aSize));
+    nscoord gridGap = ::ResolveToDefiniteSize(aGridGap, aSize);
     if (numTracks > 1) {
       // Add grid-gaps for all the tracks including the repeat() track.
       sum += gridGap * (numTracks - 1);
@@ -1218,6 +1242,8 @@ struct nsGridContainerFrame::Tracks
     }
   }
 
+  using FitContentClamper =
+    function<bool(uint32_t aTrack, nscoord aMinSize, nscoord* aSize)>;
   /**
    * Grow the planned size for tracks in aGrowableTracks up to their limit
    * and then freeze them (all aGrowableTracks must be unfrozen on entry).
@@ -1225,7 +1251,8 @@ struct nsGridContainerFrame::Tracks
    */
   nscoord GrowTracksToLimit(nscoord                   aAvailableSpace,
                             nsTArray<TrackSize>&      aPlan,
-                            const nsTArray<uint32_t>& aGrowableTracks) const
+                            const nsTArray<uint32_t>& aGrowableTracks,
+                            FitContentClamper         aFitContentClamper) const
   {
     MOZ_ASSERT(aAvailableSpace > 0 && aGrowableTracks.Length() > 0);
     nscoord space = aAvailableSpace;
@@ -1238,11 +1265,17 @@ struct nsGridContainerFrame::Tracks
           continue;
         }
         nscoord newBase = sz.mBase + spacePerTrack;
-        if (newBase > sz.mLimit) {
-          nscoord consumed = sz.mLimit - sz.mBase;
+        nscoord limit = sz.mLimit;
+        if (MOZ_UNLIKELY((sz.mState & TrackSize::eFitContent) &&
+                         aFitContentClamper)) {
+          // Clamp the limit to the fit-content() size, for §12.5.2 step 5/6.
+          aFitContentClamper(track, sz.mBase, &limit);
+        }
+        if (newBase > limit) {
+          nscoord consumed = limit - sz.mBase;
           if (consumed > 0) {
             space -= consumed;
-            sz.mBase = sz.mLimit;
+            sz.mBase = limit;
           }
           sz.mState |= TrackSize::eFrozen;
           if (--numGrowable == 0) {
@@ -1313,7 +1346,8 @@ struct nsGridContainerFrame::Tracks
   void GrowSelectedTracksUnlimited(nscoord                   aAvailableSpace,
                                    nsTArray<TrackSize>&      aPlan,
                                    const nsTArray<uint32_t>& aGrowableTracks,
-                                   TrackSize::StateBits      aSelector) const
+                                   TrackSize::StateBits      aSelector,
+                                   FitContentClamper aFitContentClamper) const
   {
     MOZ_ASSERT(aAvailableSpace > 0 && aGrowableTracks.Length() > 0);
     uint32_t numGrowable = aGrowableTracks.Length();
@@ -1338,22 +1372,37 @@ struct nsGridContainerFrame::Tracks
       }
     }
     nscoord space = aAvailableSpace;
-    while (true) {
+    DebugOnly<bool> didClamp = false;
+    while (numGrowable) {
       nscoord spacePerTrack = std::max<nscoord>(space / numGrowable, 1);
       for (uint32_t track : aGrowableTracks) {
         TrackSize& sz = aPlan[track];
         if (sz.mState & TrackSize::eSkipGrowUnlimited) {
           continue; // an excluded track
         }
-        sz.mBase += spacePerTrack;
-        space -= spacePerTrack;
+        nscoord delta = spacePerTrack;
+        nscoord newBase = sz.mBase + delta;
+        if (MOZ_UNLIKELY((sz.mState & TrackSize::eFitContent) &&
+                         aFitContentClamper)) {
+          // Clamp newBase to the fit-content() size, for §12.5.2 step 5/6.
+          if (aFitContentClamper(track, sz.mBase, &newBase)) {
+            didClamp = true;
+            delta = newBase - sz.mBase;
+            MOZ_ASSERT(delta >= 0, "track size shouldn't shrink");
+            sz.mState |= TrackSize::eSkipGrowUnlimited1;
+            --numGrowable;
+          }
+        }
+        sz.mBase = newBase;
+        space -= delta;
         MOZ_ASSERT(space >= 0);
         if (space == 0) {
           return;
         }
       }
     }
-    MOZ_ASSERT_UNREACHABLE("we don't exit the loop above except by return");
+    MOZ_ASSERT(didClamp, "we don't exit the loop above except by return, "
+                         "unless we clamped some track's size");
   }
 
   /**
@@ -1366,9 +1415,9 @@ struct nsGridContainerFrame::Tracks
                               TrackSize::StateBits aSelector)
   {
     SetupGrowthPlan(aPlan, aGrowableTracks);
-    nscoord space = GrowTracksToLimit(aAvailableSpace, aPlan, aGrowableTracks);
+    nscoord space = GrowTracksToLimit(aAvailableSpace, aPlan, aGrowableTracks, nullptr);
     if (space > 0) {
-      GrowSelectedTracksUnlimited(space, aPlan, aGrowableTracks, aSelector);
+      GrowSelectedTracksUnlimited(space, aPlan, aGrowableTracks, aSelector, nullptr);
     }
     CopyPlanToBase(aPlan, aGrowableTracks);
   }
@@ -1378,12 +1427,26 @@ struct nsGridContainerFrame::Tracks
    */
   void DistributeToTrackLimits(nscoord              aAvailableSpace,
                                nsTArray<TrackSize>& aPlan,
-                               nsTArray<uint32_t>&  aGrowableTracks)
+                               nsTArray<uint32_t>&  aGrowableTracks,
+                               const TrackSizingFunctions& aFunctions,
+                               nscoord                     aPercentageBasis)
   {
-    nscoord space = GrowTracksToLimit(aAvailableSpace, aPlan, aGrowableTracks);
+    auto fitContentClamper = [&aFunctions, aPercentageBasis] (uint32_t aTrack,
+                                                              nscoord aMinSize,
+                                                              nscoord* aSize) {
+      nscoord fitContentLimit =
+        ::ResolveToDefiniteSize(aFunctions.MaxSizingFor(aTrack), aPercentageBasis);
+      if (*aSize > fitContentLimit) {
+        *aSize = std::max(aMinSize, fitContentLimit);
+        return true;
+      }
+      return false;
+    };
+    nscoord space = GrowTracksToLimit(aAvailableSpace, aPlan, aGrowableTracks,
+                                      fitContentClamper);
     if (space > 0) {
       GrowSelectedTracksUnlimited(aAvailableSpace, aPlan, aGrowableTracks,
-                                  TrackSize::StateBits(0));
+                                  TrackSize::StateBits(0), fitContentClamper);
     }
     CopyPlanToLimit(aPlan, aGrowableTracks);
   }
@@ -3412,8 +3475,7 @@ nsGridContainerFrame::Tracks::Initialize(
                          aFunctions.MinSizingFor(i),
                          aFunctions.MaxSizingFor(i));
   }
-  auto gap = nsRuleNode::ComputeCoordPercentCalc(aGridGap, aContentBoxSize);
-  mGridGap = std::max(nscoord(0), gap);
+  mGridGap = ::ResolveToDefiniteSize(aGridGap, aContentBoxSize);
   mContentBoxSize = aContentBoxSize;
 }
 
@@ -3671,6 +3733,13 @@ nsGridContainerFrame::Tracks::ResolveIntrinsicSizeStep1(
       sz.mLimit = maxContentContribution.value();
     } else {
       sz.mLimit = std::max(sz.mLimit, maxContentContribution.value());
+    }
+    if (MOZ_UNLIKELY(sz.mState & TrackSize::eFitContent)) {
+      // Clamp mLimit to the fit-content() size, for §12.5.1.
+      auto maxCoord = aFunctions.MaxSizingFor(aRange.mStart);
+      nscoord fitContentClamp =
+        nsRuleNode::ComputeCoordPercentCalc(maxCoord, aPercentageBasis);
+      sz.mLimit = std::min(sz.mLimit, fitContentClamp);
     }
   }
   if (sz.mLimit < sz.mBase) {
@@ -4151,7 +4220,8 @@ nsGridContainerFrame::Tracks::ResolveIntrinsicSize(
                                   TrackSize::eIntrinsicMaxSizing,
                                   tracks);
           if (space > 0) {
-            DistributeToTrackLimits(space, plan, tracks);
+            DistributeToTrackLimits(space, plan, tracks, aFunctions,
+                                    aPercentageBasis);
           }
         }
         for (size_t j = 0, len = mSizes.Length(); j < len; ++j) {
@@ -4178,7 +4248,8 @@ nsGridContainerFrame::Tracks::ResolveIntrinsicSize(
                                     TrackSize::eAutoOrMaxContentMaxSizing,
                                     tracks);
             if (space > 0) {
-              DistributeToTrackLimits(space, plan, tracks);
+              DistributeToTrackLimits(space, plan, tracks, aFunctions,
+                                      aPercentageBasis);
             }
           }
         }

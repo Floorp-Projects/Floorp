@@ -90,7 +90,7 @@ CookieServiceParent::GetOriginAttributesFromParams(const IPC::SerializedLoadCont
   }
 
   if (aLoadContext.IsPrivateBitValid()) {
-    aIsPrivate = aLoadContext.mUsePrivateBrowsing;
+    aIsPrivate = aLoadContext.mOriginAttributes.mPrivateBrowsingId > 0;
   }
 
   aAttrs.InheritFromDocShellToNecko(docShellAttrs);

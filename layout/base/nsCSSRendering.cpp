@@ -3589,6 +3589,9 @@ nsCSSRendering::PrepareImageLayer(nsPresContext* aPresContext,
   nsBackgroundLayerState state(aForFrame, &aLayer.mImage, irFlags);
   if (!state.mImageRenderer.PrepareImage()) {
     // There's no image or it's not ready to be painted.
+    if (aOutIsTransformedFixed) {
+      *aOutIsTransformedFixed = false;
+    }
     return state;
   }
 

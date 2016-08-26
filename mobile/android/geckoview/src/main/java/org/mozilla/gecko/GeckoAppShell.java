@@ -70,6 +70,7 @@ import android.graphics.RectF;
 import android.graphics.SurfaceTexture;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.hardware.Camera;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -159,7 +160,7 @@ public class GeckoAppShell
                     editor.commit();
                 }
 
-                reportJavaCrash(getExceptionStackTrace(exc));
+                reportJavaCrash(exc, getExceptionStackTrace(exc));
 
             } catch (final Throwable e) {
             }
@@ -239,7 +240,7 @@ public class GeckoAppShell
 
     // helper methods
     @WrapForJNI
-    private static native void reportJavaCrash(String stackTrace);
+    /* package */ static native void reportJavaCrash(Throwable exc, String stackTrace);
 
     @WrapForJNI(dispatchTo = "gecko")
     public static native void notifyUriVisited(String uri);
@@ -315,20 +316,13 @@ public class GeckoAppShell
      */
 
     @WrapForJNI(exceptionMode = "ignore")
-    public static String handleUncaughtException(Throwable e) {
-        if (AppConstants.MOZ_CRASHREPORTER) {
-            final Throwable exc = CrashHandler.getRootException(e);
-            final StackTraceElement[] stack = exc.getStackTrace();
-            if (stack.length >= 1 && stack[0].isNativeMethod()) {
-                // The exception occurred when running native code. Return an exception
-                // string and trigger the crash reporter inside the caller so that we get
-                // a better native stack in Socorro.
-                CrashHandler.logException(Thread.currentThread(), exc);
-                return CrashHandler.getExceptionStackTrace(exc);
-            }
-        }
+    private static String getExceptionStackTrace(Throwable e) {
+        return CrashHandler.getExceptionStackTrace(CrashHandler.getRootException(e));
+    }
+
+    @WrapForJNI(exceptionMode = "ignore")
+    private static void handleUncaughtException(Throwable e) {
         CRASH_HANDLER.uncaughtException(null, e);
-        return null;
     }
 
     private static float getLocationAccuracy(Location location) {
@@ -1833,13 +1827,30 @@ public class GeckoAppShell
         sGeckoInterface = aGeckoInterface;
     }
 
-    public static android.hardware.Camera sCamera;
+    /* package */ static Camera sCamera;
 
-    static native void cameraCallbackBridge(byte[] data);
+    private static final int kPreferredFPS = 25;
+    private static byte[] sCameraBuffer;
 
-    static final int kPreferredFPS = 25;
-    static byte[] sCameraBuffer;
+    private static class CameraCallback implements Camera.PreviewCallback {
+        @WrapForJNI(calledFrom = "gecko")
+        private static native void onFrameData(int camera, byte[] data);
 
+        private final int mCamera;
+
+        public CameraCallback(int camera) {
+            mCamera = camera;
+        }
+
+        @Override
+        public void onPreviewFrame(byte[] data, Camera camera) {
+            onFrameData(mCamera, data);
+
+            if (sCamera != null) {
+                sCamera.addCallbackBuffer(sCameraBuffer);
+            }
+        }
+    }
 
     @WrapForJNI(calledFrom = "gecko")
     static int[] initCamera(String aContentType, int aCamera, int aWidth, int aHeight) {
@@ -1860,14 +1871,14 @@ public class GeckoAppShell
         int[] result = new int[4];
         result[0] = 0;
 
-        if (android.hardware.Camera.getNumberOfCameras() == 0) {
+        if (Camera.getNumberOfCameras() == 0) {
             return result;
         }
 
         try {
-            sCamera = android.hardware.Camera.open(aCamera);
+            sCamera = Camera.open(aCamera);
 
-            android.hardware.Camera.Parameters params = sCamera.getParameters();
+            Camera.Parameters params = sCamera.getParameters();
             params.setPreviewFormat(ImageFormat.NV21);
 
             // use the preview fps closest to 25 fps.
@@ -1886,11 +1897,11 @@ public class GeckoAppShell
             }
 
             // set up the closest preview size available
-            Iterator<android.hardware.Camera.Size> sit = params.getSupportedPreviewSizes().iterator();
+            Iterator<Camera.Size> sit = params.getSupportedPreviewSizes().iterator();
             int sizeDelta = 10000000;
             int bufferSize = 0;
             while (sit.hasNext()) {
-                android.hardware.Camera.Size size = sit.next();
+                Camera.Size size = sit.next();
                 if (Math.abs(size.width * size.height - aWidth * aHeight) < sizeDelta) {
                     sizeDelta = Math.abs(size.width * size.height - aWidth * aHeight);
                     params.setPreviewSize(size.width, size.height);
@@ -1914,14 +1925,7 @@ public class GeckoAppShell
             sCamera.setParameters(params);
             sCameraBuffer = new byte[(bufferSize * 12) / 8];
             sCamera.addCallbackBuffer(sCameraBuffer);
-            sCamera.setPreviewCallbackWithBuffer(new android.hardware.Camera.PreviewCallback() {
-                @Override
-                public void onPreviewFrame(byte[] data, android.hardware.Camera camera) {
-                    cameraCallbackBridge(data);
-                    if (sCamera != null)
-                        sCamera.addCallbackBuffer(sCameraBuffer);
-                }
-            });
+            sCamera.setPreviewCallbackWithBuffer(new CameraCallback(aCamera));
             sCamera.startPreview();
             params = sCamera.getParameters();
             result[0] = 1;

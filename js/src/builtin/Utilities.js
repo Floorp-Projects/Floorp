@@ -207,6 +207,15 @@ function GetTypeError(msg) {
     assert(false, "the catch block should've returned from this function.");
 }
 
+function GetInternalError(msg) {
+    try {
+        FUN_APPLY(ThrowInternalError, undefined, arguments);
+    } catch (e) {
+        return e;
+    }
+    assert(false, "the catch block should've returned from this function.");
+}
+
 // To be used when a function is required but calling it shouldn't do anything.
 function NullFunction() {}
 

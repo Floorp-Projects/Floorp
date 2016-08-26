@@ -1,0 +1,142 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html><head>
+  <meta charset="utf-8">
+  <title>CSS Grid Test: 'grid-column-gap' percentage</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1279182">
+  <link rel="help" href="http://dev.w3.org/csswg/css-grid/#gutters">
+  <link rel="match" href="grid-percent-grid-gap-ref.html">
+<style>
+html,body {
+    color:black; background-color:white; font-size:1px; padding:0; margin:0;
+}
+	
+.grid {
+  display: grid;
+  grid-template-columns: 30px 30px;
+  border: 1px solid;
+}
+
+.inline-grid {
+  display: inline-grid;
+  grid-auto-columns: 160px;
+  grid-auto-rows: 120px;
+  border: 1px solid;
+}
+
+.float { float:left; border: 2px solid blue; }
+
+.percentgap {
+  grid-gap: 20%;
+}
+
+.calcgap {
+  grid-gap: calc(12px + 10%) calc(16px + 10%);
+}
+
+span:nth-of-type(1) { background: magenta; }
+span:nth-of-type(2) { background: cyan; }
+span:nth-of-type(3) { background: yellow; }
+span:nth-of-type(4) { background: lime; }
+
+x {
+  display: inline-block;
+  width: 20px;
+  height: 30px;
+}
+
+br { clear: both; }
+    </style>
+</head>
+<body>
+
+<div class="inline-grid">
+<div class="grid percentgap">
+  <span><x></x></span>
+  <span><x></x></span>
+  <span><x></x></span>
+  <span><x></x></span>
+</div>
+</div>
+
+<div class="inline-grid" style="grid: auto / auto">
+<div class="grid percentgap" style="align-self:start; justify-self:start; width:160px; height:120px">
+  <span><x></x></span>
+  <span><x></x></span>
+  <span><x></x></span>
+  <span><x></x></span>
+</div>
+</div>
+
+<div class="inline-grid">
+<div class="grid" style="grid: min-content 20% min-content / min-content 20% min-content">
+  <span><x></x></span><z></z><span><x></x></span>
+  <z></z><z></z><z></z>
+  <span><x></x></span><z></z><span><x></x></span>
+</div>
+</div>
+
+<br>
+
+<div style="width:320px;height:200px">
+<div class="grid percentgap" style="height:120px">
+  <span><x></x></span>
+  <span><x></x></span>
+  <span><x></x></span>
+  <span><x></x></span>
+</div>
+</div>
+
+<!--  TODO: fails on Windows 8 x64 Opt
+<div class="inline-grid">
+<div class="grid calcgap">
+  <span><x></x></span>
+  <span><x></x></span>
+  <span><x></x></span>
+  <span><x></x></span>
+</div>
+</div>
+-->
+
+<div class="inline-grid" style="grid: auto / auto">
+<div class="grid calcgap" style="align-self:start; justify-self:start; width:160px; height:120px">
+  <span><x></x></span>
+  <span><x></x></span>
+  <span><x></x></span>
+  <span><x></x></span>
+</div>
+</div>
+
+<div class="inline-grid">
+<div class="grid" style="grid: min-content calc(12px + 10%) min-content / min-content calc(16px + 10%) min-content">
+  <span><x></x></span><z></z><span><x></x></span>
+  <z></z><z></z><z></z>
+  <span><x></x></span><z></z><span><x></x></span>
+</div>
+</div>
+
+<br>
+
+<div style="width:320px;height:200px">
+<div class="grid calcgap" style="height:120px; grid-column-gap:calc(32px + 10%)">
+  <span><x></x></span>
+  <span><x></x></span>
+  <span><x></x></span>
+  <span><x></x></span>
+</div>
+</div>
+
+<div style="width:320px;height:200px">
+<div class="grid calcgap" style="height:120px; grid-gap:calc(32px - 30%)">
+  <span><x></x></span>
+  <span><x></x></span>
+  <span><x></x></span>
+  <span><x></x></span>
+</div>
+</div>
+
+</body>
+</html>
