@@ -992,11 +992,17 @@ public:
   // Compute the value of an nsStyleCoord that IsCalcUnit().
   // (Values that don't require aPercentageBasis should be handled
   // inside nsRuleNode rather than through this API.)
+  // @note the caller is expected to handle percentage of an indefinite size
+  // and NOT call this method with aPercentageBasis == NS_UNCONSTRAINEDSIZE.
+  // @note the return value may be negative, e.g. for "calc(a - b%)"
   static nscoord ComputeComputedCalc(const nsStyleCoord& aCoord,
                                      nscoord aPercentageBasis);
 
   // Compute the value of an nsStyleCoord that is either a coord, a
   // percent, or a calc expression.
+  // @note the caller is expected to handle percentage of an indefinite size
+  // and NOT call this method with aPercentageBasis == NS_UNCONSTRAINEDSIZE.
+  // @note the return value may be negative, e.g. for "calc(a - b%)"
   static nscoord ComputeCoordPercentCalc(const nsStyleCoord& aCoord,
                                          nscoord aPercentageBasis);
 
