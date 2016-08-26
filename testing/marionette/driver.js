@@ -18,6 +18,8 @@ XPCOMUtils.defineLazyServiceGetter(
     this, "cookieManager", "@mozilla.org/cookiemanager;1", "nsICookieManager2");
 
 Cu.import("chrome://marionette/content/accessibility.js");
+Cu.import("chrome://marionette/content/action.js");
+Cu.import("chrome://marionette/content/addon.js");
 Cu.import("chrome://marionette/content/assert.js");
 Cu.import("chrome://marionette/content/atom.js");
 Cu.import("chrome://marionette/content/browser.js");
@@ -2605,6 +2607,34 @@ GeckoDriver.prototype.quitApplication = function(cmd, resp) {
   Services.startup.quit(flags);
 };
 
+GeckoDriver.prototype.installAddon = function(cmd, resp) {
+  if (this.appName != "Firefox") {
+    throw new UnsupportedOperationError();
+  }
+
+  let path = cmd.parameters.path;
+  let temp = cmd.parameters.temporary || false;
+  if (typeof path == "undefined" || typeof path != "string" ||
+      typeof temp != "boolean") {
+    throw InvalidArgumentError();
+  }
+
+  return addon.install(path, temp);
+};
+
+GeckoDriver.prototype.uninstallAddon = function(cmd, resp) {
+  if (this.appName != "Firefox") {
+    throw new UnsupportedOperationError();
+  }
+
+  let id = cmd.parameters.id;
+  if (typeof id == "undefined" || typeof id != "string") {
+    throw new InvalidArgumentError();
+  }
+
+  return addon.uninstall(id);
+};
+
 /**
  * Helper function to convert an outerWindowID into a UID that Marionette
  * tracks.
@@ -2860,4 +2890,7 @@ GeckoDriver.prototype.commands = {
 
   "localization:l10n:localizeEntity": GeckoDriver.prototype.localizeEntity,
   "localization:l10n:localizeProperty": GeckoDriver.prototype.localizeProperty,
+
+  "addon:install": GeckoDriver.prototype.installAddon,
+  "addon:uninstall": GeckoDriver.prototype.uninstallAddon,
 };
