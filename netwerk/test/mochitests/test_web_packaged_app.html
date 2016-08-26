@@ -43,7 +43,7 @@ CacheCallback.prototype = {
 };
 
 function checkCacheEntry(url, exists, appId) {
-  var loadContext = appId ? LoadContextInfo.custom(false, false, {appId: appId}) : LoadContextInfo.default;
+  var loadContext = appId ? LoadContextInfo.custom(false, {appId: appId}) : LoadContextInfo.default;
   var cacheService = Cc["@mozilla.org/netwerk/cache-storage-service;1"]
                      .getService(Ci.nsICacheStorageService);
   var cache = cacheService.diskCacheStorage(loadContext, false);

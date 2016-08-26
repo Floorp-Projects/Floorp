@@ -29,7 +29,7 @@ const { Heritage, ViewHelpers, setNamedTimeout } =
 const { Task } = require("devtools/shared/task");
 const nodeConstants = require("devtools/shared/dom-node-constants");
 const {KeyCodes} = require("devtools/client/shared/keycodes");
-const {ELLIPSIS} = require("devtools/client/shared/l10n");
+const {ELLIPSIS} = require("devtools/shared/l10n");
 
 XPCOMUtils.defineLazyModuleGetter(this, "PluralForm",
   "resource://gre/modules/PluralForm.jsm");

@@ -21,7 +21,7 @@ loader.lazyRequireGetter(this, "promise");
 loader.lazyRequireGetter(this, "EventEmitter", "devtools/shared/event-emitter");
 loader.lazyRequireGetter(this, "AnimationsFront", "devtools/shared/fronts/animation", true);
 
-const { LocalizationHelper } = require("devtools/client/shared/l10n");
+const { LocalizationHelper } = require("devtools/shared/l10n");
 
 const STRINGS_URI = "devtools/locale/animationinspector.properties";
 const L10N = new LocalizationHelper(STRINGS_URI);

@@ -17,24 +17,32 @@ class AutoSetNewObjectMetadata;
 class PromiseObject : public NativeObject
 {
   public:
-    static const unsigned RESERVED_SLOTS = 12;
+    static const unsigned RESERVED_SLOTS = 8;
     static const Class class_;
     static const Class protoClass_;
     static PromiseObject* create(JSContext* cx, HandleObject executor,
                                  HandleObject proto = nullptr);
 
+    static JSObject* unforgeableResolve(JSContext* cx, HandleValue value);
+    static JSObject* unforgeableReject(JSContext* cx, HandleValue value);
+
     JS::PromiseState state() {
-        int32_t state = getFixedSlot(PROMISE_STATE_SLOT).toInt32();
-        MOZ_ASSERT(state >= 0 && state <= int32_t(JS::PromiseState::Rejected));
-        return JS::PromiseState(state);
+        int32_t flags = getFixedSlot(PROMISE_FLAGS_SLOT).toInt32();
+        if (!(flags & PROMISE_FLAG_RESOLVED)) {
+            MOZ_ASSERT(!(flags & PROMISE_FLAG_FULFILLED));
+            return JS::PromiseState::Pending;
+        }
+        if (flags & PROMISE_FLAG_FULFILLED)
+            return JS::PromiseState::Fulfilled;
+        return JS::PromiseState::Rejected;
     }
     Value value()  {
         MOZ_ASSERT(state() == JS::PromiseState::Fulfilled);
-        return getFixedSlot(PROMISE_RESULT_SLOT);
+        return getFixedSlot(PROMISE_REACTIONS_OR_RESULT_SLOT);
     }
     Value reason() {
         MOZ_ASSERT(state() == JS::PromiseState::Rejected);
-        return getFixedSlot(PROMISE_RESULT_SLOT);
+        return getFixedSlot(PROMISE_REACTIONS_OR_RESULT_SLOT);
     }
 
     MOZ_MUST_USE bool resolve(JSContext* cx, HandleValue resolutionValue);
@@ -57,13 +65,14 @@ class PromiseObject : public NativeObject
     }
     MOZ_MUST_USE bool dependentPromises(JSContext* cx, MutableHandle<GCVector<Value>> values);
     uint64_t getID();
-    bool markedAsUncaught() {
-        return getFixedSlot(PROMISE_IS_HANDLED_SLOT).toInt32() != PROMISE_IS_HANDLED_STATE_HANDLED;
+    bool isUnhandled() {
+        MOZ_ASSERT(state() == JS::PromiseState::Rejected);
+        return !(getFixedSlot(PROMISE_FLAGS_SLOT).toInt32() & PROMISE_FLAG_HANDLED);
     }
     void markAsReported() {
-        MOZ_ASSERT(getFixedSlot(PROMISE_IS_HANDLED_SLOT).toInt32() ==
-                   PROMISE_IS_HANDLED_STATE_UNHANDLED);
-        setFixedSlot(PROMISE_IS_HANDLED_SLOT, Int32Value(PROMISE_IS_HANDLED_STATE_REPORTED));
+        MOZ_ASSERT(isUnhandled());
+        int32_t flags = getFixedSlot(PROMISE_FLAGS_SLOT).toInt32();
+        setFixedSlot(PROMISE_FLAGS_SLOT, Int32Value(flags | PROMISE_FLAG_REPORTED));
     }
 };
 

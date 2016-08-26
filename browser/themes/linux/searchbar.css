@@ -11,7 +11,6 @@
    * (eg. using ctrl+shift+X) */
   margin-inline-start: -23px;
   margin-inline-end: -16px;
-  padding: 1px;
 }
 
 .autocomplete-textbox-container {
@@ -157,7 +156,7 @@ menuitem[cmd="cmd_clearhistory"][disabled] {
 }
 
 .search-panel-one-offs {
-  margin: 0 -1px !important;
+  margin: 0 !important;
   border-top: 1px solid #ccc;
 }
 

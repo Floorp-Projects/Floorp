@@ -79,42 +79,32 @@ public class LayerView extends ScrollView implements Tabs.OnTabsChangedListener 
         public Compositor() {
         }
 
-        @WrapForJNI(calledFrom = "ui", dispatchTo = "proxy")
+        @WrapForJNI(calledFrom = "ui", dispatchTo = "gecko")
         @Override protected native void disposeNative();
 
         // Gecko thread sets its Java instances; does not block UI thread.
-        @WrapForJNI(calledFrom = "any", dispatchTo = "proxy")
+        @WrapForJNI(calledFrom = "any", dispatchTo = "gecko")
         /* package */ native void attachToJava(GeckoLayerClient layerClient,
                                                NativePanZoomController npzc);
 
-        @WrapForJNI(calledFrom = "any", dispatchTo = "proxy")
+        @WrapForJNI(calledFrom = "any", dispatchTo = "gecko")
         /* package */ native void onSizeChanged(int windowWidth, int windowHeight,
                                                 int screenWidth, int screenHeight);
 
         // Gecko thread creates compositor; blocks UI thread.
         @WrapForJNI(calledFrom = "ui", dispatchTo = "proxy")
-        /* package */ native void createCompositor(int width, int height);
+        /* package */ native void createCompositor(int width, int height, Object surface);
 
         // Gecko thread pauses compositor; blocks UI thread.
         @WrapForJNI(calledFrom = "ui", dispatchTo = "current")
         /* package */ native void syncPauseCompositor();
 
         // UI thread resumes compositor and notifies Gecko thread; does not block UI thread.
-        @WrapForJNI(calledFrom = "ui", dispatchTo = "proxy")
-        /* package */ native void syncResumeResizeCompositor(int width, int height);
+        @WrapForJNI(calledFrom = "ui", dispatchTo = "current")
+        /* package */ native void syncResumeResizeCompositor(int width, int height, Object surface);
 
         @WrapForJNI(calledFrom = "any", dispatchTo = "current")
         /* package */ native void syncInvalidateAndScheduleComposite();
-
-        @WrapForJNI
-        private Object getSurface() {
-            synchronized (LayerView.this) {
-                if (LayerView.this.mServerSurfaceValid) {
-                    return LayerView.this.getSurface();
-                }
-            }
-            return null;
-        }
 
         @WrapForJNI(calledFrom = "gecko")
         private void reattach() {
@@ -459,11 +449,9 @@ public class LayerView extends ScrollView implements Tabs.OnTabsChangedListener 
     void serverSurfaceChanged(int newWidth, int newHeight) {
         ThreadUtils.assertOnUiThread();
 
-        synchronized (this) {
-            mWidth = newWidth;
-            mHeight = newHeight;
-            mServerSurfaceValid = true;
-        }
+        mWidth = newWidth;
+        mHeight = newHeight;
+        mServerSurfaceValid = true;
 
         updateCompositor();
     }
@@ -484,7 +472,7 @@ public class LayerView extends ScrollView implements Tabs.OnTabsChangedListener 
             // the compositor resuming, so that Gecko knows that it can now draw.
             // It is important to not notify Gecko until after the compositor has
             // been resumed, otherwise Gecko may send updates that get dropped.
-            mCompositor.syncResumeResizeCompositor(mWidth, mHeight);
+            mCompositor.syncResumeResizeCompositor(mWidth, mHeight, getSurface());
             return;
         }
 
@@ -493,7 +481,7 @@ public class LayerView extends ScrollView implements Tabs.OnTabsChangedListener 
         // happen without needing to block anywhere.
         if (mServerSurfaceValid && getLayerClient().isGeckoReady()) {
             mCompositorCreated = true;
-            mCompositor.createCompositor(mWidth, mHeight);
+            mCompositor.createCompositor(mWidth, mHeight, getSurface());
         }
     }
 
@@ -522,7 +510,7 @@ public class LayerView extends ScrollView implements Tabs.OnTabsChangedListener 
         }
 
         if (mCompositorCreated) {
-            mCompositor.syncResumeResizeCompositor(width, height);
+            mCompositor.syncResumeResizeCompositor(width, height, getSurface());
         }
 
         if (mOverscroll != null) {
@@ -561,9 +549,7 @@ public class LayerView extends ScrollView implements Tabs.OnTabsChangedListener 
             mCompositor.syncPauseCompositor();
         }
 
-        synchronized (this) {
-            mServerSurfaceValid = false;
-        }
+        mServerSurfaceValid = false;
     }
 
     private void onDestroyed() {

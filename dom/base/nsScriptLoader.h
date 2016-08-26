@@ -584,6 +584,7 @@ private:
   nsresult CreateModuleScript(nsModuleLoadRequest* aRequest);
   nsresult ProcessFetchedModuleSource(nsModuleLoadRequest* aRequest);
   void ProcessLoadedModuleTree(nsModuleLoadRequest* aRequest);
+  bool InstantiateModuleTree(nsModuleLoadRequest* aRequest);
   void StartFetchingModuleDependencies(nsModuleLoadRequest* aRequest);
 
   RefPtr<mozilla::GenericPromise>
