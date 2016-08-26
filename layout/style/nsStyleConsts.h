@@ -71,6 +71,14 @@ enum class StyleBoxAlign : uint8_t {
   End,
 };
 
+// box-pack
+enum class StyleBoxPack : uint8_t {
+  Start,
+  Center,
+  End,
+  Justify,
+};
+
 // box-sizing
 enum class StyleBoxSizing : uint8_t {
   Content,
@@ -176,12 +184,6 @@ enum class StyleUserSelect : uint8_t {
 #define NS_STYLE_WINDOW_DRAGGING_DEFAULT 0
 #define NS_STYLE_WINDOW_DRAGGING_DRAG    1
 #define NS_STYLE_WINDOW_DRAGGING_NO_DRAG 2
-
-// box-pack
-#define NS_STYLE_BOX_PACK_START        0
-#define NS_STYLE_BOX_PACK_CENTER       1
-#define NS_STYLE_BOX_PACK_END          2
-#define NS_STYLE_BOX_PACK_JUSTIFY      3
 
 // box-decoration-break
 #define NS_STYLE_BOX_DECORATION_BREAK_SLICE  0

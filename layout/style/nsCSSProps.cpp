@@ -2265,10 +2265,10 @@ const KTableEntry nsCSSProps::kBoxOrientKTable[] = {
 };
 
 const KTableEntry nsCSSProps::kBoxPackKTable[] = {
-  { eCSSKeyword_start, NS_STYLE_BOX_PACK_START },
-  { eCSSKeyword_center, NS_STYLE_BOX_PACK_CENTER },
-  { eCSSKeyword_end, NS_STYLE_BOX_PACK_END },
-  { eCSSKeyword_justify, NS_STYLE_BOX_PACK_JUSTIFY },
+  { eCSSKeyword_start, StyleBoxPack::Start },
+  { eCSSKeyword_center, StyleBoxPack::Center },
+  { eCSSKeyword_end, StyleBoxPack::End },
+  { eCSSKeyword_justify, StyleBoxPack::Justify },
   { eCSSKeyword_UNKNOWN, -1 }
 };
 

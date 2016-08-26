@@ -338,13 +338,13 @@ nsBoxFrame::GetInitialHAlignment(nsBoxFrame::Halignment& aHalign)
   const nsStyleXUL* boxInfo = StyleXUL();
   if (IsXULHorizontal()) {
     switch (boxInfo->mBoxPack) {
-      case NS_STYLE_BOX_PACK_START:
+      case StyleBoxPack::Start:
         aHalign = nsBoxFrame::hAlign_Left;
         return true;
-      case NS_STYLE_BOX_PACK_CENTER:
+      case StyleBoxPack::Center:
         aHalign = nsBoxFrame::hAlign_Center;
         return true;
-      case NS_STYLE_BOX_PACK_END:
+      case StyleBoxPack::End:
         aHalign = nsBoxFrame::hAlign_Right;
         return true;
       default: // Nonsensical value. Just bail.
@@ -431,13 +431,13 @@ nsBoxFrame::GetInitialVAlignment(nsBoxFrame::Valignment& aValign)
   }
   else {
     switch (boxInfo->mBoxPack) {
-      case NS_STYLE_BOX_PACK_START:
+      case StyleBoxPack::Start:
         aValign = nsBoxFrame::vAlign_Top;
         return true;
-      case NS_STYLE_BOX_PACK_CENTER:
+      case StyleBoxPack::Center:
         aValign = nsBoxFrame::vAlign_Middle;
         return true;
-      case NS_STYLE_BOX_PACK_END:
+      case StyleBoxPack::End:
         aValign = nsBoxFrame::vAlign_Bottom;
         return true;
       default: // Nonsensical value. Just bail.
