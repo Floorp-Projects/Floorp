@@ -2242,11 +2242,11 @@ const KTableEntry nsCSSProps::kWritingModeKTable[] = {
 
 // Specific keyword tables for XUL.properties
 const KTableEntry nsCSSProps::kBoxAlignKTable[] = {
-  { eCSSKeyword_stretch, NS_STYLE_BOX_ALIGN_STRETCH },
-  { eCSSKeyword_start, NS_STYLE_BOX_ALIGN_START },
-  { eCSSKeyword_center, NS_STYLE_BOX_ALIGN_CENTER },
-  { eCSSKeyword_baseline, NS_STYLE_BOX_ALIGN_BASELINE },
-  { eCSSKeyword_end, NS_STYLE_BOX_ALIGN_END },
+  { eCSSKeyword_stretch, StyleBoxAlign::Stretch },
+  { eCSSKeyword_start, StyleBoxAlign::Start },
+  { eCSSKeyword_center, StyleBoxAlign::Center },
+  { eCSSKeyword_baseline, StyleBoxAlign::Baseline },
+  { eCSSKeyword_end, StyleBoxAlign::End },
   { eCSSKeyword_UNKNOWN, -1 }
 };
 

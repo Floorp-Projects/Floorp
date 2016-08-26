@@ -3429,7 +3429,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleXUL
 
   float         mBoxFlex;               // [reset] see nsStyleConsts.h
   uint32_t      mBoxOrdinal;            // [reset] see nsStyleConsts.h
-  uint8_t       mBoxAlign;              // [reset] see nsStyleConsts.h
+  mozilla::StyleBoxAlign mBoxAlign;         // [reset]
   uint8_t       mBoxDirection;          // [reset] see nsStyleConsts.h
   uint8_t       mBoxOrient;             // [reset] see nsStyleConsts.h
   uint8_t       mBoxPack;               // [reset] see nsStyleConsts.h
