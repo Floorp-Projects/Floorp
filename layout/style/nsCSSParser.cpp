@@ -8750,12 +8750,25 @@ CSSParserImpl::ParseGridTrackSize(nsCSSValue& aValue,
     return result;
   }
 
-  // Attempt to parse a minmax() function.
+  // Attempt to parse a minmax() or fit-content() function.
   if (!GetToken(true)) {
     return CSSParseResult::NotFound;
   }
-  if (!(eCSSToken_Function == mToken.mType &&
-        mToken.mIdent.LowerCaseEqualsLiteral("minmax"))) {
+  if (eCSSToken_Function != mToken.mType) {
+    UngetToken();
+    return CSSParseResult::NotFound;
+  }
+  if (mToken.mIdent.LowerCaseEqualsLiteral("fit-content")) {
+    nsCSSValue::Array* func = aValue.InitFunction(eCSSKeyword_fit_content, 1);
+    if (ParseGridTrackBreadth(func->Item(1)) == CSSParseResult::Ok &&
+        func->Item(1).IsLengthPercentCalcUnit() &&
+        ExpectSymbol(')', true)) {
+      return CSSParseResult::Ok;
+    }
+    SkipUntil(')');
+    return CSSParseResult::Error;
+  }
+  if (!mToken.mIdent.LowerCaseEqualsLiteral("minmax")) {
     UngetToken();
     return CSSParseResult::NotFound;
   }
@@ -8836,11 +8849,16 @@ CSSParserImpl::ParseGridTrackListWithFirstLineNames(nsCSSValue& aValue,
              list != firstRepeat; list = list->mNext) {
           if (list->mValue.GetUnit() == eCSSUnit_Function) {
             nsCSSValue::Array* func = list->mValue.GetArrayValue();
-            NS_ASSERTION(func->Item(0).GetKeywordValue() == eCSSKeyword_minmax,
-                         "Expected minmax(), got another function name");
-            if (!func->Item(1).IsLengthPercentCalcUnit() &&
-                !func->Item(2).IsLengthPercentCalcUnit()) {
-              return false;
+            auto funcName = func->Item(0).GetKeywordValue();
+            if (funcName == eCSSKeyword_minmax) {
+              if (!func->Item(1).IsLengthPercentCalcUnit() &&
+                  !func->Item(2).IsLengthPercentCalcUnit()) {
+                return false;
+              }
+            } else {
+              MOZ_ASSERT(funcName == eCSSKeyword_fit_content,
+                         "Expected minmax() or fit-content() function");
+              return false; // fit-content() is not a <fixed-size>
             }
           } else if (!list->mValue.IsLengthPercentCalcUnit()) {
             return false;

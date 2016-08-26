@@ -8108,6 +8108,9 @@ SetGridTrackBreadth(const nsCSSValue& aValue,
     aResult.SetFlexFractionValue(aValue.GetFloatValue());
   } else if (unit == eCSSUnit_Auto) {
     aResult.SetAutoValue();
+  } else if (unit == eCSSUnit_None) {
+    // For fit-content().
+    aResult.SetNoneValue();
   } else {
     MOZ_ASSERT(unit != eCSSUnit_Inherit && unit != eCSSUnit_Unset,
                "Unexpected value that would use dummyParentCoord");
@@ -8129,14 +8132,22 @@ SetGridTrackSize(const nsCSSValue& aValue,
                  RuleNodeCacheConditions& aConditions)
 {
   if (aValue.GetUnit() == eCSSUnit_Function) {
-    // A minmax() function.
     nsCSSValue::Array* func = aValue.GetArrayValue();
-    NS_ASSERTION(func->Item(0).GetKeywordValue() == eCSSKeyword_minmax,
-                 "Expected minmax(), got another function name");
-    SetGridTrackBreadth(func->Item(1), aResultMin,
-                        aStyleContext, aPresContext, aConditions);
-    SetGridTrackBreadth(func->Item(2), aResultMax,
-                        aStyleContext, aPresContext, aConditions);
+    auto funcName = func->Item(0).GetKeywordValue();
+    if (funcName == eCSSKeyword_minmax) {
+      SetGridTrackBreadth(func->Item(1), aResultMin,
+                          aStyleContext, aPresContext, aConditions);
+      SetGridTrackBreadth(func->Item(2), aResultMax,
+                          aStyleContext, aPresContext, aConditions);
+    } else if (funcName == eCSSKeyword_fit_content) {
+      // We represent fit-content(L) as 'none' min-sizing and L max-sizing.
+      SetGridTrackBreadth(nsCSSValue(eCSSUnit_None), aResultMin,
+                          aStyleContext, aPresContext, aConditions);
+      SetGridTrackBreadth(func->Item(1), aResultMax,
+                          aStyleContext, aPresContext, aConditions);
+    } else {
+      NS_ERROR("Expected minmax() or fit-content(), got another function name");
+    }
   } else {
     // A single <track-breadth>,
     // specifies identical min and max sizing functions.
