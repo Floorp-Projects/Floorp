@@ -1174,8 +1174,8 @@ DownloadsViewItem.prototype = {
   },
 
   downloadsCmd_showBlockedInfo() {
-    DownloadsBlockedSubview.show(this.element,
-                                 ...this.rawBlockedTitleAndDetails);
+    DownloadsBlockedSubview.toggle(this.element,
+                                   ...this.rawBlockedTitleAndDetails);
   },
 
   downloadsCmd_openReferrer() {
@@ -1604,8 +1604,9 @@ const DownloadsBlockedSubview = {
    * @param details
    *        An array of strings with information about the block.
    */
-  show(element, title, details) {
+  toggle(element, title, details) {
     if (this.view.showingSubView) {
+      this.hide();
       return;
     }
 
