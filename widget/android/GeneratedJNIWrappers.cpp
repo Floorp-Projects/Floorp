@@ -318,6 +318,14 @@ auto GeckoAppShell::GetDpi() -> int32_t
     return mozilla::jni::Method<GetDpi_t>::Call(GeckoAppShell::Context(), nullptr);
 }
 
+constexpr char GeckoAppShell::GetExceptionStackTrace_t::name[];
+constexpr char GeckoAppShell::GetExceptionStackTrace_t::signature[];
+
+auto GeckoAppShell::GetExceptionStackTrace(mozilla::jni::Throwable::Param a0) -> mozilla::jni::String::LocalRef
+{
+    return mozilla::jni::Method<GetExceptionStackTrace_t>::Call(GeckoAppShell::Context(), nullptr, a0);
+}
+
 constexpr char GeckoAppShell::GetExtensionFromMimeType_t::name[];
 constexpr char GeckoAppShell::GetExtensionFromMimeType_t::signature[];
 
@@ -489,7 +497,7 @@ auto GeckoAppShell::HandleGeckoMessage(mozilla::jni::Object::Param a0) -> void
 constexpr char GeckoAppShell::HandleUncaughtException_t::name[];
 constexpr char GeckoAppShell::HandleUncaughtException_t::signature[];
 
-auto GeckoAppShell::HandleUncaughtException(mozilla::jni::Throwable::Param a0) -> mozilla::jni::String::LocalRef
+auto GeckoAppShell::HandleUncaughtException(mozilla::jni::Throwable::Param a0) -> void
 {
     return mozilla::jni::Method<HandleUncaughtException_t>::Call(GeckoAppShell::Context(), nullptr, a0);
 }

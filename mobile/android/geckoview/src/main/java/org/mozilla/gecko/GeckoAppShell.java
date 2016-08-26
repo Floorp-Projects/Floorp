@@ -315,20 +315,13 @@ public class GeckoAppShell
      */
 
     @WrapForJNI(exceptionMode = "ignore")
-    public static String handleUncaughtException(Throwable e) {
-        if (AppConstants.MOZ_CRASHREPORTER) {
-            final Throwable exc = CrashHandler.getRootException(e);
-            final StackTraceElement[] stack = exc.getStackTrace();
-            if (stack.length >= 1 && stack[0].isNativeMethod()) {
-                // The exception occurred when running native code. Return an exception
-                // string and trigger the crash reporter inside the caller so that we get
-                // a better native stack in Socorro.
-                CrashHandler.logException(Thread.currentThread(), exc);
-                return CrashHandler.getExceptionStackTrace(exc);
-            }
-        }
+    private static String getExceptionStackTrace(Throwable e) {
+        return CrashHandler.getExceptionStackTrace(CrashHandler.getRootException(e));
+    }
+
+    @WrapForJNI(exceptionMode = "ignore")
+    private static void handleUncaughtException(Throwable e) {
         CRASH_HANDLER.uncaughtException(null, e);
-        return null;
     }
 
     private static float getLocationAccuracy(Location location) {
