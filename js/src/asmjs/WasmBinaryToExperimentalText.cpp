@@ -156,8 +156,7 @@ IsDropValueExpr(AstExpr& expr)
         return !expr.as<AstBranchTable>().maybeValue();
       case AstExprKind::If:
         return !expr.as<AstIf>().hasElse();
-      case AstExprKind::NullaryOperator:
-        return expr.as<AstNullaryOperator>().expr() == Expr::Nop;
+      case AstExprKind::Nop:
       case AstExprKind::Unreachable:
       case AstExprKind::Return:
         return true;
@@ -358,17 +357,9 @@ PrintBlockLevelExpr(WasmPrintContext& c, AstExpr& expr, bool isLast)
 // binary format parsing and rendering
 
 static bool
-PrintNullaryOperator(WasmPrintContext& c, AstNullaryOperator& op)
+PrintNop(WasmPrintContext& c, AstNop& nop)
 {
-    const char* opStr;
-
-    switch (op.expr()) {
-        case Expr::Nop:             opStr = "nop"; break;
-        case Expr::CurrentMemory:   opStr = "curent_memory"; break;
-        default:  return false;
-    }
-
-    return c.buffer.append(opStr, strlen(opStr));
+    return c.buffer.append("nop");
 }
 
 static bool
@@ -650,7 +641,6 @@ PrintUnaryOperator(WasmPrintContext& c, AstUnaryOperator& op)
       case Expr::F64Ceil:    opStr = "f64.ceil"; break;
       case Expr::F64Floor:   opStr = "f64.floor"; break;
       case Expr::F64Sqrt:    opStr = "f64.sqrt"; break;
-      case Expr::GrowMemory: opStr = "grow_memory"; break;
       default: return false;
     }
 
@@ -1347,8 +1337,8 @@ PrintExpr(WasmPrintContext& c, AstExpr& expr)
     }
 
     switch (expr.kind()) {
-      case AstExprKind::NullaryOperator:
-        return PrintNullaryOperator(c, expr.as<AstNullaryOperator>());
+      case AstExprKind::Nop:
+        return PrintNop(c, expr.as<AstNop>());
       case AstExprKind::Unreachable:
         return PrintUnreachable(c, expr.as<AstUnreachable>());
       case AstExprKind::Call:

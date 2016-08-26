@@ -1772,7 +1772,7 @@ class MOZ_STACK_CLASS ModuleValidator
         if (!args.initFromContext(cx_, Move(scriptedCaller)))
             return false;
 
-        auto genData = MakeUnique<ModuleGeneratorData>(ModuleKind::AsmJS);
+        auto genData = MakeUnique<ModuleGeneratorData>(args.assumptions.usesSignal, ModuleKind::AsmJS);
         if (!genData ||
             !genData->sigs.resize(MaxSigs) ||
             !genData->funcSigs.resize(MaxFuncs) ||
@@ -7806,7 +7806,8 @@ CheckBuffer(JSContext* cx, const AsmJSMetadata& metadata, HandleValue bufferVal,
 
     if (buffer->is<ArrayBufferObject>()) {
         Rooted<ArrayBufferObject*> abheap(cx, &buffer->as<ArrayBufferObject>());
-        if (!ArrayBufferObject::prepareForAsmJS(cx, abheap))
+        bool useSignalHandlers = metadata.assumptions.usesSignal.forOOB;
+        if (!ArrayBufferObject::prepareForAsmJS(cx, abheap, useSignalHandlers))
             return LinkFail(cx, "Unable to prepare ArrayBuffer for asm.js use");
     }
 
@@ -8816,17 +8817,28 @@ js::AsmJSFunctionToString(JSContext* cx, HandleFunction fun)
     return out.finishString();
 }
 
-// The asm.js valid heap lengths are precisely the WASM valid heap lengths for ARM
-// greater or equal to MinHeapLength
+/*****************************************************************************/
+// asm.js heap
+
 static const size_t MinHeapLength = PageSize;
+
+// From the asm.js spec Linking section:
+//  the heap object's byteLength must be either
+//    2^n for n in [12, 24)
+//  or
+//    2^24 * n for n >= 1.
 
 bool
 js::IsValidAsmJSHeapLength(uint32_t length)
 {
-    if (length < MinHeapLength)
-        return false;
+    bool valid = length >= MinHeapLength &&
+                 (IsPowerOfTwo(length) ||
+                  (length & 0x00ffffff) == 0);
 
-    return wasm::IsValidARMLengthImmediate(length);
+    MOZ_ASSERT_IF(valid, length % PageSize == 0);
+    MOZ_ASSERT_IF(valid, length == RoundUpToNextValidAsmJSHeapLength(length));
+
+    return valid;
 }
 
 uint32_t
@@ -8835,5 +8847,9 @@ js::RoundUpToNextValidAsmJSHeapLength(uint32_t length)
     if (length <= MinHeapLength)
         return MinHeapLength;
 
-    return wasm::RoundUpToNextValidARMLengthImmediate(length);
+    if (length <= 16 * 1024 * 1024)
+        return mozilla::RoundUpPow2(length);
+
+    MOZ_ASSERT(length <= 0xff000000);
+    return (length + 0x00ffffff) & ~0x00ffffff;
 }

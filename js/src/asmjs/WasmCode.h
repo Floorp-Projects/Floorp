@@ -417,7 +417,7 @@ class MetadataCacheablePod
     ModuleKind            kind;
     MemoryUsage           memoryUsage;
     uint32_t              minMemoryLength;
-    Maybe<uint32_t>       maxMemoryLength;
+    uint32_t              maxMemoryLength;
 
     explicit MetadataCacheablePod(ModuleKind kind) {
         mozilla::PodZero(this);
@@ -522,7 +522,7 @@ class Code
 
     const CallSite* lookupCallSite(void* returnAddress) const;
     const CodeRange* lookupRange(void* pc) const;
-#ifdef WASM_HUGE_MEMORY
+#ifdef ASMJS_MAY_USE_SIGNAL_HANDLERS
     const MemoryAccess* lookupMemoryAccess(void* pc) const;
 #endif
 

@@ -108,7 +108,6 @@ wasm::Classify(Expr expr)
       case Expr::B8x16not:
       case Expr::B16x8not:
       case Expr::B32x4not:
-      case Expr::GrowMemory:
         return ExprKind::Unary;
       case Expr::I32Add:
       case Expr::I32Sub:
@@ -472,7 +471,8 @@ wasm::Classify(Expr expr)
       case Expr::F32x4lessThanOrEqual:
         return ExprKind::SimdComparison;
       case Expr::CurrentMemory:
-        return ExprKind::Nullary;
+      case Expr::GrowMemory:
+        break;
     }
     MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("unimplemented opcode");
 }
