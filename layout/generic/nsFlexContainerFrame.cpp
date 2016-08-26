@@ -3248,7 +3248,7 @@ FlexboxAxisTracker::InitAxesFromLegacyProps(
   const nsStyleXUL* styleXUL = aFlexContainer->StyleXUL();
 
   const bool boxOrientIsVertical = (styleXUL->mBoxOrient ==
-                                    NS_STYLE_BOX_ORIENT_VERTICAL);
+                                    StyleBoxOrient::Vertical);
   const bool wmIsVertical = mWM.IsVertical();
 
   // If box-orient agrees with our writing-mode, then we're "row-oriented"
