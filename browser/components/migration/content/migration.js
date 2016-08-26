@@ -425,8 +425,9 @@ var MigrationWizard = {
       break;
     case "Migration:Ended":
       if (this._autoMigrate) {
-        Services.telemetry.getKeyedHistogramById("FX_MIGRATION_HOMEPAGE_IMPORTED")
-                          .add(this._source, !!this._newHomePage);
+        let hasImportedHomepage = !!(this._newHomePage && this._newHomePage != "DEFAULT");
+        Services.telemetry.getKeyedHistogramById("FX_MIGRATION_IMPORTED_HOMEPAGE")
+                          .add(this._source, hasImportedHomepage);
         if (this._newHomePage) {
           try {
             // set homepage properly
