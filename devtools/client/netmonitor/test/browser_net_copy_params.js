@@ -8,7 +8,7 @@
  */
 
 add_task(function* () {
-  let [tab, , monitor] = yield initNetMonitor(PARAMS_URL);
+  let { tab, monitor } = yield initNetMonitor(PARAMS_URL);
   info("Starting test... ");
 
   let { document, NetMonitorView } = monitor.panelWin;

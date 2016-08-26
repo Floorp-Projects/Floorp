@@ -9,7 +9,7 @@
  */
 
 add_task(function* () {
-  let [tab, , monitor] = yield initNetMonitor(PARAMS_URL);
+  let { tab, monitor } = yield initNetMonitor(PARAMS_URL);
   info("Starting test... ");
 
   let { document, L10N, EVENTS, Editor, NetMonitorView } = monitor.panelWin;

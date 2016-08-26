@@ -10,7 +10,7 @@
 const SVG_URL = EXAMPLE_URL + "dropmarker.svg";
 
 add_task(function* () {
-  let [tab, , monitor] = yield initNetMonitor(CURL_URL);
+  let { tab, monitor } = yield initNetMonitor(CURL_URL);
   info("Starting test... ");
 
   let { NetMonitorView } = monitor.panelWin;

@@ -8,7 +8,7 @@
  */
 
 add_task(function* () {
-  let [,, monitor] = yield initNetMonitor(SORTING_URL);
+  let { monitor } = yield initNetMonitor(SORTING_URL);
   info("Starting test... ");
 
   // It seems that this test may be slow on debug builds. This could be because

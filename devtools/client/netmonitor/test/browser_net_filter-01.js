@@ -29,7 +29,7 @@ const REQUESTS_WITH_MEDIA_AND_FLASH_AND_WS = REQUESTS_WITH_MEDIA_AND_FLASH.conca
 ]);
 
 add_task(function* () {
-  let [,, monitor] = yield initNetMonitor(FILTERING_URL);
+  let { monitor } = yield initNetMonitor(FILTERING_URL);
 
   function setFreetextFilter(value) {
     // Set the text and manually call all callbacks synchronously to avoid the timeout

@@ -11,7 +11,7 @@ add_task(function* () {
 });
 
 function* throttleUploadTest(actuallyThrottle) {
-  let [tab, , monitor ] = yield initNetMonitor(
+  let { tab, monitor } = yield initNetMonitor(
     HAR_EXAMPLE_URL + "html_har_post-data-test-page.html");
 
   info("Starting test... (actuallyThrottle = " + actuallyThrottle + ")");

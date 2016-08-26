@@ -12,7 +12,7 @@
  * 4) Number of requests displayed
  */
 add_task(function* () {
-  let [tab, , monitor] = yield initNetMonitor(SIMPLE_URL);
+  let { tab, monitor } = yield initNetMonitor(SIMPLE_URL);
   info("Starting test... ");
 
   let { document, NetMonitorView } = monitor.panelWin;

@@ -7,7 +7,7 @@
  * Basic tests for exporting Network panel content into HAR format.
  */
 add_task(function* () {
-  let [tab, , monitor ] = yield initNetMonitor(SIMPLE_URL);
+  let { tab, monitor } = yield initNetMonitor(SIMPLE_URL);
 
   info("Starting test... ");
 

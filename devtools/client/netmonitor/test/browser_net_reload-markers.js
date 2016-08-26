@@ -8,7 +8,7 @@
  */
 
 add_task(function* () {
-  let [,, monitor] = yield initNetMonitor(SINGLE_GET_URL);
+  let { monitor } = yield initNetMonitor(SINGLE_GET_URL);
   info("Starting test... ");
 
   let { document, EVENTS } = monitor.panelWin;

@@ -30,7 +30,7 @@ const REQUESTS_WITH_MEDIA_AND_FLASH_AND_WS = REQUESTS_WITH_MEDIA_AND_FLASH.conca
 ]);
 
 add_task(function* () {
-  let [,, monitor] = yield initNetMonitor(FILTERING_URL);
+  let { monitor } = yield initNetMonitor(FILTERING_URL);
   info("Starting test... ");
 
   // It seems that this test may be slow on Ubuntu builds running on ec2.

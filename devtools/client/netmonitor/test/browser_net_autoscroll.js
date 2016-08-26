@@ -9,7 +9,7 @@
 add_task(function* () {
   requestLongerTimeout(2);
 
-  let [, , monitor] = yield initNetMonitor(INFINITE_GET_URL);
+  let { monitor } = yield initNetMonitor(INFINITE_GET_URL);
   let win = monitor.panelWin;
   let topNode = win.document.getElementById("requests-menu-contents");
   let requestsContainer = topNode.getElementsByTagName("scrollbox")[0];
