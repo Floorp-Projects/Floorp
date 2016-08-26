@@ -237,8 +237,7 @@ add_task(function* setup() {
   ok(popupNotifications, "Got popupNotifications");
 });
 
-add_task(function* test() {
-  info("===== test 500 =====");
+add_task(function* test_accept() {
   state = {
     msg         : "http://example.com is requesting your username and password.\n\nThe site says: “some realm”",
     title       : "Authentication Required",
@@ -270,8 +269,9 @@ add_task(function* test() {
   ok(isOk, "Checking dialog return value (accept)");
   is(authinfo.username, "outuser", "Checking returned username");
   is(authinfo.password, "outpass", "Checking returned password");
+});
 
-  info("===== test 501 =====");
+add_task(function* test_cancel() {
   state = {
     msg         : "http://example.com is requesting your username and password.\n\nThe site says: “some realm”",
     title       : "Authentication Required",
@@ -295,8 +295,9 @@ add_task(function* test() {
   yield promptDone;
 
   ok(!isOk, "Checking dialog return value (cancel)");
+});
 
-  info("===== test 502 =====");
+add_task(function* test_pwonly() {
   // test filling in password-only login
   state = {
     msg         : "http://example.com is requesting your username and password.\n\nThe site says: “http://example.com”",
@@ -327,8 +328,9 @@ add_task(function* test() {
   ok(isOk, "Checking dialog return value (accept)");
   is(authinfo.username, "", "Checking returned username");
   is(authinfo.password, "examplepass", "Checking returned password");
+});
 
-  info("===== test 503 =====");
+add_task(function* test_multipleExisting() {
   // test filling in existing login (undetermined from multiple selection)
   // user2name/user2pass would also be valid to fill here.
   state = {
@@ -360,8 +362,9 @@ add_task(function* test() {
   ok(isOk, "Checking dialog return value (accept)");
   ok(authinfo.username == "user1name" || authinfo.username == "user2name", "Checking returned username");
   ok(authinfo.password == "user1pass" || authinfo.password == "user2pass", "Checking returned password");
+});
 
-  info("===== test 504 =====");
+add_task(function* test_multipleExisting2() {
   // test filling in existing login (undetermined --> user1)
   // user2name/user2pass would also be valid to fill here.
   state = {
@@ -396,8 +399,9 @@ add_task(function* test() {
   ok(isOk, "Checking dialog return value (accept)");
   is(authinfo.username, "user1name", "Checking returned username");
   is(authinfo.password, "user1pass", "Checking returned password");
+});
 
-  info("===== test 505 =====");
+add_task(function* test_multipleExisting3() {
   // test filling in existing login (undetermined --> user2)
   // user2name/user2pass would also be valid to fill here.
   state = {
@@ -433,8 +437,9 @@ add_task(function* test() {
   ok(isOk, "Checking dialog return value (accept)");
   is(authinfo.username, "user2name", "Checking returned username");
   is(authinfo.password, "user2pass", "Checking returned password");
+});
 
-  info("===== test 506 =====");
+add_task(function* test_changingMultiple() {
   // test changing a password (undetermined --> user2 w/ newpass)
   // user2name/user2pass would also be valid to fill here.
   state = {
@@ -470,8 +475,9 @@ add_task(function* test() {
   ok(isOk, "Checking dialog return value (accept)");
   is(authinfo.username, "user2name", "Checking returned username");
   is(authinfo.password, "NEWuser2pass", "Checking returned password");
+});
 
-  info("===== test 507 =====");
+add_task(function* test_changingMultiple2() {
   // test changing a password (undetermined --> user2 w/ origpass)
   // user2name/user2pass would also be valid to fill here.
   state = {
@@ -507,9 +513,9 @@ add_task(function* test() {
   ok(isOk, "Checking dialog return value (accept)");
   is(authinfo.username, "user2name", "Checking returned username");
   is(authinfo.password, "user2pass", "Checking returned password");
+});
 
-
-  info("===== test 1000 =====");
+add_task(function* test_iframe() {
   state = {
     msg         : "http://mochi.test:8888 is requesting your username and password.\n\nThe site says: “mochitest”",
     title       : "Authentication Required",
