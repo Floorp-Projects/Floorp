@@ -428,7 +428,7 @@ var MigrationWizard = {
         this.reportDataRecencyTelemetry();
       }
       if (this._autoMigrate) {
-        let hasImportedHomepage = this._newHomePage && this._newHomePage != "DEFAULT";
+        let hasImportedHomepage = !!(this._newHomePage && this._newHomePage != "DEFAULT");
         Services.telemetry.getKeyedHistogramById("FX_MIGRATION_IMPORTED_HOMEPAGE")
                           .add(this._source, hasImportedHomepage);
         if (this._newHomePage) {
