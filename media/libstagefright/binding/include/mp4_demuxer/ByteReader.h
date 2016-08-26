@@ -12,7 +12,7 @@
 
 namespace mp4_demuxer {
 
-class ByteReader
+class MOZ_RAII ByteReader
 {
 public:
   ByteReader() : mPtr(nullptr), mRemaining(0) {}

@@ -13,7 +13,7 @@
 namespace mozilla
 {
 
-class AutoByteReader : public mp4_demuxer::ByteReader
+class MOZ_RAII AutoByteReader : public mp4_demuxer::ByteReader
 {
 public:
   AutoByteReader(const uint8_t* aData, size_t aSize)
@@ -21,7 +21,7 @@ public:
   {
 
   }
-  virtual ~AutoByteReader()
+  ~AutoByteReader()
   {
     DiscardRemaining();
   }
