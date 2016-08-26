@@ -261,6 +261,7 @@ void Gecko_CopyClipPathValueFrom(mozilla::StyleClipPath* dst, const mozilla::Sty
 void Gecko_DestroyClipPath(mozilla::StyleClipPath* clip);
 mozilla::StyleBasicShape* Gecko_NewBasicShape(mozilla::StyleBasicShapeType type);
 
+void Gecko_FillAllBackgroundLists(nsStyleImageLayers* layers, uint32_t max_len);
 NS_DECL_THREADSAFE_FFI_REFCOUNTING(nsStyleCoord::Calc, Calc);
 
 // Style-struct management.

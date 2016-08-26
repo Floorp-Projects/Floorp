@@ -428,7 +428,7 @@ Accessible::NativeState()
       const nsStyleXUL* xulStyle = frame->StyleXUL();
       if (xulStyle && frame->IsXULBoxFrame()) {
         // In XUL all boxes are either vertical or horizontal
-        if (xulStyle->mBoxOrient == NS_STYLE_BOX_ORIENT_VERTICAL)
+        if (xulStyle->mBoxOrient == StyleBoxOrient::Vertical)
           state |= states::VERTICAL;
         else
           state |= states::HORIZONTAL;

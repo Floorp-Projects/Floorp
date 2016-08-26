@@ -442,6 +442,14 @@ XPCNativeSetKey::Hash() const
         for (uint16_t i = 0; i < count; i++) {
             h ^= HashPointer(*(current++));
         }
+    } else {
+        // A newly created set will contain nsISupports first...
+        RefPtr<XPCNativeInterface> isupp = XPCNativeInterface::GetISupports();
+        h ^= HashPointer(isupp);
+
+        // ...but no more than once.
+        if (isupp == mAddition)
+            return h;
     }
 
     if (mAddition) {
@@ -482,14 +490,10 @@ XPCNativeSet::GetNewOrUsed(const nsIID* iid)
     if (!set)
         return nullptr;
 
-    XPCNativeSet* set2 = map->Add(&key, set);
-    if (!set2) {
+    if (!map->AddNew(&key, set)) {
         NS_ERROR("failed to add our set!");
         DestroyInstance(set);
         set = nullptr;
-    } else if (set2 != set) {
-        DestroyInstance(set);
-        set = set2;
     }
 
     return set;
@@ -567,6 +571,8 @@ XPCNativeSet::GetNewOrUsed(nsIClassInfo* classInfo)
                     set = nullptr;
                     goto out;
                 }
+                // It is okay to find an existing entry here because
+                // we did not look for one before we called Add().
                 if (set2 != set) {
                     DestroyInstance(set);
                     set = set2;
@@ -627,14 +633,10 @@ XPCNativeSet::GetNewOrUsed(XPCNativeSetKey* key)
     if (!set)
         return nullptr;
 
-    XPCNativeSet* set2 = map->Add(key, set);
-    if (!set2) {
+    if (!map->AddNew(key, set)) {
         NS_ERROR("failed to add our set!");
         DestroyInstance(set);
         set = nullptr;
-    } else if (set2 != set) {
-        DestroyInstance(set);
-        set = set2;
     }
 
     return set;

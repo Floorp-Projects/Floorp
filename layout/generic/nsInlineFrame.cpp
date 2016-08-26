@@ -137,8 +137,7 @@ nsInlineFrame::IsSelfEmpty()
     // We skip this block and return false for box-decoration-break:clone since
     // in that case all the continuations will have the border/padding/margin.
     if ((GetStateBits() & NS_FRAME_PART_OF_IBSPLIT) &&
-        StyleBorder()->mBoxDecorationBreak ==
-          NS_STYLE_BOX_DECORATION_BREAK_SLICE) {
+        StyleBorder()->mBoxDecorationBreak == StyleBoxDecorationBreak::Slice) {
       // When direction=rtl, we need to consider logical rather than visual
       // start and end, so swap the flags.
       if (!wm.IsBidiLTR()) {
@@ -585,7 +584,7 @@ nsInlineFrame::ReflowFrames(nsPresContext* aPresContext,
   nscoord startEdge = 0;
   const bool boxDecorationBreakClone =
     MOZ_UNLIKELY(StyleBorder()->mBoxDecorationBreak ==
-                   NS_STYLE_BOX_DECORATION_BREAK_CLONE);
+                   StyleBoxDecorationBreak::Clone);
   // Don't offset by our start borderpadding if we have a prev continuation or
   // if we're in a part of an {ib} split other than the first one. For
   // box-decoration-break:clone we always offset our start since all
@@ -944,7 +943,7 @@ nsIFrame::LogicalSides
 nsInlineFrame::GetLogicalSkipSides(const ReflowInput* aReflowInput) const
 {
   if (MOZ_UNLIKELY(StyleBorder()->mBoxDecorationBreak ==
-                     NS_STYLE_BOX_DECORATION_BREAK_CLONE)) {
+                     StyleBoxDecorationBreak::Clone)) {
     return LogicalSides();
   }
 

@@ -54,7 +54,7 @@ SourceSurfaceAlignedRawData::Init(const IntSize &aSize,
                                   int32_t aStride)
 {
   mFormat = aFormat;
-  mStride = aStride ? aStride : GetAlignedStride<16>(aSize.width * BytesPerPixel(aFormat));
+  mStride = aStride ? aStride : GetAlignedStride<16>(aSize.width, BytesPerPixel(aFormat));
 
   size_t bufLen = BufferSizeFromStrideAndHeight(mStride, aSize.height);
   if (bufLen > 0) {

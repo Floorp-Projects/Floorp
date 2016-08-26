@@ -2371,8 +2371,11 @@ nsWindow::UpdateAlpha(SourceSurface* aSourceSurface, nsIntRect aBoundsRect)
 {
     // We need to create our own buffer to force the stride to match the
     // expected stride.
-    int32_t stride = GetAlignedStride<4>(BytesPerPixel(SurfaceFormat::A8) *
-                                         aBoundsRect.width);
+    int32_t stride = GetAlignedStride<4>(aBoundsRect.width,
+                                         BytesPerPixel(SurfaceFormat::A8));
+    if (stride == 0) {
+        return;
+    }
     int32_t bufferSize = stride * aBoundsRect.height;
     auto imageBuffer = MakeUniqueFallible<uint8_t[]>(bufferSize);
     {
