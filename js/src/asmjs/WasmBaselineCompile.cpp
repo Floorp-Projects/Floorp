@@ -96,7 +96,6 @@
 #include "asmjs/WasmBaselineCompile.h"
 #include "asmjs/WasmBinaryIterator.h"
 #include "asmjs/WasmGenerator.h"
-#include "asmjs/WasmSignalHandlers.h"
 #include "jit/AtomicOp.h"
 #include "jit/IonTypes.h"
 #include "jit/JitAllocPolicy.h"
@@ -451,8 +450,6 @@ class BaseCompiler
     ValTypeVector               SigDD_;
     ValTypeVector               SigD_;
     ValTypeVector               SigF_;
-    ValTypeVector               SigI_;
-    ValTypeVector               Sig_;
     Label                       returnLabel_;
     Label                       outOfLinePrologue_;
     Label                       bodyLabel_;
@@ -2014,10 +2011,6 @@ class BaseCompiler
         }
     }
 
-    const ABIArg reserveArgument(FunctionCall& call) {
-        return call.abi_.next(MIRType::Pointer);
-    }
-
     // TODO / OPTIMIZE: Note passArg is used only in one place.  I'm
     // not saying we should manually inline it, but we could hoist the
     // dispatch into the caller and have type-specific implementations
@@ -2187,21 +2180,17 @@ class BaseCompiler
         callSymbolic(builtin, call);
     }
 
-    void builtinInstanceMethodCall(SymbolicAddress builtin, const ABIArg& instanceArg,
-                                   const FunctionCall& call)
-    {
-        CallSiteDesc desc(call.lineOrBytecode_, CallSiteDesc::Register);
-        masm.wasmCallBuiltinInstanceMethod(instanceArg, builtin);
-    }
-
     //////////////////////////////////////////////////////////////////////
     //
     // Sundry low-level code generators.
 
     void addInterruptCheck()
     {
-        // Always use signals for interrupts with Asm.JS/Wasm
-        MOZ_RELEASE_ASSERT(wasm::HaveSignalHandlers());
+        if (mg_.usesSignal.forInterrupt)
+            return;
+
+        // FIXME - implement this.
+        MOZ_CRASH("Only interrupting signal handlers supported");
     }
 
     void jumpTable(LabelVector& labels) {
@@ -2913,15 +2902,16 @@ class BaseCompiler
         // space for a guard region.  Also, on x64 the atomic loads and stores
         // can't (yet) use the signal handlers.
 
-#ifdef WASM_HUGE_MEMORY
-        return false;
-#else
-        return access.needsBoundsCheck();
+#if defined(ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_OOB)
+        if (mg_.usesSignal.forOOB && !access.isAtomicAccess())
+            return false;
 #endif
+
+        return access.needsBoundsCheck();
     }
 
     bool throwOnOutOfBounds(const MWasmMemoryAccess& access) {
-        return !isCompilingAsmJS();
+        return access.isAtomicAccess() || !isCompilingAsmJS();
     }
 
     // For asm.js code only: If we have a non-zero offset, it's possible that
@@ -2935,6 +2925,19 @@ class BaseCompiler
     }
 
 #if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
+
+# if defined(JS_CODEGEN_X64)
+    // TODO / CLEANUP - copied from CodeGenerator-x64.cpp, should share.
+
+    MemoryAccess
+    WasmMemoryAccess(uint32_t before)
+    {
+        if (isCompilingAsmJS())
+            return MemoryAccess(before, MemoryAccess::CarryOn, MemoryAccess::WrapOffset);
+        return MemoryAccess(before, MemoryAccess::Throw, MemoryAccess::DontWrapOffset);
+    }
+# endif
+
     class OffsetBoundsCheck : public OutOfLineCode
     {
         Label* maybeOutOfBounds;
@@ -3143,8 +3146,7 @@ class BaseCompiler
             }
         }
 
-        if (isCompilingAsmJS())
-            masm.append(MemoryAccess(before, MemoryAccess::CarryOn, MemoryAccess::WrapOffset));
+        masm.append(WasmMemoryAccess(before));
         // TODO: call verifyHeapAccessDisassembly somehow
 # elif defined(JS_CODEGEN_X86)
         Operand srcAddr(ptr.reg, access.offset());
@@ -3224,8 +3226,7 @@ class BaseCompiler
             MOZ_CRASH("Compiler bug: Unexpected array type");
         }
 
-        if (isCompilingAsmJS())
-            masm.append(MemoryAccess(before, MemoryAccess::CarryOn, MemoryAccess::WrapOffset));
+        masm.append(WasmMemoryAccess(before));
         // TODO: call verifyHeapAccessDisassembly somehow
 # elif defined(JS_CODEGEN_X86)
         Operand dstAddr(ptr.reg, access.offset());
@@ -3496,8 +3497,6 @@ class BaseCompiler
     void emitConvertU64ToF64();
     void emitReinterpretI32AsF32();
     void emitReinterpretI64AsF64();
-    MOZ_MUST_USE bool emitGrowMemory(uint32_t callOffset);
-    MOZ_MUST_USE bool emitCurrentMemory(uint32_t callOffset);
 };
 
 void
@@ -6087,72 +6086,6 @@ BaseCompiler::emitStoreWithCoercion(ValType resultType, Scalar::Type viewType)
 }
 
 bool
-BaseCompiler::emitGrowMemory(uint32_t callOffset)
-{
-    if (deadCode_)
-        return skipCall(SigI_, ExprType::I32);
-
-    uint32_t lineOrBytecode = readCallSiteLineOrBytecode(callOffset);
-
-    sync();
-
-    uint32_t numArgs = 1;
-    size_t stackSpace = stackConsumed(numArgs);
-
-    FunctionCall baselineCall(lineOrBytecode);
-    beginCall(baselineCall, EscapesSandbox(true), IsBuiltinCall(true));
-
-    ABIArg instanceArg = reserveArgument(baselineCall);
-
-    if (!emitCallArgs(SigI_, baselineCall))
-        return false;
-
-    if (!iter_.readCallReturn(ExprType::I32))
-        return false;
-
-    builtinInstanceMethodCall(SymbolicAddress::GrowMemory, instanceArg, baselineCall);
-
-    endCall(baselineCall);
-
-    popValueStackBy(numArgs);
-    masm.freeStack(stackSpace);
-
-    pushReturned(baselineCall, ExprType::I32);
-
-    return true;
-}
-
-bool
-BaseCompiler::emitCurrentMemory(uint32_t callOffset)
-{
-    if (deadCode_)
-        return skipCall(Sig_, ExprType::I32);
-
-    uint32_t lineOrBytecode = readCallSiteLineOrBytecode(callOffset);
-
-    sync();
-
-    FunctionCall baselineCall(lineOrBytecode);
-    beginCall(baselineCall, EscapesSandbox(true), IsBuiltinCall(true));
-
-    ABIArg instanceArg = reserveArgument(baselineCall);
-
-    if (!emitCallArgs(Sig_, baselineCall))
-        return false;
-
-    if (!iter_.readCallReturn(ExprType::I32))
-        return false;
-
-    builtinInstanceMethodCall(SymbolicAddress::CurrentMemory, instanceArg, baselineCall);
-
-    endCall(baselineCall);
-
-    pushReturned(baselineCall, ExprType::I32);
-
-    return true;
-}
-
-bool
 BaseCompiler::emitBody()
 {
     uint32_t overhead = 0;
@@ -6211,7 +6144,7 @@ BaseCompiler::emitBody()
         switch (expr) {
           // Control opcodes
           case Expr::Nop:
-            CHECK(iter_.readNullary(ExprType::Void));
+            CHECK(iter_.readNullary());
             if (!deadCode_)
                 pushVoid();
             NEXT();
@@ -6701,11 +6634,11 @@ BaseCompiler::emitBody()
           case Expr::I32AtomicsExchange:
             MOZ_CRASH("Unimplemented Atomics");
 
-          // Memory Related
-          case Expr::GrowMemory:
-            CHECK_NEXT(emitGrowMemory(exprOffset));
+          // Future opcodes
           case Expr::CurrentMemory:
-            CHECK_NEXT(emitCurrentMemory(exprOffset));
+            MOZ_CRASH("Unimplemented CurrentMemory");
+          case Expr::GrowMemory:
+            MOZ_CRASH("Unimplemented GrowMemory");
 
           case Expr::Limit:;
         }
@@ -6851,8 +6784,6 @@ BaseCompiler::init()
         return false;
     if (!SigF_.append(ValType::F32))
         return false;
-    if (!SigI_.append(ValType::I32))
-        return false;
 
     const ValTypeVector& args = func_.sig().args();
 
@@ -6955,11 +6886,10 @@ LiveRegisterSet BaseCompiler::VolatileReturnGPR = volatileReturnGPR();
 bool
 js::wasm::BaselineCanCompile(const FunctionGenerator* fg)
 {
-    // On all platforms we require signals for AsmJS/Wasm.
-    // If we made it this far we must have signals.
-    MOZ_RELEASE_ASSERT(wasm::HaveSignalHandlers());
-
 #if defined(JS_CODEGEN_X64)
+    if (!fg->usesSignalsForInterrupts())
+        return false;
+
     if (fg->usesAtomics())
         return false;
 
