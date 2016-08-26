@@ -1031,7 +1031,6 @@ MediaDecoderStateMachine::ToStateStr(State aState)
     case DECODER_STATE_BUFFERING:         return "BUFFERING";
     case DECODER_STATE_COMPLETED:         return "COMPLETED";
     case DECODER_STATE_SHUTDOWN:          return "SHUTDOWN";
-    case DECODER_STATE_ERROR:             return "ERROR";
     default: MOZ_ASSERT_UNREACHABLE("Invalid state.");
   }
   return "UNKNOWN";
@@ -1098,7 +1097,6 @@ MediaDecoderStateMachine::EnterState(State aState)
     case DECODER_STATE_COMPLETED:
       ScheduleStateMachine();
       break;
-    case DECODER_STATE_ERROR:
     case DECODER_STATE_SHUTDOWN:
       mIsShutdown = true;
       break;
@@ -1953,14 +1951,11 @@ MediaDecoderStateMachine::DecodeError()
     return;
   }
 
-  // Change state to error, which will cause the state machine to wait until
-  // the MediaDecoder shuts it down.
-  SetState(DECODER_STATE_ERROR);
-  ScheduleStateMachine();
-  DECODER_WARN("Decode error, changed state to ERROR");
+  DECODER_WARN("Decode error");
+  // Change state to SHUTDOWN so we have no more processing.
+  SetState(DECODER_STATE_SHUTDOWN);
 
-  // MediaDecoder::DecodeError notifies the owner, and then shuts down the state
-  // machine.
+  // Notify the decode error and MediaDecoder will shut down MDSM.
   mOnPlaybackEvent.Notify(MediaEventType::DecodeError);
 }
 
@@ -2278,7 +2273,6 @@ nsresult MediaDecoderStateMachine::RunStateMachine()
   NS_ENSURE_TRUE(resource, NS_ERROR_NULL_POINTER);
 
   switch (mState) {
-    case DECODER_STATE_ERROR:
     case DECODER_STATE_SHUTDOWN:
     case DECODER_STATE_DORMANT:
     case DECODER_STATE_WAIT_FOR_CDM:
