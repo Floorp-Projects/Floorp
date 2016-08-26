@@ -362,7 +362,8 @@ class B2GBuildBaseScript(BuildbotMixin, MockMixin,
         self.info("Checking out tools")
         repos = [{
             'repo': self.config['tools_repo'],
-            'vcs': "hg",  # May not have hgtool yet
+            'vcs': "hg",
+            'branch': "default",
             'dest': dirs['abs_tools_dir'],
         }]
         rev = self.vcs_checkout(**repos[0])

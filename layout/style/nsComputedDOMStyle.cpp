@@ -2359,7 +2359,7 @@ nsComputedDOMStyle::DoGetBackgroundOrigin()
 
 void
 nsComputedDOMStyle::SetValueToPositionCoord(
-    const nsStyleImageLayers::Position::PositionCoord& aCoord,
+    const Position::Coord& aCoord,
     nsROCSSPrimitiveValue* aValue)
 {
   if (!aCoord.mHasPercent) {
@@ -2375,7 +2375,7 @@ nsComputedDOMStyle::SetValueToPositionCoord(
 
 void
 nsComputedDOMStyle::SetValueToPosition(
-    const nsStyleImageLayers::Position& aPosition,
+    const Position& aPosition,
     nsDOMCSSValueList* aValueList)
 {
   RefPtr<nsROCSSPrimitiveValue> valX = new nsROCSSPrimitiveValue;
@@ -6163,7 +6163,8 @@ nsComputedDOMStyle::DoGetMask()
       firstLayer.mOrigin != NS_STYLE_IMAGELAYER_ORIGIN_BORDER ||
       firstLayer.mComposite != NS_STYLE_MASK_COMPOSITE_ADD ||
       firstLayer.mMaskMode != NS_STYLE_MASK_MODE_MATCH_SOURCE ||
-      !firstLayer.mPosition.IsInitialValue(nsStyleImageLayers::LayerType::Mask) ||
+      !nsStyleImageLayers::IsInitialPositionForLayerType(
+        firstLayer.mPosition, nsStyleImageLayers::LayerType::Mask) ||
       !firstLayer.mRepeat.IsInitialValue(nsStyleImageLayers::LayerType::Mask) ||
       !firstLayer.mSize.IsInitialValue() ||
       !(firstLayer.mImage.GetType() == eStyleImageType_Null ||

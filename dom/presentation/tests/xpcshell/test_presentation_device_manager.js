@@ -40,6 +40,7 @@ var testProvider = {
   },
 };
 
+const forbiddenRequestedUrl = 'http://example.com';
 var testDevice = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIPresentationDevice]),
   id: 'id',
@@ -47,6 +48,10 @@ var testDevice = {
   type: 'type',
   establishControlChannel: function(url, presentationId) {
     return null;
+  },
+  disconnect: function() {},
+  isRequestedUrlSupported: function(requestedUrl) {
+    return forbiddenRequestedUrl !== requestedUrl;
   },
 };
 
@@ -120,6 +125,16 @@ function updateDevice() {
   }, 'presentation-device-change', false);
   testDevice.name = 'updated-name';
   manager.QueryInterface(Ci.nsIPresentationDeviceListener).updateDevice(testDevice);
+}
+
+function filterDevice() {
+  let presentationUrls = Cc['@mozilla.org/array;1'].createInstance(Ci.nsIMutableArray);
+  let url = Cc['@mozilla.org/supports-string;1'].createInstance(Ci.nsISupportsString);
+  url.data = forbiddenRequestedUrl;
+  presentationUrls.appendElement(url, false);
+  let devices = manager.getAvailableDevices(presentationUrls);
+  Assert.equal(devices.length, 0, 'expect 0 available device for example.com');
+  run_next_test();
 }
 
 function sessionRequest() {
@@ -217,6 +232,7 @@ add_test(addProvider);
 add_test(forceDiscovery);
 add_test(addDevice);
 add_test(updateDevice);
+add_test(filterDevice);
 add_test(sessionRequest);
 add_test(terminateRequest);
 add_test(reconnectRequest);

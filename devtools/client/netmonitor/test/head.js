@@ -9,7 +9,6 @@ Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/devtools/client/framework/test/shared-head.js",
   this);
 
-var { CurlUtils } = Cu.import("resource://devtools/client/shared/Curl.jsm", {});
 var NetworkHelper = require("devtools/shared/webconsole/network-helper");
 var { Toolbox } = require("devtools/client/framework/toolbox");
 

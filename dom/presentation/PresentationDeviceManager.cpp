@@ -8,6 +8,7 @@
 
 #include "mozilla/Services.h"
 #include "MainThreadUtils.h"
+#include "nsArrayUtils.h"
 #include "nsCategoryCache.h"
 #include "nsCOMPtr.h"
 #include "nsIMutableArray.h"
@@ -148,7 +149,7 @@ PresentationDeviceManager::GetDeviceAvailable(bool* aRetVal)
 }
 
 NS_IMETHODIMP
-PresentationDeviceManager::GetAvailableDevices(nsIArray** aRetVal)
+PresentationDeviceManager::GetAvailableDevices(nsIArray* aPresentationUrls, nsIArray** aRetVal)
 {
   NS_ENSURE_ARG_POINTER(aRetVal);
   MOZ_ASSERT(NS_IsMainThread());
@@ -158,9 +159,42 @@ PresentationDeviceManager::GetAvailableDevices(nsIArray** aRetVal)
   NS_DispatchToMainThread(
       NewRunnableMethod(this, &PresentationDeviceManager::ForceDiscovery));
 
+  nsTArray<nsString> presentationUrls;
+  if (aPresentationUrls) {
+    uint32_t length;
+    nsresult rv = aPresentationUrls->GetLength(&length);
+    if (NS_SUCCEEDED(rv)) {
+      for (uint32_t i = 0; i < length; ++i) {
+        nsCOMPtr<nsISupportsString> isupportStr =
+          do_QueryElementAt(aPresentationUrls, i);
+
+        nsAutoString presentationUrl;
+        rv = isupportStr->GetData(presentationUrl);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          continue;
+        }
+
+        presentationUrls.AppendElement(presentationUrl);
+      }
+    }
+  }
+
   nsCOMPtr<nsIMutableArray> devices = do_CreateInstance(NS_ARRAY_CONTRACTID);
   for (uint32_t i = 0; i < mDevices.Length(); ++i) {
-    devices->AppendElement(mDevices[i], false);
+    if (presentationUrls.IsEmpty()) {
+      devices->AppendElement(mDevices[i], false);
+      continue;
+    }
+
+    for (uint32_t j = 0; j < presentationUrls.Length(); ++j) {
+      bool isSupported;
+      if (NS_SUCCEEDED(mDevices[i]->IsRequestedUrlSupported(presentationUrls[i],
+                                                            &isSupported)) &&
+          isSupported) {
+        devices->AppendElement(mDevices[i], false);
+        break;
+      }
+    }
   }
 
   devices.forget(aRetVal);

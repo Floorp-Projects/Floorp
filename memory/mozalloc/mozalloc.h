@@ -290,6 +290,24 @@ class InfallibleAllocPolicy
 {
 public:
     template <typename T>
+    T* maybe_pod_malloc(size_t aNumElems)
+    {
+        return pod_malloc<T>(aNumElems);
+    }
+
+    template <typename T>
+    T* maybe_pod_calloc(size_t aNumElems)
+    {
+        return pod_calloc<T>(aNumElems);
+    }
+
+    template <typename T>
+    T* maybe_pod_realloc(T* aPtr, size_t aOldSize, size_t aNewSize)
+    {
+        return pod_realloc<T>(aPtr, aOldSize, aNewSize);
+    }
+
+    template <typename T>
     T* pod_malloc(size_t aNumElems)
     {
         if (aNumElems & mozilla::tl::MulOverflowMask<sizeof(T)>::value) {

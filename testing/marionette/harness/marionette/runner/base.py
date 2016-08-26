@@ -481,6 +481,11 @@ class RemoteMarionetteArguments(object):
                    'e.g emulator-5444'),
           'dest': 'device_serial',
           }],
+        [['--package'],
+         {'help': 'Name of Android package, e.g. org.mozilla.fennec',
+          'dest': 'package_name',
+          }],
+
     ]
 
 class BaseMarionetteTestRunner(object):
@@ -716,6 +721,7 @@ class BaseMarionetteTestRunner(object):
                 'adb_path': self.extra_kwargs.get('adb_path'),
                 'emulator_binary': self.extra_kwargs.get('emulator_bin'),
                 'avd': self.extra_kwargs.get('avd'),
+                'package_name': self.extra_kwargs.get('package_name'),
             })
 
         if self.address:
@@ -983,6 +989,7 @@ setReq.onerror = function() {
                 filters.append(tags(self.test_tags))
             json_path = update_mozinfo(filepath)
             self.logger.info("mozinfo updated with the following: {}".format(None))
+            self.logger.info("mozinfo is: {}".format(mozinfo.info))
             manifest_tests = manifest.active_tests(exists=False,
                                                    disabled=True,
                                                    filters=filters,
