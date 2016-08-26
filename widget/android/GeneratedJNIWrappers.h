@@ -4633,10 +4633,11 @@ public:
         typedef void SetterType;
         typedef mozilla::jni::Args<
                 int32_t,
-                int32_t> Args;
+                int32_t,
+                mozilla::jni::Object::Param> Args;
         static constexpr char name[] = "createCompositor";
         static constexpr char signature[] =
-                "(II)V";
+                "(IILjava/lang/Object;)V";
         static const bool isStatic = false;
         static const mozilla::jni::ExceptionMode exceptionMode =
                 mozilla::jni::ExceptionMode::ABORT;
@@ -4681,25 +4682,6 @@ public:
         static const mozilla::jni::DispatchTarget dispatchTarget =
                 mozilla::jni::DispatchTarget::GECKO;
     };
-
-    struct GetSurface_t {
-        typedef Compositor Owner;
-        typedef mozilla::jni::Object::LocalRef ReturnType;
-        typedef mozilla::jni::Object::Param SetterType;
-        typedef mozilla::jni::Args<> Args;
-        static constexpr char name[] = "getSurface";
-        static constexpr char signature[] =
-                "()Ljava/lang/Object;";
-        static const bool isStatic = false;
-        static const mozilla::jni::ExceptionMode exceptionMode =
-                mozilla::jni::ExceptionMode::ABORT;
-        static const mozilla::jni::CallingThread callingThread =
-                mozilla::jni::CallingThread::ANY;
-        static const mozilla::jni::DispatchTarget dispatchTarget =
-                mozilla::jni::DispatchTarget::CURRENT;
-    };
-
-    auto GetSurface() const -> mozilla::jni::Object::LocalRef;
 
     struct OnSizeChanged_t {
         typedef Compositor Owner;
@@ -4781,10 +4763,11 @@ public:
         typedef void SetterType;
         typedef mozilla::jni::Args<
                 int32_t,
-                int32_t> Args;
+                int32_t,
+                mozilla::jni::Object::Param> Args;
         static constexpr char name[] = "syncResumeResizeCompositor";
         static constexpr char signature[] =
-                "(II)V";
+                "(IILjava/lang/Object;)V";
         static const bool isStatic = false;
         static const mozilla::jni::ExceptionMode exceptionMode =
                 mozilla::jni::ExceptionMode::ABORT;
