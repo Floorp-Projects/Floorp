@@ -8,7 +8,7 @@
  */
 
 add_task(function* () {
-  let [tab, , monitor] = yield initNetMonitor(JSON_MALFORMED_URL);
+  let { tab, monitor } = yield initNetMonitor(JSON_MALFORMED_URL);
   info("Starting test... ");
 
   let { document, EVENTS, Editor, NetMonitorView } = monitor.panelWin;

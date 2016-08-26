@@ -8,7 +8,7 @@
  */
 
 add_task(function* () {
-  let [tab, , monitor] = yield initNetMonitor(JSONP_URL);
+  let { tab, monitor } = yield initNetMonitor(JSONP_URL);
   info("Starting test... ");
 
   let { document, EVENTS, L10N, NetMonitorView } = monitor.panelWin;

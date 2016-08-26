@@ -13,7 +13,7 @@ function test() {
   let gInfo = info;
   let gOk = ok;
 
-  initNetMonitor(SIMPLE_URL).then(([tab, , monitor]) => {
+  initNetMonitor(SIMPLE_URL).then(({ tab, monitor }) => {
     info("Starting test... ");
 
     is(tab.linkedBrowser.currentURI.spec, SIMPLE_URL,

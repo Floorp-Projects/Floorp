@@ -8,7 +8,7 @@
  */
 
 add_task(function* () {
-  let [tab, , monitor] = yield initNetMonitor(SIMPLE_SJS);
+  let { tab, monitor } = yield initNetMonitor(SIMPLE_SJS);
   info("Starting test... ");
 
   let { document, EVENTS, L10N, Editor, NetMonitorView } = monitor.panelWin;

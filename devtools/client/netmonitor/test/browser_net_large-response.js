@@ -10,7 +10,7 @@
 const HTML_LONG_URL = CONTENT_TYPE_SJS + "?fmt=html-long";
 
 add_task(function* () {
-  let [tab, , monitor] = yield initNetMonitor(CUSTOM_GET_URL);
+  let { tab, monitor } = yield initNetMonitor(CUSTOM_GET_URL);
   info("Starting test... ");
 
   // This test could potentially be slow because over 100 KB of stuff

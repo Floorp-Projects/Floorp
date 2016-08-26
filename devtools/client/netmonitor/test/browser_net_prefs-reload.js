@@ -8,7 +8,7 @@
  */
 
 add_task(function* () {
-  let [,, monitor] = yield initNetMonitor(SIMPLE_URL);
+  let { monitor } = yield initNetMonitor(SIMPLE_URL);
   info("Starting test... ");
 
   // This test reopens the network monitor a bunch of times, for different
@@ -146,15 +146,15 @@ add_task(function* () {
     validateFirstPrefValues();
     modifyFrontend();
 
-    let [,, newMonitor] = yield restartNetMonitor(monitor);
-    monitor = newMonitor;
+    let newMonitor = yield restartNetMonitor(monitor);
+    monitor = newMonitor.monitor;
 
     // Revalidate and reset frontend while toolbox is on the bottom.
     validateNewPrefValues();
     resetFrontend();
 
-    let [,, newMonitor2] = yield restartNetMonitor(monitor);
-    monitor = newMonitor2;
+    newMonitor = yield restartNetMonitor(monitor);
+    monitor = newMonitor.monitor;
 
     // Revalidate.
     validateFirstPrefValues();
@@ -171,15 +171,15 @@ add_task(function* () {
     validateFirstPrefValues();
     modifyFrontend();
 
-    let [,, newMonitor] = yield restartNetMonitor(monitor);
-    monitor = newMonitor;
+    let newMonitor = yield restartNetMonitor(monitor);
+    monitor = newMonitor.monitor;
 
     // Revalidate and reset frontend while toolbox is on the side.
     validateNewPrefValues();
     resetFrontend();
 
-    let [,, newMonitor2] = yield restartNetMonitor(monitor);
-    monitor = newMonitor2;
+    newMonitor = yield restartNetMonitor(monitor);
+    monitor = newMonitor.monitor;
 
     // Revalidate.
     validateFirstPrefValues();
@@ -196,15 +196,15 @@ add_task(function* () {
     validateFirstPrefValues();
     modifyFrontend();
 
-    let [,, newMonitor] = yield restartNetMonitor(monitor);
-    monitor = newMonitor;
+    let newMonitor = yield restartNetMonitor(monitor);
+    monitor = newMonitor.monitor;
 
     // Revalidate and reset frontend while toolbox is in a window.
     validateNewPrefValues();
     resetFrontend();
 
-    let [,, newMonitor2] = yield restartNetMonitor(monitor);
-    monitor = newMonitor2;
+    newMonitor = yield restartNetMonitor(monitor);
+    monitor = newMonitor.monitor;
 
     // Revalidate.
     validateFirstPrefValues();

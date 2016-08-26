@@ -10,7 +10,7 @@
 const { CurlUtils } = require("devtools/client/shared/curl");
 
 add_task(function* () {
-  let [tab, , monitor] = yield initNetMonitor(CURL_UTILS_URL);
+  let { tab, monitor } = yield initNetMonitor(CURL_UTILS_URL);
   info("Starting test... ");
 
   let { NetMonitorView, gNetwork } = monitor.panelWin;

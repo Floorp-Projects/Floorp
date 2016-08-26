@@ -8,7 +8,7 @@
  */
 
 add_task(function* () {
-  let [tab, , monitor] = yield initNetMonitor(CUSTOM_GET_URL);
+  let { tab, monitor } = yield initNetMonitor(CUSTOM_GET_URL);
   info("Starting test... ");
 
   // It seems that this test may be slow on Ubuntu builds running on ec2.

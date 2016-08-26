@@ -18,7 +18,7 @@ add_task(function* () {
     { status: 200, hasStack: true },
   ];
 
-  let [tab, , monitor] = yield initNetMonitor(CUSTOM_GET_URL);
+  let { tab, monitor } = yield initNetMonitor(CUSTOM_GET_URL);
   let { RequestsMenu } = monitor.panelWin.NetMonitorView;
   RequestsMenu.lazyUpdate = false;
 

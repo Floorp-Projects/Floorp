@@ -16,7 +16,7 @@ add_task(function* () {
     "localhost": "security-state-local",
   };
 
-  let [tab, , monitor] = yield initNetMonitor(CUSTOM_GET_URL);
+  let { tab, monitor } = yield initNetMonitor(CUSTOM_GET_URL);
   let { $, EVENTS, NetMonitorView } = monitor.panelWin;
   let { RequestsMenu } = NetMonitorView;
   RequestsMenu.lazyUpdate = false;
