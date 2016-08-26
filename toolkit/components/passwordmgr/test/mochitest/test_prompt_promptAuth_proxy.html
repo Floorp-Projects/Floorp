@@ -78,12 +78,9 @@ function initLogins(pi) {
 
 function finishTest() {
   try {
-    ok(true, "finishTest removing testing logins...");
     observerService.removeObserver(storageObserver, "passwordmgr-storage-changed");
 
     dumpLogins(pwmgr);
-    ok(true, "removing proxyLogin...");
-      pwmgr.removeLogin(proxyLogin);
   } catch (e) {
     ok(false, "finishTest FAILED: " + e);
   }
