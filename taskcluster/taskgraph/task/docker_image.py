@@ -38,8 +38,7 @@ class DockerImageTask(base.Task):
 
     @classmethod
     def load_tasks(cls, kind, path, config, params, loaded_tasks):
-        # TODO: make this match the pushdate (get it from a parameter rather than vcs)
-        pushdate = time.strftime('%Y%m%d%H%M%S', time.gmtime())
+        pushdate = time.strftime('%Y%m%d%H%M%S', time.gmtime(params['pushdate']))
 
         parameters = {
             'pushlog_id': params.get('pushlog_id', 0),
