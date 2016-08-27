@@ -153,9 +153,18 @@ public:
                                        const media::TimeUnit& aTimeThreadshold,
                                        const media::TimeUnit& aFuzz,
                                        bool& aFound);
+
+  enum class GetSampleResult
+  {
+    NO_ERROR,
+    ERROR,
+    WAITING_FOR_DATA,
+    EOS
+  };
+
   already_AddRefed<MediaRawData> GetSample(TrackInfo::TrackType aTrack,
                                            const media::TimeUnit& aFuzz,
-                                           bool& aError);
+                                           GetSampleResult& aResult);
   int32_t FindCurrentPosition(TrackInfo::TrackType aTrack,
                               const media::TimeUnit& aFuzz);
   media::TimeUnit GetNextRandomAccessPoint(TrackInfo::TrackType aTrack,

@@ -2138,17 +2138,19 @@ TrackBuffersManager::GetSample(TrackInfo::TrackType aTrack,
 already_AddRefed<MediaRawData>
 TrackBuffersManager::GetSample(TrackInfo::TrackType aTrack,
                                const TimeUnit& aFuzz,
-                               bool& aError)
+                               GetSampleResult& aResult)
 {
   MOZ_ASSERT(OnTaskQueue());
   auto& trackData = GetTracksData(aTrack);
   const TrackBuffer& track = GetTrackBuffer(aTrack);
 
-  aError = false;
+  aResult = GetSampleResult::WAITING_FOR_DATA;
 
   if (!track.Length()) {
+    aResult = GetSampleResult::EOS;
     return nullptr;
   }
+
   if (trackData.mNextGetSampleIndex.isNothing() &&
       trackData.mNextSampleTimecode == TimeUnit()) {
     // First demux, get first sample.
@@ -2156,6 +2158,10 @@ TrackBuffersManager::GetSample(TrackInfo::TrackType aTrack,
   }
 
   if (trackData.mNextGetSampleIndex.isSome()) {
+    if (trackData.mNextGetSampleIndex.ref() >= track.Length()) {
+      aResult = GetSampleResult::EOS;
+      return nullptr;
+    }
     const MediaRawData* sample =
       GetSample(aTrack,
                 trackData.mNextGetSampleIndex.ref(),
@@ -2168,7 +2174,7 @@ TrackBuffersManager::GetSample(TrackInfo::TrackType aTrack,
 
     RefPtr<MediaRawData> p = sample->Clone();
     if (!p) {
-      aError = true;
+      aResult = GetSampleResult::ERROR;
       return nullptr;
     }
     trackData.mNextGetSampleIndex.ref()++;
@@ -2177,7 +2183,16 @@ TrackBuffersManager::GetSample(TrackInfo::TrackType aTrack,
       TimeUnit::FromMicroseconds(sample->mTimecode + sample->mDuration);
     trackData.mNextSampleTime =
       TimeUnit::FromMicroseconds(sample->GetEndTime());
+    aResult = GetSampleResult::NO_ERROR;
     return p.forget();
+  }
+
+  if (trackData.mNextSampleTimecode.ToMicroseconds() >
+      track.LastElement()->mTimecode + track.LastElement()->mDuration) {
+    // The next element is past our last sample. We're done.
+    trackData.mNextGetSampleIndex = Some(uint32_t(track.Length()));
+    aResult = GetSampleResult::EOS;
+    return nullptr;
   }
 
   // Our previous index has been overwritten, attempt to find the new one.
@@ -2193,7 +2208,7 @@ TrackBuffersManager::GetSample(TrackInfo::TrackType aTrack,
   RefPtr<MediaRawData> p = sample->Clone();
   if (!p) {
     // OOM
-    aError = true;
+    aResult = GetSampleResult::ERROR;
     return nullptr;
   }
   trackData.mNextGetSampleIndex = Some(uint32_t(pos)+1);
@@ -2201,6 +2216,7 @@ TrackBuffersManager::GetSample(TrackInfo::TrackType aTrack,
     TimeUnit::FromMicroseconds(sample->mTimecode + sample->mDuration);
   trackData.mNextSampleTime =
     TimeUnit::FromMicroseconds(sample->GetEndTime());
+  aResult = GetSampleResult::NO_ERROR;
   return p.forget();
 }
 
