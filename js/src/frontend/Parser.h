@@ -1022,7 +1022,6 @@ class Parser final : private JS::AutoGCRooter, public StrictModeGetter
 
     Node blockStatement(YieldHandling yieldHandling,
                         unsigned errorNumber = JSMSG_CURLY_IN_COMPOUND);
-    Node ifStatement(YieldHandling yieldHandling);
     Node doWhileStatement(YieldHandling yieldHandling);
     Node whileStatement(YieldHandling yieldHandling);
 
@@ -1049,6 +1048,9 @@ class Parser final : private JS::AutoGCRooter, public StrictModeGetter
 
     Node labeledStatement(YieldHandling yieldHandling);
     Node labeledItem(YieldHandling yieldHandling);
+
+    Node ifStatement(YieldHandling yieldHandling);
+    Node consequentOrAlternative(YieldHandling yieldHandling);
 
     Node lexicalDeclaration(YieldHandling yieldHandling, bool isConst);
     Node importDeclaration();
