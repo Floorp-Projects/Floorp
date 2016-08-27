@@ -205,7 +205,7 @@ IsVisualCharset(const nsCString& aCharset)
 
 nsPresContext::nsPresContext(nsIDocument* aDocument, nsPresContextType aType)
   : mType(aType), mDocument(aDocument), mBaseMinFontSize(0),
-    mTextZoom(1.0), mFullZoom(1.0), mOverrideDPPX(0.0),
+    mTextZoom(1.0), mFullZoom(1.0),
     mLastFontInflationScreenSize(gfxSize(-1.0, -1.0)),
     mPageSize(-1, -1), mPPScale(1.0f),
     mViewportStyleScrollbar(NS_STYLE_OVERFLOW_AUTO, NS_STYLE_OVERFLOW_AUTO),
@@ -1306,17 +1306,6 @@ nsPresContext::SetFullZoom(float aZoom)
   AppUnitsPerDevPixelChanged();
 
   mSuppressResizeReflow = false;
-}
-
-void
-nsPresContext::SetOverrideDPPX(float aDPPX)
-{
-  mOverrideDPPX = aDPPX;
-
-  if (HasCachedStyleData()) {
-    // All cached style data must be recomputed.
-    MediaFeatureValuesChanged(eRestyle_ForceDescendants, NS_STYLE_HINT_REFLOW);
-  }
 }
 
 gfxSize
