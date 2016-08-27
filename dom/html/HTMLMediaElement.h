@@ -1516,10 +1516,6 @@ protected:
   // True iff event delivery is suspended (mPausedForInactiveDocumentOrChannel must also be true).
   bool mEventDeliveryPaused;
 
-  // True if we've reported a "waiting" event since the last
-  // readyState change to HAVE_CURRENT_DATA.
-  bool mWaitingFired;
-
   // True if we're running the "load()" method.
   bool mIsRunningLoadMethod;
 
