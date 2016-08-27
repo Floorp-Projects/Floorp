@@ -48,8 +48,10 @@ PL_strcasecmp(const char *a, const char *b)
     const unsigned char *ua = (const unsigned char *)a;
     const unsigned char *ub = (const unsigned char *)b;
 
-    if( ((const char *)0 == a) || (const char *)0 == b ) 
-        return (PRIntn)(a-b);
+    if( (const char *)0 == a )
+        return ((const char *)0 == b) ? 0 : -1;
+    if( (const char *)0 == b )
+        return 1;
 
     while( (uc[*ua] == uc[*ub]) && ('\0' != *a) )
     {
@@ -67,8 +69,10 @@ PL_strncasecmp(const char *a, const char *b, PRUint32 max)
     const unsigned char *ua = (const unsigned char *)a;
     const unsigned char *ub = (const unsigned char *)b;
 
-    if( ((const char *)0 == a) || (const char *)0 == b ) 
-        return (PRIntn)(a-b);
+    if( (const char *)0 == a )
+        return ((const char *)0 == b) ? 0 : -1;
+    if( (const char *)0 == b )
+        return 1;
 
     while( max && (uc[*ua] == uc[*ub]) && ('\0' != *a) )
     {
