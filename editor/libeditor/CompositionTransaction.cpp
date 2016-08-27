@@ -288,7 +288,10 @@ CompositionTransaction::SetIMESelection(EditorBase& aEditorBase,
 
     // If caret range isn't specified explicitly, we should hide the caret.
     // Hiding the caret benefits a Windows build (see bug 555642 comment #6).
-    aEditorBase.HideCaret(true);
+    // However, when there is no range, we should keep showing caret.
+    if (countOfRanges) {
+      aEditorBase.HideCaret(true);
+    }
   }
 
   rv = selection->EndBatchChangesInternal();
