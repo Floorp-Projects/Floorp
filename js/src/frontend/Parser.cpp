@@ -5809,6 +5809,17 @@ Parser<ParseHandler>::labeledItem(YieldHandling yieldHandling)
         return null();
 
     if (tt == TOK_FUNCTION) {
+        TokenKind next;
+        if (!tokenStream.peekToken(&next))
+            return null();
+
+        // GeneratorDeclaration is only matched by HoistableDeclaration in
+        // StatementListItem, so generators can't be inside labels.
+        if (next == TOK_MUL) {
+            report(ParseError, false, null(), JSMSG_GENERATOR_LABEL);
+            return null();
+        }
+
         // Per 13.13.1 it's a syntax error if LabelledItem: FunctionDeclaration
         // is ever matched.  Per Annex B.3.2 that modifies this text, this
         // applies only to strict mode code.
