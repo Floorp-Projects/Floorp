@@ -42,7 +42,6 @@
 
 #include "vm/ArgumentsObject-inl.h"
 #include "vm/ArrayObject-inl.h"
-#include "vm/Caches-inl.h"
 #include "vm/Interpreter-inl.h"
 #include "vm/NativeObject-inl.h"
 #include "vm/UnboxedObject-inl.h"
@@ -3382,31 +3381,6 @@ NewArray(ExclusiveContext* cxArg, uint32_t length,
     if (!proto && !GetBuiltinPrototype(cxArg, JSProto_Array, &proto))
         return nullptr;
 
-    Rooted<TaggedProto> taggedProto(cxArg, TaggedProto(proto));
-    bool isCachable = NewObjectWithTaggedProtoIsCachable(cxArg, taggedProto, newKind, &ArrayObject::class_);
-    if (isCachable) {
-        JSContext* cx = cxArg->asJSContext();
-        NewObjectCache& cache = cx->caches.newObjectCache;
-        NewObjectCache::EntryIndex entry = -1;
-        if (cache.lookupProto(&ArrayObject::class_, proto, allocKind, &entry)) {
-            gc::InitialHeap heap = GetInitialHeap(newKind, &ArrayObject::class_);
-            AutoSetNewObjectMetadata metadata(cx);
-            JSObject* obj = cache.newObjectFromHit(cx, entry, heap);
-            if (obj) {
-                /* Fixup the elements pointer and length, which may be incorrect. */
-                ArrayObject* arr = &obj->as<ArrayObject>();
-                arr->setFixedElements();
-                arr->setLength(cx, length);
-                if (maxLength > 0 &&
-                    !EnsureNewArrayElements(cx, arr, std::min(maxLength, length)))
-                {
-                    return nullptr;
-                }
-                return arr;
-            }
-        }
-    }
-
     RootedObjectGroup group(cxArg, ObjectGroup::defaultNewGroup(cxArg, &ArrayObject::class_,
                                                                 TaggedProto(proto)));
     if (!group)
@@ -3438,13 +3412,6 @@ NewArray(ExclusiveContext* cxArg, uint32_t length,
 
     if (newKind == SingletonObject && !JSObject::setSingleton(cxArg, arr))
         return nullptr;
-
-    if (isCachable) {
-        NewObjectCache& cache = cxArg->asJSContext()->caches.newObjectCache;
-        NewObjectCache::EntryIndex entry = -1;
-        cache.lookupProto(&ArrayObject::class_, proto, allocKind, &entry);
-        cache.fillProto(entry, &ArrayObject::class_, taggedProto, allocKind, arr);
-    }
 
     if (maxLength > 0 && !EnsureNewArrayElements(cxArg, arr, std::min(maxLength, length)))
         return nullptr;
