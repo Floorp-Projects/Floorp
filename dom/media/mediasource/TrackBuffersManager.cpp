@@ -1986,11 +1986,14 @@ TrackBuffersManager::Seek(TrackInfo::TrackType aTrack,
   if (aTime != TimeUnit()) {
     // Determine the interval of samples we're attempting to seek to.
     TimeIntervals buffered = trackBuffer.mBufferedRanges;
-    buffered.SetFuzz(aFuzz);
+    // Fuzz factor is +/- aFuzz; as we want to only eliminate gaps
+    // that are less than aFuzz wide, we set a fuzz factor aFuzz/2.
+    buffered.SetFuzz(aFuzz / 2);
     TimeIntervals::IndexType index = buffered.Find(aTime);
     MOZ_ASSERT(index != TimeIntervals::NoIndex,
                "We shouldn't be called if aTime isn't buffered");
     TimeInterval target = buffered[index];
+    target.mFuzz = aFuzz;
     i = FindSampleIndex(track, target);
   }
 
