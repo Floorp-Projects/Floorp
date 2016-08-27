@@ -144,8 +144,8 @@ Narrator.prototype = {
     this._win.speechSynthesis.cancel();
     let tw = this._treeWalker;
     let paragraph = tw.currentNode;
-    if (!paragraph) {
-      tw.currentNode = tw.root;
+    if (paragraph == tw.root) {
+      this._sendTestEvent("paragraphsdone", {});
       return Promise.resolve();
     }
 
@@ -193,7 +193,7 @@ Narrator.prototype = {
           // User pressed stopped.
           resolve();
         } else {
-          tw.nextNode();
+          tw.currentNode = tw.nextNode() || tw.root;
           this._speakInner().then(resolve, reject);
         }
       });
