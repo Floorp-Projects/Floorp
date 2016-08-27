@@ -858,8 +858,21 @@ protected:
     */
   bool NeedToApplyFilter()
   {
+    return EnsureUpdatedFilter().mPrimitives.Length() > 0;
+  }
+
+  /**
+   * Calls UpdateFilter if the canvas's WriteOnly state has changed between the
+   * last call to UpdateFilter and now.
+   */
+  const gfx::FilterDescription& EnsureUpdatedFilter() {
     const ContextState& state = CurrentState();
-    return state.filter.mPrimitives.Length() > 0;
+    bool isWriteOnly = mCanvasElement && mCanvasElement->IsWriteOnly();
+    if (state.filterSourceGraphicTainted != isWriteOnly) {
+      UpdateFilter();
+    }
+    MOZ_ASSERT(state.filterSourceGraphicTainted == isWriteOnly);
+    return state.filter;
   }
 
   bool NeedToCalculateBounds()
@@ -951,7 +964,7 @@ protected:
                      lineCap(mozilla::gfx::CapStyle::BUTT),
                      lineJoin(mozilla::gfx::JoinStyle::MITER_OR_BEVEL),
                      filterString(u"none"),
-                     updateFilterOnWriteOnly(false),
+                     filterSourceGraphicTainted(false),
                      imageSmoothingEnabled(true),
                      fontExplicitLanguage(false)
     { }
@@ -984,7 +997,7 @@ protected:
           filterChainObserver(aOther.filterChainObserver),
           filter(aOther.filter),
           filterAdditionalImages(aOther.filterAdditionalImages),
-          updateFilterOnWriteOnly(aOther.updateFilterOnWriteOnly),
+          filterSourceGraphicTainted(aOther.filterSourceGraphicTainted),
           imageSmoothingEnabled(aOther.imageSmoothingEnabled),
           fontExplicitLanguage(aOther.fontExplicitLanguage)
     { }
@@ -1062,7 +1075,7 @@ protected:
     RefPtr<nsSVGFilterChainObserver> filterChainObserver;
     mozilla::gfx::FilterDescription filter;
     nsTArray<RefPtr<mozilla::gfx::SourceSurface>> filterAdditionalImages;
-    bool updateFilterOnWriteOnly;
+    bool filterSourceGraphicTainted;
 
     bool imageSmoothingEnabled;
     bool fontExplicitLanguage;
