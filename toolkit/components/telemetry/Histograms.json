@@ -7849,15 +7849,6 @@
     "n_buckets": 100,
     "description": "How long has Scratchpad been active (seconds)"
   },
-  "DEVTOOLS_SCRATCHPAD_WINDOW_TIME_ACTIVE_SECONDS": {
-    "alert_emails": ["dev-developer-tools@lists.mozilla.org"],
-    "expires_in_version": "50",
-    "kind": "exponential",
-    "high": 10000000,
-    "n_buckets": 100,
-    "description": "How long has Scratchpad standalone window been active (seconds)",
-    "bug_numbers": [1214352]
-  },
   "DEVTOOLS_RESPONSIVE_TIME_ACTIVE_SECONDS": {
     "expires_in_version": "55",
     "kind": "exponential",
