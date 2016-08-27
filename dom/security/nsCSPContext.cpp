@@ -723,14 +723,14 @@ nsCSPContext::logToConsole(const char16_t* aName,
  *
  * @param aURI
  *        The uri to be stripped for reporting
- * @param aProtectedResourcePrincipal
- *        The loadingPrincipal of the protected resource
+ * @param aSelfURI
+ *        The uri of the protected resource
  *        which is needed to enforce the SOP.
  * @return ASCII serialization of the uri to be reported.
  */
 void
 StripURIForReporting(nsIURI* aURI,
-                     nsIPrincipal* aProtectedResourcePrincipal,
+                     nsIURI* aSelfURI,
                      nsACString& outStrippedURI)
 {
   // 1) If the origin of uri is a globally unique identifier (for example,
@@ -751,9 +751,7 @@ StripURIForReporting(nsIURI* aURI,
 
   // 2) If the origin of uri is not the same as the origin of the protected
   // resource, then return the ASCII serialization of uri’s origin.
-  bool sameOrigin =
-    NS_SUCCEEDED(aProtectedResourcePrincipal->CheckMayLoad(aURI, false, false));
-  if (!sameOrigin) {
+  if (!NS_SecurityCompareURIs(aSelfURI, aURI, false)) {
     // cross origin redirects also fall into this category, see:
     // http://www.w3.org/TR/CSP/#violation-reports
     aURI->GetPrePath(outStrippedURI);
@@ -810,7 +808,7 @@ nsCSPContext::SendReports(nsISupports* aBlockedContentSource,
     nsCOMPtr<nsIURI> uri = do_QueryInterface(aBlockedContentSource);
     // could be a string or URI
     if (uri) {
-      StripURIForReporting(uri, mLoadingPrincipal, reportBlockedURI);
+      StripURIForReporting(uri, mSelfURI, reportBlockedURI);
     } else {
       nsCOMPtr<nsISupportsCString> cstr = do_QueryInterface(aBlockedContentSource);
       if (cstr) {
@@ -827,7 +825,7 @@ nsCSPContext::SendReports(nsISupports* aBlockedContentSource,
 
   // document-uri
   nsAutoCString reportDocumentURI;
-  StripURIForReporting(mSelfURI, mLoadingPrincipal, reportDocumentURI);
+  StripURIForReporting(mSelfURI, mSelfURI, reportDocumentURI);
   report.mCsp_report.mDocument_uri = NS_ConvertUTF8toUTF16(reportDocumentURI);
 
   // original-policy
