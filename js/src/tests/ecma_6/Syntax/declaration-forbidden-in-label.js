@@ -24,10 +24,7 @@ assertThrowsInstanceOf(() => Function("'use strict'; d: function w() {};"), Synt
 // Annex B.3.2 allows this in non-strict mode code.
 Function("e: function x() {};");
 
-
-// This *should* fail, but it doesn't because our function parsing is such a
-// centralized mess.
-Function("f: function* y() {}");
+assertThrowsInstanceOf(() => Function("f: function* y() {}"), SyntaxError);
 
 /******************************************************************************/
 
