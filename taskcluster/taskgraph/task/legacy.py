@@ -180,15 +180,12 @@ def remove_coalescing_from_task(task):
 
     :param task: task definition.
     """
-    patterns = [
-        re.compile("^coalesce.v1.builds.*pgo$"),
-    ]
 
     try:
         payload = task["task"]["payload"]
         routes = task["task"]["routes"]
         removable_routes = [route for route in list(routes)
-                            if any([p.match(route) for p in patterns])]
+                            if route.startswith('coalesce.')]
         if removable_routes:
             # we remove supersederUrl only when we have also routes to remove
             payload.pop("supersederUrl")
