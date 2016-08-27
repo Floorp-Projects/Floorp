@@ -15,14 +15,14 @@ task:
     - 'index.buildbot.revisions.{{head_rev}}.{{project}}.android-x86'
 
   scopes:
-    - 'docker-worker:cache:level-{{level}}-{{project}}-build-android-x86-workspace'
+    - 'docker-worker:cache:level-{{level}}-{{project}}-build-android-x86-opt-workspace'
     - 'docker-worker:cache:tooltool-cache'
     - 'docker-worker:relengapi-proxy:tooltool.download.internal'
     - 'docker-worker:relengapi-proxy:tooltool.download.public'
 
   payload:
     cache:
-      level-{{level}}-{{project}}-build-android-x86-workspace: '/home/worker/workspace'
+      level-{{level}}-{{project}}-build-android-x86-opt-workspace: '/home/worker/workspace'
       tooltool-cache: '/home/worker/tooltool-cache'
 
     features:
