@@ -12,7 +12,9 @@
 #define nsDOMTokenList_h___
 
 #include "nsCOMPtr.h"
+#include "nsContentUtils.h"
 #include "nsDOMString.h"
+#include "nsWhitespaceTokenizer.h"
 #include "nsWrapperCache.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/BindingDeclarations.h"
@@ -33,6 +35,8 @@ class nsDOMTokenList : public nsISupports,
 {
 protected:
   typedef mozilla::dom::Element Element;
+  typedef nsWhitespaceTokenizerTemplate<nsContentUtils::IsHTMLWhitespace>
+    WhitespaceTokenizer;
 
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
