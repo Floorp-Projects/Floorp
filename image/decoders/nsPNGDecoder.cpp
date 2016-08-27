@@ -976,7 +976,7 @@ nsPNGDecoder::frame_info_callback(png_structp png_ptr, png_uint_32 frame_num)
                           png_get_next_frame_height(png_ptr, decoder->mInfo));
   const bool isInterlaced = bool(decoder->interlacebuf);
 
-#ifndef PNGLCONF_H
+#ifndef MOZ_EMBEDDED_LIBPNG
   // if using system library, check frame_width and height against 0
   if (frameRect.width == 0)
     png_error(png_ptr, "Frame width must not be 0");
