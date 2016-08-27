@@ -2260,6 +2260,11 @@ TrackBuffersManager::FindCurrentPosition(TrackInfo::TrackType aTrack,
     if (sampleInterval.ContainsStrict(trackData.mNextSampleTimecode)) {
       return i;
     }
+    if (sampleInterval.mStart > trackData.mNextSampleTimecode) {
+      // Samples are ordered by timecode. There's no need to search
+      // any further.
+      break;
+    }
   }
 
   for (uint32_t i = 0; i < track.Length(); i++) {
@@ -2271,6 +2276,11 @@ TrackBuffersManager::FindCurrentPosition(TrackInfo::TrackType aTrack,
 
     if (sampleInterval.ContainsWithStrictEnd(trackData.mNextSampleTimecode)) {
       return i;
+    }
+    if (sampleInterval.mStart - aFuzz > trackData.mNextSampleTimecode) {
+      // Samples are ordered by timecode. There's no need to search
+      // any further.
+      break;
     }
   }
 
