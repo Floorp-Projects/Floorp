@@ -13,11 +13,11 @@ task:
   scopes:
     - 'docker-worker:cache:tooltool-cache'
     - 'docker-worker:relengapi-proxy:tooltool.download.public'
-    - 'docker-worker:cache:level-{{level}}-{{project}}-build-linux64-haz-workspace'
+    - 'docker-worker:cache:level-{{level}}-{{project}}-build-linux64-haz-debug-workspace'
 
   payload:
     cache:
-      level-{{level}}-{{project}}-build-linux64-haz-workspace: '/home/worker/workspace'
+      level-{{level}}-{{project}}-build-linux64-haz-debug-workspace: '/home/worker/workspace'
       tooltool-cache: '/home/worker/tooltool-cache'
 
     features:
