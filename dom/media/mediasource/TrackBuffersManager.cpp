@@ -2086,8 +2086,10 @@ TrackBuffersManager::SkipToNextRandomAccessPoint(TrackInfo::TrackType aTrack,
   // SkipToNextRandomAccessPoint will not count again the parsed sample as
   // skipped.
   if (aFound) {
-    trackData.mNextSampleTimecode = nextSampleTimecode;
-    trackData.mNextSampleTime = nextSampleTime;
+    trackData.mNextSampleTimecode =
+       TimeUnit::FromMicroseconds(track[i]->mTimecode);
+    trackData.mNextSampleTime =
+       TimeUnit::FromMicroseconds(track[i]->mTime);
     trackData.mNextGetSampleIndex = Some(i);
   } else if (i > 0) {
     // Go back to the previous keyframe or the original position so the next
@@ -2181,11 +2183,28 @@ TrackBuffersManager::GetSample(TrackInfo::TrackType aTrack,
       return nullptr;
     }
     trackData.mNextGetSampleIndex.ref()++;
-    // Estimate decode timestamp of the next sample.
-    trackData.mNextSampleTimecode =
+    // Estimate decode timestamp and timestamp of the next sample.
+    TimeUnit nextSampleTimecode =
       TimeUnit::FromMicroseconds(sample->mTimecode + sample->mDuration);
-    trackData.mNextSampleTime =
+    TimeUnit nextSampleTime =
       TimeUnit::FromMicroseconds(sample->GetEndTime());
+    const MediaRawData* nextSample =
+      GetSample(aTrack,
+                trackData.mNextGetSampleIndex.ref(),
+                nextSampleTimecode,
+                nextSampleTime,
+                aFuzz);
+    if (nextSample) {
+      // We have a valid next sample, can use exact values.
+      trackData.mNextSampleTimecode =
+        TimeUnit::FromMicroseconds(nextSample->mTimecode);
+      trackData.mNextSampleTime =
+        TimeUnit::FromMicroseconds(nextSample->mTime);
+    } else {
+      // Next sample isn't available yet. Use estimates.
+      trackData.mNextSampleTimecode = nextSampleTimecode;
+      trackData.mNextSampleTime = nextSampleTime;
+    }
     aResult = GetSampleResult::NO_ERROR;
     return p.forget();
   }
