@@ -3597,7 +3597,6 @@ GCRuntime::purgeRuntime(AutoLockForExclusiveAccess& lock)
     JSContext* cx = rt->contextFromMainThread();
     cx->caches.gsnCache.purge();
     cx->caches.envCoordinateNameCache.purge();
-    cx->caches.newObjectCache.purge();
     cx->caches.nativeIterCache.purge();
     cx->caches.uncompressedSourceCache.purge();
     if (cx->caches.evalCache.initialized())
@@ -5492,7 +5491,6 @@ GCRuntime::compactPhase(JS::gcreason::Reason reason, SliceBudget& sliceBudget,
 
     // Clear caches that can contain cell pointers.
     JSContext* cx = rt->contextFromMainThread();
-    cx->caches.newObjectCache.purge();
     cx->caches.nativeIterCache.purge();
     if (cx->caches.evalCache.initialized())
         cx->caches.evalCache.clear();
