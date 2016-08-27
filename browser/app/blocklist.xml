@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1471452426000">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1472235999000">
   <emItems>
       <emItem  blockID="i58" id="webmaster@buzzzzvideos.info">
                         <versionRange  minVersion="0" maxVersion="*">
@@ -9,6 +9,12 @@
     </emItem>
       <emItem  blockID="i71" id="youtube@2youtube.com">
                         <versionRange  minVersion="0" maxVersion="*">
+                    </versionRange>
+                    <prefs>
+              </prefs>
+    </emItem>
+      <emItem  blockID="i1229" id="/^(.*@(unblocker\.yt|sparpilot\.com))|axtara@axtara\.com$/">
+                        <versionRange  minVersion="0" maxVersion="*" severity="3">
                     </versionRange>
                     <prefs>
               </prefs>
@@ -155,12 +161,6 @@
     </emItem>
       <emItem  blockID="i5" id="support@daemon-tools.cc">
                         <versionRange  minVersion=" " maxVersion="1.0.0.5">
-                    </versionRange>
-                    <prefs>
-              </prefs>
-    </emItem>
-      <emItem  blockID="i1229" id="/^(.*@(unblocker\.yt|sparpilot\.com|suchpony\.de))|axtara@axtara\.com$/">
-                        <versionRange  minVersion="0" maxVersion="*" severity="3">
                     </versionRange>
                     <prefs>
               </prefs>
@@ -1965,6 +1965,12 @@
                     <prefs>
               </prefs>
     </emItem>
+      <emItem  blockID="i1265" id="@video_downloader_pro">
+                        <versionRange  minVersion="1.2.1" maxVersion="1.2.5" severity="1">
+                    </versionRange>
+                    <prefs>
+              </prefs>
+    </emItem>
       <emItem  blockID="i60" id="youtb3@youtb3.com">
                         <versionRange  minVersion="0" maxVersion="*">
                     </versionRange>
@@ -2131,6 +2137,12 @@
     </emItem>
       <emItem  blockID="i474" id="{906000a4-88d9-4d52-b209-7a772970d91f}">
                         <versionRange  minVersion="0" maxVersion="*" severity="3">
+                    </versionRange>
+                    <prefs>
+              </prefs>
+    </emItem>
+      <emItem  blockID="i1264" id="suchpony@suchpony.de">
+                        <versionRange  minVersion="0" maxVersion="1.6.7" severity="3">
                     </versionRange>
                     <prefs>
               </prefs>
@@ -2779,8 +2791,11 @@
                     <prefs>
               </prefs>
     </emItem>
-      <emItem  blockID="i314" id="crossriderapp8812@crossrider.com">
-                        <versionRange  minVersion="0" maxVersion="*" severity="1">
+      <emItem  blockID="i24" id="{6E19037A-12E3-4295-8915-ED48BC341614}">
+                        <versionRange  minVersion="0.1" maxVersion="1.3.328.4" severity="1">
+                      <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
+                              <versionRange  minVersion="3.7a1pre" maxVersion="*" />
+                          </targetApplication>
                     </versionRange>
                     <prefs>
               </prefs>
@@ -2797,11 +2812,8 @@
                     <prefs>
               </prefs>
     </emItem>
-      <emItem  blockID="i24" id="{6E19037A-12E3-4295-8915-ED48BC341614}">
-                        <versionRange  minVersion="0.1" maxVersion="1.3.328.4" severity="1">
-                      <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
-                              <versionRange  minVersion="3.7a1pre" maxVersion="*" />
-                          </targetApplication>
+      <emItem  blockID="i314" id="crossriderapp8812@crossrider.com">
+                        <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
                     <prefs>
               </prefs>
