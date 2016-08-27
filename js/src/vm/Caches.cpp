@@ -4,13 +4,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "vm/Caches-inl.h"
+#include "vm/Caches.h"
 
 #include "mozilla/PodOperations.h"
 
-using namespace js;
+#include "jscntxt.h"
+#include "jsmath.h"
 
-using mozilla::PodZero;
+using namespace js;
 
 MathCache*
 ContextCaches::createMathCache(JSContext* cx)
@@ -34,19 +35,4 @@ ContextCaches::init()
         return false;
 
     return true;
-}
-
-void
-NewObjectCache::clearNurseryObjects(JSRuntime* rt)
-{
-    for (unsigned i = 0; i < mozilla::ArrayLength(entries); ++i) {
-        Entry& e = entries[i];
-        NativeObject* obj = reinterpret_cast<NativeObject*>(&e.templateObject);
-        if (IsInsideNursery(e.key) ||
-            rt->gc.nursery.isInside(obj->slots_) ||
-            rt->gc.nursery.isInside(obj->elements_))
-        {
-            PodZero(&e);
-        }
-    }
 }

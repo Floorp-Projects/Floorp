@@ -685,10 +685,6 @@ js::Nursery::doCollection(JSRuntime* rt, JS::gcreason::Reason reason,
     }
     maybeEndProfile(ProfileKey::MarkDebugger);
 
-    maybeStartProfile(ProfileKey::ClearNewObjectCache);
-    rt->contextFromMainThread()->caches.newObjectCache.clearNurseryObjects(rt);
-    maybeEndProfile(ProfileKey::ClearNewObjectCache);
-
     // Most of the work is done here. This loop iterates over objects that have
     // been moved to the major heap. If these objects have any outgoing pointers
     // to the nursery, then those nursery objects get moved as well, until no

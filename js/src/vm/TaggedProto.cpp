@@ -12,8 +12,6 @@
 #include "gc/Barrier.h"
 #include "gc/Zone.h"
 
-#include "vm/Caches-inl.h"
-
 namespace js {
 
 /* static */ void
