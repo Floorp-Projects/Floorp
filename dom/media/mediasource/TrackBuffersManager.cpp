@@ -2250,6 +2250,18 @@ TrackBuffersManager::FindCurrentPosition(TrackInfo::TrackType aTrack,
   auto& trackData = GetTracksData(aTrack);
   const TrackBuffer& track = GetTrackBuffer(aTrack);
 
+  // Perform an exact search first.
+  for (uint32_t i = 0; i < track.Length(); i++) {
+    const RefPtr<MediaRawData>& sample = track[i];
+    TimeInterval sampleInterval{
+      TimeUnit::FromMicroseconds(sample->mTimecode),
+      TimeUnit::FromMicroseconds(sample->mTimecode + sample->mDuration)};
+
+    if (sampleInterval.ContainsStrict(trackData.mNextSampleTimecode)) {
+      return i;
+    }
+  }
+
   for (uint32_t i = 0; i < track.Length(); i++) {
     const RefPtr<MediaRawData>& sample = track[i];
     TimeInterval sampleInterval{
