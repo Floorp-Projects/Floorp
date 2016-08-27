@@ -581,6 +581,15 @@ public:
     return false;
   }
 
+  bool ContainsStrict(const ElemType& aInterval) const {
+    for (const auto& interval : mIntervals) {
+      if (interval.ContainsStrict(aInterval)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   bool Contains(const T& aX) const {
     for (const auto& interval : mIntervals) {
       if (interval.Contains(aX)) {
