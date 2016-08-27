@@ -71,6 +71,16 @@ nsCSSClipPathInstance::ComputeSVGReferenceRect()
   // For SVG elements without associated CSS layout box, the used value for
   // content-box, padding-box, border-box and margin-box is fill-box.
   switch (mClipPathStyle.GetReferenceBox()) {
+    case StyleClipPathGeometryBox::Stroke: {
+      // XXX Bug 1299876
+      // The size of srtoke-box is not correct if this graphic element has
+      // specific stroke-linejoin or stroke-linecap.
+      gfxRect bbox = nsSVGUtils::GetBBox(mTargetFrame,
+                nsSVGUtils::eBBoxIncludeFill | nsSVGUtils::eBBoxIncludeStroke);
+      r = nsLayoutUtils::RoundGfxRectToAppRect(bbox,
+                                         nsPresContext::AppUnitsPerCSSPixel());
+      break;
+    }
     case StyleClipPathGeometryBox::View: {
       nsIContent* content = mTargetFrame->GetContent();
       nsSVGElement* element = static_cast<nsSVGElement*>(content);
