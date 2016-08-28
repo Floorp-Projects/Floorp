@@ -6403,6 +6403,7 @@ JSOpFromPropertyType(PropertyType propType)
       case PropertyType::Normal:
       case PropertyType::Method:
       case PropertyType::GeneratorMethod:
+      case PropertyType::AsyncMethod:
       case PropertyType::Constructor:
       case PropertyType::DerivedConstructor:
         return JSOP_INITPROP;
@@ -6424,8 +6425,8 @@ FunctionSyntaxKindFromPropertyType(PropertyType propType)
       case PropertyType::SetterNoExpressionClosure:
         return SetterNoExpressionClosure;
       case PropertyType::Method:
-        return Method;
       case PropertyType::GeneratorMethod:
+      case PropertyType::AsyncMethod:
         return Method;
       case PropertyType::Constructor:
         return ClassConstructor;
@@ -6439,7 +6440,19 @@ FunctionSyntaxKindFromPropertyType(PropertyType propType)
 static GeneratorKind
 GeneratorKindFromPropertyType(PropertyType propType)
 {
-    return propType == PropertyType::GeneratorMethod ? StarGenerator : NotGenerator;
+    if (propType == PropertyType::GeneratorMethod)
+        return StarGenerator;
+    if (propType == PropertyType::AsyncMethod)
+        return StarGenerator;
+    return NotGenerator;
+}
+
+static FunctionAsyncKind
+AsyncKindFromPropertyType(PropertyType propType)
+{
+    if (propType == PropertyType::AsyncMethod)
+        return AsyncFunction;
+    return SyncFunction;
 }
 
 template <typename ParseHandler>
@@ -6553,6 +6566,7 @@ Parser<ParseHandler>::classDefinition(YieldHandling yieldHandling,
 
         if (propType != PropertyType::Getter && propType != PropertyType::Setter &&
             propType != PropertyType::Method && propType != PropertyType::GeneratorMethod &&
+            propType != PropertyType::AsyncMethod &&
             propType != PropertyType::Constructor && propType != PropertyType::DerivedConstructor)
         {
             report(ParseError, false, null(), JSMSG_BAD_METHOD_DEF);
@@ -8742,10 +8756,29 @@ Parser<ParseHandler>::propertyName(YieldHandling yieldHandling, Node propList,
     MOZ_ASSERT(ltok != TOK_RC, "caller should have handled TOK_RC");
 
     bool isGenerator = false;
+    bool isAsync = false;
     if (ltok == TOK_MUL) {
         isGenerator = true;
         if (!tokenStream.getToken(&ltok, TokenStream::KeywordIsName))
             return null();
+    }
+
+    if (ltok == TOK_NAME && tokenStream.currentName() == context->names().async) {
+        TokenKind tt;
+        if (!tokenStream.getToken(&tt, TokenStream::KeywordIsName))
+            return null();
+        if (tt != TOK_LP && tt != TOK_COLON) {
+            isAsync = true;
+            ltok = tt;
+        } else {
+            tokenStream.ungetToken();
+            tokenStream.addModifierException(TokenStream::NoneIsKeywordIsName);
+        }
+    }
+
+    if (isAsync && isGenerator) {
+        report(ParseError, false, null(), JSMSG_ASYNC_GENERATOR);
+        return null();
     }
 
     propAtom.set(nullptr);
@@ -8769,7 +8802,7 @@ Parser<ParseHandler>::propertyName(YieldHandling yieldHandling, Node propList,
       case TOK_NAME: {
         propAtom.set(tokenStream.currentName());
         // Do not look for accessor syntax on generators
-        if (isGenerator ||
+        if (isGenerator || isAsync ||
             !(propAtom.get() == context->names().get ||
               propAtom.get() == context->names().set))
         {
@@ -8888,7 +8921,12 @@ Parser<ParseHandler>::propertyName(YieldHandling yieldHandling, Node propList,
 
     if (tt == TOK_LP) {
         tokenStream.ungetToken();
-        *propType = isGenerator ? PropertyType::GeneratorMethod : PropertyType::Method;
+        if (isGenerator)
+            *propType = PropertyType::GeneratorMethod;
+        else if (isAsync)
+            *propType = PropertyType::AsyncMethod;
+        else
+            *propType = PropertyType::Method;
         return propName;
     }
 
@@ -9120,8 +9158,9 @@ Parser<ParseHandler>::methodDefinition(PropertyType propType, HandleAtom funName
 {
     FunctionSyntaxKind kind = FunctionSyntaxKindFromPropertyType(propType);
     GeneratorKind generatorKind = GeneratorKindFromPropertyType(propType);
-    YieldHandling yieldHandling = GetYieldHandling(generatorKind, SyncFunction);
-    return functionDefinition(InAllowed, yieldHandling, funName, kind, generatorKind, SyncFunction);
+    FunctionAsyncKind asyncKind = AsyncKindFromPropertyType(propType);
+    YieldHandling yieldHandling = GetYieldHandling(generatorKind, asyncKind);
+    return functionDefinition(InAllowed, yieldHandling, funName, kind, generatorKind, asyncKind);
 }
 
 template <typename ParseHandler>
