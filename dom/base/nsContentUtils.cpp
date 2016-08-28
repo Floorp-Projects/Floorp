@@ -186,7 +186,6 @@
 #include "nsSandboxFlags.h"
 #include "nsScriptSecurityManager.h"
 #include "nsStreamUtils.h"
-#include "nsSVGFeatures.h"
 #include "nsTextEditorState.h"
 #include "nsTextFragment.h"
 #include "nsTextNode.h"
@@ -6990,28 +6989,6 @@ nsContentUtils::GetHTMLEditor(nsPresContext* aPresContext)
   nsCOMPtr<nsIEditor> editor;
   docShell->GetEditor(getter_AddRefs(editor));
   return editor;
-}
-
-bool
-nsContentUtils::InternalIsSupported(nsISupports* aObject,
-                                    const nsAString& aFeature,
-                                    const nsAString& aVersion)
-{
-  // If it looks like an SVG feature string, forward to nsSVGFeatures
-  if (StringBeginsWith(aFeature,
-                       NS_LITERAL_STRING("http://www.w3.org/TR/SVG"),
-                       nsASCIICaseInsensitiveStringComparator()) ||
-      StringBeginsWith(aFeature, NS_LITERAL_STRING("org.w3c.dom.svg"),
-                       nsASCIICaseInsensitiveStringComparator()) ||
-      StringBeginsWith(aFeature, NS_LITERAL_STRING("org.w3c.svg"),
-                       nsASCIICaseInsensitiveStringComparator())) {
-    return (aVersion.IsEmpty() || aVersion.EqualsLiteral("1.0") ||
-            aVersion.EqualsLiteral("1.1")) &&
-           nsSVGFeatures::HasFeature(aObject, aFeature);
-  }
-
-  // Otherwise, we claim to support everything
-  return true;
 }
 
 bool
