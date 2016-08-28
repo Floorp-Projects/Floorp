@@ -93,6 +93,7 @@ enum UnaryOperator {
     UNOP_BITNOT,
     UNOP_TYPEOF,
     UNOP_VOID,
+    UNOP_AWAIT,
 
     UNOP_LIMIT
 };
@@ -162,7 +163,8 @@ static const char* const unopNames[] = {
     "!",       /* UNOP_NOT */
     "~",       /* UNOP_BITNOT */
     "typeof",  /* UNOP_TYPEOF */
-    "void"     /* UNOP_VOID */
+    "void",    /* UNOP_VOID */
+    "await"    /* UNOP_AWAIT */
 };
 
 static const char* const nodeTypeNames[] = {
@@ -1883,6 +1885,9 @@ ASTSerializer::unop(ParseNodeKind kind, JSOp op)
     if (IsTypeofKind(kind))
         return UNOP_TYPEOF;
 
+    if (kind == PNK_AWAIT)
+        return UNOP_AWAIT;
+
     switch (op) {
       case JSOP_NEG:
         return UNOP_NEG;
@@ -2910,7 +2915,7 @@ ASTSerializer::expression(ParseNode* pn, MutableHandleValue dst)
         return leftAssociate(pn, dst);
 
       case PNK_POW:
-	return rightAssociate(pn, dst);
+        return rightAssociate(pn, dst);
 
       case PNK_DELETENAME:
       case PNK_DELETEPROP:
@@ -2922,6 +2927,7 @@ ASTSerializer::expression(ParseNode* pn, MutableHandleValue dst)
       case PNK_NOT:
       case PNK_BITNOT:
       case PNK_POS:
+      case PNK_AWAIT:
       case PNK_NEG: {
         MOZ_ASSERT(pn->pn_pos.encloses(pn->pn_kid->pn_pos));
 
