@@ -2542,6 +2542,12 @@ void MediaDecoderStateMachine::UpdateNextFrameStatus()
 
   if (status != mNextFrameStatus) {
     DECODER_LOG("Changed mNextFrameStatus to %s", statusString);
+    if(status == MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE_BUFFERING ||
+       status == MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE) {
+      // Ensure currentTime is up to date prior updating mNextFrameStatus so that
+      // the MediaDecoderOwner fire events at correct currentTime.
+      UpdatePlaybackPositionPeriodically();
+    }
   }
 
   mNextFrameStatus = status;
