@@ -315,6 +315,11 @@ class ParseContext : public Nestable<ParseContext>
     static const uint32_t NoYieldOffset = UINT32_MAX;
     uint32_t lastYieldOffset;
 
+    // lastAwaitOffset stores the offset of the last await that was parsed.
+    // NoAwaitOffset is its initial value.
+    static const uint32_t NoAwaitOffset = UINT32_MAX;
+    uint32_t         lastAwaitOffset;
+
     // All inner functions in this context. Only used when syntax parsing.
     Rooted<GCVector<JSFunction*, 8>> innerFunctionsForLazy;
 
@@ -358,6 +363,7 @@ class ParseContext : public Nestable<ParseContext>
         isStandaloneFunctionBody_(false),
         superScopeNeedsHomeObject_(false),
         lastYieldOffset(NoYieldOffset),
+        lastAwaitOffset(NoAwaitOffset),
         innerFunctionsForLazy(prs->context, GCVector<JSFunction*, 8>(prs->context)),
         newDirectives(newDirectives),
         funHasReturnExpr(false),
@@ -989,6 +995,7 @@ class Parser final : private JS::AutoGCRooter, public StrictModeGetter
     inline Node newName(PropertyName* name);
     inline Node newName(PropertyName* name, TokenPos pos);
     inline Node newYieldExpression(uint32_t begin, Node expr, bool isYieldStar = false);
+    inline Node newAwaitExpression(uint32_t begin, Node expr);
 
     inline bool abortIfSyntaxParser();
 
@@ -1185,7 +1192,7 @@ class Parser final : private JS::AutoGCRooter, public StrictModeGetter
     Node assignExpr(InHandling inHandling, YieldHandling yieldHandling,
                     TripledotHandling tripledotHandling, PossibleError* possibleError = nullptr,
                     InvokedPrediction invoked = PredictUninvoked);
-    Node assignExprWithoutYield(YieldHandling yieldHandling, unsigned err);
+    Node assignExprWithoutYieldOrAwait(YieldHandling yieldHandling);
     Node yieldExpression(InHandling inHandling);
     Node condExpr1(InHandling inHandling, YieldHandling yieldHandling,
                    TripledotHandling tripledotHandling,
@@ -1246,8 +1253,8 @@ class Parser final : private JS::AutoGCRooter, public StrictModeGetter
     bool argumentList(YieldHandling yieldHandling, Node listNode, bool* isSpread);
     Node destructuringDeclaration(DeclarationKind kind, YieldHandling yieldHandling,
                                   TokenKind tt);
-    Node destructuringDeclarationWithoutYield(DeclarationKind kind, YieldHandling yieldHandling,
-                                              TokenKind tt, unsigned msg);
+    Node destructuringDeclarationWithoutYieldOrAwait(DeclarationKind kind, YieldHandling yieldHandling,
+                                                     TokenKind tt);
 
     bool namedImportsOrNamespaceImport(TokenKind tt, Node importSpecSet);
     bool checkExportedName(JSAtom* exportName);
