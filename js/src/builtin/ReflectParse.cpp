@@ -466,7 +466,7 @@ class NodeBuilder
     MOZ_MUST_USE bool function(ASTType type, TokenPos* pos,
                                HandleValue id, NodeVector& args, NodeVector& defaults,
                                HandleValue body, HandleValue rest, GeneratorStyle generatorStyle,
-                               bool isExpression, MutableHandleValue dst);
+                               bool isAsync, bool isExpression, MutableHandleValue dst);
 
     MOZ_MUST_USE bool variableDeclarator(HandleValue id, HandleValue init, TokenPos* pos,
                                          MutableHandleValue dst);
@@ -1590,7 +1590,7 @@ bool
 NodeBuilder::function(ASTType type, TokenPos* pos,
                       HandleValue id, NodeVector& args, NodeVector& defaults,
                       HandleValue body, HandleValue rest,
-                      GeneratorStyle generatorStyle, bool isExpression,
+                      GeneratorStyle generatorStyle, bool isAsync, bool isExpression,
                       MutableHandleValue dst)
 {
     RootedValue array(cx), defarray(cx);
@@ -1601,6 +1601,7 @@ NodeBuilder::function(ASTType type, TokenPos* pos,
 
     bool isGenerator = generatorStyle != GeneratorStyle::None;
     RootedValue isGeneratorVal(cx, BooleanValue(isGenerator));
+    RootedValue isAsyncVal(cx, BooleanValue(isAsync));
     RootedValue isExpressionVal(cx, BooleanValue(isExpression));
 
     RootedValue cb(cx, callbacks[type]);
@@ -1624,6 +1625,7 @@ NodeBuilder::function(ASTType type, TokenPos* pos,
                        "body", body,
                        "rest", rest,
                        "generator", isGeneratorVal,
+                       "async", isAsyncVal,
                        "style", styleVal,
                        "expression", isExpressionVal,
                        dst);
@@ -1636,6 +1638,7 @@ NodeBuilder::function(ASTType type, TokenPos* pos,
                    "body", body,
                    "rest", rest,
                    "generator", isGeneratorVal,
+                   "async", isAsyncVal,
                    "expression", isExpressionVal,
                    dst);
 }
@@ -3396,6 +3399,7 @@ ASTSerializer::function(ParseNode* pn, ASTType type, MutableHandleValue dst)
            : GeneratorStyle::ES6)
         : GeneratorStyle::None;
 
+    bool isAsync = pn->pn_funbox->isAsync();
     bool isExpression =
 #if JS_HAS_EXPR_CLOSURES
         func->isExprBody();
@@ -3417,8 +3421,8 @@ ASTSerializer::function(ParseNode* pn, ASTType type, MutableHandleValue dst)
     else
         rest.setNull();
     return functionArgsAndBody(pn->pn_body, args, defaults, &body, &rest) &&
-        builder.function(type, &pn->pn_pos, id, args, defaults, body,
-                         rest, generatorStyle, isExpression, dst);
+           builder.function(type, &pn->pn_pos, id, args, defaults, body,
+                            rest, generatorStyle, isAsync, isExpression, dst);
 }
 
 bool
