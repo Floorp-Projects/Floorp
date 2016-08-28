@@ -857,7 +857,7 @@ Parser<ParseHandler>::isValidStrictBinding(PropertyName* name)
            name != context->names().arguments &&
            name != context->names().let &&
            name != context->names().static_ &&
-           !IsKeyword(name);
+           !(IsKeyword(name) && name != context->names().await);
 }
 
 /*
@@ -2734,10 +2734,9 @@ Parser<ParseHandler>::functionArguments(YieldHandling yieldHandling, FunctionSyn
 
                 funbox->hasDestructuringArgs = true;
 
-                Node destruct = destructuringDeclarationWithoutYield(
+                Node destruct = destructuringDeclarationWithoutYieldOrAwait(
                     DeclarationKind::FormalParameter,
-                    yieldHandling, tt,
-                    JSMSG_YIELD_IN_DEFAULT);
+                    yieldHandling, tt);
                 if (!destruct)
                     return false;
 
@@ -2806,7 +2805,7 @@ Parser<ParseHandler>::functionArguments(YieldHandling yieldHandling, FunctionSyn
                 }
                 funbox->hasParameterExprs = true;
 
-                Node def_expr = assignExprWithoutYield(yieldHandling, JSMSG_YIELD_IN_DEFAULT);
+                Node def_expr = assignExprWithoutYieldOrAwait(yieldHandling);
                 if (!def_expr)
                     return false;
                 if (!handler.setLastFunctionFormalParameterDefault(funcpn, def_expr))
@@ -3351,6 +3350,7 @@ Parser<ParseHandler>::functionFormalParametersAndBody(InHandling inHandling,
     FunctionBox* funbox = pc->functionBox();
     RootedFunction fun(context, funbox->function());
 
+    AutoAwaitIsKeyword awaitIsKeyword(&tokenStream, funbox->isAsync());
     if (!functionArguments(yieldHandling, kind, pn))
         return false;
 
@@ -4164,16 +4164,22 @@ Parser<ParseHandler>::destructuringDeclaration(DeclarationKind kind, YieldHandli
 
 template <typename ParseHandler>
 typename ParseHandler::Node
-Parser<ParseHandler>::destructuringDeclarationWithoutYield(DeclarationKind kind,
-                                                           YieldHandling yieldHandling,
-                                                           TokenKind tt, unsigned msg)
+Parser<ParseHandler>::destructuringDeclarationWithoutYieldOrAwait(DeclarationKind kind,
+                                                                  YieldHandling yieldHandling,
+                                                                  TokenKind tt)
 {
     uint32_t startYieldOffset = pc->lastYieldOffset;
+    uint32_t startAwaitOffset = pc->lastAwaitOffset;
     Node res = destructuringDeclaration(kind, yieldHandling, tt);
-    if (res && pc->lastYieldOffset != startYieldOffset) {
-        reportWithOffset(ParseError, false, pc->lastYieldOffset,
-                         msg, js_yield_str);
-        return null();
+    if (res) {
+        if (pc->lastYieldOffset != startYieldOffset) {
+            reportWithOffset(ParseError, false, pc->lastYieldOffset, JSMSG_YIELD_IN_DEFAULT);
+            return null();
+        }
+        if (pc->lastAwaitOffset != startAwaitOffset) {
+            reportWithOffset(ParseError, false, pc->lastAwaitOffset, JSMSG_AWAIT_IN_DEFAULT);
+            return null();
+        }
     }
     return res;
 }
@@ -5868,6 +5874,16 @@ Parser<ParseHandler>::newYieldExpression(uint32_t begin, typename ParseHandler::
     if (isYieldStar)
         return handler.newYieldStarExpression(begin, expr, generator);
     return handler.newYieldExpression(begin, expr, generator);
+}
+
+template <typename ParseHandler>
+typename ParseHandler::Node
+Parser<ParseHandler>::newAwaitExpression(uint32_t begin, typename ParseHandler::Node expr)
+{
+    Node generator = newDotGeneratorName();
+    if (!generator)
+        return null();
+    return handler.newAwaitExpression(begin, expr, generator);
 }
 
 template <typename ParseHandler>
@@ -7790,6 +7806,21 @@ Parser<ParseHandler>::unaryExpr(YieldHandling yieldHandling, TripledotHandling t
         return handler.newDelete(begin, expr);
       }
 
+      case TOK_AWAIT: {
+        TokenKind nextSameLine = TOK_EOF;
+        if (!tokenStream.peekTokenSameLine(&nextSameLine, TokenStream::Operand))
+            return null();
+        if (nextSameLine != TOK_EOL) {
+            Node kid = unaryExpr(yieldHandling, tripledotHandling, possibleError, invoked);
+            if (!kid)
+                return null();
+            pc->lastAwaitOffset = begin;
+            return newAwaitExpression(begin, kid);
+        }
+        report(ParseError, false, null(), JSMSG_LINE_BREAK_AFTER_AWAIT);
+        return null();
+      }
+
       default: {
         Node pn = memberExpr(yieldHandling, tripledotHandling, tt, /* allowCallSyntax = */ true,
                              possibleError, invoked);
@@ -8119,14 +8150,20 @@ Parser<ParseHandler>::generatorComprehension(uint32_t begin)
 
 template <typename ParseHandler>
 typename ParseHandler::Node
-Parser<ParseHandler>::assignExprWithoutYield(YieldHandling yieldHandling, unsigned msg)
+Parser<ParseHandler>::assignExprWithoutYieldOrAwait(YieldHandling yieldHandling)
 {
     uint32_t startYieldOffset = pc->lastYieldOffset;
+    uint32_t startAwaitOffset = pc->lastAwaitOffset;
     Node res = assignExpr(InAllowed, yieldHandling, TripledotProhibited);
-    if (res && pc->lastYieldOffset != startYieldOffset) {
-        reportWithOffset(ParseError, false, pc->lastYieldOffset,
-                         msg, js_yield_str);
-        return null();
+    if (res) {
+        if (pc->lastYieldOffset != startYieldOffset) {
+            reportWithOffset(ParseError, false, pc->lastYieldOffset, JSMSG_YIELD_IN_DEFAULT);
+            return null();
+        }
+        if (pc->lastAwaitOffset != startAwaitOffset) {
+            reportWithOffset(ParseError, false, pc->lastAwaitOffset, JSMSG_AWAIT_IN_DEFAULT);
+            return null();
+        }
     }
     return res;
 }
