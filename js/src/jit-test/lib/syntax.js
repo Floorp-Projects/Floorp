@@ -1231,4 +1231,33 @@ function test_syntax(postfixes, check_error, ignore_opts) {
   test("async function A(a) { await await await X ");
   test("async function A(a) { await await await X; ");
   test("async function A(a) { await await await X; } ");
+
+  // async/await function expression
+
+  test("(async ");
+  test("(async function ");
+  test("(async function A ");
+  test("(async function A( ");
+  test("(async function A() ");
+  test("(async function A(a ");
+  test("(async function A(a) ");
+  test("(async function A(a) { ");
+  test("(async function A(a) {} ");
+  test("(async function A(a) { await ");
+  test("(async function A(a) { await X ");
+  test("(async function A(a) { await X; ");
+  test("(async function A(a) { await X; } ");
+  test("(async function A(a) { await X; }) ");
+
+  test("(async function ( ");
+  test("(async function () ");
+  test("(async function (a ");
+  test("(async function (a) ");
+  test("(async function (a) { ");
+  test("(async function (a) {} ");
+  test("(async function (a) { await ");
+  test("(async function (a) { await X ");
+  test("(async function (a) { await X; ");
+  test("(async function (a) { await X; } ");
+  test("(async function (a) { await X; }) ");
 }

@@ -14,9 +14,17 @@ if (typeof Reflect !== "undefined" && Reflect.parse) {
     // No line terminator after async
     assertEq(Reflect.parse("async\nfunction a(){}").body[0].expression.name, "async");
 
+    // Async function expressions
+    assertEq(Reflect.parse("(async function() {})()").body[0].expression.callee.async, true);
+    assertEq(Reflect.parse("var k = async function() {}").body[0].declarations[0].init.async, true);
+    assertEq(Reflect.parse("var nmd = async function named() {}").body[0].declarations[0].init.id.name, "named");
+
     // `await` handling for function declaration name inherits.
     assertEq(Reflect.parse("async function await() {}").body[0].id.name, "await");
     assertThrows(() => Reflect.parse("async function f() { async function await() {} }"), SyntaxError);
+
+    // `await` is not allowed in function expression name.
+    assertThrows(() => Reflect.parse("(async function await() {})"), SyntaxError);
 
     // Awaiting not directly inside an async function is not allowed
     assertThrows(() => Reflect.parse("await 4;"), SyntaxError);
@@ -71,6 +79,9 @@ if (typeof Reflect !== "undefined" && Reflect.parse) {
     // blocks and other constructions
     assertEq(Reflect.parse("{ async function a() { return 2; } }")
         .body[0].body[0].async, true);
+
+    // Async function expression is primary expression.
+    Reflect.parse("(async function a() {}.constructor)");
 }
 
 if (typeof reportCompare === "function")
