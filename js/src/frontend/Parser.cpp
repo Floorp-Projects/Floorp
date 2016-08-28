@@ -2274,6 +2274,7 @@ Parser<FullParseHandler>::standaloneFunctionBody(HandleFunction fun,
     funbox->hasDuplicateParameters = duplicatedParam;
 
     YieldHandling yieldHandling = GetYieldHandling(generatorKind, asyncKind);
+    AutoAwaitIsKeyword awaitIsKeyword(&tokenStream, asyncKind == AsyncFunction);
     ParseNode* pn = functionBody(InAllowed, yieldHandling, Statement, StatementListBody);
     if (!pn)
         return null();
@@ -2539,6 +2540,10 @@ Parser<ParseHandler>::newFunction(HandleAtom atom, FunctionSyntaxKind kind,
                  ? JSFunction::INTERPRETED_NORMAL
                  : JSFunction::INTERPRETED_GENERATOR);
     }
+
+    // We store the async wrapper in a slot for later access.
+    if (asyncKind == AsyncFunction)
+        allocKind = gc::AllocKind::FUNCTION_EXTENDED;
 
     fun = NewFunctionWithProto(context, nullptr, 0, flags, nullptr, atom, proto,
                                allocKind, TenuredObject);

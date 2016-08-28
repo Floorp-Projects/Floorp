@@ -68,6 +68,11 @@ CompileStarGeneratorBody(JSContext* cx, MutableHandleFunction fun,
                          const ReadOnlyCompileOptions& options,
                          Handle<PropertyNameVector> formals, JS::SourceBufferHolder& srcBuf);
 
+MOZ_MUST_USE bool
+CompileAsyncFunctionBody(JSContext* cx, MutableHandleFunction fun,
+                         const ReadOnlyCompileOptions& options,
+                         Handle<PropertyNameVector> formals, JS::SourceBufferHolder& srcBuf);
+
 ScriptSourceObject*
 CreateScriptSourceObject(ExclusiveContext* cx, const ReadOnlyCompileOptions& options);
 
