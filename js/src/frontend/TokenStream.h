@@ -32,6 +32,8 @@ struct KeywordInfo;
 namespace js {
 namespace frontend {
 
+class AutoAwaitIsKeyword;
+
 struct TokenPos {
     uint32_t    begin;  // Offset of the token's first char.
     uint32_t    end;    // Offset of 1 past the token's last char.
@@ -431,6 +433,7 @@ class MOZ_STACK_CLASS TokenStream
     };
 
     bool awaitIsKeyword = false;
+    friend class AutoAwaitIsKeyword;
 
   public:
     typedef Token::Modifier Modifier;
@@ -1015,6 +1018,25 @@ class MOZ_STACK_CLASS TokenStream
     ExclusiveContext*   const cx;
     bool                mutedErrors;
     StrictModeGetter*   strictModeGetter;  // used to test for strict mode
+};
+
+class MOZ_STACK_CLASS AutoAwaitIsKeyword
+{
+private:
+    TokenStream* ts_;
+    bool oldAwaitIsKeyword_;
+
+public:
+    AutoAwaitIsKeyword(TokenStream* ts, bool awaitIsKeyword) {
+        ts_ = ts;
+        oldAwaitIsKeyword_ = ts_->awaitIsKeyword;
+        ts_->awaitIsKeyword = awaitIsKeyword;
+    }
+
+    ~AutoAwaitIsKeyword() {
+        ts_->awaitIsKeyword = oldAwaitIsKeyword_;
+        ts_ = nullptr;
+    }
 };
 
 extern const char*
