@@ -2615,6 +2615,7 @@ JSScript::initFromFunctionBox(ExclusiveContext* cx, HandleScript script,
 
     script->isGeneratorExp_ = funbox->isGenexpLambda;
     script->setGeneratorKind(funbox->generatorKind());
+    script->setAsyncKind(funbox->asyncKind());
 
     PositionalFormalParameterIter fi(script);
     while (fi && !fi.closedOver())
@@ -3272,6 +3273,7 @@ js::detail::CopyScript(JSContext* cx, HandleScript src, HandleScript dst,
     dst->isDerivedClassConstructor_ = src->isDerivedClassConstructor();
     dst->needsHomeObject_ = src->needsHomeObject();
     dst->isDefaultClassConstructor_ = src->isDefaultClassConstructor();
+    dst->isAsync_ = src->asyncKind() == AsyncFunction;
 
     if (nconsts != 0) {
         GCPtrValue* vector = Rebase<GCPtrValue>(dst, src, src->consts()->vector);
@@ -4004,6 +4006,7 @@ LazyScript::Create(ExclusiveContext* cx, HandleFunction fun,
     p.version = version;
     p.shouldDeclareArguments = false;
     p.hasThisBinding = false;
+    p.isAsync = false;
     p.numClosedOverBindings = closedOverBindings.length();
     p.numInnerFunctions = innerFunctions.length();
     p.generatorKindBits = GeneratorKindAsBits(NotGenerator);

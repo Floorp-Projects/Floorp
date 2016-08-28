@@ -498,6 +498,10 @@ class ParseContext : public Nestable<ParseContext>
         return generatorKind() == StarGenerator;
     }
 
+    bool isAsync() const {
+        return sc_->isFunctionBox() && sc_->asFunctionBox()->isAsync();
+    }
+
     bool isArrowFunction() const {
         return sc_->isFunctionBox() && sc_->asFunctionBox()->function()->isArrow();
     }
@@ -940,7 +944,8 @@ class Parser final : private JS::AutoGCRooter, public StrictModeGetter
      */
     ObjectBox* newObjectBox(JSObject* obj);
     FunctionBox* newFunctionBox(Node fn, JSFunction* fun, Directives directives,
-                                GeneratorKind generatorKind, bool tryAnnexB);
+                                GeneratorKind generatorKind, FunctionAsyncKind asyncKind,
+                                bool tryAnnexB);
 
     /*
      * Create a new function object given a name (which is optional if this is

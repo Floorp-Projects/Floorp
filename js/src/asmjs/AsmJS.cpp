@@ -7068,7 +7068,7 @@ ParseFunction(ModuleValidator& m, ParseNode** fnOut, unsigned* line)
     ParseContext* outerpc = m.parser().pc;
     Directives directives(outerpc);
     FunctionBox* funbox = m.parser().newFunctionBox(fn, fun, directives, NotGenerator,
-                                                    /* tryAnnexB = */ false);
+                                                    SyncFunction, /* tryAnnexB = */ false);
     if (!funbox)
         return false;
     funbox->initWithEnclosingParseContext(outerpc, frontend::Statement);
