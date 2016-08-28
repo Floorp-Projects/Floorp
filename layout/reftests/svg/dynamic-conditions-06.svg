@@ -12,7 +12,7 @@
       var svg = document.documentElement;
       svg.suspendRedraw(10000);
       setTimeout(function() {
-        svg.setAttribute("requiredFeatures", "x");
+        svg.setAttribute("systemLanguage", "x");
         svg.unsuspendRedrawAll();
         setTimeout(function() {
           svg.removeAttribute("class");

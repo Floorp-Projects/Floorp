@@ -137,10 +137,6 @@ fuzzy-if(B2G,68,4) == list-simple-1.html list-simple-1-ref.html
 == svg-image-recursive-2a.svg  svg-image-recursive-2-ref.svg
 == svg-image-recursive-2b.html svg-image-recursive-2-ref.svg
 
-# test that scripting feature is not supported in images or referenced documents
-skip-if(B2G||Mulet) == svg-image-script-1.svg lime100x100.svg # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
-== svg-image-script-2.svg lime100x100.svg
-
 # tests for external resources vs. data URIs in SVG as an image
 == svg-image-datauri-1.html            lime100x100.svg
 HTTP == svg-image-datauri-1.html       lime100x100.svg
