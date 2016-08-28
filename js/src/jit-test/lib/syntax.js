@@ -1298,4 +1298,59 @@ function test_syntax(postfixes, check_error, ignore_opts) {
   test("class X { static async m() ");
   test("class X { static async m() { ");
   test("class X { static async m() {} ");
+
+  // async/await arrow
+
+  test("(async a ");
+  test("(async a => ");
+  test("(async a => b ");
+  test("(async a => b) ");
+
+  test("(async a => { ");
+  test("(async a => { b ");
+  test("(async a => { b } ");
+  test("(async a => { b }) ");
+
+  test("(async ( ");
+  test("(async (a ");
+  test("(async (a) ");
+  test("(async (a) => ");
+  test("(async (a) => b ");
+  test("(async (a) => b) ");
+  test("(async (a, ");
+  test("(async (a, b ");
+  test("(async (a, b) ");
+  test("(async (a, b) => ");
+  test("(async (a, b) => b ");
+  test("(async (a, b) => b) ");
+
+  test("(async ([ ");
+  test("(async ([a ");
+  test("(async ([a] ");
+  test("(async ([a]) ");
+  test("(async ([a]) => ");
+  test("(async ([a]) => b ");
+  test("(async ([a]) => b) ");
+  test("(async ([a, ");
+  test("(async ([a, b ");
+  test("(async ([a, b] ");
+  test("(async ([a, b]) ");
+  test("(async ([a, b]) => ");
+  test("(async ([a, b]) => b ");
+  test("(async ([a, b]) => b) ");
+
+  test("(async ({ ");
+  test("(async ({a ");
+  test("(async ({a} ");
+  test("(async ({a}) ");
+  test("(async ({a}) => ");
+  test("(async ({a}) => b ");
+  test("(async ({a}) => b) ");
+  test("(async ({a, ");
+  test("(async ({a, b ");
+  test("(async ({a, b} ");
+  test("(async ({a, b}) ");
+  test("(async ({a, b}) => ");
+  test("(async ({a, b}) => b ");
+  test("(async ({a, b}) => b) ");
 }
