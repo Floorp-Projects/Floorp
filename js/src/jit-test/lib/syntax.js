@@ -1232,6 +1232,20 @@ function test_syntax(postfixes, check_error, ignore_opts) {
   test("async function A(a) { await await await X; ");
   test("async function A(a) { await await await X; } ");
 
+  opts = { no_fun: true, no_eval: true, module: true };
+  test("export default async ", opts);
+  test("export default async function ", opts);
+  test("export default async function ( ", opts);
+  test("export default async function () ", opts);
+  test("export default async function (a ", opts);
+  test("export default async function (a) ", opts);
+  test("export default async function (a) { ", opts);
+  test("export default async function (a) {} ", opts);
+  test("export default async function (a) { await ", opts);
+  test("export default async function (a) { await X ", opts);
+  test("export default async function (a) { await X; ", opts);
+  test("export default async function (a) { await X; } ", opts);
+
   // async/await function expression
 
   test("(async ");
