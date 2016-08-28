@@ -806,7 +806,7 @@ BlockReflowInput::FlowAndPlaceFloat(nsIFrame* aFloat)
     }
 
     // Nope. try to advance to the next band.
-    if (NS_STYLE_DISPLAY_TABLE != floatDisplay->mDisplay ||
+    if (StyleDisplay::Table != floatDisplay->mDisplay ||
           eCompatibility_NavQuirks != mPresContext->CompatibilityMode() ) {
 
       mBCoord += floatAvailableSpace.mRect.BSize(wm);

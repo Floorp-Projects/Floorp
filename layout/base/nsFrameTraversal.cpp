@@ -511,7 +511,7 @@ nsFrameIterator::IsPopupFrame(nsIFrame* aFrame)
   }
 
   return (aFrame &&
-          aFrame->StyleDisplay()->mDisplay == NS_STYLE_DISPLAY_POPUP);
+          aFrame->StyleDisplay()->mDisplay == StyleDisplay::Popup);
 }
 
 // nsVisualIterator implementation

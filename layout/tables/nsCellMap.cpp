@@ -242,7 +242,7 @@ nsTableCellMap::GetMapFor(const nsTableRowGroupFrame* aRowGroup,
 
     const nsStyleDisplay* display = aRowGroup->StyleDisplay();
     nsTableRowGroupFrame* rgOrig =
-      (NS_STYLE_DISPLAY_TABLE_HEADER_GROUP == display->mDisplay) ?
+      (StyleDisplay::TableHeaderGroup == display->mDisplay) ?
       fifTable->GetTHead() : fifTable->GetTFoot();
     // find the row group cell map using the original header/footer
     if (rgOrig && rgOrig != aRowGroup) {
@@ -2348,13 +2348,13 @@ void nsCellMap::Dump(bool aIsBorderCollapse) const
   nsTableRowGroupFrame* rg = GetRowGroup();
   const nsStyleDisplay* display = rg->StyleDisplay();
   switch (display->mDisplay) {
-  case NS_STYLE_DISPLAY_TABLE_HEADER_GROUP:
+  case StyleDisplay::TableHeaderGroup:
     printf("  thead ");
     break;
-  case NS_STYLE_DISPLAY_TABLE_FOOTER_GROUP:
+  case StyleDisplay::TableFooterGroup:
     printf("  tfoot ");
     break;
-  case NS_STYLE_DISPLAY_TABLE_ROW_GROUP:
+  case StyleDisplay::TableRowGroup:
     printf("  tbody ");
     break;
   default:

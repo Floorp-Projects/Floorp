@@ -83,7 +83,7 @@ nsTableRowGroupFrame::GetRowCount()
 #ifdef DEBUG
   for (nsFrameList::Enumerator e(mFrames); !e.AtEnd(); e.Next()) {
     NS_ASSERTION(e.get()->StyleDisplay()->mDisplay ==
-                   NS_STYLE_DISPLAY_TABLE_ROW,
+                 mozilla::StyleDisplay::TableRow,
                  "Unexpected display");
     NS_ASSERTION(e.get()->GetType() == nsGkAtoms::tableRowFrame,
                  "Unexpected frame type");
@@ -113,7 +113,7 @@ void  nsTableRowGroupFrame::AdjustRowIndices(int32_t aRowIndex,
                                              int32_t anAdjustment)
 {
   for (nsIFrame* rowFrame : mFrames) {
-    if (NS_STYLE_DISPLAY_TABLE_ROW==rowFrame->StyleDisplay()->mDisplay) {
+    if (mozilla::StyleDisplay::TableRow == rowFrame->StyleDisplay()->mDisplay) {
       int32_t index = ((nsTableRowFrame*)rowFrame)->GetRowIndex();
       if (index >= aRowIndex)
         ((nsTableRowFrame *)rowFrame)->SetRowIndex(index+anAdjustment);
@@ -1467,7 +1467,7 @@ nsTableRowGroupFrame::AppendFrames(ChildListID     aListID,
     nsTableRowFrame *rowFrame = do_QueryFrame(e.get());
     NS_ASSERTION(rowFrame, "Unexpected frame; frame constructor screwed up");
     if (rowFrame) {
-      NS_ASSERTION(NS_STYLE_DISPLAY_TABLE_ROW ==
+      NS_ASSERTION(mozilla::StyleDisplay::TableRow ==
                      e.get()->StyleDisplay()->mDisplay,
                    "wrong display type on rowframe");
       rows.AppendElement(rowFrame);
@@ -1509,7 +1509,7 @@ nsTableRowGroupFrame::InsertFrames(ChildListID     aListID,
     nsTableRowFrame *rowFrame = do_QueryFrame(e.get());
     NS_ASSERTION(rowFrame, "Unexpected frame; frame constructor screwed up");
     if (rowFrame) {
-      NS_ASSERTION(NS_STYLE_DISPLAY_TABLE_ROW ==
+      NS_ASSERTION(mozilla::StyleDisplay::TableRow ==
                      e.get()->StyleDisplay()->mDisplay,
                    "wrong display type on rowframe");
       rows.AppendElement(rowFrame);
