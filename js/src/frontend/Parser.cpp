@@ -5047,6 +5047,20 @@ Parser<FullParseHandler>::exportDeclaration()
                 return null();
             break;
           default: {
+            if (tt == TOK_NAME && tokenStream.currentName() == context->names().async) {
+                TokenKind nextSameLine = TOK_EOF;
+                if (!tokenStream.peekTokenSameLine(&nextSameLine))
+                    return null();
+
+                if (nextSameLine == TOK_FUNCTION) {
+                    tokenStream.consumeKnownToken(nextSameLine);
+                    kid = functionStmt(YieldIsName, AllowDefaultName, AsyncFunction);
+                    if (!kid)
+                        return null();
+                    break;
+                }
+            }
+
             tokenStream.ungetToken();
             RootedPropertyName name(context, context->names().starDefaultStar);
             nameNode = newName(name);
