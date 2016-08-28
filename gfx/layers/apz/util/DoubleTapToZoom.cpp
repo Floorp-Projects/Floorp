@@ -60,7 +60,7 @@ ElementFromPoint(const nsCOMPtr<nsIPresShell>& aShell,
 static bool
 ShouldZoomToElement(const nsCOMPtr<dom::Element>& aElement) {
   if (nsIFrame* frame = aElement->GetPrimaryFrame()) {
-    if (frame->GetDisplay() == NS_STYLE_DISPLAY_INLINE) {
+    if (frame->GetDisplay() == StyleDisplay::Inline) {
       return false;
     }
   }

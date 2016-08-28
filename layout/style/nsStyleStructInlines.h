@@ -114,15 +114,13 @@ nsStyleDisplay::IsOriginalDisplayInlineOutside(const nsIFrame* aContextFrame) co
   return IsOriginalDisplayInlineOutsideStyle();
 }
 
-uint8_t
+mozilla::StyleDisplay
 nsStyleDisplay::GetDisplay(const nsIFrame* aContextFrame) const
 {
   NS_ASSERTION(aContextFrame->StyleDisplay() == this, "unexpected aContextFrame");
-  if (aContextFrame->IsSVGText() &&
-      mDisplay != NS_STYLE_DISPLAY_NONE) {
+  if (aContextFrame->IsSVGText() && mDisplay != mozilla::StyleDisplay::None_) {
     return aContextFrame->GetType() == nsGkAtoms::blockFrame ?
-             NS_STYLE_DISPLAY_BLOCK :
-             NS_STYLE_DISPLAY_INLINE;
+             mozilla::StyleDisplay::Block : mozilla::StyleDisplay::Inline;
   }
   return mDisplay;
 }

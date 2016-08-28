@@ -148,7 +148,7 @@ nsTableRowFrame::Init(nsIContent*       aContent,
   // Let the base class do its initialization
   nsContainerFrame::Init(aContent, aParent, aPrevInFlow);
 
-  NS_ASSERTION(NS_STYLE_DISPLAY_TABLE_ROW == StyleDisplay()->mDisplay,
+  NS_ASSERTION(mozilla::StyleDisplay::TableRow == StyleDisplay()->mDisplay,
                "wrong display on table row frame");
 
   if (aPrevInFlow) {
@@ -1401,7 +1401,8 @@ nsTableRowFrame::GetNextRow() const
   while (childFrame) {
     nsTableRowFrame *rowFrame = do_QueryFrame(childFrame);
     if (rowFrame) {
-	  NS_ASSERTION(NS_STYLE_DISPLAY_TABLE_ROW == childFrame->StyleDisplay()->mDisplay, "wrong display type on rowframe");
+	  NS_ASSERTION(mozilla::StyleDisplay::TableRow == childFrame->StyleDisplay()->mDisplay,
+                 "wrong display type on rowframe");
       return rowFrame;
     }
     childFrame = childFrame->GetNextSibling();

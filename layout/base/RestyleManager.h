@@ -745,11 +745,11 @@ private:
   void DoRestyleUndisplayedDescendants(nsRestyleHint aChildRestyleHint,
                                        nsIContent* aParent,
                                        nsStyleContext* aParentStyleContext);
-  void RestyleUndisplayedNodes(nsRestyleHint    aChildRestyleHint,
-                               UndisplayedNode* aUndisplayed,
-                               nsIContent*      aUndisplayedParent,
-                               nsStyleContext*  aParentStyleContext,
-                               const uint8_t    aDisplay);
+  void RestyleUndisplayedNodes(nsRestyleHint      aChildRestyleHint,
+                               UndisplayedNode*   aUndisplayed,
+                               nsIContent*        aUndisplayedParent,
+                               nsStyleContext*    aParentStyleContext,
+                               const StyleDisplay aDisplay);
   void MaybeReframeForBeforePseudo();
   void MaybeReframeForAfterPseudo(nsIFrame* aFrame);
   void MaybeReframeForPseudo(CSSPseudoElementType aPseudoType,
@@ -798,7 +798,7 @@ private:
                                                     Element* aRestyleRoot);
   void ConditionallyRestyleUndisplayedNodes(UndisplayedNode* aUndisplayed,
                                             nsIContent* aUndisplayedParent,
-                                            const uint8_t aDisplay,
+                                            const StyleDisplay aDisplay,
                                             Element* aRestyleRoot);
   void ConditionallyRestyleContentDescendants(Element* aElement,
                                               Element* aRestyleRoot);
