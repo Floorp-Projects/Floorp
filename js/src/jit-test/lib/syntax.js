@@ -1260,4 +1260,28 @@ function test_syntax(postfixes, check_error, ignore_opts) {
   test("(async function (a) { await X; ");
   test("(async function (a) { await X; } ");
   test("(async function (a) { await X; }) ");
+
+  // async/await method
+
+  test("({ async ");
+  test("({ async m ");
+  test("({ async m( ");
+  test("({ async m() ");
+  test("({ async m() { ");
+  test("({ async m() {} ");
+  test("({ async m() {}, ");
+
+  test("class X { async ");
+  test("class X { async m ");
+  test("class X { async m( ");
+  test("class X { async m() ");
+  test("class X { async m() { ");
+  test("class X { async m() {} ");
+
+  test("class X { static async ");
+  test("class X { static async m ");
+  test("class X { static async m( ");
+  test("class X { static async m() ");
+  test("class X { static async m() { ");
+  test("class X { static async m() {} ");
 }
