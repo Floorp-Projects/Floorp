@@ -502,6 +502,10 @@ class ParseContext : public Nestable<ParseContext>
         return sc_->isFunctionBox() && sc_->asFunctionBox()->isAsync();
     }
 
+    FunctionAsyncKind asyncKind() const {
+        return isAsync() ? AsyncFunction : SyncFunction;
+    }
+
     bool isArrowFunction() const {
         return sc_->isFunctionBox() && sc_->asFunctionBox()->function()->isArrow();
     }
@@ -1035,7 +1039,7 @@ class Parser final : private JS::AutoGCRooter, public StrictModeGetter
     // whether it's prohibited due to strictness, JS version, or occurrence
     // inside a star generator.
     bool yieldExpressionsSupported() {
-        return versionNumber() >= JSVERSION_1_7 || pc->isGenerator();
+        return (versionNumber() >= JSVERSION_1_7 || pc->isGenerator()) && !pc->isAsync();
     }
 
     // Match the current token against the BindingIdentifier production with
@@ -1074,7 +1078,8 @@ class Parser final : private JS::AutoGCRooter, public StrictModeGetter
      * Some parsers have two versions:  an always-inlined version (with an 'i'
      * suffix) and a never-inlined version (with an 'n' suffix).
      */
-    Node functionStmt(YieldHandling yieldHandling, DefaultHandling defaultHandling);
+    Node functionStmt(YieldHandling yieldHandling, DefaultHandling defaultHandling,
+                      FunctionAsyncKind asyncKind = SyncFunction);
     Node functionExpr(InvokedPrediction invoked = PredictUninvoked);
 
     Node statementList(YieldHandling yieldHandling);
