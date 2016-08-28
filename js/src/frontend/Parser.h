@@ -1087,7 +1087,8 @@ class Parser final : private JS::AutoGCRooter, public StrictModeGetter
      */
     Node functionStmt(YieldHandling yieldHandling, DefaultHandling defaultHandling,
                       FunctionAsyncKind asyncKind = SyncFunction);
-    Node functionExpr(InvokedPrediction invoked = PredictUninvoked);
+    Node functionExpr(InvokedPrediction invoked = PredictUninvoked,
+                      FunctionAsyncKind asyncKind = SyncFunction);
 
     Node statementList(YieldHandling yieldHandling);
 
