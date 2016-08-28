@@ -567,6 +567,7 @@ enum class PropertyType {
     SetterNoExpressionClosure,
     Method,
     GeneratorMethod,
+    AsyncMethod,
     Constructor,
     DerivedConstructor
 };
