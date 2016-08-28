@@ -956,7 +956,7 @@ Element::GetClientAreaRect()
   }
 
   if (styledFrame &&
-      (styledFrame->StyleDisplay()->mDisplay != NS_STYLE_DISPLAY_INLINE ||
+      (styledFrame->StyleDisplay()->mDisplay != StyleDisplay::Inline ||
        styledFrame->IsFrameOfType(nsIFrame::eReplaced))) {
     // Special case code to make client area work even when there isn't
     // a scroll view, see bug 180552, bug 227567.

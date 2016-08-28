@@ -83,8 +83,8 @@ kAxisOrientationToSidesMap[eNumAxisOrientationTypes][eNumAxisEdges] = {
 static inline bool
 IsDisplayValueLegacyBox(const nsStyleDisplay* aStyleDisp)
 {
-  return aStyleDisp->mDisplay == NS_STYLE_DISPLAY_WEBKIT_BOX ||
-    aStyleDisp->mDisplay == NS_STYLE_DISPLAY_WEBKIT_INLINE_BOX;
+  return aStyleDisp->mDisplay == mozilla::StyleDisplay::WebkitBox ||
+    aStyleDisp->mDisplay == mozilla::StyleDisplay::WebkitInlineBox;
 }
 
 // Helper to check whether our nsFlexContainerFrame is emulating a legacy
@@ -103,7 +103,7 @@ IsLegacyBox(const nsStyleDisplay* aStyleDisp,
   // If this frame is for a scrollable element, then it will actually have
   // "display:block", and its *parent* will have the real flex-flavored display
   // value. So in that case, check the parent to find out if we're legacy.
-  if (aStyleDisp->mDisplay == NS_STYLE_DISPLAY_BLOCK) {
+  if (aStyleDisp->mDisplay == mozilla::StyleDisplay::Block) {
     nsStyleContext* parentStyleContext = aStyleContext->GetParent();
     NS_ASSERTION(parentStyleContext &&
                  aStyleContext->GetPseudo() == nsCSSAnonBoxes::scrolledContent,

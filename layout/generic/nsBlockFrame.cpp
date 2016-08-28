@@ -2930,9 +2930,9 @@ nsBlockFrame::AttributeChanged(int32_t         aNameSpaceID,
   }
   if (nsGkAtoms::value == aAttribute) {
     const nsStyleDisplay* styleDisplay = StyleDisplay();
-    if (NS_STYLE_DISPLAY_LIST_ITEM == styleDisplay->mDisplay) {
-      // Search for the closest ancestor that's a block/grid/flex frame.
-      // We make the assumption that all related list items share a
+    if (mozilla::StyleDisplay::ListItem == styleDisplay->mDisplay) {
+      // Search for the closest ancestor that's a block frame. We
+      // make the assumption that all related list items share a
       // common block/grid/flex ancestor.
       // XXXldb I think that's a bad assumption.
       nsContainerFrame* ancestor = GetParent();
@@ -6042,7 +6042,7 @@ nsBlockFrame::AdjustFloatAvailableSpace(BlockReflowInput& aState,
   const nsStyleDisplay* floatDisplay = aFloatFrame->StyleDisplay();
   WritingMode wm = aState.mReflowInput.GetWritingMode();
 
-  if (NS_STYLE_DISPLAY_TABLE != floatDisplay->mDisplay ||
+  if (mozilla::StyleDisplay::Table != floatDisplay->mDisplay ||
       eCompatibility_NavQuirks != aState.mPresContext->CompatibilityMode() ) {
     availISize = aState.ContentISize();
   }
@@ -6867,7 +6867,7 @@ nsBlockFrame::SetInitialChildList(ChildListID     aListID,
     // for a columnset we don't want a bullet per column.  Note that
     // the outermost frame for the content is the primary frame in
     // most cases; the ones when it's not (like tables) can't be
-    // NS_STYLE_DISPLAY_LIST_ITEM).
+    // StyleDisplay::ListItem).
     nsIFrame* possibleListItem = this;
     while (1) {
       nsIFrame* parent = possibleListItem->GetParent();
@@ -6876,7 +6876,7 @@ nsBlockFrame::SetInitialChildList(ChildListID     aListID,
       }
       possibleListItem = parent;
     }
-    if (NS_STYLE_DISPLAY_LIST_ITEM ==
+    if (mozilla::StyleDisplay::ListItem ==
           possibleListItem->StyleDisplay()->mDisplay &&
         !GetPrevInFlow()) {
       // Resolve style for the bullet frame
@@ -6933,7 +6933,7 @@ bool
 nsBlockFrame::BulletIsEmpty() const
 {
   NS_ASSERTION(mContent->GetPrimaryFrame()->StyleDisplay()->mDisplay ==
-                 NS_STYLE_DISPLAY_LIST_ITEM && HasOutsideBullet(),
+               mozilla::StyleDisplay::ListItem && HasOutsideBullet(),
                "should only care when we have an outside bullet");
   const nsStyleList* list = StyleList();
   return list->GetCounterStyle()->IsNone() &&

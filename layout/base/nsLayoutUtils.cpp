@@ -1404,7 +1404,7 @@ nsLayoutUtils::GetChildListNameFor(nsIFrame* aChildFrame)
         id = nsIFrame::kAbsoluteList;
       }
 #ifdef MOZ_XUL
-    } else if (NS_STYLE_DISPLAY_POPUP == disp->mDisplay) {
+    } else if (StyleDisplay::Popup == disp->mDisplay) {
       // Out-of-flows that are DISPLAY_POPUP must be kids of the root popup set
 #ifdef DEBUG
       nsIFrame* parent = aChildFrame->GetParent();
@@ -9068,8 +9068,8 @@ nsLayoutUtils::GetTouchActionFromFrame(nsIFrame* aFrame)
 
   const nsStyleDisplay* disp = aFrame->StyleDisplay();
   bool isTableElement = disp->IsInnerTableStyle() &&
-    disp->mDisplay != NS_STYLE_DISPLAY_TABLE_CELL &&
-    disp->mDisplay != NS_STYLE_DISPLAY_TABLE_CAPTION;
+    disp->mDisplay != StyleDisplay::TableCell &&
+    disp->mDisplay != StyleDisplay::TableCaption;
   if (isTableElement) {
     return NS_STYLE_TOUCH_ACTION_AUTO;
   }

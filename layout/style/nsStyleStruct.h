@@ -2824,11 +2824,13 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay
 
   // We guarantee that if mBinding is non-null, so are mBinding->GetURI() and
   // mBinding->mOriginPrincipal.
-  RefPtr<mozilla::css::URLValue> mBinding;    // [reset]
-  uint8_t mDisplay;             // [reset] see nsStyleConsts.h NS_STYLE_DISPLAY_*
-  uint8_t mOriginalDisplay;     // [reset] saved mDisplay for position:absolute/fixed
-                                //         and float:left/right; otherwise equal
-                                //         to mDisplay
+  RefPtr<mozilla::css::URLValue> mBinding; // [reset]
+  mozilla::StyleDisplay mDisplay;          // [reset] see nsStyleConsts.h SyleDisplay
+  mozilla::StyleDisplay mOriginalDisplay;  // [reset] saved mDisplay for
+                                           //         position:absolute/fixed
+                                           //         and float:left/right;
+                                           //         otherwise equal to
+                                           //         mDisplay
   uint8_t mContain;             // [reset] see nsStyleConsts.h NS_STYLE_CONTAIN_*
   uint8_t mAppearance;          // [reset]
   uint8_t mPosition;            // [reset] see nsStyleConsts.h
@@ -2905,40 +2907,40 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay
   mozilla::StyleShapeOutside mShapeOutside; // [reset]
 
   bool IsBlockInsideStyle() const {
-    return NS_STYLE_DISPLAY_BLOCK == mDisplay ||
-           NS_STYLE_DISPLAY_LIST_ITEM == mDisplay ||
-           NS_STYLE_DISPLAY_INLINE_BLOCK == mDisplay ||
-           NS_STYLE_DISPLAY_TABLE_CAPTION == mDisplay;
+    return mozilla::StyleDisplay::Block == mDisplay ||
+           mozilla::StyleDisplay::ListItem == mDisplay ||
+           mozilla::StyleDisplay::InlineBlock == mDisplay ||
+           mozilla::StyleDisplay::TableCaption == mDisplay;
     // Should TABLE_CELL be included here?  They have
     // block frames nested inside of them.
     // (But please audit all callers before changing.)
   }
 
   bool IsBlockOutsideStyle() const {
-    return NS_STYLE_DISPLAY_BLOCK == mDisplay ||
-           NS_STYLE_DISPLAY_FLEX == mDisplay ||
-           NS_STYLE_DISPLAY_WEBKIT_BOX == mDisplay ||
-           NS_STYLE_DISPLAY_GRID == mDisplay ||
-           NS_STYLE_DISPLAY_LIST_ITEM == mDisplay ||
-           NS_STYLE_DISPLAY_TABLE == mDisplay;
+    return mozilla::StyleDisplay::Block == mDisplay ||
+           mozilla::StyleDisplay::Flex == mDisplay ||
+           mozilla::StyleDisplay::WebkitBox == mDisplay ||
+           mozilla::StyleDisplay::Grid == mDisplay ||
+           mozilla::StyleDisplay::ListItem == mDisplay ||
+           mozilla::StyleDisplay::Table == mDisplay;
   }
 
-  static bool IsDisplayTypeInlineOutside(uint8_t aDisplay) {
-    return NS_STYLE_DISPLAY_INLINE == aDisplay ||
-           NS_STYLE_DISPLAY_INLINE_BLOCK == aDisplay ||
-           NS_STYLE_DISPLAY_INLINE_TABLE == aDisplay ||
-           NS_STYLE_DISPLAY_INLINE_BOX == aDisplay ||
-           NS_STYLE_DISPLAY_INLINE_FLEX == aDisplay ||
-           NS_STYLE_DISPLAY_WEBKIT_INLINE_BOX == aDisplay ||
-           NS_STYLE_DISPLAY_INLINE_GRID == aDisplay ||
-           NS_STYLE_DISPLAY_INLINE_XUL_GRID == aDisplay ||
-           NS_STYLE_DISPLAY_INLINE_STACK == aDisplay ||
-           NS_STYLE_DISPLAY_RUBY == aDisplay ||
-           NS_STYLE_DISPLAY_RUBY_BASE == aDisplay ||
-           NS_STYLE_DISPLAY_RUBY_BASE_CONTAINER == aDisplay ||
-           NS_STYLE_DISPLAY_RUBY_TEXT == aDisplay ||
-           NS_STYLE_DISPLAY_RUBY_TEXT_CONTAINER == aDisplay ||
-           NS_STYLE_DISPLAY_CONTENTS == aDisplay;
+  static bool IsDisplayTypeInlineOutside(mozilla::StyleDisplay aDisplay) {
+    return mozilla::StyleDisplay::Inline == aDisplay ||
+           mozilla::StyleDisplay::InlineBlock == aDisplay ||
+           mozilla::StyleDisplay::InlineTable == aDisplay ||
+           mozilla::StyleDisplay::InlineBox == aDisplay ||
+           mozilla::StyleDisplay::InlineFlex == aDisplay ||
+           mozilla::StyleDisplay::WebkitInlineBox == aDisplay ||
+           mozilla::StyleDisplay::InlineGrid == aDisplay ||
+           mozilla::StyleDisplay::InlineXulGrid == aDisplay ||
+           mozilla::StyleDisplay::InlineStack == aDisplay ||
+           mozilla::StyleDisplay::Ruby == aDisplay ||
+           mozilla::StyleDisplay::RubyBase == aDisplay ||
+           mozilla::StyleDisplay::RubyBaseContainer == aDisplay ||
+           mozilla::StyleDisplay::RubyText == aDisplay ||
+           mozilla::StyleDisplay::RubyTextContainer == aDisplay ||
+           mozilla::StyleDisplay::Contents == aDisplay;
   }
 
   bool IsInlineOutsideStyle() const {
@@ -2950,14 +2952,14 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay
   }
 
   bool IsInnerTableStyle() const {
-    return NS_STYLE_DISPLAY_TABLE_CAPTION == mDisplay ||
-           NS_STYLE_DISPLAY_TABLE_CELL == mDisplay ||
-           NS_STYLE_DISPLAY_TABLE_ROW == mDisplay ||
-           NS_STYLE_DISPLAY_TABLE_ROW_GROUP == mDisplay ||
-           NS_STYLE_DISPLAY_TABLE_HEADER_GROUP == mDisplay ||
-           NS_STYLE_DISPLAY_TABLE_FOOTER_GROUP == mDisplay ||
-           NS_STYLE_DISPLAY_TABLE_COLUMN == mDisplay ||
-           NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP == mDisplay;
+    return mozilla::StyleDisplay::TableCaption == mDisplay ||
+           mozilla::StyleDisplay::TableCell == mDisplay ||
+           mozilla::StyleDisplay::TableRow == mDisplay ||
+           mozilla::StyleDisplay::TableRowGroup == mDisplay ||
+           mozilla::StyleDisplay::TableHeaderGroup == mDisplay ||
+           mozilla::StyleDisplay::TableFooterGroup == mDisplay ||
+           mozilla::StyleDisplay::TableColumn == mDisplay ||
+           mozilla::StyleDisplay::TableColumnGroup == mDisplay;
   }
 
   bool IsFloatingStyle() const {
@@ -2978,12 +2980,12 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay
            NS_STYLE_POSITION_FIXED == mPosition;
   }
 
-  static bool IsRubyDisplayType(uint8_t aDisplay) {
-    return NS_STYLE_DISPLAY_RUBY == aDisplay ||
-           NS_STYLE_DISPLAY_RUBY_BASE == aDisplay ||
-           NS_STYLE_DISPLAY_RUBY_BASE_CONTAINER == aDisplay ||
-           NS_STYLE_DISPLAY_RUBY_TEXT == aDisplay ||
-           NS_STYLE_DISPLAY_RUBY_TEXT_CONTAINER == aDisplay;
+  static bool IsRubyDisplayType(mozilla::StyleDisplay aDisplay) {
+    return mozilla::StyleDisplay::Ruby == aDisplay ||
+           mozilla::StyleDisplay::RubyBase == aDisplay ||
+           mozilla::StyleDisplay::RubyBaseContainer == aDisplay ||
+           mozilla::StyleDisplay::RubyText == aDisplay ||
+           mozilla::StyleDisplay::RubyTextContainer == aDisplay;
   }
 
   bool IsRubyDisplayType() const {
@@ -3031,7 +3033,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay
   inline bool IsBlockOutside(const nsIFrame* aContextFrame) const;
   inline bool IsInlineOutside(const nsIFrame* aContextFrame) const;
   inline bool IsOriginalDisplayInlineOutside(const nsIFrame* aContextFrame) const;
-  inline uint8_t GetDisplay(const nsIFrame* aContextFrame) const;
+  inline mozilla::StyleDisplay GetDisplay(const nsIFrame* aContextFrame) const;
   inline bool IsFloating(const nsIFrame* aContextFrame) const;
   inline bool IsRelativelyPositioned(const nsIFrame* aContextFrame) const;
   inline bool IsAbsolutelyPositioned(const nsIFrame* aContextFrame) const;
