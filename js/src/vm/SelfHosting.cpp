@@ -38,6 +38,7 @@
 #include "jit/InlinableNatives.h"
 #include "js/CharacterEncoding.h"
 #include "js/Date.h"
+#include "vm/AsyncFunction.h"
 #include "vm/Compression.h"
 #include "vm/GeneratorObject.h"
 #include "vm/Interpreter.h"
@@ -1831,6 +1832,23 @@ js::ReportIncompatibleSelfHostedMethod(JSContext* cx, const CallArgs& args)
     return false;
 }
 
+bool
+intrinsic_CreateAsyncFunction(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    MOZ_ASSERT(args.length() == 2);
+
+    RootedFunction wrapper(cx, &args[0].toObject().as<JSFunction>());
+    RootedFunction unwrapped(cx, &args[1].toObject().as<JSFunction>());
+
+    RootedFunction wrapped(cx);
+    if (!CreateAsyncFunction(cx, wrapper, unwrapped, &wrapped))
+        return false;
+
+    args.rval().setObject(*wrapped);
+    return true;
+}
+
 /**
  * Returns the default locale as a well-formed, but not necessarily canonicalized,
  * BCP-47 language tag.
@@ -2230,6 +2248,8 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("RuntimeDefaultLocale",    intrinsic_RuntimeDefaultLocale,    0,0),
     JS_FN("AddContentTelemetry",     intrinsic_AddContentTelemetry,     2,0),
 
+    JS_FN("CreateAsyncFunction",     intrinsic_CreateAsyncFunction,     1,0),
+
     JS_INLINABLE_FN("_IsConstructing", intrinsic_IsConstructing,        0,0,
                     IntrinsicIsConstructing),
     JS_INLINABLE_FN("SubstringKernel", intrinsic_SubstringKernel,       3,0,
@@ -2362,6 +2382,10 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("IsWeakSet", intrinsic_IsInstanceOfBuiltin<WeakSetObject>, 1,0),
     JS_FN("CallWeakSetMethodIfWrapped",
           CallNonGenericSelfhostedMethod<Is<WeakSetObject>>, 2, 0),
+
+    JS_FN("Promise_static_resolve",                Promise_static_resolve, 1, 0),
+    JS_FN("Promise_static_reject",                 Promise_reject, 1, 0),
+    JS_FN("Promise_then",                          Promise_then, 2, 0),
 
     // See builtin/TypedObject.h for descriptors of the typedobj functions.
     JS_FN("NewOpaqueTypedObject",           js::NewOpaqueTypedObject, 1, 0),

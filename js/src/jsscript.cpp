@@ -3105,6 +3105,8 @@ Rebase(JSScript* dst, JSScript* src, T* srcp)
 static JSObject*
 CloneInnerInterpretedFunction(JSContext* cx, HandleScope enclosingScope, HandleFunction srcFun)
 {
+    /* async function should not appear as inner function. */
+    MOZ_ASSERT(!srcFun->isAsync());
     /* NB: Keep this in sync with XDRInterpretedFunction. */
     RootedObject cloneProto(cx);
     if (srcFun->isStarGenerator()) {
