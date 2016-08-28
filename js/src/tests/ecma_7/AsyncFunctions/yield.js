@@ -1,0 +1,42 @@
+var BUGNUMBER = 1185106;
+var summary = "yield handling in async function";
+
+print(BUGNUMBER + ": " + summary);
+
+function testPassArgsBody(argsbody) {
+    Reflect.parse(`async function a${argsbody}`);
+}
+
+function testErrorArgsBody(argsbody, prefix="") {
+    assertThrows(() => Reflect.parse(`${prefix} async function a${argsbody}`), SyntaxError);
+}
+
+function testErrorArgsBodyStrict(argsbody) {
+    testErrorArgsBody(argsbody);
+    testErrorArgsBody(argsbody, "'use strict'; ");
+}
+
+if (typeof Reflect !== "undefined" && Reflect.parse) {
+    // `yield` handling is inherited in async function declaration name.
+    Reflect.parse("async function yield() {}");
+    Reflect.parse("function f() { async function yield() {} }");
+    assertThrows(() => Reflect.parse("function* g() { async function yield() {} }"), SyntaxError);
+    assertThrows(() => Reflect.parse("'use strict'; async function yield() {}"), SyntaxError);
+
+    // `yield` is treated as an identifier in an async function parameter
+    // `yield` is not allowed as an identifier in strict code.
+    testPassArgsBody("(yield) {}");
+    testPassArgsBody("(yield = 1) {}");
+    testPassArgsBody("(a = yield) {}");
+    testErrorArgsBodyStrict("(yield 3) {}");
+    testErrorArgsBodyStrict("(a = yield 3) {}");
+
+    // `yield` is treated as an identifier in an async function body
+    // `yield` is not allowed as an identifier in strict code.
+    testPassArgsBody("() { yield; }");
+    testPassArgsBody("() { yield = 1; }");
+    testErrorArgsBodyStrict("() { yield 3; }");
+}
+
+if (typeof reportCompare === "function")
+    reportCompare(true, true);
