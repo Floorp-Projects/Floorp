@@ -22,6 +22,7 @@ function testErrorArgsBodyStrict(argsbody) {
     testErrorArgsBody(argsbody, "'use strict'; ");
     assertThrows(() => Reflect.parse(`class X { async m${argsbody} }`), SyntaxError);
     assertThrows(() => Reflect.parse(`class X { static async m${argsbody} }`), SyntaxError);
+    assertThrows(() => Reflect.parse(`export default async function ${argsbody}`, { target: "module" }), SyntaxError);
 }
 
 if (typeof Reflect !== "undefined" && Reflect.parse) {
