@@ -1181,7 +1181,7 @@ function test_syntax(postfixes, check_error, ignore_opts) {
   test("for each (let x in y ");
   test("for each (let x in y) ");
 
-  // asm.js
+  // ==== asm.js ====
 
   test("(function() { 'use asm'; ");
   test("(function() { 'use asm'; var ");
@@ -1208,4 +1208,27 @@ function test_syntax(postfixes, check_error, ignore_opts) {
   test("(function() { 'use asm'; var a = 1; function f() { } var tbl = [f]; return f; } ");
   test("(function() { 'use asm'; var a = 1; function f() { } var tbl = [f]; return f; }) ");
   test("(function() { 'use asm'; var a = 1; function f() { } var tbl = [f]; return f; }); ");
+
+  // ==== async/await ====
+
+  // async/await function decralation
+
+  test("async ");
+  test("async function ");
+  test("async function A ");
+  test("async function A( ");
+  test("async function A() ");
+  test("async function A(a ");
+  test("async function A(a) ");
+  test("async function A(a) { ");
+  test("async function A(a) {} ");
+  test("async function A(a) { await ");
+  test("async function A(a) { await X ");
+  test("async function A(a) { await X; ");
+  test("async function A(a) { await X; } ");
+  test("async function A(a) { await await ");
+  test("async function A(a) { await await await ");
+  test("async function A(a) { await await await X ");
+  test("async function A(a) { await await await X; ");
+  test("async function A(a) { await await await X; } ");
 }
