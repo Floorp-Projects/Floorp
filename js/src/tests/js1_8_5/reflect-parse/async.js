@@ -7,6 +7,11 @@ assertDecl("async function foo() {}", asyncFunDecl(ident("foo"), [], blockStmt([
 assertExpr("(async function() {})", asyncFunExpr(null, [], blockStmt([])));
 assertExpr("(async function foo() {})", asyncFunExpr(ident("foo"), [], blockStmt([])));
 
+// async arrow.
+assertExpr("async a => 1", asyncArrowExpr(true, [ident("a")], literal(1)));
+assertExpr("async a => { 1 }", asyncArrowExpr(false, [ident("a")], blockStmt([exprStmt(literal(1))])));
+assertExpr("async a => { return 1 }", asyncArrowExpr(false, [ident("a")], blockStmt([returnStmt(literal(1))])));
+
 // async method.
 assertExpr("({ async foo() {} })", objExpr([{ key: ident("foo"), value: asyncFunExpr(ident("foo"), [], blockStmt([]))}]));
 
