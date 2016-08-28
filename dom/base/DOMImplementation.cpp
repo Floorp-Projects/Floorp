@@ -36,21 +36,12 @@ DOMImplementation::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
   return DOMImplementationBinding::Wrap(aCx, this, aGivenProto);
 }
 
-bool
-DOMImplementation::HasFeature(const nsAString& aFeature,
-                              const nsAString& aVersion)
-{
-  return nsContentUtils::InternalIsSupported(
-           static_cast<nsIDOMDOMImplementation*>(this),
-           aFeature, aVersion);
-}
-
 NS_IMETHODIMP
 DOMImplementation::HasFeature(const nsAString& aFeature,
                               const nsAString& aVersion,
                               bool* aReturn)
 {
-  *aReturn = HasFeature(aFeature, aVersion);
+  *aReturn = true;
   return NS_OK;
 }
 

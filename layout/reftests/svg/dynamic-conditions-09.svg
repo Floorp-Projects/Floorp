@@ -3,7 +3,8 @@
      Any copyright is dedicated to the Public Domain.
      http://creativecommons.org/publicdomain/zero/1.0/
 -->
-<svg xmlns="http://www.w3.org/2000/svg" class="reftest-wait" onload="f()" requiredFeatures="http://www.w3.org/TR/SVG11/feature#Gradient">
+<svg xmlns="http://www.w3.org/2000/svg" class="reftest-wait" onload="f()"
+systemLanguage="en">
   <title>Test that changing conditional processing attributes dynamically on outer 'svg' elements while redraw is suspended is honored</title>
   <!-- https://bugzilla.mozilla.org/show_bug.cgi?id=615146 -->
 
@@ -12,7 +13,7 @@
       var svg = document.documentElement;
       svg.suspendRedraw(10000);
       setTimeout(function() {
-        svg.setAttribute("requiredFeatures", "x");
+        svg.setAttribute("systemLanguage", "x");
         svg.unsuspendRedrawAll();
         setTimeout(function() {
           svg.removeAttribute("class");
