@@ -264,6 +264,9 @@ mozilla::StyleBasicShape* Gecko_NewBasicShape(mozilla::StyleBasicShapeType type)
 void Gecko_FillAllBackgroundLists(nsStyleImageLayers* layers, uint32_t max_len);
 NS_DECL_THREADSAFE_FFI_REFCOUNTING(nsStyleCoord::Calc, Calc);
 
+nsCSSShadowArray* Gecko_NewCSSShadowArray(uint32_t len);
+NS_DECL_THREADSAFE_FFI_REFCOUNTING(nsCSSShadowArray, CSSShadowArray);
+
 // Style-struct management.
 #define STYLE_STRUCT(name, checkdata_cb)                                       \
   struct nsStyle##name;                                                        \

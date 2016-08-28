@@ -856,6 +856,15 @@ Gecko_NewBasicShape(mozilla::StyleBasicShapeType aType)
 
 NS_IMPL_THREADSAFE_FFI_REFCOUNTING(nsStyleCoord::Calc, Calc);
 
+nsCSSShadowArray*
+Gecko_NewCSSShadowArray(uint32_t aLen)
+{
+  RefPtr<nsCSSShadowArray> arr = new(aLen) nsCSSShadowArray(aLen);
+  return arr.forget().take();
+}
+
+NS_IMPL_THREADSAFE_FFI_REFCOUNTING(nsCSSShadowArray, CSSShadowArray);
+
 #define STYLE_STRUCT(name, checkdata_cb)                                      \
                                                                               \
 void                                                                          \
