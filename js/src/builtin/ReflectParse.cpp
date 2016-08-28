@@ -1809,6 +1809,7 @@ class ASTSerializer
 
     bool function(ParseNode* pn, ASTType type, MutableHandleValue dst);
     bool functionArgsAndBody(ParseNode* pn, NodeVector& args, NodeVector& defaults,
+                             bool isAsync, bool isExpression,
                              MutableHandleValue body, MutableHandleValue rest);
     bool functionBody(ParseNode* pn, TokenPos* pos, MutableHandleValue dst);
 
@@ -3426,13 +3427,14 @@ ASTSerializer::function(ParseNode* pn, ASTType type, MutableHandleValue dst)
         rest.setUndefined();
     else
         rest.setNull();
-    return functionArgsAndBody(pn->pn_body, args, defaults, &body, &rest) &&
+    return functionArgsAndBody(pn->pn_body, args, defaults, isAsync, isExpression, &body, &rest) &&
            builder.function(type, &pn->pn_pos, id, args, defaults, body,
                             rest, generatorStyle, isAsync, isExpression, dst);
 }
 
 bool
 ASTSerializer::functionArgsAndBody(ParseNode* pn, NodeVector& args, NodeVector& defaults,
+                                   bool isAsync, bool isExpression,
                                    MutableHandleValue body, MutableHandleValue rest)
 {
     ParseNode* pnargs;
@@ -3464,6 +3466,14 @@ ASTSerializer::functionArgsAndBody(ParseNode* pn, NodeVector& args, NodeVector& 
         if (pnstart && pnstart->isKind(PNK_YIELD)) {
             MOZ_ASSERT(pnstart->getOp() == JSOP_INITIALYIELD);
             pnstart = pnstart->pn_next;
+        }
+
+        // Async arrow with expression body is converted into STATEMENTLIST
+        // to insert initial yield.
+        if (isAsync && isExpression) {
+            MOZ_ASSERT(pnstart->getKind() == PNK_RETURN);
+            return functionArgs(pn, pnargs, args, defaults, rest) &&
+                   expression(pnstart->pn_kid, body);
         }
 
         return functionArgs(pn, pnargs, args, defaults, rest) &&
