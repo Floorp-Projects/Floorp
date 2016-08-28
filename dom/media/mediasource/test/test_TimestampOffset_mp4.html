@@ -71,9 +71,11 @@ runWithMSE(function(ms, el) {
       return Promise.all([audiosb.updating ? once(audiosb, 'updateend') : Promise.resolve(),
                           videosb.updating ? once(videosb, 'updateend') : Promise.resolve()]);
     }).then(function() {
-      ms.endOfStream();
-      once(el, 'ended').then(SimpleTest.finish.bind(SimpleTest));
+      info("waiting for play to complete");
       el.play();
+      el.currentTime = el.buffered.start(0);
+      ms.endOfStream();
+      Promise.all([once(el, 'ended'), once(el, 'seeked')]).then(SimpleTest.finish.bind(SimpleTest));
     });
   });
 });
