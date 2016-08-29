@@ -74,7 +74,7 @@ function setupTestFrame() {
 
     ac.onactivestatechanged = () => {
       ac.onactivestatechanged = null;
-      error("Should not receive onactivestatechanged!");
+      ok(true, "Should receive onactivestatechanged!");
     };
 
     continueTest();
