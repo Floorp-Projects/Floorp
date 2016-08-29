@@ -1217,9 +1217,17 @@ KeyframeEffectReadOnly::SetAnimation(Animation* aAnimation)
   // Restyle for the new animation.
   RequestRestyle(EffectCompositor::RestyleType::Layer);
 
-  MarkCascadeNeedsUpdate();
-
+  // The order of these function calls is important:
+  // NotifyAnimationTimingUpdated() need the updated mIsRelevant flag to check
+  // if it should create the effectSet or not, and MarkCascadeNeedsUpdate()
+  // needs a valid effectSet, so we should call them in this order.
+  if (mAnimation) {
+    mAnimation->UpdateRelevance();
+  }
   NotifyAnimationTimingUpdated();
+  if (mAnimation) {
+    MarkCascadeNeedsUpdate();
+  }
 }
 
 bool
