@@ -47,12 +47,15 @@ BlobSerial(ImageURL* aURI)
 
 ImageCacheKey::ImageCacheKey(nsIURI* aURI,
                              const PrincipalOriginAttributes& aAttrs,
-                             nsIDocument* aDocument)
-  : mURI(new ImageURL(aURI))
+                             nsIDocument* aDocument,
+                             nsresult& aRv)
+  : mURI(new ImageURL(aURI, aRv))
   , mOriginAttributes(aAttrs)
   , mControlledDocument(GetControlledDocumentToken(aDocument))
   , mIsChrome(URISchemeIs(mURI, "chrome"))
 {
+  NS_ENSURE_SUCCESS_VOID(aRv);
+
   MOZ_ASSERT(NS_IsMainThread());
 
   if (URISchemeIs(mURI, "blob")) {
