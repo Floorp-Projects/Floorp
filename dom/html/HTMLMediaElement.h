@@ -161,12 +161,7 @@ public:
    * Call this to reevaluate whether we should start/stop due to our owner
    * document being active, inactive, visible or hidden.
    */
-  void NotifyOwnerDocumentActivityChanged();
-
-  // This method does the work necessary for the
-  // NotifyOwnerDocumentActivityChanged() notification.  It returns true if the
-  // media element was paused as a result.
-  virtual bool NotifyOwnerDocumentActivityChangedInternal();
+  virtual void NotifyOwnerDocumentActivityChanged();
 
   // Called by the video decoder object, on the main thread,
   // when it has read the metadata containing video dimensions,

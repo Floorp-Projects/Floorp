@@ -1399,7 +1399,7 @@ void HTMLMediaElement::NotifyMediaStreamTracksAvailable(DOMMediaStream* aStream)
   if (videoHasChanged) {
     // We are a video element and HasVideo() changed so update the screen
     // wakelock
-    NotifyOwnerDocumentActivityChangedInternal();
+    NotifyOwnerDocumentActivityChanged();
   }
 
   mWatchManager.ManualNotify(&HTMLMediaElement::UpdateReadyStateInternal);
@@ -2923,7 +2923,7 @@ HTMLMediaElement::HTMLMediaElement(already_AddRefed<mozilla::dom::NodeInfo>& aNo
   mPaused.SetOuter(this);
 
   RegisterActivityObserver();
-  NotifyOwnerDocumentActivityChangedInternal();
+  NotifyOwnerDocumentActivityChanged();
 
   MOZ_ASSERT(NS_IsMainThread());
   mWatchManager.Watch(mDownloadSuspendedByCache, &HTMLMediaElement::UpdateReadyStateInternal);
@@ -3858,7 +3858,7 @@ nsresult HTMLMediaElement::FinishDecoderSetup(MediaDecoder* aDecoder,
 
   // We may want to suspend the new stream now.
   // This will also do an AddRemoveSelfReference.
-  NotifyOwnerDocumentActivityChangedInternal();
+  NotifyOwnerDocumentActivityChanged();
   UpdateAudioChannelPlayingState();
 
   if (!mPaused) {
@@ -4344,7 +4344,7 @@ void HTMLMediaElement::MetadataLoaded(const MediaInfo* aInfo,
 
   if (IsVideo() && aInfo->HasVideo()) {
     // We are a video element playing video so update the screen wakelock
-    NotifyOwnerDocumentActivityChangedInternal();
+    NotifyOwnerDocumentActivityChanged();
   }
 
   if (mDefaultPlaybackStartPosition != 0.0) {
@@ -5300,13 +5300,6 @@ bool HTMLMediaElement::IsBeingDestroyed()
 
 void HTMLMediaElement::NotifyOwnerDocumentActivityChanged()
 {
-  // TODO : merge NotifyOwnerDocumentActivityChangedInternal in following patch.
-  NotifyOwnerDocumentActivityChangedInternal();
-}
-
-bool
-HTMLMediaElement::NotifyOwnerDocumentActivityChangedInternal()
-{
   bool visible = !IsHidden();
   if (visible) {
     // Visible -> Just pause hidden play time (no-op if already paused).
@@ -5324,8 +5317,6 @@ HTMLMediaElement::NotifyOwnerDocumentActivityChangedInternal()
   SuspendOrResumeElement(pauseElement, !IsActive());
 
   AddRemoveSelfReference();
-
-  return pauseElement;
 }
 
 void HTMLMediaElement::AddRemoveSelfReference()

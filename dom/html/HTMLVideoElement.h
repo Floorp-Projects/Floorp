@@ -128,7 +128,7 @@ public:
 
   void SetMozUseScreenWakeLock(bool aValue);
 
-  bool NotifyOwnerDocumentActivityChangedInternal() override;
+  void NotifyOwnerDocumentActivityChanged() override;
 
   // Gives access to the decoder's frame statistics, if present.
   FrameStatistics* GetFrameStatistics();
