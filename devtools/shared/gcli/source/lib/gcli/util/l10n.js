@@ -14,76 +14,67 @@
  * limitations under the License.
  */
 
-'use strict';
+"use strict";
 
-var Cu = require('chrome').Cu;
-
-var XPCOMUtils = Cu.import('resource://gre/modules/XPCOMUtils.jsm', {}).XPCOMUtils;
-var Services = require("Services");
-
-var imports = {};
-XPCOMUtils.defineLazyGetter(imports, 'stringBundle', function () {
-  return Services.strings.createBundle('chrome://devtools-shared/locale/gcli.properties');
-});
+const {LocalizationHelper} = require("devtools/shared/l10n");
+const L10N = new LocalizationHelper("devtools-shared/locale/gcli.properties");
 
 /*
- * Not supported when embedded - we're doing things the Mozilla way not the
+ * Not supported when embedded - we"re doing things the Mozilla way not the
  * require.js way.
  */
-exports.registerStringsSource = function(modulePath) {
-  throw new Error('registerStringsSource is not available in mozilla');
+exports.registerStringsSource = function (modulePath) {
+  throw new Error("registerStringsSource is not available in mozilla");
 };
 
-exports.unregisterStringsSource = function(modulePath) {
-  throw new Error('unregisterStringsSource is not available in mozilla');
+exports.unregisterStringsSource = function (modulePath) {
+  throw new Error("unregisterStringsSource is not available in mozilla");
 };
 
-exports.lookupSwap = function(key, swaps) {
-  throw new Error('lookupSwap is not available in mozilla');
+exports.lookupSwap = function (key, swaps) {
+  throw new Error("lookupSwap is not available in mozilla");
 };
 
-exports.lookupPlural = function(key, ord, swaps) {
-  throw new Error('lookupPlural is not available in mozilla');
+exports.lookupPlural = function (key, ord, swaps) {
+  throw new Error("lookupPlural is not available in mozilla");
 };
 
-exports.getPreferredLocales = function() {
-  return [ 'root' ];
+exports.getPreferredLocales = function () {
+  return [ "root" ];
 };
 
 /** @see lookup() in lib/gcli/util/l10n.js */
-exports.lookup = function(key) {
+exports.lookup = function (key) {
   try {
     // Our memory leak hunter walks reachable objects trying to work out what
     // type of thing they are using object.constructor.name. If that causes
     // problems then we can avoid the unknown-key-exception with the following:
     /*
-    if (key === 'constructor') {
-      return { name: 'l10n-mem-leak-defeat' };
+    if (key === "constructor") {
+      return { name: "l10n-mem-leak-defeat" };
     }
     */
 
-    return imports.stringBundle.GetStringFromName(key);
-  }
-  catch (ex) {
-    console.error('Failed to lookup ', key, ex);
+    return L10N.getStr(key);
+  } catch (ex) {
+    console.error("Failed to lookup ", key, ex);
     return key;
   }
 };
 
 /** @see propertyLookup in lib/gcli/util/l10n.js */
 exports.propertyLookup = new Proxy({}, {
-  get: function(rcvr, name) {
+  get: function (rcvr, name) {
     return exports.lookup(name);
   }
 });
 
 /** @see lookupFormat in lib/gcli/util/l10n.js */
-exports.lookupFormat = function(key, swaps) {
+exports.lookupFormat = function (key, swaps) {
   try {
-    return imports.stringBundle.formatStringFromName(key, swaps, swaps.length);
-  }
-  catch (ex) {
-    console.error('Failed to format ', key, ex);
+    return L10N.getFormatStr(key, ...swaps);
+  } catch (ex) {
+    console.error("Failed to format ", key, ex);
     return key;
   }
 };

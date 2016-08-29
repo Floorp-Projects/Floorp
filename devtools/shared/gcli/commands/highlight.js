@@ -5,7 +5,6 @@
 "use strict";
 
 const l10n = require("gcli/l10n");
-const Services = require("Services");
 const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
 require("devtools/server/actors/inspector");
 const {
@@ -13,9 +12,8 @@ const {
   HighlighterEnvironment
 } = require("devtools/server/actors/highlighters");
 
-XPCOMUtils.defineLazyGetter(this, "nodesSelected", function () {
-  return Services.strings.createBundle("chrome://devtools-shared/locale/gclicommands.properties");
-});
+const {LocalizationHelper} = require("devtools/shared/l10n");
+const L10N = new LocalizationHelper("devtools-shared/locale/gclicommands.properties");
 XPCOMUtils.defineLazyModuleGetter(this, "PluralForm", "resource://gre/modules/PluralForm.jsm");
 
 // How many maximum nodes can be highlighted in parallel
@@ -139,7 +137,7 @@ exports.items = [
         i++;
       }
 
-      let highlightText = nodesSelected.GetStringFromName("highlightOutputConfirm2");
+      let highlightText = L10N.getStr("highlightOutputConfirm2");
       let output = PluralForm.get(args.selector.length, highlightText)
                              .replace("%1$S", args.selector.length);
       if (args.selector.length > i) {

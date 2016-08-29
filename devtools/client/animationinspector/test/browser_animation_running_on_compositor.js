@@ -9,11 +9,6 @@ requestLongerTimeout(2);
 // Test that when animations displayed in the timeline are running on the
 // compositor, they get a special icon and information in the tooltip.
 
-const { LocalizationHelper } = require("devtools/shared/l10n");
-
-const STRINGS_URI = "devtools/locale/animationinspector.properties";
-const L10N = new LocalizationHelper(STRINGS_URI);
-
 add_task(function* () {
   yield addTab(URL_ROOT + "doc_simple_animation.html");
   let {inspector, panel} = yield openAnimationInspector();
@@ -26,7 +21,7 @@ add_task(function* () {
   ok(animationEl.classList.contains("fast-track"),
      "The animation element has the fast-track css class");
   ok(hasTooltip(animationEl,
-                L10N.getStr("player.allPropertiesOnCompositorTooltip")),
+                ANIMATION_L10N.getStr("player.allPropertiesOnCompositorTooltip")),
      "The animation element has the right tooltip content");
 
   info("Select a node we know doesn't have an animation on the compositor");
@@ -36,10 +31,10 @@ add_task(function* () {
   ok(!animationEl.classList.contains("fast-track"),
      "The animation element does not have the fast-track css class");
   ok(!hasTooltip(animationEl,
-                 L10N.getStr("player.allPropertiesOnCompositorTooltip")),
+                 ANIMATION_L10N.getStr("player.allPropertiesOnCompositorTooltip")),
      "The animation element does not have oncompositor tooltip content");
   ok(!hasTooltip(animationEl,
-                 L10N.getStr("player.somePropertiesOnCompositorTooltip")),
+                 ANIMATION_L10N.getStr("player.somePropertiesOnCompositorTooltip")),
      "The animation element does not have oncompositor tooltip content");
 
   info("Select a node we know has animation on the compositor and not on the" +
@@ -50,7 +45,7 @@ add_task(function* () {
   ok(animationEl.classList.contains("fast-track"),
      "The animation element has the fast-track css class");
   ok(hasTooltip(animationEl,
-                L10N.getStr("player.somePropertiesOnCompositorTooltip")),
+                ANIMATION_L10N.getStr("player.somePropertiesOnCompositorTooltip")),
      "The animation element has the right tooltip content");
 });
 
