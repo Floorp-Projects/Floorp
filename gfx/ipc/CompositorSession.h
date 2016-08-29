@@ -51,7 +51,7 @@ public:
   virtual void SetContentController(GeckoContentController* aController) = 0;
 
   // Return the Async Pan/Zoom Tree Manager for this compositor.
-  virtual already_AddRefed<IAPZCTreeManager> GetAPZCTreeManager() const = 0;
+  virtual RefPtr<IAPZCTreeManager> GetAPZCTreeManager() const = 0;
 
   // Return the child end of the compositor IPC bridge.
   CompositorBridgeChild* GetCompositorBridgeChild();
