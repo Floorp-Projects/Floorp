@@ -28,6 +28,8 @@ static int MimeTypeToCodec(const nsACString& aMimeType)
     return VPXDecoder::Codec::VP8;
   } else if (aMimeType.EqualsLiteral("video/webm; codecs=vp9")) {
     return VPXDecoder::Codec::VP9;
+  } else if (aMimeType.EqualsLiteral("video/vp9")) {
+    return VPXDecoder::Codec::VP9;
   }
   return -1;
 }
@@ -230,7 +232,9 @@ VPXDecoder::IsVPX(const nsACString& aMimeType, uint8_t aCodecMask)
   return ((aCodecMask & VPXDecoder::VP8) &&
           aMimeType.EqualsLiteral("video/webm; codecs=vp8")) ||
          ((aCodecMask & VPXDecoder::VP9) &&
-          aMimeType.EqualsLiteral("video/webm; codecs=vp9"));
+          aMimeType.EqualsLiteral("video/webm; codecs=vp9")) ||
+         ((aCodecMask & VPXDecoder::VP9) &&
+          aMimeType.EqualsLiteral("video/vp9"));
 }
 
 /* static */
