@@ -3,13 +3,12 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-var modifiers = {
-  accelKey: true
-};
+"use strict";
 
 var toolbox;
-var strings = Services.strings.createBundle(
-  "chrome://devtools/locale/toolbox.properties");
+
+const {LocalizationHelper} = require("devtools/shared/l10n");
+const L10N = new LocalizationHelper("devtools/locale/toolbox.properties");
 
 function test() {
   addTab("about:blank").then(openToolbox);
@@ -48,7 +47,7 @@ function testZoomLevel(type, times, expected) {
 
 function sendZoomKey(shortcut, times) {
   for (let i = 0; i < times; i++) {
-    synthesizeKeyShortcut(strings.GetStringFromName(shortcut));
+    synthesizeKeyShortcut(L10N.getStr(shortcut));
   }
 }
 
@@ -61,7 +60,7 @@ function tidyUp() {
   toolbox.destroy().then(function () {
     gBrowser.removeCurrentTab();
 
-    toolbox = modifiers = null;
+    toolbox = null;
     finish();
   });
 }

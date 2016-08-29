@@ -8,26 +8,13 @@
 
 const Services = require("Services");
 const defer = require("devtools/shared/defer");
-const {XPCOMUtils} = require("resource://gre/modules/XPCOMUtils.jsm");
 const {Task} = require("devtools/shared/task");
 const {gDevTools} = require("devtools/client/framework/devtools");
 
-exports.OptionsPanel = OptionsPanel;
+const {LocalizationHelper} = require("devtools/shared/l10n");
+const L10N = new LocalizationHelper("devtools/locale/toolbox.properties");
 
-XPCOMUtils.defineLazyGetter(this, "l10n", function () {
-  let bundle = Services.strings.createBundle("chrome://devtools/locale/toolbox.properties");
-  let l10n = function (name, ...aArgs) {
-    try {
-      if (aArgs.length == 0) {
-        return bundle.GetStringFromName(name);
-      }
-      return bundle.formatStringFromName(name, aArgs, aArgs.length);
-    } catch (ex) {
-      console.log("Error reading '" + name + "'");
-    }
-  };
-  return l10n;
-});
+exports.OptionsPanel = OptionsPanel;
 
 function GetPref(name) {
   let type = Services.prefs.getPrefType(name);
@@ -220,8 +207,8 @@ OptionsPanel.prototype = {
         checkboxSpanLabel.textContent = tool.label;
       } else {
         atleastOneToolNotSupported = true;
-        checkboxSpanLabel.textContent = l10n(
-          "options.toolNotSupportedMarker", tool.label);
+        checkboxSpanLabel.textContent =
+          L10N.getFormatStr("options.toolNotSupportedMarker", tool.label);
         checkboxInput.setAttribute("data-unsupported", "true");
         checkboxInput.setAttribute("disabled", "true");
       }
