@@ -36,6 +36,7 @@
     _(CheckHashTables,          "ckTbls")                                     \
     _(MarkRuntime,              "mkRntm")                                     \
     _(MarkDebugger,             "mkDbgr")                                     \
+    _(ClearNewObjectCache,      "clrNOC")                                     \
     _(CollectToFP,              "collct")                                     \
     _(ObjectsTenuredCallback,   "tenCB")                                      \
     _(SweepArrayBufferViewList, "swpABO")                                     \
