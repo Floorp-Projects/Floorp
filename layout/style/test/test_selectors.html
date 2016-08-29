@@ -1244,6 +1244,19 @@ function run() {
     // Test that :-moz-placeholder is parsable.
     test_parseable(":-moz-placeholder");
 
+    // Test that things other than user-action pseudo-classes are
+    // rejected after pseudo-elements.  Some of these tests rely on
+    // using a pseudo-element that supports a user-action pseudo-class
+    // after it, so we need to use the prefixed ::-moz-color-swatch,
+    // which is one of the ones with
+    // CSS_PSEUDO_ELEMENT_SUPPORTS_USER_ACTION_STATE (none of which are
+    // unprefixed).
+    test_parseable("::-moz-color-swatch:hover");
+    test_balanced_unparseable("::-moz-color-swatch:not(.foo)");
+    test_balanced_unparseable("::-moz-color-swatch:first-child");
+    test_balanced_unparseable("::-moz-color-swatch:hover#foo");
+    test_balanced_unparseable(".foo::after:not(.bar) ~ h3");
+
     run_deferred_tests();
 }
 
