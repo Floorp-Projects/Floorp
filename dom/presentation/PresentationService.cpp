@@ -502,7 +502,9 @@ PresentationService::HandleReconnectRequest(nsIPresentationSessionRequest* aRequ
   }
 
   uint64_t windowId;
-  rv = GetWindowIdBySessionIdInternal(sessionId, &windowId);
+  rv = GetWindowIdBySessionIdInternal(sessionId,
+                                      nsIPresentationService::ROLE_RECEIVER,
+                                      &windowId);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     ctrlChannel->Disconnect(rv);
     return rv;
@@ -672,7 +674,9 @@ PresentationService::CreateControllingSessionInfo(const nsAString& aUrl,
     new PresentationControllingInfo(aUrl, aSessionId);
 
   mSessionInfoAtController.Put(aSessionId, info);
-  AddRespondingSessionId(aWindowId, aSessionId);
+  AddRespondingSessionId(aWindowId,
+                         aSessionId,
+                         nsIPresentationService::ROLE_CONTROLLER);
   return info.forget();
 }
 
@@ -908,12 +912,14 @@ PresentationService::RegisterRespondingListener(
     return (listener == aListener) ? NS_OK : NS_ERROR_DOM_INVALID_STATE_ERR;
   }
 
-  nsTArray<nsString>* sessionIdArray;
-  if (!mRespondingSessionIds.Get(aWindowId, &sessionIdArray)) {
-    return NS_ERROR_INVALID_ARG;
+  nsTArray<nsString> sessionIdArray;
+  nsresult rv = mReceiverSessionIdManager.GetSessionIds(aWindowId,
+                                                        sessionIdArray);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
   }
 
-  for (const auto& id : *sessionIdArray) {
+  for (const auto& id : sessionIdArray) {
     aListener->NotifySessionConnect(aWindowId, id);
   }
 
@@ -933,13 +939,6 @@ PresentationService::UnregisterRespondingListener(uint64_t aWindowId)
 }
 
 NS_IMETHODIMP
-PresentationService::GetExistentSessionIdAtLaunch(uint64_t aWindowId,
-                                                  nsAString& aSessionId)
-{
-  return GetExistentSessionIdAtLaunchInternal(aWindowId, aSessionId);
-}
-
-NS_IMETHODIMP
 PresentationService::NotifyReceiverReady(const nsAString& aSessionId,
                                          uint64_t aWindowId,
                                          bool aIsLoading)
@@ -953,10 +952,13 @@ PresentationService::NotifyReceiverReady(const nsAString& aSessionId,
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  AddRespondingSessionId(aWindowId, aSessionId);
+  AddRespondingSessionId(aWindowId,
+                         aSessionId,
+                         nsIPresentationService::ROLE_RECEIVER);
 
   if (!aIsLoading) {
-    return static_cast<PresentationPresentingInfo*>(info.get())->NotifyResponderFailure();
+    return static_cast<PresentationPresentingInfo*>(
+      info.get())->NotifyResponderFailure();
   }
 
   nsCOMPtr<nsIPresentationRespondingListener> listener;
@@ -1006,7 +1008,7 @@ PresentationService::UntrackSessionInfo(const nsAString& aSessionId,
   } else {
     // Terminate receiver page.
     uint64_t windowId;
-    nsresult rv = GetWindowIdBySessionIdInternal(aSessionId, &windowId);
+    nsresult rv = GetWindowIdBySessionIdInternal(aSessionId, aRole, &windowId);
     if (NS_SUCCEEDED(rv)) {
       NS_DispatchToMainThread(NS_NewRunnableFunction([windowId]() -> void {
         PRES_DEBUG("Attempt to close window[%d]\n", windowId);
@@ -1021,23 +1023,25 @@ PresentationService::UntrackSessionInfo(const nsAString& aSessionId,
   }
 
   // Remove the in-process responding info if there's still any.
-  RemoveRespondingSessionId(aSessionId);
+  RemoveRespondingSessionId(aSessionId, aRole);
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
 PresentationService::GetWindowIdBySessionId(const nsAString& aSessionId,
+                                            uint8_t aRole,
                                             uint64_t* aWindowId)
 {
-  return GetWindowIdBySessionIdInternal(aSessionId, aWindowId);
+  return GetWindowIdBySessionIdInternal(aSessionId, aRole, aWindowId);
 }
 
 NS_IMETHODIMP
 PresentationService::UpdateWindowIdBySessionId(const nsAString& aSessionId,
+                                               uint8_t aRole,
                                                const uint64_t aWindowId)
 {
-  return UpdateWindowIdBySessionIdInternal(aSessionId, aWindowId);
+  return UpdateWindowIdBySessionIdInternal(aSessionId, aRole, aWindowId);
 }
 
 bool
