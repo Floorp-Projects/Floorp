@@ -1330,15 +1330,13 @@ MacroAssemblerMIPS64Compat::unboxNonDouble(const BaseIndex& src, Register dest)
 void
 MacroAssemblerMIPS64Compat::unboxInt32(const ValueOperand& operand, Register dest)
 {
-    ma_dsll(dest, operand.valueReg(), Imm32(32));
-    ma_dsra(dest, dest, Imm32(32));
+    ma_sll(dest, operand.valueReg(), Imm32(0));
 }
 
 void
 MacroAssemblerMIPS64Compat::unboxInt32(Register src, Register dest)
 {
-    ma_dsll(dest, src, Imm32(32));
-    ma_dsra(dest, dest, Imm32(32));
+    ma_sll(dest, src, Imm32(0));
 }
 
 void
