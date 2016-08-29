@@ -238,6 +238,9 @@ public:
                                      nsIContentSink* aSink = nullptr) = 0;
   virtual void StopDocumentLoad() = 0;
 
+  virtual void SetSuppressParserErrorElement(bool aSuppress) {}
+  virtual bool SuppressParserErrorElement() { return false; }
+
   /**
    * Signal that the document title may have changed
    * (see nsDocument::GetTitle).
