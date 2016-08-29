@@ -13,8 +13,8 @@ var {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
 
 const DOMUtils = Cc["@mozilla.org/inspector/dom-utils;1"].getService(Ci.inIDOMUtils);
 
-const {colorUtils} = require("devtools/shared/css-color");
-const {cssColors} = require("devtools/shared/css-color-db");
+const {colorUtils} = require("devtools/shared/css/color");
+const {cssColors} = require("devtools/shared/css/color-db");
 
 function isValid(colorName) {
   ok(colorUtils.isValidCSSColor(colorName),

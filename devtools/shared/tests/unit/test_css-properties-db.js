@@ -9,7 +9,7 @@
 const DOMUtils = Components.classes["@mozilla.org/inspector/dom-utils;1"]
                            .getService(Components.interfaces.inIDOMUtils);
 
-const {PSEUDO_ELEMENTS, CSS_PROPERTIES} = require("devtools/shared/css-properties-db");
+const {PSEUDO_ELEMENTS, CSS_PROPERTIES} = require("devtools/shared/css/properties-db");
 const {generateCssProperties} = require("devtools/server/actors/css-properties");
 
 function run_test() {
@@ -17,13 +17,13 @@ function run_test() {
   deepEqual(PSEUDO_ELEMENTS, DOMUtils.getCSSPseudoElementNames(),
             "If this assertion fails, then the client side CSS pseudo elements list in " +
             "devtools is out of date with the pseudo elements on the platform. To fix " +
-            "this assertion open devtools/shared/css-properties-db.js and follow the " +
+            "this assertion open devtools/shared/css/properties-db.js and follow the " +
             "instructions above the CSS_PSEUDO_ELEMENTS on how to re-generate the list.");
 
   const propertiesErrorMessage = "If this assertion fails, then the client side CSS " +
                                  "properties list in devtools is out of date with the " +
                                  "CSS properties on the platform. To fix this " +
-                                 "assertion open devtools/shared/css-properties-db.js " +
+                                 "assertion open devtools/shared/css/properties-db.js " +
                                  "and follow the instructions above the CSS_PROPERTIES " +
                                  "on how to re-generate the list.";
 
