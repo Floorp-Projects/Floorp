@@ -14,7 +14,7 @@
 "use strict";
 
 add_task(function* test_connect_bidirectionally_and_postMessage() {
-  function backgroundScript() {
+  function background() {
     let onConnectCount = 0;
     browser.runtime.onConnect.addListener(port => {
       // 3. onConnect by connect() from CS.
@@ -98,7 +98,7 @@ add_task(function* test_connect_bidirectionally_and_postMessage() {
   }
 
   let extensionData = {
-    background: `(${backgroundScript})();`,
+    background,
     manifest: {
       content_scripts: [{
         js: ["contentscript.js"],
@@ -106,7 +106,7 @@ add_task(function* test_connect_bidirectionally_and_postMessage() {
       }],
     },
     files: {
-      "contentscript.js": `(${contentScript})();`,
+      "contentscript.js": contentScript,
     },
   };
 
