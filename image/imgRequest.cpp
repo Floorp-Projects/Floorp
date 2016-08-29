@@ -108,7 +108,10 @@ imgRequest::Init(nsIURI *aURI,
   mProperties = do_CreateInstance("@mozilla.org/properties;1");
 
   // Use ImageURL to ensure access to URI data off main thread.
-  mURI = new ImageURL(aURI);
+  nsresult rv;
+  mURI = new ImageURL(aURI, rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   mCurrentURI = aCurrentURI;
   mRequest = aRequest;
   mChannel = aChannel;

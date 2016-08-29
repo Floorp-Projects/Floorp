@@ -28,12 +28,18 @@ namespace image {
 class ImageURL
 {
 public:
-  explicit ImageURL(nsIURI* aURI)
+  explicit ImageURL(nsIURI* aURI, nsresult& aRv)
   {
     MOZ_ASSERT(NS_IsMainThread(), "Cannot use nsIURI off main thread!");
-    aURI->GetSpec(mSpec);
-    aURI->GetScheme(mScheme);
-    aURI->GetRef(mRef);
+
+    aRv = aURI->GetSpec(mSpec);
+    NS_ENSURE_SUCCESS_VOID(aRv);
+
+    aRv = aURI->GetScheme(mScheme);
+    NS_ENSURE_SUCCESS_VOID(aRv);
+
+    aRv = aURI->GetRef(mRef);
+    NS_ENSURE_SUCCESS_VOID(aRv);
   }
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(ImageURL)
