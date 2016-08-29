@@ -2634,7 +2634,8 @@ css::URLValueData::operator==(const URLValueData& aOther) const
             NS_SUCCEEDED(mURI->Equals(aOther.mURI, &eq)) &&
             eq)) &&
           (mOriginPrincipal == aOther.mOriginPrincipal ||
-           self.mOriginPrincipal.get()->Equals(other.mOriginPrincipal.get()));
+           self.mOriginPrincipal.get()->Equals(other.mOriginPrincipal.get())) &&
+          mLocalURLFlag == aOther.mLocalURLFlag;
 }
 
 bool
@@ -2663,7 +2664,8 @@ css::URLValueData::URIEquals(const URLValueData& aOther) const
   return (mURI == aOther.mURI ||
           (NS_SUCCEEDED(mURI->Equals(aOther.mURI, &eq)) && eq)) &&
          (mOriginPrincipal == aOther.mOriginPrincipal ||
-          self.mOriginPrincipal.get()->Equals(other.mOriginPrincipal.get()));
+          self.mOriginPrincipal.get()->Equals(other.mOriginPrincipal.get())) &&
+         mLocalURLFlag == aOther.mLocalURLFlag;
 }
 
 nsIURI*
