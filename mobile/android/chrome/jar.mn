@@ -25,6 +25,7 @@ chrome.jar:
   content/blockedSite.xhtml            (content/blockedSite.xhtml)
   content/languages.properties         (content/languages.properties)
   content/browser.xul                  (content/browser.xul)
+  content/browser.css                  (content/browser.css)
   content/browser.js                   (content/browser.js)
   content/geckoview.xul                (content/geckoview.xul)
   content/geckoview.js                 (content/geckoview.js)

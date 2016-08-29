@@ -21,7 +21,7 @@ public:
   NS_DECL_NSIHANDLERSERVICE
 
   ContentHandlerService();
-  nsresult Init();
+  MOZ_MUST_USE nsresult Init();
   static void nsIHandlerInfoToHandlerInfo(nsIHandlerInfo* aInfo, HandlerInfo* aHandlerInfo);
 
 private:

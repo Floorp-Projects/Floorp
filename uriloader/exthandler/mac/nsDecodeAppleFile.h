@@ -83,7 +83,7 @@ public:
   nsDecodeAppleFile();
   virtual ~nsDecodeAppleFile();
   
-  nsresult Initialize(nsIOutputStream *output, nsIFile *file);
+  MOZ_MUST_USE nsresult Initialize(nsIOutputStream *output, nsIFile *file);
   
 private:
   #define MAX_BUFFERSIZE    1024

@@ -10,22 +10,10 @@
 #include "OggCodecState.h"
 #include "VideoUtils.h"
 
+using mp4_demuxer::AutoByteReader;
+
 namespace mozilla
 {
-
-class AutoByteReader : public mp4_demuxer::ByteReader
-{
-public:
-  AutoByteReader(const uint8_t* aData, size_t aSize)
-    : mp4_demuxer::ByteReader(aData, aSize)
-  {
-
-  }
-  virtual ~AutoByteReader()
-  {
-    DiscardRemaining();
-  }
-};
 
 #define OGG_FLAC_METADATA_TYPE_STREAMINFO 0x7F
 #define FLAC_STREAMINFO_SIZE   34

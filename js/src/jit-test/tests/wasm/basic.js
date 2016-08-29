@@ -67,8 +67,15 @@ wasmEvalText('(module (func (result i32) (param i32) (i32.const 42)))');
 wasmEvalText('(module (func (param f32)))');
 wasmEvalText('(module (func (param f64)))');
 
-assertErrorMessage(() => wasmEvalText('(module (func (param i64) (result i32) (i32.const 123)) (export "" 0))'), TypeError, /i64 argument/);
-assertErrorMessage(() => wasmEvalText('(module (func (param i32) (result i64) (i64.const 123)) (export "" 0))'), TypeError, /i64 return type/);
+var f = wasmEvalText('(module (func (param i64) (result i32) (i32.const 123)) (export "" 0))');
+assertErrorMessage(() => f(), TypeError, /i64/);
+var f = wasmEvalText('(module (func (param i32) (result i64) (i64.const 123)) (export "" 0))');
+assertErrorMessage(() => f(), TypeError, /i64/);
+
+var f = wasmEvalText('(module (import $imp "a" "b" (param i64) (result i32)) (func $f (call_import $imp (i64.const 0))) (export "" $f))', {a:{b:()=>{}}});
+assertErrorMessage(() => f(), TypeError, /i64/);
+var f = wasmEvalText('(module (import $imp "a" "b" (result i64)) (func $f (call_import $imp)) (export "" $f))', {a:{b:()=>{}}});
+assertErrorMessage(() => f(), TypeError, /i64/);
 
 setJitCompilerOption('wasm.test-mode', 1);
 assertEqI64(wasmEvalText('(module (func (result i64) (i64.const 123)) (export "" 0))')(), {low: 123, high: 0});
@@ -327,9 +334,6 @@ if (typeof evaluate === 'function')
     evaluate(`Wasm.instantiateModule(wasmTextToBinary('(module)')) `, { fileName: null });
 
 {
-    assertErrorMessage(() => wasmEvalText('(module (import "a" "" (param i64) (result i32)))'), TypeError, /i64 argument/);
-    assertErrorMessage(() => wasmEvalText('(module (import "a" "" (result i64)))'), TypeError, /i64 return type/);
-
     setJitCompilerOption('wasm.test-mode', 1);
 
     let imp = {

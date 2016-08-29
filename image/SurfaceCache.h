@@ -269,10 +269,6 @@ struct SurfaceCache
    * need to check the result of Insert() at all.
    *
    * @param aProvider    The new cache entry to insert into the cache.
-   * @param aImageKey       Key data identifying which image the cache entry
-   *                        belongs to.
-   * @param aSurfaceKey     Key data which uniquely identifies the requested
-   *                        cache entry.
    * @return SUCCESS if the cache entry was inserted successfully. (But see above
    *           for more information about when you should check this.)
    *         FAILURE if the cache entry could not be inserted, e.g. for capacity
@@ -281,9 +277,7 @@ struct SurfaceCache
    *         FAILURE_ALREADY_PRESENT if an entry with the same ImageKey and
    *           SurfaceKey already exists in the cache.
    */
-  static InsertOutcome Insert(NotNull<ISurfaceProvider*> aProvider,
-                              const ImageKey    aImageKey,
-                              const SurfaceKey& aSurfaceKey);
+  static InsertOutcome Insert(NotNull<ISurfaceProvider*> aProvider);
 
   /**
    * Mark the cache entry @aProvider as having an available surface. This turns
@@ -299,14 +293,8 @@ struct SurfaceCache
    * available already.
    *
    * @param aProvider       The cache entry that now has a surface available.
-   * @param aImageKey       Key data identifying which image the cache entry
-   *                        belongs to.
-   * @param aSurfaceKey     Key data which uniquely identifies the requested
-   *                        cache entry.
    */
-  static void SurfaceAvailable(NotNull<ISurfaceProvider*> aProvider,
-                               const ImageKey    aImageKey,
-                               const SurfaceKey& aSurfaceKey);
+  static void SurfaceAvailable(NotNull<ISurfaceProvider*> aProvider);
 
   /**
    * Checks if a surface of a given size could possibly be stored in the cache.

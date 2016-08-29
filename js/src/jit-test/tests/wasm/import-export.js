@@ -287,6 +287,14 @@ assertEq(e1.foo, tbl.get(1));
 assertEq(tbl.get(0) === e1.foo, false);
 assertEq(e1.foo === e2.foo, false);
 
+// i64 is fully allowed for imported wasm functions
+
+var code1 = textToBinary('(module (func $exp (param i64) (result i64) (i64.add (get_local 0) (i64.const 10))) (export "exp" $exp))');
+var e1 = new Instance(new Module(code1)).exports;
+var code2 = textToBinary('(module (import $i "a" "b" (param i64) (result i64)) (func $f (result i32) (i32.wrap/i64 (call_import $i (i64.const 42)))) (export "f" $f))');
+var e2 = new Instance(new Module(code2), {a:{b:e1.exp}}).exports;
+assertEq(e2.f(), 52);
+
 // Non-existent export errors
 
 assertErrorMessage(() => new Module(textToBinary('(module (export "a" 0))')), TypeError, /exported function index out of bounds/);

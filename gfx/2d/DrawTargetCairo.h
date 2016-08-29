@@ -223,6 +223,10 @@ private: // methods
   // draw into it, to simulate the effect of an unbounded source operator.
   void ClearSurfaceForUnboundedSource(const CompositionOp &aOperator);
 
+  // Set the Cairo context font options according to the current draw target
+  // font state.
+  void SetFontOptions();
+
 private: // data
   cairo_t* mContext;
   cairo_surface_t* mSurface;
@@ -230,6 +234,8 @@ private: // data
   bool mTransformSingular;
 
   uint8_t* mLockedBits;
+
+  cairo_font_options_t* mFontOptions;
 
   struct PushedLayer
   {

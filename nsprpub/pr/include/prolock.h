@@ -11,21 +11,21 @@
 PR_BEGIN_EXTERN_C
 
 /*
-** A locking mechanism, built on the existing PRLock definiion,
+** A locking mechanism, built on the existing PRLock definition,
 ** is provided that will permit applications to define a Lock
 ** Hierarchy (or Lock Ordering) schema. An application designed
 ** using the Ordered Lock functions will terminate with a
 ** diagnostic message when a lock inversion condition is
 ** detected. 
 ** 
-** The lock ordering detection is complile-time enabled only. in
+** The lock ordering detection is compile-time enabled only. In
 ** optimized builds of NSPR, the Ordered Lock functions map
 ** directly to PRLock functions, providing no lock order
 ** detection.
 ** 
 ** The Ordered Lock Facility is compiled in when DEBUG is defined at
-** compile time. Ordered Lock can be forced on in optimized builds by
-** defining FORCE_NSPR_ORDERED_LOCK at compile time. Both the
+** compile-time. Ordered Lock can be forced on in optimized builds by
+** defining FORCE_NSPR_ORDERED_LOCK at compile-time. Both the
 ** application using Ordered Lock and NSPR must be compiled with the
 ** facility enabled to achieve the desired results.
 ** 
