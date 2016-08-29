@@ -5,10 +5,10 @@
 
 #include "prlong.h"
 
-static PRInt64 ll_zero = LL_INIT( 0x00000000,0x00000000 );
-static PRInt64 ll_maxint = LL_INIT( 0x7fffffff, 0xffffffff );
-static PRInt64 ll_minint = LL_INIT( 0x80000000, 0x00000000 );
-static PRUint64 ll_maxuint = LL_INIT( 0xffffffff, 0xffffffff );
+static PRInt64 ll_zero = PR_INT64(0x0000000000000000);
+static PRInt64 ll_maxint = PR_INT64(0x7fffffffffffffff);
+static PRInt64 ll_minint = PR_INT64(0x8000000000000000);
+static PRUint64 ll_maxuint = PR_UINT64(0xffffffffffffffff);
 
 PR_IMPLEMENT(PRInt64) LL_Zero(void) { return ll_zero; }
 PR_IMPLEMENT(PRInt64) LL_MaxInt(void) { return ll_maxint; }

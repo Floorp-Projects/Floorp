@@ -738,7 +738,7 @@ element.toJson = function(obj, seenEls) {
   // HTMLElement
   else if ("nodeType" in obj && obj.nodeType == 1) {
     let uuid = seenEls.add(obj);
-    return {[element.Key]: uuid, [element.LegacyKey]: uuid};
+    return element.makeWebElement(uuid);
   }
 
   // arbitrary objects + files

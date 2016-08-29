@@ -390,7 +390,7 @@ Animation::PlayState() const
   }
 
   if ((mPlaybackRate > 0.0 && currentTime.Value() >= EffectEnd()) ||
-      (mPlaybackRate < 0.0 && currentTime.Value().ToMilliseconds() <= 0.0)) {
+      (mPlaybackRate < 0.0 && currentTime.Value() <= TimeDuration()))  {
     return AnimationPlayState::Finished;
   }
 
@@ -930,13 +930,13 @@ Animation::PlayNoUpdate(ErrorResult& aRv, LimitBehavior aLimitBehavior)
   if (mPlaybackRate > 0.0 &&
       (currentTime.IsNull() ||
        (aLimitBehavior == LimitBehavior::AutoRewind &&
-        (currentTime.Value().ToMilliseconds() < 0.0 ||
+        (currentTime.Value() < TimeDuration() ||
          currentTime.Value() >= EffectEnd())))) {
     mHoldTime.SetValue(TimeDuration(0));
   } else if (mPlaybackRate < 0.0 &&
              (currentTime.IsNull() ||
               (aLimitBehavior == LimitBehavior::AutoRewind &&
-               (currentTime.Value().ToMilliseconds() <= 0.0 ||
+               (currentTime.Value() <= TimeDuration() ||
                 currentTime.Value() > EffectEnd())))) {
     if (EffectEnd() == TimeDuration::Forever()) {
       aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
@@ -1136,7 +1136,7 @@ Animation::UpdateFinishedState(SeekFlag aSeekFlag,
       }
     } else if (mPlaybackRate < 0.0 &&
                !currentTime.IsNull() &&
-               currentTime.Value().ToMilliseconds() <= 0.0) {
+               currentTime.Value() <= TimeDuration()) {
       if (aSeekFlag == SeekFlag::DidSeek) {
         mHoldTime = currentTime;
       } else if (!mPreviousCurrentTime.IsNull()) {
