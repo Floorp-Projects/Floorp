@@ -57,8 +57,11 @@ Finder.prototype = {
     if (this._iterator)
       this._iterator.reset();
     if (this._highlighter) {
-      this._highlighter.clear();
+      // if we clear all the references before we hide the highlights (in both
+      // highlighting modes), we simply can't use them to find the ranges we
+      // need to clear from the selection.
       this._highlighter.hide();
+      this._highlighter.clear();
     }
     this.listeners = [];
     this._docShell.QueryInterface(Ci.nsIInterfaceRequestor)
@@ -331,10 +334,10 @@ Finder.prototype = {
   },
 
   onHighlightAllChange(highlightAll) {
-    if (this._iterator)
-      this._iterator.reset();
     if (this._highlighter)
       this._highlighter.onHighlightAllChange(highlightAll);
+    if (this._iterator)
+      this._iterator.reset();
   },
 
   keyPress: function (aEvent) {

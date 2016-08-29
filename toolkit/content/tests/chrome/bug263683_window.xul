@@ -23,10 +23,12 @@
     Cu.import("resource://testing-common/ContentTask.jsm");
     ContentTask.setTestScope(window.opener.wrappedJSObject);
 
+    var gPrefsvc = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
+    const kIteratorTimeout = gPrefsvc.getIntPref("findbar.iteratorTimeout") + 20;
     var gFindBar = null;
     var gBrowser;
 
-    var imports = ["SimpleTest", "ok", "info"];
+    var imports = ["SimpleTest", "ok", "info", "is"];
     for (var name of imports) {
       window[name] = window.opener.wrappedJSObject[name];
     }
@@ -82,12 +84,16 @@
     function* onDocumentLoaded() {
       gFindBar.open();
       var search = "mozilla";
+      gFindBar._findField.focus();
       gFindBar._findField.value = search;
       var matchCase = gFindBar.getElement("find-case-sensitive");
-      if (matchCase.checked)
+      if (matchCase.checked) {
         matchCase.doCommand();
+        yield new Promise(resolve => setTimeout(resolve, kIteratorTimeout));
+      }
 
       gFindBar._find();
+      yield new Promise(resolve => setTimeout(resolve, kIteratorTimeout));
       yield toggleHighlightAndWait(true);
 
       yield ContentTask.spawn(gBrowser, { search }, function* (args) {
@@ -96,13 +102,14 @@
                                  .QueryInterface(Ci.nsISelectionController);
         Assert.ok("SELECTION_FIND" in controller, "Correctly detects new selection type");
         let selection = controller.getSelection(controller.SELECTION_FIND);
-        
+
         Assert.equal(selection.rangeCount, 1,
           "Correctly added a match to the selection type");
         Assert.equal(selection.getRangeAt(0).toString().toLowerCase(),
           args.search, "Added the correct match");
       });
 
+      yield new Promise(resolve => setTimeout(resolve, kIteratorTimeout));
       yield toggleHighlightAndWait(false);
 
       yield ContentTask.spawn(gBrowser, { search }, function* (args) {
@@ -116,6 +123,7 @@
         input.value = args.search;
       });
  
+      yield new Promise(resolve => setTimeout(resolve, kIteratorTimeout));
       yield toggleHighlightAndWait(true);
 
       yield ContentTask.spawn(gBrowser, { search }, function* (args) {
@@ -129,6 +137,7 @@
           args.search, "Added the correct match");
       });
 
+      yield new Promise(resolve => setTimeout(resolve, kIteratorTimeout));
       yield toggleHighlightAndWait(false);
 
       yield ContentTask.spawn(gBrowser, null, function* () {
@@ -139,7 +148,83 @@
         Assert.equal(inputSelection.rangeCount, 0, "Correctly removed the range");
       });
 
+      yield new Promise(resolve => setTimeout(resolve, kIteratorTimeout));
+
+      // For posterity, test iframes too.
+
+      let promise = ContentTask.spawn(gBrowser, null, function* () {
+        return new Promise(resolve => {
+          addEventListener("DOMContentLoaded", function listener() {
+            removeEventListener("DOMContentLoaded", listener);
+            resolve();
+          });
+        });
+      });
+      gBrowser.loadURI('data:text/html,<h2>Text mozilla</h2><iframe id="leframe" ' +
+        'src="data:text/html,Text mozilla"></iframe>');
+      yield promise;
+
+      yield new Promise(resolve => setTimeout(resolve, kIteratorTimeout));
+      yield toggleHighlightAndWait(true);
+
+      yield ContentTask.spawn(gBrowser, { search }, function* (args) {
+        function getSelection(docShell) {
+          let controller = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
+                                   .getInterface(Ci.nsISelectionDisplay)
+                                   .QueryInterface(Ci.nsISelectionController);
+          return controller.getSelection(controller.SELECTION_FIND);
+        }
+
+        let selection = getSelection(docShell);
+        Assert.equal(selection.rangeCount, 1,
+          "Correctly added a match to the selection type");
+        Assert.equal(selection.getRangeAt(0).toString().toLowerCase(),
+          args.search, "Added the correct match");
+
+        // Check the iframe too:
+        let frame = content.document.getElementById("leframe");
+        // Hoops! Get the docShell first, then the selection.
+        selection = getSelection(frame.contentWindow
+          .QueryInterface(Ci.nsIInterfaceRequestor)
+          .getInterface(Ci.nsIWebNavigation)
+          .QueryInterface(Ci.nsIDocShell));
+        Assert.equal(selection.rangeCount, 1,
+          "Correctly added a match to the selection type");
+        Assert.equal(selection.getRangeAt(0).toString().toLowerCase(),
+          args.search, "Added the correct match");
+      });
+
+      yield new Promise(resolve => setTimeout(resolve, kIteratorTimeout));
+      yield toggleHighlightAndWait(false);
+
+      let matches = gFindBar._foundMatches.value.match(/([\d]*)\sof\s([\d]*)/);
+      is(matches[1], "2", "Found correct amount of matches")
+
+      yield ContentTask.spawn(gBrowser, null, function* (args) {
+        function getSelection(docShell) {
+          let controller = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
+                                   .getInterface(Ci.nsISelectionDisplay)
+                                   .QueryInterface(Ci.nsISelectionController);
+          return controller.getSelection(controller.SELECTION_FIND);
+        }
+
+        let selection = getSelection(docShell);
+        Assert.equal(selection.rangeCount, 0, "Correctly removed the range");
+
+        // Check the iframe too:
+        let frame = content.document.getElementById("leframe");
+        // Hoops! Get the docShell first, then the selection.
+        selection = getSelection(frame.contentWindow
+          .QueryInterface(Ci.nsIInterfaceRequestor)
+          .getInterface(Ci.nsIWebNavigation)
+          .QueryInterface(Ci.nsIDocShell));
+        Assert.equal(selection.rangeCount, 0, "Correctly removed the range");
+
+        content.document.documentElement.focus();
+      });
+
       gFindBar.close();
+      yield new Promise(resolve => setTimeout(resolve, kIteratorTimeout));
     }
   ]]></script>
 
