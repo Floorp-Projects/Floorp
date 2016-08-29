@@ -20,6 +20,7 @@
 #include "jswrapper.h"
 
 #include "asmjs/WasmInstance.h"
+#include "builtin/Promise.h"
 #include "frontend/BytecodeCompiler.h"
 #include "frontend/Parser.h"
 #include "gc/Marking.h"
@@ -8608,13 +8609,10 @@ DebuggerObject::isPromiseGetter(JSContext* cx, unsigned argc, Value* vp)
 /* static */ bool
 DebuggerObject::promiseStateGetter(JSContext* cx, unsigned argc, Value* vp)
 {
-    THIS_DEBUGOBJECT(cx, argc, vp, "get promiseState", args, object);
-
-    if (!DebuggerObject::requirePromise(cx, object))
-        return false;
+    THIS_DEBUGOBJECT_PROMISE(cx, argc, vp, "get promiseState", args, refobj);
 
     RootedValue result(cx);
-    switch (object->promiseState()) {
+    switch (promise->state()) {
       case JS::PromiseState::Pending:
         result.setString(cx->names().pending);
         break;
@@ -9332,7 +9330,7 @@ DebuggerObject::isPromise() const
         referent = CheckedUnwrap(referent);
         if (!referent)
             return false;
-    }
+      }
 
     return referent->is<PromiseObject>();
 }
@@ -9383,12 +9381,6 @@ DebuggerObject::displayName() const
     MOZ_ASSERT(isFunction());
 
     return referent()->as<JSFunction>().displayAtom();
-}
-
-JS::PromiseState
-DebuggerObject::promiseState() const
-{
-    return promise()->state();
 }
 
 /* static */ bool
@@ -9998,30 +9990,6 @@ DebuggerObject::requireGlobal(JSContext* cx, HandleDebuggerObject object)
 
     return true;
 }
-
-#ifdef SPIDERMONKEY_PROMISE
-/* static */ bool
-DebuggerObject::requirePromise(JSContext* cx, HandleDebuggerObject object)
-{
-   RootedObject referent(cx, object->referent());
-
-   if (IsCrossCompartmentWrapper(referent)) {
-       referent = CheckedUnwrap(referent);
-       if (!referent) {
-           JS_ReportError(cx, "Permission denied to access object");
-           return false;
-       }
-   }
-
-   if (!referent->is<PromiseObject>()) {
-      JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_NOT_EXPECTED_TYPE,
-                           "Debugger", "Promise", object->getClass()->name);
-      return false;
-   }
-
-   return true;
-}
-#endif // SPIDERMONKEY_PROMISE
 
 /* static */ bool
 DebuggerObject::getScriptedProxyTarget(JSContext* cx, HandleDebuggerObject object,
