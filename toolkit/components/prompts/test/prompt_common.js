@@ -95,7 +95,7 @@ function checkEchoedAuthInfo(expectedState, doc) {
 }
 
 /**
- * Create a Proxy to relay method calls on an nsIAuthPrompt prompter to a chrome script which can
+ * Create a Proxy to relay method calls on an nsIAuthPrompt[2] prompter to a chrome script which can
  * perform the calls in the parent. Out and inout params will be copied back from the parent to
  * content.
  *
@@ -116,6 +116,10 @@ function PrompterProxy(chromeScript) {
         switch (prop) {
           case "prompt": {
             outParams = [/* result */ 5];
+            break;
+          }
+          case "promptAuth": {
+            outParams = [];
             break;
           }
           case "promptPassword": {
@@ -140,6 +144,12 @@ function PrompterProxy(chromeScript) {
         for (let outParam of outParams) {
           // Copy the out or inout param value over the original
           args[outParam].value = result.args[outParam].value;
+        }
+
+        if (prop == "promptAuth") {
+          args[2].username = result.args[2].username;
+          args[2].password = result.args[2].password;
+          args[2].domain = result.args[2].domain;
         }
 
         return result.rv;
