@@ -101,18 +101,4 @@ js::DebuggerObject::owner() const
     return Debugger::fromJSObject(dbgobj);
 }
 
-inline js::PromiseObject*
-js::DebuggerObject::promise() const
-{
-    MOZ_ASSERT(isPromise());
-
-    JSObject* referent = this->referent();
-    if (IsCrossCompartmentWrapper(referent)) {
-        referent = CheckedUnwrap(referent);
-        MOZ_ASSERT(referent);
-    }
-
-    return &referent->as<PromiseObject>();
-}
-
 #endif /* vm_Debugger_inl_h */
