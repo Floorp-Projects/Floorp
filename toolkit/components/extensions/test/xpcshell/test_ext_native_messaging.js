@@ -216,8 +216,13 @@ add_task(function* test_sendNativeMessage() {
 add_task(function* test_disconnect() {
   function background() {
     let port = browser.runtime.connectNative("echo");
-    port.onMessage.addListener(msg => {
+    port.onMessage.addListener((msg, msgPort) => {
+      browser.test.assertEq(port, msgPort, "onMessage handler should receive the port as the second argument");
       browser.test.sendMessage("message", msg);
+    });
+    port.onDisconnect.addListener(msgPort => {
+      browser.test.assertEq(port, msgPort, "onDisconnect handler should receive the port as the second argument");
+      browser.test.sendMessage("disconnected");
     });
     browser.test.onMessage.addListener((what, payload) => {
       if (what == "send") {
@@ -263,6 +268,8 @@ add_task(function* test_disconnect() {
   extension.sendMessage("disconnect");
   response = yield extension.awaitMessage("disconnect-result");
   equal(response.success, true, "disconnect succeeded");
+
+  yield extension.awaitMessage("disconnected");
 
   do_print("waiting for subprocess to exit");
   yield waitForSubprocessExit();
