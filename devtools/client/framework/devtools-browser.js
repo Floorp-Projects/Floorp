@@ -30,7 +30,8 @@ loader.lazyRequireGetter(this, "BrowserMenus", "devtools/client/framework/browse
 loader.lazyImporter(this, "CustomizableUI", "resource:///modules/CustomizableUI.jsm");
 loader.lazyImporter(this, "AppConstants", "resource://gre/modules/AppConstants.jsm");
 
-const bundle = Services.strings.createBundle("chrome://devtools/locale/toolbox.properties");
+const {LocalizationHelper} = require("devtools/shared/l10n");
+const L10N = new LocalizationHelper("devtools/locale/toolbox.properties");
 
 const TABS_OPEN_PEAK_HISTOGRAM = "DEVTOOLS_TABS_OPEN_PEAK_LINEAR";
 const TABS_OPEN_AVG_HISTOGRAM = "DEVTOOLS_TABS_OPEN_AVERAGE_LINEAR";
@@ -244,7 +245,7 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
         // Do nothing if there is only one process, the parent process.
         let contentProcesses = response.processes.filter(p => (!p.parent));
         if (contentProcesses.length < 1) {
-          let msg = bundle.GetStringFromName("toolbox.noContentProcess.message");
+          let msg = L10N.getStr("toolbox.noContentProcess.message");
           Services.prompt.alert(null, "", msg);
           deferred.reject("No content processes available.");
           return;

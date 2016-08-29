@@ -1,0 +1,284 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test HTTP auth prompts by loading authenticate.sjs</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript" src="pwmgr_common.js"></script>
+  <script type="text/javascript" src="prompt_common.js"></script>
+  <script type="text/javascript" src="notification_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+
+<div id="content" style="display: none">
+  <iframe id="iframe"></iframe>
+</div>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+var state, action;
+var iframe = document.getElementById("iframe");
+
+// Force parent to not look for tab-modal prompts, as they're not used for auth prompts.
+isTabModal = false;
+
+let chromeScript = runInParent(SimpleTest.getTestFileURL("pwmgr_common.js"));
+
+runInParent(() => {
+  const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
+  Cu.import("resource://gre/modules/Services.jsm");
+
+  let pwmgr = Cc["@mozilla.org/login-manager;1"].
+              getService(Ci.nsILoginManager);
+
+  let login3A, login3B, login4;
+  login3A = Cc["@mozilla.org/login-manager/loginInfo;1"].
+            createInstance(Ci.nsILoginInfo);
+  login3B = Cc["@mozilla.org/login-manager/loginInfo;1"].
+            createInstance(Ci.nsILoginInfo);
+  login4  = Cc["@mozilla.org/login-manager/loginInfo;1"].
+            createInstance(Ci.nsILoginInfo);
+
+  login3A.init("http://mochi.test:8888", null, "mochitest",
+               "mochiuser1", "mochipass1", "", "");
+  login3B.init("http://mochi.test:8888", null, "mochitest2",
+               "mochiuser2", "mochipass2", "", "");
+  login4.init("http://mochi.test:8888", null, "mochitest3",
+               "mochiuser3", "mochipass3-old", "", "");
+
+  pwmgr.addLogin(login3A);
+  pwmgr.addLogin(login3B);
+  pwmgr.addLogin(login4);
+});
+
+add_task(function* test_iframe() {
+  state = {
+    msg         : "http://mochi.test:8888 is requesting your username and password.\n\nThe site says: “mochitest”",
+    title       : "Authentication Required",
+    textValue   : "mochiuser1",
+    passValue   : "mochipass1",
+    iconClass   : "authentication-icon question-icon",
+    titleHidden : true,
+    textHidden  : false,
+    passHidden  : false,
+    checkHidden : true,
+    checkMsg    : "",
+    checked     : false,
+    focused     : "textField",
+    defButton   : "button0",
+  };
+  action = {
+    buttonClick : "ok",
+  };
+  promptDone = handlePrompt(state, action);
+
+  // The following tests are driven by iframe loads
+
+  var iframeLoaded = onloadPromiseFor("iframe");
+  iframe.src = "authenticate.sjs?user=mochiuser1&pass=mochipass1";
+  yield promptDone;
+  yield iframeLoaded;
+  checkEchoedAuthInfo({user: "mochiuser1", pass: "mochipass1"},
+                      iframe.contentDocument);
+
+  state = {
+    msg         : "http://mochi.test:8888 is requesting your username and password.\n\nThe site says: “mochitest2”",
+    title       : "Authentication Required",
+    textValue   : "mochiuser2",
+    passValue   : "mochipass2",
+    iconClass   : "authentication-icon question-icon",
+    titleHidden : true,
+    textHidden  : false,
+    passHidden  : false,
+    checkHidden : true,
+    checkMsg    : "",
+    checked     : false,
+    focused     : "textField",
+    defButton   : "button0",
+  };
+  action = {
+    buttonClick : "ok",
+  };
+  promptDone = handlePrompt(state, action);
+  // We've already authenticated to this host:port. For this next
+  // request, the existing auth should be sent, we'll get a 401 reply,
+  // and we should prompt for new auth.
+  iframeLoaded = onloadPromiseFor("iframe");
+  iframe.src = "authenticate.sjs?user=mochiuser2&pass=mochipass2&realm=mochitest2";
+  yield promptDone;
+  yield iframeLoaded;
+  checkEchoedAuthInfo({user: "mochiuser2", pass: "mochipass2"},
+                      iframe.contentDocument);
+
+  // Now make a load that requests the realm from test 1000. It was
+  // already provided there, so auth will *not* be prompted for -- the
+  // networking layer already knows it!
+  iframeLoaded = onloadPromiseFor("iframe");
+  iframe.src = "authenticate.sjs?user=mochiuser1&pass=mochipass1";
+  yield iframeLoaded;
+  checkEchoedAuthInfo({user: "mochiuser1", pass: "mochipass1"},
+                      iframe.contentDocument);
+
+  // Same realm we've already authenticated to, but with a different
+  // expected password (to trigger an auth prompt, and change-password
+  // popup notification).
+  state = {
+    msg         : "http://mochi.test:8888 is requesting your username and password.\n\nThe site says: “mochitest”",
+    title       : "Authentication Required",
+    textValue   : "mochiuser1",
+    passValue   : "mochipass1",
+    iconClass   : "authentication-icon question-icon",
+    titleHidden : true,
+    textHidden  : false,
+    passHidden  : false,
+    checkHidden : true,
+    checkMsg    : "",
+    checked     : false,
+    focused     : "textField",
+    defButton   : "button0",
+  };
+  action = {
+    buttonClick : "ok",
+    passField   : "mochipass1-new",
+  };
+  promptDone = handlePrompt(state, action);
+  iframeLoaded = onloadPromiseFor("iframe");
+  iframe.src = "authenticate.sjs?user=mochiuser1&pass=mochipass1-new";
+  yield promptDone;
+  yield iframeLoaded;
+  checkEchoedAuthInfo({user: "mochiuser1", pass: "mochipass1-new"},
+                      iframe.contentDocument);
+
+
+  var pwchanged = promiseStorageChanged(["modifyLogin"]);
+
+  // Check for the popup notification, and change the password.
+  var popupNotifications = getPopupNotifications(window.top);
+  popup = getPopup(popupNotifications, "password-change");
+  ok(popup, "got popup notification");
+  clickPopupButton(popup, kChangeButton);
+  popup.remove();
+
+  yield pwchanged;
+
+  // Housekeeping: change it back
+  runInParent(() => {
+    const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
+    Cu.import("resource://gre/modules/Services.jsm");
+
+    var tmpLogin = Cc["@mozilla.org/login-manager/loginInfo;1"].
+                   createInstance(Ci.nsILoginInfo);
+    tmpLogin.init("http://mochi.test:8888", null, "mochitest",
+                  "mochiuser1", "mochipass1-new", "", "");
+    var login3A = Cc["@mozilla.org/login-manager/loginInfo;1"].
+                  createInstance(Ci.nsILoginInfo);
+    login3A.init("http://mochi.test:8888", null, "mochitest",
+                 "mochiuser1", "mochipass1", "", "");
+
+    Services.logins.modifyLogin(tmpLogin, login3A);
+  });
+
+  // Same as last test, but for a realm we haven't already authenticated
+  // to (but have an existing saved login for, so that we'll trigger
+  // a change-password popup notification.
+  state = {
+    msg         : "http://mochi.test:8888 is requesting your username and password.\n\nThe site says: “mochitest3”",
+    title       : "Authentication Required",
+    textValue   : "mochiuser3",
+    passValue   : "mochipass3-old",
+    iconClass   : "authentication-icon question-icon",
+    titleHidden : true,
+    textHidden  : false,
+    passHidden  : false,
+    checkHidden : true,
+    checkMsg    : "",
+    checked     : false,
+    focused     : "textField",
+    defButton   : "button0",
+  };
+  action = {
+    buttonClick : "ok",
+    passField   : "mochipass3-new",
+  };
+  promptDone = handlePrompt(state, action);
+  iframeLoaded = onloadPromiseFor("iframe");
+  iframe.src = "authenticate.sjs?user=mochiuser3&pass=mochipass3-new&realm=mochitest3";
+  yield promptDone;
+  yield iframeLoaded;
+  checkEchoedAuthInfo({user: "mochiuser3", pass: "mochipass3-new"},
+                      iframe.contentDocument);
+
+  pwchanged = promiseStorageChanged(["modifyLogin"]);
+
+  // Check for the popup notification, and change the password.
+  popup = getPopup(popupNotifications, "password-change");
+  ok(popup, "got popup notification");
+  clickPopupButton(popup, kChangeButton);
+  popup.remove();
+
+  yield pwchanged;
+
+  // Housekeeping: change it back to the original login4. Actually,
+  // just delete it and we'll re-add it as the next test.
+  runInParent(() => {
+    const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
+    Cu.import("resource://gre/modules/Services.jsm");
+
+    var tmpLogin = Cc["@mozilla.org/login-manager/loginInfo;1"].
+                   createInstance(Ci.nsILoginInfo);
+    tmpLogin.init("http://mochi.test:8888", null, "mochitest3",
+                  "mochiuser3", "mochipass3-new", "", "");
+    Services.logins.removeLogin(tmpLogin);
+
+    // Clear cached auth from this subtest, and avoid leaking due to bug 459620.
+    var authMgr = Cc['@mozilla.org/network/http-auth-manager;1'].
+                  getService(Ci.nsIHttpAuthManager);
+    authMgr.clearAll();
+  });
+
+  state = {
+    msg         : "http://mochi.test:8888 is requesting your username and password.\n\nThe site says: “mochitest3”",
+    title       : "Authentication Required",
+    textValue   : "",
+    passValue   : "",
+    iconClass   : "authentication-icon question-icon",
+    titleHidden : true,
+    textHidden  : false,
+    passHidden  : false,
+    checkHidden : true,
+    checkMsg    : "",
+    checked     : false,
+    focused     : "textField",
+    defButton   : "button0",
+  };
+  action = {
+    buttonClick : "ok",
+    textField   : "mochiuser3",
+    passField   : "mochipass3-old",
+  };
+  // Trigger a new prompt, so we can test adding a new login.
+  promptDone = handlePrompt(state, action);
+
+  iframeLoaded = onloadPromiseFor("iframe");
+  iframe.src = "authenticate.sjs?user=mochiuser3&pass=mochipass3-old&realm=mochitest3";
+  yield promptDone;
+  yield iframeLoaded;
+  checkEchoedAuthInfo({user: "mochiuser3", pass: "mochipass3-old"},
+                      iframe.contentDocument);
+
+  var pwsaved = promiseStorageChanged(["addLogin"]);
+
+  // Check for the popup notification, and change the password.
+  popup = getPopup(popupNotifications, "password-save");
+  ok(popup, "got popup notification");
+  clickPopupButton(popup, kRememberButton);
+  popup.remove();
+  yield pwsaved;
+});
+</script>
+</pre>
+</body>
+</html>

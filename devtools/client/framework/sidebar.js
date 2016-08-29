@@ -4,11 +4,13 @@
 
 "use strict";
 
-var {XPCOMUtils} = require("resource://gre/modules/XPCOMUtils.jsm");
 var Services = require("Services");
 var {Task} = require("devtools/shared/task");
 var EventEmitter = require("devtools/shared/event-emitter");
 var Telemetry = require("devtools/client/shared/telemetry");
+
+const {LocalizationHelper} = require("devtools/shared/l10n");
+const L10N = new LocalizationHelper("devtools/locale/toolbox.properties");
 
 const XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
@@ -130,7 +132,8 @@ ToolSidebar.prototype = {
     this._allTabsBtn.setAttribute("top", "0");
     this._allTabsBtn.setAttribute("width", "15");
     this._allTabsBtn.setAttribute("type", "menu");
-    this._allTabsBtn.setAttribute("tooltiptext", l10n("sidebar.showAllTabs.tooltip"));
+    this._allTabsBtn.setAttribute("tooltiptext",
+      L10N.getStr("sidebar.showAllTabs.tooltip"));
     this._allTabsBtn.setAttribute("hidden", "true");
     allTabsContainer.appendChild(this._allTabsBtn);
 
@@ -587,19 +590,3 @@ ToolSidebar.prototype = {
     this._toolPanel = null;
   })
 };
-
-XPCOMUtils.defineLazyGetter(this, "l10n", function () {
-  let bundle = Services.strings.createBundle("chrome://devtools/locale/toolbox.properties");
-  let l10n = function (aName, ...aArgs) {
-    try {
-      if (aArgs.length == 0) {
-        return bundle.GetStringFromName(aName);
-      } else {
-        return bundle.formatStringFromName(aName, aArgs, aArgs.length);
-      }
-    } catch (ex) {
-      console.log("Error reading '" + aName + "'");
-    }
-  };
-  return l10n;
-});

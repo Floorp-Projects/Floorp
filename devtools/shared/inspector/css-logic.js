@@ -42,6 +42,9 @@
 
 const Services = require("Services");
 const CSSLexer = require("devtools/shared/css-lexer");
+const {LocalizationHelper} = require("devtools/shared/l10n");
+const styleInspectorL10N =
+  new LocalizationHelper("devtools-shared/locale/styleinspector.properties");
 
 /**
  * Special values for filter, in addition to an href these values can be used
@@ -70,16 +73,13 @@ exports.STATUS = {
 };
 
 /**
- * Memoized lookup of a l10n string from a string bundle.
- * @param {string} name The key to lookup.
- * @returns A localized version of the given key.
+ * Lookup a l10n string in the shared styleinspector string bundle.
+ *
+ * @param {String} name
+ *        The key to lookup.
+ * @returns {String} A localized version of the given key.
  */
-exports.l10n = function (name) {
-  return exports._strings.GetStringFromName(name);
-};
-
-exports._strings = Services.strings
-  .createBundle("chrome://devtools-shared/locale/styleinspector.properties");
+exports.l10n = name => styleInspectorL10N.getStr(name);
 
 /**
  * Is the given property sheet a content stylesheet?

@@ -32,21 +32,9 @@ const { KeyCodes } = require("devtools/client/shared/keycodes");
 const { BrowserLoader } =
   Cu.import("resource://devtools/client/shared/browser-loader.js", {});
 
-loader.lazyGetter(this, "toolboxStrings", () => {
-  const properties = "chrome://devtools/locale/toolbox.properties";
-  const bundle = Services.strings.createBundle(properties);
-  return (name, ...args) => {
-    try {
-      if (!args.length) {
-        return bundle.GetStringFromName(name);
-      }
-      return bundle.formatStringFromName(name, args, args.length);
-    } catch (ex) {
-      console.log("Error reading '" + name + "'");
-      return null;
-    }
-  };
-});
+const {LocalizationHelper} = require("devtools/shared/l10n");
+const L10N = new LocalizationHelper("devtools/locale/toolbox.properties");
+
 loader.lazyRequireGetter(this, "CommandUtils",
   "devtools/client/shared/developer-toolbar", true);
 loader.lazyRequireGetter(this, "getHighlighterUtils",
@@ -386,7 +374,7 @@ Toolbox.prototype = {
         useOnlyShared: true
       }).require;
 
-      iframe.setAttribute("aria-label", toolboxStrings("toolbox.label"));
+      iframe.setAttribute("aria-label", L10N.getStr("toolbox.label"));
       let domHelper = new DOMHelpers(iframe.contentWindow);
       domHelper.onceDOMReady(() => {
         domReady.resolve();
@@ -545,8 +533,8 @@ Toolbox.prototype = {
       // Prevent the opening of bookmarks window on toolbox.options.key
       event.preventDefault();
     };
-    shortcuts.on(toolboxStrings("toolbox.options.key"), selectOptions);
-    shortcuts.on(toolboxStrings("toolbox.help.key"), selectOptions);
+    shortcuts.on(L10N.getStr("toolbox.options.key"), selectOptions);
+    shortcuts.on(L10N.getStr("toolbox.help.key"), selectOptions);
   },
 
   _splitConsoleOnKeypress: function (e) {
@@ -591,7 +579,7 @@ Toolbox.prototype = {
       ["forceReload", true],
       ["forceReload2", true]
     ].forEach(([id, force]) => {
-      let key = toolboxStrings("toolbox." + id + ".key");
+      let key = L10N.getStr("toolbox." + id + ".key");
       shortcuts.on(key, (name, event) => {
         this.reloadTarget(force);
 
@@ -602,13 +590,13 @@ Toolbox.prototype = {
   },
 
   _addHostListeners: function (shortcuts) {
-    shortcuts.on(toolboxStrings("toolbox.nextTool.key"),
+    shortcuts.on(L10N.getStr("toolbox.nextTool.key"),
                  this.selectNextTool.bind(this));
-    shortcuts.on(toolboxStrings("toolbox.previousTool.key"),
+    shortcuts.on(L10N.getStr("toolbox.previousTool.key"),
                  this.selectPreviousTool.bind(this));
-    shortcuts.on(toolboxStrings("toolbox.minimize.key"),
+    shortcuts.on(L10N.getStr("toolbox.minimize.key"),
                  this._toggleMinimizeMode.bind(this));
-    shortcuts.on(toolboxStrings("toolbox.toggleHost.key"),
+    shortcuts.on(L10N.getStr("toolbox.toggleHost.key"),
                  (name, event) => {
                    this.switchToPreviousHost();
                    event.preventDefault();
@@ -703,7 +691,7 @@ Toolbox.prototype = {
       let key = doc.createElement("key");
       key.id = "key_browserconsole";
 
-      key.setAttribute("key", toolboxStrings("browserConsoleCmd.commandkey"));
+      key.setAttribute("key", L10N.getStr("browserConsoleCmd.commandkey"));
       key.setAttribute("modifiers", "accel,shift");
       // needed. See bug 371900
       key.setAttribute("oncommand", "void(0)");
@@ -807,7 +795,7 @@ Toolbox.prototype = {
       let button = this.doc.createElementNS(HTML_NS, "button");
       button.id = "toolbox-dock-" + position;
       button.className = "toolbox-dock-button devtools-button";
-      button.setAttribute("title", toolboxStrings("toolboxDockButtons." +
+      button.setAttribute("title", L10N.getStr("toolboxDockButtons." +
                                                   position + ".tooltip"));
       button.addEventListener("click", () => {
         this.switchHost(position);
@@ -818,7 +806,7 @@ Toolbox.prototype = {
   },
 
   _getMinimizeButtonShortcutTooltip: function () {
-    let str = toolboxStrings("toolbox.minimize.key");
+    let str = L10N.getStr("toolbox.minimize.key");
     let key = KeyShortcuts.parseElectronKey(this.win, str);
     return "(" + KeyShortcuts.stringify(key) + ")";
   },
@@ -828,7 +816,7 @@ Toolbox.prototype = {
     btn.className = "minimized";
 
     btn.setAttribute("title",
-      toolboxStrings("toolboxDockButtons.bottom.maximize") + " " +
+      L10N.getStr("toolboxDockButtons.bottom.maximize") + " " +
       this._getMinimizeButtonShortcutTooltip());
   },
 
@@ -837,7 +825,7 @@ Toolbox.prototype = {
     btn.className = "maximized";
 
     btn.setAttribute("title",
-      toolboxStrings("toolboxDockButtons.bottom.minimize") + " " +
+      L10N.getStr("toolboxDockButtons.bottom.minimize") + " " +
       this._getMinimizeButtonShortcutTooltip());
   },
 
@@ -985,7 +973,7 @@ Toolbox.prototype = {
     this._pickerButton = this.doc.createElementNS(HTML_NS, "button");
     this._pickerButton.id = "command-button-pick";
     this._pickerButton.className = "command-button command-button-invertable devtools-button";
-    this._pickerButton.setAttribute("title", toolboxStrings("pickButton.tooltip"));
+    this._pickerButton.setAttribute("title", L10N.getStr("pickButton.tooltip"));
     this._pickerButton.setAttribute("hidden", "true");
 
     let container = this.doc.querySelector("#toolbox-picker-container");
@@ -1577,10 +1565,10 @@ Toolbox.prototype = {
   _refreshHostTitle: function () {
     let title;
     if (this.target.name && this.target.name != this.target.url) {
-      title = toolboxStrings("toolbox.titleTemplate2",
-                             this.target.name, this.target.url);
+      title = L10N.getFormatStr("toolbox.titleTemplate2", this.target.name,
+                                                          this.target.url);
     } else {
-      title = toolboxStrings("toolbox.titleTemplate1", this.target.url);
+      title = L10N.getFormatStr("toolbox.titleTemplate1", this.target.url);
     }
     this._host.setTitle(title);
   },
@@ -1588,7 +1576,7 @@ Toolbox.prototype = {
   // Returns an instance of the preference actor
   get _preferenceFront() {
     return this.target.root.then(rootForm => {
-      return new getPreferenceFront(this.target.client, rootForm);
+      return new L10N.getFormatStr(this.target.client, rootForm);
     });
   },
 

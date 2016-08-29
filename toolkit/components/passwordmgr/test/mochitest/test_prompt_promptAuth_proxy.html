@@ -1,0 +1,264 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test promptAuth proxy prompts</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript" src="pwmgr_common.js"></script>
+  <script type="text/javascript" src="prompt_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+
+<div id="content" style="display: none">
+  <iframe id="iframe"></iframe>
+</div>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+var state, action;
+var pwmgr;
+var proxyLogin;
+var isOk;
+var mozproxy, proxiedHost = "http://mochi.test:8888";
+var proxyChannel;
+var systemPrincipal = SpecialPowers.Services.scriptSecurityManager.getSystemPrincipal();
+var ioService = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
+
+var prefs = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
+
+var level = Ci.nsIAuthPrompt2.LEVEL_NONE;
+
+var proxyAuthinfo = {
+  username : "",
+  password : "",
+  domain   : "",
+
+  flags : Ci.nsIAuthInformation.AUTH_PROXY,
+  authenticationScheme : "basic",
+  realm : ""
+};
+
+// Force parent to not look for tab-modal prompts, as they're not used for auth prompts.
+isTabModal = false;
+
+const Cc_promptFac= Cc["@mozilla.org/passwordmanager/authpromptfactory;1"];
+ok(Cc_promptFac != null, "Access Cc[@mozilla.org/passwordmanager/authpromptfactory;1]");
+
+const Ci_promptFac = Ci.nsIPromptFactory;
+ok(Ci_promptFac != null, "Access Ci.nsIPromptFactory");
+
+const promptFac = Cc_promptFac.getService(Ci_promptFac);
+ok(promptFac != null, "promptFac getService()");
+
+var prompter2 = promptFac.getPrompt(window, Ci.nsIAuthPrompt2);
+
+function initLogins(pi) {
+  pwmgr = Cc["@mozilla.org/login-manager;1"].
+          getService(Ci.nsILoginManager);
+
+  mozproxy = "moz-proxy://" + SpecialPowers.wrap(pi).host + ":" +
+              SpecialPowers.wrap(pi).port;
+
+  proxyLogin = Cc["@mozilla.org/login-manager/loginInfo;1"].
+               createInstance(Ci.nsILoginInfo);
+
+  proxyLogin.init(mozproxy, null, "Proxy Realm",
+                  "proxuser", "proxpass", "", "");
+
+  pwmgr.addLogin(proxyLogin);
+}
+
+var startupCompleteResolver;
+var startupComplete = new Promise(resolve => startupCompleteResolver = resolve);
+
+function proxyChannelListener() { }
+proxyChannelListener.prototype = {
+  onStartRequest: function(request, context) {
+    startupCompleteResolver();
+  },
+  onStopRequest: function(request, context, status) { }
+};
+
+var resolveCallback = SpecialPowers.wrapCallbackObject({
+  QueryInterface : function (iid) {
+    const interfaces = [Ci.nsIProtocolProxyCallback, Ci.nsISupports];
+
+    if (!interfaces.some( function(v) { return iid.equals(v) } ))
+      throw SpecialPowers.Cr.NS_ERROR_NO_INTERFACE;
+    return this;
+  },
+
+  onProxyAvailable : function (req, uri, pi, status) {
+    initLogins(pi);
+
+    // I'm cheating a bit here... We should probably do some magic foo to get
+    // something implementing nsIProxiedProtocolHandler and then call
+    // NewProxiedChannel(), so we have something that's definately a proxied
+    // channel. But Mochitests use a proxy for a number of hosts, so just
+    // requesting a normal channel will give us a channel that's proxied.
+    // The proxyChannel needs to move to at least on-modify-request to
+    // have valid ProxyInfo, but we use OnStartRequest during startup()
+    // for simplicity.
+    proxyChannel = ioService.newChannel2(proxiedHost,
+                                         null,
+                                         null,
+                                         null,      // aLoadingNode
+                                         systemPrincipal,
+                                         null,      // aTriggeringPrincipal
+                                         Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
+                                         Ci.nsIContentPolicy.TYPE_OTHER);
+    proxyChannel.asyncOpen2(SpecialPowers.wrapCallbackObject(new proxyChannelListener()));
+  }
+});
+
+function startup() {
+  //need to allow for arbitrary network servers defined in PAC instead of a hardcoded moz-proxy.
+  var ios = SpecialPowers.Cc["@mozilla.org/network/io-service;1"].
+    getService(SpecialPowers.Ci.nsIIOService);
+
+  var pps = SpecialPowers.Cc["@mozilla.org/network/protocol-proxy-service;1"].getService();
+
+  var channel = ios.newChannel2("http://example.com",
+                                null,
+                                null,
+                                null,      // aLoadingNode
+                                systemPrincipal,
+                                null,      // aTriggeringPrincipal
+                                Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
+                                Ci.nsIContentPolicy.TYPE_OTHER);
+  pps.asyncResolve(channel, 0, resolveCallback);
+}
+
+startup();
+
+add_task(function* setup() {
+  info("Waiting for startup to complete...");
+  yield startupComplete;
+})
+
+add_task(function* test_noAutologin() {
+  // test proxy login (default = no autologin), make sure it prompts.
+  state = {
+    msg         : "The proxy moz-proxy://127.0.0.1:8888 is requesting a username and password.\n\nThe site says: “Proxy Realm”",
+    title       : "Authentication Required",
+    textValue   : "proxuser",
+    passValue   : "proxpass",
+    iconClass   : "authentication-icon question-icon",
+    titleHidden : true,
+    textHidden  : false,
+    passHidden  : false,
+    checkHidden : true,
+    checkMsg    : "",
+    checked     : false,
+    focused     : "textField",
+    defButton   : "button0",
+  };
+  action = {
+    buttonClick : "ok",
+  };
+  proxyAuthinfo.username = "";
+  proxyAuthinfo.password = "";
+  proxyAuthinfo.realm    = "Proxy Realm";
+  proxyAuthinfo.flags    = Ci.nsIAuthInformation.AUTH_PROXY;
+
+  var time1 = pwmgr.findLogins({}, mozproxy, null, "Proxy Realm")[0].QueryInterface(Ci.nsILoginMetaInfo).timeLastUsed;
+  promptDone = handlePrompt(state, action);
+  isOk = prompter2.promptAuth(proxyChannel, level, proxyAuthinfo);
+  yield promptDone;
+  var time2 = pwmgr.findLogins({}, mozproxy, null, "Proxy Realm")[0].QueryInterface(Ci.nsILoginMetaInfo).timeLastUsed;
+
+  ok(isOk, "Checking dialog return value (accept)");
+  isnot(time1, time2, "Checking that timeLastUsed was updated");
+  is(proxyAuthinfo.username, "proxuser", "Checking returned username");
+  is(proxyAuthinfo.password, "proxpass", "Checking returned password");
+});
+
+add_task(function* test_autologin() {
+  // test proxy login (with autologin)
+
+  // Enable the autologin pref.
+  prefs.setBoolPref("signon.autologin.proxy", true);
+
+  proxyAuthinfo.username = "";
+  proxyAuthinfo.password = "";
+  proxyAuthinfo.realm    = "Proxy Realm";
+  proxyAuthinfo.flags    = Ci.nsIAuthInformation.AUTH_PROXY;
+
+  time1 = pwmgr.findLogins({}, mozproxy, null, "Proxy Realm")[0].QueryInterface(Ci.nsILoginMetaInfo).timeLastUsed;
+  isOk = prompter2.promptAuth(proxyChannel, level, proxyAuthinfo);
+  time2 = pwmgr.findLogins({}, mozproxy, null, "Proxy Realm")[0].QueryInterface(Ci.nsILoginMetaInfo).timeLastUsed;
+
+  ok(isOk, "Checking dialog return value (accept)");
+  isnot(time1, time2, "Checking that timeLastUsed was updated");
+  is(proxyAuthinfo.username, "proxuser", "Checking returned username");
+  is(proxyAuthinfo.password, "proxpass", "Checking returned password");
+});
+
+add_task(function* test_autologin_incorrect() {
+  // test proxy login (with autologin), ensure it prompts after a failed auth.
+  state = {
+    msg         : "The proxy moz-proxy://127.0.0.1:8888 is requesting a username and password.\n\nThe site says: “Proxy Realm”",
+    title       : "Authentication Required",
+    textValue   : "proxuser",
+    passValue   : "proxpass",
+    iconClass   : "authentication-icon question-icon",
+    titleHidden : true,
+    textHidden  : false,
+    passHidden  : false,
+    checkHidden : true,
+    checkMsg    : "",
+    checked     : false,
+    focused     : "textField",
+    defButton   : "button0",
+  };
+  action = {
+    buttonClick : "ok",
+  };
+
+  proxyAuthinfo.username = "";
+  proxyAuthinfo.password = "";
+  proxyAuthinfo.realm    = "Proxy Realm";
+  proxyAuthinfo.flags    = (Ci.nsIAuthInformation.AUTH_PROXY | Ci.nsIAuthInformation.PREVIOUS_FAILED);
+
+  time1 = pwmgr.findLogins({}, mozproxy, null, "Proxy Realm")[0].QueryInterface(Ci.nsILoginMetaInfo).timeLastUsed;
+  promptDone = handlePrompt(state, action);
+  isOk = prompter2.promptAuth(proxyChannel, level, proxyAuthinfo);
+  yield promptDone;
+  time2 = pwmgr.findLogins({}, mozproxy, null, "Proxy Realm")[0].QueryInterface(Ci.nsILoginMetaInfo).timeLastUsed;
+
+  ok(isOk, "Checking dialog return value (accept)");
+  isnot(time1, time2, "Checking that timeLastUsed was updated");
+  is(proxyAuthinfo.username, "proxuser", "Checking returned username");
+  is(proxyAuthinfo.password, "proxpass", "Checking returned password");
+});
+
+add_task(function* test_autologin_private() {
+  // test proxy login (with autologin), ensure it prompts in Private Browsing mode.
+  state = {
+    msg         : "the message",
+    title       : "the title",
+    textValue   : "proxuser",
+    passValue   : "proxpass",
+  };
+  action = {
+    buttonClick : "ok",
+  };
+
+  proxyAuthinfo.username = "";
+  proxyAuthinfo.password = "";
+  proxyAuthinfo.realm    = "Proxy Realm";
+  proxyAuthinfo.flags    = Ci.nsIAuthInformation.AUTH_PROXY;
+
+  prefs.clearUserPref("signon.autologin.proxy");
+
+  // XXX check for and kill popup notification??
+  // XXX check for checkbox / checkstate on old prompts?
+  // XXX check NTLM domain stuff
+});
+</script>
+</pre>
+</body>
+</html>

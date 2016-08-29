@@ -69,7 +69,7 @@ function* checkCopySelection(view) {
 
   let allMenuItems = openStyleContextMenuAndGetAllItems(view, prop);
   let menuitemCopy = allMenuItems.find(item => item.label ===
-    _STRINGS.GetStringFromName("styleinspector.contextmenu.copy"));
+    STYLE_INSPECTOR_L10N.getStr("styleinspector.contextmenu.copy"));
 
   ok(menuitemCopy.visible,
     "Copy menu item is displayed as expected");
@@ -103,7 +103,7 @@ function* checkSelectAll(view) {
 
   let allMenuItems = openStyleContextMenuAndGetAllItems(view, prop);
   let menuitemCopy = allMenuItems.find(item => item.label ===
-    _STRINGS.GetStringFromName("styleinspector.contextmenu.copy"));
+    STYLE_INSPECTOR_L10N.getStr("styleinspector.contextmenu.copy"));
 
   ok(menuitemCopy.visible,
     "Copy menu item is displayed as expected");
@@ -131,7 +131,7 @@ function* checkCopyEditorValue(view) {
 
   let allMenuItems = openStyleContextMenuAndGetAllItems(view, editor.input);
   let menuitemCopy = allMenuItems.find(item => item.label ===
-    _STRINGS.GetStringFromName("styleinspector.contextmenu.copy"));
+    STYLE_INSPECTOR_L10N.getStr("styleinspector.contextmenu.copy"));
 
   ok(menuitemCopy.visible,
     "Copy menu item is displayed as expected");

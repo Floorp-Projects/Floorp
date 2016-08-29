@@ -61,6 +61,9 @@ const {KeyCodes} = require("devtools/client/shared/keycodes");
 const {AutocompletePopup} = require("devtools/client/shared/autocomplete-popup");
 const clipboardHelper = require("devtools/shared/platform/clipboard");
 
+const {LocalizationHelper} = require("devtools/shared/l10n");
+const INSPECTOR_L10N = new LocalizationHelper("devtools/locale/inspector.properties");
+
 XPCOMUtils.defineLazyModuleGetter(this, "PluralForm",
   "resource://gre/modules/PluralForm.jsm");
 
@@ -686,7 +689,7 @@ MarkupView.prototype = {
     ["markupView.hide.key",
      "markupView.edit.key",
      "markupView.scrollInto.key"].forEach(name => {
-       let key = this.strings.GetStringFromName(name);
+       let key = INSPECTOR_L10N.getStr(name);
        shortcuts.on(key, (_, event) => this._onShortcut(name, event));
      });
 
@@ -1666,9 +1669,9 @@ MarkupView.prototype = {
         if (!(children.hasFirst && children.hasLast)) {
           let nodesCount = container.node.numChildren;
           let showAllString = PluralForm.get(nodesCount,
-            this.strings.GetStringFromName("markupView.more.showAll2"));
+            INSPECTOR_L10N.getStr("markupView.more.showAll2"));
           let data = {
-            showing: this.strings.GetStringFromName("markupView.more.showing"),
+            showing: INSPECTOR_L10N.getStr("markupView.more.showing"),
             showAll: showAllString.replace("#1", nodesCount),
             allButtonClick: () => {
               container.maxChildren = -1;
@@ -3615,9 +3618,5 @@ function getAutocompleteMaxWidth(element, container) {
   let containerRect = container.getBoundingClientRect();
   return containerRect.right - elementRect.left - 2;
 }
-
-loader.lazyGetter(MarkupView.prototype, "strings", () => Services.strings.createBundle(
-  "chrome://devtools/locale/inspector.properties"
-));
 
 exports.MarkupView = MarkupView;
