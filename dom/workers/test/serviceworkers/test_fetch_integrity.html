@@ -1,0 +1,178 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title> Test fetch.integrity on console report for serviceWorker and sharedWorker </title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script src="error_reporting_helpers.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+  <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+</head>
+<body>
+<div id="content" style="display: none"></div>
+<script type="text/javascript">
+"use strict";
+
+let security_localizer =
+  stringBundleService.createBundle("chrome://global/locale/security/security.properties");
+
+function expect_security_console_message(/* msgId, args, ... */) {
+  let expectations = [];
+  // process repeated paired arguments of: msgId, args
+  for (let i = 0; i < arguments.length; i += 4) {
+    let msgId = arguments[i];
+    let args = arguments[i + 1];
+    let filename = arguments[i + 2];
+    let windowId = arguments[i + 3];
+    expectations.push({
+      errorMessage: security_localizer.formatStringFromName(msgId, args, args.length),
+      sourceName: filename,
+      windowID: windowId
+    });
+  }
+  return new Promise(resolve => {
+    SimpleTest.monitorConsole(resolve, expectations);
+  });
+}
+
+// (This doesn't really need to be its own task, but it allows the actual test
+// case to be self-contained.)
+add_task(function setupPrefs() {
+  return SpecialPowers.pushPrefEnv({"set": [
+    ["dom.serviceWorkers.enabled", true],
+    ["dom.serviceWorkers.testing.enabled", true],
+  ]});
+});
+
+add_task(function* test_integrity_serviceWorker() {
+  var filename = make_absolute_url("fetch.js");
+  var filename2 = make_absolute_url("fake.html");
+
+  // The SW will claim us once it activates; this is async, start listening now.
+  let waitForControlled = new Promise((resolve) => {
+    navigator.serviceWorker.oncontrollerchange = resolve;
+  });
+
+  let registration = yield navigator.serviceWorker.register("fetch.js",
+                                                            { scope: "./" });
+  yield waitForControlled;
+
+  info("Test for mNavigationInterceptions.")
+  // The client_win will reload to another URL after opening filename2.
+  let client_win = window.open(filename2);
+
+  // XXX windowID should be innerWindowID
+  let mainWindowID = SpecialPowers.getDOMWindowUtils(window).outerWindowID;
+  let clientWindowID = SpecialPowers.getDOMWindowUtils(client_win).outerWindowID;
+  let expectedMessage = expect_security_console_message(
+    "MalformedIntegrityHash",
+    ["abc"],
+    filename,
+    mainWindowID,
+    "NoValidMetadata",
+    [""],
+    filename,
+    mainWindowID
+  );
+  let expectedMessage2 = expect_security_console_message(
+    "MalformedIntegrityHash",
+    ["abc"],
+    filename,
+    clientWindowID,
+    "NoValidMetadata",
+    [""],
+    filename,
+    clientWindowID
+  );
+
+  info("Test for mControlledDocuments and report error message to console.");
+  // The fetch will succeed because the integrity value is invalid and we are
+  // looking for the console message regarding the bad integrity value.
+  yield fetch("fail.html");
+
+  yield wait_for_expected_message(expectedMessage);
+
+  yield wait_for_expected_message(expectedMessage2);
+
+  yield registration.unregister();
+  client_win.close();
+});
+
+add_task(function* test_integrity_sharedWorker() {
+  var filename = make_absolute_url("sharedWorker_fetch.js");
+
+  info("Attch main window to a SharedWorker.");
+  let sharedWorker = new SharedWorker(filename);
+  let waitForConnected = new Promise((resolve) => {
+    sharedWorker.port.onmessage = function (e) {
+      if (e.data == "Connected") {
+        resolve();
+      } else {
+        reject();
+      }
+    }
+  });
+  yield waitForConnected;
+
+  info("Attch another window to the same SharedWorker.");
+  // Open another window and its also managed by the shared worker.
+  let client_win = window.open("create_another_sharedWorker.html");
+  let waitForBothConnected = new Promise((resolve) => {
+    sharedWorker.port.onmessage = function (e) {
+      if (e.data == "BothConnected") {
+        resolve();
+      } else {
+        reject();
+      }
+    }
+  });
+  yield waitForBothConnected;
+
+  // XXX windowID should be innerWindowID
+  let mainWindowID = SpecialPowers.getDOMWindowUtils(window).outerWindowID;
+  let clientWindowID = SpecialPowers.getDOMWindowUtils(client_win).outerWindowID;
+  let expectedMessage = expect_security_console_message(
+    "MalformedIntegrityHash",
+    ["abc"],
+    filename,
+    mainWindowID,
+    "NoValidMetadata",
+    [""],
+    filename,
+    mainWindowID
+  );
+  let expectedMessage2 = expect_security_console_message(
+    "MalformedIntegrityHash",
+    ["abc"],
+    filename,
+    clientWindowID,
+    "NoValidMetadata",
+    [""],
+    filename,
+    clientWindowID
+  );
+
+  info("Start to fetch a URL with wrong integrity.")
+  sharedWorker.port.start();
+  sharedWorker.port.postMessage("StartFetchWithWrongIntegrity");
+
+  let waitForSRIFailed = new Promise((resolve) => {
+    sharedWorker.port.onmessage = function (e) {
+      if (e.data == "SRI_failed") {
+        resolve();
+      } else {
+        reject();
+      }
+    }
+  });
+  yield waitForSRIFailed;
+
+  yield wait_for_expected_message(expectedMessage);
+
+  yield wait_for_expected_message(expectedMessage2);
+  client_win.close();
+});
+
+</script>
+</body>
+</html>
