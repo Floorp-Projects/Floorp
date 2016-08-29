@@ -63,11 +63,11 @@
   background-color: rgba(0,0,0,.3);
 }
 
-#navigator-toolbox > toolbar:not(#toolbar-menubar):not(#TabsToolbar) {
+#navigator-toolbox > toolbar:not(#toolbar-menubar):not(#TabsToolbar):not(#addon-bar) {
   background-image: linear-gradient(@toolbarHighlight@, @toolbarHighlight@);
 }
 
-#navigator-toolbox > toolbar:not(#toolbar-menubar):not(#TabsToolbar):-moz-lwtheme {
+#navigator-toolbox > toolbar:not(#toolbar-menubar):not(#TabsToolbar):not(#addon-bar):-moz-lwtheme {
   background-image: linear-gradient(@toolbarHighlightLWT@, @toolbarHighlightLWT@);
 }
 
@@ -1173,11 +1173,11 @@ notification[value="translation"] menulist > .menulist-dropmarker {
 }
 
 .ac-title {
-  font-size: 14px;
+  font-size: 1.05em;
 }
 
 .ac-tags {
-  font-size: 12px;
+  font-size: 0.9em;
 }
 
 html|span.ac-tag {
@@ -1191,7 +1191,7 @@ html|span.ac-tag {
 .ac-separator,
 .ac-url,
 .ac-action {
-  font-size: 12px;
+  font-size: 0.9em;
   color: -moz-nativehyperlinktext;
 }
 

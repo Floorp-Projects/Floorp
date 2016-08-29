@@ -10,8 +10,8 @@
 // and toggles appropriate things in the toolbox.
 
 var doc = null, toolbox = null, panelWin = null, modifiedPrefs = [];
-var strings = Services.strings.createBundle(
-  "chrome://devtools/locale/toolbox.properties");
+const {LocalizationHelper} = require("devtools/shared/l10n");
+const L10N = new LocalizationHelper("devtools/locale/toolbox.properties");
 
 add_task(function* () {
   const URL = "data:text/html;charset=utf8,test for dynamically registering " +
@@ -60,18 +60,18 @@ function* testOptionsShortcut() {
 
   yield toolbox.selectTool("webconsole");
   is(toolbox.currentToolId, "webconsole", "webconsole is selected");
-  synthesizeKeyShortcut(strings.GetStringFromName("toolbox.options.key"));
+  synthesizeKeyShortcut(L10N.getStr("toolbox.options.key"));
   is(toolbox.currentToolId, "options", "Toolbox selected via shortcut key (1)");
-  synthesizeKeyShortcut(strings.GetStringFromName("toolbox.options.key"));
+  synthesizeKeyShortcut(L10N.getStr("toolbox.options.key"));
   is(toolbox.currentToolId, "webconsole", "webconsole is selected (1)");
 
   yield toolbox.selectTool("webconsole");
   is(toolbox.currentToolId, "webconsole", "webconsole is selected");
-  synthesizeKeyShortcut(strings.GetStringFromName("toolbox.help.key"));
+  synthesizeKeyShortcut(L10N.getStr("toolbox.help.key"));
   is(toolbox.currentToolId, "options", "Toolbox selected via shortcut key (2)");
-  synthesizeKeyShortcut(strings.GetStringFromName("toolbox.options.key"));
+  synthesizeKeyShortcut(L10N.getStr("toolbox.options.key"));
   is(toolbox.currentToolId, "webconsole", "webconsole is reselected (2)");
-  synthesizeKeyShortcut(strings.GetStringFromName("toolbox.help.key"));
+  synthesizeKeyShortcut(L10N.getStr("toolbox.help.key"));
   is(toolbox.currentToolId, "options", "Toolbox selected via shortcut key (2)");
 }
 

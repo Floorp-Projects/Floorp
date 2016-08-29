@@ -17,9 +17,6 @@ const CONTENT = `
   </body>
 `;
 
-const STRINGS = Services.strings
-  .createBundle("chrome://devtools-shared/locale/styleinspector.properties");
-
 add_task(function* () {
   let tab = yield addTab("data:text/html;charset=utf-8," + CONTENT);
 
@@ -36,13 +33,13 @@ function checkRuleViewContent({styleDocument}) {
   is(headers.length, 3, "There are 3 headers for inherited rules");
 
   is(headers[0].textContent,
-    STRINGS.formatStringFromName("rule.inheritedFrom", ["p"], 1),
+    STYLE_INSPECTOR_L10N.getFormatStr("rule.inheritedFrom", "p"),
     "The first header is correct");
   is(headers[1].textContent,
-    STRINGS.formatStringFromName("rule.inheritedFrom", ["div"], 1),
+    STYLE_INSPECTOR_L10N.getFormatStr("rule.inheritedFrom", "div"),
     "The second header is correct");
   is(headers[2].textContent,
-    STRINGS.formatStringFromName("rule.inheritedFrom", ["body"], 1),
+    STYLE_INSPECTOR_L10N.getFormatStr("rule.inheritedFrom", "body"),
     "The third header is correct");
 
   let rules = styleDocument.querySelectorAll(".ruleview-rule");
@@ -50,17 +47,14 @@ function checkRuleViewContent({styleDocument}) {
 
   for (let rule of rules) {
     let selector = rule.querySelector(".ruleview-selectorcontainer");
-    is(selector.textContent,
-      STRINGS.GetStringFromName("rule.sourceElement"),
+    is(selector.textContent, STYLE_INSPECTOR_L10N.getStr("rule.sourceElement"),
       "The rule's selector is correct");
 
     let propertyNames = [...rule.querySelectorAll(".ruleview-propertyname")];
-    is(propertyNames.length, 1,
-       "There's only one property name, as expected");
+    is(propertyNames.length, 1, "There's only one property name, as expected");
 
     let propertyValues = [...rule.querySelectorAll(".ruleview-propertyvalue")];
-    is(propertyValues.length, 1,
-       "There's only one property value, as expected");
+    is(propertyValues.length, 1, "There's only one property value, as expected");
   }
 }
 

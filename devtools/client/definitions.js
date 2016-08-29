@@ -24,35 +24,36 @@ loader.lazyGetter(this, "ScratchpadPanel", () => require("devtools/client/scratc
 loader.lazyGetter(this, "DomPanel", () => require("devtools/client/dom/dom-panel").DomPanel);
 
 // Strings
-const toolboxProps = "chrome://devtools/locale/toolbox.properties";
-const inspectorProps = "chrome://devtools/locale/inspector.properties";
-const webConsoleProps = "chrome://devtools/locale/webconsole.properties";
-const debuggerProps = "chrome://devtools/locale/debugger.properties";
-const styleEditorProps = "chrome://devtools/locale/styleeditor.properties";
-const shaderEditorProps = "chrome://devtools/locale/shadereditor.properties";
-const canvasDebuggerProps = "chrome://devtools/locale/canvasdebugger.properties";
-const webAudioEditorProps = "chrome://devtools/locale/webaudioeditor.properties";
-const performanceProps = "chrome://devtools/locale/performance.properties";
-const netMonitorProps = "chrome://devtools/locale/netmonitor.properties";
-const storageProps = "chrome://devtools/locale/storage.properties";
-const scratchpadProps = "chrome://devtools/locale/scratchpad.properties";
-const memoryProps = "chrome://devtools/locale/memory.properties";
-const domProps = "chrome://devtools/locale/dom.properties";
+const toolboxProps = "devtools/locale/toolbox.properties";
+const inspectorProps = "devtools/locale/inspector.properties";
+const webConsoleProps = "devtools/locale/webconsole.properties";
+const debuggerProps = "devtools/locale/debugger.properties";
+const styleEditorProps = "devtools/locale/styleeditor.properties";
+const shaderEditorProps = "devtools/locale/shadereditor.properties";
+const canvasDebuggerProps = "devtools/locale/canvasdebugger.properties";
+const webAudioEditorProps = "devtools/locale/webaudioeditor.properties";
+const performanceProps = "devtools/locale/performance.properties";
+const netMonitorProps = "devtools/locale/netmonitor.properties";
+const storageProps = "devtools/locale/storage.properties";
+const scratchpadProps = "devtools/locale/scratchpad.properties";
+const memoryProps = "devtools/locale/memory.properties";
+const domProps = "devtools/locale/dom.properties";
 
-loader.lazyGetter(this, "toolboxStrings", () => Services.strings.createBundle(toolboxProps));
-loader.lazyGetter(this, "performanceStrings", () => Services.strings.createBundle(performanceProps));
-loader.lazyGetter(this, "webConsoleStrings", () => Services.strings.createBundle(webConsoleProps));
-loader.lazyGetter(this, "debuggerStrings", () => Services.strings.createBundle(debuggerProps));
-loader.lazyGetter(this, "styleEditorStrings", () => Services.strings.createBundle(styleEditorProps));
-loader.lazyGetter(this, "shaderEditorStrings", () => Services.strings.createBundle(shaderEditorProps));
-loader.lazyGetter(this, "canvasDebuggerStrings", () => Services.strings.createBundle(canvasDebuggerProps));
-loader.lazyGetter(this, "webAudioEditorStrings", () => Services.strings.createBundle(webAudioEditorProps));
-loader.lazyGetter(this, "inspectorStrings", () => Services.strings.createBundle(inspectorProps));
-loader.lazyGetter(this, "netMonitorStrings", () => Services.strings.createBundle(netMonitorProps));
-loader.lazyGetter(this, "storageStrings", () => Services.strings.createBundle(storageProps));
-loader.lazyGetter(this, "scratchpadStrings", () => Services.strings.createBundle(scratchpadProps));
-loader.lazyGetter(this, "memoryStrings", () => Services.strings.createBundle(memoryProps));
-loader.lazyGetter(this, "domStrings", () => Services.strings.createBundle(domProps));
+const {LocalizationHelper} = require("devtools/shared/l10n");
+const toolboxStrings = new LocalizationHelper(toolboxProps);
+const performanceStrings = new LocalizationHelper(performanceProps);
+const webConsoleStrings = new LocalizationHelper(webConsoleProps);
+const debuggerStrings = new LocalizationHelper(debuggerProps);
+const styleEditorStrings = new LocalizationHelper(styleEditorProps);
+const shaderEditorStrings = new LocalizationHelper(shaderEditorProps);
+const canvasDebuggerStrings = new LocalizationHelper(canvasDebuggerProps);
+const webAudioEditorStrings = new LocalizationHelper(webAudioEditorProps);
+const inspectorStrings = new LocalizationHelper(inspectorProps);
+const netMonitorStrings = new LocalizationHelper(netMonitorProps);
+const storageStrings = new LocalizationHelper(storageProps);
+const scratchpadStrings = new LocalizationHelper(scratchpadProps);
+const memoryStrings = new LocalizationHelper(memoryProps);
+const domStrings = new LocalizationHelper(domProps);
 
 var Tools = {};
 exports.Tools = Tools;
@@ -494,8 +495,7 @@ exports.defaultThemes = [
  */
 function l10n(name, bundle, arg) {
   try {
-    return arg ? bundle.formatStringFromName(name, [arg], 1)
-    : bundle.GetStringFromName(name);
+    return arg ? bundle.getFormatStr(name, arg) : bundle.getStr(name);
   } catch (ex) {
     console.log("Error reading '" + name + "'");
     throw new Error("l10n error with " + name);

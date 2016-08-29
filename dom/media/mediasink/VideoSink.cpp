@@ -11,12 +11,14 @@
 namespace mozilla {
 
 extern LazyLogModule gMediaDecoderLog;
-#define VSINK_LOG(msg, ...) \
-  MOZ_LOG(gMediaDecoderLog, LogLevel::Debug, \
-    ("VideoSink=%p " msg, this, ##__VA_ARGS__))
-#define VSINK_LOG_V(msg, ...) \
-  MOZ_LOG(gMediaDecoderLog, LogLevel::Verbose, \
-  ("VideoSink=%p " msg, this, ##__VA_ARGS__))
+
+#undef FMT
+#undef DUMP_LOG
+
+#define FMT(x, ...) "VideoSink=%p " x, this, ##__VA_ARGS__
+#define VSINK_LOG(...)   MOZ_LOG(gMediaDecoderLog, LogLevel::Debug,   (FMT(__VA_ARGS__)))
+#define VSINK_LOG_V(...) MOZ_LOG(gMediaDecoderLog, LogLevel::Verbose, (FMT(__VA_ARGS__)))
+#define DUMP_LOG(...) NS_DebugBreak(NS_DEBUG_WARNING, nsPrintfCString(FMT(__VA_ARGS__)).get(), nullptr, nullptr, -1)
 
 using namespace mozilla::layers;
 
@@ -443,6 +445,18 @@ VideoSink::UpdateRenderedVideoFrames()
   }, [self] () {
     self->UpdateRenderedVideoFramesByTimer();
   });
+}
+
+void
+VideoSink::DumpDebugInfo()
+{
+  AssertOwnerThread();
+  DUMP_LOG(
+    "IsStarted=%d IsPlaying=%d, VideoQueue: finished=%d size=%d, "
+    "mVideoFrameEndTime=%lld mHasVideo=%d mVideoSinkEndRequest.Exists()=%d "
+    "mEndPromiseHolder.IsEmpty()=%d",
+    IsStarted(), IsPlaying(), VideoQueue().IsFinished(), VideoQueue().GetSize(),
+    mVideoFrameEndTime, mHasVideo, mVideoSinkEndRequest.Exists(), mEndPromiseHolder.IsEmpty());
 }
 
 } // namespace media

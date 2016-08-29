@@ -1687,6 +1687,16 @@ if test "$ac_cv_clock_monotonic" != "no"; then
     AC_SUBST_LIST(REALTIME_LIBS)
 fi
 
+AC_CACHE_CHECK(for pthread_cond_timedwait_monotonic_np,
+               ac_cv_pthread_cond_timedwait_monotonic_np,
+               AC_TRY_LINK([#include <pthread.h>],
+                           [pthread_cond_timedwait_monotonic_np(0, 0, 0);],
+                           ac_cv_pthread_cond_timewait_monotonic_np=yes,
+                           ac_cv_pthread_cond_timewait_monotonic_np=no))
+if test "$ac_cv_pthread_cond_timewait_monotonic_np" != "no"; then
+    AC_DEFINE(HAVE_PTHREAD_COND_TIMEDWAIT_MONOTONIC)
+fi
+
 dnl check for wcrtomb/mbrtowc
 dnl =======================================================================
 if test -z "$MACOS_DEPLOYMENT_TARGET" || test "$MACOS_DEPLOYMENT_TARGET" -ge "100300"; then
