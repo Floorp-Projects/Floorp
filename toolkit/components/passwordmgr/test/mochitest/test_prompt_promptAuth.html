@@ -7,28 +7,18 @@
   <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
   <script type="text/javascript" src="pwmgr_common.js"></script>
   <script type="text/javascript" src="prompt_common.js"></script>
-  <script type="text/javascript" src="notification_common.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
 <p id="display"></p>
 
 <div id="content" style="display: none">
-  <iframe id="iframe"></iframe>
 </div>
 
 <pre id="test">
 <script class="testbody" type="text/javascript">
 var state, action;
-var pwmgr, observerService;
-var tmpLogin, login1, login2A, login2B, login2C, login2D, login2E, login3A, login3B, login4, proxyLogin;
 var isOk;
-var mozproxy, proxiedHost = "http://mochi.test:8888";
-var proxyChannel;
-var systemPrincipal = SpecialPowers.Services.scriptSecurityManager.getSystemPrincipal();
-var ioService = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
-
-var prefs = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
 
 var level = Ci.nsIAuthPrompt2.LEVEL_NONE;
 var authinfo = {
@@ -41,68 +31,63 @@ var authinfo = {
   realm : ""
 };
 
-var proxyAuthinfo = {
-  username : "",
-  password : "",
-  domain   : "",
-
-  flags : Ci.nsIAuthInformation.AUTH_PROXY,
-  authenticationScheme : "basic",
-  realm : ""
-};
-
-var iframe = document.getElementById("iframe");
-
 // Force parent to not look for tab-modal prompts, as they're not used for auth prompts.
 isTabModal = false;
 
-var channel1 = ioService.newChannel2("http://example.com",
-                                     null,
-                                     null,
-                                     null,      // aLoadingNode
-                                     SpecialPowers.Services.
-                                     scriptSecurityManager.getSystemPrincipal(),
-                                     null,      // aTriggeringPrincipal
-                                     Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
-                                     Ci.nsIContentPolicy.TYPE_OTHER);
+let chromeScript = runInParent(SimpleTest.getTestFileURL("pwmgr_common.js"));
 
-var channel2 = ioService.newChannel2("http://example2.com",
-                                     null,
-                                     null,
-                                     null,      // aLoadingNode
-                                     SpecialPowers.Services.
-                                     scriptSecurityManager.getSystemPrincipal(),
-                                     null,      // aTriggeringPrincipal
-                                     Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
-                                     Ci.nsIContentPolicy.TYPE_OTHER);
+let prompterParent = runInParent(() => {
+  const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
+  const promptFac = Cc["@mozilla.org/passwordmanager/authpromptfactory;1"].
+                    getService(Ci.nsIPromptFactory);
 
+  Cu.import("resource://gre/modules/Services.jsm");
+  let chromeWin = Services.wm.getMostRecentWindow("navigator:browser");
+  let prompter2 = promptFac.getPrompt(chromeWin, Ci.nsIAuthPrompt2);
 
-const Cc_promptFac= Cc["@mozilla.org/passwordmanager/authpromptfactory;1"];
-ok(Cc_promptFac != null, "Access Cc[@mozilla.org/passwordmanager/authpromptfactory;1]");
+  let ioService = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
+  let channels = {};
+  channels.channel1 = ioService.newChannel2("http://example.com",
+                                            null,
+                                            null,
+                                            null,      // aLoadingNode
+                                            Services.
+                                            scriptSecurityManager.getSystemPrincipal(),
+                                            null,      // aTriggeringPrincipal
+                                            Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
+                                            Ci.nsIContentPolicy.TYPE_OTHER);
 
-const Ci_promptFac = Ci.nsIPromptFactory;
-ok(Ci_promptFac != null, "Access Ci.nsIPromptFactory");
+  channels.channel2 = ioService.newChannel2("http://example2.com",
+                                            null,
+                                            null,
+                                            null,      // aLoadingNode
+                                            Services.
+                                            scriptSecurityManager.getSystemPrincipal(),
+                                            null,      // aTriggeringPrincipal
+                                            Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
+                                            Ci.nsIContentPolicy.TYPE_OTHER);
 
-const promptFac = Cc_promptFac.getService(Ci_promptFac);
-ok(promptFac != null, "promptFac getService()");
+  addMessageListener("proxyPrompter", function onMessage(msg) {
+    let args = [...msg.args];
+    let channelName = args.shift();
+    // Replace the channel name string (arg. 0) with the channel by that name.
+    args.unshift(channels[channelName]);
 
-var prompter2 = promptFac.getPrompt(window, Ci.nsIAuthPrompt2);
+    let rv = prompter2[msg.methodName](...args);
+    return {
+      rv,
+      // Send the args back to content so out/inout args can be checked.
+      args: msg.args,
+    };
+  });
 
-function initLogins(pi) {
-  observerService = Cc["@mozilla.org/observer-service;1"].
-                      getService(Ci.nsIObserverService);
-  observerService.addObserver(storageObserver, "passwordmgr-storage-changed", false);
+  Cu.import("resource://gre/modules/Services.jsm");
 
-  pwmgr = Cc["@mozilla.org/login-manager;1"].
-          getService(Ci.nsILoginManager);
+  let pwmgr = Cc["@mozilla.org/login-manager;1"].
+              getService(Ci.nsILoginManager);
 
-  mozproxy = "moz-proxy://" + SpecialPowers.wrap(pi).host + ":" +
-              SpecialPowers.wrap(pi).port;
-
-  tmpLogin = Cc["@mozilla.org/login-manager/loginInfo;1"].
-             createInstance(Ci.nsILoginInfo);
-
-  login1  = Cc["@mozilla.org/login-manager/loginInfo;1"]. // TODO
+  let login1, login2A, login2B, login2C, login2D, login2E;
+  login1  = Cc["@mozilla.org/login-manager/loginInfo;1"].
             createInstance(Ci.nsILoginInfo);
   login2A = Cc["@mozilla.org/login-manager/loginInfo;1"].
             createInstance(Ci.nsILoginInfo);
@@ -114,14 +99,6 @@ function initLogins(pi) {
             createInstance(Ci.nsILoginInfo);
   login2E = Cc["@mozilla.org/login-manager/loginInfo;1"].
             createInstance(Ci.nsILoginInfo);
-  login3A = Cc["@mozilla.org/login-manager/loginInfo;1"].
-            createInstance(Ci.nsILoginInfo);
-  login3B = Cc["@mozilla.org/login-manager/loginInfo;1"].
-            createInstance(Ci.nsILoginInfo);
-  login4  = Cc["@mozilla.org/login-manager/loginInfo;1"].
-            createInstance(Ci.nsILoginInfo);
-  proxyLogin = Cc["@mozilla.org/login-manager/loginInfo;1"].
-               createInstance(Ci.nsILoginInfo);
 
   login1.init("http://example.com", null, "http://example.com",
               "", "examplepass", "", "");
@@ -135,14 +112,6 @@ function initLogins(pi) {
                "100@beef", "user3pass", "", "");
   login2E.init("http://example2.com", null, "http://example2.com",
                "100%beef", "user3pass", "", "");
-  login3A.init("http://mochi.test:8888", null, "mochitest",
-               "mochiuser1", "mochipass1", "", "");
-  login3B.init("http://mochi.test:8888", null, "mochitest2",
-               "mochiuser2", "mochipass2", "", "");
-  login4.init("http://mochi.test:8888", null, "mochitest3",
-               "mochiuser3", "mochipass3-old", "", "");
-  proxyLogin.init(mozproxy, null, "Proxy Realm",
-                  "proxuser", "proxpass", "", "");
 
   pwmgr.addLogin(login1);
   pwmgr.addLogin(login2A);
@@ -150,181 +119,11 @@ function initLogins(pi) {
   pwmgr.addLogin(login2C);
   pwmgr.addLogin(login2D);
   pwmgr.addLogin(login2E);
-  pwmgr.addLogin(login3A);
-  pwmgr.addLogin(login3B);
-  pwmgr.addLogin(login4);
-  pwmgr.addLogin(proxyLogin);
-}
-
-function finishTest() {
-  try {
-    ok(true, "finishTest removing testing logins...");
-    observerService.removeObserver(storageObserver, "passwordmgr-storage-changed");
-
-    dumpLogins(pwmgr);
-    ok(true, "removing login 1...");
-      pwmgr.removeLogin(login1);
-    ok(true, "removing login 2A...");
-      pwmgr.removeLogin(login2A);
-    ok(true, "removing login 2B...");
-      pwmgr.removeLogin(login2B);
-    ok(true, "removing login 2C...");
-      pwmgr.removeLogin(login2C);
-    ok(true, "removing login 2D...");
-      pwmgr.removeLogin(login2D);
-    ok(true, "removing login 2E...");
-      pwmgr.removeLogin(login2E);
-    ok(true, "removing login 3A...");
-      pwmgr.removeLogin(login3A);
-    ok(true, "removing login 3B...");
-      pwmgr.removeLogin(login3B);
-    ok(true, "removing login 4...");
-      pwmgr.removeLogin(login4);
-    ok(true, "removing proxyLogin...");
-      pwmgr.removeLogin(proxyLogin);
-  } catch (e) {
-    ok(false, "finishTest FAILED: " + e);
-  }
-  ok(true, "whee, done!");
-}
-
-var startupCompleteResolver;
-var startupComplete = new Promise(resolve => startupCompleteResolver = resolve);
-
-function proxyChannelListener() { }
-proxyChannelListener.prototype = {
-  onStartRequest: function(request, context) {
-    startupCompleteResolver();
-  },
-  onStopRequest: function(request, context, status) { }
-};
-
-var resolveCallback = SpecialPowers.wrapCallbackObject({
-  QueryInterface : function (iid) {
-    const interfaces = [Ci.nsIProtocolProxyCallback, Ci.nsISupports];
-
-    if (!interfaces.some( function(v) { return iid.equals(v) } ))
-      throw SpecialPowers.Cr.NS_ERROR_NO_INTERFACE;
-    return this;
-  },
-
-  onProxyAvailable : function (req, uri, pi, status) {
-    initLogins(pi);
-
-    // I'm cheating a bit here... We should probably do some magic foo to get
-    // something implementing nsIProxiedProtocolHandler and then call
-    // NewProxiedChannel(), so we have something that's definately a proxied
-    // channel. But Mochitests use a proxy for a number of hosts, so just
-    // requesting a normal channel will give us a channel that's proxied.
-    // The proxyChannel needs to move to at least on-modify-request to
-    // have valid ProxyInfo, but we use OnStartRequest during startup()
-    // for simplicity.
-    proxyChannel = ioService.newChannel2(proxiedHost,
-                                         null,
-                                         null,
-                                         null,      // aLoadingNode
-                                         systemPrincipal,
-                                         null,      // aTriggeringPrincipal
-                                         Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
-                                         Ci.nsIContentPolicy.TYPE_OTHER);
-    proxyChannel.asyncOpen2(SpecialPowers.wrapCallbackObject(new proxyChannelListener()));
-  }
 });
 
-function startup() {
-  //need to allow for arbitrary network servers defined in PAC instead of a hardcoded moz-proxy.
-  var ios = SpecialPowers.Cc["@mozilla.org/network/io-service;1"].
-    getService(SpecialPowers.Ci.nsIIOService);
+let prompter2 = new PrompterProxy(prompterParent);
 
-  var pps = SpecialPowers.Cc["@mozilla.org/network/protocol-proxy-service;1"].getService();
-
-  var channel = ios.newChannel2("http://example.com",
-                                null,
-                                null,
-                                null,      // aLoadingNode
-                                systemPrincipal,
-                                null,      // aTriggeringPrincipal
-                                Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
-                                Ci.nsIContentPolicy.TYPE_OTHER);
-  pps.asyncResolve(channel, 0, resolveCallback);
-}
-
-function addNotificationCallback(cb) {
-  storageObserver.notificationCallbacks.push(cb);
-}
-
-var storageObserver = SpecialPowers.wrapCallbackObject({
-  notificationCallbacks: [],
-
-  QueryInterface : function (iid) {
-    const interfaces = [Ci.nsIObserver,
-                        Ci.nsISupports, Ci.nsISupportsWeakReference];
-
-    if (!interfaces.some( function(v) { return iid.equals(v) } ))
-      throw SpecialPowers.Cr.NS_ERROR_NO_INTERFACE;
-    return this;
-  },
-
-  observe : function (subject, topic, data) {
-    ok(true, ".");
-    ok(true, "observer for " + topic + " / " + data);
-    ok(true, "Time is " + (new Date()).toUTCString());
-    var wrapped = SpecialPowers.wrap(subject);
-    try {
-      switch (data) {
-        case "addLogin":
-          ok(wrapped.QueryInterface(Ci.nsILoginInfo), "subject QI 1");
-          ok(wrapped.QueryInterface(Ci.nsILoginMetaInfo), "subject QI 2");
-          dumpLogin("added: ", subject);
-          break;
-        case "modifyLogin":
-          var arr = wrapped.QueryInterface(Ci.nsIArray);
-          ok(arr, "subject QI");
-          is(arr.length, 2, "should be 2 items");
-          var oldLogin = arr.queryElementAt(0, Ci.nsILoginInfo);
-          var newLogin = arr.queryElementAt(1, Ci.nsILoginInfo);
-          dumpLogin("oldLogin: ", oldLogin);
-          dumpLogin("newLogin: ", newLogin);
-          break;
-        case "removeLogin":
-          ok(wrapped.QueryInterface(Ci.nsILoginInfo), "subject QI 1");
-          ok(wrapped.QueryInterface(Ci.nsILoginMetaInfo), "subject QI 2");
-          dumpLogin("removed: ", subject);
-          break;
-        case "removeAllLogins":
-          is(subject, null, "no subject");
-          break;
-        case "hostSavingEnabled":
-        case "hostSavingDisabled":
-          ok(subject instanceof Ci.nsISupportsString, "subject QI");
-          ok(true, "state is: " + subject.data);
-          break;
-        default:
-          do_throw("Unhandled notification: " + data + " / " + topic);
-      }
-
-      if (this.notificationCallbacks.length)
-        this.notificationCallbacks.splice(0, 1)[0]();
-    } catch (e) {
-      ok(false, "OBSERVER FAILED: " + e);
-    }
-  }
-});
-
-startup();
-
-add_task(function* setup() {
-  info("Waiting for startup to complete...");
-  yield startupComplete;
-
-  // popupNotifications (not *popup*) is a constant, per-tab container. So, we
-  // only need to fetch it once.
-  var popupNotifications = getPopupNotifications(window.top);
-  ok(popupNotifications, "Got popupNotifications");
-});
-
-add_task(function* test() {
-  info("===== test 500 =====");
+add_task(function* test_accept() {
   state = {
     msg         : "http://example.com is requesting your username and password.\n\nThe site says: “some realm”",
     title       : "Authentication Required",
@@ -350,14 +149,18 @@ add_task(function* test() {
   authinfo.realm    = "some realm";
 
   promptDone = handlePrompt(state, action);
-  isOk = prompter2.promptAuth(channel1, level, authinfo);
+  // Since prompter2 is actually a proxy to send a message to a chrome script and
+  // we can't send a channel in a message, we instead send the channel name that
+  // already exists in the chromeScript.
+  isOk = prompter2.promptAuth("channel1", level, authinfo);
   yield promptDone;
 
   ok(isOk, "Checking dialog return value (accept)");
   is(authinfo.username, "outuser", "Checking returned username");
   is(authinfo.password, "outpass", "Checking returned password");
+});
 
-  info("===== test 501 =====");
+add_task(function* test_cancel() {
   state = {
     msg         : "http://example.com is requesting your username and password.\n\nThe site says: “some realm”",
     title       : "Authentication Required",
@@ -377,12 +180,13 @@ add_task(function* test() {
     buttonClick : "cancel",
   };
   promptDone = handlePrompt(state, action);
-  isOk = prompter2.promptAuth(channel1, level, authinfo);
+  isOk = prompter2.promptAuth("channel1", level, authinfo);
   yield promptDone;
 
   ok(!isOk, "Checking dialog return value (cancel)");
+});
 
-  info("===== test 502 =====");
+add_task(function* test_pwonly() {
   // test filling in password-only login
   state = {
     msg         : "http://example.com is requesting your username and password.\n\nThe site says: “http://example.com”",
@@ -407,14 +211,15 @@ add_task(function* test() {
   authinfo.realm    = "http://example.com";
 
   promptDone = handlePrompt(state, action);
-  isOk = prompter2.promptAuth(channel1, level, authinfo);
+  isOk = prompter2.promptAuth("channel1", level, authinfo);
   yield promptDone;
 
   ok(isOk, "Checking dialog return value (accept)");
   is(authinfo.username, "", "Checking returned username");
   is(authinfo.password, "examplepass", "Checking returned password");
+});
 
-  info("===== test 503 =====");
+add_task(function* test_multipleExisting() {
   // test filling in existing login (undetermined from multiple selection)
   // user2name/user2pass would also be valid to fill here.
   state = {
@@ -440,14 +245,15 @@ add_task(function* test() {
   authinfo.realm    = "http://example2.com";
 
   promptDone = handlePrompt(state, action);
-  isOk = prompter2.promptAuth(channel2, level, authinfo);
+  isOk = prompter2.promptAuth("channel2", level, authinfo);
   yield promptDone;
 
   ok(isOk, "Checking dialog return value (accept)");
   ok(authinfo.username == "user1name" || authinfo.username == "user2name", "Checking returned username");
   ok(authinfo.password == "user1pass" || authinfo.password == "user2pass", "Checking returned password");
+});
 
-  info("===== test 504 =====");
+add_task(function* test_multipleExisting2() {
   // test filling in existing login (undetermined --> user1)
   // user2name/user2pass would also be valid to fill here.
   state = {
@@ -476,14 +282,15 @@ add_task(function* test() {
   authinfo.realm    = "http://example2.com";
 
   promptDone = handlePrompt(state, action);
-  isOk = prompter2.promptAuth(channel2, level, authinfo);
+  isOk = prompter2.promptAuth("channel2", level, authinfo);
   yield promptDone;
 
   ok(isOk, "Checking dialog return value (accept)");
   is(authinfo.username, "user1name", "Checking returned username");
   is(authinfo.password, "user1pass", "Checking returned password");
+});
 
-  info("===== test 505 =====");
+add_task(function* test_multipleExisting3() {
   // test filling in existing login (undetermined --> user2)
   // user2name/user2pass would also be valid to fill here.
   state = {
@@ -511,16 +318,16 @@ add_task(function* test() {
   authinfo.password = "";
   authinfo.realm    = "http://example2.com";
 
-  dumpNotifications();
   promptDone = handlePrompt(state, action);
-  isOk = prompter2.promptAuth(channel2, level, authinfo);
+  isOk = prompter2.promptAuth("channel2", level, authinfo);
   yield promptDone;
 
   ok(isOk, "Checking dialog return value (accept)");
   is(authinfo.username, "user2name", "Checking returned username");
   is(authinfo.password, "user2pass", "Checking returned password");
+});
 
-  info("===== test 506 =====");
+add_task(function* test_changingMultiple() {
   // test changing a password (undetermined --> user2 w/ newpass)
   // user2name/user2pass would also be valid to fill here.
   state = {
@@ -548,16 +355,16 @@ add_task(function* test() {
   authinfo.password = "";
   authinfo.realm    = "http://example2.com";
 
-  dumpNotifications();
   promptDone = handlePrompt(state, action);
-  isOk = prompter2.promptAuth(channel2, level, authinfo);
+  isOk = prompter2.promptAuth("channel2", level, authinfo);
   yield promptDone;
 
   ok(isOk, "Checking dialog return value (accept)");
   is(authinfo.username, "user2name", "Checking returned username");
   is(authinfo.password, "NEWuser2pass", "Checking returned password");
+});
 
-  info("===== test 507 =====");
+add_task(function* test_changingMultiple2() {
   // test changing a password (undetermined --> user2 w/ origpass)
   // user2name/user2pass would also be valid to fill here.
   state = {
@@ -585,358 +392,13 @@ add_task(function* test() {
   authinfo.password = "";
   authinfo.realm    = "http://example2.com";
 
-  dumpNotifications();
   promptDone = handlePrompt(state, action);
-  isOk = prompter2.promptAuth(channel2, level, authinfo);
+  isOk = prompter2.promptAuth("channel2", level, authinfo);
   yield promptDone;
 
   ok(isOk, "Checking dialog return value (accept)");
   is(authinfo.username, "user2name", "Checking returned username");
   is(authinfo.password, "user2pass", "Checking returned password");
-
-  info("===== test 508 =====");
-  // test proxy login (default = no autologin), make sure it prompts.
-  state = {
-    msg         : "The proxy moz-proxy://127.0.0.1:8888 is requesting a username and password.\n\nThe site says: “Proxy Realm”",
-    title       : "Authentication Required",
-    textValue   : "proxuser",
-    passValue   : "proxpass",
-    iconClass   : "authentication-icon question-icon",
-    titleHidden : true,
-    textHidden  : false,
-    passHidden  : false,
-    checkHidden : true,
-    checkMsg    : "",
-    checked     : false,
-    focused     : "textField",
-    defButton   : "button0",
-  };
-  action = {
-    buttonClick : "ok",
-  };
-  proxyAuthinfo.username = "";
-  proxyAuthinfo.password = "";
-  proxyAuthinfo.realm    = "Proxy Realm";
-  proxyAuthinfo.flags    = Ci.nsIAuthInformation.AUTH_PROXY;
-
-  dumpNotifications();
-  var time1 = pwmgr.findLogins({}, mozproxy, null, "Proxy Realm")[0].QueryInterface(Ci.nsILoginMetaInfo).timeLastUsed;
-  promptDone = handlePrompt(state, action);
-  isOk = prompter2.promptAuth(proxyChannel, level, proxyAuthinfo);
-  yield promptDone;
-  var time2 = pwmgr.findLogins({}, mozproxy, null, "Proxy Realm")[0].QueryInterface(Ci.nsILoginMetaInfo).timeLastUsed;
-
-  ok(isOk, "Checking dialog return value (accept)");
-  isnot(time1, time2, "Checking that timeLastUsed was updated");
-  is(proxyAuthinfo.username, "proxuser", "Checking returned username");
-  is(proxyAuthinfo.password, "proxpass", "Checking returned password");
-
-  info("===== test 509 =====");
-  // test proxy login (with autologin)
-
-  // Enable the autologin pref.
-  prefs.setBoolPref("signon.autologin.proxy", true);
-
-  proxyAuthinfo.username = "";
-  proxyAuthinfo.password = "";
-  proxyAuthinfo.realm    = "Proxy Realm";
-  proxyAuthinfo.flags    = Ci.nsIAuthInformation.AUTH_PROXY;
-
-  time1 = pwmgr.findLogins({}, mozproxy, null, "Proxy Realm")[0].QueryInterface(Ci.nsILoginMetaInfo).timeLastUsed;
-  isOk = prompter2.promptAuth(proxyChannel, level, proxyAuthinfo);
-  time2 = pwmgr.findLogins({}, mozproxy, null, "Proxy Realm")[0].QueryInterface(Ci.nsILoginMetaInfo).timeLastUsed;
-
-  ok(isOk, "Checking dialog return value (accept)");
-  isnot(time1, time2, "Checking that timeLastUsed was updated");
-  is(proxyAuthinfo.username, "proxuser", "Checking returned username");
-  is(proxyAuthinfo.password, "proxpass", "Checking returned password");
-
-  info("===== test 510 =====");
-  // test proxy login (with autologin), ensure it prompts after a failed auth.
-  state = {
-    msg         : "The proxy moz-proxy://127.0.0.1:8888 is requesting a username and password.\n\nThe site says: “Proxy Realm”",
-    title       : "Authentication Required",
-    textValue   : "proxuser",
-    passValue   : "proxpass",
-    iconClass   : "authentication-icon question-icon",
-    titleHidden : true,
-    textHidden  : false,
-    passHidden  : false,
-    checkHidden : true,
-    checkMsg    : "",
-    checked     : false,
-    focused     : "textField",
-    defButton   : "button0",
-  };
-  action = {
-    buttonClick : "ok",
-  };
-
-  proxyAuthinfo.username = "";
-  proxyAuthinfo.password = "";
-  proxyAuthinfo.realm    = "Proxy Realm";
-  proxyAuthinfo.flags    = (Ci.nsIAuthInformation.AUTH_PROXY | Ci.nsIAuthInformation.PREVIOUS_FAILED);
-
-  time1 = pwmgr.findLogins({}, mozproxy, null, "Proxy Realm")[0].QueryInterface(Ci.nsILoginMetaInfo).timeLastUsed;
-  promptDone = handlePrompt(state, action);
-  isOk = prompter2.promptAuth(proxyChannel, level, proxyAuthinfo);
-  yield promptDone;
-  time2 = pwmgr.findLogins({}, mozproxy, null, "Proxy Realm")[0].QueryInterface(Ci.nsILoginMetaInfo).timeLastUsed;
-
-  ok(isOk, "Checking dialog return value (accept)");
-  isnot(time1, time2, "Checking that timeLastUsed was updated");
-  is(proxyAuthinfo.username, "proxuser", "Checking returned username");
-  is(proxyAuthinfo.password, "proxpass", "Checking returned password");
-
-  info("===== test 511 =====");
-  // test proxy login (with autologin), ensure it prompts in Private Browsing mode.
-  state = {
-    msg         : "the message",
-    title       : "the title",
-    textValue   : "proxuser",
-    passValue   : "proxpass",
-  };
-  action = {
-    buttonClick : "ok",
-  };
-
-  proxyAuthinfo.username = "";
-  proxyAuthinfo.password = "";
-  proxyAuthinfo.realm    = "Proxy Realm";
-  proxyAuthinfo.flags    = Ci.nsIAuthInformation.AUTH_PROXY;
-
-  prefs.clearUserPref("signon.autologin.proxy");
-
-  // XXX check for and kill popup notification??
-  // XXX check for checkbox / checkstate on old prompts?
-  // XXX check NTLM domain stuff
-
-  // clear plain HTTP auth sessions before the test, to allow
-  // running them more than once.
-  var authMgr = Cc['@mozilla.org/network/http-auth-manager;1'].
-                getService(Ci.nsIHttpAuthManager);
-  authMgr.clearAll();
-
-  info("===== test 1000 =====");
-  state = {
-    msg         : "http://mochi.test:8888 is requesting your username and password.\n\nThe site says: “mochitest”",
-    title       : "Authentication Required",
-    textValue   : "mochiuser1",
-    passValue   : "mochipass1",
-    iconClass   : "authentication-icon question-icon",
-    titleHidden : true,
-    textHidden  : false,
-    passHidden  : false,
-    checkHidden : true,
-    checkMsg    : "",
-    checked     : false,
-    focused     : "textField",
-    defButton   : "button0",
-  };
-  action = {
-    buttonClick : "ok",
-  };
-  promptDone = handlePrompt(state, action);
-
-  // The following tests are driven by iframe loads
-
-  var iframeLoaded = onloadPromiseFor("iframe");
-  iframe.src = "authenticate.sjs?user=mochiuser1&pass=mochipass1";
-  yield promptDone;
-  yield iframeLoaded;
-  checkEchoedAuthInfo({user: "mochiuser1", pass: "mochipass1"},
-                      iframe.contentDocument);
-
-  state = {
-    msg         : "http://mochi.test:8888 is requesting your username and password.\n\nThe site says: “mochitest2”",
-    title       : "Authentication Required",
-    textValue   : "mochiuser2",
-    passValue   : "mochipass2",
-    iconClass   : "authentication-icon question-icon",
-    titleHidden : true,
-    textHidden  : false,
-    passHidden  : false,
-    checkHidden : true,
-    checkMsg    : "",
-    checked     : false,
-    focused     : "textField",
-    defButton   : "button0",
-  };
-  action = {
-    buttonClick : "ok",
-  };
-  promptDone = handlePrompt(state, action);
-  // We've already authenticated to this host:port. For this next
-  // request, the existing auth should be sent, we'll get a 401 reply,
-  // and we should prompt for new auth.
-  iframeLoaded = onloadPromiseFor("iframe");
-  iframe.src = "authenticate.sjs?user=mochiuser2&pass=mochipass2&realm=mochitest2";
-  yield promptDone;
-  yield iframeLoaded;
-  checkEchoedAuthInfo({user: "mochiuser2", pass: "mochipass2"},
-                      iframe.contentDocument);
-
-  // Now make a load that requests the realm from test 1000. It was
-  // already provided there, so auth will *not* be prompted for -- the
-  // networking layer already knows it!
-  iframeLoaded = onloadPromiseFor("iframe");
-  iframe.src = "authenticate.sjs?user=mochiuser1&pass=mochipass1";
-  yield iframeLoaded;
-  checkEchoedAuthInfo({user: "mochiuser1", pass: "mochipass1"},
-                      iframe.contentDocument);
-
-  // Same realm we've already authenticated to, but with a different
-  // expected password (to trigger an auth prompt, and change-password
-  // popup notification).
-  state = {
-    msg         : "http://mochi.test:8888 is requesting your username and password.\n\nThe site says: “mochitest”",
-    title       : "Authentication Required",
-    textValue   : "mochiuser1",
-    passValue   : "mochipass1",
-    iconClass   : "authentication-icon question-icon",
-    titleHidden : true,
-    textHidden  : false,
-    passHidden  : false,
-    checkHidden : true,
-    checkMsg    : "",
-    checked     : false,
-    focused     : "textField",
-    defButton   : "button0",
-  };
-  action = {
-    buttonClick : "ok",
-    passField   : "mochipass1-new",
-  };
-  promptDone = handlePrompt(state, action);
-  iframeLoaded = onloadPromiseFor("iframe");
-  iframe.src = "authenticate.sjs?user=mochiuser1&pass=mochipass1-new";
-  yield promptDone;
-  yield iframeLoaded;
-  checkEchoedAuthInfo({user: "mochiuser1", pass: "mochipass1-new"},
-                      iframe.contentDocument);
-
-  // Housekeeping: change it back
-  var pwchanged = new Promise(resolve => {
-    function resetIt() {
-      tmpLogin.init("http://mochi.test:8888", null, "mochitest",
-                    "mochiuser1", "mochipass1-new", "", "");
-      pwmgr.modifyLogin(tmpLogin, login3A);
-      resolve(true);
-    }
-    addNotificationCallback(resetIt);
-  });
-
-  // Check for the popup notification, and change the password.
-  popupNotifications = getPopupNotifications(window.top);
-  popup = getPopup(popupNotifications, "password-change");
-  ok(popup, "got popup notification");
-  clickPopupButton(popup, kChangeButton);
-  popup.remove();
-
-  yield pwchanged;
-
-  // Same as last test, but for a realm we haven't already authenticated
-  // to (but have an existing saved login for, so that we'll trigger
-  // a change-password popup notification.
-  state = {
-    msg         : "http://mochi.test:8888 is requesting your username and password.\n\nThe site says: “mochitest3”",
-    title       : "Authentication Required",
-    textValue   : "mochiuser3",
-    passValue   : "mochipass3-old",
-    iconClass   : "authentication-icon question-icon",
-    titleHidden : true,
-    textHidden  : false,
-    passHidden  : false,
-    checkHidden : true,
-    checkMsg    : "",
-    checked     : false,
-    focused     : "textField",
-    defButton   : "button0",
-  };
-  action = {
-    buttonClick : "ok",
-    passField   : "mochipass3-new",
-  };
-  promptDone = handlePrompt(state, action);
-  iframeLoaded = onloadPromiseFor("iframe");
-  iframe.src = "authenticate.sjs?user=mochiuser3&pass=mochipass3-new&realm=mochitest3";
-  yield promptDone;
-  yield iframeLoaded;
-  checkEchoedAuthInfo({user: "mochiuser3", pass: "mochipass3-new"},
-                      iframe.contentDocument);
-
-  // Housekeeping: change it back to the original login4. Actually,
-  // just delete it and we'll re-add it as the next test.
-  pwchanged = new Promise(resolve => {
-    function clearIt() {
-      ok(true, "1004's clearIt() called.");
-      try {
-        tmpLogin.init("http://mochi.test:8888", null, "mochitest3",
-                      "mochiuser3", "mochipass3-new", "", "");
-        pwmgr.removeLogin(tmpLogin);
-      } catch (e) { ok(false, "clearIt GOT EXCEPTION: " + e); }
-      resolve(true);
-    }
-    addNotificationCallback(clearIt);
-  });
-
-  // Check for the popup notification, and change the password.
-  popup = getPopup(popupNotifications, "password-change");
-  ok(popup, "got popup notification");
-  clickPopupButton(popup, kChangeButton);
-  popup.remove();
-
-  yield pwchanged;
-
-
-  // Clear cached auth from this subtest, and avoid leaking due to bug 459620.
-  authMgr.clearAll();
-  ok(true, "authMgr cleared cached auth");
-
-  state = {
-    msg         : "http://mochi.test:8888 is requesting your username and password.\n\nThe site says: “mochitest3”",
-    title       : "Authentication Required",
-    textValue   : "",
-    passValue   : "",
-    iconClass   : "authentication-icon question-icon",
-    titleHidden : true,
-    textHidden  : false,
-    passHidden  : false,
-    checkHidden : true,
-    checkMsg    : "",
-    checked     : false,
-    focused     : "textField",
-    defButton   : "button0",
-  };
-  action = {
-    buttonClick : "ok",
-    textField   : "mochiuser3",
-    passField   : "mochipass3-old",
-  };
-  // Trigger a new prompt, so we can test adding a new login.
-  promptDone = handlePrompt(state, action);
-
-  iframeLoaded = onloadPromiseFor("iframe");
-  iframe.src = "authenticate.sjs?user=mochiuser3&pass=mochipass3-old&realm=mochitest3";
-  yield promptDone;
-  yield iframeLoaded;
-  checkEchoedAuthInfo({user: "mochiuser3", pass: "mochipass3-old"},
-                      iframe.contentDocument);
-
-  var pwsaved = new Promise(resolve => {
-    function finishIt() {
-      finishTest();
-      resolve(true);
-    }
-    addNotificationCallback(finishIt);
-  });
-
-  // Check for the popup notification, and change the password.
-  popup = getPopup(popupNotifications, "password-save");
-  ok(popup, "got popup notification");
-  clickPopupButton(popup, kRememberButton);
-  popup.remove();
-  yield pwsaved;
 });
 </script>
 </pre>

@@ -12,8 +12,8 @@
  * - devtools/client/definitions for tool-specifics entries
  */
 
-const Services = require("Services");
-const MenuStrings = Services.strings.createBundle("chrome://devtools/locale/menus.properties");
+const {LocalizationHelper} = require("devtools/shared/l10n");
+const MENUS_L10N = new LocalizationHelper("devtools/locale/menus.properties");
 
 loader.lazyRequireGetter(this, "gDevTools", "devtools/client/framework/devtools", true);
 loader.lazyRequireGetter(this, "gDevToolsBrowser", "devtools/client/framework/devtools-browser", true);
@@ -23,7 +23,7 @@ loader.lazyRequireGetter(this, "gDevToolsBrowser", "devtools/client/framework/de
 const FragmentsCache = new Map();
 
 function l10n(key) {
-  return MenuStrings.GetStringFromName(key);
+  return MENUS_L10N.getStr(key);
 }
 
 /**

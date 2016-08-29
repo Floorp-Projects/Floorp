@@ -12,7 +12,7 @@
 
 namespace mp4_demuxer {
 
-class ByteReader
+class MOZ_RAII ByteReader
 {
 public:
   ByteReader() : mPtr(nullptr), mRemaining(0) {}
@@ -57,7 +57,8 @@ public:
   }
 
   // Make it explicit if we're not using the extra bytes.
-  void DiscardRemaining() {
+  void DiscardRemaining()
+  {
     mRemaining = 0;
   }
 
@@ -349,6 +350,24 @@ private:
   size_t mRemaining;
   size_t mLength;
 };
-}
+
+// A ByteReader that automatically discards remaining data before destruction.
+class MOZ_RAII AutoByteReader : public ByteReader
+{
+public:
+  AutoByteReader(const uint8_t* aData, size_t aSize)
+    : ByteReader(aData, aSize)
+  {
+  }
+  ~AutoByteReader()
+  {
+    ByteReader::DiscardRemaining();
+  }
+
+  // Prevent unneeded DiscardRemaining() calls.
+  void DiscardRemaining() = delete;
+};
+
+} // namespace mp4_demuxer
 
 #endif

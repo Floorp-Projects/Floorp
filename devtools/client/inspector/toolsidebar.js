@@ -6,13 +6,9 @@
 
 "use strict";
 
-var Services = require("Services");
 var EventEmitter = require("devtools/shared/event-emitter");
 var Telemetry = require("devtools/client/shared/telemetry");
 var { Task } = require("devtools/shared/task");
-/* eslint-disable mozilla/reject-some-requires */
-var { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
-/* eslint-enable mozilla/reject-some-requires */
 
 /**
  * This object represents replacement for ToolSidebar
@@ -302,21 +298,3 @@ ToolSidebar.prototype = {
     this._toolPanel = null;
   })
 };
-
-XPCOMUtils.defineLazyGetter(this, "l10n", function () {
-  let bundle = Services.strings.createBundle(
-    "chrome://devtools/locale/toolbox.properties");
-
-  let l10n = function (name, ...args) {
-    try {
-      if (args.length == 0) {
-        return bundle.GetStringFromName(name);
-      }
-      return bundle.formatStringFromName(name, args, args.length);
-    } catch (err) {
-      console.error(err);
-    }
-    return null;
-  };
-  return l10n;
-});

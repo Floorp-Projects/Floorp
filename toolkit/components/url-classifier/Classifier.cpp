@@ -29,6 +29,33 @@ extern mozilla::LazyLogModule gUrlClassifierDbServiceLog;
 namespace mozilla {
 namespace safebrowsing {
 
+namespace {
+
+// A scoped-clearer for nsTArray<TableUpdate*>.
+// The owning elements will be deleted and the array itself
+// will be cleared on exiting the scope.
+class ScopedUpdatesClearer {
+public:
+  explicit ScopedUpdatesClearer(nsTArray<TableUpdate*> *aUpdates)
+    : mUpdatesArrayRef(aUpdates)
+  {
+    for (auto update : *aUpdates) {
+      mUpdatesPointerHolder.AppendElement(update);
+    }
+  }
+
+  ~ScopedUpdatesClearer()
+  {
+    mUpdatesArrayRef->Clear();
+  }
+
+private:
+  nsTArray<TableUpdate*>* mUpdatesArrayRef;
+  nsTArray<nsAutoPtr<TableUpdate>> mUpdatesPointerHolder;
+};
+
+} // End of unnamed namespace.
+
 void
 Classifier::SplitTables(const nsACString& str, nsTArray<nsCString>& tables)
 {
@@ -340,28 +367,45 @@ Classifier::ApplyUpdates(nsTArray<TableUpdate*>* aUpdates)
     clockStart = PR_IntervalNow();
   }
 
-  LOG(("Backup before update."));
+  nsresult rv;
 
-  nsresult rv = BackupTables();
-  NS_ENSURE_SUCCESS(rv, rv);
+  {
+    ScopedUpdatesClearer scopedUpdatesClearer(aUpdates);
 
-  LOG(("Applying %d table updates.", aUpdates->Length()));
-
-  for (uint32_t i = 0; i < aUpdates->Length(); i++) {
-    // Previous UpdateHashStore() may have consumed this update..
-    if ((*aUpdates)[i]) {
-      // Run all updates for one table
-      nsCString updateTable(aUpdates->ElementAt(i)->TableName());
-      rv = UpdateHashStore(aUpdates, updateTable);
-      if (NS_FAILED(rv)) {
-        if (rv != NS_ERROR_OUT_OF_MEMORY) {
-          Reset();
-        }
-        return rv;
+    // In order to prevent any premature update code from being
+    // run against V4 updates, we bail out as early as possible
+    // if aUpdates is using V4.
+    for (auto update : *aUpdates) {
+      if (update && TableUpdate::Cast<TableUpdateV4>(update)) {
+        LOG(("V4 update is not supported yet."));
+        // TODO: Bug 1283009 - Supports applying table udpate V4.
+        return NS_ERROR_NOT_IMPLEMENTED;
       }
     }
-  }
-  aUpdates->Clear();
+
+    LOG(("Backup before update."));
+
+    rv = BackupTables();
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    LOG(("Applying %d table updates.", aUpdates->Length()));
+
+    for (uint32_t i = 0; i < aUpdates->Length(); i++) {
+      // Previous UpdateHashStore() may have consumed this update..
+      if ((*aUpdates)[i]) {
+        // Run all updates for one table
+        nsCString updateTable(aUpdates->ElementAt(i)->TableName());
+        rv = UpdateHashStore(aUpdates, updateTable);
+        if (NS_FAILED(rv)) {
+          if (rv != NS_ERROR_OUT_OF_MEMORY) {
+            Reset();
+          }
+          return rv;
+        }
+      }
+    }
+
+  } // End of scopedUpdatesClearer scope.
 
   rv = RegenActiveTables();
   NS_ENSURE_SUCCESS(rv, rv);
@@ -393,6 +437,7 @@ Classifier::ApplyFullHashes(nsTArray<TableUpdate*>* aUpdates)
 {
   LOG(("Applying %d table gethashes.", aUpdates->Length()));
 
+  ScopedUpdatesClearer scopedUpdatesClearer(aUpdates);
   for (uint32_t i = 0; i < aUpdates->Length(); i++) {
     TableUpdate *update = aUpdates->ElementAt(i);
 
@@ -400,9 +445,7 @@ Classifier::ApplyFullHashes(nsTArray<TableUpdate*>* aUpdates)
     NS_ENSURE_SUCCESS(rv, rv);
 
     aUpdates->ElementAt(i) = nullptr;
-    delete update;
   }
-  aUpdates->Clear();
 
   return NS_OK;
 }
@@ -635,7 +678,6 @@ Classifier::CheckValidUpdate(nsTArray<TableUpdate*>* aUpdates,
       continue;
     if (update->Empty()) {
       aUpdates->ElementAt(i) = nullptr;
-      delete update;
       continue;
     }
     validupdates++;
@@ -711,7 +753,6 @@ Classifier::UpdateHashStore(nsTArray<TableUpdate*>* aUpdates,
     }
 
     aUpdates->ElementAt(i) = nullptr;
-    delete update;
   }
 
   LOG(("Applied %d update(s) to %s.", applied, store.TableName().get()));
