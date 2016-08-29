@@ -75,7 +75,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "uuidGen",
 const BASE_SCHEMA = "chrome://extensions/content/schemas/manifest.json";
 const CATEGORY_EXTENSION_SCHEMAS = "webextension-schemas";
 const CATEGORY_EXTENSION_SCRIPTS = "webextension-scripts";
-const CATEGORY_EXTENSION_SCRIPTS_CONTENT = "webextension-scripts-content";
+const CATEGORY_EXTENSION_SCRIPTS_ADDON = "webextension-scripts-addon";
 
 let schemaURLs = new Set();
 
@@ -144,11 +144,10 @@ var Management = new class extends SchemaAPIManager {
       this.loadScript(value);
     }
 
-    // TODO(robwu): This should be removed when addons can conceptually run in
-    // a separate process. This category should be used for content scripts only,
-    // but since the current content script API implementations (i18n, extension
-    // and runtime) are also needed in adddons, we re-use the category.
-    for (let [/* name */, value] of XPCOMUtils.enumerateCategoryEntries(CATEGORY_EXTENSION_SCRIPTS_CONTENT)) {
+    // TODO(robwu): This should move to its own instances of SchemaAPIManager,
+    // because the above scripts run in the chrome process whereas the following
+    // scripts runs in the addon process.
+    for (let [/* name */, value] of XPCOMUtils.enumerateCategoryEntries(CATEGORY_EXTENSION_SCRIPTS_ADDON)) {
       this.loadScript(value);
     }
 
