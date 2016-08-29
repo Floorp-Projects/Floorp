@@ -41,8 +41,6 @@ SinfParser::ParseSchm(Box& aBox)
 
   mozilla::Unused << reader->ReadU32(); // flags -- ignore
   mSinf.mDefaultEncryptionType = reader->ReadU32();
-
-  reader->DiscardRemaining();
 }
 
 void

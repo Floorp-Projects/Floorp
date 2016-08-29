@@ -5,10 +5,10 @@
 "use strict";
 
 const { getJSON } = require("devtools/client/shared/getjson");
-const Services = require("Services");
 
 const DEVICES_URL = "devtools.devices.url";
-const Strings = Services.strings.createBundle("chrome://devtools/locale/device.properties");
+const {LocalizationHelper} = require("devtools/shared/l10n");
+const L10N = new LocalizationHelper("devtools/locale/device.properties");
 
 /* This is a catalog of common web-enabled devices and their properties,
  * intended for (mobile) device emulation.
@@ -63,6 +63,6 @@ exports.GetDevices = GetDevices;
 
 // Get the localized string for a device type.
 function GetDeviceString(deviceType) {
-  return Strings.GetStringFromName("device." + deviceType);
+  return L10N.getStr("device." + deviceType);
 }
 exports.GetDeviceString = GetDeviceString;

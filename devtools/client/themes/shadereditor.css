@@ -44,25 +44,16 @@
 
 .side-menu-widget-item-checkbox .checkbox-check {
   -moz-appearance: none;
-  background-image: url(images/itemToggle.png);
+  background-image: url(images/itemToggle.svg);
   background-color: transparent;
-  background-repeat: no-repeat;
-  background-clip: content-box;
-  background-size: 32px 16px;
-  background-position: -16px 0;
   width: 16px;
   height: 16px;
   border: 0;
 }
 
-@media (min-resolution: 1.1dppx) {
-  .side-menu-widget-item-checkbox .checkbox-check {
-    background-image: url(images/itemToggle@2x.png);
-  }
-}
-
-.side-menu-widget-item-checkbox[checked] .checkbox-check {
-  background-position: 0 0;
+.side-menu-widget-item-checkbox:not([checked]) .checkbox-check,
+.side-menu-widget-item-checkbox:not([checked]) + vbox {
+  opacity: 0.3;
 }
 
 .side-menu-widget-item:not(.selected) .checkbox-check {

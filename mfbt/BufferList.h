@@ -61,10 +61,6 @@ class BufferList : private AllocPolicy
   // to be full (i.e., size == capacity). Therefore, a byte at offset N within
   // the BufferList and stored in memory at an address A will satisfy
   // (N % Align == A % Align) if Align == 2, 4, or 8.
-  //
-  // NB: FlattenBytes can create non-full segments in the middle of the
-  // list. However, it ensures that these buffers are 8-byte aligned, so the
-  // offset invariant is not violated.
   static const size_t kSegmentAlignment = 8;
 
   // Allocate a BufferList. The BufferList will free all its buffers when it is
@@ -244,14 +240,6 @@ class BufferList : private AllocPolicy
   // data before aSize.
   inline bool ReadBytes(IterImpl& aIter, char* aData, size_t aSize) const;
 
-  // FlattenBytes reconfigures the BufferList so that data in the range
-  // [aIter, aIter + aSize) is stored contiguously. A pointer to this data is
-  // returned in aOutData. Returns false if not enough data is available. All
-  // other iterators are invalidated by this method.
-  //
-  // This method requires aIter and aSize to be 8-byte aligned.
-  inline bool FlattenBytes(IterImpl& aIter, const char** aOutData, size_t aSize);
-
   // Return a new BufferList that shares storage with this BufferList. The new
   // BufferList is read-only. It allows iteration over aSize bytes starting at
   // aIter. Borrow can fail, in which case *aSuccess will be false upon
@@ -370,64 +358,6 @@ BufferList<AllocPolicy>::ReadBytes(IterImpl& aIter, char* aData, size_t aSize) c
   }
 
   return true;
-}
-
-template<typename AllocPolicy>
-bool
-BufferList<AllocPolicy>::FlattenBytes(IterImpl& aIter, const char** aOutData, size_t aSize)
-{
-  MOZ_RELEASE_ASSERT(aSize);
-  MOZ_RELEASE_ASSERT(mOwning);
-
-  if (aIter.HasRoomFor(aSize)) {
-    // If the data is already contiguous, just return a pointer.
-    *aOutData = aIter.Data();
-    aIter.Advance(*this, aSize);
-    return true;
-  }
-
-  // This buffer will become the new contiguous segment.
-  char* buffer = this->template pod_malloc<char>(Size());
-  if (!buffer) {
-    return false;
-  }
-
-  size_t copied = 0;
-  size_t offset;
-  bool found = false;
-  for (size_t i = 0; i < mSegments.length(); i++) {
-    Segment& segment = mSegments[i];
-    memcpy(buffer + copied, segment.Start(), segment.mSize);
-
-    if (i == aIter.mSegment) {
-      offset = copied + (aIter.mData - segment.Start());
-
-      // Do we have aSize bytes after aIter?
-      if (Size() - offset >= aSize) {
-        found = true;
-        *aOutData = buffer + offset;
-
-        aIter.mSegment = 0;
-        aIter.mData = buffer + offset + aSize;
-        aIter.mDataEnd = buffer + Size();
-      }
-    }
-
-    this->free_(segment.mData);
-
-    copied += segment.mSize;
-  }
-
-  mSegments.clear();
-  mSegments.infallibleAppend(Segment(buffer, Size(), Size()));
-
-  if (!found) {
-    aIter.mSegment = 0;
-    aIter.mData = Start();
-    aIter.mDataEnd = Start() + Size();
-  }
-
-  return found;
 }
 
 template<typename AllocPolicy> template<typename BorrowingAllocPolicy>

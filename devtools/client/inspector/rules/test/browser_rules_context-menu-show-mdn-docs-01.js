@@ -61,7 +61,7 @@ function* testMdnContextMenuItemVisibility(view) {
     info("Creating context menu with " + node + " as popupNode");
     let allMenuItems = openStyleContextMenuAndGetAllItems(view, node);
     let menuitemShowMdnDocs = allMenuItems.find(item => item.label ===
-      _STRINGS.GetStringFromName("styleinspector.contextmenu.showMdnDocs"));
+      STYLE_INSPECTOR_L10N.getStr("styleinspector.contextmenu.showMdnDocs"));
 
     let isVisible = menuitemShowMdnDocs.visible;
     let shouldBeVisible = isPropertyNameNode(node);
