@@ -1056,7 +1056,11 @@ AudioChannelService::AudioChannelWindow::RequestAudioFocus(AudioChannelAgent* aA
   // Only foreground window can request audio focus, but it would still own the
   // audio focus even it goes to background. Audio focus would be abandoned
   // only when other foreground window starts audio competing.
-  mOwningAudioFocus = !(aAgent->Window()->IsBackground());
+  // One exception is if the pref "media.block-autoplay-until-in-foreground"
+  // is on and the background page is the non-visited before. Because the media
+  // in that page would be blocked until the page is going to foreground.
+  mOwningAudioFocus = (!(aAgent->Window()->IsBackground()) ||
+                       aAgent->Window()->GetMediaSuspend() == nsISuspendedTypes::SUSPENDED_BLOCK) ;
 
   MOZ_LOG(AudioChannelService::GetAudioChannelLog(), LogLevel::Debug,
          ("AudioChannelWindow, RequestAudioFocus, this = %p, "
