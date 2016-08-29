@@ -62,6 +62,9 @@ void RTCPPacketInformation::AddApplicationData(const uint8_t* data,
     if (size > kRtcpAppCode_DATA_SIZE) {
         copySize = kRtcpAppCode_DATA_SIZE;
     }
+    if (((uint32_t) applicationLength) + copySize > UINT16_MAX) {
+      return;
+    }
 
     applicationLength += copySize;
     applicationData = new uint8_t[applicationLength];
