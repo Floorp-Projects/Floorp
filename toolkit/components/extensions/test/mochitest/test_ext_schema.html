@@ -23,7 +23,7 @@ add_task(function* testEmptySchema() {
   }
 
   let extension = ExtensionTestUtils.loadExtension({
-    background: `(${background})()`,
+    background,
     manifest: {
       permissions: ["storage"],
     },
@@ -46,7 +46,7 @@ add_task(function* testUnknownProperties() {
       unknown_property: {},
     },
 
-    background: `(${background})()`,
+    background,
   });
 
   let messages = [

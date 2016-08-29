@@ -21,7 +21,7 @@ let image = atob(dataURI);
 const IMAGE_ARRAYBUFFER = Uint8Array.from(image, byte => byte.charCodeAt(0)).buffer;
 
 add_task(function* test_contentscript() {
-  function backgroundScript() {
+  function background() {
     // TODO: Use the Tabs API to obtain the tab ids for showing pageActions.
     let tabId = 1;
     let onClickedListenerEnabled = false;
@@ -71,7 +71,7 @@ add_task(function* test_contentscript() {
   }
 
   let extension = ExtensionTestUtils.loadExtension({
-    background: `(${backgroundScript}())`,
+    background,
     manifest: {
       "name": "PageAction Extension",
       "page_action": {
@@ -83,11 +83,11 @@ add_task(function* test_contentscript() {
       },
     },
     files: {
-      "default.html": `<html><head><meta charset="utf-8"><script src="popup.js"></${"script"}></head></html>`,
+      "default.html": `<html><head><meta charset="utf-8"><script src="popup.js"><\/script></head></html>`,
       "extension.png": IMAGE_ARRAYBUFFER,
-      "a.html": `<html><head><meta charset="utf-8"><script src="popup.js"></${"script"}></head></html>`,
-      "b.html": `<html><head><meta charset="utf-8"><script src="popup.js"></${"script"}></head></html>`,
-      "popup.js": `(${popupScript})()`,
+      "a.html": `<html><head><meta charset="utf-8"><script src="popup.js"><\/script></head></html>`,
+      "b.html": `<html><head><meta charset="utf-8"><script src="popup.js"><\/script></head></html>`,
+      "popup.js": popupScript,
     },
   });
 
