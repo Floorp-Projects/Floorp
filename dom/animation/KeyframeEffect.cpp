@@ -104,13 +104,7 @@ KeyframeEffectReadOnly::NotifyAnimationTimingUpdated()
   // animation cascade for this element whenever that changes.
   bool inEffect = IsInEffect();
   if (inEffect != mInEffectOnLastAnimationTimingUpdate) {
-    if (mTarget) {
-      EffectSet* effectSet = EffectSet::GetEffectSet(mTarget->mElement,
-                                                     mTarget->mPseudoType);
-      if (effectSet) {
-        effectSet->MarkCascadeNeedsUpdate();
-      }
-    }
+    MarkCascadeNeedsUpdate();
     mInEffectOnLastAnimationTimingUpdate = inEffect;
   }
 
@@ -305,15 +299,9 @@ KeyframeEffectReadOnly::UpdateProperties(nsStyleContext* aStyleContext)
 
   CalculateCumulativeChangeHint(aStyleContext);
 
-  if (mTarget) {
-    EffectSet* effectSet = EffectSet::GetEffectSet(mTarget->mElement,
-                                                   mTarget->mPseudoType);
-    if (effectSet) {
-      effectSet->MarkCascadeNeedsUpdate();
-    }
+  MarkCascadeNeedsUpdate();
 
-    RequestRestyle(EffectCompositor::RestyleType::Layer);
-  }
+  RequestRestyle(EffectCompositor::RestyleType::Layer);
 }
 
 void
@@ -1229,13 +1217,7 @@ KeyframeEffectReadOnly::SetAnimation(Animation* aAnimation)
   // Restyle for the new animation.
   RequestRestyle(EffectCompositor::RestyleType::Layer);
 
-  if (mTarget) {
-    EffectSet* effectSet = EffectSet::GetEffectSet(mTarget->mElement,
-                                                   mTarget->mPseudoType);
-    if (effectSet) {
-      effectSet->MarkCascadeNeedsUpdate();
-    }
-  }
+  MarkCascadeNeedsUpdate();
 
   NotifyAnimationTimingUpdated();
 }
@@ -1273,6 +1255,21 @@ KeyframeEffectReadOnly::MaybeUpdateFrameForCompositor()
       return;
     }
   }
+}
+
+void
+KeyframeEffectReadOnly::MarkCascadeNeedsUpdate()
+{
+  if (!mTarget) {
+    return;
+  }
+
+  EffectSet* effectSet = EffectSet::GetEffectSet(mTarget->mElement,
+                                                 mTarget->mPseudoType);
+  if (!effectSet) {
+    return;
+  }
+  effectSet->MarkCascadeNeedsUpdate();
 }
 
 //---------------------------------------------------------------------
