@@ -132,8 +132,6 @@ protected:
   static void FireScrollEnd(nsITimer* aTimer, void* aAccessibleCaretEventHub);
 
   // Member variables
-  bool mInitialized = false;
-
   State* mState = NoActionState();
 
   // Will be set to nullptr in Terminate().
@@ -155,6 +153,12 @@ protected:
 
   // For filter multitouch event
   int32_t mActiveTouchId = kInvalidTouchId;
+
+  // Flag to indicate the class has been initialized.
+  bool mInitialized = false;
+
+  // Flag to avoid calling Reflow() callback recursively.
+  bool mIsInReflowCallback = false;
 
   // Simulate long tap if the platform does not support eMouseLongTap events.
   static bool sUseLongTapInjector;
