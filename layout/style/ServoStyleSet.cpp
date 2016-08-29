@@ -76,6 +76,17 @@ ServoStyleSet::EndUpdate()
 void
 ServoStyleSet::StartStyling(nsPresContext* aPresContext)
 {
+  MOZ_ASSERT(!mStylingStarted);
+
+  // Some things, like nsDocumentViewer::GetPageMode, recreate the presShell,
+  // while keeping the content tree alive. See bug 1292280.
+  //
+  // That's why we need to force a restyle.
+  nsIContent* root = mPresContext->Document()->GetRootElement();
+  if (root) {
+    root->SetIsDirtyForServo();
+  }
+
   StyleDocument(/* aLeaveDirtyBits = */ false);
   mStylingStarted = true;
 }

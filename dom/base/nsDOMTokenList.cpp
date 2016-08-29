@@ -10,7 +10,6 @@
 
 #include "nsDOMTokenList.h"
 #include "nsAttrValue.h"
-#include "nsContentUtils.h"
 #include "nsError.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/DOMTokenListBinding.h"
@@ -195,53 +194,16 @@ nsDOMTokenList::RemoveInternal(const nsAttrValue* aAttr,
   nsAutoString input;
   aAttr->ToString(input);
 
-  nsAString::const_iterator copyStart, tokenStart, iter, end;
-  input.BeginReading(iter);
-  input.EndReading(end);
-  copyStart = iter;
-
+  WhitespaceTokenizer tokenizer(input);
   nsAutoString output;
-  bool lastTokenRemoved = false;
 
-  while (iter != end) {
-    // skip whitespace.
-    while (iter != end && nsContentUtils::IsHTMLWhitespace(*iter)) {
-      ++iter;
-    }
-
-    if (iter == end) {
-      // At this point we're sure the last seen token (if any) wasn't to be
-      // removed. So the trailing spaces will need to be kept.
-      MOZ_ASSERT(!lastTokenRemoved, "How did this happen?");
-
-      output.Append(Substring(copyStart, end));
-      break;
-    }
-
-    tokenStart = iter;
-    do {
-      ++iter;
-    } while (iter != end && !nsContentUtils::IsHTMLWhitespace(*iter));
-
-    if (aTokens.Contains(Substring(tokenStart, iter))) {
-
-      // Skip whitespace after the token, it will be collapsed.
-      while (iter != end && nsContentUtils::IsHTMLWhitespace(*iter)) {
-        ++iter;
-      }
-      copyStart = iter;
-      lastTokenRemoved = true;
-
-    } else {
-
-      if (lastTokenRemoved && !output.IsEmpty()) {
-        MOZ_ASSERT(!nsContentUtils::IsHTMLWhitespace(output.Last()),
-                   "Invalid last output token");
+  while (tokenizer.hasMoreTokens()) {
+    auto& currentToken = tokenizer.nextToken();
+    if (!aTokens.Contains(currentToken)) {
+      if (!output.IsEmpty()) {
         output.Append(char16_t(' '));
       }
-      lastTokenRemoved = false;
-      output.Append(Substring(copyStart, iter));
-      copyStart = iter;
+      output.Append(currentToken);
     }
   }
 
@@ -329,17 +291,46 @@ nsDOMTokenList::Replace(const nsAString& aToken,
   }
 
   const nsAttrValue* attr = GetParsedAttr();
-  if (!attr || !attr->Contains(aToken)) {
+  if (!attr) {
     return;
   }
 
-  AutoTArray<nsString, 1> tokens;
+  ReplaceInternal(attr, aToken, aNewToken);
+}
 
-  tokens.AppendElement(aToken);
-  RemoveInternal(attr, tokens);
+void
+nsDOMTokenList::ReplaceInternal(const nsAttrValue* aAttr,
+                                const nsAString& aToken,
+                                const nsAString& aNewToken)
+{
+  nsAutoString attribute;
+  aAttr->ToString(attribute);
 
-  tokens[0] = aNewToken;
-  AddInternal(attr, tokens);
+  nsAutoString result;
+  WhitespaceTokenizer tokenizer(attribute);
+
+  bool sawIt = false;
+  while (tokenizer.hasMoreTokens()) {
+    auto currentToken = tokenizer.nextToken();
+    if (currentToken.Equals(aToken) || currentToken.Equals(aNewToken)) {
+      if (!sawIt) {
+        sawIt = true;
+        if (!result.IsEmpty()) {
+          result.Append(char16_t(' '));
+        }
+        result.Append(aNewToken);
+      }
+    } else {
+      if (!result.IsEmpty()) {
+        result.Append(char16_t(' '));
+      }
+      result.Append(currentToken);
+    }
+  }
+
+  if (sawIt) {
+    mElement->SetAttr(kNameSpaceID_None, mAttrAtom, result, true);
+  }
 }
 
 bool

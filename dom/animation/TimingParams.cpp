@@ -162,23 +162,6 @@ TimingParams::ParseEasing(const nsAString& aEasing,
       break;
   }
 
-  // Bug 1247004
-  //
-  // The Web Animations polyfill had a bug that translated 'linear' into
-  // the string 'function (a){return a}'. This bug has been fixed but older
-  // versions of the polyfill are still widely used. Google are collecting
-  // usage data on this but for now we need to *not* throw on
-  // 'function (a){return a}' or else a lot of sites will break.
-  //
-  // Instead, we should treat this string as equivalent to 'linear' and
-  // return Nothing().
-  //
-  // Chromium has a similar special case path for this string.
-  // See: https://bugs.chromium.org/p/chromium/issues/detail?id=601672
-  if (aEasing == NS_LITERAL_STRING("function (a){return a}")) {
-    return Nothing();
-  }
-
   aRv.ThrowTypeError<dom::MSG_INVALID_EASING_ERROR>(aEasing);
   return Nothing();
 }

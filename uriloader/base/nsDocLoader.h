@@ -58,7 +58,7 @@ public:
 
     nsDocLoader();
 
-    virtual nsresult Init();
+    virtual MOZ_MUST_USE nsresult Init();
 
     static already_AddRefed<nsDocLoader> GetAsDocLoader(nsISupports* aSupports);
     // Needed to deal with ambiguous inheritance from nsISupports...
@@ -67,7 +67,7 @@ public:
     }
 
     // Add aDocLoader as a child to the docloader service.
-    static nsresult AddDocLoaderAsChildOfRoot(nsDocLoader* aDocLoader);
+    static MOZ_MUST_USE nsresult AddDocLoaderAsChildOfRoot(nsDocLoader* aDocLoader);
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSIDOCUMENTLOADER
@@ -89,10 +89,10 @@ public:
 
     // Remove aChild from our childlist.  This nulls out the child's mParent
     // pointer.
-    nsresult RemoveChildLoader(nsDocLoader *aChild);
+    MOZ_MUST_USE nsresult RemoveChildLoader(nsDocLoader *aChild);
     // Add aChild to our child list.  This will set aChild's mParent pointer to
     // |this|.
-    nsresult AddChildLoader(nsDocLoader* aChild);
+    MOZ_MUST_USE nsresult AddChildLoader(nsDocLoader* aChild);
     nsDocLoader* GetParent() const { return mParent; }
 
     struct nsListenerInfo {
@@ -112,7 +112,7 @@ public:
 protected:
     virtual ~nsDocLoader();
 
-    virtual nsresult SetDocLoaderParent(nsDocLoader * aLoader);
+    virtual MOZ_MUST_USE nsresult SetDocLoaderParent(nsDocLoader * aLoader);
 
     bool IsBusy();
 
@@ -164,7 +164,7 @@ protected:
                               nsIURI *aUri,
                               uint32_t aFlags);
 
-    bool RefreshAttempted(nsIWebProgress* aWebProgress,
+    MOZ_MUST_USE bool RefreshAttempted(nsIWebProgress* aWebProgress,
                             nsIURI *aURI,
                             int32_t aDelay,
                             bool aSameURI);
@@ -187,7 +187,7 @@ protected:
 
     // Inform a parent docloader that aChild is about to call its onload
     // handler.
-    bool ChildEnteringOnload(nsIDocumentLoader* aChild) {
+    MOZ_MUST_USE bool ChildEnteringOnload(nsIDocumentLoader* aChild) {
         // It's ok if we're already in the list -- we'll just be in there twice
         // and then the RemoveObject calls from ChildDoneWithOnload will remove
         // us.

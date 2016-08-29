@@ -67,7 +67,7 @@ public:
    * Initializes internal state. Will be called automatically when
    * this service is first instantiated.
    */
-  nsresult Init();
+  MOZ_MUST_USE nsresult Init();
  
   /**
    * Given a mimetype and an extension, looks up a mime info from the OS.
