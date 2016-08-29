@@ -92,6 +92,10 @@ public abstract class HomeFragment extends Fragment {
          * stage.
          */
         void onStateChanged(Bundle bundle);
+
+        void setCachedRecentTabsCount(int count);
+
+        int getCachedRecentTabsCount();
     }
 
     public void restoreData(Bundle data) {

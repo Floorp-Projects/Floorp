@@ -252,6 +252,7 @@ public class BrowserApp extends GeckoApp
      * to permit further experimental replacement panels such as the activity-stream panel).
      */
     private ViewGroup mHomeScreenContainer;
+    private int mCachedRecentTabsCount;
     private ActionModeCompat mActionMode;
     private TabHistoryController tabHistoryController;
     private ZoomedView mZoomedView;
@@ -2805,6 +2806,16 @@ public class BrowserApp extends GeckoApp
                         if (currentTab != null) {
                             currentTab.setMostRecentHomePanelData(bundle);
                         }
+                    }
+
+                    @Override
+                    public void setCachedRecentTabsCount(int count) {
+                        mCachedRecentTabsCount = count;
+                    }
+
+                    @Override
+                    public int getCachedRecentTabsCount() {
+                        return mCachedRecentTabsCount;
                     }
                 });
             }
