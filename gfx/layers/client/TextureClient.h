@@ -380,6 +380,16 @@ public:
                            gfx::SurfaceFormat aFormat,
                            gfx::IntSize aSize,
                            gfx::BackendType aMoz2dBackend,
+                           LayersBackend aLayersBackend,
+                           TextureFlags aTextureFlags,
+                           TextureAllocationFlags flags = ALLOC_DEFAULT);
+
+  // TODO: remove this one and use the one above instead.
+  static already_AddRefed<TextureClient>
+  CreateForRawBufferAccess(ClientIPCAllocator* aAllocator,
+                           gfx::SurfaceFormat aFormat,
+                           gfx::IntSize aSize,
+                           gfx::BackendType aMoz2dBackend,
                            TextureFlags aTextureFlags,
                            TextureAllocationFlags flags = ALLOC_DEFAULT);
 

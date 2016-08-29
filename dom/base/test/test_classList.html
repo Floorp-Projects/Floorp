@@ -308,22 +308,22 @@ function testClassList(e) {
 
   checkRemove(null, "a", null);
   checkRemove("", "a", "");
-  checkRemove("a b  c", "d", "a b  c");
-  checkRemove("a b  c", "A", "a b  c");
+  checkRemove("a b  c", "d", "a b c");
+  checkRemove("a b  c", "A", "a b c");
   checkRemove(" a a a ", "a", "");
   checkRemove("a  b", "a", "b");
-  checkRemove("a  b  ", "a", "b  ");
+  checkRemove("a  b  ", "a", "b");
   checkRemove("a a b", "a", "b");
   checkRemove("aa aa bb", "aa", "bb");
   checkRemove("a a b a a c a a", "a", "b c");
 
   checkRemove("a  b  c", "b", "a c");
   checkRemove("aaa  bbb  ccc", "bbb", "aaa ccc");
-  checkRemove(" a  b  c ", "b", " a c ");
+  checkRemove(" a  b  c ", "b", "a c");
   checkRemove("a b b b c", "b", "a c");
 
-  checkRemove("a  b  c", "c", "a  b");
-  checkRemove(" a  b  c ", "c", " a  b");
+  checkRemove("a  b  c", "c", "a b");
+  checkRemove(" a  b  c ", "c", "a b");
   checkRemove("a b c c c", "c", "a b");
 
   checkRemove("a b a c a d a", "a", "b c d");
@@ -332,12 +332,12 @@ function testClassList(e) {
   checkRemove("\ra\na\ta\f", "a", "");
 
   // multiple remove
-  checkRemove("a b c ", ["d", "e"], "a b c ");
-  checkRemove("a b c ", ["a", "b"], "c ");
+  checkRemove("a b c ", ["d", "e"], "a b c");
+  checkRemove("a b c ", ["a", "b"], "c");
   checkRemove("a b c ", ["a", "c"], "b");
-  checkRemove("a b c ", ["a", "a"], "b c ");
-  checkRemove("a b c ", ["d", "d"], "a b c ");
-  checkRemove("a b c ", [], "a b c ");
+  checkRemove("a b c ", ["a", "a"], "b c");
+  checkRemove("a b c ", ["d", "d"], "a b c");
+  checkRemove("a b c ", [], "a b c");
   checkRemove(null, ["a", "b"], null);
   checkRemove("", ["a", "b"], "");
 
@@ -366,10 +366,10 @@ function testClassList(e) {
   checkToggle("a", "a", false, "");
   checkToggle(" a a a ", "a", false, "");
   checkToggle(" A A A ", "a", true, " A A A a");
-  checkToggle(" a b c ", "b", false, " a c ");
-  checkToggle(" a b c b b", "b", false, " a c");
-  checkToggle(" a b  c  ", "c", false, " a b");
-  checkToggle(" a b c ", "a", false, "b c ");
+  checkToggle(" a b c ", "b", false, "a c");
+  checkToggle(" a b c b b", "b", false, "a c");
+  checkToggle(" a b  c  ", "c", false, "a b");
+  checkToggle(" a b c ", "a", false, "b c");
 
   // Test for bug 530171
   checkToggle("null", null, false, "");

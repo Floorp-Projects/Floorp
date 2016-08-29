@@ -13,14 +13,14 @@
 class nsMIMEInfoAndroid final : public nsIMIMEInfo
 {
 public:
-  static bool
+  static MOZ_MUST_USE bool
   GetMimeInfoForMimeType(const nsACString& aMimeType, 
                          nsMIMEInfoAndroid** aMimeInfo);
-  static bool
+  static MOZ_MUST_USE bool
   GetMimeInfoForFileExt(const nsACString& aFileExt, 
                         nsMIMEInfoAndroid** aMimeInfo);
 
-  static nsresult 
+  static MOZ_MUST_USE nsresult
   GetMimeInfoForURL(const nsACString &aURL, bool *found,
                     nsIHandlerInfo **info);
 
@@ -33,8 +33,8 @@ public:
 private:
   ~nsMIMEInfoAndroid() {}
 
-  virtual nsresult LaunchDefaultWithFile(nsIFile* aFile);
-  virtual nsresult LoadUriInternal(nsIURI *aURI);
+  virtual MOZ_MUST_USE nsresult LaunchDefaultWithFile(nsIFile* aFile);
+  virtual MOZ_MUST_USE nsresult LoadUriInternal(nsIURI *aURI);
   nsCOMPtr<nsIMutableArray> mHandlerApps;
   nsCString mType;
   nsTArray<nsCString> mExtensions;
