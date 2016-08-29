@@ -398,6 +398,13 @@ MediaStreamTrack::NotifyEnded()
 
   LOG(LogLevel::Info, ("MediaStreamTrack %p ended", this));
 
+  if (!mSource) {
+    MOZ_ASSERT(false);
+    return;
+  }
+
+  mSource->UnregisterSink(this);
+
   mReadyState = MediaStreamTrackState::Ended;
 
   DispatchTrustedEvent(NS_LITERAL_STRING("ended"));
