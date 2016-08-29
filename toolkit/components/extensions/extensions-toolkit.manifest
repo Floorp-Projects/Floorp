@@ -19,6 +19,11 @@ category webextension-scripts-content extension chrome://extensions/content/ext-
 category webextension-scripts-content i18n chrome://extensions/content/ext-i18n.js
 category webextension-scripts-content runtime chrome://extensions/content/ext-c-runtime.js
 
+# scripts that must run in the same process as addon code.
+category webextension-scripts-addon extension chrome://extensions/content/ext-c-extension.js
+category webextension-scripts-addon i18n chrome://extensions/content/ext-i18n.js
+category webextension-scripts-addon runtime chrome://extensions/content/ext-c-runtime.js
+
 # schemas
 category webextension-schemas alarms chrome://extensions/content/schemas/alarms.json
 category webextension-schemas cookies chrome://extensions/content/schemas/cookies.json

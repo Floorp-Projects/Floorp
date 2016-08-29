@@ -10,6 +10,9 @@ category webextension-scripts tabs chrome://browser/content/ext-tabs.js
 category webextension-scripts utils chrome://browser/content/ext-utils.js
 category webextension-scripts windows chrome://browser/content/ext-windows.js
 
+# scripts that must run in the same process as addon code.
+category webextension-scripts-addon tabs chrome://browser/content/ext-c-tabs.js
+
 # schemas
 category webextension-schemas bookmarks chrome://browser/content/schemas/bookmarks.json
 category webextension-schemas browser_action chrome://browser/content/schemas/browser_action.json
