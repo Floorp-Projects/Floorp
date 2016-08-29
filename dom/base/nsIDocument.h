@@ -3069,6 +3069,9 @@ protected:
   // Do we currently have an event posted to call FlushUserFontSet?
   bool mPostedFlushUserFontSet : 1;
 
+  // True is document has ever been in a foreground window.
+  bool mEverInForeground : 1;
+
   enum Type {
     eUnknown, // should never be used
     eHTML,
