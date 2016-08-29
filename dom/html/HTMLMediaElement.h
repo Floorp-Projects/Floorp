@@ -1221,6 +1221,9 @@ protected:
   // channel agent is ready to be used.
   bool MaybeCreateAudioChannelAgent();
 
+  // Determine if the element should be paused because of suspend conditions.
+  bool ShouldElementBePaused();
+
   /**
    * We have different kinds of suspended cases,
    * - SUSPENDED_PAUSE
