@@ -24,6 +24,7 @@
 #include "jscompartmentinlines.h"
 #include "jsobjinlines.h"
 
+#include "vm/Caches-inl.h"
 #include "vm/NativeObject-inl.h"
 
 using namespace js;
@@ -1529,6 +1530,35 @@ EmptyShape::getInitialShape(ExclusiveContext* cx, const Class* clasp, TaggedProt
     return getInitialShape(cx, clasp, proto, GetGCKindSlots(kind, clasp), objectFlags);
 }
 
+void
+NewObjectCache::invalidateEntriesForShape(JSContext* cx, HandleShape shape, HandleObject proto)
+{
+    const Class* clasp = shape->getObjectClass();
+
+    gc::AllocKind kind = gc::GetGCObjectKind(shape->numFixedSlots());
+    if (CanBeFinalizedInBackground(kind, clasp))
+        kind = GetBackgroundAllocKind(kind);
+
+    RootedObjectGroup group(cx, ObjectGroup::defaultNewGroup(cx, clasp, TaggedProto(proto)));
+    if (!group) {
+        purge();
+        cx->recoverFromOutOfMemory();
+        return;
+    }
+
+    EntryIndex entry;
+    for (CompartmentsInZoneIter comp(shape->zone()); !comp.done(); comp.next()) {
+        if (GlobalObject* global = comp->unsafeUnbarrieredMaybeGlobal()) {
+            if (lookupGlobal(clasp, global, kind, &entry))
+                PodZero(&entries[entry]);
+        }
+    }
+    if (!proto->is<GlobalObject>() && lookupProto(clasp, proto, kind, &entry))
+        PodZero(&entries[entry]);
+    if (lookupGroup(group, kind, &entry))
+        PodZero(&entries[entry]);
+}
+
 /* static */ void
 EmptyShape::insertInitialShape(ExclusiveContext* cx, HandleShape shape, HandleObject proto)
 {
@@ -1553,6 +1583,21 @@ EmptyShape::insertInitialShape(ExclusiveContext* cx, HandleShape shape, HandleOb
 #endif
 
     entry.shape = ReadBarrieredShape(shape);
+
+    /*
+     * This affects the shape that will be produced by the various NewObject
+     * methods, so clear any cache entry referring to the old shape. This is
+     * not required for correctness: the NewObject must always check for a
+     * nativeEmpty() result and generate the appropriate properties if found.
+     * Clearing the cache entry avoids this duplicate regeneration.
+     *
+     * Clearing is not necessary when this context is running off the main
+     * thread, as it will not use the new object cache for allocations.
+     */
+    if (cx->isJSContext()) {
+        JSContext* ncx = cx->asJSContext();
+        ncx->caches.newObjectCache.invalidateEntriesForShape(ncx, shape, proto);
+    }
 }
 
 void

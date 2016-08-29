@@ -42,7 +42,6 @@ ecma_5/Object/15.2.3.6-redefinition-1-of-4.js
 ecma_5/Object/15.2.3.6-redefinition-2-of-4.js
 ecma_5/Object/15.2.3.6-redefinition-3-of-4.js
 ecma_5/Object/15.2.3.6-redefinition-4-of-4.js
-ecma_6/extensions/array-isArray-proxy-recursion.js
 ecma_6/String/normalize-generateddata-part0.js
 ecma_6/String/normalize-generateddata-part1-not-listed.js
 ecma_6/String/normalize-generateddata-part1.js
@@ -51,7 +50,6 @@ ecma_6/String/normalize-generateddata-part3.js
 js1_5/GC/regress-203278-2.js
 js1_5/GC/regress-203278-3.js
 js1_5/GC/regress-278725.js
-js1_5/Regress/regress-203278-1.js
 js1_5/Regress/regress-312588.js
 js1_5/Regress/regress-360969-01.js
 js1_5/Regress/regress-360969-02.js
@@ -60,5 +58,3 @@ js1_5/Regress/regress-360969-04.js
 js1_5/Regress/regress-360969-05.js
 js1_5/Regress/regress-360969-06.js
 js1_8_5/extensions/clone-complex-object.js
-js1_8_5/extensions/clone-many-transferables.js
-js1_8_5/extensions/clone-object.js
