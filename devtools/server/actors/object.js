@@ -1852,14 +1852,7 @@ function getPromiseState(obj) {
       "Can't call `getPromiseState` on `Debugger.Object`s that don't " +
       "refer to Promise objects.");
   }
-
-  let state = { state: obj.promiseState };
-  if (state.state === "fulfilled") {
-    state.value = obj.promiseValue;
-  } else if (state.state === "rejected") {
-    state.reason = obj.promiseReason;
-  }
-  return state;
+  return obj.promiseState;
 }
 
 /**
