@@ -14,7 +14,7 @@ window.onload = function() {
   const { initCssProperties, getCssProperties } =
     require("devtools/shared/fronts/css-properties");
 
-  const { CSS_PROPERTIES_DB } = require("devtools/shared/css-properties-db");
+  const { CSS_PROPERTIES_DB } = require("devtools/shared/css/properties-db");
 
   function promiseAttachUrl (url) {
     return new Promise((resolve, reject) => {

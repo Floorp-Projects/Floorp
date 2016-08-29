@@ -17,7 +17,7 @@ const {
 const {
   parseDeclarations,
   parseSingleValue,
-} = require("devtools/shared/css-parsing-utils");
+} = require("devtools/shared/css/parsing-utils");
 const Services = require("Services");
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
