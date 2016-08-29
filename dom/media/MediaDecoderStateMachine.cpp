@@ -1257,9 +1257,7 @@ MediaDecoderStateMachine::Shutdown()
 void MediaDecoderStateMachine::StartDecoding()
 {
   MOZ_ASSERT(OnTaskQueue());
-  if (mState == DECODER_STATE_DECODING && !mDecodingFirstFrame) {
-    return;
-  }
+  MOZ_ASSERT(mState != DECODER_STATE_DECODING);
   SetState(DECODER_STATE_DECODING);
 
   if (mDecodingFirstFrame && mSentFirstFrameLoadedEvent) {
