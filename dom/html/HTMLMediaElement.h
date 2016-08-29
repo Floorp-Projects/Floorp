@@ -805,7 +805,7 @@ protected:
     nsTArray<Pair<nsString, RefPtr<MediaInputPort>>> mTrackPorts;
   };
 
-  nsresult PlayInternal(bool aCallerIsChrome);
+  nsresult PlayInternal();
 
   /** Use this method to change the mReadyState member, so required
    * events can be fired.
@@ -1610,11 +1610,6 @@ protected:
   // enough if we ever expand the ability of supporting multi-tracks video
   // playback.
   bool mDisableVideo;
-
-  // True if we blocked either a play() call or autoplay because the
-  // media's owner doc was not visible. Only enforced when the pref
-  // media.block-play-until-visible=true.
-  bool mPlayBlockedBecauseHidden;
 
   // An agent used to join audio channel service.
   nsCOMPtr<nsIAudioChannelAgent> mAudioChannelAgent;

@@ -2903,7 +2903,6 @@ HTMLMediaElement::HTMLMediaElement(already_AddRefed<mozilla::dom::NodeInfo>& aNo
     mAudioChannelVolume(1.0),
     mPlayingThroughTheAudioChannel(false),
     mDisableVideo(false),
-    mPlayBlockedBecauseHidden(false),
     mElementInTreeState(ELEMENT_NOT_INTREE),
     mHasUserInteraction(false),
     mFirstFrameLoaded(false),
@@ -3010,14 +3009,14 @@ HTMLMediaElement::NotifyXPCOMShutdown()
 void
 HTMLMediaElement::Play(ErrorResult& aRv)
 {
-  nsresult rv = PlayInternal(nsContentUtils::IsCallerChrome());
+  nsresult rv = PlayInternal();
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);
   }
 }
 
 nsresult
-HTMLMediaElement::PlayInternal(bool aCallerIsChrome)
+HTMLMediaElement::PlayInternal()
 {
   if (!IsAllowedToPlay()) {
     return NS_OK;
@@ -3034,14 +3033,6 @@ HTMLMediaElement::PlayInternal(bool aCallerIsChrome)
   }
   if (mSuspendedForPreloadNone) {
     ResumeLoad(PRELOAD_ENOUGH);
-  }
-
-  if (Preferences::GetBool("media.block-play-until-visible", false) &&
-      !aCallerIsChrome &&
-      OwnerDoc()->Hidden()) {
-    LOG(LogLevel::Debug, ("%p Blocked playback because owner hidden.", this));
-    mPlayBlockedBecauseHidden = true;
-    return NS_OK;
   }
 
   // Even if we just did Load() or ResumeLoad(), we could already have a decoder
@@ -3103,7 +3094,7 @@ HTMLMediaElement::PlayInternal(bool aCallerIsChrome)
 
 NS_IMETHODIMP HTMLMediaElement::Play()
 {
-  return PlayInternal(/* aCallerIsChrome = */ true);
+  return PlayInternal();
 }
 
 HTMLMediaElement::WakeLockBoolWrapper&
@@ -4961,13 +4952,6 @@ void HTMLMediaElement::CheckAutoplayDataReady()
     return;
   }
 
-  if (Preferences::GetBool("media.block-play-until-visible", false) &&
-      OwnerDoc()->Hidden()) {
-    LOG(LogLevel::Debug, ("%p Blocked autoplay because owner hidden.", this));
-    mPlayBlockedBecauseHidden = true;
-    return;
-  }
-
   mPaused = false;
   // We changed mPaused which can affect AddRemoveSelfReference
   AddRemoveSelfReference();
@@ -5342,14 +5326,6 @@ HTMLMediaElement::NotifyOwnerDocumentActivityChangedInternal()
 
   bool pauseElement = !IsActive();
   SuspendOrResumeElement(pauseElement, !IsActive());
-
-  if (!mPausedForInactiveDocumentOrChannel &&
-      mPlayBlockedBecauseHidden &&
-      !OwnerDoc()->Hidden()) {
-    LOG(LogLevel::Debug, ("%p Resuming playback now that owner doc is visble.", this));
-    mPlayBlockedBecauseHidden = false;
-    Play();
-  }
 
   AddRemoveSelfReference();
 
@@ -5957,7 +5933,7 @@ HTMLMediaElement::ResumeFromAudioChannelPaused(SuspendTypes aSuspend)
              mAudioChannelSuspended == nsISuspendedTypes::SUSPENDED_PAUSE_DISPOSABLE);
 
   SetAudioChannelSuspended(nsISuspendedTypes::NONE_SUSPENDED);
-  nsresult rv = PlayInternal(nsContentUtils::IsCallerChrome());
+  nsresult rv = PlayInternal();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return;
   }
