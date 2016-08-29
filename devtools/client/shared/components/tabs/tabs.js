@@ -47,12 +47,15 @@ define(function (require, exports, module) {
       children: React.PropTypes.oneOfType([
         React.PropTypes.array,
         React.PropTypes.element
-      ]).isRequired
+      ]).isRequired,
+      showAllTabsMenu: React.PropTypes.bool,
+      onAllTabsMenuClick: React.PropTypes.func,
     },
 
     getDefaultProps: function () {
       return {
-        tabActive: 0
+        tabActive: 0,
+        showAllTabsMenu: false,
       };
     },
 
@@ -69,12 +72,24 @@ define(function (require, exports, module) {
         // E.g. in case of an iframe being used as a tab-content
         // we want the iframe to stay in the DOM.
         created: [],
+
+        // True if tabs can't fit into available horizontal space.
+        overflow: false,
       };
     },
 
     componentDidMount: function () {
       let node = findDOMNode(this);
       node.addEventListener("keydown", this.onKeyDown, false);
+
+      // Register overflow listeners to manage visibility
+      // of all-tabs-menu. This menu is displayed when there
+      // is not enough h-space to render all tabs.
+      // It allows the user to select a tab even if it's hidden.
+      if (this.props.showAllTabsMenu) {
+        node.addEventListener("overflow", this.onOverflow, false);
+        node.addEventListener("underflow", this.onUnderflow, false);
+      }
 
       let index = this.state.tabActive;
       if (this.props.onMount) {
@@ -83,7 +98,9 @@ define(function (require, exports, module) {
     },
 
     componentWillReceiveProps: function (newProps) {
-      if (newProps.tabActive) {
+      // Check type of 'tabActive' props to see if it's valid
+      // (it's 0-based index).
+      if (typeof newProps.tabActive == "number") {
         let created = [...this.state.created];
         created[newProps.tabActive] = true;
 
@@ -97,9 +114,30 @@ define(function (require, exports, module) {
     componentWillUnmount: function () {
       let node = findDOMNode(this);
       node.removeEventListener("keydown", this.onKeyDown, false);
+
+      if (this.props.showAllTabsMenu) {
+        node.removeEventListener("overflow", this.onOverflow, false);
+        node.removeEventListener("underflow", this.onUnderflow, false);
+      }
     },
 
     // DOM Events
+
+    onOverflow: function (event) {
+      if (event.target.classList.contains("tabs-menu")) {
+        this.setState({
+          overflow: true
+        });
+      }
+    },
+
+    onUnderflow: function (event) {
+      if (event.target.classList.contains("tabs-menu")) {
+        this.setState({
+          overflow: false
+        });
+      }
+    },
 
     onKeyDown: function (event) {
       // Bail out if the focus isn't on a tab.
@@ -127,6 +165,12 @@ define(function (require, exports, module) {
     onClickTab: function (index, event) {
       this.setActive(index);
       event.preventDefault();
+    },
+
+    onAllTabsMenuClick: function (event) {
+      if (this.props.onAllTabsMenuClick) {
+        this.props.onAllTabsMenuClick(event);
+      }
     },
 
     // API
@@ -218,11 +262,21 @@ define(function (require, exports, module) {
           );
         });
 
+      // Display the menu only if there is not enough horizontal
+      // space for all tabs (and overflow happened).
+      let allTabsMenu = this.state.overflow ? (
+        DOM.div({
+          className: "all-tabs-menu",
+          onClick: this.props.onAllTabsMenuClick
+        })
+      ) : null;
+
       return (
         DOM.nav({className: "tabs-navigation"},
           DOM.ul({className: "tabs-menu", role: "tablist"},
             tabs
-          )
+          ),
+          allTabsMenu
         )
       );
     },
