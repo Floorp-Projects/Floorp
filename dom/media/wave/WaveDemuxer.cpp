@@ -170,7 +170,7 @@ WAVTrackDemuxer::RIFFParserInit()
   if (!riffHeader) {
     return false;
   }
-  ByteReader RIFFReader = ByteReader(riffHeader->Data(), 12);
+  ByteReader RIFFReader(riffHeader->Data(), 12);
   mRIFFParser.Parse(RIFFReader);
   return mRIFFParser.RiffHeader().IsValid(11);
 }
@@ -182,7 +182,7 @@ WAVTrackDemuxer::HeaderParserInit()
   if (!header) {
     return false;
   }
-  ByteReader HeaderReader = ByteReader(header->Data(), 8);
+  ByteReader HeaderReader(header->Data(), 8);
   mHeaderParser.Parse(HeaderReader);
   return true;
 }
@@ -194,8 +194,7 @@ WAVTrackDemuxer::FmtChunkParserInit()
   if (!fmtChunk) {
     return false;
   }
-  ByteReader fmtReader = ByteReader(fmtChunk->Data(),
-                                    mHeaderParser.GiveHeader().ChunkSize());
+  ByteReader fmtReader(fmtChunk->Data(), mHeaderParser.GiveHeader().ChunkSize());
   mFmtParser.Parse(fmtReader);
   return true;
 }
@@ -209,7 +208,7 @@ WAVTrackDemuxer::ListChunkParserInit(uint32_t aChunkSize)
   if (!infoTag) {
     return false;
   }
-  ByteReader infoTagReader = ByteReader(infoTag->Data(), 4);
+  ByteReader infoTagReader(infoTag->Data(), 4);
   if (!infoTagReader.CanRead32() || infoTagReader.ReadU32() != INFO_CODE) {
     return false;
   }
