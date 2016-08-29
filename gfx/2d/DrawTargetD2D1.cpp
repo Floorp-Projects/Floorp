@@ -1432,7 +1432,11 @@ DrawTargetD2D1::GetImageForLayerContent()
 
     RefPtr<ID2D1Bitmap1> tmpBitmap;
     if (mDidComplexBlendWithListInList) {
-      mDC->CreateBitmap(mBitmap->GetPixelSize(), nullptr, 0, &D2D1::BitmapProperties1(D2D1_BITMAP_OPTIONS_TARGET, D2D1::PixelFormat(DXGI_FORMAT_B8G8R8A8_UNORM, D2D1_ALPHA_MODE_PREMULTIPLIED)), getter_AddRefs(tmpBitmap));
+      D2D1_BITMAP_PROPERTIES1 props =
+        D2D1::BitmapProperties1(D2D1_BITMAP_OPTIONS_TARGET,
+                                D2D1::PixelFormat(DXGI_FORMAT_B8G8R8A8_UNORM,
+                                                  D2D1_ALPHA_MODE_PREMULTIPLIED));
+      mDC->CreateBitmap(mBitmap->GetPixelSize(), nullptr, 0, &props, getter_AddRefs(tmpBitmap));
       mDC->SetTransform(D2D1::IdentityMatrix());
       mDC->SetTarget(tmpBitmap);
       mDC->DrawImage(list, D2D1_INTERPOLATION_MODE_NEAREST_NEIGHBOR, D2D1_COMPOSITE_MODE_BOUNDED_SOURCE_COPY);
