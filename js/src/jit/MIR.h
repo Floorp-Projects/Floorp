@@ -9400,50 +9400,6 @@ class MStoreElementHole
     ALLOW_CLONE(MStoreElementHole)
 };
 
-// Try to store a value to a dense array slots vector. May fail due to the object being frozen.
-// Cannot be used on an object that has extra indexed properties.
-class MFallibleStoreElement
-  : public MAryInstruction<4>,
-    public MStoreElementCommon,
-    public MixPolicy<SingleObjectPolicy, NoFloatPolicy<3> >::Data
-{
-    JSValueType unboxedType_;
-    bool strict_;
-
-    MFallibleStoreElement(MDefinition* object, MDefinition* elements,
-                          MDefinition* index, MDefinition* value,
-                          JSValueType unboxedType, bool strict)
-      : unboxedType_(unboxedType)
-    {
-        initOperand(0, object);
-        initOperand(1, elements);
-        initOperand(2, index);
-        initOperand(3, value);
-        strict_ = strict;
-        MOZ_ASSERT(elements->type() == MIRType::Elements);
-        MOZ_ASSERT(index->type() == MIRType::Int32);
-    }
-
-  public:
-    INSTRUCTION_HEADER(FallibleStoreElement)
-    TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, object), (1, elements), (2, index), (3, value))
-
-    JSValueType unboxedType() const {
-        return unboxedType_;
-    }
-    AliasSet getAliasSet() const override {
-        return AliasSet::Store(AliasSet::ObjectFields |
-                               AliasSet::BoxedOrUnboxedElements(unboxedType()));
-    }
-    bool strict() const {
-        return strict_;
-    }
-
-    ALLOW_CLONE(MFallibleStoreElement)
-};
-
-
 // Store an unboxed object or null pointer to a v\ector.
 class MStoreUnboxedObjectOrNull
   : public MAryInstruction<4>,
@@ -13921,7 +13877,6 @@ bool ElementAccessIsTypedArray(CompilerConstraintList* constraints,
                                Scalar::Type* arrayType);
 bool ElementAccessIsPacked(CompilerConstraintList* constraints, MDefinition* obj);
 bool ElementAccessMightBeCopyOnWrite(CompilerConstraintList* constraints, MDefinition* obj);
-bool ElementAccessMightBeFrozen(CompilerConstraintList* constraints, MDefinition* obj);
 bool ElementAccessHasExtraIndexedProperty(IonBuilder* builder, MDefinition* obj);
 MIRType DenseNativeElementType(CompilerConstraintList* constraints, MDefinition* obj);
 BarrierKind PropertyReadNeedsTypeBarrier(JSContext* propertycx,

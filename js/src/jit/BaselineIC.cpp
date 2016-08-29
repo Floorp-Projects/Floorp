@@ -2822,21 +2822,17 @@ ICSetElem_DenseOrUnboxedArray::Compiler::generateStubCode(MacroAssembler& masm)
         masm.branchTestMagic(Assembler::Equal, element, &failure);
 
         // Perform a single test to see if we either need to convert double
-        // elements, clone the copy on write elements in the object or fail
-        // due to a frozen element.
+        // elements or clone the copy on write elements in the object.
         Label noSpecialHandling;
         Address elementsFlags(scratchReg, ObjectElements::offsetOfFlags());
         masm.branchTest32(Assembler::Zero, elementsFlags,
                           Imm32(ObjectElements::CONVERT_DOUBLE_ELEMENTS |
-                                ObjectElements::COPY_ON_WRITE |
-                                ObjectElements::FROZEN),
+                                ObjectElements::COPY_ON_WRITE),
                           &noSpecialHandling);
 
-        // Fail if we need to clone copy on write elements or to throw due
-        // to a frozen element.
+        // Fail if we need to clone copy on write elements.
         masm.branchTest32(Assembler::NonZero, elementsFlags,
-                          Imm32(ObjectElements::COPY_ON_WRITE |
-                                ObjectElements::FROZEN),
+                          Imm32(ObjectElements::COPY_ON_WRITE),
                           &failure);
 
         // Failure is not possible now.  Free up registers.
@@ -3036,8 +3032,7 @@ ICSetElemDenseOrUnboxedArrayAddCompiler::generateStubCode(MacroAssembler& masm)
         // Check for copy on write elements.
         Address elementsFlags(scratchReg, ObjectElements::offsetOfFlags());
         masm.branchTest32(Assembler::NonZero, elementsFlags,
-                          Imm32(ObjectElements::COPY_ON_WRITE |
-                                ObjectElements::FROZEN),
+                          Imm32(ObjectElements::COPY_ON_WRITE),
                           &failure);
 
         // Failure is not possible now.  Free up registers.

@@ -1,3 +1,4 @@
+
 function foo(x) {
   x.a = 10;
   assertEq(x.a, 0);
