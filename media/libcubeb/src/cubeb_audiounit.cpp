@@ -30,7 +30,6 @@
 #include "cubeb_ring_array.h"
 #include "cubeb_utils.h"
 #include <algorithm>
-#include <atomic>
 
 #if !defined(kCFCoreFoundationVersionNumber10_7)
 /* From CoreFoundation CFBase.h */
@@ -181,7 +180,7 @@ struct cubeb_stream {
   int draining;
   uint64_t current_latency_frames;
   uint64_t hw_latency_frames;
-  std::atomic<float> panning;
+  float panning;
   cubeb_resampler * resampler;
 };
 
@@ -410,8 +409,7 @@ audiounit_output_callback(void * user_ptr,
   stm->frames_queued += outframes;
 
   AudioFormatFlags outaff = stm->output_desc.mFormatFlags;
-  float panning = (stm->output_desc.mChannelsPerFrame == 2) ?
-      stm->panning.load(std::memory_order_relaxed) : 0.0f;
+  float panning = (stm->output_desc.mChannelsPerFrame == 2) ? stm->panning : 0.0f;
 
   /* Post process output samples. */
   if (stm->draining) {
@@ -1615,7 +1613,11 @@ int audiounit_stream_set_panning(cubeb_stream * stm, float panning)
     return CUBEB_ERROR_INVALID_PARAMETER;
   }
 
-  stm->panning.store(panning, std::memory_order_relaxed);
+  {
+    auto_lock lock(stm->mutex);
+    stm->panning = panning;
+  }
+
   return CUBEB_OK;
 }
 
