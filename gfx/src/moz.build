@@ -39,6 +39,7 @@ EXPORTS += [
     'nsTransform2D.h',
     'PingPongRegion.h',
     'RegionBuilder.h',
+    'X11UndefineNone.h'
 ]
 
 EXPORTS.mozilla += [
