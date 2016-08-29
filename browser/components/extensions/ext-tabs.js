@@ -824,36 +824,6 @@ extensions.registerSchemaAPI("tabs", "addon_parent", context => {
         return self.tabs._execute(tabId, details, "css", "removeCSS").then(() => {});
       },
 
-      connect: function(tabId, connectInfo) {
-        let tab = TabManager.getTab(tabId, context);
-        let mm = tab.linkedBrowser.messageManager;
-
-        let name = "";
-        if (connectInfo && connectInfo.name !== null) {
-          name = connectInfo.name;
-        }
-        let recipient = {extensionId: extension.id};
-        if (connectInfo && connectInfo.frameId !== null) {
-          recipient.frameId = connectInfo.frameId;
-        }
-        return context.messenger.connect(mm, name, recipient);
-      },
-
-      sendMessage: function(tabId, message, options, responseCallback) {
-        let tab = TabManager.getTab(tabId, context, null);
-        if (!tab) {
-          // ignore sendMessage to non existent tab id
-          return;
-        }
-        let mm = tab.linkedBrowser.messageManager;
-
-        let recipient = {extensionId: extension.id};
-        if (options && options.frameId !== null) {
-          recipient.frameId = options.frameId;
-        }
-        return context.messenger.sendMessage(mm, message, recipient, responseCallback);
-      },
-
       move: function(tabIds, moveProperties) {
         let index = moveProperties.index;
         let tabsMoved = [];
