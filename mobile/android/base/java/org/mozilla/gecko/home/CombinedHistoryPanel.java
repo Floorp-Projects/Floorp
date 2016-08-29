@@ -110,10 +110,15 @@ public class CombinedHistoryPanel extends HomeFragment implements RemoteClientsD
     public void onCreate(Bundle savedInstance) {
         super.onCreate(savedInstance);
 
-        mHistoryAdapter = new CombinedHistoryAdapter(getResources());
+        int cachedRecentTabsCount = 0;
+        if (mPanelStateChangeListener != null ) {
+            cachedRecentTabsCount = mPanelStateChangeListener.getCachedRecentTabsCount();
+        }
+        mHistoryAdapter = new CombinedHistoryAdapter(getResources(), cachedRecentTabsCount);
         if (mPanelStateChangeListener != null) {
             mHistoryAdapter.setPanelStateChangeListener(mPanelStateChangeListener);
         }
+
         mClientsAdapter = new ClientsAdapter(getContext());
         // The RecentTabsAdapter doesn't use a cursor and therefore can't use the CursorLoader's
         // onLoadFinished() callback for updating the panel state when the closed tab count changes.

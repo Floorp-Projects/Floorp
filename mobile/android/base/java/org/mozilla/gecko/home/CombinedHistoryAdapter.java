@@ -52,8 +52,9 @@ public class CombinedHistoryAdapter extends RecyclerView.Adapter<CombinedHistory
     // We use a sparse array to store each section header's position in the panel [more cheaply than a HashMap].
     private final SparseArray<SectionHeader> sectionHeaders;
 
-    public CombinedHistoryAdapter(Resources resources) {
+    public CombinedHistoryAdapter(Resources resources, int cachedRecentTabsCount) {
         super();
+        recentTabsCount = cachedRecentTabsCount;
         sectionHeaders = new SparseArray<>();
         HistorySectionsHelper.updateRecentSectionOffset(resources, sectionDateRangeArray);
         this.setHasStableIds(true);
@@ -110,6 +111,15 @@ public class CombinedHistoryAdapter extends RecyclerView.Adapter<CombinedHistory
                     @UiThread
                     @Override
                     public void run() {
+                        if (!countReliable && count <= recentTabsCount) {
+                            // The final tab count (where countReliable = true) is normally >= than
+                            // previous values with countReliable = false. Hence we only want to
+                            // update the displayed tab count with a preliminary value if it's larger
+                            // than the previous count, so as to avoid the displayed count jumping
+                            // downwards and then back up, as well as unnecessary folder animations.
+                            return;
+                        }
+
                         final boolean prevFolderVisibility = isRecentTabsFolderVisible();
                         recentTabsCount = count;
                         final boolean folderVisible = isRecentTabsFolderVisible();
