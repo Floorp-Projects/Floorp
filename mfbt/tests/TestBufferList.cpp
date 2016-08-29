@@ -167,29 +167,6 @@ int main(void)
   MOZ_RELEASE_ASSERT(iter.RemainingInSegment() == kLastSegmentSize);
   MOZ_RELEASE_ASSERT(unsigned(*iter.Data()) == (kTotalSize - kLastSegmentSize - kInitialSize - kSmallWrite) % 37);
 
-  // Flattening.
-
-  const size_t kFlattenSize = 1000;
-
-  const char* flat;
-  iter = bl.Iter();
-  MOZ_RELEASE_ASSERT(iter.AdvanceAcrossSegments(bl, kInitialSize));
-  MOZ_RELEASE_ASSERT(bl.FlattenBytes(iter, &flat, kFlattenSize));
-  MOZ_RELEASE_ASSERT(flat[0] == 0x0a);
-  MOZ_RELEASE_ASSERT(flat[kSmallWrite / 2] == 0x0a);
-  for (size_t i = kSmallWrite; i < kFlattenSize; i++) {
-    MOZ_RELEASE_ASSERT(unsigned(flat[i]) == (i - kSmallWrite) % 37);
-  }
-  MOZ_RELEASE_ASSERT(unsigned(*iter.Data()) == (kFlattenSize - kSmallWrite) % 37);
-
-  const size_t kSecondFlattenSize = 40;
-
-  MOZ_RELEASE_ASSERT(bl.FlattenBytes(iter, &flat, kSecondFlattenSize));
-  for (size_t i = 0; i < kSecondFlattenSize; i++) {
-    MOZ_RELEASE_ASSERT(unsigned(flat[i]) == (i + kFlattenSize - kInitialSize) % 37);
-  }
-  MOZ_RELEASE_ASSERT(iter.Done());
-
   // Clear.
 
   bl.Clear();

@@ -4,7 +4,7 @@
 
 from marionette import MarionetteTestCase
 from marionette_driver.keys import Keys
-from marionette_driver.by import By
+from marionette_driver import By
 
 
 class TestWindowHandles(MarionetteTestCase):
@@ -34,6 +34,36 @@ class TestWindowHandles(MarionetteTestCase):
 
         self.marionette.switch_to_window(origin_win)
         self.assertEqual(self.marionette.get_url(), "about:blank")
+
+    def test_new_tab_window_handles_no_switch(self):
+        """Regression test for bug 1294456.
+        This test is testing the case where Marionette attempts to send a
+        command to a window handle when the browser has opened and selected
+        a new tab. Before bug 1294456 landed, the Marionette driver was getting
+        confused about which window handle the client cared about, and assumed
+        it was the window handle for the newly opened and selected tab.
+
+        This caused Marionette to think that the browser needed to do a remoteness
+        flip in the e10s case, since the tab opened by menu_newNavigatorTab is
+        about:newtab (which is currently non-remote). This meant that commands
+        sent to what should have been the original window handle would be
+        queued and never sent, since the remoteness flip in the new tab was
+        never going to happen.
+        """
+
+        with self.marionette.using_context("chrome"):
+            menu_new_tab = self.marionette.find_element(By.ID, 'menu_newNavigatorTab')
+            menu_new_tab.click()
+
+        self.wait_for_condition(lambda mn: len(mn.window_handles) == 2)
+
+        # We still have the default tab set as our window handle. This
+        # get_url command should be sent immediately, and not be forever-queued.
+        self.assertEqual(self.marionette.get_url(), "about:blank")
+
+        self.marionette.switch_to_window(self.marionette.window_handles[1])
+        self.marionette.close()
+        self.marionette.switch_to_window(self.marionette.window_handles[0])
 
     def test_link_opened_tab_window_handles(self):
         tab_testpage = self.marionette.absolute_url("windowHandles.html")

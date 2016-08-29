@@ -3316,7 +3316,8 @@ nsDocShell::SetDocLoaderParent(nsDocLoader* aParent)
 {
   bool wasFrame = IsFrame();
 
-  nsDocLoader::SetDocLoaderParent(aParent);
+  nsresult rv = nsDocLoader::SetDocLoaderParent(aParent);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsISupportsPriority> priorityGroup = do_QueryInterface(mLoadGroup);
   if (wasFrame != IsFrame() && priorityGroup) {
@@ -4036,7 +4037,8 @@ nsDocShell::AddChild(nsIDocShellTreeItem* aChild)
   // Make sure to remove the child from its current parent.
   nsDocLoader* childsParent = childAsDocLoader->GetParent();
   if (childsParent) {
-    childsParent->RemoveChildLoader(childAsDocLoader);
+    nsresult rv = childsParent->RemoveChildLoader(childAsDocLoader);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   // Make sure to clear the treeowner in case this child is a different type

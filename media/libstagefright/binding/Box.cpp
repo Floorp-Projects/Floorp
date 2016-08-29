@@ -7,6 +7,7 @@
 #include "mp4_demuxer/Box.h"
 #include "mp4_demuxer/Stream.h"
 #include "mozilla/EndianUtils.h"
+#include "mozilla/Unused.h"
 #include <algorithm>
 
 using namespace mozilla;
@@ -141,10 +142,12 @@ Box::FirstChild() const
   return Box(mContext, mChildOffset, this);
 }
 
-bool
-Box::Read(nsTArray<uint8_t>* aDest)
+nsTArray<uint8_t>
+Box::Read()
 {
-  return Read(aDest, mRange);
+  nsTArray<uint8_t> out;
+  Unused << Read(&out, mRange);
+  return out;
 }
 
 bool

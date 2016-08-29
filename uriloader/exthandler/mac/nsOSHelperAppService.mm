@@ -560,7 +560,8 @@ nsOSHelperAppService::GetProtocolHandlerInfoFromOS(const nsACString &aScheme,
   }
 
   nsAutoString desc;
-  GetApplicationDescription(aScheme, desc);
+  rv = GetApplicationDescription(aScheme, desc);
+  NS_WARN_IF(NS_FAILED(rv));
   handlerInfo->SetDefaultDescription(desc);
 
   return NS_OK;

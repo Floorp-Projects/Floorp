@@ -119,6 +119,10 @@ public:
   // Must be called after playback stopped.
   virtual void Shutdown() {}
 
+  // Dump debugging information to the logs.
+  // Can be called in any phase.
+  virtual void DumpDebugInfo() {}
+
 protected:
   virtual ~MediaSink() {}
 };

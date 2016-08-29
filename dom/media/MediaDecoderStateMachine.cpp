@@ -2855,15 +2855,17 @@ MediaDecoderStateMachine::DumpDebugInfo()
   // It is fine to capture a raw pointer here because MediaDecoder only call
   // this function before shutdown begins.
   nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction([this] () {
+    mMediaSink->DumpDebugInfo();
     DUMP_LOG(
-      "GetMediaTime=%lld GetClock=%lld "
+      "GetMediaTime=%lld GetClock=%lld mMediaSink=%p "
       "mState=%s mPlayState=%d mDecodingFirstFrame=%d IsPlaying=%d "
       "mAudioStatus=%s mVideoStatus=%s mDecodedAudioEndTime=%lld mDecodedVideoEndTime=%lld "
-      "mIsAudioPrerolling=%d mIsVideoPrerolling=%d",
-      GetMediaTime(), mMediaSink->IsStarted() ? GetClock() : -1,
+      "mIsAudioPrerolling=%d mIsVideoPrerolling=%d "
+      "mAudioCompleted=%d mVideoCompleted=%d",
+      GetMediaTime(), mMediaSink->IsStarted() ? GetClock() : -1, mMediaSink.get(),
       ToStateStr(), mPlayState.Ref(), mDecodingFirstFrame, IsPlaying(),
       AudioRequestStatus(), VideoRequestStatus(), mDecodedAudioEndTime, mDecodedVideoEndTime,
-      mIsAudioPrerolling, mIsVideoPrerolling);
+      mIsAudioPrerolling, mIsVideoPrerolling, mAudioCompleted.Ref(), mVideoCompleted.Ref());
   });
 
   OwnerThread()->DispatchStateChange(r.forget());
