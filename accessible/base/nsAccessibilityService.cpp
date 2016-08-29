@@ -263,8 +263,7 @@ static const MarkupMapInfo sMarkupMapList[] = {
 nsAccessibilityService *nsAccessibilityService::gAccessibilityService = nullptr;
 ApplicationAccessible* nsAccessibilityService::gApplicationAccessible = nullptr;
 xpcAccessibleApplication* nsAccessibilityService::gXPCApplicationAccessible = nullptr;
-bool nsAccessibilityService::gIsShutdown = true;
-bool nsAccessibilityService::gIsPlatformCaller = false;
+uint32_t nsAccessibilityService::gConsumers = 0;
 
 nsAccessibilityService::nsAccessibilityService() :
   DocManager(), FocusManager(), mMarkupMaps(ArrayLength(sMarkupMapList))
@@ -273,7 +272,7 @@ nsAccessibilityService::nsAccessibilityService() :
 
 nsAccessibilityService::~nsAccessibilityService()
 {
-  NS_ASSERTION(gIsShutdown, "Accessibility wasn't shutdown!");
+  NS_ASSERTION(IsShutdown(), "Accessibility wasn't shutdown!");
   gAccessibilityService = nullptr;
 }
 
@@ -957,7 +956,7 @@ nsAccessibilityService::CreateAccessible(nsINode* aNode,
 {
   MOZ_ASSERT(aContext, "No context provided");
   MOZ_ASSERT(aNode, "No node to create an accessible for");
-  MOZ_ASSERT(!gIsShutdown, "No creation after shutdown");
+  MOZ_ASSERT(gConsumers, "No creation after shutdown");
 
   if (aIsSubtreeHidden)
     *aIsSubtreeHidden = false;
@@ -1284,8 +1283,6 @@ nsAccessibilityService::Init()
   sPluginTimers = new nsTArray<nsCOMPtr<nsITimer> >;
 #endif
 
-  gIsShutdown = false;
-
   // Now its safe to start platform accessibility.
   if (XRE_IsParentProcess())
     PlatformInit();
@@ -1303,9 +1300,9 @@ nsAccessibilityService::Shutdown()
   // Don't null accessibility service static member at this point to be safe
   // if someone will try to operate with it.
 
-  MOZ_ASSERT(!gIsShutdown, "Accessibility was shutdown already");
+  MOZ_ASSERT(gConsumers, "Accessibility was shutdown already");
 
-  gIsShutdown = true;
+  gConsumers = 0;
 
   // Remove observers.
   nsCOMPtr<nsIObserverService> observerService =
@@ -1344,7 +1341,6 @@ nsAccessibilityService::Shutdown()
 
   NS_RELEASE(gAccessibilityService);
   gAccessibilityService = nullptr;
-  gIsPlatformCaller = false;
 }
 
 already_AddRefed<Accessible>
@@ -1778,12 +1774,8 @@ nsAccessibilityService::CreateAccessibleForXULTree(nsIContent* aContent,
 #endif
 
 nsAccessibilityService*
-GetOrCreateAccService(bool aIsPlatformCaller)
+GetOrCreateAccService(uint32_t aNewConsumer)
 {
-  if (aIsPlatformCaller) {
-    nsAccessibilityService::gIsPlatformCaller = aIsPlatformCaller;
-  }
-
   if (!nsAccessibilityService::gAccessibilityService) {
     RefPtr<nsAccessibilityService> service = new nsAccessibilityService();
     if (!service->Init()) {
@@ -1794,19 +1786,34 @@ GetOrCreateAccService(bool aIsPlatformCaller)
 
   MOZ_ASSERT(nsAccessibilityService::gAccessibilityService,
              "Accessible service is not initialized.");
+  nsAccessibilityService::gConsumers |= aNewConsumer;
   return nsAccessibilityService::gAccessibilityService;
 }
 
-bool
-CanShutdownAccService()
+void
+MaybeShutdownAccService(uint32_t aFormerConsumer)
 {
-  nsAccessibilityService* accService = nsAccessibilityService::gAccessibilityService;
-  if (!accService) {
-    return false;
+  nsAccessibilityService* accService =
+    nsAccessibilityService::gAccessibilityService;
+
+  if (!accService || accService->IsShutdown()) {
+    return;
   }
-  return !xpcAccessibilityService::IsInUse() &&
-         !accService->IsPlatformCaller() && !accService->IsShutdown() &&
-         !nsCoreUtils::AccEventObserversExist();
+
+  if (nsCoreUtils::AccEventObserversExist() ||
+      xpcAccessibilityService::IsInUse()) {
+    // Still used by XPCOM
+    nsAccessibilityService::gConsumers =
+      (nsAccessibilityService::gConsumers & ~aFormerConsumer) |
+      nsAccessibilityService::eXPCOM;
+    return;
+  }
+
+  if (nsAccessibilityService::gConsumers & ~aFormerConsumer) {
+    nsAccessibilityService::gConsumers &= ~aFormerConsumer;
+  } else {
+    accService->Shutdown(); // Will unset all nsAccessibilityService::gConsumers
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

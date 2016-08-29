@@ -550,6 +550,11 @@ child:
      */
     async ActivateA11y();
 
+    /**
+     * Shutdown accessibility engine in content process (if not in use).
+     */
+    async ShutdownA11y();
+
     async AppInfo(nsCString version, nsCString buildID, nsCString name, nsCString UAName,
                   nsCString ID, nsCString vendor);
     async AppInit();
