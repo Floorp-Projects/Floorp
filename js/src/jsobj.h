@@ -73,6 +73,7 @@ extern const Class JSONClass;
 extern const Class MathClass;
 
 class GlobalObject;
+class NewObjectCache;
 
 // Forward declarations, required for later friend declarations.
 bool PreventExtensions(JSContext* cx, JS::HandleObject obj, JS::ObjectOpResult& result);
@@ -102,6 +103,7 @@ class JSObject : public js::gc::Cell
   private:
     friend class js::Shape;
     friend class js::GCMarker;
+    friend class js::NewObjectCache;
     friend class js::Nursery;
     friend class js::gc::RelocationOverlay;
     friend bool js::PreventExtensions(JSContext* cx, JS::HandleObject obj, JS::ObjectOpResult& result);
@@ -1125,6 +1127,10 @@ GetInitialHeap(NewObjectKind newKind, const Class* clasp)
         return gc::TenuredHeap;
     return gc::DefaultHeap;
 }
+
+bool
+NewObjectWithTaggedProtoIsCachable(ExclusiveContext* cxArg, Handle<TaggedProto> proto,
+                                   NewObjectKind newKind, const Class* clasp);
 
 // ES6 9.1.15 GetPrototypeFromConstructor.
 extern bool

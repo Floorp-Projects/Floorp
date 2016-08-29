@@ -307,6 +307,8 @@ struct Class;
 class GCMarker;
 class Shape;
 
+class NewObjectCache;
+
 #ifdef DEBUG
 static inline bool
 IsObjectValueInCompartment(Value v, JSCompartment* comp);
@@ -532,6 +534,7 @@ class NativeObject : public ShapedObject
   protected:
     friend class GCMarker;
     friend class Shape;
+    friend class NewObjectCache;
 
     void invalidateSlotRange(uint32_t start, uint32_t length) {
 #ifdef DEBUG

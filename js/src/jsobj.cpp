@@ -62,6 +62,7 @@
 
 #include "vm/ArrayObject-inl.h"
 #include "vm/BooleanObject-inl.h"
+#include "vm/Caches-inl.h"
 #include "vm/Interpreter-inl.h"
 #include "vm/NativeObject-inl.h"
 #include "vm/NumberObject-inl.h"
@@ -682,6 +683,26 @@ NewObject(ExclusiveContext* cx, HandleObjectGroup group, gc::AllocKind kind,
     return obj;
 }
 
+void
+NewObjectCache::fillProto(EntryIndex entry, const Class* clasp, js::TaggedProto proto,
+                          gc::AllocKind kind, NativeObject* obj)
+{
+    MOZ_ASSERT_IF(proto.isObject(), !proto.toObject()->is<GlobalObject>());
+    MOZ_ASSERT(obj->taggedProto() == proto);
+    return fill(entry, clasp, proto.raw(), kind, obj);
+}
+
+bool
+js::NewObjectWithTaggedProtoIsCachable(ExclusiveContext* cxArg, Handle<TaggedProto> proto,
+                                       NewObjectKind newKind, const Class* clasp)
+{
+    return cxArg->isJSContext() &&
+           proto.isObject() &&
+           newKind == GenericObject &&
+           clasp->isNative() &&
+           !proto.toObject()->is<GlobalObject>();
+}
+
 JSObject*
 js::NewObjectWithGivenTaggedProto(ExclusiveContext* cxArg, const Class* clasp,
                                   Handle<TaggedProto> proto,
@@ -691,11 +712,42 @@ js::NewObjectWithGivenTaggedProto(ExclusiveContext* cxArg, const Class* clasp,
     if (CanBeFinalizedInBackground(allocKind, clasp))
         allocKind = GetBackgroundAllocKind(allocKind);
 
+    bool isCachable = NewObjectWithTaggedProtoIsCachable(cxArg, proto, newKind, clasp);
+    if (isCachable) {
+        JSContext* cx = cxArg->asJSContext();
+        NewObjectCache& cache = cx->caches.newObjectCache;
+        NewObjectCache::EntryIndex entry = -1;
+        if (cache.lookupProto(clasp, proto.toObject(), allocKind, &entry)) {
+            JSObject* obj = cache.newObjectFromHit(cx, entry, GetInitialHeap(newKind, clasp));
+            if (obj)
+                return obj;
+        }
+    }
+
     RootedObjectGroup group(cxArg, ObjectGroup::defaultNewGroup(cxArg, clasp, proto, nullptr));
     if (!group)
         return nullptr;
 
-    return NewObject(cxArg, group, allocKind, newKind, initialShapeFlags);
+    RootedObject obj(cxArg, NewObject(cxArg, group, allocKind, newKind, initialShapeFlags));
+    if (!obj)
+        return nullptr;
+
+    if (isCachable && !obj->as<NativeObject>().hasDynamicSlots()) {
+        NewObjectCache& cache = cxArg->asJSContext()->caches.newObjectCache;
+        NewObjectCache::EntryIndex entry = -1;
+        cache.lookupProto(clasp, proto.toObject(), allocKind, &entry);
+        cache.fillProto(entry, clasp, proto, allocKind, &obj->as<NativeObject>());
+    }
+
+    return obj;
+}
+
+static bool
+NewObjectIsCachable(ExclusiveContext* cxArg, NewObjectKind newKind, const Class* clasp)
+{
+    return cxArg->isJSContext() &&
+           newKind == GenericObject &&
+           clasp->isNative();
 }
 
 JSObject*
@@ -707,6 +759,20 @@ js::NewObjectWithClassProtoCommon(ExclusiveContext* cx, const Class* clasp, Hand
 
     if (CanBeFinalizedInBackground(allocKind, clasp))
         allocKind = GetBackgroundAllocKind(allocKind);
+
+    Handle<GlobalObject*> global = cx->global();
+
+    bool isCachable = NewObjectIsCachable(cx, newKind, clasp);
+    if (isCachable) {
+        NewObjectCache& cache = cx->asJSContext()->caches.newObjectCache;
+        NewObjectCache::EntryIndex entry = -1;
+        if (cache.lookupGlobal(clasp, global, allocKind, &entry)) {
+            gc::InitialHeap heap = GetInitialHeap(newKind, clasp);
+            JSObject* obj = cache.newObjectFromHit(cx->asJSContext(), entry, heap);
+            if (obj)
+                return obj;
+        }
+    }
 
     // Find the appropriate proto for clasp. Built-in classes have a cached
     // proto on cx->global(); all others get %ObjectPrototype%.
@@ -722,7 +788,30 @@ js::NewObjectWithClassProtoCommon(ExclusiveContext* cx, const Class* clasp, Hand
     if (!group)
         return nullptr;
 
-    return NewObject(cx, group, allocKind, newKind);
+    JSObject* obj = NewObject(cx, group, allocKind, newKind);
+    if (!obj)
+        return nullptr;
+
+    if (isCachable && !obj->as<NativeObject>().hasDynamicSlots()) {
+        NewObjectCache& cache = cx->asJSContext()->caches.newObjectCache;
+        NewObjectCache::EntryIndex entry = -1;
+        cache.lookupGlobal(clasp, global, allocKind, &entry);
+        cache.fillGlobal(entry, clasp, global, allocKind,
+                         &obj->as<NativeObject>());
+    }
+
+    return obj;
+}
+
+static bool
+NewObjectWithGroupIsCachable(ExclusiveContext* cx, HandleObjectGroup group,
+                             NewObjectKind newKind)
+{
+    return group->proto().isObject() &&
+           newKind == GenericObject &&
+           group->clasp()->isNative() &&
+           (!group->newScript() || group->newScript()->analyzed()) &&
+           cx->isJSContext();
 }
 
 /*
@@ -737,7 +826,30 @@ js::NewObjectWithGroupCommon(ExclusiveContext* cx, HandleObjectGroup group,
     if (CanBeFinalizedInBackground(allocKind, group->clasp()))
         allocKind = GetBackgroundAllocKind(allocKind);
 
-    return NewObject(cx, group, allocKind, newKind);
+    bool isCachable = NewObjectWithGroupIsCachable(cx, group, newKind);
+    if (isCachable) {
+        NewObjectCache& cache = cx->asJSContext()->caches.newObjectCache;
+        NewObjectCache::EntryIndex entry = -1;
+        if (cache.lookupGroup(group, allocKind, &entry)) {
+            JSObject* obj = cache.newObjectFromHit(cx->asJSContext(), entry,
+                                                   GetInitialHeap(newKind, group->clasp()));
+            if (obj)
+                return obj;
+        }
+    }
+
+    JSObject* obj = NewObject(cx, group, allocKind, newKind);
+    if (!obj)
+        return nullptr;
+
+    if (isCachable && !obj->as<NativeObject>().hasDynamicSlots()) {
+        NewObjectCache& cache = cx->asJSContext()->caches.newObjectCache;
+        NewObjectCache::EntryIndex entry = -1;
+        cache.lookupGroup(group, allocKind, &entry);
+        cache.fillGroup(entry, group, allocKind, &obj->as<NativeObject>());
+    }
+
+    return obj;
 }
 
 bool
