@@ -418,12 +418,7 @@ VideoSink::UpdateRenderedVideoFrames()
   mVideoFrameEndTime = std::max(mVideoFrameEndTime,
     currentFrame ? currentFrame->GetEndTime() : lastDisplayedFrameEndTime);
 
-  // All frames are rendered, Let's resolve the promise.
-  if (VideoQueue().IsFinished() &&
-      VideoQueue().GetSize() <= 1 &&
-      !mVideoSinkEndRequest.Exists()) {
-    mEndPromiseHolder.ResolveIfExists(true, __func__);
-  }
+  MaybeResolveEndPromise();
 
   RenderVideoFrames(mVideoQueueSendToCompositorSize, clockTime, nowTime);
 
@@ -446,6 +441,18 @@ VideoSink::UpdateRenderedVideoFrames()
   }, [self] () {
     self->UpdateRenderedVideoFramesByTimer();
   });
+}
+
+void
+VideoSink::MaybeResolveEndPromise()
+{
+  AssertOwnerThread();
+  // All frames are rendered, Let's resolve the promise.
+  if (VideoQueue().IsFinished() &&
+      VideoQueue().GetSize() <= 1 &&
+      !mVideoSinkEndRequest.Exists()) {
+    mEndPromiseHolder.ResolveIfExists(true, __func__);
+  }
 }
 
 void

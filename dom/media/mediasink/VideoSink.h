@@ -99,6 +99,8 @@ private:
   void UpdateRenderedVideoFrames();
   void UpdateRenderedVideoFramesByTimer();
 
+  void MaybeResolveEndPromise();
+
   void AssertOwnerThread() const
   {
     MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
