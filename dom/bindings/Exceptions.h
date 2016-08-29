@@ -34,10 +34,11 @@ Throw(JSContext* cx, nsresult rv, const nsACString& message = EmptyCString());
 void
 ThrowAndReport(nsPIDOMWindowInner* aWindow, nsresult aRv);
 
-bool
+// Both signatures of ThrowExceptionObject guarantee that an exception is set on
+// aCx before they return.
+void
 ThrowExceptionObject(JSContext* aCx, Exception* aException);
-
-bool
+void
 ThrowExceptionObject(JSContext* aCx, nsIException* aException);
 
 // Create an exception object for the given nsresult and message but don't set

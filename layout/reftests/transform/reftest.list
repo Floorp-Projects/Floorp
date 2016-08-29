@@ -9,6 +9,7 @@
 == dynamic-addremove-1a.html dynamic-addremove-1-ref.html
 == dynamic-addremove-1b.html dynamic-addremove-1-ref.html
 == dynamic-addremove-1c.html dynamic-addremove-1-ref.html
+== dynamic-addremove-2.html dynamic-addremove-2-ref.html
 # translatex should act like position: relative
 skip-if(B2G||Mulet) == translatex-1a.html translatex-1-ref.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
 skip-if(B2G||Mulet) == translatex-1b.html translatex-1-ref.html # Initial mulet triage: parity with B2G/B2G Desktop

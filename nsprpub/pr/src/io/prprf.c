@@ -461,7 +461,7 @@ static struct NumArg* BuildArgArray( const char *fmt, va_list ap, int* rv, struc
 	if( c == '%' )	continue;
 
 	cn = 0;
-	while( c && c != '$' ){	    /* should imporve error check later */
+	while( c && c != '$' ){	    /* should improve error check later */
 	    cn = cn*10 + c - '0';
 	    c = *p++;
 	}
@@ -745,7 +745,7 @@ static int dosprintf(SprintfState *ss, const char *fmt, va_list ap)
 	if( nas != NULL ){
 	    /* the fmt contains the Numbered Arguments feature */
 	    i = 0;
-	    while( c && c != '$' ){	    /* should imporve error check later */
+	    while( c && c != '$' ){	    /* should improve error check later */
 		i = ( i * 10 ) + ( c - '0' );
 		c = *fmt++;
 	    }

@@ -40,6 +40,14 @@ public:
   NS_IMETHOD_(MozExternalRefCountType) AddRef() = 0;
   NS_IMETHOD_(MozExternalRefCountType) Release() = 0;
 
+  /// @return key data used for identifying which image this ISurfaceProvider is
+  /// associated with in the surface cache.
+  ImageKey GetImageKey() const { return mImageKey; }
+
+  /// @return key data used to uniquely identify this ISurfaceProvider's cache
+  /// entry in the surface cache.
+  const SurfaceKey& GetSurfaceKey() const { return mSurfaceKey; }
+
   /// @return a (potentially lazily computed) drawable reference to a surface.
   virtual DrawableSurface Surface();
 
@@ -48,7 +56,8 @@ public:
 
   /// @return the number of bytes of memory this ISurfaceProvider is expected to
   /// require. Optimizations may result in lower real memory usage. Trivial
-  /// overhead is ignored.
+  /// overhead is ignored. Because this value is used in bookkeeping, it's
+  /// important that it be constant over the lifetime of this object.
   virtual size_t LogicalSizeInBytes() const = 0;
 
   /// @return the actual number of bytes of memory this ISurfaceProvider is
@@ -74,9 +83,15 @@ public:
   const AvailabilityState& Availability() const { return mAvailability; }
 
 protected:
-  explicit ISurfaceProvider(AvailabilityState aAvailability)
-    : mAvailability(aAvailability)
-  { }
+  ISurfaceProvider(const ImageKey aImageKey,
+                   const SurfaceKey& aSurfaceKey,
+                   AvailabilityState aAvailability)
+    : mImageKey(aImageKey)
+    , mSurfaceKey(aSurfaceKey)
+    , mAvailability(aAvailability)
+  {
+    MOZ_ASSERT(aImageKey, "Must have a valid image key");
+  }
 
   virtual ~ISurfaceProvider() { }
 
@@ -99,6 +114,8 @@ private:
   friend class CachedSurface;
   friend class DrawableSurface;
 
+  const ImageKey mImageKey;
+  const SurfaceKey mSurfaceKey;
   AvailabilityState mAvailability;
 };
 
@@ -220,10 +237,15 @@ class SimpleSurfaceProvider final : public ISurfaceProvider
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(SimpleSurfaceProvider, override)
 
-  explicit SimpleSurfaceProvider(NotNull<imgFrame*> aSurface)
-    : ISurfaceProvider(AvailabilityState::StartAvailable())
+  SimpleSurfaceProvider(const ImageKey aImageKey,
+                        const SurfaceKey& aSurfaceKey,
+                        NotNull<imgFrame*> aSurface)
+    : ISurfaceProvider(aImageKey, aSurfaceKey,
+                       AvailabilityState::StartAvailable())
     , mSurface(aSurface)
-  { }
+  {
+    MOZ_ASSERT(aSurfaceKey.Size() == mSurface->GetSize());
+  }
 
   bool IsFinished() const override { return mSurface->IsFinished(); }
 
