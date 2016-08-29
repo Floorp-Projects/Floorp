@@ -266,6 +266,10 @@ add_task(function* testAccessibleCarets() {
 add_task(function* testAccessibleCarets_designMode() {
   let BrowserApp = gChromeWin.BrowserApp;
 
+  // Pre-populate the clipboard to ensure PASTE action available.
+  Cc["@mozilla.org/widget/clipboardhelper;1"].
+    getService(Ci.nsIClipboardHelper).copyString("somethingMagical");
+
   // Load test page, wait for load completion.
   let browser = BrowserApp.addTab(DESIGNMODE_TEST_URL).browser;
   let tab = BrowserApp.getTabForBrowser(browser, { selected: true });
@@ -280,9 +284,6 @@ add_task(function* testAccessibleCarets_designMode() {
   let tc_LTR_midPoint = getCharPressPoint(doc, tc_LTR_elem, 5, "x");
   let tc_RTL_midPoint = getCharPressPoint(doc, tc_RTL_elem, 9, "ת");
 
-  // Pre-populate the clipboard to ensure PASTE action available.
-  Cc["@mozilla.org/widget/clipboardhelper;1"].
-    getService(Ci.nsIClipboardHelper).copyString("somethingMagical");
   let flavors = ["text/unicode"];
   let clipboardHasText = Services.clipboard.hasDataMatchingFlavors(
     flavors, flavors.length, Ci.nsIClipboard.kGlobalClipboard);

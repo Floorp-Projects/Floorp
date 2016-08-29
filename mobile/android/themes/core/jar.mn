@@ -21,7 +21,6 @@ chrome.jar:
   skin/aboutReaderContent.css               (aboutReaderContent.css)
   skin/aboutReaderControls.css              (aboutReaderControls.css)
   skin/aboutSupport.css                     (aboutSupport.css)
-  skin/browser.css                          (browser.css)
   skin/content.css                          (content.css)
   skin/scrollbar.css                        (scrollbar-apz.css)
   skin/config.css                           (config.css)
