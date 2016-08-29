@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html style="background: red">
+  <div style="transform: translate3d(0, 0, 0); position: absolute;
+              top: 0; left: 0; width: 100px; height: 100px">
+    <div style="position: absolute">
+      <div style="position: fixed; width: 100%; height: 100%; top: 0; left: 0;
+                  background: green">
+      </div>
+    </div>
+  </div>
+  <script>
+    onload = function() {
+      document.body.offsetWidth;
+      document.querySelector("div").style.transform = "none";
+    }
+  </script>
+</html>

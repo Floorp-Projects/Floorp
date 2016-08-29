@@ -427,11 +427,6 @@ public:
    */
   bool IsIgnoringPaintSuppression() { return mIgnoreSuppression; }
   /**
-   * @return Returns if this builder had to ignore painting suppression on some
-   * document when building the display list.
-   */
-  bool GetHadToIgnorePaintSuppression() { return mHadToIgnoreSuppression; }
-  /**
    * Call this if we're doing normal painting to the window.
    */
   void SetPaintingToWindow(bool aToWindow) { mIsPaintingToWindow = aToWindow; }
@@ -1261,7 +1256,6 @@ private:
   bool                           mCurrentScrollbarWillHaveLayer;
   bool                           mBuildCaret;
   bool                           mIgnoreSuppression;
-  bool                           mHadToIgnoreSuppression;
   bool                           mIsAtRootOfPseudoStackingContext;
   bool                           mIncludeAllOutOfFlows;
   bool                           mDescendIntoSubdocuments;

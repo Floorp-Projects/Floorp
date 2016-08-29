@@ -5,11 +5,11 @@
 
 "use strict";
 
-const L10N_BUNDLE = "chrome://devtools/locale/sourceeditor.properties";
-const L10N = Services.strings.createBundle(L10N_BUNDLE);
+const {LocalizationHelper} = require("devtools/shared/l10n");
+const L10N = new LocalizationHelper("devtools/locale/sourceeditor.properties");
 
-const FIND_KEY = L10N.GetStringFromName("find.commandkey");
-const FINDAGAIN_KEY = L10N.GetStringFromName("findAgain.commandkey");
+const FIND_KEY = L10N.getStr("find.commandkey");
+const FINDAGAIN_KEY = L10N.getStr("findAgain.commandkey");
 
 const { OS } = Services.appinfo;
 

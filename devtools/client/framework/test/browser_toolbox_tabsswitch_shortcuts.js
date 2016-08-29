@@ -3,11 +3,14 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
 requestLongerTimeout(2);
 
 var {Toolbox} = require("devtools/client/framework/toolbox");
-var strings = Services.strings.createBundle(
-  "chrome://devtools/locale/toolbox.properties");
+
+const {LocalizationHelper} = require("devtools/shared/l10n");
+const L10N = new LocalizationHelper("devtools/locale/toolbox.properties");
 
 add_task(function* () {
   let tab = yield addTab("about:blank");
@@ -18,10 +21,9 @@ add_task(function* () {
                          .filter(def => def.isTargetSupported(target))
                          .map(def => def.id);
 
-  let toolbox = yield gDevTools.showToolbox(target, toolIDs[0],
-                                            Toolbox.HostType.BOTTOM);
-  let nextShortcut = strings.GetStringFromName("toolbox.nextTool.key")
-  let prevShortcut = strings.GetStringFromName("toolbox.previousTool.key")
+  let toolbox = yield gDevTools.showToolbox(target, toolIDs[0], Toolbox.HostType.BOTTOM);
+  let nextShortcut = L10N.getStr("toolbox.nextTool.key");
+  let prevShortcut = L10N.getStr("toolbox.previousTool.key");
 
   // Iterate over all tools, starting from options to netmonitor, in normal
   // order.

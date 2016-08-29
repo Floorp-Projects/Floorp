@@ -30,8 +30,8 @@ public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(AnimationSurfaceProvider, override)
 
   AnimationSurfaceProvider(NotNull<RasterImage*> aImage,
-                           NotNull<Decoder*> aDecoder,
-                           const SurfaceKey& aSurfaceKey);
+                           const SurfaceKey& aSurfaceKey,
+                           NotNull<Decoder*> aDecoder);
 
 
   //////////////////////////////////////////////////////////////////////////////
@@ -96,9 +96,6 @@ private:
 
   /// The frames of this animation, in order.
   nsTArray<RawAccessFrameRef> mFrames;
-
-  /// The key under which we're stored as a cache entry in the surface cache.
-  const SurfaceKey mSurfaceKey;
 };
 
 } // namespace image

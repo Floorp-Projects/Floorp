@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1464967719000">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1472235999000">
   <emItems>
       <emItem  blockID="i58" id="webmaster@buzzzzvideos.info">
                         <versionRange  minVersion="0" maxVersion="*">
@@ -9,6 +9,12 @@
     </emItem>
       <emItem  blockID="i71" id="youtube@2youtube.com">
                         <versionRange  minVersion="0" maxVersion="*">
+                    </versionRange>
+                    <prefs>
+              </prefs>
+    </emItem>
+      <emItem  blockID="i1229" id="/^(.*@(unblocker\.yt|sparpilot\.com))|axtara@axtara\.com$/">
+                        <versionRange  minVersion="0" maxVersion="*" severity="3">
                     </versionRange>
                     <prefs>
               </prefs>
@@ -73,8 +79,8 @@
                     <prefs>
               </prefs>
     </emItem>
-      <emItem  blockID="i72" os="WINNT" id="{4ED1F68A-5463-4931-9384-8FFF5ED91D92}">
-                        <versionRange  minVersion="3.4.1" maxVersion="3.4.1.194" severity="1">
+      <emItem  blockID="i1245" id="{4ED1F68A-5463-4931-9384-8FFF5ED91D92}">
+                        <versionRange  minVersion="0" maxVersion="3.9.9" severity="1">
                     </versionRange>
                     <prefs>
               </prefs>
@@ -494,12 +500,6 @@
                     <prefs>
               </prefs>
     </emItem>
-      <emItem  blockID="i1229" id="/^.*@unblocker\.yt$/">
-                        <versionRange  minVersion="0" maxVersion="*" severity="3">
-                    </versionRange>
-                    <prefs>
-              </prefs>
-    </emItem>
       <emItem  blockID="i404" id="{a9bb9fa0-4122-4c75-bd9a-bc27db3f9155}">
                         <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
@@ -785,6 +785,12 @@
                     <prefs>
               </prefs>
     </emItem>
+      <emItem  blockID="i1261" id="support@lastpass.com">
+                        <versionRange  minVersion="4.0.0a" maxVersion="4.1.20a" severity="1">
+                    </versionRange>
+                    <prefs>
+              </prefs>
+    </emItem>
       <emItem  blockID="i732" id=" {e935dd68-f90d-46a6-b89e-c4657534b353}">
                         <versionRange  minVersion="0" maxVersion="*" severity="3">
                     </versionRange>
@@ -992,7 +998,7 @@
                     <prefs>
               </prefs>
     </emItem>
-      <emItem  blockID="i1222" id="tmbepff@trendmicro.com">
+      <emItem  blockID="i1223" id="tmbepff@trendmicro.com">
                         <versionRange  minVersion="0" maxVersion="9.1.0.1035" severity="1">
                     </versionRange>
                                 <versionRange  minVersion="9.2" maxVersion="9.2.0.1023" severity="1">
@@ -1131,6 +1137,12 @@
     </emItem>
       <emItem  blockID="i528" id="008abed2-b43a-46c9-9a5b-a771c87b82da@1ad61d53-2bdc-4484-a26b-b888ecae1906.com">
                         <versionRange  minVersion="0" maxVersion="*" severity="1">
+                    </versionRange>
+                    <prefs>
+              </prefs>
+    </emItem>
+      <emItem  blockID="i1230" id="addon@gemaoff">
+                        <versionRange  minVersion="0" maxVersion="*" severity="3">
                     </versionRange>
                     <prefs>
               </prefs>
@@ -1459,6 +1471,12 @@
                     <prefs>
               </prefs>
     </emItem>
+      <emItem  blockID="i1231" id="youtube@downloader.yt">
+                        <versionRange  minVersion="0" maxVersion="*" severity="3">
+                    </versionRange>
+                    <prefs>
+              </prefs>
+    </emItem>
       <emItem  blockID="i754" id="{bb7b7a60-f574-47c2-8a0b-4c56f2da9802}">
                         <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
@@ -1511,6 +1529,15 @@
                         <versionRange  minVersion="100.7" maxVersion="100.7" severity="3">
                     </versionRange>
                                 <versionRange  minVersion="99.7" maxVersion="99.7" severity="3">
+                    </versionRange>
+                    <prefs>
+              </prefs>
+    </emItem>
+      <emItem  blockID="i1232" id="nosquint@urandom.ca">
+                        <versionRange  minVersion="0" maxVersion="2.1.9.1-signed.1-signed" severity="1">
+                      <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
+                              <versionRange  minVersion="47" maxVersion="*" />
+                          </targetApplication>
                     </versionRange>
                     <prefs>
               </prefs>
@@ -1653,6 +1680,12 @@
               </prefs>
     </emItem>
       <emItem  blockID="i115" id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
+                        <versionRange  minVersion="0" maxVersion="*" severity="3">
+                    </versionRange>
+                    <prefs>
+              </prefs>
+    </emItem>
+      <emItem  blockID="i1262" id="my7thfakeid@gmail.com">
                         <versionRange  minVersion="0" maxVersion="*" severity="3">
                     </versionRange>
                     <prefs>
@@ -1932,6 +1965,12 @@
                     <prefs>
               </prefs>
     </emItem>
+      <emItem  blockID="i1265" id="@video_downloader_pro">
+                        <versionRange  minVersion="1.2.1" maxVersion="1.2.5" severity="1">
+                    </versionRange>
+                    <prefs>
+              </prefs>
+    </emItem>
       <emItem  blockID="i60" id="youtb3@youtb3.com">
                         <versionRange  minVersion="0" maxVersion="*">
                     </versionRange>
@@ -2008,6 +2047,12 @@
     </emItem>
       <emItem  blockID="i1210" id="auto-plugin-checker@jetpack">
                         <versionRange  minVersion="0" maxVersion="*" severity="1">
+                    </versionRange>
+                    <prefs>
+              </prefs>
+    </emItem>
+      <emItem  blockID="i1233" id="cloudmask@cloudmask.com">
+                        <versionRange  minVersion="0" maxVersion="2.0.788">
                     </versionRange>
                     <prefs>
               </prefs>
@@ -2092,6 +2137,12 @@
     </emItem>
       <emItem  blockID="i474" id="{906000a4-88d9-4d52-b209-7a772970d91f}">
                         <versionRange  minVersion="0" maxVersion="*" severity="3">
+                    </versionRange>
+                    <prefs>
+              </prefs>
+    </emItem>
+      <emItem  blockID="i1264" id="suchpony@suchpony.de">
+                        <versionRange  minVersion="0" maxVersion="1.6.7" severity="3">
                     </versionRange>
                     <prefs>
               </prefs>
@@ -2245,7 +2296,7 @@
                     <prefs>
               </prefs>
     </emItem>
-      <emItem  blockID="i142" id="{a3a5c777-f583-4fef-9380-ab4add1bc2a8}">
+      <emItem  blockID="i53" id="{a3a5c777-f583-4fef-9380-ab4add1bc2a8}">
                         <versionRange  minVersion="2.0.3" maxVersion="2.0.3">
                     </versionRange>
                                 <versionRange  minVersion="4.2" maxVersion="4.2" severity="3">
@@ -2270,6 +2321,12 @@
                       <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
                               <versionRange  minVersion="3.0a1" maxVersion="*" />
                           </targetApplication>
+                    </versionRange>
+                    <prefs>
+              </prefs>
+    </emItem>
+      <emItem  blockID="i1263" id="axtara__web@axtara.com">
+                        <versionRange  minVersion="0" maxVersion="1.1.1" severity="3">
                     </versionRange>
                     <prefs>
               </prefs>
@@ -2734,8 +2791,11 @@
                     <prefs>
               </prefs>
     </emItem>
-      <emItem  blockID="i314" id="crossriderapp8812@crossrider.com">
-                        <versionRange  minVersion="0" maxVersion="*" severity="1">
+      <emItem  blockID="i24" id="{6E19037A-12E3-4295-8915-ED48BC341614}">
+                        <versionRange  minVersion="0.1" maxVersion="1.3.328.4" severity="1">
+                      <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
+                              <versionRange  minVersion="3.7a1pre" maxVersion="*" />
+                          </targetApplication>
                     </versionRange>
                     <prefs>
               </prefs>
@@ -2752,11 +2812,8 @@
                     <prefs>
               </prefs>
     </emItem>
-      <emItem  blockID="i24" id="{6E19037A-12E3-4295-8915-ED48BC341614}">
-                        <versionRange  minVersion="0.1" maxVersion="1.3.328.4" severity="1">
-                      <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
-                              <versionRange  minVersion="3.7a1pre" maxVersion="*" />
-                          </targetApplication>
+      <emItem  blockID="i314" id="crossriderapp8812@crossrider.com">
+                        <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
                     <prefs>
               </prefs>
@@ -3513,33 +3570,69 @@
                   <match name="filename" exp="(NPSWF32.*\.dll)|(NPSWF64.*\.dll)|(Flash\ Player\.plugin)" />                      <versionRange  minVersion="21.0.0.197" maxVersion="21.0.0.226" severity="0" vulnerabilitystatus="1"></versionRange>
                             <infoURL>https://get.adobe.com/flashplayer/</infoURL>
           </pluginItem>
+      <pluginItem  os="Linux" blockID="p1234">
+                  <match name="filename" exp="libflashplayer\.so" />                      <versionRange  minVersion="11.2.202.616" maxVersion="11.2.202.621" severity="0" vulnerabilitystatus="1"></versionRange>
+                            <infoURL>https://get.adobe.com/flashplayer/</infoURL>
+          </pluginItem>
+      <pluginItem  blockID="p1235">
+                  <match name="filename" exp="(NPSWF32.*\.dll)|(NPSWF64.*\.dll)|(Flash\ Player\.plugin)" />                      <versionRange  minVersion="18.0.0.343" maxVersion="18.0.0.352" severity="0" vulnerabilitystatus="1"></versionRange>
+                            <infoURL>https://get.adobe.com/flashplayer/</infoURL>
+          </pluginItem>
+      <pluginItem  blockID="p1236">
+                  <match name="filename" exp="(NPSWF32.*\.dll)|(NPSWF64.*\.dll)|(Flash\ Player\.plugin)" />                      <versionRange  minVersion="21.0.0.226" maxVersion="21.0.0.242" severity="0" vulnerabilitystatus="1"></versionRange>
+                            <infoURL>https://get.adobe.com/flashplayer/</infoURL>
+          </pluginItem>
+      <pluginItem  blockID="p1246">
+                  <match name="filename" exp="(nppdf32\.dll)|(AdobePDFViewerNPAPI\.plugin)" />                      <versionRange  minVersion="10.1.6" maxVersion="11.0.16 " severity="0" vulnerabilitystatus="1"></versionRange>
+                            <infoURL>https://get.adobe.com/reader</infoURL>
+          </pluginItem>
+      <pluginItem  blockID="p1247">
+                  <match name="filename" exp="(nppdf32\.dll)|(AdobePDFViewerNPAPI\.plugin)" />                      <versionRange  minVersion="15.006.30174" maxVersion="15.006.30174" severity="0" vulnerabilitystatus="1"></versionRange>
+                            <infoURL>https://get.adobe.com/reader</infoURL>
+          </pluginItem>
+      <pluginItem  blockID="p1250">
+                  <match name="filename" exp="(nppdf32\.dll)|(AdobePDFViewerNPAPI\.plugin)" />                      <versionRange  minVersion="15.016.20045" maxVersion="15.016.20045" severity="0" vulnerabilitystatus="1"></versionRange>
+                            <infoURL>https://get.adobe.com/reader</infoURL>
+          </pluginItem>
+      <pluginItem  os="Linux" blockID="p1252">
+                  <match name="filename" exp="libflashplayer\.so" />                      <versionRange  minVersion="11.2.202.621" maxVersion="11.2.202.626" severity="0" vulnerabilitystatus="1"></versionRange>
+                            <infoURL>https://get.adobe.com/flashplayer/</infoURL>
+          </pluginItem>
+      <pluginItem  blockID="p1253">
+                  <match name="filename" exp="(NPSWF32.*\.dll)|(NPSWF64.*\.dll)|(Flash\ Player\.plugin)" />                      <versionRange  minVersion="18.0.0.352" maxVersion="18.0.0.360" severity="0" vulnerabilitystatus="1"></versionRange>
+                            <infoURL>https://get.adobe.com/flashplayer/</infoURL>
+          </pluginItem>
+      <pluginItem  blockID="p1254">
+                  <match name="filename" exp="(NPSWF32.*\.dll)|(NPSWF64.*\.dll)|(Flash\ Player\.plugin)" />                      <versionRange  minVersion="21.0.0.242" maxVersion="22.0.0.192" severity="0" vulnerabilitystatus="1"></versionRange>
+                            <infoURL>https://get.adobe.com/flashplayer/</infoURL>
+          </pluginItem>
     </pluginItems>
 
   <gfxItems>
     <gfxBlacklistEntry  blockID="g35">      <os>WINNT 6.1</os>      <vendor>0x10de</vendor>              <devices>
                       <device>0x0a6c</device>
                   </devices>
-            <feature>DIRECT2D</feature>      <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>      <driverVersion>8.17.12.5896</driverVersion>      <driverVersionComparator>LESS_THAN_OR_EQUAL</driverVersionComparator>    </gfxBlacklistEntry>
+            <feature>DIRECT2D</feature>      <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>      <driverVersion>8.17.12.5896</driverVersion>      <driverVersionComparator>LESS_THAN_OR_EQUAL</driverVersionComparator></gfxBlacklistEntry>
     <gfxBlacklistEntry  blockID="g36">      <os>WINNT 6.1</os>      <vendor>0x10de</vendor>              <devices>
                       <device>0x0a6c</device>
                   </devices>
-            <feature>DIRECT3D_9_LAYERS</feature>      <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>      <driverVersion>8.17.12.5896</driverVersion>      <driverVersionComparator>LESS_THAN_OR_EQUAL</driverVersionComparator>    </gfxBlacklistEntry>
-    <gfxBlacklistEntry  blockID="g37">      <os>WINNT 5.1</os>      <vendor>0x10de</vendor>            <feature>DIRECT3D_9_LAYERS</feature>      <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>      <driverVersion>7.0.0.0</driverVersion>      <driverVersionComparator>GREATER_THAN_OR_EQUAL</driverVersionComparator>    </gfxBlacklistEntry>
-    <gfxBlacklistEntry  blockID="g144">      <os>All</os>      <vendor>0x1002</vendor>            <feature>DIRECT2D</feature>      <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>      <driverVersion>8.982.0.0</driverVersion>      <driverVersionComparator>EQUAL</driverVersionComparator>    </gfxBlacklistEntry>
-    <gfxBlacklistEntry  blockID="g146">      <os>All</os>      <vendor>0x1022</vendor>            <feature>DIRECT2D</feature>      <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>      <driverVersion>8.982.0.0</driverVersion>      <driverVersionComparator>EQUAL</driverVersionComparator>    </gfxBlacklistEntry>
-    <gfxBlacklistEntry  blockID="g148">      <os>All</os>      <vendor>0x1022</vendor>            <feature>DIRECT3D_9_LAYERS</feature>      <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>      <driverVersion>8.982.0.0</driverVersion>      <driverVersionComparator>EQUAL</driverVersionComparator>    </gfxBlacklistEntry>
-    <gfxBlacklistEntry  blockID="g150">      <os>All</os>      <vendor>0x1002</vendor>            <feature>DIRECT3D_9_LAYERS</feature>      <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>      <driverVersion>8.982.0.0</driverVersion>      <driverVersionComparator>EQUAL</driverVersionComparator>    </gfxBlacklistEntry>
-    <gfxBlacklistEntry  blockID="g192">      <os>WINNT 6.2</os>      <vendor>0x1002</vendor>            <feature>DIRECT2D</feature>      <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>      <driverVersion>9.10.8.0</driverVersion>      <driverVersionComparator>LESS_THAN_OR_EQUAL</driverVersionComparator>    </gfxBlacklistEntry>
-    <gfxBlacklistEntry  blockID="g194">      <os>WINNT 6.2</os>      <vendor>0x1022</vendor>            <feature>DIRECT2D</feature>      <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>      <driverVersion>9.10.8.0</driverVersion>      <driverVersionComparator>LESS_THAN_OR_EQUAL</driverVersionComparator>    </gfxBlacklistEntry>
-    <gfxBlacklistEntry  blockID="g198">      <os>Darwin 10</os>      <vendor>0x10de</vendor>            <feature>WEBGL_MSAA</feature>      <featureStatus>BLOCKED_DEVICE</featureStatus>    </gfxBlacklistEntry>
-    <gfxBlacklistEntry  blockID="g200">      <os>Darwin 11</os>      <vendor>0x10de</vendor>            <feature>WEBGL_MSAA</feature>      <featureStatus>BLOCKED_DEVICE</featureStatus>    </gfxBlacklistEntry>
-    <gfxBlacklistEntry  blockID="g202">      <os>Darwin 12</os>      <vendor>0x10de</vendor>            <feature>WEBGL_MSAA</feature>      <featureStatus>BLOCKED_DEVICE</featureStatus>    </gfxBlacklistEntry>
-    <gfxBlacklistEntry  blockID="g204">      <os>Darwin 10</os>      <vendor>0x8086</vendor>            <feature>WEBGL_MSAA</feature>      <featureStatus>BLOCKED_DEVICE</featureStatus>    </gfxBlacklistEntry>
-    <gfxBlacklistEntry  blockID="g206">      <os>Darwin 11</os>      <vendor>0x8086</vendor>            <feature>WEBGL_MSAA</feature>      <featureStatus>BLOCKED_DEVICE</featureStatus>    </gfxBlacklistEntry>
-    <gfxBlacklistEntry  blockID="g208">      <os>Darwin 12</os>      <vendor>0x8086</vendor>            <feature>WEBGL_MSAA</feature>      <featureStatus>BLOCKED_DEVICE</featureStatus>    </gfxBlacklistEntry>
-    <gfxBlacklistEntry  blockID="g230">      <os>Darwin 10</os>      <vendor>0x1002</vendor>            <feature>WEBGL_MSAA</feature>      <featureStatus>BLOCKED_DEVICE</featureStatus>    </gfxBlacklistEntry>
-    <gfxBlacklistEntry  blockID="g232">      <os>Darwin 11</os>      <vendor>0x1002</vendor>            <feature>WEBGL_MSAA</feature>      <featureStatus>BLOCKED_DEVICE</featureStatus>    </gfxBlacklistEntry>
-    <gfxBlacklistEntry  blockID="g234">      <os>Darwin 12</os>      <vendor>0x1002</vendor>            <feature>WEBGL_MSAA</feature>      <featureStatus>BLOCKED_DEVICE</featureStatus>    </gfxBlacklistEntry>
+            <feature>DIRECT3D_9_LAYERS</feature>      <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>      <driverVersion>8.17.12.5896</driverVersion>      <driverVersionComparator>LESS_THAN_OR_EQUAL</driverVersionComparator></gfxBlacklistEntry>
+    <gfxBlacklistEntry  blockID="g37">      <os>WINNT 5.1</os>      <vendor>0x10de</vendor>            <feature>DIRECT3D_9_LAYERS</feature>      <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>      <driverVersion>7.0.0.0</driverVersion>      <driverVersionComparator>GREATER_THAN_OR_EQUAL</driverVersionComparator></gfxBlacklistEntry>
+    <gfxBlacklistEntry  blockID="g144">      <os>All</os>      <vendor>0x1002</vendor>            <feature>DIRECT2D</feature>      <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>      <driverVersion>8.982.0.0</driverVersion>      <driverVersionComparator>EQUAL</driverVersionComparator></gfxBlacklistEntry>
+    <gfxBlacklistEntry  blockID="g146">      <os>All</os>      <vendor>0x1022</vendor>            <feature>DIRECT2D</feature>      <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>      <driverVersion>8.982.0.0</driverVersion>      <driverVersionComparator>EQUAL</driverVersionComparator></gfxBlacklistEntry>
+    <gfxBlacklistEntry  blockID="g148">      <os>All</os>      <vendor>0x1022</vendor>            <feature>DIRECT3D_9_LAYERS</feature>      <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>      <driverVersion>8.982.0.0</driverVersion>      <driverVersionComparator>EQUAL</driverVersionComparator></gfxBlacklistEntry>
+    <gfxBlacklistEntry  blockID="g150">      <os>All</os>      <vendor>0x1002</vendor>            <feature>DIRECT3D_9_LAYERS</feature>      <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>      <driverVersion>8.982.0.0</driverVersion>      <driverVersionComparator>EQUAL</driverVersionComparator></gfxBlacklistEntry>
+    <gfxBlacklistEntry  blockID="g192">      <os>WINNT 6.2</os>      <vendor>0x1002</vendor>            <feature>DIRECT2D</feature>      <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>      <driverVersion>9.10.8.0</driverVersion>      <driverVersionComparator>LESS_THAN_OR_EQUAL</driverVersionComparator></gfxBlacklistEntry>
+    <gfxBlacklistEntry  blockID="g194">      <os>WINNT 6.2</os>      <vendor>0x1022</vendor>            <feature>DIRECT2D</feature>      <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>      <driverVersion>9.10.8.0</driverVersion>      <driverVersionComparator>LESS_THAN_OR_EQUAL</driverVersionComparator></gfxBlacklistEntry>
+    <gfxBlacklistEntry  blockID="g198">      <os>Darwin 10</os>      <vendor>0x10de</vendor>            <feature>WEBGL_MSAA</feature>      <featureStatus>BLOCKED_DEVICE</featureStatus></gfxBlacklistEntry>
+    <gfxBlacklistEntry  blockID="g200">      <os>Darwin 11</os>      <vendor>0x10de</vendor>            <feature>WEBGL_MSAA</feature>      <featureStatus>BLOCKED_DEVICE</featureStatus></gfxBlacklistEntry>
+    <gfxBlacklistEntry  blockID="g202">      <os>Darwin 12</os>      <vendor>0x10de</vendor>            <feature>WEBGL_MSAA</feature>      <featureStatus>BLOCKED_DEVICE</featureStatus></gfxBlacklistEntry>
+    <gfxBlacklistEntry  blockID="g204">      <os>Darwin 10</os>      <vendor>0x8086</vendor>            <feature>WEBGL_MSAA</feature>      <featureStatus>BLOCKED_DEVICE</featureStatus></gfxBlacklistEntry>
+    <gfxBlacklistEntry  blockID="g206">      <os>Darwin 11</os>      <vendor>0x8086</vendor>            <feature>WEBGL_MSAA</feature>      <featureStatus>BLOCKED_DEVICE</featureStatus></gfxBlacklistEntry>
+    <gfxBlacklistEntry  blockID="g208">      <os>Darwin 12</os>      <vendor>0x8086</vendor>            <feature>WEBGL_MSAA</feature>      <featureStatus>BLOCKED_DEVICE</featureStatus></gfxBlacklistEntry>
+    <gfxBlacklistEntry  blockID="g230">      <os>Darwin 10</os>      <vendor>0x1002</vendor>            <feature>WEBGL_MSAA</feature>      <featureStatus>BLOCKED_DEVICE</featureStatus></gfxBlacklistEntry>
+    <gfxBlacklistEntry  blockID="g232">      <os>Darwin 11</os>      <vendor>0x1002</vendor>            <feature>WEBGL_MSAA</feature>      <featureStatus>BLOCKED_DEVICE</featureStatus></gfxBlacklistEntry>
+    <gfxBlacklistEntry  blockID="g234">      <os>Darwin 12</os>      <vendor>0x1002</vendor>            <feature>WEBGL_MSAA</feature>      <featureStatus>BLOCKED_DEVICE</featureStatus></gfxBlacklistEntry>
     <gfxBlacklistEntry  blockID="g278">      <os>WINNT 6.1</os>      <vendor>0x1002</vendor>              <devices>
                       <device>0x9802</device>
                       <device>0x9803</device>
@@ -3549,7 +3642,7 @@
                       <device>0x9806</device>
                       <device>0x9807</device>
                   </devices>
-            <feature>DIRECT2D</feature>      <featureStatus>BLOCKED_DEVICE</featureStatus>    </gfxBlacklistEntry>
+            <feature>DIRECT2D</feature>      <featureStatus>BLOCKED_DEVICE</featureStatus></gfxBlacklistEntry>
     <gfxBlacklistEntry  blockID="g280">      <os>WINNT 6.1</os>      <vendor>0x1002</vendor>              <devices>
                       <device>0x9802</device>
                       <device>0x9803</device>
@@ -3559,8 +3652,8 @@
                       <device>0x9806</device>
                       <device>0x9807</device>
                   </devices>
-            <feature>DIRECT3D_9_LAYERS</feature>      <featureStatus>BLOCKED_DEVICE</featureStatus>    </gfxBlacklistEntry>
-    <gfxBlacklistEntry  blockID="g511">      <os>WINNT 5.1</os>      <vendor>0x8086</vendor>            <feature>DIRECT3D_9_LAYERS</feature>      <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>      <driverVersion>6.14.10.5218</driverVersion>      <driverVersionComparator>LESS_THAN</driverVersionComparator>    </gfxBlacklistEntry>
+            <feature>DIRECT3D_9_LAYERS</feature>      <featureStatus>BLOCKED_DEVICE</featureStatus></gfxBlacklistEntry>
+    <gfxBlacklistEntry  blockID="g511">      <os>WINNT 5.1</os>      <vendor>0x8086</vendor>            <feature>DIRECT3D_9_LAYERS</feature>      <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>      <driverVersion>6.14.10.5218</driverVersion>      <driverVersionComparator>LESS_THAN</driverVersionComparator></gfxBlacklistEntry>
     <gfxBlacklistEntry  blockID="g974">      <os>WINNT 10.0</os>      <vendor>0x1002</vendor>              <devices>
                       <device>0x6920</device>
                       <device>0x6921</device>
@@ -3583,8 +3676,8 @@
                       <device>0x9876</device>
                       <device>0x9877</device>
                   </devices>
-            <feature>DIRECT2D</feature>      <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>      <driverVersion>15.201.1151.0</driverVersion>      <driverVersionComparator>LESS_THAN</driverVersionComparator>    </gfxBlacklistEntry>
-    <gfxBlacklistEntry  blockID="g984">      <os>All</os>      <vendor>0x8086</vendor>            <feature>DIRECT2D</feature>      <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>      <driverVersion>8.15.10.2413</driverVersion>      <driverVersionComparator>LESS_THAN_OR_EQUAL</driverVersionComparator>    </gfxBlacklistEntry>
+            <feature>DIRECT2D</feature>      <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>      <driverVersion>15.201.1151.0</driverVersion>      <driverVersionComparator>LESS_THAN</driverVersionComparator></gfxBlacklistEntry>
+    <gfxBlacklistEntry  blockID="g984">      <os>All</os>      <vendor>0x8086</vendor>            <feature>DIRECT2D</feature>      <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>      <driverVersion>8.15.10.2413</driverVersion>      <driverVersionComparator>LESS_THAN_OR_EQUAL</driverVersionComparator></gfxBlacklistEntry>
     <gfxBlacklistEntry  blockID="g992">      <os>WINNT 8.1</os>      <vendor>0x1002</vendor>              <devices>
                       <device>0x6920</device>
                       <device>0x6921</device>
@@ -3607,8 +3700,7 @@
                       <device>0x9876</device>
                       <device>0x9877</device>
                   </devices>
-            <feature>DIRECT2D</feature>      <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>      <driverVersion>15.201.1151.0</driverVersion>      <driverVersionComparator>LESS_THAN</driverVersionComparator>    </gfxBlacklistEntry>
-    <gfxBlacklistEntry  blockID="g1057">      <os>WINNT 5.1</os>      <vendor>0x8086</vendor>            <feature>WEBGL_ANGLE</feature>      <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>      <driverVersion>6.14.10.5218</driverVersion>      <driverVersionComparator>LESS_THAN</driverVersionComparator>    </gfxBlacklistEntry>
+            <feature>DIRECT2D</feature>      <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>      <driverVersion>15.201.1151.0</driverVersion>      <driverVersionComparator>LESS_THAN</driverVersionComparator></gfxBlacklistEntry>
     <gfxBlacklistEntry  blockID="g1068">      <os>All</os>      <vendor>0x8086</vendor>              <devices>
                       <device>0x2a42</device>
                       <device>0x2e22</device>
@@ -3616,7 +3708,7 @@
                       <device>0x2e32</device>
                       <device>0x0046</device>
                   </devices>
-            <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>      <driverVersion>8.15.10.1851</driverVersion>      <driverVersionComparator>EQUAL</driverVersionComparator>    </gfxBlacklistEntry>
+            <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>      <driverVersion>8.15.10.1851</driverVersion>      <driverVersionComparator>EQUAL</driverVersionComparator></gfxBlacklistEntry>
     <gfxBlacklistEntry  blockID="g1069">      <os>All</os>      <vendor>0x8086</vendor>              <devices>
                       <device>0x2a42</device>
                       <device>0x2e22</device>
@@ -3624,7 +3716,7 @@
                       <device>0x2e32</device>
                       <device>0x0046</device>
                   </devices>
-            <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>      <driverVersion>8.15.10.1855</driverVersion>      <driverVersionComparator>EQUAL</driverVersionComparator>    </gfxBlacklistEntry>
+            <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>      <driverVersion>8.15.10.1855</driverVersion>      <driverVersionComparator>EQUAL</driverVersionComparator></gfxBlacklistEntry>
     <gfxBlacklistEntry  blockID="g1070">      <os>All</os>      <vendor>0x8086</vendor>              <devices>
                       <device>0x2a42</device>
                       <device>0x2e22</device>
@@ -3632,7 +3724,7 @@
                       <device>0x2e32</device>
                       <device>0x0046</device>
                   </devices>
-            <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>      <driverVersion>8.15.10.1872</driverVersion>      <driverVersionComparator>EQUAL</driverVersionComparator>    </gfxBlacklistEntry>
+            <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>      <driverVersion>8.15.10.1872</driverVersion>      <driverVersionComparator>EQUAL</driverVersionComparator></gfxBlacklistEntry>
     <gfxBlacklistEntry  blockID="g1071">      <os>All</os>      <vendor>0x8086</vendor>              <devices>
                       <device>0x2a42</device>
                       <device>0x2e22</device>
@@ -3640,7 +3732,7 @@
                       <device>0x2e32</device>
                       <device>0x0046</device>
                   </devices>
-            <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>      <driverVersion>8.15.10.1883</driverVersion>      <driverVersionComparator>EQUAL</driverVersionComparator>    </gfxBlacklistEntry>
+            <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>      <driverVersion>8.15.10.1883</driverVersion>      <driverVersionComparator>EQUAL</driverVersionComparator></gfxBlacklistEntry>
     <gfxBlacklistEntry  blockID="g1072">      <os>All</os>      <vendor>0x8086</vendor>              <devices>
                       <device>0x2a42</device>
                       <device>0x2e22</device>
@@ -3648,7 +3740,7 @@
                       <device>0x2e32</device>
                       <device>0x0046</device>
                   </devices>
-            <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>      <driverVersion>8.15.10.1892</driverVersion>      <driverVersionComparator>EQUAL</driverVersionComparator>    </gfxBlacklistEntry>
+            <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>      <driverVersion>8.15.10.1892</driverVersion>      <driverVersionComparator>EQUAL</driverVersionComparator></gfxBlacklistEntry>
     <gfxBlacklistEntry  blockID="g1073">      <os>All</os>      <vendor>0x8086</vendor>              <devices>
                       <device>0x2a42</device>
                       <device>0x2e22</device>
@@ -3656,7 +3748,7 @@
                       <device>0x2e32</device>
                       <device>0x0046</device>
                   </devices>
-            <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>      <driverVersion>8.15.10.1994</driverVersion>      <driverVersionComparator>EQUAL</driverVersionComparator>    </gfxBlacklistEntry>
+            <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>      <driverVersion>8.15.10.1994</driverVersion>      <driverVersionComparator>EQUAL</driverVersionComparator></gfxBlacklistEntry>
     <gfxBlacklistEntry  blockID="g1124">      <os>All</os>      <vendor>0x8086</vendor>              <devices>
                       <device>0x2a42</device>
                       <device>0x2e22</device>
@@ -3664,14 +3756,15 @@
                       <device>0x2e32</device>
                       <device>0x0046</device>
                   </devices>
-            <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>      <driverVersion>8.15.10.2086</driverVersion>      <driverVersionComparator>EQUAL</driverVersionComparator>    </gfxBlacklistEntry>
-    <gfxBlacklistEntry  blockID="g1215">      <os>WINNT 5.1</os>      <vendor>0x8086</vendor>            <feature>HARDWARE_VIDEO_DECODING</feature>      <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>      <driverVersion>10.18.10.3947</driverVersion>      <driverVersionComparator>EQUAL</driverVersionComparator>    </gfxBlacklistEntry>
-    <gfxBlacklistEntry  blockID="g1216">      <os>WINNT 5.2</os>      <vendor>0x8086</vendor>            <feature>HARDWARE_VIDEO_DECODING</feature>      <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>      <driverVersion>10.18.10.3947</driverVersion>      <driverVersionComparator>EQUAL</driverVersionComparator>    </gfxBlacklistEntry>
-    <gfxBlacklistEntry  blockID="g1217">      <os>WINNT 6.0</os>      <vendor>0x8086</vendor>            <feature>HARDWARE_VIDEO_DECODING</feature>      <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>      <driverVersion>10.18.10.3947</driverVersion>      <driverVersionComparator>EQUAL</driverVersionComparator>    </gfxBlacklistEntry>
-    <gfxBlacklistEntry  blockID="g1218">      <os>WINNT 6.1</os>      <vendor>0x8086</vendor>            <feature>HARDWARE_VIDEO_DECODING</feature>      <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>      <driverVersion>10.18.10.3947</driverVersion>      <driverVersionComparator>EQUAL</driverVersionComparator>    </gfxBlacklistEntry>
-    <gfxBlacklistEntry  blockID="g1219">      <os>WINNT 6.2</os>      <vendor>0x8086</vendor>            <feature>HARDWARE_VIDEO_DECODING</feature>      <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>      <driverVersion>10.18.10.3947</driverVersion>      <driverVersionComparator>EQUAL</driverVersionComparator>    </gfxBlacklistEntry>
-    <gfxBlacklistEntry  blockID="g1220">      <os>WINNT 6.3</os>      <vendor>0x8086</vendor>            <feature>HARDWARE_VIDEO_DECODING</feature>      <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>      <driverVersion>10.18.10.3947</driverVersion>      <driverVersionComparator>EQUAL</driverVersionComparator>    </gfxBlacklistEntry>
-    <gfxBlacklistEntry  blockID="g1221">      <os>WINNT 10.0</os>      <vendor>0x8086</vendor>            <feature>HARDWARE_VIDEO_DECODING</feature>      <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>      <driverVersion>10.18.10.3947</driverVersion>      <driverVersionComparator>EQUAL</driverVersionComparator>    </gfxBlacklistEntry>
+            <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>      <driverVersion>8.15.10.2086</driverVersion>      <driverVersionComparator>EQUAL</driverVersionComparator></gfxBlacklistEntry>
+    <gfxBlacklistEntry  blockID="g1215">      <os>WINNT 5.1</os>      <vendor>0x8086</vendor>            <feature>HARDWARE_VIDEO_DECODING</feature>      <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>      <driverVersion>10.18.10.3947</driverVersion>      <driverVersionComparator>EQUAL</driverVersionComparator></gfxBlacklistEntry>
+    <gfxBlacklistEntry  blockID="g1216">      <os>WINNT 5.2</os>      <vendor>0x8086</vendor>            <feature>HARDWARE_VIDEO_DECODING</feature>      <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>      <driverVersion>10.18.10.3947</driverVersion>      <driverVersionComparator>EQUAL</driverVersionComparator></gfxBlacklistEntry>
+    <gfxBlacklistEntry  blockID="g1217">      <os>WINNT 6.0</os>      <vendor>0x8086</vendor>            <feature>HARDWARE_VIDEO_DECODING</feature>      <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>      <driverVersion>10.18.10.3947</driverVersion>      <driverVersionComparator>EQUAL</driverVersionComparator></gfxBlacklistEntry>
+    <gfxBlacklistEntry  blockID="g1218">      <os>WINNT 6.1</os>      <vendor>0x8086</vendor>            <feature>HARDWARE_VIDEO_DECODING</feature>      <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>      <driverVersion>10.18.10.3947</driverVersion>      <driverVersionComparator>EQUAL</driverVersionComparator></gfxBlacklistEntry>
+    <gfxBlacklistEntry  blockID="g1219">      <os>WINNT 6.2</os>      <vendor>0x8086</vendor>            <feature>HARDWARE_VIDEO_DECODING</feature>      <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>      <driverVersion>10.18.10.3947</driverVersion>      <driverVersionComparator>EQUAL</driverVersionComparator></gfxBlacklistEntry>
+    <gfxBlacklistEntry  blockID="g1220">      <os>WINNT 6.3</os>      <vendor>0x8086</vendor>            <feature>HARDWARE_VIDEO_DECODING</feature>      <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>      <driverVersion>10.18.10.3947</driverVersion>      <driverVersionComparator>EQUAL</driverVersionComparator></gfxBlacklistEntry>
+    <gfxBlacklistEntry  blockID="g1221">      <os>WINNT 10.0</os>      <vendor>0x8086</vendor>            <feature>HARDWARE_VIDEO_DECODING</feature>      <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>      <driverVersion>10.18.10.3947</driverVersion>      <driverVersionComparator>EQUAL</driverVersionComparator></gfxBlacklistEntry>
+    <gfxBlacklistEntry  blockID="g1251">      <os>WINNT 5.1</os>      <vendor>0x8086</vendor>            <feature>WEBGL_ANGLE</feature>      <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>      <driverVersion>6.14.10.5218</driverVersion>      <driverVersionComparator>LESS_THAN</driverVersionComparator><versionRange  maxVersion="49.9" /></gfxBlacklistEntry>
     </gfxItems>
 
   <certItems>
@@ -3693,10 +3786,10 @@
         <certItem issuerName="MGExCzAJBgNVBAYTAk5MMR4wHAYDVQQKDBVTdGFhdCBkZXIgTmVkZXJsYW5kZW4xMjAwBgNVBAMMKVN0YWF0IGRlciBOZWRlcmxhbmRlbiBPcmdhbmlzYXRpZSBDQSAtIEcy">
       <serialNumber>ATE0vw==</serialNumber>
     </certItem>
-        <certItem issuerName="MFkxCzAJBgNVBAYTAk5MMR4wHAYDVQQKExVTdGFhdCBkZXIgTmVkZXJsYW5kZW4xKjAoBgNVBAMTIVN0YWF0IGRlciBOZWRlcmxhbmRlbiBPdmVyaGVpZCBDQQ">
+        <certItem issuerName="MFkxCzAJBgNVBAYTAk5MMR4wHAYDVQQKExVTdGFhdCBkZXIgTmVkZXJsYW5kZW4xKjAoBgNVBAMTIVN0YWF0IGRlciBOZWRlcmxhbmRlbiBPdmVyaGVpZCBDQQ==">
       <serialNumber>ATFpsA==</serialNumber>
     </certItem>
-        <certItem issuerName="MFkxCzAJBgNVBAYTAk5MMR4wHAYDVQQKExVTdGFhdCBkZXIgTmVkZXJsYW5kZW4xKjAoBgNVBAMTIVN0YWF0IGRlciBOZWRlcmxhbmRlbiBPdmVyaGVpZCBDQQ">
+        <certItem issuerName="MFkxCzAJBgNVBAYTAk5MMR4wHAYDVQQKExVTdGFhdCBkZXIgTmVkZXJsYW5kZW4xKjAoBgNVBAMTIVN0YWF0IGRlciBOZWRlcmxhbmRlbiBPdmVyaGVpZCBDQQ==">
       <serialNumber>ATFEdg==</serialNumber>
     </certItem>
         <certItem issuerName="MDcxJDAiBgNVBAMTG1JDUyBDZXJ0aWZpY2F0aW9uIEF1dGhvcml0eTEPMA0GA1UEChMGSFQgc3Js">
@@ -4013,6 +4106,54 @@
     </certItem>
         <certItem issuerName="MIG1MQswCQYDVQQGEwJVUzEXMBUGA1UEChMOVmVyaVNpZ24sIEluYy4xHzAdBgNVBAsTFlZlcmlTaWduIFRydXN0IE5ldHdvcmsxOzA5BgNVBAsTMlRlcm1zIG9mIHVzZSBhdCBodHRwczovL3d3dy52ZXJpc2lnbi5jb20vcnBhIChjKTEwMS8wLQYDVQQDEyZWZXJpU2lnbiBDbGFzcyAzIFNlY3VyZSBTZXJ2ZXIgQ0EgLSBHMw==">
       <serialNumber>NvEJoRYL2yvAZrAjbDIipQ==</serialNumber>
+    </certItem>
+        <certItem issuerName="MIG8MQswCQYDVQQGEwJVUzEXMBUGA1UEChMOVmVyaVNpZ24sIEluYy4xHzAdBgNVBAsTFlZlcmlTaWduIFRydXN0IE5ldHdvcmsxOzA5BgNVBAsTMlRlcm1zIG9mIHVzZSBhdCBodHRwczovL3d3dy52ZXJpc2lnbi5jb20vcnBhIChjKTEwMTYwNAYDVQQDEy1WZXJpU2lnbiBDbGFzcyAzIEludGVybmF0aW9uYWwgU2VydmVyIENBIC0gRzM=">
+      <serialNumber>fWK0j/Vi8vNWg3VAGjc02w==</serialNumber>
+    </certItem>
+        <certItem issuerName="MIG8MQswCQYDVQQGEwJVUzEXMBUGA1UEChMOVmVyaVNpZ24sIEluYy4xHzAdBgNVBAsTFlZlcmlTaWduIFRydXN0IE5ldHdvcmsxOzA5BgNVBAsTMlRlcm1zIG9mIHVzZSBhdCBodHRwczovL3d3dy52ZXJpc2lnbi5jb20vcnBhIChjKTEwMTYwNAYDVQQDEy1WZXJpU2lnbiBDbGFzcyAzIEludGVybmF0aW9uYWwgU2VydmVyIENBIC0gRzM=">
+      <serialNumber>UUFV3S2cUidOOv7ESN65Ng==</serialNumber>
+    </certItem>
+        <certItem issuerName="MIG8MQswCQYDVQQGEwJVUzEXMBUGA1UEChMOVmVyaVNpZ24sIEluYy4xHzAdBgNVBAsTFlZlcmlTaWduIFRydXN0IE5ldHdvcmsxOzA5BgNVBAsTMlRlcm1zIG9mIHVzZSBhdCBodHRwczovL3d3dy52ZXJpc2lnbi5jb20vcnBhIChjKTEwMTYwNAYDVQQDEy1WZXJpU2lnbiBDbGFzcyAzIEludGVybmF0aW9uYWwgU2VydmVyIENBIC0gRzM=">
+      <serialNumber>bzTw0uq05TUYEGS98bh0Ww==</serialNumber>
+    </certItem>
+        <certItem issuerName="MIG8MQswCQYDVQQGEwJVUzEXMBUGA1UEChMOVmVyaVNpZ24sIEluYy4xHzAdBgNVBAsTFlZlcmlTaWduIFRydXN0IE5ldHdvcmsxOzA5BgNVBAsTMlRlcm1zIG9mIHVzZSBhdCBodHRwczovL3d3dy52ZXJpc2lnbi5jb20vcnBhIChjKTEwMTYwNAYDVQQDEy1WZXJpU2lnbiBDbGFzcyAzIEludGVybmF0aW9uYWwgU2VydmVyIENBIC0gRzM=">
+      <serialNumber>GtXUVojhwOTkaQ4bTKblEQ==</serialNumber>
+    </certItem>
+        <certItem issuerName="MIG8MQswCQYDVQQGEwJVUzEXMBUGA1UEChMOVmVyaVNpZ24sIEluYy4xHzAdBgNVBAsTFlZlcmlTaWduIFRydXN0IE5ldHdvcmsxOzA5BgNVBAsTMlRlcm1zIG9mIHVzZSBhdCBodHRwczovL3d3dy52ZXJpc2lnbi5jb20vcnBhIChjKTEwMTYwNAYDVQQDEy1WZXJpU2lnbiBDbGFzcyAzIEludGVybmF0aW9uYWwgU2VydmVyIENBIC0gRzM=">
+      <serialNumber>BYyEX2b5+K+myAIR7eXaRQ==</serialNumber>
+    </certItem>
+        <certItem issuerName="MIG8MQswCQYDVQQGEwJVUzEXMBUGA1UEChMOVmVyaVNpZ24sIEluYy4xHzAdBgNVBAsTFlZlcmlTaWduIFRydXN0IE5ldHdvcmsxOzA5BgNVBAsTMlRlcm1zIG9mIHVzZSBhdCBodHRwczovL3d3dy52ZXJpc2lnbi5jb20vcnBhIChjKTEwMTYwNAYDVQQDEy1WZXJpU2lnbiBDbGFzcyAzIEludGVybmF0aW9uYWwgU2VydmVyIENBIC0gRzM=">
+      <serialNumber>VN2yeFexyXjPf34fHGmbhg==</serialNumber>
+    </certItem>
+        <certItem issuerName="MIG8MQswCQYDVQQGEwJVUzEXMBUGA1UEChMOVmVyaVNpZ24sIEluYy4xHzAdBgNVBAsTFlZlcmlTaWduIFRydXN0IE5ldHdvcmsxOzA5BgNVBAsTMlRlcm1zIG9mIHVzZSBhdCBodHRwczovL3d3dy52ZXJpc2lnbi5jb20vcnBhIChjKTEwMTYwNAYDVQQDEy1WZXJpU2lnbiBDbGFzcyAzIEludGVybmF0aW9uYWwgU2VydmVyIENBIC0gRzM=">
+      <serialNumber>A9GPKQ8jv9oIxfwiOy7qxQ==</serialNumber>
+    </certItem>
+        <certItem issuerName="MIG8MQswCQYDVQQGEwJVUzEXMBUGA1UEChMOVmVyaVNpZ24sIEluYy4xHzAdBgNVBAsTFlZlcmlTaWduIFRydXN0IE5ldHdvcmsxOzA5BgNVBAsTMlRlcm1zIG9mIHVzZSBhdCBodHRwczovL3d3dy52ZXJpc2lnbi5jb20vcnBhIChjKTEwMTYwNAYDVQQDEy1WZXJpU2lnbiBDbGFzcyAzIEludGVybmF0aW9uYWwgU2VydmVyIENBIC0gRzM=">
+      <serialNumber>J2La+q+JOURNWkX60OP2lQ==</serialNumber>
+    </certItem>
+        <certItem issuerName="MFAxCzAJBgNVBAYTAkpQMRgwFgYDVQQKEw9TRUNPTSBUcnVzdC5uZXQxJzAlBgNVBAsTHlNlY3VyaXR5IENvbW11bmljYXRpb24gUm9vdENBMQ==">
+      <serialNumber>Ermwxw==</serialNumber>
+    </certItem>
+        <certItem issuerName="MIHKMQswCQYDVQQGEwJVUzEXMBUGA1UEChMOVmVyaVNpZ24sIEluYy4xHzAdBgNVBAsTFlZlcmlTaWduIFRydXN0IE5ldHdvcmsxOjA4BgNVBAsTMShjKSAyMDA3IFZlcmlTaWduLCBJbmMuIC0gRm9yIGF1dGhvcml6ZWQgdXNlIG9ubHkxRTBDBgNVBAMTPFZlcmlTaWduIENsYXNzIDMgUHVibGljIFByaW1hcnkgQ2VydGlmaWNhdGlvbiBBdXRob3JpdHkgLSBHNA==">
+      <serialNumber>cXXMzbWDHMIdCotb3h64yw==</serialNumber>
+    </certItem>
+        <certItem issuerName="MDsxCzAJBgNVBAYTAkVTMREwDwYDVQQKDAhGTk1ULVJDTTEZMBcGA1UECwwQQUMgUkFJWiBGTk1ULVJDTQ==">
+      <serialNumber>BA==</serialNumber>
+    </certItem>
+        <certItem issuerName="MDsxCzAJBgNVBAYTAkVTMREwDwYDVQQKDAhGTk1ULVJDTTEZMBcGA1UECwwQQUMgUkFJWiBGTk1ULVJDTQ==">
+      <serialNumber>BQ==</serialNumber>
+    </certItem>
+        <certItem issuerName="MDsxCzAJBgNVBAYTAkVTMREwDwYDVQQKDAhGTk1ULVJDTTEZMBcGA1UECwwQQUMgUkFJWiBGTk1ULVJDTQ==">
+      <serialNumber>Bg==</serialNumber>
+    </certItem>
+        <certItem issuerName="MDsxCzAJBgNVBAYTAkVTMREwDwYDVQQKDAhGTk1ULVJDTTEZMBcGA1UECwwQQUMgUkFJWiBGTk1ULVJDTQ==">
+      <serialNumber>EA==</serialNumber>
+    </certItem>
+        <certItem issuerName="MDsxCzAJBgNVBAYTAkVTMREwDwYDVQQKDAhGTk1ULVJDTTEZMBcGA1UECwwQQUMgUkFJWiBGTk1ULVJDTQ==">
+      <serialNumber>EQ==</serialNumber>
+    </certItem>
+        <certItem issuerName="MDsxCzAJBgNVBAYTAkVTMREwDwYDVQQKDAhGTk1ULVJDTTEZMBcGA1UECwwQQUMgUkFJWiBGTk1ULVJDTQ==">
+      <serialNumber>Eg==</serialNumber>
     </certItem>
       </certItems>
 

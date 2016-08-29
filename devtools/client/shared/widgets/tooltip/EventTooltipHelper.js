@@ -6,14 +6,8 @@
 
 "use strict";
 
-const Services = require("Services");
-loader.lazyGetter(this, "GetStringFromName", () => {
-  let bundle = Services.strings.createBundle(
-    "chrome://devtools/locale/inspector.properties");
-  return key => {
-    return bundle.GetStringFromName(key);
-  };
-});
+const {LocalizationHelper} = require("devtools/shared/l10n");
+const L10N = new LocalizationHelper("devtools/locale/inspector.properties");
 
 const Editor = require("devtools/client/sourceeditor/editor");
 const beautify = require("devtools/shared/jsbeautify/beautify");
@@ -82,7 +76,7 @@ EventTooltip.prototype = {
         debuggerIcon.className = "event-tooltip-debugger-icon";
         debuggerIcon.setAttribute("src",
           "chrome://devtools/skin/images/tool-debugger.svg");
-        let openInDebugger = GetStringFromName("eventsTooltip.openInDebugger");
+        let openInDebugger = L10N.getStr("eventsTooltip.openInDebugger");
         debuggerIcon.setAttribute("title", openInDebugger);
         header.appendChild(debuggerIcon);
       }

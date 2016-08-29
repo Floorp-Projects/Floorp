@@ -1163,7 +1163,7 @@ KeyframeEffectReadOnly::SetPerformanceWarning(
 
 static already_AddRefed<nsStyleContext>
 CreateStyleContextForAnimationValue(nsCSSPropertyID aProperty,
-                                    StyleAnimationValue aValue,
+                                    const StyleAnimationValue& aValue,
                                     nsStyleContext* aBaseStyleContext)
 {
   MOZ_ASSERT(aBaseStyleContext,

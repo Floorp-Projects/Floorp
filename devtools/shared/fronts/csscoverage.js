@@ -3,10 +3,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const Services = require("Services");
 const {cssUsageSpec} = require("devtools/shared/specs/csscoverage");
 const protocol = require("devtools/shared/protocol");
 const {custom} = protocol;
+
+const {LocalizationHelper} = require("devtools/shared/l10n");
+const L10N = new LocalizationHelper("devtools-shared/locale/csscoverage.properties");
 
 loader.lazyRequireGetter(this, "gDevTools", "devtools/client/framework/devtools", true);
 
@@ -14,13 +16,7 @@ loader.lazyRequireGetter(this, "gDevTools", "devtools/client/framework/devtools"
  * Allow: let foo = l10n.lookup("csscoverageFoo");
  */
 const l10n = exports.l10n = {
-  _URI: "chrome://devtools-shared/locale/csscoverage.properties",
-  lookup: function (msg) {
-    if (this._stringBundle == null) {
-      this._stringBundle = Services.strings.createBundle(this._URI);
-    }
-    return this._stringBundle.GetStringFromName(msg);
-  }
+  lookup: (msg) => L10N.getStr(msg)
 };
 
 /**

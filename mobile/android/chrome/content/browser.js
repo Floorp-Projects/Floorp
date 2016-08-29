@@ -103,6 +103,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "NetErrorHelper",
 XPCOMUtils.defineLazyModuleGetter(this, "PermissionsUtils",
                                   "resource://gre/modules/PermissionsUtils.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "Preferences",
+                                  "resource://gre/modules/Preferences.jsm");
+
 XPCOMUtils.defineLazyModuleGetter(this, "SharedPreferences",
                                   "resource://gre/modules/SharedPreferences.jsm");
 
@@ -3446,6 +3449,10 @@ Tab.prototype = {
     this.browser = document.createElement("browser");
     this.browser.setAttribute("type", "content-targetable");
     this.browser.setAttribute("messagemanagergroup", "browsers");
+
+    if (Preferences.get("browser.tabs.remote.force-enable", false)) {
+      this.browser.setAttribute("remote", "true");
+    }
 
     this.browser.permanentKey = {};
 
