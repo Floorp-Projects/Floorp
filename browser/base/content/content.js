@@ -83,9 +83,7 @@ addEventListener("blur", function(event) {
   LoginManagerContent.onUsernameInput(event);
 });
 
-var gLastContextMenuEvent = null; // null or a WeakReference to a contextmenu event
 var handleContentContextMenu = function (event) {
-  gLastContextMenuEvent = null;
   let defaultPrevented = event.defaultPrevented;
   if (!Services.prefs.getBoolPref("dom.event.contextmenu.enabled")) {
     let plugin = null;
@@ -100,36 +98,8 @@ var handleContentContextMenu = function (event) {
     defaultPrevented = false;
   }
 
-  if (defaultPrevented) {
+  if (defaultPrevented)
     return;
-  }
-
-  if (event.mozInputSource == Ci.nsIDOMMouseEvent.MOZ_SOURCE_TOUCH) {
-    // If this was triggered by touch, then we don't want to show the actual
-    // context menu until we get the APZ:LongTapUp notification. However, we
-    // will need the |event| object when we get that notification, so we save
-    // it in a WeakReference. That way it won't leak things if we never get
-    // the APZ:LongTapUp notification (which is quite possible).
-    gLastContextMenuEvent = Cu.getWeakReference(event);
-    return;
-  }
-
-  // For non-touch-derived contextmenu events, we can handle it right away.
-  showContentContextMenu(event);
-}
-
-var showContentContextMenu = function (event) {
-  if (event == null) {
-    // If we weren't given an event, then this is being invoked from the
-    // APZ:LongTapUp observer, and the contextmenu event is stashed in
-    // gLastContextMenuEvent.
-    event = (gLastContextMenuEvent ? gLastContextMenuEvent.get() : null);
-    gLastContextMenuEvent = null;
-    if (event == null) {
-      // Still no event? We can't do anything, bail out.
-      return;
-    }
-  }
 
   let addonInfo = {};
   let subject = {
@@ -246,11 +216,6 @@ var showContentContextMenu = function (event) {
 Cc["@mozilla.org/eventlistenerservice;1"]
   .getService(Ci.nsIEventListenerService)
   .addSystemEventListener(global, "contextmenu", handleContentContextMenu, false);
-
-Services.obs.addObserver(showContentContextMenu, "APZ:LongTapUp", false);
-addEventListener("unload", () => {
-  Services.obs.removeObserver(showContentContextMenu, "APZ:LongTapUp")
-}, false);
 
 // Values for telemtery bins: see TLS_ERROR_REPORT_UI in Histograms.json
 const TLS_ERROR_REPORT_TELEMETRY_UI_SHOWN = 0;
