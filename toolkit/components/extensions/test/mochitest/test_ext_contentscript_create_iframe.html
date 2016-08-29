@@ -25,7 +25,7 @@
 "use strict";
 
 add_task(function* test_contentscript_create_iframe() {
-  function backgroundScript() {
+  function background() {
     browser.runtime.onMessage.addListener((msg, sender) => {
       let {name, availableAPIs, manifest, testGetManifest} = msg;
       let hasExtTabsAPI = availableAPIs.indexOf("tabs") > 0;
@@ -97,12 +97,12 @@ add_task(function* test_contentscript_create_iframe() {
       ],
     },
 
-    background: "(" + backgroundScript + ")()",
+    background,
 
     files: {
-      "content_script.js": "new " + contentScript,
+      "content_script.js": contentScript,
       "content_script_iframe.html": document.querySelector("#test-asset").textContent,
-      "content_script_iframe.js": "new " + contentScriptIframe,
+      "content_script_iframe.js": contentScriptIframe,
     },
   };
 
