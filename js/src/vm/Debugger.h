@@ -1260,8 +1260,6 @@ class DebuggerObject : public NativeObject
 #ifdef SPIDERMONKEY_PROMISE
     static MOZ_MUST_USE bool getPromiseValue(JSContext* cx, HandleDebuggerObject object,
                                              MutableHandleValue result);
-    static MOZ_MUST_USE bool getPromiseReason(JSContext* cx, HandleDebuggerObject object,
-                                              MutableHandleValue result);
 #endif // SPIDERMONKEY_PROMISE
 
     // Methods
