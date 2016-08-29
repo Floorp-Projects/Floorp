@@ -4301,7 +4301,8 @@ void HTMLMediaElement::MetadataLoaded(const MediaInfo* aInfo,
   // get dispatched.
   AutoNotifyAudioChannelAgent autoNotify(this);
 
-  mMediaInfo = *aInfo;
+  SetMediaInfo(*aInfo);
+
   mIsEncrypted = aInfo->IsEncrypted()
 #ifdef MOZ_EME
                  || mPendingEncryptedInitData.IsEncrypted()
@@ -5509,7 +5510,7 @@ HTMLMediaElement::CopyInnerTo(Element* aDest)
   NS_ENSURE_SUCCESS(rv, rv);
   if (aDest->OwnerDoc()->IsStaticDocument()) {
     HTMLMediaElement* dest = static_cast<HTMLMediaElement*>(aDest);
-    dest->mMediaInfo = mMediaInfo;
+    dest->SetMediaInfo(mMediaInfo);
   }
   return rv;
 }
@@ -6247,46 +6248,10 @@ NS_IMETHODIMP HTMLMediaElement::WindowAudioCaptureChanged(bool aCapture)
 {
   MOZ_ASSERT(mAudioChannelAgent);
 
-  if (!OwnerDoc()->GetInnerWindow()) {
-    return NS_OK;
+  if (mAudioCapturedByWindow != aCapture) {
+    mAudioCapturedByWindow = aCapture;
+    AudioCaptureStreamChangeIfNeeded();
   }
-
-  if (aCapture != mAudioCapturedByWindow) {
-    if (aCapture) {
-      mAudioCapturedByWindow = true;
-      nsCOMPtr<nsPIDOMWindowInner> window = OwnerDoc()->GetInnerWindow();
-      uint64_t id = window->WindowID();
-      MediaStreamGraph* msg =
-        MediaStreamGraph::GetInstance(MediaStreamGraph::AUDIO_THREAD_DRIVER,
-                                      mAudioChannel);
-
-      if (GetSrcMediaStream()) {
-        mCaptureStreamPort = msg->ConnectToCaptureStream(id, GetSrcMediaStream());
-      } else {
-        RefPtr<DOMMediaStream> stream = CaptureStreamInternal(false, msg);
-        mCaptureStreamPort = msg->ConnectToCaptureStream(id, stream->GetPlaybackStream());
-      }
-    } else {
-      mAudioCapturedByWindow = false;
-      if (mDecoder) {
-        ProcessedMediaStream* ps =
-          mCaptureStreamPort->GetSource()->AsProcessedStream();
-        MOZ_ASSERT(ps);
-
-        for (uint32_t i = 0; i < mOutputStreams.Length(); i++) {
-          if (mOutputStreams[i].mStream->GetPlaybackStream() == ps) {
-            mOutputStreams.RemoveElementAt(i);
-            break;
-          }
-        }
-
-        mDecoder->RemoveOutputStream(ps);
-      }
-      mCaptureStreamPort->Destroy();
-      mCaptureStreamPort = nullptr;
-    }
-  }
-
   return NS_OK;
 }
 
@@ -6567,6 +6532,53 @@ HTMLMediaElement::ShouldElementBePaused()
   }
 
   return false;
+}
+
+void
+HTMLMediaElement::SetMediaInfo(const MediaInfo aInfo)
+{
+  mMediaInfo = aInfo;
+  AudioCaptureStreamChangeIfNeeded();
+}
+
+void
+HTMLMediaElement::AudioCaptureStreamChangeIfNeeded()
+{
+  // TODO : only capture media element with audio track, see bug1298777.
+  if (mAudioCapturedByWindow && !mCaptureStreamPort) {
+    nsCOMPtr<nsPIDOMWindowInner> window = OwnerDoc()->GetInnerWindow();
+    if (!OwnerDoc()->GetInnerWindow()) {
+      return;
+    }
+
+    uint64_t id = window->WindowID();
+    MediaStreamGraph* msg =
+      MediaStreamGraph::GetInstance(MediaStreamGraph::AUDIO_THREAD_DRIVER,
+                                    mAudioChannel);
+
+    if (GetSrcMediaStream()) {
+      mCaptureStreamPort = msg->ConnectToCaptureStream(id, GetSrcMediaStream());
+    } else {
+      RefPtr<DOMMediaStream> stream = CaptureStreamInternal(false, msg);
+      mCaptureStreamPort = msg->ConnectToCaptureStream(id, stream->GetPlaybackStream());
+    }
+  } else if (!mAudioCapturedByWindow && mCaptureStreamPort) {
+    if (mDecoder) {
+      ProcessedMediaStream* ps =
+        mCaptureStreamPort->GetSource()->AsProcessedStream();
+      MOZ_ASSERT(ps);
+
+      for (uint32_t i = 0; i < mOutputStreams.Length(); i++) {
+        if (mOutputStreams[i].mStream->GetPlaybackStream() == ps) {
+          mOutputStreams.RemoveElementAt(i);
+          break;
+        }
+      }
+      mDecoder->RemoveOutputStream(ps);
+    }
+    mCaptureStreamPort->Destroy();
+    mCaptureStreamPort = nullptr;
+  }
 }
 
 void
