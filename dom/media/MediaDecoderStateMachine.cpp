@@ -1093,6 +1093,9 @@ MediaDecoderStateMachine::EnterState(State aState)
       Reset();
       mReader->ReleaseResources();
       break;
+    case DECODER_STATE_DECODING:
+      StartDecoding();
+      break;
     case DECODER_STATE_COMPLETED:
       ScheduleStateMachine();
       break;
@@ -1254,11 +1257,11 @@ MediaDecoderStateMachine::Shutdown()
     ->CompletionPromise();
 }
 
-void MediaDecoderStateMachine::StartDecoding()
+void
+MediaDecoderStateMachine::StartDecoding()
 {
   MOZ_ASSERT(OnTaskQueue());
-  MOZ_ASSERT(mState != DECODER_STATE_DECODING);
-  SetState(DECODER_STATE_DECODING);
+  MOZ_ASSERT(mState == DECODER_STATE_DECODING);
 
   if (mDecodingFirstFrame && mSentFirstFrameLoadedEvent) {
     // We're resuming from dormant state, so we don't need to request
@@ -1327,7 +1330,7 @@ void MediaDecoderStateMachine::PlayStateChanged()
   // we are currently buffering. In other cases, we'll start playing anyway
   // when the state machine notices the decoder's state change to PLAYING.
   if (mState == DECODER_STATE_BUFFERING) {
-    StartDecoding();
+    SetState(DECODER_STATE_DECODING);
   }
 
   ScheduleStateMachine();
@@ -2026,7 +2029,7 @@ MediaDecoderStateMachine::OnMetadataRead(MetadataHolder* aMetadata)
     return;
   }
 
-  StartDecoding();
+  SetState(DECODER_STATE_DECODING);
 
   ScheduleStateMachine();
 }
@@ -2185,7 +2188,7 @@ MediaDecoderStateMachine::SeekCompleted()
   }
 
   if (nextState == DECODER_STATE_DECODING) {
-    StartDecoding();
+    SetState(DECODER_STATE_DECODING);
   } else {
     SetState(nextState);
   }
@@ -2344,7 +2347,7 @@ nsresult MediaDecoderStateMachine::RunStateMachine()
 
       DECODER_LOG("Changed state from BUFFERING to DECODING");
       DECODER_LOG("Buffered for %.3lfs", (now - mBufferingStart).ToSeconds());
-      StartDecoding();
+      SetState(DECODER_STATE_DECODING);
 
       NS_ASSERTION(IsStateMachineScheduled(), "Must have timer scheduled");
       return NS_OK;
@@ -2768,7 +2771,7 @@ MediaDecoderStateMachine::OnCDMProxyReady(RefPtr<CDMProxy> aProxy)
   mCDMProxy = aProxy;
   mReader->SetCDMProxy(aProxy);
   if (mState == DECODER_STATE_WAIT_FOR_CDM) {
-    StartDecoding();
+    SetState(DECODER_STATE_DECODING);
   }
 }
 
