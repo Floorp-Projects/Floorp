@@ -990,11 +990,7 @@ MediaDecoderStateMachine::MaybeStartBuffering()
                      (OutOfDecodedVideo() && mReader->IsWaitingVideoData());
     }
     if (shouldBuffer) {
-      StartBuffering();
-      // Don't go straight back to the state machine loop since that might
-      // cause us to start decoding again and we could flip-flop between
-      // decoding and quick-buffering.
-      ScheduleStateMachineIn(USECS_PER_S);
+      SetState(DECODER_STATE_BUFFERING);
     }
   }
 }
@@ -1095,6 +1091,9 @@ MediaDecoderStateMachine::EnterState(State aState)
       break;
     case DECODER_STATE_DECODING:
       StartDecoding();
+      break;
+    case DECODER_STATE_BUFFERING:
+      StartBuffering();
       break;
     case DECODER_STATE_COMPLETED:
       ScheduleStateMachine();
@@ -2566,10 +2565,11 @@ MediaDecoderStateMachine::GetStatistics()
   return result;
 }
 
-void MediaDecoderStateMachine::StartBuffering()
+void
+MediaDecoderStateMachine::StartBuffering()
 {
   MOZ_ASSERT(OnTaskQueue());
-  MOZ_ASSERT(mState == DECODER_STATE_DECODING);
+  MOZ_ASSERT(mState == DECODER_STATE_BUFFERING);
 
   if (IsPlaying()) {
     StopPlayback();
@@ -2584,13 +2584,17 @@ void MediaDecoderStateMachine::StartBuffering()
     decodeDuration < UsecsToDuration(QUICK_BUFFER_THRESHOLD_USECS);
   mBufferingStart = TimeStamp::Now();
 
-  SetState(DECODER_STATE_BUFFERING);
   DECODER_LOG("Changed state from DECODING to BUFFERING, decoded for %.3lfs",
               decodeDuration.ToSeconds());
   MediaStatistics stats = GetStatistics();
   DECODER_LOG("Playback rate: %.1lfKB/s%s download rate: %.1lfKB/s%s",
               stats.mPlaybackRate/1024, stats.mPlaybackRateReliable ? "" : " (unreliable)",
               stats.mDownloadRate/1024, stats.mDownloadRateReliable ? "" : " (unreliable)");
+
+  // Don't go straight back to the state machine loop since that might
+  // cause us to start decoding again and we could flip-flop between
+  // decoding and quick-buffering.
+  ScheduleStateMachineIn(USECS_PER_S);
 }
 
 void
