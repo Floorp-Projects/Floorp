@@ -744,6 +744,8 @@ public:
   bool ComputedMuted() const;
   nsSuspendedTypes ComputedSuspended() const;
 
+  void SetMediaInfo(const MediaInfo aInfo);
+
 protected:
   virtual ~HTMLMediaElement();
 
@@ -1223,6 +1225,9 @@ protected:
 
   // Determine if the element should be paused because of suspend conditions.
   bool ShouldElementBePaused();
+
+  // Create or destroy the captured stream depend on mAudioCapturedByWindow.
+  void AudioCaptureStreamChangeIfNeeded();
 
   /**
    * We have different kinds of suspended cases,
