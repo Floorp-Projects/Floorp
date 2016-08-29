@@ -5765,11 +5765,6 @@ HTMLMediaElement::IsPlayingThroughTheAudioChannel() const
     return false;
   }
 
-  // If this element doesn't have any audio tracks.
-  if (!HasAudio()) {
-    return false;
-  }
-
   // We should consider any bfcached page or inactive document as non-playing.
   if (!IsActive()) {
     return false;
@@ -5777,11 +5772,6 @@ HTMLMediaElement::IsPlayingThroughTheAudioChannel() const
 
   // A loop always is playing
   if (HasAttr(kNameSpaceID_None, nsGkAtoms::loop)) {
-    return true;
-  }
-
-  // If we are actually playing...
-  if (IsCurrentlyPlaying()) {
     return true;
   }
 
@@ -5795,7 +5785,7 @@ HTMLMediaElement::IsPlayingThroughTheAudioChannel() const
     return true;
   }
 
-  return false;
+  return true;
 }
 
 void
@@ -6256,7 +6246,6 @@ HTMLMediaElement::CannotDecryptWaitingForKey()
 NS_IMETHODIMP HTMLMediaElement::WindowAudioCaptureChanged(bool aCapture)
 {
   MOZ_ASSERT(mAudioChannelAgent);
-  MOZ_ASSERT(HasAudio());
 
   if (!OwnerDoc()->GetInnerWindow()) {
     return NS_OK;
