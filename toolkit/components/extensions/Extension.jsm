@@ -1448,6 +1448,11 @@ Extension.prototype = extend(Object.create(ExtensionData.prototype), {
 
       GlobalManager.init(this);
 
+      // The "startup" Management event sent on the extension instance itself
+      // is emitted just before the Management "startup" event,
+      // and it is used to run code that needs to be executed before
+      // any of the "startup" listeners.
+      this.emit("startup", this);
       Management.emit("startup", this);
 
       return this.runManifest(this.manifest);
