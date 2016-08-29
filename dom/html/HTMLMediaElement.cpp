@@ -1020,6 +1020,9 @@ void HTMLMediaElement::AbortExistingLoads()
   if (mTextTrackManager) {
     mTextTrackManager->NotifyReset();
   }
+
+  mEventDeliveryPaused = false;
+  mPendingEvents.Clear();
 }
 
 void HTMLMediaElement::NoSupportedMediaSourceError()
@@ -3053,9 +3056,28 @@ HTMLMediaElement::PlayInternal()
     mCurrentPlayRangeStart = CurrentTime();
   }
 
+  bool oldPaused = mPaused;
+  mPaused = false;
+  mAutoplaying = false;
+  SetAudioChannelSuspended(nsISuspendedTypes::NONE_SUSPENDED);
+
+  // We changed mPaused and mAutoplaying which can affect AddRemoveSelfReference
+  // and our preload status.
+  AddRemoveSelfReference();
+  UpdatePreloadAction();
+  UpdateSrcMediaStreamPlaying();
+  UpdateAudioChannelPlayingState();
+
+  // The check here is to handle the case that the media element starts playing
+  // after it loaded fail. eg. preload the data before playing.
+  OpenUnsupportedMediaWithExtenalAppIfNeeded();
+
+  // We should check audio channel playing state before dispatching any events,
+  // because we don't want to dispatch events for blocked media. For blocked
+  // media, the event would be pending until media is resumed.
   // TODO: If the playback has ended, then the user agent must set
   // seek to the effective start.
-  if (mPaused) {
+  if (oldPaused) {
     DispatchAsyncEvent(NS_LITERAL_STRING("play"));
     switch (mReadyState) {
     case nsIDOMHTMLMediaElement::HAVE_NOTHING:
@@ -3073,21 +3095,6 @@ HTMLMediaElement::PlayInternal()
       break;
     }
   }
-
-  mPaused = false;
-  mAutoplaying = false;
-  SetAudioChannelSuspended(nsISuspendedTypes::NONE_SUSPENDED);
-
-  // We changed mPaused and mAutoplaying which can affect AddRemoveSelfReference
-  // and our preload status.
-  AddRemoveSelfReference();
-  UpdatePreloadAction();
-  UpdateSrcMediaStreamPlaying();
-  UpdateAudioChannelPlayingState();
-
-  // The check here is to handle the case that the media element starts playing
-  // after it loaded fail. eg. preload the data before playing.
-  OpenUnsupportedMediaWithExtenalAppIfNeeded();
 
   return NS_OK;
 }
@@ -3786,10 +3793,6 @@ nsresult HTMLMediaElement::FinishDecoderSetup(MediaDecoder* aDecoder,
   // Force a same-origin check before allowing events for this media resource.
   mMediaSecurityVerified = false;
 
-  // The new stream has not been suspended by us.
-  mPausedForInactiveDocumentOrChannel = false;
-  mEventDeliveryPaused = false;
-  mPendingEvents.Clear();
   // Set mDecoder now so if methods like GetCurrentSrc get called between
   // here and Load(), they work.
   SetDecoder(aDecoder);
@@ -5938,7 +5941,7 @@ HTMLMediaElement::ResumeFromAudioChannelBlocked()
   MOZ_ASSERT(mAudioChannelSuspended == nsISuspendedTypes::SUSPENDED_BLOCK);
 
   SetAudioChannelSuspended(nsISuspendedTypes::NONE_SUSPENDED);
-  mPaused.SetCanPlay(true);
+  mPaused = false;
   SuspendOrResumeElement(false /* resume */, false);
 }
 
@@ -5962,8 +5965,8 @@ HTMLMediaElement::BlockByAudioChannel()
   }
 
   SetAudioChannelSuspended(nsISuspendedTypes::SUSPENDED_BLOCK);
-  SuspendOrResumeElement(true /* suspend */, false);
-  mPaused.SetCanPlay(false);
+  mPaused = true;
+  SuspendOrResumeElement(true /* suspend */, true /* pending event */);
 }
 
 void
