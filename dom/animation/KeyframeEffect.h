@@ -349,6 +349,10 @@ protected:
   already_AddRefed<nsStyleContext>
   GetTargetStyleContext();
 
+  // A wrapper for marking cascade update according to the current
+  // target and its effectSet.
+  void MarkCascadeNeedsUpdate();
+
   Maybe<OwningAnimationTarget> mTarget;
 
   KeyframeEffectParams mEffectOptions;
