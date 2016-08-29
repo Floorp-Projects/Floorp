@@ -143,14 +143,7 @@ function play_nonautoplay_audio_should_be_blocked(suspendedType) {
   }
 
   nonAutoPlay.play();
-  return new Promise(resolve => {
-    nonAutoPlay.onplay = function () {
-      nonAutoPlay.onplay = null;
-      is(nonAutoPlay.computedSuspended, suspendedType,
-         "The suspeded state of non-autoplay audio is correct.");
-      resolve();
-    }
-  });
+  ok(nonAutoPlay.paused, "The blocked audio can't be playback.");
 }
 
 function* suspended_pause(url, browser) {
