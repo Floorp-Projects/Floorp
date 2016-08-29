@@ -613,17 +613,32 @@ function* test(testDriver) {
     flushApzRepaints(testDriver);
   });
 
-  utils.forceReflowInterrupt();
-  // Trigger the frame reconstruction. The reflow that results will be
-  // interrupted, and we should end up with a transient 0,0 scroll offset.
-  elm.parentNode.classList.add('contentBefore');
-  yield waitForAllPaints(function() {
-    flushApzRepaints(testDriver);
-  });
+  // Take control of the refresh driver
+  utils.advanceTimeAndRefresh(0);
 
+  // Force the next reflow to get interrupted
+  utils.forceReflowInterrupt();
+
+  // Make a change that triggers frame reconstruction, and then tick the refresh
+  // driver so that layout processes the pending restyles and then runs an
+  // interruptible reflow. That reflow *will* be interrupted (because of the flag
+  // we set above), and we should end up with a transient 0,0 scroll offset
+  // being sent to the compositor.
+  elm.parentNode.classList.add('contentBefore');
+  utils.advanceTimeAndRefresh(0);
+  // On android, and maybe non-e10s platforms generally, we need to manually
+  // kick the paint to send the layer transaction to the compositor.
+  yield waitForAllPaints(function() { setTimeout(testDriver, 0) });
+
+  // Read the main-thread scroll offset; although this is temporarily 0,0 that
+  // temporary value is never exposed to content - instead reading this value
+  // will finish doing the interrupted reflow from above and then report the
+  // correct scroll offset.
   is(elm.scrollTop, maxScroll, "Main-thread scroll position was restored");
 
-  // Ensure the interrupted reflow finished and got pushed to the APZ
+  // .. and now flush everything to make sure the state gets pushed over to the
+  // compositor and APZ as well.
+  utils.restoreNormalRefresh();
   yield waitForApzFlushedRepaints(testDriver);
 
   // Now we pull the compositor data and check it. What we expect to see is that
