@@ -399,7 +399,7 @@ VideoSink::UpdateRenderedVideoFrames()
   // Skip frames up to the playback position.
   int64_t lastDisplayedFrameEndTime = 0;
   while (VideoQueue().GetSize() > mMinVideoQueueSize &&
-         clockTime > VideoQueue().PeekFront()->GetEndTime()) {
+         clockTime >= VideoQueue().PeekFront()->GetEndTime()) {
     RefPtr<MediaData> frame = VideoQueue().PopFront();
     if (frame->As<VideoData>()->mSentToCompositor) {
       lastDisplayedFrameEndTime = frame->GetEndTime();
