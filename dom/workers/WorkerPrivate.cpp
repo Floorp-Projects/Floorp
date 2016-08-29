@@ -1050,7 +1050,8 @@ public:
               const nsString& aLine, uint32_t aLineNumber,
               uint32_t aColumnNumber, uint32_t aFlags,
               uint32_t aErrorNumber, JSExnType aExnType,
-              bool aMutedError, uint64_t aInnerWindowId)
+              bool aMutedError, uint64_t aInnerWindowId,
+              JS::Handle<JS::Value> aException = JS::NullHandleValue)
   {
     if (aWorkerPrivate) {
       aWorkerPrivate->AssertIsOnWorkerThread();
@@ -1070,6 +1071,7 @@ public:
         init.mMessage = aMessage;
         init.mFilename = aFilename;
         init.mLineno = aLineNumber;
+        init.mError = aException;
       }
 
       init.mCancelable = true;
@@ -5919,6 +5921,12 @@ WorkerPrivate::ReportError(JSContext* aCx, const char* aFallbackMessage,
                mErrorHandlerRecursionCount == 1,
                "Bad recursion logic!");
 
+  JS::Rooted<JS::Value> exn(aCx);
+  if (!JS_GetPendingException(aCx, &exn)) {
+    // Probably shouldn't actually happen?  But let's go ahead and just use null
+    // for lack of anything better.
+    exn.setNull();
+  }
   JS_ClearPendingException(aCx);
 
   nsString message, filename, line;
@@ -5966,7 +5974,7 @@ WorkerPrivate::ReportError(JSContext* aCx, const char* aFallbackMessage,
   ReportErrorRunnable::ReportError(aCx, this, fireAtScope, nullptr, message,
                                    filename, line, lineNumber,
                                    columnNumber, flags, errorNumber, exnType,
-                                   mutedError, 0);
+                                   mutedError, 0, exn);
 
   mErrorHandlerRecursionCount--;
 }
