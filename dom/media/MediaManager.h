@@ -72,8 +72,7 @@ public:
   void SetId(const nsAString& aID);
   void SetRawId(const nsAString& aID);
   virtual uint32_t GetBestFitnessDistance(
-      const nsTArray<const NormalizedConstraintSet*>& aConstraintSets,
-      bool aIsChrome);
+      const nsTArray<const NormalizedConstraintSet*>& aConstraintSets);
   virtual Source* GetSource() = 0;
   nsresult Allocate(const dom::MediaTrackConstraints &aConstraints,
                     const MediaEnginePrefs &aPrefs,
@@ -290,7 +289,6 @@ private:
   already_AddRefed<PledgeChar>
   SelectSettings(
       dom::MediaStreamConstraints& aConstraints,
-      bool aIsChrome,
       RefPtr<media::Refcountable<UniquePtr<SourceSet>>>& aSources);
 
   StreamListeners* AddWindowID(uint64_t aWindowId);
