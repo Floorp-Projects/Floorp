@@ -4963,12 +4963,15 @@ void HTMLMediaElement::CheckAutoplayDataReady()
     if (mCurrentPlayRangeStart == -1.0) {
       mCurrentPlayRangeStart = CurrentTime();
     }
-    mDecoder->Play();
+    if (!ShouldElementBePaused()) {
+      mDecoder->Play();
+    }
   } else if (mSrcStream) {
     SetPlayedOrSeeked(true);
   }
-  DispatchAsyncEvent(NS_LITERAL_STRING("play"));
 
+  // For blocked media, the event would be pending until it is resumed.
+  DispatchAsyncEvent(NS_LITERAL_STRING("play"));
 }
 
 bool HTMLMediaElement::IsActive() const
@@ -5293,19 +5296,8 @@ bool HTMLMediaElement::IsBeingDestroyed()
 
 void HTMLMediaElement::NotifyOwnerDocumentActivityChanged()
 {
-  bool pauseElement = NotifyOwnerDocumentActivityChangedInternal();
-  if (pauseElement && mAudioChannelAgent) {
-    // If the element is being paused since we are navigating away from the
-    // document, notify the audio channel agent.
-    // Be careful to ignore this event during a docshell frame swap.
-    auto docShell = static_cast<nsDocShell*>(OwnerDoc()->GetDocShell());
-    if (!docShell) {
-      return;
-    }
-    if (!docShell->InFrameSwap()) {
-      NotifyAudioChannelAgent(false);
-    }
-  }
+  // TODO : merge NotifyOwnerDocumentActivityChangedInternal in following patch.
+  NotifyOwnerDocumentActivityChangedInternal();
 }
 
 bool
@@ -5324,7 +5316,7 @@ HTMLMediaElement::NotifyOwnerDocumentActivityChangedInternal()
     mDecoder->NotifyOwnerActivityChanged(visible);
   }
 
-  bool pauseElement = !IsActive();
+  bool pauseElement = ShouldElementBePaused();
   SuspendOrResumeElement(pauseElement, !IsActive());
 
   AddRemoveSelfReference();
@@ -6567,6 +6559,22 @@ HTMLMediaElement::OnVisibilityChange(Visibility aOldVisibility,
     }
   }
 
+}
+
+bool
+HTMLMediaElement::ShouldElementBePaused()
+{
+  // The media in the non-visited page would be blocked.
+  if (mAudioChannelSuspended == nsISuspendedTypes::SUSPENDED_BLOCK) {
+    return true;
+  }
+
+  // Bfcached page or inactive document.
+  if (!IsActive()) {
+    return true;
+  }
+
+  return false;
 }
 
 void
