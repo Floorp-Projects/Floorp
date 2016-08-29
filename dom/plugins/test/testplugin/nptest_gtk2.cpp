@@ -81,7 +81,7 @@ pluginInstanceInit(InstanceData* instanceData)
 
   instanceData->platformData->display = nullptr;
   instanceData->platformData->visual = nullptr;
-  instanceData->platformData->colormap = None;  
+  instanceData->platformData->colormap = X11None;
   instanceData->platformData->plug = nullptr;
 
   return NPERR_NO_ERROR;
@@ -97,7 +97,7 @@ pluginInstanceShutdown(InstanceData* instanceData)
   if (instanceData->hasWidget) {
     Window window = reinterpret_cast<XID>(instanceData->window.window);
 
-    if (window != None) {
+    if (window != X11None) {
       // This window XID should still be valid.
       // See bug 429604 and bug 454756.
       XWindowAttributes attributes;
