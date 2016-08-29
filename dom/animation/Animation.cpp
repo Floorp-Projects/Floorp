@@ -174,14 +174,16 @@ Animation::SetEffectNoUpdate(AnimationEffectReadOnly* aEffect)
       prevAnim->SetEffect(nullptr);
     }
 
-    // Create links with the new effect.
+    // Create links with the new effect. SetAnimation(this) will also update
+    // mIsRelevant of this animation, and then notify mutation observer if
+    // needed by calling Animation::UpdateRelevance(), so we don't need to
+    // call it again.
     mEffect = newEffect;
     mEffect->SetAnimation(this);
 
-    // Update relevance and then notify possible add or change.
+    // Notify possible add or change.
     // If the target is different, the change notification will be ignored by
     // AutoMutationBatchForAnimation.
-    UpdateRelevance();
     if (wasRelevant && mIsRelevant) {
       nsNodeUtils::AnimationChanged(this);
     }
