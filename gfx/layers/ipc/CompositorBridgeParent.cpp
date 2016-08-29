@@ -1432,31 +1432,64 @@ CompositorBridgeParent::ForceComposeToTarget(DrawTarget* aTarget, const gfx::Int
 PAPZCTreeManagerParent*
 CompositorBridgeParent::AllocPAPZCTreeManagerParent(const uint64_t& aLayersId)
 {
-  return nullptr;
+  // The main process should pass in 0 because we assume mRootLayerTreeID
+  MOZ_ASSERT(aLayersId == 0);
+
+  // This message doubles as initialization
+  MOZ_ASSERT(!mApzcTreeManager);
+  mApzcTreeManager = new APZCTreeManager();
+
+  MonitorAutoLock lock(*sIndirectLayerTreesLock);
+  CompositorBridgeParent::LayerTreeState& state = sIndirectLayerTrees[mRootLayerTreeID];
+  MOZ_ASSERT(state.mParent);
+  MOZ_ASSERT(!state.mApzcTreeManagerParent);
+  state.mApzcTreeManagerParent = new APZCTreeManagerParent(mRootLayerTreeID, state.mParent->GetAPZCTreeManager());
+
+  return state.mApzcTreeManagerParent;
 }
 
 bool
 CompositorBridgeParent::DeallocPAPZCTreeManagerParent(PAPZCTreeManagerParent* aActor)
 {
-  return false;
+  delete aActor;
+  return true;
 }
 
 PAPZParent*
 CompositorBridgeParent::AllocPAPZParent(const uint64_t& aLayersId)
 {
-  return nullptr;
+  // The main process should pass in 0 because we assume mRootLayerTreeID
+  MOZ_ASSERT(aLayersId == 0);
+
+  RemoteContentController* controller = new RemoteContentController();
+
+  // Increment the controller's refcount before we return it. This will keep the
+  // controller alive until it is released by IPDL in DeallocPAPZParent.
+  controller->AddRef();
+
+  MonitorAutoLock lock(*sIndirectLayerTreesLock);
+  CompositorBridgeParent::LayerTreeState& state = sIndirectLayerTrees[mRootLayerTreeID];
+  MOZ_ASSERT(!state.mController);
+  state.mController = controller;
+
+  return controller;
 }
 
 bool
 CompositorBridgeParent::DeallocPAPZParent(PAPZParent* aActor)
 {
-  return false;
+  RemoteContentController* controller = static_cast<RemoteContentController*>(aActor);
+  controller->Release();
+  return true;
 }
 
 bool
 CompositorBridgeParent::RecvAsyncPanZoomEnabled(const uint64_t& aLayersId, bool* aHasAPZ)
 {
-  return false;
+  // The main process should pass in 0 because we assume mRootLayerTreeID
+  MOZ_ASSERT(aLayersId == 0);
+  *aHasAPZ = AsyncPanZoomEnabled();
+  return true;
 }
 
 RefPtr<APZCTreeManager>
