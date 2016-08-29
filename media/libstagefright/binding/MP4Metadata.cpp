@@ -244,6 +244,17 @@ bool MP4Metadata::ShouldPreferRust() const {
       return true;
     }
   }
+
+  numTracks = mRust->GetNumberTracks(TrackInfo::kVideoTrack);
+  for (auto i = 0; i < numTracks; i++) {
+    auto info = mRust->GetTrackInfo(TrackInfo::kVideoTrack, i);
+    if (!info) {
+      return false;
+    }
+    if (info->mMimeType.EqualsASCII("video/vp9")) {
+      return true;
+    }
+  }
   // Otherwise, fall back.
   return false;
 }
@@ -286,6 +297,11 @@ MP4Metadata::Crypto() const
 bool
 MP4Metadata::ReadTrackIndex(FallibleTArray<Index::Indice>& aDest, mozilla::TrackID aTrackID)
 {
+#ifdef MOZ_RUST_MP4PARSE
+  if (mRust && mPreferRust) {
+    return mRust->ReadTrackIndex(aDest, aTrackID);
+  }
+#endif
   return mStagefright->ReadTrackIndex(aDest, aTrackID);
 }
 
@@ -731,7 +747,19 @@ MP4MetadataRust::Crypto() const
 bool
 MP4MetadataRust::ReadTrackIndex(FallibleTArray<Index::Indice>& aDest, mozilla::TrackID aTrackID)
 {
+  uint8_t fragmented = false;
+  int32_t rv = mp4parse_is_fragmented(mRustParser.get(), aTrackID, &fragmented);
+  if (rv != MP4PARSE_OK) {
+    return false;
+  }
+
+  if (fragmented) {
+    return true;
+  }
+
+  // For non-fragmented mp4.
   MOZ_ASSERT(false, "Not yet implemented");
+
   return false;
 }
 
