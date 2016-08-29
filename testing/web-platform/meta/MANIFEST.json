@@ -11410,10 +11410,6 @@
         "url": "/IndexedDB/idbcursor-continue.htm"
       },
       {
-        "path": "IndexedDB/idbcursor-continuePrimaryKey-exception-order.htm",
-        "url": "/IndexedDB/idbcursor-continuePrimaryKey-exception-order.htm"
-      },
-      {
         "path": "IndexedDB/idbcursor-continuePrimaryKey.htm",
         "url": "/IndexedDB/idbcursor-continuePrimaryKey.htm"
       },
@@ -35720,6 +35716,11 @@
       {
         "path": "workers/semantics/xhr/006.html",
         "url": "/workers/semantics/xhr/006.html"
+      },
+      {
+        "path": "IndexedDB/idbcursor-continuePrimaryKey-exception-order.htm",
+        "timeout": "long",
+        "url": "/IndexedDB/idbcursor-continuePrimaryKey-exception-order.htm"
       },
       {
         "path": "IndexedDB/idbdatabase_createObjectStore10-1000ends.htm",
