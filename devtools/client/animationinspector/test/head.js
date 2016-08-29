@@ -14,6 +14,8 @@ Services.scriptloader.loadSubScript(
 const FRAME_SCRIPT_URL = CHROME_URL_ROOT + "doc_frame_script.js";
 const COMMON_FRAME_SCRIPT_URL = "chrome://devtools/content/shared/frame-script-utils.js";
 const TAB_NAME = "animationinspector";
+const ANIMATION_L10N =
+  new LocalizationHelper("devtools/locale/animationinspector.properties");
 
 // Auto clean-up when a test ends
 registerCleanupFunction(function* () {

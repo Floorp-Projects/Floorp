@@ -10,8 +10,9 @@
 const URL = "data:text/html;charset=utf8,test page";
 
 var {Toolbox} = require("devtools/client/framework/toolbox");
-var strings = Services.strings.createBundle(
-  "chrome://devtools/locale/toolbox.properties");
+
+const {LocalizationHelper} = require("devtools/shared/l10n");
+const L10N = new LocalizationHelper("devtools/locale/toolbox.properties");
 
 function getZoomValue() {
   return parseFloat(Services.prefs.getCharPref("devtools.toolbox.zoomValue"));
@@ -39,7 +40,7 @@ add_task(function* () {
 });
 
 function zoomWithKey(toolbox, key) {
-  let shortcut = strings.GetStringFromName(key);
+  let shortcut = L10N.getStr(key);
   if (!shortcut) {
     info("Key was empty, skipping zoomWithKey");
     return;

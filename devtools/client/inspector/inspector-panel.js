@@ -31,12 +31,9 @@ const {ToolSidebar} = require("devtools/client/inspector/toolsidebar");
 const {ViewHelpers} = require("devtools/client/shared/widgets/view-helpers");
 const clipboardHelper = require("devtools/shared/platform/clipboard");
 
-loader.lazyGetter(this, "strings", () => {
-  return Services.strings.createBundle("chrome://devtools/locale/inspector.properties");
-});
-loader.lazyGetter(this, "toolboxStrings", () => {
-  return Services.strings.createBundle("chrome://devtools/locale/toolbox.properties");
-});
+const {LocalizationHelper} = require("devtools/shared/l10n");
+const INSPECTOR_L10N = new LocalizationHelper("devtools/locale/inspector.properties");
+const TOOLBOX_L10N = new LocalizationHelper("devtools/locale/toolbox.properties");
 
 /**
  * Represents an open instance of the Inspector for a tab.
@@ -213,7 +210,7 @@ InspectorPanel.prototype = {
           notificationBox.getNotificationWithValue("inspector-script-paused");
         if (!notification && this._toolbox.currentToolId == "inspector" &&
             this._toolbox.threadClient.paused) {
-          let message = strings.GetStringFromName("debuggerPausedWarning.message");
+          let message = INSPECTOR_L10N.getStr("debuggerPausedWarning.message");
           notificationBox.appendNotification(message,
             "inspector-script-paused", "", notificationBox.PRIORITY_WARNING_HIGH);
         }
@@ -361,7 +358,7 @@ InspectorPanel.prototype = {
     let shortcuts = new KeyShortcuts({
       window: this.panelDoc.defaultView,
     });
-    let key = strings.GetStringFromName("inspector.searchHTML.key");
+    let key = INSPECTOR_L10N.getStr("inspector.searchHTML.key");
     shortcuts.on(key, (name, event) => {
       // Prevent overriding same shortcut from the computed/rule views
       if (event.target.closest("#sidebar-panel-ruleview") ||
@@ -381,11 +378,10 @@ InspectorPanel.prototype = {
     let str = "";
     if (event !== "search-cleared") {
       if (result) {
-        str = strings.formatStringFromName(
-          "inspector.searchResultsCount2",
-          [result.resultsIndex + 1, result.resultsLength], 2);
+        str = INSPECTOR_L10N.getFormatStr(
+          "inspector.searchResultsCount2", result.resultsIndex + 1, result.resultsLength);
       } else {
-        str = strings.GetStringFromName("inspector.searchResultsNone");
+        str = INSPECTOR_L10N.getStr("inspector.searchResultsNone");
       }
     }
 
@@ -423,12 +419,12 @@ InspectorPanel.prototype = {
     // Append all side panels
     this.sidebar.addExistingTab(
       "ruleview",
-      strings.GetStringFromName("inspector.sidebar.ruleViewTitle"),
+      INSPECTOR_L10N.getStr("inspector.sidebar.ruleViewTitle"),
       defaultTab == "ruleview");
 
     this.sidebar.addExistingTab(
       "computedview",
-      strings.GetStringFromName("inspector.sidebar.computedViewTitle"),
+      INSPECTOR_L10N.getStr("inspector.sidebar.computedViewTitle"),
       defaultTab == "computedview");
 
     this._setDefaultSidebar = (event, toolId) => {
@@ -443,7 +439,7 @@ InspectorPanel.prototype = {
     if (this.target.form.animationsActor) {
       this.sidebar.addFrameTab(
         "animationinspector",
-        strings.GetStringFromName("inspector.sidebar.animationInspectorTitle"),
+        INSPECTOR_L10N.getStr("inspector.sidebar.animationInspectorTitle"),
         "chrome://devtools/content/animationinspector/animation-inspector.xhtml",
         defaultTab == "animationinspector");
     }
@@ -452,7 +448,7 @@ InspectorPanel.prototype = {
         this.canGetUsedFontFaces) {
       this.sidebar.addExistingTab(
         "fontinspector",
-        strings.GetStringFromName("inspector.sidebar.fontInspectorTitle"),
+        INSPECTOR_L10N.getStr("inspector.sidebar.fontInspectorTitle"),
         defaultTab == "fontinspector");
 
       this.fontInspector = new FontInspector(this, this.panelWin);
@@ -519,8 +515,8 @@ InspectorPanel.prototype = {
     let sidebarToggle = SidebarToggle({
       onClick: this.onPaneToggleButtonClicked,
       collapsed: false,
-      expandPaneTitle: strings.GetStringFromName("inspector.expandPane"),
-      collapsePaneTitle: strings.GetStringFromName("inspector.collapsePane"),
+      expandPaneTitle: INSPECTOR_L10N.getStr("inspector.expandPane"),
+      collapsePaneTitle: INSPECTOR_L10N.getStr("inspector.collapsePane"),
     });
 
     let parentBox = this.panelDoc.getElementById("inspector-sidebar-toggle-box");
@@ -875,37 +871,37 @@ InspectorPanel.prototype = {
     let menu = new Menu();
     menu.append(new MenuItem({
       id: "node-menu-edithtml",
-      label: strings.GetStringFromName("inspectorHTMLEdit.label"),
-      accesskey: strings.GetStringFromName("inspectorHTMLEdit.accesskey"),
+      label: INSPECTOR_L10N.getStr("inspectorHTMLEdit.label"),
+      accesskey: INSPECTOR_L10N.getStr("inspectorHTMLEdit.accesskey"),
       disabled: !isEditableElement || !this.isOuterHTMLEditable,
       click: () => this.editHTML(),
     }));
     menu.append(new MenuItem({
       id: "node-menu-add",
-      label: strings.GetStringFromName("inspectorAddNode.label"),
-      accesskey: strings.GetStringFromName("inspectorAddNode.accesskey"),
+      label: INSPECTOR_L10N.getStr("inspectorAddNode.label"),
+      accesskey: INSPECTOR_L10N.getStr("inspectorAddNode.accesskey"),
       disabled: !this.canAddHTMLChild(),
       click: () => this.addNode(),
     }));
     menu.append(new MenuItem({
       id: "node-menu-duplicatenode",
-      label: strings.GetStringFromName("inspectorDuplicateNode.label"),
+      label: INSPECTOR_L10N.getStr("inspectorDuplicateNode.label"),
       hidden: !this._supportsDuplicateNode,
       disabled: !isDuplicatableElement,
       click: () => this.duplicateNode(),
     }));
     menu.append(new MenuItem({
       id: "node-menu-delete",
-      label: strings.GetStringFromName("inspectorHTMLDelete.label"),
-      accesskey: strings.GetStringFromName("inspectorHTMLDelete.accesskey"),
+      label: INSPECTOR_L10N.getStr("inspectorHTMLDelete.label"),
+      accesskey: INSPECTOR_L10N.getStr("inspectorHTMLDelete.accesskey"),
       disabled: !isEditableElement,
       click: () => this.deleteNode(),
     }));
 
     menu.append(new MenuItem({
-      label: strings.GetStringFromName("inspectorAttributesSubmenu.label"),
+      label: INSPECTOR_L10N.getStr("inspectorAttributesSubmenu.label"),
       accesskey:
-        strings.GetStringFromName("inspectorAttributesSubmenu.accesskey"),
+        INSPECTOR_L10N.getStr("inspectorAttributesSubmenu.accesskey"),
       submenu: this._getAttributesSubmenu(isEditableElement),
     }));
 
@@ -939,42 +935,42 @@ InspectorPanel.prototype = {
     let copySubmenu = new Menu();
     copySubmenu.append(new MenuItem({
       id: "node-menu-copyinner",
-      label: strings.GetStringFromName("inspectorCopyInnerHTML.label"),
-      accesskey: strings.GetStringFromName("inspectorCopyInnerHTML.accesskey"),
+      label: INSPECTOR_L10N.getStr("inspectorCopyInnerHTML.label"),
+      accesskey: INSPECTOR_L10N.getStr("inspectorCopyInnerHTML.accesskey"),
       disabled: !isSelectionElement,
       click: () => this.copyInnerHTML(),
     }));
     copySubmenu.append(new MenuItem({
       id: "node-menu-copyouter",
-      label: strings.GetStringFromName("inspectorCopyOuterHTML.label"),
-      accesskey: strings.GetStringFromName("inspectorCopyOuterHTML.accesskey"),
+      label: INSPECTOR_L10N.getStr("inspectorCopyOuterHTML.label"),
+      accesskey: INSPECTOR_L10N.getStr("inspectorCopyOuterHTML.accesskey"),
       disabled: !isSelectionElement,
       click: () => this.copyOuterHTML(),
     }));
     copySubmenu.append(new MenuItem({
       id: "node-menu-copyuniqueselector",
-      label: strings.GetStringFromName("inspectorCopyCSSSelector.label"),
+      label: INSPECTOR_L10N.getStr("inspectorCopyCSSSelector.label"),
       accesskey:
-        strings.GetStringFromName("inspectorCopyCSSSelector.accesskey"),
+        INSPECTOR_L10N.getStr("inspectorCopyCSSSelector.accesskey"),
       disabled: !isSelectionElement,
       hidden: !this.canGetUniqueSelector,
       click: () => this.copyUniqueSelector(),
     }));
     copySubmenu.append(new MenuItem({
       id: "node-menu-copyimagedatauri",
-      label: strings.GetStringFromName("inspectorImageDataUri.label"),
+      label: INSPECTOR_L10N.getStr("inspectorImageDataUri.label"),
       disabled: !isSelectionElement || !markupContainer ||
                 !markupContainer.isPreviewable(),
       click: () => this.copyImageDataUri(),
     }));
 
     menu.append(new MenuItem({
-      label: strings.GetStringFromName("inspectorCopyHTMLSubmenu.label"),
+      label: INSPECTOR_L10N.getStr("inspectorCopyHTMLSubmenu.label"),
       submenu: copySubmenu,
     }));
 
     menu.append(new MenuItem({
-      label: strings.GetStringFromName("inspectorPasteHTMLSubmenu.label"),
+      label: INSPECTOR_L10N.getStr("inspectorPasteHTMLSubmenu.label"),
       submenu: this._getPasteSubmenu(isEditableElement),
     }));
 
@@ -986,13 +982,13 @@ InspectorPanel.prototype = {
                              markupContainer.hasChildren;
     menu.append(new MenuItem({
       id: "node-menu-expand",
-      label: strings.GetStringFromName("inspectorExpandNode.label"),
+      label: INSPECTOR_L10N.getStr("inspectorExpandNode.label"),
       disabled: !isNodeWithChildren,
       click: () => this.expandNode(),
     }));
     menu.append(new MenuItem({
       id: "node-menu-collapse",
-      label: strings.GetStringFromName("inspectorCollapseNode.label"),
+      label: INSPECTOR_L10N.getStr("inspectorCollapseNode.label"),
       disabled: !isNodeWithChildren || !markupContainer.expanded,
       click: () => this.collapseNode(),
     }));
@@ -1003,27 +999,27 @@ InspectorPanel.prototype = {
 
     menu.append(new MenuItem({
       id: "node-menu-scrollnodeintoview",
-      label: strings.GetStringFromName("inspectorScrollNodeIntoView.label"),
+      label: INSPECTOR_L10N.getStr("inspectorScrollNodeIntoView.label"),
       accesskey:
-        strings.GetStringFromName("inspectorScrollNodeIntoView.accesskey"),
+        INSPECTOR_L10N.getStr("inspectorScrollNodeIntoView.accesskey"),
       hidden: !this._supportsScrollIntoView,
       disabled: !isSelectionElement,
       click: () => this.scrollNodeIntoView(),
     }));
     menu.append(new MenuItem({
       id: "node-menu-screenshotnode",
-      label: strings.GetStringFromName("inspectorScreenshotNode.label"),
+      label: INSPECTOR_L10N.getStr("inspectorScreenshotNode.label"),
       disabled: !isScreenshotable,
       click: () => this.screenshotNode(),
     }));
     menu.append(new MenuItem({
       id: "node-menu-useinconsole",
-      label: strings.GetStringFromName("inspectorUseInConsole.label"),
+      label: INSPECTOR_L10N.getStr("inspectorUseInConsole.label"),
       click: () => this.useInConsole(),
     }));
     menu.append(new MenuItem({
       id: "node-menu-showdomproperties",
-      label: strings.GetStringFromName("inspectorShowDOMProperties.label"),
+      label: INSPECTOR_L10N.getStr("inspectorShowDOMProperties.label"),
       click: () => this.showDOMProperties(),
     }));
 
@@ -1055,47 +1051,47 @@ InspectorPanel.prototype = {
     let pasteSubmenu = new Menu();
     pasteSubmenu.append(new MenuItem({
       id: "node-menu-pasteinnerhtml",
-      label: strings.GetStringFromName("inspectorPasteInnerHTML.label"),
-      accesskey: strings.GetStringFromName("inspectorPasteInnerHTML.accesskey"),
+      label: INSPECTOR_L10N.getStr("inspectorPasteInnerHTML.label"),
+      accesskey: INSPECTOR_L10N.getStr("inspectorPasteInnerHTML.accesskey"),
       disabled: !isPasteable || !this.canPasteInnerOrAdjacentHTML,
       click: () => this.pasteInnerHTML(),
     }));
     pasteSubmenu.append(new MenuItem({
       id: "node-menu-pasteouterhtml",
-      label: strings.GetStringFromName("inspectorPasteOuterHTML.label"),
-      accesskey: strings.GetStringFromName("inspectorPasteOuterHTML.accesskey"),
+      label: INSPECTOR_L10N.getStr("inspectorPasteOuterHTML.label"),
+      accesskey: INSPECTOR_L10N.getStr("inspectorPasteOuterHTML.accesskey"),
       disabled: !isPasteable || !this.isOuterHTMLEditable,
       click: () => this.pasteOuterHTML(),
     }));
     pasteSubmenu.append(new MenuItem({
       id: "node-menu-pastebefore",
-      label: strings.GetStringFromName("inspectorHTMLPasteBefore.label"),
+      label: INSPECTOR_L10N.getStr("inspectorHTMLPasteBefore.label"),
       accesskey:
-        strings.GetStringFromName("inspectorHTMLPasteBefore.accesskey"),
+        INSPECTOR_L10N.getStr("inspectorHTMLPasteBefore.accesskey"),
       disabled: disableAdjacentPaste,
       click: () => this.pasteAdjacentHTML("beforeBegin"),
     }));
     pasteSubmenu.append(new MenuItem({
       id: "node-menu-pasteafter",
-      label: strings.GetStringFromName("inspectorHTMLPasteAfter.label"),
+      label: INSPECTOR_L10N.getStr("inspectorHTMLPasteAfter.label"),
       accesskey:
-        strings.GetStringFromName("inspectorHTMLPasteAfter.accesskey"),
+        INSPECTOR_L10N.getStr("inspectorHTMLPasteAfter.accesskey"),
       disabled: disableAdjacentPaste,
       click: () => this.pasteAdjacentHTML("afterEnd"),
     }));
     pasteSubmenu.append(new MenuItem({
       id: "node-menu-pastefirstchild",
-      label: strings.GetStringFromName("inspectorHTMLPasteFirstChild.label"),
+      label: INSPECTOR_L10N.getStr("inspectorHTMLPasteFirstChild.label"),
       accesskey:
-        strings.GetStringFromName("inspectorHTMLPasteFirstChild.accesskey"),
+        INSPECTOR_L10N.getStr("inspectorHTMLPasteFirstChild.accesskey"),
       disabled: disableFirstLastPaste,
       click: () => this.pasteAdjacentHTML("afterBegin"),
     }));
     pasteSubmenu.append(new MenuItem({
       id: "node-menu-pastelastchild",
-      label: strings.GetStringFromName("inspectorHTMLPasteLastChild.label"),
+      label: INSPECTOR_L10N.getStr("inspectorHTMLPasteLastChild.label"),
       accesskey:
-        strings.GetStringFromName("inspectorHTMLPasteLastChild.accesskey"),
+        INSPECTOR_L10N.getStr("inspectorHTMLPasteLastChild.accesskey"),
       disabled: disableFirstLastPaste,
       click: () => this.pasteAdjacentHTML("beforeEnd"),
     }));
@@ -1111,26 +1107,26 @@ InspectorPanel.prototype = {
 
     attributesSubmenu.append(new MenuItem({
       id: "node-menu-add-attribute",
-      label: strings.GetStringFromName("inspectorAddAttribute.label"),
-      accesskey: strings.GetStringFromName("inspectorAddAttribute.accesskey"),
+      label: INSPECTOR_L10N.getStr("inspectorAddAttribute.label"),
+      accesskey: INSPECTOR_L10N.getStr("inspectorAddAttribute.accesskey"),
       disabled: !isEditableElement,
       click: () => this.onAddAttribute(),
     }));
     attributesSubmenu.append(new MenuItem({
       id: "node-menu-edit-attribute",
-      label: strings.formatStringFromName("inspectorEditAttribute.label",
-                 [isAttributeClicked ? `"${nodeInfo.name}"` : ""], 1),
-      accesskey: strings.GetStringFromName("inspectorEditAttribute.accesskey"),
+      label: INSPECTOR_L10N.getFormatStr("inspectorEditAttribute.label",
+                                        isAttributeClicked ? `"${nodeInfo.name}"` : ""),
+      accesskey: INSPECTOR_L10N.getStr("inspectorEditAttribute.accesskey"),
       disabled: !isAttributeClicked,
       click: () => this.onEditAttribute(),
     }));
 
     attributesSubmenu.append(new MenuItem({
       id: "node-menu-remove-attribute",
-      label: strings.formatStringFromName("inspectorRemoveAttribute.label",
-                [isAttributeClicked ? `"${nodeInfo.name}"` : ""], 1),
+      label: INSPECTOR_L10N.getFormatStr("inspectorRemoveAttribute.label",
+                                        isAttributeClicked ? `"${nodeInfo.name}"` : ""),
       accesskey:
-        strings.GetStringFromName("inspectorRemoveAttribute.accesskey"),
+        INSPECTOR_L10N.getStr("inspectorRemoveAttribute.accesskey"),
       disabled: !isAttributeClicked,
       click: () => this.onRemoveAttribute(),
     }));
@@ -1168,25 +1164,25 @@ InspectorPanel.prototype = {
       // Links can't be opened in new tabs in the browser toolbox.
       if (type === "uri" && !this.target.chrome) {
         linkFollow.visible = true;
-        linkFollow.label = strings.GetStringFromName(
+        linkFollow.label = INSPECTOR_L10N.getStr(
           "inspector.menu.openUrlInNewTab.label");
       } else if (type === "cssresource") {
         linkFollow.visible = true;
-        linkFollow.label = toolboxStrings.GetStringFromName(
+        linkFollow.label = TOOLBOX_L10N.getStr(
           "toolbox.viewCssSourceInStyleEditor.label");
       } else if (type === "jsresource") {
         linkFollow.visible = true;
-        linkFollow.label = toolboxStrings.GetStringFromName(
+        linkFollow.label = TOOLBOX_L10N.getStr(
           "toolbox.viewJsSourceInDebugger.label");
       }
 
       linkCopy.visible = true;
-      linkCopy.label = strings.GetStringFromName(
+      linkCopy.label = INSPECTOR_L10N.getStr(
         "inspector.menu.copyUrlToClipboard.label");
     } else if (type === "idref") {
       linkFollow.visible = true;
-      linkFollow.label = strings.formatStringFromName(
-        "inspector.menu.selectElement.label", [popupNode.dataset.link], 1);
+      linkFollow.label = INSPECTOR_L10N.getFormatStr(
+        "inspector.menu.selectElement.label", popupNode.dataset.link);
     }
 
     return [linkFollow, linkCopy];
@@ -1210,7 +1206,7 @@ InspectorPanel.prototype = {
     this._markupBox.appendChild(this._markupFrame);
     this._markupFrame.setAttribute("src", "chrome://devtools/content/inspector/markup/markup.xhtml");
     this._markupFrame.setAttribute("aria-label",
-      strings.GetStringFromName("inspector.panelLabel.markupView"));
+      INSPECTOR_L10N.getStr("inspector.panelLabel.markupView"));
   },
 
   _onMarkupFrameLoad: function () {

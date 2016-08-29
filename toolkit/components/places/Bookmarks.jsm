@@ -1434,10 +1434,10 @@ Task.async(function* (db, folderGuids, options) {
               b.type, url, b.guid, p.guid AS parentGuid, b.dateAdded,
               b.lastModified, b.title, p.parent AS _grandParentId,
               NULL AS _childCount
-       FROM moz_bookmarks b
+       FROM descendants
+       JOIN moz_bookmarks b ON did = b.id
        JOIN moz_bookmarks p ON p.id = b.parent
-       LEFT JOIN moz_places h ON b.fk = h.id
-       WHERE b.id IN descendants`, { folderGuid });
+       LEFT JOIN moz_places h ON b.fk = h.id`, { folderGuid });
 
     itemsRemoved = itemsRemoved.concat(rowsToItemsArray(rows));
 
