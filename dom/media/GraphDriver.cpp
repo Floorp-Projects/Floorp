@@ -398,21 +398,31 @@ SystemClockDriver::WaitForNextIteration()
 
   PRIntervalTime timeout = PR_INTERVAL_NO_TIMEOUT;
   TimeStamp now = TimeStamp::Now();
-  if (mGraphImpl->mNeedAnotherIteration) {
+
+  // This lets us avoid hitting the Atomic twice when we know we won't sleep
+  bool another = mGraphImpl->mNeedAnotherIteration; // atomic
+  if (!another) {
+    mGraphImpl->mGraphDriverAsleep = true; // atomic
+    mWaitState = WAITSTATE_WAITING_INDEFINITELY;
+  }
+  // NOTE: mNeedAnotherIteration while also atomic may have changed before
+  // we could set mGraphDriverAsleep, so we must re-test it.
+  // (EnsureNextIteration sets mNeedAnotherIteration, then tests
+  // mGraphDriverAsleep
+  if (another || mGraphImpl->mNeedAnotherIteration) { // atomic
     int64_t timeoutMS = MEDIA_GRAPH_TARGET_PERIOD_MS -
       int64_t((now - mCurrentTimeStamp).ToMilliseconds());
     // Make sure timeoutMS doesn't overflow 32 bits by waking up at
     // least once a minute, if we need to wake up at all
     timeoutMS = std::max<int64_t>(0, std::min<int64_t>(timeoutMS, 60*1000));
     timeout = PR_MillisecondsToInterval(uint32_t(timeoutMS));
-    STREAM_LOG(LogLevel::Verbose, ("Waiting for next iteration; at %f, timeout=%f", (now - mInitialTimeStamp).ToSeconds(), timeoutMS/1000.0));
+    STREAM_LOG(LogLevel::Verbose,
+               ("Waiting for next iteration; at %f, timeout=%f",
+                (now - mInitialTimeStamp).ToSeconds(), timeoutMS/1000.0));
     if (mWaitState == WAITSTATE_WAITING_INDEFINITELY) {
       mGraphImpl->mGraphDriverAsleep = false; // atomic
     }
     mWaitState = WAITSTATE_WAITING_FOR_NEXT_ITERATION;
-  } else {
-    mGraphImpl->mGraphDriverAsleep = true; // atomic
-    mWaitState = WAITSTATE_WAITING_INDEFINITELY;
   }
   if (timeout > 0) {
     mGraphImpl->GetMonitor().Wait(timeout);
@@ -424,13 +434,19 @@ SystemClockDriver::WaitForNextIteration()
   if (mWaitState == WAITSTATE_WAITING_INDEFINITELY) {
     mGraphImpl->mGraphDriverAsleep = false; // atomic
   }
+  // Note: this can race against the EnsureNextIteration setting
+  // WAITSTATE_RUNNING and setting mGraphDriverAsleep to false, so you can
+  // have an iteration with WAITSTATE_WAKING_UP instead of RUNNING.
   mWaitState = WAITSTATE_RUNNING;
-  mGraphImpl->mNeedAnotherIteration = false;
+  mGraphImpl->mNeedAnotherIteration = false; // atomic
 }
 
 void SystemClockDriver::WakeUp()
 {
   mGraphImpl->GetMonitor().AssertCurrentThreadOwns();
+  // Note: this can race against the thread setting WAITSTATE_RUNNING and
+  // setting mGraphDriverAsleep to false, so you can have an iteration
+  // with WAITSTATE_WAKING_UP instead of RUNNING.
   mWaitState = WAITSTATE_WAKING_UP;
   mGraphImpl->mGraphDriverAsleep = false; // atomic
   mGraphImpl->GetMonitor().Notify();
