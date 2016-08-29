@@ -2649,36 +2649,6 @@ css::URLValueData::operator==(const URLValueData& aOther) const
 }
 
 bool
-css::URLValueData::MaybeUnresolvedURIEquals(const URLValueData& aOther) const
-{
-  if (!mURIResolved || !aOther.mURIResolved) {
-    return false;
-  }
-
-  return URIEquals(aOther);
-}
-
-bool
-css::URLValueData::URIEquals(const URLValueData& aOther) const
-{
-  MOZ_ASSERT(mURIResolved && aOther.mURIResolved,
-             "How do you know the URIs aren't null?");
-  bool eq;
-  // Cast away const so we can call nsIPrincipal::Equals.
-  auto& self = *const_cast<URLValueData*>(this);
-  auto& other = const_cast<URLValueData&>(aOther);
-  // Worth comparing GetURI() to aOther.GetURI() and mOriginPrincipal to
-  // aOther.mOriginPrincipal, because in the (probably common) case when this
-  // value was one of the ones that in fact did not change this will be our
-  // fast path to equality
-  return (mURI == aOther.mURI ||
-          (NS_SUCCEEDED(mURI->Equals(aOther.mURI, &eq)) && eq)) &&
-         (mOriginPrincipal == aOther.mOriginPrincipal ||
-          self.mOriginPrincipal.get()->Equals(other.mOriginPrincipal.get())) &&
-         mLocalURLFlag == aOther.mLocalURLFlag;
-}
-
-bool
 css::URLValueData::DefinitelyEqualURIs(const URLValueData& aOther) const
 {
   return mBaseURI == aOther.mBaseURI &&
