@@ -35,7 +35,7 @@ const { getRootBindingParent } = require("devtools/shared/layout/utils");
 const nodeConstants = require("devtools/shared/dom-node-constants");
 const {l10n, isContentStylesheet, shortSource, FILTER, STATUS} = require("devtools/shared/inspector/css-logic");
 
-loader.lazyRequireGetter(this, "CSSLexer", "devtools/shared/css-lexer");
+loader.lazyRequireGetter(this, "CSSLexer", "devtools/shared/css/lexer");
 
 /**
  * @param {function} isInherited A function that determines if the CSS property
