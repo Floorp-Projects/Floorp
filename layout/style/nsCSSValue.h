@@ -106,6 +106,7 @@ struct URLValueData
   // Construct with the actual URI.
   URLValueData(already_AddRefed<PtrHolder<nsIURI>> aURI,
                nsStringBuffer* aString,
+               already_AddRefed<PtrHolder<nsIURI>> aBaseURI,
                already_AddRefed<PtrHolder<nsIURI>> aReferrer,
                already_AddRefed<PtrHolder<nsIPrincipal>> aOriginPrincipal);
 
@@ -128,11 +129,11 @@ struct URLValueData
   bool GetLocalURLFlag() const { return mLocalURLFlag; }
 
 private:
-  // If mURIResolved is false, mURI stores the base URI.
-  // If mURIResolved is true, mURI stores the URI we resolve to; this may be
-  // null if the URI is invalid.
+  // mURI stores the lazily resolved URI.  This may be null if the URI is
+  // invalid, even once resolved.
   mutable PtrHandle<nsIURI> mURI;
 public:
+  PtrHandle<nsIURI> mBaseURI;
   RefPtr<nsStringBuffer> mString;
   PtrHandle<nsIURI> mReferrer;
   PtrHandle<nsIPrincipal> mOriginPrincipal;
@@ -151,8 +152,8 @@ struct URLValue : public URLValueData
   // These two constructors are safe to call only on the main thread.
   URLValue(nsStringBuffer* aString, nsIURI* aBaseURI, nsIURI* aReferrer,
            nsIPrincipal* aOriginPrincipal);
-  URLValue(nsIURI* aURI, nsStringBuffer* aString, nsIURI* aReferrer,
-           nsIPrincipal* aOriginPrincipal);
+  URLValue(nsIURI* aURI, nsStringBuffer* aString, nsIURI* aBaseURI,
+           nsIURI* aReferrer, nsIPrincipal* aOriginPrincipal);
 
   // This constructor is safe to call from any thread.
   URLValue(nsStringBuffer* aString,
@@ -182,8 +183,9 @@ struct ImageValue : public URLValueData
   // aString must not be null.
   //
   // This constructor is only safe to call from the main thread.
-  ImageValue(nsIURI* aURI, nsStringBuffer* aString, nsIURI* aReferrer,
-             nsIPrincipal* aOriginPrincipal, nsIDocument* aDocument);
+  ImageValue(nsIURI* aURI, nsStringBuffer* aString, nsIURI* aBaseURI,
+             nsIURI* aReferrer, nsIPrincipal* aOriginPrincipal,
+             nsIDocument* aDocument);
 
   ImageValue(const ImageValue&) = delete;
   ImageValue& operator=(const ImageValue&) = delete;
