@@ -219,6 +219,9 @@ public:
         if (!gFontHintingEnabled || !isAxisAligned(*rec)) {
             rec->setHinting(SkPaint::kNo_Hinting);
         }
+
+        // Don't apply any gamma so that we match cairo-ft's results.
+        rec->ignorePreBlend();
     }
 
     virtual void onGetFontDescriptor(SkFontDescriptor*, bool*) const override
