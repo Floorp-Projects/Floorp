@@ -175,4 +175,12 @@ public interface BrowserDB {
     public abstract boolean hasSuggestedImageUrl(String url);
     public abstract String getSuggestedImageUrlForUrl(String url);
     public abstract int getSuggestedBackgroundColorForUrl(String url);
+
+    /**
+     * Obtain a set of links for highlights from bookmarks and history.
+     *
+     * @param context The context to load the cursor.
+     * @param limit Maximum number of results to return.
+     */
+    CursorLoader getHighlights(Context context, int limit);
 }
