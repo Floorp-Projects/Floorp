@@ -3033,26 +3033,61 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay
   inline bool IsOriginalDisplayInlineOutside(const nsIFrame* aContextFrame) const;
   inline uint8_t GetDisplay(const nsIFrame* aContextFrame) const;
   inline bool IsFloating(const nsIFrame* aContextFrame) const;
-  inline bool IsAbsPosContainingBlock(const nsIFrame* aContextFrame) const;
   inline bool IsRelativelyPositioned(const nsIFrame* aContextFrame) const;
   inline bool IsAbsolutelyPositioned(const nsIFrame* aContextFrame) const;
 
   // These methods are defined in nsStyleStructInlines.h.
 
   /**
+   * Returns whether the element is a containing block for its
+   * absolutely positioned descendants.
+   * aContextFrame is the frame for which this is the nsStyleDisplay.
+   */
+  inline bool IsAbsPosContainingBlock(const nsIFrame* aContextFrame) const;
+
+  /**
+   * The same as IsAbsPosContainingBlock, except skipping the tests that
+   * are based on the frame rather than the style context (thus
+   * potentially returning a false positive).
+   */
+  template<class StyleContextLike>
+  inline bool IsAbsPosContainingBlockForAppropriateFrame(
+                StyleContextLike* aStyleContext) const;
+
+  /**
    * Returns true when the element has the transform property
    * or a related property, and supports CSS transforms.
-   * aContextFrame is the frame for which this is the nsStylePosition.
+   * aContextFrame is the frame for which this is the nsStyleDisplay.
    */
   inline bool HasTransform(const nsIFrame* aContextFrame) const;
 
   /**
    * Returns true when the element is a containing block for its fixed-pos
    * descendants.
-   * aContextFrame is the frame for which this is the nsStylePosition.
+   * aContextFrame is the frame for which this is the nsStyleDisplay.
    */
   inline bool IsFixedPosContainingBlock(const nsIFrame* aContextFrame) const;
 
+  /**
+   * The same as IsFixedPosContainingBlock, except skipping the tests that
+   * are based on the frame rather than the style context (thus
+   * potentially returning a false positive).
+   */
+  template<class StyleContextLike>
+  inline bool IsFixedPosContainingBlockForAppropriateFrame(
+                StyleContextLike* aStyleContext) const;
+
+private:
+  // Helpers for above functions, which do some but not all of the tests
+  // for them (since transform must be tested separately for each).
+  template<class StyleContextLike>
+  inline bool HasAbsPosContainingBlockStyleInternal(
+                StyleContextLike* aStyleContext) const;
+  template<class StyleContextLike>
+  inline bool HasFixedPosContainingBlockStyleInternal(
+                StyleContextLike* aStyleContext) const;
+
+public:
   // Return the 'float' and 'clear' properties, with inline-{start,end} values
   // resolved to {left,right} according to the given writing mode. These are
   // defined in WritingModes.h.

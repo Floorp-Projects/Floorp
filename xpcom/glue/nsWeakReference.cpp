@@ -10,6 +10,23 @@
 
 #include "nsWeakReference.h"
 #include "nsCOMPtr.h"
+#include "nsDebug.h"
+
+#ifdef MOZ_THREAD_SAFETY_OWNERSHIP_CHECKS_SUPPORTED
+
+#define MOZ_WEAKREF_DECL_OWNINGTHREAD nsAutoOwningThread _mWeakRefOwningThread;
+#define MOZ_WEAKREF_ASSERT_OWNINGTHREAD \
+  NS_CheckThreadSafe(_mWeakRefOwningThread.GetThread(), "nsWeakReference not thread-safe")
+#define MOZ_WEAKREF_ASSERT_OWNINGTHREAD_DELEGATED(that) \
+  NS_CheckThreadSafe((that)->_mWeakRefOwningThread.GetThread(), "nsWeakReference not thread-safe")
+
+#else
+
+#define MOZ_WEAKREF_DECL_OWNINGTHREAD
+#define MOZ_WEAKREF_ASSERT_OWNINGTHREAD do { } while (false)
+#define MOZ_WEAKREF_ASSERT_OWNINGTHREAD_DELEGATED(that) do { } while (false)
+
+#endif
 
 class nsWeakReference final : public nsIWeakReference
 {
@@ -22,6 +39,8 @@ public:
   virtual size_t SizeOfOnlyThis(mozilla::MallocSizeOf aMallocSizeOf) const override;
 
 private:
+  MOZ_WEAKREF_DECL_OWNINGTHREAD
+
   friend class nsSupportsWeakReference;
 
   explicit nsWeakReference(nsSupportsWeakReference* aReferent)
@@ -33,6 +52,7 @@ private:
   ~nsWeakReference()
   // ...I will only be destroyed by calling |delete| myself.
   {
+    MOZ_WEAKREF_ASSERT_OWNINGTHREAD;
     if (mReferent) {
       mReferent->NoticeProxyDestruction();
     }
@@ -42,7 +62,8 @@ private:
   NoticeReferentDestruction()
   // ...called (only) by an |nsSupportsWeakReference| from _its_ dtor.
   {
-    mReferent = 0;
+    MOZ_WEAKREF_ASSERT_OWNINGTHREAD;
+    mReferent = nullptr;
   }
 
   nsSupportsWeakReference* MOZ_NON_OWNING_REF mReferent;
@@ -99,6 +120,8 @@ nsSupportsWeakReference::GetWeakReference(nsIWeakReference** aInstancePtr)
 
   if (!mProxy) {
     mProxy = new nsWeakReference(this);
+  } else {
+    MOZ_WEAKREF_ASSERT_OWNINGTHREAD_DELEGATED(mProxy);
   }
   *aInstancePtr = mProxy;
 
@@ -118,6 +141,8 @@ NS_IMPL_ISUPPORTS(nsWeakReference, nsIWeakReference)
 NS_IMETHODIMP
 nsWeakReference::QueryReferent(const nsIID& aIID, void** aInstancePtr)
 {
+  MOZ_WEAKREF_ASSERT_OWNINGTHREAD;
+
   return mReferent ? mReferent->QueryInterface(aIID, aInstancePtr) :
                      NS_ERROR_NULL_POINTER;
 }
@@ -133,7 +158,7 @@ nsSupportsWeakReference::ClearWeakReferences()
 {
   if (mProxy) {
     mProxy->NoticeReferentDestruction();
-    mProxy = 0;
+    mProxy = nullptr;
   }
 }
 

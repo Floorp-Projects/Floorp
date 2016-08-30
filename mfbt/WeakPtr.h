@@ -76,6 +76,47 @@
 
 #include <string.h>
 
+// Weak referencing is not implemeted as thread safe.  When a WeakPtr
+// is created or dereferenced on thread A but the real object is just
+// being Released() on thread B, there is a possibility of a race
+// when the proxy object (detail::WeakReference) is notified about
+// the real object destruction just between when thread A is storing
+// the object pointer locally and is about to add a reference to it.
+//
+// Hence, a non-null weak proxy object is considered to have a single
+// "owning thread".  It means that each query for a weak reference,
+// its dereference, and destruction of the real object must all happen
+// on a single thread.  The following macros implement assertions for
+// checking these conditions.
+
+#if defined(DEBUG) || (defined(NIGHTLY_BUILD) && !defined(MOZ_PROFILING))
+
+#include <thread>
+#define MOZ_WEAKPTR_DECLARE_THREAD_SAFETY_CHECK \
+  std::thread::id _owningThread; \
+  bool _empty; // If it was initialized as a placeholder with mPtr = nullptr.
+#define MOZ_WEAKPTR_INIT_THREAD_SAFETY_CHECK() \
+  do { \
+    _owningThread = std::this_thread::get_id(); \
+    _empty = !p; \
+  } while (false)
+#define MOZ_WEAKPTR_ASSERT_THREAD_SAFETY() \
+  MOZ_DIAGNOSTIC_ASSERT(_empty || _owningThread == std::this_thread::get_id(), \
+                        "WeakPtr used on multiple threads")
+#define MOZ_WEAKPTR_ASSERT_THREAD_SAFETY_DELEGATED(that) \
+  (that)->AssertThreadSafety();
+
+#define MOZ_WEAKPTR_THREAD_SAFETY_CHECKING 1
+
+#else
+
+#define MOZ_WEAKPTR_DECLARE_THREAD_SAFETY_CHECK
+#define MOZ_WEAKPTR_INIT_THREAD_SAFETY_CHECK() do { } while (false)
+#define MOZ_WEAKPTR_ASSERT_THREAD_SAFETY() do { } while (false)
+#define MOZ_WEAKPTR_ASSERT_THREAD_SAFETY_DELEGATED(that) do { } while (false)
+
+#endif
+
 namespace mozilla {
 
 template <typename T> class WeakPtr;
@@ -96,9 +137,15 @@ template<class T>
 class WeakReference : public ::mozilla::RefCounted<WeakReference<T> >
 {
 public:
-  explicit WeakReference(T* p) : mPtr(p) {}
+  explicit WeakReference(T* p) : mPtr(p)
+  {
+    MOZ_WEAKPTR_INIT_THREAD_SAFETY_CHECK();
+  }
 
-  T* get() const { return mPtr; }
+  T* get() const {
+    MOZ_WEAKPTR_ASSERT_THREAD_SAFETY();
+    return mPtr;
+  }
 
 #ifdef MOZ_REFCOUNTED_LEAK_CHECKING
   const char* typeName() const
@@ -110,12 +157,20 @@ public:
   size_t typeSize() const { return sizeof(*this); }
 #endif
 
+#ifdef MOZ_WEAKPTR_THREAD_SAFETY_CHECKING
+  void AssertThreadSafety() { MOZ_WEAKPTR_ASSERT_THREAD_SAFETY(); }
+#endif
+
 private:
   friend class mozilla::SupportsWeakPtr<T>;
 
-  void detach() { mPtr = nullptr; }
+  void detach() {
+    MOZ_WEAKPTR_ASSERT_THREAD_SAFETY();
+    mPtr = nullptr;
+  }
 
   T* MOZ_NON_OWNING_REF mPtr;
+  MOZ_WEAKPTR_DECLARE_THREAD_SAFETY_CHECK
 };
 
 } // namespace detail
@@ -138,6 +193,8 @@ private:
   {
     if (!mSelfReferencingWeakPtr) {
       mSelfReferencingWeakPtr.mRef = new detail::WeakReference<T>(static_cast<T*>(this));
+    } else {
+      MOZ_WEAKPTR_ASSERT_THREAD_SAFETY_DELEGATED(mSelfReferencingWeakPtr.mRef);
     }
     return mSelfReferencingWeakPtr;
   }
@@ -163,11 +220,13 @@ public:
   WeakPtr& operator=(const WeakPtr& aOther)
   {
     mRef = aOther.mRef;
+    MOZ_WEAKPTR_ASSERT_THREAD_SAFETY_DELEGATED(mRef);
     return *this;
   }
 
   WeakPtr(const WeakPtr& aOther)
   {
+    // The thread safety check is performed inside of the operator= method.
     *this = aOther;
   }
 
@@ -179,12 +238,15 @@ public:
       // Ensure that mRef is dereferenceable in the uninitialized state.
       mRef = new WeakReference(nullptr);
     }
+    // The thread safety check happens inside SelfReferencingWeakPtr
+    // or is initialized in the WeakReference constructor.
     return *this;
   }
 
   MOZ_IMPLICIT WeakPtr(T* aOther)
   {
     *this = aOther;
+    MOZ_WEAKPTR_ASSERT_THREAD_SAFETY_DELEGATED(mRef);
   }
 
   // Ensure that mRef is dereferenceable in the uninitialized state.

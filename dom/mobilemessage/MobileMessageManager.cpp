@@ -36,7 +36,7 @@
 // Service instantiation
 #include "ipc/SmsIPCService.h"
 #include "MobileMessageService.h"
-#ifdef MOZ_WIDGET_ANDROID
+#if defined(MOZ_WIDGET_ANDROID) && defined(MOZ_WEBSMS_BACKEND)
 #include "android/MobileMessageDatabaseService.h"
 #include "android/SmsService.h"
 #elif defined(MOZ_WIDGET_GONK) && defined(MOZ_B2G_RIL)
@@ -853,7 +853,7 @@ NS_CreateSmsService()
   if (XRE_IsContentProcess()) {
     smsService = SmsIPCService::GetSingleton();
   } else {
-#ifdef MOZ_WIDGET_ANDROID
+#if defined(MOZ_WIDGET_ANDROID) && defined(MOZ_WEBSMS_BACKEND)
     smsService = new SmsService();
 #elif defined(MOZ_WIDGET_GONK) && defined(MOZ_B2G_RIL)
     smsService = do_GetService(GONK_SMSSERVICE_CONTRACTID);
@@ -870,7 +870,7 @@ NS_CreateMobileMessageDatabaseService()
   if (XRE_IsContentProcess()) {
     mobileMessageDBService = SmsIPCService::GetSingleton();
   } else {
-#ifdef MOZ_WIDGET_ANDROID
+#if defined(MOZ_WIDGET_ANDROID) && defined(MOZ_WEBSMS_BACKEND)
     mobileMessageDBService = new MobileMessageDatabaseService();
 #elif defined(MOZ_WIDGET_GONK) && defined(MOZ_B2G_RIL)
     mobileMessageDBService =

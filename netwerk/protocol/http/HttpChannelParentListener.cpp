@@ -71,8 +71,8 @@ HttpChannelParentListener::OnStartRequest(nsIRequest *aRequest, nsISupports *aCo
 
 NS_IMETHODIMP
 HttpChannelParentListener::OnStopRequest(nsIRequest *aRequest,
-                                          nsISupports *aContext,
-                                          nsresult aStatusCode)
+                                         nsISupports *aContext,
+                                         nsresult aStatusCode)
 {
   MOZ_RELEASE_ASSERT(!mSuspendedForDiversion,
     "Cannot call OnStopRequest if suspended for diversion!");
@@ -94,10 +94,10 @@ HttpChannelParentListener::OnStopRequest(nsIRequest *aRequest,
 
 NS_IMETHODIMP
 HttpChannelParentListener::OnDataAvailable(nsIRequest *aRequest,
-                                            nsISupports *aContext,
-                                            nsIInputStream *aInputStream,
-                                            uint64_t aOffset,
-                                            uint32_t aCount)
+                                           nsISupports *aContext,
+                                           nsIInputStream *aInputStream,
+                                           uint64_t aOffset,
+                                           uint32_t aCount)
 {
   MOZ_RELEASE_ASSERT(!mSuspendedForDiversion,
     "Cannot call OnDataAvailable if suspended for diversion!");

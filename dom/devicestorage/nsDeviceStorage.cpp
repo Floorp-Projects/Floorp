@@ -3118,8 +3118,6 @@ nsDOMDeviceStorage::AddOrAppendNamed(Blob* aBlob, const nsAString& aPath,
     return nullptr;
   }
 
-  nsCOMPtr<nsIRunnable> r;
-
   if (IsFullPath(aPath)) {
     nsString storagePath;
     RefPtr<nsDOMDeviceStorage> ds = GetStorage(aPath, storagePath);

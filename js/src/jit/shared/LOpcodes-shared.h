@@ -369,7 +369,7 @@
     _(CallInstanceOf)               \
     _(InterruptCheck)               \
     _(AsmJSInterruptCheck)          \
-    _(AsmThrowUnreachable)          \
+    _(WasmTrap)                     \
     _(AsmReinterpret)               \
     _(AsmReinterpretToI64)          \
     _(AsmReinterpretFromI64)        \

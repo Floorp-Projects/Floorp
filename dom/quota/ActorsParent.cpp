@@ -7488,8 +7488,6 @@ UpgradeDirectoryMetadataFrom1To2Helper::DoProcessOriginDirectories()
 {
   AssertIsOnIOThread();
 
-  nsCOMPtr<nsIFile> permanentStorageDir;
-
   for (uint32_t count = mOriginProps.Length(), index = 0;
        index < count;
        index++) {

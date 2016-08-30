@@ -157,6 +157,7 @@ static const char contentSandboxRules[] =
   "(define appBinaryPath \"%s\")\n"
   "(define appDir \"%s\")\n"
   "(define appTempDir \"%s\")\n"
+  "(define profileDir \"%s\")\n"
   "(define home-path \"%s\")\n"
   "\n"
   "; Allow read access to standard system paths.\n"
@@ -231,6 +232,9 @@ static const char contentSandboxRules[] =
   "    (resolving-subpath (string-append home-path home-relative-subpath)))\n"
   "  (define (home-literal home-relative-literal)\n"
   "    (resolving-literal (string-append home-path home-relative-literal)))\n"
+  "\n"
+  "  (define (profile-subpath profile-relative-subpath)\n"
+  "    (resolving-subpath (string-append profileDir profile-relative-subpath)))\n"
   "\n"
   "  (define (container-regex container-relative-regex)\n"
   "    (resolving-regex (string-append \"^\" (regex-quote container-path) container-relative-regex)))\n"
@@ -371,16 +375,17 @@ static const char contentSandboxRules[] =
   "  (allow file-read*\n"
   "      (home-regex \"/Library/Application Support/[^/]+/Extensions/[^/]/\")\n"
   "      (resolving-regex \"/Library/Application Support/[^/]+/Extensions/[^/]/\")\n"
-  "      (home-regex \"/Library/Application Support/Firefox/Profiles/[^/]+/extensions/\")\n"
-  "      (home-regex \"/Library/Application Support/Firefox/Profiles/[^/]+/weave/\"))\n"
+  "      (profile-subpath \"/extensions\")\n"
+  "      (profile-subpath \"/weave\"))\n"
   "\n"
-  "; the following rules should be removed when printing and \n"
+  "; the following rules should be removed when printing and\n"
   "; opening a file from disk are brokered through the main process\n"
   "  (if\n"
   "    (< sandbox-level 2)\n"
   "    (allow file*\n"
-  "        (require-not\n"
-  "            (home-subpath \"/Library\")))\n"
+  "        (require-all\n"
+  "            (require-not (home-subpath \"/Library\"))\n"
+  "            (require-not (subpath profileDir))))\n"
   "    (allow file*\n"
   "        (require-all\n"
   "            (subpath home-path)\n"
@@ -497,6 +502,7 @@ bool StartMacSandbox(MacSandboxInfo aInfo, std::string &aErrorMessage)
                aInfo.appBinaryPath.c_str(),
                aInfo.appDir.c_str(),
                aInfo.appTempDir.c_str(),
+               aInfo.profileDir.c_str(),
                getenv("HOME"));
     } else {
       fprintf(stderr,

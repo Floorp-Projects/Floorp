@@ -538,11 +538,7 @@ CodeGeneratorX64::emitWasmLoad(T* ins)
     Scalar::Type accessType = mir->accessType();
     MOZ_ASSERT(!Scalar::isSimdType(accessType), "SIMD NYI");
     MOZ_ASSERT(!mir->barrierBefore() && !mir->barrierAfter(), "atomics NYI");
-
-    if (mir->offset() > INT32_MAX) {
-        masm.jump(wasm::JumpTarget::OutOfBounds);
-        return;
-    }
+    MOZ_ASSERT(mir->offset() <= INT32_MAX);
 
     const LAllocation* ptr = ins->ptr();
     Operand srcAddr = ptr->isBogus()
@@ -583,11 +579,7 @@ CodeGeneratorX64::emitWasmStore(T* ins)
     Scalar::Type accessType = mir->accessType();
     MOZ_ASSERT(!Scalar::isSimdType(accessType), "SIMD NYI");
     MOZ_ASSERT(!mir->barrierBefore() && !mir->barrierAfter(), "atomics NYI");
-
-    if (mir->offset() > INT32_MAX) {
-        masm.jump(wasm::JumpTarget::OutOfBounds);
-        return;
-    }
+    MOZ_ASSERT(mir->offset() <= INT32_MAX);
 
     const LAllocation* value = ins->getOperand(ins->ValueIndex);
     const LAllocation* ptr = ins->ptr();

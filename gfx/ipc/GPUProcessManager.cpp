@@ -8,6 +8,7 @@
 #include "mozilla/StaticPtr.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/layers/APZCTreeManager.h"
+#include "mozilla/layers/APZCTreeManagerChild.h"
 #include "mozilla/layers/CompositorBridgeParent.h"
 #include "mozilla/layers/ImageBridgeChild.h"
 #include "mozilla/layers/ImageBridgeParent.h"
@@ -394,8 +395,17 @@ GPUProcessManager::CreateRemoteSession(nsBaseWidget* aWidget,
     return nullptr;
   }
 
+  RefPtr<APZCTreeManagerChild> apz = nullptr;
+  if (aUseAPZ) {
+    PAPZCTreeManagerChild* papz = child->SendPAPZCTreeManagerConstructor(0);
+    if (!papz) {
+      return nullptr;
+    }
+    apz = static_cast<APZCTreeManagerChild*>(papz);
+  }
+
   RefPtr<RemoteCompositorSession> session =
-    new RemoteCompositorSession(child, widget, aRootLayerTreeId);
+    new RemoteCompositorSession(child, widget, apz, aRootLayerTreeId);
   return session.forget();
 #else
   gfxCriticalNote << "Platform does not support out-of-process compositing";

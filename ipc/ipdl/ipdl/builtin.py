@@ -50,6 +50,7 @@ HeaderIncludes = (
     'nsTArray.h',
     'mozilla/ipc/ProtocolUtils.h',
     'nsTHashtable.h',
+    'mozilla/OperatorNewExtensions.h',
 )
 
 CppIncludes = (

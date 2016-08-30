@@ -16,7 +16,7 @@ EXPORTS.mozilla.dom.mobilemessage += [
     'Types.h',                # Required by IPDL SmsTypes.h
 ]
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android' and CONFIG['MOZ_WEBSMS_BACKEND']:
     SOURCES += [
         'android/MobileMessageDatabaseService.cpp',
         'android/SmsManager.cpp',

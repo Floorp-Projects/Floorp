@@ -11,7 +11,7 @@
 #include "mozilla/mscom/DispatchForwarder.h"
 #include "mozilla/mscom/MainThreadInvoker.h"
 #include "mozilla/mscom/Registration.h"
-#include "mozilla/mscom/utils.h"
+#include "mozilla/mscom/Utils.h"
 #include "MainThreadUtils.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/DebugOnly.h"

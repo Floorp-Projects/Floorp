@@ -281,11 +281,10 @@ RectTyped<units> IntRectToRect(const IntRectTyped<units>& aRect)
   return RectTyped<units>(aRect.x, aRect.y, aRect.width, aRect.height);
 }
 
-// Convenience function for intersecting two IntRects wrapped in Maybes.
-template <typename Units>
-Maybe<IntRectTyped<Units>>
-IntersectMaybeRects(const Maybe<IntRectTyped<Units>>& a,
-                    const Maybe<IntRectTyped<Units>>& b)
+// Convenience function for intersecting two rectangles wrapped in Maybes.
+template <typename T>
+Maybe<T>
+IntersectMaybeRects(const Maybe<T>& a, const Maybe<T>& b)
 {
   if (!a) {
     return b;

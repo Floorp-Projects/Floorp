@@ -687,7 +687,7 @@ public:
                            bool aFirstPass);
   void ReflowContents(ScrollReflowInput* aState,
                       const ReflowOutput& aDesiredSize);
-  void PlaceScrollArea(const ScrollReflowInput& aState,
+  void PlaceScrollArea(ScrollReflowInput& aState,
                        const nsPoint& aScrollPosition);
   nscoord GetIntrinsicVScrollbarWidth(nsRenderingContext *aRenderingContext);
 
@@ -709,6 +709,11 @@ public:
   virtual bool ComputeCustomOverflow(nsOverflowAreas& aOverflowAreas) override {
     return mHelper.ComputeCustomOverflow(aOverflowAreas);
   }
+
+  // Recomputes the scrollable overflow area we store in the helper to take children
+  // that are affected by perpsective set on the outer frame and scroll at different
+  // rates.
+  void AdjustForPerspective(nsRect& aScrollableOverflow);
 
   // Called to set the child frames. We typically have three: the scroll area,
   // the vertical scrollbar, and the horizontal scrollbar.

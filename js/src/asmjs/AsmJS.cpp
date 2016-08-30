@@ -781,7 +781,7 @@ ParseVarOrConstStatement(AsmJSParser& parser, ParseNode** var)
         return true;
     }
 
-    *var = parser.statement(YieldIsName);
+    *var = parser.statementListItem(YieldIsName);
     if (!*var)
         return false;
 
@@ -7206,7 +7206,7 @@ CheckModuleReturn(ModuleValidator& m)
     }
     ts.ungetToken();
 
-    ParseNode* returnStmt = m.parser().statement(YieldIsName);
+    ParseNode* returnStmt = m.parser().statementListItem(YieldIsName);
     if (!returnStmt)
         return false;
 

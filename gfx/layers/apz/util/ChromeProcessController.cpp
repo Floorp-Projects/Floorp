@@ -171,6 +171,10 @@ ChromeProcessController::HandleTap(TapType aType,
     return;
   }
 
+  if (!mAPZEventState) {
+    return;
+  }
+
   nsCOMPtr<nsIPresShell> presShell = GetPresShell();
   if (!presShell) {
     return;
@@ -214,6 +218,10 @@ ChromeProcessController::NotifyAPZStateChange(const ScrollableLayerGuid& aGuid,
                        APZStateChange,
                        int>(this, &ChromeProcessController::NotifyAPZStateChange,
                             aGuid, aChange, aArg));
+    return;
+  }
+
+  if (!mAPZEventState) {
     return;
   }
 

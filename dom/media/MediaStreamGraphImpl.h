@@ -522,6 +522,8 @@ public:
   void EnsureNextIteration()
   {
     mNeedAnotherIteration = true; // atomic
+    // Note: GraphDriver must ensure that there's no race on setting
+    // mNeedAnotherIteration and mGraphDriverAsleep -- see WaitForNextIteration()
     if (mGraphDriverAsleep) { // atomic
       MonitorAutoLock mon(mMonitor);
       CurrentDriver()->WakeUp(); // Might not be the same driver; might have woken already
