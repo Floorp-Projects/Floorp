@@ -156,19 +156,28 @@ struct DataSegment
 
 typedef Vector<DataSegment, 0, SystemAllocPolicy> DataSegmentVector;
 
-// ElemSegment represents an element segment in the module where each element's
-// function index has been translated to its offset in the code section.
+// ElemSegment represents an element segment in the module where each element
+// describes both its function index and its code range.
 
 struct ElemSegment
 {
-    MOZ_INIT_OUTSIDE_CTOR uint32_t tableIndex;
-    MOZ_INIT_OUTSIDE_CTOR InitExpr offset;
-    MOZ_INIT_OUTSIDE_CTOR Uint32Vector elems;
+    uint32_t tableIndex;
+    InitExpr offset;
+    Uint32Vector elemFuncIndices;
+    Uint32Vector elemCodeRangeIndices;
 
     ElemSegment() = default;
-    ElemSegment(uint32_t tableIndex, InitExpr offset, Uint32Vector&& elems)
-      : tableIndex(tableIndex), offset(offset), elems(Move(elems))
-    {}
+    ElemSegment(uint32_t tableIndex,
+                InitExpr offset,
+                Uint32Vector&& elemFuncIndices,
+                Uint32Vector&& elemCodeRangeIndices)
+      : tableIndex(tableIndex),
+        offset(offset),
+        elemFuncIndices(Move(elemFuncIndices)),
+        elemCodeRangeIndices(Move(elemCodeRangeIndices))
+    {
+        MOZ_ASSERT(elemFuncIndices.length() == elemCodeRangeIndices.length());
+    }
 
     WASM_DECLARE_SERIALIZABLE(ElemSegment)
 };
