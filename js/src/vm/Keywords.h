@@ -61,7 +61,6 @@
      * future reserved keyword in strict mode, but a keyword in JS1.7 even \
      * when strict.  Punt logic to parser. \
      */ \
-    macro(yield, yield, TOK_YIELD) \
-    macro(let, let, TOK_LET)
+    macro(yield, yield, TOK_YIELD)
 
 #endif /* vm_Keywords_h */
