@@ -51,6 +51,7 @@ WeakSetObject::initClass(JSContext* cx, JSObject* obj)
     if (!ctor ||
         !LinkConstructorAndPrototype(cx, ctor, proto) ||
         !DefinePropertiesAndFunctions(cx, proto, properties, methods) ||
+        !DefineToStringTag(cx, proto, cx->names().WeakSet) ||
         !GlobalObject::initBuiltinConstructor(cx, global, JSProto_WeakSet, ctor, proto))
     {
         return nullptr;
