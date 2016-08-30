@@ -66,10 +66,10 @@ class MarkReleaseAsShipped(BaseScript, VirtualenvMixin, BuildbotMixin):
             self.warning("Skipping buildbot properties overrides")
             return
         props = self.buildbot_config['properties']
-        mandatory_props = ['product', 'version', 'buildnumber']
+        mandatory_props = ['product', 'version', 'build_number']
         missing_props = []
         for prop in mandatory_props:
-            if props.get(prop):
+            if prop in props:
                 self.info("Overriding %s with %s" % (prop, props[prop]))
                 self.config[prop] = props.get(prop)
             else:
@@ -81,7 +81,7 @@ class MarkReleaseAsShipped(BaseScript, VirtualenvMixin, BuildbotMixin):
 
         self.config['name'] = build_release_name(self.config['product'],
                                                  self.config['version'],
-                                                 self.config['buildnumber'])
+                                                 self.config['build_number'])
 
     def mark_as_shipped(self):
         """Method to make a simple call to Ship-it API to change a release
