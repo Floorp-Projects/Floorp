@@ -31,10 +31,10 @@
         tools:text="More"
         android:layout_alignBottom="@+id/title_topsites"/>
 
-    <android.support.v7.widget.RecyclerView
+    <android.support.v4.view.ViewPager
         android:layout_width="match_parent"
         android:layout_height="115dp"
-        android:id="@+id/android.support.v7.widget.RecyclerView"
+        android:id="@+id/topsites_pager"
         android:layout_below="@+id/title_topsites"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"/>
@@ -45,7 +45,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textStyle="bold"
-        android:layout_below="@+id/android.support.v7.widget.RecyclerView"
+        android:layout_below="@+id/topsites_pager"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
         android:layout_toLeftOf="@+id/more_highlights"
