@@ -2041,15 +2041,14 @@ tls13_SetCipherSpec(sslSocket *ss, TrafficKeyType type,
     spec->epoch = (*specp)->epoch + 1;
 
     if (!IS_DTLS(ss)) {
-        spec->read_seq_num.high = spec->write_seq_num.high = 0;
+        spec->read_seq_num = spec->write_seq_num = 0;
     } else {
         /* The sequence number has the high 16 bits as the epoch. */
-        spec->read_seq_num.high = spec->write_seq_num.high =
-            spec->epoch << 16;
+        spec->read_seq_num = spec->write_seq_num =
+            (sslSequenceNumber)spec->epoch << 48;
 
         dtls_InitRecvdRecords(&spec->recvdRecords);
     }
-    spec->read_seq_num.low = spec->write_seq_num.low = 0;
 
     /* Now that we've set almost everything up, finally cut over. */
     ssl_GetSpecWriteLock(ss);
@@ -3229,13 +3228,12 @@ tls13_ExtensionAllowed(PRUint16 extension, SSL3HandshakeType message)
  * data. */
 static void
 tls13_FormatAdditionalData(PRUint8 *aad, unsigned int length,
-                           SSL3SequenceNumber seqNum)
+                           sslSequenceNumber seqNum)
 {
     PRUint8 *ptr = aad;
 
     PORT_Assert(length == 8);
-    ptr = ssl_EncodeUintX(seqNum.high, 4, ptr);
-    ptr = ssl_EncodeUintX(seqNum.low, 4, ptr);
+    ptr = ssl_EncodeUintX(seqNum, 8, ptr);
     PORT_Assert((ptr - aad) == length);
 }
 
@@ -3253,10 +3251,17 @@ tls13_ProtectRecord(sslSocket *ss,
     int cipherBytes = 0;
     const int tagLen = cipher_def->tag_size;
 
-    SSL_TRC(3, ("%d: TLS13[%d]: spec=%d phase=%s protect record of length %u, seq=0x%0x%0x",
-                SSL_GETPID(), ss->fd, cwSpec, cwSpec->phase, contentLen,
-                cwSpec->write_seq_num.high,
-                cwSpec->write_seq_num.low));
+    SSL_TRC(3, ("%d: TLS13[%d]: spec=%d (%s) protect record 0x%0llx len=%u",
+                SSL_GETPID(), ss->fd, cwSpec, cwSpec->phase,
+                cwSpec->write_seq_num, contentLen));
+
+    PORT_Assert(cipher_def->max_records <= RECORD_SEQ_MAX);
+    if ((cwSpec->write_seq_num & RECORD_SEQ_MAX) >= cipher_def->max_records) {
+        SSL_TRC(3, ("%d: TLS13[%d]: write sequence number at limit 0x%0llx",
+                    SSL_GETPID(), ss->fd, cwSpec->write_seq_num));
+        PORT_SetError(SSL_ERROR_TOO_MANY_RECORDS);
+        return SECFailure;
+    }
 
     headerLen = IS_DTLS(ss) ? DTLS_RECORD_HEADER_LENGTH : SSL3_RECORD_HEADER_LENGTH;
 
@@ -3282,8 +3287,7 @@ tls13_ProtectRecord(sslSocket *ss,
         /* Stomp the content type to be application_data */
         type = content_application_data;
 
-        tls13_FormatAdditionalData(aad, sizeof(aad),
-                                   cwSpec->write_seq_num);
+        tls13_FormatAdditionalData(aad, sizeof(aad), cwSpec->write_seq_num);
         cipherBytes = contentLen + 1; /* Room for the content type on the end. */
         rv = cwSpec->aead(
             ss->sec.isServer ? &cwSpec->server : &cwSpec->client,
@@ -3308,14 +3312,13 @@ tls13_ProtectRecord(sslSocket *ss,
         (void)ssl_EncodeUintX(
             dtls_TLSVersionToDTLSVersion(kDtlsRecordVersion), 2,
             &wrBuf->buf[1]);
-        (void)ssl_EncodeUintX(cwSpec->write_seq_num.high, 4, &wrBuf->buf[3]);
-        (void)ssl_EncodeUintX(cwSpec->write_seq_num.low, 4, &wrBuf->buf[7]);
+        (void)ssl_EncodeUintX(cwSpec->write_seq_num, 8, &wrBuf->buf[3]);
         (void)ssl_EncodeUintX(cipherBytes, 2, &wrBuf->buf[11]);
     } else {
         (void)ssl_EncodeUintX(kTlsRecordVersion, 2, &wrBuf->buf[1]);
         (void)ssl_EncodeUintX(cipherBytes, 2, &wrBuf->buf[3]);
     }
-    ssl3_BumpSequenceNumber(&cwSpec->write_seq_num);
+    ++cwSpec->write_seq_num;
 
     return SECSuccess;
 }
@@ -3340,10 +3343,9 @@ tls13_UnprotectRecord(sslSocket *ss, SSL3Ciphertext *cText, sslBuffer *plaintext
 
     *alert = bad_record_mac; /* Default alert for most issues. */
 
-    SSL_TRC(3, ("%d: TLS13[%d]: spec=%d phase=%s unprotect record of length %u seq=0x%0x%0x",
-                SSL_GETPID(), ss->fd, crSpec, crSpec->phase, cText->buf->len,
-                crSpec->read_seq_num.high,
-                crSpec->read_seq_num.low));
+    SSL_TRC(3, ("%d: TLS13[%d]: spec=%d (%s) unprotect record 0x%0llx len=%u",
+                SSL_GETPID(), ss->fd, crSpec, crSpec->phase,
+                crSpec->read_seq_num, cText->buf->len));
 
     /* We can perform this test in variable time because the record's total
      * length and the ciphersuite are both public knowledge. */

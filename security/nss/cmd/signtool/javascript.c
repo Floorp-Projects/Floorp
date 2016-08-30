@@ -1649,6 +1649,15 @@ loser:
         PR_Free(firstArchiveDir);
         firstArchiveDir = NULL;
     }
+    if (entityListTail) {
+        PR_Free(entityListTail);
+    }
+    if (curitem) {
+        PR_Free(curitem);
+    }
+    if (basedir) {
+        PR_Free(basedir);
+    }
     return retval;
 }
 

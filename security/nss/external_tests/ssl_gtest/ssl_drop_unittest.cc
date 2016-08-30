@@ -7,6 +7,11 @@
 #include "ssl.h"
 #include "secerr.h"
 
+extern "C" {
+// This is not something that should make you happy.
+#include "libssl_internals.h"
+}
+
 #include "gtest_utils.h"
 #include "scoped_ptrs.h"
 #include "tls_connect.h"
@@ -78,5 +83,50 @@ TEST_P(TlsConnectDatagram, DropServerSecondFlightThrice) {
   server_->SetPacketFilter(new SelectiveDropFilter(0xe));
   Connect();
 }
+
+// This simulates a huge number of drops on one side.
+TEST_P(TlsConnectDatagram, MissLotsOfPackets) {
+  uint16_t cipher = TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256;
+  uint64_t limit = (1ULL << 48) - 1;
+  if (version_ < SSL_LIBRARY_VERSION_TLS_1_2) {
+    cipher = TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA;
+    limit = 0x5aULL << 28;
+  }
+  EnsureTlsSetup();
+  server_->EnableSingleCipher(cipher);
+  Connect();
+
+  // Note that the limit for ChaCha is 2^48-1.
+  EXPECT_EQ(SECSuccess,
+            SSLInt_AdvanceWriteSeqNum(client_->ssl_fd(), limit - 10));
+  SendReceive();
+}
+
+class TlsConnectDatagram12Plus : public TlsConnectDatagram {
+ public:
+  TlsConnectDatagram12Plus() : TlsConnectDatagram() {}
+};
+
+// This simulates missing a window's worth of packets.
+TEST_P(TlsConnectDatagram12Plus, MissAWindow) {
+  EnsureTlsSetup();
+  server_->EnableSingleCipher(TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256);
+  Connect();
+
+  EXPECT_EQ(SECSuccess, SSLInt_AdvanceWriteSeqByAWindow(client_->ssl_fd(), 0));
+  SendReceive();
+}
+
+TEST_P(TlsConnectDatagram12Plus, MissAWindowAndOne) {
+  EnsureTlsSetup();
+  server_->EnableSingleCipher(TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256);
+  Connect();
+
+  EXPECT_EQ(SECSuccess, SSLInt_AdvanceWriteSeqByAWindow(client_->ssl_fd(), 1));
+  SendReceive();
+}
+
+INSTANTIATE_TEST_CASE_P(Datagram12Plus, TlsConnectDatagram12Plus,
+                        TlsConnectTestBase::kTlsV12Plus);
 
 }  // namespace nss_test

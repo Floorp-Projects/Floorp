@@ -33,6 +33,7 @@ else
          "$top/lib/cryptohi" \
          "$top/lib/dbm" \
          "$top/lib/dev" \
+         "$top/lib/freebl" \
          "$top/lib/softoken" \
          "$top/lib/ssl" \
          "$top/external_tests/common" \

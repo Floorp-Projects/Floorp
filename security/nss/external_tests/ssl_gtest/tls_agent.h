@@ -116,7 +116,7 @@ class TlsAgent : public PollTarget {
   void ResetPreliminaryInfo();
   void SetExpectedVersion(uint16_t version);
   void SetServerKeyBits(uint16_t bits);
-  void SetExpectedReadError(bool err);
+  void ExpectReadWriteError();
   void EnableFalseStart();
   void ExpectResumption();
   void SetSignatureAlgorithms(const SSLSignatureAndHashAlg* algorithms,
@@ -191,7 +191,7 @@ class TlsAgent : public PollTarget {
   }
 
   size_t received_bytes() const { return recv_ctr_; }
-  int32_t error_code() const { return error_code_; }
+  PRErrorCode error_code() const { return error_code_; }
 
   bool can_falsestart_hook_called() const {
     return can_falsestart_hook_called_;
@@ -331,10 +331,10 @@ class TlsAgent : public PollTarget {
   SSLChannelInfo info_;
   SSLCipherSuiteInfo csinfo_;
   SSLVersionRange vrange_;
-  int32_t error_code_;
+  PRErrorCode error_code_;
   size_t send_ctr_;
   size_t recv_ctr_;
-  bool expected_read_error_;
+  bool expect_readwrite_error_;
   HandshakeCallbackFunction handshake_callback_;
   AuthCertificateCallbackFunction auth_certificate_callback_;
   SniCallbackFunction sni_callback_;
@@ -356,15 +356,18 @@ class TlsAgentTestBase : public ::testing::Test {
   void TearDown();
 
   void MakeRecord(uint8_t type, uint16_t version, const uint8_t* buf,
-                  size_t len, DataBuffer* out, uint32_t seq_num = 0);
+                  size_t len, DataBuffer* out, uint64_t seq_num = 0);
+  static void MakeRecord(Mode mode, uint8_t type, uint16_t version,
+                         const uint8_t* buf, size_t len, DataBuffer* out,
+                         uint64_t seq_num = 0);
   void MakeHandshakeMessage(uint8_t hs_type, const uint8_t* data, size_t hs_len,
-                            DataBuffer* out, uint32_t seq_num = 0);
+                            DataBuffer* out, uint64_t seq_num = 0);
   void MakeHandshakeMessageFragment(uint8_t hs_type, const uint8_t* data,
                                     size_t hs_len, DataBuffer* out,
-                                    uint32_t seq_num, uint32_t fragment_offset,
+                                    uint64_t seq_num, uint32_t fragment_offset,
                                     uint32_t fragment_length);
-  void MakeTrivialHandshakeRecord(uint8_t hs_type, size_t hs_len,
-                                  DataBuffer* out);
+  static void MakeTrivialHandshakeRecord(uint8_t hs_type, size_t hs_len,
+                                         DataBuffer* out);
   static inline TlsAgent::Role ToRole(const std::string& str) {
     return str == "CLIENT" ? TlsAgent::CLIENT : TlsAgent::SERVER;
   }
