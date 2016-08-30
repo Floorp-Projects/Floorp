@@ -233,6 +233,10 @@ var AddonTestUtils = {
     appDirForAddons.create(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
     this.registerDirectory("XREAddonAppDir", appDirForAddons);
 
+    // Create a directory for system add-on upgrades.
+    this.systemAddonDir = this.profileDir.clone();
+    this.systemAddonDir.append("features");
+    this.systemAddonDir.create(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
 
     // Enable more extensive EM logging
     Services.prefs.setBoolPref("extensions.logging.enabled", true);
@@ -413,6 +417,16 @@ var AddonTestUtils = {
     }
   }),
 
+  /**
+    * Determine if this is a system add-on, based on install location.
+    *
+    * @param {nsIFile} file File pointer to the add-on.
+    * @returns {boolean} true if install location contains add-on file.
+    */
+  isSystemAddon(file) {
+    return this.systemAddonDir.contains(file);
+  },
+
   overrideCertDB() {
     // Unregister the real database. This only works because the add-ons manager
     // hasn't started up and grabbed the certificate database yet.
@@ -436,6 +450,11 @@ var AddonTestUtils = {
           let id = yield this.getIDFromManifest(manifestURI);
 
           let fakeCert = {commonName: id};
+          if (this.isSystemAddon(file)) {
+            fakeCert["organizationalUnit"] = "Mozilla Components";
+          } else {
+            fakeCert["organizationalUnit"] = "Preliminary";
+          }
 
           return [callback, Cr.NS_OK, fakeCert];
         } catch (e) {
