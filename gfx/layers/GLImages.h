@@ -22,6 +22,10 @@ public:
   explicit GLImage(ImageFormat aFormat) : Image(nullptr, aFormat){}
 
   virtual already_AddRefed<gfx::SourceSurface> GetAsSourceSurface() override;
+
+  GLImage* AsGLImage() override {
+    return this;
+  }
 };
 
 class EGLImageImage : public GLImage {

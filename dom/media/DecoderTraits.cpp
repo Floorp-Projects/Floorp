@@ -18,10 +18,6 @@
 #include "WebMDecoder.h"
 #include "WebMDemuxer.h"
 
-#ifdef MOZ_RAW
-#include "RawDecoder.h"
-#include "RawReader.h"
-#endif
 #ifdef MOZ_ANDROID_OMX
 #include "AndroidMediaDecoder.h"
 #include "AndroidMediaReader.h"
@@ -72,28 +68,6 @@ CodecListContains(char const *const * aCodecs, const String& aCodec)
   }
   return false;
 }
-
-#ifdef MOZ_RAW
-static const char* gRawTypes[3] = {
-  "video/x-raw",
-  "video/x-raw-yuv",
-  nullptr
-};
-
-static const char* gRawCodecs[1] = {
-  nullptr
-};
-
-static bool
-IsRawType(const nsACString& aType)
-{
-  if (!MediaDecoder::IsRawEnabled()) {
-    return false;
-  }
-
-  return CodecListContains(gRawTypes, aType);
-}
-#endif
 
 static bool
 IsOggSupportedType(const nsACString& aType,
@@ -365,11 +339,6 @@ DecoderTraits::CanHandleCodecsType(const char* aMIMEType,
                                    DecoderDoctorDiagnostics* aDiagnostics)
 {
   char const* const* codecList = nullptr;
-#ifdef MOZ_RAW
-  if (IsRawType(nsDependentCString(aMIMEType))) {
-    codecList = gRawCodecs;
-  }
-#endif
   if (IsOggTypeAndEnabled(nsDependentCString(aMIMEType))) {
     if (IsOggSupportedType(nsDependentCString(aMIMEType), aRequestedCodecs)) {
       return CANPLAY_YES;
@@ -481,11 +450,6 @@ DecoderTraits::CanHandleMediaType(const char* aMIMEType,
       return result;
     }
   }
-#ifdef MOZ_RAW
-  if (IsRawType(nsDependentCString(aMIMEType))) {
-    return CANPLAY_MAYBE;
-  }
-#endif
   if (IsOggTypeAndEnabled(nsDependentCString(aMIMEType))) {
     return CANPLAY_MAYBE;
   }
@@ -552,12 +516,6 @@ InstantiateDecoder(const nsACString& aType,
     decoder = new ADTSDecoder(aOwner);
     return decoder.forget();
   }
-#ifdef MOZ_RAW
-  if (IsRawType(aType)) {
-    decoder = new RawDecoder(aOwner);
-    return decoder.forget();
-  }
-#endif
   if (IsOggSupportedType(aType)) {
     decoder = new OggDecoder(aOwner);
     return decoder.forget();
@@ -657,11 +615,6 @@ MediaDecoderReader* DecoderTraits::CreateReader(const nsACString& aType, Abstrac
   if (IsFlacSupportedType(aType)) {
     decoderReader = new MediaFormatReader(aDecoder, new FlacDemuxer(aDecoder->GetResource()));
   } else
-#ifdef MOZ_RAW
-  if (IsRawType(aType)) {
-    decoderReader = new RawReader(aDecoder);
-  } else
-#endif
   if (IsOggSupportedType(aType)) {
     decoderReader = MediaPrefs::OggFormatReader() ?
       static_cast<MediaDecoderReader*>(new MediaFormatReader(aDecoder, new OggDemuxer(aDecoder->GetResource()))) :

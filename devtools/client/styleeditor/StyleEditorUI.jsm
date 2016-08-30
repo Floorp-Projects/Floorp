@@ -10,7 +10,7 @@ this.EXPORTED_SYMBOLS = ["StyleEditorUI"];
 const Ci = Components.interfaces;
 const Cu = Components.utils;
 
-const {require, loader} = Cu.import("resource://devtools/shared/Loader.jsm", {});
+const {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
 const Services = require("Services");
 const {NetUtil} = require("resource://gre/modules/NetUtil.jsm");
 const {OS} = require("resource://gre/modules/osfile.jsm");
@@ -25,9 +25,8 @@ const {
 } = require("resource://devtools/client/styleeditor/StyleEditorUtil.jsm");
 const {SplitView} = require("resource://devtools/client/shared/SplitView.jsm");
 const {StyleSheetEditor} = require("resource://devtools/client/styleeditor/StyleSheetEditor.jsm");
-loader.lazyImporter(this, "PluralForm", "resource://gre/modules/PluralForm.jsm");
-const {PrefObserver, PREF_ORIG_SOURCES} =
-      require("devtools/client/styleeditor/utils");
+const {PluralForm} = require("devtools/shared/plural-form");
+const {PrefObserver, PREF_ORIG_SOURCES} = require("devtools/client/styleeditor/utils");
 const csscoverage = require("devtools/shared/fronts/csscoverage");
 const {console} = require("resource://gre/modules/Console.jsm");
 const promise = require("promise");

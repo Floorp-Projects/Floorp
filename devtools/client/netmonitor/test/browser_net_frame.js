@@ -153,7 +153,7 @@ add_task(function* () {
   // all the requests the page is making, not only the XHRs.
   // We can't use about:blank here, because initNetMonitor checks that the
   // page has actually made at least one request.
-  let [ tab, , monitor ] = yield initNetMonitor(SIMPLE_URL);
+  let { tab, monitor } = yield initNetMonitor(SIMPLE_URL);
   let { NetMonitorView } = monitor.panelWin;
   let { RequestsMenu } = NetMonitorView;
   RequestsMenu.lazyUpdate = false;

@@ -63,6 +63,7 @@ DevToolsModules(
     'Loader.jsm',
     'Parser.jsm',
     'path.js',
+    'plural-form.js',
     'protocol.js',
     'system.js',
     'task.js',

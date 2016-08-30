@@ -1576,7 +1576,7 @@ Toolbox.prototype = {
   // Returns an instance of the preference actor
   get _preferenceFront() {
     return this.target.root.then(rootForm => {
-      return new L10N.getFormatStr(this.target.client, rootForm);
+      return new getPreferenceFront(this.target.client, rootForm);
     });
   },
 

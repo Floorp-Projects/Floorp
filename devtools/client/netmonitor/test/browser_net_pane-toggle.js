@@ -8,7 +8,7 @@
  */
 
 add_task(function* () {
-  let [tab, , monitor] = yield initNetMonitor(SIMPLE_URL);
+  let { tab, monitor } = yield initNetMonitor(SIMPLE_URL);
   info("Starting test... ");
 
   let { $, NetMonitorView } = monitor.panelWin;
@@ -29,9 +29,7 @@ add_task(function* () {
     "There should be no selected item in the requests menu.");
 
   let networkEvent = monitor.panelWin.once(NETWORK_EVENT);
-  yield ContentTask.spawn(tab.linkedBrowser, {}, function* () {
-    content.location.reload();
-  });
+  tab.linkedBrowser.reload();
   yield networkEvent;
 
   is(toggleButton.hasAttribute("disabled"), false,

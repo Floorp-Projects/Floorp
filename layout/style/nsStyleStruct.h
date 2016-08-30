@@ -1111,7 +1111,7 @@ public:
     return true;
   }
 
-  NS_INLINE_DECL_REFCOUNTING(nsCSSShadowArray)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(nsCSSShadowArray)
 
 private:
   uint32_t mLength;

@@ -20,7 +20,7 @@
 this.EXPORTED_SYMBOLS = ["loadKinto"];
 
 /*
- * Version 3.1.2 - 7fe074d
+ * Version 4.0.2 - ef8a96f
  */
 
 (function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.loadKinto = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
@@ -51,8 +51,6 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-
 Components.utils.import("resource://gre/modules/Sqlite.jsm");
 Components.utils.import("resource://gre/modules/Task.jsm");
 
@@ -1777,9 +1775,6 @@ class Collection {
    */
   importChanges(syncResultObject, changeObject) {
     return Promise.all(changeObject.changes.map(change => {
-      if (change.deleted) {
-        return Promise.resolve(change);
-      }
       return this._decodeRecord("remote", change);
     })).then(decodedChanges => {
       // No change, nothing to import.
@@ -1853,7 +1848,9 @@ class Collection {
 
     return this.db.execute(transaction => {
       const txn = new CollectionTransaction(this, transaction);
-      return doOperations(txn);
+      const result = doOperations(txn);
+      txn.emitEvents();
+      return result;
     }, { preload: preloadIds });
   }
 
@@ -1893,15 +1890,12 @@ class Collection {
    * - `toDelete`: unsynced deleted records we can safely delete;
    * - `toSync`: local updates to send to the server.
    *
-   * @return {Object}
+   * @return {Promise}
    */
   gatherLocalChanges() {
-    let _toDelete;
     return Promise.all([this.list({ filters: { _status: ["created", "updated"] }, order: "" }), this.list({ filters: { _status: "deleted" }, order: "" }, { includeDeleted: true })]).then(([unsynced, deleted]) => {
-      _toDelete = deleted.data;
-      // Encode unsynced records.
-      return Promise.all(unsynced.data.map(this._encodeRecord.bind(this, "remote")));
-    }).then(toSync => ({ toDelete: _toDelete, toSync }));
+      return Promise.all([Promise.all(unsynced.data.map(this._encodeRecord.bind(this, "remote"))), Promise.all(deleted.data.map(this._encodeRecord.bind(this, "remote")))]);
+    }).then(([toSync, toDelete]) => ({ toSync, toDelete }));
   }
 
   /**
@@ -1998,6 +1992,7 @@ class Collection {
       return Promise.resolve(syncResultObject);
     }
     const safe = !options.strategy || options.strategy !== Collection.CLIENT_WINS;
+    let synced;
 
     // Fetch local changes
     return this.gatherLocalChanges().then(({ toDelete, toSync }) => {
@@ -2021,7 +2016,8 @@ class Collection {
       }, { headers: options.headers, safe, aggregate: true });
     })
     // Update published local records
-    .then(synced => {
+    .then(batchResult => {
+      synced = batchResult;
       // Merge outgoing errors into sync result object
       syncResultObject.add("errors", synced.errors.map(error => {
         error.type = "outgoing";
@@ -2030,9 +2026,17 @@ class Collection {
 
       // The result of a batch returns data and permissions.
       // XXX: permissions are ignored currently.
-      const conflicts = synced.conflicts.map(c => {
-        return { type: c.type, local: c.local.data, remote: c.remote };
-      });
+      return Promise.all(synced.conflicts.map(({ type, local, remote }) => {
+        // Note: we ensure that local data are actually available, as they may
+        // be missing in the case of a published deletion.
+        const safeLocal = local && local.data || {};
+        return this._decodeRecord("remote", safeLocal).then(realLocal => {
+          return this._decodeRecord("remote", remote).then(realRemote => {
+            return { type, local: realLocal, remote: realRemote };
+          });
+        });
+      }));
+    }).then(conflicts => {
       // Merge outgoing conflicts into sync result object
       syncResultObject.add("conflicts", conflicts);
 
@@ -2282,6 +2286,27 @@ class CollectionTransaction {
   constructor(collection, adapterTransaction) {
     this.collection = collection;
     this.adapterTransaction = adapterTransaction;
+
+    this._events = [];
+  }
+
+  _queueEvent(action, payload) {
+    this._events.push({ action, payload });
+  }
+
+  /**
+   * Emit queued events, to be called once every transaction operations have
+   * been executed successfully.
+   */
+  emitEvents() {
+    for (let { action, payload } of this._events) {
+      this.collection.events.emit(action, payload);
+    }
+    if (this._events.length > 0) {
+      const targets = this._events.map(({ action, payload }) => _extends({ action }, payload));
+      this.collection.events.emit("change", { targets });
+    }
+    this._events = [];
   }
 
   /**
@@ -2342,6 +2367,7 @@ class CollectionTransaction {
       // Delete for real.
       this.adapterTransaction.delete(id);
     }
+    this._queueEvent("delete", { data: existing });
     return { data: existing, permissions: {} };
   }
 
@@ -2356,6 +2382,7 @@ class CollectionTransaction {
     const existing = this.adapterTransaction.get(id);
     if (existing) {
       this.adapterTransaction.update(markDeleted(existing));
+      this._queueEvent("delete", { data: existing });
     }
     return { data: _extends({ id }, existing), deleted: !!existing, permissions: {} };
   }
@@ -2379,6 +2406,7 @@ class CollectionTransaction {
     }
 
     this.adapterTransaction.create(record);
+    this._queueEvent("create", { data: record });
     return { data: record, permissions: {} };
   }
 
@@ -2412,7 +2440,8 @@ class CollectionTransaction {
     const newRecord = options.patch ? _extends({}, oldRecord, record) : record;
     const updated = this._updateRaw(oldRecord, newRecord, options);
     this.adapterTransaction.update(updated);
-    return { data: updated, oldRecord: oldRecord, permissions: {} };
+    this._queueEvent("update", { data: updated, oldRecord });
+    return { data: updated, oldRecord, permissions: {} };
   }
 
   /**
@@ -2467,8 +2496,12 @@ class CollectionTransaction {
     if (oldRecord && oldRecord._status == "deleted") {
       oldRecord = undefined;
     }
-
-    return { data: updated, oldRecord: oldRecord, permissions: {} };
+    if (oldRecord) {
+      this._queueEvent("update", { data: updated, oldRecord });
+    } else {
+      this._queueEvent("create", { data: updated });
+    }
+    return { data: updated, oldRecord, permissions: {} };
   }
 }
 exports.CollectionTransaction = CollectionTransaction;

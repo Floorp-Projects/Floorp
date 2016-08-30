@@ -18,9 +18,6 @@ const {OutputParser} = require("devtools/client/shared/output-parser");
 const {PrefObserver, PREF_ORIG_SOURCES} = require("devtools/client/styleeditor/utils");
 const {createChild} = require("devtools/client/inspector/shared/utils");
 const {gDevTools} = require("devtools/client/framework/devtools");
-/* eslint-disable mozilla/reject-some-requires */
-const {XPCOMUtils} = require("resource://gre/modules/XPCOMUtils.jsm");
-/* eslint-enable mozilla/reject-some-requires */
 const {getCssProperties} = require("devtools/shared/fronts/css-properties");
 
 const overlays = require("devtools/client/inspector/shared/style-inspector-overlays");
@@ -28,9 +25,6 @@ const StyleInspectorMenu = require("devtools/client/inspector/shared/style-inspe
 const {KeyShortcuts} = require("devtools/client/shared/key-shortcuts");
 const {LayoutView} = require("devtools/client/inspector/layout/layout");
 const clipboardHelper = require("devtools/shared/platform/clipboard");
-
-XPCOMUtils.defineLazyModuleGetter(this, "PluralForm",
-                                  "resource://gre/modules/PluralForm.jsm");
 
 const STYLE_INSPECTOR_PROPERTIES = "devtools-shared/locale/styleinspector.properties";
 const {LocalizationHelper} = require("devtools/shared/l10n");
