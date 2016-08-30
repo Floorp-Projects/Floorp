@@ -99,7 +99,8 @@ if (typeof assertDeepEq === 'undefined') {
             assertSameValue(ac, bc, msg);
             switch (ac) {
             case "[object Function]":
-                assertSameValue(Function_toString(a), Function_toString(b), msg);
+                if (typeof isProxy !== "undefined" && !isProxy(a) && !isProxy(b))
+                    assertSameValue(Function_toString(a), Function_toString(b), msg);
             }
         }
 

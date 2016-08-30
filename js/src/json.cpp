@@ -990,6 +990,9 @@ js::InitJSONClass(JSContext* cx, HandleObject obj)
     if (!JS_DefineFunctions(cx, JSON, json_static_methods))
         return nullptr;
 
+    if (!DefineToStringTag(cx, JSON, cx->names().JSON))
+        return nullptr;
+
     global->setConstructor(JSProto_JSON, ObjectValue(*JSON));
 
     return JSON;

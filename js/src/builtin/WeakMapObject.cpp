@@ -435,6 +435,8 @@ InitWeakMapClass(JSContext* cx, HandleObject obj, bool defineMembers)
     if (defineMembers) {
         if (!DefinePropertiesAndFunctions(cx, proto, nullptr, weak_map_methods))
             return nullptr;
+        if (!DefineToStringTag(cx, proto, cx->names().WeakMap))
+            return nullptr;
     }
 
     if (!GlobalObject::initBuiltinConstructor(cx, global, JSProto_WeakMap, ctor, proto))
