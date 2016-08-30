@@ -415,13 +415,7 @@ nsAnimationManager::UpdateAnimations(nsStyleContext* aStyleContext,
     return;
   }
 
-  if (collection) {
-    EffectSet* effectSet =
-      EffectSet::GetEffectSet(aElement, aStyleContext->GetPseudoType());
-    if (effectSet) {
-      effectSet->UpdateAnimationGeneration(mPresContext);
-    }
-  } else {
+  if (!collection) {
     bool createdCollection = false;
     collection =
       CSSAnimationCollection::GetOrCreateAnimationCollection(

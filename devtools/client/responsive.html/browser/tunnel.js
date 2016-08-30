@@ -340,6 +340,8 @@ MessageManagerTunnel.prototype = {
     "Forms:HideDropDown",
     "InPermitUnload",
     "PermitUnload",
+    // Messages sent to tabbrowser.xml
+    "contextmenu",
     // Messages sent to SelectParentHelper.jsm
     "Forms:UpdateDropDown",
     // Messages sent to browser.js

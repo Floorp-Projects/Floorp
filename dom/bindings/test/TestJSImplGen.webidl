@@ -354,9 +354,13 @@ interface TestJSImplInterface {
   void passByteString(ByteString arg);
   void passNullableByteString(ByteString? arg);
   void passOptionalByteString(optional ByteString arg);
+  void passOptionalByteStringWithDefaultValue(optional ByteString arg = "abc");
   void passOptionalNullableByteString(optional ByteString? arg);
+  void passOptionalNullableByteStringWithDefaultValue(optional ByteString? arg = null);
   void passVariadicByteString(ByteString... arg);
-  void PassUnionByteString((ByteString or long) arg);
+  void passUnionByteString((ByteString or long) arg);
+  void passOptionalUnionByteString(optional (ByteString or long) arg);
+  void passOptionalUnionByteStringWithDefaultValue(optional (ByteString or long) arg = "abc");
 
   // USVString types
   void passSVS(USVString arg);
@@ -507,6 +511,9 @@ interface TestJSImplInterface {
   void passUnionWithDefaultValue11(optional (unrestricted float or DOMString) arg = "");
   void passUnionWithDefaultValue12(optional (unrestricted float or DOMString) arg = 1);
   void passUnionWithDefaultValue13(optional (unrestricted float or DOMString) arg = Infinity);
+  void passUnionWithDefaultValue14(optional (double or ByteString) arg = "");
+  void passUnionWithDefaultValue15(optional (double or ByteString) arg = 1);
+  void passUnionWithDefaultValue16(optional (double or ByteString) arg = 1.5);
 
   void passNullableUnionWithDefaultValue1(optional (double or DOMString)? arg = "");
   void passNullableUnionWithDefaultValue2(optional (double or DOMString)? arg = 1);
@@ -520,6 +527,10 @@ interface TestJSImplInterface {
   void passNullableUnionWithDefaultValue10(optional (unrestricted float or DOMString)? arg = "");
   void passNullableUnionWithDefaultValue11(optional (unrestricted float or DOMString)? arg = 1);
   void passNullableUnionWithDefaultValue12(optional (unrestricted float or DOMString)? arg = null);
+  void passNullableUnionWithDefaultValue13(optional (double or ByteString)? arg = "");
+  void passNullableUnionWithDefaultValue14(optional (double or ByteString)? arg = 1);
+  void passNullableUnionWithDefaultValue15(optional (double or ByteString)? arg = 1.5);
+  void passNullableUnionWithDefaultValue16(optional (double or ByteString)? arg = null);
 
   void passSequenceOfUnions(sequence<(CanvasPattern or CanvasGradient)> arg);
   void passSequenceOfUnions2(sequence<(object or long)> arg);

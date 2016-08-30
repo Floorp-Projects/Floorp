@@ -65,8 +65,6 @@ private:
   const uint32_t mAudioRate;  // Audio sample rate.
   bool mDoneAudioSeeking;
   bool mDoneVideoSeeking;
-  bool mFirstAudioSample = true;
-  bool mFirstVideoSample = true;
 
   // This temporarily stores the first frame we decode after we seek.
   // This is so that if we hit end of stream while we're decoding to reach

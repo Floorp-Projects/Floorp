@@ -10,6 +10,7 @@
 #include "AccessibleCaretManager.h"
 #include "Layers.h"
 #include "gfxPrefs.h"
+#include "mozilla/AutoRestore.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/TouchEvents.h"
@@ -666,6 +667,13 @@ AccessibleCaretEventHub::Reflow(DOMHighResTimeStamp aStart,
 
   MOZ_ASSERT(mRefCnt.get() > 1, "Expect caller holds us as well!");
 
+  if (mIsInReflowCallback) {
+    return NS_OK;
+  }
+
+  AutoRestore<bool> autoRestoreIsInReflowCallback(mIsInReflowCallback);
+  mIsInReflowCallback = true;
+
   AC_LOG("%s, state: %s", __FUNCTION__, mState->Name());
   mState->OnReflow(this);
   return NS_OK;
@@ -675,12 +683,7 @@ NS_IMETHODIMP
 AccessibleCaretEventHub::ReflowInterruptible(DOMHighResTimeStamp aStart,
                                              DOMHighResTimeStamp aEnd)
 {
-  if (!mInitialized) {
-    return NS_OK;
-  }
-
-  MOZ_ASSERT(mRefCnt.get() > 1, "Expect caller holds us as well!");
-
+  // Defer the error checking to Reflow().
   return Reflow(aStart, aEnd);
 }
 

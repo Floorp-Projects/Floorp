@@ -694,6 +694,35 @@ waitForAllPaints(function() {
     yield ensureElementRemoval(div);
   });
 
+  add_task_if_omta_enabled(function* no_restyling_when_animation_style_when_re_setting_same_animation_property() {
+    var div = addDiv(null, { style: 'animation: opacity 100s' });
+    var animation = div.getAnimations()[0];
+    yield animation.ready;
+    ok(animation.isRunningOnCompositor);
+    // Apply the same animation style
+    div.style.animation = 'opacity 100s';
+    var markers = yield observeStyling(5);
+    is(markers.length, 0,
+       'Applying same animation style '  +
+       'should never cause restyles');
+    yield ensureElementRemoval(div);
+  });
+
+  add_task(function* necessary_update_should_be_invoked() {
+    var div = addDiv(null, { style: 'animation: background-color 100s' });
+    var animation = div.getAnimations()[0];
+    yield animation.ready;
+    yield waitForAnimationFrames(5);
+    // Apply another animation style
+    div.style.animation = 'background-color 110s';
+    var animation = div.getAnimations()[0];
+    var markers = yield observeStyling(5);
+    is(markers.length, 5,
+       'Applying animation style with different duration '  +
+       'should cause restyles on every frame.');
+    yield ensureElementRemoval(div);
+  });
+
 });
 
 </script>

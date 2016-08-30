@@ -85,8 +85,6 @@ AudioData::TransferAndUpdateTimestampAndDuration(AudioData* aOther,
                                       Move(aOther->mAudioData),
                                       aOther->mChannels,
                                       aOther->mRate);
-  v->mDiscontinuity = aOther->mDiscontinuity;
-
   return v.forget();
 }
 
@@ -173,7 +171,6 @@ VideoData::ShallowCopyUpdateDuration(const VideoData* aOther,
                                         aOther->mTimecode,
                                         aOther->mDisplay,
                                         aOther->mFrameID);
-  v->mDiscontinuity = aOther->mDiscontinuity;
   v->mImage = aOther->mImage;
   return v.forget();
 }
@@ -191,7 +188,6 @@ VideoData::ShallowCopyUpdateTimestamp(const VideoData* aOther,
                                         aOther->mTimecode,
                                         aOther->mDisplay,
                                         aOther->mFrameID);
-  v->mDiscontinuity = aOther->mDiscontinuity;
   v->mImage = aOther->mImage;
   return v.forget();
 }
@@ -210,7 +206,6 @@ VideoData::ShallowCopyUpdateTimestampAndDuration(const VideoData* aOther,
                                         aOther->mTimecode,
                                         aOther->mDisplay,
                                         aOther->mFrameID);
-  v->mDiscontinuity = aOther->mDiscontinuity;
   v->mImage = aOther->mImage;
   return v.forget();
 }

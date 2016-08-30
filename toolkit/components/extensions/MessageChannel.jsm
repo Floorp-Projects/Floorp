@@ -155,7 +155,7 @@ class FilteringMessageManager {
    * passes the result to our message callback.
    */
   receiveMessage({data, target}) {
-    let handlers = Array.from(this.getHandlers(data.messageName, data.recipient));
+    let handlers = Array.from(this.getHandlers(data.messageName, data.sender, data.recipient));
 
     data.target = target;
     this.callback(handlers, data);
@@ -167,14 +167,17 @@ class FilteringMessageManager {
    *
    * @param {string|number} messageName
    *     The message for which to return handlers.
+   * @param {object} sender
+   *     The sender data on which to filter handlers.
    * @param {object} recipient
    *     The recipient data on which to filter handlers.
    */
-  * getHandlers(messageName, recipient) {
+  * getHandlers(messageName, sender, recipient) {
     let handlers = this.handlers.get(messageName) || new Set();
     for (let handler of handlers) {
       if (MessageChannel.matchesFilter(handler.messageFilterStrict || {}, recipient) &&
-          MessageChannel.matchesFilter(handler.messageFilterPermissive || {}, recipient, false)) {
+          MessageChannel.matchesFilter(handler.messageFilterPermissive || {}, recipient, false) &&
+          (!handler.filterMessage || handler.filterMessage(sender, recipient))) {
         yield handler;
       }
     }
@@ -188,7 +191,7 @@ class FilteringMessageManager {
    * @param {object} handler
    *     An opaque handler object. The object may have a
    *     `messageFilterStrict` and/or a `messageFilterPermissive`
-   *     property on which to filter messages.
+   *     property and/or a `filterMessage` method on which to filter messages.
    *
    *     Final dispatching is handled by the message callback passed to
    *     the constructor.
@@ -436,6 +439,10 @@ this.MessageChannel = {
    *        object if the `recipient` object passed to `sendMessage`
    *        matches this filter, as determined by `matchesFilter` with
    *        `strict=false`.
+   *
+   *      filterMessage:
+   *        An optional function that prevents the handler from handling a
+   *        message by returning `false`. See `getHandlers` for the parameters.
    */
   addListener(targets, messageName, handler) {
     for (let target of [].concat(targets)) {
@@ -484,7 +491,8 @@ this.MessageChannel = {
    *    for the message to be received.
    * @param {object} [options.sender]
    *    A structured-clone-compatible object to identify the message
-   *    sender. This object may also be used as a filter to prematurely
+   *    sender. This object may also be used to avoid delivering the
+   *    message to the sender, and as a filter to prematurely
    *    abort responses when the sender is being destroyed.
    *    @see `abortResponses`.
    * @param {integer} [options.responseType=RESPONSE_SINGLE]

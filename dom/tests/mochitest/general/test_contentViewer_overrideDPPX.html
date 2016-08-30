@@ -1,0 +1,314 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>nsIContentViewer::overrideDPPX test</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+</head>
+
+<body>
+
+<iframe></iframe>
+
+<script type="application/javascript;version=1.8">
+
+SimpleTest.waitForExplicitFinish();
+
+const frameWindow = document.querySelector("iframe").contentWindow;
+
+const originalDPR = window.devicePixelRatio;
+const originalZoom = SpecialPowers.getFullZoom(window);
+const dppx = originalDPR * 1.5;
+const zoom = originalZoom * 0.5;
+
+const setOverrideDPPX = (value) => {
+  if (value > 0) {
+    info(`override window's dppx to ${value}`);
+  } else {
+    info(`restore window's dppx to default value`);
+  }
+
+  SpecialPowers.setOverrideDPPX(window, value);
+}
+
+const setFullZoom = (value) => {
+  info(`set window's fullZoom to ${value}`);
+  SpecialPowers.setFullZoom(window, value);
+}
+
+const createFontStyleForDPPX = (doc, value, size) => {
+  info(`adding a stylesheet that set font size to ${size}px for ${value}dppx`);
+
+  let style = doc.createElement("style");
+
+  style.setAttribute("media", `(resolution: ${value}dppx)`);
+
+  doc.head.appendChild(style);
+
+  style.sheet.insertRule(`body {font-size: ${size}px}`, 0);
+
+  return style;
+}
+
+const getBodyFontSize = (w) => w.getComputedStyle(w.document.body).fontSize;
+
+const assertValuesAreInitial = () => {
+  is(window.devicePixelRatio, originalDPR,
+    "devicePixelRatio has the original value.");
+  is(SpecialPowers.getFullZoom(window), originalZoom,
+    "fullZoom has the original value.");
+
+  is(frameWindow.devicePixelRatio, originalDPR,
+    "devicePixelRatio has the original value.");
+  is(SpecialPowers.getFullZoom(frameWindow), originalZoom,
+    "fullZoom has the original value.");
+}
+
+const gTests = {
+  "test overrideDPPX with devicePixelRatio": (done) => {
+    assertValuesAreInitial();
+
+    setOverrideDPPX(dppx);
+
+    is(window.devicePixelRatio, dppx,
+      "devicePixelRatio overridden.");
+    is(frameWindow.devicePixelRatio, dppx,
+      "frame's devicePixelRatio overridden.");
+
+    setOverrideDPPX(0);
+
+    is(window.devicePixelRatio, originalDPR,
+      "devicePixelRatio back to default.");
+    is(frameWindow.devicePixelRatio, originalDPR,
+      "frame's devicePixelRatio back to default.");
+
+    done();
+  },
+  "test overrideDPPX with devicePixelRatio and fullZoom": (done) => {
+    assertValuesAreInitial();
+
+    setFullZoom(zoom);
+    setOverrideDPPX(dppx);
+
+    is(window.devicePixelRatio, dppx,
+      "devicePixelRatio overridden; fullZoom ignored");
+    is(frameWindow.devicePixelRatio, dppx,
+      "frame's devicePixelRatio overridden; fullZoom ignored");
+
+    setOverrideDPPX(0);
+
+    is(window.devicePixelRatio, originalDPR * zoom,
+      "devicePixelRatio now is affected by fullZoom");
+    is(frameWindow.devicePixelRatio, originalDPR * zoom,
+      "frame's devicePixelRatio now is affected by fullZoom");
+    isnot(dppx, originalDPR * zoom,
+          "test is no longer testing what it should be");
+
+    setFullZoom(originalZoom);
+
+    is(window.devicePixelRatio, originalDPR,
+      "devicePixelRatio back to default.");
+    is(frameWindow.devicePixelRatio, originalDPR,
+      "frame's devicePixelRatio back to default.");
+
+    done();
+
+  },
+  "test overrideDPPX with media queries": (done) => {
+    assertValuesAreInitial();
+
+    let frameDoc = frameWindow.document;
+
+    let originalFontSize = getBodyFontSize(window);
+    let frameOriginalFontSize = getBodyFontSize(frameWindow);
+
+    let style = createFontStyleForDPPX(document, dppx, "32");
+    let frameStyle = createFontStyleForDPPX(frameDoc, dppx, "32");
+
+    let currentFontSize = getBodyFontSize(window);
+    let frameCurrentFontSize = getBodyFontSize(frameWindow);
+
+    is(currentFontSize, originalFontSize,
+      "media queries are not applied yet");
+    is(frameCurrentFontSize, frameOriginalFontSize,
+      "frame's media queries are not applied yet");
+
+    setOverrideDPPX(dppx);
+
+    currentFontSize = getBodyFontSize(window);
+    frameCurrentFontSize = getBodyFontSize(frameWindow);
+
+    isnot(currentFontSize, originalFontSize,
+      "media queries are applied.");
+    isnot(frameCurrentFontSize, frameOriginalFontSize,
+      "frame's media queries are applied.");
+
+    is(currentFontSize, "32px",
+      "font size has the expected value.");
+    is(frameCurrentFontSize, "32px",
+      "frame's font size has the expected value.");
+
+    setOverrideDPPX(0);
+
+    currentFontSize = getBodyFontSize(window);
+    frameCurrentFontSize = getBodyFontSize(frameWindow);
+
+    is(currentFontSize, originalFontSize,
+      "media queries are not applied anymore.");
+    is(frameCurrentFontSize, frameOriginalFontSize,
+      "media queries are not applied anymore.");
+
+    style.remove();
+    frameStyle.remove();
+
+    done();
+  },
+  "test overrideDPPX with media queries and fullZoom": (done) => {
+    assertValuesAreInitial();
+
+    let frameDoc = frameWindow.document;
+
+    let styles = [
+      createFontStyleForDPPX(document, originalDPR, "23"),
+      createFontStyleForDPPX(document, dppx, "32"),
+      createFontStyleForDPPX(document, originalDPR * zoom, "48"),
+      createFontStyleForDPPX(frameDoc, originalDPR, "23"),
+      createFontStyleForDPPX(frameDoc, dppx, "32"),
+      createFontStyleForDPPX(frameDoc, originalDPR * zoom, "48")
+    ];
+
+    let currentFontSize = getBodyFontSize(window);
+    let frameCurrentFontSize = getBodyFontSize(frameWindow);
+    is(currentFontSize, "23px",
+      "media queries are not applied yet");
+    is(frameCurrentFontSize, "23px",
+      "frame's media queries are not applied yet");
+
+    setFullZoom(zoom);
+    setOverrideDPPX(dppx);
+
+    currentFontSize = getBodyFontSize(window);
+    frameCurrentFontSize = getBodyFontSize(frameWindow);
+    is(currentFontSize, "32px",
+      "media queries are applied for overridden DDPX; fullZoom ignored.");
+    is(frameCurrentFontSize, "32px",
+      "frame's media queries are applied for overridden DDPX; fullZoom ignored.");
+
+    setOverrideDPPX(0);
+
+    currentFontSize = getBodyFontSize(window);
+    frameCurrentFontSize = getBodyFontSize(frameWindow);
+    is(currentFontSize, "48px",
+      "media queries are applied for fullZoom.");
+    is(frameCurrentFontSize, "48px",
+      "frame's media queries are applied for fullZoom.");
+
+    setFullZoom(originalZoom);
+
+    currentFontSize = getBodyFontSize(window);
+    frameCurrentFontSize = getBodyFontSize(frameWindow);
+    is(currentFontSize, "23px",
+      "media queries are not applied anymore.");
+    is(frameCurrentFontSize, "23px",
+      "frame's media queries are not applied anymore.");
+
+    styles.forEach(style => style.remove());
+
+    done();
+  },
+  "test OverrideDPPX with MediaQueryList": (done) => {
+    assertValuesAreInitial();
+
+    let promises = [
+      new Promise(resolve => {
+        let mql = window.matchMedia(`(resolution: ${dppx}dppx)`);
+
+        mql.addListener(function listener() {
+          ok("MediaQueryList's listener invoked.")
+          mql.removeListener(listener);
+          resolve();
+        });
+      }),
+      new Promise(resolve => {
+        let mql = frameWindow.matchMedia(`(resolution: ${dppx}dppx)`);
+
+        mql.addListener(function listener() {
+          ok("frame's MediaQueryList's listener invoked.")
+          mql.removeListener(listener);
+          resolve();
+        });
+      })
+    ];
+
+    Promise.all(promises)
+      .then(() => setOverrideDPPX(0))
+      .then(done, e => {throw e});
+
+    setOverrideDPPX(dppx);
+  },
+  "test OverrideDPPX with MediaQueryList and fullZoom": (done) => {
+    assertValuesAreInitial();
+
+    let overridden = false;
+
+    let promises = [
+      new Promise(resolve => {
+        let mql = window.matchMedia(`(resolution: ${dppx}dppx)`);
+
+        mql.addListener(function listener() {
+          ok("MediaQueryList's listener for dppx invoked.");
+          mql.removeListener(listener);
+          overridden = true;
+          resolve();
+        });
+      }),
+      new Promise(resolve => {
+        let mql = window.matchMedia(`(resolution: ${originalDPR * zoom}dppx)`);
+
+        mql.addListener(function listener() {
+          ok(overridden,
+            "MediaQueryList's listener for zoom invoked in the right order");
+
+          mql.removeListener(listener);
+          resolve();
+        });
+      })
+    ];
+
+    promises[0]
+      .then(() => setOverrideDPPX(0))
+      .then(promises[1])
+      .then(() => setFullZoom(originalZoom))
+      .then(done, e => {throw e});
+
+    setOverrideDPPX(dppx);
+    setFullZoom(zoom);
+  }
+};
+
+function* runner(tests) {
+  for (let name of Object.keys(tests)) {
+    info(name);
+    tests[name](next);
+    yield undefined;
+  }
+};
+
+const gTestRunner = runner(gTests);
+
+function next() {
+  SimpleTest.executeSoon(function() {
+    if (gTestRunner.next().done) {
+      SimpleTest.finish();
+    }
+  });
+}
+
+// Run the tests
+addLoadEvent(next);
+
+</script>
+
+</body>
+</html>

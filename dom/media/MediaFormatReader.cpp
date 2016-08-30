@@ -1320,15 +1320,8 @@ MediaFormatReader::Update(TrackType aTrack)
 void
 MediaFormatReader::ReturnOutput(MediaData* aData, TrackType aTrack)
 {
-  auto& decoder = GetDecoderData(aTrack);
-  MOZ_ASSERT(decoder.HasPromise());
+  MOZ_ASSERT(GetDecoderData(aTrack).HasPromise());
   MOZ_DIAGNOSTIC_ASSERT(aData->mType != MediaData::NULL_DATA);
-  if (decoder.mDiscontinuity) {
-    LOGV("Setting discontinuity flag");
-    decoder.mDiscontinuity = false;
-    aData->mDiscontinuity = true;
-  }
-
   LOG("Resolved data promise for %s [%lld, %lld]", TrackTypeToStr(aTrack),
       aData->mTime, aData->GetEndTime());
 
