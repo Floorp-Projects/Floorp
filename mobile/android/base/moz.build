@@ -508,7 +508,6 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'media/FormatParam.java',
     'media/JellyBeanAsyncCodec.java',
     'media/MediaControlService.java',
-    'media/RemoteManager.java',
     'media/Sample.java',
     'MediaCastingBar.java',
     'MemoryMonitor.java',

@@ -16,15 +16,23 @@ import android.media.MediaCodec;
 import android.media.MediaCodec.BufferInfo;
 import android.media.MediaFormat;
 import android.os.DeadObjectException;
+import android.os.IBinder;
 import android.os.RemoteException;
 import android.util.Log;
 import android.view.Surface;
 
 import java.nio.ByteBuffer;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.LinkedList;
+import java.util.List;
+
 // Proxy class of ICodec binder.
 public final class CodecProxy {
     private static final String LOGTAG = "GeckoRemoteCodecProxy";
     private static final boolean DEBUG = false;
+
+    private static final RemoteManager sRemoteManager = new RemoteManager();
 
     private ICodec mRemote;
     private FormatParam mFormat;
@@ -89,13 +97,167 @@ public final class CodecProxy {
         }
     }
 
-    @WrapForJNI
-    public static CodecProxy create(MediaFormat format, Surface surface, Callbacks callbacks) {
-        return RemoteManager.getInstance().createCodec(format, surface, callbacks);
+    private static final class RemoteManager implements IBinder.DeathRecipient {
+        private List<CodecProxy> mProxies = new LinkedList<CodecProxy>();
+        private ICodecManager mRemote;
+        private volatile CountDownLatch mConnectionLatch;
+        private final ServiceConnection mConnection = new ServiceConnection() {
+            @Override
+            public void onServiceConnected(ComponentName name, IBinder service) {
+                if (DEBUG) Log.d(LOGTAG, "service connected");
+                try {
+                    service.linkToDeath(RemoteManager.this, 0);
+                } catch (RemoteException e) {
+                    e.printStackTrace();
+                }
+                mRemote = ICodecManager.Stub.asInterface(service);
+                if (mConnectionLatch != null) {
+                    mConnectionLatch.countDown();
+                }
+            }
+
+            /**
+             * Called when a connection to the Service has been lost.  This typically
+             * happens when the process hosting the service has crashed or been killed.
+             * This does <em>not</em> remove the ServiceConnection itself -- this
+             * binding to the service will remain active, and you will receive a call
+             * to {@link #onServiceConnected} when the Service is next running.
+             *
+             * @param name The concrete component name of the service whose
+             *             connection has been lost.
+             */
+            @Override
+            public void onServiceDisconnected(ComponentName name) {
+                if (DEBUG) Log.d(LOGTAG, "service disconnected");
+                mRemote.asBinder().unlinkToDeath(RemoteManager.this, 0);
+                mRemote = null;
+                if (mConnectionLatch != null) {
+                    mConnectionLatch.countDown();
+                }
+            }
+        };
+
+        public synchronized boolean init() {
+            if (mRemote != null) {
+                return true;
+            }
+
+            if (DEBUG) Log.d(LOGTAG, "init remote manager " + this);
+            Context appCtxt = GeckoAppShell.getApplicationContext();
+            if (DEBUG) Log.d(LOGTAG, "ctxt=" + appCtxt);
+            appCtxt.bindService(new Intent(appCtxt, CodecManager.class),
+                    mConnection, Context.BIND_AUTO_CREATE);
+            if (!waitConnection()) {
+                appCtxt.unbindService(mConnection);
+                return false;
+            }
+            return true;
+        }
+
+        private boolean waitConnection() {
+            boolean ok = false;
+
+            mConnectionLatch = new CountDownLatch(1);
+            try {
+                int retryCount = 0;
+                while (retryCount < 5) {
+                    if (DEBUG) Log.d(LOGTAG, "waiting for connection latch:" + mConnectionLatch);
+                    mConnectionLatch.await(1, TimeUnit.SECONDS);
+                    if (mConnectionLatch.getCount() == 0) {
+                        break;
+                    }
+                    Log.w(LOGTAG, "Creator not connected in 1s. Try again.");
+                    retryCount++;
+                }
+                ok = true;
+            } catch (InterruptedException e) {
+                Log.e(LOGTAG, "service not connected in 5 seconds. Stop waiting.");
+                e.printStackTrace();
+            }
+            mConnectionLatch = null;
+
+            return ok;
+        }
+
+        public synchronized CodecProxy createCodec(MediaFormat format, Surface surface, Callbacks callbacks) {
+            try {
+                ICodec remote = mRemote.createCodec();
+                CodecProxy proxy = new CodecProxy(format, surface, callbacks);
+                if (proxy.init(remote)) {
+                    mProxies.add(proxy);
+                    return proxy;
+                } else {
+                    return null;
+                }
+            } catch (RemoteException e) {
+                e.printStackTrace();
+                return null;
+            }
+        }
+
+        @Override
+        public void binderDied() {
+            Log.e(LOGTAG, "remote codec is dead");
+            handleRemoteDeath();
+        }
+
+        private synchronized void handleRemoteDeath() {
+            // Wait for onServiceDisconnected()
+            if (!waitConnection()) {
+                notifyError(true);
+                return;
+            }
+            // Restart
+            if (init() && recoverRemoteCodec()) {
+                notifyError(false);
+            } else {
+                notifyError(true);
+            }
+        }
+
+        private synchronized void notifyError(boolean fatal) {
+            for (CodecProxy proxy : mProxies) {
+                proxy.mCallbacks.reportError(fatal);
+            }
+        }
+
+        private synchronized boolean recoverRemoteCodec() {
+            if (DEBUG) Log.d(LOGTAG, "recover codec");
+            boolean ok = true;
+            try {
+                for (CodecProxy proxy : mProxies) {
+                    ok &= proxy.init(mRemote.createCodec());
+                }
+                return ok;
+            } catch (RemoteException e) {
+                return false;
+            }
+        }
+
+        private void releaseCodec(CodecProxy proxy) throws DeadObjectException, RemoteException {
+            proxy.deinit();
+            synchronized (this) {
+                if (mProxies.remove(proxy) && mProxies.isEmpty()) {
+                    release();
+                }
+            }
+        }
+
+        private void release() {
+            if (DEBUG) Log.d(LOGTAG, "release remote manager " + this);
+            Context appCtxt = GeckoAppShell.getApplicationContext();
+            mRemote.asBinder().unlinkToDeath(this, 0);
+            mRemote = null;
+            appCtxt.unbindService(mConnection);
+        }
     }
 
-    public static CodecProxy createCodecProxy(MediaFormat format, Surface surface, Callbacks callbacks) {
-        return new CodecProxy(format, surface, callbacks);
+    @WrapForJNI
+    public static CodecProxy create(MediaFormat format, Surface surface, Callbacks callbacks) {
+        if (!sRemoteManager.init()) {
+            return null;
+        }
+        return sRemoteManager.createCodec(format, surface, callbacks);
     }
 
     private CodecProxy(MediaFormat format, Surface surface, Callbacks callbacks) {
@@ -104,7 +266,7 @@ public final class CodecProxy {
         mCallbacks = new CallbacksForwarder(callbacks);
     }
 
-    boolean init(ICodec remote) {
+    private boolean init(ICodec remote) {
         try {
             remote.setCallbacks(mCallbacks);
             remote.configure(mFormat, mOutputSurface, 0);
@@ -118,7 +280,7 @@ public final class CodecProxy {
         return true;
     }
 
-    boolean deinit() {
+    private boolean deinit() {
         try {
             mRemote.stop();
             mRemote.release();
@@ -176,7 +338,7 @@ public final class CodecProxy {
         }
         if (DEBUG) Log.d(LOGTAG, "release " + this);
         try {
-            RemoteManager.getInstance().releaseCodec(this);
+            sRemoteManager.releaseCodec(this);
         } catch (DeadObjectException e) {
             return false;
         } catch (RemoteException e) {
@@ -184,9 +346,5 @@ public final class CodecProxy {
             return false;
         }
         return true;
-    }
-
-    public synchronized void reportError(boolean fatal) {
-        mCallbacks.reportError(fatal);
     }
 }
