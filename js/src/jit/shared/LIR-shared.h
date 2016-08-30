@@ -1404,13 +1404,17 @@ class LAsmJSInterruptCheck : public LInstructionHelper<0, 0, 0>
     }
 };
 
-class LAsmThrowUnreachable : public LInstructionHelper<0, 0, 0>
+class LWasmTrap : public LInstructionHelper<0, 0, 0>
 {
   public:
-    LIR_HEADER(AsmThrowUnreachable);
+    LIR_HEADER(WasmTrap);
 
-    LAsmThrowUnreachable()
+    LWasmTrap()
     { }
+
+    const MWasmTrap* mir() const {
+        return mir_->toWasmTrap();
+    }
 };
 
 template<size_t Defs, size_t Ops>

@@ -220,7 +220,6 @@ class BlobURLsReporter final : public nsIMemoryReporter
           "blob cannot be freed until all URLs for it have been explicitly "
           "invalidated with URL.revokeObjectURL.");
         nsAutoCString path, url, owner, specialDesc;
-        nsCOMPtr<nsIURI> principalURI;
         uint64_t size = 0;
         uint32_t refCount = 1;
         DebugOnly<bool> blobImplWasCounted;

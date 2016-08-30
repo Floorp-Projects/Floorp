@@ -698,6 +698,19 @@ class FunctionCompiler
     }
 
   private:
+    // False means we're sure to be out-of-bounds after this bounds check.
+    bool maybeAddBoundsCheck(MDefinition* base, const MWasmMemoryAccess& access)
+    {
+        if (access.offset() > uint32_t(INT32_MAX)) {
+            curBlock_->end(MWasmTrap::New(alloc(), Trap::OutOfBounds));
+            curBlock_ = nullptr;
+            return false;
+        }
+        if (!mg().usesSignal.forOOB)
+            curBlock_->add(MWasmBoundsCheck::New(alloc(), base, access));
+        return true;
+    }
+
     MDefinition* loadHeapPrivate(MDefinition* base, const MWasmMemoryAccess& access,
                                  bool isInt64 = false)
     {
@@ -708,8 +721,8 @@ class FunctionCompiler
         if (mg().isAsmJS()) {
             load = MAsmJSLoadHeap::New(alloc(), base, access);
         } else {
-            if (!mg().usesSignal.forOOB)
-                curBlock_->add(MWasmBoundsCheck::New(alloc(), base, access));
+            if (!maybeAddBoundsCheck(base, access))
+                return nullptr;
             load = MWasmLoad::New(alloc(), base, access, isInt64);
         }
 
@@ -726,8 +739,8 @@ class FunctionCompiler
         if (mg().isAsmJS()) {
             store = MAsmJSStoreHeap::New(alloc(), base, access, v);
         } else {
-            if (!mg().usesSignal.forOOB)
-                curBlock_->add(MWasmBoundsCheck::New(alloc(), base, access));
+            if (!maybeAddBoundsCheck(base, access))
+                return;
             store = MWasmStore::New(alloc(), base, access, v);
         }
 
@@ -1109,7 +1122,7 @@ class FunctionCompiler
         if (inDeadCode())
             return;
 
-        auto* ins = MAsmThrowUnreachable::New(alloc());
+        auto* ins = MWasmTrap::New(alloc(), wasm::Trap::Unreachable);
         curBlock_->end(ins);
         curBlock_ = nullptr;
     }

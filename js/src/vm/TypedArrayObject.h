@@ -294,6 +294,8 @@ class TypedArrayObject : public NativeObject
     static bool set(JSContext* cx, unsigned argc, Value* vp);
 };
 
+MOZ_MUST_USE bool TypedArray_bufferGetter(JSContext* cx, unsigned argc, Value* vp);
+
 extern TypedArrayObject*
 TypedArrayCreateWithTemplate(JSContext* cx, HandleObject templateObj, int32_t len);
 

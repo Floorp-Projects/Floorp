@@ -494,11 +494,9 @@ void
 CodeGeneratorX86Shared::visitWasmBoundsCheck(LWasmBoundsCheck* ins)
 {
     const MWasmBoundsCheck* mir = ins->mir();
+
     MOZ_ASSERT(gen->needsBoundsCheckBranch(mir));
-    if (mir->offset() > INT32_MAX) {
-        masm.jump(wasm::JumpTarget::OutOfBounds);
-        return;
-    }
+    MOZ_ASSERT(mir->offset() <= INT32_MAX);
 
     Register ptrReg = ToRegister(ins->ptr());
     maybeEmitWasmBoundsCheckBranch(mir, ptrReg, mir->isRedundant());
@@ -548,9 +546,8 @@ CodeGeneratorX86Shared::maybeEmitWasmBoundsCheckBranch(const MWasmMemoryAccess* 
 
     MOZ_ASSERT(mir->endOffset() >= 1,
                "need to subtract 1 to use JAE, see also AssemblerX86Shared::UpdateBoundsCheck");
-    /*
-     * TODO: See 1287224 Unify MWasmBoundsCheck::redunant_ and needsBoundsCheck
-     */
+
+    // TODO: See 1287224 Unify MWasmBoundsCheck::redunant_ and needsBoundsCheck
     if (!redundant) {
         uint32_t cmpOffset = masm.cmp32WithPatch(ptr, Imm32(1 - mir->endOffset())).offset();
         masm.j(Assembler::AboveOrEqual, wasm::JumpTarget::OutOfBounds);

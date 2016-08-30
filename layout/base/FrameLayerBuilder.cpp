@@ -423,7 +423,6 @@ public:
     mIsSolidColorInVisibleRegion(false),
     mFontSmoothingBackgroundColor(NS_RGBA(0,0,0,0)),
     mSingleItemFixedToViewport(false),
-    mIsCaret(false),
     mNeedComponentAlpha(false),
     mForceTransparentSurface(false),
     mHideAllLayersBelow(false),
@@ -587,10 +586,6 @@ public:
    */
   bool mSingleItemFixedToViewport;
   /**
-   * True if the layer contains exactly one item for the caret.
-   */
-  bool mIsCaret;
-  /**
    * True if there is any text visible in the layer that's over
    * transparent pixels in the layer.
    */
@@ -683,8 +678,6 @@ struct NewLayerEntry {
     , mOpaqueForAnimatedGeometryRootParent(false)
     , mPropagateComponentAlphaFlattening(true)
     , mUntransformedVisibleRegion(false)
-    , mIsCaret(false)
-    , mIsPerspectiveItem(false)
   {}
   // mLayer is null if the previous entry is for a PaintedLayer that hasn't
   // been optimized to some other form (yet).
@@ -720,8 +713,6 @@ struct NewLayerEntry {
   // mVisibleRegion is relative to the associated frame before
   // transform.
   bool mUntransformedVisibleRegion;
-  bool mIsCaret;
-  bool mIsPerspectiveItem;
 };
 
 class PaintedLayerDataTree;
@@ -3087,7 +3078,6 @@ void ContainerState::FinishPaintedLayerData(PaintedLayerData& aData, FindOpaqueB
       newLayerEntry->mLayer = layer;
       newLayerEntry->mAnimatedGeometryRoot = data->mAnimatedGeometryRoot;
       newLayerEntry->mScrollClip = data->mScrollClip;
-      newLayerEntry->mIsCaret = data->mIsCaret;
 
       // Hide the PaintedLayer. We leave it in the layer tree so that we
       // can find and recycle it later.
@@ -3536,13 +3526,11 @@ ContainerState::NewPaintedLayerData(nsDisplayItem* aItem,
   data.mReferenceFrame = aItem->ReferenceFrame();
   data.mSingleItemFixedToViewport = aShouldFixToViewport;
   data.mBackfaceHidden = aItem->Frame()->In3DContextAndBackfaceIsHidden();
-  data.mIsCaret = aItem->GetType() == nsDisplayItem::TYPE_CARET;
 
   data.mNewChildLayersIndex = mNewChildLayers.Length();
   NewLayerEntry* newLayerEntry = mNewChildLayers.AppendElement();
   newLayerEntry->mAnimatedGeometryRoot = aAnimatedGeometryRoot;
   newLayerEntry->mScrollClip = aScrollClip;
-  newLayerEntry->mIsCaret = data.mIsCaret;
   // newLayerEntry->mOpaqueRegion is filled in later from
   // paintedLayerData->mOpaqueRegion, if necessary.
 
@@ -4165,9 +4153,6 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
       newLayerEntry->mAnimatedGeometryRoot = animatedGeometryRoot;
       newLayerEntry->mScrollClip = agrScrollClip;
       newLayerEntry->mLayerState = layerState;
-      if (itemType == nsDisplayItem::TYPE_PERSPECTIVE) {
-        newLayerEntry->mIsPerspectiveItem = true;
-      }
 
       // Don't attempt to flatten compnent alpha layers that are within
       // a forced active layer, or an active transform;
@@ -4175,7 +4160,6 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
           layerState == LAYER_ACTIVE_FORCE) {
         newLayerEntry->mPropagateComponentAlphaFlattening = false;
       }
-      newLayerEntry->mIsCaret = itemType == nsDisplayItem::TYPE_CARET;
       // nsDisplayTransform::BuildLayer must set layerContentsVisibleRect.
       // We rely on this to ensure 3D transforms compute a reasonable
       // layer visible region.

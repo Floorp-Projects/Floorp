@@ -12,7 +12,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Function.h"
 #include "mozilla/mscom/COMApartmentRegion.h"
-#include "mozilla/mscom/utils.h"
+#include "mozilla/mscom/Utils.h"
 #include "nsCOMPtr.h"
 #include "nsIThread.h"
 #include "nsThreadUtils.h"

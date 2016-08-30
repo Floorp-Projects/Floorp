@@ -132,7 +132,7 @@ struct ParamTraits<mozilla::mscom::COMPtrHolder<Interface, _IID>>
     if (!proxyStream.GetInterface(_IID, (void**)&rawInterface)) {
       return false;
     }
-    paramType::COMPtrType ptr(rawInterface);
+    typename paramType::COMPtrType ptr(rawInterface);
     aResult->Set(mozilla::Move(ptr));
     return true;
   }

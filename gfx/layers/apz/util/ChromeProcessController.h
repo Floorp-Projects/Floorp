@@ -24,8 +24,14 @@ namespace layers {
 class IAPZCTreeManager;
 class APZEventState;
 
-// A ChromeProcessController is attached to the root of a compositor's layer
-// tree.
+/**
+ * ChromeProcessController is a GeckoContentController attached to the root of
+ * a compositor's layer tree. It's used directly by APZ by default, and remoted
+ * using PAPZ if there is a gpu process.
+ *
+ * If ChromeProcessController needs to implement a new method on GeckoContentController
+ * PAPZ, APZChild, and RemoteContentController must be updated to handle it.
+ */
 class ChromeProcessController : public mozilla::layers::GeckoContentController
 {
 protected:

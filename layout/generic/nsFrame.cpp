@@ -1185,9 +1185,8 @@ nsIFrame::Extend3DContext() const
   }
 
   const nsStyleEffects* effects = StyleEffects();
-  nsRect temp;
   return !nsFrame::ShouldApplyOverflowClipping(this, disp) &&
-         !GetClipPropClipRect(disp, effects, &temp, GetSize()) &&
+         !GetClipPropClipRect(disp, effects, GetSize()) &&
          !nsSVGIntegrationUtils::UsingEffectsForFrame(this);
 }
 
@@ -1935,20 +1934,17 @@ inline static bool IsSVGContentWithCSSClip(const nsIFrame *aFrame)
                                                    nsGkAtoms::foreignObject);
 }
 
-bool
+Maybe<nsRect>
 nsIFrame::GetClipPropClipRect(const nsStyleDisplay* aDisp,
                               const nsStyleEffects* aEffects,
-                              nsRect* aRect,
                               const nsSize& aSize) const
 {
-  NS_PRECONDITION(aRect, "Must have aRect out parameter");
-
   if (!(aEffects->mClipFlags & NS_STYLE_CLIP_RECT) ||
       !(aDisp->IsAbsolutelyPositioned(this) || IsSVGContentWithCSSClip(this))) {
-    return false;
+    return Nothing();
   }
 
-  *aRect = aEffects->mClip;
+  nsRect rect = aEffects->mClip;
   if (MOZ_LIKELY(StyleBorder()->mBoxDecorationBreak ==
                    StyleBoxDecorationBreak::Slice)) {
     // The clip applies to the joined boxes so it's relative the first
@@ -1957,38 +1953,16 @@ nsIFrame::GetClipPropClipRect(const nsStyleDisplay* aDisp,
     for (nsIFrame* f = GetPrevContinuation(); f; f = f->GetPrevContinuation()) {
       y += f->GetRect().height;
     }
-    aRect->MoveBy(nsPoint(0, -y));
+    rect.MoveBy(nsPoint(0, -y));
   }
 
   if (NS_STYLE_CLIP_RIGHT_AUTO & aEffects->mClipFlags) {
-    aRect->width = aSize.width - aRect->x;
+    rect.width = aSize.width - rect.x;
   }
   if (NS_STYLE_CLIP_BOTTOM_AUTO & aEffects->mClipFlags) {
-    aRect->height = aSize.height - aRect->y;
+    rect.height = aSize.height - rect.y;
   }
-  return true;
-}
-
-/**
- * If the CSS 'clip' property applies to this frame, set it up
- * in aBuilder->ClipState() to clip all content descendants. Returns true
- * if the property applies, and if so also returns the clip rect (relative
- * to aFrame) in *aRect.
- */
-static bool
-ApplyClipPropClipping(nsDisplayListBuilder* aBuilder,
-                      const nsIFrame* aFrame,
-                      const nsStyleDisplay* aDisp,
-                      const nsStyleEffects* aEffects,
-                      nsRect* aRect,
-                      DisplayListClipState::AutoSaveRestore& aClipState)
-{
-  if (!aFrame->GetClipPropClipRect(aDisp, aEffects, aRect, aFrame->GetSize()))
-    return false;
-
-  nsRect clipRect = *aRect + aBuilder->ToReferenceFrame(aFrame);
-  aClipState.ClipContentDescendants(clipRect);
-  return true;
+  return Some(rect);
 }
 
 /**
@@ -2191,8 +2165,9 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
     aBuilder->AddToWillChangeBudget(this, GetSize());
   }
 
+  bool extend3DContext = Extend3DContext();
   Maybe<nsDisplayListBuilder::AutoPreserves3DContext> autoPreserves3DContext;
-  if (Extend3DContext() && !Combines3DTransformWithAncestors()) {
+  if (extend3DContext && !Combines3DTransformWithAncestors()) {
     // Start a new preserves3d context to keep informations on
     // nsDisplayListBuilder.
     autoPreserves3DContext.emplace(aBuilder);
@@ -2208,6 +2183,7 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
 
   bool inTransform = aBuilder->IsInTransform();
   bool isTransformed = IsTransformed();
+  bool hasPerspective = HasPerspective();
   // reset blend mode so we can keep track if this stacking context needs have
   // a nsDisplayBlendContainer. Set the blend mode back when the routine exits
   // so we keep track if the parent stacking context needs a container too.
@@ -2221,7 +2197,7 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
                                                               this)) {
       dirtyRect = overflow;
     } else {
-      if (overflow.IsEmpty() && !Extend3DContext()) {
+      if (overflow.IsEmpty() && !extend3DContext) {
         return;
       }
 
@@ -2269,10 +2245,59 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
   nsDisplayListBuilder::AutoBuildingDisplayList
     buildingDisplayList(aBuilder, this, dirtyRect, true);
 
+  // Depending on the effects that are applied to this frame, we can create
+  // multiple container display items and wrap them around our contents.
+  // This enum lists all the potential container display items, in the order
+  // outside to inside.
+  enum class ContainerItemType : uint8_t {
+    eNone = 0,
+    eOwnLayerIfNeeded,
+    eBlendMode,
+    eFixedPosition,
+    eStickyPosition,
+    eOwnLayerForTransformWithRoundedClip,
+    ePerspective,
+    eTransform,
+    eSeparatorTransforms,
+    eOpacity,
+    eSVGEffects,
+    eBlendContainer
+  };
+
   DisplayListClipState::AutoSaveRestore clipState(aBuilder);
 
+  // If there is a current clip, then depending on the container items we
+  // create, different things can happen to it. Some container items simply
+  // propagate the clip to their children and aren't clipped themselves.
+  // But other container items, especially those that establish a different
+  // geometry for their contents (e.g. transforms), capture the clip on
+  // themselves and unset the clip for their contents. If we create more than
+  // one of those container items, the clip will be captured on the outermost
+  // one and the inner container items will be unclipped.
+  ContainerItemType clipCapturedBy = ContainerItemType::eNone;
+  if (useFixedPosition) {
+    clipCapturedBy = ContainerItemType::eFixedPosition;
+  } else if (useStickyPosition) {
+    clipCapturedBy = ContainerItemType::eStickyPosition;
+  } else if (isTransformed) {
+    if ((hasPerspective || extend3DContext) && clipState.SavedStateHasRoundedCorners()) {
+      // If we're creating an nsDisplayTransform item that is going to combine
+      // its transform with its children (preserve-3d or perspective), then we
+      // can't have an intermediate surface. Mask layers force an intermediate
+      // surface, so if we're going to need both then create a separate
+      // wrapping layer for the mask.
+      clipCapturedBy = ContainerItemType::eOwnLayerForTransformWithRoundedClip;
+    } else if (hasPerspective) {
+      clipCapturedBy = ContainerItemType::ePerspective;
+    } else {
+      clipCapturedBy = ContainerItemType::eTransform;
+    }
+  } else if (usingSVGEffects) {
+    clipCapturedBy = ContainerItemType::eSVGEffects;
+  }
+
   bool clearClip = false;
-  if (isTransformed || usingSVGEffects || useFixedPosition || useStickyPosition) {
+  if (clipCapturedBy != ContainerItemType::eNone) {
     // We don't need to pass ancestor clipping down to our children;
     // everything goes inside a display item's child list, and the display
     // item itself will be clipped.
@@ -2293,15 +2318,16 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
 
     CheckForApzAwareEventHandlers(aBuilder, this);
 
-    nsRect clipPropClip;
-    if (ApplyClipPropClipping(aBuilder, this, disp, effects, &clipPropClip,
-                              nestedClipState)) {
-      dirtyRect.IntersectRect(dirtyRect, clipPropClip);
+    Maybe<nsRect> clipPropClip = GetClipPropClipRect(disp, effects, GetSize());
+    if (clipPropClip) {
+      dirtyRect.IntersectRect(dirtyRect, *clipPropClip);
+      nestedClipState.ClipContentDescendants(
+        *clipPropClip + aBuilder->ToReferenceFrame(this));
     }
 
-    // Extend3DContext() also guarantees that applyAbsPosClipping and usingSVGEffects are false
+    // extend3DContext also guarantees that applyAbsPosClipping and usingSVGEffects are false
     // We only modify the preserve-3d rect if we are the top of a preserve-3d heirarchy
-    if (Extend3DContext()) {
+    if (extend3DContext) {
       // Mark these first so MarkAbsoluteFramesForDisplayList knows if we are
       // going to be forced to descend into frames.
       aBuilder->MarkPreserve3DFramesForDisplayList(this);
@@ -2409,18 +2435,15 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
                                                      containerItemScrollClip));
   }
 
-  if (!isTransformed && !useFixedPosition && !useStickyPosition) {
-    // Restore saved clip state now so that any display items we create below
-    // are clipped properly.
-    clipState.ExitStackingContextContents(&containerItemScrollClip);
-  }
-
   /* If there are any SVG effects, wrap the list up in an SVG effects item
    * (which also handles CSS group opacity). Note that we create an SVG effects
    * item even if resultList is empty, since a filter can produce graphical
    * output even if the element being filtered wouldn't otherwise do so.
    */
   if (usingSVGEffects) {
+    if (clipCapturedBy == ContainerItemType::eSVGEffects) {
+      clipState.ExitStackingContextContents(&containerItemScrollClip);
+    }
     // Revert to the post-filter dirty rect.
     buildingDisplayList.SetDirtyRect(dirtyRectOutsideSVGEffects);
     /* List now emptied, so add the new list to the top. */
@@ -2457,7 +2480,7 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
    * We also traverse into sublists created by nsDisplayWrapList, so that we find all the
    * correct children.
    */
-  if (isTransformed && !resultList.IsEmpty() && Extend3DContext()) {
+  if (isTransformed && !resultList.IsEmpty() && extend3DContext) {
     // Install dummy nsDisplayTransform as a leaf containing
     // descendants not participating this 3D rendering context.
     nsDisplayList nonparticipants;
@@ -2486,19 +2509,9 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
     resultList.AppendToTop(&participants);
   }
 
-  /* If we're creating an nsDisplayTransform item that is going to combine its transform
-   * with its children (preserve-3d or perspective), then we can't have an intermediate
-   * surface. Mask layers force an intermediate surface, so if we're going to need both
-   * then create a separate wrapping layer for the mask.
-   */
-  bool needsLayerForMask = isTransformed && (Extend3DContext() || HasPerspective()) &&
-                           clipState.SavedStateHasRoundedCorners();
-  NS_ASSERTION(!Combines3DTransformWithAncestors() || !clipState.SavedStateHasRoundedCorners(),
-               "Can't support mask layers on intermediate preserve-3d frames");
-
   if (isTransformed && !resultList.IsEmpty()) {
-    // Restore clip state now so nsDisplayTransform is clipped properly.
-    if (!HasPerspective() && !useFixedPosition && !useStickyPosition && !needsLayerForMask) {
+    if (clipCapturedBy == ContainerItemType::eTransform) {
+      // Restore clip state now so nsDisplayTransform is clipped properly.
       clipState.ExitStackingContextContents(&containerItemScrollClip);
     }
     // Revert to the dirtyrect coming in from the parent, without our transform
@@ -2526,8 +2539,8 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
       resultList.AppendNewToTop(transformItem);
     }
 
-    if (HasPerspective()) {
-      if (!useFixedPosition && !useStickyPosition && !needsLayerForMask) {
+    if (hasPerspective) {
+      if (clipCapturedBy == ContainerItemType::ePerspective) {
         clipState.ExitStackingContextContents(&containerItemScrollClip);
       }
       resultList.AppendNewToTop(
@@ -2537,11 +2550,8 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
     }
   }
 
-  if (useFixedPosition || useStickyPosition || needsLayerForMask) {
+  if (clipCapturedBy == ContainerItemType::eOwnLayerForTransformWithRoundedClip) {
     clipState.ExitStackingContextContents(&containerItemScrollClip);
-  }
-
-  if (needsLayerForMask) {
     resultList.AppendNewToTop(
       new (aBuilder) nsDisplayOwnLayer(aBuilder, this, &resultList, 0,
                                        mozilla::layers::FrameMetrics::NULL_SCROLL_ID,
@@ -2551,9 +2561,15 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
   /* If we have sticky positioning, wrap it in a sticky position item.
    */
   if (useFixedPosition) {
+    if (clipCapturedBy == ContainerItemType::eFixedPosition) {
+      clipState.ExitStackingContextContents(&containerItemScrollClip);
+    }
     resultList.AppendNewToTop(
         new (aBuilder) nsDisplayFixedPosition(aBuilder, this, &resultList));
   } else if (useStickyPosition) {
+    if (clipCapturedBy == ContainerItemType::eStickyPosition) {
+      clipState.ExitStackingContextContents(&containerItemScrollClip);
+    }
     resultList.AppendNewToTop(
         new (aBuilder) nsDisplayStickyPosition(aBuilder, this, &resultList));
   }
@@ -2826,12 +2842,12 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
     child->BuildDisplayListForStackingContext(aBuilder, dirty, &list);
     aBuilder->DisplayCaret(child, dirty, &list);
   } else {
-    nsRect clipRect;
-    if (ApplyClipPropClipping(aBuilder, child, disp, effects, &clipRect,
-                              clipState)) {
-      // clipRect is in builder-reference-frame coordinates,
-      // dirty/clippedDirtyRect are in child coordinates
-      dirty.IntersectRect(dirty, clipRect);
+    Maybe<nsRect> clipPropClip =
+      child->GetClipPropClipRect(disp, effects, child->GetSize());
+    if (clipPropClip) {
+      dirty.IntersectRect(dirty, *clipPropClip);
+      clipState.ClipContentDescendants(
+        *clipPropClip + aBuilder->ToReferenceFrame(child));
     }
 
     child->MarkAbsoluteFramesForDisplayList(aBuilder, dirty);
@@ -7896,10 +7912,8 @@ UnionBorderBoxes(nsIFrame* aFrame, bool aApplyTransform,
   }
 
   const nsStyleEffects* effects = aFrame->StyleEffects();
-  nsRect clipPropClipRect;
-  bool hasClipPropClip =
-    aFrame->GetClipPropClipRect(disp, effects, &clipPropClipRect,
-                                bounds.Size());
+  Maybe<nsRect> clipPropClipRect =
+    aFrame->GetClipPropClipRect(disp, effects, bounds.Size());
 
   // Iterate over all children except pop-ups.
   const nsIFrame::ChildListIDs skip(nsIFrame::kPopupList |
@@ -7930,9 +7944,9 @@ UnionBorderBoxes(nsIFrame* aFrame, bool aApplyTransform,
         continue;
       }
 
-      if (hasClipPropClip) {
+      if (clipPropClipRect) {
         // Intersect with the clip before transforming.
-        childRect.IntersectRect(childRect, clipPropClipRect);
+        childRect.IntersectRect(childRect, *clipPropClipRect);
       }
 
       // Note that we transform each child separately according to
@@ -8152,13 +8166,12 @@ nsIFrame::FinishAndStoreOverflow(nsOverflowAreas& aOverflowAreas,
 
   // Absolute position clipping
   const nsStyleEffects* effects = StyleEffects();
-  nsRect clipPropClipRect;
-  bool hasClipPropClip =
-    GetClipPropClipRect(disp, effects, &clipPropClipRect, aNewSize);
-  if (hasClipPropClip) {
+  Maybe<nsRect> clipPropClipRect =
+    GetClipPropClipRect(disp, effects, aNewSize);
+  if (clipPropClipRect) {
     NS_FOR_FRAME_OVERFLOW_TYPES(otype) {
       nsRect& o = aOverflowAreas.Overflow(otype);
-      o.IntersectRect(o, clipPropClipRect);
+      o.IntersectRect(o, *clipPropClipRect);
     }
   }
 

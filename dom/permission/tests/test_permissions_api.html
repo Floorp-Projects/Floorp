@@ -4,143 +4,203 @@
 -->
 <!DOCTYPE HTML>
 <html>
+
 <head>
   <meta charset="utf-8">
   <title>Test for Permissions API</title>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css">
 </head>
-<body onload='runTests()'>
-<pre id="test">
-<script type="application/javascript;version=1.8">
-'use strict';
 
-let { UNKNOWN_ACTION, PROMPT_ACTION, ALLOW_ACTION, DENY_ACTION } =
-  SpecialPowers.Ci.nsIPermissionManager;
+<body>
+  <pre id="test"></pre>
+  <script type="application/javascript;version=1.8">
+  /*globals SpecialPowers, SimpleTest, is, ok, */
+  'use strict';
 
-SimpleTest.waitForExplicitFinish();
+  const {
+    UNKNOWN_ACTION,
+    PROMPT_ACTION,
+    ALLOW_ACTION,
+    DENY_ACTION
+  } = SpecialPowers.Ci.nsIPermissionManager;
 
-const PERMISSIONS = [
-  { name: 'geolocation', perm: 'geo' },
-  { name: 'notifications', perm: 'desktop-notification' },
-  { name: 'push', perm: 'desktop-notification' },
-];
+  SimpleTest.waitForExplicitFinish();
 
-const UNSUPPORTED_PERMISSIONS = [
-  'foobarbaz',  // Not in spec, for testing only.
-  'midi'
-];
+  const PERMISSIONS = [{
+    name: 'geolocation',
+    type: 'geo'
+  }, {
+    name: 'notifications',
+    type: 'desktop-notification'
+  }, {
+    name: 'push',
+    type: 'desktop-notification'
+  }, ];
 
-function setPermissions(action) {
-  let permissions = PERMISSIONS.map(x => {
-    return { 'type': x.perm, 'allow': action, 'context': document };
-  });
-  return new Promise((resolve, reject) => {
-    SpecialPowers.popPermissions(() => {
-      SpecialPowers.pushPermissions(permissions, resolve);
+  const UNSUPPORTED_PERMISSIONS = [
+    'foobarbaz', // Not in spec, for testing only.
+    'midi',
+  ];
+
+  // Create a closure, so that tests are run on the correct window object.
+  function createPermissionTester(aWindow) {
+    return {
+      setPermissions(allow) {
+        const permissions = PERMISSIONS.map(({ type }) => {
+          return {
+            type,
+            allow,
+            'context': aWindow.document
+          };
+        });
+        return new Promise((resolve) => {
+          SpecialPowers.popPermissions(() => {
+            SpecialPowers.pushPermissions(permissions, resolve);
+          });
+        });
+      },
+      revokePermissions() {
+        const promisesToRevoke = PERMISSIONS.map(({ name })  => {
+          return aWindow.navigator.permissions
+            .revoke({ name })
+            .then(
+              ({ state }) => is(state, 'prompt', `correct state for '${name}'`),
+              () => ok(false, `revoke should not have rejected for '${name}'`)
+            );
+        });
+        return Promise.all(promisesToRevoke);
+      },
+      revokeUnsupportedPermissions() {
+        const promisesToRevoke = UNSUPPORTED_PERMISSIONS.map(({ name }) => {
+          return aWindow.navigator.permissions
+            .revoke({ name })
+            .then(
+              () => ok(false, `revoke should not have resolved for '${name}'`),
+              error => is(error.name, 'TypeError', `revoke should have thrown TypeError for '${name}'`)
+            );
+        });
+        return Promise.all(promisesToRevoke);
+      },
+      checkPermissions(state) {
+        const promisesToQuery = PERMISSIONS.map(({ name }) => {
+          return aWindow.navigator.permissions
+            .query({ name })
+            .then(
+              () => is(state, state, `correct state for '${name}'`),
+              () => ok(false, `query should not have rejected for '${name}'`)
+            );
+          });
+        return Promise.all(promisesToQuery);
+      },
+      checkUnsupportedPermissions() {
+        const promisesToQuery = UNSUPPORTED_PERMISSIONS.map(({ name }) => {
+          return aWindow.navigator.permissions
+            .query({ name })
+            .then(
+              () => ok(false, `query should not have resolved for '${name}'`),
+              error => {
+                is(error.name, 'TypeError',
+                  `query should have thrown TypeError for '${name}'`);
+              }
+            );
+          });
+        return Promise.all(promisesToQuery);
+      },
+      promiseStateChanged(name, state) {
+        return aWindow.navigator.permissions
+          .query({ name })
+          .then(status => {
+            return new Promise( resolve => {
+              status.onchange = () => {
+                status.onchange = null;
+                is(status.state, state, `state changed for '${name}'`);
+                resolve();
+              };
+            });
+          },
+          () => ok(false, `query should not have rejected for '${name}'`));
+      },
+      testStatusOnChange() {
+        return new Promise((resolve) => {
+          SpecialPowers.popPermissions(() => {
+            const permission = 'geolocation';
+            const promiseGranted = this.promiseStateChanged(permission, 'granted');
+            this.setPermissions(ALLOW_ACTION);
+            promiseGranted.then(() => {
+              const promisePrompt = this.promiseStateChanged(permission, 'prompt');
+              SpecialPowers.popPermissions();
+              return promisePrompt;
+            }).then(resolve);
+          });
+        });
+      },
+      testInvalidQuery() {
+        return aWindow.navigator.permissions
+          .query({ name: 'invalid' })
+          .then(
+            () => ok(false, 'invalid query should not have resolved'),
+            () => ok(true, 'invalid query should have rejected')
+          );
+      },
+      testInvalidRevoke() {
+        return aWindow.navigator.permissions
+          .revoke({ name: 'invalid' })
+          .then(
+            () => ok(false, 'invalid revoke should not have resolved'),
+            () => ok(true, 'invalid revoke should have rejected')
+          );
+      },
+    };
+  }
+
+  function enablePrefs() {
+    const ops = {
+      'set': [
+        ['dom.permissions.revoke.enable', true],
+      ],
+    };
+    return SpecialPowers.pushPrefEnv(ops);
+  }
+
+  function createIframe() {
+    return new Promise((resolve) => {
+      const iframe = document.createElement('iframe');
+      iframe.src = 'file_empty.html';
+      iframe.onload = () => resolve(iframe.contentWindow);
+      document.body.appendChild(iframe);
     });
-  });
-}
-
-function revokePermissions(action) {
-  return Promise.all(PERMISSIONS.map(x =>
-    navigator.permissions.revoke({ name: x.name }).then(
-      result => is(result.state, "prompt", `correct state for '${x.name}'`),
-      error => ok(false, `revoke should not have rejected for '${x.name}'`))
-  ));
-}
-
-function revokeUnsupportedPermissions() {
-  return Promise.all(UNSUPPORTED_PERMISSIONS.map(name =>
-    navigator.permissions.revoke({ name: name }).then(
-      result => ok(false, `revoke should not have resolved for '${name}'`),
-      error => is(error.name, 'TypeError', `revoke should have thrown TypeError for '${name}'`))
-  ));
-}
-
-function checkPermissions(state) {
-  return Promise.all(PERMISSIONS.map(x => {
-    return navigator.permissions.query({ name: x.name }).then(
-      result => is(result.state, state, `correct state for '${x.name}'`),
-      error => ok(false, `query should not have rejected for '${x.name}'`));
-  }));
-}
-
-function checkUnsupportedPermissions() {
-  return Promise.all(UNSUPPORTED_PERMISSIONS.map(name => {
-    return navigator.permissions.query({ name: name }).then(
-      result => ok(false, `query should not have resolved for '${name}'`),
-      error => {
-        is(error.name, 'TypeError',
-           `query should have thrown TypeError for '${name}'`);
+  }
+  debugger;
+  window.onload = () => {
+    enablePrefs()
+      .then(createIframe)
+      .then(createPermissionTester)
+      .then((tester) => {
+        return tester
+          .checkUnsupportedPermissions()
+          .then(() => tester.setPermissions(UNKNOWN_ACTION))
+          .then(() => tester.checkPermissions('prompt'))
+          .then(() => tester.setPermissions(PROMPT_ACTION))
+          .then(() => tester.checkPermissions('prompt'))
+          .then(() => tester.setPermissions(ALLOW_ACTION))
+          .then(() => tester.checkPermissions('granted'))
+          .then(() => tester.setPermissions(DENY_ACTION))
+          .then(() => tester.checkPermissions('denied'))
+          .then(() => tester.testStatusOnChange())
+          .then(() => tester.testInvalidQuery())
+          .then(() => tester.revokeUnsupportedPermissions())
+          .then(() => tester.revokePermissions())
+          .then(() => tester.checkPermissions('prompt'))
+          .then(() => tester.testInvalidRevoke());
+      })
+      .then(SimpleTest.finish)
+      .catch((e) => {
+        ok(false, `Unexpected error ${e}`);
+        SimpleTest.finish();
       });
-  }));
-}
-
-function promiseStateChanged(name, state) {
-  return navigator.permissions.query({ name }).then(
-    status => {
-      return new Promise((resolve, reject) => {
-        status.onchange = () => {
-          status.onchange = null;
-          is(status.state, state, `state changed for '${name}'`);
-          resolve();
-        };
-      });
-    },
-    error => ok(false, `query should not have rejected for '${name}'`));
-}
-
-function testStatusOnChange() {
-  return new Promise((resolve, reject) => {
-    SpecialPowers.popPermissions(() => {
-      let permission = 'geolocation';
-      let promiseGranted = promiseStateChanged(permission, 'granted');
-      setPermissions(ALLOW_ACTION);
-      promiseGranted.then(() => {
-        let promisePrompt = promiseStateChanged(permission, 'prompt');
-        SpecialPowers.popPermissions();
-        return promisePrompt;
-      }).then(resolve);
-    });
-  });
-}
-
-function testInvalidQuery() {
-  navigator.permissions.query({ name: 'invalid' }).then(
-    result => ok(false, 'invalid query should not have resolved'),
-    error => ok(true, 'invalid query should have rejected'));
-}
-
-function testInvalidRevoke() {
-  navigator.permissions.revoke({ name: 'invalid' }).then(
-    result => ok(false, 'invalid revoke should not have resolved'),
-    error => ok(true, 'invalid revoke should have rejected'));
-}
-
-function runTests() {
-  checkUnsupportedPermissions()
-    .then(() => setPermissions(UNKNOWN_ACTION))
-    .then(() => checkPermissions('prompt'))
-    .then(() => setPermissions(PROMPT_ACTION))
-    .then(() => checkPermissions('prompt'))
-    .then(() => setPermissions(ALLOW_ACTION))
-    .then(() => checkPermissions('granted'))
-    .then(() => setPermissions(DENY_ACTION))
-    .then(() => checkPermissions('denied'))
-    .then(testStatusOnChange)
-    .then(testInvalidQuery)
-    .then(revokeUnsupportedPermissions)
-    .then(revokePermissions)
-    .then(() => checkPermissions('prompt'))
-    .then(testInvalidRevoke)
-    .then(SimpleTest.finish)
-    .catch ((e) => {
-      ok(false, 'Unexpected error ' + e);
-      SimpleTest.finish();
-    });
-}
-</script>
-</pre>
+  };
+  </script>
 </body>
+
 </html>

@@ -3123,9 +3123,6 @@ nsGenericHTMLElement::GetInnerText(mozilla::dom::DOMString& aValue,
 void
 nsGenericHTMLElement::SetInnerText(const nsAString& aValue)
 {
-  // Fire DOMNodeRemoved mutation events before we do anything else.
-  nsCOMPtr<nsIContent> kungFuDeathGrip;
-
   // Batch possible DOMSubtreeModified events.
   mozAutoSubtreeModified subtree(OwnerDoc(), nullptr);
   FireNodeRemovedForChildren();

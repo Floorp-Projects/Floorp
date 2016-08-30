@@ -1,0 +1,57 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for style change hint optimizations</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  SimpleTest.waitForExplicitFinish();
+
+  function runTests() {
+
+    /** Test for Bug 1251075 **/
+    function test_bug1251075_div(id) {
+      var utils = SpecialPowers.DOMWindowUtils;
+
+      var div = document.getElementById(id);
+      div.style.display = "";
+
+      var description = div.style.cssText;
+
+      div.firstElementChild.offsetTop;
+      var constructedBefore = utils.framesConstructed;
+
+      div.style.transform = "translateX(10px)";
+      div.firstElementChild.offsetTop;
+      is(utils.framesConstructed, constructedBefore,
+         "adding a transform style to an element with " + description +
+         " should not cause frame reconstruction even when the element " +
+         "has absolutely positioned descendants");
+
+      div.style.display = "none";
+    }
+
+    test_bug1251075_div("bug1251075_a");
+    test_bug1251075_div("bug1251075_b");
+
+
+    SimpleTest.finish();
+  }
+
+  </script>
+</head>
+<body onload="runTests()">
+<div id="bug1251075_a" style="will-change: transform; display:none">
+  <div style="position: absolute; top: 0; left: 0;"></div>
+  <div style="position: fixed; top: 0; left: 0;"></div>
+</div>
+<div id="bug1251075_b" style="filter: blur(3px); display:none">
+  <div style="position: absolute; top: 0; left: 0;"></div>
+  <div style="position: fixed; top: 0; left: 0;"></div>
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

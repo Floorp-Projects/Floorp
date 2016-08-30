@@ -1264,6 +1264,32 @@ nsStyleContext::CalcStyleDifferenceInternal(StyleContextLike* aNewContext,
     }
   }
 
+  if (hint & nsChangeHint_UpdateContainingBlock) {
+    // If a struct returned nsChangeHint_UpdateContainingBlock, that
+    // means that one property's influence on whether we're a containing
+    // block for abs-pos or fixed-pos elements has changed.  However, we
+    // only need to return the hint if the overall computation of
+    // whether we establish a containing block has changed.
+
+    // This depends on data in nsStyleDisplay and nsStyleEffects, so we
+    // do it here.
+
+    // Note that it's perhaps good for this test to be last because it
+    // doesn't use Peek* functions to get the structs on the old
+    // context.  But this isn't a big concern because these struct
+    // getters should be called during frame construction anyway.
+    if (StyleDisplay()->IsAbsPosContainingBlockForAppropriateFrame(this) ==
+        aNewContext->StyleDisplay()->
+          IsAbsPosContainingBlockForAppropriateFrame(aNewContext) &&
+        StyleDisplay()->IsFixedPosContainingBlockForAppropriateFrame(this) ==
+        aNewContext->StyleDisplay()->
+          IsFixedPosContainingBlockForAppropriateFrame(aNewContext)) {
+      // While some styles that cause the frame to be a containing block
+      // has changed, the overall result hasn't.
+      hint &= ~nsChangeHint_UpdateContainingBlock;
+    }
+  }
+
   MOZ_ASSERT(NS_IsHintSubset(hint, nsChangeHint_AllHints),
              "Added a new hint without bumping AllHints?");
   return hint & ~nsChangeHint_NeutralChange;

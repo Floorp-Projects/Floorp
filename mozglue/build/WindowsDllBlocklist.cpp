@@ -764,8 +764,6 @@ DllBlocklist_Initialize()
   if (GetModuleHandleA("user32.dll")) {
     sUser32BeforeBlocklist = true;
   }
-  // Catch any missing DELAYLOADS for user32.dll
-  MOZ_ASSERT(!sUser32BeforeBlocklist);
 
   NtDllIntercept.Init("ntdll.dll");
 

@@ -8,7 +8,7 @@
 
 #include "mozilla/mscom/InterceptorLog.h"
 #include "mozilla/mscom/Registration.h"
-#include "mozilla/mscom/utils.h"
+#include "mozilla/mscom/Utils.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/DebugOnly.h"
 #include "nsThreadUtils.h"

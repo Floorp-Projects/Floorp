@@ -719,16 +719,19 @@ JSCompartment::ensureRandomNumberGenerator()
     }
 }
 
+double
+js::math_random_impl(JSContext* cx)
+{
+    JSCompartment* comp = cx->compartment();
+    comp->ensureRandomNumberGenerator();
+    return comp->randomNumberGenerator.ref().nextDouble();
+}
+
 bool
 js::math_random(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-
-    JSCompartment* comp = cx->compartment();
-    comp->ensureRandomNumberGenerator();
-
-    double z = comp->randomNumberGenerator.ref().nextDouble();
-    args.rval().setDouble(z);
+    args.rval().setNumber(math_random_impl(cx));
     return true;
 }
 

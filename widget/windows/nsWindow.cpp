@@ -5211,14 +5211,6 @@ nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
 
     case WM_CONTEXTMENU:
     {
-      // If the context menu is brought up by a touch long-press, then
-      // the APZ code is responsble for dealing with this, so we don't
-      // need to do anything.
-      if (mAPZC && MOUSE_INPUT_SOURCE() == nsIDOMMouseEvent::MOZ_SOURCE_TOUCH) {
-        result = true;
-        break;
-      }
-
       // if the context menu is brought up from the keyboard, |lParam|
       // will be -1.
       LPARAM pos;

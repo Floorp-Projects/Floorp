@@ -59,7 +59,7 @@ add_task(function* () {
 
   let obsPromise = TestUtils.topicObserved("PopupNotifications-updateNotShowing");
   let overlayPromise = promisePopupNotification("click-to-play-plugins");
-  gTestBrowser.contentWindow.history.back();
+  gTestBrowser.goBack();
   yield obsPromise;
   yield overlayPromise;
 });

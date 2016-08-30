@@ -37705,6 +37705,12 @@
             "path": "web-animations/timing-model/animations/updating-the-finished-state.html",
             "url": "/web-animations/timing-model/animations/updating-the-finished-state.html"
           }
+        ],
+        "workers/Worker_ErrorEvent_error.htm": [
+          {
+            "path": "workers/Worker_ErrorEvent_error.htm",
+            "url": "/workers/Worker_ErrorEvent_error.htm"
+          }
         ]
       }
     },

@@ -34,6 +34,15 @@ using class mozilla::ScrollWheelInput from "InputData.h";
 namespace mozilla {
 namespace layers {
 
+/**
+ * PAPZCTreeManager is a protocol for remoting an IAPZCTreeManager. PAPZCTreeManager
+ * lives on the PCompositorBridge protocol which either connects to the compositor
+ * thread in the main process, or to the compositor thread in the gpu processs.
+ *
+ * PAPZCTreeManagerParent lives in the compositor thread, while PAPZCTreeManagerChild
+ * lives in the main thread of the main or the content process. APZCTreeManagerParent
+ * and APZCTreeManagerChild implement this protocol.
+ */
 sync protocol PAPZCTreeManager
 {
 manager PCompositorBridge;

@@ -131,6 +131,11 @@ enum nsChangeHint {
    * that are absolutely or fixed position. Use this hint when a style change
    * has changed whether the frame is a container for fixed-pos or abs-pos
    * elements, but reframing is otherwise not needed.
+   *
+   * Note that nsStyleContext::CalcStyleDifference adjusts results
+   * returned by style struct CalcDifference methods to return this hint
+   * only if there was a change to whether the element's overall style
+   * indicates that it establishes a containing block.
    */
   nsChangeHint_UpdateContainingBlock = 1 << 17,
 

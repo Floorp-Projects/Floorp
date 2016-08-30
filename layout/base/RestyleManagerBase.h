@@ -9,13 +9,21 @@
 
 #include "mozilla/OverflowChangedTracker.h"
 #include "nsChangeHint.h"
+#include "nsPresContext.h"
 
+class nsCString;
+class nsCSSFrameConstructor;
 class nsStyleChangeList;
 
 namespace mozilla {
 
-class ServoRestyleManager;
+class EventStates;
 class RestyleManager;
+class ServoRestyleManager;
+
+namespace dom {
+class Element;
+}
 
 /**
  * Class for sharing data and logic common to both RestyleManager and

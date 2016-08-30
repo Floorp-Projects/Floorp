@@ -8,6 +8,7 @@
 #include "mozilla/ServoStyleSet.h"
 #include "mozilla/dom/ChildIterator.h"
 #include "nsContentUtils.h"
+#include "nsPrintfCString.h"
 #include "nsStyleChangeList.h"
 
 using namespace mozilla::dom;

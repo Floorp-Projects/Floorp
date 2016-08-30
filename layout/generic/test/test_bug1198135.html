@@ -1,0 +1,84 @@
+<!doctype html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1198135
+-->
+<html><head>
+<title>Test for Bug 1198135</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1198135">Mozilla Bug 1198135</a>
+<style>
+.example {
+	perspective: 100px;
+	height: 300px;
+	width: 300px;
+	overflow-x: hidden;
+	overflow-y: auto;
+	border: 1px solid blue;
+}
+
+.example__group {
+	position: relative;
+	transform-style: preserve-3d;
+    height: 300px;
+    top: 0;
+}
+.example__layer {
+	position: absolute;
+	top:0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+}
+.layer--a {
+	box-shadow: inset 0 0 0 1px red;
+}
+.layer--b {
+	box-shadow: inset 0 0 0 1px blue;
+	transform: translateZ(50px) scale(.45);
+}
+.layer--c {
+	box-shadow: inset 0 0 0 1px green;
+}
+.layer--d {
+	box-shadow: inset 00px 0 0px 1px orange;
+	transform: translateZ(50px) scale(.45);
+}
+.layer--e {
+	box-shadow: inset 00px 0 0px 1px orange;
+	transform: translateZ(50px) scale(.45) translateY(300px);
+}
+</style>
+</head>
+
+<body>
+
+<div class="example" id="first">
+  <div class="example__group">
+    <div class="example__layer layer--a"></div>
+    <div class="example__layer layer--b"></div>
+  </div>
+  <div class="example__group">
+    <div class="example__layer layer--c"></div>
+    <div class="example__layer layer--d"></div>
+  </div>
+</div>
+
+<div class="example" id="second">
+  <div class="example__group">
+    <div class="example__layer layer--a"></div>
+    <div class="example__layer layer--b"></div>
+  </div>
+  <div class="example__group">
+    <div class="example__layer layer--c"></div>
+    <div class="example__layer layer--e"></div>
+  </div>
+</div>
+
+<script>
+  is(document.getElementById("first").scrollHeight, 600, "Scroll height should be computed correctly");
+  // The true height is 727.5 and we don't always snap the same direction.
+  isfuzzy(document.getElementById("second").scrollHeight, 728, 1, "Scroll height should be computed correctly");
+</script>
+
+</body></html>

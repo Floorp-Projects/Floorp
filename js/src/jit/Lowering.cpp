@@ -2530,9 +2530,9 @@ LIRGenerator::visitAsmJSInterruptCheck(MAsmJSInterruptCheck* ins)
 }
 
 void
-LIRGenerator::visitAsmThrowUnreachable(MAsmThrowUnreachable* ins)
+LIRGenerator::visitWasmTrap(MWasmTrap* ins)
 {
-    add(new(alloc()) LAsmThrowUnreachable, ins);
+    add(new(alloc()) LWasmTrap, ins);
 }
 
 void
