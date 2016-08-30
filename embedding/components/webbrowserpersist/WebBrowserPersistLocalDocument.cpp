@@ -825,11 +825,11 @@ PersistNodeFixup::FixupAnchor(nsIDOMNode *aNode)
         nsCOMPtr<nsIURI> newURI;
         rv = NS_NewURI(getter_AddRefs(newURI), oldCValue,
                        mParent->GetCharacterSet().get(), relativeURI);
-        if (NS_SUCCEEDED(rv) && newURI)
-        {
+        if (NS_SUCCEEDED(rv) && newURI) {
             newURI->SetUserPass(EmptyCString());
             nsAutoCString uriSpec;
-            newURI->GetSpec(uriSpec);
+            rv = newURI->GetSpec(uriSpec);
+            NS_ENSURE_SUCCESS(rv, rv);
             attr->SetValue(NS_ConvertUTF8toUTF16(uriSpec));
         }
     }
