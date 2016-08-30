@@ -56,7 +56,10 @@ public:
                       Modifiers aModifiers,
                       const ScrollableLayerGuid& aGuid,
                       uint64_t aInputBlockId);
-  void ProcessLongTapUp();
+  void ProcessLongTapUp(const nsCOMPtr<nsIPresShell>& aPresShell,
+                        const CSSPoint& aPoint,
+                        const CSSToLayoutDeviceScale& aScale,
+                        Modifiers aModifiers);
   void ProcessTouchEvent(const WidgetTouchEvent& aEvent,
                          const ScrollableLayerGuid& aGuid,
                          uint64_t aInputBlockId,
