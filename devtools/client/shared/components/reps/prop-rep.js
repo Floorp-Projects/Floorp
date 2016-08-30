@@ -37,16 +37,12 @@ define(function (require, exports, module) {
             "className": "nodeName"},
             this.props.name),
           span({
-            "className": "objectEqual",
-            role: "presentation"},
-            this.props.equal
-          ),
+            "className": "objectEqual"
+          }, this.props.equal),
           Rep(this.props),
           span({
-            "className": "objectComma",
-            role: "presentation"},
-            this.props.delim
-          )
+            "className": "objectComma"
+          }, this.props.delim)
         )
       );
     }
