@@ -488,7 +488,7 @@ MediaDecoderStateMachine::NeedToDecodeVideo()
              IsVideoDecoding(), mMinimizePreroll, HaveEnoughDecodedVideo());
   return IsVideoDecoding() &&
          mState != DECODER_STATE_SEEKING &&
-         ((IsDecodingFirstFrame() && VideoQueue().GetSize() == 0) ||
+         ((!mSentFirstFrameLoadedEvent && VideoQueue().GetSize() == 0) ||
           (!mMinimizePreroll && !HaveEnoughDecodedVideo()));
 }
 
@@ -496,7 +496,8 @@ bool
 MediaDecoderStateMachine::NeedToSkipToNextKeyframe()
 {
   MOZ_ASSERT(OnTaskQueue());
-  if (IsDecodingFirstFrame()) {
+  // Don't skip when we're still decoding first frames.
+  if (!mSentFirstFrameLoadedEvent) {
     return false;
   }
   MOZ_ASSERT(mState == DECODER_STATE_DECODING ||
@@ -557,7 +558,7 @@ MediaDecoderStateMachine::NeedToDecodeAudio()
 
   return IsAudioDecoding() &&
          mState != DECODER_STATE_SEEKING &&
-         ((IsDecodingFirstFrame() && AudioQueue().GetSize() == 0) ||
+         ((!mSentFirstFrameLoadedEvent && AudioQueue().GetSize() == 0) ||
           (!mMinimizePreroll && !HaveEnoughDecodedAudio()));
 }
 
@@ -733,7 +734,7 @@ bool
 MediaDecoderStateMachine::MaybeFinishDecodeFirstFrame()
 {
   MOZ_ASSERT(OnTaskQueue());
-  if (!IsDecodingFirstFrame() ||
+  if (mSentFirstFrameLoadedEvent ||
       (IsAudioDecoding() && AudioQueue().GetSize() == 0) ||
       (IsVideoDecoding() && VideoQueue().GetSize() == 0)) {
     return false;
@@ -790,7 +791,7 @@ MediaDecoderStateMachine::OnVideoDecoded(MediaData* aVideoSample,
         return;
       }
       TimeDuration decodeTime = TimeStamp::Now() - aDecodeStartTime;
-      if (!IsDecodingFirstFrame() &&
+      if (mSentFirstFrameLoadedEvent &&
           THRESHOLD_FACTOR * DurationToUsecs(decodeTime) > mLowAudioThresholdUsecs &&
           !HasLowUndecodedData())
       {
@@ -1503,8 +1504,12 @@ MediaDecoderStateMachine::Seek(SeekTarget aTarget)
   MOZ_ASSERT(mState > DECODER_STATE_DECODING_METADATA,
                "We should have got duration already");
 
-  if (mState < DECODER_STATE_DECODING ||
-      (IsDecodingFirstFrame() && !mReader->ForceZeroStartTime())) {
+  // Can't seek until the start time is known.
+  bool hasStartTime = mSentFirstFrameLoadedEvent || mReader->ForceZeroStartTime();
+  // Can't seek when state is WAIT_FOR_CDM or DORMANT.
+  bool stateAllowed = mState >= DECODER_STATE_DECODING;
+
+  if (!stateAllowed || !hasStartTime) {
     DECODER_LOG("Seek() Not Enough Data to continue at this stage, queuing seek");
     mQueuedSeek.RejectIfExists(__func__);
     mQueuedSeek.mTarget = aTarget;
@@ -1898,8 +1903,8 @@ bool MediaDecoderStateMachine::HasLowUndecodedData()
 bool MediaDecoderStateMachine::HasLowUndecodedData(int64_t aUsecs)
 {
   MOZ_ASSERT(OnTaskQueue());
-  NS_ASSERTION(mState >= DECODER_STATE_DECODING && !IsDecodingFirstFrame(),
-               "Must have loaded first frame for mBuffered to be valid");
+  MOZ_ASSERT(mState >= DECODER_STATE_DECODING && mSentFirstFrameLoadedEvent,
+             "Must have loaded first frame for mBuffered to be valid");
 
   // If we don't have a duration, mBuffered is probably not going to have
   // a useful buffered range. Return false here so that we don't get stuck in
@@ -2267,9 +2272,8 @@ nsresult MediaDecoderStateMachine::RunStateMachine()
       return NS_OK;
 
     case DECODER_STATE_DECODING: {
-      if (IsDecodingFirstFrame()) {
-        // We haven't completed decoding our first frames, we can't start
-        // playback yet.
+      // Can't start playback until having decoded first frames.
+      if (!mSentFirstFrameLoadedEvent) {
         return NS_OK;
       }
       if (mPlayState != MediaDecoder::PLAY_STATE_PLAYING && IsPlaying())
@@ -2486,7 +2490,7 @@ void MediaDecoderStateMachine::UpdateNextFrameStatus()
 
   MediaDecoderOwner::NextFrameStatus status;
   const char* statusString;
-  if (mState <= DECODER_STATE_WAIT_FOR_CDM || IsDecodingFirstFrame()) {
+  if (mState < DECODER_STATE_DECODING || !mSentFirstFrameLoadedEvent) {
     status = MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE;
     statusString = "NEXT_FRAME_UNAVAILABLE";
   } else if (IsBuffering()) {
