@@ -81,8 +81,8 @@ const COMMENT_REGEXP = new RegExp(String.raw`
     ^
     (
       (?:
-        [^"] |
-        " (?:[^"\\] | \\.)* "
+        [^"\n] |
+        " (?:[^"\\\n] | \\.)* "
       )*?
     )
 
