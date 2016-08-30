@@ -20,18 +20,26 @@
 
 #define ROTATE(v, c) ROTL32((v), (c))
 
-#define U32TO8_LITTLE(p, v)                                                    \
-    { (p)[0] = ((v)      ) & 0xff; (p)[1] = ((v) >>  8) & 0xff;                \
-      (p)[2] = ((v) >> 16) & 0xff; (p)[3] = ((v) >> 24) & 0xff; }
-#define U8TO32_LITTLE(p)                                                       \
-    (((PRUint32)((p)[0])      ) | ((PRUint32)((p)[1]) <<  8) |                 \
+#define U32TO8_LITTLE(p, v)          \
+    {                                \
+        (p)[0] = ((v)) & 0xff;       \
+        (p)[1] = ((v) >> 8) & 0xff;  \
+        (p)[2] = ((v) >> 16) & 0xff; \
+        (p)[3] = ((v) >> 24) & 0xff; \
+    }
+#define U8TO32_LITTLE(p)                                \
+    (((PRUint32)((p)[0])) | ((PRUint32)((p)[1]) << 8) | \
      ((PRUint32)((p)[2]) << 16) | ((PRUint32)((p)[3]) << 24))
 
-#define QUARTERROUND(x, a, b, c, d)                                            \
-    x[a] = x[a] + x[b]; x[d] = ROTATE(x[d] ^ x[a], 16);                        \
-    x[c] = x[c] + x[d]; x[b] = ROTATE(x[b] ^ x[c], 12);                        \
-    x[a] = x[a] + x[b]; x[d] = ROTATE(x[d] ^ x[a],  8);                        \
-    x[c] = x[c] + x[d]; x[b] = ROTATE(x[b] ^ x[c],  7);
+#define QUARTERROUND(x, a, b, c, d) \
+    x[a] = x[a] + x[b];             \
+    x[d] = ROTATE(x[d] ^ x[a], 16); \
+    x[c] = x[c] + x[d];             \
+    x[b] = ROTATE(x[b] ^ x[c], 12); \
+    x[a] = x[a] + x[b];             \
+    x[d] = ROTATE(x[d] ^ x[a], 8);  \
+    x[c] = x[c] + x[d];             \
+    x[b] = ROTATE(x[b] ^ x[c], 7);
 
 static void
 ChaChaCore(unsigned char output[64], const PRUint32 input[16], int num_rounds)

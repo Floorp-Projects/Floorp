@@ -13,42 +13,41 @@
 #include "plarena.h"
 #include "ecl-exp.h"
 
-
 /* RC2 operation modes */
-#define NSS_RC2			0
-#define NSS_RC2_CBC		1
+#define NSS_RC2 0
+#define NSS_RC2_CBC 1
 
 /* RC5 operation modes */
-#define NSS_RC5                 0
-#define NSS_RC5_CBC             1
+#define NSS_RC5 0
+#define NSS_RC5_CBC 1
 
 /* DES operation modes */
-#define NSS_DES			0
-#define NSS_DES_CBC		1
-#define NSS_DES_EDE3		2
-#define NSS_DES_EDE3_CBC	3
+#define NSS_DES 0
+#define NSS_DES_CBC 1
+#define NSS_DES_EDE3 2
+#define NSS_DES_EDE3_CBC 3
 
-#define DES_KEY_LENGTH		8	/* Bytes */
+#define DES_KEY_LENGTH 8 /* Bytes */
 
 /* AES operation modes */
-#define NSS_AES                 0
-#define NSS_AES_CBC             1
-#define NSS_AES_CTS             2
-#define NSS_AES_CTR             3
-#define NSS_AES_GCM             4
+#define NSS_AES 0
+#define NSS_AES_CBC 1
+#define NSS_AES_CTS 2
+#define NSS_AES_CTR 3
+#define NSS_AES_GCM 4
 
 /* Camellia operation modes */
-#define NSS_CAMELLIA                 0
-#define NSS_CAMELLIA_CBC             1
+#define NSS_CAMELLIA 0
+#define NSS_CAMELLIA_CBC 1
 
 /* SEED operation modes */
-#define NSS_SEED		0
-#define NSS_SEED_CBC		1
+#define NSS_SEED 0
+#define NSS_SEED_CBC 1
 
-#define DSA1_SUBPRIME_LEN	20			/* Bytes */
-#define DSA1_SIGNATURE_LEN 	(DSA1_SUBPRIME_LEN*2)	/* Bytes */
-#define DSA_MAX_SUBPRIME_LEN	32			/* Bytes */
-#define DSA_MAX_SIGNATURE_LEN 	(DSA_MAX_SUBPRIME_LEN*2)/* Bytes */
+#define DSA1_SUBPRIME_LEN 20                             /* Bytes */
+#define DSA1_SIGNATURE_LEN (DSA1_SUBPRIME_LEN * 2)       /* Bytes */
+#define DSA_MAX_SUBPRIME_LEN 32                          /* Bytes */
+#define DSA_MAX_SIGNATURE_LEN (DSA_MAX_SUBPRIME_LEN * 2) /* Bytes */
 
 /*
  * Mark the old defines as deprecated. This will warn code that expected
@@ -59,18 +58,17 @@
 typedef int __BLAPI_DEPRECATED __attribute__((deprecated));
 #define DSA_SUBPRIME_LEN ((__BLAPI_DEPRECATED)DSA1_SUBPRIME_LEN)
 #define DSA_SIGNATURE_LEN ((__BLAPI_DEPRECATED)DSA1_SIGNATURE_LEN)
-#define DSA_Q_BITS ((__BLAPI_DEPRECATED)(DSA1_SUBPRIME_LEN*8))
+#define DSA_Q_BITS ((__BLAPI_DEPRECATED)(DSA1_SUBPRIME_LEN * 8))
 #else
 #ifdef _WIN32
 /* This magic gets the windows compiler to give us a deprecation
  * warning */
 #pragma deprecated(DSA_SUBPRIME_LEN, DSA_SIGNATURE_LEN, DSA_QBITS)
 #endif
-#define DSA_SUBPRIME_LEN  DSA1_SUBPRIME_LEN
+#define DSA_SUBPRIME_LEN DSA1_SUBPRIME_LEN
 #define DSA_SIGNATURE_LEN DSA1_SIGNATURE_LEN
-#define DSA_Q_BITS 	  (DSA1_SUBPRIME_LEN*8)
+#define DSA_Q_BITS (DSA1_SUBPRIME_LEN * 8)
 #endif
-
 
 /* XXX We shouldn't have to hard code this limit. For
  * now, this is the quickest way to support ECDSA signature
@@ -78,59 +76,59 @@ typedef int __BLAPI_DEPRECATED __attribute__((deprecated));
  * size). This limit is sufficient for curves upto
  * 576 bits.
  */
-#define MAX_ECKEY_LEN 	        72	/* Bytes */
+#define MAX_ECKEY_LEN 72 /* Bytes */
 
 #ifdef NSS_ECC_MORE_THAN_SUITE_B
-#define EC_MAX_KEY_BITS		571     /* in bits */
-#define EC_MIN_KEY_BITS		112     /* in bits */
+#define EC_MAX_KEY_BITS 571 /* in bits */
+#define EC_MIN_KEY_BITS 112 /* in bits */
 #else
-#define EC_MAX_KEY_BITS		521     /* in bits */
-#define EC_MIN_KEY_BITS		256     /* in bits */
+#define EC_MAX_KEY_BITS 521 /* in bits */
+#define EC_MIN_KEY_BITS 256 /* in bits */
 #endif
 
 /* EC point compression format */
-#define EC_POINT_FORM_COMPRESSED_Y0    0x02
-#define EC_POINT_FORM_COMPRESSED_Y1    0x03
-#define EC_POINT_FORM_UNCOMPRESSED     0x04
-#define EC_POINT_FORM_HYBRID_Y0        0x06
-#define EC_POINT_FORM_HYBRID_Y1        0x07
+#define EC_POINT_FORM_COMPRESSED_Y0 0x02
+#define EC_POINT_FORM_COMPRESSED_Y1 0x03
+#define EC_POINT_FORM_UNCOMPRESSED 0x04
+#define EC_POINT_FORM_HYBRID_Y0 0x06
+#define EC_POINT_FORM_HYBRID_Y1 0x07
 
 /*
  * Number of bytes each hash algorithm produces
  */
-#define MD2_LENGTH		16	/* Bytes */
-#define MD5_LENGTH		16	/* Bytes */
-#define SHA1_LENGTH		20	/* Bytes */
-#define SHA256_LENGTH 		32 	/* bytes */
-#define SHA384_LENGTH 		48 	/* bytes */
-#define SHA512_LENGTH 		64 	/* bytes */
-#define HASH_LENGTH_MAX         SHA512_LENGTH
+#define MD2_LENGTH 16    /* Bytes */
+#define MD5_LENGTH 16    /* Bytes */
+#define SHA1_LENGTH 20   /* Bytes */
+#define SHA256_LENGTH 32 /* bytes */
+#define SHA384_LENGTH 48 /* bytes */
+#define SHA512_LENGTH 64 /* bytes */
+#define HASH_LENGTH_MAX SHA512_LENGTH
 
 /*
  * Input block size for each hash algorithm.
  */
 
-#define MD2_BLOCK_LENGTH 	 64 	/* bytes */
-#define MD5_BLOCK_LENGTH 	 64 	/* bytes */
-#define SHA1_BLOCK_LENGTH 	 64 	/* bytes */
-#define SHA224_BLOCK_LENGTH 	 64 	/* bytes */
-#define SHA256_BLOCK_LENGTH 	 64 	/* bytes */
-#define SHA384_BLOCK_LENGTH 	128 	/* bytes */
-#define SHA512_BLOCK_LENGTH 	128 	/* bytes */
-#define HASH_BLOCK_LENGTH_MAX 	SHA512_BLOCK_LENGTH
+#define MD2_BLOCK_LENGTH 64     /* bytes */
+#define MD5_BLOCK_LENGTH 64     /* bytes */
+#define SHA1_BLOCK_LENGTH 64    /* bytes */
+#define SHA224_BLOCK_LENGTH 64  /* bytes */
+#define SHA256_BLOCK_LENGTH 64  /* bytes */
+#define SHA384_BLOCK_LENGTH 128 /* bytes */
+#define SHA512_BLOCK_LENGTH 128 /* bytes */
+#define HASH_BLOCK_LENGTH_MAX SHA512_BLOCK_LENGTH
 
-#define AES_KEY_WRAP_IV_BYTES    8
-#define AES_KEY_WRAP_BLOCK_SIZE  8  /* bytes */
-#define AES_BLOCK_SIZE          16  /* bytes */
+#define AES_KEY_WRAP_IV_BYTES 8
+#define AES_KEY_WRAP_BLOCK_SIZE 8 /* bytes */
+#define AES_BLOCK_SIZE 16         /* bytes */
 
-#define AES_128_KEY_LENGTH      16  /* bytes */
-#define AES_192_KEY_LENGTH      24  /* bytes */
-#define AES_256_KEY_LENGTH      32  /* bytes */
+#define AES_128_KEY_LENGTH 16 /* bytes */
+#define AES_192_KEY_LENGTH 24 /* bytes */
+#define AES_256_KEY_LENGTH 32 /* bytes */
 
-#define CAMELLIA_BLOCK_SIZE          16  /* bytes */
+#define CAMELLIA_BLOCK_SIZE 16 /* bytes */
 
-#define SEED_BLOCK_SIZE 16              /* bytes */
-#define SEED_KEY_LENGTH 16              /* bytes */
+#define SEED_BLOCK_SIZE 16 /* bytes */
+#define SEED_KEY_LENGTH 16 /* bytes */
 
 #define NSS_FREEBL_DEFAULT_CHUNKSIZE 2048
 
@@ -138,11 +136,11 @@ typedef int __BLAPI_DEPRECATED __attribute__((deprecated));
  * These values come from the initial key size limits from the PKCS #11
  * module. They may be arbitrarily adjusted to any value freebl supports.
  */
-#define RSA_MIN_MODULUS_BITS   128
+#define RSA_MIN_MODULUS_BITS 128
 #define RSA_MAX_MODULUS_BITS 16384
-#define RSA_MAX_EXPONENT_BITS   64
-#define DH_MIN_P_BITS	       128
-#define DH_MAX_P_BITS        16384
+#define RSA_MAX_EXPONENT_BITS 64
+#define DH_MIN_P_BITS 128
+#define DH_MAX_P_BITS 16384
 
 /*
  * The FIPS 186-1 algorithm for generating primes P and Q allows only 9
@@ -152,17 +150,17 @@ typedef int __BLAPI_DEPRECATED __attribute__((deprecated));
  * of P is to be used.
  * The following table relates j to the lengths of P and Q in bits.
  *
- *	j	bits in P	bits in Q
- *	_	_________	_________
- *	0	 512		160
- *	1	 576		160
- *	2	 640		160
- *	3	 704		160
- *	4	 768		160
- *	5	 832		160
- *	6	 896		160
- *	7	 960		160
- *	8	1024		160
+ *  j   bits in P   bits in Q
+ *  _   _________   _________
+ *  0    512        160
+ *  1    576        160
+ *  2    640        160
+ *  3    704        160
+ *  4    768        160
+ *  5    832        160
+ *  6    896        160
+ *  7    960        160
+ *  8   1024        160
  *
  * The FIPS-186-1 compliant PQG generator takes j as an input parameter.
  *
@@ -179,24 +177,22 @@ typedef int __BLAPI_DEPRECATED __attribute__((deprecated));
  * lengths as input and returns an error if they aren't in this list.
  */
 
-#define DSA1_Q_BITS      160
-#define DSA_MAX_P_BITS	3072
-#define DSA_MIN_P_BITS	 512
-#define DSA_MAX_Q_BITS   256
-#define DSA_MIN_Q_BITS   160
+#define DSA1_Q_BITS 160
+#define DSA_MAX_P_BITS 3072
+#define DSA_MIN_P_BITS 512
+#define DSA_MAX_Q_BITS 256
+#define DSA_MIN_Q_BITS 160
 
-#if DSA_MAX_Q_BITS != DSA_MAX_SUBPRIME_LEN*8
+#if DSA_MAX_Q_BITS != DSA_MAX_SUBPRIME_LEN * 8
 #error "Inconsistent declaration of DSA SUBPRIME/Q parameters in blapit.h"
 #endif
-
 
 /*
  * function takes desired number of bits in P,
  * returns index (0..8) or -1 if number of bits is invalid.
  */
 #define PQG_PBITS_TO_INDEX(bits) \
-    (((bits) < 512 || (bits) > 1024 || (bits) % 64) ? \
-    -1 : (int)((bits)-512)/64)
+    (((bits) < 512 || (bits) > 1024 || (bits) % 64) ? -1 : (int)((bits)-512) / 64)
 
 /*
  * function takes index (0-8)
@@ -204,43 +200,42 @@ typedef int __BLAPI_DEPRECATED __attribute__((deprecated));
  */
 #define PQG_INDEX_TO_PBITS(j) (((unsigned)(j) > 8) ? -1 : (512 + 64 * (j)))
 
-
 /***************************************************************************
-** Opaque objects 
+** Opaque objects
 */
 
-struct DESContextStr        ;
-struct RC2ContextStr        ;
-struct RC4ContextStr        ;
-struct RC5ContextStr        ;
-struct AESContextStr        ;
-struct CamelliaContextStr   ;
-struct MD2ContextStr        ;
-struct MD5ContextStr        ;
-struct SHA1ContextStr       ;
-struct SHA256ContextStr     ;
-struct SHA512ContextStr     ;
-struct AESKeyWrapContextStr ;
-struct SEEDContextStr       ;	
+struct DESContextStr;
+struct RC2ContextStr;
+struct RC4ContextStr;
+struct RC5ContextStr;
+struct AESContextStr;
+struct CamelliaContextStr;
+struct MD2ContextStr;
+struct MD5ContextStr;
+struct SHA1ContextStr;
+struct SHA256ContextStr;
+struct SHA512ContextStr;
+struct AESKeyWrapContextStr;
+struct SEEDContextStr;
 struct ChaCha20Poly1305ContextStr;
 
-typedef struct DESContextStr        DESContext;
-typedef struct RC2ContextStr        RC2Context;
-typedef struct RC4ContextStr        RC4Context;
-typedef struct RC5ContextStr        RC5Context;
-typedef struct AESContextStr        AESContext;
-typedef struct CamelliaContextStr   CamelliaContext;
-typedef struct MD2ContextStr        MD2Context;
-typedef struct MD5ContextStr        MD5Context;
-typedef struct SHA1ContextStr       SHA1Context;
-typedef struct SHA256ContextStr     SHA256Context;
+typedef struct DESContextStr DESContext;
+typedef struct RC2ContextStr RC2Context;
+typedef struct RC4ContextStr RC4Context;
+typedef struct RC5ContextStr RC5Context;
+typedef struct AESContextStr AESContext;
+typedef struct CamelliaContextStr CamelliaContext;
+typedef struct MD2ContextStr MD2Context;
+typedef struct MD5ContextStr MD5Context;
+typedef struct SHA1ContextStr SHA1Context;
+typedef struct SHA256ContextStr SHA256Context;
 /* SHA224Context is really a SHA256ContextStr.  This is not a mistake. */
-typedef struct SHA256ContextStr     SHA224Context;
-typedef struct SHA512ContextStr     SHA512Context;
+typedef struct SHA256ContextStr SHA224Context;
+typedef struct SHA512ContextStr SHA512Context;
 /* SHA384Context is really a SHA512ContextStr.  This is not a mistake. */
-typedef struct SHA512ContextStr     SHA384Context;
+typedef struct SHA512ContextStr SHA384Context;
 typedef struct AESKeyWrapContextStr AESKeyWrapContext;
-typedef struct SEEDContextStr	    SEEDContext;	
+typedef struct SEEDContextStr SEEDContext;
 typedef struct ChaCha20Poly1305ContextStr ChaCha20Poly1305Context;
 
 /***************************************************************************
@@ -249,7 +244,7 @@ typedef struct ChaCha20Poly1305ContextStr ChaCha20Poly1305Context;
 
 /* member names from PKCS#1, section 7.1 */
 struct RSAPublicKeyStr {
-    PLArenaPool * arena;
+    PLArenaPool *arena;
     SECItem modulus;
     SECItem publicExponent;
 };
@@ -257,7 +252,7 @@ typedef struct RSAPublicKeyStr RSAPublicKey;
 
 /* member names from PKCS#1, section 7.2 */
 struct RSAPrivateKeyStr {
-    PLArenaPool * arena;
+    PLArenaPool *arena;
     SECItem version;
     SECItem modulus;
     SECItem publicExponent;
@@ -269,7 +264,6 @@ struct RSAPrivateKeyStr {
     SECItem coefficient;
 };
 typedef struct RSAPrivateKeyStr RSAPrivateKey;
-
 
 /***************************************************************************
 ** DSA Public and Private Key and related structures
@@ -285,10 +279,10 @@ struct PQGParamsStr {
 typedef struct PQGParamsStr PQGParams;
 
 struct PQGVerifyStr {
-    PLArenaPool * arena;	/* includes this struct, seed, & h. */
-    unsigned int  counter;
-    SECItem       seed;
-    SECItem       h;
+    PLArenaPool *arena; /* includes this struct, seed, & h. */
+    unsigned int counter;
+    SECItem seed;
+    SECItem h;
 };
 typedef struct PQGVerifyStr PQGVerify;
 
@@ -311,14 +305,14 @@ typedef struct DSAPrivateKeyStr DSAPrivateKey;
 */
 
 struct DHParamsStr {
-    PLArenaPool * arena;
+    PLArenaPool *arena;
     SECItem prime; /* p */
-    SECItem base; /* g */
+    SECItem base;  /* g */
 };
 typedef struct DHParamsStr DHParams;
 
 struct DHPublicKeyStr {
-    PLArenaPool * arena;
+    PLArenaPool *arena;
     SECItem prime;
     SECItem base;
     SECItem publicValue;
@@ -326,7 +320,7 @@ struct DHPublicKeyStr {
 typedef struct DHPublicKeyStr DHPublicKey;
 
 struct DHPrivateKeyStr {
-    PLArenaPool * arena;
+    PLArenaPool *arena;
     SECItem prime;
     SECItem base;
     SECItem publicValue;
@@ -340,12 +334,12 @@ typedef struct DHPrivateKeyStr DHPrivateKey;
 */
 
 /*
-** The ECParams data structures can encode elliptic curve 
+** The ECParams data structures can encode elliptic curve
 ** parameters for both GFp and GF2m curves.
 */
 
 typedef enum { ec_params_explicit,
-	       ec_params_named
+               ec_params_named
 } ECParamsType;
 
 typedef enum { ec_field_GFp = 1,
@@ -353,72 +347,72 @@ typedef enum { ec_field_GFp = 1,
 } ECFieldType;
 
 struct ECFieldIDStr {
-    int         size;   /* field size in bits */
+    int size; /* field size in bits */
     ECFieldType type;
     union {
-        SECItem  prime; /* prime p for (GFp) */
-        SECItem  poly;  /* irreducible binary polynomial for (GF2m) */
+        SECItem prime; /* prime p for (GFp) */
+        SECItem poly;  /* irreducible binary polynomial for (GF2m) */
     } u;
-    int         k1;     /* first coefficient of pentanomial or
-                         * the only coefficient of trinomial 
+    int k1; /* first coefficient of pentanomial or
+                         * the only coefficient of trinomial
                          */
-    int         k2;     /* two remaining coefficients of pentanomial */
-    int         k3;
+    int k2; /* two remaining coefficients of pentanomial */
+    int k3;
 };
 typedef struct ECFieldIDStr ECFieldID;
 
 struct ECCurveStr {
-    SECItem a;          /* contains octet stream encoding of
-                         * field element (X9.62 section 4.3.3) 
-			 */
+    SECItem a; /* contains octet stream encoding of
+                         * field element (X9.62 section 4.3.3)
+             */
     SECItem b;
     SECItem seed;
 };
 typedef struct ECCurveStr ECCurve;
 
 struct ECParamsStr {
-    PLArenaPool * arena;
-    ECParamsType  type;
-    ECFieldID     fieldID;
-    ECCurve       curve; 
-    SECItem       base;
-    SECItem       order; 
-    int           cofactor;
-    SECItem       DEREncoding;
-    ECCurveName   name;
-    SECItem       curveOID;
+    PLArenaPool *arena;
+    ECParamsType type;
+    ECFieldID fieldID;
+    ECCurve curve;
+    SECItem base;
+    SECItem order;
+    int cofactor;
+    SECItem DEREncoding;
+    ECCurveName name;
+    SECItem curveOID;
 };
 typedef struct ECParamsStr ECParams;
 
 struct ECPublicKeyStr {
-    ECParams ecParams;   
-    SECItem publicValue;   /* elliptic curve point encoded as 
-			    * octet stream.
-			    */
+    ECParams ecParams;
+    SECItem publicValue; /* elliptic curve point encoded as
+                * octet stream.
+                */
 };
 typedef struct ECPublicKeyStr ECPublicKey;
 
 struct ECPrivateKeyStr {
-    ECParams ecParams;   
-    SECItem publicValue;   /* encoded ec point */
-    SECItem privateValue;  /* private big integer */
-    SECItem version;       /* As per SEC 1, Appendix C, Section C.4 */
+    ECParams ecParams;
+    SECItem publicValue;  /* encoded ec point */
+    SECItem privateValue; /* private big integer */
+    SECItem version;      /* As per SEC 1, Appendix C, Section C.4 */
 };
 typedef struct ECPrivateKeyStr ECPrivateKey;
 
-typedef void * (*BLapiAllocateFunc)(void);
+typedef void *(*BLapiAllocateFunc)(void);
 typedef void (*BLapiDestroyContextFunc)(void *cx, PRBool freeit);
-typedef SECStatus (*BLapiInitContextFunc)(void *cx, 
-				   const unsigned char *key, 
-				   unsigned int keylen,
-				   const unsigned char *, 
-				   int, 
-				   unsigned int ,
-				   unsigned int );
+typedef SECStatus (*BLapiInitContextFunc)(void *cx,
+                                          const unsigned char *key,
+                                          unsigned int keylen,
+                                          const unsigned char *,
+                                          int,
+                                          unsigned int,
+                                          unsigned int);
 typedef SECStatus (*BLapiEncrypt)(void *cx, unsigned char *output,
-				unsigned int *outputLen, 
-				unsigned int maxOutputLen,
-				const unsigned char *input, 
-				unsigned int inputLen);
+                                  unsigned int *outputLen,
+                                  unsigned int maxOutputLen,
+                                  const unsigned char *input,
+                                  unsigned int inputLen);
 
 #endif /* _BLAPIT_H_ */
