@@ -7373,7 +7373,7 @@ var gIdentityHandler = {
     let img = document.createElement("image");
     let classes = "identity-popup-permission-icon " + aPermission.id + "-icon";
     if (aPermission.state == SitePermissions.BLOCK)
-      classes += " blocked";
+      classes += " blocked-permission-icon";
     if (aPermission.inUse)
       classes += " in-use";
     img.setAttribute("class", classes);
