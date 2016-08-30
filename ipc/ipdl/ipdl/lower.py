@@ -851,7 +851,7 @@ IPDL union type."""
         else:
             return ExprNew(self.bareType(self.side),
                            args=args,
-                           newargs=[ self.callGetPtr() ])
+                           newargs=[ ExprVar('mozilla::KnownNotNull'), self.callGetPtr() ])
 
     def callDtor(self):
         if self.recursive:
