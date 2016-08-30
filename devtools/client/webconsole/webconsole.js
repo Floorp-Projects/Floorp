@@ -35,10 +35,10 @@ loader.lazyRequireGetter(this, "gSequenceId", "devtools/client/webconsole/jsterm
 loader.lazyImporter(this, "VariablesView", "resource://devtools/client/shared/widgets/VariablesView.jsm");
 loader.lazyImporter(this, "VariablesViewController", "resource://devtools/client/shared/widgets/VariablesViewController.jsm");
 loader.lazyRequireGetter(this, "gDevTools", "devtools/client/framework/devtools", true);
-loader.lazyImporter(this, "PluralForm", "resource://gre/modules/PluralForm.jsm");
 loader.lazyRequireGetter(this, "KeyShortcuts", "devtools/client/shared/key-shortcuts", true);
 loader.lazyRequireGetter(this, "ZoomKeys", "devtools/client/shared/zoom-keys");
 
+const {PluralForm} = require("devtools/shared/plural-form");
 const STRINGS_URI = "devtools/locale/webconsole.properties";
 var l10n = new WebConsoleUtils.L10n(STRINGS_URI);
 
