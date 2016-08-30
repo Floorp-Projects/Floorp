@@ -1635,7 +1635,7 @@ void ClearCycleCollectorCleanupData()
 static bool
 ShouldClearPurple(nsIContent* aContent)
 {
-  MOZ_ASSERT(aContent)
+  MOZ_ASSERT(aContent);
   if (aContent->IsPurple()) {
     return true;
   }
