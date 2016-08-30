@@ -223,7 +223,6 @@ frame.Manager = class {
     mm.addWeakMessageListener("Marionette:getImportedScripts", this.driver.importedScripts);
     mm.addWeakMessageListener("Marionette:register", this.driver);
     mm.addWeakMessageListener("Marionette:listenersAttached", this.driver);
-    mm.addWeakMessageListener("Marionette:getFiles", this.driver);
     mm.addWeakMessageListener("MarionetteFrame:handleModal", this);
     mm.addWeakMessageListener("MarionetteFrame:getCurrentFrameId", this);
     mm.addWeakMessageListener("MarionetteFrame:getInterruptedState", this);
@@ -252,7 +251,6 @@ frame.Manager = class {
     mm.removeWeakMessageListener("Marionette:getImportedScripts", this.driver.importedScripts);
     mm.removeWeakMessageListener("Marionette:listenersAttached", this.driver);
     mm.removeWeakMessageListener("Marionette:register", this.driver);
-    mm.removeWeakMessageListener("Marionette:getFiles", this.driver);
     mm.removeWeakMessageListener("MarionetteFrame:handleModal", this);
     mm.removeWeakMessageListener("MarionetteFrame:getCurrentFrameId", this);
   }
