@@ -22,6 +22,20 @@ this.FakeFilesystemService = function FakeFilesystemService(contents) {
   this.fakeContents = contents;
   let self = this;
 
+  // Save away the unmocked versions of the functions we replace here for tests
+  // that really want the originals. As this may be called many times per test,
+  // we must be careful to not replace them with ones we previously replaced.
+  // (And WTF are we bothering with these mocks in the first place? Is the
+  // performance of the filesystem *really* such that it outweighs the downside
+  // of not running our real JSON functions in the tests? Eg, these mocks don't
+  // always throw exceptions when the real ones do. Anyway...)
+  for (let name of ["jsonSave", "jsonLoad", "jsonMove", "jsonRemove"]) {
+    let origName = "_real_" + name;
+    if (!Utils[origName]) {
+      Utils[origName] = Utils[name];
+    }
+  }
+
   Utils.jsonSave = function jsonSave(filePath, that, obj, callback) {
     let json = typeof obj == "function" ? obj.call(that) : obj;
     self.fakeContents["weave/" + filePath + ".json"] = JSON.stringify(json);
