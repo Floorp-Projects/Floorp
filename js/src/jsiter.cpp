@@ -1495,8 +1495,12 @@ GlobalObject::initArrayIteratorProto(JSContext* cx, Handle<GlobalObject*> global
 
     const Class* cls = &ArrayIteratorPrototypeClass;
     RootedObject proto(cx, global->createBlankPrototypeInheriting(cx, cls, iteratorProto));
-    if (!proto || !DefinePropertiesAndFunctions(cx, proto, nullptr, array_iterator_methods))
+    if (!proto ||
+        !DefinePropertiesAndFunctions(cx, proto, nullptr, array_iterator_methods) ||
+        !DefineToStringTag(cx, proto, cx->names().ArrayIterator))
+    {
         return false;
+    }
 
     global->setReservedSlot(ARRAY_ITERATOR_PROTO, ObjectValue(*proto));
     return true;
@@ -1514,8 +1518,12 @@ GlobalObject::initStringIteratorProto(JSContext* cx, Handle<GlobalObject*> globa
 
     const Class* cls = &StringIteratorPrototypeClass;
     RootedObject proto(cx, global->createBlankPrototypeInheriting(cx, cls, iteratorProto));
-    if (!proto || !DefinePropertiesAndFunctions(cx, proto, nullptr, string_iterator_methods))
+    if (!proto ||
+        !DefinePropertiesAndFunctions(cx, proto, nullptr, string_iterator_methods) ||
+        !DefineToStringTag(cx, proto, cx->names().StringIterator))
+    {
         return false;
+    }
 
     global->setReservedSlot(STRING_ITERATOR_PROTO, ObjectValue(*proto));
     return true;

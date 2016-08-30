@@ -11,8 +11,8 @@ var p2 = r2.proxy;
 assertThrowsInstanceOf(() => ({} instanceof p), TypeError);
 assertThrowsInstanceOf(() => ({} instanceof p2), TypeError);
 
-assertEq(Object.prototype.toString.call(p), "[object Object]");
-assertEq(Object.prototype.toString.call(p2), "[object Function]");
+assertThrowsInstanceOf(() => Object.prototype.toString.call(p), TypeError);
+assertThrowsInstanceOf(() => Object.prototype.toString.call(p2), TypeError);
 
 assertThrowsInstanceOf(() => RegExp.prototype.exec.call(p, ""), TypeError);
 assertThrowsInstanceOf(() => RegExp.prototype.exec.call(p2, ""), TypeError);

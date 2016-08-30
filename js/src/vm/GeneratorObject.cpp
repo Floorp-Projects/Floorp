@@ -300,14 +300,20 @@ GlobalObject::initStarGenerators(JSContext* cx, Handle<GlobalObject*> global)
                                                                            iteratorProto));
     if (!genObjectProto)
         return false;
-    if (!DefinePropertiesAndFunctions(cx, genObjectProto, nullptr, star_generator_methods))
+    if (!DefinePropertiesAndFunctions(cx, genObjectProto, nullptr, star_generator_methods) ||
+        !DefineToStringTag(cx, genObjectProto, cx->names().Generator))
+    {
         return false;
+    }
 
     RootedObject genFunctionProto(cx, NewSingletonObjectWithFunctionPrototype(cx, global));
     if (!genFunctionProto || !genFunctionProto->setDelegate(cx))
         return false;
-    if (!LinkConstructorAndPrototype(cx, genFunctionProto, genObjectProto))
+    if (!LinkConstructorAndPrototype(cx, genFunctionProto, genObjectProto) ||
+        !DefineToStringTag(cx, genFunctionProto, cx->names().GeneratorFunction))
+    {
         return false;
+    }
 
     RootedValue function(cx, global->getConstructor(JSProto_Function));
     if (!function.toObjectOrNull())

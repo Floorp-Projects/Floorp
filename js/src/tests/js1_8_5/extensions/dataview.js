@@ -1532,7 +1532,7 @@ function test() {
     assertEq(Object.prototype.toString.apply(new Float32Array(0)), "[object Float32Array]");
     assertEq(Object.prototype.toString.apply(new ArrayBuffer()), "[object ArrayBuffer]");
     assertEq(Object.prototype.toString.apply(new DataView(view.buffer)), "[object DataView]");
-    assertEq(Object.prototype.toString.apply(DataView.prototype), "[object DataViewPrototype]");
+    assertEq(Object.prototype.toString.apply(DataView.prototype), "[object DataView]");
 
     // Technically the spec requires these throw a TypeError -- right now.  It's
     // not clear this is desirable.  Once we implement @@toStringTag we can see

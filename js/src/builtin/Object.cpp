@@ -305,63 +305,116 @@ js::ObjectToSource(JSContext* cx, HandleObject obj)
 }
 #endif /* JS_HAS_TOSOURCE */
 
-JSString*
-JS_BasicObjectToString(JSContext* cx, HandleObject obj)
-{
-    // Some classes are really common, don't allocate new strings for them.
-    // The ordering below is based on the measurements in bug 966264.
-    if (obj->is<PlainObject>())
-        return cx->names().objectObject;
-    if (obj->is<StringObject>())
-        return cx->names().objectString;
-    if (obj->is<ArrayObject>())
-        return cx->names().objectArray;
-    if (obj->is<JSFunction>())
-        return cx->names().objectFunction;
-    if (obj->is<NumberObject>())
-        return cx->names().objectNumber;
-
-    const char* className = GetObjectClassName(cx, obj);
-
-    if (strcmp(className, "Window") == 0)
-        return cx->names().objectWindow;
-
-    StringBuffer sb(cx);
-    if (!sb.append("[object ") || !sb.append(className, strlen(className)) ||
-        !sb.append("]"))
-    {
-        return nullptr;
-    }
-    return sb.finishString();
-}
-
-/* ES5 15.2.4.2.  Note steps 1 and 2 are errata. */
+// ES6 19.1.3.6
 bool
 js::obj_toString(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    /* Step 1. */
+    // Step 1.
     if (args.thisv().isUndefined()) {
         args.rval().setString(cx->names().objectUndefined);
         return true;
     }
 
-    /* Step 2. */
+    // Step 2.
     if (args.thisv().isNull()) {
         args.rval().setString(cx->names().objectNull);
         return true;
     }
 
-    /* Step 3. */
+    // Step 3.
     RootedObject obj(cx, ToObject(cx, args.thisv()));
     if (!obj)
         return false;
 
-    /* Steps 4-5. */
-    JSString* str = JS_BasicObjectToString(cx, obj);
+    // Step 4.
+    bool isArray;
+    if (!IsArray(cx, obj, &isArray))
+        return false;
+
+    // Step 5.
+    RootedString builtinTag(cx);
+    if (isArray) {
+        builtinTag = cx->names().objectArray;
+    } else {
+        // Steps 6-13.
+        ESClass cls;
+        if (!GetBuiltinClass(cx, obj, &cls))
+            return false;
+
+        switch (cls) {
+          case ESClass::String:
+            builtinTag = cx->names().objectString;
+            break;
+          case ESClass::Arguments:
+            builtinTag = cx->names().objectArguments;
+            break;
+          case ESClass::Error:
+            builtinTag = cx->names().objectError;
+            break;
+          case ESClass::Boolean:
+            builtinTag = cx->names().objectBoolean;
+            break;
+          case ESClass::Number:
+            builtinTag = cx->names().objectNumber;
+            break;
+          case ESClass::Date:
+            builtinTag = cx->names().objectDate;
+            break;
+          case ESClass::RegExp:
+            builtinTag = cx->names().objectRegExp;
+            break;
+          default:
+            if (obj->isCallable()) {
+                // Non-standard: Prevent <object> from showing up as Function.
+                RootedObject unwrapped(cx, CheckedUnwrap(obj));
+                if (!unwrapped || !unwrapped->getClass()->isDOMClass())
+                    builtinTag = cx->names().objectFunction;
+            }
+            break;
+        }
+    }
+    // Step 14.
+    // Currently omitted for non-standard fallback.
+
+    // Step 15.
+    RootedValue tag(cx);
+    RootedId toStringTagId(cx, SYMBOL_TO_JSID(cx->wellKnownSymbols().toStringTag));
+    if (!GetProperty(cx, obj, obj, toStringTagId, &tag))
+        return false;
+
+    // Step 16.
+    if (!tag.isString()) {
+        // Non-standard (bug 1277801): Use ClassName as a fallback in the interim
+        if (!builtinTag) {
+            const char* className = GetObjectClassName(cx, obj);
+
+            StringBuffer sb(cx);
+            if (!sb.append("[object ") || !sb.append(className, strlen(className)) ||
+                !sb.append("]"))
+            {
+                return false;
+            }
+
+            builtinTag = sb.finishString();
+            if (!builtinTag)
+                return false;
+        }
+
+        args.rval().setString(builtinTag);
+        return true;
+    }
+
+    // Step 17.
+    StringBuffer sb(cx);
+    if (!sb.append("[object ") || !sb.append(tag.toString()) || !sb.append("]"))
+        return false;
+
+    RootedString str(cx, sb.finishString());
     if (!str)
         return false;
+
     args.rval().setString(str);
     return true;
 }

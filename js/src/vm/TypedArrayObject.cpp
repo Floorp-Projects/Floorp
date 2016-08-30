@@ -1339,6 +1339,7 @@ TypedArrayObject::protoAccessors[] = {
     JS_PSG("buffer", TypedArray_bufferGetter, 0),
     JS_PSG("byteLength", TypedArray_byteLengthGetter, 0),
     JS_PSG("byteOffset", TypedArray_byteOffsetGetter, 0),
+    JS_SELF_HOSTED_SYM_GET(toStringTag, "TypedArrayToStringTag", 0),
     JS_PS_END
 };
 
@@ -2730,6 +2731,9 @@ DataViewObject::initClass(JSContext* cx)
         return false;
 
     if (!JS_DefineFunctions(cx, proto, DataViewObject::jsfuncs))
+        return false;
+
+    if (!DefineToStringTag(cx, proto, cx->names().DataView))
         return false;
 
     /*

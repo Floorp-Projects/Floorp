@@ -20,6 +20,7 @@
     macro(arguments, arguments, "arguments") \
     macro(as, as, "as") \
     macro(ArrayBufferSpecies, ArrayBufferSpecies, "ArrayBufferSpecies") \
+    macro(ArrayIterator, ArrayIterator, "Array Iterator") \
     macro(ArrayIteratorNext, ArrayIteratorNext, "ArrayIteratorNext") \
     macro(ArraySpecies, ArraySpecies, "ArraySpecies") \
     macro(ArraySpeciesCreate, ArraySpeciesCreate, "ArraySpeciesCreate") \
@@ -121,6 +122,7 @@
     macro(futexNotEqual, futexNotEqual, "not-equal") \
     macro(futexTimedOut, futexTimedOut, "timed-out") \
     macro(gcCycleNumber, gcCycleNumber, "gcCycleNumber") \
+    macro(Generator, Generator, "Generator") \
     macro(GeneratorFunction, GeneratorFunction, "GeneratorFunction") \
     macro(get, get, "get") \
     macro(getPrefix, getPrefix, "get ") \
@@ -175,6 +177,7 @@
     macro(locale, locale, "locale") \
     macro(lookupGetter, lookupGetter, "__lookupGetter__") \
     macro(lookupSetter, lookupSetter, "__lookupSetter__") \
+    macro(MapIterator, MapIterator, "Map Iterator") \
     macro(maximumFractionDigits, maximumFractionDigits, "maximumFractionDigits") \
     macro(maximumSignificantDigits, maximumSignificantDigits, "maximumSignificantDigits") \
     macro(message, message, "message") \
@@ -203,15 +206,18 @@
     macro(NumberFormat, NumberFormat, "NumberFormat") \
     macro(NumberFormatFormatGet, NumberFormatFormatGet, "Intl_NumberFormat_format_get") \
     macro(numeric, numeric, "numeric") \
-    macro(objectArray, objectArray, "[object Array]") \
-    macro(objectFunction, objectFunction, "[object Function]") \
-    macro(objectNull, objectNull, "[object Null]") \
-    macro(objectNumber, objectNumber, "[object Number]") \
-    macro(objectObject, objectObject, "[object Object]") \
-    macro(objects, objects, "objects") \
-    macro(objectString, objectString, "[object String]") \
     macro(objectUndefined, objectUndefined, "[object Undefined]") \
-    macro(objectWindow, objectWindow, "[object Window]") \
+    macro(objectNull, objectNull, "[object Null]") \
+    macro(objectArray, objectArray, "[object Array]") \
+    macro(objectString, objectString, "[object String]") \
+    macro(objectArguments, objectArguments, "[object Arguments]") \
+    macro(objectFunction, objectFunction, "[object Function]") \
+    macro(objectError, objectError, "[object Error]") \
+    macro(objectBoolean, objectBoolean, "[object Boolean]") \
+    macro(objectNumber, objectNumber, "[object Number]") \
+    macro(objectDate, objectDate, "[object Date]") \
+    macro(objectRegExp, objectRegExp, "[object RegExp]") \
+    macro(objects, objects, "objects") \
     macro(of, of, "of") \
     macro(offset, offset, "offset") \
     macro(optimizedOut, optimizedOut, "optimizedOut") \
@@ -223,6 +229,7 @@
     macro(pattern, pattern, "pattern") \
     macro(preventExtensions, preventExtensions, "preventExtensions") \
     macro(promise, promise, "promise") \
+    macro(SetIterator, SetIterator, "Set Iterator") \
     macro(state, state, "state") \
     macro(pending, pending, "pending") \
     macro(fulfillHandler, fulfillHandler, "fulfillHandler") \
@@ -260,6 +267,7 @@
     macro(static, static_, "static") \
     macro(sticky, sticky, "sticky") \
     macro(strings, strings, "strings") \
+    macro(StringIterator, StringIterator, "String Iterator") \
     macro(StructType, StructType, "StructType") \
     macro(style, style, "style") \
     macro(super, super, "super") \
