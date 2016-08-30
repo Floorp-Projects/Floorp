@@ -415,7 +415,8 @@ VideoSink::UpdateRenderedVideoFrames()
   // the end time of the current frame, or if we dropped all frames in the
   // queue, the end time of the last frame we removed from the queue.
   RefPtr<MediaData> currentFrame = VideoQueue().PeekFront();
-  mVideoFrameEndTime = currentFrame ? currentFrame->GetEndTime() : lastDisplayedFrameEndTime;
+  mVideoFrameEndTime = std::max(mVideoFrameEndTime,
+    currentFrame ? currentFrame->GetEndTime() : lastDisplayedFrameEndTime);
 
   // All frames are rendered, Let's resolve the promise.
   if (VideoQueue().IsFinished() &&

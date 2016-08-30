@@ -8,7 +8,7 @@
  */
 
 add_task(function* () {
-  let [tab, , monitor] = yield initNetMonitor(CURL_URL);
+  let { tab, monitor } = yield initNetMonitor(CURL_URL);
   info("Starting test... ");
 
   // Different quote chars are used for Windows and POSIX

@@ -455,10 +455,6 @@ private:
 
   void EnsureTelemetryReported();
 
-#ifdef MOZ_RAW
-  static bool IsRawEnabled();
-#endif
-
   static bool IsOggEnabled();
   static bool IsOpusEnabled();
   static bool IsWaveEnabled();

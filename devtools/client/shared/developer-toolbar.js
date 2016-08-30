@@ -17,7 +17,7 @@ const L10N = new LocalizationHelper("devtools/locale/toolbox.properties");
 const NS_XHTML = "http://www.w3.org/1999/xhtml";
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
-loader.lazyImporter(this, "PluralForm", "resource://gre/modules/PluralForm.jsm");
+const { PluralForm } = require("devtools/shared/plural-form");
 
 loader.lazyGetter(this, "prefBranch", function () {
   return Services.prefs.getBranch(null)

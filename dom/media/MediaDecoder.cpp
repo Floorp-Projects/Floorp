@@ -1688,14 +1688,6 @@ MediaDecoder::SetCDMProxy(CDMProxy* aProxy)
 }
 #endif
 
-#ifdef MOZ_RAW
-bool
-MediaDecoder::IsRawEnabled()
-{
-  return Preferences::GetBool("media.raw.enabled");
-}
-#endif
-
 bool
 MediaDecoder::IsOpusEnabled()
 {

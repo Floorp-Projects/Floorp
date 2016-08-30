@@ -601,6 +601,9 @@ public:
   float GetFullZoom() { return mFullZoom; }
   void SetFullZoom(float aZoom);
 
+  float GetOverrideDPPX() { return mOverrideDPPX; }
+  void SetOverrideDPPX(float aDPPX);
+
   nscoord GetAutoQualityMinFontSize() {
     return DevPixelsToAppUnits(mAutoQualityMinFontSizePixelsPref);
   }
@@ -1254,7 +1257,7 @@ protected:
   int32_t               mBaseMinFontSize;
   float                 mTextZoom;      // Text zoom, defaults to 1.0
   float                 mFullZoom;      // Page zoom, defaults to 1.0
-
+  float                 mOverrideDPPX;   // DPPX overrided, defaults to 0.0
   gfxSize               mLastFontInflationScreenSize;
 
   int32_t               mCurAppUnitsPerDevPixel;

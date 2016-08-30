@@ -5,16 +5,15 @@
 "use strict";
 
 const l10n = require("gcli/l10n");
-const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
 require("devtools/server/actors/inspector");
 const {
   BoxModelHighlighter,
   HighlighterEnvironment
 } = require("devtools/server/actors/highlighters");
 
+const {PluralForm} = require("devtools/shared/plural-form");
 const {LocalizationHelper} = require("devtools/shared/l10n");
 const L10N = new LocalizationHelper("devtools-shared/locale/gclicommands.properties");
-XPCOMUtils.defineLazyModuleGetter(this, "PluralForm", "resource://gre/modules/PluralForm.jsm");
 
 // How many maximum nodes can be highlighted in parallel
 const MAX_HIGHLIGHTED_ELEMENTS = 100;

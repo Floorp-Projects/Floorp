@@ -172,10 +172,9 @@ NextFrameSeekTask::OnAudioDecoded(MediaData* aAudioSample)
   // The MDSM::mDecodedAudioEndTime will be updated once the whole SeekTask is
   // resolved.
 
-  SAMPLE_LOG("OnAudioDecoded [%lld,%lld] disc=%d",
+  SAMPLE_LOG("OnAudioDecoded [%lld,%lld]",
              aAudioSample->mTime,
-             aAudioSample->GetEndTime(),
-             aAudioSample->mDiscontinuity);
+             aAudioSample->GetEndTime());
 
   // We accept any audio data here.
   mSeekedAudioData = aAudioSample;
@@ -208,10 +207,9 @@ NextFrameSeekTask::OnVideoDecoded(MediaData* aVideoSample)
   // The MDSM::mDecodedVideoEndTime will be updated once the whole SeekTask is
   // resolved.
 
-  SAMPLE_LOG("OnVideoDecoded [%lld,%lld] disc=%d",
+  SAMPLE_LOG("OnVideoDecoded [%lld,%lld]",
              aVideoSample->mTime,
-             aVideoSample->GetEndTime(),
-             aVideoSample->mDiscontinuity);
+             aVideoSample->GetEndTime());
 
   if (aVideoSample->mTime > mCurrentTime) {
     mSeekedVideoData = aVideoSample;

@@ -29,6 +29,12 @@ add_task(function* tabsSendMessageReply() {
       }
     });
 
+    let childFrame = document.createElement("iframe");
+    childFrame.src = "extensionpage.html";
+    document.body.appendChild(childFrame);
+  }
+
+  function senderScript() {
     Promise.all([
       browser.runtime.sendMessage("respond-now"),
       browser.runtime.sendMessage("respond-now-2"),
@@ -61,6 +67,10 @@ add_task(function* tabsSendMessageReply() {
 
   let extension = ExtensionTestUtils.loadExtension({
     background,
+    files: {
+      "senderScript.js": senderScript,
+      "extensionpage.html": `<!DOCTYPE html><meta charset="utf-8"><script src="senderScript.js"></script>`,
+    },
   });
 
   yield extension.startup();

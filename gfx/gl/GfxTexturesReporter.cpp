@@ -47,6 +47,9 @@ FormatBytes(size_t amount)
       case 3:
       unit = "GB";
       break;
+      default:
+      unit = "";
+      break;
   }
 
   stream << val << " " << unit;
