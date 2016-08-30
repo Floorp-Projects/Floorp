@@ -527,6 +527,15 @@ checkbox:-moz-focusring {
   font-size: inherit;
 }
 
+/*
+ * @TODO : has-clear-btn class was added for bug 1296187 and we should remove it
+ *  once we have a standardized search and filter input across the toolboxes.
+ */
+.has-clear-btn > .devtools-searchinput,
+.has-clear-btn > .devtools-filterinput {
+  padding-inline-end: 23px;
+}
+
 .devtools-searchinput {
   background-image: var(--magnifying-glass-image);
 }
@@ -614,7 +623,6 @@ checkbox:-moz-focusring {
 .devtools-rule-searchbox[filled] {
   background-color: var(--searchbox-background-color);
   border-color: var(--searchbox-border-color);
-  padding-inline-end: 23px;
 }
 
 .devtools-style-searchbox-no-match {
