@@ -1100,15 +1100,15 @@ class BindingIter
     //               vars - environment slot or name
     //               lets - environment slot or name
     //             consts - environment slot or name
-    uint32_t positionalFormalStart_;
-    uint32_t nonPositionalFormalStart_;
-    uint32_t topLevelFunctionStart_;
-    uint32_t varStart_;
-    uint32_t letStart_;
-    uint32_t constStart_;
-    uint32_t length_;
+    MOZ_INIT_OUTSIDE_CTOR uint32_t positionalFormalStart_;
+    MOZ_INIT_OUTSIDE_CTOR uint32_t nonPositionalFormalStart_;
+    MOZ_INIT_OUTSIDE_CTOR uint32_t topLevelFunctionStart_;
+    MOZ_INIT_OUTSIDE_CTOR uint32_t varStart_;
+    MOZ_INIT_OUTSIDE_CTOR uint32_t letStart_;
+    MOZ_INIT_OUTSIDE_CTOR uint32_t constStart_;
+    MOZ_INIT_OUTSIDE_CTOR uint32_t length_;
 
-    uint32_t index_;
+    MOZ_INIT_OUTSIDE_CTOR uint32_t index_;
 
     enum Flags : uint8_t {
         CannotHaveSlots = 0,
@@ -1126,12 +1126,12 @@ class BindingIter
 
     static const uint8_t CanHaveSlotsMask = 0x7;
 
-    uint8_t flags_;
-    uint16_t argumentSlot_;
-    uint32_t frameSlot_;
-    uint32_t environmentSlot_;
+    MOZ_INIT_OUTSIDE_CTOR uint8_t flags_;
+    MOZ_INIT_OUTSIDE_CTOR uint16_t argumentSlot_;
+    MOZ_INIT_OUTSIDE_CTOR uint32_t frameSlot_;
+    MOZ_INIT_OUTSIDE_CTOR uint32_t environmentSlot_;
 
-    BindingName* names_;
+    MOZ_INIT_OUTSIDE_CTOR BindingName* names_;
 
     void init(uint32_t positionalFormalStart, uint32_t nonPositionalFormalStart,
               uint32_t topLevelFunctionStart, uint32_t varStart,
