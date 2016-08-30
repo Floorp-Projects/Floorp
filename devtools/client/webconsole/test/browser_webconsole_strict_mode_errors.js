@@ -21,7 +21,7 @@ add_task(function* () {
     webconsole: hud,
     messages: [
       {
-        text: "SyntaxError: redefining arguments is deprecated",
+        text: "SyntaxError: 'arguments' can't be defined or assigned to in strict mode code",
         category: CATEGORY_JS,
         severity: SEVERITY_ERROR,
       },
