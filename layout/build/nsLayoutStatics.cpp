@@ -116,10 +116,10 @@ using namespace mozilla::system;
 #include "nsPermissionManager.h"
 #include "nsCookieService.h"
 #include "nsApplicationCacheService.h"
+#include "mozilla/dom/CustomElementsRegistry.h"
 #include "mozilla/dom/time/DateCacheCleaner.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/IMEStateManager.h"
-#include "nsDocument.h"
 #include "mozilla/dom/HTMLVideoElement.h"
 #include "CameraPreferences.h"
 #include "TouchManager.h"
@@ -437,7 +437,7 @@ nsLayoutStatics::Shutdown()
 
   DisplayItemClip::Shutdown();
 
-  nsDocument::XPCOMShutdown();
+  CustomElementsRegistry::XPCOMShutdown();
 
   CacheObserver::Shutdown();
 
