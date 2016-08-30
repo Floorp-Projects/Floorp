@@ -6,7 +6,6 @@
  *  following interfaces and array size requirements:
  */
 
-
 void conv_i32_to_d32(double *d32, unsigned int *i32, int len);
 
 /*  Converts an array of int's to an array of doubles, so that each double
@@ -15,7 +14,6 @@ void conv_i32_to_d32(double *d32, unsigned int *i32, int len);
  *  The pointers d32 and i32 should point to arrays of size at least  len
  *  (doubles and unsigned ints, respectively)
  */
-
 
 void conv_i32_to_d16(double *d16, unsigned int *i32, int len);
 
@@ -29,24 +27,22 @@ void conv_i32_to_d16(double *d16, unsigned int *i32, int len);
  *  2*len and i32 should point an array of ints of size at least  len
  */
 
-
-void conv_i32_to_d32_and_d16(double *d32, double *d16, 
-			     unsigned int *i32, int len);
+void conv_i32_to_d32_and_d16(double *d32, double *d16,
+                             unsigned int *i32, int len);
 
 /*  Does the above two conversions together, it is much faster than doing
  *  both of those in succession
  */
 
-
 void mont_mulf_noconv(unsigned int *result,
-		     double *dm1, double *dm2, double *dt,
-		     double *dn, unsigned int *nint,
-		     int nlen, double dn0);
+                      double *dm1, double *dm2, double *dt,
+                      double *dn, unsigned int *nint,
+                      int nlen, double dn0);
 
 /*  Does the Montgomery multiplication of the numbers stored in the arrays
  *  pointed to by dm1 and dm2, writing the result to the array pointed to by
  *  result. It uses the array pointed to by dt as a temporary work area.
- *  nint should point to the modulus in the array-of-integers representation, 
+ *  nint should point to the modulus in the array-of-integers representation,
  *  dn should point to its array-of-doubles as obtained as a result of the
  *  function call   conv_i32_to_d32(dn, nint, nlen);
  *  nlen is the length of the array containing the modulus.
@@ -54,10 +50,10 @@ void mont_mulf_noconv(unsigned int *result,
  *  call   conv_i32_to_d32(dm1, m1, nlen), the representation for dm2 is the
  *  result of the function call   conv_i32_to_d16(dm2, m2, nlen).
  *  Note that m1 and m2 should both be of length nlen, so they should be
- *  padded with 0's if necessary before the conversion. The result comes in 
+ *  padded with 0's if necessary before the conversion. The result comes in
  *  this form (int representation, padded with 0's).
  *  dn0 is the value of the 16 least significant bits of n0'.
- *  The function does not allocate memory for any of the arrays, so the 
+ *  The function does not allocate memory for any of the arrays, so the
  *  pointers should point to arrays with the following minimal sizes:
  *  result - nlen+1
  *  dm1    - nlen
@@ -66,4 +62,4 @@ void mont_mulf_noconv(unsigned int *result,
  *  dn     - nlen
  *  nint   - nlen
  *  No two arrays should point to overlapping areas of memory.
- */  
+ */

@@ -11,8 +11,14 @@
 #include "sslerr.h"
 #include "sslproto.h"
 
+extern "C" {
+// This is not something that should make you happy.
+#include "libssl_internals.h"
+}
+
 #include "gtest_utils.h"
 #include "tls_connect.h"
+#include "tls_parser.h"
 
 namespace nss_test {
 
@@ -24,17 +30,22 @@ class TlsCipherSuiteTestBase : public TlsConnectTestBase {
   TlsCipherSuiteTestBase(std::string mode, uint16_t version,
                          uint16_t cipher_suite)
       : TlsConnectTestBase(TlsConnectTestBase::ToMode(mode), version),
-        cipher_suite_(cipher_suite) {}
+        cipher_suite_(cipher_suite),
+        csinfo_({0}) {
+    SECStatus rv =
+        SSL_GetCipherSuiteInfo(cipher_suite_, &csinfo_, sizeof(csinfo_));
+    EXPECT_EQ(SECSuccess, rv);
+    if (rv == SECSuccess) {
+      std::cerr << "Cipher suite: " << csinfo_.cipherSuiteName << std::endl;
+    }
+  }
 
  protected:
   uint16_t cipher_suite_;
+  SSLCipherSuiteInfo csinfo_;
 
   void SetupCertificate() {
-    SSLCipherSuiteInfo csinfo;
-    EXPECT_EQ(SECSuccess,
-              SSL_GetCipherSuiteInfo(cipher_suite_, &csinfo, sizeof(csinfo)));
-    std::cerr << "Cipher suite: " << csinfo.cipherSuiteName << std::endl;
-    switch (csinfo.authType) {
+    switch (csinfo_.authType) {
       case ssl_auth_rsa_sign:
         Reset(TlsAgent::kServerRsaSign);
         break;
@@ -101,27 +112,17 @@ class TlsResumptionTest
                                std::get<2>(GetParam())) {}
 
   bool SkipIfCipherSuiteIsDSA() {
-    SSLCipherSuiteInfo csinfo;
-    SECStatus rv =
-        SSL_GetCipherSuiteInfo(cipher_suite_, &csinfo, sizeof(csinfo));
-    if (rv != SECSuccess) {
-      EXPECT_TRUE(false) << "Can't get cipher suite info";
-      return false;
-    }
-    bool isDSA = csinfo.authType == ssl_auth_dsa;
+    bool isDSA = csinfo_.authType == ssl_auth_dsa;
     if (isDSA) {
-      std::cerr << "Skipping DSA suite: " << csinfo.cipherSuiteName
+      std::cerr << "Skipping DSA suite: " << csinfo_.cipherSuiteName
                 << std::endl;
     }
     return isDSA;
   }
 
   void EnablePskCipherSuite() {
-    SSLCipherSuiteInfo targetInfo;
-    ASSERT_EQ(SECSuccess, SSL_GetCipherSuiteInfo(cipher_suite_, &targetInfo,
-                                                 sizeof(targetInfo)));
     SSLKEAType targetKea;
-    switch (targetInfo.keaType) {
+    switch (csinfo_.keaType) {
       case ssl_kea_ecdh:
         targetKea = ssl_kea_ecdh_psk;
         break;
@@ -130,7 +131,7 @@ class TlsResumptionTest
         break;
       default:
         EXPECT_TRUE(false) << "Unsupported KEA type for "
-                           << targetInfo.cipherSuiteName;
+                           << csinfo_.cipherSuiteName;
         return;
     }
 
@@ -143,8 +144,8 @@ class TlsResumptionTest
                                                    sizeof(candidateInfo)));
       if (candidateInfo.authType == ssl_auth_psk &&
           candidateInfo.keaType == targetKea &&
-          candidateInfo.symCipher == targetInfo.symCipher &&
-          candidateInfo.macAlgorithm == targetInfo.macAlgorithm) {
+          candidateInfo.symCipher == csinfo_.symCipher &&
+          candidateInfo.macAlgorithm == csinfo_.macAlgorithm) {
         // We aren't able to check that the PRF hash is the same.  This is OK
         // because there are (currently) no suites that have different PRF
         // hashes but also use the same symmetric cipher.
@@ -156,7 +157,7 @@ class TlsResumptionTest
       }
     }
     EXPECT_TRUE(found) << "Can't find matching PSK cipher for "
-                       << targetInfo.cipherSuiteName;
+                       << csinfo_.cipherSuiteName;
   }
 };
 
@@ -187,6 +188,102 @@ TEST_P(TlsResumptionTest, ResumeCipherSuite) {
   ConnectAndCheckCipherSuite();
 }
 
+class TlsCipherLimitTest
+    : public TlsCipherSuiteTestBase,
+      public ::testing::WithParamInterface<CipherSuiteProfile> {
+ public:
+  TlsCipherLimitTest()
+      : TlsCipherSuiteTestBase(std::get<0>(GetParam()), std::get<1>(GetParam()),
+                               std::get<2>(GetParam())) {}
+
+ protected:
+  // Get the expected limit on the number of records that can be sent for the
+  // cipher suite.
+  uint64_t record_limit() const {
+    switch (csinfo_.symCipher) {
+      case ssl_calg_rc4:
+      case ssl_calg_3des:
+        return 1ULL << 20;
+      case ssl_calg_aes:
+      case ssl_calg_aes_gcm:
+        return 0x5aULL << 28;
+      case ssl_calg_null:
+      case ssl_calg_chacha20:
+        return (1ULL << 48) - 1;
+      case ssl_calg_rc2:
+      case ssl_calg_des:
+      case ssl_calg_idea:
+      case ssl_calg_fortezza:
+      case ssl_calg_camellia:
+      case ssl_calg_seed:
+        break;
+    }
+    EXPECT_TRUE(false) << "No limit for " << csinfo_.cipherSuiteName;
+    return 1ULL < 48;
+  }
+
+  uint64_t last_safe_write() const {
+    uint64_t limit = record_limit() - 1;
+    if (version_ < SSL_LIBRARY_VERSION_TLS_1_1 &&
+        (csinfo_.symCipher == ssl_calg_3des ||
+         csinfo_.symCipher == ssl_calg_aes)) {
+      // 1/n-1 record splitting needs space for two records.
+      limit--;
+    }
+    return limit;
+  }
+};
+
+// This only works for stream ciphers because we modify the sequence number -
+// which is included explicitly in the DTLS record header - and that trips a
+// different error code.  Note that the message that the client sends would not
+// decrypt (the nonce/IV wouldn't match), but the record limit is hit before
+// attempting to decrypt a record.
+TEST_P(TlsCipherLimitTest, ReadLimit) {
+  SetupCertificate();
+  EnableSingleCipher();
+  ConnectAndCheckCipherSuite();
+  EXPECT_EQ(SECSuccess,
+            SSLInt_AdvanceWriteSeqNum(client_->ssl_fd(), last_safe_write()));
+  EXPECT_EQ(SECSuccess,
+            SSLInt_AdvanceReadSeqNum(server_->ssl_fd(), last_safe_write()));
+
+  client_->SendData(10, 10);
+  server_->ReadBytes();  // This should be OK.
+
+  // The payload needs to be big enough to pass for encrypted.  In the extreme
+  // case (TLS 1.3), this means 1 for payload, 1 for content type and 16 for
+  // authentication tag.
+  static const uint8_t payload[18] = {6};
+  DataBuffer record;
+  uint64_t epoch = 0;
+  if (mode_ == DGRAM) {
+    epoch++;
+    if (version_ == SSL_LIBRARY_VERSION_TLS_1_3) {
+      epoch++;
+    }
+  }
+  TlsAgentTestBase::MakeRecord(mode_, kTlsApplicationDataType, version_,
+                               payload, sizeof(payload), &record,
+                               (epoch << 48) | record_limit());
+  server_->adapter()->PacketReceived(record);
+  server_->ExpectReadWriteError();
+  server_->ReadBytes();
+  EXPECT_EQ(SSL_ERROR_TOO_MANY_RECORDS, server_->error_code());
+}
+
+TEST_P(TlsCipherLimitTest, WriteLimit) {
+  SetupCertificate();
+  EnableSingleCipher();
+  ConnectAndCheckCipherSuite();
+  EXPECT_EQ(SECSuccess,
+            SSLInt_AdvanceWriteSeqNum(client_->ssl_fd(), last_safe_write()));
+  client_->SendData(10, 10);
+  client_->ExpectReadWriteError();
+  client_->SendData(10, 10);
+  EXPECT_EQ(SSL_ERROR_TOO_MANY_RECORDS, client_->error_code());
+}
+
 // This awful macro makes the test instantiations easier to read.
 #define INSTANTIATE_CIPHER_TEST_P(name, modes, versions, ...)      \
   static const uint16_t k##name##CiphersArr[] = {__VA_ARGS__};     \
@@ -199,6 +296,11 @@ TEST_P(TlsResumptionTest, ResumeCipherSuite) {
                          k##name##Ciphers));                       \
   INSTANTIATE_TEST_CASE_P(                                         \
       Resume##name, TlsResumptionTest,                             \
+      ::testing::Combine(TlsConnectTestBase::kTlsModes##modes,     \
+                         TlsConnectTestBase::kTls##versions,       \
+                         k##name##Ciphers));                       \
+  INSTANTIATE_TEST_CASE_P(                                         \
+      Limit##name, TlsCipherLimitTest,                             \
       ::testing::Combine(TlsConnectTestBase::kTlsModes##modes,     \
                          TlsConnectTestBase::kTls##versions,       \
                          k##name##Ciphers))

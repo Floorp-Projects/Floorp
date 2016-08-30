@@ -17,7 +17,7 @@
 struct HMACContextStr {
     void *hash;
     const SECHashObject *hashobj;
-    PRBool        wasAllocated;
+    PRBool wasAllocated;
     unsigned char ipad[HMAC_PAD_SIZE];
     unsigned char opad[HMAC_PAD_SIZE];
 };
@@ -26,50 +26,50 @@ void
 HMAC_Destroy(HMACContext *cx, PRBool freeit)
 {
     if (cx == NULL)
-	return;
+        return;
 
     PORT_Assert(!freeit == !cx->wasAllocated);
     if (cx->hash != NULL) {
-	cx->hashobj->destroy(cx->hash, PR_TRUE);
-	PORT_Memset(cx, 0, sizeof *cx);
+        cx->hashobj->destroy(cx->hash, PR_TRUE);
+        PORT_Memset(cx, 0, sizeof *cx);
     }
     if (freeit)
-	PORT_Free(cx);
+        PORT_Free(cx);
 }
 
 SECStatus
-HMAC_Init( HMACContext * cx, const SECHashObject *hash_obj, 
-	   const unsigned char *secret, unsigned int secret_len, PRBool isFIPS)
+HMAC_Init(HMACContext *cx, const SECHashObject *hash_obj,
+          const unsigned char *secret, unsigned int secret_len, PRBool isFIPS)
 {
     unsigned int i;
     unsigned char hashed_secret[HASH_LENGTH_MAX];
 
     /* required by FIPS 198 Section 3 */
-    if (isFIPS && secret_len < hash_obj->length/2) {
-	PORT_SetError(SEC_ERROR_INVALID_ARGS);
-	return SECFailure;
+    if (isFIPS && secret_len < hash_obj->length / 2) {
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        return SECFailure;
     }
     if (cx == NULL) {
-	PORT_SetError(SEC_ERROR_INVALID_ARGS);
-	return SECFailure;
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        return SECFailure;
     }
     cx->wasAllocated = PR_FALSE;
     cx->hashobj = hash_obj;
     cx->hash = cx->hashobj->create();
     if (cx->hash == NULL)
-	goto loser;
+        goto loser;
 
     if (secret_len > cx->hashobj->blocklength) {
-	cx->hashobj->begin( cx->hash);
-	cx->hashobj->update(cx->hash, secret, secret_len);
-	PORT_Assert(cx->hashobj->length <= sizeof hashed_secret);
-	cx->hashobj->end(   cx->hash, hashed_secret, &secret_len, 
-	                 sizeof hashed_secret);
-	if (secret_len != cx->hashobj->length) {
-	    PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
-	    goto loser;
-	}
-	secret = (const unsigned char *)&hashed_secret[0];
+        cx->hashobj->begin(cx->hash);
+        cx->hashobj->update(cx->hash, secret, secret_len);
+        PORT_Assert(cx->hashobj->length <= sizeof hashed_secret);
+        cx->hashobj->end(cx->hash, hashed_secret, &secret_len,
+                         sizeof hashed_secret);
+        if (secret_len != cx->hashobj->length) {
+            PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
+            goto loser;
+        }
+        secret = (const unsigned char *)&hashed_secret[0];
     }
 
     PORT_Memset(cx->ipad, 0x36, cx->hashobj->blocklength);
@@ -77,8 +77,8 @@ HMAC_Init( HMACContext * cx, const SECHashObject *hash_obj,
 
     /* fold secret into padding */
     for (i = 0; i < secret_len; i++) {
-	cx->ipad[i] ^= secret[i];
-	cx->opad[i] ^= secret[i];
+        cx->ipad[i] ^= secret[i];
+        cx->opad[i] ^= secret[i];
     }
     PORT_Memset(hashed_secret, 0, sizeof hashed_secret);
     return SECSuccess;
@@ -86,23 +86,23 @@ HMAC_Init( HMACContext * cx, const SECHashObject *hash_obj,
 loser:
     PORT_Memset(hashed_secret, 0, sizeof hashed_secret);
     if (cx->hash != NULL)
-	cx->hashobj->destroy(cx->hash, PR_TRUE);
+        cx->hashobj->destroy(cx->hash, PR_TRUE);
     return SECFailure;
 }
 
 HMACContext *
-HMAC_Create(const SECHashObject *hash_obj, const unsigned char *secret, 
+HMAC_Create(const SECHashObject *hash_obj, const unsigned char *secret,
             unsigned int secret_len, PRBool isFIPS)
 {
     SECStatus rv;
-    HMACContext * cx = PORT_ZNew(HMACContext);
+    HMACContext *cx = PORT_ZNew(HMACContext);
     if (cx == NULL)
-	return NULL;
+        return NULL;
     rv = HMAC_Init(cx, hash_obj, secret, secret_len, isFIPS);
     cx->wasAllocated = PR_TRUE;
     if (rv != SECSuccess) {
-	PORT_Free(cx); /* contains no secret info */
-	cx = NULL;
+        PORT_Free(cx); /* contains no secret info */
+        cx = NULL;
     }
     return cx;
 }
@@ -123,16 +123,16 @@ HMAC_Update(HMACContext *cx, const unsigned char *data, unsigned int data_len)
 
 SECStatus
 HMAC_Finish(HMACContext *cx, unsigned char *result, unsigned int *result_len,
-	    unsigned int max_result_len)
+            unsigned int max_result_len)
 {
     if (max_result_len < cx->hashobj->length) {
-	PORT_SetError(SEC_ERROR_INVALID_ARGS);
-	return SECFailure;
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        return SECFailure;
     }
 
     cx->hashobj->end(cx->hash, result, result_len, max_result_len);
     if (*result_len != cx->hashobj->length)
-	return SECFailure;
+        return SECFailure;
 
     cx->hashobj->begin(cx->hash);
     cx->hashobj->update(cx->hash, cx->opad, cx->hashobj->blocklength);
@@ -146,15 +146,15 @@ HMAC_Clone(HMACContext *cx)
 {
     HMACContext *newcx;
 
-    newcx = (HMACContext*)PORT_ZAlloc(sizeof(HMACContext));
+    newcx = (HMACContext *)PORT_ZAlloc(sizeof(HMACContext));
     if (newcx == NULL)
-	goto loser;
+        goto loser;
 
     newcx->wasAllocated = PR_TRUE;
     newcx->hashobj = cx->hashobj;
     newcx->hash = cx->hashobj->clone(cx->hash);
     if (newcx->hash == NULL)
-	goto loser;
+        goto loser;
     PORT_Memcpy(newcx->ipad, cx->ipad, cx->hashobj->blocklength);
     PORT_Memcpy(newcx->opad, cx->opad, cx->hashobj->blocklength);
     return newcx;

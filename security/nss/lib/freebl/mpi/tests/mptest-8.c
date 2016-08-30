@@ -19,47 +19,50 @@
 
 #include "mpprime.h"
 
-int main(int argc, char *argv[])
+int
+main(int argc, char *argv[])
 {
-  int       ix;
-  mp_digit  num;
-  mp_int    a;
+    int ix;
+    mp_digit num;
+    mp_int a;
 
-  srand(time(NULL));
+    srand(time(NULL));
 
-  if(argc < 2) {
-    fprintf(stderr, "Usage: %s <a>\n", argv[0]);
-    return 1;
-  }
-
-  printf("Test 8: Probabilistic primality testing\n\n");
-
-  mp_init(&a);
-
-  mp_read_radix(&a, argv[1], 10);
-
-  printf("a = "); mp_print(&a, stdout); fputc('\n', stdout);
-
-  printf("\nChecking for divisibility by small primes ... \n");
-  num = 170;
-  if(mpp_divis_primes(&a, &num) == MP_YES) {
-    printf("it is not prime\n");
-    goto CLEANUP;
-  }
-  printf("Passed that test (not divisible by any small primes).\n");
-
-  for(ix = 0; ix < 10; ix++) {
-    printf("\nPerforming Rabin-Miller test, iteration %d\n", ix + 1);
-
-    if(mpp_pprime(&a, 5) == MP_NO) {
-      printf("it is not prime\n");
-      goto CLEANUP;
+    if (argc < 2) {
+        fprintf(stderr, "Usage: %s <a>\n", argv[0]);
+        return 1;
     }
-  }
-  printf("All tests passed; a is probably prime\n");
+
+    printf("Test 8: Probabilistic primality testing\n\n");
+
+    mp_init(&a);
+
+    mp_read_radix(&a, argv[1], 10);
+
+    printf("a = ");
+    mp_print(&a, stdout);
+    fputc('\n', stdout);
+
+    printf("\nChecking for divisibility by small primes ... \n");
+    num = 170;
+    if (mpp_divis_primes(&a, &num) == MP_YES) {
+        printf("it is not prime\n");
+        goto CLEANUP;
+    }
+    printf("Passed that test (not divisible by any small primes).\n");
+
+    for (ix = 0; ix < 10; ix++) {
+        printf("\nPerforming Rabin-Miller test, iteration %d\n", ix + 1);
+
+        if (mpp_pprime(&a, 5) == MP_NO) {
+            printf("it is not prime\n");
+            goto CLEANUP;
+        }
+    }
+    printf("All tests passed; a is probably prime\n");
 
 CLEANUP:
-  mp_clear(&a);
+    mp_clear(&a);
 
-  return 0;
+    return 0;
 }

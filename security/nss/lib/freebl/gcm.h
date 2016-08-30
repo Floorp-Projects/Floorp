@@ -16,16 +16,16 @@ typedef struct GCMContextStr GCMContext;
  *
  * The cipher argument is a block cipher in the ECB encrypt mode.
  */
-GCMContext * GCM_CreateContext(void *context, freeblCipherFunc cipher,
-			const unsigned char *params, unsigned int blocksize);
+GCMContext *GCM_CreateContext(void *context, freeblCipherFunc cipher,
+                              const unsigned char *params, unsigned int blocksize);
 void GCM_DestroyContext(GCMContext *gcm, PRBool freeit);
-SECStatus GCM_EncryptUpdate(GCMContext  *gcm, unsigned char *outbuf,
-			unsigned int *outlen, unsigned int maxout,
-			const unsigned char *inbuf, unsigned int inlen,
-			unsigned int blocksize);
+SECStatus GCM_EncryptUpdate(GCMContext *gcm, unsigned char *outbuf,
+                            unsigned int *outlen, unsigned int maxout,
+                            const unsigned char *inbuf, unsigned int inlen,
+                            unsigned int blocksize);
 SECStatus GCM_DecryptUpdate(GCMContext *gcm, unsigned char *outbuf,
-			unsigned int *outlen, unsigned int maxout,
-			const unsigned char *inbuf, unsigned int inlen,
-			unsigned int blocksize);
+                            unsigned int *outlen, unsigned int maxout,
+                            const unsigned char *inbuf, unsigned int inlen,
+                            unsigned int blocksize);
 
 #endif
