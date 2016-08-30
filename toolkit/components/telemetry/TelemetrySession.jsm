@@ -41,11 +41,6 @@ const REASON_TEST_PING = "test-ping";
 const REASON_ENVIRONMENT_CHANGE = "environment-change";
 const REASON_SHUTDOWN = "shutdown";
 
-const HISTOGRAM_SUFFIXES = {
-  PARENT: "",
-  CONTENT: "#content",
-}
-
 const ENVIRONMENT_CHANGE_LISTENER = "TelemetrySession::onEnvironmentChange";
 
 const MS_IN_ONE_HOUR  = 60 * 60 * 1000;
@@ -881,28 +876,23 @@ var Impl = {
   },
 
   getHistograms: function getHistograms(subsession, clearSubsession) {
-    this._log.trace("getHistograms - subsession: " + subsession +
-                    ", clearSubsession: " + clearSubsession);
+    this._log.trace("getHistograms - subsession: " + subsession + ", clearSubsession: " + clearSubsession);
 
     let registered =
       Telemetry.registeredHistograms(this.getDatasetType(), []);
-    if (this._testing == false) {
-      // Omit telemetry test histograms outside of tests.
-      registered = registered.filter(n => !n.startsWith("TELEMETRY_TEST_"));
-    }
-    registered = registered.concat(registered.map(n => "STARTUP_" + n));
-
     let hls = subsession ? Telemetry.snapshotSubsessionHistograms(clearSubsession)
                          : Telemetry.histogramSnapshots;
     let ret = {};
 
     for (let name of registered) {
-      for (let suffix of Object.values(HISTOGRAM_SUFFIXES)) {
-        if (name + suffix in hls) {
-          if (!(suffix in ret)) {
-            ret[suffix] = {};
+      for (let n of [name, "STARTUP_" + name]) {
+        if (n in hls) {
+          // Omit telemetry test histograms outside of tests.
+          if (n.startsWith('TELEMETRY_TEST_') && this._testing == false) {
+            this._log.trace("getHistograms - Skipping test histogram: " + n);
+          } else {
+            ret[n] = this.packHistogram(hls[n]);
           }
-          ret[suffix][name] = this.packHistogram(hls[name + suffix]);
         }
       }
     }
@@ -930,41 +920,36 @@ var Impl = {
   },
 
   getKeyedHistograms: function(subsession, clearSubsession) {
-    this._log.trace("getKeyedHistograms - subsession: " + subsession +
-                    ", clearSubsession: " + clearSubsession);
+    this._log.trace("getKeyedHistograms - subsession: " + subsession + ", clearSubsession: " + clearSubsession);
 
     let registered =
       Telemetry.registeredKeyedHistograms(this.getDatasetType(), []);
-    if (this._testing == false) {
-      // Omit telemetry test histograms outside of tests.
-      registered = registered.filter(id => !id.startsWith("TELEMETRY_TEST_"));
-    }
     let ret = {};
 
     for (let id of registered) {
-      for (let suffix of Object.values(HISTOGRAM_SUFFIXES)) {
-        let keyed = Telemetry.getKeyedHistogramById(id + suffix);
-        let snapshot = null;
-        if (subsession) {
-          snapshot = clearSubsession ? keyed.snapshotSubsessionAndClear()
-                                     : keyed.subsessionSnapshot();
-        } else {
-          snapshot = keyed.snapshot();
-        }
+      // Omit telemetry test histograms outside of tests.
+      if (id.startsWith('TELEMETRY_TEST_') && this._testing == false) {
+        this._log.trace("getKeyedHistograms - Skipping test histogram: " + id);
+        continue;
+      }
+      let keyed = Telemetry.getKeyedHistogramById(id);
+      let snapshot = null;
+      if (subsession) {
+        snapshot = clearSubsession ? keyed.snapshotSubsessionAndClear()
+                                   : keyed.subsessionSnapshot();
+      } else {
+        snapshot = keyed.snapshot();
+      }
 
-        let keys = Object.keys(snapshot);
-        if (keys.length == 0) {
-          // Skip empty keyed histogram.
-          continue;
-        }
+      let keys = Object.keys(snapshot);
+      if (keys.length == 0) {
+        // Skip empty keyed histogram.
+        continue;
+      }
 
-        if (!(suffix in ret)) {
-          ret[suffix] = {};
-        }
-        ret[suffix][id] = {};
-        for (let key of keys) {
-          ret[suffix][id][key] = this.packHistogram(snapshot[key]);
-        }
+      ret[id] = {};
+      for (let key of keys) {
+        ret[id][key] = this.packHistogram(snapshot[key]);
       }
     }
 
@@ -1250,12 +1235,12 @@ var Impl = {
 
     // This allows wrapping data retrieval calls in a try-catch block so that
     // failures don't break the rest of the ping assembly.
-    const protect = (fn, defaultReturn = null) => {
+    const protect = (fn) => {
       try {
         return fn();
       } catch (ex) {
         this._log.error("assemblePayloadWithMeasurements - caught exception", ex);
-        return defaultReturn;
+        return null;
       }
     };
 
@@ -1263,6 +1248,8 @@ var Impl = {
     let payloadObj = {
       ver: PAYLOAD_VERSION,
       simpleMeasurements: simpleMeasurements,
+      histograms: protect(() => this.getHistograms(isSubsession, clearSubsession)),
+      keyedHistograms: protect(() => this.getKeyedHistograms(isSubsession, clearSubsession)),
     };
 
     // Add extended set measurements common to chrome & content processes
@@ -1277,21 +1264,14 @@ var Impl = {
       return payloadObj;
     }
 
-    // Additional payload for chrome process.
-    let histograms = protect(() => this.getHistograms(isSubsession, clearSubsession), {});
-    let keyedHistograms = protect(() => this.getKeyedHistograms(isSubsession, clearSubsession), {});
-    payloadObj.histograms = histograms[HISTOGRAM_SUFFIXES.PARENT] || {};
-    payloadObj.keyedHistograms = keyedHistograms[HISTOGRAM_SUFFIXES.PARENT] || {};
+    // Set the scalars for the parent process.
     payloadObj.processes = {
       parent: {
         scalars: protect(() => this.getScalars(isSubsession, clearSubsession)),
-      },
-      content: {
-        histograms: histograms[HISTOGRAM_SUFFIXES.CONTENT],
-        keyedHistograms: keyedHistograms[HISTOGRAM_SUFFIXES.CONTENT],
-      },
+      }
     };
 
+    // Additional payload for chrome process.
     payloadObj.info = info;
 
     // Add extended set measurements for chrome process.
