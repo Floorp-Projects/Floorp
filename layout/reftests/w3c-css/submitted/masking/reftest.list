@@ -87,6 +87,8 @@ fuzzy-if(winWidget,1,21) == clip-path-paddingBox-1b.html clip-path-geometryBox-1
 fuzzy(64,311) == clip-path-borderBox-1a.html clip-path-geometryBox-1-ref.html
 fuzzy-if(winWidget,1,21) == clip-path-borderBox-1b.html clip-path-geometryBox-1-ref.html
 fuzzy-if(winWidget,1,21) == clip-path-marginBox-1a.html clip-path-geometryBox-1-ref.html
+fuzzy-if(winWidget,1,21) == clip-path-viewBox-1a.html clip-path-geometryBox-1-ref.html
+fuzzy-if(winWidget,1,21) == clip-path-viewBox-1b.html clip-path-geometryBox-1-ref.html
 fuzzy-if(winWidget,1,98) == clip-path-geometryBox-2a.html clip-path-geometryBox-2-ref.html
 fuzzy-if(winWidget,1,98) == clip-path-geometryBox-2b.html clip-path-geometryBox-2-ref.html
 fuzzy-if(winWidget,1,98) == clip-path-geometryBox-2c.html clip-path-geometryBox-2-ref.html
