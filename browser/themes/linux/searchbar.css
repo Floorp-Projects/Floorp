@@ -4,7 +4,6 @@
 
 #PopupSearchAutoComplete {
   margin-inline-start: -24px;
-  padding: 1px;
 }
 
 .autocomplete-textbox-container {
@@ -113,7 +112,7 @@ menuitem[cmd="cmd_clearhistory"][disabled] {
 }
 
 .search-panel-one-offs {
-  margin: 0 -1px !important;
+  margin: 0 !important;
   border-top: 1px solid rgba(0, 0, 0, 0.2);
 }
 
