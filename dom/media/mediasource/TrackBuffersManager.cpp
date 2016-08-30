@@ -300,20 +300,17 @@ TimeIntervals
 TrackBuffersManager::Buffered()
 {
   MSE_DEBUG("");
-  MonitorAutoLock mon(mMonitor);
   // http://w3c.github.io/media-source/index.html#widl-SourceBuffer-buffered
   // 2. Let highest end time be the largest track buffer ranges end time across all the track buffers managed by this SourceBuffer object.
-  TimeUnit highestEndTime;
+  TimeUnit highestEndTime = HighestEndTime();
 
+  MonitorAutoLock mon(mMonitor);
   nsTArray<TimeIntervals*> tracks;
   if (HasVideo()) {
     tracks.AppendElement(&mVideoBufferedRanges);
   }
   if (HasAudio()) {
     tracks.AppendElement(&mAudioBufferedRanges);
-  }
-  for (auto trackRanges : tracks) {
-    highestEndTime = std::max(trackRanges->GetEnd(), highestEndTime);
   }
 
   // 3. Let intersection ranges equal a TimeRange object containing a single range from 0 to highest end time.
@@ -1896,6 +1893,13 @@ TrackBuffersManager::Buffered(TrackInfo::TrackType aTrack)
   return GetTracksData(aTrack).mBufferedRanges;
 }
 
+const media::TimeUnit&
+TrackBuffersManager::HighestStartTime(TrackInfo::TrackType aTrack)
+{
+  MOZ_ASSERT(OnTaskQueue());
+  return GetTracksData(aTrack).mHighestStartTimestamp;
+}
+
 TimeIntervals
 TrackBuffersManager::SafeBuffered(TrackInfo::TrackType aTrack) const
 {
@@ -1915,6 +1919,25 @@ TrackBuffersManager::HighestStartTime()
       std::max(track->mHighestStartTimestamp, highestStartTime);
   }
   return highestStartTime;
+}
+
+TimeUnit
+TrackBuffersManager::HighestEndTime()
+{
+  MonitorAutoLock mon(mMonitor);
+  TimeUnit highestEndTime;
+
+  nsTArray<TimeIntervals*> tracks;
+  if (HasVideo()) {
+    tracks.AppendElement(&mVideoBufferedRanges);
+  }
+  if (HasAudio()) {
+    tracks.AppendElement(&mAudioBufferedRanges);
+  }
+  for (auto trackRanges : tracks) {
+    highestEndTime = std::max(trackRanges->GetEnd(), highestEndTime);
+  }
+  return highestEndTime;
 }
 
 const TrackBuffersManager::TrackBuffer&
@@ -1963,12 +1986,14 @@ TrackBuffersManager::Seek(TrackInfo::TrackType aTrack,
   if (aTime != TimeUnit()) {
     // Determine the interval of samples we're attempting to seek to.
     TimeIntervals buffered = trackBuffer.mBufferedRanges;
+    // Fuzz factor is +/- aFuzz; as we want to only eliminate gaps
+    // that are less than aFuzz wide, we set a fuzz factor aFuzz/2.
+    buffered.SetFuzz(aFuzz / 2);
     TimeIntervals::IndexType index = buffered.Find(aTime);
-    buffered.SetFuzz(aFuzz);
-    index = buffered.Find(aTime);
-    MOZ_ASSERT(index != TimeIntervals::NoIndex);
-
+    MOZ_ASSERT(index != TimeIntervals::NoIndex,
+               "We shouldn't be called if aTime isn't buffered");
     TimeInterval target = buffered[index];
+    target.mFuzz = aFuzz;
     i = FindSampleIndex(track, target);
   }
 
@@ -2061,8 +2086,10 @@ TrackBuffersManager::SkipToNextRandomAccessPoint(TrackInfo::TrackType aTrack,
   // SkipToNextRandomAccessPoint will not count again the parsed sample as
   // skipped.
   if (aFound) {
-    trackData.mNextSampleTimecode = nextSampleTimecode;
-    trackData.mNextSampleTime = nextSampleTime;
+    trackData.mNextSampleTimecode =
+       TimeUnit::FromMicroseconds(track[i]->mTimecode);
+    trackData.mNextSampleTime =
+       TimeUnit::FromMicroseconds(track[i]->mTime);
     trackData.mNextGetSampleIndex = Some(i);
   } else if (i > 0) {
     // Go back to the previous keyframe or the original position so the next
@@ -2116,17 +2143,19 @@ TrackBuffersManager::GetSample(TrackInfo::TrackType aTrack,
 already_AddRefed<MediaRawData>
 TrackBuffersManager::GetSample(TrackInfo::TrackType aTrack,
                                const TimeUnit& aFuzz,
-                               bool& aError)
+                               GetSampleResult& aResult)
 {
   MOZ_ASSERT(OnTaskQueue());
   auto& trackData = GetTracksData(aTrack);
   const TrackBuffer& track = GetTrackBuffer(aTrack);
 
-  aError = false;
+  aResult = GetSampleResult::WAITING_FOR_DATA;
 
   if (!track.Length()) {
+    aResult = GetSampleResult::EOS;
     return nullptr;
   }
+
   if (trackData.mNextGetSampleIndex.isNothing() &&
       trackData.mNextSampleTimecode == TimeUnit()) {
     // First demux, get first sample.
@@ -2134,6 +2163,10 @@ TrackBuffersManager::GetSample(TrackInfo::TrackType aTrack,
   }
 
   if (trackData.mNextGetSampleIndex.isSome()) {
+    if (trackData.mNextGetSampleIndex.ref() >= track.Length()) {
+      aResult = GetSampleResult::EOS;
+      return nullptr;
+    }
     const MediaRawData* sample =
       GetSample(aTrack,
                 trackData.mNextGetSampleIndex.ref(),
@@ -2146,16 +2179,42 @@ TrackBuffersManager::GetSample(TrackInfo::TrackType aTrack,
 
     RefPtr<MediaRawData> p = sample->Clone();
     if (!p) {
-      aError = true;
+      aResult = GetSampleResult::ERROR;
       return nullptr;
     }
     trackData.mNextGetSampleIndex.ref()++;
-    // Estimate decode timestamp of the next sample.
-    trackData.mNextSampleTimecode =
+    // Estimate decode timestamp and timestamp of the next sample.
+    TimeUnit nextSampleTimecode =
       TimeUnit::FromMicroseconds(sample->mTimecode + sample->mDuration);
-    trackData.mNextSampleTime =
+    TimeUnit nextSampleTime =
       TimeUnit::FromMicroseconds(sample->GetEndTime());
+    const MediaRawData* nextSample =
+      GetSample(aTrack,
+                trackData.mNextGetSampleIndex.ref(),
+                nextSampleTimecode,
+                nextSampleTime,
+                aFuzz);
+    if (nextSample) {
+      // We have a valid next sample, can use exact values.
+      trackData.mNextSampleTimecode =
+        TimeUnit::FromMicroseconds(nextSample->mTimecode);
+      trackData.mNextSampleTime =
+        TimeUnit::FromMicroseconds(nextSample->mTime);
+    } else {
+      // Next sample isn't available yet. Use estimates.
+      trackData.mNextSampleTimecode = nextSampleTimecode;
+      trackData.mNextSampleTime = nextSampleTime;
+    }
+    aResult = GetSampleResult::NO_ERROR;
     return p.forget();
+  }
+
+  if (trackData.mNextSampleTimecode.ToMicroseconds() >
+      track.LastElement()->mTimecode + track.LastElement()->mDuration) {
+    // The next element is past our last sample. We're done.
+    trackData.mNextGetSampleIndex = Some(uint32_t(track.Length()));
+    aResult = GetSampleResult::EOS;
+    return nullptr;
   }
 
   // Our previous index has been overwritten, attempt to find the new one.
@@ -2171,7 +2230,7 @@ TrackBuffersManager::GetSample(TrackInfo::TrackType aTrack,
   RefPtr<MediaRawData> p = sample->Clone();
   if (!p) {
     // OOM
-    aError = true;
+    aResult = GetSampleResult::ERROR;
     return nullptr;
   }
   trackData.mNextGetSampleIndex = Some(uint32_t(pos)+1);
@@ -2179,6 +2238,7 @@ TrackBuffersManager::GetSample(TrackInfo::TrackType aTrack,
     TimeUnit::FromMicroseconds(sample->mTimecode + sample->mDuration);
   trackData.mNextSampleTime =
     TimeUnit::FromMicroseconds(sample->GetEndTime());
+  aResult = GetSampleResult::NO_ERROR;
   return p.forget();
 }
 
@@ -2190,6 +2250,23 @@ TrackBuffersManager::FindCurrentPosition(TrackInfo::TrackType aTrack,
   auto& trackData = GetTracksData(aTrack);
   const TrackBuffer& track = GetTrackBuffer(aTrack);
 
+  // Perform an exact search first.
+  for (uint32_t i = 0; i < track.Length(); i++) {
+    const RefPtr<MediaRawData>& sample = track[i];
+    TimeInterval sampleInterval{
+      TimeUnit::FromMicroseconds(sample->mTimecode),
+      TimeUnit::FromMicroseconds(sample->mTimecode + sample->mDuration)};
+
+    if (sampleInterval.ContainsStrict(trackData.mNextSampleTimecode)) {
+      return i;
+    }
+    if (sampleInterval.mStart > trackData.mNextSampleTimecode) {
+      // Samples are ordered by timecode. There's no need to search
+      // any further.
+      break;
+    }
+  }
+
   for (uint32_t i = 0; i < track.Length(); i++) {
     const RefPtr<MediaRawData>& sample = track[i];
     TimeInterval sampleInterval{
@@ -2199,6 +2276,11 @@ TrackBuffersManager::FindCurrentPosition(TrackInfo::TrackType aTrack,
 
     if (sampleInterval.ContainsWithStrictEnd(trackData.mNextSampleTimecode)) {
       return i;
+    }
+    if (sampleInterval.mStart - aFuzz > trackData.mNextSampleTimecode) {
+      // Samples are ordered by timecode. There's no need to search
+      // any further.
+      break;
     }
   }
 

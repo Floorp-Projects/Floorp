@@ -1303,14 +1303,6 @@ StartMacOSContentSandbox()
     MOZ_CRASH("Failed to get NS_OS_TEMP_DIR path");
   }
 
-  nsCOMPtr<nsIFile> profileDir;
-  ContentChild::GetSingleton()->GetProfileDir(getter_AddRefs(profileDir));
-  nsCString profileDirPath;
-  rv = profileDir->GetNativePath(profileDirPath);
-  if (NS_FAILED(rv)) {
-    MOZ_CRASH("Failed to get profile path");
-  }
-
   MacSandboxInfo info;
   info.type = MacSandboxType_Content;
   info.level = info.level = sandboxLevel;
@@ -1318,7 +1310,6 @@ StartMacOSContentSandbox()
   info.appBinaryPath.assign(appBinaryPath.get());
   info.appDir.assign(appDir.get());
   info.appTempDir.assign(tempDirPath.get());
-  info.profileDir.assign(profileDirPath.get());
 
   std::string err;
   if (!mozilla::StartMacSandbox(info, err)) {

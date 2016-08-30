@@ -2,132 +2,11 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 import pytest
-from mock import patch, Mock, DEFAULT, mock_open, MagicMock, sentinel
 
-from marionette.runtests import (
-    MarionetteTestRunner,
-    MarionetteHarness,
-    MarionetteArguments,
-    cli
-)
-from marionette.runner import MarionetteTestResult
-from marionette_driver.marionette import Marionette
-from manifestparser import TestManifest
+from mock import Mock, patch, mock_open, sentinel, DEFAULT
 
-# avoid importing MarionetteJSTestCase to prevent pytest from
-# collecting and running it as part of this test suite
-import marionette.marionette_test as marionette_test
-
-
-def _check_crash_counts(has_crashed, runner, mock_marionette):
-    if has_crashed:
-        assert mock_marionette.check_for_crash.call_count == 1
-        assert runner.crashed == 1
-    else:
-        assert runner.crashed == 0
-
-
-@pytest.fixture
-def mock_marionette(request):
-    """ Mock marionette instance """
-    marionette = MagicMock(spec=Marionette)
-    if 'has_crashed' in request.funcargnames:
-        marionette.check_for_crash.return_value = request.getfuncargvalue(
-            'has_crashed'
-        )
-    return marionette
-
-
-@pytest.fixture
-def empty_marionette_testcase():
-    """ Testable MarionetteTestCase class """
-    class EmptyTestCase(marionette_test.MarionetteTestCase):
-        def test_nothing(self):
-            pass
-
-    return EmptyTestCase
-
-
-@pytest.fixture
-def empty_marionette_test(mock_marionette, empty_marionette_testcase):
-    return empty_marionette_testcase(lambda: mock_marionette, 'test_nothing')
-
-
-@pytest.fixture(scope='module')
-def logger():
-    """
-    Fake logger to help with mocking out other runner-related classes.
-    """
-    import mozlog
-    return Mock(spec=mozlog.structuredlog.StructuredLogger)
-
-
-@pytest.fixture
-def mach_parsed_kwargs(logger):
-    """
-    Parsed and verified dictionary used during simplest
-    call to mach marionette-test
-    """
-    return {
-        'adb_path': None,
-        'addon': None,
-        'address': None,
-        'app': None,
-        'app_args': [],
-        'avd': None,
-        'avd_home': None,
-        'binary': u'/path/to/firefox',
-        'browsermob_port' : None,
-        'browsermob_script' : None,
-        'device_serial': None,
-        'e10s': True,
-        'emulator': False,
-        'emulator_bin': None,
-        'gecko_log': None,
-        'jsdebugger': False,
-        'log_errorsummary': None,
-        'log_html': None,
-        'log_mach': None,
-        'log_mach_buffer': None,
-        'log_mach_level': None,
-        'log_mach_verbose': None,
-        'log_raw': None,
-        'log_raw_level': None,
-        'log_tbpl': None,
-        'log_tbpl_buffer': None,
-        'log_tbpl_compact': None,
-        'log_tbpl_level': None,
-        'log_unittest': None,
-        'log_xunit': None,
-        'logger_name': 'Marionette-based Tests',
-        'package_name': None,
-        'prefs': {
-            'browser.tabs.remote.autostart': True,
-            'browser.tabs.remote.force-enable': True,
-            'extensions.e10sBlocksEnabling': False,
-        },
-        'prefs_args': None,
-        'prefs_files': None,
-        'profile': None,
-        'pydebugger': None,
-        'repeat': 0,
-        'server_root': None,
-        'shuffle': False,
-        'shuffle_seed': 2276870381009474531,
-        'socket_timeout': 360.0,
-        'sources': None,
-        'startup_timeout': 60,
-        'symbols_path': None,
-        'test_tags': None,
-        'tests': [u'/path/to/unit-tests.ini'],
-        'testvars': None,
-        'this_chunk': None,
-        'timeout': None,
-        'total_chunks': None,
-        'verbose': None,
-        'workspace': None,
-        'logger': logger,
-    }
+from marionette.runtests import MarionetteTestRunner
+import manifestparser
 
 
 @pytest.fixture
@@ -151,118 +30,6 @@ def mock_runner(runner, mock_marionette, monkeypatch):
     runner._appName = 'fake_app'
     monkeypatch.setattr('marionette.runner.base.mozversion', Mock())
     return runner
-
-
-@pytest.fixture
-def harness_class(request):
-    """
-    Mock based on MarionetteHarness whose run method just returns a number of
-    failures according to the supplied test parameter
-    """
-    if 'num_fails_crashed' in request.funcargnames:
-        num_fails_crashed = request.getfuncargvalue('num_fails_crashed')
-    else:
-        num_fails_crashed = (0, 0)
-    harness_cls = Mock(spec=MarionetteHarness)
-    harness = harness_cls.return_value
-    if num_fails_crashed is None:
-        harness.run.side_effect = Exception
-    else:
-        harness.run.return_value = sum(num_fails_crashed)
-    return harness_cls
-
-
-@pytest.fixture
-def runner_class(request):
-    """
-    Mock based on MarionetteTestRunner, wherein the runner.failed,
-    runner.crashed attributes are provided by a test parameter
-    """
-    if 'num_fails_crashed' in request.funcargnames:
-        failures, crashed = request.getfuncargvalue('num_fails_crashed')
-    else:
-        failures = 0
-        crashed = 0
-    mock_runner_class = Mock(spec=MarionetteTestRunner)
-    runner = mock_runner_class.return_value
-    runner.failed = failures
-    runner.crashed = crashed
-    return mock_runner_class
-
-
-@pytest.mark.parametrize(
-    "num_fails_crashed,exit_code",
-    [((0, 0), 0), ((1, 0), 10), ((0, 1), 10), (None, 1)],
-)
-def test_cli_exit_code(num_fails_crashed, exit_code, harness_class):
-    with pytest.raises(SystemExit) as err:
-        cli(harness_class=harness_class)
-    assert err.value.code == exit_code
-
-
-@pytest.mark.parametrize("num_fails_crashed", [(0, 0), (1, 0), (1, 1)])
-def test_call_harness_with_parsed_args_yields_num_failures(mach_parsed_kwargs,
-                                                           runner_class,
-                                                           num_fails_crashed):
-    with patch(
-        'marionette.runtests.MarionetteHarness.parse_args'
-    ) as parse_args:
-        failed_or_crashed = MarionetteHarness(runner_class,
-                                              args=mach_parsed_kwargs).run()
-        parse_args.assert_not_called()
-    assert failed_or_crashed == sum(num_fails_crashed)
-
-
-@pytest.mark.parametrize("sock_timeout_value", ['A', '10', '1B-', '1C2', '44.35'])
-def test_parse_arg_socket_timeout_with_multiple_values(sock_timeout_value):
-    argv = ['marionette', '--socket-timeout', sock_timeout_value]
-    parser = MarionetteArguments()
-
-    def _is_float_convertible(value):
-        try:
-            float(value)
-            return True
-        except:
-            return False
-
-    if not _is_float_convertible(sock_timeout_value):
-        # should raising exception, since sock_timeout must be convertible to float.
-        with pytest.raises(SystemExit) as ex:
-            parser.parse_args(args=argv)
-        assert ex.value.code == 2
-    else:
-        # should pass without raising exception.
-        args = parser.parse_args(args=argv)
-        assert hasattr(args, 'socket_timeout') and args.socket_timeout == float(sock_timeout_value)
-
-
-def test_call_harness_with_no_args_yields_num_failures(runner_class):
-    with patch(
-        'marionette.runtests.MarionetteHarness.parse_args',
-        return_value={'tests': []}
-    ) as parse_args:
-        failed_or_crashed = MarionetteHarness(runner_class).run()
-        assert parse_args.call_count == 1
-    assert failed_or_crashed == 0
-
-
-def test_args_passed_to_runner_class(mach_parsed_kwargs, runner_class):
-    arg_list = mach_parsed_kwargs.keys()
-    arg_list.remove('tests')
-    mach_parsed_kwargs.update([(a, getattr(sentinel, a)) for a in arg_list])
-    harness = MarionetteHarness(runner_class, args=mach_parsed_kwargs)
-    harness.process_args = Mock()
-    harness.run()
-    for arg in arg_list:
-        assert harness._runner_class.call_args[1][arg] is getattr(sentinel, arg)
-
-
-def test_args_passed_to_driverclass(mock_runner):
-    built_kwargs = {'arg1': 'value1', 'arg2': 'value2'}
-    mock_runner._build_kwargs = Mock(return_value=built_kwargs)
-    with pytest.raises(IOError):
-        mock_runner.run_tests(['fake_tests.ini'])
-    assert mock_runner.driverclass.call_args[1] == built_kwargs
 
 
 @pytest.fixture
@@ -305,6 +72,43 @@ def expected_driver_args(runner):
     for attr in ['app', 'app_args', 'profile', 'addons', 'gecko_log']:
         expected[attr] = getattr(runner, attr)
     return expected
+
+
+@pytest.fixture(params=['enabled', 'disabled', 'enabled_disabled', 'empty'])
+def manifest_fixture(request):
+    '''
+    Fixture for the contents of mock_manifest, where a manifest
+    can include enabled tests, disabled tests, both, or neither (empty)
+    '''
+    included = []
+    if 'enabled' in request.param:
+        included += [(u'test_expected_pass.py', 'pass'),
+                     (u'test_expected_fail.py', 'fail')]
+    if 'disabled' in request.param:
+        included += [(u'test_pass_disabled.py', 'pass', 'skip-if: true'),
+                     (u'test_fail_disabled.py', 'fail', 'skip-if: true')]
+    keys = ('path', 'expected', 'disabled')
+    active_tests = [dict(zip(keys, values)) for values in included]
+
+    class ManifestFixture:
+        def __init__(self, name, tests):
+            self.filepath = "/path/to/fake/manifest.ini"
+            self.n_disabled = len([t for t in tests if 'disabled' in t])
+            self.n_enabled = len(tests) - self.n_disabled
+            mock_manifest = Mock(spec=manifestparser.TestManifest,
+                                 active_tests=Mock(return_value=tests))
+            self.mock_manifest = Mock(return_value=mock_manifest)
+            self.__repr__ = lambda: "<ManifestFixture {}>".format(name)
+
+    return ManifestFixture(request.param, active_tests)
+
+
+def test_args_passed_to_driverclass(mock_runner):
+    built_kwargs = {'arg1': 'value1', 'arg2': 'value2'}
+    mock_runner._build_kwargs = Mock(return_value=built_kwargs)
+    with pytest.raises(IOError):
+        mock_runner.run_tests(['fake_tests.ini'])
+    assert mock_runner.driverclass.call_args[1] == built_kwargs
 
 
 def test_build_kwargs_basic_args(build_kwargs_using):
@@ -386,18 +190,6 @@ def test_build_kwargs_with_emulator_or_address(expected_driver_args, build_kwarg
         expected_driver_args.assert_keys_not_in(built_kwargs)
 
 
-def test_harness_sets_up_default_test_handlers(mach_parsed_kwargs):
-    """
-    If the necessary TestCase is not in test_handlers,
-    tests are omitted silently
-    """
-    harness = MarionetteHarness(args=mach_parsed_kwargs)
-    mach_parsed_kwargs.pop('tests')
-    runner = harness._runner_class(**mach_parsed_kwargs)
-    assert marionette_test.MarionetteTestCase in runner.test_handlers
-    assert marionette_test.MarionetteJSTestCase in runner.test_handlers
-
-
 def test_parsing_testvars(mach_parsed_kwargs):
     mach_parsed_kwargs.pop('tests')
     testvars_json_loads = [
@@ -435,28 +227,12 @@ def test_load_testvars_throws_expected_errors(mach_parsed_kwargs):
     assert 'not properly formatted' in json_exc.value.message
 
 
-@pytest.mark.parametrize("has_crashed", [True, False])
-def test_crash_is_recorded_as_error(empty_marionette_test,
-                                    logger,
-                                    has_crashed):
-    """ Number of errors is incremented by stopTest iff has_crashed is true """
-    # collect results from the empty test
-    result = MarionetteTestResult(
-        marionette=empty_marionette_test._marionette_weakref(),
-        logger=logger, verbosity=None,
-        stream=None, descriptions=None,
-    )
-    result.startTest(empty_marionette_test)
-    assert len(result.errors) == 0
-    assert len(result.failures) == 0
-    assert result.testsRun == 1
-    assert result.shouldStop is False
-    result.stopTest(empty_marionette_test)
-    assert result.shouldStop == has_crashed
+def _check_crash_counts(has_crashed, runner, mock_marionette):
     if has_crashed:
-        assert len(result.errors) == 1
+        assert mock_marionette.check_for_crash.call_count == 1
+        assert runner.crashed == 1
     else:
-        assert len(result.errors) == 0
+        assert runner.crashed == 0
 
 
 @pytest.mark.parametrize("has_crashed", [True, False])
@@ -509,36 +285,6 @@ def test_add_test_directory(runner):
     for test in runner.tests:
         assert test_dir in test['filepath']
     assert len(runner.tests) == 4
-
-
-
-
-@pytest.fixture(params=['enabled', 'disabled', 'enabled_disabled', 'empty'])
-def manifest_fixture(request):
-    '''
-    Fixture for the contents of mock_manifest, where a manifest
-    can include enabled tests, disabled tests, both, or neither (empty)
-    '''
-    included = []
-    if 'enabled' in request.param:
-        included += [(u'test_expected_pass.py', 'pass'),
-                     (u'test_expected_fail.py', 'fail')]
-    if 'disabled' in request.param:
-        included += [(u'test_pass_disabled.py', 'pass', 'skip-if: true'),
-                     (u'test_fail_disabled.py', 'fail', 'skip-if: true')]
-    keys = ('path', 'expected', 'disabled')
-    active_tests = [dict(zip(keys, values)) for values in included]
-
-    class ManifestFixture:
-        def __init__(self, name, tests):
-            self.filepath = "/path/to/fake/manifest.ini"
-            self.n_disabled = len([t for t in tests if 'disabled' in t])
-            self.n_enabled = len(tests) - self.n_disabled
-            mock_manifest = Mock(spec=TestManifest, active_tests=Mock(return_value=tests))
-            self.mock_manifest = Mock(return_value=mock_manifest)
-            self.__repr__ = lambda: "<ManifestFixture {}>".format(name)
-
-    return ManifestFixture(request.param, active_tests)
 
 
 @pytest.mark.parametrize("test_files_exist", [True, False])

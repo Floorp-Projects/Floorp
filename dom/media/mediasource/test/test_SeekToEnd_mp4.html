@@ -1,0 +1,57 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>MSE: seeking to end of data with data gap.</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="mediasource.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+runWithMSE(function(ms, el) {
+
+  once(ms, 'sourceopen').then(function() {
+    ok(true, "Receive a sourceopen event");
+    var videosb = ms.addSourceBuffer("video/mp4");
+    var audiosb = ms.addSourceBuffer("audio/mp4");
+
+    fetchAndLoad(videosb, 'bipbop/bipbop_video', ['init'], '.mp4')
+    .then(fetchAndLoad.bind(null, videosb, 'bipbop/bipbop_video', range(1, 6), '.m4s'))
+    .then(fetchAndLoad.bind(null, audiosb, 'bipbop/bipbop_audio', ['init'], '.mp4'))
+    .then(function() {
+      is(videosb.buffered.length, 1, "continuous buffered range");
+      // Ensure we have at least 2s less audio than video.
+      audiosb.appendWindowEnd = videosb.buffered.end(0) - 2;
+      return fetchAndLoad(audiosb, 'bipbop/bipbop_audio', range(1, 6), '.m4s');
+    }).then(function() {
+      ms.endOfStream();
+      return Promise.all([once(el, "durationchange"), once(ms, "sourceended")]);
+    }).then(function() {
+      ok(true, "endOfStream completed");
+      // Seek to the middle of the gap where audio is missing. As we are in readyState = ended
+      // seeking must complete.
+      el.currentTime = videosb.buffered.end(0) / 2 + audiosb.buffered.end(0) / 2;
+      ok(el.currentTime - audiosb.buffered.end(0) > 1, "gap is big enough");
+      is(el.buffered.length, 1, "continuous buffered range");
+      is(el.buffered.end(0), videosb.buffered.end(0), "buffered range end is aligned with longest track");
+      ok(el.seeking, "element is now seeking");
+      ok(el.currentTime >= el.buffered.start(0) && el.currentTime <= el.buffered.end(0), "seeking time is in buffered range");
+      ok(el.currentTime > audiosb.buffered.end(0), "seeking point is not buffered in audio track");
+      return once(el, 'seeked');
+    }).then(function() {
+      ok(true, "we have successfully seeked");
+      // Now ensure that we can play to the end, even though we are missing data in one track.
+      el.play();
+      once(el, 'ended').then(SimpleTest.finish.bind(SimpleTest));
+    });
+  });
+});
+
+</script>
+</pre>
+</body>
+</html>

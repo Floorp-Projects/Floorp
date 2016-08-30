@@ -161,12 +161,7 @@ public:
    * Call this to reevaluate whether we should start/stop due to our owner
    * document being active, inactive, visible or hidden.
    */
-  void NotifyOwnerDocumentActivityChanged();
-
-  // This method does the work necessary for the
-  // NotifyOwnerDocumentActivityChanged() notification.  It returns true if the
-  // media element was paused as a result.
-  virtual bool NotifyOwnerDocumentActivityChangedInternal();
+  virtual void NotifyOwnerDocumentActivityChanged();
 
   // Called by the video decoder object, on the main thread,
   // when it has read the metadata containing video dimensions,
@@ -744,6 +739,8 @@ public:
   bool ComputedMuted() const;
   nsSuspendedTypes ComputedSuspended() const;
 
+  void SetMediaInfo(const MediaInfo aInfo);
+
 protected:
   virtual ~HTMLMediaElement();
 
@@ -805,7 +802,7 @@ protected:
     nsTArray<Pair<nsString, RefPtr<MediaInputPort>>> mTrackPorts;
   };
 
-  nsresult PlayInternal(bool aCallerIsChrome);
+  nsresult PlayInternal();
 
   /** Use this method to change the mReadyState member, so required
    * events can be fired.
@@ -1221,6 +1218,12 @@ protected:
   // channel agent is ready to be used.
   bool MaybeCreateAudioChannelAgent();
 
+  // Determine if the element should be paused because of suspend conditions.
+  bool ShouldElementBePaused();
+
+  // Create or destroy the captured stream depend on mAudioCapturedByWindow.
+  void AudioCaptureStreamChangeIfNeeded();
+
   /**
    * We have different kinds of suspended cases,
    * - SUSPENDED_PAUSE
@@ -1516,10 +1519,6 @@ protected:
   // True iff event delivery is suspended (mPausedForInactiveDocumentOrChannel must also be true).
   bool mEventDeliveryPaused;
 
-  // True if we've reported a "waiting" event since the last
-  // readyState change to HAVE_CURRENT_DATA.
-  bool mWaitingFired;
-
   // True if we're running the "load()" method.
   bool mIsRunningLoadMethod;
 
@@ -1614,11 +1613,6 @@ protected:
   // enough if we ever expand the ability of supporting multi-tracks video
   // playback.
   bool mDisableVideo;
-
-  // True if we blocked either a play() call or autoplay because the
-  // media's owner doc was not visible. Only enforced when the pref
-  // media.block-play-until-visible=true.
-  bool mPlayBlockedBecauseHidden;
 
   // An agent used to join audio channel service.
   nsCOMPtr<nsIAudioChannelAgent> mAudioChannelAgent;
