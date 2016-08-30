@@ -15,9 +15,16 @@ from external_media_tests.utils import verbose_until
 
 class YouTubePuppeteer(VideoPuppeteer):
     """
-    Wrapper around a YouTube #movie_player element.
+    Wrapper around a YouTube .html5-video-player element.
 
-    Partial reference: https://developers.google.com/youtube/js_api_reference.
+    Can be used with youtube videos or youtube videos at embedded URLS. E.g.
+    both https://www.youtube.com/watch?v=AbAACm1IQE0 and
+    https://www.youtube.com/embed/AbAACm1IQE0 should work.
+
+    Using an embedded video has the advantage of not auto-playing more videos
+    while a test is running.
+
+    Partial reference: https://developers.google.com/youtube/iframe_api_reference.
     This reference is useful for site-specific features such as interacting
     with ads, or accessing YouTube's debug data.
     """
@@ -37,14 +44,16 @@ class YouTubePuppeteer(VideoPuppeteer):
         self.player = None
         super(YouTubePuppeteer,
               self).__init__(marionette, url,
-                             video_selector='#movie_player video',
+                             video_selector='.html5-video-player video',
                              **kwargs)
         wait = Wait(self.marionette, timeout=30)
         with self.marionette.using_context(Marionette.CONTEXT_CONTENT):
             verbose_until(wait, self,
-                          expected.element_present(By.ID, 'movie_player'))
-            self.player = self.marionette.find_element(By.ID, 'movie_player')
-            self.marionette.execute_script("log('#movie_player "
+                          expected.element_present(By.CLASS_NAME,
+                                                   'html5-video-player'))
+            self.player = self.marionette.find_element(By.CLASS_NAME,
+                                                       'html5-video-player')
+            self.marionette.execute_script("log('.html5-video-player "
                                            "element obtained');")
         # When an ad is playing, self.player_duration indicates the duration
         # of the spliced-in ad stream, not the duration of the main video, so
@@ -117,7 +126,7 @@ class YouTubePuppeteer(VideoPuppeteer):
     def execute_yt_script(self, script):
         """
         Execute JS script in content context with access to video element and
-        YouTube #movie_player element.
+        YouTube .html5-video-player element.
 
         :param script: script to be executed.
 
@@ -131,7 +140,7 @@ class YouTubePuppeteer(VideoPuppeteer):
     @property
     def playback_quality(self):
         """
-        Please see https://developers.google.com/youtube/js_api_reference#Playback_quality
+        Please see https://developers.google.com/youtube/iframe_api_reference#Playback_quality
         for valid values.
 
         :return: A string with a valid value returned via YouTube.
@@ -176,7 +185,7 @@ class YouTubePuppeteer(VideoPuppeteer):
         """
 
         :return: The YouTube state of the video. See
-         https://developers.google.com/youtube/js_api_reference#getPlayerState
+         https://developers.google.com/youtube/iframe_api_reference#getPlayerState
          for valid values.
         """
         state = self.execute_yt_script('return arguments[1].'
@@ -188,7 +197,7 @@ class YouTubePuppeteer(VideoPuppeteer):
         """
         This and the following properties are based on the
         player.getPlayerState() call
-        (https://developers.google.com/youtube/js_api_reference#Playback_status)
+        (https://developers.google.com/youtube/iframe_api_reference#Playback_status)
 
         :return: True if the video has not yet started.
         """
@@ -240,7 +249,7 @@ class YouTubePuppeteer(VideoPuppeteer):
         Get state of current ad.
 
         :return: Returns one of the constants listed in
-         https://developers.google.com/youtube/js_api_reference#Playback_status
+         https://developers.google.com/youtube/iframe_api_reference#Playback_status
          for an ad.
 
         """
@@ -350,7 +359,7 @@ class YouTubePuppeteer(VideoPuppeteer):
             # no ad playing
             return False
         if self.ad_skippable:
-            selector = '#movie_player .videoAdUiSkipContainer'
+            selector = '.html5-video-player .videoAdUiSkipContainer'
             wait = Wait(self.marionette, timeout=30)
             try:
                 with self.marionette.using_context(Marionette.CONTEXT_CONTENT):
@@ -378,7 +387,7 @@ class YouTubePuppeteer(VideoPuppeteer):
         if (self.ad_playing and self.video_src.startswith('mediasource') and
                 self.duration):
             return self.duration
-        selector = '#movie_player .videoAdUiAttribution'
+        selector = '.html5-media-player .videoAdUiAttribution'
         wait = Wait(self.marionette, timeout=5)
         try:
             with self.marionette.using_context(Marionette.CONTEXT_CONTENT):
@@ -464,7 +473,7 @@ class YouTubePuppeteer(VideoPuppeteer):
             player_state = self._yt_player_state_name[self.player_state]
             ad_state = self._yt_player_state_name[self.ad_state]
             messages += [
-                '#movie_player: {',
+                '.html5-media-player: {',
                 '\tvideo id: {0},'.format(self.movie_id),
                 '\tvideo_title: {0}'.format(self.movie_title),
                 '\tcurrent_state: {0},'.format(player_state),
@@ -475,7 +484,7 @@ class YouTubePuppeteer(VideoPuppeteer):
                 '}'
             ]
         else:
-            messages += ['\t#movie_player: None']
+            messages += ['\t.html5-media-player: None']
         return '\n'.join(messages)
 
 
