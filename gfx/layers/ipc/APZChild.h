@@ -15,6 +15,10 @@ namespace layers {
 
 class GeckoContentController;
 
+/**
+ * APZChild implements PAPZChild and is used to remote a GeckoContentController
+ * that lives in a different process than where APZ lives.
+ */
 class APZChild final : public PAPZChild
 {
 public:

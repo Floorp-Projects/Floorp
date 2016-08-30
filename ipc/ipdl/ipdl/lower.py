@@ -851,7 +851,7 @@ IPDL union type."""
         else:
             return ExprNew(self.bareType(self.side),
                            args=args,
-                           newargs=[ self.callGetPtr() ])
+                           newargs=[ ExprVar('mozilla::KnownNotNull'), self.callGetPtr() ])
 
     def callDtor(self):
         if self.recursive:
@@ -1797,17 +1797,17 @@ class _GenerateProtocolCode(ipdl.ast.Visitor):
             else:
                 return ExprVar(s.decl.cxxname)
 
-        # bool Transition(State from, Trigger trigger, State* next)
+        # bool Transition(Trigger trigger, State* next)
+        # The state we are transitioning from is stored in *next.
         fromvar = ExprVar('from')
         triggervar = ExprVar('trigger')
         nextvar = ExprVar('next')
-        msgexpr = ExprSelect(triggervar, '.', 'mMsg')
+        msgexpr = ExprSelect(triggervar, '.', 'mMessage')
         actionexpr = ExprSelect(triggervar, '.', 'mAction')
 
         transitionfunc = FunctionDefn(FunctionDecl(
             'Transition',
-            params=[ Decl(Type('State'), fromvar.name),
-                     Decl(Type('mozilla::ipc::Trigger'), triggervar.name),
+            params=[ Decl(Type('mozilla::ipc::Trigger'), triggervar.name),
                      Decl(Type('State', ptr=1), nextvar.name) ],
             ret=Type.BOOL))
 
@@ -1902,6 +1902,8 @@ class _GenerateProtocolCode(ipdl.ast.Visitor):
         if usesend or userecv:
             transitionfunc.addstmt(Whitespace.NL)
 
+        transitionfunc.addstmt(StmtDecl(Decl(Type('State'), fromvar.name),
+                                        init=ExprDeref(nextvar)))
         transitionfunc.addstmt(fromswitch)
         # all --> Error transitions break to here.  But only insert this
         # block if there is any possibility of such transitions.
@@ -3086,22 +3088,10 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 params=[ Decl(_cxxArrayType(p.managedCxxType(managed, self.side), ref=1),
                               arrvar.name) ],
                 const=1))
-            ivar = ExprVar('i')
-            elementsvar = ExprVar('elements')
-            itervar = ExprVar('iter')
-            meth.addstmt(StmtDecl(Decl(Type.UINT32, ivar.name),
-                                  init=ExprLiteral.ZERO))
-            meth.addstmt(StmtDecl(Decl(Type(_actorName(managed.name(), self.side), ptrptr=1), elementsvar.name),
-                                  init=ExprCall(ExprSelect(arrvar, '.', 'AppendElements'),
-                                                args=[ ExprCall(ExprSelect(p.managedVar(managed, self.side),
-                                                                           '.', 'Count')) ])))
-            foreachaccumulate = forLoopOverHashtable(p.managedVar(managed, self.side),
-                                                     itervar, const=True)
-            foreachaccumulate.addstmt(StmtExpr(
-                ExprAssn(ExprIndex(elementsvar, ivar),
-                         actorFromIter(itervar))))
-            foreachaccumulate.addstmt(StmtExpr(ExprPrefixUnop(ivar, '++')))
-            meth.addstmt(foreachaccumulate)
+            meth.addstmt(StmtExpr(
+                ExprCall(ExprSelect(p.managedVar(managed, self.side),
+                                    '.', 'ToArray'),
+                         args=[ arrvar ])))
 
             refmeth = MethodDefn(MethodDecl(
                 p.managedMethod(managed, self.side).name,
@@ -5441,8 +5431,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         ifbad = StmtIf(ExprNot(
             ExprCall(
                 ExprVar(self.protocol.name +'::Transition'),
-                args=[ stateexpr,
-                       ExprCall(ExprVar('Trigger'),
+                args=[ ExprCall(ExprVar('Trigger'),
                                 args=[ action, ExprVar(msgid) ]),
                        ExprAddrOf(stateexpr) ])))
         ifbad.addifstmts(_badTransition())

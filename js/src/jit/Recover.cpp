@@ -1006,6 +1006,24 @@ RMathFunction::recover(JSContext* cx, SnapshotIterator& iter) const
 }
 
 bool
+MRandom::writeRecoverData(CompactBufferWriter& writer) const
+{
+    MOZ_ASSERT(this->canRecoverOnBailout());
+    writer.writeUnsigned(uint32_t(RInstruction::Recover_Random));
+    return true;
+}
+
+RRandom::RRandom(CompactBufferReader& reader)
+{}
+
+bool
+RRandom::recover(JSContext* cx, SnapshotIterator& iter) const
+{
+    iter.storeInstructionResult(DoubleValue(math_random_impl(cx)));
+    return true;
+}
+
+bool
 MStringSplit::writeRecoverData(CompactBufferWriter& writer) const
 {
     MOZ_ASSERT(canRecoverOnBailout());

@@ -2544,6 +2544,13 @@ js::SetPrototype(JSContext* cx, HandleObject obj, HandleObject proto, JS::Object
         return Proxy::setPrototype(cx, obj, proto, result);
     }
 
+    /*
+     * ES6 9.1.2 step 3-4 if |obj.[[Prototype]]| has SameValue as |proto| return true.
+     * Since the values in question are objects, we can just compare pointers.
+     */
+    if (proto == obj->staticPrototype())
+        return result.succeed();
+
     /* Disallow mutation of immutable [[Prototype]]s. */
     if (obj->staticPrototypeIsImmutable() && ImmutablePrototypesEnabled)
         return result.fail(JSMSG_CANT_SET_PROTO);
@@ -2577,13 +2584,6 @@ js::SetPrototype(JSContext* cx, HandleObject obj, HandleObject proto, JS::Object
                              "incompatible Location object");
         return false;
     }
-
-    /*
-     * ES6 9.1.2 step 3-4 if |obj.[[Prototype]]| has SameValue as |proto| return true.
-     * Since the values in question are objects, we can just compare pointers.
-     */
-    if (proto == obj->staticPrototype())
-        return result.succeed();
 
     /* ES6 9.1.2 step 5 forbids changing [[Prototype]] if not [[Extensible]]. */
     bool extensible;
