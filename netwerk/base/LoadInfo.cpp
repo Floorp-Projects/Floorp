@@ -177,21 +177,23 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
       }
     }
 
-  if (!(mSecurityFlags & nsILoadInfo::SEC_FORCE_PRIVATE_BROWSING)) {
-    if (aLoadingContext) {
-      nsCOMPtr<nsILoadContext> loadContext =
-        aLoadingContext->OwnerDoc()->GetLoadContext();
-      if (loadContext) {
-        bool usePrivateBrowsing;
-        nsresult rv = loadContext->GetUsePrivateBrowsing(&usePrivateBrowsing);
-        if (NS_SUCCEEDED(rv) && usePrivateBrowsing) {
-          mSecurityFlags |= nsILoadInfo::SEC_FORCE_PRIVATE_BROWSING;
-        }
+  InheritOriginAttributes(mLoadingPrincipal, mOriginAttributes);
+
+  // We need to do this after inheriting the document's origin attributes
+  // above, in case the loading principal ends up being the system principal.
+  if (aLoadingContext) {
+    nsCOMPtr<nsILoadContext> loadContext =
+      aLoadingContext->OwnerDoc()->GetLoadContext();
+    nsCOMPtr<nsIDocShell> docShell = aLoadingContext->OwnerDoc()->GetDocShell();
+    if (loadContext && docShell &&
+        docShell->ItemType() == nsIDocShellTreeItem::typeContent) {
+      bool usePrivateBrowsing;
+      nsresult rv = loadContext->GetUsePrivateBrowsing(&usePrivateBrowsing);
+      if (NS_SUCCEEDED(rv)) {
+        mOriginAttributes.SyncAttributesWithPrivateBrowsing(usePrivateBrowsing);
       }
     }
   }
-
-  InheritOriginAttributes(mLoadingPrincipal, mOriginAttributes);
 
   // For chrome docshell, the mPrivateBrowsingId remains 0 even its
   // UsePrivateBrowsing() is true, so we only update the mPrivateBrowsingId in
@@ -199,9 +201,7 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
   if (aLoadingContext) {
     nsCOMPtr<nsIDocShell> docShell = aLoadingContext->OwnerDoc()->GetDocShell();
     if (docShell) {
-      if (docShell->ItemType() == nsIDocShellTreeItem::typeContent) {
-        mOriginAttributes.SyncAttributesWithPrivateBrowsing(GetUsePrivateBrowsing());
-      } else if (docShell->ItemType() == nsIDocShellTreeItem::typeChrome) {
+      if (docShell->ItemType() == nsIDocShellTreeItem::typeChrome) {
         MOZ_ASSERT(mOriginAttributes.mPrivateBrowsingId == 0,
                    "chrome docshell shouldn't have mPrivateBrowsingId set.");
       }
@@ -264,10 +264,7 @@ LoadInfo::LoadInfo(nsPIDOMWindowOuter* aOuterWindow,
   const DocShellOriginAttributes attrs =
     nsDocShell::Cast(docShell)->GetOriginAttributes();
 
-  if (docShell->ItemType() == nsIDocShellTreeItem::typeContent) {
-    MOZ_ASSERT(GetUsePrivateBrowsing() == (attrs.mPrivateBrowsingId != 0),
-               "docshell and mSecurityFlags have different value for PrivateBrowsing().");
-  } else if (docShell->ItemType() == nsIDocShellTreeItem::typeChrome) {
+  if (docShell->ItemType() == nsIDocShellTreeItem::typeChrome) {
     MOZ_ASSERT(attrs.mPrivateBrowsingId == 0,
                "chrome docshell shouldn't have mPrivateBrowsingId set.");
   }
@@ -583,14 +580,6 @@ LoadInfo::GetDontFollowRedirects(bool* aResult)
 {
   *aResult =
     (mSecurityFlags & nsILoadInfo::SEC_DONT_FOLLOW_REDIRECTS);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::GetUsePrivateBrowsing(bool* aUsePrivateBrowsing)
-{
-  *aUsePrivateBrowsing = (mSecurityFlags &
-                          nsILoadInfo::SEC_FORCE_PRIVATE_BROWSING);
   return NS_OK;
 }
 

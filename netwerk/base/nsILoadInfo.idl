@@ -175,19 +175,10 @@ interface nsILoadInfo : nsISupports
   const unsigned long SEC_DONT_FOLLOW_REDIRECTS = (1<<12);
 
   /**
-   * Force private browsing. Setting this flag the private browsing can be
-   * enforce even when a loading is not happening in the context of a document.
-   *
-   * If the flag is true, even if a document context is present,
-   * GetUsePrivateBrowsing will always return true.
-   */
-  const unsigned long SEC_FORCE_PRIVATE_BROWSING = (1<<13);
-
-  /**
    * Load an error page, it should be one of following : about:neterror,
    * about:certerror, about:blocked, or about:tabcrashed.
    */
-  const unsigned long SEC_LOAD_ERROR_PAGE = (1<<14);
+  const unsigned long SEC_LOAD_ERROR_PAGE = (1<<13);
 
   /**
    * This is the principal of the network request's caller/requester where
@@ -349,13 +340,6 @@ interface nsILoadInfo : nsISupports
    * the principal.
    */
   [infallible] readonly attribute boolean aboutBlankInherits;
-
-  /**
-   * If usePrivateBrowsing is true, private browsing will be used.
-   * This value equals to originAttributes.privateBrowsingId in *content*
-   * side.
-   */
-  [infallible] readonly attribute boolean usePrivateBrowsing;
 
   /**
    * If allowChrome is true, then use nsIScriptSecurityManager::ALLOW_CHROME

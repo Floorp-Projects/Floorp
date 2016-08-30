@@ -255,9 +255,6 @@ public:
   /**
    * Get the Private Browsing image loader instance that is used by gecko code,
    * creating it if necessary.
-   *
-   * The nsIChannel objects that this instance creates are created with the
-   * nsILoadInfo::SEC_FORCE_PRIVATE_BROWSING flag.
    */
   static imgLoader* PrivateBrowsingLoader();
 
