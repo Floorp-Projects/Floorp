@@ -19,7 +19,6 @@ EXPORTS.mozilla += [
     '!TelemetryScalarEnums.h',
     'ProcessedStack.h',
     'Telemetry.h',
-    'TelemetryComms.h',
     'ThreadHangStats.h',
 ]
 
