@@ -2639,13 +2639,7 @@ Parser<ParseHandler>::functionArguments(YieldHandling yieldHandling, FunctionSyn
                 break;
               }
 
-              case TOK_YIELD:
-                if (!checkYieldNameValidity())
-                    return false;
-                MOZ_ASSERT(yieldHandling == YieldIsName);
-                goto TOK_NAME;
-
-              case TOK_TRIPLEDOT: {
+              case TOK_TRIPLEDOT:
                 if (IsSetterKind(kind)) {
                     report(ParseError, false, null(),
                            JSMSG_ACCESSOR_WRONG_ARGS, "setter", "one", "");
@@ -2655,18 +2649,6 @@ Parser<ParseHandler>::functionArguments(YieldHandling yieldHandling, FunctionSyn
                 hasRest = true;
                 funbox->function()->setHasRest();
 
-                if (!tokenStream.getToken(&tt))
-                    return false;
-                // FIXME: This fails to handle a rest parameter named |yield|
-                //        correctly outside of generators: that is,
-                //        |var f = (...yield) => 42;| should be valid code!
-                //        When this is fixed, make sure to consult both
-                //        |yieldHandling| and |checkYieldNameValidity| for
-                //        correctness until legacy generator syntax is removed.
-                if (tt != TOK_NAME) {
-                    report(ParseError, false, null(), JSMSG_NO_REST_NAME);
-                    return false;
-                }
                 disallowDuplicateParams = true;
                 if (duplicatedParam) {
                     // Has duplicated args before the rest parameter.
@@ -2674,15 +2656,23 @@ Parser<ParseHandler>::functionArguments(YieldHandling yieldHandling, FunctionSyn
                     return false;
                 }
 
-                goto TOK_NAME;
-              }
+                if (!tokenStream.getToken(&tt))
+                    return false;
+                if (tt != TOK_NAME && tt != TOK_YIELD) {
+                    report(ParseError, false, null(), JSMSG_NO_REST_NAME);
+                    return false;
+                }
+                MOZ_FALLTHROUGH;
 
-              TOK_NAME:
-              case TOK_NAME: {
+              case TOK_NAME:
+              case TOK_YIELD: {
                 if (parenFreeArrow)
                     funbox->setStart(tokenStream);
 
-                RootedPropertyName name(context, tokenStream.currentName());
+                RootedPropertyName name(context, bindingIdentifier(yieldHandling));
+                if (!name)
+                    return false;
+
                 if (!notePositionalFormalParameter(funcpn, name, disallowDuplicateParams,
                                                    &duplicatedParam))
                 {
@@ -3342,19 +3332,6 @@ Parser<ParseHandler>::functionFormalParametersAndBody(InHandling inHandling,
 }
 
 template <typename ParseHandler>
-bool
-Parser<ParseHandler>::checkYieldNameValidity()
-{
-    // In star generators and in JS >= 1.7, yield is a keyword.  Otherwise in
-    // strict mode, yield is a future reserved word.
-    if (pc->isStarGenerator() || versionNumber() >= JSVERSION_1_7 || pc->sc()->strict()) {
-        report(ParseError, false, null(), JSMSG_RESERVED_ID, "yield");
-        return false;
-    }
-    return true;
-}
-
-template <typename ParseHandler>
 typename ParseHandler::Node
 Parser<ParseHandler>::functionStmt(YieldHandling yieldHandling, DefaultHandling defaultHandling)
 {
@@ -3387,12 +3364,10 @@ Parser<ParseHandler>::functionStmt(YieldHandling yieldHandling, DefaultHandling 
             return null();
     }
 
-    if (tt == TOK_NAME) {
-        name = tokenStream.currentName();
-    } else if (tt == TOK_YIELD) {
-        if (!checkYieldNameValidity())
+    if (tt == TOK_NAME || tt == TOK_YIELD) {
+        name = bindingIdentifier(yieldHandling);
+        if (!name)
             return null();
-        name = tokenStream.currentName();
     } else if (defaultHandling == AllowDefaultName) {
         name = context->names().starDefaultStar;
         tokenStream.ungetToken();
@@ -3436,12 +3411,10 @@ Parser<ParseHandler>::functionExpr(InvokedPrediction invoked)
     }
 
     RootedPropertyName name(context);
-    if (tt == TOK_NAME) {
-        name = tokenStream.currentName();
-    } else if (tt == TOK_YIELD) {
-        if (!checkYieldNameValidity())
+    if (tt == TOK_NAME || tt == TOK_YIELD) {
+        name = bindingIdentifier(YieldIsName);
+        if (!name)
             return null();
-        name = tokenStream.currentName();
     } else {
         tokenStream.ungetToken();
     }
@@ -3688,19 +3661,12 @@ Parser<ParseHandler>::matchLabel(YieldHandling yieldHandling, MutableHandle<Prop
     if (!tokenStream.peekTokenSameLine(&tt, TokenStream::Operand))
         return false;
 
-    if (tt == TOK_NAME) {
-        tokenStream.consumeKnownToken(TOK_NAME, TokenStream::Operand);
-        MOZ_ASSERT_IF(tokenStream.currentName() == context->names().yield,
-                      yieldHandling == YieldIsName);
-        label.set(tokenStream.currentName());
-    } else if (tt == TOK_YIELD) {
-        // We might still consider |yield| to be valid here, contrary to ES6.
-        // Fix bug 1104014, then stop shipping legacy generators in chrome
-        // code, then remove this check!
-        tokenStream.consumeKnownToken(TOK_YIELD, TokenStream::Operand);
-        if (!checkYieldNameValidity())
+    if (tt == TOK_NAME || tt == TOK_YIELD) {
+        tokenStream.consumeKnownToken(tt, TokenStream::Operand);
+
+        label.set(labelIdentifier(yieldHandling));
+        if (!label)
             return false;
-        label.set(tokenStream.currentName());
     } else {
         label.set(nullptr);
     }
@@ -4200,19 +4166,16 @@ Parser<ParseHandler>::declarationName(Node decl, DeclarationKind declKind, Token
                                       bool initialDeclaration, YieldHandling yieldHandling,
                                       ParseNodeKind* forHeadKind, Node* forInOrOfExpression)
 {
-    if (tt != TOK_NAME) {
-        // Anything other than TOK_YIELD or TOK_NAME is an error.
-        if (tt != TOK_YIELD) {
-            report(ParseError, false, null(), JSMSG_NO_VARIABLE_NAME);
-            return null();
-        }
-
-        // TOK_YIELD is only okay if it's treated as a name.
-        if (!checkYieldNameValidity())
-            return null();
+    // Anything other than TOK_YIELD or TOK_NAME is an error.
+    if (tt != TOK_NAME && tt != TOK_YIELD) {
+        report(ParseError, false, null(), JSMSG_NO_VARIABLE_NAME);
+        return null();
     }
 
-    RootedPropertyName name(context, tokenStream.currentName());
+    RootedPropertyName name(context, bindingIdentifier(yieldHandling));
+    if (!name)
+        return null();
+
     Node binding = newName(name);
     if (!binding)
         return null();
@@ -4385,38 +4348,58 @@ Parser<FullParseHandler>::namedImportsOrNamespaceImport(TokenKind tt, Node impor
             // peekToken matched it as a TOK_NAME, and put it in the
             // lookahead buffer, so this call will match keywords as well.
             MUST_MATCH_TOKEN_MOD(TOK_NAME, TokenStream::KeywordIsName, JSMSG_NO_IMPORT_NAME);
-            Node importName = newName(tokenStream.currentName());
-            if (!importName)
-                return false;
+            Rooted<PropertyName*> importName(context, tokenStream.currentName());
+            TokenPos importNamePos = pos();
 
-            bool foundAs;
-            if (!tokenStream.matchContextualKeyword(&foundAs, context->names().as))
-                return false;
+            TokenKind maybeAs;
+            if (!tokenStream.peekToken(&maybeAs))
+                return null();
 
-            if (foundAs) {
-                MUST_MATCH_TOKEN(TOK_NAME, JSMSG_NO_BINDING_NAME);
+            if (maybeAs == TOK_NAME &&
+                tokenStream.nextName() == context->names().as)
+            {
+                tokenStream.consumeKnownToken(TOK_NAME);
+
+                if (!checkUnescapedName())
+                    return false;
+
+                TokenKind afterAs;
+                if (!tokenStream.getToken(&afterAs))
+                    return false;
+
+                if (afterAs != TOK_NAME && afterAs != TOK_YIELD) {
+                    report(ParseError, false, null(), JSMSG_NO_BINDING_NAME);
+                    return false;
+                }
             } else {
                 // Keywords cannot be bound to themselves, so an import name
                 // that is a keyword is a syntax error if it is not followed
                 // by the keyword 'as'.
                 // See the ImportSpecifier production in ES6 section 15.2.2.
-                if (IsKeyword(importName->name())) {
+                if (IsKeyword(importName)) {
                     JSAutoByteString bytes;
-                    if (!AtomToPrintableString(context, importName->name(), &bytes))
+                    if (!AtomToPrintableString(context, importName, &bytes))
                         return false;
                     report(ParseError, false, null(), JSMSG_AS_AFTER_RESERVED_WORD, bytes.ptr());
                     return false;
                 }
             }
 
-            RootedPropertyName bindingAtom(context, tokenStream.currentName());
+            RootedPropertyName bindingAtom(context, importedBinding());
+            if (!bindingAtom)
+                return false;
+
             Node bindingName = newName(bindingAtom);
             if (!bindingName)
                 return false;
             if (!noteDeclaredName(bindingAtom, DeclarationKind::Import, pos()))
                 return false;
 
-            Node importSpec = handler.newBinary(PNK_IMPORT_SPEC, importName, bindingName);
+            Node importNameNode = newName(importName, importNamePos);
+            if (!importNameNode)
+                return false;
+
+            Node importSpec = handler.newBinary(PNK_IMPORT_SPEC, importNameNode, bindingName);
             if (!importSpec)
                 return false;
 
@@ -4456,7 +4439,9 @@ Parser<FullParseHandler>::namedImportsOrNamespaceImport(TokenKind tt, Node impor
         // definitions that hold a module namespace object. They are treated
         // as const variables which are initialized during the
         // ModuleDeclarationInstantiation step.
-        RootedPropertyName bindingName(context, tokenStream.currentName());
+        RootedPropertyName bindingName(context, importedBinding());
+        if (!bindingName)
+            return false;
         Node bindingNameNode = newName(bindingName);
         if (!bindingNameNode)
             return false;
@@ -4515,10 +4500,14 @@ Parser<FullParseHandler>::importDeclaration()
             if (!importName)
                 return null();
 
-            RootedPropertyName bindingAtom(context, tokenStream.currentName());
+            RootedPropertyName bindingAtom(context, importedBinding());
+            if (!bindingAtom)
+                return null();
+
             Node bindingName = newName(bindingAtom);
             if (!bindingName)
                 return null();
+
             if (!noteDeclaredName(bindingAtom, DeclarationKind::Import, pos()))
                 return null();
 
@@ -5875,8 +5864,9 @@ template <typename ParseHandler>
 typename ParseHandler::Node
 Parser<ParseHandler>::labeledStatement(YieldHandling yieldHandling)
 {
-    uint32_t begin = pos().begin;
-    RootedPropertyName label(context, tokenStream.currentName());
+    RootedPropertyName label(context, labelIdentifier(yieldHandling));
+    if (!label)
+        return null();
 
     auto hasSameLabel = [&label](ParseContext::LabelStatement* stmt) {
         return stmt->label() == label;
@@ -5886,6 +5876,8 @@ Parser<ParseHandler>::labeledStatement(YieldHandling yieldHandling)
         report(ParseError, false, null(), JSMSG_DUPLICATE_LABEL);
         return null();
     }
+
+    uint32_t begin = pos().begin;
 
     tokenStream.consumeKnownToken(TOK_COLON);
 
@@ -6021,19 +6013,12 @@ Parser<ParseHandler>::tryStatement(YieldHandling yieldHandling)
                 if (!catchName)
                     return null();
                 break;
-              case TOK_YIELD:
-                if (yieldHandling == YieldIsKeyword) {
-                    report(ParseError, false, null(), JSMSG_RESERVED_ID, "yield");
-                    return null();
-                }
 
-                // Even if yield is *not* necessarily a keyword, we still must
-                // check its validity for legacy generators.
-                if (!checkYieldNameValidity())
+              case TOK_NAME:
+              case TOK_YIELD: {
+                RootedPropertyName param(context, bindingIdentifier(yieldHandling));
+                if (!param)
                     return null();
-                MOZ_FALLTHROUGH;
-              case TOK_NAME: {
-                RootedPropertyName param(context, tokenStream.currentName());
                 catchName = newName(param);
                 if (!catchName)
                     return null();
@@ -6233,13 +6218,10 @@ Parser<ParseHandler>::classDefinition(YieldHandling yieldHandling,
         return null();
 
     RootedPropertyName name(context);
-    if (tt == TOK_NAME) {
-        name = tokenStream.currentName();
-    } else if (tt == TOK_YIELD) {
-        if (!checkYieldNameValidity())
+    if (tt == TOK_NAME || tt == TOK_YIELD) {
+        name = bindingIdentifier(yieldHandling);
+        if (!name)
             return null();
-        MOZ_ASSERT(yieldHandling != YieldIsKeyword);
-        name = tokenStream.currentName();
     } else if (classContext == ClassStatement) {
         if (defaultHandling == AllowDefaultName) {
             name = context->names().starDefaultStar;
@@ -6455,6 +6437,9 @@ Parser<ParseHandler>::nextTokenContinuesLetDeclaration(TokenKind next, YieldHand
 
     // Otherwise a let declaration must have a name.
     if (next == TOK_NAME) {
+        MOZ_ASSERT(tokenStream.nextName() != context->names().yield,
+                   "token stream should interpret 'yield' as TOK_YIELD");
+
         // One non-"yield" TOK_NAME edge case deserves special comment.
         // Consider this:
         //
@@ -6466,22 +6451,21 @@ Parser<ParseHandler>::nextTokenContinuesLetDeclaration(TokenKind next, YieldHand
         // that we should parse this as two ExpressionStatements?   No.  ASI
         // resolves during parsing.  Static semantics only apply to the full
         // parse tree with ASI applied.  No backsies!
-        if (tokenStream.nextName() != context->names().yield)
-            return true;
-    } else if (next != TOK_YIELD) {
-        return false;
+        return true;
     }
 
-    // We have the name "yield": the grammar parameter exactly states whether
-    // this is okay.  Even if YieldIsKeyword, the code might be valid if ASI
-    // induces a preceding semicolon.  If YieldIsName, the code is valid
-    // outside strict mode, and declaration-parsing code will enforce strict
-    // mode restrictions.
-    //
-    // No checkYieldNameValidity for TOK_YIELD is needed here.  It'll happen
-    // when TOK_YIELD is consumed as BindingIdentifier or as start of a fresh
-    // Statement.
-    return yieldHandling == YieldIsName;
+    // If we have the name "yield", the grammar parameter exactly states
+    // whether this is okay.  (This wasn't true for SpiderMonkey's ancient
+    // legacy generator syntax, but that's dead now.)  If YieldIsName,
+    // declaration-parsing code will (if necessary) enforce a strict mode
+    // restriction on defining "yield".  If YieldIsKeyword, consider this the
+    // end of the declaration, in case ASI induces a semicolon that makes the
+    // "yield" valid.
+    if (next == TOK_YIELD)
+        return yieldHandling == YieldIsName;
+
+    // Otherwise not a let declaration.
+    return false;
 }
 
 template <typename ParseHandler>
@@ -6535,11 +6519,10 @@ Parser<ParseHandler>::statement(YieldHandling yieldHandling)
         TokenKind next;
         if (!tokenStream.peekToken(&next, modifier))
             return null();
-        if (next == TOK_COLON) {
-            if (!checkYieldNameValidity())
-                return null();
+
+        if (next == TOK_COLON)
             return labeledStatement(yieldHandling);
-        }
+
         return expressionStatement(yieldHandling);
       }
 
@@ -6757,11 +6740,10 @@ Parser<ParseHandler>::statementListItem(YieldHandling yieldHandling,
         TokenKind next;
         if (!tokenStream.peekToken(&next, modifier))
             return null();
-        if (next == TOK_COLON) {
-            if (!checkYieldNameValidity())
-                return null();
+
+        if (next == TOK_COLON)
             return labeledStatement(yieldHandling);
-        }
+
         return expressionStatement(yieldHandling);
       }
 
@@ -7248,8 +7230,13 @@ Parser<ParseHandler>::assignExpr(InHandling inHandling, YieldHandling yieldHandl
     if (tt == TOK_NAME) {
         if (!tokenStream.nextTokenEndsExpr(&endsExpr))
             return null();
-        if (endsExpr)
-            return identifierName(yieldHandling);
+        if (endsExpr) {
+            Rooted<PropertyName*> name(context, identifierReference(yieldHandling));
+            if (!name)
+                return null();
+
+            return identifierReference(name);
+        }
     }
 
     if (tt == TOK_NUMBER) {
@@ -8258,18 +8245,77 @@ Parser<ParseHandler>::newName(PropertyName* name, TokenPos pos)
 }
 
 template <typename ParseHandler>
-typename ParseHandler::Node
-Parser<ParseHandler>::identifierName(YieldHandling yieldHandling)
+PropertyName*
+Parser<ParseHandler>::labelOrIdentifierReference(YieldHandling yieldHandling)
 {
-    RootedPropertyName name(context, tokenStream.currentName());
-    if (yieldHandling == YieldIsKeyword && name == context->names().yield) {
-        report(ParseError, false, null(), JSMSG_RESERVED_ID, "yield");
-        return null();
+    PropertyName* ident;
+    const Token& tok = tokenStream.currentToken();
+    if (tok.type == TOK_NAME) {
+        ident = tok.name();
+        MOZ_ASSERT(ident != context->names().yield,
+                   "tokenizer should have treated 'yield' as TOK_YIELD");
+    } else {
+        MOZ_ASSERT(tok.type == TOK_YIELD);
+
+        if (yieldHandling == YieldIsKeyword ||
+            pc->sc()->strict() ||
+            pc->isStarGenerator() ||
+            versionNumber() >= JSVERSION_1_7)
+        {
+            report(ParseError, false, null(), JSMSG_RESERVED_ID, "yield");
+            return nullptr;
+        }
+
+        ident = context->names().yield;
     }
 
-    // If we're inside a function that later becomes a legacy generator, then
-    // a |yield| identifier name here will be detected by a subsequent
-    // |checkYieldNameValidity| call.
+    return ident;
+}
+
+template <typename ParseHandler>
+PropertyName*
+Parser<ParseHandler>::bindingIdentifier(YieldHandling yieldHandling)
+{
+    PropertyName* ident;
+    const Token& tok = tokenStream.currentToken();
+    if (tok.type == TOK_NAME) {
+        ident = tok.name();
+        MOZ_ASSERT(ident != context->names().yield,
+                   "tokenizer should have treated 'yield' as TOK_YIELD");
+
+        if (pc->sc()->strict()) {
+            const char* badName = ident == context->names().arguments
+                                  ? "arguments"
+                                  : ident == context->names().eval
+                                  ? "eval"
+                                  : nullptr;
+            if (badName) {
+                report(ParseError, false, null(), JSMSG_BAD_STRICT_ASSIGN, badName);
+                return nullptr;
+            }
+        }
+    } else {
+        MOZ_ASSERT(tok.type == TOK_YIELD);
+
+        if (yieldHandling == YieldIsKeyword ||
+            pc->sc()->strict() ||
+            pc->isStarGenerator() ||
+            versionNumber() >= JSVERSION_1_7)
+        {
+            report(ParseError, false, null(), JSMSG_RESERVED_ID, "yield");
+            return nullptr;
+        }
+
+        ident = context->names().yield;
+    }
+
+    return ident;
+}
+
+template <typename ParseHandler>
+typename ParseHandler::Node
+Parser<ParseHandler>::identifierReference(Handle<PropertyName*> name)
+{
     Node pn = newName(name);
     if (!pn)
         return null();
@@ -8670,7 +8716,11 @@ Parser<ParseHandler>::objectLiteral(YieldHandling yieldHandling, PossibleError* 
             if (!tokenStream.checkForKeyword(propAtom, nullptr))
                 return null();
 
-            Node nameExpr = identifierName(yieldHandling);
+            Rooted<PropertyName*> name(context, identifierReference(yieldHandling));
+            if (!name)
+                return null();
+
+            Node nameExpr = identifierReference(name);
             if (!nameExpr)
                 return null();
 
@@ -8684,7 +8734,11 @@ Parser<ParseHandler>::objectLiteral(YieldHandling yieldHandling, PossibleError* 
             if (!tokenStream.checkForKeyword(propAtom, nullptr))
                 return null();
 
-            Node lhs = identifierName(yieldHandling);
+            Rooted<PropertyName*> name(context, identifierReference(yieldHandling));
+            if (!name)
+                return null();
+
+            Node lhs = identifierReference(name);
             if (!lhs)
                 return null();
 
@@ -8693,7 +8747,7 @@ Parser<ParseHandler>::objectLiteral(YieldHandling yieldHandling, PossibleError* 
             Node rhs;
             {
                 // Clearing `inDestructuringDecl` allows name use to be noted
-                // in `identifierName`. See bug 1255167.
+                // in Parser::identifierReference. See bug 1255167.
                 AutoClearInDestructuringDecl autoClear(pc);
                 rhs = assignExpr(InAllowed, yieldHandling, TripledotProhibited);
                 if (!rhs)
@@ -8900,11 +8954,13 @@ Parser<ParseHandler>::primaryExpr(YieldHandling yieldHandling, TripledotHandling
         return stringLiteral();
 
       case TOK_YIELD:
-        if (!checkYieldNameValidity())
+      case TOK_NAME: {
+        Rooted<PropertyName*> name(context, identifierReference(yieldHandling));
+        if (!name)
             return null();
-        MOZ_FALLTHROUGH;
-      case TOK_NAME:
-        return identifierName(yieldHandling);
+
+        return identifierReference(name);
+      }
 
       case TOK_REGEXP:
         return newRegExp();
@@ -8946,12 +9002,11 @@ Parser<ParseHandler>::primaryExpr(YieldHandling yieldHandling, TripledotHandling
         TokenKind next;
         if (!tokenStream.getToken(&next))
             return null();
-        // FIXME: This fails to handle a rest parameter named |yield| correctly
-        //        outside of generators: |var f = (...yield) => 42;| should be
-        //        valid code!  When this is fixed, make sure to consult both
-        //        |yieldHandling| and |checkYieldNameValidity| for correctness
-        //        until legacy generator syntax is removed.
-        if (next != TOK_NAME) {
+
+        // This doesn't check that the provided name is allowed, e.g. if the
+        // enclosing code is strict mode code, any of "arguments", "let", or
+        // "yield" should be prohibited.  Argument-parsing code handles that.
+        if (next != TOK_NAME && next != TOK_YIELD) {
             report(ParseError, false, null(), JSMSG_UNEXPECTED_TOKEN,
                    "rest argument name", TokenKindToDesc(next));
             return null();
