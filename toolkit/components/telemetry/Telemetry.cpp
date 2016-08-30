@@ -2369,13 +2369,6 @@ TelemetryImpl::ClearScalars()
   return NS_OK;
 }
 
-NS_IMETHODIMP
-TelemetryImpl::FlushBatchedChildTelemetry()
-{
-  TelemetryHistogram::IPCTimerFired(nullptr, nullptr);
-  return NS_OK;
-}
-
 size_t
 TelemetryImpl::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
 {
