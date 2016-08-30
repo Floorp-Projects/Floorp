@@ -2,6 +2,14 @@
   "items": {
     "manual": [
       {
+        "path": "dummy.xml",
+        "url": "/dummy.xml"
+      },
+      {
+        "path": "dummy.xhtml",
+        "url": "/dummy.xhtml"
+      },
+      {
         "path": "2dcontext/conformance-requirements/2d.coordinatespace-manual.html",
         "url": "/2dcontext/conformance-requirements/2d.coordinatespace-manual.html"
       },
