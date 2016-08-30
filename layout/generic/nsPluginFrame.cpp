@@ -1388,10 +1388,8 @@ nsPluginFrame::GetLayerState(nsDisplayListBuilder* aBuilder,
 
 #ifdef MOZ_WIDGET_ANDROID
   // We always want a layer on Honeycomb and later
-  if (AndroidBridge::Bridge()->GetAPIVersion() >= 11)
-    return LAYER_ACTIVE;
-#endif
-
+  return LAYER_ACTIVE;
+#else
   if (mInstanceOwner->NeedsScrollImageLayer()) {
     return LAYER_ACTIVE;
   }
@@ -1401,6 +1399,7 @@ nsPluginFrame::GetLayerState(nsDisplayListBuilder* aBuilder,
   }
 
   return LAYER_ACTIVE_FORCE;
+#endif
 }
 
 class PluginFrameDidCompositeObserver final : public ClientLayerManager::
