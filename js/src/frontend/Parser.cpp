@@ -848,6 +848,7 @@ Parser<ParseHandler>::checkStrictBinding(PropertyName* name, TokenPos pos)
     if (name == context->names().eval ||
         name == context->names().arguments ||
         name == context->names().let ||
+        name == context->names().static_ ||
         IsKeyword(name))
     {
         JSAutoByteString bytes;
@@ -6306,6 +6307,13 @@ Parser<ParseHandler>::classDefinition(YieldHandling yieldHandling,
 
         bool isStatic = false;
         if (tt == TOK_NAME && tokenStream.currentName() == context->names().static_) {
+            MOZ_ASSERT(pc->sc()->strict(), "classes are always strict");
+
+            // Strict mode forbids "class" as Identifier, so it can only be the
+            // unescaped keyword.
+            if (!checkUnescapedName())
+                return null();
+
             if (!tokenStream.peekToken(&tt, TokenStream::KeywordIsName))
                 return null();
             if (tt == TOK_RC) {
@@ -8248,6 +8256,8 @@ Parser<ParseHandler>::labelOrIdentifierReference(YieldHandling yieldHandling)
         if (pc->sc()->strict()) {
             const char* badName = ident == context->names().let
                                   ? "let"
+                                  : ident == context->names().static_
+                                  ? "static"
                                   : nullptr;
             if (badName) {
                 report(ParseError, false, null(), JSMSG_RESERVED_ID, badName);
@@ -8296,6 +8306,8 @@ Parser<ParseHandler>::bindingIdentifier(YieldHandling yieldHandling)
 
             badName = ident == context->names().let
                       ? "let"
+                      : ident == context->names().static_
+                      ? "static"
                       : nullptr;
             if (badName) {
                 report(ParseError, false, null(), JSMSG_RESERVED_ID, badName);
