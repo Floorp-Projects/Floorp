@@ -892,11 +892,11 @@ private:
   // True if we are back from DECODER_STATE_DORMANT state and
   // LoadedMetadataEvent was already sent.
   bool mSentLoadedMetadataEvent;
-  // True if we are back from DECODER_STATE_DORMANT state and
-  // FirstFrameLoadedEvent was already sent, then we can skip
-  // SetStartTime because the mStartTime already set before. Also we don't need
-  // to decode any audio/video since the MediaDecoder will trigger a seek
-  // operation soon.
+
+  // True if we've decoded first frames (thus having the start time) and
+  // notified the FirstFrameLoaded event. Note we can't initiate seek until the
+  // start time is known which happens when the first frames are decoded or we
+  // are playing an MSE stream (the start time is always assumed 0).
   bool mSentFirstFrameLoadedEvent;
 
   bool mSentPlaybackEndedEvent;
