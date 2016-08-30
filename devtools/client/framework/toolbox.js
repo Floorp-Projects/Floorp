@@ -621,8 +621,17 @@ Toolbox.prototype = {
                  });
 
     this.doc.addEventListener("keypress", this._splitConsoleOnKeypress, false);
-
     this.doc.addEventListener("focus", this._onFocus, true);
+    this.win.addEventListener("unload", this.destroy);
+  },
+
+  _removeHostListeners: function () {
+    // The host iframe's contentDocument may already be gone.
+    if (this.doc) {
+      this.doc.removeEventListener("keypress", this._splitConsoleOnKeypress, false);
+      this.doc.removeEventListener("focus", this._onFocus, true);
+      this.win.removeEventListener("unload", this.destroy);
+    }
   },
 
   _registerOverlays: function () {
@@ -2031,12 +2040,7 @@ Toolbox.prototype = {
    * @return {promise} to be resolved when the host is destroyed.
    */
   destroyHost: function () {
-    // The host iframe's contentDocument may already be gone.
-    if (this.doc) {
-      this.doc.removeEventListener("keypress",
-        this._splitConsoleOnKeypress, false);
-      this.doc.removeEventListener("focus", this._onFocus, true);
-    }
+    this._removeHostListeners();
     return this._host.destroy();
   },
 
