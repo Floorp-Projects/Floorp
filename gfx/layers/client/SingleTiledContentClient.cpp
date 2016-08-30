@@ -11,13 +11,13 @@ namespace mozilla {
 namespace layers {
 
 
-SingleTiledContentClient::SingleTiledContentClient(ClientTiledPaintedLayer& aPaintedLayer,
+SingleTiledContentClient::SingleTiledContentClient(ClientTiledPaintedLayer* aPaintedLayer,
                                                    ClientLayerManager* aManager)
   : TiledContentClient(aManager, "Single")
 {
   MOZ_COUNT_CTOR(SingleTiledContentClient);
 
-  mTiledBuffer = new ClientSingleTiledLayerBuffer(aPaintedLayer, *this, aManager);
+  mTiledBuffer = new ClientSingleTiledLayerBuffer(aPaintedLayer, this, aManager);
 }
 
 void
@@ -41,8 +41,8 @@ SingleTiledContentClient::ClientSupportsLayerSize(const gfx::IntSize& aSize, Cli
   return aSize.width <= maxTextureSize && aSize.height <= maxTextureSize;
 }
 
-ClientSingleTiledLayerBuffer::ClientSingleTiledLayerBuffer(ClientTiledPaintedLayer& aPaintedLayer,
-                                                           CompositableClient& aCompositableClient,
+ClientSingleTiledLayerBuffer::ClientSingleTiledLayerBuffer(ClientTiledPaintedLayer* aPaintedLayer,
+                                                           CompositableClient* aCompositableClient,
                                                            ClientLayerManager* aManager)
   : ClientTiledLayerBuffer(aPaintedLayer, aCompositableClient)
   , mManager(aManager)
@@ -93,7 +93,7 @@ already_AddRefed<TextureClient>
 ClientSingleTiledLayerBuffer::GetTextureClient()
 {
   MOZ_ASSERT(mFormat != gfx::SurfaceFormat::UNKNOWN);
-  return mCompositableClient.CreateTextureClientForDrawing(
+  return mCompositableClient->CreateTextureClientForDrawing(
     gfx::ImageFormatToSurfaceFormat(mFormat), mSize, BackendSelector::Content,
     TextureFlags::DISALLOW_BIGIMAGE | TextureFlags::IMMEDIATE_UPLOAD);
 }
@@ -125,8 +125,10 @@ ClientSingleTiledLayerBuffer::PaintThebes(const nsIntRegion& aNewValidRegion,
   mFormat = gfxPlatform::GetPlatform()->OptimalFormatForContent(content);
 
   if (mTile.IsPlaceholderTile()) {
+    mTile.SetLayerManager(mManager);
     mTile.SetTextureAllocator(this);
   }
+  mTile.SetCompositableClient(mCompositableClient);
 
   // The dirty region relative to the top-left of the tile.
   nsIntRegion tileDirtyRegion = paintRegion.MovedBy(-mTilingOrigin);
@@ -134,8 +136,7 @@ ClientSingleTiledLayerBuffer::PaintThebes(const nsIntRegion& aNewValidRegion,
   nsIntRegion extraPainted;
   RefPtr<TextureClient> backBufferOnWhite;
   RefPtr<TextureClient> backBuffer =
-    mTile.GetBackBuffer(mCompositableClient,
-                        tileDirtyRegion,
+    mTile.GetBackBuffer(tileDirtyRegion,
                         content, mode,
                         extraPainted,
                         &backBufferOnWhite);
@@ -184,7 +185,7 @@ ClientSingleTiledLayerBuffer::PaintThebes(const nsIntRegion& aNewValidRegion,
     }
     ctx->SetMatrix(ctx->CurrentMatrix().Translate(-mTilingOrigin.x, -mTilingOrigin.y));
 
-    aCallback(&mPaintedLayer, ctx, paintRegion, paintRegion, DrawRegionClip::DRAW, nsIntRegion(), aCallbackData);
+    aCallback(mPaintedLayer, ctx, paintRegion, paintRegion, DrawRegionClip::DRAW, nsIntRegion(), aCallbackData);
   }
 
   // Mark the area we just drew into the back buffer as invalid in the front buffer as they're
