@@ -30,7 +30,7 @@ function load1Soon() {
 
 function load1Done() {
   // Check the title
-  var title = ctx.tab1Browser.contentWindow.document.title;
+  var title = ctx.tab1Browser.contentTitle;
   checkTitle(title);
 
   // Try loading the same image in a new tab to make sure things work in
@@ -49,7 +49,7 @@ function load2Soon() {
 
 function load2Done() {
   // Check the title
-  var title = ctx.tab2Browser.contentWindow.document.title;
+  var title = ctx.tab2Browser.contentTitle;
   checkTitle(title);
 
   // Clean up

@@ -554,6 +554,15 @@ SourceBuffer::HighestStartTime()
          : 0.0;
 }
 
+double
+SourceBuffer::HighestEndTime()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  return mTrackBuffersManager
+         ? mTrackBuffersManager->HighestEndTime().ToSeconds()
+         : 0.0;
+}
+
 NS_IMPL_CYCLE_COLLECTION_CLASS(SourceBuffer)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(SourceBuffer)

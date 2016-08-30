@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import os
+import re
 
 from firefox_ui_harness.testcases import FirefoxTestCase
 from marionette_driver import Wait
@@ -11,32 +12,31 @@ from marionette_driver import Wait
 class TestSafeBrowsingInitialDownload(FirefoxTestCase):
 
     test_data = [{
-            'platforms': ['linux', 'windows_nt', 'darwin'],
-            'files': [
-                # Phishing
-                "goog-badbinurl-shavar.pset",
-                "goog-badbinurl-shavar.sbstore",
-                "goog-malware-shavar.pset",
-                "goog-malware-shavar.sbstore",
-                "goog-phish-shavar.pset",
-                "goog-phish-shavar.sbstore",
-                "goog-unwanted-shavar.pset",
-                "goog-unwanted-shavar.sbstore",
+        'platforms': ['linux', 'windows_nt', 'darwin'],
+        'files': [
+            # Phishing
+            r'goog-badbinurl-shavar.pset',
+            r'goog-badbinurl-shavar.sbstore',
+            r'goog-malware-shavar.pset',
+            r'goog-malware-shavar.sbstore',
+            r'goog(pub)?-phish-shavar.pset',
+            r'goog(pub)?-phish-shavar.sbstore',
+            r'goog-unwanted-shavar.pset',
+            r'goog-unwanted-shavar.sbstore',
 
-                # Tracking Protections
-                "base-track-digest256.pset",
-                "base-track-digest256.sbstore",
-                "mozstd-trackwhite-digest256.pset",
-                "mozstd-trackwhite-digest256.sbstore"
-                ]
-            },
-        {
-            'platforms': ['windows_nt'],
-            'files': [
-                "goog-downloadwhite-digest256.pset",
-                "goog-downloadwhite-digest256.sbstore"
-            ]
-        }
+            # Tracking Protections
+            r'base-track-digest256.pset',
+            r'base-track-digest256.sbstore',
+            r'mozstd-trackwhite-digest256.pset',
+            r'mozstd-trackwhite-digest256.sbstore'
+        ],
+    }, {
+        'platforms': ['windows_nt'],
+        'files': [
+            r'goog-downloadwhite-digest256.pset',
+            r'goog-downloadwhite-digest256.sbstore'
+        ]
+    },
     ]
 
     browser_prefs = {
@@ -72,5 +72,5 @@ class TestSafeBrowsingInitialDownload(FirefoxTestCase):
                 continue
             for item in data['files']:
                 wait.until(
-                    lambda _: os.path.exists(os.path.join(self.sb_files_path, item)),
+                    lambda _: [f for f in os.listdir(self.sb_files_path) if re.search(item, f)],
                     message='Safe Browsing File: {} not found!'.format(item))

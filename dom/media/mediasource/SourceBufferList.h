@@ -86,6 +86,7 @@ public:
   void ClearSimple();
 
   double HighestStartTime();
+  double HighestEndTime();
 
 private:
   ~SourceBufferList();

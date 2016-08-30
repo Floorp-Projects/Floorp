@@ -379,20 +379,28 @@ MediaSourceTrackDemuxer::BreakCycles()
 RefPtr<MediaSourceTrackDemuxer::SeekPromise>
 MediaSourceTrackDemuxer::DoSeek(media::TimeUnit aTime)
 {
+  typedef TrackBuffersManager::GetSampleResult Result;
+
   TimeIntervals buffered = mManager->Buffered(mType);
   // Fuzz factor represents a +/- threshold. So when seeking it allows the gap
   // to be twice as big as the fuzz value. We only want to allow EOS_FUZZ gap.
   buffered.SetFuzz(MediaSourceDemuxer::EOS_FUZZ / 2);
   TimeUnit seekTime = std::max(aTime - mPreRoll, TimeUnit::FromMicroseconds(0));
 
-  if (!buffered.Contains(seekTime)) {
-    if (!buffered.Contains(aTime)) {
+  if (mManager->IsEnded() && seekTime >= buffered.GetEnd()) {
+    // We're attempting to seek past the end time. Cap seekTime so that we seek
+    // to the last sample instead.
+    seekTime =
+      std::max(mManager->HighestStartTime(mType) - mPreRoll,
+               TimeUnit::FromMicroseconds(0));
+  }
+  if (!buffered.ContainsWithStrictEnd(seekTime)) {
+    if (!buffered.ContainsWithStrictEnd(aTime)) {
       // We don't have the data to seek to.
-      return SeekPromise::CreateAndReject(
-        mManager->IsEnded() ? DemuxerFailureReason::END_OF_STREAM :
-                              DemuxerFailureReason::WAITING_FOR_DATA, __func__);
+      return SeekPromise::CreateAndReject(DemuxerFailureReason::WAITING_FOR_DATA,
+                                          __func__);
     }
-    // Theorically we should reject the promise with WAITING_FOR_DATA,
+    // Theoretically we should reject the promise with WAITING_FOR_DATA,
     // however, to avoid unwanted regressions we assume that if at this time
     // we don't have the wanted data it won't come later.
     // Instead of using the pre-rolled time, use the earliest time available in
@@ -401,13 +409,13 @@ MediaSourceTrackDemuxer::DoSeek(media::TimeUnit aTime)
     MOZ_ASSERT(index != TimeIntervals::NoIndex);
     seekTime = buffered[index].mStart;
   }
-  seekTime = mManager->Seek(mType, seekTime, MediaSourceDemuxer::EOS_FUZZ / 2);
-  bool error;
+  seekTime = mManager->Seek(mType, seekTime, MediaSourceDemuxer::EOS_FUZZ);
+  Result result;
   RefPtr<MediaRawData> sample =
     mManager->GetSample(mType,
                         media::TimeUnit(),
-                        error);
-  MOZ_ASSERT(!error && sample);
+                        result);
+  MOZ_ASSERT(result != Result::ERROR && sample);
   mNextSample = Some(sample);
   mReset = false;
   {
@@ -421,33 +429,39 @@ MediaSourceTrackDemuxer::DoSeek(media::TimeUnit aTime)
 RefPtr<MediaSourceTrackDemuxer::SamplesPromise>
 MediaSourceTrackDemuxer::DoGetSamples(int32_t aNumSamples)
 {
+  typedef TrackBuffersManager::GetSampleResult Result;
+
   if (mReset) {
     // If a seek (or reset) was recently performed, we ensure that the data
     // we are about to retrieve is still available.
     TimeIntervals buffered = mManager->Buffered(mType);
-    buffered.SetFuzz(MediaSourceDemuxer::EOS_FUZZ);
+    buffered.SetFuzz(MediaSourceDemuxer::EOS_FUZZ / 2);
 
-    if (!buffered.Contains(TimeUnit::FromMicroseconds(0))) {
-      return SamplesPromise::CreateAndReject(
-        mManager->IsEnded() ? DemuxerFailureReason::END_OF_STREAM :
-                              DemuxerFailureReason::WAITING_FOR_DATA, __func__);
+    if (!buffered.Length() && mManager->IsEnded()) {
+      return SamplesPromise::CreateAndReject(DemuxerFailureReason::END_OF_STREAM,
+                                             __func__);
+    }
+    if (!buffered.ContainsWithStrictEnd(TimeUnit::FromMicroseconds(0))) {
+      return SamplesPromise::CreateAndReject(DemuxerFailureReason::WAITING_FOR_DATA,
+                                             __func__);
     }
     mReset = false;
   }
-  bool error = false;
   RefPtr<MediaRawData> sample;
   if (mNextSample) {
     sample = mNextSample.ref();
     mNextSample.reset();
   } else {
-    sample = mManager->GetSample(mType, MediaSourceDemuxer::EOS_FUZZ, error);
+    Result result;
+    sample = mManager->GetSample(mType, MediaSourceDemuxer::EOS_FUZZ, result);
     if (!sample) {
-      if (error) {
+      if (result == Result::ERROR) {
         return SamplesPromise::CreateAndReject(DemuxerFailureReason::DEMUXER_ERROR, __func__);
       }
       return SamplesPromise::CreateAndReject(
-        mManager->IsEnded() ? DemuxerFailureReason::END_OF_STREAM :
-                              DemuxerFailureReason::WAITING_FOR_DATA, __func__);
+        (result == Result::EOS && mManager->IsEnded())
+        ? DemuxerFailureReason::END_OF_STREAM
+        : DemuxerFailureReason::WAITING_FOR_DATA, __func__);
     }
   }
   RefPtr<SamplesHolder> samples = new SamplesHolder;
@@ -466,8 +480,8 @@ MediaSourceTrackDemuxer::DoSkipToNextRandomAccessPoint(media::TimeUnit aTimeThre
   uint32_t parsed = 0;
   // Ensure that the data we are about to skip to is still available.
   TimeIntervals buffered = mManager->Buffered(mType);
-  buffered.SetFuzz(MediaSourceDemuxer::EOS_FUZZ);
-  if (buffered.Contains(aTimeThreadshold)) {
+  buffered.SetFuzz(MediaSourceDemuxer::EOS_FUZZ / 2);
+  if (buffered.ContainsWithStrictEnd(aTimeThreadshold)) {
     bool found;
     parsed = mManager->SkipToNextRandomAccessPoint(mType,
                                                    aTimeThreadshold,
