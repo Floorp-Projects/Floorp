@@ -5,6 +5,7 @@
 
 <window id="presentation-window"
         onload="PresentationView.startup();"
+        onunload="PresentationView.stop();"
         windowtype="navigator:browser"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
