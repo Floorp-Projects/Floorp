@@ -153,7 +153,7 @@ Simulator* Simulator::Current() {
 }
 
 
-Simulator* Simulator::Create() {
+Simulator* Simulator::Create(JSContext* cx) {
   Decoder *decoder = js_new<vixl::Decoder>();
   if (!decoder)
     return nullptr;

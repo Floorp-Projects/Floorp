@@ -8,9 +8,15 @@ const Memory = WebAssembly.Memory;
 const Table = WebAssembly.Table;
 
 const mem1Page = new Memory({initial:1});
+const mem1PageMax1 = new Memory({initial:1, maximum: 1});
 const mem2Page = new Memory({initial:2});
+const mem2PageMax2 = new Memory({initial:2, maximum: 2});
+const mem2PageMax3 = new Memory({initial:2, maximum: 3});
+const mem2PageMax4 = new Memory({initial:2, maximum: 4});
 const mem3Page = new Memory({initial:3});
+const mem3PageMax3 = new Memory({initial:3, maximum: 3});
 const mem4Page = new Memory({initial:4});
+const mem4PageMax4 = new Memory({initial:4, maximum: 4});
 const tab1Elem = new Table({initial:1, element:"anyfunc"});
 const tab2Elem = new Table({initial:2, element:"anyfunc"});
 const tab3Elem = new Table({initial:3, element:"anyfunc"});
@@ -19,6 +25,8 @@ const tab4Elem = new Table({initial:4, element:"anyfunc"});
 // Explicitly opt into the new binary format for imports and exports until it
 // is used by default everywhere.
 const textToBinary = str => wasmTextToBinary(str, 'new-format');
+
+assertErrorMessage(() => new Memory({initial:2, maximum:1}), TypeError, /bad Memory maximum size/);
 
 const m1 = new Module(textToBinary('(module (import "foo" "bar") (import "baz" "quux"))'));
 assertErrorMessage(() => new Instance(m1), TypeError, /no import object given/);
@@ -33,9 +41,15 @@ assertErrorMessage(() => new Instance(m2), TypeError, /no import object given/);
 assertErrorMessage(() => new Instance(m2, {x:null}), TypeError, /import object field is not an Object/);
 assertErrorMessage(() => new Instance(m2, {x:{y:{}}}), TypeError, /import object field is not a Memory/);
 assertErrorMessage(() => new Instance(m2, {x:{y:mem1Page}}), TypeError, /imported Memory with incompatible size/);
+assertErrorMessage(() => new Instance(m2, {x:{y:mem1PageMax1}}), TypeError, /imported Memory with incompatible size/);
 assertErrorMessage(() => new Instance(m2, {x:{y:mem4Page}}), TypeError, /imported Memory with incompatible size/);
-assertEq(new Instance(m2, {x:{y:mem2Page}}) instanceof Instance, true);
-assertEq(new Instance(m2, {x:{y:mem3Page}}) instanceof Instance, true);
+assertErrorMessage(() => new Instance(m2, {x:{y:mem4PageMax4}}), TypeError, /imported Memory with incompatible size/);
+assertErrorMessage(() => new Instance(m2, {x:{y:mem2Page}}), TypeError, /imported Memory with incompatible size/);
+assertEq(new Instance(m2, {x:{y:mem2PageMax2}}) instanceof Instance, true);
+assertErrorMessage(() => new Instance(m2, {x:{y:mem3Page}}), TypeError, /imported Memory with incompatible size/);
+assertEq(new Instance(m2, {x:{y:mem3PageMax3}}) instanceof Instance, true);
+assertEq(new Instance(m2, {x:{y:mem2PageMax3}}) instanceof Instance, true);
+assertErrorMessage(() => new Instance(m2, {x:{y:mem2PageMax4}}), TypeError, /imported Memory with incompatible size/);
 
 const m3 = new Module(textToBinary('(module (import "foo" "bar" (memory 1 1)) (import "baz" "quux"))'));
 assertErrorMessage(() => new Instance(m3), TypeError, /no import object given/);
@@ -43,7 +57,8 @@ assertErrorMessage(() => new Instance(m3, {foo:null}), TypeError, /import object
 assertErrorMessage(() => new Instance(m3, {foo:{bar:{}}}), TypeError, /import object field is not a Memory/);
 assertErrorMessage(() => new Instance(m3, {foo:{bar:mem1Page}, baz:null}), TypeError, /import object field is not an Object/);
 assertErrorMessage(() => new Instance(m3, {foo:{bar:mem1Page}, baz:{quux:mem1Page}}), TypeError, /import object field is not a Function/);
-assertEq(new Instance(m3, {foo:{bar:mem1Page}, baz:{quux:()=>{}}}) instanceof Instance, true);
+assertErrorMessage(() => new Instance(m3, {foo:{bar:mem1Page}, baz:{quux:()=>{}}}), TypeError, /imported Memory with incompatible size/);
+assertEq(new Instance(m3, {foo:{bar:mem1PageMax1}, baz:{quux:()=>{}}}) instanceof Instance, true);
 
 const m4 = new Module(textToBinary('(module (import "baz" "quux") (import "foo" "bar" (memory 1 1)))'));
 assertErrorMessage(() => new Instance(m4), TypeError, /no import object given/);
@@ -51,7 +66,8 @@ assertErrorMessage(() => new Instance(m4, {baz:null}), TypeError, /import object
 assertErrorMessage(() => new Instance(m4, {baz:{quux:{}}}), TypeError, /import object field is not a Function/);
 assertErrorMessage(() => new Instance(m4, {baz:{quux:()=>{}}, foo:null}), TypeError, /import object field is not an Object/);
 assertErrorMessage(() => new Instance(m4, {baz:{quux:()=>{}}, foo:{bar:()=>{}}}), TypeError, /import object field is not a Memory/);
-assertEq(new Instance(m3, {baz:{quux:()=>{}}, foo:{bar:mem1Page}}) instanceof Instance, true);
+assertErrorMessage(() => new Instance(m4, {baz:{quux:()=>{}}, foo:{bar:mem1Page}}), TypeError, /imported Memory with incompatible size/);
+assertEq(new Instance(m3, {baz:{quux:()=>{}}, foo:{bar:mem1PageMax1}}) instanceof Instance, true);
 
 const m5 = new Module(textToBinary('(module (import "a" "b" (memory 2)))'));
 assertErrorMessage(() => new Instance(m5, {a:{b:mem1Page}}), TypeError, /imported Memory with incompatible size/);
@@ -125,7 +141,7 @@ var arr = [];
 var importObj = {
     get foo() {
         arr.push("foo");
-        return { get bar() { arr.push("bar"); return new WebAssembly.Memory({initial:1}) } }
+        return { get bar() { arr.push("bar"); return new WebAssembly.Memory({initial:1, maximum:1}) } }
     },
     get baz() {
         arr.push("baz");
@@ -264,7 +280,7 @@ assertEq(e.tbl1.get(0), e.tbl1.get(3));
 // Re-exports and Identity:
 
 var code = textToBinary('(module (import "a" "b" (memory 1 1)) (export "foo" memory) (export "bar" memory))');
-var mem = new Memory({initial:1});
+var mem = new Memory({initial:1, maximum:1});
 var e = new Instance(new Module(code), {a:{b:mem}}).exports;
 assertEq(mem, e.foo);
 assertEq(mem, e.bar);
@@ -320,7 +336,7 @@ var m = new Module(textToBinary(`
             (i32.load8_u (get_local $p)))
         (export "get" $get))
 `));
-var mem = new Memory({initial:1});
+var mem = new Memory({initial:1, maximum:1});
 var {get} = new Instance(m, {a:{b:mem}}).exports;
 assertEq(get(0), 0xa);
 assertEq(get(1), 0xb);
