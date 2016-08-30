@@ -1260,19 +1260,11 @@ MediaDecoderStateMachine::StartDecoding()
   MOZ_ASSERT(OnTaskQueue());
   MOZ_ASSERT(mState == DECODER_STATE_DECODING);
 
-  if (mDecodingFirstFrame && mSentFirstFrameLoadedEvent) {
-    // We're resuming from dormant state, so we don't need to request
-    // the first samples in order to determine the media start time,
-    // we have the start time from last time we loaded.
-    // FinishDecodeFirstFrame will be launched upon completion of the seek when
-    // we have data ready to play.
-    MOZ_ASSERT(mQueuedSeek.Exists() && mSentFirstFrameLoadedEvent,
-               "Return from dormant must have queued seek");
-
-    if (mQueuedSeek.Exists()) {
-      InitiateSeek(Move(mQueuedSeek));
-      return;
-    }
+  // Handle the pending seek now if we've decoded first frames. Otherwise it
+  // will be handled after decoding first frames.
+  if (mSentFirstFrameLoadedEvent && mQueuedSeek.Exists()) {
+    InitiateSeek(Move(mQueuedSeek));
+    return;
   }
 
   if (CheckIfDecodeComplete()) {
