@@ -33,6 +33,7 @@ var requests = [];
 var listeners = [];
 
 function NotificationCallbacks(isPrivate) {
+  this.originAttributes.privateBrowsingId = isPrivate ? 1 : 0;
   this.usePrivateBrowsing = isPrivate;
 }
 
@@ -48,7 +49,9 @@ NotificationCallbacks.prototype = {
       return this;
     throw Cr.NS_ERROR_NO_INTERFACE;
   },
-  originAttributes: {}
+  originAttributes: {
+    privateBrowsingId: 0
+  }
 };
 
 var gImgPath = 'http://localhost:' + server.identity.primaryPort + '/image.png';
@@ -56,11 +59,11 @@ var gImgPath = 'http://localhost:' + server.identity.primaryPort + '/image.png';
 function setup_chan(path, isPrivate, callback) {
   var uri = NetUtil.newURI(gImgPath);
   var securityFlags = Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL;
-  if (isPrivate) {
-    securityFlags |= Ci.nsILoadInfo.SEC_FORCE_PRIVATE_BROWSING;
-  }
-  var chan =  NetUtil.newChannel({uri: uri, loadUsingSystemPrincipal: true,
-                                  securityFlags: securityFlags});
+  var principal = Services.scriptSecurityManager
+                          .createCodebasePrincipal(uri, {privateBrowsingId: isPrivate ? 1 : 0});
+  var chan =  NetUtil.newChannel({uri: uri, loadingPrincipal: principal,
+                                  securityFlags: securityFlags,
+                                  contentPolicyType: Ci.nsIContentPolicy.TYPE_INTERNAL_IMAGE});
   chan.notificationCallbacks = new NotificationCallbacks(isPrivate);
   var channelListener = new ChannelListener();
   chan.asyncOpen2(channelListener);

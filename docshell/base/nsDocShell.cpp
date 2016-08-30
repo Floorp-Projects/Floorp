@@ -10857,10 +10857,6 @@ nsDocShell::DoURILoad(nsIURI* aURI,
     securityFlags |= nsILoadInfo::SEC_SANDBOXED;
   }
 
-  if (UsePrivateBrowsing()) {
-    securityFlags |= nsILoadInfo::SEC_FORCE_PRIVATE_BROWSING;
-  }
-
   nsCOMPtr<nsILoadInfo> loadInfo =
     (aContentPolicyType == nsIContentPolicy::TYPE_DOCUMENT) ?
       new LoadInfo(loadingWindow, triggeringPrincipal,
