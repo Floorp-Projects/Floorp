@@ -22,4 +22,4 @@
 # changes to stick? As of bug 928195, this shouldn't be necessary! Please
 # don't change CLOBBER for WebIDL changes any more.
 
-Bug 1287426 - Clobber required because of Linux Chromium sandbox file moves.
+Bug 1288460 requires a clobber due to bug 1298779.
