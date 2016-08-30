@@ -175,7 +175,8 @@ module.exports = createClass({
       if (functionDisplayName) {
         elements.push(
           dom.span({ className: "frame-link-function-display-name" },
-            functionDisplayName)
+            functionDisplayName),
+          " "
         );
       }
     }
@@ -242,7 +243,7 @@ module.exports = createClass({
     elements.push(sourceEl);
 
     if (showHost && host) {
-      elements.push(dom.span({ className: "frame-link-host" }, host));
+      elements.push(" ", dom.span({ className: "frame-link-host" }, host));
     }
 
     return dom.span(attributes, ...elements);
