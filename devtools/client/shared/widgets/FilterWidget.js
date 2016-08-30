@@ -688,7 +688,7 @@ CSSFilterEditorWidget.prototype = {
         this.filtersList.querySelector(".filter:last-of-type input");
     if (lastInput) {
       lastInput.focus();
-      if (lastInput.type == "text") {
+      if (lastInput.type === "text") {
         // move cursor to end of input
         const end = lastInput.value.length;
         lastInput.setSelectionRange(end, end);
