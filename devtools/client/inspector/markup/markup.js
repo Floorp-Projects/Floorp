@@ -52,20 +52,15 @@ const {KeyShortcuts} = require("devtools/client/shared/key-shortcuts");
 const {template} = require("devtools/shared/gcli/templater");
 const nodeConstants = require("devtools/shared/dom-node-constants");
 const nodeFilterConstants = require("devtools/shared/dom-node-filter-constants");
-/* eslint-disable mozilla/reject-some-requires */
-const {XPCOMUtils} = require("resource://gre/modules/XPCOMUtils.jsm");
-/* eslint-enable mozilla/reject-some-requires */
 const {getCssProperties} = require("devtools/shared/fronts/css-properties");
 const {KeyCodes} = require("devtools/client/shared/keycodes");
 
 const {AutocompletePopup} = require("devtools/client/shared/autocomplete-popup");
 const clipboardHelper = require("devtools/shared/platform/clipboard");
 
+const {PluralForm} = require("devtools/shared/plural-form");
 const {LocalizationHelper} = require("devtools/shared/l10n");
 const INSPECTOR_L10N = new LocalizationHelper("devtools/locale/inspector.properties");
-
-XPCOMUtils.defineLazyModuleGetter(this, "PluralForm",
-  "resource://gre/modules/PluralForm.jsm");
 
 /**
  * Vocabulary for the purposes of this file:

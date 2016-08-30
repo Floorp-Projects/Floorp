@@ -290,55 +290,63 @@ static const /*SSL3ClientCertificateType */ PRUint8 certificate_types[] = {
 CERTDistNames *ssl3_server_ca_list = NULL;
 static SSL3Statistics ssl3stats;
 
-/* indexed by SSL3BulkCipher */
+/* Record protection algorithms, indexed by SSL3BulkCipher.
+ *
+ * The |max_records| field (|mr| below) is set to a number that is higher than
+ * recommended in some literature (esp. TLS 1.3) because we currently abort the
+ * connection when this limit is reached and we want to ensure that we only
+ * rarely hit this limit.  See bug 1268745 for details.
+ */
+#define MR_MAX RECORD_SEQ_MAX  /* 2^48-1 */
+#define MR_128 (0x5aULL << 28) /* For AES and similar. */
+#define MR_LOW (1ULL << 20)    /* For weak ciphers. */
 /* clang-format off */
 static const ssl3BulkCipherDef bulk_cipher_defs[] = {
     /*                                    |--------- Lengths ---------| */
-    /* cipher             calg            k  s  type         i  b  t  n */
-    /*                                    e  e               v  l  a  o */
-    /* oid                short_name      y  c               |  o  g  n */
-    /*                                    |  r               |  c  |  c */
-    /*                                    |  e               |  k  |  e */
-    /*                                    |  t               |  |  |  | */
+    /* cipher             calg            :  s                        : */
+    /*                                    :  e                  b     n */
+    /* oid                short_name mr   :                     l     o */
+    /*                                    k  r                  o  t  n */
+    /*                                    e  e               i  c  a  c */
+    /*                                    y  t  type         v  k  g  e */
     {cipher_null,         calg_null,      0, 0, type_stream, 0, 0, 0, 0,
-     SEC_OID_NULL_CIPHER, "NULL"},
+     SEC_OID_NULL_CIPHER, "NULL", MR_MAX},
     {cipher_rc4,          calg_rc4,      16,16, type_stream, 0, 0, 0, 0,
-     SEC_OID_RC4,         "RC4"},
+     SEC_OID_RC4,         "RC4", MR_LOW},
     {cipher_rc4_40,       calg_rc4,      16, 5, type_stream, 0, 0, 0, 0,
-     SEC_OID_RC4_40,      "RC4-40"},
+     SEC_OID_RC4_40,      "RC4-40", MR_LOW},
     {cipher_rc4_56,       calg_rc4,      16, 7, type_stream, 0, 0, 0, 0,
-     SEC_OID_RC4_56,      "RC4-56"},
+     SEC_OID_RC4_56,      "RC4-56", MR_LOW},
     {cipher_rc2,          calg_rc2,      16,16, type_block,  8, 8, 0, 0,
-     SEC_OID_RC2_CBC,     "RC2-CBC"},
+     SEC_OID_RC2_CBC,     "RC2-CBC", MR_LOW},
     {cipher_rc2_40,       calg_rc2,      16, 5, type_block,  8, 8, 0, 0,
-     SEC_OID_RC2_40_CBC,  "RC2-CBC-40"},
+     SEC_OID_RC2_40_CBC,  "RC2-CBC-40", MR_LOW},
     {cipher_des,          calg_des,       8, 8, type_block,  8, 8, 0, 0,
-     SEC_OID_DES_CBC,     "DES-CBC"},
+     SEC_OID_DES_CBC,     "DES-CBC", MR_LOW},
     {cipher_3des,         calg_3des,     24,24, type_block,  8, 8, 0, 0,
-     SEC_OID_DES_EDE3_CBC, "3DES-EDE-CBC"},
-    {cipher_des40,        calg_des,       8, 5, type_block,  8, 8, 0, 0,
-     SEC_OID_DES_40_CBC,  "DES-CBC-40"},
-    {cipher_idea,         calg_idea,     16,16, type_block,  8, 8, 0, 0,
-     SEC_OID_IDEA_CBC,    "IDEA-CBC"},
+     SEC_OID_DES_EDE3_CBC, "3DES-EDE-CBC", MR_LOW},
     {cipher_aes_128,      calg_aes,      16,16, type_block, 16,16, 0, 0,
-     SEC_OID_AES_128_CBC, "AES-128"},
+     SEC_OID_AES_128_CBC, "AES-128", MR_128},
     {cipher_aes_256,      calg_aes,      32,32, type_block, 16,16, 0, 0,
-     SEC_OID_AES_256_CBC, "AES-256"},
+     SEC_OID_AES_256_CBC, "AES-256", MR_128},
     {cipher_camellia_128, calg_camellia, 16,16, type_block, 16,16, 0, 0,
-     SEC_OID_CAMELLIA_128_CBC, "Camellia-128"},
+     SEC_OID_CAMELLIA_128_CBC, "Camellia-128", MR_128},
     {cipher_camellia_256, calg_camellia, 32,32, type_block, 16,16, 0, 0,
-     SEC_OID_CAMELLIA_256_CBC, "Camellia-256"},
+     SEC_OID_CAMELLIA_256_CBC, "Camellia-256", MR_128},
     {cipher_seed,         calg_seed,     16,16, type_block, 16,16, 0, 0,
-     SEC_OID_SEED_CBC,    "SEED-CBC"},
+     SEC_OID_SEED_CBC,    "SEED-CBC", MR_128},
     {cipher_aes_128_gcm,  calg_aes_gcm,  16,16, type_aead,   4, 0,16, 8,
-     SEC_OID_AES_128_GCM, "AES-128-GCM"},
+     SEC_OID_AES_128_GCM, "AES-128-GCM", MR_128},
     {cipher_aes_256_gcm,  calg_aes_gcm,  32,32, type_aead,   4, 0,16, 8,
-     SEC_OID_AES_256_GCM, "AES-256-GCM"},
+     SEC_OID_AES_256_GCM, "AES-256-GCM", MR_128},
     {cipher_chacha20,     calg_chacha20, 32,32, type_aead,  12, 0,16, 0,
-     SEC_OID_CHACHA20_POLY1305, "ChaCha20-Poly1305"},
+     SEC_OID_CHACHA20_POLY1305, "ChaCha20-Poly1305", MR_MAX},
     {cipher_missing,      calg_null,      0, 0, type_stream, 0, 0, 0, 0,
-     SEC_OID_UNKNOWN,     "missing"},
+     SEC_OID_UNKNOWN,     "missing", 0U},
 };
+#undef MR_MAX
+#undef MR_128
+#undef MR_LOW
 
 static const ssl3KEADef kea_defs[] =
 { /* indexed by SSL3KeyExchangeAlgorithm */
@@ -383,41 +391,15 @@ static const ssl3CipherSuiteDef cipher_suite_defs[] =
     {TLS_RSA_WITH_RC4_128_SHA,      cipher_rc4,    mac_sha, kea_rsa, ssl_hash_none},
     {TLS_RSA_EXPORT_WITH_RC2_CBC_40_MD5,
                                     cipher_rc2_40, mac_md5, kea_rsa_export, ssl_hash_none},
-#if 0 /* not implemented */
-    {TLS_RSA_WITH_IDEA_CBC_SHA,     cipher_idea,   mac_sha, kea_rsa, ssl_hash_none},
-    {TLS_RSA_EXPORT_WITH_DES40_CBC_SHA,
-                                    cipher_des40,  mac_sha, kea_rsa_export, ssl_hash_none},
-#endif
     {TLS_RSA_WITH_DES_CBC_SHA,      cipher_des,    mac_sha, kea_rsa, ssl_hash_none},
     {TLS_RSA_WITH_3DES_EDE_CBC_SHA, cipher_3des,   mac_sha, kea_rsa, ssl_hash_none},
     {TLS_DHE_DSS_WITH_DES_CBC_SHA,  cipher_des,    mac_sha, kea_dhe_dss, ssl_hash_none},
     {TLS_DHE_DSS_WITH_3DES_EDE_CBC_SHA,
                                     cipher_3des,   mac_sha, kea_dhe_dss, ssl_hash_none},
     {TLS_DHE_DSS_WITH_RC4_128_SHA,  cipher_rc4,    mac_sha, kea_dhe_dss, ssl_hash_none},
-#if 0 /* not implemented */
-    {TLS_DH_DSS_EXPORT_WITH_DES40_CBC_SHA,
-                                    cipher_des40,  mac_sha, kea_dh_dss_export, ssl_hash_none},
-    {TLS_DH_DSS_DES_CBC_SHA,        cipher_des,    mac_sha, kea_dh_dss, ssl_hash_none},
-    {TLS_DH_DSS_3DES_CBC_SHA,       cipher_3des,   mac_sha, kea_dh_dss, ssl_hash_none},
-    {TLS_DH_RSA_EXPORT_WITH_DES40_CBC_SHA,
-                                    cipher_des40,  mac_sha, kea_dh_rsa_export, ssl_hash_none},
-    {TLS_DH_RSA_DES_CBC_SHA,        cipher_des,    mac_sha, kea_dh_rsa, ssl_hash_none},
-    {TLS_DH_RSA_3DES_CBC_SHA,       cipher_3des,   mac_sha, kea_dh_rsa, ssl_hash_none},
-    {TLS_DHE_DSS_EXPORT_WITH_DES40_CBC_SHA,
-                                    cipher_des40,  mac_sha, kea_dh_dss_export, ssl_hash_none},
-    {TLS_DHE_RSA_EXPORT_WITH_DES40_CBC_SHA,
-                                    cipher_des40,  mac_sha, kea_dh_rsa_export, ssl_hash_none},
-#endif
     {TLS_DHE_RSA_WITH_DES_CBC_SHA,  cipher_des,    mac_sha, kea_dhe_rsa, ssl_hash_none},
     {TLS_DHE_RSA_WITH_3DES_EDE_CBC_SHA,
                                     cipher_3des,   mac_sha, kea_dhe_rsa, ssl_hash_none},
-#if 0
-    {SSL_DH_ANON_EXPORT_RC4_40_MD5, cipher_rc4_40, mac_md5, kea_dh_anon_export, ssl_hash_none},
-    {TLS_DH_anon_EXPORT_WITH_DES40_CBC_SHA,
-                                    cipher_des40,  mac_sha, kea_dh_anon_export, ssl_hash_none},
-    {TLS_DH_anon_WITH_DES_CBC_SHA,  cipher_des,    mac_sha, kea_dh_anon, ssl_hash_none},
-    {TLS_DH_anon_WITH_3DES_CBC_SHA, cipher_3des,   mac_sha, kea_dh_anon, ssl_hash_none},
-#endif
 
 
 /* New TLS cipher suites */
@@ -432,14 +414,6 @@ static const ssl3CipherSuiteDef cipher_suite_defs[] =
     {TLS_DHE_RSA_WITH_AES_256_CBC_SHA,  cipher_aes_256, mac_sha, kea_dhe_rsa, ssl_hash_none},
     {TLS_DHE_RSA_WITH_AES_256_CBC_SHA256, cipher_aes_256, hmac_sha256, kea_dhe_rsa, ssl_hash_sha256},
     {TLS_DHE_RSA_WITH_AES_256_GCM_SHA384, cipher_aes_256_gcm, mac_aead, kea_dhe_rsa, ssl_hash_sha384},
-#if 0
-    {TLS_DH_DSS_WITH_AES_128_CBC_SHA,   cipher_aes_128, mac_sha, kea_dh_dss, ssl_hash_none},
-    {TLS_DH_RSA_WITH_AES_128_CBC_SHA,   cipher_aes_128, mac_sha, kea_dh_rsa, ssl_hash_none},
-    {TLS_DH_anon_WITH_AES_128_CBC_SHA,  cipher_aes_128, mac_sha, kea_dh_anon, ssl_hash_none},
-    {TLS_DH_DSS_WITH_AES_256_CBC_SHA,   cipher_aes_256, mac_sha, kea_dh_dss, ssl_hash_none},
-    {TLS_DH_RSA_WITH_AES_256_CBC_SHA,   cipher_aes_256, mac_sha, kea_dh_rsa, ssl_hash_none},
-    {TLS_DH_anon_WITH_AES_256_CBC_SHA,  cipher_aes_256, mac_sha, kea_dh_anon, ssl_hash_none},
-#endif
 
     {TLS_RSA_WITH_SEED_CBC_SHA,     cipher_seed,   mac_sha, kea_rsa, ssl_hash_none},
 
@@ -1574,14 +1548,6 @@ ssl3_ComputeDHKeyHash(sslSocket *ss, SSLHashType hashAlg, SSL3Hashes *hashes,
     return rv;
 }
 
-void
-ssl3_BumpSequenceNumber(SSL3SequenceNumber *num)
-{
-    num->low++;
-    if (num->low == 0)
-        num->high++;
-}
-
 /* Called twice, only from ssl3_DestroyCipherSpec (immediately below). */
 static void
 ssl3_CleanupKeyMaterial(ssl3KeyMaterial *mat)
@@ -2076,21 +2042,21 @@ ssl3_ParamFromIV(CK_MECHANISM_TYPE mtype, SECItem *iv, CK_ULONG ulEffectiveBits)
  */
 static unsigned int
 ssl3_BuildRecordPseudoHeader(unsigned char *out,
-                             SSL3SequenceNumber seq_num,
+                             sslSequenceNumber seq_num,
                              SSL3ContentType type,
                              PRBool includesVersion,
                              SSL3ProtocolVersion version,
                              PRBool isDTLS,
                              int length)
 {
-    out[0] = (unsigned char)(seq_num.high >> 24);
-    out[1] = (unsigned char)(seq_num.high >> 16);
-    out[2] = (unsigned char)(seq_num.high >> 8);
-    out[3] = (unsigned char)(seq_num.high >> 0);
-    out[4] = (unsigned char)(seq_num.low >> 24);
-    out[5] = (unsigned char)(seq_num.low >> 16);
-    out[6] = (unsigned char)(seq_num.low >> 8);
-    out[7] = (unsigned char)(seq_num.low >> 0);
+    out[0] = (unsigned char)(seq_num >> 56);
+    out[1] = (unsigned char)(seq_num >> 48);
+    out[2] = (unsigned char)(seq_num >> 40);
+    out[3] = (unsigned char)(seq_num >> 32);
+    out[4] = (unsigned char)(seq_num >> 24);
+    out[5] = (unsigned char)(seq_num >> 16);
+    out[6] = (unsigned char)(seq_num >> 8);
+    out[7] = (unsigned char)(seq_num >> 0);
     out[8] = type;
 
     /* SSL3 MAC doesn't include the record's version field. */
@@ -2599,7 +2565,7 @@ ssl3_InitPendingCipherSpec(sslSocket *ss, PK11SymKey *pms)
 
     /* Generic behaviors -- common to all crypto methods */
     if (!IS_DTLS(ss)) {
-        pwSpec->read_seq_num.high = pwSpec->write_seq_num.high = 0;
+        pwSpec->read_seq_num = pwSpec->write_seq_num = 0;
     } else {
         if (cwSpec->epoch == PR_UINT16_MAX) {
             /* The problem here is that we have rehandshaked too many
@@ -2612,12 +2578,11 @@ ssl3_InitPendingCipherSpec(sslSocket *ss, PK11SymKey *pms)
         }
         /* The sequence number has the high 16 bits as the epoch. */
         pwSpec->epoch = cwSpec->epoch + 1;
-        pwSpec->read_seq_num.high = pwSpec->write_seq_num.high =
-            pwSpec->epoch << 16;
+        pwSpec->read_seq_num = pwSpec->write_seq_num =
+            (sslSequenceNumber)pwSpec->epoch << 48;
 
         dtls_InitRecvdRecords(&pwSpec->recvdRecords);
     }
-    pwSpec->read_seq_num.low = pwSpec->write_seq_num.low = 0;
 
 done:
     ssl_ReleaseSpecWriteLock(ss); /******************************/
@@ -2930,9 +2895,18 @@ ssl3_CompressMACEncryptRecord(ssl3CipherSpec *cwSpec,
     int cipherBytes = 0;
     unsigned char pseudoHeader[13];
     unsigned int pseudoHeaderLen;
+    PRUint8 *b;
 
     cipher_def = cwSpec->cipher_def;
     headerLen = isDTLS ? DTLS_RECORD_HEADER_LENGTH : SSL3_RECORD_HEADER_LENGTH;
+
+    PORT_Assert(cipher_def->max_records <= RECORD_SEQ_MAX);
+    if ((cwSpec->write_seq_num & RECORD_SEQ_MAX) >= cipher_def->max_records) {
+        SSL_TRC(3, ("%d: SSL[-]: write sequence number at limit 0x%0llx",
+                    SSL_GETPID(), cwSpec->write_seq_num));
+        PORT_SetError(SSL_ERROR_TOO_MANY_RECORDS);
+        return SECFailure;
+    }
 
     if (cipher_def->type == type_block &&
         cwSpec->version >= SSL_LIBRARY_VERSION_TLS_1_1) {
@@ -3090,23 +3064,14 @@ ssl3_CompressMACEncryptRecord(ssl3CipherSpec *cwSpec,
     PORT_Assert(cipherBytes <= MAX_FRAGMENT_LENGTH + 1024);
 
     wrBuf->len = cipherBytes + headerLen;
-    wrBuf->buf[0] = type;
+    b = &wrBuf->buf[0];
+    b = ssl_EncodeUintX(type, 1, b);
     if (isDTLS) {
         SSL3ProtocolVersion version;
 
         version = dtls_TLSVersionToDTLSVersion(cwSpec->version);
-        wrBuf->buf[1] = MSB(version);
-        wrBuf->buf[2] = LSB(version);
-        wrBuf->buf[3] = (unsigned char)(cwSpec->write_seq_num.high >> 24);
-        wrBuf->buf[4] = (unsigned char)(cwSpec->write_seq_num.high >> 16);
-        wrBuf->buf[5] = (unsigned char)(cwSpec->write_seq_num.high >> 8);
-        wrBuf->buf[6] = (unsigned char)(cwSpec->write_seq_num.high >> 0);
-        wrBuf->buf[7] = (unsigned char)(cwSpec->write_seq_num.low >> 24);
-        wrBuf->buf[8] = (unsigned char)(cwSpec->write_seq_num.low >> 16);
-        wrBuf->buf[9] = (unsigned char)(cwSpec->write_seq_num.low >> 8);
-        wrBuf->buf[10] = (unsigned char)(cwSpec->write_seq_num.low >> 0);
-        wrBuf->buf[11] = MSB(cipherBytes);
-        wrBuf->buf[12] = LSB(cipherBytes);
+        b = ssl_EncodeUintX(version, 2, b);
+        b = ssl_EncodeUintX(cwSpec->write_seq_num, 8, b);
     } else {
         SSL3ProtocolVersion version = cwSpec->version;
 
@@ -3114,13 +3079,11 @@ ssl3_CompressMACEncryptRecord(ssl3CipherSpec *cwSpec,
             version = PR_MIN(SSL_LIBRARY_VERSION_TLS_1_0, version);
         }
 
-        wrBuf->buf[1] = MSB(version);
-        wrBuf->buf[2] = LSB(version);
-        wrBuf->buf[3] = MSB(cipherBytes);
-        wrBuf->buf[4] = LSB(cipherBytes);
+        b = ssl_EncodeUintX(version, 2, b);
     }
+    (void)ssl_EncodeUintX(cipherBytes, 2, b);
 
-    ssl3_BumpSequenceNumber(&cwSpec->write_seq_num);
+    ++cwSpec->write_seq_num;
 
     return SECSuccess;
 }
@@ -4980,16 +4943,16 @@ ssl3_ConsumeHandshakeVariable(sslSocket *ss, SECItem *i, PRInt32 bytes,
     return SECSuccess;
 }
 
-/* Helper function to encode a uint32 into a buffer */
+/* Helper function to encode an unsigned integer into a buffer. */
 PRUint8 *
-ssl_EncodeUintX(PRUint32 value, unsigned int bytes, PRUint8 *to)
+ssl_EncodeUintX(PRUint64 value, unsigned int bytes, PRUint8 *to)
 {
-    PRUint32 encoded;
+    PRUint64 encoded;
 
-    PORT_Assert(bytes > 0 && bytes <= 4);
+    PORT_Assert(bytes > 0 && bytes <= sizeof(encoded));
 
-    encoded = PR_htonl(value);
-    memcpy(to, ((unsigned char *)(&encoded)) + (4 - bytes), bytes);
+    encoded = PR_htonll(value);
+    memcpy(to, ((unsigned char *)(&encoded)) + (sizeof(encoded) - bytes), bytes);
     return to + bytes;
 }
 
@@ -13522,7 +13485,7 @@ ssl3_HandleRecord(sslSocket *ss, SSL3Ciphertext *cText, sslBuffer *databuf)
 {
     SECStatus rv;
     PRBool isTLS;
-    PRUint64 dtls_seq_num = 0;
+    sslSequenceNumber seq_num = 0;
     ssl3CipherSpec *crSpec;
     SSL3ContentType rType;
     sslBuffer *plaintext;
@@ -13561,12 +13524,21 @@ ssl3_HandleRecord(sslSocket *ss, SSL3Ciphertext *cText, sslBuffer *databuf)
     isTLS = (PRBool)(crSpec->version > SSL_LIBRARY_VERSION_3_0);
 
     if (IS_DTLS(ss)) {
-        if (!dtls_IsRelevant(ss, crSpec, cText, &dtls_seq_num)) {
+        if (!dtls_IsRelevant(ss, crSpec, cText, &seq_num)) {
             ssl_ReleaseSpecReadLock(ss); /*****************************/
             databuf->len = 0;            /* Needed to ensure data not left around */
             /* Drop the packet, but first see if retransmission is needed. */
             return dtls_MaybeRetransmitHandshake(ss, cText);
         }
+    } else {
+        seq_num = crSpec->read_seq_num + 1;
+    }
+    if (seq_num >= crSpec->cipher_def->max_records) {
+        ssl_ReleaseSpecReadLock(ss); /*****************************/
+        SSL_TRC(3, ("%d: SSL[%d]: read sequence number at limit 0x%0llx",
+                    SSL_GETPID(), ss->fd, seq_num));
+        PORT_SetError(SSL_ERROR_TOO_MANY_RECORDS);
+        return SECFailure;
     }
 
     /* If we will be decompressing the buffer we need to decrypt somewhere
@@ -13623,10 +13595,9 @@ ssl3_HandleRecord(sslSocket *ss, SSL3Ciphertext *cText, sslBuffer *databuf)
     }
 
     /* SECSuccess */
-    if (!IS_DTLS(ss)) {
-        ssl3_BumpSequenceNumber(&crSpec->read_seq_num);
-    } else {
-        dtls_RecordSetRecvd(&crSpec->recvdRecords, dtls_seq_num);
+    crSpec->read_seq_num = seq_num;
+    if (IS_DTLS(ss)) {
+        dtls_RecordSetRecvd(&crSpec->recvdRecords, seq_num);
     }
 
     ssl_ReleaseSpecReadLock(ss); /*****************************************/
@@ -13798,13 +13769,10 @@ ssl3_InitCipherSpec(ssl3CipherSpec *spec)
     spec->server.write_mac_key = NULL;
     spec->server.write_mac_context = NULL;
 
-    spec->write_seq_num.high = 0;
-    spec->write_seq_num.low = 0;
-
-    spec->read_seq_num.high = 0;
-    spec->read_seq_num.low = 0;
-
+    spec->write_seq_num = 0;
+    spec->read_seq_num = 0;
     spec->epoch = 0;
+
     spec->refCt = 128; /* Arbitrarily high number to prevent
                         * non-TLS 1.3 cipherSpecs from being
                         * GCed. This will be overwritten with

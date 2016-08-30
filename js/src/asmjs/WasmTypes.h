@@ -810,9 +810,9 @@ class BoundsCheck
 
 // Summarizes a heap access made by wasm code that needs to be patched later
 // and/or looked up by the wasm signal handlers. Different architectures need
-// to know different things (x64: offset and length, ARM: where to patch in
-// heap length, x86: where to patch in heap length and base).
-
+// to know different things (x64: intruction offset, wrapping and failure
+// behavior, ARM: nothing, x86: offset of end of instruction (heap length to
+// patch is last 4 bytes of instruction)).
 #if defined(JS_CODEGEN_X86)
 class MemoryAccess
 {
@@ -868,7 +868,7 @@ class MemoryAccess
 #elif defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_ARM64) || \
       defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64) || \
       defined(JS_CODEGEN_NONE)
-// Nothing! We just want bounds checks on these platforms.
+// Nothing! We don't patch or emulate memory accesses on these platforms.
 class MemoryAccess {
   public:
     void offsetBy(uint32_t) { MOZ_CRASH(); }
@@ -938,6 +938,8 @@ enum class SymbolicAddress
     TruncateDoubleToUint64,
     Uint64ToFloatingPoint,
     Int64ToFloatingPoint,
+    GrowMemory,
+    CurrentMemory,
     Limit
 };
 
@@ -995,28 +997,12 @@ enum class JumpTarget
 
 typedef EnumeratedArray<JumpTarget, JumpTarget::Limit, Uint32Vector> JumpSiteArray;
 
-// The SignalUsage struct captures global parameters that affect all wasm code
-// generation. It also currently is the single source of truth for whether or
-// not to use signal handlers for different purposes.
-
-struct SignalUsage
-{
-    // NB: these fields are serialized as a POD in Assumptions.
-    bool forOOB;
-    bool forInterrupt;
-
-    SignalUsage();
-    bool operator==(SignalUsage rhs) const;
-    bool operator!=(SignalUsage rhs) const { return !(*this == rhs); }
-};
-
 // Assumptions captures ambient state that must be the same when compiling and
 // deserializing a module for the compiled code to be valid. If it's not, then
 // the module must be recompiled from scratch.
 
 struct Assumptions
 {
-    SignalUsage           usesSignal;
     uint32_t              cpuId;
     JS::BuildIdCharVector buildId;
     bool                  newFormat;
@@ -1073,7 +1059,9 @@ WASM_DECLARE_POD_VECTOR(TableDesc, TableDescVector)
 class CalleeDesc
 {
   public:
-    enum Which { Internal, Import, WasmTable, AsmJSTable, Builtin };
+    // Unlike Builtin, BuilinInstanceMethod expects an implicit Instance*
+    // as its first argument. (e.g. see Instance::growMemory)
+    enum Which { Internal, Import, WasmTable, AsmJSTable, Builtin, BuiltinInstanceMethod };
 
   private:
     Which which_;
@@ -1123,6 +1111,12 @@ class CalleeDesc
         c.u.builtin_ = callee;
         return c;
     }
+    static CalleeDesc builtinInstanceMethod(SymbolicAddress callee) {
+        CalleeDesc c;
+        c.which_ = BuiltinInstanceMethod;
+        c.u.builtin_ = callee;
+        return c;
+    }
     Which which() const {
         return which_;
     }
@@ -1154,7 +1148,7 @@ class CalleeDesc
         return u.table.sigId_;
     }
     SymbolicAddress builtin() const {
-        MOZ_ASSERT(which_ == Builtin);
+        MOZ_ASSERT(which_ == Builtin || which_ == BuiltinInstanceMethod);
         return u.builtin_;
     }
 };
@@ -1252,10 +1246,15 @@ struct ExternalTableElem
 // requires linear memory to always be a multiple of 64KiB.
 static const unsigned PageSize = 64 * 1024;
 
-#ifdef ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_OOB
+#ifdef JS_CODEGEN_X64
+#define WASM_HUGE_MEMORY
 static const uint64_t Uint32Range = uint64_t(UINT32_MAX) + 1;
 static const uint64_t MappedSize = 2 * Uint32Range + PageSize;
 #endif
+
+bool IsValidARMLengthImmediate(uint32_t length);
+uint32_t RoundUpToNextValidARMLengthImmediate(uint32_t length);
+size_t LegalizeMapLength(size_t requestedSize);
 
 static const unsigned NaN64GlobalDataOffset       = 0;
 static const unsigned NaN32GlobalDataOffset       = NaN64GlobalDataOffset + sizeof(double);

@@ -140,11 +140,10 @@ public:
     virtual float GetDPI() override;
     virtual double GetDefaultScaleInternal() override;
     NS_IMETHOD Show(bool aState) override;
-    NS_IMETHOD SetModal(bool aModal) override;
     virtual bool IsVisible() const override;
-    NS_IMETHOD ConstrainPosition(bool aAllowSlop,
-                                 int32_t *aX,
-                                 int32_t *aY) override;
+    virtual void ConstrainPosition(bool aAllowSlop,
+                                   int32_t *aX,
+                                   int32_t *aY) override;
     NS_IMETHOD Move(double aX,
                     double aY) override;
     NS_IMETHOD Resize(double aWidth,
@@ -156,9 +155,6 @@ public:
                       double aHeight,
                       bool aRepaint) override;
     void SetZIndex(int32_t aZIndex) override;
-    NS_IMETHOD PlaceBehind(nsTopLevelWidgetZPlacement aPlacement,
-                           nsIWidget *aWidget,
-                           bool aActivate) override;
     virtual void SetSizeMode(nsSizeMode aMode) override;
     NS_IMETHOD Enable(bool aState) override;
     virtual bool IsEnabled() const override;
@@ -172,9 +168,6 @@ public:
     virtual nsresult MakeFullScreen(bool aFullScreen,
                                     nsIScreen* aTargetScreen = nullptr)
                                     override;
-    NS_IMETHOD SetWindowClass(const nsAString& xulWinType) override;
-
-
 
     NS_IMETHOD SetCursor(nsCursor aCursor) override { return NS_ERROR_NOT_IMPLEMENTED; }
     NS_IMETHOD SetCursor(imgIContainer* aCursor,
@@ -187,10 +180,6 @@ public:
     void SetNativeData(uint32_t aDataType, uintptr_t aVal) override;
     NS_IMETHOD SetTitle(const nsAString& aTitle) override { return NS_OK; }
     NS_IMETHOD SetIcon(const nsAString& aIconSpec) override { return NS_OK; }
-    NS_IMETHOD CaptureMouse(bool aCapture) override { return NS_ERROR_NOT_IMPLEMENTED; }
-    NS_IMETHOD CaptureRollupEvents(nsIRollupListener *aListener,
-                                   bool aDoCapture) override { return NS_ERROR_NOT_IMPLEMENTED; }
-
     NS_IMETHOD GetAttention(int32_t aCycleCount) override { return NS_ERROR_NOT_IMPLEMENTED; }
     NS_IMETHOD BeginResizeDrag(mozilla::WidgetGUIEvent* aEvent,
                                int32_t aHorizontal,
@@ -208,8 +197,6 @@ public:
     LayerManager* GetLayerManager(PLayerTransactionChild* aShadowManager = nullptr,
                                   LayersBackend aBackendHint = mozilla::layers::LayersBackend::LAYERS_NONE,
                                   LayerManagerPersistence aPersistence = LAYER_MANAGER_CURRENT) override;
-
-    NS_IMETHOD ReparentNativeWidget(nsIWidget* aNewParent) override;
 
     virtual bool NeedsPaint() override;
     virtual void DrawWindowUnderlay(LayerManagerComposite* aManager, LayoutDeviceIntRect aRect) override;

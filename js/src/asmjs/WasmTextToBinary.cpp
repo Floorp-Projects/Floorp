@@ -100,7 +100,6 @@ class WasmToken
         Loop,
         Module,
         Name,
-        Nop,
         Offset,
         OpenParen,
         Param,
@@ -118,6 +117,7 @@ class WasmToken
         Text,
         Then,
         Type,
+        NullaryOpcode,
         UnaryOpcode,
         Unreachable,
         UnsignedInteger,
@@ -195,7 +195,7 @@ class WasmToken
         MOZ_ASSERT(begin != end);
         MOZ_ASSERT(kind_ == UnaryOpcode || kind_ == BinaryOpcode || kind_ == TernaryOpcode ||
                    kind_ == ComparisonOpcode || kind_ == ConversionOpcode ||
-                   kind_ == Load || kind_ == Store);
+                   kind_ == Load || kind_ == Store || kind_ == NullaryOpcode);
         u.expr_ = expr;
     }
     explicit WasmToken(const char16_t* begin)
@@ -245,7 +245,7 @@ class WasmToken
     Expr expr() const {
         MOZ_ASSERT(kind_ == UnaryOpcode || kind_ == BinaryOpcode || kind_ == TernaryOpcode ||
                    kind_ == ComparisonOpcode || kind_ == ConversionOpcode ||
-                   kind_ == Load || kind_ == Store);
+                   kind_ == Load || kind_ == Store || kind_ == NullaryOpcode);
         return u.expr_;
     }
 };
@@ -757,6 +757,8 @@ WasmTokenStream::next()
                 return WasmToken(WasmToken::CallImport, begin, cur_);
             return WasmToken(WasmToken::Call, begin, cur_);
         }
+        if (consume(u"current_memory"))
+            return WasmToken(WasmToken::NullaryOpcode, Expr::CurrentMemory, begin, cur_);
         break;
 
       case 'd':
@@ -988,6 +990,8 @@ WasmTokenStream::next()
             return WasmToken(WasmToken::GetLocal, begin, cur_);
         if (consume(u"global"))
             return WasmToken(WasmToken::Global, begin, cur_);
+        if (consume(u"grow_memory"))
+            return WasmToken(WasmToken::UnaryOpcode, Expr::GrowMemory, begin, cur_);
         break;
 
       case 'i':
@@ -1302,7 +1306,7 @@ WasmTokenStream::next()
         if (consume(u"nan"))
             return nan(begin);
         if (consume(u"nop"))
-            return WasmToken(WasmToken::Nop, begin, cur_);
+            return WasmToken(WasmToken::NullaryOpcode, Expr::Nop, begin, cur_);
         break;
 
       case 'o':
@@ -1914,6 +1918,12 @@ ParseUnaryOperator(WasmParseContext& c, Expr expr)
     return new(c.lifo) AstUnaryOperator(expr, op);
 }
 
+static AstNullaryOperator*
+ParseNullaryOperator(WasmParseContext& c, Expr expr)
+{
+    return new(c.lifo) AstNullaryOperator(expr);
+}
+
 static AstBinaryOperator*
 ParseBinaryOperator(WasmParseContext& c, Expr expr)
 {
@@ -2183,8 +2193,6 @@ ParseExprInsideParens(WasmParseContext& c)
     WasmToken token = c.ts.get();
 
     switch (token.kind()) {
-      case WasmToken::Nop:
-        return new(c.lifo) AstNop;
       case WasmToken::Unreachable:
         return new(c.lifo) AstUnreachable;
       case WasmToken::BinaryOpcode:
@@ -2231,6 +2239,8 @@ ParseExprInsideParens(WasmParseContext& c)
         return ParseTernaryOperator(c, token.expr());
       case WasmToken::UnaryOpcode:
         return ParseUnaryOperator(c, token.expr());
+      case WasmToken::NullaryOpcode:
+        return ParseNullaryOperator(c, token.expr());
       default:
         c.ts.generateError(token, c.error);
         return nullptr;
@@ -3117,7 +3127,7 @@ static bool
 ResolveExpr(Resolver& r, AstExpr& expr)
 {
     switch (expr.kind()) {
-      case AstExprKind::Nop:
+      case AstExprKind::NullaryOperator:
       case AstExprKind::Unreachable:
         return true;
       case AstExprKind::BinaryOperator:
@@ -3444,6 +3454,12 @@ EncodeUnaryOperator(Encoder& e, AstUnaryOperator& b)
 }
 
 static bool
+EncodeNullaryOperator(Encoder& e, AstNullaryOperator& b)
+{
+    return e.writeExpr(b.expr());
+}
+
+static bool
 EncodeBinaryOperator(Encoder& e, AstBinaryOperator& b)
 {
     return EncodeExpr(e, *b.lhs()) &&
@@ -3580,8 +3596,6 @@ static bool
 EncodeExpr(Encoder& e, AstExpr& expr)
 {
     switch (expr.kind()) {
-      case AstExprKind::Nop:
-        return e.writeExpr(Expr::Nop);
       case AstExprKind::Unreachable:
         return e.writeExpr(Expr::Unreachable);
       case AstExprKind::BinaryOperator:
@@ -3622,6 +3636,8 @@ EncodeExpr(Encoder& e, AstExpr& expr)
         return EncodeTernaryOperator(e, expr.as<AstTernaryOperator>());
       case AstExprKind::UnaryOperator:
         return EncodeUnaryOperator(e, expr.as<AstUnaryOperator>());
+      case AstExprKind::NullaryOperator:
+        return EncodeNullaryOperator(e, expr.as<AstNullaryOperator>());
     }
     MOZ_CRASH("Bad expr kind");
 }

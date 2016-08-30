@@ -213,12 +213,18 @@ CertReq(SECKEYPrivateKey *privk, SECKEYPublicKey *pubk, KeyType keyType,
         spki->algorithm.parameters.data = NULL;
         rv = SECOID_SetAlgorithmID(arena, &spki->algorithm,
                                    SEC_OID_PKCS1_RSA_PSS_SIGNATURE, 0);
+        if (rv != SECSuccess) {
+            PORT_FreeArena(arena, PR_FALSE);
+            SECU_PrintError(progName, "unable to set algorithm ID");
+            return SECFailure;
+        }
     }
 
     /* Generate certificate request */
     cr = CERT_CreateCertificateRequest(subject, spki, NULL);
     SECKEY_DestroySubjectPublicKeyInfo(spki);
     if (!cr) {
+        PORT_FreeArena(arena, PR_FALSE);
         SECU_PrintError(progName, "unable to make certificate request");
         return SECFailure;
     }

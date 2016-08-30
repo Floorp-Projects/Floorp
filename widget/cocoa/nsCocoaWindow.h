@@ -241,8 +241,8 @@ public:
     virtual nsIWidget*      GetSheetWindowParent(void) override;
     NS_IMETHOD              Enable(bool aState) override;
     virtual bool            IsEnabled() const override;
-    NS_IMETHOD              SetModal(bool aState) override;
-    NS_IMETHOD              SetFakeModal(bool aState) override;
+    virtual void            SetModal(bool aState) override;
+    virtual void            SetFakeModal(bool aState) override;
     virtual bool            IsVisible() const override;
     NS_IMETHOD              SetFocus(bool aState=false) override;
     virtual LayoutDeviceIntPoint WidgetToScreenOffset() override;
@@ -252,12 +252,10 @@ public:
 
     virtual void* GetNativeData(uint32_t aDataType) override;
 
-    NS_IMETHOD              ConstrainPosition(bool aAllowSlop,
+    virtual void            ConstrainPosition(bool aAllowSlop,
                                               int32_t *aX, int32_t *aY) override;
     virtual void            SetSizeConstraints(const SizeConstraints& aConstraints) override;
     NS_IMETHOD              Move(double aX, double aY) override;
-    NS_IMETHOD              PlaceBehind(nsTopLevelWidgetZPlacement aPlacement,
-                                        nsIWidget *aWidget, bool aActivate) override;
     virtual void            SetSizeMode(nsSizeMode aMode) override;
     NS_IMETHOD              HideWindowChrome(bool aShouldHide) override;
 
@@ -307,19 +305,20 @@ public:
                                           LayerManagerPersistence aPersistence = LAYER_MANAGER_CURRENT) override;
     NS_IMETHOD DispatchEvent(mozilla::WidgetGUIEvent* aEvent,
                              nsEventStatus& aStatus) override;
-    NS_IMETHOD CaptureRollupEvents(nsIRollupListener * aListener, bool aDoCapture) override;
+    virtual void CaptureRollupEvents(nsIRollupListener * aListener,
+                                     bool aDoCapture) override;
     NS_IMETHOD GetAttention(int32_t aCycleCount) override;
     virtual bool HasPendingInputEvent() override;
     virtual nsTransparencyMode GetTransparencyMode() override;
     virtual void SetTransparencyMode(nsTransparencyMode aMode) override;
-    NS_IMETHOD SetWindowShadowStyle(int32_t aStyle) override;
+    virtual void SetWindowShadowStyle(int32_t aStyle) override;
     virtual void SetShowsToolbarButton(bool aShow) override;
     virtual void SetShowsFullScreenButton(bool aShow) override;
     virtual void SetWindowAnimationType(WindowAnimationType aType) override;
     virtual void SetDrawsTitle(bool aDrawTitle) override;
     virtual void SetUseBrightTitlebarForeground(bool aBrightForeground) override;
     NS_IMETHOD SetNonClientMargins(LayoutDeviceIntMargin& aMargins) override;
-    NS_IMETHOD SetWindowTitlebarColor(nscolor aColor, bool aActive) override;
+    virtual void SetWindowTitlebarColor(nscolor aColor, bool aActive) override;
     virtual void SetDrawsInTitlebar(bool aState) override;
     virtual void UpdateThemeGeometries(const nsTArray<ThemeGeometry>& aThemeGeometries) override;
     virtual nsresult SynthesizeNativeMouseEvent(LayoutDeviceIntPoint aPoint,
@@ -352,8 +351,6 @@ public:
                         void* aCallbackData) override;
 
     void SetPopupWindowLevel();
-
-    NS_IMETHOD         ReparentNativeWidget(nsIWidget* aNewParent) override;
 
 protected:
   virtual ~nsCocoaWindow();

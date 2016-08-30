@@ -23,19 +23,19 @@
 typedef struct gcmHashContextStr gcmHashContext;
 
 static SECStatus gcmHash_InitContext(gcmHashContext *hash,
-				     const unsigned char *H,
-				     unsigned int blocksize);
+                                     const unsigned char *H,
+                                     unsigned int blocksize);
 static void gcmHash_DestroyContext(gcmHashContext *ghash, PRBool freeit);
 static SECStatus gcmHash_Update(gcmHashContext *ghash,
-				const unsigned char *buf, unsigned int len,
-				unsigned int blocksize);
+                                const unsigned char *buf, unsigned int len,
+                                unsigned int blocksize);
 static SECStatus gcmHash_Sync(gcmHashContext *ghash, unsigned int blocksize);
 static SECStatus gcmHash_Final(gcmHashContext *gcm, unsigned char *outbuf,
-			       unsigned int *outlen, unsigned int maxout,
-			       unsigned int blocksize);
+                               unsigned int *outlen, unsigned int maxout,
+                               unsigned int blocksize);
 static SECStatus gcmHash_Reset(gcmHashContext *ghash,
-			       const unsigned char *inbuf,
-			       unsigned int inbufLen, unsigned int blocksize);
+                               const unsigned char *inbuf,
+                               unsigned int inbufLen, unsigned int blocksize);
 
 /* compile time defines to select how the GF2 multiply is calculated.
  * There are currently 2 algorithms implemented here: MPI and ALGORITHM_1.
@@ -45,9 +45,9 @@ static SECStatus gcmHash_Reset(gcmHashContext *ghash,
  * "The Galois/Counter Mode of Operation (GCM)", McGrew & Viega.
  */
 #if !defined(GCM_USE_ALGORITHM_1) && !defined(GCM_USE_MPI)
-#define GCM_USE_MPI 1 /* MPI is about 5x faster with the
-		       * same or less complexity. It's possible to use
-		       * tables to speed things up even more */
+#define GCM_USE_MPI 1 /* MPI is about 5x faster with the               \
+                       * same or less complexity. It's possible to use \
+                       * tables to speed things up even more */
 #endif
 
 /* GCM defines the bit string to be LSB first, which is exactly
@@ -88,23 +88,29 @@ static const unsigned char gcm_byte_rev[256] = {
     0x1f, 0x9f, 0x5f, 0xdf, 0x3f, 0xbf, 0x7f, 0xff
 };
 
-
 #ifdef GCM_TRACE
 #include <stdio.h>
 
-#define GCM_TRACE_X(ghash,label) { \
-	unsigned char _X[MAX_BLOCK_SIZE]; int i; \
-	gcm_getX(ghash, _X, blocksize); \
-	printf(label,(ghash)->m); \
-	for (i=0; i < blocksize; i++) printf("%02x",_X[i]); \
-	printf("\n"); }
-#define GCM_TRACE_BLOCK(label,buf,blocksize) {\
-	printf(label); \
-	for (i=0; i < blocksize; i++) printf("%02x",buf[i]); \
-	printf("\n"); }
+#define GCM_TRACE_X(ghash, label)         \
+    {                                     \
+        unsigned char _X[MAX_BLOCK_SIZE]; \
+        int i;                            \
+        gcm_getX(ghash, _X, blocksize);   \
+        printf(label, (ghash)->m);        \
+        for (i = 0; i < blocksize; i++)   \
+            printf("%02x", _X[i]);        \
+        printf("\n");                     \
+    }
+#define GCM_TRACE_BLOCK(label, buf, blocksize) \
+    {                                          \
+        printf(label);                         \
+        for (i = 0; i < blocksize; i++)        \
+            printf("%02x", buf[i]);            \
+        printf("\n");                          \
+    }
 #else
-#define GCM_TRACE_X(ghash,label)
-#define GCM_TRACE_BLOCK(label,buf,blocksize)
+#define GCM_TRACE_X(ghash, label)
+#define GCM_TRACE_BLOCK(label, buf, blocksize)
 #endif
 
 #ifdef GCM_USE_MPI
@@ -120,15 +126,15 @@ static const unsigned char gcm_byte_rev[256] = {
 
 /* state needed to handle GCM Hash function */
 struct gcmHashContextStr {
-     mp_int H;
-     mp_int X;
-     mp_int C_i;
-     const unsigned int *poly;
-     unsigned char buffer[MAX_BLOCK_SIZE];
-     unsigned int bufLen;
-     int m; /* XXX what is m? */
-     unsigned char counterBuf[2*GCM_HASH_LEN_LEN];
-     PRUint64 cLen;
+    mp_int H;
+    mp_int X;
+    mp_int C_i;
+    const unsigned int *poly;
+    unsigned char buffer[MAX_BLOCK_SIZE];
+    unsigned int bufLen;
+    int m; /* XXX what is m? */
+    unsigned char counterBuf[2 * GCM_HASH_LEN_LEN];
+    PRUint64 cLen;
 };
 
 /* f = x^128 + x^7 + x^2 + x + 1 */
@@ -137,18 +143,18 @@ static const unsigned int poly_128[] = { 128, 7, 2, 1, 0 };
 /* sigh, GCM defines the bit strings exactly backwards from everything else */
 static void
 gcm_reverse(unsigned char *target, const unsigned char *src,
-							unsigned int blocksize)
+            unsigned int blocksize)
 {
     unsigned int i;
-    for (i=0; i < blocksize; i++) {
-	target[blocksize-i-1] = gcm_byte_rev[src[i]];
+    for (i = 0; i < blocksize; i++) {
+        target[blocksize - i - 1] = gcm_byte_rev[src[i]];
     }
 }
 
 /* Initialize a gcmHashContext */
 static SECStatus
 gcmHash_InitContext(gcmHashContext *ghash, const unsigned char *H,
-		    unsigned int blocksize)
+                    unsigned int blocksize)
 {
     mp_err err = MP_OKAY;
     unsigned char H_rev[MAX_BLOCK_SIZE];
@@ -156,23 +162,23 @@ gcmHash_InitContext(gcmHashContext *ghash, const unsigned char *H,
     MP_DIGITS(&ghash->H) = 0;
     MP_DIGITS(&ghash->X) = 0;
     MP_DIGITS(&ghash->C_i) = 0;
-    CHECK_MPI_OK( mp_init(&ghash->H) );
-    CHECK_MPI_OK( mp_init(&ghash->X) );
-    CHECK_MPI_OK( mp_init(&ghash->C_i) );
+    CHECK_MPI_OK(mp_init(&ghash->H));
+    CHECK_MPI_OK(mp_init(&ghash->X));
+    CHECK_MPI_OK(mp_init(&ghash->C_i));
 
     mp_zero(&ghash->X);
     gcm_reverse(H_rev, H, blocksize);
-    CHECK_MPI_OK( mp_read_unsigned_octets(&ghash->H, H_rev, blocksize) );
+    CHECK_MPI_OK(mp_read_unsigned_octets(&ghash->H, H_rev, blocksize));
 
     /* set the irreducible polynomial. Each blocksize has its own polynomial.
      * for now only blocksize 16 (=128 bits) is defined */
     switch (blocksize) {
-    case 16: /* 128 bits */
-	ghash->poly = poly_128;
-	break;
-    default:
-	PORT_SetError(SEC_ERROR_INVALID_ARGS);
-	goto cleanup;
+        case 16: /* 128 bits */
+            ghash->poly = poly_128;
+            break;
+        default:
+            PORT_SetError(SEC_ERROR_INVALID_ARGS);
+            goto cleanup;
     }
     ghash->cLen = 0;
     ghash->bufLen = 0;
@@ -194,7 +200,7 @@ gcmHash_DestroyContext(gcmHashContext *ghash, PRBool freeit)
     mp_clear(&ghash->C_i);
     PORT_Memset(ghash, 0, sizeof(gcmHashContext));
     if (freeit) {
-	PORT_Free(ghash);
+        PORT_Free(ghash);
     }
 }
 
@@ -208,25 +214,25 @@ gcm_getX(gcmHashContext *ghash, unsigned char *T, unsigned int blocksize)
 
     len = mp_unsigned_octet_size(&ghash->X);
     if (len <= 0) {
-	PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
-	return SECFailure;
+        PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
+        return SECFailure;
     }
     X = tmp_buf;
     PORT_Assert((unsigned int)len <= blocksize);
     if ((unsigned int)len > blocksize) {
-	PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
-	return SECFailure;
+        PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
+        return SECFailure;
     }
     /* zero pad the result */
     if (len != blocksize) {
-	PORT_Memset(X,0,blocksize-len);
-	X += blocksize-len;
+        PORT_Memset(X, 0, blocksize - len);
+        X += blocksize - len;
     }
 
     err = mp_to_unsigned_octets(&ghash->X, X, len);
     if (err < 0) {
-	PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
-	return SECFailure;
+        PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
+        return SECFailure;
     }
     gcm_reverse(T, tmp_buf, blocksize);
     return SECSuccess;
@@ -234,40 +240,40 @@ gcm_getX(gcmHashContext *ghash, unsigned char *T, unsigned int blocksize)
 
 static SECStatus
 gcm_HashMult(gcmHashContext *ghash, const unsigned char *buf,
-		unsigned int count, unsigned int blocksize)
+             unsigned int count, unsigned int blocksize)
 {
     SECStatus rv = SECFailure;
     mp_err err = MP_OKAY;
     unsigned char tmp_buf[MAX_BLOCK_SIZE];
     unsigned int i;
 
-    for (i=0; i < count; i++, buf += blocksize) {
-	ghash->m++;
-	gcm_reverse(tmp_buf, buf, blocksize);
-	CHECK_MPI_OK(mp_read_unsigned_octets(&ghash->C_i, tmp_buf, blocksize));
-	CHECK_MPI_OK(mp_badd(&ghash->X, &ghash->C_i, &ghash->C_i));
-	/*
-	 * Looking to speed up GCM, this the the place to do it.
-	 * There are two areas that can be exploited to speed up this code.
-	 *
-	 * 1) H is a constant in this multiply. We can precompute H * (0 - 255)
-	 * at init time and this becomes an blockize xors of our table lookup.
-	 *
-	 * 2) poly is a constant for each blocksize. We can calculate the
-	 * modulo reduction by a series of adds and shifts.
-	 *
-	 * For now we are after functionality, so we will go ahead and use
-	 * the builtin bmulmod from mpi
-	 */
+    for (i = 0; i < count; i++, buf += blocksize) {
+        ghash->m++;
+        gcm_reverse(tmp_buf, buf, blocksize);
+        CHECK_MPI_OK(mp_read_unsigned_octets(&ghash->C_i, tmp_buf, blocksize));
+        CHECK_MPI_OK(mp_badd(&ghash->X, &ghash->C_i, &ghash->C_i));
+        /*
+         * Looking to speed up GCM, this the the place to do it.
+         * There are two areas that can be exploited to speed up this code.
+         *
+         * 1) H is a constant in this multiply. We can precompute H * (0 - 255)
+         * at init time and this becomes an blockize xors of our table lookup.
+         *
+         * 2) poly is a constant for each blocksize. We can calculate the
+         * modulo reduction by a series of adds and shifts.
+         *
+         * For now we are after functionality, so we will go ahead and use
+         * the builtin bmulmod from mpi
+         */
         CHECK_MPI_OK(mp_bmulmod(&ghash->C_i, &ghash->H,
-					ghash->poly, &ghash->X));
-	GCM_TRACE_X(ghash, "X%d = ")
+                                ghash->poly, &ghash->X));
+        GCM_TRACE_X(ghash, "X%d = ")
     }
     rv = SECSuccess;
 cleanup:
     PORT_Memset(tmp_buf, 0, sizeof(tmp_buf));
     if (rv != SECSuccess) {
-	MP_TO_SEC_ERROR(err);
+        MP_TO_SEC_ERROR(err);
     }
     return rv;
 }
@@ -284,58 +290,57 @@ gcm_zeroX(gcmHashContext *ghash)
 #ifdef GCM_USE_ALGORITHM_1
 /* use algorithm 1 of McGrew & Viega "The Galois/Counter Mode of Operation" */
 
-#define GCM_ARRAY_SIZE (MAX_BLOCK_SIZE/sizeof(unsigned long))
+#define GCM_ARRAY_SIZE (MAX_BLOCK_SIZE / sizeof(unsigned long))
 
 struct gcmHashContextStr {
-     unsigned long H[GCM_ARRAY_SIZE];
-     unsigned long X[GCM_ARRAY_SIZE];
-     unsigned long R;
-     unsigned char buffer[MAX_BLOCK_SIZE];
-     unsigned int bufLen;
-     int m;
-     unsigned char counterBuf[2*GCM_HASH_LEN_LEN];
-     PRUint64 cLen;
+    unsigned long H[GCM_ARRAY_SIZE];
+    unsigned long X[GCM_ARRAY_SIZE];
+    unsigned long R;
+    unsigned char buffer[MAX_BLOCK_SIZE];
+    unsigned int bufLen;
+    int m;
+    unsigned char counterBuf[2 * GCM_HASH_LEN_LEN];
+    PRUint64 cLen;
 };
 
 static void
 gcm_bytes_to_longs(unsigned long *l, const unsigned char *c, unsigned int len)
 {
-    int i,j;
-    int array_size = len/sizeof(unsigned long);
+    int i, j;
+    int array_size = len / sizeof(unsigned long);
 
     PORT_Assert(len % sizeof(unsigned long) == 0);
-    for (i=0; i < array_size; i++) {
-	unsigned long tmp = 0;
-	int byte_offset = i * sizeof(unsigned long);
-	for (j=sizeof(unsigned long)-1; j >= 0; j--) {
-	    tmp = (tmp << PR_BITS_PER_BYTE) | gcm_byte_rev[c[byte_offset+j]];
-	}
-	l[i] = tmp;
+    for (i = 0; i < array_size; i++) {
+        unsigned long tmp = 0;
+        int byte_offset = i * sizeof(unsigned long);
+        for (j = sizeof(unsigned long) - 1; j >= 0; j--) {
+            tmp = (tmp << PR_BITS_PER_BYTE) | gcm_byte_rev[c[byte_offset + j]];
+        }
+        l[i] = tmp;
     }
 }
 
 static void
 gcm_longs_to_bytes(const unsigned long *l, unsigned char *c, unsigned int len)
 {
-    int i,j;
-    int array_size = len/sizeof(unsigned long);
+    int i, j;
+    int array_size = len / sizeof(unsigned long);
 
     PORT_Assert(len % sizeof(unsigned long) == 0);
-    for (i=0; i < array_size; i++) {
-	unsigned long tmp = l[i];
-	int byte_offset = i * sizeof(unsigned long);
-	for (j=0; j < sizeof(unsigned long); j++) {
-	    c[byte_offset+j] = gcm_byte_rev[tmp & 0xff];
-	    tmp = (tmp >> PR_BITS_PER_BYTE);
-	}
+    for (i = 0; i < array_size; i++) {
+        unsigned long tmp = l[i];
+        int byte_offset = i * sizeof(unsigned long);
+        for (j = 0; j < sizeof(unsigned long); j++) {
+            c[byte_offset + j] = gcm_byte_rev[tmp & 0xff];
+            tmp = (tmp >> PR_BITS_PER_BYTE);
+        }
     }
 }
-
 
 /* Initialize a gcmHashContext */
 static SECStatus
 gcmHash_InitContext(gcmHashContext *ghash, const unsigned char *H,
-		    unsigned int blocksize)
+                    unsigned int blocksize)
 {
     PORT_Memset(ghash->X, 0, sizeof(ghash->X));
     PORT_Memset(ghash->H, 0, sizeof(ghash->H));
@@ -344,12 +349,12 @@ gcmHash_InitContext(gcmHashContext *ghash, const unsigned char *H,
     /* set the irreducible polynomial. Each blocksize has its own polynommial
      * for now only blocksize 16 (=128 bits) is defined */
     switch (blocksize) {
-    case 16: /* 128 bits */
-	ghash->R = (unsigned long) 0x87; /* x^7 + x^2 + x +1 */
-	break;
-    default:
-	PORT_SetError(SEC_ERROR_INVALID_ARGS);
-	goto cleanup;
+        case 16:                            /* 128 bits */
+            ghash->R = (unsigned long)0x87; /* x^7 + x^2 + x +1 */
+            break;
+        default:
+            PORT_SetError(SEC_ERROR_INVALID_ARGS);
+            goto cleanup;
     }
     ghash->cLen = 0;
     ghash->bufLen = 0;
@@ -367,7 +372,7 @@ gcmHash_DestroyContext(gcmHashContext *ghash, PRBool freeit)
 {
     PORT_Memset(ghash, 0, sizeof(gcmHashContext));
     if (freeit) {
-	PORT_Free(ghash);
+        PORT_Free(ghash);
     }
 }
 
@@ -377,10 +382,10 @@ gcm_shift_one(unsigned long *t, unsigned int count)
     unsigned long carry = 0;
     unsigned long nextcarry = 0;
     unsigned int i;
-    for (i=0; i < count; i++) {
-	nextcarry = t[i] >> ((sizeof(unsigned long)*PR_BITS_PER_BYTE)-1);
-	t[i] = (t[i] << 1) | carry;
-	carry = nextcarry;
+    for (i = 0; i < count; i++) {
+        nextcarry = t[i] >> ((sizeof(unsigned long) * PR_BITS_PER_BYTE) - 1);
+        t[i] = (t[i] << 1) | carry;
+        carry = nextcarry;
     }
     return carry;
 }
@@ -392,41 +397,41 @@ gcm_getX(gcmHashContext *ghash, unsigned char *T, unsigned int blocksize)
     return SECSuccess;
 }
 
-#define GCM_XOR(t, s, len) \
-	for (l=0; l < len; l++) t[l] ^= s[l]
+#define GCM_XOR(t, s, len)    \
+    for (l = 0; l < len; l++) \
+    t[l] ^= s[l]
 
 static SECStatus
 gcm_HashMult(gcmHashContext *ghash, const unsigned char *buf,
-		unsigned int count, unsigned int blocksize)
+             unsigned int count, unsigned int blocksize)
 {
     unsigned long C_i[GCM_ARRAY_SIZE];
-    unsigned int arraysize = blocksize/sizeof(unsigned long);
+    unsigned int arraysize = blocksize / sizeof(unsigned long);
     unsigned int i, j, k, l;
 
-    for (i=0; i < count; i++, buf += blocksize) {
-	ghash->m++;
-	gcm_bytes_to_longs(C_i, buf, blocksize);
-	GCM_XOR(C_i, ghash->X, arraysize);
-	/* multiply X = C_i * H */
-	PORT_Memset(ghash->X, 0, sizeof(ghash->X));
-	for (j=0; j < arraysize; j++) {
-	    unsigned long H = ghash->H[j];
-	    for (k=0; k < sizeof(unsigned long)*PR_BITS_PER_BYTE; k++) {
-		if (H & 1) {
-		    GCM_XOR(ghash->X, C_i, arraysize);
-		}
-		if (gcm_shift_one(C_i, arraysize)) {
-		    C_i[0] = C_i[0] ^ ghash->R;
-		}
-		H = H >> 1;
-	    }
-	}
-	GCM_TRACE_X(ghash, "X%d = ")
+    for (i = 0; i < count; i++, buf += blocksize) {
+        ghash->m++;
+        gcm_bytes_to_longs(C_i, buf, blocksize);
+        GCM_XOR(C_i, ghash->X, arraysize);
+        /* multiply X = C_i * H */
+        PORT_Memset(ghash->X, 0, sizeof(ghash->X));
+        for (j = 0; j < arraysize; j++) {
+            unsigned long H = ghash->H[j];
+            for (k = 0; k < sizeof(unsigned long) * PR_BITS_PER_BYTE; k++) {
+                if (H & 1) {
+                    GCM_XOR(ghash->X, C_i, arraysize);
+                }
+                if (gcm_shift_one(C_i, arraysize)) {
+                    C_i[0] = C_i[0] ^ ghash->R;
+                }
+                H = H >> 1;
+            }
+        }
+        GCM_TRACE_X(ghash, "X%d = ")
     }
     PORT_Memset(C_i, 0, sizeof(C_i));
     return SECSuccess;
 }
-
 
 static void
 gcm_zeroX(gcmHashContext *ghash)
@@ -443,51 +448,51 @@ gcm_zeroX(gcmHashContext *ghash)
  */
 static SECStatus
 gcmHash_Update(gcmHashContext *ghash, const unsigned char *buf,
-	       unsigned int len, unsigned int blocksize)
+               unsigned int len, unsigned int blocksize)
 {
     unsigned int blocks;
     SECStatus rv;
 
-    ghash->cLen += (len*PR_BITS_PER_BYTE);
+    ghash->cLen += (len * PR_BITS_PER_BYTE);
 
     /* first deal with the current buffer of data. Try to fill it out so
      * we can hash it */
     if (ghash->bufLen) {
-	unsigned int needed = PR_MIN(len, blocksize - ghash->bufLen);
-	if (needed != 0) {
-	    PORT_Memcpy(ghash->buffer+ghash->bufLen, buf, needed);
-	}
-	buf += needed;
-	len -= needed;
-	ghash->bufLen += needed;
-	if (len == 0) {
-	    /* didn't add enough to hash the data, nothing more do do */
-	    return SECSuccess;
-	}
-	PORT_Assert(ghash->bufLen == blocksize);
-	/* hash the buffer and clear it */
-	rv = gcm_HashMult(ghash, ghash->buffer, 1, blocksize);
-	PORT_Memset(ghash->buffer, 0, blocksize);
-	ghash->bufLen = 0;
-	if (rv != SECSuccess) {
-	    return SECFailure;
-	}
+        unsigned int needed = PR_MIN(len, blocksize - ghash->bufLen);
+        if (needed != 0) {
+            PORT_Memcpy(ghash->buffer + ghash->bufLen, buf, needed);
+        }
+        buf += needed;
+        len -= needed;
+        ghash->bufLen += needed;
+        if (len == 0) {
+            /* didn't add enough to hash the data, nothing more do do */
+            return SECSuccess;
+        }
+        PORT_Assert(ghash->bufLen == blocksize);
+        /* hash the buffer and clear it */
+        rv = gcm_HashMult(ghash, ghash->buffer, 1, blocksize);
+        PORT_Memset(ghash->buffer, 0, blocksize);
+        ghash->bufLen = 0;
+        if (rv != SECSuccess) {
+            return SECFailure;
+        }
     }
     /* now hash any full blocks remaining in the data stream */
-    blocks = len/blocksize;
+    blocks = len / blocksize;
     if (blocks) {
-	rv = gcm_HashMult(ghash, buf, blocks, blocksize);
-	if (rv != SECSuccess) {
-	    return SECFailure;
-	}
-	buf += blocks*blocksize;
-	len -= blocks*blocksize;
+        rv = gcm_HashMult(ghash, buf, blocks, blocksize);
+        if (rv != SECSuccess) {
+            return SECFailure;
+        }
+        buf += blocks * blocksize;
+        len -= blocks * blocksize;
     }
 
     /* save any remainder in the buffer to be hashed with the next call */
     if (len != 0) {
-	PORT_Memcpy(ghash->buffer, buf, len);
-	ghash->bufLen = len;
+        PORT_Memcpy(ghash->buffer, buf, len);
+        ghash->bufLen = len;
     }
     return SECSuccess;
 }
@@ -504,23 +509,23 @@ gcmHash_Sync(gcmHashContext *ghash, unsigned int blocksize)
 
     /* copy the previous counter to the upper block */
     PORT_Memcpy(ghash->counterBuf, &ghash->counterBuf[GCM_HASH_LEN_LEN],
-							GCM_HASH_LEN_LEN);
+                GCM_HASH_LEN_LEN);
     /* copy the current counter in the lower block */
-    for (i=0; i < GCM_HASH_LEN_LEN; i++) {
-	ghash->counterBuf[GCM_HASH_LEN_LEN+i] =
-	    (ghash->cLen >> ((GCM_HASH_LEN_LEN-1-i)*PR_BITS_PER_BYTE)) & 0xff;
+    for (i = 0; i < GCM_HASH_LEN_LEN; i++) {
+        ghash->counterBuf[GCM_HASH_LEN_LEN + i] =
+            (ghash->cLen >> ((GCM_HASH_LEN_LEN - 1 - i) * PR_BITS_PER_BYTE)) & 0xff;
     }
     ghash->cLen = 0;
 
     /* now zero fill the buffer and hash the last block */
     if (ghash->bufLen) {
-	PORT_Memset(ghash->buffer+ghash->bufLen, 0, blocksize - ghash->bufLen);
-	rv = gcm_HashMult(ghash, ghash->buffer, 1, blocksize);
-	PORT_Memset(ghash->buffer, 0, blocksize);
-	ghash->bufLen = 0;
-	if (rv != SECSuccess) {
-	    return SECFailure;
-	}
+        PORT_Memset(ghash->buffer + ghash->bufLen, 0, blocksize - ghash->bufLen);
+        rv = gcm_HashMult(ghash, ghash->buffer, 1, blocksize);
+        PORT_Memset(ghash->buffer, 0, blocksize);
+        ghash->bufLen = 0;
+        if (rv != SECSuccess) {
+            return SECFailure;
+        }
     }
     return SECSuccess;
 }
@@ -531,31 +536,32 @@ gcmHash_Sync(gcmHashContext *ghash, unsigned int blocksize)
  */
 static SECStatus
 gcmHash_Final(gcmHashContext *ghash, unsigned char *outbuf,
-		unsigned int *outlen, unsigned int maxout,
-		unsigned int blocksize)
+              unsigned int *outlen, unsigned int maxout,
+              unsigned int blocksize)
 {
     unsigned char T[MAX_BLOCK_SIZE];
     SECStatus rv;
 
     rv = gcmHash_Sync(ghash, blocksize);
     if (rv != SECSuccess) {
-	goto cleanup;
+        goto cleanup;
     }
 
-    rv = gcm_HashMult(ghash, ghash->counterBuf, (GCM_HASH_LEN_LEN*2)/blocksize,
-								blocksize);
+    rv = gcm_HashMult(ghash, ghash->counterBuf, (GCM_HASH_LEN_LEN * 2) / blocksize,
+                      blocksize);
     if (rv != SECSuccess) {
-	goto cleanup;
+        goto cleanup;
     }
 
     GCM_TRACE_X(ghash, "GHASH(H,A,C) = ")
 
     rv = gcm_getX(ghash, T, blocksize);
     if (rv != SECSuccess) {
-	goto cleanup;
+        goto cleanup;
     }
 
-    if (maxout > blocksize) maxout = blocksize;
+    if (maxout > blocksize)
+        maxout = blocksize;
     PORT_Memcpy(outbuf, T, maxout);
     *outlen = maxout;
     rv = SECSuccess;
@@ -567,25 +573,25 @@ cleanup:
 
 SECStatus
 gcmHash_Reset(gcmHashContext *ghash, const unsigned char *AAD,
-	      unsigned int AADLen, unsigned int blocksize)
+              unsigned int AADLen, unsigned int blocksize)
 {
     SECStatus rv;
 
     ghash->cLen = 0;
-    PORT_Memset(ghash->counterBuf, 0, GCM_HASH_LEN_LEN*2);
+    PORT_Memset(ghash->counterBuf, 0, GCM_HASH_LEN_LEN * 2);
     ghash->bufLen = 0;
     gcm_zeroX(ghash);
 
     /* now kick things off by hashing the Additional Authenticated Data */
     if (AADLen != 0) {
-	rv = gcmHash_Update(ghash, AAD, AADLen, blocksize);
-	if (rv != SECSuccess) {
-	    return SECFailure;
-	}
-	rv = gcmHash_Sync(ghash, blocksize);
-	if (rv != SECSuccess) {
-	    return SECFailure;
-	}
+        rv = gcmHash_Update(ghash, AAD, AADLen, blocksize);
+        if (rv != SECSuccess) {
+            return SECFailure;
+        }
+        rv = gcmHash_Sync(ghash, blocksize);
+        if (rv != SECSuccess) {
+            return SECFailure;
+        }
     }
     return SECSuccess;
 }
@@ -604,7 +610,7 @@ struct GCMContextStr {
 
 GCMContext *
 GCM_CreateContext(void *context, freeblCipherFunc cipher,
-		  const unsigned char *params, unsigned int blocksize)
+                  const unsigned char *params, unsigned int blocksize)
 {
     GCMContext *gcm = NULL;
     gcmHashContext *ghash;
@@ -617,23 +623,23 @@ GCM_CreateContext(void *context, freeblCipherFunc cipher,
     SECStatus rv;
 
     if (blocksize > MAX_BLOCK_SIZE || blocksize > sizeof(ctrParams.cb)) {
-	PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
-	return NULL;
+        PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
+        return NULL;
     }
     gcm = PORT_ZNew(GCMContext);
     if (gcm == NULL) {
-	return NULL;
+        return NULL;
     }
     /* first fill in the ghash context */
     ghash = &gcm->ghash_context;
     PORT_Memset(H, 0, blocksize);
     rv = (*cipher)(context, H, &tmp, blocksize, H, blocksize, blocksize);
     if (rv != SECSuccess) {
-	goto loser;
+        goto loser;
     }
     rv = gcmHash_InitContext(ghash, H, blocksize);
     if (rv != SECSuccess) {
-	goto loser;
+        goto loser;
     }
     freeHash = PR_TRUE;
 
@@ -641,23 +647,23 @@ GCM_CreateContext(void *context, freeblCipherFunc cipher,
     ctrParams.ulCounterBits = 32;
     PORT_Memset(ctrParams.cb, 0, sizeof(ctrParams.cb));
     if ((blocksize == 16) && (gcmParams->ulIvLen == 12)) {
-	PORT_Memcpy(ctrParams.cb, gcmParams->pIv, gcmParams->ulIvLen);
-	ctrParams.cb[blocksize-1] = 1;
+        PORT_Memcpy(ctrParams.cb, gcmParams->pIv, gcmParams->ulIvLen);
+        ctrParams.cb[blocksize - 1] = 1;
     } else {
-	rv = gcmHash_Update(ghash, gcmParams->pIv, gcmParams->ulIvLen,
-			    blocksize);
-	if (rv != SECSuccess) {
-	    goto loser;
-	}
-	rv = gcmHash_Final(ghash, ctrParams.cb, &tmp, blocksize, blocksize);
-	if (rv != SECSuccess) {
-	    goto loser;
-	}
+        rv = gcmHash_Update(ghash, gcmParams->pIv, gcmParams->ulIvLen,
+                            blocksize);
+        if (rv != SECSuccess) {
+            goto loser;
+        }
+        rv = gcmHash_Final(ghash, ctrParams.cb, &tmp, blocksize, blocksize);
+        if (rv != SECSuccess) {
+            goto loser;
+        }
     }
     rv = CTR_InitContext(&gcm->ctr_context, context, cipher,
-				(unsigned char *)&ctrParams, blocksize);
+                         (unsigned char *)&ctrParams, blocksize);
     if (rv != SECSuccess) {
-	goto loser;
+        goto loser;
     }
     freeCtr = PR_TRUE;
 
@@ -666,28 +672,28 @@ GCM_CreateContext(void *context, freeblCipherFunc cipher,
     /* calculate the final tag key. NOTE: gcm->tagKey is zero to start with.
      * if this assumption changes, we would need to explicitly clear it here */
     rv = CTR_Update(&gcm->ctr_context, gcm->tagKey, &tmp, blocksize,
-		    gcm->tagKey, blocksize, blocksize);
+                    gcm->tagKey, blocksize, blocksize);
     if (rv != SECSuccess) {
-	goto loser;
+        goto loser;
     }
 
     /* finally mix in the AAD data */
     rv = gcmHash_Reset(ghash, gcmParams->pAAD, gcmParams->ulAADLen, blocksize);
     if (rv != SECSuccess) {
-	goto loser;
+        goto loser;
     }
 
     return gcm;
 
 loser:
     if (freeCtr) {
-	CTR_DestroyContext(&gcm->ctr_context, PR_FALSE);
+        CTR_DestroyContext(&gcm->ctr_context, PR_FALSE);
     }
     if (freeHash) {
-	gcmHash_DestroyContext(&gcm->ghash_context, PR_FALSE);
+        gcmHash_DestroyContext(&gcm->ghash_context, PR_FALSE);
     }
     if (gcm) {
-	PORT_Free(gcm);
+        PORT_Free(gcm);
     }
     return NULL;
 }
@@ -703,54 +709,53 @@ GCM_DestroyContext(GCMContext *gcm, PRBool freeit)
     PORT_Memset(&gcm->tagBits, 0, sizeof(gcm->tagBits));
     PORT_Memset(gcm->tagKey, 0, sizeof(gcm->tagKey));
     if (freeit) {
-	PORT_Free(gcm);
+        PORT_Free(gcm);
     }
 }
 
 static SECStatus
 gcm_GetTag(GCMContext *gcm, unsigned char *outbuf,
-	unsigned int *outlen, unsigned int maxout,
-	unsigned int blocksize)
+           unsigned int *outlen, unsigned int maxout,
+           unsigned int blocksize)
 {
     unsigned int tagBytes;
     unsigned int extra;
     unsigned int i;
     SECStatus rv;
 
-    tagBytes = (gcm->tagBits + (PR_BITS_PER_BYTE-1)) / PR_BITS_PER_BYTE;
-    extra = tagBytes*PR_BITS_PER_BYTE - gcm->tagBits;
+    tagBytes = (gcm->tagBits + (PR_BITS_PER_BYTE - 1)) / PR_BITS_PER_BYTE;
+    extra = tagBytes * PR_BITS_PER_BYTE - gcm->tagBits;
 
     if (outbuf == NULL) {
-	*outlen = tagBytes;
-	PORT_SetError(SEC_ERROR_OUTPUT_LEN);
-	return SECFailure;
+        *outlen = tagBytes;
+        PORT_SetError(SEC_ERROR_OUTPUT_LEN);
+        return SECFailure;
     }
 
     if (maxout < tagBytes) {
-	*outlen = tagBytes;
-	PORT_SetError(SEC_ERROR_OUTPUT_LEN);
-	return SECFailure;
+        *outlen = tagBytes;
+        PORT_SetError(SEC_ERROR_OUTPUT_LEN);
+        return SECFailure;
     }
     maxout = tagBytes;
     rv = gcmHash_Final(&gcm->ghash_context, outbuf, outlen, maxout, blocksize);
     if (rv != SECSuccess) {
-	return SECFailure;
+        return SECFailure;
     }
 
     GCM_TRACE_BLOCK("GHASH=", outbuf, blocksize);
     GCM_TRACE_BLOCK("Y0=", gcm->tagKey, blocksize);
-    for (i=0; i < *outlen; i++) {
-	outbuf[i] ^= gcm->tagKey[i];
+    for (i = 0; i < *outlen; i++) {
+        outbuf[i] ^= gcm->tagKey[i];
     }
     GCM_TRACE_BLOCK("Y0=", gcm->tagKey, blocksize);
     GCM_TRACE_BLOCK("T=", outbuf, blocksize);
     /* mask off any extra bits we got */
     if (extra) {
-	outbuf[tagBytes-1] &= ~((1 << extra)-1);
+        outbuf[tagBytes - 1] &= ~((1 << extra) - 1);
     }
     return SECSuccess;
 }
-
 
 /*
  * See The Galois/Counter Mode of Operation, McGrew and Viega.
@@ -759,41 +764,41 @@ gcm_GetTag(GCMContext *gcm, unsigned char *outbuf,
  */
 SECStatus
 GCM_EncryptUpdate(GCMContext *gcm, unsigned char *outbuf,
-		unsigned int *outlen, unsigned int maxout,
-		const unsigned char *inbuf, unsigned int inlen,
-		unsigned int blocksize)
+                  unsigned int *outlen, unsigned int maxout,
+                  const unsigned char *inbuf, unsigned int inlen,
+                  unsigned int blocksize)
 {
     SECStatus rv;
     unsigned int tagBytes;
     unsigned int len;
 
-    tagBytes = (gcm->tagBits + (PR_BITS_PER_BYTE-1)) / PR_BITS_PER_BYTE;
+    tagBytes = (gcm->tagBits + (PR_BITS_PER_BYTE - 1)) / PR_BITS_PER_BYTE;
     if (UINT_MAX - inlen < tagBytes) {
-	PORT_SetError(SEC_ERROR_INPUT_LEN);
-	return SECFailure;
+        PORT_SetError(SEC_ERROR_INPUT_LEN);
+        return SECFailure;
     }
     if (maxout < inlen + tagBytes) {
-	*outlen = inlen + tagBytes;
-	PORT_SetError(SEC_ERROR_OUTPUT_LEN);
-	return SECFailure;
+        *outlen = inlen + tagBytes;
+        PORT_SetError(SEC_ERROR_OUTPUT_LEN);
+        return SECFailure;
     }
 
     rv = CTR_Update(&gcm->ctr_context, outbuf, outlen, maxout,
-			inbuf, inlen, blocksize);
+                    inbuf, inlen, blocksize);
     if (rv != SECSuccess) {
-	return SECFailure;
+        return SECFailure;
     }
     rv = gcmHash_Update(&gcm->ghash_context, outbuf, *outlen, blocksize);
     if (rv != SECSuccess) {
-	PORT_Memset(outbuf, 0, *outlen); /* clear the output buffer */
-	*outlen = 0;
-	return SECFailure;
+        PORT_Memset(outbuf, 0, *outlen); /* clear the output buffer */
+        *outlen = 0;
+        return SECFailure;
     }
     rv = gcm_GetTag(gcm, outbuf + *outlen, &len, maxout - *outlen, blocksize);
     if (rv != SECSuccess) {
-	PORT_Memset(outbuf, 0, *outlen); /* clear the output buffer */
-	*outlen = 0;
-	return SECFailure;
+        PORT_Memset(outbuf, 0, *outlen); /* clear the output buffer */
+        *outlen = 0;
+        return SECFailure;
     };
     *outlen += len;
     return SECSuccess;
@@ -809,9 +814,9 @@ GCM_EncryptUpdate(GCMContext *gcm, unsigned char *outbuf,
  */
 SECStatus
 GCM_DecryptUpdate(GCMContext *gcm, unsigned char *outbuf,
-		unsigned int *outlen, unsigned  int maxout,
-		const unsigned char *inbuf, unsigned int inlen,
-		unsigned int blocksize)
+                  unsigned int *outlen, unsigned int maxout,
+                  const unsigned char *inbuf, unsigned int inlen,
+                  unsigned int blocksize)
 {
     SECStatus rv;
     unsigned int tagBytes;
@@ -819,12 +824,12 @@ GCM_DecryptUpdate(GCMContext *gcm, unsigned char *outbuf,
     const unsigned char *intag;
     unsigned int len;
 
-    tagBytes = (gcm->tagBits + (PR_BITS_PER_BYTE-1)) / PR_BITS_PER_BYTE;
+    tagBytes = (gcm->tagBits + (PR_BITS_PER_BYTE - 1)) / PR_BITS_PER_BYTE;
 
     /* get the authentication block */
     if (inlen < tagBytes) {
-	PORT_SetError(SEC_ERROR_INPUT_LEN);
-	return SECFailure;
+        PORT_SetError(SEC_ERROR_INPUT_LEN);
+        return SECFailure;
     }
 
     inlen -= tagBytes;
@@ -833,23 +838,23 @@ GCM_DecryptUpdate(GCMContext *gcm, unsigned char *outbuf,
     /* verify the block */
     rv = gcmHash_Update(&gcm->ghash_context, inbuf, inlen, blocksize);
     if (rv != SECSuccess) {
-	return SECFailure;
+        return SECFailure;
     }
     rv = gcm_GetTag(gcm, tag, &len, blocksize, blocksize);
     if (rv != SECSuccess) {
-	return SECFailure;
+        return SECFailure;
     }
     /* Don't decrypt if we can't authenticate the encrypted data!
      * This assumes that if tagBits is not a multiple of 8, intag will
      * preserve the masked off missing bits.  */
     if (NSS_SecureMemcmp(tag, intag, tagBytes) != 0) {
-	/* force a CKR_ENCRYPTED_DATA_INVALID error at in softoken */
-	PORT_SetError(SEC_ERROR_BAD_DATA);
-	PORT_Memset(tag, 0, sizeof(tag));
-	return SECFailure;
+        /* force a CKR_ENCRYPTED_DATA_INVALID error at in softoken */
+        PORT_SetError(SEC_ERROR_BAD_DATA);
+        PORT_Memset(tag, 0, sizeof(tag));
+        return SECFailure;
     }
     PORT_Memset(tag, 0, sizeof(tag));
     /* finish the decryption */
     return CTR_Update(&gcm->ctr_context, outbuf, outlen, maxout,
-			  inbuf, inlen, blocksize);
+                      inbuf, inlen, blocksize);
 }
