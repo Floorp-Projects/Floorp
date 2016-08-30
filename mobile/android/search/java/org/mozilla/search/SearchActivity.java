@@ -114,7 +114,7 @@ public class SearchActivity extends Locales.LocaleAwareFragmentActivity
         suggestionsFragment = (SuggestionsFragment) getSupportFragmentManager().findFragmentById(R.id.suggestions);
         postSearchFragment = (PostSearchFragment)  getSupportFragmentManager().findFragmentById(R.id.postsearch);
 
-        searchEngineManager = new SearchEngineManager(this, Distribution.init(this));
+        searchEngineManager = new SearchEngineManager(this, Distribution.init(getApplicationContext()));
         searchEngineManager.setChangeCallback(this);
 
         // Initialize the fragments with the selected search engine.
