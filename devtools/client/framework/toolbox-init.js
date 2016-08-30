@@ -66,18 +66,7 @@ if (url.search.length > 1) {
       target = yield targetFromURL(url);
     }
     let options = { customIframe: host };
-    let toolbox = yield gDevTools.showToolbox(target, tool, Toolbox.HostType.CUSTOM, options);
-
-    // Watch for toolbox.xul unload in order to cleanup things when we close
-    // about:devtools-toolbox tabs
-    function onUnload() {
-      window.removeEventListener("unload", onUnload);
-      toolbox.destroy();
-    }
-    window.addEventListener("unload", onUnload);
-    toolbox.on("destroy", function () {
-      window.removeEventListener("unload", onUnload);
-    });
+    yield gDevTools.showToolbox(target, tool, Toolbox.HostType.CUSTOM, options);
   }).catch(error => {
     console.error("Exception while loading the toolbox", error);
   });
