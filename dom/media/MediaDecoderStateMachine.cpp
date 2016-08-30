@@ -2197,12 +2197,7 @@ MediaDecoderStateMachine::SeekCompleted()
     mOnPlaybackEvent.Notify(MediaEventType::Invalidate);
   }
 
-  if (nextState == DECODER_STATE_DECODING) {
-    SetState(DECODER_STATE_DECODING);
-  } else {
-    SetState(nextState);
-  }
-
+  SetState(nextState);
   ScheduleStateMachine();
 }
 
