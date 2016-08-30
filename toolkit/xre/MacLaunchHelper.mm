@@ -19,77 +19,23 @@
 
 using namespace mozilla;
 
-namespace {
-cpu_type_t pref_cpu_types[2] = {
-#if defined(__i386__)
-                                 CPU_TYPE_X86,
-#elif defined(__x86_64__)
-                                 CPU_TYPE_X86_64,
-#elif defined(__ppc__)
-                                 CPU_TYPE_POWERPC,
-#endif
-                                 CPU_TYPE_ANY };
-
-cpu_type_t cpu_i386_types[2] = {
-                                 CPU_TYPE_X86,
-                                 CPU_TYPE_ANY };
-
-cpu_type_t cpu_x64_86_types[2] = {
-                                 CPU_TYPE_X86_64,
-                                 CPU_TYPE_ANY };
-} // namespace
-
-void LaunchChildMac(int aArgc, char** aArgv,
-                    uint32_t aRestartType, pid_t *pid)
+void LaunchChildMac(int aArgc, char** aArgv, pid_t* aPid)
 {
-  // "posix_spawnp" uses null termination for arguments rather than a count.
-  // Note that we are not duplicating the argument strings themselves.
-  auto argv_copy = MakeUnique<char*[]>(aArgc + 1);
-  for (int i = 0; i < aArgc; i++) {
-    argv_copy[i] = aArgv[i];
-  }
-  argv_copy[aArgc] = NULL;
+  MacAutoreleasePool pool;
 
-  // Initialize spawn attributes.
-  posix_spawnattr_t spawnattr;
-  if (posix_spawnattr_init(&spawnattr) != 0) {
-    printf("Failed to init posix spawn attribute.");
-    return;
-  }
-
-  cpu_type_t *wanted_type = pref_cpu_types;
-  size_t attr_count = ArrayLength(pref_cpu_types);
-
-  if (aRestartType & nsIAppStartup::eRestarti386) {
-    wanted_type = cpu_i386_types;
-    attr_count = ArrayLength(cpu_i386_types);
-  } else if (aRestartType & nsIAppStartup::eRestartx86_64) {
-    wanted_type = cpu_x64_86_types;
-    attr_count = ArrayLength(cpu_x64_86_types);
-  }
-
-  // Set spawn attributes.
-  size_t attr_ocount = 0;
-  if (posix_spawnattr_setbinpref_np(&spawnattr, attr_count, wanted_type, &attr_ocount) != 0 ||
-      attr_ocount != attr_count) {
-    printf("Failed to set binary preference on posix spawn attribute.");
-    posix_spawnattr_destroy(&spawnattr);
-    return;
-  }
-
-  // Pass along our environment.
-  char** envp = NULL;
-  char*** cocoaEnvironment = _NSGetEnviron();
-  if (cocoaEnvironment) {
-    envp = *cocoaEnvironment;
-  }
-
-  int result = posix_spawnp(pid, argv_copy[0], NULL, &spawnattr, argv_copy.get(), envp);
-
-  posix_spawnattr_destroy(&spawnattr);
-
-  if (result != 0) {
-    printf("Process spawn failed with code %d!", result);
+  @try {
+    NSString* launchPath = [NSString stringWithUTF8String:aArgv[0]];
+    NSMutableArray* arguments = [NSMutableArray arrayWithCapacity:aArgc - 1];
+    for (int i = 1; i < aArgc; i++) {
+      [arguments addObject:[NSString stringWithUTF8String:aArgv[i]]];
+    }
+    NSTask* child = [NSTask launchedTaskWithLaunchPath:launchPath
+                                             arguments:arguments];
+    if (aPid) {
+      *aPid = [child processIdentifier];
+    }
+  } @catch (NSException* e) {
+    NSLog(@"%@: %@", e.name, e.reason);
   }
 }
 
@@ -176,10 +122,9 @@ void AbortElevatedUpdate()
   NSLog(@"Unable to clean up updater.");
 }
 
-bool LaunchElevatedUpdate(int argc, char** argv, uint32_t aRestartType,
-                          pid_t* pid)
+bool LaunchElevatedUpdate(int aArgc, char** aArgv, pid_t* aPid)
 {
-  LaunchChildMac(argc, argv, aRestartType, pid);
+  LaunchChildMac(aArgc, aArgv, aPid);
   bool didSucceed = InstallPrivilegedHelper();
   if (!didSucceed) {
     AbortElevatedUpdate();
