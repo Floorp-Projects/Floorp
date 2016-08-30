@@ -1,0 +1,37 @@
+<!doctype html>
+<title>Mozilla Bug 1140617</title>
+<link rel=stylesheet href="/tests/SimpleTest/test.css">
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1140617"
+   target="_blank">Mozilla Bug 1140617</a>
+<iframe id="i1" width="200" height="100" src="about:blank"></iframe>
+<img id="i" src="green.png">
+<script>
+function runTest() {
+  SpecialPowers.setCommandNode(window, document.getElementById("i"));
+  SpecialPowers.doCommand(window, "cmd_copyImageContents");
+
+  var e = document.getElementById('i1');
+  var doc = e.contentDocument;
+  doc.designMode = "on";
+  doc.defaultView.focus();
+  var selection = doc.defaultView.getSelection();
+  selection.removeAllRanges();
+  selection.selectAllChildren(doc.body);
+  selection.collapseToEnd();
+
+  doc.execCommand("fontname", false, "Arial");
+  doc.execCommand("bold", false, null);
+  doc.execCommand("insertText", false, "12345");
+  doc.execCommand("paste", false, null);
+  doc.execCommand("insertText", false, "a");
+
+  is(doc.queryCommandValue("fontname"), "Arial", "Arial expected");
+  is(doc.queryCommandState("bold"), true, "Bold expected");
+
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(runTest);
+</script>
