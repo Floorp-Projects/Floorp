@@ -3086,22 +3086,10 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 params=[ Decl(_cxxArrayType(p.managedCxxType(managed, self.side), ref=1),
                               arrvar.name) ],
                 const=1))
-            ivar = ExprVar('i')
-            elementsvar = ExprVar('elements')
-            itervar = ExprVar('iter')
-            meth.addstmt(StmtDecl(Decl(Type.UINT32, ivar.name),
-                                  init=ExprLiteral.ZERO))
-            meth.addstmt(StmtDecl(Decl(Type(_actorName(managed.name(), self.side), ptrptr=1), elementsvar.name),
-                                  init=ExprCall(ExprSelect(arrvar, '.', 'AppendElements'),
-                                                args=[ ExprCall(ExprSelect(p.managedVar(managed, self.side),
-                                                                           '.', 'Count')) ])))
-            foreachaccumulate = forLoopOverHashtable(p.managedVar(managed, self.side),
-                                                     itervar, const=True)
-            foreachaccumulate.addstmt(StmtExpr(
-                ExprAssn(ExprIndex(elementsvar, ivar),
-                         actorFromIter(itervar))))
-            foreachaccumulate.addstmt(StmtExpr(ExprPrefixUnop(ivar, '++')))
-            meth.addstmt(foreachaccumulate)
+            meth.addstmt(StmtExpr(
+                ExprCall(ExprSelect(p.managedVar(managed, self.side),
+                                    '.', 'ToArray'),
+                         args=[ arrvar ])))
 
             refmeth = MethodDefn(MethodDecl(
                 p.managedMethod(managed, self.side).name,
