@@ -758,6 +758,17 @@ VRDisplayOculus::SubmitFrame(TextureSourceD3D11* aSource,
   if (!mIsPresenting) {
     return;
   }
+  if (mRenderTargets.IsEmpty()) {
+    /**
+     * XXX - We should resolve fail the promise returned by
+     *       VRDisplay.requestPresent() when the DX11 resources fail allocation
+     *       in VRDisplayOculus::StartPresentation().
+     *       Bailing out here prevents the crash but content should be aware
+     *       that frames are not being presented.
+     *       See Bug 1299309.
+     **/
+    return;
+  }
   MOZ_ASSERT(mDevice);
   MOZ_ASSERT(mContext);
 
