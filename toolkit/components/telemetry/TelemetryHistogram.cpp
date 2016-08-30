@@ -14,12 +14,9 @@
 #include "nsClassHashtable.h"
 #include "nsITelemetry.h"
 
-#include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ToJSValue.h"
 #include "mozilla/StartupTimeline.h"
 #include "mozilla/StaticMutex.h"
-#include "mozilla/StaticPtr.h"
-#include "mozilla/unused.h"
 
 #include "TelemetryCommon.h"
 #include "TelemetryHistogram.h"
@@ -34,9 +31,6 @@ using base::FlagHistogram;
 using base::LinearHistogram;
 using mozilla::StaticMutex;
 using mozilla::StaticMutexAutoLock;
-using mozilla::StaticAutoPtr;
-using mozilla::Telemetry::Accumulation;
-using mozilla::Telemetry::KeyedAccumulation;
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -98,7 +92,6 @@ using mozilla::Telemetry::KeyedAccumulation;
 #define EXPIRED_ID "__expired__"
 #define SUBSESSION_HISTOGRAM_PREFIX "sub#"
 #define KEYED_HISTOGRAM_NAME_SEPARATOR "#"
-#define CHILD_HISTOGRAM_SUFFIX "#content"
 
 namespace {
 
@@ -192,12 +185,6 @@ AddonMapType gAddonMap;
 // The singleton StatisticsRecorder object for this process.
 base::StatisticsRecorder* gStatisticsRecorder = nullptr;
 
-// For batching and sending child process accumulations to the parent
-nsITimer* gIPCTimer = nullptr;
-bool gIPCTimerArmed = false;
-StaticAutoPtr<nsTArray<Accumulation>> gAccumulations;
-StaticAutoPtr<nsTArray<KeyedAccumulation>> gKeyedAccumulations;
-
 } // namespace
 
 
@@ -216,12 +203,6 @@ const mozilla::Telemetry::ID kRecordingInitiallyDisabledIDs[] = {
   mozilla::Telemetry::TELEMETRY_TEST_COUNT_INIT_NO_RECORD,
   mozilla::Telemetry::TELEMETRY_TEST_KEYED_COUNT_INIT_NO_RECORD
 };
-
-// Sending each remote accumulation immediately places undue strain on the
-// IPC subsystem. Batch the remote accumulations for a period of time before
-// sending them all at once. This value was chosen as a balance between data
-// timeliness and performance (see bug 1218576)
-const uint32_t kBatchTimeoutMs = 2000;
 
 } // namespace
 
@@ -437,12 +418,10 @@ internal_GetHistogramEnumId(const char *name, mozilla::Telemetry::ID *id)
 
 // O(1) histogram lookup by numeric id
 nsresult
-internal_GetHistogramByEnumId(mozilla::Telemetry::ID id, Histogram **ret,
-                              bool child = false)
+internal_GetHistogramByEnumId(mozilla::Telemetry::ID id, Histogram **ret)
 {
   static Histogram* knownHistograms[mozilla::Telemetry::HistogramCount] = {0};
-  static Histogram* knownChildHistograms[mozilla::Telemetry::HistogramCount] = {0};
-  Histogram *h = child ? knownChildHistograms[id] : knownHistograms[id];
+  Histogram *h = knownHistograms[id];
   if (h) {
     *ret = h;
     return NS_OK;
@@ -453,15 +432,8 @@ internal_GetHistogramByEnumId(mozilla::Telemetry::ID id, Histogram **ret,
     return NS_ERROR_FAILURE;
   }
 
-  nsCString histogramName;
-  histogramName.Append(p.id());
-  if (child) {
-    histogramName.AppendLiteral(CHILD_HISTOGRAM_SUFFIX);
-  }
-
-  nsresult rv = internal_HistogramGet(histogramName.get(), p.expiration(),
-                                      p.histogramType, p.min, p.max,
-                                      p.bucketCount, true, &h);
+  nsresult rv = internal_HistogramGet(p.id(), p.expiration(), p.histogramType,
+                                      p.min, p.max, p.bucketCount, true, &h);
   if (NS_FAILED(rv))
     return rv;
 
@@ -481,11 +453,7 @@ internal_GetHistogramByEnumId(mozilla::Telemetry::ID id, Histogram **ret,
   }
 #endif
 
-  if (child) {
-    *ret = knownChildHistograms[id] = h;
-  } else {
-    *ret = knownHistograms[id] = h;
-  }
+  *ret = knownHistograms[id] = h;
   return NS_OK;
 }
 
@@ -1719,55 +1687,9 @@ internal_SetHistogramRecordingEnabled(mozilla::Telemetry::ID aID, bool aEnabled)
   MOZ_ASSERT(false, "Telemetry::SetHistogramRecordingEnabled(...) id not found");
 }
 
-void internal_armIPCTimer()
-{
-  if (gIPCTimerArmed) {
-    return;
-  }
-  if (!gIPCTimer) {
-    CallCreateInstance(NS_TIMER_CONTRACTID, &gIPCTimer);
-  }
-  if (gIPCTimer) {
-    gIPCTimer->InitWithFuncCallback(TelemetryHistogram::IPCTimerFired,
-                                    nullptr, kBatchTimeoutMs,
-                                    nsITimer::TYPE_ONE_SHOT);
-    gIPCTimerArmed = true;
-  }
-}
-
-bool
-internal_RemoteAccumulate(mozilla::Telemetry::ID aId, uint32_t aSample)
-{
-  if (XRE_IsParentProcess()) {
-    return false;
-  }
-  if (!gAccumulations) {
-    gAccumulations = new nsTArray<Accumulation>();
-  }
-  gAccumulations->AppendElement(Accumulation{aId, aSample});
-  internal_armIPCTimer();
-  return true;
-}
-
-bool
-internal_RemoteAccumulate(mozilla::Telemetry::ID aId,
-                    const nsCString& aKey, uint32_t aSample)
-{
-  if (XRE_IsParentProcess()) {
-    return false;
-  }
-  if (!gKeyedAccumulations) {
-    gKeyedAccumulations = new nsTArray<KeyedAccumulation>();
-  }
-  gKeyedAccumulations->AppendElement(KeyedAccumulation{aId, aSample, aKey});
-  internal_armIPCTimer();
-  return true;
-}
-
 void internal_Accumulate(mozilla::Telemetry::ID aHistogram, uint32_t aSample)
 {
-  if (!internal_CanRecordBase() ||
-      internal_RemoteAccumulate(aHistogram, aSample)) {
+  if (!internal_CanRecordBase()) {
     return;
   }
   Histogram *h;
@@ -1781,50 +1703,13 @@ void
 internal_Accumulate(mozilla::Telemetry::ID aID,
                     const nsCString& aKey, uint32_t aSample)
 {
-  if (!gInitDone || !internal_CanRecordBase() ||
-      internal_RemoteAccumulate(aID, aKey, aSample)) {
+  if (!gInitDone || !internal_CanRecordBase()) {
     return;
   }
   const HistogramInfo& th = gHistograms[aID];
   KeyedHistogram* keyed
      = internal_GetKeyedHistogramById(nsDependentCString(th.id()));
   MOZ_ASSERT(keyed);
-  keyed->Add(aKey, aSample);
-}
-
-void
-internal_AccumulateChild(mozilla::Telemetry::ID aId, uint32_t aSample)
-{
-  if (!internal_CanRecordBase()) {
-    return;
-  }
-  Histogram* h;
-  nsresult rv = internal_GetHistogramByEnumId(aId, &h, true);
-  if (NS_SUCCEEDED(rv)) {
-    internal_HistogramAdd(*h, aSample, gHistograms[aId].dataset);
-  } else {
-    NS_WARNING("NS_FAILED GetHistogramByEnumId for CHILD");
-  }
-}
-
-void
-internal_AccumulateChildKeyed(mozilla::Telemetry::ID aId,
-                              const nsCString& aKey, uint32_t aSample)
-{
-  if (!gInitDone || !internal_CanRecordBase()) {
-    return;
-  }
-  const HistogramInfo& th = gHistograms[aId];
-  nsCString id;
-  id.Append(th.id());
-  id.AppendLiteral(CHILD_HISTOGRAM_SUFFIX);
-  KeyedHistogram* keyed = internal_GetKeyedHistogramById(id);
-  if (!keyed) {
-    const nsDependentCString expiration(th.expiration());
-    keyed = new KeyedHistogram(id, expiration, th.histogramType, th.min, th.max,
-                               th.bucketCount, th.dataset);
-    gKeyedHistograms.Put(id, keyed);
-  }
   keyed->Add(aKey, aSample);
 }
 
@@ -1937,11 +1822,6 @@ void TelemetryHistogram::DeInitializeGlobalState()
   gHistogramMap.Clear();
   gKeyedHistograms.Clear();
   gAddonMap.Clear();
-  gAccumulations = nullptr;
-  gKeyedAccumulations = nullptr;
-  if (gIPCTimer) {
-    NS_RELEASE(gIPCTimer);
-  }
   gInitDone = false;
 }
 
@@ -2047,7 +1927,12 @@ TelemetryHistogram::Accumulate(const char* name, uint32_t sample)
   if (NS_FAILED(rv)) {
     return;
   }
-  internal_Accumulate(id, sample);
+
+  Histogram *h;
+  rv = internal_GetHistogramByEnumId(id, &h);
+  if (NS_SUCCEEDED(rv)) {
+    internal_HistogramAdd(*h, sample, gHistograms[id].dataset);
+  }
 }
 
 void
@@ -2071,34 +1956,6 @@ TelemetryHistogram::AccumulateCategorical(mozilla::Telemetry::ID aId,
 {
   StaticMutexAutoLock locker(gTelemetryHistogramMutex);
   internal_HistogramAddCategorical(aId, label);
-}
-
-void
-TelemetryHistogram::AccumulateChild(const nsTArray<Accumulation>& aAccumulations)
-{
-  MOZ_ASSERT(XRE_IsParentProcess());
-  StaticMutexAutoLock locker(gTelemetryHistogramMutex);
-  if (!internal_CanRecordBase()) {
-    return;
-  }
-  for (uint32_t i = 0; i < aAccumulations.Length(); ++i) {
-    internal_AccumulateChild(aAccumulations[i].mId, aAccumulations[i].mSample);
-  }
-}
-
-void
-TelemetryHistogram::AccumulateChildKeyed(const nsTArray<KeyedAccumulation>& aAccumulations)
-{
-  MOZ_ASSERT(XRE_IsParentProcess());
-  StaticMutexAutoLock locker(gTelemetryHistogramMutex);
-  if (!internal_CanRecordBase()) {
-    return;
-  }
-  for (uint32_t i = 0; i < aAccumulations.Length(); ++i) {
-    internal_AccumulateChildKeyed(aAccumulations[i].mId,
-                                  aAccumulations[i].mKey,
-                                  aAccumulations[i].mSample);
-  }
 }
 
 void
@@ -2271,8 +2128,6 @@ TelemetryHistogram::CreateHistogramSnapshots(JSContext *cx,
       Histogram *h;
       mozilla::DebugOnly<nsresult> rv
          = internal_GetHistogramByEnumId(mozilla::Telemetry::ID(i), &h);
-      MOZ_ASSERT(NS_SUCCEEDED(rv));
-      rv = internal_GetHistogramByEnumId(mozilla::Telemetry::ID(i), &h, true);
       MOZ_ASSERT(NS_SUCCEEDED(rv));
     }
   }
@@ -2536,41 +2391,4 @@ TelemetryHistogram::GetHistogramSizesofIncludingThis(mozilla::MallocSizeOf
     n += h->SizeOfIncludingThis(aMallocSizeOf);
   }
   return n;
-}
-
-// This method takes the lock only to double-buffer the batched telemetry.
-// It releases the lock before calling out to IPC code which can (and does)
-// Accumulate (which would deadlock)
-//
-// To ensure non-reentrancy, the timer is not released until the method
-// completes
-void
-TelemetryHistogram::IPCTimerFired(nsITimer* aTimer, void* aClosure)
-{
-  nsTArray<Accumulation> accumulationsToSend;
-  nsTArray<KeyedAccumulation> keyedAccumulationsToSend;
-  {
-    StaticMutexAutoLock locker(gTelemetryHistogramMutex);
-    if (gAccumulations) {
-      accumulationsToSend.SwapElements(*gAccumulations);
-    }
-    if (gKeyedAccumulations) {
-      keyedAccumulationsToSend.SwapElements(*gKeyedAccumulations);
-    }
-  }
-
-  mozilla::dom::ContentChild* contentChild = mozilla::dom::ContentChild::GetSingleton();
-  mozilla::Unused << NS_WARN_IF(!contentChild);
-  if (contentChild) {
-    if (accumulationsToSend.Length()) {
-      mozilla::Unused <<
-        NS_WARN_IF(!contentChild->SendAccumulateChildHistogram(accumulationsToSend));
-    }
-    if (keyedAccumulationsToSend.Length()) {
-      mozilla::Unused <<
-        NS_WARN_IF(!contentChild->SendAccumulateChildKeyedHistogram(keyedAccumulationsToSend));
-    }
-  }
-
-  gIPCTimerArmed = false;
 }
