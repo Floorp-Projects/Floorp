@@ -5892,8 +5892,9 @@ ScrollFrameHelper::SaveState() const
   }
 
   // Don't store a scroll state if we never have been scrolled or restored
-  // a previous scroll state.
-  if (!mHasBeenScrolled && !mDidHistoryRestore) {
+  // a previous scroll state, and we're not in the middle of a smooth scroll.
+  bool isInSmoothScroll = IsProcessingAsyncScroll() || mLastSmoothScrollOrigin;
+  if (!mHasBeenScrolled && !mDidHistoryRestore && !isInSmoothScroll) {
     return nullptr;
   }
 
@@ -5902,8 +5903,15 @@ ScrollFrameHelper::SaveState() const
   // valid and we haven't moved since the last update of mLastPos (same check
   // that ScrollToRestoredPosition uses). This ensures if a reframe occurs
   // while we're in the process of loading content to scroll to a restored
-  // position, we'll keep trying after the reframe.
+  // position, we'll keep trying after the reframe. Similarly, if we're in the
+  // middle of a smooth scroll, store the destination so that when we restore
+  // we'll jump straight to the end of the scroll animation, rather than
+  // effectively dropping it. Note that the mRestorePos will override the
+  // smooth scroll destination if both are present.
   nsPoint pt = GetLogicalScrollPosition();
+  if (isInSmoothScroll) {
+    pt = mDestination;
+  }
   if (mRestorePos.y != -1 && pt == mLastPos) {
     pt = mRestorePos;
   }
