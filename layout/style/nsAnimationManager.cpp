@@ -1036,7 +1036,11 @@ CSSAnimationBuilder::GetComputedValue(nsPresContext* aPresContext,
   if (StyleAnimationValue::ExtractComputedValue(aProperty,
                                                 mStyleWithoutAnimation,
                                                 computedValue)) {
-    StyleAnimationValue::UncomputeValue(aProperty, Move(computedValue), result);
+    DebugOnly<bool> uncomputeResult =
+      StyleAnimationValue::UncomputeValue(aProperty, Move(computedValue),
+                                          result);
+    MOZ_ASSERT(uncomputeResult,
+               "Unable to get specified value from computed value");
   }
 
   // If we hit this assertion, it probably means we are fetching a value from

@@ -39,9 +39,7 @@ AnimValuesStyleRule::MapRuleInfoInto(nsRuleData* aRuleData)
     {
       nsCSSValue *prop = aRuleData->ValueFor(pair.mProperty);
       if (prop->GetUnit() == eCSSUnit_Null) {
-#ifdef DEBUG
-        bool ok =
-#endif
+        DebugOnly<bool> ok =
           StyleAnimationValue::UncomputeValue(pair.mProperty, pair.mValue,
                                               *prop);
         MOZ_ASSERT(ok, "could not store computed value");
@@ -78,7 +76,8 @@ AnimValuesStyleRule::List(FILE* out, int32_t aIndent) const
     str.Append(nsCSSProps::GetStringValue(pair.mProperty));
     str.AppendLiteral(": ");
     nsAutoString value;
-    StyleAnimationValue::UncomputeValue(pair.mProperty, pair.mValue, value);
+    Unused <<
+      StyleAnimationValue::UncomputeValue(pair.mProperty, pair.mValue, value);
     AppendUTF16toUTF8(value, str);
     str.AppendLiteral("; ");
   }
