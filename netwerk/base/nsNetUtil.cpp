@@ -2424,21 +2424,12 @@ NS_CompareLoadInfoAndLoadContext(nsIChannel *aChannel)
   DocShellOriginAttributes originAttrsLoadContext;
   loadContext->GetOriginAttributes(originAttrsLoadContext);
 
-  bool loadInfoUsePB = loadInfo->GetUsePrivateBrowsing();
-  bool loadContextUsePB = false;
-  rv = loadContext->GetUsePrivateBrowsing(&loadContextUsePB);
-  if (NS_FAILED(rv)) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  LOG(("NS_CompareLoadInfoAndLoadContext - loadInfo: %d, %d, %d, %d, %d; "
-       "loadContext: %d %d, %d, %d, %d. [channel=%p]",
+  LOG(("NS_CompareLoadInfoAndLoadContext - loadInfo: %d, %d, %d, %d; "
+       "loadContext: %d %d, %d, %d. [channel=%p]",
        originAttrsLoadInfo.mAppId, originAttrsLoadInfo.mInIsolatedMozBrowser,
        originAttrsLoadInfo.mUserContextId, originAttrsLoadInfo.mPrivateBrowsingId,
-       loadInfoUsePB,
        loadContextAppId, loadContextIsInBE,
        originAttrsLoadContext.mUserContextId, originAttrsLoadContext.mPrivateBrowsingId,
-       loadContextUsePB,
        aChannel));
 
   MOZ_ASSERT(originAttrsLoadInfo.mAppId == loadContextAppId,
@@ -2459,10 +2450,6 @@ NS_CompareLoadInfoAndLoadContext(nsIChannel *aChannel)
              originAttrsLoadContext.mPrivateBrowsingId,
              "The value of mPrivateBrowsingId in the loadContext and in the "
              "loadInfo are not the same!");
-
-  MOZ_ASSERT(loadInfoUsePB == loadContextUsePB,
-             "The value of usePrivateBrowsing in the loadContext and in the loadInfo "
-             "are not the same!");
 
   return NS_OK;
 }
