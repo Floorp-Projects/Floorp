@@ -431,6 +431,7 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'health/SessionInformation.java',
     'health/StubbedHealthRecorder.java',
     'home/activitystream/ActivityStream.java',
+    'home/activitystream/ActivityStreamHomeFragment.java',
     'home/activitystream/ActivityStreamHomeScreen.java',
     'home/activitystream/StreamItem.java',
     'home/activitystream/StreamRecyclerAdapter.java',
