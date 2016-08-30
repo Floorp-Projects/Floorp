@@ -108,6 +108,7 @@ const ToolboxButtons = exports.ToolboxButtons = [
  */
 function Toolbox(target, selectedTool, hostType, hostOptions) {
   this._target = target;
+  this._win = null;
   this._toolPanels = new Map();
   this._telemetry = new Telemetry();
   if (Services.prefs.getBoolPref("devtools.sourcemap.locations.enabled")) {
@@ -273,24 +274,17 @@ Toolbox.prototype = {
   },
 
   /**
-   * Get the iframe containing the toolbox UI.
-   */
-  get frame() {
-    return this._host.frame;
-  },
-
-  /**
    * Shortcut to the window containing the toolbox UI
    */
   get win() {
-    return this.frame.contentWindow;
+    return this._win;
   },
 
   /**
    * Shortcut to the document containing the toolbox UI
    */
   get doc() {
-    return this.frame.contentDocument;
+    return this.win.document;
   },
 
   /**
@@ -359,6 +353,8 @@ Toolbox.prototype = {
   open: function () {
     return Task.spawn(function* () {
       let iframe = yield this._host.create();
+      this._win = iframe.contentWindow;
+
       let domReady = defer();
 
       // Prevent reloading the document when the toolbox is opened in a tab
@@ -1838,7 +1834,7 @@ Toolbox.prototype = {
     return newHost.create().then(iframe => {
       // change toolbox document's parent to the new host
       iframe.QueryInterface(Ci.nsIFrameLoaderOwner);
-      iframe.swapFrameLoaders(this.frame);
+      iframe.swapFrameLoaders(this._host.frame);
 
       this._host.off("window-closed", this.destroy);
       this.destroyHost();
@@ -2143,6 +2139,8 @@ Toolbox.prototype = {
         .then(() => this.destroyHost())
         .catch(console.error)
         .then(() => {
+          this._win = null;
+
           // Targets need to be notified that the toolbox is being torn down.
           // This is done after other destruction tasks since it may tear down
           // fronts and the debugger transport which earlier destroy methods may

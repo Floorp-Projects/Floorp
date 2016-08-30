@@ -7,7 +7,7 @@ var toolbox;
 add_task(function* () {
   let target = TargetFactory.forTab(gBrowser.selectedTab);
   let toolbox = yield gDevTools.showToolbox(target);
-  let doc = toolbox.frame.contentDocument;
+  let doc = toolbox.doc;
   let root = doc.documentElement;
 
   let platform = root.getAttribute("platform");

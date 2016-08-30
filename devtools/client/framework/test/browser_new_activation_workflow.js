@@ -39,10 +39,8 @@ function checkToolLoading() {
 }
 
 function selectAndCheckById(id) {
-  let doc = toolbox.frame.contentDocument;
-
   return toolbox.selectTool(id).then(function () {
-    let tab = doc.getElementById("toolbox-tab-" + id);
+    let tab = toolbox.doc.getElementById("toolbox-tab-" + id);
     is(tab.hasAttribute("selected"), true, "The " + id + " tab is selected");
   });
 }

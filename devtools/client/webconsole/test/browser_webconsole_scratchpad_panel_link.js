@@ -65,7 +65,7 @@ add_task(function* () {
     is(toolbox.getCurrentPanel(), scratchpadPanel,
       "Clicking link switches to Scratchpad panel");
 
-    is(Services.ww.activeWindow, toolbox.frame.ownerGlobal,
+    is(Services.ww.activeWindow, toolbox.win.parent,
        "Scratchpad's toolbox is focused");
 
     Tools.scratchpad.isTargetSupported = isTargetSupported;
