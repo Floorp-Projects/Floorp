@@ -2165,9 +2165,11 @@ MediaDecoderStateMachine::SeekCompleted()
   // SeekTask::Discard() will ask MediaDecoderReaderWrapper to discard media
   // data requests.
 
-  if (mDecodingFirstFrame) {
-    // We were resuming from dormant, or initiated a seek early.
-    // We can fire loadeddata now.
+  // Notify FirstFrameLoaded now if we haven't since we've decoded some data
+  // for readyState to transition to HAVE_CURRENT_DATA and fire 'loadeddata'.
+  if (!mSentFirstFrameLoadedEvent) {
+    // Only MSE can start seeking before finishing decoding first frames.
+    MOZ_ASSERT(mReader->ForceZeroStartTime());
     FinishDecodeFirstFrame();
   }
 
