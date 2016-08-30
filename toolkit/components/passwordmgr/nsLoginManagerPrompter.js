@@ -257,8 +257,8 @@ LoginManagerPrompter.prototype = {
 
   // Whether we are in private browsing mode
   get _inPrivateBrowsing() {
-    if (this._window) {
-      return PrivateBrowsingUtils.isContentWindowPrivate(this._window);
+    if (this._chromeWindow) {
+      return PrivateBrowsingUtils.isWindowPrivate(this._chromeWindow);
     }
     // If we don't that we're in private browsing mode if the caller did
     // not provide a window.  The callers which really care about this
@@ -290,7 +290,7 @@ LoginManagerPrompter.prototype = {
       aResult.value = aDefaultText;
     }
 
-    return this._promptService.prompt(this._window,
+    return this._promptService.prompt(this._chromeWindow,
            aDialogTitle, aText, aResult, null, {});
   },
 
@@ -352,7 +352,7 @@ LoginManagerPrompter.prototype = {
       }
     }
 
-    var ok = this._promptService.promptUsernameAndPassword(this._window,
+    var ok = this._promptService.promptUsernameAndPassword(this._chromeWindow,
                 aDialogTitle, aText, aUsername, aPassword,
                 checkBoxLabel, checkBox);
 
@@ -443,7 +443,7 @@ LoginManagerPrompter.prototype = {
       }
     }
 
-    var ok = this._promptService.promptPassword(this._window, aDialogTitle,
+    var ok = this._promptService.promptPassword(this._chromeWindow, aDialogTitle,
                                                 aText, aPassword,
                                                 checkBoxLabel, checkBox);
 
@@ -563,9 +563,9 @@ LoginManagerPrompter.prototype = {
 
     var ok = canAutologin;
     if (!ok) {
-      if (this._window)
-        PromptUtils.fireDialogEvent(this._window, "DOMWillOpenModalDialog", this._browser);
-      ok = this._promptService.promptAuth(this._window,
+      if (this._chromeWindow)
+        PromptUtils.fireDialogEvent(this._chromeWindow, "DOMWillOpenModalDialog", this._browser);
+      ok = this._promptService.promptAuth(this._chromeWindow,
                                           aChannel, aLevel, aAuthInfo,
                                           checkboxLabel, checkbox);
     }
@@ -681,12 +681,12 @@ LoginManagerPrompter.prototype = {
 
   init : function (aWindow, aFactory) {
     if (aWindow instanceof Ci.nsIDOMChromeWindow) {
-      this._window = aWindow;
+      this._chromeWindow = aWindow;
       // needs to be set explicitly using setBrowser
       this._browser = null;
     } else {
       let {win, browser} = this._getChromeWindow(aWindow);
-      this._window = win;
+      this._chromeWindow = win;
       this._browser = browser;
     }
     this._opener = null;
@@ -1128,7 +1128,7 @@ LoginManagerPrompter.prototype = {
                                     "notNowButtonText");
 
     this.log("Prompting user to save/ignore login");
-    var userChoice = this._promptService.confirmEx(this._window,
+    var userChoice = this._promptService.confirmEx(this._chromeWindow,
                                         dialogTitle, dialogText,
                                         buttonFlags, rememberButtonText,
                                         notNowButtonText, neverButtonText,
@@ -1260,7 +1260,7 @@ LoginManagerPrompter.prototype = {
                                 "passwordChangeTitle");
 
     // returns 0 for yes, 1 for no.
-    var ok = !this._promptService.confirmEx(this._window,
+    var ok = !this._promptService.confirmEx(this._chromeWindow,
                             dialogTitle, dialogText, buttonFlags,
                             null, null, null,
                             null, {});
@@ -1293,7 +1293,7 @@ LoginManagerPrompter.prototype = {
 
     // If user selects ok, outparam.value is set to the index
     // of the selected username.
-    var ok = this._promptService.select(this._window,
+    var ok = this._promptService.select(this._chromeWindow,
                             dialogTitle, dialogText,
                             usernames.length, usernames,
                             selectedIndex);
@@ -1354,36 +1354,24 @@ LoginManagerPrompter.prototype = {
   },
 
   _getNotifyWindow: function () {
-    try {
-      // Get topmost window, in case we're in a frame.
-      let win = this._window;
-      let browser = this._browser;
+    // Some sites pop up a temporary login window, which disappears
+    // upon submission of credentials. We want to put the notification
+    // bar in the opener window if this seems to be happening.
+    if (this._opener) {
+      let chromeDoc = this._chromeWindow.document.documentElement;
 
-      // Some sites pop up a temporary login window, which disappears
-      // upon submission of credentials. We want to put the notification
-      // bar in the opener window if this seems to be happening.
-      if (this._opener) {
-        let chromeDoc = win.document.documentElement;
-
-        // Check to see if the current window was opened with chrome
-        // disabled, and if so use the opener window. But if the window
-        // has been used to visit other pages (ie, has a history),
-        // assume it'll stick around and *don't* use the opener.
-        if (chromeDoc.getAttribute("chromehidden") && !browser.canGoBack) {
-          this.log("Using opener window for notification bar.");
-          return this._getChromeWindow(this._opener);
-        }
+      // Check to see if the current window was opened with chrome
+      // disabled, and if so use the opener window. But if the window
+      // has been used to visit other pages (ie, has a history),
+      // assume it'll stick around and *don't* use the opener.
+      if (chromeDoc.getAttribute("chromehidden") && !this._browser.canGoBack) {
+        this.log("Using opener window for notification bar.");
+        return this._getChromeWindow(this._opener);
       }
-
-      return { win, browser };
-
-    } catch (e) {
-      // If any errors happen, just assume no notification box.
-      this.log("Unable to get notify window: " + e.fileName + ":" + e.lineNumber + ": " + e.message);
-      return null;
     }
-  },
 
+    return { win: this._chromeWindow, browser: this._browser };
+  },
 
   /**
    * Returns the popup notification to this prompter,
