@@ -27,8 +27,8 @@ class ClientSingleTiledLayerBuffer
 {
   virtual ~ClientSingleTiledLayerBuffer() {}
 public:
-  ClientSingleTiledLayerBuffer(ClientTiledPaintedLayer& aPaintedLayer,
-                               CompositableClient& aCompositableClient,
+  ClientSingleTiledLayerBuffer(ClientTiledPaintedLayer* aPaintedLayer,
+                               CompositableClient* aCompositableClient,
                                ClientLayerManager* aManager);
 
   // TextureClientAllocator
@@ -106,7 +106,7 @@ private:
 class SingleTiledContentClient : public TiledContentClient
 {
 public:
-  SingleTiledContentClient(ClientTiledPaintedLayer& aPaintedLayer,
+  SingleTiledContentClient(ClientTiledPaintedLayer* aPaintedLayer,
                            ClientLayerManager* aManager);
 
 protected:
