@@ -11,6 +11,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/ipc/ProcessChild.h"
+#include "mozilla/layers/APZThreadUtils.h"
 #include "mozilla/layers/CompositorBridgeParent.h"
 #include "mozilla/layers/CompositorThread.h"
 #include "mozilla/layers/ImageBridgeParent.h"
@@ -63,6 +64,7 @@ GPUParent::Init(base::ProcessId aParentPid,
     return false;
   }
   CompositorThreadHolder::Start();
+  APZThreadUtils::SetControllerThread(CompositorThreadHolder::Loop());
   VRManager::ManagerInit();
   LayerTreeOwnerTracker::Initialize();
   mozilla::ipc::SetThisProcessName("GPU Process");
@@ -170,8 +172,12 @@ GPUParent::RecvGetDeviceStatus(GPUDeviceData* aOut)
 
 #if defined(XP_WIN)
   if (DeviceManagerDx* dm = DeviceManagerDx::Get()) {
-    dm->ExportDeviceInfo(&aOut->d3d11Device());
+    D3D11DeviceStatus deviceStatus;
+    dm->ExportDeviceInfo(&deviceStatus);
+    aOut->gpuDevice() = deviceStatus;
   }
+#else
+  aOut->gpuDevice() = null_t();
 #endif
 
   return true;

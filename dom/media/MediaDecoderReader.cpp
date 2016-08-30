@@ -516,8 +516,6 @@ MediaDecoderReader::Shutdown()
   // Shut down the watch manager before shutting down our task queue.
   mWatchManager.Shutdown();
 
-  RefPtr<ShutdownPromise> p;
-
   mDecoder = nullptr;
 
   ReaderQueue::Instance().Remove(this);

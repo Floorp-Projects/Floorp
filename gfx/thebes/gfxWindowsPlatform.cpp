@@ -2004,7 +2004,7 @@ gfxWindowsPlatform::ImportGPUDeviceData(const mozilla::gfx::GPUDeviceData& aData
 
   DeviceManagerDx* dm = DeviceManagerDx::Get();
   if (gfxConfig::IsEnabled(Feature::D3D11_COMPOSITING)) {
-    dm->ImportDeviceInfo(aData.d3d11Device());
+    dm->ImportDeviceInfo(aData.gpuDevice().get_D3D11DeviceStatus());
   } else {
     // There should be no devices, so this just takes away the device status.
     dm->ResetDevices();

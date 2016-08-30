@@ -938,7 +938,8 @@ class Parser final : private JS::AutoGCRooter, public StrictModeGetter
 
   public:
     /* Public entry points for parsing. */
-    Node statement(YieldHandling yieldHandling, bool canHaveDirectives = false);
+    Node statement(YieldHandling yieldHandling);
+    Node statementListItem(YieldHandling yieldHandling, bool canHaveDirectives = false);
 
     bool maybeParseDirective(Node list, Node pn, bool* cont);
 
@@ -1017,11 +1018,11 @@ class Parser final : private JS::AutoGCRooter, public StrictModeGetter
      */
     Node functionStmt(YieldHandling yieldHandling, DefaultHandling defaultHandling);
     Node functionExpr(InvokedPrediction invoked = PredictUninvoked);
-    Node statements(YieldHandling yieldHandling);
+
+    Node statementList(YieldHandling yieldHandling);
 
     Node blockStatement(YieldHandling yieldHandling,
                         unsigned errorNumber = JSMSG_CURLY_IN_COMPOUND);
-    Node ifStatement(YieldHandling yieldHandling);
     Node doWhileStatement(YieldHandling yieldHandling);
     Node whileStatement(YieldHandling yieldHandling);
 
@@ -1039,13 +1040,26 @@ class Parser final : private JS::AutoGCRooter, public StrictModeGetter
     Node breakStatement(YieldHandling yieldHandling);
     Node returnStatement(YieldHandling yieldHandling);
     Node withStatement(YieldHandling yieldHandling);
-    Node labeledStatement(YieldHandling yieldHandling);
     Node throwStatement(YieldHandling yieldHandling);
     Node tryStatement(YieldHandling yieldHandling);
     Node catchBlockStatement(YieldHandling yieldHandling, HandlePropertyName simpleCatchParam);
     Node debuggerStatement();
 
+    Node variableStatement(YieldHandling yieldHandling);
+
+    Node labeledStatement(YieldHandling yieldHandling);
+    Node labeledItem(YieldHandling yieldHandling);
+
+    Node ifStatement(YieldHandling yieldHandling);
+    Node consequentOrAlternative(YieldHandling yieldHandling);
+
+    // While on a |let| TOK_NAME token, examine |next|.  Indicate whether
+    // |next|, the next token already gotten with modifier TokenStream::None,
+    // continues a LexicalDeclaration.
+    bool nextTokenContinuesLetDeclaration(TokenKind next, YieldHandling yieldHandling);
+
     Node lexicalDeclaration(YieldHandling yieldHandling, bool isConst);
+
     Node importDeclaration();
     Node exportDeclaration();
     Node expressionStatement(YieldHandling yieldHandling,
@@ -1238,15 +1252,6 @@ class Parser final : private JS::AutoGCRooter, public StrictModeGetter
     bool finishFunctionScopes();
     bool finishFunction();
     bool leaveInnerFunction(ParseContext* outerpc);
-
-    // Use when the current token is TOK_NAME and is known to be 'let'.
-    bool shouldParseLetDeclaration(bool* parseDeclOut);
-
-    // Use when the lookahead token is TOK_NAME and is known to be 'let'. If a
-    // let declaration should be parsed, the TOK_NAME token of 'let' is
-    // consumed. Otherwise, the current token remains the TOK_NAME token of
-    // 'let'.
-    bool peekShouldParseLetDeclaration(bool* parseDeclOut, TokenStream::Modifier modifier);
 
   public:
     enum FunctionCallBehavior {

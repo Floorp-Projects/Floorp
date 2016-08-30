@@ -464,5 +464,17 @@ void ArrayLengthReadError(const char* aElementName)
   NS_RUNTIMEABORT(message.get());
 }
 
+void
+TableToArray(const nsTHashtable<nsPtrHashKey<void>>& aTable,
+             nsTArray<void*>& aArray)
+{
+  uint32_t i = 0;
+  void** elements = aArray.AppendElements(aTable.Count());
+  for (auto iter = aTable.ConstIter(); !iter.Done(); iter.Next()) {
+    elements[i] = iter.Get()->GetKey();
+    ++i;
+  }
+}
+
 } // namespace ipc
 } // namespace mozilla

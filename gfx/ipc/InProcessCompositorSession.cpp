@@ -54,7 +54,7 @@ InProcessCompositorSession::SetContentController(GeckoContentController* aContro
   mCompositorBridgeParent->SetControllerForLayerTree(mRootLayerTreeId, aController);
 }
 
-already_AddRefed<IAPZCTreeManager>
+RefPtr<IAPZCTreeManager>
 InProcessCompositorSession::GetAPZCTreeManager() const
 {
   return mCompositorBridgeParent->GetAPZCTreeManager(mRootLayerTreeId);
