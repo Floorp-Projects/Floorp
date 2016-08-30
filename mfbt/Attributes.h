@@ -458,6 +458,12 @@
  *   Using this attribute on a member disables the check that this member must be
  *   initialized in constructors via list-initialization, in the constructor body,
  *   or via functions called from the constructor body.
+ * MOZ_IS_CLASS_INIT: Applies to class method declarations. Occasionally the
+ *   constructor doesn't initialize all of the member variables and another function
+ *   is used to initialize the rest. This marker is used to make the static analysis
+ *   tool aware that the marked function is part of the initialization process
+ *   and to include the marked function in the scan mechanism that determines witch
+ *   member variables still remain uninitialized.
  * MOZ_NON_AUTOABLE: Applies to class declarations. Makes it a compile time error to
  *   use `auto` in place of this type in variable declarations.  This is intended to
  *   be used with types which are intended to be implicitly constructed into other
@@ -493,6 +499,8 @@
 #  define MOZ_NON_AUTOABLE __attribute__((annotate("moz_non_autoable")))
 #  define MOZ_INIT_OUTSIDE_CTOR \
     __attribute__((annotate("moz_ignore_ctor_initialization")))
+#  define MOZ_IS_CLASS_INIT \
+    __attribute__((annotate("moz_is_class_init")))
 /*
  * It turns out that clang doesn't like void func() __attribute__ {} without a
  * warning, so use pragmas to disable the warning. This code won't work on GCC
@@ -525,6 +533,7 @@
 #  define MOZ_NEEDS_MEMMOVABLE_MEMBERS /* nothing */
 #  define MOZ_INHERIT_TYPE_ANNOTATIONS_FROM_TEMPLATE_ARGS /* nothing */
 #  define MOZ_INIT_OUTSIDE_CTOR /* nothing */
+#  define MOZ_IS_CLASS_INIT /* nothing */
 #  define MOZ_NON_AUTOABLE /* nothing */
 #endif /* MOZ_CLANG_PLUGIN */
 
