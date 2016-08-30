@@ -19,7 +19,7 @@
 #include "mozilla/StartupTimeline.h"
 #include "mozilla/StaticMutex.h"
 #include "mozilla/StaticPtr.h"
-#include "mozilla/unused.h"
+#include "mozilla/Unused.h"
 
 #include "TelemetryCommon.h"
 #include "TelemetryHistogram.h"
