@@ -1802,7 +1802,7 @@ class _GenerateProtocolCode(ipdl.ast.Visitor):
         fromvar = ExprVar('from')
         triggervar = ExprVar('trigger')
         nextvar = ExprVar('next')
-        msgexpr = ExprSelect(triggervar, '.', 'mMsg')
+        msgexpr = ExprSelect(triggervar, '.', 'mMessage')
         actionexpr = ExprSelect(triggervar, '.', 'mAction')
 
         transitionfunc = FunctionDefn(FunctionDecl(
