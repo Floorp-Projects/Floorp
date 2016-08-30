@@ -1370,6 +1370,19 @@ NPObjWrapper_GetProperty(JSContext *cx, JS::Handle<JSObject*> obj, JS::Handle<js
       vp.setObject(*obj);
       return true;
     }
+
+    if (JS::GetSymbolCode(sym) == JS::SymbolCode::toStringTag) {
+      JS::RootedString tag(cx, JS_NewStringCopyZ(cx, NPRUNTIME_JSCLASS_NAME));
+      if (!tag) {
+        return false;
+      }
+
+      vp.setString(tag);
+      return true;
+    }
+
+    vp.setUndefined();
+    return true;
   }
 
   // Find out what plugin (NPP) is the owner of the object we're
