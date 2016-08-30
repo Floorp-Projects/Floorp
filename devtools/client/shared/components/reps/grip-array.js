@@ -127,13 +127,11 @@ define(function (require, exports, module) {
           title,
           objectLink({
             className: "arrayLeftBracket",
-            role: "presentation",
             object: object
           }, brackets.left),
           items,
           objectLink({
             className: "arrayRightBracket",
-            role: "presentation",
             object: object
           }, brackets.right),
           span({

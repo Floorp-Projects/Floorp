@@ -139,13 +139,11 @@ define(function (require, exports, module) {
           className: "objectBox objectBox-array"},
           objectLink({
             className: "arrayLeftBracket",
-            role: "presentation",
             object: object
           }, brackets.left),
           items,
           objectLink({
             className: "arrayRightBracket",
-            role: "presentation",
             object: object
           }, brackets.right),
           DOM.span({

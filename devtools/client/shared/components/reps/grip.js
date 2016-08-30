@@ -177,7 +177,6 @@ define(function (require, exports, module) {
             this.getTitle(object),
             objectLink({
               className: "objectLeftBrace",
-              role: "presentation",
               object: object
             }, "")
           )
@@ -189,13 +188,11 @@ define(function (require, exports, module) {
           this.getTitle(object),
           objectLink({
             className: "objectLeftBrace",
-            role: "presentation",
             object: object
           }, " { "),
           props,
           objectLink({
             className: "objectRightBrace",
-            role: "presentation",
             object: object
           }, " }")
         )
