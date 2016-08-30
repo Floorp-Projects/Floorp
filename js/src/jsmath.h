@@ -94,6 +94,9 @@ GenerateXorShift128PlusSeed(mozilla::Array<uint64_t, 2>& seed);
 extern uint64_t
 random_next(uint64_t* rngState, int bits);
 
+extern double
+math_random_impl(JSContext* cx);
+
 extern bool
 math_random(JSContext* cx, unsigned argc, js::Value* vp);
 

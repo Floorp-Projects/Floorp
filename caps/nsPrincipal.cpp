@@ -220,9 +220,9 @@ nsPrincipal::SubsumesInternal(nsIPrincipal* aOther,
     }
   }
 
-    nsCOMPtr<nsIURI> otherURI;
-    rv = aOther->GetURI(getter_AddRefs(otherURI));
-    NS_ENSURE_SUCCESS(rv, false);
+  nsCOMPtr<nsIURI> otherURI;
+  rv = aOther->GetURI(getter_AddRefs(otherURI));
+  NS_ENSURE_SUCCESS(rv, false);
 
   // Compare codebases.
   return nsScriptSecurityManager::SecurityCompareURIs(mCodebase, otherURI);

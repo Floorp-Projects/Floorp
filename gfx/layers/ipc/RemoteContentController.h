@@ -20,11 +20,14 @@ class TabParent;
 namespace layers {
 
 /**
- * RemoteContentController uses the PAPZ protocol to implement a
- * GeckoContentController for a browser living in a remote process.
- * Most of the member functions can be called on any thread, exceptions are
- * annotated in comments. The PAPZ protocol runs on the main thread (so all the
- * Recv* member functions do too).
+ * RemoteContentController implements PAPZChild and is used to access a
+ * GeckoContentController that lives in a different process.
+ *
+ * RemoteContentController lives on the compositor thread. All methods can
+ * be called off the compositor thread and will get dispatched to the right
+ * thread, with the exception of RequestContentRepaint and NotifyFlushComplete,
+ * which must be called on the repaint thread, which in this case is the compositor
+ * thread.
  */
 class RemoteContentController : public GeckoContentController
                               , public PAPZParent

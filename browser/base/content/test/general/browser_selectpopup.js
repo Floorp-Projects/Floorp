@@ -39,6 +39,21 @@ const PAGECONTENT_SMALL =
   "  <option value='Six'>Six</option>" +
   "</select></body></html>";
 
+const PAGECONTENT_SOMEHIDDEN =
+  "<html>" +
+  "<body><select id='one'>" +
+  "  <option value='One' style='display: none;'>OneHidden</option>" +
+  "  <option value='Two' style='display: none;'>TwoHidden</option>" +
+  "  <option value='Three'>ThreeVisible</option>" +
+  "  <option value='Four'style='display: table;'>FourVisible</option>" +
+  "  <option value='Five'>FiveVisible</option>" +
+  "  <optgroup label='GroupHidden' style='display: none;'>" +
+  "    <option value='Four'>Six.OneHidden</option>" +
+  "    <option value='Five' style='display: block;'>Six.TwoHidden</option>" +
+  "  </optgroup>" +
+  "  <option value='Six'>SevenVisible</option>" +
+  "</select></body></html>";
+
 const PAGECONTENT_TRANSLATED =
   "<html><body>" +
   "<div id='div'>" +
@@ -483,5 +498,35 @@ add_task(function* test_mousemove_correcttarget() {
     yield popupHiddenPromise;
   }
 
+  yield BrowserTestUtils.removeTab(tab);
+});
+
+// This test checks when a <select> element has some options with altered display values.
+add_task(function* test_somehidden() {
+  const pageUrl = "data:text/html," + escape(PAGECONTENT_SOMEHIDDEN);
+  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, pageUrl);
+
+  let selectPopup = document.getElementById("ContentSelectDropdown").menupopup;
+
+  let popupShownPromise = BrowserTestUtils.waitForEvent(selectPopup, "popupshown");
+  yield BrowserTestUtils.synthesizeMouseAtCenter("#one", { type: "mousedown" }, gBrowser.selectedBrowser);
+  yield popupShownPromise;
+
+  // The exact number is not needed; just ensure the height is larger than 4 items to accomodate any popup borders.
+  ok(selectPopup.getBoundingClientRect().height >= selectPopup.lastChild.getBoundingClientRect().height * 4, "Height contains at least 4 items");
+  ok(selectPopup.getBoundingClientRect().height < selectPopup.lastChild.getBoundingClientRect().height * 5, "Height doesn't contain 5 items");
+
+  // The label contains the substring 'Visible' for items that are visible.
+  // Otherwise, it is expected to be display: none.
+  is(selectPopup.parentNode.itemCount, 9, "Correct number of items");
+  let child = selectPopup.firstChild;
+  let idx = 1;
+  while (child) {
+    is(getComputedStyle(child).display, child.label.indexOf("Visible") > 0 ? "-moz-box" : "none",
+       "Item " + (idx++) + " is visible");
+    child = child.nextSibling;
+  }
+
+  yield hideSelectPopup(selectPopup, "escape");
   yield BrowserTestUtils.removeTab(tab);
 });
