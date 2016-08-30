@@ -160,7 +160,7 @@ add_task(function* test_reload_to_invalid_version_fails() {
 
   addonDir = yield promiseWriteWebManifestForExtension(manifest, tempdir, "invalid_version", false);
   let expectedMsg = new RegExp("Add-on invalid_version_cannot_be_reloaded@tests.mozilla.org is not compatible with application version. " +
-                               "add-on minVersion: 1, add-on maxVersion: 1");
+                               "add-on minVersion: 1. add-on maxVersion: 1.");
 
   yield Assert.rejects(addon.reload(),
                        expectedMsg,

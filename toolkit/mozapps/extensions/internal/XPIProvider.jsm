@@ -3998,11 +3998,19 @@ this.XPIProvider = {
     }
     let addon = yield loadManifestFromFile(aFile, TemporaryInstallLocation);
 
-    if (!addon.isCompatible) {
+    if (addon.appDisabled) {
+      let message = `Add-on ${addon.id} is not compatible with application version.`;
+
       let app = addon.matchingTargetApplication;
-      throw new Error(`Add-on ${addon.id} is not compatible with application version. ` +
-                      `add-on minVersion: ${app.minVersion}, ` +
-                      `add-on maxVersion: ${app.maxVersion}`);
+      if (app) {
+        if (app.minVersion) {
+          message += ` add-on minVersion: ${app.minVersion}.`;
+        }
+        if (app.maxVersion) {
+          message += ` add-on maxVersion: ${app.maxVersion}.`;
+        }
+      }
+      throw new Error(message);
     }
 
     if (!addon.bootstrap) {
