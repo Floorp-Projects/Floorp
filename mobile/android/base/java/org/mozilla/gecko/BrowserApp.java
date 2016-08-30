@@ -2706,7 +2706,8 @@ public class BrowserApp extends GeckoApp
         }
 
         if (mHomeScreen == null) {
-            if (ActivityStream.isEnabled(this)) {
+            if (ActivityStream.isEnabled(this) &&
+                !ActivityStream.isHomePanel()) {
                 final ViewStub asStub = (ViewStub) findViewById(R.id.activity_stream_stub);
                 mHomeScreen = (HomeScreen) asStub.inflate();
             } else {
