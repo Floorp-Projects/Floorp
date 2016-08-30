@@ -50,10 +50,9 @@ typedef Vector<FuncImportGenDesc, 0, SystemAllocPolicy> FuncImportGenDescVector;
 struct ModuleGeneratorData
 {
     ModuleKind                kind;
-    SignalUsage               usesSignal;
     MemoryUsage               memoryUsage;
     mozilla::Atomic<uint32_t> minMemoryLength;
-    uint32_t                  maxMemoryLength;
+    Maybe<uint32_t>           maxMemoryLength;
 
     SigWithIdVector           sigs;
     SigWithIdPtrVector        funcSigs;
@@ -62,12 +61,10 @@ struct ModuleGeneratorData
     TableDescVector           tables;
     Uint32Vector              asmJSSigToTableIndex;
 
-    explicit ModuleGeneratorData(SignalUsage usesSignal, ModuleKind kind = ModuleKind::Wasm)
+    explicit ModuleGeneratorData(ModuleKind kind = ModuleKind::Wasm)
       : kind(kind),
-        usesSignal(usesSignal),
         memoryUsage(MemoryUsage::None),
-        minMemoryLength(0),
-        maxMemoryLength(UINT32_MAX)
+        minMemoryLength(0)
     {}
 
     bool isAsmJS() const {
@@ -145,7 +142,6 @@ class MOZ_STACK_CLASS ModuleGenerator
                            Metadata* maybeAsmJSMetadata = nullptr);
 
     bool isAsmJS() const { return metadata_->kind == ModuleKind::AsmJS; }
-    SignalUsage usesSignal() const { return metadata_->assumptions.usesSignal; }
     jit::MacroAssembler& masm() { return masm_; }
 
     // Memory:
@@ -248,10 +244,6 @@ class MOZ_STACK_CLASS FunctionGenerator
     }
     void setUsesAtomics() {
         usesAtomics_ = true;
-    }
-
-    bool usesSignalsForInterrupts() const {
-        return m_->usesSignal().forInterrupt;
     }
 
     Bytes& bytes() {

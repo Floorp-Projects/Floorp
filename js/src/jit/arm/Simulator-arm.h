@@ -100,12 +100,12 @@ class Simulator
     };
 
     // Returns nullptr on OOM.
-    static Simulator* Create();
+    static Simulator* Create(JSContext* cx);
 
     static void Destroy(Simulator* simulator);
 
     // Constructor/destructor are for internal use only; use the static methods above.
-    Simulator();
+    explicit Simulator(JSContext* cx);
     ~Simulator();
 
     // The currently executing Simulator instance. Potentially there can be one
@@ -259,6 +259,9 @@ class Simulator
     inline void increaseStopCounter(uint32_t bkpt_code);
     void printStopInfo(uint32_t code);
 
+    // Handle any wasm faults, returning true if the fault was handled.
+    inline bool handleWasmFault(int32_t addr, unsigned numBytes);
+
     // Read and write memory.
     inline uint8_t readBU(int32_t addr);
     inline int8_t readB(int32_t addr);
@@ -348,6 +351,8 @@ class Simulator
     void setVFPRegister(int reg_index, const InputType& value);
 
     void callInternal(uint8_t* entry);
+
+    JSContext* const cx_;
 
     // Architecture state.
     // Saturating instructions require a Q flag to indicate saturation.

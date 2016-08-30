@@ -351,32 +351,15 @@ wasm::AddressOf(SymbolicAddress imm, ExclusiveContext* cx)
         return FuncCast(ecmaPow, Args_Double_DoubleDouble);
       case SymbolicAddress::ATan2D:
         return FuncCast(ecmaAtan2, Args_Double_DoubleDouble);
+      case SymbolicAddress::GrowMemory:
+        return FuncCast<uint32_t (Instance*, uint32_t)>(Instance::growMemory_i32, Args_General2);
+      case SymbolicAddress::CurrentMemory:
+        return FuncCast<uint32_t (Instance*)>(Instance::currentMemory_i32, Args_General1);
       case SymbolicAddress::Limit:
         break;
     }
 
     MOZ_CRASH("Bad SymbolicAddress");
-}
-
-SignalUsage::SignalUsage()
-  :
-#ifdef ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_OOB
-    // Signal-handling is only used to eliminate bounds checks when the OS page
-    // size is an even divisor of the WebAssembly page size.
-    forOOB(HaveSignalHandlers() &&
-           gc::SystemPageSize() <= PageSize &&
-           PageSize % gc::SystemPageSize() == 0 &&
-           !JitOptions.wasmExplicitBoundsChecks),
-#else
-    forOOB(false),
-#endif
-    forInterrupt(HaveSignalHandlers())
-{}
-
-bool
-SignalUsage::operator==(SignalUsage rhs) const
-{
-    return forOOB == rhs.forOOB && forInterrupt == rhs.forInterrupt;
 }
 
 static uint32_t
@@ -565,15 +548,13 @@ SigWithId::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
 }
 
 Assumptions::Assumptions(JS::BuildIdCharVector&& buildId)
-  : usesSignal(),
-    cpuId(GetCPUID()),
+  : cpuId(GetCPUID()),
     buildId(Move(buildId)),
     newFormat(false)
 {}
 
 Assumptions::Assumptions()
-  : usesSignal(),
-    cpuId(GetCPUID()),
+  : cpuId(GetCPUID()),
     buildId(),
     newFormat(false)
 {}
@@ -591,7 +572,6 @@ Assumptions::initBuildIdFromContext(ExclusiveContext* cx)
 bool
 Assumptions::clone(const Assumptions& other)
 {
-    usesSignal = other.usesSignal;
     cpuId = other.cpuId;
     newFormat = other.newFormat;
     return buildId.appendAll(other.buildId);
@@ -600,8 +580,7 @@ Assumptions::clone(const Assumptions& other)
 bool
 Assumptions::operator==(const Assumptions& rhs) const
 {
-    return usesSignal == rhs.usesSignal &&
-           cpuId == rhs.cpuId &&
+    return cpuId == rhs.cpuId &&
            buildId.length() == rhs.buildId.length() &&
            PodEqual(buildId.begin(), rhs.buildId.begin(), buildId.length()) &&
            newFormat == rhs.newFormat;
@@ -610,8 +589,7 @@ Assumptions::operator==(const Assumptions& rhs) const
 size_t
 Assumptions::serializedSize() const
 {
-    return sizeof(usesSignal) +
-           sizeof(uint32_t) +
+    return sizeof(uint32_t) +
            SerializedPodVectorSize(buildId) +
            sizeof(bool);
 }
@@ -619,7 +597,6 @@ Assumptions::serializedSize() const
 uint8_t*
 Assumptions::serialize(uint8_t* cursor) const
 {
-    cursor = WriteBytes(cursor, &usesSignal, sizeof(usesSignal));
     cursor = WriteScalar<uint32_t>(cursor, cpuId);
     cursor = SerializePodVector(cursor, buildId);
     cursor = WriteScalar<bool>(cursor, newFormat);
@@ -629,7 +606,6 @@ Assumptions::serialize(uint8_t* cursor) const
 const uint8_t*
 Assumptions::deserialize(const uint8_t* cursor)
 {
-    (cursor = ReadBytes(cursor, &usesSignal, sizeof(usesSignal))) &&
     (cursor = ReadScalar<uint32_t>(cursor, &cpuId)) &&
     (cursor = DeserializePodVector(cursor, &buildId)) &&
     (cursor = ReadScalar<bool>(cursor, &newFormat));
@@ -640,4 +616,58 @@ size_t
 Assumptions::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
 {
     return buildId.sizeOfExcludingThis(mallocSizeOf);
+}
+
+//  Heap length on ARM should fit in an ARM immediate. We approximate the set
+//  of valid ARM immediates with the predicate:
+//    2^n for n in [16, 24)
+//  or
+//    2^24 * n for n >= 1.
+bool
+wasm::IsValidARMLengthImmediate(uint32_t length)
+{
+    bool valid = (IsPowerOfTwo(length) ||
+                  (length & 0x00ffffff) == 0);
+
+    MOZ_ASSERT_IF(valid, length % PageSize == 0);
+
+    return valid;
+}
+
+uint32_t
+wasm::RoundUpToNextValidARMLengthImmediate(uint32_t length)
+{
+    MOZ_ASSERT(length <= 0xff000000);
+
+    if (length <= 16 * 1024 * 1024)
+        length = length ? mozilla::RoundUpPow2(length) : 0;
+    else
+        length = (length + 0x00ffffff) & ~0x00ffffff;
+
+    MOZ_ASSERT(IsValidARMLengthImmediate(length));
+
+    return length;
+}
+
+size_t
+wasm::LegalizeMapLength(size_t requestedSize)
+{
+#ifdef WASM_HUGE_MEMORY
+    // On 64-bit platforms just give us a 4G guard region
+    return wasm::MappedSize;
+#else
+    uint32_t res = requestedSize;
+
+    // On 32-bit platforms clamp down to 1GB
+    uint32_t MaxMappedSize = (1 << 30);
+    res = Min(res, MaxMappedSize);
+
+# ifdef JS_CODEGEN_ARM
+    // On Arm round so that it fits in a single instruction
+    res = RoundUpToNextValidARMLengthImmediate(res);
+    MOZ_RELEASE_ASSERT(res <= MaxMappedSize);
+# endif
+
+    return res;
+#endif
 }
