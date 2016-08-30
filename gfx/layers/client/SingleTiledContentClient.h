@@ -27,8 +27,8 @@ class ClientSingleTiledLayerBuffer
 {
   virtual ~ClientSingleTiledLayerBuffer() {}
 public:
-  ClientSingleTiledLayerBuffer(ClientTiledPaintedLayer* aPaintedLayer,
-                               CompositableClient* aCompositableClient,
+  ClientSingleTiledLayerBuffer(ClientTiledPaintedLayer& aPaintedLayer,
+                               CompositableClient& aCompositableClient,
                                ClientLayerManager* aManager);
 
   // TextureClientAllocator
@@ -83,8 +83,6 @@ public:
 private:
   TileClient mTile;
 
-  ClientLayerManager* mManager;
-
   nsIntRegion mPaintedRegion;
   nsIntRegion mValidRegion;
   bool mWasLastPaintProgressive;
@@ -106,7 +104,7 @@ private:
 class SingleTiledContentClient : public TiledContentClient
 {
 public:
-  SingleTiledContentClient(ClientTiledPaintedLayer* aPaintedLayer,
+  SingleTiledContentClient(ClientTiledPaintedLayer& aPaintedLayer,
                            ClientLayerManager* aManager);
 
 protected:
