@@ -541,10 +541,14 @@ TileClient::DiscardFrontBuffer()
   if (mFrontBuffer) {
     MOZ_ASSERT(mFrontBuffer->GetReadLock());
 
-    mAllocator->ReturnTextureClientDeferred(mFrontBuffer);
-    if (mFrontBufferOnWhite) {
-      mAllocator->ReturnTextureClientDeferred(mFrontBufferOnWhite);
+    MOZ_ASSERT(mAllocator);
+    if (mAllocator) {
+      mAllocator->ReturnTextureClientDeferred(mFrontBuffer);
+      if (mFrontBufferOnWhite) {
+        mAllocator->ReturnTextureClientDeferred(mFrontBufferOnWhite);
+      }
     }
+
     if (mFrontBuffer->IsLocked()) {
       mFrontBuffer->Unlock();
     }
@@ -559,7 +563,8 @@ TileClient::DiscardFrontBuffer()
 static void
 DiscardTexture(TextureClient* aTexture, TextureClientAllocator* aAllocator)
 {
-  if (aTexture) {
+  MOZ_ASSERT(aAllocator);
+  if (aTexture && aAllocator) {
     MOZ_ASSERT(aTexture->GetReadLock());
     if (!aTexture->HasSynchronization() && aTexture->IsReadLocked()) {
       // Our current back-buffer is still locked by the compositor. This can occur
@@ -578,10 +583,12 @@ DiscardTexture(TextureClient* aTexture, TextureClientAllocator* aAllocator)
 void
 TileClient::DiscardBackBuffer()
 {
-  DiscardTexture(mBackBuffer, mAllocator);
-  mBackBuffer.Set(this, nullptr);
-  DiscardTexture(mBackBufferOnWhite, mAllocator);
-  mBackBufferOnWhite = nullptr;
+  if (mBackBuffer) {
+    DiscardTexture(mBackBuffer, mAllocator);
+    mBackBuffer.Set(this, nullptr);
+    DiscardTexture(mBackBufferOnWhite, mAllocator);
+    mBackBufferOnWhite = nullptr;
+  }
 }
 
 static already_AddRefed<TextureClient>
@@ -621,6 +628,10 @@ TileClient::GetBackBuffer(CompositableClient& aCompositable,
                           nsIntRegion& aAddPaintedRegion,
                           RefPtr<TextureClient>* aBackBufferOnWhite)
 {
+  if (!mAllocator) {
+    gfxCriticalError() << "[TileClient] Missing TextureClientAllocator.";
+    return nullptr;
+  }
   if (aMode != SurfaceMode::SURFACE_COMPONENT_ALPHA) {
     // It can happen that a component-alpha layer stops being on component alpha
     // on the next frame, just drop the buffers on white if that happens.
@@ -1044,11 +1055,12 @@ ClientMultiTiledLayerBuffer::ValidateTile(TileClient& aTile,
   SurfaceMode mode;
   gfxContentType content = GetContentType(&mode);
 
-  if (aTile.IsPlaceholderTile()) {
+  if (!aTile.mAllocator) {
     aTile.SetTextureAllocator(mManager->GetCompositorBridgeChild()->GetTexturePool(
       mManager->GetCompositorBackendType(),
       gfxPlatform::GetPlatform()->Optimal2DFormatForContent(content),
       TextureFlags::DISALLOW_BIGIMAGE | TextureFlags::IMMEDIATE_UPLOAD));
+    MOZ_ASSERT(aTile.mAllocator);
   }
 
   nsIntRegion offsetScaledDirtyRegion = aDirtyRegion.MovedBy(-aTileOrigin);
