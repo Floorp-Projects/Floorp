@@ -83,10 +83,10 @@ public:
   virtual bool IsVisible() const override
   { return mVisible; }
 
-  NS_IMETHOD ConstrainPosition(bool     /*ignored aAllowSlop*/,
-                               int32_t* aX,
-                               int32_t* aY) override
-  { *aX = kMaxDimension;  *aY = kMaxDimension;  return NS_OK; }
+  virtual void ConstrainPosition(bool     /*ignored aAllowSlop*/,
+                                 int32_t* aX,
+                                 int32_t* aY) override
+  { *aX = kMaxDimension; *aY = kMaxDimension; }
 
   // Widget position is controlled by the parent process via TabChild.
   NS_IMETHOD Move(double aX, double aY) override
@@ -127,8 +127,6 @@ public:
 #if defined(XP_WIN)
   void SetNativeData(uint32_t aDataType, uintptr_t aVal) override;
 #endif
-  NS_IMETHOD ReparentNativeWidget(nsIWidget* aNewParent) override
-  { return NS_ERROR_UNEXPECTED; }
 
   // PuppetWidgets don't have any concept of titles.
   NS_IMETHOD SetTitle(const nsAString& aTitle) override
@@ -148,10 +146,6 @@ public:
                              const FrameMetrics::ViewID& aViewId,
                              const mozilla::Maybe<ZoomConstraints>& aConstraints) override;
   bool AsyncPanZoomEnabled() const override;
-
-  NS_IMETHOD CaptureRollupEvents(nsIRollupListener* aListener,
-                                 bool aDoCapture) override
-  { return NS_ERROR_UNEXPECTED; }
 
   NS_IMETHOD_(bool)
   ExecuteNativeKeyBinding(NativeKeyBindingsType aType,
@@ -222,7 +216,7 @@ public:
                             int32_t aPanelX, int32_t aPanelY,
                             nsString& aCommitted) override;
 
-  NS_IMETHOD SetPluginFocused(bool& aFocused) override;
+  virtual void SetPluginFocused(bool& aFocused) override;
   virtual void DefaultProcOfPluginEvent(
                  const mozilla::WidgetPluginEvent& aEvent) override;
 

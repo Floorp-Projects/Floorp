@@ -9,7 +9,7 @@
 #ifndef VIS_PROTO_H
 #define VIS_PROTO_H
 
-#pragma ident	"@(#)vis_proto.h	1.3	97/03/30 SMI"
+#pragma ident "@(#)vis_proto.h	1.3	97/03/30 SMI"
 
 #ifdef __cplusplus
 extern "C" {
@@ -186,46 +186,46 @@ void vis_error(char * /*fmt*/, int /*a0*/);
 void vis_sim_init(void);
 
 /* For better performance */
-#define vis_fmul8x16(farg,darg) vis_fmul8x16_dummy((farg),0,(darg))
+#define vis_fmul8x16(farg, darg) vis_fmul8x16_dummy((farg), 0, (darg))
 
 /* Nicknames for explicit ASI loads and stores. */
-#define vis_st_u8      vis_stdfa_ASI_FL8P
-#define vis_st_u8_i    vis_stdfa_ASI_FL8P_index
-#define vis_st_u8_le   vis_stdfa_ASI_FL8PL
-#define vis_st_u16     vis_stdfa_ASI_FL16P
-#define vis_st_u16_i   vis_stdfa_ASI_FL16P_index
-#define vis_st_u16_le  vis_stdfa_ASI_FL16PL
+#define vis_st_u8 vis_stdfa_ASI_FL8P
+#define vis_st_u8_i vis_stdfa_ASI_FL8P_index
+#define vis_st_u8_le vis_stdfa_ASI_FL8PL
+#define vis_st_u16 vis_stdfa_ASI_FL16P
+#define vis_st_u16_i vis_stdfa_ASI_FL16P_index
+#define vis_st_u16_le vis_stdfa_ASI_FL16PL
 
-#define vis_ld_u8      vis_lddfa_ASI_FL8P
-#define vis_ld_u8_i    vis_lddfa_ASI_FL8P_index
-#define vis_ld_u8_le   vis_lddfa_ASI_FL8PL
-#define vis_ld_u16     vis_lddfa_ASI_FL16P
-#define vis_ld_u16_i   vis_lddfa_ASI_FL16P_index
-#define vis_ld_u16_le  vis_lddfa_ASI_FL16PL
+#define vis_ld_u8 vis_lddfa_ASI_FL8P
+#define vis_ld_u8_i vis_lddfa_ASI_FL8P_index
+#define vis_ld_u8_le vis_lddfa_ASI_FL8PL
+#define vis_ld_u16 vis_lddfa_ASI_FL16P
+#define vis_ld_u16_i vis_lddfa_ASI_FL16P_index
+#define vis_ld_u16_le vis_lddfa_ASI_FL16PL
 
-#define vis_pst_8      vis_stdfa_ASI_PST8P
-#define vis_pst_16     vis_stdfa_ASI_PST16P
-#define vis_pst_32     vis_stdfa_ASI_PST32P
+#define vis_pst_8 vis_stdfa_ASI_PST8P
+#define vis_pst_16 vis_stdfa_ASI_PST16P
+#define vis_pst_32 vis_stdfa_ASI_PST32P
 
-#define vis_st_u8s     vis_stdfa_ASI_FL8S
-#define vis_st_u8s_le  vis_stdfa_ASI_FL8SL
-#define vis_st_u16s    vis_stdfa_ASI_FL16S
+#define vis_st_u8s vis_stdfa_ASI_FL8S
+#define vis_st_u8s_le vis_stdfa_ASI_FL8SL
+#define vis_st_u16s vis_stdfa_ASI_FL16S
 #define vis_st_u16s_le vis_stdfa_ASI_FL16SL
 
-#define vis_ld_u8s     vis_lddfa_ASI_FL8S
-#define vis_ld_u8s_le  vis_lddfa_ASI_FL8SL
-#define vis_ld_u16s    vis_lddfa_ASI_FL16S
+#define vis_ld_u8s vis_lddfa_ASI_FL8S
+#define vis_ld_u8s_le vis_lddfa_ASI_FL8SL
+#define vis_ld_u16s vis_lddfa_ASI_FL16S
 #define vis_ld_u16s_le vis_lddfa_ASI_FL16SL
 
-#define vis_pst_8s     vis_stdfa_ASI_PST8S
-#define vis_pst_16s    vis_stdfa_ASI_PST16S
-#define vis_pst_32s    vis_stdfa_ASI_PST32S
+#define vis_pst_8s vis_stdfa_ASI_PST8S
+#define vis_pst_16s vis_stdfa_ASI_PST16S
+#define vis_pst_32s vis_stdfa_ASI_PST32S
 
 /* "<" and ">=" may be implemented in terms of ">" and "<=". */
-#define vis_fcmplt16(a,b) vis_fcmpgt16((b),(a))
-#define vis_fcmplt32(a,b) vis_fcmpgt32((b),(a))
-#define vis_fcmpge16(a,b) vis_fcmple16((b),(a))
-#define vis_fcmpge32(a,b) vis_fcmple32((b),(a))
+#define vis_fcmplt16(a, b) vis_fcmpgt16((b), (a))
+#define vis_fcmplt32(a, b) vis_fcmpgt32((b), (a))
+#define vis_fcmpge16(a, b) vis_fcmple16((b), (a))
+#define vis_fcmpge32(a, b) vis_fcmple32((b), (a))
 
 #ifdef __cplusplus
 } // End of extern "C"

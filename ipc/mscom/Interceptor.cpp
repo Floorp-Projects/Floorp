@@ -23,7 +23,7 @@ namespace mozilla {
 namespace mscom {
 
 /* static */ HRESULT
-Interceptor::Create(STAUniquePtr<IUnknown>& aTarget, IInterceptorSink* aSink,
+Interceptor::Create(STAUniquePtr<IUnknown> aTarget, IInterceptorSink* aSink,
                     REFIID aIid, void** aOutput)
 {
   MOZ_ASSERT(aOutput && aTarget && aSink);
@@ -34,13 +34,13 @@ Interceptor::Create(STAUniquePtr<IUnknown>& aTarget, IInterceptorSink* aSink,
   if (!aTarget || !aSink) {
     return E_INVALIDARG;
   }
-  Interceptor* intcpt = new Interceptor(aTarget, aSink);
+  Interceptor* intcpt = new Interceptor(Move(aTarget), aSink);
   HRESULT hr = intcpt->QueryInterface(aIid, aOutput);
   static_cast<WeakReferenceSupport*>(intcpt)->Release();
   return hr;
 }
 
-Interceptor::Interceptor(STAUniquePtr<IUnknown>& aTarget, IInterceptorSink* aSink)
+Interceptor::Interceptor(STAUniquePtr<IUnknown> aTarget, IInterceptorSink* aSink)
   : WeakReferenceSupport(WeakReferenceSupport::Flags::eDestroyOnMainThread)
   , mTarget(Move(aTarget))
   , mEventSink(aSink)

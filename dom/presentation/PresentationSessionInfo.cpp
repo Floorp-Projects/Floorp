@@ -373,7 +373,9 @@ PresentationSessionInfo::GetWindow()
     return nullptr;
   }
   uint64_t windowId = 0;
-  if (NS_WARN_IF(NS_FAILED(service->GetWindowIdBySessionId(mSessionId, &windowId)))) {
+  if (NS_WARN_IF(NS_FAILED(service->GetWindowIdBySessionId(mSessionId,
+                                                           mRole,
+                                                           &windowId)))) {
     return nullptr;
   }
 

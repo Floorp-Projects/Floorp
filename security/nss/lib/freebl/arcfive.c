@@ -40,8 +40,8 @@ RC5_CreateContext(const SECItem *key, unsigned int rounds,
 **      "cx" the context
 **      "freeit" if PR_TRUE then free the object as well as its sub-objects
 */
-void 
-RC5_DestroyContext(RC5Context *cx, PRBool freeit) 
+void
+RC5_DestroyContext(RC5Context *cx, PRBool freeit)
 {
     PORT_SetError(PR_NOT_IMPLEMENTED_ERROR);
 }
@@ -57,10 +57,10 @@ RC5_DestroyContext(RC5Context *cx, PRBool freeit)
 **      "input" the input data
 **      "inputLen" the amount of input data
 */
-SECStatus 
-RC5_Encrypt(RC5Context *cx, unsigned char *output, unsigned int *outputLen, 
-	    unsigned int maxOutputLen, 
-	    const unsigned char *input, unsigned int inputLen)
+SECStatus
+RC5_Encrypt(RC5Context *cx, unsigned char *output, unsigned int *outputLen,
+            unsigned int maxOutputLen,
+            const unsigned char *input, unsigned int inputLen)
 {
     PORT_SetError(PR_NOT_IMPLEMENTED_ERROR);
     return SECFailure;
@@ -77,12 +77,11 @@ RC5_Encrypt(RC5Context *cx, unsigned char *output, unsigned int *outputLen,
 **      "input" the input data
 **      "inputLen" the amount of input data
 */
-SECStatus 
-RC5_Decrypt(RC5Context *cx, unsigned char *output, unsigned int *outputLen, 
-	    unsigned int maxOutputLen,
+SECStatus
+RC5_Decrypt(RC5Context *cx, unsigned char *output, unsigned int *outputLen,
+            unsigned int maxOutputLen,
             const unsigned char *input, unsigned int inputLen)
 {
     PORT_SetError(PR_NOT_IMPLEMENTED_ERROR);
     return SECFailure;
 }
-

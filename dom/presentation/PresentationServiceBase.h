@@ -25,32 +25,73 @@ public:
   PresentationServiceBase() = default;
 
 protected:
+  class SessionIdManager final
+  {
+  public:
+    explicit SessionIdManager()
+    {
+      MOZ_COUNT_CTOR(SessionIdManager);
+    }
+
+    ~SessionIdManager()
+    {
+      MOZ_COUNT_DTOR(SessionIdManager);
+    }
+
+    nsresult GetWindowId(const nsAString& aSessionId, uint64_t* aWindowId);
+
+    nsresult GetSessionIds(uint64_t aWindowId, nsTArray<nsString>& aSessionIds);
+
+    void AddSessionId(uint64_t aWindowId, const nsAString& aSessionId);
+
+    void RemoveSessionId(const nsAString& aSessionId);
+
+    nsresult UpdateWindowId(const nsAString& aSessionId, const uint64_t aWindowId);
+
+    void Clear()
+    {
+      mRespondingSessionIds.Clear();
+      mRespondingWindowIds.Clear();
+    }
+
+  private:
+    nsClassHashtable<nsUint64HashKey, nsTArray<nsString>> mRespondingSessionIds;
+    nsDataHashtable<nsStringHashKey, uint64_t> mRespondingWindowIds;
+  };
+
   virtual ~PresentationServiceBase() = default;
 
   void Shutdown()
   {
     mRespondingListeners.Clear();
-    mRespondingSessionIds.Clear();
-    mRespondingWindowIds.Clear();
+    mControllerSessionIdManager.Clear();
+    mReceiverSessionIdManager.Clear();
   }
-  nsresult GetExistentSessionIdAtLaunchInternal(uint64_t aWindowId, nsAString& aSessionId);
-  nsresult GetWindowIdBySessionIdInternal(const nsAString& aSessionId, uint64_t* aWindowId);
-  void AddRespondingSessionId(uint64_t aWindowId, const nsAString& aSessionId);
-  void RemoveRespondingSessionId(const nsAString& aSessionId);
+
+  nsresult GetWindowIdBySessionIdInternal(const nsAString& aSessionId,
+                                          uint8_t aRole,
+                                          uint64_t* aWindowId);
+  void AddRespondingSessionId(uint64_t aWindowId,
+                              const nsAString& aSessionId,
+                              uint8_t aRole);
+  void RemoveRespondingSessionId(const nsAString& aSessionId,
+                                 uint8_t aRole);
   nsresult UpdateWindowIdBySessionIdInternal(const nsAString& aSessionId,
+                                             uint8_t aRole,
                                              const uint64_t aWindowId);
 
   // Store the responding listener based on the window ID of the (in-process or
   // OOP) receiver page.
-  nsRefPtrHashtable<nsUint64HashKey, nsIPresentationRespondingListener> mRespondingListeners;
+  nsRefPtrHashtable<nsUint64HashKey, nsIPresentationRespondingListener>
+  mRespondingListeners;
 
   // Store the mapping between the window ID of the in-process and OOP page and the ID
-  // of the responding session. It's used for an receiver page to retrieve
-  // the correspondent session ID. Besides, also keep the mapping
+  // of the responding session. It's used for both controller and receiver page
+  // to retrieve the correspondent session ID. Besides, also keep the mapping
   // between the responding session ID and the window ID to help look up the
   // window ID.
-  nsClassHashtable<nsUint64HashKey, nsTArray<nsString>> mRespondingSessionIds;
-  nsDataHashtable<nsStringHashKey, uint64_t> mRespondingWindowIds;
+  SessionIdManager mControllerSessionIdManager;
+  SessionIdManager mReceiverSessionIdManager;
 };
 
 } // namespace dom

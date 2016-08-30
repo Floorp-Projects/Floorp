@@ -15,53 +15,54 @@
 
 #include "mpi.h"
 
-#define IBASE     10
-#define OBASE     16
-#define USAGE     "Usage: %s ibase obase [value]\n"
-#define MAXBASE   64
-#define MINBASE   2
+#define IBASE 10
+#define OBASE 16
+#define USAGE "Usage: %s ibase obase [value]\n"
+#define MAXBASE 64
+#define MINBASE 2
 
-int main(int argc, char *argv[])
+int
+main(int argc, char *argv[])
 {
-  int    ix, ibase = IBASE, obase = OBASE;
-  mp_int val;
+    int ix, ibase = IBASE, obase = OBASE;
+    mp_int val;
 
-  ix = 1;
-  if(ix < argc) {
-    ibase = atoi(argv[ix++]);
-    
-    if(ibase < MINBASE || ibase > MAXBASE) {
-      fprintf(stderr, "%s: input radix must be between %d and %d inclusive\n",
-	      argv[0], MINBASE, MAXBASE);
-      return 1;
+    ix = 1;
+    if (ix < argc) {
+        ibase = atoi(argv[ix++]);
+
+        if (ibase < MINBASE || ibase > MAXBASE) {
+            fprintf(stderr, "%s: input radix must be between %d and %d inclusive\n",
+                    argv[0], MINBASE, MAXBASE);
+            return 1;
+        }
     }
-  }
-  if(ix < argc) {
-    obase = atoi(argv[ix++]);
+    if (ix < argc) {
+        obase = atoi(argv[ix++]);
 
-    if(obase < MINBASE || obase > MAXBASE) {
-      fprintf(stderr, "%s: output radix must be between %d and %d inclusive\n",
-	      argv[0], MINBASE, MAXBASE);
-      return 1;
+        if (obase < MINBASE || obase > MAXBASE) {
+            fprintf(stderr, "%s: output radix must be between %d and %d inclusive\n",
+                    argv[0], MINBASE, MAXBASE);
+            return 1;
+        }
     }
-  }
 
-  mp_init(&val);
-  while(ix < argc) {
-    char  *out;
-    int    outlen;
+    mp_init(&val);
+    while (ix < argc) {
+        char *out;
+        int outlen;
 
-    mp_read_radix(&val, argv[ix++], ibase);
+        mp_read_radix(&val, argv[ix++], ibase);
 
-    outlen = mp_radix_size(&val, obase);
-    out = calloc(outlen, sizeof(char));
-    mp_toradix(&val, out, obase);
+        outlen = mp_radix_size(&val, obase);
+        out = calloc(outlen, sizeof(char));
+        mp_toradix(&val, out, obase);
 
-    printf("%s\n", out);
-    free(out);
-  }
+        printf("%s\n", out);
+        free(out);
+    }
 
-  mp_clear(&val);
+    mp_clear(&val);
 
-  return 0;
+    return 0;
 }

@@ -644,6 +644,8 @@ protected:
 
   nsCString mResponseCharset;
 
+  void MatchCharsetAndDecoderToResponseDocument();
+
   XMLHttpRequestResponseType mResponseType;
 
   // It is either a cached blob-response from the last call to GetResponse,
@@ -708,6 +710,7 @@ protected:
   void HandleTimeoutCallback();
 
   bool mErrorLoad;
+  bool mErrorParsingXML;
   bool mWaitingForOnStopRequest;
   bool mProgressTimerIsActive;
   bool mIsHtml;

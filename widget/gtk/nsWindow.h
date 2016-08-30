@@ -107,9 +107,9 @@ public:
         return mozilla::DesktopToLayoutDeviceScale(1.0);
     }
     virtual nsresult   SetParent(nsIWidget* aNewParent) override;
-    NS_IMETHOD         SetModal(bool aModal) override;
+    virtual void       SetModal(bool aModal) override;
     virtual bool       IsVisible() const override;
-    NS_IMETHOD         ConstrainPosition(bool aAllowSlop,
+    virtual void       ConstrainPosition(bool aAllowSlop,
                                          int32_t *aX,
                                          int32_t *aY) override;
     virtual void       SetSizeConstraints(const SizeConstraints& aConstraints) override;
@@ -126,10 +126,6 @@ public:
                                          bool   aRepaint) override;
     virtual bool       IsEnabled() const override;
 
-
-    NS_IMETHOD         PlaceBehind(nsTopLevelWidgetZPlacement  aPlacement,
-                                   nsIWidget                  *aWidget,
-                                   bool                        aActivate) override;
     void               SetZIndex(int32_t aZIndex) override;
     virtual void       SetSizeMode(nsSizeMode aMode) override;
     NS_IMETHOD         Enable(bool aState) override;
@@ -146,10 +142,10 @@ public:
     void               SetNativeData(uint32_t aDataType, uintptr_t aVal) override;
     NS_IMETHOD         SetTitle(const nsAString& aTitle) override;
     NS_IMETHOD         SetIcon(const nsAString& aIconSpec) override;
-    NS_IMETHOD         SetWindowClass(const nsAString& xulWinType) override;
+    virtual void       SetWindowClass(const nsAString& xulWinType) override;
     virtual LayoutDeviceIntPoint WidgetToScreenOffset() override;
-    NS_IMETHOD         CaptureMouse(bool aCapture) override;
-    NS_IMETHOD         CaptureRollupEvents(nsIRollupListener *aListener,
+    virtual void       CaptureMouse(bool aCapture) override;
+    virtual void       CaptureRollupEvents(nsIRollupListener *aListener,
                                            bool aDoCapture) override;
     NS_IMETHOD         GetAttention(int32_t aCycleCount) override;
     virtual nsresult   SetWindowClipRegion(const nsTArray<LayoutDeviceIntRect>& aRects,
@@ -320,7 +316,7 @@ public:
     static already_AddRefed<DrawTarget> GetDrawTargetForGdkDrawable(GdkDrawable* aDrawable,
                                                                     const mozilla::gfx::IntSize& aSize);
 #endif
-    NS_IMETHOD         ReparentNativeWidget(nsIWidget* aNewParent) override;
+    virtual void       ReparentNativeWidget(nsIWidget* aNewParent) override;
 
     virtual nsresult SynthesizeNativeMouseEvent(LayoutDeviceIntPoint aPoint,
                                                 uint32_t aNativeMessage,

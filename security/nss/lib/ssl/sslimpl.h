@@ -437,8 +437,6 @@ typedef enum {
     cipher_rc2_40,
     cipher_des,
     cipher_3des,
-    cipher_des40,
-    cipher_idea,
     cipher_aes_128,
     cipher_aes_256,
     cipher_camellia_128,
@@ -457,14 +455,7 @@ typedef enum { type_stream,
 
 #define MAX_IV_LENGTH 24
 
-/*
- * Do not depend upon 64 bit arithmetic in the underlying machine.
- */
-typedef struct {
-    PRUint32 high;
-    PRUint32 low;
-} SSL3SequenceNumber;
-
+typedef PRUint64 sslSequenceNumber;
 typedef PRUint16 DTLSEpoch;
 
 typedef void (*DTLSTimerCb)(sslSocket *);
@@ -520,18 +511,19 @@ typedef SECStatus (*SSLCompressor)(void *context,
                                    int inlen);
 typedef SECStatus (*SSLDestroy)(void *context, PRBool freeit);
 
-/* The DTLS anti-replay window. Defined here because we need it in
- * the cipher spec. Note that this is a ring buffer but left and
- * right represent the true window, with modular arithmetic used to
- * map them onto the buffer.
+/* The DTLS anti-replay window in number of packets. Defined here because we
+ * need it in the cipher spec. Note that this is a ring buffer but left and
+ * right represent the true window, with modular arithmetic used to map them
+ * onto the buffer.
  */
-#define DTLS_RECVD_RECORDS_WINDOW 1024 /* Packets; approximate   \
-                                        * Must be divisible by 8 \
-                                        */
+#define DTLS_RECVD_RECORDS_WINDOW 1024
+#define RECORD_SEQ_MAX ((1ULL << 48) - 1)
+PR_STATIC_ASSERT(DTLS_RECVD_RECORDS_WINDOW % 8 == 0);
+
 typedef struct DTLSRecvdRecordsStr {
     unsigned char data[DTLS_RECVD_RECORDS_WINDOW / 8];
-    PRUint64 left;
-    PRUint64 right;
+    sslSequenceNumber left;
+    sslSequenceNumber right;
 } DTLSRecvdRecords;
 
 /*
@@ -560,8 +552,8 @@ typedef struct {
     void *decompressContext;
     PRBool bypassCiphers; /* did double bypass (at least) */
     PK11SymKey *master_secret;
-    SSL3SequenceNumber write_seq_num;
-    SSL3SequenceNumber read_seq_num;
+    sslSequenceNumber write_seq_num;
+    sslSequenceNumber read_seq_num;
     SSL3ProtocolVersion version;
     ssl3KeyMaterial client;
     ssl3KeyMaterial server;
@@ -741,6 +733,9 @@ struct ssl3BulkCipherDefStr {
     unsigned int explicit_nonce_size; /* for AEAD ciphers. */
     SECOidTag oid;
     const char *short_name;
+    /* The maximum number of records that can be sent/received with the same
+      * symmetric key before the connection will be terminated. */
+    PRUint64 max_records;
 };
 
 /*
@@ -1073,7 +1068,7 @@ struct ssl3StateStr {
 typedef struct {
     SSL3ContentType type;
     SSL3ProtocolVersion version;
-    SSL3SequenceNumber seq_num; /* DTLS only */
+    sslSequenceNumber seq_num; /* DTLS only */
     sslBuffer *buf;
 } SSL3Ciphertext;
 
@@ -1798,7 +1793,7 @@ extern PRInt32 ssl3_ConsumeHandshakeNumber(sslSocket *ss, PRInt32 bytes,
 extern SECStatus ssl3_ConsumeHandshakeVariable(sslSocket *ss, SECItem *i,
                                                PRInt32 bytes, SSL3Opaque **b,
                                                PRUint32 *length);
-extern PRUint8 *ssl_EncodeUintX(PRUint32 value, unsigned int bytes,
+extern PRUint8 *ssl_EncodeUintX(PRUint64 value, unsigned int bytes,
                                 PRUint8 *to);
 extern PRBool ssl_IsSupportedSignatureScheme(SignatureScheme scheme);
 extern SECStatus ssl_CheckSignatureSchemeConsistency(
@@ -1936,15 +1931,18 @@ extern void dtls_CheckTimer(sslSocket *ss);
 extern void dtls_CancelTimer(sslSocket *ss);
 extern void dtls_SetMTU(sslSocket *ss, PRUint16 advertised);
 extern void dtls_InitRecvdRecords(DTLSRecvdRecords *records);
-extern int dtls_RecordGetRecvd(const DTLSRecvdRecords *records, PRUint64 seq);
-extern void dtls_RecordSetRecvd(DTLSRecvdRecords *records, PRUint64 seq);
+extern int dtls_RecordGetRecvd(const DTLSRecvdRecords *records,
+                               sslSequenceNumber seq);
+extern void dtls_RecordSetRecvd(DTLSRecvdRecords *records,
+                                sslSequenceNumber seq);
 extern void dtls_RehandshakeCleanup(sslSocket *ss);
 extern SSL3ProtocolVersion
 dtls_TLSVersionToDTLSVersion(SSL3ProtocolVersion tlsv);
 extern SSL3ProtocolVersion
 dtls_DTLSVersionToTLSVersion(SSL3ProtocolVersion dtlsv);
 extern PRBool dtls_IsRelevant(sslSocket *ss, const ssl3CipherSpec *crSpec,
-                              const SSL3Ciphertext *cText, PRUint64 *seqNum);
+                              const SSL3Ciphertext *cText,
+                              sslSequenceNumber *seqNum);
 extern SECStatus dtls_MaybeRetransmitHandshake(sslSocket *ss,
                                                const SSL3Ciphertext *cText);
 
@@ -1975,7 +1973,6 @@ SECStatus ssl3_ComputeHandshakeHashes(sslSocket *ss,
                                       ssl3CipherSpec *spec,
                                       SSL3Hashes *hashes,
                                       PRUint32 sender);
-void ssl3_BumpSequenceNumber(SSL3SequenceNumber *num);
 PRInt32 tls13_ServerSendKeyShareXtn(sslSocket *ss, PRBool append,
                                     PRUint32 maxBytes);
 SECStatus ssl_CreateECDHEphemeralKeyPair(const namedGroupDef *ecGroup,

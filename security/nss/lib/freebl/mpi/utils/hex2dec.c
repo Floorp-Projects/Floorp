@@ -13,26 +13,28 @@
 
 #include "mpi.h"
 
-int main(int argc, char *argv[])
+int
+main(int argc, char *argv[])
 {
-  mp_int  a;
-  char   *buf;
-  int     len;
+    mp_int a;
+    char *buf;
+    int len;
 
-  if(argc < 2) {
-    fprintf(stderr, "Usage: %s <a>\n", argv[0]);
-    return 1;
-  }
+    if (argc < 2) {
+        fprintf(stderr, "Usage: %s <a>\n", argv[0]);
+        return 1;
+    }
 
-  mp_init(&a); mp_read_radix(&a, argv[1], 16);
-  len = mp_radix_size(&a, 10);
-  buf = malloc(len);
-  mp_toradix(&a, buf, 10);
+    mp_init(&a);
+    mp_read_radix(&a, argv[1], 16);
+    len = mp_radix_size(&a, 10);
+    buf = malloc(len);
+    mp_toradix(&a, buf, 10);
 
-  printf("%s\n", buf);
+    printf("%s\n", buf);
 
-  free(buf);
-  mp_clear(&a);
+    free(buf);
+    mp_clear(&a);
 
-  return 0;
+    return 0;
 }
