@@ -81,6 +81,13 @@ class MediaEngineTabVideoSource : public MediaEngineVideoSource, nsIDOMEventList
       RefPtr<MediaEngineTabVideoSource> mVideoSource;
     };
 
+    class DestroyRunnable : public Runnable {
+    public:
+      explicit DestroyRunnable(MediaEngineTabVideoSource* videoSource) : mVideoSource(videoSource) {}
+      NS_IMETHOD Run();
+      RefPtr<MediaEngineTabVideoSource> mVideoSource;
+    };
+
 protected:
     ~MediaEngineTabVideoSource() {}
 
