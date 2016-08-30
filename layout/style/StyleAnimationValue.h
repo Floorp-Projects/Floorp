@@ -60,6 +60,17 @@ public:
   }
 
   /**
+   * Calculates a measure of 'distance' between two colors.
+   *
+   * @param aStartColor The start of the interval for which the distance
+   *                    should be calculated.
+   * @param aEndColor   The end of the interval for which the distance
+   *                    should be calculated.
+   * @return the result of the calculation.
+   */
+  static double ComputeColorDistance(nscolor aStartColor, nscolor aEndColor);
+
+  /**
    * Calculates a measure of 'distance' between two values.
    *
    * This measure of Distance is guaranteed to be proportional to
