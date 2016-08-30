@@ -653,12 +653,12 @@ DumpAnimationProperties(nsTArray<AnimationProperty>& aAnimationProperties)
     printf("%s\n", nsCSSProps::GetStringValue(p.mProperty).get());
     for (auto& s : p.mSegments) {
       nsString fromValue, toValue;
-      StyleAnimationValue::UncomputeValue(p.mProperty,
-                                          s.mFromValue,
-                                          fromValue);
-      StyleAnimationValue::UncomputeValue(p.mProperty,
-                                          s.mToValue,
-                                          toValue);
+      Unused << StyleAnimationValue::UncomputeValue(p.mProperty,
+                                                    s.mFromValue,
+                                                    fromValue);
+      Unused << StyleAnimationValue::UncomputeValue(p.mProperty,
+                                                    s.mToValue,
+                                                    toValue);
       printf("  %f..%f: %s..%s\n", s.mFromKey, s.mToKey,
              NS_ConvertUTF16toUTF8(fromValue).get(),
              NS_ConvertUTF16toUTF8(toValue).get());
@@ -717,7 +717,9 @@ CreatePropertyValue(nsCSSPropertyID aProperty,
   aResult.mOffset = aOffset;
 
   nsString stringValue;
-  StyleAnimationValue::UncomputeValue(aProperty, aValue, stringValue);
+  DebugOnly<bool> uncomputeResult =
+    StyleAnimationValue::UncomputeValue(aProperty, aValue, stringValue);
+  MOZ_ASSERT(uncomputeResult, "failed to uncompute value");
   aResult.mValue = stringValue;
 
   if (aTimingFunction) {
