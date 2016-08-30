@@ -2815,18 +2815,6 @@ AccumulateTimeDelta(ID aHistogram, TimeStamp start, TimeStamp end)
 }
 
 void
-AccumulateChild(const nsTArray<Accumulation>& aAccumulations)
-{
-  TelemetryHistogram::AccumulateChild(aAccumulations);
-}
-
-void
-AccumulateChildKeyed(const nsTArray<KeyedAccumulation>& aAccumulations)
-{
-  TelemetryHistogram::AccumulateChildKeyed(aAccumulations);
-}
-
-void
 ClearHistogram(ID aId)
 {
   TelemetryHistogram::ClearHistogram(aId);
