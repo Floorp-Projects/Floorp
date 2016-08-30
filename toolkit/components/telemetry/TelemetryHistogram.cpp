@@ -336,6 +336,16 @@ HistogramInfo::label_id(const char* label, uint32_t* labelId) const
   return NS_ERROR_FAILURE;
 }
 
+bool
+StringEndsWith(const std::string& name, const std::string& suffix)
+{
+  if (name.size() < suffix.size()) {
+    return false;
+  }
+
+  return name.compare(name.size() - suffix.size(), suffix.size(), suffix) == 0;
+}
+
 } // namespace
 
 
@@ -420,6 +430,18 @@ internal_HistogramGet(const char *name, const char *expiration,
   return NS_OK;
 }
 
+CharPtrEntryType*
+internal_GetHistogramMapEntry(const char* name)
+{
+  nsDependentCString histogramName(name);
+  NS_NAMED_LITERAL_CSTRING(suffix, CHILD_HISTOGRAM_SUFFIX);
+  if (!StringEndsWith(histogramName, suffix)) {
+    return gHistogramMap.GetEntry(name);
+  }
+  auto root = Substring(histogramName, 0, histogramName.Length() - suffix.Length());
+  return gHistogramMap.GetEntry(PromiseFlatCString(root).get());
+}
+
 nsresult
 internal_GetHistogramEnumId(const char *name, mozilla::Telemetry::ID *id)
 {
@@ -427,7 +449,7 @@ internal_GetHistogramEnumId(const char *name, mozilla::Telemetry::ID *id)
     return NS_ERROR_FAILURE;
   }
 
-  CharPtrEntryType *entry = gHistogramMap.GetEntry(name);
+  CharPtrEntryType *entry = internal_GetHistogramMapEntry(name);
   if (!entry) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -499,7 +521,9 @@ internal_GetHistogramByName(const nsACString &name, Histogram **ret)
     return rv;
   }
 
-  rv = internal_GetHistogramByEnumId(id, ret);
+  bool isChild = StringEndsWith(name,
+                                NS_LITERAL_CSTRING(CHILD_HISTOGRAM_SUFFIX));
+  rv = internal_GetHistogramByEnumId(id, ret, isChild);
   if (NS_FAILED(rv))
     return rv;
 
@@ -555,6 +579,7 @@ internal_CloneHistogram(const nsACString& newName,
 }
 
 #if !defined(MOZ_WIDGET_GONK) && !defined(MOZ_WIDGET_ANDROID)
+
 Histogram*
 internal_GetSubsessionHistogram(Histogram& existing)
 {
@@ -565,9 +590,14 @@ internal_GetSubsessionHistogram(Histogram& existing)
     return nullptr;
   }
 
+  bool isChild = StringEndsWith(existing.histogram_name(),
+                                CHILD_HISTOGRAM_SUFFIX);
+
   static Histogram* subsession[mozilla::Telemetry::HistogramCount] = {};
-  if (subsession[id]) {
-    return subsession[id];
+  static Histogram* subsessionChild[mozilla::Telemetry::HistogramCount] = {};
+  Histogram* cached = isChild ? subsessionChild[id] : subsession[id];
+  if (cached) {
+    return cached;
   }
 
   NS_NAMED_LITERAL_CSTRING(prefix, SUBSESSION_HISTOGRAM_PREFIX);
@@ -577,10 +607,15 @@ internal_GetSubsessionHistogram(Histogram& existing)
   }
 
   nsCString subsessionName(prefix);
-  subsessionName.Append(existingName);
+  subsessionName.Append(existing.histogram_name().c_str());
 
-  subsession[id] = internal_CloneHistogram(subsessionName, id, existing);
-  return subsession[id];
+  Histogram* clone = internal_CloneHistogram(subsessionName, id, existing);
+  if (isChild) {
+    subsessionChild[id] = clone;
+  } else {
+    subsession[id] = clone;
+  }
+  return clone;
 }
 #endif
 
