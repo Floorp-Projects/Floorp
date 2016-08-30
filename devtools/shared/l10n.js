@@ -114,6 +114,63 @@ LocalizationHelper.prototype = {
   }
 };
 
+function getPropertiesForNode(node) {
+  let bundleEl = node.closest("[data-localization-bundle]");
+  if (!bundleEl) {
+    return null;
+  }
+
+  let propertiesUrl = bundleEl.getAttribute("data-localization-bundle");
+  return getProperties(propertiesUrl);
+}
+
+/**
+ * Translate existing markup annotated with data-localization attributes.
+ *
+ * How to use data-localization in markup:
+ *
+ *   <div data-localization="content=myContent;title=myTitle"/>
+ *
+ * The data-localization attribute identifies an element as being localizable.
+ * The content of the attribute is semi-colon separated list of descriptors.
+ * - "title=myTitle" means the "title" attribute should be replaced with the localized
+ *   string corresponding to the key "myTitle".
+ * - "content=myContent" means the text content of the node should be replaced by the
+ *   string corresponding to "myContent"
+ *
+ * How to define the localization bundle in markup:
+ *
+ *   <div data-localization-bundle="url/to/my.properties">
+ *     [...]
+ *       <div data-localization="content=myContent;title=myTitle"/>
+ *
+ * Set the data-localization-bundle on an ancestor of the nodes that should be localized.
+ *
+ * @param {Element} root
+ *        The root node to use for the localization
+ */
+function localizeMarkup(root) {
+  let elements = root.querySelectorAll("[data-localization]");
+  for (let element of elements) {
+    let properties = getPropertiesForNode(element);
+    if (!properties) {
+      continue;
+    }
+
+    let attributes = element.getAttribute("data-localization").split(";");
+    for (let attribute of attributes) {
+      let [name, value] = attribute.trim().split("=");
+      if (name === "content") {
+        element.textContent = properties[value];
+      } else {
+        element.setAttribute(name, properties[value]);
+      }
+    }
+
+    element.removeAttribute("data-localization");
+  }
+}
+
 const sharedL10N = new LocalizationHelper("devtools-shared/locale/shared.properties");
 const ELLIPSIS = sharedL10N.getStr("ellipsis");
 
@@ -151,5 +208,6 @@ function MultiLocalizationHelper(...stringBundleNames) {
 }
 
 exports.LocalizationHelper = LocalizationHelper;
+exports.localizeMarkup = localizeMarkup;
 exports.MultiLocalizationHelper = MultiLocalizationHelper;
 exports.ELLIPSIS = ELLIPSIS;
