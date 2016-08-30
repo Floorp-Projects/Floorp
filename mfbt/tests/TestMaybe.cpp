@@ -761,6 +761,87 @@ TestVirtualFunction() {
   return true;
 }
 
+static Maybe<int*>
+ReturnSomeNullptr()
+{
+  return Some(nullptr);
+}
+
+struct D
+{
+  explicit D(Maybe<int*>) {}
+};
+
+static bool
+TestSomeNullptrConversion()
+{
+  Maybe<int*> m1 = Some(nullptr);
+  MOZ_RELEASE_ASSERT(m1.isSome());
+  MOZ_RELEASE_ASSERT(m1);
+  MOZ_RELEASE_ASSERT(!*m1);
+
+  auto m2 = ReturnSomeNullptr();
+  MOZ_RELEASE_ASSERT(m2.isSome());
+  MOZ_RELEASE_ASSERT(m2);
+  MOZ_RELEASE_ASSERT(!*m2);
+
+  Maybe<decltype(nullptr)> m3 = Some(nullptr);
+  MOZ_RELEASE_ASSERT(m3.isSome());
+  MOZ_RELEASE_ASSERT(m3);
+  MOZ_RELEASE_ASSERT(*m3 == nullptr);
+
+  D d(Some(nullptr));
+
+  return true;
+}
+
+struct Base {};
+struct Derived : Base {};
+
+static Maybe<Base*>
+ReturnDerivedPointer()
+{
+  Derived* d = nullptr;
+  return Some(d);
+}
+
+struct ExplicitConstructorBasePointer
+{
+  explicit ExplicitConstructorBasePointer(Maybe<Base*>) {}
+};
+
+static bool
+TestSomePointerConversion()
+{
+  Base base;
+  Derived derived;
+
+  Maybe<Base*> m1 = Some(&derived);
+  MOZ_RELEASE_ASSERT(m1.isSome());
+  MOZ_RELEASE_ASSERT(m1);
+  MOZ_RELEASE_ASSERT(*m1 == &derived);
+
+  auto m2 = ReturnDerivedPointer();
+  MOZ_RELEASE_ASSERT(m2.isSome());
+  MOZ_RELEASE_ASSERT(m2);
+  MOZ_RELEASE_ASSERT(*m2 == nullptr);
+
+  Maybe<Base*> m3 = Some(&base);
+  MOZ_RELEASE_ASSERT(m3.isSome());
+  MOZ_RELEASE_ASSERT(m3);
+  MOZ_RELEASE_ASSERT(*m3 == &base);
+
+  auto s1 = Some(&derived);
+  Maybe<Base*> c1(s1);
+  MOZ_RELEASE_ASSERT(c1.isSome());
+  MOZ_RELEASE_ASSERT(c1);
+  MOZ_RELEASE_ASSERT(*c1 == &derived);
+
+  ExplicitConstructorBasePointer ecbp(Some(&derived));
+
+  return true;
+}
+
 int
 main()
 {
@@ -772,6 +853,8 @@ main()
   RUN_TEST(TestToMaybe);
   RUN_TEST(TestComparisonOperators);
   RUN_TEST(TestVirtualFunction);
+  RUN_TEST(TestSomeNullptrConversion);
+  RUN_TEST(TestSomePointerConversion);
 
   return 0;
 }

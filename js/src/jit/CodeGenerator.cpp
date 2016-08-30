@@ -11520,10 +11520,10 @@ CodeGenerator::visitAsmJSInterruptCheck(LAsmJSInterruptCheck* lir)
 }
 
 void
-CodeGenerator::visitAsmThrowUnreachable(LAsmThrowUnreachable* lir)
+CodeGenerator::visitWasmTrap(LWasmTrap* lir)
 {
     MOZ_ASSERT(gen->compilingAsmJS());
-    masm.jump(wasm::JumpTarget::Unreachable);
+    masm.jump(wasm::JumpTarget(lir->mir()->trap()));
 }
 
 typedef bool (*RecompileFn)(JSContext*);

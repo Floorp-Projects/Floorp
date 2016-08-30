@@ -2,6 +2,8 @@ setJitCompilerOption("baseline.warmup.trigger", 10);
 setJitCompilerOption("ion.warmup.trigger", 20);
 var i;
 
+var config = getBuildConfiguration();
+
 // Check that we are able to remove the operation inside recover test functions (denoted by "rop..."),
 // when we inline the first version of uceFault, and ensure that the bailout is correct
 // when uceFault is replaced (which cause an invalidation bailout)
@@ -1286,6 +1288,29 @@ function rhypot_object_4args(i) {
     return i;
 }
 
+var uceFault_random = eval(uneval(uceFault).replace('uceFault', 'uceFault_random'));
+function rrandom(i) {
+    // setRNGState() exists only in debug builds
+
+    if(config.debug) {
+        setRNGState(2, 0);
+        var x = Math.random();
+        if (uceFault_random(i) || uceFault_random(i)) {
+            setRNGState(2, 0);
+            assertEq(x, Math.random());
+        }
+        assertRecoveredOnBailout(x, true);
+    } else {
+        var x = Math.random();
+        if (uceFault_random(i) || uceFault_random(i)) {
+            Math.random();
+        }
+        assertRecoveredOnBailout(x, true);
+    }
+
+    return i;
+}
+
 var uceFault_sin_number = eval(uneval(uceFault).replace('uceFault', 'uceFault_sin_number'));
 function rsin_number(i) {
     var x = Math.sin(i);
@@ -1444,6 +1469,7 @@ for (i = 0; i < 100; i++) {
     rhypot_object_2args(i);
     rhypot_object_3args(i);
     rhypot_object_4args(i);
+    rrandom(i);
     rsin_number(i);
     rsin_object(i);
     rlog_number(i);

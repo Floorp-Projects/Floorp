@@ -120,6 +120,33 @@ private:
 
     // During VisitHeader we sould not allow cal to SetHeader.
     bool mInVisitHeaders;
+
+#ifdef MOZ_CRASHREPORTER
+    class DbgReentrantMonitorAutoEnter : ReentrantMonitorAutoEnter
+    {
+    public:
+        explicit DbgReentrantMonitorAutoEnter(nsHttpRequestHead& aInstance,
+                                              const char* aFunc)
+            : ReentrantMonitorAutoEnter(aInstance.mReentrantMonitor),
+              mInstance(aInstance),
+              mFunc(aFunc)
+        {
+            DbgCheck(true);
+        }
+        ~DbgReentrantMonitorAutoEnter(void)
+        {
+            DbgCheck(false);
+        }
+
+    private:
+        void DbgCheck(bool aIn);
+
+        nsHttpRequestHead& mInstance;
+        const char* mFunc;
+    };
+
+    bool mAnnotated;
+#endif
 };
 
 } // namespace net

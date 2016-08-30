@@ -27,7 +27,11 @@ public:
   /**
    * Requests a paint of the given FrameMetrics |aFrameMetrics| from Gecko.
    * Implementations per-platform are responsible for actually handling this.
-   * This method will always be called on the Gecko main thread.
+   *
+   * This method must always be called on the repaint thread, which depends
+   * on the GeckoContentController. For ChromeProcessController it is the
+   * Gecko main thread, while for RemoteContentController it is the compositor
+   * thread where it can send IPDL messages.
    */
   virtual void RequestContentRepaint(const FrameMetrics& aFrameMetrics) = 0;
 

@@ -16,6 +16,7 @@
 #include "mozilla/TypeTraits.h"
 
 #include <new>  // for placement new
+#include <type_traits>
 
 namespace mozilla {
 
@@ -101,10 +102,51 @@ public:
     }
   }
 
+  /**
+   * Maybe<T*> can be copy-constructed from a Maybe<U*> if U* and T* are
+   * compatible, or from Maybe<decltype(nullptr)>.
+   */
+  template<typename U,
+           typename =
+             typename std::enable_if<std::is_pointer<T>::value &&
+                                     (std::is_same<U, decltype(nullptr)>::value ||
+                                      (std::is_pointer<U>::value &&
+                                       std::is_base_of<typename std::remove_pointer<T>::type,
+                                                       typename std::remove_pointer<U>::type>::value))>::type>
+  MOZ_IMPLICIT
+  Maybe(const Maybe<U>& aOther)
+    : mIsSome(false)
+  {
+    if (aOther.isSome()) {
+      emplace(*aOther);
+    }
+  }
+
   Maybe(Maybe&& aOther)
     : mIsSome(false)
   {
     if (aOther.mIsSome) {
+      emplace(Move(*aOther));
+      aOther.reset();
+    }
+  }
+
+  /**
+   * Maybe<T*> can be move-constructed from a Maybe<U*> if U* and T* are
+   * compatible, or from Maybe<decltype(nullptr)>.
+   */
+  template<typename U,
+           typename =
+             typename std::enable_if<std::is_pointer<T>::value &&
+                                     (std::is_same<U, decltype(nullptr)>::value ||
+                                      (std::is_pointer<U>::value &&
+                                       std::is_base_of<typename std::remove_pointer<T>::type,
+                                                       typename std::remove_pointer<U>::type>::value))>::type>
+  MOZ_IMPLICIT
+  Maybe(Maybe<U>&& aOther)
+    : mIsSome(false)
+  {
+    if (aOther.isSome()) {
       emplace(Move(*aOther));
       aOther.reset();
     }

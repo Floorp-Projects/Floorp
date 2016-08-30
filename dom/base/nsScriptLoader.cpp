@@ -2660,7 +2660,6 @@ nsScriptLoader::PrepareLoadedRequest(nsScriptLoadRequest* aRequest,
       return NS_ERROR_FAILURE;
     }
 
-    nsCOMPtr<nsIURI> baseURL;
     channel->GetURI(getter_AddRefs(request->mBaseURL));
 
     // Attempt to compile off main thread.

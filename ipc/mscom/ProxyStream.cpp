@@ -7,7 +7,7 @@
 #include "DynamicallyLinkedFunctionPtr.h"
 #include "mozilla/mscom/EnsureMTA.h"
 #include "mozilla/mscom/ProxyStream.h"
-#include "mozilla/mscom/utils.h"
+#include "mozilla/mscom/Utils.h"
 
 #include "mozilla/Move.h"
 

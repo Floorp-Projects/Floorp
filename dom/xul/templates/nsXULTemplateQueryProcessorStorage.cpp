@@ -225,7 +225,6 @@ nsXULTemplateQueryProcessorStorage::GetDatasource(nsIArray* aDataSources,
             return rv;
         }
 
-        nsCOMPtr<nsIFile> file;
         rv = fileChannel->GetFile(getter_AddRefs(databaseFile));
         NS_ENSURE_SUCCESS(rv, rv);
     }

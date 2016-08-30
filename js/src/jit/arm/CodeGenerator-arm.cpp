@@ -2291,11 +2291,7 @@ CodeGeneratorARM::visitWasmBoundsCheck(LWasmBoundsCheck* ins)
 {
     MWasmBoundsCheck* mir = ins->mir();
 
-    uint32_t offset = mir->offset();
-    if (offset > INT32_MAX) {
-        masm.as_b(wasm::JumpTarget::OutOfBounds);
-        return;
-    }
+    MOZ_ASSERT(mir->offset() <= INT32_MAX);
 
     if (!mir->isRedundant()) {
         // No guarantee that heapBase + endOffset can be properly encoded in
@@ -2348,11 +2344,7 @@ CodeGeneratorARM::emitWasmLoad(T* lir)
     MOZ_ASSERT(!mir->barrierBefore() && !mir->barrierAfter(), "atomics NYI");
 
     uint32_t offset = mir->offset();
-    if (offset > INT32_MAX) {
-        // This is unreachable because of bounds checks.
-        masm.breakpoint();
-        return;
-    }
+    MOZ_ASSERT(offset <= INT32_MAX);
 
     Register ptr = ToRegister(lir->ptr());
     Scalar::Type type = mir->accessType();
@@ -2419,11 +2411,7 @@ CodeGeneratorARM::emitWasmUnalignedLoad(T* lir)
     MOZ_ASSERT(!mir->barrierBefore() && !mir->barrierAfter(), "atomics NYI");
 
     uint32_t offset = mir->offset();
-    if (offset > INT32_MAX) {
-        // This is unreachable because of bounds checks.
-        masm.breakpoint();
-        return;
-    }
+    MOZ_ASSERT(offset <= INT32_MAX);
 
     Register ptr = ToRegister(lir->ptrCopy());
     if (offset)
@@ -2503,11 +2491,7 @@ CodeGeneratorARM::emitWasmStore(T* lir)
     MOZ_ASSERT(!mir->barrierBefore() && !mir->barrierAfter(), "atomics NYI");
 
     uint32_t offset = mir->offset();
-    if (offset > INT32_MAX) {
-        // This is unreachable because of bounds checks.
-        masm.breakpoint();
-        return;
-    }
+    MOZ_ASSERT(offset <= INT32_MAX);
 
     Register ptr = ToRegister(lir->ptr());
     unsigned byteSize = mir->byteSize();
