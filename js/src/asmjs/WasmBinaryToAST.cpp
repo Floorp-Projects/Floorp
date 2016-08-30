@@ -514,6 +514,20 @@ AstDecodeUnary(AstDecodeContext& c, ValType type, Expr expr)
 }
 
 static bool
+AstDecodeNullary(AstDecodeContext& c, ExprType type, Expr expr)
+{
+    if (!c.iter().readNullary(type))
+        return false;
+
+    AstNullaryOperator* nullary = new(c.lifo) AstNullaryOperator(expr);
+    if (!nullary)
+        return false;
+
+    c.iter().setResult(AstDecodeStackItem(nullary, 0));
+    return true;
+}
+
+static bool
 AstDecodeBinary(AstDecodeContext& c, ValType type, Expr expr)
 {
     AstDecodeStackItem lhs;
@@ -713,12 +727,8 @@ AstDecodeExpr(AstDecodeContext& c)
     AstExpr* tmp;
     switch (expr) {
       case Expr::Nop:
-        if (!c.iter().readNullary())
+        if (!AstDecodeNullary(c, ExprType::Void, expr))
             return false;
-        tmp = new(c.lifo) AstNop();
-        if (!tmp)
-            return false;
-        c.iter().setResult(AstDecodeStackItem(tmp));
         break;
       case Expr::Call:
         if (!AstDecodeCall(c))
@@ -800,6 +810,7 @@ AstDecodeExpr(AstDecodeContext& c)
       case Expr::I32Clz:
       case Expr::I32Ctz:
       case Expr::I32Popcnt:
+      case Expr::GrowMemory:
         if (!AstDecodeUnary(c, ValType::I32, expr))
             return false;
         break;
@@ -1082,6 +1093,10 @@ AstDecodeExpr(AstDecodeContext& c)
         break;
       case Expr::Return:
         if (!AstDecodeReturn(c))
+            return false;
+        break;
+      case Expr::CurrentMemory:
+        if (!AstDecodeNullary(c, ExprType::I32, expr))
             return false;
         break;
       case Expr::Unreachable:

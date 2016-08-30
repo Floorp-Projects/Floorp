@@ -514,28 +514,6 @@ WasmIsSupported(JSContext* cx, unsigned argc, Value* vp)
 }
 
 static bool
-WasmUsesSignalForOOB(JSContext* cx, unsigned argc, Value* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    args.rval().setBoolean(wasm::SignalUsage().forOOB);
-    return true;
-}
-
-static bool
-SuppressSignalHandlers(JSContext* cx, unsigned argc, Value* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-
-    if (!args.requireAtLeast(cx, "suppressSignalHandlers", 1))
-        return false;
-
-    wasm::SuppressSignalHandlersForTesting(ToBoolean(args[0]));
-
-    args.rval().setUndefined();
-    return true;
-}
-
-static bool
 WasmTextToBinary(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -3834,15 +3812,6 @@ gc::ZealModeHelpText),
     JS_FN_HELP("wasmIsSupported", WasmIsSupported, 0, 0,
 "wasmIsSupported()",
 "  Returns a boolean indicating whether WebAssembly is supported on the current device."),
-
-    JS_FN_HELP("wasmUsesSignalForOOB", WasmUsesSignalForOOB, 0, 0,
-"wasmUsesSignalForOOB()",
-"  Return whether wasm and asm.js use a signal handler for detecting out-of-bounds."),
-
-    JS_FN_HELP("suppressSignalHandlers", SuppressSignalHandlers, 1, 0,
-"suppressSignalHandlers(suppress)",
-"  This function allows artificially suppressing signal handler support, even if the underlying "
-"  platform supports it."),
 
     JS_FN_HELP("wasmTextToBinary", WasmTextToBinary, 1, 0,
 "wasmTextToBinary(str)",
