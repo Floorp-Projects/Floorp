@@ -43,7 +43,7 @@ extern size_t RNG_GetNoise(void *buf, size_t maxbytes);
 */
 extern void RNG_SystemInfoForRNG(void);
 
-/* 
+/*
 ** Use the contents (and stat) of a file to help seed the
 ** global random number generator.
 */

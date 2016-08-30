@@ -1333,6 +1333,12 @@ class MacroAssembler : public MacroAssemblerSpecific
     // WasmTableCallIndexReg must contain the index of the indirect call.
     void wasmCallIndirect(const wasm::CallSiteDesc& desc, const wasm::CalleeDesc& callee);
 
+    // This function takes care of loading the pointer to the current instance
+    // as the implicit first argument. It preserves TLS and pinned registers.
+    // (TLS & pinned regs are non-volatile registers in the system ABI).
+    void wasmCallBuiltinInstanceMethod(const ABIArg& instanceArg,
+                                       wasm::SymbolicAddress builtin);
+
     //}}} check_macroassembler_style
   public:
 

@@ -120,7 +120,7 @@ public:
 
   NS_IMETHOD              Show(bool bState) override;
   virtual bool            IsVisible() const override;
-  NS_IMETHOD              ConstrainPosition(bool aAllowSlop, int32_t *aX, int32_t *aY) override;
+  virtual void            ConstrainPosition(bool aAllowSlop, int32_t *aX, int32_t *aY) override;
   virtual void            SetSizeConstraints(const SizeConstraints& aConstraints) override;
   virtual const SizeConstraints GetSizeConstraints() override;
   NS_IMETHOD              Move(double aX, double aY) override;
@@ -129,7 +129,7 @@ public:
   NS_IMETHOD              BeginResizeDrag(mozilla::WidgetGUIEvent* aEvent,
                                           int32_t aHorizontal,
                                           int32_t aVertical) override;
-  NS_IMETHOD              PlaceBehind(nsTopLevelWidgetZPlacement aPlacement, nsIWidget *aWidget, bool aActivate) override;
+  virtual void            PlaceBehind(nsTopLevelWidgetZPlacement aPlacement, nsIWidget *aWidget, bool aActivate) override;
   virtual void            SetSizeMode(nsSizeMode aMode) override;
   NS_IMETHOD              Enable(bool aState) override;
   virtual bool            IsEnabled() const override;
@@ -166,8 +166,8 @@ public:
   NS_IMETHOD              DispatchEvent(mozilla::WidgetGUIEvent* aEvent,
                                         nsEventStatus& aStatus) override;
   virtual void            EnableDragDrop(bool aEnable) override;
-  NS_IMETHOD              CaptureMouse(bool aCapture) override;
-  NS_IMETHOD              CaptureRollupEvents(nsIRollupListener * aListener,
+  virtual void            CaptureMouse(bool aCapture) override;
+  virtual void            CaptureRollupEvents(nsIRollupListener* aListener,
                                               bool aDoCapture) override;
   NS_IMETHOD              GetAttention(int32_t aCycleCount) override;
   virtual bool            HasPendingInputEvent() override;
@@ -291,7 +291,7 @@ public:
   }
   void SetTaskbarPreview(nsITaskbarWindowPreview *preview) { mTaskbarPreview = do_GetWeakReference(preview); }
 
-  NS_IMETHOD              ReparentNativeWidget(nsIWidget* aNewParent) override;
+  virtual void            ReparentNativeWidget(nsIWidget* aNewParent) override;
 
   // Open file picker tracking
   void                    PickerOpen();

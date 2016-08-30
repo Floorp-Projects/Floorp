@@ -487,6 +487,18 @@ XMLDocument::Load(const nsAString& aUrl, ErrorResult& aRv)
   return true;
 }
 
+void
+XMLDocument::SetSuppressParserErrorElement(bool aSuppress)
+{
+  mSuppressParserErrorElement = aSuppress;
+}
+
+bool
+XMLDocument::SuppressParserErrorElement()
+{
+  return mSuppressParserErrorElement;
+}
+
 nsresult
 XMLDocument::StartDocumentLoad(const char* aCommand,
                                nsIChannel* aChannel,

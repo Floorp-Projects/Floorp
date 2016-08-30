@@ -10,7 +10,7 @@
 
 add_task(function* () {
   requestLongerTimeout(2);
-  let { PluralForm } = Cu.import("resource://gre/modules/PluralForm.jsm", {});
+  let { PluralForm } = require("devtools/shared/plural-form");
 
   let { tab, monitor } = yield initNetMonitor(FILTERING_URL);
   info("Starting test... ");

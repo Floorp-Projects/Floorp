@@ -484,3 +484,6 @@ ER3(SSL_ERROR_RX_UNEXPECTED_EXTENSION, (SSL_ERROR_BASE + 151),
 
 ER3(SSL_ERROR_MISSING_SUPPORTED_GROUPS, (SSL_ERROR_BASE + 152),
     "SSL expected a supported groups extension.")
+
+ER3(SSL_ERROR_TOO_MANY_RECORDS, (SSL_ERROR_BASE + 153),
+    "SSL sent or received too many records with the same symmetric key.")

@@ -541,7 +541,7 @@ void
 CodeGeneratorX86Shared::maybeEmitWasmBoundsCheckBranch(const MWasmMemoryAccess* mir, Register ptr,
                                                        bool redundant)
 {
-    if (!mir->needsBoundsCheck())
+    if (!gen->needsBoundsCheckBranch(mir))
         return;
 
     MOZ_ASSERT(mir->endOffset() >= 1,

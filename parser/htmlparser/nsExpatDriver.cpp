@@ -947,7 +947,7 @@ nsExpatDriver::HandleError()
   nsCOMPtr<nsIScriptError> serr(do_CreateInstance(NS_SCRIPTERROR_CONTRACTID));
   nsresult rv = NS_ERROR_FAILURE;
   if (serr) {
-    rv = serr->InitWithWindowID(description,
+    rv = serr->InitWithWindowID(errorText,
                                 mURISpec,
                                 mLastLine,
                                 lineNumber, colNumber,

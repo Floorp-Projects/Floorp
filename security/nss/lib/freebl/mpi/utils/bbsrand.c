@@ -15,20 +15,21 @@
 
 #include "bbs_rand.h"
 
-#define NUM_TESTS   100
+#define NUM_TESTS 100
 
-int main(void)
+int
+main(void)
 {
-  unsigned int   seed, result, ix;
+    unsigned int seed, result, ix;
 
-  seed = time(NULL);
-  bbs_srand((unsigned char *)&seed, sizeof(seed));
+    seed = time(NULL);
+    bbs_srand((unsigned char *)&seed, sizeof(seed));
 
-  for(ix = 0; ix < NUM_TESTS; ix++) {
-    result = bbs_rand();
-    
-    printf("Test %3u: %08X\n", ix + 1, result);
-  }
+    for (ix = 0; ix < NUM_TESTS; ix++) {
+        result = bbs_rand();
 
-  return 0;
+        printf("Test %3u: %08X\n", ix + 1, result);
+    }
+
+    return 0;
 }

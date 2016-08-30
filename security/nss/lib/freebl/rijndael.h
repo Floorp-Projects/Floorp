@@ -10,7 +10,7 @@
 #define RIJNDAEL_MIN_BLOCKSIZE 16 /* bytes */
 #define RIJNDAEL_MAX_BLOCKSIZE 32 /* bytes */
 
-typedef SECStatus AESBlockFunc(AESContext *cx, 
+typedef SECStatus AESBlockFunc(AESContext *cx,
                                unsigned char *output,
                                const unsigned char *input);
 
@@ -23,7 +23,7 @@ typedef SECStatus AESBlockFunc(AESContext *cx,
 #define RIJNDAEL_NUM_ROUNDS(Nk, Nb) \
     (PR_MAX(Nk, Nb) + 6)
 
-/* RIJNDAEL_MAX_STATE_SIZE 
+/* RIJNDAEL_MAX_STATE_SIZE
  *
  * Maximum number of bytes in the state (spec includes up to 256-bit block
  * size)
@@ -50,19 +50,18 @@ typedef SECStatus AESBlockFunc(AESContext *cx,
  * worker_cx   - the context for worker and destroy
  * isBlock     - is the mode of operation a block cipher or a stream cipher?
  */
-struct AESContextStr
-{
-    unsigned int   Nb;
-    unsigned int   Nr;
+struct AESContextStr {
+    unsigned int Nb;
+    unsigned int Nr;
     freeblCipherFunc worker;
     /* NOTE: The offsets of iv and expandedKey are hardcoded in intel-aes.s.
      * Don't add new members before them without updating intel-aes.s. */
     unsigned char iv[RIJNDAEL_MAX_BLOCKSIZE];
-    PRUint32      expandedKey[RIJNDAEL_MAX_EXP_KEY_SIZE];
+    PRUint32 expandedKey[RIJNDAEL_MAX_EXP_KEY_SIZE];
     freeblDestroyFunc destroy;
-    void	      *worker_cx;
-    PRBool	      isBlock;
-    int           mode;
+    void *worker_cx;
+    PRBool isBlock;
+    int mode;
 };
 
 #endif /* _RIJNDAEL_H_ */

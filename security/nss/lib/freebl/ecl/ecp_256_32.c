@@ -48,7 +48,7 @@ static const felem kOne = {
     0x1fffffff, 0xfffffff, 0x1fbfffff, 0x1ffffff,
     0
 };
-static const felem kZero = {0};
+static const felem kZero = { 0 };
 static const felem kP = {
     0x1fffffff, 0xfffffff, 0x1fffffff, 0x3ff,
     0, 0, 0x200000, 0xf000000,
@@ -162,7 +162,7 @@ static const limb kPrecomputed[NLIMBS * 2 * 15 * 2] = {
  *
  * x must be a u32 or an equivalent type such as limb.
  */
-#define NON_ZERO_TO_ALL_ONES(x) ((((u32)(x) - 1) >> 31) - 1)
+#define NON_ZERO_TO_ALL_ONES(x) ((((u32)(x)-1) >> 31) - 1)
 
 /* felem_reduce_carry adds a multiple of p in order to cancel |carry|,
  * which is a term at 2**257.
@@ -170,7 +170,8 @@ static const limb kPrecomputed[NLIMBS * 2 * 15 * 2] = {
  * On entry: carry < 2**3, inout[0,2,...] < 2**29, inout[1,3,...] < 2**28.
  * On exit: inout[0,2,..] < 2**30, inout[1,3,...] < 2**29.
  */
-static void felem_reduce_carry(felem inout, limb carry)
+static void
+felem_reduce_carry(felem inout, limb carry)
 {
     const u32 carry_mask = NON_ZERO_TO_ALL_ONES(carry);
 
@@ -196,24 +197,25 @@ static void felem_reduce_carry(felem inout, limb carry)
  * On entry, in[i]+in2[i] must not overflow a 32-bit word.
  * On exit: out[0,2,...] < 2**30, out[1,3,...] < 2**29
  */
-static void felem_sum(felem out, const felem in, const felem in2)
+static void
+felem_sum(felem out, const felem in, const felem in2)
 {
     limb carry = 0;
     unsigned int i;
     for (i = 0;; i++) {
-	out[i] = in[i] + in2[i];
-	out[i] += carry;
-	carry = out[i] >> 29;
-	out[i] &= kBottom29Bits;
+        out[i] = in[i] + in2[i];
+        out[i] += carry;
+        carry = out[i] >> 29;
+        out[i] &= kBottom29Bits;
 
-	i++;
-	if (i == NLIMBS)
-	    break;
+        i++;
+        if (i == NLIMBS)
+            break;
 
-	out[i] = in[i] + in2[i];
-	out[i] += carry;
-	carry = out[i] >> 28;
-	out[i] &= kBottom28Bits;
+        out[i] = in[i] + in2[i];
+        out[i] += carry;
+        carry = out[i] >> 28;
+        out[i] &= kBottom28Bits;
     }
 
     felem_reduce_carry(out, carry);
@@ -240,27 +242,28 @@ static const felem zero31 = {
  *           in2[0,2,...] < 2**30, in2[1,3,...] < 2**29.
  * On exit: out[0,2,...] < 2**30, out[1,3,...] < 2**29.
  */
-static void felem_diff(felem out, const felem in, const felem in2)
+static void
+felem_diff(felem out, const felem in, const felem in2)
 {
     limb carry = 0;
     unsigned int i;
 
     for (i = 0;; i++) {
-	out[i] = in[i] - in2[i];
-	out[i] += zero31[i];
-	out[i] += carry;
-	carry = out[i] >> 29;
-	out[i] &= kBottom29Bits;
+        out[i] = in[i] - in2[i];
+        out[i] += zero31[i];
+        out[i] += carry;
+        carry = out[i] >> 29;
+        out[i] &= kBottom29Bits;
 
-	i++;
-	if (i == NLIMBS)
-	    break;
+        i++;
+        if (i == NLIMBS)
+            break;
 
-	out[i] = in[i] - in2[i];
-	out[i] += zero31[i];
-	out[i] += carry;
-	carry = out[i] >> 28;
-	out[i] &= kBottom28Bits;
+        out[i] = in[i] - in2[i];
+        out[i] += zero31[i];
+        out[i] += carry;
+        carry = out[i] >> 28;
+        out[i] &= kBottom28Bits;
     }
 
     felem_reduce_carry(out, carry);
@@ -277,7 +280,8 @@ static void felem_diff(felem out, const felem in, const felem in2)
  * On entry: tmp[i] < 2**64
  * On exit: out[0,2,...] < 2**30, out[1,3,...] < 2**29
  */
-static void felem_reduce_degree(felem out, u64 tmp[17])
+static void
+felem_reduce_degree(felem out, u64 tmp[17])
 {
     /* The following table may be helpful when reading this code:
      *
@@ -301,36 +305,36 @@ static void felem_reduce_degree(felem out, u64 tmp[17])
      * the right register rather than doing a double-word shift and truncating
      * afterwards.
      */
-    tmp2[1] = ((limb) tmp[0]) >> 29;
-    tmp2[1] |= (((limb) (tmp[0] >> 32)) << 3) & kBottom28Bits;
-    tmp2[1] += ((limb) tmp[1]) & kBottom28Bits;
+    tmp2[1] = ((limb)tmp[0]) >> 29;
+    tmp2[1] |= (((limb)(tmp[0] >> 32)) << 3) & kBottom28Bits;
+    tmp2[1] += ((limb)tmp[1]) & kBottom28Bits;
     carry = tmp2[1] >> 28;
     tmp2[1] &= kBottom28Bits;
 
     for (i = 2; i < 17; i++) {
-	tmp2[i] = ((limb) (tmp[i - 2] >> 32)) >> 25;
-	tmp2[i] += ((limb) (tmp[i - 1])) >> 28;
-	tmp2[i] += (((limb) (tmp[i - 1] >> 32)) << 4) & kBottom29Bits;
-	tmp2[i] += ((limb) tmp[i]) & kBottom29Bits;
-	tmp2[i] += carry;
-	carry = tmp2[i] >> 29;
-	tmp2[i] &= kBottom29Bits;
+        tmp2[i] = ((limb)(tmp[i - 2] >> 32)) >> 25;
+        tmp2[i] += ((limb)(tmp[i - 1])) >> 28;
+        tmp2[i] += (((limb)(tmp[i - 1] >> 32)) << 4) & kBottom29Bits;
+        tmp2[i] += ((limb)tmp[i]) & kBottom29Bits;
+        tmp2[i] += carry;
+        carry = tmp2[i] >> 29;
+        tmp2[i] &= kBottom29Bits;
 
-	i++;
-	if (i == 17)
-	    break;
-	tmp2[i] = ((limb) (tmp[i - 2] >> 32)) >> 25;
-	tmp2[i] += ((limb) (tmp[i - 1])) >> 29;
-	tmp2[i] += (((limb) (tmp[i - 1] >> 32)) << 3) & kBottom28Bits;
-	tmp2[i] += ((limb) tmp[i]) & kBottom28Bits;
-	tmp2[i] += carry;
-	carry = tmp2[i] >> 28;
-	tmp2[i] &= kBottom28Bits;
+        i++;
+        if (i == 17)
+            break;
+        tmp2[i] = ((limb)(tmp[i - 2] >> 32)) >> 25;
+        tmp2[i] += ((limb)(tmp[i - 1])) >> 29;
+        tmp2[i] += (((limb)(tmp[i - 1] >> 32)) << 3) & kBottom28Bits;
+        tmp2[i] += ((limb)tmp[i]) & kBottom28Bits;
+        tmp2[i] += carry;
+        carry = tmp2[i] >> 28;
+        tmp2[i] &= kBottom28Bits;
     }
 
-    tmp2[17] = ((limb) (tmp[15] >> 32)) >> 25;
-    tmp2[17] += ((limb) (tmp[16])) >> 29;
-    tmp2[17] += (((limb) (tmp[16] >> 32)) << 3);
+    tmp2[17] = ((limb)(tmp[15] >> 32)) >> 25;
+    tmp2[17] += ((limb)(tmp[16])) >> 29;
+    tmp2[17] += (((limb)(tmp[16] >> 32)) << 3);
     tmp2[17] += carry;
 
     /* Montgomery elimination of terms:
@@ -345,101 +349,101 @@ static void felem_reduce_degree(felem out, u64 tmp[17])
      * extra factor of R.
      */
     for (i = 0;; i += 2) {
-	tmp2[i + 1] += tmp2[i] >> 29;
-	x = tmp2[i] & kBottom29Bits;
-	xMask = NON_ZERO_TO_ALL_ONES(x);
-	tmp2[i] = 0;
+        tmp2[i + 1] += tmp2[i] >> 29;
+        x = tmp2[i] & kBottom29Bits;
+        xMask = NON_ZERO_TO_ALL_ONES(x);
+        tmp2[i] = 0;
 
-	/* The bounds calculations for this loop are tricky. Each iteration of
-	 * the loop eliminates two words by adding values to words to their
-	 * right.
-	 *
-	 * The following table contains the amounts added to each word (as an
-	 * offset from the value of i at the top of the loop). The amounts are
-	 * accounted for from the first and second half of the loop separately
-	 * and are written as, for example, 28 to mean a value <2**28.
-	 *
-	 * Word:                   3   4   5   6   7   8   9   10
-	 * Added in top half:     28  11      29  21  29  28
-	 *                                        28  29
-	 *                                            29
-	 * Added in bottom half:      29  10      28  21  28   28
-	 *                                            29
-	 *
-	 * The value that is currently offset 7 will be offset 5 for the next
-	 * iteration and then offset 3 for the iteration after that. Therefore
-	 * the total value added will be the values added at 7, 5 and 3.
-	 *
-	 * The following table accumulates these values. The sums at the bottom
-	 * are written as, for example, 29+28, to mean a value < 2**29+2**28.
-	 *
-	 * Word:                   3   4   5   6   7   8   9  10  11  12  13
-	 *                        28  11  10  29  21  29  28  28  28  28  28
-	 *                            29  28  11  28  29  28  29  28  29  28
-	 *                                    29  28  21  21  29  21  29  21
-	 *                                        10  29  28  21  28  21  28
-	 *                                        28  29  28  29  28  29  28
-	 *                                            11  10  29  10  29  10
-	 *                                            29  28  11  28  11
-	 *                                                    29      29
-	 *                        --------------------------------------------
-	 *                                                30+ 31+ 30+ 31+ 30+
-	 *                                                28+ 29+ 28+ 29+ 21+
-	 *                                                21+ 28+ 21+ 28+ 10
-	 *                                                10  21+ 10  21+
-	 *                                                    11      11
-	 *
-	 * So the greatest amount is added to tmp2[10] and tmp2[12]. If
-	 * tmp2[10/12] has an initial value of <2**29, then the maximum value
-	 * will be < 2**31 + 2**30 + 2**28 + 2**21 + 2**11, which is < 2**32,
-	 * as required.
+        /* The bounds calculations for this loop are tricky. Each iteration of
+         * the loop eliminates two words by adding values to words to their
+         * right.
+         *
+         * The following table contains the amounts added to each word (as an
+         * offset from the value of i at the top of the loop). The amounts are
+         * accounted for from the first and second half of the loop separately
+         * and are written as, for example, 28 to mean a value <2**28.
+         *
+         * Word:                   3   4   5   6   7   8   9   10
+         * Added in top half:     28  11      29  21  29  28
+         *                                        28  29
+         *                                            29
+         * Added in bottom half:      29  10      28  21  28   28
+         *                                            29
+         *
+         * The value that is currently offset 7 will be offset 5 for the next
+         * iteration and then offset 3 for the iteration after that. Therefore
+         * the total value added will be the values added at 7, 5 and 3.
+         *
+         * The following table accumulates these values. The sums at the bottom
+         * are written as, for example, 29+28, to mean a value < 2**29+2**28.
+         *
+         * Word:                   3   4   5   6   7   8   9  10  11  12  13
+         *                        28  11  10  29  21  29  28  28  28  28  28
+         *                            29  28  11  28  29  28  29  28  29  28
+         *                                    29  28  21  21  29  21  29  21
+         *                                        10  29  28  21  28  21  28
+         *                                        28  29  28  29  28  29  28
+         *                                            11  10  29  10  29  10
+         *                                            29  28  11  28  11
+         *                                                    29      29
+         *                        --------------------------------------------
+         *                                                30+ 31+ 30+ 31+ 30+
+         *                                                28+ 29+ 28+ 29+ 21+
+         *                                                21+ 28+ 21+ 28+ 10
+         *                                                10  21+ 10  21+
+         *                                                    11      11
+         *
+         * So the greatest amount is added to tmp2[10] and tmp2[12]. If
+         * tmp2[10/12] has an initial value of <2**29, then the maximum value
+         * will be < 2**31 + 2**30 + 2**28 + 2**21 + 2**11, which is < 2**32,
+         * as required.
          */
-	tmp2[i + 3] += (x << 10) & kBottom28Bits;
-	tmp2[i + 4] += (x >> 18);
+        tmp2[i + 3] += (x << 10) & kBottom28Bits;
+        tmp2[i + 4] += (x >> 18);
 
-	tmp2[i + 6] += (x << 21) & kBottom29Bits;
-	tmp2[i + 7] += x >> 8;
+        tmp2[i + 6] += (x << 21) & kBottom29Bits;
+        tmp2[i + 7] += x >> 8;
 
-	/* At position 200, which is the starting bit position for word 7, we
-	 * have a factor of 0xf000000 = 2**28 - 2**24.
-	 */
-	tmp2[i + 7] += 0x10000000 & xMask;
-	/* Word 7 is 28 bits wide, so the 2**28 term exactly hits word 8. */
-	tmp2[i + 8] += (x - 1) & xMask;
-	tmp2[i + 7] -= (x << 24) & kBottom28Bits;
-	tmp2[i + 8] -= x >> 4;
+        /* At position 200, which is the starting bit position for word 7, we
+         * have a factor of 0xf000000 = 2**28 - 2**24.
+         */
+        tmp2[i + 7] += 0x10000000 & xMask;
+        /* Word 7 is 28 bits wide, so the 2**28 term exactly hits word 8. */
+        tmp2[i + 8] += (x - 1) & xMask;
+        tmp2[i + 7] -= (x << 24) & kBottom28Bits;
+        tmp2[i + 8] -= x >> 4;
 
-	tmp2[i + 8] += 0x20000000 & xMask;
-	tmp2[i + 8] -= x;
-	tmp2[i + 8] += (x << 28) & kBottom29Bits;
-	tmp2[i + 9] += ((x >> 1) - 1) & xMask;
+        tmp2[i + 8] += 0x20000000 & xMask;
+        tmp2[i + 8] -= x;
+        tmp2[i + 8] += (x << 28) & kBottom29Bits;
+        tmp2[i + 9] += ((x >> 1) - 1) & xMask;
 
-	if (i+1 == NLIMBS)
-	    break;
-	tmp2[i + 2] += tmp2[i + 1] >> 28;
-	x = tmp2[i + 1] & kBottom28Bits;
-	xMask = NON_ZERO_TO_ALL_ONES(x);
-	tmp2[i + 1] = 0;
+        if (i + 1 == NLIMBS)
+            break;
+        tmp2[i + 2] += tmp2[i + 1] >> 28;
+        x = tmp2[i + 1] & kBottom28Bits;
+        xMask = NON_ZERO_TO_ALL_ONES(x);
+        tmp2[i + 1] = 0;
 
-	tmp2[i + 4] += (x << 11) & kBottom29Bits;
-	tmp2[i + 5] += (x >> 18);
+        tmp2[i + 4] += (x << 11) & kBottom29Bits;
+        tmp2[i + 5] += (x >> 18);
 
-	tmp2[i + 7] += (x << 21) & kBottom28Bits;
-	tmp2[i + 8] += x >> 7;
+        tmp2[i + 7] += (x << 21) & kBottom28Bits;
+        tmp2[i + 8] += x >> 7;
 
-	/* At position 199, which is the starting bit of the 8th word when
-	 * dealing with a context starting on an odd word, we have a factor of
-	 * 0x1e000000 = 2**29 - 2**25. Since we have not updated i, the 8th
-	 * word from i+1 is i+8.
-	 */
-	tmp2[i + 8] += 0x20000000 & xMask;
-	tmp2[i + 9] += (x - 1) & xMask;
-	tmp2[i + 8] -= (x << 25) & kBottom29Bits;
-	tmp2[i + 9] -= x >> 4;
+        /* At position 199, which is the starting bit of the 8th word when
+         * dealing with a context starting on an odd word, we have a factor of
+         * 0x1e000000 = 2**29 - 2**25. Since we have not updated i, the 8th
+         * word from i+1 is i+8.
+         */
+        tmp2[i + 8] += 0x20000000 & xMask;
+        tmp2[i + 9] += (x - 1) & xMask;
+        tmp2[i + 8] -= (x << 25) & kBottom29Bits;
+        tmp2[i + 9] -= x >> 4;
 
-	tmp2[i + 9] += 0x10000000 & xMask;
-	tmp2[i + 9] -= x;
-	tmp2[i + 10] += (x - 1) & xMask;
+        tmp2[i + 9] += 0x10000000 & xMask;
+        tmp2[i + 9] -= x;
+        tmp2[i + 10] += (x - 1) & xMask;
     }
 
     /* We merge the right shift with a carry chain. The words above 2**257 have
@@ -447,21 +451,21 @@ static void felem_reduce_degree(felem out, u64 tmp[17])
      */
     carry = 0;
     for (i = 0; i < 8; i++) {
-	/* The maximum value of tmp2[i + 9] occurs on the first iteration and
-	 * is < 2**30+2**29+2**28. Adding 2**29 (from tmp2[i + 10]) is
-	 * therefore safe.
-	 */
-	out[i] = tmp2[i + 9];
-	out[i] += carry;
-	out[i] += (tmp2[i + 10] << 28) & kBottom29Bits;
-	carry = out[i] >> 29;
-	out[i] &= kBottom29Bits;
+        /* The maximum value of tmp2[i + 9] occurs on the first iteration and
+         * is < 2**30+2**29+2**28. Adding 2**29 (from tmp2[i + 10]) is
+         * therefore safe.
+         */
+        out[i] = tmp2[i + 9];
+        out[i] += carry;
+        out[i] += (tmp2[i + 10] << 28) & kBottom29Bits;
+        carry = out[i] >> 29;
+        out[i] &= kBottom29Bits;
 
-	i++;
-	out[i] = tmp2[i + 9] >> 1;
-	out[i] += carry;
-	carry = out[i] >> 28;
-	out[i] &= kBottom28Bits;
+        i++;
+        out[i] = tmp2[i + 9] >> 1;
+        out[i] += carry;
+        carry = out[i] >> 28;
+        out[i] &= kBottom28Bits;
     }
 
     out[8] = tmp2[17];
@@ -477,58 +481,59 @@ static void felem_reduce_degree(felem out, u64 tmp[17])
  * On entry: in[0,2,...] < 2**30, in[1,3,...] < 2**29.
  * On exit: out[0,2,...] < 2**30, out[1,3,...] < 2**29.
  */
-static void felem_square(felem out, const felem in)
+static void
+felem_square(felem out, const felem in)
 {
     u64 tmp[17];
 
-    tmp[0] = ((u64) in[0]) * in[0];
-    tmp[1] = ((u64) in[0]) * (in[1] << 1);
-    tmp[2] = ((u64) in[0]) * (in[2] << 1) +
-	     ((u64) in[1]) * (in[1] << 1);
-    tmp[3] = ((u64) in[0]) * (in[3] << 1) +
-	     ((u64) in[1]) * (in[2] << 1);
-    tmp[4] = ((u64) in[0]) * (in[4] << 1) +
-	     ((u64) in[1]) * (in[3] << 2) +
-	     ((u64) in[2]) * in[2];
-    tmp[5] = ((u64) in[0]) * (in[5] << 1) +
-	     ((u64) in[1]) * (in[4] << 1) +
-	     ((u64) in[2]) * (in[3] << 1);
-    tmp[6] = ((u64) in[0]) * (in[6] << 1) +
-	     ((u64) in[1]) * (in[5] << 2) +
-	     ((u64) in[2]) * (in[4] << 1) +
-	     ((u64) in[3]) * (in[3] << 1);
-    tmp[7] = ((u64) in[0]) * (in[7] << 1) +
-	     ((u64) in[1]) * (in[6] << 1) +
-	     ((u64) in[2]) * (in[5] << 1) +
-	     ((u64) in[3]) * (in[4] << 1);
+    tmp[0] = ((u64)in[0]) * in[0];
+    tmp[1] = ((u64)in[0]) * (in[1] << 1);
+    tmp[2] = ((u64)in[0]) * (in[2] << 1) +
+             ((u64)in[1]) * (in[1] << 1);
+    tmp[3] = ((u64)in[0]) * (in[3] << 1) +
+             ((u64)in[1]) * (in[2] << 1);
+    tmp[4] = ((u64)in[0]) * (in[4] << 1) +
+             ((u64)in[1]) * (in[3] << 2) +
+             ((u64)in[2]) * in[2];
+    tmp[5] = ((u64)in[0]) * (in[5] << 1) +
+             ((u64)in[1]) * (in[4] << 1) +
+             ((u64)in[2]) * (in[3] << 1);
+    tmp[6] = ((u64)in[0]) * (in[6] << 1) +
+             ((u64)in[1]) * (in[5] << 2) +
+             ((u64)in[2]) * (in[4] << 1) +
+             ((u64)in[3]) * (in[3] << 1);
+    tmp[7] = ((u64)in[0]) * (in[7] << 1) +
+             ((u64)in[1]) * (in[6] << 1) +
+             ((u64)in[2]) * (in[5] << 1) +
+             ((u64)in[3]) * (in[4] << 1);
     /* tmp[8] has the greatest value of 2**61 + 2**60 + 2**61 + 2**60 + 2**60,
      * which is < 2**64 as required.
      */
-    tmp[8] = ((u64) in[0]) * (in[8] << 1) +
-	     ((u64) in[1]) * (in[7] << 2) +
-	     ((u64) in[2]) * (in[6] << 1) +
-	     ((u64) in[3]) * (in[5] << 2) +
-	     ((u64) in[4]) * in[4];
-    tmp[9] = ((u64) in[1]) * (in[8] << 1) +
-	     ((u64) in[2]) * (in[7] << 1) +
-	     ((u64) in[3]) * (in[6] << 1) +
-	     ((u64) in[4]) * (in[5] << 1);
-    tmp[10] = ((u64) in[2]) * (in[8] << 1) +
-	      ((u64) in[3]) * (in[7] << 2) +
-	      ((u64) in[4]) * (in[6] << 1) +
-	      ((u64) in[5]) * (in[5] << 1);
-    tmp[11] = ((u64) in[3]) * (in[8] << 1) +
-	      ((u64) in[4]) * (in[7] << 1) +
-	      ((u64) in[5]) * (in[6] << 1);
-    tmp[12] = ((u64) in[4]) * (in[8] << 1) +
-	      ((u64) in[5]) * (in[7] << 2) +
-	      ((u64) in[6]) * in[6];
-    tmp[13] = ((u64) in[5]) * (in[8] << 1) +
-	      ((u64) in[6]) * (in[7] << 1);
-    tmp[14] = ((u64) in[6]) * (in[8] << 1) +
-	      ((u64) in[7]) * (in[7] << 1);
-    tmp[15] = ((u64) in[7]) * (in[8] << 1);
-    tmp[16] = ((u64) in[8]) * in[8];
+    tmp[8] = ((u64)in[0]) * (in[8] << 1) +
+             ((u64)in[1]) * (in[7] << 2) +
+             ((u64)in[2]) * (in[6] << 1) +
+             ((u64)in[3]) * (in[5] << 2) +
+             ((u64)in[4]) * in[4];
+    tmp[9] = ((u64)in[1]) * (in[8] << 1) +
+             ((u64)in[2]) * (in[7] << 1) +
+             ((u64)in[3]) * (in[6] << 1) +
+             ((u64)in[4]) * (in[5] << 1);
+    tmp[10] = ((u64)in[2]) * (in[8] << 1) +
+              ((u64)in[3]) * (in[7] << 2) +
+              ((u64)in[4]) * (in[6] << 1) +
+              ((u64)in[5]) * (in[5] << 1);
+    tmp[11] = ((u64)in[3]) * (in[8] << 1) +
+              ((u64)in[4]) * (in[7] << 1) +
+              ((u64)in[5]) * (in[6] << 1);
+    tmp[12] = ((u64)in[4]) * (in[8] << 1) +
+              ((u64)in[5]) * (in[7] << 2) +
+              ((u64)in[6]) * in[6];
+    tmp[13] = ((u64)in[5]) * (in[8] << 1) +
+              ((u64)in[6]) * (in[7] << 1);
+    tmp[14] = ((u64)in[6]) * (in[8] << 1) +
+              ((u64)in[7]) * (in[7] << 1);
+    tmp[15] = ((u64)in[7]) * (in[8] << 1);
+    tmp[16] = ((u64)in[8]) * in[8];
 
     felem_reduce_degree(out, tmp);
 }
@@ -539,99 +544,101 @@ static void felem_square(felem out, const felem in)
  *           in2[0,2,...] < 2**30, in2[1,3,...] < 2**29.
  * On exit: out[0,2,...] < 2**30, out[1,3,...] < 2**29.
  */
-static void felem_mul(felem out, const felem in, const felem in2)
+static void
+felem_mul(felem out, const felem in, const felem in2)
 {
     u64 tmp[17];
 
-    tmp[0] = ((u64) in[0]) * in2[0];
-    tmp[1] = ((u64) in[0]) * (in2[1] << 0) +
-	     ((u64) in[1]) * (in2[0] << 0);
-    tmp[2] = ((u64) in[0]) * (in2[2] << 0) +
-	     ((u64) in[1]) * (in2[1] << 1) +
-	     ((u64) in[2]) * (in2[0] << 0);
-    tmp[3] = ((u64) in[0]) * (in2[3] << 0) +
-	     ((u64) in[1]) * (in2[2] << 0) +
-	     ((u64) in[2]) * (in2[1] << 0) +
-	     ((u64) in[3]) * (in2[0] << 0);
-    tmp[4] = ((u64) in[0]) * (in2[4] << 0) +
-	     ((u64) in[1]) * (in2[3] << 1) +
-	     ((u64) in[2]) * (in2[2] << 0) +
-	     ((u64) in[3]) * (in2[1] << 1) +
-	     ((u64) in[4]) * (in2[0] << 0);
-    tmp[5] = ((u64) in[0]) * (in2[5] << 0) +
-	     ((u64) in[1]) * (in2[4] << 0) +
-	     ((u64) in[2]) * (in2[3] << 0) +
-	     ((u64) in[3]) * (in2[2] << 0) +
-	     ((u64) in[4]) * (in2[1] << 0) +
-	     ((u64) in[5]) * (in2[0] << 0);
-    tmp[6] = ((u64) in[0]) * (in2[6] << 0) +
-	     ((u64) in[1]) * (in2[5] << 1) +
-	     ((u64) in[2]) * (in2[4] << 0) +
-	     ((u64) in[3]) * (in2[3] << 1) +
-	     ((u64) in[4]) * (in2[2] << 0) +
-	     ((u64) in[5]) * (in2[1] << 1) +
-	     ((u64) in[6]) * (in2[0] << 0);
-    tmp[7] = ((u64) in[0]) * (in2[7] << 0) +
-	     ((u64) in[1]) * (in2[6] << 0) +
-	     ((u64) in[2]) * (in2[5] << 0) +
-	     ((u64) in[3]) * (in2[4] << 0) +
-	     ((u64) in[4]) * (in2[3] << 0) +
-	     ((u64) in[5]) * (in2[2] << 0) +
-	     ((u64) in[6]) * (in2[1] << 0) +
-	     ((u64) in[7]) * (in2[0] << 0);
+    tmp[0] = ((u64)in[0]) * in2[0];
+    tmp[1] = ((u64)in[0]) * (in2[1] << 0) +
+             ((u64)in[1]) * (in2[0] << 0);
+    tmp[2] = ((u64)in[0]) * (in2[2] << 0) +
+             ((u64)in[1]) * (in2[1] << 1) +
+             ((u64)in[2]) * (in2[0] << 0);
+    tmp[3] = ((u64)in[0]) * (in2[3] << 0) +
+             ((u64)in[1]) * (in2[2] << 0) +
+             ((u64)in[2]) * (in2[1] << 0) +
+             ((u64)in[3]) * (in2[0] << 0);
+    tmp[4] = ((u64)in[0]) * (in2[4] << 0) +
+             ((u64)in[1]) * (in2[3] << 1) +
+             ((u64)in[2]) * (in2[2] << 0) +
+             ((u64)in[3]) * (in2[1] << 1) +
+             ((u64)in[4]) * (in2[0] << 0);
+    tmp[5] = ((u64)in[0]) * (in2[5] << 0) +
+             ((u64)in[1]) * (in2[4] << 0) +
+             ((u64)in[2]) * (in2[3] << 0) +
+             ((u64)in[3]) * (in2[2] << 0) +
+             ((u64)in[4]) * (in2[1] << 0) +
+             ((u64)in[5]) * (in2[0] << 0);
+    tmp[6] = ((u64)in[0]) * (in2[6] << 0) +
+             ((u64)in[1]) * (in2[5] << 1) +
+             ((u64)in[2]) * (in2[4] << 0) +
+             ((u64)in[3]) * (in2[3] << 1) +
+             ((u64)in[4]) * (in2[2] << 0) +
+             ((u64)in[5]) * (in2[1] << 1) +
+             ((u64)in[6]) * (in2[0] << 0);
+    tmp[7] = ((u64)in[0]) * (in2[7] << 0) +
+             ((u64)in[1]) * (in2[6] << 0) +
+             ((u64)in[2]) * (in2[5] << 0) +
+             ((u64)in[3]) * (in2[4] << 0) +
+             ((u64)in[4]) * (in2[3] << 0) +
+             ((u64)in[5]) * (in2[2] << 0) +
+             ((u64)in[6]) * (in2[1] << 0) +
+             ((u64)in[7]) * (in2[0] << 0);
     /* tmp[8] has the greatest value but doesn't overflow. See logic in
      * felem_square.
      */
-    tmp[8] = ((u64) in[0]) * (in2[8] << 0) +
-	     ((u64) in[1]) * (in2[7] << 1) +
-	     ((u64) in[2]) * (in2[6] << 0) +
-	     ((u64) in[3]) * (in2[5] << 1) +
-	     ((u64) in[4]) * (in2[4] << 0) +
-	     ((u64) in[5]) * (in2[3] << 1) +
-	     ((u64) in[6]) * (in2[2] << 0) +
-	     ((u64) in[7]) * (in2[1] << 1) +
-	     ((u64) in[8]) * (in2[0] << 0);
-    tmp[9] = ((u64) in[1]) * (in2[8] << 0) +
-	     ((u64) in[2]) * (in2[7] << 0) +
-	     ((u64) in[3]) * (in2[6] << 0) +
-	     ((u64) in[4]) * (in2[5] << 0) +
-	     ((u64) in[5]) * (in2[4] << 0) +
-	     ((u64) in[6]) * (in2[3] << 0) +
-	     ((u64) in[7]) * (in2[2] << 0) +
-	     ((u64) in[8]) * (in2[1] << 0);
-    tmp[10] = ((u64) in[2]) * (in2[8] << 0) +
-	      ((u64) in[3]) * (in2[7] << 1) +
-	      ((u64) in[4]) * (in2[6] << 0) +
-	      ((u64) in[5]) * (in2[5] << 1) +
-	      ((u64) in[6]) * (in2[4] << 0) +
-	      ((u64) in[7]) * (in2[3] << 1) +
-	      ((u64) in[8]) * (in2[2] << 0);
-    tmp[11] = ((u64) in[3]) * (in2[8] << 0) +
-	      ((u64) in[4]) * (in2[7] << 0) +
-	      ((u64) in[5]) * (in2[6] << 0) +
-	      ((u64) in[6]) * (in2[5] << 0) +
-	      ((u64) in[7]) * (in2[4] << 0) +
-	      ((u64) in[8]) * (in2[3] << 0);
-    tmp[12] = ((u64) in[4]) * (in2[8] << 0) +
-	      ((u64) in[5]) * (in2[7] << 1) +
-	      ((u64) in[6]) * (in2[6] << 0) +
-	      ((u64) in[7]) * (in2[5] << 1) +
-	      ((u64) in[8]) * (in2[4] << 0);
-    tmp[13] = ((u64) in[5]) * (in2[8] << 0) +
-	      ((u64) in[6]) * (in2[7] << 0) +
-	      ((u64) in[7]) * (in2[6] << 0) +
-	      ((u64) in[8]) * (in2[5] << 0);
-    tmp[14] = ((u64) in[6]) * (in2[8] << 0) +
-	      ((u64) in[7]) * (in2[7] << 1) +
-	      ((u64) in[8]) * (in2[6] << 0);
-    tmp[15] = ((u64) in[7]) * (in2[8] << 0) +
-	      ((u64) in[8]) * (in2[7] << 0);
-    tmp[16] = ((u64) in[8]) * (in2[8] << 0);
+    tmp[8] = ((u64)in[0]) * (in2[8] << 0) +
+             ((u64)in[1]) * (in2[7] << 1) +
+             ((u64)in[2]) * (in2[6] << 0) +
+             ((u64)in[3]) * (in2[5] << 1) +
+             ((u64)in[4]) * (in2[4] << 0) +
+             ((u64)in[5]) * (in2[3] << 1) +
+             ((u64)in[6]) * (in2[2] << 0) +
+             ((u64)in[7]) * (in2[1] << 1) +
+             ((u64)in[8]) * (in2[0] << 0);
+    tmp[9] = ((u64)in[1]) * (in2[8] << 0) +
+             ((u64)in[2]) * (in2[7] << 0) +
+             ((u64)in[3]) * (in2[6] << 0) +
+             ((u64)in[4]) * (in2[5] << 0) +
+             ((u64)in[5]) * (in2[4] << 0) +
+             ((u64)in[6]) * (in2[3] << 0) +
+             ((u64)in[7]) * (in2[2] << 0) +
+             ((u64)in[8]) * (in2[1] << 0);
+    tmp[10] = ((u64)in[2]) * (in2[8] << 0) +
+              ((u64)in[3]) * (in2[7] << 1) +
+              ((u64)in[4]) * (in2[6] << 0) +
+              ((u64)in[5]) * (in2[5] << 1) +
+              ((u64)in[6]) * (in2[4] << 0) +
+              ((u64)in[7]) * (in2[3] << 1) +
+              ((u64)in[8]) * (in2[2] << 0);
+    tmp[11] = ((u64)in[3]) * (in2[8] << 0) +
+              ((u64)in[4]) * (in2[7] << 0) +
+              ((u64)in[5]) * (in2[6] << 0) +
+              ((u64)in[6]) * (in2[5] << 0) +
+              ((u64)in[7]) * (in2[4] << 0) +
+              ((u64)in[8]) * (in2[3] << 0);
+    tmp[12] = ((u64)in[4]) * (in2[8] << 0) +
+              ((u64)in[5]) * (in2[7] << 1) +
+              ((u64)in[6]) * (in2[6] << 0) +
+              ((u64)in[7]) * (in2[5] << 1) +
+              ((u64)in[8]) * (in2[4] << 0);
+    tmp[13] = ((u64)in[5]) * (in2[8] << 0) +
+              ((u64)in[6]) * (in2[7] << 0) +
+              ((u64)in[7]) * (in2[6] << 0) +
+              ((u64)in[8]) * (in2[5] << 0);
+    tmp[14] = ((u64)in[6]) * (in2[8] << 0) +
+              ((u64)in[7]) * (in2[7] << 1) +
+              ((u64)in[8]) * (in2[6] << 0);
+    tmp[15] = ((u64)in[7]) * (in2[8] << 0) +
+              ((u64)in[8]) * (in2[7] << 0);
+    tmp[16] = ((u64)in[8]) * (in2[8] << 0);
 
     felem_reduce_degree(out, tmp);
 }
 
-static void felem_assign(felem out, const felem in)
+static void
+felem_assign(felem out, const felem in)
 {
     memcpy(out, in, sizeof(felem));
 }
@@ -643,66 +650,67 @@ static void felem_assign(felem out, const felem in)
  *   a^{p-1} = 1 (mod p)
  *   a^{p-2} = a^{-1} (mod p)
  */
-static void felem_inv(felem out, const felem in)
+static void
+felem_inv(felem out, const felem in)
 {
     felem ftmp, ftmp2;
     /* each e_I will hold |in|^{2^I - 1} */
     felem e2, e4, e8, e16, e32, e64;
     unsigned int i;
 
-    felem_square(ftmp, in);		/* 2^1 */
-    felem_mul(ftmp, in, ftmp);		/* 2^2 - 2^0 */
+    felem_square(ftmp, in);    /* 2^1 */
+    felem_mul(ftmp, in, ftmp); /* 2^2 - 2^0 */
     felem_assign(e2, ftmp);
-    felem_square(ftmp, ftmp);		/* 2^3 - 2^1 */
-    felem_square(ftmp, ftmp);		/* 2^4 - 2^2 */
-    felem_mul(ftmp, ftmp, e2);		/* 2^4 - 2^0 */
+    felem_square(ftmp, ftmp);  /* 2^3 - 2^1 */
+    felem_square(ftmp, ftmp);  /* 2^4 - 2^2 */
+    felem_mul(ftmp, ftmp, e2); /* 2^4 - 2^0 */
     felem_assign(e4, ftmp);
-    felem_square(ftmp, ftmp);		/* 2^5 - 2^1 */
-    felem_square(ftmp, ftmp);		/* 2^6 - 2^2 */
-    felem_square(ftmp, ftmp);		/* 2^7 - 2^3 */
-    felem_square(ftmp, ftmp);		/* 2^8 - 2^4 */
-    felem_mul(ftmp, ftmp, e4);		/* 2^8 - 2^0 */
+    felem_square(ftmp, ftmp);  /* 2^5 - 2^1 */
+    felem_square(ftmp, ftmp);  /* 2^6 - 2^2 */
+    felem_square(ftmp, ftmp);  /* 2^7 - 2^3 */
+    felem_square(ftmp, ftmp);  /* 2^8 - 2^4 */
+    felem_mul(ftmp, ftmp, e4); /* 2^8 - 2^0 */
     felem_assign(e8, ftmp);
     for (i = 0; i < 8; i++) {
-	felem_square(ftmp, ftmp);
-    }					/* 2^16 - 2^8 */
-    felem_mul(ftmp, ftmp, e8);		/* 2^16 - 2^0 */
+        felem_square(ftmp, ftmp);
+    }                          /* 2^16 - 2^8 */
+    felem_mul(ftmp, ftmp, e8); /* 2^16 - 2^0 */
     felem_assign(e16, ftmp);
     for (i = 0; i < 16; i++) {
-	felem_square(ftmp, ftmp);
-    }					/* 2^32 - 2^16 */
-    felem_mul(ftmp, ftmp, e16);		/* 2^32 - 2^0 */
+        felem_square(ftmp, ftmp);
+    }                           /* 2^32 - 2^16 */
+    felem_mul(ftmp, ftmp, e16); /* 2^32 - 2^0 */
     felem_assign(e32, ftmp);
     for (i = 0; i < 32; i++) {
-	felem_square(ftmp, ftmp);
-    }					/* 2^64 - 2^32 */
+        felem_square(ftmp, ftmp);
+    } /* 2^64 - 2^32 */
     felem_assign(e64, ftmp);
-    felem_mul(ftmp, ftmp, in);		/* 2^64 - 2^32 + 2^0 */
+    felem_mul(ftmp, ftmp, in); /* 2^64 - 2^32 + 2^0 */
     for (i = 0; i < 192; i++) {
-	felem_square(ftmp, ftmp);
-    }					/* 2^256 - 2^224 + 2^192 */
+        felem_square(ftmp, ftmp);
+    } /* 2^256 - 2^224 + 2^192 */
 
-    felem_mul(ftmp2, e64, e32);		/* 2^64 - 2^0 */
+    felem_mul(ftmp2, e64, e32); /* 2^64 - 2^0 */
     for (i = 0; i < 16; i++) {
-	felem_square(ftmp2, ftmp2);
-    }					/* 2^80 - 2^16 */
-    felem_mul(ftmp2, ftmp2, e16);	/* 2^80 - 2^0 */
+        felem_square(ftmp2, ftmp2);
+    }                             /* 2^80 - 2^16 */
+    felem_mul(ftmp2, ftmp2, e16); /* 2^80 - 2^0 */
     for (i = 0; i < 8; i++) {
-	felem_square(ftmp2, ftmp2);
-    }					/* 2^88 - 2^8 */
-    felem_mul(ftmp2, ftmp2, e8);	/* 2^88 - 2^0 */
+        felem_square(ftmp2, ftmp2);
+    }                            /* 2^88 - 2^8 */
+    felem_mul(ftmp2, ftmp2, e8); /* 2^88 - 2^0 */
     for (i = 0; i < 4; i++) {
-	felem_square(ftmp2, ftmp2);
-    }					/* 2^92 - 2^4 */
-    felem_mul(ftmp2, ftmp2, e4);	/* 2^92 - 2^0 */
-    felem_square(ftmp2, ftmp2);		/* 2^93 - 2^1 */
-    felem_square(ftmp2, ftmp2);		/* 2^94 - 2^2 */
-    felem_mul(ftmp2, ftmp2, e2);	/* 2^94 - 2^0 */
-    felem_square(ftmp2, ftmp2);		/* 2^95 - 2^1 */
-    felem_square(ftmp2, ftmp2);		/* 2^96 - 2^2 */
-    felem_mul(ftmp2, ftmp2, in);	/* 2^96 - 3 */
+        felem_square(ftmp2, ftmp2);
+    }                            /* 2^92 - 2^4 */
+    felem_mul(ftmp2, ftmp2, e4); /* 2^92 - 2^0 */
+    felem_square(ftmp2, ftmp2);  /* 2^93 - 2^1 */
+    felem_square(ftmp2, ftmp2);  /* 2^94 - 2^2 */
+    felem_mul(ftmp2, ftmp2, e2); /* 2^94 - 2^0 */
+    felem_square(ftmp2, ftmp2);  /* 2^95 - 2^1 */
+    felem_square(ftmp2, ftmp2);  /* 2^96 - 2^2 */
+    felem_mul(ftmp2, ftmp2, in); /* 2^96 - 3 */
 
-    felem_mul(out, ftmp2, ftmp);	/* 2^256 - 2^224 + 2^192 + 2^96 - 3 */
+    felem_mul(out, ftmp2, ftmp); /* 2^256 - 2^224 + 2^192 + 2^96 - 3 */
 }
 
 /* felem_scalar_3 sets out=3*out.
@@ -710,25 +718,26 @@ static void felem_inv(felem out, const felem in)
  * On entry: out[0,2,...] < 2**30, out[1,3,...] < 2**29.
  * On exit: out[0,2,...] < 2**30, out[1,3,...] < 2**29.
  */
-static void felem_scalar_3(felem out)
+static void
+felem_scalar_3(felem out)
 {
     limb carry = 0;
     unsigned int i;
 
     for (i = 0;; i++) {
-	out[i] *= 3;
-	out[i] += carry;
-	carry = out[i] >> 29;
-	out[i] &= kBottom29Bits;
+        out[i] *= 3;
+        out[i] += carry;
+        carry = out[i] >> 29;
+        out[i] &= kBottom29Bits;
 
-	i++;
-	if (i == NLIMBS)
-	    break;
+        i++;
+        if (i == NLIMBS)
+            break;
 
-	out[i] *= 3;
-	out[i] += carry;
-	carry = out[i] >> 28;
-	out[i] &= kBottom28Bits;
+        out[i] *= 3;
+        out[i] += carry;
+        carry = out[i] >> 28;
+        out[i] &= kBottom28Bits;
     }
 
     felem_reduce_carry(out, carry);
@@ -739,28 +748,29 @@ static void felem_scalar_3(felem out)
  * On entry: out[0,2,...] < 2**30, out[1,3,...] < 2**29.
  * On exit: out[0,2,...] < 2**30, out[1,3,...] < 2**29.
  */
-static void felem_scalar_4(felem out)
+static void
+felem_scalar_4(felem out)
 {
     limb carry = 0, next_carry;
     unsigned int i;
 
     for (i = 0;; i++) {
-	next_carry = out[i] >> 27;
-	out[i] <<= 2;
-	out[i] &= kBottom29Bits;
-	out[i] += carry;
-	carry = next_carry + (out[i] >> 29);
-	out[i] &= kBottom29Bits;
+        next_carry = out[i] >> 27;
+        out[i] <<= 2;
+        out[i] &= kBottom29Bits;
+        out[i] += carry;
+        carry = next_carry + (out[i] >> 29);
+        out[i] &= kBottom29Bits;
 
-	i++;
-	if (i == NLIMBS)
-	    break;
-	next_carry = out[i] >> 26;
-	out[i] <<= 2;
-	out[i] &= kBottom28Bits;
-	out[i] += carry;
-	carry = next_carry + (out[i] >> 28);
-	out[i] &= kBottom28Bits;
+        i++;
+        if (i == NLIMBS)
+            break;
+        next_carry = out[i] >> 26;
+        out[i] <<= 2;
+        out[i] &= kBottom28Bits;
+        out[i] += carry;
+        carry = next_carry + (out[i] >> 28);
+        out[i] &= kBottom28Bits;
     }
 
     felem_reduce_carry(out, carry);
@@ -771,28 +781,29 @@ static void felem_scalar_4(felem out)
  * On entry: out[0,2,...] < 2**30, out[1,3,...] < 2**29.
  * On exit: out[0,2,...] < 2**30, out[1,3,...] < 2**29.
  */
-static void felem_scalar_8(felem out)
+static void
+felem_scalar_8(felem out)
 {
     limb carry = 0, next_carry;
     unsigned int i;
 
     for (i = 0;; i++) {
-	next_carry = out[i] >> 26;
-	out[i] <<= 3;
-	out[i] &= kBottom29Bits;
-	out[i] += carry;
-	carry = next_carry + (out[i] >> 29);
-	out[i] &= kBottom29Bits;
+        next_carry = out[i] >> 26;
+        out[i] <<= 3;
+        out[i] &= kBottom29Bits;
+        out[i] += carry;
+        carry = next_carry + (out[i] >> 29);
+        out[i] &= kBottom29Bits;
 
-	i++;
-	if (i == NLIMBS)
-	    break;
-	next_carry = out[i] >> 25;
-	out[i] <<= 3;
-	out[i] &= kBottom28Bits;
-	out[i] += carry;
-	carry = next_carry + (out[i] >> 28);
-	out[i] &= kBottom28Bits;
+        i++;
+        if (i == NLIMBS)
+            break;
+        next_carry = out[i] >> 25;
+        out[i] <<= 3;
+        out[i] &= kBottom28Bits;
+        out[i] += carry;
+        carry = next_carry + (out[i] >> 28);
+        out[i] &= kBottom28Bits;
     }
 
     felem_reduce_carry(out, carry);
@@ -801,7 +812,8 @@ static void felem_scalar_8(felem out)
 /* felem_is_zero_vartime returns 1 iff |in| == 0. It takes a variable amount of
  * time depending on the value of |in|.
  */
-static char felem_is_zero_vartime(const felem in)
+static char
+felem_is_zero_vartime(const felem in)
 {
     limb carry;
     int i;
@@ -811,29 +823,29 @@ static char felem_is_zero_vartime(const felem in)
     /* First, reduce tmp to a minimal form.
      */
     do {
-	carry = 0;
-	for (i = 0;; i++) {
-	    tmp[i] += carry;
-	    carry = tmp[i] >> 29;
-	    tmp[i] &= kBottom29Bits;
+        carry = 0;
+        for (i = 0;; i++) {
+            tmp[i] += carry;
+            carry = tmp[i] >> 29;
+            tmp[i] &= kBottom29Bits;
 
-	    i++;
-	    if (i == NLIMBS)
-		break;
+            i++;
+            if (i == NLIMBS)
+                break;
 
-	    tmp[i] += carry;
-	    carry = tmp[i] >> 28;
-	    tmp[i] &= kBottom28Bits;
-	}
+            tmp[i] += carry;
+            carry = tmp[i] >> 28;
+            tmp[i] &= kBottom28Bits;
+        }
 
-	felem_reduce_carry(tmp, carry);
+        felem_reduce_carry(tmp, carry);
     } while (carry);
 
     /* tmp < 2**257, so the only possible zero values are 0, p and 2p.
      */
     return memcmp(tmp, kZero, sizeof(tmp)) == 0 ||
-	   memcmp(tmp, kP, sizeof(tmp)) == 0 ||
-	   memcmp(tmp, k2P, sizeof(tmp)) == 0;
+           memcmp(tmp, kP, sizeof(tmp)) == 0 ||
+           memcmp(tmp, k2P, sizeof(tmp)) == 0;
 }
 
 /* Group operations:
@@ -847,8 +859,9 @@ static char felem_is_zero_vartime(const felem in)
  *
  * See http://www.hyperelliptic.org/EFD/g1p/auto-shortw-jacobian-0.html#doubling-dbl-2009-l
  */
-static void point_double(felem x_out, felem y_out, felem z_out,
-			 const felem x, const felem y, const felem z)
+static void
+point_double(felem x_out, felem y_out, felem z_out,
+             const felem x, const felem y, const felem z)
 {
     felem delta, gamma, alpha, beta, tmp, tmp2;
 
@@ -886,9 +899,10 @@ static void point_double(felem x_out, felem y_out, felem z_out,
  * Note that this function does not handle P+P, infinity+P nor P+infinity
  * correctly.
  */
-static void point_add_mixed(felem x_out, felem y_out, felem z_out,
-			    const felem x1, const felem y1, const felem z1,
-			    const felem x2, const felem y2)
+static void
+point_add_mixed(felem x_out, felem y_out, felem z_out,
+                const felem x1, const felem y1, const felem z1,
+                const felem x2, const felem y2)
 {
     felem z1z1, z1z1z1, s2, u2, h, i, j, r, rr, v, tmp;
 
@@ -926,9 +940,10 @@ static void point_add_mixed(felem x_out, felem y_out, felem z_out,
  * Note that this function does not handle P+P, infinity+P nor P+infinity
  * correctly.
  */
-static void point_add(felem x_out, felem y_out, felem z_out,
-		      const felem x1, const felem y1, const felem z1,
-		      const felem x2, const felem y2, const felem z2)
+static void
+point_add(felem x_out, felem y_out, felem z_out,
+          const felem x1, const felem y1, const felem z1,
+          const felem x2, const felem y2, const felem z2)
 {
     felem z1z1, z1z1z1, z2z2, z2z2z2, s1, s2, u1, u2, h, i, j, r, rr, v, tmp;
 
@@ -975,7 +990,8 @@ static void point_add(felem x_out, felem y_out, felem z_out,
  *
  * This function handles the case where {x1,y1,z1}={x2,y2,z2}.
  */
-static void point_add_or_double_vartime(
+static void
+point_add_or_double_vartime(
     felem x_out, felem y_out, felem z_out,
     const felem x1, const felem y1, const felem z1,
     const felem x2, const felem y2, const felem z2)
@@ -1006,8 +1022,8 @@ static void point_add_or_double_vartime(
     felem_diff(r, s2, s1);
     y_equal = felem_is_zero_vartime(r);
     if (x_equal && y_equal) {
-	point_double(x_out, y_out, z_out, x1, y1, z1);
-	return;
+        point_double(x_out, y_out, z_out, x1, y1, z1);
+        return;
     }
     felem_sum(r, r, r);
     felem_mul(v, u1, i);
@@ -1029,21 +1045,23 @@ static void point_add_or_double_vartime(
  *
  * On entry: mask is either 0 or 0xffffffff.
  */
-static void copy_conditional(felem out, const felem in, limb mask)
+static void
+copy_conditional(felem out, const felem in, limb mask)
 {
     int i;
 
     for (i = 0; i < NLIMBS; i++) {
-	const limb tmp = mask & (in[i] ^ out[i]);
-	out[i] ^= tmp;
+        const limb tmp = mask & (in[i] ^ out[i]);
+        out[i] ^= tmp;
     }
 }
 
 /* select_affine_point sets {out_x,out_y} to the index'th entry of table.
  * On entry: index < 16, table[0] must be zero.
  */
-static void select_affine_point(felem out_x, felem out_y,
-				const limb *table, limb index)
+static void
+select_affine_point(felem out_x, felem out_y,
+                    const limb *table, limb index)
 {
     limb i, j;
 
@@ -1051,25 +1069,26 @@ static void select_affine_point(felem out_x, felem out_y,
     memset(out_y, 0, sizeof(felem));
 
     for (i = 1; i < 16; i++) {
-	limb mask = i ^ index;
-	mask |= mask >> 2;
-	mask |= mask >> 1;
-	mask &= 1;
-	mask--;
-	for (j = 0; j < NLIMBS; j++, table++) {
-	    out_x[j] |= *table & mask;
-	}
-	for (j = 0; j < NLIMBS; j++, table++) {
-	    out_y[j] |= *table & mask;
-	}
+        limb mask = i ^ index;
+        mask |= mask >> 2;
+        mask |= mask >> 1;
+        mask &= 1;
+        mask--;
+        for (j = 0; j < NLIMBS; j++, table++) {
+            out_x[j] |= *table & mask;
+        }
+        for (j = 0; j < NLIMBS; j++, table++) {
+            out_y[j] |= *table & mask;
+        }
     }
 }
 
 /* select_jacobian_point sets {out_x,out_y,out_z} to the index'th entry of
  * table.  On entry: index < 16, table[0] must be zero.
  */
-static void select_jacobian_point(felem out_x, felem out_y, felem out_z,
-				  const limb *table, limb index)
+static void
+select_jacobian_point(felem out_x, felem out_y, felem out_z,
+                      const limb *table, limb index)
 {
     limb i, j;
 
@@ -1080,28 +1099,29 @@ static void select_jacobian_point(felem out_x, felem out_y, felem out_z,
     /* The implicit value at index 0 is all zero. We don't need to perform that
      * iteration of the loop because we already set out_* to zero.
      */
-    table += 3*NLIMBS;
+    table += 3 * NLIMBS;
 
     for (i = 1; i < 16; i++) {
-	limb mask = i ^ index;
-	mask |= mask >> 2;
-	mask |= mask >> 1;
-	mask &= 1;
-	mask--;
-	for (j = 0; j < NLIMBS; j++, table++) {
-	    out_x[j] |= *table & mask;
-	}
-	for (j = 0; j < NLIMBS; j++, table++) {
-	    out_y[j] |= *table & mask;
-	}
-	for (j = 0; j < NLIMBS; j++, table++) {
-	    out_z[j] |= *table & mask;
-	}
+        limb mask = i ^ index;
+        mask |= mask >> 2;
+        mask |= mask >> 1;
+        mask &= 1;
+        mask--;
+        for (j = 0; j < NLIMBS; j++, table++) {
+            out_x[j] |= *table & mask;
+        }
+        for (j = 0; j < NLIMBS; j++, table++) {
+            out_y[j] |= *table & mask;
+        }
+        for (j = 0; j < NLIMBS; j++, table++) {
+            out_z[j] |= *table & mask;
+        }
     }
 }
 
 /* get_bit returns the bit'th bit of scalar. */
-static char get_bit(const u8 scalar[32], int bit)
+static char
+get_bit(const u8 scalar[32], int bit)
 {
     return ((scalar[bit >> 3]) >> (bit & 7)) & 1;
 }
@@ -1110,7 +1130,8 @@ static char get_bit(const u8 scalar[32], int bit)
  * number. Note that the value of scalar must be less than the order of the
  * group.
  */
-static void scalar_base_mult(felem nx, felem ny, felem nz, const u8 scalar[32])
+static void
+scalar_base_mult(felem nx, felem ny, felem nz, const u8 scalar[32])
 {
     int i, j;
     limb n_is_infinity_mask = -1, p_is_noninfinite_mask, mask;
@@ -1127,53 +1148,55 @@ static void scalar_base_mult(felem nx, felem ny, felem nz, const u8 scalar[32])
      * positions 32,96,160 and 224 and does this 32 times.
      */
     for (i = 0; i < 32; i++) {
-	if (i) {
-	    point_double(nx, ny, nz, nx, ny, nz);
-	}
-	table_offset = 0;
-	for (j = 0; j <= 32; j += 32) {
-	    char bit0 = get_bit(scalar, 31 - i + j);
-	    char bit1 = get_bit(scalar, 95 - i + j);
-	    char bit2 = get_bit(scalar, 159 - i + j);
-	    char bit3 = get_bit(scalar, 223 - i + j);
-	    limb index = bit0 | (bit1 << 1) | (bit2 << 2) | (bit3 << 3);
+        if (i) {
+            point_double(nx, ny, nz, nx, ny, nz);
+        }
+        table_offset = 0;
+        for (j = 0; j <= 32; j += 32) {
+            char bit0 = get_bit(scalar, 31 - i + j);
+            char bit1 = get_bit(scalar, 95 - i + j);
+            char bit2 = get_bit(scalar, 159 - i + j);
+            char bit3 = get_bit(scalar, 223 - i + j);
+            limb index = bit0 | (bit1 << 1) | (bit2 << 2) | (bit3 << 3);
 
-	    select_affine_point(px, py, kPrecomputed + table_offset, index);
-	    table_offset += 30 * NLIMBS;
+            select_affine_point(px, py, kPrecomputed + table_offset, index);
+            table_offset += 30 * NLIMBS;
 
-	    /* Since scalar is less than the order of the group, we know that
-	     * {nx,ny,nz} != {px,py,1}, unless both are zero, which we handle
-	     * below.
-	     */
-	    point_add_mixed(tx, ty, tz, nx, ny, nz, px, py);
-	    /* The result of point_add_mixed is incorrect if {nx,ny,nz} is zero
-	     * (a.k.a.  the point at infinity). We handle that situation by
-	     * copying the point from the table.
-	     */
-	    copy_conditional(nx, px, n_is_infinity_mask);
-	    copy_conditional(ny, py, n_is_infinity_mask);
-	    copy_conditional(nz, kOne, n_is_infinity_mask);
+            /* Since scalar is less than the order of the group, we know that
+             * {nx,ny,nz} != {px,py,1}, unless both are zero, which we handle
+             * below.
+             */
+            point_add_mixed(tx, ty, tz, nx, ny, nz, px, py);
+            /* The result of point_add_mixed is incorrect if {nx,ny,nz} is zero
+             * (a.k.a.  the point at infinity). We handle that situation by
+             * copying the point from the table.
+             */
+            copy_conditional(nx, px, n_is_infinity_mask);
+            copy_conditional(ny, py, n_is_infinity_mask);
+            copy_conditional(nz, kOne, n_is_infinity_mask);
 
-	    /* Equally, the result is also wrong if the point from the table is
-	     * zero, which happens when the index is zero. We handle that by
-	     * only copying from {tx,ty,tz} to {nx,ny,nz} if index != 0.
-	     */
-	    p_is_noninfinite_mask = NON_ZERO_TO_ALL_ONES(index);
-	    mask = p_is_noninfinite_mask & ~n_is_infinity_mask;
-	    copy_conditional(nx, tx, mask);
-	    copy_conditional(ny, ty, mask);
-	    copy_conditional(nz, tz, mask);
-	    /* If p was not zero, then n is now non-zero. */
-	    n_is_infinity_mask &= ~p_is_noninfinite_mask;
-	}
+            /* Equally, the result is also wrong if the point from the table is
+             * zero, which happens when the index is zero. We handle that by
+             * only copying from {tx,ty,tz} to {nx,ny,nz} if index != 0.
+             */
+            p_is_noninfinite_mask = NON_ZERO_TO_ALL_ONES(index);
+            mask = p_is_noninfinite_mask & ~n_is_infinity_mask;
+            copy_conditional(nx, tx, mask);
+            copy_conditional(ny, ty, mask);
+            copy_conditional(nz, tz, mask);
+            /* If p was not zero, then n is now non-zero. */
+            n_is_infinity_mask &= ~p_is_noninfinite_mask;
+        }
     }
 }
 
 /* point_to_affine converts a Jacobian point to an affine point. If the input
  * is the point at infinity then it returns (0, 0) in constant time.
  */
-static void point_to_affine(felem x_out, felem y_out,
-			    const felem nx, const felem ny, const felem nz) {
+static void
+point_to_affine(felem x_out, felem y_out,
+                const felem nx, const felem ny, const felem nz)
+{
     felem z_inv, z_inv_sq;
     felem_inv(z_inv, nz);
     felem_square(z_inv_sq, z_inv);
@@ -1183,8 +1206,9 @@ static void point_to_affine(felem x_out, felem y_out,
 }
 
 /* scalar_mult sets {nx,ny,nz} = scalar*{x,y}. */
-static void scalar_mult(felem nx, felem ny, felem nz,
-			const felem x, const felem y, const u8 scalar[32])
+static void
+scalar_mult(felem nx, felem ny, felem nz,
+            const felem x, const felem y, const u8 scalar[32])
 {
     int i;
     felem px, py, pz, tx, ty, tz;
@@ -1198,11 +1222,11 @@ static void scalar_mult(felem nx, felem ny, felem nz,
     memcpy(&precomp[1][2], kOne, sizeof(felem));
 
     for (i = 2; i < 16; i += 2) {
-	point_double(precomp[i][0], precomp[i][1], precomp[i][2],
-		     precomp[i / 2][0], precomp[i / 2][1], precomp[i / 2][2]);
+        point_double(precomp[i][0], precomp[i][1], precomp[i][2],
+                     precomp[i / 2][0], precomp[i / 2][1], precomp[i / 2][2]);
 
-	point_add_mixed(precomp[i + 1][0], precomp[i + 1][1], precomp[i + 1][2],
-			precomp[i][0], precomp[i][1], precomp[i][2], x, y);
+        point_add_mixed(precomp[i + 1][0], precomp[i + 1][1], precomp[i + 1][2],
+                        precomp[i][0], precomp[i][1], precomp[i][2], x, y);
     }
 
     memset(nx, 0, sizeof(felem));
@@ -1212,33 +1236,33 @@ static void scalar_mult(felem nx, felem ny, felem nz,
 
     /* We add in a window of four bits each iteration and do this 64 times. */
     for (i = 0; i < 64; i++) {
-	if (i) {
-	    point_double(nx, ny, nz, nx, ny, nz);
-	    point_double(nx, ny, nz, nx, ny, nz);
-	    point_double(nx, ny, nz, nx, ny, nz);
-	    point_double(nx, ny, nz, nx, ny, nz);
-	}
+        if (i) {
+            point_double(nx, ny, nz, nx, ny, nz);
+            point_double(nx, ny, nz, nx, ny, nz);
+            point_double(nx, ny, nz, nx, ny, nz);
+            point_double(nx, ny, nz, nx, ny, nz);
+        }
 
-	index = scalar[31 - i / 2];
-	if ((i & 1) == 1) {
-	    index &= 15;
-	} else {
-	    index >>= 4;
-	}
+        index = scalar[31 - i / 2];
+        if ((i & 1) == 1) {
+            index &= 15;
+        } else {
+            index >>= 4;
+        }
 
-	/* See the comments in scalar_base_mult about handling infinities. */
-	select_jacobian_point(px, py, pz, precomp[0][0], index);
-	point_add(tx, ty, tz, nx, ny, nz, px, py, pz);
-	copy_conditional(nx, px, n_is_infinity_mask);
-	copy_conditional(ny, py, n_is_infinity_mask);
-	copy_conditional(nz, pz, n_is_infinity_mask);
+        /* See the comments in scalar_base_mult about handling infinities. */
+        select_jacobian_point(px, py, pz, precomp[0][0], index);
+        point_add(tx, ty, tz, nx, ny, nz, px, py, pz);
+        copy_conditional(nx, px, n_is_infinity_mask);
+        copy_conditional(ny, py, n_is_infinity_mask);
+        copy_conditional(nz, pz, n_is_infinity_mask);
 
-	p_is_noninfinite_mask = NON_ZERO_TO_ALL_ONES(index);
-	mask = p_is_noninfinite_mask & ~n_is_infinity_mask;
-	copy_conditional(nx, tx, mask);
-	copy_conditional(ny, ty, mask);
-	copy_conditional(nz, tz, mask);
-	n_is_infinity_mask &= ~p_is_noninfinite_mask;
+        p_is_noninfinite_mask = NON_ZERO_TO_ALL_ONES(index);
+        mask = p_is_noninfinite_mask & ~n_is_infinity_mask;
+        copy_conditional(nx, tx, mask);
+        copy_conditional(ny, ty, mask);
+        copy_conditional(nz, tz, mask);
+        n_is_infinity_mask &= ~p_is_noninfinite_mask;
     }
 }
 
@@ -1254,12 +1278,12 @@ static void scalar_mult(felem nx, felem ny, felem nz,
 #define BYTESWAP64(x) OSSwapInt64(x)
 #else
 #define BYTESWAP32(x) \
-    (((x) >> 24) | (((x) >> 8) & 0xff00) | (((x) & 0xff00) << 8) | ((x) << 24))
-#define BYTESWAP64(x) \
-    (((x) >> 56) | (((x) >> 40) & 0xff00) | \
+    (((x) >> 24) | (((x) >> 8) & 0xff00) | (((x)&0xff00) << 8) | ((x) << 24))
+#define BYTESWAP64(x)                                       \
+    (((x) >> 56) | (((x) >> 40) & 0xff00) |                 \
      (((x) >> 24) & 0xff0000) | (((x) >> 8) & 0xff000000) | \
-     (((x) & 0xff000000) << 8) | (((x) & 0xff0000) << 24) | \
-     (((x) & 0xff00) << 40) | ((x) << 56))
+     (((x)&0xff000000) << 8) | (((x)&0xff0000) << 24) |     \
+     (((x)&0xff00) << 40) | ((x) << 56))
 #endif
 
 #ifdef MP_USE_UINT_DIGIT
@@ -1276,23 +1300,24 @@ static const mp_digit kRInvDigits[8] = {
 };
 #else
 static const mp_digit kRInvDigits[4] = {
-    PR_UINT64(0x180000000),  0xffffffff,
+    PR_UINT64(0x180000000), 0xffffffff,
     PR_UINT64(0xfffffffe80000001), PR_UINT64(0x7fffffff00000001)
 };
 #endif
-#define MP_DIGITS_IN_256_BITS (32/sizeof(mp_digit))
+#define MP_DIGITS_IN_256_BITS (32 / sizeof(mp_digit))
 static const mp_int kRInv = {
     MP_ZPOS,
     MP_DIGITS_IN_256_BITS,
     MP_DIGITS_IN_256_BITS,
-    (mp_digit*) kRInvDigits
+    (mp_digit *)kRInvDigits
 };
 
 static const limb kTwo28 = 0x10000000;
 static const limb kTwo29 = 0x20000000;
 
 /* to_montgomery sets out = R*in. */
-static mp_err to_montgomery(felem out, const mp_int *in, const ECGroup *group)
+static mp_err
+to_montgomery(felem out, const mp_int *in, const ECGroup *group)
 {
     /* There are no MPI functions for bitshift operations and we wish to shift
      * in 257 bits left so we move the digits 256-bits left and then multiply
@@ -1305,20 +1330,20 @@ static mp_err to_montgomery(felem out, const mp_int *in, const ECGroup *group)
     MP_CHECKOK(mp_init(&in_shifted));
     MP_CHECKOK(s_mp_pad(&in_shifted, MP_USED(in) + MP_DIGITS_IN_256_BITS));
     memcpy(&MP_DIGIT(&in_shifted, MP_DIGITS_IN_256_BITS),
-	   MP_DIGITS(in),
-	   MP_USED(in)*sizeof(mp_digit));
+           MP_DIGITS(in),
+           MP_USED(in) * sizeof(mp_digit));
     MP_CHECKOK(mp_mul_2(&in_shifted, &in_shifted));
     MP_CHECKOK(group->meth->field_mod(&in_shifted, &in_shifted, group->meth));
 
     for (i = 0;; i++) {
-	out[i] = MP_DIGIT(&in_shifted, 0) & kBottom29Bits;
-	MP_CHECKOK(mp_div_d(&in_shifted, kTwo29, &in_shifted, NULL));
+        out[i] = MP_DIGIT(&in_shifted, 0) & kBottom29Bits;
+        MP_CHECKOK(mp_div_d(&in_shifted, kTwo29, &in_shifted, NULL));
 
-	i++;
-	if (i == NLIMBS)
-	    break;
-	out[i] = MP_DIGIT(&in_shifted, 0) & kBottom28Bits;
-	MP_CHECKOK(mp_div_d(&in_shifted, kTwo28, &in_shifted, NULL));
+        i++;
+        if (i == NLIMBS)
+            break;
+        out[i] = MP_DIGIT(&in_shifted, 0) & kBottom28Bits;
+        MP_CHECKOK(mp_div_d(&in_shifted, kTwo28, &in_shifted, NULL));
     }
 
 CLEANUP:
@@ -1327,8 +1352,9 @@ CLEANUP:
 }
 
 /* from_montgomery sets out=in/R. */
-static mp_err from_montgomery(mp_int *out, const felem in,
-			      const ECGroup *group)
+static mp_err
+from_montgomery(mp_int *out, const felem in,
+                const ECGroup *group)
 {
     mp_int result, tmp;
     mp_err res;
@@ -1337,14 +1363,14 @@ static mp_err from_montgomery(mp_int *out, const felem in,
     MP_CHECKOK(mp_init(&result));
     MP_CHECKOK(mp_init(&tmp));
 
-    MP_CHECKOK(mp_add_d(&tmp, in[NLIMBS-1], &result));
-    for (i = NLIMBS-2; i >= 0; i--) {
-	if ((i & 1) == 0) {
-	    MP_CHECKOK(mp_mul_d(&result, kTwo29, &tmp));
-	} else {
-	    MP_CHECKOK(mp_mul_d(&result, kTwo28, &tmp));
-	}
-	MP_CHECKOK(mp_add_d(&tmp, in[i], &result));
+    MP_CHECKOK(mp_add_d(&tmp, in[NLIMBS - 1], &result));
+    for (i = NLIMBS - 2; i >= 0; i--) {
+        if ((i & 1) == 0) {
+            MP_CHECKOK(mp_mul_d(&result, kTwo29, &tmp));
+        } else {
+            MP_CHECKOK(mp_mul_d(&result, kTwo28, &tmp));
+        }
+        MP_CHECKOK(mp_add_d(&tmp, in[i], &result));
     }
 
     MP_CHECKOK(mp_mul(&result, &kRInv, out));
@@ -1357,7 +1383,8 @@ CLEANUP:
 }
 
 /* scalar_from_mp_int sets out_scalar=n, where n < the group order. */
-static void scalar_from_mp_int(u8 out_scalar[32], const mp_int *n)
+static void
+scalar_from_mp_int(u8 out_scalar[32], const mp_int *n)
 {
     /* We require that |n| is less than the order of the group and therefore it
      * will fit into |out_scalar|. However, these is a timing side-channel here
@@ -1369,12 +1396,12 @@ static void scalar_from_mp_int(u8 out_scalar[32], const mp_int *n)
     memcpy(out_scalar, MP_DIGITS(n), MP_USED(n) * sizeof(mp_digit));
 #else
     {
-	mp_size i;
-	mp_digit swapped[MP_DIGITS_IN_256_BITS];
-	for (i = 0; i < MP_USED(n); i++) {
-	    swapped[i] = BYTESWAP_MP_DIGIT_TO_LE(MP_DIGIT(n, i));
-	}
-	memcpy(out_scalar, swapped, MP_USED(n) * sizeof(mp_digit));
+        mp_size i;
+        mp_digit swapped[MP_DIGITS_IN_256_BITS];
+        for (i = 0; i < MP_USED(n); i++) {
+            swapped[i] = BYTESWAP_MP_DIGIT_TO_LE(MP_DIGIT(n, i));
+        }
+        memcpy(out_scalar, swapped, MP_USED(n) * sizeof(mp_digit));
     }
 #endif
 }
@@ -1382,9 +1409,10 @@ static void scalar_from_mp_int(u8 out_scalar[32], const mp_int *n)
 /* ec_GFp_nistp256_base_point_mul sets {out_x,out_y} = nG, where n is < the
  * order of the group.
  */
-static mp_err ec_GFp_nistp256_base_point_mul(const mp_int *n,
-				             mp_int *out_x, mp_int *out_y,
-				             const ECGroup *group)
+static mp_err
+ec_GFp_nistp256_base_point_mul(const mp_int *n,
+                               mp_int *out_x, mp_int *out_y,
+                               const ECGroup *group)
 {
     u8 scalar[32];
     felem x, y, z, x_affine, y_affine;
@@ -1405,10 +1433,11 @@ CLEANUP:
 /* ec_GFp_nistp256_point_mul sets {out_x,out_y} = n*{in_x,in_y}, where n is <
  * the order of the group.
  */
-static mp_err ec_GFp_nistp256_point_mul(const mp_int *n,
-				        const mp_int *in_x, const mp_int *in_y,
-				        mp_int *out_x, mp_int *out_y,
-				        const ECGroup *group)
+static mp_err
+ec_GFp_nistp256_point_mul(const mp_int *n,
+                          const mp_int *in_x, const mp_int *in_y,
+                          mp_int *out_x, mp_int *out_y,
+                          const ECGroup *group)
 {
     u8 scalar[32];
     felem x, y, z, x_affine, y_affine, px, py;
@@ -1435,11 +1464,12 @@ CLEANUP:
  * is safe because it's used for signature validation which doesn't deal
  * with secrets.
  */
-static mp_err ec_GFp_nistp256_points_mul_vartime(
-	const mp_int *n1, const mp_int *n2,
-	const mp_int *in_x, const mp_int *in_y,
-	mp_int *out_x, mp_int *out_y,
-	const ECGroup *group)
+static mp_err
+ec_GFp_nistp256_points_mul_vartime(
+    const mp_int *n1, const mp_int *n2,
+    const mp_int *in_x, const mp_int *in_y,
+    mp_int *out_x, mp_int *out_y,
+    const ECGroup *group)
 {
     u8 scalar1[32], scalar2[32];
     felem x1, y1, z1, x2, y2, z2, x_affine, y_affine, px, py;
@@ -1447,19 +1477,19 @@ static mp_err ec_GFp_nistp256_points_mul_vartime(
 
     /* If n2 == NULL, this is just a base-point multiplication. */
     if (n2 == NULL) {
-	return ec_GFp_nistp256_base_point_mul(n1, out_x, out_y, group);
+        return ec_GFp_nistp256_base_point_mul(n1, out_x, out_y, group);
     }
 
     /* If n1 == nULL, this is just an arbitary-point multiplication. */
     if (n1 == NULL) {
-	return ec_GFp_nistp256_point_mul(n2, in_x, in_y, out_x, out_y, group);
+        return ec_GFp_nistp256_point_mul(n2, in_x, in_y, out_x, out_y, group);
     }
 
     /* If both scalars are zero, then the result is the point at infinity. */
     if (mp_cmp_z(n1) == 0 && mp_cmp_z(n2) == 0) {
-	mp_zero(out_x);
-	mp_zero(out_y);
-	return res;
+        mp_zero(out_x);
+        mp_zero(out_y);
+        return res;
     }
 
     scalar_from_mp_int(scalar1, n1);
@@ -1471,17 +1501,17 @@ static mp_err ec_GFp_nistp256_points_mul_vartime(
     scalar_mult(x2, y2, z2, px, py, scalar2);
 
     if (mp_cmp_z(n2) == 0) {
-	/* If n2 == 0, then {x2,y2,z2} is zero and the result is just
-	 * {x1,y1,z1}. */
+        /* If n2 == 0, then {x2,y2,z2} is zero and the result is just
+     * {x1,y1,z1}. */
     } else if (mp_cmp_z(n1) == 0) {
-	/* If n1 == 0, then {x1,y1,z1} is zero and the result is just
-	 * {x2,y2,z2}. */
-	memcpy(x1, x2, sizeof(x2));
-	memcpy(y1, y2, sizeof(y2));
-	memcpy(z1, z2, sizeof(z2));
+        /* If n1 == 0, then {x1,y1,z1} is zero and the result is just
+     * {x2,y2,z2}. */
+        memcpy(x1, x2, sizeof(x2));
+        memcpy(y1, y2, sizeof(y2));
+        memcpy(z1, z2, sizeof(z2));
     } else {
-	/* This function handles the case where {x1,y1,z1} == {x2,y2,z2}. */
-	point_add_or_double_vartime(x1, y1, z1, x1, y1, z1, x2, y2, z2);
+        /* This function handles the case where {x1,y1,z1} == {x2,y2,z2}. */
+        point_add_or_double_vartime(x1, y1, z1, x1, y1, z1, x2, y2, z2);
     }
 
     point_to_affine(x_affine, y_affine, x1, y1, z1);
@@ -1493,7 +1523,8 @@ CLEANUP:
 }
 
 /* Wire in fast point multiplication for named curves. */
-mp_err ec_group_set_gfp256_32(ECGroup *group, ECCurveName name)
+mp_err
+ec_group_set_gfp256_32(ECGroup *group, ECCurveName name)
 {
     if (name == ECCurve_NIST_P256) {
         group->base_point_mul = &ec_GFp_nistp256_base_point_mul;

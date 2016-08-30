@@ -568,12 +568,6 @@ nsWindow::ConfigureChildren(const nsTArray<nsIWidget::Configuration>& config)
 }
 
 NS_IMETHODIMP
-nsWindow::ReparentNativeWidget(nsIWidget* aNewParent)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
 nsWindow::Show(bool aState)
 {
   if (aState != mVisible) {
@@ -585,20 +579,6 @@ nsWindow::Show(bool aState)
       }
       mVisible = aState;
   }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWindow::SetModal(bool aModal)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWindow::ConstrainPosition(bool aAllowSlop,
-                            int32_t *aX,
-                            int32_t *aY)
-{
   return NS_OK;
 }
 
@@ -672,14 +652,6 @@ NS_IMETHODIMP nsWindow::Resize(double aWidth, double aHeight, bool aRepaint)
     ReportSizeEvent();
 
     return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWindow::PlaceBehind(nsTopLevelWidgetZPlacement aPlacement,
-                      nsIWidget *aWidget,
-                      bool aActivate)
-{
-  return NS_OK;
 }
 
 void

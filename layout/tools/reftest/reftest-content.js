@@ -4,8 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-// This file is used both for e10s and non-e10s reftests.
-
 var CC = Components.classes;
 const CI = Components.interfaces;
 const CR = Components.results;
@@ -688,27 +686,6 @@ function OnDocumentLoad(event)
         // Ignore load events for previous documents.
         return;
     }
-
-    // Reftests open and close windows very quickly, so that the usual
-    // browser heuristics for running the garbage collector (GC) and
-    // cycle collector (CC) do not work well. This causes memory usage
-    // to increase, which can cause tests to run out of memory, or
-    // time out because we end up freeing many windows at once during
-    // a test, which can take a long time.
-    //
-    // To combat this, call |runNextCollectorTimer();| a few
-    // times. This makes us run incremental GC or CC more eagerly,
-    // reducing memory usage, while ensuring that we are still
-    // somewhat testing incremental collection.
-    //
-    // There's no specific reason for calling this four times in a
-    // row, other than it seemed to help more than calling it less
-    // times, and it helped as much as calling it five times. Each
-    // call should only take 5ms to 40ms.
-    windowUtils().runNextCollectorTimer();
-    windowUtils().runNextCollectorTimer();
-    windowUtils().runNextCollectorTimer();
-    windowUtils().runNextCollectorTimer();
 
     // Collect all editable, spell-checked elements.  It may be the case that
     // not all the elements that match this selector will be spell checked: for

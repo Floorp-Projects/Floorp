@@ -29,6 +29,9 @@ public:
   virtual void ResetToURI(nsIURI *aURI, nsILoadGroup *aLoadGroup,
                           nsIPrincipal* aPrincipal) override;
 
+  virtual void SetSuppressParserErrorElement(bool aSuppress) override;
+  virtual bool SuppressParserErrorElement() override;
+
   virtual nsresult StartDocumentLoad(const char* aCommand, nsIChannel* channel,
                                      nsILoadGroup* aLoadGroup,
                                      nsISupports* aContainer,
@@ -85,6 +88,10 @@ protected:
 
   // If true. we're really a Document, not an XMLDocument
   bool mIsPlainDocument;
+
+  // If true, do not output <parsererror> elements. Per spec, XMLHttpRequest
+  // shouldn't output them, whereas DOMParser/others should (see bug 918703).
+  bool mSuppressParserErrorElement;
 };
 
 } // namespace dom

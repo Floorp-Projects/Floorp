@@ -11,7 +11,7 @@
 #ifndef _PQG_H_
 #define _PQG_H_ 1
 
-/* PQG_GetLength returns the significant bytes in the SECItem object (that is 
+/* PQG_GetLength returns the significant bytes in the SECItem object (that is
  * the length of the object minus any leading zeros. Any SECItem may be used,
  * though this function is usually used for P, Q, or G values */
 unsigned int PQG_GetLength(const SECItem *obj);

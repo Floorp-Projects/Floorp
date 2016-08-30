@@ -140,7 +140,9 @@ public:
   NS_DECL_ISUPPORTS
 
   // nsIWidget interface
-  NS_IMETHOD              CaptureMouse(bool aCapture) override;
+  virtual void            CaptureMouse(bool aCapture) override {}
+  virtual void            CaptureRollupEvents(nsIRollupListener* aListener,
+                                              bool aDoCapture) override {}
   virtual nsIWidgetListener*  GetWidgetListener() override;
   virtual void            SetWidgetListener(nsIWidgetListener* alistener) override;
   virtual void            Destroy() override;
@@ -153,8 +155,9 @@ public:
   virtual void            RemoveChild(nsIWidget* aChild) override;
 
   void                    SetZIndex(int32_t aZIndex) override;
-  NS_IMETHOD              PlaceBehind(nsTopLevelWidgetZPlacement aPlacement,
-                                      nsIWidget *aWidget, bool aActivate) override;
+  virtual void            PlaceBehind(nsTopLevelWidgetZPlacement aPlacement,
+                                      nsIWidget *aWidget, bool aActivate)
+                                      override {}
 
   virtual void            SetSizeMode(nsSizeMode aMode) override;
   virtual nsSizeMode      SizeMode() override
@@ -170,7 +173,7 @@ public:
   virtual void            SetTransparencyMode(nsTransparencyMode aMode) override;
   virtual nsTransparencyMode GetTransparencyMode() override;
   virtual void            GetWindowClipRegion(nsTArray<LayoutDeviceIntRect>* aRects) override;
-  NS_IMETHOD              SetWindowShadowStyle(int32_t aStyle) override;
+  virtual void            SetWindowShadowStyle(int32_t aStyle) override {}
   virtual void            SetShowsToolbarButton(bool aShow) override {}
   virtual void            SetShowsFullScreenButton(bool aShow) override {}
   virtual void            SetWindowAnimationType(WindowAnimationType aType) override {}
@@ -195,9 +198,10 @@ public:
   virtual void            CreateCompositor(int aWidth, int aHeight);
   virtual void            PrepareWindowEffects() override {}
   virtual void            UpdateThemeGeometries(const nsTArray<ThemeGeometry>& aThemeGeometries) override {}
-  NS_IMETHOD              SetModal(bool aModal) override;
+  virtual void            SetModal(bool aModal) override {}
   virtual uint32_t        GetMaxTouchPoints() const override;
-  NS_IMETHOD              SetWindowClass(const nsAString& xulWinType) override;
+  virtual void            SetWindowClass(const nsAString& xulWinType)
+                            override {}
   virtual nsresult        SetWindowClipRegion(const nsTArray<LayoutDeviceIntRect>& aRects, bool aIntersectWithExisting) override;
   // Return whether this widget interprets parameters to Move and Resize APIs
   // as "desktop pixels" rather than "device pixels", and therefore
@@ -214,6 +218,9 @@ public:
   mozilla::DesktopToLayoutDeviceScale GetDesktopToDeviceScale() override {
     return mozilla::DesktopToLayoutDeviceScale(1.0);
   }
+  virtual void            ConstrainPosition(bool aAllowSlop,
+                                            int32_t *aX,
+                                            int32_t *aY) override {}
   NS_IMETHOD              MoveClient(double aX, double aY) override;
   NS_IMETHOD              ResizeClient(double aWidth, double aHeight, bool aRepaint) override;
   NS_IMETHOD              ResizeClient(double aX, double aY, double aWidth, double aHeight, bool aRepaint) override;
@@ -227,7 +234,8 @@ public:
   NS_IMETHOD              GetAttention(int32_t aCycleCount) override;
   virtual bool            HasPendingInputEvent() override;
   NS_IMETHOD              SetIcon(const nsAString &anIconSpec) override;
-  NS_IMETHOD              SetWindowTitlebarColor(nscolor aColor, bool aActive) override;
+  virtual void            SetWindowTitlebarColor(nscolor aColor, bool aActive)
+                            override {}
   virtual void            SetDrawsInTitlebar(bool aState) override {}
   virtual bool            ShowsResizeIndicator(LayoutDeviceIntRect* aResizerRect) override;
   virtual void            FreeNativeData(void * data, uint32_t aDataType) override {}
@@ -242,8 +250,7 @@ public:
                                          int32_t aPanelX, int32_t aPanelY,
                                          nsString& aCommitted) override
                           { return NS_ERROR_NOT_IMPLEMENTED; }
-  NS_IMETHOD              SetPluginFocused(bool& aFocused) override
-                          { return NS_ERROR_NOT_IMPLEMENTED; }
+  virtual void            SetPluginFocused(bool& aFocused) override {}
   virtual void            SetCandidateWindowForPlugin(
                             const mozilla::widget::CandidateWindowPosition&
                               aPosition) override
@@ -331,7 +338,7 @@ public:
             mBorderStyle & eBorderStyle_title);
   }
 
-  NS_IMETHOD              ReparentNativeWidget(nsIWidget* aNewParent) override = 0;
+  virtual void ReparentNativeWidget(nsIWidget* aNewParent) override {}
 
   virtual const SizeConstraints GetSizeConstraints() override;
   virtual void SetSizeConstraints(const SizeConstraints& aConstraints) override;

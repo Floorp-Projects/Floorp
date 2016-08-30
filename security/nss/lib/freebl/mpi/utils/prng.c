@@ -21,37 +21,37 @@
 
 #include "bbs_rand.h"
 
-int main(int argc, char *argv[])
+int
+main(int argc, char *argv[])
 {
-  unsigned char *seed;
-  unsigned int   ix, num = 1;
-  pid_t          pid;
-  
-  if(argc > 1) {
-    num = atoi(argv[1]);
-    if(num <= 0) 
-      num = 1;
-  }
+    unsigned char *seed;
+    unsigned int ix, num = 1;
+    pid_t pid;
 
-  pid = getpid();
-  srand(time(NULL) * (unsigned int)pid);
+    if (argc > 1) {
+        num = atoi(argv[1]);
+        if (num <= 0)
+            num = 1;
+    }
 
-  /* Not a perfect seed, but not bad */
-  seed = malloc(bbs_seed_size);
-  for(ix = 0; ix < bbs_seed_size; ix++) {
-    seed[ix] = rand() % UCHAR_MAX;
-  }
+    pid = getpid();
+    srand(time(NULL) * (unsigned int)pid);
 
-  bbs_srand(seed, bbs_seed_size);
-  memset(seed, 0, bbs_seed_size);
-  free(seed);
+    /* Not a perfect seed, but not bad */
+    seed = malloc(bbs_seed_size);
+    for (ix = 0; ix < bbs_seed_size; ix++) {
+        seed[ix] = rand() % UCHAR_MAX;
+    }
 
-  while(num-- > 0) {
-    ix = bbs_rand();
+    bbs_srand(seed, bbs_seed_size);
+    memset(seed, 0, bbs_seed_size);
+    free(seed);
 
-    printf("%u\n", ix);
-  }
+    while (num-- > 0) {
+        ix = bbs_rand();
 
-  return 0;
+        printf("%u\n", ix);
+    }
 
+    return 0;
 }
