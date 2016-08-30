@@ -462,18 +462,12 @@ ssl3_GatherCompleteHandshake(sslSocket *ss, int flags)
                 cText.version = (ss->gs.hdr[1] << 8) | ss->gs.hdr[2];
 
                 if (IS_DTLS(ss)) {
-                    int i;
+                    sslSequenceNumber seq_num;
 
                     cText.version = dtls_DTLSVersionToTLSVersion(cText.version);
                     /* DTLS sequence number */
-                    cText.seq_num.high = 0;
-                    cText.seq_num.low = 0;
-                    for (i = 0; i < 4; i++) {
-                        cText.seq_num.high <<= 8;
-                        cText.seq_num.low <<= 8;
-                        cText.seq_num.high |= ss->gs.hdr[3 + i];
-                        cText.seq_num.low |= ss->gs.hdr[7 + i];
-                    }
+                    PORT_Memcpy(&seq_num, &ss->gs.hdr[3], sizeof(seq_num));
+                    cText.seq_num = PR_ntohll(seq_num);
                 }
 
                 cText.buf = &ss->gs.inbuf;

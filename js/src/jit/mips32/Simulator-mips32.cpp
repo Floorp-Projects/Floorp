@@ -518,7 +518,7 @@ bool Simulator::ICacheCheckingEnabled = false;
 int Simulator::StopSimAt = -1;
 
 Simulator*
-Simulator::Create()
+Simulator::Create(JSContext* cx)
 {
     Simulator* sim = js_new<Simulator>();
     if (!sim)

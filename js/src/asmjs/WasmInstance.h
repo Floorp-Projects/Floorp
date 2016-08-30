@@ -56,9 +56,13 @@ class Instance
     static int32_t callImport_i32(Instance*, int32_t, int32_t, uint64_t*);
     static int32_t callImport_i64(Instance*, int32_t, int32_t, uint64_t*);
     static int32_t callImport_f64(Instance*, int32_t, int32_t, uint64_t*);
+    static uint32_t growMemory_i32(Instance* instance, uint32_t delta);
+    static uint32_t currentMemory_i32(Instance* instance);
 
     bool callImport(JSContext* cx, uint32_t funcImportIndex, unsigned argc, const uint64_t* argv,
                     MutableHandleValue rval);
+    uint32_t growMemory(uint32_t delta);
+    uint32_t currentMemory();
 
     // Only WasmInstanceObject can call the private trace function.
     friend class js::WasmInstanceObject;
@@ -87,6 +91,8 @@ class Instance
     const SharedTableVector& tables() const { return tables_; }
     SharedMem<uint8_t*> memoryBase() const;
     size_t memoryLength() const;
+    size_t memoryMappedSize() const;
+    bool memoryAccessInGuardRegion(uint8_t* addr, unsigned numBytes) const;
     TlsData& tlsData() { return tlsData_; }
 
     // This method returns a pointer to the GC object that owns this Instance.
@@ -107,6 +113,7 @@ class Instance
     // be notified so it can go back to the generic callImport.
 
     void deoptimizeImportExit(uint32_t funcImportIndex);
+    bool memoryAccessWouldFault(uint8_t* addr, unsigned numBytes);
 
     // See Code::ensureProfilingState comment.
 

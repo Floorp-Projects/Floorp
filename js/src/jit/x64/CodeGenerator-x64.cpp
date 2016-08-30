@@ -470,14 +470,6 @@ AsmJSMemoryAccess(uint32_t before, wasm::MemoryAccess::OutOfBoundsBehavior throw
                               offsetWithinWholeSimdVector);
 }
 
-static wasm::MemoryAccess
-WasmMemoryAccess(uint32_t before)
-{
-    return wasm::MemoryAccess(before,
-                              wasm::MemoryAccess::Throw,
-                              wasm::MemoryAccess::DontWrapOffset);
-}
-
 void
 CodeGeneratorX64::load(Scalar::Type type, const Operand& srcAddr, AnyRegister out)
 {
@@ -554,8 +546,6 @@ CodeGeneratorX64::emitWasmLoad(T* ins)
 
     verifyLoadDisassembly(before, after, isInt64, accessType, /* numElems */ 0, srcAddr,
                           *ins->output()->output());
-
-    masm.append(WasmMemoryAccess(before));
 }
 
 void
@@ -593,8 +583,6 @@ CodeGeneratorX64::emitWasmStore(T* ins)
 
     verifyStoreDisassembly(before, after, mir->value()->type() == MIRType::Int64,
                            accessType, /* numElems */ 0, dstAddr, *value);
-
-    masm.append(WasmMemoryAccess(before));
 }
 
 void
@@ -699,7 +687,10 @@ CodeGeneratorX64::visitAsmJSLoadHeap(LAsmJSLoadHeap* ins)
 
     memoryBarrier(mir->barrierAfter());
 
-    masm.append(AsmJSMemoryAccess(before, wasm::MemoryAccess::CarryOn));
+    // We cannot emulate atomic accesses currently.
+    masm.append(AsmJSMemoryAccess(before, (mir->isAtomicAccess() ?
+                                           wasm::MemoryAccess::Throw :
+                                           wasm::MemoryAccess::CarryOn)));
 }
 
 void
@@ -902,7 +893,10 @@ CodeGeneratorX64::visitAsmJSStoreHeap(LAsmJSStoreHeap* ins)
 
     memoryBarrier(mir->barrierAfter());
 
-    masm.append(AsmJSMemoryAccess(before, wasm::MemoryAccess::CarryOn));
+    // See comment in visitAsmJSLoadHeap
+    masm.append(AsmJSMemoryAccess(before, (mir->isAtomicAccess() ?
+                                           wasm::MemoryAccess::Throw :
+                                           wasm::MemoryAccess::CarryOn)));
 }
 
 void

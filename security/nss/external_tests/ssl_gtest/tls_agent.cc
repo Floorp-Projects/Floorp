@@ -63,7 +63,7 @@ TlsAgent::TlsAgent(const std::string& name, Role role, Mode mode)
       error_code_(0),
       send_ctr_(0),
       recv_ctr_(0),
-      expected_read_error_(false),
+      expect_readwrite_error_(false),
       handshake_callback_(),
       auth_certificate_callback_(),
       sni_callback_() {
@@ -340,7 +340,7 @@ void TlsAgent::SetExpectedVersion(uint16_t version) {
 
 void TlsAgent::SetServerKeyBits(uint16_t bits) { server_key_bits_ = bits; }
 
-void TlsAgent::SetExpectedReadError(bool err) { expected_read_error_ = err; }
+void TlsAgent::ExpectReadWriteError() { expect_readwrite_error_ = true; }
 
 void TlsAgent::SetSignatureAlgorithms(const SSLSignatureAndHashAlg* algorithms,
                                       size_t count) {
@@ -487,16 +487,16 @@ void TlsAgent::CheckSrtp() const {
 void TlsAgent::CheckErrorCode(int32_t expected) const {
   EXPECT_EQ(STATE_ERROR, state_);
   EXPECT_EQ(expected, error_code_)
-      << "Got error code " << PORT_ErrorToString(error_code_) << " expecting "
-      << PORT_ErrorToString(expected) << std::endl;
+      << "Got error code " << PORT_ErrorToName(error_code_) << " expecting "
+      << PORT_ErrorToName(expected) << std::endl;
 }
 
 void TlsAgent::WaitForErrorCode(int32_t expected, uint32_t delay) const {
   ASSERT_EQ(0, error_code_);
   WAIT_(error_code_ != 0, delay);
-  EXPECT_EQ(expected, error_code_) << "Got error code " << error_code_
-                                   << " expecting "
-                                   << PORT_ErrorToString(expected) << std::endl;
+  EXPECT_EQ(expected, error_code_)
+      << "Got error code " << PORT_ErrorToName(error_code_) << " expecting "
+      << PORT_ErrorToName(expected) << std::endl;
 }
 
 void TlsAgent::CheckPreliminaryInfo() {
@@ -687,6 +687,10 @@ void TlsAgent::SendDirect(const DataBuffer& buf) {
   adapter_->peer()->PacketReceived(buf);
 }
 
+static bool ErrorIsNonFatal(PRErrorCode code) {
+  return code == PR_WOULD_BLOCK_ERROR || code == SSL_ERROR_RX_SHORT_DTLS_READ;
+}
+
 void TlsAgent::SendData(size_t bytes, size_t blocksize) {
   uint8_t block[4096];
 
@@ -702,14 +706,17 @@ void TlsAgent::SendData(size_t bytes, size_t blocksize) {
 
     LOGV("Writing " << tosend << " bytes");
     int32_t rv = PR_Write(ssl_fd_, block, tosend);
-    ASSERT_EQ(tosend, static_cast<size_t>(rv));
+    if (expect_readwrite_error_) {
+      EXPECT_GT(0, rv);
+      EXPECT_NE(PR_WOULD_BLOCK_ERROR, error_code_);
+      error_code_ = PR_GetError();
+      expect_readwrite_error_ = false;
+    } else {
+      ASSERT_EQ(tosend, static_cast<size_t>(rv));
+    }
 
     bytes -= tosend;
   }
-}
-
-static bool ErrorIsNonFatal(PRErrorCode code) {
-  return code == PR_WOULD_BLOCK_ERROR || code == SSL_ERROR_RX_SHORT_DTLS_READ;
 }
 
 void TlsAgent::ReadBytes() {
@@ -727,9 +734,11 @@ void TlsAgent::ReadBytes() {
     }
   } else {
     err = PR_GetError();
-    LOG("Read error " << err << ": " << PORT_ErrorToString(err));
-    if (err != PR_WOULD_BLOCK_ERROR && expected_read_error_) {
+    LOG("Read error " << PORT_ErrorToName(err) << ": "
+                      << PORT_ErrorToString(err));
+    if (err != PR_WOULD_BLOCK_ERROR && expect_readwrite_error_) {
       error_code_ = err;
+      expect_readwrite_error_ = false;
     }
   }
 
@@ -804,32 +813,36 @@ void TlsAgentTestBase::ProcessMessage(const DataBuffer& buffer,
   }
 }
 
-void TlsAgentTestBase::MakeRecord(uint8_t type, uint16_t version,
+void TlsAgentTestBase::MakeRecord(Mode mode, uint8_t type, uint16_t version,
                                   const uint8_t* buf, size_t len,
-                                  DataBuffer* out, uint32_t seq_num) {
+                                  DataBuffer* out, uint64_t seq_num) {
   size_t index = 0;
   index = out->Write(index, type, 1);
-  ;  // Content Type
   index = out->Write(
-      index, mode_ == STREAM ? version : TlsVersionToDtlsVersion(version),
-      2);  // Version
-  if (mode_ == DGRAM) {
-    index = out->Write(index, 0U, 4);
-    index = out->Write(index, seq_num, 4);
+      index, mode == STREAM ? version : TlsVersionToDtlsVersion(version), 2);
+  if (mode == DGRAM) {
+    index = out->Write(index, seq_num >> 32, 4);
+    index = out->Write(index, seq_num & PR_UINT32_MAX, 4);
   }
-  index = out->Write(index, len, 2);  // Length
+  index = out->Write(index, len, 2);
   out->Write(index, buf, len);
+}
+
+void TlsAgentTestBase::MakeRecord(uint8_t type, uint16_t version,
+                                  const uint8_t* buf, size_t len,
+                                  DataBuffer* out, uint64_t seq_num) {
+  MakeRecord(mode_, type, version, buf, len, out, seq_num);
 }
 
 void TlsAgentTestBase::MakeHandshakeMessage(uint8_t hs_type,
                                             const uint8_t* data, size_t hs_len,
-                                            DataBuffer* out, uint32_t seq_num) {
+                                            DataBuffer* out, uint64_t seq_num) {
   return MakeHandshakeMessageFragment(hs_type, data, hs_len, out, seq_num, 0,
                                       0);
 }
 void TlsAgentTestBase::MakeHandshakeMessageFragment(
     uint8_t hs_type, const uint8_t* data, size_t hs_len, DataBuffer* out,
-    uint32_t seq_num, uint32_t fragment_offset, uint32_t fragment_length) {
+    uint64_t seq_num, uint32_t fragment_offset, uint32_t fragment_length) {
   size_t index = 0;
   if (!fragment_length) fragment_length = hs_len;
   index = out->Write(index, hs_type, 1);  // Handshake record type.

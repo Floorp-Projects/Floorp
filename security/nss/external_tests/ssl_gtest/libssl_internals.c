@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* vim: set ts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
@@ -221,4 +221,65 @@ PRBool SSLInt_SendAlert(PRFileDesc *fd, uint8_t level, uint8_t type) {
   if (rv != SECSuccess) return PR_FALSE;
 
   return PR_TRUE;
+}
+
+SECStatus SSLInt_AdvanceReadSeqNum(PRFileDesc *fd, PRUint64 to) {
+  PRUint64 epoch;
+  sslSocket *ss;
+  ssl3CipherSpec *spec;
+
+  ss = ssl_FindSocket(fd);
+  if (!ss) {
+    return SECFailure;
+  }
+  if (to >= (1ULL << 48)) {
+    return SECFailure;
+  }
+  ssl_GetSpecWriteLock(ss);
+  spec = ss->ssl3.crSpec;
+  epoch = spec->read_seq_num >> 48;
+  spec->read_seq_num = (epoch << 48) | to;
+
+  /* For DTLS, we need to fix the record sequence number.  For this, we can just
+   * scrub the entire structure on the assumption that the new sequence number
+   * is far enough past the last received sequence number. */
+  if (to <= spec->recvdRecords.right + DTLS_RECVD_RECORDS_WINDOW) {
+    return SECFailure;
+  }
+  dtls_RecordSetRecvd(&spec->recvdRecords, to);
+
+  ssl_ReleaseSpecWriteLock(ss);
+  return SECSuccess;
+}
+
+SECStatus SSLInt_AdvanceWriteSeqNum(PRFileDesc *fd, PRUint64 to) {
+  PRUint64 epoch;
+  sslSocket *ss;
+
+  ss = ssl_FindSocket(fd);
+  if (!ss) {
+    return SECFailure;
+  }
+  if (to >= (1ULL << 48)) {
+    return SECFailure;
+  }
+  ssl_GetSpecWriteLock(ss);
+  epoch = ss->ssl3.cwSpec->write_seq_num >> 48;
+  ss->ssl3.cwSpec->write_seq_num = (epoch << 48) | to;
+  ssl_ReleaseSpecWriteLock(ss);
+  return SECSuccess;
+}
+
+SECStatus SSLInt_AdvanceWriteSeqByAWindow(PRFileDesc *fd, PRInt32 extra) {
+  sslSocket *ss;
+  sslSequenceNumber to;
+
+  ss = ssl_FindSocket(fd);
+  if (!ss) {
+    return SECFailure;
+  }
+  ssl_GetSpecReadLock(ss);
+  to = ss->ssl3.cwSpec->write_seq_num + DTLS_RECVD_RECORDS_WINDOW + extra;
+  ssl_ReleaseSpecReadLock(ss);
+  return SSLInt_AdvanceWriteSeqNum(fd, to & RECORD_SEQ_MAX);
 }

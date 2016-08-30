@@ -153,11 +153,9 @@ TestNonConvertibilityForOneType()
 {
   using mozilla::IsConvertible;
 
-#if defined(MOZ_HAVE_EXPLICIT_CONVERSION)
   static_assert(!IsConvertible<T, bool>::value, "should not be convertible");
   static_assert(!IsConvertible<T, int>::value, "should not be convertible");
   static_assert(!IsConvertible<T, uint64_t>::value, "should not be convertible");
-#endif
 
   static_assert(!IsConvertible<bool, T>::value, "should not be convertible");
   static_assert(!IsConvertible<int, T>::value, "should not be convertible");
@@ -428,18 +426,12 @@ void TestNoConversionsBetweenUnrelatedTypes()
   static_assert(!IsConvertible<decltype(T1::A), decltype(T2::A | T2::B)>::value,
                 "should not be convertible");
 
-  // The following are #ifdef MOZ_HAVE_EXPLICIT_CONVERSION because without
-  // support for explicit conversion operators, we can't easily have these bad
-  // conversions completely removed. They still do fail to compile in practice,
-  // but not in a way that we can static_assert on.
-#ifdef MOZ_HAVE_EXPLICIT_CONVERSION
   static_assert(!IsConvertible<decltype(T1::A | T1::B), T2>::value,
                 "should not be convertible");
   static_assert(!IsConvertible<decltype(T1::A | T1::B), decltype(T2::A)>::value,
                 "should not be convertible");
   static_assert(!IsConvertible<decltype(T1::A | T1::B), decltype(T2::A | T2::B)>::value,
                 "should not be convertible");
-#endif
 }
 
 enum class Int8EnumWithHighBits : int8_t {

@@ -56,9 +56,6 @@ public:
 
     NS_IMETHOD Show(bool aState);
     virtual bool IsVisible() const;
-    NS_IMETHOD ConstrainPosition(bool aAllowSlop,
-                                 int32_t *aX,
-                                 int32_t *aY);
     NS_IMETHOD Move(double aX,
                     double aY);
     NS_IMETHOD Resize(double aWidth,
@@ -94,13 +91,6 @@ public:
                                                 double aPointerPressure,
                                                 uint32_t aPointerOrientation,
                                                 nsIObserver* aObserver) override;
-
-    NS_IMETHOD CaptureRollupEvents(nsIRollupListener *aListener,
-                                   bool aDoCapture)
-    {
-        return NS_ERROR_NOT_IMPLEMENTED;
-    }
-    NS_IMETHOD ReparentNativeWidget(nsIWidget* aNewParent);
 
     virtual nsresult MakeFullScreen(
         bool aFullScreen, nsIScreen* aTargetScreen = nullptr) override;

@@ -123,6 +123,9 @@ assertErrorMessage(() => new Memory(1), TypeError, "first argument must be a mem
 assertErrorMessage(() => new Memory({initial:{valueOf() { throw new Error("here")}}}), Error, "here");
 assertErrorMessage(() => new Memory({initial:-1}), TypeError, /bad Memory initial size/);
 assertErrorMessage(() => new Memory({initial:Math.pow(2,32)}), TypeError, /bad Memory initial size/);
+assertErrorMessage(() => new Memory({initial:1, maximum: Math.pow(2,32)/Math.pow(2,14) }), TypeError, /bad Memory maximum size/);
+assertErrorMessage(() => new Memory({initial:2, maximum: 1 }), TypeError, /bad Memory maximum size/);
+assertErrorMessage(() => new Memory({maximum: -1 }), TypeError, /bad Memory maximum size/);
 assertEq(new Memory({initial:1}) instanceof Memory, true);
 assertEq(new Memory({initial:1.5}).buffer.byteLength, 64*1024);
 

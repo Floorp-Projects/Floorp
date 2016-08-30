@@ -40,3 +40,24 @@ class smartptr_printer(object):
             type_name = str(self.value.dereference().dynamic_type.pointer())
 
         return '[(%s) %s]' % (type_name, str(self.value))
+
+@GeckoPrettyPrinter('mozilla::StyleSheetHandle::RefPtr', '^mozilla::HandleRefPtr<mozilla::StyleSheetHandle>$')
+class sheetptr_printer(object):
+    def __init__(self, value):
+        self.value = value['mHandle']
+        if self.value and self.value['mPtr'] and self.value['mPtr']['mValue']:
+            self.value = self.value['mPtr']['mValue']
+
+    def to_string(self):
+        if not self.value:
+            type_name = str(self.value.type)
+            value = 0
+        else:
+            value = int(self.value)
+            if value & 0x1:
+                value = value & ~0x1
+                type_name = 'mozilla::ServoStyleSheet *'
+            else:
+                type_name = 'mozilla::CSSStyleSheet *'
+
+        return '[(%s) %s]' % (type_name, hex(value))

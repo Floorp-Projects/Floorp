@@ -1271,6 +1271,26 @@ class ABIArg
 
     bool argInRegister() const { return kind() != Stack; }
     AnyRegister reg() const { return kind_ == GPR ? AnyRegister(gpr()) : AnyRegister(fpu()); }
+
+    bool operator==(const ABIArg& rhs) const {
+        if (kind_ != rhs.kind_)
+            return false;
+
+        switch((int8_t)kind_) {
+            case GPR:   return u.gpr_ == rhs.u.gpr_;
+#if defined(JS_CODEGEN_REGISTER_PAIR)
+            case GPR_PAIR: return u.gpr_ == rhs.u.gpr_;
+#endif
+            case FPU:   return u.fpu_ == rhs.u.fpu_;
+            case Stack: return u.offset_ == rhs.u.offset_;
+            case -1:    return true;
+            default:    MOZ_CRASH("Invalid value for ABIArg kind");
+        }
+    }
+
+    bool operator!=(const ABIArg& rhs) const {
+        return !(*this == rhs);
+    }
 };
 
 // Get the set of registers which should be saved by a block of code which

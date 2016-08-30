@@ -330,7 +330,7 @@ JSRuntime::init(uint32_t maxbytes, uint32_t maxNurseryBytes)
     JS::ResetTimeZone();
 
 #ifdef JS_SIMULATOR
-    simulator_ = js::jit::Simulator::Create();
+    simulator_ = js::jit::Simulator::Create(contextFromMainThread());
     if (!simulator_)
         return false;
 #endif

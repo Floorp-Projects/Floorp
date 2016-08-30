@@ -16,10 +16,10 @@
 #include "secitem.h"
 #include "blapii.h"
 
-#define RSA_BLOCK_MIN_PAD_LEN            8
-#define RSA_BLOCK_FIRST_OCTET            0x00
-#define RSA_BLOCK_PRIVATE_PAD_OCTET      0xff
-#define RSA_BLOCK_AFTER_PAD_OCTET        0x00
+#define RSA_BLOCK_MIN_PAD_LEN 8
+#define RSA_BLOCK_FIRST_OCTET 0x00
+#define RSA_BLOCK_PRIVATE_PAD_OCTET 0xff
+#define RSA_BLOCK_AFTER_PAD_OCTET 0x00
 
 /*
  * RSA block types
@@ -29,9 +29,9 @@
  * the value that NSS has been using in the past.
  */
 typedef enum {
-    RSA_BlockPrivate = 1,   /* pad for a private-key operation */
-    RSA_BlockPublic = 2,    /* pad for a public-key operation */
-    RSA_BlockRaw = 4        /* simply justify the block appropriately */
+    RSA_BlockPrivate = 1, /* pad for a private-key operation */
+    RSA_BlockPublic = 2,  /* pad for a public-key operation */
+    RSA_BlockRaw = 4      /* simply justify the block appropriately */
 } RSA_BlockType;
 
 /* Needed for RSA-PSS functions */
@@ -41,7 +41,9 @@ static const unsigned char eightZeros[] = { 0, 0, 0, 0, 0, 0, 0, 0 };
  * Returns 1 iff a == b, otherwise returns 0.
  * Note: For ranges of bytes, use constantTimeCompare.
  */
-static unsigned char constantTimeEQ8(unsigned char a, unsigned char b) {
+static unsigned char
+constantTimeEQ8(unsigned char a, unsigned char b)
+{
     unsigned char c = ~((a - b) | (b - a));
     c >>= 7;
     return c;
@@ -51,9 +53,11 @@ static unsigned char constantTimeEQ8(unsigned char a, unsigned char b) {
  * Returns 1 iff len bytes of a are identical to len bytes of b, otherwise
  * returns 0.
  */
-static unsigned char constantTimeCompare(const unsigned char *a,
-                                         const unsigned char *b,
-                                         unsigned int len) {
+static unsigned char
+constantTimeCompare(const unsigned char *a,
+                    const unsigned char *b,
+                    unsigned int len)
+{
     unsigned char tmp = 0;
     unsigned int i;
     for (i = 0; i < len; ++i, ++a, ++b)
@@ -65,15 +69,16 @@ static unsigned char constantTimeCompare(const unsigned char *a,
  * Returns a if c is 1, or b if c is 0. The result is undefined if c is
  * not 0 or 1.
  */
-static unsigned int constantTimeCondition(unsigned int c,
-                                          unsigned int a,
-                                          unsigned int b)
+static unsigned int
+constantTimeCondition(unsigned int c,
+                      unsigned int a,
+                      unsigned int b)
 {
     return (~(c - 1) & a) | ((c - 1) & b);
 }
 
 static unsigned int
-rsa_modulusLen(SECItem * modulus)
+rsa_modulusLen(SECItem *modulus)
 {
     unsigned char byteZero = modulus->data[0];
     unsigned int modLen = modulus->len - !byteZero;
@@ -87,7 +92,7 @@ rsa_modulusLen(SECItem * modulus)
 static unsigned char *
 rsa_FormatOneBlock(unsigned modulusLen,
                    RSA_BlockType blockType,
-                   SECItem * data)
+                   SECItem *data)
 {
     unsigned char *block;
     unsigned char *bp;
@@ -95,7 +100,7 @@ rsa_FormatOneBlock(unsigned modulusLen,
     int i, j;
     SECStatus rv;
 
-    block = (unsigned char *) PORT_Alloc(modulusLen);
+    block = (unsigned char *)PORT_Alloc(modulusLen);
     if (block == NULL)
         return NULL;
 
@@ -103,146 +108,146 @@ rsa_FormatOneBlock(unsigned modulusLen,
 
     /*
      * All RSA blocks start with two octets:
-     *	0x00 || BlockType
+     *  0x00 || BlockType
      */
     *bp++ = RSA_BLOCK_FIRST_OCTET;
-    *bp++ = (unsigned char) blockType;
+    *bp++ = (unsigned char)blockType;
 
     switch (blockType) {
 
-      /*
+        /*
        * Blocks intended for private-key operation.
        */
-      case RSA_BlockPrivate:	 /* preferred method */
-        /*
+        case RSA_BlockPrivate: /* preferred method */
+            /*
          * 0x00 || BT || Pad || 0x00 || ActualData
          *   1      1   padLen    1      data->len
          * Pad is either all 0x00 or all 0xff bytes, depending on blockType.
          */
-        padLen = modulusLen - data->len - 3;
-        PORT_Assert(padLen >= RSA_BLOCK_MIN_PAD_LEN);
-        if (padLen < RSA_BLOCK_MIN_PAD_LEN) {
-            PORT_Free(block);
-            return NULL;
-        }
-        PORT_Memset(bp, RSA_BLOCK_PRIVATE_PAD_OCTET, padLen);
-        bp += padLen;
-        *bp++ = RSA_BLOCK_AFTER_PAD_OCTET;
-        PORT_Memcpy(bp, data->data, data->len);
-        break;
+            padLen = modulusLen - data->len - 3;
+            PORT_Assert(padLen >= RSA_BLOCK_MIN_PAD_LEN);
+            if (padLen < RSA_BLOCK_MIN_PAD_LEN) {
+                PORT_Free(block);
+                return NULL;
+            }
+            PORT_Memset(bp, RSA_BLOCK_PRIVATE_PAD_OCTET, padLen);
+            bp += padLen;
+            *bp++ = RSA_BLOCK_AFTER_PAD_OCTET;
+            PORT_Memcpy(bp, data->data, data->len);
+            break;
 
-      /*
-       * Blocks intended for public-key operation.
-       */
-      case RSA_BlockPublic:
         /*
-         * 0x00 || BT || Pad || 0x00 || ActualData
-         *   1      1   padLen    1      data->len
-         * Pad is all non-zero random bytes.
-         *
-         * Build the block left to right.
-         * Fill the entire block from Pad to the end with random bytes.
-         * Use the bytes after Pad as a supply of extra random bytes from
-         * which to find replacements for the zero bytes in Pad.
-         * If we need more than that, refill the bytes after Pad with
-         * new random bytes as necessary.
+         * Blocks intended for public-key operation.
          */
-        padLen = modulusLen - (data->len + 3);
-        PORT_Assert(padLen >= RSA_BLOCK_MIN_PAD_LEN);
-        if (padLen < RSA_BLOCK_MIN_PAD_LEN) {
-            PORT_Free(block);
-            return NULL;
-        }
-        j = modulusLen - 2;
-        rv = RNG_GenerateGlobalRandomBytes(bp, j);
-        if (rv == SECSuccess) {
-            for (i = 0; i < padLen; ) {
-                unsigned char repl;
-                /* Pad with non-zero random data. */
-                if (bp[i] != RSA_BLOCK_AFTER_PAD_OCTET) {
-                    ++i;
-                    continue;
-                }
-                if (j <= padLen) {
-                    rv = RNG_GenerateGlobalRandomBytes(bp + padLen,
-                                          modulusLen - (2 + padLen));
-                    if (rv != SECSuccess)
-                        break;
-                    j = modulusLen - 2;
-                }
-                do {
-                    repl = bp[--j];
-                } while (repl == RSA_BLOCK_AFTER_PAD_OCTET && j > padLen);
-                if (repl != RSA_BLOCK_AFTER_PAD_OCTET) {
-                    bp[i++] = repl;
+        case RSA_BlockPublic:
+            /*
+             * 0x00 || BT || Pad || 0x00 || ActualData
+             *   1      1   padLen    1      data->len
+             * Pad is all non-zero random bytes.
+             *
+             * Build the block left to right.
+             * Fill the entire block from Pad to the end with random bytes.
+             * Use the bytes after Pad as a supply of extra random bytes from
+             * which to find replacements for the zero bytes in Pad.
+             * If we need more than that, refill the bytes after Pad with
+             * new random bytes as necessary.
+             */
+            padLen = modulusLen - (data->len + 3);
+            PORT_Assert(padLen >= RSA_BLOCK_MIN_PAD_LEN);
+            if (padLen < RSA_BLOCK_MIN_PAD_LEN) {
+                PORT_Free(block);
+                return NULL;
+            }
+            j = modulusLen - 2;
+            rv = RNG_GenerateGlobalRandomBytes(bp, j);
+            if (rv == SECSuccess) {
+                for (i = 0; i < padLen;) {
+                    unsigned char repl;
+                    /* Pad with non-zero random data. */
+                    if (bp[i] != RSA_BLOCK_AFTER_PAD_OCTET) {
+                        ++i;
+                        continue;
+                    }
+                    if (j <= padLen) {
+                        rv = RNG_GenerateGlobalRandomBytes(bp + padLen,
+                                                           modulusLen - (2 + padLen));
+                        if (rv != SECSuccess)
+                            break;
+                        j = modulusLen - 2;
+                    }
+                    do {
+                        repl = bp[--j];
+                    } while (repl == RSA_BLOCK_AFTER_PAD_OCTET && j > padLen);
+                    if (repl != RSA_BLOCK_AFTER_PAD_OCTET) {
+                        bp[i++] = repl;
+                    }
                 }
             }
-        }
-        if (rv != SECSuccess) {
-            PORT_Free(block);
-            PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
-            return NULL;
-        }
-        bp += padLen;
-        *bp++ = RSA_BLOCK_AFTER_PAD_OCTET;
-        PORT_Memcpy(bp, data->data, data->len);
-        break;
+            if (rv != SECSuccess) {
+                PORT_Free(block);
+                PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
+                return NULL;
+            }
+            bp += padLen;
+            *bp++ = RSA_BLOCK_AFTER_PAD_OCTET;
+            PORT_Memcpy(bp, data->data, data->len);
+            break;
 
-      default:
-        PORT_Assert(0);
-        PORT_Free(block);
-        return NULL;
+        default:
+            PORT_Assert(0);
+            PORT_Free(block);
+            return NULL;
     }
 
     return block;
 }
 
 static SECStatus
-rsa_FormatBlock(SECItem * result,
+rsa_FormatBlock(SECItem *result,
                 unsigned modulusLen,
                 RSA_BlockType blockType,
-                SECItem * data)
+                SECItem *data)
 {
     switch (blockType) {
-      case RSA_BlockPrivate:
-      case RSA_BlockPublic:
-        /*
-         * 0x00 || BT || Pad || 0x00 || ActualData
-         *
-         * The "3" below is the first octet + the second octet + the 0x00
-         * octet that always comes just before the ActualData.
-         */
-        PORT_Assert(data->len <= (modulusLen - (3 + RSA_BLOCK_MIN_PAD_LEN)));
+        case RSA_BlockPrivate:
+        case RSA_BlockPublic:
+            /*
+             * 0x00 || BT || Pad || 0x00 || ActualData
+             *
+             * The "3" below is the first octet + the second octet + the 0x00
+             * octet that always comes just before the ActualData.
+             */
+            PORT_Assert(data->len <= (modulusLen - (3 + RSA_BLOCK_MIN_PAD_LEN)));
 
-        result->data = rsa_FormatOneBlock(modulusLen, blockType, data);
-        if (result->data == NULL) {
+            result->data = rsa_FormatOneBlock(modulusLen, blockType, data);
+            if (result->data == NULL) {
+                result->len = 0;
+                return SECFailure;
+            }
+            result->len = modulusLen;
+
+            break;
+
+        case RSA_BlockRaw:
+            /*
+             * Pad || ActualData
+             * Pad is zeros. The application is responsible for recovering
+             * the actual data.
+             */
+            if (data->len > modulusLen) {
+                return SECFailure;
+            }
+            result->data = (unsigned char *)PORT_ZAlloc(modulusLen);
+            result->len = modulusLen;
+            PORT_Memcpy(result->data + (modulusLen - data->len),
+                        data->data, data->len);
+            break;
+
+        default:
+            PORT_Assert(0);
+            result->data = NULL;
             result->len = 0;
             return SECFailure;
-        }
-        result->len = modulusLen;
-
-        break;
-
-      case RSA_BlockRaw:
-        /*
-         * Pad || ActualData
-         * Pad is zeros. The application is responsible for recovering
-         * the actual data.
-         */
-        if (data->len > modulusLen ) {
-            return SECFailure;
-        }
-        result->data = (unsigned char*)PORT_ZAlloc(modulusLen);
-        result->len = modulusLen;
-        PORT_Memcpy(result->data + (modulusLen - data->len),
-                    data->data, data->len);
-        break;
-
-      default:
-        PORT_Assert(0);
-        result->data = NULL;
-        result->len = 0;
-        return SECFailure;
     }
 
     return SECSuccess;
@@ -253,18 +258,18 @@ rsa_FormatBlock(SECItem * result,
  */
 static SECStatus
 MGF1(HASH_HashType hashAlg,
-     unsigned char * mask,
+     unsigned char *mask,
      unsigned int maskLen,
-     const unsigned char * mgfSeed,
+     const unsigned char *mgfSeed,
      unsigned int mgfSeedLen)
 {
     unsigned int digestLen;
     PRUint32 counter;
     PRUint32 rounds;
-    unsigned char * tempHash;
-    unsigned char * temp;
-    const SECHashObject * hash;
-    void * hashContext;
+    unsigned char *tempHash;
+    unsigned char *temp;
+    const SECHashObject *hash;
+    void *hashContext;
     unsigned char C[4];
 
     hash = HASH_GetRawHashObject(hashAlg);
@@ -302,11 +307,11 @@ MGF1(HASH_HashType hashAlg,
 
 /* XXX Doesn't set error code */
 SECStatus
-RSA_SignRaw(RSAPrivateKey * key,
-            unsigned char * output,
-            unsigned int * outputLen,
+RSA_SignRaw(RSAPrivateKey *key,
+            unsigned char *output,
+            unsigned int *outputLen,
             unsigned int maxOutputLen,
-            const unsigned char * data,
+            const unsigned char *data,
             unsigned int dataLen)
 {
     SECStatus rv = SECSuccess;
@@ -317,9 +322,9 @@ RSA_SignRaw(RSAPrivateKey * key,
     if (maxOutputLen < modulusLen)
         return SECFailure;
 
-    unformatted.len  = dataLen;
-    unformatted.data = (unsigned char*)data;
-    formatted.data   = NULL;
+    unformatted.len = dataLen;
+    unformatted.data = (unsigned char *)data;
+    formatted.data = NULL;
     rv = rsa_FormatBlock(&formatted, modulusLen, RSA_BlockRaw, &unformatted);
     if (rv != SECSuccess)
         goto done;
@@ -335,15 +340,15 @@ done:
 
 /* XXX Doesn't set error code */
 SECStatus
-RSA_CheckSignRaw(RSAPublicKey * key,
-                 const unsigned char * sig,
+RSA_CheckSignRaw(RSAPublicKey *key,
+                 const unsigned char *sig,
                  unsigned int sigLen,
-                 const unsigned char * hash,
+                 const unsigned char *hash,
                  unsigned int hashLen)
 {
     SECStatus rv;
     unsigned int modulusLen = rsa_modulusLen(&key->modulus);
-    unsigned char * buffer;
+    unsigned char *buffer;
 
     if (sigLen != modulusLen)
         goto failure;
@@ -377,11 +382,11 @@ failure:
 
 /* XXX Doesn't set error code */
 SECStatus
-RSA_CheckSignRecoverRaw(RSAPublicKey * key,
-                        unsigned char * data,
-                        unsigned int * dataLen,
+RSA_CheckSignRecoverRaw(RSAPublicKey *key,
+                        unsigned char *data,
+                        unsigned int *dataLen,
                         unsigned int maxDataLen,
-                        const unsigned char * sig,
+                        const unsigned char *sig,
                         unsigned int sigLen)
 {
     SECStatus rv;
@@ -405,11 +410,11 @@ failure:
 
 /* XXX Doesn't set error code */
 SECStatus
-RSA_EncryptRaw(RSAPublicKey * key,
-               unsigned char * output,
-               unsigned int * outputLen,
+RSA_EncryptRaw(RSAPublicKey *key,
+               unsigned char *output,
+               unsigned int *outputLen,
                unsigned int maxOutputLen,
-               const unsigned char * input,
+               const unsigned char *input,
                unsigned int inputLen)
 {
     SECStatus rv;
@@ -421,9 +426,9 @@ RSA_EncryptRaw(RSAPublicKey * key,
     if (maxOutputLen < modulusLen)
         goto failure;
 
-    unformatted.len  = inputLen;
-    unformatted.data = (unsigned char*)input;
-    formatted.data   = NULL;
+    unformatted.len = inputLen;
+    unformatted.data = (unsigned char *)input;
+    formatted.data = NULL;
     rv = rsa_FormatBlock(&formatted, modulusLen, RSA_BlockRaw, &unformatted);
     if (rv != SECSuccess)
         goto failure;
@@ -444,11 +449,11 @@ failure:
 
 /* XXX Doesn't set error code */
 SECStatus
-RSA_DecryptRaw(RSAPrivateKey * key,
-               unsigned char * output,
-               unsigned int * outputLen,
+RSA_DecryptRaw(RSAPrivateKey *key,
+               unsigned char *output,
+               unsigned int *outputLen,
                unsigned int maxOutputLen,
-               const unsigned char * input,
+               const unsigned char *input,
                unsigned int inputLen)
 {
     SECStatus rv;
@@ -480,25 +485,25 @@ failure:
  * output and outputLen.
  */
 static SECStatus
-eme_oaep_decode(unsigned char * output,
-                unsigned int * outputLen,
+eme_oaep_decode(unsigned char *output,
+                unsigned int *outputLen,
                 unsigned int maxOutputLen,
-                const unsigned char * input,
+                const unsigned char *input,
                 unsigned int inputLen,
                 HASH_HashType hashAlg,
                 HASH_HashType maskHashAlg,
-                const unsigned char * label,
+                const unsigned char *label,
                 unsigned int labelLen)
 {
-    const SECHashObject * hash;
-    void * hashContext;
+    const SECHashObject *hash;
+    void *hashContext;
     SECStatus rv = SECFailure;
     unsigned char labelHash[HASH_LENGTH_MAX];
     unsigned int i;
     unsigned int maskLen;
     unsigned int paddingOffset;
-    unsigned char * mask = NULL;
-    unsigned char * tmpOutput = NULL;
+    unsigned char *mask = NULL;
+    unsigned char *tmpOutput = NULL;
     unsigned char isGood;
     unsigned char foundPaddingEnd;
 
@@ -522,14 +527,14 @@ eme_oaep_decode(unsigned char * output,
     (*hash->end)(hashContext, labelHash, &i, sizeof(labelHash));
     (*hash->destroy)(hashContext, PR_TRUE);
 
-    tmpOutput = (unsigned char*)PORT_Alloc(inputLen);
+    tmpOutput = (unsigned char *)PORT_Alloc(inputLen);
     if (tmpOutput == NULL) {
         PORT_SetError(SEC_ERROR_NO_MEMORY);
         goto done;
     }
 
     maskLen = inputLen - hash->length - 1;
-    mask = (unsigned char*)PORT_Alloc(maskLen);
+    mask = (unsigned char *)PORT_Alloc(maskLen);
     if (mask == NULL) {
         PORT_SetError(SEC_ERROR_NO_MEMORY);
         goto done;
@@ -639,21 +644,21 @@ done:
  * label is the optional value L to be associated with the message.
  */
 static SECStatus
-eme_oaep_encode(unsigned char * em,
+eme_oaep_encode(unsigned char *em,
                 unsigned int emLen,
-                const unsigned char * input,
+                const unsigned char *input,
                 unsigned int inputLen,
                 HASH_HashType hashAlg,
                 HASH_HashType maskHashAlg,
-                const unsigned char * label,
+                const unsigned char *label,
                 unsigned int labelLen,
-                const unsigned char * seed,
+                const unsigned char *seed,
                 unsigned int seedLen)
 {
-    const SECHashObject * hash;
-    void * hashContext;
+    const SECHashObject *hash;
+    void *hashContext;
     SECStatus rv;
-    unsigned char * mask;
+    unsigned char *mask;
     unsigned int reservedLen;
     unsigned int dbMaskLen;
     unsigned int i;
@@ -732,7 +737,7 @@ eme_oaep_encode(unsigned char * em,
 
     /* Step 2.e - Generate dbMask*/
     dbMaskLen = emLen - hash->length - 1;
-    mask = (unsigned char*)PORT_Alloc(dbMaskLen);
+    mask = (unsigned char *)PORT_Alloc(dbMaskLen);
     if (mask == NULL) {
         PORT_SetError(SEC_ERROR_NO_MEMORY);
         return SECFailure;
@@ -753,22 +758,22 @@ eme_oaep_encode(unsigned char * em,
 }
 
 SECStatus
-RSA_EncryptOAEP(RSAPublicKey * key,
+RSA_EncryptOAEP(RSAPublicKey *key,
                 HASH_HashType hashAlg,
                 HASH_HashType maskHashAlg,
-                const unsigned char * label,
+                const unsigned char *label,
                 unsigned int labelLen,
-                const unsigned char * seed,
+                const unsigned char *seed,
                 unsigned int seedLen,
-                unsigned char * output,
-                unsigned int * outputLen,
+                unsigned char *output,
+                unsigned int *outputLen,
                 unsigned int maxOutputLen,
-                const unsigned char * input,
+                const unsigned char *input,
                 unsigned int inputLen)
 {
     SECStatus rv = SECFailure;
     unsigned int modulusLen = rsa_modulusLen(&key->modulus);
-    unsigned char * oaepEncoded = NULL;
+    unsigned char *oaepEncoded = NULL;
 
     if (maxOutputLen < modulusLen) {
         PORT_SetError(SEC_ERROR_OUTPUT_LEN);
@@ -807,20 +812,20 @@ done:
 }
 
 SECStatus
-RSA_DecryptOAEP(RSAPrivateKey * key,
+RSA_DecryptOAEP(RSAPrivateKey *key,
                 HASH_HashType hashAlg,
                 HASH_HashType maskHashAlg,
-                const unsigned char * label,
+                const unsigned char *label,
                 unsigned int labelLen,
-                unsigned char * output,
-                unsigned int * outputLen,
+                unsigned char *output,
+                unsigned int *outputLen,
                 unsigned int maxOutputLen,
-                const unsigned char * input,
+                const unsigned char *input,
                 unsigned int inputLen)
 {
     SECStatus rv = SECFailure;
     unsigned int modulusLen = rsa_modulusLen(&key->modulus);
-    unsigned char * oaepEncoded = NULL;
+    unsigned char *oaepEncoded = NULL;
 
     if ((hashAlg == HASH_AlgNULL) || (maskHashAlg == HASH_AlgNULL)) {
         PORT_SetError(SEC_ERROR_INVALID_ALGORITHM);
@@ -860,11 +865,11 @@ done:
 
 /* XXX Doesn't set error code */
 SECStatus
-RSA_EncryptBlock(RSAPublicKey * key,
-                 unsigned char * output,
-                 unsigned int * outputLen,
+RSA_EncryptBlock(RSAPublicKey *key,
+                 unsigned char *output,
+                 unsigned int *outputLen,
                  unsigned int maxOutputLen,
-                 const unsigned char * input,
+                 const unsigned char *input,
                  unsigned int inputLen)
 {
     SECStatus rv;
@@ -876,9 +881,9 @@ RSA_EncryptBlock(RSAPublicKey * key,
     if (maxOutputLen < modulusLen)
         goto failure;
 
-    unformatted.len  = inputLen;
-    unformatted.data = (unsigned char*)input;
-    formatted.data   = NULL;
+    unformatted.len = inputLen;
+    unformatted.data = (unsigned char *)input;
+    formatted.data = NULL;
     rv = rsa_FormatBlock(&formatted, modulusLen, RSA_BlockPublic,
                          &unformatted);
     if (rv != SECSuccess)
@@ -900,17 +905,17 @@ failure:
 
 /* XXX Doesn't set error code */
 SECStatus
-RSA_DecryptBlock(RSAPrivateKey * key,
-                 unsigned char * output,
-                 unsigned int * outputLen,
+RSA_DecryptBlock(RSAPrivateKey *key,
+                 unsigned char *output,
+                 unsigned int *outputLen,
                  unsigned int maxOutputLen,
-                 const unsigned char * input,
+                 const unsigned char *input,
                  unsigned int inputLen)
 {
     SECStatus rv;
     unsigned int modulusLen = rsa_modulusLen(&key->modulus);
     unsigned int i;
-    unsigned char * buffer;
+    unsigned char *buffer;
 
     if (inputLen != modulusLen)
         goto failure;
@@ -961,17 +966,17 @@ failure:
  * NOTE: this code assumes modBits is a multiple of 8.
  */
 static SECStatus
-emsa_pss_encode(unsigned char * em,
+emsa_pss_encode(unsigned char *em,
                 unsigned int emLen,
-                const unsigned char * mHash,
+                const unsigned char *mHash,
                 HASH_HashType hashAlg,
                 HASH_HashType maskHashAlg,
-                const unsigned char * salt,
+                const unsigned char *salt,
                 unsigned int saltLen)
 {
-    const SECHashObject * hash;
-    void * hash_context;
-    unsigned char * dbMask;
+    const SECHashObject *hash;
+    void *hash_context;
+    unsigned char *dbMask;
     unsigned int dbMaskLen;
     unsigned int i;
     SECStatus rv;
@@ -1045,17 +1050,17 @@ emsa_pss_encode(unsigned char * em,
  * NOTE: this code assumes modBits is a multiple of 8.
  */
 static SECStatus
-emsa_pss_verify(const unsigned char * mHash,
-                const unsigned char * em,
+emsa_pss_verify(const unsigned char *mHash,
+                const unsigned char *em,
                 unsigned int emLen,
                 HASH_HashType hashAlg,
                 HASH_HashType maskHashAlg,
                 unsigned int saltLen)
 {
-    const SECHashObject * hash;
-    void * hash_context;
-    unsigned char * db;
-    unsigned char * H_;  /* H' from the RFC */
+    const SECHashObject *hash;
+    void *hash_context;
+    unsigned char *db;
+    unsigned char *H_; /* H' from the RFC */
     unsigned int i;
     unsigned int dbMaskLen;
     SECStatus rv;
@@ -1138,15 +1143,15 @@ emsa_pss_verify(const unsigned char * mHash,
 }
 
 SECStatus
-RSA_SignPSS(RSAPrivateKey * key,
+RSA_SignPSS(RSAPrivateKey *key,
             HASH_HashType hashAlg,
             HASH_HashType maskHashAlg,
-            const unsigned char * salt,
+            const unsigned char *salt,
             unsigned int saltLength,
-            unsigned char * output,
-            unsigned int * outputLen,
+            unsigned char *output,
+            unsigned int *outputLen,
             unsigned int maxOutputLen,
-            const unsigned char * input,
+            const unsigned char *input,
             unsigned int inputLen)
 {
     SECStatus rv = SECSuccess;
@@ -1182,18 +1187,18 @@ done:
 }
 
 SECStatus
-RSA_CheckSignPSS(RSAPublicKey * key,
+RSA_CheckSignPSS(RSAPublicKey *key,
                  HASH_HashType hashAlg,
                  HASH_HashType maskHashAlg,
                  unsigned int saltLength,
-                 const unsigned char * sig,
+                 const unsigned char *sig,
                  unsigned int sigLen,
-                 const unsigned char * hash,
+                 const unsigned char *hash,
                  unsigned int hashLen)
 {
     SECStatus rv;
     unsigned int modulusLen = rsa_modulusLen(&key->modulus);
-    unsigned char * buffer;
+    unsigned char *buffer;
 
     if (sigLen != modulusLen) {
         PORT_SetError(SEC_ERROR_BAD_SIGNATURE);
@@ -1227,11 +1232,11 @@ RSA_CheckSignPSS(RSAPublicKey * key,
 
 /* XXX Doesn't set error code */
 SECStatus
-RSA_Sign(RSAPrivateKey * key,
-         unsigned char * output,
-         unsigned int * outputLen,
+RSA_Sign(RSAPrivateKey *key,
+         unsigned char *output,
+         unsigned int *outputLen,
          unsigned int maxOutputLen,
-         const unsigned char * input,
+         const unsigned char *input,
          unsigned int inputLen)
 {
     SECStatus rv = SECSuccess;
@@ -1242,9 +1247,9 @@ RSA_Sign(RSAPrivateKey * key,
     if (maxOutputLen < modulusLen)
         return SECFailure;
 
-    unformatted.len  = inputLen;
-    unformatted.data = (unsigned char*)input;
-    formatted.data   = NULL;
+    unformatted.len = inputLen;
+    unformatted.data = (unsigned char *)input;
+    formatted.data = NULL;
     rv = rsa_FormatBlock(&formatted, modulusLen, RSA_BlockPrivate,
                          &unformatted);
     if (rv != SECSuccess)
@@ -1263,16 +1268,16 @@ done:
 
 /* XXX Doesn't set error code */
 SECStatus
-RSA_CheckSign(RSAPublicKey * key,
-              const unsigned char * sig,
+RSA_CheckSign(RSAPublicKey *key,
+              const unsigned char *sig,
               unsigned int sigLen,
-              const unsigned char * data,
+              const unsigned char *data,
               unsigned int dataLen)
 {
     SECStatus rv;
     unsigned int modulusLen = rsa_modulusLen(&key->modulus);
     unsigned int i;
-    unsigned char * buffer;
+    unsigned char *buffer;
 
     if (sigLen != modulusLen)
         goto failure;
@@ -1324,17 +1329,17 @@ failure:
 
 /* XXX Doesn't set error code */
 SECStatus
-RSA_CheckSignRecover(RSAPublicKey * key,
-                     unsigned char * output,
-                     unsigned int * outputLen,
+RSA_CheckSignRecover(RSAPublicKey *key,
+                     unsigned char *output,
+                     unsigned int *outputLen,
                      unsigned int maxOutputLen,
-                     const unsigned char * sig,
+                     const unsigned char *sig,
                      unsigned int sigLen)
 {
     SECStatus rv;
     unsigned int modulusLen = rsa_modulusLen(&key->modulus);
     unsigned int i;
-    unsigned char * buffer;
+    unsigned char *buffer;
 
     if (sigLen != modulusLen)
         goto failure;

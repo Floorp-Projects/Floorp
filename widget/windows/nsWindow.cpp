@@ -1048,21 +1048,20 @@ NS_IMETHODIMP nsWindow::SetParent(nsIWidget *aNewParent)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsWindow::ReparentNativeWidget(nsIWidget* aNewParent)
 {
   NS_PRECONDITION(aNewParent, "");
 
   mParent = aNewParent;
   if (mWindowType == eWindowType_popup) {
-    return NS_OK;
+    return;
   }
   HWND newParent = (HWND)aNewParent->GetNativeData(NS_NATIVE_WINDOW);
   NS_ASSERTION(newParent, "Parent widget has a null native window handle");
   if (newParent && mWnd) {
     ::SetParent(mWnd, newParent);
   }
-  return NS_OK;
 }
 
 nsIWidget* nsWindow::GetParent(void)
@@ -1817,8 +1816,9 @@ nsWindow::BeginResizeDrag(WidgetGUIEvent* aEvent,
  **************************************************************/
 
 // Position the window behind the given window
-NS_IMETHODIMP nsWindow::PlaceBehind(nsTopLevelWidgetZPlacement aPlacement,
-                                    nsIWidget *aWidget, bool aActivate)
+void
+nsWindow::PlaceBehind(nsTopLevelWidgetZPlacement aPlacement,
+                      nsIWidget *aWidget, bool aActivate)
 {
   HWND behind = HWND_TOP;
   if (aPlacement == eZPlacementBottom)
@@ -1842,7 +1842,6 @@ NS_IMETHODIMP nsWindow::PlaceBehind(nsTopLevelWidgetZPlacement aPlacement,
   }
 
   ::SetWindowPos(mWnd, behind, 0, 0, 0, 0, flags);
-  return NS_OK;
 }
 
 static UINT
@@ -1909,11 +1908,11 @@ nsWindow::SetSizeMode(nsSizeMode aMode)
 // Constrain a potential move to fit onscreen
 // Position (aX, aY) is specified in Windows screen (logical) pixels,
 // except when using per-monitor DPI, in which case it's device pixels.
-NS_IMETHODIMP nsWindow::ConstrainPosition(bool aAllowSlop,
-                                          int32_t *aX, int32_t *aY)
+void
+nsWindow::ConstrainPosition(bool aAllowSlop, int32_t *aX, int32_t *aY)
 {
   if (!mIsTopWidgetWindow) // only a problem for top-level windows
-    return NS_OK;
+    return;
 
   double dpiScale = GetDesktopToDeviceScale().scale;
 
@@ -1928,7 +1927,7 @@ NS_IMETHODIMP nsWindow::ConstrainPosition(bool aAllowSlop,
 
   nsCOMPtr<nsIScreenManager> screenmgr = do_GetService(sScreenManagerContractID);
   if (!screenmgr) {
-    return NS_ERROR_NOT_AVAILABLE;
+    return;
   }
   nsCOMPtr<nsIScreen> screen;
   int32_t left, top, width, height;
@@ -1939,13 +1938,13 @@ NS_IMETHODIMP nsWindow::ConstrainPosition(bool aAllowSlop,
     // For normalized windows, use the desktop work area.
     nsresult rv = screen->GetAvailRectDisplayPix(&left, &top, &width, &height);
     if (NS_FAILED(rv)) {
-      return rv;
+      return;
     }
   } else {
     // For full screen windows, use the desktop.
     nsresult rv = screen->GetRectDisplayPix(&left, &top, &width, &height);
     if (NS_FAILED(rv)) {
-      return rv;
+      return;
     }
   }
   screenRect.left = left;
@@ -1976,8 +1975,6 @@ NS_IMETHODIMP nsWindow::ConstrainPosition(bool aAllowSlop,
     else if (*aY >= screenRect.bottom - logHeight)
       *aY = screenRect.bottom - logHeight;
   }
-
-  return NS_OK;
 }
 
 /**************************************************************
@@ -3540,7 +3537,7 @@ nsWindow::EnableDragDrop(bool aEnable)
  *
  **************************************************************/
 
-NS_IMETHODIMP nsWindow::CaptureMouse(bool aCapture)
+void nsWindow::CaptureMouse(bool aCapture)
 {
   TRACKMOUSEEVENT mTrack;
   mTrack.cbSize = sizeof(TRACKMOUSEEVENT);
@@ -3555,7 +3552,6 @@ NS_IMETHODIMP nsWindow::CaptureMouse(bool aCapture)
   }
   sIsInMouseCapture = aCapture;
   TrackMouseEvent(&mTrack);
-  return NS_OK;
 }
 
 /**************************************************************
@@ -3568,8 +3564,8 @@ NS_IMETHODIMP nsWindow::CaptureMouse(bool aCapture)
  *
  **************************************************************/
 
-NS_IMETHODIMP nsWindow::CaptureRollupEvents(nsIRollupListener * aListener,
-                                            bool aDoCapture)
+void
+nsWindow::CaptureRollupEvents(nsIRollupListener* aListener, bool aDoCapture)
 {
   if (aDoCapture) {
     gRollupListener = aListener;
@@ -3582,8 +3578,6 @@ NS_IMETHODIMP nsWindow::CaptureRollupEvents(nsIRollupListener * aListener,
     sProcessHook = false;
     UnregisterSpecialDropdownHooks();
   }
-
-  return NS_OK;
 }
 
 /**************************************************************

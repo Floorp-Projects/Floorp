@@ -60,7 +60,9 @@ PresentationIPCService::StartSession(const nsAString& aUrl,
                                      nsIPresentationServiceCallback* aCallback)
 {
   if (aWindowId != 0) {
-    AddRespondingSessionId(aWindowId, aSessionId);
+    AddRespondingSessionId(aWindowId,
+                           aSessionId,
+                           nsIPresentationService::ROLE_CONTROLLER);
   }
 
   return SendRequest(aCallback, StartSessionRequest(nsString(aUrl),
@@ -281,16 +283,18 @@ PresentationIPCService::NotifySessionTransport(const nsString& aSessionId,
 
 NS_IMETHODIMP
 PresentationIPCService::GetWindowIdBySessionId(const nsAString& aSessionId,
+                                               uint8_t aRole,
                                                uint64_t* aWindowId)
 {
-  return GetWindowIdBySessionIdInternal(aSessionId, aWindowId);
+  return GetWindowIdBySessionIdInternal(aSessionId, aRole, aWindowId);
 }
 
 NS_IMETHODIMP
 PresentationIPCService::UpdateWindowIdBySessionId(const nsAString& aSessionId,
+                                                  uint8_t aRole,
                                                   const uint64_t aWindowId)
 {
-  return UpdateWindowIdBySessionIdInternal(aSessionId, aWindowId);
+  return UpdateWindowIdBySessionIdInternal(aSessionId, aRole, aWindowId);
 }
 
 nsresult
@@ -357,13 +361,6 @@ PresentationIPCService::NotifyAvailableChange(bool aAvailable)
 }
 
 NS_IMETHODIMP
-PresentationIPCService::GetExistentSessionIdAtLaunch(uint64_t aWindowId,
-                                                     nsAString& aSessionId)
-{
-  return GetExistentSessionIdAtLaunchInternal(aWindowId, aSessionId);;
-}
-
-NS_IMETHODIMP
 PresentationIPCService::NotifyReceiverReady(const nsAString& aSessionId,
                                             uint64_t aWindowId,
                                             bool aIsLoading)
@@ -376,7 +373,9 @@ PresentationIPCService::NotifyReceiverReady(const nsAString& aSessionId,
   }
 
   // Track the responding info for an OOP receiver page.
-  AddRespondingSessionId(aWindowId, aSessionId);
+  AddRespondingSessionId(aWindowId,
+                         aSessionId,
+                         nsIPresentationService::ROLE_RECEIVER);
 
   NS_WARN_IF(!sPresentationChild->SendNotifyReceiverReady(nsString(aSessionId),
                                                           aWindowId,
@@ -398,7 +397,9 @@ PresentationIPCService::UntrackSessionInfo(const nsAString& aSessionId,
   if (nsIPresentationService::ROLE_RECEIVER == aRole) {
     // Terminate receiver page.
     uint64_t windowId;
-    if (NS_SUCCEEDED(GetWindowIdBySessionIdInternal(aSessionId, &windowId))) {
+    if (NS_SUCCEEDED(GetWindowIdBySessionIdInternal(aSessionId,
+                                                    aRole,
+                                                    &windowId))) {
       NS_DispatchToMainThread(NS_NewRunnableFunction([windowId]() -> void {
         PRES_DEBUG("Attempt to close window[%d]\n", windowId);
 
@@ -410,7 +411,7 @@ PresentationIPCService::UntrackSessionInfo(const nsAString& aSessionId,
   }
 
   // Remove the OOP responding info (if it has never been used).
-  RemoveRespondingSessionId(aSessionId);
+  RemoveRespondingSessionId(aSessionId, aRole);
   if (mSessionInfos.Contains(aSessionId)) {
     mSessionInfos.Remove(aSessionId);
   }

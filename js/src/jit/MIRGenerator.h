@@ -39,11 +39,6 @@ class MIRGenerator
                  TempAllocator* alloc, MIRGraph* graph,
                  const CompileInfo* info, const OptimizationInfo* optimizationInfo);
 
-    void initUsesSignalHandlersForAsmJSOOB(bool init) {
-#if defined(ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_OOB)
-        usesSignalHandlersForAsmJSOOB_ = init;
-#endif
-    }
     void initMinAsmJSHeapLength(uint32_t init) {
         minAsmJSHeapLength_ = init;
     }
@@ -200,9 +195,6 @@ class MIRGenerator
 
     void addAbortedPreliminaryGroup(ObjectGroup* group);
 
-#if defined(ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_OOB)
-    bool usesSignalHandlersForAsmJSOOB_;
-#endif
     uint32_t minAsmJSHeapLength_;
 
     void setForceAbort() {

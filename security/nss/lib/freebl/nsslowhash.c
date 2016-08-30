@@ -14,16 +14,17 @@
 #include "blapii.h"
 
 struct NSSLOWInitContextStr {
-   int count;
+    int count;
 };
 
 struct NSSLOWHASHContextStr {
     const SECHashObject *hashObj;
     void *hashCtxt;
-   
 };
 
-static int nsslow_GetFIPSEnabled(void) {
+static int
+nsslow_GetFIPSEnabled(void)
+{
 #ifdef LINUX
     FILE *f;
     char d;
@@ -50,100 +51,100 @@ NSSLOWInitContext *
 NSSLOW_Init(void)
 {
 #ifdef FREEBL_NO_DEPEND
-    (void) FREEBL_InitStubs();
+    (void)FREEBL_InitStubs();
 #endif
 
-   /* make sure the FIPS product is installed if we are trying to
-    * go into FIPS mode */
-   if (nsslow_GetFIPSEnabled()) {
-	if (BL_FIPSEntryOK(PR_TRUE) != SECSuccess) {
-	    PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
-	    post_failed = PR_TRUE;
-	    return NULL;
-	}
-   }
-   post_failed = PR_FALSE;
-    
-   return &dummyContext;
+    /* make sure the FIPS product is installed if we are trying to
+     * go into FIPS mode */
+    if (nsslow_GetFIPSEnabled()) {
+        if (BL_FIPSEntryOK(PR_TRUE) != SECSuccess) {
+            PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
+            post_failed = PR_TRUE;
+            return NULL;
+        }
+    }
+    post_failed = PR_FALSE;
+
+    return &dummyContext;
 }
 
 void
 NSSLOW_Shutdown(NSSLOWInitContext *context)
 {
-   PORT_Assert(context == &dummyContext);
-   return;
+    PORT_Assert(context == &dummyContext);
+    return;
 }
 
 void
 NSSLOW_Reset(NSSLOWInitContext *context)
 {
-   PORT_Assert(context == &dummyContext);
-   return;
+    PORT_Assert(context == &dummyContext);
+    return;
 }
 
 NSSLOWHASHContext *
-NSSLOWHASH_NewContext(NSSLOWInitContext *initContext, 
-			HASH_HashType hashType)
+NSSLOWHASH_NewContext(NSSLOWInitContext *initContext,
+                      HASH_HashType hashType)
 {
-   NSSLOWHASHContext *context;
+    NSSLOWHASHContext *context;
 
-   if (post_failed) {
-	PORT_SetError(SEC_ERROR_PKCS11_DEVICE_ERROR);
-	return NULL;
-   }
+    if (post_failed) {
+        PORT_SetError(SEC_ERROR_PKCS11_DEVICE_ERROR);
+        return NULL;
+    }
 
-   if (initContext != &dummyContext) {
-	PORT_SetError(SEC_ERROR_INVALID_ARGS);
-	return (NULL);
-   }
+    if (initContext != &dummyContext) {
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        return (NULL);
+    }
 
-   context = PORT_ZNew(NSSLOWHASHContext);
-   if (!context) {
-	return NULL;
-   }
-   context->hashObj = HASH_GetRawHashObject(hashType);
-   if (!context->hashObj) {
-	PORT_Free(context);
-	return NULL;
-   }
-   context->hashCtxt = context->hashObj->create();
-   if (!context->hashCtxt) {
-	PORT_Free(context);
-	return NULL;
-   }
+    context = PORT_ZNew(NSSLOWHASHContext);
+    if (!context) {
+        return NULL;
+    }
+    context->hashObj = HASH_GetRawHashObject(hashType);
+    if (!context->hashObj) {
+        PORT_Free(context);
+        return NULL;
+    }
+    context->hashCtxt = context->hashObj->create();
+    if (!context->hashCtxt) {
+        PORT_Free(context);
+        return NULL;
+    }
 
-   return context;
+    return context;
 }
 
 void
 NSSLOWHASH_Begin(NSSLOWHASHContext *context)
 {
-   return context->hashObj->begin(context->hashCtxt);
+    return context->hashObj->begin(context->hashCtxt);
 }
 
 void
-NSSLOWHASH_Update(NSSLOWHASHContext *context, const unsigned char *buf, 
-						 unsigned int len)
+NSSLOWHASH_Update(NSSLOWHASHContext *context, const unsigned char *buf,
+                  unsigned int len)
 {
-   return context->hashObj->update(context->hashCtxt, buf, len);
+    return context->hashObj->update(context->hashCtxt, buf, len);
 }
 
 void
-NSSLOWHASH_End(NSSLOWHASHContext *context, unsigned char *buf, 
-					 unsigned int *ret, unsigned int len)
+NSSLOWHASH_End(NSSLOWHASHContext *context, unsigned char *buf,
+               unsigned int *ret, unsigned int len)
 {
-   return context->hashObj->end(context->hashCtxt, buf, ret, len);
+    return context->hashObj->end(context->hashCtxt, buf, ret, len);
 }
 
 void
 NSSLOWHASH_Destroy(NSSLOWHASHContext *context)
 {
-   context->hashObj->destroy(context->hashCtxt, PR_TRUE);
-   PORT_Free(context);
+    context->hashObj->destroy(context->hashCtxt, PR_TRUE);
+    PORT_Free(context);
 }
 
 unsigned int
 NSSLOWHASH_Length(NSSLOWHASHContext *context)
 {
-   return context->hashObj->length;
+    return context->hashObj->length;
 }

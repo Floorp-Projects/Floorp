@@ -54,7 +54,7 @@ public:
   constexpr operator E() const { return mValue; }
 
   template<typename DestinationType>
-  MOZ_EXPLICIT_CONVERSION constexpr
+  explicit constexpr
   operator DestinationType() const { return DestinationType(mValue); }
 
   constexpr bool operator !() const { return !bool(mValue); }

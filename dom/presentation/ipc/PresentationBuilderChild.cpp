@@ -39,7 +39,10 @@ nsresult PresentationBuilderChild::Init()
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  if (NS_WARN_IF(NS_FAILED(service->GetWindowIdBySessionId(mSessionId, &windowId)))) {
+  if (NS_WARN_IF(NS_FAILED(service->GetWindowIdBySessionId(
+                           mSessionId,
+                           mRole,
+                           &windowId)))) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 

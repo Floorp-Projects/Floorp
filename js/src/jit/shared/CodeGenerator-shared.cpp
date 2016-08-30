@@ -1519,6 +1519,9 @@ CodeGeneratorShared::emitWasmCallBase(LWasmCallBase* ins)
       case wasm::CalleeDesc::Builtin:
         masm.call(callee.builtin());
         break;
+      case wasm::CalleeDesc::BuiltinInstanceMethod:
+        masm.wasmCallBuiltinInstanceMethod(mir->instanceArg(), callee.builtin());
+        break;
     }
 
     // After return, restore the caller's TLS and pinned registers.

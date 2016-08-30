@@ -36,7 +36,7 @@ CreateHolderFromAccessible(Accessible* aAccToWrap)
   STAUniquePtr<IAccessible> iaToProxy(rawNative);
 
   IAccessible* rawIntercepted = nullptr;
-  HRESULT hr = MainThreadHandoff::WrapInterface(iaToProxy, &rawIntercepted);
+  HRESULT hr = MainThreadHandoff::WrapInterface(Move(iaToProxy), &rawIntercepted);
   MOZ_ASSERT(SUCCEEDED(hr));
   if (FAILED(hr)) {
     return nullptr;

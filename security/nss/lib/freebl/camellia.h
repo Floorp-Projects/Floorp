@@ -9,19 +9,19 @@
 #define CAMELLIA_MIN_KEYSIZE 16 /* bytes */
 #define CAMELLIA_MAX_KEYSIZE 32 /* bytes */
 
-#define CAMELLIA_MAX_EXPANDEDKEY (34*2) /* 32bit unit */
+#define CAMELLIA_MAX_EXPANDEDKEY (34 * 2) /* 32bit unit */
 
 typedef PRUint32 KEY_TABLE_TYPE[CAMELLIA_MAX_EXPANDEDKEY];
 
 typedef SECStatus CamelliaFunc(CamelliaContext *cx, unsigned char *output,
-			       unsigned int *outputLen,
-			       unsigned int maxOutputLen,
-			       const unsigned char *input,
-			       unsigned int inputLen);
+                               unsigned int *outputLen,
+                               unsigned int maxOutputLen,
+                               const unsigned char *input,
+                               unsigned int inputLen);
 
-typedef SECStatus CamelliaBlockFunc(const PRUint32 *subkey, 
-				    unsigned char *output,
-				    const unsigned char *input);
+typedef SECStatus CamelliaBlockFunc(const PRUint32 *subkey,
+                                    unsigned char *output,
+                                    const unsigned char *input);
 
 /* CamelliaContextStr
  *
@@ -32,11 +32,10 @@ typedef SECStatus CamelliaBlockFunc(const PRUint32 *subkey,
  * iv          - initialization vector for CBC mode
  * expandedKey - the round keys in 4-byte words
  */
-struct CamelliaContextStr
-{
-    PRUint32  keysize; /* bytes */
-    CamelliaFunc  *worker;
-    PRUint32      expandedKey[CAMELLIA_MAX_EXPANDEDKEY];
+struct CamelliaContextStr {
+    PRUint32 keysize; /* bytes */
+    CamelliaFunc *worker;
+    PRUint32 expandedKey[CAMELLIA_MAX_EXPANDEDKEY];
     PRUint8 iv[CAMELLIA_BLOCK_SIZE];
 };
 

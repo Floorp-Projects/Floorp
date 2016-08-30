@@ -43,6 +43,26 @@ AnyArrayBufferByteLength(const ArrayBufferObjectMaybeShared* buf)
     return buf->as<SharedArrayBufferObject>().byteLength();
 }
 
+inline size_t
+WasmArrayBufferMappedSize(const ArrayBufferObjectMaybeShared* buf)
+{
+    if (buf->is<ArrayBufferObject>())
+        return buf->as<ArrayBufferObject>().wasmMappedSize();
+#ifdef WASM_HUGE_MEMORY
+    return wasm::MappedSize;
+#else
+    return buf->as<SharedArrayBufferObject>().byteLength();
+#endif
+}
+
+inline uint32_t
+WasmArrayBufferActualByteLength(const ArrayBufferObjectMaybeShared* buf)
+{
+    if (buf->is<ArrayBufferObject>())
+        return buf->as<ArrayBufferObject>().wasmActualByteLength();
+    return buf->as<SharedArrayBufferObject>().byteLength();
+}
+
 inline ArrayBufferObjectMaybeShared&
 AsAnyArrayBuffer(HandleValue val)
 {
