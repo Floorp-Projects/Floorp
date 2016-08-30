@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  * vim: sw=4 ts=4 et :
  */
 /* This Source Code Form is subject to the terms of the Mozilla Public
@@ -604,10 +604,31 @@ CreateEndpoints(const PrivateIPDLInterface& aPrivate,
   return NS_OK;
 }
 
+void
+TableToArray(const nsTHashtable<nsPtrHashKey<void>>& aTable,
+             nsTArray<void*>& aArray);
+
 } // namespace ipc
 
 template<typename Protocol>
-using ManagedContainer = nsTHashtable<nsPtrHashKey<Protocol>>;
+class ManagedContainer : public nsTHashtable<nsPtrHashKey<Protocol>>
+{
+  typedef nsTHashtable<nsPtrHashKey<Protocol>> BaseClass;
+
+public:
+  // Having the core logic work on void pointers, rather than typed pointers,
+  // means that we can have one instance of this code out-of-line, rather
+  // than several hundred instances of this code out-of-lined.  (Those
+  // repeated instances don't necessarily get folded together by the linker
+  // because they contain member offsets and such that differ between the
+  // functions.)  We do have to pay for it with some eye-bleedingly bad casts,
+  // though.
+  void ToArray(nsTArray<Protocol*>& aArray) const {
+    ::mozilla::ipc::TableToArray(*reinterpret_cast<const nsTHashtable<nsPtrHashKey<void>>*>
+                                 (static_cast<const BaseClass*>(this)),
+                                 reinterpret_cast<nsTArray<void*>&>(aArray));
+  }
+};
 
 template<typename Protocol>
 Protocol*
