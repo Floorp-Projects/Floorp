@@ -1316,10 +1316,19 @@ nsListControlFrame::UpdateSelection()
     // if it's a combobox, display the new text
     nsWeakFrame weakFrame(this);
     if (mComboboxFrame) {
+#if defined(XP_MACOSX) || defined(MOZ_WIDGET_GTK)
+      // For GTK and OS X, we do not update the combobox
+      // while the dropdown is open and the user is updating
+      // their selection.
+      if (!mComboboxFrame->IsDroppedDown()) {
+        mComboboxFrame->RedisplaySelectedText();
+      }
+#else
       mComboboxFrame->RedisplaySelectedText();
+#endif
 
-      // When dropdown list is open, onchange event will be fired when Enter key
-      // is hit or when dropdown list is dismissed.
+      // When dropdown list is open, onchange event will be fired when
+      // Enter key is hit or when dropdown list is dismissed.
       if (mComboboxFrame->IsDroppedDown()) {
         return weakFrame.IsAlive();
       }
