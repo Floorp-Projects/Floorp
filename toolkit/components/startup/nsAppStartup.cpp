@@ -98,6 +98,8 @@ static NS_DEFINE_CID(kXPCOMShutdownCID,
 
 using namespace mozilla;
 
+uint32_t gRestartMode = 0;
+
 class nsAppExitEvent : public mozilla::Runnable {
 private:
   RefPtr<nsAppStartup> mService;
@@ -386,10 +388,12 @@ nsAppStartup::Quit(uint32_t aMode)
     mShuttingDown = true;
     if (!mRestart) {
       mRestart = (aMode & eRestart) != 0;
+      gRestartMode = (aMode & 0xF0);
     }
 
     if (!mRestartNotSameProfile) {
       mRestartNotSameProfile = (aMode & eRestartNotSameProfile) != 0;
+      gRestartMode = (aMode & 0xF0);
     }
 
     if (mRestart || mRestartNotSameProfile) {
