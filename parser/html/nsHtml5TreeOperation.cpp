@@ -440,9 +440,7 @@ nsHtml5TreeOperation::CreateElement(int32_t aNs,
 
       // Custom element setup may be needed if there is an "is" attribute.
       if (kNameSpaceID_None == nsuri && !prefix && nsGkAtoms::is == localName) {
-        newContent->OwnerDoc()->SetupCustomElement(newContent,
-                                                   newContent->GetNameSpaceID(),
-                                                   &value);
+        nsContentUtils::SetupCustomElement(newContent, &value);
       }
     }
   }

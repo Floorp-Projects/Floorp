@@ -2482,34 +2482,13 @@ public:
 
   nsIDocument* GetTopLevelContentDocument();
 
-  /**
-   * Registers an unresolved custom element that is a candidate for
-   * upgrade when the definition is registered via registerElement.
-   * |aTypeName| is the name of the custom element type, if it is not
-   * provided, then element name is used. |aTypeName| should be provided
-   * when registering a custom element that extends an existing
-   * element. e.g. <button is="x-button">.
-   */
-  virtual nsresult RegisterUnresolvedElement(Element* aElement,
-                                             nsIAtom* aTypeName = nullptr) = 0;
-  virtual void EnqueueLifecycleCallback(ElementCallbackType aType,
-                                        Element* aCustomElement,
-                                        mozilla::dom::LifecycleCallbackArgs* aArgs = nullptr,
-                                        mozilla::dom::CustomElementDefinition* aDefinition = nullptr) = 0;
-  virtual void SetupCustomElement(Element* aElement,
-                                  uint32_t aNamespaceID,
-                                  const nsAString* aTypeExtension = nullptr) = 0;
   virtual void
     RegisterElement(JSContext* aCx, const nsAString& aName,
                     const mozilla::dom::ElementRegistrationOptions& aOptions,
                     JS::MutableHandle<JSObject*> aRetval,
                     mozilla::ErrorResult& rv) = 0;
-
-  /**
-   * In some cases, new document instances must be associated with
-   * an existing web components custom element registry as specified.
-   */
-  virtual void UseRegistryFromDocument(nsIDocument* aDocument) = 0;
+  virtual already_AddRefed<mozilla::dom::CustomElementsRegistry>
+    GetCustomElementsRegistry() = 0;
 
   already_AddRefed<nsContentList>
   GetElementsByTagName(const nsAString& aTagName)
