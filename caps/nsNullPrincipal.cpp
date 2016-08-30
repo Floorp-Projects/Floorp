@@ -78,10 +78,10 @@ nsNullPrincipal::Init(const PrincipalOriginAttributes& aOriginAttributes)
   return NS_OK;
 }
 
-void
+nsresult
 nsNullPrincipal::GetScriptLocation(nsACString &aStr)
 {
-  mURI->GetSpec(aStr);
+  return mURI->GetSpec(aStr);
 }
 
 /**
