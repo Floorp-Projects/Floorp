@@ -1238,6 +1238,7 @@ FilterNodeGraphFromDescription(DrawTarget* aDT,
                                nsTArray<RefPtr<SourceSurface>>& aAdditionalImages)
 {
   const nsTArray<FilterPrimitiveDescription>& primitives = aFilter.mPrimitives;
+  MOZ_RELEASE_ASSERT(!primitives.IsEmpty());
 
   RefPtr<FilterCachedColorModels> sourceFilters[4];
   nsTArray<RefPtr<FilterCachedColorModels> > primitiveFilters;
@@ -1328,6 +1329,7 @@ FilterNodeGraphFromDescription(DrawTarget* aDT,
     primitiveFilters.AppendElement(primitiveFilter);
   }
 
+  MOZ_RELEASE_ASSERT(!primitiveFilters.IsEmpty());
   return primitiveFilters.LastElement()->ForColorModel(ColorModel::PremulSRGB());
 }
 
@@ -1477,6 +1479,8 @@ FilterSupport::ComputeResultChangeRegion(const FilterDescription& aFilter,
                                          const nsIntRegion& aStrokePaintChange)
 {
   const nsTArray<FilterPrimitiveDescription>& primitives = aFilter.mPrimitives;
+  MOZ_RELEASE_ASSERT(!primitives.IsEmpty());
+
   nsTArray<nsIntRegion> resultChangeRegions;
 
   for (int32_t i = 0; i < int32_t(primitives.Length()); ++i) {
@@ -1498,6 +1502,7 @@ FilterSupport::ComputeResultChangeRegion(const FilterDescription& aFilter,
     resultChangeRegions.AppendElement(changeRegion);
   }
 
+  MOZ_RELEASE_ASSERT(!resultChangeRegions.IsEmpty());
   return resultChangeRegions[resultChangeRegions.Length() - 1];
 }
 
@@ -1638,6 +1643,7 @@ FilterSupport::ComputePostFilterExtents(const FilterDescription& aFilter,
                                         const nsIntRegion& aSourceGraphicExtents)
 {
   const nsTArray<FilterPrimitiveDescription>& primitives = aFilter.mPrimitives;
+  MOZ_RELEASE_ASSERT(!primitives.IsEmpty());
   nsTArray<nsIntRegion> postFilterExtents;
 
   for (int32_t i = 0; i < int32_t(primitives.Length()); ++i) {
@@ -1658,6 +1664,7 @@ FilterSupport::ComputePostFilterExtents(const FilterDescription& aFilter,
     postFilterExtents.AppendElement(extent);
   }
 
+  MOZ_RELEASE_ASSERT(!postFilterExtents.IsEmpty());
   return postFilterExtents[postFilterExtents.Length() - 1];
 }
 
@@ -1768,6 +1775,11 @@ FilterSupport::ComputeSourceNeededRegions(const FilterDescription& aFilter,
                                           nsIntRegion& aStrokePaintNeededRegion)
 {
   const nsTArray<FilterPrimitiveDescription>& primitives = aFilter.mPrimitives;
+  MOZ_ASSERT(!primitives.IsEmpty());
+  if (primitives.IsEmpty()) {
+    return;
+  }
+
   nsTArray<nsIntRegion> primitiveNeededRegions;
   primitiveNeededRegions.AppendElements(primitives.Length());
 
@@ -1791,11 +1803,9 @@ FilterSupport::ComputeSourceNeededRegions(const FilterDescription& aFilter,
   }
 
   // Clip original SourceGraphic to first filter region.
-  if (primitives.Length() > 0) {
-    const FilterPrimitiveDescription& firstDescr = primitives[0];
-    aSourceGraphicNeededRegion.And(aSourceGraphicNeededRegion,
-                                   firstDescr.FilterSpaceBounds());
-  }
+  const FilterPrimitiveDescription& firstDescr = primitives[0];
+  aSourceGraphicNeededRegion.And(aSourceGraphicNeededRegion,
+                                 firstDescr.FilterSpaceBounds());
 }
 
 // FilterPrimitiveDescription
