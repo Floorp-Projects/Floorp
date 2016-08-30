@@ -45,7 +45,9 @@ window.onload = function() {
     let traceEl = trace.getDOMNode();
     ok(traceEl, "Rendered StackTrace has an element");
 
-    let frameEls = traceEl.childNodes;
+    // Get the child nodes and filter out the text-only whitespace ones
+    let frameEls = Array.from(traceEl.childNodes)
+      .filter(n => n.className.includes("frame"));
     ok(frameEls, "Rendered StackTrace has frames");
     is(frameEls.length, 3, "StackTrace has 3 frames");
 
@@ -76,6 +78,14 @@ window.onload = function() {
       shouldLink: true,
       tooltip: "View source in Debugger → http://myfile.com/loadee.js:10",
     });
+
+    // Check the tabs and newlines in the stack trace textContent
+    let traceText = traceEl.textContent;
+    let traceLines = traceText.split("\n");
+    ok(traceLines.length > 0, "There are newlines in the stack trace text");
+    is(traceLines.pop(), "", "There is a newline at the end of the stack trace text");
+    is(traceLines.length, 3, "The stack trace text has 3 lines");
+    ok(traceLines.every(l => l[0] == "\t"), "Every stack trace line starts with tab");
   });
 }
 </script>
