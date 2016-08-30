@@ -218,7 +218,7 @@ public final class NotificationHelper implements GeckoEventListener {
             Log.i(LOGTAG, "buildNotificationPendingIntent, error parsing", ex);
         }
         final Intent notificationIntent = buildNotificationIntent(message, builder);
-        PendingIntent res = PendingIntent.getActivity(mContext, 0, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        PendingIntent res = PendingIntent.getBroadcast(mContext, 0, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
         return res;
     }
 
