@@ -8613,40 +8613,58 @@ DebuggerObject::isPromiseGetter(JSContext* cx, unsigned argc, Value* vp)
 /* static */ bool
 DebuggerObject::promiseStateGetter(JSContext* cx, unsigned argc, Value* vp)
 {
-    THIS_DEBUGOBJECT_OWNER_PROMISE(cx, argc, vp, "get promiseState", args, dbg, refobj);
+    THIS_DEBUGOBJECT_PROMISE(cx, argc, vp, "get promiseState", args, refobj);
 
-    RootedPlainObject obj(cx, NewBuiltinClassInstance<PlainObject>(cx));
-    RootedValue result(cx, UndefinedValue());
-    RootedValue reason(cx, UndefinedValue());
-    if (!obj)
-        return false;
-    RootedValue state(cx);
+    RootedValue result(cx);
     switch (promise->state()) {
       case JS::PromiseState::Pending:
-        state.setString(cx->names().pending);
+        result.setString(cx->names().pending);
         break;
       case JS::PromiseState::Fulfilled:
-        state.setString(cx->names().fulfilled);
-        result = promise->value();
+        result.setString(cx->names().fulfilled);
         break;
       case JS::PromiseState::Rejected:
-        state.setString(cx->names().rejected);
-        reason = promise->reason();
+        result.setString(cx->names().rejected);
         break;
     }
 
+    args.rval().set(result);
+    return true;
+}
+
+/* static */ bool
+DebuggerObject::promiseValueGetter(JSContext* cx, unsigned argc, Value* vp)
+{
+    THIS_DEBUGOBJECT_OWNER_PROMISE(cx, argc, vp, "get promiseValue", args, dbg, refobj);
+
+    if (promise->state() != JS::PromiseState::Fulfilled) {
+        args.rval().setUndefined();
+        return true;
+    }
+
+    RootedValue result(cx, promise->value());
     if (!dbg->wrapDebuggeeValue(cx, &result))
         return false;
-    if (!dbg->wrapDebuggeeValue(cx, &reason))
+
+    args.rval().set(result);
+    return true;
+}
+
+/* static */ bool
+DebuggerObject::promiseReasonGetter(JSContext* cx, unsigned argc, Value* vp)
+{
+    THIS_DEBUGOBJECT_OWNER_PROMISE(cx, argc, vp, "get promiseReason", args, dbg, refobj);
+
+    if (promise->state() != JS::PromiseState::Rejected) {
+        args.rval().setUndefined();
+        return true;
+    }
+
+    RootedValue result(cx, promise->reason());
+    if (!dbg->wrapDebuggeeValue(cx, &result))
         return false;
 
-    if (!DefineProperty(cx, obj, cx->names().state.get(), state))
-        return false;
-    if (!DefineProperty(cx, obj, cx->names().value.get(), result))
-        return false;
-    if (!DefineProperty(cx, obj, cx->names().reason.get(), reason))
-        return false;
-    args.rval().setObject(*obj);
+    args.rval().set(result);
     return true;
 }
 
@@ -9186,6 +9204,8 @@ const JSPropertySpec DebuggerObject::properties_[] = {
 const JSPropertySpec DebuggerObject::promiseProperties_[] = {
     JS_PSG("isPromise", DebuggerObject::isPromiseGetter, 0),
     JS_PSG("promiseState", DebuggerObject::promiseStateGetter, 0),
+    JS_PSG("promiseValue", DebuggerObject::promiseValueGetter, 0),
+    JS_PSG("promiseReason", DebuggerObject::promiseReasonGetter, 0),
     JS_PSG("promiseLifetime", DebuggerObject::promiseLifetimeGetter, 0),
     JS_PSG("promiseTimeToResolution", DebuggerObject::promiseTimeToResolutionGetter, 0),
     JS_PSG("promiseAllocationSite", DebuggerObject::promiseAllocationSiteGetter, 0),
