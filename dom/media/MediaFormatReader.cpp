@@ -77,7 +77,6 @@ MediaFormatReader::MediaFormatReader(AbstractMediaDecoder* aDecoder,
   , mDemuxOnly(false)
   , mSeekScheduled(false)
   , mVideoFrameContainer(aVideoFrameContainer)
-  , mExplicitDuration(mTaskQueue, Maybe<double>(), "MediaFormatReader::mExplicitDuration(Mirror)")
 {
   MOZ_ASSERT(aDemuxer);
   MOZ_COUNT_CTOR(MediaFormatReader);
@@ -139,8 +138,6 @@ MediaFormatReader::Shutdown()
   mDemuxer = nullptr;
   mPlatform = nullptr;
   mVideoFrameContainer = nullptr;
-
-  mExplicitDuration.DisconnectIfConnected();
 
   return MediaDecoderReader::Shutdown();
 }
@@ -252,10 +249,6 @@ MediaFormatReader::AsyncReadMetadata()
     metadata->mInfo = mInfo;
     metadata->mTags = nullptr;
     return MetadataPromise::CreateAndResolve(metadata, __func__);
-  }
-
-  if (mDecoder->CanonicalExplicitDuration()) {
-    mExplicitDuration.Connect(mDecoder->CanonicalExplicitDuration());
   }
 
   RefPtr<MetadataPromise> p = mMetadataPromise.Ensure(__func__);
@@ -1083,20 +1076,6 @@ MediaFormatReader::InternalSeek(TrackType aTrack, const InternalSeekTarget& aTar
                     [self, aTrack] (DemuxerFailureReason aResult) {
                       auto& decoder = self->GetDecoderData(aTrack);
                       decoder.mSeekRequest.Complete();
-
-                      if (aResult == DemuxerFailureReason::END_OF_STREAM) {
-                        // We want to enter EOS when performing an
-                        // internal seek only if we're attempting to seek past
-                        // the explicit duration to avoid unwanted ended
-                        // event to be fired.
-                        if (self->mExplicitDuration.Ref().isSome() &&
-                            decoder.mTimeThreshold.ref().Time() <
-                            TimeUnit::FromSeconds(
-                              self->mExplicitDuration.Ref().ref())) {
-                          aResult = DemuxerFailureReason::WAITING_FOR_DATA;
-                        }
-                      }
-
                       switch (aResult) {
                         case DemuxerFailureReason::WAITING_FOR_DATA:
                           self->NotifyWaitingForData(aTrack);
@@ -1752,14 +1731,6 @@ MediaFormatReader::OnSeekFailed(TrackType aTrack, DemuxerFailureReason aResult)
     mVideo.mSeekRequest.Complete();
   } else {
     mAudio.mSeekRequest.Complete();
-  }
-
-  // We want to enter EOS when performing a seek only if we're attempting to
-  // seek past the explicit duration to avoid unwanted ended
-  // event to be fired.
-  if (mExplicitDuration.Ref().isSome() &&
-      mPendingSeekTime.ref() < TimeUnit::FromSeconds(mExplicitDuration.Ref().ref())) {
-    aResult = DemuxerFailureReason::WAITING_FOR_DATA;
   }
 
   if (aResult == DemuxerFailureReason::WAITING_FOR_DATA) {

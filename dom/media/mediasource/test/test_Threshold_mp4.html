@@ -15,13 +15,12 @@ SimpleTest.waitForExplicitFinish();
 runWithMSE(function(ms, el) {
 
 var threshold = 0.5; // gap threshold in seconds.
-// duration of a frame. The FFmpeg decoder can't calculate properly calculate the duration of the last frame.
-var fuzz = 33322 / 1000000;
+var fuzz = 0.000001; // fuzz when comparing double.
 
   once(ms, 'sourceopen').then(function() {
     ok(true, "Receive a sourceopen event");
     var videosb = ms.addSourceBuffer("video/mp4");
-    var vchunks = [ {start: 0, end: 3.2033}, { start: 3.2033, end: 6.4066}];
+    var vchunks = [ {start: 0, end: 3.203333}, { start: 3.203333, end: 6.406666}];
 
     fetchAndLoad(videosb, 'bipbop/bipbop_video', ['init'], '.mp4')
     .then(fetchAndLoad.bind(null, videosb, 'bipbop/bipbop_video', range(1, 5), '.m4s'))
@@ -40,8 +39,10 @@ var fuzz = 33322 / 1000000;
     }).then(function() {
       return once(el, 'waiting');
     }).then(function() {
-      // We're waiting for data at the end of the last segment.
-      isfuzzy(el.currentTime, vchunks[1].end + threshold, fuzz, "skipped the gap properly");
+      // We're waiting for data after the start of the last frame.
+      // 0.033333 is the duration of the last frame.
+      ok(el.currentTime >= vchunks[1].end - 0.033333 + threshold - fuzz
+         && el.currentTime <= vchunks[1].end + threshold + fuzz, "skipped the gap properly: " + el.currentTime + " " + (vchunks[1].end + threshold));
       is(el.buffered.length, 2, "buffered range has right length");
       // Now we test that seeking will succeed despite the gap.
       el.currentTime = el.buffered.end(0) + (threshold / 2);
@@ -68,8 +69,10 @@ var fuzz = 33322 / 1000000;
     }).then(function() {
       return once(el, 'waiting');
     }).then(function() {
-      // We're waiting for data at the end of the first segment as the gap is too big.
-      isfuzzy(el.currentTime, vchunks[0].end, fuzz, "stopped at the gap properly");
+      // We're waiting for data after the start of the last frame.
+      // 0.033333 is the duration of the last frame.
+      ok(el.currentTime >= vchunks[0].end - 0.033333 - fuzz
+         && el.currentTime <= vchunks[0].end + fuzz, "stopped at the gap properly: " + el.currentTime + " " + vchunks[0].end);
       SimpleTest.finish();
     });
   });

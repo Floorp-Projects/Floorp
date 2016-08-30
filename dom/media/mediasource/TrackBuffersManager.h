@@ -123,6 +123,7 @@ public:
   // Buffered must conform to http://w3c.github.io/media-source/index.html#widl-SourceBuffer-buffered
   media::TimeIntervals Buffered();
   media::TimeUnit HighestStartTime();
+  media::TimeUnit HighestEndTime();
 
   // Return the size of the data managed by this SourceBufferContentManager.
   int64_t GetSize() const;
@@ -139,6 +140,7 @@ public:
   MediaInfo GetMetadata();
   const TrackBuffer& GetTrackBuffer(TrackInfo::TrackType aTrack);
   const media::TimeIntervals& Buffered(TrackInfo::TrackType);
+  const media::TimeUnit& HighestStartTime(TrackInfo::TrackType);
   media::TimeIntervals SafeBuffered(TrackInfo::TrackType) const;
   bool IsEnded() const
   {
@@ -151,9 +153,18 @@ public:
                                        const media::TimeUnit& aTimeThreadshold,
                                        const media::TimeUnit& aFuzz,
                                        bool& aFound);
+
+  enum class GetSampleResult
+  {
+    NO_ERROR,
+    ERROR,
+    WAITING_FOR_DATA,
+    EOS
+  };
+
   already_AddRefed<MediaRawData> GetSample(TrackInfo::TrackType aTrack,
                                            const media::TimeUnit& aFuzz,
-                                           bool& aError);
+                                           GetSampleResult& aResult);
   int32_t FindCurrentPosition(TrackInfo::TrackType aTrack,
                               const media::TimeUnit& aFuzz);
   media::TimeUnit GetNextRandomAccessPoint(TrackInfo::TrackType aTrack,

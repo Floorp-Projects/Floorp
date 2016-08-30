@@ -23,10 +23,6 @@
 #include "prenv.h"
 #include "nsXPCOMPrivate.h"
 
-#if defined(XP_MACOSX) && defined(MOZ_CONTENT_SANDBOX)
-#include "nsAppDirectoryServiceDefs.h"
-#endif
-
 #include "nsExceptionHandler.h"
 
 #include "nsDirectoryServiceDefs.h"
@@ -612,20 +608,6 @@ AddAppDirToCommandLine(std::vector<std::string>& aCmdLine)
         aCmdLine.push_back(path.get());
 #endif
       }
-
-#if defined(XP_MACOSX) && defined(MOZ_CONTENT_SANDBOX)
-      // Full path to the profile dir
-      nsCOMPtr<nsIFile> profileDir;
-      rv = directoryService->Get(NS_APP_USER_PROFILE_50_DIR,
-                                 NS_GET_IID(nsIFile),
-                                 getter_AddRefs(profileDir));
-      if (NS_SUCCEEDED(rv)) {
-        nsAutoCString path;
-        MOZ_ALWAYS_SUCCEEDS(profileDir->GetNativePath(path));
-        aCmdLine.push_back("-profile");
-        aCmdLine.push_back(path.get());
-      }
-#endif
     }
   }
 }

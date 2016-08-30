@@ -536,16 +536,13 @@ MediaSource::DurationChange(double aNewDuration, ErrorResult& aRv)
     return;
   }
 
-  // 3. Update duration to new duration.
-  // 4. If a user agent is unable to partially render audio frames or text cues
-  // that start before and end after the duration, then run the following steps:
-  // Update new duration to the highest end time reported by the buffered
-  // attribute across all SourceBuffer objects in sourceBuffers.
-  //   1. Update new duration to the highest end time reported by the buffered
-  //      attribute across all SourceBuffer objects in sourceBuffers.
-  //   2. Update duration to new duration.
+  // 3. Let highest end time be the largest track buffer ranges end time across
+  // all the track buffers across all SourceBuffer objects in sourceBuffers.
+  double highestEndTime = mSourceBuffers->HighestEndTime();
+  // 4. If new duration is less than highest end time, then
+  //    4.1 Update new duration to equal highest end time.
   aNewDuration =
-    std::max(aNewDuration, mSourceBuffers->GetHighestBufferedEndTime());
+    std::max(aNewDuration, highestEndTime);
 
   // 5. Update the media duration to new duration and run the HTMLMediaElement
   // duration change algorithm.
