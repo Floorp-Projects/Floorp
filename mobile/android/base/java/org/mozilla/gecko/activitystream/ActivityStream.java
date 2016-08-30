@@ -26,6 +26,6 @@ public class ActivityStream {
      * or as a HomePager replacement.
      */
     public static boolean isHomePanel() {
-        return false;
+        return true;
     }
 }
