@@ -21,7 +21,7 @@
 
 #include "mozilla/Attributes.h"
 
-#if defined(XP_DARWIN) && defined(ASMJS_MAY_USE_SIGNAL_HANDLERS)
+#if defined(XP_DARWIN)
 # include <mach/mach.h>
 #endif
 #include "threading/Thread.h"
@@ -42,17 +42,12 @@ namespace wasm {
 MOZ_MUST_USE bool
 EnsureSignalHandlers(JSRuntime* rt);
 
-// Return whether signals can be used in this process for interrupts or, ifdef
-// ASMJS_MAY_USE_SIGNAL_HANDLERS, asm.js/wasm out-of-bounds. This value can
-// change over time solely due to DisableSignalHandlersForTesting.
+// Return whether signals can be used in this process for interrupts or
+// asm.js/wasm out-of-bounds.
 bool
 HaveSignalHandlers();
 
-// Artificially suppress signal handler support, for testing purposes.
-void
-SuppressSignalHandlersForTesting(bool suppress);
-
-#if defined(XP_DARWIN) && defined(ASMJS_MAY_USE_SIGNAL_HANDLERS)
+#if defined(XP_DARWIN)
 // On OSX we are forced to use the lower-level Mach exception mechanism instead
 // of Unix signals. Mach exceptions are not handled on the victim's stack but
 // rather require an extra thread. For simplicity, we create one such thread

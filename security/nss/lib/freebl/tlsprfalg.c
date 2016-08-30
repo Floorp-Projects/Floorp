@@ -12,13 +12,12 @@
 #include "hasht.h"
 #include "alghmac.h"
 
-
 #define PHASH_STATE_MAX_LEN HASH_LENGTH_MAX
 
 /* TLS P_hash function */
 SECStatus
-TLS_P_hash(HASH_HashType hashType, const SECItem *secret, const char *label, 
-	SECItem *seed, SECItem *result, PRBool isFIPS)
+TLS_P_hash(HASH_HashType hashType, const SECItem *secret, const char *label,
+           SECItem *seed, SECItem *result, PRBool isFIPS)
 {
     unsigned char state[PHASH_STATE_MAX_LEN];
     unsigned char outbuf[PHASH_STATE_MAX_LEN];
@@ -38,11 +37,11 @@ TLS_P_hash(HASH_HashType hashType, const SECItem *secret, const char *label,
     res = result->data;
 
     if (label != NULL)
-	label_len = PORT_Strlen(label);
+        label_len = PORT_Strlen(label);
 
     cx = HMAC_Create(hashObj, secret->data, secret->len, isFIPS);
     if (cx == NULL)
-	goto loser;
+        goto loser;
 
     /* initialize the state = A(1) = HMAC_hash(secret, seed) */
     HMAC_Begin(cx);
@@ -50,51 +49,51 @@ TLS_P_hash(HASH_HashType hashType, const SECItem *secret, const char *label,
     HMAC_Update(cx, seed->data, seed->len);
     status = HMAC_Finish(cx, state, &state_len, sizeof(state));
     if (status != SECSuccess)
-	goto loser;
+        goto loser;
 
     /* generate a block at a time until we're done */
     while (remaining > 0) {
 
-	HMAC_Begin(cx);
-	HMAC_Update(cx, state, state_len);
-	if (label_len)
-	    HMAC_Update(cx, (unsigned char *)label, label_len);
-	HMAC_Update(cx, seed->data, seed->len);
-	status = HMAC_Finish(cx, outbuf, &outbuf_len, sizeof(outbuf));
-	if (status != SECSuccess)
-	    goto loser;
+        HMAC_Begin(cx);
+        HMAC_Update(cx, state, state_len);
+        if (label_len)
+            HMAC_Update(cx, (unsigned char *)label, label_len);
+        HMAC_Update(cx, seed->data, seed->len);
+        status = HMAC_Finish(cx, outbuf, &outbuf_len, sizeof(outbuf));
+        if (status != SECSuccess)
+            goto loser;
 
         /* Update the state = A(i) = HMAC_hash(secret, A(i-1)) */
-	HMAC_Begin(cx); 
-	HMAC_Update(cx, state, state_len); 
-	status = HMAC_Finish(cx, state, &state_len, sizeof(state));
-	if (status != SECSuccess)
-	    goto loser;
+        HMAC_Begin(cx);
+        HMAC_Update(cx, state, state_len);
+        status = HMAC_Finish(cx, state, &state_len, sizeof(state));
+        if (status != SECSuccess)
+            goto loser;
 
-	chunk_size = PR_MIN(outbuf_len, remaining);
-	PORT_Memcpy(res, &outbuf, chunk_size);
-	res += chunk_size;
-	remaining -= chunk_size;
+        chunk_size = PR_MIN(outbuf_len, remaining);
+        PORT_Memcpy(res, &outbuf, chunk_size);
+        res += chunk_size;
+        remaining -= chunk_size;
     }
 
     rv = SECSuccess;
 
 loser:
     /* clear out state so it's not left on the stack */
-    if (cx) 
-    	HMAC_Destroy(cx, PR_TRUE);
+    if (cx)
+        HMAC_Destroy(cx, PR_TRUE);
     PORT_Memset(state, 0, sizeof(state));
     PORT_Memset(outbuf, 0, sizeof(outbuf));
     return rv;
 }
 
 SECStatus
-TLS_PRF(const SECItem *secret, const char *label, SECItem *seed, 
-         SECItem *result, PRBool isFIPS)
+TLS_PRF(const SECItem *secret, const char *label, SECItem *seed,
+        SECItem *result, PRBool isFIPS)
 {
     SECStatus rv = SECFailure, status;
     unsigned int i;
-    SECItem tmp = { siBuffer, NULL, 0};
+    SECItem tmp = { siBuffer, NULL, 0 };
     SECItem S1;
     SECItem S2;
 
@@ -103,34 +102,33 @@ TLS_PRF(const SECItem *secret, const char *label, SECItem *seed,
     PORT_Assert((result != NULL) && (result->data != NULL));
 
     S1.type = siBuffer;
-    S1.len  = (secret->len / 2) + (secret->len & 1);
+    S1.len = (secret->len / 2) + (secret->len & 1);
     S1.data = secret->data;
 
     S2.type = siBuffer;
-    S2.len  = S1.len;
+    S2.len = S1.len;
     S2.data = secret->data + (secret->len - S2.len);
 
-    tmp.data = (unsigned char*)PORT_Alloc(result->len);
+    tmp.data = (unsigned char *)PORT_Alloc(result->len);
     if (tmp.data == NULL)
-	goto loser;
+        goto loser;
     tmp.len = result->len;
 
     status = TLS_P_hash(HASH_AlgMD5, &S1, label, seed, result, isFIPS);
     if (status != SECSuccess)
-	goto loser;
+        goto loser;
 
     status = TLS_P_hash(HASH_AlgSHA1, &S2, label, seed, &tmp, isFIPS);
     if (status != SECSuccess)
-	goto loser;
+        goto loser;
 
     for (i = 0; i < result->len; i++)
-	result->data[i] ^= tmp.data[i];
+        result->data[i] ^= tmp.data[i];
 
     rv = SECSuccess;
 
 loser:
     if (tmp.data != NULL)
-	PORT_ZFree(tmp.data, tmp.len);
+        PORT_ZFree(tmp.data, tmp.len);
     return rv;
 }
-

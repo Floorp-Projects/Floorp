@@ -420,11 +420,6 @@ void nsBaseWidget::BaseCreate(nsIWidget* aParent,
   }
 }
 
-NS_IMETHODIMP nsBaseWidget::CaptureMouse(bool aCapture)
-{
-  return NS_OK;
-}
-
 //-------------------------------------------------------------------------
 //
 // Accessor functions to get/set the client data
@@ -719,17 +714,6 @@ void nsBaseWidget::SetZIndex(int32_t aZIndex)
 
 //-------------------------------------------------------------------------
 //
-// Places widget behind the given widget (platforms must override)
-//
-//-------------------------------------------------------------------------
-NS_IMETHODIMP nsBaseWidget::PlaceBehind(nsTopLevelWidgetZPlacement aPlacement,
-                                        nsIWidget *aWidget, bool aActivate)
-{
-  return NS_OK;
-}
-
-//-------------------------------------------------------------------------
-//
 // Maximize, minimize or restore the window. The BaseWidget implementation
 // merely stores the state.
 //
@@ -850,17 +834,6 @@ nsBaseWidget::SetWindowClipRegion(const nsTArray<LayoutDeviceIntRect>& aRects,
     StoreWindowClipRegion(rects);
   }
   return NS_OK;
-}
-
-//-------------------------------------------------------------------------
-//
-// Set window shadow style
-//
-//-------------------------------------------------------------------------
-
-NS_IMETHODIMP nsBaseWidget::SetWindowShadowStyle(int32_t aMode)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 //-------------------------------------------------------------------------
@@ -1469,11 +1442,6 @@ void nsBaseWidget::OnDestroy()
   ReleaseContentController();
 }
 
-NS_IMETHODIMP nsBaseWidget::SetWindowClass(const nsAString& xulWinType)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 NS_IMETHODIMP nsBaseWidget::MoveClient(double aX, double aY)
 {
   LayoutDeviceIntPoint clientOffset(GetClientOffset());
@@ -1604,11 +1572,6 @@ uint32_t nsBaseWidget::GetMaxTouchPoints() const
   return 0;
 }
 
-NS_IMETHODIMP nsBaseWidget::SetModal(bool aModal)
-{
-  return NS_ERROR_FAILURE;
-}
-
 NS_IMETHODIMP
 nsBaseWidget::GetAttention(int32_t aCycleCount) {
     return NS_OK;
@@ -1624,12 +1587,6 @@ NS_IMETHODIMP
 nsBaseWidget::SetIcon(const nsAString&)
 {
   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsBaseWidget::SetWindowTitlebarColor(nscolor aColor, bool aActive)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 bool

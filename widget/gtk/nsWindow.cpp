@@ -870,7 +870,7 @@ nsWindow::SetParent(nsIWidget *aNewParent)
     return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsWindow::ReparentNativeWidget(nsIWidget* aNewParent)
 {
     NS_PRECONDITION(aNewParent, "");
@@ -883,7 +883,7 @@ nsWindow::ReparentNativeWidget(nsIWidget* aNewParent)
         // reparent.
         MOZ_ASSERT(gdk_window_is_destroyed(mGdkWindow),
                    "live GdkWindow with no widget");
-        return NS_OK;
+        return;
     }
     MOZ_ASSERT(!gdk_window_is_destroyed(mGdkWindow),
                "destroyed GdkWindow with widget");
@@ -901,7 +901,6 @@ nsWindow::ReparentNativeWidget(nsIWidget* aNewParent)
 
     ReparentNativeWidgetInternal(aNewParent, newContainer, newParentWindow,
                                  oldContainer);
-    return NS_OK;
 }
 
 void
@@ -942,16 +941,15 @@ nsWindow::ReparentNativeWidgetInternal(nsIWidget* aNewParent,
     }
 }
 
-NS_IMETHODIMP
+void
 nsWindow::SetModal(bool aModal)
 {
     LOG(("nsWindow::SetModal [%p] %d\n", (void *)this, aModal));
     if (mIsDestroyed)
-        return aModal ? NS_ERROR_NOT_AVAILABLE : NS_OK;
+        return;
     if (!mIsTopLevel || !mShell)
-        return NS_ERROR_FAILURE;
+        return;
     gtk_window_set_modal(GTK_WINDOW(mShell), aModal ? TRUE : FALSE);
-    return NS_OK;
 }
 
 // nsIWidget method, which means IsShown.
@@ -970,11 +968,11 @@ nsWindow::RegisterTouchWindow()
 #endif
 }
 
-NS_IMETHODIMP
+void
 nsWindow::ConstrainPosition(bool aAllowSlop, int32_t *aX, int32_t *aY)
 {
     if (!mIsTopLevel || !mShell)
-      return NS_OK;
+      return;
 
     double dpiScale = GetDefaultScale().scale;
 
@@ -993,7 +991,7 @@ nsWindow::ConstrainPosition(bool aAllowSlop, int32_t *aX, int32_t *aY)
 
     // We don't have any screen so leave the coordinates as is
     if (!screen)
-      return NS_OK;
+      return;
 
     nsIntRect screenRect;
     if (mSizeMode != nsSizeMode_Fullscreen) {
@@ -1027,8 +1025,6 @@ nsWindow::ConstrainPosition(bool aAllowSlop, int32_t *aX, int32_t *aY)
       else if (*aY >= screenRect.YMost() - logHeight)
           *aY = screenRect.YMost() - logHeight;
     }
-
-    return NS_OK;
 }
 
 void nsWindow::SetSizeConstraints(const SizeConstraints& aConstraints)
@@ -1238,14 +1234,6 @@ nsWindow::NativeMove()
     else if (mGdkWindow) {
         gdk_window_move(mGdkWindow, point.x, point.y);
     }
-}
-
-NS_IMETHODIMP
-nsWindow::PlaceBehind(nsTopLevelWidgetZPlacement  aPlacement,
-                      nsIWidget                  *aWidget,
-                      bool                        aActivate)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 void
@@ -1879,16 +1867,16 @@ nsWindow::WidgetToScreenOffset()
     return GdkPointToDevicePixels({ x, y });
 }
 
-NS_IMETHODIMP
+void
 nsWindow::CaptureMouse(bool aCapture)
 {
     LOG(("CaptureMouse %p\n", (void *)this));
 
     if (!mGdkWindow)
-        return NS_OK;
+        return;
 
     if (!mContainer)
-        return NS_ERROR_FAILURE;
+        return;
 
     if (aCapture) {
         gtk_grab_add(GTK_WIDGET(mContainer));
@@ -1898,19 +1886,17 @@ nsWindow::CaptureMouse(bool aCapture)
         ReleaseGrabs();
         gtk_grab_remove(GTK_WIDGET(mContainer));
     }
-
-    return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsWindow::CaptureRollupEvents(nsIRollupListener *aListener,
                               bool               aDoCapture)
 {
     if (!mGdkWindow)
-        return NS_OK;
+        return;
 
     if (!mContainer)
-        return NS_ERROR_FAILURE;
+        return;
 
     LOG(("CaptureRollupEvents %p %i\n", this, int(aDoCapture)));
 
@@ -1933,8 +1919,6 @@ nsWindow::CaptureRollupEvents(nsIRollupListener *aListener,
         gtk_grab_remove(GTK_WIDGET(mContainer));
         gRollupListener = nullptr;
     }
-
-    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -4012,19 +3996,19 @@ nsWindow::Create(nsIWidget* aParent,
     return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsWindow::SetWindowClass(const nsAString &xulWinType)
 {
   if (!mShell)
-    return NS_ERROR_FAILURE;
+    return;
 
   const char *res_class = gdk_get_program_class();
   if (!res_class)
-    return NS_ERROR_FAILURE;
+    return;
 
   char *res_name = ToNewCString(xulWinType);
   if (!res_name)
-    return NS_ERROR_OUT_OF_MEMORY;
+    return;
 
   const char *role = nullptr;
 
@@ -4050,7 +4034,7 @@ nsWindow::SetWindowClass(const nsAString &xulWinType)
       XClassHint *class_hint = XAllocClassHint();
       if (!class_hint) {
         free(res_name);
-        return NS_ERROR_OUT_OF_MEMORY;
+        return;
       }
       class_hint->res_name = res_name;
       class_hint->res_class = const_cast<char*>(res_class);
@@ -4066,8 +4050,6 @@ nsWindow::SetWindowClass(const nsAString &xulWinType)
 #endif /* MOZ_X11 */
 
   free(res_name);
-
-  return NS_OK;
 }
 
 void

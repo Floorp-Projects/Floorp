@@ -162,16 +162,6 @@ interface nsIPresentationService : nsISupports
   void unregisterRespondingListener(in unsigned long long windowId);
 
   /*
-   * Check if the presentation instance has an existent session ID at launch.
-   * An empty string is always returned at sender side. Whereas at receiver side
-   * the associated session ID is returned if the window ID and URI are matched;
-   * otherwise an empty string is returned.
-   *
-   * @param windowId: The inner window ID used to look up the session ID.
-   */
-  DOMString getExistentSessionIdAtLaunch(in unsigned long long windowId);
-
-  /*
    * Notify the receiver page is ready for presentation use.
    *
    * @param sessionId An ID to identify presentation session.
@@ -204,17 +194,23 @@ interface nsIPresentationService : nsISupports
 
   /*
    * The windowId for building RTCDataChannel session transport
+   *
+   * @param sessionId: An ID to identify presentation session.
+   * @param role: Identify the function called by controller or receiver.
    */
-  unsigned long long getWindowIdBySessionId(in DOMString sessionId);
+  unsigned long long getWindowIdBySessionId(in DOMString sessionId,
+                                            in uint8_t role);
 
   /*
    * Update the mapping of the session ID and window ID.
    *
    * @param sessionId: An ID to identify presentation session.
+   * @param role: Identify the function called by controller or receiver.
    * @param windowId: The inner window ID associated with the presentation
    *                  session.
    */
   void updateWindowIdBySessionId(in DOMString sessionId,
+                                 in uint8_t role,
                                  in unsigned long long windowId);
 
   /*

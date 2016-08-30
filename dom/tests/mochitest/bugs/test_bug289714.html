@@ -1,0 +1,44 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=289714
+-->
+<head>
+  <title>Test for Bug 289714</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=289714">Mozilla Bug 289714</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+let xhr = new XMLHttpRequest(),
+    expectedResponseText = "<?xml version='1.0' encoding='shift-jis'?><xml>" +
+                           (new Array(1 << 13)).join("こんにちは") +
+                           "</xml>";
+xhr.open("GET", "bug289714.sjs");
+xhr.onprogress = function() {
+  let text = xhr.responseText;
+  is(text, expectedResponseText.substring(0, text.length),
+     "Data before OnStopRequest is decoded properly");
+  xhr.onprogress = undefined;
+}
+xhr.onload = xhr.onerror = function() {
+  is(xhr.responseText, expectedResponseText,
+     "Final response is decoded properly");
+  SimpleTest.finish();
+}
+xhr.send();
+
+</script>
+</pre>
+</body>
+</html>
+

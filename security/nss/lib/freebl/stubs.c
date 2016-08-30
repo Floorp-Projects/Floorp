@@ -46,7 +46,7 @@
 
 /*
  * This uses function pointers.
- * 
+ *
  * CONS:  A separate function is needed to
  * fill in the function pointers.
  *
@@ -56,109 +56,129 @@
  *  we switch between the stubs and real NSPR on the fly. NSPR will
  *  do bad things if passed an _FakeArena to free or allocate from).
  */
-#define STUB_DECLARE(ret, fn,  args) \
-   typedef ret (*type_##fn) args; \
-   static type_##fn ptr_##fn = NULL
+#define STUB_DECLARE(ret, fn, args) \
+    typedef ret(*type_##fn) args;   \
+    static type_##fn ptr_##fn = NULL
 
 #define STUB_SAFE_CALL0(fn) \
-    if (ptr_##fn) { return ptr_##fn(); }
-#define STUB_SAFE_CALL1(fn,a1) \
-    if (ptr_##fn) { return ptr_##fn(a1); }
-#define STUB_SAFE_CALL2(fn,a1,a2) \
-    if (ptr_##fn) { return ptr_##fn(a1,a2); }
-#define STUB_SAFE_CALL3(fn,a1,a2,a3) \
-    if (ptr_##fn) { return ptr_##fn(a1,a2,a3); }
-#define STUB_SAFE_CALL4(fn,a1,a2,a3,a4) \
-    if (ptr_##fn) { return ptr_##fn(a1,a2,a3,a4); }
-#define STUB_SAFE_CALL6(fn,a1,a2,a3,a4,a5,a6) \
-    if (ptr_##fn) { return ptr_##fn(a1,a2,a3,a4,a5,a6); }
+    if (ptr_##fn) {         \
+        return ptr_##fn();  \
+    }
+#define STUB_SAFE_CALL1(fn, a1) \
+    if (ptr_##fn) {             \
+        return ptr_##fn(a1);    \
+    }
+#define STUB_SAFE_CALL2(fn, a1, a2) \
+    if (ptr_##fn) {                 \
+        return ptr_##fn(a1, a2);    \
+    }
+#define STUB_SAFE_CALL3(fn, a1, a2, a3) \
+    if (ptr_##fn) {                     \
+        return ptr_##fn(a1, a2, a3);    \
+    }
+#define STUB_SAFE_CALL4(fn, a1, a2, a3, a4) \
+    if (ptr_##fn) {                         \
+        return ptr_##fn(a1, a2, a3, a4);    \
+    }
+#define STUB_SAFE_CALL6(fn, a1, a2, a3, a4, a5, a6) \
+    if (ptr_##fn) {                                 \
+        return ptr_##fn(a1, a2, a3, a4, a5, a6);    \
+    }
 
-#define STUB_FETCH_FUNCTION(fn) \
-    ptr_##fn = (type_##fn) dlsym(lib,#fn); \
-    if (ptr_##fn == NULL) { \
-        return SECFailure; \
+#define STUB_FETCH_FUNCTION(fn)            \
+    ptr_##fn = (type_##fn)dlsym(lib, #fn); \
+    if (ptr_##fn == NULL) {                \
+        return SECFailure;                 \
     }
 
 #else
 /*
  * this uses the loader weak attribute. it works automatically, but once
- * freebl is loaded, the symbols are 'fixed' (later loading of NSPR or 
+ * freebl is loaded, the symbols are 'fixed' (later loading of NSPR or
  * libutil will not resolve these symbols).
  */
 
-#define STUB_DECLARE(ret, fn,  args) \
-   WEAK extern ret fn args
+#define STUB_DECLARE(ret, fn, args) \
+    WEAK extern ret fn args
 
 #define STUB_SAFE_CALL0(fn) \
-    if (fn) { return fn(); }
-#define STUB_SAFE_CALL1(fn,a1) \
-    if (fn) { return fn(a1); }
-#define STUB_SAFE_CALL2(fn,a1,a2) \
-    if (fn) { return fn(a1,a2); }
-#define STUB_SAFE_CALL3(fn,a1,a2,a3) \
-    if (fn) { return fn(a1,a2,a3); }
-#define STUB_SAFE_CALL4(fn,a1,a2,a3,a4) \
-    if (fn) { return fn(a1,a2,a3,a4); }
-#define STUB_SAFE_CALL6(fn,a1,a2,a3,a4,a5,a6) \
-    if (fn) { return fn(a1,a2,a3,a4,a5,a6); }
+    if (fn) {               \
+        return fn();        \
+    }
+#define STUB_SAFE_CALL1(fn, a1) \
+    if (fn) {                   \
+        return fn(a1);          \
+    }
+#define STUB_SAFE_CALL2(fn, a1, a2) \
+    if (fn) {                       \
+        return fn(a1, a2);          \
+    }
+#define STUB_SAFE_CALL3(fn, a1, a2, a3) \
+    if (fn) {                           \
+        return fn(a1, a2, a3);          \
+    }
+#define STUB_SAFE_CALL4(fn, a1, a2, a3, a4) \
+    if (fn) {                               \
+        return fn(a1, a2, a3, a4);          \
+    }
+#define STUB_SAFE_CALL6(fn, a1, a2, a3, a4, a5, a6) \
+    if (fn) {                                       \
+        return fn(a1, a2, a3, a4, a5, a6);          \
+    }
 #endif
 
+STUB_DECLARE(void *, PORT_Alloc_Util, (size_t len));
+STUB_DECLARE(void *, PORT_ArenaAlloc_Util, (PLArenaPool * arena, size_t size));
+STUB_DECLARE(void *, PORT_ArenaZAlloc_Util, (PLArenaPool * arena, size_t size));
+STUB_DECLARE(void, PORT_Free_Util, (void *ptr));
+STUB_DECLARE(void, PORT_FreeArena_Util, (PLArenaPool * arena, PRBool zero));
+STUB_DECLARE(int, PORT_GetError_Util, (void));
+STUB_DECLARE(PLArenaPool *, PORT_NewArena_Util, (unsigned long chunksize));
+STUB_DECLARE(void, PORT_SetError_Util, (int value));
+STUB_DECLARE(void *, PORT_ZAlloc_Util, (size_t len));
+STUB_DECLARE(void, PORT_ZFree_Util, (void *ptr, size_t len));
 
-STUB_DECLARE(void *,PORT_Alloc_Util,(size_t len));
-STUB_DECLARE(void *,PORT_ArenaAlloc_Util,(PLArenaPool *arena, size_t size));
-STUB_DECLARE(void *,PORT_ArenaZAlloc_Util,(PLArenaPool *arena, size_t size));
-STUB_DECLARE(void ,PORT_Free_Util,(void *ptr));
-STUB_DECLARE(void ,PORT_FreeArena_Util,(PLArenaPool *arena, PRBool zero));
-STUB_DECLARE(int,PORT_GetError_Util,(void));
-STUB_DECLARE(PLArenaPool *,PORT_NewArena_Util,(unsigned long chunksize));
-STUB_DECLARE(void,PORT_SetError_Util,(int value));
-STUB_DECLARE(void *,PORT_ZAlloc_Util,(size_t len));
-STUB_DECLARE(void,PORT_ZFree_Util,(void *ptr, size_t len));
+STUB_DECLARE(void, PR_Assert, (const char *s, const char *file, PRIntn ln));
+STUB_DECLARE(PRStatus, PR_Access, (const char *name, PRAccessHow how));
+STUB_DECLARE(PRStatus, PR_CallOnce, (PRCallOnceType * once, PRCallOnceFN func));
+STUB_DECLARE(PRStatus, PR_Close, (PRFileDesc * fd));
+STUB_DECLARE(void, PR_DestroyLock, (PRLock * lock));
+STUB_DECLARE(void, PR_DestroyCondVar, (PRCondVar * cvar));
+STUB_DECLARE(void, PR_Free, (void *ptr));
+STUB_DECLARE(char *, PR_GetLibraryFilePathname, (const char *name,
+                                                 PRFuncPtr addr));
+STUB_DECLARE(PRFileDesc *, PR_ImportPipe, (PROsfd osfd));
+STUB_DECLARE(void, PR_Lock, (PRLock * lock));
+STUB_DECLARE(PRCondVar *, PR_NewCondVar, (PRLock * lock));
+STUB_DECLARE(PRLock *, PR_NewLock, (void));
+STUB_DECLARE(PRStatus, PR_NotifyCondVar, (PRCondVar * cvar));
+STUB_DECLARE(PRStatus, PR_NotifyAllCondVar, (PRCondVar * cvar));
+STUB_DECLARE(PRFileDesc *, PR_Open, (const char *name, PRIntn flags,
+                                     PRIntn mode));
+STUB_DECLARE(PRInt32, PR_Read, (PRFileDesc * fd, void *buf, PRInt32 amount));
+STUB_DECLARE(PROffset32, PR_Seek, (PRFileDesc * fd, PROffset32 offset,
+                                   PRSeekWhence whence));
+STUB_DECLARE(PRStatus, PR_Sleep, (PRIntervalTime ticks));
+STUB_DECLARE(PRStatus, PR_Unlock, (PRLock * lock));
+STUB_DECLARE(PRStatus, PR_WaitCondVar, (PRCondVar * cvar,
+                                        PRIntervalTime timeout));
+STUB_DECLARE(char *, PR_GetEnvSecure, (const char *));
 
-STUB_DECLARE(void,PR_Assert,(const char *s, const char *file, PRIntn ln));
-STUB_DECLARE(PRStatus,PR_Access,(const char *name, PRAccessHow how));
-STUB_DECLARE(PRStatus,PR_CallOnce,(PRCallOnceType *once, PRCallOnceFN func));
-STUB_DECLARE(PRStatus,PR_Close,(PRFileDesc *fd));
-STUB_DECLARE(void,PR_DestroyLock,(PRLock *lock));
-STUB_DECLARE(void,PR_DestroyCondVar,(PRCondVar *cvar));
-STUB_DECLARE(void,PR_Free,(void *ptr));
-STUB_DECLARE(char * ,PR_GetLibraryFilePathname,(const char *name,
-			PRFuncPtr addr));
-STUB_DECLARE(PRFileDesc *,PR_ImportPipe,(PROsfd osfd));
-STUB_DECLARE(void,PR_Lock,(PRLock *lock));
-STUB_DECLARE(PRCondVar *,PR_NewCondVar,(PRLock *lock));
-STUB_DECLARE(PRLock *,PR_NewLock,(void));
-STUB_DECLARE(PRStatus,PR_NotifyCondVar,(PRCondVar *cvar));
-STUB_DECLARE(PRStatus,PR_NotifyAllCondVar,(PRCondVar *cvar));
-STUB_DECLARE(PRFileDesc *,PR_Open,(const char *name, PRIntn flags,
-			 PRIntn mode));
-STUB_DECLARE(PRInt32,PR_Read,(PRFileDesc *fd, void *buf, PRInt32 amount));
-STUB_DECLARE(PROffset32,PR_Seek,(PRFileDesc *fd, PROffset32 offset, 
-			PRSeekWhence whence));
-STUB_DECLARE(PRStatus,PR_Sleep,(PRIntervalTime ticks));
-STUB_DECLARE(PRStatus,PR_Unlock,(PRLock *lock));
-STUB_DECLARE(PRStatus,PR_WaitCondVar,(PRCondVar *cvar,
-			PRIntervalTime timeout));
-STUB_DECLARE(char*,PR_GetEnvSecure,(const char *));
+STUB_DECLARE(SECItem *, SECITEM_AllocItem_Util, (PLArenaPool * arena,
+                                                 SECItem *item, unsigned int len));
+STUB_DECLARE(SECComparison, SECITEM_CompareItem_Util, (const SECItem *a,
+                                                       const SECItem *b));
+STUB_DECLARE(SECStatus, SECITEM_CopyItem_Util, (PLArenaPool * arena,
+                                                SECItem *to, const SECItem *from));
+STUB_DECLARE(void, SECITEM_FreeItem_Util, (SECItem * zap, PRBool freeit));
+STUB_DECLARE(void, SECITEM_ZfreeItem_Util, (SECItem * zap, PRBool freeit));
+STUB_DECLARE(SECOidTag, SECOID_FindOIDTag_Util, (const SECItem *oid));
+STUB_DECLARE(int, NSS_SecureMemcmp, (const void *a, const void *b, size_t n));
 
-
-STUB_DECLARE(SECItem *,SECITEM_AllocItem_Util,(PLArenaPool *arena,
-			SECItem *item,unsigned int len));
-STUB_DECLARE(SECComparison,SECITEM_CompareItem_Util,(const SECItem *a,
-			const SECItem *b));
-STUB_DECLARE(SECStatus,SECITEM_CopyItem_Util,(PLArenaPool *arena,
-			SECItem *to,const SECItem *from));
-STUB_DECLARE(void,SECITEM_FreeItem_Util,(SECItem *zap, PRBool freeit));
-STUB_DECLARE(void,SECITEM_ZfreeItem_Util,(SECItem *zap, PRBool freeit));
-STUB_DECLARE(SECOidTag,SECOID_FindOIDTag_Util,(const SECItem *oid));
-STUB_DECLARE(int, NSS_SecureMemcmp,(const void *a, const void *b, size_t n));
-
-
-#define PORT_ZNew_stub(type) (type*)PORT_ZAlloc_stub(sizeof(type))
-#define PORT_New_stub(type) (type*)PORT_Alloc_stub(sizeof(type))
-#define PORT_ZNewArray_stub(type, num)       \
-                (type*) PORT_ZAlloc_stub (sizeof(type)*(num))
-
+#define PORT_ZNew_stub(type) (type *)PORT_ZAlloc_stub(sizeof(type))
+#define PORT_New_stub(type) (type *)PORT_Alloc_stub(sizeof(type))
+#define PORT_ZNewArray_stub(type, num) \
+    (type *)PORT_ZAlloc_stub(sizeof(type) * (num))
 
 /*
  * NOTE: in order to support hashing only the memory allocation stubs,
@@ -168,7 +188,6 @@ STUB_DECLARE(int, NSS_SecureMemcmp,(const void *a, const void *b, size_t n));
  * will most likely fail.
  */
 
- 
 /* memory */
 extern void *
 PORT_Alloc_stub(size_t len)
@@ -190,11 +209,10 @@ PORT_ZAlloc_stub(size_t len)
     STUB_SAFE_CALL1(PORT_ZAlloc_Util, len);
     void *ptr = malloc(len);
     if (ptr) {
-	memset(ptr, 0, len);
+        memset(ptr, 0, len);
     }
     return ptr;
 }
-
 
 extern void
 PORT_ZFree_stub(void *ptr, size_t len)
@@ -241,14 +259,13 @@ PORT_ArenaZAlloc_stub(PLArenaPool *arena, size_t size)
     return NULL;
 }
 
-extern void    
+extern void
 PORT_FreeArena_stub(PLArenaPool *arena, PRBool zero)
 {
 
     STUB_SAFE_CALL2(PORT_FreeArena_Util, arena, zero);
     abort();
 }
-
 
 /* io */
 extern PRFileDesc *
@@ -277,12 +294,12 @@ PR_Open_stub(const char *name, PRIntn flags, PRIntn mode)
 
     fd = open(name, lflags, mode);
     if (fd >= 0) {
-	lfd = PORT_New_stub(int);
-	if (lfd != NULL) {
-	    *lfd = fd;
-	} else {
-	    close(fd);
-	}
+        lfd = PORT_New_stub(int);
+        if (lfd != NULL) {
+            *lfd = fd;
+        } else {
+            close(fd);
+        }
     }
     return (PRFileDesc *)lfd;
 }
@@ -296,7 +313,7 @@ PR_ImportPipe_stub(PROsfd fd)
 
     lfd = PORT_New_stub(int);
     if (lfd != NULL) {
-	*lfd = fd;
+        *lfd = fd;
     }
     return (PRFileDesc *)lfd;
 }
@@ -310,7 +327,7 @@ PR_Close_stub(PRFileDesc *fd)
     lfd = (int *)fd;
     close(*lfd);
     PORT_Free_stub(lfd);
-    
+
     return PR_SUCCESS;
 }
 
@@ -319,7 +336,7 @@ PR_Read_stub(PRFileDesc *fd, void *buf, PRInt32 amount)
 {
     int *lfd;
     STUB_SAFE_CALL3(PR_Read, fd, buf, amount);
-    
+
     lfd = (int *)fd;
     return read(*lfd, buf, amount);
 }
@@ -345,31 +362,32 @@ PR_Seek_stub(PRFileDesc *fd, PROffset32 offset, PRSeekWhence whence)
     return lseek(*lfd, offset, lwhence);
 }
 
-PRStatus PR_Access_stub(const char *name, PRAccessHow how)
+PRStatus
+PR_Access_stub(const char *name, PRAccessHow how)
 {
     int mode = F_OK;
     int rv;
     STUB_SAFE_CALL2(PR_Access, name, how);
     switch (how) {
-    case PR_ACCESS_WRITE_OK:
-	mode = W_OK;
-	break;
-    case PR_ACCESS_READ_OK:
-	mode = R_OK;
-	break;
-    /* assume F_OK for all others */
-    default:
-	break;
+        case PR_ACCESS_WRITE_OK:
+            mode = W_OK;
+            break;
+        case PR_ACCESS_READ_OK:
+            mode = R_OK;
+            break;
+        /* assume F_OK for all others */
+        default:
+            break;
     }
     rv = access(name, mode);
     if (rv == 0) {
-	return PR_SUCCESS;
+        return PR_SUCCESS;
     }
     return PR_FAILURE;
 }
 
 /*
- * library 
+ * library
  */
 extern char *
 PR_GetLibraryFilePathname_stub(const char *name, PRFuncPtr addr)
@@ -382,27 +400,26 @@ PR_GetLibraryFilePathname_stub(const char *name, PRFuncPtr addr)
     if (dladdr((void *)addr, &dli) == 0) {
         return NULL;
     }
-    result = PORT_Alloc_stub(strlen(dli.dli_fname)+1);
+    result = PORT_Alloc_stub(strlen(dli.dli_fname) + 1);
     if (result != NULL) {
         strcpy(result, dli.dli_fname);
     }
     return result;
 }
 
-
 #include <errno.h>
 
 /* errors */
 extern int
 PORT_GetError_stub(void)
-{ 
+{
     STUB_SAFE_CALL0(PORT_GetError_Util);
     return errno;
 }
 
-extern void 
+extern void
 PORT_SetError_stub(int value)
-{ 
+{
     STUB_SAFE_CALL1(PORT_SetError_Util, value);
     errno = value;
 }
@@ -421,10 +438,9 @@ extern PRStatus
 PR_Sleep_stub(PRIntervalTime ticks)
 {
     STUB_SAFE_CALL1(PR_Sleep, ticks);
-    usleep(ticks*1000); 
+    usleep(ticks * 1000);
     return PR_SUCCESS;
 }
-
 
 /* locking */
 extern PRLock *
@@ -491,14 +507,13 @@ PR_WaitCondVar_stub(PRCondVar *cvar, PRIntervalTime timeout)
     return PR_FAILURE;
 }
 
-extern char*
+extern char *
 PR_GetEnvSecure_stub(const char *var)
 {
     STUB_SAFE_CALL1(PR_GetEnvSecure, var);
     abort();
     return NULL;
 }
-
 
 extern void
 PR_DestroyCondVar_stub(PRCondVar *cvar)
@@ -519,7 +534,6 @@ PR_CallOnce_stub(PRCallOnceType *once, PRCallOnceFN func)
     return PR_FAILURE;
 }
 
-
 /*
  * SECITEMS implement Item Utilities
  */
@@ -533,13 +547,13 @@ SECITEM_FreeItem_stub(SECItem *zap, PRBool freeit)
 extern SECItem *
 SECITEM_AllocItem_stub(PLArenaPool *arena, SECItem *item, unsigned int len)
 {
-    STUB_SAFE_CALL3(SECITEM_AllocItem_Util, arena, item, len); 
+    STUB_SAFE_CALL3(SECITEM_AllocItem_Util, arena, item, len);
     abort();
     return NULL;
 }
 
 extern SECComparison
-SECITEM_CompareItem_stub(const SECItem *a, const SECItem *b) 
+SECITEM_CompareItem_stub(const SECItem *a, const SECItem *b)
 {
     STUB_SAFE_CALL2(SECITEM_CompareItem_Util, a, b);
     abort();
@@ -578,8 +592,8 @@ NSS_SecureMemcmp_stub(const void *a, const void *b, size_t n)
 
 #ifdef FREEBL_NO_WEAK
 
-static const char *nsprLibName = SHLIB_PREFIX"nspr4."SHLIB_SUFFIX;
-static const char *nssutilLibName = SHLIB_PREFIX"nssutil3."SHLIB_SUFFIX;
+static const char *nsprLibName = SHLIB_PREFIX "nspr4." SHLIB_SUFFIX;
+static const char *nssutilLibName = SHLIB_PREFIX "nssutil3." SHLIB_SUFFIX;
 
 static SECStatus
 freebl_InitNSPR(void *lib)
@@ -634,16 +648,17 @@ freebl_InitNSSUtil(void *lib)
 /*
  * fetch the library if it's loaded. For NSS it should already be loaded
  */
-#define freebl_getLibrary(libName)  \
-    dlopen (libName, RTLD_LAZY|RTLD_NOLOAD)
+#define freebl_getLibrary(libName) \
+    dlopen(libName, RTLD_LAZY | RTLD_NOLOAD)
 
 #define freebl_releaseLibrary(lib) \
-    if (lib) dlclose(lib)
+    if (lib)                       \
+    dlclose(lib)
 
-static void * FREEBLnsprGlobalLib = NULL;
-static void * FREEBLnssutilGlobalLib = NULL;
+static void *FREEBLnsprGlobalLib = NULL;
+static void *FREEBLnssutilGlobalLib = NULL;
 
-void __attribute ((destructor)) FREEBL_unload()
+void __attribute((destructor)) FREEBL_unload()
 {
     freebl_releaseLibrary(FREEBLnsprGlobalLib);
     freebl_releaseLibrary(FREEBLnssutilGlobalLib);
@@ -652,7 +667,7 @@ void __attribute ((destructor)) FREEBL_unload()
 
 /*
  * load the symbols from the real libraries if available.
- * 
+ *
  * if force is set, explicitly load the libraries if they are not already
  * loaded. If we could not use the real libraries, return failure.
  */
@@ -661,34 +676,34 @@ FREEBL_InitStubs()
 {
     SECStatus rv = SECSuccess;
 #ifdef FREEBL_NO_WEAK
-    void *nspr = NULL; 
-    void *nssutil = NULL; 
+    void *nspr = NULL;
+    void *nssutil = NULL;
 
     /* NSPR should be first */
     if (!FREEBLnsprGlobalLib) {
-	nspr = freebl_getLibrary(nsprLibName);
-	if (!nspr) {
-	    return SECFailure;
-	}
-	rv = freebl_InitNSPR(nspr);
-	if (rv != SECSuccess) {
-	    freebl_releaseLibrary(nspr);
-	    return rv;
-	}
-	FREEBLnsprGlobalLib = nspr; /* adopt */
+        nspr = freebl_getLibrary(nsprLibName);
+        if (!nspr) {
+            return SECFailure;
+        }
+        rv = freebl_InitNSPR(nspr);
+        if (rv != SECSuccess) {
+            freebl_releaseLibrary(nspr);
+            return rv;
+        }
+        FREEBLnsprGlobalLib = nspr; /* adopt */
     }
     /* now load NSSUTIL */
     if (!FREEBLnssutilGlobalLib) {
-	nssutil= freebl_getLibrary(nssutilLibName);
-	if (!nssutil) {
-	    return SECFailure;
-	}
-	rv = freebl_InitNSSUtil(nssutil);
-	if (rv != SECSuccess) {
-	    freebl_releaseLibrary(nssutil);
-	    return rv;
-	}
-	FREEBLnssutilGlobalLib = nssutil; /* adopt */
+        nssutil = freebl_getLibrary(nssutilLibName);
+        if (!nssutil) {
+            return SECFailure;
+        }
+        rv = freebl_InitNSSUtil(nssutil);
+        if (rv != SECSuccess) {
+            freebl_releaseLibrary(nssutil);
+            return rv;
+        }
+        FREEBLnssutilGlobalLib = nssutil; /* adopt */
     }
 #endif
 
