@@ -209,6 +209,8 @@ public class GeckoApplication extends Application
         if (AppConstants.MOZ_ANDROID_DOWNLOAD_CONTENT_SERVICE) {
             DownloadContentService.startStudy(this);
         }
+
+        GeckoAccessibility.setAccessibilityManagerListeners(this);
     }
 
     public boolean isApplicationInBackground() {
