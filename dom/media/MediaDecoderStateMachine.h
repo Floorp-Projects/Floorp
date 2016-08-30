@@ -567,8 +567,7 @@ protected:
   // If there are any queued seek, will change state to DECODER_STATE_SEEKING
   // and return true.
   bool MaybeFinishDecodeFirstFrame();
-  // Return true if we are currently decoding the first frames.
-  bool IsDecodingFirstFrame();
+
   void FinishDecodeFirstFrame();
 
   // Completes the seek operation, moves onto the next appropriate state.
@@ -884,10 +883,6 @@ private:
 
   // Track our request to update the buffered ranges
   MozPromiseRequestHolder<MediaDecoderReader::BufferedUpdatePromise> mBufferedUpdateRequest;
-
-  // True if we need to call FinishDecodeFirstFrame() upon frame decoding
-  // succeeding.
-  bool mDecodingFirstFrame;
 
   // True if we are back from DECODER_STATE_DORMANT state and
   // LoadedMetadataEvent was already sent.

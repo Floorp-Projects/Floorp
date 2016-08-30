@@ -242,7 +242,6 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   mQuickBuffering(false),
   mMinimizePreroll(false),
   mDecodeThreadWaiting(false),
-  mDecodingFirstFrame(true),
   mSentLoadedMetadataEvent(false),
   mSentFirstFrameLoadedEvent(false),
   mSentPlaybackEndedEvent(false),
@@ -1078,7 +1077,6 @@ MediaDecoderStateMachine::EnterState(State aState)
   MOZ_ASSERT(OnTaskQueue());
   switch (aState) {
     case DECODER_STATE_DECODING_METADATA:
-      mDecodingFirstFrame = true;
       ReadMetadata();
       break;
     case DECODER_STATE_DORMANT:
@@ -2071,12 +2069,6 @@ MediaDecoderStateMachine::EnqueueFirstFrameLoadedEvent()
     []() { MOZ_CRASH("Should not reach"); }));
 }
 
-bool
-MediaDecoderStateMachine::IsDecodingFirstFrame()
-{
-  return mState == DECODER_STATE_DECODING && mDecodingFirstFrame;
-}
-
 void
 MediaDecoderStateMachine::FinishDecodeFirstFrame()
 {
@@ -2103,9 +2095,8 @@ MediaDecoderStateMachine::FinishDecodeFirstFrame()
     // If we didn't have duration and/or start time before, we should now.
     EnqueueLoadedMetadataEvent();
   }
-  EnqueueFirstFrameLoadedEvent();
 
-  mDecodingFirstFrame = false;
+  EnqueueFirstFrameLoadedEvent();
 }
 
 void
@@ -2828,12 +2819,12 @@ MediaDecoderStateMachine::DumpDebugInfo()
     mMediaSink->DumpDebugInfo();
     DUMP_LOG(
       "GetMediaTime=%lld GetClock=%lld mMediaSink=%p "
-      "mState=%s mPlayState=%d mDecodingFirstFrame=%d IsPlaying=%d "
+      "mState=%s mPlayState=%d mSentFirstFrameLoadedEvent=%d IsPlaying=%d "
       "mAudioStatus=%s mVideoStatus=%s mDecodedAudioEndTime=%lld mDecodedVideoEndTime=%lld "
       "mIsAudioPrerolling=%d mIsVideoPrerolling=%d "
       "mAudioCompleted=%d mVideoCompleted=%d",
       GetMediaTime(), mMediaSink->IsStarted() ? GetClock() : -1, mMediaSink.get(),
-      ToStateStr(), mPlayState.Ref(), mDecodingFirstFrame, IsPlaying(),
+      ToStateStr(), mPlayState.Ref(), mSentFirstFrameLoadedEvent, IsPlaying(),
       AudioRequestStatus(), VideoRequestStatus(), mDecodedAudioEndTime, mDecodedVideoEndTime,
       mIsAudioPrerolling, mIsVideoPrerolling, mAudioCompleted.Ref(), mVideoCompleted.Ref());
   });
