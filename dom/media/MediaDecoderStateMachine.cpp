@@ -2024,8 +2024,6 @@ MediaDecoderStateMachine::OnMetadataRead(MetadataHolder* aMetadata)
   }
 
   SetState(DECODER_STATE_DECODING);
-
-  ScheduleStateMachine();
 }
 
 void
@@ -2198,7 +2196,7 @@ MediaDecoderStateMachine::SeekCompleted()
   }
 
   SetState(nextState);
-  ScheduleStateMachine();
+  MOZ_ASSERT(IsStateMachineScheduled());
 }
 
 RefPtr<ShutdownPromise>
