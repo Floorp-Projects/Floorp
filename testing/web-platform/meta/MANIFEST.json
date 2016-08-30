@@ -38615,6 +38615,48 @@
             "url": "/html/semantics/links/links-created-by-a-and-area-elements/htmlanchorelement_noopener.html"
           }
         ],
+        "html/webappapis/idle-callbacks/callback-exception.html": [
+          {
+            "path": "html/webappapis/idle-callbacks/callback-exception.html",
+            "url": "/html/webappapis/idle-callbacks/callback-exception.html"
+          }
+        ],
+        "html/webappapis/idle-callbacks/callback-iframe.html": [
+          {
+            "path": "html/webappapis/idle-callbacks/callback-iframe.html",
+            "url": "/html/webappapis/idle-callbacks/callback-iframe.html"
+          }
+        ],
+        "html/webappapis/idle-callbacks/callback-invoked.html": [
+          {
+            "path": "html/webappapis/idle-callbacks/callback-invoked.html",
+            "url": "/html/webappapis/idle-callbacks/callback-invoked.html"
+          }
+        ],
+        "html/webappapis/idle-callbacks/callback-multiple-calls.html": [
+          {
+            "path": "html/webappapis/idle-callbacks/callback-multiple-calls.html",
+            "url": "/html/webappapis/idle-callbacks/callback-multiple-calls.html"
+          }
+        ],
+        "html/webappapis/idle-callbacks/callback-timeout.html": [
+          {
+            "path": "html/webappapis/idle-callbacks/callback-timeout.html",
+            "url": "/html/webappapis/idle-callbacks/callback-timeout.html"
+          }
+        ],
+        "html/webappapis/idle-callbacks/cancel-invoked.html": [
+          {
+            "path": "html/webappapis/idle-callbacks/cancel-invoked.html",
+            "url": "/html/webappapis/idle-callbacks/cancel-invoked.html"
+          }
+        ],
+        "html/webappapis/idle-callbacks/idlharness.html": [
+          {
+            "path": "html/webappapis/idle-callbacks/idlharness.html",
+            "url": "/html/webappapis/idle-callbacks/idlharness.html"
+          }
+        ],
         "secure-contexts/basic-dedicated-worker.html": [
           {
             "path": "secure-contexts/basic-dedicated-worker.html",
