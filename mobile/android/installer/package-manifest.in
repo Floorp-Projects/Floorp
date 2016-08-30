@@ -532,6 +532,7 @@
 @BINPATH@/components/NSSDialogService.js
 @BINPATH@/components/PersistentNotificationHandler.js
 @BINPATH@/components/PresentationDevicePrompt.js
+@BINPATH@/components/PresentationRequestUIGlue.js
 @BINPATH@/components/PromptService.js
 @BINPATH@/components/SessionStore.js
 @BINPATH@/components/SiteSpecificUserAgent.js
