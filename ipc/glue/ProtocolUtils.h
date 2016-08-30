@@ -121,11 +121,13 @@ struct Trigger
 
     Trigger(Action action, int32_t msg) :
         mAction(action),
-        mMsg(msg)
-    {}
+        mMessage(msg)
+    {
+      MOZ_ASSERT(0 <= msg && msg < INT32_MAX);
+    }
 
-    Action mAction;
-    int32_t mMsg;
+    uint32_t mAction : 1;
+    uint32_t mMessage : 31;
 };
 
 class ProtocolCloneContext
