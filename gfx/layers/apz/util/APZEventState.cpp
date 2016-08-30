@@ -205,23 +205,13 @@ APZEventState::ProcessSingleTap(const CSSPoint& aPoint,
   }
 }
 
-void
-APZEventState::ProcessLongTap(const nsCOMPtr<nsIPresShell>& aPresShell,
-                              const CSSPoint& aPoint,
-                              const CSSToLayoutDeviceScale& aScale,
-                              Modifiers aModifiers,
-                              const ScrollableLayerGuid& aGuid,
-                              uint64_t aInputBlockId)
+bool
+APZEventState::FireContextmenuEvents(const nsCOMPtr<nsIPresShell>& aPresShell,
+                                     const CSSPoint& aPoint,
+                                     const CSSToLayoutDeviceScale& aScale,
+                                     Modifiers aModifiers,
+                                     const nsCOMPtr<nsIWidget>& aWidget)
 {
-  APZES_LOG("Handling long tap at %s\n", Stringify(aPoint).c_str());
-
-  nsCOMPtr<nsIWidget> widget = GetWidget();
-  if (!widget) {
-    return;
-  }
-
-  SendPendingTouchPreventedResponse(false);
-
   // Converting the modifiers to DOM format for the DispatchMouseEvent call
   // is the most useless thing ever because nsDOMWindowUtils::SendMouseEvent
   // just converts them back to widget format, but that API has many callers,
@@ -243,11 +233,33 @@ APZEventState::ProcessLongTap(const nsCOMPtr<nsIPresShell>& aPresShell,
     nsEventStatus status =
         APZCCallbackHelper::DispatchSynthesizedMouseEvent(eMouseLongTap, time,
                                                           ldPoint,
-                                                          aModifiers, widget);
+                                                          aModifiers, aWidget);
     eventHandled = (status == nsEventStatus_eConsumeNoDefault);
     APZES_LOG("MOZLONGTAP event handled: %d\n", eventHandled);
   }
 
+  return eventHandled;
+}
+
+void
+APZEventState::ProcessLongTap(const nsCOMPtr<nsIPresShell>& aPresShell,
+                              const CSSPoint& aPoint,
+                              const CSSToLayoutDeviceScale& aScale,
+                              Modifiers aModifiers,
+                              const ScrollableLayerGuid& aGuid,
+                              uint64_t aInputBlockId)
+{
+  APZES_LOG("Handling long tap at %s\n", Stringify(aPoint).c_str());
+
+  nsCOMPtr<nsIWidget> widget = GetWidget();
+  if (!widget) {
+    return;
+  }
+
+  SendPendingTouchPreventedResponse(false);
+
+  bool eventHandled = FireContextmenuEvents(aPresShell, aPoint, aScale,
+        aModifiers, widget);
   mContentReceivedInputBlockCallback(aGuid, aInputBlockId, eventHandled);
 
   if (eventHandled) {
