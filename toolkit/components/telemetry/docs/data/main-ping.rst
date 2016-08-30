@@ -104,7 +104,17 @@ Structure:
       "parent": {
         scalars: {...},
       },
+      "content": {
+        histograms: {...},
+        keyedHistograms: {...},
+      },
     }
+
+histograms and keyedHistograms
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+This section contains histograms and keyed histograms accumulated on content processes. Histograms recorded on a content child process have different character than parent histograms. For instance, ``GC_MS`` will be much different in ``processes.content`` as it has to contend with web content, whereas the instance in ``payload.histograms`` has only to contend with browser JS. Also, some histograms may be absent if never recorded on a content child process (``EVENTLOOP_UI_ACTIVITY`` is parent-process-only).
+
+This format was adopted in Firefox 51 via bug 1218576.
 
 scalars
 ~~~~~~~
@@ -112,11 +122,11 @@ This section contains the :doc:`../collection/scalars` that are valid for the cu
 
 childPayloads
 -------------
-The Telemetry payloads sent by child processes, recorded on child process shutdown (event ``content-child-shutdown`` observed) and whenever ``TelemetrySession.requestChildPayloads()`` is called (currently only used in tests). They are reduced session payloads, only available with e10s. Among some other things, they don't report addon details, addon histograms or UI Telemetry.
-
-Any histogram whose Accumulate call happens on a child process will be accumulated into a childPayload's histogram, not the parent's. As such, some histograms in childPayloads will contain different data (e.g. ``GC_MS`` will be much different in childPayloads, for instance, because the child GC needs to content with content scripts and parent doesn't) and some histograms will be absent (``EVENTLOOP_UI_ACTIVITY`` is parent-process-only because it measures inter-event timings where the OS delivers the events in the parent).
+The Telemetry payloads sent by child processes, recorded on child process shutdown (event ``content-child-shutdown`` observed). They are reduced session payloads, only available with e10s. Among some other things, they don't contain histograms, keyed histograms, addon details, addon histograms, or UI Telemetry.
 
 Note: Child payloads are not collected and cleared with subsession splits, they are currently only meaningful when analysed from ``saved-session`` or ``main`` pings with ``reason`` set to ``shutdown``.
+
+Note: Before Firefox 51 and bug 1218576, content process histograms and keyedHistograms were in the individual child payloads instead of being aggregated into ``processes.content``.
 
 simpleMeasurements
 ------------------
