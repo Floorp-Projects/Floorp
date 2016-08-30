@@ -21,6 +21,7 @@ import org.mozilla.gecko.dlc.DownloadContentService;
 import org.mozilla.gecko.home.HomePanelsManager;
 import org.mozilla.gecko.lwt.LightweightTheme;
 import org.mozilla.gecko.mdns.MulticastDNSManager;
+import org.mozilla.gecko.media.AudioFocusAgent;
 import org.mozilla.gecko.notifications.NotificationHelper;
 import org.mozilla.gecko.util.Clipboard;
 import org.mozilla.gecko.util.HardwareUtils;
@@ -211,6 +212,8 @@ public class GeckoApplication extends Application
         }
 
         GeckoAccessibility.setAccessibilityManagerListeners(this);
+
+        AudioFocusAgent.getInstance().attachToContext(this);
     }
 
     public boolean isApplicationInBackground() {
