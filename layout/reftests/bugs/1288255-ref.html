@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Bug 1288255 - Wrong line breaking due to cached hyphen width</title>
+  <style>
+    @font-face {
+      font-family: LongHyphenTest;
+      src: url(LongHyphenTest.woff2);
+    }
+    #test {
+      font: 16px/2 LongHyphenTest;
+      width: 14em;
+      border: 1px solid blue;
+    }
+  </style>
+</head>
+<body>
+  <p>Test passes if there are two lines each has three rectangles:</p>
+  <div id="test">
+    XXX XXX XXX<br>XXX XXX XXX
+  </div>
+</body>
+</html>
