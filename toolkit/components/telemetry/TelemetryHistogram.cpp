@@ -2153,9 +2153,6 @@ TelemetryHistogram::AccumulateCategorical(mozilla::Telemetry::ID aId,
                                           const nsCString& label)
 {
   StaticMutexAutoLock locker(gTelemetryHistogramMutex);
-  if (!internal_CanRecordBase()) {
-    return;
-  }
   internal_HistogramAddCategorical(aId, label);
 }
 
