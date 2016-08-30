@@ -5205,6 +5205,15 @@ nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
 
     case WM_CONTEXTMENU:
     {
+      // If the context menu is brought up by a touch long-press, then
+      // the APZ code is responsible for dealing with this, so we don't
+      // need to do anything.
+      if (mTouchWindow && MOUSE_INPUT_SOURCE() == nsIDOMMouseEvent::MOZ_SOURCE_TOUCH) {
+        MOZ_ASSERT(mAPZC); // since mTouchWindow is true, APZ must be enabled
+        result = true;
+        break;
+      }
+
       // if the context menu is brought up from the keyboard, |lParam|
       // will be -1.
       LPARAM pos;
@@ -7410,6 +7419,13 @@ nsWindow::NeedsToHandleNCActivateDelayed(HWND aWnd)
   return window && !window->IsPopup();
 }
 
+static bool
+IsTouchSupportEnabled(HWND aWnd)
+{
+  nsWindow* topWindow = WinUtils::GetNSWindowPtr(WinUtils::GetTopLevelHWND(aWnd, true));
+  return topWindow ? topWindow->IsTouchWindow() : false;
+}
+
 // static
 bool
 nsWindow::DealWithPopups(HWND aWnd, UINT aMessage,
@@ -7441,12 +7457,32 @@ nsWindow::DealWithPopups(HWND aWnd, UINT aMessage,
   nsWindow* popupWindow = static_cast<nsWindow*>(popup.get());
   UINT nativeMessage = WinUtils::GetNativeMessage(aMessage);
   switch (nativeMessage) {
+    case WM_TOUCH:
+      if (!IsTouchSupportEnabled(aWnd)) {
+        // If APZ is disabled, don't allow touch inputs to dismiss popups. The
+        // compatibility mouse events will do it instead.
+        return false;
+      }
+      MOZ_FALLTHROUGH;
     case WM_LBUTTONDOWN:
     case WM_RBUTTONDOWN:
     case WM_MBUTTONDOWN:
     case WM_NCLBUTTONDOWN:
     case WM_NCRBUTTONDOWN:
     case WM_NCMBUTTONDOWN:
+      if (nativeMessage != WM_TOUCH &&
+          IsTouchSupportEnabled(aWnd) &&
+          MOUSE_INPUT_SOURCE() == nsIDOMMouseEvent::MOZ_SOURCE_TOUCH) {
+        // If any of these mouse events are really compatibility events that
+        // Windows is sending for touch inputs, then don't allow them to dismiss
+        // popups when APZ is enabled (instead we do the dismissing as part of
+        // WM_TOUCH handling which is more correct).
+        // If we don't do this, then when the user lifts their finger after a
+        // long-press, the WM_RBUTTONDOWN compatibility event that Windows sends
+        // us will dismiss the contextmenu popup that we displayed as part of
+        // handling the long-tap-up.
+        return false;
+      }
       if (!EventIsInsideWindow(popupWindow) &&
           GetPopupsToRollup(rollupListener, &popupsToRollup)) {
         break;
