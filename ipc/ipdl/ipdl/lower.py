@@ -1797,7 +1797,8 @@ class _GenerateProtocolCode(ipdl.ast.Visitor):
             else:
                 return ExprVar(s.decl.cxxname)
 
-        # bool Transition(State from, Trigger trigger, State* next)
+        # bool Transition(Trigger trigger, State* next)
+        # The state we are transitioning from is stored in *next.
         fromvar = ExprVar('from')
         triggervar = ExprVar('trigger')
         nextvar = ExprVar('next')
@@ -1806,8 +1807,7 @@ class _GenerateProtocolCode(ipdl.ast.Visitor):
 
         transitionfunc = FunctionDefn(FunctionDecl(
             'Transition',
-            params=[ Decl(Type('State'), fromvar.name),
-                     Decl(Type('mozilla::ipc::Trigger'), triggervar.name),
+            params=[ Decl(Type('mozilla::ipc::Trigger'), triggervar.name),
                      Decl(Type('State', ptr=1), nextvar.name) ],
             ret=Type.BOOL))
 
@@ -1902,6 +1902,8 @@ class _GenerateProtocolCode(ipdl.ast.Visitor):
         if usesend or userecv:
             transitionfunc.addstmt(Whitespace.NL)
 
+        transitionfunc.addstmt(StmtDecl(Decl(Type('State'), fromvar.name),
+                                        init=ExprDeref(nextvar)))
         transitionfunc.addstmt(fromswitch)
         # all --> Error transitions break to here.  But only insert this
         # block if there is any possibility of such transitions.
@@ -5429,8 +5431,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         ifbad = StmtIf(ExprNot(
             ExprCall(
                 ExprVar(self.protocol.name +'::Transition'),
-                args=[ stateexpr,
-                       ExprCall(ExprVar('Trigger'),
+                args=[ ExprCall(ExprVar('Trigger'),
                                 args=[ action, ExprVar(msgid) ]),
                        ExprAddrOf(stateexpr) ])))
         ifbad.addifstmts(_badTransition())
