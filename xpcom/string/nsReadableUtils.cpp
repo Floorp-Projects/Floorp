@@ -6,6 +6,8 @@
 
 #include "nsReadableUtils.h"
 
+#include "mozilla/CheckedInt.h"
+
 #include "nsMemory.h"
 #include "nsString.h"
 #include "nsTArray.h"
@@ -183,13 +185,17 @@ AppendUTF16toUTF8(const nsAString& aSource, nsACString& aDest,
   copy_string(aSource.BeginReading(source_start),
               aSource.EndReading(source_end), calculator);
 
-  uint32_t count = calculator.Size();
+  size_t count = calculator.Size();
 
   if (count) {
-    uint32_t old_dest_length = aDest.Length();
+    auto old_dest_length = aDest.Length();
 
     // Grow the buffer if we need to.
-    if (!aDest.SetLength(old_dest_length + count, aFallible)) {
+    mozilla::CheckedInt<nsACString::size_type> new_length(count);
+    new_length += old_dest_length;
+
+    if (!new_length.isValid() ||
+        !aDest.SetLength(new_length.value(), aFallible)) {
       return false;
     }
 
