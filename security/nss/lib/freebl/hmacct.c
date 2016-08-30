@@ -25,8 +25,8 @@
  *
  * Note: the argument to these macros must be an unsigned int.
  * */
-#define DUPLICATE_MSB_TO_ALL(x) ( (unsigned int)( (int)(x) >> (sizeof(int)*8-1) ) )
-#define DUPLICATE_MSB_TO_ALL_8(x) ( (unsigned char)(DUPLICATE_MSB_TO_ALL(x)) )
+#define DUPLICATE_MSB_TO_ALL(x) ((unsigned int)((int)(x) >> (sizeof(int) * 8 - 1)))
+#define DUPLICATE_MSB_TO_ALL_8(x) ((unsigned char)(DUPLICATE_MSB_TO_ALL(x)))
 
 /* constantTimeGE returns 0xff if a>=b and 0x00 otherwise, where a, b <
  * MAX_UINT/2. */
@@ -115,7 +115,7 @@ MAC(unsigned char *mdOut,
     const unsigned int maxMACBytes = len - mdSize - 1;
     /* numBlocks is the maximum number of hash blocks. */
     const unsigned int numBlocks =
-	(maxMACBytes + 1 + mdLengthSize + mdBlockSize - 1) / mdBlockSize;
+        (maxMACBytes + 1 + mdLengthSize + mdBlockSize - 1) / mdBlockSize;
     /* macEndOffset is the index just past the end of the data to be
      * MACed. */
     const unsigned int macEndOffset = dataLen + headerLen - mdSize;
@@ -152,67 +152,67 @@ MAC(unsigned char *mdOut,
     /* For SSLv3, if we're going to have any starting blocks then we need
      * at least two because the header is larger than a single block. */
     if (numBlocks > varianceBlocks + (isSSLv3 ? 1 : 0)) {
-	numStartingBlocks = numBlocks - varianceBlocks;
-	k = mdBlockSize*numStartingBlocks;
+        numStartingBlocks = numBlocks - varianceBlocks;
+        k = mdBlockSize * numStartingBlocks;
     }
 
-    bits = 8*macEndOffset;
+    bits = 8 * macEndOffset;
     hashObj->begin(mdState);
     if (!isSSLv3) {
-	/* Compute the initial HMAC block. For SSLv3, the padding and
-	 * secret bytes are included in |header| because they take more
-	 * than a single block. */
-	bits += 8*mdBlockSize;
-	memset(hmacPad, 0, mdBlockSize);
-	PORT_Assert(macSecretLen <= sizeof(hmacPad));
-	memcpy(hmacPad, macSecret, macSecretLen);
-	for (i = 0; i < mdBlockSize; i++)
-	    hmacPad[i] ^= 0x36;
-	hashObj->update(mdState, hmacPad, mdBlockSize);
+        /* Compute the initial HMAC block. For SSLv3, the padding and
+         * secret bytes are included in |header| because they take more
+         * than a single block. */
+        bits += 8 * mdBlockSize;
+        memset(hmacPad, 0, mdBlockSize);
+        PORT_Assert(macSecretLen <= sizeof(hmacPad));
+        memcpy(hmacPad, macSecret, macSecretLen);
+        for (i = 0; i < mdBlockSize; i++)
+            hmacPad[i] ^= 0x36;
+        hashObj->update(mdState, hmacPad, mdBlockSize);
     }
 
     j = 0;
     memset(lengthBytes, 0, sizeof(lengthBytes));
     if (mdLengthSize == 16) {
-	j = 8;
+        j = 8;
     }
     if (hashObj->type == HASH_AlgMD5) {
-	/* MD5 appends a little-endian length. */
-	for (i = 0; i < 4; i++) {
-	    lengthBytes[i+j] = bits >> (8*i);
-	}
+        /* MD5 appends a little-endian length. */
+        for (i = 0; i < 4; i++) {
+            lengthBytes[i + j] = bits >> (8 * i);
+        }
     } else {
-	/* All other TLS hash functions use a big-endian length. */
-	for (i = 0; i < 4; i++) {
-	    lengthBytes[4+i+j] = bits >> (8*(3-i));
-	}
+        /* All other TLS hash functions use a big-endian length. */
+        for (i = 0; i < 4; i++) {
+            lengthBytes[4 + i + j] = bits >> (8 * (3 - i));
+        }
     }
 
     if (k > 0) {
-	if (isSSLv3) {
-	    /* The SSLv3 header is larger than a single block.
-	     * overhang is the number of bytes beyond a single
-	     * block that the header consumes: either 7 bytes
-	     * (SHA1) or 11 bytes (MD5). */
-	    const unsigned int overhang = headerLen-mdBlockSize;
-	    hashObj->update(mdState, header, mdBlockSize);
-	    memcpy(firstBlock, header + mdBlockSize, overhang);
-	    memcpy(firstBlock + overhang, data, mdBlockSize-overhang);
-	    hashObj->update(mdState, firstBlock, mdBlockSize);
-	    for (i = 1; i < k/mdBlockSize - 1; i++) {
-		hashObj->update(mdState, data + mdBlockSize*i - overhang,
-				mdBlockSize);
-	    }
-	} else {
-	    /* k is a multiple of mdBlockSize. */
-	    memcpy(firstBlock, header, 13);
-	    memcpy(firstBlock+13, data, mdBlockSize-13);
-	    hashObj->update(mdState, firstBlock, mdBlockSize);
-	    for (i = 1; i < k/mdBlockSize; i++) {
-		hashObj->update(mdState, data + mdBlockSize*i - 13,
-				mdBlockSize);
-	    }
-	}
+        if (isSSLv3) {
+            /* The SSLv3 header is larger than a single block.
+             * overhang is the number of bytes beyond a single
+             * block that the header consumes: either 7 bytes
+             * (SHA1) or 11 bytes (MD5). */
+            const unsigned int overhang = headerLen - mdBlockSize;
+            hashObj->update(mdState, header, mdBlockSize);
+            memcpy(firstBlock, header + mdBlockSize, overhang);
+            memcpy(firstBlock + overhang, data, mdBlockSize - overhang);
+            hashObj->update(mdState, firstBlock, mdBlockSize);
+            for (i = 1; i < k / mdBlockSize - 1; i++) {
+                hashObj->update(mdState, data + mdBlockSize * i - overhang,
+                                mdBlockSize);
+            }
+        } else {
+            /* k is a multiple of mdBlockSize. */
+            memcpy(firstBlock, header, 13);
+            memcpy(firstBlock + 13, data, mdBlockSize - 13);
+            hashObj->update(mdState, firstBlock, mdBlockSize);
+            for (i = 1; i < k / mdBlockSize; i++) {
+                hashObj->update(mdState, data + mdBlockSize * i - 13,
+                                mdBlockSize);
+            }
+        }
     }
 
     memset(macOut, 0, sizeof(macOut));
@@ -221,69 +221,69 @@ MAC(unsigned char *mdOut,
      * it in constant time. If i == indexA then we'll include the 0x80
      * bytes and zero pad etc. For each block we selectively copy it, in
      * constant time, to |macOut|. */
-    for (i = numStartingBlocks; i <= numStartingBlocks+varianceBlocks; i++) {
-	unsigned char block[HASH_BLOCK_LENGTH_MAX];
-	unsigned char isBlockA = constantTimeEQ8(i, indexA);
-	unsigned char isBlockB = constantTimeEQ8(i, indexB);
-	for (j = 0; j < mdBlockSize; j++) {
-	    unsigned char isPastC = isBlockA & constantTimeGE(j, c);
-	    unsigned char isPastCPlus1 = isBlockA & constantTimeGE(j, c+1);
-	    unsigned char b = 0;
-	    if (k < headerLen) {
-		b = header[k];
-	    } else if (k < dataTotalLen + headerLen) {
-		b = data[k-headerLen];
-	    }
-	    k++;
+    for (i = numStartingBlocks; i <= numStartingBlocks + varianceBlocks; i++) {
+        unsigned char block[HASH_BLOCK_LENGTH_MAX];
+        unsigned char isBlockA = constantTimeEQ8(i, indexA);
+        unsigned char isBlockB = constantTimeEQ8(i, indexB);
+        for (j = 0; j < mdBlockSize; j++) {
+            unsigned char isPastC = isBlockA & constantTimeGE(j, c);
+            unsigned char isPastCPlus1 = isBlockA & constantTimeGE(j, c + 1);
+            unsigned char b = 0;
+            if (k < headerLen) {
+                b = header[k];
+            } else if (k < dataTotalLen + headerLen) {
+                b = data[k - headerLen];
+            }
+            k++;
 
-	    /* If this is the block containing the end of the
-	     * application data, and we are at the offset for the
-	     * 0x80 value, then overwrite b with 0x80. */
-	    b = (b&~isPastC) | (0x80&isPastC);
-	    /* If this the the block containing the end of the
-	     * application data and we're past the 0x80 value then
-	     * just write zero. */
-	    b = b&~isPastCPlus1;
-	    /* If this is indexB (the final block), but not
-	     * indexA (the end of the data), then the 64-bit
-	     * length didn't fit into indexA and we're having to
-	     * add an extra block of zeros. */
-	    b &= ~isBlockB | isBlockA;
+            /* If this is the block containing the end of the
+             * application data, and we are at the offset for the
+             * 0x80 value, then overwrite b with 0x80. */
+            b = (b & ~isPastC) | (0x80 & isPastC);
+            /* If this the the block containing the end of the
+             * application data and we're past the 0x80 value then
+             * just write zero. */
+            b = b & ~isPastCPlus1;
+            /* If this is indexB (the final block), but not
+             * indexA (the end of the data), then the 64-bit
+             * length didn't fit into indexA and we're having to
+             * add an extra block of zeros. */
+            b &= ~isBlockB | isBlockA;
 
-	    /* The final bytes of one of the blocks contains the length. */
-	    if (j >= mdBlockSize - mdLengthSize) {
-		/* If this is indexB, write a length byte. */
-		b = (b&~isBlockB) |
-		    (isBlockB&lengthBytes[j-(mdBlockSize-mdLengthSize)]);
-	    }
-	    block[j] = b;
-	}
+            /* The final bytes of one of the blocks contains the length. */
+            if (j >= mdBlockSize - mdLengthSize) {
+                /* If this is indexB, write a length byte. */
+                b = (b & ~isBlockB) |
+                    (isBlockB & lengthBytes[j - (mdBlockSize - mdLengthSize)]);
+            }
+            block[j] = b;
+        }
 
-	hashObj->update(mdState, block, mdBlockSize);
-	hashObj->end_raw(mdState, block, NULL, mdSize);
-	/* If this is indexB, copy the hash value to |macOut|. */
-	for (j = 0; j < mdSize; j++) {
-	    macOut[j] |= block[j]&isBlockB;
-	}
+        hashObj->update(mdState, block, mdBlockSize);
+        hashObj->end_raw(mdState, block, NULL, mdSize);
+        /* If this is indexB, copy the hash value to |macOut|. */
+        for (j = 0; j < mdSize; j++) {
+            macOut[j] |= block[j] & isBlockB;
+        }
     }
 
     hashObj->begin(mdState);
 
     if (isSSLv3) {
-	/* We repurpose |hmacPad| to contain the SSLv3 pad2 block. */
-	for (i = 0; i < sslv3PadLen; i++)
-	    hmacPad[i] = 0x5c;
+        /* We repurpose |hmacPad| to contain the SSLv3 pad2 block. */
+        for (i = 0; i < sslv3PadLen; i++)
+            hmacPad[i] = 0x5c;
 
-	hashObj->update(mdState, macSecret, macSecretLen);
-	hashObj->update(mdState, hmacPad, sslv3PadLen);
-	hashObj->update(mdState, macOut, mdSize);
+        hashObj->update(mdState, macSecret, macSecretLen);
+        hashObj->update(mdState, hmacPad, sslv3PadLen);
+        hashObj->update(mdState, macOut, mdSize);
     } else {
-	/* Complete the HMAC in the standard manner. */
-	for (i = 0; i < mdBlockSize; i++)
-	    hmacPad[i] ^= 0x6a;
+        /* Complete the HMAC in the standard manner. */
+        for (i = 0; i < mdBlockSize; i++)
+            hmacPad[i] ^= 0x6a;
 
-	hashObj->update(mdState, hmacPad, mdBlockSize);
-	hashObj->update(mdState, macOut, mdSize);
+        hashObj->update(mdState, hmacPad, mdBlockSize);
+        hashObj->update(mdState, macOut, mdSize);
     }
 
     hashObj->end(mdState, mdOut, mdOutLen, mdOutMax);
@@ -307,10 +307,10 @@ HMAC_ConstantTime(
     unsigned int bodyTotalLen)
 {
     if (hashObj->end_raw == NULL)
-	return SECFailure;
+        return SECFailure;
     return MAC(result, resultLen, maxResultLen, hashObj, secret, secretLen,
-	       header, headerLen, body, bodyLen, bodyTotalLen,
-	       0 /* not SSLv3 */);
+               header, headerLen, body, bodyLen, bodyTotalLen,
+               0 /* not SSLv3 */);
 }
 
 SECStatus
@@ -328,9 +328,8 @@ SSLv3_MAC_ConstantTime(
     unsigned int bodyTotalLen)
 {
     if (hashObj->end_raw == NULL)
-	return SECFailure;
+        return SECFailure;
     return MAC(result, resultLen, maxResultLen, hashObj, secret, secretLen,
-	       header, headerLen, body, bodyLen, bodyTotalLen,
-	       1 /* SSLv3 */);
+               header, headerLen, body, bodyLen, bodyTotalLen,
+               1 /* SSLv3 */);
 }
-

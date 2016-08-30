@@ -122,6 +122,7 @@ PresentationReconnectCallback::NotifySuccess()
     }
 
     rv = service->UpdateWindowIdBySessionId(mSessionId,
+                                            nsIPresentationService::ROLE_CONTROLLER,
                                             mRequest->GetOwner()->WindowID());
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;

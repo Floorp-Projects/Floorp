@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -1076,7 +1077,7 @@ dtls_InitRecvdRecords(DTLSRecvdRecords *records)
  *  Called from: ssl3_HandleRecord()
  */
 int
-dtls_RecordGetRecvd(const DTLSRecvdRecords *records, PRUint64 seq)
+dtls_RecordGetRecvd(const DTLSRecvdRecords *records, sslSequenceNumber seq)
 {
     PRUint64 offset;
 
@@ -1101,7 +1102,7 @@ dtls_RecordGetRecvd(const DTLSRecvdRecords *records, PRUint64 seq)
  * Called from ssl3_HandleRecord()
  */
 void
-dtls_RecordSetRecvd(DTLSRecvdRecords *records, PRUint64 seq)
+dtls_RecordSetRecvd(DTLSRecvdRecords *records, sslSequenceNumber seq)
 {
     PRUint64 offset;
 
@@ -1109,9 +1110,9 @@ dtls_RecordSetRecvd(DTLSRecvdRecords *records, PRUint64 seq)
         return;
 
     if (seq > records->right) {
-        PRUint64 new_left;
-        PRUint64 new_right;
-        PRUint64 right;
+        sslSequenceNumber new_left;
+        sslSequenceNumber new_right;
+        sslSequenceNumber right;
 
         /* Slide to the right; this is the tricky part
          *
@@ -1127,9 +1128,13 @@ dtls_RecordSetRecvd(DTLSRecvdRecords *records, PRUint64 seq)
         new_right = seq | 0x07;
         new_left = (new_right - DTLS_RECVD_RECORDS_WINDOW) + 1;
 
-        for (right = records->right + 8; right <= new_right; right += 8) {
-            offset = right % DTLS_RECVD_RECORDS_WINDOW;
-            records->data[offset / 8] = 0;
+        if (new_right > records->right + DTLS_RECVD_RECORDS_WINDOW) {
+            PORT_Memset(records->data, 0, sizeof(records->data));
+        } else {
+            for (right = records->right + 8; right <= new_right; right += 8) {
+                offset = right % DTLS_RECVD_RECORDS_WINDOW;
+                records->data[offset / 8] = 0;
+            }
         }
 
         records->right = new_right;
@@ -1185,11 +1190,12 @@ DTLS_GetHandshakeTimeout(PRFileDesc *socket, PRIntervalTime *timeout)
  */
 PRBool
 dtls_IsRelevant(sslSocket *ss, const ssl3CipherSpec *crSpec,
-                const SSL3Ciphertext *cText, PRUint64 *seqNum)
+                const SSL3Ciphertext *cText, sslSequenceNumber *seqNum)
 {
-    DTLSEpoch epoch = cText->seq_num.high >> 16;
-    PRUint64 dtls_seq_num;
+    DTLSEpoch epoch;
+    sslSequenceNumber dtls_seq_num;
 
+    epoch = cText->seq_num >> 48;
     if (crSpec->epoch != epoch) {
         SSL_DBG(("%d: SSL3[%d]: dtls_IsRelevant, received packet "
                  "from irrelevant epoch %d",
@@ -1197,9 +1203,7 @@ dtls_IsRelevant(sslSocket *ss, const ssl3CipherSpec *crSpec,
         return PR_FALSE;
     }
 
-    dtls_seq_num = (((PRUint64)(cText->seq_num.high & 0xffff)) << 32) |
-                   ((PRUint64)cText->seq_num.low);
-
+    dtls_seq_num = cText->seq_num & RECORD_SEQ_MAX;
     if (dtls_RecordGetRecvd(&crSpec->recvdRecords, dtls_seq_num) != 0) {
         SSL_DBG(("%d: SSL3[%d]: dtls_IsRelevant, rejecting "
                  "potentially replayed packet",
@@ -1228,7 +1232,7 @@ SECStatus
 dtls_MaybeRetransmitHandshake(sslSocket *ss, const SSL3Ciphertext *cText)
 {
     SECStatus rv = SECSuccess;
-    DTLSEpoch messageEpoch = cText->seq_num.high >> 16;
+    DTLSEpoch messageEpoch = cText->seq_num >> 48;
 
     if (!ss->sec.isServer && ss->version >= SSL_LIBRARY_VERSION_TLS_1_3 &&
         messageEpoch == 0 && cText->type == content_handshake) {

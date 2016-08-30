@@ -39,9 +39,6 @@ MIRGenerator::MIRGenerator(CompileCompartment* compartment, const JitCompileOpti
     instrumentedProfiling_(false),
     instrumentedProfilingIsCached_(false),
     safeForMinorGC_(true),
-#if defined(ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_OOB)
-    usesSignalHandlersForAsmJSOOB_(false),
-#endif
     minAsmJSHeapLength_(0),
     options(options),
     gs_(alloc)
@@ -116,11 +113,11 @@ MIRGenerator::needsBoundsCheckBranch(const MWasmMemoryAccess* access) const
     // We use signal-handlers on x64, but on x86 there isn't enough address
     // space for a guard region.  Also, on x64 the atomic loads and stores
     // can't (yet) use the signal handlers.
-#if defined(ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_OOB)
-    if (usesSignalHandlersForAsmJSOOB_ && !access->isAtomicAccess())
-        return false;
-#endif
+#ifdef WASM_HUGE_MEMORY
+    return false;
+#else
     return access->needsBoundsCheck();
+#endif
 }
 
 size_t
@@ -133,19 +130,14 @@ MIRGenerator::foldableOffsetRange(const MWasmMemoryAccess* access) const
                   "WasmImmediateRange should be the size of an unconstrained "
                   "address immediate");
 
-#ifdef ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_OOB
+#ifdef WASM_HUGE_MEMORY
     static_assert(wasm::Uint32Range + WasmImmediateRange + sizeof(wasm::Val) < wasm::MappedSize,
                   "When using signal handlers for bounds checking, a uint32 is added to the base "
                   "address followed by an immediate in the range [0, WasmImmediateRange). An "
                   "unaligned access (whose size is conservatively approximated by wasm::Val) may "
                   "spill over, so ensure a space at the end.");
-
-    // Signal-handling can be dynamically disabled by OS bugs or flags.
-    // Bug 1254935: Atomic accesses can't be handled with signal handlers yet.
-    if (usesSignalHandlersForAsmJSOOB_ && !access->isAtomicAccess())
-        return WasmImmediateRange;
-#endif
-
+    return WasmImmediateRange;
+#else
     // On 32-bit platforms, if we've proven the access is in bounds after
     // 32-bit wrapping, we can fold full offsets because they're added with
     // 32-bit arithmetic.
@@ -156,6 +148,7 @@ MIRGenerator::foldableOffsetRange(const MWasmMemoryAccess* access) const
     // minimum heap length, and allows explicit bounds checks to fold in the
     // offset without overflow.
     return WasmCheckedImmediateRange;
+#endif
 }
 
 void

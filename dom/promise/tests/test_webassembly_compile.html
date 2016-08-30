@@ -11,6 +11,7 @@
 <body>
 <script>
 const wasmTextToBinary = SpecialPowers.unwrap(SpecialPowers.Cu.getJSTestingFunctions().wasmTextToBinary);
+const wasmIsSupported = SpecialPowers.Cu.getJSTestingFunctions().wasmIsSupported
 const fooModuleCode = wasmTextToBinary(`(module
   (func $foo (result i32) (i32.const 42))
   (export "foo" $foo)
@@ -27,7 +28,10 @@ function propertiesExist() {
   ok(WebAssembly, "WebAssembly object should exist");
   ok(WebAssembly.compile, "WebAssembly.compile function should exist");
 
-  runTest();
+  if (!wasmIsSupported())
+    SimpleTest.finish();
+  else
+    runTest();
 }
 
 function compileFail() {

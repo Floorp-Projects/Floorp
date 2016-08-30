@@ -25,24 +25,17 @@ assertEq(f(0x7f),0x7f);
 assertEq(f(0xff),-1);
 assertEq(f(0x100),0);
 
-// Test signal handlers deactivation
-if (wasmUsesSignalForOOB()) {
-    suppressSignalHandlers(true);
-    assertEq(wasmUsesSignalForOOB(), false);
+{
+      var buf = new ArrayBuffer(BUF_MIN);
+      var code = asmCompile('glob', 'imp', 'b', USE_ASM + HEAP_IMPORTS + '/* not a clone */ function f(i) {i=i|0; i32[0] = i; return i8[0]|0}; return f');
+      var f = asmLink(code, this, null, buf);
+      assertEq(f(0),0);
+      assertEq(f(0x7f),0x7f);
+      assertEq(f(0xff),-1);
+      assertEq(f(0x100),0);
 
-    var buf = new ArrayBuffer(BUF_MIN);
-    var code = asmCompile('glob', 'imp', 'b', USE_ASM + HEAP_IMPORTS + '/* not a clone */ function f(i) {i=i|0; i32[0] = i; return i8[0]|0}; return f');
-    var f = asmLink(code, this, null, buf);
-    assertEq(f(0),0);
-    assertEq(f(0x7f),0x7f);
-    assertEq(f(0xff),-1);
-    assertEq(f(0x100),0);
-
-    // Bug 1088655
-    assertEq(asmLink(asmCompile('stdlib', 'foreign', 'heap', USE_ASM + 'var i32=new stdlib.Int32Array(heap); function f(i) {i=i|0;var j=0x10000;return (i32[j>>2] = i)|0 } return f'), this, null, buf)(1), 1);
-
-    suppressSignalHandlers(false);
-    assertEq(wasmUsesSignalForOOB(), true);
+      // Bug 1088655
+      assertEq(asmLink(asmCompile('stdlib', 'foreign', 'heap', USE_ASM + 'var i32=new stdlib.Int32Array(heap); function f(i) {i=i|0;var j=0x10000;return (i32[j>>2] = i)|0 } return f'), this, null, buf)(1), 1);
 }
 
 setCachingEnabled(false);

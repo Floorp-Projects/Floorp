@@ -42,7 +42,7 @@ const TESTS = [
     // #4
     file: "test-bug-595934-malformedxml.xhtml",
     category: "malformed-xml",
-    matchString: "no element found",
+    matchString: "no root element found",
   },
   {
     // #5

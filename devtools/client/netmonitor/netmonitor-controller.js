@@ -124,9 +124,6 @@ XPCOMUtils.defineConstant(this, "Editor", Editor);
 XPCOMUtils.defineLazyModuleGetter(this, "Chart",
   "resource://devtools/client/shared/widgets/Chart.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "PluralForm",
-  "resource://gre/modules/PluralForm.jsm");
-
 XPCOMUtils.defineLazyServiceGetter(this, "clipboardHelper",
   "@mozilla.org/widget/clipboardhelper;1", "nsIClipboardHelper");
 

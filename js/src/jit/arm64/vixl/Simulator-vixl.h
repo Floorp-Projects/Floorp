@@ -713,7 +713,7 @@ class Simulator : public DecoderVisitor {
   // Moz changes.
   void init(Decoder* decoder, FILE* stream);
   static Simulator* Current();
-  static Simulator* Create();
+  static Simulator* Create(JSContext* cx);
   static void Destroy(Simulator* sim);
   uintptr_t stackLimit() const;
   uintptr_t* addressOfStackLimit();

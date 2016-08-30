@@ -639,18 +639,17 @@ class nsIWidget : public nsISupports
     NS_IMETHOD Show(bool aState) = 0;
 
     /**
-     * Make the window modal
-     *
+     * Make the window modal.
      */
-    NS_IMETHOD SetModal(bool aModal) = 0;
+    virtual void SetModal(bool aModal) = 0;
 
     /**
      * Make the non-modal window opened by modal window fake-modal, that will
      * call SetFakeModal(false) on destroy on Cocoa.
      */
-    NS_IMETHOD SetFakeModal(bool aModal)
+    virtual void SetFakeModal(bool aModal)
     {
-        return SetModal(aModal);
+        SetModal(aModal);
     }
 
     /**
@@ -679,12 +678,11 @@ class nsIWidget : public nsISupports
      *           out: the x position constrained to fit on the screen(s).
      * @param aY in: an y position expressed in screen coordinates.
      *           out: the y position constrained to fit on the screen(s).
-     * @return vapid success indication. but see also the parameters.
      *
      **/
-    NS_IMETHOD ConstrainPosition(bool aAllowSlop,
-                                 int32_t *aX,
-                                 int32_t *aY) = 0;
+    virtual void ConstrainPosition(bool aAllowSlop,
+                                   int32_t *aX,
+                                   int32_t *aY) = 0;
 
     /**
      * NOTE:
@@ -821,8 +819,8 @@ class nsIWidget : public nsISupports
      *                   null is equivalent to aPlacement of eZPlacementTop
      * @param aActivate  true to activate the widget after placing it
      */
-    NS_IMETHOD PlaceBehind(nsTopLevelWidgetZPlacement aPlacement,
-                           nsIWidget *aWidget, bool aActivate) = 0;
+    virtual void PlaceBehind(nsTopLevelWidgetZPlacement aPlacement,
+                             nsIWidget *aWidget, bool aActivate) = 0;
 
     /**
      * Minimize, maximize or normalize the window size.
@@ -1106,7 +1104,7 @@ class nsIWidget : public nsISupports
      *
      * Ignored on child widgets and on non-Mac platforms.
      */
-    NS_IMETHOD SetWindowShadowStyle(int32_t aStyle) = 0;
+    virtual void SetWindowShadowStyle(int32_t aStyle) = 0;
 
     /*
      * On Mac OS X, this method shows or hides the pill button in the titlebar
@@ -1383,12 +1381,12 @@ class nsIWidget : public nsISupports
      * @param aCapture true enables mouse capture, false disables mouse capture
      *
      */
-    NS_IMETHOD CaptureMouse(bool aCapture) = 0;
+    virtual void CaptureMouse(bool aCapture) = 0;
 
     /**
      * Classify the window for the window manager. Mostly for X11.
      */
-    NS_IMETHOD SetWindowClass(const nsAString& xulWinType) = 0;
+    virtual void SetWindowClass(const nsAString& xulWinType) = 0;
 
     /**
      * Enables/Disables system capture of any and all events that would cause a
@@ -1397,7 +1395,8 @@ class nsIWidget : public nsISupports
      * @param aDoCapture true enables capture, false disables capture
      *
      */
-    NS_IMETHOD CaptureRollupEvents(nsIRollupListener* aListener, bool aDoCapture) = 0;
+    virtual void CaptureRollupEvents(nsIRollupListener* aListener,
+                                     bool aDoCapture) = 0;
 
     /**
      * Bring this window to the user's attention.  This is intended to be a more
@@ -1434,7 +1433,7 @@ class nsIWidget : public nsISupports
      * @param aActive Whether the color should be applied to active or inactive
      *                windows.
      */
-    NS_IMETHOD SetWindowTitlebarColor(nscolor aColor, bool aActive) = 0;
+    virtual void SetWindowTitlebarColor(nscolor aColor, bool aActive) = 0;
 
     /**
      * If set to true, the window will draw its contents into the titlebar
@@ -1758,7 +1757,7 @@ public:
      *
      * aFocused  Whether or not a plugin is focused
      */
-    NS_IMETHOD SetPluginFocused(bool& aFocused) = 0;
+    virtual void SetPluginFocused(bool& aFocused) = 0;
 
     /*
      * Tell the plugin has focus.  It is unnecessary to use IPC
@@ -1873,7 +1872,7 @@ public:
      * @param aNewParent the native widget of aNewParent is the new native
      *                   parent widget
      */
-    NS_IMETHOD ReparentNativeWidget(nsIWidget* aNewParent) = 0;
+    virtual void ReparentNativeWidget(nsIWidget* aNewParent) = 0;
 
     /**
      * Return true if widget has it's own GL context

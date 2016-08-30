@@ -1653,13 +1653,6 @@ nsWindow::SetParent(nsIWidget *aNewParent)
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsWindow::ReparentNativeWidget(nsIWidget *aNewParent)
-{
-    NS_PRECONDITION(aNewParent, "");
-    return NS_OK;
-}
-
 nsIWidget*
 nsWindow::GetParent()
 {
@@ -1743,21 +1736,13 @@ nsWindow::Show(bool aState)
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsWindow::SetModal(bool aState)
-{
-    ALOG("nsWindow[%p]::SetModal %d ignored", (void*)this, aState);
-
-    return NS_OK;
-}
-
 bool
 nsWindow::IsVisible() const
 {
     return mIsVisible;
 }
 
-NS_IMETHODIMP
+void
 nsWindow::ConstrainPosition(bool aAllowSlop,
                             int32_t *aX,
                             int32_t *aY)
@@ -1769,8 +1754,6 @@ nsWindow::ConstrainPosition(bool aAllowSlop,
         *aX = 0;
         *aY = 0;
     }
-
-    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1836,14 +1819,6 @@ void
 nsWindow::SetZIndex(int32_t aZIndex)
 {
     ALOG("nsWindow[%p]::SetZIndex %d ignored", (void*)this, aZIndex);
-}
-
-NS_IMETHODIMP
-nsWindow::PlaceBehind(nsTopLevelWidgetZPlacement aPlacement,
-                      nsIWidget *aWidget,
-                      bool aActivate)
-{
-    return NS_OK;
 }
 
 void
@@ -1993,12 +1968,6 @@ nsWindow::MakeFullScreen(bool aFullScreen, nsIScreen*)
     mIsFullScreen = aFullScreen;
     mAwaitingFullScreen = true;
     GeckoAppShell::SetFullScreen(aFullScreen);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWindow::SetWindowClass(const nsAString& xulWinType)
-{
     return NS_OK;
 }
 

@@ -21,8 +21,8 @@
 
 /* Parity results                    */
 
-#define MP_EVEN       MP_YES
-#define MP_ODD        MP_NO
+#define MP_EVEN MP_YES
+#define MP_ODD MP_NO
 
 /* Bitwise functions                 */
 
@@ -33,14 +33,14 @@ mp_err mpl_xor(mp_int *a, mp_int *b, mp_int *c); /* bitwise XOR       */
 
 /* Shift functions                   */
 
-mp_err mpl_rsh(const mp_int *a, mp_int *b, mp_digit d);   /* right shift    */
-mp_err mpl_lsh(const mp_int *a, mp_int *b, mp_digit d);   /* left shift     */
+mp_err mpl_rsh(const mp_int *a, mp_int *b, mp_digit d); /* right shift    */
+mp_err mpl_lsh(const mp_int *a, mp_int *b, mp_digit d); /* left shift     */
 
 /* Bit count and parity              */
 
-mp_err mpl_num_set(mp_int *a, int *num);         /* count set bits    */
-mp_err mpl_num_clear(mp_int *a, int *num);       /* count clear bits  */
-mp_err mpl_parity(mp_int *a);                    /* determine parity  */
+mp_err mpl_num_set(mp_int *a, int *num);   /* count set bits    */
+mp_err mpl_num_clear(mp_int *a, int *num); /* count clear bits  */
+mp_err mpl_parity(mp_int *a);              /* determine parity  */
 
 /* Get & Set the value of a bit */
 

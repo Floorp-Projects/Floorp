@@ -42,7 +42,6 @@ public:
     virtual bool            IsEnabled() const override {
         return true;
     }
-    NS_IMETHOD              SetModal(bool aState) override;
     virtual bool            IsVisible() const override {
         return mVisible;
     }
@@ -52,11 +51,7 @@ public:
     virtual void SetBackgroundColor(const nscolor &aColor) override;
     virtual void* GetNativeData(uint32_t aDataType) override;
 
-    NS_IMETHOD              ConstrainPosition(bool aAllowSlop,
-                                              int32_t *aX, int32_t *aY) override;
     NS_IMETHOD              Move(double aX, double aY) override;
-    NS_IMETHOD              PlaceBehind(nsTopLevelWidgetZPlacement aPlacement,
-                                        nsIWidget *aWidget, bool aActivate) override;
     virtual void            SetSizeMode(nsSizeMode aMode) override;
     void                    EnteredFullScreen(bool aFullScreen);
     NS_IMETHOD              Resize(double aWidth, double aHeight, bool aRepaint) override;
@@ -85,10 +80,6 @@ public:
     virtual nsresult ConfigureChildren(const nsTArray<Configuration>& aConfigurations) override;
     NS_IMETHOD DispatchEvent(mozilla::WidgetGUIEvent* aEvent,
                              nsEventStatus& aStatus) override;
-    NS_IMETHOD CaptureRollupEvents(nsIRollupListener * aListener,
-                                   bool aDoCapture) override {
-        return NS_ERROR_NOT_IMPLEMENTED;
-    }
 
     void WillPaintWindow();
     bool PaintWindow(LayoutDeviceIntRegion aRegion);
@@ -107,8 +98,6 @@ public:
                         DoCommandCallback aCallback,
                         void* aCallbackData) override;
     */
-
-    NS_IMETHOD         ReparentNativeWidget(nsIWidget* aNewParent) override;
 
 protected:
     virtual ~nsWindow();

@@ -1,0 +1,86 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test XHR capabilities</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+add_task(function* test_xhr_capabilities() {
+  function backgroundScript() {
+    let xhr = new XMLHttpRequest();
+    xhr.open("GET", browser.extension.getURL("bad.xml"));
+
+    browser.test.sendMessage("result",
+      {name: "Background script XHRs should not be privileged",
+       result: xhr.channel === undefined});
+
+    xhr.onload = () => {
+      browser.test.sendMessage("result",
+        {name: "Background script XHRs should not yield <parsererrors>",
+         result: xhr.responseXML === null});
+    };
+    xhr.send();
+  }
+
+  function contentScript() {
+    let xhr = new XMLHttpRequest();
+    xhr.open("GET", browser.extension.getURL("bad.xml"));
+
+    browser.test.sendMessage("result",
+      {name: "Content script XHRs should not be privileged",
+       result: xhr.channel === undefined});
+
+    xhr.onload = () => {
+      browser.test.sendMessage("result",
+        {name: "Content script XHRs should not yield <parsererrors>",
+         result: xhr.responseXML === null});
+    };
+    xhr.send();
+  }
+
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      background: {
+        "scripts": ["background.js"],
+      },
+      content_scripts: [{
+        "matches": ["http://example.com/"],
+        "js": ["content_script.js"],
+      }],
+      web_accessible_resources: [
+        "bad.xml",
+      ],
+    },
+
+    files: {
+      "bad.xml": "<xml",
+      "background.js": `(${backgroundScript})()`,
+      "content_script.js": `(${contentScript})()`,
+    },
+  });
+
+  yield extension.startup();
+
+  let win = window.open("http://example.com/");
+
+  // We expect four test results from the content/background scripts.
+  for (let i = 0; i < 4; ++i) {
+    let result = yield extension.awaitMessage("result");
+    ok(result.result, result.name);
+  }
+
+  win.close();
+  yield extension.unload();
+});
+</script>
+
+</body>
+</html>
