@@ -604,11 +604,20 @@ Toolbox.prototype = {
 
   _addHostListeners: function (shortcuts) {
     shortcuts.on(L10N.getStr("toolbox.nextTool.key"),
-                 this.selectNextTool.bind(this));
+                 (name, event) => {
+                   this.selectNextTool();
+                   event.preventDefault();
+                 });
     shortcuts.on(L10N.getStr("toolbox.previousTool.key"),
-                 this.selectPreviousTool.bind(this));
+                 (name, event) => {
+                   this.selectPreviousTool();
+                   event.preventDefault();
+                 });
     shortcuts.on(L10N.getStr("toolbox.minimize.key"),
-                 this._toggleMinimizeMode.bind(this));
+                 (name, event) => {
+                   this._toggleMinimizeMode();
+                   event.preventDefault();
+                 });
     shortcuts.on(L10N.getStr("toolbox.toggleHost.key"),
                  (name, event) => {
                    this.switchToPreviousHost();
