@@ -280,17 +280,21 @@ ServoRestyleManager::ProcessPendingRestyles()
 {
   MOZ_ASSERT(PresContext()->Document(), "No document?  Pshaw!");
   MOZ_ASSERT(!nsContentUtils::IsSafeToRunScript(), "Missing a script blocker!");
+
+  if (MOZ_UNLIKELY(!PresContext()->PresShell()->DidInitialize())) {
+    // PresShell::FlushPendingNotifications doesn't early-return in the case
+    // where the PreShell hasn't yet been initialized (and therefore we haven't
+    // yet done the initial style traversal of the DOM tree). We should arguably
+    // fix up the callers and assert against this case, but we just detect and
+    // handle it for now.
+    return;
+  }
+
   if (!HasPendingRestyles()) {
     return;
   }
 
   ServoStyleSet* styleSet = StyleSet();
-  if (!styleSet->StylingStarted()) {
-    // If something caused us to restyle, and we haven't started styling yet,
-    // do nothing. Everything is dirty, and we'll style it all later.
-    return;
-  }
-
   nsIDocument* doc = PresContext()->Document();
   Element* root = doc->GetRootElement();
   if (root) {
@@ -331,7 +335,7 @@ ServoRestyleManager::ProcessPendingRestyles()
   }
 
   MOZ_ASSERT(!doc->IsDirtyForServo());
-  MOZ_ASSERT(!doc->HasDirtyDescendantsForServo());
+  doc->UnsetHasDirtyDescendantsForServo();
 
   mModifiedElements.Clear();
 
@@ -354,6 +358,20 @@ ServoRestyleManager::RestyleForInsertOrChange(nsINode* aContainer,
 void
 ServoRestyleManager::ContentInserted(nsINode* aContainer, nsIContent* aChild)
 {
+  if (aContainer == aContainer->OwnerDoc()) {
+    // If we're getting this notification for the insertion of a root element,
+    // that means either:
+    //   (a) We initialized the PresShell before the root element existed, or
+    //   (b) The root element was removed and it or another root is being
+    //       inserted.
+    //
+    // Either way the whole tree is dirty, so we should style the document.
+    MOZ_ASSERT(aChild == aChild->OwnerDoc()->GetRootElement());
+    MOZ_ASSERT(aChild->IsDirtyForServo());
+    StyleSet()->StyleDocument(/* aLeaveDirtyBits = */ false);
+    return;
+  }
+
   if (!aContainer->ServoData().get()) {
     // This can happen with display:none. Bug 1297249 tracks more investigation
     // and assertions here.
