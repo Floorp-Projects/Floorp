@@ -1537,7 +1537,7 @@ HTMLFormElement::NamedGetter(const nsAString& aName, bool &aFound)
 void
 HTMLFormElement::GetSupportedNames(nsTArray<nsString >& aRetval)
 {
-  // TODO https://www.w3.org/Bugs/Public/show_bug.cgi?id=22320
+  // TODO https://github.com/whatwg/html/issues/1731
 }
 
 already_AddRefed<nsISupports>
