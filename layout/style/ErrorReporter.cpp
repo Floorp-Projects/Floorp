@@ -35,7 +35,10 @@ public:
       mURI = aURI;
 
       nsAutoCString cSpec;
-      mURI->GetSpec(cSpec);
+      nsresult rv = mURI->GetSpec(cSpec);
+      if (NS_FAILED(rv)) {
+        cSpec.AssignLiteral("[nsIURI::GetSpec failed]");
+      }
       CopyUTF8toUTF16(cSpec, mSpec);
     }
     return mSpec;

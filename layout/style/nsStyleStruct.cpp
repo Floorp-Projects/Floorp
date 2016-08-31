@@ -185,7 +185,12 @@ FragmentOrURL::GetSourceString(nsString &aRef) const
     mURL->GetRef(cref);
     cref.Insert('#', 0);
   } else {
-    mURL->GetSpec(cref);
+    // It's not entirely clear how to best handle failure here. Ensuring the
+    // string is empty seems safest.
+    nsresult rv = mURL->GetSpec(cref);
+    if (NS_FAILED(rv)) {
+      cref.Truncate();
+    }
   }
 
   aRef = NS_ConvertUTF8toUTF16(cref);
