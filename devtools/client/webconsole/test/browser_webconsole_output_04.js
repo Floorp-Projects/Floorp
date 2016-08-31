@@ -58,9 +58,8 @@ var inputTests = [
   // 4
   {
     input: "testDOMException()",
-    output: 'DOMException [SyntaxError: "An invalid or illegal string was ' +
-            'specified"',
-    printOutput: '"SyntaxError: An invalid or illegal string was specified"',
+    output: `DOMException [SyntaxError: "'foo;()bar!' is not a valid selector"`,
+    printOutput: `"SyntaxError: 'foo;()bar!' is not a valid selector"`,
     inspectable: true,
     variablesViewLabel: "SyntaxError",
   },
