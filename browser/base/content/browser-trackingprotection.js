@@ -211,7 +211,7 @@ var TrackingProtection = {
         // Ignore the fragment in case the intro is shown on the tour page
         // (e.g. if the user manually visited the tour or clicked the link from
         // about:privatebrowsing) so we can avoid a reload.
-        ignoreFragment: true,
+        ignoreFragment: "whenComparingAndReplace",
       });
     };
 
