@@ -3910,20 +3910,6 @@ ContentParent::RecvNSSU2FTokenSign(nsTArray<uint8_t>&& aApplication,
 }
 
 bool
-ContentParent::RecvGetSystemMemory(const uint64_t& aGetterId)
-{
-  uint32_t memoryTotal = 0;
-
-#if defined(XP_LINUX)
-  memoryTotal = mozilla::hal::GetTotalSystemMemoryLevel();
-#endif
-
-  Unused << SendSystemMemoryAvailable(aGetterId, memoryTotal);
-
-  return true;
-}
-
-bool
 ContentParent::RecvGetLookAndFeelCache(nsTArray<LookAndFeelInt>* aLookAndFeelIntCache)
 {
   *aLookAndFeelIntCache = LookAndFeel::GetIntCache();
