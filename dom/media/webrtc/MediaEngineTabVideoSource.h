@@ -76,16 +76,6 @@ class MediaEngineTabVideoSource : public MediaEngineVideoSource, nsIDOMEventList
       RefPtr<MediaEngineTabVideoSource> mVideoSource;
     };
 
-    /**
-     * This releases references that must be released on main thread.
-     */
-    class DestroyRunnable : public Runnable {
-    public:
-      explicit DestroyRunnable(MediaEngineTabVideoSource* videoSource) : mVideoSource(videoSource) {}
-      NS_IMETHOD Run();
-      RefPtr<MediaEngineTabVideoSource> mVideoSource;
-    };
-
 protected:
     ~MediaEngineTabVideoSource() {}
 
@@ -101,12 +91,12 @@ private:
     int32_t mTimePerFrame;
     UniquePtr<unsigned char[]> mData;
     size_t mDataSize;
-    nsCOMPtr<nsPIDOMWindowOuter> mWindow; // Main-thread only
+    nsCOMPtr<nsPIDOMWindowOuter> mWindow;
     // If this is set, we will run despite mWindow == nullptr.
     bool mBlackedoutWindow;
     RefPtr<layers::SourceSurfaceImage> mImage;
     nsCOMPtr<nsITimer> mTimer;
     Monitor mMonitor;
-    nsCOMPtr<nsITabSource> mTabSource; // Main-thread only
+    nsCOMPtr<nsITabSource> mTabSource;
   };
 }
