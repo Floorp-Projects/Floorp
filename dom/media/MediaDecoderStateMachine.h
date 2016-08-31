@@ -498,25 +498,19 @@ protected:
   // Clears any previous seeking state and initiates a new seek on the decoder.
   RefPtr<MediaDecoder::SeekPromise> InitiateSeek(SeekJob aSeekJob);
 
-  nsresult DispatchAudioDecodeTaskIfNeeded();
+  void DispatchAudioDecodeTaskIfNeeded();
+  void DispatchVideoDecodeTaskIfNeeded();
 
-  // Ensures a task to decode audio has been dispatched to the decode task queue.
-  // If a task to decode has already been dispatched, this does nothing,
-  // otherwise this dispatches a task to do the decode.
-  // This is called on the state machine or decode threads.
-  // The decoder monitor must be held.
-  nsresult EnsureAudioDecodeTaskQueued();
+  // Dispatch a task to decode audio if there is not.
+  void EnsureAudioDecodeTaskQueued();
+
+  // Dispatch a task to decode video if there is not.
+  void EnsureVideoDecodeTaskQueued();
+
   // Start a task to decode audio.
   // The decoder monitor must be held.
   void RequestAudioData();
 
-  nsresult DispatchVideoDecodeTaskIfNeeded();
-
-  // Ensures a task to decode video has been dispatched to the decode task queue.
-  // If a task to decode has already been dispatched, this does nothing,
-  // otherwise this dispatches a task to do the decode.
-  // The decoder monitor must be held.
-  nsresult EnsureVideoDecodeTaskQueued();
   // Start a task to decode video.
   // The decoder monitor must be held.
   void RequestVideoData();
@@ -564,10 +558,8 @@ protected:
   // Queries our state to see whether the decode has finished for all streams.
   bool CheckIfDecodeComplete();
 
-  // Performs one "cycle" of the state machine. Polls the state, and may send
-  // a video frame to be displayed, and generally manages the decode. Called
-  // periodically via timer to ensure the video stays in sync.
-  nsresult RunStateMachine();
+  // Performs one "cycle" of the state machine.
+  void RunStateMachine();
 
   bool IsStateMachineScheduled() const;
 
