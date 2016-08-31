@@ -4,12 +4,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "PresentationAvailability.h"
+
 #include "mozilla/dom/PresentationAvailabilityBinding.h"
+#include "mozilla/dom/Promise.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIPresentationDeviceManager.h"
 #include "nsIPresentationService.h"
 #include "nsServiceManagerUtils.h"
-#include "PresentationAvailability.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -17,9 +19,11 @@ using namespace mozilla::dom;
 NS_IMPL_CYCLE_COLLECTION_CLASS(PresentationAvailability)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(PresentationAvailability, DOMEventTargetHelper)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPromise)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(PresentationAvailability, DOMEventTargetHelper)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mPromise);
   tmp->Shutdown();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
@@ -31,10 +35,13 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(PresentationAvailability)
 NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
 /* static */ already_AddRefed<PresentationAvailability>
-PresentationAvailability::Create(nsPIDOMWindowInner* aWindow)
+PresentationAvailability::Create(nsPIDOMWindowInner* aWindow,
+                                 RefPtr<Promise>& aPromise)
 {
-  RefPtr<PresentationAvailability> availability = new PresentationAvailability(aWindow);
-  return NS_WARN_IF(!availability->Init()) ? nullptr : availability.forget();
+  RefPtr<PresentationAvailability> availability =
+    new PresentationAvailability(aWindow);
+  return NS_WARN_IF(!availability->Init(aPromise)) ? nullptr
+                                                   : availability.forget();
 }
 
 PresentationAvailability::PresentationAvailability(nsPIDOMWindowInner* aWindow)
@@ -49,7 +56,7 @@ PresentationAvailability::~PresentationAvailability()
 }
 
 bool
-PresentationAvailability::Init()
+PresentationAvailability::Init(RefPtr<Promise>& aPromise)
 {
   nsCOMPtr<nsIPresentationService> service =
     do_GetService(PRESENTATION_SERVICE_CONTRACTID);
@@ -59,15 +66,14 @@ PresentationAvailability::Init()
 
   nsresult rv = service->RegisterAvailabilityListener(this);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return false;
+    // If the user agent is unable to monitor available device,
+    // Resolve promise with |value| set to false.
+    mIsAvailable = false;
+    aPromise->MaybeResolve(this);
+    return true;
   }
 
-  nsCOMPtr<nsIPresentationDeviceManager> deviceManager =
-    do_GetService(PRESENTATION_DEVICE_MANAGER_CONTRACTID);
-  if (NS_WARN_IF(!deviceManager)) {
-    return false;
-  }
-  deviceManager->GetDeviceAvailable(&mIsAvailable);
+  mPromise = aPromise;
 
   return true;
 }
@@ -114,8 +120,19 @@ PresentationAvailability::NotifyAvailableChange(bool aIsAvailable)
 }
 
 void
-PresentationAvailability::UpdateAvailabilityAndDispatchEvent(bool aIsAvailable) {
+PresentationAvailability::UpdateAvailabilityAndDispatchEvent(bool aIsAvailable)
+{
+  bool isChanged = (aIsAvailable != mIsAvailable);
+
   mIsAvailable = aIsAvailable;
 
-  NS_WARN_IF(NS_FAILED(DispatchTrustedEvent(NS_LITERAL_STRING("change"))));
+  if (mPromise) {
+    mPromise->MaybeResolve(this);
+    mPromise = nullptr;
+    return;
+  }
+
+  if (isChanged) {
+    NS_WARN_IF(NS_FAILED(DispatchTrustedEvent(NS_LITERAL_STRING("change"))));
+  }
 }

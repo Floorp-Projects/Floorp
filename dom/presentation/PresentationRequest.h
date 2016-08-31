@@ -22,8 +22,6 @@ class PresentationRequest final : public DOMEventTargetHelper
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(PresentationRequest,
-                                           DOMEventTargetHelper)
 
   static already_AddRefed<PresentationRequest> Constructor(const GlobalObject& aGlobal,
                                                            const nsAString& aUrl,
@@ -65,7 +63,6 @@ private:
   bool IsPrioriAuthenticatedURL(const nsAString& aUrl);
 
   nsString mUrl;
-  RefPtr<PresentationAvailability> mAvailability;
 };
 
 } // namespace dom
