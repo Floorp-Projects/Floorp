@@ -986,6 +986,8 @@ PopEnvironment(JSContext* cx, EnvironmentIter& ei)
       case ScopeKind::Lexical:
       case ScopeKind::SimpleCatch:
       case ScopeKind::Catch:
+      case ScopeKind::NamedLambda:
+      case ScopeKind::StrictNamedLambda:
         if (MOZ_UNLIKELY(cx->compartment()->isDebuggee()))
             DebugEnvironments::onPopLexical(cx, ei);
         if (ei.scope().hasEnvironment())
@@ -1011,8 +1013,6 @@ PopEnvironment(JSContext* cx, EnvironmentIter& ei)
             ei.initialFrame().popOffEnvironmentChain<VarEnvironmentObject>();
         break;
       case ScopeKind::Eval:
-      case ScopeKind::NamedLambda:
-      case ScopeKind::StrictNamedLambda:
       case ScopeKind::Global:
       case ScopeKind::NonSyntactic:
       case ScopeKind::Module:

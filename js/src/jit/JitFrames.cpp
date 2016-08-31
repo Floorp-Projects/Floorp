@@ -2397,17 +2397,19 @@ InlineFrameIterator::callee(MaybeReadFallback& fallback) const
 
 JSObject*
 InlineFrameIterator::computeEnvironmentChain(Value envChainValue, MaybeReadFallback& fallback,
-                                             bool* hasCallObj) const
+                                             bool* hasInitialEnv) const
 {
     if (envChainValue.isObject()) {
-        if (hasCallObj) {
+        if (hasInitialEnv) {
             if (fallback.canRecoverResults()) {
                 RootedObject obj(fallback.maybeCx, &envChainValue.toObject());
-                *hasCallObj = isFunctionFrame() && callee(fallback)->needsCallObject();
+                *hasInitialEnv = isFunctionFrame() &&
+                                 callee(fallback)->needsFunctionEnvironmentObjects();
                 return obj;
             } else {
                 JS::AutoSuppressGCAnalysis nogc; // If we cannot recover then we cannot GC.
-                *hasCallObj = isFunctionFrame() && callee(fallback)->needsCallObject();
+                *hasInitialEnv = isFunctionFrame() &&
+                                 callee(fallback)->needsFunctionEnvironmentObjects();
             }
         }
 
