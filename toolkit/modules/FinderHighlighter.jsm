@@ -595,17 +595,21 @@ FinderHighlighter.prototype = {
    * offset is accounted for.
    * Geometry.jsm takes care of the DOMRect calculations.
    *
-   * @param  {nsIDOMWindow} window
+   * @param  {nsIDOMWindow} window          Window to read the boundary rect from
+   * @param  {Boolean}      [includeScroll] Whether to ignore the scroll offset,
+   *                                        which is useful for comparing DOMRects.
+   *                                        Optional, defaults to `true`
    * @return {Rect}
    */
-  _getRootBounds(window) {
+  _getRootBounds(window, includeScroll = true) {
     let dwu = this._getDWU(window);
     let cssPageRect = Rect.fromRect(dwu.getRootBounds());
-
     let scrollX = {};
     let scrollY = {};
-    dwu.getScrollXY(false, scrollX, scrollY);
-    cssPageRect.translate(scrollX.value, scrollY.value);
+    if (includeScroll) {
+      dwu.getScrollXY(false, scrollX, scrollY);
+      cssPageRect.translate(scrollX.value, scrollY.value);
+    }
 
     // If we're in a frame, update the position of the rect (top/ left).
     let currWin = window;
@@ -617,9 +621,10 @@ FinderHighlighter.prototype = {
       dwu = this._getDWU(currWin);
       let parentRect = Rect.fromRect(dwu.getBoundsWithoutFlushing(el));
 
-      // Always take the scroll position into account.
-      dwu.getScrollXY(false, scrollX, scrollY);
-      parentRect.translate(scrollX.value, scrollY.value);
+      if (includeScroll) {
+        dwu.getScrollXY(false, scrollX, scrollY);
+        parentRect.translate(scrollX.value, scrollY.value);
+      }
 
       cssPageRect.translate(parentRect.left, parentRect.top);
     }
@@ -784,17 +789,18 @@ FinderHighlighter.prototype = {
     } else
       bounds = this._getRootBounds(window);
 
+    let topBounds = this._getRootBounds(window.top, false);
     let rects = new Set();
     // A range may consist of multiple rectangles, we can also do these kind of
     // precise cut-outs. range.getBoundingClientRect() returns the fully
     // encompassing rectangle, which is too much for our purpose here.
-    for (let dims of range.getClientRects()) {
-      rects.add({
-        height: dims.bottom - dims.top,
-        width: dims.right - dims.left,
-        y: dims.top + bounds.top,
-        x: dims.left + bounds.left
-      });
+    for (let rect of range.getClientRects()) {
+      rect = Rect.fromRect(rect);
+      rect.x += bounds.x;
+      rect.y += bounds.y;
+      // If the rect is not even visible from the top document, we can ignore it.
+      if (rect.intersects(topBounds))
+        rects.add(rect);
     }
 
     dict = dict || this.getForWindow(window.top);
@@ -894,6 +900,8 @@ FinderHighlighter.prototype = {
         // Make sure to at least show the dimmed background.
         this._repaintHighlightAllMask(window, false);
         this._scheduleRepaintOfMask(window);
+      } else {
+        this._scheduleRepaintOfMask(window, { scrollOnly: true });
       }
       return;
     }
@@ -1049,22 +1057,20 @@ FinderHighlighter.prototype = {
     dict.modalRepaintScheduler = window.setTimeout(() => {
       dict.modalRepaintScheduler = null;
 
-      if (dict.unconditionalRepaintRequested) {
+      let { width: previousWidth, height: previousHeight } = dict.lastWindowDimensions;
+      let { width, height } = dict.lastWindowDimensions = this._getWindowDimensions(window);
+      let pageContentChanged = (Math.abs(previousWidth - width) > kContentChangeThresholdPx ||
+                                Math.abs(previousHeight - height) > kContentChangeThresholdPx);
+      // When the page has changed significantly enough in size, we'll restart
+      // the iterator with the same parameters as before to find us new ranges.
+      if (pageContentChanged)
+        this.iterator.restart(this.finder);
+
+      if (dict.unconditionalRepaintRequested ||
+          (dict.modalHighlightRectsMap.size && pageContentChanged)) {
         dict.unconditionalRepaintRequested = false;
         this._repaintHighlightAllMask(window);
-        return;
       }
-
-      let { width, height } = this._getWindowDimensions(window);
-      if (!dict.modalHighlightRectsMap.size ||
-          (Math.abs(dict.lastWindowDimensions.width - width) < kContentChangeThresholdPx &&
-           Math.abs(dict.lastWindowDimensions.height - height) < kContentChangeThresholdPx)) {
-        return;
-      }
-
-      this.iterator.restart(this.finder);
-      dict.lastWindowDimensions = { width, height };
-      this._repaintHighlightAllMask(window);
     }, kModalHighlightRepaintFreqMs);
   },
 
