@@ -6,7 +6,7 @@ skip-if(B2G||Mulet) fuzzy-if(skiaContent,1,3) needs-focus == button-load.html bu
 skip-if(B2G||Mulet) fuzzy-if(skiaContent,1,3) needs-focus == button-create.html button-ref.html # B2G timed out waiting for reftest-wait to be removed # Initial mulet triage: parity with B2G/B2G Desktop
 skip-if(B2G||Mulet) fuzzy-if(skiaContent,1,3) needs-focus == textarea-load.html textarea-ref.html # B2G timed out waiting for reftest-wait to be removed # Initial mulet triage: parity with B2G/B2G Desktop
 skip-if(B2G||Mulet) fuzzy-if(skiaContent,1,3) needs-focus == textarea-create.html textarea-ref.html # B2G timed out waiting for reftest-wait to be removed # Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) fuzzy-if(skiaContent,2,4) needs-focus == select-load.html select-ref.html # B2G timed out waiting for reftest-wait to be removed # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if(B2G||Mulet) fuzzy-if(skiaContent,9,6) needs-focus == select-load.html select-ref.html # B2G timed out waiting for reftest-wait to be removed # Initial mulet triage: parity with B2G/B2G Desktop
 skip-if(B2G||Mulet) fuzzy-if(skiaContent,2,4) needs-focus == select-create.html select-ref.html # B2G timed out waiting for reftest-wait to be removed # Initial mulet triage: parity with B2G/B2G Desktop
 needs-focus == autofocus-after-load.html autofocus-after-load-ref.html
 fails-if(B2G||Mulet) fuzzy-if(skiaContent,2,5) needs-focus == autofocus-leaves-iframe.html autofocus-leaves-iframe-ref.html # B2G focus difference between test and reference # Initial mulet triage: parity with B2G/B2G Desktop
