@@ -1499,8 +1499,7 @@ MediaDecoderStateMachine::Seek(SeekTarget aTarget)
     return MediaDecoder::SeekPromise::CreateAndReject(/* aIgnored = */ true, __func__);
   }
 
-  MOZ_ASSERT(mState > DECODER_STATE_DECODING_METADATA,
-               "We should have got duration already");
+  MOZ_ASSERT(mDuration.Ref().isSome(), "We should have got duration already");
 
   // Can't seek until the start time is known.
   bool hasStartTime = mSentFirstFrameLoadedEvent || mReader->ForceZeroStartTime();
