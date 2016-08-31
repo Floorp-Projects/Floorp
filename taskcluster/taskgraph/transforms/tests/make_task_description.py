@@ -37,8 +37,8 @@ transforms = TransformSequence()
 
 @transforms.add
 def make_task_description(config, tests):
-    """Convert *test* descriptions to *task* descriptions, suitable for input
-    to make_task"""
+    """Convert *test* descriptions to *task* descriptions (input to
+    taskgraph.transforms.task)"""
 
     for test in tests:
         label = '{}-{}-{}'.format(config.kind, test['test-platform'], test['test-name'])

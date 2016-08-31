@@ -8,6 +8,8 @@ transformations is generic to any kind of task, but abstracts away some of the
 complexities of worker implementations, scopes, and treeherder annotations.
 """
 
+from __future__ import absolute_import, print_function, unicode_literals
+
 from taskgraph.util.treeherder import split_symbol
 from taskgraph.transforms.base import (
     validate_schema,
@@ -23,38 +25,40 @@ taskref_or_string = Any(
 # A task description is a general description of a TaskCluster task
 task_description_schema = Schema({
     # the label for this task
-    'label': basestring,
+    Required('label'): basestring,
 
     # description of the task (for metadata)
-    'description': basestring,
+    Required('description'): basestring,
 
     # attributes for this task
-    'attributes': {basestring: object},
+    Optional('attributes'): {basestring: object},
 
     # dependencies of this task, keyed by name; these are passed through
     # verbatim and subject to the interpretation of the Task's get_dependencies
     # method.
-    'dependencies': {basestring: object},
+    Optional('dependencies'): {basestring: object},
 
     # expiration and deadline times, relative to task creation, with units
-    # (e.g., "14 days")
-    'expires-after': basestring,
-    'deadline-after': basestring,
+    # (e.g., "14 days").  Defaults are set based on the project.
+    Optional('expires-after'): basestring,
+    Optional('deadline-after'): basestring,
 
     # custom routes for this task; the default treeherder routes will be added
     # automatically
-    'routes': [basestring],
+    Optional('routes'): [basestring],
 
     # custom scopes for this task; any scopes required for the worker will be
     # added automatically
-    'scopes': [basestring],
+    Optional('scopes'): [basestring],
 
     # custom "task.extra" content
-    'extra': {basestring: object},
+    Optional('extra'): {basestring: object},
 
     # treeherder-related information; see
     # https://schemas.taskcluster.net/taskcluster-treeherder/v1/task-treeherder-config.json
-    'treeherder': {
+    # If not specified, no treeherder extra information or routes will be
+    # added to the task
+    Optional('treeherder'): {
         # either a bare symbol, or "grp(sym)".
         'symbol': basestring,
 
@@ -78,7 +82,7 @@ task_description_schema = Schema({
 
     # information specific to the worker implementation that will run this task
     'worker': Any({
-        'implementation': Any('docker-worker', 'docker-engine'),
+        Required('implementation'): Any('docker-worker', 'docker-engine'),
 
         # the docker image (in docker's `host/repo/image:tag` format) in which
         # to run the task; if omitted, this will be a reference to the image
@@ -88,12 +92,14 @@ task_description_schema = Schema({
 
         # worker features that should be enabled
         Required('relengapi-proxy', default=False): bool,
+        Required('taskcluster-proxy', default=False): bool,
         Required('allow-ptrace', default=False): bool,
         Required('loopback-video', default=False): bool,
         Required('loopback-audio', default=False): bool,
+        Optional('superseder-url'): basestring,
 
         # caches to set up for the task
-        'caches': [{
+        Optional('caches'): [{
             # only one type is supported by any of the workers right now
             'type': 'persistent',
 
@@ -106,7 +112,7 @@ task_description_schema = Schema({
         }],
 
         # artifacts to extract from the task image after completion
-        'artifacts': [{
+        Optional('artifacts'): [{
             # type of artifact -- simple file, or recursive directory
             'type': Any('file', 'directory'),
 
@@ -119,7 +125,7 @@ task_description_schema = Schema({
         }],
 
         # environment variables
-        'env': {basestring: taskref_or_string},
+        Required('env', default={}): {basestring: taskref_or_string},
 
         # the command to run
         'command': [taskref_or_string],
@@ -127,14 +133,14 @@ task_description_schema = Schema({
         # the maximum time to run, in seconds
         'max-run-time': int,
     }, {
-        'implementation': 'generic-worker',
+        Required('implementation'): 'generic-worker',
 
         # command is a list of commands to run, sequentially
         'command': [basestring],
 
         # artifacts to extract from the task image after completion; note that artifacts
         # for the generic worker cannot have names
-        'artifacts': [{
+        Optional('artifacts'): [{
             # type of artifact -- simple file, or recursive directory
             'type': Any('file', 'directory'),
 
@@ -143,14 +149,15 @@ task_description_schema = Schema({
         }],
 
         # environment variables
-        'env': {basestring: taskref_or_string},
+        Required('env', default={}): {basestring: taskref_or_string},
 
         # the maximum time to run, in seconds
         'max-run-time': int,
     }, {
-        'implementation': 'buildbot-bridge',
+        Required('implementation'): 'buildbot-bridge',
 
-        # see https://github.com/mozilla/buildbot-bridge/blob/master/bbb/schemas/payload.yml
+        # see
+        # https://github.com/mozilla/buildbot-bridge/blob/master/bbb/schemas/payload.yml
         'buildername': basestring,
         'sourcestamp': {
             'branch': basestring,
@@ -298,37 +305,37 @@ def validate(config, tasks):
 def build_task(config, tasks):
     for task in tasks:
         provisioner_id, worker_type = task['worker-type'].split('/', 1)
-        routes = task['routes']
-        scopes = task['scopes']
+        routes = task.get('routes', [])
+        scopes = task.get('scopes', [])
 
         # set up extra
-        extra = task['extra']
-        extra['treeherderEnv'] = task['treeherder']['environments']
+        extra = task.get('extra', {})
+        task_th = task.get('treeherder')
+        if task_th:
+            extra['treeherderEnv'] = task_th['environments']
 
-        task_th = task['treeherder']
-        treeherder = extra.setdefault('treeherder', {})
+            treeherder = extra.setdefault('treeherder', {})
 
-        machine_platform, collection = task_th['platform'].split('/', 1)
-        treeherder['machine'] = {'platform': machine_platform}
-        treeherder['collection'] = {collection: True}
+            machine_platform, collection = task_th['platform'].split('/', 1)
+            treeherder['machine'] = {'platform': machine_platform}
+            treeherder['collection'] = {collection: True}
 
-        groupSymbol, symbol = split_symbol(task_th['symbol'])
-        if groupSymbol != '?':
+            groupSymbol, symbol = split_symbol(task_th['symbol'])
             treeherder['groupSymbol'] = groupSymbol
             if groupSymbol not in GROUP_NAMES:
                 raise Exception(UNKNOWN_GROUP_NAME.format(groupSymbol))
             treeherder['groupName'] = GROUP_NAMES[groupSymbol]
-        treeherder['symbol'] = symbol
-        treeherder['jobKind'] = task_th['kind']
-        treeherder['tier'] = task_th['tier']
+            treeherder['symbol'] = symbol
+            treeherder['jobKind'] = task_th['kind']
+            treeherder['tier'] = task_th['tier']
 
-        routes.extend([
-            '{}.v2.{}.{}.{}'.format(root,
-                                    config.params['project'],
-                                    config.params['head_rev'],
-                                    config.params['pushlog_id'])
-            for root in 'tc-treeherder', 'tc-treeherder-stage'
-        ])
+            routes.extend([
+                '{}.v2.{}.{}.{}'.format(root,
+                                        config.params['project'],
+                                        config.params['head_rev'],
+                                        config.params['pushlog_id'])
+                for root in 'tc-treeherder', 'tc-treeherder-stage'
+            ])
 
         task_def = {
             'provisionerId': provisioner_id,
