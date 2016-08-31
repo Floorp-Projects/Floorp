@@ -592,6 +592,8 @@ public class BrowserContract {
 
     public static final class Highlights {
         public static final Uri CONTENT_URI = Uri.withAppendedPath(AUTHORITY_URI, "highlights");
+
+        public static final String DATE = "date";
     }
 
     @RobocopTarget
