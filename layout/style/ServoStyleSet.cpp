@@ -506,7 +506,9 @@ void
 ServoStyleSet::StyleNewSubtree(nsIContent* aContent)
 {
   MOZ_ASSERT(aContent->IsDirtyForServo());
-  Servo_RestyleSubtree(aContent, mRawSet.get());
+  if (aContent->IsElement() || aContent->IsNodeOfType(nsINode::eTEXT)) {
+    Servo_RestyleSubtree(aContent, mRawSet.get());
+  }
   ClearDirtyBits(aContent);
 }
 
