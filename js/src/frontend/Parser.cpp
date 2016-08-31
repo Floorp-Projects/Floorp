@@ -7685,8 +7685,6 @@ Parser<ParseHandler>::generatorComprehensionLambda(unsigned begin)
      * kid and could be removed from pc->sc().
      */
     genFunbox->anyCxFlags = outerpc->sc()->anyCxFlags;
-    if (outerpc->isFunctionBox())
-        genFunbox->funCxFlags = outerpc->functionBox()->funCxFlags;
 
     if (!declareDotGeneratorName())
         return null();
