@@ -3669,7 +3669,7 @@ StyleAnimationValue::ExtractComputedValue(nsCSSPropertyID aProperty,
         BORDER_WIDTH_CASE(eCSSProperty_border_top_width, top)
         #undef BORDER_WIDTH_CASE
 
-        case eCSSProperty__moz_column_rule_width:
+        case eCSSProperty_column_rule_width:
           aComputedValue.SetCoordValue(
             static_cast<const nsStyleColumn*>(styleStruct)->
               GetComputedColumnRuleWidth());
@@ -3702,7 +3702,7 @@ StyleAnimationValue::ExtractComputedValue(nsCSSPropertyID aProperty,
           break;
         }
 
-        case eCSSProperty__moz_column_rule_color: {
+        case eCSSProperty_column_rule_color: {
           const nsStyleColumn *styleColumn =
             static_cast<const nsStyleColumn*>(styleStruct);
           nscolor color;
@@ -3715,7 +3715,7 @@ StyleAnimationValue::ExtractComputedValue(nsCSSPropertyID aProperty,
           break;
         }
 
-        case eCSSProperty__moz_column_count: {
+        case eCSSProperty_column_count: {
           const nsStyleColumn *styleColumn =
             static_cast<const nsStyleColumn*>(styleStruct);
           if (styleColumn->mColumnCount == NS_STYLE_COLUMN_COUNT_AUTO) {
