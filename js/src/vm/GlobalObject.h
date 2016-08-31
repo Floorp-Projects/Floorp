@@ -46,22 +46,18 @@ enum class SimdType;
  * [APPLICATION_SLOTS + JSProto_LIMIT, APPLICATION_SLOTS + 2 * JSProto_LIMIT)
  *   Stores the prototype, if any, for the constructor for the corresponding
  *   JSProtoKey offset from JSProto_LIMIT.
- * [APPLICATION_SLOTS + 2 * JSProto_LIMIT, APPLICATION_SLOTS + 3 * JSProto_LIMIT)
- *   Stores the current value of the global property named for the JSProtoKey
- *   for the corresponding JSProtoKey offset from 2 * JSProto_LIMIT.
- * [APPLICATION_SLOTS + 3 * JSProto_LIMIT, RESERVED_SLOTS)
+ * [APPLICATION_SLOTS + 2 * JSProto_LIMIT, RESERVED_SLOTS)
  *   Various one-off values: ES5 13.2.3's [[ThrowTypeError]], RegExp statics,
  *   the original eval for this global object (implementing |var eval =
  *   otherWindow.eval; eval(...)| as an indirect eval), a bit indicating
  *   whether this object has been cleared (see JS_ClearScope), and a cache for
  *   whether eval is allowed (per the global's Content Security Policy).
  *
- * The first two JSProto_LIMIT-sized ranges are necessary to implement
+ * The two JSProto_LIMIT-sized ranges are necessary to implement
  * js::FindClassObject, and spec language speaking in terms of "the original
  * Array prototype object", or "as if by the expression new Array()" referring
- * to the original Array constructor. The third range stores the (writable and
- * even deletable) Object, Array, &c. properties (although a slot won't be used
- * again if its property is deleted and readded).
+ * to the original Array constructor. The actual (writable and even deletable)
+ * Object, Array, &c. properties are not stored in reserved slots.
  */
 class GlobalObject : public NativeObject
 {
@@ -69,10 +65,10 @@ class GlobalObject : public NativeObject
     static const unsigned APPLICATION_SLOTS = JSCLASS_GLOBAL_APPLICATION_SLOTS;
 
     /*
-     * Count of slots to store built-in constructors, prototypes, and initial
-     * visible properties for the constructors.
+     * Count of slots to store built-in prototypes and initial visible
+     * properties for the constructors.
      */
-    static const unsigned STANDARD_CLASS_SLOTS  = JSProto_LIMIT * 3;
+    static const unsigned STANDARD_CLASS_SLOTS = JSProto_LIMIT * 2;
 
     enum : unsigned {
         /* Various function values needed by the engine. */
@@ -182,19 +178,6 @@ class GlobalObject : public NativeObject
     void setPrototype(JSProtoKey key, const Value& value) {
         MOZ_ASSERT(key <= JSProto_LIMIT);
         setSlot(APPLICATION_SLOTS + JSProto_LIMIT + key, value);
-    }
-
-    static uint32_t constructorPropertySlot(JSProtoKey key) {
-        MOZ_ASSERT(key <= JSProto_LIMIT);
-        return APPLICATION_SLOTS + JSProto_LIMIT * 2 + key;
-    }
-
-    Value getConstructorPropertySlot(JSProtoKey key) {
-        return getSlot(constructorPropertySlot(key));
-    }
-
-    void setConstructorPropertySlot(JSProtoKey key, const Value& ctor) {
-        setSlot(constructorPropertySlot(key), ctor);
     }
 
     bool classIsInitialized(JSProtoKey key) const {
