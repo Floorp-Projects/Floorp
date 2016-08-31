@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en" class="reftest-wait">
+<head>
+  <meta charset="UTF-8">
+  <title>Bug 1288255 - Wrong line breaking due to cached hyphen width</title>
+  <style id="font" media="not all">
+    @font-face {
+      font-family: LongHyphenTest;
+      src: url(LongHyphenTest.woff2);
+    }
+  </style>
+  <style>
+    #test {
+      font: 16px/2 LongHyphenTest;
+      width: 14em;
+      border: 1px solid blue;
+    }
+  </style>
+</head>
+<body onload="load_font()">
+  <p>Test passes if there are two lines each has three rectangles:</p>
+  <div id="test">
+    <span>XXX XXX</span> XXX X&shy;XX XXX XXX
+  </div>
+  <script>
+    function load_font() {
+      document.getElementById("font").media = "";
+      document.fonts.load("16px LongHyphenTest").then(() => {
+        document.documentElement.className = "";
+      });
+    }
+  </script>
+</body>
+</html>

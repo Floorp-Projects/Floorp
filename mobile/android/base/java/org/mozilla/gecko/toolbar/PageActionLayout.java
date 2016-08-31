@@ -55,10 +55,24 @@ public class PageActionLayout extends LinearLayout implements NativeEventListene
         mPageActionList = new ArrayList<PageAction>();
         setNumberShown(DEFAULT_PAGE_ACTIONS_SHOWN);
         refreshPageActionIcons();
+    }
+
+    @Override
+    protected void onAttachedToWindow() {
+        super.onAttachedToWindow();
 
         EventDispatcher.getInstance().registerGeckoThreadListener(this,
             "PageActions:Add",
             "PageActions:Remove");
+    }
+
+    @Override
+    protected void onDetachedFromWindow() {
+        EventDispatcher.getInstance().unregisterGeckoThreadListener(this,
+            "PageActions:Add",
+            "PageActions:Remove");
+
+        super.onDetachedFromWindow();
     }
 
     private void setNumberShown(int count) {
@@ -71,12 +85,6 @@ public class PageActionLayout extends LinearLayout implements NativeEventListene
                 mLayout.addView(createImageButton());
             }
         }
-    }
-
-    public void onDestroy() {
-        EventDispatcher.getInstance().unregisterGeckoThreadListener(this,
-            "PageActions:Add",
-            "PageActions:Remove");
     }
 
     @Override

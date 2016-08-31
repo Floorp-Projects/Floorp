@@ -382,14 +382,15 @@ const DownloadsPanel = {
     } else {
       itemClearList.setAttribute("hidden", "true");
     }
+    DownloadsViewController.updateCommands();
 
-    document.getElementById("downloadsFooterButtonsSplitter").classList
-      .add("downloadsDropmarkerSplitterExtend");
+    document.getElementById("downloadsFooter")
+      .setAttribute("showingdropdown", true);
   },
 
   onFooterPopupHidden(aEvent) {
-    document.getElementById("downloadsFooterButtonsSplitter").classList
-      .remove("downloadsDropmarkerSplitterExtend");
+    document.getElementById("downloadsFooter")
+      .removeAttribute("showingdropdown");
   },
 
   //////////////////////////////////////////////////////////////////////////////

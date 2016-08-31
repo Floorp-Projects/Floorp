@@ -1656,7 +1656,7 @@ public abstract class GeckoApp
         ThreadUtils.getBackgroundHandler().postDelayed(new Runnable() {
             @Override
             public void run() {
-                UpdateServiceHelper.registerForUpdates(GeckoApp.this);
+                UpdateServiceHelper.registerForUpdates(GeckoAppShell.getApplicationContext());
             }
         }, updateServiceDelay);
 
@@ -2215,6 +2215,7 @@ public abstract class GeckoApp
             "Accessibility:Ready",
             "Bookmark:Insert",
             "Contact:Add",
+            "DevToolsAuth:Scan",
             "DOMFullScreen:Start",
             "DOMFullScreen:Stop",
             "Image:SetAs",
@@ -2420,7 +2421,7 @@ public abstract class GeckoApp
         }
     }
 
-    private class DeferredCleanupTask implements Runnable {
+    private static class DeferredCleanupTask implements Runnable {
         // The cleanup-version setting is recorded to avoid repeating the same
         // tasks on subsequent startups; CURRENT_CLEANUP_VERSION may be updated
         // if we need to do additional cleanup for future Gecko versions.
@@ -2430,7 +2431,8 @@ public abstract class GeckoApp
 
         @Override
         public void run() {
-            long cleanupVersion = getSharedPreferences().getInt(CLEANUP_VERSION, 0);
+            final Context context = GeckoAppShell.getApplicationContext();
+            long cleanupVersion = GeckoSharedPrefs.forApp(context).getInt(CLEANUP_VERSION, 0);
 
             if (cleanupVersion < 1) {
                 // Reduce device storage footprint by removing .ttf files from
@@ -2453,7 +2455,7 @@ public abstract class GeckoApp
             // Additional cleanup needed for future versions would go here
 
             if (cleanupVersion != CURRENT_CLEANUP_VERSION) {
-                SharedPreferences.Editor editor = GeckoApp.this.getSharedPreferences().edit();
+                SharedPreferences.Editor editor = GeckoSharedPrefs.forApp(context).edit();
                 editor.putInt(CLEANUP_VERSION, CURRENT_CLEANUP_VERSION);
                 editor.apply();
             }
