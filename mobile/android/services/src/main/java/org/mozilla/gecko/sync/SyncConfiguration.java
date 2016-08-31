@@ -30,6 +30,8 @@ public class SyncConfiguration {
   public URI             clusterURL;
   public KeyBundle       syncKeyBundle;
 
+  public InfoConfiguration infoConfiguration;
+
   public CollectionKeys  collectionKeys;
   public InfoCollections infoCollections;
   public MetaGlobal      metaGlobal;
@@ -364,6 +366,10 @@ public class SyncConfiguration {
 
   public String infoCollectionsURL() {
     return infoBaseURL() + "collections";
+  }
+
+  public String infoConfigurationURL() {
+    return infoBaseURL() + "configuration";
   }
 
   public String infoCollectionCountsURL() {

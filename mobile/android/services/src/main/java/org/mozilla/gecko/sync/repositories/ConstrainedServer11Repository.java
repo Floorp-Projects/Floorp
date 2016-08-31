@@ -7,6 +7,7 @@ package org.mozilla.gecko.sync.repositories;
 import java.net.URISyntaxException;
 
 import org.mozilla.gecko.sync.InfoCollections;
+import org.mozilla.gecko.sync.InfoConfiguration;
 import org.mozilla.gecko.sync.net.AuthHeaderProvider;
 
 /**
@@ -20,8 +21,8 @@ public class ConstrainedServer11Repository extends Server11Repository {
   private String sort = null;
   private long limit  = -1;
 
-  public ConstrainedServer11Repository(String collection, String storageURL, AuthHeaderProvider authHeaderProvider, InfoCollections infoCollections, long limit, String sort) throws URISyntaxException {
-    super(collection, storageURL, authHeaderProvider, infoCollections);
+  public ConstrainedServer11Repository(String collection, String storageURL, AuthHeaderProvider authHeaderProvider, InfoCollections infoCollections, InfoConfiguration infoConfiguration, long limit, String sort) throws URISyntaxException {
+    super(collection, storageURL, authHeaderProvider, infoCollections, infoConfiguration);
     this.limit = limit;
     this.sort  = sort;
   }

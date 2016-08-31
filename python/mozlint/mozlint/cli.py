@@ -6,7 +6,7 @@ from __future__ import print_function, unicode_literals
 
 import os
 import sys
-from argparse import ArgumentParser
+from argparse import ArgumentParser, REMAINDER
 
 
 SEARCH_PATHS = []
@@ -52,6 +52,10 @@ class MozlintParser(ArgumentParser):
           'help': "Lint files touched by changes in the working directory "
                   "(i.e haven't been committed yet). Works with mercurial or git.",
           }],
+        [['extra_args'],
+         {'nargs': REMAINDER,
+          'help': "Extra arguments that will be forwarded to the underlying linter.",
+          }],
     ]
 
     def __init__(self, **kwargs):
@@ -59,6 +63,13 @@ class MozlintParser(ArgumentParser):
 
         for cli, args in self.arguments:
             self.add_argument(*cli, **args)
+
+    def parse_known_args(self, *args, **kwargs):
+        # This is here so the eslint mach command doesn't lose 'extra_args'
+        # when using mach's dispatch functionality.
+        args, extra = ArgumentParser.parse_known_args(self, *args, **kwargs)
+        args.extra_args = extra
+        return args, extra
 
 
 def find_linters(linters=None):

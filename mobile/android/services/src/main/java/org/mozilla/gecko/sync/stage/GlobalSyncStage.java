@@ -18,6 +18,7 @@ public interface GlobalSyncStage {
     idle,                       // Start state.
     checkPreconditions,         // Preparation of the basics. TODO: clear status
     fetchInfoCollections,       // Take a look at timestamps.
+    fetchInfoConfiguration,     // Fetch server upload limits
     fetchMetaGlobal,
     ensureKeysStage,
     /*

@@ -1612,13 +1612,20 @@
             // Make sure the browser is destroyed so it unregisters from observer notifications
             aBrowser.destroy();
 
-            // Make sure to restore the original droppedLinkHandler.
+            // Make sure to restore the original droppedLinkHandler and
+            // relatedBrowser.
             let droppedLinkHandler = aBrowser.droppedLinkHandler;
+            let relatedBrowser = aBrowser.relatedBrowser;
 
             // Change the "remote" attribute.
             let parent = aBrowser.parentNode;
             parent.removeChild(aBrowser);
             aBrowser.setAttribute("remote", aShouldBeRemote ? "true" : "false");
+
+            // NB: This works with the hack in the browser constructor that
+            // turns this normal property into a field.
+            aBrowser.relatedBrowser = relatedBrowser;
+
             parent.appendChild(aBrowser);
 
             aBrowser.userTypedValue = oldUserTypedValue;

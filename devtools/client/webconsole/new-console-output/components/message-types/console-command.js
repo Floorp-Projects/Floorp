@@ -47,8 +47,12 @@ function ConsoleCommand(props) {
     // @TODO add timestamp
     // @TODO add indent if necessary
     icon,
-    dom.span({className: "message-body-wrapper message-body devtools-monospace"},
-      dom.span({}, message.messageText)
+    dom.span({ className: "message-body-wrapper" },
+      dom.span({ className: "message-flex-body" },
+        dom.span({ className: "message-body devtools-monospace" },
+          message.messageText
+        )
+      )
     )
   );
 }

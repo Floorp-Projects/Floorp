@@ -9,11 +9,14 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 
 import org.mozilla.gecko.sync.InfoCollections;
+import org.mozilla.gecko.sync.InfoConfiguration;
 import org.mozilla.gecko.sync.Utils;
 import org.mozilla.gecko.sync.net.AuthHeaderProvider;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionCreationDelegate;
 
 import android.content.Context;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 /**
  * A Server11Repository implements fetching and storing against the Sync 1.1 API.
@@ -27,6 +30,8 @@ public class Server11Repository extends Repository {
   protected final AuthHeaderProvider authHeaderProvider;
   protected final InfoCollections infoCollections;
 
+  private final InfoConfiguration infoConfiguration;
+
   /**
    * Construct a new repository that fetches and stores against the Sync 1.1. API.
    *
@@ -36,7 +41,7 @@ public class Server11Repository extends Repository {
    * @param infoCollections instance; must not be null.
    * @throws URISyntaxException
    */
-  public Server11Repository(String collection, String storageURL, AuthHeaderProvider authHeaderProvider, InfoCollections infoCollections) throws URISyntaxException {
+  public Server11Repository(@NonNull String collection, @NonNull String storageURL, AuthHeaderProvider authHeaderProvider, @NonNull InfoCollections infoCollections, @NonNull InfoConfiguration infoConfiguration) throws URISyntaxException {
     if (collection == null) {
       throw new IllegalArgumentException("collection must not be null");
     }
@@ -50,6 +55,7 @@ public class Server11Repository extends Repository {
     this.collectionURI = new URI(storageURL + (storageURL.endsWith("/") ? collection : "/" + collection));
     this.authHeaderProvider = authHeaderProvider;
     this.infoCollections = infoCollections;
+    this.infoConfiguration = infoConfiguration;
   }
 
   @Override
@@ -118,5 +124,14 @@ public class Server11Repository extends Repository {
 
   public boolean updateNeeded(long lastSyncTimestamp) {
     return infoCollections.updateNeeded(collection, lastSyncTimestamp);
+  }
+
+  @Nullable
+  public Long getCollectionLastModified() {
+    return infoCollections.getTimestamp(collection);
+  }
+
+  public InfoConfiguration getInfoConfiguration() {
+    return infoConfiguration;
   }
 }

@@ -29,17 +29,17 @@ window.addEventListener("popstate", function(aEvent) {
   gState = aEvent.state;
 }, false);
 
-function waitForLoad(aCallback) {
+function waitForLoad() {
   function listener() {
     gFrame.removeEventListener("load", listener, false);
-    SimpleTest.executeSoon(aCallback);
+    SimpleTest.executeSoon(continue_test);
   }
 
   gFrame.addEventListener("load", listener, false);
 }
 
-function loadContent(aURL, aCallback) {
-  waitForLoad(aCallback);
+function loadContent(aURL) {
+  waitForLoad();
 
   gFrame.src = aURL;
 }
@@ -61,42 +61,51 @@ function run_test() {
 
   gFrame = document.getElementById("iframe");
 
-  test_basic_inner_navigation();
+  continue_test();
 }
 
-function end_test() {
-  testWin.done();
+function* test_body()
+{
+  yield* test_basic_inner_navigation();
+  yield* test_state_navigation();
 }
 
-function test_basic_inner_navigation() {
+var gTestContinuation = null;
+
+function continue_test() {
+  if (!gTestContinuation) {
+    gTestContinuation = test_body();
+  }
+  var ret = gTestContinuation.next();
+  if (ret.done) {
+    testWin.done();
+  }
+}
+
+function* test_basic_inner_navigation() {
   // Navigate the inner frame a few times
-  loadContent(URL1, function() {
-    is(getURL(), URL1, "URL should be correct");
-    is(getContent(), "Test1", "Page should be correct");
+  yield loadContent(URL1);
+  is(getURL(), URL1, "URL should be correct");
+  is(getContent(), "Test1", "Page should be correct");
 
-    loadContent(URL2, function() {
-      is(getURL(), URL2, "URL should be correct");
-      is(getContent(), "Test2", "Page should be correct");
+  yield loadContent(URL2);
 
-      // Test that history is working
-      waitForLoad(function() {
-        is(getURL(), URL1, "URL should be correct");
-        is(getContent(), "Test1", "Page should be correct");
+  is(getURL(), URL2, "URL should be correct");
+  is(getContent(), "Test2", "Page should be correct");
 
-        waitForLoad(function() {
-          is(getURL(), URL2, "URL should be correct");
-          is(getContent(), "Test2", "Page should be correct");
+  // Test that history is working
+  window.history.back();
+  yield waitForLoad();
+  is(getURL(), URL1, "URL should be correct");
+  is(getContent(), "Test1", "Page should be correct");
 
-          test_state_navigation();
-        });
-        window.history.forward();
-      });
-      window.history.back();
-    });
-  });
+  window.history.forward();
+  yield waitForLoad();
+  is(getURL(), URL2, "URL should be correct");
+  is(getContent(), "Test2", "Page should be correct");
 }
 
-function test_state_navigation() {
+function* test_state_navigation() {
   window.history.pushState("STATE1", window.location);
 
   is(getURL(), URL2, "URL should be correct");
@@ -126,25 +135,20 @@ function test_state_navigation() {
   is(getURL(), URL2, "URL should be correct");
   is(getContent(), "Test2", "Page should be correct");
 
-  waitForLoad(function() {
-    is(getURL(), URL1, "URL should be correct");
-    is(getContent(), "Test1", "Page should be correct");
-
-    waitForLoad(function() {
-      is(gState, "START", "State should be correct");
-      is(getURL(), START, "URL should be correct");
-      is(getContent(), "Start", "Page should be correct");
-
-      end_test();
-    });
-
-    window.history.back();
-
-    is(gState, "START", "State should be correct");
-  });
-
   window.history.back();
   is(gState, "START", "State should be correct");
+  yield waitForLoad();
+
+  is(getURL(), URL1, "URL should be correct");
+  is(getContent(), "Test1", "Page should be correct");
+
+  window.history.back();
+  is(gState, "START", "State should be correct after going back twice");
+  yield waitForLoad();
+
+  is(gState, "START", "State should be correct");
+  is(getURL(), START, "URL should be correct");
+  is(getContent(), "Start", "Page should be correct");
 }
 </script>
 </pre>

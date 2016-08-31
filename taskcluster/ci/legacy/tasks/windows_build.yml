@@ -2,7 +2,7 @@ $inherits:
   from: 'tasks/build.yml'
 
 task:
-  workerType: gecko-1-b-win2012
+  workerType: 'gecko-{{level}}-b-win2012'
   payload:
     artifacts:
       -

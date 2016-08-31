@@ -78,7 +78,7 @@ function getMessageComponent(message) {
         case MESSAGE_TYPE.LOG:
           return componentMap.get("PageError");
         default:
-          componentMap.get("DefaultRenderer");
+          return componentMap.get("DefaultRenderer");
       }
   }
 

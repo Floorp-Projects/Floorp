@@ -50,6 +50,7 @@ public class AndroidBrowserBookmarksServerSyncStage extends ServerSyncStage {
         session.config.storageURL(),
         session.getAuthHeaderProvider(),
         session.config.infoCollections,
+        session.config.infoConfiguration,
         BOOKMARKS_REQUEST_LIMIT,
         BOOKMARKS_SORT,
         countsFetcher);

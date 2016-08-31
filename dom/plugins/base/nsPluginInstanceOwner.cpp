@@ -212,11 +212,6 @@ nsPluginInstanceOwner::GetImageContainer()
   RefPtr<ImageContainer> container;
 
 #if MOZ_WIDGET_ANDROID
-  // Right now we only draw with Gecko layers on Honeycomb and higher. See Paint()
-  // for what we do on other versions.
-  if (AndroidBridge::Bridge()->GetAPIVersion() < 11)
-    return nullptr;
-
   LayoutDeviceRect r = GetPluginRect();
 
   // NotifySize() causes Flash to do a bunch of stuff like ask for surfaces to render
