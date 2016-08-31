@@ -268,15 +268,16 @@ class VideoPuppeteer(object):
         if self.video:
             messages += [
                 '\t(video)',
-                '\tcurrent_time: {0},'.format(self.current_time),
-                '\tduration: {0},'.format(self.duration),
-                '\texpected_duration: {0},'.format(self.expected_duration),
-                '\tlag: {0},'.format(self.lag),
-                '\turl: {0}'.format(self.video_url),
-                '\tsrc: {0}'.format(self.video_src),
-                '\tframes total: {0}'.format(self.total_frames),
-                '\t - dropped: {0}'.format(self.dropped_frames),
-                '\t - corrupted: {0}'.format(self.corrupted_frames)
+                '\tcurrent_time: {},'.format(self.current_time),
+                '\tduration: {},'.format(self.duration),
+                '\texpected_duration: {},'.format(self.expected_duration),
+                '\tplayed: {}'.format(self.played),
+                '\tlag: {},'.format(self.lag),
+                '\turl: {}'.format(self.video_url),
+                '\tsrc: {}'.format(self.video_src),
+                '\tframes total: {}'.format(self.total_frames),
+                '\t - dropped: {}'.format(self.dropped_frames),
+                '\t - corrupted: {}'.format(self.corrupted_frames)
             ]
         else:
             messages += ['\tvideo: None']
