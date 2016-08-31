@@ -57,10 +57,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "LoginManagerParent",
 XPCOMUtils.defineLazyModuleGetter(this, "Task", "resource://gre/modules/Task.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
 
-if (AppConstants.MOZ_SAFE_BROWSING) {
-  XPCOMUtils.defineLazyModuleGetter(this, "SafeBrowsing",
-                                    "resource://gre/modules/SafeBrowsing.jsm");
-}
+XPCOMUtils.defineLazyModuleGetter(this, "SafeBrowsing",
+                                  "resource://gre/modules/SafeBrowsing.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "BrowserUtils",
                                   "resource://gre/modules/BrowserUtils.jsm");
@@ -549,10 +547,8 @@ var BrowserApp = {
       InitLater(() => Services.search.init(), Services, "search");
       InitLater(() => DownloadNotifications.init(), window, "DownloadNotifications");
 
-      if (AppConstants.MOZ_SAFE_BROWSING) {
-        // Bug 778855 - Perf regression if we do this here. To be addressed in bug 779008.
-        InitLater(() => SafeBrowsing.init(), window, "SafeBrowsing");
-      }
+      // Bug 778855 - Perf regression if we do this here. To be addressed in bug 779008.
+      InitLater(() => SafeBrowsing.init(), window, "SafeBrowsing");
 
       InitLater(() => Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager));
       InitLater(() => LoginManagerParent.init(), window, "LoginManagerParent");

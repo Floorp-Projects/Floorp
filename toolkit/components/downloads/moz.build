@@ -32,19 +32,15 @@ XPIDL_SOURCES += [
 XPIDL_MODULE = 'downloads'
 
 UNIFIED_SOURCES += [
-    'nsDownloadManager.cpp',
+    'ApplicationReputation.cpp',
+    'chromium/chrome/common/safe_browsing/csd.pb.cc',
+    'nsDownloadManager.cpp'
 ]
 
 # SQLFunctions.cpp cannot be built in unified mode because of Windows headers.
 SOURCES += [
     'SQLFunctions.cpp',
 ]
-
-if CONFIG['MOZ_URL_CLASSIFIER']:
-    UNIFIED_SOURCES += [
-        'ApplicationReputation.cpp',
-        'chromium/chrome/common/safe_browsing/csd.pb.cc'
-    ]
 
 if CONFIG['OS_ARCH'] == 'WINNT':
     # Can't build unified because we need CreateEvent which some IPC code
