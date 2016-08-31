@@ -13,7 +13,6 @@ XPIDL_MODULE = 'MobileComponents'
 EXTRA_COMPONENTS += [
     'AboutRedirector.js',
     'AddonUpdateService.js',
-    'AndroidActivitiesGlue.js',
     'BlocklistPrompt.js',
     'BrowserCLH.js',
     'ColorPicker.js',
