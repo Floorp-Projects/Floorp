@@ -967,10 +967,11 @@ ApplyUpdate(nsIFile *greDir, nsIFile *updateDir, nsIFile *statusFile,
     }
     exit(0);
   } else {
-    LaunchChildMac(argc, argv, outpid);
     if (restart) {
+      LaunchChildMac(argc, argv);
       exit(0);
     }
+    LaunchChildMac(argc, argv, outpid);
   }
 #else
   *outpid = PR_CreateProcess(updaterPath.get(), argv, nullptr, nullptr);
@@ -991,6 +992,9 @@ ProcessHasTerminated(ProcessType pt)
     return false;
   }
   CloseHandle(pt);
+  return true;
+#elif defined(XP_MACOSX)
+  // We're waiting for the process to terminate in LaunchChildMac.
   return true;
 #elif defined(XP_UNIX)
   int exitStatus;

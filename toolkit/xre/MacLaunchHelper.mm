@@ -33,6 +33,10 @@ void LaunchChildMac(int aArgc, char** aArgv, pid_t* aPid)
                                              arguments:arguments];
     if (aPid) {
       *aPid = [child processIdentifier];
+      // We used to use waitpid to wait for the process to terminate. This is
+      // incompatible with NSTask and we wait for the process to exit here
+      // instead.
+      [child waitUntilExit];
     }
   } @catch (NSException* e) {
     NSLog(@"%@: %@", e.name, e.reason);
