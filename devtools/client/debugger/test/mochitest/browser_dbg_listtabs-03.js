@@ -47,15 +47,9 @@ function test() {
     is(response.type, "detached", "Should have detached");
 
     yield removeTab(tab);
-    yield closeConnection();
+    yield gClient.close();
     finish();
   }));
-}
-
-function closeConnection() {
-  let deferred = promise.defer();
-  gClient.close(deferred.resolve);
-  return deferred.promise;
 }
 
 registerCleanupFunction(function () {

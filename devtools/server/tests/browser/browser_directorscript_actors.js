@@ -23,7 +23,7 @@ add_task(function* () {
   yield testDirectorScriptWindowEval(directorManager);
   yield testDirectorScriptUnloadOnDetach(directorManager);
 
-  yield closeDebuggerClient(client);
+  yield client.close();
   gBrowser.removeCurrentTab();
   DirectorRegistry.clear();
 });

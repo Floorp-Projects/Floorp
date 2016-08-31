@@ -36,7 +36,7 @@ add_task(function* () {
     "The built-in profiler module should still be active (2).");
 
   yield front.destroy();
-  yield closeDebuggerClient(client);
+  yield client.close();
 
   ok(!(yield pmmIsProfilerActive()),
     "The built-in profiler module should no longer be active.");

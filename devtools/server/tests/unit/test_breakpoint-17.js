@@ -108,7 +108,7 @@ function test_remove_one(aFirst, aSecond) {
         do_check_true(hitSecond,
                       "We should still hit `second`, but not `first`.");
 
-        gClient.close(gCallback);
+        gClient.close().then(gCallback);
         return;
       }
 

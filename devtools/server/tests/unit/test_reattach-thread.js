@@ -54,5 +54,5 @@ function test_reattach()
 
 function cleanup()
 {
-  gClient.close(do_test_finished);
+  gClient.close().then(do_test_finished);
 }

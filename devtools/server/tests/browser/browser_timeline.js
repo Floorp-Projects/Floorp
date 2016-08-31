@@ -58,6 +58,6 @@ add_task(function* () {
   isActive = yield front.isRecording();
   ok(!isActive, "Not recording after stop()");
 
-  yield closeDebuggerClient(client);
+  yield client.close();
   gBrowser.removeCurrentTab();
 });
