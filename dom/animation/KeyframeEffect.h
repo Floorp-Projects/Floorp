@@ -319,8 +319,6 @@ protected:
                           const OptionsType& aOptions,
                           ErrorResult& aRv);
 
-  void ResetWinsInCascade();
-
   // This effect is registered with its target element so long as:
   //
   // (a) It has a target element, and
