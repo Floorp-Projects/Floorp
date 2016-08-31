@@ -2073,11 +2073,10 @@ void
 MediaDecoderStateMachine::FinishDecodeFirstFrame()
 {
   MOZ_ASSERT(OnTaskQueue());
+  MOZ_ASSERT(!mSentFirstFrameLoadedEvent);
   DECODER_LOG("FinishDecodeFirstFrame");
 
-  if (!mSentFirstFrameLoadedEvent) {
-    mMediaSink->Redraw(mInfo.mVideo);
-  }
+  mMediaSink->Redraw(mInfo.mVideo);
 
   // If we don't know the duration by this point, we assume infinity, per spec.
   if (mDuration.Ref().isNothing()) {
