@@ -31,7 +31,7 @@
     info("Testing playback of track clone");
     var test = createMediaElement('video', 'testClonePlayback');
     var playback = new MediaStreamPlayback(test, cloneStream);
-    return playback.playMedia(false);
+    return playback.playMediaWithMediaStreamTracksStop(false);
   });
 
   runTest(() => Promise.resolve()
@@ -52,7 +52,7 @@
 
       var test = createMediaElement('video', 'testClonePlayback');
       var playback = new MediaStreamPlayback(test, cloneStream);
-      return playback.playMedia(false)
+      return playback.playMediaWithMediaStreamTracksStop(false)
         .then(() => info("Testing that clones of ended tracks are ended"))
         .then(() => cloneStream.clone().getTracks().forEach(t =>
           is(t.readyState, "ended", "Track " + t.id + " should be ended")));
@@ -73,7 +73,7 @@
 
       var test = createMediaElement('video', 'testClonePlayback');
       var playback = new MediaStreamPlayback(test, stream);
-      return playback.playMedia(false);
+      return playback.playMediaWithMediaStreamTracksStop(false);
     })
     .then(() => {
       info("Testing audio content routing with MediaStreamTrack.clone()");
