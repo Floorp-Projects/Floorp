@@ -22,9 +22,9 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamItem> {
     private Cursor highlightsCursor;
     private Cursor topSitesCursor;
 
-    private final HomePager.OnUrlOpenListener onUrlOpenListener;
+    private HomePager.OnUrlOpenListener onUrlOpenListener;
 
-    StreamRecyclerAdapter(HomePager.OnUrlOpenListener onUrlOpenListener) {
+    void setOnUrlOpenListener(HomePager.OnUrlOpenListener onUrlOpenListener) {
         this.onUrlOpenListener = onUrlOpenListener;
     }
 
