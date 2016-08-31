@@ -279,7 +279,7 @@ public:
 
 /**
  * This listener observes the first video frame to arrive with a non-empty size,
- * and calls HTMLMediaElement::ReceivedMediaStreamInitialSize() with that size.
+ * and calls HTMLMediaElement::UpdateInitialMediaSize() with that size.
  */
 class HTMLMediaElement::StreamSizeListener : public DirectMediaStreamTrackListener {
 public:
@@ -287,13 +287,17 @@ public:
     mElement(aElement),
     mInitialSizeFound(false)
   {}
+
   void Forget() { mElement = nullptr; }
 
   void ReceivedSize(gfx::IntSize aSize)
   {
+    MOZ_ASSERT(NS_IsMainThread());
+
     if (!mElement) {
       return;
     }
+
     RefPtr<HTMLMediaElement> deathGrip = mElement;
     mElement->UpdateInitialMediaSize(aSize);
   }
@@ -302,9 +306,15 @@ public:
                                StreamTime aTrackOffset,
                                const MediaSegment& aMedia) override
   {
-    if (mInitialSizeFound || aMedia.GetType() != MediaSegment::VIDEO) {
+    if (mInitialSizeFound) {
       return;
     }
+
+    if (aMedia.GetType() != MediaSegment::VIDEO) {
+      MOZ_ASSERT(false, "Should only lock on to a video track");
+      return;
+    }
+
     const VideoSegment& video = static_cast<const VideoSegment&>(aMedia);
     for (VideoSegment::ConstChunkIterator c(video); !c.IsEnded(); c.Next()) {
       if (c->mFrame.GetIntrinsicSize() != gfx::IntSize(0,0)) {
@@ -326,7 +336,9 @@ private:
   // These fields may only be accessed on the main thread
   HTMLMediaElement* mElement;
 
-  // These fields may only be accessed on the MSG thread
+  // These fields may only be accessed on the MSG's appending thread.
+  // (this is a direct listener so we get called by whoever is producing
+  // this track's data)
   bool mInitialSizeFound;
 };
 
