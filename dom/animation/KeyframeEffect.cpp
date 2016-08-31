@@ -570,14 +570,6 @@ KeyframeEffectReadOnly::ConstructKeyframeEffect(
 }
 
 void
-KeyframeEffectReadOnly::ResetWinsInCascade()
-{
-  for (AnimationProperty& property : mProperties) {
-    property.mWinsInCascade = false;
-  }
-}
-
-void
 KeyframeEffectReadOnly::UpdateTargetRegistration()
 {
   if (!mTarget) {
@@ -1359,7 +1351,9 @@ KeyframeEffect::SetTarget(const Nullable<ElementOrCSSPseudoElement>& aTarget)
   if (mTarget) {
     UnregisterTarget();
     ResetIsRunningOnCompositor();
-    ResetWinsInCascade();
+    // We don't need to reset the mWinsInCascade member since it will be updated
+    // when we later associate with a different target (and until that time this
+    // flag is not used).
 
     RequestRestyle(EffectCompositor::RestyleType::Layer);
 
