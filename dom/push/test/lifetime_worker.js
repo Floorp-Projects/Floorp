@@ -45,13 +45,19 @@ function resolvePromise() {
 }
 
 onmessage = function(event) {
-  // FIXME(catalinb): we cannot treat these events as extendable
-  // yet. Bug 1143717
-  event.source.postMessage({type: "message", state: state});
+  var lastState = state;
   state = event.data;
-  if (event.data === "release") {
+  if (state === 'wait') {
+    event.waitUntil(new Promise(function(res, rej) {
+      if (resolvePromiseCallback) {
+        dump("ERROR: service worker was already waiting on a promise.\n");
+      }
+      resolvePromiseCallback = res;
+    }));
+  } else if (state === 'release') {
     resolvePromise();
   }
+  event.source.postMessage({type: "message", state: lastState});
 }
 
 onpush = function(event) {

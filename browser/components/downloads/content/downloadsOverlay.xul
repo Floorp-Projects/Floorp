@@ -129,51 +129,53 @@
           <spacer flex="1"/>
           <vbox id="downloadsFooter"
                 class="downloadsPanelFooter">
-            <hbox id="downloadsSummary"
-                  align="center"
-                  orient="horizontal"
-                  onkeydown="DownloadsSummary.onKeyDown(event);"
-                  onclick="DownloadsSummary.onClick(event);">
-              <image class="downloadTypeIcon" />
-              <vbox pack="center"
-                    class="downloadContainer"
-                    style="width: &downloadDetails.width;">
-                <description id="downloadsSummaryDescription"
-                             style="min-width: &downloadsSummary.minWidth2;"/>
-                <progressmeter id="downloadsSummaryProgress"
-                               class="downloadProgress"
-                               min="0"
-                               max="100"
-                               mode="normal" />
-                <description id="downloadsSummaryDetails"
-                             crop="end"/>
-              </vbox>
-            </hbox>
-            <hbox id="downloadsFooterButtons">
-              <button id="downloadsHistory"
-                      class="plain downloadsPanelFooterButton"
-                      label="&downloadsHistory.label;"
-                      accesskey="&downloadsHistory.accesskey;"
-                      flex="1"
-                      oncommand="DownloadsPanel.showDownloadsHistory();"/>
-              <toolbarseparator id="downloadsFooterButtonsSplitter"
-                      class="downloadsDropmarkerSplitter"/>
-              <button id="downloadsFooterDropmarker"
-                      class="plain downloadsPanelFooterButton downloadsDropmarker"
-                      type="menu">
-                <menupopup id="downloadSubPanel"
-                           onpopupshowing="DownloadsPanel.onFooterPopupShowing(event);"
-                           onpopuphidden="DownloadsPanel.onFooterPopupHidden(event);"
-                           position="after_end">
-                  <menuitem id="downloadsDropdownItemClearList"
-                            command="downloadsCmd_clearList"
-                            label="&cmd.clearList2.label;"/>
-                  <menuitem id="downloadsDropdownItemOpenDownloadsFolder"
-                            oncommand="DownloadsPanel.openDownloadsFolder();"
-                            label="&openDownloadsFolder.label;"/>
-                </menupopup>
-              </button>
-            </hbox>
+            <stack>
+              <hbox id="downloadsSummary"
+                    align="center"
+                    orient="horizontal"
+                    onkeydown="DownloadsSummary.onKeyDown(event);"
+                    onclick="DownloadsSummary.onClick(event);">
+                <image class="downloadTypeIcon" />
+                <vbox pack="center"
+                      class="downloadContainer"
+                      style="width: &downloadDetails.width;">
+                  <description id="downloadsSummaryDescription"
+                               style="min-width: &downloadsSummary.minWidth2;"/>
+                  <progressmeter id="downloadsSummaryProgress"
+                                 class="downloadProgress"
+                                 min="0"
+                                 max="100"
+                                 mode="normal" />
+                  <description id="downloadsSummaryDetails"
+                               crop="end"/>
+                </vbox>
+              </hbox>
+              <hbox id="downloadsFooterButtons">
+                <button id="downloadsHistory"
+                        class="plain downloadsPanelFooterButton"
+                        label="&downloadsHistory.label;"
+                        accesskey="&downloadsHistory.accesskey;"
+                        flex="1"
+                        oncommand="DownloadsPanel.showDownloadsHistory();"/>
+                <toolbarseparator id="downloadsFooterButtonsSplitter"
+                        class="downloadsDropmarkerSplitter"/>
+                <button id="downloadsFooterDropmarker"
+                        class="plain downloadsPanelFooterButton downloadsDropmarker"
+                        type="menu">
+                  <menupopup id="downloadSubPanel"
+                             onpopupshowing="DownloadsPanel.onFooterPopupShowing(event);"
+                             onpopuphidden="DownloadsPanel.onFooterPopupHidden(event);"
+                             position="after_end">
+                    <menuitem id="downloadsDropdownItemClearList"
+                              command="downloadsCmd_clearList"
+                              label="&cmd.clearList2.label;"/>
+                    <menuitem id="downloadsDropdownItemOpenDownloadsFolder"
+                              oncommand="DownloadsPanel.openDownloadsFolder();"
+                              label="&openDownloadsFolder.label;"/>
+                  </menupopup>
+                </button>
+              </hbox>
+            </stack>
           </vbox>
         </panelview>
 

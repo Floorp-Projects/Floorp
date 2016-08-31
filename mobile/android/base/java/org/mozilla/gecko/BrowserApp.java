@@ -57,7 +57,6 @@ import org.mozilla.gecko.home.HomePanelsManager;
 import org.mozilla.gecko.home.HomeScreen;
 import org.mozilla.gecko.home.SearchEngine;
 import org.mozilla.gecko.javaaddons.JavaAddonManager;
-import org.mozilla.gecko.media.AudioFocusAgent;
 import org.mozilla.gecko.menu.GeckoMenu;
 import org.mozilla.gecko.menu.GeckoMenuItem;
 import org.mozilla.gecko.mozglue.SafeIntent;
@@ -706,8 +705,9 @@ public class BrowserApp extends GeckoApp
 
         // We want to upload the telemetry core ping as soon after startup as possible. It relies on the
         // Distribution being initialized. If you move this initialization, ensure it plays well with telemetry.
-        final Distribution distribution = Distribution.init(this);
-        distribution.addOnDistributionReadyCallback(new DistributionStoreCallback(this, profile.getName()));
+        final Distribution distribution = Distribution.init(getApplicationContext());
+        distribution.addOnDistributionReadyCallback(
+                new DistributionStoreCallback(getApplicationContext(), profile.getName()));
 
         mSearchEngineManager = new SearchEngineManager(this, distribution);
 
@@ -769,8 +769,6 @@ public class BrowserApp extends GeckoApp
                        })
                       .run();
         }
-
-        AudioFocusAgent.getInstance().attachToContext(this);
 
         for (final BrowserAppDelegate delegate : delegates) {
             delegate.onCreate(this, savedInstanceState);
@@ -1406,7 +1404,8 @@ public class BrowserApp extends GeckoApp
             "Menu:Update",
             "LightweightTheme:Update",
             "Search:Keyword",
-            "Prompt:ShowTop");
+            "Prompt:ShowTop",
+            "Video:Play");
 
         EventDispatcher.getInstance().unregisterGeckoThreadListener((NativeEventListener) this,
             "CharEncoding:Data",
@@ -2706,7 +2705,8 @@ public class BrowserApp extends GeckoApp
         }
 
         if (mHomeScreen == null) {
-            if (ActivityStream.isEnabled(this)) {
+            if (ActivityStream.isEnabled(this) &&
+                !ActivityStream.isHomePanel()) {
                 final ViewStub asStub = (ViewStub) findViewById(R.id.activity_stream_stub);
                 mHomeScreen = (HomeScreen) asStub.inflate();
             } else {

@@ -269,7 +269,8 @@ ElemSegment::serializedSize() const
 {
     return sizeof(tableIndex) +
            sizeof(offset) +
-           SerializedPodVectorSize(elems);
+           SerializedPodVectorSize(elemFuncIndices) +
+           SerializedPodVectorSize(elemCodeRangeIndices);
 }
 
 uint8_t*
@@ -277,7 +278,8 @@ ElemSegment::serialize(uint8_t* cursor) const
 {
     cursor = WriteBytes(cursor, &tableIndex, sizeof(tableIndex));
     cursor = WriteBytes(cursor, &offset, sizeof(offset));
-    cursor = SerializePodVector(cursor, elems);
+    cursor = SerializePodVector(cursor, elemFuncIndices);
+    cursor = SerializePodVector(cursor, elemCodeRangeIndices);
     return cursor;
 }
 
@@ -286,14 +288,16 @@ ElemSegment::deserialize(const uint8_t* cursor)
 {
     (cursor = ReadBytes(cursor, &tableIndex, sizeof(tableIndex))) &&
     (cursor = ReadBytes(cursor, &offset, sizeof(offset))) &&
-    (cursor = DeserializePodVector(cursor, &elems));
+    (cursor = DeserializePodVector(cursor, &elemFuncIndices)) &&
+    (cursor = DeserializePodVector(cursor, &elemCodeRangeIndices));
     return cursor;
 }
 
 size_t
 ElemSegment::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
 {
-    return elems.sizeOfExcludingThis(mallocSizeOf);
+    return elemFuncIndices.sizeOfExcludingThis(mallocSizeOf) +
+           elemCodeRangeIndices.sizeOfExcludingThis(mallocSizeOf);
 }
 
 size_t
@@ -451,26 +455,26 @@ Module::initElems(JSContext* cx, HandleWasmInstanceObject instanceObj,
         }
 
         uint32_t tableLength = instance.metadata().tables[seg.tableIndex].initial;
-        if (offset > tableLength || tableLength - offset < seg.elems.length()) {
+        if (offset > tableLength || tableLength - offset < seg.elemCodeRangeIndices.length()) {
             JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_FAIL,
                                  "element segment does not fit");
             return false;
         }
 
-        // If profiling is already enabled in the wasm::Compartment, the new
-        // instance must use the profiling entry for typed functions instead of
-        // the default nonProfilingEntry.
-        bool useProfilingEntry = instance.code().profilingEnabled() && table.isTypedFunction();
-
+        bool profilingEnabled = instance.code().profilingEnabled();
+        const CodeRangeVector& codeRanges = instance.code().metadata().codeRanges;
         uint8_t* codeBase = instance.codeBase();
-        for (uint32_t i = 0; i < seg.elems.length(); i++) {
-            void* code = codeBase + seg.elems[i];
-            if (useProfilingEntry)
-                code = codeBase + instance.code().lookupRange(code)->funcProfilingEntry();
-            table.set(offset + i, code, instance);
+        for (uint32_t i = 0; i < seg.elemCodeRangeIndices.length(); i++) {
+            const CodeRange& cr = codeRanges[seg.elemCodeRangeIndices[i]];
+            uint32_t codeOffset = table.isTypedFunction()
+                                  ? profilingEnabled
+                                    ? cr.funcProfilingEntry()
+                                    : cr.funcNonProfilingEntry()
+                                  : cr.funcTableEntry();
+            table.set(offset + i, codeBase + codeOffset, instance);
         }
 
-        prevEnd = offset + seg.elems.length();
+        prevEnd = offset + seg.elemFuncIndices.length();
     }
 
     return true;

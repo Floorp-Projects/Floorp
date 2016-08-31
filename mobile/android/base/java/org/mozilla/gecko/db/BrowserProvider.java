@@ -43,6 +43,7 @@ import android.content.UriMatcher;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.database.MatrixCursor;
+import android.database.MergeCursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteCursor;
 import android.database.sqlite.SQLiteDatabase;
@@ -794,6 +795,69 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
         return updated;
     }
 
+    /**
+     * Get topsites by themselves, without the inclusion of pinned sites. Suggested sites
+     * will be appended (if necessary) to the end of the list in order to provide up to PARAM_LIMIT items.
+     */
+    private Cursor getPlainTopSites(final Uri uri) {
+        final SQLiteDatabase db = getReadableDatabase(uri);
+
+        final String limitParam = uri.getQueryParameter(BrowserContract.PARAM_LIMIT);
+        final int limit;
+        if (limitParam != null) {
+            limit = Integer.parseInt(limitParam);
+        } else {
+            limit = 12;
+        }
+
+        // Filter out: unvisited pages (history_id == -1) pinned (and other special) sites, deleted sites,
+        // and about: pages.
+        final String ignoreForTopSitesWhereClause =
+                "(" + Combined.HISTORY_ID + " IS NOT -1)" +
+                " AND " +
+                Combined.URL + " NOT IN (SELECT " +
+                Bookmarks.URL + " FROM " + TABLE_BOOKMARKS + " WHERE " +
+                DBUtils.qualifyColumn(TABLE_BOOKMARKS, Bookmarks.PARENT) + " < " + Bookmarks.FIXED_ROOT_ID + " AND " +
+                DBUtils.qualifyColumn(TABLE_BOOKMARKS, Bookmarks.IS_DELETED) + " == 0)" +
+                " AND " +
+                "(" + Combined.URL + " NOT LIKE ?)";
+
+        final String[] ignoreForTopSitesArgs = new String[] {
+                AboutPages.URL_FILTER
+        };
+
+        final Cursor c = db.rawQuery("SELECT " +
+                   Bookmarks._ID + ", " +
+                   Combined.BOOKMARK_ID + ", " +
+                   Combined.HISTORY_ID + ", " +
+                   Bookmarks.URL + ", " +
+                   Bookmarks.TITLE + ", " +
+                   Combined.HISTORY_ID + ", " +
+                   TopSites.TYPE_TOP + " AS " + TopSites.TYPE +
+                   " FROM " + Combined.VIEW_NAME +
+                   " WHERE " + ignoreForTopSitesWhereClause +
+                   " ORDER BY " + BrowserContract.getCombinedFrecencySortOrder(true, false) +
+                   " LIMIT " + limit,
+                ignoreForTopSitesArgs);
+
+        c.setNotificationUri(getContext().getContentResolver(),
+                BrowserContract.AUTHORITY_URI);
+
+        if (c.getCount() == limit) {
+            return c;
+        }
+
+        // If we don't have enough data: get suggested sites too
+        final SuggestedSites suggestedSites = GeckoProfile.get(getContext(), uri.getQueryParameter(BrowserContract.PARAM_PROFILE)).getDB().getSuggestedSites();
+
+        final Cursor suggestedSitesCursor = suggestedSites.get(limit - c.getCount());
+
+        return new MergeCursor(new Cursor[]{
+                c,
+                suggestedSitesCursor
+        });
+    }
+
     private Cursor getTopSites(final Uri uri) {
         // In order to correctly merge the top and pinned sites we:
         //
@@ -946,10 +1010,10 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
         // with -1 to represent no-sites, which allows us to directly add 1 to obtain the expected value
         // regardless of whether a position was actually retrieved.
         final String blanksLimitClause = " LIMIT MAX(0, " +
-                                         "COALESCE((SELECT " + Bookmarks.POSITION + " " + pinnedSitesFromClause + "), -1) + 1" +
-                                         " - (SELECT COUNT(*) " + pinnedSitesFromClause + ")" +
-                                         " - (SELECT COUNT(*) FROM " + TABLE_TOPSITES + ")" +
-                                         ")";
+                            "COALESCE((SELECT " + Bookmarks.POSITION + " " + pinnedSitesFromClause + "), -1) + 1" +
+                            " - (SELECT COUNT(*) " + pinnedSitesFromClause + ")" +
+                            " - (SELECT COUNT(*) FROM " + TABLE_TOPSITES + ")" +
+                            ")";
 
         db.beginTransaction();
         try {
@@ -1077,7 +1141,11 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
         final int match = URI_MATCHER.match(uri);
 
         if (match == TOPSITES) {
-            return getTopSites(uri);
+            if (uri.getBooleanQueryParameter(BrowserContract.PARAM_TOPSITES_DISABLE_PINNED, false)) {
+                return getPlainTopSites(uri);
+            } else {
+                return getTopSites(uri);
+            }
         }
 
         SQLiteDatabase db = getReadableDatabase(uri);

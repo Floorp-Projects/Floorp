@@ -175,7 +175,9 @@ protected:
   // fetched from as the URI instead of the jar: uri itself.  Pass in
   // true for aGetInnermostURI when that's the case.
   nsresult GetURI(nsIURI** aURL, bool aGetInnermostURI = false);
-  nsresult GetWritableURI(nsIURI** aURL);
+  nsresult GetWritableURI(nsIURI** aURL,
+                          // If not null, give it the new ref
+                          const nsACString* aNewRef = nullptr);
   nsresult SetURI(nsIURI* aURL, bool aReplace = false);
   nsresult SetHrefWithBase(const nsAString& aHref, nsIURI* aBase,
                            bool aReplace);

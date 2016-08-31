@@ -9,6 +9,7 @@ const SPLITCONSOLE_ENABLED_PREF = "devtools.toolbox.splitconsoleEnabled";
 const SPLITCONSOLE_HEIGHT_PREF = "devtools.toolbox.splitconsoleHeight";
 const OS_HISTOGRAM = "DEVTOOLS_OS_ENUMERATED_PER_USER";
 const OS_IS_64_BITS = "DEVTOOLS_OS_IS_64_BITS_PER_USER";
+const HOST_HISTOGRAM = "DEVTOOLS_TOOLBOX_HOST";
 const SCREENSIZE_HISTOGRAM = "DEVTOOLS_SCREEN_RESOLUTION_ENUMERATED_PER_USER";
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 const { SourceMapService } = require("./source-map-service");
@@ -488,6 +489,17 @@ Toolbox.prototype = {
     return this.browserRequire("devtools/client/shared/vendor/react-dom");
   },
 
+  // Return HostType id for telemetry
+  _getTelemetryHostId: function () {
+    switch (this.hostType) {
+      case Toolbox.HostType.BOTTOM: return 0;
+      case Toolbox.HostType.SIDE: return 1;
+      case Toolbox.HostType.WINDOW: return 2;
+      case Toolbox.HostType.CUSTOM: return 3;
+      default: return 9;
+    }
+  },
+
   _pingTelemetry: function () {
     this._telemetry.toolOpened("toolbox");
 
@@ -495,6 +507,7 @@ Toolbox.prototype = {
     this._telemetry.logOncePerBrowserVersion(OS_IS_64_BITS,
                                              Services.appinfo.is64Bit ? 1 : 0);
     this._telemetry.logOncePerBrowserVersion(SCREENSIZE_HISTOGRAM, system.getScreenDimensions());
+    this._telemetry.log(HOST_HISTOGRAM, this._getTelemetryHostId());
   },
 
   /**
@@ -1836,6 +1849,8 @@ Toolbox.prototype = {
       this.focusTool(this.currentToolId, true);
 
       this.emit("host-changed");
+
+      this._telemetry.log(HOST_HISTOGRAM, this._getTelemetryHostId());
     });
   },
 

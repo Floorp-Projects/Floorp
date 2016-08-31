@@ -176,7 +176,7 @@ this.IsolationTestTools = {
     add_task(function* addTaskForIsolationTests() {
       let testSettings = [
         { mode: TEST_MODE_FIRSTPARTY,
-          skip: false,
+          skip: true,
           prefs: [["privacy.firstparty.isolate", true]]
         },
         { mode: TEST_MODE_NO_ISOLATION,
