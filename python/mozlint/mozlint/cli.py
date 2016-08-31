@@ -101,7 +101,11 @@ def run(paths, linters, fmt, rev, workdir, **lintargs):
     results = lint.roll(paths, rev=rev, workdir=workdir)
 
     formatter = formatters.get(fmt)
-    print(formatter(results))
+
+    # Explicitly utf-8 encode the output as some of the formatters make
+    # use of unicode characters. This will prevent a UnicodeEncodeError
+    # on environments where utf-8 isn't the default
+    print(formatter(results).encode('utf-8', 'replace'))
     return 1 if results else 0
 
 
