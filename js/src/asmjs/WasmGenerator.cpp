@@ -901,18 +901,26 @@ ModuleGenerator::finishFuncDefs()
 }
 
 bool
-ModuleGenerator::addElemSegment(ElemSegment&& seg)
+ModuleGenerator::addElemSegment(InitExpr offset, Uint32Vector&& elemFuncIndices)
 {
+    MOZ_ASSERT(!isAsmJS());
+    MOZ_ASSERT(finishedFuncDefs_);
     MOZ_ASSERT(shared_->tables.length() == 1);
 
     if (shared_->tables[0].external) {
-        for (uint32_t funcIndex : seg.elems) {
+        for (uint32_t funcIndex : elemFuncIndices) {
             if (!exportedFuncs_.put(funcIndex))
                 return false;
         }
     }
 
-    return elemSegments_.append(Move(seg));
+    Uint32Vector codeRangeIndices;
+    if (!codeRangeIndices.resize(elemFuncIndices.length()))
+        return false;
+    for (size_t i = 0; i < elemFuncIndices.length(); i++)
+        codeRangeIndices[i] = funcIndexToCodeRange_[elemFuncIndices[i]];
+
+    return elemSegments_.emplaceBack(0, offset, Move(elemFuncIndices), Move(codeRangeIndices));
 }
 
 void
@@ -945,11 +953,19 @@ bool
 ModuleGenerator::initSigTableElems(uint32_t sigIndex, Uint32Vector&& elemFuncIndices)
 {
     MOZ_ASSERT(isAsmJS());
+    MOZ_ASSERT(finishedFuncDefs_);
 
     uint32_t tableIndex = shared_->asmJSSigToTableIndex[sigIndex];
     MOZ_ASSERT(shared_->tables[tableIndex].initial == elemFuncIndices.length());
 
-    return elemSegments_.emplaceBack(tableIndex, InitExpr(Val(uint32_t(0))), Move(elemFuncIndices));
+    Uint32Vector codeRangeIndices;
+    if (!codeRangeIndices.resize(elemFuncIndices.length()))
+        return false;
+    for (size_t i = 0; i < elemFuncIndices.length(); i++)
+        codeRangeIndices[i] = funcIndexToCodeRange_[elemFuncIndices[i]];
+
+    InitExpr offset(Val(uint32_t(0)));
+    return elemSegments_.emplaceBack(tableIndex, offset, Move(elemFuncIndices), Move(codeRangeIndices));
 }
 
 SharedModule
@@ -1022,16 +1038,6 @@ ModuleGenerator::finish(const ShareableBytes& bytecode)
         lastEnd = codeRange.end();
     }
 #endif
-
-    // Convert function indices to offsets into the code section.
-    // WebAssembly's tables are (currently) all untyped and point to the table
-    // entry. asm.js tables are all typed and thus point to the normal entry.
-    for (ElemSegment& seg : elemSegments_) {
-        for (uint32_t& elem : seg.elems) {
-            const CodeRange& cr = funcCodeRange(elem);
-            elem = isAsmJS() ? cr.funcNonProfilingEntry() : cr.funcTableEntry();
-        }
-    }
 
     if (!finishLinkData(code))
         return nullptr;

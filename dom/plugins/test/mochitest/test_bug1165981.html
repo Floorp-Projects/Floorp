@@ -10,7 +10,7 @@
       "use strict";
 
       SimpleTest.waitForExplicitFinish();
-      ok(SpecialPowers.setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED, "Flash Test Plug-in"), "Should find allowed test flash plugin");
+      ok(SpecialPowers.setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED, "Shockwave Flash"), "Should find allowed test flash plugin");
       ok(SpecialPowers.setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED, "Silverlight Test Plug-in"), "Should find allowed test silverlight plugin");
       ok(!SpecialPowers.setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED, "Third Test Plug-in"), "Should not find disallowed plugin");
 
@@ -56,11 +56,11 @@
         pluginElement = document.getElementById("disallowedPlugin");
         is(typeof pluginElement.identifierToStringTest, "undefined", "Should NOT be able to call a function on a disallowed plugin");
 
-        ok(navigator.plugins["Flash Test Plug-in"], "Should have queried a plugin named 'Flash Test Plug-in'");
+        ok(navigator.plugins["Shockwave Flash"], "Should have queried a plugin named 'Shockwave Flash'");
         ok(navigator.plugins["Silverlight Test Plug-in"], "Should have queried a plugin named 'Silverlight Test Plug-in'");
         ok(!navigator.plugins["Third Test Plug-in"], "Should NOT have queried a disallowed plugin named 'Third Test Plug-in'");
 
-        ok(findPlugin("Flash Test Plug-in"), "Should have found a plugin named 'Flash Test Plug-in'");
+        ok(findPlugin("Shockwave Flash"), "Should have found a plugin named 'Shockwave Flash'");
         ok(findPlugin("Silverlight Test Plug-in"), "Should have found a plugin named 'Silverlight Test Plug-in'");
         ok(!findPlugin("Third Test Plug-in"), "Should NOT found a disallowed plugin named 'Third Test Plug-in'");
 

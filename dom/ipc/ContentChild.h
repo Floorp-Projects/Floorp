@@ -440,6 +440,7 @@ public:
   virtual bool RecvFlushMemory(const nsString& reason) override;
 
   virtual bool RecvActivateA11y() override;
+  virtual bool RecvShutdownA11y() override;
 
   virtual bool RecvGarbageCollect() override;
   virtual bool RecvCycleCollect() override;
