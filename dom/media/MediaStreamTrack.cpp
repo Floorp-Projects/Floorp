@@ -388,22 +388,6 @@ MediaStreamTrack::Clone()
 }
 
 void
-MediaStreamTrack::SetReadyState(MediaStreamTrackState aState)
-{
-  MOZ_ASSERT(!(mReadyState == MediaStreamTrackState::Ended &&
-               aState == MediaStreamTrackState::Live),
-             "We don't support overriding the ready state from ended to live");
-
-  if (mReadyState == MediaStreamTrackState::Live &&
-      aState == MediaStreamTrackState::Ended &&
-      mSource) {
-    mSource->UnregisterSink(this);
-  }
-
-  mReadyState = aState;
-}
-
-void
 MediaStreamTrack::NotifyEnded()
 {
   MOZ_ASSERT(NS_IsMainThread());
