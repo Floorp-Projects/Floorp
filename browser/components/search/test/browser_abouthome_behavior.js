@@ -75,13 +75,6 @@ function test() {
       }
     },
     {
-      name: "Search with eBay from about:home",
-      searchURL: replaceUrl("http://rover.ebay.com/rover/1/711-47294-18009-3/4?mfe=search&mpre=http://www.ebay.com/sch/i.html?_nkw=foo"),
-      run: function () {
-        verify_about_home_search("eBay");
-      }
-    },
-    {
       name: "Search with Google from about:home",
       searchURL: replaceUrl("https://www.google.com/search?q=foo&ie=utf-8&oe=utf-8"),
       run: function () {
