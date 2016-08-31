@@ -10,7 +10,7 @@ docker-image: lint
 task:
   metadata:
     name: '[TC] - ESLint'
-    description: 'ESLint test'
+    description: 'JavaScript ESLint linter'
 
   payload:
     image:
@@ -32,16 +32,15 @@ task:
           rm eslint.tar.gz &&
           ln -s ../eslint-plugin-mozilla node_modules &&
           cd ../../.. &&
-          tools/lint/eslint/node_modules/.bin/eslint --quiet --plugin html --ext [.js,.jsm,.jsx,.xml,.html,.xhtml] -f tools/lint/eslint-formatter .
-
+          ./mach lint -l eslint -f treeherder --quiet
   extra:
     locations:
-        build: null
-        tests: null
+      build: null
+      tests: null
     treeherder:
-        machine:
-            platform: lint
-        symbol: ES
+      machine:
+        platform: lint
+      symbol: ES
     treeherderEnv:
-        - production
-        - staging
+      - production
+      - staging
