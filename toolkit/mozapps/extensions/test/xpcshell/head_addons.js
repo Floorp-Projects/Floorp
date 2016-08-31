@@ -659,18 +659,16 @@ function writeInstallRDFToDir(aData, aDir, aId = aData.id, aExtraFile = null) {
  *          The install directory to add the extension to
  * @param   aId
  *          An optional string to override the default installation aId
- * @param   {Object} aExtraFiles
- *          An optional object containing file names and their contents.
+ * @param   aExtraFile
+ *          An optional dummy file to create in the extension
  * @return  A file pointing to where the extension was installed
  */
-function writeInstallRDFToXPI(aData, aDir, aId = aData.id, aExtraFiles = null) {
+function writeInstallRDFToXPI(aData, aDir, aId = aData.id, aExtraFile = null) {
   let files = {
     "install.rdf": AddonTestUtils.createInstallRDF(aData),
   };
-
-  if (aExtraFiles) {
-    Object.assign(files, aExtraFiles);
-  }
+  if (aExtraFile)
+    files[aExtraFile] = "";
 
   if (!aDir.exists())
     aDir.create(AM_Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
