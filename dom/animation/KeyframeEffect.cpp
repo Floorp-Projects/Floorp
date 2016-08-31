@@ -12,6 +12,7 @@
 #include "mozilla/dom/KeyframeEffectBinding.h"
 #include "mozilla/KeyframeUtils.h"
 #include "nsDOMMutationObserver.h" // For nsAutoAnimationMutationBatch
+#include "nsIScriptError.h"
 
 namespace mozilla {
 namespace dom {
@@ -130,7 +131,49 @@ KeyframeEffect::SetSpacing(JSContext* aCx,
                            const nsAString& aSpacing,
                            ErrorResult& aRv)
 {
-  // TODO: Implement this in the next patch.
+  SpacingMode spacingMode = SpacingMode::distribute;
+  nsCSSPropertyID pacedProperty = eCSSProperty_UNKNOWN;
+  nsAutoString invalidPacedProperty;
+  KeyframeEffectParams::ParseSpacing(aSpacing,
+                                     spacingMode,
+                                     pacedProperty,
+                                     invalidPacedProperty,
+                                     aRv);
+  if (aRv.Failed()) {
+    return;
+  }
+
+  if (!invalidPacedProperty.IsEmpty()) {
+    const char16_t* params[] = { invalidPacedProperty.get() };
+    nsIDocument* doc = AnimationUtils::GetCurrentRealmDocument(aCx);
+    nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
+                                    NS_LITERAL_CSTRING("Animation"),
+                                    doc,
+                                    nsContentUtils::eDOM_PROPERTIES,
+                                    "UnanimatablePacedProperty",
+                                    params, ArrayLength(params));
+  }
+
+  if (mEffectOptions.mSpacingMode == spacingMode &&
+      mEffectOptions.mPacedProperty == pacedProperty) {
+    return;
+  }
+
+  mEffectOptions.mSpacingMode = spacingMode;
+  mEffectOptions.mPacedProperty = pacedProperty;
+
+  // Apply spacing. We apply distribute here. If the new spacing is paced,
+  // UpdateProperties() will apply it.
+  if (mEffectOptions.mSpacingMode == SpacingMode::distribute) {
+    KeyframeUtils::ApplyDistributeSpacing(mKeyframes);
+  }
+
+  if (mTarget) {
+    RefPtr<nsStyleContext> styleContext = GetTargetStyleContext();
+    if (styleContext) {
+      UpdateProperties(styleContext);
+    }
+  }
 }
 
 } // namespace dom
