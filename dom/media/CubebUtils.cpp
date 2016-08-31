@@ -132,11 +132,15 @@ cubeb* GetCubebContext()
 void InitPreferredSampleRate()
 {
   StaticMutexAutoLock lock(sMutex);
-  if (sPreferredSampleRate == 0 &&
-      cubeb_get_preferred_sample_rate(GetCubebContextUnlocked(),
-                                      &sPreferredSampleRate) != CUBEB_OK) {
-    // Query failed, use a sensible default.
-    sPreferredSampleRate = 44100;
+  if (sPreferredSampleRate == 0) {
+    cubeb* context = GetCubebContextUnlocked();
+    if (context) {
+      if (cubeb_get_preferred_sample_rate(context,
+                                          &sPreferredSampleRate) != CUBEB_OK) {
+        // Query failed, use a sensible default.
+        sPreferredSampleRate = 44100;
+      }
+    }
   }
 }
 
