@@ -588,6 +588,12 @@ AudioCallbackDriver::~AudioCallbackDriver()
 void
 AudioCallbackDriver::Init()
 {
+  cubeb* cubebContext = CubebUtils::GetCubebContext();
+  if (!cubebContext) {
+    NS_WARNING("Could not get cubeb context.");
+    return;
+  }
+
   cubeb_stream_params output;
   cubeb_stream_params input;
   uint32_t latency_frames;
@@ -619,7 +625,7 @@ AudioCallbackDriver::Init()
     output.format = CUBEB_SAMPLE_FLOAT32NE;
   }
 
-  if (cubeb_get_min_latency(CubebUtils::GetCubebContext(), output, &latency_frames) != CUBEB_OK) {
+  if (cubeb_get_min_latency(cubebContext, output, &latency_frames) != CUBEB_OK) {
     NS_WARNING("Could not get minimal latency from cubeb.");
     return;
   }
@@ -650,7 +656,7 @@ AudioCallbackDriver::Init()
         // XXX Only pass input input if we have an input listener.  Always
         // set up output because it's easier, and it will just get silence.
         // XXX Add support for adding/removing an input listener later.
-        cubeb_stream_init(CubebUtils::GetCubebContext(), &stream,
+        cubeb_stream_init(cubebContext, &stream,
                           "AudioCallbackDriver",
                           input_id,
                           mGraphImpl->mInputWanted ? &input : nullptr,
