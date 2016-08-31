@@ -839,13 +839,13 @@ nsXBLPrototypeHandler::ConstructPrototype(nsIContent* aKeyElement,
     if ((mKeyMask & GTK2Modifiers) == GTK2Modifiers &&
         modifiers.First() != char16_t(',') &&
         (mDetail == 'u' || mDetail == 'U'))
-      ReportKeyConflict(key.get(), modifiers.get(), aKeyElement, "GTK2Conflict");
+      ReportKeyConflict(key.get(), modifiers.get(), aKeyElement, "GTK2Conflict2");
     const uint8_t WinModifiers = cControl | cAlt | cControlMask | cAltMask;
     if ((mKeyMask & WinModifiers) == WinModifiers &&
         modifiers.First() != char16_t(',') &&
         (('A' <= mDetail && mDetail <= 'Z') ||
          ('a' <= mDetail && mDetail <= 'z')))
-      ReportKeyConflict(key.get(), modifiers.get(), aKeyElement, "WinConflict");
+      ReportKeyConflict(key.get(), modifiers.get(), aKeyElement, "WinConflict2");
   }
   else {
     key.Assign(aKeyCode);
@@ -889,7 +889,9 @@ nsXBLPrototypeHandler::ReportKeyConflict(const char16_t* aKey, const char16_t* a
     doc = aKeyElement->OwnerDoc();
   }
 
-  const char16_t* params[] = { aKey, aModifiers };
+  nsAutoString id;
+  aKeyElement->GetAttr(kNameSpaceID_None, nsGkAtoms::id, id);
+  const char16_t* params[] = { aKey, aModifiers, id.get() };
   nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
                                   NS_LITERAL_CSTRING("XBL Prototype Handler"), doc,
                                   nsContentUtils::eXBL_PROPERTIES,
