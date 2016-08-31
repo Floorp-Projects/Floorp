@@ -1625,10 +1625,11 @@ function copyTestUpdaterForRunUsingUpdater() {
 }
 
 /**
- * Logs the contents of an update log.
+ * Logs the contents of an update log and for maintenance service tests this
+ * will log the contents of the latest maintenanceservice.log.
  *
  * @param   aLogLeafName
- *          The leaf name of the log.
+ *          The leaf name of the update log.
  */
 function logUpdateLog(aLogLeafName) {
   let updateLog = getUpdateLog(aLogLeafName);
@@ -1643,6 +1644,25 @@ function logUpdateLog(aLogLeafName) {
     });
   } else {
     logTestInfo("update log doesn't exist, path: " + updateLog.path);
+  }
+
+  if (IS_SERVICE_TEST) {
+    let serviceLog = getMaintSvcDir();
+    serviceLog.append("logs");
+    serviceLog.append("maintenanceservice.log");
+    if (serviceLog.exists()) {
+      // xpcshell tests won't display the entire contents so log each line.
+      let serviceLogContents = readFileBytes(serviceLog).replace(/\r\n/g, "\n");
+      serviceLogContents = replaceLogPaths(serviceLogContents);
+      let aryLogContents = serviceLogContents.split("\n");
+      logTestInfo("contents of " + serviceLog.path + ":");
+      aryLogContents.forEach(function RU_LC_FE(aLine) {
+        logTestInfo(aLine);
+      });
+    } else {
+      logTestInfo("maintenance service log doesn't exist, path: " +
+                  serviceLog.path);
+    }
   }
 }
 
