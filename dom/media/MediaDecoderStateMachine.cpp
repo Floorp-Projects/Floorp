@@ -1829,8 +1829,7 @@ MediaDecoderStateMachine::RequestVideoData()
   MOZ_ASSERT(OnTaskQueue());
   MOZ_ASSERT(mState != DECODER_STATE_SEEKING);
 
-  bool skipToNextKeyFrame = mSentFirstFrameLoadedEvent &&
-    NeedToSkipToNextKeyframe();
+  bool skipToNextKeyFrame = NeedToSkipToNextKeyframe();
 
   media::TimeUnit currentTime = media::TimeUnit::FromMicroseconds(GetMediaTime());
 
