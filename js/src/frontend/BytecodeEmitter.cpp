@@ -301,6 +301,7 @@ static bool
 ScopeKindIsInBody(ScopeKind kind)
 {
     return kind == ScopeKind::Lexical ||
+           kind == ScopeKind::SimpleCatch ||
            kind == ScopeKind::Catch ||
            kind == ScopeKind::With ||
            kind == ScopeKind::FunctionBodyVar ||
@@ -681,6 +682,7 @@ BytecodeEmitter::EmitterScope::searchInEnclosingScope(JSAtom* name, Scope* scope
           case ScopeKind::Lexical:
           case ScopeKind::NamedLambda:
           case ScopeKind::StrictNamedLambda:
+          case ScopeKind::SimpleCatch:
           case ScopeKind::Catch:
             if (hasEnv) {
                 for (BindingIter bi(si.scope()); bi; bi++) {
@@ -1412,6 +1414,7 @@ BytecodeEmitter::EmitterScope::leave(BytecodeEmitter* bce, bool nonLocal)
     ScopeKind kind = scope(bce)->kind();
     switch (kind) {
       case ScopeKind::Lexical:
+      case ScopeKind::SimpleCatch:
       case ScopeKind::Catch:
         if (!bce->emit1(hasEnvironment() ? JSOP_POPLEXICALENV : JSOP_DEBUGLEAVELEXICALENV))
             return false;
@@ -5664,7 +5667,7 @@ BytecodeEmitter::emitLexicalScope(ParseNode* pn)
     // For example, consider the following code.
     //
     // L1: {
-    // L2:  let x = 42;
+    // L2:   let x = 42;
     // L3: }
     //
     // If line number notes were not updated before the TDZ poison, the TDZ
@@ -5679,7 +5682,12 @@ BytecodeEmitter::emitLexicalScope(ParseNode* pn)
     }
 
     EmitterScope emitterScope(this);
-    ScopeKind kind = body->isKind(PNK_CATCH) ? ScopeKind::Catch : ScopeKind::Lexical;
+    ScopeKind kind;
+    if (body->isKind(PNK_CATCH))
+        kind = body->pn_kid1->isKind(PNK_NAME) ? ScopeKind::SimpleCatch : ScopeKind::Catch;
+    else
+        kind = ScopeKind::Lexical;
+
     if (!emitterScope.enterLexical(this, kind, pn->scopeBindings()))
         return false;
 
