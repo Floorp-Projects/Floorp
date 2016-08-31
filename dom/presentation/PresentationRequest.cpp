@@ -23,12 +23,10 @@
 #include "nsServiceManagerUtils.h"
 #include "PresentationAvailability.h"
 #include "PresentationCallbacks.h"
+#include "PresentationLog.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
-
-NS_IMPL_CYCLE_COLLECTION_INHERITED(PresentationRequest, DOMEventTargetHelper,
-                                   mAvailability)
 
 NS_IMPL_ADDREF_INHERITED(PresentationRequest, DOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(PresentationRequest, DOMEventTargetHelper)
@@ -107,11 +105,6 @@ PresentationRequest::~PresentationRequest()
 bool
 PresentationRequest::Init()
 {
-  mAvailability = PresentationAvailability::Create(GetOwner());
-  if (NS_WARN_IF(!mAvailability)) {
-    return false;
-  }
-
   return true;
 }
 
@@ -317,6 +310,8 @@ PresentationRequest::FindOrCreatePresentationConnection(
 already_AddRefed<Promise>
 PresentationRequest::GetAvailability(ErrorResult& aRv)
 {
+  PRES_DEBUG("%s:id[%s]\n", __func__,
+             NS_ConvertUTF16toUTF8(mUrl).get());
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(GetOwner());
   if (NS_WARN_IF(!global)) {
     aRv.Throw(NS_ERROR_UNEXPECTED);
@@ -345,7 +340,18 @@ PresentationRequest::GetAvailability(ErrorResult& aRv)
     return promise.forget();
   }
 
-  promise->MaybeResolve(mAvailability);
+  // TODO
+  // Search the set of availability object and resolve
+  // promise with the one had same presentation URLs.
+
+  RefPtr<PresentationAvailability> availability =
+    PresentationAvailability::Create(GetOwner(), promise);
+
+  if (!availability) {
+    promise->MaybeReject(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+    return promise.forget();
+  }
+
   return promise.forget();
 }
 

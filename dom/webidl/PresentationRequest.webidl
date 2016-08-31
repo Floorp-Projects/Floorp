@@ -49,6 +49,7 @@ interface PresentationRequest : EventTarget {
   *
   * The promise may be rejected duo to one of the following reasons:
   * - "NotSupportedError": Unable to continuously monitor the availability.
+  * - "SecurityError":  This operation is insecure.
   */
   [Throws]
   Promise<PresentationAvailability> getAvailability();

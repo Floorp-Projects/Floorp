@@ -9,9 +9,12 @@
 
 #include "mozilla/DOMEventTargetHelper.h"
 #include "nsIPresentationListener.h"
+#include "nsTArray.h"
 
 namespace mozilla {
 namespace dom {
+
+class Promise;
 
 class PresentationAvailability final : public DOMEventTargetHelper
                                      , public nsIPresentationAvailabilityListener
@@ -23,7 +26,8 @@ public:
   NS_DECL_NSIPRESENTATIONAVAILABILITYLISTENER
 
   static already_AddRefed<PresentationAvailability>
-  Create(nsPIDOMWindowInner* aWindow);
+  Create(nsPIDOMWindowInner* aWindow,
+         RefPtr<Promise>& aPromise);
 
   virtual void DisconnectFromOwner() override;
 
@@ -38,15 +42,17 @@ public:
 private:
   explicit PresentationAvailability(nsPIDOMWindowInner* aWindow);
 
-  ~PresentationAvailability();
+  virtual ~PresentationAvailability();
 
-  bool Init();
+  bool Init(RefPtr<Promise>& aPromise);
 
   void Shutdown();
 
   void UpdateAvailabilityAndDispatchEvent(bool aIsAvailable);
 
   bool mIsAvailable;
+
+  RefPtr<Promise> mPromise;
 };
 
 } // namespace dom

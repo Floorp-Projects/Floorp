@@ -198,7 +198,7 @@ PresentationIPCService::UnregisterAvailabilityListener(nsIPresentationAvailabili
   MOZ_ASSERT(aListener);
 
   mAvailabilityListeners.RemoveElement(aListener);
-  if (sPresentationChild) {
+  if (mAvailabilityListeners.IsEmpty() && sPresentationChild) {
     NS_WARN_IF(!sPresentationChild->SendUnregisterAvailabilityHandler());
   }
   return NS_OK;
