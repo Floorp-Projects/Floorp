@@ -16,6 +16,7 @@
 
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ToJSValue.h"
+#include "mozilla/Atomics.h"
 #include "mozilla/StartupTimeline.h"
 #include "mozilla/StaticMutex.h"
 #include "mozilla/StaticPtr.h"
@@ -194,7 +195,8 @@ base::StatisticsRecorder* gStatisticsRecorder = nullptr;
 
 // For batching and sending child process accumulations to the parent
 nsITimer* gIPCTimer = nullptr;
-bool gIPCTimerArmed = false;
+mozilla::Atomic<bool, mozilla::Relaxed> gIPCTimerArmed(false);
+mozilla::Atomic<bool, mozilla::Relaxed> gIPCTimerArming(false);
 StaticAutoPtr<nsTArray<Accumulation>> gAccumulations;
 StaticAutoPtr<nsTArray<KeyedAccumulation>> gKeyedAccumulations;
 
@@ -1239,6 +1241,14 @@ internal_AddonReflector(AddonEntryType *entry, JSContext *cx,
 //
 // PRIVATE: thread-unsafe helpers for the external interface
 
+// This is a StaticMutex rather than a plain Mutex (1) so that
+// it gets initialised in a thread-safe manner the first time
+// it is used, and (2) because it is never de-initialised, and
+// a normal Mutex would show up as a leak in BloatView.  StaticMutex
+// also has the "OffTheBooks" property, so it won't show as a leak
+// in BloatView.
+static StaticMutex gTelemetryHistogramMutex;
+
 namespace {
 
 void
@@ -1268,8 +1278,10 @@ internal_SetHistogramRecordingEnabled(mozilla::Telemetry::ID aID, bool aEnabled)
   MOZ_ASSERT(false, "Telemetry::SetHistogramRecordingEnabled(...) id not found");
 }
 
-void internal_armIPCTimer()
+void internal_armIPCTimerMainThread()
 {
+  MOZ_ASSERT(NS_IsMainThread());
+  gIPCTimerArming = false;
   if (gIPCTimerArmed) {
     return;
   }
@@ -1281,6 +1293,22 @@ void internal_armIPCTimer()
                                     nullptr, kBatchTimeoutMs,
                                     nsITimer::TYPE_ONE_SHOT);
     gIPCTimerArmed = true;
+  }
+}
+
+void internal_armIPCTimer()
+{
+  if (gIPCTimerArmed || gIPCTimerArming) {
+    return;
+  }
+  gIPCTimerArming = true;
+  if (NS_IsMainThread()) {
+    internal_armIPCTimerMainThread();
+  } else {
+    NS_DispatchToMainThread(NS_NewRunnableFunction([]() -> void {
+      StaticMutexAutoLock locker(gTelemetryHistogramMutex);
+      internal_armIPCTimerMainThread();
+    }));
   }
 }
 
@@ -1889,14 +1917,6 @@ internal_WrapAndReturnKeyedHistogram(KeyedHistogram *h, JSContext *cx,
 ////////////////////////////////////////////////////////////////////////
 //
 // EXTERNALLY VISIBLE FUNCTIONS in namespace TelemetryHistogram::
-
-// This is a StaticMutex rather than a plain Mutex (1) so that
-// it gets initialised in a thread-safe manner the first time
-// it is used, and (2) because it is never de-initialised, and
-// a normal Mutex would show up as a leak in BloatView.  StaticMutex
-// also has the "OffTheBooks" property, so it won't show as a leak
-// in BloatView.
-static StaticMutex gTelemetryHistogramMutex;
 
 // All of these functions are actually in namespace TelemetryHistogram::,
 // but the ::TelemetryHistogram prefix is given explicitly.  This is
@@ -2597,11 +2617,11 @@ TelemetryHistogram::GetHistogramSizesofIncludingThis(mozilla::MallocSizeOf
 // To ensure we don't loop IPCTimerFired->AccumulateChild->arm timer, we don't
 // unset gIPCTimerArmed until the IPC completes
 //
-// This function may be re-entered. The shared datastructures gAccumulations and
-// gKeyedAccumulations are guarded by the lock.
+// This function must be called on the main thread, otherwise IPC will fail.
 void
 TelemetryHistogram::IPCTimerFired(nsITimer* aTimer, void* aClosure)
 {
+  MOZ_ASSERT(NS_IsMainThread());
   nsTArray<Accumulation> accumulationsToSend;
   nsTArray<KeyedAccumulation> keyedAccumulationsToSend;
   {
