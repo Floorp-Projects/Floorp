@@ -180,11 +180,16 @@ public:
   {
     UINT mCharCode;
     UINT mScanCode;
+    bool mIsSysKey;
     bool mIsDeadKey;
     bool mConsumed;
 
-    FakeCharMsg() :
-      mCharCode(0), mScanCode(0), mIsDeadKey(false), mConsumed(false)
+    FakeCharMsg()
+      : mCharCode(0)
+      , mScanCode(0)
+      , mIsSysKey(false)
+      , mIsDeadKey(false)
+      , mConsumed(false)
     {
     }
 
@@ -192,7 +197,10 @@ public:
     {
       MSG msg;
       msg.hwnd = aWnd;
-      msg.message = mIsDeadKey ? WM_DEADCHAR : WM_CHAR;
+      msg.message = mIsDeadKey && mIsSysKey ? WM_SYSDEADCHAR :
+                                 mIsDeadKey ? WM_DEADCHAR :
+                                  mIsSysKey ? WM_SYSCHAR :
+                                              WM_CHAR;
       msg.wParam = static_cast<WPARAM>(mCharCode);
       msg.lParam = static_cast<LPARAM>(mScanCode << 16);
       msg.time = 0;
@@ -588,6 +596,13 @@ public:
    */
   bool IsDeadKey(uint8_t aVirtualKey,
                  const ModifierKeyState& aModKeyState) const;
+
+  /**
+   * IsSysKey() returns true if aVirtualKey with aModKeyState causes WM_SYSKEY*
+   * or WM_SYS*CHAR messages.
+   */
+  bool IsSysKey(uint8_t aVirtualKey,
+                const ModifierKeyState& aModKeyState) const;
 
   /**
    * GetUniCharsAndModifiers() returns characters which is inputted by the
