@@ -52,6 +52,7 @@ TransitionEvent::Constructor(const GlobalObject& aGlobal,
   internalEvent->mPseudoElement = aParam.mPseudoElement;
 
   e->SetTrusted(trusted);
+  e->SetComposed(aParam.mComposed);
   return e.forget();
 }
 
