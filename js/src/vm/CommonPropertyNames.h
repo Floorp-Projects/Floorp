@@ -106,6 +106,7 @@
     macro(fill, fill, "fill") \
     macro(find, find, "find") \
     macro(findIndex, findIndex, "findIndex") \
+    macro(firstDayOfWeek, firstDayOfWeek, "firstDayOfWeek") \
     macro(fix, fix, "fix") \
     macro(flags, flags, "flags") \
     macro(float32, float32, "float32") \
@@ -181,6 +182,7 @@
     macro(maximumFractionDigits, maximumFractionDigits, "maximumFractionDigits") \
     macro(maximumSignificantDigits, maximumSignificantDigits, "maximumSignificantDigits") \
     macro(message, message, "message") \
+    macro(minDays, minDays, "minDays") \
     macro(minimumFractionDigits, minimumFractionDigits, "minimumFractionDigits") \
     macro(minimumIntegerDigits, minimumIntegerDigits, "minimumIntegerDigits") \
     macro(minimumSignificantDigits, minimumSignificantDigits, "minimumSignificantDigits") \
@@ -321,6 +323,8 @@
     macro(RegExpSearcher, RegExpSearcher, "RegExpSearcher") \
     macro(RegExpTester, RegExpTester, "RegExpTester") \
     macro(weekday, weekday, "weekday") \
+    macro(weekendEnd, weekendEnd, "weekendEnd") \
+    macro(weekendStart, weekendStart, "weekendStart") \
     macro(writable, writable, "writable") \
     macro(year, year, "year") \
     macro(yield, yield, "yield") \
