@@ -81,10 +81,10 @@ common.  They all run on one of a small set of worker implementations, each
 with their own idiosyncracies.  And they all report to TreeHerder in a similar
 way.
 
-The transforms in ``taskcluster/taskgraph/transforms/make_task.py`` implement
+The transforms in ``taskcluster/taskgraph/transforms/task.py`` implement
 this common functionality.  They expect a "task description", and produce a
 task definition.  The schema for a task description is defined at the top of
-``make_task.py``, with copious comments.  The parts of the task description
+``task.py``, with copious comments.  The parts of the task description
 that are specific to a worker implementation are isolated in a ``worker``
 object which has an ``implementation`` property naming the worker
 implementation.  Thus the transforms that produce a task description must be
@@ -130,7 +130,7 @@ configuration in ``kind.yml``:
    embodies the specifics of how test runs work: invoking mozharness, various
    worker options, and so on.
 
- * Finally, the ``taskgraph.transforms.make_task:transforms``, described above
+ * Finally, the ``taskgraph.transforms.task:transforms``, described above
    under "Task-Generation Transforms", are applied.
 
 Test dependencies are produced in the form of a dictionary mapping dependency
