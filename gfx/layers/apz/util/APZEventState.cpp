@@ -290,15 +290,11 @@ APZEventState::ProcessTouchEvent(const WidgetTouchEvent& aEvent,
     sentContentResponse = SendPendingTouchPreventedResponse(false);
     // sentContentResponse can be true here if we get two TOUCH_STARTs in a row
     // and just responded to the first one.
-    if (!aEvent.mFlags.mHandledByAPZ) {
-      // This condition being true means this touchstart is synthetic and is
-      // coming from TabParent.injectTouchEvent.
-      // Since APZ doesn't know about it we don't want to send a response for
-      // this block; we want to just skip over it from the point of view of
-      // prevent-default notifications.
-      APZES_LOG("Got a synthetic touch-start!\n");
-      break;
-    }
+
+    // We're about to send a response back to APZ, but we should only do it
+    // for events that went through APZ (which should be all of them).
+    MOZ_ASSERT(aEvent.mFlags.mHandledByAPZ);
+
     if (isTouchPrevented) {
       mContentReceivedInputBlockCallback(aGuid, aInputBlockId, isTouchPrevented);
       sentContentResponse = true;
