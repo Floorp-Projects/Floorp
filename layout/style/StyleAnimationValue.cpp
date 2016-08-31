@@ -849,9 +849,7 @@ StyleAnimationValue::ComputeDistance(nsCSSPropertyID aProperty,
             (color2.GetColorValue(), StyleAnimationValue::ColorConstructor);
           double colorDistance;
 
-        #ifdef DEBUG
-          bool ok =
-        #endif
+          DebugOnly<bool> ok =
             StyleAnimationValue::ComputeDistance(eCSSProperty_color,
                                                  color1Value, color2Value,
                                                  colorDistance);
@@ -1260,9 +1258,7 @@ AddShadowItems(double aCoeff1, const nsCSSValue &aValue1,
     StyleAnimationValue color2Value
       (color2.GetColorValue(), StyleAnimationValue::ColorConstructor);
     StyleAnimationValue resultColorValue;
-  #ifdef DEBUG
-    bool ok =
-  #endif
+    DebugOnly<bool> ok =
       StyleAnimationValue::AddWeighted(eCSSProperty_color,
                                        aCoeff1, color1Value,
                                        aCoeff2, color2Value,

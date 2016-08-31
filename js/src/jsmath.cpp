@@ -1388,6 +1388,8 @@ js::InitMathClass(JSContext* cx, HandleObject obj)
         return nullptr;
     if (!JS_DefineConstDoubles(cx, Math, math_constants))
         return nullptr;
+    if (!DefineToStringTag(cx, Math, cx->names().Math))
+        return nullptr;
 
     obj->as<GlobalObject>().setConstructor(JSProto_Math, ObjectValue(*Math));
 

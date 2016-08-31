@@ -46,6 +46,7 @@
 #include "vm/TypedArrayCommon.h"
 #include "vm/WrapperObject.h"
 
+#include "jsatominlines.h"
 #include "jsfuninlines.h"
 #include "jsobjinlines.h"
 #include "jsscriptinlines.h"
@@ -1970,6 +1971,23 @@ intrinsic_ConstructorForTypedArray(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
+static bool
+intrinsic_NameForTypedArray(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    MOZ_ASSERT(args.length() == 1);
+    MOZ_ASSERT(args[0].isObject());
+
+    RootedObject object(cx, &args[0].toObject());
+    MOZ_ASSERT(object->is<TypedArrayObject>());
+
+    JSProtoKey protoKey = StandardProtoKeyOrNull(object);
+    MOZ_ASSERT(protoKey);
+
+    args.rval().setString(ClassName(protoKey, cx));
+    return true;
+}
+
 /**
  * Returns an object created in the embedding-provided incumbent global.
  *
@@ -2292,6 +2310,7 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("OwnPropertyKeys",         intrinsic_OwnPropertyKeys,         1,0),
     JS_FN("MakeDefaultConstructor",  intrinsic_MakeDefaultConstructor,  2,0),
     JS_FN("_ConstructorForTypedArray", intrinsic_ConstructorForTypedArray, 1,0),
+    JS_FN("_NameForTypedArray",      intrinsic_NameForTypedArray, 1,0),
     JS_FN("DecompileArg",            intrinsic_DecompileArg,            2,0),
     JS_FN("_FinishBoundFunctionInit", intrinsic_FinishBoundFunctionInit, 4,0),
     JS_FN("RuntimeDefaultLocale",    intrinsic_RuntimeDefaultLocale,    0,0),

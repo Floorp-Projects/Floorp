@@ -10459,7 +10459,9 @@ IonBuilder::jsop_setelem_dense(TemporaryTypeSet::DoubleConversion conversion,
 
     // Writes which are on holes in the object do not have to bail out if they
     // cannot hit another indexed property on the object or its prototypes.
-    bool writeOutOfBounds = !ElementAccessHasExtraIndexedProperty(this, obj);
+    bool hasNoExtraIndexedProperty = !ElementAccessHasExtraIndexedProperty(this, obj);
+
+    bool mayBeFrozen = ElementAccessMightBeFrozen(constraints(), obj);
 
     // Ensure id is an integer.
     MInstruction* idInt32 = MToInt32::New(alloc(), id);
@@ -10505,10 +10507,21 @@ IonBuilder::jsop_setelem_dense(TemporaryTypeSet::DoubleConversion conversion,
     // Use MStoreElementHole if this SETELEM has written to out-of-bounds
     // indexes in the past. Otherwise, use MStoreElement so that we can hoist
     // the initialized length and bounds check.
+    // If an object may have been frozen, no previous expectation hold and we
+    // fallback to MFallibleStoreElement.
     MInstruction* store;
     MStoreElementCommon *common = nullptr;
-    if (writeHole && writeOutOfBounds) {
+    if (writeHole && hasNoExtraIndexedProperty && !mayBeFrozen) {
         MStoreElementHole* ins = MStoreElementHole::New(alloc(), obj, elements, id, newValue, unboxedType);
+        store = ins;
+        common = ins;
+
+        current->add(ins);
+        current->push(value);
+    } else if (hasNoExtraIndexedProperty && mayBeFrozen) {
+        bool strict = IsStrictSetPC(pc);
+        MFallibleStoreElement* ins = MFallibleStoreElement::New(alloc(), obj, elements, id,
+                                                                newValue, unboxedType, strict);
         store = ins;
         common = ins;
 
@@ -10518,7 +10531,7 @@ IonBuilder::jsop_setelem_dense(TemporaryTypeSet::DoubleConversion conversion,
         MInstruction* initLength = initializedLength(obj, elements, unboxedType);
 
         id = addBoundsCheck(id, initLength);
-        bool needsHoleCheck = !packed && !writeOutOfBounds;
+        bool needsHoleCheck = !packed && !hasNoExtraIndexedProperty;
 
         if (unboxedType != JSVAL_TYPE_MAGIC) {
             store = storeUnboxedValue(obj, elements, 0, id, unboxedType, newValue);

@@ -561,8 +561,13 @@ SampleValue(float aPortion, Animation& aAnimation, StyleAnimationValue& aStart,
                aStart.GetUnit() == StyleAnimationValue::eUnit_None ||
                aEnd.GetUnit() == StyleAnimationValue::eUnit_None,
                "Must have same unit");
-  StyleAnimationValue::Interpolate(aAnimation.property(), aStart, aEnd,
-                                aPortion, interpolatedValue);
+  // This should never fail because we only pass transform and opacity values
+  // to the compositor and they should never fail to interpolate.
+  DebugOnly<bool> uncomputeResult =
+    StyleAnimationValue::Interpolate(aAnimation.property(), aStart, aEnd,
+                                     aPortion, interpolatedValue);
+  MOZ_ASSERT(uncomputeResult, "could not uncompute value");
+
   if (aAnimation.property() == eCSSProperty_opacity) {
     *aValue = interpolatedValue.GetFloatValue();
     return;

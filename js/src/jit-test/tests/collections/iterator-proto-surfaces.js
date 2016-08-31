@@ -9,13 +9,9 @@ function test(constructor) {
     var iter = new constructor()[Symbol.iterator]();
     assertDeepEq(Reflect.ownKeys(iter), []);
 
-    // Iterator prototypes only have a .next property.
-    // At least until we support @@toStringTag.
+    // Iterator prototypes only have a .next and @@toStringTag property.
     var proto1 = Object.getPrototypeOf(iter);
-
-    var names = Reflect.ownKeys(proto1);
-    names.sort();
-    assertDeepEq(Reflect.ownKeys(proto1), ['next']);
+    assertDeepEq(Reflect.ownKeys(proto1), ['next', Symbol.toStringTag]);
 
     var desc = Object.getOwnPropertyDescriptor(proto1, 'next');
     assertEq(desc.configurable, true);

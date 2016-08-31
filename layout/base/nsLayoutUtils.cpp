@@ -2899,12 +2899,12 @@ TransformGfxRectToAncestor(nsIFrame *aFrame,
       // and put it in the cache, if provided
       *aMatrixCache = Some(ctm);
     }
-    // If we computed it, also fill out the axis-alignment flag
-    if (aPreservesAxisAlignedRectangles) {
-      Matrix matrix2d;
-      *aPreservesAxisAlignedRectangles =
-        ctm.Is2D(&matrix2d) && matrix2d.PreservesAxisAlignedRectangles();
-    }
+  }
+  // Fill out the axis-alignment flag
+  if (aPreservesAxisAlignedRectangles) {
+    Matrix matrix2d;
+    *aPreservesAxisAlignedRectangles =
+      ctm.Is2D(&matrix2d) && matrix2d.PreservesAxisAlignedRectangles();
   }
   Rect maxBounds = Rect(-std::numeric_limits<float>::max() * 0.5,
                         -std::numeric_limits<float>::max() * 0.5,
