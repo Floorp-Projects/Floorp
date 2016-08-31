@@ -8,14 +8,16 @@ Cu.import("resource://gre/modules/AddonManager.jsm", this);
 Cu.import("resource://gre/modules/AddonWatcher.jsm", this);
 Cu.import("resource://gre/modules/PerformanceWatcher.jsm", this);
 Cu.import("resource://gre/modules/Services.jsm", this);
+Cu.import("resource://testing-common/ContentTaskUtils.jsm", this);
 
 /**
  * Base class for simulating slow addons/webpages.
  */
-function CPUBurner(url) {
+function CPUBurner(url, jankThreshold) {
   info(`CPUBurner: Opening tab for ${url}\n`);
   this.url = url;
   this.tab = gBrowser.addTab(url);
+  this.jankThreshold = jankThreshold;
   let browser = this.tab.linkedBrowser;
   this._browser = browser;
   ContentTask.spawn(this._browser, null, CPUBurner.frameScript);
@@ -26,7 +28,7 @@ CPUBurner.prototype = {
     return this._browser.outerWindowID;
   },
   /**
-   * Burn CPU until it triggers a listener.
+   * Burn CPU until it triggers a listener with the specified jank threshold.
    */
   run: Task.async(function*(burner, max, listener) {
     listener.reset();
@@ -37,7 +39,7 @@ CPUBurner.prototype = {
       } catch (ex) {
         return false;
       }
-      if (listener.triggered) {
+      if (listener.triggered && listener.result >= this.jankThreshold) {
         return true;
       }
     }
@@ -161,7 +163,8 @@ AlertListener.prototype = {
  * Simulate a slow add-on.
  */
 function AddonBurner(addonId = "fake add-on id: " + Math.random()) {
-  CPUBurner.call(this, `http://example.com/?uri=${addonId}`)
+  this.jankThreshold = 200000;
+  CPUBurner.call(this, `http://example.com/?uri=${addonId}`, this.jankThreshold);
   this._addonId = addonId;
   this._sandbox = Components.utils.Sandbox(Services.scriptSecurityManager.getSystemPrincipal(), { addonId: this._addonId });
   this._CPOWBurner = null;
