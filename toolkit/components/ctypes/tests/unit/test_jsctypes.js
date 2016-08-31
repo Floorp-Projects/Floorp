@@ -35,14 +35,6 @@ function do_check_throws(f, type, stack)
   do_throw("expected " + type.name + " exception, none thrown", stack);
 }
 
-function do_check_class(obj, classname, stack)
-{
-  if (!stack)
-    stack = Components.stack.caller;
-
-  do_check_eq(Object.prototype.toString.call(obj), "[object " + classname + "]", stack);
-}
-
 function run_test()
 {
   // Test ctypes.CType and ctypes.CData are set up correctly.
@@ -232,10 +224,6 @@ function run_abstract_class_tests()
   do_check_throws(function() { ctypes.CType(); }, TypeError);
   do_check_throws(function() { new ctypes.CType() }, TypeError);
 
-  // Test that classes and prototypes are set up correctly.
-  do_check_class(ctypes.CType, "Function");
-  do_check_class(ctypes.CType.prototype, "CType");
-
   do_check_true(ctypes.CType.hasOwnProperty("prototype"));
   do_check_throws(function() { ctypes.CType.prototype(); }, TypeError);
   do_check_throws(function() { new ctypes.CType.prototype() }, TypeError);
@@ -270,10 +258,6 @@ function run_abstract_class_tests()
   do_check_throws(function() { ctypes.CData(); }, TypeError);
   do_check_throws(function() { new ctypes.CData() }, TypeError);
 
-  // Test that classes and prototypes are set up correctly.
-  do_check_class(ctypes.CData, "Function");
-  do_check_class(ctypes.CData.prototype, "CData");
-
   do_check_true(ctypes.CData.__proto__ === ctypes.CType.prototype);
   do_check_true(ctypes.CData instanceof ctypes.CType);
 
@@ -302,10 +286,6 @@ function run_abstract_class_tests()
 
 function run_Int64_tests() {
   do_check_throws(function() { ctypes.Int64(); }, TypeError);
-
-  // Test that classes and prototypes are set up correctly.
-  do_check_class(ctypes.Int64, "Function");
-  do_check_class(ctypes.Int64.prototype, "Int64");
 
   do_check_true(ctypes.Int64.hasOwnProperty("prototype"));
   do_check_true(ctypes.Int64.prototype.hasOwnProperty("constructor"));
@@ -476,10 +456,6 @@ function run_Int64_tests() {
 
 function run_UInt64_tests() {
   do_check_throws(function() { ctypes.UInt64(); }, TypeError);
-
-  // Test that classes and prototypes are set up correctly.
-  do_check_class(ctypes.UInt64, "Function");
-  do_check_class(ctypes.UInt64.prototype, "UInt64");
 
   do_check_true(ctypes.UInt64.hasOwnProperty("prototype"));
   do_check_true(ctypes.UInt64.prototype.hasOwnProperty("constructor"));
@@ -746,10 +722,6 @@ function offsetof(struct, member) {
 // Test the class and prototype hierarchy for a given basic type 't'.
 function run_basic_class_tests(t)
 {
-  // Test that classes and prototypes are set up correctly.
-  do_check_class(t, "CType");
-  do_check_class(t.prototype, "CData");
-
   do_check_true(t.__proto__ === ctypes.CType.prototype);
   do_check_true(t instanceof ctypes.CType);
 
@@ -770,7 +742,6 @@ function run_basic_class_tests(t)
 
   // Test that an instance 'd' of 't' is a CData.
   let d = t();
-  do_check_class(d, "CData");
   do_check_true(d.__proto__ === t.prototype);
   do_check_true(d instanceof t);
   do_check_true(d.constructor === t);
@@ -1291,10 +1262,6 @@ function run_char16_tests(library, t, name, limits) {
 // Test the class and prototype hierarchy for a given type constructor 'c'.
 function run_type_ctor_class_tests(c, t, t2, props=[], fns=[], instanceProps=[], instanceFns=[], specialProps=[])
 {
-  // Test that classes and prototypes are set up correctly on the type ctor 'c'.
-  do_check_class(c, "Function");
-  do_check_class(c.prototype, "CType");
-
   do_check_true(c.prototype.__proto__ === ctypes.CType.prototype);
   do_check_true(c.prototype instanceof ctypes.CType);
   do_check_true(c.prototype.constructor === c);
@@ -1311,15 +1278,9 @@ function run_type_ctor_class_tests(c, t, t2, props=[], fns=[], instanceProps=[],
   for (let f of fns)
     do_check_throws(function() { c.prototype[f](); }, TypeError);
 
-  // Test that classes and prototypes are set up correctly on a constructed
-  // type 't'.
-  do_check_class(t, "CType");
-  do_check_class(t.prototype, "CData");
-
   do_check_true(t.__proto__ === c.prototype);
   do_check_true(t instanceof c);
 
-  do_check_class(t.prototype.__proto__, "CData");
   // 't.prototype.__proto__' is the common ancestor of all types constructed
   // from 'c'; while not available from 'c' directly, it should be identically
   // equal to 't2.prototype.__proto__' where 't2' is a different CType
@@ -1367,7 +1328,6 @@ function run_type_ctor_class_tests(c, t, t2, props=[], fns=[], instanceProps=[],
   // Test that an instance 'd' of 't' is a CData.
   if (t.__proto__ != ctypes.FunctionType.prototype) {
     let d = t();
-    do_check_class(d, "CData");
     do_check_true(d.__proto__ === t.prototype);
     do_check_true(d instanceof t);
     do_check_true(d.constructor === t);

@@ -657,6 +657,14 @@ js::DefinePropertiesAndFunctions(JSContext* cx, HandleObject obj,
     return true;
 }
 
+bool
+js::DefineToStringTag(JSContext *cx, HandleObject obj, JSAtom* tag)
+{
+    RootedId toStringTagId(cx, SYMBOL_TO_JSID(cx->wellKnownSymbols().toStringTag));
+    RootedValue tagString(cx, StringValue(tag));
+    return DefineProperty(cx, obj, toStringTagId, tagString, nullptr, nullptr, JSPROP_READONLY);
+}
+
 static void
 GlobalDebuggees_finalize(FreeOp* fop, JSObject* obj)
 {

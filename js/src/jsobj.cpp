@@ -476,17 +476,13 @@ js::SetIntegrityLevel(JSContext* cx, HandleObject obj, IntegrityLevel level)
     assertSameCompartment(cx, obj);
 
     // Steps 3-5. (Steps 1-2 are redundant assertions.)
-    if (!PreventExtensions(cx, obj))
+    if (!PreventExtensions(cx, obj, level))
         return false;
 
     // Steps 6-7.
     AutoIdVector keys(cx);
     if (!GetPropertyKeys(cx, obj, JSITER_HIDDEN | JSITER_OWNONLY | JSITER_SYMBOLS, &keys))
         return false;
-
-    // PreventExtensions must sparsify dense objects, so we can assign to holes
-    // without checks.
-    MOZ_ASSERT_IF(obj->isNative(), obj->as<NativeObject>().getDenseCapacity() == 0);
 
     // Steps 8-9, loosely interpreted.
     if (obj->isNative() && !obj->as<NativeObject>().inDictionaryMode() &&
@@ -2640,7 +2636,7 @@ js::SetPrototype(JSContext* cx, HandleObject obj, HandleObject proto)
 }
 
 bool
-js::PreventExtensions(JSContext* cx, HandleObject obj, ObjectOpResult& result)
+js::PreventExtensions(JSContext* cx, HandleObject obj, ObjectOpResult& result, IntegrityLevel level)
 {
     if (obj->is<ProxyObject>())
         return js::Proxy::preventExtensions(cx, obj, result);
@@ -2656,13 +2652,19 @@ js::PreventExtensions(JSContext* cx, HandleObject obj, ObjectOpResult& result)
     if (!js::GetPropertyKeys(cx, obj, JSITER_HIDDEN | JSITER_OWNONLY, &props))
         return false;
 
-    // Convert all dense elements to sparse properties. This will shrink the
-    // initialized length and capacity of the object to zero and ensure that no
-    // new dense elements can be added without calling growElements(), which
-    // checks isExtensible().
+    // Actually prevent extension. If the object is being frozen, do it by
+    // setting the frozen flag on both the object and the object group.
+    // Otherwise, fallback to sparsifying the object, which makes sure no
+    // element can be added without a call to isExtensible, at the cost of
+    // performance.
     if (obj->isNative()) {
-        if (!NativeObject::sparsifyDenseElements(cx, obj.as<NativeObject>()))
+        if (level == IntegrityLevel::Frozen) {
+            MarkObjectGroupFlags(cx, obj, OBJECT_FLAG_FROZEN);
+            if (!ObjectElements::FreezeElements(cx, obj.as<NativeObject>()))
+                return false;
+        } else if (!NativeObject::sparsifyDenseElements(cx, obj.as<NativeObject>())) {
             return false;
+        }
     }
 
     if (!obj->setFlags(cx, BaseShape::NOT_EXTENSIBLE, JSObject::GENERATE_SHAPE))
@@ -2671,10 +2673,10 @@ js::PreventExtensions(JSContext* cx, HandleObject obj, ObjectOpResult& result)
 }
 
 bool
-js::PreventExtensions(JSContext* cx, HandleObject obj)
+js::PreventExtensions(JSContext* cx, HandleObject obj, IntegrityLevel level)
 {
     ObjectOpResult result;
-    return PreventExtensions(cx, obj, result) && result.checkStrict(cx, obj);
+    return PreventExtensions(cx, obj, result, level) && result.checkStrict(cx, obj);
 }
 
 bool

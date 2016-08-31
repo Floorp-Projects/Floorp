@@ -1,7 +1,0 @@
-{
-  "WeakMap.prototype.delete.length": true,
-  "WeakMap.prototype.get.length": true,
-  "WeakMap.prototype.has.length": true,
-  "WeakMap.prototype.set.length": true,
-  "WeakMap.prototype.@@toStringTag": true
-}

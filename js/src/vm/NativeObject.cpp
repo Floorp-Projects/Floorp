@@ -101,6 +101,24 @@ ObjectElements::MakeElementsCopyOnWrite(ExclusiveContext* cx, NativeObject* obj)
     return true;
 }
 
+/* static */ bool
+ObjectElements::FreezeElements(ExclusiveContext* cx, HandleNativeObject obj)
+{
+    if (!obj->maybeCopyElementsForWrite(cx))
+        return false;
+
+    if (obj->hasEmptyElements())
+        return true;
+
+    ObjectElements* header = obj->getElementsHeader();
+
+    // Note: this method doesn't update type information to indicate that the
+    // elements might be frozen. Handling this is left to the caller.
+    header->freeze();
+
+    return true;
+}
+
 #ifdef DEBUG
 void
 js::NativeObject::checkShapeConsistency()
@@ -2305,7 +2323,9 @@ SetExistingProperty(JSContext* cx, HandleNativeObject obj, HandleId id, HandleVa
 {
     // Step 5 for dense elements.
     if (IsImplicitDenseOrTypedArrayElement(shape)) {
-        // Step 5.a is a no-op: all dense elements are writable.
+        // Step 5.a.
+        if (obj->getElementsHeader()->isFrozen())
+            return result.fail(JSMSG_READ_ONLY);
 
         // Pure optimization for the common case:
         if (receiver.isObject() && pobj == &receiver.toObject())
