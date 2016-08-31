@@ -13,7 +13,8 @@ const PAGE_1 = "data:text/html,<html><body>A%20regular,%20everyday,%20normal%20p
 const PAGE_2 = "data:text/html,<html><body>Another%20regular,%20everyday,%20normal%20page.";
 
 add_task(function* setup() {
-  yield pushPrefs(["browser.tabs.animate", false],
+  yield pushPrefs(["dom.ipc.processCount", 1],
+                  ["browser.tabs.animate", false],
                   ["browser.sessionstore.restore_on_demand", false]);
 });
 
