@@ -313,12 +313,15 @@ cubeb_stream_type ConvertChannelToCubebType(dom::AudioChannel aChannel)
 
 void GetCurrentBackend(nsAString& aBackend)
 {
-  const char* backend = cubeb_get_backend_id(GetCubebContext());
-  if (!backend) {
-    aBackend.AssignLiteral("unknown");
-    return;
+  cubeb* cubebContext = GetCubebContext();
+  if (cubebContext) {
+    const char* backend = cubeb_get_backend_id(cubebContext);
+    if (backend) {
+      aBackend.AssignASCII(backend);
+      return;
+    }
   }
-  aBackend.AssignASCII(backend);
+  aBackend.AssignLiteral("unknown");
 }
 
 } // namespace CubebUtils
