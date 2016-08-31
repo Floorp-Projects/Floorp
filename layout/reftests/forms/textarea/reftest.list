@@ -1,6 +1,6 @@
 skip-if(B2G||Mulet||Android) == resize.html resize-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 # an offset seems to apply to the native resizer on windows so skip this test for now
-skip-if(B2G||Mulet||Android) skip-if(winWidget) fuzzy-if(cocoaWidget,1,33) fuzzy-if(skiaContent&&!winWidget,5,10) == resize-background.html resize-background-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if(B2G||Mulet||Android) skip-if(winWidget) fuzzy-if(cocoaWidget,1,33) fuzzy-if(skiaContent&&!winWidget&&!Android,5,10) == resize-background.html resize-background-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 skip-if(B2G||Mulet||Android) != ltr.html rtl.html # Initial mulet triage: parity with B2G/B2G Desktop
 skip-if(B2G||Mulet||Android) != ltr-scrollbar.html rtl-scrollbar.html # Initial mulet triage: parity with B2G/B2G Desktop
 skip-if(B2G||Mulet||Android) != in-ltr-doc-scrollbar.html in-rtl-doc-scrollbar.html # Initial mulet triage: parity with B2G/B2G Desktop
