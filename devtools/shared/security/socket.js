@@ -90,6 +90,7 @@ DebuggerSocket.connect = Task.async(function* (settings) {
     cert,
     transport
   });
+  transport.connectionSettings = settings;
   return transport;
 });
 
