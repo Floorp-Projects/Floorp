@@ -9,7 +9,6 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.mozilla.gecko.AppConstants.Versions;
-import org.mozilla.gecko.gfx.LayerView;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.util.UIAsyncTask;
 
@@ -18,6 +17,7 @@ import android.graphics.Rect;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewParent;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityManager;
 import android.view.accessibility.AccessibilityNodeInfo;
@@ -52,7 +52,7 @@ public class GeckoAccessibility {
                         (AccessibilityManager) context.getSystemService(Context.ACCESSIBILITY_SERVICE);
                     sEnabled = accessibilityManager.isEnabled() && accessibilityManager.isTouchExplorationEnabled();
                     if (Versions.feature16Plus && sEnabled && sSelfBrailleClient == null) {
-                        sSelfBrailleClient = new SelfBrailleClient(GeckoAppShell.getContext(), false);
+                        sSelfBrailleClient = new SelfBrailleClient(context, false);
                     }
 
                     try {
@@ -106,12 +106,13 @@ public class GeckoAccessibility {
     }
 
     private static void sendDirectAccessibilityEvent(int eventType, JSONObject message) {
+        final Context context = GeckoAppShell.getApplicationContext();
         final AccessibilityEvent accEvent = AccessibilityEvent.obtain(eventType);
         accEvent.setClassName(GeckoAccessibility.class.getName());
-        accEvent.setPackageName(GeckoAppShell.getContext().getPackageName());
+        accEvent.setPackageName(context.getPackageName());
         populateEventFromJSON(accEvent, message);
         AccessibilityManager accessibilityManager =
-            (AccessibilityManager) GeckoAppShell.getContext().getSystemService(Context.ACCESSIBILITY_SERVICE);
+            (AccessibilityManager) context.getSystemService(Context.ACCESSIBILITY_SERVICE);
         try {
             accessibilityManager.sendAccessibilityEvent(accEvent);
         } catch (IllegalStateException e) {
@@ -161,7 +162,7 @@ public class GeckoAccessibility {
         } else {
             // In Jelly Bean we populate an AccessibilityNodeInfo with the minimal amount of data to have
             // it work with TalkBack.
-            final LayerView view = GeckoAppShell.getLayerView();
+            final View view = GeckoAppShell.getLayerView();
             if (view == null)
                 return;
 
@@ -210,7 +211,7 @@ public class GeckoAccessibility {
                     @Override
                     public void run() {
                         final AccessibilityEvent event = AccessibilityEvent.obtain(eventType);
-                        event.setPackageName(GeckoAppShell.getContext().getPackageName());
+                        event.setPackageName(GeckoAppShell.getApplicationContext().getPackageName());
                         event.setClassName(GeckoAccessibility.class.getName());
                         if (eventType == AccessibilityEvent.TYPE_ANNOUNCEMENT ||
                             eventType == AccessibilityEvent.TYPE_VIEW_SCROLLED) {
@@ -219,7 +220,7 @@ public class GeckoAccessibility {
                             event.setSource(view, VIRTUAL_CURSOR_POSITION);
                         }
                         populateEventFromJSON(event, message);
-                        view.requestSendAccessibilityEvent(view, event);
+                        ((ViewParent) view).requestSendAccessibilityEvent(view, event);
                     }
                 });
 
@@ -236,11 +237,11 @@ public class GeckoAccessibility {
         sSelfBrailleClient.write(data);
     }
 
-    public static void setDelegate(LayerView layerview) {
+    public static void setDelegate(View view) {
         // Only use this delegate in Jelly Bean.
         if (Versions.feature16Plus) {
-            layerview.setAccessibilityDelegate(new GeckoAccessibilityDelegate());
-            layerview.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_YES);
+            view.setAccessibilityDelegate(new GeckoAccessibilityDelegate());
+            view.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_YES);
         }
     }
 
@@ -265,7 +266,7 @@ public class GeckoAccessibility {
         }
     }
 
-    public static void onLayerViewFocusChanged(LayerView layerview, boolean gainFocus) {
+    public static void onLayerViewFocusChanged(boolean gainFocus) {
         if (sEnabled)
             GeckoAppShell.notifyObservers("Accessibility:Focus", gainFocus ? "true" : "false");
     }
@@ -299,7 +300,7 @@ public class GeckoAccessibility {
                                 info.setParent(host);
                                 info.setSource(host, virtualDescendantId);
                                 info.setVisibleToUser(host.isShown());
-                                info.setPackageName(GeckoAppShell.getContext().getPackageName());
+                                info.setPackageName(GeckoAppShell.getApplicationContext().getPackageName());
                                 info.setClassName(host.getClass().getName());
                                 info.setEnabled(true);
                                 info.addAction(AccessibilityNodeInfo.ACTION_CLEAR_ACCESSIBILITY_FOCUS);

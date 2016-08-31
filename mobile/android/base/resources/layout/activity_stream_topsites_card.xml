@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<org.mozilla.gecko.widget.FilledCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="wrap_content"
+    android:layout_height="115dp"
+    android:layout_margin="1dp">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <org.mozilla.gecko.widget.FaviconView
+            android:id="@+id/favicon"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_above="@+id/title"
+            android:layout_alignParentTop="true"
+            android:layout_centerHorizontal="true"
+            android:layout_gravity="center"
+            tools:background="@drawable/favicon_globe"/>
+
+        <TextView
+            android:id="@+id/title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:ellipsize="end"
+            android:gravity="center"
+            android:lines="1"
+            android:padding="4dp"
+            android:textColor="@android:color/black"
+            tools:text="Lorem Ipsum here is a title"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentEnd="true"/>
+
+        <ImageView
+            android:id="@+id/menu_button"
+            android:layout_width="wrap_content"
+            android:layout_height="32dp"
+            android:layout_gravity="right|top"
+            android:padding="6dp"
+            android:src="@drawable/menu"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentEnd="true"/>
+
+    </RelativeLayout>
+</org.mozilla.gecko.widget.FilledCardView>
