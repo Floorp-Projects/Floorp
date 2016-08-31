@@ -176,10 +176,6 @@ static const char* GetOmxLibraryName()
   if (version >= 17) {
     return "libomxpluginkk.so";
   }
-  else if (version < 14) {
-    // Below Honeycomb not supported
-    return nullptr;
-  }
 
   // Ice Cream Sandwich and Jellybean
   return "libomxplugin.so";

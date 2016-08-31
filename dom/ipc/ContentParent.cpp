@@ -1705,14 +1705,15 @@ ContentParent::AllocateLayerTreeId(ContentParent* aContent,
   GPUProcessManager* gpu = GPUProcessManager::Get();
 
   *aId = gpu->AllocateLayerTreeId();
+
+  if (!aContent || !aTopLevel) {
+    return false;
+  }
+
   gpu->MapLayerTreeId(*aId, aContent->OtherPid());
 
   if (!gfxPlatform::AsyncPanZoomEnabled()) {
     return true;
-  }
-
-  if (!aContent || !aTopLevel) {
-    return false;
   }
 
   return aContent->SendNotifyLayerAllocated(aTabId, *aId);

@@ -228,6 +228,7 @@ class BufferList : private AllocPolicy
 
   // Special convenience method that returns Iter().Data().
   char* Start() { return mSegments[0].mData; }
+  const char* Start() const { return mSegments[0].mData; }
 
   IterImpl Iter() const { return IterImpl(*this); }
 

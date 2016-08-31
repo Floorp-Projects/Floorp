@@ -118,9 +118,15 @@ add_task(function* testNarrate() {
     ok(!NarrateTestUtils.isVisible(popup), "popup is dismissed while speaking");
     NarrateTestUtils.isStartedState(content, ok);
 
-    promiseEvent = ContentTaskUtils.waitForEvent(content, "paragraphend");
-    $(NarrateTestUtils.STOP).click();
-    yield promiseEvent;
+    // Go forward all the way to the end of the article. We should eventually
+    // stop.
+    do {
+      promiseEvent = Promise.race([
+        ContentTaskUtils.waitForEvent(content, "paragraphstart"),
+        ContentTaskUtils.waitForEvent(content, "paragraphsdone")]);
+      $(NarrateTestUtils.FORWARD).click();
+    } while ((yield promiseEvent).type == "paragraphstart");
+
     yield ContentTaskUtils.waitForCondition(
       () => !$(NarrateTestUtils.STOP), "transitioned to stopped state");
     NarrateTestUtils.isStoppedState(content, ok);

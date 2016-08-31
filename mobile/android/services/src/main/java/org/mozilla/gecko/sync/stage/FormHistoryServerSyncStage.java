@@ -45,6 +45,7 @@ public class FormHistoryServerSyncStage extends ServerSyncStage {
         session.config.storageURL(),
         session.getAuthHeaderProvider(),
         session.config.infoCollections,
+        session.config.infoConfiguration,
         FORM_HISTORY_REQUEST_LIMIT,
         FORM_HISTORY_SORT);
   }

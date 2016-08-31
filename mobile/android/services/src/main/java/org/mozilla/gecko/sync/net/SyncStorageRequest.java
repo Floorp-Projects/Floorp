@@ -120,7 +120,9 @@ public class SyncStorageRequest implements Resource {
       SyncStorageRequestDelegate d = this.request.delegate;
       SyncStorageResponse res = new SyncStorageResponse(response);
       // It is the responsibility of the delegate handlers to completely consume the response.
-      if (res.wasSuccessful()) {
+      // In context of a Sync storage response, success is either a 200 OK or 202 Accepted.
+      // 202 is returned during uploads of data in a batching mode, indicating that more is expected.
+      if (res.getStatusCode() == 200 || res.getStatusCode() == 202) {
         d.handleRequestSuccess(res);
       } else {
         Logger.warn(LOG_TAG, "HTTP request failed.");

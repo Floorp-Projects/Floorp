@@ -3284,7 +3284,7 @@ IMEInputHandler::GetAttributedSubstringFromRange(NSRange& aRange,
 
   MOZ_LOG(gLog, LogLevel::Info,
     ("%p IMEInputHandler::GetAttributedSubstringFromRange, "
-     "textContent={ mSucceeded=%s, mReply={ mString=\"%s\", mOffset=%llu } }",
+     "textContent={ mSucceeded=%s, mReply={ mString=\"%s\", mOffset=%u } }",
      this, TrueOrFalse(textContent.mSucceeded),
      NS_ConvertUTF16toUTF8(textContent.mReply.mString).get(),
      textContent.mReply.mOffset));
@@ -3361,7 +3361,7 @@ IMEInputHandler::SelectedRange()
 
   MOZ_LOG(gLog, LogLevel::Info,
     ("%p IMEInputHandler::SelectedRange, selection={ mSucceeded=%s, "
-     "mReply={ mOffset=%llu, mString.Length()=%llu } }",
+     "mReply={ mOffset=%u, mString.Length()=%u } }",
      this, TrueOrFalse(selection.mSucceeded), selection.mReply.mOffset,
      selection.mReply.mString.Length()));
 
