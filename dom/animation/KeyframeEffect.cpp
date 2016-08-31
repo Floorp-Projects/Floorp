@@ -125,5 +125,13 @@ KeyframeEffect::SetTarget(const Nullable<ElementOrCSSPseudoElement>& aTarget)
   }
 }
 
+void
+KeyframeEffect::SetSpacing(JSContext* aCx,
+                           const nsAString& aSpacing,
+                           ErrorResult& aRv)
+{
+  // TODO: Implement this in the next patch.
+}
+
 } // namespace dom
 } // namespace mozilla
