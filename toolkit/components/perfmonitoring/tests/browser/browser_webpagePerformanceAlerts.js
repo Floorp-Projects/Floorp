@@ -8,7 +8,7 @@
   * Simulate a slow webpage.
   */
 function WebpageBurner() {
-  CPUBurner.call(this, "http://example.com/browser/toolkit/components/perfmonitoring/tests/browser/browser_compartments.html?test=" + Math.random());
+  CPUBurner.call(this, "http://example.com/browser/toolkit/components/perfmonitoring/tests/browser/browser_compartments.html?test=" + Math.random(), 300000);
 }
 WebpageBurner.prototype = Object.create(CPUBurner.prototype);
 WebpageBurner.prototype.promiseBurnContentCPU = function() {
