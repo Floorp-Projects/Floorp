@@ -899,7 +899,8 @@ bool
 nsHtml5TreeOpExecutor::ShouldPreloadURI(nsIURI *aURI)
 {
   nsAutoCString spec;
-  aURI->GetSpec(spec);
+  nsresult rv = aURI->GetSpec(spec);
+  NS_ENSURE_SUCCESS(rv, false);
   if (mPreloadedURLs.Contains(spec)) {
     return false;
   }
