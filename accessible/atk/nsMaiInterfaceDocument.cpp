@@ -61,14 +61,15 @@ getDocumentLocaleCB(AtkDocument *aDocument)
 static inline GSList *
 prependToList(GSList *aList, const char *const aName, const nsAutoString &aValue)
 {
-  if (aValue.IsEmpty())
+  if (aValue.IsEmpty()) {
     return aList;
+  }
 
-    // libspi will free these
-    AtkAttribute *atkAttr = (AtkAttribute *)g_malloc(sizeof(AtkAttribute));
-    atkAttr->name = g_strdup(aName);
-    atkAttr->value = g_strdup(NS_ConvertUTF16toUTF8(aValue).get());
-    return g_slist_prepend(aList, atkAttr);
+  // libspi will free these
+  AtkAttribute *atkAttr = (AtkAttribute *)g_malloc(sizeof(AtkAttribute));
+  atkAttr->name = g_strdup(aName);
+  atkAttr->value = g_strdup(NS_ConvertUTF16toUTF8(aValue).get());
+  return g_slist_prepend(aList, atkAttr);
 }
 
 AtkAttributeSet *
