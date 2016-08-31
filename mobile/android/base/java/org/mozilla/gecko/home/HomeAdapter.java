@@ -5,8 +5,10 @@
 
 package org.mozilla.gecko.home;
 
+import org.mozilla.gecko.activitystream.ActivityStream;
 import org.mozilla.gecko.home.HomeConfig.PanelConfig;
 import org.mozilla.gecko.home.HomeConfig.PanelType;
+import org.mozilla.gecko.home.activitystream.ActivityStreamHomeFragment;
 
 import android.content.Context;
 import android.os.Bundle;
@@ -64,7 +66,7 @@ public class HomeAdapter extends FragmentStatePagerAdapter {
     @Override
     public Fragment getItem(int position) {
         PanelInfo info = mPanelInfos.get(position);
-        return Fragment.instantiate(mContext, info.getClassName(), info.getArgs());
+        return Fragment.instantiate(mContext, info.getClassName(mContext), info.getArgs());
     }
 
     @Override
@@ -193,8 +195,16 @@ public class HomeAdapter extends FragmentStatePagerAdapter {
             return mPanelConfig.getTitle();
         }
 
-        public String getClassName() {
+        public String getClassName(Context context) {
             final PanelType type = mPanelConfig.getType();
+
+            // Override top_sites with ActivityStream panel when enabled
+            // PanelType.toString() returns the panel id
+            if (type.toString() == "top_sites" &&
+                ActivityStream.isEnabled(context) &&
+                ActivityStream.isHomePanel()) {
+                return ActivityStreamHomeFragment.class.getName();
+            }
             return type.getPanelClass().getName();
         }
 

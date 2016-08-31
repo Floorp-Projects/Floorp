@@ -80,6 +80,7 @@ public class SuggestedSites {
         BrowserContract.SuggestedSites._ID,
         BrowserContract.SuggestedSites.URL,
         BrowserContract.SuggestedSites.TITLE,
+        BrowserContract.Combined.HISTORY_ID
     };
 
     private static final String JSON_KEY_URL = "url";
@@ -478,7 +479,15 @@ public class SuggestedSites {
         Log.d(LOGTAG, "Number of suggested sites: " + sitesCount);
 
         final int maxCount = Math.min(limit, sitesCount);
+        // History IDS: real history is positive, -1 is no history id in the combined table
+        // hence we can start at -2 for suggested sites
+        int id = -1;
         for (Site site : cachedSites.values()) {
+            // Decrement ID here: this ensure we have a consistent ID to URL mapping, even if items
+            // are removed. If we instead decremented at the point of insertion we'd end up with
+            // ID conflicts when a suggested site is removed. (note that cachedSites does not change
+            // while we're already showing topsites)
+            --id;
             if (cursor.getCount() == maxCount) {
                 break;
             }
@@ -491,9 +500,10 @@ public class SuggestedSites {
 
             if (restrictedProfile == site.restricted) {
                 final RowBuilder row = cursor.newRow();
-                row.add(-1);
+                row.add(id);
                 row.add(site.url);
                 row.add(site.title);
+                row.add(id);
             }
         }
 

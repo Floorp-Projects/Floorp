@@ -38,7 +38,7 @@ define(function (require, exports, module) {
       if (this.props.mode != "tiny") {
         return objectLink({
           object: object
-        }, object.class);
+        }, object.class + " ");
       }
       return "";
     },

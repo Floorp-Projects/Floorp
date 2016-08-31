@@ -51,7 +51,7 @@ window.onload = Task.async(function* () {
     is(renderedRep.type, GripArray.rep, `Rep correctly selects ${GripArray.rep.displayName}`);
 
     // Test rendering
-    const defaultOutput = `Array[]`;
+    const defaultOutput = `Array []`;
 
     const modeTests = [
       {
@@ -79,7 +79,7 @@ window.onload = Task.async(function* () {
     // Test array: `[1, "foo", {}]`;
     const testName = "testMaxProps";
 
-    const defaultOutput = `Array[ 1, "foo", Object ]`;
+    const defaultOutput = `Array [ 1, "foo", Object ]`;
 
     const modeTests = [
       {
@@ -107,7 +107,7 @@ window.onload = Task.async(function* () {
     // Test array = `["test string"…] //4 items`
     const testName = "testMoreThanShortMaxProps";
 
-    const defaultOutput = `Array[ ${Array(maxLength.short).fill("\"test string\"").join(", ")}, 1 more… ]`;
+    const defaultOutput = `Array [ ${Array(maxLength.short).fill("\"test string\"").join(", ")}, 1 more… ]`;
 
     const modeTests = [
       {
@@ -124,7 +124,7 @@ window.onload = Task.async(function* () {
       },
       {
         mode: "long",
-        expectedOutput: `Array[ ${Array(maxLength.short + 1).fill("\"test string\"").join(", ")} ]`,
+        expectedOutput: `Array [ ${Array(maxLength.short + 1).fill("\"test string\"").join(", ")} ]`,
       }
     ];
 
@@ -135,8 +135,8 @@ window.onload = Task.async(function* () {
     // Test array = `["test string"…] //301 items`
     const testName = "testMoreThanLongMaxProps";
 
-    const defaultShortOutput = `Array[ ${Array(maxLength.short).fill("\"test string\"").join(", ")}, ${maxLength.long + 1 - maxLength.short} more… ]`;
-    const defaultLongOutput = `Array[ ${Array(maxLength.long).fill("\"test string\"").join(", ")}, 1 more… ]`;
+    const defaultShortOutput = `Array [ ${Array(maxLength.short).fill("\"test string\"").join(", ")}, ${maxLength.long + 1 - maxLength.short} more… ]`;
+    const defaultLongOutput = `Array [ ${Array(maxLength.long).fill("\"test string\"").join(", ")}, 1 more… ]`;
 
     const modeTests = [
       {
@@ -164,7 +164,7 @@ window.onload = Task.async(function* () {
     // Test array = `let a = []; a = [a]`
     const testName = "testRecursiveArray";
 
-    const defaultOutput = `Array[ [1] ]`;
+    const defaultOutput = `Array [ [1] ]`;
 
     const modeTests = [
       {
@@ -191,8 +191,8 @@ window.onload = Task.async(function* () {
   function testPreviewLimit() {
     const testName = "testPreviewLimit";
 
-    const shortOutput = `Array[ 0, 1, 2, 8 more… ]`;
-    const defaultOutput = `Array[ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 1 more… ]`;
+    const shortOutput = `Array [ 0, 1, 2, 8 more… ]`;
+    const defaultOutput = `Array [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 1 more… ]`;
 
     const modeTests = [
       {
@@ -219,7 +219,7 @@ window.onload = Task.async(function* () {
   function testNamedNodeMap() {
     const testName = "testNamedNodeMap";
 
-    const defaultOutput = `NamedNodeMap[ class="myclass", cellpadding="7", border="3" ]`;
+    const defaultOutput = `NamedNodeMap [ class="myclass", cellpadding="7", border="3" ]`;
 
     const modeTests = [
       {

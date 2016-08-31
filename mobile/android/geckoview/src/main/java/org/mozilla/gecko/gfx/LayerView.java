@@ -189,7 +189,6 @@ public class LayerView extends ScrollView implements Tabs.OnTabsChangedListener 
         setFocusableInTouchMode(true);
 
         GeckoAccessibility.setDelegate(this);
-        GeckoAccessibility.setAccessibilityManagerListeners(getContext());
     }
 
     /**
@@ -708,7 +707,7 @@ public class LayerView extends ScrollView implements Tabs.OnTabsChangedListener 
     @Override
     public void onFocusChanged (boolean gainFocus, int direction, Rect previouslyFocusedRect) {
         super.onFocusChanged(gainFocus, direction, previouslyFocusedRect);
-        GeckoAccessibility.onLayerViewFocusChanged(this, gainFocus);
+        GeckoAccessibility.onLayerViewFocusChanged(gainFocus);
     }
 
     public void setFullScreenState(FullScreenState state) {

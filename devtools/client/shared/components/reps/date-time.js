@@ -30,7 +30,7 @@ define(function (require, exports, module) {
       if (this.props.objectLink) {
         return this.props.objectLink({
           object: grip
-        }, grip.class);
+        }, grip.class + " ");
       }
       return "";
     },

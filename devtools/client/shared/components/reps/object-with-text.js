@@ -31,7 +31,7 @@ define(function (require, exports, module) {
         return span({className: "objectBox"},
           this.props.objectLink({
             object: grip
-          }, this.getType(grip))
+          }, this.getType(grip) + " ")
         );
       }
       return "";
