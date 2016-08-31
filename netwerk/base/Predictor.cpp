@@ -48,11 +48,6 @@
 #include "SerializedLoadContext.h"
 #include "mozilla/net/NeckoChild.h"
 
-#if defined(ANDROID) && !defined(MOZ_WIDGET_GONK)
-#include "nsIPropertyBag2.h"
-static const int32_t ANDROID_23_VERSION = 10;
-#endif
-
 using namespace mozilla;
 
 namespace mozilla {
@@ -589,22 +584,6 @@ Predictor::Init()
   }
 
   nsresult rv = NS_OK;
-
-#if defined(ANDROID) && !defined(MOZ_WIDGET_GONK)
-  // This is an ugly hack to disable the predictor on android < 2.3, as it
-  // doesn't play nicely with those android versions, at least on our infra.
-  // Causes timeouts in reftests. See bug 881804 comment 86.
-  nsCOMPtr<nsIPropertyBag2> infoService =
-    do_GetService("@mozilla.org/system-info;1");
-  if (infoService) {
-    int32_t androidVersion = -1;
-    rv = infoService->GetPropertyAsInt32(NS_LITERAL_STRING("version"),
-                                         &androidVersion);
-    if (NS_SUCCEEDED(rv) && (androidVersion < ANDROID_23_VERSION)) {
-      return NS_ERROR_NOT_AVAILABLE;
-    }
-  }
-#endif
 
   rv = InstallObserver();
   NS_ENSURE_SUCCESS(rv, rv);

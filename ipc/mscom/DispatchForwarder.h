@@ -15,7 +15,7 @@
 namespace mozilla {
 namespace mscom {
 
-class DispatchForwarder : public IDispatch
+class DispatchForwarder final : public IDispatch
 {
 public:
   static HRESULT Create(IInterceptor* aInterceptor,
