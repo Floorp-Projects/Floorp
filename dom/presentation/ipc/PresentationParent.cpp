@@ -5,6 +5,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "DCPresentationChannelDescription.h"
+#include "mozilla/dom/ContentProcessManager.h"
 #include "mozilla/ipc/InputStreamUtils.h"
 #include "nsIPresentationDeviceManager.h"
 #include "nsServiceManagerUtils.h"
@@ -35,10 +36,11 @@ PresentationParent::PresentationParent()
 }
 
 bool
-PresentationParent::Init()
+PresentationParent::Init(ContentParentId aContentParentId)
 {
   MOZ_ASSERT(!mService);
   mService = do_GetService(PRESENTATION_SERVICE_CONTRACTID);
+  mChildId = aContentParentId;
   return NS_WARN_IF(!mService) ? false : true;
 }
 
@@ -107,7 +109,7 @@ PresentationParent::AllocPPresentationRequestParent(
   const PresentationIPCRequest& aRequest)
 {
   MOZ_ASSERT(mService);
-  RefPtr<PresentationRequestParent> actor = new PresentationRequestParent(mService);
+  RefPtr<PresentationRequestParent> actor = new PresentationRequestParent(mService, mChildId);
   return actor.forget().take();
 }
 
@@ -309,8 +311,10 @@ PresentationParent::RecvNotifyTransportClosed(const nsString& aSessionId,
 
 NS_IMPL_ISUPPORTS(PresentationRequestParent, nsIPresentationServiceCallback)
 
-PresentationRequestParent::PresentationRequestParent(nsIPresentationService* aService)
+PresentationRequestParent::PresentationRequestParent(nsIPresentationService* aService,
+                                                     ContentParentId aContentParentId)
   : mService(aService)
+  , mChildId(aContentParentId)
 {
   MOZ_COUNT_CTOR(PresentationRequestParent);
 }
@@ -333,9 +337,18 @@ PresentationRequestParent::DoRequest(const StartSessionRequest& aRequest)
   MOZ_ASSERT(mService);
   mNeedRegisterBuilder = true;
   mSessionId = aRequest.sessionId();
+
+  nsCOMPtr<nsIDOMEventTarget> eventTarget;
+  ContentProcessManager* cpm = ContentProcessManager::GetSingleton();
+  RefPtr<TabParent> tp =
+    cpm->GetTopLevelTabParentByProcessAndTabId(mChildId, aRequest.tabId());
+  if (tp) {
+    eventTarget = do_QueryInterface(tp->GetOwnerElement());
+  }
+
   return mService->StartSession(aRequest.url(), aRequest.sessionId(),
                                 aRequest.origin(), aRequest.deviceId(),
-                                aRequest.windowId(), this);
+                                aRequest.windowId(), eventTarget, this);
 }
 
 nsresult
