@@ -123,17 +123,23 @@ public class PresentationMediaPlayerManager extends MediaPlayerManager {
         public void surfaceChanged(SurfaceHolder holder, int format, int width,
                                    int height) {
             // Surface changed so force a composite
-            invalidateAndScheduleComposite(mGeckoView);
+            if (GeckoThread.isStateAtLeast(GeckoThread.State.PROFILE_READY)) {
+                invalidateAndScheduleComposite(mGeckoView);
+            }
         }
 
         @Override
         public void surfaceCreated(SurfaceHolder holder) {
-            addPresentationSurface(mGeckoView, holder.getSurface());
+            if (GeckoThread.isStateAtLeast(GeckoThread.State.PROFILE_READY)) {
+                addPresentationSurface(mGeckoView, holder.getSurface());
+            }
         }
 
         @Override
         public void surfaceDestroyed(SurfaceHolder holder) {
-            removePresentationSurface();
+            if (GeckoThread.isStateAtLeast(GeckoThread.State.PROFILE_READY)) {
+                removePresentationSurface();
+            }
         }
     }
 }

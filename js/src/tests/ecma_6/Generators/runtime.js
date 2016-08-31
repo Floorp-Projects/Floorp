@@ -74,9 +74,7 @@ function TestGeneratorObjectPrototype() {
     found_property_names.sort();
 
     assertDeepEq(found_property_names, expected_property_names);
-
-    // No symbol properties, at least until we have @@toStringTag.
-    assertEq(Object.getOwnPropertySymbols(GeneratorObjectPrototype).length, 0);
+    assertDeepEq(Object.getOwnPropertySymbols(GeneratorObjectPrototype), [Symbol.toStringTag]);
 }
 TestGeneratorObjectPrototype();
 

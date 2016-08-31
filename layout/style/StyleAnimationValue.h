@@ -53,8 +53,9 @@ public:
    * @param aCount      The number of times to add aValueToAdd.
    * @return true on success, false on failure.
    */
-  static bool Add(nsCSSPropertyID aProperty, StyleAnimationValue& aDest,
-                  const StyleAnimationValue& aValueToAdd, uint32_t aCount) {
+  static MOZ_MUST_USE bool
+  Add(nsCSSPropertyID aProperty, StyleAnimationValue& aDest,
+      const StyleAnimationValue& aValueToAdd, uint32_t aCount) {
     return AddWeighted(aProperty, 1.0, aDest, aCount, aValueToAdd, aDest);
   }
 
@@ -76,10 +77,11 @@ public:
    * @param aDistance   The result of the calculation.
    * @return true on success, false on failure.
    */
-  static bool ComputeDistance(nsCSSPropertyID aProperty,
-                              const StyleAnimationValue& aStartValue,
-                              const StyleAnimationValue& aEndValue,
-                              double& aDistance);
+  static MOZ_MUST_USE bool
+  ComputeDistance(nsCSSPropertyID aProperty,
+                  const StyleAnimationValue& aStartValue,
+                  const StyleAnimationValue& aEndValue,
+                  double& aDistance);
 
   /**
    * Calculates an interpolated value that is the specified |aPortion| between
@@ -97,11 +99,12 @@ public:
    * @param [out] aResultValue The resulting interpolated value.
    * @return true on success, false on failure.
    */
-  static bool Interpolate(nsCSSPropertyID aProperty,
-                          const StyleAnimationValue& aStartValue,
-                          const StyleAnimationValue& aEndValue,
-                          double aPortion,
-                          StyleAnimationValue& aResultValue) {
+  static MOZ_MUST_USE bool
+  Interpolate(nsCSSPropertyID aProperty,
+              const StyleAnimationValue& aStartValue,
+              const StyleAnimationValue& aEndValue,
+              double aPortion,
+              StyleAnimationValue& aResultValue) {
     return AddWeighted(aProperty, 1.0 - aPortion, aStartValue,
                        aPortion, aEndValue, aResultValue);
   }
@@ -120,10 +123,11 @@ public:
    * difficulty, we might change this to restrict them to being
    * positive.
    */
-  static bool AddWeighted(nsCSSPropertyID aProperty,
-                          double aCoeff1, const StyleAnimationValue& aValue1,
-                          double aCoeff2, const StyleAnimationValue& aValue2,
-                          StyleAnimationValue& aResultValue);
+  static MOZ_MUST_USE bool
+  AddWeighted(nsCSSPropertyID aProperty,
+              double aCoeff1, const StyleAnimationValue& aValue1,
+              double aCoeff2, const StyleAnimationValue& aValue2,
+              StyleAnimationValue& aResultValue);
 
   // Type-conversion methods
   // -----------------------
@@ -157,13 +161,14 @@ public:
    *                        nullptr.
    * @return true on success, false on failure.
    */
-  static bool ComputeValue(nsCSSPropertyID aProperty,
-                           mozilla::dom::Element* aTargetElement,
-                           nsStyleContext* aStyleContext,
-                           const nsAString& aSpecifiedValue,
-                           bool aUseSVGMode,
-                           StyleAnimationValue& aComputedValue,
-                           bool* aIsContextSensitive = nullptr);
+  static MOZ_MUST_USE bool
+  ComputeValue(nsCSSPropertyID aProperty,
+               mozilla::dom::Element* aTargetElement,
+               nsStyleContext* aStyleContext,
+               const nsAString& aSpecifiedValue,
+               bool aUseSVGMode,
+               StyleAnimationValue& aComputedValue,
+               bool* aIsContextSensitive = nullptr);
 
   /**
    * Like ComputeValue, but returns an array of StyleAnimationValues.
@@ -175,25 +180,27 @@ public:
    * to aResult.  On failure, aResult might still have partial results
    * in it.
    */
-  static bool ComputeValues(nsCSSPropertyID aProperty,
-                            mozilla::CSSEnabledState aEnabledState,
-                            mozilla::dom::Element* aTargetElement,
-                            nsStyleContext* aStyleContext,
-                            const nsAString& aSpecifiedValue,
-                            bool aUseSVGMode,
-                            nsTArray<PropertyStyleAnimationValuePair>& aResult);
+  static MOZ_MUST_USE bool
+  ComputeValues(nsCSSPropertyID aProperty,
+                mozilla::CSSEnabledState aEnabledState,
+                mozilla::dom::Element* aTargetElement,
+                nsStyleContext* aStyleContext,
+                const nsAString& aSpecifiedValue,
+                bool aUseSVGMode,
+                nsTArray<PropertyStyleAnimationValuePair>& aResult);
 
   /**
    * A variant on ComputeValues that takes an nsCSSValue as the specified
    * value. Only longhand properties are supported.
    */
-  static bool ComputeValues(nsCSSPropertyID aProperty,
-                            mozilla::CSSEnabledState aEnabledState,
-                            mozilla::dom::Element* aTargetElement,
-                            nsStyleContext* aStyleContext,
-                            const nsCSSValue& aSpecifiedValue,
-                            bool aUseSVGMode,
-                            nsTArray<PropertyStyleAnimationValuePair>& aResult);
+  static MOZ_MUST_USE bool
+  ComputeValues(nsCSSPropertyID aProperty,
+                mozilla::CSSEnabledState aEnabledState,
+                mozilla::dom::Element* aTargetElement,
+                nsStyleContext* aStyleContext,
+                const nsCSSValue& aSpecifiedValue,
+                bool aUseSVGMode,
+                nsTArray<PropertyStyleAnimationValuePair>& aResult);
 
   /**
    * Creates a specified value for the given computed value.
@@ -211,16 +218,22 @@ public:
    * @param aComputedValue The computed value to be converted.
    * @param [out] aSpecifiedValue The resulting specified value.
    * @return true on success, false on failure.
+   *
+   * These functions are not MOZ_MUST_USE because failing to check the return
+   * value is common and reasonable.
    */
-  static bool UncomputeValue(nsCSSPropertyID aProperty,
-                             const StyleAnimationValue& aComputedValue,
-                             nsCSSValue& aSpecifiedValue);
-  static bool UncomputeValue(nsCSSPropertyID aProperty,
-                             StyleAnimationValue&& aComputedValue,
-                             nsCSSValue& aSpecifiedValue);
-  static bool UncomputeValue(nsCSSPropertyID aProperty,
-                             const StyleAnimationValue& aComputedValue,
-                             nsAString& aSpecifiedValue);
+  static MOZ_MUST_USE bool
+  UncomputeValue(nsCSSPropertyID aProperty,
+                 const StyleAnimationValue& aComputedValue,
+                 nsCSSValue& aSpecifiedValue);
+  static MOZ_MUST_USE bool
+  UncomputeValue(nsCSSPropertyID aProperty,
+                 StyleAnimationValue&& aComputedValue,
+                 nsCSSValue& aSpecifiedValue);
+  static MOZ_MUST_USE bool
+  UncomputeValue(nsCSSPropertyID aProperty,
+                 const StyleAnimationValue& aComputedValue,
+                 nsAString& aSpecifiedValue);
 
   /**
    * Gets the computed value for the given property from the given style
@@ -236,9 +249,10 @@ public:
    * @param [out] aComputedValue The resulting computed value.
    * @return true on success, false on failure.
    */
-  static bool ExtractComputedValue(nsCSSPropertyID aProperty,
-                                   nsStyleContext* aStyleContext,
-                                   StyleAnimationValue& aComputedValue);
+  static MOZ_MUST_USE bool ExtractComputedValue(
+    nsCSSPropertyID aProperty,
+    nsStyleContext* aStyleContext,
+    StyleAnimationValue& aComputedValue);
 
   /**
    * Interpolates between 2 matrices by decomposing them.

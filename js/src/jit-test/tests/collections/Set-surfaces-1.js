@@ -13,11 +13,7 @@ assertEq(Set.length, 0);
 assertEq(Set.name, "Set");
 
 assertEq(Object.getPrototypeOf(Set.prototype), Object.prototype);
-assertEq("toStringTag" in Symbol, false,
-         "if this fails, congratulations!  implement " +
-         "Set.prototype[Symbol.toStringTag] = 'Set' in SpiderMonkey and make " +
-         "the next test check for '[object Set]' again");
-assertEq(Object.prototype.toString.call(Set.prototype), "[object Object]");
+assertEq(Object.prototype.toString.call(Set.prototype), "[object Set]");
 assertEq(Object.prototype.toString.call(new Set()), "[object Set]");
 assertEq(Object.keys(Set.prototype).join(), "");
 assertEq(Set.prototype.constructor, Set);

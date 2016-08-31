@@ -1771,6 +1771,9 @@ js::InitArrayBufferClass(JSContext* cx, HandleObject obj)
     if (!JS_DefineFunctions(cx, arrayBufferProto, ArrayBufferObject::jsfuncs))
         return nullptr;
 
+    if (!DefineToStringTag(cx, arrayBufferProto, cx->names().ArrayBuffer))
+        return nullptr;
+
     if (!GlobalObject::initBuiltinConstructor(cx, global, JSProto_ArrayBuffer,
                                               ctor, arrayBufferProto))
     {

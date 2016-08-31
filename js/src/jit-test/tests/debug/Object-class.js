@@ -12,7 +12,7 @@ dbg.onDebuggerStatement = function (frame) {
     assertEq(arr[3].class, "Date");
     assertEq(arr[4].class, "Object");
     assertEq(arr[5].class, "Function");
-    assertEq(arr[6].class, "Date");
+    assertEq(arr[6].class, "Object");
     hits++;
 };
 g.f(Object.prototype, [], eval, new Date,
