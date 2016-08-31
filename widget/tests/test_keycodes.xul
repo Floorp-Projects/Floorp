@@ -3244,16 +3244,16 @@ function* runXULKeyTests()
   }
   else if (IS_WIN) {
     yield testKeyElement({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_OEM_1,
-                          modifiers:{ctrlKey:1}, chars:";"},
+                          modifiers:{ctrlKey:1}, chars:""},
                          "unshiftedKey");
     yield testKeyElement({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_OEM_1,
-                          modifiers:{ctrlKey:1, shiftKey:1}, chars:";"},
+                          modifiers:{ctrlKey:1, shiftKey:1}, chars:""},
                          "shiftedKey");
     yield testKeyElement({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_OEM_7,
-                          modifiers:{ctrlKey:1}, chars:"'"},
+                          modifiers:{ctrlKey:1}, chars:""},
                          "reservedUnshiftedKey");
     yield testKeyElement({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_OEM_7,
-                          modifiers:{ctrlKey:1, shiftKey:1}, chars:"'"},
+                          modifiers:{ctrlKey:1, shiftKey:1}, chars:""},
                          "reservedShiftedKey");
   }
 
@@ -3439,7 +3439,7 @@ function* runReservedKeyTests()
   } else if (IS_WIN) {
     // Ctrl+T is reserved for opening new tab.
     yield testReservedKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_T,
-                           modifiers:{ctrlKey:1}, chars:"t"});
+                           modifiers:{ctrlKey:1}, chars:"\u0014"});
   }
 
   finializeKeyElementTest();
