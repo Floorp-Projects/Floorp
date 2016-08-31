@@ -113,12 +113,16 @@ function cleanupTestTabs() {
 
 function switchTab(aURI, aShouldFindExistingTab, aOpenParams = {}) {
   // Build the description before switchToTabHavingURI deletes the object properties.
-  let msg = "Should switch to existing " + aURI + " tab if one existed, " +
-        (aOpenParams.ignoreFragment ? "ignoring" : "including") + " fragment portion, " +
-        (aOpenParams.ignoreQueryString || aOpenParams.replaceQueryString ?
-         (aOpenParams.replaceQueryString ? "replacing" : "ignoring") :
-         "including"
-        ) + " query string.";
+  let msg = `Should switch to existing ${aURI} tab if one existed, ` +
+        `${(aOpenParams.ignoreFragment ? "ignoring" : "including")} fragment portion, `;
+  if (aOpenParams.replaceQueryString) {
+    msg += "replacing";
+  } else if (aOpenParams.ignoreQueryString) {
+    msg += "ignoring";
+  } else {
+    msg += "including";
+  }
+  msg += " query string.";
   let tabFound = switchToTabHavingURI(aURI, true, aOpenParams);
   is(tabFound, aShouldFindExistingTab, msg);
 }
