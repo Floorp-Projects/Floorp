@@ -100,6 +100,7 @@ PointerEvent::Constructor(EventTarget* aOwner,
   widgetEvent->buttons = aParam.mButtons;
 
   e->SetTrusted(trusted);
+  e->SetComposed(aParam.mComposed);
   return e.forget();
 }
 

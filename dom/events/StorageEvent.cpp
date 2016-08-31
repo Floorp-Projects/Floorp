@@ -65,7 +65,7 @@ StorageEvent::Constructor(EventTarget* aOwner,
   e->mUrl = aEventInitDict.mUrl;
   e->mStorageArea = aEventInitDict.mStorageArea;
   e->SetTrusted(trusted);
-
+  e->SetComposed(aEventInitDict.mComposed);
   return e.forget();
 }
 
