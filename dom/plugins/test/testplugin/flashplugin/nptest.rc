@@ -31,7 +31,7 @@ BEGIN
             VALUE "InternalName", "npswftest"
             VALUE "MIMEType", "application/x-shockwave-flash-test"
             VALUE "OriginalFilename", "npswftest.dll"
-            VALUE "ProductName", "Flash Test Plug-in"
+            VALUE "ProductName", "Shockwave Flash"
             VALUE "ProductVersion", "1.0"
         END
     END

@@ -119,44 +119,6 @@ Task.async(function* (type = "bottom", src = "data:text/html;charset=utf-8,") {
 });
 
 /**
- * Load the Telemetry utils, then stub Telemetry.prototype.log in order to
- * record everything that's logged in it.
- * Store all recordings on Telemetry.telemetryInfo.
- * @return {Telemetry}
- */
-function loadTelemetryAndRecordLogs() {
-  info("Mock the Telemetry log function to record logged information");
-
-  let Telemetry = require("devtools/client/shared/telemetry");
-  Telemetry.prototype.telemetryInfo = {};
-  Telemetry.prototype._oldlog = Telemetry.prototype.log;
-  Telemetry.prototype.log = function (histogramId, value) {
-    if (!this.telemetryInfo) {
-      // Can be removed when Bug 992911 lands (see Bug 1011652 Comment 10)
-      return;
-    }
-    if (histogramId) {
-      if (!this.telemetryInfo[histogramId]) {
-        this.telemetryInfo[histogramId] = [];
-      }
-
-      this.telemetryInfo[histogramId].push(value);
-    }
-  };
-
-  return Telemetry;
-}
-
-/**
- * Stop recording the Telemetry logs and put back the utils as it was before.
- */
-function stopRecordingTelemetryLogs(Telemetry) {
-  Telemetry.prototype.log = Telemetry.prototype._oldlog;
-  delete Telemetry.prototype._oldlog;
-  delete Telemetry.prototype.telemetryInfo;
-}
-
-/**
  * Check the correctness of the data recorded in Telemetry after
  * loadTelemetryAndRecordLogs was called.
  */
