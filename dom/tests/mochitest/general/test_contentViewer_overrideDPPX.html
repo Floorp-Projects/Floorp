@@ -284,6 +284,50 @@ const gTests = {
 
     setOverrideDPPX(dppx);
     setFullZoom(zoom);
+  },
+  "test OverrideDPPX is kept on document navigation": (done) => {
+    assertValuesAreInitial();
+
+    let frameOriginalFontSize = getBodyFontSize(frameWindow);
+    let frameStyle = createFontStyleForDPPX(frameWindow.document, dppx, "32");
+    let frameCurrentFontSize = getBodyFontSize(frameWindow);
+
+    is(frameCurrentFontSize, frameOriginalFontSize,
+      "frame's media queries are not applied yet");
+
+    setOverrideDPPX(dppx);
+
+    frameCurrentFontSize = getBodyFontSize(frameWindow);
+
+    is(frameWindow.devicePixelRatio, dppx,
+      "frame's devicePixelRatio overridden.");
+    isnot(frameCurrentFontSize, frameOriginalFontSize,
+      "frame's media queries are applied.");
+    is(frameCurrentFontSize, "32px",
+      "frame's font size has the expected value.");
+
+    frameWindow.frameElement.addEventListener("load", function listener() {
+      this.removeEventListener("load", listener);
+
+      frameStyle = createFontStyleForDPPX(frameWindow.document, dppx, "32");
+
+      frameCurrentFontSize = getBodyFontSize(frameWindow);
+
+      is(frameWindow.devicePixelRatio, dppx,
+        "frame's devicePixelRatio is still overridden.");
+      isnot(frameCurrentFontSize, frameOriginalFontSize,
+        "frame's media queries are still applied.");
+      is(frameCurrentFontSize, "32px",
+        "frame's font size has still the expected value.");
+
+      frameStyle.remove();
+
+      setOverrideDPPX(0);
+
+      done();
+    });
+
+    frameWindow.location.reload(true);
   }
 };
 
