@@ -71,6 +71,8 @@ class CacheObserver : public nsIObserver
 
   static bool EntryIsTooBig(int64_t aSize, bool aUsingDisk);
 
+  static uint32_t MaxShutdownIOLag()
+    { return sMaxShutdownIOLag; }
   static bool IsPastShutdownIOLag();
 
   static bool ShuttingDown()

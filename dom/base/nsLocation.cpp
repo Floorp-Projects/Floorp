@@ -243,7 +243,7 @@ nsLocation::GetURI(nsIURI** aURI, bool aGetInnermostURI)
 }
 
 nsresult
-nsLocation::GetWritableURI(nsIURI** aURI)
+nsLocation::GetWritableURI(nsIURI** aURI, const nsACString* aNewRef)
 {
   *aURI = nullptr;
 
@@ -254,7 +254,11 @@ nsLocation::GetWritableURI(nsIURI** aURI)
     return rv;
   }
 
-  return uri->Clone(aURI);
+  if (!aNewRef) {
+    return uri->Clone(aURI);
+  }
+
+  return uri->CloneWithNewRef(*aNewRef, aURI);
 }
 
 nsresult
@@ -349,18 +353,13 @@ nsLocation::GetHash(nsAString& aHash)
 NS_IMETHODIMP
 nsLocation::SetHash(const nsAString& aHash)
 {
-  nsCOMPtr<nsIURI> uri;
-  nsresult rv = GetWritableURI(getter_AddRefs(uri));
-  if (NS_FAILED(rv) || !uri) {
-    return rv;
-  }
-
   NS_ConvertUTF16toUTF8 hash(aHash);
   if (hash.IsEmpty() || hash.First() != char16_t('#')) {
     hash.Insert(char16_t('#'), 0);
   }
-  rv = uri->SetRef(hash);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = GetWritableURI(getter_AddRefs(uri), &hash);
+  if (NS_FAILED(rv) || !uri) {
     return rv;
   }
 

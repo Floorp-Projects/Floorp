@@ -115,7 +115,7 @@ gfxContext::~gfxContext()
 {
   for (int i = mStateStack.Length() - 1; i >= 0; i--) {
     for (unsigned int c = 0; c < mStateStack[i].pushedClips.Length(); c++) {
-      mDT->PopClip();
+      mStateStack[i].drawTarget->PopClip();
     }
   }
   mDT->Flush();

@@ -19,7 +19,7 @@
 	<key>CFBundleVersion</key>
 	<string>1.0.0.0</string>
 	<key>WebPluginName</key>
-	<string>Flash Test Plug-in</string>
+	<string>Shockwave Flash</string>
 	<key>WebPluginDescription</key>
 	<string>Flash plug-in for testing purposes.</string>
 	<key>WebPluginMIMETypes</key>

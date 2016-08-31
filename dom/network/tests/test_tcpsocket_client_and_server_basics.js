@@ -347,6 +347,9 @@ function* test_basics() {
   serverQueue = connectedResult.queue;
 
   // -- Attempt to send non-string data.
+  // Restore the original behavior by replacing toString with
+  // Object.prototype.toString. (bug 1121938)
+  bigUint8Array.toString = Object.prototype.toString;
   is(clientSocket.send(bigUint8Array), true,
      'Client sending a large non-string should only send a small string.');
   clientSocket.close();

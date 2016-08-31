@@ -105,6 +105,13 @@ private:
   // These flags are only accessed on the IO thread.
   bool                 mDoomWhenFoundPinned : 1;
   bool                 mDoomWhenFoundNonPinned : 1;
+  // Set when after shutdown AND:
+  // - when writing: writing data (not metadata) OR the physical file handle is not currently open
+  // - when truncating: the physical file handle is not currently open
+  // When set it prevents any further writes or truncates on such handles to happen immediately
+  // after shutdown and gives a chance to write metadata of already open files quickly as possible
+  // (only that renders them actually usable by the cache.)
+  bool                 mKilled : 1;
   // For existing files this is always pre-set to UNKNOWN.  The status is udpated accordingly
   // after the matadata has been parsed.
   // For new files the flag is set according to which storage kind is opening

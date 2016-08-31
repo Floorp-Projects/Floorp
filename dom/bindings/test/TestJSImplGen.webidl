@@ -491,7 +491,12 @@ interface TestJSImplInterface {
   //void passUnionWithSequence((sequence<object> or long) arg);
   void passUnionWithArrayBuffer((ArrayBuffer or long) arg);
   void passUnionWithString((DOMString or object) arg);
-  //void passUnionWithEnum((MyTestEnum or object) arg);
+  // Using an enum in a union.  Note that we use some enum not declared in our
+  // binding file, because UnionTypes.h will need to include the binding header
+  // for this enum.  Pick an enum from an interface that won't drag in too much
+  // stuff.
+  void passUnionWithEnum((SupportedType or object) arg);
+
   // Trying to use a callback in a union won't include the test
   // headers, unfortunately, so won't compile.
   //  void passUnionWithCallback((MyTestCallback or long) arg);
@@ -514,6 +519,9 @@ interface TestJSImplInterface {
   void passUnionWithDefaultValue14(optional (double or ByteString) arg = "");
   void passUnionWithDefaultValue15(optional (double or ByteString) arg = 1);
   void passUnionWithDefaultValue16(optional (double or ByteString) arg = 1.5);
+  void passUnionWithDefaultValue17(optional (double or SupportedType) arg = "text/html");
+  void passUnionWithDefaultValue18(optional (double or SupportedType) arg = 1);
+  void passUnionWithDefaultValue19(optional (double or SupportedType) arg = 1.5);
 
   void passNullableUnionWithDefaultValue1(optional (double or DOMString)? arg = "");
   void passNullableUnionWithDefaultValue2(optional (double or DOMString)? arg = 1);
@@ -531,6 +539,10 @@ interface TestJSImplInterface {
   void passNullableUnionWithDefaultValue14(optional (double or ByteString)? arg = 1);
   void passNullableUnionWithDefaultValue15(optional (double or ByteString)? arg = 1.5);
   void passNullableUnionWithDefaultValue16(optional (double or ByteString)? arg = null);
+  void passNullableUnionWithDefaultValue17(optional (double or SupportedType)? arg = "text/html");
+  void passNullableUnionWithDefaultValue18(optional (double or SupportedType)? arg = 1);
+  void passNullableUnionWithDefaultValue19(optional (double or SupportedType)? arg = 1.5);
+  void passNullableUnionWithDefaultValue20(optional (double or SupportedType)? arg = null);
 
   void passSequenceOfUnions(sequence<(CanvasPattern or CanvasGradient)> arg);
   void passSequenceOfUnions2(sequence<(object or long)> arg);

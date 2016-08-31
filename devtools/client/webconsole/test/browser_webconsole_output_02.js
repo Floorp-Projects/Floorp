@@ -97,7 +97,7 @@ var inputTests = [
   {
     input: "window.typedarray1",
     output: "Int32Array [ 1, 287, 8651, 40983, 8754 ]",
-    printOutput: "[object Int32Array]",
+    printOutput: "1,287,8651,40983,8754",
     inspectable: true,
     variablesViewLabel: "Int32Array[5]",
   },

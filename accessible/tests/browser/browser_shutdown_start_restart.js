@@ -4,7 +4,7 @@
 
 'use strict';
 
-add_task(function* testStartAndRestart() {
+add_task(function* () {
   info('Creating a service');
   // Create a11y service.
   let a11yInit = initPromise();

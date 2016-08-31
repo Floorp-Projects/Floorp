@@ -184,7 +184,7 @@ class MOZ_STACK_CLASS ModuleGenerator
 
     // Segments:
     MOZ_MUST_USE bool addDataSegment(DataSegment s) { return dataSegments_.append(s); }
-    MOZ_MUST_USE bool addElemSegment(ElemSegment&& s);
+    MOZ_MUST_USE bool addElemSegment(InitExpr offset, Uint32Vector&& elemFuncIndices);
 
     // Function names:
     void setFuncNames(NameInBytecodeVector&& funcNames);

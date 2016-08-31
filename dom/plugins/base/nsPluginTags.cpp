@@ -360,8 +360,12 @@ void nsPluginTag::InitMime(const char* const* aMimeTypes,
         mSupportsAsyncInit = true;
         break;
       case nsPluginHost::eSpecialType_Flash:
-        mIsFlashPlugin = true;
-        mSupportsAsyncInit = true;
+        // VLC sometimes claims to implement the Flash MIME type, and we want
+        // to allow users to control that separately from Adobe Flash.
+        if (Name().EqualsLiteral("Shockwave Flash")) {
+          mIsFlashPlugin = true;
+          mSupportsAsyncInit = true;
+        }
         break;
       case nsPluginHost::eSpecialType_Silverlight:
       case nsPluginHost::eSpecialType_Unity:

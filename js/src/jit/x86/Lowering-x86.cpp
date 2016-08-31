@@ -217,23 +217,24 @@ LIRGeneratorX86::lowerForALUInt64(LInstructionHelper<INT64_PIECES, 2 * INT64_PIE
 void
 LIRGeneratorX86::lowerForMulInt64(LMulI64* ins, MMul* mir, MDefinition* lhs, MDefinition* rhs)
 {
-    bool constantNeedTemp = true;
+    bool needsTemp = true;
+
     if (rhs->isConstant()) {
         int64_t constant = rhs->toConstant()->toInt64();
         int32_t shift = mozilla::FloorLog2(constant);
-        // See special cases in CodeGeneratorX86Shared::visitMulI64
+        // See special cases in CodeGeneratorX86Shared::visitMulI64.
         if (constant >= -1 && constant <= 2)
-            constantNeedTemp = false;
+            needsTemp = false;
         if (int64_t(1) << shift == constant)
-            constantNeedTemp = false;
+            needsTemp = false;
     }
 
     // MulI64 on x86 needs output to be in edx, eax;
     ins->setInt64Operand(0, useInt64Fixed(lhs, Register64(edx, eax), /*useAtStart = */ true));
-    ins->setInt64Operand(INT64_PIECES,
-            lhs != rhs ? useInt64OrConstant(rhs) : useInt64OrConstantAtStart(rhs));
-    if (constantNeedTemp)
+    ins->setInt64Operand(INT64_PIECES, useInt64OrConstant(rhs));
+    if (needsTemp)
         ins->setTemp(0, temp());
+
     defineInt64Fixed(ins, mir, LInt64Allocation(LAllocation(AnyRegister(edx)),
                                                 LAllocation(AnyRegister(eax))));
 }

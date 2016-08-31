@@ -29,7 +29,7 @@ function IsDetachedBuffer(buffer) {
     // optimization in place there to avoid incurring the cost here.  An
     // alternative is to give SharedArrayBuffer the same layout as ArrayBuffer.
     if (IsSharedArrayBuffer(buffer))
-	return false;
+        return false;
 
     var flags = UnsafeGetInt32FromReservedSlot(buffer, JS_ARRAYBUFFER_FLAGS_SLOT);
     return (flags & JS_ARRAYBUFFER_DETACHED_FLAG) !== 0;
@@ -171,11 +171,10 @@ function TypedArrayEvery(callbackfn, thisArg = undefined) {
 
     // Steps 3-5.
     var len;
-    if (isTypedArray) {
+    if (isTypedArray)
         len = TypedArrayLength(O);
-    } else {
+    else
         len = callFunction(CallTypedArrayMethodIfWrapped, O, O, "TypedArrayLength");
-    }
 
     // Step 6.
     if (arguments.length === 0)
@@ -260,11 +259,10 @@ function TypedArrayFilter(callbackfn, thisArg = undefined) {
 
     // Step 4.
     var len;
-    if (isTypedArray) {
+    if (isTypedArray)
         len = TypedArrayLength(O);
-    } else {
+    else
         len = callFunction(CallTypedArrayMethodIfWrapped, O, O, "TypedArrayLength");
-    }
 
     // Step 5.
     if (arguments.length === 0)
@@ -329,11 +327,10 @@ function TypedArrayFind(predicate, thisArg = undefined) {
 
     // Steps 3-5.
     var len;
-    if (isTypedArray) {
+    if (isTypedArray)
         len = TypedArrayLength(O);
-    } else {
+    else
         len = callFunction(CallTypedArrayMethodIfWrapped, O, O, "TypedArrayLength");
-    }
 
     // Step 6.
     if (arguments.length === 0)
@@ -372,11 +369,10 @@ function TypedArrayFindIndex(predicate, thisArg = undefined) {
 
     // Steps 3-5.
     var len;
-    if (isTypedArray) {
+    if (isTypedArray)
         len = TypedArrayLength(O);
-    } else {
+    else
         len = callFunction(CallTypedArrayMethodIfWrapped, O, O, "TypedArrayLength");
-    }
 
     // Step 6.
     if (arguments.length === 0)
@@ -413,11 +409,10 @@ function TypedArrayForEach(callbackfn, thisArg = undefined) {
 
     // Step 3-4.
     var len;
-    if (isTypedArray) {
+    if (isTypedArray)
         len = TypedArrayLength(O);
-    } else {
+    else
         len = callFunction(CallTypedArrayMethodIfWrapped, O, O, "TypedArrayLength");
-    }
 
     // Step 5.
     if (arguments.length === 0)
@@ -518,7 +513,7 @@ function TypedArrayJoin(separator) {
     var element0 = O[0];
 
     // Steps 10-11.
-    // Omit the 'if' clause in step 10, since typed arrays can not have undefined or null elements.
+    // Omit the 'if' clause in step 10, since typed arrays can't have undefined or null elements.
     var R = ToString(element0);
 
     // Steps 12-13.
@@ -530,7 +525,7 @@ function TypedArrayJoin(separator) {
         var element = O[k];
 
         // Steps 13.c-13.d.
-        // Omit the 'if' clause in step 13.c, since typed arrays can not have undefined or null elements.
+        // Omit the 'if' clause in step 13.c, since typed arrays can't have undefined or null elements.
         var next = ToString(element);
 
         // Step 13.e.
@@ -607,11 +602,10 @@ function TypedArrayMap(callbackfn, thisArg = undefined) {
 
     // Step 4.
     var len;
-    if (isTypedArray) {
+    if (isTypedArray)
         len = TypedArrayLength(O);
-    } else {
+    else
         len = callFunction(CallTypedArrayMethodIfWrapped, O, O, "TypedArrayLength");
-    }
 
     // Step 5.
     if (arguments.length === 0)
@@ -657,11 +651,10 @@ function TypedArrayReduce(callbackfn/*, initialValue*/) {
 
     // Steps 3-5.
     var len;
-    if (isTypedArray) {
+    if (isTypedArray)
         len = TypedArrayLength(O);
-    } else {
+    else
         len = callFunction(CallTypedArrayMethodIfWrapped, O, O, "TypedArrayLength");
-    }
 
     // Step 6.
     if (arguments.length === 0)
@@ -704,11 +697,10 @@ function TypedArrayReduceRight(callbackfn/*, initialValue*/) {
 
     // Steps 3-5.
     var len;
-    if (isTypedArray) {
+    if (isTypedArray)
         len = TypedArrayLength(O);
-    } else {
+    else
         len = callFunction(CallTypedArrayMethodIfWrapped, O, O, "TypedArrayLength");
-    }
 
     // Step 6.
     if (arguments.length === 0)
@@ -870,7 +862,7 @@ function SetFromTypedArray(target, typedArray, targetOffset, targetLength) {
 }
 
 // ES6 draft 20150304 %TypedArray%.prototype.set
-function TypedArraySet(overloaded, offset) {
+function TypedArraySet(overloaded, offset = 0) {
     // Steps 2-5, either algorithm.
     var target = this;
     if (!IsObject(target) || !IsTypedArray(target)) {
@@ -971,11 +963,10 @@ function TypedArraySome(callbackfn, thisArg = undefined) {
 
     // Steps 3-5.
     var len;
-    if (isTypedArray) {
+    if (isTypedArray)
         len = TypedArrayLength(O);
-    } else {
+    else
         len = callFunction(CallTypedArrayMethodIfWrapped, O, O, "TypedArrayLength");
-    }
 
     // Step 6.
     if (arguments.length === 0)
@@ -1104,6 +1095,78 @@ function TypedArraySort(comparefn) {
     }
 
     return QuickSort(obj, len, comparefn);
+}
+
+// ES2017 draft rev f8a9be8ea4bd97237d176907a1e3080dce20c68f
+//   22.2.3.28 %TypedArray%.prototype.toLocaleString ([ reserved1 [ , reserved2 ] ])
+// ES2017 Intl draft rev 78bbe7d1095f5ff3760ac4017ed366026e4cb276
+//   13.4.1 Array.prototype.toLocaleString ([ locales [ , options ]])
+function TypedArrayToLocaleString(locales = undefined, options = undefined) {
+    // ValidateTypedArray, then step 1.
+    var array = this;
+
+    // This function is not generic.
+    // We want to make sure that we have an attached buffer, per spec prose.
+    var isTypedArray = IsTypedArrayEnsuringArrayBuffer(array);
+
+    // If we got here, `this` is either a typed array or a cross-compartment
+    // wrapper for one.
+
+    // Step 2.
+    var len;
+    if (isTypedArray)
+        len = TypedArrayLength(array);
+    else
+        len = callFunction(CallTypedArrayMethodIfWrapped, array, array, "TypedArrayLength");
+
+    // Step 4.
+    if (len === 0)
+        return "";
+
+    // Step 5.
+    var firstElement = array[0];
+
+    // Steps 6-7.
+    // Omit the 'if' clause in step 6, since typed arrays can't have undefined
+    // or null elements.
+#if EXPOSE_INTL_API
+    var R = ToString(callContentFunction(firstElement.toLocaleString, firstElement, locales, options));
+#else
+    var R = ToString(callContentFunction(firstElement.toLocaleString, firstElement));
+#endif
+
+    // Step 3 (reordered).
+    // We don't (yet?) implement locale-dependent separators.
+    var separator = ",";
+
+    // Steps 8-9.
+    for (var k = 1; k < len; k++) {
+        // Step 9.a.
+        var S = R + separator;
+
+        // Step 9.b.
+        var nextElement = array[k];
+
+        // Step 9.c *should* be unreachable: typed array elements are numbers.
+        // But bug 1079853 means |nextElement| *could* be |undefined|, if the
+        // previous iteration's step 9.d or step 7 detached |array|'s buffer.
+        // Conveniently, if this happens, evaluating |nextElement.toLocaleString|
+        // throws the required TypeError, and the only observable difference is
+        // the error message. So despite bug 1079853, we can skip step 9.c.
+
+        // Step 9.d.
+#if EXPOSE_INTL_API
+        R = ToString(callContentFunction(nextElement.toLocaleString, nextElement, locales, options));
+#else
+        R = ToString(callContentFunction(nextElement.toLocaleString, nextElement));
+#endif
+
+        // Step 9.e.
+        R = S + R;
+    }
+
+    // Step 10.
+    return R;
 }
 
 // ES6 draft 20150304 %TypedArray%.prototype.subarray

@@ -23,10 +23,7 @@ xpcAccessibilityService *xpcAccessibilityService::gXPCAccessibilityService = nul
 void
 xpcAccessibilityService::ShutdownCallback(nsITimer* aTimer, void* aClosure)
 {
-  if (CanShutdownAccService()) {
-    GetAccService()->Shutdown();
-  }
-
+  MaybeShutdownAccService(nsAccessibilityService::eXPCOM);
   xpcAccessibilityService* xpcAccService =
     reinterpret_cast<xpcAccessibilityService*>(aClosure);
 
@@ -47,7 +44,7 @@ xpcAccessibilityService::AddRef(void)
   NS_LOG_ADDREF(this, count, "xpcAccessibilityService", sizeof(*this));
 
   if (mRefCnt > 1) {
-    GetOrCreateAccService(false);
+    GetOrCreateAccService(nsAccessibilityService::eXPCOM);
   }
 
   return count;
@@ -238,7 +235,7 @@ NS_GetAccessibilityService(nsIAccessibilityService** aResult)
   NS_ENSURE_TRUE(aResult, NS_ERROR_NULL_POINTER);
   *aResult = nullptr;
 
-  GetOrCreateAccService(false);
+  GetOrCreateAccService(nsAccessibilityService::eXPCOM);
 
   xpcAccessibilityService* service = new xpcAccessibilityService();
   NS_ENSURE_TRUE(service, NS_ERROR_OUT_OF_MEMORY);
