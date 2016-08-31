@@ -2480,21 +2480,22 @@ void MediaDecoderStateMachine::UpdateNextFrameStatus()
 
   MediaDecoderOwner::NextFrameStatus status;
   const char* statusString;
-  if (mState < DECODER_STATE_DECODING || !mSentFirstFrameLoadedEvent) {
-    status = MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE;
-    statusString = "NEXT_FRAME_UNAVAILABLE";
-  } else if (IsBuffering()) {
-    status = MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE_BUFFERING;
-    statusString = "NEXT_FRAME_UNAVAILABLE_BUFFERING";
-  } else if (IsSeeking()) {
-    status = MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE_SEEKING;
-    statusString = "NEXT_FRAME_UNAVAILABLE_SEEKING";
-  } else if (HaveNextFrameData()) {
-    status = MediaDecoderOwner::NEXT_FRAME_AVAILABLE;
-    statusString = "NEXT_FRAME_AVAILABLE";
-  } else {
-    status = MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE;
-    statusString = "NEXT_FRAME_UNAVAILABLE";
+
+  switch (mState.Ref()) {
+    case DECODER_STATE_BUFFERING:
+      status = MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE_BUFFERING;
+      statusString = "NEXT_FRAME_UNAVAILABLE_BUFFERING";
+      break;
+    case DECODER_STATE_SEEKING:
+      status = MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE_SEEKING;
+      statusString = "NEXT_FRAME_UNAVAILABLE_SEEKING";
+      break;
+    default:
+      bool b = HaveNextFrameData();
+      status = b ? MediaDecoderOwner::NEXT_FRAME_AVAILABLE :
+                   MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE;
+      statusString = b ? "NEXT_FRAME_AVAILABLE" : "NEXT_FRAME_UNAVAILABLE";
+      break;
   }
 
   if (status != mNextFrameStatus) {
