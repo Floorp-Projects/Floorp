@@ -39,6 +39,27 @@
   height: 100%;
 }
 
+.tabs .all-tabs-menu  {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 15px;
+  height: 100%;
+  border-style: solid;
+  border-width: 0;
+  border-inline-start-width: 1px;
+  border-color: var(--theme-splitter-color);
+  background: url("chrome://devtools/skin/images/dropmarker.svg");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-color: var(--theme-tab-toolbar-background);
+}
+
+.tabs .all-tabs-menu:-moz-locale-dir(rtl) {
+  right: unset;
+  left: 0;
+}
+
 /* Light Theme */
 
 .theme-dark .tabs,
@@ -48,6 +69,7 @@
 
 .theme-dark .tabs .tabs-navigation,
 .theme-light .tabs .tabs-navigation {
+  position: relative;
   border-bottom: 1px solid var(--theme-splitter-color);
   background: var(--theme-tab-toolbar-background);
 }
