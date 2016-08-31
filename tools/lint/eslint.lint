@@ -309,8 +309,13 @@ def lint(paths, binary=None, fix=None, setup=None, **lintargs):
     if fix:
         cmd_args.insert(1, '--fix')
 
+    shell = False
+    if os.environ.get('MSYSTEM') in ('MINGW32', 'MINGW64'):
+        # The eslint binary needs to be run from a shell with msys
+        shell = True
+
     orig = signal.signal(signal.SIGINT, signal.SIG_IGN)
-    proc = ProcessHandler(cmd_args, env=os.environ, stream=None)
+    proc = ProcessHandler(cmd_args, env=os.environ, stream=None, shell=shell)
     proc.run()
     signal.signal(signal.SIGINT, orig)
 
