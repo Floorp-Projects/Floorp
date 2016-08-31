@@ -1240,7 +1240,7 @@ class Parser final : private JS::AutoGCRooter, public StrictModeGetter
     bool declareDotGeneratorName();
 
     bool checkFunctionDefinition(HandleAtom funAtom, Node pn, FunctionSyntaxKind kind,
-                                 bool *tryAnnexB);
+                                 GeneratorKind generatorKind, bool* tryAnnexB);
     bool skipLazyInnerFunction(Node pn, bool tryAnnexB);
     bool innerFunction(Node pn, ParseContext* outerpc, HandleFunction fun,
                        InHandling inHandling, FunctionSyntaxKind kind,
