@@ -110,10 +110,7 @@ runTest(() => getUserMedia({video: true, fake: true})
     gUMVideoElement.play();
     return checkVideoPlaying(captureStreamElement);
   })
-  .then(() => {
-    gUMVideoElement.srcObject.getTracks().forEach(t => t.stop());
-    ok(true, "Test passed.");
-  })
+  .then(() => ok(true, "Test passed."))
   .catch(e => ok(false, "Test failed: " + e + (e.stack ? "\n" + e.stack : ""))));
 
 </script>
