@@ -11,10 +11,8 @@
 #include <unistd.h>
 
 extern "C" {
-  void LaunchChildMac(int aArgc, char** aArgv, uint32_t aRestartType = 0,
-                      pid_t *pid = 0);
-  bool LaunchElevatedUpdate(int argc, char** argv, uint32_t aRestartType = 0,
-                            pid_t* pid = 0);
+  void LaunchChildMac(int aArgc, char** aArgv, pid_t* aPid = 0);
+  bool LaunchElevatedUpdate(int aArgc, char** aArgv, pid_t* aPid = 0);
 }
 
 #endif

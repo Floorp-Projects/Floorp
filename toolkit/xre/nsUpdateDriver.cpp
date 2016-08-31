@@ -639,9 +639,6 @@ SwitchToUpdatedApp(nsIFile *greDir, nsIFile *updateDir,
   _exit(0);
 #elif defined(XP_MACOSX)
   CommandLineServiceMac::SetupMacCommandLine(argc, argv, true);
-  // LaunchChildMac uses posix_spawnp and prefers the current
-  // architecture when launching. It doesn't require a
-  // null-terminated string but it doesn't matter if we pass one.
   LaunchChildMac(argc, argv);
   exit(0);
 #else
@@ -964,13 +961,13 @@ ApplyUpdate(nsIFile *greDir, nsIFile *updateDir, nsIFile *statusFile,
   // occur when an admin user installs the application, but another admin
   // user attempts to update (see bug 394984).
   if (restart && !IsRecursivelyWritable(installDirPath.get())) {
-    if (!LaunchElevatedUpdate(argc, argv, 0, outpid)) {
+    if (!LaunchElevatedUpdate(argc, argv, outpid)) {
       LOG(("Failed to launch elevated update!"));
       exit(1);
     }
     exit(0);
   } else {
-    LaunchChildMac(argc, argv, 0, outpid);
+    LaunchChildMac(argc, argv, outpid);
     if (restart) {
       exit(0);
     }
