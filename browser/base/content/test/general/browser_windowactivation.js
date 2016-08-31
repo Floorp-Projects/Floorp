@@ -150,15 +150,15 @@ function childFunction()
       sendAsyncMessage("Test:ActivateEvent", { ok: !windowGotActivate });
       windowGotActivate = false;
     });
-  
+
   addEventListener("deactivate", function() {
       sendAsyncMessage("Test:DeactivateEvent", { ok: !windowGotDeactivate });
       windowGotDeactivate = false;
     });
   content.addEventListener("activate", function() {
-      windowGotActivate = true;;
+      windowGotActivate = true;
     });
-  
+
   content.addEventListener("deactivate", function() {
       windowGotDeactivate = true;
     });

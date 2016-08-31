@@ -155,7 +155,7 @@ function test() {
     Services.prefs.clearUserPref(SAVE_PER_SITE_PREF);
     info("Finished running the cleanup code");
   });
- 
+
   Services.prefs.setBoolPref(ALWAYS_DOWNLOAD_DIR_PREF, false);
   testOnWindow(undefined, function(win) {
     let windowGonePromise = promiseWindowWillBeClosed(win);

@@ -32,7 +32,7 @@ add_task(function* () {
   // check plugin state
   let pluginInfo = yield promiseForPluginInfo("test", gBrowser.selectedBrowser);
   ok(!pluginInfo.activated, "plugin should not be activated");
-   
+
   // Display a context menu on the test plugin so we can test
   // activation menu options.
   yield ContentTask.spawn(gBrowser.selectedBrowser, {}, function* () {

@@ -72,7 +72,7 @@ add_task(function*() {
     observer.onDownloadFail = observer.onManyLinksChanged;
     DirectoryLinksProvider.addObserver(observer);
     return deferred.promise;
-  };
+  }
 
   let gOrigDirectorySource = Services.prefs.getCharPref(PREF_NEWTAB_DIRECTORYSOURCE);
   registerCleanupFunction(() => {

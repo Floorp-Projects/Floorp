@@ -41,7 +41,7 @@ function handleMessageEvents(event) {
           var bodyInnerHTML = event.source.document.body.innerHTML;
         }
         catch (e) {
-          var bodyInnerHTML = "";
+          bodyInnerHTML = "";
         }
         if (cacheCount == 2 || bodyInnerHTML.includes("error")) {
           clearInterval(intervalID);

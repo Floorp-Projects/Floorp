@@ -308,7 +308,7 @@ function waitForTab(aCallback) {
 function test() {
   waitForExplicitFinish();
 
-  Task.spawn(function () {
+  Task.spawn(function* () {
     const webchannelWhitelistPref = "webchannel.allowObject.urlWhitelist";
     let origWhitelist = Services.prefs.getCharPref(webchannelWhitelistPref);
     let newWhitelist = origWhitelist + " http://example.com";

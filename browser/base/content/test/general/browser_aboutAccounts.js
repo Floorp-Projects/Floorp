@@ -66,7 +66,7 @@ var gTests = [
           deferred.resolve();
         }
       });
-    } catch(e) {
+    } catch (e) {
       ok(false, "Failed to get all commands");
       deferred.reject();
     }
@@ -415,7 +415,7 @@ function test()
 {
   waitForExplicitFinish();
 
-  Task.spawn(function () {
+  Task.spawn(function* () {
     for (let test of gTests) {
       info(test.desc);
       try {

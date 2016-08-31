@@ -304,7 +304,7 @@ add_task(function* test_everything_warning() {
   let uris = [];
   let places = [];
   let pURI;
-  // within past hour, within past two hours, within past four hours and 
+  // within past hour, within past two hours, within past four hours and
   // outside past four hours
   [10, 70, 130, 250].forEach(function(aValue) {
     pURI = makeURI("http://" + aValue + "-minutes-ago.com/");
@@ -361,7 +361,7 @@ add_task(function* test_cannot_clear_history() {
     ok(cb.length == 1 && !cb[0].disabled, "There is formdata, checkbox to " +
        "clear formdata should be enabled.");
 
-    var cb = this.win.document.querySelectorAll(
+    cb = this.win.document.querySelectorAll(
                "#itemList > [preference='privacy.cpd.history']");
     ok(cb.length == 1 && !cb[0].disabled, "There is history, checkbox to " +
        "clear history should be enabled.");
@@ -644,7 +644,7 @@ var now_uSec = now_mSec * 1000;
  */
 function WindowHelper(aWin) {
   this.win = aWin;
-  this.promiseClosed = new Promise(resolve => {this._resolveClosed = resolve});
+  this.promiseClosed = new Promise(resolve => { this._resolveClosed = resolve });
 }
 
 WindowHelper.prototype = {

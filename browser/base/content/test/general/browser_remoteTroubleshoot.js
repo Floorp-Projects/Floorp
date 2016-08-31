@@ -18,7 +18,7 @@ function promiseChannelResponse(channelID, originOrPermission) {
       resolve(data);
     });
   });
-};
+}
 
 // Loads the specified URI in a new tab and waits for it to send us data on our
 // test web-channel and resolves with that data.

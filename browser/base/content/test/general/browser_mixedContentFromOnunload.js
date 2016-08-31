@@ -16,7 +16,7 @@ const gHttpsTestRoot2 = "https://test2.example.com/browser/browser/base/content/
 var gTestBrowser = null;
 add_task(function *() {
   let url = gHttpTestRoot1 + "file_mixedContentFromOnunload.html";
-  yield BrowserTestUtils.withNewTab({gBrowser, url}, function*(){
+  yield BrowserTestUtils.withNewTab({gBrowser, url}, function*() {
     yield new Promise(resolve => {
       SpecialPowers.pushPrefEnv({
         "set": [

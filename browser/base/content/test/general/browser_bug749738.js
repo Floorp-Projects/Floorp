@@ -20,7 +20,7 @@ function test() {
     try {
       gFindBar.close();
       ok(true, "findbar.close should not throw an exception");
-    } catch(e) {
+    } catch (e) {
       ok(false, "findbar.close threw exception: " + e);
     }
     finish();

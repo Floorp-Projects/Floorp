@@ -12,7 +12,7 @@ function test() {
 
   let uri = "http://example.org/browser/browser/base/content/test/general/dummy_page.html";
 
-  Task.spawn(function () {
+  Task.spawn(function* () {
     tab = gBrowser.addTab();
     yield FullZoomHelper.load(tab, uri);
 
@@ -26,7 +26,7 @@ function test() {
 // -------------
 // Test clean-up
 function endTest() {
-  Task.spawn(function () {
+  Task.spawn(function* () {
     yield FullZoomHelper.removeTabAndWaitForLocationChange(tab);
 
     tab = null;

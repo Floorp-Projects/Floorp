@@ -198,7 +198,7 @@ var tests = {
       BrowserTestUtils.removeTab(testTab).then(() => {
         hasoptions(testData.options, JSON.parse(msg.data));
         testData = corpus[testIndex++];
-        BrowserTestUtils.waitForCondition(() => { return SocialShare.currentShare == null; },"share panel closed").then(() => {
+        BrowserTestUtils.waitForCondition(() => { return SocialShare.currentShare == null; }, "share panel closed").then(() => {
           if (testData) {
             runOneTest();
           } else {
@@ -372,7 +372,7 @@ var tests = {
           EventUtils.sendKey("a");
           EventUtils.sendKey("i");
           EventUtils.sendKey("l");
-  
+
           SocialShare.panel.addEventListener("popuphidden", function hidden(evt) {
             SocialShare.panel.removeEventListener("popuphidden", hidden);
             let topwin = Services.wm.getMostRecentWindow(null);

@@ -26,7 +26,7 @@ add_task(function*() {
   is(specificPanel.state, "open", "specificPanel has been opened");
 
   let generalPanelPromise = BrowserTestUtils.waitForEvent(generalPanel, "popupshown");
-  generalPanel.openPopupAtScreen(510,510);
+  generalPanel.openPopupAtScreen(510, 510);
   yield generalPanelPromise;
   is(generalPanel.state, "open", "generalPanel has been opened");
 

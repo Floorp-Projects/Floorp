@@ -65,7 +65,7 @@ add_task(function*() {
     yield new Promise((resolve, reject) => {
       addEventListener("paste", function copyEvent(event) {
         removeEventListener("paste", copyEvent, true);
-        let clipboardData = event.clipboardData; 
+        let clipboardData = event.clipboardData;
         Assert.equal(clipboardData.mozItemCount, 1, "One item on clipboard");
         Assert.equal(clipboardData.types.length, 2, "Two types on clipboard");
         Assert.equal(clipboardData.types[0], "text/html", "text/html on clipboard");
@@ -101,7 +101,7 @@ add_task(function*() {
     yield new Promise((resolve, reject) => {
       addEventListener("paste", function copyEvent(event) {
         removeEventListener("paste", copyEvent, true);
-        let clipboardData = event.clipboardData; 
+        let clipboardData = event.clipboardData;
         Assert.equal(clipboardData.mozItemCount, 1, "One item on clipboard 2");
         Assert.equal(clipboardData.types.length, 2, "Two types on clipboard 2");
         Assert.equal(clipboardData.types[0], "text/html", "text/html on clipboard 2");
