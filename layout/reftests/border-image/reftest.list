@@ -46,7 +46,7 @@ fuzzy-if(asyncPan&&!layersGPUAccelerated,121,514) == border-image-outset-move-1.
 fuzzy(1,98) fuzzy-if(skiaContent,1,350) == border-image-linear-gradient-slice-1.html border-image-linear-gradient-slice-1-ref.html
 fuzzy(1,149) fuzzy-if(OSX,1,10595) == border-image-linear-gradient-slice-2.html border-image-linear-gradient-slice-2-ref.html
 fuzzy(1,433) fuzzy-if(skiaContent,1,2500) == border-image-linear-gradient-slice-fill-1.html border-image-linear-gradient-slice-fill-1-ref.html
-fuzzy(1,177) fuzzy-if(OSX,1,25771) fuzzy-if(skiaContent,1,300) == border-image-linear-gradient-slice-fill-2.html border-image-linear-gradient-slice-fill-2-ref.html
+fuzzy(1,177) fuzzy-if(OSX,1,25771) fuzzy-if(skiaContent,1,400) == border-image-linear-gradient-slice-fill-2.html border-image-linear-gradient-slice-fill-2-ref.html
 fuzzy(1,48)  fuzzy-if(OSX,5,1676) == border-image-linear-gradient-width.html border-image-linear-gradient-width-ref.html
 fuzzy(1,5000) fuzzy-if(OSX,1,15000) == border-image-linear-gradient-slice-width.html border-image-linear-gradient-slice-width-ref.html
 fuzzy(1,3000) fuzzy-if(OSX,1,6000) == border-image-linear-gradient-outset.html border-image-linear-gradient-outset-ref.html

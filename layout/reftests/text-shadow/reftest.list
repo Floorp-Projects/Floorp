@@ -26,9 +26,9 @@ HTTP(..) == blur-opacity.html blur-opacity-ref.html
 == overflow-not-scrollable-2.html overflow-not-scrollable-2-ref.html
 
 needs-focus != text-shadow-selected-1.html text-shadow-selected-1-notref.html
-fails-if(Android||B2G) fuzzy-if(skiaContent,1,1000) needs-focus == text-shadow-selected-1.html text-shadow-selected-1-ref.html # different foreground selection color on Android/B2G
+fails-if(Android||B2G) fuzzy-if(skiaContent&&!Android,1,1000) needs-focus == text-shadow-selected-1.html text-shadow-selected-1-ref.html # different foreground selection color on Android/B2G
 needs-focus != text-shadow-selected-2.html text-shadow-selected-2-notref.html
-fails-if(Android||B2G) fuzzy-if(skiaContent,1,1400) needs-focus == text-shadow-selected-2.html text-shadow-selected-2-ref.html # different foreground selection color on Android/B2G
+fails-if(Android||B2G) fuzzy-if(skiaContent&&!Android,1,1400) needs-focus == text-shadow-selected-2.html text-shadow-selected-2-ref.html # different foreground selection color on Android/B2G
 
 # bug 692744
 == text-shadow-on-space-1.html text-shadow-on-space-1-ref.html
