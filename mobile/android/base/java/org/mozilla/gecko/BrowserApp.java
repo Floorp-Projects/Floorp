@@ -2672,7 +2672,8 @@ public class BrowserApp extends GeckoApp
             mFirstrunAnimationContainer.registerOnFinishListener(new FirstrunAnimationContainer.OnFinishListener() {
                 @Override
                 public void onFinish() {
-                    if (mFirstrunAnimationContainer.showBrowserHint()) {
+                    if (mFirstrunAnimationContainer.showBrowserHint() &&
+                        TextUtils.isEmpty(getHomepage())) {
                         enterEditingMode();
                     }
                 }
