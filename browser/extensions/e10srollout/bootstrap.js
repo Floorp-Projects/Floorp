@@ -13,6 +13,7 @@ Cu.import("resource://gre/modules/UpdateUtils.jsm");
  // The amount of people to be part of e10s
 const TEST_THRESHOLD = {
   "beta"    : 0.5,  // 50%
+  "release" : 1.0,  // 100%
 };
 
 const ADDON_ROLLOUT_POLICY = {
