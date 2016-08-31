@@ -423,6 +423,11 @@ ResponsiveUI.prototype = {
     }
 
     switch (event.data.type) {
+      case "change-viewport-device":
+        let { userAgent, pixelRatio } = event.data.device;
+        this.updateUserAgent(userAgent);
+        this.updateDPPX(pixelRatio);
+        break;
       case "content-resize":
         let { width, height } = event.data;
         this.emit("content-resize", {
@@ -436,10 +441,6 @@ ResponsiveUI.prototype = {
       case "update-touch-simulation":
         let { enabled } = event.data;
         this.updateTouchSimulation(enabled);
-        break;
-      case "update-user-agent":
-        let { userAgent } = event.data;
-        this.updateUserAgent(userAgent);
         break;
     }
   },
@@ -457,11 +458,19 @@ ResponsiveUI.prototype = {
     }
   }),
 
-  updateUserAgent: function (userAgent) {
+  updateUserAgent(userAgent) {
     if (userAgent) {
       this.emulationFront.setUserAgentOverride(userAgent);
     } else {
       this.emulationFront.clearUserAgentOverride();
+    }
+  },
+
+  updateDPPX(dppx) {
+    if (dppx) {
+      this.emulationFront.setDPPXOverride(dppx);
+    } else {
+      this.emulationFront.clearDPPXOverride();
     }
   },
 
