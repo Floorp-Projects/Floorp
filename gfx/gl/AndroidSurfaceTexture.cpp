@@ -46,12 +46,6 @@ public:
   }
 };
 
-static bool
-IsSTSupported()
-{
-  return AndroidBridge::Bridge()->GetAPIVersion() >= 14; /* ICS */
-}
-
 already_AddRefed<AndroidSurfaceTexture>
 AndroidSurfaceTexture::Create()
 {
@@ -61,10 +55,6 @@ AndroidSurfaceTexture::Create()
 already_AddRefed<AndroidSurfaceTexture>
 AndroidSurfaceTexture::Create(GLContext* aContext, GLuint aTexture)
 {
-  if (!IsSTSupported()) {
-    return nullptr;
-  }
-
   RefPtr<AndroidSurfaceTexture> st = new AndroidSurfaceTexture();
   if (!st->Init(aContext, aTexture)) {
     printf_stderr("Failed to initialize AndroidSurfaceTexture");

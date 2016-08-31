@@ -61,9 +61,12 @@
   locale/@AB_CD@/global/keys.properties                 (%chrome/global/keys.properties)
   locale/@AB_CD@/global/languageNames.properties        (%chrome/global/languageNames.properties)
   locale/@AB_CD@/global/mozilla.dtd                     (%chrome/global/mozilla.dtd)
+#ifndef MOZ_FENNEC
   locale/@AB_CD@/global/narrate.properties              (%chrome/global/narrate.properties)
+#endif
   locale/@AB_CD@/global/notification.dtd                (%chrome/global/notification.dtd)
   locale/@AB_CD@/global/preferences.dtd                 (%chrome/global/preferences.dtd)
+#ifndef MOZ_FENNEC
   locale/@AB_CD@/global/printdialog.dtd                 (%chrome/global/printdialog.dtd)
   locale/@AB_CD@/global/printjoboptions.dtd             (%chrome/global/printjoboptions.dtd)
   locale/@AB_CD@/global/printPageSetup.dtd              (%chrome/global/printPageSetup.dtd)
@@ -71,6 +74,7 @@
   locale/@AB_CD@/global/printPreviewProgress.dtd        (%chrome/global/printPreviewProgress.dtd)
   locale/@AB_CD@/global/printdialog.properties          (%chrome/global/printdialog.properties)
   locale/@AB_CD@/global/printProgress.dtd               (%chrome/global/printProgress.dtd)
+#endif
   locale/@AB_CD@/global/regionNames.properties          (%chrome/global/regionNames.properties)
   locale/@AB_CD@/global/resetProfile.dtd                (%chrome/global/resetProfile.dtd)
   locale/@AB_CD@/global/resetProfile.properties         (%chrome/global/resetProfile.properties)

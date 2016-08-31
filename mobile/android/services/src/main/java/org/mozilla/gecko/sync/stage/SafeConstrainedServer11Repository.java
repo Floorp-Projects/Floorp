@@ -8,6 +8,7 @@ import java.net.URISyntaxException;
 
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.sync.InfoCollections;
+import org.mozilla.gecko.sync.InfoConfiguration;
 import org.mozilla.gecko.sync.InfoCounts;
 import org.mozilla.gecko.sync.JSONRecordFetcher;
 import org.mozilla.gecko.sync.net.AuthHeaderProvider;
@@ -37,11 +38,12 @@ public class SafeConstrainedServer11Repository extends ConstrainedServer11Reposi
                                            String storageURL,
                                            AuthHeaderProvider authHeaderProvider,
                                            InfoCollections infoCollections,
+                                           InfoConfiguration infoConfiguration,
                                            long limit,
                                            String sort,
                                            JSONRecordFetcher countFetcher)
     throws URISyntaxException {
-    super(collection, storageURL, authHeaderProvider, infoCollections, limit, sort);
+    super(collection, storageURL, authHeaderProvider, infoCollections, infoConfiguration, limit, sort);
     if (countFetcher == null) {
       throw new IllegalArgumentException("countFetcher must not be null");
     }

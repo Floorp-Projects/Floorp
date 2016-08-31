@@ -526,8 +526,17 @@ EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
   NS_WARN_IF_FALSE(!aTargetFrame ||
                    !aTargetFrame->GetContent() ||
                    aTargetFrame->GetContent() == aTargetContent ||
-                   aTargetFrame->GetContent()->GetFlattenedTreeParent() == aTargetContent,
+                   aTargetFrame->GetContent()->GetFlattenedTreeParent() == aTargetContent ||
+                   aTargetFrame->IsGeneratedContentFrame(),
                    "aTargetFrame should be related with aTargetContent");
+#if DEBUG
+  if (aTargetFrame && aTargetFrame->IsGeneratedContentFrame()) {
+    nsCOMPtr<nsIContent> targetContent;
+    aTargetFrame->GetContentForEvent(aEvent, getter_AddRefs(targetContent));
+    MOZ_ASSERT(aTargetContent == targetContent,
+               "Unexpected target for generated content frame!");
+  }
+#endif
 
   mCurrentTarget = aTargetFrame;
   mCurrentTargetContent = nullptr;
