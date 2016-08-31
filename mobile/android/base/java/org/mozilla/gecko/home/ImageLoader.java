@@ -56,7 +56,7 @@ public class ImageLoader {
             lrucache = new LruCache(context);
             Picasso.Builder builder = new Picasso.Builder(context).memoryCache(lrucache);
 
-            final Distribution distribution = Distribution.getInstance(context);
+            final Distribution distribution = Distribution.getInstance(context.getApplicationContext());
             builder.downloader(new ImageDownloader(context, distribution));
             instance = builder.build();
         }
