@@ -18,7 +18,6 @@ var spinEventLoop = () => new Promise(r => setTimeout(r, 0));
 var stream;
 var clone;
 var newStream;
-var tracks = [];
 
 var addTrack = track => {
   info("Adding track " + track.id);
@@ -50,15 +49,15 @@ runTest(() => getUserMedia({audio: true, video: true})
   })
   .then(s => {
     newStream = s;
-// TODO: Uncomment once bug 1294605 is fixed
-//    info("Stopping an original track");
-//    stopTrack(stream.getTracks()[0]);
+
+    info("Stopping an original track");
+    stopTrack(stream.getTracks()[0]);
 
     return spinEventLoop();
   })
   .then(() => {
     info("Removing original tracks");
-    stream.getTracks().forEach(t => (stream.removeTrack(t), tracks.push(t)));
+    stream.getTracks().forEach(t => stream.removeTrack(t));
 
     return spinEventLoop();
   })
@@ -90,7 +89,6 @@ runTest(() => getUserMedia({audio: true, video: true})
   .then(() => {
     info("Stopping originals");
     stream.getTracks().forEach(t => stopTrack(t));
-    tracks.forEach(t => stopTrack(t));
 
     return spinEventLoop();
   })

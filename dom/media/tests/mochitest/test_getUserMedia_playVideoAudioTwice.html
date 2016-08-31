@@ -15,8 +15,9 @@
       var testVideo = createMediaElement('video', 'testVideo');
       var playback = new LocalMediaStreamPlayback(testVideo, stream);
 
-      return playback.playMediaWithoutStoppingTracks(false)
-        .then(() => playback.playMedia(true));
+      return playback.playMedia(false)
+        .then(() => playback.playMedia(true))
+        .then(() => stream.stop());
     });
   });
 

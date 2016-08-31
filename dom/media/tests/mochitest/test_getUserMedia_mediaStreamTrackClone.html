@@ -40,9 +40,8 @@
     .then(() => getUserMedia({video: true})).then(stream => {
       info("Test cloning a track into inception");
       var track = stream.getTracks()[0];
-      var clone = track;
-      var clones = Array(10).fill().map(() => clone = clone.clone());
-      var inceptionClone = clones.pop();
+      var inceptionClone = track.clone().clone().clone().clone().clone()
+                                .clone().clone().clone().clone().clone();
       checkMediaStreamTrackCloneAgainstOriginal(inceptionClone, track);
 
       var cloneStream = new MediaStream();
@@ -53,16 +52,10 @@
 
       var test = createMediaElement('video', 'testClonePlayback');
       var playback = new MediaStreamPlayback(test, cloneStream);
-      return playback.playMedia(false).then(() => {
-// TODO: Uncomment once bug 1294605 is fixed
-//          info("Testing that clones of ended tracks are ended");
-//          cloneStream.clone().getTracks().forEach(t =>
-//            is(t.readyState, "ended", "Track " + t.id + " should be ended"));
-        })
-        .then(() => {
-          clones.forEach(t => t.stop());
-          track.stop();
-        });
+      return playback.playMedia(false)
+        .then(() => info("Testing that clones of ended tracks are ended"))
+        .then(() => cloneStream.clone().getTracks().forEach(t =>
+          is(t.readyState, "ended", "Track " + t.id + " should be ended")));
     })
     .then(() => getUserMedia({audio: true, video: true})).then(stream => {
       info("Test adding many track clones to the original stream");
