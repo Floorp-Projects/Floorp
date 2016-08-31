@@ -935,6 +935,8 @@ Messages.Simple.prototype = extend(Messages.BaseMessage.prototype, {
 
     this.element.appendChild(body);
 
+    this.element.appendChild(this.document.createTextNode("\n"));
+
     this.element.clipboardText = this.element.textContent;
 
     if (this.private) {
@@ -991,15 +993,11 @@ Messages.Simple.prototype = extend(Messages.BaseMessage.prototype, {
     let location = this._renderLocation();
 
     if (repeatNode) {
-      bodyFlex.appendChild(this.document.createTextNode(" "));
       bodyFlex.appendChild(repeatNode);
     }
     if (location) {
-      bodyFlex.appendChild(this.document.createTextNode(" "));
       bodyFlex.appendChild(location);
     }
-
-    bodyFlex.appendChild(this.document.createTextNode("\n"));
 
     if (this.stack) {
       this._attachment = new Widgets.Stacktrace(this, this.stack).render().element;
