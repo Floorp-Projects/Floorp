@@ -39,6 +39,7 @@ var gTimeoutHook = null;
 var gFailureTimeout = null;
 var gFailureReason;
 var gAssertionCount = 0;
+var gTestCount = 0;
 
 var gDebug;
 var gVerbose = false;
@@ -139,6 +140,15 @@ function SetFailureTimeout(cb, timeout)
 
 function StartTestURI(type, uri, timeout)
 {
+    // The GC is only able to clean up compartments after the CC runs. Since
+    // the JS ref tests disable the normal browser chrome and do not otherwise
+    // create substatial DOM garbage, the CC tends not to run enough normally.
+    ++gTestCount;
+    if (gTestCount % 3000 == 0) {
+        CU.forceGC();
+        CU.forceCC();
+    }
+
     // Reset gExplicitPendingPaintCount in case there was a timeout or
     // the count is out of sync for some other reason
     if (gExplicitPendingPaintCount != 0) {

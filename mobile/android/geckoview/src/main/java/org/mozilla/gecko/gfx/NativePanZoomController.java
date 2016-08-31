@@ -29,7 +29,7 @@ class NativePanZoomController extends JNIObject implements PanZoomController {
     private Overscroll mOverscroll;
     boolean mNegateWheelScroll;
     private float mPointerScrollFactor;
-    private final PrefsHelper.PrefHandler mPrefsObserver;
+    private PrefsHelper.PrefHandler mPrefsObserver;
     private long mLastDownTime;
     private static final float MAX_SCROLL = 0.075f * GeckoAppShell.getDpi();
 
@@ -197,6 +197,10 @@ class NativePanZoomController extends JNIObject implements PanZoomController {
 
     @Override @WrapForJNI(calledFrom = "ui") // PanZoomController
     public void destroy() {
+        if (mPrefsObserver != null) {
+            PrefsHelper.removeObserver(mPrefsObserver);
+            mPrefsObserver = null;
+        }
         if (mDestroyed || !mTarget.isGeckoReady()) {
             return;
         }

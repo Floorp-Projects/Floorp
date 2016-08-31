@@ -5655,6 +5655,17 @@
     "description": "Time for the home screen Top Sites query to return with no filter set (ms)",
     "cpp_guard": "ANDROID"
   },
+  "FENNEC_ACTIVITY_STREAM_TOPSITES_LOADER_TIME_MS": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "low": 10,
+    "high": 20000,
+    "n_buckets": 20,
+    "description": "Time for the Activity Stream home screen Top Sites query to return (ms)",
+    "alert_emails": ["mobile-frontend@mozilla.com"],
+    "bug_numbers": [1293790],
+    "cpp_guard": "ANDROID"
+  },
   "FENNEC_HOMEPANELS_CUSTOM": {
     "expires_in_version": "54",
     "kind": "boolean",
@@ -7386,6 +7397,15 @@
     "kind": "boolean",
     "keyed": true,
     "description": "Measures whether a particular JavaScript error has been displayed in the webconsole."
+  },
+  "DEVTOOLS_TOOLBOX_HOST": {
+    "alert_emails": ["dev-developer-tools@lists.mozilla.org"],
+    "expires_in_version": "58",
+    "kind": "enumerated",
+    "bug_numbers": [1205845],
+    "n_values": 9,
+    "releaseChannelCollection": "opt-out",
+    "description": "Records DevTools toolbox host each time the toolbox is opened and when the host is changed (0:Bottom, 1:Side, 2:Window, 3:Custom, 9:Unknown)."
   },
   "VIEW_SOURCE_IN_BROWSER_OPENED_BOOLEAN": {
     "alert_emails": ["mozilla-dev-developer-tools@lists.mozilla.org", "jryans@mozilla.com"],

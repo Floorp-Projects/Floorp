@@ -3,8 +3,9 @@
                 xmlns:tools="http://schemas.android.com/tools"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical">
-
+                xmlns:app="http://schemas.android.com/apk/res-auto"
+                android:orientation="vertical"
+                android:padding="4dp">
 
     <TextView
         android:id="@+id/title_topsites"
@@ -31,13 +32,26 @@
         tools:text="More"
         android:layout_alignBottom="@+id/title_topsites"/>
 
-    <android.support.v7.widget.RecyclerView
+    <android.support.v4.view.ViewPager
         android:layout_width="match_parent"
         android:layout_height="115dp"
-        android:id="@+id/android.support.v7.widget.RecyclerView"
+        android:id="@+id/topsites_pager"
         android:layout_below="@+id/title_topsites"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"/>
+
+    <org.mozilla.gecko.home.activitystream.topsites.CirclePageIndicator
+        android:id="@+id/topsites_indicator"
+        android:padding="10dip"
+        app:fillColor="#444444"
+        app:pageColor="#FFFFFF"
+        app:strokeWidth="1dp"
+        app:radius="2dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/topsites_pager"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"/>
 
     <TextView
         android:id="@+id/title_highlights"
@@ -45,7 +59,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textStyle="bold"
-        android:layout_below="@+id/android.support.v7.widget.RecyclerView"
+        android:layout_below="@+id/topsites_indicator"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
         android:layout_toLeftOf="@+id/more_highlights"
@@ -62,6 +76,5 @@
         android:layout_alignTop="@+id/title_highlights"
         android:layout_alignLeft="@+id/more_topsites"
         android:layout_alignStart="@+id/more_topsites"/>
-
 
 </RelativeLayout>
