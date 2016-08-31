@@ -65,6 +65,8 @@ public:
   // that to update the properties rather than calling
   // GetStyleContextForElement.
   void SetTarget(const Nullable<ElementOrCSSPseudoElement>& aTarget);
+
+  void SetSpacing(JSContext* aCx, const nsAString& aSpacing, ErrorResult& aRv);
 };
 
 } // namespace dom
