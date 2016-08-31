@@ -109,7 +109,7 @@ function watchLinksChangeOnce() {
     observer.onDownloadFail = observer.onManyLinksChanged;
     DirectoryLinksProvider.addObserver(observer);
   });
-};
+}
 
 add_task(function* setup() {
   registerCleanupFunction(function() {
@@ -250,6 +250,7 @@ function setPinnedLinks(aLinks) {
         return {url: "http://example" + (id != "-1" ? id : "") + ".com/",
                 title: "site#" + id,
                 type: "history"};
+      return undefined;
     });
   }
 

@@ -85,7 +85,7 @@ function* expectFocusOnF6(backward, expectedDocument, expectedElement, onContent
   }
 }
 
-// Load a page and navigate between it and the chrome window. 
+// Load a page and navigate between it and the chrome window.
 add_task(function* ()
 {
   let page1Promise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
@@ -156,7 +156,7 @@ add_task(function* ()
   SidebarUI.toggle('viewBookmarksSidebar');
   yield loadPromise;
 
-  
+
   gURLBar.focus();
   yield* expectFocusOnF6(false, "bookmarksPanel",
                                 sidebar.contentDocument.getElementById("search-box").inputField,

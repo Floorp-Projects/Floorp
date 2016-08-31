@@ -7,7 +7,7 @@ function test() {
 
   // There should be one tab when we start the test
   let [origTab] = gBrowser.visibleTabs;
-  is(gBrowser.visibleTabs.length, 1, "1 tab should be open");  
+  is(gBrowser.visibleTabs.length, 1, "1 tab should be open");
   is(Disabled(), true, "Bookmark All Tabs should be disabled");
 
   // Add a tab
@@ -25,7 +25,7 @@ function test() {
     // Hide the original tab
     gBrowser.selectedTab = testTab2;
     gBrowser.showOnlyTheseTabs([testTab2]);
-    is(gBrowser.visibleTabs.length, 1, "1 tab should be visible");  
+    is(gBrowser.visibleTabs.length, 1, "1 tab should be visible");
     is(Disabled(), true, "Bookmark All Tabs should be disabled as there is only one visible tab");
 
     // Add a tab that will get pinned
@@ -42,7 +42,7 @@ function test() {
     let allTabs = Array.from(gBrowser.tabs);
     gBrowser.showOnlyTheseTabs(allTabs);
 
-    // reset the environment  
+    // reset the environment
     gBrowser.removeTab(testTab2);
     gBrowser.removeTab(testTab1);
     gBrowser.removeTab(pinned);

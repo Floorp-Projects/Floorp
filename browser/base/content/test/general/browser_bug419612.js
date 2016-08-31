@@ -1,7 +1,7 @@
 function test() {
   waitForExplicitFinish();
 
-  Task.spawn(function () {
+  Task.spawn(function* () {
     let testPage = "http://example.org/browser/browser/base/content/test/general/dummy_page.html";
     let tab1 = gBrowser.addTab();
     yield FullZoomHelper.selectTabAndWaitForLocationChange(tab1);
