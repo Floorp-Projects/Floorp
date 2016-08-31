@@ -55,9 +55,9 @@ class MoveEmitterMIPSShared
     MoveEmitterMIPSShared(MacroAssembler& masm)
       : inCycle_(0),
         masm(masm),
+        pushedAtStart_(masm.framePushed()),
         pushedAtCycle_(-1),
         pushedAtSpill_(-1),
-        pushedAtStart_(masm.framePushed()),
         spilledReg_(InvalidReg),
         spilledFloatReg_(InvalidFloatReg)
     { }
