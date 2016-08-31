@@ -119,6 +119,17 @@ MediaEngineTabVideoSource::InitRunnable::Run()
   return NS_OK;
 }
 
+nsresult
+MediaEngineTabVideoSource::DestroyRunnable::Run()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  mVideoSource->mWindow = nullptr;
+  mVideoSource->mTabSource = nullptr;
+
+  return NS_OK;
+}
+
 void
 MediaEngineTabVideoSource::GetName(nsAString_internal& aName) const
 {
@@ -193,6 +204,8 @@ nsresult
 MediaEngineTabVideoSource::Deallocate(AllocationHandle* aHandle)
 {
   MOZ_ASSERT(!aHandle);
+  NS_DispatchToMainThread(do_AddRef(new DestroyRunnable(this)));
+
   {
     MonitorAutoLock mon(mMonitor);
     mState = kReleased;
