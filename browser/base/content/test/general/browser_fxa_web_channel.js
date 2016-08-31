@@ -198,7 +198,7 @@ function makeObserver(aObserveTopic, aObserveFunc) {
 function test() {
   waitForExplicitFinish();
 
-  Task.spawn(function () {
+  Task.spawn(function* () {
     for (let test of gTests) {
       info("Running: " + test.desc);
       yield test.run();
