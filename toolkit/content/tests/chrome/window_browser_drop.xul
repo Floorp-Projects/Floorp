@@ -50,7 +50,7 @@ function doDropAndStopLoad(browser, data, shouldExpectStateChange) {
 
     let dataTransfer = new content.DataTransfer("dragstart", false);
     dataTransfer.mozSetDataAt(data.type, data.data, 0);
-    let event = content.document.createEvent("DragEvents");
+    let event = content.document.createEvent("DragEvent");
     event.initDragEvent("drop", true, true, content, 0, 0, 0, 0, 0,
                         false, false, false, false, 0, null, dataTransfer);
     content.document.body.dispatchEvent(event);

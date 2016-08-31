@@ -165,7 +165,7 @@ function runTests()
       var targetDescription = " (dispatched to " + aTarget._description + ")";
       function dispatchKeyEvent(aKeyCode, aChar, aTarget)
       {
-        var keyEvent = document.createEvent("KeyEvents");
+        var keyEvent = document.createEvent("KeyboardEvent");
         keyEvent.initKeyEvent("keypress", true, true, null, false, false,
                                false, false, aKeyCode,
                                aChar ? aChar.charCodeAt(0) : 0);

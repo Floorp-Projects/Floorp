@@ -27,7 +27,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=381167
 SimpleTest.waitForExplicitFinish();
 
 function closeit() {
-  var evt = document.createEvent('KeyEvents');
+  var evt = document.createEvent('KeyboardEvent');
                                  evt.initKeyEvent('keypress', true, true,
                                  window,
                                  true, false, false, false,
