@@ -205,6 +205,10 @@ class Scope : public js::gc::TenuredCell
     static Scope* create(ExclusiveContext* cx, ScopeKind kind, HandleScope enclosing,
                          HandleShape envShape);
 
+    template <typename T, typename D>
+    static Scope* create(ExclusiveContext* cx, ScopeKind kind, HandleScope enclosing,
+                         HandleShape envShape, mozilla::UniquePtr<T, D> data);
+
     template <typename ConcreteScope, XDRMode mode>
     static bool XDRSizedBindingNames(XDRState<mode>* xdr, Handle<ConcreteScope*> scope,
                                      MutableHandle<typename ConcreteScope::Data*> data);
