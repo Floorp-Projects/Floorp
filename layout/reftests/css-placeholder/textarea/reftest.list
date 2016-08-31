@@ -18,6 +18,7 @@ needs-focus == placeholder-blur.html placeholder-simple-ref.html
 == placeholder-value-set.html placeholder-value-ref.html
 == placeholder-value-unset.html placeholder-simple-ref.html
 == placeholder-value-reset.html placeholder-simple-ref.html
+== placeholdershown.html placeholdershown-ref.html
 == css-resize.html css-resize-ref.html
 == css-display.html placeholder-simple-ref.html
 # We can't check except by verifying that the output is different.
