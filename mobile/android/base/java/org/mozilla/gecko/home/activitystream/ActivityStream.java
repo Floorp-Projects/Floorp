@@ -16,6 +16,7 @@ import android.widget.FrameLayout;
 
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.home.HomePager;
 import org.mozilla.gecko.home.SimpleCursorLoader;
 import org.mozilla.gecko.home.activitystream.topsites.TopSitesPagerAdapter;
 
@@ -37,6 +38,10 @@ public class ActivityStream extends FrameLayout {
         rv.setAdapter(adapter);
         rv.setLayoutManager(new LinearLayoutManager(getContext()));
         rv.setHasFixedSize(true);
+    }
+
+    void setOnUrlOpenListener(HomePager.OnUrlOpenListener listener) {
+        adapter.setOnUrlOpenListener(listener);
     }
 
     public void load(LoaderManager lm) {
