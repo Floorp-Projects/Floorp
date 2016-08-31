@@ -2590,16 +2590,21 @@ HTMLMediaElement::CaptureStreamInternal(bool aFinishWhenEnded,
     mAudioCaptured = true;
   }
 
+  if (mDecoder) {
+    out->mCapturingDecoder = true;
+    mDecoder->AddOutputStream(out->mStream->GetInputStream()->AsProcessedStream(),
+                              aFinishWhenEnded);
+  } else if (mSrcStream) {
+    out->mCapturingMediaStream = true;
+  }
+
   if (mReadyState == HAVE_NOTHING) {
-    // Do not expose the tracks directly before we have metadata.
+    // Do not expose the tracks until we have metadata.
     RefPtr<DOMMediaStream> result = out->mStream;
     return result.forget();
   }
 
   if (mDecoder) {
-    out->mCapturingDecoder = true;
-    mDecoder->AddOutputStream(out->mStream->GetInputStream()->AsProcessedStream(),
-                              aFinishWhenEnded);
     if (HasAudio()) {
       TrackID audioTrackId = mMediaInfo.mAudio.mTrackId;
       RefPtr<MediaStreamTrackSource> trackSource =
@@ -2625,22 +2630,6 @@ HTMLMediaElement::CaptureStreamInternal(bool aFinishWhenEnded,
   }
 
   if (mSrcStream) {
-    out->mCapturingMediaStream = true;
-    MediaStream* inputStream = out->mStream->GetInputStream();
-    if (!inputStream) {
-      NS_ERROR("No input stream");
-      RefPtr<DOMMediaStream> result = out->mStream;
-      return result.forget();
-    }
-
-    ProcessedMediaStream* processedInputStream =
-      inputStream->AsProcessedStream();
-    if (!processedInputStream) {
-      NS_ERROR("Input stream not a ProcessedMediaStream");
-      RefPtr<DOMMediaStream> result = out->mStream;
-      return result.forget();
-    }
-
     for (size_t i = 0; i < AudioTracks()->Length(); ++i) {
       AudioTrack* t = (*AudioTracks())[i];
       if (t->Enabled()) {
