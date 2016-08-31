@@ -134,9 +134,14 @@ SVGFEImageFrame::AttributeChanged(int32_t  aNameSpaceID,
                "Observers observe the filter, so that's what we must invalidate");
     nsSVGEffects::InvalidateDirectRenderingObservers(GetParent());
   }
-  if (aNameSpaceID == kNameSpaceID_XLink &&
+  if ((aNameSpaceID == kNameSpaceID_XLink ||
+       aNameSpaceID == kNameSpaceID_None) &&
       aAttribute == nsGkAtoms::href) {
-    if (element->mStringAttributes[SVGFEImageElement::HREF].IsExplicitlySet()) {
+    bool hrefIsSet =
+      element->mStringAttributes[SVGFEImageElement::HREF].IsExplicitlySet() ||
+      element->mStringAttributes[SVGFEImageElement::XLINK_HREF]
+        .IsExplicitlySet();
+    if (hrefIsSet) {
       element->LoadSVGImage(true, true);
     } else {
       element->CancelImageRequests(true);

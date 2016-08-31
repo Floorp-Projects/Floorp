@@ -41,8 +41,9 @@ nsSVGElement::EnumInfo SVGGradientElement::sEnumInfo[2] =
   }
 };
 
-nsSVGElement::StringInfo SVGGradientElement::sStringInfo[1] =
+nsSVGElement::StringInfo SVGGradientElement::sStringInfo[2] =
 {
+  { &nsGkAtoms::href, kNameSpaceID_None, true },
   { &nsGkAtoms::href, kNameSpaceID_XLink, true }
 };
 
@@ -95,7 +96,9 @@ SVGGradientElement::SpreadMethod()
 already_AddRefed<SVGAnimatedString>
 SVGGradientElement::Href()
 {
-  return mStringAttributes[HREF].ToDOMAnimatedString(this);
+  return mStringAttributes[HREF].IsExplicitlySet()
+         ? mStringAttributes[HREF].ToDOMAnimatedString(this)
+         : mStringAttributes[XLINK_HREF].ToDOMAnimatedString(this);
 }
 
 //----------------------------------------------------------------------

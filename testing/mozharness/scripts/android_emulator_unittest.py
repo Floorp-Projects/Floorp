@@ -170,7 +170,7 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
     @PreScriptAction('create-virtualenv')
     def _pre_create_virtualenv(self, action):
         dirs = self.query_abs_dirs()
-
+        requirements = None
         if os.path.isdir(dirs['abs_mochitest_dir']):
             # mochitest is the only thing that needs this
             requirements = os.path.join(dirs['abs_mochitest_dir'],
@@ -179,7 +179,7 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
         elif self.test_suite == 'marionette':
             requirements = os.path.join(dirs['abs_test_install_dir'],
                                     'config', 'marionette_requirements.txt')
-
+        if requirements:
             self.register_virtualenv_module(requirements=[requirements],
                                             two_pass=True)
 

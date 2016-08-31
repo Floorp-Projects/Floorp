@@ -21,8 +21,9 @@ SVGScriptElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
   return SVGScriptElementBinding::Wrap(aCx, this, aGivenProto);
 }
 
-nsSVGElement::StringInfo SVGScriptElement::sStringInfo[1] =
+nsSVGElement::StringInfo SVGScriptElement::sStringInfo[2] =
 {
+  { &nsGkAtoms::href, kNameSpaceID_None, false },
   { &nsGkAtoms::href, kNameSpaceID_XLink, false }
 };
 
@@ -109,7 +110,9 @@ SVGScriptElement::SetCrossOrigin(const nsAString & aCrossOrigin,
 already_AddRefed<SVGAnimatedString>
 SVGScriptElement::Href()
 {
-  return mStringAttributes[HREF].ToDOMAnimatedString(this);
+  return mStringAttributes[HREF].IsExplicitlySet()
+         ? mStringAttributes[HREF].ToDOMAnimatedString(this)
+         : mStringAttributes[XLINK_HREF].ToDOMAnimatedString(this);
 }
 
 //----------------------------------------------------------------------
@@ -140,18 +143,23 @@ SVGScriptElement::FreezeUriAsyncDefer()
     return;
   }
 
-  if (mStringAttributes[HREF].IsExplicitlySet()) {
+  if (mStringAttributes[HREF].IsExplicitlySet() ||
+      mStringAttributes[XLINK_HREF].IsExplicitlySet()) {
     // variation of this code in nsHTMLScriptElement - check if changes
     // need to be transfered when modifying
     nsAutoString src;
-    mStringAttributes[HREF].GetAnimValue(src, this);
+    if (mStringAttributes[HREF].IsExplicitlySet()) {
+      mStringAttributes[HREF].GetAnimValue(src, this);
+    } else {
+      mStringAttributes[XLINK_HREF].GetAnimValue(src, this);
+    }
 
     nsCOMPtr<nsIURI> baseURI = GetBaseURI();
     NS_NewURI(getter_AddRefs(mUri), src, nullptr, baseURI);
     // At this point mUri will be null for invalid URLs.
     mExternal = true;
   }
-  
+
   mFrozen = true;
 }
 
@@ -161,7 +169,9 @@ SVGScriptElement::FreezeUriAsyncDefer()
 bool
 SVGScriptElement::HasScriptContent()
 {
-  return (mFrozen ? mExternal : mStringAttributes[HREF].IsExplicitlySet()) ||
+  return (mFrozen ? mExternal
+                  : mStringAttributes[HREF].IsExplicitlySet() ||
+                    mStringAttributes[XLINK_HREF].IsExplicitlySet()) ||
          nsContentUtils::HasNonEmptyTextContent(this);
 }
 
@@ -199,7 +209,9 @@ nsresult
 SVGScriptElement::AfterSetAttr(int32_t aNamespaceID, nsIAtom* aName,
                                const nsAttrValue* aValue, bool aNotify)
 {
-  if (aNamespaceID == kNameSpaceID_XLink && aName == nsGkAtoms::href) {
+  if ((aNamespaceID == kNameSpaceID_XLink ||
+       aNamespaceID == kNameSpaceID_None) &&
+      aName == nsGkAtoms::href) {
     MaybeProcessScript();
   }
   return SVGScriptElementBase::AfterSetAttr(aNamespaceID, aName,

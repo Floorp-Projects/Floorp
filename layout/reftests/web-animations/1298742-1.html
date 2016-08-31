@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html class="reftest-wait reftest-no-flush">
+<title>Bug 1298742</title>
+<style>
+div {
+  width: 100px;
+  height: 100px;
+  background: blue;
+  transform: translate(10px);
+}
+</style>
+<div id="target"></div>
+<script>
+  const MS_PER_SEC = 1000;
+  var elem = document.getElementById("target");
+  var animA =
+    elem.animate({ transform: [ 'translate(0px)', 'translate(60px)' ] },
+                 100 * MS_PER_SEC);
+  var animB =
+    elem.animate({ transform: [ 'translate(60px)', 'translate(0px)' ] },
+                 100 * MS_PER_SEC);
+  animA.pause();
+  animB.pause();
+
+  Promise.all([animA.ready, animB.ready]).then(function() {
+    animB.effect = null;
+    requestAnimationFrame(function() {
+      document.documentElement.classList.remove("reftest-wait");
+    });
+  });
+</script>
+</html>

@@ -2998,7 +2998,8 @@ var NativeWindow = {
       if (href)
         return href;
 
-      href = aLink.getAttributeNS(kXLinkNamespace, "href");
+      href = aLink.getAttribute("href") ||
+             aLink.getAttributeNS(kXLinkNamespace, "href");
       if (!href || !href.match(/\S/)) {
         // Without this we try to save as the current doc,
         // for example, HTML case also throws if empty
