@@ -170,14 +170,12 @@ ParseContext::Scope::removeVarForAnnexBLexicalFunction(ParseContext* pc, JSAtom*
     pc->removeInnerFunctionBoxesForAnnexB(name);
 }
 
-#ifdef DEBUG
 static bool
 DeclarationKindIsCatchParameter(DeclarationKind kind)
 {
     return kind == DeclarationKind::SimpleCatchParameter ||
            kind == DeclarationKind::CatchParameter;
 }
-#endif
 
 bool
 ParseContext::Scope::addCatchParameters(ParseContext* pc, Scope& catchParamScope)
@@ -955,6 +953,60 @@ DeclarationKindIsVar(DeclarationKind kind)
            kind == DeclarationKind::ForOfVar;
 }
 
+template <typename ParseHandler>
+Maybe<DeclarationKind>
+Parser<ParseHandler>::isVarRedeclaredInEval(HandlePropertyName name, DeclarationKind kind)
+{
+    MOZ_ASSERT(DeclarationKindIsVar(kind));
+    MOZ_ASSERT(pc->sc()->isEvalContext());
+
+    // In the case of eval, we also need to check enclosing VM scopes to see
+    // if the var declaration is allowed in the context.
+    //
+    // This check is necessary in addition to
+    // js::CheckEvalDeclarationConflicts because we only know during parsing
+    // if a var is bound by for-of.
+    Scope* enclosingScope = pc->sc()->compilationEnclosingScope();
+    Scope* varScope = EvalScope::nearestVarScopeForDirectEval(enclosingScope);
+    MOZ_ASSERT(varScope);
+    for (ScopeIter si(enclosingScope); si; si++) {
+        for (js::BindingIter bi(si.scope()); bi; bi++) {
+            if (bi.name() != name)
+                continue;
+
+            switch (bi.kind()) {
+              case BindingKind::Let: {
+                  // Annex B.3.5 allows redeclaring simple (non-destructured)
+                  // catch parameters with var declarations, except when it
+                  // appears in a for-of.
+                  bool annexB35Allowance = si.kind() == ScopeKind::SimpleCatch &&
+                                           kind != DeclarationKind::ForOfVar;
+                  if (!annexB35Allowance) {
+                      return Some(ScopeKindIsCatch(si.kind())
+                                  ? DeclarationKind::CatchParameter
+                                  : DeclarationKind::Let);
+                  }
+                  break;
+              }
+
+              case BindingKind::Const:
+                return Some(DeclarationKind::Const);
+
+              case BindingKind::Import:
+              case BindingKind::FormalParameter:
+              case BindingKind::Var:
+              case BindingKind::NamedLambdaCallee:
+                break;
+            }
+        }
+
+        if (si.scope() == varScope)
+            break;
+    }
+
+    return Nothing();
+}
+
 static bool
 DeclarationKindIsParameter(DeclarationKind kind)
 {
@@ -1010,6 +1062,9 @@ Parser<ParseHandler>::tryDeclareVar(HandlePropertyName name, DeclarationKind kin
         }
     }
 
+    if (!pc->sc()->strict() && pc->sc()->isEvalContext())
+        *redeclaredKind = isVarRedeclaredInEval(name, kind);
+
     return true;
 }
 
@@ -1021,46 +1076,6 @@ Parser<ParseHandler>::tryDeclareVarForAnnexBLexicalFunction(HandlePropertyName n
     Maybe<DeclarationKind> redeclaredKind;
     if (!tryDeclareVar(name, DeclarationKind::VarForAnnexBLexicalFunction, &redeclaredKind))
         return false;
-
-    // In the case of eval, we also need to check enclosing VM scopes to see
-    // if an Annex B var should be synthesized.
-    if (!redeclaredKind && pc->sc()->isEvalContext()) {
-        Scope* enclosingScope = pc->sc()->compilationEnclosingScope();
-        Scope* varScope = EvalScope::nearestVarScopeForDirectEval(enclosingScope);
-        MOZ_ASSERT(varScope);
-        for (ScopeIter si(enclosingScope); si; si++) {
-            for (js::BindingIter bi(si.scope()); bi; bi++) {
-                if (bi.name() != name)
-                    continue;
-
-                switch (bi.kind()) {
-                  case BindingKind::Let: {
-                    // Annex B.3.5 allows redeclaring simple (non-destructured)
-                    // catch parameters with var declarations, except when it
-                    // appears in a for-of, which a function declaration is
-                    // definitely not.
-                    bool annexB35Allowance = si.kind() == ScopeKind::Catch;
-                    if (!annexB35Allowance)
-                        redeclaredKind = Some(DeclarationKind::Let);
-                    break;
-                  }
-
-                  case BindingKind::Const:
-                    redeclaredKind = Some(DeclarationKind::Const);
-                    break;
-
-                  case BindingKind::Import:
-                  case BindingKind::FormalParameter:
-                  case BindingKind::Var:
-                  case BindingKind::NamedLambdaCallee:
-                    break;
-                }
-            }
-
-            if (si.scope() == varScope)
-                break;
-        }
-    }
 
     if (redeclaredKind) {
         // If an early error would have occurred, undo all the

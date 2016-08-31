@@ -984,6 +984,7 @@ PopEnvironment(JSContext* cx, EnvironmentIter& ei)
 {
     switch (ei.scope().kind()) {
       case ScopeKind::Lexical:
+      case ScopeKind::SimpleCatch:
       case ScopeKind::Catch:
         if (MOZ_UNLIKELY(cx->compartment()->isDebuggee()))
             DebugEnvironments::onPopLexical(cx, ei);
