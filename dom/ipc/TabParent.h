@@ -540,6 +540,10 @@ public:
 
   bool SendSelectionEvent(mozilla::WidgetSelectionEvent& event);
 
+  bool SendPasteTransferable(const IPCDataTransfer& aDataTransfer,
+                             const bool& aIsPrivateData,
+                             const IPC::Principal& aRequestingPrincipal);
+
   static TabParent* GetFrom(nsFrameLoader* aFrameLoader);
 
   static TabParent* GetFrom(nsIFrameLoader* aFrameLoader);
