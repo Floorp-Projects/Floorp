@@ -247,6 +247,7 @@ function get_sync_test_telemetry() {
   for (let engineName of testEngines) {
     ns.SyncTelemetry.allowedEngines.add(engineName);
   }
+  ns.SyncTelemetry.submissionInterval = -1;
   return ns.SyncTelemetry;
 }
 
@@ -256,7 +257,9 @@ function assert_valid_ping(record) {
       deepEqual([], SyncPingValidator.errors, "Sync telemetry ping validation failed");
     }
     equal(record.version, 1);
-    lessOrEqual(record.when, Date.now());
+    record.syncs.forEach(p => {
+      lessOrEqual(p.when, Date.now());
+    });
   }
 }
 
@@ -264,24 +267,26 @@ function assert_valid_ping(record) {
 function assert_success_ping(ping) {
   ok(!!ping);
   assert_valid_ping(ping);
-  ok(!ping.failureReason);
-  equal(undefined, ping.status);
-  greater(ping.engines.length, 0);
-  for (let e of ping.engines) {
-    ok(!e.failureReason);
-    equal(undefined, e.status);
-    if (e.outgoing) {
-      for (let o of e.outgoing) {
-        equal(undefined, o.failed);
-        notEqual(undefined, o.sent);
+  ping.syncs.forEach(record => {
+    ok(!record.failureReason);
+    equal(undefined, record.status);
+    greater(record.engines.length, 0);
+    for (let e of record.engines) {
+      ok(!e.failureReason);
+      equal(undefined, e.status);
+      if (e.outgoing) {
+        for (let o of e.outgoing) {
+          equal(undefined, o.failed);
+          notEqual(undefined, o.sent);
+        }
+      }
+      if (e.incoming) {
+        equal(undefined, e.incoming.failed);
+        equal(undefined, e.incoming.newFailed);
+        notEqual(undefined, e.incoming.applied || e.incoming.reconciled);
       }
     }
-    if (e.incoming) {
-      equal(undefined, e.incoming.failed);
-      equal(undefined, e.incoming.newFailed);
-      notEqual(undefined, e.incoming.applied || e.incoming.reconciled);
-    }
-  }
+  });
 }
 
 // Hooks into telemetry to validate all pings after calling.
@@ -290,7 +295,7 @@ function validate_all_future_pings() {
   telem.submit = assert_valid_ping;
 }
 
-function wait_for_ping(callback, allowErrorPings) {
+function wait_for_ping(callback, allowErrorPings, getFullPing = false) {
   return new Promise(resolve => {
     let telem = get_sync_test_telemetry();
     let oldSubmit = telem.submit;
@@ -301,15 +306,20 @@ function wait_for_ping(callback, allowErrorPings) {
       } else {
         assert_success_ping(record);
       }
-      resolve(record);
+      if (getFullPing) {
+        resolve(record);
+      } else {
+        equal(record.syncs.length, 1);
+        resolve(record.syncs[0]);
+      }
     };
     callback();
   });
 }
 
 // Short helper for wait_for_ping
-function sync_and_validate_telem(allowErrorPings) {
-  return wait_for_ping(() => Service.sync(), allowErrorPings);
+function sync_and_validate_telem(allowErrorPings, getFullPing = false) {
+  return wait_for_ping(() => Service.sync(), allowErrorPings, getFullPing);
 }
 
 // Used for the (many) cases where we do a 'partial' sync, where only a single
@@ -337,47 +347,50 @@ function sync_engine_and_validate_telem(engine, allowErrorPings, onError) {
     let initialSyncStatus = ns.Status._sync;
 
     let oldSubmit = telem.submit;
-    telem.submit = function(record) {
+    telem.submit = function(ping) {
       telem.submit = oldSubmit;
-      if (record && record.status) {
-        // did we see anything to lead us to believe that something bad actually happened
-        let realProblem = record.failureReason || record.engines.some(e => {
-          if (e.failureReason || e.status) {
-            return true;
-          }
-          if (e.outgoing && e.outgoing.some(o => o.failed > 0)) {
-            return true;
-          }
-          return e.incoming && e.incoming.failed;
-        });
-        if (!realProblem) {
-          // no, so if the status is the same as it was initially, just assume
-          // that its leftover and that we can ignore it.
-          if (record.status.sync && record.status.sync == initialSyncStatus) {
-            delete record.status.sync;
-          }
-          if (record.status.service && record.status.service == initialServiceStatus) {
-            delete record.status.service;
-          }
-          if (!record.status.sync && !record.status.service) {
-            delete record.status;
+      ping.syncs.forEach(record => {
+        if (record && record.status) {
+          // did we see anything to lead us to believe that something bad actually happened
+          let realProblem = record.failureReason || record.engines.some(e => {
+            if (e.failureReason || e.status) {
+              return true;
+            }
+            if (e.outgoing && e.outgoing.some(o => o.failed > 0)) {
+              return true;
+            }
+            return e.incoming && e.incoming.failed;
+          });
+          if (!realProblem) {
+            // no, so if the status is the same as it was initially, just assume
+            // that its leftover and that we can ignore it.
+            if (record.status.sync && record.status.sync == initialSyncStatus) {
+              delete record.status.sync;
+            }
+            if (record.status.service && record.status.service == initialServiceStatus) {
+              delete record.status.service;
+            }
+            if (!record.status.sync && !record.status.service) {
+              delete record.status;
+            }
           }
         }
-      }
+      });
       if (allowErrorPings) {
-        assert_valid_ping(record);
+        assert_valid_ping(ping);
       } else {
-        assert_success_ping(record);
+        assert_success_ping(ping);
       }
+      equal(ping.syncs.length, 1);
       if (caughtError) {
         if (onError) {
-          onError(record);
+          onError(ping.syncs[0]);
         }
         reject(caughtError);
       } else {
-        resolve(record);
+        resolve(ping.syncs[0]);
       }
-    };
+    }
     Svc.Obs.notify("weave:service:sync:start");
     try {
       engine.sync();
