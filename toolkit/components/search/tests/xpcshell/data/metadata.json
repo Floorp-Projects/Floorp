@@ -21,13 +21,10 @@
   "[app]\/ddg.xml": {
     "order": 6
   },
-  "[app]\/eBay.xml": {
+  "[app]\/twitter.xml": {
     "order": 7
   },
-  "[app]\/twitter.xml": {
-    "order": 8
-  },
   "[app]\/wikipedia.xml": {
-    "order": 9
+    "order": 8
   }
 }
