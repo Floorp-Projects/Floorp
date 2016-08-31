@@ -20,4 +20,12 @@ public class ActivityStream {
         return GeckoSharedPrefs.forApp(context)
                 .getBoolean(GeckoPreferences.PREFS_ACTIVITY_STREAM, false);
     }
+
+    /**
+     * Query whether we want to display Activity Stream as a Home Panel (within the HomePager),
+     * or as a HomePager replacement.
+     */
+    public static boolean isHomePanel() {
+        return true;
+    }
 }

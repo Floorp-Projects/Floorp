@@ -5,6 +5,7 @@
 package org.mozilla.gecko.home.activitystream;
 
 import android.database.Cursor;
+import android.support.v4.view.ViewPager;
 import android.support.v7.widget.RecyclerView;
 import android.text.format.DateUtils;
 import android.view.View;
@@ -13,6 +14,9 @@ import android.widget.TextView;
 
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.db.BrowserContract;
+import org.mozilla.gecko.home.HomePager;
+import org.mozilla.gecko.home.activitystream.topsites.CirclePageIndicator;
+import org.mozilla.gecko.home.activitystream.topsites.TopSitesPagerAdapter;
 
 public abstract class StreamItem extends RecyclerView.ViewHolder {
     public StreamItem(View itemView) {
@@ -25,9 +29,21 @@ public abstract class StreamItem extends RecyclerView.ViewHolder {
 
     public static class TopPanel extends StreamItem {
         public static final int LAYOUT_ID = R.layout.activity_stream_main_toppanel;
+        private final ViewPager topSitesPager;
 
-        public TopPanel(View itemView) {
+        public TopPanel(View itemView, HomePager.OnUrlOpenListener onUrlOpenListener) {
             super(itemView);
+
+            topSitesPager = (ViewPager) itemView.findViewById(R.id.topsites_pager);
+            topSitesPager.setAdapter(new TopSitesPagerAdapter(itemView.getContext(), onUrlOpenListener));
+
+            CirclePageIndicator indicator = (CirclePageIndicator) itemView.findViewById(R.id.topsites_indicator);
+            indicator.setViewPager(topSitesPager);
+        }
+
+        @Override
+        public void bind(Cursor cursor) {
+            ((TopSitesPagerAdapter) topSitesPager.getAdapter()).swapCursor(cursor);
         }
     }
 

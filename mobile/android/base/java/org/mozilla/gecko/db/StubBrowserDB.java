@@ -26,6 +26,7 @@ import android.content.Context;
 import android.database.ContentObserver;
 import android.database.Cursor;
 import android.graphics.drawable.BitmapDrawable;
+import android.support.v4.content.CursorLoader;
 
 class StubSearches implements Searches {
     public StubSearches() {
@@ -372,6 +373,10 @@ public class StubBrowserDB implements BrowserDB {
     }
 
     public Cursor getTopSites(ContentResolver cr, int suggestedRangeLimit, int limit) {
+        return null;
+    }
+
+    public CursorLoader getActivityStreamTopSites(Context context, int limit) {
         return null;
     }
 

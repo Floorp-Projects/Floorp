@@ -34,8 +34,11 @@
 }
 
 /* The tab takes entire horizontal space and individual tabs
-  should stretch accordingly. Use flexbox for the behavior. */
+  should stretch accordingly. Use flexbox for the behavior.
+  Use also `overflow: hidden` so, 'overflow' and 'underflow'
+  events are fired (it's utilized by the all-tabs-menu). */
 .tabs .tabs-navigation .tabs-menu {
+  overflow: hidden;
   display: flex;
 }
 

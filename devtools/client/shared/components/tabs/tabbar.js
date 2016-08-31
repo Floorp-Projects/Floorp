@@ -9,6 +9,9 @@
 const { DOM, createClass, PropTypes, createFactory } = require("devtools/client/shared/vendor/react");
 const Tabs = createFactory(require("devtools/client/shared/components/tabs/tabs").Tabs);
 
+const Menu = require("devtools/client/framework/menu");
+const MenuItem = require("devtools/client/framework/menu-item");
+
 // Shortcuts
 const { div } = DOM;
 
@@ -20,6 +23,14 @@ let Tabbar = createClass({
 
   propTypes: {
     onSelect: PropTypes.func,
+    showAllTabsMenu: PropTypes.bool,
+    toolbox: PropTypes.object,
+  },
+
+  getDefaultProps: function () {
+    return {
+      showAllTabsMenu: false,
+    };
   },
 
   getInitialState: function () {
@@ -125,6 +136,33 @@ let Tabbar = createClass({
     }
   },
 
+  onAllTabsMenuClick: function (event) {
+    let menu = new Menu();
+    let target = event.target;
+
+    // Generate list of menu items from the list of tabs.
+    this.state.tabs.forEach(tab => {
+      menu.append(new MenuItem({
+        label: tab.title,
+        type: "checkbox",
+        checked: this.getCurrentTabId() == tab.id,
+        click: () => this.select(tab.id),
+      }));
+    });
+
+    // Show a drop down menu with frames.
+    // XXX Missing menu API for specifying target (anchor)
+    // and relative position to it. See also:
+    // https://developer.mozilla.org/en-US/docs/Mozilla/Tech/XUL/Method/openPopup
+    // https://bugzilla.mozilla.org/show_bug.cgi?id=1274551
+    let rect = target.getBoundingClientRect();
+    let screenX = target.ownerDocument.defaultView.mozInnerScreenX;
+    let screenY = target.ownerDocument.defaultView.mozInnerScreenY;
+    menu.popup(rect.left + screenX, rect.bottom + screenY, this.props.toolbox);
+
+    return menu;
+  },
+
   // Rendering
 
   renderTab: function (tab) {
@@ -148,6 +186,8 @@ let Tabbar = createClass({
     return (
       div({className: "devtools-sidebar-tabs"},
         Tabs({
+          onAllTabsMenuClick: this.onAllTabsMenuClick,
+          showAllTabsMenu: this.props.showAllTabsMenu,
           tabActive: this.state.activeTab,
           onAfterChange: this.onTabChanged},
           tabs

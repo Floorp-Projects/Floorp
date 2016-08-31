@@ -1,0 +1,78 @@
+<!DOCTYPE HTML>
+<html class="theme-light">
+<!--
+Test all-tabs menu.
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Tabs component All-tabs menu test</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  <link rel="stylesheet" type="text/css" href="resource://devtools/client/themes/variables.css">
+  <link rel="stylesheet" type="text/css" href="resource://devtools/client/themes/common.css">
+  <link rel="stylesheet" type="text/css" href="resource://devtools/client/themes/light-theme.css">
+  <link rel="stylesheet" type="text/css" href="resource://devtools/client/shared/components/tabs/tabs.css">
+  <link rel="stylesheet" type="text/css" href="resource://devtools/client/shared/components/tabs/tabbar.css">
+  <link rel="stylesheet" type="text/css" href="resource://devtools/client/inspector/components/side-panel.css">
+  <link rel="stylesheet" type="text/css" href="resource://devtools/client/inspector/components/inspector-tab-panel.css">
+</head>
+<body>
+<pre id="test">
+<script src="head.js" type="application/javascript;version=1.8"></script>
+<script type="application/javascript;version=1.8">
+window.onload = Task.async(function* () {
+  try {
+    const ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
+    const React = browserRequire("devtools/client/shared/vendor/react");
+    const Tabbar = React.createFactory(browserRequire("devtools/client/shared/components/tabs/tabbar"));
+
+    // Create container for the TabBar. Set smaller width
+    // to ensure that tabs won't fit and the all-tabs menu
+    // needs to appear.
+    const tabBarBox = document.createElement("div");
+    tabBarBox.style.width = "200px";
+    tabBarBox.style.height = "200px";
+    tabBarBox.style.border = "1px solid lightgray";
+    document.body.appendChild(tabBarBox);
+
+    // Render the tab-bar.
+    const tabbar = Tabbar({
+      showAllTabsMenu: true,
+    });
+
+    const tabbarReact = ReactDOM.render(tabbar, tabBarBox);
+
+    // Test panel.
+    let TabPanel = React.createFactory(React.createClass({
+      render: function () {
+        return React.DOM.div({}, "content");
+      }
+    }));
+
+    // Create a few panels.
+    yield addTabWithPanel(1);
+    yield addTabWithPanel(2);
+    yield addTabWithPanel(3);
+    yield addTabWithPanel(4);
+    yield addTabWithPanel(5);
+
+    // Make sure the all-tabs menu is there.
+    const allTabsMenu = tabBarBox.querySelector(".all-tabs-menu");
+    ok(allTabsMenu, "All-tabs menu must be rendered");
+
+    function addTabWithPanel(tabId) {
+      return setState(tabbarReact, Object.assign({}, tabbarReact.state, {
+        tabs: tabbarReact.state.tabs.concat({id: `${tabId}`,
+          title: `tab-${tabId}`, panel: TabPanel}),
+      }));
+    }
+  } catch(e) {
+    ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
+  } finally {
+    SimpleTest.finish();
+  }
+});
+</script>
+</pre>
+</body>
+</html>

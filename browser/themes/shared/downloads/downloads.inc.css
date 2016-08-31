@@ -94,7 +94,7 @@ toolbarseparator.downloadsDropmarkerSplitter {
 }
 
 #downloadsFooter:hover toolbarseparator.downloadsDropmarkerSplitter,
-#downloadsFooter toolbarseparator.downloadsDropmarkerSplitterExtend {
+#downloadsFooter[showingdropdown] toolbarseparator {
   margin: 0;
 }
 
