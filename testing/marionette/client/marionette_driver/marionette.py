@@ -757,7 +757,7 @@ class Marionette(object):
             exc, val, tb = sys.exc_info()
 
             # Give the application some time to shutdown
-            returncode = self.instance.runner.wait(timeout=self.DEFAULT_STARTUP_TIMEOUT)
+            returncode = self.instance.runner.wait(timeout=self.DEFAULT_SHUTDOWN_TIMEOUT)
             if returncode is None:
                 self.cleanup()
                 message = ('Process killed because the connection to Marionette server is lost.'
@@ -1032,30 +1032,46 @@ class Marionette(object):
             self.start_session()
             self.reset_timeouts()
 
-    @do_process_check
-    def quit_in_app(self):
+    def _request_in_app_shutdown(self, shutdown_flags=None):
+        """Terminate the currently running instance from inside the application.
+
+        :param shutdown_flags: If specified use additional flags for the shutdown
+                               of the application. Possible values here correspond
+                               to constants in nsIAppStartup: http://mzl.la/1X0JZsC.
         """
-        This will terminate the currently running instance.
+        flags = set(["eForceQuit"])
+        if shutdown_flags:
+            flags.add(shutdown_flags)
+        self._send_message("quitApplication", {"flags": list(flags)})
+
+        self.delete_session(in_app=True)
+
+    @do_process_check
+    def quit(self, in_app=False):
+        """Terminate the currently running instance.
+
+        This command will delete the active marionette session. It also allows
+        manipulation of eg. the profile data while the application is not running.
+        To start the application again, start_session() has to be called.
+
+        :param in_app: If True, marionette will cause a quit from within the
+                       browser. Otherwise the browser will be quit immediately
+                       by killing the process.
         """
         if not self.instance:
-            raise errors.MarionetteException("quit_in_app() can only be called "
+            raise errors.MarionetteException("quit() can only be called "
                                              "on Gecko instances launched by Marionette")
-        # Values here correspond to constants in nsIAppStartup.
-        # See http://mzl.la/1X0JZsC
-        restart_flags = [
-            "eForceQuit",
-            "eRestart",
-        ]
-        self._send_message("quitApplication", {"flags": restart_flags})
-        self.client.close()
 
-        try:
-            self.raise_for_port(self.wait_for_port())
-        except socket.timeout:
-            if self.instance.runner.returncode is not None:
-                exc, val, tb = sys.exc_info()
-                self.cleanup()
-                raise exc, 'Requested restart of the application was aborted', tb
+        self.reset_timeouts()
+
+        if in_app:
+            self._request_in_app_shutdown()
+
+            # Give the application some time to shutdown
+            self.instance.runner.wait(timeout=self.DEFAULT_SHUTDOWN_TIMEOUT)
+        else:
+            self.delete_session()
+            self.instance.close()
 
     @do_process_check
     def restart(self, clean=False, in_app=False):
@@ -1063,33 +1079,45 @@ class Marionette(object):
         This will terminate the currently running instance, and spawn a new instance
         with the same profile and then reuse the session id when creating a session again.
 
-        : param clean: If False the same profile will be used after the restart. Note
-                       that the in app initiated restart always maintains the same
-                       profile.
-        : param in_app: If True, marionette will cause a restart from within the
-                        browser. Otherwise the browser will be restarted immediately
-                        by killing the process.
+        :param clean: If False the same profile will be used after the restart. Note
+                      that the in app initiated restart always maintains the same
+                      profile.
+        :param in_app: If True, marionette will cause a restart from within the
+                       browser. Otherwise the browser will be restarted immediately
+                       by killing the process.
         """
         if not self.instance:
             raise errors.MarionetteException("restart() can only be called "
                                              "on Gecko instances launched by Marionette")
+        session_id = self.session_id
+
         if in_app:
             if clean:
                 raise ValueError("An in_app restart cannot be triggered with the clean flag set")
-            self.quit_in_app()
+
+            self._request_in_app_shutdown("eRestart")
+
+            try:
+                self.raise_for_port(self.wait_for_port())
+            except socket.timeout:
+                if self.instance.runner.returncode is not None:
+                    exc, val, tb = sys.exc_info()
+                    self.cleanup()
+                    raise exc, "Requested restart of the application was aborted", tb
+
         else:
             self.delete_session()
             self.instance.restart(clean=clean)
             self.raise_for_port(self.wait_for_port())
 
-        self.start_session(session_id=self.session_id)
+        self.start_session(session_id=session_id)
         self.reset_timeouts()
 
-        if in_app and self.session.get('processId'):
+        if in_app and self.session.get("processId"):
             # In some cases Firefox restarts itself by spawning into a new process group.
             # As long as mozprocess cannot track that behavior (bug 1284864) we assist by
             # informing about the new process id.
-            self.instance.runner.process_handler.check_for_detached(self.session['processId'])
+            self.instance.runner.process_handler.check_for_detached(self.session["processId"])
 
     def absolute_url(self, relative_url):
         '''
@@ -1113,7 +1141,7 @@ class Marionette(object):
 
         :returns: A dict of the capabilities offered."""
         if self.instance:
-            returncode = self.instance.runner.process_handler.proc.returncode
+            returncode = self.instance.runner.returncode
             if returncode is not None:
                 # We're managing a binary which has terminated, so restart it.
                 self.instance.restart()
@@ -1145,9 +1173,15 @@ class Marionette(object):
         self._send_message("setTestName", {"value": test_name})
         self._test_name = test_name
 
-    def delete_session(self):
-        """Close the current session and disconnect from the server."""
-        self._send_message("deleteSession")
+    def delete_session(self, in_app=False):
+        """Close the current session and disconnect from the server.
+
+        :param in_app: False, if the session should be closed from the client.
+                       Otherwise a request to quit or restart the instance from
+                       within the application itself is used.
+        """
+        if not in_app:
+            self._send_message("deleteSession")
         self.session_id = None
         self.session = None
         self.window = None

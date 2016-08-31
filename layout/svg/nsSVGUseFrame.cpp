@@ -117,8 +117,7 @@ nsSVGUseFrame::AttributeChanged(int32_t         aNameSpaceID,
   SVGUseElement *useElement = static_cast<SVGUseElement*>(mContent);
 
   if (aNameSpaceID == kNameSpaceID_None) {
-    if (aAttribute == nsGkAtoms::x ||
-        aAttribute == nsGkAtoms::y) {
+    if (aAttribute == nsGkAtoms::x || aAttribute == nsGkAtoms::y) {
       // make sure our cached transform matrix gets (lazily) updated
       mCanvasTM = nullptr;
       nsLayoutUtils::PostRestyleEvent(
@@ -144,8 +143,11 @@ nsSVGUseFrame::AttributeChanged(int32_t         aNameSpaceID,
         nsSVGUtils::ScheduleReflowSVG(this);
       }
     }
-  } else if (aNameSpaceID == kNameSpaceID_XLink &&
-             aAttribute == nsGkAtoms::href) {
+  }
+
+  if ((aNameSpaceID == kNameSpaceID_XLink ||
+       aNameSpaceID == kNameSpaceID_None) &&
+      aAttribute == nsGkAtoms::href) {
     // we're changing our nature, clear out the clone information
     nsLayoutUtils::PostRestyleEvent(
       useElement, nsRestyleHint(0),

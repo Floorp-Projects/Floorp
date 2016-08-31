@@ -132,7 +132,7 @@ function test() {
 }
 
 function runTests() {
-  let completer = new CSSCompleter();
+  let completer = new CSSCompleter({cssProperties: getClientCssProperties()});
   let matches = (arr, toCheck) => !arr.some((x, i) => x != toCheck[i]);
   let checkState = (expected, actual) => {
     if (expected[0] == "null" && actual == null) {

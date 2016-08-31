@@ -5,11 +5,8 @@
 "use strict";
 
 /* eslint-disable complexity */
-
-/* eslint-disable mozilla/reject-some-requires */
-const { Cc, Ci } = require("chrome");
-/* eslint-enable mozilla/reject-some-requires */
 const {cssTokenizer, cssTokenizerWithLineColumn} = require("devtools/shared/css-parsing-utils");
+const {getClientCssProperties} = require("devtools/shared/fronts/css-properties");
 
 /**
  * Here is what this file (+ css-parsing-utils.js) do.
@@ -78,8 +75,6 @@ const SELECTOR_STATES = {
 };
 /* eslint-enable no-inline-comments */
 
-const { properties, propertyNames } = getCSSKeywords();
-
 /**
  * Constructor for the autocompletion object.
  *
@@ -87,10 +82,15 @@ const { properties, propertyNames } = getCSSKeywords();
  *        - walker {Object} The object used for query selecting from the current
  *                 target's DOM.
  *        - maxEntries {Number} Maximum selectors suggestions to display.
+ *        - cssProperties {Object} The database of CSS properties.
  */
 function CSSCompleter(options = {}) {
   this.walker = options.walker;
   this.maxEntries = options.maxEntries || 15;
+  // If no css properties database is passed in, default to the client list.
+  this.cssProperties = options.cssProperties || getClientCssProperties();
+
+  this.propertyNames = this.cssProperties.getNames().sort();
 
   // Array containing the [line, ch, scopeStack] for the locations where the
   // CSS state is "null"
@@ -844,18 +844,18 @@ CSSCompleter.prototype = {
       return Promise.resolve(finalList);
     }
 
-    let length = propertyNames.length;
+    let length = this.propertyNames.length;
     let i = 0, count = 0;
     for (; i < length && count < this.maxEntries; i++) {
-      if (propertyNames[i].startsWith(startProp)) {
+      if (this.propertyNames[i].startsWith(startProp)) {
         count++;
-        let propName = propertyNames[i];
+        let propName = this.propertyNames[i];
         finalList.push({
           preLabel: startProp,
           label: propName,
           text: propName + ": "
         });
-      } else if (propertyNames[i] > startProp) {
+      } else if (this.propertyNames[i] > startProp) {
         // We have crossed all possible matches alphabetically.
         break;
       }
@@ -872,7 +872,7 @@ CSSCompleter.prototype = {
    */
   completeValues: function (propName, startValue) {
     let finalList = [];
-    let list = ["!important;", ...(properties[propName] || [])];
+    let list = ["!important;", ...this.cssProperties.getValues(propName)];
     // If there is no character being completed, we are showing an initial list
     // of possible values. Skipping '!important' in this case.
     if (!startValue) {
@@ -1210,30 +1210,5 @@ CSSCompleter.prototype = {
     return null;
   }
 };
-
-/**
- * Returns a list of all property names and a map of property name vs possible
- * CSS values provided by the Gecko engine.
- *
- * @return {Object} An object with following properties:
- *         - propertyNames {Array} Array of string containing all the possible
- *                         CSS property names.
- *         - properties {Object|Map} A map where key is the property name and
- *                      value is an array of string containing all the possible
- *                      CSS values the property can have.
- */
-function getCSSKeywords() {
-  let domUtils = Cc["@mozilla.org/inspector/dom-utils;1"]
-                   .getService(Ci.inIDOMUtils);
-  let props = {};
-  let propNames = domUtils.getCSSPropertyNames(domUtils.INCLUDE_ALIASES);
-  propNames.forEach(prop => {
-    props[prop] = domUtils.getCSSValuesForProperty(prop).sort();
-  });
-  return {
-    properties: props,
-    propertyNames: propNames.sort()
-  };
-}
 
 module.exports = CSSCompleter;

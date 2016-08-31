@@ -2024,8 +2024,6 @@ MediaDecoderStateMachine::OnMetadataRead(MetadataHolder* aMetadata)
   }
 
   SetState(DECODER_STATE_DECODING);
-
-  ScheduleStateMachine();
 }
 
 void
@@ -2181,12 +2179,6 @@ MediaDecoderStateMachine::SeekCompleted()
     FinishDecodeFirstFrame();
   }
 
-  if (nextState == DECODER_STATE_DECODING) {
-    SetState(DECODER_STATE_DECODING);
-  } else {
-    SetState(nextState);
-  }
-
   // Ensure timestamps are up to date.
   UpdatePlaybackPositionInternal(newCurrentTime);
 
@@ -2198,12 +2190,13 @@ MediaDecoderStateMachine::SeekCompleted()
   // if we need to buffer after the seek.
   mQuickBuffering = false;
 
-  ScheduleStateMachine();
-
   if (video) {
     mMediaSink->Redraw(mInfo.mVideo);
     mOnPlaybackEvent.Notify(MediaEventType::Invalidate);
   }
+
+  SetState(nextState);
+  MOZ_ASSERT(IsStateMachineScheduled());
 }
 
 RefPtr<ShutdownPromise>
