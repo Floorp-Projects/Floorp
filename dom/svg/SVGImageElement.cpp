@@ -37,8 +37,9 @@ nsSVGElement::LengthInfo SVGImageElement::sLengthInfo[4] =
   { &nsGkAtoms::height, 0, nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER, SVGContentUtils::Y },
 };
 
-nsSVGElement::StringInfo SVGImageElement::sStringInfo[1] =
+nsSVGElement::StringInfo SVGImageElement::sStringInfo[2] =
 {
+  { &nsGkAtoms::href, kNameSpaceID_None, true },
   { &nsGkAtoms::href, kNameSpaceID_XLink, true }
 };
 
@@ -108,7 +109,9 @@ SVGImageElement::PreserveAspectRatio()
 already_AddRefed<SVGAnimatedString>
 SVGImageElement::Href()
 {
-  return mStringAttributes[HREF].ToDOMAnimatedString(this);
+  return mStringAttributes[HREF].IsExplicitlySet()
+         ? mStringAttributes[HREF].ToDOMAnimatedString(this)
+         : mStringAttributes[XLINK_HREF].ToDOMAnimatedString(this);
 }
 
 //----------------------------------------------------------------------
@@ -120,7 +123,11 @@ SVGImageElement::LoadSVGImage(bool aForce, bool aNotify)
   nsCOMPtr<nsIURI> baseURI = GetBaseURI();
 
   nsAutoString href;
-  mStringAttributes[HREF].GetAnimValue(href, this);
+  if (mStringAttributes[HREF].IsExplicitlySet()) {
+    mStringAttributes[HREF].GetAnimValue(href, this);
+  } else {
+    mStringAttributes[XLINK_HREF].GetAnimValue(href, this);
+  }
   href.Trim(" \t\n\r");
 
   if (baseURI && !href.IsEmpty())
@@ -136,7 +143,9 @@ nsresult
 SVGImageElement::AfterSetAttr(int32_t aNamespaceID, nsIAtom* aName,
                               const nsAttrValue* aValue, bool aNotify)
 {
-  if (aNamespaceID == kNameSpaceID_XLink && aName == nsGkAtoms::href) {
+  if (aName == nsGkAtoms::href &&
+      (aNamespaceID == kNameSpaceID_None ||
+       aNamespaceID == kNameSpaceID_XLink)) {
 
     // If there isn't a frame we still need to load the image in case
     // the frame is created later e.g. by attaching to a document.
@@ -157,7 +166,8 @@ SVGImageElement::AfterSetAttr(int32_t aNamespaceID, nsIAtom* aName,
 void
 SVGImageElement::MaybeLoadSVGImage()
 {
-  if (mStringAttributes[HREF].IsExplicitlySet() &&
+  if ((mStringAttributes[HREF].IsExplicitlySet() ||
+       mStringAttributes[XLINK_HREF].IsExplicitlySet()) &&
       (NS_FAILED(LoadSVGImage(false, true)) ||
        !LoadingEnabled())) {
     CancelImageRequests(true);
@@ -177,7 +187,8 @@ SVGImageElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
   nsImageLoadingContent::BindToTree(aDocument, aParent, aBindingParent,
                                     aCompileEventHandlers);
 
-  if (mStringAttributes[HREF].IsExplicitlySet()) {
+  if (mStringAttributes[HREF].IsExplicitlySet() ||
+      mStringAttributes[XLINK_HREF].IsExplicitlySet()) {
     // FIXME: Bug 660963 it would be nice if we could just have
     // ClearBrokenState update our state and do it fast...
     ClearBrokenState();

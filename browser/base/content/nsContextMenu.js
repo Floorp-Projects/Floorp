@@ -1566,8 +1566,8 @@ nsContextMenu.prototype = {
     if (href)
       return href;
 
-    href = this.link.getAttributeNS("http://www.w3.org/1999/xlink",
-                                    "href");
+    href = this.link.getAttribute("href") ||
+           this.link.getAttributeNS("http://www.w3.org/1999/xlink", "href");
 
     if (!href || !href.match(/\S/)) {
       // Without this we try to save as the current doc,

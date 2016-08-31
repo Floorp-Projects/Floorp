@@ -1223,6 +1223,10 @@ nsHtml5TreeBuilder::documentMode(nsHtml5DocumentMode m)
     mBuilder->SetDocumentMode(m);
     return;
   }
+  if (mSpeculativeLoadStage) {
+    mSpeculativeLoadQueue.AppendElement()->InitSetDocumentMode(m);
+    return;
+  }
   nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
   NS_ASSERTION(treeOp, "Tree op allocation failed.");
   treeOp->Init(m);

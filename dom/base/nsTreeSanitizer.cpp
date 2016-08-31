@@ -593,6 +593,7 @@ nsIAtom** const kAttributesSVG[] = {
 };
 
 nsIAtom** const kURLAttributesSVG[] = {
+  &nsGkAtoms::href,
   nullptr
 };
 

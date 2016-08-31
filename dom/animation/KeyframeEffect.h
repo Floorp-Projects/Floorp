@@ -319,8 +319,6 @@ protected:
                           const OptionsType& aOptions,
                           ErrorResult& aRv);
 
-  void ResetWinsInCascade();
-
   // This effect is registered with its target element so long as:
   //
   // (a) It has a target element, and
@@ -350,6 +348,10 @@ protected:
   // infinite recursion.
   already_AddRefed<nsStyleContext>
   GetTargetStyleContext();
+
+  // A wrapper for marking cascade update according to the current
+  // target and its effectSet.
+  void MarkCascadeNeedsUpdate();
 
   Maybe<OwningAnimationTarget> mTarget;
 

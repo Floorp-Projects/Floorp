@@ -558,17 +558,18 @@ function getFailingHttpServer(serverPort, serverIdentities) {
 //
 // serverPort is the port of the http OCSP responder
 // identity is the http hostname that will answer the OCSP requests
-// invalidIdentities is an array of identities that if used an
-//   will cause a test failure
 // nssDBLocation is the location of the NSS database from where the OCSP
 //   responses will be generated (assumes appropiate keys are present)
 // expectedCertNames is an array of nicks of the certs to be responsed
 // expectedBasePaths is an optional array that is used to indicate
 //   what is the expected base path of the OCSP request.
-function startOCSPResponder(serverPort, identity, invalidIdentities,
-                            nssDBLocation, expectedCertNames,
-                            expectedBasePaths, expectedMethods,
-                            expectedResponseTypes) {
+// expectedMethods is an optional array of methods ("GET" or "POST") indicating
+//   by which HTTP method the server is expected to be queried.
+// expectedResponseTypes is an optional array of OCSP response types to use (see
+//   GenerateOCSPResponse.cpp).
+function startOCSPResponder(serverPort, identity, nssDBLocation,
+                            expectedCertNames, expectedBasePaths,
+                            expectedMethods, expectedResponseTypes) {
   let ocspResponseGenerationArgs = expectedCertNames.map(
     function(expectedNick) {
       let responseType = "good";
@@ -583,10 +584,6 @@ function startOCSPResponder(serverPort, identity, invalidIdentities,
   let httpServer = new HttpServer();
   httpServer.registerPrefixHandler("/",
     function handleServerCallback(aRequest, aResponse) {
-      invalidIdentities.forEach(function(identity) {
-        Assert.notEqual(aRequest.host, identity,
-                        "Request host and invalid identity should not match");
-      });
       do_print("got request for: " + aRequest.path);
       let basePath = aRequest.path.slice(1).split("/")[0];
       if (expectedBasePaths.length >= 1) {
@@ -604,9 +601,6 @@ function startOCSPResponder(serverPort, identity, invalidIdentities,
       aResponse.write(ocspResponses.shift());
     });
   httpServer.identity.setPrimary("http", identity, serverPort);
-  invalidIdentities.forEach(function(identity) {
-    httpServer.identity.add("http", identity, serverPort);
-  });
   httpServer.start(serverPort);
   return {
     stop: function(callback) {

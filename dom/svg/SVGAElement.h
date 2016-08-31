@@ -76,9 +76,9 @@ protected:
 
   virtual StringAttributesInfo GetStringInfo() override;
 
-  enum { HREF, TARGET };
-  nsSVGString mStringAttributes[2];
-  static StringInfo sStringInfo[2];
+  enum { HREF, XLINK_HREF, TARGET };
+  nsSVGString mStringAttributes[3];
+  static StringInfo sStringInfo[3];
 };
 
 } // namespace dom

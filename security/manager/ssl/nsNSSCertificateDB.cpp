@@ -1523,7 +1523,6 @@ VerifyCertAtTime(nsIX509Cert* aCert,
     }
     *_retval = 0;
   } else {
-    NS_ENSURE_TRUE(evOidPolicy == SEC_OID_UNKNOWN, NS_ERROR_FAILURE);
     NS_ENSURE_TRUE(error != 0, NS_ERROR_FAILURE);
     *_retval = error;
   }

@@ -16,6 +16,9 @@ import os
 import sys
 import time
 
+from manifestparser import TestManifest
+from reftest import ReftestManifest
+
 from mozbuild.util import ensureParentDir
 from mozpack.files import FileFinder
 from mozpack.mozjar import JarWriter
@@ -92,6 +95,35 @@ ARCHIVE_FILES = {
             'source': buildconfig.topobjdir,
             'base': '_tests',
             'pattern': 'modules/**',
+        },
+        {
+            'source': buildconfig.topsrcdir,
+            'base': 'testing/marionette',
+            'patterns': [
+                'client/**',
+                'mach_test_package_commands.py',
+            ],
+            'dest': 'marionette',
+        },
+        {
+            'source': buildconfig.topsrcdir,
+            'base': 'testing/marionette/harness',
+            'pattern': '**',
+            'dest': 'marionette',
+            'ignore': [
+                'marionette/tests'
+            ]
+        },
+        {
+            'source': buildconfig.topsrcdir,
+            'base': '',
+            'manifests': [
+                'testing/marionette/harness/marionette/tests/unit-tests.ini',
+                'testing/marionette/harness/marionette/tests/webapi-tests.ini',
+            ],
+            # We also need the manifests and harness_unit tests
+            'pattern': 'testing/marionette/harness/marionette/tests/**',
+            'dest': 'marionette/tests',
         },
         {
             'source': buildconfig.topobjdir,
@@ -315,6 +347,15 @@ ARCHIVE_FILES = {
             'pattern': 'mozinfo.json',
             'dest': 'reftest',
         },
+        {
+            'source': buildconfig.topsrcdir,
+            'base': '',
+            'manifests': [
+                'layout/reftests/reftest.list',
+                'testing/crashtest/crashtests.list',
+            ],
+            'dest': 'reftest/tests',
+        }
     ],
     'talos': [
         {
@@ -414,15 +455,28 @@ for k, v in ARCHIVE_FILES.items():
 def find_files(archive):
     for entry in ARCHIVE_FILES[archive]:
         source = entry['source']
+        dest = entry.get('dest')
         base = entry.get('base', '')
+
         pattern = entry.get('pattern')
         patterns = entry.get('patterns', [])
         if pattern:
             patterns.append(pattern)
-        dest = entry.get('dest')
+
+        manifest = entry.get('manifest')
+        manifests = entry.get('manifests', [])
+        if manifest:
+            manifests.append(manifest)
+        if manifests:
+            dirs = find_manifest_dirs(buildconfig.topsrcdir, manifests)
+            patterns.extend({'{}/**'.format(d) for d in dirs})
+
         ignore = list(entry.get('ignore', []))
-        ignore.append('**/.mkdir.done')
-        ignore.append('**/*.pyc')
+        ignore.extend([
+            '**/.flake8',
+            '**/.mkdir.done',
+            '**/*.pyc',
+        ])
 
         common_kwargs = {
             'find_executables': False,
@@ -439,14 +493,29 @@ def find_files(archive):
                 yield p, f
 
 
-def find_reftest_dirs(topsrcdir, manifests):
-    from reftest import ReftestManifest
+def find_manifest_dirs(topsrcdir, manifests):
+    """Routine to retrieve directories specified in a manifest, relative to topsrcdir.
 
+    It does not recurse into manifests, as we currently have no need for that.
+    """
     dirs = set()
+
     for p in manifests:
-        m = ReftestManifest()
-        m.load(os.path.join(topsrcdir, p))
-        dirs |= m.dirs
+        p = os.path.join(topsrcdir, p)
+
+        if p.endswith('.ini'):
+            test_manifest = TestManifest()
+            test_manifest.read(p)
+            dirs |= set([os.path.dirname(m) for m in test_manifest.manifests()])
+
+        elif p.endswith('.list'):
+            m = ReftestManifest()
+            m.load(p)
+            dirs |= m.dirs
+
+        else:
+            raise Exception('"{}" is not a supported manifest format.'.format(
+                os.path.splitext(p)[1]))
 
     dirs = {mozpath.normpath(d[len(topsrcdir):]).lstrip('/') for d in dirs}
 
@@ -467,27 +536,6 @@ def find_reftest_dirs(topsrcdir, manifests):
     return sorted(seen)
 
 
-def insert_reftest_entries(entries):
-    """Reftests have their own mechanism for defining tests and locations.
-
-    This function is called when processing the reftest archive to process
-    reftest test manifests and insert the results into the existing list of
-    archive entries.
-    """
-    manifests = (
-        'layout/reftests/reftest.list',
-        'testing/crashtest/crashtests.list',
-    )
-
-    for base in find_reftest_dirs(buildconfig.topsrcdir, manifests):
-        entries.append({
-            'source': buildconfig.topsrcdir,
-            'base': '',
-            'pattern': '%s/**' % base,
-            'dest': 'reftest/tests',
-        })
-
-
 def main(argv):
     parser = argparse.ArgumentParser(
         description='Produce test archives')
@@ -498,11 +546,6 @@ def main(argv):
 
     if not args.outputfile.endswith('.zip'):
         raise Exception('expected zip output file')
-
-    # Adjust reftest entries only if processing reftests (because it is
-    # unnecessary overhead otherwise).
-    if args.archive == 'reftest':
-        insert_reftest_entries(ARCHIVE_FILES['reftest'])
 
     file_count = 0
     t_start = time.time()
@@ -515,8 +558,8 @@ def main(argv):
         with JarWriter(fileobj=fh, optimize=False, compress_level=5) as writer:
             res = find_files(args.archive)
             for p, f in res:
+                writer.add(p.encode('utf-8'), f.read(), mode=f.mode, skip_duplicates=True)
                 file_count += 1
-                writer.add(p.encode('utf-8'), f.read(), mode=f.mode)
 
     duration = time.time() - t_start
     zip_size = os.path.getsize(args.outputfile)

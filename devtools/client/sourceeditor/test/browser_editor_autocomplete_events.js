@@ -25,7 +25,7 @@ function* runTests() {
   let {ed, win, edWin} = yield setup(null, {
     autocomplete: true,
     mode: Editor.modes.css,
-    autocompleteOpts: {walker: walker}
+    autocompleteOpts: {walker: walker, cssProperties: getClientCssProperties()}
   });
   yield testMouse(ed, edWin);
   yield testKeyboard(ed, edWin);
