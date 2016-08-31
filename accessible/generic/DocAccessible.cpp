@@ -2273,8 +2273,15 @@ DocAccessible::UncacheChildrenInSubtree(Accessible* aRoot)
   RemoveDependentIDsFor(aRoot);
 
   uint32_t count = aRoot->ContentChildCount();
-  for (uint32_t idx = 0; idx < count; idx++)
-    UncacheChildrenInSubtree(aRoot->ContentChildAt(idx));
+  for (uint32_t idx = 0; idx < count; idx++) {
+    Accessible* child = aRoot->ContentChildAt(idx);
+
+    // Removing this accessible from the document doesn't mean anything about
+    // accessibles for subdocuments, so skip removing those from the tree.
+    if (!child->IsDoc()) {
+      UncacheChildrenInSubtree(child);
+    }
+  }
 
   if (aRoot->IsNodeMapEntry() &&
       mNodeToAccessibleMap.Get(aRoot->GetNode()) == aRoot)
