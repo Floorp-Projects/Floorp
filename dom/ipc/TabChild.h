@@ -400,6 +400,11 @@ public:
   RecvSelectionEvent(const mozilla::WidgetSelectionEvent& aEvent) override;
 
   virtual bool
+  RecvPasteTransferable(const IPCDataTransfer& aDataTransfer,
+                        const bool& aIsPrivateData,
+                        const IPC::Principal& aRequestingPrincipal) override;
+
+  virtual bool
   RecvActivateFrameEvent(const nsString& aType, const bool& aCapture) override;
 
   virtual bool RecvLoadRemoteScript(const nsString& aURL,
