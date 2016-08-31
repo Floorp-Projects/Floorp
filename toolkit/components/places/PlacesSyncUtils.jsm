@@ -101,65 +101,34 @@ const BookmarkSyncUtils = PlacesSyncUtils.bookmarks = Object.freeze({
     }
     return PlacesUtils.withConnectionWrapper("BookmarkSyncUtils: order",
       Task.async(function* (db) {
-        let children;
-
-        yield db.executeTransaction(function* () {
-          children = yield fetchAllChildren(db, parentGuid);
-          if (!children.length) {
-            return;
-          }
-          for (let child of children) {
-            // Note the current index for notifying observers. This can
-            // be removed once we switch to `reorder`.
-            child.oldIndex = child.index;
-          }
-
-          // Reorder the list, ignoring missing children.
-          let delta = 0;
-          for (let i = 0; i < childGuids.length; ++i) {
-            let guid = childGuids[i];
-            let child = findChildByGuid(children, guid);
-            if (!child) {
-              delta++;
-              BookmarkSyncLog.trace(`order: Ignoring missing child ${guid}`);
-              continue;
-            }
-            let newIndex = i - delta;
-            updateChildIndex(children, child, newIndex);
-          }
-          children.sort((a, b) => a.index - b.index);
-
-          // Update positions. We use a custom query instead of
-          // `PlacesUtils.bookmarks.reorder` because `reorder` introduces holes
-          // (bug 1293365). Once it's fixed, we can uncomment this code and
-          // remove the transaction, query, and observer notification code.
-
-          /*
-          let orderedChildrenGuids = children.map(({ guid }) => guid);
-          yield PlacesUtils.bookmarks.reorder(parentGuid, orderedChildrenGuids);
-          */
-
-          yield db.executeCached(`WITH sorting(g, p) AS (
-            VALUES ${children.map(
-              (child, i) => `("${child.guid}", ${i})`
-            ).join()}
-          ) UPDATE moz_bookmarks SET position = (
-            SELECT p FROM sorting WHERE g = guid
-          ) WHERE parent = (
-            SELECT id FROM moz_bookmarks WHERE guid = :parentGuid
-          )`,
-          { parentGuid });
-        });
-
-        // Notify observers.
-        let observers = PlacesUtils.bookmarks.getObservers();
-        for (let child of children) {
-          notify(observers, "onItemMoved", [ child.id, child.parentId,
-                                             child.oldIndex, child.parentId,
-                                             child.index, child.type,
-                                             child.guid, parentGuid,
-                                             parentGuid, SOURCE_SYNC ]);
+        let children = yield fetchAllChildren(db, parentGuid);
+        if (!children.length) {
+          return;
         }
+        for (let child of children) {
+          // Note the current index for notifying observers. This can
+          // be removed once we switch to `reorder`.
+          child.oldIndex = child.index;
+        }
+
+        // Reorder the list, ignoring missing children.
+        let delta = 0;
+        for (let i = 0; i < childGuids.length; ++i) {
+          let guid = childGuids[i];
+          let child = findChildByGuid(children, guid);
+          if (!child) {
+            delta++;
+            BookmarkSyncLog.trace(`order: Ignoring missing child ${guid}`);
+            continue;
+          }
+          let newIndex = i - delta;
+          updateChildIndex(children, child, newIndex);
+        }
+        children.sort((a, b) => a.index - b.index);
+
+        // Update positions.
+        let orderedChildrenGuids = children.map(({ guid }) => guid);
+        yield PlacesUtils.bookmarks.reorder(parentGuid, orderedChildrenGuids);
       })
     );
   }),
