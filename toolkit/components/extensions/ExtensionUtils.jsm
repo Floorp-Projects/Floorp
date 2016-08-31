@@ -908,6 +908,10 @@ EventManager.prototype = {
       dump(`Expected function\n${Error().stack}`);
       return;
     }
+    if (this.context.unloaded) {
+      dump(`Cannot add listener to ${this.name} after context unloaded`);
+      return;
+    }
 
     if (!this.callbacks.size) {
       this.context.callOnClose(this);
@@ -928,6 +932,7 @@ EventManager.prototype = {
     this.callbacks.delete(callback);
     if (this.callbacks.size == 0) {
       this.unregister();
+      this.unregister = null;
 
       this.context.forgetOnClose(this);
     }
@@ -959,7 +964,9 @@ EventManager.prototype = {
     if (this.callbacks.size) {
       this.unregister();
     }
-    this.callbacks = Object.freeze([]);
+    this.callbacks.clear();
+    this.register = null;
+    this.unregister = null;
   },
 
   api() {
