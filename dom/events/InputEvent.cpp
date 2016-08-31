@@ -56,6 +56,7 @@ InputEvent::Constructor(const GlobalObject& aGlobal,
   InternalEditorInputEvent* internalEvent = e->mEvent->AsEditorInputEvent();
   internalEvent->mIsComposing = aParam.mIsComposing;
   e->SetTrusted(trusted);
+  e->SetComposed(aParam.mComposed);
   return e.forget();
 }
 

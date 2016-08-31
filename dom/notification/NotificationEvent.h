@@ -43,6 +43,7 @@ public:
     bool trusted = e->Init(aOwner);
     e->InitEvent(aType, aOptions.mBubbles, aOptions.mCancelable);
     e->SetTrusted(trusted);
+    e->SetComposed(aOptions.mComposed);
     e->mNotification = aOptions.mNotification;
     e->SetWantsPopupControlCheck(e->IsTrusted());
     return e.forget();
