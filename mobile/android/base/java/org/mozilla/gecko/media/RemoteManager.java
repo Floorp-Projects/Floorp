@@ -28,7 +28,7 @@ public final class RemoteManager implements IBinder.DeathRecipient {
     private static RemoteManager sRemoteManager = null;
 
     public synchronized static RemoteManager getInstance() {
-        if (sRemoteManager == null){
+        if (sRemoteManager == null) {
             sRemoteManager = new RemoteManager();
         }
 

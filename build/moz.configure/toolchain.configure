@@ -778,7 +778,7 @@ def check_have_64_bit(have_64_bit, compiler_have_64_bit):
 @depends(c_compiler)
 def default_debug_flags(compiler_info):
     # Debug info is ON by default.
-    if compiler_info.type == 'msvc':
+    if compiler_info.type in ('msvc', 'clang-cl'):
         return '-Zi'
     return '-g'
 

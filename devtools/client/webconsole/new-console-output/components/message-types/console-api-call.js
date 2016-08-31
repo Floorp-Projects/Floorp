@@ -45,6 +45,15 @@ function ConsoleApiCall(props) {
 
   const icon = MessageIcon({level});
   const repeat = MessageRepeat({repeat: message.repeat});
+  const shouldRenderFrame = frame && frame.source !== "debugger eval code";
+  const location = dom.span({ className: "message-location devtools-monospace" },
+    shouldRenderFrame ? FrameView({
+      frame,
+      onClick: onViewSourceInDebugger,
+      showEmptyPathAsHost: true,
+      sourceMapService
+    }) : null
+  );
 
   let collapse = "";
   let attachment = "";
@@ -83,7 +92,6 @@ function ConsoleApiCall(props) {
     classes.push("open");
   }
 
-  const shouldRenderFrame = frame && frame.source !== "debugger eval code";
   return dom.div({
     className: classes.join(" ")
   },
@@ -92,23 +100,14 @@ function ConsoleApiCall(props) {
     icon,
     collapse,
     dom.span({className: "message-body-wrapper"},
-      dom.span({},
-        dom.span({className: "message-flex-body"},
-          dom.span({className: "message-body devtools-monospace"},
-            messageBody
-          ),
-          repeat,
-          dom.span({ className: "message-location devtools-monospace" },
-            shouldRenderFrame ? FrameView({
-              frame,
-              onClick: onViewSourceInDebugger,
-              showEmptyPathAsHost: true,
-              sourceMapService
-            }) : null
-          )
+      dom.span({className: "message-flex-body"},
+        dom.span({className: "message-body devtools-monospace"},
+          messageBody
         ),
-        attachment
-      )
+        repeat,
+        location
+      ),
+      attachment
     )
   );
 }

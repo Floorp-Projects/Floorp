@@ -25,6 +25,6 @@ describe("EvaluationResult component:", () => {
 });
 
 function getMessageBody(rendered) {
-  const queryPath = "div.message.cm-s-mozilla span.message-body-wrapper.message-body.devtools-monospace";
+  const queryPath = "div.message span.message-body-wrapper span.message-body";
   return rendered.querySelector(queryPath);
 }

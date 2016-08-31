@@ -367,6 +367,8 @@ function parseDeclarationsInternal(isCssPropertyKnown, inputString,
         // Insert the new declarations just before the final element.
         let lastDecl = declarations.pop();
         declarations = [...declarations, ...newDecls, lastDecl];
+      } else {
+        current += " ";
       }
     } else {
       current += inputString.substring(token.startOffset, token.endOffset);

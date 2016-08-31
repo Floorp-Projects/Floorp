@@ -371,12 +371,18 @@ AudioBuffer::StealJSArrayDataIntoSharedChannels(JSContext* aJSContext)
   RefPtr<ThreadSharedFloatArrayBufferList> result =
     new ThreadSharedFloatArrayBufferList(mJSChannels.Length());
   for (uint32_t i = 0; i < mJSChannels.Length(); ++i) {
+    if (mJSChannels[i]) {
+      JS::ExposeObjectToActiveJS(mJSChannels[i]);
+    }
     JS::Rooted<JSObject*> arrayBufferView(aJSContext, mJSChannels[i]);
     bool isSharedMemory;
     JS::Rooted<JSObject*> arrayBuffer(aJSContext,
                                       JS_GetArrayBufferViewBuffer(aJSContext,
                                                                   arrayBufferView,
                                                                   &isSharedMemory));
+    if (arrayBuffer) {
+      JS::ExposeObjectToActiveJS(arrayBuffer);
+    }
     // The channel data arrays should all have originated in
     // RestoreJSChannelData, where they are created unshared.
     MOZ_ASSERT(!isSharedMemory);

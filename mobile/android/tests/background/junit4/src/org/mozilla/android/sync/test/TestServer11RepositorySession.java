@@ -3,17 +3,16 @@
 
 package org.mozilla.android.sync.test;
 
-import ch.boye.httpclientandroidlib.HttpEntity;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mozilla.android.sync.test.SynchronizerHelpers.TrackingWBORepository;
 import org.mozilla.android.sync.test.helpers.BaseTestStorageRequestDelegate;
 import org.mozilla.android.sync.test.helpers.HTTPServerTestHelper;
 import org.mozilla.android.sync.test.helpers.MockServer;
-import org.mozilla.gecko.background.testhelpers.MockRecord;
 import org.mozilla.gecko.background.testhelpers.TestRunner;
 import org.mozilla.gecko.background.testhelpers.WaitHelper;
 import org.mozilla.gecko.sync.InfoCollections;
+import org.mozilla.gecko.sync.InfoConfiguration;
 import org.mozilla.gecko.sync.JSONRecordFetcher;
 import org.mozilla.gecko.sync.Utils;
 import org.mozilla.gecko.sync.crypto.KeyBundle;
@@ -21,18 +20,14 @@ import org.mozilla.gecko.sync.middleware.Crypto5MiddlewareRepository;
 import org.mozilla.gecko.sync.net.AuthHeaderProvider;
 import org.mozilla.gecko.sync.net.BaseResource;
 import org.mozilla.gecko.sync.net.BasicAuthHeaderProvider;
-import org.mozilla.gecko.sync.net.SyncStorageRecordRequest;
 import org.mozilla.gecko.sync.net.SyncStorageResponse;
 import org.mozilla.gecko.sync.repositories.FetchFailedException;
-import org.mozilla.gecko.sync.repositories.Repository;
 import org.mozilla.gecko.sync.repositories.RepositorySession;
 import org.mozilla.gecko.sync.repositories.Server11Repository;
-import org.mozilla.gecko.sync.repositories.Server11RepositorySession;
 import org.mozilla.gecko.sync.repositories.StoreFailedException;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionCreationDelegate;
 import org.mozilla.gecko.sync.repositories.domain.BookmarkRecord;
 import org.mozilla.gecko.sync.repositories.domain.BookmarkRecordFactory;
-import org.mozilla.gecko.sync.repositories.domain.Record;
 import org.mozilla.gecko.sync.stage.SafeConstrainedServer11Repository;
 import org.mozilla.gecko.sync.synchronizer.ServerLocalSynchronizer;
 import org.mozilla.gecko.sync.synchronizer.Synchronizer;
@@ -41,8 +36,6 @@ import org.simpleframework.http.Request;
 import org.simpleframework.http.Response;
 
 import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.junit.Assert.assertEquals;
@@ -70,7 +63,6 @@ public class TestServer11RepositorySession {
   private static final int    TEST_PORT   = HTTPServerTestHelper.getTestPort();
   private static final String TEST_SERVER = "http://localhost:" + TEST_PORT + "/";
   static final String LOCAL_BASE_URL      = TEST_SERVER + "1.1/n6ec3u5bee3tixzp2asys7bs6fve4jfw/";
-  static final String LOCAL_REQUEST_URL   = LOCAL_BASE_URL + "storage/bookmarks";
   static final String LOCAL_INFO_BASE_URL = LOCAL_BASE_URL + "info/";
   static final String LOCAL_COUNTS_URL    = LOCAL_INFO_BASE_URL + "collection_counts";
 
@@ -81,6 +73,7 @@ public class TestServer11RepositorySession {
 
   public final AuthHeaderProvider authHeaderProvider = new BasicAuthHeaderProvider(TEST_USERNAME, TEST_PASSWORD);
   protected final InfoCollections infoCollections = new InfoCollections();
+  protected final InfoConfiguration infoConfiguration = new InfoConfiguration();
 
   // Few-second timeout so that our longer operations don't time out and cause spurious error-handling results.
   private static final int SHORT_TIMEOUT = 10000;
@@ -90,25 +83,6 @@ public class TestServer11RepositorySession {
   }
 
   private HTTPServerTestHelper data     = new HTTPServerTestHelper();
-
-  public class MockServer11RepositorySession extends Server11RepositorySession {
-    public MockServer11RepositorySession(Repository repository) {
-      super(repository);
-    }
-
-    public RecordUploadRunnable getRecordUploadRunnable() {
-      // TODO: implement upload delegate in the class, too!
-      return new RecordUploadRunnable(null, recordsBuffer, recordGuidsBuffer, byteCount);
-    }
-
-    public void enqueueRecord(Record r) {
-      super.enqueue(r);
-    }
-
-    public HttpEntity getEntity() {
-      return this.getRecordUploadRunnable().getBodyEntity();
-    }
-  }
 
   public class TestSyncStorageRequestDelegate extends
   BaseTestStorageRequestDelegate {
@@ -125,24 +99,6 @@ public class TestServer11RepositorySession {
     }
   }
 
-  @Test
-  public void test() throws URISyntaxException {
-
-    BaseResource.rewriteLocalhost = false;
-    data.startHTTPServer(new POSTMockServer());
-
-    MockServer11RepositorySession session = new MockServer11RepositorySession(
-        null);
-    session.enqueueRecord(new MockRecord(Utils.generateGuid(), null, 0, false));
-    session.enqueueRecord(new MockRecord(Utils.generateGuid(), null, 0, false));
-
-    URI uri = new URI(LOCAL_REQUEST_URL);
-    SyncStorageRecordRequest r = new SyncStorageRecordRequest(uri);
-    TestSyncStorageRequestDelegate delegate = new TestSyncStorageRequestDelegate(TEST_USERNAME, TEST_PASSWORD);
-    r.delegate = delegate;
-    r.post(session.getEntity());
-  }
-
   @SuppressWarnings("static-method")
   protected TrackingWBORepository getLocal(int numRecords) {
     final TrackingWBORepository local = new TrackingWBORepository();
@@ -157,7 +113,7 @@ public class TestServer11RepositorySession {
     final String COLLECTION = "test";
 
     final TrackingWBORepository local = getLocal(100);
-    final Server11Repository remote = new Server11Repository(COLLECTION, getCollectionURL(COLLECTION), authHeaderProvider, infoCollections);
+    final Server11Repository remote = new Server11Repository(COLLECTION, getCollectionURL(COLLECTION), authHeaderProvider, infoCollections, infoConfiguration);
     KeyBundle collectionKey = new KeyBundle(TEST_USERNAME, SYNC_KEY);
     Crypto5MiddlewareRepository cryptoRepo = new Crypto5MiddlewareRepository(remote, collectionKey);
     cryptoRepo.recordFactory = new BookmarkRecordFactory();
@@ -234,6 +190,7 @@ public class TestServer11RepositorySession {
         getCollectionURL(collection),
         getAuthHeaderProvider(),
         infoCollections,
+        infoConfiguration,
         5000, "sortindex", countsFetcher);
 
     data.startHTTPServer(server);
