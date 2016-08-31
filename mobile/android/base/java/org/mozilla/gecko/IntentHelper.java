@@ -12,7 +12,6 @@ import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.JSONUtils;
 import org.mozilla.gecko.util.NativeEventListener;
 import org.mozilla.gecko.util.NativeJSObject;
-import org.mozilla.gecko.util.WebActivityMapper;
 import org.mozilla.gecko.widget.ExternalIntentDuringPrivateBrowsingPromptFragment;
 
 import org.json.JSONArray;
@@ -48,7 +47,6 @@ public final class IntentHelper implements GeckoEventListener,
         "Intent:GetHandlers",
         "Intent:Open",
         "Intent:OpenForResult",
-        "WebActivity:Open"
     };
 
     private static final String[] NATIVE_EVENTS = {
@@ -416,8 +414,6 @@ public final class IntentHelper implements GeckoEventListener,
                 open(message);
             } else if (event.equals("Intent:OpenForResult")) {
                 openForResult(message);
-            } else if (event.equals("WebActivity:Open")) {
-                openWebActivity(message);
             }
         } catch (JSONException e) {
             Log.e(LOGTAG, "Exception handling message \"" + event + "\":", e);
@@ -570,11 +566,6 @@ public final class IntentHelper implements GeckoEventListener,
      */
     private String getUnknownProtocolErrorPageUri(final String encodedUri) {
         return UNKNOWN_PROTOCOL_URI_PREFIX + encodedUri;
-    }
-
-    private void openWebActivity(JSONObject message) throws JSONException {
-        final Intent intent = WebActivityMapper.getIntentForWebActivity(message.getJSONObject("activity"));
-        ActivityHandlerHelper.startIntentForActivity(activity, intent, new ResultHandler(message));
     }
 
     private static class ResultHandler implements ActivityResultHandler {
