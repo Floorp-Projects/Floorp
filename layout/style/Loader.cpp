@@ -1775,10 +1775,10 @@ Loader::ParseSheet(const nsAString& aInput,
                            aLoadData->mSheet->Principal(),
                            aLoadData->mLineNumber);
   } else {
-    aLoadData->mSheet->AsServo()->ParseSheet(aInput, sheetURI, baseURI,
-                                             aLoadData->mSheet->Principal(),
-                                             aLoadData->mLineNumber);
-    rv = NS_OK;
+    rv =
+      aLoadData->mSheet->AsServo()->ParseSheet(aInput, sheetURI, baseURI,
+                                               aLoadData->mSheet->Principal(),
+                                               aLoadData->mLineNumber);
   }
 
   mParsingDatas.RemoveElementAt(mParsingDatas.Length() - 1);

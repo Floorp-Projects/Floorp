@@ -68,7 +68,7 @@ ServoStyleSheet::AppendStyleSheet(StyleSheetHandle aSheet)
   MOZ_CRASH("stylo: not implemented");
 }
 
-void
+nsresult
 ServoStyleSheet::ParseSheet(const nsAString& aInput,
                             nsIURI* aSheetURI,
                             nsIURI* aBaseURI,
@@ -83,7 +83,8 @@ ServoStyleSheet::ParseSheet(const nsAString& aInput,
     new ThreadSafePrincipalHolder(aSheetPrincipal);
 
   nsCString baseString;
-  aBaseURI->GetSpec(baseString);
+  nsresult rv = aBaseURI->GetSpec(baseString);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   NS_ConvertUTF16toUTF8 input(aInput);
   mSheet = Servo_StyleSheet_FromUTF8Bytes(
@@ -91,6 +92,8 @@ ServoStyleSheet::ParseSheet(const nsAString& aInput,
       mParsingMode,
       reinterpret_cast<const uint8_t*>(baseString.get()), baseString.Length(),
       base, referrer, principal).Consume();
+
+  return NS_OK;
 }
 
 void
