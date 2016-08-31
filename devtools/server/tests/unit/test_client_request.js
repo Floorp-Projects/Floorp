@@ -160,7 +160,7 @@ function test_close_client_while_sending_requests() {
     expectReply.resolve();
   });
 
-  gClient.close(() => {
+  gClient.close().then(() => {
     activeRequest.then(() => {
       ok(false, "First request unexpectedly succeed while closing the connection");
     }, response => {

@@ -86,7 +86,7 @@ function onNewSource(aEvent, aPacket) {
 
 function resumeAndCloseConnection() {
   let deferred = promise.defer();
-  gThreadClient.resume(() => gClient.close(deferred.resolve));
+  gThreadClient.resume(() => deferred.resolve(gClient.close()));
   return deferred.promise;
 }
 

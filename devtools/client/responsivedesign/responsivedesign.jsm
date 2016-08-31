@@ -388,10 +388,8 @@ ResponsiveUI.prototype = {
       this.touchEventSimulator.stop();
     }
 
-    yield new Promise((resolve, reject) => {
-      this.client.close(resolve);
-      this.client = this.emulationFront = null;
-    });
+    yield this.client.close();
+    this.client = this.emulationFront = null;
 
     this._telemetry.toolClosed("responsive");
 

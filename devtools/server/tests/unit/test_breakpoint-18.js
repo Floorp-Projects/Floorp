@@ -78,5 +78,5 @@ function testDbgStatement(event, { why }) {
   // Not break on another offset from the same line (that isn't an entry point
   // to the line)
   do_check_neq(why.type, "breakpoint");
-  gClient.close(gCallback);
+  gClient.close().then(gCallback);
 }

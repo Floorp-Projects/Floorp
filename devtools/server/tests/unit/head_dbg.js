@@ -164,11 +164,7 @@ function connect(client) {
 
 function close(client) {
   dump("Closing client.\n");
-  return new Promise(function (resolve) {
-    client.close(function () {
-      resolve();
-    });
-  });
+  return client.close();
 }
 
 function listTabs(client) {

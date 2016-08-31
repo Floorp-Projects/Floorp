@@ -84,5 +84,5 @@ function test_remove_breakpoint()
   if (!done) {
     do_check_true(false);
   }
-  gClient.close(gCallback);
+  gClient.close().then(gCallback);
 }

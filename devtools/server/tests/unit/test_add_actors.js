@@ -103,5 +103,5 @@ function test_stable_global_actor_instances()
 }
 
 function close_client() {
-  gClient.close(() => run_next_test());
+  gClient.close().then(() => run_next_test());
 }

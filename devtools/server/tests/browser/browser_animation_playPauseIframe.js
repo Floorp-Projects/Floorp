@@ -31,7 +31,7 @@ add_task(function* () {
   yield checkState(animations, nodeInFrame1, "running");
   yield checkState(animations, nodeInFrame2, "running");
 
-  yield closeDebuggerClient(client);
+  yield client.close();
   gBrowser.removeCurrentTab();
 });
 

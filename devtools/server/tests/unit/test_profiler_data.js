@@ -19,7 +19,7 @@ function run_test()
     activate_profiler(client, actor, startTime => {
       test_data(client, actor, startTime, () => {
         deactivate_profiler(client, actor, () => {
-          client.close(do_test_finished);
+          client.close().then(do_test_finished);
         });
       });
     });
