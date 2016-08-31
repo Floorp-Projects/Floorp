@@ -104,7 +104,7 @@ function runTests() {
   }
 
   function cleanup() {
-    client.close(function () {
+    client.close().then(function () {
       DebuggerServer.destroy();
       iframe.remove();
       SimpleTest.finish()

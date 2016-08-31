@@ -99,7 +99,7 @@ window.onload = function() {
         is(timeline[1].value, 0,
           "The last framerate value should be 0.");
 
-        client.close(() => {
+        client.close().then(() => {
           DebuggerServer.destroy();
           SimpleTest.finish()
         });

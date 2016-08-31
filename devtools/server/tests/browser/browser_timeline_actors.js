@@ -46,7 +46,7 @@ add_task(function* () {
 
   info("Stop timeline marker recording");
   yield front.stop();
-  yield closeDebuggerClient(client);
+  yield client.close();
   gBrowser.removeCurrentTab();
 });
 

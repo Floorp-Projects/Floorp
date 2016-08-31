@@ -61,7 +61,7 @@ function test_column_breakpoint()
         if (++timesBreakpointHit === 3) {
           gThreadClient.removeListener("paused", onPaused);
           bpClient.remove(function (aResponse) {
-            gThreadClient.resume(() => gClient.close(gCallback));
+            gThreadClient.resume(() => gClient.close().then(gCallback));
           });
         } else {
           gThreadClient.resume();

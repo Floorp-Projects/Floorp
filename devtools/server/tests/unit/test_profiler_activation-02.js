@@ -21,7 +21,7 @@ function run_test()
     get_chrome_actors((client, form) => {
       let actor = form.profilerActor;
       test_start_time(client, actor, () => {
-        client.close(do_test_finished);
+        client.close().then(do_test_finished);
       });
     });
   });

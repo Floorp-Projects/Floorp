@@ -57,7 +57,7 @@ add_task(function* () {
   ok(!!message, "testDirectorScript_undefinedAttachMethod error event received");
   assertIsDirectorScriptError(errorUndefinedAttachMethod);
 
-  yield closeDebuggerClient(client);
+  yield client.close();
   gBrowser.removeCurrentTab();
   DirectorRegistry.clear();
 });

@@ -308,7 +308,7 @@ function run_test()
       rootClient.emitFalsyOptions();
       return deferred.promise;
     }).then(() => {
-      client.close(() => {
+      client.close().then(() => {
         do_test_finished();
       });
     }).then(null, err => {

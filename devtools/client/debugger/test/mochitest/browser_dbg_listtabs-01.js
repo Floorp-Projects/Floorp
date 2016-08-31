@@ -29,7 +29,7 @@ function test() {
       .then(testSecondTab)
       .then(testRemoveTab)
       .then(testAttachRemovedTab)
-      .then(closeConnection)
+      .then(() => gClient.close())
       .then(finish)
       .then(null, aError => {
         ok(false, "Got an error: " + aError.message + "\n" + aError.stack);
@@ -87,12 +87,6 @@ function testAttachRemovedTab() {
 
     return deferred.promise;
   });
-}
-
-function closeConnection() {
-  let deferred = promise.defer();
-  gClient.close(deferred.resolve);
-  return deferred.promise;
 }
 
 registerCleanupFunction(function () {

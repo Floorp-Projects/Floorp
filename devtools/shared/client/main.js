@@ -354,9 +354,17 @@ DebuggerClient.prototype = {
    *
    * @param aOnClosed function
    *        If specified, will be called when the debugging connection
-   *        has been closed.
+   *        has been closed. This parameter is deprecated - please use
+   *        the returned Promise.
+   * @return Promise
+   *         Resolves after the underlying transport is closed.
    */
   close: function (aOnClosed) {
+    let deferred = promise.defer();
+    if (aOnClosed) {
+      deferred.promise.then(aOnClosed);
+    }
+
     // Disable detach event notifications, because event handlers will be in a
     // cleared scope by the time they run.
     this._eventsEnabled = false;
@@ -371,17 +379,11 @@ DebuggerClient.prototype = {
     // as we won't be able to send any message.
     if (this._closed) {
       cleanup();
-      if (aOnClosed) {
-        aOnClosed();
-      }
-      return;
+      deferred.resolve();
+      return deferred.promise;
     }
 
-    if (aOnClosed) {
-      this.addOneTimeListener("closed", function (aEvent) {
-        aOnClosed();
-      });
-    }
+    this.addOneTimeListener("closed", deferred.resolve);
 
     // Call each client's `detach` method by calling
     // lastly registered ones first to give a chance
@@ -402,6 +404,8 @@ DebuggerClient.prototype = {
       detachClients();
     };
     detachClients();
+
+    return deferred.promise;
   },
 
   /*

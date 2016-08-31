@@ -63,7 +63,7 @@ function test_object_grip()
       do_check_true(obj2.prototype != undefined);
 
       gThreadClient.resume(function () {
-        gClient.close(gCallback);
+        gClient.close().then(gCallback);
       });
     });
 

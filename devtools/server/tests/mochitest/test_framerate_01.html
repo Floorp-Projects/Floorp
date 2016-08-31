@@ -129,7 +129,7 @@ window.onload = function() {
       prevFramerateValue = currFramerateStart;
     }
 
-    client.close(() => {
+    client.close().then(() => {
       DebuggerServer.destroy();
       SimpleTest.finish()
     });

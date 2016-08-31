@@ -29,6 +29,6 @@ add_task(function* () {
   ok(markers.some(({restyleHint}) => restyleHint != void 0),
     "Some markers have a restyleHint.");
 
-  yield closeDebuggerClient(client);
+  yield client.close();
   gBrowser.removeCurrentTab();
 });

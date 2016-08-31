@@ -33,6 +33,6 @@ add_task(function* () {
   // at least have the infinitely running animations.
   ok(players.length >= 4, "All subtree animations were retrieved");
 
-  yield closeDebuggerClient(client);
+  yield client.close();
   gBrowser.removeCurrentTab();
 });

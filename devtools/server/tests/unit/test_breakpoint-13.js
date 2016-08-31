@@ -99,7 +99,7 @@ function test_simple_breakpoint()
       let waiter = waitForPause(gThreadClient);
       gThreadClient.stepIn();
       yield waiter;
-      bpClient.remove(() => gThreadClient.resume(() => gClient.close(gCallback)));
+      bpClient.remove(() => gThreadClient.resume(() => gClient.close().then(gCallback)));
     }));
   });
 

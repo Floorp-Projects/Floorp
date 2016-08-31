@@ -207,7 +207,7 @@ function run_test()
       trace.expectReceive({"from":"<actorid>"});
       expectRootChildren(0);
     }).then(() => {
-      client.close(() => {
+      client.close().then(() => {
         do_test_finished();
       });
     }).then(null, err => {
