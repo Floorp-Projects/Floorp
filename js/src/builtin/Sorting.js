@@ -144,10 +144,12 @@ function RadixSort(array, len, buffer, nbytes, signed, floating, comparefn) {
         view = new Int32Array(buffer, offset, len);
 
         // Flip sign bit for positive numbers; flip all bits for negative
-        // numbers
+        // numbers, except negative NaNs.
         for (let i = 0; i < len; i++) {
             if (view[i] & signMask) {
-                view[i] ^= 0xFFFFFFFF;
+                if ((view[i] & 0x7F800000) !== 0x7F800000 || (view[i] & 0x007FFFFF) === 0) {
+                    view[i] ^= 0xFFFFFFFF;
+                }
             } else {
                 view[i] ^= signMask;
             }
