@@ -69,10 +69,10 @@ public abstract class StreamItem extends RecyclerView.ViewHolder {
 
         @Override
         public void bind(Cursor cursor) {
-            vLabel.setText(cursor.getString(cursor.getColumnIndexOrThrow(BrowserContract.History.TITLE)));
+            final long time = cursor.getLong(cursor.getColumnIndexOrThrow(BrowserContract.Highlights.DATE));
+            final String ago = DateUtils.getRelativeTimeSpanString(time, System.currentTimeMillis(), DateUtils.MINUTE_IN_MILLIS, 0).toString();
 
-            final long timeVisited = cursor.getLong(cursor.getColumnIndexOrThrow(BrowserContract.History.DATE_LAST_VISITED));
-            final String ago = DateUtils.getRelativeTimeSpanString(timeVisited, System.currentTimeMillis(), DateUtils.MINUTE_IN_MILLIS, 0).toString();
+            vLabel.setText(cursor.getString(cursor.getColumnIndexOrThrow(BrowserContract.History.TITLE)));
             vTimeSince.setText(ago);
         }
     }
@@ -95,8 +95,8 @@ public abstract class StreamItem extends RecyclerView.ViewHolder {
         public void bind(Cursor cursor) {
             vLabel.setText(cursor.getString(cursor.getColumnIndexOrThrow(BrowserContract.History.TITLE)));
 
-            final long timeVisited = cursor.getLong(cursor.getColumnIndexOrThrow(BrowserContract.History.DATE_LAST_VISITED));
-            final String ago = DateUtils.getRelativeTimeSpanString(timeVisited, System.currentTimeMillis(), DateUtils.MINUTE_IN_MILLIS, 0).toString();
+            final long time = cursor.getLong(cursor.getColumnIndexOrThrow(BrowserContract.Highlights.DATE));
+            final String ago = DateUtils.getRelativeTimeSpanString(time, System.currentTimeMillis(), DateUtils.MINUTE_IN_MILLIS, 0).toString();
             vTimeSince.setText(ago);
         }
     }

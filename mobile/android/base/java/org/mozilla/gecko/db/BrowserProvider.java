@@ -19,6 +19,7 @@ import org.mozilla.gecko.db.BrowserContract.Bookmarks;
 import org.mozilla.gecko.db.BrowserContract.Combined;
 import org.mozilla.gecko.db.BrowserContract.FaviconColumns;
 import org.mozilla.gecko.db.BrowserContract.Favicons;
+import org.mozilla.gecko.db.BrowserContract.Highlights;
 import org.mozilla.gecko.db.BrowserContract.History;
 import org.mozilla.gecko.db.BrowserContract.Visits;
 import org.mozilla.gecko.db.BrowserContract.Schema;
@@ -1161,7 +1162,8 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
                 DBUtils.qualifyColumn(Bookmarks.TABLE_NAME, Bookmarks._ID) + " AS " + Combined.BOOKMARK_ID + ", " +
                 "-1 AS " + Combined.HISTORY_ID + ", " +
                 DBUtils.qualifyColumn(Bookmarks.TABLE_NAME, Bookmarks.URL) + ", " +
-                DBUtils.qualifyColumn(Bookmarks.TABLE_NAME, Bookmarks.TITLE) + " " +
+                DBUtils.qualifyColumn(Bookmarks.TABLE_NAME, Bookmarks.TITLE) + ", " +
+                DBUtils.qualifyColumn(Bookmarks.TABLE_NAME, Bookmarks.DATE_CREATED) + " AS " + Highlights.DATE + " " +
                 "FROM " + Bookmarks.TABLE_NAME + " " +
                 "LEFT JOIN " + History.TABLE_NAME + " ON " +
                     DBUtils.qualifyColumn(Bookmarks.TABLE_NAME, Bookmarks.URL) + " = " +
@@ -1181,7 +1183,8 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
                 History._ID + " AS " + Combined.HISTORY_ID + ", " +
                 "-1 AS " + Combined.BOOKMARK_ID + ", " +
                 History.URL + ", " +
-                History.TITLE + " " +
+                History.TITLE + ", " +
+                History.DATE_LAST_VISITED + " AS " + Highlights.DATE + " " +
                 "FROM " + History.TABLE_NAME + " " +
                 "WHERE " + History.DATE_LAST_VISITED + " < " + last30Minutes + " " +
                 "AND " + History.VISITS + " <= 3 " +
