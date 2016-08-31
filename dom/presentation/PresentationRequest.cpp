@@ -184,9 +184,15 @@ PresentationRequest::StartWithDevice(const nsAString& aDeviceId,
     return promise.forget();
   }
 
+  // Get xul:browser element in parent process or nsWindowRoot object in child
+  // process. If it's in child process, the corresponding xul:browser element
+  // will be obtained at PresentationRequestParent::DoRequest in its parent
+  // process.
+  nsCOMPtr<nsIDOMEventTarget> handler =
+    do_QueryInterface(GetOwner()->GetChromeEventHandler());
   nsCOMPtr<nsIPresentationServiceCallback> callback =
     new PresentationRequesterCallback(this, mUrl, id, promise);
-  rv = service->StartSession(mUrl, id, origin, aDeviceId, GetOwner()->WindowID(), callback);
+  rv = service->StartSession(mUrl, id, origin, aDeviceId, GetOwner()->WindowID(), handler, callback);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     promise->MaybeReject(NS_ERROR_DOM_OPERATION_ERR);
   }
