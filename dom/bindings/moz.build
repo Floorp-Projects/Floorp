@@ -144,9 +144,6 @@ if CONFIG['MOZ_BUILD_APP'] in ['browser', 'mobile/android', 'xulrunner']:
     DEFINES['HAVE_SIDEBAR'] = True
 
 
-if CONFIG['MOZ_SIMPLEPUSH']:
-    DEFINES['MOZ_SIMPLEPUSH'] = True
-
 PYTHON_UNIT_TESTS += [
     'mozwebidlcodegen/test/test_mozwebidlcodegen.py',
 ]

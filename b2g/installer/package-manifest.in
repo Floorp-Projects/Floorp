@@ -604,11 +604,7 @@
 @RESPATH@/components/AppsService.manifest
 @RESPATH@/components/Push.js
 @RESPATH@/components/Push.manifest
-#ifdef MOZ_SIMPLEPUSH
-@RESPATH@/components/PushServiceLauncher.js
-#else
 @RESPATH@/components/PushComponents.js
-#endif
 
 @RESPATH@/components/nsDOMIdentity.js
 @RESPATH@/components/nsIDService.js
