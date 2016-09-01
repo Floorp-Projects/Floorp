@@ -35,6 +35,15 @@ class SigningTask(base.Task):
         for fennec_task in fennec_tasks:
             templates = Templates(root)
             task = templates.load('signing.yml', {})
+
+            artifacts = ['public/build/target.apk',
+                         'public/build/en-US/target.apk']
+            for artifact in artifacts:
+                url = ARTIFACT_URL.format('<build-nightly-fennec>', artifact)
+                task['task']['payload']['unsignedArtifacts'].append({
+                    'task-reference': url
+                })
+
             attributes = {'kind': 'signing'}
             tasks.append(cls(kind, 'signing-nightly-fennec', task=task['task'],
                              attributes=attributes))
