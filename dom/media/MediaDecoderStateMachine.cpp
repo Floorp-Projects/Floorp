@@ -1097,6 +1097,9 @@ MediaDecoderStateMachine::EnterState(State aState)
       Reset();
       mReader->ReleaseResources();
       break;
+    case DECODER_STATE_DECODING_FIRSTFRAME:
+      DecodeFirstFrame();
+      break;
     case DECODER_STATE_DECODING:
       StartDecoding();
       break;
@@ -1264,19 +1267,38 @@ MediaDecoderStateMachine::Shutdown()
 }
 
 void
+MediaDecoderStateMachine::DecodeFirstFrame()
+{
+  MOZ_ASSERT(OnTaskQueue());
+  MOZ_ASSERT(mState == DECODER_STATE_DECODING_FIRSTFRAME);
+
+  // Handle pending seek.
+  if (mQueuedSeek.Exists() &&
+      (mSentFirstFrameLoadedEvent || mReader->ForceZeroStartTime())) {
+    InitiateSeek(Move(mQueuedSeek));
+    return;
+  }
+
+  // Transition to DECODING if we've decoded first frames.
+  if (mSentFirstFrameLoadedEvent) {
+    SetState(DECODER_STATE_DECODING);
+    return;
+  }
+
+  // Dispatch tasks to decode first frames.
+  DispatchDecodeTasksIfNeeded();
+}
+
+void
 MediaDecoderStateMachine::StartDecoding()
 {
   MOZ_ASSERT(OnTaskQueue());
   // Should transition to DECODING only after decoding first frames.
   MOZ_ASSERT(mSentFirstFrameLoadedEvent);
   MOZ_ASSERT(mState == DECODER_STATE_DECODING);
-
-  // Handle the pending seek now if we've decoded first frames. Otherwise it
-  // will be handled after decoding first frames.
-  if (mSentFirstFrameLoadedEvent && mQueuedSeek.Exists()) {
-    InitiateSeek(Move(mQueuedSeek));
-    return;
-  }
+  // Pending seek should've been handled by DECODING_FIRSTFRAME before
+  // transitioning to DECODING.
+  MOZ_ASSERT(!mQueuedSeek.Exists());
 
   if (CheckIfDecodeComplete()) {
     SetState(DECODER_STATE_COMPLETED);
