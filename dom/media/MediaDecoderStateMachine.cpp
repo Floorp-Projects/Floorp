@@ -794,8 +794,7 @@ MediaDecoderStateMachine::OnVideoDecoded(MediaData* aVideoSample,
         return;
       }
       TimeDuration decodeTime = TimeStamp::Now() - aDecodeStartTime;
-      if (mSentFirstFrameLoadedEvent &&
-          THRESHOLD_FACTOR * DurationToUsecs(decodeTime) > mLowAudioThresholdUsecs &&
+      if (THRESHOLD_FACTOR * DurationToUsecs(decodeTime) > mLowAudioThresholdUsecs &&
           !HasLowUndecodedData())
       {
         mLowAudioThresholdUsecs =
@@ -2288,10 +2287,6 @@ MediaDecoderStateMachine::RunStateMachine()
       return;
 
     case DECODER_STATE_DECODING: {
-      // Can't start playback until having decoded first frames.
-      if (!mSentFirstFrameLoadedEvent) {
-        return;
-      }
       if (mPlayState != MediaDecoder::PLAY_STATE_PLAYING && IsPlaying())
       {
         // We're playing, but the element/decoder is in paused state. Stop
