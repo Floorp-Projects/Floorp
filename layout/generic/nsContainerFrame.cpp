@@ -1814,7 +1814,7 @@ nsContainerFrame::FrameStartsCounterScope(nsIFrame* aFrame)
 }
 
 bool
-nsBlockFrame::RenumberLists(nsPresContext* aPresContext)
+nsBlockFrame::RenumberLists()
 {
   if (!nsContainerFrame::FrameStartsCounterScope(this)) {
     // If this frame doesn't start a counter scope then we don't need
