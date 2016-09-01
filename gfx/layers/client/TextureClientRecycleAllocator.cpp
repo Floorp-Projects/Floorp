@@ -221,10 +221,16 @@ TextureClientRecycleAllocator::Allocate(gfx::SurfaceFormat aFormat,
 void
 TextureClientRecycleAllocator::ShrinkToMinimumSize()
 {
-  MutexAutoLock lock(mLock);
-  while (!mPooledClients.empty()) {
-    mPooledClients.pop();
+  RefPtr<TextureClientRecycleAllocator> kungFuDeathGrip(this);
+  std::map<TextureClient*, RefPtr<TextureClientHolder> > inUseClients;
+  {
+    MutexAutoLock lock(mLock);
+    while (!mPooledClients.empty()) {
+      mPooledClients.pop();
+    }
+    mInUseClients.swap(inUseClients);
   }
+  inUseClients.clear();
 }
 
 void

@@ -186,7 +186,6 @@
 #include "nsSandboxFlags.h"
 #include "nsScriptSecurityManager.h"
 #include "nsStreamUtils.h"
-#include "nsSVGFeatures.h"
 #include "nsTextEditorState.h"
 #include "nsTextFragment.h"
 #include "nsTextNode.h"
@@ -6993,28 +6992,6 @@ nsContentUtils::GetHTMLEditor(nsPresContext* aPresContext)
 }
 
 bool
-nsContentUtils::InternalIsSupported(nsISupports* aObject,
-                                    const nsAString& aFeature,
-                                    const nsAString& aVersion)
-{
-  // If it looks like an SVG feature string, forward to nsSVGFeatures
-  if (StringBeginsWith(aFeature,
-                       NS_LITERAL_STRING("http://www.w3.org/TR/SVG"),
-                       nsASCIICaseInsensitiveStringComparator()) ||
-      StringBeginsWith(aFeature, NS_LITERAL_STRING("org.w3c.dom.svg"),
-                       nsASCIICaseInsensitiveStringComparator()) ||
-      StringBeginsWith(aFeature, NS_LITERAL_STRING("org.w3c.svg"),
-                       nsASCIICaseInsensitiveStringComparator())) {
-    return (aVersion.IsEmpty() || aVersion.EqualsLiteral("1.0") ||
-            aVersion.EqualsLiteral("1.1")) &&
-           nsSVGFeatures::HasFeature(aObject, aFeature);
-  }
-
-  // Otherwise, we claim to support everything
-  return true;
-}
-
-bool
 nsContentUtils::IsContentInsertionPoint(const nsIContent* aContent)
 {
   // Check if the content is a XBL insertion point.
@@ -8100,6 +8077,7 @@ nsContentUtils::SendMouseEvent(nsCOMPtr<nsIPresShell> aPresShell,
                                float aX,
                                float aY,
                                int32_t aButton,
+                               int32_t aButtons,
                                int32_t aClickCount,
                                int32_t aModifiers,
                                bool aIgnoreRootScrollFrame,
@@ -8150,7 +8128,9 @@ nsContentUtils::SendMouseEvent(nsCOMPtr<nsIPresShell> aPresShell,
                                           WidgetMouseEvent::eNormal);
   event.mModifiers = GetWidgetModifiers(aModifiers);
   event.button = aButton;
-  event.buttons = GetButtonsFlagForButton(aButton);
+  event.buttons = aButtons != nsIDOMWindowUtils::MOUSE_BUTTONS_NOT_SPECIFIED ?
+                  aButtons :
+                  msg == eMouseUp ? 0 : GetButtonsFlagForButton(aButton);
   event.pressure = aPressure;
   event.inputSource = aInputSourceArg;
   event.mClickCount = aClickCount;

@@ -12,8 +12,7 @@
  */
 
 interface DOMImplementation {
-  boolean hasFeature(DOMString feature,
-                     [TreatNullAs=EmptyString] DOMString version);
+  boolean hasFeature();
 
   [Throws]
   DocumentType createDocumentType(DOMString qualifiedName, DOMString publicId,

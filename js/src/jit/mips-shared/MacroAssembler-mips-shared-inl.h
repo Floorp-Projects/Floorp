@@ -965,6 +965,22 @@ MacroAssembler::storeFloat32x3(FloatRegister src, const BaseIndex& dest)
     MOZ_CRASH("NYI");
 }
 
+// ===============================================================
+// Clamping functions.
+
+void
+MacroAssembler::clampIntToUint8(Register reg)
+{
+    // If reg is < 0, then we want to clamp to 0.
+    as_slti(ScratchRegister, reg, 0);
+    as_movn(reg, zero, ScratchRegister);
+
+    // If reg is >= 255, then we want to clamp to 255.
+    ma_li(SecondScratchReg, Imm32(255));
+    as_slti(ScratchRegister, reg, 255);
+    as_movz(reg, SecondScratchReg, ScratchRegister);
+}
+
 //}}} check_macroassembler_style
 // ===============================================================
 

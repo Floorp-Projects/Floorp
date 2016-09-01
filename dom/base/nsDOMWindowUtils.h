@@ -94,7 +94,8 @@ protected:
                                   bool aToWindow,
                                   bool *aPreventDefault,
                                   bool aIsDOMEventSynthesized,
-                                  bool aIsWidgetEventSynthesized);
+                                  bool aIsWidgetEventSynthesized,
+                                  int32_t aButtons);
 
   NS_IMETHOD SendPointerEventCommon(const nsAString& aType,
                                     float aX,

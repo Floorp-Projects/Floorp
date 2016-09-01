@@ -86,7 +86,6 @@
 #include "nsRuleProcessorData.h"
 #include "nsString.h"
 #include "nsStyleConsts.h"
-#include "nsSVGFeatures.h"
 #include "nsSVGUtils.h"
 #include "nsTextNode.h"
 #include "nsUnicharUtils.h"

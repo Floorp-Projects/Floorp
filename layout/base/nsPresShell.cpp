@@ -4432,9 +4432,8 @@ PresShell::ContentRemoved(nsIDocument *aDocument,
   // If it does we should release the pointer capture for the elements.
   for (auto iter = gPointerCaptureList->Iter(); !iter.Done(); iter.Next()) {
     nsIPresShell::PointerCaptureInfo* data = iter.UserData();
-    if (data && data->mOverrideContent &&
-        nsContentUtils::ContentIsDescendantOf(data->mOverrideContent,
-                                              aChild)) {
+    if (data && data->mPendingContent &&
+        nsContentUtils::ContentIsDescendantOf(data->mPendingContent, aChild)) {
       nsIPresShell::ReleasePointerCapturingContent(iter.Key());
     }
   }
@@ -6696,17 +6695,15 @@ nsIPresShell::SetCapturingContent(nsIContent* aContent, uint8_t aFlags)
 nsIPresShell::SetPointerCapturingContent(uint32_t aPointerId, nsIContent* aContent)
 {
   PointerCaptureInfo* pointerCaptureInfo = nullptr;
-  gPointerCaptureList->Get(aPointerId, &pointerCaptureInfo);
-  nsIContent* content = pointerCaptureInfo ?
-    pointerCaptureInfo->mOverrideContent.get() : nullptr;
+  MOZ_ASSERT(aContent != nullptr);
 
-  if (!content && (nsIDOMMouseEvent::MOZ_SOURCE_MOUSE == GetPointerType(aPointerId))) {
+  if (nsIDOMMouseEvent::MOZ_SOURCE_MOUSE == GetPointerType(aPointerId)) {
     SetCapturingContent(aContent, CAPTURE_PREVENTDRAG);
   }
 
-  if (pointerCaptureInfo) {
+  if (gPointerCaptureList->Get(aPointerId, &pointerCaptureInfo) &&
+      pointerCaptureInfo) {
     pointerCaptureInfo->mPendingContent = aContent;
-    pointerCaptureInfo->mReleaseContent = false;
   } else {
     gPointerCaptureList->Put(aPointerId,
                              new PointerCaptureInfo(aContent, GetPointerPrimaryState(aPointerId)));
@@ -6716,14 +6713,14 @@ nsIPresShell::SetPointerCapturingContent(uint32_t aPointerId, nsIContent* aConte
 /* static */ void
 nsIPresShell::ReleasePointerCapturingContent(uint32_t aPointerId)
 {
-  if (gActivePointersIds->Get(aPointerId)) {
+  if (nsIDOMMouseEvent::MOZ_SOURCE_MOUSE == GetPointerType(aPointerId)) {
     SetCapturingContent(nullptr, CAPTURE_PREVENTDRAG);
   }
 
   PointerCaptureInfo* pointerCaptureInfo = nullptr;
-  if (gPointerCaptureList->Get(aPointerId, &pointerCaptureInfo) && pointerCaptureInfo) {
-    // Set flag to asyncronously release capture for given pointer.
-    pointerCaptureInfo->mReleaseContent = true;
+  if (gPointerCaptureList->Get(aPointerId, &pointerCaptureInfo) &&
+      pointerCaptureInfo) {
+    pointerCaptureInfo->mPendingContent = nullptr;
   }
 }
 
@@ -6737,49 +6734,31 @@ nsIPresShell::GetPointerCapturingContent(uint32_t aPointerId)
   return nullptr;
 }
 
-/* static */ bool
+/* static */ void
 nsIPresShell::CheckPointerCaptureState(uint32_t aPointerId,
                                        uint16_t aPointerType, bool aIsPrimary)
 {
-  bool didDispatchEvent = false;
-  PointerCaptureInfo* pointerCaptureInfo = nullptr;
-  if (gPointerCaptureList->Get(aPointerId, &pointerCaptureInfo) && pointerCaptureInfo) {
-    // If pendingContent exist or anybody calls element.releasePointerCapture
-    // we should dispatch lostpointercapture event to overrideContent if it exist
-    if (pointerCaptureInfo->mPendingContent || pointerCaptureInfo->mReleaseContent) {
-      if (pointerCaptureInfo->mOverrideContent) {
-        nsCOMPtr<nsIContent> content;
-        pointerCaptureInfo->mOverrideContent.swap(content);
-        if (pointerCaptureInfo->mReleaseContent) {
-          pointerCaptureInfo->mPendingContent = nullptr;
-        }
-        if (pointerCaptureInfo->Empty()) {
-          gPointerCaptureList->Remove(aPointerId);
-        }
-        DispatchGotOrLostPointerCaptureEvent(false, aPointerId, aPointerType,
-                                             aIsPrimary, content);
-        didDispatchEvent = true;
-      } else if (pointerCaptureInfo->mPendingContent && pointerCaptureInfo->mReleaseContent) {
-        // If anybody calls element.releasePointerCapture
-        // We should clear overrideContent and pendingContent
-        pointerCaptureInfo->mPendingContent = nullptr;
-        pointerCaptureInfo->mReleaseContent = false;
-      }
+  PointerCaptureInfo* captureInfo = nullptr;
+  if (gPointerCaptureList->Get(aPointerId, &captureInfo) && captureInfo &&
+      captureInfo->mPendingContent != captureInfo->mOverrideContent) {
+    // cache captureInfo->mPendingContent since it may be changed in the pointer
+    // event listener
+    nsIContent* pendingContent = captureInfo->mPendingContent.get();
+    if (captureInfo->mOverrideContent) {
+      DispatchGotOrLostPointerCaptureEvent(/* aIsGotCapture */ false,
+                                           aPointerId, aPointerType, aIsPrimary,
+                                           captureInfo->mOverrideContent);
+    }
+    if (pendingContent) {
+      DispatchGotOrLostPointerCaptureEvent(/* aIsGotCapture */ true, aPointerId,
+                                           aPointerType, aIsPrimary,
+                                           pendingContent);
+    }
+    captureInfo->mOverrideContent = pendingContent;
+    if (captureInfo->Empty()) {
+      gPointerCaptureList->Remove(aPointerId);
     }
   }
-  if (gPointerCaptureList->Get(aPointerId, &pointerCaptureInfo) && pointerCaptureInfo) {
-    // If pendingContent exist we should dispatch gotpointercapture event to it
-    if (pointerCaptureInfo && pointerCaptureInfo->mPendingContent) {
-      pointerCaptureInfo->mOverrideContent = pointerCaptureInfo->mPendingContent;
-      pointerCaptureInfo->mPendingContent = nullptr;
-      pointerCaptureInfo->mReleaseContent = false;
-      DispatchGotOrLostPointerCaptureEvent(true, aPointerId, aPointerType,
-                                           aIsPrimary,
-                                           pointerCaptureInfo->mOverrideContent);
-      didDispatchEvent = true;
-    }
-  }
-  return didDispatchEvent;
 }
 
 /* static */ uint16_t
@@ -7140,16 +7119,16 @@ DispatchPointerFromMouseOrTouch(PresShell* aShell,
     int16_t button = mouseEvent->button;
     switch (mouseEvent->mMessage) {
     case eMouseMove:
-      if (mouseEvent->buttons == 0) {
-        button = -1;
-      }
+      button = -1;
       pointerMessage = ePointerMove;
       break;
     case eMouseUp:
-      pointerMessage = ePointerUp;
+      pointerMessage = mouseEvent->buttons ? ePointerMove : ePointerUp;
       break;
     case eMouseDown:
-      pointerMessage = ePointerDown;
+      pointerMessage =
+        mouseEvent->buttons & ~nsContentUtils::GetButtonsFlagForButton(button) ?
+        ePointerMove : ePointerDown;
       break;
     default:
       return NS_OK;
@@ -7158,6 +7137,7 @@ DispatchPointerFromMouseOrTouch(PresShell* aShell,
     WidgetPointerEvent event(*mouseEvent);
     event.mMessage = pointerMessage;
     event.button = button;
+    event.buttons = mouseEvent->buttons;
     event.pressure = event.buttons ?
                      mouseEvent->pressure ? mouseEvent->pressure : 0.5f :
                      0.0f;

@@ -227,9 +227,3 @@ onmessage = event => {
     });
   });
 };
-
-onclose = event => {
-  io.shutdown();
-
-  self.postMessage({msg: "close"});
-};
