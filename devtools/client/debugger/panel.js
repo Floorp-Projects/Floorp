@@ -93,19 +93,6 @@ DebuggerPanel.prototype = {
 
   // DebuggerPanel API
 
-  getFrames() {
-    let framesController = this.panelWin.DebuggerController.StackFrames;
-    let thread = framesController.activeThread;
-    if (thread && thread.paused) {
-      return {
-        frames: thread.cachedFrames,
-        selected: framesController.currentFrameDepth,
-      };
-    }
-
-    return null;
-  },
-
   addBreakpoint: function (location) {
     const { actions } = this.panelWin;
     const { dispatch } = this._controller;

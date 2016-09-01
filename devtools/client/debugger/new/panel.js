@@ -18,40 +18,13 @@ DebuggerPanel.prototype = {
     }
 
     return targetPromise.then(() => {
-      this.panelWin.Debugger.bootstrap({
-        threadClient: this.toolbox.threadClient,
-        tabTarget: this.toolbox.target
-      });
+      const dbg = this.panelWin.Debugger;
+      dbg.setThreadClient(this.toolbox.threadClient);
+      dbg.setTabTarget(this.toolbox.target);
+      dbg.initPage(dbg.getActions());
+      dbg.renderApp();
       return this;
     });
-  },
-
-  function _store() {
-    return this.panelWin.Debugger.store;
-  },
-
-  function _getState() {
-    return this._store().getState();
-  },
-
-  function _actions() {
-    return this.panelWin.Debugger.actions;
-  },
-
-  function _selectors() {
-    return this.panelWin.Debugger.selectors;
-  },
-
-  getFrames: function() {
-    let frames = this._selectors().getFrames(this._getState()).toJS();
-    const selectedFrame = this._selectors().getSelectedFrame(this._getState());
-    const selected = frames.findIndex(frame => frame.id == selectedFrame.id);
-
-    frames.forEach(frame => {
-      frame.actor = frame.id;
-    });
-
-    return { frames, selected };
   },
 
   destroy: function() {

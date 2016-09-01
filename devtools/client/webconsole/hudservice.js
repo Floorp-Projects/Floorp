@@ -521,12 +521,18 @@ WebConsole.prototype = {
       return null;
     }
     let panel = toolbox.getPanel("jsdebugger");
-
     if (!panel) {
       return null;
     }
-
-    return panel.getFrames();
+    let framesController = panel.panelWin.DebuggerController.StackFrames;
+    let thread = framesController.activeThread;
+    if (thread && thread.paused) {
+      return {
+        frames: thread.cachedFrames,
+        selected: framesController.currentFrameDepth,
+      };
+    }
+    return null;
   },
 
   /**
