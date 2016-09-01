@@ -926,6 +926,8 @@ nsSVGIntegrationUtils::PaintMaskAndClipPath(const PaintFramesParams& aParams)
 DrawResult
 nsSVGIntegrationUtils::PaintFilter(const PaintFramesParams& aParams)
 {
+  MOZ_ASSERT(!aParams.builder->IsForGenerateGlyphMask());
+
   nsIFrame* frame = aParams.frame;
   DrawResult result = DrawResult::SUCCESS;
   bool hasSVGLayout = (frame->GetStateBits() & NS_FRAME_SVG_LAYOUT);
@@ -968,23 +970,12 @@ nsSVGIntegrationUtils::PaintFilter(const PaintFramesParams& aParams)
   }
 
   /* Paint the child and apply filters */
-  if (!aParams.builder->IsForGenerateGlyphMask()) {
-    RegularFramePaintCallback callback(aParams.builder, aParams.layerManager,
-                                       offsetToUserSpace);
-
-    nsRegion dirtyRegion = aParams.dirtyRect - offsetToBoundingBox;
-    gfxMatrix tm = nsSVGIntegrationUtils::GetCSSPxToDevPxMatrix(frame);
-    nsFilterInstance::PaintFilteredFrame(frame, target->GetDrawTarget(),
-                                         tm, &callback, &dirtyRegion);
-  } else {
-    target->SetMatrix(matrixAutoSaveRestore.Matrix());
-    BasicLayerManager* basic = static_cast<BasicLayerManager*>(aParams.layerManager);
-    RefPtr<gfxContext> oldCtx = basic->GetTarget();
-    basic->SetTarget(target);
-    aParams.layerManager->EndTransaction(FrameLayerBuilder::DrawPaintedLayer,
-                                          aParams.builder);
-    basic->SetTarget(oldCtx);
-  }
+  RegularFramePaintCallback callback(aParams.builder, aParams.layerManager,
+                                     offsetToUserSpace);
+  nsRegion dirtyRegion = aParams.dirtyRect - offsetToBoundingBox;
+  gfxMatrix tm = nsSVGIntegrationUtils::GetCSSPxToDevPxMatrix(frame);
+  nsFilterInstance::PaintFilteredFrame(frame, target->GetDrawTarget(),
+                                       tm, &callback, &dirtyRegion);
 
   if (aParams.frame->StyleEffects()->mMixBlendMode != NS_STYLE_BLEND_NORMAL) {
     MOZ_ASSERT(target != &aParams.ctx);
