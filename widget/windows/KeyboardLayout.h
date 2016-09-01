@@ -605,6 +605,15 @@ public:
                 const ModifierKeyState& aModKeyState) const;
 
   /**
+   * MaybeInitNativeKeyWithCompositeChar() may initialize aNativeKey with
+   * proper composite character when dead key produces a composite character.
+   * Otherwise, just returns false.
+   */
+  bool MaybeInitNativeKeyWithCompositeChar(
+         NativeKey& aNativeKey,
+         const ModifierKeyState& aModKeyState);
+
+  /**
    * GetUniCharsAndModifiers() returns characters which is inputted by the
    * aVirtualKey with aModKeyState.  This method isn't stateful.
    */
