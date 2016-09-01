@@ -104,7 +104,14 @@ ScopedResolveTexturesForDraw::ScopedResolveTexturesForDraw(WebGLContext* webgl,
     const std::vector<const WebGLFBAttachPoint*>* attachList = nullptr;
     const auto& fb = mWebGL->mBoundDrawFramebuffer;
     if (fb) {
+        if (!fb->ValidateAndInitAttachments(funcName)) {
+            *out_error = true;
+            return;
+        }
+
         attachList = &(fb->ResolvedCompleteData()->texDrawBuffers);
+    } else {
+        webgl->ClearBackbufferIfNeeded();
     }
 
     MOZ_ASSERT(mWebGL->mActiveProgramLinkInfo);
@@ -294,15 +301,6 @@ WebGLContext::DrawArrays_check(GLint first, GLsizei count, GLsizei primcount,
     if (uint32_t(primcount) > mMaxFetchedInstances) {
         ErrorInvalidOperation("%s: bound instance attribute buffers do not have sufficient size for given primcount", info);
         return false;
-    }
-
-    MOZ_ASSERT(gl->IsCurrent());
-
-    if (mBoundDrawFramebuffer) {
-        if (!mBoundDrawFramebuffer->ValidateAndInitAttachments(info))
-            return false;
-    } else {
-        ClearBackbufferIfNeeded();
     }
 
     if (!DoFakeVertexAttrib0(checked_firstPlusCount.value())) {
@@ -497,18 +495,8 @@ WebGLContext::DrawElements_check(GLsizei count, GLenum type,
                         WebGLContext::EnumName(type));
     }
 
-    MOZ_ASSERT(gl->IsCurrent());
-
-    if (mBoundDrawFramebuffer) {
-        if (!mBoundDrawFramebuffer->ValidateAndInitAttachments(info))
-            return false;
-    } else {
-        ClearBackbufferIfNeeded();
-    }
-
-    if (!DoFakeVertexAttrib0(mMaxFetchedVertices)) {
+    if (!DoFakeVertexAttrib0(mMaxFetchedVertices))
         return false;
-    }
 
     return true;
 }
