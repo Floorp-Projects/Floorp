@@ -121,7 +121,6 @@ VPXDecoder::DoDecode(MediaRawData* aSample)
 
   vpx_codec_iter_t  iter = nullptr;
   vpx_image_t      *img;
-  bool didOutput = false;
 
   while ((img = vpx_codec_get_frame(&mVPX, &iter))) {
     NS_ASSERTION(img->fmt == VPX_IMG_FMT_I420 ||
@@ -180,10 +179,6 @@ VPXDecoder::DoDecode(MediaRawData* aSample)
       return -1;
     }
     mCallback->Output(v);
-    didOutput = true;
-  }
-  if (!didOutput) {
-    mCallback->InputExhausted();
   }
   return 0;
 }
@@ -197,6 +192,8 @@ VPXDecoder::ProcessDecode(MediaRawData* aSample)
   }
   if (DoDecode(aSample) == -1) {
     mCallback->Error(MediaDataDecoderError::DECODE_ERROR);
+  } else if (mTaskQueue->IsEmpty()) {
+    mCallback->InputExhausted();
   }
 }
 

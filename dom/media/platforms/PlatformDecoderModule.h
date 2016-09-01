@@ -175,8 +175,6 @@ public:
 
   // Denotes that the last input sample has been inserted into the decoder,
   // and no more output can be produced unless more input is sent.
-  // InputExhausted should only be called if no decoded samples were returned
-  // from the last input.
   virtual void InputExhausted() = 0;
 
   virtual void DrainComplete() = 0;
