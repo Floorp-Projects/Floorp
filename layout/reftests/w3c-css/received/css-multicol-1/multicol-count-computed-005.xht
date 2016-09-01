@@ -4,7 +4,7 @@
   <title>CSS Multi-column Layout Test: -moz-column-rule and overflow inside (complex test)</title>
   <link rel="author" title="Opera Software ASA" href="http://www.opera.com/" />
   <link rel="reviewer" title="Gérard Talbot" href="http://www.gtalbot.org/BrowserBugsSection/css21testsuite/" /> <!-- 2013-08-03 -->
-  <link rel="help" href="http://www.w3.org/TR/css3-multicol/#the-number-and-width-of--moz-columns" title="3. The number and width of -moz-columns" />
+  <link rel="help" href="http://www.w3.org/TR/css3-multicol/#the-number-and-width-of-columns" title="3. The number and width of -moz-columns" />
   <link rel="match" href="multicol-count-computed-003-ref.xht" />
   <meta name="flags" content="ahem" />
   <meta name="assert" content="This test checks that if one of 2 adjacent column boxes (2nd and 3rd colum box in this test) does not have any content, then the column rule separating those should not be drawn. In this test, the 3rd colum box should have no inline content. This test also checks that inline content in the normal flow that extends into a column gap should be clipped in the middle of the column gap. So, in this test, inline content in 1st column box should be partially clipped and overlapped partially by 1st -moz-column-rule." />
@@ -26,9 +26,9 @@
   width: 13em;
 
   -moz-column-gap: 5em;
-  -moz--moz-column-rule-color: blue;
-  -moz--moz-column-rule-style: solid;
-  -moz--moz-column-rule-width: 1.5em;
+  -moz-column-rule-color: blue;
+  -moz-column-rule-style: solid;
+  -moz-column-rule-width: 1.5em;
   -moz-column-width: 1em;
   }
 
@@ -79,7 +79,7 @@
   Column rules are only drawn between two -moz-columns that
   both have content.
   "
-  http://www.w3.org/TR/css3-multicol/#-moz-column-gaps-and-rules
+  http://www.w3.org/TR/css3-multicol/#column-gaps-and-rules
   */
   ]]></style>
  </head>
