@@ -6492,8 +6492,8 @@ AddonInstall.prototype = {
                     getService(Ci.nsIPromptFactory);
       let prompt = factory.getPrompt(win, Ci.nsIAuthPrompt2);
 
-      if (this.browser && this.browser.isRemoteBrowser && prompt instanceof Ci.nsILoginManagerPrompter)
-        prompt.setE10sData(this.browser, null);
+      if (this.browser && prompt instanceof Ci.nsILoginManagerPrompter)
+        prompt.browser = this.browser;
 
       return prompt;
     }

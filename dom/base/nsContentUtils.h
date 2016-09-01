@@ -2364,18 +2364,6 @@ public:
   static nsIEditor* GetHTMLEditor(nsPresContext* aPresContext);
 
   /**
-   * Check whether a spec feature/version is supported.
-   * @param aObject the object, which should support the feature,
-   *        for example nsIDOMNode or nsIDOMDOMImplementation
-   * @param aFeature the feature ("Views", "Core", "HTML", "Range" ...)
-   * @param aVersion the version ("1.0", "2.0", ...)
-   * @return whether the feature is supported or not
-   */
-  static bool InternalIsSupported(nsISupports* aObject,
-                                  const nsAString& aFeature,
-                                  const nsAString& aVersion);
-
-  /**
    * Returns true if the browser.dom.window.dump.enabled pref is set.
    */
   static bool DOMWindowDumpEnabled();
@@ -2554,6 +2542,7 @@ public:
                                  float aX,
                                  float aY,
                                  int32_t aButton,
+                                 int32_t aButtons,
                                  int32_t aClickCount,
                                  int32_t aModifiers,
                                  bool aIgnoreRootScrollFrame,

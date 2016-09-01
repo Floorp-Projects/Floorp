@@ -18,8 +18,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1000870
         iframe.src = "pointerevent_lostpointercapture_is_first-manual.html";
       }
       function executeTest(int_win) {
-        sendMouseEvent(int_win, "btnCapture", "mousedown");
-        sendMouseEvent(int_win, "btnCapture", "mouseup");
+        sendMouseEvent(int_win, "btnCapture", "mousedown", {button:0});
+        sendMouseEvent(int_win, "btnCapture", "mouseup", {button:0});
         sendMouseEvent(int_win, "btnCapture", "mousemove");
       }
     </script>

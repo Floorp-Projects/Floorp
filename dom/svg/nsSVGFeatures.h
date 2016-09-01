@@ -13,17 +13,6 @@ class nsSVGFeatures
 {
 public:
   /**
-   * Check whether we support the given feature string.
-   *
-   * @param aObject the object, which should support the feature,
-   *        for example nsIDOMNode or nsIDOMDOMImplementation
-   * @param aFeature one of the feature strings specified at
-   *    http://www.w3.org/TR/SVG11/feature.html
-   */
-  static bool
-  HasFeature(nsISupports* aObject, const nsAString& aFeature);
-
-  /**
    * Check whether we support the given extension string.
    *
    * @param aExtension the URI of an extension. Known extensions are

@@ -60,6 +60,7 @@ DIRS += [
     'tooltiptext',
     'typeaheadfind',
     'utils',
+    'url-classifier',
     'urlformatter',
     'viewconfig',
     'workerloader',
@@ -86,9 +87,6 @@ if CONFIG['MOZ_XUL']:
 
 if CONFIG['MOZ_TOOLKIT_SEARCH']:
     DIRS += ['search']
-
-if CONFIG['MOZ_URL_CLASSIFIER']:
-    DIRS += ['url-classifier']
 
 DIRS += ['captivedetect']
 

@@ -59,7 +59,10 @@ public:
   // nsIDOMDOMImplementation
   NS_DECL_NSIDOMDOMIMPLEMENTATION
 
-  bool HasFeature(const nsAString& aFeature, const nsAString& aVersion);
+  bool HasFeature()
+  {
+    return true;
+  }
 
   already_AddRefed<DocumentType>
   CreateDocumentType(const nsAString& aQualifiedName,

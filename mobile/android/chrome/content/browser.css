@@ -2,16 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/**
- * Optimization for tabs that are restored lazily. We can save a good amount of
- * memory that to-be-restored tabs would otherwise consume simply by setting
- * their browsers to 'display: none' as that will prevent them from having to
- * create a presentation and the like.
- */
-browser[pending] {
-  display: none;
-}
-
 browser[remote="true"] {
   -moz-binding: url("chrome://global/content/bindings/remote-browser.xml#remote-browser");
 }
