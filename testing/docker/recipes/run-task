@@ -19,11 +19,16 @@ import argparse
 import datetime
 import errno
 import grp
+import json
 import os
 import pwd
 import re
 import subprocess
 import sys
+import urllib2
+
+
+FINGERPRINT_URL = 'http://taskcluster/secrets/v1/secret/project/taskcluster/gecko/hgfingerprint'
 
 
 def print_line(prefix, m):
@@ -88,8 +93,28 @@ def vcs_checkout(args):
         print('revision is not specified for checkout')
         sys.exit(1)
 
+    # Obtain certificate fingerprints.
+    try:
+        print_line(b'vcs', 'fetching hg.mozilla.org fingerprint from %s\n' %
+                   FINGERPRINT_URL)
+        res = urllib2.urlopen(FINGERPRINT_URL, timeout=10)
+        secret = res.read()
+    except urllib2.URLError as e:
+        print('error retrieving hg fingerprint: %s' % e)
+        sys.exit(1)
+
+    try:
+        secret = json.loads(secret, encoding='utf-8')
+    except ValueError:
+        print('invalid JSON in hg fingerprint secret')
+        sys.exit(1)
+
+    hgmo_fingerprint = secret['secret']['fingerprints'].encode('ascii')
+
     res = run_and_prefix_output(b'vcs', [
-        b'/usr/bin/hg', b'robustcheckout',
+        b'/usr/bin/hg',
+        b'--config', b'hostsecurity.hg.mozilla.org:fingerprints=%s' % hgmo_fingerprint,
+        b'robustcheckout',
         b'--sharebase', b'/home/worker/hg-shared',
         b'--purge',
         b'--upstream', base_repo,
