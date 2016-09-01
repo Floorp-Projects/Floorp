@@ -32,6 +32,7 @@
 #include "mozilla/dom/GetFilesHelper.h"
 #include "mozilla/dom/PCrashReporterChild.h"
 #include "mozilla/dom/ProcessGlobal.h"
+#include "mozilla/dom/PushNotifier.h"
 #include "mozilla/dom/workers/ServiceWorkerManager.h"
 #include "mozilla/dom/nsIContentChild.h"
 #include "mozilla/gfx/gfxVars.h"
@@ -165,10 +166,6 @@
 
 #ifdef ACCESSIBILITY
 #include "nsAccessibilityService.h"
-#endif
-
-#ifndef MOZ_SIMPLEPUSH
-#include "mozilla/dom/PushNotifier.h"
 #endif
 
 #include "mozilla/dom/File.h"
@@ -3255,10 +3252,8 @@ ContentChild::RecvPush(const nsCString& aScope,
                        const IPC::Principal& aPrincipal,
                        const nsString& aMessageId)
 {
-#ifndef MOZ_SIMPLEPUSH
   PushMessageDispatcher dispatcher(aScope, aPrincipal, aMessageId, Nothing());
   Unused << NS_WARN_IF(NS_FAILED(dispatcher.NotifyObserversAndWorkers()));
-#endif
   return true;
 }
 
@@ -3268,10 +3263,8 @@ ContentChild::RecvPushWithData(const nsCString& aScope,
                                const nsString& aMessageId,
                                InfallibleTArray<uint8_t>&& aData)
 {
-#ifndef MOZ_SIMPLEPUSH
   PushMessageDispatcher dispatcher(aScope, aPrincipal, aMessageId, Some(aData));
   Unused << NS_WARN_IF(NS_FAILED(dispatcher.NotifyObserversAndWorkers()));
-#endif
   return true;
 }
 
@@ -3279,10 +3272,8 @@ bool
 ContentChild::RecvPushSubscriptionChange(const nsCString& aScope,
                                          const IPC::Principal& aPrincipal)
 {
-#ifndef MOZ_SIMPLEPUSH
   PushSubscriptionChangeDispatcher dispatcher(aScope, aPrincipal);
   Unused << NS_WARN_IF(NS_FAILED(dispatcher.NotifyObserversAndWorkers()));
-#endif
   return true;
 }
 
@@ -3290,10 +3281,8 @@ bool
 ContentChild::RecvPushError(const nsCString& aScope, const IPC::Principal& aPrincipal,
                             const nsString& aMessage, const uint32_t& aFlags)
 {
-#ifndef MOZ_SIMPLEPUSH
   PushErrorDispatcher dispatcher(aScope, aPrincipal, aMessage, aFlags);
   Unused << NS_WARN_IF(NS_FAILED(dispatcher.NotifyObserversAndWorkers()));
-#endif
   return true;
 }
 
@@ -3301,10 +3290,8 @@ bool
 ContentChild::RecvNotifyPushSubscriptionModifiedObservers(const nsCString& aScope,
                                                           const IPC::Principal& aPrincipal)
 {
-#ifndef MOZ_SIMPLEPUSH
   PushSubscriptionModifiedDispatcher dispatcher(aScope, aPrincipal);
   Unused << NS_WARN_IF(NS_FAILED(dispatcher.NotifyObservers()));
-#endif
   return true;
 }
 

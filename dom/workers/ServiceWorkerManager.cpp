@@ -45,6 +45,7 @@
 #include "mozilla/dom/PromiseNativeHandler.h"
 #include "mozilla/dom/Request.h"
 #include "mozilla/dom/RootedDictionary.h"
+#include "mozilla/dom/TypedArray.h"
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/PBackgroundChild.h"
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
@@ -80,10 +81,6 @@
 #include "WorkerPrivate.h"
 #include "WorkerRunnable.h"
 #include "WorkerScope.h"
-
-#ifndef MOZ_SIMPLEPUSH
-#include "mozilla/dom/TypedArray.h"
-#endif
 
 #ifdef PostMessage
 #undef PostMessage
@@ -927,9 +924,6 @@ ServiceWorkerManager::SendPushEvent(const nsACString& aOriginAttributes,
                                     const nsAString& aMessageId,
                                     const Maybe<nsTArray<uint8_t>>& aData)
 {
-#ifdef MOZ_SIMPLEPUSH
-  return NS_ERROR_NOT_AVAILABLE;
-#else
   PrincipalOriginAttributes attrs;
   if (!attrs.PopulateFromSuffix(aOriginAttributes)) {
     return NS_ERROR_INVALID_ARG;
@@ -945,16 +939,12 @@ ServiceWorkerManager::SendPushEvent(const nsACString& aOriginAttributes,
 
   return serviceWorker->WorkerPrivate()->SendPushEvent(aMessageId, aData,
                                                        registration);
-#endif // MOZ_SIMPLEPUSH
 }
 
 NS_IMETHODIMP
 ServiceWorkerManager::SendPushSubscriptionChangeEvent(const nsACString& aOriginAttributes,
                                                       const nsACString& aScope)
 {
-#ifdef MOZ_SIMPLEPUSH
-  return NS_ERROR_NOT_AVAILABLE;
-#else
   PrincipalOriginAttributes attrs;
   if (!attrs.PopulateFromSuffix(aOriginAttributes)) {
     return NS_ERROR_INVALID_ARG;
@@ -965,7 +955,6 @@ ServiceWorkerManager::SendPushSubscriptionChangeEvent(const nsACString& aOriginA
     return NS_ERROR_FAILURE;
   }
   return info->WorkerPrivate()->SendPushSubscriptionChangeEvent();
-#endif
 }
 
 nsresult
