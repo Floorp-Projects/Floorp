@@ -3594,6 +3594,11 @@ PaintInactiveLayer(nsDisplayListBuilder* aBuilder,
     if (basic->InTransaction()) {
       basic->AbortTransaction();
     }
+  } else if (aItem->GetType() == nsDisplayItem::TYPE_FILTER){
+    static_cast<nsDisplayFilter*>(aItem)->PaintAsLayer(aBuilder, aCtx, basic);
+    if (basic->InTransaction()) {
+      basic->AbortTransaction();
+    }
   } else {
     basic->EndTransaction(FrameLayerBuilder::DrawPaintedLayer, aBuilder);
   }
