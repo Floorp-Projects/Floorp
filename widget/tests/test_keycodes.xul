@@ -3440,6 +3440,8 @@ function* runReservedKeyTests()
     // Ctrl+T is reserved for opening new tab.
     yield testReservedKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_T,
                            modifiers:{ctrlKey:1}, chars:"\u0014"});
+    yield testReservedKey({layout:KEYBOARD_LAYOUT_ARABIC, keyCode:WIN_VK_T,
+                           modifiers:{ctrlKey:1}, chars:"\u0014"});
   }
 
   finializeKeyElementTest();
