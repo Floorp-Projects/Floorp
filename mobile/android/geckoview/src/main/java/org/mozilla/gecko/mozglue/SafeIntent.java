@@ -26,6 +26,18 @@ public class SafeIntent {
         this.intent = intent;
     }
 
+    public boolean hasExtra(String name) {
+        try {
+            return intent.hasExtra(name);
+        } catch (OutOfMemoryError e) {
+            Log.w(LOGTAG, "Couldn't determine if intent had an extra: OOM. Malformed?");
+            return false;
+        } catch (RuntimeException e) {
+            Log.w(LOGTAG, "Couldn't determine if intent had an extra.", e);
+            return false;
+        }
+    }
+
     public boolean getBooleanExtra(final String name, final boolean defaultValue) {
         try {
             return intent.getBooleanExtra(name, defaultValue);
