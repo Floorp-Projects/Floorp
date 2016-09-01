@@ -259,7 +259,7 @@ public class Tabs implements GeckoEventListener {
         notifyListeners(tab, TabEvents.SELECTED);
 
         if (mLayerView != null) {
-            mLayerView.setClearColor(tab.isPrivate() ? mPrivateClearColor : Color.WHITE);
+            mLayerView.setClearColor(getTabColor(tab));
         }
 
         if (oldTab != null) {
@@ -672,6 +672,10 @@ public class Tabs implements GeckoEventListener {
             // are also selected/unselected, so it would be redundant to also listen
             // for ADDED/CLOSED events.
             case SELECTED:
+                if (mLayerView != null) {
+                    mLayerView.setSurfaceBackgroundColor(getTabColor(tab));
+                    mLayerView.setPaintState(LayerView.PAINT_START);
+                }
                 queuePersistAllTabs();
             case UNSELECTED:
                 tab.onChange();
@@ -982,5 +986,13 @@ public class Tabs implements GeckoEventListener {
     @JNITarget
     public static int getNextTabId() {
         return sTabId.getAndIncrement();
+    }
+
+    private int getTabColor(Tab tab) {
+        if (tab != null) {
+            return tab.isPrivate() ? mPrivateClearColor : Color.WHITE;
+        }
+
+        return Color.WHITE;
     }
 }
