@@ -112,7 +112,6 @@
 #include "nsSandboxFlags.h"
 #include "FrameLayerBuilder.h"
 #include "VRManagerChild.h"
-#include "nsICommandParams.h"
 
 #ifdef NS_PRINTING
 #include "nsIPrintSession.h"
@@ -2146,39 +2145,6 @@ TabChild::RecvSelectionEvent(const WidgetSelectionEvent& event)
   Unused << SendOnEventNeedingAckHandled(event.mMessage);
   return true;
 }
-
-bool
-TabChild::RecvPasteTransferable(const IPCDataTransfer& aDataTransfer,
-                                const bool& aIsPrivateData,
-                                const IPC::Principal& aRequestingPrincipal)
-{
-  nsresult rv;
-  nsCOMPtr<nsITransferable> trans =
-    do_CreateInstance("@mozilla.org/widget/transferable;1", &rv);
-  NS_ENSURE_SUCCESS(rv, true);
-  trans->Init(nullptr);
-
-  rv = nsContentUtils::IPCTransferableToTransferable(aDataTransfer,
-                                                     aIsPrivateData,
-                                                     aRequestingPrincipal,
-                                                     trans, nullptr, this);
-  NS_ENSURE_SUCCESS(rv, true);
-
-  nsCOMPtr<nsIDocShell> ourDocShell = do_GetInterface(WebNavigation());
-  if (NS_WARN_IF(!ourDocShell)) {
-    return true;
-  }
-
-  nsCOMPtr<nsICommandParams> params = do_CreateInstance("@mozilla.org/embedcomp/command-params;1", &rv);
-  NS_ENSURE_SUCCESS(rv, true);
-
-  rv = params->SetISupportsValue("transferable", trans);
-  NS_ENSURE_SUCCESS(rv, true);
-
-  ourDocShell->DoCommandWithParams("cmd_pasteTransferable", params);
-  return true;
-}
-
 
 a11y::PDocAccessibleChild*
 TabChild::AllocPDocAccessibleChild(PDocAccessibleChild*, const uint64_t&)

@@ -2226,16 +2226,6 @@ TabParent::SendSelectionEvent(WidgetSelectionEvent& event)
   return true;
 }
 
-bool
-TabParent::SendPasteTransferable(const IPCDataTransfer& aDataTransfer,
-                                 const bool& aIsPrivateData,
-                                 const IPC::Principal& aRequestingPrincipal)
-{
-  return PBrowserParent::SendPasteTransferable(aDataTransfer,
-                                               aIsPrivateData,
-                                               aRequestingPrincipal);
-}
-
 /*static*/ TabParent*
 TabParent::GetFrom(nsFrameLoader* aFrameLoader)
 {
