@@ -1882,6 +1882,28 @@ this.Schemas = {
   },
 
   /**
+   * Checks whether a given object has the necessary permissions to
+   * expose the given namespace.
+   *
+   * @param {string} namespace
+   *        The top-level namespace to check permissions for.
+   * @param {object} wrapperFuncs
+   *        Wrapper functions for the given context.
+   * @param {function} wrapperFuncs.hasPermission
+   *        A function which, when given a string argument, returns true
+   *        if the context has the given permission.
+   * @returns {boolean}
+   *        True if the context has permission for the given namespace.
+   */
+  checkPermissions(namespace, wrapperFuncs) {
+    let ns = this.namespaces.get(namespace);
+    if (ns && ns.permissions) {
+      return ns.permissions.some(perm => wrapperFuncs.hasPermission(perm));
+    }
+    return true;
+  },
+
+  /**
    * Inject registered extension APIs into `dest`.
    *
    * @param {object} dest The root namespace for the APIs.
