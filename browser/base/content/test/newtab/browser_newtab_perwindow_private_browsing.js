@@ -39,7 +39,7 @@ add_task(function* () {
 });
 
 var windowsToClose = [];
-function testOnWindow(options) {
+function* testOnWindow(options) {
   let newWindowPromise = BrowserTestUtils.waitForNewWindow();
   var win = OpenBrowserWindow(options);
   windowsToClose.push(win);

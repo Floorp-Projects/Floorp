@@ -125,14 +125,10 @@ add_task(function* () {
       return aLink2.frecency - aLink1.frecency ||
              aLink2.lastVisitDate - aLink1.lastVisitDate;
     }
-    else {
-      if (aLink2.type == "history") {
-        return 1;
-      }
-      else {
-        return -1;
-      }
+    if (aLink2.type == "history") {
+      return 1;
     }
+    return -1;
   };
 
   // add a row of history tiles, directory tiles will be clipped off, hence no scrollbar

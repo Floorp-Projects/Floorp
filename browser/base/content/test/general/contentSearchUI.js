@@ -98,7 +98,7 @@ var messageHandlers = {
     }
     row.addEventListener("mousemove", function handler() {
       row.removeEventListener("mousemove", handler);
-      ack("mousemove"); 
+      ack("mousemove");
     });
     content.synthesizeMouseAtCenter(row, event);
   },

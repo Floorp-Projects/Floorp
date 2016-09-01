@@ -76,8 +76,8 @@ fuzzy-if(winWidget,48,600) fuzzy-if(cocoaWidget,19,97) HTTP(../..) == wm-row-pro
 
 fuzzy-if(Android,255,38) == table-caption-top-1.html table-caption-top-1-ref.html
 fuzzy-if(Android,255,38) == table-caption-bottom-1.html table-caption-bottom-1-ref.html
-== table-caption-left-1.html table-caption-left-1-ref.html
-== table-caption-right-1.html table-caption-right-1-ref.html
+fuzzy-if(Android,244,27) == table-caption-left-1.html table-caption-left-1-ref.html
+fuzzy-if(Android,244,27) == table-caption-right-1.html table-caption-right-1-ref.html
 
 == border-collapse-bevels-1a.html border-collapse-bevels-1-ref.html
 fuzzy-if(cocoaWidget,23,162) == border-collapse-bevels-1b.html border-collapse-bevels-1-ref.html

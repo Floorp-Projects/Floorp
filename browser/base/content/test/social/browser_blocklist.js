@@ -92,12 +92,12 @@ var tests = {
               ok(true, "added and removed provider");
               finishTest(true);
             });
-          } catch(e) {
+          } catch (e) {
             ok(false, "SocialService.disableProvider threw exception: " + e);
             finishTest(false);
           }
         });
-      } catch(e) {
+      } catch (e) {
         ok(false, "SocialService.addProvider threw exception: " + e);
         finishTest(false);
       }
@@ -118,7 +118,7 @@ var tests = {
             finishTest(false);
           });
         });
-      } catch(e) {
+      } catch (e) {
         ok(true, "SocialService.addProvider should throw blocklist exception: " + e);
         finishTest(true);
       }
@@ -143,7 +143,7 @@ var tests = {
         Social.installProvider(data, function(addonManifest) {
           finishTest(false);
         });
-      } catch(e) {
+      } catch (e) {
         finishTest(true);
       }
     });
@@ -203,7 +203,7 @@ var tests = {
         // to fire.
         setAndUpdateBlocklist(blocklistURL);
       });
-    } catch(e) {
+    } catch (e) {
       ok(false, "unable to add provider " + e);
       next();
     }

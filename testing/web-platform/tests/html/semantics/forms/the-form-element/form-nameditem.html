@@ -115,6 +115,11 @@ test(function() {
   var button = document.getElementsByTagName("input")[0]
   assert_equals(button.type, "button")
   assert_equals(form.button, button)
+  var desc = Object.getOwnPropertyDescriptor(form, "button");
+  assert_equals(desc.value, button);
+  assert_false(desc.writable);
+  assert_true(desc.configurable);
+  assert_false(desc.enumerable);
   assert_equals(form.button.length, undefined)
 }, "Name for a single element should work")
 
@@ -221,6 +226,12 @@ test(function() {
   var input2 = document.getElementsByName("d")[1]
   assert_equals(input2.localName, "input")
   assert_equals(input2.getAttribute("form"), "c")
+
+  var desc = Object.getOwnPropertyDescriptor(form, "d");
+  assert_equals(desc.value, form.d);
+  assert_false(desc.writable);
+  assert_true(desc.configurable);
+  assert_false(desc.enumerable);
 
   assert_true(form.d instanceof NodeList, "form.d should be a NodeList")
   assert_array_equals(form.d, [input1, input2])

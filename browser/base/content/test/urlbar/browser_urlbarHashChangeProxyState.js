@@ -7,7 +7,7 @@
 add_task(function* () {
   let baseURL = "https://example.org/browser/browser/base/content/test/urlbar/dummy_page.html";
   let url = baseURL + "#foo";
-  yield BrowserTestUtils.withNewTab({ gBrowser, url }, function(browser) {
+  yield BrowserTestUtils.withNewTab({ gBrowser, url }, function*(browser) {
     let identityBox = document.getElementById("identity-box");
     let expectedURL = url;
 

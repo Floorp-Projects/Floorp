@@ -551,14 +551,14 @@ class js::WasmArrayRawBuffer
 # ifdef XP_WIN
         if (!VirtualAlloc(dataPointer(), newMapped, MEM_RESERVE, PAGE_NOACCESS))
             return;
-# elif defined(XP_DARWIN)
-        // No mechanism for remapping on MaxOS. Luckily shouldn't need it here
-        // as most MacOS configs are 64 bit
-        return;
-#else // Unix
+# elif defined(XP_LINUX)
         // Note this will not move memory (no MREMAP_MAYMOVE specified)
         if (MAP_FAILED == mremap(dataPointer(), mappedSize_, newMapped, 0))
             return;
+# else
+        // No mechanism for remapping on MaxOS. Luckily shouldn't need it here
+        // as most MacOS configs are 64 bit
+        return;
 # endif  // !XP_WIN
 
         mappedSize_ = newMapped;

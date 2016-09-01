@@ -106,7 +106,7 @@ function getChangeEvents()
   });
 }
 
-function doSelectTests(contentType, dtd)
+function* doSelectTests(contentType, dtd)
 {
   const pageUrl = "data:" + contentType + "," + escape(dtd + "\n" + PAGECONTENT);
   let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, pageUrl);

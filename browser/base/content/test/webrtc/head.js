@@ -71,7 +71,7 @@ function promiseIndicatorWindow() {
   return promiseWindow("chrome://browser/content/webrtcIndicator.xul");
 }
 
-function assertWebRTCIndicatorStatus(expected) {
+function* assertWebRTCIndicatorStatus(expected) {
   let ui = Cu.import("resource:///modules/webrtcUI.jsm", {}).webrtcUI;
   let expectedState = expected ? "visible" : "hidden";
   let msg = "WebRTC indicator " + expectedState;
@@ -436,15 +436,13 @@ function* checkSharingUI(aExpected) {
     if (expected) {
       is(icon.length, 1, "should show " + id + " icon in control center panel");
       ok(icon[0].classList.contains("in-use"), "icon should have the in-use class");
+    } else if (!icon.length) {
+      ok(true, "should not show " + id + " icon in the control center panel");
     } else {
-      if (!icon.length) {
-        ok(true, "should not show " + id + " icon in the control center panel");
-      } else {
-        // This will happen if there are persistent permissions set.
-        ok(!icon[0].classList.contains("in-use"),
-           "if shown, the " + id + " icon should not have the in-use class");
-        is(icon.length, 1, "should not show more than 1 " + id + " icon");
-      }
+      // This will happen if there are persistent permissions set.
+      ok(!icon[0].classList.contains("in-use"),
+         "if shown, the " + id + " icon should not have the in-use class");
+      is(icon.length, 1, "should not show more than 1 " + id + " icon");
     }
   }
   gIdentityHandler._identityPopup.hidden = true;

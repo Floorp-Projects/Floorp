@@ -15,7 +15,7 @@ add_task(function* () {
     function sendDropEvent(aCellIndex, aDragData) {
       let dataTransfer = new content.DataTransfer("dragstart", false);
       dataTransfer.mozSetDataAt("text/x-moz-url", aDragData, 0);
-      let event = content.document.createEvent("DragEvents");
+      let event = content.document.createEvent("DragEvent");
       event.initDragEvent("drop", true, true, content, 0, 0, 0, 0, 0,
                           false, false, false, false, 0, null, dataTransfer);
 
