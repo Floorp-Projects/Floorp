@@ -23,7 +23,7 @@ function prepareTest(nextTest, url, browser) {
   if (!browser)
     browser = gTestBrowser;
 
-  ContentTask.spawn(browser, url, function(url){
+  ContentTask.spawn(browser, url, function(url) {
     content.location = url;
   });
 }

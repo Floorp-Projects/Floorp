@@ -101,7 +101,7 @@ function test_hoverOne() {
 }
 
 function test_hoverStatePersistence() {
-  // Test that the afterhovered and beforehovered attributes are still there when 
+  // Test that the afterhovered and beforehovered attributes are still there when
   // a tab is selected and then unselected again. See bug 856107.
 
   function assertState() {

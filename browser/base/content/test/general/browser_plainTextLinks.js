@@ -138,7 +138,7 @@ add_task(function *() {
 
     let popupHiddenPromise = BrowserTestUtils.waitForEvent(contentAreaContextMenu, "popuphidden");
     contentAreaContextMenu.hidePopup();
-    yield popupHiddenPromise;  
+    yield popupHiddenPromise;
   }
 
   gBrowser.removeCurrentTab();

@@ -125,17 +125,17 @@ function runMultipleEnginesTestAndFinalize() {
 }
 
 function searchDiscovery() {
-  var head = doc().getElementById("linkparent");
+  let head = doc().getElementById("linkparent");
 
   if (searchDiscoveryTests.length) {
     setHandlerFunc(runSearchDiscoveryTest);
-    var test = searchDiscoveryTests[0];
-    var link = doc().createElement("link");
+    let test = searchDiscoveryTests[0];
+    let link = doc().createElement("link");
 
-    var rel = test.rel || "search";
-    var href = test.href || "http://so.not.here.mozilla.com/search.xml";
-    var type = test.type || "application/opensearchdescription+xml";
-    var title = test.title || searchDiscoveryTests.length;
+    let rel = test.rel || "search";
+    let href = test.href || "http://so.not.here.mozilla.com/search.xml";
+    let type = test.type || "application/opensearchdescription+xml";
+    let title = test.title || searchDiscoveryTests.length;
     if (test.pass == undefined)
       test.pass = true;
 
@@ -148,12 +148,12 @@ function searchDiscovery() {
     setHandlerFunc(runMultipleEnginesTestAndFinalize);
     setHandlerFunc(runMultipleEnginesTestAndFinalize);
     // Test multiple engines with the same title
-    var link = doc().createElement("link");
+    let link = doc().createElement("link");
     link.rel = "search";
     link.href = "http://first.mozilla.com/search.xml";
     link.type = "application/opensearchdescription+xml";
     link.title = "Test Engine";
-    var link2 = link.cloneNode(false);
+    let link2 = link.cloneNode(false);
     link2.href = "http://second.mozilla.com/search.xml";
 
     head.appendChild(link);

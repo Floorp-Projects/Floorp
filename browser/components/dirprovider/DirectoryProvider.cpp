@@ -117,9 +117,10 @@ AppendDistroSearchDirs(nsIProperties* aDirSvc, nsCOMArray<nsIFile> &array)
 
         defLocalePlugins->AppendNative(defLocale);
         rv = defLocalePlugins->Exists(&exists);
-        if (NS_SUCCEEDED(rv) && exists)
+        if (NS_SUCCEEDED(rv) && exists) {
           array.AppendObject(defLocalePlugins);
           return; // all done
+        }
       }
     }
 
