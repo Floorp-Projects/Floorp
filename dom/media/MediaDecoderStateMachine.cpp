@@ -685,11 +685,6 @@ MediaDecoderStateMachine::OnNotDecoded(MediaData::Type aType,
     } else {
       StopPrerollingVideo();
     }
-    if (mState == DECODER_STATE_BUFFERING ||
-        mState == DECODER_STATE_DECODING ||
-        mState == DECODER_STATE_DECODING_FIRSTFRAME) {
-        MaybeFinishDecodeFirstFrame();
-    }
     return;
   }
 
