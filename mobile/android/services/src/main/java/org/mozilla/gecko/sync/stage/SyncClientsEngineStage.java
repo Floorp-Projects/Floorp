@@ -6,19 +6,27 @@ package org.mozilla.gecko.sync.stage;
 
 import android.accounts.Account;
 import android.content.Context;
+import android.support.annotation.NonNull;
 import android.text.TextUtils;
+import android.util.Log;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.background.common.log.Logger;
+import org.mozilla.gecko.background.fxa.FxAccountClient;
+import org.mozilla.gecko.background.fxa.FxAccountClient20;
+import org.mozilla.gecko.background.fxa.FxAccountClientException;
 import org.mozilla.gecko.fxa.FirefoxAccounts;
 import org.mozilla.gecko.fxa.authenticator.AndroidFxAccount;
 import org.mozilla.gecko.sync.CommandProcessor;
@@ -54,6 +62,7 @@ public class SyncClientsEngineStage extends AbstractSessionManagingSyncStage {
   public static final String STAGE_NAME            = COLLECTION_NAME;
   public static final int CLIENTS_TTL_REFRESH      = 604800000;   // 7 days in milliseconds.
   public static final int MAX_UPLOAD_FAILURE_COUNT = 5;
+  public static final long NOTIFY_TAB_SENT_TTL_SECS = TimeUnit.SECONDS.convert(1L, TimeUnit.HOURS); // 1 hour
 
   protected final ClientRecordFactory factory = new ClientRecordFactory();
   protected ClientUploadDelegate clientUploadDelegate;
@@ -65,7 +74,7 @@ public class SyncClientsEngineStage extends AbstractSessionManagingSyncStage {
   protected volatile boolean shouldWipe;
   protected volatile boolean shouldUploadLocalRecord;     // Set if, e.g., we received commands or need to refresh our version.
   protected final AtomicInteger uploadAttemptsCount = new AtomicInteger();
-  protected final List<ClientRecord> toUpload = new ArrayList<ClientRecord>();
+  protected final List<ClientRecord> modifiedClientsToUpload = new ArrayList<ClientRecord>();
 
   protected int getClientsCount() {
     return getClientsDatabaseAccessor().clientsCount();
@@ -151,11 +160,78 @@ public class SyncClientsEngineStage extends AbstractSessionManagingSyncStage {
 
       // If we upload remote records, checkAndUpload() will be called upon
       // upload success in the delegate. Otherwise call checkAndUpload() now.
-      if (toUpload.size() > 0) {
+      if (modifiedClientsToUpload.size() > 0) {
+        // modifiedClientsToUpload is cleared in uploadRemoteRecords, save what we need here
+        final List<String> devicesToNotify = new ArrayList<>();
+        for (ClientRecord record : modifiedClientsToUpload) {
+          if (!TextUtils.isEmpty(record.fxaDeviceId)) {
+            devicesToNotify.add(record.fxaDeviceId);
+          }
+        }
+
+        // This method is synchronous, there's no risk of notifying the clients
+        // before we actually uploaded the records
         uploadRemoteRecords();
+
+        // Notify the clients who got their record written
+        notifyClients(devicesToNotify);
+
         return;
       }
       checkAndUpload();
+    }
+
+    private void notifyClients(final List<String> devicesToNotify) {
+      final ExecutorService executor = Executors.newSingleThreadExecutor();
+      final Context context = session.getContext();
+      final Account account = FirefoxAccounts.getFirefoxAccount(context);
+      if (account == null) {
+        Log.e(LOG_TAG, "Can't notify other clients: no account");
+        return;
+      }
+      final AndroidFxAccount fxAccount = new AndroidFxAccount(context, account);
+      final ExtendedJSONObject payload = createNotifyDevicesPayload();
+
+      final byte[] sessionToken;
+      try {
+        sessionToken = fxAccount.getSessionToken();
+      } catch (AndroidFxAccount.InvalidFxAState invalidFxAState) {
+        Log.e(LOG_TAG, "Could not get session token", invalidFxAState);
+        return;
+      }
+
+      // API doc : https://github.com/mozilla/fxa-auth-server/blob/master/docs/api.md#post-v1accountdevicesnotify
+      final FxAccountClient fxAccountClient = new FxAccountClient20(fxAccount.getAccountServerURI(), executor);
+      fxAccountClient.notifyDevices(sessionToken, devicesToNotify, payload, NOTIFY_TAB_SENT_TTL_SECS, new FxAccountClient20.RequestDelegate<ExtendedJSONObject>() {
+        @Override
+        public void handleError(Exception e) {
+          Log.e(LOG_TAG, "Error while notifying devices", e);
+        }
+
+        @Override
+        public void handleFailure(FxAccountClientException.FxAccountClientRemoteException e) {
+          Log.e(LOG_TAG, "Error while notifying devices", e);
+        }
+
+        @Override
+        public void handleSuccess(ExtendedJSONObject result) {
+          Log.i(LOG_TAG, devicesToNotify.size() + " devices notified");
+        }
+      });
+    }
+
+    @NonNull
+    @SuppressWarnings("unchecked")
+    private ExtendedJSONObject createNotifyDevicesPayload() {
+      final ExtendedJSONObject payload = new ExtendedJSONObject();
+      payload.put("version", 1);
+      payload.put("command", "sync:collection_changed");
+      final ExtendedJSONObject data = new ExtendedJSONObject();
+      final JSONArray collections = new JSONArray();
+      collections.add("clients");
+      data.put("collections", collections);
+      payload.put("data", data);
+      return payload;
     }
 
     @Override
@@ -290,7 +366,7 @@ public class SyncClientsEngineStage extends AbstractSessionManagingSyncStage {
 
         Logger.debug(LOG_TAG, "Client upload failed. Aborting sync.");
         if (!currentlyUploadingLocalRecord) {
-          toUpload.clear(); // These will be redownloaded.
+          modifiedClientsToUpload.clear(); // These will be redownloaded.
         }
         BaseResource.consumeEntity(response); // The exception thrown should need the response body.
         session.abort(new HTTPFailureException(response), "Client upload failed.");
@@ -474,19 +550,19 @@ public class SyncClientsEngineStage extends AbstractSessionManagingSyncStage {
       }
       record.commands.add(jsonCommand);
     }
-    toUpload.add(record);
+    modifiedClientsToUpload.add(record);
   }
 
   @SuppressWarnings("unchecked")
   protected void uploadRemoteRecords() {
-    Logger.trace(LOG_TAG, "In uploadRemoteRecords. Uploading " + toUpload.size() + " records" );
+    Logger.trace(LOG_TAG, "In uploadRemoteRecords. Uploading " + modifiedClientsToUpload.size() + " records" );
 
-    for (ClientRecord r : toUpload) {
+    for (ClientRecord r : modifiedClientsToUpload) {
       Logger.trace(LOG_TAG, ">> Uploading record " + r.guid + ": " + r.name);
     }
 
-    if (toUpload.size() == 1) {
-      ClientRecord record = toUpload.get(0);
+    if (modifiedClientsToUpload.size() == 1) {
+      ClientRecord record = modifiedClientsToUpload.get(0);
       Logger.debug(LOG_TAG, "Only 1 remote record to upload.");
       Logger.debug(LOG_TAG, "Record last modified: " + record.lastModified);
       CryptoRecord cryptoRecord = encryptClientRecord(record);
@@ -498,7 +574,7 @@ public class SyncClientsEngineStage extends AbstractSessionManagingSyncStage {
     }
 
     JSONArray cryptoRecords = new JSONArray();
-    for (ClientRecord record : toUpload) {
+    for (ClientRecord record : modifiedClientsToUpload) {
       Logger.trace(LOG_TAG, "Record " + record.guid + " is being uploaded" );
 
       CryptoRecord cryptoRecord = encryptClientRecord(record);
@@ -547,7 +623,7 @@ public class SyncClientsEngineStage extends AbstractSessionManagingSyncStage {
   public void clearRecordsToUpload() {
     try {
       getClientsDatabaseAccessor().wipeCommandsTable();
-      toUpload.clear();
+      modifiedClientsToUpload.clear();
     } finally {
       closeDataAccessor();
     }

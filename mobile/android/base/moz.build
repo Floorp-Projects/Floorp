@@ -139,7 +139,6 @@ gujar.sources += [geckoview_source_dir + 'java/org/mozilla/gecko/' + x for x in 
     'util/UIAsyncTask.java',
     'util/UUIDUtil.java',
     'util/WeakReferenceHandler.java',
-    'util/WebActivityMapper.java',
     'util/WindowUtils.java',
 ]]
 gujar.extra_jars = [

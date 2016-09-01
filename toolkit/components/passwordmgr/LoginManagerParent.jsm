@@ -84,7 +84,7 @@ var LoginManagerParent = {
                           data.usernameField,
                           data.newPasswordField,
                           data.oldPasswordField,
-                          msg.objects.openerWin,
+                          msg.objects.openerTopWindow,
                           msg.target);
         break;
       }
@@ -287,21 +287,14 @@ var LoginManagerParent = {
 
   onFormSubmit: function(hostname, formSubmitURL,
                          usernameField, newPasswordField,
-                         oldPasswordField, opener,
+                         oldPasswordField, openerTopWindow,
                          target) {
     function getPrompter() {
       var prompterSvc = Cc["@mozilla.org/login-manager/prompter;1"].
                         createInstance(Ci.nsILoginManagerPrompter);
-      // XXX For E10S, we don't want to use the browser's contentWindow
-      // because it's in another process, so we use our chrome window as
-      // the window parent (the content process is responsible for
-      // making sure that its window is not in private browsing mode).
-      // In the same-process case, we can simply use the content window.
-      prompterSvc.init(target.isRemoteBrowser ?
-                          target.ownerDocument.defaultView :
-                          target.contentWindow);
-      if (target.isRemoteBrowser)
-        prompterSvc.setE10sData(target, opener);
+      prompterSvc.init(target.ownerDocument.defaultView);
+      prompterSvc.browser = target;
+      prompterSvc.opener = openerTopWindow;
       return prompterSvc;
     }
 

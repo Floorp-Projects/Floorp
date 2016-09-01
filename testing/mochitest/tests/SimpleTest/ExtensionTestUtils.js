@@ -83,6 +83,23 @@ ExtensionTestUtils.loadExtension = function(ext)
     },
   };
 
+  // Mimic serialization of functions as done in `Extension.generateXPI` and
+  // `Extension.generateZipFile` because functions are dropped when `ext` object
+  // is sent to the main process via the message manager.
+  ext = Object.assign({}, ext);
+  if (ext.files) {
+    ext.files = Object.assign({}, ext.files);
+    for (let filename of Object.keys(ext.files)) {
+      let file = ext.files[filename];
+      if (typeof file == "function") {
+        ext.files[filename] = `(${file})();`
+      }
+    }
+  }
+  if (typeof ext.background == "function") {
+    ext.background = `(${ext.background})();`
+  }
+
   var extension = SpecialPowers.loadExtension(ext, handler);
 
   registerCleanup(() => {

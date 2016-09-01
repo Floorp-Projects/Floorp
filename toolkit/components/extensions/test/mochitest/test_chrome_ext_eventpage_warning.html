@@ -25,10 +25,10 @@ function createEventPageExtension(eventPage) {
       "background": eventPage,
     },
     files: {
-      "event-page-script.js": `(${eventPageScript})()`,
+      "event-page-script.js": eventPageScript,
       "event-page.html": `<html><head>
         <meta charset="utf-8">
-        <script src="event-page-script.js"></${"script"}>
+        <script src="event-page-script.js"><\/script>
       </head></html>`,
     },
   });

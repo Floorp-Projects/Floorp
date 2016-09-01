@@ -132,7 +132,7 @@ add_task(function* webnav_transitions_props() {
         "webNavigation",
       ],
     },
-    background: `(${backgroundScriptTransitions})()`,
+    background: backgroundScriptTransitions,
   };
 
   let extension = ExtensionTestUtils.loadExtension(extensionData);
@@ -349,7 +349,7 @@ add_task(function* webnav_ordering() {
         "webNavigation",
       ],
     },
-    background: "(" + backgroundScript.toString() + ")()",
+    background: backgroundScript,
   };
 
   let extension = ExtensionTestUtils.loadExtension(extensionData);
@@ -515,7 +515,7 @@ add_task(function* webnav_error_event() {
         "webNavigation",
       ],
     },
-    background: `(${backgroundScriptErrorEvent})()`,
+    background: backgroundScriptErrorEvent,
   };
 
   let extension = ExtensionTestUtils.loadExtension(extensionData);

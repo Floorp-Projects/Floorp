@@ -22,7 +22,7 @@ function loadContentScriptExtension(contentScript) {
       }],
     },
     files: {
-      "contentscript.js": `(${contentScript})();`,
+      "contentscript.js": contentScript,
     },
   };
   return ExtensionTestUtils.loadExtension(extensionData);

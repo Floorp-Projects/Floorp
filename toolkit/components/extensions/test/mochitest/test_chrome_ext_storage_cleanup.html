@@ -106,7 +106,7 @@ add_task(function* test_uninstall() {
   });
 
   let extension = ExtensionTestUtils.loadExtension({
-    background: `(${writeData})()`,
+    background: writeData,
     manifest: {
       applications: {gecko: {id: ID}},
       permissions: ["storage"],
@@ -125,7 +125,7 @@ add_task(function* test_uninstall() {
   // it is actually a meaningful test!
   yield SpecialPowers.popPrefEnv();
   extension = ExtensionTestUtils.loadExtension({
-    background: `(${readData})()`,
+    background: readData,
     manifest: {
       applications: {gecko: {id: ID}},
       permissions: ["storage"],
@@ -143,7 +143,7 @@ add_task(function* test_uninstall() {
 
   // Read again.  This time, our data should be gone.
   extension = ExtensionTestUtils.loadExtension({
-    background: `(${readData})()`,
+    background: readData,
     manifest: {
       applications: {gecko: {id: ID}},
       permissions: ["storage"],

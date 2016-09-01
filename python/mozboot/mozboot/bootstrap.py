@@ -417,7 +417,7 @@ def current_firefox_checkout(check_output, hg=None):
         if hg and os.path.exists(hg_dir):
             # Verify the hg repo is a Firefox repo by looking at rev 0.
             try:
-                node = check_output([hg, 'log', '-r', '0', '-T', '{node}'], cwd=path)
+                node = check_output([hg, 'log', '-r', '0', '--template', '{node}'], cwd=path)
                 if node in HG_ROOT_REVISIONS:
                     return 'hg'
                 # Else the root revision is different. There could be nested

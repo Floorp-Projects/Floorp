@@ -14,7 +14,7 @@
 "use strict";
 
 add_task(function* test_webnav_unresolved_uri_on_expected_URI_scheme() {
-  function backgroundScript() {
+  function background() {
     let lastTest;
 
     function cleanupTestListeners() {
@@ -70,7 +70,7 @@ add_task(function* test_webnav_unresolved_uri_on_expected_URI_scheme() {
         "webNavigation",
       ],
     },
-    background: "new " + backgroundScript,
+    background,
   };
 
   let extension = ExtensionTestUtils.loadExtension(extensionData);
@@ -257,7 +257,7 @@ add_task(function* test_webnav_unresolved_uri_on_expected_URI_scheme() {
 });
 
 add_task(function* test_webnav_empty_filter_validation_error() {
-  function backgroundScript() {
+  function background() {
     let catchedException;
 
     try {
@@ -287,7 +287,7 @@ add_task(function* test_webnav_empty_filter_validation_error() {
         "webNavigation",
       ],
     },
-    background: "new " + backgroundScript,
+    background,
   });
 
   yield extension.startup();
