@@ -46,7 +46,8 @@ class SyntaxParseHandler
         NodeThrow,
         NodeEmptyStatement,
 
-        NodeDeclaration,
+        NodeVarDeclaration,
+        NodeLexicalDeclaration,
 
         NodeFunctionDefinition,
 
@@ -376,22 +377,25 @@ class SyntaxParseHandler
     }
 
     Node newDeclarationList(ParseNodeKind kind, JSOp op = JSOP_NOP) {
-        return NodeDeclaration;
+        if (kind == PNK_VAR)
+            return NodeVarDeclaration;
+        MOZ_ASSERT(kind == PNK_LET || kind == PNK_CONST);
+        return NodeLexicalDeclaration;
     }
     Node newDeclarationList(ParseNodeKind kind, Node kid, JSOp op = JSOP_NOP) {
-        return NodeDeclaration;
+        return newDeclarationList(kind, op);
     }
 
     bool isDeclarationList(Node node) {
-        return node == NodeDeclaration;
+        return node == NodeVarDeclaration || node == NodeLexicalDeclaration;
     }
 
     Node singleBindingFromDeclaration(Node decl) {
         MOZ_ASSERT(isDeclarationList(decl));
 
-        // This is, unfortunately, very dodgy.  Obviously NodeDeclaration
-        // can store no info on the arbitrary number of bindings it could
-        // contain.
+        // This is, unfortunately, very dodgy.  Obviously NodeVarDeclaration
+        // and NodeLexicalDeclaration can store no info on the arbitrary
+        // number of bindings it could contain.
         //
         // But this method is called only for cloning for-in/of declarations
         // as initialization targets.  That context simplifies matters.  If the
@@ -419,7 +423,8 @@ class SyntaxParseHandler
                    list == NodeUnparenthesizedArray ||
                    list == NodeUnparenthesizedObject ||
                    list == NodeUnparenthesizedCommaExpr ||
-                   list == NodeDeclaration ||
+                   list == NodeVarDeclaration ||
+                   list == NodeLexicalDeclaration ||
                    list == NodeFunctionCall);
     }
 
@@ -442,7 +447,7 @@ class SyntaxParseHandler
     }
 
     bool isStatementPermittedAfterReturnStatement(Node pn) {
-        return pn == NodeFunctionDefinition || pn == NodeDeclaration ||
+        return pn == NodeFunctionDefinition || pn == NodeVarDeclaration ||
                pn == NodeBreak ||
                pn == NodeThrow ||
                pn == NodeEmptyStatement;
