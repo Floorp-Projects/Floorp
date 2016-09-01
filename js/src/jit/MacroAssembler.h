@@ -1339,6 +1339,12 @@ class MacroAssembler : public MacroAssemblerSpecific
     void wasmCallBuiltinInstanceMethod(const ABIArg& instanceArg,
                                        wasm::SymbolicAddress builtin);
 
+  public:
+    // ========================================================================
+    // Clamping functions.
+
+    inline void clampIntToUint8(Register reg) PER_SHARED_ARCH;
+
     //}}} check_macroassembler_style
   public:
 
