@@ -84,3 +84,13 @@ def target_tasks_ash_tasks(full_task_graph, parameters):
             return False
         return True
     return [l for l, t in full_task_graph.tasks.iteritems() if filter(t)]
+
+
+@_target_task('nightly_fennec')
+def target_tasks_nightly(full_task_graph, parameters):
+    """Select the set of tasks required for a nightly build of fennec. The
+    nightly build process involves a pipeline of builds, signing,
+    and, eventually, uploading the tasks to balrog."""
+    return [t.label for t in full_task_graph.tasks.itervalues()
+            if t.attributes.get('kind') in ['nightly-fennec', 'signing']]
+
