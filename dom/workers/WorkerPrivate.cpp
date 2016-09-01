@@ -290,7 +290,7 @@ LogErrorToConsole(const nsAString& aMessage,
 
   nsCOMPtr<nsIScriptError> scriptError =
     do_CreateInstance(NS_SCRIPTERROR_CONTRACTID);
-  NS_WARN_IF_FALSE(scriptError, "Failed to create script error!");
+  NS_WARNING_ASSERTION(scriptError, "Failed to create script error!");
 
   if (scriptError) {
     if (NS_FAILED(scriptError->InitWithWindowID(aMessage, aFilename, aLine,
@@ -304,7 +304,7 @@ LogErrorToConsole(const nsAString& aMessage,
 
   nsCOMPtr<nsIConsoleService> consoleService =
     do_GetService(NS_CONSOLESERVICE_CONTRACTID);
-  NS_WARN_IF_FALSE(consoleService, "Failed to get console service!");
+  NS_WARNING_ASSERTION(consoleService, "Failed to get console service!");
 
   if (consoleService) {
     if (scriptError) {
@@ -2436,9 +2436,9 @@ WorkerPrivateParent<Derived>::GetEventTarget()
     target = mEventTarget;
   }
 
-  NS_WARN_IF_FALSE(target,
-                   "Requested event target for a worker that is already "
-                   "shutting down!");
+  NS_WARNING_ASSERTION(
+    target,
+    "Requested event target for a worker that is already shutting down!");
 
   return target.forget();
 }

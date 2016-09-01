@@ -631,8 +631,8 @@ nsContentSecurityManager::IsOriginPotentiallyTrustworthy(nsIPrincipal* aPrincipa
   // Blobs are expected to inherit their principal so we don't expect to have
   // a codebase principal with scheme 'blob' here.  We can't assert that though
   // since someone could mess with a non-blob URI to give it that scheme.
-  NS_WARN_IF_FALSE(!scheme.EqualsLiteral("blob"),
-                   "IsOriginPotentiallyTrustworthy ignoring blob scheme");
+  NS_WARNING_ASSERTION(!scheme.EqualsLiteral("blob"),
+                       "IsOriginPotentiallyTrustworthy ignoring blob scheme");
 
   // According to the specification, the user agent may choose to extend the
   // trust to other, vendor-specific URL schemes. We use this for "resource:",

@@ -345,7 +345,7 @@ nsNavHistory::GetRecentFlags(nsIURI *aURI)
   uint32_t result = 0;
   nsAutoCString spec;
   nsresult rv = aURI->GetSpec(spec);
-  NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Unable to get aURI's spec");
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Unable to get aURI's spec");
 
   if (NS_SUCCEEDED(rv)) {
     if (CheckIsRecentEvent(&mRecentTyped, spec))
@@ -569,7 +569,7 @@ public:
       nsCOMPtr<nsIURI> uri;
       (void)NS_NewURI(getter_AddRefs(uri), mSpec);
       // We cannot assert since some automated tests are checking this path.
-      NS_WARN_IF_FALSE(uri, "Invalid URI in FrecencyNotification");
+      NS_WARNING_ASSERTION(uri, "Invalid URI in FrecencyNotification");
       // Notify a frecency change only if we have a valid uri, otherwise
       // the observer couldn't gather any useful data from the notification.
       if (uri) {
@@ -2341,7 +2341,8 @@ nsNavHistory::EndUpdateBatch()
   if (--mBatchLevel == 0) {
     if (mBatchDBTransaction) {
       DebugOnly<nsresult> rv = mBatchDBTransaction->Commit();
-      NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Batch failed to commit transaction");
+      NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                           "Batch failed to commit transaction");
       delete mBatchDBTransaction;
       mBatchDBTransaction = nullptr;
     }
@@ -2861,7 +2862,7 @@ nsNavHistory::OnBeginVacuum(bool* _vacuumGranted)
 NS_IMETHODIMP
 nsNavHistory::OnEndVacuum(bool aSucceeded)
 {
-  NS_WARN_IF_FALSE(aSucceeded, "Places.sqlite vacuum failed.");
+  NS_WARNING_ASSERTION(aSucceeded, "Places.sqlite vacuum failed.");
   return NS_OK;
 }
 

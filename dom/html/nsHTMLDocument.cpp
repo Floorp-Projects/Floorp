@@ -746,7 +746,7 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
                  "How did those end up different here?  wyciwyg channels are "
                  "not nsICachingChannel");
     rv = cachingChan->SetCacheTokenCachedCharset(charset);
-    NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "cannot SetMetaDataElement");
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "cannot SetMetaDataElement");
     rv = NS_OK; // don't propagate error
   }
 

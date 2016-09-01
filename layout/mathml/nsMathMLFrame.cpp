@@ -163,8 +163,9 @@ nsMathMLFrame::GetPresentationDataFrom(nsIFrame*           aFrame,
     }
     frame = frame->GetParent();
   }
-  NS_WARN_IF_FALSE(frame && frame->GetContent(),
-                   "bad MathML markup - could not find the top <math> element");
+  NS_WARNING_ASSERTION(
+    frame && frame->GetContent(),
+    "bad MathML markup - could not find the top <math> element");
 }
 
 /* static */ void

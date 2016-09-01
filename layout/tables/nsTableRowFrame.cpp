@@ -48,10 +48,10 @@ struct TableCellReflowInput : public ReflowInput
 void TableCellReflowInput::FixUp(const LogicalSize& aAvailSpace)
 {
   // fix the mComputed values during a pass 2 reflow since the cell can be a percentage base
-  NS_WARN_IF_FALSE(NS_UNCONSTRAINEDSIZE != aAvailSpace.ISize(mWritingMode),
-                   "have unconstrained inline-size; this should only result from "
-                   "very large sizes, not attempts at intrinsic inline size "
-                   "calculation");
+  NS_WARNING_ASSERTION(
+    NS_UNCONSTRAINEDSIZE != aAvailSpace.ISize(mWritingMode),
+    "have unconstrained inline-size; this should only result from very large "
+    "sizes, not attempts at intrinsic inline size calculation");
   if (NS_UNCONSTRAINEDSIZE != ComputedISize()) {
     nscoord computedISize = aAvailSpace.ISize(mWritingMode) -
       ComputedLogicalBorderPadding().IStartEnd(mWritingMode);

@@ -397,9 +397,9 @@ nsTransitionManager::StyleContextChanged(dom::Element *aElement,
     return;
   }
 
-  NS_WARN_IF_FALSE(!mPresContext->EffectCompositor()->
-                     HasThrottledStyleUpdates(),
-                   "throttled animations not up to date");
+  NS_WARNING_ASSERTION(
+    !mPresContext->EffectCompositor()->HasThrottledStyleUpdates(),
+    "throttled animations not up to date");
 
   // Compute what the css-transitions spec calls the "after-change
   // style", which is the new style without any data from transitions,

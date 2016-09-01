@@ -379,7 +379,7 @@ nsWeakFrame::Init(nsIFrame* aFrame)
   mFrame = aFrame;
   if (mFrame) {
     nsIPresShell* shell = mFrame->PresContext()->GetPresShell();
-    NS_WARN_IF_FALSE(shell, "Null PresShell in nsWeakFrame!");
+    NS_WARNING_ASSERTION(shell, "Null PresShell in nsWeakFrame!");
     if (shell) {
       shell->AddWeakFrame(this);
     } else {
@@ -657,18 +657,18 @@ nsFrame::DestroyFrom(nsIFrame* aDestructRoot)
     // Delete previous sibling's reference to me.
     nsIFrame* prevSib = Properties().Get(nsIFrame::IBSplitPrevSibling());
     if (prevSib) {
-      NS_WARN_IF_FALSE(this ==
-         prevSib->Properties().Get(nsIFrame::IBSplitSibling()),
-         "IB sibling chain is inconsistent");
+      NS_WARNING_ASSERTION(
+        this == prevSib->Properties().Get(nsIFrame::IBSplitSibling()),
+        "IB sibling chain is inconsistent");
       prevSib->Properties().Delete(nsIFrame::IBSplitSibling());
     }
 
     // Delete next sibling's reference to me.
     nsIFrame* nextSib = Properties().Get(nsIFrame::IBSplitSibling());
     if (nextSib) {
-      NS_WARN_IF_FALSE(this ==
-         nextSib->Properties().Get(nsIFrame::IBSplitPrevSibling()),
-         "IB sibling chain is inconsistent");
+      NS_WARNING_ASSERTION(
+        this == nextSib->Properties().Get(nsIFrame::IBSplitPrevSibling()),
+        "IB sibling chain is inconsistent");
       nextSib->Properties().Delete(nsIFrame::IBSplitPrevSibling());
     }
   }

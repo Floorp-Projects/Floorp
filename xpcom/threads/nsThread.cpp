@@ -1171,8 +1171,8 @@ nsThread::AddObserver(nsIThreadObserver* aObserver)
     return NS_ERROR_NOT_SAME_THREAD;
   }
 
-  NS_WARN_IF_FALSE(!mEventObservers.Contains(aObserver),
-                   "Adding an observer twice!");
+  NS_WARNING_ASSERTION(!mEventObservers.Contains(aObserver),
+                       "Adding an observer twice!");
 
   if (!mEventObservers.AppendElement(WrapNotNull(aObserver))) {
     NS_WARNING("Out of memory!");

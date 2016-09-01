@@ -301,9 +301,9 @@ nsScriptErrorBase::ToString(nsACString& /*UTF8*/ aResult)
 NS_IMETHODIMP
 nsScriptErrorBase::GetOuterWindowID(uint64_t* aOuterWindowID)
 {
-    NS_WARN_IF_FALSE(NS_IsMainThread() || mInitializedOnMainThread,
-                     "This can't be safely determined off the main thread, "
-                     "returning an inaccurate value!");
+    NS_WARNING_ASSERTION(NS_IsMainThread() || mInitializedOnMainThread,
+                         "This can't be safely determined off the main thread, "
+                         "returning an inaccurate value!");
 
     if (!mInitializedOnMainThread && NS_IsMainThread()) {
         InitializeOnMainThread();
@@ -330,9 +330,9 @@ nsScriptErrorBase::GetTimeStamp(int64_t* aTimeStamp)
 NS_IMETHODIMP
 nsScriptErrorBase::GetIsFromPrivateWindow(bool* aIsFromPrivateWindow)
 {
-    NS_WARN_IF_FALSE(NS_IsMainThread() || mInitializedOnMainThread,
-                     "This can't be safely determined off the main thread, "
-                     "returning an inaccurate value!");
+    NS_WARNING_ASSERTION(NS_IsMainThread() || mInitializedOnMainThread,
+                         "This can't be safely determined off the main thread, "
+                         "returning an inaccurate value!");
 
     if (!mInitializedOnMainThread && NS_IsMainThread()) {
         InitializeOnMainThread();

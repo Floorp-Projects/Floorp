@@ -2229,8 +2229,8 @@ nsFrameLoader::CheckForRecursiveLoad(nsIURI* aURI)
   // Check that we're still in the docshell tree.
   nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
   mDocShell->GetTreeOwner(getter_AddRefs(treeOwner));
-  NS_WARN_IF_FALSE(treeOwner,
-                   "Trying to load a new url to a docshell without owner!");
+  NS_WARNING_ASSERTION(treeOwner,
+                       "Trying to load a new url to a docshell without owner!");
   NS_ENSURE_STATE(treeOwner);
 
   if (mDocShell->ItemType() != nsIDocShellTreeItem::typeContent) {

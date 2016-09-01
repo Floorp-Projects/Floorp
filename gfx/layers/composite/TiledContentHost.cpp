@@ -296,8 +296,9 @@ TiledLayerBufferComposite::UseTiles(const SurfaceDescriptorTiles& aTiles,
     TileHost& tile = mRetainedTiles[i];
 
     if (tileDesc.type() != TileDescriptor::TTexturedTileDescriptor) {
-      NS_WARN_IF_FALSE(tileDesc.type() == TileDescriptor::TPlaceholderTileDescriptor,
-                       "Unrecognised tile descriptor type");
+      NS_WARNING_ASSERTION(
+        tileDesc.type() == TileDescriptor::TPlaceholderTileDescriptor,
+        "Unrecognised tile descriptor type");
       continue;
     }
 
