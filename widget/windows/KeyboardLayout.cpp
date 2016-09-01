@@ -2348,11 +2348,23 @@ NativeKey::WillDispatchKeyboardEvent(WidgetKeyboardEvent& aKeyboardEvent,
     return;
   }
 
+  // Check if aKeyboardEvent is the last event for a key press.
+  // So, if it's not an eKeyPress event, it's always the last event.
+  // Otherwise, check if the index is the last character of
+  // mCommittedCharsAndModifiers.
+  bool isLastIndex =
+    aKeyboardEvent.mMessage != eKeyPress ||
+    mCommittedCharsAndModifiers.IsEmpty() ||
+    mCommittedCharsAndModifiers.mLength - 1 == aIndex;
+
   nsTArray<AlternativeCharCode>& altArray =
     aKeyboardEvent.mAlternativeCharCodes;
 
-  uint16_t shiftedChar = 0, unshiftedChar = 0;
-  if (skipUniChars <= aIndex) {
+  // Set charCode and adjust modifier state for every eKeyPress event.
+  // This is not necessary for the other keyboard events because the other
+  // keyboard events shouldn't have non-zero charCode value and should have
+  // current modifier state.
+  if (aKeyboardEvent.mMessage == eKeyPress && skipUniChars <= aIndex) {
     // XXX Modifying modifier state of aKeyboardEvent is illegal, but no way
     //     to set different modifier state per keypress event except this
     //     hack.  Note that ideally, dead key should cause composition events
@@ -2381,19 +2393,44 @@ NativeKey::WillDispatchKeyboardEvent(WidgetKeyboardEvent& aKeyboardEvent,
     aKeyboardEvent.SetCharCode(uniChar);
   }
 
-  if (skipShiftedChars <= aIndex) {
-    shiftedChar = mShiftedString.mChars[aIndex - skipShiftedChars];
+  // We need to append alterntaive charCode values:
+  //   - if the event is eKeyPress, we need to append for the index because
+  //     eKeyPress event is dispatched for every character inputted by a
+  //     key press.
+  //   - if the event is not eKeyPress, we need to append for all characters
+  //     inputted by the key press because the other keyboard events (e.g.,
+  //     eKeyDown are eKeyUp) are fired only once for a key press.
+  size_t count;
+  if (aKeyboardEvent.mMessage == eKeyPress) {
+    // Basically, append alternative charCode values only for the index.
+    count = 1;
+    // However, if it's the last eKeyPress event but different shift state
+    // can input longer string, the last eKeyPress event should have all
+    // remaining alternative charCode values.
+    if (isLastIndex) {
+      count = longestLength - aIndex;
+    }
+  } else {
+    count = longestLength;
   }
-  if (skipUnshiftedChars <= aIndex) {
-    unshiftedChar = mUnshiftedString.mChars[aIndex - skipUnshiftedChars];
-  }
+  for (size_t i = 0; i < count; ++i) {
+    uint16_t shiftedChar = 0, unshiftedChar = 0;
+    if (skipShiftedChars <= aIndex + i) {
+      shiftedChar = mShiftedString.mChars[aIndex + i - skipShiftedChars];
+    }
+    if (skipUnshiftedChars <= aIndex + i) {
+      unshiftedChar = mUnshiftedString.mChars[aIndex + i - skipUnshiftedChars];
+    }
 
-  if (shiftedChar || unshiftedChar) {
-    AlternativeCharCode chars(unshiftedChar, shiftedChar);
-    altArray.AppendElement(chars);
-  }
+    if (shiftedChar || unshiftedChar) {
+      AlternativeCharCode chars(unshiftedChar, shiftedChar);
+      altArray.AppendElement(chars);
+    }
 
-  if (aIndex == longestLength - 1) {
+    if (!isLastIndex) {
+      continue;
+    }
+
     if (mUnshiftedLatinChar || mShiftedLatinChar) {
       AlternativeCharCode chars(mUnshiftedLatinChar, mShiftedLatinChar);
       altArray.AppendElement(chars);
