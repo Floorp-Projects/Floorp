@@ -108,7 +108,7 @@ nsNameSpaceManager::RegisterNameSpace(const nsAString& aURI,
   }
 
   NS_POSTCONDITION(aNameSpaceID >= -1, "Bogus namespace ID");
-  
+
   return rv;
 }
 
