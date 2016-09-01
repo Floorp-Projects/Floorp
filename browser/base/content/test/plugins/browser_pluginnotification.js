@@ -481,7 +481,7 @@ add_task(function* () {
       Assert.ok(overlayRect.width == 200 && overlayRect.height == 200,
         "Test 21c, plugin " + args.id + " should have click-to-play overlay with zero dims");
     });
-    
+
 
     let pluginInfo = yield promiseForPluginInfo(id);
     ok(!pluginInfo.activated, "Test 21c, Plugin with id=" + id + " should not be activated");

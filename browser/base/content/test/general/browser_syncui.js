@@ -137,7 +137,7 @@ function checkButtonsStatus(shouldBeActive) {
     ]) {
     let elt = document.getElementById(eid);
     if (shouldBeActive) {
-      Assert.equal(elt.getAttribute("syncstatus"), "active", `${eid} should be active`);;
+      Assert.equal(elt.getAttribute("syncstatus"), "active", `${eid} should be active`);
     } else {
       Assert.ok(!elt.hasAttribute("syncstatus"), `${eid} should have no status attr`);
     }

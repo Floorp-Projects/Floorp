@@ -24,7 +24,7 @@ var gFrontProgressListener = {
     is(state, gFrontNotifications[gFrontNotificationsPos], "Got a notification for the front notifications listener");
     gFrontNotificationsPos++;
   },
-  
+
   onStatusChange: function (aWebProgress, aRequest, aStatus, aMessage) {
   },
 
@@ -62,7 +62,7 @@ var gAllProgressListener = {
     is(state, gAllNotifications[gAllNotificationsPos], "Got a notification for the all notifications listener");
     gAllNotificationsPos++;
   },
-  
+
   onStatusChange: function (aBrowser, aWebProgress, aRequest, aStatus, aMessage) {
     var state = "onStatusChange";
     ok(aBrowser == gTestBrowser, state + " notification came from the correct browser");

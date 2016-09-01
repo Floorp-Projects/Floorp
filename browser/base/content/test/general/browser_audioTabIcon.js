@@ -4,16 +4,15 @@ function* wait_for_tab_playing_event(tab, expectPlaying) {
   if (tab.soundPlaying == expectPlaying) {
     ok(true, "The tab should " + (expectPlaying ? "" : "not ") + "be playing");
     return true;
-  } else {
-    yield BrowserTestUtils.waitForEvent(tab, "TabAttrModified", false, (event) => {
-      if (event.detail.changed.indexOf("soundplaying") >= 0) {
-        is(tab.hasAttribute("soundplaying"), expectPlaying, "The tab should " + (expectPlaying ? "" : "not ") + "be playing");
-        is(tab.soundPlaying, expectPlaying, "The tab should " + (expectPlaying ? "" : "not ") + "be playing");
-        return true;
-      }
-      return false;
-    });
   }
+  return yield BrowserTestUtils.waitForEvent(tab, "TabAttrModified", false, (event) => {
+    if (event.detail.changed.indexOf("soundplaying") >= 0) {
+      is(tab.hasAttribute("soundplaying"), expectPlaying, "The tab should " + (expectPlaying ? "" : "not ") + "be playing");
+      is(tab.soundPlaying, expectPlaying, "The tab should " + (expectPlaying ? "" : "not ") + "be playing");
+      return true;
+    }
+    return false;
+  });
 }
 
 function* play(tab) {
@@ -230,6 +229,7 @@ function* test_swapped_browser_while_playing(oldTab, newBrowser) {
     if (event.detail.changed.indexOf("soundplaying") >= 0) {
       return (++receivedSoundPlaying == 2);
     }
+    return false;
   });
 
   ok(newTab.hasAttribute("muted"), "Expected the correct muted attribute on the new tab");

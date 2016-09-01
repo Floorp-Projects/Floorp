@@ -27,8 +27,9 @@ SVGAElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
   return SVGAElementBinding::Wrap(aCx, this, aGivenProto);
 }
 
-nsSVGElement::StringInfo SVGAElement::sStringInfo[2] =
+nsSVGElement::StringInfo SVGAElement::sStringInfo[3] =
 {
+  { &nsGkAtoms::href, kNameSpaceID_None, true },
   { &nsGkAtoms::href, kNameSpaceID_XLink, true },
   { &nsGkAtoms::target, kNameSpaceID_None, true }
 };
@@ -74,7 +75,9 @@ SVGAElement::~SVGAElement()
 already_AddRefed<SVGAnimatedString>
 SVGAElement::Href()
 {
-  return mStringAttributes[HREF].ToDOMAnimatedString(this);
+  return mStringAttributes[HREF].IsExplicitlySet()
+         ? mStringAttributes[HREF].ToDOMAnimatedString(this)
+         : mStringAttributes[XLINK_HREF].ToDOMAnimatedString(this);
 }
 
 //----------------------------------------------------------------------
@@ -228,8 +231,12 @@ SVGAElement::IsLink(nsIURI** aURI) const
     { &nsGkAtoms::_empty, &nsGkAtoms::onRequest, nullptr };
 
   // Optimization: check for href first for early return
-  const nsAttrValue* href = mAttrsAndChildren.GetAttr(nsGkAtoms::href,
-                                                      kNameSpaceID_XLink);
+  bool useXLink = !HasAttr(kNameSpaceID_None, nsGkAtoms::href);
+  const nsAttrValue* href =
+    useXLink
+    ? mAttrsAndChildren.GetAttr(nsGkAtoms::href, kNameSpaceID_XLink)
+    : mAttrsAndChildren.GetAttr(nsGkAtoms::href, kNameSpaceID_None);
+
   if (href &&
       FindAttrValueIn(kNameSpaceID_XLink, nsGkAtoms::type,
                       sTypeVals, eCaseMatters) !=
@@ -243,9 +250,9 @@ SVGAElement::IsLink(nsIURI** aURI) const
     nsCOMPtr<nsIURI> baseURI = GetBaseURI();
     // Get absolute URI
     nsAutoString str;
-    mStringAttributes[HREF].GetAnimValue(str, this);
-    nsContentUtils::NewURIWithDocumentCharset(aURI, str,
-                                              OwnerDoc(), baseURI);
+    const uint8_t idx = useXLink ? XLINK_HREF : HREF;
+    mStringAttributes[idx].GetAnimValue(str, this);
+    nsContentUtils::NewURIWithDocumentCharset(aURI, str, OwnerDoc(), baseURI);
     // must promise out param is non-null if we return true
     return !!*aURI;
   }
@@ -297,7 +304,9 @@ SVGAElement::SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
   // we will need the updated attribute value because notifying the document
   // that content states have changed will call IntrinsicState, which will try
   // to get updated information about the visitedness from Link.
-  if (aName == nsGkAtoms::href && aNameSpaceID == kNameSpaceID_XLink) {
+  if (aName == nsGkAtoms::href &&
+      (aNameSpaceID == kNameSpaceID_XLink ||
+       aNameSpaceID == kNameSpaceID_None)) {
     Link::ResetLinkState(!!aNotify, true);
   }
 
@@ -315,8 +324,12 @@ SVGAElement::UnsetAttr(int32_t aNameSpaceID, nsIAtom* aAttr,
   // we will need the updated attribute value because notifying the document
   // that content states have changed will call IntrinsicState, which will try
   // to get updated information about the visitedness from Link.
-  if (aAttr == nsGkAtoms::href && aNameSpaceID == kNameSpaceID_XLink) {
-    Link::ResetLinkState(!!aNotify, false);
+  if (aAttr == nsGkAtoms::href &&
+      (aNameSpaceID == kNameSpaceID_XLink ||
+       aNameSpaceID == kNameSpaceID_None)) {
+    bool hasHref = HasAttr(kNameSpaceID_None, nsGkAtoms::href) ||
+                   HasAttr(kNameSpaceID_XLink, nsGkAtoms::href);
+    Link::ResetLinkState(!!aNotify, hasHref);
   }
 
   return rv;

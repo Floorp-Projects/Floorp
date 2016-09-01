@@ -1,0 +1,131 @@
+<!DOCTYPE HTML>
+<html>
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+<head>
+  <meta charset="utf-8">
+  <title>Test for PresentationAvailability</title>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1228508">Test PresentationAvailability</a>
+<script type="application/javascript;version=1.8">
+
+"use strict";
+
+var testDevice = {
+  id: 'id',
+  name: 'name',
+  type: 'type',
+};
+
+var gScript = SpecialPowers.loadChromeScript(SimpleTest.getTestFileURL('PresentationDeviceInfoChromeScript.js'));
+var request;
+var availability;
+
+function testSetup() {
+  return new Promise(function(aResolve, aReject) {
+    gScript.addMessageListener('setup-complete', function() {
+      aResolve();
+    });
+    gScript.sendAsyncMessage('setup');
+  });
+}
+
+function testInitialUnavailable() {
+  request = new PresentationRequest("https://example.com");
+
+  return request.getAvailability().then(function(aAvailability) {
+    is(aAvailability.value, false, "Should have no available device after setup");
+    aAvailability.onchange = function() {
+      aAvailability.onchange = null;
+      ok(aAvailability.value, "Device should be available.");
+    }
+    availability = aAvailability;
+    gScript.sendAsyncMessage('trigger-device-add', testDevice);
+  }).catch(function(aError) {
+    ok(false, "Error occurred when getting availability: " + aError);
+    teardown();
+  });
+}
+
+function testInitialAvailable() {
+  let anotherRequest = new PresentationRequest("https://example.net");
+  return anotherRequest.getAvailability().then(function(aAvailability) {
+    is(aAvailability.value, true, "Should have available device initially");
+    isnot(aAvailability, availability, "Should get different availability object for different request URL");
+  }).catch(function(aError) {
+    ok(false, "Error occurred when getting availability: " + aError);
+    teardown();
+  });
+}
+
+function testSameObject() {
+  let sameUrlRequest = new PresentationRequest("https://example.com");
+  return sameUrlRequest.getAvailability().then(function(aAvailability) {
+    is(aAvailability, availability, "Should get same availability object for same request URL");
+  }).catch(function(aError) {
+    ok(false, "Error occurred when getting availability: " + aError);
+    teardown();
+  });
+}
+
+function testOnChangeEvent() {
+  return new Promise(function(aResolve, aReject) {
+    availability.onchange = function() {
+      availability.onchange = null;
+      is(availability.value, false, "Should have no available device after device removed");
+      aResolve();
+    }
+    gScript.sendAsyncMessage('trigger-device-remove');
+  });
+}
+
+function testConsecutiveGetAvailability() {
+  let request = new PresentationRequest("https://example.org");
+  let firstAvailabilityResolved = false;
+  return Promise.all([
+    request.getAvailability().then(function() {
+      firstAvailabilityResolved = true;
+    }),
+    request.getAvailability().then(function() {
+      ok(firstAvailabilityResolved, "getAvailability() should be resolved in sequence");
+    })
+  ]).catch(function(aError) {
+    ok(false, "Error occurred when getting availability: " + aError);
+    teardown();
+  });
+}
+
+function teardown() {
+  request = null;
+  availability = null;
+  gScript.sendAsyncMessage('teardown');
+  gScript.destroy();
+  SimpleTest.finish();
+}
+
+function runTests() {
+  ok(navigator.presentation, "navigator.presentation should be available.");
+  testSetup().then(testInitialUnavailable)
+             .then(testInitialAvailable)
+             .then(testSameObject)
+             .then(testOnChangeEvent)
+             .then(testConsecutiveGetAvailability)
+             .then(teardown);
+}
+
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPermissions([
+  {type: "presentation-device-manage", allow: false, context: document},
+], function() {
+  SpecialPowers.pushPrefEnv({ "set": [["dom.presentation.enabled", true],
+                                      ["dom.presentation.controller.enabled", true],
+                                      ["dom.presentation.session_transport.data_channel.enable", false]]},
+                            runTests);
+});
+
+</script>
+</body>
+</html>

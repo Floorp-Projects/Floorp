@@ -15,7 +15,7 @@ add_task(function* () {
 
     try {
       gBrowser.removeTab(tab);
-    } catch(ex) { /* tab may have already been closed in case of failure */ }
+    } catch (ex) { /* tab may have already been closed in case of failure */ }
 
     return PlacesTestUtils.clearHistory();
   });

@@ -214,7 +214,7 @@ add_task(function* () {
   NewTabUtils.allPages.enabled = false;
   EventUtils.synthesizeKey("k", { accelKey: true });
 
-  
+
   let aboutHomeLoaded = new Promise(resolve => {
     tab.linkedBrowser.addEventListener("AboutHomeLoadSnippetsCompleted", function loadListener(event) {
       tab.linkedBrowser.removeEventListener("AboutHomeLoadSnippetsCompleted", loadListener, true);

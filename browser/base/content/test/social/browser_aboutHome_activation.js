@@ -78,7 +78,7 @@ function test()
     PopupNotifications.panel.removeAttribute("animate");
   });
 
-  Task.spawn(function () {
+  Task.spawn(function* () {
     for (let test of gTests) {
       info(test.desc);
 

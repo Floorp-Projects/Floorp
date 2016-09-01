@@ -203,7 +203,7 @@ function promiseCheckChildNoFocusedElement(browser)
 {
   if (!gMultiProcessBrowser) {
     Assert.equal(Services.focus.focusedElement, null, "There should be no focused element");
-    return;
+    return null;
   }
 
   return ContentTask.spawn(browser, { }, function* () {

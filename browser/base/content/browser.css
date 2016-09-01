@@ -254,16 +254,6 @@ toolbar[customizing] > .overflow-button {
   -moz-box-ordinal-group: 0;
 }
 
-/* In private windows, the #titlebar-content is higher because of the
- * private browsing indicator. With the margin-top the titlebar buttons
- * align to the top correctly in that case, but only if we don't stretch
- * the box they're in because the container is too high, so we override
- * the default alignment value (stretch).
- */
-#main-window[tabsintitlebar] > #titlebar > #titlebar-content > #titlebar-buttonbox-container {
-  -moz-box-align: start;
-}
-
 %else
 /* On non-OSX, these should be start-aligned */
 #titlebar-buttonbox-container {

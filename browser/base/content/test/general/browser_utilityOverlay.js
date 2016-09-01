@@ -72,7 +72,7 @@ function test_eventMatchesKey() {
     // Make sure to remove the event listener so future tests don't
     // fail when they simulate key presses.
     document.removeEventListener("keypress", checkEvent);
-  };
+  }
 
   runNextTest();
 }
