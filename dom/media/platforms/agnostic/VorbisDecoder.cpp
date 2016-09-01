@@ -143,6 +143,8 @@ VorbisDataDecoder::ProcessDecode(MediaRawData* aSample)
   }
   if (DoDecode(aSample) == -1) {
     mCallback->Error(MediaDataDecoderError::DECODE_ERROR);
+  } else if (mTaskQueue->IsEmpty()) {
+    mCallback->InputExhausted();
   }
 }
 
