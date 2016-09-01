@@ -567,8 +567,7 @@ protected:
   // If there are any queued seek, will change state to DECODER_STATE_SEEKING
   // and return true.
   bool MaybeFinishDecodeFirstFrame();
-  // Return true if we are currently decoding the first frames.
-  bool IsDecodingFirstFrame();
+
   void FinishDecodeFirstFrame();
 
   // Completes the seek operation, moves onto the next appropriate state.
@@ -885,18 +884,14 @@ private:
   // Track our request to update the buffered ranges
   MozPromiseRequestHolder<MediaDecoderReader::BufferedUpdatePromise> mBufferedUpdateRequest;
 
-  // True if we need to call FinishDecodeFirstFrame() upon frame decoding
-  // succeeding.
-  bool mDecodingFirstFrame;
-
   // True if we are back from DECODER_STATE_DORMANT state and
   // LoadedMetadataEvent was already sent.
   bool mSentLoadedMetadataEvent;
-  // True if we are back from DECODER_STATE_DORMANT state and
-  // FirstFrameLoadedEvent was already sent, then we can skip
-  // SetStartTime because the mStartTime already set before. Also we don't need
-  // to decode any audio/video since the MediaDecoder will trigger a seek
-  // operation soon.
+
+  // True if we've decoded first frames (thus having the start time) and
+  // notified the FirstFrameLoaded event. Note we can't initiate seek until the
+  // start time is known which happens when the first frames are decoded or we
+  // are playing an MSE stream (the start time is always assumed 0).
   bool mSentFirstFrameLoadedEvent;
 
   bool mSentPlaybackEndedEvent;

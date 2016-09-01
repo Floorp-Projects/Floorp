@@ -217,7 +217,7 @@ nsresult nsPluginNativeWindowGtk::CreateXEmbedWindow(bool aEnableXtFocus) {
   GdkVisual* gdkVisual = gdk_drawable_get_visual(gdkWindow);
   mWsInfo.depth = gdkVisual->depth;
 #else
-  mWsInfo.colormap = None;
+  mWsInfo.colormap = X11None;
   GdkVisual* gdkVisual = gdk_window_get_visual(gdkWindow);
   mWsInfo.depth = gdk_visual_get_depth(gdkVisual);
 #endif

@@ -15,7 +15,7 @@
 
 add_task(function* test_i18n_css() {
   let extension = ExtensionTestUtils.loadExtension({
-    background: "new " + function() {
+    background: function() {
       function fetch(url) {
         return new Promise((resolve, reject) => {
           let xhr = new XMLHttpRequest();

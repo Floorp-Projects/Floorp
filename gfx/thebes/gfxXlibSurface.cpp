@@ -25,7 +25,7 @@ using namespace mozilla::gfx;
 gfxXlibSurface::gfxXlibSurface(Display *dpy, Drawable drawable, Visual *visual)
     : mPixmapTaken(false), mDisplay(dpy), mDrawable(drawable)
 #if defined(GL_PROVIDER_GLX)
-    , mGLXPixmap(None)
+    , mGLXPixmap(X11None)
 #endif
 {
     const gfx::IntSize size = DoSizeQuery();
@@ -36,7 +36,7 @@ gfxXlibSurface::gfxXlibSurface(Display *dpy, Drawable drawable, Visual *visual)
 gfxXlibSurface::gfxXlibSurface(Display *dpy, Drawable drawable, Visual *visual, const gfx::IntSize& size)
     : mPixmapTaken(false), mDisplay(dpy), mDrawable(drawable)
 #if defined(GL_PROVIDER_GLX)
-    , mGLXPixmap(None)
+    , mGLXPixmap(X11None)
 #endif
 {
     NS_ASSERTION(Factory::CheckSurfaceSize(size, XLIB_IMAGE_SIDE_SIZE_LIMIT),
@@ -51,7 +51,7 @@ gfxXlibSurface::gfxXlibSurface(Screen *screen, Drawable drawable, XRenderPictFor
     : mPixmapTaken(false), mDisplay(DisplayOfScreen(screen)),
       mDrawable(drawable)
 #if defined(GL_PROVIDER_GLX)
-      , mGLXPixmap(None)
+      , mGLXPixmap(X11None)
 #endif
 {
     NS_ASSERTION(Factory::CheckSurfaceSize(size, XLIB_IMAGE_SIDE_SIZE_LIMIT),
@@ -67,7 +67,7 @@ gfxXlibSurface::gfxXlibSurface(Screen *screen, Drawable drawable, XRenderPictFor
 gfxXlibSurface::gfxXlibSurface(cairo_surface_t *csurf)
     : mPixmapTaken(false)
 #if defined(GL_PROVIDER_GLX)
-      , mGLXPixmap(None)
+      , mGLXPixmap(X11None)
 #endif
 {
     NS_PRECONDITION(cairo_surface_status(csurf) == 0,
@@ -97,9 +97,9 @@ CreatePixmap(Screen *screen, const gfx::IntSize& size, unsigned int depth,
              Drawable relatedDrawable)
 {
     if (!Factory::CheckSurfaceSize(size, XLIB_IMAGE_SIDE_SIZE_LIMIT))
-        return None;
+        return X11None;
 
-    if (relatedDrawable == None) {
+    if (relatedDrawable == X11None) {
         relatedDrawable = RootWindowOfScreen(screen);
     }
     Display *dpy = DisplayOfScreen(screen);
@@ -274,7 +274,7 @@ gfxXlibSurface::Finish()
 #if defined(GL_PROVIDER_GLX)
     if (mPixmapTaken && mGLXPixmap) {
         gl::sGLXLibrary.DestroyPixmap(mDisplay, mGLXPixmap);
-        mGLXPixmap = None;
+        mGLXPixmap = X11None;
     }
 #endif
     gfxASurface::Finish();

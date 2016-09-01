@@ -2163,7 +2163,7 @@ DrawTargetCairo::Draw3DTransformedSurface(SourceSurface* aSurface, const Matrix4
                                          0, nullptr);
 
   XRenderComposite(display, PictOpSrc,
-                   srcPict, None, dstPict,
+                   srcPict, X11None, dstPict,
                    0, 0, 0, 0, 0, 0,
                    xformBounds.width, xformBounds.height);
 
@@ -2313,7 +2313,7 @@ BorrowedXlibDrawable::Init(DrawTarget* aDT)
   MOZ_ASSERT(aDT, "Caller should check for nullptr");
   MOZ_ASSERT(!mDT, "Can't initialize twice!");
   mDT = aDT;
-  mDrawable = None;
+  mDrawable = X11None;
 
 #ifdef CAIRO_HAS_XLIB_SURFACE
   if (aDT->GetBackendType() != BackendType::CAIRO ||
@@ -2356,7 +2356,7 @@ BorrowedXlibDrawable::Finish()
   cairo_surface_t* surf = cairo_get_group_target(cairoDT->mContext);
   cairo_surface_mark_dirty(surf);
   if (mDrawable) {
-    mDrawable = None;
+    mDrawable = X11None;
   }
 }
 #endif
