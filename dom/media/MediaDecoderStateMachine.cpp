@@ -584,11 +584,14 @@ MediaDecoderStateMachine::OnAudioDecoded(MediaData* aAudioSample)
       return;
     }
 
+    case DECODER_STATE_DECODING_FIRSTFRAME: {
+      Push(audio, MediaData::AUDIO_DATA);
+      MaybeFinishDecodeFirstFrame();
+      return;
+    }
+
     case DECODER_STATE_DECODING: {
       Push(audio, MediaData::AUDIO_DATA);
-      if (MaybeFinishDecodeFirstFrame()) {
-        return;
-      }
       if (mIsAudioPrerolling && DonePrerollingAudio()) {
         StopPrerollingAudio();
       }
@@ -710,11 +713,11 @@ MediaDecoderStateMachine::OnNotDecoded(MediaData::Type aType,
     StopPrerollingVideo();
   }
   switch (mState) {
+    case DECODER_STATE_DECODING_FIRSTFRAME:
+      MaybeFinishDecodeFirstFrame();
+      return;
     case DECODER_STATE_BUFFERING:
     case DECODER_STATE_DECODING: {
-      if (MaybeFinishDecodeFirstFrame()) {
-        return;
-      }
       if (CheckIfDecodeComplete()) {
         SetState(DECODER_STATE_COMPLETED);
         return;
@@ -774,11 +777,14 @@ MediaDecoderStateMachine::OnVideoDecoded(MediaData* aVideoSample,
       return;
     }
 
+    case DECODER_STATE_DECODING_FIRSTFRAME: {
+      Push(video, MediaData::VIDEO_DATA);
+      MaybeFinishDecodeFirstFrame();
+      return;
+    }
+
     case DECODER_STATE_DECODING: {
       Push(video, MediaData::VIDEO_DATA);
-      if (MaybeFinishDecodeFirstFrame()) {
-        return;
-      }
       if (mIsVideoPrerolling && DonePrerollingVideo()) {
         StopPrerollingVideo();
       }
