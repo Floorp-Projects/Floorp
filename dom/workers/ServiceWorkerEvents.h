@@ -11,13 +11,10 @@
 #include "mozilla/dom/ExtendableEventBinding.h"
 #include "mozilla/dom/ExtendableMessageEventBinding.h"
 #include "mozilla/dom/FetchEventBinding.h"
+#include "mozilla/dom/File.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/Response.h"
 #include "mozilla/dom/workers/bindings/ServiceWorker.h"
-
-#ifndef MOZ_SIMPLEPUSH
-#include "mozilla/dom/File.h"
-#endif
 
 #include "nsProxyRelease.h"
 #include "nsContentUtils.h"
@@ -185,8 +182,6 @@ public:
   ReportCanceled();
 };
 
-#ifndef MOZ_SIMPLEPUSH
-
 class PushMessageData final : public nsISupports,
                               public nsWrapperCache
 {
@@ -255,7 +250,6 @@ public:
     return mData;
   }
 };
-#endif /* ! MOZ_SIMPLEPUSH */
 
 class ExtendableMessageEvent final : public ExtendableEvent
 {

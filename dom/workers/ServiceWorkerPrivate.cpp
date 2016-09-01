@@ -11,6 +11,7 @@
 #include "nsIHttpChannelInternal.h"
 #include "nsIHttpHeaderVisitor.h"
 #include "nsINetworkInterceptController.h"
+#include "nsIPushErrorReporter.h"
 #include "nsISupportsImpl.h"
 #include "nsIUploadChannel2.h"
 #include "nsNetUtil.h"
@@ -26,13 +27,9 @@
 #include "mozilla/dom/InternalHeaders.h"
 #include "mozilla/dom/NotificationEvent.h"
 #include "mozilla/dom/PromiseNativeHandler.h"
+#include "mozilla/dom/PushEventBinding.h"
 #include "mozilla/dom/RequestBinding.h"
 #include "mozilla/Unused.h"
-
-#ifndef MOZ_SIMPLEPUSH
-#include "nsIPushErrorReporter.h"
-#include "mozilla/dom/PushEventBinding.h"
-#endif
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -729,7 +726,6 @@ ServiceWorkerPrivate::SendLifeCycleEvent(const nsAString& aEventType,
   return NS_OK;
 }
 
-#ifndef MOZ_SIMPLEPUSH
 namespace {
 
 class PushErrorReporter final : public PromiseNativeHandler
@@ -895,16 +891,12 @@ public:
 };
 
 } // anonymous namespace
-#endif // !MOZ_SIMPLEPUSH
 
 nsresult
 ServiceWorkerPrivate::SendPushEvent(const nsAString& aMessageId,
                                     const Maybe<nsTArray<uint8_t>>& aData,
                                     ServiceWorkerRegistrationInfo* aRegistration)
 {
-#ifdef MOZ_SIMPLEPUSH
-  return NS_ERROR_NOT_AVAILABLE;
-#else
   nsresult rv = SpawnWorkerIfNeeded(PushEvent, nullptr);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -931,15 +923,11 @@ ServiceWorkerPrivate::SendPushEvent(const nsAString& aMessageId,
   }
 
   return NS_OK;
-#endif // MOZ_SIMPLEPUSH
 }
 
 nsresult
 ServiceWorkerPrivate::SendPushSubscriptionChangeEvent()
 {
-#ifdef MOZ_SIMPLEPUSH
-  return NS_ERROR_NOT_AVAILABLE;
-#else
   nsresult rv = SpawnWorkerIfNeeded(PushSubscriptionChangeEvent, nullptr);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -951,7 +939,6 @@ ServiceWorkerPrivate::SendPushSubscriptionChangeEvent()
   }
 
   return NS_OK;
-#endif // MOZ_SIMPLEPUSH
 }
 
 namespace {

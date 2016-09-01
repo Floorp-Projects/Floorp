@@ -10,6 +10,8 @@
 #include "mozilla/dom/Notification.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PromiseWorkerProxy.h"
+#include "mozilla/dom/PushManagerBinding.h"
+#include "mozilla/dom/PushManager.h"
 #include "mozilla/dom/ServiceWorkerRegistrationBinding.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
@@ -29,11 +31,6 @@
 #include "WorkerPrivate.h"
 #include "Workers.h"
 #include "WorkerScope.h"
-
-#ifndef MOZ_SIMPLEPUSH
-#include "mozilla/dom/PushManagerBinding.h"
-#include "mozilla/dom/PushManager.h"
-#endif
 
 using namespace mozilla::dom::workers;
 
@@ -161,9 +158,7 @@ private:
   RefPtr<ServiceWorker> mWaitingWorker;
   RefPtr<ServiceWorker> mActiveWorker;
 
-#ifndef MOZ_SIMPLEPUSH
   RefPtr<PushManager> mPushManager;
-#endif
 };
 
 NS_IMPL_ADDREF_INHERITED(ServiceWorkerRegistrationMainThread, ServiceWorkerRegistration)
@@ -172,16 +167,10 @@ NS_IMPL_RELEASE_INHERITED(ServiceWorkerRegistrationMainThread, ServiceWorkerRegi
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(ServiceWorkerRegistrationMainThread)
 NS_INTERFACE_MAP_END_INHERITING(ServiceWorkerRegistration)
 
-#ifndef MOZ_SIMPLEPUSH
 NS_IMPL_CYCLE_COLLECTION_INHERITED(ServiceWorkerRegistrationMainThread,
                                    ServiceWorkerRegistration,
                                    mPushManager,
                                    mInstallingWorker, mWaitingWorker, mActiveWorker);
-#else
-NS_IMPL_CYCLE_COLLECTION_INHERITED(ServiceWorkerRegistrationMainThread,
-                                   ServiceWorkerRegistration,
-                                   mInstallingWorker, mWaitingWorker, mActiveWorker);
-#endif
 
 ServiceWorkerRegistrationMainThread::ServiceWorkerRegistrationMainThread(nsPIDOMWindowInner* aWindow,
                                                                          const nsAString& aScope)
@@ -836,10 +825,6 @@ ServiceWorkerRegistrationMainThread::GetPushManager(JSContext* aCx,
 {
   AssertIsOnMainThread();
 
-#ifdef MOZ_SIMPLEPUSH
-  return nullptr;
-#else
-
   if (!mPushManager) {
     nsCOMPtr<nsIGlobalObject> globalObject = do_QueryInterface(GetOwner());
 
@@ -857,8 +842,6 @@ ServiceWorkerRegistrationMainThread::GetPushManager(JSContext* aCx,
 
   RefPtr<PushManager> ret = mPushManager;
   return ret.forget();
-
-#endif /* ! MOZ_SIMPLEPUSH */
 }
 
 ////////////////////////////////////////////////////
@@ -931,9 +914,7 @@ private:
   WorkerPrivate* mWorkerPrivate;
   RefPtr<WorkerListener> mListener;
 
-#ifndef MOZ_SIMPLEPUSH
   RefPtr<PushManager> mPushManager;
-#endif
 };
 
 class WorkerListener final : public ServiceWorkerRegistrationListener
@@ -1055,16 +1036,13 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(ServiceWorkerRegistrationWorkerThread)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(ServiceWorkerRegistrationWorkerThread,
                                                   ServiceWorkerRegistration)
-#ifndef MOZ_SIMPLEPUSH
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPushManager)
-#endif
+
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(ServiceWorkerRegistrationWorkerThread,
                                                 ServiceWorkerRegistration)
-#ifndef MOZ_SIMPLEPUSH
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mPushManager)
-#endif
   tmp->ReleaseListener(RegistrationIsGoingAway);
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
@@ -1354,18 +1332,12 @@ ServiceWorkerRegistrationWorkerThread::GetNotifications(const GetNotificationOpt
 already_AddRefed<PushManager>
 ServiceWorkerRegistrationWorkerThread::GetPushManager(JSContext* aCx, ErrorResult& aRv)
 {
-#ifdef MOZ_SIMPLEPUSH
-  return nullptr;
-#else
-
   if (!mPushManager) {
     mPushManager = new PushManager(mScope);
   }
 
   RefPtr<PushManager> ret = mPushManager;
   return ret.forget();
-
-#endif /* ! MOZ_SIMPLEPUSH */
 }
 
 ////////////////////////////////////////////////////
