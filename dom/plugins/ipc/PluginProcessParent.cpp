@@ -112,12 +112,6 @@ AddSandboxAllowedFiles(int32_t aSandboxLevel,
                           NS_LITERAL_STRING("\\Adobe"));
     AddSandboxAllowedFile(aAllowedDirectories, dirSvc, NS_WIN_APPDATA_DIR,
                           NS_LITERAL_STRING("\\Adobe\\Flash Player"));
-
-    // Write access to the Temp directory is needed in some mochitest crash
-    // tests.
-    // Bug 1171393 tracks removing this requirement.
-    AddSandboxAllowedFile(aAllowedFilesReadWrite, dirSvc, NS_OS_TEMP_DIR,
-                          NS_LITERAL_STRING("\\*"));
 }
 #endif
 
