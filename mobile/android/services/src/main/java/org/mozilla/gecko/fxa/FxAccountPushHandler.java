@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.mozilla.gecko.fxa.authenticator.AndroidFxAccount;
@@ -15,6 +16,9 @@ public class FxAccountPushHandler {
     private static final String LOG_TAG = "FxAccountPush";
 
     private static final String COMMAND_DEVICE_DISCONNECTED = "fxaccounts:device_disconnected";
+    private static final String COMMAND_COLLECTION_CHANGED = "sync:collection_changed";
+
+    private static final String CLIENTS_COLLECTION = "clients";
 
     // Forbid instantiation
     private FxAccountPushHandler() {}
@@ -45,12 +49,32 @@ public class FxAccountPushHandler {
                 case COMMAND_DEVICE_DISCONNECTED:
                     handleDeviceDisconnection(context, data);
                     break;
+                case COMMAND_COLLECTION_CHANGED:
+                    handleCollectionChanged(context, data);
+                    break;
                 default:
                     Log.d(LOG_TAG, "No handler defined for FxA Push command " + command);
                     break;
             }
         } catch (JSONException e) {
             Log.e(LOG_TAG, "Error while handling FxA push notification", e);
+        }
+    }
+
+    private static void handleCollectionChanged(Context context, JSONObject data) throws JSONException {
+        JSONArray collections = data.getJSONArray("collections");
+        int len = collections.length();
+        for (int i = 0; i < len; i++) {
+            if (collections.getString(i).equals(CLIENTS_COLLECTION)) {
+                final Account account = FirefoxAccounts.getFirefoxAccount(context);
+                if (account == null) {
+                    Log.e(LOG_TAG, "The account does not exist anymore");
+                    return;
+                }
+                final AndroidFxAccount fxAccount = new AndroidFxAccount(context, account);
+                fxAccount.requestImmediateSync(new String[] { CLIENTS_COLLECTION }, null);
+                return;
+            }
         }
     }
 

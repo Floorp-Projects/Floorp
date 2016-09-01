@@ -1077,6 +1077,25 @@ MediaStreamGraph::NotifyOutputData(AudioDataValue* aBuffer, size_t aFrames,
   }
 }
 
+void
+MediaStreamGraph::AssertOnGraphThreadOrNotRunning() const
+{
+  // either we're on the right thread (and calling CurrentDriver() is safe),
+  // or we're going to assert anyways, so don't cross-check CurrentDriver
+#ifdef DEBUG
+  MediaStreamGraphImpl const * graph =
+    static_cast<MediaStreamGraphImpl const *>(this);
+  // if all the safety checks fail, assert we own the monitor
+  if (!graph->mDriver->OnThread()) {
+    if (!(graph->mDetectedNotRunning &&
+          graph->mLifecycleState > MediaStreamGraphImpl::LIFECYCLE_RUNNING &&
+          NS_IsMainThread())) {
+      graph->mMonitor.AssertCurrentThreadOwns();
+    }
+  }
+#endif
+}
+
 bool
 MediaStreamGraphImpl::ShouldUpdateMainThread()
 {

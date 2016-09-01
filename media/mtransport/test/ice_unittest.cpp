@@ -763,7 +763,7 @@ class IceTestPeer : public sigslot::has_slots<> {
             remote->GetCandidates(i);
 
         for (size_t j=0; j<candidates.size(); ++j) {
-          std::cerr << name_ << " Candidate: " + candidates[j] << std::endl;
+          std::cerr << name_ << " Adding remote candidate: " + candidates[j] << std::endl;
         }
         res = aStream->ParseAttributes(candidates);
         ASSERT_TRUE(NS_SUCCEEDED(res));

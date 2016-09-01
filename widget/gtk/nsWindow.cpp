@@ -452,7 +452,7 @@ nsWindow::nsWindow()
     mOldFocusWindow      = 0;
 
     mXDisplay = nullptr;
-    mXWindow  = None;
+    mXWindow  = X11None;
     mXVisual  = nullptr;
     mXDepth   = 0;
 #endif /* MOZ_X11 */
@@ -4587,7 +4587,7 @@ nsWindow::ClearTransparencyBitmap()
     Display* xDisplay = GDK_WINDOW_XDISPLAY(mGdkWindow);
     Window xWindow = gdk_x11_window_get_xid(mGdkWindow);
 
-    XShapeCombineMask(xDisplay, xWindow, ShapeBounding, 0, 0, None, ShapeSet);
+    XShapeCombineMask(xDisplay, xWindow, ShapeBounding, 0, 0, X11None, ShapeSet);
 #endif
 }
 

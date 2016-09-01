@@ -11,6 +11,7 @@
 #ifdef MOZ_X11
 #include <X11/extensions/Xrender.h>
 #include <X11/Xlib.h>
+#include "X11UndefineNone.h"
 #endif
 
 struct _cairo;
@@ -87,7 +88,7 @@ public:
   BorrowedXlibDrawable()
     : mDT(nullptr),
       mDisplay(nullptr),
-      mDrawable(None),
+      mDrawable(X11None),
       mScreen(nullptr),
       mVisual(nullptr),
       mXRenderFormat(nullptr)
@@ -96,7 +97,7 @@ public:
   explicit BorrowedXlibDrawable(DrawTarget *aDT)
     : mDT(nullptr),
       mDisplay(nullptr),
-      mDrawable(None),
+      mDrawable(X11None),
       mScreen(nullptr),
       mVisual(nullptr),
       mXRenderFormat(nullptr)

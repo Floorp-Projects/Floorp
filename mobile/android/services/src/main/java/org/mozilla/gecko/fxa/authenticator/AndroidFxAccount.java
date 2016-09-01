@@ -30,6 +30,7 @@ import org.mozilla.gecko.fxa.FxAccountConstants;
 import org.mozilla.gecko.fxa.login.State;
 import org.mozilla.gecko.fxa.login.State.StateLabel;
 import org.mozilla.gecko.fxa.login.StateFactory;
+import org.mozilla.gecko.fxa.login.TokensAndKeysState;
 import org.mozilla.gecko.fxa.sync.FxAccountProfileService;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
 import org.mozilla.gecko.sync.Utils;
@@ -604,6 +605,24 @@ public class AndroidFxAccount {
       return StateFactory.fromJSONObject(stateLabel, new ExtendedJSONObject(stateString));
     } catch (Exception e) {
       throw new IllegalStateException("could not get state", e);
+    }
+  }
+
+  public byte[] getSessionToken() throws InvalidFxAState {
+    State state = getState();
+    StateLabel stateLabel = state.getStateLabel();
+    if (stateLabel == StateLabel.Cohabiting || stateLabel == StateLabel.Married) {
+      TokensAndKeysState tokensAndKeysState = (TokensAndKeysState) state;
+      return tokensAndKeysState.getSessionToken();
+    }
+    throw new InvalidFxAState("Cannot get sessionToken: not in a TokensAndKeysState state");
+  }
+
+  public static class InvalidFxAState extends Exception {
+    private static final long serialVersionUID = -8537626959811195978L;
+
+    public InvalidFxAState(String message) {
+      super(message);
     }
   }
 

@@ -279,7 +279,7 @@ public:
 
 /**
  * This listener observes the first video frame to arrive with a non-empty size,
- * and calls HTMLMediaElement::ReceivedMediaStreamInitialSize() with that size.
+ * and calls HTMLMediaElement::UpdateInitialMediaSize() with that size.
  */
 class HTMLMediaElement::StreamSizeListener : public DirectMediaStreamTrackListener {
 public:
@@ -287,13 +287,17 @@ public:
     mElement(aElement),
     mInitialSizeFound(false)
   {}
+
   void Forget() { mElement = nullptr; }
 
   void ReceivedSize(gfx::IntSize aSize)
   {
+    MOZ_ASSERT(NS_IsMainThread());
+
     if (!mElement) {
       return;
     }
+
     RefPtr<HTMLMediaElement> deathGrip = mElement;
     mElement->UpdateInitialMediaSize(aSize);
   }
@@ -302,18 +306,27 @@ public:
                                StreamTime aTrackOffset,
                                const MediaSegment& aMedia) override
   {
-    if (mInitialSizeFound || aMedia.GetType() != MediaSegment::VIDEO) {
+    if (mInitialSizeFound) {
       return;
     }
+
+    if (aMedia.GetType() != MediaSegment::VIDEO) {
+      MOZ_ASSERT(false, "Should only lock on to a video track");
+      return;
+    }
+
     const VideoSegment& video = static_cast<const VideoSegment&>(aMedia);
     for (VideoSegment::ConstChunkIterator c(video); !c.IsEnded(); c.Next()) {
       if (c->mFrame.GetIntrinsicSize() != gfx::IntSize(0,0)) {
         mInitialSizeFound = true;
         nsCOMPtr<nsIRunnable> event =
-          NewRunnableMethod<gfx::IntSize>(
-              this, &StreamSizeListener::ReceivedSize,
-              c->mFrame.GetIntrinsicSize());
-        aGraph->DispatchToMainThreadAfterStreamStateUpdate(event.forget());
+          NewRunnableMethod<gfx::IntSize>(this, &StreamSizeListener::ReceivedSize,
+                                          c->mFrame.GetIntrinsicSize());
+        // This is fine to dispatch straight to main thread (instead of via
+        // ...AfterStreamUpdate()) since it reflects state of the element,
+        // not the stream. Events reflecting stream or track state should be
+        // dispatched so their order is preserved.
+        NS_DispatchToMainThread(event.forget());
         return;
       }
     }
@@ -323,7 +336,9 @@ private:
   // These fields may only be accessed on the main thread
   HTMLMediaElement* mElement;
 
-  // These fields may only be accessed on the MSG thread
+  // These fields may only be accessed on the MSG's appending thread.
+  // (this is a direct listener so we get called by whoever is producing
+  // this track's data)
   bool mInitialSizeFound;
 };
 
@@ -2575,16 +2590,21 @@ HTMLMediaElement::CaptureStreamInternal(bool aFinishWhenEnded,
     mAudioCaptured = true;
   }
 
+  if (mDecoder) {
+    out->mCapturingDecoder = true;
+    mDecoder->AddOutputStream(out->mStream->GetInputStream()->AsProcessedStream(),
+                              aFinishWhenEnded);
+  } else if (mSrcStream) {
+    out->mCapturingMediaStream = true;
+  }
+
   if (mReadyState == HAVE_NOTHING) {
-    // Do not expose the tracks directly before we have metadata.
+    // Do not expose the tracks until we have metadata.
     RefPtr<DOMMediaStream> result = out->mStream;
     return result.forget();
   }
 
   if (mDecoder) {
-    out->mCapturingDecoder = true;
-    mDecoder->AddOutputStream(out->mStream->GetInputStream()->AsProcessedStream(),
-                              aFinishWhenEnded);
     if (HasAudio()) {
       TrackID audioTrackId = mMediaInfo.mAudio.mTrackId;
       RefPtr<MediaStreamTrackSource> trackSource =
@@ -2610,22 +2630,6 @@ HTMLMediaElement::CaptureStreamInternal(bool aFinishWhenEnded,
   }
 
   if (mSrcStream) {
-    out->mCapturingMediaStream = true;
-    MediaStream* inputStream = out->mStream->GetInputStream();
-    if (!inputStream) {
-      NS_ERROR("No input stream");
-      RefPtr<DOMMediaStream> result = out->mStream;
-      return result.forget();
-    }
-
-    ProcessedMediaStream* processedInputStream =
-      inputStream->AsProcessedStream();
-    if (!processedInputStream) {
-      NS_ERROR("Input stream not a ProcessedMediaStream");
-      RefPtr<DOMMediaStream> result = out->mStream;
-      return result.forget();
-    }
-
     for (size_t i = 0; i < AudioTracks()->Length(); ++i) {
       AudioTrack* t = (*AudioTracks())[i];
       if (t->Enabled()) {

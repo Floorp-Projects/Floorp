@@ -73,6 +73,7 @@ class CentOSFedoraBootstrapper(BaseBootstrapper):
             ]
 
             self.mobile_android_packages += [
+                'java-1.8.0-openjdk-devel',
                 'ncurses-devel.i686',
                 'libstdc++.i686',
                 'zlib-devel.i686',
@@ -129,6 +130,15 @@ class CentOSFedoraBootstrapper(BaseBootstrapper):
                                            sdk_path=self.sdk_path, sdk_url=self.sdk_url,
                                            ndk_path=self.ndk_path, ndk_url=self.ndk_url,
                                            artifact_mode=artifact_mode)
+
+        # Most recent version of build-tools appears to be 23.0.1 on Fedora
+        packages = [p for p in android.ANDROID_PACKAGES if not p.startswith('build-tools')]
+        packages.append('build-tools-23.0.1')
+
+        # 3. We expect the |android| tool to be at
+        # ~/.mozbuild/android-sdk-linux/tools/android.
+        android_tool = os.path.join(self.sdk_path, 'tools', 'android')
+        android.ensure_android_packages(android_tool=android_tool, packages=packages)
 
     def suggest_mobile_android_mozconfig(self, artifact_mode=False):
         import android

@@ -13,7 +13,7 @@
 <script type="text/javascript">
 "use strict";
 
-function backgroundScript() {
+function background() {
   browser.runtime.onMessage.addListener(result => {
     browser.test.assertEq(result, 12, "x is 12");
     browser.test.notifyPass("background test passed");
@@ -27,7 +27,7 @@ function contentScript() {
 }
 
 let extensionData = {
-  background: "(" + backgroundScript.toString() + ")()",
+  background,
   manifest: {
     "content_scripts": [{
       "matches": ["http://mochi.test/*/file_sample.html"],
@@ -37,7 +37,7 @@ let extensionData = {
   },
 
   files: {
-    "content_script.js": "(" + contentScript.toString() + ")()",
+    "content_script.js": contentScript,
   },
 };
 

@@ -765,9 +765,9 @@ public class TestClientsEngineStage extends MockSyncClientsEngineStage {
     final String expectedGUID = remoteRecord.guid;
 
     this.addCommands(remoteRecord);
-    assertEquals(1, toUpload.size());
+    assertEquals(1, modifiedClientsToUpload.size());
 
-    final ClientRecord recordToUpload = toUpload.get(0);
+    final ClientRecord recordToUpload = modifiedClientsToUpload.get(0);
     assertEquals(4, recordToUpload.commands.size());
     assertEquals(expectedGUID, recordToUpload.guid);
     assertEquals(null, recordToUpload.version);
@@ -782,9 +782,9 @@ public class TestClientsEngineStage extends MockSyncClientsEngineStage {
     final String expectedGUID = remoteRecord.guid;
 
     this.addCommands(remoteRecord);
-    assertEquals(1, toUpload.size());
+    assertEquals(1, modifiedClientsToUpload.size());
 
-    final ClientRecord recordToUpload = toUpload.get(0);
+    final ClientRecord recordToUpload = modifiedClientsToUpload.get(0);
     assertEquals(4, recordToUpload.commands.size());
     assertEquals(expectedGUID, recordToUpload.guid);
     assertEquals("12a1", recordToUpload.version);

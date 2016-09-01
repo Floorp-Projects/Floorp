@@ -19,9 +19,8 @@ import org.mozilla.gecko.background.fxa.FxAccountClient20.RequestDelegate;
 import org.mozilla.gecko.background.fxa.FxAccountClientException.FxAccountClientRemoteException;
 import org.mozilla.gecko.background.fxa.FxAccountRemoteError;
 import org.mozilla.gecko.fxa.authenticator.AndroidFxAccount;
+import org.mozilla.gecko.fxa.authenticator.AndroidFxAccount.InvalidFxAState;
 import org.mozilla.gecko.fxa.login.State;
-import org.mozilla.gecko.fxa.login.State.StateLabel;
-import org.mozilla.gecko.fxa.login.TokensAndKeysState;
 import org.mozilla.gecko.sync.SharedPreferencesClientsDataDelegate;
 import org.mozilla.gecko.util.BundleEventListener;
 import org.mozilla.gecko.util.EventCallback;
@@ -112,7 +111,11 @@ public class FxAccountDeviceRegistrator implements BundleEventListener {
     String pushAuthKey = subscription.getString("pushAuthKey");
 
     final AndroidFxAccount fxAccount = AndroidFxAccount.fromContext(context);
-    final byte[] sessionToken = getSessionToken(fxAccount);
+    if (fxAccount == null) {
+      Log.e(LOG_TAG, "AndroidFxAccount is null");
+      return;
+    }
+    final byte[] sessionToken = fxAccount.getSessionToken();
     final FxAccountDevice device;
     String deviceId = fxAccount.getDeviceId();
     String clientName = getClientName(fxAccount, context);
@@ -178,17 +181,6 @@ public class FxAccountDeviceRegistrator implements BundleEventListener {
       Log.e(LOG_TAG, "Unable to get client name.", e);
       return null;
     }
-  }
-
-  @Nullable
-  private static byte[] getSessionToken(final AndroidFxAccount fxAccount) throws InvalidFxAState {
-    State state = fxAccount.getState();
-    StateLabel stateLabel = state.getStateLabel();
-    if (stateLabel == StateLabel.Cohabiting || stateLabel == StateLabel.Married) {
-      TokensAndKeysState tokensAndKeysState = (TokensAndKeysState) state;
-      return tokensAndKeysState.getSessionToken();
-    }
-    throw new InvalidFxAState("Cannot get sessionToken: not in a TokensAndKeysState state");
   }
 
   private static void handleTokenError(final FxAccountClientRemoteException error,
@@ -286,13 +278,5 @@ public class FxAccountDeviceRegistrator implements BundleEventListener {
     Method registerBackgroundThreadListener = eventDispatcher.getMethod("registerBackgroundThreadListener",
             BundleEventListener.class, String[].class);
     registerBackgroundThreadListener.invoke(instance, this, new String[] { "FxAccountsPush:Subscribe:Response" });
-  }
-
-  public static class InvalidFxAState extends Exception {
-    private static final long serialVersionUID = -8537626959811195978L;
-
-    public InvalidFxAState(String message) {
-      super(message);
-    }
   }
 }

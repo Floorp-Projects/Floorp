@@ -213,10 +213,10 @@ add_task(function* test_get_accept_languages() {
       }],
     },
 
-    background: `(${background})()`,
+    background,
 
     files: {
-      "content_script.js": `(${content})()`,
+      "content_script.js": content,
     },
   });
 
@@ -331,7 +331,7 @@ add_task(function* test_detect_language() {
     "Pour une aide rapide et effective, veuiller trouver votre aide dans le menu ci-dessus." +
     "Motoring events began soon after the construction of the first successful gasoline-fueled automobiles. The quick brown fox jumped over the lazy dog";
 
-  function backgroundScript() {
+  function background() {
     function checkResult(source, result, expected) {
       browser.test.assertEq(expected.isReliable, result.isReliable, "result.confident is true");
       browser.test.assertEq(
@@ -387,10 +387,10 @@ add_task(function* test_detect_language() {
       }],
     },
 
-    background: `(${backgroundScript})()`,
+    background,
 
     files: {
-      "content_script.js": `(${content})()`,
+      "content_script.js": content,
     },
   });
 

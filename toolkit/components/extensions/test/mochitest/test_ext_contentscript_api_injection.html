@@ -52,8 +52,8 @@ add_task(function* test_contentscript_api_injection() {
     },
 
     files: {
-      "content_script.js": "new " + contentScript,
-      "content_script_iframe.js": "new " + contentScriptIframe,
+      "content_script.js": contentScript,
+      "content_script_iframe.js": contentScriptIframe,
       "content_script_iframe.html": document.querySelector("#test-asset").textContent,
     },
   };

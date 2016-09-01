@@ -74,7 +74,7 @@ add_task(function* test_contentscript_exportHelpers() {
     },
 
     files: {
-      "contentscript.js": `(${contentScript})();`,
+      "contentscript.js": contentScript,
     },
   };
 

@@ -18,7 +18,7 @@ let dataURI = "iVBORw0KGgoAAAANSUhEUgAAACQAAAAkCAYAAADhAJiYAAAC4klEQVRYhdWXLWzbQ
 let image = atob(dataURI);
 const IMAGE_ARRAYBUFFER = Uint8Array.from(image, byte => byte.charCodeAt(0)).buffer;
 
-function backgroundScript() {
+function background() {
   browser.test.assertTrue("pageAction" in browser, "Namespace 'pageAction' exists in browser");
   browser.test.assertTrue("show" in browser.pageAction, "API method 'show' exists in browser.pageAction");
 
@@ -46,7 +46,7 @@ function backgroundScript() {
 
 add_task(function* test_contentscript() {
   let extension = ExtensionTestUtils.loadExtension({
-    background: "(" + backgroundScript.toString() + ")()",
+    background,
     manifest: {
       "name": "PageAction Extension",
       "page_action": {

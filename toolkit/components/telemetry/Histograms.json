@@ -8209,42 +8209,6 @@
     "kind": "boolean",
     "description": "Intercepted fetch sending back same Request object. File bugs in Core::DOM in case of a Telemetry regression."
   },
-  "LOOP_CLIENT_CALL_URL_REQUESTS_SUCCESS": {
-    "expires_in_version": "never",
-    "kind": "boolean",
-    "description": "Stores 1 if generating a call URL succeeded, and 0 if it failed."
-  },
-  "LOOP_CLIENT_CALL_URL_SHARED": {
-    "expires_in_version": "never",
-    "kind": "boolean",
-    "description": "Stores 1 every time the URL is copied or shared."
-  },
-  "LOOP_ROOM_CREATE": {
-    "alert_emails": ["firefox-dev@mozilla.org", "mdeboer@mozilla.com"],
-    "expires_in_version": "54",
-    "kind": "enumerated",
-    "n_values": 4,
-    "releaseChannelCollection": "opt-out",
-    "description": "Number of times a room create action is performed (0=CREATE_SUCCESS, 1=CREATE_FAIL)"
-  },
-  "LOOP_COPY_PANEL_ACTIONS": {
-    "alert_emails": ["firefox-dev@mozilla.org", "edilee@mozilla.com"],
-    "expires_in_version": "54",
-    "kind": "enumerated",
-    "n_values": 5,
-    "releaseChannelCollection": "opt-out",
-    "bug_numbers": [1239965, 1259506],
-    "description": "Number of times each of the following copy panel actions are triggered: 0=SHOWN, 1=NO_AGAIN, 2=NO_NEVER, 3=YES_AGAIN, 4=YES_NEVER"
-  },
-  "LOOP_ACTIVITY_COUNTER": {
-    "alert_emails": ["firefox-dev@mozilla.org", "mbanner@mozilla.com"],
-    "expires_in_version": "54",
-    "kind": "enumerated",
-    "n_values": 5,
-    "releaseChannelCollection": "opt-out",
-    "bug_numbers": [1208416],
-    "description": "Number of times an action is performed by an user (0=OPEN_PANEL, 1=OPEN_CONVERSATION, 2=ROOM_OPEN, 3=ROOM_SHARE, 4=ROOM_DELETE)"
-  },
   "E10S_STATUS": {
     "alert_emails": ["firefox-dev@mozilla.org"],
     "expires_in_version": "never",

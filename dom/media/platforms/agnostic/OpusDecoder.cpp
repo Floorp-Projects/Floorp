@@ -163,11 +163,8 @@ OpusDataDecoder::ProcessDecode(MediaRawData* aSample)
       mCallback->Error(MediaDataDecoderError::DECODE_ERROR);
       break;
     case DecodeError::DECODE_SUCCESS:
+      mCallback->InputExhausted();
       break;
-  }
-
-  if (mTaskQueue->IsEmpty()) {
-    mCallback->InputExhausted();
   }
 }
 

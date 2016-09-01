@@ -695,8 +695,11 @@ nsContextMenu.prototype = {
           this.target.getRequest(Ci.nsIImageLoadingContent.CURRENT_REQUEST);
         if (request && (request.imageStatus & request.STATUS_SIZE_AVAILABLE))
           this.onLoadedImage = true;
-        if (request && (request.imageStatus & request.STATUS_LOAD_COMPLETE))
+        if (request &&
+            (request.imageStatus & request.STATUS_LOAD_COMPLETE) &&
+            !(request.imageStatus & request.STATUS_ERROR)) {
           this.onCompletedImage = true;
+        }
 
         this.mediaURL = this.target.currentURI.spec;
 
