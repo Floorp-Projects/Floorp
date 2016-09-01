@@ -53,10 +53,8 @@
     locale/browser/places/bookmarkProperties.properties (%chrome/browser/places/bookmarkProperties.properties)
     locale/browser/preferences/selectBookmark.dtd  (%chrome/browser/preferences/selectBookmark.dtd)
     locale/browser/places/moveBookmarks.dtd        (%chrome/browser/places/moveBookmarks.dtd)
-#ifdef MOZ_SAFE_BROWSING
     locale/browser/safebrowsing/phishing-afterload-warning-message.dtd (%chrome/browser/safebrowsing/phishing-afterload-warning-message.dtd)
     locale/browser/safebrowsing/report-phishing.dtd                    (%chrome/browser/safebrowsing/report-phishing.dtd)
-#endif
     locale/browser/feeds/subscribe.dtd              (%chrome/browser/feeds/subscribe.dtd)
     locale/browser/feeds/subscribe.properties       (%chrome/browser/feeds/subscribe.properties)
     locale/browser/migration/migration.dtd         (%chrome/browser/migration/migration.dtd)
