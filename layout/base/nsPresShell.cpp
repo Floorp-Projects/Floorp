@@ -1682,8 +1682,15 @@ PresShell::Initialize(nscoord aWidth, nscoord aHeight)
 
   mPresContext->SetVisibleArea(nsRect(0, 0, aWidth, aHeight));
 
-  if (mStyleSet->IsServo()) {
-    mStyleSet->AsServo()->StartStyling(GetPresContext());
+  if (mStyleSet->IsServo() && mDocument->GetRootElement()) {
+    // If we have the root element already, go ahead style it along with any
+    // descendants.
+    //
+    // Some things, like nsDocumentViewer::GetPageMode, recreate the PresShell
+    // while keeping the content tree alive (see bug 1292280) - so we
+    // unconditionally mark the root as dirty.
+    mDocument->GetRootElement()->SetIsDirtyForServo();
+    mStyleSet->AsServo()->StyleDocument(/* aLeaveDirtyBits = */ false);
   }
 
   // Get the root frame from the frame manager

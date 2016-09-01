@@ -789,39 +789,25 @@ BrowserElementParent.prototype = {
                                                 radiisX, radiisY, rotationAngles, forces,
                                                 count, modifiers) {
 
-    let tabParent = this._frameLoader.tabParent;
-    if (tabParent && tabParent.useAsyncPanZoom) {
-      tabParent.injectTouchEvent(type,
-                                 identifiers,
-                                 touchesX,
-                                 touchesY,
-                                 radiisX,
-                                 radiisY,
-                                 rotationAngles,
-                                 forces,
-                                 count,
-                                 modifiers);
-    } else {
-      let offset = this.getChildProcessOffset();
-      for (var i = 0; i < touchesX.length; i++) {
-        touchesX[i] += offset.x;
-      }
-      for (var i = 0; i < touchesY.length; i++) {
-        touchesY[i] += offset.y;
-      }
-      this._sendAsyncMsg("send-touch-event", {
-        "type": type,
-        "identifiers": identifiers,
-        "touchesX": touchesX,
-        "touchesY": touchesY,
-        "radiisX": radiisX,
-        "radiisY": radiisY,
-        "rotationAngles": rotationAngles,
-        "forces": forces,
-        "count": count,
-        "modifiers": modifiers
-      });
+    let offset = this.getChildProcessOffset();
+    for (var i = 0; i < touchesX.length; i++) {
+      touchesX[i] += offset.x;
     }
+    for (var i = 0; i < touchesY.length; i++) {
+      touchesY[i] += offset.y;
+    }
+    this._sendAsyncMsg("send-touch-event", {
+      "type": type,
+      "identifiers": identifiers,
+      "touchesX": touchesX,
+      "touchesY": touchesY,
+      "radiisX": radiisX,
+      "radiisY": radiisY,
+      "rotationAngles": rotationAngles,
+      "forces": forces,
+      "count": count,
+      "modifiers": modifiers
+    });
   }),
 
   getCanGoBack: defineDOMRequestMethod('get-can-go-back'),

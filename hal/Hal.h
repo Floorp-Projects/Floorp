@@ -628,14 +628,6 @@ void StopDiskSpaceWatcher();
 uint32_t GetTotalSystemMemory();
 
 /**
- * Get the level of total system memory on device in MiB.
- * (round the value up to the next power of two)
- *
- * Returns 0 if we are unable to determine this information from /proc/meminfo.
- */
-uint32_t GetTotalSystemMemoryLevel();
-
-/**
  * Determine whether the headphone switch event is from input device
  */
 bool IsHeadphoneEventFromInputDev();

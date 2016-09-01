@@ -53,6 +53,7 @@ enum class ScopeKind : uint8_t
 
     // LexicalScope
     Lexical,
+    SimpleCatch,
     Catch,
     NamedLambda,
     StrictNamedLambda,
@@ -71,6 +72,12 @@ enum class ScopeKind : uint8_t
     // ModuleScope
     Module
 };
+
+static inline bool
+ScopeKindIsCatch(ScopeKind kind)
+{
+    return kind == ScopeKind::SimpleCatch || kind == ScopeKind::Catch;
+}
 
 const char* BindingKindString(BindingKind kind);
 const char* ScopeKindString(ScopeKind kind);
@@ -205,6 +212,10 @@ class Scope : public js::gc::TenuredCell
     static Scope* create(ExclusiveContext* cx, ScopeKind kind, HandleScope enclosing,
                          HandleShape envShape);
 
+    template <typename T, typename D>
+    static Scope* create(ExclusiveContext* cx, ScopeKind kind, HandleScope enclosing,
+                         HandleShape envShape, mozilla::UniquePtr<T, D> data);
+
     template <typename ConcreteScope, XDRMode mode>
     static bool XDRSizedBindingNames(XDRState<mode>* xdr, Handle<ConcreteScope*> scope,
                                      MutableHandle<typename ConcreteScope::Data*> data);
@@ -298,6 +309,9 @@ class Scope : public js::gc::TenuredCell
 // Lexical
 //   A plain lexical scope.
 //
+// SimpleCatch
+//   Holds the single catch parameter of a catch block.
+//
 // Catch
 //   Holds the catch parameters (and only the catch parameters) of a catch
 //   block.
@@ -376,6 +390,7 @@ inline bool
 Scope::is<LexicalScope>() const
 {
     return kind_ == ScopeKind::Lexical ||
+           kind_ == ScopeKind::SimpleCatch ||
            kind_ == ScopeKind::Catch ||
            kind_ == ScopeKind::NamedLambda ||
            kind_ == ScopeKind::StrictNamedLambda;

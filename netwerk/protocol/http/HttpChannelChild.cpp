@@ -857,10 +857,7 @@ HttpChannelChild::OnStopRequest(const nsresult& channelStatus,
   LOG(("HttpChannelChild::OnStopRequest [this=%p status=%x]\n",
        this, channelStatus));
 
-  if (mUploadStream) {
-    mUploadStream->Close();
-    mUploadStream = nullptr;
-  }
+  mUploadStream = nullptr;
 
   if (mDivertingToParent) {
     MOZ_RELEASE_ASSERT(!mFlushedForDiversion,

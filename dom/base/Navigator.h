@@ -185,13 +185,6 @@ public:
   // NavigatorBinding::ClearCachedUserAgentValue(this);
   void ClearUserAgentCache();
 
-  // Feature Detection API
-  already_AddRefed<Promise> GetFeature(const nsAString& aName,
-                                       ErrorResult& aRv);
-
-  already_AddRefed<Promise> HasFeature(const nsAString &aName,
-                                       ErrorResult& aRv);
-
   bool Vibrate(uint32_t aDuration);
   bool Vibrate(const nsTArray<uint32_t>& aDuration);
   void SetVibrationPermission(bool aPermitted, bool aPersistent);

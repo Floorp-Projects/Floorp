@@ -136,10 +136,6 @@ class ThumbnailHelper final
             return nullptr;
         }
 
-        MOZ_ASSERT(gfxPlatform::GetPlatform()->
-                           SupportsAzureContentForType(BackendType::CAIRO),
-                   "Need BackendType::CAIRO support");
-
         uint8_t* const data = static_cast<uint8_t*>(aData->Address());
         if (!data) {
             return nullptr;
@@ -149,12 +145,11 @@ class ThumbnailHelper final
                 AndroidBridge::Bridge()->GetScreenDepth() == 24;
         const uint32_t stride = aThumbWidth * (is24bit ? 4 : 2);
 
-        RefPtr<DrawTarget> dt = gfx::Factory::CreateDrawTargetForData(
-                BackendType::CAIRO,
+        RefPtr<DrawTarget> dt = gfxPlatform::GetPlatform()->CreateDrawTargetForData(
                 data,
                 IntSize(aThumbWidth, aThumbHeight),
                 stride,
-                is24bit ? SurfaceFormat::B8G8R8X8
+                is24bit ? SurfaceFormat::B8G8R8A8
                         : SurfaceFormat::R5G6B5_UINT16);
 
         if (!dt || !dt->IsValid()) {

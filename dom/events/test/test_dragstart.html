@@ -57,8 +57,8 @@ function afterDragTests()
                     false, true, false, false, 0, null, null);
   $("synthetic").dispatchEvent(evt);
 
-  var evt = document.createEvent("dragevents");
-  ok(evt instanceof DragEvent, "synthetic dragevents class")
+  var evt = document.createEvent("dragevent");
+  ok(evt instanceof DragEvent, "synthetic dragevent class")
   evt.initDragEvent("dragover", true, true, window, 0, 40, 35, 20, 15,
                     true, false, true, true, 2, document.documentElement, null);
   $("synthetic2").dispatchEvent(evt);

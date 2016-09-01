@@ -170,15 +170,47 @@ ParseContext::Scope::removeVarForAnnexBLexicalFunction(ParseContext* pc, JSAtom*
     pc->removeInnerFunctionBoxesForAnnexB(name);
 }
 
+static bool
+DeclarationKindIsCatchParameter(DeclarationKind kind)
+{
+    return kind == DeclarationKind::SimpleCatchParameter ||
+           kind == DeclarationKind::CatchParameter;
+}
+
+bool
+ParseContext::Scope::addCatchParameters(ParseContext* pc, Scope& catchParamScope)
+{
+    if (pc->useAsmOrInsideUseAsm())
+        return true;
+
+    for (DeclaredNameMap::Range r = catchParamScope.declared_->all(); !r.empty(); r.popFront()) {
+        DeclarationKind kind = r.front().value()->kind();
+        MOZ_ASSERT(DeclarationKindIsCatchParameter(kind));
+        JSAtom* name = r.front().key();
+        AddDeclaredNamePtr p = lookupDeclaredNameForAdd(name);
+        MOZ_ASSERT(!p);
+        if (!addDeclaredName(pc, p, name, kind))
+            return false;
+    }
+
+    return true;
+}
+
 void
-ParseContext::Scope::removeSimpleCatchParameter(ParseContext* pc, JSAtom* name)
+ParseContext::Scope::removeCatchParameters(ParseContext* pc, Scope& catchParamScope)
 {
     if (pc->useAsmOrInsideUseAsm())
         return;
 
-    DeclaredNamePtr p = declared_->lookup(name);
-    MOZ_ASSERT(p && p->value()->kind() == DeclarationKind::SimpleCatchParameter);
-    declared_->remove(p);
+    for (DeclaredNameMap::Range r = catchParamScope.declared_->all(); !r.empty(); r.popFront()) {
+        DeclaredNamePtr p = declared_->lookup(r.front().key());
+        MOZ_ASSERT(p);
+
+        // This check is needed because the catch body could have declared
+        // vars, which would have been added to catchParamScope.
+        if (DeclarationKindIsCatchParameter(r.front().value()->kind()))
+            declared_->remove(p);
+    }
 }
 
 void
@@ -921,6 +953,60 @@ DeclarationKindIsVar(DeclarationKind kind)
            kind == DeclarationKind::ForOfVar;
 }
 
+template <typename ParseHandler>
+Maybe<DeclarationKind>
+Parser<ParseHandler>::isVarRedeclaredInEval(HandlePropertyName name, DeclarationKind kind)
+{
+    MOZ_ASSERT(DeclarationKindIsVar(kind));
+    MOZ_ASSERT(pc->sc()->isEvalContext());
+
+    // In the case of eval, we also need to check enclosing VM scopes to see
+    // if the var declaration is allowed in the context.
+    //
+    // This check is necessary in addition to
+    // js::CheckEvalDeclarationConflicts because we only know during parsing
+    // if a var is bound by for-of.
+    Scope* enclosingScope = pc->sc()->compilationEnclosingScope();
+    Scope* varScope = EvalScope::nearestVarScopeForDirectEval(enclosingScope);
+    MOZ_ASSERT(varScope);
+    for (ScopeIter si(enclosingScope); si; si++) {
+        for (js::BindingIter bi(si.scope()); bi; bi++) {
+            if (bi.name() != name)
+                continue;
+
+            switch (bi.kind()) {
+              case BindingKind::Let: {
+                  // Annex B.3.5 allows redeclaring simple (non-destructured)
+                  // catch parameters with var declarations, except when it
+                  // appears in a for-of.
+                  bool annexB35Allowance = si.kind() == ScopeKind::SimpleCatch &&
+                                           kind != DeclarationKind::ForOfVar;
+                  if (!annexB35Allowance) {
+                      return Some(ScopeKindIsCatch(si.kind())
+                                  ? DeclarationKind::CatchParameter
+                                  : DeclarationKind::Let);
+                  }
+                  break;
+              }
+
+              case BindingKind::Const:
+                return Some(DeclarationKind::Const);
+
+              case BindingKind::Import:
+              case BindingKind::FormalParameter:
+              case BindingKind::Var:
+              case BindingKind::NamedLambdaCallee:
+                break;
+            }
+        }
+
+        if (si.scope() == varScope)
+            break;
+    }
+
+    return Nothing();
+}
+
 static bool
 DeclarationKindIsParameter(DeclarationKind kind)
 {
@@ -976,6 +1062,9 @@ Parser<ParseHandler>::tryDeclareVar(HandlePropertyName name, DeclarationKind kin
         }
     }
 
+    if (!pc->sc()->strict() && pc->sc()->isEvalContext())
+        *redeclaredKind = isVarRedeclaredInEval(name, kind);
+
     return true;
 }
 
@@ -987,46 +1076,6 @@ Parser<ParseHandler>::tryDeclareVarForAnnexBLexicalFunction(HandlePropertyName n
     Maybe<DeclarationKind> redeclaredKind;
     if (!tryDeclareVar(name, DeclarationKind::VarForAnnexBLexicalFunction, &redeclaredKind))
         return false;
-
-    // In the case of eval, we also need to check enclosing VM scopes to see
-    // if an Annex B var should be synthesized.
-    if (!redeclaredKind && pc->sc()->isEvalContext()) {
-        Scope* enclosingScope = pc->sc()->compilationEnclosingScope();
-        Scope* varScope = EvalScope::nearestVarScopeForDirectEval(enclosingScope);
-        MOZ_ASSERT(varScope);
-        for (ScopeIter si(enclosingScope); si; si++) {
-            for (js::BindingIter bi(si.scope()); bi; bi++) {
-                if (bi.name() != name)
-                    continue;
-
-                switch (bi.kind()) {
-                  case BindingKind::Let: {
-                    // Annex B.3.5 allows redeclaring simple (non-destructured)
-                    // catch parameters with var declarations, except when it
-                    // appears in a for-of, which a function declaration is
-                    // definitely not.
-                    bool annexB35Allowance = si.kind() == ScopeKind::Catch;
-                    if (!annexB35Allowance)
-                        redeclaredKind = Some(DeclarationKind::Let);
-                    break;
-                  }
-
-                  case BindingKind::Const:
-                    redeclaredKind = Some(DeclarationKind::Const);
-                    break;
-
-                  case BindingKind::Import:
-                  case BindingKind::FormalParameter:
-                  case BindingKind::Var:
-                  case BindingKind::NamedLambdaCallee:
-                    break;
-                }
-            }
-
-            if (si.scope() == varScope)
-                break;
-        }
-    }
 
     if (redeclaredKind) {
         // If an early error would have occurred, undo all the
@@ -2704,7 +2753,7 @@ Parser<ParseHandler>::functionArguments(YieldHandling yieldHandling, FunctionSyn
 template <typename ParseHandler>
 bool
 Parser<ParseHandler>::checkFunctionDefinition(HandleAtom funAtom, Node pn, FunctionSyntaxKind kind,
-                                              bool *tryAnnexB)
+                                              GeneratorKind generatorKind, bool* tryAnnexB)
 {
     if (kind == Statement) {
         TokenPos pos = handler.getPosition(pn);
@@ -2733,7 +2782,7 @@ Parser<ParseHandler>::checkFunctionDefinition(HandleAtom funAtom, Node pn, Funct
             MOZ_ASSERT(declaredInStmt->kind() != StatementKind::Label);
             MOZ_ASSERT(StatementKindIsBraced(declaredInStmt->kind()));
 
-            if (!pc->sc()->strict()) {
+            if (!pc->sc()->strict() && generatorKind == NotGenerator) {
                 // Under sloppy mode, try Annex B.3.3 semantics. If making an
                 // additional 'var' binding of the same name does not throw an
                 // early error, do so. This 'var' binding would be assigned
@@ -2893,7 +2942,7 @@ Parser<ParseHandler>::functionDefinition(InHandling inHandling, YieldHandling yi
 
     // Note the declared name and check for early errors.
     bool tryAnnexB = false;
-    if (!checkFunctionDefinition(funName, pn, kind, &tryAnnexB))
+    if (!checkFunctionDefinition(funName, pn, kind, generatorKind, &tryAnnexB))
         return null();
 
     // When fully parsing a LazyScript, we do not fully reparse its inner
@@ -5974,8 +6023,6 @@ Parser<ParseHandler>::tryStatement(YieldHandling yieldHandling)
              */
             MUST_MATCH_TOKEN(TOK_LP, JSMSG_PAREN_BEFORE_CATCH);
 
-            RootedPropertyName simpleCatchParam(context);
-
             if (!tokenStream.getToken(&tt))
                 return null();
             Node catchName;
@@ -5998,17 +6045,15 @@ Parser<ParseHandler>::tryStatement(YieldHandling yieldHandling)
                 if (!checkYieldNameValidity())
                     return null();
                 MOZ_FALLTHROUGH;
-              case TOK_NAME:
-                simpleCatchParam = tokenStream.currentName();
-                catchName = newName(simpleCatchParam);
+              case TOK_NAME: {
+                RootedPropertyName param(context, tokenStream.currentName());
+                catchName = newName(param);
                 if (!catchName)
                     return null();
-                if (!noteDeclaredName(simpleCatchParam, DeclarationKind::SimpleCatchParameter,
-                                      pos()))
-                {
+                if (!noteDeclaredName(param, DeclarationKind::SimpleCatchParameter, pos()))
                     return null();
-                }
                 break;
+              }
 
               default:
                 report(ParseError, false, null(), JSMSG_CATCH_IDENTIFIER);
@@ -6035,7 +6080,7 @@ Parser<ParseHandler>::tryStatement(YieldHandling yieldHandling)
 
             MUST_MATCH_TOKEN(TOK_LC, JSMSG_CURLY_BEFORE_CATCH);
 
-            Node catchBody = catchBlockStatement(yieldHandling, simpleCatchParam);
+            Node catchBody = catchBlockStatement(yieldHandling, scope);
             if (!catchBody)
                 return null();
 
@@ -6089,43 +6134,33 @@ Parser<ParseHandler>::tryStatement(YieldHandling yieldHandling)
 template <typename ParseHandler>
 typename ParseHandler::Node
 Parser<ParseHandler>::catchBlockStatement(YieldHandling yieldHandling,
-                                          HandlePropertyName simpleCatchParam)
+                                          ParseContext::Scope& catchParamScope)
 {
     ParseContext::Statement stmt(pc, StatementKind::Block);
 
-    // Annex B.3.5 requires that vars be allowed to redeclare a simple
-    // (non-destructured) catch parameter (including via a direct eval), so
-    // the catch parameter needs to live in its own scope. So if we have a
-    // simple catch parameter, make a new scope.
-    Node body;
-    if (simpleCatchParam) {
-        ParseContext::Scope scope(this);
-        if (!scope.init(pc))
-            return null();
+    // ES 13.15.7 CatchClauseEvaluation
+    //
+    // Step 8 means that the body of a catch block always has an additional
+    // lexical scope.
+    ParseContext::Scope scope(this);
+    if (!scope.init(pc))
+        return null();
 
-        // The catch parameter name cannot be redeclared inside the catch
-        // block, so declare the name in the inner scope.
-        if (!noteDeclaredName(simpleCatchParam, DeclarationKind::SimpleCatchParameter, pos()))
-            return null();
+    // The catch parameter names cannot be redeclared inside the catch
+    // block, so declare the name in the inner scope.
+    if (!scope.addCatchParameters(pc, catchParamScope))
+        return null();
 
-        Node list = statementList(yieldHandling);
-        if (!list)
-            return null();
-
-        // The catch parameter name is not bound in this scope, so remove it
-        // before generating bindings.
-        scope.removeSimpleCatchParameter(pc, simpleCatchParam);
-
-        body = finishLexicalScope(scope, list);
-    } else {
-        body = statementList(yieldHandling);
-    }
-    if (!body)
+    Node list = statementList(yieldHandling);
+    if (!list)
         return null();
 
     MUST_MATCH_TOKEN_MOD(TOK_RC, TokenStream::Operand, JSMSG_CURLY_AFTER_CATCH);
 
-    return body;
+    // The catch parameter names are not bound in the body scope, so remove
+    // them before generating bindings.
+    scope.removeCatchParameters(pc, catchParamScope);
+    return finishLexicalScope(scope, list);
 }
 
 template <typename ParseHandler>

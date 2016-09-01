@@ -154,9 +154,10 @@ class ParseContext : public Nestable<ParseContext>
         // name from all scopes in pc's scope stack.
         static void removeVarForAnnexBLexicalFunction(ParseContext* pc, JSAtom* name);
 
-        // Remove a simple catch parameter name. Used to implement the odd
-        // semantics of Annex B.3.5.
-        void removeSimpleCatchParameter(ParseContext* pc, JSAtom* name);
+        // Add and remove catch parameter names. Used to implement the odd
+        // semantics of catch bodies.
+        bool addCatchParameters(ParseContext* pc, Scope& catchParamScope);
+        void removeCatchParameters(ParseContext* pc, Scope& catchParamScope);
 
         void useAsVarScope(ParseContext* pc) {
             MOZ_ASSERT(!pc->varScope_);
@@ -1042,7 +1043,7 @@ class Parser final : private JS::AutoGCRooter, public StrictModeGetter
     Node withStatement(YieldHandling yieldHandling);
     Node throwStatement(YieldHandling yieldHandling);
     Node tryStatement(YieldHandling yieldHandling);
-    Node catchBlockStatement(YieldHandling yieldHandling, HandlePropertyName simpleCatchParam);
+    Node catchBlockStatement(YieldHandling yieldHandling, ParseContext::Scope& catchParamScope);
     Node debuggerStatement();
 
     Node variableStatement(YieldHandling yieldHandling);
@@ -1239,7 +1240,7 @@ class Parser final : private JS::AutoGCRooter, public StrictModeGetter
     bool declareDotGeneratorName();
 
     bool checkFunctionDefinition(HandleAtom funAtom, Node pn, FunctionSyntaxKind kind,
-                                 bool *tryAnnexB);
+                                 GeneratorKind generatorKind, bool* tryAnnexB);
     bool skipLazyInnerFunction(Node pn, bool tryAnnexB);
     bool innerFunction(Node pn, ParseContext* outerpc, HandleFunction fun,
                        InHandling inHandling, FunctionSyntaxKind kind,
@@ -1275,6 +1276,8 @@ class Parser final : private JS::AutoGCRooter, public StrictModeGetter
                                        bool disallowDuplicateParams = false,
                                        bool* duplicatedParam = nullptr);
     bool noteDestructuredPositionalFormalParameter(Node fn, Node destruct);
+    mozilla::Maybe<DeclarationKind> isVarRedeclaredInEval(HandlePropertyName name,
+                                                          DeclarationKind kind);
     bool tryDeclareVar(HandlePropertyName name, DeclarationKind kind,
                        mozilla::Maybe<DeclarationKind>* redeclaredKind);
     bool tryDeclareVarForAnnexBLexicalFunction(HandlePropertyName name, bool* tryAnnexB);

@@ -218,7 +218,7 @@ MozMillElement.prototype.dragToElement = function(aElement, aOffsetX, aOffsetY,
     EventUtils.synthesizeMouse(destNode, destCoords.x, destCoords.y,
                                { type: "mousemove" }, destWindow);
 
-    var event = destWindow.document.createEvent("DragEvents");
+    var event = destWindow.document.createEvent("DragEvent");
     event.initDragEvent("dragenter", true, true, destWindow, 0, 0, 0, 0, 0,
                         false, false, false, false, 0, null, dataTransfer);
     event.initDragEvent("dragover", true, true, destWindow, 0, 0, 0, 0, 0,

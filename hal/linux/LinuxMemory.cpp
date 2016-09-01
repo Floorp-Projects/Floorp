@@ -35,37 +35,5 @@ GetTotalSystemMemory()
   return sTotalMemory * 1024;
 }
 
-uint32_t
-GetTotalSystemMemoryLevel()
-{
-  static uint32_t sTotalMemoryLevel = 1;
-  uint32_t sTotalMemory;
-  static bool sTotalMemoryObtained = false;
-
-  if (!sTotalMemoryObtained) {
-    sTotalMemoryObtained = true;
-
-    FILE* fd = fopen("/proc/meminfo", "r");
-    if (!fd) {
-      return 0;
-    }
-
-    int rv = fscanf(fd, "MemTotal: %i kB", &sTotalMemory);
-
-    if (fclose(fd) || rv != 1) {
-      return 0;
-    }
-
-    // From KB to MiB
-    sTotalMemory /= 1024;
-
-    while (sTotalMemoryLevel <= sTotalMemory) {
-      sTotalMemoryLevel *= 2;
-    }
-  }
-
-  return sTotalMemoryLevel;
-}
-
 } // namespace hal_impl
 } // namespace mozilla

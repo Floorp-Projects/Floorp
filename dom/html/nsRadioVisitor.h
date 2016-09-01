@@ -94,5 +94,18 @@ protected:
   bool mNotify;
 };
 
+class nsRadioUpdateStateVisitor : public nsRadioVisitor
+{
+public:
+  explicit nsRadioUpdateStateVisitor(nsIFormControl* aExcludeElement)
+    : mExcludeElement(aExcludeElement)
+    { }
+
+  virtual bool Visit(nsIFormControl* aRadio) override;
+
+protected:
+  nsIFormControl* mExcludeElement;
+};
+
 #endif // _nsRadioVisitor_h__
 

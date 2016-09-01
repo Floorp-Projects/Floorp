@@ -1669,27 +1669,6 @@ DefineStandardSlot(JSContext* cx, HandleObject obj, JSProtoKey key, JSAtom* atom
                    HandleValue v, uint32_t attrs, bool& named)
 {
     RootedId id(cx, AtomToId(atom));
-
-    if (key != JSProto_Null) {
-        /*
-         * Initializing an actual standard class on a global object. If the
-         * property is not yet present, force it into a new one bound to a
-         * reserved slot. Otherwise, go through the normal property path.
-         */
-        Rooted<GlobalObject*> global(cx, &obj->as<GlobalObject>());
-
-        if (!global->lookup(cx, id)) {
-            global->setConstructorPropertySlot(key, v);
-
-            uint32_t slot = GlobalObject::constructorPropertySlot(key);
-            if (!NativeObject::addProperty(cx, global, id, nullptr, nullptr, slot, attrs, 0))
-                return false;
-
-            named = true;
-            return true;
-        }
-    }
-
     named = DefineProperty(cx, obj, id, v, nullptr, nullptr, attrs);
     return named;
 }

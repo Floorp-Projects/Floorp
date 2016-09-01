@@ -55,3 +55,15 @@ nsRadioSetValueMissingState::Visit(nsIFormControl* aRadio)
   return true;
 }
 
+bool
+nsRadioUpdateStateVisitor::Visit(nsIFormControl* aRadio)
+{
+  if (aRadio == mExcludeElement) {
+    return true;
+  }
+
+  HTMLInputElement* input = static_cast<HTMLInputElement*>(aRadio);
+  input->UpdateState(true);
+
+  return true;
+}
