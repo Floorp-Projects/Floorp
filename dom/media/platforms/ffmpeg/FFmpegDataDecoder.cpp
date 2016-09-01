@@ -117,11 +117,10 @@ FFmpegDataDecoder<LIBAV_VER>::ProcessDecode(MediaRawData* aSample)
     case DecodeResult::FATAL_ERROR:
       mCallback->Error(MediaDataDecoderError::FATAL_ERROR);
       break;
-    case DecodeResult::DECODE_NO_FRAME:
-      mCallback->InputExhausted();
-      break;
     default:
-      break;
+      if (mTaskQueue->IsEmpty()) {
+        mCallback->InputExhausted();
+      }
   }
 }
 

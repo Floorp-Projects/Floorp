@@ -143,15 +143,13 @@ WMFMediaDataDecoder::ProcessOutput()
 {
   RefPtr<MediaData> output;
   HRESULT hr = S_OK;
-  bool didOutput = false;
   while (SUCCEEDED(hr = mMFTManager->Output(mLastStreamOffset, output)) &&
          output) {
     mHasSuccessfulOutput = true;
     mCallback->Output(output);
-    didOutput = true;
   }
   if (hr == MF_E_TRANSFORM_NEED_MORE_INPUT) {
-    if (!didOutput) {
+    if (mTaskQueue->IsEmpty()) {
       mCallback->InputExhausted();
     }
   } else if (FAILED(hr)) {
