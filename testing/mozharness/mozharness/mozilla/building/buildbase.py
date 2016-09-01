@@ -918,6 +918,14 @@ or run without that action (ie: --no-{action})"
                 'branch': self.branch
             }
 
+        # this prevents taskcluster from overwriting the target files with
+        # the multilocale files. Put everything from the en-US build in a
+        # separate folder.
+        if multiLocale and self.config.get('taskcluster_nightly'):
+            if 'UPLOAD_PATH' in mach_env:
+                mach_env['UPLOAD_PATH'] = os.path.join(mach_env['UPLOAD_PATH'],
+                                                       'en-US')
+
         # _query_post_upload_cmd returns a list (a cmd list), for env sake here
         # let's make it a string
         if c.get('is_automation'):
@@ -1635,17 +1643,28 @@ or run without that action (ie: --no-{action})"
         dirs = self.query_abs_dirs()
         base_work_dir = dirs['base_work_dir']
         objdir = dirs['abs_obj_dir']
-        branch = self.buildbot_config['properties']['branch']
+        branch = self.branch
 
         # Some android versions share the same .json config - if
         # multi_locale_config_platform is set, use that the .json name;
         # otherwise, use the buildbot platform.
+        default_platform = self.buildbot_config['properties'].get('platform',
+                                                                  'android')
+
         multi_config_pf = self.config.get('multi_locale_config_platform',
-                                          self.buildbot_config['properties']['platform'])
+                                          default_platform)
+
+        # The l10n script location differs on buildbot and taskcluster
+        if self.config.get('taskcluster_nightly'):
+            multil10n_path = \
+                'build/src/testing/mozharness/scripts/multil10n.py'
+            base_work_dir = os.path.join(base_work_dir, 'workspace')
+        else:
+            multil10n_path = '%s/scripts/scripts/multil10n.py' % base_work_dir,
 
         cmd = [
             self.query_exe('python'),
-            '%s/scripts/scripts/multil10n.py' % base_work_dir,
+            multil10n_path,
             '--config-file',
             'multi_locale/%s_%s.json' % (branch, multi_config_pf),
             '--config-file',
