@@ -3850,7 +3850,7 @@ nsFlexContainerFrame::Reflow(nsPresContext* aPresContext,
     SortChildrenIfNeeded<IsOrderLEQWithDOMFallback>();
   }
 
-  RenumberLists();
+  RenumberList();
 
   const FlexboxAxisTracker axisTracker(this, aReflowInput.GetWritingMode());
 
@@ -4391,7 +4391,7 @@ nsFlexContainerFrame::GetMinISize(nsRenderingContext* aRenderingContext)
   nscoord minWidth = 0;
   DISPLAY_MIN_WIDTH(this, minWidth);
 
-  RenumberLists();
+  RenumberList();
 
   const nsStylePosition* stylePos = StylePosition();
   const FlexboxAxisTracker axisTracker(this, GetWritingMode());
@@ -4420,7 +4420,7 @@ nsFlexContainerFrame::GetPrefISize(nsRenderingContext* aRenderingContext)
   nscoord prefWidth = 0;
   DISPLAY_PREF_WIDTH(this, prefWidth);
 
-  RenumberLists();
+  RenumberList();
 
   // XXXdholbert Optimization: We could cache our intrinsic widths like
   // nsBlockFrame does (and return it early from this function if it's set).
