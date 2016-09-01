@@ -149,9 +149,7 @@ WMFMediaDataDecoder::ProcessOutput()
     mCallback->Output(output);
   }
   if (hr == MF_E_TRANSFORM_NEED_MORE_INPUT) {
-    if (mTaskQueue->IsEmpty()) {
-      mCallback->InputExhausted();
-    }
+    mCallback->InputExhausted();
   } else if (FAILED(hr)) {
     NS_WARNING("WMFMediaDataDecoder failed to output data");
     mCallback->Error(MediaDataDecoderError::DECODE_ERROR);
