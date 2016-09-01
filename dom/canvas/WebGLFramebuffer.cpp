@@ -370,6 +370,15 @@ WebGLFBAttachPoint::Resolve(gl::GLContext* gl, FBTarget target) const
 
     const auto& texName = Texture()->mGLName;
 
+    ////
+
+    const auto fnAttach2D = [&](GLenum attachmentPoint) {
+        gl->fFramebufferTexture2D(target.get(), attachmentPoint, mTexImageTarget.get(),
+                                  texName, mTexImageLevel);
+    };
+
+    ////
+
     switch (mTexImageTarget.get()) {
     case LOCAL_GL_TEXTURE_2D:
     case LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_X:
@@ -378,8 +387,12 @@ WebGLFBAttachPoint::Resolve(gl::GLContext* gl, FBTarget target) const
     case LOCAL_GL_TEXTURE_CUBE_MAP_NEGATIVE_Y:
     case LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_Z:
     case LOCAL_GL_TEXTURE_CUBE_MAP_NEGATIVE_Z:
-        gl->fFramebufferTexture2D(target.get(), mAttachmentPoint, mTexImageTarget.get(),
-                                  texName, mTexImageLevel);
+        if (mAttachmentPoint == LOCAL_GL_DEPTH_STENCIL_ATTACHMENT) {
+            fnAttach2D(LOCAL_GL_DEPTH_ATTACHMENT);
+            fnAttach2D(LOCAL_GL_STENCIL_ATTACHMENT);
+        } else {
+            fnAttach2D(mAttachmentPoint);
+        }
         break;
 
     case LOCAL_GL_TEXTURE_2D_ARRAY:
