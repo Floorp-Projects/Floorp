@@ -4,7 +4,7 @@
  * Tests that the identity-box shows the chromeUI styling
  * when viewing about:home in a new window.
  */
-add_task(function*(){
+add_task(function*() {
   let homepage = "about:home";
   yield SpecialPowers.pushPrefEnv({
     "set": [

@@ -9,7 +9,7 @@ function test() {
 
   waitForExplicitFinish();
 
-  Task.spawn(function () {
+  Task.spawn(function* () {
     tab1 = gBrowser.addTab();
     tab2 = gBrowser.addTab();
     yield FullZoomHelper.selectTabAndWaitForLocationChange(tab1);

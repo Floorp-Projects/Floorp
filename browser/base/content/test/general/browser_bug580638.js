@@ -41,7 +41,7 @@ function test() {
 
   gBrowser.selectedTab = lastSelectedTab;
   testState(false);
-  
+
   gBrowser.selectedTab = pinnedTab;
   testState(true);
 
@@ -49,7 +49,7 @@ function test() {
   gBrowser.unpinTab(pinnedTab);
   testState(false);
 
-  gBrowser.pinTab(pinnedTab);  
+  gBrowser.pinTab(pinnedTab);
   testState(true);
 
   // Test updating the key state after removing the tab.

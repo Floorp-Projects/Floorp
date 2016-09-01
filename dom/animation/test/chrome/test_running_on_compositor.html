@@ -560,5 +560,199 @@ promise_test(function(t) {
 }, 'Clearing *important* opacity style on the target element sends the ' +
    'animation to the compositor');
 
+promise_test(function(t) {
+  var div = addDiv(t);
+  var firstAnimation = div.animate({ opacity: [1, 0] }, 100 * MS_PER_SEC);
+  var secondAnimation = div.animate({ opacity: [0, 1] }, 100 * MS_PER_SEC);
+
+  var another = addDiv(t);
+
+  return Promise.all([firstAnimation.ready, secondAnimation.ready]).then(function() {
+    assert_equals(secondAnimation.isRunningOnCompositor, omtaEnabled,
+                  'The second opacity animation on an element reports that ' +
+                  'it is running on the compositor');
+    assert_equals(firstAnimation.isRunningOnCompositor, false,
+                  'The first opacity animation on the same element reports ' +
+                  'that it is NOT running on the compositor');
+
+    firstAnimation.effect.target = another;
+    return waitForFrame();
+  }).then(function() {
+    assert_equals(secondAnimation.isRunningOnCompositor, omtaEnabled,
+                  'The second opacity animation on the element keeps ' +
+                  'running on the compositor after the preiously overridden ' +
+                  'animation is applied to a different element');
+    assert_equals(firstAnimation.isRunningOnCompositor, omtaEnabled,
+                  'The previously overridden opacity animation reports that ' +
+                  'it it running on the compositor after being applied to a ' +
+                  'different element');
+  });
+}, 'Active animation which was not running on the compositor due to ' +
+   'composite order starts running on the compositor after changing ' +
+   'the target element');
+
+promise_test(function(t) {
+  var div = addDiv(t);
+  var firstAnimation = div.animate({ opacity: [1, 0] }, 100 * MS_PER_SEC);
+  var secondAnimation = div.animate({ opacity: [0, 1] }, 100 * MS_PER_SEC);
+
+  var another = addDiv(t);
+
+  return Promise.all([firstAnimation.ready, secondAnimation.ready]).then(function() {
+    assert_equals(secondAnimation.isRunningOnCompositor, omtaEnabled,
+                  'The second opacity animation on an element reports that ' +
+                  'it is running on the compositor');
+    assert_equals(firstAnimation.isRunningOnCompositor, false,
+                  'The first opacity animation on the same element reports ' +
+                  'that it is NOT running on the compositor');
+
+    secondAnimation.effect.target = another;
+    return waitForFrame();
+  }).then(function() {
+    assert_equals(secondAnimation.isRunningOnCompositor, omtaEnabled,
+                  'The second opacity animation continues to run on the ' +
+                  'compositor after being applied to a different element');
+    assert_equals(firstAnimation.isRunningOnCompositor, omtaEnabled,
+                  'The previously overridden opacity animation now reports ' +
+                  'that it is running on the compositor after the animation ' +
+                  'that was overridding it is applied to a different element');
+  });
+}, 'Animation which was overridden and, as a result, not running on the ' +
+   'compositor begins running on the compositor after higher-priority ' +
+   'animation is applied to a different element');
+
+promise_test(function(t) {
+  var div = addDiv(t);
+  var another = addDiv(t);
+
+  var animation = div.animate({ opacity: [1, 0] }, 100 * MS_PER_SEC);
+  var anotherAnimation = another.animate({ opacity: [0, 1] }, 100 * MS_PER_SEC);
+
+  return Promise.all([animation.ready, anotherAnimation.ready]).then(function() {
+    assert_equals(anotherAnimation.isRunningOnCompositor, omtaEnabled,
+                  'An opacity animation on an element reports that ' +
+                  'it is running on the compositor');
+    assert_equals(animation.isRunningOnCompositor, omtaEnabled,
+                  'Opacity animation running on a different element reports ' +
+                  'that it is running on the compositor');
+
+    anotherAnimation.effect.target = div;
+    return waitForFrame();
+  }).then(function() {
+    assert_equals(anotherAnimation.isRunningOnCompositor, omtaEnabled,
+                  'Animation continues to run on the compositor after ' +
+                  'being applied to a different element with a ' +
+                  'lower-priority animation');
+    assert_equals(animation.isRunningOnCompositor, false,
+                  'Animation stops running on the compositor after ' +
+                  'a higher-priority animation originally applied to ' +
+                  'a different element is applied to the same element');
+  });
+}, 'Moving a higher-priority animation to an element which already has the ' +
+   'same property animation running on the compositor makes the initial ' +
+   'animation stop running on the compositor');
+
+promise_test(function(t) {
+  var div = addDiv(t);
+  var importantOpacityElement = addDiv(t, { style: "opacity: 1 ! important" });
+
+  var animation = div.animate({ opacity: [1, 0] }, 100 * MS_PER_SEC);
+
+  return animation.ready.then(function() {
+    assert_equals(animation.isRunningOnCompositor, omtaEnabled,
+                  'Opacity animation on an element reports ' +
+                  'that it is running on the compositor');
+
+    animation.effect.target = null;
+    return waitForFrame();
+  }).then(function() {
+    assert_equals(animation.isRunningOnCompositor, false,
+                  'Animation is no longer running on the compositor after ' +
+                  'removing from the element');
+    animation.effect.target = importantOpacityElement;
+    return waitForFrame();
+  }).then(function() {
+    assert_equals(animation.isRunningOnCompositor, false,
+                  'Animation is NOT running on the compositor even after ' +
+                  'being applied to a different element which has an ' +
+                  '!important opacity declaration');
+  });
+}, 'Animation continues not running on the compositor after being ' +
+   'applied to an element which has an important declaration and ' +
+   'having previously been temporarily associated with no target element');
+
+promise_test(function(t) {
+  var div = addDiv(t);
+  var another = addDiv(t);
+
+  var lowerAnimation = div.animate({ opacity: [1, 0] }, 100 * MS_PER_SEC);
+  var higherAnimation = another.animate({ opacity: [0, 1] }, 100 * MS_PER_SEC);
+
+  return Promise.all([lowerAnimation.ready, higherAnimation.ready]).then(function() {
+    assert_equals(lowerAnimation.isRunningOnCompositor, omtaEnabled,
+                  'An opacity animation on an element reports that ' +
+                  'it is running on the compositor');
+    assert_equals(higherAnimation.isRunningOnCompositor, omtaEnabled,
+                  'Opacity animation on a different element reports ' +
+                  'that it is running on the compositor');
+
+    lowerAnimation.effect.target = null;
+    return waitForFrame();
+  }).then(function() {
+    assert_equals(lowerAnimation.isRunningOnCompositor, false,
+                  'Animation is no longer running on the compositor after ' +
+                  'being removed from the element');
+    lowerAnimation.effect.target = another;
+    return waitForFrame();
+  }).then(function() {
+    assert_equals(lowerAnimation.isRunningOnCompositor, false,
+                  'A lower-priority animation does NOT begin running ' +
+                  'on the compositor after being applied to an element ' +
+                  'which has a higher-priority animation');
+    assert_equals(higherAnimation.isRunningOnCompositor, omtaEnabled,
+                  'A higher-priority animation continues to run on the ' +
+                  'compositor even after a lower-priority animation is ' +
+                  'applied to the same element');
+  });
+}, 'Animation continues not running on the compositor after being applied ' +
+   'to an element which has a higher-priority animation and after ' +
+   'being remporarily associated with no target element');
+
+promise_test(function(t) {
+  var div = addDiv(t);
+  var another = addDiv(t);
+
+  var lowerAnimation = div.animate({ opacity: [1, 0] }, 100 * MS_PER_SEC);
+  var higherAnimation = another.animate({ opacity: [0, 1] }, 100 * MS_PER_SEC);
+
+  return Promise.all([lowerAnimation.ready, higherAnimation.ready]).then(function() {
+    assert_equals(lowerAnimation.isRunningOnCompositor, omtaEnabled,
+                  'An opacity animation on an element reports that ' +
+                  'it is running on the compositor');
+    assert_equals(higherAnimation.isRunningOnCompositor, omtaEnabled,
+                  'Opacity animation on a different element reports ' +
+                  'that it is running on the compositor');
+
+    higherAnimation.effect.target = null;
+    return waitForFrame();
+  }).then(function() {
+    assert_equals(higherAnimation.isRunningOnCompositor, false,
+                  'Animation is no longer running on the compositor after ' +
+                  'being removed from the element');
+    higherAnimation.effect.target = div;
+    return waitForFrame();
+  }).then(function() {
+    assert_equals(lowerAnimation.isRunningOnCompositor, false,
+                  'Animation stops running on the compositor after ' +
+                  'a higher-priority animation applied to the same element');
+    assert_equals(higherAnimation.isRunningOnCompositor, omtaEnabled,
+                  'A higher-priority animation begins to running on the ' +
+                  'compositor after being applied to an element which has ' +
+                  'a lower-priority-animation');
+  });
+}, 'Animation begins running on the compositor after being applied ' +
+   'to an element which has a lower-priority animation once after ' +
+   'disassociating with an element');
+
 </script>
 </body>

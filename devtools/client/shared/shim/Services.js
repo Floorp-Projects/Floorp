@@ -41,10 +41,6 @@ function PrefBranch(parent, name, fullName) {
   this._hasUserValue = false;
   this._userValue = null;
   this._type = PREF_INVALID;
-
-  if (!parent) {
-    this._initializeRoot();
-  }
 }
 
 PrefBranch.prototype = {
@@ -469,6 +465,7 @@ const Services = {
   get prefs() {
     if (!this._prefs) {
       this._prefs = new PrefBranch(null, "", "");
+      this._prefs._initializeRoot();
     }
     return this._prefs;
   },

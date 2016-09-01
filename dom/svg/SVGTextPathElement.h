@@ -74,9 +74,9 @@ public:
   static nsSVGEnumMapping sSpacingMap[];
   static EnumInfo sEnumInfo[3];
 
-  enum { HREF };
-  nsSVGString mStringAttributes[1];
-  static StringInfo sStringInfo[1];
+  enum { HREF, XLINK_HREF };
+  nsSVGString mStringAttributes[2];
+  static StringInfo sStringInfo[2];
 };
 
 } // namespace dom

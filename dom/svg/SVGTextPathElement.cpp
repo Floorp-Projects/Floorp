@@ -61,8 +61,9 @@ nsSVGElement::EnumInfo SVGTextPathElement::sEnumInfo[3] =
   }
 };
 
-nsSVGElement::StringInfo SVGTextPathElement::sStringInfo[1] =
+nsSVGElement::StringInfo SVGTextPathElement::sStringInfo[2] =
 {
+  { &nsGkAtoms::href, kNameSpaceID_None, true },
   { &nsGkAtoms::href, kNameSpaceID_XLink, true }
 };
 
@@ -82,7 +83,9 @@ NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGTextPathElement)
 already_AddRefed<SVGAnimatedString>
 SVGTextPathElement::Href()
 {
-  return mStringAttributes[HREF].ToDOMAnimatedString(this);
+  return mStringAttributes[HREF].IsExplicitlySet()
+         ? mStringAttributes[HREF].ToDOMAnimatedString(this)
+         : mStringAttributes[XLINK_HREF].ToDOMAnimatedString(this);
 }
 
 //----------------------------------------------------------------------

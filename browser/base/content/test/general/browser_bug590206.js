@@ -113,7 +113,7 @@ add_task(function* test_file() {
   gBrowser.removeTab(newTab);
 });
 
-add_task(function test_resource_uri() {
+add_task(function* test_resource_uri() {
   let oldTab = gBrowser.selectedTab;
   let dataURI = "resource://gre/modules/Services.jsm";
 
@@ -130,7 +130,7 @@ add_task(function test_resource_uri() {
   gBrowser.removeTab(newTab);
 });
 
-add_task(function test_data_uri() {
+add_task(function* test_data_uri() {
   let oldTab = gBrowser.selectedTab;
   let dataURI = "data:text/html,hi"
 
@@ -146,7 +146,7 @@ add_task(function test_data_uri() {
   gBrowser.removeTab(newTab);
 });
 
-add_task(function test_about_uri() {
+add_task(function* test_about_uri() {
   let oldTab = gBrowser.selectedTab;
   let aboutURI = "about:robots"
 

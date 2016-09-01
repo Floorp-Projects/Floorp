@@ -17,7 +17,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "Downloads",
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesTestUtils",
                                   "resource://testing-common/PlacesTestUtils.jsm");
 
-function setup(){
+function setup() {
   gPrefService.setBoolPref("browser.altClickSave", true);
 
   let testPage =
@@ -52,7 +52,7 @@ add_task(function* test_alt_click()
   let downloads = [];
   let downloadView;
   // When 1 download has been attempted then resolve the promise.
-  let finishedAllDownloads = new Promise( (resolve)=> {
+  let finishedAllDownloads = new Promise( (resolve) => {
     downloadView = {
       onDownloadAdded: function (aDownload) {
         downloads.push(aDownload);
@@ -81,7 +81,7 @@ add_task(function* test_alt_click_on_xlinks()
   let downloads = [];
   let downloadView;
   // When all 2 downloads have been attempted then resolve the promise.
-  let finishedAllDownloads = new Promise( (resolve)=> {
+  let finishedAllDownloads = new Promise( (resolve) => {
     downloadView = {
       onDownloadAdded: function (aDownload) {
         downloads.push(aDownload);

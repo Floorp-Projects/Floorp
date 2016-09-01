@@ -32,6 +32,7 @@ EXPORTS.mozilla.dom += [
 ]
 
 UNIFIED_SOURCES += [
+    'AvailabilityCollection.cpp',
     'ControllerConnectionCollection.cpp',
     'DCPresentationChannelDescription.cpp',
     'ipc/PresentationBuilderChild.cpp',

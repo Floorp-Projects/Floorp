@@ -38,8 +38,9 @@ nsSVGElement::LengthInfo SVGUseElement::sLengthInfo[4] =
   { &nsGkAtoms::height, 0, nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER, SVGContentUtils::Y },
 };
 
-nsSVGElement::StringInfo SVGUseElement::sStringInfo[1] =
+nsSVGElement::StringInfo SVGUseElement::sStringInfo[2] =
 {
+  { &nsGkAtoms::href, kNameSpaceID_None, true },
   { &nsGkAtoms::href, kNameSpaceID_XLink, true }
 };
 
@@ -109,7 +110,9 @@ SVGUseElement::Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const
 already_AddRefed<SVGAnimatedString>
 SVGUseElement::Href()
 {
-  return mStringAttributes[HREF].ToDOMAnimatedString(this);
+  return mStringAttributes[HREF].IsExplicitlySet()
+         ? mStringAttributes[HREF].ToDOMAnimatedString(this)
+         : mStringAttributes[XLINK_HREF].ToDOMAnimatedString(this);
 }
 
 //----------------------------------------------------------------------
@@ -395,9 +398,15 @@ void
 SVGUseElement::LookupHref()
 {
   nsAutoString href;
-  mStringAttributes[HREF].GetAnimValue(href, this);
-  if (href.IsEmpty())
+  if (mStringAttributes[HREF].IsExplicitlySet()) {
+    mStringAttributes[HREF].GetAnimValue(href, this);
+  } else {
+    mStringAttributes[XLINK_HREF].GetAnimValue(href, this);
+  }
+
+  if (href.IsEmpty()) {
     return;
+  }
 
   nsCOMPtr<nsIURI> targetURI;
   nsCOMPtr<nsIURI> baseURI = mOriginal ? mOriginal->GetBaseURI() : GetBaseURI();

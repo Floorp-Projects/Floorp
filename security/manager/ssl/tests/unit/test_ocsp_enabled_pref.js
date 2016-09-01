@@ -25,7 +25,7 @@ function getFailingOCSPResponder() {
 }
 
 function getOCSPResponder(expectedCertNames) {
-  return startOCSPResponder(SERVER_PORT, "www.example.com", [], "test_ev_certs",
+  return startOCSPResponder(SERVER_PORT, "www.example.com", "test_ev_certs",
                             expectedCertNames, []);
 }
 
@@ -41,7 +41,7 @@ function testOff() {
   add_test(() => {
     clearOCSPCache();
     let ocspResponder = getFailingOCSPResponder();
-    checkEVStatus(gCertDB, certFromFile("ev-valid"), certificateUsageSSLServer,
+    checkEVStatus(gCertDB, certFromFile("test-oid-path-ee"), certificateUsageSSLServer,
                   false);
     ocspResponder.stop(run_next_test);
   });
@@ -50,7 +50,7 @@ function testOff() {
   add_test(() => {
     clearOCSPCache();
     let ocspResponder = getFailingOCSPResponder();
-    checkCertErrorGeneric(gCertDB, certFromFile("non-ev-root"),
+    checkCertErrorGeneric(gCertDB, certFromFile("non-ev-root-path-ee"),
                           PRErrorCodeSuccess, certificateUsageSSLServer);
     ocspResponder.stop(run_next_test);
   });
@@ -69,9 +69,9 @@ function testOn() {
   add_test(() => {
     clearOCSPCache();
     let ocspResponder =
-      getOCSPResponder(gEVExpected ? ["int-ev-valid", "ev-valid"]
-                                   : ["ev-valid"]);
-    checkEVStatus(gCertDB, certFromFile("ev-valid"), certificateUsageSSLServer,
+      getOCSPResponder(gEVExpected ? ["test-oid-path-int", "test-oid-path-ee"]
+                                   : ["test-oid-path-ee"]);
+    checkEVStatus(gCertDB, certFromFile("test-oid-path-ee"), certificateUsageSSLServer,
                   gEVExpected);
     ocspResponder.stop(run_next_test);
   });
@@ -80,8 +80,8 @@ function testOn() {
   // successfully.
   add_test(() => {
     clearOCSPCache();
-    let ocspResponder = getOCSPResponder(["non-ev-root"]);
-    checkCertErrorGeneric(gCertDB, certFromFile("non-ev-root"),
+    let ocspResponder = getOCSPResponder(["non-ev-root-path-ee"]);
+    checkCertErrorGeneric(gCertDB, certFromFile("non-ev-root-path-ee"),
                           PRErrorCodeSuccess, certificateUsageSSLServer);
     ocspResponder.stop(run_next_test);
   });
@@ -100,9 +100,9 @@ function testEVOnly() {
   add_test(() => {
     clearOCSPCache();
     let ocspResponder = gEVExpected
-                      ? getOCSPResponder(["int-ev-valid", "ev-valid"])
+                      ? getOCSPResponder(["test-oid-path-int", "test-oid-path-ee"])
                       : getFailingOCSPResponder();
-    checkEVStatus(gCertDB, certFromFile("ev-valid"), certificateUsageSSLServer,
+    checkEVStatus(gCertDB, certFromFile("test-oid-path-ee"), certificateUsageSSLServer,
                   gEVExpected);
     ocspResponder.stop(run_next_test);
   });
@@ -111,7 +111,7 @@ function testEVOnly() {
   add_test(() => {
     clearOCSPCache();
     let ocspResponder = getFailingOCSPResponder();
-    checkCertErrorGeneric(gCertDB, certFromFile("non-ev-root"),
+    checkCertErrorGeneric(gCertDB, certFromFile("non-ev-root-path-ee"),
                           PRErrorCodeSuccess, certificateUsageSSLServer);
     ocspResponder.stop(run_next_test);
   });
@@ -129,9 +129,9 @@ function run_test() {
   Services.prefs.setBoolPref("security.OCSP.require", true);
 
   loadCert("evroot", "CTu,,");
-  loadCert("int-ev-valid", ",,");
+  loadCert("test-oid-path-int", ",,");
   loadCert("non-evroot-ca", "CTu,,");
-  loadCert("int-non-ev-root", ",,");
+  loadCert("non-ev-root-path-int", ",,");
 
   testOff();
   testOn();

@@ -91,18 +91,19 @@ function testCreateRequest() {
     info('Sender: --- testCreateRequest ---');
     request = new PresentationRequest(receiverUrl);
     request.getAvailability().then((aAvailability) => {
+      is(aAvailability.value, false, "Sender: should have no available device after setup");
       aAvailability.onchange = function() {
         aAvailability.onchange = null;
         ok(aAvailability.value, 'Sender: Device should be available.');
         aResolve();
       }
+
+      gScript.sendAsyncMessage('trigger-device-add');
     }).catch((aError) => {
       ok(false, 'Sender: Error occurred when getting availability: ' + aError);
       teardown();
       aReject();
     });
-
-    gScript.sendAsyncMessage('trigger-device-add');
   });
 }
 

@@ -10,7 +10,7 @@ add_task(function* test_switchtab_decodeuri() {
   yield promiseAutocompleteResultPopup("dummy_page");
 
   info("Select autocomplete popup entry");
-  EventUtils.synthesizeKey("VK_DOWN" , {});
+  EventUtils.synthesizeKey("VK_DOWN", {});
   ok(gURLBar.value.startsWith("moz-action:switchtab"), "switch to tab entry found");
 
   info("switch-to-tab");
@@ -21,7 +21,7 @@ add_task(function* test_switchtab_decodeuri() {
       is(gBrowser.selectedTab, tab, "Should have switched to the right tab");
       resolve();
     }, false);
-    EventUtils.synthesizeKey("VK_RETURN" , { });
+    EventUtils.synthesizeKey("VK_RETURN", { });
   });
 
   gBrowser.removeCurrentTab();

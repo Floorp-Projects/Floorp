@@ -61,14 +61,14 @@ function runSocialTestWithProvider(manifest, callback, finishcallback) {
   let manifests = Array.isArray(manifest) ? manifest : [manifest];
 
   // Check that none of the provider's content ends up in history.
-  function finishCleanUp() {
+  function* finishCleanUp() {
     for (let i = 0; i < manifests.length; i++) {
       let m = manifests[i];
       for (let what of ['iconURL', 'shareURL']) {
         if (m[what]) {
           yield promiseSocialUrlNotRemembered(m[what]);
         }
-      };
+      }
     }
     for (let i = 0; i < gURLsNotRemembered.length; i++) {
       yield promiseSocialUrlNotRemembered(gURLsNotRemembered[i]);
@@ -153,10 +153,10 @@ function runSocialTests(tests, cbPreTest, cbPostTest, cbFinish) {
 
 
   if (cbPreTest === undefined) {
-    cbPreTest = function(cb) {cb()};
+    cbPreTest = function(cb) { cb() };
   }
   if (cbPostTest === undefined) {
-    cbPostTest = function(cb) {cb()};
+    cbPostTest = function(cb) { cb() };
   }
 
   function runNextTest() {
@@ -213,7 +213,7 @@ function setManifestPref(name, manifest) {
 function getManifestPrefname(aManifest) {
   // is same as the generated name in SocialServiceInternal.getManifestPrefname
   let originUri = Services.io.newURI(aManifest.origin, null, null);
-  return "social.manifest." + originUri.hostPort.replace('.','-');
+  return "social.manifest." + originUri.hostPort.replace('.', '-');
 }
 
 function ensureFrameLoaded(frame, uri) {
