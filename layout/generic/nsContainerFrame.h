@@ -473,7 +473,7 @@ public:
    * if it's already in reflow, or via calling FrameNeedsReflow() to schedule
    * a reflow.
    */
-  bool RenumberLists();
+  bool RenumberList();
 
   /**
    * Renumber this frame if it's a list-item, then call RenumberChildFrames.

@@ -674,7 +674,7 @@ nsBlockFrame::GetMinISize(nsRenderingContext *aRenderingContext)
     curFrame->LazyMarkLinesDirty();
   }
 
-  if (RenumberLists()) {
+  if (RenumberList()) {
     AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);
   }
   if (GetStateBits() & NS_BLOCK_NEEDS_BIDI_RESOLUTION)
@@ -762,7 +762,7 @@ nsBlockFrame::GetPrefISize(nsRenderingContext *aRenderingContext)
     curFrame->LazyMarkLinesDirty();
   }
 
-  if (RenumberLists()) {
+  if (RenumberList()) {
     AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);
   }
   if (GetStateBits() & NS_BLOCK_NEEDS_BIDI_RESOLUTION)
@@ -1108,7 +1108,7 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
   if (GetStateBits() & NS_BLOCK_NEEDS_BIDI_RESOLUTION)
     static_cast<nsBlockFrame*>(FirstContinuation())->ResolveBidi();
 
-  if (RenumberLists()) {
+  if (RenumberList()) {
     AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);
   }
 
@@ -2947,7 +2947,7 @@ nsBlockFrame::AttributeChanged(int32_t         aNameSpaceID,
       // Tell the ancestor to renumber list items within itself.
       if (ancestor) {
         // XXX Not sure if this is necessary anymore
-        if (ancestor->RenumberLists()) {
+        if (ancestor->RenumberList()) {
           PresContext()->PresShell()->
             FrameNeedsReflow(ancestor, nsIPresShell::eStyleChange,
                              NS_FRAME_HAS_DIRTY_CHILDREN);
