@@ -14,7 +14,7 @@
 "use strict";
 
 add_task(function* test_contentscript() {
-  function backgroundScript() {
+  function background() {
     browser.runtime.onMessage.addListener(([msg, expectedState, readyState], sender) => {
       if (msg == "chrome-namespace-ok") {
         browser.test.sendMessage(msg);
@@ -69,13 +69,13 @@ add_task(function* test_contentscript() {
         },
       ],
     },
-    background: "(" + backgroundScript.toString() + ")()",
+    background,
 
     files: {
-      "content_script_start.js": "(" + contentScriptStart.toString() + ")()",
-      "content_script_end.js": "(" + contentScriptEnd.toString() + ")()",
-      "content_script_idle.js": "(" + contentScriptIdle.toString() + ")()",
-      "content_script.js": "(" + contentScript.toString() + ")()",
+      "content_script_start.js": contentScriptStart,
+      "content_script_end.js": contentScriptEnd,
+      "content_script_idle.js": contentScriptIdle,
+      "content_script.js": contentScript,
     },
   };
 

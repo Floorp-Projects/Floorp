@@ -36,7 +36,7 @@ add_task(function* test_contentscript_context() {
     },
 
     files: {
-      "content_script.js": `(${contentScript})()`,
+      "content_script.js": contentScript,
     },
   });
 

@@ -6,6 +6,7 @@ package org.mozilla.gecko.fxa.login;
 import android.text.TextUtils;
 
 import org.mozilla.gecko.background.fxa.FxAccountClient;
+import org.mozilla.gecko.background.fxa.FxAccountClient20;
 import org.mozilla.gecko.background.fxa.FxAccountClient20.AccountStatusResponse;
 import org.mozilla.gecko.background.fxa.FxAccountClient20.RequestDelegate;
 import org.mozilla.gecko.background.fxa.FxAccountClient20.RecoveryEmailStatusResponse;
@@ -23,6 +24,7 @@ import org.mozilla.gecko.sync.Utils;
 import java.io.UnsupportedEncodingException;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -215,5 +217,10 @@ public class MockFxAccountClient implements FxAccountClient {
     Collection<FxAccountDevice> devices = user.devices.values();
     FxAccountDevice[] devicesArray = devices.toArray(new FxAccountDevice[devices.size()]);
     requestDelegate.handleSuccess(devicesArray);
+  }
+
+  @Override
+  public void notifyDevices(byte[] sessionToken, List<String> deviceIds, ExtendedJSONObject payload, Long TTL, RequestDelegate<ExtendedJSONObject> requestDelegate) {
+    requestDelegate.handleSuccess(new ExtendedJSONObject());
   }
 }

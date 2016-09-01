@@ -18,7 +18,7 @@
 add_task(function* test_versioned_js() {
   // We need to deal with escaping the close script tags.
   // May as well consolidate it into one place.
-  let script = attrs => `<script ${attrs}></${"script"}>`;
+  let script = attrs => `<script ${attrs}><\/script>`;
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
@@ -34,7 +34,7 @@ add_task(function* test_versioned_js() {
         ${script('src="background-3.js" type="application/javascript"')}
       `,
 
-      "background.js": "new " + function() {
+      "background.js": function() {
         window.reportResult = msg => {
           browser.test.assertEq(
             msg, "background-script-3",
@@ -44,13 +44,13 @@ add_task(function* test_versioned_js() {
         };
       },
 
-      "background-1.js": "new " + function() {
+      "background-1.js": function() {
         window.reportResult("background-script-1");
       },
-      "background-2.js": "new " + function() {
+      "background-2.js": function() {
         window.reportResult("background-script-2");
       },
-      "background-3.js": "new " + function() {
+      "background-3.js": function() {
         window.reportResult("background-script-3");
       },
     },

@@ -695,6 +695,7 @@ NativeKey::NativeKey(nsWindowBase* aWidget,
   , mScanCode(0)
   , mIsExtended(false)
   , mIsDeadKey(false)
+  , mIsFollowedByNonControlCharMessage(false)
   , mFakeCharMsgs(aFakeCharMsgs && aFakeCharMsgs->Length() ?
                     aFakeCharMsgs : nullptr)
 {
@@ -879,7 +880,12 @@ NativeKey::NativeKey(nsWindowBase* aWidget,
 
   mDOMKeyCode =
     keyboardLayout->ConvertNativeKeyCodeToDOMKeyCode(mOriginalVirtualKeyCode);
-  mKeyNameIndex =
+  // Be aware, keyboard utilities can change non-printable keys to printable
+  // keys.  In such case, we should make the key value as a printable key.
+  mIsFollowedByNonControlCharMessage =
+    IsKeyDownMessage() && IsFollowedByNonControlCharMessage();
+  mKeyNameIndex = mIsFollowedByNonControlCharMessage ?
+    KEY_NAME_INDEX_USE_STRING :
     keyboardLayout->ConvertNativeKeyCodeToKeyNameIndex(mOriginalVirtualKeyCode);
   mCodeNameIndex =
     KeyboardLayout::ConvertScanCodeToCodeNameIndex(
@@ -890,7 +896,9 @@ NativeKey::NativeKey(nsWindowBase* aWidget,
   mIsDeadKey =
     (IsFollowedByDeadCharMessage() ||
      keyboardLayout->IsDeadKey(mOriginalVirtualKeyCode, mModKeyState));
-  mIsPrintableKey = KeyboardLayout::IsPrintableCharKey(mOriginalVirtualKeyCode);
+  mIsPrintableKey =
+    mKeyNameIndex == KEY_NAME_INDEX_USE_STRING ||
+    KeyboardLayout::IsPrintableCharKey(mOriginalVirtualKeyCode);
 
   if (IsKeyDownMessage()) {
     // Compute some strings which may be inputted by the key with various
@@ -1052,6 +1060,24 @@ NativeKey::IsFollowedByDeadCharMessage() const
     }
   }
   return IsDeadCharMessage(nextMsg);
+}
+
+bool
+NativeKey::IsFollowedByNonControlCharMessage() const
+{
+  MSG nextMsg;
+  if (mFakeCharMsgs) {
+    nextMsg = mFakeCharMsgs->ElementAt(0).GetCharMsg(mMsg.hwnd);
+  } else if (IsKeyMessageOnPlugin()) {
+    return false;
+  } else {
+    if (!WinUtils::PeekMessage(&nextMsg, mMsg.hwnd, WM_KEYFIRST, WM_KEYLAST,
+                               PM_NOREMOVE | PM_NOYIELD)) {
+      return false;
+    }
+  }
+  return nextMsg.message == WM_CHAR &&
+         !IsControlChar(static_cast<char16_t>(nextMsg.wParam));
 }
 
 bool
@@ -1843,6 +1869,13 @@ NativeKey::NeedsToHandleWithoutFollowingCharMessages() const
     return true;
   }
 
+  // If keydown message is followed by WM_CHAR whose wParam isn't a control
+  // character, we should dispatch keypress event with the char message
+  // even with any modifier state.
+  if (mIsFollowedByNonControlCharMessage) {
+    return false;
+  }
+
   // If any modifier keys which may cause printable keys becoming non-printable
   // are not pressed, we don't need special handling for the key.
   if (!mModKeyState.IsControl() && !mModKeyState.IsAlt() &&
@@ -2520,6 +2553,33 @@ KeyboardLayout::IsDeadKey(uint8_t aVirtualKey,
 
   return mVirtualKeys[virtualKeyIndex].IsDeadKey(
            VirtualKey::ModifiersToShiftState(aModKeyState.GetModifiers()));
+}
+
+bool
+KeyboardLayout::IsSysKey(uint8_t aVirtualKey,
+                         const ModifierKeyState& aModKeyState) const
+{
+  // If Alt key is not pressed, it's never a system key combination.
+  // Additionally, if Ctrl key is pressed, it's never a system key combination
+  // too.
+  if (!aModKeyState.IsAlt() || aModKeyState.IsControl()) {
+    return false;
+  }
+
+  int32_t virtualKeyIndex = GetKeyIndex(aVirtualKey);
+  if (virtualKeyIndex < 0) {
+    return true;
+  }
+
+  UniCharsAndModifiers inputCharsAndModifiers =
+    GetUniCharsAndModifiers(aVirtualKey, aModKeyState);
+  if (inputCharsAndModifiers.IsEmpty()) {
+    return true;
+  }
+
+  // If the Alt key state isn't consumed, that means that the key with Alt
+  // doesn't cause text input.  So, the combination is a system key.
+  return inputCharsAndModifiers.mModifiers[0] != MODIFIER_ALT;
 }
 
 void
@@ -3430,8 +3490,10 @@ KeyboardLayout::SynthesizeNativeKeyEvent(nsWindowBase* aWidget,
     if (keySpecific == VK_RCONTROL || keySpecific == VK_RMENU) {
       lParam |= 0x1000000;
     }
-    MSG keyDownMsg = WinUtils::InitMSG(WM_KEYDOWN, key, lParam,
-                                       aWidget->GetWindowHandle());
+    bool makeSysKeyMsg = IsSysKey(key, modKeyState);
+    MSG keyDownMsg =
+      WinUtils::InitMSG(makeSysKeyMsg ? WM_SYSKEYDOWN : WM_KEYDOWN,
+                        key, lParam, aWidget->GetWindowHandle());
     if (i == keySequence.Length() - 1) {
       bool makeDeadCharMsg =
         (IsDeadKey(key, modKeyState) && aCharacters.IsEmpty());
@@ -3452,6 +3514,7 @@ KeyboardLayout::SynthesizeNativeKeyEvent(nsWindowBase* aWidget,
           NativeKey::FakeCharMsg* fakeCharMsg = fakeCharMsgs.AppendElement();
           fakeCharMsg->mCharCode = chars.CharAt(j);
           fakeCharMsg->mScanCode = scanCode;
+          fakeCharMsg->mIsSysKey = makeSysKeyMsg;
           fakeCharMsg->mIsDeadKey = makeDeadCharMsg;
         }
         NativeKey nativeKey(aWidget, keyDownMsg, modKeyState, 0, &fakeCharMsgs);
@@ -3490,7 +3553,10 @@ KeyboardLayout::SynthesizeNativeKeyEvent(nsWindowBase* aWidget,
     if (keySpecific == VK_RCONTROL || keySpecific == VK_RMENU) {
       lParam |= 0x1000000;
     }
-    MSG keyUpMsg = WinUtils::InitMSG(WM_KEYUP, key, lParam,
+    // Don't use WM_SYSKEYUP for Alt keyup.
+    bool makeSysKeyMsg = IsSysKey(key, modKeyState) && key != VK_MENU;
+    MSG keyUpMsg = WinUtils::InitMSG(makeSysKeyMsg ? WM_SYSKEYUP : WM_KEYUP,
+                                     key, lParam,
                                      aWidget->GetWindowHandle());
     NativeKey nativeKey(aWidget, keyUpMsg, modKeyState);
     nativeKey.HandleKeyUpMessage();

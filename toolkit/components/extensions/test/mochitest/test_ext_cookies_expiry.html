@@ -42,7 +42,7 @@ add_task(function* test_cookies_expiry() {
     manifest: {
       "permissions": ["http://example.com/", "cookies"],
     },
-    background: `(${background})()`,
+    background,
   });
 
   let cookieSvc = SpecialPowers.Services.cookies;

@@ -14,7 +14,7 @@
 "use strict";
 
 add_task(function* test_cookies() {
-  function backgroundScript() {
+  function background() {
     function assertExpected(expected, cookie) {
       for (let key of Object.keys(cookie)) {
         browser.test.assertTrue(key in expected, `found property ${key}`);
@@ -168,7 +168,7 @@ add_task(function* test_cookies() {
   }
 
   let extension = ExtensionTestUtils.loadExtension({
-    background: `(${backgroundScript})()`,
+    background,
     manifest: {
       permissions: ["cookies", "*://example.org/"],
     },

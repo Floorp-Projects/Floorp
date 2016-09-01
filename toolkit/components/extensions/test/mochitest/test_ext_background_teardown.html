@@ -14,7 +14,7 @@
 "use strict";
 
 add_task(function* test_background_reload_and_unload() {
-  function backgroundScript() {
+  function background() {
     browser.test.onMessage.addListener(msg => {
       browser.test.assertEq("reload-background", msg);
       location.reload();
@@ -27,7 +27,7 @@ add_task(function* test_background_reload_and_unload() {
   yield chromeScript.promiseOneMessage("chromescript-startup");
 
   let extensionData = {
-    background: `(${backgroundScript})();`,
+    background,
   };
 
   let extension = ExtensionTestUtils.loadExtension(extensionData);
