@@ -58,10 +58,6 @@
   --urlbar-dropmarker-active-2x-region: rect(0px, 33px, 14px, 22px);
 }
 
-:root[devtoolstheme="dark"] #identity-box {
-  --identity-box-chrome-color: #46afe3;
-}
-
 :root[devtoolstheme="light"] {
   --url-and-searchbar-background-color: #fff;
 

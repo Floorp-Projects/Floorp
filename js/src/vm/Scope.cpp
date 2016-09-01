@@ -56,6 +56,7 @@ js::ScopeKindString(ScopeKind kind)
         return "parameter expression var";
       case ScopeKind::Lexical:
         return "lexical";
+      case ScopeKind::SimpleCatch:
       case ScopeKind::Catch:
         return "catch";
       case ScopeKind::NamedLambda:
@@ -274,6 +275,23 @@ Scope::create(ExclusiveContext* cx, ScopeKind kind, HandleScope enclosing, Handl
     return scope;
 }
 
+template <typename T, typename D>
+/* static */ Scope*
+Scope::create(ExclusiveContext* cx, ScopeKind kind, HandleScope enclosing,
+              HandleShape envShape, mozilla::UniquePtr<T, D> data)
+{
+    Scope* scope = create(cx, kind, enclosing, envShape);
+    if (!scope)
+        return nullptr;
+
+    // It is an invariant that all Scopes that have data (currently, all
+    // ScopeKinds except With) must have non-null data.
+    MOZ_ASSERT(data);
+    scope->initData(Move(data));
+
+    return scope;
+}
+
 uint32_t
 Scope::chainLength() const
 {
@@ -318,10 +336,6 @@ Scope::clone(JSContext* cx, HandleScope scope, HandleScope enclosing)
             return nullptr;
     }
 
-    Scope* scopeClone = create(cx, scope->kind_, enclosing, envShape);
-    if (!scopeClone)
-        return nullptr;
-
     switch (scope->kind_) {
       case ScopeKind::Function:
         MOZ_CRASH("Use FunctionScope::clone.");
@@ -333,11 +347,11 @@ Scope::clone(JSContext* cx, HandleScope scope, HandleScope enclosing)
         UniquePtr<VarScope::Data> dataClone = CopyScopeData<VarScope>(cx, original);
         if (!dataClone)
             return nullptr;
-        scopeClone->initData(Move(dataClone));
-        break;
+        return create(cx, scope->kind_, enclosing, envShape, Move(dataClone));
       }
 
       case ScopeKind::Lexical:
+      case ScopeKind::SimpleCatch:
       case ScopeKind::Catch:
       case ScopeKind::NamedLambda:
       case ScopeKind::StrictNamedLambda: {
@@ -345,12 +359,11 @@ Scope::clone(JSContext* cx, HandleScope scope, HandleScope enclosing)
         UniquePtr<LexicalScope::Data> dataClone = CopyScopeData<LexicalScope>(cx, original);
         if (!dataClone)
             return nullptr;
-        scopeClone->initData(Move(dataClone));
-        break;
+        return create(cx, scope->kind_, enclosing, envShape, Move(dataClone));
       }
 
       case ScopeKind::With:
-        break;
+        return create(cx, scope->kind_, enclosing, envShape);
 
       case ScopeKind::Eval:
       case ScopeKind::StrictEval: {
@@ -358,8 +371,7 @@ Scope::clone(JSContext* cx, HandleScope scope, HandleScope enclosing)
         UniquePtr<EvalScope::Data> dataClone = CopyScopeData<EvalScope>(cx, original);
         if (!dataClone)
             return nullptr;
-        scopeClone->initData(Move(dataClone));
-        break;
+        return create(cx, scope->kind_, enclosing, envShape, Move(dataClone));
       }
 
       case ScopeKind::Global:
@@ -372,7 +384,7 @@ Scope::clone(JSContext* cx, HandleScope scope, HandleScope enclosing)
         break;
     }
 
-    return scopeClone;
+    return nullptr;
 }
 
 void
@@ -408,6 +420,7 @@ LexicalScope::firstFrameSlot() const
 {
     switch (kind()) {
       case ScopeKind::Lexical:
+      case ScopeKind::SimpleCatch:
       case ScopeKind::Catch:
         // For intra-frame scopes, find the enclosing scope's next frame slot.
         return nextFrameSlot(enclosing());
@@ -433,6 +446,7 @@ LexicalScope::nextFrameSlot(Scope* scope)
           case ScopeKind::ParameterExpressionVar:
             return si.scope()->as<VarScope>().nextFrameSlot();
           case ScopeKind::Lexical:
+          case ScopeKind::SimpleCatch:
           case ScopeKind::Catch:
             return si.scope()->as<LexicalScope>().nextFrameSlot();
           case ScopeKind::NamedLambda:
@@ -477,15 +491,11 @@ LexicalScope::create(ExclusiveContext* cx, ScopeKind kind, Handle<Data*> data,
     if (!copy)
         return nullptr;
 
-    Scope* scope = Scope::create(cx, kind, enclosing, envShape);
+    Scope* scope = Scope::create(cx, kind, enclosing, envShape, Move(copy.get()));
     if (!scope)
         return nullptr;
-
     MOZ_ASSERT(scope->as<LexicalScope>().firstFrameSlot() == firstFrameSlot);
-
-    LexicalScope* lexicalScope = &scope->as<LexicalScope>();
-    lexicalScope->initData(Move(copy.get()));
-    return lexicalScope;
+    return &scope->as<LexicalScope>();
 }
 
 /* static */ Shape*
@@ -774,13 +784,10 @@ VarScope::create(ExclusiveContext* cx, ScopeKind kind, Handle<Data*> data,
             return nullptr;
     }
 
-    Scope* scope = Scope::create(cx, kind, enclosing, envShape);
+    Scope* scope = Scope::create(cx, kind, enclosing, envShape, Move(copy.get()));
     if (!scope)
         return nullptr;
-
-    VarScope* varScope = &scope->as<VarScope>();
-    varScope->initData(Move(copy.get()));
-    return varScope;
+    return &scope->as<VarScope>();
 }
 
 /* static */ Shape*
@@ -880,13 +887,10 @@ GlobalScope::create(ExclusiveContext* cx, ScopeKind kind, Handle<Data*> data)
     if (!copy)
         return nullptr;
 
-    Scope* scope = Scope::create(cx, kind, nullptr, nullptr);
+    Scope* scope = Scope::create(cx, kind, nullptr, nullptr, Move(copy.get()));
     if (!scope)
         return nullptr;
-
-    GlobalScope* globalScope = &scope->as<GlobalScope>();
-    globalScope->initData(Move(copy.get()));
-    return globalScope;
+    return &scope->as<GlobalScope>();
 }
 
 /* static */ GlobalScope*
@@ -897,13 +901,10 @@ GlobalScope::clone(JSContext* cx, Handle<GlobalScope*> scope, ScopeKind kind)
     if (!dataClone)
         return nullptr;
 
-    Scope* scopeClone = Scope::create(cx, kind, nullptr, nullptr);
+    Scope* scopeClone = Scope::create(cx, kind, nullptr, nullptr, Move(dataClone.get()));
     if (!scopeClone)
         return nullptr;
-
-    GlobalScope* globalScopeClone = &scopeClone->as<GlobalScope>();
-    globalScopeClone->initData(Move(dataClone.get()));
-    return globalScopeClone;
+    return &scopeClone->as<GlobalScope>();
 }
 
 template <XDRMode mode>
@@ -998,13 +999,10 @@ EvalScope::create(ExclusiveContext* cx, ScopeKind scopeKind, Handle<Data*> data,
             return nullptr;
     }
 
-    Scope* scope = Scope::create(cx, scopeKind, enclosing, envShape);
+    Scope* scope = Scope::create(cx, scopeKind, enclosing, envShape, Move(copy.get()));
     if (!scope)
         return nullptr;
-
-    EvalScope* evalScope = &scope->as<EvalScope>();
-    evalScope->initData(Move(copy.get()));
-    return evalScope;
+    return &scope->as<EvalScope>();
 }
 
 /* static */ Scope*
@@ -1155,6 +1153,7 @@ BindingIter::BindingIter(Scope* scope)
 {
     switch (scope->kind()) {
       case ScopeKind::Lexical:
+      case ScopeKind::SimpleCatch:
       case ScopeKind::Catch:
         init(scope->as<LexicalScope>().data(),
              scope->as<LexicalScope>().firstFrameSlot(), 0);

@@ -5,17 +5,6 @@
 %endif
 
 #identity-box {
-  --identity-box-verified-color: hsl(92,100%,30%);
-%ifdef MOZ_OFFICIAL_BRANDING
-  --identity-box-chrome-color: rgb(229,115,0);
-%else
-%if MOZ_UPDATE_CHANNEL == aurora
-  --identity-box-chrome-color: rgb(51,30,84);
-%else
-  --identity-box-chrome-color: rgb(0,33,71);
-%endif
-%endif
-
   font-size: .9em;
   padding: 3px 5px;
   overflow: hidden;
@@ -24,14 +13,16 @@
   transition: padding-left, padding-right;
 }
 
-#urlbar[pageproxystate="valid"] > #identity-box.verifiedIdentity > #connection-icon,
 #urlbar[pageproxystate="valid"] > #identity-box.verifiedIdentity > #identity-icon-labels {
-  color: var(--identity-box-verified-color);
+  color: hsl(92,100%,30%);
 }
 
-#urlbar[pageproxystate="valid"] > #identity-box.chromeUI > #connection-icon,
 #urlbar[pageproxystate="valid"] > #identity-box.chromeUI > #identity-icon-labels {
-  color: var(--identity-box-chrome-color);
+%ifdef MOZ_OFFICIAL_BRANDING
+  color: rgb(229,115,0);
+%else
+  color: inherit;
+%endif
 }
 
 #identity-icon-labels:-moz-locale-dir(ltr) {

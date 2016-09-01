@@ -43,8 +43,8 @@ is(document.defaultView.getComputedStyle($("s"), null).getPropertyValue("margin-
 $("s").setAttribute("type", "radio");
 
 is(document.defaultView.getComputedStyle($("s"), null).getPropertyValue("margin-left"),
-   "10px",
-   "Only checkboxes should have indeterminate styles applied to them");
+   "30px",
+   "Setting an indeterminate element to type radio should give it indeterminate styles");
 
 $("s").setAttribute("type", "checkbox");
 

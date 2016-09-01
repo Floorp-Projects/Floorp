@@ -98,7 +98,7 @@ function* runNextTest() {
       shownState = true;
       info("[" + nextTest.id + "] popup shown");
       Task.spawn(() => nextTest.onShown(this))
-          .then(undefined , ex => Assert.ok(false, "onShown failed: " + ex));
+          .then(undefined, ex => Assert.ok(false, "onShown failed: " + ex));
     });
     onPopupEvent("popuphidden", function () {
       info("[" + nextTest.id + "] popup hidden");

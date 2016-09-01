@@ -79,7 +79,7 @@ find-menu appears in editor element which has had makeEditable() called but desi
     function* enterStringIntoEditor(aString) {
       for (let i = 0; i < aString.length; i++) {
         yield ContentTask.spawn(gBrowser, { charCode: aString.charCodeAt(i) }, function* (args) {
-          let event = content.document.createEvent("KeyEvents");
+          let event = content.document.createEvent("KeyboardEvent");
           event.initKeyEvent("keypress", true, true, null, false, false,
                              false, false, 0, args.charCode);
           content.document.body.dispatchEvent(event);

@@ -711,6 +711,7 @@ js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope, HandleScrip
                     return false;
                 break;
               case ScopeKind::Lexical:
+              case ScopeKind::SimpleCatch:
               case ScopeKind::Catch:
               case ScopeKind::NamedLambda:
               case ScopeKind::StrictNamedLambda:

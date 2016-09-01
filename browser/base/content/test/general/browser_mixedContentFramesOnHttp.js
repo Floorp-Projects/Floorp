@@ -24,7 +24,7 @@ add_task(function *() {
     }, resolve);
   });
   let url = gHttpTestUrl
-  yield BrowserTestUtils.withNewTab({gBrowser, url}, function*(){
+  yield BrowserTestUtils.withNewTab({gBrowser, url}, function*() {
     gTestBrowser = gBrowser.selectedBrowser;
     // check security state is insecure
     isSecurityState("insecure");

@@ -597,7 +597,7 @@ function emitTouchEvent(type, touch) {
                    getInterface(Components.interfaces.nsIWebNavigation).
                    QueryInterface(Components.interfaces.nsIDocShell);
     if (docShell.asyncPanZoomEnabled && actions.scrolling) {
-      // if we're in APZ and we're scrolling, we must use injectTouchEvent to dispatch our touchmove events
+      // if we're in APZ and we're scrolling, we must use sendNativeTouchPoint to dispatch our touchmove events
       let index = sendSyncMessage("MarionetteFrame:getCurrentFrameId");
       // only call emitTouchEventForIFrame if we're inside an iframe.
       if (index != null) {

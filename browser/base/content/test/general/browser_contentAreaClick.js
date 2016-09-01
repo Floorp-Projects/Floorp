@@ -1,7 +1,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
- 
+
 /**
  * Test for bug 549340.
  * Test for browser.js::contentAreaClick() util.
@@ -45,7 +45,7 @@ var gTests = [
       gPrefService.setBoolPref("browser.altClickSave", true);
     },
     clean: function() {
-      gPrefService.clearUserPref("browser.altClickSave"); 
+      gPrefService.clearUserPref("browser.altClickSave");
     },
     event: { shiftKey: true,
              altKey: true },
@@ -60,7 +60,7 @@ var gTests = [
       gPrefService.setBoolPref("browser.altClickSave", true);
     },
     clean: function() {
-      gPrefService.clearUserPref("browser.altClickSave"); 
+      gPrefService.clearUserPref("browser.altClickSave");
     },
     event: { shiftKey: true,
              altKey: true },
@@ -85,7 +85,7 @@ var gTests = [
       gPrefService.setBoolPref("browser.altClickSave", true);
     },
     clean: function() {
-      gPrefService.clearUserPref("browser.altClickSave"); 
+      gPrefService.clearUserPref("browser.altClickSave");
     },
     event: { altKey: true },
     targets: [ "commonlink", "maplink" ],
@@ -99,7 +99,7 @@ var gTests = [
       gPrefService.setBoolPref("browser.altClickSave", true);
     },
     clean: function() {
-      gPrefService.clearUserPref("browser.altClickSave"); 
+      gPrefService.clearUserPref("browser.altClickSave");
     },
     event: { altKey: true },
     targets: [ "mathxlink", "svgxlink" ],
@@ -215,7 +215,7 @@ var gClickHandler = {
       isnot(gInvokedMethods.indexOf(aExpectedMethodName), -1,
             gCurrentTest.desc + ":" + aExpectedMethodName + " was invoked");
     });
-    
+
     if (gInvokedMethods.length != gCurrentTest.expectedInvokedMethods.length) {
       ok(false, "Wrong number of invoked methods");
       gInvokedMethods.forEach(method => info(method + " was invoked"));

@@ -20,11 +20,11 @@ add_task(function* () {
   let popupShownPromise = BrowserTestUtils.waitForEvent(contentAreaContextMenu, "popupshown");
   yield BrowserTestUtils.synthesizeMouse("frame", 5, 5,
         { type: "contextmenu", button: 2}, gBrowser.selectedBrowser);
-  yield popupShownPromise;  
+  yield popupShownPromise;
 
   ok(document.getElementById("frame-sep").hidden, "'frame-sep' should be hidden if the selection contains only spaces");
 
   let popupHiddenPromise = BrowserTestUtils.waitForEvent(contentAreaContextMenu, "popuphidden");
   contentAreaContextMenu.hidePopup();
-  yield popupHiddenPromise;  
+  yield popupHiddenPromise;
 });
