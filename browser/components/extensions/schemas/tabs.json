@@ -834,7 +834,7 @@
                 "name": "result",
                 "optional": true,
                 "type": "array",
-                "items": {"type": "any", "minimum": 0},
+                "items": {"type": "any"},
                 "description": "The result of the script in every injected frame."
               }
             ]

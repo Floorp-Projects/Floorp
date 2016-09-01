@@ -125,6 +125,7 @@ AssertScopeMatchesEnvironment(Scope* scope, JSObject* originalEnv)
                 break;
 
               case ScopeKind::Lexical:
+              case ScopeKind::SimpleCatch:
               case ScopeKind::Catch:
               case ScopeKind::NamedLambda:
               case ScopeKind::StrictNamedLambda:

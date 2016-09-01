@@ -25,8 +25,9 @@ SVGMPathElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
   return SVGMPathElementBinding::Wrap(aCx, this, aGivenProto);
 }
 
-nsSVGElement::StringInfo SVGMPathElement::sStringInfo[1] =
+nsSVGElement::StringInfo SVGMPathElement::sStringInfo[2] =
 {
+  { &nsGkAtoms::href, kNameSpaceID_None, false },
   { &nsGkAtoms::href, kNameSpaceID_XLink, false }
 };
 
@@ -75,7 +76,9 @@ NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGMPathElement)
 already_AddRefed<SVGAnimatedString>
 SVGMPathElement::Href()
 {
-  return mStringAttributes[HREF].ToDOMAnimatedString(this);
+  return mStringAttributes[HREF].IsExplicitlySet()
+         ? mStringAttributes[HREF].ToDOMAnimatedString(this)
+         : mStringAttributes[XLINK_HREF].ToDOMAnimatedString(this);
 }
 
 //----------------------------------------------------------------------
@@ -96,7 +99,9 @@ SVGMPathElement::BindToTree(nsIDocument* aDocument,
 
   if (aDocument) {
     const nsAttrValue* hrefAttrValue =
-      mAttrsAndChildren.GetAttr(nsGkAtoms::href, kNameSpaceID_XLink);
+      HasAttr(kNameSpaceID_None, nsGkAtoms::href)
+      ? mAttrsAndChildren.GetAttr(nsGkAtoms::href, kNameSpaceID_None)
+      : mAttrsAndChildren.GetAttr(nsGkAtoms::href, kNameSpaceID_XLink);
     if (hrefAttrValue) {
       UpdateHrefTarget(aParent, hrefAttrValue->GetStringValue());
     }
@@ -121,12 +126,19 @@ SVGMPathElement::ParseAttribute(int32_t aNamespaceID,
   bool returnVal =
     SVGMPathElementBase::ParseAttribute(aNamespaceID, aAttribute,
                                           aValue, aResult);
-  if (aNamespaceID == kNameSpaceID_XLink &&
+  if ((aNamespaceID == kNameSpaceID_XLink ||
+       aNamespaceID == kNameSpaceID_None ) &&
       aAttribute == nsGkAtoms::href &&
       IsInUncomposedDoc()) {
-    // NOTE: If we fail the IsInDoc call, it's ok -- we'll update the target
+    // Note: If we fail the IsInDoc call, it's ok -- we'll update the target
     // on next BindToTree call.
-    UpdateHrefTarget(GetParent(), aValue);
+
+    // Note: "href" takes priority over xlink:href. So if "xlink:href" is being
+    // set here, we only let that update our target if "href" is *unset*.
+    if (aNamespaceID != kNameSpaceID_XLink ||
+        !mStringAttributes[HREF].IsExplicitlySet()) {
+      UpdateHrefTarget(GetParent(), aValue);
+    }
   }
   return returnVal;
 }
@@ -139,9 +151,21 @@ SVGMPathElement::UnsetAttr(int32_t aNamespaceID,
                                                aNotify);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (aNamespaceID == kNameSpaceID_XLink &&
-      aAttribute == nsGkAtoms::href) {
-    UnlinkHrefTarget(true);
+  if (aAttribute == nsGkAtoms::href) {
+    if (aNamespaceID == kNameSpaceID_None) {
+      UnlinkHrefTarget(true);
+
+      // After unsetting href, we may still have xlink:href, so we should
+      // try to add it back.
+      const nsAttrValue* xlinkHref =
+        mAttrsAndChildren.GetAttr(nsGkAtoms::href, kNameSpaceID_XLink);
+      if (xlinkHref) {
+        UpdateHrefTarget(GetParent(), xlinkHref->GetStringValue());
+      }
+    } else if (!HasAttr(kNameSpaceID_None, nsGkAtoms::href)) {
+      UnlinkHrefTarget(true);
+    } // else: we unset xlink:href, but we still have href attribute, so keep
+      // the target linking to href.
   }
 
   return NS_OK;
@@ -181,10 +205,11 @@ SVGMPathElement::AttributeChanged(nsIDocument* aDocument,
 SVGPathElement*
 SVGMPathElement::GetReferencedPath()
 {
-  if (!HasAttr(kNameSpaceID_XLink, nsGkAtoms::href)) {
+  if (!HasAttr(kNameSpaceID_XLink, nsGkAtoms::href) &&
+      !HasAttr(kNameSpaceID_None, nsGkAtoms::href)) {
     MOZ_ASSERT(!mHrefTarget.get(),
-               "We shouldn't have an xlink:href target "
-               "if we don't have an xlink:href attribute");
+               "We shouldn't have a href target "
+               "if we don't have an xlink:href or href attribute");
     return nullptr;
   }
 

@@ -14,8 +14,8 @@ const SERVER_PORT = 8888;
 
 function getOCSPResponder(expectedCertNames) {
   let expectedPaths = expectedCertNames.slice();
-  return startOCSPResponder(SERVER_PORT, "www.example.com", [],
-                            "test_validity", expectedCertNames, expectedPaths);
+  return startOCSPResponder(SERVER_PORT, "www.example.com", "test_validity",
+                            expectedCertNames, expectedPaths);
 }
 
 function certFromFile(filename) {

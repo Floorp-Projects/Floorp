@@ -61,10 +61,6 @@ var capabilities = {};
 
 var actions = new action.Chain(checkForInterrupted);
 
-// Contains the last file input element that was the target of
-// sendKeysToElement.
-var fileInputElement;
-
 // the unload handler
 var onunload;
 
@@ -252,12 +248,12 @@ var deleteAllCookiesFn = dispatch(deleteAllCookies);
 var executeFn = dispatch(execute);
 var executeInSandboxFn = dispatch(executeInSandbox);
 var executeSimpleTestFn = dispatch(executeSimpleTest);
+var sendKeysToElementFn = dispatch(sendKeysToElement);
 
 /**
  * Start all message listeners
  */
 function startListeners() {
-  addMessageListenerId("Marionette:receiveFiles", receiveFiles);
   addMessageListenerId("Marionette:newSession", newSession);
   addMessageListenerId("Marionette:execute", executeFn);
   addMessageListenerId("Marionette:executeInSandbox", executeInSandboxFn);
@@ -287,7 +283,7 @@ function startListeners() {
   addMessageListenerId("Marionette:getElementRect", getElementRectFn);
   addMessageListenerId("Marionette:isElementEnabled", isElementEnabledFn);
   addMessageListenerId("Marionette:isElementSelected", isElementSelectedFn);
-  addMessageListenerId("Marionette:sendKeysToElement", sendKeysToElement);
+  addMessageListenerId("Marionette:sendKeysToElement", sendKeysToElementFn);
   addMessageListenerId("Marionette:clearElement", clearElementFn);
   addMessageListenerId("Marionette:switchToFrame", switchToFrame);
   addMessageListenerId("Marionette:switchToParentFrame", switchToParentFrame);
@@ -362,7 +358,6 @@ function restart(msg) {
  * Removes all listeners
  */
 function deleteSession(msg) {
-  removeMessageListenerId("Marionette:receiveFiles", receiveFiles);
   removeMessageListenerId("Marionette:newSession", newSession);
   removeMessageListenerId("Marionette:execute", executeFn);
   removeMessageListenerId("Marionette:executeInSandbox", executeInSandboxFn);
@@ -392,7 +387,7 @@ function deleteSession(msg) {
   removeMessageListenerId("Marionette:getElementRect", getElementRectFn);
   removeMessageListenerId("Marionette:isElementEnabled", isElementEnabledFn);
   removeMessageListenerId("Marionette:isElementSelected", isElementSelectedFn);
-  removeMessageListenerId("Marionette:sendKeysToElement", sendKeysToElement);
+  removeMessageListenerId("Marionette:sendKeysToElement", sendKeysToElementFn);
   removeMessageListenerId("Marionette:clearElement", clearElementFn);
   removeMessageListenerId("Marionette:switchToFrame", switchToFrame);
   removeMessageListenerId("Marionette:switchToParentFrame", switchToParentFrame);
@@ -591,29 +586,6 @@ function setTestName(msg) {
 }
 
 /**
- * Receive file objects from chrome in order to complete a
- * sendKeysToElement action on a file input element.
- */
-function receiveFiles(msg) {
-  if ("error" in msg.json) {
-    let err = new InvalidArgumentError(msg.json.error);
-    sendError(err, msg.json.command_id);
-    return;
-  }
-
-  if (!fileInputElement) {
-    let err = new InvalidElementStateError("receiveFiles called with no valid fileInputElement");
-    sendError(err, msg.json.command_id);
-    return;
-  }
-
-  interaction.uploadFile(fileInputElement, msg.json.file);
-  fileInputElement = null;
-
-  sendOk(msg.json.command_id);
-}
-
-/**
  * This function creates a touch event given a touch type and a touch
  */
 function emitTouchEvent(type, touch) {
@@ -625,7 +597,7 @@ function emitTouchEvent(type, touch) {
                    getInterface(Components.interfaces.nsIWebNavigation).
                    QueryInterface(Components.interfaces.nsIDocShell);
     if (docShell.asyncPanZoomEnabled && actions.scrolling) {
-      // if we're in APZ and we're scrolling, we must use injectTouchEvent to dispatch our touchmove events
+      // if we're in APZ and we're scrolling, we must use sendNativeTouchPoint to dispatch our touchmove events
       let index = sendSyncMessage("MarionetteFrame:getCurrentFrameId");
       // only call emitTouchEventForIFrame if we're inside an iframe.
       if (index != null) {
@@ -1308,28 +1280,14 @@ function isElementSelected(id) {
       el, capabilities.raisesAccessibilityExceptions);
 }
 
-/**
- * Send keys to element
- */
-function sendKeysToElement(msg) {
-  let command_id = msg.json.command_id;
-  let val = msg.json.value;
-  let id = msg.json.id;
+function* sendKeysToElement(id, val) {
   let el = seenEls.get(id, curContainer);
-
   if (el.type == "file") {
-    let p = val.join("");
-        fileInputElement = el;
-        // In e10s, we can only construct File objects in the parent process,
-        // so pass the filename to driver.js, which in turn passes them back
-        // to this frame script in receiveFiles.
-        sendSyncMessage("Marionette:getFiles",
-            {value: p, command_id: command_id});
+    let path = val.join("");
+    yield interaction.uploadFile(el, path);
   } else {
-    let promise = interaction.sendKeysToElement(
-        el, val, false, capabilities.raisesAccessibilityExceptions)
-      .then(() => sendOk(command_id))
-      .catch(e => sendError(e, command_id));
+    yield interaction.sendKeysToElement(
+        el, val, false, capabilities.raisesAccessibilityExceptions);
   }
 }
 

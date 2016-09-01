@@ -32,7 +32,6 @@
 #include "mozilla/dom/GetFilesHelper.h"
 #include "mozilla/dom/PCrashReporterChild.h"
 #include "mozilla/dom/ProcessGlobal.h"
-#include "mozilla/dom/Promise.h"
 #include "mozilla/dom/workers/ServiceWorkerManager.h"
 #include "mozilla/dom/nsIContentChild.h"
 #include "mozilla/gfx/gfxVars.h"
@@ -2261,22 +2260,6 @@ ContentChild::AddRemoteAlertObserver(const nsString& aData,
   NS_ASSERTION(aObserver, "Adding a null observer?");
   mAlertObservers.AppendElement(new AlertObserver(aObserver, aData));
   return NS_OK;
-}
-
-
-bool
-ContentChild::RecvSystemMemoryAvailable(const uint64_t& aGetterId,
-                                        const uint32_t& aMemoryAvailable)
-{
-  RefPtr<Promise> p = dont_AddRef(reinterpret_cast<Promise*>(aGetterId));
-
-  if (!aMemoryAvailable) {
-    p->MaybeReject(NS_ERROR_NOT_AVAILABLE);
-    return true;
-  }
-
-  p->MaybeResolve((int)aMemoryAvailable);
-  return true;
 }
 
 bool

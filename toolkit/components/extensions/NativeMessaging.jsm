@@ -377,7 +377,7 @@ this.NativeApp = class extends EventEmitter {
   }
 
   portAPI() {
-    let api = {
+    let port = {
       name: this.name,
 
       disconnect: () => {
@@ -393,7 +393,7 @@ this.NativeApp = class extends EventEmitter {
 
       onDisconnect: new ExtensionUtils.SingletonEventManager(this.context, "native.onDisconnect", fire => {
         let listener = what => {
-          this.context.runSafe(fire);
+          this.context.runSafeWithoutClone(fire, port);
         };
         this.on("disconnect", listener);
         return () => {
@@ -403,7 +403,8 @@ this.NativeApp = class extends EventEmitter {
 
       onMessage: new ExtensionUtils.SingletonEventManager(this.context, "native.onMessage", fire => {
         let listener = (what, msg) => {
-          this.context.runSafe(fire, msg);
+          msg = Cu.cloneInto(msg, this.context.cloneScope);
+          this.context.runSafeWithoutClone(fire, msg, port);
         };
         this.on("message", listener);
         return () => {
@@ -412,7 +413,9 @@ this.NativeApp = class extends EventEmitter {
       }).api(),
     };
 
-    return Cu.cloneInto(api, this.context.cloneScope, {cloneFunctions: true});
+    port = Cu.cloneInto(port, this.context.cloneScope, {cloneFunctions: true});
+
+    return port;
   }
 
   sendMessage(msg) {

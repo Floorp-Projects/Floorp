@@ -306,10 +306,6 @@ var PingPicker = {
             .addEventListener("click", () => this._movePingIndex(1), false);
     document.getElementById("choose-payload")
             .addEventListener("change", () => displayPingData(gPingData), false);
-    document.getElementById("histograms-processes")
-            .addEventListener("change", () => displayPingData(gPingData), false);
-    document.getElementById("keyed-histograms-processes")
-            .addEventListener("change", () => displayPingData(gPingData), false);
   },
 
   onPingSourceChanged: function() {
@@ -1786,33 +1782,6 @@ function sortStartupMilestones(aSimpleMeasurements) {
   return result;
 }
 
-function renderProcessList(ping, selectEl) {
-  removeAllChildNodes(selectEl);
-  let option = document.createElement("option");
-  option.appendChild(document.createTextNode("parent"));
-  option.setAttribute("value", "");
-  option.selected = true;
-  selectEl.appendChild(option);
-
-  if (!("processes" in ping.payload)) {
-    selectEl.disabled = true;
-    return;
-  }
-  selectEl.disabled = false;
-
-  for (let process of Object.keys(ping.payload.processes)) {
-    // TODO: parent hgrams are on root payload, not in payload.processes.parent
-    // When/If that gets moved, you'll need to remove this:
-    if (process === "parent") {
-      continue;
-    }
-    option = document.createElement("option");
-    option.appendChild(document.createTextNode(process));
-    option.setAttribute("value", process);
-    selectEl.appendChild(option);
-  }
-}
-
 function renderPayloadList(ping) {
   // Rebuild the payload select with options:
   //   Parent Payload (selected)
@@ -1881,11 +1850,9 @@ function displayPingData(ping, updatePayloadList = false) {
   const keysHeader = bundle.GetStringFromName("keysHeader");
   const valuesHeader = bundle.GetStringFromName("valuesHeader");
 
-  // Update the payload list and process lists
+  // Update the payload list
   if (updatePayloadList) {
     renderPayloadList(ping);
-    renderProcessList(ping, document.getElementById("histograms-processes"));
-    renderProcessList(ping, document.getElementById("keyed-histograms-processes"));
   }
 
   // Show general data.
@@ -1962,18 +1929,8 @@ function displayPingData(ping, updatePayloadList = false) {
   removeAllChildNodes(hgramDiv);
 
   let histograms = payload.histograms;
-
-  let hgramsSelect = document.getElementById("histograms-processes");
-  let hgramsOption = hgramsSelect.selectedOptions.item(0);
-  let hgramsProcess = hgramsOption.getAttribute("value");
-  if (hgramsProcess &&
-      "processes" in ping.payload &&
-      hgramsProcess in ping.payload.processes) {
-    histograms = ping.payload.processes[hgramsProcess].histograms;
-  }
-
   hasData = Object.keys(histograms).length > 0;
-  setHasData("histograms-section", hasData || hgramsSelect.options.length);
+  setHasData("histograms-section", hasData);
 
   if (hasData) {
     for (let [name, hgram] of Object.entries(histograms)) {
@@ -1993,18 +1950,8 @@ function displayPingData(ping, updatePayloadList = false) {
   let keyedDiv = document.getElementById("keyed-histograms");
   removeAllChildNodes(keyedDiv);
 
+  setHasData("keyed-histograms-section", false);
   let keyedHistograms = payload.keyedHistograms;
-
-  let keyedHgramsSelect = document.getElementById("keyed-histograms-processes");
-  let keyedHgramsOption = keyedHgramsSelect.selectedOptions.item(0);
-  let keyedHgramsProcess = keyedHgramsOption.getAttribute("value");
-  if (keyedHgramsProcess &&
-      "processes" in ping.payload &&
-      keyedHgramsProcess in ping.payload.processes) {
-    keyedHistograms = ping.payload.processes[keyedHgramsProcess].keyedHistograms;
-  }
-
-  setHasData("keyed-histograms-section", keyedHgramsSelect.options.length);
   if (keyedHistograms) {
     let hasData = false;
     for (let [id, keyed] of Object.entries(keyedHistograms)) {
@@ -2013,7 +1960,7 @@ function displayPingData(ping, updatePayloadList = false) {
         KeyedHistogram.render(keyedDiv, id, keyed, {unpacked: true});
       }
     }
-    setHasData("keyed-histograms-section", hasData || keyedHgramsSelect.options.length);
+    setHasData("keyed-histograms-section", hasData);
   }
 
   // Show addon histogram data
