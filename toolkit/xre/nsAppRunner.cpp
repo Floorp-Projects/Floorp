@@ -4590,7 +4590,7 @@ enum {
   kE10sDisabledForBidi = 6,
   kE10sDisabledForAddons = 7,
   kE10sForceDisabled = 8,
-  kE10sDisabledForXPAcceleration = 9,
+  // kE10sDisabledForXPAcceleration = 9, removed in bug 1296353
   kE10sDisabledForOperatingSystem = 10,
 };
 
@@ -4680,18 +4680,6 @@ MultiprocessBlockPolicy() {
   if (Preferences::GetDefaultCString("app.update.channel").EqualsLiteral("release") &&
       !IsVistaOrLater()) {
     gMultiprocessBlockPolicy = kE10sDisabledForOperatingSystem;
-    return gMultiprocessBlockPolicy;
-  }
-
-  /**
-   * We block on Windows XP if layers acceleration is requested. This is due to
-   * bug 1237769 where D3D9 and e10s behave badly together on XP.
-   */
-  bool layersAccelerationRequested = !Preferences::GetBool("layers.acceleration.disabled") ||
-                                      Preferences::GetBool("layers.acceleration.force-enabled");
-
-  if (layersAccelerationRequested && !IsVistaOrLater()) {
-    gMultiprocessBlockPolicy = kE10sDisabledForXPAcceleration;
     return gMultiprocessBlockPolicy;
   }
 #endif // XP_WIN

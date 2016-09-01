@@ -60,7 +60,6 @@ var snapshotFormatters = {
       case 6:
       case 7:
       case 8:
-      case 9:
         statusText = stringBundle().GetStringFromName("multiProcessStatus." + data.autoStartStatus);
         break;
 
