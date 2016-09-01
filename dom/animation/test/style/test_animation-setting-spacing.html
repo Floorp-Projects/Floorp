@@ -1,0 +1,14 @@
+<!doctype html>
+<meta charset=utf-8>
+<script src='/resources/testharness.js'></script>
+<script src='/resources/testharnessreport.js'></script>
+<div id='log'></div>
+<script>
+'use strict';
+setup({explicit_done: true});
+SpecialPowers.pushPrefEnv(
+  { 'set': [['dom.animations-api.core.enabled', true]]},
+  function() {
+    window.open('file_animation-setting-spacing.html');
+  });
+</script>

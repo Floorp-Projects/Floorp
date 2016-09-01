@@ -37856,6 +37856,12 @@
             "url": "/web-animations/interfaces/Animation/effect.html"
           }
         ],
+        "web-animations/interfaces/KeyframeEffect/spacing.html": [
+          {
+            "path": "web-animations/interfaces/KeyframeEffect/spacing.html",
+            "url": "/web-animations/interfaces/KeyframeEffect/spacing.html"
+          }
+        ],
         "web-animations/timing-model/animation-effects/phases-and-states.html": [
           {
             "path": "web-animations/timing-model/animation-effects/phases-and-states.html",
