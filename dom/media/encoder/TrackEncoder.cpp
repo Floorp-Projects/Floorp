@@ -219,6 +219,15 @@ VideoTrackEncoder::Init(const VideoSegment& aSegment)
 
    iter.Next();
   }
+
+  mNotInitDuration += aSegment.GetDuration();
+  if ((mNotInitDuration / mTrackRate > INIT_FAILED_DURATION) &&
+      mInitCounter > 1) {
+    LOG("[VideoTrackEncoder]: Initialize failed for %ds.", INIT_FAILED_DURATION);
+    NotifyEndOfStream();
+    return;
+  }
+
 }
 
 void
