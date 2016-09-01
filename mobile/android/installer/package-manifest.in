@@ -431,14 +431,12 @@
 ; Modules
 @BINPATH@/modules/*
 
-#ifdef MOZ_SAFE_BROWSING
 ; Safe Browsing
 @BINPATH@/components/nsURLClassifier.manifest
 @BINPATH@/components/nsUrlClassifierHashCompleter.js
 @BINPATH@/components/nsUrlClassifierListManager.js
 @BINPATH@/components/nsUrlClassifierLib.js
 @BINPATH@/components/url-classifier.xpt
-#endif
 
 ; Private Browsing
 @BINPATH@/components/privatebrowsing.xpt
