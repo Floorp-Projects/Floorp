@@ -5629,10 +5629,9 @@ SVGTextFrame::TransformFrameRectFromTextChild(const nsRect& aRect,
     // Intersect it with the run.
     uint32_t flags = TextRenderedRun::eIncludeFill |
                      TextRenderedRun::eIncludeStroke;
-    rectInFrameUserSpace.IntersectRect
-      (rectInFrameUserSpace, run.GetFrameUserSpaceRect(presContext, flags).ToThebesRect());
 
-    if (!rectInFrameUserSpace.IsEmpty()) {
+    if (rectInFrameUserSpace.IntersectRect(rectInFrameUserSpace,
+        run.GetFrameUserSpaceRect(presContext, flags).ToThebesRect())) {
       // Transform it up to user space of the <text>, also taking into
       // account the font size scale.
       gfxMatrix m = run.GetTransformFromRunUserSpaceToUserSpace(presContext);

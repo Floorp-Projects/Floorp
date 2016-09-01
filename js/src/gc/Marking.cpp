@@ -1277,6 +1277,7 @@ Scope::traceChildren(JSTracer* trc)
         reinterpret_cast<VarScope::Data*>(data_)->trace(trc);
         break;
       case ScopeKind::Lexical:
+      case ScopeKind::SimpleCatch:
       case ScopeKind::Catch:
       case ScopeKind::NamedLambda:
       case ScopeKind::StrictNamedLambda:
@@ -1324,6 +1325,7 @@ js::GCMarker::eagerlyMarkChildren(Scope* scope)
       }
 
       case ScopeKind::Lexical:
+      case ScopeKind::SimpleCatch:
       case ScopeKind::Catch:
       case ScopeKind::NamedLambda:
       case ScopeKind::StrictNamedLambda: {

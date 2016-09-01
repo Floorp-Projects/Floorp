@@ -8,17 +8,6 @@
 [builtinclass, scriptable, uuid(8e49f7b0-1f98-4939-bf91-e9c39cd56434)]
 interface nsITabParent : nsISupports
 {
-  void injectTouchEvent(in AString aType,
-                        [array, size_is(count)] in uint32_t aIdentifiers,
-                        [array, size_is(count)] in int32_t aXs,
-                        [array, size_is(count)] in int32_t aYs,
-                        [array, size_is(count)] in uint32_t aRxs,
-                        [array, size_is(count)] in uint32_t aRys,
-                        [array, size_is(count)] in float aRotationAngles,
-                        [array, size_is(count)] in float aForces,
-                        in uint32_t count,
-                        in long aModifiers);
-
   void getChildProcessOffset(out int32_t aCssX, out int32_t aCssY);
 
   readonly attribute boolean useAsyncPanZoom;

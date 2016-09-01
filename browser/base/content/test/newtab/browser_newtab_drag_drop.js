@@ -78,14 +78,14 @@ function doDragEvent(sourceIndex, dropIndex) {
   return ContentTask.spawn(gBrowser.selectedBrowser,
                            { sourceIndex: sourceIndex, dropIndex: dropIndex }, function*(args) {
     let dataTransfer = new content.DataTransfer("dragstart", false);
-    let event = content.document.createEvent("DragEvents");
+    let event = content.document.createEvent("DragEvent");
     event.initDragEvent("dragstart", true, true, content, 0, 0, 0, 0, 0,
                         false, false, false, false, 0, null, dataTransfer);
 
     let target = content.gGrid.cells[args.sourceIndex].site.node;
     target.dispatchEvent(event);
 
-    event = content.document.createEvent("DragEvents");
+    event = content.document.createEvent("DragEvent");
     event.initDragEvent("drop", true, true, content, 0, 0, 0, 0, 0,
                         false, false, false, false, 0, null, dataTransfer);
 

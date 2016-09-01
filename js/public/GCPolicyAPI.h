@@ -144,10 +144,13 @@ struct GCPolicy<mozilla::UniquePtr<T, D>>
 {
     static mozilla::UniquePtr<T,D> initial() { return mozilla::UniquePtr<T,D>(); }
     static void trace(JSTracer* trc, mozilla::UniquePtr<T,D>* tp, const char* name) {
-        GCPolicy<T>::trace(trc, tp->get(), name);
+        if (tp->get())
+            GCPolicy<T>::trace(trc, tp->get(), name);
     }
     static bool needsSweep(mozilla::UniquePtr<T,D>* tp) {
-        return GCPolicy<T>::needsSweep(tp->get());
+        if (tp->get())
+            return GCPolicy<T>::needsSweep(tp->get());
+        return false;
     }
 };
 

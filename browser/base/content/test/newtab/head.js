@@ -419,7 +419,7 @@ function* simulateExternalDrop(aDestIndex) {
         let dataTransfer = new iframe.contentWindow.DataTransfer("dragstart", false);
         dataTransfer.mozSetDataAt("text/x-moz-url", "http://example99.com/", 0);
 
-        let event = content.document.createEvent("DragEvents");
+        let event = content.document.createEvent("DragEvent");
         event.initDragEvent("drop", true, true, content, 0, 0, 0, 0, 0,
                             false, false, false, false, 0, null, dataTransfer);
 

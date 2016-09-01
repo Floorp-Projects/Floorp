@@ -7,11 +7,15 @@ module.metadata = {
   "stability": "unstable"
 };
 
-const { Ci } = require("chrome");
+const { Ci, Cc, Cu } = require("chrome");
 const core = require("../l10n/core");
 const { loadSheet, removeSheet } = require("../stylesheet/utils");
 const { process, frames } = require("../remote/child");
-const { Services } = require("resource://gre/modules/Services.jsm");
+var observerService = Cc["@mozilla.org/observer-service;1"]
+                      .getService(Ci.nsIObserverService);
+const { ShimWaiver } = Cu.import("resource://gre/modules/ShimWaiver.jsm");
+const addObserver = ShimWaiver.getProperty(observerService, "addObserver");
+const removeObserver = ShimWaiver.getProperty(observerService, "removeObserver");
 
 const assetsURI = require('../self').data.url();
 
@@ -115,7 +119,7 @@ let enabled = false;
 function enable() {
   if (enabled)
     return;
-  Services.obs.addObserver(onContentWindow, ON_CONTENT, false);
+  addObserver(onContentWindow, ON_CONTENT, false);
   enabled = true;
 }
 process.port.on("sdk/l10n/html/enable", enable);
@@ -123,7 +127,7 @@ process.port.on("sdk/l10n/html/enable", enable);
 function disable() {
   if (!enabled)
     return;
-  Services.obs.removeObserver(onContentWindow, ON_CONTENT);
+  removeObserver(onContentWindow, ON_CONTENT);
   enabled = false;
 }
 process.port.on("sdk/l10n/html/disable", disable);

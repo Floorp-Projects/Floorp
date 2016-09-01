@@ -38,7 +38,7 @@
 
     function enterStringIntoFindField(aString) {
       for (var i=0; i < aString.length; i++) {
-        var event = document.createEvent("KeyEvents");
+        var event = document.createEvent("KeyboardEvent");
         event.initKeyEvent("keypress", true, true, null, false, false,
                            false, false, 0, aString.charCodeAt(i));
         gFindBar._findField.inputField.dispatchEvent(event);
@@ -64,7 +64,7 @@
         highlight.click();
 
       // Delete search term
-      var event = document.createEvent("KeyEvents");
+      var event = document.createEvent("KeyboardEvent");
       event.initKeyEvent("keypress", true, true, null, false, false,
                          false, false, KeyEvent.DOM_VK_BACK_SPACE, 0);
       gFindBar._findField.inputField.dispatchEvent(event);
