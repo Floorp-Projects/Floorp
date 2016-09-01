@@ -783,8 +783,8 @@ void nsView::List(FILE* out, int32_t aIndent) const
     nsRect windowBounds = LayoutDeviceIntRect::ToAppUnits(rect, p2a);
     rect = mWindow->GetBounds();
     nsRect nonclientBounds = LayoutDeviceIntRect::ToAppUnits(rect, p2a);
-    nsrefcnt widgetRefCnt = mWindow.get()->AddRef() - 1;
-    mWindow.get()->Release();
+    nsrefcnt widgetRefCnt = mWindow->AddRef() - 1;
+    mWindow->Release();
     int32_t Z = mWindow->GetZIndex();
     fprintf(out, "(widget=%p[%" PRIuPTR "] z=%d pos={%d,%d,%d,%d}) ",
             (void*)mWindow, widgetRefCnt, Z,
