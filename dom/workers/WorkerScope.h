@@ -148,7 +148,6 @@ public:
 
   IMPL_EVENT_HANDLER(online)
   IMPL_EVENT_HANDLER(offline)
-  IMPL_EVENT_HANDLER(close)
 
   void
   Dump(const Optional<nsAString>& aString) const;
