@@ -57,6 +57,7 @@ DIRS += [
     'memory',
     'mfbt',
     'mozglue',
+    'tools/fuzzing',
 ]
 
 if not CONFIG['JS_STANDALONE']:
