@@ -169,7 +169,7 @@ nsresult
 NS_NewElement(Element** aResult,
               already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
               FromParser aFromParser,
-              nsAString* aIs)
+              const nsAString* aIs)
 {
   RefPtr<mozilla::dom::NodeInfo> ni = aNodeInfo;
   int32_t ns = ni->NamespaceID();
