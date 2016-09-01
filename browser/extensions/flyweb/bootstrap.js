@@ -13,6 +13,10 @@ XPCOMUtils.defineLazyModuleGetter(this, "Console",
                                   "resource://gre/modules/Console.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Services",
                                   "resource://gre/modules/Services.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Integration",
+                                  "resource://gre/modules/Integration.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PermissionUI",
+                                  "resource:///modules/PermissionUI.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "gFlyWebBundle", function() {
   const tns = {
@@ -114,6 +118,75 @@ class DiscoveryManager {
   }
 }
 
+const FlyWebPermissionPromptIntegration = (base) => ({
+  __proto__: base,
+  createPermissionPrompt(type, request) {
+    if (type != "flyweb-publish-server") {
+      return super.createPermissionPrompt(...arguments);
+    }
+
+    return {
+      __proto__: PermissionUI.PermissionPromptForRequestPrototype,
+      get request() {
+        return request;
+      },
+      get permissionKey() {
+        return "flyweb-publish-server";
+      },
+      get popupOptions() {
+        return {
+          learnMoreURL: "https://flyweb.github.io",
+          popupIconURL: "chrome://flyweb/skin/icon-64.png",
+        };
+      },
+      get notificationID() {
+        return "flyweb-publish-server";
+      },
+      get anchorID() {
+        const kAnchorID = "flyweb-publish-server-notification-icon";
+        let chromeDoc = this.browser.ownerDocument;
+        let anchor = chromeDoc.getElementById(kAnchorID);
+        if (!anchor) {
+          let notificationPopupBox =
+            chromeDoc.getElementById("notification-popup-box");
+          let notificationIcon = chromeDoc.createElement("image");
+          notificationIcon.id = kAnchorID;
+          notificationIcon.setAttribute("src",
+                                        "chrome://flyweb/skin/icon-64.png");
+          notificationIcon.classList.add("notification-anchor-icon");
+          notificationIcon.setAttribute("role", "button");
+          notificationIcon.setAttribute("aria-label",
+                                        "View the publish-server request");
+          notificationIcon.style.filter =
+            "url('chrome://browser/skin/filters.svg#fill')";
+          notificationIcon.style.fill = "currentcolor";
+          notificationIcon.style.opacity = "0.4";
+          notificationPopupBox.appendChild(notificationIcon);
+        }
+
+        return kAnchorID;
+      },
+      get message() {
+        return "Would you like to let this site start a server accessible " +
+               "to nearby devices and people?";
+      },
+      get promptActions() {
+        return [{
+          label: "Allow Server",
+          accessKey: "A",
+          action: Ci.nsIPermissionManager.ALLOW_ACTION,
+          expireType:  Ci.nsIPermissionManager.EXPIRE_SESSION,
+        }, {
+          label: "Block Server",
+          accessKey: "B",
+          action: Ci.nsIPermissionManager.DENY_ACTION,
+          expireType: Ci.nsIPermissionManager.EXPIRE_SESSION,
+        }];
+      },
+    };
+  },
+});
+
 let FlyWebView = {
   init() {
     // Create widget and add it to the menu panel.
@@ -206,6 +279,9 @@ let FlyWebView = {
         }
       }
     });
+
+    Integration.contentPermission
+               .register(FlyWebPermissionPromptIntegration);
   },
 
   uninit() {
@@ -215,5 +291,8 @@ let FlyWebView = {
       gDiscoveryManagerInstance.destroy();
       gDiscoveryManagerInstance = null;
     }
+
+    Integration.contentPermission
+               .unregister(FlyWebPermissionPromptIntegration);
   }
 };
