@@ -1340,6 +1340,7 @@ class Parser final : private JS::AutoGCRooter, public StrictModeGetter
     void addTelemetry(JSCompartment::DeprecatedLanguageExtension e);
 
     bool warnOnceAboutExprClosure();
+    bool warnOnceAboutForEach();
 };
 
 } /* namespace frontend */
