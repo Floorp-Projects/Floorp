@@ -232,6 +232,7 @@ struct ParamTraits<mozilla::WidgetMouseEvent>
                        aParam.mContextMenuTrigger));
     WriteParam(aMsg, static_cast<paramType::ExitFromType>(aParam.mExitFrom));
     WriteParam(aMsg, aParam.mClickCount);
+    WriteParam(aMsg, aParam.pointerId);
   }
 
   static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
@@ -246,7 +247,8 @@ struct ParamTraits<mozilla::WidgetMouseEvent>
          ReadParam(aMsg, aIter, &reason) &&
          ReadParam(aMsg, aIter, &contextMenuTrigger) &&
          ReadParam(aMsg, aIter, &exitFrom) &&
-         ReadParam(aMsg, aIter, &aResult->mClickCount);
+         ReadParam(aMsg, aIter, &aResult->mClickCount) &&
+         ReadParam(aMsg, aIter, &aResult->pointerId);
     aResult->mReason = static_cast<paramType::Reason>(reason);
     aResult->mContextMenuTrigger =
       static_cast<paramType::ContextMenuTrigger>(contextMenuTrigger);
@@ -286,7 +288,6 @@ struct ParamTraits<mozilla::WidgetPointerEvent>
   static void Write(Message* aMsg, const paramType& aParam)
   {
     WriteParam(aMsg, static_cast<mozilla::WidgetMouseEvent>(aParam));
-    WriteParam(aMsg, aParam.pointerId);
     WriteParam(aMsg, aParam.mWidth);
     WriteParam(aMsg, aParam.mHeight);
     WriteParam(aMsg, aParam.tiltX);
@@ -298,7 +299,6 @@ struct ParamTraits<mozilla::WidgetPointerEvent>
   {
     bool rv =
       ReadParam(aMsg, aIter, static_cast<mozilla::WidgetMouseEvent*>(aResult)) &&
-      ReadParam(aMsg, aIter, &aResult->pointerId) &&
       ReadParam(aMsg, aIter, &aResult->mWidth) &&
       ReadParam(aMsg, aIter, &aResult->mHeight) &&
       ReadParam(aMsg, aIter, &aResult->tiltX) &&
