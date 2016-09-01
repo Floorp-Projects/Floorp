@@ -13,6 +13,7 @@ UNIFIED_SOURCES += [
     'TestPerProviderDirectory.cpp',
     'TestSafebrowsingHash.cpp',
     'TestSafeBrowsingProtobuf.cpp',
+    'TestTable.cpp',
     'TestUrlClassifierUtils.cpp',
 ]
 
