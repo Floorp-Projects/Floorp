@@ -215,18 +215,6 @@ public:
   void
   UpdateAllWorkerMemoryParameter(JSGCParamKey aKey, uint32_t aValue);
 
-  static uint32_t
-  GetContentCloseHandlerTimeoutSeconds()
-  {
-    return sDefaultJSSettings.content.maxScriptRuntime;
-  }
-
-  static uint32_t
-  GetChromeCloseHandlerTimeoutSeconds()
-  {
-    return sDefaultJSSettings.chrome.maxScriptRuntime;
-  }
-
 #ifdef JS_GC_ZEAL
   static void
   SetDefaultGCZeal(uint8_t aGCZeal, uint32_t aFrequency)

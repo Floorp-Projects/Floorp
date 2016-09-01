@@ -746,28 +746,16 @@ public:
       return;
     }
     nsIPresShell::PointerCaptureInfo* pointerCaptureInfo = nullptr;
-    if (nsIPresShell::gPointerCaptureList->Get(aPointerId, &pointerCaptureInfo) && pointerCaptureInfo) {
-      // Call ReleasePointerCapture only on correct element
-      // (on element that have status pointer capture override
-      // or on element that have status pending pointer capture)
-      if (pointerCaptureInfo->mOverrideContent == this) {
-        nsIPresShell::ReleasePointerCapturingContent(aPointerId);
-      } else if (pointerCaptureInfo->mPendingContent == this) {
-        nsIPresShell::ReleasePointerCapturingContent(aPointerId);
-      }
+    if (nsIPresShell::gPointerCaptureList->Get(aPointerId, &pointerCaptureInfo) &&
+        pointerCaptureInfo && pointerCaptureInfo->mPendingContent == this) {
+      nsIPresShell::ReleasePointerCapturingContent(aPointerId);
     }
   }
   bool HasPointerCapture(long aPointerId)
   {
-    bool activeState = false;
-    if (!nsIPresShell::GetPointerInfo(aPointerId, activeState)) {
-      return false;
-    }
     nsIPresShell::PointerCaptureInfo* pointerCaptureInfo = nullptr;
     if (nsIPresShell::gPointerCaptureList->Get(aPointerId, &pointerCaptureInfo) &&
-        pointerCaptureInfo && !pointerCaptureInfo->mReleaseContent &&
-        (pointerCaptureInfo->mOverrideContent == this ||
-         pointerCaptureInfo->mPendingContent == this)) {
+        pointerCaptureInfo && pointerCaptureInfo->mPendingContent == this) {
       return true;
     }
     return false;
