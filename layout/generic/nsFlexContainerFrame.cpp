@@ -3850,6 +3850,8 @@ nsFlexContainerFrame::Reflow(nsPresContext* aPresContext,
     SortChildrenIfNeeded<IsOrderLEQWithDOMFallback>();
   }
 
+  RenumberLists();
+
   const FlexboxAxisTracker axisTracker(this, aReflowInput.GetWritingMode());
 
   // If we're being fragmented into a constrained BSize, then subtract off
@@ -4389,6 +4391,8 @@ nsFlexContainerFrame::GetMinISize(nsRenderingContext* aRenderingContext)
   nscoord minWidth = 0;
   DISPLAY_MIN_WIDTH(this, minWidth);
 
+  RenumberLists();
+
   const nsStylePosition* stylePos = StylePosition();
   const FlexboxAxisTracker axisTracker(this, GetWritingMode());
 
@@ -4415,6 +4419,8 @@ nsFlexContainerFrame::GetPrefISize(nsRenderingContext* aRenderingContext)
 {
   nscoord prefWidth = 0;
   DISPLAY_PREF_WIDTH(this, prefWidth);
+
+  RenumberLists();
 
   // XXXdholbert Optimization: We could cache our intrinsic widths like
   // nsBlockFrame does (and return it early from this function if it's set).
