@@ -1470,7 +1470,7 @@ WebGLFramebuffer::GetAttachmentParameter(const char* funcName, JSContext* cx,
                                          ErrorResult* const out_error)
 {
     const auto maybeAttach = GetAttachPoint(attachEnum);
-    if (!maybeAttach) {
+    if (!maybeAttach || attachEnum == LOCAL_GL_NONE) {
         mContext->ErrorInvalidEnum("%s: Can only query COLOR_ATTACHMENTi,"
                                    " DEPTH_ATTACHMENT, DEPTH_STENCIL_ATTACHMENT, or"
                                    " STENCIL_ATTACHMENT for a framebuffer.",
