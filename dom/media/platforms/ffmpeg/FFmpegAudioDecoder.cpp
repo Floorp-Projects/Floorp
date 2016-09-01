@@ -133,6 +133,7 @@ FFmpegAudioDecoder<LIBAV_VER>::DoDecode(MediaRawData* aSample)
 
   int64_t samplePosition = aSample->mOffset;
   media::TimeUnit pts = media::TimeUnit::FromMicroseconds(aSample->mTime);
+  bool didOutput = false;
 
   while (packet.size > 0) {
     int decoded;
@@ -181,6 +182,7 @@ FFmpegAudioDecoder<LIBAV_VER>::DoDecode(MediaRawData* aSample)
                                              numChannels,
                                              samplingRate);
       mCallback->Output(data);
+      didOutput = true;
       pts += duration;
       if (!pts.IsValid()) {
         NS_WARNING("Invalid count of accumulated audio samples");
@@ -192,7 +194,7 @@ FFmpegAudioDecoder<LIBAV_VER>::DoDecode(MediaRawData* aSample)
     samplePosition += bytesConsumed;
   }
 
-  return DecodeResult::DECODE_FRAME;
+  return didOutput ? DecodeResult::DECODE_FRAME : DecodeResult::DECODE_NO_FRAME;
 }
 
 void
