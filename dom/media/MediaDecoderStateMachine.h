@@ -474,8 +474,10 @@ protected:
   // If we don't, switch to buffering mode.
   void MaybeStartBuffering();
 
-  // Moves the decoder into decoding state. Called on the state machine
-  // thread. The decoder monitor must be held.
+  // The entry action of DECODER_STATE_DECODING_FIRSTFRAME.
+  void DecodeFirstFrame();
+
+  // The entry action of DECODER_STATE_DECODING.
   void StartDecoding();
 
   // Moves the decoder into the shutdown state, and dispatches an error
