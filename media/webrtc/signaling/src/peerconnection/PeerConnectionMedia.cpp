@@ -42,7 +42,6 @@
 #include "nsIURI.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsICancelable.h"
-#include "nsIDocument.h"
 #include "nsILoadInfo.h"
 #include "nsIContentPolicy.h"
 #include "nsIProxyInfo.h"
