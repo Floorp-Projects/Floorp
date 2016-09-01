@@ -9,7 +9,7 @@ function promiseAddonStartup() {
   const {Management} = Cu.import("resource://gre/modules/Extension.jsm");
 
   return new Promise(resolve => {
-    let listener = (extension) => {
+    let listener = (evt, extension) => {
       Management.off("startup", listener);
       resolve(extension);
     };
