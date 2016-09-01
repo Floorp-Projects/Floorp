@@ -175,6 +175,9 @@ public:
 
   // Denotes that the last input sample has been inserted into the decoder,
   // and no more output can be produced unless more input is sent.
+  // A frame decoding session is completed once InputExhausted has been called.
+  // MediaDataDecoder::Input will not be called again until InputExhausted has
+  // been called.
   virtual void InputExhausted() = 0;
 
   virtual void DrainComplete() = 0;
