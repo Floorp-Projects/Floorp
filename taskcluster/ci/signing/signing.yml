@@ -1,0 +1,22 @@
+task:
+  provisionerId: "aws-provisioner-v1"
+  workerType: "desktop-test"
+  schedulerId: task-graph-scheduler
+
+  created:
+    relative-datestamp: "0 seconds"
+  deadline:
+    relative-datestamp: "24 hours"
+  payload:
+    image: "ubuntu:13.10"
+    command:
+      - "/bin/bash"
+      - "-c"
+      - "echo \"hello World\""
+    maxRunTime: 600
+  metadata:
+    name: "Signing Fennec Nightly Task"
+    description: "Markdown description of **what** this task does"
+    owner: "amiyaguchi@mozilla.com"
+    source: "https://tools.taskcluster.net/task-creator/"
+
