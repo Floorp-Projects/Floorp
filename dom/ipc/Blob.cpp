@@ -1605,7 +1605,7 @@ private:
     mIOTarget.swap(ioTarget);
 
     DebugOnly<nsresult> rv = stream->Close();
-    NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Failed to close stream!");
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to close stream!");
 
     MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(NewRunnableMethod(ioTarget, &nsIThread::Shutdown)));
 

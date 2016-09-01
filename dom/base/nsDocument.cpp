@@ -10341,7 +10341,8 @@ nsIDocument::CreateStaticClone(nsIDocShell* aCloneContainer)
             if (sheet->IsGecko()) {
               RefPtr<CSSStyleSheet> clonedSheet =
                 sheet->AsGecko()->Clone(nullptr, nullptr, clonedDoc, nullptr);
-              NS_WARN_IF_FALSE(clonedSheet, "Cloning a stylesheet didn't work!");
+              NS_WARNING_ASSERTION(clonedSheet,
+                                   "Cloning a stylesheet didn't work!");
               if (clonedSheet) {
                 clonedDoc->AddStyleSheet(clonedSheet);
               }
@@ -10360,7 +10361,8 @@ nsIDocument::CreateStaticClone(nsIDocShell* aCloneContainer)
             if (sheet->IsGecko()) {
               RefPtr<CSSStyleSheet> clonedSheet =
                 sheet->AsGecko()->Clone(nullptr, nullptr, clonedDoc, nullptr);
-              NS_WARN_IF_FALSE(clonedSheet, "Cloning a stylesheet didn't work!");
+              NS_WARNING_ASSERTION(clonedSheet,
+                                   "Cloning a stylesheet didn't work!");
               if (clonedSheet) {
                 clonedDoc->AddOnDemandBuiltInUASheet(clonedSheet);
               }
@@ -12416,8 +12418,10 @@ nsDocument::SetPointerLock(Element* aElement, int aCursorStyle)
   nsIFrame* rootFrame = shell->GetRootFrame();
   if (!NS_WARN_IF(!rootFrame)) {
     widget = rootFrame->GetNearestWidget();
-    NS_WARN_IF_FALSE(widget, "SetPointerLock(): Unable to find widget "
-                     "in shell->GetRootFrame()->GetNearestWidget();");
+    NS_WARNING_ASSERTION(
+      widget,
+      "SetPointerLock(): Unable to find widget in "
+      "shell->GetRootFrame()->GetNearestWidget();");
     if (aElement && !widget) {
       return false;
     }

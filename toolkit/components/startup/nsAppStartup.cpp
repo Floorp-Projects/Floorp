@@ -190,26 +190,27 @@ nsAppStartup::Init()
       mProbesManager->
       GetProbe(kPlacesInitCompleteCID,
                NS_LITERAL_CSTRING("places-init-complete"));
-    NS_WARN_IF_FALSE(mPlacesInitCompleteProbe,
-                     "Cannot initialize probe 'places-init-complete'");
+    NS_WARNING_ASSERTION(mPlacesInitCompleteProbe,
+                         "Cannot initialize probe 'places-init-complete'");
 
     mSessionWindowRestoredProbe =
       mProbesManager->
       GetProbe(kSessionStoreWindowRestoredCID,
                NS_LITERAL_CSTRING("sessionstore-windows-restored"));
-    NS_WARN_IF_FALSE(mSessionWindowRestoredProbe,
-                     "Cannot initialize probe 'sessionstore-windows-restored'");
-                     
+    NS_WARNING_ASSERTION(
+      mSessionWindowRestoredProbe,
+      "Cannot initialize probe 'sessionstore-windows-restored'");
+
     mXPCOMShutdownProbe =
       mProbesManager->
       GetProbe(kXPCOMShutdownCID,
                NS_LITERAL_CSTRING("xpcom-shutdown"));
-    NS_WARN_IF_FALSE(mXPCOMShutdownProbe,
-                     "Cannot initialize probe 'xpcom-shutdown'");
+    NS_WARNING_ASSERTION(mXPCOMShutdownProbe,
+                         "Cannot initialize probe 'xpcom-shutdown'");
 
     rv = mProbesManager->StartSession();
-    NS_WARN_IF_FALSE(NS_SUCCEEDED(rv),
-                     "Cannot initialize system probe manager");
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                         "Cannot initialize system probe manager");
   }
 #endif //defined(XP_WIN)
 

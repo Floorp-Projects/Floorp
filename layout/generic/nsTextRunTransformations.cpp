@@ -180,9 +180,9 @@ MergeCharactersInTextRun(gfxTextRun* aDest, gfxTextRun* aSrc,
       // that decomposed into a sequence of base+diacritics, for example),
       // just discard the entire merge run. See comment at start of this
       // function.
-      NS_WARN_IF_FALSE(!aCharsToMerge[mergeRunStart],
-                       "unable to merge across a glyph run boundary, "
-                       "glyph(s) discarded");
+      NS_WARNING_ASSERTION(
+        !aCharsToMerge[mergeRunStart],
+        "unable to merge across a glyph run boundary, glyph(s) discarded");
       if (!aCharsToMerge[mergeRunStart]) {
         if (anyMissing) {
           mergedGlyph.SetMissing(glyphs.Length());

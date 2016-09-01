@@ -440,7 +440,7 @@ SpeechDispatcherService::RegisterVoices()
       registry->AddVoice(this, iter.Key(), voice->mName, voice->mLanguage,
                          voice->mName.EqualsLiteral("default"), true);
 
-    NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Failed to add voice");
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to add voice");
   }
 
   mInitThread->Shutdown();

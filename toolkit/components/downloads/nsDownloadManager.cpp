@@ -1005,7 +1005,8 @@ nsDownloadManager::Init()
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = RestoreActiveDownloads();
-  NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Failed to restore all active downloads");
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                       "Failed to restore all active downloads");
 
   nsCOMPtr<nsINavHistoryService> history =
     do_GetService(NS_NAVHISTORYSERVICE_CONTRACTID);

@@ -153,11 +153,11 @@ public:
     }
 
     // Track had not been created on main thread before, create it now.
-    NS_WARN_IF_FALSE(!mStream->mTracks.IsEmpty(),
-                     "A new track was detected on the input stream; creating "
-                     "a corresponding MediaStreamTrack. Initial tracks "
-                     "should be added manually to immediately and "
-                     "synchronously be available to JS.");
+    NS_WARNING_ASSERTION(
+      !mStream->mTracks.IsEmpty(),
+      "A new track was detected on the input stream; creating a corresponding "
+      "MediaStreamTrack. Initial tracks should be added manually to "
+      "immediately and synchronously be available to JS.");
     RefPtr<MediaStreamTrackSource> source;
     if (mStream->mTrackSourceGetter) {
       source = mStream->mTrackSourceGetter->GetMediaStreamTrackSource(aTrackID);

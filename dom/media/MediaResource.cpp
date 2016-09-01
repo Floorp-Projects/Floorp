@@ -254,8 +254,9 @@ ChannelMediaResource::OnStartRequest(nsIRequest* aRequest)
         }
         // Give some warnings if the ranges are unexpected.
         // XXX These could be error conditions.
-        NS_WARN_IF_FALSE(mOffset == rangeStart,
-                         "response range start does not match current offset");
+        NS_WARNING_ASSERTION(
+          mOffset == rangeStart,
+          "response range start does not match current offset");
         mOffset = rangeStart;
         mCacheStream.NotifyDataStarted(rangeStart);
       }

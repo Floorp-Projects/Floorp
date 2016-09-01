@@ -6534,7 +6534,7 @@ nsGlobalWindow::FinishFullscreenChange(bool aIsFullscreen)
     ErrorResult rv;
     mWakeLock = pmService->NewWakeLock(NS_LITERAL_STRING("DOM_Fullscreen"),
                                        AsOuter()->GetCurrentInnerWindow(), rv);
-    NS_WARN_IF_FALSE(!rv.Failed(), "Failed to lock the wakelock");
+    NS_WARNING_ASSERTION(!rv.Failed(), "Failed to lock the wakelock");
     rv.SuppressException();
   } else if (mWakeLock && !mFullScreen) {
     ErrorResult rv;
