@@ -127,6 +127,10 @@ XRE_GetProcessTypeType XRE_GetProcessType;
 XRE_SetProcessTypeType XRE_SetProcessType;
 XRE_InitChildProcessType XRE_InitChildProcess;
 XRE_EnableSameExecutableForContentProcType XRE_EnableSameExecutableForContentProc;
+#ifdef LIBFUZZER
+XRE_LibFuzzerSetMainType XRE_LibFuzzerSetMain;
+XRE_LibFuzzerGetFuncsType XRE_LibFuzzerGetFuncs;
+#endif
 
 static const nsDynamicFunctionLoad kXULFuncs[] = {
     { "XRE_GetFileFromPath", (NSFuncPtr*) &XRE_GetFileFromPath },
@@ -141,8 +145,23 @@ static const nsDynamicFunctionLoad kXULFuncs[] = {
     { "XRE_SetProcessType", (NSFuncPtr*) &XRE_SetProcessType },
     { "XRE_InitChildProcess", (NSFuncPtr*) &XRE_InitChildProcess },
     { "XRE_EnableSameExecutableForContentProc", (NSFuncPtr*) &XRE_EnableSameExecutableForContentProc },
+#ifdef LIBFUZZER
+    { "XRE_LibFuzzerSetMain", (NSFuncPtr*) &XRE_LibFuzzerSetMain },
+    { "XRE_LibFuzzerGetFuncs", (NSFuncPtr*) &XRE_LibFuzzerGetFuncs },
+#endif
     { nullptr, nullptr }
 };
+
+#ifdef LIBFUZZER
+int libfuzzer_main(int argc, char **argv);
+
+/* This wrapper is used by the libFuzzer main to call into libxul */
+
+void libFuzzerGetFuncs(const char* moduleName, LibFuzzerInitFunc* initFunc,
+                       LibFuzzerTestingFunc* testingFunc) {
+  return XRE_LibFuzzerGetFuncs(moduleName, initFunc, testingFunc);
+}
+#endif
 
 static int do_main(int argc, char* argv[], char* envp[], nsIFile *xreDirectory)
 {
@@ -252,6 +271,11 @@ static int do_main(int argc, char* argv[], char* envp[], nsIFile *xreDirectory)
   }
 #endif
   appData.sandboxBrokerServices = brokerServices;
+#endif
+
+#ifdef LIBFUZZER
+  if (getenv("LIBFUZZER"))
+    XRE_LibFuzzerSetMain(argc, argv, libfuzzer_main);
 #endif
 
   return XRE_main(argc, argv, &appData, mainFlags);
