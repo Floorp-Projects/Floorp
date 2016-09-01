@@ -11,7 +11,7 @@ var gTab1, gTab2, gLevel1, gLevel2;
 function test() {
   waitForExplicitFinish();
 
-  Task.spawn(function () {
+  Task.spawn(function* () {
     gTab1 = gBrowser.addTab();
     gTab2 = gBrowser.addTab();
 
@@ -22,7 +22,7 @@ function test() {
 }
 
 function zoomTab1() {
-  Task.spawn(function () {
+  Task.spawn(function* () {
     is(gBrowser.selectedTab, gTab1, "Tab 1 is selected");
     FullZoomHelper.zoomTest(gTab1, 1, "Initial zoom of tab 1 should be 1");
     FullZoomHelper.zoomTest(gTab2, 1, "Initial zoom of tab 2 should be 1");
@@ -40,7 +40,7 @@ function zoomTab1() {
 }
 
 function zoomTab2() {
-  Task.spawn(function () {
+  Task.spawn(function* () {
     is(gBrowser.selectedTab, gTab2, "Tab 2 is selected");
 
     FullZoom.reduce();
@@ -55,7 +55,7 @@ function zoomTab2() {
 }
 
 function testNavigation() {
-  Task.spawn(function () {
+  Task.spawn(function* () {
     yield FullZoomHelper.load(gTab1, TEST_VIDEO);
     FullZoomHelper.zoomTest(gTab1, 1, "Zoom should be 1 when a video was loaded");
     yield waitForNextTurn(); // trying to fix orange bug 806046
@@ -75,7 +75,7 @@ function waitForNextTurn() {
 
 var finishTestStarted  = false;
 function finishTest() {
-  Task.spawn(function () {
+  Task.spawn(function* () {
     ok(!finishTestStarted, "finishTest called more than once");
     finishTestStarted = true;
 

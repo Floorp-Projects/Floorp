@@ -10,7 +10,7 @@ var gTab1, gTab2, gLevel1;
 function test() {
   waitForExplicitFinish();
 
-  Task.spawn(function () {
+  Task.spawn(function* () {
     gTab1 = gBrowser.addTab();
     gTab2 = gBrowser.addTab();
 
@@ -21,7 +21,7 @@ function test() {
 }
 
 function zoomTab1() {
-  Task.spawn(function () {
+  Task.spawn(function* () {
     is(gBrowser.selectedTab, gTab1, "Tab 1 is selected");
     FullZoomHelper.zoomTest(gTab1, 1, "Initial zoom of tab 1 should be 1");
     FullZoomHelper.zoomTest(gTab2, 1, "Initial zoom of tab 2 should be 1");
@@ -43,7 +43,7 @@ function zoomTab1() {
 }
 
 function finishTest() {
-  Task.spawn(function () {
+  Task.spawn(function* () {
     yield FullZoomHelper.selectTabAndWaitForLocationChange(gTab1);
     yield FullZoom.reset();
     yield FullZoomHelper.removeTabAndWaitForLocationChange(gTab1);

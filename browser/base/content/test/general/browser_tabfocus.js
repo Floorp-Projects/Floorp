@@ -12,7 +12,7 @@ function EventStore() {
   this["main-window"] = [];
   this["window1"] = [];
   this["window2"] = [];
-};
+}
 
 EventStore.prototype = {
   "push": function (event) {
@@ -56,11 +56,9 @@ function* getFocusedElementForBrowser(browser, dontCheckExtraFocus = false)
         { dontCheckExtraFocus : dontCheckExtraFocus });
     });
   }
-  else {
-    var focusedWindow = {};
-    var node = fm.getFocusedElementForWindow(browser.contentWindow, false, focusedWindow);
-    return "Focus is " + (node ? node.id : "<none>");
-  }
+  var focusedWindow = {};
+  var node = fm.getFocusedElementForWindow(browser.contentWindow, false, focusedWindow);
+  return "Focus is " + (node ? node.id : "<none>");
 }
 
 function focusInChild()

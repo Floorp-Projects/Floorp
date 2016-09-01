@@ -690,17 +690,17 @@ add_task(function* test_select_input_text() {
   return;
 
   yield test_contextmenu("#test-select-input-text",
-    ["context-undo",        false,
-     "---",                 null,
-     "context-cut",         true,
-     "context-copy",        true,
-     "context-paste",       null, // ignore clipboard state
-     "context-delete",      true,
-     "---",                 null,
-     "context-selectall",   true,
-     "context-searchselect",true,
-     "---",                 null,
-     "spell-check-enabled", true
+    ["context-undo",         false,
+     "---",                  null,
+     "context-cut",          true,
+     "context-copy",         true,
+     "context-paste",        null, // ignore clipboard state
+     "context-delete",       true,
+     "---",                  null,
+     "context-selectall",    true,
+     "context-searchselect", true,
+     "---",                  null,
+     "spell-check-enabled",  true
     ].concat(LOGIN_FILL_ITEMS),
     {
       *preCheckContextMenuFn() {

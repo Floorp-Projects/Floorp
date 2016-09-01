@@ -34,12 +34,12 @@ function getDocHeader()
 {
   return "<html><head><meta charset='utf-8'></head><body>" + getEmptyFrame();
 }
- 
+
 function getDocFooter()
 {
   return "</body></html>";
 }
- 
+
 function getEmptyFrame()
 {
   return "<iframe style='width:100px; height:30px; margin:3px; border:1px solid lightgray;' " +

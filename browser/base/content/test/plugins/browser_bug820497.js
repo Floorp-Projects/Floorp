@@ -27,7 +27,7 @@ add_task(function* () {
 
   yield promiseTabLoadEvent(gBrowser.selectedTab, gTestRoot + "plugin_bug820497.html");
 
-  yield promiseForCondition(function () { return gNumPluginBindingsAttached == 1; });  
+  yield promiseForCondition(function () { return gNumPluginBindingsAttached == 1; });
 
   // cpows
   {
@@ -52,7 +52,7 @@ add_task(function* () {
     XPCNativeWrapper.unwrap(content).addSecondPlugin();
   });
 
-  yield promiseForCondition(function () { return gNumPluginBindingsAttached == 2; });  
+  yield promiseForCondition(function () { return gNumPluginBindingsAttached == 2; });
 
   // cpows
   {

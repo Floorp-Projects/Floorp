@@ -27,7 +27,7 @@ function removeProvider(provider) {
 }
 
 function postTestCleanup(callback) {
-  Task.spawn(function () {
+  Task.spawn(function* () {
     // any tabs opened by the test.
     for (let tab of tabsToRemove) {
       yield BrowserTestUtils.removeTab(tab);
@@ -92,7 +92,7 @@ function clickAddonRemoveButton(tab, aCallback) {
   AddonManager.getAddonsByTypes(["service"], function(aAddons) {
     let addon = aAddons[0];
 
-    let doc = tab.linkedBrowser.contentDocument;;
+    let doc = tab.linkedBrowser.contentDocument;
     let list = doc.getElementById("addon-list");
 
     let item = getAddonItemInList(addon.id, list);
@@ -185,7 +185,7 @@ var tests = {
       next();
     });
   },
-  
+
   testIFrameActivation: function(next) {
     activateIFrameProvider(gTestDomains[0], function() {
       is(SocialUI.enabled, false, "SocialUI is not enabled");
@@ -195,7 +195,7 @@ var tests = {
       next();
     });
   },
-  
+
   testActivationFirstProvider: function(next) {
     // first up we add a manifest entry for a single provider.
     activateOneProvider(gProviders[0], false, function() {
@@ -204,7 +204,7 @@ var tests = {
       next();
     });
   },
-  
+
   testActivationMultipleProvider: function(next) {
     // The trick with this test is to make sure that Social.providers[1] is
     // the current provider when doing the undo - this makes sure that the

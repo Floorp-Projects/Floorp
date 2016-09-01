@@ -63,7 +63,7 @@ add_task(function*() {
     yield Promise.all([focusEventPromise, messagePromise]);
 
     gURLBar.inputField.value = inputValue.slice(0, -1);
-    EventUtils.synthesizeKey(inputValue.slice(-1) , {});
+    EventUtils.synthesizeKey(inputValue.slice(-1), {});
     EventUtils.synthesizeKey("VK_RETURN", { shiftKey: true });
     yield stoppedLoadPromise;
   }

@@ -16,7 +16,7 @@ add_task(function* () {
   gURLBar.openPopup();
   yield BrowserTestUtils.switchTab(gBrowser, tab2);
   ok(!gURLBar.popupOpen, "urlbar focused in tab to switch to, close popup");
-  
+
   // cleanup
   gBrowser.removeCurrentTab();
   gBrowser.removeCurrentTab();

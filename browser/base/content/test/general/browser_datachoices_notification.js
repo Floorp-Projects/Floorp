@@ -96,7 +96,7 @@ var checkInfobarButton = Task.async(function* (aNotification) {
   yield promiseNextTick();
 });
 
-add_task(function* setup(){
+add_task(function* setup() {
   const bypassNotification = Preferences.get(PREF_BYPASS_NOTIFICATION, true);
   const currentPolicyVersion = Preferences.get(PREF_CURRENT_POLICY_VERSION, 1);
 
@@ -120,7 +120,7 @@ function clearAcceptedPolicy() {
   Preferences.reset(PREF_ACCEPTED_POLICY_DATE);
 }
 
-add_task(function* test_single_window(){
+add_task(function* test_single_window() {
   clearAcceptedPolicy();
 
   // Close all the notifications, then try to trigger the data choices infobar.
@@ -164,7 +164,7 @@ add_task(function* test_single_window(){
                  "Date pref set.");
 });
 
-add_task(function* test_multiple_windows(){
+add_task(function* test_multiple_windows() {
   clearAcceptedPolicy();
 
   // Close all the notifications, then try to trigger the data choices infobar.
@@ -211,7 +211,7 @@ add_task(function* test_multiple_windows(){
   yield BrowserTestUtils.closeWindow(otherWindow);
 
   // Check that we are clear to upload and that the policy data us saved.
-  Assert.ok(TelemetryReportingPolicy.canUpload(),"User should be allowed to upload now.");
+  Assert.ok(TelemetryReportingPolicy.canUpload(), "User should be allowed to upload now.");
   Assert.equal(TelemetryReportingPolicy.testIsUserNotified(), true,
                "User notified about datareporting policy.");
   Assert.equal(Preferences.get(PREF_ACCEPTED_POLICY_VERSION, 0), TEST_POLICY_VERSION,

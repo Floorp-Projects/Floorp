@@ -155,7 +155,7 @@ function test_TestEventListeners()
   e("MozRotateGestureUpdate", SimpleGestureEvent.ROTATION_COUNTERCLOCKWISE, -13.0, 0);
   e("MozRotateGestureUpdate", SimpleGestureEvent.ROTATION_CLOCKWISE, 13.0, 0);
   e("MozRotateGesture", SimpleGestureEvent.ROTATION_CLOCKWISE, 33.0, 0);
-  
+
   // Tap and presstap gesture events
   test_clicks("MozTapGesture", 1);
   test_clicks("MozTapGesture", 2);

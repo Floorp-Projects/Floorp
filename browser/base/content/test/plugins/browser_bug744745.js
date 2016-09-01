@@ -41,7 +41,7 @@ add_task(function* () {
     let plugin = content.document.getElementById("test");
     if (!plugin) {
       Assert.ok(false, "plugin element not available.");
-      return false;
+      return;
     }
     // We can't use MochiKit's routine
     let style = content.getComputedStyle(plugin);

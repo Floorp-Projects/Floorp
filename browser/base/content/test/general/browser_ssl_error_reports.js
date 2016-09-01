@@ -77,7 +77,7 @@ function* testSendReportAutomatically(testURL, suffix, errorURISuffix) {
   // Cleanup.
   gBrowser.removeTab(tab);
   cleanup();
-};
+}
 
 function* testSetAutomatic(testURL, suffix, errorURISuffix) {
   Services.prefs.setBoolPref(PREF_REPORT_ENABLED, true);

@@ -17,7 +17,7 @@ add_task(function* test_switchtab_override() {
     try {
       gBrowser.removeTab(tab);
       gBrowser.removeTab(secondTab);
-    } catch(ex) { /* tabs may have already been closed in case of failure */ }
+    } catch (ex) { /* tabs may have already been closed in case of failure */ }
   });
 
   info("Wait for autocomplete")
@@ -34,11 +34,11 @@ add_task(function* test_switchtab_override() {
 
   gURLBar.focus();
   gURLBar.value = "dummy_pag";
-  EventUtils.synthesizeKey("e" , {});
+  EventUtils.synthesizeKey("e", {});
   yield deferred.promise;
 
   info("Select second autocomplete popup entry");
-  EventUtils.synthesizeKey("VK_DOWN" , {});
+  EventUtils.synthesizeKey("VK_DOWN", {});
   ok(/moz-action:switchtab/.test(gURLBar.value), "switch to tab entry found");
 
   info("Override switch-to-tab");
@@ -54,10 +54,10 @@ add_task(function* test_switchtab_override() {
   // Otherwise it would load the page.
   whenTabLoaded(secondTab, deferred.resolve);
 
-  EventUtils.synthesizeKey("VK_SHIFT" , { type: "keydown" });
-  EventUtils.synthesizeKey("VK_RETURN" , { });
+  EventUtils.synthesizeKey("VK_SHIFT", { type: "keydown" });
+  EventUtils.synthesizeKey("VK_RETURN", { });
   info(`gURLBar.value = ${gURLBar.value}`);
-  EventUtils.synthesizeKey("VK_SHIFT" , { type: "keyup" });
+  EventUtils.synthesizeKey("VK_SHIFT", { type: "keyup" });
   yield deferred.promise;
 
   yield PlacesTestUtils.clearHistory();
