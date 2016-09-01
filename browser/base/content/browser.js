@@ -7381,6 +7381,8 @@ var gIdentityHandler = {
 
     let button = document.createElement("button");
     button.setAttribute("class", "identity-popup-permission-remove-button");
+    let tooltiptext = gNavigatorBundle.getString("permissions.remove.tooltip");
+    button.setAttribute("tooltiptext", tooltiptext);
     button.addEventListener("command", () => {
       this._permissionList.removeChild(container);
       if (aPermission.inUse &&
