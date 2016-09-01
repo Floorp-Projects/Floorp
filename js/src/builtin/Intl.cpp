@@ -133,30 +133,30 @@ uenum_close(UEnumeration* en)
 struct UCollator;
 
 enum UColAttribute {
-     UCOL_ALTERNATE_HANDLING,
-     UCOL_CASE_FIRST,
-     UCOL_CASE_LEVEL,
-     UCOL_NORMALIZATION_MODE,
-     UCOL_STRENGTH,
-     UCOL_NUMERIC_COLLATION,
+    UCOL_ALTERNATE_HANDLING,
+    UCOL_CASE_FIRST,
+    UCOL_CASE_LEVEL,
+    UCOL_NORMALIZATION_MODE,
+    UCOL_STRENGTH,
+    UCOL_NUMERIC_COLLATION,
 };
 
 enum UColAttributeValue {
-  UCOL_DEFAULT = -1,
-  UCOL_PRIMARY = 0,
-  UCOL_SECONDARY = 1,
-  UCOL_TERTIARY = 2,
-  UCOL_OFF = 16,
-  UCOL_ON = 17,
-  UCOL_SHIFTED = 20,
-  UCOL_LOWER_FIRST = 24,
-  UCOL_UPPER_FIRST = 25,
+    UCOL_DEFAULT = -1,
+    UCOL_PRIMARY = 0,
+    UCOL_SECONDARY = 1,
+    UCOL_TERTIARY = 2,
+    UCOL_OFF = 16,
+    UCOL_ON = 17,
+    UCOL_SHIFTED = 20,
+    UCOL_LOWER_FIRST = 24,
+    UCOL_UPPER_FIRST = 25,
 };
 
 enum UCollationResult {
-  UCOL_EQUAL = 0,
-  UCOL_GREATER = 1,
-  UCOL_LESS = -1
+    UCOL_EQUAL = 0,
+    UCOL_GREATER = 1,
+    UCOL_LESS = -1
 };
 
 static int32_t
@@ -221,18 +221,18 @@ enum UNumberFormatRoundingMode {
 };
 
 enum UNumberFormatAttribute {
-  UNUM_GROUPING_USED,
-  UNUM_MIN_INTEGER_DIGITS,
-  UNUM_MAX_FRACTION_DIGITS,
-  UNUM_MIN_FRACTION_DIGITS,
-  UNUM_ROUNDING_MODE,
-  UNUM_SIGNIFICANT_DIGITS_USED,
-  UNUM_MIN_SIGNIFICANT_DIGITS,
-  UNUM_MAX_SIGNIFICANT_DIGITS,
+    UNUM_GROUPING_USED,
+    UNUM_MIN_INTEGER_DIGITS,
+    UNUM_MAX_FRACTION_DIGITS,
+    UNUM_MIN_FRACTION_DIGITS,
+    UNUM_ROUNDING_MODE,
+    UNUM_SIGNIFICANT_DIGITS_USED,
+    UNUM_MIN_SIGNIFICANT_DIGITS,
+    UNUM_MAX_SIGNIFICANT_DIGITS,
 };
 
 enum UNumberFormatTextAttribute {
-  UNUM_CURRENCY_CODE,
+    UNUM_CURRENCY_CODE,
 };
 
 static int32_t
@@ -313,9 +313,31 @@ NumberingSystem::getName()
 typedef void* UCalendar;
 
 enum UCalendarType {
-  UCAL_TRADITIONAL,
-  UCAL_DEFAULT = UCAL_TRADITIONAL,
-  UCAL_GREGORIAN
+    UCAL_TRADITIONAL,
+    UCAL_DEFAULT = UCAL_TRADITIONAL,
+    UCAL_GREGORIAN
+};
+
+enum UCalendarAttribute {
+    UCAL_FIRST_DAY_OF_WEEK,
+    UCAL_MINIMAL_DAYS_IN_FIRST_WEEK
+};
+
+enum UCalendarDaysOfWeek {
+    UCAL_SUNDAY,
+    UCAL_MONDAY,
+    UCAL_TUESDAY,
+    UCAL_WEDNESDAY,
+    UCAL_THURSDAY,
+    UCAL_FRIDAY,
+    UCAL_SATURDAY
+};
+
+enum UCalendarWeekdayType {
+    UCAL_WEEKDAY,
+    UCAL_WEEKEND,
+    UCAL_WEEKEND_ONSET,
+    UCAL_WEEKEND_CEASE
 };
 
 static UCalendar*
@@ -344,6 +366,19 @@ ucal_close(UCalendar* cal)
     MOZ_CRASH("ucal_close: Intl API disabled");
 }
 
+static UCalendarWeekdayType
+ucal_getDayOfWeekType(const UCalendar *cal, UCalendarDaysOfWeek dayOfWeek, UErrorCode* status)
+{
+    MOZ_CRASH("ucal_getDayOfWeekType: Intl API disabled");
+}
+
+static int32_t
+ucal_getAttribute(const UCalendar*    cal,
+                  UCalendarAttribute  attr)
+{
+    MOZ_CRASH("ucal_getAttribute: Intl API disabled");
+}
+
 typedef void* UDateTimePatternGenerator;
 
 static UDateTimePatternGenerator*
@@ -370,43 +405,43 @@ typedef void* UCalendar;
 typedef void* UDateFormat;
 
 enum UDateFormatField {
-  UDAT_ERA_FIELD = 0,
-  UDAT_YEAR_FIELD = 1,
-  UDAT_MONTH_FIELD = 2,
-  UDAT_DATE_FIELD = 3,
-  UDAT_HOUR_OF_DAY1_FIELD = 4,
-  UDAT_HOUR_OF_DAY0_FIELD = 5,
-  UDAT_MINUTE_FIELD = 6,
-  UDAT_SECOND_FIELD = 7,
-  UDAT_FRACTIONAL_SECOND_FIELD = 8,
-  UDAT_DAY_OF_WEEK_FIELD = 9,
-  UDAT_DAY_OF_YEAR_FIELD = 10,
-  UDAT_DAY_OF_WEEK_IN_MONTH_FIELD = 11,
-  UDAT_WEEK_OF_YEAR_FIELD = 12,
-  UDAT_WEEK_OF_MONTH_FIELD = 13,
-  UDAT_AM_PM_FIELD = 14,
-  UDAT_HOUR1_FIELD = 15,
-  UDAT_HOUR0_FIELD = 16,
-  UDAT_TIMEZONE_FIELD = 17,
-  UDAT_YEAR_WOY_FIELD = 18,
-  UDAT_DOW_LOCAL_FIELD = 19,
-  UDAT_EXTENDED_YEAR_FIELD = 20,
-  UDAT_JULIAN_DAY_FIELD = 21,
-  UDAT_MILLISECONDS_IN_DAY_FIELD = 22,
-  UDAT_TIMEZONE_RFC_FIELD = 23,
-  UDAT_TIMEZONE_GENERIC_FIELD = 24,
-  UDAT_STANDALONE_DAY_FIELD = 25,
-  UDAT_STANDALONE_MONTH_FIELD = 26,
-  UDAT_QUARTER_FIELD = 27,
-  UDAT_STANDALONE_QUARTER_FIELD = 28,
-  UDAT_TIMEZONE_SPECIAL_FIELD = 29,
-  UDAT_YEAR_NAME_FIELD = 30,
-  UDAT_TIMEZONE_LOCALIZED_GMT_OFFSET_FIELD = 31,
-  UDAT_TIMEZONE_ISO_FIELD = 32,
-  UDAT_TIMEZONE_ISO_LOCAL_FIELD = 33,
-  UDAT_RELATED_YEAR_FIELD = 34,
-  UDAT_TIME_SEPARATOR_FIELD = 35,
-  UDAT_FIELD_COUNT = 36 
+    UDAT_ERA_FIELD = 0,
+    UDAT_YEAR_FIELD = 1,
+    UDAT_MONTH_FIELD = 2,
+    UDAT_DATE_FIELD = 3,
+    UDAT_HOUR_OF_DAY1_FIELD = 4,
+    UDAT_HOUR_OF_DAY0_FIELD = 5,
+    UDAT_MINUTE_FIELD = 6,
+    UDAT_SECOND_FIELD = 7,
+    UDAT_FRACTIONAL_SECOND_FIELD = 8,
+    UDAT_DAY_OF_WEEK_FIELD = 9,
+    UDAT_DAY_OF_YEAR_FIELD = 10,
+    UDAT_DAY_OF_WEEK_IN_MONTH_FIELD = 11,
+    UDAT_WEEK_OF_YEAR_FIELD = 12,
+    UDAT_WEEK_OF_MONTH_FIELD = 13,
+    UDAT_AM_PM_FIELD = 14,
+    UDAT_HOUR1_FIELD = 15,
+    UDAT_HOUR0_FIELD = 16,
+    UDAT_TIMEZONE_FIELD = 17,
+    UDAT_YEAR_WOY_FIELD = 18,
+    UDAT_DOW_LOCAL_FIELD = 19,
+    UDAT_EXTENDED_YEAR_FIELD = 20,
+    UDAT_JULIAN_DAY_FIELD = 21,
+    UDAT_MILLISECONDS_IN_DAY_FIELD = 22,
+    UDAT_TIMEZONE_RFC_FIELD = 23,
+    UDAT_TIMEZONE_GENERIC_FIELD = 24,
+    UDAT_STANDALONE_DAY_FIELD = 25,
+    UDAT_STANDALONE_MONTH_FIELD = 26,
+    UDAT_QUARTER_FIELD = 27,
+    UDAT_STANDALONE_QUARTER_FIELD = 28,
+    UDAT_TIMEZONE_SPECIAL_FIELD = 29,
+    UDAT_YEAR_NAME_FIELD = 30,
+    UDAT_TIMEZONE_LOCALIZED_GMT_OFFSET_FIELD = 31,
+    UDAT_TIMEZONE_ISO_FIELD = 32,
+    UDAT_TIMEZONE_ISO_LOCAL_FIELD = 33,
+    UDAT_RELATED_YEAR_FIELD = 34,
+    UDAT_TIME_SEPARATOR_FIELD = 35,
+    UDAT_FIELD_COUNT = 36
 };
 
 enum UDateFormatStyle {
@@ -2344,6 +2379,96 @@ js::intl_FormatDateTime(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
+bool
+js::intl_GetCalendarInfo(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    MOZ_ASSERT(args.length() == 1);
+
+    JSAutoByteString locale(cx, args[0].toString());
+    if (!locale)
+        return false;
+
+    UErrorCode status = U_ZERO_ERROR;
+    const UChar* uTimeZone = nullptr;
+    int32_t uTimeZoneLength = 0;
+    UCalendar* cal = ucal_open(uTimeZone, uTimeZoneLength, locale.ptr(), UCAL_DEFAULT, &status);
+    if (U_FAILURE(status)) {
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
+        return false;
+    }
+    ScopedICUObject<UCalendar, ucal_close> toClose(cal);
+
+    RootedObject info(cx, NewBuiltinClassInstance<PlainObject>(cx));
+    if (!info)
+        return false;
+
+    RootedValue v(cx);
+    int32_t firstDayOfWeek = ucal_getAttribute(cal, UCAL_FIRST_DAY_OF_WEEK);
+    v.setInt32(firstDayOfWeek);
+
+    if (!DefineProperty(cx, info, cx->names().firstDayOfWeek, v))
+        return false;
+
+    int32_t minDays = ucal_getAttribute(cal, UCAL_MINIMAL_DAYS_IN_FIRST_WEEK);
+    v.setInt32(minDays);
+    if (!DefineProperty(cx, info, cx->names().minDays, v))
+        return false;
+
+    UCalendarWeekdayType prevDayType = ucal_getDayOfWeekType(cal, UCAL_SATURDAY, &status);
+    if (U_FAILURE(status)) {
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
+        return false;
+    }
+
+    RootedValue weekendStart(cx), weekendEnd(cx);
+
+    for (int i = UCAL_SUNDAY; i <= UCAL_SATURDAY; i++) {
+        UCalendarDaysOfWeek dayOfWeek = static_cast<UCalendarDaysOfWeek>(i);
+        UCalendarWeekdayType type = ucal_getDayOfWeekType(cal, dayOfWeek, &status);
+        if (U_FAILURE(status)) {
+            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
+            return false;
+        }
+
+        if (prevDayType != type) {
+            switch (type) {
+              case UCAL_WEEKDAY:
+                // If the first Weekday after Weekend is Sunday (1),
+                // then the last Weekend day is Saturday (7).
+                // Otherwise we'll just take the previous days number.
+                weekendEnd.setInt32(i == 1 ? 7 : i - 1);
+                break;
+              case UCAL_WEEKEND:
+                weekendStart.setInt32(i);
+                break;
+              case UCAL_WEEKEND_ONSET:
+              case UCAL_WEEKEND_CEASE:
+                // At the time this code was added, ICU apparently never behaves this way,
+                // so just throw, so that users will report a bug and we can decide what to
+                // do.
+                JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
+                return false;
+              default:
+                break;
+            }
+        }
+
+        prevDayType = type;
+    }
+
+    MOZ_ASSERT(weekendStart.isInt32());
+    MOZ_ASSERT(weekendEnd.isInt32());
+
+    if (!DefineProperty(cx, info, cx->names().weekendStart, weekendStart))
+        return false;
+
+    if (!DefineProperty(cx, info, cx->names().weekendEnd, weekendEnd))
+        return false;
+
+    args.rval().setObject(*info);
+    return true;
+}
 
 /******************** Intl ********************/
 
