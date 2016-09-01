@@ -789,7 +789,7 @@ protected:
   // NS_FRAME_HAS_DIRTY_CHILDREN bit set on it by the caller; either directly
   // if it's already in reflow, or via calling FrameNeedsReflow() to schedule a
   // reflow.
-  bool RenumberLists(nsPresContext* aPresContext);
+  bool RenumberLists();
 
   void ReflowBullet(nsIFrame* aBulletFrame,
                     BlockReflowInput& aState,
