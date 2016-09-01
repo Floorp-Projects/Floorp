@@ -1517,7 +1517,7 @@ MediaDecoderStateMachine::Seek(SeekTarget aTarget)
   // Can't seek until the start time is known.
   bool hasStartTime = mSentFirstFrameLoadedEvent || mReader->ForceZeroStartTime();
   // Can't seek when state is WAIT_FOR_CDM or DORMANT.
-  bool stateAllowed = mState >= DECODER_STATE_DECODING;
+  bool stateAllowed = mState >= DECODER_STATE_DECODING_FIRSTFRAME;
 
   if (!stateAllowed || !hasStartTime) {
     DECODER_LOG("Seek() Not Enough Data to continue at this stage, queuing seek");
