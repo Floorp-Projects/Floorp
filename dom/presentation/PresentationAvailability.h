@@ -9,26 +9,39 @@
 
 #include "mozilla/DOMEventTargetHelper.h"
 #include "nsIPresentationListener.h"
+#include "nsTArray.h"
 
 namespace mozilla {
 namespace dom {
 
+class Promise;
+
 class PresentationAvailability final : public DOMEventTargetHelper
                                      , public nsIPresentationAvailabilityListener
+                                     , public SupportsWeakPtr<PresentationAvailability>
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(PresentationAvailability,
                                            DOMEventTargetHelper)
   NS_DECL_NSIPRESENTATIONAVAILABILITYLISTENER
+  MOZ_DECLARE_WEAKREFERENCE_TYPENAME(PresentationAvailability)
 
   static already_AddRefed<PresentationAvailability>
-  Create(nsPIDOMWindowInner* aWindow);
+  Create(nsPIDOMWindowInner* aWindow,
+         const nsAString& aUrl,
+         RefPtr<Promise>& aPromise);
 
   virtual void DisconnectFromOwner() override;
 
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
+
+  bool Equals(const uint64_t aWindowID, const nsAString& aUrl) const;
+
+  bool IsCachedValueReady();
+
+  void EnqueuePromise(RefPtr<Promise>& aPromise);
 
   // WebIDL (public APIs)
   bool Value() const;
@@ -36,17 +49,22 @@ public:
   IMPL_EVENT_HANDLER(change);
 
 private:
-  explicit PresentationAvailability(nsPIDOMWindowInner* aWindow);
+  explicit PresentationAvailability(nsPIDOMWindowInner* aWindow,
+                                    const nsAString& aUrl);
 
-  ~PresentationAvailability();
+  virtual ~PresentationAvailability();
 
-  bool Init();
+  bool Init(RefPtr<Promise>& aPromise);
 
   void Shutdown();
 
   void UpdateAvailabilityAndDispatchEvent(bool aIsAvailable);
 
   bool mIsAvailable;
+
+  nsTArray<RefPtr<Promise>> mPromises;
+
+  nsString mUrl;
 };
 
 } // namespace dom

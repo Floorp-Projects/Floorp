@@ -441,7 +441,8 @@ MediaConstraintsHelper::FindBadConstraint(
       mDeviceId(MockDevice::HasThreadSafeRefCnt::value ? aDeviceId : nsString()) {}
 
     uint32_t GetBestFitnessDistance(
-        const nsTArray<const NormalizedConstraintSet*>& aConstraintSets)
+        const nsTArray<const NormalizedConstraintSet*>& aConstraintSets,
+        bool aIsChrome)
     {
       return mMediaEngineSource->GetBestFitnessDistance(aConstraintSets,
                                                         mDeviceId);

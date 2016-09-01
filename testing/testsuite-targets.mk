@@ -182,7 +182,6 @@ stage-all: \
   stage-mochitest \
   stage-jstests \
   stage-jetpack \
-  stage-marionette \
   stage-luciddream \
   test-packages-manifest \
   $(NULL)
@@ -331,24 +330,6 @@ stage-luciddream: make-stage-dir
 	$(NSINSTALL) -D $(LUCIDDREAM_DIR)
 	@(cd $(topsrcdir)/testing/luciddream && tar $(TAR_CREATE_FLAGS) - *) | (cd $(LUCIDDREAM_DIR)/ && tar -xf -)
 
-MARIONETTE_DIR=$(PKG_STAGE)/marionette
-stage-marionette: make-stage-dir
-	$(NSINSTALL) -D $(MARIONETTE_DIR)/tests
-	$(NSINSTALL) -D $(MARIONETTE_DIR)/client
-	@(cd $(topsrcdir)/testing/marionette/harness && tar --exclude marionette/tests $(TAR_CREATE_FLAGS) - *) | (cd $(MARIONETTE_DIR)/ && tar -xf -)
-	@(cd $(topsrcdir)/testing/marionette/client && tar $(TAR_CREATE_FLAGS) - *) | (cd $(MARIONETTE_DIR)/client && tar -xf -)
-	cp $(topsrcdir)/testing/marionette/mach_test_package_commands.py $(MARIONETTE_DIR)
-	$(PYTHON) $(topsrcdir)/testing/marionette/harness/marionette/tests/print-manifest-dirs.py \
-          $(topsrcdir) \
-          $(topsrcdir)/testing/marionette/harness/marionette/tests/unit-tests.ini \
-          | (cd $(topsrcdir) && xargs tar $(TAR_CREATE_FLAGS) -) \
-          | (cd $(MARIONETTE_DIR)/tests && tar -xf -)
-	$(PYTHON) $(topsrcdir)/testing/marionette/harness/marionette/tests/print-manifest-dirs.py \
-          $(topsrcdir) \
-          $(topsrcdir)/testing/marionette/harness/marionette/tests/webapi-tests.ini \
-          | (cd $(topsrcdir) && xargs tar $(TAR_CREATE_FLAGS) -) \
-          | (cd $(MARIONETTE_DIR)/tests && tar -xf -)
-
 stage-instrumentation-tests: make-stage-dir
 	$(MAKE) -C $(DEPTH)/testing/instrumentation stage-package
 
@@ -376,7 +357,6 @@ stage-extensions: make-stage-dir
   stage-jstests \
   stage-android \
   stage-jetpack \
-  stage-marionette \
   stage-steeplechase \
   stage-instrumentation-tests \
   stage-luciddream \

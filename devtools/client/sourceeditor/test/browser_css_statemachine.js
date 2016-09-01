@@ -5,7 +5,6 @@
 "use strict";
 
 const CSSCompleter = require("devtools/client/sourceeditor/css-autocompleter");
-const { Cc, Ci } = require("chrome");
 
 const CSS_URI = "http://mochi.test:8888/browser/devtools/client/sourceeditor" +
                 "/test/css_statemachine_testcases.css";
@@ -66,7 +65,7 @@ function test() {
 }
 
 function runTests() {
-  let completer = new CSSCompleter();
+  let completer = new CSSCompleter({cssProperties: getClientCssProperties()});
   let checkState = state => {
     if (state[0] == "null" && (!completer.state || completer.state == "null")) {
       return true;

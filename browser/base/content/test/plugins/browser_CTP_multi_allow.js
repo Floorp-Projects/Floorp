@@ -54,7 +54,7 @@ add_task(function* () {
       pluginItem = item;
     }
   }
-  
+
   // Choose "Allow now" for the test plugin
   pluginItem.value = "allownow";
   PopupNotifications.panel.firstChild._primaryButton.click();

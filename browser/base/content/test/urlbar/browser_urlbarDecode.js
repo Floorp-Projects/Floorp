@@ -7,14 +7,14 @@
 
 add_task(function* injectJSON() {
   let inputStrs = [
-    'http://example.com/ ", "url": "bar' ,
-    'http://example.com/\\' ,
-    'http://example.com/"' ,
-    'http://example.com/","url":"evil.com' ,
-    'http://mozilla.org/\\u0020' ,
-    'http://www.mozilla.org/","url":1e6,"some-key":"foo' ,
-    'http://www.mozilla.org/","url":null,"some-key":"foo' ,
-    'http://www.mozilla.org/","url":["foo","bar"],"some-key":"foo' ,
+    'http://example.com/ ", "url": "bar',
+    'http://example.com/\\',
+    'http://example.com/"',
+    'http://example.com/","url":"evil.com',
+    'http://mozilla.org/\\u0020',
+    'http://www.mozilla.org/","url":1e6,"some-key":"foo',
+    'http://www.mozilla.org/","url":null,"some-key":"foo',
+    'http://www.mozilla.org/","url":["foo","bar"],"some-key":"foo',
   ];
   for (let inputStr of inputStrs) {
     yield checkInput(inputStr);
@@ -84,12 +84,12 @@ function* checkInput(inputStr) {
   let expectedURL = "moz-action:" + type + "," + JSON.stringify(params);
   Assert.equal(item.getAttribute("url"), expectedURL, "url");
 
-  Assert.equal(item.getAttribute("title"), inputStr.replace("\\","/"), "title");
+  Assert.equal(item.getAttribute("title"), inputStr.replace("\\", "/"), "title");
   Assert.equal(item.getAttribute("text"), inputStr, "text");
 
   let itemType = item.getAttribute("type");
   Assert.equal(itemType, "visiturl");
 
-  Assert.equal(item._titleText.textContent, inputStr.replace("\\","/"), "Visible title");
+  Assert.equal(item._titleText.textContent, inputStr.replace("\\", "/"), "Visible title");
   Assert.equal(item._actionText.textContent, "Visit", "Visible action");
 }

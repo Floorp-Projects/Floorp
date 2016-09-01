@@ -30,7 +30,7 @@ function promiseNewTabSwitched() {
   });
 }
 
-function testURL(url, loadFunc, endFunc) {
+function* testURL(url, loadFunc, endFunc) {
   let tabSwitchedPromise = promiseNewTabSwitched();
   let tab = gBrowser.selectedTab = gBrowser.addTab();
   let browser = gBrowser.selectedBrowser;

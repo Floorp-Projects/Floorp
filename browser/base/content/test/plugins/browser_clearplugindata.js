@@ -78,7 +78,7 @@ add_task(function* () {
 
   yield promiseUpdatePluginBindings(gTestBrowser);
 
-  ok(stored(["foo.com","bar.com","baz.com","qux.com"]),
+  ok(stored(["foo.com", "bar.com", "baz.com", "qux.com"]),
     "Data stored for sites");
 
   // Clear 20 seconds ago
@@ -86,7 +86,7 @@ add_task(function* () {
   sanitizer.range = [now_uSec - 20*1000000, now_uSec];
   yield sanitizer.sanitize();
 
-  ok(stored(["bar.com","qux.com"]), "Data stored for sites");
+  ok(stored(["bar.com", "qux.com"]), "Data stored for sites");
   ok(!stored(["foo.com"]), "Data cleared for foo.com");
   ok(!stored(["baz.com"]), "Data cleared for baz.com");
 
@@ -109,7 +109,7 @@ add_task(function* () {
 
   yield promiseUpdatePluginBindings(gTestBrowser);
 
-  ok(stored(["foo.com","bar.com","baz.com","qux.com"]),
+  ok(stored(["foo.com", "bar.com", "baz.com", "qux.com"]),
     "Data stored for sites");
 
   // Attempt to clear 20 seconds ago. The plugin will throw

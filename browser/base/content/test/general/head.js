@@ -75,9 +75,9 @@ function updateTabContextMenu(tab, onOpened) {
       yield onOpened();
       onFinished();
     });
-  } else {
-    onFinished();
   }
+  onFinished();
+  return Promise.resolve();
 }
 
 function openToolbarCustomizationUI(aCallback, aBrowserWin) {
@@ -692,7 +692,7 @@ function assertMixedContentBlockingState(tabbrowser, states = {}) {
     throw new Error("assertMixedContentBlockingState requires a browser and a states object");
   }
 
-  let {passiveLoaded,activeLoaded,activeBlocked} = states;
+  let {passiveLoaded, activeLoaded, activeBlocked} = states;
   let {gIdentityHandler} = tabbrowser.ownerGlobal;
   let doc = tabbrowser.ownerDocument;
   let identityBox = gIdentityHandler._identityBox;
@@ -837,7 +837,7 @@ function is_hidden(element) {
   if (style.visibility != "visible")
     return true;
   if (style.display == "-moz-popup")
-    return ["hiding","closed"].indexOf(element.state) != -1;
+    return ["hiding", "closed"].indexOf(element.state) != -1;
 
   // Hiding a parent element will hide all its children
   if (element.parentNode != element.ownerDocument)
@@ -1023,7 +1023,11 @@ function getPropertyBagValue(bag, key) {
   try {
     let val = bag.getProperty(key);
     return val;
-  } catch(e if e.result == Cr.NS_ERROR_FAILURE) {}
+  } catch (e) {
+    if (e.result != Cr.NS_ERROR_FAILURE) {
+      throw e;
+    }
+  }
 
   return null;
 }
@@ -1165,6 +1169,7 @@ function getCertExceptionDialog(aLocation) {
       }
     }
   }
+  return undefined;
 }
 
 function setupRemoteClientsFixture(fixture) {

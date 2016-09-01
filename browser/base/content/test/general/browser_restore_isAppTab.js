@@ -85,7 +85,7 @@ function isBrowserAppTab(browser) {
 var restart = Task.async(function*(browser) {
   // If the tab isn't remote this would crash the main process so skip it
   if (!browser.isRemoteBrowser)
-    return browser;
+    return;
 
   // Make sure the main process has all of the current tab state before crashing
   yield TabStateFlusher.flush(browser);

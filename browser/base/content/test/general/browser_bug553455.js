@@ -703,7 +703,7 @@ function test_localfile() {
   try {
     var path = cr.convertChromeURL(makeURI(CHROMEROOT + "corrupt.xpi")).spec;
   } catch (ex) {
-    var path = CHROMEROOT + "corrupt.xpi";
+    path = CHROMEROOT + "corrupt.xpi";
   }
   gBrowser.selectedTab = gBrowser.addTab("about:blank");
   BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(() => {
@@ -1133,7 +1133,7 @@ function runNextTest() {
     gTestStart = Date.now();
     TESTS.shift()();
   });
-};
+}
 
 var XPInstallObserver = {
   observe: function (aSubject, aTopic, aData) {
