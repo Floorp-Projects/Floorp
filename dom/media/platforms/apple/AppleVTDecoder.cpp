@@ -34,11 +34,9 @@ AppleVTDecoder::AppleVTDecoder(const VideoInfo& aConfig,
   , mPictureHeight(aConfig.mImage.height)
   , mDisplayWidth(aConfig.mDisplay.width)
   , mDisplayHeight(aConfig.mDisplay.height)
-  , mQueuedSamples(0)
   , mTaskQueue(aTaskQueue)
   , mMaxRefFrames(mp4_demuxer::H264::ComputeMaxRefFrames(aConfig.mExtraData))
   , mImageContainer(aImageContainer)
-  , mInputIncoming(0)
   , mIsShutDown(false)
 #ifdef MOZ_WIDGET_UIKIT
   , mUseSoftwareImages(true)
@@ -88,8 +86,6 @@ AppleVTDecoder::Input(MediaRawData* aSample)
       aSample->mKeyframe ? " keyframe" : "",
       aSample->Size());
 
-  mInputIncoming++;
-
   mTaskQueue->Dispatch(NewRunnableMethod<RefPtr<MediaRawData>>(
     this, &AppleVTDecoder::ProcessDecode, aSample));
   return NS_OK;
@@ -104,8 +100,6 @@ AppleVTDecoder::Flush()
     NewRunnableMethod(this, &AppleVTDecoder::ProcessFlush);
   SyncRunnable::DispatchToThread(mTaskQueue, runnable);
   mIsFlushing = false;
-  // All ProcessDecode() tasks should be done.
-  MOZ_ASSERT(mInputIncoming == 0);
 
   mSeekTargetThreshold.reset();
 
@@ -142,18 +136,11 @@ AppleVTDecoder::ProcessDecode(MediaRawData* aSample)
 {
   AssertOnTaskQueueThread();
 
-  mInputIncoming--;
-
   if (mIsFlushing) {
     return NS_OK;
   }
 
   auto rv = DoDecode(aSample);
-  // Ask for more data.
-  if (NS_SUCCEEDED(rv) && !mInputIncoming && mQueuedSamples <= mMaxRefFrames) {
-    LOG("%s task queue empty; requesting more data", GetDescriptionName());
-    mCallback->InputExhausted();
-  }
 
   return rv;
 }
@@ -213,7 +200,6 @@ AppleVTDecoder::DrainReorderedFrames()
   while (!mReorderQueue.IsEmpty()) {
     mCallback->Output(mReorderQueue.Pop().get());
   }
-  mQueuedSamples = 0;
 }
 
 void
@@ -223,7 +209,6 @@ AppleVTDecoder::ClearReorderedFrames()
   while (!mReorderQueue.IsEmpty()) {
     mReorderQueue.Pop();
   }
-  mQueuedSamples = 0;
 }
 
 void
@@ -288,16 +273,10 @@ AppleVTDecoder::OutputFrame(CVPixelBufferRef aImage,
       aFrameRef.is_sync_point ? " keyframe" : ""
   );
 
-  if (mQueuedSamples > mMaxRefFrames) {
-    // We had stopped requesting more input because we had received too much at
-    // the time. We can ask for more once again.
-    mCallback->InputExhausted();
-  }
-  MOZ_ASSERT(mQueuedSamples);
-  mQueuedSamples--;
-
   if (!aImage) {
-    // Image was dropped by decoder.
+    // Image was dropped by decoder or none return yet.
+    // We need more input to continue.
+    mCallback->InputExhausted();
     return NS_OK;
   }
 
@@ -410,9 +389,10 @@ AppleVTDecoder::OutputFrame(CVPixelBufferRef aImage,
   // in composition order.
   MonitorAutoLock mon(mMonitor);
   mReorderQueue.Push(data);
-  while (mReorderQueue.Length() > mMaxRefFrames) {
+  if (mReorderQueue.Length() > mMaxRefFrames) {
     mCallback->Output(mReorderQueue.Pop().get());
   }
+  mCallback->InputExhausted();
   LOG("%llu decoded frames queued",
       static_cast<unsigned long long>(mReorderQueue.Length()));
 
@@ -479,8 +459,6 @@ AppleVTDecoder::DoDecode(MediaRawData* aSample)
     NS_ERROR("Couldn't create CMSampleBuffer");
     return NS_ERROR_FAILURE;
   }
-
-  mQueuedSamples++;
 
   VTDecodeFrameFlags decodeFlags =
     kVTDecodeFrame_EnableAsynchronousDecompression;
