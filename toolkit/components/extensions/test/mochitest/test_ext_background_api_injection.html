@@ -15,7 +15,7 @@
 
 add_task(function* testBackgroundWindow() {
   let extension = ExtensionTestUtils.loadExtension({
-    background: "new " + function() {
+    background: function() {
       const BASE = "http://mochi.test:8888/tests/toolkit/components/extensions/test/mochitest";
 
       browser.test.log("background script executed");

@@ -86,18 +86,18 @@ add_task(function* test_multiple_pages() {
   }
 
   let extension = ExtensionTestUtils.loadExtension({
-    background: `(${background})()`,
+    background,
 
     files: {
       "tab.html": `<!DOCTYPE html>
         <html>
           <head>
             <meta charset="utf-8">
-            <script src="tab.js"></${"script"}>
+            <script src="tab.js"><\/script>
           </head>
         </html>`,
 
-      "tab.js": `(${tab})()`,
+      "tab.js": tab,
     },
 
     manifest: {

@@ -32,7 +32,7 @@ add_task(function* test_background_canvas() {
   }
 
   let extensionData = {
-    background: `(${background})()`,
+    background,
   };
 
   let extension = ExtensionTestUtils.loadExtension(extensionData);

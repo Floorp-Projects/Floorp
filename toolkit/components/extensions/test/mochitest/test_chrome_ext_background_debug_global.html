@@ -29,7 +29,7 @@ const {
  * debugging is actually working correctly end-to-end.
  */
 
-function backgroundScript() {
+function background() {
   window.testThing = "test!";
   browser.test.notifyPass("background script ran");
 }
@@ -37,11 +37,10 @@ function backgroundScript() {
 const ID = "debug@tests.mozilla.org";
 let extensionData = {
   useAddonManager: "temporary",
-  background: "(" + backgroundScript.toString() + ")()",
+  background,
   manifest: {
     applications: {gecko: {id: ID}},
   },
-  files: {},
 };
 
 add_task(function* () {

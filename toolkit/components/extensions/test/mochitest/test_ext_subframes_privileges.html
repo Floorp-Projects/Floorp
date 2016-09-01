@@ -14,7 +14,7 @@
 "use strict";
 
 add_task(function* test_webext_tab_subframe_privileges() {
-  function backgroundScript() {
+  function background() {
     browser.runtime.onMessage.addListener(({msg, success, tabId, error}) => {
       if (msg == "webext-tab-subframe-privileges") {
         if (success) {
@@ -57,7 +57,7 @@ add_task(function* test_webext_tab_subframe_privileges() {
   }
 
   let extensionData = {
-    background: "new " + backgroundScript,
+    background,
     files: {
       "tab.html": `<!DOCTYPE>
           <head>
@@ -70,10 +70,10 @@ add_task(function* test_webext_tab_subframe_privileges() {
       "tab-subframe.html": `<!DOCTYPE>
           <head>
             <meta charset="utf-8">
-            <script src="tab-subframe.js"></${"script"}>
+            <script src="tab-subframe.js"><\/script>
           </head>
         </html>`,
-      "tab-subframe.js": `(${tabSubframeScript})()`,
+      "tab-subframe.js": tabSubframeScript,
     },
   };
   let extension = ExtensionTestUtils.loadExtension(extensionData);
@@ -109,10 +109,10 @@ add_task(function* test_webext_background_subframe_privileges() {
       "background-subframe.html": `<!DOCTYPE>
          <head>
            <meta charset="utf-8">
-           <script src="background-subframe.js"></${"script"}>
+           <script src="background-subframe.js"><\/script>
          </head>
        </html>`,
-      "background-subframe.js": `(${backgroundSubframeScript})()`,
+      "background-subframe.js": backgroundSubframeScript,
     },
   };
   let extension = ExtensionTestUtils.loadExtension(extensionData);
@@ -124,7 +124,7 @@ add_task(function* test_webext_background_subframe_privileges() {
 });
 
 add_task(function* test_webext_contentscript_iframe_subframe_privileges() {
-  function backgroundScript() {
+  function background() {
     browser.runtime.onMessage.addListener(({name, hasTabsAPI, hasStorageAPI}) => {
       if (name == "contentscript-iframe-loaded") {
         browser.test.assertFalse(hasTabsAPI,
@@ -152,7 +152,7 @@ add_task(function* test_webext_contentscript_iframe_subframe_privileges() {
   }
 
   let extensionData = {
-    background: "new " + backgroundScript,
+    background,
     manifest: {
       "permissions": ["storage"],
       "content_scripts": [{
@@ -164,7 +164,7 @@ add_task(function* test_webext_contentscript_iframe_subframe_privileges() {
       ],
     },
     files: {
-      "contentscript.js": `(${contentScript})()`,
+      "contentscript.js": contentScript,
       "contentscript-iframe.html": `<!DOCTYPE>
          <head>
            <meta charset="utf-8">
@@ -176,10 +176,10 @@ add_task(function* test_webext_contentscript_iframe_subframe_privileges() {
       "contentscript-iframe-subframe.html": `<!DOCTYPE>
          <head>
            <meta charset="utf-8">
-           <script src="contentscript-iframe-subframe.js"></${"script"}>
+           <script src="contentscript-iframe-subframe.js"><\/script>
          </head>
        </html>`,
-      "contentscript-iframe-subframe.js": `(${subframeScript})()`,
+      "contentscript-iframe-subframe.js": subframeScript,
     },
   };
   let extension = ExtensionTestUtils.loadExtension(extensionData);

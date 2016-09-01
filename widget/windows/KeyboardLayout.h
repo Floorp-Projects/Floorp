@@ -180,11 +180,16 @@ public:
   {
     UINT mCharCode;
     UINT mScanCode;
+    bool mIsSysKey;
     bool mIsDeadKey;
     bool mConsumed;
 
-    FakeCharMsg() :
-      mCharCode(0), mScanCode(0), mIsDeadKey(false), mConsumed(false)
+    FakeCharMsg()
+      : mCharCode(0)
+      , mScanCode(0)
+      , mIsSysKey(false)
+      , mIsDeadKey(false)
+      , mConsumed(false)
     {
     }
 
@@ -192,7 +197,10 @@ public:
     {
       MSG msg;
       msg.hwnd = aWnd;
-      msg.message = mIsDeadKey ? WM_DEADCHAR : WM_CHAR;
+      msg.message = mIsDeadKey && mIsSysKey ? WM_SYSDEADCHAR :
+                                 mIsDeadKey ? WM_DEADCHAR :
+                                  mIsSysKey ? WM_SYSCHAR :
+                                              WM_CHAR;
       msg.wParam = static_cast<WPARAM>(mCharCode);
       msg.lParam = static_cast<LPARAM>(mScanCode << 16);
       msg.time = 0;
@@ -305,6 +313,10 @@ private:
   // mIsOverridingKeyboardLayout is true if the instance temporarily overriding
   // keyboard layout with specified by the constructor.
   bool    mIsOverridingKeyboardLayout;
+  // mIsFollowedByNonControlCharMessage may be true when mMsg is a keydown
+  // message.  When the keydown message is followed by a char message, this
+  // is true.
+  bool    mIsFollowedByNonControlCharMessage;
 
   nsTArray<FakeCharMsg>* mFakeCharMsgs;
 
@@ -412,6 +424,7 @@ private:
     return (aMessage == WM_SYSCHAR || aMessage == WM_SYSDEADCHAR);
   }
   bool MayBeSameCharMessage(const MSG& aCharMsg1, const MSG& aCharMsg2) const;
+  bool IsFollowedByNonControlCharMessage() const;
   bool IsFollowedByDeadCharMessage() const;
   bool IsKeyMessageOnPlugin() const
   {
@@ -583,6 +596,13 @@ public:
    */
   bool IsDeadKey(uint8_t aVirtualKey,
                  const ModifierKeyState& aModKeyState) const;
+
+  /**
+   * IsSysKey() returns true if aVirtualKey with aModKeyState causes WM_SYSKEY*
+   * or WM_SYS*CHAR messages.
+   */
+  bool IsSysKey(uint8_t aVirtualKey,
+                const ModifierKeyState& aModKeyState) const;
 
   /**
    * GetUniCharsAndModifiers() returns characters which is inputted by the

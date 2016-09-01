@@ -13,7 +13,7 @@
 <script type="text/javascript">
 "use strict";
 
-function backgroundScript() {
+function background() {
   browser.runtime.onMessage.addListener((msg, sender, sendReply) => {
     browser.test.assertTrue(sender.tab.url.endsWith("file_sample.html"), "sender url correct");
 
@@ -45,7 +45,7 @@ function contentScript() {
 }
 
 let extensionData = {
-  background: "(" + backgroundScript.toString() + ")()",
+  background,
   manifest: {
     "permissions": ["tabs"],
     "content_scripts": [{
@@ -56,7 +56,7 @@ let extensionData = {
   },
 
   files: {
-    "content_script.js": "(" + contentScript.toString() + ")()",
+    "content_script.js": contentScript,
   },
 };
 

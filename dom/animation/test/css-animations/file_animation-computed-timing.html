@@ -192,7 +192,7 @@ test(function(t) {
   // undefined value.
   var div = addDiv(t, {style: 'animation: moveAnimation 10s -100s forwards'});
   var effect = div.getAnimations()[0].effect;
-  assert_equals(effect.getComputedTiming().endTime, -90 * MS_PER_SEC,
+  assert_equals(effect.getComputedTiming().endTime, 0,
                 'Initial value of endTime');
 }, 'endTime of an animation that finishes before its startTime');
 

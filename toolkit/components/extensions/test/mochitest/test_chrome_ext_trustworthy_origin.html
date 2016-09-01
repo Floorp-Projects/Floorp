@@ -25,13 +25,12 @@ XPCOMUtils.defineLazyServiceGetter(this, "gContentSecurityManager",
                                    "nsIContentSecurityManager");
 
 add_task(function* () {
-  function backgroundScript() {
+  function background() {
     browser.test.sendMessage("ready", browser.runtime.getURL("/test.html"));
   }
 
   let extensionData = {
-    background: "(" + backgroundScript.toString() + ")()",
-    manifest: {},
+    background,
     files: {
       "test.html": `<html><head></head><body></body></html>`,
     },

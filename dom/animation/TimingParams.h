@@ -114,7 +114,8 @@ struct TimingParams
 
   StickyTimeDuration EndTime() const
   {
-    return mDelay + ActiveDuration() + mEndDelay;
+    return std::max(mDelay + ActiveDuration() + mEndDelay,
+                    StickyTimeDuration());
   }
 
   bool operator==(const TimingParams& aOther) const;

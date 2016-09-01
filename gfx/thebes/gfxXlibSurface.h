@@ -10,6 +10,7 @@
 
 #include <X11/extensions/Xrender.h>
 #include <X11/Xlib.h>
+#include "X11UndefineNone.h"
 
 #if defined(GL_PROVIDER_GLX)
 #include "GLXLibrary.h"
@@ -46,13 +47,13 @@ public:
     // |screen| (if specified).
     static already_AddRefed<gfxXlibSurface>
     Create(Screen *screen, Visual *visual, const mozilla::gfx::IntSize& size,
-           Drawable relatedDrawable = None);
+           Drawable relatedDrawable = X11None);
     static cairo_surface_t *
     CreateCairoSurface(Screen *screen, Visual *visual, const mozilla::gfx::IntSize& size,
-                       Drawable relatedDrawable = None);
+                       Drawable relatedDrawable = X11None);
     static already_AddRefed<gfxXlibSurface>
     Create(Screen* screen, XRenderPictFormat *format, const mozilla::gfx::IntSize& size,
-           Drawable relatedDrawable = None);
+           Drawable relatedDrawable = X11None);
 
     virtual ~gfxXlibSurface();
 

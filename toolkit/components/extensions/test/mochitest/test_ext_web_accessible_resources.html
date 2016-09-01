@@ -141,33 +141,33 @@ add_task(function* test_web_accessible_resources() {
       ],
     },
 
-    background: `(${background})()`,
+    background,
 
     files: {
-      "content_script.js": `(${contentScript})()`,
+      "content_script.js": contentScript,
 
       "accessible.html": `<html><head>
         <meta charset="utf-8">
-        <script src="accessible.js"></${"script"}>
+        <script src="accessible.js"><\/script>
       </head></html>`,
 
       "accessible.js": 'browser.runtime.sendMessage(["page-script", location.href]);',
 
       "inaccessible.html": `<html><head>
         <meta charset="utf-8">
-        <script src="inaccessible.js"></${"script"}>
+        <script src="inaccessible.js"><\/script>
       </head></html>`,
 
       "inaccessible.js": 'browser.runtime.sendMessage(["page-script", location.href]);',
 
       "wild1.html": `<html><head>
         <meta charset="utf-8">
-        <script src="wild.js"></${"script"}>
+        <script src="wild.js"><\/script>
       </head></html>`,
 
       "wild2.htm": `<html><head>
         <meta charset="utf-8">
-        <script src="wild.js"></${"script"}>
+        <script src="wild.js"><\/script>
       </head></html>`,
 
       "wild.js": 'browser.runtime.sendMessage(["page-script", location.href]);',
@@ -231,11 +231,11 @@ add_task(function* test_web_accessible_resources_csp() {
         "test_script.js",
       ],
     },
-    background: `(${background})()`,
+    background,
     files: {
       "content_script_helper.js": `${testImageLoading}`,
-      "content_script.js": `(${content})()`,
-      "test_script.js": `(${testScript})()`,
+      "content_script.js": content,
+      "test_script.js": testScript,
       "image.png": IMAGE_ARRAYBUFFER,
     },
   });
@@ -326,11 +326,11 @@ add_task(function* test_web_accessible_resources_mixed_content() {
         "test_script.js",
       ],
     },
-    background: `(${background})()`,
+    background,
     files: {
       "content_script_helper.js": `${testImageLoading}`,
-      "content_script.js": `(${content})()`,
-      "test_script.js": `(${testScript})()`,
+      "content_script.js": content,
+      "test_script.js": testScript,
       "image.png": IMAGE_ARRAYBUFFER,
     },
   });

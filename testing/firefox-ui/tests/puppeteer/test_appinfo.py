@@ -16,7 +16,8 @@ class TestAppInfo(FirefoxTestCase):
         self.assertEqual(self.appinfo.name, version_info['application_name'])
         self.assertEqual(self.appinfo.vendor, version_info['application_vendor'])
         self.assertEqual(self.appinfo.version, version_info['application_version'])
-        self.assertEqual(self.appinfo.platformBuildID, version_info['platform_buildid'])
+        # Bug 1298328 - Platform buildid mismatch due to incremental builds
+        # self.assertEqual(self.appinfo.platformBuildID, version_info['platform_buildid'])
         self.assertEqual(self.appinfo.platformVersion, version_info['platform_version'])
         self.assertIsNotNone(self.appinfo.locale)
         self.assertIsNotNone(self.appinfo.user_agent)
