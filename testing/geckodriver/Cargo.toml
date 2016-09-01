@@ -6,6 +6,7 @@ authors = [
   "Andreas Tolfsen <ato@mozilla.com>",
 ]
 description = "Proxy for using WebDriver clients to interact with Gecko-based browsers."
+keywords = ["webdriver", "w3c", "proxy", "httpd", "mozilla", "firefox"]
 repository = "https://github.com/mozilla/geckodriver"
 readme = "README.md"
 license = "MPL-2.0"
