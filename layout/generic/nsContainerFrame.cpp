@@ -1936,23 +1936,49 @@ nsContainerFrame::RenumberFrameAndDescendants(int32_t* aOrdinal,
         kidRenumberedABullet = true;
       }
     }
-  } else if (NS_STYLE_DISPLAY_BLOCK == display->mDisplay) {
+  } else if (display->mDisplay == NS_STYLE_DISPLAY_BLOCK ||
+             display->mDisplay == NS_STYLE_DISPLAY_FLEX ||
+             display->mDisplay == NS_STYLE_DISPLAY_GRID) {
     if (FrameStartsCounterScope(kid)) {
-      // Don't bother recursing into a block frame that is a new
-      // counter scope. Any list-items in there will be handled by
-      // it.
+      // Don't bother recursing into a frame that is a new counter scope.
+      // Any list-items in there will be handled by it.
     } else {
-      // If the display=block element is a block frame then go ahead
-      // and recurse into it, as it might have child list-items.
-      nsBlockFrame* kidBlock = nsLayoutUtils::GetAsBlock(kid);
-      if (kidBlock) {
+      nsContainerFrame* container = do_QueryFrame(kid);
+      if (container) {
         kidRenumberedABullet =
-          kidBlock->RenumberChildFrames(aOrdinal, aDepth + 1,
-                                        aIncrement, aForCounting);
+          container->RenumberChildFrames(aOrdinal, aDepth + 1,
+                                         aIncrement, aForCounting);
       }
     }
   }
   return kidRenumberedABullet;
+}
+
+bool
+nsContainerFrame::RenumberChildFrames(int32_t* aOrdinal,
+                                      int32_t aDepth,
+                                      int32_t aIncrement,
+                                      bool aForCounting)
+{
+  bool renumbered = false;
+  for (auto kid : mFrames) {
+    bool kidRenumbered =
+      kid->RenumberFrameAndDescendants(aOrdinal, aDepth, aIncrement, aForCounting);
+    if (!aForCounting && kidRenumbered) {
+      renumbered = true;
+    }
+  }
+
+  // We need to set NS_FRAME_HAS_DIRTY_CHILDREN bits up the tree between
+  // the bullet and the caller of RenumberLists.  But the caller itself
+  // has to be responsible for setting the bit itself, since that caller
+  // might be making a FrameNeedsReflow call, which requires that the
+  // bit not be set yet.
+  if (renumbered && aDepth != 0) {
+    AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);
+  }
+
+  return renumbered;
 }
 
 nsOverflowContinuationTracker::nsOverflowContinuationTracker(nsContainerFrame* aFrame,

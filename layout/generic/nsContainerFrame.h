@@ -504,7 +504,7 @@ public:
   virtual bool RenumberChildFrames(int32_t* aOrdinal,
                                    int32_t aDepth,
                                    int32_t aIncrement,
-                                   bool aForCounting) { return false; }
+                                   bool aForCounting);
 
 #define NS_DECLARE_FRAME_PROPERTY_FRAMELIST(prop) \
   NS_DECLARE_FRAME_PROPERTY_WITH_DTOR_NEVER_CALLED(prop, nsFrameList)
