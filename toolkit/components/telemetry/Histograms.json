@@ -10232,5 +10232,12 @@
     "bug_numbers": [1190627],
     "description": "When restoring tabs on startup, reading from sessionstore.js failed, but sessionstore.bak was read successfully.",
     "cpp_guard": "ANDROID"
+  },
+  "NUMBER_OF_PROFILES": {
+    "alert_emails": ["amarchesini@mozilla.com"],
+    "expires_in_version": "58",
+    "bug_numbers": [1296606],
+    "kind": "count",
+    "description": "Number of named profiles."
   }
 }

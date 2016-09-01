@@ -18,10 +18,7 @@
 		rect2.setAttribute("requiredFeatures", "http://www.w3.org/TR/SVG11/feature#Gradient");
 
 		var rect3 = document.getElementById("rect3");
-		rect3.setAttribute("requiredFeatures", "foo");
-
-		var rect4 = document.getElementById("rect4");
-		rect4.setAttribute("requiredExtensions", "foo");
+		rect3.setAttribute("requiredExtensions", "foo");
 		}
 	</script>
 
@@ -33,6 +30,4 @@
 	<rect id="rect2" x="200" y="100" width="50" height="50" fill="lime"/>
 
 	<rect id="rect3" x="50" y="200" width="50" height="50" fill="red"/>
-
-	<rect id="rect4" x="200" y="200" width="50" height="50" fill="red"/>
 </svg>

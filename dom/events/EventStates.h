@@ -300,6 +300,8 @@ private:
 #define NS_EVENT_STATE_UNRESOLVED NS_DEFINE_EVENT_STATE_MACRO(46)
 // Element is transitioning for rules changed by style editor
 #define NS_EVENT_STATE_STYLEEDITOR_TRANSITIONING NS_DEFINE_EVENT_STATE_MACRO(47)
+// Content shows its placeholder
+#define NS_EVENT_STATE_PLACEHOLDERSHOWN NS_DEFINE_EVENT_STATE_MACRO(48)
 
 // Event state that is used for values that need to be parsed but do nothing.
 #define NS_EVENT_STATE_IGNORE NS_DEFINE_EVENT_STATE_MACRO(63)

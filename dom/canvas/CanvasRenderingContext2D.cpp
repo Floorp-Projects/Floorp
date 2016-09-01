@@ -5426,12 +5426,13 @@ CanvasRenderingContext2D::GetImageDataArray(JSContext* aCx,
   DataSourceSurface::MappedSurface rawData;
   if (!srcReadRect.IsEmpty()) {
     RefPtr<SourceSurface> snapshot;
-    if (mTarget) {
-      snapshot = mTarget->Snapshot();
-    } else if (mBufferProvider) {
+    if (!mTarget && mBufferProvider) {
       snapshot = mBufferProvider->BorrowSnapshot();
     } else {
       EnsureTarget();
+      if (!IsTargetValid()) {
+        return NS_ERROR_FAILURE;
+      }
       snapshot = mTarget->Snapshot();
     }
 

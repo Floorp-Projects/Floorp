@@ -2882,3 +2882,25 @@ function Intl_getCanonicalLocales(locales) {
   }
   return result;
 }
+
+function Intl_getCalendarInfo(locales) {
+  const requestedLocales = CanonicalizeLocaleList(locales);
+
+  const DateTimeFormat = dateTimeFormatInternalProperties;
+  const localeData = DateTimeFormat.localeData;
+
+  const localeOpt = new Record();
+  localeOpt.localeMatcher = "best fit";
+
+  const r = ResolveLocale(callFunction(DateTimeFormat.availableLocales, DateTimeFormat),
+                          requestedLocales,
+                          localeOpt,
+                          DateTimeFormat.relevantExtensionKeys,
+                          localeData);
+
+  const result = intl_GetCalendarInfo(r.locale);
+  result.calendar = r.ca;
+  result.locale = r.locale;
+
+  return result;
+}

@@ -1528,6 +1528,23 @@ MacroAssembler::storeFloat32x3(FloatRegister src, const BaseIndex& dest)
     MOZ_CRASH("NYI");
 }
 
+// ===============================================================
+// Clamping functions.
+
+void
+MacroAssembler::clampIntToUint8(Register reg)
+{
+    vixl::UseScratchRegisterScope temps(this);
+    const ARMRegister scratch32 = temps.AcquireW();
+    const ARMRegister reg32(reg, 32);
+    MOZ_ASSERT(!scratch32.Is(reg32));
+
+    Cmp(reg32, Operand(reg32, vixl::UXTB));
+    Csel(reg32, reg32, vixl::wzr, Assembler::GreaterThanOrEqual);
+    Mov(scratch32, Operand(0xff));
+    Csel(reg32, reg32, scratch32, Assembler::LessThanOrEqual);
+}
+
 //}}} check_macroassembler_style
 // ===============================================================
 
