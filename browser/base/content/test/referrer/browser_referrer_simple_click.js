@@ -10,7 +10,7 @@ function startSimpleClickTestCase(aTestNumber) {
   });
 
   clickTheLink(gTestWindow, "testlink", {});
-};
+}
 
 function test() {
   requestLongerTimeout(10);  // slowwww shutdown on e10s

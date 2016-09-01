@@ -17,21 +17,25 @@ add_task(function *test_ignoreFragment() {
   let hashChangePromise = new Promise(resolve => {
     tabRefAboutHome.linkedBrowser.contentWindow.addEventListener("hashchange", resolve, false);
   });
-  switchTab("about:home#2", true, { ignoreFragment: true });
+  switchTab("about:home#2", true, { ignoreFragment: "whenComparingAndReplace" });
   is(tabRefAboutHome, gBrowser.selectedTab, "The same about:home tab should be switched to");
   yield hashChangePromise;
   is(gBrowser.currentURI.ref, "2", "The ref should be updated to the new ref");
+  switchTab("about:mozilla", true);
+  switchTab("about:home#3", true, { ignoreFragment: "whenComparing" });
+  is(tabRefAboutHome, gBrowser.selectedTab, "The same about:home tab should be switched to");
+  is(gBrowser.currentURI.ref, "2", "The ref should be unchanged since the fragment is only ignored when comparing");
   switchTab("about:mozilla", true);
   switchTab("about:home#1", false);
   isnot(tabRefAboutHome, gBrowser.selectedTab, "Selected tab should not be initial about:blank tab");
   is(gBrowser.tabs.length, numTabsAtStart + 1, "Should have one new tab opened");
   switchTab("about:mozilla", true);
-  switchTab("about:home", true, {ignoreFragment: true});
+  switchTab("about:home", true, {ignoreFragment: "whenComparingAndReplace"});
   yield promiseWaitForCondition(function() {
     return tabRefAboutHome.linkedBrowser.currentURI.spec == "about:home";
   });
   is(tabRefAboutHome.linkedBrowser.currentURI.spec, "about:home", "about:home shouldn't have hash");
-  switchTab("about:about", false, { ignoreFragment: true });
+  switchTab("about:about", false, { ignoreFragment: "whenComparingAndReplace" });
   cleanupTestTabs();
 });
 
@@ -83,9 +87,9 @@ add_task(function* test_replaceQueryStringAndFragment() {
   gBrowser.removeCurrentTab();
   switchTab("about:home?hello=firefox#aaa", true);
   is(tabRefAboutHome, gBrowser.selectedTab, "Selected tab should be the initial about:home tab");
-  switchTab("about:mozilla?hello=firefox#bbb", true, { replaceQueryString: true, ignoreFragment: true });
+  switchTab("about:mozilla?hello=firefox#bbb", true, { replaceQueryString: true, ignoreFragment: "whenComparingAndReplace" });
   is(tabRefAboutMozilla, gBrowser.selectedTab, "Selected tab should be the initial about:mozilla tab");
-  switchTab("about:home?hello=firefoxos#bbb", true, { ignoreQueryString: true, ignoreFragment: true });
+  switchTab("about:home?hello=firefoxos#bbb", true, { ignoreQueryString: true, ignoreFragment: "whenComparingAndReplace" });
   is(tabRefAboutHome, gBrowser.selectedTab, "Selected tab should be the initial about:home tab");
   cleanupTestTabs();
 });
@@ -113,12 +117,16 @@ function cleanupTestTabs() {
 
 function switchTab(aURI, aShouldFindExistingTab, aOpenParams = {}) {
   // Build the description before switchToTabHavingURI deletes the object properties.
-  let msg = "Should switch to existing " + aURI + " tab if one existed, " +
-        (aOpenParams.ignoreFragment ? "ignoring" : "including") + " fragment portion, " +
-        (aOpenParams.ignoreQueryString || aOpenParams.replaceQueryString ?
-         (aOpenParams.replaceQueryString ? "replacing" : "ignoring") :
-         "including"
-        ) + " query string.";
+  let msg = `Should switch to existing ${aURI} tab if one existed, ` +
+        `${(aOpenParams.ignoreFragment ? "ignoring" : "including")} fragment portion, `;
+  if (aOpenParams.replaceQueryString) {
+    msg += "replacing";
+  } else if (aOpenParams.ignoreQueryString) {
+    msg += "ignoring";
+  } else {
+    msg += "including";
+  }
+  msg += " query string.";
   let tabFound = switchToTabHavingURI(aURI, true, aOpenParams);
   is(tabFound, aShouldFindExistingTab, msg);
 }

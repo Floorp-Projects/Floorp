@@ -79,7 +79,7 @@ function* onHistoryReady() {
 
   // Should test cookies here, but nsICookieManager/nsICookieService
   // doesn't let us fake creation times.  bug 463127
-  
+
   let s = new Sanitizer();
   s.ignoreTimespan = false;
   s.prefDomain = "privacy.cpd.";
@@ -202,7 +202,7 @@ function* onHistoryReady() {
 
   if (hoursSinceMidnight > 1)
     ok((yield downloadExists(publicList, "fakefile-today")), "'Today' download should still be present");
-  
+
   downloadPromise = promiseDownloadRemoved(publicList);
   formHistoryPromise = promiseFormHistoryRemoved();
 
@@ -385,7 +385,7 @@ function* onHistoryReady() {
   if (minutesSinceMidnight > 250)
     yield countEntries("today", "today form entry should still exist", checkOne);
   yield countEntries("b4today", "b4today form entry should still exist", checkOne);
-  
+
   ok(!(yield downloadExists(publicList, "fakefile-4-hour-10-minutes")), "4 hour 10 minute download should now be deleted");
   ok((yield downloadExists(publicList, "fakefile-old")), "Year old download should still be present");
   if (minutesSinceMidnight > 250)
@@ -486,7 +486,7 @@ function setupHistory() {
   return deferred.promise;
 }
 
-function setupFormHistory() {
+function* setupFormHistory() {
 
   function searchEntries(terms, params) {
     let deferred = Promise.defer();
@@ -616,7 +616,7 @@ function setupFormHistory() {
   is(checks, 9, "9 checks made");
 }
 
-function setupDownloads() {
+function* setupDownloads() {
 
   let publicList = yield Downloads.getList(Downloads.PUBLIC);
 
@@ -689,7 +689,7 @@ function setupDownloads() {
   download.startTime = today, // 12:00:01 AM this morning
   download.canceled = true;
   yield publicList.add(download);
-  
+
   // Add "before today" download
   let lastYear = new Date();
   lastYear.setFullYear(lastYear.getFullYear() - 1);
@@ -701,7 +701,7 @@ function setupDownloads() {
   download.startTime = lastYear,
   download.canceled = true;
   yield publicList.add(download);
-  
+
   // Confirm everything worked
   let downloads = yield publicList.getAll();
   is(downloads.length, 9, "9 Pretend downloads added");
@@ -723,13 +723,10 @@ function setupDownloads() {
  * @param aID
  *        The ids of the downloads to check.
  */
-function downloadExists(list, path)
-{
-  return Task.spawn(function() {
-    let listArray = yield list.getAll();
-    throw new Task.Result(listArray.some(i => i.target.path == path));
-  });
-}
+let downloadExists = Task.async(function* (list, path) {
+  let listArray = yield list.getAll();
+  return listArray.some(i => i.target.path == path);
+});
 
 function isToday(aDate) {
   return aDate.getDate() == new Date().getDate();

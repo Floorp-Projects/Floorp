@@ -15,7 +15,7 @@ var gTests = [
 
 {
   desc: "getUserMedia audio+video",
-  run: function checkAudioVideo() {
+  run: function* checkAudioVideo() {
     let promise = promisePopupNotificationShown("webRTC-shareDevices");
     yield promiseRequestDevice(true, true);
     yield promise;
@@ -44,7 +44,7 @@ var gTests = [
 
 {
   desc: "getUserMedia audio only",
-  run: function checkAudioOnly() {
+  run: function* checkAudioOnly() {
     let promise = promisePopupNotificationShown("webRTC-shareDevices");
     yield promiseRequestDevice(true);
     yield promise;
@@ -73,7 +73,7 @@ var gTests = [
 
 {
   desc: "getUserMedia video only",
-  run: function checkVideoOnly() {
+  run: function* checkVideoOnly() {
     let promise = promisePopupNotificationShown("webRTC-shareDevices");
     yield promiseRequestDevice(false, true);
     yield promise;
@@ -101,7 +101,7 @@ var gTests = [
 
 {
   desc: "getUserMedia audio+video, user clicks \"Don't Share\"",
-  run: function checkDontShare() {
+  run: function* checkDontShare() {
     let promise = promisePopupNotificationShown("webRTC-shareDevices");
     yield promiseRequestDevice(true, true);
     yield promise;
@@ -120,7 +120,7 @@ var gTests = [
 
 {
   desc: "getUserMedia audio+video: stop sharing",
-  run: function checkStopSharing() {
+  run: function* checkStopSharing() {
     let promise = promisePopupNotificationShown("webRTC-shareDevices");
     yield promiseRequestDevice(true, true);
     yield promise;
@@ -148,7 +148,7 @@ var gTests = [
 
 {
   desc: "getUserMedia audio+video: reloading the page removes all gUM UI",
-  run: function checkReloading() {
+  run: function* checkReloading() {
     let promise = promisePopupNotificationShown("webRTC-shareDevices");
     yield promiseRequestDevice(true, true);
     yield promise;
@@ -184,10 +184,10 @@ var gTests = [
 
 {
   desc: "getUserMedia prompt: Always/Never Share",
-  run: function checkRememberCheckbox() {
+  run: function* checkRememberCheckbox() {
     let elt = id => document.getElementById(id);
 
-    function checkPerm(aRequestAudio, aRequestVideo,
+    function* checkPerm(aRequestAudio, aRequestVideo,
                        aExpectedAudioPerm, aExpectedVideoPerm, aNever) {
       let promise = promisePopupNotificationShown("webRTC-shareDevices");
       yield promiseRequestDevice(aRequestAudio, aRequestVideo);
@@ -261,8 +261,8 @@ var gTests = [
 
 {
   desc: "getUserMedia without prompt: use persistent permissions",
-  run: function checkUsePersistentPermissions() {
-    function usePerm(aAllowAudio, aAllowVideo, aRequestAudio, aRequestVideo,
+  run: function* checkUsePersistentPermissions() {
+    function* usePerm(aAllowAudio, aAllowVideo, aRequestAudio, aRequestVideo,
                      aExpectStream) {
       let Perms = Services.perms;
       let uri = gBrowser.selectedBrowser.documentURI;
@@ -381,8 +381,8 @@ var gTests = [
 
 {
   desc: "Stop Sharing removes persistent permissions",
-  run: function checkStopSharingRemovesPersistentPermissions() {
-    function stopAndCheckPerm(aRequestAudio, aRequestVideo) {
+  run: function* checkStopSharingRemovesPersistentPermissions() {
+    function* stopAndCheckPerm(aRequestAudio, aRequestVideo) {
       let Perms = Services.perms;
       let uri = gBrowser.selectedBrowser.documentURI;
 
@@ -435,7 +435,7 @@ var gTests = [
 
 {
   desc: "test showControlCenter",
-  run: function checkShowControlCenter() {
+  run: function* checkShowControlCenter() {
     let promise = promisePopupNotificationShown("webRTC-shareDevices");
     yield promiseRequestDevice(false, true);
     yield promise;
@@ -476,7 +476,7 @@ var gTests = [
 
 {
   desc: "'Always Allow' ignored and not shown on http pages",
-  run: function checkNoAlwaysOnHttp() {
+  run: function* checkNoAlwaysOnHttp() {
     // Load an http page instead of the https version.
     let browser = gBrowser.selectedBrowser;
     browser.loadURI(browser.documentURI.spec.replace("https://", "http://"));
@@ -532,7 +532,7 @@ function test() {
     ok(gIdentityHandler._identityPopup.hidden,
        "should start the test with the control center hidden");
 
-    Task.spawn(function () {
+    Task.spawn(function* () {
       yield SpecialPowers.pushPrefEnv({"set": [[PREF_PERMISSION_FAKE, true]]});
 
       for (let test of gTests) {

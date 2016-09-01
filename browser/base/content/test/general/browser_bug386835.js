@@ -8,7 +8,7 @@ const FORWARD = 1;
 function test() {
   waitForExplicitFinish();
 
-  Task.spawn(function () {
+  Task.spawn(function* () {
     gTab1 = gBrowser.addTab(gTestPage);
     gTab2 = gBrowser.addTab();
     gTab3 = gBrowser.addTab();
@@ -20,7 +20,7 @@ function test() {
 }
 
 function secondPageLoaded() {
-  Task.spawn(function () {
+  Task.spawn(function* () {
     FullZoomHelper.zoomTest(gTab1, 1, "Initial zoom of tab 1 should be 1");
     FullZoomHelper.zoomTest(gTab2, 1, "Initial zoom of tab 2 should be 1");
     FullZoomHelper.zoomTest(gTab3, 1, "Initial zoom of tab 3 should be 1");
@@ -39,7 +39,7 @@ function secondPageLoaded() {
 }
 
 function thirdPageLoaded() {
-  Task.spawn(function () {
+  Task.spawn(function* () {
     FullZoomHelper.zoomTest(gTab1, gLevel, "Tab 1 should still be zoomed");
     FullZoomHelper.zoomTest(gTab2, 1, "Tab 2 should still not be affected");
     FullZoomHelper.zoomTest(gTab3, gLevel, "Tab 3 should have zoomed as it was loading in the background");
@@ -55,7 +55,7 @@ function thirdPageLoaded() {
 }
 
 function imageLoaded() {
-  Task.spawn(function () {
+  Task.spawn(function* () {
     FullZoomHelper.zoomTest(gTab1, 1, "Zoom should be 1 when image was loaded in the background");
     yield FullZoomHelper.selectTabAndWaitForLocationChange(gTab1);
     FullZoomHelper.zoomTest(gTab1, 1, "Zoom should still be 1 when tab with image is selected");
@@ -63,7 +63,7 @@ function imageLoaded() {
 }
 
 function imageZoomSwitch() {
-  Task.spawn(function () {
+  Task.spawn(function* () {
     yield FullZoomHelper.navigate(BACK);
     yield FullZoomHelper.navigate(FORWARD);
     FullZoomHelper.zoomTest(gTab1, 1, "Tab 1 should not be zoomed when an image loads");
@@ -75,7 +75,7 @@ function imageZoomSwitch() {
 
 var finishTestStarted  = false;
 function finishTest() {
-  Task.spawn(function () {
+  Task.spawn(function* () {
     ok(!finishTestStarted, "finishTest called more than once");
     finishTestStarted = true;
     yield FullZoomHelper.selectTabAndWaitForLocationChange(gTab1);

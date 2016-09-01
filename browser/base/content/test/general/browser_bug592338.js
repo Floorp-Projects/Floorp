@@ -136,7 +136,7 @@ function runNextTest() {
     info("Running " + TESTS[0].name);
     TESTS.shift()();
   });
-};
+}
 
 function test() {
   waitForExplicitFinish();

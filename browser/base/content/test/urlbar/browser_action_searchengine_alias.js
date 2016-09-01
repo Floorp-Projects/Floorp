@@ -16,7 +16,7 @@ add_task(function* () {
 
     try {
       gBrowser.removeTab(tab);
-    } catch(ex) { /* tab may have already been closed in case of failure */ }
+    } catch (ex) { /* tab may have already been closed in case of failure */ }
 
     return PlacesTestUtils.clearHistory();
   });
@@ -28,7 +28,7 @@ add_task(function* () {
   ok(result.getAttribute("image") === engine.iconURI.spec,
      "Image attribute should have the search engine's icon");
 
-  EventUtils.synthesizeKey("VK_RETURN" , { });
+  EventUtils.synthesizeKey("VK_RETURN", { });
   yield promiseTabLoaded(gBrowser.selectedTab);
 
   is(gBrowser.selectedBrowser.currentURI.spec, "http://example.com/?q=open+a+search");

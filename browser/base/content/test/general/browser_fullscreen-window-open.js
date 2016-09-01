@@ -27,7 +27,7 @@ function test () {
   });
 }
 
-registerCleanupFunction(function(){
+registerCleanupFunction(function() {
   // Exit browser fullscreen mode.
   BrowserFullScreen();
 
@@ -331,7 +331,7 @@ WindowListener.prototype = {
 
       // wait for trasition to fullscreen on OSX Lion later
       if (isOSX) {
-        setTimeout(function(){
+        setTimeout(function() {
           domwindow.close();
           executeSoon(this.callBack_onFinalize);
         }.bind(this), 3000);
