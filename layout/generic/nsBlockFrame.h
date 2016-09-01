@@ -785,12 +785,6 @@ protected:
   //----------------------------------------
   // List handling kludge
 
-  // If this returns true, the block it's called on should get the
-  // NS_FRAME_HAS_DIRTY_CHILDREN bit set on it by the caller; either directly
-  // if it's already in reflow, or via calling FrameNeedsReflow() to schedule a
-  // reflow.
-  bool RenumberLists();
-
   void ReflowBullet(nsIFrame* aBulletFrame,
                     BlockReflowInput& aState,
                     ReflowOutput& aMetrics,

@@ -1814,9 +1814,9 @@ nsContainerFrame::FrameStartsCounterScope(nsIFrame* aFrame)
 }
 
 bool
-nsBlockFrame::RenumberLists()
+nsContainerFrame::RenumberLists()
 {
-  if (!nsContainerFrame::FrameStartsCounterScope(this)) {
+  if (!FrameStartsCounterScope(this)) {
     // If this frame doesn't start a counter scope then we don't need
     // to renumber child list items.
     return false;
@@ -1836,23 +1836,22 @@ nsBlockFrame::RenumberLists()
     increment = 1;
   }
 
-  nsGenericHTMLElement *hc = nsGenericHTMLElement::FromContent(mContent);
+  nsGenericHTMLElement* hc = nsGenericHTMLElement::FromContent(mContent);
   // Must be non-null, since FrameStartsCounterScope only returns true
   // for HTML elements.
   MOZ_ASSERT(hc, "How is mContent not HTML?");
   const nsAttrValue* attr = hc->GetParsedAttr(nsGkAtoms::start);
+  nsContainerFrame* fif = static_cast<nsContainerFrame*>(FirstInFlow());
   if (attr && attr->Type() == nsAttrValue::eInteger) {
     ordinal = attr->GetIntegerValue();
   } else if (increment < 0) {
     // <ol reversed> case, or some other case with a negative increment: count
     // up the child list
     ordinal = 0;
-    nsBlockFrame* block = static_cast<nsBlockFrame*>(FirstInFlow());
-    block->RenumberChildFrames(&ordinal, 0, -increment, true);
+    fif->RenumberChildFrames(&ordinal, 0, -increment, true);
   }
 
-  nsBlockFrame* block = static_cast<nsBlockFrame*>(FirstInFlow());
-  return block->RenumberChildFrames(&ordinal, 0, increment, false);
+  return fif->RenumberChildFrames(&ordinal, 0, increment, false);
 }
 
 // add in a sanity check for absurdly deep frame trees.  See bug 42138
