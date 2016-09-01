@@ -425,7 +425,6 @@ private:
   friend class mozilla::EventStateManager;
   friend class ::nsGlobalWindow;
   friend class ::nsFocusManager;
-  friend class ::nsDocument;
 
   // Allow CusomtElementRegistry to call AddStates.
   friend class CustomElementsRegistry;
