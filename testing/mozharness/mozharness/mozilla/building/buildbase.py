@@ -2040,6 +2040,15 @@ or run without that action (ie: --no-{action})"
         # grab any props available from this or previous unclobbered runs
         self.generate_build_props(console_output=False,
                                   halt_on_failure=False)
+
+        # generate balrog props as artifacts
+        if self.config.get('taskcluster_nightly'):
+            env = self.query_mach_build_env(multiLocale=False)
+            props_path = os.path.join(env["UPLOAD_PATH"],
+                    'balrog_props.json')
+            self.generate_balrog_props(props_path)
+            return
+
         if not self.config.get("balrog_servers"):
             self.fatal("balrog_servers not set; skipping balrog submission.")
             return
