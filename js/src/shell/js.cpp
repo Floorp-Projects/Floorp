@@ -878,6 +878,30 @@ SetPromiseRejectionTrackerCallback(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
+#ifdef ENABLE_INTL_API
+static bool
+AddIntlExtras(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    if (!args.get(0).isObject()) {
+        JS_ReportError(cx, "addIntlExtras must be passed an object");
+        return false;
+    }
+    JS::RootedObject intl(cx, &args[0].toObject());
+
+    static const JSFunctionSpec funcs[] = {
+        JS_SELF_HOSTED_FN("getCalendarInfo", "Intl_getCalendarInfo", 1, 0),
+        JS_FS_END
+    };
+
+    if (!JS_DefineFunctions(cx, intl, funcs))
+        return false;
+
+    args.rval().setUndefined();
+    return true;
+}
+#endif // ENABLE_INTL_API
+
 static bool
 EvalAndPrint(JSContext* cx, const char* bytes, size_t length,
              int lineno, bool compileOnly)
@@ -5799,6 +5823,16 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
 "setPromiseRejectionTrackerCallback()",
 "Sets the callback to be invoked whenever a Promise rejection is unhandled\n"
 "or a previously-unhandled rejection becomes handled."),
+
+#ifdef ENABLE_INTL_API
+    JS_FN_HELP("addIntlExtras", AddIntlExtras, 1, 0,
+"addIntlExtras(obj)",
+"Adds various not-yet-standardized Intl functions as properties on the\n"
+"provided object (this should generally be Intl itself).  The added\n"
+"functions and their behavior are experimental: don't depend upon them\n"
+"unless you're willing to update your code if these experimental APIs change\n"
+"underneath you."),
+#endif // ENABLE_INTL_API
 
     JS_FS_HELP_END
 };
