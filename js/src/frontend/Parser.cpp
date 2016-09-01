@@ -5786,18 +5786,10 @@ Parser<ParseHandler>::yieldExpression(InHandling inHandling)
     MOZ_CRASH("yieldExpr");
 }
 
-template <>
-ParseNode*
-Parser<FullParseHandler>::withStatement(YieldHandling yieldHandling)
+template <typename ParseHandler>
+typename ParseHandler::Node
+Parser<ParseHandler>::withStatement(YieldHandling yieldHandling)
 {
-    // test262/ch12/12.10/12.10-0-1.js fails if we try to parse with-statements
-    // in syntax-parse mode. See bug 892583.
-    if (handler.syntaxParser) {
-        handler.disableSyntaxParser();
-        abortedSyntaxParse = true;
-        return null();
-    }
-
     MOZ_ASSERT(tokenStream.isCurrentTokenType(TOK_WITH));
     uint32_t begin = pos().begin;
 
@@ -5829,14 +5821,6 @@ Parser<FullParseHandler>::withStatement(YieldHandling yieldHandling)
     pc->sc()->setBindingsAccessedDynamically();
 
     return handler.newWithStatement(begin, objectExpr, innerBlock);
-}
-
-template <>
-SyntaxParseHandler::Node
-Parser<SyntaxParseHandler>::withStatement(YieldHandling yieldHandling)
-{
-    JS_ALWAYS_FALSE(abortIfSyntaxParser());
-    return null();
 }
 
 template <typename ParseHandler>
