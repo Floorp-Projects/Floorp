@@ -59,6 +59,7 @@ function* close_subdialog_and_test_generic_end_state(browser, closingFn, closing
     info("waiting for dialogclosing");
     let closingEvent =
       yield ContentTaskUtils.waitForEvent(frame.contentWindow, "dialogclosing");
+    let closingButton = closingEvent.detail.button;
     let actualAcceptCount = frame.contentWindow.arguments &&
                             frame.contentWindow.arguments[0].acceptCount;
 
@@ -70,7 +71,7 @@ function* close_subdialog_and_test_generic_end_state(browser, closingFn, closing
     Assert.equal(frame.getAttribute("style"), "", "inline styles should be cleared");
     Assert.equal(frame.contentWindow.location.href.toString(), "about:blank",
       "sub-dialog should be unloaded");
-    Assert.equal(closingEvent.detail.button, expectations.closingButton,
+    Assert.equal(closingButton, expectations.closingButton,
       "closing event should indicate button was '" + expectations.closingButton + "'");
     Assert.equal(actualAcceptCount, expectations.acceptCount,
       "should be 1 if accepted, 0 if canceled, undefined if closed w/out button");
