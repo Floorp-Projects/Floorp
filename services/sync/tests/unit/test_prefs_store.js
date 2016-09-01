@@ -131,6 +131,37 @@ function run_test() {
     store.update(record);
     do_check_eq(prefs.get("testing.int"), 42);
 
+    _("The light-weight theme preference is handled correctly.");
+    let lastThemeID = undefined;
+    let orig_updateLightWeightTheme = store._updateLightWeightTheme;
+    store._updateLightWeightTheme = function(themeID) {
+      lastThemeID = themeID;
+    }
+    try {
+      record = new PrefRec("prefs", PREFS_GUID);
+      record.value = {
+        "testing.int": 42,
+      };
+      store.update(record);
+      do_check_true(lastThemeID === undefined,
+                    "should not have tried to change the theme with an unrelated pref.");
+      Services.prefs.setCharPref("lightweightThemes.selectedThemeID", "foo");
+      record.value = {
+        "lightweightThemes.selectedThemeID": "foo",
+      };
+      store.update(record);
+      do_check_true(lastThemeID === undefined,
+                    "should not have tried to change the theme when the incoming pref matches current value.");
+
+      record.value = {
+        "lightweightThemes.selectedThemeID": "bar",
+      };
+      store.update(record);
+      do_check_eq(lastThemeID, "bar",
+                  "should have tried to change the theme when the incoming pref was different.");
+    } finally {
+      store._updateLightWeightTheme = orig_updateLightWeightTheme;
+    }
   } finally {
     prefs.resetBranch("");
   }
