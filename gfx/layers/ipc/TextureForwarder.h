@@ -22,10 +22,6 @@ namespace layers {
 class TextureForwarder : public ClientIPCAllocator
 {
 public:
-  TextureForwarder();
-
-  virtual ~TextureForwarder();
-
   /**
    * Create a TextureChild/Parent pair as as well as the TextureHost on the parent side.
    */
@@ -37,10 +33,7 @@ public:
 
   virtual TextureForwarder* AsTextureForwarder() override { return this; }
 
-  virtual FixedSizeSmallShmemSectionAllocator* GetTileLockAllocator();
-
-private:
-  FixedSizeSmallShmemSectionAllocator* mSectionAllocator;
+  virtual FixedSizeSmallShmemSectionAllocator* GetTileLockAllocator() { return nullptr; }
 };
 
 } // namespace layers
