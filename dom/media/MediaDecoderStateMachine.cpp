@@ -729,23 +729,24 @@ MediaDecoderStateMachine::OnNotDecoded(MediaData::Type aType,
   }
 }
 
-bool
+void
 MediaDecoderStateMachine::MaybeFinishDecodeFirstFrame()
 {
   MOZ_ASSERT(OnTaskQueue());
-  if (mSentFirstFrameLoadedEvent ||
-      (IsAudioDecoding() && AudioQueue().GetSize() == 0) ||
+  MOZ_ASSERT(!mSentFirstFrameLoadedEvent);
+
+  if ((IsAudioDecoding() && AudioQueue().GetSize() == 0) ||
       (IsVideoDecoding() && VideoQueue().GetSize() == 0)) {
-    return false;
-  }
-  FinishDecodeFirstFrame();
-  if (!mQueuedSeek.Exists()) {
-    return false;
+    return;
   }
 
-  // We can now complete the pending seek.
-  InitiateSeek(Move(mQueuedSeek));
-  return true;
+  FinishDecodeFirstFrame();
+
+  if (mQueuedSeek.Exists()) {
+    InitiateSeek(Move(mQueuedSeek));
+  } else {
+    SetState(DECODER_STATE_DECODING);
+  }
 }
 
 void

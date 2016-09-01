@@ -542,11 +542,9 @@ protected:
   void OnMetadataRead(MetadataHolder* aMetadata);
   void OnMetadataNotRead(ReadMetadataFailureReason aReason);
 
-  // Checks whether we're finished decoding first audio and/or video packets.
-  // If so will trigger firing loadeddata event.
-  // If there are any queued seek, will change state to DECODER_STATE_SEEKING
-  // and return true.
-  bool MaybeFinishDecodeFirstFrame();
+  // Notify FirstFrameLoaded if having decoded first frames and
+  // transition to SEEKING if there is any pending seek, or DECODING otherwise.
+  void MaybeFinishDecodeFirstFrame();
 
   void FinishDecodeFirstFrame();
 
