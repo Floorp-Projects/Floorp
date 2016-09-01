@@ -27,7 +27,7 @@ add_task(function* testShutdownCleanup() {
      "GlobalManager start as not initialized");
 
   let extension = ExtensionTestUtils.loadExtension({
-    background: "new " + function() {
+    background: function() {
       browser.test.notifyPass("background page loaded");
     },
   });

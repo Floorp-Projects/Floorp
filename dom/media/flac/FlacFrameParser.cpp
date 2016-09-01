@@ -132,7 +132,7 @@ FlacFrameParser::DecodeHeaderBlock(const uint8_t* aPacket, size_t aLength)
       if (numChannels > FLAC_MAX_CHANNELS) {
         return false;
       }
-      uint32_t bps = ((blob >> 38) & BITMASK(5)) + 1;
+      uint32_t bps = ((blob >> 36) & BITMASK(5)) + 1;
       if (bps > 24) {
         return false;
       }

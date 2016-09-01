@@ -17,7 +17,7 @@ add_task(function* test_contentscript_reload_and_unload() {
   function contentScript() {
     browser.test.sendMessage("contentscript-run");
   }
-  function backgroundScript() {
+  function background() {
     let removedTabs = 0;
     browser.tabs.onRemoved.addListener(() => {
       browser.test.assertEq(1, ++removedTabs,
@@ -27,7 +27,7 @@ add_task(function* test_contentscript_reload_and_unload() {
   }
 
   let extensionData = {
-    background: `(${backgroundScript})();`,
+    background,
     manifest: {
       content_scripts: [{
         "matches": ["http://mochi.test/*/file_sample.html"],
@@ -36,7 +36,7 @@ add_task(function* test_contentscript_reload_and_unload() {
     },
 
     files: {
-      "contentscript.js": `(${contentScript})();`,
+      "contentscript.js": contentScript,
     },
   };
 
