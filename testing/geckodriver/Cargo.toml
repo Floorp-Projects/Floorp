@@ -1,7 +1,10 @@
 [package]
 name = "geckodriver"
 version = "0.10.0"
-authors = ["James Graham <james@hoppipolla.co.uk>"]
+authors = [
+  "James Graham <james@hoppipolla.co.uk>",
+  "Andreas Tolfsen <ato@mozilla.com>",
+]
 description = "Proxy for using WebDriver clients to interact with Gecko-based browsers."
 repository = "https://github.com/mozilla/geckodriver"
 license = "MPL-2.0"
