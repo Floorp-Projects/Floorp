@@ -761,7 +761,6 @@ void nsCSSValue::StartImageLoad(nsIDocument* aDocument) const
   mozilla::css::ImageValue* image =
     new mozilla::css::ImageValue(mValue.mURL->GetURI(),
                                  mValue.mURL->mString,
-                                 mValue.mURL->mBaseURI,
                                  mValue.mURL->mReferrer,
                                  mValue.mURL->mOriginPrincipal,
                                  aDocument);
@@ -2593,21 +2592,17 @@ nsCSSValue::Array::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) cons
 
 css::URLValueData::URLValueData(already_AddRefed<PtrHolder<nsIURI>> aURI,
                                 nsStringBuffer* aString,
-                                already_AddRefed<PtrHolder<nsIURI>> aBaseURI,
                                 already_AddRefed<PtrHolder<nsIURI>> aReferrer,
                                 already_AddRefed<PtrHolder<nsIPrincipal>>
                                   aOriginPrincipal)
   : mURI(Move(aURI))
-  , mBaseURI(Move(aBaseURI))
   , mString(aString)
   , mReferrer(Move(aReferrer))
   , mOriginPrincipal(Move(aOriginPrincipal))
   , mURIResolved(true)
   , mLocalURLFlag(IsLocalRefURL(aString))
 {
-  MOZ_ASSERT(mString);
-  MOZ_ASSERT(mBaseURI);
-  MOZ_ASSERT(mOriginPrincipal);
+  MOZ_ASSERT(mOriginPrincipal, "Must have an origin principal");
 }
 
 css::URLValueData::URLValueData(nsStringBuffer* aString,
@@ -2615,16 +2610,14 @@ css::URLValueData::URLValueData(nsStringBuffer* aString,
                                 already_AddRefed<PtrHolder<nsIURI>> aReferrer,
                                 already_AddRefed<PtrHolder<nsIPrincipal>>
                                   aOriginPrincipal)
-  : mBaseURI(Move(aBaseURI))
+  : mURI(Move(aBaseURI))
   , mString(aString)
   , mReferrer(Move(aReferrer))
   , mOriginPrincipal(Move(aOriginPrincipal))
   , mURIResolved(false)
   , mLocalURLFlag(IsLocalRefURL(aString))
 {
-  MOZ_ASSERT(aString);
-  MOZ_ASSERT(mBaseURI);
-  MOZ_ASSERT(mOriginPrincipal);
+  MOZ_ASSERT(mOriginPrincipal, "Must have an origin principal");
 }
 
 bool
@@ -2640,44 +2633,50 @@ css::URLValueData::operator==(const URLValueData& aOther) const
            (mURI && aOther.mURI &&
             NS_SUCCEEDED(mURI->Equals(aOther.mURI, &eq)) &&
             eq)) &&
-          (mBaseURI == aOther.mBaseURI ||
-           (NS_SUCCEEDED(self.mBaseURI.get()->Equals(other.mBaseURI.get(), &eq)) &&
-            eq)) &&
           (mOriginPrincipal == aOther.mOriginPrincipal ||
-           self.mOriginPrincipal.get()->Equals(other.mOriginPrincipal.get())) &&
-          mLocalURLFlag == aOther.mLocalURLFlag;
+           self.mOriginPrincipal.get()->Equals(other.mOriginPrincipal.get()));
 }
 
 bool
-css::URLValueData::DefinitelyEqualURIs(const URLValueData& aOther) const
+css::URLValueData::MaybeUnresolvedURIEquals(const URLValueData& aOther) const
 {
-  return mBaseURI == aOther.mBaseURI &&
-         (mString == aOther.mString ||
-          NS_strcmp(nsCSSValue::GetBufferValue(mString),
-                    nsCSSValue::GetBufferValue(aOther.mString)));
+  if (!mURIResolved || !aOther.mURIResolved) {
+    return false;
+  }
+
+  return URIEquals(aOther);
 }
 
 bool
-css::URLValueData::DefinitelyEqualURIsAndPrincipal(
-    const URLValueData& aOther) const
+css::URLValueData::URIEquals(const URLValueData& aOther) const
 {
-  return mOriginPrincipal == aOther.mOriginPrincipal &&
-         DefinitelyEqualURIs(aOther);
+  MOZ_ASSERT(mURIResolved && aOther.mURIResolved,
+             "How do you know the URIs aren't null?");
+  bool eq;
+  // Cast away const so we can call nsIPrincipal::Equals.
+  auto& self = *const_cast<URLValueData*>(this);
+  auto& other = const_cast<URLValueData&>(aOther);
+  // Worth comparing GetURI() to aOther.GetURI() and mOriginPrincipal to
+  // aOther.mOriginPrincipal, because in the (probably common) case when this
+  // value was one of the ones that in fact did not change this will be our
+  // fast path to equality
+  return (mURI == aOther.mURI ||
+          (NS_SUCCEEDED(mURI->Equals(aOther.mURI, &eq)) && eq)) &&
+         (mOriginPrincipal == aOther.mOriginPrincipal ||
+          self.mOriginPrincipal.get()->Equals(other.mOriginPrincipal.get()));
 }
 
 nsIURI*
 css::URLValueData::GetURI() const
 {
-  MOZ_ASSERT(NS_IsMainThread());
-
   if (!mURIResolved) {
-    MOZ_ASSERT(!mURI);
+    mURIResolved = true;
+    // Be careful to not null out mURI before we've passed it as the base URI
     nsCOMPtr<nsIURI> newURI;
     NS_NewURI(getter_AddRefs(newURI),
               NS_ConvertUTF16toUTF8(nsCSSValue::GetBufferValue(mString)),
-              nullptr, const_cast<nsIURI*>(mBaseURI.get()));
+              nullptr, mURI);
     mURI = new PtrHolder<nsIURI>(newURI.forget());
-    mURIResolved = true;
   }
 
   return mURI;
@@ -2707,11 +2706,10 @@ URLValue::URLValue(nsStringBuffer* aString, nsIURI* aBaseURI, nsIURI* aReferrer,
   MOZ_ASSERT(NS_IsMainThread());
 }
 
-URLValue::URLValue(nsIURI* aURI, nsStringBuffer* aString, nsIURI* aBaseURI,
-                   nsIURI* aReferrer, nsIPrincipal* aOriginPrincipal)
+URLValue::URLValue(nsIURI* aURI, nsStringBuffer* aString, nsIURI* aReferrer,
+                   nsIPrincipal* aOriginPrincipal)
   : URLValueData(do_AddRef(new PtrHolder<nsIURI>(aURI)),
                  aString,
-                 do_AddRef(new PtrHolder<nsIURI>(aBaseURI)),
                  do_AddRef(new PtrHolder<nsIURI>(aReferrer)),
                  do_AddRef(new PtrHolder<nsIPrincipal>(aOriginPrincipal)))
 {
@@ -2731,12 +2729,10 @@ css::URLValue::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
 }
 
 css::ImageValue::ImageValue(nsIURI* aURI, nsStringBuffer* aString,
-                            nsIURI* aBaseURI, nsIURI* aReferrer,
-                            nsIPrincipal* aOriginPrincipal,
+                            nsIURI* aReferrer, nsIPrincipal* aOriginPrincipal,
                             nsIDocument* aDocument)
   : URLValueData(do_AddRef(new PtrHolder<nsIURI>(aURI)),
                  aString,
-                 do_AddRef(new PtrHolder<nsIURI>(aBaseURI, false)),
                  do_AddRef(new PtrHolder<nsIURI>(aReferrer)),
                  do_AddRef(new PtrHolder<nsIPrincipal>(aOriginPrincipal)))
 {
