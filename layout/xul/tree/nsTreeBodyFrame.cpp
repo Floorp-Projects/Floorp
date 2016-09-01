@@ -2867,7 +2867,7 @@ nsTreeBodyFrame::PaintTreeBody(nsRenderingContext& aRenderingContext,
 #ifdef DEBUG
   int32_t rowCount = mRowCount;
   mView->GetRowCount(&rowCount);
-  NS_WARN_IF_FALSE(mRowCount == rowCount, "row count changed unexpectedly");
+  NS_WARNING_ASSERTION(mRowCount == rowCount, "row count changed unexpectedly");
 #endif
 
   DrawResult result = DrawResult::SUCCESS;

@@ -204,8 +204,8 @@ public:
                "conditions or is uncacheable");
 #ifdef DEBUG
     for (Entry* e = static_cast<Entry*>(mEntries[aSID]); e; e = e->mNext) {
-      NS_WARN_IF_FALSE(e->mConditions != aConditions,
-                       "wasteful to have duplicate conditional style data");
+      NS_WARNING_ASSERTION(e->mConditions != aConditions,
+                           "wasteful to have duplicate conditional style data");
     }
 #endif
 

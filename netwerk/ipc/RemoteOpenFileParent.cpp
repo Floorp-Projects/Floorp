@@ -37,7 +37,7 @@ RemoteOpenFileParent::OpenSendCloseDelete()
 
   nsAutoCString path;
   nsresult rv = mURI->GetFilePath(path);
-  NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "GetFilePath failed!");
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "GetFilePath failed!");
 
   NS_UnescapeURL(path);
 

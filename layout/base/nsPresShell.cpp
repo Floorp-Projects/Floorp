@@ -1320,7 +1320,8 @@ PresShell::Destroy()
   }
 
 
-  NS_WARN_IF_FALSE(!mWeakFrames, "Weak frames alive after destroying FrameManager");
+  NS_WARNING_ASSERTION(!mWeakFrames,
+                       "Weak frames alive after destroying FrameManager");
   while (mWeakFrames) {
     mWeakFrames->Clear(this);
   }
@@ -8884,7 +8885,7 @@ PresShell::PrepareToUseCaretPosition(nsIWidget* aEventWidget,
                                nsIPresShell::SCROLL_OVERFLOW_HIDDEN);
     NS_ENSURE_SUCCESS(rv, false);
     frame = content->GetPrimaryFrame();
-    NS_WARN_IF_FALSE(frame, "No frame for focused content?");
+    NS_WARNING_ASSERTION(frame, "No frame for focused content?");
   }
 
   // Actually scroll the selection (ie caret) into view. Note that this must

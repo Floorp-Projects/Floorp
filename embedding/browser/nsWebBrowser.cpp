@@ -1254,7 +1254,7 @@ nsWebBrowser::Create()
   if (XRE_IsParentProcess()) {
     // Hook up global history. Do not fail if we can't - just warn.
     rv = EnableGlobalHistory(mShouldEnableHistory);
-    NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "EnableGlobalHistory() failed");
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "EnableGlobalHistory() failed");
   }
 
   NS_ENSURE_SUCCESS(mDocShellAsWin->Create(), NS_ERROR_FAILURE);

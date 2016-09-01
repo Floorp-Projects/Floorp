@@ -250,11 +250,10 @@ public:
 #ifdef DEBUG
   virtual ~WidgetMouseEvent()
   {
-    NS_WARN_IF_FALSE(mMessage != eContextMenu ||
-                     button ==
-                       ((mContextMenuTrigger == eNormal) ? eRightButton :
-                                                           eLeftButton),
-                     "Wrong button set to eContextMenu event?");
+    NS_WARNING_ASSERTION(
+      mMessage != eContextMenu ||
+      button == ((mContextMenuTrigger == eNormal) ? eRightButton : eLeftButton),
+      "Wrong button set to eContextMenu event?");
   }
 #endif
 

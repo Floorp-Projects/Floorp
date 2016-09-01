@@ -3001,9 +3001,10 @@ nsTableFrame::ReflowChildren(TableReflowInput& aReflowInput,
 
   nsIFrame* prevKidFrame = nullptr;
   WritingMode wm = aReflowInput.reflowInput.GetWritingMode();
-  NS_WARN_IF_FALSE(wm.IsVertical() || NS_UNCONSTRAINEDSIZE !=
-                                      aReflowInput.reflowInput.ComputedWidth(),
-                   "shouldn't have unconstrained width in horizontal mode");
+  NS_WARNING_ASSERTION(
+    wm.IsVertical() ||
+    NS_UNCONSTRAINEDSIZE != aReflowInput.reflowInput.ComputedWidth(),
+    "shouldn't have unconstrained width in horizontal mode");
   nsSize containerSize =
     aReflowInput.reflowInput.ComputedSizeAsContainerIfConstrained();
 

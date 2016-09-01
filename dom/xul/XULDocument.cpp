@@ -3019,8 +3019,9 @@ XULDocument::DoneWalking()
         NS_ASSERTION(mDelayFrameLoaderInitialization,
                      "mDelayFrameLoaderInitialization should be true!");
         mDelayFrameLoaderInitialization = false;
-        NS_WARN_IF_FALSE(mUpdateNestLevel == 0,
-                         "Constructing XUL document in middle of an update?");
+        NS_WARNING_ASSERTION(
+          mUpdateNestLevel == 0,
+          "Constructing XUL document in middle of an update?");
         if (mUpdateNestLevel == 0) {
             MaybeInitializeFinalizeFrameLoaders();
         }
