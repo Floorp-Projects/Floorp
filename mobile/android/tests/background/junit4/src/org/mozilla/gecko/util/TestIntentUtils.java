@@ -11,6 +11,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mozilla.gecko.background.testhelpers.TestRunner;
+import org.mozilla.gecko.mozglue.SafeIntent;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -59,7 +60,7 @@ public class TestIntentUtils {
 
     @Test
     public void testGetEnvVarMap() throws Exception {
-        final HashMap<String, String> actual = IntentUtils.getEnvVarMap(testIntent);
+        final HashMap<String, String> actual = IntentUtils.getEnvVarMap(new SafeIntent(testIntent));
         for (final String actualEnvVarName : actual.keySet()) {
             assertTrue("Actual key exists in test data: " + actualEnvVarName,
                     TEST_ENV_VAR_MAP.containsKey(actualEnvVarName));

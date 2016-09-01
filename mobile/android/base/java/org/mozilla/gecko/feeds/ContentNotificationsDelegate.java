@@ -7,6 +7,7 @@ package org.mozilla.gecko.feeds;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v4.app.NotificationManagerCompat;
 
 import org.mozilla.gecko.AppConstants;
@@ -15,6 +16,7 @@ import org.mozilla.gecko.R;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.delegates.BrowserAppDelegate;
+import org.mozilla.gecko.mozglue.SafeIntent;
 
 import java.util.List;
 
@@ -33,27 +35,35 @@ public class ContentNotificationsDelegate extends BrowserAppDelegate {
 
     @Override
     public void onCreate(BrowserApp browserApp, Bundle savedInstanceState) {
-        final Intent intent = browserApp.getIntent();
-
         if (savedInstanceState != null) {
             // This activity is getting restored: We do not want to handle the URLs in the Intent again. The browser
             // will take care of restoring the tabs we already created.
             return;
         }
 
-        if (intent != null && ACTION_CONTENT_NOTIFICATION.equals(intent.getAction())) {
+
+        final Intent unsafeIntent = browserApp.getIntent();
+
+        // Nothing to do.
+        if (unsafeIntent == null) {
+            return;
+        }
+
+        final SafeIntent intent = new SafeIntent(unsafeIntent);
+
+        if (ACTION_CONTENT_NOTIFICATION.equals(intent.getAction())) {
             openURLsFromIntent(browserApp, intent);
         }
     }
 
     @Override
-    public void onNewIntent(BrowserApp browserApp, Intent intent) {
-        if (intent != null && ACTION_CONTENT_NOTIFICATION.equals(intent.getAction())) {
+    public void onNewIntent(BrowserApp browserApp, @NonNull final SafeIntent intent) {
+        if (ACTION_CONTENT_NOTIFICATION.equals(intent.getAction())) {
             openURLsFromIntent(browserApp, intent);
         }
     }
 
-    private void openURLsFromIntent(BrowserApp browserApp, final Intent intent) {
+    private void openURLsFromIntent(BrowserApp browserApp, @NonNull final SafeIntent intent) {
         final List<String> urls = intent.getStringArrayListExtra(EXTRA_URLS);
         if (urls != null) {
             browserApp.openUrls(urls);
