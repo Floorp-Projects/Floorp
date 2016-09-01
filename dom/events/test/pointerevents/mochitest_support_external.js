@@ -72,6 +72,8 @@ function sendMouseEvent(int_win, elemId, mouseEventType, params) {
       eventObj.button = params.button;
     if(params && "inputSource" in params)
       eventObj.inputSource = params.inputSource;
+    if(params && "buttons" in params)
+      eventObj.buttons = params.buttons;
     console.log(elemId, eventObj);
     synthesizeMouse(elem, rect.width/4, rect.height/2, eventObj, int_win);
   } else {

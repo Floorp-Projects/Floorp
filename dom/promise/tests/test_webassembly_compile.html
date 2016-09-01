@@ -25,13 +25,15 @@ function checkFooModule(m) {
 }
 
 function propertiesExist() {
+  if (!wasmIsSupported()) {
+    ok(!this["WebAssembly"], "If the device doesn't support, there will be no WebAssembly object");
+    SimpleTest.finish();
+    return;
+  }
+
   ok(WebAssembly, "WebAssembly object should exist");
   ok(WebAssembly.compile, "WebAssembly.compile function should exist");
-
-  if (!wasmIsSupported())
-    SimpleTest.finish();
-  else
-    runTest();
+  runTest();
 }
 
 function compileFail() {

@@ -31,8 +31,7 @@ is(circle.cy.animVal.value, 100, "a is in effect at start");
 is(b.getStartTime(), 100, "b has resolved start time at start");
 
 // Add a failing conditional processing test
-a.setAttribute("requiredFeatures",
-               "http://www.w3.org/TR/SVGX/feature#SharksWithLasers");
+a.setAttribute("systemLanguage", "no-such-language");
 ok(hasUnresolvedStartTime(a),
    "a has unresolved start time with failing conditional processing test");
 is(circle.cy.animVal.value, 0,
@@ -41,15 +40,15 @@ ok(hasUnresolvedStartTime(b),
    "b has unresolved start time with failing conditional processing test on a");
 
 // Remove failing conditional processing test
-a.removeAttribute("requiredFeatures");
+a.removeAttribute("systemLanguage");
 is(a.getStartTime(), 0, "a has resolved start time after removing test");
 is(circle.cy.animVal.value, 100, "a is in effect after removing test");
 is(b.getStartTime(), 100, "b has resolved start time after removing test on a");
 
 // Add another failing conditional processing test
 // According to the spec, if a null string or empty string value is set for
-// the 'requiredFeatures' attribute, the attribute returns "false".
-a.setAttribute("requiredFeatures", "");
+// the 'systemLanguage' attribute, the attribute returns "false".
+a.setAttribute("systemLanguage", "");
 
 // Fast forward until |a| would have finished
 var endEventsReceived = 0;
@@ -61,8 +60,7 @@ is(circle.cx.animVal.value, 0,
    "b is not in effect with failing conditional processing test on a");
 
 // Make test pass
-a.setAttribute("requiredFeatures",
-               "http://www.w3.org/TR/SVG11/feature#Animation");
+a.setAttribute("systemLanguage", "en");
 is(circle.cx.animVal.value, 100,
    "b is in effect with passing conditional processing test on a");
 

@@ -603,64 +603,6 @@ private:
   }
 };
 
-class CloseEventRunnable final : public WorkerRunnable
-{
-public:
-  explicit CloseEventRunnable(WorkerPrivate* aWorkerPrivate)
-  : WorkerRunnable(aWorkerPrivate, WorkerThreadUnchangedBusyCount)
-  { }
-
-private:
-  virtual bool
-  PreDispatch(WorkerPrivate* aWorkerPrivate) override
-  {
-    MOZ_CRASH("Don't call Dispatch() on CloseEventRunnable!");
-  }
-
-  virtual void
-  PostDispatch(WorkerPrivate* aWorkerPrivate, bool aDispatchResult) override
-  {
-    MOZ_CRASH("Don't call Dispatch() on CloseEventRunnable!");
-  }
-
-  virtual bool
-  WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
-  {
-    aWorkerPrivate->CloseHandlerStarted();
-
-    WorkerGlobalScope* globalScope = aWorkerPrivate->GlobalScope();
-
-    RefPtr<Event> event = NS_NewDOMEvent(globalScope, nullptr, nullptr);
-
-    event->InitEvent(NS_LITERAL_STRING("close"), false, false);
-    event->SetTrusted(true);
-
-    globalScope->DispatchDOMEvent(nullptr, event, nullptr, nullptr);
-
-    return true;
-  }
-
-  nsresult Cancel() override
-  {
-    // We need to run regardless.
-    Run();
-    return WorkerRunnable::Cancel();
-  }
-
-  virtual void
-  PostRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate, bool aRunResult)
-          override
-  {
-    // Report errors.
-    WorkerRunnable::PostRun(aCx, aWorkerPrivate, aRunResult);
-
-    // Match the busy count increase from NotifyRunnable.
-    aWorkerPrivate->ModifyBusyCountFromWorker(false);
-
-    aWorkerPrivate->CloseHandlerFinished();
-  }
-};
-
 class MessageEventRunnable final : public WorkerRunnable
                                  , public StructuredCloneHolder
 {
@@ -899,8 +841,6 @@ private:
   PreDispatch(WorkerPrivate* aWorkerPrivate) override
   {
     aWorkerPrivate->AssertIsOnParentThread();
-    // Modify here, but not in PostRun! This busy count addition will be matched
-    // by the CloseEventRunnable.
     return aWorkerPrivate->ModifyBusyCount(true);
   }
 
@@ -913,6 +853,14 @@ private:
       // Undo the busy count modification.
       aWorkerPrivate->ModifyBusyCount(false);
     }
+  }
+
+  virtual void
+  PostRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate, bool aRunResult)
+          override
+  {
+    aWorkerPrivate->ModifyBusyCountFromWorker(false);
+    return;
   }
 
   virtual bool
@@ -935,9 +883,7 @@ private:
   virtual bool
   WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
   {
-    // This busy count will be matched by the CloseEventRunnable.
-    return aWorkerPrivate->ModifyBusyCount(true) &&
-           aWorkerPrivate->Close();
+    return aWorkerPrivate->Close();
   }
 };
 
@@ -1355,111 +1301,6 @@ DummyCallback(nsITimer* aTimer, void* aClosure)
 {
   // Nothing!
 }
-
-class KillCloseEventRunnable final : public WorkerRunnable
-{
-  nsCOMPtr<nsITimer> mTimer;
-
-  class KillScriptRunnable final : public WorkerControlRunnable
-  {
-  public:
-    explicit KillScriptRunnable(WorkerPrivate* aWorkerPrivate)
-    : WorkerControlRunnable(aWorkerPrivate, WorkerThreadUnchangedBusyCount)
-    { }
-
-  private:
-    virtual bool
-    PreDispatch(WorkerPrivate* aWorkerPrivate) override
-    {
-      // Silence bad assertions, this is dispatched from the timer thread.
-      return true;
-    }
-
-    virtual void
-    PostDispatch(WorkerPrivate* aWorkerPrivate, bool aDispatchResult) override
-    {
-      // Silence bad assertions, this is dispatched from the timer thread.
-    }
-
-    virtual bool
-    WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
-    {
-      // Kill running script.
-      return false;
-    }
-  };
-
-public:
-  explicit KillCloseEventRunnable(WorkerPrivate* aWorkerPrivate)
-  : WorkerRunnable(aWorkerPrivate, WorkerThreadUnchangedBusyCount)
-  { }
-
-  bool
-  SetTimeout(uint32_t aDelayMS)
-  {
-    nsCOMPtr<nsITimer> timer = do_CreateInstance(NS_TIMER_CONTRACTID);
-    if (!timer) {
-      return false;
-    }
-
-    RefPtr<KillScriptRunnable> runnable =
-      new KillScriptRunnable(mWorkerPrivate);
-
-    RefPtr<TimerThreadEventTarget> target =
-      new TimerThreadEventTarget(mWorkerPrivate, runnable);
-
-    if (NS_FAILED(timer->SetTarget(target))) {
-      return false;
-    }
-
-    if (NS_FAILED(timer->InitWithNamedFuncCallback(
-          DummyCallback, nullptr, aDelayMS, nsITimer::TYPE_ONE_SHOT,
-          "dom::workers::DummyCallback(1)"))) {
-      return false;
-    }
-
-    mTimer.swap(timer);
-    return true;
-  }
-
-private:
-  ~KillCloseEventRunnable()
-  {
-    if (mTimer) {
-      mTimer->Cancel();
-    }
-  }
-
-  virtual bool
-  PreDispatch(WorkerPrivate* aWorkerPrivate) override
-  {
-    MOZ_CRASH("Don't call Dispatch() on KillCloseEventRunnable!");
-  }
-
-  virtual void
-  PostDispatch(WorkerPrivate* aWorkerPrivate, bool aDispatchResult) override
-  {
-    MOZ_CRASH("Don't call Dispatch() on KillCloseEventRunnable!");
-  }
-
-  virtual bool
-  WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
-  {
-    if (mTimer) {
-      mTimer->Cancel();
-      mTimer = nullptr;
-    }
-
-    return true;
-  }
-
-  nsresult Cancel() override
-  {
-    // We need to run regardless.
-    Run();
-    return WorkerRunnable::Cancel();
-  }
-};
 
 class UpdateContextOptionsRunnable final : public WorkerControlRunnable
 {
@@ -4035,8 +3876,6 @@ WorkerPrivate::WorkerPrivate(WorkerPrivate* aParent,
   , mFrozen(false)
   , mTimerRunning(false)
   , mRunningExpiredTimeouts(false)
-  , mCloseHandlerStarted(false)
-  , mCloseHandlerFinished(false)
   , mPendingEventQueueClearing(false)
   , mMemoryReporterRunning(false)
   , mBlockedForMemoryReporter(false)
@@ -4258,7 +4097,6 @@ WorkerPrivate::GetLoadInfo(JSContext* aCx, nsPIDOMWindowInner* aWindow,
     }
 
     if (parentStatus > Running) {
-      NS_WARNING("Cannot create child workers from the close handler!");
       return NS_ERROR_FAILURE;
     }
 
@@ -4536,12 +4374,13 @@ WorkerPrivate::DoRunLoop(JSContext* aCx)
   Maybe<JSAutoCompartment> workerCompartment;
 
   for (;;) {
-    Status currentStatus;
+    Status currentStatus, previousStatus;
     bool debuggerRunnablesPending = false;
     bool normalRunnablesPending = false;
 
     {
       MutexAutoLock lock(mMutex);
+      previousStatus = mStatus;
 
       while (mControlQueue.IsEmpty() &&
              !(debuggerRunnablesPending = !mDebuggerQueue.IsEmpty()) &&
@@ -4562,10 +4401,11 @@ WorkerPrivate::DoRunLoop(JSContext* aCx)
       currentStatus = mStatus;
     }
 
-    // If the close handler has finished and all holders are done then we can
-    // kill this thread.
+    // if all holders are done then we can kill this thread.
     if (currentStatus != Running && !HasActiveHolders()) {
-      if (mCloseHandlerFinished && currentStatus != Killing) {
+
+      // If we just changed status, we must schedule the current runnables.
+      if (previousStatus != Running && currentStatus != Killing) {
         NotifyInternal(aCx, Killing);
         MOZ_ASSERT(!JS_IsExceptionPending(aCx));
 
@@ -4646,10 +4486,8 @@ WorkerPrivate::DoRunLoop(JSContext* aCx)
         JS_MaybeGC(aCx);
       }
     } else if (normalRunnablesPending) {
-      MOZ_ASSERT(NS_HasPendingEvents(mThread));
-
       // Process a single runnable from the main queue.
-      MOZ_ALWAYS_TRUE(NS_ProcessNextEvent(mThread, false));
+      NS_ProcessNextEvent(mThread, false);
 
       normalRunnablesPending = NS_HasPendingEvents(mThread);
       if (normalRunnablesPending && GlobalScope()) {
@@ -4851,7 +4689,7 @@ WorkerPrivate::InterruptCallback(JSContext* aCx)
         break;
       }
 
-      WaitForWorkerEvents(PR_MillisecondsToInterval(RemainingRunTimeMS()));
+      WaitForWorkerEvents(PR_MillisecondsToInterval(UINT32_MAX));
     }
   }
 
@@ -5151,17 +4989,6 @@ WorkerPrivate::ClearDebuggerEventQueue()
     // It should be ok to simply release the runnable, without running it.
     runnable->Release();
   }
-}
-
-uint32_t
-WorkerPrivate::RemainingRunTimeMS() const
-{
-  if (mKillTime.IsNull()) {
-    return UINT32_MAX;
-  }
-  TimeDuration runtime = mKillTime - TimeStamp::Now();
-  double ms = runtime > TimeDuration(0) ? runtime.ToMilliseconds() : 0;
-  return ms > double(UINT32_MAX) ? UINT32_MAX : uint32_t(ms);
 }
 
 bool
@@ -5802,8 +5629,6 @@ WorkerPrivate::NotifyInternal(JSContext* aCx, Status aStatus)
 
   MOZ_ASSERT(previousStatus != Pending);
 
-  MOZ_ASSERT(previousStatus >= Canceling || mKillTime.IsNull());
-
   // Let all our holders know the new status.
   NotifyHolders(aCx, aStatus);
   MOZ_ASSERT(!JS_IsExceptionPending(aCx));
@@ -5820,26 +5645,10 @@ WorkerPrivate::NotifyInternal(JSContext* aCx, Status aStatus)
     }
   }
 
-  // If we've run the close handler, we don't need to do anything else.
-  if (mCloseHandlerFinished) {
-    return true;
-  }
-
   // If the worker script never ran, or failed to compile, we don't need to do
-  // anything else, except pretend that we ran the close handler.
+  // anything else.
   if (!GlobalScope()) {
-    mCloseHandlerStarted = true;
-    mCloseHandlerFinished = true;
     return true;
-  }
-
-  // If this is the first time our status has changed we also need to schedule
-  // the close handler unless we're being shut down.
-  if (previousStatus == Running && aStatus != Killing) {
-    MOZ_ASSERT(!mCloseHandlerStarted && !mCloseHandlerFinished);
-
-    RefPtr<CloseEventRunnable> closeRunnable = new CloseEventRunnable(this);
-    MOZ_ALWAYS_SUCCEEDS(NS_DispatchToCurrentThread(closeRunnable));
   }
 
   if (aStatus == Closing) {
@@ -5853,58 +5662,12 @@ WorkerPrivate::NotifyInternal(JSContext* aCx, Status aStatus)
     return true;
   }
 
-  if (aStatus == Terminating) {
-    // Only abort the script if we're not yet running the close handler.
-    return mCloseHandlerStarted;
-  }
-
-  if (aStatus == Canceling) {
-    // We need to enforce a timeout on the close handler.
-    MOZ_ASSERT(previousStatus >= Running && previousStatus <= Terminating);
-
-    uint32_t killSeconds = IsChromeWorker() ?
-      RuntimeService::GetChromeCloseHandlerTimeoutSeconds() :
-      RuntimeService::GetContentCloseHandlerTimeoutSeconds();
-
-    if (killSeconds) {
-      mKillTime = TimeStamp::Now() + TimeDuration::FromSeconds(killSeconds);
-
-      if (!mCloseHandlerFinished && !ScheduleKillCloseEventRunnable()) {
-        return false;
-      }
-    }
-
-    // Only abort the script if we're not yet running the close handler.
-    return mCloseHandlerStarted;
-  }
-
-  MOZ_ASSERT(aStatus == Killing);
-
-  mKillTime = TimeStamp::Now();
-
-  if (mCloseHandlerStarted && !mCloseHandlerFinished) {
-    ScheduleKillCloseEventRunnable();
-  }
+  MOZ_ASSERT(aStatus == Terminating ||
+             aStatus == Canceling ||
+             aStatus == Killing);
 
   // Always abort the script.
   return false;
-}
-
-bool
-WorkerPrivate::ScheduleKillCloseEventRunnable()
-{
-  AssertIsOnWorkerThread();
-  MOZ_ASSERT(!mKillTime.IsNull());
-
-  RefPtr<KillCloseEventRunnable> killCloseEventRunnable =
-    new KillCloseEventRunnable(this);
-  if (!killCloseEventRunnable->SetTimeout(RemainingRunTimeMS())) {
-    return false;
-  }
-
-  MOZ_ALWAYS_SUCCEEDS(NS_DispatchToCurrentThread(killCloseEventRunnable));
-
-  return true;
 }
 
 void
@@ -5965,9 +5728,8 @@ WorkerPrivate::ReportError(JSContext* aCx, const char* aFallbackMessage,
   mErrorHandlerRecursionCount++;
 
   // Don't want to run the scope's error handler if this is a recursive error or
-  // if there was an error in the close handler or if we ran out of memory.
+  // if we ran out of memory.
   bool fireAtScope = mErrorHandlerRecursionCount == 1 &&
-                     !mCloseHandlerStarted &&
                      errorNumber != JSMSG_OUT_OF_MEMORY &&
                      JS::CurrentGlobalOrNull(aCx);
 
@@ -6006,13 +5768,6 @@ WorkerPrivate::SetTimeout(JSContext* aCx,
   {
     MutexAutoLock lock(mMutex);
     currentStatus = mStatus;
-  }
-
-  // It's a script bug if setTimeout/setInterval are called from a close handler
-  // so throw an exception.
-  if (currentStatus == Closing) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return 0;
   }
 
   // If the worker is trying to call setTimeout/setInterval and the parent
