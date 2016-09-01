@@ -5667,7 +5667,7 @@ nsDocument::CreateElementNS(const nsAString& aNamespaceURI,
   }
 
   // Throw NotFoundError if 'is' is not-null and definition is null
-  nsString* is = CheckCustomElementName(
+  const nsString* is = CheckCustomElementName(
     aOptions, aQualifiedName, nodeInfo->NamespaceID(), rv);
   if (rv.Failed()) {
     return nullptr;
@@ -8682,7 +8682,7 @@ nsDocument::RetrieveRelevantHeaders(nsIChannel *aChannel)
 
 already_AddRefed<Element>
 nsDocument::CreateElem(const nsAString& aName, nsIAtom *aPrefix,
-                       int32_t aNamespaceID, nsAString* aIs)
+                       int32_t aNamespaceID, const nsAString* aIs)
 {
 #ifdef DEBUG
   nsAutoString qName;
@@ -13428,7 +13428,7 @@ nsIDocument::UpdateStyleBackendType()
 #endif
 }
 
-nsString*
+const nsString*
 nsDocument::CheckCustomElementName(const ElementCreationOptions& aOptions,
                                    const nsAString& aLocalName,
                                    uint32_t aNamespaceID,
@@ -13441,7 +13441,7 @@ nsDocument::CheckCustomElementName(const ElementCreationOptions& aOptions,
       return nullptr;
   }
 
-  nsString* is = const_cast<nsString*>(&(aOptions.mIs.Value()));
+  const nsString* is = &aOptions.mIs.Value();
 
   // Throw NotFoundError if 'is' is not-null and definition is null
   if (!LookupCustomElementDefinition(aLocalName, aNamespaceID, is)) {
