@@ -215,10 +215,7 @@ AppleATDecoder::SubmitSample(MediaRawData* aSample)
     }
     mQueuedSamples.Clear();
   }
-
-  if (mTaskQueue->IsEmpty()) {
-    mCallback->InputExhausted();
-  }
+  mCallback->InputExhausted();
 }
 
 nsresult
