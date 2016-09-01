@@ -36,7 +36,9 @@ mod marionette;
 
 lazy_static! {
     pub static ref VERSION: String =
-        format!("{}\n\n{}", crate_version!(), "The source is available at https://github.com/mozilla/geckodriver
+        format!("{}\n\n{}", crate_version!(),
+"The source code of this program is available at
+https://github.com/mozilla/geckodriver.
 
 This program is subject to the terms of the Mozilla Public License 2.0.
 You can obtain a copy of the license at https://mozilla.org/MPL/2.0/.");
