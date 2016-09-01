@@ -8,6 +8,7 @@
 
 #include "MmsMessageInternal.h"
 #include "mozilla/dom/MmsMessageBinding.h"
+#include "nsPIDOMWindow.h"
 
 using namespace mozilla::dom::mobilemessage;
 
