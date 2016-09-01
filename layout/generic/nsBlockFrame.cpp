@@ -2931,19 +2931,25 @@ nsBlockFrame::AttributeChanged(int32_t         aNameSpaceID,
   if (nsGkAtoms::value == aAttribute) {
     const nsStyleDisplay* styleDisplay = StyleDisplay();
     if (NS_STYLE_DISPLAY_LIST_ITEM == styleDisplay->mDisplay) {
-      // Search for the closest ancestor that's a block frame. We
-      // make the assumption that all related list items share a
-      // common block parent.
+      // Search for the closest ancestor that's a block/grid/flex frame.
+      // We make the assumption that all related list items share a
+      // common block/grid/flex ancestor.
       // XXXldb I think that's a bad assumption.
-      nsBlockFrame* blockParent = nsLayoutUtils::FindNearestBlockAncestor(this);
-
-      // Tell the enclosing block frame to renumber list items within
-      // itself
-      if (nullptr != blockParent) {
+      nsContainerFrame* ancestor = GetParent();
+      for (; ancestor; ancestor = ancestor->GetParent()) {
+        auto frameType = ancestor->GetType();
+        if (frameType == nsGkAtoms::blockFrame ||
+            frameType == nsGkAtoms::flexContainerFrame ||
+            frameType == nsGkAtoms::gridContainerFrame) {
+          break;
+        }
+      }
+      // Tell the ancestor to renumber list items within itself.
+      if (ancestor) {
         // XXX Not sure if this is necessary anymore
-        if (blockParent->RenumberLists()) {
+        if (ancestor->RenumberLists()) {
           PresContext()->PresShell()->
-            FrameNeedsReflow(blockParent, nsIPresShell::eStyleChange,
+            FrameNeedsReflow(ancestor, nsIPresShell::eStyleChange,
                              NS_FRAME_HAS_DIRTY_CHILDREN);
         }
       }
