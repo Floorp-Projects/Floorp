@@ -1645,6 +1645,12 @@ or run without that action (ie: --no-{action})"
         objdir = dirs['abs_obj_dir']
         branch = self.branch
 
+        # Building a nightly with the try repository fails because a
+        # config-file does not exist for try. Default to mozilla-central
+        # settings (arbitrarily).
+        if branch == 'try':
+            branch = 'mozilla-central'
+
         # Some android versions share the same .json config - if
         # multi_locale_config_platform is set, use that the .json name;
         # otherwise, use the buildbot platform.
