@@ -22,11 +22,9 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamItem> {
     private Cursor highlightsCursor;
     private Cursor topSitesCursor;
 
-    private final WeakReference<LoaderManager> loaderManagerWeakReference;
     private final HomePager.OnUrlOpenListener onUrlOpenListener;
 
-    StreamRecyclerAdapter(LoaderManager lm, HomePager.OnUrlOpenListener onUrlOpenListener) {
-        loaderManagerWeakReference = new WeakReference<>(lm);
+    StreamRecyclerAdapter(HomePager.OnUrlOpenListener onUrlOpenListener) {
         this.onUrlOpenListener = onUrlOpenListener;
     }
 

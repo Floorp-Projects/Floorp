@@ -3,10 +3,4 @@
                                                       android:orientation="vertical"
                                                       android:layout_width="match_parent"
                                                       android:layout_height="match_parent"
-                                                      android:background="#FAFAFA">
-    <android.support.v7.widget.RecyclerView
-        android:id="@+id/activity_stream_main_recyclerview"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"/>
-
-</org.mozilla.gecko.home.activitystream.ActivityStreamHomeScreen>
+                                                      android:background="#FAFAFA"/>
