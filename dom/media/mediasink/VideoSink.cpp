@@ -145,6 +145,9 @@ VideoSink::SetPlaying(bool aPlaying)
     mUpdateScheduler.Reset();
     // Since playback is paused, tell compositor to render only current frame.
     RenderVideoFrames(1);
+    if (mContainer) {
+      mContainer->ClearCachedResources();
+    }
   }
 
   mAudioSink->SetPlaying(aPlaying);

@@ -73,6 +73,9 @@ public:
   // but was actually painted at t+n, this returns n in seconds. Threadsafe.
   double GetFrameDelay();
 
+  // Clear any resources that are not immediately necessary.
+  void ClearCachedResources();
+
   // Returns a new frame ID for SetCurrentFrames().  The client must either
   // call this on only one thread or provide barriers.  Do not use together
   // with SetCurrentFrame().
