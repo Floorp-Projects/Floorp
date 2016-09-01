@@ -294,12 +294,6 @@ void VideoFrameContainer::ClearFutureFrames()
   }
 }
 
-void
-VideoFrameContainer::ClearCachedResources()
-{
-  mImageContainer->ClearCachedResources();
-}
-
 ImageContainer* VideoFrameContainer::GetImageContainer() {
   return mImageContainer;
 }
