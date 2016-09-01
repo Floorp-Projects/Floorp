@@ -316,7 +316,7 @@ Exception::GetFilename(JSContext* aCx, nsAString& aFilename)
     return mLocation->GetFilename(aCx, aFilename);
   }
 
-  aFilename.Assign(mFilename);
+  aFilename.Truncate();
   return NS_OK;
 }
 
