@@ -13,6 +13,7 @@
 #include "mozilla/dom/MobileConnectionInfo.h"
 #include "mozilla/dom/MobileNetworkInfo.h"
 #include "mozilla/dom/MozMobileConnectionBinding.h"
+#include "mozilla/dom/ScriptSettings.h"
 
 using mozilla::AutoJSContext;
 using mozilla::dom::mobileconnection::MobileCallForwardingOptions;
