@@ -5599,7 +5599,7 @@ nsGridContainerFrame::Reflow(nsPresContext*           aPresContext,
     ::MergeSortedFrameLists(mFrames, items, GetContent());
   }
 
-  RenumberLists();
+  RenumberList();
 
 #ifdef DEBUG
   mDidPushItemsBitMayLie = false;
@@ -5904,7 +5904,7 @@ nscoord
 nsGridContainerFrame::IntrinsicISize(nsRenderingContext* aRenderingContext,
                                      IntrinsicISizeType  aConstraint)
 {
-  RenumberLists();
+  RenumberList();
 
   // Calculate the sum of column sizes under aConstraint.
   // http://dev.w3.org/csswg/css-grid/#intrinsic-sizes
