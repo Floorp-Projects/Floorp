@@ -63,7 +63,7 @@ Event.simulateKey = function(element, eventName) {
     charCode: 0
   }, arguments[2] || {});
 
-  var oEvent = document.createEvent("KeyEvents");
+  var oEvent = document.createEvent("KeyboardEvent");
   oEvent.initKeyEvent(eventName, true, true, window, 
     options.ctrlKey, options.altKey, options.shiftKey, options.metaKey,
     options.keyCode, options.charCode );

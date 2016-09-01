@@ -1,4 +1,4 @@
-fuzzy-if(Android,2,2) skip-if(B2G||Mulet) == out-of-bounds-selectedindex.html out-of-bounds-selectedindex-ref.html # test for bug 471741 # Initial mulet triage: parity with B2G/B2G Desktop
+fuzzy-if(Android,4,11) skip-if(B2G||Mulet) == out-of-bounds-selectedindex.html out-of-bounds-selectedindex-ref.html # test for bug 471741 # Initial mulet triage: parity with B2G/B2G Desktop
 skip-if(B2G||Mulet) == multiple.html multiple-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 == boguskids.html boguskids-ref.html
 == dynamic-boguskids.html boguskids-ref.html

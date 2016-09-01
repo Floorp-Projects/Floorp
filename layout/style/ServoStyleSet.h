@@ -55,8 +55,6 @@ public:
   void BeginUpdate();
   nsresult EndUpdate();
 
-  void StartStyling(nsPresContext* aPresContext);
-
   already_AddRefed<nsStyleContext>
   ResolveStyleFor(dom::Element* aElement,
                   nsStyleContext* aParentContext);
@@ -128,7 +126,7 @@ public:
 
   /**
    * Performs a Servo traversal to compute style for all dirty nodes in the
-   * document.
+   * document. The root element must be non-null.
    *
    * If aLeaveDirtyBits is true, the dirty/dirty-descendant bits are not
    * cleared.
@@ -155,8 +153,6 @@ public:
    */
   void StyleNewChildren(nsIContent* aParent);
 
-  bool StylingStarted() const { return mStylingStarted; }
-
 private:
   already_AddRefed<nsStyleContext> GetContext(already_AddRefed<ServoComputedValues>,
                                               nsStyleContext* aParentContext,
@@ -173,7 +169,6 @@ private:
   EnumeratedArray<SheetType, SheetType::Count,
                   nsTArray<RefPtr<ServoStyleSheet>>> mSheets;
   int32_t mBatching;
-  bool mStylingStarted;
 };
 
 } // namespace mozilla

@@ -122,6 +122,8 @@ const HELPER_SLEEP_TIMEOUT = 180;
 // the test will try to kill it.
 const APP_TIMER_TIMEOUT = 120000;
 
+const FILE_IN_USE_TIMEOUT_MS = 1000;
+
 const PIPE_TO_NULL = IS_WIN ? ">nul" : "> /dev/null 2>&1";
 
 const LOG_FUNCTION = do_print;
@@ -1623,10 +1625,11 @@ function copyTestUpdaterForRunUsingUpdater() {
 }
 
 /**
- * Logs the contents of an update log.
+ * Logs the contents of an update log and for maintenance service tests this
+ * will log the contents of the latest maintenanceservice.log.
  *
  * @param   aLogLeafName
- *          The leaf name of the log.
+ *          The leaf name of the update log.
  */
 function logUpdateLog(aLogLeafName) {
   let updateLog = getUpdateLog(aLogLeafName);
@@ -1641,6 +1644,25 @@ function logUpdateLog(aLogLeafName) {
     });
   } else {
     logTestInfo("update log doesn't exist, path: " + updateLog.path);
+  }
+
+  if (IS_SERVICE_TEST) {
+    let serviceLog = getMaintSvcDir();
+    serviceLog.append("logs");
+    serviceLog.append("maintenanceservice.log");
+    if (serviceLog.exists()) {
+      // xpcshell tests won't display the entire contents so log each line.
+      let serviceLogContents = readFileBytes(serviceLog).replace(/\r\n/g, "\n");
+      serviceLogContents = replaceLogPaths(serviceLogContents);
+      let aryLogContents = serviceLogContents.split("\n");
+      logTestInfo("contents of " + serviceLog.path + ":");
+      aryLogContents.forEach(function RU_LC_FE(aLine) {
+        logTestInfo(aLine);
+      });
+    } else {
+      logTestInfo("maintenance service log doesn't exist, path: " +
+                  serviceLog.path);
+    }
   }
 }
 
@@ -1904,7 +1926,16 @@ function stageUpdate() {
  */
 function checkUpdateStagedState(aUpdateState) {
   if (IS_WIN) {
-    waitForApplicationStop(FILE_UPDATER_BIN);
+    if (IS_SERVICE_TEST) {
+      waitForServiceStop(false);
+    } else {
+      let updater = getApplyDirFile(FILE_UPDATER_BIN, true);
+      if (isFileInUse(updater)) {
+        do_timeout(FILE_IN_USE_TIMEOUT_MS,
+                   checkUpdateStagedState.bind(null, aUpdateState));
+        return;
+      }
+    }
   }
 
   Assert.equal(aUpdateState, STATE_AFTER_STAGE,
@@ -2335,24 +2366,6 @@ function waitForApplicationStop(aApplication) {
 }
 
 /**
- * Checks if an application is running.
- *
- * @param   aApplication
- *          The application binary name to check if it is running.
- */
-function isProcessRunning(aApplication) {
-  if (!IS_WIN) {
-    do_throw("Windows only function called by a different platform!");
-  }
-
-  debugDump("checking if " + aApplication + " is running");
-  // Use the helper bin to ensure the application is stopped. If not stopped,
-  // then wait for it to stop (at most 120 seconds).
-  let args = ["is-process-running", aApplication];
-  let exitValue = runTestHelperSync(args);
-  return exitValue;
-}
-/**
  * Helper function for updater tests for launching the updater using the
  * maintenance service to apply a mar file. When complete runUpdateFinished
  * will be called.
@@ -2390,15 +2403,8 @@ function runUpdateUsingService(aExpectedStatus, aSwitchApp, aCheckSvcLog) {
   }
 
   function checkServiceUpdateFinished() {
-    if (isProcessRunning(FILE_MAINTENANCE_SERVICE_BIN)) {
-      do_execute_soon(checkServiceUpdateFinished);
-      return;
-    }
-
-    if (isProcessRunning(FILE_UPDATER_BIN)) {
-      do_execute_soon(checkServiceUpdateFinished);
-      return;
-    }
+    waitForApplicationStop(FILE_MAINTENANCE_SERVICE_BIN);
+    waitForApplicationStop(FILE_UPDATER_BIN);
 
     // Wait for the expected status
     let status;
@@ -3489,43 +3495,65 @@ function checkCallbackServiceLog() {
   waitForFilesInUse();
 }
 
-// Waits until files that are in use that break tests are no longer in use and
-// then calls doTestFinish to end the test.
+/**
+ * Helper function to check if a file is in use on Windows by making a copy of
+ * a file and attempting to delete the original file. If the deletion is
+ * successful the copy of the original file is renamed to the original file's
+ * name and if the deletion is not successful the copy of the original file is
+ * deleted.
+ *
+ * @param   aFile
+ *          An nsIFile for the file to be checked if it is in use.
+ * @return  true if the file can't be deleted and false otherwise.
+ */
+function isFileInUse(aFile) {
+  if (!IS_WIN) {
+    do_throw("Windows only function called by a different platform!");
+  }
+
+  if (!aFile.exists()) {
+    debugDump("file does not exist, path: " + aFile.path);
+    return false;
+  }
+
+  let fileBak = aFile.parent;
+  fileBak.append(aFile.leafName + ".bak");
+  try {
+    if (fileBak.exists()) {
+      fileBak.remove(false);
+    }
+    aFile.copyTo(aFile.parent, fileBak.leafName);
+    aFile.remove(false);
+    fileBak.moveTo(aFile.parent, aFile.leafName);
+    debugDump("file is not in use, path: " + aFile.path);
+    return false;
+  } catch (e) {
+    debugDump("file in use, path: " + aFile.path + ", exception: " + e);
+    try {
+      if (fileBak.exists()) {
+        fileBak.remove(false);
+      }
+    } catch (e) {
+      logTestInfo("unable to remove backup file, path: " +
+                  fileBak.path + ", exception: " + e);
+    }
+  }
+  return true;
+}
+
+/**
+ * Waits until files that are in use that break tests are no longer in use and
+ * then calls doTestFinish to end the test.
+ */
 function waitForFilesInUse() {
   if (IS_WIN) {
-    let appBin = getApplyDirFile(FILE_APP_BIN, true);
-    let maintSvcInstaller = getApplyDirFile(FILE_MAINTENANCE_SERVICE_INSTALLER_BIN, true);
-    let helper = getApplyDirFile("uninstall/helper.exe", true);
-    let updater = getApplyDirFile(FILE_UPDATER_BIN, true);
-    let files = [appBin, updater, maintSvcInstaller, helper];
-
-    for (let i = 0; i < files.length; ++i) {
-      let file = files[i];
-      let fileBak = file.parent.clone();
-      if (file.exists()) {
-        fileBak.append(file.leafName + ".bak");
-        try {
-          if (fileBak.exists()) {
-            fileBak.remove(false);
-          }
-          file.copyTo(fileBak.parent, fileBak.leafName);
-          file.remove(false);
-          fileBak.moveTo(file.parent, file.leafName);
-          debugDump("file is not in use, path: " + file.path);
-        } catch (e) {
-          debugDump("will try again to remove file in use, path: " +
-                    file.path + ", exception: " + e);
-          try {
-            if (fileBak.exists()) {
-              fileBak.remove(false);
-            }
-          } catch (e) {
-            logTestInfo("unable to remove backup file, path: " +
-                        fileBak.path + ", exception: " + e);
-          }
-          do_execute_soon(waitForFilesInUse);
-          return;
-        }
+    let fileNames = [FILE_APP_BIN, FILE_UPDATER_BIN,
+                     FILE_MAINTENANCE_SERVICE_INSTALLER_BIN];
+    for (let i = 0; i < fileNames.length; ++i) {
+      let file = getApplyDirFile(fileNames[i], true);
+      if (isFileInUse(file)) {
+        do_timeout(FILE_IN_USE_TIMEOUT_MS, waitForFilesInUse);
+        return;
       }
     }
   }
@@ -3969,7 +3997,7 @@ function runUpdateUsingApp(aExpectedStatus) {
                    "process-finished");
 
       if (IS_SERVICE_TEST) {
-        waitForServiceStop();
+        waitForServiceStop(false);
       }
 
       do_execute_soon(afterAppExits);
@@ -4063,13 +4091,15 @@ const gUpdateStagedObserver = {
   observe: function(aSubject, aTopic, aData) {
     debugDump("observe called with topic: " + aTopic + ", data: " + aData);
     if (aTopic == "update-staged") {
+      Services.obs.removeObserver(gUpdateStagedObserver, "update-staged");
       // The environment is reset after the update-staged observer topic because
       // processUpdate in nsIUpdateProcessor uses a new thread and clearing the
       // environment immediately after calling processUpdate can clear the
       // environment before the updater is launched.
       resetEnvironment();
-      Services.obs.removeObserver(gUpdateStagedObserver, "update-staged");
-      checkUpdateStagedState(aData);
+      // Use do_execute_soon to prevent any failures from propagating to the
+      // update service.
+      do_execute_soon(checkUpdateStagedState.bind(null, aData));
     }
   },
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver])

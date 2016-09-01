@@ -223,7 +223,14 @@ public class Distribution {
             public void run() {
                 boolean distributionSet = distribution.doInit();
                 if (distributionSet) {
-                    GeckoAppShell.notifyObservers("Distribution:Set", "");
+                    String preferencesJSON = "";
+                    try {
+                        final File descFile = distribution.getDistributionFile("preferences.json");
+                        preferencesJSON = FileUtils.readStringFromFile(descFile);
+                    } catch (IOException e) {
+                        Log.e(LOGTAG, "Error getting distribution descriptor file.", e);
+                    }
+                    GeckoAppShell.notifyObservers("Distribution:Set", preferencesJSON);
                 }
             }
         });

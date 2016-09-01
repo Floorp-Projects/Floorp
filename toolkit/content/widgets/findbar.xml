@@ -787,7 +787,7 @@
           if (!aTarget)
             return;
 
-          let event = document.createEvent("KeyEvents");
+          let event = document.createEvent("KeyboardEvent");
           event.initKeyEvent(aEvent.type, aEvent.bubbles, aEvent.cancelable,
                              aEvent.view, aEvent.ctrlKey, aEvent.altKey,
                              aEvent.shiftKey, aEvent.metaKey, aEvent.keyCode,

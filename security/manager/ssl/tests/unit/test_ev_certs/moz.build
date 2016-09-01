@@ -6,15 +6,20 @@
 
 # Temporarily disabled. See bug 1256495.
 #test_certificates = (
-#    'ev-valid-anypolicy-int.pem',
-#    'ev-valid.pem',
+#    'anyPolicy-ee-path-ee.pem',
+#    'anyPolicy-ee-path-int.pem',
+#    'anyPolicy-int-path-ee.pem',
+#    'anyPolicy-int-path-int.pem',
 #    'evroot.pem',
-#    'int-ev-valid-anypolicy-int.pem',
-#    'int-ev-valid.pem',
-#    'int-non-ev-root.pem',
-#    'no-ocsp-url-cert.pem',
-#    'non-ev-root.pem',
+#    'no-ocsp-ee-path-ee.pem',
+#    'no-ocsp-ee-path-int.pem',
+#    'no-ocsp-int-path-ee.pem',
+#    'no-ocsp-int-path-int.pem',
+#    'non-ev-root-path-ee.pem',
+#    'non-ev-root-path-int.pem',
 #    'non-evroot-ca.pem',
+#    'test-oid-path-ee.pem',
+#    'test-oid-path-int.pem',
 #)
 #
 #for test_certificate in test_certificates:
@@ -22,7 +27,7 @@
 #
 #test_keys = (
 #    'evroot.key',
-#    'int-ev-valid.key',
+#    'test-oid-path-int.key',
 #)
 #
 #for test_key in test_keys:

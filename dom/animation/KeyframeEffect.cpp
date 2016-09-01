@@ -104,13 +104,7 @@ KeyframeEffectReadOnly::NotifyAnimationTimingUpdated()
   // animation cascade for this element whenever that changes.
   bool inEffect = IsInEffect();
   if (inEffect != mInEffectOnLastAnimationTimingUpdate) {
-    if (mTarget) {
-      EffectSet* effectSet = EffectSet::GetEffectSet(mTarget->mElement,
-                                                     mTarget->mPseudoType);
-      if (effectSet) {
-        effectSet->MarkCascadeNeedsUpdate();
-      }
-    }
+    MarkCascadeNeedsUpdate();
     mInEffectOnLastAnimationTimingUpdate = inEffect;
   }
 
@@ -305,15 +299,9 @@ KeyframeEffectReadOnly::UpdateProperties(nsStyleContext* aStyleContext)
 
   CalculateCumulativeChangeHint(aStyleContext);
 
-  if (mTarget) {
-    EffectSet* effectSet = EffectSet::GetEffectSet(mTarget->mElement,
-                                                   mTarget->mPseudoType);
-    if (effectSet) {
-      effectSet->MarkCascadeNeedsUpdate();
-    }
+  MarkCascadeNeedsUpdate();
 
-    RequestRestyle(EffectCompositor::RestyleType::Layer);
-  }
+  RequestRestyle(EffectCompositor::RestyleType::Layer);
 }
 
 void
@@ -567,14 +555,6 @@ KeyframeEffectReadOnly::ConstructKeyframeEffect(
   }
 
   return effect.forget();
-}
-
-void
-KeyframeEffectReadOnly::ResetWinsInCascade()
-{
-  for (AnimationProperty& property : mProperties) {
-    property.mWinsInCascade = false;
-  }
 }
 
 void
@@ -1234,18 +1214,17 @@ KeyframeEffectReadOnly::SetAnimation(Animation* aAnimation)
 
   mAnimation = aAnimation;
 
-  // Restyle for the new animation.
-  RequestRestyle(EffectCompositor::RestyleType::Layer);
-
-  if (mTarget) {
-    EffectSet* effectSet = EffectSet::GetEffectSet(mTarget->mElement,
-                                                   mTarget->mPseudoType);
-    if (effectSet) {
-      effectSet->MarkCascadeNeedsUpdate();
-    }
+  // The order of these function calls is important:
+  // NotifyAnimationTimingUpdated() need the updated mIsRelevant flag to check
+  // if it should create the effectSet or not, and MarkCascadeNeedsUpdate()
+  // needs a valid effectSet, so we should call them in this order.
+  if (mAnimation) {
+    mAnimation->UpdateRelevance();
   }
-
   NotifyAnimationTimingUpdated();
+  if (mAnimation) {
+    MarkCascadeNeedsUpdate();
+  }
 }
 
 bool
@@ -1281,6 +1260,21 @@ KeyframeEffectReadOnly::MaybeUpdateFrameForCompositor()
       return;
     }
   }
+}
+
+void
+KeyframeEffectReadOnly::MarkCascadeNeedsUpdate()
+{
+  if (!mTarget) {
+    return;
+  }
+
+  EffectSet* effectSet = EffectSet::GetEffectSet(mTarget->mElement,
+                                                 mTarget->mPseudoType);
+  if (!effectSet) {
+    return;
+  }
+  effectSet->MarkCascadeNeedsUpdate();
 }
 
 //---------------------------------------------------------------------
@@ -1361,7 +1355,9 @@ KeyframeEffect::SetTarget(const Nullable<ElementOrCSSPseudoElement>& aTarget)
   if (mTarget) {
     UnregisterTarget();
     ResetIsRunningOnCompositor();
-    ResetWinsInCascade();
+    // We don't need to reset the mWinsInCascade member since it will be updated
+    // when we later associate with a different target (and until that time this
+    // flag is not used).
 
     RequestRestyle(EffectCompositor::RestyleType::Layer);
 

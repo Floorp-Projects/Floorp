@@ -3385,7 +3385,8 @@ SVGTextFrame::HandleAttributeChangeInDescendant(Element* aElement,
     if (aNameSpaceID == kNameSpaceID_None &&
         aAttribute == nsGkAtoms::startOffset) {
       NotifyGlyphMetricsChange();
-    } else if (aNameSpaceID == kNameSpaceID_XLink &&
+    } else if ((aNameSpaceID == kNameSpaceID_XLink ||
+                aNameSpaceID == kNameSpaceID_None) &&
                aAttribute == nsGkAtoms::href) {
       // Blow away our reference, if any
       nsIFrame* childElementFrame = aElement->GetPrimaryFrame();
@@ -4822,7 +4823,14 @@ SVGTextFrame::GetTextPathPathElement(nsIFrame* aTextPathFrame)
     nsIContent* content = aTextPathFrame->GetContent();
     dom::SVGTextPathElement* tp = static_cast<dom::SVGTextPathElement*>(content);
     nsAutoString href;
-    tp->mStringAttributes[dom::SVGTextPathElement::HREF].GetAnimValue(href, tp);
+    if (tp->mStringAttributes[dom::SVGTextPathElement::HREF].IsExplicitlySet()) {
+      tp->mStringAttributes[dom::SVGTextPathElement::HREF]
+        .GetAnimValue(href, tp);
+    } else {
+      tp->mStringAttributes[dom::SVGTextPathElement::XLINK_HREF]
+        .GetAnimValue(href, tp);
+    }
+
     if (href.IsEmpty()) {
       return nullptr; // no URL
     }
@@ -5621,10 +5629,9 @@ SVGTextFrame::TransformFrameRectFromTextChild(const nsRect& aRect,
     // Intersect it with the run.
     uint32_t flags = TextRenderedRun::eIncludeFill |
                      TextRenderedRun::eIncludeStroke;
-    rectInFrameUserSpace.IntersectRect
-      (rectInFrameUserSpace, run.GetFrameUserSpaceRect(presContext, flags).ToThebesRect());
 
-    if (!rectInFrameUserSpace.IsEmpty()) {
+    if (rectInFrameUserSpace.IntersectRect(rectInFrameUserSpace,
+        run.GetFrameUserSpaceRect(presContext, flags).ToThebesRect())) {
       // Transform it up to user space of the <text>, also taking into
       // account the font size scale.
       gfxMatrix m = run.GetTransformFromRunUserSpaceToUserSpace(presContext);

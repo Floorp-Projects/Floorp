@@ -652,7 +652,7 @@ class InlineFrameIterator
   private:
     void findNextFrame();
     JSObject* computeEnvironmentChain(Value envChainValue, MaybeReadFallback& fallback,
-                                      bool* hasCallObj = nullptr) const;
+                                      bool* hasInitialEnv = nullptr) const;
 
   public:
     InlineFrameIterator(JSContext* cx, const JitFrameIterator* iter);
@@ -694,7 +694,7 @@ class InlineFrameIterator
 
     template <class ArgOp, class LocalOp>
     void readFrameArgsAndLocals(JSContext* cx, ArgOp& argOp, LocalOp& localOp,
-                                JSObject** envChain, bool* hasCallObj,
+                                JSObject** envChain, bool* hasInitialEnv,
                                 Value* rval, ArgumentsObject** argsObj, Value* thisv,
                                 ReadFrameArgsBehavior behavior,
                                 MaybeReadFallback& fallback) const
@@ -704,7 +704,7 @@ class InlineFrameIterator
         // Read the env chain.
         if (envChain) {
             Value envChainValue = s.maybeRead(fallback);
-            *envChain = computeEnvironmentChain(envChainValue, fallback, hasCallObj);
+            *envChain = computeEnvironmentChain(envChainValue, fallback, hasInitialEnv);
         } else {
             s.skip();
         }
