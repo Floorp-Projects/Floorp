@@ -2,18 +2,21 @@
  * vim: set ts=8 sts=4 et sw=4 tw=99:
  */
 
-#ifdef XP_UNIX
 #include <fcntl.h>
 #include <stdio.h>
-#include <string.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <unistd.h>
 
 #include "jsfriendapi.h"
 #include "js/StructuredClone.h"
 #include "jsapi-tests/tests.h"
 #include "vm/ArrayBufferObject.h"
+
+#ifdef XP_WIN
+#  include <io.h>
+#  define GET_OS_FD(a) int(_get_osfhandle(a))
+#else
+#  include <unistd.h>
+#  define GET_OS_FD(a) (a)
+#endif
 
 const char test_data[] = "1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 const char test_filename[] = "temp-bug945152_MappedArrayBuffer";
@@ -52,6 +55,9 @@ BEGIN_TEST(testMappedArrayBuffer_bug945152)
     // Transfer mapped array buffer contents.
     CHECK(TestTransferObject());
 
+    // GC so we can remove the file we created.
+    GC(cx);
+
     test_file.remove();
 
     return true;
@@ -60,7 +66,7 @@ BEGIN_TEST(testMappedArrayBuffer_bug945152)
 JSObject* CreateNewObject(const int offset, const int length)
 {
     int fd = open(test_filename, O_RDONLY);
-    void* ptr = JS_CreateMappedArrayBufferContents(fd, offset, length);
+    void* ptr = JS_CreateMappedArrayBufferContents(GET_OS_FD(fd), offset, length);
     close(fd);
     if (!ptr)
         return nullptr;
@@ -103,7 +109,7 @@ bool TestCreateObject(uint32_t offset, uint32_t length)
 bool TestReleaseContents()
 {
     int fd = open(test_filename, O_RDONLY);
-    void* ptr = JS_CreateMappedArrayBufferContents(fd, 0, 12);
+    void* ptr = JS_CreateMappedArrayBufferContents(GET_OS_FD(fd), 0, 12);
     close(fd);
     if (!ptr)
         return false;
@@ -183,4 +189,5 @@ static void GC(JSContext* cx)
 }
 
 END_TEST(testMappedArrayBuffer_bug945152)
-#endif
+
+#undef GET_OS_FD
