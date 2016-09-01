@@ -53,7 +53,7 @@ interface Document : Node {
   Element? getElementById(DOMString elementId);
 
   [NewObject, Throws]
-  Element createElement(DOMString localName, optional ElementCreationOptions options);
+  Element createElement(DOMString localName, optional (ElementCreationOptions or DOMString) options);
   [NewObject, Throws]
   Element createElementNS(DOMString? namespace, DOMString qualifiedName, optional ElementCreationOptions options);
   [NewObject]
