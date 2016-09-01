@@ -1871,12 +1871,10 @@ nsContainerFrame::RenumberFrameAndDescendants(int32_t* aOrdinal,
   if (MAX_DEPTH_FOR_LIST_RENUMBERING < aDepth) {
     return false;
   }
-  // if the frame is a placeholder, then get the out of flow frame
-  nsIFrame* kid = nsPlaceholderFrame::GetRealFrameFor(this);
-  const nsStyleDisplay* display = kid->StyleDisplay();
+  const nsStyleDisplay* display = StyleDisplay();
 
   // drill down through any wrappers to the real frame
-  kid = GetContentInsertionFrame();
+  nsIFrame* kid = GetContentInsertionFrame();
   if (!kid) {
     return false;
   }
