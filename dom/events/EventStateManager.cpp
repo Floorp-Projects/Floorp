@@ -3860,7 +3860,6 @@ CreateMouseOrPointerWidgetEvent(WidgetMouseEvent* aMouseEvent,
       new WidgetPointerEvent(aMouseEvent->IsTrusted(), aMessage,
                              aMouseEvent->mWidget);
     newPointerEvent->mIsPrimary = sourcePointer->mIsPrimary;
-    newPointerEvent->pointerId = sourcePointer->pointerId;
     newPointerEvent->mWidth = sourcePointer->mWidth;
     newPointerEvent->mHeight = sourcePointer->mHeight;
     newPointerEvent->inputSource = sourcePointer->inputSource;
@@ -3882,6 +3881,7 @@ CreateMouseOrPointerWidgetEvent(WidgetMouseEvent* aMouseEvent,
   aNewEvent->pressure = aMouseEvent->pressure;
   aNewEvent->mPluginEvent = aMouseEvent->mPluginEvent;
   aNewEvent->inputSource = aMouseEvent->inputSource;
+  aNewEvent->pointerId = aMouseEvent->pointerId;
 }
 
 nsIFrame*
