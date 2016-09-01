@@ -7,6 +7,8 @@
 
 #include "nsContainerFrame.h"
 
+#include "mozilla/dom/HTMLDetailsElement.h"
+#include "mozilla/dom/HTMLSummaryElement.h"
 #include "nsAbsoluteContainingBlock.h"
 #include "nsIDocument.h"
 #include "nsPresContext.h"
@@ -1794,6 +1796,166 @@ nsContainerFrame::ResolvedOrientationIsVertical()
   }
   NS_NOTREACHED("unexpected -moz-orient value");
   return false;
+}
+
+// static
+bool
+nsContainerFrame::FrameStartsCounterScope(nsIFrame* aFrame)
+{
+  nsIContent* content = aFrame->GetContent();
+  if (!content || !content->IsHTMLElement())
+    return false;
+
+  nsIAtom* localName = content->NodeInfo()->NameAtom();
+  return localName == nsGkAtoms::ol ||
+         localName == nsGkAtoms::ul ||
+         localName == nsGkAtoms::dir ||
+         localName == nsGkAtoms::menu;
+}
+
+bool
+nsBlockFrame::RenumberLists(nsPresContext* aPresContext)
+{
+  if (!nsContainerFrame::FrameStartsCounterScope(this)) {
+    // If this frame doesn't start a counter scope then we don't need
+    // to renumber child list items.
+    return false;
+  }
+
+  MOZ_ASSERT(mContent->IsHTMLElement(),
+             "FrameStartsCounterScope should only return true for HTML elements");
+
+  // Setup initial list ordinal value
+  // XXX Map html's start property to counter-reset style
+  int32_t ordinal = 1;
+  int32_t increment;
+  if (mContent->IsHTMLElement(nsGkAtoms::ol) &&
+      mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::reversed)) {
+    increment = -1;
+  } else {
+    increment = 1;
+  }
+
+  nsGenericHTMLElement *hc = nsGenericHTMLElement::FromContent(mContent);
+  // Must be non-null, since FrameStartsCounterScope only returns true
+  // for HTML elements.
+  MOZ_ASSERT(hc, "How is mContent not HTML?");
+  const nsAttrValue* attr = hc->GetParsedAttr(nsGkAtoms::start);
+  if (attr && attr->Type() == nsAttrValue::eInteger) {
+    ordinal = attr->GetIntegerValue();
+  } else if (increment < 0) {
+    // <ol reversed> case, or some other case with a negative increment: count
+    // up the child list
+    ordinal = 0;
+    nsBlockFrame* block = static_cast<nsBlockFrame*>(FirstInFlow());
+    block->RenumberChildFrames(&ordinal, 0, -increment, true);
+  }
+
+  nsBlockFrame* block = static_cast<nsBlockFrame*>(FirstInFlow());
+  return block->RenumberChildFrames(&ordinal, 0, increment, false);
+}
+
+// add in a sanity check for absurdly deep frame trees.  See bug 42138
+// can't just use IsFrameTreeTooDeep() because that method has side effects we don't want
+#define MAX_DEPTH_FOR_LIST_RENUMBERING 200  // 200 open displayable tags is pretty unrealistic
+
+bool
+nsContainerFrame::RenumberFrameAndDescendants(int32_t* aOrdinal,
+                                              int32_t aDepth,
+                                              int32_t aIncrement,
+                                              bool aForCounting)
+{
+  NS_PRECONDITION(aOrdinal, "null params are immoral!");
+
+  // add in a sanity check for absurdly deep frame trees.  See bug 42138
+  if (MAX_DEPTH_FOR_LIST_RENUMBERING < aDepth) {
+    return false;
+  }
+  // if the frame is a placeholder, then get the out of flow frame
+  nsIFrame* kid = nsPlaceholderFrame::GetRealFrameFor(this);
+  const nsStyleDisplay* display = kid->StyleDisplay();
+
+  // drill down through any wrappers to the real frame
+  kid = GetContentInsertionFrame();
+  if (!kid) {
+    return false;
+  }
+
+  // Do not renumber list for summary elements.
+  if (HTMLDetailsElement::IsDetailsEnabled()) {
+    HTMLSummaryElement* summary =
+      HTMLSummaryElement::FromContent(kid->GetContent());
+    if (summary && summary->IsMainSummary()) {
+      return false;
+    }
+  }
+
+  bool kidRenumberedABullet = false;
+
+  // If the frame is a list-item and the frame implements our
+  // block frame API then get its bullet and set the list item
+  // ordinal.
+  if (NS_STYLE_DISPLAY_LIST_ITEM == display->mDisplay) {
+    // Make certain that the frame is a block frame in case
+    // something foreign has crept in.
+    nsBlockFrame* listItem = nsLayoutUtils::GetAsBlock(kid);
+    if (listItem) {
+      nsBulletFrame* bullet = listItem->GetBullet();
+      if (bullet) {
+        if (!aForCounting) {
+          bool changed;
+          *aOrdinal = bullet->SetListItemOrdinal(*aOrdinal, &changed, aIncrement);
+          if (changed) {
+            kidRenumberedABullet = true;
+
+            // The ordinal changed - mark the bullet frame, and any
+            // intermediate frames between it and the block (are there
+            // ever any?), dirty.
+            // The calling code will make the necessary FrameNeedsReflow
+            // call for the list ancestor.
+            bullet->AddStateBits(NS_FRAME_IS_DIRTY);
+            nsIFrame *f = bullet;
+            do {
+              nsIFrame *parent = f->GetParent();
+              parent->ChildIsDirty(f);
+              f = parent;
+            } while (f != listItem);
+          }
+        } else {
+          // We're only counting the number of children,
+          // not restyling them. Don't take |value|
+          // into account when incrementing the ordinal
+          // or dirty the bullet.
+          *aOrdinal += aIncrement;
+        }
+      }
+
+      // XXX temporary? if the list-item has child list-items they
+      // should be numbered too; especially since the list-item is
+      // itself (ASSUMED!) not to be a counter-resetter.
+      bool meToo = listItem->RenumberChildFrames(aOrdinal, aDepth + 1,
+                                                 aIncrement, aForCounting);
+      if (meToo) {
+        kidRenumberedABullet = true;
+      }
+    }
+  } else if (NS_STYLE_DISPLAY_BLOCK == display->mDisplay) {
+    if (FrameStartsCounterScope(kid)) {
+      // Don't bother recursing into a block frame that is a new
+      // counter scope. Any list-items in there will be handled by
+      // it.
+    } else {
+      // If the display=block element is a block frame then go ahead
+      // and recurse into it, as it might have child list-items.
+      nsBlockFrame* kidBlock = nsLayoutUtils::GetAsBlock(kid);
+      if (kidBlock) {
+        kidRenumberedABullet =
+          kidBlock->RenumberChildFrames(aOrdinal, aDepth + 1,
+                                        aIncrement, aForCounting);
+      }
+    }
+  }
+  return kidRenumberedABullet;
 }
 
 nsOverflowContinuationTracker::nsOverflowContinuationTracker(nsContainerFrame* aFrame,
