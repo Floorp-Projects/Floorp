@@ -1981,6 +1981,30 @@ nsContainerFrame::RenumberChildFrames(int32_t* aOrdinal,
   return renumbered;
 }
 
+nsresult
+nsContainerFrame::AttributeChanged(int32_t         aNameSpaceID,
+                                   nsIAtom*        aAttribute,
+                                   int32_t         aModType)
+{
+  nsresult rv = nsSplittableFrame::AttributeChanged(aNameSpaceID,
+                                                    aAttribute, aModType);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  if (nsGkAtoms::start == aAttribute ||
+      (nsGkAtoms::reversed == aAttribute &&
+       mContent->IsHTMLElement(nsGkAtoms::ol))) {
+
+    // XXX Not sure if this is necessary anymore
+    if (RenumberLists()) {
+      PresContext()->PresShell()->
+        FrameNeedsReflow(this, nsIPresShell::eStyleChange,
+                         NS_FRAME_HAS_DIRTY_CHILDREN);
+    }
+  }
+  return rv;
+}
+
 nsOverflowContinuationTracker::nsOverflowContinuationTracker(nsContainerFrame* aFrame,
                                                              bool              aWalkOOFFrames,
                                                              bool              aSkipOverflowContainerChildren)
