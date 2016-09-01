@@ -60,10 +60,10 @@ EqualURIs(nsIURI *aURI1, nsIURI *aURI2)
 }
 
 static bool
-DefinitelyEqualURIsAndPrincipal(css::URLValue* aURI1, css::URLValue* aURI2)
+MaybeUnresolvedURIEquals(css::URLValue *aURI1, css::URLValue *aURI2)
 {
-  return aURI1 == aURI2 ||
-         (aURI1 && aURI2 && aURI1->DefinitelyEqualURIsAndPrincipal(*aURI2));
+  return aURI1 == aURI2 ||    // handle null==null, and optimize
+         (aURI1 && aURI2 && aURI1->MaybeUnresolvedURIEquals(*aURI2));
 }
 
 static
@@ -3108,7 +3108,7 @@ nsStyleDisplay::CalcDifference(const nsStyleDisplay& aNewData) const
 {
   nsChangeHint hint = nsChangeHint(0);
 
-  if (!DefinitelyEqualURIsAndPrincipal(mBinding, aNewData.mBinding)
+  if (!MaybeUnresolvedURIEquals(mBinding, aNewData.mBinding)
       || mPosition != aNewData.mPosition
       || mDisplay != aNewData.mDisplay
       || mContain != aNewData.mContain
