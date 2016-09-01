@@ -68,6 +68,8 @@ WaveDataDecoder::Input(MediaRawData* aSample)
 {
   if (!DoDecode(aSample)) {
     mCallback->Error(MediaDataDecoderError::DECODE_ERROR);
+  } else {
+    mCallback->InputExhausted();
   }
   return NS_OK;
 }
