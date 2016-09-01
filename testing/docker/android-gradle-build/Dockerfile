@@ -1,12 +1,24 @@
-FROM          taskcluster/centos6-build-upd:0.1.3.20160222133000
+# TODO remove VOLUME below when the base image is updated next.
+FROM          taskcluster/centos6-build-upd:0.1.6.20160329195300
 MAINTAINER    Nick Alexander <nalexander@mozilla.com>
 
 # BEGIN ../desktop-build/Dockerfile
+
+# TODO remove when base image is updated
+VOLUME /home/worker/workspace
+VOLUME /home/worker/tooltool-cache
 
 # Add build scripts; these are the entry points from the taskcluster worker, and
 # operate on environment variables
 ADD             bin /home/worker/bin
 RUN             chmod +x /home/worker/bin/*
+
+# Add wrapper scripts for xvfb allowing tasks to easily retry starting up xvfb
+# %include testing/docker/recipes/xvfb.sh
+ADD topsrcdir/testing/docker/recipes/xvfb.sh /home/worker/scripts/xvfb.sh
+
+# Add configuration
+COPY            dot-config                    /home/worker/.config
 
 # Generate machine uuid file
 RUN dbus-uuidgen --ensure=/var/lib/dbus/machine-id
@@ -39,11 +51,14 @@ RUN yum upgrade -y
 # Install JDK and Sonatype Nexus.  Cribbed directly from
 # https://github.com/sonatype/docker-nexus/blob/fffd2c61b2368292040910c055cf690c8e76a272/oss/Dockerfile.
 
+# Install the screen package here to use with xvfb.
+# Move installation to base centos6-build image once Bug 1272629 is fixed
 RUN yum install -y \
   createrepo \
   curl \
   java-1.7.0-openjdk-devel \
   java-1.7.0-openjdk \
+  screen \
   sudo \
   tar \
   unzip \
@@ -77,3 +92,6 @@ RUN chmod +rx /build/tooltool.py
 
 # Back to the centos6-build workdir, matching desktop-build.
 WORKDIR /home/worker
+
+# Set a default command useful for debugging
+CMD ["/bin/bash", "--login"]
