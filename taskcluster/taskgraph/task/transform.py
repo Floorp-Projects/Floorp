@@ -5,10 +5,12 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import logging
+import itertools
 
 from . import base
 from .. import files_changed
 from ..util.python_path import find_object
+from ..util.templates import merge
 from ..util.yaml import load_yaml
 from ..transforms.base import TransformSequence, TransformConfig
 
@@ -31,17 +33,27 @@ class TransformTask(base.Task):
         transform.
 
         By default, this reads jobs from the `jobs` key, or from yaml files
-        named by `jobs-from`, but can be overridden in subclasses.  The
-        entities are read from mappings, and the keys to those mappings are
-        added in the `name` key of each entity.
+        named by `jobs-from`.  The entities are read from mappings, and the
+        keys to those mappings are added in the `name` key of each entity.
+
+        If there is a `job-defaults` config, then every job is merged with it.
+        This provides a simple way to set default values for all jobs of a
+        kind.  More complex defaults should be implemented with custom
+        transforms.
+
+        This method can be overridden in subclasses that need to perform more
+        complex calculations to generate the list of inputs.
         """
         def jobs():
-            for name, job in config.get('jobs', {}).iteritems():
+            defaults = config.get('job-defaults')
+            jobs = config.get('jobs', {}).iteritems()
+            jobs_from = itertools.chain.from_iterable(
+                load_yaml(path, filename).iteritems()
+                for filename in config.get('jobs-from', {}))
+            for name, job in itertools.chain(jobs, jobs_from):
+                if defaults:
+                    job = merge(defaults, job)
                 yield name, job
-            for filename in config.get('jobs-from', {}):
-                jobs = load_yaml(path, filename)
-                for name, job in jobs.iteritems():
-                    yield name, job
 
         for name, job in jobs():
             job['name'] = name
