@@ -182,14 +182,28 @@ Tools.jsdebugger = {
   }
 };
 
-if (Services.prefs.getBoolPref("devtools.debugger.new-debugger-frontend")) {
-  const NewDebuggerPanel = require("devtools/client/debugger/new/panel").DebuggerPanel;
+function switchDebugger() {
+  if (Services.prefs.getBoolPref("devtools.debugger.new-debugger-frontend")) {
+    const NewDebuggerPanel = require("devtools/client/debugger/new/panel").DebuggerPanel;
 
-  Tools.jsdebugger.url = "chrome://devtools/content/debugger/new/index.html";
-  Tools.jsdebugger.build = function (iframeWindow, toolbox) {
-    return new NewDebuggerPanel(iframeWindow, toolbox);
-  };
+    Tools.jsdebugger.url = "chrome://devtools/content/debugger/new/index.html";
+    Tools.jsdebugger.build = function (iframeWindow, toolbox) {
+      return new NewDebuggerPanel(iframeWindow, toolbox);
+    };
+  } else {
+    Tools.jsdebugger.url = "chrome://devtools/content/debugger/debugger.xul";
+    Tools.jsdebugger.build = function (iframeWindow, toolbox) {
+      return new DebuggerPanel(iframeWindow, toolbox);
+    };
+  }
 }
+switchDebugger();
+
+Services.prefs.addObserver(
+  "devtools.debugger.new-debugger-frontend",
+  { observe: switchDebugger },
+  false
+);
 
 Tools.styleEditor = {
   id: "styleeditor",

@@ -19,18 +19,26 @@ interface nsILoginManagerPrompter : nsISupports {
    *        resulting in a need to prompt them for something. The prompt
    *        will be associated with this window (or, if a notification bar
    *        is being used, topmost opener in some cases).
+   *
+   *        If this window is a content window, the corresponding window and browser
+   *        elements will be calculated. If this window is a chrome window, the
+   *        corresponding browser element needs to be set using setBrowser.
    */
   void init(in nsIDOMWindow aWindow);
 
   /**
-   * If the caller knows which browser this prompter is being created for,
-   * they can call this function to avoid having to calculate it from the
-   * window passed to init.
-   *
-   * @param aBrowser the <browser> to use for this prompter.
-   * @param aOpener the opener to use for this prompter.
+   * The browser this prompter is being created for.
+   * This is required if the init function received a chrome window as argument.
    */
-  void setE10sData(in nsIDOMElement aBrowser, in nsIDOMWindow aOpener);
+  attribute nsIDOMElement browser;
+
+  /**
+   * The opener that was used to open the window passed to init.
+   * The opener can be used to determine in which window the prompt
+   * should be shown. Must be a content window that is not a frame window,
+   * make sure to pass the top window using e.g. window.top.
+   */
+  attribute nsIDOMWindow opener;
 
   /**
    * Ask the user if they want to save a login (Yes, Never, Not Now)

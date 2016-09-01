@@ -53,7 +53,6 @@ WorkerGlobalScope implements ImageBitmapFactories;
 
 // Mozilla extensions
 partial interface WorkerGlobalScope {
-  attribute EventHandler onclose;
 
   void dump(optional DOMString str);
 

@@ -30,7 +30,7 @@ Tests of DOM Worker terminate feature
 
   function messageListener(event) {
     is(event.data, "Still alive!", "Correct message!");
-    if (messageCount++ == 20) {
+    if (++messageCount == 20) {
       ok(worker.onmessage === messageListener,
          "Correct listener before terminate");
 
@@ -82,7 +82,7 @@ Tests of DOM Worker terminate feature
   }
 
   function testCount() {
-    is(messageCount, 21, "Received another message after terminated!");
+    is(messageCount, 20, "Received another message after terminated!");
     if (intervalCount++ == 5) {
       clearInterval(interval);
       SimpleTest.finish();

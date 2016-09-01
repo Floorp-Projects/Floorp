@@ -257,8 +257,8 @@ LoginManagerPrompter.prototype = {
 
   // Whether we are in private browsing mode
   get _inPrivateBrowsing() {
-    if (this._window) {
-      return PrivateBrowsingUtils.isContentWindowPrivate(this._window);
+    if (this._chromeWindow) {
+      return PrivateBrowsingUtils.isWindowPrivate(this._chromeWindow);
     }
     // If we don't that we're in private browsing mode if the caller did
     // not provide a window.  The callers which really care about this
@@ -290,7 +290,7 @@ LoginManagerPrompter.prototype = {
       aResult.value = aDefaultText;
     }
 
-    return this._promptService.prompt(this._window,
+    return this._promptService.prompt(this._chromeWindow,
            aDialogTitle, aText, aResult, null, {});
   },
 
@@ -352,7 +352,7 @@ LoginManagerPrompter.prototype = {
       }
     }
 
-    var ok = this._promptService.promptUsernameAndPassword(this._window,
+    var ok = this._promptService.promptUsernameAndPassword(this._chromeWindow,
                 aDialogTitle, aText, aUsername, aPassword,
                 checkBoxLabel, checkBox);
 
@@ -443,7 +443,7 @@ LoginManagerPrompter.prototype = {
       }
     }
 
-    var ok = this._promptService.promptPassword(this._window, aDialogTitle,
+    var ok = this._promptService.promptPassword(this._chromeWindow, aDialogTitle,
                                                 aText, aPassword,
                                                 checkBoxLabel, checkBox);
 
@@ -563,9 +563,9 @@ LoginManagerPrompter.prototype = {
 
     var ok = canAutologin;
     if (!ok) {
-      if (this._window)
-        PromptUtils.fireDialogEvent(this._window, "DOMWillOpenModalDialog", this._browser);
-      ok = this._promptService.promptAuth(this._window,
+      if (this._chromeWindow)
+        PromptUtils.fireDialogEvent(this._chromeWindow, "DOMWillOpenModalDialog", this._browser);
+      ok = this._promptService.promptAuth(this._chromeWindow,
                                           aChannel, aLevel, aAuthInfo,
                                           checkboxLabel, checkbox);
     }
@@ -679,20 +679,27 @@ LoginManagerPrompter.prototype = {
   /* ---------- nsILoginManagerPrompter prompts ---------- */
 
 
-
   init : function (aWindow, aFactory) {
-    this._window = aWindow;
-    this._factory = aFactory || null;
-    this._browser = null;
+    if (aWindow instanceof Ci.nsIDOMChromeWindow) {
+      this._chromeWindow = aWindow;
+      // needs to be set explicitly using setBrowser
+      this._browser = null;
+    } else {
+      let {win, browser} = this._getChromeWindow(aWindow);
+      this._chromeWindow = win;
+      this._browser = browser;
+    }
     this._opener = null;
+    this._factory = aFactory || null;
 
     this.log("===== initialized =====");
   },
 
-  setE10sData : function (aBrowser, aOpener) {
-    if (!(this._window instanceof Ci.nsIDOMChromeWindow))
-      throw new Error("Unexpected call");
+  set browser(aBrowser) {
     this._browser = aBrowser;
+  },
+
+  set opener(aOpener) {
     this._opener = aOpener;
   },
 
@@ -1121,7 +1128,7 @@ LoginManagerPrompter.prototype = {
                                     "notNowButtonText");
 
     this.log("Prompting user to save/ignore login");
-    var userChoice = this._promptService.confirmEx(this._window,
+    var userChoice = this._promptService.confirmEx(this._chromeWindow,
                                         dialogTitle, dialogText,
                                         buttonFlags, rememberButtonText,
                                         notNowButtonText, neverButtonText,
@@ -1253,7 +1260,7 @@ LoginManagerPrompter.prototype = {
                                 "passwordChangeTitle");
 
     // returns 0 for yes, 1 for no.
-    var ok = !this._promptService.confirmEx(this._window,
+    var ok = !this._promptService.confirmEx(this._chromeWindow,
                             dialogTitle, dialogText, buttonFlags,
                             null, null, null,
                             null, {});
@@ -1286,7 +1293,7 @@ LoginManagerPrompter.prototype = {
 
     // If user selects ok, outparam.value is set to the index
     // of the selected username.
-    var ok = this._promptService.select(this._window,
+    var ok = this._promptService.select(this._chromeWindow,
                             dialogTitle, dialogText,
                             usernames.length, usernames,
                             selectedIndex);
@@ -1331,86 +1338,40 @@ LoginManagerPrompter.prototype = {
     this._pwmgr.modifyLogin(login, propBag);
   },
 
-
   /**
-   * Given a content DOM window, returns the chrome window it's in.
+   * Given a content DOM window, returns the chrome window and browser it's in.
    */
   _getChromeWindow: function (aWindow) {
-    // In e10s, aWindow may already be a chrome window.
-    if (aWindow instanceof Ci.nsIDOMChromeWindow)
-      return aWindow;
-    var chromeWin = aWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                           .getInterface(Ci.nsIWebNavigation)
-                           .QueryInterface(Ci.nsIDocShell)
-                           .chromeEventHandler.ownerDocument.defaultView;
-    return chromeWin;
+    let windows = Services.wm.getEnumerator(null);
+    while (windows.hasMoreElements()) {
+      let win = windows.getNext();
+      let browser = win.gBrowser.getBrowserForContentWindow(aWindow);
+      if (browser) {
+        return { win, browser };
+      }
+    }
+    return null;
   },
-
 
   _getNotifyWindow: function () {
+    // Some sites pop up a temporary login window, which disappears
+    // upon submission of credentials. We want to put the notification
+    // bar in the opener window if this seems to be happening.
+    if (this._opener) {
+      let chromeDoc = this._chromeWindow.document.documentElement;
 
-    try {
-      // Get topmost window, in case we're in a frame.
-      var notifyWin = this._window.top;
-      var isE10s = (notifyWin instanceof Ci.nsIDOMChromeWindow);
-      var useOpener = false;
-
-      // Some sites pop up a temporary login window, which disappears
-      // upon submission of credentials. We want to put the notification
-      // bar in the opener window if this seems to be happening.
-      if (notifyWin.opener) {
-        var chromeDoc = this._getChromeWindow(notifyWin).
-                             document.documentElement;
-
-        var hasHistory;
-        if (isE10s) {
-          if (!this._browser)
-            throw new Error("Expected a browser in e10s");
-          hasHistory = this._browser.canGoBack;
-        } else {
-          var webnav = notifyWin.
-                       QueryInterface(Ci.nsIInterfaceRequestor).
-                       getInterface(Ci.nsIWebNavigation);
-          hasHistory = webnav.sessionHistory.count > 1;
-        }
-
-        // Check to see if the current window was opened with chrome
-        // disabled, and if so use the opener window. But if the window
-        // has been used to visit other pages (ie, has a history),
-        // assume it'll stick around and *don't* use the opener.
-        if (chromeDoc.getAttribute("chromehidden") && !hasHistory) {
-          this.log("Using opener window for notification bar.");
-          notifyWin = notifyWin.opener;
-          useOpener = true;
-        }
+      // Check to see if the current window was opened with chrome
+      // disabled, and if so use the opener window. But if the window
+      // has been used to visit other pages (ie, has a history),
+      // assume it'll stick around and *don't* use the opener.
+      if (chromeDoc.getAttribute("chromehidden") && !this._browser.canGoBack) {
+        this.log("Using opener window for notification bar.");
+        return this._getChromeWindow(this._opener);
       }
-
-      let browser;
-      if (useOpener && this._opener && isE10s) {
-        // In e10s, we have to reconstruct the opener browser from
-        // the CPOW passed in the message (and then passed to us in
-        // setE10sData).
-        // NB: notifyWin is now the chrome window for the opening
-        // window.
-
-        browser = notifyWin.gBrowser.getBrowserForContentWindow(this._opener);
-      } else if (isE10s) {
-        browser = this._browser;
-      } else {
-        var chromeWin = this._getChromeWindow(notifyWin).wrappedJSObject;
-        browser = chromeWin.gBrowser
-                           .getBrowserForDocument(notifyWin.top.document);
-      }
-
-      return { notifyWin: notifyWin, browser: browser };
-
-    } catch (e) {
-      // If any errors happen, just assume no notification box.
-      this.log("Unable to get notify window: " + e.fileName + ":" + e.lineNumber + ": " + e.message);
-      return null;
     }
-  },
 
+    return { win: this._chromeWindow, browser: this._browser };
+  },
 
   /**
    * Returns the popup notification to this prompter,
@@ -1420,13 +1381,10 @@ LoginManagerPrompter.prototype = {
     let popupNote = null;
 
     try {
-      let { notifyWin } = this._getNotifyWindow();
+      let { win: notifyWin } = this._getNotifyWindow();
 
-      // Get the chrome window for the content window we're using.
       // .wrappedJSObject needed here -- see bug 422974 comment 5.
-      let chromeWin = this._getChromeWindow(notifyWin).wrappedJSObject;
-
-      popupNote = chromeWin.PopupNotifications;
+      popupNote = notifyWin.wrappedJSObject.PopupNotifications;
     } catch (e) {
       this.log("Popup notifications not available on window");
     }
@@ -1443,13 +1401,10 @@ LoginManagerPrompter.prototype = {
     let notifyBox = null;
 
     try {
-      let { notifyWin } = this._getNotifyWindow();
+      let { win: notifyWin } = this._getNotifyWindow();
 
-      // Get the chrome window for the content window we're using.
       // .wrappedJSObject needed here -- see bug 422974 comment 5.
-      let chromeWin = this._getChromeWindow(notifyWin).wrappedJSObject;
-
-      notifyBox = chromeWin.getNotificationBox(notifyWin);
+      notifyBox = notifyWin.wrappedJSObject.getNotificationBox(notifyWin);
     } catch (e) {
       this.log("Notification bars not available on window");
     }

@@ -331,7 +331,8 @@ interface nsIDOMWindowUtils : nsISupports {
                          [optional] in float aPressure,
                          [optional] in unsigned short aInputSourceArg,
                          [optional] in boolean aIsDOMEventSynthesized,
-                         [optional] in boolean aIsWidgetEventSynthesized);
+                         [optional] in boolean aIsWidgetEventSynthesized,
+                         [optional] in long aButtons);
 
 
   /** Synthesize a pointer event. The event types supported are:
@@ -451,7 +452,8 @@ interface nsIDOMWindowUtils : nsISupports {
                               [optional] in float aPressure,
                               [optional] in unsigned short aInputSourceArg,
                               [optional] in boolean aIsDOMEventSynthesized,
-                              [optional] in boolean aIsWidgetEventSynthesized);
+                              [optional] in boolean aIsWidgetEventSynthesized,
+                              [optional] in long aButtons);
 
   /** The same as sendPointerEvent but ensures that the event
    *  is dispatched to this DOM window or one of its children.
@@ -1950,6 +1952,19 @@ interface nsIDOMWindowUtils : nsISupports {
    * can be used by tests to force execution of the interrupted reflow codepaths.
    */
   void forceReflowInterrupt();
+
+  const long MOUSE_BUTTONS_NO_BUTTON = 0x00;
+  const long MOUSE_BUTTONS_LEFT_BUTTON = 0x01;
+  const long MOUSE_BUTTONS_RIGHT_BUTTON = 0x02;
+  const long MOUSE_BUTTONS_MIDDLE_BUTTON = 0x04;
+  // Typically, "back" button being left side of 5-button
+  // mice, see "buttons" attribute document of DOM3 Events.
+  const long MOUSE_BUTTONS_4TH_BUTTON = 0x08;
+  // Typically, "forward" button being right side of 5-button
+  // mice, see "buttons" attribute document of DOM3 Events.
+  const long MOUSE_BUTTONS_5TH_BUTTON = 0x10;
+  // Buttons are not specified, will be calculated from |aButton|.
+  const long MOUSE_BUTTONS_NOT_SPECIFIED = -1;
 };
 
 [scriptable, uuid(c694e359-7227-4392-a138-33c0cc1f15a6)]

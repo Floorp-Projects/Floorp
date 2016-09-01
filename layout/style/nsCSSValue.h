@@ -378,8 +378,14 @@ enum nsCSSUnit {
   eCSSUnit_ShortHexColor       = 84,   // (nscolor) an opaque RGBA value specified as #rgb
   eCSSUnit_HexColorAlpha       = 85,   // (nscolor) an opaque RGBA value specified as #rrggbbaa
   eCSSUnit_ShortHexColorAlpha  = 86,   // (nscolor) an opaque RGBA value specified as #rgba
-  eCSSUnit_PercentageRGBColor  = 87,   // (nsCSSValueFloatColor*)
-  eCSSUnit_PercentageRGBAColor = 88,   // (nsCSSValueFloatColor*)
+  eCSSUnit_PercentageRGBColor  = 87,   // (nsCSSValueFloatColor*) an opaque
+                                       // RGBA value specified as rgb() with
+                                       // percentage components. Values over
+                                       // 100% are allowed.
+  eCSSUnit_PercentageRGBAColor = 88,   // (nsCSSValueFloatColor*) an RGBA value
+                                       // specified as rgba() with percentage
+                                       // components. Values over 100% are
+                                       // allowed.
   eCSSUnit_HSLColor            = 89,   // (nsCSSValueFloatColor*)
   eCSSUnit_HSLAColor           = 90,   // (nsCSSValueFloatColor*)
 
@@ -726,6 +732,12 @@ public:
 
   nscoord GetFixedLength(nsPresContext* aPresContext) const;
   nscoord GetPixelLength() const;
+
+  nsCSSValueFloatColor* GetFloatColorValue() const
+  {
+    MOZ_ASSERT(IsFloatColorUnit(), "not a float color value");
+    return mValue.mFloatColor;
+  }
 
   void Reset()  // sets to null
   {
@@ -1687,6 +1699,10 @@ public:
   bool operator==(nsCSSValueFloatColor& aOther) const;
 
   nscolor GetColorValue(nsCSSUnit aUnit) const;
+  float Comp1() const { return mComponent1; }
+  float Comp2() const { return mComponent2; }
+  float Comp3() const { return mComponent3; }
+  float Alpha() const { return mAlpha; }
   bool IsNonTransparentColor() const;
 
   void AppendToString(nsCSSUnit aUnit, nsAString& aResult) const;
@@ -1696,11 +1712,20 @@ public:
   NS_INLINE_DECL_REFCOUNTING(nsCSSValueFloatColor)
 
 private:
-  // FIXME: We should not be clamping specified RGB color components.
-  float mComponent1;  // 0..1 for RGB, 0..360 for HSL
-  float mComponent2;  // 0..1
-  float mComponent3;  // 0..1
-  float mAlpha;       // 0..1
+  // The range of each component is.
+  // [0, 1] for HSLColor and HSLAColor. mComponent1 for hue, mComponent2 for
+  //                                    saturation, mComponent3 for lightness.
+  //                                    [0, 1] for saturation and lightness
+  //                                    represents [0%, 100%].
+  //                                    [0, 1] for hue represents
+  //                                    [0deg, 360deg].
+  //
+  // [-float::max(), float::max()] for PercentageRGBColor, PercentageRGBAColor.
+  //                               1.0 means 100%.
+  float mComponent1;
+  float mComponent2;
+  float mComponent3;
+  float mAlpha;
 
   nsCSSValueFloatColor(const nsCSSValueFloatColor& aOther) = delete;
   nsCSSValueFloatColor& operator=(const nsCSSValueFloatColor& aOther)

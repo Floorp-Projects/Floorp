@@ -18,6 +18,7 @@
 #include "nsIObserverService.h"
 #include "nsISimpleEnumerator.h"
 #include "nsIToolkitChromeRegistry.h"
+#include "nsIToolkitProfileService.h"
 #include "nsIXULRuntime.h"
 
 #include "nsAppDirectoryServiceDefs.h"
@@ -1184,6 +1185,26 @@ nsXREDirProvider::DoStartup()
         mode = 2;
     }
     mozilla::Telemetry::Accumulate(mozilla::Telemetry::SAFE_MODE_USAGE, mode);
+
+    // Telemetry about number of profiles.
+    nsCOMPtr<nsIToolkitProfileService> profileService =
+      do_GetService("@mozilla.org/toolkit/profile-service;1");
+    if (profileService) {
+      nsCOMPtr<nsISimpleEnumerator> profiles;
+      rv = profileService->GetProfiles(getter_AddRefs(profiles));
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+
+      uint32_t count = 0;
+      nsCOMPtr<nsISupports> profile;
+      while (NS_SUCCEEDED(profiles->GetNext(getter_AddRefs(profile)))) {
+        ++count;
+      }
+
+      mozilla::Telemetry::Accumulate(mozilla::Telemetry::NUMBER_OF_PROFILES,
+                                     count);
+    }
 
     obsSvc->NotifyObservers(nullptr, "profile-initial-state", nullptr);
 

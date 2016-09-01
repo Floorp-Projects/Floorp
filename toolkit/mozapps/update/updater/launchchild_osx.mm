@@ -34,14 +34,14 @@ void LaunchChild(int argc, const char** argv)
 
   @try {
     NSString* launchPath = [NSString stringWithUTF8String:argv[0]];
-    NSMutableArray* arguments = [NSMutableArray arrayWithCapacity:argc];
+    NSMutableArray* arguments = [NSMutableArray arrayWithCapacity:argc - 1];
     for (int i = 1; i < argc; i++) {
       [arguments addObject:[NSString stringWithUTF8String:argv[i]]];
     }
     [NSTask launchedTaskWithLaunchPath:launchPath
                              arguments:arguments];
   } @catch (NSException* e) {
-    // Ignore any exception.
+    NSLog(@"%@: %@", e.name, e.reason);
   }
 }
 
