@@ -12,23 +12,21 @@ import android.widget.TextView;
 
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.db.BrowserContract;
-import org.mozilla.gecko.favicons.Favicons;
-import org.mozilla.gecko.home.UpdateViewFaviconLoadedListener;
+import org.mozilla.gecko.icons.IconCallback;
+import org.mozilla.gecko.icons.IconResponse;
+import org.mozilla.gecko.icons.Icons;
 import org.mozilla.gecko.widget.FaviconView;
 
-import java.util.EnumSet;
+import java.util.concurrent.Future;
 
-class TopSitesCard extends RecyclerView.ViewHolder {
+class TopSitesCard extends RecyclerView.ViewHolder implements IconCallback {
     private final FaviconView faviconView;
 
     private final TextView title;
     private final View menuButton;
-
-    private final UpdateViewFaviconLoadedListener mFaviconListener;
+    private Future<IconResponse> ongoingIconLoad;
 
     private String url;
-
-    private int mLoadFaviconJobId = Favicons.NOT_LOADING;
 
     public TopSitesCard(CardView card) {
         super(card);
@@ -37,8 +35,6 @@ class TopSitesCard extends RecyclerView.ViewHolder {
 
         title = (TextView) card.findViewById(R.id.title);
         menuButton = card.findViewById(R.id.menu);
-
-        mFaviconListener = new UpdateViewFaviconLoadedListener(faviconView);
     }
 
     void bind(Cursor cursor) {
@@ -46,8 +42,19 @@ class TopSitesCard extends RecyclerView.ViewHolder {
 
         title.setText(cursor.getString(cursor.getColumnIndexOrThrow(BrowserContract.Combined.TITLE)));
 
-        Favicons.cancelFaviconLoad(mLoadFaviconJobId);
+        if (ongoingIconLoad != null) {
+            ongoingIconLoad.cancel(true);
+        }
 
-        mLoadFaviconJobId = Favicons.getSizedFaviconForPageFromLocal(faviconView.getContext(), url, mFaviconListener);
+        ongoingIconLoad = Icons.with(itemView.getContext())
+                .pageUrl(url)
+                .skipNetwork()
+                .build()
+                .execute(this);
+    }
+
+    @Override
+    public void onIconResponse(IconResponse response) {
+        faviconView.updateImage(response);
     }
 }

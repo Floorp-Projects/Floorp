@@ -486,7 +486,6 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'home/TopSitesPanel.java',
     'home/TopSitesThumbnailView.java',
     'home/TwoLinePageRow.java',
-    'home/UpdateViewFaviconLoadedListener.java',
     'icons/decoders/FaviconDecoder.java',
     'icons/decoders/ICODecoder.java',
     'icons/decoders/IconDirectoryEntry.java',
