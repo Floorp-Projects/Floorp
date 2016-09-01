@@ -3229,9 +3229,11 @@ CheckVarNameConflictsInEnv(JSContext* cx, HandleScript script, HandleObject obj)
         return true;
     }
 
-    if (env->isSyntactic() && !env->isGlobal() && env->scope().kind() == ScopeKind::Catch) {
-        // Annex B.3.5 says 'var' declarations with the same name as catch
-        // parameters are allowed.
+    if (env->isSyntactic() && !env->isGlobal() && env->scope().kind() == ScopeKind::SimpleCatch) {
+        // Annex B.3.5 allows redeclaring simple (non-destructured) catch
+        // parameters with var declarations, except when it appears in a
+        // for-of. The for-of allowance is computed in
+        // Parser::isVarRedeclaredInEval.
         return true;
     }
 
@@ -3249,8 +3251,6 @@ bool
 js::CheckEvalDeclarationConflicts(JSContext* cx, HandleScript script,
                                   HandleObject scopeChain, HandleObject varObj)
 {
-    // We don't need to check body-level lexical bindings for conflict. Eval
-    // scripts always execute under their own lexical scope.
     if (!script->bodyScope()->as<EvalScope>().hasBindings())
         return true;
 

@@ -39,7 +39,7 @@ function fireDrop(element, shouldAllowDrop, shouldAllowOnlyChromeDrop) {
 
   ds.startDragSession();
 
-  var event = document.createEvent("DragEvents");
+  var event = document.createEvent("DragEvent");
   event.initDragEvent("dragover", true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null, dataTransfer);
   fireEvent(element, event);
 
@@ -47,7 +47,7 @@ function fireDrop(element, shouldAllowDrop, shouldAllowOnlyChromeDrop) {
   is(ds.getCurrentSession().onlyChromeDrop, shouldAllowOnlyChromeDrop,
      "Unexpected .onlyChromeDrop");
 
-  event = document.createEvent("DragEvents");
+  event = document.createEvent("DragEvent");
   event.initDragEvent("drop", true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null, dataTransfer);
   fireEvent(element, event);
 

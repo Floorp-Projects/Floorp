@@ -286,8 +286,8 @@ nsCaseTransformTextRunFactory::TransformString(
     nsTArray<RefPtr<nsTransformedCharStyle>>* aStyleArray)
 {
   bool auxiliaryOutputArrays = aCanBreakBeforeArray && aStyleArray;
-  NS_PRECONDITION(!auxiliaryOutputArrays || aTextRun,
-                  "text run must be provided to use aux output arrays");
+  MOZ_ASSERT(!auxiliaryOutputArrays || aTextRun,
+      "text run must be provided to use aux output arrays");
 
   uint32_t length = aString.Length();
   const char16_t* str = aString.BeginReading();

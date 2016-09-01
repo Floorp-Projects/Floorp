@@ -1,0 +1,109 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=885359
+-->
+<head>
+  <title>Test for Bug 885359</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=885359">Mozilla Bug 343444</a>
+<p id="display"></p>
+<form>
+  <input type="radio" id='radio1'/><br/>
+
+  <input type="radio" id="g1radio1" name="group1"/>
+  <input type="radio" id="g1radio2" name="group1"/></br>
+  <input type="radio" id="g1radio3" name="group1"/></br>
+
+  <input type="radio" id="g2radio1" name="group2"/>
+  <input type="radio" id="g2radio2" name="group2" checked/></br>
+</form>
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+var radio1 = document.getElementById("radio1");
+var g1radio1 = document.getElementById("g1radio1");
+var g1radio2 = document.getElementById("g1radio2");
+var g1radio3 = document.getElementById("g1radio3");
+var g2radio1 = document.getElementById("g2radio1");
+var g2radio2 = document.getElementById("g2radio2");
+
+SimpleTest.waitForFocus(function() {
+  test();
+  SimpleTest.finish();
+});
+
+function verifyIndeterminateState(aElement, aIsIndeterminate, aMessage) {
+  is(aElement.mozMatchesSelector(':indeterminate'), aIsIndeterminate, aMessage);
+}
+
+function test() {
+  // Initial State.
+  verifyIndeterminateState(radio1, true,
+    "Unchecked radio in its own group (no name attribute)");
+  verifyIndeterminateState(g1radio1, true, "No selected radio in its group");
+  verifyIndeterminateState(g1radio2, true, "No selected radio in its group");
+  verifyIndeterminateState(g1radio3, true, "No selected radio in its group");
+  verifyIndeterminateState(g2radio1, false, "Selected radio in its group");
+  verifyIndeterminateState(g2radio2, false, "Selected radio in its group");
+
+  // Selecting radio buttion.
+  g1radio1.checked = true;
+  verifyIndeterminateState(g1radio1, false,
+    "Selecting a radio should affect all radios in the group");
+  verifyIndeterminateState(g1radio2, false,
+    "Selecting a radio should affect all radios in the group");
+  verifyIndeterminateState(g1radio3, false,
+    "Selecting a radio should affect all radios in the group");
+
+  // Changing the selected radio button.
+  g1radio3.checked = true;
+  verifyIndeterminateState(g1radio1, false,
+    "Selecting a radio should affect all radios in the group");
+  verifyIndeterminateState(g1radio2, false,
+    "Selecting a radio should affect all radios in the group");
+  verifyIndeterminateState(g1radio3, false,
+    "Selecting a radio should affect all radios in the group");
+
+  // Deselecting radio button.
+  g2radio2.checked = false;
+  verifyIndeterminateState(g2radio1, true,
+    "Deselecting a radio should affect all radios in the group");
+  verifyIndeterminateState(g2radio2, true,
+    "Deselecting a radio should affect all radios in the group");
+
+  // Move a selected radio button to another group.
+  g1radio3.name = "group2";
+
+  // The radios' state in the original group becomes indeterminated.
+  verifyIndeterminateState(g1radio1, true,
+    "Removing a radio from a group should affect all radios in the group");
+  verifyIndeterminateState(g1radio2, true,
+    "Removing a radio from a group should affect all radios in the group");
+
+  // The radios' state in the new group becomes determinated.
+  verifyIndeterminateState(g1radio3, false,
+    "Adding a radio from a group should affect all radios in the group");
+  verifyIndeterminateState(g2radio1, false,
+    "Adding a radio from a group should affect all radios in the group");
+  verifyIndeterminateState(g2radio2, false,
+    "Adding a radio from a group should affect all radios in the group");
+
+  // Change input type to 'text'.
+  g1radio3.type = "text";
+  verifyIndeterminateState(g1radio3, false,
+    "Input type text does not have an indeterminate state");
+  verifyIndeterminateState(g2radio1, true,
+    "Changing input type should affect all radios in the group");
+  verifyIndeterminateState(g2radio2, true,
+    "Changing input type should affect all radios in the group");
+}
+</script>
+</pre>
+</body>
+</html>
+

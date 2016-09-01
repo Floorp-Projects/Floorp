@@ -78,7 +78,7 @@
 
     function* enterStringIntoFindField(aString) {
       for (let i = 0; i < aString.length; i++) {      
-        let event = document.createEvent("KeyEvents");
+        let event = document.createEvent("KeyboardEvent");
         let promise = new Promise(resolve => {
           let listener = {
             onFindResult: function() {

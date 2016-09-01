@@ -20,7 +20,7 @@ function failingOCSPResponder() {
 }
 
 function start_ocsp_responder(expectedCertNames, expectedPaths) {
-  return startOCSPResponder(SERVER_PORT, "www.example.com", [],
+  return startOCSPResponder(SERVER_PORT, "www.example.com",
                             "test_ocsp_url", expectedCertNames, expectedPaths);
 }
 

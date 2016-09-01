@@ -6,6 +6,7 @@
 
 #include "PresentationRequest.h"
 
+#include "AvailabilityCollection.h"
 #include "ControllerConnectionCollection.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/dom/PresentationRequestBinding.h"
@@ -23,12 +24,10 @@
 #include "nsServiceManagerUtils.h"
 #include "PresentationAvailability.h"
 #include "PresentationCallbacks.h"
+#include "PresentationLog.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
-
-NS_IMPL_CYCLE_COLLECTION_INHERITED(PresentationRequest, DOMEventTargetHelper,
-                                   mAvailability)
 
 NS_IMPL_ADDREF_INHERITED(PresentationRequest, DOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(PresentationRequest, DOMEventTargetHelper)
@@ -107,11 +106,6 @@ PresentationRequest::~PresentationRequest()
 bool
 PresentationRequest::Init()
 {
-  mAvailability = PresentationAvailability::Create(GetOwner());
-  if (NS_WARN_IF(!mAvailability)) {
-    return false;
-  }
-
   return true;
 }
 
@@ -317,6 +311,8 @@ PresentationRequest::FindOrCreatePresentationConnection(
 already_AddRefed<Promise>
 PresentationRequest::GetAvailability(ErrorResult& aRv)
 {
+  PRES_DEBUG("%s:id[%s]\n", __func__,
+             NS_ConvertUTF16toUTF8(mUrl).get());
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(GetOwner());
   if (NS_WARN_IF(!global)) {
     aRv.Throw(NS_ERROR_UNEXPECTED);
@@ -345,8 +341,50 @@ PresentationRequest::GetAvailability(ErrorResult& aRv)
     return promise.forget();
   }
 
-  promise->MaybeResolve(mAvailability);
+  FindOrCreatePresentationAvailability(promise);
+
   return promise.forget();
+}
+
+void
+PresentationRequest::FindOrCreatePresentationAvailability(RefPtr<Promise>& aPromise)
+{
+  MOZ_ASSERT(aPromise);
+
+  if (NS_WARN_IF(!GetOwner())) {
+    aPromise->MaybeReject(NS_ERROR_DOM_OPERATION_ERR);
+    return;
+  }
+
+  AvailabilityCollection* collection = AvailabilityCollection::GetSingleton();
+  if (NS_WARN_IF(!collection)) {
+    aPromise->MaybeReject(NS_ERROR_DOM_OPERATION_ERR);
+    return;
+  }
+
+  RefPtr<PresentationAvailability> availability =
+    collection->Find(GetOwner()->WindowID(), mUrl);
+
+  if (!availability) {
+    availability = PresentationAvailability::Create(GetOwner(), mUrl, aPromise);
+  } else {
+    PRES_DEBUG(">resolve with same object:id[%s]\n",
+               NS_ConvertUTF16toUTF8(mUrl).get());
+
+    // Fetching cached available devices is asynchronous in our implementation,
+    // we need to ensure the promise is resolved in order.
+    if (availability->IsCachedValueReady()) {
+      aPromise->MaybeResolve(availability);
+      return;
+    }
+
+    availability->EnqueuePromise(aPromise);
+  }
+
+  if (!availability) {
+    aPromise->MaybeReject(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+    return;
+  }
 }
 
 nsresult
