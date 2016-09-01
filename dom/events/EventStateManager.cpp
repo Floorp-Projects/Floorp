@@ -5209,38 +5209,16 @@ EventStateManager::DoContentCommandEvent(WidgetContentCommandEvent* aEvent)
     if (canDoIt && !aEvent->mOnlyEnabledCheck) {
       switch (aEvent->mMessage) {
         case eContentCommandPasteTransferable: {
-          nsFocusManager* fm = nsFocusManager::GetFocusManager();
-          nsIContent* focusedContent = fm ? fm->GetFocusedContent() : nullptr;
-          RefPtr<TabParent> remote = TabParent::GetFrom(focusedContent);
-          if (remote) {
-            NS_ENSURE_TRUE(remote->Manager()->IsContentParent(), NS_ERROR_FAILURE);
+          nsCOMPtr<nsICommandController> commandController = do_QueryInterface(controller);
+          NS_ENSURE_STATE(commandController);
 
-            nsCOMPtr<nsITransferable> transferable = aEvent->mTransferable;
-            IPCDataTransfer ipcDataTransfer;
-            ContentParent* cp = remote->Manager()->AsContentParent();
-            nsContentUtils::TransferableToIPCTransferable(transferable,
-                                                          &ipcDataTransfer,
-                                                          false, nullptr,
-                                                          cp);
-            bool isPrivateData = false;
-            transferable->GetIsPrivateData(&isPrivateData);
-            nsCOMPtr<nsIPrincipal> requestingPrincipal;
-            transferable->GetRequestingPrincipal(getter_AddRefs(requestingPrincipal));
-            remote->SendPasteTransferable(ipcDataTransfer, isPrivateData,
-                                          IPC::Principal(requestingPrincipal));
-            rv = NS_OK;
-          } else {
-            nsCOMPtr<nsICommandController> commandController = do_QueryInterface(controller);
-            NS_ENSURE_STATE(commandController);
+          nsCOMPtr<nsICommandParams> params = do_CreateInstance("@mozilla.org/embedcomp/command-params;1", &rv);
+          NS_ENSURE_SUCCESS(rv, rv);
 
-            nsCOMPtr<nsICommandParams> params = do_CreateInstance("@mozilla.org/embedcomp/command-params;1", &rv);
-            NS_ENSURE_SUCCESS(rv, rv);
+          rv = params->SetISupportsValue("transferable", aEvent->mTransferable);
+          NS_ENSURE_SUCCESS(rv, rv);
 
-            rv = params->SetISupportsValue("transferable", aEvent->mTransferable);
-            NS_ENSURE_SUCCESS(rv, rv);
-
-            rv = commandController->DoCommandWithParams(cmd, params);
-          }
+          rv = commandController->DoCommandWithParams(cmd, params);
           break;
         }
 
