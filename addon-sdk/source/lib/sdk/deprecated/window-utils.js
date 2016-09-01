@@ -62,7 +62,6 @@ function WindowTracker(delegate) {
    }
 
   this._delegate = delegate;
-  this._loadingWindows = [];
 
   for (let window of getWindows())
     this._regWindow(window);
@@ -81,17 +80,12 @@ WindowTracker.prototype = {
     if (ignoreWindow(window))
       return;
 
-    this._loadingWindows.push(window);
     window.addEventListener('load', this, true);
   },
 
   _unregLoadingWindow: function _unregLoadingWindow(window) {
-    var index = this._loadingWindows.indexOf(window);
-
-    if (index != -1) {
-      this._loadingWindows.splice(index, 1);
-      window.removeEventListener('load', this, true);
-    }
+    // This may have no effect if we ignored the window in _regLoadingWindow().
+    window.removeEventListener('load', this, true);
   },
 
   _regWindow: function _regWindow(window) {

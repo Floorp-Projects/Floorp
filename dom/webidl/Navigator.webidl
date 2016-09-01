@@ -29,7 +29,6 @@ Navigator implements NavigatorLanguage;
 Navigator implements NavigatorOnLine;
 Navigator implements NavigatorContentUtils;
 Navigator implements NavigatorStorageUtils;
-Navigator implements NavigatorFeatures;
 Navigator implements NavigatorConcurrentHardware;
 
 [NoInterfaceObject, Exposed=(Window,Worker)]
@@ -90,15 +89,6 @@ interface NavigatorContentUtils {
 interface NavigatorStorageUtils {
   // NOT IMPLEMENTED
   //void yieldForStorageUpdates();
-};
-
-[NoInterfaceObject]
-interface NavigatorFeatures {
-  [ChromeOnly, Throws]
-  Promise<any> getFeature(DOMString name);
-
-  [ChromeOnly, Throws]
-  Promise<any> hasFeature(DOMString name);
 };
 
 partial interface Navigator {

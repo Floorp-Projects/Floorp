@@ -518,8 +518,6 @@ child:
 
     async NotifyVisited(URIParams uri);
 
-    async SystemMemoryAvailable(uint64_t getterId, uint32_t memoryAvailable);
-
     async PreferenceUpdate(PrefSetting pref);
     async VarUpdate(GfxVarUpdate var);
 
@@ -828,8 +826,6 @@ parent:
     sync NSSU2FTokenSign(uint8_t[] application, uint8_t[] challenge,
                          uint8_t[] keyHandle)
         returns (uint8_t[] signature);
-
-    async GetSystemMemory(uint64_t getterId);
 
     sync IsSecureURI(uint32_t type, URIParams uri, uint32_t flags)
         returns (bool isSecureURI);
