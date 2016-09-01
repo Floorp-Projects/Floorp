@@ -114,19 +114,15 @@ private:
     PRStatus ReadFromSocket(PRFileDesc *fd);
     PRStatus WriteToSocket(PRFileDesc *fd);
 
-    bool IsHostDomainSocket()
+    bool IsLocalProxy()
     {
-#ifdef XP_UNIX
         nsAutoCString proxyHost;
         mProxy->GetHost(proxyHost);
-        return Substring(proxyHost, 0, 5) == "file:";
-#else
-        return false;
-#endif // XP_UNIX
+        return IsHostLocalTarget(proxyHost);
     }
 
-    nsresult SetDomainSocketPath(const nsACString& aDomainSocketPath,
-                             NetAddr* aProxyAddr)
+    nsresult SetLocalProxyPath(const nsACString& aLocalProxyPath,
+                               NetAddr* aProxyAddr)
     {
 #ifdef XP_UNIX
         nsresult rv;
@@ -145,7 +141,7 @@ private:
         }
 
         nsCOMPtr<nsIFile> socketFile;
-        rv = fileHandler->GetFileFromURLSpec(aDomainSocketPath,
+        rv = fileHandler->GetFileFromURLSpec(aLocalProxyPath,
                                              getter_AddRefs(socketFile));
         if (NS_WARN_IF(NS_FAILED(rv))) {
             return rv;
@@ -165,9 +161,20 @@ private:
         strcpy(aProxyAddr->local.path, path.get());
 
         return NS_OK;
+#elif defined(XP_WIN)
+        MOZ_ASSERT(aProxyAddr);
+
+        if (sizeof(aProxyAddr->local.path) <= aLocalProxyPath.Length()) {
+            NS_WARNING("pipe path too long.");
+            return NS_ERROR_FAILURE;
+        }
+
+        aProxyAddr->raw.family = AF_LOCAL;
+        strcpy(aProxyAddr->local.path, PromiseFlatCString(aLocalProxyPath).get());
+        return NS_OK;
 #else
+        mozilla::Unused << aLocalProxyPath;
         mozilla::Unused << aProxyAddr;
-        mozilla::Unused << aDomainSocketPath;
         return NS_ERROR_NOT_IMPLEMENTED;
 #endif
     }
@@ -489,12 +496,12 @@ nsSOCKSSocketInfo::ConnectToProxy(PRFileDesc *fd)
 
     int32_t addresses = 0;
     do {
-        if (IsHostDomainSocket()) {
-            rv = SetDomainSocketPath(proxyHost, &mInternalProxyAddr);
+        if (IsLocalProxy()) {
+            rv = SetLocalProxyPath(proxyHost, &mInternalProxyAddr);
             if (NS_FAILED(rv)) {
                 LOGERROR(("socks: unable to connect to SOCKS proxy, %s",
                          proxyHost.get()));
-              return PR_FAILURE;
+                return PR_FAILURE;
             }
         } else {
             if (addresses++) {
@@ -529,7 +536,7 @@ nsSOCKSSocketInfo::ConnectToProxy(PRFileDesc *fd)
             if (c == PR_WOULD_BLOCK_ERROR || c == PR_IN_PROGRESS_ERROR) {
                 mState = SOCKS_CONNECTING_TO_PROXY;
                 return status;
-            } else if (IsHostDomainSocket()) {
+            } else if (IsLocalProxy()) {
                 LOGERROR(("socks: connect to domain socket failed (%d)", c));
                 PR_SetError(PR_CONNECT_REFUSED_ERROR, 0);
                 mState = SOCKS_FAILED;
@@ -1049,7 +1056,7 @@ nsSOCKSSocketInfo::DoHandshake(PRFileDesc *fd, int16_t oflags)
 
     switch (mState) {
         case SOCKS_INITIAL:
-            if (IsHostDomainSocket()) {
+            if (IsLocalProxy()) {
                 mState = SOCKS_DNS_COMPLETE;
                 mLookupStatus = NS_OK;
                 return ConnectToProxy(fd);
@@ -1534,4 +1541,16 @@ nsSOCKSIOLayerAddToSocket(int32_t family,
     *info = static_cast<nsISOCKSSocketInfo*>(infoObject);
     NS_ADDREF(*info);
     return NS_OK;
+}
+
+bool
+IsHostLocalTarget(const nsACString& aHost)
+{
+#if defined(XP_UNIX)
+    return StringBeginsWith(aHost, NS_LITERAL_CSTRING("file:"));
+#elif defined(XP_WIN)
+    return StringBeginsWith(aHost, NS_LITERAL_CSTRING("\\\\.\\pipe\\"));
+#else
+    return false;
+#endif // XP_UNIX
 }
