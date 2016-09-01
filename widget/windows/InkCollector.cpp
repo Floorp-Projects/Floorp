@@ -169,6 +169,21 @@ void InkCollector::ClearTarget()
   }
 }
 
+uint16_t InkCollector::GetPointerId()
+{
+  return mPointerId;
+}
+
+void InkCollector::SetPointerId(uint16_t aPointerId)
+{
+  mPointerId = aPointerId;
+}
+
+void InkCollector::ClearPointerId()
+{
+  mPointerId = 0;
+}
+
 // The display and the digitizer have quite different properties.
 // The display has CursorMustTouch, the mouse pointer alway touches the display surface.
 // The digitizer lists Integrated and HardProximity.
