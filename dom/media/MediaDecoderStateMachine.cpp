@@ -682,7 +682,9 @@ MediaDecoderStateMachine::OnNotDecoded(MediaData::Type aType,
     } else {
       StopPrerollingVideo();
     }
-    if (mState == DECODER_STATE_BUFFERING || mState == DECODER_STATE_DECODING) {
+    if (mState == DECODER_STATE_BUFFERING ||
+        mState == DECODER_STATE_DECODING ||
+        mState == DECODER_STATE_DECODING_FIRSTFRAME) {
         MaybeFinishDecodeFirstFrame();
     }
     return;
@@ -828,6 +830,8 @@ bool
 MediaDecoderStateMachine::CheckIfDecodeComplete()
 {
   MOZ_ASSERT(OnTaskQueue());
+  // DecodeComplete is possible only after decoding first frames.
+  MOZ_ASSERT(mSentFirstFrameLoadedEvent);
   MOZ_ASSERT(mState == DECODER_STATE_DECODING ||
              mState == DECODER_STATE_BUFFERING);
   return !IsVideoDecoding() && !IsAudioDecoding();
@@ -941,6 +945,8 @@ void MediaDecoderStateMachine::StopPlayback()
 void MediaDecoderStateMachine::MaybeStartPlayback()
 {
   MOZ_ASSERT(OnTaskQueue());
+  // Should try to start playback only after decoding first frames.
+  MOZ_ASSERT(mSentFirstFrameLoadedEvent);
   MOZ_ASSERT(mState == DECODER_STATE_DECODING ||
              mState == DECODER_STATE_COMPLETED);
 
@@ -976,6 +982,8 @@ void
 MediaDecoderStateMachine::MaybeStartBuffering()
 {
   MOZ_ASSERT(OnTaskQueue());
+  // Buffering makes senses only after decoding first frames.
+  MOZ_ASSERT(mSentFirstFrameLoadedEvent);
   MOZ_ASSERT(mState == DECODER_STATE_DECODING);
 
   if (mPlayState == MediaDecoder::PLAY_STATE_PLAYING &&
@@ -1023,14 +1031,15 @@ void MediaDecoderStateMachine::UpdatePlaybackPosition(int64_t aTime)
 MediaDecoderStateMachine::ToStateStr(State aState)
 {
   switch (aState) {
-    case DECODER_STATE_DECODING_METADATA: return "DECODING_METADATA";
-    case DECODER_STATE_WAIT_FOR_CDM:      return "WAIT_FOR_CDM";
-    case DECODER_STATE_DORMANT:           return "DORMANT";
-    case DECODER_STATE_DECODING:          return "DECODING";
-    case DECODER_STATE_SEEKING:           return "SEEKING";
-    case DECODER_STATE_BUFFERING:         return "BUFFERING";
-    case DECODER_STATE_COMPLETED:         return "COMPLETED";
-    case DECODER_STATE_SHUTDOWN:          return "SHUTDOWN";
+    case DECODER_STATE_DECODING_METADATA:   return "DECODING_METADATA";
+    case DECODER_STATE_WAIT_FOR_CDM:        return "WAIT_FOR_CDM";
+    case DECODER_STATE_DORMANT:             return "DORMANT";
+    case DECODER_STATE_DECODING_FIRSTFRAME: return "DECODING_FIRSTFRAME";
+    case DECODER_STATE_DECODING:            return "DECODING";
+    case DECODER_STATE_SEEKING:             return "SEEKING";
+    case DECODER_STATE_BUFFERING:           return "BUFFERING";
+    case DECODER_STATE_COMPLETED:           return "COMPLETED";
+    case DECODER_STATE_SHUTDOWN:            return "SHUTDOWN";
     default: MOZ_ASSERT_UNREACHABLE("Invalid state.");
   }
   return "UNKNOWN";
@@ -1257,6 +1266,8 @@ void
 MediaDecoderStateMachine::StartDecoding()
 {
   MOZ_ASSERT(OnTaskQueue());
+  // Should transition to DECODING only after decoding first frames.
+  MOZ_ASSERT(mSentFirstFrameLoadedEvent);
   MOZ_ASSERT(mState == DECODER_STATE_DECODING);
 
   // Handle the pending seek now if we've decoded first frames. Otherwise it
@@ -2244,6 +2255,7 @@ MediaDecoderStateMachine::RunStateMachine()
     case DECODER_STATE_DORMANT:
     case DECODER_STATE_WAIT_FOR_CDM:
     case DECODER_STATE_DECODING_METADATA:
+    case DECODER_STATE_DECODING_FIRSTFRAME:
       return;
 
     case DECODER_STATE_DECODING: {
