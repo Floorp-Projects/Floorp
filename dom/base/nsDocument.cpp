@@ -218,6 +218,7 @@
 #include "mozilla/dom/TabChild.h"
 #include "mozilla/dom/UndoManager.h"
 #include "mozilla/dom/WebComponentsBinding.h"
+#include "mozilla/dom/CustomElementsRegistryBinding.h"
 #include "mozilla/dom/CustomElementsRegistry.h"
 #include "nsFrame.h"
 #include "nsDOMCaretPosition.h"
@@ -5710,8 +5711,7 @@ nsDocument::CustomElementConstructor(JSContext* aCx, unsigned aArgc, JS::Value* 
   }
 
   nsCOMPtr<nsIAtom> typeAtom(NS_Atomize(elemName));
-  CustomElementHashKey key(kNameSpaceID_Unknown, typeAtom);
-  CustomElementDefinition* definition = registry->mCustomDefinitions.Get(&key);
+  CustomElementDefinition* definition = registry->mCustomDefinitions.Get(typeAtom);
   if (!definition) {
     return true;
   }
@@ -5719,7 +5719,7 @@ nsDocument::CustomElementConstructor(JSContext* aCx, unsigned aArgc, JS::Value* 
   nsDependentAtomString localName(definition->mLocalName);
 
   nsCOMPtr<Element> element =
-    document->CreateElem(localName, nullptr, definition->mNamespaceID);
+    document->CreateElem(localName, nullptr, kNameSpaceID_XHTML);
   NS_ENSURE_TRUE(element, true);
 
   if (definition->mLocalName != typeAtom) {
@@ -5783,30 +5783,6 @@ nsDocument::RegisterElement(JSContext* aCx, const nsAString& aType,
   nsAutoString lcType;
   nsContentUtils::ASCIIToLower(aType, lcType);
 
-  // Only convert NAME to lowercase in HTML documents. Note that NAME is
-  // options.extends.
-  nsAutoString lcName;
-  if (IsHTMLDocument()) {
-    nsContentUtils::ASCIIToLower(aOptions.mExtends, lcName);
-  } else {
-    lcName.Assign(aOptions.mExtends);
-  }
-
-  nsCOMPtr<nsIAtom> typeAtom(NS_Atomize(lcType));
-  if (!nsContentUtils::IsCustomElementName(typeAtom)) {
-    rv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
-    return;
-  }
-
-  // If there already exists a definition with the same TYPE, set ERROR to
-  // DuplicateDefinition and stop.
-  // Note that we need to find existing custom elements from either namespace.
-  CustomElementHashKey duplicateFinder(kNameSpaceID_Unknown, typeAtom);
-  if (registry->mCustomDefinitions.Get(&duplicateFinder)) {
-    rv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
-    return;
-  }
-
   nsIGlobalObject* sgo = GetScopeObject();
   if (!sgo) {
     rv.Throw(NS_ERROR_UNEXPECTED);
@@ -5814,183 +5790,59 @@ nsDocument::RegisterElement(JSContext* aCx, const nsAString& aType,
   }
 
   JS::Rooted<JSObject*> global(aCx, sgo->GetGlobalJSObject());
-  nsCOMPtr<nsIAtom> nameAtom;
-  int32_t namespaceID = kNameSpaceID_XHTML;
   JS::Rooted<JSObject*> protoObject(aCx);
-  {
+
+  if (!aOptions.mPrototype) {
     JS::Rooted<JSObject*> htmlProto(aCx);
-    {
-      JSAutoCompartment ac(aCx, global);
-
-      htmlProto = HTMLElementBinding::GetProtoObjectHandle(aCx);
-      if (!htmlProto) {
-        rv.Throw(NS_ERROR_OUT_OF_MEMORY);
-        return;
-      }
+    htmlProto = HTMLElementBinding::GetProtoObjectHandle(aCx);
+    if (!htmlProto) {
+      rv.Throw(NS_ERROR_OUT_OF_MEMORY);
+      return;
     }
 
-    if (!aOptions.mPrototype) {
-      if (!JS_WrapObject(aCx, &htmlProto)) {
-        rv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
-        return;
-      }
-
-      protoObject = JS_NewObjectWithGivenProto(aCx, nullptr, htmlProto);
-      if (!protoObject) {
-        rv.Throw(NS_ERROR_UNEXPECTED);
-        return;
-      }
-    } else {
-      protoObject = aOptions.mPrototype;
-
-      // Get the unwrapped prototype to do some checks.
-      JS::Rooted<JSObject*> protoObjectUnwrapped(aCx, js::CheckedUnwrap(protoObject));
-      if (!protoObjectUnwrapped) {
-        // If the caller's compartment does not have permission to access the
-        // unwrapped prototype then throw.
-        rv.Throw(NS_ERROR_DOM_SECURITY_ERR);
-        return;
-      }
-
-      // If PROTOTYPE is already an interface prototype object for any interface
-      // object or PROTOTYPE has a non-configurable property named constructor,
-      // throw a NotSupportedError and stop.
-      const js::Class* clasp = js::GetObjectClass(protoObjectUnwrapped);
-      if (IsDOMIfaceAndProtoClass(clasp)) {
-        rv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
-        return;
-      }
-
-      JS::Rooted<JS::PropertyDescriptor> descRoot(aCx);
-      JS::MutableHandle<JS::PropertyDescriptor> desc(&descRoot);
-      // This check may go through a wrapper, but as we checked above
-      // it should be transparent or an xray. This should be fine for now,
-      // until the spec is sorted out.
-      if (!JS_GetPropertyDescriptor(aCx, protoObject, "constructor", desc)) {
-        rv.Throw(NS_ERROR_UNEXPECTED);
-        return;
-      }
-
-      if (!desc.configurable()) {
-        rv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
-        return;
-      }
-
-      JS::Rooted<JSObject*> protoProto(aCx, protoObject);
-
-      if (!JS_WrapObject(aCx, &htmlProto)) {
-        rv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
-        return;
-      }
-
-      while (protoProto) {
-        if (protoProto == htmlProto) {
-          break;
-        }
-
-        if (!JS_GetPrototype(aCx, protoProto, &protoProto)) {
-          rv.Throw(NS_ERROR_UNEXPECTED);
-          return;
-        }
-      }
-    } // Done with the checks, leave prototype's compartment.
-
-    // If name was provided and not null...
-    if (!lcName.IsEmpty()) {
-      // Let BASE be the element interface for NAME and NAMESPACE.
-      nameAtom = NS_Atomize(lcName);
-      nsIParserService* ps = nsContentUtils::GetParserService();
-      if (!ps) {
-        rv.Throw(NS_ERROR_UNEXPECTED);
-        return;
-      }
-
-      bool known =
-        ps->HTMLCaseSensitiveAtomTagToId(nameAtom) != eHTMLTag_userdefined;
-
-      // If BASE does not exist or is an interface for a custom element, set ERROR
-      // to InvalidName and stop.
-      // If BASE exists, then it cannot be an interface for a custom element.
-      if (!known) {
-        rv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
-        return;
-      }
-    } else {
-      nameAtom = typeAtom;
+    protoObject = JS_NewObjectWithGivenProto(aCx, nullptr, htmlProto);
+    if (!protoObject) {
+      rv.Throw(NS_ERROR_UNEXPECTED);
+      return;
     }
-  } // Leaving the document's compartment for the LifecycleCallbacks init
+  } else {
+    protoObject = aOptions.mPrototype;
 
-  JS::Rooted<JSObject*> wrappedProto(aCx, protoObject);
-  if (!JS_WrapObject(aCx, &wrappedProto)) {
-    rv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
-    return;
-  }
+    // Get the unwrapped prototype to do some checks.
+    JS::Rooted<JSObject*> protoObjectUnwrapped(aCx, js::CheckedUnwrap(protoObject));
+    if (!protoObjectUnwrapped) {
+      // If the caller's compartment does not have permission to access the
+      // unwrapped prototype then throw.
+      rv.Throw(NS_ERROR_DOM_SECURITY_ERR);
+      return;
+    }
 
-  // Note: We call the init from the caller compartment here
-  nsAutoPtr<LifecycleCallbacks> callbacksHolder(new LifecycleCallbacks());
-  JS::RootedValue rootedv(aCx, JS::ObjectValue(*wrappedProto));
-  if (!JS_WrapValue(aCx, &rootedv) || !callbacksHolder->Init(aCx, rootedv)) {
-    rv.Throw(NS_ERROR_FAILURE);
-    return;
-  }
+    // If PROTOTYPE is already an interface prototype object for any interface
+    // object or PROTOTYPE has a non-configurable property named constructor,
+    // throw a NotSupportedError and stop.
+    const js::Class* clasp = js::GetObjectClass(protoObjectUnwrapped);
+    if (IsDOMIfaceAndProtoClass(clasp)) {
+      rv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+      return;
+    }
 
-  // Associate the definition with the custom element.
-  CustomElementHashKey key(namespaceID, typeAtom);
-  LifecycleCallbacks* callbacks = callbacksHolder.forget();
-  CustomElementDefinition* definition =
-    new CustomElementDefinition(wrappedProto,
-                                typeAtom,
-                                nameAtom,
-                                callbacks,
-                                namespaceID,
-                                0 /* TODO dependent on HTML imports. Bug 877072 */);
-  registry->mCustomDefinitions.Put(&key, definition);
+    JS::Rooted<JS::PropertyDescriptor> descRoot(aCx);
+    JS::MutableHandle<JS::PropertyDescriptor> desc(&descRoot);
+    // This check may go through a wrapper, but as we checked above
+    // it should be transparent or an xray. This should be fine for now,
+    // until the spec is sorted out.
+    if (!JS_GetPropertyDescriptor(aCx, protoObject, "constructor", desc)) {
+      rv.Throw(NS_ERROR_UNEXPECTED);
+      return;
+    }
 
-  // Do element upgrade.
-  nsAutoPtr<nsTArray<nsWeakPtr>> candidates;
-  registry->mCandidatesMap.RemoveAndForget(&key, candidates);
-  if (candidates) {
-    for (size_t i = 0; i < candidates->Length(); ++i) {
-      nsCOMPtr<Element> elem = do_QueryReferent(candidates->ElementAt(i));
-      if (!elem) {
-        continue;
-      }
-
-      elem->RemoveStates(NS_EVENT_STATE_UNRESOLVED);
-
-      // Make sure that the element name matches the name in the definition.
-      // (e.g. a definition for x-button extending button should match
-      // <button is="x-button"> but not <x-button>.
-      if (elem->NodeInfo()->NameAtom() != nameAtom) {
-        //Skip over this element because definition does not apply.
-        continue;
-      }
-
-      MOZ_ASSERT(elem->IsHTMLElement(nameAtom));
-      nsWrapperCache* cache;
-      CallQueryInterface(elem, &cache);
-      MOZ_ASSERT(cache, "Element doesn't support wrapper cache?");
-
-      // We want to set the custom prototype in the caller's comparment.
-      // In the case that element is in a different compartment,
-      // this will set the prototype on the element's wrapper and
-      // thus only visible in the wrapper's compartment.
-      JS::RootedObject wrapper(aCx);
-      if ((wrapper = cache->GetWrapper()) && JS_WrapObject(aCx, &wrapper)) {
-        if (!JS_SetPrototype(aCx, wrapper, wrappedProto)) {
-          continue;
-        }
-      }
-
-      if (GetDocShell()) {
-        nsContentUtils::EnqueueLifecycleCallback(
-          this, nsIDocument::eCreated, elem, nullptr, definition);
-      }
+    if (!desc.configurable()) {
+      rv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+      return;
     }
   }
 
   JS::Rooted<JSFunction*> constructor(aCx);
-
   {
     // Go into the document's global compartment when creating the constructor
     // function because we want to get the correct document (where the
@@ -6019,6 +5871,21 @@ nsDocument::RegisterElement(JSContext* aCx, const nsAString& aType,
     rv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
     return;
   }
+
+  ElementDefinitionOptions options;
+  if (!aOptions.mExtends.IsVoid()) {
+    // Only convert NAME to lowercase in HTML documents.
+    nsAutoString lcName;
+    IsHTMLDocument() ? nsContentUtils::ASCIIToLower(aOptions.mExtends, lcName)
+                     : lcName.Assign(aOptions.mExtends);
+
+    options.mExtends.Construct(lcName);
+  }
+
+  RootedCallback<OwningNonNull<binding_detail::FastFunction>> functionConstructor(aCx);
+  functionConstructor = new binding_detail::FastFunction(aCx, wrappedConstructor, sgo);
+
+  registry->Define(lcType, functionConstructor, options, rv);
 
   aRetval.set(wrappedConstructor);
 }
