@@ -172,7 +172,6 @@ function localizeMarkup(root) {
 }
 
 const sharedL10N = new LocalizationHelper("devtools-shared/locale/shared.properties");
-const ELLIPSIS = sharedL10N.getStr("ellipsis");
 
 /**
  * A helper for having the same interface as LocalizationHelper, but for more
@@ -210,4 +209,4 @@ function MultiLocalizationHelper(...stringBundleNames) {
 exports.LocalizationHelper = LocalizationHelper;
 exports.localizeMarkup = localizeMarkup;
 exports.MultiLocalizationHelper = MultiLocalizationHelper;
-exports.ELLIPSIS = ELLIPSIS;
+Object.defineProperty(exports, "ELLIPSIS", { get: () => sharedL10N.getStr("ellipsis") });
