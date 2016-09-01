@@ -2018,7 +2018,7 @@ MediaDecoderStateMachine::OnMetadataRead(MetadataHolder* aMetadata)
     return;
   }
 
-  SetState(DECODER_STATE_DECODING);
+  SetState(DECODER_STATE_DECODING_FIRSTFRAME);
 }
 
 void
@@ -2743,7 +2743,7 @@ MediaDecoderStateMachine::OnCDMProxyReady(RefPtr<CDMProxy> aProxy)
   mCDMProxy = aProxy;
   mReader->SetCDMProxy(aProxy);
   if (mState == DECODER_STATE_WAIT_FOR_CDM) {
-    SetState(DECODER_STATE_DECODING);
+    SetState(DECODER_STATE_DECODING_FIRSTFRAME);
   }
 }
 
