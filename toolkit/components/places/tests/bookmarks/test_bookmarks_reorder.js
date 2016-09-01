@@ -42,7 +42,8 @@ add_task(function* reorder_nonexistent_guid() {
 
 add_task(function* reorder() {
   let bookmarks = [
-    { url: "http://example1.com/",
+    { type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+      url: "http://example1.com/",
       parentGuid: PlacesUtils.bookmarks.unfiledGuid
     },
     { type: PlacesUtils.bookmarks.TYPE_FOLDER,
@@ -51,10 +52,12 @@ add_task(function* reorder() {
     { type: PlacesUtils.bookmarks.TYPE_SEPARATOR,
       parentGuid: PlacesUtils.bookmarks.unfiledGuid
     },
-    { url: "http://example2.com/",
+    { type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+      url: "http://example2.com/",
       parentGuid: PlacesUtils.bookmarks.unfiledGuid
     },
-    { url: "http://example3.com/",
+    { type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+      url: "http://example3.com/",
       parentGuid: PlacesUtils.bookmarks.unfiledGuid
     }
   ];
@@ -106,64 +109,6 @@ add_task(function* reorder() {
   Assert.equal(rows.length, 0, "All the bookmarks should have consistent positions");
 });
 
-add_task(function* move_and_reorder() {
-  // Start clean.
-  yield PlacesUtils.bookmarks.eraseEverything();
-
-  let bm1 = yield PlacesUtils.bookmarks.insert({
-    url: "http://example1.com/",
-    parentGuid: PlacesUtils.bookmarks.unfiledGuid
-  });
-  let f1 = yield PlacesUtils.bookmarks.insert({
-    type: PlacesUtils.bookmarks.TYPE_FOLDER,
-    parentGuid: PlacesUtils.bookmarks.unfiledGuid
-  });
-  let bm2 = yield PlacesUtils.bookmarks.insert({
-    url: "http://example2.com/",
-    parentGuid: f1.guid
-  });
-  let f2 = yield PlacesUtils.bookmarks.insert({
-    type: PlacesUtils.bookmarks.TYPE_FOLDER,
-    parentGuid: PlacesUtils.bookmarks.unfiledGuid
-  });
-  let bm3 = yield PlacesUtils.bookmarks.insert({
-    url: "http://example3.com/",
-    parentGuid: f2.guid
-  });
-  let bm4 = yield PlacesUtils.bookmarks.insert({
-    url: "http://example4.com/",
-    parentGuid: f2.guid
-  });
-
-  // Invert f2 children.
-  // This is critical to reproduce the bug, cause it inverts the position
-  // compared to the natural insertion order.
-  yield PlacesUtils.bookmarks.reorder(f2.guid, [bm4.guid, bm3.guid]);
-
-  bm1.parentGuid = f1.guid;
-  bm1.index = 0;
-  yield PlacesUtils.bookmarks.update(bm1);
-
-  bm1 = yield PlacesUtils.bookmarks.fetch(bm1.guid);
-  Assert.equal(bm1.index, 0);
-  bm2 = yield PlacesUtils.bookmarks.fetch(bm2.guid);
-  Assert.equal(bm2.index, 1);
-  bm3 = yield PlacesUtils.bookmarks.fetch(bm3.guid);
-  Assert.equal(bm3.index, 2);
-  bm4 = yield PlacesUtils.bookmarks.fetch(bm4.guid);
-  Assert.equal(bm4.index, 1);
-
-  // No-op reorder on f1 children.
-  // Nothing should change. Though, due to bug 1293365 this was causing children
-  // of other folders to get messed up.
-  yield PlacesUtils.bookmarks.reorder(f1.guid, [bm1.guid, bm2.guid]);
-
-  bm1 = yield PlacesUtils.bookmarks.fetch(bm1.guid);
-  Assert.equal(bm1.index, 0);
-  bm2 = yield PlacesUtils.bookmarks.fetch(bm2.guid);
-  Assert.equal(bm2.index, 1);
-  bm3 = yield PlacesUtils.bookmarks.fetch(bm3.guid);
-  Assert.equal(bm3.index, 2);
-  bm4 = yield PlacesUtils.bookmarks.fetch(bm4.guid);
-  Assert.equal(bm4.index, 1);
-});
+function run_test() {
+  run_next_test();
+}
