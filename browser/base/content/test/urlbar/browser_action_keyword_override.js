@@ -27,13 +27,13 @@ add_task(function*() {
   is(result._actionText.textContent, "", "Action text should be empty");
 
   info("During override");
-  EventUtils.synthesizeKey("VK_SHIFT" , { type: "keydown" });
+  EventUtils.synthesizeKey("VK_SHIFT", { type: "keydown" });
   is_element_visible(titleHbox, "Title element should be visible");
   is_element_hidden(urlHbox, "URL element should be hidden");
   is_element_visible(actionHbox, "Action element should be visible");
   is(result._actionText.textContent, "", "Action text should be empty");
 
-  EventUtils.synthesizeKey("VK_SHIFT" , { type: "keyup" });
+  EventUtils.synthesizeKey("VK_SHIFT", { type: "keyup" });
 
   gURLBar.popup.hidePopup();
   yield promisePopupHidden(gURLBar.popup);

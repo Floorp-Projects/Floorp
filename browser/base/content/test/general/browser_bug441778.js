@@ -13,7 +13,7 @@ function test() {
   const TEST_PAGE_URL = 'data:text/html,<body><iframe src=""></iframe></body>';
   const TEST_IFRAME_URL = "http://test2.example.org/";
 
-  Task.spawn(function () {
+  Task.spawn(function* () {
     // Prepare the test tab
     let tab = gBrowser.addTab();
     yield FullZoomHelper.selectTabAndWaitForLocationChange(tab);

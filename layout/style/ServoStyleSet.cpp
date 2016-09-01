@@ -22,7 +22,6 @@ ServoStyleSet::ServoStyleSet()
   : mPresContext(nullptr)
   , mRawSet(Servo_StyleSet_Init())
   , mBatching(0)
-  , mStylingStarted(false)
 {
 }
 
@@ -71,24 +70,6 @@ ServoStyleSet::EndUpdate()
 
   // ... do something ...
   return NS_OK;
-}
-
-void
-ServoStyleSet::StartStyling(nsPresContext* aPresContext)
-{
-  MOZ_ASSERT(!mStylingStarted);
-
-  // Some things, like nsDocumentViewer::GetPageMode, recreate the presShell,
-  // while keeping the content tree alive. See bug 1292280.
-  //
-  // That's why we need to force a restyle.
-  nsIContent* root = mPresContext->Document()->GetRootElement();
-  if (root) {
-    root->SetIsDirtyForServo();
-  }
-
-  StyleDocument(/* aLeaveDirtyBits = */ false);
-  mStylingStarted = true;
 }
 
 already_AddRefed<nsStyleContext>
@@ -484,21 +465,16 @@ ClearDirtyBits(nsIContent* aContent)
 void
 ServoStyleSet::StyleDocument(bool aLeaveDirtyBits)
 {
-  // Unconditionally clear the flag on the document so that HasPendingRestyles
-  // returns false.
-  nsIDocument* doc = mPresContext->Document();
-  doc->UnsetHasDirtyDescendantsForServo();
-
   // Grab the root.
-  nsIContent* root = mPresContext->Document()->GetRootElement();
-  if (!root) {
-    return;
-  }
+  nsIDocument* doc = mPresContext->Document();
+  nsIContent* root = doc->GetRootElement();
+  MOZ_ASSERT(root);
 
   // Restyle the document, clearing the dirty bits if requested.
   Servo_RestyleSubtree(root, mRawSet.get());
   if (!aLeaveDirtyBits) {
     ClearDirtyBits(root);
+    doc->UnsetHasDirtyDescendantsForServo();
   }
 }
 

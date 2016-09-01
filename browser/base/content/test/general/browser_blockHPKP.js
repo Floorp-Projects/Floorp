@@ -81,7 +81,7 @@ function errorPageLoaded() {
       return BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
     }).then(pinningRemovalLoaded);
   });
-};
+}
 
 // After the pinning information has been removed (successful load) proceed
 // to load again with the invalid pin domain.
@@ -89,7 +89,7 @@ function pinningRemovalLoaded() {
   BrowserTestUtils.loadURI(gBrowser.selectedBrowser, "https://" + kBadPinningDomain).then(function() {
     return BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
   }).then(badPinningPageLoaded);
-};
+}
 
 // Finally, we should successfully load
 // https://bad.include-subdomains.pinning-dynamic.example.com.
@@ -98,4 +98,4 @@ function badPinningPageLoaded() {
     ok(true, "load complete");
     finish();
   });
-};
+}

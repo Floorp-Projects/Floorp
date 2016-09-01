@@ -16,7 +16,7 @@ var gTests = [
 
 {
   desc: "getUserMedia audio+video",
-  run: function checkAudioVideo() {
+  run: function* checkAudioVideo() {
     let promise = promisePopupNotificationShown("webRTC-shareDevices");
     yield promiseRequestDevice(true, true, "frame1");
     yield promise;
@@ -45,7 +45,7 @@ var gTests = [
 
 {
   desc: "getUserMedia audio+video: stop sharing",
-  run: function checkStopSharing() {
+  run: function* checkStopSharing() {
     let promise = promisePopupNotificationShown("webRTC-shareDevices");
     yield promiseRequestDevice(true, true, "frame1");
     yield promise;
@@ -86,7 +86,7 @@ var gTests = [
 
 {
   desc: "getUserMedia audio+video: reloading the frame removes all sharing UI",
-  run: function checkReloading() {
+  run: function* checkReloading() {
     let promise = promisePopupNotificationShown("webRTC-shareDevices");
     yield promiseRequestDevice(true, true, "frame1");
     yield promise;
@@ -121,7 +121,7 @@ var gTests = [
 
 {
   desc: "getUserMedia audio+video: reloading the frame removes prompts",
-  run: function checkReloadingRemovesPrompts() {
+  run: function* checkReloadingRemovesPrompts() {
     let promise = promisePopupNotificationShown("webRTC-shareDevices");
     yield promiseRequestDevice(true, true, "frame1");
     yield promise;
@@ -141,7 +141,7 @@ var gTests = [
 
 {
   desc: "getUserMedia audio+video: reloading a frame updates the sharing UI",
-  run: function checkUpdateWhenReloading() {
+  run: function* checkUpdateWhenReloading() {
     // We'll share only the mic in the first frame, then share both in the
     // second frame, then reload the second frame. After each step, we'll check
     // the UI is in the correct state.
@@ -216,7 +216,7 @@ function test() {
     is(PopupNotifications._currentNotifications.length, 0,
        "should start the test without any prior popup notification");
 
-    Task.spawn(function () {
+    Task.spawn(function* () {
       yield SpecialPowers.pushPrefEnv({"set": [[PREF_PERMISSION_FAKE, true]]});
 
       for (let test of gTests) {

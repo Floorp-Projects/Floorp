@@ -118,7 +118,7 @@ add_task(function* test_reader_view_element_attribute_transform() {
       let observer = new MutationObserver((mutations) => {
         mutations.forEach( mu => {
           let muValue = element.getAttribute(attribute);
-          if(element.getAttribute(attribute) !== mu.oldValue) {
+          if (element.getAttribute(attribute) !== mu.oldValue) {
             checkFn();
             resolve();
             observer.disconnect();
@@ -134,7 +134,7 @@ add_task(function* test_reader_view_element_attribute_transform() {
 
       triggerFn();
     });
-  };
+  }
 
   let command = document.getElementById("View:ReaderView");
   let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser);

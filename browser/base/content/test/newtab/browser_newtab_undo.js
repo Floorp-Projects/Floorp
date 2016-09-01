@@ -37,11 +37,11 @@ add_task(function* () {
 function* undo() {
   let updatedPromise = whenPagesUpdated();
   yield BrowserTestUtils.synthesizeMouseAtCenter("#newtab-undo-button", {}, gBrowser.selectedBrowser);
-  yield updatedPromise; 
+  yield updatedPromise;
 }
 
 function* undoAll() {
   let updatedPromise = whenPagesUpdated();
   yield BrowserTestUtils.synthesizeMouseAtCenter("#newtab-undo-restore-button", {}, gBrowser.selectedBrowser);
-  yield updatedPromise; 
+  yield updatedPromise;
 }

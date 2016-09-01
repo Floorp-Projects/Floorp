@@ -19,7 +19,7 @@ add_task(function* () {
 
     function sendDragEvent(aEventType, aTarget) {
       let dataTransfer = new content.DataTransfer(aEventType, false);
-      let event = content.document.createEvent("DragEvents");
+      let event = content.document.createEvent("DragEvent");
       event.initDragEvent(aEventType, true, true, content, 0, 0, 0, 0, 0,
                           false, false, false, false, 0, null, dataTransfer);
       aTarget.dispatchEvent(event);
