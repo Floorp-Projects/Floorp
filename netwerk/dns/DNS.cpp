@@ -92,6 +92,11 @@ void NetAddrToPRNetAddr(const NetAddr *addr, PRNetAddr *prAddr)
     prAddr->local.family = PR_AF_LOCAL;
     memcpy(prAddr->local.path, addr->local.path, sizeof(addr->local.path));
   }
+#elif defined(XP_WIN)
+  else if (addr->raw.family == AF_LOCAL) {
+    prAddr->local.family = PR_AF_LOCAL;
+    memcpy(prAddr->local.path, addr->local.path, sizeof(addr->local.path));
+  }
 #endif
 }
 
