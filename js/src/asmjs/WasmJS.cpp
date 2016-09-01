@@ -56,20 +56,6 @@ wasm::HasCompilerSupport(ExclusiveContext* cx)
 #endif
 }
 
-static bool
-CheckCompilerSupport(JSContext* cx)
-{
-    if (!HasCompilerSupport(cx)) {
-#ifdef JS_MORE_DETERMINISTIC
-        fprintf(stderr, "WebAssembly is not supported on the current device.\n");
-#endif
-        JS_ReportError(cx, "WebAssembly is not supported on the current device.");
-        return false;
-    }
-
-    return true;
-}
-
 // ============================================================================
 // (Temporary) Wasm class and static methods
 
@@ -223,9 +209,6 @@ bool
 wasm::Eval(JSContext* cx, Handle<TypedArrayObject*> code, HandleObject importObj,
            MutableHandleWasmInstanceObject instanceObj)
 {
-    if (!CheckCompilerSupport(cx))
-        return false;
-
     MutableBytes bytecode = cx->new_<ShareableBytes>();
     if (!bytecode)
         return false;
@@ -318,6 +301,7 @@ const Class js::WasmClass = {
 JSObject*
 js::InitWasmClass(JSContext* cx, HandleObject global)
 {
+    MOZ_RELEASE_ASSERT(HasCompilerSupport(cx));
     MOZ_ASSERT(cx->options().wasm());
 
     RootedObject proto(cx, global->as<GlobalObject>().getOrCreateObjectPrototype(cx));
@@ -429,8 +413,7 @@ GetCompileArgs(JSContext* cx, CallArgs callArgs, const char* name, MutableBytes*
         return false;
 
     compileArgs->assumptions.newFormat = true;
-
-    return CheckCompilerSupport(cx);
+    return true;
 }
 
 /* static */ bool
@@ -1337,6 +1320,7 @@ InitConstructor(JSContext* cx, HandleObject wasm, const char* name, MutableHandl
 JSObject*
 js::InitWebAssemblyClass(JSContext* cx, HandleObject obj)
 {
+    MOZ_RELEASE_ASSERT(HasCompilerSupport(cx));
     MOZ_ASSERT(cx->options().wasm());
 
     Handle<GlobalObject*> global = obj.as<GlobalObject>();
