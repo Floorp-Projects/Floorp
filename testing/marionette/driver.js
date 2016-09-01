@@ -2268,7 +2268,12 @@ GeckoDriver.prototype.sessionTearDown = function(cmd, resp) {
   // reset frame to the top-most frame
   this.curFrame = null;
   if (this.mainFrame) {
-    this.mainFrame.focus();
+    try {
+      this.mainFrame.focus();
+    }
+    catch (e) {
+      this.mainFrame = null;
+    }
   }
 
   this.sessionId = null;
