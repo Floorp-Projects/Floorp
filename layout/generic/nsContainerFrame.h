@@ -463,6 +463,15 @@ public:
   static bool FrameStartsCounterScope(nsIFrame* aFrame);
 
   /**
+   * Renumber the list of the counter scope started by this frame, if any.
+   * If this returns true, the frame it's called on should get the
+   * NS_FRAME_HAS_DIRTY_CHILDREN bit set on it by the caller; either directly
+   * if it's already in reflow, or via calling FrameNeedsReflow() to schedule
+   * a reflow.
+   */
+  bool RenumberLists();
+
+  /**
    * Renumber this frame if it's a list-item, then call RenumberChildFrames.
    * @param aOrdinal Ordinal number to start counting at.
    *        Modifies this number for each associated list
