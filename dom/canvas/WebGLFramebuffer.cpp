@@ -1235,8 +1235,13 @@ WebGLFramebuffer::ReadBuffer(const char* funcName, GLenum attachPoint)
 {
     const auto& maybeAttach = GetColorAttachPoint(attachPoint);
     if (!maybeAttach) {
-        mContext->ErrorInvalidValue("%s: `mode` must be a COLOR_ATTACHMENTi, for "
-                                    " 0 <= i < MAX_DRAW_BUFFERS.", funcName);
+        const char text[] = "%s: `mode` must be a COLOR_ATTACHMENTi, for 0 <= i <"
+                            " MAX_DRAW_BUFFERS.";
+        if (attachPoint == LOCAL_GL_BACK) {
+            mContext->ErrorInvalidOperation(text, funcName);
+        } else {
+            mContext->ErrorInvalidEnum(text, funcName);
+        }
         return;
     }
     const auto& attach = maybeAttach.value();
