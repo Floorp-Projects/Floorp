@@ -10,7 +10,7 @@ mp4parse_capi = { path = "../../../media/libstagefright/binding/mp4parse_capi" }
 
 [lib]
 path = "lib.rs"
-crate-type = ["staticlib"]
+crate-type = ["rlib"]
 test = false
 doctest = false
 bench = false
