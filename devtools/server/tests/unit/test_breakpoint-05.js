@@ -58,7 +58,7 @@ function test_child_skip_breakpoint()
         // Remove the breakpoint.
         bpClient.remove(function (aResponse) {
           gThreadClient.resume(function () {
-            gClient.close(gCallback);
+            gClient.close().then(gCallback);
           });
         });
       });

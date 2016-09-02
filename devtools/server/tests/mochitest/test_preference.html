@@ -75,7 +75,7 @@ function runTests() {
           is(Services.prefs.getPrefType(key), Ci.nsIPrefBranch.PREF_INVALID, "pref (" + key + ") is clear");
         });
 
-        client.close(() => {
+        client.close().then(() => {
           DebuggerServer.destroy();
           SimpleTest.finish()
         });

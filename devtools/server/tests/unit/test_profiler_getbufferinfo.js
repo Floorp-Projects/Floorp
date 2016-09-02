@@ -25,7 +25,7 @@ function run_test()
         wait_for_samples(client, actor, () => {
           check_buffer(client, actor, () => {
             deactivate_profiler(client, actor, () => {
-              client.close(do_test_finished);
+              client.close().then(do_test_finished);
             });
           });
         });

@@ -53,7 +53,7 @@ function test_object_grip()
     do_check_false(obj2Client.isSealed);
 
     gThreadClient.resume(_ => {
-      gClient.close(gCallback);
+      gClient.close().then(gCallback);
     });
   });
 

@@ -116,7 +116,6 @@
                    flex="1"
                    align="stretch">
           <richlistbox id="downloadsListBox"
-                       class="plain"
                        context="downloadsContextMenu"
                        onmouseover="DownloadsView.onDownloadMouseOver(event);"
                        onmouseout="DownloadsView.onDownloadMouseOut(event);"
@@ -152,7 +151,7 @@
               </hbox>
               <hbox id="downloadsFooterButtons">
                 <button id="downloadsHistory"
-                        class="plain downloadsPanelFooterButton"
+                        class="downloadsPanelFooterButton"
                         label="&downloadsHistory.label;"
                         accesskey="&downloadsHistory.accesskey;"
                         flex="1"
@@ -160,7 +159,7 @@
                 <toolbarseparator id="downloadsFooterButtonsSplitter"
                         class="downloadsDropmarkerSplitter"/>
                 <button id="downloadsFooterDropmarker"
-                        class="plain downloadsPanelFooterButton downloadsDropmarker"
+                        class="downloadsPanelFooterButton downloadsDropmarker"
                         type="menu">
                   <menupopup id="downloadSubPanel"
                              onpopupshowing="DownloadsPanel.onFooterPopupShowing(event);"
@@ -190,12 +189,12 @@
                 class="downloadsPanelFooter"
                 align="stretch">
             <button id="downloadsPanel-blockedSubview-openButton"
-                    class="plain downloadsPanelFooterButton"
+                    class="downloadsPanelFooterButton"
                     command="downloadsCmd_unblockAndOpen"
                     flex="1"/>
             <toolbarseparator/>
             <button id="downloadsPanel-blockedSubview-deleteButton"
-                    class="plain downloadsPanelFooterButton"
+                    class="downloadsPanelFooterButton"
                     oncommand="DownloadsBlockedSubview.confirmBlock();"
                     default="true"
                     flex="1"/>

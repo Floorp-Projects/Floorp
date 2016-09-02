@@ -32,7 +32,7 @@ function startServerAndGetSelectedTabMemory() {
 }
 
 function destroyServerAndFinish(client) {
-  client.close(() => {
+  client.close().then(() => {
     DebuggerServer.destroy();
     SimpleTest.finish();
   });

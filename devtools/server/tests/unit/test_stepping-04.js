@@ -54,7 +54,7 @@ function test_simple_stepping()
         do_check_eq(gDebuggee.b, undefined);
 
         gThreadClient.resume(function () {
-          gClient.close(gCallback);
+          gClient.close().then(gCallback);
         });
       });
       gThreadClient.stepOver();

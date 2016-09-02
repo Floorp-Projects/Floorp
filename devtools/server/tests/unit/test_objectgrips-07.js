@@ -57,7 +57,7 @@ function test_object_grip()
     do_check_true(eClient.isExtensible);
 
     gThreadClient.resume(_ => {
-      gClient.close(gCallback);
+      gClient.close().then(gCallback);
     });
   });
 

@@ -30,6 +30,6 @@ add_task(function* () {
   ok(Array.isArray(players), "An array of players was returned");
   is(players.length, 0, "0 players have been returned for the invalid node");
 
-  yield closeDebuggerClient(client);
+  yield client.close();
   gBrowser.removeCurrentTab();
 });

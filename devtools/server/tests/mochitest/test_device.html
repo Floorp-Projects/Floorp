@@ -77,7 +77,7 @@ window.onload = function() {
 
         is(a, b, "Permissions Tables is valid");
 
-        client.close(() => {
+        client.close().then(() => {
           DebuggerServer.destroy();
           SimpleTest.finish()
         });

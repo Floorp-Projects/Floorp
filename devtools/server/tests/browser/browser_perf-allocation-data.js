@@ -33,6 +33,6 @@ add_task(function* () {
   ok(sizes.every(n => n > 0 && typeof n === "number"), "all sizes are positive numbers");
 
   yield front.destroy();
-  yield closeDebuggerClient(client);
+  yield client.close();
   gBrowser.removeCurrentTab();
 });

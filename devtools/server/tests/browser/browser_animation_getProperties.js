@@ -31,6 +31,6 @@ add_task(function* () {
   // purpose. This object comes straight out of the web animations API
   // unmodified.
 
-  yield closeDebuggerClient(client);
+  yield client.close();
   gBrowser.removeCurrentTab();
 });
