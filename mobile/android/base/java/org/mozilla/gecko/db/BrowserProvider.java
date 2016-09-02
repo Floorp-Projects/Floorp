@@ -1169,7 +1169,8 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
                     DBUtils.qualifyColumn(Bookmarks.TABLE_NAME, Bookmarks.URL) + " = " +
                     DBUtils.qualifyColumn(History.TABLE_NAME, History.URL) + " " +
                 "WHERE " + DBUtils.qualifyColumn(Bookmarks.TABLE_NAME, Bookmarks.DATE_CREATED) + " > " + threeDaysAgo + " " +
-                "AND " + DBUtils.qualifyColumn(History.TABLE_NAME, History.VISITS) + " <= 3 " +
+                "AND (" + DBUtils.qualifyColumn(History.TABLE_NAME, History.VISITS) + " <= 3 " +
+                  "OR " + DBUtils.qualifyColumn(History.TABLE_NAME, History.VISITS) + " IS NULL) " +
                 "AND " + DBUtils.qualifyColumn(Bookmarks.TABLE_NAME, Bookmarks.IS_DELETED)  + " = 0 " +
                 // TODO: Implement block list (bug 1298783)
                 "ORDER BY " + DBUtils.qualifyColumn(Bookmarks.TABLE_NAME, Bookmarks.DATE_CREATED) + " DESC " +
