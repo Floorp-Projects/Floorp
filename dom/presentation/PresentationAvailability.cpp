@@ -8,6 +8,7 @@
 
 #include "mozilla/dom/PresentationAvailabilityBinding.h"
 #include "mozilla/dom/Promise.h"
+#include "mozilla/Unused.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIPresentationDeviceManager.h"
 #include "nsIPresentationService.h"
@@ -100,8 +101,8 @@ void PresentationAvailability::Shutdown()
     return;
   }
 
-  nsresult rv = service->UnregisterAvailabilityListener(this);
-  NS_WARN_IF(NS_FAILED(rv));
+  Unused <<
+    NS_WARN_IF(NS_FAILED(service->UnregisterAvailabilityListener(this)));
 }
 
 /* virtual */ void
@@ -186,6 +187,7 @@ PresentationAvailability::UpdateAvailabilityAndDispatchEvent(bool aIsAvailable)
   }
 
   if (isChanged) {
-    NS_WARN_IF(NS_FAILED(DispatchTrustedEvent(NS_LITERAL_STRING("change"))));
+    Unused <<
+      NS_WARN_IF(NS_FAILED(DispatchTrustedEvent(NS_LITERAL_STRING("change"))));
   }
 }

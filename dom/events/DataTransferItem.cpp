@@ -426,7 +426,7 @@ DataTransferItem::GetAsString(FunctionStringCallback* aCallback,
     {
       ErrorResult rv;
       mCallback->Call(mStringData, rv);
-      NS_WARN_IF(rv.Failed());
+      NS_WARNING_ASSERTION(!rv.Failed(), "callback failed");
       return rv.StealNSResult();
     }
   private:

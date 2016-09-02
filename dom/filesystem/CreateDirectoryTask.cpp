@@ -100,7 +100,7 @@ CreateDirectoryTaskChild::SetSuccessRequestResult(const FileSystemResponseValue&
 
   aRv = NS_NewNativeLocalFile(NS_ConvertUTF16toUTF8(r.realPath()), true,
                               getter_AddRefs(mTargetPath));
-  NS_WARN_IF(aRv.Failed());
+  NS_WARNING_ASSERTION(!aRv.Failed(), "NS_NewNativeLocalFile failed");
 }
 
 void
