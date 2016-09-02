@@ -7124,6 +7124,8 @@ var Distribution = {
   // File used to store campaign data
   _file: null,
 
+  _preferencesJSON: null,
+
   init: function dc_init() {
     Services.obs.addObserver(this, "Distribution:Changed", false);
     Services.obs.addObserver(this, "Distribution:Set", false);
@@ -7146,9 +7148,18 @@ var Distribution = {
         } catch (e) {
           console.log("Unable to reinit search service.");
         }
+        // Make sure we don't reuse the original preferences
+        this._preferencesJSON = null;
         // Fall through.
 
       case "Distribution:Set":
+        if (aData) {
+          try {
+            this._preferencesJSON = JSON.parse(aData);
+          } catch (e) {
+            console.log("Invalid distribution JSON.");
+          }
+        }
         // Reload the default prefs so we can observe "prefservice:after-app-defaults"
         Services.prefs.QueryInterface(Ci.nsIObserver).observe(null, "reload-default-prefs", null);
         this.installDistroAddons();
@@ -7183,6 +7194,11 @@ var Distribution = {
   },
 
   getPrefs: function dc_getPrefs() {
+    if (this._preferencesJSON) {
+        this.applyPrefs(this._preferencesJSON);
+        return;
+    }
+
     // Get the distribution directory, and bail if it doesn't exist.
     let file = FileUtils.getDir("XREAppDist", [], false);
     if (!file.exists())
