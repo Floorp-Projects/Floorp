@@ -472,6 +472,13 @@ public class Tabs implements GeckoEventListener {
             if (event.equals("Tab:Added")) {
                 String url = message.isNull("uri") ? null : message.getString("uri");
 
+                if (message.getBoolean("cancelEditMode")) {
+                    final Tab oldTab = getSelectedTab();
+                    if (oldTab != null) {
+                        oldTab.setIsEditing(false);
+                    }
+                }
+
                 if (message.getBoolean("stub")) {
                     if (tab == null) {
                         // Tab was already closed; abort
