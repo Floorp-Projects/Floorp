@@ -61,9 +61,11 @@ GridDimension::SetTrackInfo(const ComputedGridTrackInfo* aTrackInfo)
 
 void
 GridDimension::SetLineInfo(const ComputedGridTrackInfo* aTrackInfo,
-                           const ComputedGridLineInfo* aLineInfo)
+                           const ComputedGridLineInfo* aLineInfo,
+                           const nsTArray<RefPtr<GridArea>>& aAreas,
+                           bool aIsRow)
 {
-  mLines->SetLineInfo(aTrackInfo, aLineInfo);
+  mLines->SetLineInfo(aTrackInfo, aLineInfo, aAreas, aIsRow);
 }
 
 } // namespace dom

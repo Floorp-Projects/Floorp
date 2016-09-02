@@ -105,8 +105,6 @@ interface GridArea
 
   /**
    * These values are 1-indexed line numbers bounding the area.
-   * FIXME: Bug 1297189 - Implicit grid areas need boundary line numbers
-   * exposed to dev tools
    */
   readonly attribute unsigned long rowStart;
   readonly attribute unsigned long rowEnd;
