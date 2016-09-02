@@ -43,8 +43,6 @@ SharedPlanarYCbCrImage::~SharedPlanarYCbCrImage() {
       ImageBridgeChild::DispatchReleaseTextureClient(mTextureClient);
       mTextureClient = nullptr;
     }
-
-    ImageBridgeChild::DispatchReleaseImageClient(mCompositable.forget().take());
   }
 }
 

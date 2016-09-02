@@ -354,6 +354,7 @@ UNIFIED_SOURCES += [
     'ipc/APZCTreeManagerChild.cpp',
     'ipc/APZCTreeManagerParent.cpp',
     'ipc/AsyncTransactionTracker.cpp',
+    'ipc/CompositableForwarder.cpp',
     'ipc/CompositableTransactionParent.cpp',
     'ipc/CompositorBench.cpp',
     'ipc/CompositorBridgeChild.cpp',
