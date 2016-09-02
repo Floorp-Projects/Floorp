@@ -99,9 +99,7 @@ ImageLayerComposite::RenderLayer(const IntRect& aClipRect)
 #ifdef MOZ_DUMP_PAINTING
   if (gfxEnv::DumpCompositorTextures()) {
     RefPtr<gfx::DataSourceSurface> surf = mImageHost->GetAsSurface();
-    if (surf) {
-      WriteSnapshotToDumpFile(this, surf);
-    }
+    WriteSnapshotToDumpFile(this, surf);
   }
 #endif
 
