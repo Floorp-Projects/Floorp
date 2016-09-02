@@ -1268,7 +1268,7 @@ VARIABLES = {
         This variable can only be used on Linux.
         """),
 
-    'SYMBOLS_FILE': (SourcePath, unicode,
+    'SYMBOLS_FILE': (Path, unicode,
         """A file containing a list of symbols to export from a shared library.
 
         The given file contains a list of symbols to be exported, and is
