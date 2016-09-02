@@ -8,7 +8,6 @@
 
 #ifdef MOZ_HAVE_SHMIMAGE
 #include "mozilla/X11Util.h"
-#include "mozilla/gfx/gfxVars.h"
 #include "mozilla/ipc/SharedMemory.h"
 #include "gfxPlatform.h"
 #include "nsPrintfCString.h"
@@ -151,7 +150,7 @@ nsShmImage::CreateImage(const IntSize& aSize)
 
   mSize = aSize;
 
-  BackendType backend = gfxVars::ContentBackend();
+  BackendType backend = gfxPlatform::GetPlatform()->GetDefaultContentBackend();
 
   mFormat = SurfaceFormat::UNKNOWN;
   switch (mDepth) {
