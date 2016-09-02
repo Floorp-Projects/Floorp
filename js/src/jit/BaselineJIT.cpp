@@ -54,8 +54,6 @@ ICStubSpace::freeAllAfterMinorGC(JSRuntime* rt)
 BaselineScript::BaselineScript(uint32_t prologueOffset, uint32_t epilogueOffset,
                                uint32_t profilerEnterToggleOffset,
                                uint32_t profilerExitToggleOffset,
-                               uint32_t traceLoggerEnterToggleOffset,
-                               uint32_t traceLoggerExitToggleOffset,
                                uint32_t postDebugPrologueOffset)
   : method_(nullptr),
     templateEnv_(nullptr),
@@ -70,8 +68,6 @@ BaselineScript::BaselineScript(uint32_t prologueOffset, uint32_t epilogueOffset,
     traceLoggerScriptsEnabled_(false),
     traceLoggerEngineEnabled_(false),
 # endif
-    traceLoggerEnterToggleOffset_(traceLoggerEnterToggleOffset),
-    traceLoggerExitToggleOffset_(traceLoggerExitToggleOffset),
     traceLoggerScriptEvent_(),
 #endif
     postDebugPrologueOffset_(postDebugPrologueOffset),
@@ -404,13 +400,12 @@ BaselineScript::New(JSScript* jsscript,
                     uint32_t prologueOffset, uint32_t epilogueOffset,
                     uint32_t profilerEnterToggleOffset,
                     uint32_t profilerExitToggleOffset,
-                    uint32_t traceLoggerEnterToggleOffset,
-                    uint32_t traceLoggerExitToggleOffset,
                     uint32_t postDebugPrologueOffset,
                     size_t icEntries,
                     size_t pcMappingIndexEntries, size_t pcMappingSize,
                     size_t bytecodeTypeMapEntries,
-                    size_t yieldEntries)
+                    size_t yieldEntries,
+                    size_t traceLoggerToggleOffsetEntries)
 {
     static const unsigned DataAlignment = sizeof(uintptr_t);
 
@@ -418,25 +413,27 @@ BaselineScript::New(JSScript* jsscript,
     size_t pcMappingIndexEntriesSize = pcMappingIndexEntries * sizeof(PCMappingIndexEntry);
     size_t bytecodeTypeMapSize = bytecodeTypeMapEntries * sizeof(uint32_t);
     size_t yieldEntriesSize = yieldEntries * sizeof(uintptr_t);
+    size_t tlEntriesSize = traceLoggerToggleOffsetEntries * sizeof(uint32_t);
 
     size_t paddedICEntriesSize = AlignBytes(icEntriesSize, DataAlignment);
     size_t paddedPCMappingIndexEntriesSize = AlignBytes(pcMappingIndexEntriesSize, DataAlignment);
     size_t paddedPCMappingSize = AlignBytes(pcMappingSize, DataAlignment);
     size_t paddedBytecodeTypesMapSize = AlignBytes(bytecodeTypeMapSize, DataAlignment);
     size_t paddedYieldEntriesSize = AlignBytes(yieldEntriesSize, DataAlignment);
+    size_t paddedTLEntriesSize = AlignBytes(tlEntriesSize, DataAlignment);
 
     size_t allocBytes = paddedICEntriesSize +
                         paddedPCMappingIndexEntriesSize +
                         paddedPCMappingSize +
                         paddedBytecodeTypesMapSize +
-                        paddedYieldEntriesSize;
+                        paddedYieldEntriesSize +
+                        paddedTLEntriesSize;
 
     BaselineScript* script = jsscript->zone()->pod_malloc_with_extra<BaselineScript, uint8_t>(allocBytes);
     if (!script)
         return nullptr;
     new (script) BaselineScript(prologueOffset, epilogueOffset,
                                 profilerEnterToggleOffset, profilerExitToggleOffset,
-                                traceLoggerEnterToggleOffset, traceLoggerExitToggleOffset,
                                 postDebugPrologueOffset);
 
     size_t offsetCursor = sizeof(BaselineScript);
@@ -459,6 +456,10 @@ BaselineScript::New(JSScript* jsscript,
 
     script->yieldEntriesOffset_ = yieldEntries ? offsetCursor : 0;
     offsetCursor += paddedYieldEntriesSize;
+
+    script->traceLoggerToggleOffsetsOffset_ = tlEntriesSize ? offsetCursor : 0;
+    script->numTraceLoggerToggleOffsets_ = traceLoggerToggleOffsetEntries;
+    offsetCursor += paddedTLEntriesSize;
 
     MOZ_ASSERT(offsetCursor == sizeof(BaselineScript) + allocBytes);
     return script;
@@ -968,7 +969,8 @@ BaselineScript::toggleDebugTraps(JSScript* script, jsbytecode* pc)
 
 #ifdef JS_TRACE_LOGGING
 void
-BaselineScript::initTraceLogger(JSRuntime* runtime, JSScript* script)
+BaselineScript::initTraceLogger(JSRuntime* runtime, JSScript* script,
+                                const Vector<CodeOffset>& offsets)
 {
 #ifdef DEBUG
     traceLoggerScriptsEnabled_ = TraceLogTextIdEnabled(TraceLogger_Scripts);
@@ -978,11 +980,15 @@ BaselineScript::initTraceLogger(JSRuntime* runtime, JSScript* script)
     TraceLoggerThread* logger = TraceLoggerForMainThread(runtime);
     traceLoggerScriptEvent_ = TraceLoggerEvent(logger, TraceLogger_Scripts, script);
 
+    MOZ_ASSERT(offsets.length() == numTraceLoggerToggleOffsets_);
+    for (size_t i = 0; i < offsets.length(); i++)
+        traceLoggerToggleOffsets()[i] = offsets[i].offset();
+
     if (TraceLogTextIdEnabled(TraceLogger_Engine) || TraceLogTextIdEnabled(TraceLogger_Scripts)) {
-        CodeLocationLabel enter(method_, CodeOffset(traceLoggerEnterToggleOffset_));
-        CodeLocationLabel exit(method_, CodeOffset(traceLoggerExitToggleOffset_));
-        Assembler::ToggleToCmp(enter);
-        Assembler::ToggleToCmp(exit);
+        for (size_t i = 0; i < numTraceLoggerToggleOffsets_; i++) {
+            CodeLocationLabel label(method_, CodeOffset(traceLoggerToggleOffsets()[i]));
+            Assembler::ToggleToCmp(label);
+        }
     }
 }
 
@@ -1004,17 +1010,13 @@ BaselineScript::toggleTraceLoggerScripts(JSRuntime* runtime, JSScript* script, b
 
     AutoWritableJitCode awjc(method());
 
-    // Enable/Disable the traceLogger prologue and epilogue.
-    CodeLocationLabel enter(method_, CodeOffset(traceLoggerEnterToggleOffset_));
-    CodeLocationLabel exit(method_, CodeOffset(traceLoggerExitToggleOffset_));
-    if (!engineEnabled) {
-        if (enable) {
-            Assembler::ToggleToCmp(enter);
-            Assembler::ToggleToCmp(exit);
-        } else {
-            Assembler::ToggleToJmp(enter);
-            Assembler::ToggleToJmp(exit);
-        }
+    // Enable/Disable the traceLogger.
+    for (size_t i = 0; i < numTraceLoggerToggleOffsets_; i++) {
+        CodeLocationLabel label(method_, CodeOffset(traceLoggerToggleOffsets()[i]));
+        if (enable)
+            Assembler::ToggleToCmp(label);
+        else
+            Assembler::ToggleToJmp(label);
     }
 
 #if DEBUG
@@ -1033,16 +1035,12 @@ BaselineScript::toggleTraceLoggerEngine(bool enable)
     AutoWritableJitCode awjc(method());
 
     // Enable/Disable the traceLogger prologue and epilogue.
-    CodeLocationLabel enter(method_, CodeOffset(traceLoggerEnterToggleOffset_));
-    CodeLocationLabel exit(method_, CodeOffset(traceLoggerExitToggleOffset_));
-    if (!scriptsEnabled) {
-        if (enable) {
-            Assembler::ToggleToCmp(enter);
-            Assembler::ToggleToCmp(exit);
-        } else {
-            Assembler::ToggleToJmp(enter);
-            Assembler::ToggleToJmp(exit);
-        }
+    for (size_t i = 0; i < numTraceLoggerToggleOffsets_; i++) {
+        CodeLocationLabel label(method_, CodeOffset(traceLoggerToggleOffsets()[i]));
+        if (enable)
+            Assembler::ToggleToCmp(label);
+        else
+            Assembler::ToggleToJmp(label);
     }
 
 #if DEBUG
