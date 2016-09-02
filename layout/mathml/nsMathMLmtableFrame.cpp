@@ -335,8 +335,9 @@ public:
 };
 
 #ifdef DEBUG
-#define DEBUG_VERIFY_THAT_FRAME_IS(_frame, _expected) \
-  NS_ASSERTION(NS_STYLE_DISPLAY_##_expected == _frame->StyleDisplay()->mDisplay, "internal error");
+#define DEBUG_VERIFY_THAT_FRAME_IS(_frame, _expected)                              \
+  MOZ_ASSERT(mozilla::StyleDisplay::_expected == _frame->StyleDisplay()->mDisplay, \
+             "internal error");
 #else
 #define DEBUG_VERIFY_THAT_FRAME_IS(_frame, _expected)
 #endif
@@ -588,7 +589,7 @@ MapAllAttributesIntoCSS(nsMathMLmtableFrame* aTableFrame)
     return;
 
   for (nsIFrame* rowFrame : rgFrame->PrincipalChildList()) {
-    DEBUG_VERIFY_THAT_FRAME_IS(rowFrame, TABLE_ROW);
+    DEBUG_VERIFY_THAT_FRAME_IS(rowFrame, TableRow);
     if (rowFrame->GetType() == nsGkAtoms::tableRowFrame) {
       // Map row rowalign.
       ParseFrameAttribute(rowFrame, nsGkAtoms::rowalign_, false);
@@ -596,7 +597,7 @@ MapAllAttributesIntoCSS(nsMathMLmtableFrame* aTableFrame)
       ParseFrameAttribute(rowFrame, nsGkAtoms::columnalign_, true);
 
       for (nsIFrame* cellFrame : rowFrame->PrincipalChildList()) {
-        DEBUG_VERIFY_THAT_FRAME_IS(cellFrame, TABLE_CELL);
+        DEBUG_VERIFY_THAT_FRAME_IS(cellFrame, TableCell);
         if (IS_TABLE_CELL(cellFrame->GetType())) {
           // Map cell rowalign.
           ParseFrameAttribute(cellFrame, nsGkAtoms::rowalign_, false);
@@ -807,7 +808,7 @@ nsMathMLmtableWrapperFrame::GetRowFrameAt(int32_t aRowIndex)
       return nullptr;
     for (nsIFrame* rowFrame : rgFrame->PrincipalChildList()) {
       if (aRowIndex == 0) {
-        DEBUG_VERIFY_THAT_FRAME_IS(rowFrame, TABLE_ROW);
+        DEBUG_VERIFY_THAT_FRAME_IS(rowFrame, TableRow);
         if (rowFrame->GetType() != nsGkAtoms::tableRowFrame)
           return nullptr;
 

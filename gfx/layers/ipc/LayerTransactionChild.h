@@ -40,6 +40,7 @@ public:
   void Destroy();
 
   bool IPCOpen() const { return mIPCOpen && !mDestroyed; }
+  bool IsDestroyed() const { return mDestroyed; }
 
   void SetForwarder(ShadowLayerForwarder* aForwarder)
   {

@@ -31,14 +31,14 @@ assertEq(promiseDO3.promiseState, "rejected");
 assertThrowsInstanceOf(function () { promiseDO4.promiseState }, TypeError);
 assertThrowsInstanceOf(function () { promiseDO5.promiseState }, TypeError);
 
-assertEq(promiseDO1.promiseValue, undefined);
+assertThrowsInstanceOf(function () { promiseDO1.promiseValue }, TypeError);
 assertEq(promiseDO2.promiseValue, 42);
-assertEq(promiseDO3.promiseValue, undefined);
+assertThrowsInstanceOf(function () { promiseDO3.promiseValue }, TypeError);
 assertThrowsInstanceOf(function () { promiseDO4.promiseValue }, TypeError);
 assertThrowsInstanceOf(function () { promiseDO5.promiseValue }, TypeError);
 
-assertEq(promiseDO1.promiseReason, undefined);
-assertEq(promiseDO2.promiseReason, undefined);
+assertThrowsInstanceOf(function () { promiseDO1.promiseReason }, TypeError);
+assertThrowsInstanceOf(function () { promiseDO2.promiseReason }, TypeError);
 assertEq(promiseDO3.promiseReason, 42);
 assertThrowsInstanceOf(function () { promiseDO4.promiseReason }, TypeError);
 assertThrowsInstanceOf(function () { promiseDO5.promiseReason }, TypeError);

@@ -448,8 +448,9 @@ struct ParamTraits<nsTArray<E>>
       MOZ_RELEASE_ASSERT(ByteLengthIsValid(length, sizeof(E), &pickledLength));
       aMsg->WriteBytes(aParam.Elements(), pickledLength);
     } else {
+      const E* elems = aParam.Elements();
       for (uint32_t index = 0; index < length; index++) {
-        WriteParam(aMsg, aParam[index]);
+        WriteParam(aMsg, elems[index]);
       }
     }
   }

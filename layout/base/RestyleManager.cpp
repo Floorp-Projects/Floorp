@@ -163,7 +163,7 @@ RestyleManager::RestyleElement(Element*               aElement,
     nsStyleContext* newContext =
       FrameConstructor()->MaybeRecreateFramesForElement(aElement);
     if (newContext &&
-        newContext->StyleDisplay()->mDisplay == NS_STYLE_DISPLAY_CONTENTS) {
+        newContext->StyleDisplay()->mDisplay == StyleDisplay::Contents) {
       // Style change for a display:contents node that did not recreate frames.
       ComputeAndProcessStyleChange(newContext, aElement, aMinHint,
                                    aRestyleTracker, aRestyleHint,
@@ -1785,10 +1785,10 @@ ElementRestyler::DoConditionallyRestyleUndisplayedDescendants(
   nsCSSFrameConstructor* fc = mPresContext->FrameConstructor();
   UndisplayedNode* nodes = fc->GetAllUndisplayedContentIn(aParent);
   ConditionallyRestyleUndisplayedNodes(nodes, aParent,
-                                       NS_STYLE_DISPLAY_NONE, aRestyleRoot);
+                                       StyleDisplay::None_, aRestyleRoot);
   nodes = fc->GetAllDisplayContentsIn(aParent);
   ConditionallyRestyleUndisplayedNodes(nodes, aParent,
-                                       NS_STYLE_DISPLAY_CONTENTS, aRestyleRoot);
+                                       StyleDisplay::Contents, aRestyleRoot);
 }
 
 // The structure of this method parallels RestyleUndisplayedNodes.
@@ -1797,11 +1797,11 @@ void
 ElementRestyler::ConditionallyRestyleUndisplayedNodes(
     UndisplayedNode* aUndisplayed,
     nsIContent* aUndisplayedParent,
-    const uint8_t aDisplay,
+    const StyleDisplay aDisplay,
     Element* aRestyleRoot)
 {
-  MOZ_ASSERT(aDisplay == NS_STYLE_DISPLAY_NONE ||
-             aDisplay == NS_STYLE_DISPLAY_CONTENTS);
+  MOZ_ASSERT(aDisplay == StyleDisplay::None_ ||
+             aDisplay == StyleDisplay::Contents);
   if (!aUndisplayed) {
     return;
   }
@@ -1823,9 +1823,9 @@ ElementRestyler::ConditionallyRestyleUndisplayedNodes(
     Element* element = undisplayed->mContent->AsElement();
 
     if (!ConditionallyRestyle(element, aRestyleRoot)) {
-      if (aDisplay == NS_STYLE_DISPLAY_NONE) {
+      if (aDisplay == StyleDisplay::None_) {
         ConditionallyRestyleContentDescendants(element, aRestyleRoot);
-      } else {  // NS_STYLE_DISPLAY_CONTENTS
+      } else {  // StyleDisplay::Contents
         DoConditionallyRestyleUndisplayedDescendants(element, aRestyleRoot);
       }
     }
@@ -3423,20 +3423,20 @@ ElementRestyler::DoRestyleUndisplayedDescendants(nsRestyleHint aChildRestyleHint
   nsCSSFrameConstructor* fc = mPresContext->FrameConstructor();
   UndisplayedNode* nodes = fc->GetAllUndisplayedContentIn(aParent);
   RestyleUndisplayedNodes(aChildRestyleHint, nodes, aParent,
-                          aParentContext, NS_STYLE_DISPLAY_NONE);
+                          aParentContext, StyleDisplay::None_);
   nodes = fc->GetAllDisplayContentsIn(aParent);
   RestyleUndisplayedNodes(aChildRestyleHint, nodes, aParent,
-                          aParentContext, NS_STYLE_DISPLAY_CONTENTS);
+                          aParentContext, StyleDisplay::Contents);
 }
 
 // The structure of this method parallels ConditionallyRestyleUndisplayedNodes.
 // If you update this method, you probably want to update that one too.
 void
-ElementRestyler::RestyleUndisplayedNodes(nsRestyleHint    aChildRestyleHint,
-                                         UndisplayedNode* aUndisplayed,
-                                         nsIContent*      aUndisplayedParent,
-                                         nsStyleContext*  aParentContext,
-                                         const uint8_t    aDisplay)
+ElementRestyler::RestyleUndisplayedNodes(nsRestyleHint      aChildRestyleHint,
+                                         UndisplayedNode*   aUndisplayed,
+                                         nsIContent*        aUndisplayedParent,
+                                         nsStyleContext*    aParentContext,
+                                         const StyleDisplay aDisplay)
 {
   nsIContent* undisplayedParent = aUndisplayedParent;
   UndisplayedNode* undisplayed = aUndisplayed;
@@ -3507,7 +3507,7 @@ ElementRestyler::RestyleUndisplayedNodes(nsRestyleHint    aChildRestyleHint,
       // update the undisplayed node with the new context
       undisplayed->mStyle = undisplayedContext;
 
-      if (aDisplay == NS_STYLE_DISPLAY_CONTENTS) {
+      if (aDisplay == StyleDisplay::Contents) {
         DoRestyleUndisplayedDescendants(aChildRestyleHint, element,
                                         undisplayed->mStyle);
       }
@@ -3814,7 +3814,7 @@ RestyleManager::ComputeAndProcessStyleChange(nsStyleContext*        aNewContext,
                                              const RestyleHintData& aRestyleHintData)
 {
   MOZ_ASSERT(mReframingStyleContexts, "should have rsc");
-  MOZ_ASSERT(aNewContext->StyleDisplay()->mDisplay == NS_STYLE_DISPLAY_CONTENTS);
+  MOZ_ASSERT(aNewContext->StyleDisplay()->mDisplay == StyleDisplay::Contents);
   nsIFrame* frame = GetNearestAncestorFrame(aElement);
   MOZ_ASSERT(frame, "display:contents node in map although it's a "
                     "display:none descendant?");

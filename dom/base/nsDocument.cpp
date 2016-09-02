@@ -218,6 +218,8 @@
 #include "mozilla/dom/TabChild.h"
 #include "mozilla/dom/UndoManager.h"
 #include "mozilla/dom/WebComponentsBinding.h"
+#include "mozilla/dom/CustomElementsRegistryBinding.h"
+#include "mozilla/dom/CustomElementsRegistry.h"
 #include "nsFrame.h"
 #include "nsDOMCaretPosition.h"
 #include "nsIDOMHTMLTextAreaElement.h"
@@ -367,156 +369,6 @@ nsIdentifierMapEntry::RemoveContentChangeCallback(nsIDocument::IDTargetObserver 
     mChangeCallbacks = nullptr;
   }
 }
-
-namespace mozilla {
-namespace dom {
-
-NS_IMPL_CYCLE_COLLECTION_CLASS(Registry)
-
-NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(Registry)
-  for (auto iter = tmp->mCustomDefinitions.Iter(); !iter.Done(); iter.Next()) {
-    aCallbacks.Trace(&iter.UserData()->mPrototype,
-                     "mCustomDefinitions prototype",
-                     aClosure);
-  }
-NS_IMPL_CYCLE_COLLECTION_TRACE_END
-
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(Registry)
-  for (auto iter = tmp->mCustomDefinitions.Iter(); !iter.Done(); iter.Next()) {
-    nsAutoPtr<LifecycleCallbacks>& callbacks = iter.UserData()->mCallbacks;
-
-    if (callbacks->mAttributeChangedCallback.WasPassed()) {
-      NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb,
-        "mCustomDefinitions->mCallbacks->mAttributeChangedCallback");
-      cb.NoteXPCOMChild(callbacks->mAttributeChangedCallback.Value());
-    }
-
-    if (callbacks->mCreatedCallback.WasPassed()) {
-      NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb,
-        "mCustomDefinitions->mCallbacks->mCreatedCallback");
-      cb.NoteXPCOMChild(callbacks->mCreatedCallback.Value());
-    }
-
-    if (callbacks->mAttachedCallback.WasPassed()) {
-      NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb,
-        "mCustomDefinitions->mCallbacks->mAttachedCallback");
-      cb.NoteXPCOMChild(callbacks->mAttachedCallback.Value());
-    }
-
-    if (callbacks->mDetachedCallback.WasPassed()) {
-      NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb,
-        "mCustomDefinitions->mCallbacks->mDetachedCallback");
-      cb.NoteXPCOMChild(callbacks->mDetachedCallback.Value());
-    }
-  }
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Registry)
-  tmp->mCustomDefinitions.Clear();
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(Registry)
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-NS_INTERFACE_MAP_END
-
-NS_IMPL_CYCLE_COLLECTING_ADDREF(Registry)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(Registry)
-
-Registry::Registry()
-{
-  mozilla::HoldJSObjects(this);
-}
-
-Registry::~Registry()
-{
-  mozilla::DropJSObjects(this);
-}
-
-void
-CustomElementCallback::Call()
-{
-  ErrorResult rv;
-  switch (mType) {
-    case nsIDocument::eCreated:
-    {
-      // For the duration of this callback invocation, the element is being created
-      // flag must be set to true.
-      mOwnerData->mElementIsBeingCreated = true;
-
-      // The callback hasn't actually been invoked yet, but we need to flip
-      // this now in order to enqueue the attached callback. This is a spec
-      // bug (w3c bug 27437).
-      mOwnerData->mCreatedCallbackInvoked = true;
-
-      // If ELEMENT is in a document and this document has a browsing context,
-      // enqueue attached callback for ELEMENT.
-      nsIDocument* document = mThisObject->GetComposedDoc();
-      if (document && document->GetDocShell()) {
-        document->EnqueueLifecycleCallback(nsIDocument::eAttached, mThisObject);
-      }
-
-      static_cast<LifecycleCreatedCallback *>(mCallback.get())->Call(mThisObject, rv);
-      mOwnerData->mElementIsBeingCreated = false;
-      break;
-    }
-    case nsIDocument::eAttached:
-      static_cast<LifecycleAttachedCallback *>(mCallback.get())->Call(mThisObject, rv);
-      break;
-    case nsIDocument::eDetached:
-      static_cast<LifecycleDetachedCallback *>(mCallback.get())->Call(mThisObject, rv);
-      break;
-    case nsIDocument::eAttributeChanged:
-      static_cast<LifecycleAttributeChangedCallback *>(mCallback.get())->Call(mThisObject,
-        mArgs.name, mArgs.oldValue, mArgs.newValue, rv);
-      break;
-  }
-}
-
-void
-CustomElementCallback::Traverse(nsCycleCollectionTraversalCallback& aCb) const
-{
-  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(aCb, "mThisObject");
-  aCb.NoteXPCOMChild(mThisObject);
-
-  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(aCb, "mCallback");
-  aCb.NoteXPCOMChild(mCallback);
-}
-
-CustomElementCallback::CustomElementCallback(Element* aThisObject,
-                                             nsIDocument::ElementCallbackType aCallbackType,
-                                             mozilla::dom::CallbackFunction* aCallback,
-                                             CustomElementData* aOwnerData)
-  : mThisObject(aThisObject),
-    mCallback(aCallback),
-    mType(aCallbackType),
-    mOwnerData(aOwnerData)
-{
-}
-
-CustomElementData::CustomElementData(nsIAtom* aType)
-  : mType(aType),
-    mCurrentCallback(-1),
-    mElementIsBeingCreated(false),
-    mCreatedCallbackInvoked(true),
-    mAssociatedMicroTask(-1)
-{
-}
-
-void
-CustomElementData::RunCallbackQueue()
-{
-  // Note: It's possible to re-enter this method.
-  while (static_cast<uint32_t>(++mCurrentCallback) < mCallbackQueue.Length()) {
-    mCallbackQueue[mCurrentCallback]->Call();
-  }
-
-  mCallbackQueue.Clear();
-  mCurrentCallback = -1;
-}
-
-} // namespace dom
-} // namespace mozilla
 
 void
 nsIdentifierMapEntry::FireChangeCallbacks(Element* aOldElement,
@@ -1494,12 +1346,6 @@ nsDocument::nsDocument(const char* aContentType)
   // void state used to differentiate an empty source from an unselected source
   mPreloadPictureFoundSource.SetIsVoid(true);
 
-  if (!sProcessingStack) {
-    sProcessingStack.emplace();
-    // Add the base queue sentinel to the processing stack.
-    sProcessingStack->AppendElement((CustomElementData*) nullptr);
-  }
-
   mEverInForeground = false;
 }
 
@@ -1616,8 +1462,6 @@ nsDocument::~nsDocument()
 
   mInDestructor = true;
   mInUnlinkOrDeletion = true;
-
-  mRegistry = nullptr;
 
   mozilla::DropJSObjects(this);
 
@@ -1792,7 +1636,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsDocument)
     uint32_t nsid = tmp->GetDefaultNamespaceID();
     nsAutoCString uri;
     if (tmp->mDocumentURI)
-      tmp->mDocumentURI->GetSpec(uri);
+      uri = tmp->mDocumentURI->GetSpecOrDefault();
     if (nsid < ArrayLength(kNSURIs)) {
       SprintfLiteral(name, "nsDocument %s %s %s",
                      loadedAsData.get(), kNSURIs[nsid], uri.get());
@@ -1890,7 +1734,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsDocument)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPendingAnimationTracker)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTemplateContentsOwner)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mChildrenCollection)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mRegistry)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mAnonymousContents)
 
   // Traverse all our nsCOMArrays.
@@ -1975,7 +1818,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDocument)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mPendingAnimationTracker)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mTemplateContentsOwner)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mChildrenCollection)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mRegistry)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mMasterDocument)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mOrientationPendingPromise)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mImportManager)
@@ -2187,9 +2029,8 @@ nsDocument::ResetToURI(nsIURI *aURI, nsILoadGroup *aLoadGroup,
   NS_PRECONDITION(aURI, "Null URI passed to ResetToURI");
 
   if (gDocumentLeakPRLog && MOZ_LOG_TEST(gDocumentLeakPRLog, LogLevel::Debug)) {
-    nsAutoCString spec;
-    aURI->GetSpec(spec);
-    PR_LogPrint("DOCUMENT %p ResetToURI %s", this, spec.get());
+    PR_LogPrint("DOCUMENT %p ResetToURI %s", this,
+                aURI->GetSpecOrDefault().get());
   }
 
   mSecurityInfo = nullptr;
@@ -2225,13 +2066,6 @@ nsDocument::ResetToURI(nsIURI *aURI, nsILoadGroup *aLoadGroup,
     mCachedRootElement = nullptr;
   }
   mInUnlinkOrDeletion = oldVal;
-
-  if (!mMasterDocument) {
-    // "When creating an import, use the registry of the master document."
-    // Note: at this point the mMasterDocument is already set for imports
-    // (and only for imports)
-    mRegistry = nullptr;
-  }
 
   // Reset our stylesheets
   ResetStylesheetsToURI(aURI);
@@ -2528,10 +2362,8 @@ nsDocument::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
   if (gDocumentLeakPRLog && MOZ_LOG_TEST(gDocumentLeakPRLog, LogLevel::Debug)) {
     nsCOMPtr<nsIURI> uri;
     aChannel->GetURI(getter_AddRefs(uri));
-    nsAutoCString spec;
-    if (uri)
-      uri->GetSpec(spec);
-    PR_LogPrint("DOCUMENT %p StartDocumentLoad %s", this, spec.get());
+    PR_LogPrint("DOCUMENT %p StartDocumentLoad %s",
+                this, uri ? uri->GetSpecOrDefault().get() : "");
   }
 
   MOZ_ASSERT(NodePrincipal()->GetAppId() != nsIScriptSecurityManager::UNKNOWN_APP_ID,
@@ -4735,10 +4567,6 @@ nsDocument::SetScriptGlobalObject(nsIScriptGlobalObject *aScriptGlobalObject)
     }
 
     MaybeRescheduleAnimationFrameNotifications();
-    if (Preferences::GetBool("dom.webcomponents.enabled") ||
-        Preferences::GetBool("dom.webcomponents.customelements.enabled")) {
-      mRegistry = new Registry();
-    }
   }
 
   // Remember the pointer to our window (or lack there of), to avoid
@@ -5564,26 +5392,29 @@ bool IsLowercaseASCII(const nsAString& aValue)
   return true;
 }
 
-CustomElementDefinition*
-nsDocument::LookupCustomElementDefinition(const nsAString& aLocalName,
-                                          uint32_t aNameSpaceID,
-                                          const nsAString* aIs)
+already_AddRefed<mozilla::dom::CustomElementsRegistry>
+nsDocument::GetCustomElementsRegistry()
 {
-  if (!mRegistry || aNameSpaceID != kNameSpaceID_XHTML) {
+  nsAutoString contentType;
+  GetContentType(contentType);
+  if (!IsHTMLDocument() &&
+      !contentType.EqualsLiteral("application/xhtml+xml")) {
     return nullptr;
   }
 
-  nsCOMPtr<nsIAtom> localNameAtom = NS_Atomize(aLocalName);
-  nsCOMPtr<nsIAtom> typeAtom = aIs ? NS_Atomize(*aIs) : localNameAtom;
-
-  CustomElementDefinition* data;
-  CustomElementHashKey key(aNameSpaceID, typeAtom);
-  if (mRegistry->mCustomDefinitions.Get(&key, &data) &&
-      data->mLocalName == localNameAtom) {
-    return data;
+  nsCOMPtr<nsPIDOMWindowInner> window(
+    do_QueryInterface(mScriptGlobalObject ? mScriptGlobalObject
+                                          : GetScopeObject()));
+  if (!window) {
+    return nullptr;
   }
 
-  return nullptr;
+  RefPtr<CustomElementsRegistry> registry = window->CustomElements();
+  if (!registry) {
+    return nullptr;
+  }
+
+  return registry.forget();
 }
 
 already_AddRefed<Element>
@@ -5613,48 +5444,6 @@ nsDocument::CreateElement(const nsAString& aTagName,
     needsLowercase ? lcTagName : aTagName, nullptr, mDefaultElementType, is);
 
   return elem.forget();
-}
-
-void
-nsDocument::SetupCustomElement(Element* aElement,
-                               uint32_t aNamespaceID,
-                               const nsAString* aTypeExtension)
-{
-  if (!mRegistry || aNamespaceID != kNameSpaceID_XHTML) {
-    return;
-  }
-
-  nsCOMPtr<nsIAtom> tagAtom = aElement->NodeInfo()->NameAtom();
-  nsCOMPtr<nsIAtom> typeAtom = aTypeExtension ?
-    NS_Atomize(*aTypeExtension) : tagAtom;
-
-  if (aTypeExtension && !aElement->HasAttr(kNameSpaceID_None, nsGkAtoms::is)) {
-    // Custom element setup in the parser happens after the "is"
-    // attribute is added.
-    aElement->SetAttr(kNameSpaceID_None, nsGkAtoms::is, *aTypeExtension, true);
-  }
-
-  CustomElementDefinition* data = LookupCustomElementDefinition(
-    aElement->NodeInfo()->LocalName(), aNamespaceID, aTypeExtension);
-
-  if (!data) {
-    // The type extension doesn't exist in the registry,
-    // thus we don't need to enqueue callback or adjust
-    // the "is" attribute, but it is possibly an upgrade candidate.
-    RegisterUnresolvedElement(aElement, typeAtom);
-    return;
-  }
-
-  if (data->mLocalName != tagAtom) {
-    // The element doesn't match the local name for the
-    // definition, thus the element isn't a custom element
-    // and we don't need to do anything more.
-    return;
-  }
-
-  // Enqueuing the created callback will set the CustomElementData on the
-  // element, causing prototype swizzling to occur in Element::WrapObject.
-  EnqueueLifecycleCallback(nsIDocument::eCreated, aElement, nullptr, data);
 }
 
 NS_IMETHODIMP
@@ -5916,25 +5705,28 @@ nsDocument::CustomElementConstructor(JSContext* aCx, unsigned aArgc, JS::Value* 
     return true;
   }
 
+  RefPtr<mozilla::dom::CustomElementsRegistry> registry = window->CustomElements();
+  if (!registry) {
+    return true;
+  }
+
   nsCOMPtr<nsIAtom> typeAtom(NS_Atomize(elemName));
-  CustomElementHashKey key(kNameSpaceID_Unknown, typeAtom);
-  CustomElementDefinition* definition;
-  if (!document->mRegistry ||
-      !document->mRegistry->mCustomDefinitions.Get(&key, &definition)) {
+  CustomElementDefinition* definition = registry->mCustomDefinitions.Get(typeAtom);
+  if (!definition) {
     return true;
   }
 
   nsDependentAtomString localName(definition->mLocalName);
 
   nsCOMPtr<Element> element =
-    document->CreateElem(localName, nullptr, definition->mNamespaceID);
+    document->CreateElem(localName, nullptr, kNameSpaceID_XHTML);
   NS_ENSURE_TRUE(element, true);
 
   if (definition->mLocalName != typeAtom) {
     // This element is a custom element by extension, thus we need to
     // do some special setup. For non-extended custom elements, this happens
     // when the element is created.
-    document->SetupCustomElement(element, definition->mNamespaceID, &elemName);
+    nsContentUtils::SetupCustomElement(element, &elemName);
   }
 
   nsresult rv = nsContentUtils::WrapNative(aCx, element, element, args.rval());
@@ -5975,255 +5767,21 @@ nsDocument::IsWebComponentsEnabled(JSContext* aCx, JSObject* aObject)
   return false;
 }
 
-nsresult
-nsDocument::RegisterUnresolvedElement(Element* aElement, nsIAtom* aTypeName)
-{
-  if (!mRegistry) {
-    return NS_OK;
-  }
-
-  mozilla::dom::NodeInfo* info = aElement->NodeInfo();
-
-  // Candidate may be a custom element through extension,
-  // in which case the custom element type name will not
-  // match the element tag name. e.g. <button is="x-button">.
-  nsCOMPtr<nsIAtom> typeName = aTypeName;
-  if (!typeName) {
-    typeName = info->NameAtom();
-  }
-
-  CustomElementHashKey key(info->NamespaceID(), typeName);
-  if (mRegistry->mCustomDefinitions.Get(&key)) {
-    return NS_OK;
-  }
-
-  nsTArray<nsWeakPtr>* unresolved;
-  mRegistry->mCandidatesMap.Get(&key, &unresolved);
-  if (!unresolved) {
-    unresolved = new nsTArray<nsWeakPtr>();
-    // Ownership of unresolved is taken by mCandidatesMap.
-    mRegistry->mCandidatesMap.Put(&key, unresolved);
-  }
-
-  nsWeakPtr* elem = unresolved->AppendElement();
-  *elem = do_GetWeakReference(aElement);
-  aElement->AddStates(NS_EVENT_STATE_UNRESOLVED);
-
-  return NS_OK;
-}
-
-void
-nsDocument::EnqueueLifecycleCallback(nsIDocument::ElementCallbackType aType,
-                                     Element* aCustomElement,
-                                     LifecycleCallbackArgs* aArgs,
-                                     CustomElementDefinition* aDefinition)
-{
-  if (!mRegistry) {
-    // The element might not belong to a document that
-    // has a browsing context, and thus no registry.
-    return;
-  }
-
-  CustomElementData* elementData = aCustomElement->GetCustomElementData();
-
-  // Let DEFINITION be ELEMENT's definition
-  CustomElementDefinition* definition = aDefinition;
-  if (!definition) {
-    mozilla::dom::NodeInfo* info = aCustomElement->NodeInfo();
-
-    // Make sure we get the correct definition in case the element
-    // is a extended custom element e.g. <button is="x-button">.
-    nsCOMPtr<nsIAtom> typeAtom = elementData ?
-      elementData->mType.get() : info->NameAtom();
-
-    CustomElementHashKey key(info->NamespaceID(), typeAtom);
-    if (!mRegistry->mCustomDefinitions.Get(&key, &definition) ||
-        definition->mLocalName != info->NameAtom()) {
-      // Trying to enqueue a callback for an element that is not
-      // a custom element. We are done, nothing to do.
-      return;
-    }
-  }
-
-  if (!elementData) {
-    // Create the custom element data the first time
-    // that we try to enqueue a callback.
-    elementData = new CustomElementData(definition->mType);
-    // aCustomElement takes ownership of elementData
-    aCustomElement->SetCustomElementData(elementData);
-    MOZ_ASSERT(aType == nsIDocument::eCreated,
-               "First callback should be the created callback");
-  }
-
-  // Let CALLBACK be the callback associated with the key NAME in CALLBACKS.
-  CallbackFunction* func = nullptr;
-  switch (aType) {
-    case nsIDocument::eCreated:
-      if (definition->mCallbacks->mCreatedCallback.WasPassed()) {
-        func = definition->mCallbacks->mCreatedCallback.Value();
-      }
-      break;
-
-    case nsIDocument::eAttached:
-      if (definition->mCallbacks->mAttachedCallback.WasPassed()) {
-        func = definition->mCallbacks->mAttachedCallback.Value();
-      }
-      break;
-
-    case nsIDocument::eDetached:
-      if (definition->mCallbacks->mDetachedCallback.WasPassed()) {
-        func = definition->mCallbacks->mDetachedCallback.Value();
-      }
-      break;
-
-    case nsIDocument::eAttributeChanged:
-      if (definition->mCallbacks->mAttributeChangedCallback.WasPassed()) {
-        func = definition->mCallbacks->mAttributeChangedCallback.Value();
-      }
-      break;
-  }
-
-  // If there is no such callback, stop.
-  if (!func) {
-    return;
-  }
-
-  if (aType == nsIDocument::eCreated) {
-    elementData->mCreatedCallbackInvoked = false;
-  } else if (!elementData->mCreatedCallbackInvoked) {
-    // Callbacks other than created callback must not be enqueued
-    // until after the created callback has been invoked.
-    return;
-  }
-
-  // Add CALLBACK to ELEMENT's callback queue.
-  CustomElementCallback* callback = new CustomElementCallback(aCustomElement,
-                                                              aType,
-                                                              func,
-                                                              elementData);
-  // Ownership of callback is taken by mCallbackQueue.
-  elementData->mCallbackQueue.AppendElement(callback);
-  if (aArgs) {
-    callback->SetArgs(*aArgs);
-  }
-
-  if (!elementData->mElementIsBeingCreated) {
-    CustomElementData* lastData =
-      sProcessingStack->SafeLastElement(nullptr);
-
-    // A new element queue needs to be pushed if the queue at the
-    // top of the stack is associated with another microtask level.
-    bool shouldPushElementQueue =
-      (!lastData || lastData->mAssociatedMicroTask <
-         static_cast<int32_t>(nsContentUtils::MicroTaskLevel()));
-
-    // Push a new element queue onto the processing stack when appropriate
-    // (when we enter a new microtask).
-    if (shouldPushElementQueue) {
-      // Push a sentinel value on the processing stack to mark the
-      // boundary between the element queues.
-      sProcessingStack->AppendElement((CustomElementData*) nullptr);
-    }
-
-    sProcessingStack->AppendElement(elementData);
-    elementData->mAssociatedMicroTask =
-      static_cast<int32_t>(nsContentUtils::MicroTaskLevel());
-
-    // Add a script runner to pop and process the element queue at
-    // the top of the processing stack.
-    if (shouldPushElementQueue) {
-      // Lifecycle callbacks enqueued by user agent implementation
-      // should be invoked prior to returning control back to script.
-      // Create a script runner to process the top of the processing
-      // stack as soon as it is safe to run script.
-      nsCOMPtr<nsIRunnable> runnable =
-        NS_NewRunnableFunction(&nsDocument::ProcessTopElementQueue);
-      nsContentUtils::AddScriptRunner(runnable);
-    }
-  }
-}
-
-// static
-void
-nsDocument::ProcessTopElementQueue()
-{
-  MOZ_ASSERT(nsContentUtils::IsSafeToRunScript());
-
-  nsTArray<RefPtr<CustomElementData>>& stack = *sProcessingStack;
-  uint32_t firstQueue = stack.LastIndexOf((CustomElementData*) nullptr);
-
-  for (uint32_t i = firstQueue + 1; i < stack.Length(); ++i) {
-    // Callback queue may have already been processed in an earlier
-    // element queue or in an element queue that was popped
-    // off more recently.
-    if (stack[i]->mAssociatedMicroTask != -1) {
-      stack[i]->RunCallbackQueue();
-      stack[i]->mAssociatedMicroTask = -1;
-    }
-  }
-
-  // If this was actually the base element queue, don't bother trying to pop
-  // the first "queue" marker (sentinel).
-  if (firstQueue != 0) {
-    stack.SetLength(firstQueue);
-  } else {
-    // Don't pop sentinel for base element queue.
-    stack.SetLength(1);
-  }
-}
-
-bool
-nsDocument::RegisterEnabled()
-{
-  static bool sPrefValue =
-    Preferences::GetBool("dom.webcomponents.enabled", false);
-  return sPrefValue;
-}
-
-// static
-Maybe<nsTArray<RefPtr<mozilla::dom::CustomElementData>>>
-nsDocument::sProcessingStack;
-
 void
 nsDocument::RegisterElement(JSContext* aCx, const nsAString& aType,
                             const ElementRegistrationOptions& aOptions,
                             JS::MutableHandle<JSObject*> aRetval,
                             ErrorResult& rv)
 {
-  if (!mRegistry) {
+  RefPtr<CustomElementsRegistry> registry(GetCustomElementsRegistry());
+  if (!registry) {
     rv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
     return;
   }
-
-  Registry::DefinitionMap& definitions = mRegistry->mCustomDefinitions;
 
   // Unconditionally convert TYPE to lowercase.
   nsAutoString lcType;
   nsContentUtils::ASCIIToLower(aType, lcType);
-
-  // Only convert NAME to lowercase in HTML documents. Note that NAME is
-  // options.extends.
-  nsAutoString lcName;
-  if (IsHTMLDocument()) {
-    nsContentUtils::ASCIIToLower(aOptions.mExtends, lcName);
-  } else {
-    lcName.Assign(aOptions.mExtends);
-  }
-
-  nsCOMPtr<nsIAtom> typeAtom(NS_Atomize(lcType));
-  if (!nsContentUtils::IsCustomElementName(typeAtom)) {
-    rv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
-    return;
-  }
-
-  // If there already exists a definition with the same TYPE, set ERROR to
-  // DuplicateDefinition and stop.
-  // Note that we need to find existing custom elements from either namespace.
-  CustomElementHashKey duplicateFinder(kNameSpaceID_Unknown, typeAtom);
-  if (definitions.Get(&duplicateFinder)) {
-    rv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
-    return;
-  }
 
   nsIGlobalObject* sgo = GetScopeObject();
   if (!sgo) {
@@ -6232,180 +5790,59 @@ nsDocument::RegisterElement(JSContext* aCx, const nsAString& aType,
   }
 
   JS::Rooted<JSObject*> global(aCx, sgo->GetGlobalJSObject());
-  nsCOMPtr<nsIAtom> nameAtom;
-  int32_t namespaceID = kNameSpaceID_XHTML;
   JS::Rooted<JSObject*> protoObject(aCx);
-  {
+
+  if (!aOptions.mPrototype) {
     JS::Rooted<JSObject*> htmlProto(aCx);
-    {
-      JSAutoCompartment ac(aCx, global);
-
-      htmlProto = HTMLElementBinding::GetProtoObjectHandle(aCx);
-      if (!htmlProto) {
-        rv.Throw(NS_ERROR_OUT_OF_MEMORY);
-        return;
-      }
+    htmlProto = HTMLElementBinding::GetProtoObjectHandle(aCx);
+    if (!htmlProto) {
+      rv.Throw(NS_ERROR_OUT_OF_MEMORY);
+      return;
     }
 
-    if (!aOptions.mPrototype) {
-      if (!JS_WrapObject(aCx, &htmlProto)) {
-        rv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
-        return;
-      }
-
-      protoObject = JS_NewObjectWithGivenProto(aCx, nullptr, htmlProto);
-      if (!protoObject) {
-        rv.Throw(NS_ERROR_UNEXPECTED);
-        return;
-      }
-    } else {
-      protoObject = aOptions.mPrototype;
-
-      // Get the unwrapped prototype to do some checks.
-      JS::Rooted<JSObject*> protoObjectUnwrapped(aCx, js::CheckedUnwrap(protoObject));
-      if (!protoObjectUnwrapped) {
-        // If the caller's compartment does not have permission to access the
-        // unwrapped prototype then throw.
-        rv.Throw(NS_ERROR_DOM_SECURITY_ERR);
-        return;
-      }
-
-      // If PROTOTYPE is already an interface prototype object for any interface
-      // object or PROTOTYPE has a non-configurable property named constructor,
-      // throw a NotSupportedError and stop.
-      const js::Class* clasp = js::GetObjectClass(protoObjectUnwrapped);
-      if (IsDOMIfaceAndProtoClass(clasp)) {
-        rv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
-        return;
-      }
-
-      JS::Rooted<JS::PropertyDescriptor> descRoot(aCx);
-      JS::MutableHandle<JS::PropertyDescriptor> desc(&descRoot);
-      // This check may go through a wrapper, but as we checked above
-      // it should be transparent or an xray. This should be fine for now,
-      // until the spec is sorted out.
-      if (!JS_GetPropertyDescriptor(aCx, protoObject, "constructor", desc)) {
-        rv.Throw(NS_ERROR_UNEXPECTED);
-        return;
-      }
-
-      if (!desc.configurable()) {
-        rv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
-        return;
-      }
-
-      JS::Rooted<JSObject*> protoProto(aCx, protoObject);
-
-      if (!JS_WrapObject(aCx, &htmlProto)) {
-        rv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
-        return;
-      }
-
-      while (protoProto) {
-        if (protoProto == htmlProto) {
-          break;
-        }
-
-        if (!JS_GetPrototype(aCx, protoProto, &protoProto)) {
-          rv.Throw(NS_ERROR_UNEXPECTED);
-          return;
-        }
-      }
-    } // Done with the checks, leave prototype's compartment.
-
-    // If name was provided and not null...
-    if (!lcName.IsEmpty()) {
-      // Let BASE be the element interface for NAME and NAMESPACE.
-      nameAtom = NS_Atomize(lcName);
-      nsIParserService* ps = nsContentUtils::GetParserService();
-      if (!ps) {
-        rv.Throw(NS_ERROR_UNEXPECTED);
-        return;
-      }
-
-      bool known =
-        ps->HTMLCaseSensitiveAtomTagToId(nameAtom) != eHTMLTag_userdefined;
-
-      // If BASE does not exist or is an interface for a custom element, set ERROR
-      // to InvalidName and stop.
-      // If BASE exists, then it cannot be an interface for a custom element.
-      if (!known) {
-        rv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
-        return;
-      }
-    } else {
-      nameAtom = typeAtom;
+    protoObject = JS_NewObjectWithGivenProto(aCx, nullptr, htmlProto);
+    if (!protoObject) {
+      rv.Throw(NS_ERROR_UNEXPECTED);
+      return;
     }
-  } // Leaving the document's compartment for the LifecycleCallbacks init
+  } else {
+    protoObject = aOptions.mPrototype;
 
-  JS::Rooted<JSObject*> wrappedProto(aCx, protoObject);
-  if (!JS_WrapObject(aCx, &wrappedProto)) {
-    rv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
-    return;
-  }
+    // Get the unwrapped prototype to do some checks.
+    JS::Rooted<JSObject*> protoObjectUnwrapped(aCx, js::CheckedUnwrap(protoObject));
+    if (!protoObjectUnwrapped) {
+      // If the caller's compartment does not have permission to access the
+      // unwrapped prototype then throw.
+      rv.Throw(NS_ERROR_DOM_SECURITY_ERR);
+      return;
+    }
 
-  // Note: We call the init from the caller compartment here
-  nsAutoPtr<LifecycleCallbacks> callbacksHolder(new LifecycleCallbacks());
-  JS::RootedValue rootedv(aCx, JS::ObjectValue(*wrappedProto));
-  if (!JS_WrapValue(aCx, &rootedv) || !callbacksHolder->Init(aCx, rootedv)) {
-    rv.Throw(NS_ERROR_FAILURE);
-    return;
-  }
+    // If PROTOTYPE is already an interface prototype object for any interface
+    // object or PROTOTYPE has a non-configurable property named constructor,
+    // throw a NotSupportedError and stop.
+    const js::Class* clasp = js::GetObjectClass(protoObjectUnwrapped);
+    if (IsDOMIfaceAndProtoClass(clasp)) {
+      rv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+      return;
+    }
 
-  // Associate the definition with the custom element.
-  CustomElementHashKey key(namespaceID, typeAtom);
-  LifecycleCallbacks* callbacks = callbacksHolder.forget();
-  CustomElementDefinition* definition =
-    new CustomElementDefinition(wrappedProto,
-                                typeAtom,
-                                nameAtom,
-                                callbacks,
-                                namespaceID,
-                                0 /* TODO dependent on HTML imports. Bug 877072 */);
-  definitions.Put(&key, definition);
+    JS::Rooted<JS::PropertyDescriptor> descRoot(aCx);
+    JS::MutableHandle<JS::PropertyDescriptor> desc(&descRoot);
+    // This check may go through a wrapper, but as we checked above
+    // it should be transparent or an xray. This should be fine for now,
+    // until the spec is sorted out.
+    if (!JS_GetPropertyDescriptor(aCx, protoObject, "constructor", desc)) {
+      rv.Throw(NS_ERROR_UNEXPECTED);
+      return;
+    }
 
-  // Do element upgrade.
-  nsAutoPtr<nsTArray<nsWeakPtr>> candidates;
-  mRegistry->mCandidatesMap.RemoveAndForget(&key, candidates);
-  if (candidates) {
-    for (size_t i = 0; i < candidates->Length(); ++i) {
-      nsCOMPtr<Element> elem = do_QueryReferent(candidates->ElementAt(i));
-      if (!elem) {
-        continue;
-      }
-
-      elem->RemoveStates(NS_EVENT_STATE_UNRESOLVED);
-
-      // Make sure that the element name matches the name in the definition.
-      // (e.g. a definition for x-button extending button should match
-      // <button is="x-button"> but not <x-button>.
-      if (elem->NodeInfo()->NameAtom() != nameAtom) {
-        //Skip over this element because definition does not apply.
-        continue;
-      }
-
-      MOZ_ASSERT(elem->IsHTMLElement(nameAtom));
-      nsWrapperCache* cache;
-      CallQueryInterface(elem, &cache);
-      MOZ_ASSERT(cache, "Element doesn't support wrapper cache?");
-
-      // We want to set the custom prototype in the caller's comparment.
-      // In the case that element is in a different compartment,
-      // this will set the prototype on the element's wrapper and
-      // thus only visible in the wrapper's compartment.
-      JS::RootedObject wrapper(aCx);
-      if ((wrapper = cache->GetWrapper()) && JS_WrapObject(aCx, &wrapper)) {
-        if (!JS_SetPrototype(aCx, wrapper, wrappedProto)) {
-          continue;
-        }
-      }
-
-      EnqueueLifecycleCallback(nsIDocument::eCreated, elem, nullptr, definition);
+    if (!desc.configurable()) {
+      rv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+      return;
     }
   }
 
   JS::Rooted<JSFunction*> constructor(aCx);
-
   {
     // Go into the document's global compartment when creating the constructor
     // function because we want to get the correct document (where the
@@ -6435,15 +5872,22 @@ nsDocument::RegisterElement(JSContext* aCx, const nsAString& aType,
     return;
   }
 
-  aRetval.set(wrappedConstructor);
-}
+  ElementDefinitionOptions options;
+  if (!aOptions.mExtends.IsVoid()) {
+    // Only convert NAME to lowercase in HTML documents.
+    nsAutoString lcName;
+    IsHTMLDocument() ? nsContentUtils::ASCIIToLower(aOptions.mExtends, lcName)
+                     : lcName.Assign(aOptions.mExtends);
 
-void
-nsDocument::UseRegistryFromDocument(nsIDocument* aDocument)
-{
-  nsDocument* doc = static_cast<nsDocument*>(aDocument);
-  MOZ_ASSERT(!mRegistry, "There should be no existing registry.");
-  mRegistry = doc->mRegistry;
+    options.mExtends.Construct(lcName);
+  }
+
+  RootedCallback<OwningNonNull<binding_detail::FastFunction>> functionConstructor(aCx);
+  functionConstructor = new binding_detail::FastFunction(aCx, wrappedConstructor, sgo);
+
+  registry->Define(lcType, functionConstructor, options, rv);
+
+  aRetval.set(wrappedConstructor);
 }
 
 NS_IMETHODIMP
@@ -8990,8 +8434,6 @@ nsDocument::Destroy()
   // leak-fixing if we fix nsDocumentViewer to do cycle-collection, but
   // tearing down all those frame trees right now is the right thing to do.
   mExternalResourceMap.Shutdown();
-
-  mRegistry = nullptr;
 }
 
 void
@@ -10344,7 +9786,8 @@ nsIDocument::CreateStaticClone(nsIDocShell* aCloneContainer)
             if (sheet->IsGecko()) {
               RefPtr<CSSStyleSheet> clonedSheet =
                 sheet->AsGecko()->Clone(nullptr, nullptr, clonedDoc, nullptr);
-              NS_WARN_IF_FALSE(clonedSheet, "Cloning a stylesheet didn't work!");
+              NS_WARNING_ASSERTION(clonedSheet,
+                                   "Cloning a stylesheet didn't work!");
               if (clonedSheet) {
                 clonedDoc->AddStyleSheet(clonedSheet);
               }
@@ -10363,7 +9806,8 @@ nsIDocument::CreateStaticClone(nsIDocShell* aCloneContainer)
             if (sheet->IsGecko()) {
               RefPtr<CSSStyleSheet> clonedSheet =
                 sheet->AsGecko()->Clone(nullptr, nullptr, clonedDoc, nullptr);
-              NS_WARN_IF_FALSE(clonedSheet, "Cloning a stylesheet didn't work!");
+              NS_WARNING_ASSERTION(clonedSheet,
+                                   "Cloning a stylesheet didn't work!");
               if (clonedSheet) {
                 clonedDoc->AddOnDemandBuiltInUASheet(clonedSheet);
               }
@@ -12419,8 +11863,10 @@ nsDocument::SetPointerLock(Element* aElement, int aCursorStyle)
   nsIFrame* rootFrame = shell->GetRootFrame();
   if (!NS_WARN_IF(!rootFrame)) {
     widget = rootFrame->GetNearestWidget();
-    NS_WARN_IF_FALSE(widget, "SetPointerLock(): Unable to find widget "
-                     "in shell->GetRootFrame()->GetNearestWidget();");
+    NS_WARNING_ASSERTION(
+      widget,
+      "SetPointerLock(): Unable to find widget in "
+      "shell->GetRootFrame()->GetNearestWidget();");
     if (aElement && !widget) {
       return false;
     }
@@ -12574,12 +12020,6 @@ nsDocument::OnAppThemeChanged()
     bool isAlternate;
     link->UpdateStyleSheet(nullptr, &willNotify, &isAlternate, true);
   }
-}
-
-void
-nsDocument::XPCOMShutdown()
-{
-  sProcessingStack.reset();
 }
 
 void
@@ -13055,8 +12495,7 @@ nsDocument::ReportUseCounters()
     }
 
     if (sDebugUseCounters) {
-      nsCString spec;
-      uri->GetSpec(spec);
+      nsCString spec = uri->GetSpecOrDefault();
 
       // URIs can be rather long for data documents, so truncate them to
       // some reasonable length.
@@ -13467,7 +12906,8 @@ nsDocument::CheckCustomElementName(const ElementCreationOptions& aOptions,
   nsString* is = const_cast<nsString*>(&(aOptions.mIs.Value()));
 
   // Throw NotFoundError if 'is' is not-null and definition is null
-  if (!LookupCustomElementDefinition(aLocalName, aNamespaceID, is)) {
+  if (!nsContentUtils::LookupCustomElementDefinition(this, aLocalName,
+                                                     aNamespaceID, is)) {
       rv.Throw(NS_ERROR_DOM_NOT_FOUND_ERR);
   }
 

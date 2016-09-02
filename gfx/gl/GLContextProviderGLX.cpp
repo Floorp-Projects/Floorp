@@ -423,8 +423,9 @@ GLXLibrary::CreatePixmap(gfxASurface* aSurface)
     if (matchIndex == -1) {
         // GLX can't handle A8 surfaces, so this is not really unexpected. The
         // caller should deal with this situation.
-        NS_WARN_IF_FALSE(format->depth == 8,
-                         "[GLX] Couldn't find a FBConfig matching Pixmap format");
+        NS_WARNING_ASSERTION(
+          format->depth == 8,
+          "[GLX] Couldn't find a FBConfig matching Pixmap format");
         return X11None;
     }
 

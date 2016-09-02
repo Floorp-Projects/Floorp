@@ -378,7 +378,9 @@ nsChildView::~nsChildView()
     childView->ResetParent();
   }
 
-  NS_WARN_IF_FALSE(mOnDestroyCalled, "nsChildView object destroyed without calling Destroy()");
+  NS_WARNING_ASSERTION(
+    mOnDestroyCalled,
+    "nsChildView object destroyed without calling Destroy()");
 
   DestroyCompositor();
 

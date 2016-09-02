@@ -204,8 +204,8 @@ public:
                "conditions or is uncacheable");
 #ifdef DEBUG
     for (Entry* e = static_cast<Entry*>(mEntries[aSID]); e; e = e->mNext) {
-      NS_WARN_IF_FALSE(e->mConditions != aConditions,
-                       "wasteful to have duplicate conditional style data");
+      NS_WARNING_ASSERTION(e->mConditions != aConditions,
+                           "wasteful to have duplicate conditional style data");
     }
 #endif
 
@@ -792,9 +792,9 @@ public:
   // This is infallible; it will never return nullptr.
   static already_AddRefed<nsRuleNode> CreateRootNode(nsPresContext* aPresContext);
 
-  static void EnsureBlockDisplay(uint8_t& display,
+  static void EnsureBlockDisplay(mozilla::StyleDisplay& display,
                                  bool aConvertListItem = false);
-  static void EnsureInlineDisplay(uint8_t& display);
+  static void EnsureInlineDisplay(mozilla::StyleDisplay& display);
 
   // Transition never returns null; on out of memory it'll just return |this|.
   nsRuleNode* Transition(nsIStyleRule* aRule, mozilla::SheetType aLevel,

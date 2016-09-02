@@ -207,7 +207,7 @@ LookupCache::WriteFile()
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = mPrefixSet->StoreToFile(psFile);
-  NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "failed to store the prefixset");
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "failed to store the prefixset");
 
   return NS_OK;
 }

@@ -127,7 +127,7 @@ nsTextEquivUtils::AppendTextEquivFromTextContent(nsIContent *aContent,
         // get words jammed together in final name.
         const nsStyleDisplay* display = frame->StyleDisplay();
         if (display->IsBlockOutsideStyle() ||
-            display->mDisplay == NS_STYLE_DISPLAY_TABLE_CELL) {
+            display->mDisplay == StyleDisplay::TableCell) {
           isHTMLBlock = true;
           if (!aString->IsEmpty()) {
             aString->Append(char16_t(' '));

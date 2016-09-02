@@ -8667,8 +8667,8 @@ DebuggerObject::promiseValueGetter(JSContext* cx, unsigned argc, Value* vp)
         return false;
 
     if (object->promiseState() != JS::PromiseState::Fulfilled) {
-        args.rval().setUndefined();
-        return true;
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_DEBUG_PROMISE_NOT_FULFILLED);
+        return false;
     }
 
     return DebuggerObject::getPromiseValue(cx, object, args.rval());;
@@ -8683,8 +8683,8 @@ DebuggerObject::promiseReasonGetter(JSContext* cx, unsigned argc, Value* vp)
         return false;
 
     if (object->promiseState() != JS::PromiseState::Rejected) {
-        args.rval().setUndefined();
-        return true;
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_DEBUG_PROMISE_NOT_REJECTED);
+        return false;
     }
 
     return DebuggerObject::getPromiseReason(cx, object, args.rval());;
@@ -8693,23 +8693,29 @@ DebuggerObject::promiseReasonGetter(JSContext* cx, unsigned argc, Value* vp)
 /* static */ bool
 DebuggerObject::promiseLifetimeGetter(JSContext* cx, unsigned argc, Value* vp)
 {
-    THIS_DEBUGOBJECT_PROMISE(cx, argc, vp, "get promiseLifetime", args, refobj);
+    THIS_DEBUGOBJECT(cx, argc, vp, "get promiseLifetime", args, object);
 
-    args.rval().setNumber(promise->lifetime());
+    if (!DebuggerObject::requirePromise(cx, object))
+        return false;
+
+    args.rval().setNumber(object->promiseLifetime());
     return true;
 }
 
 /* static */ bool
 DebuggerObject::promiseTimeToResolutionGetter(JSContext* cx, unsigned argc, Value* vp)
 {
-    THIS_DEBUGOBJECT_PROMISE(cx, argc, vp, "get promiseTimeToResolution", args, refobj);
+    THIS_DEBUGOBJECT(cx, argc, vp, "get promiseTimeToResolution", args, object);
 
-    if (promise->state() == JS::PromiseState::Pending) {
+    if (!DebuggerObject::requirePromise(cx, object))
+        return false;
+
+    if (object->promiseState() == JS::PromiseState::Pending) {
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_DEBUG_PROMISE_NOT_RESOLVED);
         return false;
     }
 
-    args.rval().setNumber(promise->timeToResolution());
+    args.rval().setNumber(object->promiseTimeToResolution());
     return true;
 }
 
@@ -9413,6 +9419,20 @@ JS::PromiseState
 DebuggerObject::promiseState() const
 {
     return promise()->state();
+}
+
+double
+DebuggerObject::promiseLifetime() const
+{
+    return promise()->lifetime();
+}
+
+double
+DebuggerObject::promiseTimeToResolution() const
+{
+    MOZ_ASSERT(promiseState() != JS::PromiseState::Pending);
+
+    return promise()->timeToResolution();
 }
 
 /* static */ bool

@@ -74,7 +74,7 @@ static LazyLogModule gSHistoryLog("nsSHistory");
     if (MOZ_LOG_TEST(gSHistoryLog, LogLevel::Debug)) {     \
       nsAutoCString _specStr(NS_LITERAL_CSTRING("(null)"));\
       if (uri) {                                           \
-        uri->GetSpec(_specStr);                            \
+        _specStr = uri->GetSpecOrDefault();                \
       }                                                    \
       const char* _spec = _specStr.get();                  \
       LOG(format);                                         \

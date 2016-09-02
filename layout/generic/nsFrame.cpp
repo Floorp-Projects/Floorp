@@ -379,7 +379,7 @@ nsWeakFrame::Init(nsIFrame* aFrame)
   mFrame = aFrame;
   if (mFrame) {
     nsIPresShell* shell = mFrame->PresContext()->GetPresShell();
-    NS_WARN_IF_FALSE(shell, "Null PresShell in nsWeakFrame!");
+    NS_WARNING_ASSERTION(shell, "Null PresShell in nsWeakFrame!");
     if (shell) {
       shell->AddWeakFrame(this);
     } else {
@@ -481,7 +481,7 @@ IsFontSizeInflationContainer(nsIFrame* aFrame,
 
   nsIContent *content = aFrame->GetContent();
   nsIAtom* frameType = aFrame->GetType();
-  bool isInline = (aFrame->GetDisplay() == NS_STYLE_DISPLAY_INLINE ||
+  bool isInline = (aFrame->GetDisplay() == StyleDisplay::Inline ||
                    RubyUtils::IsRubyBox(frameType) ||
                    (aFrame->IsFloating() &&
                     frameType == nsGkAtoms::letterFrame) ||
@@ -657,18 +657,18 @@ nsFrame::DestroyFrom(nsIFrame* aDestructRoot)
     // Delete previous sibling's reference to me.
     nsIFrame* prevSib = Properties().Get(nsIFrame::IBSplitPrevSibling());
     if (prevSib) {
-      NS_WARN_IF_FALSE(this ==
-         prevSib->Properties().Get(nsIFrame::IBSplitSibling()),
-         "IB sibling chain is inconsistent");
+      NS_WARNING_ASSERTION(
+        this == prevSib->Properties().Get(nsIFrame::IBSplitSibling()),
+        "IB sibling chain is inconsistent");
       prevSib->Properties().Delete(nsIFrame::IBSplitSibling());
     }
 
     // Delete next sibling's reference to me.
     nsIFrame* nextSib = Properties().Get(nsIFrame::IBSplitSibling());
     if (nextSib) {
-      NS_WARN_IF_FALSE(this ==
-         nextSib->Properties().Get(nsIFrame::IBSplitPrevSibling()),
-         "IB sibling chain is inconsistent");
+      NS_WARNING_ASSERTION(
+        this == nextSib->Properties().Get(nsIFrame::IBSplitPrevSibling()),
+        "IB sibling chain is inconsistent");
       nextSib->Properties().Delete(nsIFrame::IBSplitPrevSibling());
     }
   }
@@ -4192,7 +4192,7 @@ nsIFrame::ContentOffsets OffsetsForSingleFrame(nsIFrame* aFrame, nsPoint aPoint)
   // Figure out whether the offsets should be over, after, or before the frame
   nsRect rect(nsPoint(0, 0), aFrame->GetSize());
 
-  bool isBlock = aFrame->GetDisplay() != NS_STYLE_DISPLAY_INLINE;
+  bool isBlock = aFrame->GetDisplay() != StyleDisplay::Inline;
   bool isRtl = (aFrame->StyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL);
   if ((isBlock && rect.y < aPoint.y) ||
       (!isBlock && ((isRtl  && rect.x + rect.width / 2 > aPoint.x) || 
@@ -10799,22 +10799,25 @@ ReflowInput::DisplayInitFrameTypeExit(nsIFrame* aFrame,
     if (aFrame->IsFloating())
       printf(" float");
 
-    // This array must exactly match the NS_STYLE_DISPLAY constants.
+    // This array must exactly match the StyleDisplay enum.
     const char *const displayTypes[] = {
-      "none", "block", "inline", "inline-block", "list-item", "marker",
-      "run-in", "compact", "table", "inline-table", "table-row-group",
-      "table-column", "table-column-group", "table-header-group",
-      "table-footer-group", "table-row", "table-cell", "table-caption",
-      "box", "inline-box",
+      "none", "block", "inline", "inline-block", "list-item", "table",
+      "inline-table", "table-row-group", "table-column", "table-column",
+      "table-column-group", "table-header-group", "table-footer-group",
+      "table-row", "table-cell", "table-caption", "flex", "inline-flex",
+      "grid", "inline-grid", "ruby", "ruby-base", "ruby-base-container",
+      "ruby-text", "ruby-text-container", "contents", "-webkit-box",
+      "-webkit-inline-box", "box", "inline-box",
 #ifdef MOZ_XUL
       "grid", "inline-grid", "grid-group", "grid-line", "stack",
-      "inline-stack", "deck", "popup", "groupbox",
+      "inline-stack", "deck", "groupbox", "popup",
 #endif
     };
-    if (disp->mDisplay >= ArrayLength(displayTypes))
-      printf(" display=%u", disp->mDisplay);
+    const uint32_t display = static_cast<uint32_t>(disp->mDisplay);
+    if (display >= ArrayLength(displayTypes))
+      printf(" display=%u", display);
     else
-      printf(" display=%s", displayTypes[disp->mDisplay]);
+      printf(" display=%s", displayTypes[display]);
 
     // This array must exactly match the NS_CSS_FRAME_TYPE constants.
     const char *const cssFrameTypes[] = {
