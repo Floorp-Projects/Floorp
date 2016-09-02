@@ -4249,6 +4249,11 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         var = self.var
         idvar = ExprVar('id')
         intype = _cxxConstRefType(actortype, self.side)
+        # XXX the writer code can treat the actor as logically const; many
+        # other places that call _cxxConstRefType cannot treat the actor
+        # as logically const, particularly callers that can leak out to
+        # Gecko directly.
+        intype.const = 1
         cxxtype = _cxxBareType(actortype, self.side)
         outtype = _cxxPtrToType(actortype, self.side)
 
@@ -4340,14 +4345,12 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             typeinit = { 'ptr': 1 }
         directtype = Type(directtype.name, **typeinit)
         elemsvar = ExprVar('elems')
+        elemvar = ExprVar('elem')
 
         write = MethodDefn(self.writeMethodDecl(intype, var))
-        forwrite = StmtFor(init=ExprAssn(Decl(Type.UINT32, ivar.name),
-                                         ExprLiteral.ZERO),
-                           cond=ExprBinary(ivar, '<', lenvar),
-                           update=ExprPrefixUnop(ivar, '++'))
+        forwrite = StmtRangedFor(elemvar, var)
         forwrite.addstmt(
-            self.checkedWrite(eltipdltype, ExprIndex(var, ivar), msgvar,
+            self.checkedWrite(eltipdltype, elemvar, msgvar,
                               sentinelKey=arraytype.name()))
         write.addstmts([
             StmtDecl(Decl(Type.UINT32, lenvar.name),
