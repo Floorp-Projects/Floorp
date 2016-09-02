@@ -289,24 +289,6 @@ DeflateStringToUTF8Buffer(JSFlatString* src, mozilla::RangedPtr<char> dst,
                           size_t* dstlenp = nullptr, size_t* numcharsp = nullptr);
 
 /*
- * The smallest character encoding capable of fully representing a particular
- * string.
- */
-enum class SmallestEncoding {
-    ASCII,
-    Latin1,
-    UTF16
-};
-
-/*
- * Returns the smallest encoding possible for the given string: if all
- * codepoints are <128 then ASCII, otherwise if all codepoints are <256
- * Latin-1, else UTF16.
- */
-JS_PUBLIC_API(SmallestEncoding)
-FindSmallestEncoding(UTF8Chars utf8);
-
-/*
   * Return a null-terminated Latin-1 string copied from the input string,
   * storing its length (excluding null terminator) in |*outlen|.  Fail and
   * report an error if the string contains non-Latin-1 codepoints.  Returns
