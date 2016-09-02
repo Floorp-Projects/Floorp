@@ -31,7 +31,7 @@ extKeyUsage:[serverAuth,clientAuth,codeSigning,emailProtection
              OCSPSigning,timeStamping]
 subjectAlternativeName:[<dNSName|directoryName>,...]
 authorityInformationAccess:<OCSP URI>
-certificatePolicies:<policy OID>
+certificatePolicies:[<policy OID>,...]
 nameConstraints:{permitted,excluded}:[<dNSName|directoryName>,...]
 nsCertType:sslServer
 TLSFeature:[<TLSFeature>,...]
@@ -554,14 +554,15 @@ class Certificate(object):
         sequence.setComponentByPosition(0, accessDescription)
         self.addExtension(rfc2459.id_pe_authorityInfoAccess, sequence, critical)
 
-    def addCertificatePolicies(self, policyOID, critical):
+    def addCertificatePolicies(self, policyOIDs, critical):
         policies = rfc2459.CertificatePolicies()
-        policy = rfc2459.PolicyInformation()
-        if policyOID == 'any':
-            policyOID = '2.5.29.32.0'
-        policyIdentifier = rfc2459.CertPolicyId(policyOID)
-        policy.setComponentByName('policyIdentifier', policyIdentifier)
-        policies.setComponentByPosition(0, policy)
+        for pos, policyOID in enumerate(policyOIDs.split(',')):
+            if policyOID == 'any':
+                policyOID = '2.5.29.32.0'
+            policy = rfc2459.PolicyInformation()
+            policyIdentifier = rfc2459.CertPolicyId(policyOID)
+            policy.setComponentByName('policyIdentifier', policyIdentifier)
+            policies.setComponentByPosition(pos, policy)
         self.addExtension(rfc2459.id_ce_certificatePolicies, policies, critical)
 
     def addNameConstraints(self, constraints, critical):
