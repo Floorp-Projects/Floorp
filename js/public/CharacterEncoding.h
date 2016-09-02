@@ -31,8 +31,6 @@ class Latin1Chars : public mozilla::Range<Latin1Char>
     typedef mozilla::Range<Latin1Char> Base;
 
   public:
-    using CharT = Latin1Char;
-
     Latin1Chars() : Base() {}
     Latin1Chars(char* aBytes, size_t aLength) : Base(reinterpret_cast<Latin1Char*>(aBytes), aLength) {}
     Latin1Chars(const Latin1Char* aBytes, size_t aLength)
@@ -51,8 +49,6 @@ class Latin1CharsZ : public mozilla::RangedPtr<Latin1Char>
     typedef mozilla::RangedPtr<Latin1Char> Base;
 
   public:
-    using CharT = Latin1Char;
-
     Latin1CharsZ() : Base(nullptr, 0) {}
 
     Latin1CharsZ(char* aBytes, size_t aLength)
@@ -77,8 +73,6 @@ class UTF8Chars : public mozilla::Range<unsigned char>
     typedef mozilla::Range<unsigned char> Base;
 
   public:
-    using CharT = unsigned char;
-
     UTF8Chars() : Base() {}
     UTF8Chars(char* aBytes, size_t aLength)
       : Base(reinterpret_cast<unsigned char*>(aBytes), aLength)
@@ -96,8 +90,6 @@ class UTF8CharsZ : public mozilla::RangedPtr<unsigned char>
     typedef mozilla::RangedPtr<unsigned char> Base;
 
   public:
-    using CharT = unsigned char;
-
     UTF8CharsZ() : Base(nullptr, 0) {}
 
     UTF8CharsZ(char* aBytes, size_t aLength)
@@ -128,8 +120,6 @@ class ConstUTF8CharsZ
     const char* data_;
 
   public:
-    using CharT = unsigned char;
-
     ConstUTF8CharsZ() : data_(nullptr)
     {}
 
@@ -167,8 +157,6 @@ class TwoByteChars : public mozilla::Range<char16_t>
     typedef mozilla::Range<char16_t> Base;
 
   public:
-    using CharT = char16_t;
-
     TwoByteChars() : Base() {}
     TwoByteChars(char16_t* aChars, size_t aLength) : Base(aChars, aLength) {}
     TwoByteChars(const char16_t* aChars, size_t aLength) : Base(const_cast<char16_t*>(aChars), aLength) {}
@@ -182,8 +170,6 @@ class TwoByteCharsZ : public mozilla::RangedPtr<char16_t>
     typedef mozilla::RangedPtr<char16_t> Base;
 
   public:
-    using CharT = char16_t;
-
     TwoByteCharsZ() : Base(nullptr, 0) {}
 
     TwoByteCharsZ(char16_t* chars, size_t length)
@@ -205,8 +191,6 @@ class ConstTwoByteChars : public mozilla::Range<const char16_t>
     typedef mozilla::Range<const char16_t> Base;
 
   public:
-    using CharT = char16_t;
-
     ConstTwoByteChars() : Base() {}
     ConstTwoByteChars(const char16_t* aChars, size_t aLength) : Base(aChars, aLength) {}
 };
@@ -287,23 +271,6 @@ GetDeflatedUTF8StringLength(JSFlatString* s);
 JS_PUBLIC_API(void)
 DeflateStringToUTF8Buffer(JSFlatString* src, mozilla::RangedPtr<char> dst,
                           size_t* dstlenp = nullptr, size_t* numcharsp = nullptr);
-
-/*
-  * Return a null-terminated Latin-1 string copied from the input string,
-  * storing its length (excluding null terminator) in |*outlen|.  Fail and
-  * report an error if the string contains non-Latin-1 codepoints.  Returns
-  * Latin1CharsZ() on failure.
- */
-extern Latin1CharsZ
-UTF8CharsToNewLatin1CharsZ(JSContext* cx, const UTF8Chars utf8, size_t* outlen);
-
-/*
- * Return a null-terminated Latin-1 string copied from the input string,
- * storing its length (excluding null terminator) in |*outlen|.  Non-Latin-1
- * codepoints are replaced by '?'.  Returns Latin1CharsZ() on failure.
- */
-extern Latin1CharsZ
-LossyUTF8CharsToNewLatin1CharsZ(JSContext* cx, const UTF8Chars utf8, size_t* outlen);
 
 } // namespace JS
 
