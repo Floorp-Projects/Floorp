@@ -17,7 +17,8 @@ const TEST_THRESHOLD = {
 };
 
 const ADDON_ROLLOUT_POLICY = {
-  "beta"    : "2a", // Set 2 + any WebExtension
+  "beta"    : "49a", // 10 tested add-ons + any WebExtension
+  "release" : "49a", // 10 tested add-ons + any WebExtension
 };
 
 const PREF_COHORT_SAMPLE       = "e10s.rollout.cohortSample";
