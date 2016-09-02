@@ -217,15 +217,6 @@ VRManagerParent::ActorDestroy(ActorDestroyReason why)
   MessageLoop::current()->PostTask(NewRunnableMethod(this, &VRManagerParent::DeferredDestroy));
 }
 
-mozilla::ipc::IToplevelProtocol*
-VRManagerParent::CloneToplevel(const InfallibleTArray<mozilla::ipc::ProtocolFdMapping>& aFds,
-                               base::ProcessHandle aPeerProcess,
-                               mozilla::ipc::ProtocolCloneContext* aCtx)
-{
-  MOZ_ASSERT_UNREACHABLE("Not supported");
-  return nullptr;
-}
-
 void
 VRManagerParent::OnChannelConnected(int32_t aPid)
 {

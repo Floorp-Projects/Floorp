@@ -706,14 +706,6 @@ NeckoParent::DeallocPTransportProviderParent(PTransportProviderParent* aActor)
   return true;
 }
 
-void
-NeckoParent::CloneManagees(ProtocolBase* aSource,
-                         mozilla::ipc::ProtocolCloneContext* aCtx)
-{
-  aCtx->SetNeckoParent(this); // For cloning protocols managed by this.
-  PNeckoParent::CloneManagees(aSource, aCtx);
-}
-
 mozilla::ipc::IProtocol*
 NeckoParent::CloneProtocol(Channel* aChannel,
                            mozilla::ipc::ProtocolCloneContext* aCtx)
