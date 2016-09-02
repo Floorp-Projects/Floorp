@@ -800,51 +800,51 @@ ReflowInput::InitFrameType(nsIAtom* aFrameType)
     else if (disp->IsFloating(mFrame)) {
       frameType = NS_CSS_FRAME_TYPE_FLOATING;
     } else {
-      NS_ASSERTION(disp->mDisplay == NS_STYLE_DISPLAY_POPUP,
+      NS_ASSERTION(disp->mDisplay == StyleDisplay::Popup,
                    "unknown out of flow frame type");
       frameType = NS_CSS_FRAME_TYPE_UNKNOWN;
     }
   }
   else {
     switch (GetDisplay()) {
-    case NS_STYLE_DISPLAY_BLOCK:
-    case NS_STYLE_DISPLAY_LIST_ITEM:
-    case NS_STYLE_DISPLAY_TABLE:
-    case NS_STYLE_DISPLAY_TABLE_CAPTION:
-    case NS_STYLE_DISPLAY_FLEX:
-    case NS_STYLE_DISPLAY_WEBKIT_BOX:
-    case NS_STYLE_DISPLAY_GRID:
-    case NS_STYLE_DISPLAY_RUBY_TEXT_CONTAINER:
+    case StyleDisplay::Block:
+    case StyleDisplay::ListItem:
+    case StyleDisplay::Table:
+    case StyleDisplay::TableCaption:
+    case StyleDisplay::Flex:
+    case StyleDisplay::WebkitBox:
+    case StyleDisplay::Grid:
+    case StyleDisplay::RubyTextContainer:
       frameType = NS_CSS_FRAME_TYPE_BLOCK;
       break;
 
-    case NS_STYLE_DISPLAY_INLINE:
-    case NS_STYLE_DISPLAY_INLINE_BLOCK:
-    case NS_STYLE_DISPLAY_INLINE_TABLE:
-    case NS_STYLE_DISPLAY_INLINE_BOX:
-    case NS_STYLE_DISPLAY_INLINE_XUL_GRID:
-    case NS_STYLE_DISPLAY_INLINE_STACK:
-    case NS_STYLE_DISPLAY_INLINE_FLEX:
-    case NS_STYLE_DISPLAY_WEBKIT_INLINE_BOX:
-    case NS_STYLE_DISPLAY_INLINE_GRID:
-    case NS_STYLE_DISPLAY_RUBY:
-    case NS_STYLE_DISPLAY_RUBY_BASE:
-    case NS_STYLE_DISPLAY_RUBY_TEXT:
-    case NS_STYLE_DISPLAY_RUBY_BASE_CONTAINER:
+    case StyleDisplay::Inline:
+    case StyleDisplay::InlineBlock:
+    case StyleDisplay::InlineTable:
+    case StyleDisplay::InlineBox:
+    case StyleDisplay::InlineXulGrid:
+    case StyleDisplay::InlineStack:
+    case StyleDisplay::InlineFlex:
+    case StyleDisplay::WebkitInlineBox:
+    case StyleDisplay::InlineGrid:
+    case StyleDisplay::Ruby:
+    case StyleDisplay::RubyBase:
+    case StyleDisplay::RubyText:
+    case StyleDisplay::RubyBaseContainer:
       frameType = NS_CSS_FRAME_TYPE_INLINE;
       break;
 
-    case NS_STYLE_DISPLAY_TABLE_CELL:
-    case NS_STYLE_DISPLAY_TABLE_ROW_GROUP:
-    case NS_STYLE_DISPLAY_TABLE_COLUMN:
-    case NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP:
-    case NS_STYLE_DISPLAY_TABLE_HEADER_GROUP:
-    case NS_STYLE_DISPLAY_TABLE_FOOTER_GROUP:
-    case NS_STYLE_DISPLAY_TABLE_ROW:
+    case StyleDisplay::TableCell:
+    case StyleDisplay::TableRowGroup:
+    case StyleDisplay::TableColumn:
+    case StyleDisplay::TableColumnGroup:
+    case StyleDisplay::TableHeaderGroup:
+    case StyleDisplay::TableFooterGroup:
+    case StyleDisplay::TableRow:
       frameType = NS_CSS_FRAME_TYPE_INTERNAL_TABLE;
       break;
 
-    case NS_STYLE_DISPLAY_NONE:
+    case StyleDisplay::None_:
     default:
       frameType = NS_CSS_FRAME_TYPE_UNKNOWN;
       break;
@@ -1213,7 +1213,7 @@ ReflowInput::CalculateHypotheticalPosition
                       nsHypotheticalPosition&  aHypotheticalPos,
                       nsIAtom*                 aFrameType) const
 {
-  NS_ASSERTION(mStyleDisplay->mOriginalDisplay != NS_STYLE_DISPLAY_NONE,
+  NS_ASSERTION(mStyleDisplay->mOriginalDisplay != StyleDisplay::None_,
                "mOriginalDisplay has not been properly initialized");
 
   // Find the nearest containing block frame to the placeholder frame,
@@ -1246,7 +1246,7 @@ ReflowInput::CalculateHypotheticalPosition
   // the element had been in the flow
   nscoord boxISize;
   bool    knowBoxISize = false;
-  if ((NS_STYLE_DISPLAY_INLINE == mStyleDisplay->mOriginalDisplay) &&
+  if ((StyleDisplay::Inline == mStyleDisplay->mOriginalDisplay) &&
       !NS_FRAME_IS_REPLACED(mFrameType)) {
     // For non-replaced inline-level elements the 'inline size' property
     // doesn't apply, so we don't know what the inline size would have
@@ -2052,7 +2052,7 @@ static inline bool
 IsSideCaption(nsIFrame* aFrame, const nsStyleDisplay* aStyleDisplay,
               WritingMode aWM)
 {
-  if (aStyleDisplay->mDisplay != NS_STYLE_DISPLAY_TABLE_CAPTION) {
+  if (aStyleDisplay->mDisplay != StyleDisplay::TableCaption) {
     return false;
   }
   uint8_t captionSide = aFrame->StyleTableBorder()->mCaptionSide;
@@ -2242,8 +2242,8 @@ ReflowInput::InitConstraints(nsPresContext*     aPresContext,
       bool rowOrRowGroup = false;
       const nsStyleCoord &inlineSize = mStylePosition->ISize(wm);
       nsStyleUnit inlineSizeUnit = inlineSize.GetUnit();
-      if ((NS_STYLE_DISPLAY_TABLE_ROW == mStyleDisplay->mDisplay) ||
-          (NS_STYLE_DISPLAY_TABLE_ROW_GROUP == mStyleDisplay->mDisplay)) {
+      if ((StyleDisplay::TableRow == mStyleDisplay->mDisplay) ||
+          (StyleDisplay::TableRowGroup == mStyleDisplay->mDisplay)) {
         // 'inlineSize' property doesn't apply to table rows and row groups
         inlineSizeUnit = eStyleUnit_Auto;
         rowOrRowGroup = true;
@@ -2272,8 +2272,8 @@ ReflowInput::InitConstraints(nsPresContext*     aPresContext,
       }
 
       // Calculate the computed block size
-      if ((NS_STYLE_DISPLAY_TABLE_COLUMN == mStyleDisplay->mDisplay) ||
-          (NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP == mStyleDisplay->mDisplay)) {
+      if ((StyleDisplay::TableColumn == mStyleDisplay->mDisplay) ||
+          (StyleDisplay::TableColumnGroup == mStyleDisplay->mDisplay)) {
         // 'blockSize' property doesn't apply to table columns and column groups
         blockSizeUnit = eStyleUnit_Auto;
       }
@@ -2383,7 +2383,7 @@ ReflowInput::InitConstraints(nsPresContext*     aPresContext,
       // margin calculations.
       if (isBlock &&
           !IsSideCaption(mFrame, mStyleDisplay, cbwm) &&
-          mStyleDisplay->mDisplay != NS_STYLE_DISPLAY_INLINE_TABLE &&
+          mStyleDisplay->mDisplay != StyleDisplay::InlineTable &&
           parentFrameType != nsGkAtoms::flexContainerFrame &&
           parentFrameType != nsGkAtoms::gridContainerFrame) {
         CalculateBlockSideMargins(aFrameType);
@@ -2983,7 +2983,7 @@ ReflowInput::IsFloating() const
   return mStyleDisplay->IsFloating(mFrame);
 }
 
-uint8_t
+mozilla::StyleDisplay
 ReflowInput::GetDisplay() const
 {
   return mStyleDisplay->GetDisplay(mFrame);

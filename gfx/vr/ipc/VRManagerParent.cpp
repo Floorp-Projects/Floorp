@@ -166,7 +166,7 @@ VRManagerParent::CreateForContent(Endpoint<PVRManagerParent>&& aEndpoint)
 void
 VRManagerParent::Bind(Endpoint<PVRManagerParent>&& aEndpoint)
 {
-  if (!aEndpoint.Bind(this, nullptr)) {
+  if (!aEndpoint.Bind(this)) {
     return;
   }
   mSelfRef = this;
@@ -215,15 +215,6 @@ VRManagerParent::ActorDestroy(ActorDestroyReason why)
 {
   UnregisterFromManager();
   MessageLoop::current()->PostTask(NewRunnableMethod(this, &VRManagerParent::DeferredDestroy));
-}
-
-mozilla::ipc::IToplevelProtocol*
-VRManagerParent::CloneToplevel(const InfallibleTArray<mozilla::ipc::ProtocolFdMapping>& aFds,
-                               base::ProcessHandle aPeerProcess,
-                               mozilla::ipc::ProtocolCloneContext* aCtx)
-{
-  MOZ_ASSERT_UNREACHABLE("Not supported");
-  return nullptr;
 }
 
 void

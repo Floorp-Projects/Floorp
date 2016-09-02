@@ -35,7 +35,7 @@ VsyncBridgeParent::~VsyncBridgeParent()
 void
 VsyncBridgeParent::Open(Endpoint<PVsyncBridgeParent>&& aEndpoint)
 {
-  if (!aEndpoint.Bind(this, nullptr)) {
+  if (!aEndpoint.Bind(this)) {
     // We can't recover from this.
     MOZ_CRASH("Failed to bind VsyncBridgeParent to endpoint");
   }

@@ -331,7 +331,8 @@ WheelTransaction::SetTimeout()
   DebugOnly<nsresult> rv =
     sTimer->InitWithFuncCallback(OnTimeout, nullptr, GetTimeoutTime(),
                                  nsITimer::TYPE_ONE_SHOT);
-  NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "nsITimer::InitWithFuncCallback failed");
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                       "nsITimer::InitWithFuncCallback failed");
 }
 
 /* static */ nsIntPoint

@@ -483,11 +483,10 @@ gfxUserFontEntry::LoadNextSrc()
                             mPlatformFontEntry = fe;
                             SetLoadState(STATUS_LOADED);
                             if (LOG_ENABLED()) {
-                                nsAutoCString fontURI;
-                                currSrc.mURI->GetSpec(fontURI);
                                 LOG(("userfonts (%p) [src %d] "
                                      "loaded uri from cache: (%s) for (%s)\n",
-                                     mFontSet, mSrcIndex, fontURI.get(),
+                                     mFontSet, mSrcIndex,
+                                     currSrc.mURI->GetSpecOrDefault().get(),
                                      NS_ConvertUTF16toUTF8(mFamilyName).get()));
                             }
                             return;
@@ -532,10 +531,9 @@ gfxUserFontEntry::LoadNextSrc()
 
                         if (loadOK) {
                             if (LOG_ENABLED()) {
-                                nsAutoCString fontURI;
-                                currSrc.mURI->GetSpec(fontURI);
                                 LOG(("userfonts (%p) [src %d] loading uri: (%s) for (%s)\n",
-                                     mFontSet, mSrcIndex, fontURI.get(),
+                                     mFontSet, mSrcIndex,
+                                     currSrc.mURI->GetSpecOrDefault().get(),
                                      NS_ConvertUTF16toUTF8(mFamilyName).get()));
                             }
                             return;
@@ -703,11 +701,10 @@ gfxUserFontEntry::LoadPlatformFont(const uint8_t* aFontData, uint32_t& aLength)
         StoreUserFontData(fe, mFontSet->GetPrivateBrowsing(), originalFullName,
                           &metadata, metaOrigLen, compression);
         if (LOG_ENABLED()) {
-            nsAutoCString fontURI;
-            mSrcList[mSrcIndex].mURI->GetSpec(fontURI);
             LOG(("userfonts (%p) [src %d] loaded uri: (%s) for (%s) "
                  "(%p) gen: %8.8x compress: %d%%\n",
-                 mFontSet, mSrcIndex, fontURI.get(),
+                 mFontSet, mSrcIndex,
+                 mSrcList[mSrcIndex].mURI->GetSpecOrDefault().get(),
                  NS_ConvertUTF16toUTF8(mFamilyName).get(),
                  this, uint32_t(mFontSet->mGeneration), fontCompressionRatio));
         }
@@ -716,11 +713,10 @@ gfxUserFontEntry::LoadPlatformFont(const uint8_t* aFontData, uint32_t& aLength)
         gfxUserFontSet::UserFontCache::CacheFont(fe);
     } else {
         if (LOG_ENABLED()) {
-            nsAutoCString fontURI;
-            mSrcList[mSrcIndex].mURI->GetSpec(fontURI);
             LOG(("userfonts (%p) [src %d] failed uri: (%s) for (%s)"
                  " error making platform font\n",
-                 mFontSet, mSrcIndex, fontURI.get(),
+                 mFontSet, mSrcIndex,
+                 mSrcList[mSrcIndex].mURI->GetSpecOrDefault().get(),
                  NS_ConvertUTF16toUTF8(mFamilyName).get()));
         }
     }
@@ -1313,8 +1309,7 @@ gfxUserFontSet::UserFontCache::Entry::ReportMemory(
         NS_ConvertUTF16toUTF8 familyName(mFontEntry->mFamilyName);
         path.AppendPrintf("family=%s", familyName.get());
         if (mURI) {
-            nsCString spec;
-            mURI->GetSpec(spec);
+            nsCString spec = mURI->GetSpecOrDefault();
             spec.ReplaceChar('/', '\\');
             // Some fonts are loaded using horrendously-long data: URIs;
             // truncate those before reporting them.
@@ -1330,8 +1325,7 @@ gfxUserFontSet::UserFontCache::Entry::ReportMemory(
             nsCOMPtr<nsIURI> uri;
             mPrincipal->GetURI(getter_AddRefs(uri));
             if (uri) {
-                nsCString spec;
-                uri->GetSpec(spec);
+                nsCString spec = uri->GetSpecOrDefault();
                 if (!spec.IsEmpty()) {
                     // Include a clue as to who loaded this resource. (Note
                     // that because of font entry sharing, other pages may now

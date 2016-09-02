@@ -981,7 +981,7 @@ nsGenericHTMLElement::ParseBackgroundAttribute(int32_t aNamespaceID,
     }
 
     mozilla::css::URLValue *url =
-      new mozilla::css::URLValue(uri, buffer, doc->GetDocumentURI(),
+      new mozilla::css::URLValue(uri, buffer, baseURI, doc->GetDocumentURI(),
                                  NodePrincipal());
     aResult.SetTo(url, &aValue);
     return true;
@@ -1290,7 +1290,7 @@ nsGenericHTMLElement::MapCommonAttributesInto(const nsMappedAttributes* aAttribu
     nsCSSValue* display = aData->ValueForDisplay();
     if (display->GetUnit() == eCSSUnit_Null) {
       if (aAttributes->IndexOfAttr(nsGkAtoms::hidden) >= 0) {
-        display->SetIntValue(NS_STYLE_DISPLAY_NONE, eCSSUnit_Enumerated);
+        display->SetIntValue(StyleDisplay::None_, eCSSUnit_Enumerated);
       }
     }
   }
@@ -3097,7 +3097,7 @@ IsOrHasAncestorWithDisplayNone(Element* aElement, nsIPresShell* aPresShell)
       sc = nsComputedDOMStyle::GetStyleContextForElementNoFlush(elementsToCheck[i],
                                                                 nullptr, aPresShell);
     }
-    if (sc->StyleDisplay()->mDisplay == NS_STYLE_DISPLAY_NONE) {
+    if (sc->StyleDisplay()->mDisplay == StyleDisplay::None_) {
       return true;
     }
   }

@@ -445,8 +445,9 @@ gfxCoreTextShaper::SetGlyphsFromRun(gfxShapedText *aShapedText,
     while (glyphStart < numGlyphs) { // keep finding groups until all glyphs are accounted for
         bool inOrder = true;
         int32_t charEnd = glyphToChar[glyphStart] - stringRange.location;
-        NS_WARN_IF_FALSE(charEnd >= 0 && charEnd < stringRange.length,
-                         "glyph-to-char mapping points outside string range");
+        NS_WARNING_ASSERTION(
+            charEnd >= 0 && charEnd < stringRange.length,
+            "glyph-to-char mapping points outside string range");
         // clamp charEnd to the valid range of the string
         charEnd = std::max(charEnd, 0);
         charEnd = std::min(charEnd, int32_t(stringRange.length));
@@ -526,16 +527,16 @@ gfxCoreTextShaper::SetGlyphsFromRun(gfxShapedText *aShapedText,
             }
         } while (charEnd != charLimit);
 
-        NS_WARN_IF_FALSE(glyphStart < glyphEnd,
-                         "character/glyph clump contains no glyphs!");
+        NS_WARNING_ASSERTION(glyphStart < glyphEnd,
+                             "character/glyph clump contains no glyphs!");
         if (glyphStart == glyphEnd) {
             ++glyphStart; // make progress - avoid potential infinite loop
             charStart = charEnd;
             continue;
         }
 
-        NS_WARN_IF_FALSE(charStart != charEnd,
-                         "character/glyph clump contains no characters!");
+        NS_WARNING_ASSERTION(charStart != charEnd,
+                             "character/glyph clump contains no characters!");
         if (charStart == charEnd) {
             glyphStart = glyphEnd; // this is bad - we'll discard the glyph(s),
                                    // as there's nowhere to attach them

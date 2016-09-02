@@ -3172,7 +3172,7 @@ public:
   inline bool IsBlockInside() const;
   inline bool IsBlockOutside() const;
   inline bool IsInlineOutside() const;
-  inline uint8_t GetDisplay() const;
+  inline mozilla::StyleDisplay GetDisplay() const;
   inline bool IsFloating() const;
   inline bool IsAbsPosContainingBlock() const;
   inline bool IsFixedPosContainingBlock() const;

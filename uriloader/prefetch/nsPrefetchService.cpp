@@ -431,10 +431,8 @@ nsPrefetchService::ProcessNextURI(nsPrefetchNode *aFinished)
         mQueue.pop_front();
 
         if (LOG_ENABLED()) {
-            nsAutoCString spec;
-            node->mURI->GetSpec(spec);
-            LOG(("ProcessNextURI [%s]\n", spec.get()));
-        }
+            LOG(("ProcessNextURI [%s]\n",
+                 node->mURI->GetSpecOrDefault().get())); }
 
         //
         // if opening the channel fails (e.g. security check returns an error),
@@ -605,9 +603,7 @@ nsPrefetchService::Prefetch(nsIURI *aURI,
     NS_ENSURE_ARG_POINTER(aReferrerURI);
 
     if (LOG_ENABLED()) {
-        nsAutoCString spec;
-        aURI->GetSpec(spec);
-        LOG(("PrefetchURI [%s]\n", spec.get()));
+        LOG(("PrefetchURI [%s]\n", aURI->GetSpecOrDefault().get()));
     }
 
     if (mDisabled) {
@@ -727,9 +723,7 @@ nsPrefetchService::CancelPrefetchURI(nsIURI* aURI,
     NS_ENSURE_ARG_POINTER(aURI);
 
     if (LOG_ENABLED()) {
-        nsAutoCString spec;
-        aURI->GetSpec(spec);
-        LOG(("CancelPrefetchURI [%s]\n", spec.get()));
+        LOG(("CancelPrefetchURI [%s]\n", aURI->GetSpecOrDefault().get()));
     }
 
     //

@@ -1058,7 +1058,7 @@ this.PushService = {
 
   /**
    * Called on message from the child process. aPageRecord is an object sent by
-   * navigator.push, identifying the sending page and other fields.
+   * the push manager, identifying the sending page and other fields.
    */
   _registerWithServer: function(aPageRecord) {
     console.debug("registerWithServer()", aPageRecord);

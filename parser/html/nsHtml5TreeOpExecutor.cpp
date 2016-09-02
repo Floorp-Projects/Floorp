@@ -1006,7 +1006,7 @@ nsHtml5TreeOpExecutor::SetSpeculationBase(const nsAString& aURL)
   const nsCString& charset = mDocument->GetDocumentCharacterSet();
   DebugOnly<nsresult> rv = NS_NewURI(getter_AddRefs(mSpeculationBaseURI), aURL,
                                      charset.get(), mDocument->GetDocumentURI());
-  NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Failed to create a URI");
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to create a URI");
 }
 
 void

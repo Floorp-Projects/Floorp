@@ -1892,7 +1892,7 @@ nsContainerFrame::RenumberFrameAndDescendants(int32_t* aOrdinal,
   // If the frame is a list-item and the frame implements our
   // block frame API then get its bullet and set the list item
   // ordinal.
-  if (NS_STYLE_DISPLAY_LIST_ITEM == display->mDisplay) {
+  if (mozilla::StyleDisplay::ListItem == display->mDisplay) {
     // Make certain that the frame is a block frame in case
     // something foreign has crept in.
     nsBlockFrame* listItem = nsLayoutUtils::GetAsBlock(kid);
@@ -1936,9 +1936,9 @@ nsContainerFrame::RenumberFrameAndDescendants(int32_t* aOrdinal,
         kidRenumberedABullet = true;
       }
     }
-  } else if (display->mDisplay == NS_STYLE_DISPLAY_BLOCK ||
-             display->mDisplay == NS_STYLE_DISPLAY_FLEX ||
-             display->mDisplay == NS_STYLE_DISPLAY_GRID) {
+  } else if (display->mDisplay == mozilla::StyleDisplay::Block ||
+             display->mDisplay == mozilla::StyleDisplay::Flex ||
+             display->mDisplay == mozilla::StyleDisplay::Grid) {
     if (FrameStartsCounterScope(kid)) {
       // Don't bother recursing into a frame that is a new counter scope.
       // Any list-items in there will be handled by it.

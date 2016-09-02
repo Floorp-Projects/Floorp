@@ -464,7 +464,7 @@ IsBreakElement(nsINode* aNode)
   // Anything that's not an inline element is a break element.
   // XXXbz should replaced inlines be break elements, though?
   return element->GetPrimaryFrame()->StyleDisplay()->mDisplay !=
-    NS_STYLE_DISPLAY_INLINE;
+    StyleDisplay::Inline;
 }
 
 struct CheckLeavingBreakElementClosure {

@@ -1237,7 +1237,7 @@ nsBoxFrame::AttributeChanged(int32_t aNameSpaceID,
     // kPopupList and XULRelayoutChildAtOrdinal() only handles
     // principal children.
     if (parent && !(GetStateBits() & NS_FRAME_OUT_OF_FLOW) &&
-        StyleDisplay()->mDisplay != NS_STYLE_DISPLAY_POPUP) {
+        StyleDisplay()->mDisplay != mozilla::StyleDisplay::Popup) {
       parent->XULRelayoutChildAtOrdinal(this);
       // XXXldb Should this instead be a tree change on the child or parent?
       PresContext()->PresShell()->

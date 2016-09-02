@@ -12,6 +12,7 @@
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/ipc/ProcessChild.h"
 #include "mozilla/layers/APZThreadUtils.h"
+#include "mozilla/layers/APZCTreeManager.h"
 #include "mozilla/layers/CompositorBridgeParent.h"
 #include "mozilla/layers/CompositorThread.h"
 #include "mozilla/layers/ImageBridgeParent.h"
@@ -65,6 +66,7 @@ GPUParent::Init(base::ProcessId aParentPid,
   }
   CompositorThreadHolder::Start();
   APZThreadUtils::SetControllerThread(CompositorThreadHolder::Loop());
+  APZCTreeManager::InitializeGlobalState();
   VRManager::ManagerInit();
   LayerTreeOwnerTracker::Initialize();
   mozilla::ipc::SetThisProcessName("GPU Process");

@@ -37,7 +37,7 @@ VsyncBridgeChild::Create(RefPtr<VsyncIOThreadHolder> aThread,
 void
 VsyncBridgeChild::Open(Endpoint<PVsyncBridgeChild>&& aEndpoint)
 {
-  if (!aEndpoint.Bind(this, nullptr)) {
+  if (!aEndpoint.Bind(this)) {
     // The GPU Process Manager might be gone if we receive ActorDestroy very
     // late in shutdown.
     if (GPUProcessManager* gpm = GPUProcessManager::Get())

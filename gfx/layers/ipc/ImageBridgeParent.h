@@ -134,12 +134,6 @@ public:
 
   static bool NotifyImageComposites(nsTArray<ImageCompositeNotification>& aNotifications);
 
-  // Overriden from IToplevelProtocol
-  IToplevelProtocol*
-  CloneToplevel(const InfallibleTArray<ProtocolFdMapping>& aFds,
-                base::ProcessHandle aPeerProcess,
-                mozilla::ipc::ProtocolCloneContext* aCtx) override;
-
   virtual bool UsesImageBridge() const override { return true; }
 
   virtual bool IPCOpen() const override { return !mClosed; }

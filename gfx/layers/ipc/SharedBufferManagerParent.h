@@ -63,11 +63,6 @@ public:
    */
   static void DropGrallocBuffer(ProcessId id, mozilla::layers::SurfaceDescriptor aDesc);
 
-  // Overriden from IToplevelProtocol
-  IToplevelProtocol*
-  CloneToplevel(const InfallibleTArray<ProtocolFdMapping>& aFds,
-                base::ProcessHandle aPeerProcess,
-                mozilla::ipc::ProtocolCloneContext* aCtx) override;
   MessageLoop* GetMessageLoop();
 
 protected:

@@ -1726,8 +1726,8 @@ MediaCacheStream::NotifyDataStarted(int64_t aOffset)
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
 
   ReentrantMonitorAutoEnter mon(gMediaCache->GetReentrantMonitor());
-  NS_WARN_IF_FALSE(aOffset == mChannelOffset,
-                   "Server is giving us unexpected offset");
+  NS_WARNING_ASSERTION(aOffset == mChannelOffset,
+                       "Server is giving us unexpected offset");
   MOZ_ASSERT(aOffset >= 0);
   mChannelOffset = aOffset;
   if (mStreamLength >= 0) {

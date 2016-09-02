@@ -274,11 +274,6 @@ private:
   }
 
   // These methods are only called by IPDL.
-  virtual IToplevelProtocol*
-  CloneToplevel(const InfallibleTArray<ProtocolFdMapping>& aFds,
-                ProcessHandle aPeerProcess,
-                ProtocolCloneContext* aCtx) override;
-
   virtual void
   ActorDestroy(ActorDestroyReason aWhy) override;
 };
@@ -1289,41 +1284,6 @@ ParentImpl::MainThreadActorDestroy()
 
   // This may be the last reference!
   Release();
-}
-
-IToplevelProtocol*
-ParentImpl::CloneToplevel(const InfallibleTArray<ProtocolFdMapping>& aFds,
-                          ProcessHandle aPeerProcess,
-                          ProtocolCloneContext* aCtx)
-{
-  AssertIsInMainProcess();
-  AssertIsOnMainThread();
-  MOZ_ASSERT(aCtx->GetContentParent());
-
-  const ProtocolId protocolId = GetProtocolId();
-
-  for (unsigned int i = 0; i < aFds.Length(); i++) {
-    if (static_cast<ProtocolId>(aFds[i].protocolId()) != protocolId) {
-      continue;
-    }
-
-    UniquePtr<Transport> transport = OpenDescriptor(aFds[i].fd(), Transport::MODE_SERVER);
-    if (!transport) {
-      NS_WARNING("Failed to open transport!");
-      break;
-    }
-
-    PBackgroundParent* clonedActor =
-      Alloc(aCtx->GetContentParent(), transport.get(), base::GetProcId(aPeerProcess));
-    MOZ_ASSERT(clonedActor);
-
-    clonedActor->CloneManagees(this, aCtx);
-    clonedActor->SetTransport(Move(transport));
-
-    return clonedActor;
-  }
-
-  return nullptr;
 }
 
 void

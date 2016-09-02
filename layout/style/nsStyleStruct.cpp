@@ -60,10 +60,10 @@ EqualURIs(nsIURI *aURI1, nsIURI *aURI2)
 }
 
 static bool
-MaybeUnresolvedURIEquals(css::URLValue *aURI1, css::URLValue *aURI2)
+DefinitelyEqualURIsAndPrincipal(css::URLValue* aURI1, css::URLValue* aURI2)
 {
-  return aURI1 == aURI2 ||    // handle null==null, and optimize
-         (aURI1 && aURI2 && aURI1->MaybeUnresolvedURIEquals(*aURI2));
+  return aURI1 == aURI2 ||
+         (aURI1 && aURI2 && aURI1->DefinitelyEqualURIsAndPrincipal(*aURI2));
 }
 
 static
@@ -2981,8 +2981,8 @@ StyleAnimation::operator==(const StyleAnimation& aOther) const
 // nsStyleDisplay
 //
 nsStyleDisplay::nsStyleDisplay(StyleStructContext aContext)
-  : mDisplay(NS_STYLE_DISPLAY_INLINE)
-  , mOriginalDisplay(NS_STYLE_DISPLAY_INLINE)
+  : mDisplay(StyleDisplay::Inline)
+  , mOriginalDisplay(StyleDisplay::Inline)
   , mContain(NS_STYLE_CONTAIN_NONE)
   , mAppearance(NS_THEME_NONE)
   , mPosition(NS_STYLE_POSITION_STATIC)
@@ -3108,7 +3108,7 @@ nsStyleDisplay::CalcDifference(const nsStyleDisplay& aNewData) const
 {
   nsChangeHint hint = nsChangeHint(0);
 
-  if (!MaybeUnresolvedURIEquals(mBinding, aNewData.mBinding)
+  if (!DefinitelyEqualURIsAndPrincipal(mBinding, aNewData.mBinding)
       || mPosition != aNewData.mPosition
       || mDisplay != aNewData.mDisplay
       || mContain != aNewData.mContain

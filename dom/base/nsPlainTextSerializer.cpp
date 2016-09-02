@@ -113,7 +113,7 @@ nsPlainTextSerializer::~nsPlainTextSerializer()
 {
   delete[] mTagStack;
   delete[] mOLStack;
-  NS_WARN_IF_FALSE(mHeadLevel == 0, "Wrong head level!");
+  NS_WARNING_ASSERTION(mHeadLevel == 0, "Wrong head level!");
 }
 
 NS_IMPL_ISUPPORTS(nsPlainTextSerializer,
