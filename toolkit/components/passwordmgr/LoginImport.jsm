@@ -162,7 +162,6 @@ this.LoginImport.prototype = {
       rows = yield connection.execute("SELECT * FROM moz_disabledHosts");
       for (let row of rows) {
         try {
-          let id = row.getResultByName("id");
           let hostname = row.getResultByName("hostname");
 
           this.store.data.disabledHosts.push(hostname);

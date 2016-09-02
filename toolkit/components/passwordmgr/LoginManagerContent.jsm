@@ -1189,7 +1189,7 @@ var LoginManagerContent = {
       formOrigin: LoginUtils._getPasswordOrigin(doc.documentURI),
     })[0];
 
-    let [usernameField, newPasswordField, oldPasswordField] =
+    let [usernameField, newPasswordField] =
           this._getFormFields(form, false, recipes);
 
     // If we are not verifying a password field, we want
