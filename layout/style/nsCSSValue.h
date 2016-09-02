@@ -122,6 +122,19 @@ struct URLValueData
   // false in that case).
   bool MaybeUnresolvedURIEquals(const URLValueData& aOther) const;
 
+  // Returns true iff we know for sure, by comparing the mBaseURI pointer,
+  // the specified url() value mString, and the mLocalURLFlag, that these
+  // two URLValueData objects represent the same computed url() value.
+  //
+  // Doesn't look at mReferrer or mOriginPrincipal.
+  //
+  // Safe to call from any thread.
+  bool DefinitelyEqualURIs(const URLValueData& aOther) const;
+
+  // Smae as DefinitelyEqualURIs but additionally compares the nsIPrincipal
+  // pointers of the two URLValueData objects.
+  bool DefinitelyEqualURIsAndPrincipal(const URLValueData& aOther) const;
+
   nsIURI* GetURI() const;
 
   size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;

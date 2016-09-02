@@ -2678,6 +2678,23 @@ css::URLValueData::URIEquals(const URLValueData& aOther) const
          mLocalURLFlag == aOther.mLocalURLFlag;
 }
 
+bool
+css::URLValueData::DefinitelyEqualURIs(const URLValueData& aOther) const
+{
+  return mBaseURI == aOther.mBaseURI &&
+         (mString == aOther.mString ||
+          NS_strcmp(nsCSSValue::GetBufferValue(mString),
+                    nsCSSValue::GetBufferValue(aOther.mString)));
+}
+
+bool
+css::URLValueData::DefinitelyEqualURIsAndPrincipal(
+    const URLValueData& aOther) const
+{
+  return mOriginPrincipal == aOther.mOriginPrincipal &&
+         DefinitelyEqualURIs(aOther);
+}
+
 nsIURI*
 css::URLValueData::GetURI() const
 {
