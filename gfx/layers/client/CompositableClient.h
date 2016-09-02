@@ -161,14 +161,9 @@ public:
 
   void Destroy();
 
-  static bool DestroyFallback(PCompositableChild* aActor);
-
   bool IsConnected() const;
 
   PCompositableChild* GetIPDLActor() const;
-
-  // should only be called by a CompositableForwarder
-  virtual void SetIPDLActor(CompositableChild* aChild);
 
   CompositableForwarder* GetForwarder() const
   {
@@ -216,19 +211,7 @@ public:
    */
   virtual void RemoveTexture(TextureClient* aTexture);
 
-  static CompositableClient* FromIPDLActor(PCompositableChild* aActor);
-
-  /**
-   * Allocate and deallocate a CompositableChild actor.
-   *
-   * CompositableChild is an implementation detail of CompositableClient that is not
-   * exposed to the rest of the code base. CreateIPDLActor and DestroyIPDLActor
-   * are for use with the managing IPDL protocols only (so that they can
-   * implement AllocCompositableChild and DeallocPCompositableChild).
-   */
-  static PCompositableChild* CreateIPDLActor();
-
-  static bool DestroyIPDLActor(PCompositableChild* actor);
+  static RefPtr<CompositableClient> FromIPDLActor(PCompositableChild* aActor);
 
   void InitIPDLActor(PCompositableChild* aActor, uint64_t aAsyncID = 0);
 
@@ -242,7 +225,7 @@ public:
                                 TextureClient* aTexture,
                                 TextureDumpMode aCompress);
 protected:
-  CompositableChild* mCompositableChild;
+  RefPtr<CompositableChild> mCompositableChild;
   RefPtr<CompositableForwarder> mForwarder;
   // Some layers may want to enforce some flags to all their textures
   // (like disallowing tiling)

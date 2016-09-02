@@ -9,9 +9,24 @@
 namespace mozilla {
 namespace layers {
 
+/* static */ PCompositableChild*
+CompositableChild::CreateActor()
+{
+  CompositableChild* child = new CompositableChild();
+  child->AddRef();
+  return child;
+}
+
+/* static */ void
+CompositableChild::DestroyActor(PCompositableChild* aChild)
+{
+  static_cast<CompositableChild*>(aChild)->Release();
+}
+
 CompositableChild::CompositableChild()
  : mCompositableClient(nullptr),
-   mAsyncID(0)
+   mAsyncID(0),
+   mCanSend(true)
 {
   MOZ_COUNT_CTOR(CompositableChild);
 }
@@ -19,6 +34,12 @@ CompositableChild::CompositableChild()
 CompositableChild::~CompositableChild()
 {
   MOZ_COUNT_DTOR(CompositableChild);
+}
+
+bool
+CompositableChild::IsConnected() const
+{
+  return mCompositableClient && mCanSend;
 }
 
 void
@@ -34,12 +55,64 @@ CompositableChild::RevokeCompositableClient()
   mCompositableClient = nullptr;
 }
 
+RefPtr<CompositableClient>
+CompositableChild::GetCompositableClient()
+{
+  return mCompositableClient;
+}
+
 void
 CompositableChild::ActorDestroy(ActorDestroyReason)
 {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  mCanSend = false;
+
   if (mCompositableClient) {
     mCompositableClient->mCompositableChild = nullptr;
+    mCompositableClient = nullptr;
   }
+}
+
+/* static */ PCompositableChild*
+AsyncCompositableChild::CreateActor()
+{
+  AsyncCompositableChild* child = new AsyncCompositableChild();
+  child->AddRef();
+  return child;
+}
+
+AsyncCompositableChild::AsyncCompositableChild()
+ : mLock("AsyncCompositableChild.mLock")
+{
+}
+
+AsyncCompositableChild::~AsyncCompositableChild()
+{
+}
+
+void
+AsyncCompositableChild::ActorDestroy(ActorDestroyReason)
+{
+  mCanSend = false;
+
+  // We do not revoke CompositableClient::mCompositableChild here, since that
+  // could race with the main thread.
+  RevokeCompositableClient();
+}
+
+void
+AsyncCompositableChild::RevokeCompositableClient()
+{
+  MutexAutoLock lock(mLock);
+  mCompositableClient = nullptr;
+}
+
+RefPtr<CompositableClient>
+AsyncCompositableChild::GetCompositableClient()
+{
+  MutexAutoLock lock(mLock);
+  return CompositableChild::GetCompositableClient();
 }
 
 } // namespace layers

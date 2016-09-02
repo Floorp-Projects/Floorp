@@ -43,39 +43,34 @@ RemoveTextureFromCompositableTracker::ReleaseTextureClient()
   }
 }
 
-/* static */ PCompositableChild*
-CompositableClient::CreateIPDLActor()
-{
-  return new CompositableChild();
-}
-
-/* static */ bool
-CompositableClient::DestroyIPDLActor(PCompositableChild* actor)
-{
-  delete actor;
-  return true;
-}
-
 void
 CompositableClient::InitIPDLActor(PCompositableChild* aActor, uint64_t aAsyncID)
 {
   MOZ_ASSERT(aActor);
-  CompositableChild* child = static_cast<CompositableChild*>(aActor);
-  mCompositableChild = child;
-  child->Init(this, aAsyncID);
+
+  mForwarder->AssertInForwarderThread();
+
+  mCompositableChild = static_cast<CompositableChild*>(aActor);
+  mCompositableChild->Init(this, aAsyncID);
 }
 
-/* static */ CompositableClient*
+/* static */ RefPtr<CompositableClient>
 CompositableClient::FromIPDLActor(PCompositableChild* aActor)
 {
   MOZ_ASSERT(aActor);
-  return static_cast<CompositableChild*>(aActor)->GetCompositableClient();
+
+  RefPtr<CompositableClient> client = static_cast<CompositableChild*>(aActor)->GetCompositableClient();
+  if (!client) {
+    return nullptr;
+  }
+
+  client->mForwarder->AssertInForwarderThread();
+  return client;
 }
 
 CompositableClient::CompositableClient(CompositableForwarder* aForwarder,
                                        TextureFlags aTextureFlags)
-: mCompositableChild(nullptr)
-, mForwarder(aForwarder)
+: mForwarder(aForwarder)
 , mTextureFlags(aTextureFlags)
 {
   MOZ_COUNT_CTOR(CompositableClient);
@@ -93,12 +88,6 @@ CompositableClient::GetCompositorBackendType() const
   return mForwarder->GetCompositorBackendType();
 }
 
-void
-CompositableClient::SetIPDLActor(CompositableChild* aChild)
-{
-  mCompositableChild = aChild;
-}
-
 PCompositableChild*
 CompositableClient::GetIPDLActor() const
 {
@@ -112,6 +101,8 @@ CompositableClient::Connect(ImageContainer* aImageContainer)
   if (!GetForwarder() || GetIPDLActor()) {
     return false;
   }
+
+  GetForwarder()->AssertInForwarderThread();
   GetForwarder()->Connect(this, aImageContainer);
   return true;
 }
@@ -119,28 +110,28 @@ CompositableClient::Connect(ImageContainer* aImageContainer)
 bool
 CompositableClient::IsConnected() const
 {
-  return mCompositableChild && mCompositableChild->CanSend();
+  // CanSend() is only reliable in the same thread as the IPDL channel.
+  mForwarder->AssertInForwarderThread();
+  return mCompositableChild && mCompositableChild->IsConnected();
 }
 
 void
 CompositableClient::Destroy()
 {
-  if (!IsConnected()) {
+  if (!mCompositableChild) {
     return;
   }
 
   if (mTextureClientRecycler) {
     mTextureClientRecycler->Destroy();
   }
-  mCompositableChild->RevokeCompositableClient();
-  mCompositableChild->Destroy(mForwarder);
-  mCompositableChild = nullptr;
-}
 
-bool
-CompositableClient::DestroyFallback(PCompositableChild* aActor)
-{
-  return aActor->SendDestroySync();
+  // Take away our IPDL's actor reference back to us.
+  mCompositableChild->RevokeCompositableClient();
+
+  // Schedule the IPDL actor to be destroyed on the forwarder's thread.
+  mForwarder->Destroy(mCompositableChild);
+  mCompositableChild = nullptr;
 }
 
 uint64_t

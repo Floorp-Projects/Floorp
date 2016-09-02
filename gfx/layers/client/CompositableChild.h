@@ -8,12 +8,14 @@
 
 #include <stdint.h>
 #include "IPDLActor.h"
+#include "mozilla/Mutex.h"
 #include "mozilla/layers/PCompositableChild.h"
 
 namespace mozilla {
 namespace layers {
 
 class CompositableClient;
+class AsyncCompositableChild;
 
 /**
  * IPDL actor used by CompositableClient to match with its corresponding
@@ -21,27 +23,66 @@ class CompositableClient;
  *
  * CompositableChild is owned by a CompositableClient.
  */
-class CompositableChild : public ChildActor<PCompositableChild>
+class CompositableChild : public PCompositableChild
 {
 public:
-  CompositableChild();
-  virtual ~CompositableChild();
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CompositableChild)
+
+  static PCompositableChild* CreateActor();
+  static void DestroyActor(PCompositableChild* aChild);
 
   void Init(CompositableClient* aCompositable, uint64_t aAsyncID);
-  void RevokeCompositableClient();
+  virtual void RevokeCompositableClient();
 
-  void ActorDestroy(ActorDestroyReason) override;
+  virtual void ActorDestroy(ActorDestroyReason) override;
 
-  CompositableClient* GetCompositableClient() {
-    return mCompositableClient;
+  virtual RefPtr<CompositableClient> GetCompositableClient();
+
+  virtual AsyncCompositableChild* AsAsyncCompositableChild() {
+    return nullptr;
   }
+
   uint64_t GetAsyncID() const {
     return mAsyncID;
   }
 
-private:
+  // These should only be called on the IPDL thread.
+  bool IsConnected() const;
+  bool CanSend() const {
+    return mCanSend;
+  }
+
+protected:
+  CompositableChild();
+  virtual ~CompositableChild();
+
+protected:
   CompositableClient* mCompositableClient;
   uint64_t mAsyncID;
+  bool mCanSend;
+};
+
+// This CompositableChild can be used off the main thread.
+class AsyncCompositableChild final : public CompositableChild
+{
+public:
+  static PCompositableChild* CreateActor();
+
+  void RevokeCompositableClient() override;
+  RefPtr<CompositableClient> GetCompositableClient() override;
+
+  void ActorDestroy(ActorDestroyReason) override;
+
+  AsyncCompositableChild* AsAsyncCompositableChild() override {
+    return this;
+  }
+
+protected:
+  AsyncCompositableChild();
+  ~AsyncCompositableChild() override;
+
+private:
+  Mutex mLock;
 };
 
 } // namespace layers
