@@ -912,8 +912,9 @@ nsresult
 mozInlineSpellChecker::SpellCheckRange(nsIDOMRange* aRange)
 {
   if (!mSpellCheck) {
-    NS_WARN_IF_FALSE(mPendingSpellCheck,
-                     "Trying to spellcheck, but checking seems to be disabled");
+    NS_WARNING_ASSERTION(
+      mPendingSpellCheck,
+      "Trying to spellcheck, but checking seems to be disabled");
     return NS_ERROR_NOT_INITIALIZED;
   }
 

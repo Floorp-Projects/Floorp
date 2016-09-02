@@ -32,6 +32,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "Preferences",
                                   "resource://gre/modules/Preferences.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PromiseUtils",
                                   "resource://gre/modules/PromiseUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Schemas",
+                                  "resource://gre/modules/Schemas.jsm");
 
 function getConsole() {
   return new ConsoleAPI({
@@ -977,7 +979,6 @@ function SingletonEventManager(context, name, register) {
   this.name = name;
   this.register = register;
   this.unregister = new Map();
-  context.callOnClose(this);
 }
 
 SingletonEventManager.prototype = {
@@ -992,6 +993,7 @@ SingletonEventManager.prototype = {
 
     let unregister = this.register(wrappedCallback, ...args);
     this.unregister.set(callback, unregister);
+    this.context.callOnClose(this);
   },
 
   removeListener(callback) {
@@ -1897,8 +1899,10 @@ class SchemaAPIManager extends EventEmitter {
     }
 
     for (let api of apis) {
-      api = api.getAPI(context);
-      copy(obj, api);
+      if (Schemas.checkPermissions(api.namespace, context.extension)) {
+        api = api.getAPI(context);
+        copy(obj, api);
+      }
     }
   }
 }

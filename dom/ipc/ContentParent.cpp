@@ -66,6 +66,7 @@
 #include "mozilla/dom/Permissions.h"
 #include "mozilla/dom/PresentationParent.h"
 #include "mozilla/dom/PPresentationParent.h"
+#include "mozilla/dom/PushNotifier.h"
 #include "mozilla/dom/FlyWebPublishedServerIPC.h"
 #include "mozilla/dom/quota/QuotaManagerService.h"
 #include "mozilla/dom/telephony/TelephonyParent.h"
@@ -261,10 +262,6 @@ using namespace mozilla::system;
 #ifdef MOZ_ENABLE_PROFILER_SPS
 #include "nsIProfiler.h"
 #include "nsIProfileSaveEvent.h"
-#endif
-
-#ifndef MOZ_SIMPLEPUSH
-#include "mozilla/dom/PushNotifier.h"
 #endif
 
 #ifdef XP_WIN
@@ -2484,61 +2481,11 @@ ContentParent::RecvSetClipboard(const IPCDataTransfer& aDataTransfer,
   NS_ENSURE_SUCCESS(rv, true);
   trans->Init(nullptr);
 
-  const nsTArray<IPCDataTransferItem>& items = aDataTransfer.items();
-  for (const auto& item : items) {
-    trans->AddDataFlavor(item.flavor().get());
-
-    if (item.data().type() == IPCDataTransferData::TnsString) {
-      nsCOMPtr<nsISupportsString> dataWrapper =
-        do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID, &rv);
-      NS_ENSURE_SUCCESS(rv, true);
-
-      const nsString& text = item.data().get_nsString();
-      rv = dataWrapper->SetData(text);
-      NS_ENSURE_SUCCESS(rv, true);
-
-      rv = trans->SetTransferData(item.flavor().get(), dataWrapper,
-                                  text.Length() * sizeof(char16_t));
-
-      NS_ENSURE_SUCCESS(rv, true);
-    } else if (item.data().type() == IPCDataTransferData::TShmem) {
-      if (nsContentUtils::IsFlavorImage(item.flavor())) {
-        nsCOMPtr<imgIContainer> imageContainer;
-        rv = nsContentUtils::DataTransferItemToImage(item,
-                                                     getter_AddRefs(imageContainer));
-        NS_ENSURE_SUCCESS(rv, true);
-
-        nsCOMPtr<nsISupportsInterfacePointer> imgPtr =
-          do_CreateInstance(NS_SUPPORTS_INTERFACE_POINTER_CONTRACTID);
-        NS_ENSURE_TRUE(imgPtr, true);
-
-        rv = imgPtr->SetData(imageContainer);
-        NS_ENSURE_SUCCESS(rv, true);
-
-        trans->SetTransferData(item.flavor().get(), imgPtr, sizeof(nsISupports*));
-      } else {
-        nsCOMPtr<nsISupportsCString> dataWrapper =
-          do_CreateInstance(NS_SUPPORTS_CSTRING_CONTRACTID, &rv);
-        NS_ENSURE_SUCCESS(rv, true);
-
-        // The buffer contains the terminating null.
-        Shmem itemData = item.data().get_Shmem();
-        const nsDependentCString text(itemData.get<char>(),
-                                      itemData.Size<char>());
-        rv = dataWrapper->SetData(text);
-        NS_ENSURE_SUCCESS(rv, true);
-
-        rv = trans->SetTransferData(item.flavor().get(), dataWrapper, text.Length());
-
-        NS_ENSURE_SUCCESS(rv, true);
-      }
-
-      Unused << DeallocShmem(item.data().get_Shmem());
-    }
-  }
-
-  trans->SetIsPrivateData(aIsPrivateData);
-  trans->SetRequestingPrincipal(aRequestingPrincipal);
+  rv = nsContentUtils::IPCTransferableToTransferable(aDataTransfer,
+                                                     aIsPrivateData,
+                                                     aRequestingPrincipal,
+                                                     trans, this, nullptr);
+  NS_ENSURE_SUCCESS(rv, true);
 
   clipboard->SetData(trans, nullptr, aWhichClipboard);
   return true;
@@ -5276,10 +5223,8 @@ ContentParent::RecvNotifyPushObservers(const nsCString& aScope,
                                        const IPC::Principal& aPrincipal,
                                        const nsString& aMessageId)
 {
-#ifndef MOZ_SIMPLEPUSH
   PushMessageDispatcher dispatcher(aScope, aPrincipal, aMessageId, Nothing());
   Unused << NS_WARN_IF(NS_FAILED(dispatcher.NotifyObservers()));
-#endif
   return true;
 }
 
@@ -5289,10 +5234,8 @@ ContentParent::RecvNotifyPushObserversWithData(const nsCString& aScope,
                                                const nsString& aMessageId,
                                                InfallibleTArray<uint8_t>&& aData)
 {
-#ifndef MOZ_SIMPLEPUSH
   PushMessageDispatcher dispatcher(aScope, aPrincipal, aMessageId, Some(aData));
   Unused << NS_WARN_IF(NS_FAILED(dispatcher.NotifyObservers()));
-#endif
   return true;
 }
 
@@ -5300,10 +5243,8 @@ bool
 ContentParent::RecvNotifyPushSubscriptionChangeObservers(const nsCString& aScope,
                                                          const IPC::Principal& aPrincipal)
 {
-#ifndef MOZ_SIMPLEPUSH
   PushSubscriptionChangeDispatcher dispatcher(aScope, aPrincipal);
   Unused << NS_WARN_IF(NS_FAILED(dispatcher.NotifyObservers()));
-#endif
   return true;
 }
 
@@ -5311,10 +5252,8 @@ bool
 ContentParent::RecvNotifyPushSubscriptionModifiedObservers(const nsCString& aScope,
                                                            const IPC::Principal& aPrincipal)
 {
-#ifndef MOZ_SIMPLEPUSH
   PushSubscriptionModifiedDispatcher dispatcher(aScope, aPrincipal);
   Unused << NS_WARN_IF(NS_FAILED(dispatcher.NotifyObservers()));
-#endif
   return true;
 }
 

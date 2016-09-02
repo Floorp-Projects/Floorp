@@ -1757,12 +1757,9 @@ imgLoader::ValidateEntry(imgCacheEntry* aEntry,
            ("imgLoader::ValidateEntry validating cache entry. "
             "validateRequest = %d", validateRequest));
   } else if (!key && MOZ_LOG_TEST(gImgLog, LogLevel::Debug)) {
-    nsAutoCString spec;
-    aURI->GetSpec(spec);
-
     MOZ_LOG(gImgLog, LogLevel::Debug,
            ("imgLoader::ValidateEntry BYPASSING cache validation for %s "
-            "because of NULL LoadID", spec.get()));
+            "because of NULL LoadID", aURI->GetSpecOrDefault().get()));
   }
 
   // We can't use a cached request if it comes from a different
@@ -2007,9 +2004,8 @@ imgLoader::LoadImage(nsIURI* aURI,
     return NS_ERROR_NULL_POINTER;
   }
 
-  nsAutoCString spec;
-  aURI->GetSpec(spec);
-  LOG_SCOPE_WITH_PARAM(gImgLog, "imgLoader::LoadImage", "aURI", spec.get());
+  LOG_SCOPE_WITH_PARAM(gImgLog, "imgLoader::LoadImage", "aURI",
+                       aURI->GetSpecOrDefault().get());
 
   *_retval = nullptr;
 
@@ -2101,10 +2097,6 @@ imgLoader::LoadImage(nsIURI* aURI,
 
       entry->Touch();
 
-#ifdef DEBUG_joe
-      printf("CACHEGET: %d %s %d\n", time(nullptr), spec.get(),
-             entry->SizeOfData());
-#endif
     } else {
       // We can't use this entry. We'll try to load it off the network, and if
       // successful, overwrite the old entry in the cache with a new one.
@@ -2763,11 +2755,9 @@ imgCacheValidator::OnStartRequest(nsIRequest* aRequest, nsISupports* ctxt)
   }
 
   if (MOZ_LOG_TEST(gImgLog, LogLevel::Debug)) {
-    nsAutoCString spec;
-    uri->GetSpec(spec);
     LOG_MSG_WITH_PARAM(gImgLog,
                        "imgCacheValidator::OnStartRequest creating new request",
-                       "uri", spec.get());
+                       "uri", uri->GetSpecOrDefault().get());
   }
 
   int32_t corsmode = mRequest->GetCORSMode();

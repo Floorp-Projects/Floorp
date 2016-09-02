@@ -11,7 +11,10 @@ import org.mozilla.gecko.TelemetryContract;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.mozilla.gecko.icons.storage.DiskStorage;
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Set;
 
 import android.content.Context;
@@ -51,6 +54,11 @@ class PrivateDataPreference extends MultiPrefMultiChoicePreference {
             } catch (JSONException e) {
                 Log.e(LOGTAG, "JSON error", e);
             }
+        }
+
+        if (values.contains("private.data.offlineApps")) {
+            // Remove all icons from storage if removing "Offline website data" was selected.
+            DiskStorage.get(getContext()).evictAll();
         }
 
         // clear private data in gecko

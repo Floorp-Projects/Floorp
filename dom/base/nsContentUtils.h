@@ -34,6 +34,7 @@
 #include "mozilla/Logging.h"
 #include "mozilla/NotNull.h"
 #include "nsIContentPolicy.h"
+#include "nsIDocument.h"
 #include "nsPIDOMWindow.h"
 
 #if defined(XP_WIN)
@@ -55,7 +56,6 @@ class nsIContent;
 class nsIContentPolicy;
 class nsIContentSecurityPolicy;
 class nsIDocShellTreeItem;
-class nsIDocument;
 class nsIDocumentLoaderFactory;
 class nsIDOMDocument;
 class nsIDOMDocumentFragment;
@@ -119,14 +119,17 @@ class ErrorResult;
 class EventListenerManager;
 
 namespace dom {
+struct CustomElementDefinition;
 class DocumentFragment;
 class Element;
 class EventTarget;
 class IPCDataTransfer;
 class IPCDataTransferItem;
+struct LifecycleCallbackArgs;
 class NodeInfo;
 class nsIContentChild;
 class nsIContentParent;
+class TabChild;
 class Selection;
 class TabParent;
 } // namespace dom
@@ -2481,6 +2484,13 @@ public:
    */
   static bool IsFlavorImage(const nsACString& aFlavor);
 
+  static nsresult IPCTransferableToTransferable(const mozilla::dom::IPCDataTransfer& aDataTransfer,
+                                                const bool& aIsPrivateData,
+                                                nsIPrincipal* aRequestingPrincipal,
+                                                nsITransferable* aTransferable,
+                                                mozilla::dom::nsIContentParent* aContentParent,
+                                                mozilla::dom::TabChild* aTabChild);
+
   static void TransferablesToIPCTransferables(nsISupportsArray* aTransferables,
                                               nsTArray<mozilla::dom::IPCDataTransfer>& aIPC,
                                               bool aInSyncMessage,
@@ -2667,6 +2677,30 @@ public:
    * https://fetch.spec.whatwg.org/#concept-response-https-state
    */
   static bool HttpsStateIsModern(nsIDocument* aDocument);
+
+  /**
+   * Looking up a custom element definition.
+   * https://html.spec.whatwg.org/#look-up-a-custom-element-definition
+   */
+  static mozilla::dom::CustomElementDefinition*
+    LookupCustomElementDefinition(nsIDocument* aDoc,
+                                  const nsAString& aLocalName,
+                                  uint32_t aNameSpaceID,
+                                  const nsAString* aIs = nullptr);
+
+  static void SetupCustomElement(Element* aElement,
+                                 const nsAString* aTypeExtension = nullptr);
+
+  static void EnqueueLifecycleCallback(nsIDocument* aDoc,
+                                       nsIDocument::ElementCallbackType aType,
+                                       Element* aCustomElement,
+                                       mozilla::dom::LifecycleCallbackArgs* aArgs = nullptr,
+                                       mozilla::dom::CustomElementDefinition* aDefinition = nullptr);
+
+  static void GetCustomPrototype(nsIDocument* aDoc,
+                                 int32_t aNamespaceID,
+                                 nsIAtom* aAtom,
+                                 JS::MutableHandle<JSObject*> prototype);
 
 private:
   static bool InitializeEventTable();

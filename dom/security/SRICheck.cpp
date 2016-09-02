@@ -63,13 +63,11 @@ IsEligible(nsIChannel* aChannel, const CORSMode aCORSMode,
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (MOZ_LOG_TEST(SRILogHelper::GetSriLog(), mozilla::LogLevel::Debug)) {
-    nsAutoCString documentSpec, finalSpec;
+    nsAutoCString documentSpec;
     aDocument->GetDocumentURI()->GetAsciiSpec(documentSpec);
-    if (finalURI) {
-      finalURI->GetSpec(finalSpec);
-    }
     SRILOG(("SRICheck::IsEligible, documentURI=%s; requestURI=%s; finalURI=%s",
-            documentSpec.get(), requestSpec.get(), finalSpec.get()));
+            documentSpec.get(), requestSpec.get(),
+            finalURI ? finalURI->GetSpecOrDefault().get() : ""));
   }
 
   // Is the sub-resource same-origin?

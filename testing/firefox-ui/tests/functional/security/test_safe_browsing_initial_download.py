@@ -65,7 +65,8 @@ class TestSafeBrowsingInitialDownload(FirefoxTestCase):
             FirefoxTestCase.tearDown(self)
 
     def test_safe_browsing_initial_download(self):
-        wait = Wait(self.marionette, timeout=self.browser.timeout_page_load)
+        wait = Wait(self.marionette, timeout=self.browser.timeout_page_load,
+                    ignored_exceptions=[OSError])
 
         for data in self.test_data:
             if self.platform not in data['platforms']:

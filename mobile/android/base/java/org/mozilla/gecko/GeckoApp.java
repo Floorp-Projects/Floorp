@@ -9,8 +9,6 @@ import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.GeckoProfileDirectories.NoMozillaDirectoryException;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.UrlAnnotations;
-import org.mozilla.gecko.favicons.Favicons;
-import org.mozilla.gecko.favicons.OnFaviconLoadedListener;
 import org.mozilla.gecko.gfx.BitmapUtils;
 import org.mozilla.gecko.gfx.FullScreenState;
 import org.mozilla.gecko.gfx.LayerView;
@@ -18,6 +16,9 @@ import org.mozilla.gecko.health.HealthRecorder;
 import org.mozilla.gecko.health.SessionInformation;
 import org.mozilla.gecko.health.StubbedHealthRecorder;
 import org.mozilla.gecko.home.HomeConfig.PanelType;
+import org.mozilla.gecko.icons.IconCallback;
+import org.mozilla.gecko.icons.IconResponse;
+import org.mozilla.gecko.icons.Icons;
 import org.mozilla.gecko.menu.GeckoMenu;
 import org.mozilla.gecko.menu.GeckoMenuInflater;
 import org.mozilla.gecko.menu.MenuPanel;
@@ -1154,11 +1155,6 @@ public abstract class GeckoApp
         GeckoAppShell.setNotificationClient(makeNotificationClient());
 
         Tabs.getInstance().attachToContext(this);
-        try {
-            Favicons.initializeWithContext(this);
-        } catch (Exception e) {
-            Log.e(LOGTAG, "Exception starting favicon cache. Corrupt resources?", e);
-        }
 
         // Tell Stumbler to register a local broadcast listener to listen for preference intents.
         // We do this via intents since we can't easily access Stumbler directly,
@@ -1916,12 +1912,18 @@ public abstract class GeckoApp
 
     @Override
     public void createShortcut(final String title, final String url) {
-        Favicons.getPreferredIconForHomeScreenShortcut(this, url, new OnFaviconLoadedListener() {
-            @Override
-            public void onFaviconLoaded(String url, String faviconURL, Bitmap favicon) {
-                doCreateShortcut(title, url, favicon);
-            }
-        });
+        Icons.with(this)
+                .pageUrl(url)
+                .skipNetwork()
+                .skipMemory()
+                .forLauncherIcon()
+                .build()
+                .execute(new IconCallback() {
+                    @Override
+                    public void onIconResponse(IconResponse response) {
+                        doCreateShortcut(title, url, response.getBitmap());
+                    }
+                });
     }
 
     private void doCreateShortcut(final String aTitle, final String aURI, final Bitmap aIcon) {
@@ -2266,8 +2268,6 @@ public abstract class GeckoApp
                 }
             });
         }
-
-        Favicons.close();
 
         super.onDestroy();
 

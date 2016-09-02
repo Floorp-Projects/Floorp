@@ -68,10 +68,8 @@ WyciwygChannelParent::RecvInit(const URIParams&          aURI,
   if (!uri)
     return false;
 
-  nsCString uriSpec;
-  uri->GetSpec(uriSpec);
   LOG(("WyciwygChannelParent RecvInit [this=%p uri=%s]\n",
-       this, uriSpec.get()));
+       this, uri->GetSpecOrDefault().get()));
 
   nsCOMPtr<nsIIOService> ios(do_GetIOService(&rv));
   if (NS_FAILED(rv))

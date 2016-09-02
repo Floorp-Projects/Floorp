@@ -75,3 +75,6 @@ pref("services.sync.log.cryptoDebug", false);
 
 pref("services.sync.fxa.termsURL", "https://accounts.firefox.com/legal/terms");
 pref("services.sync.fxa.privacyURL", "https://accounts.firefox.com/legal/privacy");
+
+pref("services.sync.telemetry.submissionInterval", 43200); // 12 hours in seconds
+pref("services.sync.telemetry.maxPayloadCount", 500);

@@ -930,6 +930,7 @@ ShadowLayerForwarder::CreateTexture(const SurfaceDescriptor& aSharedData,
   if (!HasShadowManager() ||
       !mShadowManager->IPCOpen() ||
       !mShadowManager->Manager()) {
+    gfxCriticalNote << "ShadowLayerForwarder::CreateTexture fails with HSM:" << HasShadowManager() << ", IPCOpen:" << mShadowManager->IPCOpen() << ", Destroyed:" << mShadowManager->IsDestroyed() << ", M:" << !!mShadowManager->Manager();
     return nullptr;
   }
   return mShadowManager->Manager()->SendPTextureConstructor(aSharedData, aLayersBackend, aFlags, mShadowManager->GetId(), aSerial);

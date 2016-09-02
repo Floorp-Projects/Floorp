@@ -83,7 +83,7 @@ NS_NewNamedThread(const char (&aName)[LEN],
   NS_SetThreadName<LEN>(thread, aName);
   if (aInitialEvent) {
     rv = thread->Dispatch(aInitialEvent, NS_DISPATCH_NORMAL);
-    NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Initial event dispatch failed");
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Initial event dispatch failed");
   }
 
   *aResult = nullptr;

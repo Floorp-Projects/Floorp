@@ -338,6 +338,7 @@ struct JSCompartment
     bool                         isSelfHosting;
     bool                         marked;
     bool                         warnedAboutExprClosure;
+    bool                         warnedAboutForEach;
 
 #ifdef DEBUG
     bool                         firedOnNewGlobalObject;

@@ -170,8 +170,7 @@ AppendWindowURI(nsGlobalWindow *aWindow, nsACString& aStr, bool aAnonymize)
     if (aAnonymize && !aWindow->IsChromeWindow()) {
       aStr.AppendPrintf("<anonymized-%llu>", aWindow->WindowID());
     } else {
-      nsCString spec;
-      uri->GetSpec(spec);
+      nsCString spec = uri->GetSpecOrDefault();
 
       // A hack: replace forward slashes with '\\' so they aren't
       // treated as path separators.  Users of the reporters

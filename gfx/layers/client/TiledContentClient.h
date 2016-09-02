@@ -70,18 +70,9 @@ struct TileClient
     return mFrontBuffer != o.mFrontBuffer;
   }
 
-  void SetLayerManager(ClientLayerManager *aManager)
-  {
-    mManager = aManager;
-  }
   void SetTextureAllocator(TextureClientAllocator* aAllocator)
   {
     mAllocator = aAllocator;
-  }
-
-  void SetCompositableClient(CompositableClient* aCompositableClient)
-  {
-    mCompositableClient = aCompositableClient;
   }
 
   bool IsPlaceholderTile() const
@@ -126,7 +117,8 @@ struct TileClient
   *
   * If nullptr is returned, aTextureClientOnWhite is undefined.
   */
-  TextureClient* GetBackBuffer(const nsIntRegion& aDirtyRegion,
+  TextureClient* GetBackBuffer(CompositableClient&,
+                               const nsIntRegion& aDirtyRegion,
                                gfxContentType aContent, SurfaceMode aMode,
                                nsIntRegion& aAddPaintedRegion,
                                RefPtr<TextureClient>* aTextureClientOnWhite);
@@ -153,10 +145,8 @@ struct TileClient
   RefPtr<TextureClient> mBackBufferOnWhite;
   RefPtr<TextureClient> mFrontBuffer;
   RefPtr<TextureClient> mFrontBufferOnWhite;
-  RefPtr<ClientLayerManager> mManager;
   RefPtr<TextureClientAllocator> mAllocator;
   gfx::IntRect mUpdateRect;
-  CompositableClient* mCompositableClient;
   bool mWasPlaceholder;
 #ifdef GFX_TILEDLAYER_DEBUG_OVERLAY
   TimeStamp        mLastUpdate;
@@ -289,8 +279,8 @@ private:
 class ClientTiledLayerBuffer
 {
 public:
-  ClientTiledLayerBuffer(ClientTiledPaintedLayer* aPaintedLayer,
-                         CompositableClient* aCompositableClient)
+  ClientTiledLayerBuffer(ClientTiledPaintedLayer& aPaintedLayer,
+                         CompositableClient& aCompositableClient)
     : mPaintedLayer(aPaintedLayer)
     , mCompositableClient(aCompositableClient)
     , mLastPaintContentType(gfxContentType::COLOR)
@@ -332,8 +322,8 @@ protected:
   void UnlockTile(TileClient& aTile);
   gfxContentType GetContentType(SurfaceMode* aMode = nullptr) const;
 
-  ClientTiledPaintedLayer* mPaintedLayer;
-  CompositableClient* mCompositableClient;
+  ClientTiledPaintedLayer& mPaintedLayer;
+  CompositableClient& mCompositableClient;
 
   gfxContentType mLastPaintContentType;
   SurfaceMode mLastPaintSurfaceMode;
@@ -348,19 +338,10 @@ class ClientMultiTiledLayerBuffer
 {
   friend class TiledLayerBuffer<ClientMultiTiledLayerBuffer, TileClient>;
 public:
-  ClientMultiTiledLayerBuffer(ClientTiledPaintedLayer* aPaintedLayer,
-                              CompositableClient* aCompositableClient,
+  ClientMultiTiledLayerBuffer(ClientTiledPaintedLayer& aPaintedLayer,
+                              CompositableClient& aCompositableClient,
                               ClientLayerManager* aManager,
                               SharedFrameMetricsHelper* aHelper);
-  ClientMultiTiledLayerBuffer()
-    : ClientTiledLayerBuffer(nullptr, nullptr)
-    , mManager(nullptr)
-    , mCallback(nullptr)
-    , mCallbackData(nullptr)
-    , mSharedFrameMetricsHelper(nullptr)
-    , mTilingOrigin(std::numeric_limits<int32_t>::max(),
-                    std::numeric_limits<int32_t>::max())
-  {}
 
   void PaintThebes(const nsIntRegion& aNewValidRegion,
                    const nsIntRegion& aPaintRegion,
@@ -435,7 +416,7 @@ protected:
   TileClient GetPlaceholderTile() const { return TileClient(); }
 
 private:
-  ClientLayerManager* mManager;
+  RefPtr<ClientLayerManager> mManager;
   LayerManager::DrawPaintedLayerCallback mCallback;
   void* mCallbackData;
 
@@ -527,7 +508,7 @@ private:
 class MultiTiledContentClient : public TiledContentClient
 {
 public:
-  MultiTiledContentClient(ClientTiledPaintedLayer* aPaintedLayer,
+  MultiTiledContentClient(ClientTiledPaintedLayer& aPaintedLayer,
                           ClientLayerManager* aManager);
 
 protected:

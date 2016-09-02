@@ -12,7 +12,8 @@ import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.db.BrowserDB;
-import org.mozilla.gecko.favicons.Favicons;
+import org.mozilla.gecko.icons.IconRequest;
+import org.mozilla.gecko.icons.Icons;
 import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.NativeEventListener;
 import org.mozilla.gecko.util.NativeJSObject;
@@ -21,6 +22,8 @@ import org.mozilla.gecko.util.UIAsyncTask;
 
 import android.content.Context;
 import android.util.Log;
+
+import java.util.concurrent.ExecutionException;
 
 public final class ReadingListHelper implements NativeEventListener {
     private static final String LOGTAG = "GeckoReadingListHelper";
@@ -66,7 +69,35 @@ public final class ReadingListHelper implements NativeEventListener {
         (new UIAsyncTask.WithoutParams<String>(ThreadUtils.getBackgroundHandler()) {
             @Override
             public String doInBackground() {
-                return Favicons.getFaviconURLForPageURL(db, context.getContentResolver(), url);
+                // This is a bit ridiculous if you look at the bigger picture: Reader mode extracts
+                // the article content. We insert the content into a new document (about:reader).
+                // Some events are exchanged to lookup the icon URL for the actual website. This
+                // URL is then added to the markup which will then trigger our icon loading code in
+                // the Tab class.
+                //
+                // The Tab class could just lookup and load the icon itself. All it needs to do is
+                // to strip the about:reader URL and perform a normal icon load from cache.
+                //
+                // A more global solution (looking at desktop and iOS) would be to copy the <link>
+                // markup from the original page to the about:reader page and then rely on our normal
+                // icon loading code. This would work even if we do not have anything in the cache
+                // for some kind of reason.
+
+                final IconRequest request = Icons.with(context)
+                        .pageUrl(url)
+                        .prepareOnly()
+                        .build();
+
+                try {
+                    request.execute(null).get();
+                    if (request.getIconCount() > 0) {
+                        return request.getBestIcon().getUrl();
+                    }
+                } catch (InterruptedException | ExecutionException e) {
+                    // Ignore
+                }
+
+                return null;
             }
 
             @Override

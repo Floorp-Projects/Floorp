@@ -5,20 +5,8 @@
 
 package org.mozilla.gecko.home;
 
-import org.mozilla.gecko.AboutPages;
-import org.mozilla.gecko.R;
-import org.mozilla.gecko.db.BrowserContract;
-import org.mozilla.gecko.distribution.PartnerBookmarksProviderProxy;
-import org.mozilla.gecko.favicons.LoadFaviconTask;
-import org.mozilla.gecko.reader.SavedReaderViewHelper;
-import org.mozilla.gecko.reader.ReaderModeUtils;
-import org.mozilla.gecko.Tab;
-import org.mozilla.gecko.Tabs;
-import org.mozilla.gecko.db.BrowserContract.Combined;
-import org.mozilla.gecko.db.BrowserContract.URLColumns;
-import org.mozilla.gecko.favicons.Favicons;
-import org.mozilla.gecko.favicons.OnFaviconLoadedListener;
-import org.mozilla.gecko.widget.FaviconView;
+import java.lang.ref.WeakReference;
+import java.util.concurrent.Future;
 
 import android.content.Context;
 import android.database.Cursor;
@@ -26,10 +14,25 @@ import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.view.Gravity;
 import android.view.LayoutInflater;
-import android.widget.ImageView;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+
+import org.mozilla.gecko.AboutPages;
+import org.mozilla.gecko.R;
+import org.mozilla.gecko.Tab;
+import org.mozilla.gecko.Tabs;
+import org.mozilla.gecko.db.BrowserContract;
+import org.mozilla.gecko.db.BrowserContract.Combined;
+import org.mozilla.gecko.db.BrowserContract.URLColumns;
+import org.mozilla.gecko.distribution.PartnerBookmarksProviderProxy;
+import org.mozilla.gecko.icons.IconDescriptor;
+import org.mozilla.gecko.icons.IconResponse;
+import org.mozilla.gecko.icons.Icons;
+import org.mozilla.gecko.reader.ReaderModeUtils;
+import org.mozilla.gecko.reader.SavedReaderViewHelper;
+import org.mozilla.gecko.widget.FaviconView;
 
 public class TwoLinePageRow extends LinearLayout
                             implements Tabs.OnTabsChangedListener {
@@ -43,12 +46,9 @@ public class TwoLinePageRow extends LinearLayout
     private int mSwitchToTabIconId;
 
     private final FaviconView mFavicon;
+    private Future<IconResponse> mOngoingIconLoad;
 
     private boolean mShowIcons;
-    private int mLoadFaviconJobId = Favicons.NOT_LOADING;
-
-    // Listener for handling Favicon loads.
-    private final OnFaviconLoadedListener mFaviconListener;
 
     // The URL for the page corresponding to this view.
     private String mPageUrl;
@@ -76,7 +76,6 @@ public class TwoLinePageRow extends LinearLayout
         mShowIcons = true;
 
         mFavicon = (FaviconView) findViewById(R.id.icon);
-        mFaviconListener = new UpdateViewFaviconLoadedListener(mFavicon);
     }
 
     @Override
@@ -258,26 +257,31 @@ public class TwoLinePageRow extends LinearLayout
 
         // Blank the Favicon, so we don't show the wrong Favicon if we scroll and miss DB.
         mFavicon.clearImage();
-        Favicons.cancelFaviconLoad(mLoadFaviconJobId);
+
+        if (mOngoingIconLoad != null) {
+            mOngoingIconLoad.cancel(true);
+        }
 
         // Displayed RecentTabsPanel URLs may refer to pages opened in reader mode, so we
         // remove the about:reader prefix to ensure the Favicon loads properly.
         final String pageURL = ReaderModeUtils.stripAboutReaderUrl(url);
 
         if (bookmarkId < BrowserContract.Bookmarks.FAKE_PARTNER_BOOKMARKS_START) {
-            mLoadFaviconJobId = Favicons.getSizedFavicon(
-                    getContext(),
-                    pageURL,
-                    PartnerBookmarksProviderProxy.getUriForIcon(getContext(), bookmarkId).toString(),
-                    Favicons.LoadType.PRIVILEGED,
-                    Favicons.defaultFaviconSize,
-                    // We want to load the favicon from the content provider but we do not want the
-                    // favicon loader to fallback to loading a favicon from the web using a guessed
-                    // default URL.
-                    LoadFaviconTask.FLAG_NO_DOWNLOAD_FROM_GUESSED_DEFAULT_URL,
-                    mFaviconListener);
+            mOngoingIconLoad = Icons.with(getContext())
+                    .pageUrl(pageURL)
+                    .skipNetwork()
+                    .privileged(true)
+                    .icon(IconDescriptor.createGenericIcon(
+                            PartnerBookmarksProviderProxy.getUriForIcon(getContext(), bookmarkId).toString()))
+                    .build()
+                    .execute(mFavicon.createIconCallback());
         } else {
-            mLoadFaviconJobId = Favicons.getSizedFaviconForPageFromLocal(getContext(), pageURL, mFaviconListener);
+            mOngoingIconLoad = Icons.with(getContext())
+                    .pageUrl(pageURL)
+                    .skipNetwork()
+                    .build()
+                    .execute(mFavicon.createIconCallback());
+
         }
 
         updateDisplayedUrl(url, hasReaderCacheItem);

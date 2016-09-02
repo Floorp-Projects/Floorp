@@ -757,6 +757,15 @@ class StmtFor(Block):
         self.cond = cond
         self.update = update
 
+class StmtRangedFor(Block):
+    def __init__(self, var, iteree):
+        assert isinstance(var, ExprVar)
+        assert iteree
+
+        Block.__init__(self)
+        self.var = var
+        self.iteree = iteree
+
 class StmtSwitch(Block):
     def __init__(self, expr):
         Block.__init__(self)

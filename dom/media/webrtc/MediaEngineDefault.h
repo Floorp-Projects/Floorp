@@ -145,9 +145,10 @@ public:
   {
 #ifdef DEBUG
     StreamTracks::Track* data = aSource->FindTrack(aId);
-    NS_WARN_IF_FALSE(!data || data->IsEnded() ||
-                     aDesiredTime <= aSource->GetEndOfAppendedData(aId),
-                     "MediaEngineDefaultAudioSource data underrun");
+    NS_WARNING_ASSERTION(
+      !data || data->IsEnded() ||
+      aDesiredTime <= aSource->GetEndOfAppendedData(aId),
+      "MediaEngineDefaultAudioSource data underrun");
 #endif
   }
 

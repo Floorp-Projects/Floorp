@@ -256,7 +256,7 @@ already_AddRefed<PrintTarget> nsDeviceContextSpecWin::MakePrintTarget()
   }
 
   if (mDevMode) {
-    NS_WARN_IF_FALSE(mDriverName, "No driver!");
+    NS_WARNING_ASSERTION(mDriverName, "No driver!");
     HDC dc = ::CreateDCW(mDriverName, mDeviceName, nullptr, mDevMode);
     if (!dc) {
       gfxCriticalError(gfxCriticalError::DefaultOptions(false))

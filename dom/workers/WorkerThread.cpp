@@ -86,8 +86,6 @@ WorkerThread::~WorkerThread()
 already_AddRefed<WorkerThread>
 WorkerThread::Create(const WorkerThreadFriendKey& /* aKey */)
 {
-  MOZ_ASSERT(nsThreadManager::get());
-
   RefPtr<WorkerThread> thread = new WorkerThread();
   if (NS_FAILED(thread->Init())) {
     NS_WARNING("Failed to create new thread!");

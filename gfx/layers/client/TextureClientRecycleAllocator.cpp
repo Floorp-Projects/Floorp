@@ -22,6 +22,7 @@ public:
 
   explicit TextureClientHolder(TextureClient* aClient)
     : mTextureClient(aClient)
+    , mWillRecycle(true)
   {}
 
   TextureClient* GetTextureClient()
@@ -29,9 +30,20 @@ public:
     return mTextureClient;
   }
 
+  bool WillRecycle()
+  {
+    return mWillRecycle;
+  }
+
+  void ClearWillRecycle()
+  {
+    mWillRecycle = false;
+  }
+
   void ClearTextureClient() { mTextureClient = nullptr; }
 protected:
   RefPtr<TextureClient> mTextureClient;
+  bool mWillRecycle;
 };
 
 class DefaultTextureClientAllocationHelper : public ITextureClientAllocationHelper
@@ -221,16 +233,17 @@ TextureClientRecycleAllocator::Allocate(gfx::SurfaceFormat aFormat,
 void
 TextureClientRecycleAllocator::ShrinkToMinimumSize()
 {
-  RefPtr<TextureClientRecycleAllocator> kungFuDeathGrip(this);
-  std::map<TextureClient*, RefPtr<TextureClientHolder> > inUseClients;
-  {
-    MutexAutoLock lock(mLock);
-    while (!mPooledClients.empty()) {
-      mPooledClients.pop();
-    }
-    mInUseClients.swap(inUseClients);
+  MutexAutoLock lock(mLock);
+  while (!mPooledClients.empty()) {
+    mPooledClients.pop();
   }
-  inUseClients.clear();
+  // We can not clear using TextureClients safely.
+  // Just clear WillRecycle here.
+  std::map<TextureClient*, RefPtr<TextureClientHolder> >::iterator it;
+  for (it = mInUseClients.begin(); it != mInUseClients.end(); it++) {
+    RefPtr<TextureClientHolder> holder = it->second;
+    holder->ClearWillRecycle();
+  }
 }
 
 void
@@ -256,7 +269,8 @@ TextureClientRecycleAllocator::RecycleTextureClient(TextureClient* aClient)
     MutexAutoLock lock(mLock);
     if (mInUseClients.find(aClient) != mInUseClients.end()) {
       textureHolder = mInUseClients[aClient]; // Keep reference count of TextureClientHolder within lock.
-      if (!mIsDestroyed && mPooledClients.size() < mMaxPooledSize) {
+      if (textureHolder->WillRecycle() &&
+          !mIsDestroyed && mPooledClients.size() < mMaxPooledSize) {
         mPooledClients.push(textureHolder);
       }
       mInUseClients.erase(aClient);

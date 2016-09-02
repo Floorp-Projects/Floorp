@@ -400,7 +400,7 @@ nsTableColFrame * nsTableColGroupFrame::GetNextColumn(nsIFrame *aChildFrame)
   }
   while (childFrame)
   {
-    if (NS_STYLE_DISPLAY_TABLE_COLUMN ==
+    if (mozilla::StyleDisplay::TableColumn ==
         childFrame->StyleDisplay()->mDisplay)
     {
       result = (nsTableColFrame *)childFrame;

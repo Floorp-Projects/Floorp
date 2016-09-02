@@ -77,7 +77,7 @@ CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation
   // Ignore all operations on compositables created on stale compositors. We
   // return true because the child is unable to handle errors.
   CompositableHost* compositable = CompositableHost::FromIPDLActor(aEdit.compositableParent());
-  if (compositable->GetCompositor() && compositable->GetCompositor()->IsValid()) {
+  if (compositable->GetCompositor() && !compositable->GetCompositor()->IsValid()) {
     return true;
   }
 

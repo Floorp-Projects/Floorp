@@ -1744,8 +1744,6 @@ nsNSSComponent::InitializeNSS()
   }
 
   DisableMD5();
-  // Initialize the certverifier log before calling any functions that library.
-  InitCertVerifierLog();
   LoadLoadableRoots();
 
   MaybeEnableFamilySafetyCompatibility();

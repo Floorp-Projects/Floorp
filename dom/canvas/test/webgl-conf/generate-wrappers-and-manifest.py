@@ -20,8 +20,7 @@ GENERATED_PATHSTR = 'generated'
 WEBGL2_TEST_MANGLE = '2_'
 PATH_SEP_MANGLING = '__'
 WEBGL2_SKIP_IF_CONDITION = "(os == 'android' || os == 'linux' || " \
-                           "(os == 'win' && os_version == '5.1') || " \
-                           "(os == 'win' && os_version == '6.2'))"
+                           "(os == 'win' && os_version == '5.1'))"
 
 SUPPORT_DIRS = [
     'checkout',

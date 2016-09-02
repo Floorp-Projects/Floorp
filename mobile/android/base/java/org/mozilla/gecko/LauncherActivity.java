@@ -8,10 +8,12 @@ package org.mozilla.gecko;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.customtabs.CustomTabsIntent;
 
 import org.mozilla.gecko.customtabs.CustomTabsActivity;
 import org.mozilla.gecko.db.BrowserContract;
+import org.mozilla.gecko.mozglue.SafeIntent;
 import org.mozilla.gecko.preferences.GeckoPreferences;
 import org.mozilla.gecko.tabqueue.TabQueueHelper;
 import org.mozilla.gecko.tabqueue.TabQueueService;
@@ -26,28 +28,29 @@ public class LauncherActivity extends Activity {
 
         GeckoAppShell.ensureCrashHandling();
 
-        if (AppConstants.MOZ_ANDROID_CUSTOM_TABS && isCustomTabsIntent() && isCustomTabsEnabled()) {
+        final SafeIntent safeIntent = new SafeIntent(getIntent());
+
+        // If it's not a view intent, it won't be a custom tabs intent either. Just launch!
+        if (!isViewIntentWithURL(safeIntent)) {
+            dispatchNormalIntent();
+
+        // Is this a custom tabs intent, and are custom tabs enabled?
+        } else if (AppConstants.MOZ_ANDROID_CUSTOM_TABS && isCustomTabsIntent(safeIntent)
+                && isCustomTabsEnabled()) {
             dispatchCustomTabsIntent();
-        } else if (isViewIntentWithURL()) {
-            dispatchViewIntent();
+
+        // Can we dispatch this VIEW action intent to the tab queue service?
+        } else if (!safeIntent.getBooleanExtra(BrowserContract.SKIP_TAB_QUEUE_FLAG, false)
+                && TabQueueHelper.TAB_QUEUE_ENABLED
+                && TabQueueHelper.isTabQueueEnabled(this)) {
+            dispatchTabQueueIntent();
+
+        // Dispatch this VIEW action intent to the browser.
         } else {
             dispatchNormalIntent();
         }
 
         finish();
-    }
-
-    /**
-     * Dispatch a VIEW action intent; either to the browser or to the tab queue service.
-     */
-    private void dispatchViewIntent() {
-        if (TabQueueHelper.TAB_QUEUE_ENABLED
-                && TabQueueHelper.isTabQueueEnabled(this)
-                && !getIntent().getBooleanExtra(BrowserContract.SKIP_TAB_QUEUE_FLAG, false)) {
-            dispatchTabQueueIntent();
-        } else {
-            dispatchNormalIntent();
-        }
     }
 
     /**
@@ -74,16 +77,14 @@ public class LauncherActivity extends Activity {
         startActivity(intent);
     }
 
-    private boolean isViewIntentWithURL() {
-        final Intent intent = getIntent();
-
-        return Intent.ACTION_VIEW.equals(intent.getAction())
-                && intent.getDataString() != null;
+    private static boolean isViewIntentWithURL(@NonNull final SafeIntent safeIntent) {
+        return Intent.ACTION_VIEW.equals(safeIntent.getAction())
+                && safeIntent.getDataString() != null;
     }
 
-    private boolean isCustomTabsIntent() {
-        return isViewIntentWithURL()
-                && getIntent().hasExtra(CustomTabsIntent.EXTRA_SESSION);
+    private static boolean isCustomTabsIntent(@NonNull final SafeIntent safeIntent) {
+        return isViewIntentWithURL(safeIntent)
+                && safeIntent.hasExtra(CustomTabsIntent.EXTRA_SESSION);
     }
 
     private boolean isCustomTabsEnabled() {

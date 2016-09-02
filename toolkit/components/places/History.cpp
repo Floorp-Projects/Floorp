@@ -661,7 +661,7 @@ public:
     if (obsService) {
       DebugOnly<nsresult> rv =
         obsService->NotifyObservers(uri, URI_VISIT_SAVED, nullptr);
-      NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Could not notify observers");
+      NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Could not notify observers");
     }
 
     History* history = History::GetService();
@@ -1870,7 +1870,7 @@ History::History()
   gService = this;
 
   nsCOMPtr<nsIObserverService> os = services::GetObserverService();
-  NS_WARN_IF_FALSE(os, "Observer service was not found!");
+  NS_WARNING_ASSERTION(os, "Observer service was not found!");
   if (os) {
     (void)os->AddObserver(this, TOPIC_PLACES_SHUTDOWN, false);
   }

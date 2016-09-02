@@ -205,23 +205,13 @@ APZEventState::ProcessSingleTap(const CSSPoint& aPoint,
   }
 }
 
-void
-APZEventState::ProcessLongTap(const nsCOMPtr<nsIPresShell>& aPresShell,
-                              const CSSPoint& aPoint,
-                              const CSSToLayoutDeviceScale& aScale,
-                              Modifiers aModifiers,
-                              const ScrollableLayerGuid& aGuid,
-                              uint64_t aInputBlockId)
+bool
+APZEventState::FireContextmenuEvents(const nsCOMPtr<nsIPresShell>& aPresShell,
+                                     const CSSPoint& aPoint,
+                                     const CSSToLayoutDeviceScale& aScale,
+                                     Modifiers aModifiers,
+                                     const nsCOMPtr<nsIWidget>& aWidget)
 {
-  APZES_LOG("Handling long tap at %s\n", Stringify(aPoint).c_str());
-
-  nsCOMPtr<nsIWidget> widget = GetWidget();
-  if (!widget) {
-    return;
-  }
-
-  SendPendingTouchPreventedResponse(false);
-
   // Converting the modifiers to DOM format for the DispatchMouseEvent call
   // is the most useless thing ever because nsDOMWindowUtils::SendMouseEvent
   // just converts them back to widget format, but that API has many callers,
@@ -243,11 +233,40 @@ APZEventState::ProcessLongTap(const nsCOMPtr<nsIPresShell>& aPresShell,
     nsEventStatus status =
         APZCCallbackHelper::DispatchSynthesizedMouseEvent(eMouseLongTap, time,
                                                           ldPoint,
-                                                          aModifiers, widget);
+                                                          aModifiers, aWidget);
     eventHandled = (status == nsEventStatus_eConsumeNoDefault);
     APZES_LOG("MOZLONGTAP event handled: %d\n", eventHandled);
   }
 
+  return eventHandled;
+}
+
+void
+APZEventState::ProcessLongTap(const nsCOMPtr<nsIPresShell>& aPresShell,
+                              const CSSPoint& aPoint,
+                              const CSSToLayoutDeviceScale& aScale,
+                              Modifiers aModifiers,
+                              const ScrollableLayerGuid& aGuid,
+                              uint64_t aInputBlockId)
+{
+  APZES_LOG("Handling long tap at %s\n", Stringify(aPoint).c_str());
+
+  nsCOMPtr<nsIWidget> widget = GetWidget();
+  if (!widget) {
+    return;
+  }
+
+  SendPendingTouchPreventedResponse(false);
+
+#ifdef XP_WIN
+  // On Windows, we fire the contextmenu events when the user lifts their
+  // finger, in keeping with the platform convention. This happens in the
+  // ProcessLongTapUp function.
+  bool eventHandled = false;
+#else
+  bool eventHandled = FireContextmenuEvents(aPresShell, aPoint, aScale,
+        aModifiers, widget);
+#endif
   mContentReceivedInputBlockCallback(aGuid, aInputBlockId, eventHandled);
 
   if (eventHandled) {
@@ -263,10 +282,17 @@ APZEventState::ProcessLongTap(const nsCOMPtr<nsIPresShell>& aPresShell,
 }
 
 void
-APZEventState::ProcessLongTapUp()
+APZEventState::ProcessLongTapUp(const nsCOMPtr<nsIPresShell>& aPresShell,
+                                const CSSPoint& aPoint,
+                                const CSSToLayoutDeviceScale& aScale,
+                                Modifiers aModifiers)
 {
-  nsCOMPtr<nsIObserverService> observerService = mozilla::services::GetObserverService();
-  observerService->NotifyObservers(nullptr, "APZ:LongTapUp", nullptr);
+#ifdef XP_WIN
+  nsCOMPtr<nsIWidget> widget = GetWidget();
+  if (widget) {
+    FireContextmenuEvents(aPresShell, aPoint, aScale, aModifiers, widget);
+  }
+#endif
 }
 
 void

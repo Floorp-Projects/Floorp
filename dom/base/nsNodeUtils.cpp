@@ -471,15 +471,14 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, bool aClone, bool aDeep,
       // enqueing created callback and prototype swizzling.
       Element* elem = clone->AsElement();
       if (nsContentUtils::IsCustomElementName(nodeInfo->NameAtom())) {
-        elem->OwnerDoc()->SetupCustomElement(elem, nodeInfo->NamespaceID());
+        nsContentUtils::SetupCustomElement(elem);
       } else {
         // Check if node may be custom element by type extension.
         // ex. <button is="x-button">
         nsAutoString extension;
         if (elem->GetAttr(kNameSpaceID_None, nsGkAtoms::is, extension) &&
             !extension.IsEmpty()) {
-          elem->OwnerDoc()->SetupCustomElement(elem, nodeInfo->NamespaceID(),
-                                               &extension);
+          nsContentUtils::SetupCustomElement(elem, &extension);
         }
       }
     }

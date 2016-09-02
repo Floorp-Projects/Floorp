@@ -218,14 +218,12 @@ nsFontFaceLoader::OnStreamComplete(nsIStreamLoader* aLoader,
   }
 
   if (LOG_ENABLED()) {
-    nsAutoCString fontURI;
-    mFontURI->GetSpec(fontURI);
     if (NS_SUCCEEDED(aStatus)) {
       LOG(("userfonts (%p) download completed - font uri: (%s) time: %d ms\n",
-           this, fontURI.get(), downloadTimeMS));
+           this, mFontURI->GetSpecOrDefault().get(), downloadTimeMS));
     } else {
       LOG(("userfonts (%p) download failed - font uri: (%s) error: %8.8x\n",
-           this, fontURI.get(), aStatus));
+           this, mFontURI->GetSpecOrDefault().get(), aStatus));
     }
   }
 

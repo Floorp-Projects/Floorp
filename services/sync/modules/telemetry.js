@@ -210,13 +210,11 @@ class TelemetryRecord {
     this.currentEngine = null;
   }
 
-  // toJSON returns the actual payload we will submit.
   toJSON() {
     let result = {
       when: this.when,
       uid: this.uid,
       took: this.took,
-      version: PING_FORMAT_VERSION,
       failureReason: this.failureReason,
       status: this.status,
     };
@@ -333,6 +331,30 @@ class SyncTelemetryImpl {
     this.allowedEngines = allowedEngines;
     this.current = null;
     this.setupObservers();
+
+    this.payloads = [];
+    this.discarded = 0;
+    this.maxPayloadCount = Svc.Prefs.get("telemetry.maxPayloadCount");
+    this.submissionInterval = Svc.Prefs.get("telemetry.submissionInterval") * 1000;
+    this.lastSubmissionTime = Telemetry.msSinceProcessStart();
+  }
+
+  getPingJSON(reason) {
+    return {
+      why: reason,
+      discarded: this.discarded || undefined,
+      version: PING_FORMAT_VERSION,
+      syncs: this.payloads.slice(),
+    };
+  }
+
+  finish(reason) {
+    // Note that we might be in the middle of a sync right now, and so we don't
+    // want to touch this.current.
+    let result = this.getPingJSON(reason);
+    this.payloads = [];
+    this.discarded = 0;
+    this.submit(result);
   }
 
   setupObservers() {
@@ -342,19 +364,26 @@ class SyncTelemetryImpl {
   }
 
   shutdown() {
+    this.finish("shutdown");
     for (let topic of TOPICS) {
       Observers.remove(topic, this, this);
     }
   }
 
   submit(record) {
-    TelemetryController.submitExternalPing("sync", record);
+    // We still call submit() with possibly illegal payloads so that tests can
+    // know that the ping was built. We don't end up submitting them, however.
+    if (record.syncs.length) {
+      TelemetryController.submitExternalPing("sync", record);
+    }
   }
+
 
   onSyncStarted() {
     if (this.current) {
       log.warn("Observed weave:service:sync:start, but we're already recording a sync!");
       // Just discard the old record, consistent with our handling of engines, above.
+      this.current = null;
     }
     this.current = new TelemetryRecord(this.allowedEngines);
   }
@@ -373,9 +402,16 @@ class SyncTelemetryImpl {
       return;
     }
     this.current.finished(error);
-    let current = this.current;
+    if (this.payloads.length < this.maxPayloadCount) {
+      this.payloads.push(this.current.toJSON());
+    } else {
+      ++this.discarded;
+    }
     this.current = null;
-    this.submit(current.toJSON());
+    if ((Telemetry.msSinceProcessStart() - this.lastSubmissionTime) > this.submissionInterval) {
+      this.finish("schedule");
+      this.lastSubmissionTime = Telemetry.msSinceProcessStart();
+    }
   }
 
   observe(subject, topic, data) {

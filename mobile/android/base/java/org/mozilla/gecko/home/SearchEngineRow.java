@@ -12,6 +12,7 @@ import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.home.BrowserSearch.OnEditSuggestionListener;
 import org.mozilla.gecko.home.BrowserSearch.OnSearchListener;
 import org.mozilla.gecko.home.HomePager.OnUrlOpenListener;
+import org.mozilla.gecko.icons.IconResponse;
 import org.mozilla.gecko.preferences.GeckoPreferences;
 import org.mozilla.gecko.util.DrawableUtil;
 import org.mozilla.gecko.util.StringUtils;
@@ -383,7 +384,8 @@ class SearchEngineRow extends AnimatedHeightLayout {
     public void updateSuggestions(boolean searchSuggestionsEnabled, SearchEngine searchEngine, @Nullable List<String> rawSearchHistorySuggestions, boolean animate) {
         mSearchEngine = searchEngine;
         // Set the search engine icon (e.g., Google) for the row.
-        mIconView.updateAndScaleImage(mSearchEngine.getIcon(), mSearchEngine.getEngineIdentifier());
+
+        mIconView.updateAndScaleImage(IconResponse.create(mSearchEngine.getIcon()));
         // Set the initial content description.
         setDescriptionOnSuggestion(mUserEnteredTextView, mUserEnteredTextView.getText().toString());
 

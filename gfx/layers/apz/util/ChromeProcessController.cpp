@@ -197,7 +197,7 @@ ChromeProcessController::HandleTap(TapType aType,
         aInputBlockId);
     break;
   case TapType::eLongTapUp:
-    mAPZEventState->ProcessLongTapUp();
+    mAPZEventState->ProcessLongTapUp(presShell, point, scale, aModifiers);
     break;
   case TapType::eSentinel:
     // Should never happen, but we need to handle this case branch for the

@@ -83,8 +83,8 @@ kAxisOrientationToSidesMap[eNumAxisOrientationTypes][eNumAxisEdges] = {
 static inline bool
 IsDisplayValueLegacyBox(const nsStyleDisplay* aStyleDisp)
 {
-  return aStyleDisp->mDisplay == NS_STYLE_DISPLAY_WEBKIT_BOX ||
-    aStyleDisp->mDisplay == NS_STYLE_DISPLAY_WEBKIT_INLINE_BOX;
+  return aStyleDisp->mDisplay == mozilla::StyleDisplay::WebkitBox ||
+    aStyleDisp->mDisplay == mozilla::StyleDisplay::WebkitInlineBox;
 }
 
 // Helper to check whether our nsFlexContainerFrame is emulating a legacy
@@ -103,7 +103,7 @@ IsLegacyBox(const nsStyleDisplay* aStyleDisp,
   // If this frame is for a scrollable element, then it will actually have
   // "display:block", and its *parent* will have the real flex-flavored display
   // value. So in that case, check the parent to find out if we're legacy.
-  if (aStyleDisp->mDisplay == NS_STYLE_DISPLAY_BLOCK) {
+  if (aStyleDisp->mDisplay == mozilla::StyleDisplay::Block) {
     nsStyleContext* parentStyleContext = aStyleContext->GetParent();
     NS_ASSERTION(parentStyleContext &&
                  aStyleContext->GetPseudo() == nsCSSAnonBoxes::scrolledContent,
@@ -3489,9 +3489,10 @@ nsFlexContainerFrame::GetMainSizeFromReflowInput(
   if (aAxisTracker.IsRowOriented()) {
     // Row-oriented --> our main axis is the inline axis, so our main size
     // is our inline size (which should already be resolved).
-    NS_WARN_IF_FALSE(aReflowInput.ComputedISize() != NS_UNCONSTRAINEDSIZE,
-                     "Unconstrained inline size; this should only result from "
-                     "huge sizes (not intrinsic sizing w/ orthogonal flows)");
+    NS_WARNING_ASSERTION(
+      aReflowInput.ComputedISize() != NS_UNCONSTRAINEDSIZE,
+      "Unconstrained inline size; this should only result from huge sizes "
+      "(not intrinsic sizing w/ orthogonal flows)");
     return aReflowInput.ComputedISize();
   }
 
@@ -3592,9 +3593,10 @@ nsFlexContainerFrame::ComputeCrossSize(const ReflowInput& aReflowInput,
   if (aAxisTracker.IsColumnOriented()) {
     // Column-oriented --> our cross axis is the inline axis, so our cross size
     // is our inline size (which should already be resolved).
-    NS_WARN_IF_FALSE(aReflowInput.ComputedISize() != NS_UNCONSTRAINEDSIZE,
-                     "Unconstrained inline size; this should only result from "
-                     "huge sizes (not intrinsic sizing w/ orthogonal flows)");
+    NS_WARNING_ASSERTION(
+      aReflowInput.ComputedISize() != NS_UNCONSTRAINEDSIZE,
+      "Unconstrained inline size; this should only result from huge sizes "
+      "(not intrinsic sizing w/ orthogonal flows)");
     *aIsDefinite = true;
     return aReflowInput.ComputedISize();
   }
@@ -3755,8 +3757,9 @@ nsFlexContainerFrame::SizeItemInCrossAxis(
     // an instance of nsFrame (i.e. it should return null from GetType()).
     // XXXdholbert Once we've fixed bug 765861, we should upgrade this to an
     // assertion that trivially passes if bug 765861's flag has been flipped.
-    NS_WARN_IF_FALSE(!aItem.Frame()->GetType(),
-                     "Child should at least request space for border/padding");
+    NS_WARNING_ASSERTION(
+      !aItem.Frame()->GetType(),
+      "Child should at least request space for border/padding");
     aItem.SetCrossSize(0);
   } else {
     // (normal case)
@@ -4199,9 +4202,10 @@ nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
     // children (or if our children are huge enough that they have nscoord_MIN
     // as their baseline... in which case, we'll use the wrong baseline, but no
     // big deal)
-    NS_WARN_IF_FALSE(lines.getFirst()->IsEmpty(),
-                     "Have flex items but didn't get an ascent - that's odd "
-                     "(or there are just gigantic sizes involved)");
+    NS_WARNING_ASSERTION(
+      lines.getFirst()->IsEmpty(),
+      "Have flex items but didn't get an ascent - that's odd (or there are "
+      "just gigantic sizes involved)");
     // Per spec, synthesize baseline from the flex container's content box
     // (i.e. use block-end side of content-box)
     // XXXdholbert This only makes sense if parent's writing mode is

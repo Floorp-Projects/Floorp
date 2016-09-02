@@ -1877,11 +1877,8 @@ nsDocShell::SetCurrentURI(nsIURI* aURI, nsIRequest* aRequest,
                           bool aFireOnLocationChange, uint32_t aLocationFlags)
 {
   if (gDocShellLeakLog && MOZ_LOG_TEST(gDocShellLeakLog, LogLevel::Debug)) {
-    nsAutoCString spec;
-    if (aURI) {
-      aURI->GetSpec(spec);
-    }
-    PR_LogPrint("DOCSHELL %p SetCurrentURI %s\n", this, spec.get());
+    PR_LogPrint("DOCSHELL %p SetCurrentURI %s\n",
+                this, aURI ? aURI->GetSpecOrDefault().get() : "");
   }
 
   // We don't want to send a location change when we're displaying an error
@@ -5249,9 +5246,6 @@ nsDocShell::LoadErrorPage(nsIURI* aURI, const char16_t* aURL,
 {
 #if defined(DEBUG)
   if (MOZ_LOG_TEST(gDocShellLog, LogLevel::Debug)) {
-    nsAutoCString spec;
-    aURI->GetSpec(spec);
-
     nsAutoCString chanName;
     if (aFailedChannel) {
       aFailedChannel->GetName(chanName);
@@ -5261,7 +5255,8 @@ nsDocShell::LoadErrorPage(nsIURI* aURI, const char16_t* aURL,
 
     MOZ_LOG(gDocShellLog, LogLevel::Debug,
            ("nsDocShell[%p]::LoadErrorPage(\"%s\", \"%s\", {...}, [%s])\n", this,
-            spec.get(), NS_ConvertUTF16toUTF8(aURL).get(), chanName.get()));
+            aURI->GetSpecOrDefault().get(), NS_ConvertUTF16toUTF8(aURL).get(),
+            chanName.get()));
   }
 #endif
   mFailedChannel = aFailedChannel;
@@ -6336,9 +6331,9 @@ nsDocShell::SetMixedContentChannel(nsIChannel* aMixedContentChannel)
     // Get the root docshell.
     nsCOMPtr<nsIDocShellTreeItem> root;
     GetSameTypeRootTreeItem(getter_AddRefs(root));
-    NS_WARN_IF_FALSE(root.get() == static_cast<nsIDocShellTreeItem*>(this),
-                     "Setting mMixedContentChannel on a docshell that is not "
-                     "the root docshell");
+    NS_WARNING_ASSERTION(root.get() == static_cast<nsIDocShellTreeItem*>(this),
+                         "Setting mMixedContentChannel on a docshell that is "
+                         "not the root docshell");
   }
 #endif
   mMixedContentChannel = aMixedContentChannel;
@@ -9718,11 +9713,8 @@ nsDocShell::InternalLoad(nsIURI* aURI,
   mOriginalUriString.Truncate();
 
   if (gDocShellLeakLog && MOZ_LOG_TEST(gDocShellLeakLog, LogLevel::Debug)) {
-    nsAutoCString spec;
-    if (aURI) {
-      aURI->GetSpec(spec);
-    }
-    PR_LogPrint("DOCSHELL %p InternalLoad %s\n", this, spec.get());
+    PR_LogPrint("DOCSHELL %p InternalLoad %s\n",
+                this, aURI ? aURI->GetSpecOrDefault().get() : "");
   }
   // Initialize aDocShell/aRequest
   if (aDocShell) {
@@ -11433,9 +11425,6 @@ nsDocShell::OnNewURI(nsIURI* aURI, nsIChannel* aChannel,
 
 #if defined(DEBUG)
   if (MOZ_LOG_TEST(gDocShellLog, LogLevel::Debug)) {
-    nsAutoCString spec;
-    aURI->GetSpec(spec);
-
     nsAutoCString chanName;
     if (aChannel) {
       aChannel->GetName(chanName);
@@ -11444,8 +11433,8 @@ nsDocShell::OnNewURI(nsIURI* aURI, nsIChannel* aChannel,
     }
 
     MOZ_LOG(gDocShellLog, LogLevel::Debug,
-           ("nsDocShell[%p]::OnNewURI(\"%s\", [%s], 0x%x)\n", this, spec.get(),
-            chanName.get(), aLoadType));
+            ("nsDocShell[%p]::OnNewURI(\"%s\", [%s], 0x%x)\n",
+             this, aURI->GetSpecOrDefault().get(), chanName.get(), aLoadType));
   }
 #endif
 
@@ -12079,9 +12068,6 @@ nsDocShell::AddToSessionHistory(nsIURI* aURI, nsIChannel* aChannel,
 
 #if defined(DEBUG)
   if (MOZ_LOG_TEST(gDocShellLog, LogLevel::Debug)) {
-    nsAutoCString spec;
-    aURI->GetSpec(spec);
-
     nsAutoCString chanName;
     if (aChannel) {
       aChannel->GetName(chanName);
@@ -12090,8 +12076,8 @@ nsDocShell::AddToSessionHistory(nsIURI* aURI, nsIChannel* aChannel,
     }
 
     MOZ_LOG(gDocShellLog, LogLevel::Debug,
-           ("nsDocShell[%p]::AddToSessionHistory(\"%s\", [%s])\n",
-            this, spec.get(), chanName.get()));
+            ("nsDocShell[%p]::AddToSessionHistory(\"%s\", [%s])\n",
+             this, aURI->GetSpecOrDefault().get(), chanName.get()));
   }
 #endif
 
@@ -12887,7 +12873,7 @@ nsDocShell::ExtractLastVisit(nsIChannel* aChannel,
     rv = props->GetPropertyAsUint32(NS_LITERAL_STRING("docshell.previousFlags"),
                                     aChannelRedirectFlags);
 
-    NS_WARN_IF_FALSE(
+    NS_WARNING_ASSERTION(
       NS_SUCCEEDED(rv),
       "Could not fetch previous flags, URI will be treated like referrer");
   }
@@ -14241,8 +14227,7 @@ nsDocShell::SetOriginAttributes(const DocShellOriginAttributes& aAttrs)
       if (!uri) {
         return NS_ERROR_FAILURE;
       }
-      nsAutoCString uriSpec;
-      uri->GetSpec(uriSpec);
+      nsCString uriSpec = uri->GetSpecOrDefault();
       MOZ_ASSERT(uriSpec.EqualsLiteral("about:blank"));
       if (!uriSpec.EqualsLiteral("about:blank")) {
         return NS_ERROR_FAILURE;
@@ -14471,8 +14456,7 @@ nsDocShell::ShouldPrepareForIntercept(nsIURI* aURI, bool aIsNonSubresourceReques
   if (mCurrentURI &&
       nsContentUtils::CookiesBehavior() == nsICookieService::BEHAVIOR_REJECT_FOREIGN) {
     nsAutoCString uriSpec;
-    mCurrentURI->GetSpec(uriSpec);
-    if (!(uriSpec.EqualsLiteral("about:blank"))) {
+    if (!(mCurrentURI->GetSpecOrDefault().EqualsLiteral("about:blank"))) {
       // Reject the interception of third-party iframes if the cookie behaviour
       // is set to reject all third-party cookies (1). In case that this pref
       // is not set or can't be read, we default to allow all cookies (0) as

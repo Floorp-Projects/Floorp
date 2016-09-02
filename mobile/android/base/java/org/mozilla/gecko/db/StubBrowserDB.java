@@ -15,13 +15,12 @@ import java.util.Map;
 import org.json.JSONObject;
 import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.distribution.Distribution;
-import org.mozilla.gecko.favicons.decoders.LoadFaviconResult;
+import org.mozilla.gecko.icons.decoders.LoadFaviconResult;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.feeds.subscriptions.FeedSubscription;
 
 import android.content.ContentProviderOperation;
 import android.content.ContentResolver;
-import android.content.ContentValues;
 import android.content.Context;
 import android.database.ContentObserver;
 import android.database.Cursor;
@@ -278,16 +277,12 @@ public class StubBrowserDB implements BrowserDB {
     public void updateBookmark(ContentResolver cr, int id, String uri, String title, String keyword) {
     }
 
-    public LoadFaviconResult getFaviconForUrl(ContentResolver cr, String faviconURL) {
+    public LoadFaviconResult getFaviconForUrl(Context context, ContentResolver cr, String faviconURL) {
         return null;
     }
 
     public String getFaviconURLFromPageURL(ContentResolver cr, String uri) {
         return null;
-    }
-
-    public void updateFaviconForUrl(ContentResolver cr, String pageUri,
-                                    byte[] encodedFavicon, String faviconUri) {
     }
 
     public boolean hideSuggestedSite(String url) {
@@ -323,12 +318,6 @@ public class StubBrowserDB implements BrowserDB {
                                       long parent, long added,
                                       long modified, long position,
                                       String keyword, int type) {
-    }
-
-    public void updateFaviconInBatch(ContentResolver cr,
-                                     Collection<ContentProviderOperation> operations,
-                                     String url, String faviconUrl,
-                                     String faviconGuid, byte[] data) {
     }
 
     public void pinSite(ContentResolver cr, String url, String title, int position) {

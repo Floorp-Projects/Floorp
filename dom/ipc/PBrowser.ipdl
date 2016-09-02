@@ -675,6 +675,14 @@ child:
     async SelectionEvent(WidgetSelectionEvent event);
 
     /**
+     * Call PasteTransferable via a controller on the content process
+     * to handle the command content event, "pasteTransferable".
+     */
+    async PasteTransferable(IPCDataTransfer aDataTransfer,
+                            bool aIsPrivateData,
+                            Principal aRequestingPrincipal);
+
+    /**
      * Activate event forwarding from client to parent.
      */
     async ActivateFrameEvent(nsString aType, bool capture);

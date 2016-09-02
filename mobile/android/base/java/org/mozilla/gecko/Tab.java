@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.TreeSet;
+import java.util.concurrent.Future;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -18,16 +18,17 @@ import org.json.JSONObject;
 import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.URLMetadata;
-import org.mozilla.gecko.favicons.FaviconGenerator;
-import org.mozilla.gecko.favicons.Favicons;
-import org.mozilla.gecko.favicons.LoadFaviconTask;
-import org.mozilla.gecko.favicons.OnFaviconLoadedListener;
-import org.mozilla.gecko.favicons.RemoteFavicon;
 import org.mozilla.gecko.gfx.BitmapUtils;
+import org.mozilla.gecko.icons.IconCallback;
+import org.mozilla.gecko.icons.IconDescriptor;
+import org.mozilla.gecko.icons.IconRequestBuilder;
+import org.mozilla.gecko.icons.IconResponse;
+import org.mozilla.gecko.icons.Icons;
 import org.mozilla.gecko.reader.ReaderModeUtils;
 import org.mozilla.gecko.reader.ReadingListHelper;
 import org.mozilla.gecko.toolbar.BrowserToolbar.TabEditingState;
 import org.mozilla.gecko.util.ThreadUtils;
+import org.mozilla.gecko.widget.SiteLogins;
 
 import android.content.ContentResolver;
 import android.content.Context;
@@ -39,7 +40,6 @@ import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
-import org.mozilla.gecko.widget.SiteLogins;
 
 public class Tab {
     private static final String LOGTAG = "GeckoTab";
@@ -56,8 +56,9 @@ public class Tab {
     private String mFaviconUrl;
     private String mApplicationId; // Intended to be null after explicit user action.
 
-    // The set of all available Favicons for this tab, sorted by attractiveness.
-    final TreeSet<RemoteFavicon> mAvailableFavicons = new TreeSet<>();
+    private IconRequestBuilder mIconRequestBuilder;
+    private Future<IconResponse> mRunningIconRequest;
+
     private boolean mHasFeeds;
     private boolean mHasOpenSearch;
     private final SiteIdentity mSiteIdentity;
@@ -434,12 +435,15 @@ public class Tab {
     }
 
     public synchronized void addFavicon(String faviconURL, int faviconSize, String mimeType) {
-        RemoteFavicon favicon = new RemoteFavicon(faviconURL, faviconSize, mimeType);
+        mIconRequestBuilder
+                .icon(IconDescriptor.createFavicon(faviconURL, faviconSize, mimeType))
+                .deferBuild();
+    }
 
-        // Add this Favicon to the set of available Favicons.
-        synchronized (mAvailableFavicons) {
-            mAvailableFavicons.add(favicon);
-        }
+    public synchronized void addTouchicon(String iconUrl, int faviconSize, String mimeType) {
+        mIconRequestBuilder
+                .icon(IconDescriptor.createTouchicon(iconUrl, faviconSize, mimeType))
+                .deferBuild();
     }
 
     public void loadFavicon() {
@@ -448,72 +452,31 @@ public class Tab {
             return;
         }
 
-        // If we have a Favicon explicitly set, load it.
-        if (!mAvailableFavicons.isEmpty()) {
-            RemoteFavicon newFavicon = mAvailableFavicons.first();
-
-            // If the new Favicon is different, cancel the old load. Else, abort.
-            if (newFavicon.faviconUrl.equals(mFaviconUrl)) {
-                return;
-            }
-
-            Favicons.cancelFaviconLoad(mFaviconLoadId);
-            mFaviconUrl = newFavicon.faviconUrl;
-        } else {
-            // Otherwise, fallback to the default Favicon.
-            mFaviconUrl = null;
+        if (mIconRequestBuilder == null) {
+            // For the first internal homepage we might want to load a favicon without ever receiving
+            // a location change event first. In this case we didn't start to build a request yet.
+            // Let's do that now.
+            mIconRequestBuilder = Icons.with(mAppContext).pageUrl(mUrl);
         }
 
-        final Favicons.LoadType loadType;
-        if (mSiteIdentity.getSecurityMode() == SiteIdentity.SecurityMode.CHROMEUI) {
-            loadType = Favicons.LoadType.PRIVILEGED;
-        } else {
-            loadType = Favicons.LoadType.UNPRIVILEGED;
-        }
-
-        int flags = (isPrivate() || mErrorType != ErrorType.NONE) ? 0 : LoadFaviconTask.FLAG_PERSIST;
-        mFaviconLoadId = Favicons.getSizedFavicon(mAppContext, mUrl, mFaviconUrl,
-                loadType, Favicons.browserToolbarFaviconSize, flags,
-                new OnFaviconLoadedListener() {
+        mRunningIconRequest = mIconRequestBuilder
+                .build()
+                .execute(new IconCallback() {
                     @Override
-                    public void onFaviconLoaded(String pageUrl, String faviconURL, Bitmap favicon) {
-                        // The tab might be pointing to another URL by the time the
-                        // favicon is finally loaded, in which case we simply ignore it.
-                        if (!pageUrl.equals(mUrl)) {
-                            return;
-                        }
+                    public void onIconResponse(IconResponse response) {
+                        mFavicon = response.getBitmap();
 
-                        // That one failed. Try the next one.
-                        if (favicon == null) {
-                            // If what we just tried to load originated from the set of declared icons..
-                            if (!mAvailableFavicons.isEmpty()) {
-                                // Discard it.
-                                mAvailableFavicons.remove(mAvailableFavicons.first());
-
-                                // Load the next best, if we have one. If not, it'll fall back to the
-                                // default Favicon URL, before giving up.
-                                loadFavicon();
-
-                                return;
-                            }
-
-                            // Total failure: generate a default favicon.
-                            FaviconGenerator.generate(mAppContext, mUrl, this);
-                            return;
-                        }
-
-                        mFavicon = favicon;
-                        mFaviconLoadId = Favicons.NOT_LOADING;
                         Tabs.getInstance().notifyListeners(Tab.this, Tabs.TabEvents.FAVICON);
                     }
-                }
-        );
+                });
     }
 
     public synchronized void clearFavicon() {
         // Cancel any ongoing favicon load (if we never finished downloading the old favicon before
         // we changed page).
-        Favicons.cancelFaviconLoad(mFaviconLoadId);
+        if (mRunningIconRequest != null) {
+            mRunningIconRequest.cancel(true);
+        }
 
         // Keep the favicon unchanged while entering reader mode
         if (mEnteringReaderMode)
@@ -521,7 +484,6 @@ public class Tab {
 
         mFavicon = null;
         mFaviconUrl = null;
-        mAvailableFavicons.clear();
     }
 
     public void setHasFeeds(boolean hasFeeds) {
@@ -663,6 +625,10 @@ public class Tab {
                 // spurious location change, so we're definitely loading a new
                 // page.
                 clearFavicon();
+
+                // Start to build a new request to load a favicon.
+                mIconRequestBuilder = Icons.with(mAppContext)
+                        .pageUrl(uri);
 
                 // Load local static Favicons immediately
                 if (AboutPages.isBuiltinIconPage(uri)) {

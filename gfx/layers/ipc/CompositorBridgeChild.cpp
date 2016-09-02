@@ -183,7 +183,7 @@ CompositorBridgeChild::InitForContent(Endpoint<PCompositorBridgeChild>&& aEndpoi
   MOZ_ASSERT(!sCompositorBridge);
 
   RefPtr<CompositorBridgeChild> child(new CompositorBridgeChild(nullptr));
-  if (!aEndpoint.Bind(child, nullptr)) {
+  if (!aEndpoint.Bind(child)) {
     NS_RUNTIMEABORT("Couldn't Open() Compositor channel.");
     return false;
   }
@@ -224,7 +224,7 @@ CompositorBridgeChild::CreateRemote(const uint64_t& aProcessToken,
                                     Endpoint<PCompositorBridgeChild>&& aEndpoint)
 {
   RefPtr<CompositorBridgeChild> child = new CompositorBridgeChild(aLayerManager);
-  if (!aEndpoint.Bind(child, nullptr)) {
+  if (!aEndpoint.Bind(child)) {
     return nullptr;
   }
 

@@ -777,6 +777,11 @@ class MochitestArguments(ArgumentContainer):
             "geckomediaplugin": 20000,
         }
 
+        # Bug 1293324 - OSX 10.10 sometimes leaks a little more
+        # graphics layers stuff in the content process.
+        if mozinfo.isMac:
+            options.leakThresholds["tab"] = 12000
+
         # XXX We can't normalize test_paths in the non build_obj case here,
         # because testRoot depends on the flavor, which is determined by the
         # mach command and therefore not finalized yet. Conversely, test paths

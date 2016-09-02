@@ -2281,8 +2281,9 @@ MessageChannel::DebugAbort(const char* file, int line, const char* cond,
 void
 MessageChannel::DumpInterruptStack(const char* const pfx) const
 {
-    NS_WARN_IF_FALSE(MessageLoop::current() != mWorkerLoop,
-                     "The worker thread had better be paused in a debugger!");
+    NS_WARNING_ASSERTION(
+      MessageLoop::current() != mWorkerLoop,
+      "The worker thread had better be paused in a debugger!");
 
     printf_stderr("%sMessageChannel 'backtrace':\n", pfx);
 

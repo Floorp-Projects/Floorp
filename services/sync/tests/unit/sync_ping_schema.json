@@ -3,40 +3,51 @@
   "description": "schema for Sync pings, documentation avaliable in toolkit/components/telemetry/docs/sync-ping.rst",
   "type": "object",
   "additionalProperties": false,
-  "required": ["when", "version", "took", "uid"],
+  "required": ["version", "syncs", "why"],
   "properties": {
     "version": { "type": "integer", "minimum": 0 },
-    "didLogin": { "type": "boolean" },
-    "when": { "type": "integer" },
-    "status": {
-      "type": "object",
-      "anyOf": [
-        {"required": ["sync"]},
-        {"required": ["service"]}
-      ],
-      "additionalProperties": false,
-      "properties": {
-        "sync": { "type": "string" },
-        "service": { "type": "string" }
-      }
-    },
-    "why": { "enum": ["startup", "schedule", "score", "user", "tabs"] },
-    "took": { "type": "integer", "minimum": -1 },
-    "uid": {
-      "type": "string",
-      "oneOf": [
-        { "pattern": "^[0-9a-f]{32}$" },
-        { "maxLength": 0 }
-      ]
-    },
-    "failureReason": { "$ref": "#/definitions/error" },
-    "engines": {
+    "discarded": { "type": "integer", "minimum": 1 },
+    "why": { "enum": ["shutdown", "schedule"] },
+    "syncs": {
       "type": "array",
       "minItems": 1,
-      "items": { "$ref": "#/definitions/engine" }
+      "items": { "$ref": "#/definitions/payload" }
     }
   },
   "definitions": {
+    "payload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["when", "uid", "took"],
+      "properties": {
+        "didLogin": { "type": "boolean" },
+        "when": { "type": "integer" },
+        "uid": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{32}$"
+        },
+        "status": {
+          "type": "object",
+          "anyOf": [
+            { "required": ["sync"] },
+            { "required": ["service"] }
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "sync": { "type": "string" },
+            "service": { "type": "string" }
+          }
+        },
+        "why": { "enum": ["startup", "schedule", "score", "user", "tabs"] },
+        "took": { "type": "integer", "minimum": -1 },
+        "failureReason": { "$ref": "#/definitions/error" },
+        "engines": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/definitions/engine" }
+        }
+      }
+    },
     "engine": {
       "required": ["name"],
       "additionalProperties": false,

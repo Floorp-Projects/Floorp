@@ -136,6 +136,7 @@ class EventStateManager;
 namespace dom {
 
 class Animation;
+class CustomElementsRegistry;
 class Link;
 class UndoManager;
 class DOMRect;
@@ -424,7 +425,9 @@ private:
   friend class mozilla::EventStateManager;
   friend class ::nsGlobalWindow;
   friend class ::nsFocusManager;
-  friend class ::nsDocument;
+
+  // Allow CusomtElementRegistry to call AddStates.
+  friend class CustomElementsRegistry;
 
   // Also need to allow Link to call UpdateLinkState.
   friend class Link;

@@ -72,7 +72,8 @@ public class AboutPages {
 
     }
 
-    private static final String[] DEFAULT_ICON_PAGES = new String[] {
+    public static final String[] DEFAULT_ICON_PAGES = new String[] {
+        HOME,
         ACCOUNTS,
         ADDONS,
         CONFIG,
@@ -81,13 +82,6 @@ public class AboutPages {
         HEALTHREPORT,
         UPDATER
     };
-
-    /**
-     * Callers must not modify the returned array.
-     */
-    public static String[] getDefaultIconPages() {
-        return DEFAULT_ICON_PAGES;
-    }
 
     public static boolean isBuiltinIconPage(final String url) {
         if (url == null ||

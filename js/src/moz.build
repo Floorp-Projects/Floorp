@@ -602,7 +602,8 @@ if CONFIG['HAVE_LINUX_PERF_EVENT_H']:
     SOURCES += [
         'perf/pm_linux.cpp'
     ]
-    SOURCES['perf/pm_linux.cpp'].flags += [CONFIG['LINUX_HEADERS_INCLUDES']]
+    if CONFIG['LINUX_HEADERS_INCLUDES']:
+        SOURCES['perf/pm_linux.cpp'].flags += [CONFIG['LINUX_HEADERS_INCLUDES']]
 else:
     SOURCES += [
         'perf/pm_stub.cpp'

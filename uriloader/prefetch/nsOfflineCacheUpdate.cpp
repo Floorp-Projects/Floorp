@@ -98,11 +98,9 @@ LogToConsole(const char * message, nsOfflineCacheUpdateItem * item = nullptr)
     {
         nsAutoString messageUTF16 = NS_ConvertUTF8toUTF16(message);
         if (item && item->mURI) {
-            nsAutoCString uriSpec;
-            item->mURI->GetSpec(uriSpec);
-
             messageUTF16.AppendLiteral(", URL=");
-            messageUTF16.Append(NS_ConvertUTF8toUTF16(uriSpec));
+            messageUTF16.Append(
+                NS_ConvertUTF8toUTF16(item->mURI->GetSpecOrDefault()));
         }
         consoleService->LogStringMessage(messageUTF16.get());
     }
@@ -346,9 +344,8 @@ nsresult
 nsOfflineCacheUpdateItem::OpenChannel(nsOfflineCacheUpdate *aUpdate)
 {
     if (LOG_ENABLED()) {
-        nsAutoCString spec;
-        mURI->GetSpec(spec);
-        LOG(("%p: Opening channel for %s", this, spec.get()));
+        LOG(("%p: Opening channel for %s", this,
+             mURI->GetSpecOrDefault().get()));
     }
 
     if (mUpdate) {
@@ -469,10 +466,8 @@ nsOfflineCacheUpdateItem::OnStopRequest(nsIRequest *aRequest,
                                         nsresult aStatus)
 {
     if (LOG_ENABLED()) {
-        nsAutoCString spec;
-        mURI->GetSpec(spec);
         LOG(("%p: Done fetching offline item %s [status=%x]\n",
-            this, spec.get(), aStatus));
+             this, mURI->GetSpecOrDefault().get(), aStatus));
     }
 
     if (mBytesRead == 0 && aStatus == NS_OK) {
@@ -1892,9 +1887,8 @@ nsOfflineCacheUpdate::ProcessNextURI()
     }
 
     if (LOG_ENABLED()) {
-        nsAutoCString spec;
-        runItem->mURI->GetSpec(spec);
-        LOG(("%p: Opening channel for %s", this, spec.get()));
+        LOG(("%p: Opening channel for %s", this,
+             runItem->mURI->GetSpecOrDefault().get()));
     }
 
     ++mItemsInProgress;
