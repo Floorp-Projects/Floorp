@@ -185,7 +185,7 @@ public:
   {
     nsCOMPtr<nsIParser> parser = do_QueryReferent(mCreatorParser);
     if (parser) {
-      parser->BeginEvaluatingParserInsertedScript();
+      parser->PushDefinedInsertionPoint();
     }
   }
 
@@ -196,7 +196,7 @@ public:
   {
     nsCOMPtr<nsIParser> parser = do_QueryReferent(mCreatorParser);
     if (parser) {
-      parser->EndEvaluatingParserInsertedScript();
+      parser->PopDefinedInsertionPoint();
     }
   }
 
