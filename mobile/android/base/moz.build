@@ -226,6 +226,7 @@ geckoview_java_files = [
     'GeckoView.java',
     'GeckoViewChrome.java',
     'GeckoViewContent.java',
+    'GeckoViewFragment.java',
     'gfx/Axis.java',
     'gfx/BitmapUtils.java',
     'gfx/BufferedImage.java',

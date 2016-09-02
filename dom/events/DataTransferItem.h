@@ -48,7 +48,10 @@ public:
   already_AddRefed<DataTransferItem> Clone(DataTransfer* aDataTransfer) const;
 
   virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+
+  // NOTE: This accesses the subject principal, and should not be called from C++
   void GetAsString(FunctionStringCallback* aCallback, ErrorResult& aRv);
+
   void GetKind(nsAString& aKind) const
   {
     switch (mKind) {
@@ -79,9 +82,15 @@ public:
     mKind = aKind;
   }
 
+  // NOTE: This accesses the subject principal, and should not be called from C++
   already_AddRefed<File> GetAsFile(ErrorResult& aRv);
+  already_AddRefed<File> GetAsFileWithPrincipal(nsIPrincipal* aPrincipal,
+                                                ErrorResult& aRv);
 
+  // NOTE: This accesses the subject principal, and should not be called from C++
   already_AddRefed<FileSystemEntry> GetAsEntry(ErrorResult& aRv);
+  already_AddRefed<FileSystemEntry> GetAsEntryWithPrincipal(nsIPrincipal* aPrincipal,
+                                                            ErrorResult& aRv);
 
   DataTransfer* GetParentObject() const
   {
@@ -119,6 +128,8 @@ public:
   {
     mChromeOnly = aChromeOnly;
   }
+
+  static eKind KindFromData(nsIVariant* aData);
 
 private:
   ~DataTransferItem() {}

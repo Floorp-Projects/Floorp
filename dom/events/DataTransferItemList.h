@@ -71,7 +71,7 @@ public:
                        uint32_t aIndex, nsIPrincipal* aPrincipal,
                        bool aInsertOnly, bool aHidden, ErrorResult& aRv);
 
-  FileList* Files();
+  already_AddRefed<FileList> Files(nsIPrincipal* aPrincipal);
 
   // Moz-style helper methods for interacting with the stored data
   void MozRemoveByTypeAt(const nsAString& aType, uint32_t aIndex,
@@ -94,12 +94,15 @@ private:
                                   nsIVariant* aData, nsIPrincipal* aPrincipal,
                                   bool aHidden);
   void RegenerateFiles();
+  void GenerateFiles(FileList* aFiles, nsIPrincipal* aFilesPrincipal);
 
   ~DataTransferItemList() {}
 
   RefPtr<DataTransfer> mDataTransfer;
   bool mIsExternal;
   RefPtr<FileList> mFiles;
+  // The principal for which mFiles is cached
+  nsCOMPtr<nsIPrincipal> mFilesPrincipal;
   nsTArray<RefPtr<DataTransferItem>> mItems;
   nsTArray<nsTArray<RefPtr<DataTransferItem>>> mIndexedItems;
 };
