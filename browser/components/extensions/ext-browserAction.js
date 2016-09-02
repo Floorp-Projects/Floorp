@@ -461,7 +461,6 @@ extensions.registerSchemaAPI("browserAction", "addon_parent", context => {
 
         let icon = IconDetails.normalize(details, extension, context);
         BrowserAction.for(extension).setProperty(tab, "icon", icon);
-        return Promise.resolve();
       },
 
       setBadgeText: function(details) {
