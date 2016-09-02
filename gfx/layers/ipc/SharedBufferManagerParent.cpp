@@ -360,23 +360,5 @@ SharedBufferManagerParent::GetGraphicBuffer(GrallocBufferRef aRef)
 }
 #endif
 
-IToplevelProtocol*
-SharedBufferManagerParent::CloneToplevel(const InfallibleTArray<ProtocolFdMapping>& aFds,
-                                 base::ProcessHandle aPeerProcess,
-                                 mozilla::ipc::ProtocolCloneContext* aCtx)
-{
-  for (unsigned int i = 0; i < aFds.Length(); i++) {
-    if (aFds[i].protocolId() == unsigned(GetProtocolId())) {
-      UniquePtr<Transport> transport =
-        OpenDescriptor(aFds[i].fd(), Transport::MODE_SERVER);
-      PSharedBufferManagerParent* bufferManager = Create(transport.get(), base::GetProcId(aPeerProcess));
-      bufferManager->CloneManagees(this, aCtx);
-      bufferManager->IToplevelProtocol::SetTransport(Move(transport));
-      return bufferManager;
-    }
-  }
-  return nullptr;
-}
-
 } /* namespace layers */
 } /* namespace mozilla */

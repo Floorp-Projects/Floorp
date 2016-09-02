@@ -365,15 +365,6 @@ ImageBridgeParent::GetInstance(ProcessId aId)
   return sImageBridges[aId];
 }
 
-IToplevelProtocol*
-ImageBridgeParent::CloneToplevel(const InfallibleTArray<ProtocolFdMapping>& aFds,
-                                 base::ProcessHandle aPeerProcess,
-                                 mozilla::ipc::ProtocolCloneContext* aCtx)
-{
-  MOZ_ASSERT_UNREACHABLE("Not supported");
-  return nullptr;
-}
-
 void
 ImageBridgeParent::OnChannelConnected(int32_t aPid)
 {
