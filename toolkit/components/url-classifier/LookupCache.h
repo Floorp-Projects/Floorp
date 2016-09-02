@@ -104,7 +104,7 @@ public:
   nsresult Open();
   // The directory handle where we operate will
   // be moved away when a backup is made.
-  nsresult UpdateDirHandle(nsIFile* aStoreDirectory);
+  nsresult UpdateRootDirHandle(nsIFile* aRootStoreDirectory);
   // This will Clear() the passed arrays when done.
   nsresult Build(AddPrefixArray& aAddPrefixes,
                  AddCompleteArray& aAddCompletes);
@@ -134,6 +134,7 @@ private:
 
   bool mPrimed;
   nsCString mTableName;
+  nsCOMPtr<nsIFile> mRootStoreDirectory;
   nsCOMPtr<nsIFile> mStoreDirectory;
   // Set of prefixes known to be in the database
   RefPtr<nsUrlClassifierPrefixSet> mPrefixSet;
