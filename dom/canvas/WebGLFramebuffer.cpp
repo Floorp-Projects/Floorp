@@ -1080,15 +1080,15 @@ WebGLFramebuffer::ResolvedData::ResolvedData(const WebGLFramebuffer& parent)
         if (!fnCommon(attach))
             return;
 
-        out_destSet->insert(attach);
+        out_destSet->insert(WebGLFBAttachPoint::Ordered(attach));
     };
 
     const auto fnDepthStencil = [&](const WebGLFBAttachPoint& attach) {
         if (!fnCommon(attach))
             return;
 
-        drawSet.insert(attach);
-        readSet.insert(attach);
+        drawSet.insert(WebGLFBAttachPoint::Ordered(attach));
+        readSet.insert(WebGLFBAttachPoint::Ordered(attach));
     };
 
     ////
