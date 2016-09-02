@@ -3295,10 +3295,6 @@ nsresult
 SetSandboxMetadata(JSContext* cx, JS::HandleObject sandboxArg,
                    JS::HandleValue metadata);
 
-nsresult
-GetSandboxPrincipal(JSContext* aCx, JS::HandleObject aSandboxArg,
-                    nsIPrincipal** aPrincipal);
-
 bool
 CreateObjectIn(JSContext* cx, JS::HandleValue vobj, CreateObjectInOptions& options,
                JS::MutableHandleValue rval);
