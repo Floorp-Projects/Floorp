@@ -218,7 +218,7 @@ ImageBridgeParent::CreateForContent(Endpoint<PImageBridgeParent>&& aEndpoint)
 void
 ImageBridgeParent::Bind(Endpoint<PImageBridgeParent>&& aEndpoint)
 {
-  if (!aEndpoint.Bind(this, nullptr))
+  if (!aEndpoint.Bind(this))
     return;
   mSelfRef = this;
 }
