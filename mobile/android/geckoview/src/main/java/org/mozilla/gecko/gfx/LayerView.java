@@ -31,6 +31,7 @@ import android.graphics.Point;
 import android.graphics.PointF;
 import android.graphics.Rect;
 import android.graphics.SurfaceTexture;
+import android.os.Parcelable;
 import android.util.AttributeSet;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
@@ -70,6 +71,8 @@ public class LayerView extends ScrollView implements Tabs.OnTabsChangedListener 
 
     private boolean mServerSurfaceValid;
     private int mWidth, mHeight;
+
+    private boolean onAttachedToWindowCalled;
 
     /* This is written by the Gecko thread and the UI thread, and read by the UI thread. */
     @WrapForJNI(stubName = "CompositorCreated", calledFrom = "ui")
@@ -115,6 +118,8 @@ public class LayerView extends ScrollView implements Tabs.OnTabsChangedListener 
         private void destroy() {
             // The nsWindow has been closed. First mark our compositor as destroyed.
             LayerView.this.mCompositorCreated = false;
+
+            LayerView.this.mLayerClient.setGeckoReady(false);
 
             // Then clear out any pending calls on the UI thread by disposing on the UI thread.
             ThreadUtils.postToUiThread(new Runnable() {
@@ -299,6 +304,14 @@ public class LayerView extends ScrollView implements Tabs.OnTabsChangedListener 
     }
 
     @Override
+    protected void onRestoreInstanceState(final Parcelable state) {
+        if (onAttachedToWindowCalled) {
+            attachCompositor();
+        }
+        super.onRestoreInstanceState(state);
+    }
+
+    @Override
     protected void onAttachedToWindow() {
         super.onAttachedToWindow();
 
@@ -352,6 +365,15 @@ public class LayerView extends ScrollView implements Tabs.OnTabsChangedListener 
         }
 
         attachCompositor();
+
+        onAttachedToWindowCalled = true;
+    }
+
+    @Override
+    protected void onDetachedFromWindow() {
+        super.onDetachedFromWindow();
+
+        onAttachedToWindowCalled = false;
     }
 
     // Don't expose GeckoLayerClient to things outside this package; only expose it as an Object
