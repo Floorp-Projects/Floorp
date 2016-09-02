@@ -15,6 +15,7 @@ from mach.decorators import (
 
 def run_reftest(context, **kwargs):
     kwargs['app'] = kwargs['app'] or context.firefox_bin
+    kwargs['e10s'] = context.mozharness_config.get('e10s', kwargs['e10s'])
     kwargs['certPath'] = context.certs_dir
     kwargs['utilityPath'] = context.bin_dir
     kwargs['extraProfileFiles'].append(os.path.join(context.bin_dir, 'plugins'))
