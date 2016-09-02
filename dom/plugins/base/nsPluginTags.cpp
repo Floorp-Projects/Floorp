@@ -248,6 +248,7 @@ nsPluginTag::nsPluginTag(nsPluginInfo* aPluginInfo,
            aPluginInfo->fMimeDescriptionArray,
            aPluginInfo->fExtensionArray,
            aPluginInfo->fVariantCount);
+  InitSandboxLevel();
   EnsureMembersAreUTF8();
   FixupVersion();
 }
