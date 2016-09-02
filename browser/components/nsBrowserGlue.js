@@ -71,6 +71,8 @@ XPCOMUtils.defineLazyServiceGetter(this, "AlertsService", "@mozilla.org/alerts-s
 if (AppConstants.MOZ_CRASHREPORTER) {
   XPCOMUtils.defineLazyModuleGetter(this, "PluginCrashReporter",
                                     "resource:///modules/ContentCrashHandlers.jsm");
+  XPCOMUtils.defineLazyModuleGetter(this, "UnsubmittedCrashHandler",
+                                    "resource:///modules/ContentCrashHandlers.jsm");
   XPCOMUtils.defineLazyModuleGetter(this, "CrashSubmit",
                                     "resource://gre/modules/CrashSubmit.jsm");
 }
@@ -714,6 +716,7 @@ BrowserGlue.prototype = {
     TabCrashHandler.init();
     if (AppConstants.MOZ_CRASHREPORTER) {
       PluginCrashReporter.init();
+      UnsubmittedCrashHandler.init();
     }
 
     Services.obs.notifyObservers(null, "browser-ui-startup-complete", "");
@@ -741,64 +744,6 @@ BrowserGlue.prototype = {
       if (buildDate + acceptableAge < today) {
         Cc["@mozilla.org/updates/update-service;1"].getService(Ci.nsIApplicationUpdateService).checkForBackgroundUpdates();
       }
-    }
-  },
-
-  checkForPendingCrashReports: function() {
-    // We don't process crash reports older than 28 days, so don't bother submitting them
-    const PENDING_CRASH_REPORT_DAYS = 28;
-    if (AppConstants.MOZ_CRASHREPORTER) {
-      let dateLimit = new Date();
-      dateLimit.setDate(dateLimit.getDate() - PENDING_CRASH_REPORT_DAYS);
-      CrashSubmit.pendingIDsAsync(dateLimit).then(
-        function onSuccess(ids) {
-          let count = ids.length;
-          if (count) {
-            let win = RecentWindow.getMostRecentBrowserWindow();
-            if (!win) {
-              return;
-            }
-            let nb =  win.document.getElementById("global-notificationbox");
-            let notification = nb.getNotificationWithValue("pending-crash-reports");
-            if (notification) {
-              return;
-            }
-            let buttons = [
-              {
-                label: win.gNavigatorBundle.getString("pendingCrashReports.submitAll"),
-                callback: function() {
-                  ids.forEach(function(id) {
-                    CrashSubmit.submit(id, {extraExtraKeyVals: {"SubmittedFromInfobar": true}});
-                  });
-                }
-              },
-              {
-                label: win.gNavigatorBundle.getString("pendingCrashReports.ignoreAll"),
-                callback: function() {
-                  ids.forEach(function(id) {
-                    CrashSubmit.ignore(id);
-                  });
-                }
-              },
-              {
-                label: win.gNavigatorBundle.getString("pendingCrashReports.viewAll"),
-                callback: function() {
-                  win.openUILinkIn("about:crashes", "tab");
-                  return true;
-                }
-              }
-            ];
-            nb.appendNotification(PluralForm.get(count,
-                                                 win.gNavigatorBundle.getString("pendingCrashReports.label")).replace("#1", count),
-                                  "pending-crash-reports",
-                                  "chrome://browser/skin/tab-crashed.svg",
-                                  nb.PRIORITY_INFO_HIGH, buttons);
-          }
-        },
-        function onError(err) {
-          Cu.reportError(err);
-        }
-      );
     }
   },
 
@@ -1069,10 +1014,6 @@ BrowserGlue.prototype = {
     }
 
     this._checkForOldBuildUpdates();
-
-    if (!AppConstants.RELEASE_BUILD) {
-      this.checkForPendingCrashReports();
-    }
 
     CaptivePortalWatcher.init();
 

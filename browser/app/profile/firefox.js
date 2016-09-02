@@ -1507,3 +1507,12 @@ pref("print.use_simplify_page", true);
 // Space separated list of URLS that are allowed to send objects (instead of
 // only strings) through webchannels. This list is duplicated in mobile/android/app/mobile.js
 pref("webchannel.allowObject.urlWhitelist", "https://accounts.firefox.com https://content.cdn.mozilla.net https://input.mozilla.org https://support.mozilla.org https://install.mozilla.org");
+
+// Whether or not the browser should scan for unsubmitted
+// crash reports, and then show a notification for submitting
+// those reports.
+#ifdef RELEASE_BUILD
+pref("browser.crashReports.unsubmittedCheck.enabled", false);
+#else
+pref("browser.crashReports.unsubmittedCheck.enabled", true);
+#endif
