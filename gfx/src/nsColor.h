@@ -77,6 +77,22 @@ NS_HexToRGBA(const nsAString& aBuf, nsHexColorType aType, nscolor* aResult);
 // you get if you draw aFG on top of aBG with operator OVER.
 nscolor NS_ComposeColors(nscolor aBG, nscolor aFG);
 
+namespace mozilla {
+
+inline uint32_t RoundingDivideBy255(uint32_t n)
+{
+  // There is an approximate alternative: ((n << 8) + n + 32896) >> 16
+  // But that is actually slower than this simple expression on a modern
+  // machine with a modern compiler.
+  return (n + 127) / 255;
+}
+
+// Blend one RGBA color with another based on a given ratio.
+// It is a linear interpolation on each channel with alpha premultipled.
+nscolor LinearBlendColors(nscolor aBg, nscolor aFg, uint_fast8_t aFgRatio);
+
+} // namespace mozilla
+
 // Translate a hex string to a color. Return true if it parses ok,
 // otherwise return false.
 // This version accepts 1 to 9 digits (missing digits are 0)
