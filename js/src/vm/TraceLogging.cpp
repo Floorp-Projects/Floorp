@@ -491,6 +491,14 @@ TraceLoggerThread::startEvent(uint32_t id)
     if (!traceLoggerState->isTextIdEnabled(id))
        return;
 
+#ifdef DEBUG
+    if (enabled > 0) {
+        AutoEnterOOMUnsafeRegion oomUnsafe;
+        if (!graphStack.append(id))
+            oomUnsafe.crash("Could not add item to debug stack.");
+    }
+#endif
+
     log(id);
 }
 
@@ -515,6 +523,23 @@ TraceLoggerThread::stopEvent(uint32_t id)
     MOZ_ASSERT(traceLoggerState);
     if (!traceLoggerState->isTextIdEnabled(id))
         return;
+
+#ifdef DEBUG
+    if (enabled > 0) {
+        uint32_t prev = graphStack.popCopy();
+        if (id == TraceLogger_Engine) {
+            MOZ_ASSERT(prev == TraceLogger_IonMonkey || prev == TraceLogger_Baseline ||
+                       prev == TraceLogger_Interpreter);
+        } else if (id == TraceLogger_Scripts) {
+            MOZ_ASSERT(prev >= TraceLogger_Last);
+        } else if (id >= TraceLogger_Last) {
+            MOZ_ASSERT(prev >= TraceLogger_Last);
+            MOZ_ASSERT_IF(prev != id, strcmp(eventText(id), eventText(prev)) == 0);
+        } else {
+            MOZ_ASSERT(id == prev);
+        }
+    }
+#endif
 
     log(TraceLogger_Stop);
 }
