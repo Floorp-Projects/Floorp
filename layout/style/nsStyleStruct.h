@@ -18,6 +18,7 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/SheetType.h"
 #include "mozilla/StaticPtr.h"
+#include "mozilla/StyleComplexColor.h"
 #include "mozilla/StyleStructContext.h"
 #include "mozilla/UniquePtr.h"
 #include "nsColor.h"
@@ -478,6 +479,11 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleColor
   nsStyleColor(const nsStyleColor& aOther);
   ~nsStyleColor() {
     MOZ_COUNT_DTOR(nsStyleColor);
+  }
+
+  nscolor CalcComplexColor(const mozilla::StyleComplexColor& aColor) const {
+    return mozilla::LinearBlendColors(aColor.mColor, mColor,
+                                      aColor.mForegroundRatio);
   }
 
   nsChangeHint CalcDifference(const nsStyleColor& aNewData) const;
