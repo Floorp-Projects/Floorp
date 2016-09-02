@@ -3385,7 +3385,7 @@ nsPrintEngine::TurnScriptingOn(bool aDoTurnOn)
 
     if (nsCOMPtr<nsPIDOMWindowInner> window = doc->GetInnerWindow()) {
       nsCOMPtr<nsIGlobalObject> go = do_QueryInterface(window);
-      NS_WARN_IF_FALSE(go && go->GetGlobalJSObject(), "Can't get global");
+      NS_WARNING_ASSERTION(go && go->GetGlobalJSObject(), "Can't get global");
       nsresult propThere = NS_PROPTABLE_PROP_NOT_THERE;
       doc->GetProperty(nsGkAtoms::scriptEnabledBeforePrintOrPreview,
                        &propThere);

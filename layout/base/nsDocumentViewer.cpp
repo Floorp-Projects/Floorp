@@ -2484,8 +2484,8 @@ nsDocumentViewer::FindContainerView()
   // cases. Treat that as display:none, the document is not
   // displayed.
   if (subdocFrame->GetType() != nsGkAtoms::subDocumentFrame) {
-    NS_WARN_IF_FALSE(!subdocFrame->GetType(),
-                     "Subdocument container has non-subdocument frame");
+    NS_WARNING_ASSERTION(!subdocFrame->GetType(),
+                         "Subdocument container has non-subdocument frame");
     return nullptr;
   }
 
@@ -3782,8 +3782,9 @@ nsDocumentViewer::PrintPreview(nsIPrintSettings* aPrintSettings,
                                nsIWebProgressListener* aWebProgressListener)
 {
 #if defined(NS_PRINTING) && defined(NS_PRINT_PREVIEW)
-  NS_WARN_IF_FALSE(IsInitializedForPrintPreview(),
-                   "Using docshell.printPreview is the preferred way for print previewing!");
+  NS_WARNING_ASSERTION(
+    IsInitializedForPrintPreview(),
+    "Using docshell.printPreview is the preferred way for print previewing!");
 
   NS_ENSURE_ARG_POINTER(aChildDOMWin);
   nsresult rv = NS_OK;

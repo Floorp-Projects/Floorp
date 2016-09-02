@@ -238,8 +238,8 @@ DelayBuffer::UpdateUpmixChannels(int aNewReadChunk, uint32_t aChannelCount,
     return;
   }
 
-  NS_WARN_IF_FALSE(mHaveWrittenBlock || aNewReadChunk != mCurrentChunk,
-                   "Smoothing is making feedback delay too small.");
+  NS_WARNING_ASSERTION(mHaveWrittenBlock || aNewReadChunk != mCurrentChunk,
+                       "Smoothing is making feedback delay too small.");
 
   mLastReadChunk = aNewReadChunk;
   mUpmixChannels = mChunks[aNewReadChunk].ChannelData<float>();

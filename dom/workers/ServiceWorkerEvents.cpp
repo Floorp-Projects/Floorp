@@ -12,6 +12,8 @@
 #include "nsINetworkInterceptController.h"
 #include "nsIOutputStream.h"
 #include "nsIScriptError.h"
+#include "nsIUnicodeDecoder.h"
+#include "nsIUnicodeEncoder.h"
 #include "nsContentPolicyUtils.h"
 #include "nsContentUtils.h"
 #include "nsComponentManagerUtils.h"
@@ -26,29 +28,22 @@
 
 #include "mozilla/ErrorResult.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/dom/BodyUtil.h"
 #include "mozilla/dom/DOMException.h"
 #include "mozilla/dom/DOMExceptionBinding.h"
+#include "mozilla/dom/EncodingUtils.h"
 #include "mozilla/dom/FetchEventBinding.h"
 #include "mozilla/dom/MessagePort.h"
 #include "mozilla/dom/MessagePortList.h"
 #include "mozilla/dom/PromiseNativeHandler.h"
+#include "mozilla/dom/PushEventBinding.h"
+#include "mozilla/dom/PushMessageDataBinding.h"
+#include "mozilla/dom/PushUtil.h"
 #include "mozilla/dom/Request.h"
+#include "mozilla/dom/TypedArray.h"
 #include "mozilla/dom/Response.h"
 #include "mozilla/dom/WorkerScope.h"
 #include "mozilla/dom/workers/bindings/ServiceWorker.h"
-
-#ifndef MOZ_SIMPLEPUSH
-#include "mozilla/dom/PushEventBinding.h"
-#include "mozilla/dom/PushMessageDataBinding.h"
-
-#include "nsIUnicodeDecoder.h"
-#include "nsIUnicodeEncoder.h"
-
-#include "mozilla/dom/BodyUtil.h"
-#include "mozilla/dom/EncodingUtils.h"
-#include "mozilla/dom/PushUtil.h"
-#include "mozilla/dom/TypedArray.h"
-#endif
 
 #include "js/Conversions.h"
 #include "js/TypeDecls.h"
@@ -962,8 +957,6 @@ NS_INTERFACE_MAP_END_INHERITING(Event)
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(ExtendableEvent, Event, mPromises)
 
-#ifndef MOZ_SIMPLEPUSH
-
 namespace {
 nsresult
 ExtractBytesFromUSVString(const nsAString& aStr, nsTArray<uint8_t>& aBytes)
@@ -1161,8 +1154,6 @@ PushEvent::WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
   return mozilla::dom::PushEventBinding::Wrap(aCx, this, aGivenProto);
 }
-
-#endif /* ! MOZ_SIMPLEPUSH */
 
 ExtendableMessageEvent::ExtendableMessageEvent(EventTarget* aOwner)
   : ExtendableEvent(aOwner)

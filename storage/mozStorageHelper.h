@@ -94,13 +94,13 @@ public:
     if (mConnection && mHasTransaction && !mCompleted) {
       if (mCommitOnComplete) {
         mozilla::DebugOnly<nsresult> rv = Commit();
-        NS_WARN_IF_FALSE(NS_SUCCEEDED(rv),
-                         "A transaction didn't commit correctly");
+        NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                             "A transaction didn't commit correctly");
       }
       else {
         mozilla::DebugOnly<nsresult> rv = Rollback();
-        NS_WARN_IF_FALSE(NS_SUCCEEDED(rv),
-                         "A transaction didn't rollback correctly");
+        NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                             "A transaction didn't rollback correctly");
       }
     }
   }

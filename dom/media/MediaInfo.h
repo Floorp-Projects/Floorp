@@ -282,7 +282,7 @@ public:
       case 270:
         return kDegree_270;
       default:
-        NS_WARN_IF_FALSE(aDegree == 0, "Invalid rotation degree, ignored");
+        NS_WARNING_ASSERTION(aDegree == 0, "Invalid rotation degree, ignored");
         return kDegree_0;
     }
   }

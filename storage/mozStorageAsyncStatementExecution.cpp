@@ -459,7 +459,7 @@ AsyncExecuteStatements::notifyComplete()
     else {
       DebugOnly<nsresult> rv =
         mConnection->rollbackTransactionInternal(mNativeConnection);
-      NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Transaction failed to rollback");
+      NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Transaction failed to rollback");
     }
     mHasTransaction = false;
   }

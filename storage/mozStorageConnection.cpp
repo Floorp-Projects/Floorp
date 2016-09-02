@@ -58,8 +58,10 @@ mozilla::LazyLogModule gStorageLog("mozStorage");
 #define CHECK_MAINTHREAD_ABUSE() \
   do { \
     nsCOMPtr<nsIThread> mainThread = do_GetMainThread(); \
-    NS_WARN_IF_FALSE(threadOpenedOn == mainThread || !NS_IsMainThread(), \
-               "Using Storage synchronous API on main-thread, but the connection was opened on another thread."); \
+    NS_WARNING_ASSERTION( \
+      threadOpenedOn == mainThread || !NS_IsMainThread(), \
+      "Using Storage synchronous API on main-thread, but the connection was " \
+      "opened on another thread."); \
   } while(0)
 #else
 #define CHECK_MAINTHREAD_ABUSE() do { /* Nothing */ } while(0)

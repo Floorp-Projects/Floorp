@@ -1088,7 +1088,8 @@ nsJSChannel::SetExecuteAsync(bool aIsAsync)
         mIsAsync = aIsAsync;
     }
     // else ignore this call
-    NS_WARN_IF_FALSE(!mIsActive, "Calling SetExecuteAsync on active channel?");
+    NS_WARNING_ASSERTION(!mIsActive,
+                         "Calling SetExecuteAsync on active channel?");
 
     return NS_OK;
 }

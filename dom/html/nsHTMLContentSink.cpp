@@ -257,14 +257,12 @@ NS_NewHTMLElement(Element** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& 
   if ((tag == eHTMLTag_userdefined &&
       nsContentUtils::IsCustomElementName(name)) ||
       aIs) {
-    nsIDocument* doc = nodeInfo->GetDocument();
-
     NS_IF_ADDREF(*aResult = NS_NewHTMLElement(nodeInfo.forget(), aFromParser));
     if (!*aResult) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    doc->SetupCustomElement(*aResult, kNameSpaceID_XHTML, aIs);
+    nsContentUtils::SetupCustomElement(*aResult, aIs);
 
     return NS_OK;
   }

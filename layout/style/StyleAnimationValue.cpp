@@ -291,9 +291,13 @@ FragmentOrURLToURLValue(FragmentOrURL* aUrl, nsIDocument* aDoc)
   nsString path;
   aUrl->GetSourceString(path);
   RefPtr<nsStringBuffer> uriStringBuffer = nsCSSValue::BufferFromString(path);
+  // XXXheycam We should store URLValue objects inside FragmentOrURLs so that
+  // we can extract the original base URI, referrer and principal to pass in
+  // here.
   RefPtr<mozilla::css::URLValue> result =
     new mozilla::css::URLValue(aUrl->GetSourceURL(), uriStringBuffer,
-                               aDoc->GetDocumentURI(), aDoc->NodePrincipal());
+                               aUrl->GetSourceURL(), aDoc->GetDocumentURI(),
+                               aDoc->NodePrincipal());
 
   return result.forget();
 }

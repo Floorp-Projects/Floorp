@@ -139,9 +139,8 @@ nsChromeProtocolHandler::NewChannel2(nsIURI* aURI,
     rv = nsChromeRegistry::gChromeRegistry->ConvertChromeURL(aURI, getter_AddRefs(resolvedURI));
     if (NS_FAILED(rv)) {
 #ifdef DEBUG
-        nsAutoCString spec;
-        aURI->GetSpec(spec);
-        printf("Couldn't convert chrome URL: %s\n", spec.get());
+        printf("Couldn't convert chrome URL: %s\n",
+               aURI->GetSpecOrDefault().get());
 #endif
         return rv;
     }

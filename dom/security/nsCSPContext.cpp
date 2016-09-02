@@ -109,9 +109,8 @@ nsCSPContext::ShouldLoad(nsContentPolicyType aContentType,
                          int16_t*            outDecision)
 {
   if (CSPCONTEXTLOGENABLED()) {
-    nsAutoCString spec;
-    aContentLocation->GetSpec(spec);
-    CSPCONTEXTLOG(("nsCSPContext::ShouldLoad, aContentLocation: %s", spec.get()));
+    CSPCONTEXTLOG(("nsCSPContext::ShouldLoad, aContentLocation: %s",
+                   aContentLocation->GetSpecOrDefault().get()));
     CSPCONTEXTLOG((">>>>                      aContentType: %d", aContentType));
   }
 
@@ -185,9 +184,10 @@ nsCSPContext::ShouldLoad(nsContentPolicyType aContentType,
   }
 
   if (CSPCONTEXTLOGENABLED()) {
-    nsAutoCString spec;
-    aContentLocation->GetSpec(spec);
-    CSPCONTEXTLOG(("nsCSPContext::ShouldLoad, decision: %s, aContentLocation: %s", *outDecision > 0 ? "load" : "deny", spec.get()));
+    CSPCONTEXTLOG(("nsCSPContext::ShouldLoad, decision: %s, "
+                   "aContentLocation: %s",
+                   *outDecision > 0 ? "load" : "deny",
+                   aContentLocation->GetSpecOrDefault().get()));
   }
   return NS_OK;
 }
@@ -1226,9 +1226,8 @@ nsCSPContext::PermitsAncestry(nsIDocShell* aDocShell, bool* outPermitsAncestry)
       uriClone->SetUserPass(EmptyCString());
 
       if (CSPCONTEXTLOGENABLED()) {
-        nsAutoCString spec;
-        uriClone->GetSpec(spec);
-        CSPCONTEXTLOG(("nsCSPContext::PermitsAncestry, found ancestor: %s", spec.get()));
+        CSPCONTEXTLOG(("nsCSPContext::PermitsAncestry, found ancestor: %s",
+                       uriClone->GetSpecOrDefault().get()));
       }
       ancestorsArray.AppendElement(uriClone);
     }
@@ -1246,9 +1245,8 @@ nsCSPContext::PermitsAncestry(nsIDocShell* aDocShell, bool* outPermitsAncestry)
 
   for (uint32_t a = 0; a < ancestorsArray.Length(); a++) {
     if (CSPCONTEXTLOGENABLED()) {
-      nsAutoCString spec;
-      ancestorsArray[a]->GetSpec(spec);
-      CSPCONTEXTLOG(("nsCSPContext::PermitsAncestry, checking ancestor: %s", spec.get()));
+      CSPCONTEXTLOG(("nsCSPContext::PermitsAncestry, checking ancestor: %s",
+                     ancestorsArray[a]->GetSpecOrDefault().get()));
     }
     // omit the ancestor URI in violation reports if cross-origin as per spec
     // (it is a violation of the same-origin policy).
@@ -1293,11 +1291,9 @@ nsCSPContext::Permits(nsIURI* aURI,
                                 true);    // send blocked URI in violation reports
 
   if (CSPCONTEXTLOGENABLED()) {
-      nsAutoCString spec;
-      aURI->GetSpec(spec);
       CSPCONTEXTLOG(("nsCSPContext::Permits, aUri: %s, aDir: %d, isAllowed: %s",
-                    spec.get(), aDir,
-                    *outPermits ? "allow" : "deny"));
+                     aURI->GetSpecOrDefault().get(), aDir,
+                     *outPermits ? "allow" : "deny"));
   }
 
   return NS_OK;

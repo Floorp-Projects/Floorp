@@ -1162,11 +1162,11 @@ nsPresContext::CompatibilityModeChanged()
     // quirk.css needs to come after html.css; we just keep it at the end.
     DebugOnly<nsresult> rv =
       styleSet->AppendStyleSheet(SheetType::Agent, sheet);
-    NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "failed to insert quirk.css");
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "failed to insert quirk.css");
   } else {
     DebugOnly<nsresult> rv =
       styleSet->RemoveStyleSheet(SheetType::Agent, sheet);
-    NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "failed to remove quirk.css");
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "failed to remove quirk.css");
   }
 
   mQuirkSheetAdded = needsQuirkSheet;

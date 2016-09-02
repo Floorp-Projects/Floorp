@@ -159,8 +159,7 @@ nsFloatManager::GetFlowArea(WritingMode aWM, nscoord aBOffset,
   if (aBSize == nscoord_MAX) {
     // This warning (and the two below) are possible to hit on pages
     // with really large objects.
-    NS_WARN_IF_FALSE(aInfoType == BAND_FROM_POINT,
-                     "bad height");
+    NS_WARNING_ASSERTION(aInfoType == BAND_FROM_POINT, "bad height");
     blockEnd = nscoord_MAX;
   } else {
     blockEnd = blockStart + aBSize;

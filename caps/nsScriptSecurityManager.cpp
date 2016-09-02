@@ -256,8 +256,10 @@ nsScriptSecurityManager::AppStatusForPrincipal(nsIPrincipal *aPrin)
     // mozbrowser frames.
     bool inIsolatedMozBrowser = aPrin->GetIsInIsolatedMozBrowserElement();
 
-    NS_WARN_IF_FALSE(appId != nsIScriptSecurityManager::UNKNOWN_APP_ID,
-                     "Asking for app status on a principal with an unknown app id");
+    NS_WARNING_ASSERTION(
+      appId != nsIScriptSecurityManager::UNKNOWN_APP_ID,
+      "Asking for app status on a principal with an unknown app id");
+
     // Installed apps have a valid app id (not NO_APP_ID or UNKNOWN_APP_ID)
     // and they are not inside a mozbrowser.
     if (appId == nsIScriptSecurityManager::NO_APP_ID ||

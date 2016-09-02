@@ -605,7 +605,7 @@ nsPicoService::RegisterVoices()
     // time before previous utterances end. So, aQueuesUtterances == false
     DebugOnly<nsresult> rv =
       registry->AddVoice(this, uri, name, voice->mLanguage, true, false);
-    NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Failed to add voice");
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to add voice");
   }
 
   mInitialized = true;

@@ -133,10 +133,8 @@ FTPChannelParent::DoAsyncOpen(const URIParams& aURI,
       return false;
 
 #ifdef DEBUG
-  nsCString uriSpec;
-  uri->GetSpec(uriSpec);
   LOG(("FTPChannelParent DoAsyncOpen [this=%p uri=%s]\n",
-       this, uriSpec.get()));
+       this, uri->GetSpecOrDefault().get()));
 #endif
 
   nsCOMPtr<nsIIOService> ios(do_GetIOService(&rv));

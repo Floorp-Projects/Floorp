@@ -1157,9 +1157,6 @@ class Protocol(ipdl.ast.Protocol):
             fn = ExprSelect(actorThis, '->', fn.name)
         return ExprCall(fn)
 
-    def cloneManagees(self):
-        return ExprVar('CloneManagees')
-
     def cloneProtocol(self):
         return ExprVar('CloneProtocol')
 
@@ -3463,17 +3460,16 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
         for managed in ptype.manages:
             managedVar = p.managedVar(managed, self.side)
+            lenvar = ExprVar('len')
+            kidvar = ExprVar('kid')
 
-            foreachdestroy = StmtFor(
-                init=Param(Type.UINT32, ivar.name, ExprLiteral.ZERO),
-                cond=ExprBinary(ivar, '<', _callCxxArrayLength(kidsvar)),
-                update=ExprPrefixUnop(ivar, '++'))
+            foreachdestroy = StmtRangedFor(kidvar, kidsvar)
 
             foreachdestroy.addstmt(
                 Whitespace('// Guarding against a child removing a sibling from the list during the iteration.\n', indent=1))
-            ifhas = StmtIf(_callHasManagedActor(managedVar, ithkid))
+            ifhas = StmtIf(_callHasManagedActor(managedVar, kidvar))
             ifhas.addifstmt(StmtExpr(ExprCall(
-                ExprSelect(ithkid, '->', destroysubtreevar.name),
+                ExprSelect(kidvar, '->', destroysubtreevar.name),
                 args=[ subtreewhyvar ])))
             foreachdestroy.addstmt(ifhas)
 
@@ -3483,8 +3479,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                     '// Recursively shutting down %s kids\n'% (managed.name()),
                     indent=1),
                 StmtDecl(
-                    Decl(_cxxArrayType(p.managedCxxType(managed, self.side)), kidsvar.name),
-                    initargs=[ ExprCall(ExprSelect(managedVar, '.', 'Count')) ]),
+                    Decl(_cxxArrayType(p.managedCxxType(managed, self.side)), kidsvar.name)),
                 Whitespace(
                     '// Accumulate kids into a stable structure to iterate over\n',
                     indent=1),
@@ -3662,12 +3657,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         getchannel = MethodDefn(MethodDecl(
             p.getChannelMethod().name,
             ret=Type('MessageChannel', ptr=1),
-            virtual=1))
-
-        clonemanagees = MethodDefn(MethodDecl(
-            p.cloneManagees().name,
-            params=[ Decl(protocolbase, sourcevar.name),
-                     Decl(clonecontexttype, clonecontextvar.name) ],
             virtual=1))
 
         cloneprotocol = MethodDefn(MethodDecl(
@@ -3873,14 +3862,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         othervar = ExprVar('other')
         managertype = Type(_actorName(p.name, self.side), ptr=1)
 
-        if len(p.managesStmts):
-            otherstmt = StmtDecl(Decl(managertype,
-                                      othervar.name),
-                                 init=ExprCast(sourcevar,
-                                               managertype,
-                                               static=1))
-            clonemanagees.addstmt(otherstmt)
-
         # Keep track of types created with an INOUT ctor. We need to call
         # Register() or RegisterID() for them depending on the side the managee
         # is created.
@@ -3889,71 +3870,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             msgtype = msg.decl.type
             if msgtype.isCtor() and msgtype.isInout():
                 inoutCtorTypes.append(msgtype.constructedType())
-
-        actorvar = ExprVar('actor')
-        for managee in p.managesStmts:
-            block = StmtBlock()
-            manageeipdltype = managee.decl.type
-            actortype = ipdl.type.ActorType(manageeipdltype)
-            manageecxxtype = _cxxBareType(actortype, self.side)
-            manageearray = p.managedVar(manageeipdltype, self.side)
-            abortstmt = StmtIf(ExprBinary(actorvar, '==', ExprLiteral.NULL))
-            abortstmt.addifstmts([
-                _fatalError('can not clone an ' + actortype.name() + ' actor'),
-                StmtReturn()])
-            forstmt = StmtFor(
-                init=Param(Type.UINT32, ivar.name, ExprLiteral.ZERO),
-                cond=ExprBinary(ivar, '<', _callCxxArrayLength(kidsvar)),
-                update=ExprPrefixUnop(ivar, '++'))
-
-            registerstmt = StmtExpr(ExprCall(p.registerIDMethod(),
-                                    args=[actorvar, _actorId(actorvar)]))
-            # Implement if (actor id > 0) then Register() else RegisterID()
-            if manageeipdltype in inoutCtorTypes:
-                registerif = StmtIf(ExprBinary(_actorId(actorvar),
-                                               '>',
-                                               ExprLiteral.ZERO))
-                registerif.addifstmt(StmtExpr(ExprCall(p.registerMethod(),
-                                                       args=[actorvar])))
-                registerif.addelsestmt(registerstmt)
-                registerstmt = registerif
-
-            forstmt.addstmts([
-                StmtExpr(ExprAssn(
-                    actorvar,
-                    ExprCast(
-                        ExprCall(
-                            ExprSelect(ithkid,
-                                       '->',
-                                       p.cloneProtocol().name),
-                            args=[ p.channelForSubactor(),
-                                   clonecontextvar ]),
-                        manageecxxtype,
-                        static=1))),
-                abortstmt,
-                StmtExpr(ExprAssn(_actorId(actorvar), _actorId(ithkid))),
-                StmtExpr(ExprAssn(_actorManager(actorvar), ExprVar.THIS)),
-                StmtExpr(ExprAssn(
-                    _actorChannel(actorvar),
-                    p.channelForSubactor())),
-                StmtExpr(ExprAssn(_actorState(actorvar), _actorState(ithkid))),
-                StmtExpr(_callInsertManagedActor(manageearray, actorvar)),
-                registerstmt,
-                StmtExpr(ExprCall(
-                    ExprSelect(actorvar,
-                               '->',
-                               p.cloneManagees().name),
-                    args=[ ithkid, clonecontextvar ]))
-                ])
-            block.addstmts([
-                StmtDecl(Decl(_cxxArrayType(manageecxxtype, ref=0),
-                              kidsvar.name)),
-                StmtExpr(ExprCall(ExprSelect(othervar, '->',
-                                             p.managedMethod(manageeipdltype, self.side).name),
-                                  args=[ kidsvar ])),
-                StmtDecl(Decl(manageecxxtype, actorvar.name)),
-                forstmt])
-            clonemanagees.addstmt(block)
 
         # all protocols share the "same" RemoveManagee() implementation
         pvar = ExprVar('aProtocolId')
@@ -4006,7 +3922,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                  destroyshmem,
                  otherpid,
                  getchannel,
-                 clonemanagees,
                  cloneprotocol,
                  Whitespace.NL ]
 
@@ -4228,10 +4143,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 ExprSelect(pvar, '->', 'IToplevelProtocol::SetTransport'),
                 args=[ExprMove(tvar)]))
 
-            addopened = StmtExpr(ExprCall(
-                ExprVar('IToplevelProtocol::AddOpenedActor'),
-                args=[pvar]))
-
             case.addstmts([
                 StmtDecl(Decl(_uniqueptr(Type('Transport')), tvar.name)),
                 StmtDecl(Decl(Type(_actorName(actor.ptype.name(), actor.side),
@@ -4239,7 +4150,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 iffailopen,
                 iffailalloc,
                 settrans,
-                addopened,
                 StmtBreak()
             ])
             label = _messageStartName(actor.ptype)
@@ -4337,6 +4247,11 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         var = self.var
         idvar = ExprVar('id')
         intype = _cxxConstRefType(actortype, self.side)
+        # XXX the writer code can treat the actor as logically const; many
+        # other places that call _cxxConstRefType cannot treat the actor
+        # as logically const, particularly callers that can leak out to
+        # Gecko directly.
+        intype.const = 1
         cxxtype = _cxxBareType(actortype, self.side)
         outtype = _cxxPtrToType(actortype, self.side)
 
@@ -4419,13 +4334,21 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         intype = _cxxConstRefType(arraytype, self.side)
         outtype = _cxxPtrToType(arraytype, self.side)
 
+        # We access elements directly in Read and Write to avoid array bounds
+        # checking.
+        directtype = _cxxBareType(arraytype.basetype, self.side)
+        if directtype.ptr:
+            typeinit = { 'ptrptr': 1 }
+        else:
+            typeinit = { 'ptr': 1 }
+        directtype = Type(directtype.name, **typeinit)
+        elemsvar = ExprVar('elems')
+        elemvar = ExprVar('elem')
+
         write = MethodDefn(self.writeMethodDecl(intype, var))
-        forwrite = StmtFor(init=ExprAssn(Decl(Type.UINT32, ivar.name),
-                                         ExprLiteral.ZERO),
-                           cond=ExprBinary(ivar, '<', lenvar),
-                           update=ExprPrefixUnop(ivar, '++'))
+        forwrite = StmtRangedFor(elemvar, var)
         forwrite.addstmt(
-            self.checkedWrite(eltipdltype, ExprIndex(var, ivar), msgvar,
+            self.checkedWrite(eltipdltype, elemvar, msgvar,
                               sentinelKey=arraytype.name()))
         write.addstmts([
             StmtDecl(Decl(Type.UINT32, lenvar.name),
@@ -4442,10 +4365,13 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                           cond=ExprBinary(ivar, '<', lenvar),
                           update=ExprPrefixUnop(ivar, '++'))
         forread.addstmt(
-            self.checkedRead(eltipdltype, ExprAddrOf(ExprIndex(favar, ivar)),
+            self.checkedRead(eltipdltype, ExprAddrOf(ExprIndex(elemsvar, ivar)),
                              msgvar, itervar, errfnRead,
                              '\'' + eltipdltype.name() + '[i]\'',
                              sentinelKey=arraytype.name()))
+        appendstmt = StmtDecl(Decl(directtype, elemsvar.name),
+                              init=ExprCall(ExprSelect(favar, '.', 'AppendElements'),
+                                            args=[ lenvar ]))
         read.addstmts([
             StmtDecl(Decl(_cxxArrayType(_cxxBareType(arraytype.basetype, self.side)), favar.name)),
             StmtDecl(Decl(Type.UINT32, lenvar.name)),
@@ -4454,7 +4380,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                              [ arraytype.name() ],
                              sentinelKey=('length', arraytype.name())),
             Whitespace.NL,
-            StmtExpr(_callCxxArraySetLength(favar, lenvar)),
+            appendstmt,
             forread,
             StmtExpr(_callCxxSwapArrayElements(var, favar, '->')),
             StmtReturn.TRUE

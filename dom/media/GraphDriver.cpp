@@ -486,7 +486,8 @@ AsyncCubebTask::AsyncCubebTask(AudioCallbackDriver* aDriver, AsyncCubebOperation
     mOperation(aOperation),
     mShutdownGrip(aDriver->GraphImpl())
 {
-  NS_WARN_IF_FALSE(mDriver->mAudioStream || aOperation == INIT, "No audio stream !");
+  NS_WARNING_ASSERTION(mDriver->mAudioStream || aOperation == INIT,
+                       "No audio stream!");
 }
 
 AsyncCubebTask::~AsyncCubebTask()
@@ -658,8 +659,9 @@ AudioCallbackDriver::Init()
                           DataCallback_s, StateCallback_s, this) == CUBEB_OK) {
       mAudioStream.own(stream);
       DebugOnly<int> rv = cubeb_stream_set_volume(mAudioStream, CubebUtils::GetVolumeScale());
-      NS_WARN_IF_FALSE(rv == CUBEB_OK,
-          "Could not set the audio stream volume in GraphDriver.cpp");
+      NS_WARNING_ASSERTION(
+        rv == CUBEB_OK,
+        "Could not set the audio stream volume in GraphDriver.cpp");
       CubebUtils::ReportCubebBackendUsed();
     } else {
 #ifdef MOZ_WEBRTC
@@ -1008,7 +1010,7 @@ AudioCallbackDriver::MixerCallback(AudioDataValue* aMixedBuffer,
   MOZ_ASSERT(mBuffer.Available() == 0, "Missing frames to fill audio callback's buffer.");
 
   DebugOnly<uint32_t> written = mScratchBuffer.Fill(aMixedBuffer + toWrite * aChannels, aFrames - toWrite);
-  NS_WARN_IF_FALSE(written == aFrames - toWrite, "Dropping frames.");
+  NS_WARNING_ASSERTION(written == aFrames - toWrite, "Dropping frames.");
 };
 
 void AudioCallbackDriver::PanOutputIfNeeded(bool aMicrophoneActive)

@@ -335,7 +335,7 @@ nsTableFrame::SetInitialChildList(ChildListID     aListID,
     aChildList.RemoveFirstChild();
     const nsStyleDisplay* childDisplay = childFrame->StyleDisplay();
 
-    if (NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP == childDisplay->mDisplay) {
+    if (mozilla::StyleDisplay::TableColumnGroup == childDisplay->mDisplay) {
       NS_ASSERTION(nsGkAtoms::tableColGroupFrame == childFrame->GetType(),
                    "This is not a colgroup");
       mColGroups.AppendFrame(nullptr, childFrame);
@@ -530,7 +530,7 @@ nsTableFrame::ResetRowIndices(const nsFrameList::Slice& aRowGroupsToExclude)
     if (!excludeRowGroups.GetEntry(rgFrame)) {
       const nsFrameList& rowFrames = rgFrame->PrincipalChildList();
       for (nsFrameList::Enumerator rows(rowFrames); !rows.AtEnd(); rows.Next()) {
-        if (NS_STYLE_DISPLAY_TABLE_ROW==rows.get()->StyleDisplay()->mDisplay) {
+        if (mozilla::StyleDisplay::TableRow == rows.get()->StyleDisplay()->mDisplay) {
           ((nsTableRowFrame *)rows.get())->SetRowIndex(rowIndex);
           rowIndex++;
         }
@@ -1454,7 +1454,7 @@ nsTableFrame::SetColumnDimensions(nscoord aBSize, WritingMode aWM,
     nscoord cellSpacingI = 0;
     const nsFrameList& columnList = colGroupFrame->PrincipalChildList();
     for (nsIFrame* colFrame : columnList) {
-      if (NS_STYLE_DISPLAY_TABLE_COLUMN ==
+      if (mozilla::StyleDisplay::TableColumn ==
           colFrame->StyleDisplay()->mDisplay) {
         NS_ASSERTION(colIdx < GetColCount(), "invalid number of columns");
         cellSpacingI = GetColSpacing(colIdx);
@@ -1476,7 +1476,7 @@ nsTableFrame::SetColumnDimensions(nscoord aBSize, WritingMode aWM,
     colIdx = groupFirstCol;
     LogicalPoint colOrigin(aWM);
     for (nsIFrame* colFrame : columnList) {
-      if (NS_STYLE_DISPLAY_TABLE_COLUMN ==
+      if (mozilla::StyleDisplay::TableColumn ==
           colFrame->StyleDisplay()->mDisplay) {
         nscoord colISize = fif->GetColumnISizeFromFirstInFlow(colIdx);
         LogicalRect colRect(aWM, colOrigin.I(aWM), colOrigin.B(aWM),
@@ -2106,7 +2106,7 @@ nsTableFrame::GetFirstBodyRowGroupFrame()
 
     // We expect the header and footer row group frames to be first, and we only
     // allow one header and one footer
-    if (NS_STYLE_DISPLAY_TABLE_HEADER_GROUP == childDisplay->mDisplay) {
+    if (mozilla::StyleDisplay::TableHeaderGroup == childDisplay->mDisplay) {
       if (headerFrame) {
         // We already have a header frame and so this header frame is treated
         // like an ordinary body row group frame
@@ -2114,7 +2114,7 @@ nsTableFrame::GetFirstBodyRowGroupFrame()
       }
       headerFrame = kidFrame;
 
-    } else if (NS_STYLE_DISPLAY_TABLE_FOOTER_GROUP == childDisplay->mDisplay) {
+    } else if (mozilla::StyleDisplay::TableFooterGroup == childDisplay->mDisplay) {
       if (footerFrame) {
         // We already have a footer frame and so this footer frame is treated
         // like an ordinary body row group frame
@@ -2122,7 +2122,7 @@ nsTableFrame::GetFirstBodyRowGroupFrame()
       }
       footerFrame = kidFrame;
 
-    } else if (NS_STYLE_DISPLAY_TABLE_ROW_GROUP == childDisplay->mDisplay) {
+    } else if (mozilla::StyleDisplay::TableRowGroup == childDisplay->mDisplay) {
       return kidFrame;
     }
   }
@@ -2229,7 +2229,7 @@ nsTableFrame::GetCollapsedISize(const WritingMode aWM,
          colFrame = colFrame->GetNextCol()) {
       const nsStyleDisplay* colDisplay = colFrame->StyleDisplay();
       nscoord colIdx = colFrame->GetColIndex();
-      if (NS_STYLE_DISPLAY_TABLE_COLUMN == colDisplay->mDisplay) {
+      if (mozilla::StyleDisplay::TableColumn == colDisplay->mDisplay) {
         const nsStyleVisibility* colVis = colFrame->StyleVisibility();
         bool collapseCol = (NS_STYLE_VISIBILITY_COLLAPSE == colVis->mVisible);
         nscoord colISize = fif->GetColumnISizeFromFirstInFlow(colIdx);
@@ -2300,7 +2300,7 @@ nsTableFrame::AppendFrames(ChildListID     aListID,
     // See what kind of frame we have
     const nsStyleDisplay* display = f->StyleDisplay();
 
-    if (NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP == display->mDisplay) {
+    if (mozilla::StyleDisplay::TableColumnGroup == display->mDisplay) {
       if (MOZ_UNLIKELY(GetPrevInFlow())) {
         nsFrameList colgroupFrame(f, f);
         auto firstInFlow = static_cast<nsTableFrame*>(FirstInFlow());
@@ -2374,7 +2374,7 @@ nsTableFrame::InsertFrames(ChildListID     aListID,
     nsIFrame* next = e.NextFrame();
     if (!next || next->StyleDisplay()->mDisplay != display->mDisplay) {
       nsFrameList head = aFrameList.ExtractHead(e);
-      if (display->mDisplay == NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP) {
+      if (display->mDisplay == mozilla::StyleDisplay::TableColumnGroup) {
         insertions[0].mID = kColGroupList;
         insertions[0].mList.AppendFrames(nullptr, head);
       } else {
@@ -2405,14 +2405,14 @@ nsTableFrame::HomogenousInsertFrames(ChildListID     aListID,
 {
   // See what kind of frame we have
   const nsStyleDisplay* display = aFrameList.FirstChild()->StyleDisplay();
-  bool isColGroup = NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP == display->mDisplay;
+  bool isColGroup = mozilla::StyleDisplay::TableColumnGroup == display->mDisplay;
 #ifdef DEBUG
   // Verify that either all siblings have display:table-column-group, or they
   // all have display values different from table-column-group.
   for (nsIFrame* frame : aFrameList) {
     auto nextDisplay = frame->StyleDisplay()->mDisplay;
     MOZ_ASSERT(isColGroup ==
-               (nextDisplay == NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP),
+               (nextDisplay == mozilla::StyleDisplay::TableColumnGroup),
                "heterogenous childlist");
   }
 #endif
@@ -2424,8 +2424,8 @@ nsTableFrame::HomogenousInsertFrames(ChildListID     aListID,
   if (aPrevFrame) {
     const nsStyleDisplay* prevDisplay = aPrevFrame->StyleDisplay();
     // Make sure they belong on the same frame list
-    if ((display->mDisplay == NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP) !=
-        (prevDisplay->mDisplay == NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP)) {
+    if ((display->mDisplay == mozilla::StyleDisplay::TableColumnGroup) !=
+        (prevDisplay->mDisplay == mozilla::StyleDisplay::TableColumnGroup)) {
       // the previous frame is not valid, see comment at ::AppendFrames
       // XXXbz Using content indices here means XBL will get screwed
       // over...  Oh, well.
@@ -2473,7 +2473,7 @@ nsTableFrame::HomogenousInsertFrames(ChildListID     aListID,
       }
     }
   }
-  if (NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP == display->mDisplay) {
+  if (mozilla::StyleDisplay::TableColumnGroup == display->mDisplay) {
     NS_ASSERTION(aListID == kColGroupList, "unexpected child list");
     // Insert the column group frames
     const nsFrameList::Slice& newColgroups =
@@ -2592,7 +2592,7 @@ nsTableFrame::RemoveFrame(ChildListID     aListID,
                           nsIFrame*       aOldFrame)
 {
   NS_ASSERTION(aListID == kColGroupList ||
-               NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP !=
+               mozilla::StyleDisplay::TableColumnGroup !=
                  aOldFrame->StyleDisplay()->mDisplay,
                "Wrong list name; use kColGroupList iff colgroup");
   nsIPresShell* shell = PresContext()->PresShell();
@@ -2813,7 +2813,7 @@ nsTableFrame::OrderRowGroups(RowGroupArray& aChildren,
       static_cast<nsTableRowGroupFrame*>(kidFrame);
 
     switch (kidDisplay->mDisplay) {
-    case NS_STYLE_DISPLAY_TABLE_HEADER_GROUP:
+    case mozilla::StyleDisplay::TableHeaderGroup:
       if (head) { // treat additional thead like tbody
         aChildren.AppendElement(rowGroup);
       }
@@ -2821,7 +2821,7 @@ nsTableFrame::OrderRowGroups(RowGroupArray& aChildren,
         head = rowGroup;
       }
       break;
-    case NS_STYLE_DISPLAY_TABLE_FOOTER_GROUP:
+    case mozilla::StyleDisplay::TableFooterGroup:
       if (foot) { // treat additional tfoot like tbody
         aChildren.AppendElement(rowGroup);
       }
@@ -2829,7 +2829,7 @@ nsTableFrame::OrderRowGroups(RowGroupArray& aChildren,
         foot = rowGroup;
       }
       break;
-    case NS_STYLE_DISPLAY_TABLE_ROW_GROUP:
+    case mozilla::StyleDisplay::TableRowGroup:
       aChildren.AppendElement(rowGroup);
       break;
     default:
@@ -2867,7 +2867,7 @@ nsTableFrame::GetTHead() const
   nsIFrame* kidFrame = mFrames.FirstChild();
   while (kidFrame) {
     if (kidFrame->StyleDisplay()->mDisplay ==
-          NS_STYLE_DISPLAY_TABLE_HEADER_GROUP) {
+          mozilla::StyleDisplay::TableHeaderGroup) {
       return static_cast<nsTableRowGroupFrame*>(kidFrame);
     }
 
@@ -2890,7 +2890,7 @@ nsTableFrame::GetTFoot() const
   nsIFrame* kidFrame = mFrames.FirstChild();
   while (kidFrame) {
     if (kidFrame->StyleDisplay()->mDisplay ==
-          NS_STYLE_DISPLAY_TABLE_FOOTER_GROUP) {
+          mozilla::StyleDisplay::TableFooterGroup) {
       return static_cast<nsTableRowGroupFrame*>(kidFrame);
     }
 
@@ -3001,9 +3001,10 @@ nsTableFrame::ReflowChildren(TableReflowInput& aReflowInput,
 
   nsIFrame* prevKidFrame = nullptr;
   WritingMode wm = aReflowInput.reflowInput.GetWritingMode();
-  NS_WARN_IF_FALSE(wm.IsVertical() || NS_UNCONSTRAINEDSIZE !=
-                                      aReflowInput.reflowInput.ComputedWidth(),
-                   "shouldn't have unconstrained width in horizontal mode");
+  NS_WARNING_ASSERTION(
+    wm.IsVertical() ||
+    NS_UNCONSTRAINEDSIZE != aReflowInput.reflowInput.ComputedWidth(),
+    "shouldn't have unconstrained width in horizontal mode");
   nsSize containerSize =
     aReflowInput.reflowInput.ComputedSizeAsContainerIfConstrained();
 
@@ -6673,10 +6674,9 @@ BCPaintBorderIterator::SetNewRowGroup()
       // header or footer
       const nsStyleDisplay* display = mRg->StyleDisplay();
       if (mRowIndex == mDamageArea.StartRow()) {
-        mIsRepeatedHeader = (NS_STYLE_DISPLAY_TABLE_HEADER_GROUP == display->mDisplay);
-      }
-      else {
-        mIsRepeatedFooter = (NS_STYLE_DISPLAY_TABLE_FOOTER_GROUP == display->mDisplay);
+        mIsRepeatedHeader = (mozilla::StyleDisplay::TableHeaderGroup == display->mDisplay);
+      } else {
+        mIsRepeatedFooter = (mozilla::StyleDisplay::TableFooterGroup == display->mDisplay);
       }
     }
   }

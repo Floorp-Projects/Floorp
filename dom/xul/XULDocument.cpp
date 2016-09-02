@@ -2534,18 +2534,13 @@ XULDocument::LoadOverlayInternal(nsIURI* aURI, bool aIsDynamic,
     *aFailureFromContent = false;
 
     if (MOZ_LOG_TEST(gXULLog, LogLevel::Debug)) {
-        nsAutoCString urlspec;
-        aURI->GetSpec(urlspec);
-        nsAutoCString parentDoc;
         nsCOMPtr<nsIURI> uri;
-        nsresult rv = mChannel->GetOriginalURI(getter_AddRefs(uri));
-        if (NS_SUCCEEDED(rv))
-            rv = uri->GetSpec(parentDoc);
-        if (!(parentDoc.get()))
-            parentDoc = "";
+        mChannel->GetOriginalURI(getter_AddRefs(uri));
 
         MOZ_LOG(gXULLog, LogLevel::Debug,
-                ("xul: %s loading overlay %s", parentDoc.get(), urlspec.get()));
+                ("xul: %s loading overlay %s",
+                 uri ? uri->GetSpecOrDefault().get() : "",
+                 aURI->GetSpecOrDefault().get()));
     }
 
     if (aIsDynamic)
@@ -3024,8 +3019,9 @@ XULDocument::DoneWalking()
         NS_ASSERTION(mDelayFrameLoaderInitialization,
                      "mDelayFrameLoaderInitialization should be true!");
         mDelayFrameLoaderInitialization = false;
-        NS_WARN_IF_FALSE(mUpdateNestLevel == 0,
-                         "Constructing XUL document in middle of an update?");
+        NS_WARNING_ASSERTION(
+          mUpdateNestLevel == 0,
+          "Constructing XUL document in middle of an update?");
         if (mUpdateNestLevel == 0) {
             MaybeInitializeFinalizeFrameLoaders();
         }
@@ -3192,11 +3188,8 @@ void
 XULDocument::ReportMissingOverlay(nsIURI* aURI)
 {
     NS_PRECONDITION(aURI, "Must have a URI");
-    
-    nsAutoCString spec;
-    aURI->GetSpec(spec);
 
-    NS_ConvertUTF8toUTF16 utfSpec(spec);
+    NS_ConvertUTF8toUTF16 utfSpec(aURI->GetSpecOrDefault());
     const char16_t* params[] = { utfSpec.get() };
     nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
                                     NS_LITERAL_CSTRING("XUL Document"), this,
@@ -3305,9 +3298,7 @@ XULDocument::OnStreamComplete(nsIStreamLoader* aLoader,
             nsCOMPtr<nsIURI> uri;
             channel->GetURI(getter_AddRefs(uri));
             if (uri) {
-                nsAutoCString uriSpec;
-                uri->GetSpec(uriSpec);
-                printf("Failed to load %s\n", uriSpec.get());
+                printf("Failed to load %s\n", uri->GetSpecOrDefault().get());
             }
         }
     }
@@ -3987,17 +3978,14 @@ XULDocument::OverlayForwardReference::~OverlayForwardReference()
         idC.AssignWithConversion(id);
 
         nsIURI *protoURI = mDocument->mCurrentPrototype->GetURI();
-        nsAutoCString urlspec;
-        protoURI->GetSpec(urlspec);
 
         nsCOMPtr<nsIURI> docURI;
-        nsAutoCString parentDoc;
-        nsresult rv = mDocument->mChannel->GetOriginalURI(getter_AddRefs(docURI));
-        if (NS_SUCCEEDED(rv))
-            docURI->GetSpec(parentDoc);
+        mDocument->mChannel->GetOriginalURI(getter_AddRefs(docURI));
+
         MOZ_LOG(gXULLog, LogLevel::Warning,
                ("xul: %s overlay failed to resolve '%s' in %s",
-                urlspec.get(), idC.get(), parentDoc.get()));
+                protoURI->GetSpecOrDefault().get(), idC.get(),
+                docURI ? docURI->GetSpecOrDefault().get() : ""));
     }
 }
 

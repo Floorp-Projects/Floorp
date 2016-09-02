@@ -179,8 +179,9 @@ public:
     (void)mOutputStream->Close();
 
     // But, we'll warn about it not being successful if it wasn't.
-    NS_WARN_IF_FALSE(NS_SUCCEEDED(aStatusCode),
-                     "Got an error when trying to load our default favicon!");
+    NS_WARNING_ASSERTION(
+      NS_SUCCEEDED(aStatusCode),
+      "Got an error when trying to load our default favicon!");
 
     return NS_OK;
   }

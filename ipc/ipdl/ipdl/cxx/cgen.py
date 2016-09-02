@@ -436,6 +436,19 @@ class CxxCodeGen(CodePrinter, Visitor):
         self.printdentln('}')
 
 
+    def visitStmtRangedFor(self, rf):
+        self.printdent('for (auto& ')
+        rf.var.accept(self)
+        self.write(' : ')
+        rf.iteree.accept(self)
+        self.println(') {')
+
+        self.indent()
+        self.visitBlock(rf)
+        self.dedent()
+        self.printdentln('}')
+
+
     def visitStmtSwitch(self, sw):
         self.printdent('switch (')
         sw.expr.accept(self)

@@ -659,12 +659,12 @@ private:
 /*static*/ void
 AsyncPanZoomController::InitializeGlobalState()
 {
-  MOZ_ASSERT(NS_IsMainThread());
-
   static bool sInitialized = false;
   if (sInitialized)
     return;
   sInitialized = true;
+
+  MOZ_ASSERT(NS_IsMainThread());
 
   gZoomAnimationFunction = new ComputedTimingFunction();
   gZoomAnimationFunction->Init(

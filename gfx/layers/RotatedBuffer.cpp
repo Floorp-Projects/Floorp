@@ -355,7 +355,7 @@ RotatedContentBuffer::EnsureBuffer()
     }
   }
 
-  NS_WARN_IF_FALSE(mDTBuffer && mDTBuffer->IsValid(), "no buffer");
+  NS_WARNING_ASSERTION(mDTBuffer && mDTBuffer->IsValid(), "no buffer");
   return !!mDTBuffer;
 }
 
@@ -370,7 +370,7 @@ RotatedContentBuffer::EnsureBufferOnWhite()
     }
   }
 
-  NS_WARN_IF_FALSE(mDTBufferOnWhite, "no buffer");
+  NS_WARNING_ASSERTION(mDTBufferOnWhite, "no buffer");
   return !!mDTBufferOnWhite;
 }
 

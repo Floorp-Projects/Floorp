@@ -38,8 +38,8 @@ GetSmsChild()
   if (!gSmsChild) {
     gSmsChild = ContentChild::GetSingleton()->SendPSmsConstructor();
 
-    NS_WARN_IF_FALSE(gSmsChild,
-                     "Calling methods on SmsIPCService during shutdown!");
+    NS_WARNING_ASSERTION(gSmsChild,
+                         "Calling methods on SmsIPCService during shutdown!");
   }
 
   return gSmsChild;

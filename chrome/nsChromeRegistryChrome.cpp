@@ -453,7 +453,8 @@ nsChromeRegistryChrome::SendRegisteredChrome(
       DebugOnly<bool> success =
         parents[i]->SendRegisterChrome(packages, resources, overrides,
                                        mSelectedLocale, true);
-      NS_WARN_IF_FALSE(success, "couldn't reset a child's registered chrome");
+      NS_WARNING_ASSERTION(success,
+                           "couldn't reset a child's registered chrome");
     }
   }
 }

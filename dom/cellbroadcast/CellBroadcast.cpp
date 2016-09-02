@@ -82,8 +82,8 @@ CellBroadcast::CellBroadcast(nsPIDOMWindowInner* aWindow,
 {
   mListener = new Listener(this);
   DebugOnly<nsresult> rv = aService->RegisterListener(mListener);
-  NS_WARN_IF_FALSE(NS_SUCCEEDED(rv),
-                   "Failed registering Cell Broadcast callback");
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                       "Failed registering Cell Broadcast callback");
 }
 
 CellBroadcast::~CellBroadcast()

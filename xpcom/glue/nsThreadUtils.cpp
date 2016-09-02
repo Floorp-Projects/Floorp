@@ -61,8 +61,8 @@ NS_NewThread(nsIThread** aResult, nsIRunnable* aEvent, uint32_t aStackSize)
   nsCOMPtr<nsIThread> thread;
 #ifdef MOZILLA_INTERNAL_API
   nsresult rv =
-    nsThreadManager::get()->nsThreadManager::NewThread(0, aStackSize,
-                                                       getter_AddRefs(thread));
+    nsThreadManager::get().nsThreadManager::NewThread(0, aStackSize,
+                                                      getter_AddRefs(thread));
 #else
   nsresult rv;
   nsCOMPtr<nsIThreadManager> mgr =
@@ -93,7 +93,7 @@ nsresult
 NS_GetCurrentThread(nsIThread** aResult)
 {
 #ifdef MOZILLA_INTERNAL_API
-  return nsThreadManager::get()->nsThreadManager::GetCurrentThread(aResult);
+  return nsThreadManager::get().nsThreadManager::GetCurrentThread(aResult);
 #else
   nsresult rv;
   nsCOMPtr<nsIThreadManager> mgr =
@@ -109,7 +109,7 @@ nsresult
 NS_GetMainThread(nsIThread** aResult)
 {
 #ifdef MOZILLA_INTERNAL_API
-  return nsThreadManager::get()->nsThreadManager::GetMainThread(aResult);
+  return nsThreadManager::get().nsThreadManager::GetMainThread(aResult);
 #else
   nsresult rv;
   nsCOMPtr<nsIThreadManager> mgr =
@@ -344,7 +344,7 @@ NS_SetThreadName(nsIThread* aThread, const nsACString& aName)
 nsIThread*
 NS_GetCurrentThread()
 {
-  return nsThreadManager::get()->GetCurrentThread();
+  return nsThreadManager::get().GetCurrentThread();
 }
 #endif
 

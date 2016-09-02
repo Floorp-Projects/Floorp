@@ -42,6 +42,10 @@ add_task(function*() {
   // tick box and accept dialog
   checkbox.checked = true;
   ourPrompt.onButtonClick(0);
+  // Wait for that click to actually be handled completely.
+  yield new Promise(function(resolve) {
+    Services.tm.mainThread.dispatch(resolve, Ci.nsIThread.DISPATCH_NORMAL);
+  });
   // check permission is set
   let ps = Services.perms;
   is(ps.ALLOW_ACTION, ps.testPermission(makeURI(pageWithAlert), "focus-tab-by-prompt"),

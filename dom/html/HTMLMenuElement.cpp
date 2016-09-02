@@ -113,7 +113,7 @@ HTMLMenuElement::CreateBuilder()
   }
 
   nsCOMPtr<nsIMenuBuilder> builder = do_CreateInstance(HTMLMENUBUILDER_CONTRACTID);
-  NS_WARN_IF_FALSE(builder, "No builder available");
+  NS_WARNING_ASSERTION(builder, "No builder available");
   return builder.forget();
 }
 

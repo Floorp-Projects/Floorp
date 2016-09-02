@@ -218,7 +218,7 @@ ImageBridgeParent::CreateForContent(Endpoint<PImageBridgeParent>&& aEndpoint)
 void
 ImageBridgeParent::Bind(Endpoint<PImageBridgeParent>&& aEndpoint)
 {
-  if (!aEndpoint.Bind(this, nullptr))
+  if (!aEndpoint.Bind(this))
     return;
   mSelfRef = this;
 }
@@ -363,15 +363,6 @@ ImageBridgeParent::GetInstance(ProcessId aId)
 {
   NS_ASSERTION(sImageBridges.count(aId) == 1, "ImageBridgeParent for the process");
   return sImageBridges[aId];
-}
-
-IToplevelProtocol*
-ImageBridgeParent::CloneToplevel(const InfallibleTArray<ProtocolFdMapping>& aFds,
-                                 base::ProcessHandle aPeerProcess,
-                                 mozilla::ipc::ProtocolCloneContext* aCtx)
-{
-  MOZ_ASSERT_UNREACHABLE("Not supported");
-  return nullptr;
 }
 
 void

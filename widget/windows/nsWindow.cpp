@@ -6846,7 +6846,7 @@ nsWindow::WindowUsesOMTC()
   }
   style |= CS_HREDRAW | CS_VREDRAW;
   DebugOnly<ULONG_PTR> result = ::SetClassLongPtr(mWnd, GCL_STYLE, style);
-  NS_WARN_IF_FALSE(result, "Could not reset window class style");
+  NS_WARNING_ASSERTION(result, "Could not reset window class style");
 }
 
 bool

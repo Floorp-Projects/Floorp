@@ -1738,7 +1738,7 @@ CanvasRenderingContext2D::TrySkiaGLTarget(RefPtr<gfx::DrawTarget>& aOutDT,
   DemoteOldestContextIfNecessary();
   mBufferProvider = nullptr;
 
-#if USE_SKIA_GPU
+#ifdef USE_SKIA_GPU
   SkiaGLGlue* glue = gfxPlatform::GetPlatform()->GetSkiaGLGlue();
   if (!glue || !glue->GetGrContext() || !glue->GetGLContext()) {
     return false;

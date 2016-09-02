@@ -614,10 +614,10 @@ ShouldSuppressLineBreak(const nsStyleContext* aContext,
     // Line break suppressing bit is propagated to any children of
     // line participants, which include inline, contents, and inline
     // ruby boxes.
-    if (aParentDisplay->mDisplay == NS_STYLE_DISPLAY_INLINE ||
-        aParentDisplay->mDisplay == NS_STYLE_DISPLAY_CONTENTS ||
-        aParentDisplay->mDisplay == NS_STYLE_DISPLAY_RUBY ||
-        aParentDisplay->mDisplay == NS_STYLE_DISPLAY_RUBY_BASE_CONTAINER) {
+    if (aParentDisplay->mDisplay == mozilla::StyleDisplay::Inline ||
+        aParentDisplay->mDisplay == mozilla::StyleDisplay::Contents ||
+        aParentDisplay->mDisplay == mozilla::StyleDisplay::Ruby ||
+        aParentDisplay->mDisplay == mozilla::StyleDisplay::RubyBaseContainer) {
       return true;
     }
   }
@@ -641,12 +641,12 @@ ShouldSuppressLineBreak(const nsStyleContext* aContext,
   // directly affects the line layout. This case is handled by the BR
   // frame which checks the flag of its parent frame instead of itself.
   if ((aParentDisplay->IsRubyDisplayType() &&
-       aDisplay->mDisplay != NS_STYLE_DISPLAY_RUBY_BASE_CONTAINER &&
-       aDisplay->mDisplay != NS_STYLE_DISPLAY_RUBY_TEXT_CONTAINER) ||
+       aDisplay->mDisplay != mozilla::StyleDisplay::RubyBaseContainer &&
+       aDisplay->mDisplay != mozilla::StyleDisplay::RubyTextContainer) ||
       // Since ruby base and ruby text may exist themselves without any
       // non-anonymous frame outside, we should also check them.
-      aDisplay->mDisplay == NS_STYLE_DISPLAY_RUBY_BASE ||
-      aDisplay->mDisplay == NS_STYLE_DISPLAY_RUBY_TEXT) {
+      aDisplay->mDisplay == mozilla::StyleDisplay::RubyBase ||
+      aDisplay->mDisplay == mozilla::StyleDisplay::RubyText) {
     return true;
   }
   return false;
@@ -661,10 +661,10 @@ static bool
 ShouldBlockifyChildren(const nsStyleDisplay* aStyleDisp)
 {
   auto displayVal = aStyleDisp->mDisplay;
-  return NS_STYLE_DISPLAY_FLEX == displayVal ||
-    NS_STYLE_DISPLAY_INLINE_FLEX == displayVal ||
-    NS_STYLE_DISPLAY_GRID == displayVal ||
-    NS_STYLE_DISPLAY_INLINE_GRID == displayVal;
+  return mozilla::StyleDisplay::Flex == displayVal ||
+    mozilla::StyleDisplay::InlineFlex == displayVal ||
+    mozilla::StyleDisplay::Grid == displayVal ||
+    mozilla::StyleDisplay::InlineGrid == displayVal;
 }
 
 void
@@ -696,7 +696,7 @@ nsStyleContext::SetStyleBits()
   // Set the NS_STYLE_IN_DISPLAY_NONE_SUBTREE bit
   const nsStyleDisplay* disp = StyleDisplay();
   if ((mParent && mParent->IsInDisplayNoneSubtree()) ||
-      disp->mDisplay == NS_STYLE_DISPLAY_NONE) {
+      disp->mDisplay == mozilla::StyleDisplay::None_) {
     mBits |= NS_STYLE_IN_DISPLAY_NONE_SUBTREE;
   }
 }
@@ -719,7 +719,7 @@ nsStyleContext::ApplyStyleFixups(bool aSkipParentDisplayBasedStyleFixup)
     if (textReset->mInitialLetterSize != 0.0f) {
       nsStyleContext* containerSC = mParent;
       const nsStyleDisplay* containerDisp = containerSC->StyleDisplay();
-      while (containerDisp->mDisplay == NS_STYLE_DISPLAY_CONTENTS) {
+      while (containerDisp->mDisplay == mozilla::StyleDisplay::Contents) {
         if (!containerSC->GetParent()) {
           break;
         }
@@ -782,7 +782,7 @@ nsStyleContext::ApplyStyleFixups(bool aSkipParentDisplayBasedStyleFixup)
 
   // Correct tables.
   const nsStyleDisplay* disp = StyleDisplay();
-  if (disp->mDisplay == NS_STYLE_DISPLAY_TABLE) {
+  if (disp->mDisplay == mozilla::StyleDisplay::Table) {
     // -moz-center and -moz-right are used for HTML's alignment
     // This is covering the <div align="right"><table>...</table></div> case.
     // In this case, we don't want to inherit the text alignment into the table.
@@ -805,14 +805,14 @@ nsStyleContext::ApplyStyleFixups(bool aSkipParentDisplayBasedStyleFixup)
   // here if needed, by changing the style data, so that other code
   // doesn't get confused by looking at the style data.
   if (!mParent) {
-    uint8_t displayVal = disp->mDisplay;
-    if (displayVal != NS_STYLE_DISPLAY_CONTENTS) {
+    auto displayVal = disp->mDisplay;
+    if (displayVal != mozilla::StyleDisplay::Contents) {
       nsRuleNode::EnsureBlockDisplay(displayVal, true);
     } else {
       // http://dev.w3.org/csswg/css-display/#transformations
       // "... a display-outside of 'contents' computes to block-level
       //  on the root element."
-      displayVal = NS_STYLE_DISPLAY_BLOCK;
+      displayVal = mozilla::StyleDisplay::Block;
     }
     if (displayVal != disp->mDisplay) {
       nsStyleDisplay* mutable_display = GET_UNIQUE_STYLE_DATA(Display);
@@ -843,7 +843,7 @@ nsStyleContext::ApplyStyleFixups(bool aSkipParentDisplayBasedStyleFixup)
     // it like a flex/grid item here.)
     nsStyleContext* containerContext = mParent;
     const nsStyleDisplay* containerDisp = containerContext->StyleDisplay();
-    while (containerDisp->mDisplay == NS_STYLE_DISPLAY_CONTENTS) {
+    while (containerDisp->mDisplay == mozilla::StyleDisplay::Contents) {
       if (!containerContext->GetParent()) {
         break;
       }
@@ -858,7 +858,7 @@ nsStyleContext::ApplyStyleFixups(bool aSkipParentDisplayBasedStyleFixup)
       // positioned, we'll have already been through a call to
       // EnsureBlockDisplay() in nsRuleNode, so this call here won't change
       // anything. So we're OK.
-      uint8_t displayVal = disp->mDisplay;
+      auto displayVal = disp->mDisplay;
       nsRuleNode::EnsureBlockDisplay(displayVal);
       if (displayVal != disp->mDisplay) {
         NS_ASSERTION(!disp->IsAbsolutelyPositionedStyle(),
@@ -877,7 +877,7 @@ nsStyleContext::ApplyStyleFixups(bool aSkipParentDisplayBasedStyleFixup)
   if (mParent && ::ShouldSuppressLineBreak(this, disp, mParent,
                                            mParent->StyleDisplay())) {
     mBits |= NS_STYLE_SUPPRESS_LINEBREAK;
-    uint8_t displayVal = disp->mDisplay;
+    auto displayVal = disp->mDisplay;
     nsRuleNode::EnsureInlineDisplay(displayVal);
     if (displayVal != disp->mDisplay) {
       nsStyleDisplay* mutable_display = GET_UNIQUE_STYLE_DATA(Display);
@@ -886,8 +886,8 @@ nsStyleContext::ApplyStyleFixups(bool aSkipParentDisplayBasedStyleFixup)
     }
   }
   // Suppress border/padding of ruby level containers
-  if (disp->mDisplay == NS_STYLE_DISPLAY_RUBY_BASE_CONTAINER ||
-      disp->mDisplay == NS_STYLE_DISPLAY_RUBY_TEXT_CONTAINER) {
+  if (disp->mDisplay == mozilla::StyleDisplay::RubyBaseContainer ||
+      disp->mDisplay == mozilla::StyleDisplay::RubyTextContainer) {
     CreateEmptyStyleData(eStyleStruct_Border);
     CreateEmptyStyleData(eStyleStruct_Padding);
   }
@@ -917,11 +917,11 @@ nsStyleContext::ApplyStyleFixups(bool aSkipParentDisplayBasedStyleFixup)
    *     to inline-block. [CSS21]
    *   ...etc.
    */
-  if (disp->mDisplay == NS_STYLE_DISPLAY_INLINE &&
+  if (disp->mDisplay == mozilla::StyleDisplay::Inline &&
       !nsCSSAnonBoxes::IsNonElement(mPseudoTag) &&
       mParent) {
     auto cbContext = mParent;
-    while (cbContext->StyleDisplay()->mDisplay == NS_STYLE_DISPLAY_CONTENTS) {
+    while (cbContext->StyleDisplay()->mDisplay == mozilla::StyleDisplay::Contents) {
       cbContext = cbContext->mParent;
     }
     MOZ_ASSERT(cbContext, "the root context can't have display:contents");
@@ -932,7 +932,7 @@ nsStyleContext::ApplyStyleFixups(bool aSkipParentDisplayBasedStyleFixup)
       nsStyleDisplay* mutable_display = GET_UNIQUE_STYLE_DATA(Display);
       disp = mutable_display;
       mutable_display->mOriginalDisplay = mutable_display->mDisplay =
-        NS_STYLE_DISPLAY_INLINE_BLOCK;
+        mozilla::StyleDisplay::InlineBlock;
     }
   }
 

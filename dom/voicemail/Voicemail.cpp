@@ -87,8 +87,8 @@ Voicemail::Voicemail(nsPIDOMWindowInner* aWindow,
 
   mListener = new Listener(this);
   DebugOnly<nsresult> rv = mService->RegisterListener(mListener);
-  NS_WARN_IF_FALSE(NS_SUCCEEDED(rv),
-                   "Failed registering voicemail messages with service");
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                       "Failed registering voicemail messages with service");
 
   uint32_t length = 0;
   if (NS_SUCCEEDED(mService->GetNumItems(&length)) && length != 0) {
