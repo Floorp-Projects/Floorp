@@ -45,6 +45,12 @@ public class ReaderModeUtils {
         return getAboutReaderForUrl(url, -1);
     }
 
+    /**
+     * Obtain the underlying URL from an about:reader URL.
+     * This will return the input URL if either of the following is true:
+     * 1. the input URL is a non about:reader URL
+     * 2. the input URL is an invalid/unparseable about:reader URL
+     */
     public static String stripAboutReaderUrl(String url) {
         if (!AboutPages.isAboutReader(url)) {
             return url;
