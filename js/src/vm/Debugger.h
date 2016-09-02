@@ -1319,6 +1319,7 @@ class DebuggerObject : public NativeObject
     JSAtom* displayName() const;
 #ifdef SPIDERMONKEY_PROMISE
     JS::PromiseState promiseState() const;
+    double promiseLifetime() const;
 #endif // SPIDERMONKEY_PROMISE
 
   private:
