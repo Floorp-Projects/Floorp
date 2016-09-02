@@ -291,6 +291,9 @@ private:
   SubCompleteArray mSubCompletes;
 
   uint32_t mFileSize;
+
+  // For gtest to inspect private members.
+  friend class PerProviderDirectoryTestUtils;
 };
 
 } // namespace safebrowsing
