@@ -93,4 +93,3 @@ def target_tasks_nightly(full_task_graph, parameters):
     and, eventually, uploading the tasks to balrog."""
     return [t.label for t in full_task_graph.tasks.itervalues()
             if t.attributes.get('kind') in ['nightly-fennec', 'signing']]
-
