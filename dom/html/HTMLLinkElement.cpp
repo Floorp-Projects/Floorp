@@ -451,7 +451,7 @@ HTMLLinkElement::GetLinkTarget(nsAString& aTarget)
 static const DOMTokenListSupportedToken sSupportedRelValues[] = {
   // Keep this in sync with ToLinkMask in nsStyleLinkElement.cpp.
   // "import" must come first because it's conditional.
-  "import"
+  "import",
   "prefetch",
   "dns-prefetch",
   "stylesheet",

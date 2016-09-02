@@ -6,22 +6,22 @@
 package org.mozilla.gecko.widget;
 
 import org.mozilla.gecko.R;
-import org.mozilla.gecko.favicons.FaviconGenerator;
-import org.mozilla.gecko.favicons.Favicons;
-import org.mozilla.gecko.util.ThreadUtils;
+import org.mozilla.gecko.icons.IconCallback;
+import org.mozilla.gecko.icons.IconResponse;
 
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.RectF;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
-import android.util.Log;
 import android.util.TypedValue;
 import android.widget.ImageView;
+
+import java.lang.ref.WeakReference;
+
 /**
  * Special version of ImageView for favicons.
  * Displays solid colour background around Favicon to fill space not occupied by the icon. Colour
@@ -40,11 +40,6 @@ public class FaviconView extends ImageView {
     // Reference to the unscaled bitmap, if any, to prevent repeated assignments of the same bitmap
     // to the view from causing repeated rescalings (Some of the callers do this)
     private Bitmap mUnscaledBitmap;
-
-    // Key into the Favicon dominant colour cache. Should be the Favicon URL if the image displayed
-    // here is a Favicon managed by the caching system. If not, any appropriately unique-to-this-image
-    // string is acceptable.
-    private String mIconKey;
 
     private int mActualWidth;
     private int mActualHeight;
@@ -150,12 +145,7 @@ public class FaviconView extends ImageView {
         // fill with the coloured background. If applicable, show it.
         // We assume Favicons are still squares and only bother with the background if more than 3px
         // of it would be displayed.
-        if (Math.abs(mIconBitmap.getWidth() - mActualWidth) > 3) {
-            mDominantColor = Favicons.getFaviconColor(mIconKey);
-            if (mDominantColor == -1) {
-                mDominantColor = 0;
-            }
-        } else {
+        if (Math.abs(mIconBitmap.getWidth() - mActualWidth) < 3) {
             mDominantColor = 0;
         }
     }
@@ -181,51 +171,22 @@ public class FaviconView extends ImageView {
      * colour of the provided image - this value is used to draw the coloured background in this view
      * if the icon is not large enough to fill it.
      *
-     * @param bitmap favicon image
-     * @param key string used as a key to cache the dominant color of this image
      * @param allowScaling If true, allows the provided bitmap to be scaled by this FaviconView.
      *                     Typically, you should prefer using Favicons obtained via the caching system
      *                     (Favicons class), so as to exploit caching.
      */
-    private void updateImageInternal(Bitmap bitmap, String key, boolean allowScaling) {
-        if (bitmap == null) {
-            Log.w(LOGTAG, "updateImageInternal() called without bitmap");
-
-            // At this point we do not have a page URL anymore.
-            showDefaultFavicon(null);
-            return;
-        }
-
+    private void updateImageInternal(IconResponse response, boolean allowScaling) {
         // Reassigning the same bitmap? Don't bother.
-        if (mUnscaledBitmap == bitmap) {
+        if (mUnscaledBitmap == response.getBitmap()) {
             return;
         }
-        mUnscaledBitmap = bitmap;
-        mIconBitmap = bitmap;
-        mIconKey = key;
+        mUnscaledBitmap = response.getBitmap();
+        mIconBitmap = response.getBitmap();
+        mDominantColor = response.getColor();
         mScalingExpected = allowScaling;
 
         // Possibly update the display.
         formatImage();
-    }
-
-    public void showDefaultFavicon(final String pageURL) {
-        ThreadUtils.postToBackgroundThread(new Runnable() {
-            @Override
-            public void run() {
-                final Bitmap favicon = FaviconGenerator.generate(getContext(), pageURL);
-
-                ThreadUtils.postToUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        // We handle the default favicon as any other favicon to avoid the complications of special
-                        // casing it. This means that the icon can be scaled both up and down, and the dominant
-                        // color box can used if it is enabled in XML attrs.
-                        updateAndScaleImage(favicon, DEFAULT_FAVICON_KEY);
-                    }
-                });
-            }
-        });
     }
 
     private void showNoImage() {
@@ -240,7 +201,7 @@ public class FaviconView extends ImageView {
         showNoImage();
         mUnscaledBitmap = null;
         mIconBitmap = null;
-        mIconKey = null;
+        mDominantColor = 0;
         mScalingExpected = false;
     }
 
@@ -254,27 +215,46 @@ public class FaviconView extends ImageView {
      * Due to Bug 913746, icons bundled for search engines are not available to the cache, so must
      * always have the scaling logic applied here. At the time of writing, this is the only case in
      * which the scaling logic here is applied.
-     *
-     * @param bitmap The bitmap to display in this favicon view.
-     * @param key The key to use into the dominant colours cache when selecting a background colour.
      */
-    public void updateAndScaleImage(Bitmap bitmap, String key) {
-        updateImageInternal(bitmap, key, true);
+    public void updateAndScaleImage(IconResponse response) {
+        updateImageInternal(response, true);
     }
 
     /**
      * Update the image displayed in the Favicon view without scaling. Images larger than the view
      * will be centrally cropped. Images smaller than the view will be placed centrally and the
      * extra space filled with the dominant colour of the provided image.
-     *
-     * @param bitmap The bitmap to display in this favicon view.
-     * @param key The key to use into the dominant colours cache when selecting a background colour.
      */
-    public void updateImage(Bitmap bitmap, String key) {
-        updateImageInternal(bitmap, key, false);
+    public void updateImage(IconResponse response) {
+        updateImageInternal(response, false);
     }
 
     public Bitmap getBitmap() {
         return mIconBitmap;
+    }
+
+    /**
+     * Create an IconCallback implementation that will update this view after an icon has been loaded.
+     */
+    public IconCallback createIconCallback() {
+        return new Callback(this);
+    }
+
+    private static class Callback implements IconCallback {
+        private final WeakReference<FaviconView> viewReference;
+
+        private Callback(FaviconView view) {
+            this.viewReference = new WeakReference<FaviconView>(view);
+        }
+
+        @Override
+        public void onIconResponse(IconResponse response) {
+            final FaviconView view = viewReference.get();
+            if (view == null) {
+                return;
+            }
+
+            view.updateImage(response);
+        }
     }
 }

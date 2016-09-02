@@ -6,11 +6,16 @@
 package org.mozilla.gecko.preferences;
 
 import android.content.ContentValues;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Build;
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.db.BrowserContract.Bookmarks;
 import org.mozilla.gecko.db.LocalBrowserDB;
+import org.mozilla.gecko.icons.IconResponse;
+import org.mozilla.gecko.icons.IconsHelper;
+import org.mozilla.gecko.icons.storage.DiskStorage;
 
 import android.content.ContentProviderOperation;
 import android.content.ContentResolver;
@@ -20,6 +25,7 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.RemoteException;
 import android.provider.BaseColumns;
+import android.text.TextUtils;
 import android.util.Log;
 
 import java.util.ArrayList;
@@ -102,7 +108,7 @@ public class AndroidImport implements Runnable {
                                               BrowserContract.Bookmarks.DEFAULT_POSITION,
                                               null, Bookmarks.TYPE_BOOKMARK);
                     if (data != null) {
-                        mDB.updateFaviconInBatch(mCr, mOperations, url, null, null, data);
+                        storeBitmap(data, url);
                     }
                     cursor.moveToNext();
                 }
@@ -140,7 +146,7 @@ public class AndroidImport implements Runnable {
                     byte[] data = cursor.getBlob(faviconCol);
                     mDB.updateHistoryInBatch(mCr, mOperations, url, title, date, visits);
                     if (data != null) {
-                        mDB.updateFaviconInBatch(mCr, mOperations, url, null, null, data);
+                        storeBitmap(data, url);
                     }
                     ContentValues visitData = new ContentValues();
                     visitData.put(LocalBrowserDB.HISTORY_VISITS_DATE, date);
@@ -162,6 +168,27 @@ public class AndroidImport implements Runnable {
         mDB.insertVisitsFromImportHistoryInBatch(mCr, mOperations, visitsToSynthesize);
 
         flushBatchOperations();
+    }
+
+    private void storeBitmap(byte[] data, String url) {
+        if (TextUtils.isEmpty(url) || data == null) {
+            return;
+        }
+
+        final Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0, data.length);
+        if (bitmap == null) {
+            return;
+        }
+
+        final String iconUrl = IconsHelper.guessDefaultFaviconURL(url);
+        if (iconUrl == null) {
+            return;
+        }
+
+        final DiskStorage storage = DiskStorage.get(mContext);
+
+        storage.putIcon(url, bitmap);
+        storage.putMapping(url, iconUrl);
     }
 
     protected Cursor query(Uri mainUri, Uri fallbackUri, String condition) {
