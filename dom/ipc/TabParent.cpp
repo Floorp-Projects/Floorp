@@ -2777,6 +2777,9 @@ TabParent::RecvBrowserFrameOpenWindow(PBrowserParent* aOpener,
                                         this, aRenderFrame, aURL, aName, aFeatures,
                                         aTextureFactoryIdentifier, aLayersId);
   *aOutWindowOpened = (opened == BrowserElementParent::OPEN_WINDOW_ADDED);
+  if (!*aOutWindowOpened) {
+    Destroy();
+  }
   return true;
 }
 
