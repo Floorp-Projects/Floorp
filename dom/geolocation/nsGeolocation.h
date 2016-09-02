@@ -191,10 +191,10 @@ private:
 
   nsresult GetCurrentPosition(GeoPositionCallback aCallback,
                               GeoPositionErrorCallback aErrorCallback,
-                              PositionOptions* aOptions);
+                              nsAutoPtr<PositionOptions>&& aOptions);
   nsresult WatchPosition(GeoPositionCallback aCallback,
                          GeoPositionErrorCallback aErrorCallback,
-                         PositionOptions* aOptions, int32_t* aRv);
+                         nsAutoPtr<PositionOptions>&& aOptions, int32_t* aRv);
 
   bool RegisterRequestWithPrompt(nsGeolocationRequest* request);
 
