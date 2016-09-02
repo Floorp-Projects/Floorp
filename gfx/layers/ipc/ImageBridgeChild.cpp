@@ -915,7 +915,7 @@ ImageBridgeChild::InitForContent(Endpoint<PImageBridgeChild>&& aEndpoint)
 void
 ImageBridgeChild::Bind(Endpoint<PImageBridgeChild>&& aEndpoint)
 {
-  aEndpoint.Bind(this, nullptr);
+  aEndpoint.Bind(this);
 }
 
 void ImageBridgeChild::ShutDown()

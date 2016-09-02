@@ -733,7 +733,7 @@ CompositorBridgeParent::InitSameProcess(widget::CompositorWidget* aWidget,
 bool
 CompositorBridgeParent::Bind(Endpoint<PCompositorBridgeParent>&& aEndpoint)
 {
-  if (!aEndpoint.Bind(this, nullptr)) {
+  if (!aEndpoint.Bind(this)) {
     return false;
   }
   mSelfRef = this;
@@ -2127,7 +2127,7 @@ public:
   }
 
   void Bind(Endpoint<PCompositorBridgeParent>&& aEndpoint) {
-    if (!aEndpoint.Bind(this, nullptr)) {
+    if (!aEndpoint.Bind(this)) {
       return;
     }
     mSelfRef = this;

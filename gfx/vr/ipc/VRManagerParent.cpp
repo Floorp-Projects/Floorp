@@ -166,7 +166,7 @@ VRManagerParent::CreateForContent(Endpoint<PVRManagerParent>&& aEndpoint)
 void
 VRManagerParent::Bind(Endpoint<PVRManagerParent>&& aEndpoint)
 {
-  if (!aEndpoint.Bind(this, nullptr)) {
+  if (!aEndpoint.Bind(this)) {
     return;
   }
   mSelfRef = this;

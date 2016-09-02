@@ -216,22 +216,13 @@ class Endpoint;
  * IToplevelProtocol tracks all top-level protocol actors created from
  * this protocol actor.
  */
-class IToplevelProtocol : private LinkedListElement<IToplevelProtocol>
+class IToplevelProtocol
 {
-    friend class LinkedList<IToplevelProtocol>;
-    friend class LinkedListElement<IToplevelProtocol>;
-
     template<class PFooSide> friend class Endpoint;
 
 protected:
     explicit IToplevelProtocol(ProtocolId aProtoId);
     ~IToplevelProtocol();
-
-    /**
-     * Add an actor to the list of actors that have been opened by this
-     * protocol.
-     */
-    void AddOpenedActor(IToplevelProtocol* aActor);
 
 public:
     void SetTransport(UniquePtr<Transport> aTrans)
@@ -243,23 +234,9 @@ public:
 
     ProtocolId GetProtocolId() const { return mProtocolId; }
 
-    void GetOpenedActors(nsTArray<IToplevelProtocol*>& aActors);
-
     virtual MessageChannel* GetIPCChannel() = 0;
 
-    // This Unsafe version should only be used when all other threads are
-    // frozen, since it performs no locking. It also takes a stack-allocated
-    // array and its size (number of elements) rather than an nsTArray. The Nuwa
-    // code that calls this function is not allowed to allocate memory.
-    size_t GetOpenedActorsUnsafe(IToplevelProtocol** aActors, size_t aActorsMax);
-
 private:
-    void AddOpenedActorLocked(IToplevelProtocol* aActor);
-    void GetOpenedActorsLocked(nsTArray<IToplevelProtocol*>& aActors);
-
-    LinkedList<IToplevelProtocol> mOpenActors; // All protocol actors opened by this.
-    IToplevelProtocol* mOpener;
-
     ProtocolId mProtocolId;
     UniquePtr<Transport> mTrans;
 };
@@ -513,13 +490,8 @@ public:
     }
 
     // This method binds aActor to this endpoint. After this call, the actor can
-    // be used to send and receive messages. The endpoint becomes invalid. The
-    // |aProcessActor| parameter is used to associate protocols with content
-    // processes. In practice, this parameter should always be a ContentParent
-    // or ContentChild, depending on which process you are in. It is used to
-    // find all the channels that need to be "frozen" or "revived" when creating
-    // or cloning the Nuwa process.
-    bool Bind(PFooSide* aActor, IToplevelProtocol* aProcessActor)
+    // be used to send and receive messages. The endpoint becomes invalid.
+    bool Bind(PFooSide* aActor)
     {
         MOZ_RELEASE_ASSERT(mValid);
         MOZ_RELEASE_ASSERT(mMyPid == base::GetCurrentProcId());
@@ -534,9 +506,6 @@ public:
         }
         mValid = false;
         aActor->SetTransport(Move(t));
-        if (aProcessActor) {
-            aProcessActor->AddOpenedActor(aActor);
-        }
         return true;
     }
 
