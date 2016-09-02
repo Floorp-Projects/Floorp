@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+</head>
+
+<body>
+<canvas id="canvas0"></canvas>
+
+<script>
+  var canvas0=document.getElementById("canvas0");
+  var ctx=canvas0.getContext("2d");
+  canvas0.addEventListener("DOMAttrModified",
+                                           function(event) {
+                                             canvas0.toBlob(function(){},"image/jpeg",1);
+                                           }, true); 
+  canvas0.setAttribute("height",470)
+</script>
+
+</body>
+</html>

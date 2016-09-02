@@ -370,9 +370,8 @@ nsCSPBaseSrc::permits(nsIURI* aUri, const nsAString& aNonce, bool aWasRedirected
                       bool aReportOnly, bool aUpgradeInsecure) const
 {
   if (CSPUTILSLOGENABLED()) {
-    nsAutoCString spec;
-    aUri->GetSpec(spec);
-    CSPUTILSLOG(("nsCSPBaseSrc::permits, aUri: %s", spec.get()));
+    CSPUTILSLOG(("nsCSPBaseSrc::permits, aUri: %s",
+                 aUri->GetSpecOrDefault().get()));
   }
   return false;
 }
@@ -406,9 +405,8 @@ nsCSPSchemeSrc::permits(nsIURI* aUri, const nsAString& aNonce, bool aWasRedirect
                         bool aReportOnly, bool aUpgradeInsecure) const
 {
   if (CSPUTILSLOGENABLED()) {
-    nsAutoCString spec;
-    aUri->GetSpec(spec);
-    CSPUTILSLOG(("nsCSPSchemeSrc::permits, aUri: %s", spec.get()));
+    CSPUTILSLOG(("nsCSPSchemeSrc::permits, aUri: %s",
+                 aUri->GetSpecOrDefault().get()));
   }
   MOZ_ASSERT((!mScheme.EqualsASCII("")), "scheme can not be the empty string");
   return permitsScheme(mScheme, aUri, aReportOnly, aUpgradeInsecure);
@@ -527,9 +525,8 @@ nsCSPHostSrc::permits(nsIURI* aUri, const nsAString& aNonce, bool aWasRedirected
                       bool aReportOnly, bool aUpgradeInsecure) const
 {
   if (CSPUTILSLOGENABLED()) {
-    nsAutoCString spec;
-    aUri->GetSpec(spec);
-    CSPUTILSLOG(("nsCSPHostSrc::permits, aUri: %s", spec.get()));
+    CSPUTILSLOG(("nsCSPHostSrc::permits, aUri: %s",
+                 aUri->GetSpecOrDefault().get()));
   }
 
   // we are following the enforcement rules from the spec, see:
@@ -752,10 +749,9 @@ nsCSPNonceSrc::permits(nsIURI* aUri, const nsAString& aNonce, bool aWasRedirecte
                        bool aReportOnly, bool aUpgradeInsecure) const
 {
   if (CSPUTILSLOGENABLED()) {
-    nsAutoCString spec;
-    aUri->GetSpec(spec);
     CSPUTILSLOG(("nsCSPNonceSrc::permits, aUri: %s, aNonce: %s",
-                spec.get(), NS_ConvertUTF16toUTF8(aNonce).get()));
+                 aUri->GetSpecOrDefault().get(),
+                 NS_ConvertUTF16toUTF8(aNonce).get()));
   }
 
   return mNonce.Equals(aNonce);
@@ -923,9 +919,8 @@ nsCSPDirective::permits(nsIURI* aUri, const nsAString& aNonce, bool aWasRedirect
                         bool aReportOnly, bool aUpgradeInsecure) const
 {
   if (CSPUTILSLOGENABLED()) {
-    nsAutoCString spec;
-    aUri->GetSpec(spec);
-    CSPUTILSLOG(("nsCSPDirective::permits, aUri: %s", spec.get()));
+    CSPUTILSLOG(("nsCSPDirective::permits, aUri: %s",
+                 aUri->GetSpecOrDefault().get()));
   }
 
   for (uint32_t i = 0; i < mSrcs.Length(); i++) {
@@ -1278,10 +1273,9 @@ nsCSPPolicy::permits(CSPDirective aDir,
                      nsAString& outViolatedDirective) const
 {
   if (CSPUTILSLOGENABLED()) {
-    nsAutoCString spec;
-    aUri->GetSpec(spec);
     CSPUTILSLOG(("nsCSPPolicy::permits, aUri: %s, aDir: %d, aSpecific: %s",
-                 spec.get(), aDir, aSpecific ? "true" : "false"));
+                 aUri->GetSpecOrDefault().get(), aDir,
+                 aSpecific ? "true" : "false"));
   }
 
   NS_ASSERTION(aUri, "permits needs an uri to perform the check!");

@@ -28,9 +28,9 @@ SendRequest(BluetoothReplyRunnable* aRunnable, const Request& aRequest)
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aRunnable);
 
-  NS_WARN_IF_FALSE(sBluetoothChild,
-                   "Calling methods on BluetoothServiceChildProcess during "
-                   "shutdown!");
+  NS_WARNING_ASSERTION(
+    sBluetoothChild,
+    "Calling methods on BluetoothServiceChildProcess during shutdown!");
 
   if (sBluetoothChild) {
     BluetoothRequestChild* actor = new BluetoothRequestChild(aRunnable);

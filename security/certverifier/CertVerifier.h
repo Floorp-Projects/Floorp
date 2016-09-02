@@ -150,7 +150,6 @@ private:
   bool SHA1ModeMoreRestrictiveThanGivenMode(SHA1Mode mode);
 };
 
-void InitCertVerifierLog();
 mozilla::pkix::Result IsCertBuiltInRoot(CERTCertificate* cert, bool& result);
 mozilla::pkix::Result CertListContainsExpectedKeys(
   const CERTCertList* certList, const char* hostname, mozilla::pkix::Time time,

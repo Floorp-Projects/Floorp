@@ -1270,7 +1270,8 @@ nsIOService::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
              */
             if (size > 0 && size < 1024*1024)
                 gDefaultSegmentSize = size;
-        NS_WARN_IF_FALSE( (!(size & (size - 1))) , "network segment size is not a power of 2!");
+        NS_WARNING_ASSERTION(!(size & (size - 1)),
+                             "network segment size is not a power of 2!");
     }
 
     if (!pref || strcmp(pref, NETWORK_NOTIFY_CHANGED_PREF) == 0) {

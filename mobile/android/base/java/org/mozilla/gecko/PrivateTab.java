@@ -8,6 +8,8 @@ package org.mozilla.gecko;
 import android.content.Context;
 
 import android.support.v4.content.ContextCompat;
+
+import org.json.JSONObject;
 import org.mozilla.gecko.db.BrowserDB;
 
 public class PrivateTab extends Tab {
@@ -17,6 +19,9 @@ public class PrivateTab extends Tab {
 
     @Override
     protected void saveThumbnailToDB(final BrowserDB db) {}
+
+    @Override
+    public void setMetadata(JSONObject metadata) {}
 
     @Override
     public boolean isPrivate() {

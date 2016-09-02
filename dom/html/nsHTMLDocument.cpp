@@ -557,7 +557,7 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
       mCompatMode = eCompatibility_FullStandards;
       loadAsHtml5 = false;
   }
-  
+
   // TODO: Proper about:blank treatment is bug 543435
   if (loadAsHtml5 && view) {
     // mDocumentURI hasn't been set, yet, so get the URI from the channel
@@ -567,16 +567,14 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
     // GetSpec can be expensive for some URIs, so check the scheme first.
     bool isAbout = false;
     if (uri && NS_SUCCEEDED(uri->SchemeIs("about", &isAbout)) && isAbout) {
-      nsAutoCString str;
-      uri->GetSpec(str);
-      if (str.EqualsLiteral("about:blank")) {
-        loadAsHtml5 = false;    
+      if (uri->GetSpecOrDefault().EqualsLiteral("about:blank")) {
+        loadAsHtml5 = false;
       }
     }
   }
-  
+
   CSSLoader()->SetCompatibilityMode(mCompatMode);
-  
+
   nsresult rv = nsDocument::StartDocumentLoad(aCommand,
                                               aChannel, aLoadGroup,
                                               aContainer,
@@ -748,7 +746,7 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
                  "How did those end up different here?  wyciwyg channels are "
                  "not nsICachingChannel");
     rv = cachingChan->SetCacheTokenCachedCharset(charset);
-    NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "cannot SetMetaDataElement");
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "cannot SetMetaDataElement");
     rv = NS_OK; // don't propagate error
   }
 
@@ -1506,15 +1504,9 @@ nsHTMLDocument::Open(JSContext* cx,
 #ifdef DEBUG
     nsCOMPtr<nsIURI> callerDocURI = callerDoc->GetDocumentURI();
     nsCOMPtr<nsIURI> thisURI = nsIDocument::GetDocumentURI();
-    nsAutoCString callerSpec;
-    nsAutoCString thisSpec;
-    if (callerDocURI) {
-      callerDocURI->GetSpec(callerSpec);
-    }
-    if (thisURI) {
-      thisURI->GetSpec(thisSpec);
-    }
-    printf("nsHTMLDocument::Open callerDoc %s this %s\n", callerSpec.get(), thisSpec.get());
+    printf("nsHTMLDocument::Open callerDoc %s this %s\n",
+           callerDocURI ? callerDocURI->GetSpecOrDefault().get() : "",
+           thisURI ? thisURI->GetSpecOrDefault().get() : "");
 #endif
 
     rv.Throw(NS_ERROR_DOM_SECURITY_ERR);

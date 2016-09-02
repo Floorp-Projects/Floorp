@@ -434,7 +434,7 @@ nsThread::ThreadFunc(void* aArg)
   SetupCurrentThreadForChaosMode();
 
   // Inform the ThreadManager
-  nsThreadManager::get()->RegisterCurrentThread(self);
+  nsThreadManager::get().RegisterCurrentThread(*self);
 
   mozilla::IOInterposer::RegisterCurrentThread();
 
@@ -491,7 +491,7 @@ nsThread::ThreadFunc(void* aArg)
   mozilla::IOInterposer::UnregisterCurrentThread();
 
   // Inform the threadmanager that this thread is going away
-  nsThreadManager::get()->UnregisterCurrentThread(self);
+  nsThreadManager::get().UnregisterCurrentThread(*self);
 
   // Dispatch shutdown ACK
   NotNull<nsThreadShutdownContext*> context =
@@ -654,7 +654,7 @@ nsThread::InitCurrentThread()
   mThread = PR_GetCurrentThread();
   SetupCurrentThreadForChaosMode();
 
-  nsThreadManager::get()->RegisterCurrentThread(this);
+  nsThreadManager::get().RegisterCurrentThread(*this);
   return NS_OK;
 }
 
@@ -720,7 +720,7 @@ nsThread::DispatchInternal(already_AddRefed<nsIRunnable> aEvent, uint32_t aFlags
 #endif
 
   if (aFlags & DISPATCH_SYNC) {
-    nsThread* thread = nsThreadManager::get()->GetCurrentThread();
+    nsThread* thread = nsThreadManager::get().GetCurrentThread();
     if (NS_WARN_IF(!thread)) {
       return NS_ERROR_NOT_AVAILABLE;
     }
@@ -833,7 +833,7 @@ nsThread::ShutdownInternal(bool aSync)
   }
 
   NotNull<nsThread*> currentThread =
-    WrapNotNull(nsThreadManager::get()->GetCurrentThread());
+    WrapNotNull(nsThreadManager::get().GetCurrentThread());
 
   nsAutoPtr<nsThreadShutdownContext>& context =
     *currentThread->mRequestedShutdownContexts.AppendElement();
@@ -1171,8 +1171,8 @@ nsThread::AddObserver(nsIThreadObserver* aObserver)
     return NS_ERROR_NOT_SAME_THREAD;
   }
 
-  NS_WARN_IF_FALSE(!mEventObservers.Contains(aObserver),
-                   "Adding an observer twice!");
+  NS_WARNING_ASSERTION(!mEventObservers.Contains(aObserver),
+                       "Adding an observer twice!");
 
   if (!mEventObservers.AppendElement(WrapNotNull(aObserver))) {
     NS_WARNING("Out of memory!");

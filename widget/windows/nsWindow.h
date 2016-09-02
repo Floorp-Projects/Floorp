@@ -314,6 +314,7 @@ public:
                      nsIKeyEventInPluginCallback* aCallback) override;
 
   void GetCompositorWidgetInitData(mozilla::widget::CompositorWidgetInitData* aInitData) override;
+  bool IsTouchWindow() const { return mTouchWindow; }
 
 protected:
   virtual ~nsWindow();

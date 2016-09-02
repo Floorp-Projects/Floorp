@@ -190,7 +190,7 @@ nsSMILCompositor::UpdateCachedBaseValue(const nsSMILValue& aBaseValue)
   if (!mCachedBaseValue) {
     // We don't have last sample's base value cached. Assume it's changed.
     mCachedBaseValue = new nsSMILValue(aBaseValue);
-    NS_WARN_IF_FALSE(mCachedBaseValue, "failed to cache base value (OOM?)");
+    NS_WARNING_ASSERTION(mCachedBaseValue, "failed to cache base value (OOM?)");
     mForceCompositing = true;
   } else if (*mCachedBaseValue != aBaseValue) {
     // Base value has changed since last sample.

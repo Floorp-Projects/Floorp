@@ -485,46 +485,52 @@ enum class FillMode : uint32_t;
            NS_STYLE_WRITING_MODE_SIDEWAYS_MASK)
 
 // See nsStyleDisplay
-#define NS_STYLE_DISPLAY_NONE                   0
-#define NS_STYLE_DISPLAY_BLOCK                  1
-#define NS_STYLE_DISPLAY_INLINE                 2
-#define NS_STYLE_DISPLAY_INLINE_BLOCK           3
-#define NS_STYLE_DISPLAY_LIST_ITEM              4
-#define NS_STYLE_DISPLAY_TABLE                  8
-#define NS_STYLE_DISPLAY_INLINE_TABLE           9
-#define NS_STYLE_DISPLAY_TABLE_ROW_GROUP        10
-#define NS_STYLE_DISPLAY_TABLE_COLUMN           11
-#define NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP     12
-#define NS_STYLE_DISPLAY_TABLE_HEADER_GROUP     13
-#define NS_STYLE_DISPLAY_TABLE_FOOTER_GROUP     14
-#define NS_STYLE_DISPLAY_TABLE_ROW              15
-#define NS_STYLE_DISPLAY_TABLE_CELL             16
-#define NS_STYLE_DISPLAY_TABLE_CAPTION          17
-#define NS_STYLE_DISPLAY_BOX                    18
-#define NS_STYLE_DISPLAY_INLINE_BOX             19
+//
+// NOTE: Order is important! If you change it, make sure to take a look at
+// the FrameConstructorDataByDisplay stuff (both the XUL and non-XUL version),
+// and ensure it's still correct!
+enum class StyleDisplay : uint8_t {
+  None_ = 0,
+  Block,
+  Inline,
+  InlineBlock,
+  ListItem,
+  Table,
+  InlineTable,
+  TableRowGroup,
+  TableColumn,
+  TableColumnGroup,
+  TableHeaderGroup,
+  TableFooterGroup,
+  TableRow,
+  TableCell,
+  TableCaption,
+  Flex,
+  InlineFlex,
+  Grid,
+  InlineGrid,
+  Ruby,
+  RubyBase,
+  RubyBaseContainer,
+  RubyText,
+  RubyTextContainer,
+  Contents,
+  WebkitBox,
+  WebkitInlineBox,
+  Box,
+  InlineBox,
 #ifdef MOZ_XUL
-#define NS_STYLE_DISPLAY_XUL_GRID               20
-#define NS_STYLE_DISPLAY_INLINE_XUL_GRID        21
-#define NS_STYLE_DISPLAY_XUL_GRID_GROUP         22
-#define NS_STYLE_DISPLAY_XUL_GRID_LINE          23
-#define NS_STYLE_DISPLAY_STACK                  24
-#define NS_STYLE_DISPLAY_INLINE_STACK           25
-#define NS_STYLE_DISPLAY_DECK                   26
-#define NS_STYLE_DISPLAY_POPUP                  27
-#define NS_STYLE_DISPLAY_GROUPBOX               28
+  XulGrid,
+  InlineXulGrid,
+  XulGridGroup,
+  XulGridLine,
+  Stack,
+  InlineStack,
+  Deck,
+  Groupbox,
+  Popup,
 #endif
-#define NS_STYLE_DISPLAY_FLEX                   29
-#define NS_STYLE_DISPLAY_INLINE_FLEX            30
-#define NS_STYLE_DISPLAY_GRID                   31
-#define NS_STYLE_DISPLAY_INLINE_GRID            32
-#define NS_STYLE_DISPLAY_RUBY                   33
-#define NS_STYLE_DISPLAY_RUBY_BASE              34
-#define NS_STYLE_DISPLAY_RUBY_BASE_CONTAINER    35
-#define NS_STYLE_DISPLAY_RUBY_TEXT              36
-#define NS_STYLE_DISPLAY_RUBY_TEXT_CONTAINER    37
-#define NS_STYLE_DISPLAY_CONTENTS               38
-#define NS_STYLE_DISPLAY_WEBKIT_BOX             39
-#define NS_STYLE_DISPLAY_WEBKIT_INLINE_BOX      40
+};
 
 // See nsStyleDisplay
 // If these are re-ordered, nsComputedDOMStyle::DoGetContain() and

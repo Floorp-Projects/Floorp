@@ -2312,10 +2312,10 @@ nsCSSRuleProcessor::RestrictedSelectorMatches(
   MOZ_ASSERT(aSelector->IsRestrictedSelector(),
              "aSelector must not have a pseudo-element");
 
-  NS_WARN_IF_FALSE(!HasPseudoClassSelectorArgsWithCombinators(aSelector),
-                   "processing eRestyle_SomeDescendants can be slow if "
-                   "pseudo-classes with selector arguments can now have "
-                   "combinators in them");
+  NS_WARNING_ASSERTION(
+    !HasPseudoClassSelectorArgsWithCombinators(aSelector),
+    "processing eRestyle_SomeDescendants can be slow if pseudo-classes with "
+    "selector arguments can now have combinators in them");
 
   // We match aSelector as if :visited and :link both match visited and
   // unvisited links.

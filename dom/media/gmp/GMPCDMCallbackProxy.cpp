@@ -157,7 +157,6 @@ public:
   }
 
   RefPtr<CDMProxy> mProxy;
-  dom::PromiseId mPid;
   nsString mSid;
   dom::MediaKeyMessageType mMsgType;
   nsTArray<uint8_t> mMsg;

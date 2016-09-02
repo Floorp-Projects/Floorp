@@ -5220,10 +5220,8 @@ Parser<ParseHandler>::forStatement(YieldHandling yieldHandling)
             iflags = JSITER_FOREACH;
             isForEach = true;
             addTelemetry(JSCompartment::DeprecatedForEach);
-            if (versionNumber() < JSVERSION_LATEST) {
-                if (!report(ParseWarning, pc->sc()->strict(), null(), JSMSG_DEPRECATED_FOR_EACH))
-                    return null();
-            }
+            if (!warnOnceAboutForEach())
+                return null();
         }
     }
 
@@ -9029,6 +9027,22 @@ Parser<ParseHandler>::warnOnceAboutExprClosure()
         cx->compartment()->warnedAboutExprClosure = true;
     }
 #endif
+    return true;
+}
+
+template <typename ParseHandler>
+bool
+Parser<ParseHandler>::warnOnceAboutForEach()
+{
+    JSContext* cx = context->maybeJSContext();
+    if (!cx)
+        return true;
+
+    if (!cx->compartment()->warnedAboutForEach) {
+        if (!report(ParseWarning, false, null(), JSMSG_DEPRECATED_FOR_EACH))
+            return false;
+        cx->compartment()->warnedAboutForEach = true;
+    }
     return true;
 }
 
