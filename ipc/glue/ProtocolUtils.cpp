@@ -151,32 +151,6 @@ IToplevelProtocol::GetOpenedActorsUnsafe(IToplevelProtocol** aActors, size_t aAc
   return count;
 }
 
-IToplevelProtocol*
-IToplevelProtocol::CloneToplevel(const InfallibleTArray<ProtocolFdMapping>& aFds,
-                                 base::ProcessHandle aPeerProcess,
-                                 ProtocolCloneContext* aCtx)
-{
-  NS_NOTREACHED("Clone() for this protocol actor is not implemented");
-  return nullptr;
-}
-
-void
-IToplevelProtocol::CloneOpenedToplevels(IToplevelProtocol* aTemplate,
-                                        const InfallibleTArray<ProtocolFdMapping>& aFds,
-                                        base::ProcessHandle aPeerProcess,
-                                        ProtocolCloneContext* aCtx)
-{
-  StaticMutexAutoLock al(gProtocolMutex);
-
-  nsTArray<IToplevelProtocol*> actors;
-  aTemplate->GetOpenedActorsLocked(actors);
-
-  for (size_t i = 0; i < actors.Length(); i++) {
-    IToplevelProtocol* newactor = actors[i]->CloneToplevel(aFds, aPeerProcess, aCtx);
-    AddOpenedActorLocked(newactor);
-  }
-}
-
 class ChannelOpened : public IPC::Message
 {
 public:
