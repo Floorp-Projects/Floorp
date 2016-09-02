@@ -1129,5 +1129,35 @@ class TestEmitterBasic(unittest.TestCase):
                 self.assertEqual(str(f), '!libfoo.so')
                 self.assertEqual(path, 'foo/bar')
 
+    def test_symbols_file(self):
+        """Test that SYMBOLS_FILE works"""
+        reader = self.reader('test-symbols-file')
+        genfile, shlib = self.read_topsrcdir(reader)
+        self.assertIsInstance(genfile, GeneratedFile)
+        self.assertIsInstance(shlib, SharedLibrary)
+        # This looks weird but MockConfig sets DLL_{PREFIX,SUFFIX} and
+        # the reader method in this class sets OS_TARGET=WINNT.
+        self.assertEqual(shlib.symbols_file, 'libfoo.so.def')
+
+    def test_symbols_file_objdir(self):
+        """Test that a SYMBOLS_FILE in the objdir works"""
+        reader = self.reader('test-symbols-file-objdir')
+        genfile, shlib = self.read_topsrcdir(reader)
+        self.assertIsInstance(genfile, GeneratedFile)
+        self.assertEqual(genfile.script,
+                         mozpath.join(reader.config.topsrcdir, 'foo.py'))
+        self.assertIsInstance(shlib, SharedLibrary)
+        self.assertEqual(shlib.symbols_file, 'foo.symbols')
+
+    def test_symbols_file_objdir_missing_generated(self):
+        """Test that a SYMBOLS_FILE in the objdir that's missing
+        from GENERATED_FILES is an error.
+        """
+        reader = self.reader('test-symbols-file-objdir-missing-generated')
+        with self.assertRaisesRegexp(SandboxValidationError,
+             'Objdir file specified in SYMBOLS_FILE not in GENERATED_FILES:'):
+            self.read_topsrcdir(reader)
+
+
 if __name__ == '__main__':
     main()
