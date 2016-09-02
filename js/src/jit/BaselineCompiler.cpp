@@ -196,20 +196,18 @@ BaselineCompiler::compile()
 
     // Note: There is an extra entry in the bytecode type map for the search hint, see below.
     size_t bytecodeTypeMapEntries = script->nTypeSets() + 1;
-
     UniquePtr<BaselineScript> baselineScript(
         BaselineScript::New(script, prologueOffset_.offset(),
                             epilogueOffset_.offset(),
                             profilerEnterFrameToggleOffset_.offset(),
                             profilerExitFrameToggleOffset_.offset(),
-                            traceLoggerEnterToggleOffset_.offset(),
-                            traceLoggerExitToggleOffset_.offset(),
                             postDebugPrologueOffset_.offset(),
                             icEntries_.length(),
                             pcMappingIndexEntries.length(),
                             pcEntries.length(),
                             bytecodeTypeMapEntries,
-                            yieldOffsets_.length()),
+                            yieldOffsets_.length(),
+                            traceLoggerToggleOffsets_.length()),
         JS::DeletePolicy<BaselineScript>(cx->runtime()));
     if (!baselineScript) {
         ReportOutOfMemory(cx);
@@ -263,7 +261,7 @@ BaselineCompiler::compile()
 
 #ifdef JS_TRACE_LOGGING
     // Initialize the tracelogger instrumentation.
-    baselineScript->initTraceLogger(cx->runtime(), script);
+    baselineScript->initTraceLogger(cx->runtime(), script, traceLoggerToggleOffsets_);
 #endif
 
     uint32_t* bytecodeMap = baselineScript->bytecodeTypeMap();
@@ -842,7 +840,8 @@ BaselineCompiler::emitTraceLoggerEnter()
     Register scriptReg = regs.takeAnyGeneral();
 
     Label noTraceLogger;
-    traceLoggerEnterToggleOffset_ = masm.toggledJump(&noTraceLogger);
+    if (!traceLoggerToggleOffsets_.append(masm.toggledJump(&noTraceLogger)))
+        return false;
 
     masm.Push(loggerReg);
     masm.Push(scriptReg);
@@ -875,7 +874,8 @@ BaselineCompiler::emitTraceLoggerExit()
     Register loggerReg = regs.takeAnyGeneral();
 
     Label noTraceLogger;
-    traceLoggerExitToggleOffset_ = masm.toggledJump(&noTraceLogger);
+    if (!traceLoggerToggleOffsets_.append(masm.toggledJump(&noTraceLogger)))
+        return false;
 
     masm.Push(loggerReg);
     masm.movePtr(ImmPtr(logger), loggerReg);
@@ -884,6 +884,32 @@ BaselineCompiler::emitTraceLoggerExit()
     masm.tracelogStopId(loggerReg, TraceLogger_Scripts, /* force = */ true);
 
     masm.Pop(loggerReg);
+
+    masm.bind(&noTraceLogger);
+
+    return true;
+}
+
+bool
+BaselineCompiler::emitTraceLoggerResume(Register baselineScript, AllocatableGeneralRegisterSet& regs)
+{
+    Register scriptId = regs.takeAny();
+    Register loggerReg = regs.takeAny();
+
+    Label noTraceLogger;
+    if (!traceLoggerToggleOffsets_.append(masm.toggledJump(&noTraceLogger)))
+        return false;
+
+    TraceLoggerThread* logger = TraceLoggerForMainThread(cx->runtime());
+    masm.movePtr(ImmPtr(logger), loggerReg);
+
+    Address scriptEvent(baselineScript, BaselineScript::offsetOfTraceLoggerScriptEvent());
+    masm.computeEffectiveAddress(scriptEvent, scriptId);
+    masm.tracelogStartEvent(loggerReg, scriptId);
+    masm.tracelogStartId(loggerReg, TraceLogger_Baseline, /* force = */ true);
+
+    regs.add(loggerReg);
+    regs.add(scriptId);
 
     masm.bind(&noTraceLogger);
 
@@ -4222,6 +4248,11 @@ BaselineCompiler::emit_JSOP_RESUME()
     Label interpret;
     masm.loadPtr(Address(scratch1, JSScript::offsetOfBaselineScript()), scratch1);
     masm.branchPtr(Assembler::BelowOrEqual, scratch1, ImmPtr(BASELINE_DISABLED_SCRIPT), &interpret);
+
+#ifdef JS_TRACE_LOGGING
+    if (!emitTraceLoggerResume(scratch1, regs))
+        return false;
+#endif
 
     Register constructing = regs.takeAny();
     ValueOperand newTarget = regs.takeAnyValue();
