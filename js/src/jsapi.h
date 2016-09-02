@@ -843,7 +843,6 @@ class MOZ_STACK_CLASS SourceBufferHolder final
                                            object that delegates to a prototype
                                            containing this property */
 #define JSPROP_INTERNAL_USE_BIT 0x80    /* internal JS engine use only */
-//                             0x100    /* Unused */
 #define JSFUN_STUB_GSOPS       0x200    /* use JS_PropertyStub getter/setter
                                            instead of defaulting to class gsops
                                            for property holding function */
@@ -1870,22 +1869,38 @@ typedef struct JSNativeWrapper {
  */
 struct JSPropertySpec {
     struct SelfHostedWrapper {
-        void*      unused;
+        void*       unused;
         const char* funname;
+    };
+
+    struct StringValueWrapper {
+        void*       unused;
+        const char* value;
     };
 
     const char*                 name;
     uint8_t                     flags;
     union {
-        JSNativeWrapper     native;
-        SelfHostedWrapper   selfHosted;
-    } getter;
-    union {
-        JSNativeWrapper           native;
-        SelfHostedWrapper         selfHosted;
-    } setter;
+        struct {
+            union {
+                JSNativeWrapper    native;
+                SelfHostedWrapper  selfHosted;
+            } getter;
+            union {
+                JSNativeWrapper    native;
+                SelfHostedWrapper  selfHosted;
+            } setter;
+        } accessors;
+        StringValueWrapper         string;
+    };
+
+    bool isAccessor() const {
+        return !(flags & JSPROP_INTERNAL_USE_BIT);
+    }
 
     bool isSelfHosted() const {
+        MOZ_ASSERT(isAccessor());
+
 #ifdef DEBUG
         // Verify that our accessors match our JSPROP_GETTER flag.
         if (flags & JSPROP_GETTER)
@@ -1904,17 +1919,17 @@ struct JSPropertySpec {
                   "JSNativeWrapper::info");
 private:
     void checkAccessorsAreNative() const {
-        MOZ_ASSERT(getter.native.op);
+        MOZ_ASSERT(accessors.getter.native.op);
         // We may not have a setter at all.  So all we can assert here, for the
         // native case is that if we have a jitinfo for the setter then we have
         // a setter op too.  This is good enough to make sure we don't have a
         // SelfHostedWrapper for the setter.
-        MOZ_ASSERT_IF(setter.native.info, setter.native.op);
+        MOZ_ASSERT_IF(accessors.setter.native.info, accessors.setter.native.op);
     }
 
     void checkAccessorsAreSelfHosted() const {
-        MOZ_ASSERT(!getter.selfHosted.unused);
-        MOZ_ASSERT(!setter.selfHosted.unused);
+        MOZ_ASSERT(!accessors.getter.selfHosted.unused);
+        MOZ_ASSERT(!accessors.setter.selfHosted.unused);
     }
 };
 
@@ -1963,37 +1978,46 @@ inline int CheckIsSetterOp(JSSetterOp op);
 
 #define JS_STUBSETTER JS_PROPERTYOP_SETTER(JS_StrictPropertyStub)
 
+#define JS_PS_ACCESSOR_SPEC(name, getter, setter, flags, extraFlags) \
+    { name, uint8_t(JS_CHECK_ACCESSOR_FLAGS(flags) | extraFlags), \
+      { {  getter, setter  } } }
+#define JS_PS_STRINGVALUE_SPEC(name, value, flags) \
+    { name, uint8_t(flags | JSPROP_INTERNAL_USE_BIT), \
+      { { STRINGVALUE_WRAPPER(value), JSNATIVE_WRAPPER(nullptr) } } }
+
+#define SELFHOSTED_WRAPPER(name) \
+    { { nullptr, JS_CAST_STRING_TO(name, const JSJitInfo*) } }
+#define STRINGVALUE_WRAPPER(value) \
+    { { nullptr, JS_CAST_STRING_TO(value, const JSJitInfo*) } }
+
 /*
  * JSPropertySpec uses JSNativeWrapper.  These macros encapsulate the definition
  * of JSNative-backed JSPropertySpecs, by defining the JSNativeWrappers for
  * them.
  */
 #define JS_PSG(name, getter, flags) \
-    {name, \
-     uint8_t(JS_CHECK_ACCESSOR_FLAGS(flags) | JSPROP_SHARED), \
-     JSNATIVE_WRAPPER(getter), \
-     JSNATIVE_WRAPPER(nullptr)}
+    JS_PS_ACCESSOR_SPEC(name, JSNATIVE_WRAPPER(getter), JSNATIVE_WRAPPER(nullptr), flags, \
+                        JSPROP_SHARED)
 #define JS_PSGS(name, getter, setter, flags) \
-    {name, \
-     uint8_t(JS_CHECK_ACCESSOR_FLAGS(flags) | JSPROP_SHARED), \
-     JSNATIVE_WRAPPER(getter), \
-     JSNATIVE_WRAPPER(setter)}
+    JS_PS_ACCESSOR_SPEC(name, JSNATIVE_WRAPPER(getter), JSNATIVE_WRAPPER(setter), flags, \
+                         JSPROP_SHARED)
 #define JS_SELF_HOSTED_GET(name, getterName, flags) \
-    {name, \
-     uint8_t(JS_CHECK_ACCESSOR_FLAGS(flags) | JSPROP_SHARED | JSPROP_GETTER), \
-     { { nullptr, JS_CAST_STRING_TO(getterName, const JSJitInfo*) } }, \
-     JSNATIVE_WRAPPER(nullptr) }
+    JS_PS_ACCESSOR_SPEC(name, SELFHOSTED_WRAPPER(getterName), JSNATIVE_WRAPPER(nullptr), flags, \
+                         JSPROP_SHARED | JSPROP_GETTER)
 #define JS_SELF_HOSTED_GETSET(name, getterName, setterName, flags) \
-    {name, \
-     uint8_t(JS_CHECK_ACCESSOR_FLAGS(flags) | JSPROP_SHARED | JSPROP_GETTER | JSPROP_SETTER), \
-     { nullptr, JS_CAST_STRING_TO(getterName, const JSJitInfo*) },  \
-     { nullptr, JS_CAST_STRING_TO(setterName, const JSJitInfo*) } }
-#define JS_PS_END { nullptr, 0, JSNATIVE_WRAPPER(nullptr), JSNATIVE_WRAPPER(nullptr) }
+    JS_PS_ACCESSOR_SPEC(name, SELFHOSTED_WRAPPER(getterName), SELFHOSTED_WRAPPER(setterName), \
+                         flags, JSPROP_SHARED | JSPROP_GETTER | JSPROP_SETTER)
 #define JS_SELF_HOSTED_SYM_GET(symbol, getterName, flags) \
-    {reinterpret_cast<const char*>(uint32_t(::JS::SymbolCode::symbol) + 1), \
-     uint8_t(JS_CHECK_ACCESSOR_FLAGS(flags) | JSPROP_SHARED | JSPROP_GETTER), \
-     { { nullptr, JS_CAST_STRING_TO(getterName, const JSJitInfo*) } }, \
-     JSNATIVE_WRAPPER(nullptr) }
+    JS_PS_ACCESSOR_SPEC(reinterpret_cast<const char*>(uint32_t(::JS::SymbolCode::symbol) + 1), \
+                         SELFHOSTED_WRAPPER(getterName), JSNATIVE_WRAPPER(nullptr), flags, \
+                         JSPROP_SHARED | JSPROP_GETTER)
+#define JS_STRING_PS(name, string, flags) \
+    JS_PS_STRINGVALUE_SPEC(name, string, flags)
+#define JS_STRING_SYM_PS(symbol, string, flags) \
+    JS_PS_STRINGVALUE_SPEC(reinterpret_cast<const char*>(uint32_t(::JS::SymbolCode::symbol) + 1), \
+                           string, flags)
+#define JS_PS_END \
+    JS_PS_ACCESSOR_SPEC(nullptr, JSNATIVE_WRAPPER(nullptr), JSNATIVE_WRAPPER(nullptr), 0, 0)
 
 /**
  * To define a native function, set call to a JSNativeWrapper. To define a
