@@ -267,8 +267,6 @@ static bool
 InflateUTF8StringToBuffer(JSContext* cx, const UTF8Chars src, CharT* dst, size_t* dstlenp,
                           JS::SmallestEncoding *smallestEncoding)
 {
-    if (Action != AssertNoInvalids)
-        *smallestEncoding = JS::SmallestEncoding::ASCII;
     auto RequireLatin1 = [&smallestEncoding]{
         *smallestEncoding = std::max(JS::SmallestEncoding::Latin1, *smallestEncoding);
     };
