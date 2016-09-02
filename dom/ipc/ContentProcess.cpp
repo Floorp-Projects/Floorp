@@ -49,10 +49,10 @@ SetTmpEnvironmentVariable(nsIFile* aValue)
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return;
   }
-  NS_WARN_IF(!SetEnvironmentVariableW(L"TMP", fullTmpPath.get()));
+  Unused << NS_WARN_IF(!SetEnvironmentVariableW(L"TMP", fullTmpPath.get()));
   // We also set TEMP in case there is naughty third-party code that is
   // referencing the environment variable directly.
-  NS_WARN_IF(!SetEnvironmentVariableW(L"TEMP", fullTmpPath.get()));
+  Unused << NS_WARN_IF(!SetEnvironmentVariableW(L"TEMP", fullTmpPath.get()));
 }
 #endif
 
@@ -72,7 +72,7 @@ SetTmpEnvironmentVariable(nsIFile* aValue)
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return;
   }
-  NS_WARN_IF(setenv("TMPDIR", fullTmpPath.get(), 1) != 0);
+  Unused << NS_WARN_IF(setenv("TMPDIR", fullTmpPath.get(), 1) != 0);
 }
 #endif
 

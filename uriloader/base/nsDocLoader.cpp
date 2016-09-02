@@ -35,6 +35,7 @@
 #include "nsPresContext.h"
 #include "nsIAsyncVerifyRedirectCallback.h"
 
+using mozilla::DebugOnly;
 using mozilla::LogLevel;
 
 static NS_DEFINE_CID(kThisImplCID, NS_THIS_DOCLOADER_IMPL_CID);
@@ -345,8 +346,8 @@ nsDocLoader::Destroy()
   // Remove the document loader from the parent list of loaders...
   if (mParent)
   {
-    nsresult rv = mParent->RemoveChildLoader(this);
-    NS_WARN_IF(NS_FAILED(rv));
+    DebugOnly<nsresult> rv = mParent->RemoveChildLoader(this);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "RemoveChildLoader failed");
   }
 
   // Release all the information about network requests...
@@ -377,8 +378,9 @@ nsDocLoader::DestroyChildren()
     if (loader) {
       // This is a safe cast, as we only put nsDocLoader objects into the
       // array
-      nsresult rv = static_cast<nsDocLoader*>(loader)->SetDocLoaderParent(nullptr);
-      NS_WARN_IF(NS_FAILED(rv));
+      DebugOnly<nsresult> rv =
+        static_cast<nsDocLoader*>(loader)->SetDocLoaderParent(nullptr);
+      NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "SetDocLoaderParent failed");
     }
   }
   mChildList.Clear();

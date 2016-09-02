@@ -8,6 +8,7 @@
 #include "mozilla/EndianUtils.h"
 #include "mozilla/Logging.h"
 #include "mozilla/ScopeExit.h"
+#include "mozilla/Unused.h"
 #include "nsComponentManagerUtils.h"
 #include "nsCOMPtr.h"
 #include "nsDebug.h"
@@ -335,7 +336,7 @@ BrowseOperator::Start()
                                              nullptr,
                                              &BrowseReplyRunnable::Reply,
                                              this);
-  NS_WARN_IF(kDNSServiceErr_NoError != err);
+  NS_WARNING_ASSERTION(kDNSServiceErr_NoError == err, "DNSServiceBrowse fail");
 
   if (mListener) {
     if (kDNSServiceErr_NoError == err) {
@@ -491,7 +492,8 @@ RegisterOperator::Start()
                        TXTRecordGetBytesPtr(&txtRecord),
                        &RegisterReplyRunnable::Reply,
                        this);
-  NS_WARN_IF(kDNSServiceErr_NoError != err);
+  NS_WARNING_ASSERTION(kDNSServiceErr_NoError == err,
+                       "DNSServiceRegister fail");
 
   TXTRecordDeallocate(&txtRecord);
 
@@ -620,7 +622,7 @@ ResolveOperator::Reply(DNSServiceRef aSdRef,
   MOZ_ASSERT(GetThread() == NS_GetCurrentThread());
 
   auto guard = MakeScopeExit([this] {
-    NS_WARN_IF(NS_FAILED(Stop()));
+    Unused << NS_WARN_IF(NS_FAILED(Stop()));
   });
 
   if (NS_WARN_IF(kDNSServiceErr_NoError != aErrorCode)) {
@@ -674,7 +676,7 @@ ResolveOperator::Reply(DNSServiceRef aSdRef,
   }
   else {
     mListener->OnResolveFailed(info, aErrorCode);
-    NS_WARN_IF(NS_FAILED(Stop()));
+    Unused << NS_WARN_IF(NS_FAILED(Stop()));
   }
 }
 
@@ -683,7 +685,7 @@ ResolveOperator::GetAddrInfor(nsIDNSServiceInfo* aServiceInfo)
 {
   RefPtr<GetAddrInfoOperator> getAddreOp = new GetAddrInfoOperator(aServiceInfo,
                                                                    mListener);
-  NS_WARN_IF(NS_FAILED(getAddreOp->Start()));
+  Unused << NS_WARN_IF(NS_FAILED(getAddreOp->Start()));
 }
 
 GetAddrInfoOperator::GetAddrInfoOperator(nsIDNSServiceInfo* aServiceInfo,
@@ -739,7 +741,7 @@ GetAddrInfoOperator::Reply(DNSServiceRef aSdRef,
   MOZ_ASSERT(GetThread() == NS_GetCurrentThread());
 
   auto guard = MakeScopeExit([this] {
-    NS_WARN_IF(NS_FAILED(Stop()));
+    Unused << NS_WARN_IF(NS_FAILED(Stop()));
   });
 
   if (NS_WARN_IF(kDNSServiceErr_NoError != aErrorCode)) {

@@ -530,7 +530,8 @@ AudioStream::GetUnprocessed(AudioBufferWriter& aWriter)
     // TODO: There might be still unprocessed samples in the stretcher.
     // We should either remove or flush them so they won't be in the output
     // next time we switch a playback rate other than 1.0.
-    NS_WARN_IF(mTimeStretcher->numUnprocessedSamples() > 0);
+    NS_WARNING_ASSERTION(
+      mTimeStretcher->numUnprocessedSamples() == 0, "no samples");
   }
 
   while (aWriter.Available() > 0) {
