@@ -6550,7 +6550,16 @@ HTMLMediaElement::SetMediaInfo(const MediaInfo aInfo)
 void
 HTMLMediaElement::AudioCaptureStreamChangeIfNeeded()
 {
-  // TODO : only capture media element with audio track, see bug1298777.
+  // Window audio capturing only happens after creating audio channel agent.
+  if (!mAudioChannelAgent) {
+    return;
+  }
+
+  // No need to capture a silence media element.
+  if (!HasAudio()) {
+    return;
+  }
+
   if (mAudioCapturedByWindow && !mCaptureStreamPort) {
     nsCOMPtr<nsPIDOMWindowInner> window = OwnerDoc()->GetInnerWindow();
     if (!OwnerDoc()->GetInnerWindow()) {
