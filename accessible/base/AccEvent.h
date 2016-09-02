@@ -51,10 +51,6 @@ public:
      //    node, only the umbrella event on the ancestor will be emitted.
     eCoalesceReorder,
 
-     // eCoalesceMutationTextChange : coalesce text change events caused by
-     // tree mutations of the same tree level.
-    eCoalesceMutationTextChange,
-
     // eCoalesceOfSameType : For events of the same type, only the newest event
     // will be processed.
     eCoalesceOfSameType,
@@ -214,7 +210,7 @@ class AccMutationEvent: public AccEvent
 {
 public:
   AccMutationEvent(uint32_t aEventType, Accessible* aTarget) :
-    AccEvent(aEventType, aTarget, eAutoDetect, eCoalesceMutationTextChange)
+    AccEvent(aEventType, aTarget, eAutoDetect, eCoalesceReorder)
   {
     // Don't coalesce these since they are coalesced by reorder event. Coalesce
     // contained text change events.
