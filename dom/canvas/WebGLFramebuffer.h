@@ -107,7 +107,7 @@ public:
     struct Ordered {
         const WebGLFBAttachPoint& mRef;
 
-        Ordered(const WebGLFBAttachPoint& ref)
+        explicit Ordered(const WebGLFBAttachPoint& ref)
             : mRef(ref)
         { }
 
@@ -182,7 +182,7 @@ protected:
         std::set<WebGLFBAttachPoint::Ordered> drawSet;
         std::set<WebGLFBAttachPoint::Ordered> readSet;
 
-        ResolvedData(const WebGLFramebuffer& parent);
+        explicit ResolvedData(const WebGLFramebuffer& parent);
     };
 
     UniquePtr<const ResolvedData> mResolvedCompleteData;
