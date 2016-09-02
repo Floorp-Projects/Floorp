@@ -112,16 +112,6 @@ struct URLValueData
 
   bool operator==(const URLValueData& aOther) const;
 
-  // URIEquals only compares URIs and principals (unlike operator==, which
-  // also compares the original strings).  URIEquals also assumes that the
-  // mURI member of both URL objects is non-null.  Do NOT call this method
-  // unless you're sure this is the case.
-  bool URIEquals(const URLValueData& aOther) const;
-
-  // Pretty much like URIEquals, but allows comparing unresolved URIs (returning
-  // false in that case).
-  bool MaybeUnresolvedURIEquals(const URLValueData& aOther) const;
-
   // Returns true iff we know for sure, by comparing the mBaseURI pointer,
   // the specified url() value mString, and the mLocalURLFlag, that these
   // two URLValueData objects represent the same computed url() value.
