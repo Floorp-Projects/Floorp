@@ -8667,8 +8667,8 @@ DebuggerObject::promiseValueGetter(JSContext* cx, unsigned argc, Value* vp)
         return false;
 
     if (object->promiseState() != JS::PromiseState::Fulfilled) {
-        args.rval().setUndefined();
-        return true;
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_DEBUG_PROMISE_NOT_FULFILLED);
+        return false;
     }
 
     return DebuggerObject::getPromiseValue(cx, object, args.rval());;
@@ -8683,8 +8683,8 @@ DebuggerObject::promiseReasonGetter(JSContext* cx, unsigned argc, Value* vp)
         return false;
 
     if (object->promiseState() != JS::PromiseState::Rejected) {
-        args.rval().setUndefined();
-        return true;
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_DEBUG_PROMISE_NOT_REJECTED);
+        return false;
     }
 
     return DebuggerObject::getPromiseReason(cx, object, args.rval());;
