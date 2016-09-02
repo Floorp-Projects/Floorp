@@ -176,15 +176,15 @@ TraceLoggerThread::~TraceLoggerThread()
 bool
 TraceLoggerThread::enable()
 {
-    if (enabled > 0) {
-        enabled++;
+    if (enabled_ > 0) {
+        enabled_++;
         return true;
     }
 
     if (failed)
         return false;
 
-    enabled = 1;
+    enabled_ = 1;
     logTimestamp(TraceLogger_Enable);
 
     return true;
@@ -195,7 +195,7 @@ TraceLoggerThread::fail(JSContext* cx, const char* error)
 {
     JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_TRACELOGGER_ENABLE_FAIL, error);
     failed = true;
-    enabled = 0;
+    enabled_ = 0;
 
     return false;
 }
@@ -206,7 +206,7 @@ TraceLoggerThread::enable(JSContext* cx)
     if (!enable())
         return fail(cx, "internal error");
 
-    if (enabled == 1) {
+    if (enabled_ == 1) {
         // Get the top Activation to log the top script/pc (No inlined frames).
         ActivationIterator iter(cx->runtime());
         Activation* act = iter.activation();
@@ -252,21 +252,24 @@ TraceLoggerThread::enable(JSContext* cx)
 }
 
 bool
-TraceLoggerThread::disable()
+TraceLoggerThread::disable(bool force, const char* error)
 {
     if (failed)
         return false;
 
-    if (enabled == 0)
+    if (enabled_ == 0)
         return true;
 
-    if (enabled > 1) {
-        enabled--;
+    if (enabled_ > 1 && !force) {
+        enabled_--;
         return true;
     }
 
+    if (force)
+        traceLoggerState->maybeSpewError(error);
+
     logTimestamp(TraceLogger_Disable);
-    enabled = 0;
+    enabled_ = 0;
 
     return true;
 }
@@ -492,7 +495,7 @@ TraceLoggerThread::startEvent(uint32_t id)
        return;
 
 #ifdef DEBUG
-    if (enabled > 0) {
+    if (enabled_ > 0) {
         AutoEnterOOMUnsafeRegion oomUnsafe;
         if (!graphStack.append(id))
             oomUnsafe.crash("Could not add item to debug stack.");
@@ -525,7 +528,7 @@ TraceLoggerThread::stopEvent(uint32_t id)
         return;
 
 #ifdef DEBUG
-    if (enabled > 0) {
+    if (enabled_ > 0) {
         uint32_t prev = graphStack.popCopy();
         if (id == TraceLogger_Engine) {
             MOZ_ASSERT(prev == TraceLogger_IonMonkey || prev == TraceLogger_Baseline ||
@@ -560,7 +563,7 @@ TraceLoggerThread::logTimestamp(uint32_t id)
 void
 TraceLoggerThread::log(uint32_t id)
 {
-    if (enabled == 0)
+    if (enabled_ == 0)
         return;
 
     MOZ_ASSERT(traceLoggerState);
@@ -784,6 +787,7 @@ TraceLoggerThreadState::init()
                 "  EnableMainThread        Start logging the main thread immediately.\n"
                 "  EnableOffThread         Start logging helper threads immediately.\n"
                 "  EnableGraph             Enable spewing the tracelogging graph to a file.\n"
+                "  Errors                  Report errors during tracing to stderr.\n"
             );
             printf("\n");
             exit(0);
@@ -796,6 +800,8 @@ TraceLoggerThreadState::init()
             offThreadEnabled = true;
         if (strstr(options, "EnableGraph"))
             graphSpewingEnabled = true;
+        if (strstr(options, "Errors"))
+            spewErrors = true;
     }
 
     startupTime = rdtsc();
