@@ -19,9 +19,6 @@ task:
   provisionerId: aws-provisioner-v1
   schedulerId: task-graph-scheduler
 
-  routes:
-    - 'index.gecko.v1.{{project}}.revision.linux.{{head_rev}}.{{build_name}}'
-    - 'index.gecko.v1.{{project}}.latest.linux.{{build_name}}'
   scopes:
     - 'docker-worker:cache:level-{{level}}-hg-shared'
     - 'docker-worker:cache:level-{{level}}-checkouts'
