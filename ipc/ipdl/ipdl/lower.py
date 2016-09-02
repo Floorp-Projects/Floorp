@@ -3460,17 +3460,16 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
         for managed in ptype.manages:
             managedVar = p.managedVar(managed, self.side)
+            lenvar = ExprVar('len')
+            kidvar = ExprVar('kid')
 
-            foreachdestroy = StmtFor(
-                init=Param(Type.UINT32, ivar.name, ExprLiteral.ZERO),
-                cond=ExprBinary(ivar, '<', _callCxxArrayLength(kidsvar)),
-                update=ExprPrefixUnop(ivar, '++'))
+            foreachdestroy = StmtRangedFor(kidvar, kidsvar)
 
             foreachdestroy.addstmt(
                 Whitespace('// Guarding against a child removing a sibling from the list during the iteration.\n', indent=1))
-            ifhas = StmtIf(_callHasManagedActor(managedVar, ithkid))
+            ifhas = StmtIf(_callHasManagedActor(managedVar, kidvar))
             ifhas.addifstmt(StmtExpr(ExprCall(
-                ExprSelect(ithkid, '->', destroysubtreevar.name),
+                ExprSelect(kidvar, '->', destroysubtreevar.name),
                 args=[ subtreewhyvar ])))
             foreachdestroy.addstmt(ifhas)
 
@@ -3480,8 +3479,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                     '// Recursively shutting down %s kids\n'% (managed.name()),
                     indent=1),
                 StmtDecl(
-                    Decl(_cxxArrayType(p.managedCxxType(managed, self.side)), kidsvar.name),
-                    initargs=[ ExprCall(ExprSelect(managedVar, '.', 'Count')) ]),
+                    Decl(_cxxArrayType(p.managedCxxType(managed, self.side)), kidsvar.name)),
                 Whitespace(
                     '// Accumulate kids into a stable structure to iterate over\n',
                     indent=1),
