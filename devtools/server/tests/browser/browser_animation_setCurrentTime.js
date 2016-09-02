@@ -14,7 +14,7 @@ add_task(function* () {
   yield testSetCurrentTime(walker, animations);
   yield testSetCurrentTimes(walker, animations);
 
-  yield closeDebuggerClient(client);
+  yield client.close();
   gBrowser.removeCurrentTab();
 });
 

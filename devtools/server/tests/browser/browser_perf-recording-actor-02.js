@@ -49,6 +49,6 @@ add_task(function* () {
   is(front.getBufferUsageForRecording(model), null, "buffer usage should be null when no longer recording.");
 
   yield front.destroy();
-  yield closeDebuggerClient(client);
+  yield client.close();
   gBrowser.removeCurrentTab();
 });

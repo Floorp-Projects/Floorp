@@ -50,6 +50,6 @@ add_task(function* () {
   is(players[1].state.iterationCount, 100,
      "The iterationCount of the second animation is correct");
 
-  yield closeDebuggerClient(client);
+  yield client.close();
   gBrowser.removeCurrentTab();
 });

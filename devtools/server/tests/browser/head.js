@@ -83,15 +83,6 @@ function connectDebuggerClient(client) {
 }
 
 /**
- * Close a debugger client's connection.
- * @param {DebuggerClient}
- * @return {Promise} Resolves when the connection is closed.
- */
-function closeDebuggerClient(client) {
-  return new Promise(resolve => client.close(resolve));
-}
-
-/**
  * Wait for eventName on target.
  * @param {Object} target An observable object that either supports on/off or
  * addEventListener/removeEventListener

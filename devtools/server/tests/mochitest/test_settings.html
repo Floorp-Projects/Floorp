@@ -81,7 +81,7 @@ function runTests() {
         is(resetSettings["app.reportCrashes"], fakeSettings["app.reportCrashes"], "reset to original string setting");
         is(JSON.stringify(resetSettings["app.someObject"]), JSON.stringify(fakeSettings["app.someObject"]), "reset to original object setting");
 
-        client.close(() => {
+        client.close().then(() => {
           DebuggerServer.destroy();
           SimpleTest.finish();
         });

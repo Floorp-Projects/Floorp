@@ -29,7 +29,7 @@ function test_close(aTransport)
   let onClosed = function () {
     gClient.removeListener("closed", onClosed);
     ok(true, "Client emitted 'closed' event");
-    gClient.close(function () {
+    gClient.close().then(function () {
       ok(true, "client.close() successfully called its callback");
       do_test_finished();
     });

@@ -43,7 +43,7 @@ add_task(function* () {
 
   animations.off("mutations", onMutations);
 
-  yield closeDebuggerClient(client);
+  yield client.close();
   gBrowser.removeCurrentTab();
 });
 

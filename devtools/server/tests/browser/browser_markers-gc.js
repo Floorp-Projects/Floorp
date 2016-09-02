@@ -45,6 +45,6 @@ add_task(function* () {
 
   is(ordered, true, "All GC and non-GC markers are in order by start time.");
 
-  yield closeDebuggerClient(client);
+  yield client.close();
   gBrowser.removeCurrentTab();
 });

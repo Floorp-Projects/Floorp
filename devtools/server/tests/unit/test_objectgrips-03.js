@@ -60,7 +60,7 @@ function test_object_grip()
           do_check_eq(aResponse.descriptor.set.type, "undefined");
 
           gThreadClient.resume(function () {
-            gClient.close(gCallback);
+            gClient.close().then(gCallback);
           });
         });
       });

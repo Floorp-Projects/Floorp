@@ -52,7 +52,7 @@ function test_breakpoint_running()
       do_check_neq(aResponse.error, "noScript");
 
       do_execute_soon(function () {
-        gClient.close(gCallback);
+        gClient.close().then(gCallback);
       });
     });
   });

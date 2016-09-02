@@ -24,6 +24,6 @@ add_task(function* () {
 
   ok(markers.some(m => m.name === MARKER_NAME), `got some ${MARKER_NAME} markers`);
 
-  yield closeDebuggerClient(client);
+  yield client.close();
   gBrowser.removeCurrentTab();
 });

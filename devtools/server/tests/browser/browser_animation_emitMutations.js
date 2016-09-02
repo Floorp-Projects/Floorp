@@ -57,6 +57,6 @@ add_task(function* () {
   ok(changes[1].player === p1 || changes[1].player === p2,
     "The second removed player was one of the previously added players");
 
-  yield closeDebuggerClient(client);
+  yield client.close();
   gBrowser.removeCurrentTab();
 });

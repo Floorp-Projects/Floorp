@@ -30,7 +30,7 @@ function test() {
       .then(testSecondAddon)
       .then(testRemoveFirstAddon)
       .then(testRemoveSecondAddon)
-      .then(closeConnection)
+      .then(() => gClient.close())
       .then(finish)
       .then(null, aError => {
         ok(false, "Got an error: " + aError.message + "\n" + aError.stack);
@@ -101,12 +101,6 @@ function testRemoveSecondAddon() {
       ok(!aGrip, "Shouldn't find a addon actor for the second addon anymore.");
     });
   });
-}
-
-function closeConnection() {
-  let deferred = promise.defer();
-  gClient.close(deferred.resolve);
-  return deferred.promise;
 }
 
 registerCleanupFunction(function () {

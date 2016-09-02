@@ -93,7 +93,7 @@ function test_next_pause()
     do_check_eq(aPacket.why.type, "debuggerStatement");
 
     gThreadClient.resume(function () {
-      gClient.close(gCallback);
+      gClient.close().then(gCallback);
     });
   });
 

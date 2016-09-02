@@ -46,6 +46,6 @@ add_task(function* () {
     is(state.playbackRate, .5, "The playbackRate was updated");
   }
 
-  yield closeDebuggerClient(client);
+  yield client.close();
   gBrowser.removeCurrentTab();
 });

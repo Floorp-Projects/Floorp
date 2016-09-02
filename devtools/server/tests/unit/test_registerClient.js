@@ -86,7 +86,7 @@ function test_client_events()
 }
 
 function close_client() {
-  gClient.close(() => {
+  gClient.close().then(() => {
     // Check that client.detach method is call on client destruction
     do_check_true(gTestClient.detached);
     run_next_test();

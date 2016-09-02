@@ -62,7 +62,7 @@ function test_object_grip()
       do_check_eq(aResponse.ownProperties.d.value.type, "-0");
 
       gThreadClient.resume(function () {
-        gClient.close(gCallback);
+        gClient.close().then(gCallback);
       });
     });
   });
