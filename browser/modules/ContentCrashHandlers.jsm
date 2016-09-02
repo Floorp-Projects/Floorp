@@ -8,7 +8,9 @@ var Cc = Components.classes;
 var Ci = Components.interfaces;
 var Cu = Components.utils;
 
-this.EXPORTED_SYMBOLS = [ "TabCrashHandler", "PluginCrashReporter" ];
+this.EXPORTED_SYMBOLS = [ "TabCrashHandler",
+                          "PluginCrashReporter",
+                          "UnsubmittedCrashHandler" ];
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
@@ -21,6 +23,21 @@ XPCOMUtils.defineLazyModuleGetter(this, "RemotePages",
   "resource://gre/modules/RemotePageManager.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "SessionStore",
   "resource:///modules/sessionstore/SessionStore.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Task",
+  "resource://gre/modules/Task.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "RecentWindow",
+  "resource:///modules/RecentWindow.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PluralForm",
+  "resource://gre/modules/PluralForm.jsm");
+
+XPCOMUtils.defineLazyGetter(this, "gNavigatorBundle", function() {
+  const url = "chrome://browser/locale/browser.properties";
+  return Services.strings.createBundle(url);
+});
+
+// We don't process crash reports older than 28 days, so don't bother
+// submitting them
+const PENDING_CRASH_REPORT_DAYS = 28;
 
 this.TabCrashHandler = {
   _crashedTabCount: 0,
@@ -318,6 +335,181 @@ this.TabCrashHandler = {
     return this.childMap.get(this.browserMap.get(browser.permanentKey));
   },
 }
+
+/**
+ * This component is responsible for scanning the pending
+ * crash report directory for reports, and (if enabled), to
+ * prompt the user to submit those reports.
+ */
+this.UnsubmittedCrashHandler = {
+  init() {
+    if (this.initialized) {
+      return;
+    }
+
+    this.initialized = true;
+
+    let pref = "browser.crashReports.unsubmittedCheck.enabled";
+    let shouldCheck = Services.prefs.getBoolPref(pref);
+
+    if (shouldCheck) {
+      Services.obs.addObserver(this, "browser-delayed-startup-finished",
+                               false);
+    }
+  },
+
+  observe(subject, topic, data) {
+    if (topic != "browser-delayed-startup-finished") {
+      return;
+    }
+
+    Services.obs.removeObserver(this, topic);
+    this.checkForUnsubmittedCrashReports();
+  },
+
+  /**
+   * Scans the profile directory for unsubmitted crash reports
+   * within the past PENDING_CRASH_REPORT_DAYS days. If it
+   * finds any, it will, if necessary, attempt to open a notification
+   * bar to prompt the user to submit them.
+   *
+   * @returns Promise
+   *          Resolves after it tries to append a notification on
+   *          the most recent browser window. If a notification
+   *          cannot be shown, will resolve anyways.
+   */
+  checkForUnsubmittedCrashReports: Task.async(function*() {
+    let dateLimit = new Date();
+    dateLimit.setDate(dateLimit.getDate() - PENDING_CRASH_REPORT_DAYS);
+
+    let reportIDs = [];
+    try {
+      reportIDs = yield CrashSubmit.pendingIDsAsync(dateLimit);
+    } catch (e) {
+      Cu.reportError(e);
+      return;
+    }
+
+    if (reportIDs.length) {
+      this.showPendingSubmissionsNotification(reportIDs);
+    }
+  }),
+
+  /**
+   * Given an array of unsubmitted crash report IDs, try to open
+   * up a notification asking the user to submit them.
+   *
+   * @param reportIDs (Array<string>)
+   *        The Array of report IDs to offer the user to send.
+   */
+  showPendingSubmissionsNotification(reportIDs) {
+    let count = reportIDs.length;
+    if (!count) {
+      return;
+    }
+
+    let messageTemplate =
+      gNavigatorBundle.GetStringFromName("pendingCrashReports.label");
+
+    let message = PluralForm.get(count, messageTemplate).replace("#1", count);
+
+    CrashNotificationBar.show({
+      notificationID: "pending-crash-reports",
+      message,
+      reportIDs,
+    });
+  },
+};
+
+this.CrashNotificationBar = {
+  /**
+   * Attempts to show a notification bar to the user in the most
+   * recent browser window asking them to submit some crash report
+   * IDs. If a notification cannot be shown (for example, there
+   * is no browser window), this method exits silently.
+   *
+   * The notification will allow the user to submit their crash
+   * reports. If the user dismissed the notification, the crash
+   * reports will be marked to be ignored (though they can
+   * still be manually submitted via about:crashes).
+   *
+   * @param JS Object
+   *        An Object with the following properties:
+   *
+   *        notificationID (string)
+   *          The ID for the notification to be opened.
+   *
+   *        message (string)
+   *          The message to be displayed in the notification.
+   *
+   *        reportIDs (Array<string>)
+   *          The array of report IDs to offer to the user.
+   */
+  show({ notificationID, message, reportIDs }) {
+    let chromeWin = RecentWindow.getMostRecentBrowserWindow();
+    if (!chromeWin) {
+      // Can't show a notification in this case. We'll hopefully
+      // get another opportunity to have the user submit their
+      // crash reports later.
+      return;
+    }
+
+    let nb =  chromeWin.document.getElementById("global-notificationbox");
+    let notification = nb.getNotificationWithValue(notificationID);
+    if (notification) {
+      return;
+    }
+
+    let buttons = [{
+      label: gNavigatorBundle.GetStringFromName("pendingCrashReports.submitAll"),
+      callback: () => {
+        this.submitReports(reportIDs);
+      },
+    },
+    {
+      label: gNavigatorBundle.GetStringFromName("pendingCrashReports.viewAll"),
+      callback: function() {
+        chromeWin.openUILinkIn("about:crashes", "tab");
+        return true;
+      },
+    }];
+
+    let eventCallback = (eventType) => {
+      if (eventType == "dismissed") {
+        // The user intentionally dismissed the notification,
+        // which we interpret as meaning that they don't care
+        // to submit the reports. We'll ignore these particular
+        // reports going forward.
+        reportIDs.forEach(function(reportID) {
+          CrashSubmit.ignore(reportID);
+        });
+      }
+    };
+
+    nb.appendNotification(message, notificationID,
+                          "chrome://browser/skin/tab-crashed.svg",
+                          nb.PRIORITY_INFO_HIGH, buttons,
+                          eventCallback);
+  },
+
+  /**
+   * Attempt to submit reports to the crash report server. Each
+   * report will have the "SubmittedFromInfobar" extra key set
+   * to true.
+   *
+   * @param reportIDs (Array<string>)
+   *        The array of reportIDs to submit.
+   */
+  submitReports(reportIDs) {
+    for (let reportID of reportIDs) {
+      CrashSubmit.submit(reportID, {
+        extraExtraKeyVals: {
+          "SubmittedFromInfobar": true,
+        },
+      });
+    }
+  },
+};
 
 this.PluginCrashReporter = {
   /**
