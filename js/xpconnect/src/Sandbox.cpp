@@ -1326,8 +1326,6 @@ GetExpandedPrincipal(JSContext* cx, HandleObject arrayObj, nsIExpandedPrincipal*
     nsTArray< nsCOMPtr<nsIPrincipal> > allowedDomains(length);
     allowedDomains.SetLength(length);
 
-    nsCOMPtr<nsIPrincipal> windowPrincipal;
-
     for (uint32_t i = 0; i < length; ++i) {
         RootedValue allowed(cx);
         if (!JS_GetElement(cx, arrayObj, i, &allowed))
@@ -1339,7 +1337,7 @@ GetExpandedPrincipal(JSContext* cx, HandleObject arrayObj, nsIExpandedPrincipal*
             // In case of string let's try to fetch a codebase principal from it.
             RootedString str(cx, allowed.toString());
 
-            // We use a default context ID here because we don't support
+            // We use a default originAttributes here because we don't support
             // passing a userContextId with an array.
             PrincipalOriginAttributes attrs;
             if (!ParsePrincipal(cx, str, attrs, getter_AddRefs(principal)))
@@ -1356,11 +1354,6 @@ GetExpandedPrincipal(JSContext* cx, HandleObject arrayObj, nsIExpandedPrincipal*
             principal = do_QueryInterface(prinOrSop);
             if (sop)
                 principal = sop->GetPrincipal();
-
-            // If a Window object has been passed, the expanded principal will inherit
-            // its OriginAttributes.  If more than one Window object has been passed, use
-            // the last one.
-            windowPrincipal = principal;
         }
         NS_ENSURE_TRUE(principal, false);
 
@@ -1375,11 +1368,7 @@ GetExpandedPrincipal(JSContext* cx, HandleObject arrayObj, nsIExpandedPrincipal*
         allowedDomains[i] = principal;
   }
 
-  PrincipalOriginAttributes attrs;
-  if (windowPrincipal) {
-      attrs = BasePrincipal::Cast(windowPrincipal)->OriginAttributesRef();
-  }
-  RefPtr<nsExpandedPrincipal> result = new nsExpandedPrincipal(allowedDomains, attrs);
+  nsCOMPtr<nsIExpandedPrincipal> result = new nsExpandedPrincipal(allowedDomains);
   result.forget(out);
   return true;
 }
@@ -1746,26 +1735,6 @@ nsXPCComponents_utils_Sandbox::CallOrConstruct(nsIXPConnectWrappedNative* wrappe
         return NS_ERROR_UNEXPECTED;
 
     *_retval = true;
-    return NS_OK;
-}
-
-nsresult
-xpc::GetSandboxPrincipal(JSContext* aCx, HandleObject aSandboxArg,
-                         nsIPrincipal** aPrincipal)
-{
-    JS_AbortIfWrongThread(aCx);
-
-    RootedObject sandbox(aCx, js::CheckedUnwrap(aSandboxArg));
-    if (!sandbox || !IsSandbox(sandbox)) {
-        return NS_ERROR_INVALID_ARG;
-    }
-
-    nsIScriptObjectPrincipal* sop =
-        static_cast<nsIScriptObjectPrincipal*>(xpc_GetJSPrivate(sandbox));
-    MOZ_ASSERT(sop, "Invalid sandbox passed");
-    nsCOMPtr<nsIPrincipal> prin = sop->GetPrincipal();
-    prin.forget(aPrincipal);
-
     return NS_OK;
 }
 

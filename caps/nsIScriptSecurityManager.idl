@@ -255,14 +255,6 @@ interface nsIScriptSecurityManager : nsISupports
     nsIPrincipal getChannelURIPrincipal(in nsIChannel aChannel);
 
     /**
-     * Get the principal for a sandbox object.
-     *
-     * This function is currently only used in tests.
-     */
-    [implicit_jscontext]
-    nsIPrincipal getSandboxPrincipal(in jsval aSandbox);
-
-    /**
      * Check whether a given principal is a system principal.  This allows us
      * to avoid handing back the system principal to script while allowing
      * script to check whether a given principal is system.
