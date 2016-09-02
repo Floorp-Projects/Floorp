@@ -728,12 +728,9 @@ ErrorLoadingBuiltinSheet(nsIURI* aURI, const char* aMsg)
   AnnotateCrashReport(aURI);
 #endif
 
-  nsAutoCString spec;
-  if (aURI) {
-    aURI->GetSpec(spec);
-  }
-  NS_RUNTIMEABORT(nsPrintfCString("%s loading built-in stylesheet '%s'",
-                                  aMsg, spec.get()).get());
+  NS_RUNTIMEABORT(
+    nsPrintfCString("%s loading built-in stylesheet '%s'",
+                    aMsg, aURI ? aURI->GetSpecOrDefault().get() : "").get());
 }
 
 void

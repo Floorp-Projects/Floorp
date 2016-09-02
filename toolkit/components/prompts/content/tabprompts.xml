@@ -270,8 +270,21 @@
             <parameter name="buttonNum"/>
             <body>
             <![CDATA[
-                this.Dialog["onButton" + buttonNum]();
-                this.shutdownPrompt();
+                // We want to do all the work her asynchronously off a Gecko
+                // runnable, because of situations like the one described in
+                // https://bugzilla.mozilla.org/show_bug.cgi?id=1167575#c35 : we
+                // get here off processing of an OS event and will also process
+                // one more Gecko runnable before we break out of the event loop
+                // spin whoever posted the prompt is doing.  If we do all our
+                // work sync, we will exit modal state _before_ processing that
+                // runnable, and if exiting moral state posts a runnable we will
+                // incorrectly process that runnable before leaving our event
+                // loop spin.
+                Services.tm.mainThread.dispatch(() => {
+                    this.Dialog["onButton" + buttonNum]();
+                    this.shutdownPrompt();
+                  },
+                  Ci.nsIThread.DISPATCH_NORMAL);
             ]]>
             </body>
         </method>

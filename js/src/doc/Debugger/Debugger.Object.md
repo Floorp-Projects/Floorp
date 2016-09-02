@@ -218,17 +218,18 @@ from its prototype:
     If the referent is not a [`Promise`][promise], throw a `TypeError`.
 
 `promiseValue`
-:   If the referent is a [`Promise`][promise] that has been fulfilled, return
-    a debuggee value representing the value the [`Promise`][promise] has been
-    fulfilled with.
+:   Return a debuggee value representing the value the [`Promise`][promise] has
+    been fulfilled with.
 
-    If the [`Promise`][promise] has not been fulfilled, return `undefined`. If
-    the referent is not a [`Promise`][promise], throw a `TypeError`.
+    If the referent is not a [`Promise`][promise], or the [`Promise`][promise]
+    has not been fulfilled, throw a `TypeError`.
 
 `promiseReason`
-:   If the referent is a [`Promise`][promise] that has been rejected, return a
-    debuggee value representing the value the [`Promise`][promise] has been
-    rejected with.
+:   Return a debuggee value representing the value the [`Promise`][promise] has
+    been rejected with.
+
+    If the referent is not a [`Promise`][promise], or the [`Promise`][promise]
+    has not been rejected, throw a `TypeError`.
 
 `promiseAllocationSite`
 :   If the referent is a [`Promise`][promise], this is the

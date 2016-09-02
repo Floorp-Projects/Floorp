@@ -125,12 +125,10 @@ using mozilla::dom::gonk::AudioManager;
 using mozilla::system::nsVolumeService;
 #endif
 
-#ifndef MOZ_SIMPLEPUSH
 #include "mozilla/dom/PushNotifier.h"
 using mozilla::dom::PushNotifier;
 #define PUSHNOTIFIER_CID \
 { 0x2fc2d3e3, 0x020f, 0x404e, { 0xb0, 0x6a, 0x6e, 0xcf, 0x3e, 0xa2, 0x33, 0x4a } }
-#endif
 
 #include "AudioChannelAgent.h"
 using mozilla::dom::AudioChannelAgent;
@@ -400,10 +398,8 @@ NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsIPresentationService,
                                          NS_CreatePresentationService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(PresentationTCPSessionTransport)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(NotificationTelemetryService, Init)
-
-#ifndef MOZ_SIMPLEPUSH
 NS_GENERIC_FACTORY_CONSTRUCTOR(PushNotifier)
-#endif
+
 //-----------------------------------------------------------------------------
 
 static bool gInitialized = false;
@@ -772,10 +768,7 @@ NS_DEFINE_NAMED_CID(DOMREQUEST_SERVICE_CID);
 NS_DEFINE_NAMED_CID(QUOTAMANAGER_SERVICE_CID);
 NS_DEFINE_NAMED_CID(SERVICEWORKERMANAGER_CID);
 NS_DEFINE_NAMED_CID(NOTIFICATIONTELEMETRYSERVICE_CID);
-
-#ifndef MOZ_SIMPLEPUSH
 NS_DEFINE_NAMED_CID(PUSHNOTIFIER_CID);
-#endif
 
 NS_DEFINE_NAMED_CID(WORKERDEBUGGERMANAGER_CID);
 #ifdef MOZ_WIDGET_GONK
@@ -1080,9 +1073,7 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
   { &kQUOTAMANAGER_SERVICE_CID, false, nullptr, QuotaManagerServiceConstructor },
   { &kSERVICEWORKERMANAGER_CID, false, nullptr, ServiceWorkerManagerConstructor },
   { &kNOTIFICATIONTELEMETRYSERVICE_CID, false, nullptr, NotificationTelemetryServiceConstructor },
-#ifndef MOZ_SIMPLEPUSH
   { &kPUSHNOTIFIER_CID, false, nullptr, PushNotifierConstructor },
-#endif
   { &kWORKERDEBUGGERMANAGER_CID, true, nullptr, WorkerDebuggerManagerConstructor },
 #ifdef MOZ_WIDGET_GONK
   { &kSYSTEMWORKERMANAGER_CID, true, nullptr, SystemWorkerManagerConstructor },
@@ -1247,9 +1238,7 @@ static const mozilla::Module::ContractIDEntry kLayoutContracts[] = {
   { QUOTAMANAGER_SERVICE_CONTRACTID, &kQUOTAMANAGER_SERVICE_CID },
   { SERVICEWORKERMANAGER_CONTRACTID, &kSERVICEWORKERMANAGER_CID },
   { NOTIFICATIONTELEMETRYSERVICE_CONTRACTID, &kNOTIFICATIONTELEMETRYSERVICE_CID },
-#ifndef MOZ_SIMPLEPUSH
   { PUSHNOTIFIER_CONTRACTID, &kPUSHNOTIFIER_CID },
-#endif
   { WORKERDEBUGGERMANAGER_CONTRACTID, &kWORKERDEBUGGERMANAGER_CID },
 #ifdef MOZ_WIDGET_GONK
   { SYSTEMWORKERMANAGER_CONTRACTID, &kSYSTEMWORKERMANAGER_CID },
@@ -1350,9 +1339,7 @@ static const mozilla::Module::CategoryEntry kLayoutCategories[] = {
   { "net-channel-event-sinks", "CSPService", CSPSERVICE_CONTRACTID },
   { "net-channel-event-sinks", NS_MIXEDCONTENTBLOCKER_CONTRACTID, NS_MIXEDCONTENTBLOCKER_CONTRACTID },
   { "app-startup", "Script Security Manager", "service," NS_SCRIPTSECURITYMANAGER_CONTRACTID },
-#ifndef MOZ_SIMPLEPUSH
   { "app-startup", "Push Notifier", "service," PUSHNOTIFIER_CONTRACTID },
-#endif
   { "clear-origin-data", "QuotaManagerService", "service," QUOTAMANAGER_SERVICE_CONTRACTID },
   { OBSERVER_TOPIC_IDLE_DAILY, "QuotaManagerService", QUOTAMANAGER_SERVICE_CONTRACTID },
 #ifdef MOZ_WIDGET_GONK

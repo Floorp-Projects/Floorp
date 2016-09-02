@@ -280,10 +280,8 @@ HttpChannelParent::DoAsyncOpen(  const URIParams&           aURI,
   nsCOMPtr<nsIURI> apiRedirectToUri = DeserializeURI(aAPIRedirectToURI);
   nsCOMPtr<nsIURI> topWindowUri = DeserializeURI(aTopWindowURI);
 
-  nsCString uriSpec;
-  uri->GetSpec(uriSpec);
   LOG(("HttpChannelParent RecvAsyncOpen [this=%p uri=%s]\n",
-       this, uriSpec.get()));
+       this, uri->GetSpecOrDefault().get()));
 
   nsresult rv;
 

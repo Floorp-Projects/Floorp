@@ -313,7 +313,7 @@ RemoteOpenFileChild::NotifyListener(nsresult aResult)
   mListener = nullptr;     // release ref to listener
 
   RefPtr<nsJARProtocolHandler> handler(gJarHandler);
-  NS_WARN_IF_FALSE(handler, "nsJARProtocolHandler is already gone!");
+  NS_WARNING_ASSERTION(handler, "nsJARProtocolHandler is already gone!");
 
   if (handler) {
     handler->RemoteOpenFileComplete(this, aResult);

@@ -62,6 +62,7 @@
  *     This
  *     Super
  *     Arguments
+ *     Var Scope
  *   [Operators]
  *     Comparison Operators
  *     Arithmetic Operators

@@ -40,6 +40,8 @@
  */
 
 %{C++
+#include "nsStringGlue.h"
+
 #undef GetPort  // XXX Windows!
 #undef SetPort  // XXX Windows!
 %}
@@ -87,6 +89,22 @@ interface nsIURI : nsISupports
      * Some characters may be escaped.
      */
     attribute AUTF8String spec;
+
+%{ C++
+    // An infallible wrapper for GetSpec() that returns a failure indication
+    // string if GetSpec() fails. It is most useful for creating
+    // logging/warning/error messages produced for human consumption, and when
+    // matching a URI spec against a fixed spec such as about:blank.
+    nsCString GetSpecOrDefault()
+    {
+        nsCString spec;
+        nsresult rv = GetSpec(spec);
+        if (NS_FAILED(rv)) {
+            spec.Assign("[nsIURI::GetSpec failed]");
+        }
+        return spec;
+    }
+%}
 
     /**
      * The prePath (eg. scheme://user:password@host:port) returns the string

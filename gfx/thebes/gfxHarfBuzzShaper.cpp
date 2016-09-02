@@ -1515,7 +1515,8 @@ gfxHarfBuzzShaper::ShapeText(DrawTarget      *aDrawTarget,
     nsresult rv = SetGlyphsFromRun(aDrawTarget, aShapedText, aOffset, aLength,
                                    aText, buffer, aVertical);
 
-    NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "failed to store glyphs into gfxShapedWord");
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                         "failed to store glyphs into gfxShapedWord");
     hb_buffer_destroy(buffer);
 
     return NS_SUCCEEDED(rv);

@@ -1359,7 +1359,7 @@ nsGlobalWindow::~nsGlobalWindow()
   if (!PR_GetEnv("MOZ_QUIET")) {
     nsAutoCString url;
     if (mLastOpenedURI) {
-      mLastOpenedURI->GetSpec(url);
+      url = mLastOpenedURI->GetSpecOrDefault();
 
       // Data URLs can be very long, so truncate to avoid flooding the log.
       const uint32_t maxURLLength = 1000;
@@ -1846,7 +1846,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsGlobalWindow)
     char name[512];
     nsAutoCString uri;
     if (tmp->mDoc && tmp->mDoc->GetDocumentURI()) {
-      tmp->mDoc->GetDocumentURI()->GetSpec(uri);
+      uri = tmp->mDoc->GetDocumentURI()->GetSpecOrDefault();
     }
     SprintfLiteral(name, "nsGlobalWindow # %" PRIu64 " %s %s", tmp->mWindowID,
                    tmp->IsInnerWindow() ? "inner" : "outer", uri.get());
@@ -2993,10 +2993,8 @@ nsGlobalWindow::InnerSetNewDocument(JSContext* aCx, nsIDocument* aDocument)
 
   if (gDOMLeakPRLog && MOZ_LOG_TEST(gDOMLeakPRLog, LogLevel::Debug)) {
     nsIURI *uri = aDocument->GetDocumentURI();
-    nsAutoCString spec;
-    if (uri)
-      uri->GetSpec(spec);
-    PR_LogPrint("DOMWINDOW %p SetNewDocument %s", this, spec.get());
+    PR_LogPrint("DOMWINDOW %p SetNewDocument %s",
+                this, uri ? uri->GetSpecOrDefault().get() : "");
   }
 
   mDoc = aDocument;
@@ -6536,7 +6534,7 @@ nsGlobalWindow::FinishFullscreenChange(bool aIsFullscreen)
     ErrorResult rv;
     mWakeLock = pmService->NewWakeLock(NS_LITERAL_STRING("DOM_Fullscreen"),
                                        AsOuter()->GetCurrentInnerWindow(), rv);
-    NS_WARN_IF_FALSE(!rv.Failed(), "Failed to lock the wakelock");
+    NS_WARNING_ASSERTION(!rv.Failed(), "Failed to lock the wakelock");
     rv.SuppressException();
   } else if (mWakeLock && !mFullScreen) {
     ErrorResult rv;

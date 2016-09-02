@@ -57,7 +57,7 @@ public final class GuestSession {
         manager.cancel(R.id.guestNotification);
     }
 
-    public static void handleIntent(BrowserApp context, Intent intent) {
+    public static void onNotificationIntentReceived(BrowserApp context) {
         context.showGuestModeDialog(BrowserApp.GuestModeDialog.LEAVING);
     }
 

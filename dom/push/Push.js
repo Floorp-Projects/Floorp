@@ -27,7 +27,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "PushService",
 const PUSH_CID = Components.ID("{cde1d019-fad8-4044-b141-65fb4fb7a245}");
 
 /**
- * The Push component runs in the child process and exposes the SimplePush API
+ * The Push component runs in the child process and exposes the Push API
  * to the web application. The PushService running in the parent process is the
  * one actually performing all operations.
  */

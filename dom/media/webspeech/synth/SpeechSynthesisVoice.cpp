@@ -53,7 +53,8 @@ SpeechSynthesisVoice::GetName(nsString& aRetval) const
 {
   DebugOnly<nsresult> rv =
     nsSynthVoiceRegistry::GetInstance()->GetVoiceName(mUri, aRetval);
-  NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Failed to get SpeechSynthesisVoice.name");
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                       "Failed to get SpeechSynthesisVoice.name");
 }
 
 void
@@ -61,7 +62,8 @@ SpeechSynthesisVoice::GetLang(nsString& aRetval) const
 {
   DebugOnly<nsresult> rv =
     nsSynthVoiceRegistry::GetInstance()->GetVoiceLang(mUri, aRetval);
-  NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Failed to get SpeechSynthesisVoice.lang");
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                       "Failed to get SpeechSynthesisVoice.lang");
 }
 
 bool
@@ -70,7 +72,7 @@ SpeechSynthesisVoice::LocalService() const
   bool isLocal;
   DebugOnly<nsresult> rv =
     nsSynthVoiceRegistry::GetInstance()->IsLocalVoice(mUri, &isLocal);
-  NS_WARN_IF_FALSE(
+  NS_WARNING_ASSERTION(
     NS_SUCCEEDED(rv), "Failed to get SpeechSynthesisVoice.localService");
 
   return isLocal;
@@ -82,7 +84,7 @@ SpeechSynthesisVoice::Default() const
   bool isDefault;
   DebugOnly<nsresult> rv =
     nsSynthVoiceRegistry::GetInstance()->IsDefaultVoice(mUri, &isDefault);
-  NS_WARN_IF_FALSE(
+  NS_WARNING_ASSERTION(
     NS_SUCCEEDED(rv), "Failed to get SpeechSynthesisVoice.default");
 
   return isDefault;

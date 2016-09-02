@@ -141,8 +141,9 @@ MobileConnection::MobileConnection(nsPIDOMWindowInner* aWindow,
 
   if (CheckPermission("mobileconnection")) {
     DebugOnly<nsresult> rv = mMobileConnection->RegisterListener(mListener);
-    NS_WARN_IF_FALSE(NS_SUCCEEDED(rv),
-                     "Failed registering mobile connection messages with service");
+    NS_WARNING_ASSERTION(
+      NS_SUCCEEDED(rv),
+      "Failed registering mobile connection messages with service");
     UpdateVoice();
     UpdateData();
 
@@ -158,8 +159,8 @@ MobileConnection::MobileConnection(nsPIDOMWindowInner* aWindow,
     }
 
     rv = mIccHandler->RegisterListener(mListener);
-    NS_WARN_IF_FALSE(NS_SUCCEEDED(rv),
-                     "Failed registering icc messages with service");
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                         "Failed registering icc messages with service");
     UpdateIccId();
   }
 }

@@ -168,7 +168,7 @@ public:
     mImpl->InitCurrentThread();
 
     nsCOMPtr<nsIThread> thisThread;
-    nsThreadManager::get()->GetCurrentThread(getter_AddRefs(thisThread));
+    nsThreadManager::get().GetCurrentThread(getter_AddRefs(thisThread));
 
     do {
       Work work = mImpl->PopWork();

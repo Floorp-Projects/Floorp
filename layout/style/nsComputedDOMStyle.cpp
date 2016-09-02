@@ -4780,7 +4780,7 @@ nsComputedDOMStyle::DoGetHeight()
     calcHeight = true;
 
     const nsStyleDisplay* displayData = StyleDisplay();
-    if (displayData->mDisplay == NS_STYLE_DISPLAY_INLINE &&
+    if (displayData->mDisplay == mozilla::StyleDisplay::Inline &&
         !(mInnerFrame->IsFrameOfType(nsIFrame::eReplaced)) &&
         // An outer SVG frame should behave the same as eReplaced in this case
         mInnerFrame->GetType() != nsGkAtoms::svgOuterSVGFrame) {
@@ -4824,7 +4824,7 @@ nsComputedDOMStyle::DoGetWidth()
     calcWidth = true;
 
     const nsStyleDisplay *displayData = StyleDisplay();
-    if (displayData->mDisplay == NS_STYLE_DISPLAY_INLINE &&
+    if (displayData->mDisplay == mozilla::StyleDisplay::Inline &&
         !(mInnerFrame->IsFrameOfType(nsIFrame::eReplaced)) &&
         // An outer SVG frame should behave the same as eReplaced in this case
         mInnerFrame->GetType() != nsGkAtoms::svgOuterSVGFrame) {
@@ -5426,10 +5426,10 @@ nsComputedDOMStyle::StyleCoordToNSCoord(const nsStyleCoord& aCoord,
         // We can also get a negative value with a percentage value if
         // percentageBase is negative; this isn't expected, but can happen
         // when large length values overflow.
-        NS_WARN_IF_FALSE(percentageBase >= 0,
-                         "percentage base value overflowed to become "
-                         "negative for a property that disallows negative "
-                         "values");
+        NS_WARNING_ASSERTION(
+          percentageBase >= 0,
+          "percentage base value overflowed to become negative for a property "
+          "that disallows negative values");
         MOZ_ASSERT(aCoord.IsCalcUnit() ||
                    (aCoord.HasPercent() && percentageBase < 0),
                    "parser should have rejected value");

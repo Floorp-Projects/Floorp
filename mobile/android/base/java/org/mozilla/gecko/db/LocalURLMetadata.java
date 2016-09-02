@@ -18,7 +18,7 @@ import java.util.Set;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.mozilla.gecko.GeckoAppShell;
-import org.mozilla.gecko.favicons.Favicons;
+import org.mozilla.gecko.icons.decoders.LoadFaviconResult;
 import org.mozilla.gecko.util.ThreadUtils;
 
 import android.content.ContentResolver;
@@ -85,7 +85,7 @@ public class LocalURLMetadata implements URLMetadata {
                     sizes.add(new Integer(keys.next()));
                 }
 
-                final int bestSize = Favicons.selectBestSizeFromList(sizes, preferredSize);
+                final int bestSize = LoadFaviconResult.selectBestSizeFromList(sizes, preferredSize);
                 final String iconURL = icons.getString(Integer.toString(bestSize));
 
                 data.put(URLMetadataTable.TOUCH_ICON_COLUMN, iconURL);

@@ -90,10 +90,7 @@ EnableLogging(const char* aModulesStr)
 static void
 LogDocURI(nsIDocument* aDocumentNode)
 {
-  nsIURI* uri = aDocumentNode->GetDocumentURI();
-  nsAutoCString spec;
-  uri->GetSpec(spec);
-  printf("uri: %s", spec.get());
+  printf("uri: %s", aDocumentNode->GetDocumentURI()->GetSpecOrDefault().get());
 }
 
 static void
