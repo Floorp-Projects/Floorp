@@ -202,15 +202,25 @@ private:
   friend class EventTree;
 };
 
+/**
+ * A base class for events related to tree mutation, either an AccMutation
+ * event, or an AccReorderEvent.
+ */
+class AccTreeMutationEvent : public AccEvent
+{
+public:
+  AccTreeMutationEvent(uint32_t aEventType, Accessible* aTarget) :
+    AccEvent(aEventType, aTarget, eAutoDetect, eCoalesceReorder) {}
+};
 
 /**
  * Base class for show and hide accessible events.
  */
-class AccMutationEvent: public AccEvent
+class AccMutationEvent: public AccTreeMutationEvent
 {
 public:
   AccMutationEvent(uint32_t aEventType, Accessible* aTarget) :
-    AccEvent(aEventType, aTarget, eAutoDetect, eCoalesceReorder)
+    AccTreeMutationEvent(aEventType, aTarget)
   {
     // Don't coalesce these since they are coalesced by reorder event. Coalesce
     // contained text change events.
@@ -298,12 +308,11 @@ private:
 /**
  * Class for reorder accessible event. Takes care about
  */
-class AccReorderEvent : public AccEvent
+class AccReorderEvent : public AccTreeMutationEvent
 {
 public:
   explicit AccReorderEvent(Accessible* aTarget) :
-    AccEvent(::nsIAccessibleEvent::EVENT_REORDER, aTarget,
-             eAutoDetect, eCoalesceReorder) { }
+    AccTreeMutationEvent(::nsIAccessibleEvent::EVENT_REORDER, aTarget) { }
   virtual ~AccReorderEvent() { }
 
   // Event
