@@ -7,6 +7,7 @@
 #include "jit/BaselineJIT.h"
 
 #include "mozilla/BinarySearch.h"
+#include "mozilla/DebugOnly.h"
 #include "mozilla/MemoryReporting.h"
 
 #include "asmjs/WasmInstance.h"
@@ -28,6 +29,7 @@
 #include "vm/Stack-inl.h"
 
 using mozilla::BinarySearchIf;
+using mozilla::DebugOnly;
 
 using namespace js;
 using namespace js::jit;
@@ -995,8 +997,7 @@ BaselineScript::initTraceLogger(JSRuntime* runtime, JSScript* script,
 void
 BaselineScript::toggleTraceLoggerScripts(JSRuntime* runtime, JSScript* script, bool enable)
 {
-    bool engineEnabled = TraceLogTextIdEnabled(TraceLogger_Engine);
-
+    DebugOnly<bool> engineEnabled = TraceLogTextIdEnabled(TraceLogger_Engine);
     MOZ_ASSERT(enable == !traceLoggerScriptsEnabled_);
     MOZ_ASSERT(engineEnabled == traceLoggerEngineEnabled_);
 
@@ -1025,8 +1026,7 @@ BaselineScript::toggleTraceLoggerScripts(JSRuntime* runtime, JSScript* script, b
 void
 BaselineScript::toggleTraceLoggerEngine(bool enable)
 {
-    bool scriptsEnabled = TraceLogTextIdEnabled(TraceLogger_Scripts);
-
+    DebugOnly<bool> scriptsEnabled = TraceLogTextIdEnabled(TraceLogger_Scripts);
     MOZ_ASSERT(enable == !traceLoggerEngineEnabled_);
     MOZ_ASSERT(scriptsEnabled == traceLoggerScriptsEnabled_);
 
