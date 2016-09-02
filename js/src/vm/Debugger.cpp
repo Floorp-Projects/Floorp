@@ -8693,9 +8693,12 @@ DebuggerObject::promiseReasonGetter(JSContext* cx, unsigned argc, Value* vp)
 /* static */ bool
 DebuggerObject::promiseLifetimeGetter(JSContext* cx, unsigned argc, Value* vp)
 {
-    THIS_DEBUGOBJECT_PROMISE(cx, argc, vp, "get promiseLifetime", args, refobj);
+    THIS_DEBUGOBJECT(cx, argc, vp, "get promiseLifetime", args, object);
 
-    args.rval().setNumber(promise->lifetime());
+    if (!DebuggerObject::requirePromise(cx, object))
+        return false;
+
+    args.rval().setNumber(object->promiseLifetime());
     return true;
 }
 
@@ -9413,6 +9416,12 @@ JS::PromiseState
 DebuggerObject::promiseState() const
 {
     return promise()->state();
+}
+
+double
+DebuggerObject::promiseLifetime() const
+{
+    return promise()->lifetime();
 }
 
 /* static */ bool
