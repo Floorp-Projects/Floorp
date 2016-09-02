@@ -21,6 +21,7 @@ GECKO = os.path.realpath(os.path.join(__file__, '..', '..', '..', '..'))
 ARTIFACT_URL = 'https://queue.taskcluster.net/v1/task/{}/artifacts/{}'
 INDEX_URL = 'https://index.taskcluster.net/v1/task/{}'
 
+
 class NightlyFennecTask(base.Task):
 
     def __init__(self, *args, **kwargs):
@@ -56,8 +57,7 @@ class NightlyFennecTask(base.Task):
             'index': 'index',
             'project': project,
             'pushlog_id': params.get('pushlog_id', 0),
-            'base_repository': params['base_repository'] or
-                params['head_repository'],
+            'base_repository': params['base_repository'] or params['head_repository'],
             'docker_image': docker_image,
             'head_repository': params['head_repository'],
             'head_ref': params['head_ref'] or params['head_rev'],
