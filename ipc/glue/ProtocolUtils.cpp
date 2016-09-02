@@ -64,8 +64,6 @@ void ProtocolCloneContext::SetContentParent(ContentParent* aContentParent)
   mContentParent = aContentParent;
 }
 
-static StaticMutex gProtocolMutex;
-
 IToplevelProtocol::IToplevelProtocol(ProtocolId aProtoId)
  : mProtocolId(aProtoId)
 {
@@ -73,8 +71,6 @@ IToplevelProtocol::IToplevelProtocol(ProtocolId aProtoId)
 
 IToplevelProtocol::~IToplevelProtocol()
 {
-  StaticMutexAutoLock al(gProtocolMutex);
-
   if (mTrans) {
     RefPtr<DeleteTask<Transport>> task = new DeleteTask<Transport>(mTrans.release());
     XRE_GetIOMessageLoop()->PostTask(task.forget());
