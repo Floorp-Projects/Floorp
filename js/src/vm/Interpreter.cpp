@@ -3897,6 +3897,12 @@ CASE(JSOP_RESUME)
         GeneratorObject::ResumeKind resumeKind = GeneratorObject::getResumeKind(REGS.pc);
         bool ok = GeneratorObject::resume(cx, activation, gen, val, resumeKind);
         SET_SCRIPT(REGS.fp()->script());
+
+        TraceLoggerThread* logger = TraceLoggerForMainThread(cx->runtime());
+        TraceLoggerEvent scriptEvent(logger, TraceLogger_Scripts, script);
+        TraceLogStartEvent(logger, scriptEvent);
+        TraceLogStartEvent(logger, TraceLogger_Interpreter);
+
         if (!ok)
             goto error;
     }
