@@ -175,3 +175,48 @@ add_task(function* test_two_ids() {
 
   addon.uninstall();
 });
+
+add_task(function* strict_min_star() {
+  const addonId = "strict_min_max@tests.mozilla.org";
+  const MANIFEST = {
+    name: "strict min star test",
+    description: "test strict min with star",
+    manifest_version: 2,
+    version: "1.0",
+  };
+
+  function flushAndRemove(file) {
+    // flush JAR cache and remove the file
+    Services.obs.notifyObservers(file, "flush-cache-entry", null);
+    file.remove(true);
+  }
+
+  // * in min will generate a warning
+  for (let version of ["0.*", "0.*.0"]) {
+    let apps = {
+      applications: {
+        gecko: {
+          id: addonId,
+          strict_min_version: version,
+        },
+      },
+    }
+    let testManifest = Object.assign(apps, MANIFEST);
+
+    let addonDir = writeWebManifestForExtension(testManifest, gTmpD,
+                                                "strict_min_star");
+    let { messages } = yield promiseConsoleOutput(function* () {
+      yield AddonManager.installTemporaryAddon(addonDir);
+    });
+    ok(messages.some(msg => msg.message.includes("The use of '*' in strict_min_version is deprecated")),
+       "Deprecation warning for strict_min_version with '*' was generated");
+
+    let addon = yield promiseAddonByID(addonId);
+
+    notEqual(addon, null, "Add-on is installed");
+    equal(addon.id, addonId, "Add-on has the expected id");
+
+    addon.uninstall();
+    flushAndRemove(addonDir);
+  }
+});
