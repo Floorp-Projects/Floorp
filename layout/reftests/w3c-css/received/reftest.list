@@ -61,7 +61,7 @@ fuzzy(87,180) HTTP(../../..) == css-multicol-1/multicol-columns-005.xht css-mult
 fuzzy(87,180) HTTP(../../..) == css-multicol-1/multicol-columns-006.xht css-multicol-1/multicol-columns-001-ref.xht
 fuzzy(87,180) HTTP(../../..) == css-multicol-1/multicol-columns-007.xht css-multicol-1/multicol-columns-001-ref.xht
 fuzzy(204,930) HTTP(../../..) == css-multicol-1/multicol-columns-invalid-001.xht css-multicol-1/multicol-columns-invalid-001-ref.xht
-fails HTTP(../../..) == css-multicol-1/multicol-columns-invalid-002.xht css-multicol-1/multicol-columns-invalid-001-ref.xht
+fails-if(OSX||winWidget) HTTP(../../..) == css-multicol-1/multicol-columns-invalid-002.xht css-multicol-1/multicol-columns-invalid-001-ref.xht
 fuzzy(204,930) HTTP(../../..) == css-multicol-1/multicol-columns-toolong-001.xht css-multicol-1/multicol-columns-invalid-001-ref.xht
 fuzzy(116,530) HTTP(../../..) == css-multicol-1/multicol-containing-001.xht css-multicol-1/multicol-containing-001-ref.xht
 fuzzy(215,241) HTTP(../../..) == css-multicol-1/multicol-containing-002.xht css-multicol-1/multicol-containing-002-ref.xht
@@ -70,7 +70,7 @@ fails HTTP(../../..) == css-multicol-1/multicol-count-002.xht css-multicol-1/mul
 fails HTTP(../../..) == css-multicol-1/multicol-count-computed-001.xht css-multicol-1/multicol-count-computed-ref.xht
 fails HTTP(../../..) == css-multicol-1/multicol-count-computed-002.xht css-multicol-1/multicol-count-computed-2-ref.xht
 fails HTTP(../../..) == css-multicol-1/multicol-count-computed-003.xht css-multicol-1/multicol-count-computed-003-ref.xht
-fuzzy(112,861) HTTP(../../..) == css-multicol-1/multicol-count-computed-004.xht css-multicol-1/multicol-count-computed-004-ref.xht
+fuzzy-if(winWidget||OSX||gtkWidget,112,861) fails-if(Android) HTTP(../../..) == css-multicol-1/multicol-count-computed-004.xht css-multicol-1/multicol-count-computed-004-ref.xht
 fails HTTP(../../..) == css-multicol-1/multicol-count-computed-005.xht css-multicol-1/multicol-count-computed-003-ref.xht
 fails HTTP(../../..) == css-multicol-1/multicol-count-large-001.xht css-multicol-1/multicol-count-large-ref.xht
 fuzzy(255,132) HTTP(../../..) == css-multicol-1/multicol-count-large-002.xht css-multicol-1/multicol-count-large-2-ref.xht
@@ -89,11 +89,11 @@ fails == css-multicol-1/multicol-fill-auto-block-children-002.xht css-multicol-1
 fails HTTP(../../..) == css-multicol-1/multicol-fill-auto.xht css-multicol-1/multicol-fill-ref.xht
 fuzzy(116,80) HTTP(../../..) == css-multicol-1/multicol-fill-balance-001.xht css-multicol-1/multicol-fill-balance-001-ref.xht
 fuzzy(116,821) HTTP(../../..) == css-multicol-1/multicol-gap-000.xht css-multicol-1/multicol-gap-000-ref.xht
-fuzzy(116,290) HTTP(../../..) == css-multicol-1/multicol-gap-001.xht css-multicol-1/multicol-gap-001-ref.xht
+fuzzy(255,290) HTTP(../../..) == css-multicol-1/multicol-gap-001.xht css-multicol-1/multicol-gap-001-ref.xht
 fuzzy(204,930) HTTP(../../..) == css-multicol-1/multicol-gap-002.xht css-multicol-1/multicol-gap-002-ref.xht
 fuzzy(204,930) HTTP(../../..) == css-multicol-1/multicol-gap-003.xht css-multicol-1/multicol-gap-002-ref.xht
 fuzzy(107,1823) HTTP(../../..) == css-multicol-1/multicol-gap-fraction-001.xht css-multicol-1/multicol-gap-fraction-001-ref.xht
-fuzzy(204,1048) HTTP(../../..) == css-multicol-1/multicol-gap-large-001.xht css-multicol-1/multicol-gap-large-001-ref.xht
+fuzzy-if(winWidget||OSX||gtkWidget,204,1048) fails-if(Android) HTTP(../../..) == css-multicol-1/multicol-gap-large-001.xht css-multicol-1/multicol-gap-large-001-ref.xht
 fuzzy(225,920) HTTP(../../..) == css-multicol-1/multicol-gap-large-002.xht css-multicol-1/multicol-gap-large-002-ref.xht
 fuzzy(204,930) HTTP(../../..) == css-multicol-1/multicol-gap-negative-001.xht css-multicol-1/multicol-gap-002-ref.xht
 HTTP(../../..) == css-multicol-1/multicol-height-001.xht css-multicol-1/multicol-height-001-ref.xht
@@ -103,14 +103,14 @@ fuzzy(116,1893) HTTP(../../..) == css-multicol-1/multicol-inherit-002.xht css-mu
 fails HTTP(../../..) == css-multicol-1/multicol-inherit-003.xht css-multicol-1/multicol-inherit-3-ref.xht
 fails HTTP(../../..) == css-multicol-1/multicol-inherit-004.xht css-multicol-1/multicol-inherit-4-ref.xht
 fuzzy(96,264) HTTP(../../..) == css-multicol-1/multicol-list-item-001.xht css-multicol-1/multicol-list-item-001-ref.xht
-fuzzy(73,300) HTTP(../../..) == css-multicol-1/multicol-margin-001.xht css-multicol-1/ref-filled-green-100px-square.xht
-fuzzy(73,300) HTTP(../../..) == css-multicol-1/multicol-margin-002.xht css-multicol-1/ref-filled-green-100px-square.xht
+fuzzy(73,1200) HTTP(../../..) == css-multicol-1/multicol-margin-001.xht css-multicol-1/ref-filled-green-100px-square.xht
+fuzzy(73,1200) HTTP(../../..) == css-multicol-1/multicol-margin-002.xht css-multicol-1/ref-filled-green-100px-square.xht
 fuzzy(243,3322) HTTP(../../..) == css-multicol-1/multicol-margin-child-001.xht css-multicol-1/multicol-margin-child-001-ref.xht
 fuzzy(255,4008) HTTP(../../..) == css-multicol-1/multicol-nested-002.xht css-multicol-1/multicol-nested-002-ref.xht
 fuzzy(255,4109) HTTP(../../..) == css-multicol-1/multicol-nested-005.xht css-multicol-1/multicol-nested-005-ref.xht
-fails HTTP(../../..) == css-multicol-1/multicol-nested-column-rule-001.xht css-multicol-1/multicol-nested-column-rule-001-ref.xht
+fuzzy(225,13600) HTTP(../../..) == css-multicol-1/multicol-nested-column-rule-001.xht css-multicol-1/multicol-nested-column-rule-001-ref.xht
 fuzzy(204,2463) HTTP(../../..) == css-multicol-1/multicol-nested-margin-001.xht css-multicol-1/multicol-nested-margin-001-ref.xht
-fails HTTP(../../..) == css-multicol-1/multicol-nested-margin-002.xht css-multicol-1/multicol-nested-margin-002-ref.xht
+fails-if(OSX||winWidget) HTTP(../../..) == css-multicol-1/multicol-nested-margin-002.xht css-multicol-1/multicol-nested-margin-002-ref.xht
 fuzzy(204,2371) HTTP(../../..) == css-multicol-1/multicol-nested-margin-003.xht css-multicol-1/multicol-nested-margin-003-ref.xht
 fuzzy(225,2529) HTTP(../../..) == css-multicol-1/multicol-nested-margin-004.xht css-multicol-1/multicol-nested-margin-004-ref.xht
 fuzzy(225,2529) HTTP(../../..) == css-multicol-1/multicol-nested-margin-005.xht css-multicol-1/multicol-nested-margin-004-ref.xht
@@ -120,27 +120,27 @@ fuzzy-if(OSX,61,2) HTTP(../../..) == css-multicol-1/multicol-reduce-000.xht css-
 fuzzy-if(OSX,8,20) HTTP(../../..) == css-multicol-1/multicol-rule-000.xht css-multicol-1/multicol-rule-000-ref.xht
 fuzzy(116,1584) HTTP(../../..) == css-multicol-1/multicol-rule-001.xht css-multicol-1/multicol-rule-001-ref.xht
 fails HTTP(../../..) == css-multicol-1/multicol-rule-002.xht css-multicol-1/multicol-rule-ref.xht
-fails HTTP(../../..) == css-multicol-1/multicol-rule-003.xht css-multicol-1/multicol-rule-003-ref.xht
+fails-if(OSX||winWidget) HTTP(../../..) == css-multicol-1/multicol-rule-003.xht css-multicol-1/multicol-rule-003-ref.xht
 HTTP(../../..) == css-multicol-1/multicol-rule-004.xht css-multicol-1/multicol-rule-004-ref.xht
-fails HTTP(../../..) == css-multicol-1/multicol-rule-color-001.xht css-multicol-1/multicol-rule-color-001-ref.xht
-fails HTTP(../../..) == css-multicol-1/multicol-rule-color-inherit-001.xht css-multicol-1/multicol-rule-color-inherit-001-ref.xht
+fails-if(OSX||winWidget) HTTP(../../..) == css-multicol-1/multicol-rule-color-001.xht css-multicol-1/multicol-rule-color-001-ref.xht
+HTTP(../../..) == css-multicol-1/multicol-rule-color-inherit-001.xht css-multicol-1/multicol-rule-color-inherit-001-ref.xht
 fails HTTP(../../..) == css-multicol-1/multicol-rule-color-inherit-002.xht css-multicol-1/multicol-rule-color-inherit-001-ref.xht
 fuzzy(106,354) HTTP(../../..) == css-multicol-1/multicol-rule-dashed-000.xht css-multicol-1/multicol-rule-dashed-000-ref.xht
 fuzzy(106,354) HTTP(../../..) == css-multicol-1/multicol-rule-dotted-000.xht css-multicol-1/multicol-rule-dotted-000-ref.xht
 fuzzy(106,354) HTTP(../../..) == css-multicol-1/multicol-rule-double-000.xht css-multicol-1/multicol-rule-double-000-ref.xht
-fails HTTP(../../..) == css-multicol-1/multicol-rule-fraction-001.xht css-multicol-1/multicol-rule-fraction-001-ref.xht
-fails HTTP(../../..) == css-multicol-1/multicol-rule-fraction-002.xht css-multicol-1/multicol-rule-fraction-002-ref.xht
+fails-if(OSX||winWidget) HTTP(../../..) == css-multicol-1/multicol-rule-fraction-001.xht css-multicol-1/multicol-rule-fraction-001-ref.xht
+fails-if(OSX||winWidget) HTTP(../../..) == css-multicol-1/multicol-rule-fraction-002.xht css-multicol-1/multicol-rule-fraction-002-ref.xht
 fails HTTP(../../..) == css-multicol-1/multicol-rule-fraction-003.xht css-multicol-1/multicol-rule-fraction-3-ref.xht
 fuzzy(106,354) HTTP(../../..) == css-multicol-1/multicol-rule-groove-000.xht css-multicol-1/multicol-rule-groove-000-ref.xht
 fuzzy(94,256) HTTP(../../..) == css-multicol-1/multicol-rule-hidden-000.xht css-multicol-1/multicol-rule-hidden-000-ref.xht
 fuzzy(106,354) HTTP(../../..) == css-multicol-1/multicol-rule-inset-000.xht css-multicol-1/multicol-rule-ridge-000-ref.xht
-fails HTTP(../../..) == css-multicol-1/multicol-rule-large-001.xht css-multicol-1/multicol-rule-large-001-ref.xht
+fuzzy(255,2808) HTTP(../../..) == css-multicol-1/multicol-rule-large-001.xht css-multicol-1/multicol-rule-large-001-ref.xht
 fuzzy(94,256) HTTP(../../..) == css-multicol-1/multicol-rule-none-000.xht css-multicol-1/multicol-rule-hidden-000-ref.xht
 fuzzy(106,354) HTTP(../../..) == css-multicol-1/multicol-rule-outset-000.xht css-multicol-1/multicol-rule-groove-000-ref.xht
 HTTP(../../..) == css-multicol-1/multicol-rule-percent-001.xht css-multicol-1/multicol-containing-002-ref.xht
 fails HTTP(../../..) == css-multicol-1/multicol-rule-px-001.xht css-multicol-1/multicol-rule-ref.xht
 fuzzy(106,354) HTTP(../../..) == css-multicol-1/multicol-rule-ridge-000.xht css-multicol-1/multicol-rule-ridge-000-ref.xht
-fails HTTP(../../..) == css-multicol-1/multicol-rule-samelength-001.xht css-multicol-1/multicol-rule-samelength-001-ref.xht
+HTTP(../../..) == css-multicol-1/multicol-rule-samelength-001.xht css-multicol-1/multicol-rule-samelength-001-ref.xht
 HTTP(../../..) == css-multicol-1/multicol-rule-shorthand-001.xht css-multicol-1/multicol-rule-samelength-001-ref.xht
 fuzzy(106,354) HTTP(../../..) == css-multicol-1/multicol-rule-solid-000.xht css-multicol-1/multicol-rule-solid-000-ref.xht
 fails HTTP(../../..) == css-multicol-1/multicol-rule-stacking-001.xht css-multicol-1/multicol-rule-stacking-ref.xht
