@@ -183,6 +183,11 @@ class TraceLoggerThread
     // event.
     uint32_t iteration_;
 
+#ifdef DEBUG
+    typedef Vector<uint32_t, 1, js::SystemAllocPolicy > GraphStack;
+    GraphStack graphStack;
+#endif
+
   public:
     AutoTraceLog* top;
 
