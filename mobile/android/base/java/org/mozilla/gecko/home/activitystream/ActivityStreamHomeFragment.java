@@ -29,7 +29,10 @@ public class ActivityStreamHomeFragment
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
-        activityStream = (ActivityStream) inflater.inflate(R.layout.activity_stream, container, false);
+        if (activityStream == null) {
+            activityStream = (ActivityStream) inflater.inflate(R.layout.activity_stream, container, false);
+            activityStream.setOnUrlOpenListener(mUrlOpenListener);
+        }
 
         return activityStream;
     }

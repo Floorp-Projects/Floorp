@@ -173,7 +173,6 @@ add_task(function *test_uploading() {
     engine.resetClient();
 
     ping = yield sync_engine_and_validate_telem(engine, false);
-
     equal(ping.engines.length, 1);
     equal(ping.engines[0].name, "bookmarks");
     equal(ping.engines[0].outgoing.length, 1);
@@ -444,3 +443,53 @@ add_task(function* test_nserror() {
     yield cleanAndGo(server);
   }
 });
+
+
+add_identity_test(this, function *test_discarding() {
+  let helper = track_collections_helper();
+  let upd = helper.with_updated_collection;
+  let telem = get_sync_test_telemetry();
+  telem.maxPayloadCount = 2;
+  telem.submissionInterval = Infinity;
+  let oldSubmit = telem.submit;
+
+  let server;
+  try {
+
+    yield configureIdentity({ username: "johndoe" });
+    let handlers = {
+      "/1.1/johndoe/info/collections": helper.handler,
+      "/1.1/johndoe/storage/crypto/keys": upd("crypto", new ServerWBO("keys").handler()),
+      "/1.1/johndoe/storage/meta/global": upd("meta",  new ServerWBO("global").handler())
+    };
+
+    let collections = ["clients", "bookmarks", "forms", "history", "passwords", "prefs", "tabs"];
+
+    for (let coll of collections) {
+      handlers["/1.1/johndoe/storage/" + coll] = upd(coll, new ServerCollection({}, true).handler());
+    }
+
+    server = httpd_setup(handlers);
+    Service.serverURL = server.baseURI;
+    telem.submit = () => ok(false, "Submitted telemetry ping when we should not have");
+
+    for (let i = 0; i < 5; ++i) {
+      Service.sync();
+    }
+    telem.submit = oldSubmit;
+    telem.submissionInterval = -1;
+    let ping = yield sync_and_validate_telem(true, true); // with this we've synced 6 times
+    equal(ping.syncs.length, 2);
+    equal(ping.discarded, 4);
+  } finally {
+    telem.maxPayloadCount = 500;
+    telem.submissionInterval = -1;
+    telem.submit = oldSubmit;
+    if (server) {
+      yield new Promise(resolve => server.stop(resolve));
+    }
+  }
+})
+
+
+

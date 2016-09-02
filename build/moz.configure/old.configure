@@ -270,7 +270,6 @@ def old_configure_options(*options):
     '--with-intl-api',
     '--with-ios-sdk',
     '--with-jitreport-granularity',
-    '--with-linux-headers',
     '--with-macbundlename-prefix',
     '--with-macos-private-frameworks',
     '--with-macos-sdk',

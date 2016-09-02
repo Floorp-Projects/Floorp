@@ -16,7 +16,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 
 import ch.boye.httpclientandroidlib.entity.ContentProducer;
@@ -28,9 +27,9 @@ import ch.boye.httpclientandroidlib.entity.EntityTemplate;
 public class RecordUploadRunnable implements Runnable {
     public final String LOG_TAG = "RecordUploadRunnable";
 
-    public final static byte[] RECORDS_START = "[".getBytes(StandardCharsets.UTF_8);
-    public final static byte[] RECORD_SEPARATOR = ",".getBytes(StandardCharsets.UTF_8);
-    public final static byte[] RECORDS_END = "]".getBytes(StandardCharsets.UTF_8);
+    public final static byte[] RECORDS_START = { 91 };      // [ in UTF-8
+    public final static byte[] RECORD_SEPARATOR = { 44 };   // , in UTF-8
+    public final static byte[] RECORDS_END = { 93 };        // ] in UTF-8
 
     private static final String QUERY_PARAM_BATCH = "batch";
     private static final String QUERY_PARAM_TRUE = "true";

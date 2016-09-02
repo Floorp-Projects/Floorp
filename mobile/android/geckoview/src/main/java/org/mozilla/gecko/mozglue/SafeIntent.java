@@ -12,6 +12,8 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 
+import java.util.ArrayList;
+
 /**
  * External applications can pass values into Intents that can cause us to crash: in defense,
  * we wrap {@link Intent} and catch the exceptions they may force us to throw. See bug 1090385
@@ -24,6 +26,18 @@ public class SafeIntent {
 
     public SafeIntent(final Intent intent) {
         this.intent = intent;
+    }
+
+    public boolean hasExtra(String name) {
+        try {
+            return intent.hasExtra(name);
+        } catch (OutOfMemoryError e) {
+            Log.w(LOGTAG, "Couldn't determine if intent had an extra: OOM. Malformed?");
+            return false;
+        } catch (RuntimeException e) {
+            Log.w(LOGTAG, "Couldn't determine if intent had an extra.", e);
+            return false;
+        }
     }
 
     public boolean getBooleanExtra(final String name, final boolean defaultValue) {
@@ -81,6 +95,18 @@ public class SafeIntent {
     public String getDataString() {
         try {
             return intent.getDataString();
+        } catch (OutOfMemoryError e) {
+            Log.w(LOGTAG, "Couldn't get intent data string: OOM. Malformed?");
+            return null;
+        } catch (RuntimeException e) {
+            Log.w(LOGTAG, "Couldn't get intent data string.", e);
+            return null;
+        }
+    }
+
+    public ArrayList<String> getStringArrayListExtra(final String name) {
+        try {
+            return intent.getStringArrayListExtra(name);
         } catch (OutOfMemoryError e) {
             Log.w(LOGTAG, "Couldn't get intent data string: OOM. Malformed?");
             return null;

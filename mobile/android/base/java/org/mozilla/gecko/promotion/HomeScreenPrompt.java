@@ -11,7 +11,6 @@ import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.MotionEvent;
@@ -26,15 +25,16 @@ import org.mozilla.gecko.R;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.db.UrlAnnotations;
-import org.mozilla.gecko.favicons.Favicons;
-import org.mozilla.gecko.favicons.OnFaviconLoadedListener;
+import org.mozilla.gecko.icons.IconCallback;
+import org.mozilla.gecko.icons.IconResponse;
+import org.mozilla.gecko.icons.Icons;
 import org.mozilla.gecko.Experiments;
 import org.mozilla.gecko.util.ThreadUtils;
 
 /**
  * Prompt to promote adding the current website to the home screen.
  */
-public class HomeScreenPrompt extends Locales.LocaleAwareActivity implements OnFaviconLoadedListener {
+public class HomeScreenPrompt extends Locales.LocaleAwareActivity implements IconCallback {
     private static final String EXTRA_TITLE = "title";
     private static final String EXTRA_URL = "url";
 
@@ -141,12 +141,13 @@ public class HomeScreenPrompt extends Locales.LocaleAwareActivity implements OnF
     }
 
     private void loadShortcutIcon() {
-        ThreadUtils.postToBackgroundThread(new Runnable() {
-            @Override
-            public void run() {
-                Favicons.getPreferredIconForHomeScreenShortcut(HomeScreenPrompt.this, url, HomeScreenPrompt.this);
-            }
-        });
+        Icons.with(this)
+                .pageUrl(url)
+                .skipNetwork()
+                .skipMemory()
+                .forLauncherIcon()
+                .build()
+                .execute(this);
     }
 
     private void slideIn() {
@@ -237,16 +238,7 @@ public class HomeScreenPrompt extends Locales.LocaleAwareActivity implements OnF
     }
 
     @Override
-    public void onFaviconLoaded(String url, String faviconURL, final Bitmap favicon) {
-        if (favicon == null) {
-            return;
-        }
-
-        ThreadUtils.postToUiThread(new Runnable() {
-            @Override
-            public void run() {
-                iconView.setImageBitmap(favicon);
-            }
-        });
+    public void onIconResponse(IconResponse response) {
+        iconView.setImageBitmap(response.getBitmap());
     }
 }
