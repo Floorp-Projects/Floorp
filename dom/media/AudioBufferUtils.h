@@ -83,8 +83,9 @@ public:
     // all the streams were ended (no mixer callback occured).
     // XXX Remove this warning, or find a way to avoid it if the mixer callback
     // isn't called.
-    NS_WARN_IF_FALSE(Available() == 0 || mSampleWriteOffset == 0,
-            "Audio Buffer is not full by the end of the callback.");
+    NS_WARNING_ASSERTION(
+      Available() == 0 || mSampleWriteOffset == 0,
+      "Audio Buffer is not full by the end of the callback.");
     // Make sure the data returned is always set and not random!
     if (Available()) {
       PodZero(mBuffer + mSampleWriteOffset, FramesToSamples(CHANNELS, Available()));

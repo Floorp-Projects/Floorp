@@ -759,7 +759,7 @@ WinUtils::WaitForMessage(DWORD aTimeoutMs)
     }
     DWORD result = ::MsgWaitForMultipleObjectsEx(0, NULL, aTimeoutMs - elapsed,
                                                  MOZ_QS_ALLEVENT, waitFlags);
-    NS_WARN_IF_FALSE(result != WAIT_FAILED, "Wait failed");
+    NS_WARNING_ASSERTION(result != WAIT_FAILED, "Wait failed");
     if (result == WAIT_TIMEOUT) {
       break;
     }

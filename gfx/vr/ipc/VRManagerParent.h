@@ -33,12 +33,6 @@ public:
   static bool CreateForGPUProcess(Endpoint<PVRManagerParent>&& aEndpoint);
   static bool CreateForContent(Endpoint<PVRManagerParent>&& aEndpoint);
 
-  // Overriden from IToplevelProtocol
-  ipc::IToplevelProtocol*
-  CloneToplevel(const InfallibleTArray<ipc::ProtocolFdMapping>& aFds,
-                base::ProcessHandle aPeerProcess,
-                mozilla::ipc::ProtocolCloneContext* aCtx) override;
-
   virtual base::ProcessId GetChildProcessId() override;
 
   // ShmemAllocator

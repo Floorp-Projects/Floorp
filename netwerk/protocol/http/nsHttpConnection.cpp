@@ -1254,8 +1254,9 @@ nsHttpConnection::ReadTimeoutTick(PRIntervalTime now)
     uint32_t nextTickAfter = UINT32_MAX;
     // Timeout if the response is taking too long to arrive.
     if (mResponseTimeoutEnabled) {
-        NS_WARN_IF_FALSE(gHttpHandler->ResponseTimeoutEnabled(),
-                         "Timing out a response, but response timeout is disabled!");
+        NS_WARNING_ASSERTION(
+            gHttpHandler->ResponseTimeoutEnabled(),
+            "Timing out a response, but response timeout is disabled!");
 
         PRIntervalTime initialResponseDelta = now - mLastWriteTime;
 

@@ -93,6 +93,14 @@ public:
   APZCTreeManager();
 
   /**
+   * Initializes the global state used in AsyncPanZoomController.
+   * This is normally called when it is first needed in the constructor
+   * of APZCTreeManager, but can be called manually to force it to be
+   * initialized earlier.
+   */
+  static void InitializeGlobalState();
+
+  /**
    * Rebuild the hit-testing tree based on the layer update that just came up.
    * Preserve nodes and APZC instances where possible, but retire those whose
    * layers are no longer in the layer tree.

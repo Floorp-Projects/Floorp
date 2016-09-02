@@ -194,8 +194,8 @@ nsSMILCSSValueType::IsEqual(const nsSMILValue& aLeft,
   if (leftWrapper) {
     if (rightWrapper) {
       // Both non-null
-      NS_WARN_IF_FALSE(leftWrapper != rightWrapper,
-                       "Two nsSMILValues with matching ValueWrapper ptr");
+      NS_WARNING_ASSERTION(leftWrapper != rightWrapper,
+                           "Two nsSMILValues with matching ValueWrapper ptr");
       return (leftWrapper->mPropID == rightWrapper->mPropID &&
               leftWrapper->mCSSValue == rightWrapper->mCSSValue);
     }

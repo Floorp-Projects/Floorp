@@ -249,7 +249,7 @@ AutoSetRestoreSVGContextPaint::AutoSetRestoreSVGContextPaint(
   DebugOnly<nsresult> res =
     mSVGDocument->SetProperty(nsGkAtoms::svgContextPaint, aContextPaint);
 
-  NS_WARN_IF_FALSE(NS_SUCCEEDED(res), "Failed to set context paint");
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(res), "Failed to set context paint");
 }
 
 AutoSetRestoreSVGContextPaint::~AutoSetRestoreSVGContextPaint()
@@ -259,7 +259,7 @@ AutoSetRestoreSVGContextPaint::~AutoSetRestoreSVGContextPaint()
     DebugOnly<nsresult> res =
       mSVGDocument->SetProperty(nsGkAtoms::svgContextPaint, mOuterContextPaint);
 
-    NS_WARN_IF_FALSE(NS_SUCCEEDED(res), "Failed to restore context paint");
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(res), "Failed to restore context paint");
   }
 }
 

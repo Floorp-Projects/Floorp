@@ -1231,8 +1231,9 @@ CanTextCrossFrameBoundary(nsIFrame* aFrame, nsIAtom* aType)
       result.mFrameToScan = aFrame->PrincipalChildList().FirstChild();
       result.mOverflowFrameToScan =
         aFrame->GetChildList(nsIFrame::kOverflowList).FirstChild();
-      NS_WARN_IF_FALSE(!result.mOverflowFrameToScan,
-                       "Scanning overflow inline frames is something we should avoid");
+      NS_WARNING_ASSERTION(
+        !result.mOverflowFrameToScan,
+        "Scanning overflow inline frames is something we should avoid");
       result.mScanSiblings = true;
       result.mTextRunCanCrossFrameBoundary = true;
       result.mLineBreakerCanCrossFrameBoundary = true;
@@ -5219,10 +5220,10 @@ nsTextFrame::GetTextDecorations(
     // inline-stack, inline-box, inline-grid), we're done.
     // If we're on a ruby frame other than ruby text container, we
     // should continue.
-    uint8_t display = f->GetDisplay();
-    if (display != NS_STYLE_DISPLAY_INLINE &&
+    mozilla::StyleDisplay display = f->GetDisplay();
+    if (display != mozilla::StyleDisplay::Inline &&
         (!nsStyleDisplay::IsRubyDisplayType(display) ||
-         display == NS_STYLE_DISPLAY_RUBY_TEXT_CONTAINER) &&
+         display == mozilla::StyleDisplay::RubyTextContainer) &&
         nsStyleDisplay::IsDisplayTypeInlineOutside(display)) {
       break;
     }
@@ -9480,8 +9481,8 @@ nsTextFrame::TrimTrailingWhiteSpace(DrawTarget* aDrawTarget)
   // Maybe if we passed a maxTextLength? But that only happens at direction
   // changes (so we wouldn't kern across the boundary) or for first-letter
   // (which always fits because it starts the line!).
-  NS_WARN_IF_FALSE(result.mDeltaWidth >= 0,
-                   "Negative deltawidth, something odd is happening");
+  NS_WARNING_ASSERTION(result.mDeltaWidth >= 0,
+                       "Negative deltawidth, something odd is happening");
 
 #ifdef NOISY_TRIM
   ListTag(stdout);

@@ -20,10 +20,10 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSITHREADMANAGER
 
-  static nsThreadManager* get()
+  static nsThreadManager& get()
   {
     static nsThreadManager sInstance;
-    return &sInstance;
+    return sInstance;
   }
 
   nsresult Init();
@@ -34,11 +34,11 @@ public:
 
   // Called by nsThread to inform the ThreadManager it exists.  This method
   // must be called when the given thread is the current thread.
-  void RegisterCurrentThread(nsThread* aThread);
+  void RegisterCurrentThread(nsThread& aThread);
 
   // Called by nsThread to inform the ThreadManager it is going away.  This
   // method must be called when the given thread is the current thread.
-  void UnregisterCurrentThread(nsThread* aThread);
+  void UnregisterCurrentThread(nsThread& aThread);
 
   // Returns the current thread.  Returns null if OOM or if ThreadManager isn't
   // initialized.
@@ -68,7 +68,7 @@ private:
   nsRefPtrHashtable<nsPtrHashKey<PRThread>, nsThread> mThreadsByPRThread;
   unsigned            mCurThreadIndex;  // thread-local-storage index
   RefPtr<nsThread>  mMainThread;
-  PRThread*           mMainPRThread;
+  PRThread*         mMainPRThread;
   mozilla::OffTheBooksMutex mLock;  // protects tables
   mozilla::Atomic<bool> mInitialized;
 

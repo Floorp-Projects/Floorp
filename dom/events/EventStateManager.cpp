@@ -523,12 +523,12 @@ EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
     return NS_ERROR_NULL_POINTER;
   }
 
-  NS_WARN_IF_FALSE(!aTargetFrame ||
-                   !aTargetFrame->GetContent() ||
-                   aTargetFrame->GetContent() == aTargetContent ||
-                   aTargetFrame->GetContent()->GetFlattenedTreeParent() == aTargetContent ||
-                   aTargetFrame->IsGeneratedContentFrame(),
-                   "aTargetFrame should be related with aTargetContent");
+  NS_WARNING_ASSERTION(
+    !aTargetFrame || !aTargetFrame->GetContent() ||
+    aTargetFrame->GetContent() == aTargetContent ||
+    aTargetFrame->GetContent()->GetFlattenedTreeParent() == aTargetContent ||
+    aTargetFrame->IsGeneratedContentFrame(),
+    "aTargetFrame should be related with aTargetContent");
 #if DEBUG
   if (aTargetFrame && aTargetFrame->IsGeneratedContentFrame()) {
     nsCOMPtr<nsIContent> targetContent;
@@ -3022,7 +3022,7 @@ EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
           // If the mousedown happened inside a popup, don't
           // try to set focus on one of its containing elements
           const nsStyleDisplay* display = currFrame->StyleDisplay();
-          if (display->mDisplay == NS_STYLE_DISPLAY_POPUP) {
+          if (display->mDisplay == StyleDisplay::Popup) {
             newFocus = nullptr;
             break;
           }

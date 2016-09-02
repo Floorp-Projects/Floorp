@@ -814,7 +814,7 @@ nsSynthVoiceRegistry::SpeakImpl(VoiceData* aVoice,
   SpeechServiceType serviceType;
 
   DebugOnly<nsresult> rv = aVoice->mService->GetServiceType(&serviceType);
-  NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Failed to get speech service type");
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to get speech service type");
 
   if (serviceType == nsISpeechService::SERVICETYPE_INDIRECT_AUDIO) {
     aTask->InitIndirectAudio();

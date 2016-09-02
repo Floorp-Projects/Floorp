@@ -117,10 +117,9 @@ CSPService::ShouldLoad(uint32_t aContentType,
   }
 
   if (MOZ_LOG_TEST(gCspPRLog, LogLevel::Debug)) {
-    nsAutoCString location;
-    aContentLocation->GetSpec(location);
     MOZ_LOG(gCspPRLog, LogLevel::Debug,
-           ("CSPService::ShouldLoad called for %s", location.get()));
+           ("CSPService::ShouldLoad called for %s",
+           aContentLocation->GetSpecOrDefault().get()));
   }
 
   // default decision, CSP can revise it if there's a policy to enforce
@@ -210,10 +209,9 @@ CSPService::ShouldProcess(uint32_t         aContentType,
   }
 
   if (MOZ_LOG_TEST(gCspPRLog, LogLevel::Debug)) {
-    nsAutoCString location;
-    aContentLocation->GetSpec(location);
     MOZ_LOG(gCspPRLog, LogLevel::Debug,
-        ("CSPService::ShouldProcess called for %s", location.get()));
+            ("CSPService::ShouldProcess called for %s",
+            aContentLocation->GetSpecOrDefault().get()));
   }
 
   // ShouldProcess is only relevant to TYPE_OBJECT, so let's convert the

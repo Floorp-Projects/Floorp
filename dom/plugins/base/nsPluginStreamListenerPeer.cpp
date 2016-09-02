@@ -310,11 +310,9 @@ nsresult nsPluginStreamListenerPeer::Initialize(nsIURI *aURL,
                                                 nsNPAPIPluginStreamListener* aListener)
 {
 #ifdef PLUGIN_LOGGING
-  nsAutoCString urlSpec;
-  if (aURL != nullptr) aURL->GetSpec(urlSpec);
-
   MOZ_LOG(nsPluginLogging::gPluginLog, PLUGIN_LOG_NORMAL,
-         ("nsPluginStreamListenerPeer::Initialize instance=%p, url=%s\n", aInstance, urlSpec.get()));
+          ("nsPluginStreamListenerPeer::Initialize instance=%p, url=%s\n",
+           aInstance, aURL ? aURL->GetSpecOrDefault().get() : ""));
 
   PR_LogFlush();
 #endif
