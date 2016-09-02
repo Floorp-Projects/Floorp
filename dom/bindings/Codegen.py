@@ -3487,6 +3487,24 @@ def InitMemberSlots(descriptor, failureCode):
         failureCode=failureCode)
 
 
+def SetImmutablePrototype(descriptor, failureCode):
+    if not descriptor.hasNonOrdinaryGetPrototypeOf():
+        return ""
+
+    return fill(
+        """
+        bool succeeded;
+        if (!JS_SetImmutablePrototype(aCx, aReflector, &succeeded)) {
+          ${failureCode}
+        }
+        MOZ_ASSERT(succeeded,
+                   "Making a fresh reflector instance have an immutable "
+                   "prototype can internally fail, but it should never be "
+                   "unsuccessful");
+        """,
+        failureCode=failureCode)
+
+
 def DeclareProto():
     """
     Declare the canonicalProto and proto we have for our wrapping operation.
@@ -3584,6 +3602,7 @@ class CGWrapWithCacheMethod(CGAbstractMethod):
             aCache->SetWrapper(aReflector);
             $*{unforgeable}
             $*{slots}
+            $*{setImmutablePrototype}
             creator.InitializationSucceeded();
 
             MOZ_ASSERT(aCache->GetWrapperPreserveColor() &&
@@ -3606,6 +3625,8 @@ class CGWrapWithCacheMethod(CGAbstractMethod):
             unforgeable=CopyUnforgeablePropertiesToInstance(self.descriptor,
                                                             failureCode),
             slots=InitMemberSlots(self.descriptor, failureCode),
+            setImmutablePrototype=SetImmutablePrototype(self.descriptor,
+                                                        failureCode),
             preserveWrapper=preserveWrapper)
 
 
@@ -3658,6 +3679,8 @@ class CGWrapNonWrapperCacheMethod(CGAbstractMethod):
             $*{unforgeable}
 
             $*{slots}
+
+            $*{setImmutablePrototype}
             creator.InitializationSucceeded();
             return true;
             """,
@@ -3666,7 +3689,9 @@ class CGWrapNonWrapperCacheMethod(CGAbstractMethod):
             createObject=CreateBindingJSObject(self.descriptor, self.properties),
             unforgeable=CopyUnforgeablePropertiesToInstance(self.descriptor,
                                                             failureCode),
-            slots=InitMemberSlots(self.descriptor, failureCode))
+            slots=InitMemberSlots(self.descriptor, failureCode),
+            setImmutablePrototype=SetImmutablePrototype(self.descriptor,
+                                                        failureCode))
 
 
 class CGWrapGlobalMethod(CGAbstractMethod):
