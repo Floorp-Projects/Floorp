@@ -457,6 +457,8 @@ class BaseContext {
               dump(`Promise resolved after context unloaded\n`);
             } else if (!this.active) {
               dump(`Promise resolved while context is inactive\n`);
+            } else if (value instanceof SpreadArgs) {
+              runSafe(resolve, value.length == 1 ? value[0] : value);
             } else {
               runSafe(resolve, value);
             }
@@ -1744,7 +1746,7 @@ class ProxyAPIImplementation extends SchemaAPIInterface {
     if (!set) {
       return;
     }
-    set.remove(listener);
+    set.delete(listener);
 
     if (set.size == 0) {
       this.childApiManager.messageManager.sendAsyncMessage("API:RemoveListener", {
