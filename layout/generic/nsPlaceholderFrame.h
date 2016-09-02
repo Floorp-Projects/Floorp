@@ -139,6 +139,15 @@ public:
 
   virtual nsStyleContext* GetParentStyleContext(nsIFrame** aProviderFrame) const override;
 
+  bool RenumberFrameAndDescendants(int32_t* aOrdinal,
+                                   int32_t aDepth,
+                                   int32_t aIncrement,
+                                   bool aForCounting) override
+  {
+    return mOutOfFlowFrame->
+      RenumberFrameAndDescendants(aOrdinal, aDepth, aIncrement, aForCounting);
+  }
+
   /**
    * @return the out-of-flow for aFrame if aFrame is a placeholder; otherwise
    * aFrame

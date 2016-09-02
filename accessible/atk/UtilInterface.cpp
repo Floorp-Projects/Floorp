@@ -251,23 +251,23 @@ mai_key_snooper(GtkWidget *the_widget, GdkEventKey *event, gpointer func_data)
 static guint sKey_snooper_id = 0;
 
 static guint
-mai_util_add_key_event_listener (AtkKeySnoopFunc listener,
-                                 gpointer data)
+mai_util_add_key_event_listener(AtkKeySnoopFunc listener, gpointer data)
 {
-  if (MOZ_UNLIKELY(!listener))
+  if (MOZ_UNLIKELY(!listener)) {
     return 0;
+  }
 
-    static guint key=0;
+  static guint key = 0;
 
-    if (!sKey_listener_list) {
-        sKey_listener_list = g_hash_table_new(nullptr, nullptr);
-        sKey_snooper_id = gtk_key_snooper_install(mai_key_snooper, data);
-    }
-    AtkKeySnoopFuncPointer atkKeySnoop;
-    atkKeySnoop.func_ptr = listener;
-    g_hash_table_insert(sKey_listener_list, GUINT_TO_POINTER (key++),
-                        atkKeySnoop.data);
-    return key;
+  if (!sKey_listener_list) {
+    sKey_listener_list = g_hash_table_new(nullptr, nullptr);
+    sKey_snooper_id = gtk_key_snooper_install(mai_key_snooper, data);
+  }
+  AtkKeySnoopFuncPointer atkKeySnoop;
+  atkKeySnoop.func_ptr = listener;
+  g_hash_table_insert(sKey_listener_list, GUINT_TO_POINTER(key++),
+                      atkKeySnoop.data);
+  return key;
 }
 
 static void
