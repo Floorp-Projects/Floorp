@@ -90,11 +90,15 @@ EventQueue::CoalesceEvents()
 
   switch(tailEvent->mEventRule) {
     case AccEvent::eCoalesceReorder:
-      MOZ_ASSERT(tailEvent->mAccessible->IsApplication() ||
-                 tailEvent->mAccessible->IsOuterDoc() ||
-                 tailEvent->mAccessible->IsXULTree(),
+    {
+      DebugOnly<Accessible*> target = tailEvent->mAccessible.get();
+      MOZ_ASSERT(target->IsApplication() ||
+                 target->IsOuterDoc() ||
+                 target->IsXULTree(),
                  "Only app or outerdoc accessible reorder events are in the queue");
+      MOZ_ASSERT(tailEvent->GetEventType() == nsIAccessibleEvent::EVENT_REORDER, "only reorder events should be queued");
       break; // case eCoalesceReorder
+    }
 
     case AccEvent::eCoalesceOfSameType:
     {
