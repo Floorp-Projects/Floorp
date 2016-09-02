@@ -1198,7 +1198,10 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
                 "ORDER BY " + History.DATE_LAST_VISITED + " DESC " +
                 "LIMIT " + historyLimit + ")";
 
-        final String query = "SELECT DISTINCT * FROM (" + bookmarksQuery + " UNION ALL " + historyQuery + ");";
+        final String query = "SELECT DISTINCT * " +
+                "FROM (" + bookmarksQuery + " " +
+                "UNION ALL " + historyQuery + ") " +
+                "GROUP BY " + Combined.URL + ";";
 
         return db.rawQuery(query, null);
     }
