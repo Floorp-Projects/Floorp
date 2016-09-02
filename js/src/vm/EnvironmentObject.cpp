@@ -3182,6 +3182,59 @@ js::CheckVarNameConflict(JSContext* cx, Handle<LexicalEnvironmentObject*> lexica
     return true;
 }
 
+static void
+ReportCannotDeclareGlobalBinding(JSContext* cx, HandlePropertyName name, const char* reason)
+{
+    JSAutoByteString printable;
+    if (AtomToPrintableString(cx, name, &printable)) {
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
+                             JSMSG_CANT_DECLARE_GLOBAL_BINDING,
+                             printable.ptr(), reason);
+    }
+}
+
+bool
+js::CheckCanDeclareGlobalBinding(JSContext* cx, Handle<GlobalObject*> global,
+                                 HandlePropertyName name, bool isFunction)
+{
+    RootedId id(cx, NameToId(name));
+    Rooted<PropertyDescriptor> desc(cx);
+    if (!GetOwnPropertyDescriptor(cx, global, id, &desc))
+        return false;
+
+    // ES 8.1.14.15 CanDeclareGlobalVar
+    // ES 8.1.14.16 CanDeclareGlobalFunction
+
+    // Step 4.
+    if (!desc.object()) {
+        // 8.1.14.15 step 6.
+        // 8.1.14.16 step 5.
+        if (global->nonProxyIsExtensible())
+            return true;
+
+        ReportCannotDeclareGlobalBinding(cx, name, "global is non-extensible");
+        return false;
+    }
+
+    // Global functions have additional restrictions.
+    if (isFunction) {
+        // 8.1.14.16 step 6.
+        if (desc.configurable())
+            return true;
+
+        // 8.1.14.16 step 7.
+        if (desc.isDataDescriptor() && desc.writable() && desc.enumerable())
+            return true;
+
+        ReportCannotDeclareGlobalBinding(cx, name,
+                                         "property must be configurable or "
+                                         "both writable and enumerable");
+        return false;
+    }
+
+    return true;
+}
+
 bool
 js::CheckGlobalDeclarationConflicts(JSContext* cx, HandleScript script,
                                     Handle<LexicalEnvironmentObject*> lexicalEnv,
@@ -3196,14 +3249,32 @@ js::CheckGlobalDeclarationConflicts(JSContext* cx, HandleScript script,
     RootedPropertyName name(cx);
     Rooted<BindingIter> bi(cx, BindingIter(script));
 
+    // ES 15.1.11 GlobalDeclarationInstantiation
+
+    // Step 6.
+    //
+    // Check 'var' declarations do not conflict with existing bindings in the
+    // global lexical environment.
     for (; bi; bi++) {
         if (bi.kind() != BindingKind::Var)
             break;
         name = bi.name()->asPropertyName();
         if (!CheckVarNameConflict(cx, lexicalEnv, name))
             return false;
+
+        // Step 10 and 12.
+        //
+        // Check that global functions and vars may be declared.
+        if (varObj->is<GlobalObject>()) {
+            Handle<GlobalObject*> global = varObj.as<GlobalObject>();
+            if (!CheckCanDeclareGlobalBinding(cx, global, name, bi.isTopLevelFunction()))
+                return false;
+        }
     }
 
+    // Step 5.
+    //
+    // Check that lexical bindings do not conflict.
     for (; bi; bi++) {
         name = bi.name()->asPropertyName();
         if (!CheckLexicalNameConflict(cx, lexicalEnv, varObj, name))
@@ -3256,7 +3327,9 @@ js::CheckEvalDeclarationConflicts(JSContext* cx, HandleScript script,
 
     RootedObject obj(cx, scopeChain);
 
-    // ES6 18.2.1.2 step d
+    // ES 18.2.1.3.
+
+    // Step 5.
     //
     // Check that a direct eval will not hoist 'var' bindings over lexical
     // bindings with the same name.
@@ -3264,6 +3337,19 @@ js::CheckEvalDeclarationConflicts(JSContext* cx, HandleScript script,
         if (!CheckVarNameConflictsInEnv(cx, script, obj))
             return false;
         obj = obj->enclosingEnvironment();
+    }
+
+    // Step 8.
+    //
+    // Check that global functions may be declared.
+    if (varObj->is<GlobalObject>()) {
+        Handle<GlobalObject*> global = varObj.as<GlobalObject>();
+        RootedPropertyName name(cx);
+        for (Rooted<BindingIter> bi(cx, BindingIter(script)); bi; bi++) {
+            name = bi.name()->asPropertyName();
+            if (!CheckCanDeclareGlobalBinding(cx, global, name, bi.isTopLevelFunction()))
+                return false;
+        }
     }
 
     return true;
