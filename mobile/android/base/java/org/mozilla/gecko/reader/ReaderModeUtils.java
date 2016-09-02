@@ -20,7 +20,7 @@ public class ReaderModeUtils {
      *     URLs.
      * @return <code>null</code> if the URL is malformed or doesn't contain a URL parameter.
      */
-    public static String getUrlFromAboutReader(String aboutReaderUrl) {
+    private static String getUrlFromAboutReader(String aboutReaderUrl) {
         return StringUtils.getQueryParameter(aboutReaderUrl, "url");
     }
 
