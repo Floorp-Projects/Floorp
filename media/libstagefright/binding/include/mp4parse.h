@@ -93,6 +93,8 @@ mp4parse_error mp4parse_get_track_audio_info(mp4parse_parser* parser, uint32_t t
 /// Fill the supplied `mp4parse_track_video_info` with metadata for `track`.
 mp4parse_error mp4parse_get_track_video_info(mp4parse_parser* parser, uint32_t track_index, mp4parse_track_video_info* info);
 
+mp4parse_error mp4parse_is_fragmented(mp4parse_parser* parser, uint32_t track_id, uint8_t* fragmented);
+
 
 
 #ifdef __cplusplus

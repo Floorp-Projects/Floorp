@@ -5,7 +5,7 @@
 //! # Examples
 //!
 //! ```rust
-//! extern crate mp4parse;
+//! extern crate mp4parse_capi;
 //! use std::io::Read;
 //!
 //! extern fn buf_read(buf: *mut u8, size: usize, userdata: *mut std::os::raw::c_void) -> isize {
@@ -17,14 +17,16 @@
 //!    }
 //! }
 //!
-//! let mut file = std::fs::File::open("examples/minimal.mp4").unwrap();
-//! let io = mp4parse::mp4parse_io { read: buf_read,
-//!                                  userdata: &mut file as *mut _ as *mut std::os::raw::c_void };
+//! let mut file = std::fs::File::open("../mp4parse/tests/minimal.mp4").unwrap();
+//! let io = mp4parse_capi::mp4parse_io {
+//!     read: buf_read,
+//!     userdata: &mut file as *mut _ as *mut std::os::raw::c_void
+//! };
 //! unsafe {
-//!     let parser = mp4parse::mp4parse_new(&io);
-//!     let rv = mp4parse::mp4parse_read(parser);
-//!     assert_eq!(rv, mp4parse::mp4parse_error::MP4PARSE_OK);
-//!     mp4parse::mp4parse_free(parser);
+//!     let parser = mp4parse_capi::mp4parse_new(&io);
+//!     let rv = mp4parse_capi::mp4parse_read(parser);
+//!     assert_eq!(rv, mp4parse_capi::mp4parse_error::MP4PARSE_OK);
+//!     mp4parse_capi::mp4parse_free(parser);
 //! }
 //! ```
 
@@ -32,21 +34,24 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use std;
+extern crate mp4parse;
+
 use std::io::Read;
 use std::collections::HashMap;
 
 // Symbols we need from our rust api.
-use MediaContext;
-use TrackType;
-use read_mp4;
-use Error;
-use media_time_to_ms;
-use track_time_to_ms;
-use SampleEntry;
-use AudioCodecSpecific;
-use VideoCodecSpecific;
-use serialize_opus_header;
+use mp4parse::MediaContext;
+use mp4parse::TrackType;
+use mp4parse::read_mp4;
+use mp4parse::Error;
+use mp4parse::SampleEntry;
+use mp4parse::AudioCodecSpecific;
+use mp4parse::VideoCodecSpecific;
+use mp4parse::MediaTimeScale;
+use mp4parse::MediaScaledTime;
+use mp4parse::TrackTimeScale;
+use mp4parse::TrackScaledTime;
+use mp4parse::serialize_opus_header;
 
 // rusty-cheddar's C enum generation doesn't namespace enum members by
 // prefixing them, so we're forced to do it in our member names until
@@ -266,11 +271,22 @@ pub unsafe extern fn mp4parse_get_track_count(parser: *const mp4parse_parser, co
     let context = (*parser).context();
 
     // Make sure the track count fits in a u32.
-    if context.tracks.len() >= u32::max_value() as usize {
+    if context.tracks.len() > u32::max_value() as usize {
         return MP4PARSE_ERROR_INVALID;
     }
     *count = context.tracks.len() as u32;
     MP4PARSE_OK
+}
+
+fn media_time_to_ms(time: MediaScaledTime, scale: MediaTimeScale) -> u64 {
+    assert!(scale.0 != 0);
+    time.0 * 1000000 / scale.0
+}
+
+fn track_time_to_ms(time: TrackScaledTime, scale: TrackTimeScale) -> u64 {
+    assert!(time.1 == scale.1);
+    assert!(scale.0 != 0);
+    time.0 * 1000000 / scale.0
 }
 
 /// Fill the supplied `mp4parse_track_info` with metadata for `track`.
@@ -310,22 +326,28 @@ pub unsafe extern fn mp4parse_get_track_info(parser: *mut mp4parse_parser, track
         _ => mp4parse_codec::MP4PARSE_CODEC_UNKNOWN,
     };
 
-    // Maybe context & track should just have a single simple is_valid() instead?
-    if context.timescale.is_none() ||
-       context.tracks[track_index].timescale.is_none() ||
-       context.tracks[track_index].duration.is_none() ||
-       context.tracks[track_index].track_id.is_none() {
-        return MP4PARSE_ERROR_INVALID;
+    let track = &context.tracks[track_index];
+
+    if let (Some(track_timescale),
+            Some(context_timescale),
+            Some(track_duration)) = (track.timescale,
+                                     context.timescale,
+                                     track.duration) {
+        info.media_time = track.media_time.map_or(0, |media_time| {
+            track_time_to_ms(media_time, track_timescale) as i64
+        }) - track.empty_duration.map_or(0, |empty_duration| {
+            media_time_to_ms(empty_duration, context_timescale) as i64
+        });
+
+        info.duration = track_time_to_ms(track_duration, track_timescale);
+    } else {
+        return MP4PARSE_ERROR_INVALID
     }
 
-    let track = &context.tracks[track_index];
-    info.media_time = track.media_time.map_or(0, |media_time| {
-        track_time_to_ms(media_time, track.timescale.unwrap()) as i64
-    }) - track.empty_duration.map_or(0, |empty_duration| {
-        media_time_to_ms(empty_duration, context.timescale.unwrap()) as i64
-    });
-    info.duration = track_time_to_ms(track.duration.unwrap(), track.timescale.unwrap());
-    info.track_id = track.track_id.unwrap();
+    info.track_id = match track.track_id {
+        Some(track_id) => track_id,
+        None => return MP4PARSE_ERROR_INVALID,
+    };
 
     MP4PARSE_OK
 }
@@ -434,6 +456,32 @@ pub unsafe extern fn mp4parse_get_track_video_info(parser: *mut mp4parse_parser,
     }
     (*info).image_width = video.width;
     (*info).image_height = video.height;
+
+    MP4PARSE_OK
+}
+
+// A fragmented file needs mvex table and contains no data in stts, stsc, and stco boxes.
+#[no_mangle]
+pub unsafe extern fn mp4parse_is_fragmented(parser: *mut mp4parse_parser, track_id: u32, fragmented: *mut u8) -> mp4parse_error {
+    if parser.is_null() || (*parser).poisoned() {
+        return MP4PARSE_ERROR_BADARG;
+    }
+
+    let context = (*parser).context_mut();
+    let tracks = &context.tracks;
+    (*fragmented) = false as u8;
+
+    if !context.has_mvex {
+        return MP4PARSE_OK;
+    }
+
+    // check sample tables.
+    let mut iter = tracks.iter();
+    match iter.find(|track| track.track_id == Some(track_id)) {
+        Some(track) if track.empty_sample_boxes.all_empty() => (*fragmented) = true as u8,
+        Some(_) => {},
+        None => return MP4PARSE_ERROR_BADARG,
+    }
 
     MP4PARSE_OK
 }
@@ -614,7 +662,7 @@ fn get_track_count_poisoned_parser() {
 #[test]
 fn arg_validation_with_data() {
     unsafe {
-        let mut file = std::fs::File::open("examples/minimal.mp4").unwrap();
+        let mut file = std::fs::File::open("../mp4parse/tests/minimal.mp4").unwrap();
         let io = mp4parse_io { read: valid_read,
                                userdata: &mut file as *mut _ as *mut std::os::raw::c_void };
         let parser = mp4parse_new(&io);
