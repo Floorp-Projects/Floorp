@@ -954,17 +954,6 @@ StyleAnimationValue::ComputeDistance(nsCSSPropertyID aProperty,
   return false;
 }
 
-#define MAX_PACKED_COLOR_COMPONENT 255
-
-inline uint8_t ClampColor(double aColor)
-{
-  if (aColor >= MAX_PACKED_COLOR_COMPONENT)
-    return MAX_PACKED_COLOR_COMPONENT;
-  if (aColor <= 0.0)
-    return 0;
-  return NSToIntRound(aColor);
-}
-
 // Ensure that a float/double value isn't NaN by returning zero instead
 // (NaN doesn't have a sign) as a general restriction for floating point
 // values in RestrictValue.
