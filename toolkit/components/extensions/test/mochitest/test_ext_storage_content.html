@@ -50,6 +50,9 @@ function contentScript() {
       return get({[prop]: undefined});
     }).then(data => {
       browser.test.assertEq(data[prop], value, "object getter worked for " + prop);
+      return browser.storage.local.get(prop).then(data => {
+        browser.test.assertEq(data[prop], value, "promise getter worked for " + prop);
+      });
     });
   }
 
