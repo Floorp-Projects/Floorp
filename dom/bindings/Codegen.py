@@ -586,7 +586,10 @@ class CGPrototypeJSClass(CGThing):
     def define(self):
         prototypeID, depth = PrototypeIDAndDepth(self.descriptor)
         slotCount = "DOM_INTERFACE_PROTO_SLOTS_BASE"
-        if self.descriptor.hasUnforgeableMembers:
+        # Globals handle unforgeables directly in Wrap() instead of
+        # via a holder.
+        if (self.descriptor.hasUnforgeableMembers and
+            not self.descriptor.isGlobal()):
             slotCount += " + 1 /* slot for the JSObject holding the unforgeable properties */"
         (protoGetter, _) = InterfacePrototypeObjectProtoGetter(self.descriptor)
         type = "eGlobalInterfacePrototype" if self.descriptor.isGlobal() else "eInterfacePrototype"
@@ -2930,7 +2933,9 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
         else:
             defineAliases = None
 
-        if self.descriptor.hasUnforgeableMembers:
+        # Globals handle unforgeables directly in Wrap() instead of
+        # via a holder.
+        if self.descriptor.hasUnforgeableMembers and not self.descriptor.isGlobal():
             assert needInterfacePrototypeObject
 
             # We want to use the same JSClass and prototype as the object we'll
@@ -2939,12 +2944,7 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
             # a fast copy.  In the case of proxies that's null, because the
             # expando object is a vanilla object, but in the case of other DOM
             # objects it's whatever our class is.
-            #
-            # Also, for a global we can't use the global's class; just use
-            # nullpr and when we do the copy off the holder we'll take a slower
-            # path.  This also means that we don't need to worry about matching
-            # the prototype.
-            if self.descriptor.proxy or self.descriptor.isGlobal():
+            if self.descriptor.proxy:
                 holderClass = "nullptr"
                 holderProto = "nullptr"
             else:
@@ -3334,7 +3334,8 @@ def CreateBindingJSObject(descriptor, properties):
     return objDecl + create
 
 
-def InitUnforgeablePropertiesOnHolder(descriptor, properties, failureCode):
+def InitUnforgeablePropertiesOnHolder(descriptor, properties, failureCode,
+                                      holderName="unforgeableHolder"):
     """
     Define the unforgeable properties on the unforgeable holder for
     the interface represented by descriptor.
@@ -3351,18 +3352,20 @@ def InitUnforgeablePropertiesOnHolder(descriptor, properties, failureCode):
 
     defineUnforgeableAttrs = fill(
         """
-        if (!DefineUnforgeableAttributes(aCx, unforgeableHolder, %s)) {
+        if (!DefineUnforgeableAttributes(aCx, ${holderName}, %s)) {
           $*{failureCode}
         }
         """,
-        failureCode=failureCode)
+        failureCode=failureCode,
+        holderName=holderName)
     defineUnforgeableMethods = fill(
         """
-        if (!DefineUnforgeableMethods(aCx, unforgeableHolder, %s)) {
+        if (!DefineUnforgeableMethods(aCx, ${holderName}, %s)) {
           $*{failureCode}
         }
         """,
-        failureCode=failureCode)
+        failureCode=failureCode,
+        holderName=holderName)
 
     unforgeableMembers = [
         (defineUnforgeableAttrs, properties.unforgeableAttrs),
@@ -3384,16 +3387,17 @@ def InitUnforgeablePropertiesOnHolder(descriptor, properties, failureCode):
             """
             JS::RootedId toPrimitive(aCx,
               SYMBOL_TO_JSID(JS::GetWellKnownSymbol(aCx, JS::SymbolCode::toPrimitive)));
-            if (!JS_DefinePropertyById(aCx, unforgeableHolder, toPrimitive,
+            if (!JS_DefinePropertyById(aCx, ${holderName}, toPrimitive,
                                        JS::UndefinedHandleValue,
                                        JSPROP_READONLY | JSPROP_PERMANENT) ||
-                !JS_DefineProperty(aCx, unforgeableHolder, "toJSON",
+                !JS_DefineProperty(aCx, ${holderName}, "toJSON",
                                    JS::UndefinedHandleValue,
                                    JSPROP_READONLY | JSPROP_ENUMERATE | JSPROP_PERMANENT)) {
               $*{failureCode}
             }
             """,
-            failureCode=failureCode)))
+            failureCode=failureCode,
+            holderName=holderName)))
 
     return CGWrapper(CGList(unforgeables), pre="\n")
 
@@ -3403,6 +3407,8 @@ def CopyUnforgeablePropertiesToInstance(descriptor, wrapperCache):
     Copy the unforgeable properties from the unforgeable holder for
     this interface to the instance object we have.
     """
+    assert not descriptor.isGlobal();
+
     if not descriptor.hasUnforgeableMembers:
         return ""
 
@@ -3442,23 +3448,15 @@ def CopyUnforgeablePropertiesToInstance(descriptor, wrapperCache):
     else:
         obj = "aReflector"
 
-    # We can't do the fast copy for globals, because we can't allocate the
-    # unforgeable holder for those with the right JSClass.  Luckily, there
-    # aren't too many globals being created.
-    if descriptor.isGlobal():
-        copyFunc = "JS_CopyPropertiesFrom"
-    else:
-        copyFunc = "JS_InitializePropertiesFromCompatibleNativeObject"
     copyCode.append(CGGeneric(fill(
         """
         JS::Rooted<JSObject*> unforgeableHolder(aCx,
           &js::GetReservedSlot(canonicalProto, DOM_INTERFACE_PROTO_SLOTS_BASE).toObject());
-        if (!${copyFunc}(aCx, ${obj}, unforgeableHolder)) {
+        if (!JS_InitializePropertiesFromCompatibleNativeObject(aCx, ${obj}, unforgeableHolder)) {
           $*{cleanup}
           return false;
         }
         """,
-        copyFunc=copyFunc,
         obj=obj,
         cleanup=cleanup)))
 
@@ -3709,14 +3707,19 @@ class CGWrapGlobalMethod(CGAbstractMethod):
         else:
             chromeProperties = "nullptr"
 
+        failureCode = dedent(
+            """
+            aCache->ReleaseWrapper(aObject);
+            aCache->ClearWrapper();
+            return false;
+            """);
+
         if self.descriptor.hasUnforgeableMembers:
-            declareProto = "JS::Handle<JSObject*> canonicalProto =\n"
-            assertProto = (
-                "MOZ_ASSERT(canonicalProto &&\n"
-                "           IsDOMIfaceAndProtoClass(js::GetObjectClass(canonicalProto)));\n")
+            unforgeable = InitUnforgeablePropertiesOnHolder(
+                self.descriptor, self.properties, failureCode,
+                "aReflector").define();
         else:
-            declareProto = ""
-            assertProto = ""
+            unforgeable = ""
 
         return fill(
             """
@@ -3724,26 +3727,23 @@ class CGWrapGlobalMethod(CGAbstractMethod):
             MOZ_ASSERT(ToSupportsIsOnPrimaryInheritanceChain(aObject, aCache),
                        "nsISupports must be on our primary inheritance chain");
 
-            $*{declareProto}
-              CreateGlobal<${nativeType}, GetProtoObjectHandle>(aCx,
+            if (!CreateGlobal<${nativeType}, GetProtoObjectHandle>(aCx,
                                              aObject,
                                              aCache,
                                              sClass.ToJSClass(),
                                              aOptions,
                                              aPrincipal,
                                              aInitStandardClasses,
-                                             aReflector);
-            if (!aReflector) {
-              return false;
+                                             aReflector)) {
+              $*{failureCode}
             }
-            $*{assertProto}
 
             // aReflector is a new global, so has a new compartment.  Enter it
             // before doing anything with it.
             JSAutoCompartment ac(aCx, aReflector);
 
             if (!DefineProperties(aCx, aReflector, ${properties}, ${chromeProperties})) {
-              return false;
+              $*{failureCode}
             }
             $*{unforgeable}
 
@@ -3753,11 +3753,10 @@ class CGWrapGlobalMethod(CGAbstractMethod):
             """,
             assertions=AssertInheritanceChain(self.descriptor),
             nativeType=self.descriptor.nativeType,
-            declareProto=declareProto,
-            assertProto=assertProto,
             properties=properties,
             chromeProperties=chromeProperties,
-            unforgeable=CopyUnforgeablePropertiesToInstance(self.descriptor, True),
+            failureCode=failureCode,
+            unforgeable=unforgeable,
             slots=InitMemberSlots(self.descriptor, True))
 
 
