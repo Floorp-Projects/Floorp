@@ -135,14 +135,14 @@ struct Module
 #  if defined(_MSC_VER)
 #    pragma section(".kPStaticModules$M", read)
 #    pragma comment(linker, "/merge:.kPStaticModules=.rdata")
-#    define NSMODULE_SECTION __declspec(allocate(".kPStaticModules$M"))
+#    define NSMODULE_SECTION __declspec(allocate(".kPStaticModules$M"), dllexport)
 #  elif defined(__GNUC__)
 #    if defined(__ELF__)
 #      define NSMODULE_SECTION __attribute__((section(".kPStaticModules"), visibility("protected")))
 #    elif defined(__MACH__)
 #      define NSMODULE_SECTION __attribute__((section("__DATA, .kPStaticModules"), visibility("default")))
 #    elif defined (_WIN32)
-#      define NSMODULE_SECTION __attribute__((section(".kPStaticModules")))
+#      define NSMODULE_SECTION __attribute__((section(".kPStaticModules"), dllexport))
 #    endif
 #  endif
 #  if !defined(NSMODULE_SECTION)

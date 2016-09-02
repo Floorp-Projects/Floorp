@@ -53,7 +53,7 @@ endif
 endif
 
 ifdef _MSC_VER
-get_first_and_last = dumpbin -section:rodata -map $1 | grep _NSModule@@ | sort -k 2 | sed -n 's/^.*?\([^@]*\)@@.*$$/\1/;1p;$$p'
+get_first_and_last = dumpbin -exports $1 | grep _NSModule@@ | sort -k 3 | sed -n 's/^.*?\([^@]*\)@@.*$$/\1/;1p;$$p'
 else
 get_first_and_last = $(TOOLCHAIN_PREFIX)nm -g $1 | grep _NSModule$$ | grep -vw refptr | sort | sed -n 's/^.* _*\([^ ]*\)$$/\1/;1p;$$p'
 endif
