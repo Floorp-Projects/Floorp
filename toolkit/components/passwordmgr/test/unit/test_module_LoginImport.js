@@ -181,7 +181,6 @@ add_task(function* test_import_downgraded()
 {
   let store = new LoginStore(getTempFile("test-import-downgraded.json").path);
   let loginsSqlite = getTempFile("test-logins-downgraded.sqlite").path;
-  let loginList = TestData.loginList();
 
   // Create and populate the SQLite database first.
   let connection = yield Sqlite.openConnection({ path: loginsSqlite });

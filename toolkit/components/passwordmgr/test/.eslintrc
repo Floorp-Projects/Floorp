@@ -2,5 +2,8 @@
   "extends": [
     "../../../../testing/mochitest/mochitest.eslintrc",
     "../../../../testing/mochitest/chrome.eslintrc"
-  ]
+  ],
+  "rules": {
+    "no-unused-vars": 0,
+  },
 }
