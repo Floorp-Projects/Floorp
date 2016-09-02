@@ -34,24 +34,23 @@ public class IntentUtils {
      *
      * @return A Map of environment variable name to value, e.g. ENV_VAR -> VALUE
      */
-    public static HashMap<String, String> getEnvVarMap(@NonNull final Intent unsafeIntent) {
+    public static HashMap<String, String> getEnvVarMap(@NonNull final SafeIntent intent) {
         // Optimization: get matcher for re-use. Pattern.matcher creates a new object every time so it'd be great
         // to avoid the unnecessary allocation, particularly because we expect to be called on the startup path.
         final Pattern envVarPattern = Pattern.compile(ENV_VAR_REGEX);
         final Matcher matcher = envVarPattern.matcher(""); // argument does not matter here.
 
         // This is expected to be an external intent so we should use SafeIntent to prevent crashing.
-        final SafeIntent safeIntent = new SafeIntent(unsafeIntent);
         final HashMap<String, String> out = new HashMap<>();
         int i = 0;
         while (true) {
             final String envKey = "env" + i;
             i += 1;
-            if (!unsafeIntent.hasExtra(envKey)) {
+            if (!intent.hasExtra(envKey)) {
                 break;
             }
 
-            maybeAddEnvVarToEnvVarMap(out, safeIntent, envKey, matcher);
+            maybeAddEnvVarToEnvVarMap(out, intent, envKey, matcher);
         }
         return out;
     }
