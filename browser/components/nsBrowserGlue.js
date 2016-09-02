@@ -755,6 +755,9 @@ BrowserGlue.prototype = {
           let count = ids.length;
           if (count) {
             let win = RecentWindow.getMostRecentBrowserWindow();
+            if (!win) {
+              return;
+            }
             let nb =  win.document.getElementById("global-notificationbox");
             let notification = nb.getNotificationWithValue("pending-crash-reports");
             if (notification) {
