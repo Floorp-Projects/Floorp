@@ -55,11 +55,6 @@
   outline-offset: -5px;
 }
 
-.downloadsPanelFooterButton > .button-box {
-  /* Hide the border so we don't display an inner focus ring. */
-  border: none;
-}
-
 /*** List items and similar elements in the summary ***/
 
 :root {

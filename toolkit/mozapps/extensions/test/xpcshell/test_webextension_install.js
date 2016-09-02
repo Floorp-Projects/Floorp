@@ -363,4 +363,35 @@ add_task(function* test_strict_min_max() {
 
   addon.uninstall();
   flushAndRemove(addonDir);
+
+  // * in min will generate a warning
+  for (let version of ["0.*", "0.*.0"]) {
+    newId = "strict_min_star@tests.mozilla.org";
+    let apps = {
+      applications: {
+        gecko: {
+          id: newId,
+          strict_min_version: version,
+        },
+      },
+    }
+    let testManifest = Object.assign(apps, MANIFEST);
+
+    let addonDir = yield promiseWriteWebManifestForExtension(testManifest, gTmpD,
+                                            "strict_min_star");
+
+    let { messages } = yield promiseConsoleOutput(function* () {
+      yield AddonManager.installTemporaryAddon(addonDir);
+    });
+    ok(messages.some(msg => msg.message.includes("The use of '*' in strict_min_version is deprecated")),
+       "Deprecation warning for strict_min_version with '*' was generated");
+
+    let addon = yield promiseAddonByID(newId);
+
+    notEqual(addon, null, "Add-on is installed");
+    equal(addon.id, newId, "Add-on has the expected id");
+
+    addon.uninstall();
+    flushAndRemove(addonDir);
+  }
 });

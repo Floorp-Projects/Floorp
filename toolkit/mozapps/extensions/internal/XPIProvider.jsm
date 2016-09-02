@@ -929,6 +929,11 @@ var loadManifestFromWebManifest = Task.async(function*(aUri) {
     logger.warn("Ignoring applications property in manifest");
   }
 
+  // A * is illegal in strict_min_version
+  if (bss.strict_min_version && bss.strict_min_version.split(".").some(part => part == "*")) {
+    logger.warn("The use of '*' in strict_min_version is deprecated");
+  }
+
   let addon = new AddonInternal();
   addon.id = bss.id;
   addon.version = manifest.version;

@@ -712,7 +712,7 @@ option('--disable-skia', help='Disable use of Skia')
 @depends('--disable-skia', target)
 def skia(value, target):
     if value.origin == 'default' and target.endianness == 'big':
-        return False
+        return None
     if value:
         return True
 
@@ -733,10 +733,10 @@ option('--disable-skia-gpu', help='Disable use of Skia-GPU')
 def skia_gpu(value, skia, target):
     if value.origin == 'default':
         if not skia:
-            return False
+            return None
         # Skia GPU support may not reliably build on certain *BSDs (see bug 1234494)
         if target.os in ('NetBSD', 'OpenBSD'):
-            return False
+            return None
     elif value and not skia:
         die('Cannot enable Skia-GPU without enabling Skia')
     if skia and value:

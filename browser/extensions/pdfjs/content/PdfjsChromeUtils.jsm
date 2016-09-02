@@ -52,6 +52,7 @@ var DEFAULT_PREFERENCES =
   "externalLinkTarget": 0
 }
 
+
 var PdfjsChromeUtils = {
   // For security purposes when running remote, we restrict preferences
   // content can access.
