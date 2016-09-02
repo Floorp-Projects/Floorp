@@ -64,7 +64,7 @@ function test_object_grip()
         do_check_true(aResponse.ownPropertyNames.toString != undefined);
 
         gThreadClient.resume(function () {
-          gClient.close(gCallback);
+          gClient.close().then(gCallback);
         });
       });
     });

@@ -13,7 +13,7 @@ add_task(function* () {
   yield theRightNumberOfPlayersIsReturned(walker, animations);
   yield playersCanBePausedAndResumed(walker, animations);
 
-  yield closeDebuggerClient(client);
+  yield client.close();
   gBrowser.removeCurrentTab();
 });
 

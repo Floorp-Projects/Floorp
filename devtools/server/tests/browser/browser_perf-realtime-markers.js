@@ -44,7 +44,7 @@ add_task(function* () {
   is(counters.ticks.length, 3, "three ticks events fired.");
 
   yield front.destroy();
-  yield closeDebuggerClient(client);
+  yield client.close();
   gBrowser.removeCurrentTab();
 
   function handler(name, data) {

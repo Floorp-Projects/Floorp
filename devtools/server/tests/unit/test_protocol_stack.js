@@ -88,7 +88,7 @@ function run_test() {
     }, () => {
       ok(false, "Request failed unexpectedly");
     }).then(() => {
-      client.close(() => {
+      client.close().then(() => {
         do_test_finished();
       });
     });

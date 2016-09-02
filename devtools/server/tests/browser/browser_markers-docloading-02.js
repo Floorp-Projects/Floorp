@@ -30,6 +30,6 @@ add_task(function* () {
 
   ok(true, "Found the required marker names.");
 
-  yield closeDebuggerClient(client);
+  yield client.close();
   gBrowser.removeCurrentTab();
 });

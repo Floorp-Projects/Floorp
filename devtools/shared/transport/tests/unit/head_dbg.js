@@ -185,7 +185,7 @@ function initTestDebuggerServer() {
 }
 
 function finishClient(aClient) {
-  aClient.close(function () {
+  aClient.close().then(function () {
     do_test_finished();
   });
 }

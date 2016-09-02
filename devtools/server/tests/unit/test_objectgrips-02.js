@@ -50,7 +50,7 @@ function test_object_grip()
         do_check_eq(aResponse.ownPropertyNames[1], "c");
 
         gThreadClient.resume(function () {
-          gClient.close(gCallback);
+          gClient.close().then(gCallback);
         });
       });
     });
