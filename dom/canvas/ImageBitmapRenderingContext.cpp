@@ -109,8 +109,7 @@ ImageBitmapRenderingContext::MatchWithIntrinsicSize()
                                      temp->GetSize(),
                                      map.GetStride(),
                                      temp->GetFormat());
-  if (!dt || !dt->IsValid()) {
-    gfxWarning() << "ImageBitmapRenderingContext::MatchWithIntrinsicSize failed";
+  if (!dt) {
     return nullptr;
   }
 

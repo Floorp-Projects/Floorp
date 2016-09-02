@@ -142,10 +142,6 @@ already_AddRefed<gfxASurface>
 gfxPlatformGtk::CreateOffscreenSurface(const IntSize& aSize,
                                        gfxImageFormat aFormat)
 {
-    if (!Factory::AllowedSurfaceSize(aSize)) {
-        return nullptr;
-    }
-
     RefPtr<gfxASurface> newSurface;
     bool needsClear = true;
 #ifdef MOZ_X11

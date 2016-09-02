@@ -735,11 +735,6 @@ Factory::PurgeAllCaches()
 already_AddRefed<DrawTarget>
 Factory::CreateDrawTargetForCairoSurface(cairo_surface_t* aSurface, const IntSize& aSize, SurfaceFormat* aFormat)
 {
-  if (!AllowedSurfaceSize(aSize)) {
-    gfxCriticalError(LoggerOptionsBasedOnSize(aSize)) << "Failed to allocate a surface due to invalid size (Cairo) " << aSize;
-    return nullptr;
-  }
-
   RefPtr<DrawTarget> retVal;
 
 #ifdef USE_CAIRO
@@ -775,11 +770,6 @@ Factory::CreateSourceSurfaceForCairoSurface(cairo_surface_t* aSurface, const Int
 already_AddRefed<DrawTarget>
 Factory::CreateDrawTargetForCairoCGContext(CGContextRef cg, const IntSize& aSize)
 {
-  if (!AllowedSurfaceSize(aSize)) {
-    gfxCriticalError(LoggerOptionsBasedOnSize(aSize)) << "Failed to allocate a surface due to invalid size (CG) " << aSize;
-    return nullptr;
-  }
-
   RefPtr<DrawTarget> retVal;
 
   RefPtr<DrawTargetCG> newTarget = new DrawTargetCG();
@@ -809,7 +799,7 @@ Factory::CreateWrappingDataSourceSurface(uint8_t *aData,
                                          SourceSurfaceDeallocator aDeallocator /* = nullptr */,
                                          void* aClosure /* = nullptr */)
 {
-  if (!AllowedSurfaceSize(aSize) || aStride <= 0) {
+  if (aSize.width <= 0 || aSize.height <= 0) {
     return nullptr;
   }
   if (!aDeallocator && aClosure) {
@@ -853,8 +843,7 @@ Factory::CreateDataSourceSurfaceWithStride(const IntSize &aSize,
                                            int32_t aStride,
                                            bool aZero)
 {
-  if (!AllowedSurfaceSize(aSize) ||
-      aStride < aSize.width * BytesPerPixel(aFormat)) {
+  if (aStride < aSize.width * BytesPerPixel(aFormat)) {
     gfxCriticalError(LoggerOptionsBasedOnSize(aSize)) << "CreateDataSourceSurfaceWithStride failed with bad stride " << aStride << ", " << aSize << ", " << aFormat;
     return nullptr;
   }
