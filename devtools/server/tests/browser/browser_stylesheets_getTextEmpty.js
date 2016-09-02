@@ -36,5 +36,5 @@ add_task(function* () {
   let source = yield longStr.string();
   is(source, "", "text is empty");
 
-  yield closeDebuggerClient(client);
+  yield client.close();
 });

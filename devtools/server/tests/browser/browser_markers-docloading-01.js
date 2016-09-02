@@ -32,6 +32,6 @@ add_task(function* () {
   // Wait some more time to make sure the 'doc-loading' events never get fired.
   yield DevToolsUtils.waitForTime(1000);
 
-  yield closeDebuggerClient(client);
+  yield client.close();
   gBrowser.removeCurrentTab();
 });

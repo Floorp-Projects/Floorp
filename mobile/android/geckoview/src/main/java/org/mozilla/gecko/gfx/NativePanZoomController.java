@@ -143,6 +143,7 @@ class NativePanZoomController extends JNIObject implements PanZoomController {
     NativePanZoomController(PanZoomTarget target, View view) {
         mTarget = target;
         mView = (LayerView) view;
+        mDestroyed = true;
 
         String[] prefs = { "ui.scrolling.negate_wheel_scroll" };
         mPrefsObserver = new PrefsHelper.PrefHandlerBase() {
@@ -206,6 +207,11 @@ class NativePanZoomController extends JNIObject implements PanZoomController {
         }
         mDestroyed = true;
         disposeNative();
+    }
+
+    @Override
+    public void attach() {
+        mDestroyed = false;
     }
 
     @WrapForJNI(calledFrom = "ui", dispatchTo = "gecko") @Override // JNIObject

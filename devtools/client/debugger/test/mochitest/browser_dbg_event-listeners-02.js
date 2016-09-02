@@ -32,7 +32,7 @@ function test() {
       })
       .then(pauseDebuggee)
       .then(testEventListeners)
-      .then(closeConnection)
+      .then(() => gClient.close())
       .then(finish)
       .then(null, aError => {
         ok(false, "Got an error: " + aError.message + "\n" + aError.stack);
@@ -115,12 +115,6 @@ function testEventListeners(aThreadClient) {
     });
   });
 
-  return deferred.promise;
-}
-
-function closeConnection() {
-  let deferred = promise.defer();
-  gClient.close(deferred.resolve);
   return deferred.promise;
 }
 

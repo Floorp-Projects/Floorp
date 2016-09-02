@@ -101,7 +101,7 @@ function set_breakpoints(source, location) {
       gThreadClient.resume(function () {
         // Give any remaining breakpoints a chance to trigger.
         do_timeout(1000, function () {
-          gClient.close(gCallback);
+          gClient.close().then(gCallback);
         });
       });
 

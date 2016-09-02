@@ -79,6 +79,8 @@
                            {type: "text/html"});
       dtList.add(file2);
 
+      todo(files.length == 2, "This test has chrome privileges, so the FileList objects aren't updated live");
+      files = e.dataTransfer.files;
       is(files.length, 2, "The files property should have been updated in place");
       is(files[1], file2, "It should be the same file as the file we originally created");
       is(file2, e.dataTransfer.mozGetDataAt("text/html", 2),
@@ -98,6 +100,9 @@
       is(dtList[oldLength].getAsFile(), file3, "It should be stored in the last index as a file");
       is(dtList[oldLength].type, "random/string", "It should have the correct type");
       is(dtList[oldLength].kind, "file", "It should have the correct kind");
+
+      todo(files.length == 3, "This test has chrome privileges, so the FileList objects aren't updated live");
+      files = e.dataTransfer.files;
       is(files[files.length - 1], file3, "It should also be in the files list");
 
       oldLength = dtList.length;

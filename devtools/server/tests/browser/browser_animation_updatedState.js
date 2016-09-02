@@ -12,7 +12,7 @@ add_task(function* () {
 
   yield playStateIsUpdatedDynamically(walker, animations);
 
-  yield closeDebuggerClient(client);
+  yield client.close();
   gBrowser.removeCurrentTab();
 });
 

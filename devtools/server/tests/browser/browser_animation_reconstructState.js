@@ -13,7 +13,7 @@ add_task(function* () {
 
   yield playerHasCompleteStateAtAllTimes(walker, animations);
 
-  yield closeDebuggerClient(client);
+  yield client.close();
   gBrowser.removeCurrentTab();
 });
 

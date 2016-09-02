@@ -28,7 +28,7 @@ function test() {
       .then(attachAddonThread)
       .then(testDebugger)
       .then(testSources)
-      .then(closeConnection)
+      .then(() => gClient.close())
       .then(uninstallAddon)
       .then(finish)
       .then(null, aError => {
@@ -86,12 +86,6 @@ function testSources() {
 
 function uninstallAddon() {
   return removeAddon(gAddon);
-}
-
-function closeConnection() {
-  let deferred = promise.defer();
-  gClient.close(deferred.resolve);
-  return deferred.promise;
 }
 
 registerCleanupFunction(function () {

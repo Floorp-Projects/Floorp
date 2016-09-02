@@ -32,12 +32,12 @@ add_task(function* () {
 
   // Manually teardown the tabs so we can check profiler status
   yield secondFront.destroy();
-  yield closeDebuggerClient(client2);
+  yield client2.close();
   ok((yield pmmIsProfilerActive()),
     "The built-in profiler module should still be active.");
 
   yield firstFront.destroy();
-  yield closeDebuggerClient(client);
+  yield client.close();
   ok(!(yield pmmIsProfilerActive()),
     "The built-in profiler module should no longer be active.");
 

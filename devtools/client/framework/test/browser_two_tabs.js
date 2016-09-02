@@ -146,7 +146,7 @@ function cleanup() {
   container.addEventListener("TabClose", function onTabClose() {
     container.removeEventListener("TabClose", onTabClose);
 
-    gClient.close(finish);
+    gClient.close().then(finish);
   });
   gBrowser.removeTab(gTab1);
 }

@@ -58,6 +58,6 @@ add_task(function* () {
     "even though the total number of frames did not overflow.");
 
   yield front.destroy();
-  yield closeDebuggerClient(client);
+  yield client.close();
   gBrowser.removeCurrentTab();
 });

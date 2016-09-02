@@ -662,9 +662,7 @@ AddonDebugger.prototype = {
   }),
 
   destroy: Task.async(function* () {
-    let deferred = promise.defer();
-    this.client.close(deferred.resolve);
-    yield deferred.promise;
+    yield this.client.close();
     yield this.debuggerPanel._toolbox.destroy();
     this.frame.remove();
     window.removeEventListener("message", this._onMessage);
@@ -1078,11 +1076,7 @@ function connect(client) {
 
 function close(client) {
   info("Waiting for client to close.\n");
-  return new Promise(function (resolve) {
-    client.close(() => {
-      resolve();
-    });
-  });
+  return client.close();
 }
 
 function listTabs(client) {
