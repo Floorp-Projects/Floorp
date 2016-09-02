@@ -13,10 +13,6 @@ use byteorder::ReadBytesExt;
 use std::io::{Read, Take};
 use std::cmp;
 
-// Expose C api wrapper.
-pub mod capi;
-pub use capi::*;
-
 mod boxes;
 use boxes::BoxType;
 
@@ -109,18 +105,18 @@ struct FileTypeBox {
 /// Movie header box 'mvhd'.
 #[derive(Debug)]
 struct MovieHeaderBox {
-    timescale: u32,
+    pub timescale: u32,
     duration: u64,
 }
 
 /// Track header box 'tkhd'
 #[derive(Debug, Clone)]
-struct TrackHeaderBox {
+pub struct TrackHeaderBox {
     track_id: u32,
-    disabled: bool,
-    duration: u64,
-    width: u32,
-    height: u32,
+    pub disabled: bool,
+    pub duration: u64,
+    pub width: u32,
+    pub height: u32,
 }
 
 /// Edit list box 'elst'
@@ -201,7 +197,7 @@ struct SampleDescriptionBox {
 }
 
 #[derive(Debug, Clone)]
-enum SampleEntry {
+pub enum SampleEntry {
     Audio(AudioSampleEntry),
     Video(VideoSampleEntry),
     Unknown,
@@ -209,45 +205,45 @@ enum SampleEntry {
 
 #[allow(non_camel_case_types)]
 #[derive(Debug, Clone)]
-enum AudioCodecSpecific {
+pub enum AudioCodecSpecific {
     ES_Descriptor(Vec<u8>),
     OpusSpecificBox(OpusSpecificBox),
 }
 
 #[derive(Debug, Clone)]
-struct AudioSampleEntry {
+pub struct AudioSampleEntry {
     data_reference_index: u16,
-    channelcount: u16,
-    samplesize: u16,
-    samplerate: u32,
-    codec_specific: AudioCodecSpecific,
+    pub channelcount: u16,
+    pub samplesize: u16,
+    pub samplerate: u32,
+    pub codec_specific: AudioCodecSpecific,
 }
 
 #[derive(Debug, Clone)]
-enum VideoCodecSpecific {
+pub enum VideoCodecSpecific {
     AVCConfig(Vec<u8>),
     VPxConfig(VPxConfigBox),
 }
 
 #[derive(Debug, Clone)]
-struct VideoSampleEntry {
+pub struct VideoSampleEntry {
     data_reference_index: u16,
-    width: u16,
-    height: u16,
-    codec_specific: VideoCodecSpecific,
+    pub width: u16,
+    pub height: u16,
+    pub codec_specific: VideoCodecSpecific,
 }
 
 /// Represent a Video Partition Codec Configuration 'vpcC' box (aka vp9).
 #[derive(Debug, Clone)]
-struct VPxConfigBox {
+pub struct VPxConfigBox {
     profile: u8,
     level: u8,
-    bit_depth: u8,
-    color_space: u8, // Really an enum
-    chroma_subsampling: u8,
+    pub bit_depth: u8,
+    pub color_space: u8, // Really an enum
+    pub chroma_subsampling: u8,
     transfer_function: u8,
     video_full_range: bool,
-    codec_init: Vec<u8>, // Empty for vp8/vp9.
+    pub codec_init: Vec<u8>, // Empty for vp8/vp9.
 }
 
 #[derive(Debug, Clone)]
@@ -259,8 +255,8 @@ struct ChannelMappingTable {
 
 /// Represent an OpusSpecificBox 'dOps'
 #[derive(Debug, Clone)]
-struct OpusSpecificBox {
-    version: u8,
+pub struct OpusSpecificBox {
+    pub version: u8,
     output_channel_count: u8,
     pre_skip: u16,
     input_sample_rate: u32,
@@ -270,73 +266,80 @@ struct OpusSpecificBox {
 }
 
 /// Internal data structures.
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct MediaContext {
-    timescale: Option<MediaTimeScale>,
+    pub timescale: Option<MediaTimeScale>,
+    pub has_mvex: bool,
     /// Tracks found in the file.
-    tracks: Vec<Track>,
+    pub tracks: Vec<Track>,
 }
 
 impl MediaContext {
     pub fn new() -> MediaContext {
-        MediaContext {
-            timescale: None,
-            tracks: Vec::new(),
-        }
+        Default::default()
     }
 }
 
 #[derive(Debug)]
-enum TrackType {
+pub enum TrackType {
     Audio,
     Video,
     Unknown,
 }
 
+impl Default for TrackType {
+    fn default() -> Self { TrackType::Unknown }
+}
+
 /// The media's global (mvhd) timescale.
-#[derive(Debug, Copy, Clone)]
-struct MediaTimeScale(u64);
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub struct MediaTimeScale(pub u64);
 
 /// A time scaled by the media's global (mvhd) timescale.
-#[derive(Debug, Copy, Clone)]
-struct MediaScaledTime(u64);
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub struct MediaScaledTime(pub u64);
 
 /// The track's local (mdhd) timescale.
-#[derive(Debug, Copy, Clone)]
-struct TrackTimeScale(u64, usize);
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub struct TrackTimeScale(pub u64, pub usize);
 
 /// A time scaled by the track's local (mdhd) timescale.
-#[derive(Debug, Copy, Clone)]
-struct TrackScaledTime(u64, usize);
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub struct TrackScaledTime(pub u64, pub usize);
 
-#[derive(Debug)]
-struct Track {
+/// A fragmented file contains no sample data in stts, stsc, and stco.
+#[derive(Debug, Default)]
+pub struct EmptySampleTableBoxes {
+    pub empty_stts : bool,
+    pub empty_stsc : bool,
+    pub empty_stco : bool,
+}
+
+/// Check boxes contain data.
+impl EmptySampleTableBoxes {
+    pub fn all_empty(&self) -> bool {
+        self.empty_stts & self.empty_stsc & self.empty_stco
+    }
+}
+
+#[derive(Debug, Default)]
+pub struct Track {
     id: usize,
-    track_type: TrackType,
-    empty_duration: Option<MediaScaledTime>,
-    media_time: Option<TrackScaledTime>,
-    timescale: Option<TrackTimeScale>,
-    duration: Option<TrackScaledTime>,
-    track_id: Option<u32>,
-    mime_type: String,
-    data: Option<SampleEntry>,
-    tkhd: Option<TrackHeaderBox>, // TODO(kinetik): find a nicer way to export this.
+    pub track_type: TrackType,
+    pub empty_duration: Option<MediaScaledTime>,
+    pub media_time: Option<TrackScaledTime>,
+    pub timescale: Option<TrackTimeScale>,
+    pub duration: Option<TrackScaledTime>,
+    pub track_id: Option<u32>,
+    pub mime_type: String,
+    pub empty_sample_boxes: EmptySampleTableBoxes,
+    pub data: Option<SampleEntry>,
+    pub tkhd: Option<TrackHeaderBox>, // TODO(kinetik): find a nicer way to export this.
 }
 
 impl Track {
     fn new(id: usize) -> Track {
-        Track {
-            id: id,
-            track_type: TrackType::Unknown,
-            empty_duration: None,
-            media_time: None,
-            timescale: None,
-            duration: None,
-            track_id: None,
-            mime_type: String::new(),
-            data: None,
-            tkhd: None,
-        }
+        Track { id: id, ..Default::default() }
     }
 }
 
@@ -454,7 +457,7 @@ macro_rules! check_parser_state {
 
 /// Read the contents of a box, including sub boxes.
 ///
-/// Metadata is accumulated in the passed-through MediaContext struct,
+/// Metadata is accumulated in the passed-through `MediaContext` struct,
 /// which can be examined later.
 pub fn read_mp4<T: Read>(f: &mut T, context: &mut MediaContext) -> Result<()> {
     let mut found_ftyp = false;
@@ -532,6 +535,10 @@ fn read_moov<T: Read>(f: &mut BMFFBox<T>, context: &mut MediaContext) -> Result<
                 let mut track = Track::new(context.tracks.len());
                 try!(read_trak(&mut b, &mut track));
                 context.tracks.push(track);
+            }
+            BoxType::MovieExtendsBox => {
+                context.has_mvex = true;
+                try!(skip_box_content(&mut b));
             }
             _ => try!(skip_box_content(&mut b)),
         };
@@ -654,10 +661,12 @@ fn read_stbl<T: Read>(f: &mut BMFFBox<T>, track: &mut Track) -> Result<()> {
             }
             BoxType::TimeToSampleBox => {
                 let stts = try!(read_stts(&mut b));
+                track.empty_sample_boxes.empty_stts = stts.samples.is_empty();
                 log!("{:?}", stts);
             }
             BoxType::SampleToChunkBox => {
                 let stsc = try!(read_stsc(&mut b));
+                track.empty_sample_boxes.empty_stsc = stsc.samples.is_empty();
                 log!("{:?}", stsc);
             }
             BoxType::SampleSizeBox => {
@@ -666,6 +675,7 @@ fn read_stbl<T: Read>(f: &mut BMFFBox<T>, track: &mut Track) -> Result<()> {
             }
             BoxType::ChunkOffsetBox => {
                 let stco = try!(read_stco(&mut b));
+                track.empty_sample_boxes.empty_stco = stco.offsets.is_empty();
                 log!("{:?}", stco);
             }
             BoxType::ChunkLargeOffsetBox => {
@@ -985,7 +995,7 @@ fn read_vpcc<T: Read>(src: &mut BMFFBox<T>) -> Result<VPxConfigBox> {
     })
 }
 
-/// Parse OpusSpecificBox.
+/// Parse `OpusSpecificBox`.
 fn read_dops<T: Read>(src: &mut BMFFBox<T>) -> Result<OpusSpecificBox> {
     let version = try!(src.read_u8());
     if version != 0 {
@@ -1024,13 +1034,13 @@ fn read_dops<T: Read>(src: &mut BMFFBox<T>) -> Result<OpusSpecificBox> {
     })
 }
 
-/// Re-serialize the Opus codec-specific config data as an OpusHead packet.
+/// Re-serialize the Opus codec-specific config data as an `OpusHead` packet.
 ///
 /// Some decoders expect the initialization data in the format used by the
-/// Ogg and WebM encapsulations. To support this we prepend the 'OpusHead'
+/// Ogg and WebM encapsulations. To support this we prepend the `OpusHead`
 /// tag and byte-swap the data from big- to little-endian relative to the
 /// dOps box.
-fn serialize_opus_header<W: byteorder::WriteBytesExt + std::io::Write>(opus: &OpusSpecificBox, dst: &mut W) -> Result<()> {
+pub fn serialize_opus_header<W: byteorder::WriteBytesExt + std::io::Write>(opus: &OpusSpecificBox, dst: &mut W) -> Result<()> {
     match dst.write(b"OpusHead") {
         Err(e) => return Err(Error::from(e)),
         Ok(bytes) => {
@@ -1151,16 +1161,14 @@ fn read_video_desc<T: Read>(src: &mut BMFFBox<T>, track: &mut Track) -> Result<S
         check_parser_state!(b.content);
     }
 
-    if codec_specific.is_none() {
-        return Err(Error::InvalidData("malformed video sample entry"));
-    }
-
-    Ok(SampleEntry::Video(VideoSampleEntry {
-        data_reference_index: data_reference_index,
-        width: width,
-        height: height,
-        codec_specific: codec_specific.unwrap(),
-    }))
+    codec_specific
+        .map(|codec_specific| SampleEntry::Video(VideoSampleEntry {
+            data_reference_index: data_reference_index,
+            width: width,
+            height: height,
+            codec_specific: codec_specific,
+        }))
+        .ok_or_else(|| Error::InvalidData("malformed video sample entry"))
 }
 
 /// Parse an audio description inside an stsd box.
@@ -1235,17 +1243,15 @@ fn read_audio_desc<T: Read>(src: &mut BMFFBox<T>, track: &mut Track) -> Result<S
         check_parser_state!(b.content);
     }
 
-    if codec_specific.is_none() {
-        return Err(Error::InvalidData("malformed audio sample entry"));
-    }
-
-    Ok(SampleEntry::Audio(AudioSampleEntry {
-        data_reference_index: data_reference_index,
-        channelcount: channelcount,
-        samplesize: samplesize,
-        samplerate: samplerate,
-        codec_specific: codec_specific.unwrap(),
-    }))
+    codec_specific
+        .map(|codec_specific| SampleEntry::Audio(AudioSampleEntry {
+            data_reference_index: data_reference_index,
+            channelcount: channelcount,
+            samplesize: samplesize,
+            samplerate: samplerate,
+            codec_specific: codec_specific,
+        }))
+        .ok_or_else(|| Error::InvalidData("malformed audio sample entry"))
 }
 
 /// Parse a stsd box.
@@ -1350,17 +1356,6 @@ fn read_fixed_length_pascal_string<T: Read>(src: &mut T, size: usize) -> Result<
     let buf = try!(read_buf(src, len));
     try!(skip(src, size - 1 - buf.len()));
     String::from_utf8(buf).map_err(From::from)
-}
-
-fn media_time_to_ms(time: MediaScaledTime, scale: MediaTimeScale) -> u64 {
-    assert!(scale.0 != 0);
-    time.0 * 1000000 / scale.0
-}
-
-fn track_time_to_ms(time: TrackScaledTime, scale: TrackTimeScale) -> u64 {
-    assert!(time.1 == scale.1);
-    assert!(scale.0 != 0);
-    time.0 * 1000000 / scale.0
 }
 
 fn be_i16<T: ReadBytesExt>(src: &mut T) -> Result<i16> {
