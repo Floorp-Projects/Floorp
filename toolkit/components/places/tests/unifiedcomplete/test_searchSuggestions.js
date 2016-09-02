@@ -482,6 +482,94 @@ add_task(function* prohibit_suggestions() {
     ],
   });
 
+  // When using multiple words, we should still get suggestions:
+  yield check_autocomplete({
+    search: "localhost other",
+    searchParam: "enable-actions",
+    matches: [
+      makeSearchMatch("localhost other", { engineName: ENGINE_NAME, heuristic: true }),
+      {
+        uri: makeActionURI(("searchengine"), {
+          engineName: ENGINE_NAME,
+          input: "localhost other foo",
+          searchQuery: "localhost other",
+          searchSuggestion: "localhost other foo",
+        }),
+        title: ENGINE_NAME,
+        style: ["action", "searchengine"],
+        icon: "",
+      },
+      {
+        uri: makeActionURI(("searchengine"), {
+          engineName: ENGINE_NAME,
+          input: "localhost other bar",
+          searchQuery: "localhost other",
+          searchSuggestion: "localhost other bar",
+        }),
+        title: ENGINE_NAME,
+        style: ["action", "searchengine"],
+        icon: "",
+      },
+    ],
+  });
+
+  // Clear the whitelist for localhost, and try preferring DNS for any single
+  // word instead:
+  Services.prefs.clearUserPref("browser.fixup.domainwhitelist.localhost");
+  Services.prefs.setBoolPref("browser.fixup.dns_first_for_single_words", true);
+  do_register_cleanup(() => {
+    Services.prefs.clearUserPref("browser.fixup.dns_first_for_single_words");
+  });
+
+  yield check_autocomplete({
+    search: "localhost",
+    searchParam: "enable-actions",
+    matches: [
+      makeVisitMatch("localhost", "http://localhost/", { heuristic: true }),
+    ],
+  });
+
+  yield check_autocomplete({
+    search: "somethingelse",
+    searchParam: "enable-actions",
+    matches: [
+      makeVisitMatch("somethingelse", "http://somethingelse/", { heuristic: true }),
+    ],
+  });
+
+  // When using multiple words, we should still get suggestions:
+  yield check_autocomplete({
+    search: "localhost other",
+    searchParam: "enable-actions",
+    matches: [
+      makeSearchMatch("localhost other", { engineName: ENGINE_NAME, heuristic: true }),
+      {
+        uri: makeActionURI(("searchengine"), {
+          engineName: ENGINE_NAME,
+          input: "localhost other foo",
+          searchQuery: "localhost other",
+          searchSuggestion: "localhost other foo",
+        }),
+        title: ENGINE_NAME,
+        style: ["action", "searchengine"],
+        icon: "",
+      },
+      {
+        uri: makeActionURI(("searchengine"), {
+          engineName: ENGINE_NAME,
+          input: "localhost other bar",
+          searchQuery: "localhost other",
+          searchSuggestion: "localhost other bar",
+        }),
+        title: ENGINE_NAME,
+        style: ["action", "searchengine"],
+        icon: "",
+      },
+    ],
+  });
+
+  Services.prefs.clearUserPref("browser.fixup.dns_first_for_single_words");
+
   yield check_autocomplete({
     search: "1.2.3.4",
     searchParam: "enable-actions",
