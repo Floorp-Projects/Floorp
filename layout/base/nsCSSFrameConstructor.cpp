@@ -9199,11 +9199,12 @@ nsCSSFrameConstructor::CaptureStateForFramesOf(nsIContent* aContent,
   }
 }
 
-static bool EqualURIs(mozilla::css::URLValue *aURI1,
-                      mozilla::css::URLValue *aURI2)
+static bool
+DefinitelyEqualURIsAndPrincipal(mozilla::css::URLValue* aURI1,
+                                mozilla::css::URLValue* aURI2)
 {
-  return aURI1 == aURI2 ||    // handle null==null, and optimize
-         (aURI1 && aURI2 && aURI1->URIEquals(*aURI2));
+  return aURI1 == aURI2 ||
+         (aURI1 && aURI2 && aURI1->DefinitelyEqualURIsAndPrincipal(*aURI2));
 }
 
 nsStyleContext*
@@ -9239,7 +9240,8 @@ nsCSSFrameConstructor::MaybeRecreateFramesForElement(Element* aElement)
       return newContext;
     }
     const nsStyleDisplay* oldDisp = oldContext->PeekStyleDisplay();
-    if (oldDisp && EqualURIs(disp->mBinding, oldDisp->mBinding)) {
+    if (oldDisp &&
+        DefinitelyEqualURIsAndPrincipal(disp->mBinding, oldDisp->mBinding)) {
       return newContext;
     }
   }
