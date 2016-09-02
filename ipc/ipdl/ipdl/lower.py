@@ -4331,6 +4331,16 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         intype = _cxxConstRefType(arraytype, self.side)
         outtype = _cxxPtrToType(arraytype, self.side)
 
+        # We access elements directly in Read and Write to avoid array bounds
+        # checking.
+        directtype = _cxxBareType(arraytype.basetype, self.side)
+        if directtype.ptr:
+            typeinit = { 'ptrptr': 1 }
+        else:
+            typeinit = { 'ptr': 1 }
+        directtype = Type(directtype.name, **typeinit)
+        elemsvar = ExprVar('elems')
+
         write = MethodDefn(self.writeMethodDecl(intype, var))
         forwrite = StmtFor(init=ExprAssn(Decl(Type.UINT32, ivar.name),
                                          ExprLiteral.ZERO),
@@ -4354,10 +4364,13 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                           cond=ExprBinary(ivar, '<', lenvar),
                           update=ExprPrefixUnop(ivar, '++'))
         forread.addstmt(
-            self.checkedRead(eltipdltype, ExprAddrOf(ExprIndex(favar, ivar)),
+            self.checkedRead(eltipdltype, ExprAddrOf(ExprIndex(elemsvar, ivar)),
                              msgvar, itervar, errfnRead,
                              '\'' + eltipdltype.name() + '[i]\'',
                              sentinelKey=arraytype.name()))
+        appendstmt = StmtDecl(Decl(directtype, elemsvar.name),
+                              init=ExprCall(ExprSelect(favar, '.', 'AppendElements'),
+                                            args=[ lenvar ]))
         read.addstmts([
             StmtDecl(Decl(_cxxArrayType(_cxxBareType(arraytype.basetype, self.side)), favar.name)),
             StmtDecl(Decl(Type.UINT32, lenvar.name)),
@@ -4366,7 +4379,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                              [ arraytype.name() ],
                              sentinelKey=('length', arraytype.name())),
             Whitespace.NL,
-            StmtExpr(_callCxxArraySetLength(favar, lenvar)),
+            appendstmt,
             forread,
             StmtExpr(_callCxxSwapArrayElements(var, favar, '->')),
             StmtReturn.TRUE
