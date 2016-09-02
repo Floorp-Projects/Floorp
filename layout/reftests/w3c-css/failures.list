@@ -55,7 +55,7 @@ fuzzy(87,180) css-multicol-1/multicol-columns-005.xht
 fuzzy(87,180) css-multicol-1/multicol-columns-006.xht
 fuzzy(87,180) css-multicol-1/multicol-columns-007.xht
 fuzzy(204,930) css-multicol-1/multicol-columns-invalid-001.xht
-fails css-multicol-1/multicol-columns-invalid-002.xht
+fails-if(OSX||winWidget) css-multicol-1/multicol-columns-invalid-002.xht
 fuzzy(204,930) css-multicol-1/multicol-columns-toolong-001.xht
 fuzzy(116,530) css-multicol-1/multicol-containing-001.xht
 fuzzy(215,241) css-multicol-1/multicol-containing-002.xht
@@ -64,7 +64,7 @@ fails css-multicol-1/multicol-count-002.xht
 fails css-multicol-1/multicol-count-computed-001.xht
 fails css-multicol-1/multicol-count-computed-002.xht
 fails css-multicol-1/multicol-count-computed-003.xht
-fuzzy(112,861) css-multicol-1/multicol-count-computed-004.xht
+fuzzy-if(winWidget||OSX||gtkWidget,112,861) fails-if(Android) css-multicol-1/multicol-count-computed-004.xht
 fails css-multicol-1/multicol-count-computed-005.xht
 fails css-multicol-1/multicol-count-large-001.xht
 fuzzy(255,132) css-multicol-1/multicol-count-large-002.xht
@@ -78,11 +78,11 @@ fuzzy(116,3270) css-multicol-1/multicol-fill-auto-003.xht
 fails css-multicol-1/multicol-fill-auto.xht
 fuzzy(116,80) css-multicol-1/multicol-fill-balance-001.xht
 fuzzy(116,821) css-multicol-1/multicol-gap-000.xht
-fuzzy(116,290) css-multicol-1/multicol-gap-001.xht
+fuzzy(255,290) css-multicol-1/multicol-gap-001.xht
 fuzzy(204,930) css-multicol-1/multicol-gap-002.xht
 fuzzy(204,930) css-multicol-1/multicol-gap-003.xht
 fuzzy(107,1823) css-multicol-1/multicol-gap-fraction-001.xht
-fuzzy(204,1048) css-multicol-1/multicol-gap-large-001.xht
+fuzzy-if(winWidget||OSX||gtkWidget,204,1048) fails-if(Android) css-multicol-1/multicol-gap-large-001.xht
 fuzzy(225,920) css-multicol-1/multicol-gap-large-002.xht
 fuzzy(204,930) css-multicol-1/multicol-gap-negative-001.xht
 fails css-multicol-1/multicol-height-block-child-001.xht
@@ -91,13 +91,13 @@ fuzzy(116,1893) css-multicol-1/multicol-inherit-002.xht
 fails css-multicol-1/multicol-inherit-003.xht
 fails css-multicol-1/multicol-inherit-004.xht
 fuzzy(96,264) css-multicol-1/multicol-list-item-001.xht
-fuzzy(73,300) css-multicol-1/multicol-margin-001.xht
-fuzzy(73,300) css-multicol-1/multicol-margin-002.xht
+fuzzy(73,1200) css-multicol-1/multicol-margin-001.xht
+fuzzy(73,1200) css-multicol-1/multicol-margin-002.xht
 fuzzy(243,3322) css-multicol-1/multicol-margin-child-001.xht
 fuzzy(255,4008) css-multicol-1/multicol-nested-002.xht
 fuzzy(255,4109) css-multicol-1/multicol-nested-005.xht
 fuzzy(204,2463) css-multicol-1/multicol-nested-margin-001.xht
-fails css-multicol-1/multicol-nested-margin-002.xht
+fails-if(OSX||winWidget) css-multicol-1/multicol-nested-margin-002.xht
 fuzzy(204,2371) css-multicol-1/multicol-nested-margin-003.xht
 fuzzy(225,2529) css-multicol-1/multicol-nested-margin-004.xht
 fuzzy(225,2529) css-multicol-1/multicol-nested-margin-005.xht
@@ -107,20 +107,17 @@ fuzzy-if(OSX,61,2) css-multicol-1/multicol-reduce-000.xht
 fuzzy-if(OSX,8,20) css-multicol-1/multicol-rule-000.xht
 fuzzy(116,1584) css-multicol-1/multicol-rule-001.xht
 fails css-multicol-1/multicol-rule-002.xht
-fails css-multicol-1/multicol-rule-003.xht
-fails css-multicol-1/multicol-rule-color-001.xht
-fails css-multicol-1/multicol-rule-color-inherit-001.xht
-fails css-multicol-1/multicol-rule-color-inherit-002.xht
+fails-if(OSX||winWidget) css-multicol-1/multicol-rule-003.xht
+fails-if(OSX||winWidget) css-multicol-1/multicol-rule-color-001.xht
 fuzzy(106,354) css-multicol-1/multicol-rule-dashed-000.xht
 fuzzy(106,354) css-multicol-1/multicol-rule-dotted-000.xht
 fuzzy(106,354) css-multicol-1/multicol-rule-double-000.xht
-fails css-multicol-1/multicol-rule-fraction-001.xht
-fails css-multicol-1/multicol-rule-fraction-002.xht
+fails-if(OSX||winWidget) css-multicol-1/multicol-rule-fraction-001.xht
+fails-if(OSX||winWidget) css-multicol-1/multicol-rule-fraction-002.xht
 fails css-multicol-1/multicol-rule-fraction-003.xht
 fuzzy(106,354) css-multicol-1/multicol-rule-groove-000.xht
 fuzzy(94,256) css-multicol-1/multicol-rule-hidden-000.xht
 fuzzy(106,354) css-multicol-1/multicol-rule-inset-000.xht
-fails css-multicol-1/multicol-rule-large-001.xht
 fuzzy(106,354) css-multicol-1/multicol-rule-outset-000.xht
 fails css-multicol-1/multicol-rule-px-001.xht
 fuzzy(106,354) css-multicol-1/multicol-rule-ridge-000.xht
@@ -155,9 +152,15 @@ fails css-multicol-1/multicol-width-small-001.xht
 fuzzy(225,1060) css-multicol-1/multicol-width-invalid-001.xht
 fuzzy(225,1060) css-multicol-1/multicol-width-large-002.xht
 fails css-multicol-1/multicol-zero-height-001.xht
-fails css-multicol-1/multicol-nested-column-rule-001.xht
+fuzzy(225,13600) css-multicol-1/multicol-nested-column-rule-001.xht
 fuzzy(94,256) css-multicol-1/multicol-rule-none-000.xht
-fails css-multicol-1/multicol-rule-samelength-001.xht
+
+#Fails because of regression (Bug 1306769)
+fails css-multicol-1/multicol-rule-color-inherit-002.xht
+
+#This test seems to pass only on Linux-opt build, fails on everything else
+#Therefore using fuzzy annotation as a catch all
+fuzzy(255,2808) css-multicol-1/multicol-rule-large-001.xht
 
 #Fails because column-span property not implemented (Bug 616436)
 fails css-multicol-1/multicol-fill-auto-block-children-001.xht
