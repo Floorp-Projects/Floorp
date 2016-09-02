@@ -5,9 +5,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import logging
-import json
 import os
-import time
 
 from . import base
 from taskgraph.util.templates import Templates
@@ -17,6 +15,7 @@ logger = logging.getLogger(__name__)
 GECKO = os.path.realpath(os.path.join(__file__, '..', '..', '..', '..'))
 ARTIFACT_URL = 'https://queue.taskcluster.net/v1/task/{}/artifacts/{}'
 INDEX_URL = 'https://index.taskcluster.net/v1/task/{}'
+
 
 class SigningTask(base.Task):
 
@@ -28,8 +27,7 @@ class SigningTask(base.Task):
         root = os.path.abspath(os.path.join(path, config['signing_path']))
 
         # get each nightly-fennec and add its name to this task
-        fennec_tasks = [t for t in loaded_tasks if t.attributes.get('kind')
-                        == 'nightly-fennec']
+        fennec_tasks = [t for t in loaded_tasks if t.attributes.get('kind') == 'nightly-fennec']
 
         tasks = []
         for fennec_task in fennec_tasks:
