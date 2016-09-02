@@ -23,7 +23,7 @@ add_task(function* () {
 
   function testL10N() {
     let { L10N } = monitor.panelWin;
-    is(typeof L10N.getStr("netmonitor.label"), "string",
+    is(typeof L10N.getStr("netmonitor.security.enabled"), "string",
       "The getStr() method didn't return a valid string.");
     is(typeof L10N.getFormatStr("networkMenu.totalMS", "foo"), "string",
       "The getFormatStr() method didn't return a valid string.");

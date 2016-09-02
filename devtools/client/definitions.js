@@ -23,37 +23,8 @@ loader.lazyGetter(this, "StoragePanel", () => require("devtools/client/storage/p
 loader.lazyGetter(this, "ScratchpadPanel", () => require("devtools/client/scratchpad/scratchpad-panel").ScratchpadPanel);
 loader.lazyGetter(this, "DomPanel", () => require("devtools/client/dom/dom-panel").DomPanel);
 
-// Strings
-const toolboxProps = "devtools/locale/toolbox.properties";
-const inspectorProps = "devtools/locale/inspector.properties";
-const webConsoleProps = "devtools/locale/webconsole.properties";
-const debuggerProps = "devtools/locale/debugger.properties";
-const styleEditorProps = "devtools/locale/styleeditor.properties";
-const shaderEditorProps = "devtools/locale/shadereditor.properties";
-const canvasDebuggerProps = "devtools/locale/canvasdebugger.properties";
-const webAudioEditorProps = "devtools/locale/webaudioeditor.properties";
-const performanceProps = "devtools/locale/performance.properties";
-const netMonitorProps = "devtools/locale/netmonitor.properties";
-const storageProps = "devtools/locale/storage.properties";
-const scratchpadProps = "devtools/locale/scratchpad.properties";
-const memoryProps = "devtools/locale/memory.properties";
-const domProps = "devtools/locale/dom.properties";
-
 const {LocalizationHelper} = require("devtools/shared/l10n");
-const toolboxStrings = new LocalizationHelper(toolboxProps);
-const performanceStrings = new LocalizationHelper(performanceProps);
-const webConsoleStrings = new LocalizationHelper(webConsoleProps);
-const debuggerStrings = new LocalizationHelper(debuggerProps);
-const styleEditorStrings = new LocalizationHelper(styleEditorProps);
-const shaderEditorStrings = new LocalizationHelper(shaderEditorProps);
-const canvasDebuggerStrings = new LocalizationHelper(canvasDebuggerProps);
-const webAudioEditorStrings = new LocalizationHelper(webAudioEditorProps);
-const inspectorStrings = new LocalizationHelper(inspectorProps);
-const netMonitorStrings = new LocalizationHelper(netMonitorProps);
-const storageStrings = new LocalizationHelper(storageProps);
-const scratchpadStrings = new LocalizationHelper(scratchpadProps);
-const memoryStrings = new LocalizationHelper(memoryProps);
-const domStrings = new LocalizationHelper(domProps);
+const L10N = new LocalizationHelper("devtools/locale/startup.properties");
 
 var Tools = {};
 exports.Tools = Tools;
@@ -66,10 +37,10 @@ Tools.options = {
   icon: "chrome://devtools/skin/images/tool-options.svg",
   invertIconForDarkTheme: true,
   bgTheme: "theme-body",
-  label: l10n("options.label", toolboxStrings),
+  label: l10n("options.label"),
   iconOnly: true,
-  panelLabel: l10n("options.panelLabel", toolboxStrings),
-  tooltip: l10n("optionsButton.tooltip", toolboxStrings),
+  panelLabel: l10n("options.panelLabel"),
+  tooltip: l10n("optionsButton.tooltip"),
   inMenu: false,
 
   isTargetSupported: function () {
@@ -83,17 +54,17 @@ Tools.options = {
 
 Tools.inspector = {
   id: "inspector",
-  accesskey: l10n("inspector.accesskey", inspectorStrings),
-  key: l10n("inspector.commandkey", inspectorStrings),
+  accesskey: l10n("inspector.accesskey"),
+  key: l10n("inspector.commandkey"),
   ordinal: 1,
   modifiers: osString == "Darwin" ? "accel,alt" : "accel,shift",
   icon: "chrome://devtools/skin/images/tool-inspector.svg",
   invertIconForDarkTheme: true,
   url: "chrome://devtools/content/inspector/inspector.xul",
-  label: l10n("inspector.label", inspectorStrings),
-  panelLabel: l10n("inspector.panelLabel", inspectorStrings),
+  label: l10n("inspector.label"),
+  panelLabel: l10n("inspector.panelLabel"),
   get tooltip() {
-    return l10n("inspector.tooltip2", inspectorStrings,
+    return l10n("inspector.tooltip2",
     (osString == "Darwin" ? "Cmd+Opt+" : "Ctrl+Shift+") + this.key);
   },
   inMenu: true,
@@ -118,18 +89,18 @@ Tools.inspector = {
 
 Tools.webConsole = {
   id: "webconsole",
-  key: l10n("cmd.commandkey", webConsoleStrings),
-  accesskey: l10n("webConsoleCmd.accesskey", webConsoleStrings),
+  key: l10n("cmd.commandkey"),
+  accesskey: l10n("webConsoleCmd.accesskey"),
   modifiers: Services.appinfo.OS == "Darwin" ? "accel,alt" : "accel,shift",
   ordinal: 2,
   icon: "chrome://devtools/skin/images/tool-webconsole.svg",
   invertIconForDarkTheme: true,
   url: "chrome://devtools/content/webconsole/webconsole.xul",
-  label: l10n("ToolboxTabWebconsole.label", webConsoleStrings),
-  menuLabel: l10n("MenuWebconsole.label", webConsoleStrings),
-  panelLabel: l10n("ToolboxWebConsole.panelLabel", webConsoleStrings),
+  label: l10n("ToolboxTabWebconsole.label"),
+  menuLabel: l10n("MenuWebconsole.label"),
+  panelLabel: l10n("ToolboxWebConsole.panelLabel"),
   get tooltip() {
-    return l10n("ToolboxWebconsole.tooltip2", webConsoleStrings,
+    return l10n("ToolboxWebconsole.tooltip2",
     (osString == "Darwin" ? "Cmd+Opt+" : "Ctrl+Shift+") + this.key);
   },
   inMenu: true,
@@ -156,18 +127,18 @@ Tools.webConsole = {
 
 Tools.jsdebugger = {
   id: "jsdebugger",
-  key: l10n("debuggerMenu.commandkey", debuggerStrings),
-  accesskey: l10n("debuggerMenu.accesskey", debuggerStrings),
+  key: l10n("debuggerMenu.commandkey"),
+  accesskey: l10n("debuggerMenu.accesskey"),
   modifiers: osString == "Darwin" ? "accel,alt" : "accel,shift",
   ordinal: 3,
   icon: "chrome://devtools/skin/images/tool-debugger.svg",
   invertIconForDarkTheme: true,
   highlightedicon: "chrome://devtools/skin/images/tool-debugger-paused.svg",
   url: "chrome://devtools/content/debugger/debugger.xul",
-  label: l10n("ToolboxDebugger.label", debuggerStrings),
-  panelLabel: l10n("ToolboxDebugger.panelLabel", debuggerStrings),
+  label: l10n("ToolboxDebugger.label"),
+  panelLabel: l10n("ToolboxDebugger.panelLabel"),
   get tooltip() {
-    return l10n("ToolboxDebugger.tooltip2", debuggerStrings,
+    return l10n("ToolboxDebugger.tooltip2",
     (osString == "Darwin" ? "Cmd+Opt+" : "Ctrl+Shift+") + this.key);
   },
   inMenu: true,
@@ -207,18 +178,18 @@ Services.prefs.addObserver(
 
 Tools.styleEditor = {
   id: "styleeditor",
-  key: l10n("open.commandkey", styleEditorStrings),
+  key: l10n("open.commandkey"),
   ordinal: 4,
   visibilityswitch: "devtools.styleeditor.enabled",
-  accesskey: l10n("open.accesskey", styleEditorStrings),
+  accesskey: l10n("open.accesskey"),
   modifiers: "shift",
   icon: "chrome://devtools/skin/images/tool-styleeditor.svg",
   invertIconForDarkTheme: true,
   url: "chrome://devtools/content/styleeditor/styleeditor.xul",
-  label: l10n("ToolboxStyleEditor.label", styleEditorStrings),
-  panelLabel: l10n("ToolboxStyleEditor.panelLabel", styleEditorStrings),
+  label: l10n("ToolboxStyleEditor.label"),
+  panelLabel: l10n("ToolboxStyleEditor.panelLabel"),
   get tooltip() {
-    return l10n("ToolboxStyleEditor.tooltip3", styleEditorStrings,
+    return l10n("ToolboxStyleEditor.tooltip3",
     "Shift+" + functionkey(this.key));
   },
   inMenu: true,
@@ -240,9 +211,9 @@ Tools.shaderEditor = {
   icon: "chrome://devtools/skin/images/tool-shadereditor.svg",
   invertIconForDarkTheme: true,
   url: "chrome://devtools/content/shadereditor/shadereditor.xul",
-  label: l10n("ToolboxShaderEditor.label", shaderEditorStrings),
-  panelLabel: l10n("ToolboxShaderEditor.panelLabel", shaderEditorStrings),
-  tooltip: l10n("ToolboxShaderEditor.tooltip", shaderEditorStrings),
+  label: l10n("ToolboxShaderEditor.label"),
+  panelLabel: l10n("ToolboxShaderEditor.panelLabel"),
+  tooltip: l10n("ToolboxShaderEditor.tooltip"),
 
   isTargetSupported: function (target) {
     return target.hasActor("webgl") && !target.chrome;
@@ -260,9 +231,9 @@ Tools.canvasDebugger = {
   icon: "chrome://devtools/skin/images/tool-canvas.svg",
   invertIconForDarkTheme: true,
   url: "chrome://devtools/content/canvasdebugger/canvasdebugger.xul",
-  label: l10n("ToolboxCanvasDebugger.label", canvasDebuggerStrings),
-  panelLabel: l10n("ToolboxCanvasDebugger.panelLabel", canvasDebuggerStrings),
-  tooltip: l10n("ToolboxCanvasDebugger.tooltip", canvasDebuggerStrings),
+  label: l10n("ToolboxCanvasDebugger.label"),
+  panelLabel: l10n("ToolboxCanvasDebugger.panelLabel"),
+  tooltip: l10n("ToolboxCanvasDebugger.tooltip"),
 
   // Hide the Canvas Debugger in the Add-on Debugger and Browser Toolbox
   // (bug 1047520).
@@ -283,14 +254,13 @@ Tools.performance = {
   highlightedicon: "chrome://devtools/skin/images/tool-profiler-active.svg",
   url: "chrome://devtools/content/performance/performance.xul",
   visibilityswitch: "devtools.performance.enabled",
-  label: l10n("performance.label", performanceStrings),
-  panelLabel: l10n("performance.panelLabel", performanceStrings),
+  label: l10n("performance.label"),
+  panelLabel: l10n("performance.panelLabel"),
   get tooltip() {
-    return l10n("performance.tooltip", performanceStrings,
-    "Shift+" + functionkey(this.key));
+    return l10n("performance.tooltip", "Shift+" + functionkey(this.key));
   },
-  accesskey: l10n("performance.accesskey", performanceStrings),
-  key: l10n("performance.commandkey", performanceStrings),
+  accesskey: l10n("performance.accesskey"),
+  key: l10n("performance.commandkey"),
   modifiers: "shift",
   inMenu: true,
 
@@ -311,9 +281,9 @@ Tools.memory = {
   highlightedicon: "chrome://devtools/skin/images/tool-memory-active.svg",
   url: "chrome://devtools/content/memory/memory.xhtml",
   visibilityswitch: "devtools.memory.enabled",
-  label: l10n("memory.label", memoryStrings),
-  panelLabel: l10n("memory.panelLabel", memoryStrings),
-  tooltip: l10n("memory.tooltip", memoryStrings),
+  label: l10n("memory.label"),
+  panelLabel: l10n("memory.panelLabel"),
+  tooltip: l10n("memory.tooltip"),
 
   isTargetSupported: function (target) {
     return target.getTrait("heapSnapshots") && !target.isAddon;
@@ -326,18 +296,18 @@ Tools.memory = {
 
 Tools.netMonitor = {
   id: "netmonitor",
-  accesskey: l10n("netmonitor.accesskey", netMonitorStrings),
-  key: l10n("netmonitor.commandkey", netMonitorStrings),
+  accesskey: l10n("netmonitor.accesskey"),
+  key: l10n("netmonitor.commandkey"),
   ordinal: 9,
   modifiers: osString == "Darwin" ? "accel,alt" : "accel,shift",
   visibilityswitch: "devtools.netmonitor.enabled",
   icon: "chrome://devtools/skin/images/tool-network.svg",
   invertIconForDarkTheme: true,
   url: "chrome://devtools/content/netmonitor/netmonitor.xul",
-  label: l10n("netmonitor.label", netMonitorStrings),
-  panelLabel: l10n("netmonitor.panelLabel", netMonitorStrings),
+  label: l10n("netmonitor.label"),
+  panelLabel: l10n("netmonitor.panelLabel"),
   get tooltip() {
-    return l10n("netmonitor.tooltip2", netMonitorStrings,
+    return l10n("netmonitor.tooltip2",
     (osString == "Darwin" ? "Cmd+Opt+" : "Ctrl+Shift+") + this.key);
   },
   inMenu: true,
@@ -353,20 +323,19 @@ Tools.netMonitor = {
 
 Tools.storage = {
   id: "storage",
-  key: l10n("storage.commandkey", storageStrings),
+  key: l10n("storage.commandkey"),
   ordinal: 10,
-  accesskey: l10n("storage.accesskey", storageStrings),
+  accesskey: l10n("storage.accesskey"),
   modifiers: "shift",
   visibilityswitch: "devtools.storage.enabled",
   icon: "chrome://devtools/skin/images/tool-storage.svg",
   invertIconForDarkTheme: true,
   url: "chrome://devtools/content/storage/storage.xul",
-  label: l10n("storage.label", storageStrings),
-  menuLabel: l10n("storage.menuLabel", storageStrings),
-  panelLabel: l10n("storage.panelLabel", storageStrings),
+  label: l10n("storage.label"),
+  menuLabel: l10n("storage.menuLabel"),
+  panelLabel: l10n("storage.panelLabel"),
   get tooltip() {
-    return l10n("storage.tooltip3", storageStrings,
-    "Shift+" + functionkey(this.key));
+    return l10n("storage.tooltip3", "Shift+" + functionkey(this.key));
   },
   inMenu: true,
 
@@ -387,9 +356,9 @@ Tools.webAudioEditor = {
   icon: "chrome://devtools/skin/images/tool-webaudio.svg",
   invertIconForDarkTheme: true,
   url: "chrome://devtools/content/webaudioeditor/webaudioeditor.xul",
-  label: l10n("ToolboxWebAudioEditor1.label", webAudioEditorStrings),
-  panelLabel: l10n("ToolboxWebAudioEditor1.panelLabel", webAudioEditorStrings),
-  tooltip: l10n("ToolboxWebAudioEditor1.tooltip", webAudioEditorStrings),
+  label: l10n("ToolboxWebAudioEditor1.label"),
+  panelLabel: l10n("ToolboxWebAudioEditor1.panelLabel"),
+  tooltip: l10n("ToolboxWebAudioEditor1.tooltip"),
 
   isTargetSupported: function (target) {
     return !target.chrome && target.hasActor("webaudio");
@@ -407,9 +376,9 @@ Tools.scratchpad = {
   icon: "chrome://devtools/skin/images/tool-scratchpad.svg",
   invertIconForDarkTheme: true,
   url: "chrome://devtools/content/scratchpad/scratchpad.xul",
-  label: l10n("scratchpad.label", scratchpadStrings),
-  panelLabel: l10n("scratchpad.panelLabel", scratchpadStrings),
-  tooltip: l10n("scratchpad.tooltip", scratchpadStrings),
+  label: l10n("scratchpad.label"),
+  panelLabel: l10n("scratchpad.panelLabel"),
+  tooltip: l10n("scratchpad.tooltip"),
   inMenu: false,
   commands: "devtools/client/scratchpad/scratchpad-commands",
 
@@ -424,19 +393,19 @@ Tools.scratchpad = {
 
 Tools.dom = {
   id: "dom",
-  accesskey: l10n("dom.accesskey", domStrings),
-  key: l10n("dom.commandkey", domStrings),
+  accesskey: l10n("dom.accesskey"),
+  key: l10n("dom.commandkey"),
   ordinal: 13,
   modifiers: osString == "Darwin" ? "accel,alt" : "accel,shift",
   visibilityswitch: "devtools.dom.enabled",
   icon: "chrome://devtools/skin/images/tool-dom.svg",
   invertIconForDarkTheme: true,
   url: "chrome://devtools/content/dom/dom.html",
-  label: l10n("dom.label", domStrings),
-  panelLabel: l10n("dom.panelLabel", domStrings),
+  label: l10n("dom.label"),
+  panelLabel: l10n("dom.panelLabel"),
   get tooltip() {
-    return l10n("dom.tooltip", domStrings,
-    (osString == "Darwin" ? "Cmd+Opt+" : "Ctrl+Shift+") + this.key);
+    return l10n("dom.tooltip",
+      (osString == "Darwin" ? "Cmd+Opt+" : "Ctrl+Shift+") + this.key);
   },
   inMenu: true,
 
@@ -470,7 +439,7 @@ exports.defaultTools = defaultTools;
 
 Tools.darkTheme = {
   id: "dark",
-  label: l10n("options.darkTheme.label2", toolboxStrings),
+  label: l10n("options.darkTheme.label2"),
   ordinal: 1,
   stylesheets: ["chrome://devtools/skin/dark-theme.css"],
   classList: ["theme-dark"],
@@ -478,7 +447,7 @@ Tools.darkTheme = {
 
 Tools.lightTheme = {
   id: "light",
-  label: l10n("options.lightTheme.label2", toolboxStrings),
+  label: l10n("options.lightTheme.label2"),
   ordinal: 2,
   stylesheets: ["chrome://devtools/skin/light-theme.css"],
   classList: ["theme-light"],
@@ -486,7 +455,7 @@ Tools.lightTheme = {
 
 Tools.firebugTheme = {
   id: "firebug",
-  label: l10n("options.firebugTheme.label2", toolboxStrings),
+  label: l10n("options.firebugTheme.label2"),
   ordinal: 3,
   stylesheets: ["chrome://devtools/skin/firebug-theme.css"],
   classList: ["theme-light", "theme-firebug"],
@@ -503,13 +472,13 @@ exports.defaultThemes = [
  *
  * @param {string} name
  *        The key to lookup.
- * @param {StringBundle} bundle
- *        The key to lookup.
+ * @param {string} arg
+ *        Optional format argument.
  * @returns A localized version of the given key.
  */
-function l10n(name, bundle, arg) {
+function l10n(name, arg) {
   try {
-    return arg ? bundle.getFormatStr(name, arg) : bundle.getStr(name);
+    return arg ? L10N.getFormatStr(name, arg) : L10N.getStr(name);
   } catch (ex) {
     console.log("Error reading '" + name + "'");
     throw new Error("l10n error with " + name);
