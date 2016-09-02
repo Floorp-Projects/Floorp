@@ -1561,7 +1561,7 @@ DrawTargetSkia::OptimizeSourceSurface(SourceSurface *aSurface) const
 already_AddRefed<SourceSurface>
 DrawTargetSkia::CreateSourceSurfaceFromNativeSurface(const NativeSurface &aSurface) const
 {
-#if USE_SKIA_GPU
+#ifdef USE_SKIA_GPU
   if (aSurface.mType == NativeSurfaceType::OPENGL_TEXTURE && UsingSkiaGPU()) {
     // Wrap the OpenGL texture id in a Skia texture handle.
     GrBackendTextureDesc texDesc;
