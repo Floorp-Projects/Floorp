@@ -513,6 +513,7 @@ ContentChild::ContentChild()
  : mID(uint64_t(-1))
  , mCanOverrideProcessName(true)
  , mIsAlive(true)
+ , mShuttingDown(false)
 {
   // This process is a content process, so it's clearly running in
   // multiprocess mode!
@@ -861,6 +862,12 @@ bool
 ContentChild::IsAlive() const
 {
   return mIsAlive;
+}
+
+bool
+ContentChild::IsShuttingDown() const
+{
+  return mShuttingDown;
 }
 
 void
@@ -2987,6 +2994,8 @@ ContentChild::RecvShutdown()
       return true;
     }
   }
+
+  mShuttingDown = true;
 
   if (mPolicy) {
     mPolicy->Deactivate();
