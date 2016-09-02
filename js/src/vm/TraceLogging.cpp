@@ -480,7 +480,12 @@ TraceLoggerThread::startEvent(TraceLoggerTextId id) {
 void
 TraceLoggerThread::startEvent(const TraceLoggerEvent& event) {
     if (!event.hasPayload()) {
+        if (!enabled())
+            return;
         startEvent(TraceLogger_Error);
+        disable(/* force = */ true, "TraceLogger encountered an empty event. "
+                                    "Potentially due to OOM during creation of "
+                                    "this event. Disabling TraceLogger.");
         return;
     }
     startEvent(event.payload()->textId());
@@ -775,6 +780,8 @@ TraceLoggerThreadState::init()
     enabledTextIds[TraceLogger_Interpreter] = enabledTextIds[TraceLogger_Engine];
     enabledTextIds[TraceLogger_Baseline] = enabledTextIds[TraceLogger_Engine];
     enabledTextIds[TraceLogger_IonMonkey] = enabledTextIds[TraceLogger_Engine];
+
+    enabledTextIds[TraceLogger_Error] = true;
 
     const char* options = getenv("TLOPTIONS");
     if (options) {

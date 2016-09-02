@@ -978,13 +978,13 @@ BaselineScript::initTraceLogger(JSRuntime* runtime, JSScript* script,
 #endif
 
     TraceLoggerThread* logger = TraceLoggerForMainThread(runtime);
-    traceLoggerScriptEvent_ = TraceLoggerEvent(logger, TraceLogger_Scripts, script);
 
     MOZ_ASSERT(offsets.length() == numTraceLoggerToggleOffsets_);
     for (size_t i = 0; i < offsets.length(); i++)
         traceLoggerToggleOffsets()[i] = offsets[i].offset();
 
     if (TraceLogTextIdEnabled(TraceLogger_Engine) || TraceLogTextIdEnabled(TraceLogger_Scripts)) {
+        traceLoggerScriptEvent_ = TraceLoggerEvent(logger, TraceLogger_Scripts, script);
         for (size_t i = 0; i < numTraceLoggerToggleOffsets_; i++) {
             CodeLocationLabel label(method_, CodeOffset(traceLoggerToggleOffsets()[i]));
             Assembler::ToggleToCmp(label);
@@ -1003,10 +1003,8 @@ BaselineScript::toggleTraceLoggerScripts(JSRuntime* runtime, JSScript* script, b
     // Patch the logging script textId to be correct.
     // When logging log the specific textId else the global Scripts textId.
     TraceLoggerThread* logger = TraceLoggerForMainThread(runtime);
-    if (enable)
+    if (enable && !traceLoggerScriptEvent_.hasPayload())
         traceLoggerScriptEvent_ = TraceLoggerEvent(logger, TraceLogger_Scripts, script);
-    else
-        traceLoggerScriptEvent_ = TraceLoggerEvent(logger, TraceLogger_Scripts);
 
     AutoWritableJitCode awjc(method());
 
