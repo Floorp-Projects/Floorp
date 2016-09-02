@@ -116,6 +116,8 @@ public:
 
   bool IsAlive() const;
 
+  bool IsShuttingDown() const;
+
   static void AppendProcessId(nsACString& aName);
 
   ContentBridgeParent* GetLastBridge()
@@ -682,7 +684,9 @@ private:
   // Hashtable to keep track of the pending GetFilesHelper objects.
   // This GetFilesHelperChild objects are removed when RecvGetFilesResponse is
   // received.
- nsRefPtrHashtable<nsIDHashKey, GetFilesHelperChild> mGetFilesPendingRequests;
+  nsRefPtrHashtable<nsIDHashKey, GetFilesHelperChild> mGetFilesPendingRequests;
+
+  bool mShuttingDown;
 
   DISALLOW_EVIL_CONSTRUCTORS(ContentChild);
 };
