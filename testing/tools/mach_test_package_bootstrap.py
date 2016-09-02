@@ -112,6 +112,15 @@ def find_firefox(context):
             continue
 
 
+def find_hostutils(context):
+    workdir = context.mozharness_workdir
+    hostutils = os.path.join(workdir, 'hostutils')
+    for fname in os.listdir(hostutils):
+        fpath = os.path.join(hostutils, fname)
+        if os.path.isdir(fpath) and fname.startswith('host-utils'):
+            return fpath
+
+
 def normalize_test_path(test_root, path):
     if os.path.isabs(path) or os.path.exists(path):
         return os.path.normpath(os.path.abspath(path))
@@ -151,6 +160,8 @@ def bootstrap(test_package_root):
         if key == 'firefox_bin':
             return find_firefox(context)
 
+        if key == 'hostutils':
+            return find_hostutils(context)
 
         if key == 'mozharness_config':
             for dir_path in ancestors(context.package_root):
