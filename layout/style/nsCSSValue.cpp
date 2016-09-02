@@ -761,6 +761,7 @@ void nsCSSValue::StartImageLoad(nsIDocument* aDocument) const
   mozilla::css::ImageValue* image =
     new mozilla::css::ImageValue(mValue.mURL->GetURI(),
                                  mValue.mURL->mString,
+                                 mValue.mURL->mBaseURI,
                                  mValue.mURL->mReferrer,
                                  mValue.mURL->mOriginPrincipal,
                                  aDocument);
@@ -2592,17 +2593,21 @@ nsCSSValue::Array::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) cons
 
 css::URLValueData::URLValueData(already_AddRefed<PtrHolder<nsIURI>> aURI,
                                 nsStringBuffer* aString,
+                                already_AddRefed<PtrHolder<nsIURI>> aBaseURI,
                                 already_AddRefed<PtrHolder<nsIURI>> aReferrer,
                                 already_AddRefed<PtrHolder<nsIPrincipal>>
                                   aOriginPrincipal)
   : mURI(Move(aURI))
+  , mBaseURI(Move(aBaseURI))
   , mString(aString)
   , mReferrer(Move(aReferrer))
   , mOriginPrincipal(Move(aOriginPrincipal))
   , mURIResolved(true)
   , mLocalURLFlag(IsLocalRefURL(aString))
 {
-  MOZ_ASSERT(mOriginPrincipal, "Must have an origin principal");
+  MOZ_ASSERT(mString);
+  MOZ_ASSERT(mBaseURI);
+  MOZ_ASSERT(mOriginPrincipal);
 }
 
 css::URLValueData::URLValueData(nsStringBuffer* aString,
@@ -2610,14 +2615,16 @@ css::URLValueData::URLValueData(nsStringBuffer* aString,
                                 already_AddRefed<PtrHolder<nsIURI>> aReferrer,
                                 already_AddRefed<PtrHolder<nsIPrincipal>>
                                   aOriginPrincipal)
-  : mURI(Move(aBaseURI))
+  : mBaseURI(Move(aBaseURI))
   , mString(aString)
   , mReferrer(Move(aReferrer))
   , mOriginPrincipal(Move(aOriginPrincipal))
   , mURIResolved(false)
   , mLocalURLFlag(IsLocalRefURL(aString))
 {
-  MOZ_ASSERT(mOriginPrincipal, "Must have an origin principal");
+  MOZ_ASSERT(aString);
+  MOZ_ASSERT(mBaseURI);
+  MOZ_ASSERT(mOriginPrincipal);
 }
 
 bool
@@ -2632,6 +2639,9 @@ css::URLValueData::operator==(const URLValueData& aOther) const
           (GetURI() == aOther.GetURI() || // handles null == null
            (mURI && aOther.mURI &&
             NS_SUCCEEDED(mURI->Equals(aOther.mURI, &eq)) &&
+            eq)) &&
+          (mBaseURI == aOther.mBaseURI ||
+           (NS_SUCCEEDED(self.mBaseURI.get()->Equals(other.mBaseURI.get(), &eq)) &&
             eq)) &&
           (mOriginPrincipal == aOther.mOriginPrincipal ||
            self.mOriginPrincipal.get()->Equals(other.mOriginPrincipal.get())) &&
@@ -2671,14 +2681,16 @@ css::URLValueData::URIEquals(const URLValueData& aOther) const
 nsIURI*
 css::URLValueData::GetURI() const
 {
+  MOZ_ASSERT(NS_IsMainThread());
+
   if (!mURIResolved) {
-    mURIResolved = true;
-    // Be careful to not null out mURI before we've passed it as the base URI
+    MOZ_ASSERT(!mURI);
     nsCOMPtr<nsIURI> newURI;
     NS_NewURI(getter_AddRefs(newURI),
               NS_ConvertUTF16toUTF8(nsCSSValue::GetBufferValue(mString)),
-              nullptr, mURI);
+              nullptr, const_cast<nsIURI*>(mBaseURI.get()));
     mURI = new PtrHolder<nsIURI>(newURI.forget());
+    mURIResolved = true;
   }
 
   return mURI;
@@ -2708,10 +2720,11 @@ URLValue::URLValue(nsStringBuffer* aString, nsIURI* aBaseURI, nsIURI* aReferrer,
   MOZ_ASSERT(NS_IsMainThread());
 }
 
-URLValue::URLValue(nsIURI* aURI, nsStringBuffer* aString, nsIURI* aReferrer,
-                   nsIPrincipal* aOriginPrincipal)
+URLValue::URLValue(nsIURI* aURI, nsStringBuffer* aString, nsIURI* aBaseURI,
+                   nsIURI* aReferrer, nsIPrincipal* aOriginPrincipal)
   : URLValueData(do_AddRef(new PtrHolder<nsIURI>(aURI)),
                  aString,
+                 do_AddRef(new PtrHolder<nsIURI>(aBaseURI)),
                  do_AddRef(new PtrHolder<nsIURI>(aReferrer)),
                  do_AddRef(new PtrHolder<nsIPrincipal>(aOriginPrincipal)))
 {
@@ -2731,10 +2744,12 @@ css::URLValue::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
 }
 
 css::ImageValue::ImageValue(nsIURI* aURI, nsStringBuffer* aString,
-                            nsIURI* aReferrer, nsIPrincipal* aOriginPrincipal,
+                            nsIURI* aBaseURI, nsIURI* aReferrer,
+                            nsIPrincipal* aOriginPrincipal,
                             nsIDocument* aDocument)
   : URLValueData(do_AddRef(new PtrHolder<nsIURI>(aURI)),
                  aString,
+                 do_AddRef(new PtrHolder<nsIURI>(aBaseURI, false)),
                  do_AddRef(new PtrHolder<nsIURI>(aReferrer)),
                  do_AddRef(new PtrHolder<nsIPrincipal>(aOriginPrincipal)))
 {
