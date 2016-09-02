@@ -50,7 +50,7 @@ SpecialPowers.pushPrefEnv(
             ["urlclassifier.phishTable", "test-phish-simple"]]},
   function() {
     classifierHelper.waitForInit()
-      .then(() => { classifierHelper.addUrlToDB(testData); })
+      .then(() => classifierHelper.addUrlToDB(testData))
       .then(updateSuccess)
       .catch(err => {
         updateError(err);
