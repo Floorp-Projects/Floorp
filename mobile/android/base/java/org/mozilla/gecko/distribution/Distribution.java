@@ -227,7 +227,7 @@ public class Distribution {
                     String preferencesJSON = "";
                     try {
                         final File descFile = distribution.getDistributionFile("preferences.json");
-                        preferencesJSON = FileUtils.getFileContents(descFile);
+                        preferencesJSON = FileUtils.readStringFromFile(descFile);
                     } catch (IOException e) {
                         // Just send empty string
                     }
