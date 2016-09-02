@@ -2684,7 +2684,7 @@ css::URLValueData::DefinitelyEqualURIs(const URLValueData& aOther) const
   return mBaseURI == aOther.mBaseURI &&
          (mString == aOther.mString ||
           NS_strcmp(nsCSSValue::GetBufferValue(mString),
-                    nsCSSValue::GetBufferValue(aOther.mString)));
+                    nsCSSValue::GetBufferValue(aOther.mString)) == 0);
 }
 
 bool
