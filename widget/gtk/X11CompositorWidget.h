@@ -49,9 +49,6 @@ public:
   X11CompositorWidget* AsX11() override { return this; }
   CompositorWidgetDelegate* AsDelegate() override { return this; }
 
-  Display* XDisplay() const { return mXDisplay; }
-  Window XWindow() const { return mXWindow; }
-
 protected:
   nsWindow* mWidget;
 
