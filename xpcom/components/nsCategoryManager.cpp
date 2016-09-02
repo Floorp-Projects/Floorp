@@ -471,7 +471,7 @@ nsCategoryManager::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
   n += mTable.ShallowSizeOfExcludingThis(aMallocSizeOf);
   for (auto iter = mTable.ConstIter(); !iter.Done(); iter.Next()) {
     // We don't measure the key string because it's a non-owning pointer.
-    n += iter.Data().get()->SizeOfExcludingThis(aMallocSizeOf);
+    n += iter.Data()->SizeOfExcludingThis(aMallocSizeOf);
   }
 
   return n;
