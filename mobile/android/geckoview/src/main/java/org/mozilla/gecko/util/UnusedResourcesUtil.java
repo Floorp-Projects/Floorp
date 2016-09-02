@@ -119,4 +119,10 @@ final class UnusedResourcesUtil {
             R.style.RemoteTabsPanelItem_TextAppearance_Linkified,
             R.style.RemoteTabsPanelItem_Button,
     };
+
+    // String resources that are used in the full-pane Activity Stream that are temporarily
+    // not needed while Activity Stream is part of the HomePager
+    public static final int[] TEMPORARY_UNUSED_ACTIVITY_STREAM = {
+            R.string.activity_stream_topsites
+    };
 }
