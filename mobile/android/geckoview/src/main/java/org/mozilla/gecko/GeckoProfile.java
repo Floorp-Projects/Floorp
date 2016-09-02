@@ -9,6 +9,7 @@ import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.os.Bundle;
 import android.support.annotation.WorkerThread;
 import android.text.TextUtils;
 import android.util.Log;
@@ -392,7 +393,7 @@ public final class GeckoProfile {
      */
     @RobocopTarget
     public synchronized File getDir() {
-        forceCreate();
+        forceCreateLocked();
         return mProfileDir;
     }
 
@@ -400,9 +401,9 @@ public final class GeckoProfile {
      * Forces profile creation. Consider using {@link #getDir()} to initialize the profile instead - it is the
      * lazy initializer and, for our code reasoning abilities, we should initialize the profile in one place.
      */
-    private synchronized GeckoProfile forceCreate() {
+    private void forceCreateLocked() {
         if (mProfileDir != null) {
-            return this;
+            return;
         }
 
         try {
@@ -417,7 +418,6 @@ public final class GeckoProfile {
         } catch (IOException ioe) {
             Log.e(LOGTAG, "Error getting profile dir", ioe);
         }
-        return this;
     }
 
     public File getFile(String aFile) {
@@ -898,12 +898,12 @@ public final class GeckoProfile {
         INIParser parser = GeckoProfileDirectories.getProfilesINI(mMozillaDir);
 
         // Salt the name of our requested profile
-        String saltedName = GeckoProfileDirectories.saltProfileName(mName);
-        File profileDir = new File(mMozillaDir, saltedName);
-        while (profileDir.exists()) {
+        String saltedName;
+        File profileDir;
+        do {
             saltedName = GeckoProfileDirectories.saltProfileName(mName);
             profileDir = new File(mMozillaDir, saltedName);
-        }
+        } while (profileDir.exists());
 
         // Attempt to create the salted profile dir
         if (!profileDir.mkdirs()) {
@@ -988,6 +988,12 @@ public final class GeckoProfile {
     @RobocopTarget
     public void enqueueInitialization(final File profileDir) {
         Log.i(LOGTAG, "Enqueuing profile init.");
+
+        final Bundle message = new Bundle(2);
+        message.putCharSequence("name", getName());
+        message.putCharSequence("path", profileDir.getAbsolutePath());
+        EventDispatcher.getInstance().dispatch("Profile:Create", message);
+
         final Context context = mApplicationContext;
 
         // Add everything when we're done loading the distribution.
