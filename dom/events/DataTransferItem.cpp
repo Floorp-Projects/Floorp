@@ -103,9 +103,13 @@ DataTransferItem::SetData(nsIVariant* aData)
     return;
   }
 
-  mKind = KIND_OTHER;
   mData = aData;
+  mKind = KindFromData(mData);
+}
 
+/* static */ DataTransferItem::eKind
+DataTransferItem::KindFromData(nsIVariant* aData)
+{
   nsCOMPtr<nsISupports> supports;
   nsresult rv = aData->GetAsISupports(getter_AddRefs(supports));
   if (NS_SUCCEEDED(rv) && supports) {
@@ -113,8 +117,7 @@ DataTransferItem::SetData(nsIVariant* aData)
     if (nsCOMPtr<nsIDOMBlob>(do_QueryInterface(supports)) ||
         nsCOMPtr<BlobImpl>(do_QueryInterface(supports)) ||
         nsCOMPtr<nsIFile>(do_QueryInterface(supports))) {
-      mKind = KIND_FILE;
-      return;
+      return KIND_FILE;
     }
   }
 
@@ -126,8 +129,10 @@ DataTransferItem::SetData(nsIVariant* aData)
   // consider it a string, by calling GetAsAString, and checking for success.
   rv = aData->GetAsAString(string);
   if (NS_SUCCEEDED(rv)) {
-    mKind = KIND_STRING;
+    return KIND_STRING;
   }
+
+  return KIND_OTHER;
 }
 
 void
@@ -235,26 +240,34 @@ DataTransferItem::FillInExternalData()
 already_AddRefed<File>
 DataTransferItem::GetAsFile(ErrorResult& aRv)
 {
+  return GetAsFileWithPrincipal(nsContentUtils::SubjectPrincipal(), aRv);
+}
+
+already_AddRefed<File>
+DataTransferItem::GetAsFileWithPrincipal(nsIPrincipal* aPrincipal, ErrorResult& aRv)
+{
   if (mKind != KIND_FILE) {
     return nullptr;
   }
 
-  nsCOMPtr<nsIVariant> data = Data(nsContentUtils::SubjectPrincipal(), aRv);
+  // This is done even if we have an mCachedFile, as it performs the necessary
+  // permissions checks to ensure that we are allowed to access this type.
+  nsCOMPtr<nsIVariant> data = Data(aPrincipal, aRv);
   if (NS_WARN_IF(!data || aRv.Failed())) {
-    return nullptr;
-  }
-
-  nsCOMPtr<nsISupports> supports;
-  aRv = data->GetAsISupports(getter_AddRefs(supports));
-  MOZ_ASSERT(!aRv.Failed() && supports,
-             "File objects should be stored as nsISupports variants");
-  if (aRv.Failed() || !supports) {
     return nullptr;
   }
 
   // Generate the dom::File from the stored data, caching it so that the
   // same object is returned in the future.
   if (!mCachedFile) {
+    nsCOMPtr<nsISupports> supports;
+    aRv = data->GetAsISupports(getter_AddRefs(supports));
+    MOZ_ASSERT(!aRv.Failed() && supports,
+               "File objects should be stored as nsISupports variants");
+    if (aRv.Failed() || !supports) {
+      return nullptr;
+    }
+
     if (nsCOMPtr<nsIDOMBlob> domBlob = do_QueryInterface(supports)) {
       Blob* blob = static_cast<Blob*>(domBlob.get());
       mCachedFile = blob->ToFile();
@@ -275,7 +288,14 @@ DataTransferItem::GetAsFile(ErrorResult& aRv)
 already_AddRefed<FileSystemEntry>
 DataTransferItem::GetAsEntry(ErrorResult& aRv)
 {
-  RefPtr<File> file = GetAsFile(aRv);
+  return GetAsEntryWithPrincipal(nsContentUtils::SubjectPrincipal(), aRv);
+}
+
+already_AddRefed<FileSystemEntry>
+DataTransferItem::GetAsEntryWithPrincipal(nsIPrincipal* aPrincipal,
+                                          ErrorResult& aRv)
+{
+  RefPtr<File> file = GetAsFileWithPrincipal(aPrincipal, aRv);
   if (NS_WARN_IF(aRv.Failed()) || !file) {
     return nullptr;
   }

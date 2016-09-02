@@ -94,6 +94,7 @@ function initializeDefaultPreferences() {
   "externalLinkTarget": 0
 }
 
+
   var defaultBranch = Services.prefs.getDefaultBranch(PREF_PREFIX + '.');
   var defaultValue;
   for (var key in DEFAULT_PREFERENCES) {

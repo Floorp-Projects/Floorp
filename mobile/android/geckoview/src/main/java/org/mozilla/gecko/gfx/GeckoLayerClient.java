@@ -91,9 +91,9 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
 
     private volatile boolean mGeckoIsReady;
 
-    private final PanZoomController mPanZoomController;
+    /* package */ final PanZoomController mPanZoomController;
     private final DynamicToolbarAnimator mToolbarAnimator;
-    private final LayerView mView;
+    /* package */ final LayerView mView;
 
     /* This flag is true from the time that browser.js detects a first-paint is about to start,
      * to the time that we receive the first-paint composite notification from the compositor.
@@ -142,6 +142,10 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
         mPanZoomController.setOverscrollHandler(listener);
     }
 
+    public void setGeckoReady(boolean ready) {
+        mGeckoIsReady = ready;
+    }
+
     @Override // PanZoomTarget
     public boolean isGeckoReady() {
         return mGeckoIsReady;
@@ -166,6 +170,7 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
         mView.post(new Runnable() {
             @Override
             public void run() {
+                mPanZoomController.attach();
                 mView.updateCompositor();
             }
         });

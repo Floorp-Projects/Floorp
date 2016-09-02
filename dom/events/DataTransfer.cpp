@@ -283,10 +283,10 @@ DataTransfer::GetMozUserCancelled(bool* aUserCancelled)
   return NS_OK;
 }
 
-FileList*
+already_AddRefed<FileList>
 DataTransfer::GetFiles(ErrorResult& aRv)
 {
-  return mItems->Files();
+  return mItems->Files(nsContentUtils::SubjectPrincipal());
 }
 
 NS_IMETHODIMP
@@ -296,11 +296,13 @@ DataTransfer::GetFiles(nsIDOMFileList** aFileList)
     return NS_ERROR_FAILURE;
   }
 
-  ErrorResult rv;
-  RefPtr<FileList> files = GetFiles(rv);
-  if (NS_WARN_IF(rv.Failed())) {
-    return rv.StealNSResult();
-  }
+  // The XPCOM interface is only avaliable to system code, and thus we can
+  // assume the system principal. This is consistent with the previous behavour
+  // of this function, which also assumed the system principal.
+  //
+  // This code is also called from C++ code, which expects it to have a System
+  // Principal, and thus the SubjectPrincipal cannot be used.
+  RefPtr<FileList> files = mItems->Files(nsContentUtils::GetSystemPrincipal());
 
   files.forget(aFileList);
   return NS_OK;
@@ -666,6 +668,27 @@ DataTransfer::MozGetDataAt(JSContext* aCx, const nsAString& aFormat,
   }
 }
 
+/* static */ bool
+DataTransfer::PrincipalMaySetData(const nsAString& aType,
+                                  nsIVariant* aData,
+                                  nsIPrincipal* aPrincipal)
+{
+  if (!nsContentUtils::IsSystemPrincipal(aPrincipal)) {
+    DataTransferItem::eKind kind = DataTransferItem::KindFromData(aData);
+    if (kind == DataTransferItem::KIND_OTHER) {
+      NS_WARNING("Disallowing adding non string/file types to DataTransfer");
+      return false;
+    }
+
+    if (aType.EqualsASCII(kFileMime) ||
+        aType.EqualsASCII(kFilePromiseMime)) {
+      NS_WARNING("Disallowing adding x-moz-file or x-moz-file-promize types to DataTransfer");
+      return false;
+    }
+  }
+  return true;
+}
+
 nsresult
 DataTransfer::SetDataAtInternal(const nsAString& aFormat, nsIVariant* aData,
                                 uint32_t aIndex,
@@ -697,20 +720,8 @@ DataTransfer::SetDataAtInternal(const nsAString& aFormat, nsIVariant* aData,
     return NS_ERROR_TYPE_ERR;
   }
 
-  // Don't allow non-chrome to add non-string or file data. We'll block file
-  // promises as well which are used internally for drags to the desktop.
-  if (!nsContentUtils::IsSystemPrincipal(aSubjectPrincipal)) {
-    if (aFormat.EqualsLiteral(kFilePromiseMime) ||
-        aFormat.EqualsLiteral(kFileMime)) {
-      return NS_ERROR_DOM_SECURITY_ERR;
-    }
-
-    uint16_t type;
-    aData->GetDataType(&type);
-    if (type == nsIDataType::VTYPE_INTERFACE ||
-        type == nsIDataType::VTYPE_INTERFACE_IS) {
-      return NS_ERROR_DOM_SECURITY_ERR;
-    }
+  if (!PrincipalMaySetData(aFormat, aData, aSubjectPrincipal)) {
+    return NS_ERROR_DOM_SECURITY_ERR;
   }
 
   return SetDataWithPrincipal(aFormat, aData, aIndex, aSubjectPrincipal);
@@ -836,7 +847,7 @@ DataTransfer::GetFilesAndDirectories(ErrorResult& aRv)
     return nullptr;
   }
 
-  RefPtr<FileList> files = mItems->Files();
+  RefPtr<FileList> files = mItems->Files(nsContentUtils::SubjectPrincipal());
   if (NS_WARN_IF(!files)) {
     return nullptr;
   }
