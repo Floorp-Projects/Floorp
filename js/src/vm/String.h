@@ -1210,17 +1210,6 @@ NewStringCopyZ(js::ExclusiveContext* cx, const char* s)
     return NewStringCopyN<allowGC>(cx, s, strlen(s));
 }
 
-template <js::AllowGC allowGC>
-extern JSFlatString*
-NewStringCopyUTF8N(JSContext* cx, const JS::UTF8Chars utf8);
-
-template <js::AllowGC allowGC>
-inline JSFlatString*
-NewStringCopyUTF8Z(JSContext* cx, const JS::ConstUTF8CharsZ utf8)
-{
-    return NewStringCopyUTF8N<allowGC>(cx, JS::UTF8Chars(utf8.c_str(), strlen(utf8.c_str())));
-}
-
 } /* namespace js */
 
 // Addon IDs are interned atoms which are never destroyed. This detail is

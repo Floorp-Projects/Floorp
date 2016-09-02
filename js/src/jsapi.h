@@ -27,7 +27,6 @@
 #include "jspubtd.h"
 
 #include "js/CallArgs.h"
-#include "js/CharacterEncoding.h"
 #include "js/Class.h"
 #include "js/GCVector.h"
 #include "js/HashTable.h"
@@ -4615,12 +4614,6 @@ JS_NewStringCopyN(JSContext* cx, const char* s, size_t n);
 
 extern JS_PUBLIC_API(JSString*)
 JS_NewStringCopyZ(JSContext* cx, const char* s);
-
-extern JS_PUBLIC_API(JSString*)
-JS_NewStringCopyUTF8Z(JSContext* cx, const JS::ConstUTF8CharsZ s);
-
-extern JS_PUBLIC_API(JSString*)
-JS_NewStringCopyUTF8N(JSContext* cx, const JS::UTF8Chars s);
 
 extern JS_PUBLIC_API(JSString*)
 JS_AtomizeAndPinJSString(JSContext* cx, JS::HandleString str);
