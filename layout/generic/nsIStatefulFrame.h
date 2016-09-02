@@ -10,6 +10,7 @@
 #ifndef _nsIStatefulFrame_h
 #define _nsIStatefulFrame_h
 
+#include "nsContentUtils.h"
 #include "nsQueryFrame.h"
 
 class nsPresState;
