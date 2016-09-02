@@ -5243,13 +5243,8 @@ CanvasRenderingContext2D::DrawWindow(nsGlobalWindow& aWindow, double aX,
     thebes->SetMatrix(gfxMatrix(matrix._11, matrix._12, matrix._21,
                                 matrix._22, matrix._31, matrix._32));
   } else {
-    IntSize dtSize = IntSize::Ceil(sw, sh);
-    if (!Factory::AllowedSurfaceSize(dtSize)) {
-      aError.Throw(NS_ERROR_FAILURE);
-      return;
-    }
     drawDT =
-      gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(dtSize,
+      gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(IntSize::Ceil(sw, sh),
                                                                    SurfaceFormat::B8G8R8A8);
     if (!drawDT || !drawDT->IsValid()) {
       aError.Throw(NS_ERROR_FAILURE);
@@ -5275,12 +5270,6 @@ CanvasRenderingContext2D::DrawWindow(nsGlobalWindow& aWindow, double aX,
       return;
     }
     RefPtr<DataSourceSurface> data = snapshot->GetDataSurface();
-    if (!data || !Factory::AllowedSurfaceSize(data->GetSize())) {
-      gfxCriticalError() << "Unexpected invalid data source surface " <<
-        (data ? data->GetSize() : IntSize(0,0));
-      aError.Throw(NS_ERROR_FAILURE);
-      return;
-    }
 
     DataSourceSurface::MappedSurface rawData;
     if (NS_WARN_IF(!data->Map(DataSourceSurface::READ, &rawData))) {

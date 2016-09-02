@@ -80,8 +80,7 @@ private:
   friend class Factory;
 
   // If we have a custom deallocator, the |aData| will be released using the
-  // custom deallocator and |aClosure| in dtor.  The assumption is that the
-  // caller will check for valid size and stride before making this call.
+  // custom deallocator and |aClosure| in dtor.
   void InitWrappingData(unsigned char *aData,
                         const IntSize &aSize,
                         int32_t aStride,
