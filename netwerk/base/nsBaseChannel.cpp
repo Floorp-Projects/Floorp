@@ -84,8 +84,8 @@ nsBaseChannel::Redirect(nsIChannel *newChannel, uint32_t redirectFlags,
   // make a copy of the loadinfo, append to the redirectchain
   // and set it on the new channel
   if (mLoadInfo) {
-    nsSecurityFlags secFlags = mLoadInfo->GetSecurityFlags() ^
-                               nsILoadInfo::SEC_FORCE_INHERIT_PRINCIPAL;
+    nsSecurityFlags secFlags = mLoadInfo->GetSecurityFlags() &
+                               ~nsILoadInfo::SEC_FORCE_INHERIT_PRINCIPAL;
     nsCOMPtr<nsILoadInfo> newLoadInfo =
       static_cast<mozilla::LoadInfo*>(mLoadInfo.get())->CloneWithNewSecFlags(secFlags);
 
