@@ -548,7 +548,7 @@ function run_test()
       do_check_true(ret[1] !== childFront);
       do_check_true(ret[1] instanceof ChildFront);
     }).then(() => {
-      client.close(() => {
+      client.close().then(() => {
         do_test_finished();
       });
     }).then(null, err => {

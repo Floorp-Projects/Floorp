@@ -70,7 +70,7 @@ window.onload = function() {
       is(typeof tick, "number", "All values should be numbers.");
     }
 
-    client.close(() => {
+    client.close().then(() => {
       DebuggerServer.destroy();
       SimpleTest.finish()
     });

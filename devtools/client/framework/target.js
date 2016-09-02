@@ -586,7 +586,7 @@ TabTarget.prototype = {
       if (this.isLocalTab) {
         // We started with a local tab and created the client ourselves, so we
         // should close it.
-        this._client.close(cleanupAndResolve);
+        this._client.close().then(cleanupAndResolve);
       } else if (this.activeTab) {
         // The client was handed to us, so we are not responsible for closing
         // it. We just need to detach from the tab, if already attached.

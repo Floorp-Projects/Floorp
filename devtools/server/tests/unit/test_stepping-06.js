@@ -64,7 +64,7 @@ function test_simple_stepping()
               do_check_eq(aPacket.why.frameFinished.throw, "ah");
 
               gThreadClient.resume(function () {
-                gClient.close(gCallback);
+                gClient.close().then(gCallback);
               });
             });
             gThreadClient.stepOut();

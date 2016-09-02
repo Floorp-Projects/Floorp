@@ -87,5 +87,13 @@
 "algorithm": "sha512",
 "filename": "rust-std-lib.tar.bz2",
 "unpack": true
+},
+{
+"algorithm": "sha512",
+"visibility": "public",
+"filename": "dotgradle.tar.xz",
+"unpack": true,
+"digest": "9f082ccd71ad18991eb71fcad355c6990f50a72a09ab9b79696521485656083a72faf5a8d4714de9c4b901ee2319b6786a51964846bb7075061642a8505501c2",
+"size": 512
 }
 ]

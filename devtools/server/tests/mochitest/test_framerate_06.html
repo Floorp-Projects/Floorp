@@ -69,7 +69,7 @@ window.onload = function() {
     var belowThreshold = diffs.filter(v => v <= THRESHOLD);
     ok(belowThreshold.length <= 10, "we should have very few frames less than the threshold");
 
-    client.close(() => {
+    client.close().then(() => {
       DebuggerServer.destroy();
       SimpleTest.finish()
     });

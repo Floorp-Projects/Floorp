@@ -698,7 +698,7 @@ BrowserConsole.prototype = extend(WebConsole.prototype, {
 
     let chromeWindow = this.chromeWindow;
     this.$destroy().then(() =>
-      this.target.client.close(() => {
+      this.target.client.close().then(() => {
         HUDService._browserConsoleID = null;
         chromeWindow.close();
         this._bc_destroyer.resolve(null);

@@ -53,7 +53,7 @@ function test() {
           is(count, 2,
             "Only two actor exists in all pools. One tab actor and one global.");
 
-          gClient.close(finish);
+          gClient.close().then(finish);
         });
       });
     });

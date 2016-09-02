@@ -1,0 +1,128 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1247074
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1247074</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/paint_listener.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style>
+  .outer {
+      direction: ltr;
+      height: 400px;
+      width: 415px;
+      overflow: hidden;
+      position: relative;
+  }
+  .inner {
+      height: 100%;
+      outline: none;
+      overflow-x: hidden;
+      overflow-y: scroll;
+      position: relative;
+      scroll-behavior: smooth;
+  }
+  .outer.contentBefore::before {
+      top: 0;
+      content: '';
+      display: block;
+      height: 2px;
+      position: absolute;
+      width: 100%;
+      z-index: 99;
+  }
+  </style>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1247074">Mozilla Bug 1247074</a>
+<p id="display"></p>
+<div class="outer">
+  <div class="inner">
+   <ol>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+    <li>Some text</li>
+   </ol>
+  </div>
+</div>
+<script>
+SimpleTest.waitForExplicitFinish();
+window.onload = function() {
+  var elm = document.getElementsByClassName('inner')[0];
+
+  // Take control of the refresh driver
+  var utils = SpecialPowers.DOMWindowUtils;
+  utils.advanceTimeAndRefresh(0);
+
+  // Start a smooth scroll and advance a couple of frames so we're in the
+  // middle of the scroll animation
+  elm.scrollTop = 500;
+  utils.advanceTimeAndRefresh(16);
+  utils.advanceTimeAndRefresh(16);
+
+  // Trigger a frame reconstruction
+  elm.parentNode.classList.add('contentBefore');
+
+  // Reach a stable state and verify the scroll position is 500
+  utils.restoreNormalRefresh();
+  waitForAllPaintsFlushed(function() {
+    SimpleTest.is(elm.scrollTop, 500, "Scroll position ended up at 500");
+    SimpleTest.finish();
+  });
+}
+
+</script>
+</body>
+</html>

@@ -23,7 +23,7 @@ add_task(function* () {
   yield testErrorOnAttach(directorManager);
   yield testErrorOnDetach(directorManager);
 
-  yield closeDebuggerClient(client);
+  yield client.close();
   gBrowser.removeCurrentTab();
   DirectorRegistry.clear();
 });

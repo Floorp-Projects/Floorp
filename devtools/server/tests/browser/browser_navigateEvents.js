@@ -152,7 +152,7 @@ function cleanup() {
   let browser = gBrowser.selectedBrowser;
   browser.removeEventListener("DOMContentLoaded", onDOMContentLoaded);
   browser.removeEventListener("load", onLoad);
-  client.close(function () {
+  client.close().then(function () {
     Services.obs.addObserver(httpObserver, "http-on-modify-request", false);
     DebuggerServer.destroy();
     finish();
