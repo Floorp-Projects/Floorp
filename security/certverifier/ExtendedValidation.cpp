@@ -11,6 +11,7 @@
 #include "certdb.h"
 #include "hasht.h"
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/PodOperations.h"
 #include "pk11pub.h"
 #include "pkix/pkixtypes.h"
 #include "prerror.h"
@@ -1271,9 +1272,15 @@ RegisterOID(const SECItem& oidItem, const char* oidName)
   return SECOID_AddEntry(&od);
 }
 
+static SECOidTag sCABForumEVOIDTag = SEC_OID_UNKNOWN;
+
 static bool
 isEVPolicy(SECOidTag policyOIDTag)
 {
+  if (policyOIDTag != SEC_OID_UNKNOWN && policyOIDTag == sCABForumEVOIDTag) {
+    return true;
+  }
+
   for (const nsMyTrustedEVInfo& entry : myTrustedEVInfos) {
     if (policyOIDTag == entry.oid_tag) {
       return true;
@@ -1294,11 +1301,17 @@ CertIsAuthoritativeForEVPolicy(const UniqueCERTCertificate& cert,
     return false;
   }
 
+  const SECOidData* cabforumOIDData = SECOID_FindOIDByTag(sCABForumEVOIDTag);
   for (const nsMyTrustedEVInfo& entry : myTrustedEVInfos) {
     if (entry.cert && CERT_CompareCerts(cert.get(), entry.cert.get())) {
+      if (cabforumOIDData && cabforumOIDData->oid.len == policy.numBytes &&
+          mozilla::PodEqual(cabforumOIDData->oid.data, policy.bytes,
+                            policy.numBytes)) {
+        return true;
+      }
       const SECOidData* oidData = SECOID_FindOIDByTag(entry.oid_tag);
       if (oidData && oidData->oid.len == policy.numBytes &&
-          !memcmp(oidData->oid.data, policy.bytes, policy.numBytes)) {
+          mozilla::PodEqual(oidData->oid.data, policy.bytes, policy.numBytes)) {
         return true;
       }
     }
@@ -1310,6 +1323,19 @@ CertIsAuthoritativeForEVPolicy(const UniqueCERTCertificate& cert,
 static PRStatus
 IdentityInfoInit()
 {
+  static const char* sCABForumOIDString = "2.23.140.1.1";
+  static const char* sCABForumOIDDescription = "CA/Browser Forum EV OID";
+
+  mozilla::ScopedAutoSECItem cabforumOIDItem;
+  if (SEC_StringToOID(nullptr, &cabforumOIDItem, sCABForumOIDString, 0)
+        != SECSuccess) {
+    return PR_FAILURE;
+  }
+  sCABForumEVOIDTag = RegisterOID(cabforumOIDItem, sCABForumOIDDescription);
+  if (sCABForumEVOIDTag == SEC_OID_UNKNOWN) {
+    return PR_FAILURE;
+  }
+
   for (size_t iEV = 0; iEV < mozilla::ArrayLength(myTrustedEVInfos); ++iEV) {
     nsMyTrustedEVInfo& entry = myTrustedEVInfos[iEV];
 
