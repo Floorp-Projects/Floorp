@@ -67,8 +67,8 @@ class VideoPuppeteer(object):
         self._set_duration = set_duration
         self.video = None
         self.expected_duration = 0
-        self._start_time = 0
-        self._start_wall_time = 0
+        self._first_seen_time = 0
+        self._first_seen_wall_time = 0
         wait = Wait(self.marionette, timeout=self.timeout)
         with self.marionette.using_context(Marionette.CONTEXT_CONTENT):
             self.marionette.navigate(self.test_url)
@@ -96,8 +96,8 @@ class VideoPuppeteer(object):
         wait = Wait(self, timeout=self.timeout)
         verbose_until(wait, self, playback_started,
                       "Check if video has played some range")
-        self._start_time = self.current_time
-        self._start_wall_time = clock()
+        self._first_seen_time = self.current_time
+        self._first_seen_wall_time = clock()
         self.update_expected_duration()
 
     def update_expected_duration(self):
@@ -115,14 +115,21 @@ class VideoPuppeteer(object):
         # video, for example), so self.duration is the duration of the main
         # video.
         video_duration = self.duration
-        set_duration = self._set_duration
-        # In case video starts at t > 0, adjust target time partial playback
-        if self._set_duration and self._start_time:
-            set_duration += self._start_time
-        if 0 < set_duration < video_duration:
-            self.expected_duration = set_duration
+        # Do our best to figure out where the video started playing
+        played_ranges = self.played
+        if played_ranges.length > 0:
+            # If we have a range we should only have on continuous range
+            assert played_ranges.length == 1
+            start_position = played_ranges.start(0)
         else:
-            self.expected_duration = video_duration
+            # If we don't have a range we should have a current time
+            start_position = self._first_seen_time
+        # In case video starts at t > 0, adjust target time partial playback
+        remaining_video = video_duration - start_position
+        if 0 < self._set_duration < remaining_video:
+            self.expected_duration = self._set_duration
+        else:
+            self.expected_duration = remaining_video
 
     def get_debug_lines(self):
         """
@@ -171,7 +178,11 @@ class VideoPuppeteer(object):
         :return: How much time is remaining given the duration of the video
             and the duration that has been set.
         """
-        return self.expected_duration - self.current_time
+        played_ranges = self.played
+        # Playback should be in one range (as tests do not currently seek).
+        assert played_ranges.length == 1
+        played_duration = self.played.end(0) - self.played.start(0)
+        return self.expected_duration - played_duration
 
     @property
     def played(self):
@@ -242,8 +253,8 @@ class VideoPuppeteer(object):
         """
         # Note that self.current_time could temporarily refer to a
         # spliced-in ad
-        elapsed_current_time = self.current_time - self._start_time
-        elapsed_wall_time = clock() - self._start_wall_time
+        elapsed_current_time = self.current_time - self._first_seen_time
+        elapsed_wall_time = clock() - self._first_seen_wall_time
         return elapsed_wall_time - elapsed_current_time
 
     def measure_progress(self):
@@ -268,15 +279,16 @@ class VideoPuppeteer(object):
         if self.video:
             messages += [
                 '\t(video)',
-                '\tcurrent_time: {0},'.format(self.current_time),
-                '\tduration: {0},'.format(self.duration),
-                '\texpected_duration: {0},'.format(self.expected_duration),
-                '\tlag: {0},'.format(self.lag),
-                '\turl: {0}'.format(self.video_url),
-                '\tsrc: {0}'.format(self.video_src),
-                '\tframes total: {0}'.format(self.total_frames),
-                '\t - dropped: {0}'.format(self.dropped_frames),
-                '\t - corrupted: {0}'.format(self.corrupted_frames)
+                '\tcurrent_time: {},'.format(self.current_time),
+                '\tduration: {},'.format(self.duration),
+                '\texpected_duration: {},'.format(self.expected_duration),
+                '\tplayed: {}'.format(self.played),
+                '\tlag: {},'.format(self.lag),
+                '\turl: {}'.format(self.video_url),
+                '\tsrc: {}'.format(self.video_src),
+                '\tframes total: {}'.format(self.total_frames),
+                '\t - dropped: {}'.format(self.dropped_frames),
+                '\t - corrupted: {}'.format(self.corrupted_frames)
             ]
         else:
             messages += ['\tvideo: None']
@@ -340,8 +352,7 @@ def playback_done(video):
     :return: True if we are close enough to the end of playback; False
         otherwise.
     """
-    remaining_time = video.remaining_time
-    if abs(remaining_time) < video.interval:
+    if video.remaining_time < video.interval:
         return True
 
     # Check to see if the video has stalled. Accumulate the amount of lag

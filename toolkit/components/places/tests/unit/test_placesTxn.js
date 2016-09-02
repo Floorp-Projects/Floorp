@@ -555,6 +555,40 @@ add_task(function* test_edit_keyword() {
   do_check_eq(PlacesUtils.getPostDataForBookmark(testBkmId), null);
 });
 
+add_task(function* test_edit_specific_keyword() {
+  const KEYWORD = "keyword-test_edit_keyword2";
+
+  let testURI = NetUtil.newURI("http://test_edit_keyword2.com");
+  let testBkmId = bmsvc.insertBookmark(root, testURI, bmsvc.DEFAULT_INDEX, "Test edit keyword");
+  // Add multiple keyword to this uri.
+  yield PlacesUtils.keywords.insert({ keyword: "kw1", url: testURI.spec, postData: "postData1" });
+  yield PlacesUtils.keywords.insert({keyword: "kw2", url: testURI.spec, postData: "postData2" });
+
+  // Try to change only kw2.
+  let txn = new PlacesEditBookmarkKeywordTransaction(testBkmId, KEYWORD, "postData2", "kw2");
+
+  txn.doTransaction();
+  do_check_eq(observer._itemChangedId, testBkmId);
+  do_check_eq(observer._itemChangedProperty, "keyword");
+  do_check_eq(observer._itemChangedValue, KEYWORD);
+  let entry = yield PlacesUtils.keywords.fetch("kw1");
+  Assert.equal(entry.url.href, testURI.spec);
+  Assert.equal(entry.postData, "postData1");
+  yield promiseKeyword(KEYWORD, testURI.spec, "postData2");
+  yield promiseKeyword("kw2", null);
+
+  txn.undoTransaction();
+  do_check_eq(observer._itemChangedId, testBkmId);
+  do_check_eq(observer._itemChangedProperty, "keyword");
+  do_check_eq(observer._itemChangedValue, "kw2");
+  do_check_eq(PlacesUtils.getPostDataForBookmark(testBkmId), "postData1");
+  entry = yield PlacesUtils.keywords.fetch("kw1");
+  Assert.equal(entry.url.href, testURI.spec);
+  Assert.equal(entry.postData, "postData1");
+  yield promiseKeyword("kw2", testURI.spec, "postData2");
+  yield promiseKeyword("keyword", null);
+});
+
 add_task(function* test_LoadInSidebar_transaction() {
   let testURI = NetUtil.newURI("http://test_LoadInSidebar_transaction.com");
   let testBkmId = bmsvc.insertBookmark(root, testURI, bmsvc.DEFAULT_INDEX, "Test LoadInSidebar transaction");

@@ -67,7 +67,6 @@
 #include "nsJSUtils.h"
 #include "nsILoadInfo.h"
 #include "nsXPCOMStrings.h"
-#include "xpcprivate.h"
 
 // This should be probably defined on some other place... but I couldn't find it
 #define WEBAPPS_PERM_NAME "webapps-manage"
@@ -473,18 +472,6 @@ nsScriptSecurityManager::GetChannelURIPrincipal(nsIChannel* aChannel,
     nsCOMPtr<nsIPrincipal> prin = BasePrincipal::CreateCodebasePrincipal(uri, attrs);
     prin.forget(aPrincipal);
     return *aPrincipal ? NS_OK : NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-nsScriptSecurityManager::GetSandboxPrincipal(JS::HandleValue aSandboxArg,
-                                             JSContext* aCx,
-                                             nsIPrincipal** aPrincipal)
-{
-  if (!aSandboxArg.isObject()) {
-    return NS_ERROR_INVALID_ARG;
-  }
-  JS::RootedObject sandbox(aCx, &aSandboxArg.toObject());
-  return xpc::GetSandboxPrincipal(aCx, sandbox, aPrincipal);
 }
 
 NS_IMETHODIMP

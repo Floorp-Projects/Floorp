@@ -19,7 +19,6 @@ import org.mozilla.gecko.annotation.JNITarget;
 import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.db.BrowserDB;
-import org.mozilla.gecko.favicons.Favicons;
 import org.mozilla.gecko.mozglue.SafeIntent;
 import org.mozilla.gecko.notifications.WhatsNewReceiver;
 import org.mozilla.gecko.reader.ReaderModeUtils;
@@ -113,6 +112,7 @@ public class Tabs implements GeckoEventListener {
             "Content:PageShow",
             "DOMTitleChanged",
             "Link:Favicon",
+            "Link:Touchicon",
             "Link:Feed",
             "Link:OpenSearch",
             "DesktopMode:Changed",
@@ -520,12 +520,8 @@ public class Tabs implements GeckoEventListener {
             } else if (event.equals("DOMTitleChanged")) {
                 tab.updateTitle(message.getString("title"));
             } else if (event.equals("Link:Favicon")) {
-                // Don't bother if the type isn't one we can decode.
-                if (!Favicons.canDecodeType(message.getString("mime"))) {
-                    return;
-                }
-
                 // Add the favicon to the set of available icons for this tab.
+
                 tab.addFavicon(message.getString("href"), message.getInt("size"), message.getString("mime"));
 
                 // Load the favicon. If the tab is still loading, we actually do the load once the
@@ -534,6 +530,8 @@ public class Tabs implements GeckoEventListener {
                 if (tab.getState() != Tab.STATE_LOADING) {
                     tab.loadFavicon();
                 }
+            } else if (event.equals("Link:Touchicon")) {
+                tab.addTouchicon(message.getString("href"), message.getInt("size"), message.getString("mime"));
             } else if (event.equals("Link:Feed")) {
                 tab.setHasFeeds(true);
                 notifyListeners(tab, TabEvents.LINK_FEED);

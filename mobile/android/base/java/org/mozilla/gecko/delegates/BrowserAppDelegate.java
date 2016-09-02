@@ -9,6 +9,7 @@ import android.content.Intent;
 import android.os.Bundle;
 
 import org.mozilla.gecko.BrowserApp;
+import org.mozilla.gecko.mozglue.SafeIntent;
 import org.mozilla.gecko.tabs.TabsPanel;
 
 /**
@@ -54,7 +55,7 @@ public abstract class BrowserAppDelegate {
     /**
      * Called when BrowserApp already exists and a new Intent to re-launch it was fired.
      */
-    public void onNewIntent(BrowserApp browserApp, Intent intent) {}
+    public void onNewIntent(BrowserApp browserApp, SafeIntent intent) {}
 
     /**
      * Called when the tabs tray is opened.

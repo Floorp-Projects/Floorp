@@ -525,6 +525,24 @@ add_task(function* test_oldKeywordsAPI() {
   check_no_orphans();
 });
 
-function run_test() {
-  run_next_test();
-}
+add_task(function* test_bookmarkURLChange() {
+  let fc1 = yield foreign_count("http://example1.com/");
+  let fc2 = yield foreign_count("http://example2.com/");
+  let bookmark = yield PlacesUtils.bookmarks.insert({ url: "http://example1.com/",
+                                                      type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+                                                      parentGuid: PlacesUtils.bookmarks.unfiledGuid });
+  yield PlacesUtils.keywords.insert({ keyword: "keyword",
+                                      url: "http://example1.com/" });
+
+  yield check_keyword(true, "http://example1.com/", "keyword");
+  Assert.equal((yield foreign_count("http://example1.com/")), fc1 + 2); // +1 bookmark +1 keyword
+
+  yield PlacesUtils.bookmarks.update({ guid: bookmark.guid,
+                                       url: "http://example2.com/"});
+  yield promiseKeyword("keyword", "http://example2.com/");
+
+  yield check_keyword(false, "http://example1.com/", "keyword");
+  yield check_keyword(true, "http://example2.com/", "keyword");
+  Assert.equal((yield foreign_count("http://example1.com/")), fc1); // -1 bookmark -1 keyword
+  Assert.equal((yield foreign_count("http://example2.com/")), fc2 + 2); // +1 bookmark +1 keyword
+});
