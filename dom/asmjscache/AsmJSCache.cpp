@@ -1548,6 +1548,19 @@ OpenFile(nsIPrincipal* aPrincipal,
     return JS::AsmJSCache_SynchronousScript;
   }
 
+  // Check to see whether the principal reflects a private browsing session.
+  // Since AsmJSCache requires disk access at the moment, caching should be
+  // disabled in private browsing situations. Failing here will cause later
+  // read/write requests to also fail.
+  uint32_t pbId;
+  if (NS_WARN_IF(NS_FAILED(aPrincipal->GetPrivateBrowsingId(&pbId)))) {
+    return JS::AsmJSCache_InternalError;
+  }
+
+  if (pbId > 0) {
+    return JS::AsmJSCache_Disabled_PrivateBrowsing;
+  }
+
   // We need to synchronously call into the parent to open the file and
   // interact with the QuotaManager. The child can then map the file into its
   // address space to perform I/O.
