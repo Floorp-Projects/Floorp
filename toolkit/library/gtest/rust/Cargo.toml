@@ -10,7 +10,7 @@ mp4parse-gtest = { path = "../../../../dom/media/gtest" }
 
 [lib]
 path = "lib.rs"
-crate-type = ["staticlib"]
+crate-type = ["rlib"]
 test = false
 doctest = false
 bench = false

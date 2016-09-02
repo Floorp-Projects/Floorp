@@ -6,4 +6,4 @@ authors = [
 ]
 
 [lib]
-crate-type = ["staticlib"]
+crate-type = ["rlib"]

@@ -1236,25 +1236,49 @@ class RecursiveMakeBackend(CommonBackend):
         # We have to link any Rust libraries after all intermediate static
         # libraries have been listed to ensure that the Rust libraries are
         # searched after the C/C++ objects that might reference Rust symbols.
-        # Building Rust crates normally takes care of Rust->Rust linkage, but
-        # we have to be careful: a savvy user might have specified that there
-        # is a staticlib (that contains the Rust runtime) and several other
-        # rlibs (which are plain archive files) to be linked into a given
-        # library.  We need to ensure that the staticlib comes after the
-        # rlibs to ensure symbols are found correctly.
-        if isinstance(obj, SharedLibrary) and any(isinstance(o, RustLibrary)
-                                                  for o in obj.linked_libraries):
-            libs = [l for l in obj.linked_libraries if isinstance(l, RustLibrary)]
-            def name_cmp(l1, l2):
-                if l1.crate_type == 'staticlib':
-                    return 1
-                if l2.crate_type == 'staticlib':
-                    return -1
-                return cmp(l1.basename, l2.basename)
-            libs.sort(cmp=name_cmp)
-            for l in libs:
-                relpath = pretty_relpath(l)
-                backend_file.write('STATIC_LIBS += %s/%s\n' % (relpath, l.import_name))
+
+        def find_rlibs(obj):
+            if isinstance(obj, RustLibrary):
+                yield obj
+            elif isinstance(obj, StaticLibrary) and not obj.no_expand_lib:
+                for l in obj.linked_libraries:
+                    for rlib in find_rlibs(l):
+                        yield rlib
+
+        # Check if we have any rust libraries to prelink and include in our
+        # final library. If we do, write out the RUST_PRELINK information
+        rlibs = []
+        if isinstance(obj, (SharedLibrary, StaticLibrary)):
+            for l in obj.linked_libraries:
+                rlibs += find_rlibs(l)
+        if rlibs:
+            prelink_libname = '%s/%s%s-rs-prelink%s' \
+                              % (relpath,
+                                 obj.config.lib_prefix,
+                                 obj.basename,
+                                 obj.config.lib_suffix)
+            backend_file.write('RUST_PRELINK := %s\n' % prelink_libname)
+            backend_file.write_once('STATIC_LIBS += %s\n' % prelink_libname)
+
+            extern_crate_file = mozpath.join(
+                obj.objdir, '%s-rs-prelink.rs' % obj.basename)
+            with self._write_file(extern_crate_file) as f:
+                f.write('// AUTOMATICALLY GENERATED.  DO NOT EDIT.\n\n')
+                for rlib in rlibs:
+                    f.write('extern crate %s;\n'
+                            % rlib.basename.replace('-', '_'))
+            backend_file.write('RUST_PRELINK_SRC := %s\n' % extern_crate_file)
+
+            backend_file.write('RUST_PRELINK_FLAGS :=\n')
+            backend_file.write('RUST_PRELINK_DEPS :=\n')
+            for rlib in rlibs:
+                rlib_relpath = pretty_relpath(rlib)
+                backend_file.write('RUST_PRELINK_FLAGS += --extern %s=%s/%s\n'
+                                   % (rlib.basename, rlib_relpath, rlib.import_name))
+                backend_file.write('RUST_PRELINK_FLAGS += -L %s/%s\n'
+                                   % (rlib_relpath, rlib.deps_path))
+                backend_file.write('RUST_PRELINK_DEPS += %s/%s\n'
+                                   % (rlib_relpath, rlib.import_name))
 
         for lib in obj.linked_system_libs:
             if obj.KIND == 'target':

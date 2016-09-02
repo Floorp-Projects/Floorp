@@ -436,7 +436,7 @@ class TreeMetadataEmitter(LoggingMixin):
                 context)
 
         crate_type = crate_type[0]
-        if crate_type != 'staticlib':
+        if crate_type != 'rlib':
             raise SandboxValidationError(
                 'crate-type %s is not permitted for %s' % (crate_type, libname),
                 context)
@@ -658,17 +658,6 @@ class TreeMetadataEmitter(LoggingMixin):
                     lib = StaticLibrary(context, libname, **static_args)
                 self._libs[libname].append(lib)
                 self._linkage.append((context, lib, 'USE_LIBS'))
-
-                # Multiple staticlibs for a library means multiple copies
-                # of the Rust runtime, which will result in linking errors
-                # later on.
-                if is_rust_library:
-                    staticlibs = [l for l in self._libs[libname]
-                                  if isinstance(l, RustLibrary) and l.crate_type == 'staticlib']
-                    if len(staticlibs) > 1:
-                        raise SandboxValidationError(
-                            'Cannot have multiple Rust staticlibs in %s: %s' % (libname, ', '.join(l.basename for l in staticlibs)),
-                            context)
 
                 has_linkables = True
 
