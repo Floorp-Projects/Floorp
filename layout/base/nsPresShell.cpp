@@ -1320,7 +1320,8 @@ PresShell::Destroy()
   }
 
 
-  NS_WARN_IF_FALSE(!mWeakFrames, "Weak frames alive after destroying FrameManager");
+  NS_WARNING_ASSERTION(!mWeakFrames,
+                       "Weak frames alive after destroying FrameManager");
   while (mWeakFrames) {
     mWeakFrames->Clear(this);
   }
@@ -1669,9 +1670,8 @@ PresShell::Initialize(nscoord aWidth, nscoord aHeight)
     if (mDocument) {
       nsIURI *uri = mDocument->GetDocumentURI();
       if (uri) {
-        nsAutoCString url;
-        uri->GetSpec(url);
-        printf("*** PresShell::Initialize (this=%p, url='%s')\n", (void*)this, url.get());
+        printf("*** PresShell::Initialize (this=%p, url='%s')\n",
+               (void*)this, uri->GetSpecOrDefault().get());
       }
     }
   }
@@ -2512,13 +2512,9 @@ PresShell::BeginLoad(nsIDocument *aDocument)
 
   if (shouldLog) {
     nsIURI* uri = mDocument->GetDocumentURI();
-    nsAutoCString spec;
-    if (uri) {
-      uri->GetSpec(spec);
-    }
     MOZ_LOG(gLog, LogLevel::Debug,
            ("(presshell) %p load begin [%s]\n",
-            this, spec.get()));
+            this, uri ? uri->GetSpecOrDefault().get() : ""));
   }
 }
 
@@ -2547,7 +2543,7 @@ PresShell::LoadComplete()
     nsIURI* uri = mDocument->GetDocumentURI();
     nsAutoCString spec;
     if (uri) {
-      uri->GetSpec(spec);
+      spec = uri->GetSpecOrDefault();
     }
     if (shouldLog) {
       MOZ_LOG(gLog, LogLevel::Debug,
@@ -8889,7 +8885,7 @@ PresShell::PrepareToUseCaretPosition(nsIWidget* aEventWidget,
                                nsIPresShell::SCROLL_OVERFLOW_HIDDEN);
     NS_ENSURE_SUCCESS(rv, false);
     frame = content->GetPrimaryFrame();
-    NS_WARN_IF_FALSE(frame, "No frame for focused content?");
+    NS_WARNING_ASSERTION(frame, "No frame for focused content?");
   }
 
   // Actually scroll the selection (ie caret) into view. Note that this must
@@ -9482,13 +9478,10 @@ PresShell::DoReflow(nsIFrame* target, bool aInterruptible)
     parent = nsLayoutUtils::GetCrossDocParentFrame(parent);
   }
 
-  nsAutoCString docURL("N/A");
   nsIURI *uri = mDocument->GetDocumentURI();
-  if (uri)
-    uri->GetSpec(docURL);
-
   PROFILER_LABEL_PRINTF("PresShell", "DoReflow",
-    js::ProfileEntry::Category::GRAPHICS, "(%s)", docURL.get());
+    js::ProfileEntry::Category::GRAPHICS, "(%s)",
+    uri ? uri->GetSpecOrDefault().get() : "N/A");
 
   nsDocShell* docShell = static_cast<nsDocShell*>(GetPresContext()->GetDocShell());
   RefPtr<TimelineConsumers> timelines = TimelineConsumers::Get();

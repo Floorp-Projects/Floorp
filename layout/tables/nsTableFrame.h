@@ -263,7 +263,7 @@ public:
   /** @return true if aDisplayType represents a rowgroup of any sort
     * (header, footer, or body)
     */
-  bool IsRowGroup(int32_t aDisplayType) const;
+  bool IsRowGroup(mozilla::StyleDisplay aDisplayType) const;
 
   virtual const nsFrameList& GetChildList(ChildListID aListID) const override;
   virtual void GetChildLists(nsTArray<ChildList>* aLists) const override;
@@ -883,11 +883,11 @@ protected:
 };
 
 
-inline bool nsTableFrame::IsRowGroup(int32_t aDisplayType) const
+inline bool nsTableFrame::IsRowGroup(mozilla::StyleDisplay aDisplayType) const
 {
-  return bool((NS_STYLE_DISPLAY_TABLE_HEADER_GROUP == aDisplayType) ||
-                (NS_STYLE_DISPLAY_TABLE_FOOTER_GROUP == aDisplayType) ||
-                (NS_STYLE_DISPLAY_TABLE_ROW_GROUP    == aDisplayType));
+  return mozilla::StyleDisplay::TableHeaderGroup == aDisplayType ||
+         mozilla::StyleDisplay::TableFooterGroup == aDisplayType ||
+         mozilla::StyleDisplay::TableRowGroup    == aDisplayType;
 }
 
 inline void nsTableFrame::SetHaveReflowedColGroups(bool aValue)

@@ -106,13 +106,11 @@ RestyleTracker::ProcessOneRestyle(Element* aElement,
 void
 RestyleTracker::DoProcessRestyles()
 {
-  nsAutoCString docURL;
+  nsAutoCString docURL("N/A");
   if (profiler_is_active()) {
     nsIURI *uri = Document()->GetDocumentURI();
     if (uri) {
-      uri->GetSpec(docURL);
-    } else {
-      docURL = "N/A";
+      docURL = uri->GetSpecOrDefault();
     }
   }
   PROFILER_LABEL_PRINTF("RestyleTracker", "ProcessRestyles",

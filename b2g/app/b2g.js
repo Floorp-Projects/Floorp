@@ -406,40 +406,6 @@ pref("dom.phonenumber.substringmatching.PE", 7);
 // WebAlarms
 pref("dom.mozAlarms.enabled", true);
 
-// SimplePush
-pref("services.push.enabled", true);
-// Debugging enabled.
-pref("services.push.debug", false);
-// Is the network connection allowed to be up?
-// This preference should be used in UX to enable/disable push.
-pref("services.push.connection.enabled", true);
-// serverURL to be assigned by services team
-pref("services.push.serverURL", "wss://push.services.mozilla.com/");
-pref("services.push.userAgentID", "");
-// Exponential back-off start is 5 seconds like in HTTP/1.1.
-// Maximum back-off is pingInterval.
-pref("services.push.retryBaseInterval", 5000);
-// Interval at which to ping PushServer to check connection status. In
-// milliseconds. If no reply is received within requestTimeout, the connection
-// is considered closed.
-pref("services.push.pingInterval", 1800000); // 30 minutes
-// How long before a DOMRequest errors as timeout
-pref("services.push.requestTimeout", 10000);
-pref("services.push.pingInterval.default", 180000);// 3 min
-pref("services.push.pingInterval.mobile", 180000); // 3 min
-pref("services.push.pingInterval.wifi", 180000);  // 3 min
-// Adaptive ping
-pref("services.push.adaptive.enabled", true);
-pref("services.push.adaptive.lastGoodPingInterval", 180000);// 3 min
-pref("services.push.adaptive.lastGoodPingInterval.mobile", 180000);// 3 min
-pref("services.push.adaptive.lastGoodPingInterval.wifi", 180000);// 3 min
-// Valid gap between the biggest good ping and the bad ping
-pref("services.push.adaptive.gap", 60000); // 1 minute
-// We limit the ping to this maximum value
-pref("services.push.adaptive.upperLimit", 1740000); // 29 min
-// enable udp wakeup support
-pref("services.push.udp.wakeupEnabled", true);
-
 // NetworkStats
 #ifdef MOZ_WIDGET_GONK
 pref("dom.mozNetworkStats.enabled", true);

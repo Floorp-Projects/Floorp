@@ -83,7 +83,7 @@ private:
     LOG("Freeing Dnsapi.dll");
     MOZ_ASSERT(mLibrary);
     DebugOnly<BOOL> rv = FreeLibrary(mLibrary);
-    NS_WARN_IF_FALSE(rv, "Failed to free Dnsapi.dll.");
+    NS_WARNING_ASSERTION(rv, "Failed to free Dnsapi.dll.");
   }
 };
 
@@ -117,7 +117,7 @@ _GetAddrInfoInit_Windows()
   FARPROC dnsFreeFunc = GetProcAddress(library, "DnsFree");
   if (NS_WARN_IF(!dnsQueryFunc) || NS_WARN_IF(!dnsFreeFunc)) {
     DebugOnly<BOOL> rv = FreeLibrary(library);
-    NS_WARN_IF_FALSE(rv, "Failed to free Dnsapi.dll.");
+    NS_WARNING_ASSERTION(rv, "Failed to free Dnsapi.dll.");
     return NS_ERROR_FAILURE;
   }
 

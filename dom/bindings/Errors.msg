@@ -26,6 +26,7 @@ MSG_DEF(MSG_INVALID_ENUM_VALUE, 3, JSEXN_TYPEERR, "{0} '{1}' is not a valid valu
 MSG_DEF(MSG_MISSING_ARGUMENTS, 1, JSEXN_TYPEERR, "Not enough arguments to {0}.")
 MSG_DEF(MSG_NOT_OBJECT, 1, JSEXN_TYPEERR, "{0} is not an object.")
 MSG_DEF(MSG_NOT_CALLABLE, 1, JSEXN_TYPEERR, "{0} is not callable.")
+MSG_DEF(MSG_NOT_CONSTRUCTOR, 1, JSEXN_TYPEERR, "{0} is not a constructor.")
 MSG_DEF(MSG_DOES_NOT_IMPLEMENT_INTERFACE, 2, JSEXN_TYPEERR, "{0} does not implement interface {1}.")
 MSG_DEF(MSG_METHOD_THIS_DOES_NOT_IMPLEMENT_INTERFACE, 2, JSEXN_TYPEERR, "'{0}' called on an object that does not implement interface {1}.")
 MSG_DEF(MSG_METHOD_THIS_UNWRAPPING_DENIED, 1, JSEXN_TYPEERR, "Permission to call '{0}' denied.")

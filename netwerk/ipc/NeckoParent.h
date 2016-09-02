@@ -58,9 +58,6 @@ public:
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
   virtual nsresult OfflineNotification(nsISupports *) override;
   virtual uint32_t GetAppId() override { return NECKO_UNKNOWN_APP_ID; }
-  virtual void
-  CloneManagees(ProtocolBase* aSource,
-              mozilla::ipc::ProtocolCloneContext* aCtx) override;
   virtual PCookieServiceParent* AllocPCookieServiceParent() override;
   virtual bool
   RecvPCookieServiceConstructor(PCookieServiceParent* aActor) override

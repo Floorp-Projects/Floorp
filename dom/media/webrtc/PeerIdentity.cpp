@@ -79,7 +79,8 @@ PeerIdentity::GetNormalizedHost(const nsCOMPtr<nsIIDNService>& aIdnService,
 {
   const nsCString chost = NS_ConvertUTF16toUTF8(aHost);
   DebugOnly<nsresult> rv = aIdnService->ConvertUTF8toACE(chost, aNormalizedHost);
-  NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Failed to convert UTF-8 host to ASCII");
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                       "Failed to convert UTF-8 host to ASCII");
 }
 
 } /* namespace mozilla */

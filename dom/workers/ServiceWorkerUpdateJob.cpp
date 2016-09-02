@@ -390,7 +390,7 @@ ServiceWorkerUpdateJob::ComparisonResult(nsresult aStatus,
     rv = nsContentUtils::FormatLocalizedString(nsContentUtils::eDOM_PROPERTIES,
                                                "ServiceWorkerScopePathMismatch",
                                                params, message);
-    NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Failed to format localized string");
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to format localized string");
     RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
     swm->ReportToAllClients(mScope,
                             message,

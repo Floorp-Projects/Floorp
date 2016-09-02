@@ -111,11 +111,8 @@ nsUrlClassifierStreamUpdater::FetchUpdate(nsIURI *aUpdateUrl,
 {
 
 #ifdef DEBUG
-  {
-    nsCString spec;
-    aUpdateUrl->GetSpec(spec);
-    LOG(("Fetching update %s from %s", aRequestPayload.Data(), spec.get()));
-  }
+  LOG(("Fetching update %s from %s",
+       aRequestPayload.Data(), aUpdateUrl->GetSpecOrDefault().get()));
 #endif
 
   nsresult rv;

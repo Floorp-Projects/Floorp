@@ -167,7 +167,7 @@ public:
 
   bool IsValid()
   {
-    NS_WARN_IF_FALSE(!!(mTarget), "Event target is not valid!");
+    NS_WARNING_ASSERTION(!!(mTarget), "Event target is not valid!");
     return !!(mTarget);
   }
 

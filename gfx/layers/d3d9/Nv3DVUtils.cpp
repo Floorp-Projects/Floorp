@@ -39,7 +39,7 @@ Nv3DVUtils::~Nv3DVUtils()
 #endif
 // Uncomment these to enable spurious warnings.
 //#define WARNING(str) NS_WARNING(str)
-//#define WARN_IF_FALSE(b, str) NS_WARN_IF_FALSE(b, str)
+//#define WARN_IF_FALSE(b, str) NS_WARNING_ASSERTION(b, str)
 #define WARNING(str)
 #define WARN_IF_FALSE(b, str)
 

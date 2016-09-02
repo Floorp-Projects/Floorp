@@ -21,7 +21,8 @@ SameProcessMessageQueue::~SameProcessMessageQueue()
   // This code should run during shutdown, and we should already have pumped the
   // event loop. So we should only see messages here if someone is sending
   // messages pretty late in shutdown.
-  NS_WARN_IF_FALSE(mQueue.IsEmpty(), "Shouldn't send messages during shutdown");
+  NS_WARNING_ASSERTION(mQueue.IsEmpty(),
+                       "Shouldn't send messages during shutdown");
   sSingleton = nullptr;
 }
 

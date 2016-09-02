@@ -50,7 +50,8 @@ inline bool NS_warn_if_impl(bool aCondition, const char* aExpr,
 #endif
 
 /**
- * Warn if a given condition is false.
+ * Test an assertion for truth. If the expression is not true then
+ * emit a warning.
  *
  * Program execution continues past the usage of this macro.
  *
@@ -58,16 +59,15 @@ inline bool NS_warn_if_impl(bool aCondition, const char* aExpr,
  * evaluate the message argument.
  */
 #ifdef DEBUG
-#define NS_WARN_IF_FALSE(_expr,_msg)                          \
+#define NS_WARNING_ASSERTION(_expr, _msg)                     \
   do {                                                        \
     if (!(_expr)) {                                           \
       NS_DebugBreak(NS_DEBUG_WARNING, _msg, #_expr, __FILE__, __LINE__); \
     }                                                         \
   } while(0)
 #else
-#define NS_WARN_IF_FALSE(_expr, _msg)  do { /* nothing */ } while(0)
+#define NS_WARNING_ASSERTION(_expr, _msg)  do { /* nothing */ } while(0)
 #endif
-
 
 /**
  * Test an assertion for truth. If the expression is not true then

@@ -570,9 +570,9 @@ RecomputePosition(nsIFrame* aFrame)
     parentReflowInput.mCBReflowInput = cbReflowInput.ptr();
   }
 
-  NS_WARN_IF_FALSE(parentSize.ISize(parentWM) != NS_INTRINSICSIZE &&
-                   parentSize.BSize(parentWM) != NS_INTRINSICSIZE,
-                   "parentSize should be valid");
+  NS_WARNING_ASSERTION(parentSize.ISize(parentWM) != NS_INTRINSICSIZE &&
+                       parentSize.BSize(parentWM) != NS_INTRINSICSIZE,
+                       "parentSize should be valid");
   parentReflowInput.SetComputedISize(std::max(parentSize.ISize(parentWM), 0));
   parentReflowInput.SetComputedBSize(std::max(parentSize.BSize(parentWM), 0));
   parentReflowInput.ComputedPhysicalMargin().SizeTo(0, 0, 0, 0);
