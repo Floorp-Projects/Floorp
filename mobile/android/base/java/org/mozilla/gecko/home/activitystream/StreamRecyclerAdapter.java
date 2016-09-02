@@ -35,11 +35,6 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamItem> {
         } else if (position == getItemCount() - 1) {
             return BottomPanel.LAYOUT_ID;
         } else {
-            // TODO: in future we'll want to create different items for some results, tbc?
-            // For now let's show a detailed view for these two positions...
-            if (position == 2 || position == 6) {
-                return HighlightItem.LAYOUT_ID;
-            }
             return CompactItem.LAYOUT_ID;
         }
     }

@@ -17,6 +17,12 @@ import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.home.HomePager;
 import org.mozilla.gecko.home.activitystream.topsites.CirclePageIndicator;
 import org.mozilla.gecko.home.activitystream.topsites.TopSitesPagerAdapter;
+import org.mozilla.gecko.icons.IconCallback;
+import org.mozilla.gecko.icons.IconResponse;
+import org.mozilla.gecko.icons.Icons;
+import org.mozilla.gecko.widget.FaviconView;
+
+import java.util.concurrent.Future;
 
 public abstract class StreamItem extends RecyclerView.ViewHolder {
     public StreamItem(View itemView) {
@@ -55,25 +61,45 @@ public abstract class StreamItem extends RecyclerView.ViewHolder {
         }
     }
 
-    public static class CompactItem extends StreamItem {
+    public static class CompactItem extends StreamItem implements IconCallback {
         public static final int LAYOUT_ID = R.layout.activity_stream_card_history_item;
 
+        final FaviconView vIconView;
         final TextView vLabel;
         final TextView vTimeSince;
+
+        private Future<IconResponse> ongoingIconLoad;
 
         public CompactItem(View itemView) {
             super(itemView);
             vLabel = (TextView) itemView.findViewById(R.id.card_history_label);
             vTimeSince = (TextView) itemView.findViewById(R.id.card_history_time_since);
+            vIconView = (FaviconView) itemView.findViewById(R.id.icon);
         }
 
         @Override
         public void bind(Cursor cursor) {
             final long time = cursor.getLong(cursor.getColumnIndexOrThrow(BrowserContract.Highlights.DATE));
             final String ago = DateUtils.getRelativeTimeSpanString(time, System.currentTimeMillis(), DateUtils.MINUTE_IN_MILLIS, 0).toString();
+            final String url = cursor.getString(cursor.getColumnIndexOrThrow(BrowserContract.Combined.URL));
 
             vLabel.setText(cursor.getString(cursor.getColumnIndexOrThrow(BrowserContract.History.TITLE)));
             vTimeSince.setText(ago);
+
+            if (ongoingIconLoad != null) {
+                ongoingIconLoad.cancel(true);
+            }
+
+            ongoingIconLoad = Icons.with(itemView.getContext())
+                    .pageUrl(url)
+                    .skipNetwork()
+                    .build()
+                    .execute(this);
+        }
+
+        @Override
+        public void onIconResponse(IconResponse response) {
+            vIconView.updateImage(response);
         }
     }
 
