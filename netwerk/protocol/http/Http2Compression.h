@@ -72,11 +72,13 @@ protected:
   virtual void ClearHeaderTable();
   virtual void MakeRoom(uint32_t amount, const char *direction);
   virtual void DumpState();
+  virtual void SetMaxBufferSizeInternal(uint32_t maxBufferSize);
 
   nsACString *mOutput;
   nvFIFO mHeaderTable;
 
   uint32_t mMaxBuffer;
+  uint32_t mMaxBufferSetting;
 
 private:
   RefPtr<HpackDynamicTableReporter> mDynamicReporter;
@@ -99,7 +101,6 @@ public:
   void GetScheme(nsACString &hdr) { hdr = mHeaderScheme; }
   void GetPath(nsACString &hdr) { hdr = mHeaderPath; }
   void GetMethod(nsACString &hdr) { hdr = mHeaderMethod; }
-  void SetCompressor(Http2Compressor *compressor) { mCompressor = compressor; }
 
 private:
   nsresult DoIndexed();
@@ -122,8 +123,6 @@ private:
   nsresult DecodeFinalHuffmanCharacter(const HuffmanIncomingTable *table,
                                        uint8_t &c, uint8_t &bitsLeft);
 
-  Http2Compressor *mCompressor;
-
   nsCString mHeaderStatus;
   nsCString mHeaderHost;
   nsCString mHeaderScheme;
@@ -143,7 +142,6 @@ class Http2Compressor final : public Http2BaseCompressor
 {
 public:
   Http2Compressor() : mParsedContentLength(-1),
-                      mMaxBufferSetting(kDefaultMaxBuffer),
                       mBufferSizeChangeWaiting(false),
                       mLowestBufferSizeWaiting(0)
   { };
@@ -159,7 +157,6 @@ public:
   int64_t GetParsedContentLength() { return mParsedContentLength; } // -1 on not found
 
   void SetMaxBufferSize(uint32_t maxBufferSize);
-  nsresult SetMaxBufferSizeInternal(uint32_t maxBufferSize);
 
 private:
   enum outputCode {
@@ -178,7 +175,6 @@ private:
   void EncodeTableSizeChange(uint32_t newMaxSize);
 
   int64_t mParsedContentLength;
-  uint32_t mMaxBufferSetting;
   bool mBufferSizeChangeWaiting;
   uint32_t mLowestBufferSizeWaiting;
 };
