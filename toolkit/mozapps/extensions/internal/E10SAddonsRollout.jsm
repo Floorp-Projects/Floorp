@@ -46,6 +46,14 @@ const ADDONS = {
     id: "jid0-GXjLLfbCoAx0LcltEdFrEkQdQPI@jetpack", minVersion: "3.0.10",
   },
 
+  "PersonasPlus": { // PersonasPlus
+    id: "personas@christopher.beard", minVersion: "1.8.0",
+  },
+
+  "ACR": { // Add-on Compatibility Reporter
+    id: "compatibility@addons.mozilla.org", minVersion: "2.2.0",
+  },
+
   // Add-ons used for testing
   "test1": {
     id: "bootstrap1@tests.mozilla.org", minVersion: "1.0",
@@ -58,10 +66,8 @@ const ADDONS = {
 
 // NOTE: Do not modify sets or policies after they have already been
 // published to users. They must remain unchanged to provide valid data.
-const set1 = [ADDONS.Emoji,
-              ADDONS.ASP,
-              ADDONS.DYTV];
 
+// Set 2 used during 48 Beta cycle. Kept here for historical reasons.
 const set2 = [ADDONS.Greasemonkey,
               ADDONS.DYTV,
               ADDONS.VDH,
@@ -69,17 +75,48 @@ const set2 = [ADDONS.Greasemonkey,
               ADDONS.ABP,
               ADDONS.uBlockOrigin,
               ADDONS.Emoji,
-              ADDONS.ASP];
+              ADDONS.ASP,
+              ADDONS.PersonasPlus];
+
+const set49Release = [
+  ADDONS.Greasemonkey,
+  ADDONS.DYTV,
+  ADDONS.VDH,
+  ADDONS.Lightbeam,
+  ADDONS.ABP,
+  ADDONS.uBlockOrigin,
+  ADDONS.Emoji,
+  ADDONS.ASP,
+  ADDONS.PersonasPlus,
+  ADDONS.ACR
+];
+
+// These are only the add-ons in the Add-Ons Manager Discovery
+// pane. This set is here in case we need to reduce add-ons
+// exposure live on Release.
+const set49PaneOnly = [
+  ADDONS.ABP,
+  ADDONS.VDH,
+  ADDONS.Emoji,
+  ADDONS.ASP,
+  ADDONS.ACR
+]
 
 // We use these named policies to correlate the telemetry
 // data with them, in order to understand how each set
 // is behaving in the wild.
 const RolloutPolicy = {
-  "1a": { addons: set1, webextensions: true },
+  // Used during 48 Beta cycle
   "2a": { addons: set2, webextensions: true },
-
-  "1b": { addons: set1, webextensions: false },
   "2b": { addons: set2, webextensions: false },
+
+  // Set agreed for Release 49
+  "49a": { addons: set49Release, webextensions: true },
+  "49b": { addons: set49Release, webextensions: false },
+
+  // Smaller set that can be used for Release 49
+  "49limiteda": { addons: set49PaneOnly, webextensions: true },
+  "49limitedb": { addons: set49PaneOnly, webextensions: false },
 
   "xpcshell-test": { addons: [ADDONS.test1, ADDONS.test2], webextensions: false },
 };
