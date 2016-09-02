@@ -865,8 +865,8 @@ ProtocolParserProtobuf::ProcessOneResponse(const ListUpdateResponse& aResponse)
   nsCString state(aResponse.new_client_state().c_str(),
                   aResponse.new_client_state().size());
   NS_DispatchToMainThread(NS_NewRunnableFunction([listName, state] () {
-    nsresult rv = SaveStateToPref(listName, state);
-    NS_WARN_IF(NS_FAILED(rv));
+    DebugOnly<nsresult> rv = SaveStateToPref(listName, state);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "SaveStateToPref failed");
   }));
 
   PARSER_LOG(("==== Update for threat type '%d' ====", aResponse.threat_type()));

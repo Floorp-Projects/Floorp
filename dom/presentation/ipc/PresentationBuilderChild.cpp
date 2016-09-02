@@ -10,6 +10,7 @@
 #include "PresentationBuilderChild.h"
 #include "PresentationIPCService.h"
 #include "nsServiceManagerUtils.h"
+#include "mozilla/Unused.h"
 
 namespace mozilla {
 namespace dom {
@@ -110,10 +111,10 @@ PresentationBuilderChild::OnSessionTransport(nsIPresentationSessionTransport* aT
 
   nsCOMPtr<nsIPresentationService> service =
     do_GetService(PRESENTATION_SERVICE_CONTRACTID);
-  NS_WARN_IF(!service);
+  NS_WARNING_ASSERTION(service, "no presentation service");
   if (service) {
-    NS_WARN_IF(NS_FAILED(static_cast<PresentationIPCService*>(service.get())->
-                           NotifySessionTransport(mSessionId, mRole, aTransport)));
+    Unused << NS_WARN_IF(NS_FAILED(static_cast<PresentationIPCService*>(service.get())->
+                                     NotifySessionTransport(mSessionId, mRole, aTransport)));
   }
   mBuilder = nullptr;
   return NS_OK;

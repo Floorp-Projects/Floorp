@@ -1449,10 +1449,10 @@ nsGonkCameraControl::OnAutoFocusMoving(bool aIsMoving)
 
         if (!mAutoFocusPending) {
           RefPtr<nsITimerCallback> timerCb = new AutoFocusMovingTimerCallback(this);
-          nsresult rv = mAutoFocusCompleteTimer->InitWithCallback(timerCb,
-                                                                  kAutoFocusCompleteTimeoutMs,
-                                                                  nsITimer::TYPE_ONE_SHOT);
-          NS_WARN_IF(NS_FAILED(rv));
+          DebugOnly<nsresult> rv =
+            mAutoFocusCompleteTimer->InitWithCallback(
+              timerCb, kAutoFocusCompleteTimeoutMs, nsITimer::TYPE_ONE_SHOT);
+          NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "InitWithCallback failed");
         }
         return;
       }

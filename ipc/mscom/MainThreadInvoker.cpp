@@ -131,7 +131,7 @@ MainThreadInvoker::Invoke(already_AddRefed<nsIRunnable>&& aRunnable,
   // check for APCs during event processing. If we omit this then the main
   // thread will not check its APC queue until it is idle. Note that failing to
   // dispatch this event is non-fatal, but it will delay execution of the APC.
-  NS_WARN_IF(NS_FAILED(NS_DispatchToMainThread(sAlertRunnable)));
+  Unused << NS_WARN_IF(NS_FAILED(NS_DispatchToMainThread(sAlertRunnable)));
   return WaitForCompletion(aTimeout);
 }
 

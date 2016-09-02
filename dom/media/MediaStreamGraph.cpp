@@ -2611,7 +2611,7 @@ MediaStream::AddMainThreadListener(MainThreadMediaStreamListener* aListener)
   };
 
   nsCOMPtr<nsIRunnable> runnable = new NotifyRunnable(this);
-  NS_WARN_IF(NS_FAILED(NS_DispatchToMainThread(runnable.forget())));
+  Unused << NS_WARN_IF(NS_FAILED(NS_DispatchToMainThread(runnable.forget())));
 }
 
 SourceMediaStream::SourceMediaStream() :

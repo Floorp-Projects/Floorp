@@ -1034,7 +1034,8 @@ nsGIFDecoder2::ReadLZWData(const char* aData, size_t aLength)
         continue;
 
       case WriteState::FINISHED:
-        NS_WARN_IF(mGIFStruct.pixels_remaining > 0);
+        NS_WARNING_ASSERTION(mGIFStruct.pixels_remaining <= 0,
+                             "too many pixels");
         mGIFStruct.pixels_remaining = 0;
         break;
 
