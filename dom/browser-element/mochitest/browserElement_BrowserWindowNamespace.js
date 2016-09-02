@@ -24,12 +24,12 @@ function runTest() {
     document.body.appendChild(e.detail.frameElement);
 
     e.detail.frameElement.addEventListener('mozbrowserlocationchange', function(e) {
-      if (e.detail == "http://example.com/#2") {
+      if (e.detail.url == "http://example.com/#2") {
         ok(true, "Got locationchange to http://example.com/#2");
         SimpleTest.finish();
       }
       else {
-        ok(true, "Got locationchange to " + e.detail);
+        ok(true, "Got locationchange to " + e.detail.url);
       }
     });
 
