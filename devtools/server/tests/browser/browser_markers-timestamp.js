@@ -38,6 +38,6 @@ add_task(function* () {
 
   pmmClearFrameScripts();
 
-  yield closeDebuggerClient(client);
+  yield client.close();
   gBrowser.removeCurrentTab();
 });

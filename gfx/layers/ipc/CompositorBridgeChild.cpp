@@ -59,6 +59,7 @@ CompositorBridgeChild::CompositorBridgeChild(ClientLayerManager *aLayerManager)
   , mCanSend(false)
   , mFwdTransactionId(0)
   , mMessageLoop(MessageLoop::current())
+  , mSectionAllocator(nullptr)
 {
   MOZ_ASSERT(NS_IsMainThread());
 }
@@ -98,6 +99,11 @@ CompositorBridgeChild::Destroy()
 
   for (size_t i = 0; i < mTexturePools.Length(); i++) {
     mTexturePools[i]->Destroy();
+  }
+
+  if (mSectionAllocator) {
+    delete mSectionAllocator;
+    mSectionAllocator = nullptr;
   }
 
   // Destroying the layer manager may cause all sorts of things to happen, so
@@ -959,6 +965,21 @@ CompositorBridgeChild::ClearTexturePool()
     mTexturePools[i]->Clear();
   }
 }
+
+FixedSizeSmallShmemSectionAllocator*
+CompositorBridgeChild::GetTileLockAllocator()
+{
+  MOZ_ASSERT(IPCOpen());
+  if (!IPCOpen()) {
+    return nullptr;
+  }
+
+  if (!mSectionAllocator) {
+    mSectionAllocator = new FixedSizeSmallShmemSectionAllocator(this);
+  }
+  return mSectionAllocator;
+}
+
 
 PTextureChild*
 CompositorBridgeChild::CreateTexture(const SurfaceDescriptor& aSharedData,

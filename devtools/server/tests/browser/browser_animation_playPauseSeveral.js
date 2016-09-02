@@ -64,7 +64,7 @@ add_task(function* () {
   is(state2.playState, "running",
     "The playState of the second player is running");
 
-  yield closeDebuggerClient(client);
+  yield client.close();
   gBrowser.removeCurrentTab();
 });
 

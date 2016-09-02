@@ -3274,6 +3274,17 @@ public:
    */
   bool IsScrolledOutOfView();
 
+  /**
+   * If this returns true, the frame it's called on should get the
+   * NS_FRAME_HAS_DIRTY_CHILDREN bit set on it by the caller; either directly
+   * if it's already in reflow, or via calling FrameNeedsReflow() to schedule a
+   * reflow.
+   */
+  virtual bool RenumberFrameAndDescendants(int32_t* aOrdinal,
+                                           int32_t aDepth,
+                                           int32_t aIncrement,
+                                           bool aForCounting) { return false; }
+
 protected:
   // Members
   nsRect           mRect;

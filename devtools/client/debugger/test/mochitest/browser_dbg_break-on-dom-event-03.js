@@ -28,7 +28,7 @@ function test() {
       .then(aThreadClient => gThreadClient = aThreadClient)
       .then(pauseDebuggee)
       .then(testBreakOnLoad)
-      .then(closeConnection)
+      .then(() => gClient.close())
       .then(finish)
       .then(null, aError => {
         ok(false, "Got an error: " + aError.message + "\n" + aError.stack);
@@ -89,12 +89,6 @@ function testBreakOnLoad() {
 function triggerButtonClick() {
   let button = content.document.querySelector("button");
   EventUtils.sendMouseEvent({ type: "click" }, button);
-}
-
-function closeConnection() {
-  let deferred = promise.defer();
-  gClient.close(deferred.resolve);
-  return deferred.promise;
 }
 
 registerCleanupFunction(function () {

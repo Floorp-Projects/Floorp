@@ -28,6 +28,6 @@ add_task(function* () {
   ok(markers.some(m => m.name === "nsCycleCollector::Collect"), "got some nsCycleCollector::Collect markers");
   ok(markers.some(m => m.name === "nsCycleCollector::ForgetSkippable"), "got some nsCycleCollector::Collect markers");
 
-  yield closeDebuggerClient(client);
+  yield client.close();
   gBrowser.removeCurrentTab();
 });

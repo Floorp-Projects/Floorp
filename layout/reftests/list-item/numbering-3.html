@@ -1,0 +1,49 @@
+<!DOCTYPE HTML>
+<html><head>
+    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+    <title>Testcase #1 for bug 1171419</title>
+</head>
+<body>
+
+<ol style="list-style: decimal inside; display:grid">
+    <li style="overflow: hidden">List item 1</li>
+    <li style="overflow: hidden">List item 2</li>
+    <li>List item 3</li>
+    <li style="overflow: hidden">List item 4</li>
+    <li style="overflow: hidden">List item 5</li>
+    <li>List item 6</li>
+    <div style="overflow: hidden"><li>List item 7</li></div>
+</ol>
+
+<ol style="list-style: decimal inside; display:grid">
+<div>
+    <li style="overflow: hidden">List item 1</li>
+    <li style="overflow: hidden">List item 2</li>
+    <li>List item 3</li>
+</div>
+</ol>
+
+<ol style="list-style: decimal inside; display:grid">
+<div style="display:grid">
+    <li style="overflow: hidden">List item 1</li>
+    <li style="overflow: hidden">List item 2</li>
+    <li>List item 3</li>
+</div>
+</ol>
+
+<ol style="list-style: decimal inside; display:inline-grid">
+<div style="display:grid">
+    <li style="overflow: hidden">List item 1</li>
+    <li style="overflow: hidden">List item 2</li>
+    <li>List item 3</li>
+</div>
+</ol>
+
+<ol style="list-style: decimal inside; display:grid">
+    <li style="-moz-column-width:1em; column-width:1em;">item1</li>
+    <li style="-moz-column-width:1em; column-width:1em;">item2</li>
+    <li style="-moz-column-width:1em; column-width:1em;">item3</li>
+</ol>
+
+</body>
+</html>

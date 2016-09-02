@@ -27,6 +27,6 @@ add_task(function* () {
   ok(markers.some(m => m.name === "MinorGC" && m.causeName),
      "got some MinorGC markers");
 
-  yield closeDebuggerClient(client);
+  yield client.close();
   gBrowser.removeCurrentTab();
 });

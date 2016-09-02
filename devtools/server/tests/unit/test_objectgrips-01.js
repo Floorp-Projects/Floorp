@@ -47,7 +47,7 @@ function test_object_grip()
       do_check_eq(aResponse.ownPropertyNames[2], "c");
 
       gThreadClient.resume(function () {
-        gClient.close(gCallback);
+        gClient.close().then(gCallback);
       });
     });
 

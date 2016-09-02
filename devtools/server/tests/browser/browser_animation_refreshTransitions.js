@@ -44,7 +44,7 @@ add_task(function* () {
   is(reportedMutations.filter(m => m.type === "added").length, 2,
     "2 'added' events were sent (for the new transitions)");
 
-  yield closeDebuggerClient(client);
+  yield client.close();
   gBrowser.removeCurrentTab();
 });
 

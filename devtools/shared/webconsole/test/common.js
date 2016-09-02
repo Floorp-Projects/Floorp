@@ -145,7 +145,7 @@ function _attachConsole(aListeners, aCallback, aAttachToTab, aAttachToWorker)
 
 function closeDebugger(aState, aCallback)
 {
-  aState.dbgClient.close(aCallback);
+  aState.dbgClient.close().then(aCallback);
   aState.dbgClient = null;
   aState.client = null;
 }

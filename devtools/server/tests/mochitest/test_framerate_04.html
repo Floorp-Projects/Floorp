@@ -59,7 +59,7 @@ window.onload = function() {
     ok(secondBatch.every((e, i, array) => i < array.length - 1 ? e < array[i + 1] : true),
       "All the ticks in the final batch should be ascending in value.");
 
-    client.close(() => {
+    client.close().then(() => {
       DebuggerServer.destroy();
       SimpleTest.finish()
     });
