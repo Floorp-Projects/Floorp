@@ -6,6 +6,7 @@
 #include "mozilla/layers/CompositableClient.h"
 #include <stdint.h>                     // for uint64_t, uint32_t
 #include "gfxPlatform.h"                // for gfxPlatform
+#include "mozilla/layers/CompositableChild.h"
 #include "mozilla/layers/CompositableForwarder.h"
 #include "mozilla/layers/ImageBridgeChild.h"
 #include "mozilla/layers/TextureClient.h"  // for TextureClient, etc
@@ -25,37 +26,6 @@ namespace mozilla {
 namespace layers {
 
 using namespace mozilla::gfx;
-
-/**
- * IPDL actor used by CompositableClient to match with its corresponding
- * CompositableHost on the compositor side.
- *
- * CompositableChild is owned by a CompositableClient.
- */
-class CompositableChild : public ChildActor<PCompositableChild>
-{
-public:
-  CompositableChild()
-  : mCompositableClient(nullptr), mAsyncID(0)
-  {
-    MOZ_COUNT_CTOR(CompositableChild);
-  }
-
-  virtual ~CompositableChild()
-  {
-    MOZ_COUNT_DTOR(CompositableChild);
-  }
-
-  virtual void ActorDestroy(ActorDestroyReason) override {
-    if (mCompositableClient) {
-      mCompositableClient->mCompositableChild = nullptr;
-    }
-  }
-
-  CompositableClient* mCompositableClient;
-
-  uint64_t mAsyncID;
-};
 
 void
 RemoveTextureFromCompositableTracker::ReleaseTextureClient()
@@ -92,15 +62,14 @@ CompositableClient::InitIPDLActor(PCompositableChild* aActor, uint64_t aAsyncID)
   MOZ_ASSERT(aActor);
   CompositableChild* child = static_cast<CompositableChild*>(aActor);
   mCompositableChild = child;
-  child->mCompositableClient = this;
-  child->mAsyncID = aAsyncID;
+  child->Init(this, aAsyncID);
 }
 
 /* static */ CompositableClient*
 CompositableClient::FromIPDLActor(PCompositableChild* aActor)
 {
   MOZ_ASSERT(aActor);
-  return static_cast<CompositableChild*>(aActor)->mCompositableClient;
+  return static_cast<CompositableChild*>(aActor)->GetCompositableClient();
 }
 
 CompositableClient::CompositableClient(CompositableForwarder* aForwarder,
@@ -163,7 +132,7 @@ CompositableClient::Destroy()
   if (mTextureClientRecycler) {
     mTextureClientRecycler->Destroy();
   }
-  mCompositableChild->mCompositableClient = nullptr;
+  mCompositableChild->RevokeCompositableClient();
   mCompositableChild->Destroy(mForwarder);
   mCompositableChild = nullptr;
 }
@@ -178,7 +147,7 @@ uint64_t
 CompositableClient::GetAsyncID() const
 {
   if (mCompositableChild) {
-    return mCompositableChild->mAsyncID;
+    return mCompositableChild->GetAsyncID();
   }
   return 0; // zero is always an invalid async ID
 }
