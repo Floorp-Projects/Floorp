@@ -228,9 +228,13 @@ class TraceLoggerThread
             start = events.data();
         }
 
-        *lastIteration = iteration_;
-        *lastSize = events.size();
+        getIterationAndSize(lastIteration, lastSize);
         return start;
+    }
+
+    void getIterationAndSize(uint32_t* iteration, uint32_t* size) const {
+        *iteration = iteration_;
+        *size = events.size();
     }
 
     // Extract the details filename, lineNumber and columnNumber out of a event
