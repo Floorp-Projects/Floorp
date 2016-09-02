@@ -37796,6 +37796,12 @@
             "url": "/editing/other/delete.html"
           }
         ],
+        "html/browsers/history/the-location-interface/location-prototype-setting.html": [
+          {
+            "path": "html/browsers/history/the-location-interface/location-prototype-setting.html",
+            "url": "/html/browsers/history/the-location-interface/location-prototype-setting.html"
+          }
+        ],
         "html/semantics/forms/the-form-element/form-submission-sandbox.html": [
           {
             "path": "html/semantics/forms/the-form-element/form-submission-sandbox.html",

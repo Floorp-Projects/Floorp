@@ -2536,16 +2536,6 @@ js::SetPrototype(JSContext* cx, HandleObject obj, HandleObject proto, JS::Object
         return false;
     }
 
-    /*
-     * Explicitly disallow mutating the [[Prototype]] of Location objects
-     * for flash-related security reasons.
-     */
-    if (!strcmp(obj->getClass()->name, "Location")) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_CANT_SET_PROTO_OF,
-                             "incompatible Location object");
-        return false;
-    }
-
     /* ES6 9.1.2 step 5 forbids changing [[Prototype]] if not [[Extensible]]. */
     bool extensible;
     if (!IsExtensible(cx, obj, &extensible))
