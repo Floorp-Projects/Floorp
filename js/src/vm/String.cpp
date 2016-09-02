@@ -1303,42 +1303,6 @@ NewStringCopyN<CanGC>(ExclusiveContext* cx, const Latin1Char* s, size_t n);
 template JSFlatString*
 NewStringCopyN<NoGC>(ExclusiveContext* cx, const Latin1Char* s, size_t n);
 
-
-template <js::AllowGC allowGC>
-JSFlatString*
-NewStringCopyUTF8N(JSContext* cx, const JS::UTF8Chars utf8)
-{
-    JS::SmallestEncoding encoding = JS::FindSmallestEncoding(utf8);
-    if (encoding == JS::SmallestEncoding::ASCII)
-        return NewStringCopyN<allowGC>(cx, utf8.start().get(), utf8.length());
-
-    size_t length;
-    if (encoding == JS::SmallestEncoding::Latin1) {
-        Latin1Char* latin1 = UTF8CharsToNewLatin1CharsZ(cx, utf8, &length).get();
-        if (!latin1)
-            return nullptr;
-
-        JSFlatString* result = NewString<allowGC>(cx, latin1, length);
-        if (!result)
-            js_free((void*)latin1);
-        return result;
-    }
-
-    MOZ_ASSERT(encoding == JS::SmallestEncoding::UTF16);
-
-    char16_t* utf16 = UTF8CharsToNewTwoByteCharsZ(cx, utf8, &length).get();
-    if (!utf16)
-        return nullptr;
-
-    JSFlatString* result = NewString<allowGC>(cx, utf16, length);
-    if (!result)
-        js_free((void*)utf16);
-    return result;
-}
-
-template JSFlatString*
-NewStringCopyUTF8N<CanGC>(JSContext* cx, const JS::UTF8Chars utf8);
-
 } /* namespace js */
 
 #ifdef DEBUG
