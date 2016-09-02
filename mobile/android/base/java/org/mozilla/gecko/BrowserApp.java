@@ -693,6 +693,7 @@ public class BrowserApp extends GeckoApp
             "LightweightTheme:Update",
             "Search:Keyword",
             "Prompt:ShowTop",
+            "Tab:Added",
             "Video:Play");
 
         EventDispatcher.getInstance().registerGeckoThreadListener((NativeEventListener)this,
@@ -1427,6 +1428,7 @@ public class BrowserApp extends GeckoApp
             "LightweightTheme:Update",
             "Search:Keyword",
             "Prompt:ShowTop",
+            "Tab:Added",
             "Video:Play");
 
         EventDispatcher.getInstance().unregisterGeckoThreadListener((NativeEventListener) this,
@@ -2042,6 +2044,20 @@ public class BrowserApp extends GeckoApp
                     bringToFrontIntent.setClassName(AppConstants.ANDROID_PACKAGE_NAME, AppConstants.MOZ_ANDROID_BROWSER_INTENT_CLASS);
                     bringToFrontIntent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
                     startActivity(bringToFrontIntent);
+                    break;
+
+                case "Tab:Added":
+                    if (message.getBoolean("cancelEditMode")) {
+                        ThreadUtils.postToUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                // Set the target tab to null so it does not get selected (on editing
+                                // mode exit) in lieu of the tab that we're going to open and select.
+                                mTargetTabForEditingMode = null;
+                                mBrowserToolbar.cancelEdit();
+                            }
+                        });
+                    }
                     break;
 
                 default:
