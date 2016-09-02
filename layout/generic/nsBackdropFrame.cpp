@@ -8,6 +8,8 @@
 
 #include "nsBackdropFrame.h"
 
+#include "nsDisplayList.h"
+
 using namespace mozilla;
 
 NS_IMPL_FRAMEARENA_HELPERS(nsBackdropFrame)
