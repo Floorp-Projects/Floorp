@@ -14,14 +14,10 @@ from mach.decorators import (
 
 
 def run_reftest(context, **kwargs):
+    kwargs['app'] = kwargs['app'] or context.firefox_bin
     kwargs['certPath'] = context.certs_dir
     kwargs['utilityPath'] = context.bin_dir
     kwargs['extraProfileFiles'].append(os.path.join(context.bin_dir, 'plugins'))
-
-    if not kwargs['app']:
-        # This could still return None in which case --appname must be used
-        # to specify the firefox binary.
-        kwargs['app'] = context.find_firefox()
 
     if not kwargs['tests']:
         kwargs['tests'] = [os.path.join('layout', 'reftests', 'reftest.list')]

@@ -21,11 +21,9 @@ from mach.decorators import (
 
 def run_xpcshell(context, **kwargs):
     args = Namespace(**kwargs)
+    args.appPath = args.appPath or os.path.dirname(context.firefox_bin)
     args.utility_path = context.bin_dir
     args.testingModulesDir = context.modules_dir
-
-    if not args.appPath:
-        args.appPath = os.path.dirname(context.find_firefox())
 
     if not args.xpcshell:
         args.xpcshell = os.path.join(args.appPath, 'xpcshell')

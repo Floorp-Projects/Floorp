@@ -19,16 +19,19 @@ parser = None
 def run_mochitest(context, **kwargs):
     args = Namespace(**kwargs)
     args.certPath = context.certs_dir
-    args.utilityPath = context.bin_dir
-    args.extraProfileFiles.append(os.path.join(context.bin_dir, 'plugins'))
-
-    if not args.app:
-        args.app = context.find_firefox()
 
     if args.test_paths:
         test_root = os.path.join(context.package_root, 'mochitest', 'tests')
         normalize = partial(context.normalize_test_path, test_root)
         args.test_paths = map(normalize, args.test_paths)
+
+    return run_mochitest_desktop(context, args)
+
+
+def run_mochitest_desktop(context, args):
+    args.app = args.app or context.firefox_bin
+    args.utilityPath = context.bin_dir
+    args.extraProfileFiles.append(os.path.join(context.bin_dir, 'plugins'))
 
     from runtests import run_test_harness
     return run_test_harness(parser, args)
