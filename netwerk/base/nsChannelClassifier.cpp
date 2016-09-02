@@ -107,11 +107,9 @@ nsChannelClassifier::ShouldEnableTrackingProtection(nsIChannel *aChannel,
     if (!isThirdPartyWindow || !isThirdPartyChannel) {
       *result = false;
       if (LOG_ENABLED()) {
-        nsAutoCString spec;
-        chanURI->GetSpec(spec);
         LOG(("nsChannelClassifier[%p]: Skipping tracking protection checks "
              "for first party or top-level load channel[%p] with uri %s",
-             this, aChannel, spec.get()));
+             this, aChannel, chanURI->GetSpecOrDefault().get()));
       }
       return NS_OK;
     }
@@ -186,12 +184,10 @@ nsChannelClassifier::ShouldEnableTrackingProtection(nsIChannel *aChannel,
     // (page elements blocked) the state will be then updated.
     if (*result) {
       if (LOG_ENABLED()) {
-        nsAutoCString topspec, spec;
-        topWinURI->GetSpec(topspec);
-        chanURI->GetSpec(spec);
         LOG(("nsChannelClassifier[%p]: Enabling tracking protection checks on "
              "channel[%p] with uri %s for toplevel window %s", this, aChannel,
-             spec.get(), topspec.get()));
+             chanURI->GetSpecOrDefault().get(),
+             topWinURI->GetSpecOrDefault().get()));
       }
       return NS_OK;
     }
@@ -348,13 +344,11 @@ nsChannelClassifier::StartInternal()
     (void)ShouldEnableTrackingProtection(mChannel, &trackingProtectionEnabled);
 
     if (LOG_ENABLED()) {
-      nsAutoCString uriSpec, principalSpec;
-      uri->GetSpec(uriSpec);
       nsCOMPtr<nsIURI> principalURI;
       principal->GetURI(getter_AddRefs(principalURI));
-      principalURI->GetSpec(principalSpec);
       LOG(("nsChannelClassifier[%p]: Classifying principal %s on channel with "
-           "uri %s", this, principalSpec.get(), uriSpec.get()));
+           "uri %s", this, principalURI->GetSpecOrDefault().get(),
+           uri->GetSpecOrDefault().get()));
     }
     rv = uriClassifier->Classify(principal, trackingProtectionEnabled, this,
                                  &expectCallback);
@@ -572,9 +566,7 @@ nsChannelClassifier::SetBlockedTrackingContent(nsIChannel *channel)
   // Log a warning to the web console.
   nsCOMPtr<nsIURI> uri;
   channel->GetURI(getter_AddRefs(uri));
-  nsCString utf8spec;
-  uri->GetSpec(utf8spec);
-  NS_ConvertUTF8toUTF16 spec(utf8spec);
+  NS_ConvertUTF8toUTF16 spec(uri->GetSpecOrDefault());
   const char16_t* params[] = { spec.get() };
   nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
                                   NS_LITERAL_CSTRING("Tracking Protection"),
@@ -676,11 +668,9 @@ nsChannelClassifier::OnClassifyComplete(nsresult aErrorCode)
         if (LOG_ENABLED()) {
           nsCOMPtr<nsIURI> uri;
           mChannel->GetURI(getter_AddRefs(uri));
-          nsAutoCString spec;
-          uri->GetSpec(spec);
           LOG(("nsChannelClassifier[%p]: cancelling channel %p for %s "
                "with error code %s", this, mChannel.get(),
-               spec.get(), errorName.get()));
+               uri->GetSpecOrDefault().get(), errorName.get()));
         }
 
         // Channel will be cancelled (page element blocked) due to tracking.

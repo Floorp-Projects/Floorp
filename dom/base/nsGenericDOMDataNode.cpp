@@ -970,9 +970,9 @@ nsGenericDOMDataNode::GetWholeText(nsAString& aWholeText)
     return GetData(aWholeText);
 
   int32_t index = parent->IndexOf(this);
-  NS_WARN_IF_FALSE(index >= 0,
-                   "Trying to use .wholeText with an anonymous"
-                    "text node child of a binding parent?");
+  NS_WARNING_ASSERTION(index >= 0,
+                       "Trying to use .wholeText with an anonymous"
+                       "text node child of a binding parent?");
   NS_ENSURE_TRUE(index >= 0, NS_ERROR_DOM_NOT_SUPPORTED_ERR);
   int32_t first =
     FirstLogicallyAdjacentTextNode(parent, index);

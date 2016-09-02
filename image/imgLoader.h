@@ -327,7 +327,7 @@ public:
    * @param aMimeType The MIME type to evaluate.
    * @param aAcceptedMimeTypes Which kinds of MIME types to treat as images.
    */
-  static NS_EXPORT_(bool)
+  static bool
   SupportImageWithMimeType(const char* aMimeType,
                            AcceptedMimeTypes aAccept =
                              AcceptedMimeTypes::IMAGES);

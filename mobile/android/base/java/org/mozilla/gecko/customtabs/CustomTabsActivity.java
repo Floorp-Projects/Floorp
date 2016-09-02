@@ -20,4 +20,9 @@ public class CustomTabsActivity extends GeckoApp {
     public int getLayout() {
         return R.layout.customtabs_activity;
     }
+
+    @Override
+    public void onBackPressed() {
+        finish();
+    }
 }

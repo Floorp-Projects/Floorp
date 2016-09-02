@@ -13257,16 +13257,19 @@ Factory::Create(const LoggingInfo& aLoggingInfo)
   if (loggingInfo) {
     MOZ_ASSERT(aLoggingInfo.backgroundChildLoggingId() == loggingInfo->Id());
 #if !DISABLE_ASSERTS_FOR_FUZZING
-    NS_WARN_IF_FALSE(aLoggingInfo.nextTransactionSerialNumber() ==
-                       loggingInfo->mLoggingInfo.nextTransactionSerialNumber(),
-                     "NextTransactionSerialNumber doesn't match!");
-    NS_WARN_IF_FALSE(aLoggingInfo.nextVersionChangeTransactionSerialNumber() ==
-                       loggingInfo->mLoggingInfo.
-                         nextVersionChangeTransactionSerialNumber(),
-                     "NextVersionChangeTransactionSerialNumber doesn't match!");
-    NS_WARN_IF_FALSE(aLoggingInfo.nextRequestSerialNumber() ==
-                       loggingInfo->mLoggingInfo.nextRequestSerialNumber(),
-                     "NextRequestSerialNumber doesn't match!");
+    NS_WARNING_ASSERTION(
+      aLoggingInfo.nextTransactionSerialNumber() ==
+        loggingInfo->mLoggingInfo.nextTransactionSerialNumber(),
+      "NextTransactionSerialNumber doesn't match!");
+    NS_WARNING_ASSERTION(
+      aLoggingInfo.nextVersionChangeTransactionSerialNumber() ==
+        loggingInfo->mLoggingInfo.
+      nextVersionChangeTransactionSerialNumber(),
+      "NextVersionChangeTransactionSerialNumber doesn't match!");
+    NS_WARNING_ASSERTION(
+      aLoggingInfo.nextRequestSerialNumber() ==
+        loggingInfo->mLoggingInfo.nextRequestSerialNumber(),
+      "NextRequestSerialNumber doesn't match!");
 #endif // !DISABLE_ASSERTS_FOR_FUZZING
   } else {
     loggingInfo = new DatabaseLoggingInfo(aLoggingInfo);
@@ -23089,19 +23092,20 @@ CommitOp::Run()
       if (NS_SUCCEEDED(mResultCode)) {
         if (fileRefcountFunction) {
           mResultCode = fileRefcountFunction->WillCommit();
-          NS_WARN_IF_FALSE(NS_SUCCEEDED(mResultCode), "WillCommit() failed!");
+          NS_WARNING_ASSERTION(NS_SUCCEEDED(mResultCode),
+                               "WillCommit() failed!");
         }
 
         if (NS_SUCCEEDED(mResultCode)) {
           mResultCode = WriteAutoIncrementCounts();
-          NS_WARN_IF_FALSE(NS_SUCCEEDED(mResultCode),
-                           "WriteAutoIncrementCounts() failed!");
+          NS_WARNING_ASSERTION(NS_SUCCEEDED(mResultCode),
+                               "WriteAutoIncrementCounts() failed!");
 
           if (NS_SUCCEEDED(mResultCode)) {
             AssertForeignKeyConsistency(connection);
 
             mResultCode = connection->CommitWriteTransaction();
-            NS_WARN_IF_FALSE(NS_SUCCEEDED(mResultCode), "Commit failed!");
+            NS_WARNING_ASSERTION(NS_SUCCEEDED(mResultCode), "Commit failed!");
 
             if (NS_SUCCEEDED(mResultCode) &&
                 mTransaction->GetMode() == IDBTransaction::READ_WRITE_FLUSH) {

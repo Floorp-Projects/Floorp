@@ -29,21 +29,6 @@ function createdCallbackFromMainDoc() {
   document.createElement("x-associated-doc-callback-elem");
 }
 
-function createdCallbackFromAssociatedDoc() {
-  var createdCallbackCalled = false;
-  var assocDoc = document.implementation.createHTMLDocument();
-
-  var proto = Object.create(HTMLElement.prototype);
-  proto.createdCallback = function() {
-    is(createdCallbackCalled, false, "created callback should only be called once in this tests.");
-    createdCallbackCalled = true;
-    runNextTest();
-  };
-
-  assocDoc.registerElement("x-main-doc-callback-elem", { prototype: proto });
-  assocDoc.createElement("x-main-doc-callback-elem");
-}
-
 function createdCallbackFromDocHTMLNamespace() {
   var createdCallbackCalled = false;
   var assocDoc = document.implementation.createDocument("http://www.w3.org/1999/xhtml", "html", null);
@@ -80,7 +65,6 @@ function runNextTest() {
 }
 
 var testFunctions = [
-  createdCallbackFromAssociatedDoc,
   createdCallbackFromMainDoc,
   createdCallbackFromDocHTMLNamespace,
   registerNoRegistryDoc,

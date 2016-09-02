@@ -13,7 +13,6 @@ PREPROCESSED_WEBIDL_FILES = [
     'Navigator.webidl',
     'Promise.webidl',
     'PromiseDebugging.webidl',
-    'ServiceWorkerRegistration.webidl',
     'Window.webidl',
 ]
 
@@ -396,6 +395,12 @@ WEBIDL_FILES = [
     'PresentationRequest.webidl',
     'ProcessingInstruction.webidl',
     'ProfileTimelineMarker.webidl',
+    'PushEvent.webidl',
+    'PushManager.webidl',
+    'PushManager.webidl',
+    'PushMessageData.webidl',
+    'PushSubscription.webidl',
+    'PushSubscriptionOptions.webidl',
     'RadioNodeList.webidl',
     'Range.webidl',
     'Rect.webidl',
@@ -415,6 +420,7 @@ WEBIDL_FILES = [
     'ServiceWorkerContainer.webidl',
     'ServiceWorkerGlobalScope.webidl',
     'ServiceWorkerMessageEvent.webidl',
+    'ServiceWorkerRegistration.webidl',
     'SettingChangeNotification.webidl',
     'SettingsManager.webidl',
     'ShadowRoot.webidl',
@@ -717,20 +723,6 @@ if CONFIG['MOZ_B2G_BT']:
         'BluetoothPbapParameters.webidl',
         'BluetoothPbapRequestHandle.webidl',
         'BluetoothUUID.webidl',
-    ]
-
-if CONFIG['MOZ_SIMPLEPUSH']:
-    WEBIDL_FILES += [
-        'SimplePushManager.webidl'
-    ]
-else:
-    WEBIDL_FILES += [
-        'PushEvent.webidl',
-        'PushManager.webidl',
-        'PushManager.webidl',
-        'PushMessageData.webidl',
-        'PushSubscription.webidl',
-        'PushSubscriptionOptions.webidl',
     ]
 
 if CONFIG['MOZ_NFC']:

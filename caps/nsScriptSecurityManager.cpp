@@ -67,6 +67,7 @@
 #include "nsJSUtils.h"
 #include "nsILoadInfo.h"
 #include "nsXPCOMStrings.h"
+#include "xpcprivate.h"
 
 // This should be probably defined on some other place... but I couldn't find it
 #define WEBAPPS_PERM_NAME "webapps-manage"
@@ -256,8 +257,10 @@ nsScriptSecurityManager::AppStatusForPrincipal(nsIPrincipal *aPrin)
     // mozbrowser frames.
     bool inIsolatedMozBrowser = aPrin->GetIsInIsolatedMozBrowserElement();
 
-    NS_WARN_IF_FALSE(appId != nsIScriptSecurityManager::UNKNOWN_APP_ID,
-                     "Asking for app status on a principal with an unknown app id");
+    NS_WARNING_ASSERTION(
+      appId != nsIScriptSecurityManager::UNKNOWN_APP_ID,
+      "Asking for app status on a principal with an unknown app id");
+
     // Installed apps have a valid app id (not NO_APP_ID or UNKNOWN_APP_ID)
     // and they are not inside a mozbrowser.
     if (appId == nsIScriptSecurityManager::NO_APP_ID ||
@@ -470,6 +473,18 @@ nsScriptSecurityManager::GetChannelURIPrincipal(nsIChannel* aChannel,
     nsCOMPtr<nsIPrincipal> prin = BasePrincipal::CreateCodebasePrincipal(uri, attrs);
     prin.forget(aPrincipal);
     return *aPrincipal ? NS_OK : NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsScriptSecurityManager::GetSandboxPrincipal(JS::HandleValue aSandboxArg,
+                                             JSContext* aCx,
+                                             nsIPrincipal** aPrincipal)
+{
+  if (!aSandboxArg.isObject()) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  JS::RootedObject sandbox(aCx, &aSandboxArg.toObject());
+  return xpc::GetSandboxPrincipal(aCx, sandbox, aPrincipal);
 }
 
 NS_IMETHODIMP

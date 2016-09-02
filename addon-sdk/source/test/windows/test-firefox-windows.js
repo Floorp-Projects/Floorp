@@ -289,10 +289,10 @@ exports.testActiveWindow = function*(assert) {
   assert.equal(windows.activeWindow.title, window3.title, "Correct active window - 3");
 
   yield close(rawWindow2);
-  assert.equal(rawWindow2.closed, true, 'window 2 is closed');
-
   yield close(rawWindow3);
-  assert.equal(rawWindow3.closed, true, 'window 3 is closed');
+
+  assert.equal(windows.length, 1, "Correct number of browser windows");
+  assert.equal(window.closed, false, "Original window is still open");
 };
 
 exports.testTrackWindows = function(assert, done) {

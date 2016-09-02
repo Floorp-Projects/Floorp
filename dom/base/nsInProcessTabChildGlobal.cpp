@@ -129,8 +129,8 @@ nsInProcessTabChildGlobal::Init()
   nsresult rv =
 #endif
   InitTabChildGlobal();
-  NS_WARN_IF_FALSE(NS_SUCCEEDED(rv),
-                   "Couldn't initialize nsInProcessTabChildGlobal");
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                       "Couldn't initialize nsInProcessTabChildGlobal");
   mMessageManager = new nsFrameMessageManager(this,
                                               nullptr,
                                               dom::ipc::MM_CHILD);

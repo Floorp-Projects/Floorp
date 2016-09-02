@@ -103,9 +103,7 @@ nsThreadPool::PutEvent(already_AddRefed<nsIRunnable> aEvent, uint32_t aFlags)
   }
 
   nsCOMPtr<nsIThread> thread;
-  nsThreadManager::get()->NewThread(0,
-                                    stackSize,
-                                    getter_AddRefs(thread));
+  nsThreadManager::get().NewThread(0, stackSize, getter_AddRefs(thread));
   if (NS_WARN_IF(!thread)) {
     return NS_ERROR_UNEXPECTED;
   }
@@ -158,7 +156,7 @@ nsThreadPool::Run()
   LOG(("THRD-P(%p) enter %s\n", this, mName.BeginReading()));
 
   nsCOMPtr<nsIThread> current;
-  nsThreadManager::get()->GetCurrentThread(getter_AddRefs(current));
+  nsThreadManager::get().GetCurrentThread(getter_AddRefs(current));
 
   bool shutdownThreadOnExit = false;
   bool exitThread = false;
@@ -258,7 +256,7 @@ nsThreadPool::Dispatch(already_AddRefed<nsIRunnable> aEvent, uint32_t aFlags)
 
   if (aFlags & DISPATCH_SYNC) {
     nsCOMPtr<nsIThread> thread;
-    nsThreadManager::get()->GetCurrentThread(getter_AddRefs(thread));
+    nsThreadManager::get().GetCurrentThread(getter_AddRefs(thread));
     if (NS_WARN_IF(!thread)) {
       return NS_ERROR_NOT_AVAILABLE;
     }

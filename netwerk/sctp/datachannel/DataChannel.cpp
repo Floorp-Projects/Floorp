@@ -711,7 +711,8 @@ DataChannelConnection::Listen(unsigned short port)
   struct sockaddr_in addr;
   socklen_t addr_len;
 
-  NS_WARN_IF_FALSE(!NS_IsMainThread(), "Blocks, do not call from main thread!!!");
+  NS_WARNING_ASSERTION(!NS_IsMainThread(),
+                       "Blocks, do not call from main thread!!!");
 
   /* Acting as the 'server' */
   memset((void *)&addr, 0, sizeof(addr));
@@ -766,7 +767,8 @@ DataChannelConnection::Connect(const char *addr, unsigned short port)
   struct sockaddr_in addr4;
   struct sockaddr_in6 addr6;
 
-  NS_WARN_IF_FALSE(!NS_IsMainThread(), "Blocks, do not call from main thread!!!");
+  NS_WARNING_ASSERTION(!NS_IsMainThread(),
+                       "Blocks, do not call from main thread!!!");
 
   /* Acting as the connector */
   LOG(("Connecting to %s, port %u", addr, port));
@@ -2170,7 +2172,7 @@ DataChannelConnection::SendMsgInternal(DataChannel *channel, const char *data,
   int32_t result;
 
   NS_ENSURE_TRUE(channel->mState == OPEN || channel->mState == CONNECTING, 0);
-  NS_WARN_IF_FALSE(length > 0, "Length is 0?!");
+  NS_WARNING_ASSERTION(length > 0, "Length is 0?!");
 
   // To avoid problems where an in-order OPEN is lost and an
   // out-of-order data message "beats" it, require data to be in-order
@@ -2284,8 +2286,8 @@ DataChannelConnection::SendBinary(DataChannel *channel, const char *data,
          channel->mBufferedData.Length()));
     return sent;
   }
-  NS_WARN_IF_FALSE(len <= DATA_CHANNEL_MAX_BINARY_FRAGMENT,
-                   "Sending too-large data on unreliable channel!");
+  NS_WARNING_ASSERTION(len <= DATA_CHANNEL_MAX_BINARY_FRAGMENT,
+                       "Sending too-large data on unreliable channel!");
 
   // This will fail if the message is too large (default 256K)
   return SendMsgInternal(channel, data, len, ppid_final);

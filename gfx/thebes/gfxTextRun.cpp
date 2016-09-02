@@ -1316,10 +1316,12 @@ gfxTextRun::CopyGlyphDataFrom(gfxTextRun *aSource, Range aRange, uint32_t aDest)
         // This means the rendering of the cluster will probably not be very good,
         // but it's the best we can do for now if the specified font only covered the
         // initial base character and not its applied marks.
-        NS_WARN_IF_FALSE(aSource->IsClusterStart(start),
-                         "Started font run in the middle of a cluster");
-        NS_WARN_IF_FALSE(end == aSource->GetLength() || aSource->IsClusterStart(end),
-                         "Ended font run in the middle of a cluster");
+        NS_WARNING_ASSERTION(
+          aSource->IsClusterStart(start),
+          "Started font run in the middle of a cluster");
+        NS_WARNING_ASSERTION(
+          end == aSource->GetLength() || aSource->IsClusterStart(end),
+          "Ended font run in the middle of a cluster");
 
         nsresult rv = AddGlyphRun(font, iter.GetGlyphRun()->mMatchType,
                                   start - aRange.start + aDest, false,

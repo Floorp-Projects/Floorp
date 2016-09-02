@@ -735,7 +735,8 @@ protected:
       nsresult rv =
 #endif
       mFile->Remove(false);
-      NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Failed to remove temporary DOMFile.");
+      NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                           "Failed to remove temporary DOMFile.");
     }
   }
 

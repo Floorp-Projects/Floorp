@@ -212,7 +212,7 @@ GetBitmapForSurface(SourceSurface* aSurface)
 
   DataSourceSurface* surf = aSurface->GetDataSurface().take();
   if (!surf) {
-    gfxDevCrash(LogReason::SourceSurfaceIncompatible) << "Non-Skia SourceSurfaces need to be DataSourceSurfaces";
+    gfxWarning() << "Failed getting DataSourceSurface for Skia bitmap";
     return bitmap;
   }
 
@@ -492,18 +492,12 @@ DrawTargetSkia::DrawSurface(SourceSurface *aSurface,
                             const DrawSurfaceOptions &aSurfOptions,
                             const DrawOptions &aOptions)
 {
-  RefPtr<SourceSurface> dataSurface;
-
-  if (!(aSurface->GetType() == SurfaceType::SKIA || aSurface->GetType() == SurfaceType::DATA)) {
-    dataSurface = aSurface->GetDataSurface();
-    if (!dataSurface) {
-      gfxDebug() << *this << ": DrawSurface() can't draw surface";
-      return;
-    }
-    aSurface = dataSurface.get();
+  if (aSource.IsEmpty()) {
+    return;
   }
 
-  if (aSource.IsEmpty()) {
+  SkBitmap bitmap = GetBitmapForSurface(aSurface);
+  if (bitmap.empty()) {
     return;
   }
 
@@ -511,7 +505,6 @@ DrawTargetSkia::DrawSurface(SourceSurface *aSurface,
 
   SkRect destRect = RectToSkRect(aDest);
   SkRect sourceRect = RectToSkRect(aSource);
-  SkBitmap bitmap = GetBitmapForSurface(aSurface);
   bool forceGroup = bitmap.colorType() == kAlpha_8_SkColorType &&
                     aOptions.mCompositionOp != CompositionOp::OP_OVER;
 
@@ -552,8 +545,12 @@ DrawTargetSkia::DrawSurfaceWithShadow(SourceSurface *aSurface,
                                       Float aSigma,
                                       CompositionOp aOperator)
 {
-  if (!(aSurface->GetType() == SurfaceType::SKIA || aSurface->GetType() == SurfaceType::DATA) ||
-      aSurface->GetSize().IsEmpty()) {
+  if (aSurface->GetSize().IsEmpty()) {
+    return;
+  }
+
+  SkBitmap bitmap = GetBitmapForSurface(aSurface);
+  if (bitmap.empty()) {
     return;
   }
 
@@ -561,8 +558,6 @@ DrawTargetSkia::DrawSurfaceWithShadow(SourceSurface *aSurface,
 
   mCanvas->save();
   mCanvas->resetMatrix();
-
-  SkBitmap bitmap = GetBitmapForSurface(aSurface);
 
   SkPaint paint;
   paint.setXfermodeMode(GfxOpToSkiaOp(aOperator));
@@ -1349,6 +1344,9 @@ DrawTarget::Draw3DTransformedSurface(SourceSurface* aSurface, const Matrix4x4& a
 
   // Read in the source data.
   SkBitmap srcBitmap = GetBitmapForSurface(aSurface);
+  if (srcBitmap.empty()) {
+    return true;
+  }
 
   // Set up an intermediate destination surface only the size of the transformed bounds.
   // Try to pass through the source's format unmodified in both the BGRA and ARGB cases.
@@ -1403,9 +1401,12 @@ DrawTargetSkia::Draw3DTransformedSurface(SourceSurface* aSurface, const Matrix4x
     return false;
   }
 
-  MarkChanged();
-
   SkBitmap bitmap = GetBitmapForSurface(aSurface);
+  if (bitmap.empty()) {
+    return true;
+  }
+
+  MarkChanged();
 
   mCanvas->save();
 
@@ -1561,7 +1562,7 @@ DrawTargetSkia::OptimizeSourceSurface(SourceSurface *aSurface) const
 already_AddRefed<SourceSurface>
 DrawTargetSkia::CreateSourceSurfaceFromNativeSurface(const NativeSurface &aSurface) const
 {
-#if USE_SKIA_GPU
+#ifdef USE_SKIA_GPU
   if (aSurface.mType == NativeSurfaceType::OPENGL_TEXTURE && UsingSkiaGPU()) {
     // Wrap the OpenGL texture id in a Skia texture handle.
     GrBackendTextureDesc texDesc;
@@ -1593,13 +1594,12 @@ DrawTargetSkia::CopySurface(SourceSurface *aSurface,
                             const IntRect& aSourceRect,
                             const IntPoint &aDestination)
 {
-  if (aSurface->GetType() != SurfaceType::SKIA && aSurface->GetType() != SurfaceType::DATA) {
+  SkBitmap bitmap = GetBitmapForSurface(aSurface);
+  if (bitmap.empty()) {
     return;
   }
 
   MarkChanged();
-
-  SkBitmap bitmap = GetBitmapForSurface(aSurface);
 
   mCanvas->save();
   mCanvas->setMatrix(SkMatrix::MakeTrans(SkIntToScalar(aDestination.x), SkIntToScalar(aDestination.y)));

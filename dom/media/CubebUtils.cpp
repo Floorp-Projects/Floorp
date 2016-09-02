@@ -149,8 +149,8 @@ void InitBrandName()
     if (NS_SUCCEEDED(rv)) {
       rv = brandBundle->GetStringFromName(u"brandShortName",
                                           getter_Copies(brandName));
-      NS_WARN_IF_FALSE(NS_SUCCEEDED(rv),
-          "Could not get the program name for a cubeb stream.");
+      NS_WARNING_ASSERTION(
+        NS_SUCCEEDED(rv), "Could not get the program name for a cubeb stream.");
     }
   }
   /* cubeb expects a c-string. */
@@ -170,12 +170,12 @@ cubeb* GetCubebContextUnlocked()
   if (!sBrandName && NS_IsMainThread()) {
     InitBrandName();
   } else {
-    NS_WARN_IF_FALSE(sBrandName,
-        "Did not initialize sbrandName, and not on the main thread?");
+    NS_WARNING_ASSERTION(
+      sBrandName, "Did not initialize sbrandName, and not on the main thread?");
   }
 
   DebugOnly<int> rv = cubeb_init(&sCubebContext, sBrandName);
-  NS_WARN_IF_FALSE(rv == CUBEB_OK, "Could not get a cubeb context.");
+  NS_WARNING_ASSERTION(rv == CUBEB_OK, "Could not get a cubeb context.");
 
   return sCubebContext;
 }

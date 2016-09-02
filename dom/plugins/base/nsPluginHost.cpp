@@ -949,12 +949,10 @@ nsPluginHost::TrySetUpPluginInstance(const nsACString &aMimeType,
                                      nsPluginInstanceOwner *aOwner)
 {
 #ifdef PLUGIN_LOGGING
-  nsAutoCString urlSpec;
-  if (aURL != nullptr) aURL->GetSpec(urlSpec);
-
   MOZ_LOG(nsPluginLogging::gPluginLog, PLUGIN_LOG_NORMAL,
-        ("nsPluginHost::TrySetupPluginInstance Begin mime=%s, owner=%p, url=%s\n",
-         PromiseFlatCString(aMimeType).get(), aOwner, urlSpec.get()));
+          ("nsPluginHost::TrySetupPluginInstance Begin mime=%s, owner=%p, url=%s\n",
+           PromiseFlatCString(aMimeType).get(), aOwner,
+           aURL ? aURL->GetSpecOrDefault().get() : ""));
 
   PR_LogFlush();
 #endif
@@ -1013,13 +1011,10 @@ nsPluginHost::TrySetUpPluginInstance(const nsACString &aMimeType,
   }
 
 #ifdef PLUGIN_LOGGING
-  nsAutoCString urlSpec2;
-  if (aURL)
-    aURL->GetSpec(urlSpec2);
-
   MOZ_LOG(nsPluginLogging::gPluginLog, PLUGIN_LOG_BASIC,
         ("nsPluginHost::TrySetupPluginInstance Finished mime=%s, rv=%d, owner=%p, url=%s\n",
-         PromiseFlatCString(aMimeType).get(), rv, aOwner, urlSpec2.get()));
+         PromiseFlatCString(aMimeType).get(), rv, aOwner,
+         aURL ? aURL->GetSpecOrDefault().get() : ""));
 
   PR_LogFlush();
 #endif

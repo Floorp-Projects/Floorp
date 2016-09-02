@@ -122,7 +122,7 @@ TextEditRules::Init(TextEditor* aTextEditor)
   // We hold a non-refcounted reference back to our editor.
   mTextEditor = aTextEditor;
   RefPtr<Selection> selection = mTextEditor->GetSelection();
-  NS_WARN_IF_FALSE(selection, "editor cannot get selection");
+  NS_WARNING_ASSERTION(selection, "editor cannot get selection");
 
   // Put in a magic br if needed. This method handles null selection,
   // which should never happen anyway

@@ -203,8 +203,9 @@ BasicPaintedLayer::Validate(LayerManager::DrawPaintedLayerCallback aCallback,
     // It's possible that state.mRegionToInvalidate is nonempty here,
     // if we are shrinking the valid region to nothing. So use mRegionToDraw
     // instead.
-    NS_WARN_IF_FALSE(state.mRegionToDraw.IsEmpty(),
-                     "No context when we have something to draw, resource exhaustion?");
+    NS_WARNING_ASSERTION(
+      state.mRegionToDraw.IsEmpty(),
+      "No context when we have something to draw, resource exhaustion?");
   }
 
   for (uint32_t i = 0; i < readbackUpdates.Length(); ++i) {
