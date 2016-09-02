@@ -6,7 +6,6 @@
 package org.mozilla.gecko;
 
 import android.app.Activity;
-import android.content.ContentResolver;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -21,11 +20,8 @@ import org.mozilla.gecko.GeckoProfileDirectories.NoMozillaDirectoryException;
 import org.mozilla.gecko.GeckoProfileDirectories.NoSuchProfileException;
 import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.db.BrowserDB;
-import org.mozilla.gecko.db.LocalBrowserDB;
 import org.mozilla.gecko.db.StubBrowserDB;
-import org.mozilla.gecko.distribution.Distribution;
 import org.mozilla.gecko.firstrun.FirstrunAnimationContainer;
-import org.mozilla.gecko.preferences.DistroSharedPrefsImport;
 import org.mozilla.gecko.util.FileUtils;
 import org.mozilla.gecko.util.INIParser;
 import org.mozilla.gecko.util.INISection;
@@ -385,6 +381,14 @@ public final class GeckoProfile {
                                           mName, mProfileDir);
         }
         return mInGuestMode;
+    }
+
+    /**
+     * Return an Object that can be used with a synchronized statement to allow
+     * exclusive access to the profile.
+     */
+    public Object getLock() {
+        return this;
     }
 
     /**
@@ -993,67 +997,5 @@ public final class GeckoProfile {
         message.putCharSequence("name", getName());
         message.putCharSequence("path", profileDir.getAbsolutePath());
         EventDispatcher.getInstance().dispatch("Profile:Create", message);
-
-        final Context context = mApplicationContext;
-
-        // Add everything when we're done loading the distribution.
-        final Distribution distribution = Distribution.getInstance(context);
-        distribution.addOnDistributionReadyCallback(new Distribution.ReadyCallback() {
-            @Override
-            public void distributionNotFound() {
-                this.distributionFound(null);
-            }
-
-            @Override
-            public void distributionFound(Distribution distribution) {
-                Log.d(LOGTAG, "Running post-distribution task: bookmarks.");
-
-                final ContentResolver cr = context.getContentResolver();
-
-                // Because we are running in the background, we want to synchronize on the
-                // GeckoProfile instance so that we don't race with main thread operations
-                // such as locking/unlocking/removing the profile.
-                synchronized (GeckoProfile.this) {
-                    // Skip initialization if the profile directory has been removed.
-                    if (!profileDir.exists()) {
-                        return;
-                    }
-
-                    // We pass the number of added bookmarks to ensure that the
-                    // indices of the distribution and default bookmarks are
-                    // contiguous. Because there are always at least as many
-                    // bookmarks as there are favicons, we can also guarantee that
-                    // the favicon IDs won't overlap.
-                    final LocalBrowserDB db = new LocalBrowserDB(getName());
-                    final int offset = distribution == null ? 0 : db.addDistributionBookmarks(cr, distribution, 0);
-                    db.addDefaultBookmarks(context, cr, offset);
-
-                    Log.d(LOGTAG, "Running post-distribution task: android preferences.");
-                    DistroSharedPrefsImport.importPreferences(context, distribution);
-                }
-            }
-
-            @Override
-            public void distributionArrivedLate(Distribution distribution) {
-                Log.d(LOGTAG, "Running late distribution task: bookmarks.");
-                // Recover as best we can.
-                synchronized (GeckoProfile.this) {
-                    // Skip initialization if the profile directory has been removed.
-                    if (!profileDir.exists()) {
-                        return;
-                    }
-
-                    final LocalBrowserDB db = new LocalBrowserDB(getName());
-                    // We assume we've been called very soon after startup, and so our offset
-                    // into "Mobile Bookmarks" is the number of bookmarks in the DB.
-                    final ContentResolver cr = context.getContentResolver();
-                    final int offset = db.getCount(cr, "bookmarks");
-                    db.addDistributionBookmarks(cr, distribution, offset);
-
-                    Log.d(LOGTAG, "Running late distribution task: android preferences.");
-                    DistroSharedPrefsImport.importPreferences(context, distribution);
-                }
-            }
-        });
     }
 }
