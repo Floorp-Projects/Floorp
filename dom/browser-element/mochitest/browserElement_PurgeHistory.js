@@ -75,7 +75,7 @@ function test3() {
 
 function test4() {
   addOneShotIframeEventListener('mozbrowserlocationchange', function(e) {
-    is(e.detail, browserElementTestHelpers.emptyPage3);
+    is(e.detail.url, browserElementTestHelpers.emptyPage3);
     purgeHistory(SimpleTest.finish);
   });
 
