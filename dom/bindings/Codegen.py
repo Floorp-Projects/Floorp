@@ -2527,7 +2527,7 @@ class AttrDefiner(PropertyDefiner):
 
         return self.generatePrefableArray(
             array, name,
-            lambda fields: '  { "%s", %s, %s, %s}' % fields,
+            lambda fields: '  { "%s", %s, { { %s, %s } } }' % fields,
             '  JS_PS_END',
             'JSPropertySpec',
             PropertyDefiner.getControllingCondition, specData, doIdArrays)
