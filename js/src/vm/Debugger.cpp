@@ -5056,7 +5056,14 @@ Debugger::drainTraceLoggerScriptCalls(JSContext* cx, unsigned argc, Value* vp)
         if (!item)
             return false;
 
+        // Filter out internal time.
         uint32_t textId = eventItem->textId;
+        if (textId == TraceLogger_Internal) {
+            eventItem++;
+            MOZ_ASSERT(eventItem->textId == TraceLogger_Stop);
+            continue;
+        }
+
         if (textId != TraceLogger_Stop && !logger->textIdIsScriptEvent(textId))
             continue;
 
