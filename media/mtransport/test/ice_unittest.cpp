@@ -2880,6 +2880,24 @@ TEST_F(WebRtcIceConnectTest, TestConnectSymmetricNat) {
   Connect();
 }
 
+TEST_F(WebRtcIceConnectTest, TestConnectSymmetricNatAndNoNat) {
+  p1_ = MakeUnique<IceTestPeer>("P1", test_utils_, true, false, false);
+  p1_->UseNat();
+  p1_->SetFilteringType(TestNat::PORT_DEPENDENT);
+  p1_->SetMappingType(TestNat::PORT_DEPENDENT);
+
+  p2_ = MakeUnique<IceTestPeer>("P2", test_utils_, false, false, false);
+  initted_ = true;
+
+  AddStream(1);
+  p1_->SetExpectedTypes(NrIceCandidate::Type::ICE_PEER_REFLEXIVE,
+                        NrIceCandidate::Type::ICE_HOST);
+  p2_->SetExpectedTypes(NrIceCandidate::Type::ICE_HOST,
+                        NrIceCandidate::Type::ICE_PEER_REFLEXIVE);
+  ASSERT_TRUE(Gather());
+  Connect();
+}
+
 TEST_F(WebRtcIceConnectTest, TestGatherNatBlocksUDP) {
   if (turn_server_.empty())
     return;
