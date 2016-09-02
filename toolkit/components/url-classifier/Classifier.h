@@ -85,6 +85,20 @@ public:
                             PrefixArray* aNoiseEntries);
   static void SplitTables(const nsACString& str, nsTArray<nsCString>& tables);
 
+  // Given a root store directory, return a private store directory
+  // based on the table name. To avoid migration issue, the private
+  // store directory is only different from root directory for V4 tables.
+  //
+  // For V4 tables (suffixed by '-proto'), the private directory would
+  // be [root directory path]/[provider]. The provider of V4 tables is
+  // 'google4'.
+  //
+  // Note that if the table name is not owned by any provider, just use
+  // the root directory.
+  static nsresult GetPrivateStoreDirectory(nsIFile* aRootStoreDirectory,
+                                           const nsACString& aTableName,
+                                           nsIFile** aPrivateStoreDirectory);
+
 private:
   void DropStores();
   void DeleteTables(const nsTArray<nsCString>& aTables);
@@ -111,7 +125,7 @@ private:
   // Root dir of the Local profile.
   nsCOMPtr<nsIFile> mCacheDirectory;
   // Main directory where to store the databases.
-  nsCOMPtr<nsIFile> mStoreDirectory;
+  nsCOMPtr<nsIFile> mRootStoreDirectory;
   // Used for atomically updating the other dirs.
   nsCOMPtr<nsIFile> mBackupDirectory;
   nsCOMPtr<nsIFile> mToDeleteDirectory;
