@@ -1320,6 +1320,7 @@ class DebuggerObject : public NativeObject
 #ifdef SPIDERMONKEY_PROMISE
     JS::PromiseState promiseState() const;
     double promiseLifetime() const;
+    double promiseTimeToResolution() const;
 #endif // SPIDERMONKEY_PROMISE
 
   private:
