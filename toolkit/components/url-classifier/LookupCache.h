@@ -142,6 +142,9 @@ private:
   CompletionArray mUpdateCompletions;
   // Full length hashes obtained in gethash request
   CompletionArray mGetHashCache;
+
+  // For gtest to inspect private members.
+  friend class PerProviderDirectoryTestUtils;
 };
 
 } // namespace safebrowsing
