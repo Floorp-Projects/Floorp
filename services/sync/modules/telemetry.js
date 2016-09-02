@@ -18,7 +18,6 @@ Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://gre/modules/TelemetryController.jsm");
 Cu.import("resource://gre/modules/FxAccounts.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/osfile.jsm", this);
 
 let constants = {};
 Cu.import("resource://services-sync/constants.js", constants);
@@ -51,14 +50,6 @@ const PING_FORMAT_VERSION = 1;
 const ENGINES = new Set(["addons", "bookmarks", "clients", "forms", "history",
                          "passwords", "prefs", "tabs"]);
 
-// A regex we can use to replace the profile dir in error messages. We use a
-// regexp so we can simply replace all case-insensitive occurences.
-// This escaping function is from:
-// https://developer.mozilla.org/en/docs/Web/JavaScript/Guide/Regular_Expressions
-const reProfileDir = new RegExp(
-        OS.Constants.Path.profileDir.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"),
-        "gi");
-
 // is it a wrapped auth error from browserid_identity?
 function isBrowerIdAuthError(error) {
   // I can't think of what could throw on String conversion
@@ -82,9 +73,7 @@ function transformError(error, engineName) {
       // This is hacky, but I can't imagine that it's not also accurate.
       return { name: "othererror", error };
     }
-    // There's a chance the profiledir is in the error string which is PII we
-    // want to avoid including in the ping.
-    error = error.replace(reProfileDir, "[profileDir]");
+
     return { name: "unexpectederror", error };
   }
 
@@ -110,8 +99,7 @@ function transformError(error, engineName) {
 
   return {
     name: "unexpectederror",
-    // as above, remove the profile dir value.
-    error: String(error).replace(reProfileDir, "[profileDir]")
+    error: String(error),
   }
 }
 
