@@ -1,0 +1,12 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+* License, v. 2.0. If a copy of the MPL was not distributed with this
+* file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+[scriptable, uuid(9f9bc42e-54f4-11e6-9aed-4b1429ac0ba0)]
+interface mozIMozIntl : nsISupports
+{
+  [implicit_jscontext] void addGetCalendarInfo(in jsval intlObject);
+};
