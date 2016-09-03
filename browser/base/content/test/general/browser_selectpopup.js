@@ -5,6 +5,8 @@
 // in a child process. This is different than single-process as a <menulist> is used
 // to implement the dropdown list.
 
+requestLongerTimeout(2);
+
 const XHTML_DTD = '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">';
 
 const PAGECONTENT =
