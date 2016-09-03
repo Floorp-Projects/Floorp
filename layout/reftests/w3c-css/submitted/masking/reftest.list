@@ -77,27 +77,3 @@ fails == mask-origin-2.html mask-origin-2-ref.html # bug 1260094
 == mask-size-percent-length.html mask-size-percent-percent-ref.html
 == mask-size-percent-percent.html mask-size-percent-percent-ref.html
 == mask-size-percent-percent-stretch.html mask-size-percent-percent-stretch-ref.html
-
-default-preferences pref(layout.css.clip-path-shapes.enabled,true)
-
-== clip-path-contentBox-1a.html clip-path-geometryBox-1-ref.html
-== clip-path-contentBox-1b.html clip-path-geometryBox-1-ref.html
-== clip-path-contentBox-1c.html clip-path-geometryBox-1-ref.html
-== clip-path-paddingBox-1a.html clip-path-geometryBox-1-ref.html
-== clip-path-paddingBox-1b.html clip-path-geometryBox-1-ref.html
-== clip-path-paddingBox-1c.html clip-path-geometryBox-1-ref.html
-fuzzy(64,311) == clip-path-borderBox-1a.html clip-path-geometryBox-1-ref.html
-== clip-path-borderBox-1b.html clip-path-geometryBox-1-ref.html
-fuzzy(64,311) == clip-path-borderBox-1c.html clip-path-geometryBox-1-ref.html
-== clip-path-marginBox-1a.html clip-path-geometryBox-1-ref.html
-== clip-path-viewBox-1a.html clip-path-geometryBox-1-ref.html
-== clip-path-viewBox-1b.html clip-path-geometryBox-1-ref.html
-fuzzy(64,311) == clip-path-viewBox-1c.html clip-path-geometryBox-1-ref.html
-fuzzy(64,311) == clip-path-fillBox-1a.html clip-path-geometryBox-1-ref.html
-fuzzy(64,311) == clip-path-strokeBox-1a.html clip-path-geometryBox-1-ref.html
-fuzzy(64,311) == clip-path-strokeBox-1b.html clip-path-geometryBox-1-ref.html
-== clip-path-geometryBox-2a.html clip-path-geometryBox-2-ref.html
-== clip-path-geometryBox-2b.html clip-path-geometryBox-2-ref.html
-== clip-path-geometryBox-2c.html clip-path-geometryBox-2-ref.html
-== clip-path-geometryBox-2d.html clip-path-geometryBox-2-ref.html
-

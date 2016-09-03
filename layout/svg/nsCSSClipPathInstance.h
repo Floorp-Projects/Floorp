@@ -47,11 +47,6 @@ private:
 
   already_AddRefed<Path> CreateClipPathInset(DrawTarget* aDrawTarget,
                                              const nsRect& aRefBox);
-
-
-  nsRect ComputeHTMLReferenceRect();
-  nsRect ComputeSVGReferenceRect();
-
   /**
    * The frame for the element that is currently being clipped.
    */
