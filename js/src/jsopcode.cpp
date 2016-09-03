@@ -1179,6 +1179,8 @@ ExpressionDecompiler::decompilePC(jsbytecode* pc)
       case JSOP_GETARG: {
         unsigned slot = GET_ARGNO(pc);
         JSAtom* atom = getArg(slot);
+        if (!atom)
+            return false;
         return write(atom);
       }
       case JSOP_GETLOCAL: {

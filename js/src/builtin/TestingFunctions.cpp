@@ -3113,15 +3113,6 @@ ByteSizeOfScript(JSContext*cx, unsigned argc, Value* vp)
 }
 
 static bool
-ImmutablePrototypesEnabled(JSContext* cx, unsigned argc, Value* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-
-    args.rval().setBoolean(JS_ImmutablePrototypesEnabled());
-    return true;
-}
-
-static bool
 SetImmutablePrototype(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -3990,11 +3981,6 @@ gc::ZealModeHelpText),
     JS_FN_HELP("byteSizeOfScript", ByteSizeOfScript, 1, 0,
 "byteSizeOfScript(f)",
 "  Return the size in bytes occupied by the function |f|'s JSScript.\n"),
-
-    JS_FN_HELP("immutablePrototypesEnabled", ImmutablePrototypesEnabled, 0, 0,
-"immutablePrototypesEnabled()",
-"  Returns true if immutable-prototype behavior (triggered by setImmutablePrototype)\n"
-"  is enabled, such that modifying an immutable prototype will fail."),
 
     JS_FN_HELP("setImmutablePrototype", SetImmutablePrototype, 1, 0,
 "setImmutablePrototype(obj)",

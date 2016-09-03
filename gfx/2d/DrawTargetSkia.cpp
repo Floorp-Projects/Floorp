@@ -1183,12 +1183,8 @@ ShouldUseCGToFillGlyphs(const GlyphRenderingOptions* aOptions, const Pattern& aP
 
 #endif
 
-void
-DrawTargetSkia::FillGlyphs(ScaledFont *aFont,
-                           const GlyphBuffer &aBuffer,
-                           const Pattern &aPattern,
-                           const DrawOptions &aOptions,
-                           const GlyphRenderingOptions *aRenderingOptions)
+static bool
+CanDrawFont(ScaledFont* aFont)
 {
   switch (aFont->GetType()) {
   case FontType::SKIA:
@@ -1197,8 +1193,20 @@ DrawTargetSkia::FillGlyphs(ScaledFont *aFont,
   case FontType::MAC:
   case FontType::GDI:
   case FontType::DWRITE:
-    break;
+    return true;
   default:
+    return false;
+  }
+}
+
+void
+DrawTargetSkia::FillGlyphs(ScaledFont *aFont,
+                           const GlyphBuffer &aBuffer,
+                           const Pattern &aPattern,
+                           const DrawOptions &aOptions,
+                           const GlyphRenderingOptions *aRenderingOptions)
+{
+  if (!CanDrawFont(aFont)) {
     return;
   }
 
@@ -1219,11 +1227,18 @@ DrawTargetSkia::FillGlyphs(ScaledFont *aFont,
   }
 
   AutoPaintSetup paint(mCanvas.get(), aOptions, aPattern);
+  AntialiasMode aaMode = aFont->GetDefaultAAMode();
+  if (aOptions.mAntialiasMode != AntialiasMode::DEFAULT) {
+    aaMode = aOptions.mAntialiasMode;
+  }
+  bool aaEnabled = aaMode != AntialiasMode::NONE;
+
+  paint.mPaint.setAntiAlias(aaEnabled);
   paint.mPaint.setTypeface(typeface);
   paint.mPaint.setTextSize(SkFloatToScalar(skiaFont->mSize));
   paint.mPaint.setTextEncoding(SkPaint::kGlyphID_TextEncoding);
 
-  bool shouldLCDRenderText = ShouldLCDRenderText(aFont->GetType(), aOptions.mAntialiasMode);
+  bool shouldLCDRenderText = ShouldLCDRenderText(aFont->GetType(), aaMode);
   paint.mPaint.setLCDRenderText(shouldLCDRenderText);
 
   bool useSubpixelText = true;
@@ -1237,7 +1252,7 @@ DrawTargetSkia::FillGlyphs(ScaledFont *aFont,
     useSubpixelText = false;
     break;
   case FontType::MAC:
-    if (aOptions.mAntialiasMode == AntialiasMode::GRAY) {
+    if (aaMode == AntialiasMode::GRAY) {
       // Normally, Skia enables LCD FontSmoothing which creates thicker fonts
       // and also enables subpixel AA. CoreGraphics without font smoothing
       // explicitly creates thinner fonts and grayscale AA.
@@ -1257,14 +1272,15 @@ DrawTargetSkia::FillGlyphs(ScaledFont *aFont,
     }
     break;
   case FontType::GDI:
+  {
     if (!shouldLCDRenderText) {
-      // If we have non LCD GDI text, Cairo currently always uses cleartype fonts and
-      // converts them to grayscale. Force Skia to do the same, otherwise we use
-      // GDI fonts with the ANTIALIASED_QUALITY which is generally bolder than
-      // Cleartype fonts.
+      // If we have non LCD GDI text, render the fonts as cleartype and convert them
+      // to grayscale. This seems to be what Chrome and IE are doing on Windows 7.
+      // This also applies if cleartype is disabled system wide.
       paint.mPaint.setFlags(paint.mPaint.getFlags() | SkPaint::kGenA8FromLCD_Flag);
     }
     break;
+  }
   default:
     break;
   }

@@ -1,0 +1,18 @@
+{
+    "routes": [
+        "{index}.gecko.v2.{project}.revision.{head_rev}.{build_product}.{build_name}-{build_type}",
+        "{index}.gecko.v2.{project}.pushdate.{year}.{month}.{day}.{pushdate}.{build_product}.{build_name}-{build_type}",
+        "{index}.gecko.v2.{project}.latest.{build_product}.{build_name}-{build_type}"
+    ],
+    "nightly": [
+        "{index}.gecko.v2.{project}.nightly.{year}.{month}.{day}.revision.{head_rev}.{build_product}.{build_name}-{build_type}",
+        "{index}.gecko.v2.{project}.nightly.{year}.{month}.{day}.latest.{build_product}.{build_name}-{build_type}",
+        "{index}.gecko.v2.{project}.nightly.revision.{head_rev}.{build_product}.{build_name}-{build_type}",
+        "{index}.gecko.v2.{project}.nightly.latest.{build_product}.{build_name}-{build_type}"
+    ],
+    "l10n": [
+        "{index}.gecko.v2.{project}.revision.{head_rev}.{build_product}-l10n.{build_name}-{build_type}.{locale}",
+        "{index}.gecko.v2.{project}.pushdate.{year}.{month}.{day}.{pushdate}.{build_product}-l10n.{build_name}-{build_type}.{locale}",
+        "{index}.gecko.v2.{project}.latest.{build_product}-l10n.{build_name}-{build_type}.{locale}"
+    ]
+}

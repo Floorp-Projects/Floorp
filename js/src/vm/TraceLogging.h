@@ -167,7 +167,7 @@ class TraceLoggerThread
                     DefaultHasher<uint32_t>,
                     SystemAllocPolicy> TextIdHashMap;
 
-    uint32_t enabled;
+    uint32_t enabled_;
     bool failed;
 
     UniquePtr<TraceLoggerGraph> graph;
@@ -183,11 +183,16 @@ class TraceLoggerThread
     // event.
     uint32_t iteration_;
 
+#ifdef DEBUG
+    typedef Vector<uint32_t, 1, js::SystemAllocPolicy > GraphStack;
+    GraphStack graphStack;
+#endif
+
   public:
     AutoTraceLog* top;
 
     TraceLoggerThread()
-      : enabled(0),
+      : enabled_(0),
         failed(false),
         graph(),
         nextTextId(TraceLogger_Last),
@@ -203,7 +208,8 @@ class TraceLoggerThread
 
     bool enable();
     bool enable(JSContext* cx);
-    bool disable();
+    bool disable(bool force = false, const char* = "");
+    bool enabled() { return enabled_ > 0; }
 
   private:
     bool fail(JSContext* cx, const char* error);
@@ -223,9 +229,13 @@ class TraceLoggerThread
             start = events.data();
         }
 
-        *lastIteration = iteration_;
-        *lastSize = events.size();
+        getIterationAndSize(lastIteration, lastSize);
         return start;
+    }
+
+    void getIterationAndSize(uint32_t* iteration, uint32_t* size) const {
+        *iteration = iteration_;
+        *size = events.size();
     }
 
     // Extract the details filename, lineNumber and columnNumber out of a event
@@ -287,7 +297,7 @@ class TraceLoggerThread
 
   public:
     static unsigned offsetOfEnabled() {
-        return offsetof(TraceLoggerThread, enabled);
+        return offsetof(TraceLoggerThread, enabled_);
     }
 #endif
 };
@@ -309,6 +319,7 @@ class TraceLoggerThreadState
     bool mainThreadEnabled;
     bool offThreadEnabled;
     bool graphSpewingEnabled;
+    bool spewErrors;
     ThreadLoggerHashMap threadLoggers;
     MainThreadLoggers mainThreadLoggers;
 
@@ -323,7 +334,8 @@ class TraceLoggerThreadState
 #endif
         mainThreadEnabled(false),
         offThreadEnabled(false),
-        graphSpewingEnabled(false)
+        graphSpewingEnabled(false),
+        spewErrors(false)
     { }
 
     bool init();
@@ -340,6 +352,10 @@ class TraceLoggerThreadState
     }
     void enableTextId(JSContext* cx, uint32_t textId);
     void disableTextId(JSContext* cx, uint32_t textId);
+    void maybeSpewError(const char* text) {
+        if (spewErrors)
+            fprintf(stderr, "%s\n", text);
+    }
 
   private:
     TraceLoggerThread* forMainThread(PerThreadData* mainThread);

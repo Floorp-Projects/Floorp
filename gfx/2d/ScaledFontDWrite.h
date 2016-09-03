@@ -44,7 +44,7 @@ public:
 
   virtual bool GetFontFileData(FontFileDataOutput aDataCallback, void *aBaton);
 
-  virtual AntialiasMode GetDefaultAAMode();
+  virtual AntialiasMode GetDefaultAAMode() override;
 
 #ifdef USE_SKIA
   virtual SkTypeface* GetSkTypeface();

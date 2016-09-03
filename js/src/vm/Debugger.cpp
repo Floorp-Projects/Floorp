@@ -650,6 +650,17 @@ Debugger::Debugger(JSContext* cx, NativeObject* dbg)
 
     JS_INIT_CLIST(&breakpoints);
     JS_INIT_CLIST(&onNewGlobalObjectWatchersLink);
+
+#ifdef JS_TRACE_LOGGING
+    TraceLoggerThread* logger = TraceLoggerForMainThread(cx->runtime());
+    if (logger) {
+#ifdef NIGHTLY_BUILD
+        logger->getIterationAndSize(&traceLoggerLastDrainedIteration, &traceLoggerLastDrainedSize);
+#endif
+        logger->getIterationAndSize(&traceLoggerScriptedCallsLastDrainedIteration,
+                                    &traceLoggerScriptedCallsLastDrainedSize);
+    }
+#endif
 }
 
 Debugger::~Debugger()
@@ -5056,7 +5067,14 @@ Debugger::drainTraceLoggerScriptCalls(JSContext* cx, unsigned argc, Value* vp)
         if (!item)
             return false;
 
+        // Filter out internal time.
         uint32_t textId = eventItem->textId;
+        if (textId == TraceLogger_Internal) {
+            eventItem++;
+            MOZ_ASSERT(eventItem->textId == TraceLogger_Stop);
+            continue;
+        }
+
         if (textId != TraceLogger_Stop && !logger->textIdIsScriptEvent(textId))
             continue;
 

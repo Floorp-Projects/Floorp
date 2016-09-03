@@ -1135,12 +1135,12 @@ nsParser::IsInsertionPointDefined()
 }
 
 void
-nsParser::BeginEvaluatingParserInsertedScript()
+nsParser::PushDefinedInsertionPoint()
 {
 }
 
 void
-nsParser::EndEvaluatingParserInsertedScript()
+nsParser::PopDefinedInsertionPoint()
 {
 }
 
