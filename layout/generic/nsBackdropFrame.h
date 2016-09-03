@@ -29,14 +29,15 @@ public:
   virtual void BuildDisplayList(nsDisplayListBuilder* aBuilder,
                                 const nsRect& aDirtyRect,
                                 const nsDisplayListSet& aLists) override;
-  virtual LogicalSize ComputeAutoSize(nsRenderingContext *aRenderingContext,
-                                      WritingMode aWM,
-                                      const LogicalSize& aCBSize,
-                                      nscoord aAvailableISize,
-                                      const LogicalSize& aMargin,
-                                      const LogicalSize& aBorder,
-                                      const LogicalSize& aPadding,
-                                      bool aShrinkWrap) override;
+  virtual mozilla::LogicalSize
+    ComputeAutoSize(nsRenderingContext *aRenderingContext,
+                    mozilla::WritingMode aWM,
+                    const mozilla::LogicalSize& aCBSize,
+                    nscoord aAvailableISize,
+                    const mozilla::LogicalSize& aMargin,
+                    const mozilla::LogicalSize& aBorder,
+                    const mozilla::LogicalSize& aPadding,
+                    bool aShrinkWrap) override;
   virtual void Reflow(nsPresContext* aPresContext,
                       ReflowOutput& aDesiredSize,
                       const ReflowInput& aReflowInput,

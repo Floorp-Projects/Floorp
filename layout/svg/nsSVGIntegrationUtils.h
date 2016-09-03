@@ -47,6 +47,12 @@ public:
   UsingEffectsForFrame(const nsIFrame* aFrame);
 
   /**
+   * Returns true if mask or clippath are currently applied to this frame.
+   */
+  static bool
+  UsingMaskOrClipPathForFrame(const nsIFrame* aFrame);
+
+  /**
    * Returns the size of the union of the border-box rects of all of
    * aNonSVGFrame's continuations.
    */
@@ -147,7 +153,10 @@ public:
    * Paint non-SVG frame with SVG effects.
    */
   static DrawResult
-  PaintFramesWithEffects(const PaintFramesParams& aParams);
+  PaintMaskAndClipPath(const PaintFramesParams& aParams);
+
+  static DrawResult
+  PaintFilter(const PaintFramesParams& aParams);
 
   /**
    * SVG frames expect to paint in SVG user units, which are equal to CSS px
