@@ -440,12 +440,10 @@
 
 .tabbrowser-tab::after,
 .tabbrowser-tab::before {
-  width: 1px;
+  margin-top: 5px;
+  margin-bottom: 4px;
   margin-inline-start: -1px;
-  background-image: linear-gradient(transparent 5px,
-                                    currentColor 5px,
-                                    currentColor calc(100% - 4px),
-                                    transparent calc(100% - 4px));
+  border-left: 1px solid currentColor;
   opacity: 0.2;
 }
 

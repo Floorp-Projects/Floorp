@@ -110,6 +110,7 @@ def get_decision_parameters(options):
         'pushdate',
         'owner',
         'level',
+        'triggered_by',
         'target_tasks_method',
     ] if n in options}
 
@@ -121,6 +122,10 @@ def get_decision_parameters(options):
                        "PER_PROJECT_PARAMETERS in {} to customize behavior "
                        "for this project".format(project, __file__))
         parameters.update(PER_PROJECT_PARAMETERS['default'])
+
+    # `target_tasks_method` has higher precedence than `project` parameters
+    if options.get('target_tasks_method'):
+        parameters['target_tasks_method'] = options['target_tasks_method']
 
     return Parameters(parameters)
 

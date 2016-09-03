@@ -586,7 +586,10 @@ class CGPrototypeJSClass(CGThing):
     def define(self):
         prototypeID, depth = PrototypeIDAndDepth(self.descriptor)
         slotCount = "DOM_INTERFACE_PROTO_SLOTS_BASE"
-        if self.descriptor.hasUnforgeableMembers:
+        # Globals handle unforgeables directly in Wrap() instead of
+        # via a holder.
+        if (self.descriptor.hasUnforgeableMembers and
+            not self.descriptor.isGlobal()):
             slotCount += " + 1 /* slot for the JSObject holding the unforgeable properties */"
         (protoGetter, _) = InterfacePrototypeObjectProtoGetter(self.descriptor)
         type = "eGlobalInterfacePrototype" if self.descriptor.isGlobal() else "eInterfacePrototype"
@@ -2527,7 +2530,7 @@ class AttrDefiner(PropertyDefiner):
 
         return self.generatePrefableArray(
             array, name,
-            lambda fields: '  { "%s", %s, %s, %s}' % fields,
+            lambda fields: '  { "%s", %s, { { %s, %s } } }' % fields,
             '  JS_PS_END',
             'JSPropertySpec',
             PropertyDefiner.getControllingCondition, specData, doIdArrays)
@@ -2930,7 +2933,9 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
         else:
             defineAliases = None
 
-        if self.descriptor.hasUnforgeableMembers:
+        # Globals handle unforgeables directly in Wrap() instead of
+        # via a holder.
+        if self.descriptor.hasUnforgeableMembers and not self.descriptor.isGlobal():
             assert needInterfacePrototypeObject
 
             # We want to use the same JSClass and prototype as the object we'll
@@ -2939,12 +2944,7 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
             # a fast copy.  In the case of proxies that's null, because the
             # expando object is a vanilla object, but in the case of other DOM
             # objects it's whatever our class is.
-            #
-            # Also, for a global we can't use the global's class; just use
-            # nullpr and when we do the copy off the holder we'll take a slower
-            # path.  This also means that we don't need to worry about matching
-            # the prototype.
-            if self.descriptor.proxy or self.descriptor.isGlobal():
+            if self.descriptor.proxy:
                 holderClass = "nullptr"
                 holderProto = "nullptr"
             else:
@@ -3334,7 +3334,8 @@ def CreateBindingJSObject(descriptor, properties):
     return objDecl + create
 
 
-def InitUnforgeablePropertiesOnHolder(descriptor, properties, failureCode):
+def InitUnforgeablePropertiesOnHolder(descriptor, properties, failureCode,
+                                      holderName="unforgeableHolder"):
     """
     Define the unforgeable properties on the unforgeable holder for
     the interface represented by descriptor.
@@ -3351,18 +3352,20 @@ def InitUnforgeablePropertiesOnHolder(descriptor, properties, failureCode):
 
     defineUnforgeableAttrs = fill(
         """
-        if (!DefineUnforgeableAttributes(aCx, unforgeableHolder, %s)) {
+        if (!DefineUnforgeableAttributes(aCx, ${holderName}, %s)) {
           $*{failureCode}
         }
         """,
-        failureCode=failureCode)
+        failureCode=failureCode,
+        holderName=holderName)
     defineUnforgeableMethods = fill(
         """
-        if (!DefineUnforgeableMethods(aCx, unforgeableHolder, %s)) {
+        if (!DefineUnforgeableMethods(aCx, ${holderName}, %s)) {
           $*{failureCode}
         }
         """,
-        failureCode=failureCode)
+        failureCode=failureCode,
+        holderName=holderName)
 
     unforgeableMembers = [
         (defineUnforgeableAttrs, properties.unforgeableAttrs),
@@ -3384,25 +3387,28 @@ def InitUnforgeablePropertiesOnHolder(descriptor, properties, failureCode):
             """
             JS::RootedId toPrimitive(aCx,
               SYMBOL_TO_JSID(JS::GetWellKnownSymbol(aCx, JS::SymbolCode::toPrimitive)));
-            if (!JS_DefinePropertyById(aCx, unforgeableHolder, toPrimitive,
+            if (!JS_DefinePropertyById(aCx, ${holderName}, toPrimitive,
                                        JS::UndefinedHandleValue,
                                        JSPROP_READONLY | JSPROP_PERMANENT) ||
-                !JS_DefineProperty(aCx, unforgeableHolder, "toJSON",
+                !JS_DefineProperty(aCx, ${holderName}, "toJSON",
                                    JS::UndefinedHandleValue,
                                    JSPROP_READONLY | JSPROP_ENUMERATE | JSPROP_PERMANENT)) {
               $*{failureCode}
             }
             """,
-            failureCode=failureCode)))
+            failureCode=failureCode,
+            holderName=holderName)))
 
     return CGWrapper(CGList(unforgeables), pre="\n")
 
 
-def CopyUnforgeablePropertiesToInstance(descriptor, wrapperCache):
+def CopyUnforgeablePropertiesToInstance(descriptor, failureCode):
     """
     Copy the unforgeable properties from the unforgeable holder for
     this interface to the instance object we have.
     """
+    assert not descriptor.isGlobal();
+
     if not descriptor.hasUnforgeableMembers:
         return ""
 
@@ -3416,15 +3422,6 @@ def CopyUnforgeablePropertiesToInstance(descriptor, wrapperCache):
             """))
     ]
 
-    if wrapperCache:
-        cleanup = dedent(
-            """
-            aCache->ReleaseWrapper(aObject);
-            aCache->ClearWrapper();
-            """)
-    else:
-        cleanup = ""
-
     # For proxies, we want to define on the expando object, not directly on the
     # reflector, so we can make sure we don't get confused by named getters.
     if descriptor.proxy:
@@ -3433,34 +3430,24 @@ def CopyUnforgeablePropertiesToInstance(descriptor, wrapperCache):
             JS::Rooted<JSObject*> expando(aCx,
               DOMProxyHandler::EnsureExpandoObject(aCx, aReflector));
             if (!expando) {
-              $*{cleanup}
-              return false;
+              $*{failureCode}
             }
             """,
-            cleanup=cleanup)))
+            failureCode=failureCode)))
         obj = "expando"
     else:
         obj = "aReflector"
 
-    # We can't do the fast copy for globals, because we can't allocate the
-    # unforgeable holder for those with the right JSClass.  Luckily, there
-    # aren't too many globals being created.
-    if descriptor.isGlobal():
-        copyFunc = "JS_CopyPropertiesFrom"
-    else:
-        copyFunc = "JS_InitializePropertiesFromCompatibleNativeObject"
     copyCode.append(CGGeneric(fill(
         """
         JS::Rooted<JSObject*> unforgeableHolder(aCx,
           &js::GetReservedSlot(canonicalProto, DOM_INTERFACE_PROTO_SLOTS_BASE).toObject());
-        if (!${copyFunc}(aCx, ${obj}, unforgeableHolder)) {
-          $*{cleanup}
-          return false;
+        if (!JS_InitializePropertiesFromCompatibleNativeObject(aCx, ${obj}, unforgeableHolder)) {
+          $*{failureCode}
         }
         """,
-        copyFunc=copyFunc,
         obj=obj,
-        cleanup=cleanup)))
+        failureCode=failureCode)))
 
     return CGWrapper(CGList(copyCode), pre="\n").define()
 
@@ -3480,7 +3467,7 @@ def AssertInheritanceChain(descriptor):
     return asserts
 
 
-def InitMemberSlots(descriptor, wrapperCache):
+def InitMemberSlots(descriptor, failureCode):
     """
     Initialize member slots on our JS object if we're supposed to have some.
 
@@ -3491,22 +3478,31 @@ def InitMemberSlots(descriptor, wrapperCache):
     """
     if not descriptor.interface.hasMembersInSlots():
         return ""
-    if wrapperCache:
-        clearWrapper = dedent(
-            """
-            aCache->ReleaseWrapper(aObject);
-            aCache->ClearWrapper();
-            """)
-    else:
-        clearWrapper = ""
     return fill(
         """
         if (!UpdateMemberSlots(aCx, aReflector, aObject)) {
-          $*{clearWrapper}
-          return false;
+          $*{failureCode}
         }
         """,
-        clearWrapper=clearWrapper)
+        failureCode=failureCode)
+
+
+def SetImmutablePrototype(descriptor, failureCode):
+    if not descriptor.hasNonOrdinaryGetPrototypeOf():
+        return ""
+
+    return fill(
+        """
+        bool succeeded;
+        if (!JS_SetImmutablePrototype(aCx, aReflector, &succeeded)) {
+          ${failureCode}
+        }
+        MOZ_ASSERT(succeeded,
+                   "Making a fresh reflector instance have an immutable "
+                   "prototype can internally fail, but it should never be "
+                   "unsuccessful");
+        """,
+        failureCode=failureCode)
 
 
 def DeclareProto():
@@ -3563,6 +3559,14 @@ class CGWrapWithCacheMethod(CGAbstractMethod):
                 """)
         else:
             preserveWrapper = "PreserveWrapper(aObject);\n"
+
+        failureCode = dedent(
+            """
+            aCache->ReleaseWrapper(aObject);
+            aCache->ClearWrapper();
+            return false;
+            """)
+
         return fill(
             """
             $*{assertInheritance}
@@ -3598,6 +3602,7 @@ class CGWrapWithCacheMethod(CGAbstractMethod):
             aCache->SetWrapper(aReflector);
             $*{unforgeable}
             $*{slots}
+            $*{setImmutablePrototype}
             creator.InitializationSucceeded();
 
             MOZ_ASSERT(aCache->GetWrapperPreserveColor() &&
@@ -3617,8 +3622,11 @@ class CGWrapWithCacheMethod(CGAbstractMethod):
             assertInheritance=AssertInheritanceChain(self.descriptor),
             declareProto=DeclareProto(),
             createObject=CreateBindingJSObject(self.descriptor, self.properties),
-            unforgeable=CopyUnforgeablePropertiesToInstance(self.descriptor, True),
-            slots=InitMemberSlots(self.descriptor, True),
+            unforgeable=CopyUnforgeablePropertiesToInstance(self.descriptor,
+                                                            failureCode),
+            slots=InitMemberSlots(self.descriptor, failureCode),
+            setImmutablePrototype=SetImmutablePrototype(self.descriptor,
+                                                        failureCode),
             preserveWrapper=preserveWrapper)
 
 
@@ -3657,6 +3665,8 @@ class CGWrapNonWrapperCacheMethod(CGAbstractMethod):
         self.properties = properties
 
     def definition_body(self):
+        failureCode = "return false;\n"
+
         return fill(
             """
             $*{assertions}
@@ -3669,14 +3679,19 @@ class CGWrapNonWrapperCacheMethod(CGAbstractMethod):
             $*{unforgeable}
 
             $*{slots}
+
+            $*{setImmutablePrototype}
             creator.InitializationSucceeded();
             return true;
             """,
             assertions=AssertInheritanceChain(self.descriptor),
             declareProto=DeclareProto(),
             createObject=CreateBindingJSObject(self.descriptor, self.properties),
-            unforgeable=CopyUnforgeablePropertiesToInstance(self.descriptor, False),
-            slots=InitMemberSlots(self.descriptor, False))
+            unforgeable=CopyUnforgeablePropertiesToInstance(self.descriptor,
+                                                            failureCode),
+            slots=InitMemberSlots(self.descriptor, failureCode),
+            setImmutablePrototype=SetImmutablePrototype(self.descriptor,
+                                                        failureCode))
 
 
 class CGWrapGlobalMethod(CGAbstractMethod):
@@ -3709,14 +3724,19 @@ class CGWrapGlobalMethod(CGAbstractMethod):
         else:
             chromeProperties = "nullptr"
 
+        failureCode = dedent(
+            """
+            aCache->ReleaseWrapper(aObject);
+            aCache->ClearWrapper();
+            return false;
+            """);
+
         if self.descriptor.hasUnforgeableMembers:
-            declareProto = "JS::Handle<JSObject*> canonicalProto =\n"
-            assertProto = (
-                "MOZ_ASSERT(canonicalProto &&\n"
-                "           IsDOMIfaceAndProtoClass(js::GetObjectClass(canonicalProto)));\n")
+            unforgeable = InitUnforgeablePropertiesOnHolder(
+                self.descriptor, self.properties, failureCode,
+                "aReflector").define();
         else:
-            declareProto = ""
-            assertProto = ""
+            unforgeable = ""
 
         return fill(
             """
@@ -3724,26 +3744,23 @@ class CGWrapGlobalMethod(CGAbstractMethod):
             MOZ_ASSERT(ToSupportsIsOnPrimaryInheritanceChain(aObject, aCache),
                        "nsISupports must be on our primary inheritance chain");
 
-            $*{declareProto}
-              CreateGlobal<${nativeType}, GetProtoObjectHandle>(aCx,
+            if (!CreateGlobal<${nativeType}, GetProtoObjectHandle>(aCx,
                                              aObject,
                                              aCache,
                                              sClass.ToJSClass(),
                                              aOptions,
                                              aPrincipal,
                                              aInitStandardClasses,
-                                             aReflector);
-            if (!aReflector) {
-              return false;
+                                             aReflector)) {
+              $*{failureCode}
             }
-            $*{assertProto}
 
             // aReflector is a new global, so has a new compartment.  Enter it
             // before doing anything with it.
             JSAutoCompartment ac(aCx, aReflector);
 
             if (!DefineProperties(aCx, aReflector, ${properties}, ${chromeProperties})) {
-              return false;
+              $*{failureCode}
             }
             $*{unforgeable}
 
@@ -3753,12 +3770,11 @@ class CGWrapGlobalMethod(CGAbstractMethod):
             """,
             assertions=AssertInheritanceChain(self.descriptor),
             nativeType=self.descriptor.nativeType,
-            declareProto=declareProto,
-            assertProto=assertProto,
             properties=properties,
             chromeProperties=chromeProperties,
-            unforgeable=CopyUnforgeablePropertiesToInstance(self.descriptor, True),
-            slots=InitMemberSlots(self.descriptor, True))
+            failureCode=failureCode,
+            unforgeable=unforgeable,
+            slots=InitMemberSlots(self.descriptor, failureCode))
 
 
 class CGUpdateMemberSlotsMethod(CGAbstractStaticMethod):
