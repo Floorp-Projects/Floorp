@@ -219,6 +219,15 @@ public:
   {
     return AccEvent::GetEventGroups() | (1U << eTreeMutationEvent);
   }
+
+  void SetNextEvent(AccTreeMutationEvent* aNext) { mNextEvent = aNext; }
+  void SetPrevEvent(AccTreeMutationEvent* aPrev) { mPrevEvent = aPrev; }
+  AccTreeMutationEvent* NextEvent() const { return mNextEvent; }
+  AccTreeMutationEvent* PrevEvent() const { return mPrevEvent; }
+
+private:
+  RefPtr<AccTreeMutationEvent> mNextEvent;
+  RefPtr<AccTreeMutationEvent> mPrevEvent;
 };
 
 /**

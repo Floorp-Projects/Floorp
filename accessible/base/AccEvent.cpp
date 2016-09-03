@@ -42,7 +42,23 @@ AccEvent::AccEvent(uint32_t aEventType, Accessible* aAccessible,
 ////////////////////////////////////////////////////////////////////////////////
 // AccEvent cycle collection
 
-NS_IMPL_CYCLE_COLLECTION(AccEvent, mAccessible)
+NS_IMPL_CYCLE_COLLECTION_CLASS(AccEvent)
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(AccEvent)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mAccessible)
+  if (AccTreeMutationEvent* tmEvent = downcast_accEvent(tmp)) {
+    tmEvent->SetNextEvent(nullptr);
+    tmEvent->SetPrevEvent(nullptr);
+  }
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(AccEvent)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mAccessible)
+  if (AccTreeMutationEvent* tmEvent = downcast_accEvent(tmp)) {
+    CycleCollectionNoteChild(cb, tmEvent->NextEvent(), "mNext");
+    CycleCollectionNoteChild(cb, tmEvent->PrevEvent(), "mPrevEvent");
+  }
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(AccEvent, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(AccEvent, Release)
