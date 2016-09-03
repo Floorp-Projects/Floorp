@@ -217,6 +217,7 @@
       {
         "name": "uninstallSelf",
         "type": "function",
+        "unsupported": true,
         "description": "Uninstalls the calling extension. Note: This function can be used without requesting the 'management' permission in the manifest.",
         "async": "callback",
         "parameters": [
@@ -229,11 +230,6 @@
                 "type": "boolean",
                 "optional": true,
                 "description": "Whether or not a confirm-uninstall dialog should prompt the user. Defaults to false."
-              },
-              "dialogMessage": {
-                "type": "string",
-                "optional": true,
-                "description": "The message to display to a user when being asked to confirm removal of the extension."
               }
             }
           },
