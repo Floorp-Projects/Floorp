@@ -320,19 +320,19 @@ enum { REG_EIP = 14 };
 // into the emulator code from a Mach exception handler rather than a
 // sigaction-style signal handler.
 #if defined(XP_DARWIN)
-# if defined(JS_CODEGEN_X64)
+# if defined(JS_CPU_X64)
 struct macos_x64_context {
     x86_thread_state64_t thread;
     x86_float_state64_t float_;
 };
 #  define EMULATOR_CONTEXT macos_x64_context
-# elif defined(JS_CODEGEN_X86)
+# elif defined(JS_CPU_X86)
 struct macos_x86_context {
     x86_thread_state_t thread;
     x86_float_state_t float_;
 };
 #  define EMULATOR_CONTEXT macos_x86_context
-# elif defined(JS_CODEGEN_ARM)
+# elif defined(JS_CPU_ARM)
 struct macos_arm_context {
     arm_thread_state_t thread;
     arm_neon_state_t float_;
@@ -884,17 +884,17 @@ HandleMachException(JSRuntime* rt, const ExceptionRequest& request)
 
     // Read out the JSRuntime thread's register state.
     EMULATOR_CONTEXT context;
-# if defined(JS_CODEGEN_X64)
+# if defined(JS_CPU_X64)
     unsigned int thread_state_count = x86_THREAD_STATE64_COUNT;
     unsigned int float_state_count = x86_FLOAT_STATE64_COUNT;
     int thread_state = x86_THREAD_STATE64;
     int float_state = x86_FLOAT_STATE64;
-# elif defined(JS_CODEGEN_X86)
+# elif defined(JS_CPU_X86)
     unsigned int thread_state_count = x86_THREAD_STATE_COUNT;
     unsigned int float_state_count = x86_FLOAT_STATE_COUNT;
     int thread_state = x86_THREAD_STATE;
     int float_state = x86_FLOAT_STATE;
-# elif defined(JS_CODEGEN_ARM)
+# elif defined(JS_CPU_ARM)
     unsigned int thread_state_count = ARM_THREAD_STATE_COUNT;
     unsigned int float_state_count = ARM_NEON_STATE_COUNT;
     int thread_state = ARM_THREAD_STATE;
@@ -1230,7 +1230,7 @@ RedirectJitCodeToInterruptCheck(JSRuntime* rt, CONTEXT* context)
 
     if (WasmActivation* activation = rt->wasmActivationStack()) {
 #ifdef JS_SIMULATOR
-        (void)ContextToPC;  // silence static 'unused' errors
+        (void)ContextToPC(context);  // silence static 'unused' errors
 
         void* pc = rt->simulator()->get_pc_as<void*>();
 
