@@ -181,7 +181,6 @@ function getHSTSStatus(host, resultList) {
   var uri = "https://" + host.name + "/";
   req.open("GET", uri, true);
   req.timeout = REQUEST_TIMEOUT;
-  req.channel.notificationCallbacks = new RedirectAndAuthStopper();
 
   let errorhandler = (evt) => {
     dump(`ERROR: error making request to ${host.name} (type=${evt.type})\n`);
@@ -205,6 +204,7 @@ function getHSTSStatus(host, resultList) {
   };
 
   try {
+    req.channel.notificationCallbacks = new RedirectAndAuthStopper();
     req.send();
   }
   catch (e) {

@@ -221,10 +221,10 @@ function downloadFile(url) {
     xhr.responseType = "arraybuffer";
     try {
       xhr.open("GET", url);
+      xhr.send(null);
     } catch (ex) {
       reject(ex);
     }
-    xhr.send(null);
   });
 }
 
