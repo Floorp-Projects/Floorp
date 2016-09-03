@@ -24,9 +24,9 @@
 "unpack": true
 },
 {
-"version": "cargo 0.13.0-nightly (664125b 2016-07-19)",
-"size": 3123796,
-"digest": "4b9d2bcb8488b6649ba6c748e19d33bfceb25c7566e882fc7e00322392e424a5a9c5878c11c61d57cdaecf67bcc110842c6eff95e49736e8f3c83d9ce1677122",
+"version": "cargo 0.13.0-nightly (e713e7f 2016-08-31)",
+"size": 3245716,
+"digest": "d5bb0d88ce7bb1b5a316d7a8ca6341672f5ee8008fa7754511bf53fabd54c0770e95397232896d6087547891f1143f6968d8b1e106e39800b43defeb0025c7c0",
 "algorithm": "sha512",
 "filename": "cargo.tar.xz",
 "unpack": true

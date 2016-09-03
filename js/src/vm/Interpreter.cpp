@@ -3897,6 +3897,12 @@ CASE(JSOP_RESUME)
         GeneratorObject::ResumeKind resumeKind = GeneratorObject::getResumeKind(REGS.pc);
         bool ok = GeneratorObject::resume(cx, activation, gen, val, resumeKind);
         SET_SCRIPT(REGS.fp()->script());
+
+        TraceLoggerThread* logger = TraceLoggerForMainThread(cx->runtime());
+        TraceLoggerEvent scriptEvent(logger, TraceLogger_Scripts, script);
+        TraceLogStartEvent(logger, scriptEvent);
+        TraceLogStartEvent(logger, TraceLogger_Interpreter);
+
         if (!ok)
             goto error;
     }
@@ -4390,15 +4396,9 @@ js::DefFunOperation(JSContext* cx, HandleScript script, HandleObject envChain,
             if (!DefineProperty(cx, parent, name, rval, nullptr, nullptr, attrs))
                 return false;
         } else {
-            if (shape->isAccessorDescriptor() || !shape->writable() || !shape->enumerable()) {
-                JSAutoByteString bytes;
-                if (AtomToPrintableString(cx, name, &bytes)) {
-                    JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_CANT_REDEFINE_PROP,
-                                         bytes.ptr());
-                }
-
-                return false;
-            }
+            MOZ_ASSERT(shape->isDataDescriptor());
+            MOZ_ASSERT(shape->writable());
+            MOZ_ASSERT(shape->enumerable());
         }
 
         // Careful: the presence of a shape, even one appearing to derive from

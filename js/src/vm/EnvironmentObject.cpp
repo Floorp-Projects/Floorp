@@ -1375,28 +1375,27 @@ class DebugEnvironmentProxyHandler : public BaseProxyHandler
     };
 
     /*
-     * This function handles access to unaliased locals/formals. Since they are
-     * unaliased, the values of these variables are not stored in the slots of
-     * the normal Call/ClonedBlockObject scope objects and thus must be
-     * recovered from somewhere else:
-     *  + if the invocation for which the scope was created is still executing,
+     * This function handles access to unaliased locals/formals. Since they
+     * are unaliased, the values of these variables are not stored in the
+     * slots of the normal CallObject and LexicalEnvironmentObject
+     * environments and thus must be recovered from somewhere else:
+     *  + if the invocation for which the env was created is still executing,
      *    there is a JS frame live on the stack holding the values;
-     *  + if the invocation for which the scope was created finished executing:
-     *     - and there was a DebugEnvironmentProxy associated with scope, then the
-     *       DebugEnvironments::onPop(Call|Block) handler copied out the unaliased
-     *       variables:
-     *        . for block scopes, the unaliased values were copied directly
-     *          into the block object, since there is a slot allocated for every
-     *          block binding, regardless of whether it is aliased;
-     *        . for function scopes, a dense array is created in onPopCall to hold
-     *          the unaliased values and attached to the DebugEnvironmentProxy;
+     *  + if the invocation for which the env was created finished executing:
+     *     - and there was a DebugEnvironmentProxy associated with env, then
+     *       the DebugEnvironments::onPop(Call|Lexical) handler copied out the
+     *       unaliased variables. In both cases, a dense array is created in
+     *       onPop(Call|Lexical) to hold the unaliased values and attached to
+     *       the DebugEnvironmentProxy;
      *     - and there was not a DebugEnvironmentProxy yet associated with the
      *       scope, then the unaliased values are lost and not recoverable.
      *
      * Callers should check accessResult for non-failure results:
      *  - ACCESS_UNALIASED if the access was unaliased and completed
      *  - ACCESS_GENERIC   if the access was aliased or the property not found
-     *  - ACCESS_LOST      if the value has been lost to the debugger
+     *  - ACCESS_LOST      if the value has been lost to the debugger and the
+     *                     action is GET; if the action is SET, we assign to the
+     *                     name of the variable on the environment object
      */
     bool handleUnaliasedAccess(JSContext* cx, Handle<DebugEnvironmentProxy*> debugEnv,
                                Handle<EnvironmentObject*> env, HandleId id, Action action,
@@ -1532,7 +1531,8 @@ class DebugEnvironmentProxyHandler : public BaseProxyHandler
 
             // Named lambdas that are not closed over are lost.
             if (loc.kind() == BindingLocation::Kind::NamedLambdaCallee) {
-                *accessResult = ACCESS_LOST;
+                if (action == GET)
+                    *accessResult = ACCESS_LOST;
                 return true;
             }
 
@@ -2031,11 +2031,10 @@ class DebugEnvironmentProxyHandler : public BaseProxyHandler
         switch (access) {
           case ACCESS_UNALIASED:
             return result.succeed();
-          case ACCESS_GENERIC:
-            {
-                RootedValue envVal(cx, ObjectValue(*env));
-                return SetProperty(cx, env, id, v, envVal, result);
-            }
+          case ACCESS_GENERIC: {
+            RootedValue envVal(cx, ObjectValue(*env));
+            return SetProperty(cx, env, id, v, envVal, result);
+          }
           default:
             MOZ_CRASH("bad AccessResult");
         }
@@ -3182,6 +3181,59 @@ js::CheckVarNameConflict(JSContext* cx, Handle<LexicalEnvironmentObject*> lexica
     return true;
 }
 
+static void
+ReportCannotDeclareGlobalBinding(JSContext* cx, HandlePropertyName name, const char* reason)
+{
+    JSAutoByteString printable;
+    if (AtomToPrintableString(cx, name, &printable)) {
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
+                             JSMSG_CANT_DECLARE_GLOBAL_BINDING,
+                             printable.ptr(), reason);
+    }
+}
+
+bool
+js::CheckCanDeclareGlobalBinding(JSContext* cx, Handle<GlobalObject*> global,
+                                 HandlePropertyName name, bool isFunction)
+{
+    RootedId id(cx, NameToId(name));
+    Rooted<PropertyDescriptor> desc(cx);
+    if (!GetOwnPropertyDescriptor(cx, global, id, &desc))
+        return false;
+
+    // ES 8.1.14.15 CanDeclareGlobalVar
+    // ES 8.1.14.16 CanDeclareGlobalFunction
+
+    // Step 4.
+    if (!desc.object()) {
+        // 8.1.14.15 step 6.
+        // 8.1.14.16 step 5.
+        if (global->nonProxyIsExtensible())
+            return true;
+
+        ReportCannotDeclareGlobalBinding(cx, name, "global is non-extensible");
+        return false;
+    }
+
+    // Global functions have additional restrictions.
+    if (isFunction) {
+        // 8.1.14.16 step 6.
+        if (desc.configurable())
+            return true;
+
+        // 8.1.14.16 step 7.
+        if (desc.isDataDescriptor() && desc.writable() && desc.enumerable())
+            return true;
+
+        ReportCannotDeclareGlobalBinding(cx, name,
+                                         "property must be configurable or "
+                                         "both writable and enumerable");
+        return false;
+    }
+
+    return true;
+}
+
 bool
 js::CheckGlobalDeclarationConflicts(JSContext* cx, HandleScript script,
                                     Handle<LexicalEnvironmentObject*> lexicalEnv,
@@ -3196,14 +3248,32 @@ js::CheckGlobalDeclarationConflicts(JSContext* cx, HandleScript script,
     RootedPropertyName name(cx);
     Rooted<BindingIter> bi(cx, BindingIter(script));
 
+    // ES 15.1.11 GlobalDeclarationInstantiation
+
+    // Step 6.
+    //
+    // Check 'var' declarations do not conflict with existing bindings in the
+    // global lexical environment.
     for (; bi; bi++) {
         if (bi.kind() != BindingKind::Var)
             break;
         name = bi.name()->asPropertyName();
         if (!CheckVarNameConflict(cx, lexicalEnv, name))
             return false;
+
+        // Step 10 and 12.
+        //
+        // Check that global functions and vars may be declared.
+        if (varObj->is<GlobalObject>()) {
+            Handle<GlobalObject*> global = varObj.as<GlobalObject>();
+            if (!CheckCanDeclareGlobalBinding(cx, global, name, bi.isTopLevelFunction()))
+                return false;
+        }
     }
 
+    // Step 5.
+    //
+    // Check that lexical bindings do not conflict.
     for (; bi; bi++) {
         name = bi.name()->asPropertyName();
         if (!CheckLexicalNameConflict(cx, lexicalEnv, varObj, name))
@@ -3256,7 +3326,9 @@ js::CheckEvalDeclarationConflicts(JSContext* cx, HandleScript script,
 
     RootedObject obj(cx, scopeChain);
 
-    // ES6 18.2.1.2 step d
+    // ES 18.2.1.3.
+
+    // Step 5.
     //
     // Check that a direct eval will not hoist 'var' bindings over lexical
     // bindings with the same name.
@@ -3264,6 +3336,19 @@ js::CheckEvalDeclarationConflicts(JSContext* cx, HandleScript script,
         if (!CheckVarNameConflictsInEnv(cx, script, obj))
             return false;
         obj = obj->enclosingEnvironment();
+    }
+
+    // Step 8.
+    //
+    // Check that global functions may be declared.
+    if (varObj->is<GlobalObject>()) {
+        Handle<GlobalObject*> global = varObj.as<GlobalObject>();
+        RootedPropertyName name(cx);
+        for (Rooted<BindingIter> bi(cx, BindingIter(script)); bi; bi++) {
+            name = bi.name()->asPropertyName();
+            if (!CheckCanDeclareGlobalBinding(cx, global, name, bi.isTopLevelFunction()))
+                return false;
+        }
     }
 
     return true;

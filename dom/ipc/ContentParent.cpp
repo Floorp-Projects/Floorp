@@ -4061,12 +4061,12 @@ AddGeolocationListener(nsIDOMGeoPositionCallback* watcher,
     return -1;
   }
 
-  PositionOptions* options = new PositionOptions();
+  nsAutoPtr<PositionOptions> options(new PositionOptions());
   options->mTimeout = 0;
   options->mMaximumAge = 0;
   options->mEnableHighAccuracy = highAccuracy;
   int32_t retval = 1;
-  geo->WatchPosition(watcher, errorCallBack, options, &retval);
+  geo->WatchPosition(watcher, errorCallBack, Move(options), &retval);
   return retval;
 }
 

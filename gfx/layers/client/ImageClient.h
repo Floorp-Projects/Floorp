@@ -131,11 +131,6 @@ public:
     return TextureInfo(mType);
   }
 
-  virtual void SetIPDLActor(CompositableChild* aChild) override
-  {
-    MOZ_ASSERT(!aChild, "ImageClientBridge should not have IPDL actor");
-  }
-
 protected:
   uint64_t mAsyncContainerID;
 };

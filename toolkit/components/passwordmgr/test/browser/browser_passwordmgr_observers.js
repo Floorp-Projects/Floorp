@@ -12,9 +12,7 @@ function test() {
   let pmDialog = window.openDialog(
     "chrome://passwordmgr/content/passwordManager.xul",
     "Toolkit:PasswordManager", "");
-  let pmexDialog = window.openDialog(
-    "chrome://passwordmgr/content/passwordManagerExceptions.xul",
-    "Toolkit:PasswordManagerExceptions", "");
+
   let logins = [];
   let loginCounter = 0;
   let loginOrder = null;
@@ -48,14 +46,6 @@ function test() {
             is(countLogins(), 0, "Verify all logins removed");
             runNextTest();
             break;
-          case 9:
-            is(countDisabledHosts(), 1, "Verify disabled host added");
-            runNextTest();
-            break;
-          case 10:
-            is(countDisabledHosts(), 0, "Verify disabled host removed");
-            runNextTest();
-            break;
         }
       }
     }
@@ -73,12 +63,6 @@ function test() {
     modifiedLogin = new nsLoginInfo(LOGIN_HOST + "?n=0", LOGIN_HOST + "?n=0",
       null, "user0", "newpassword0", "u0", "p0");
     is(logins.length, LOGIN_COUNT, "Verify logins created");
-  }
-
-  function countDisabledHosts() {
-    let doc = pmexDialog.document;
-    let rejectsTree = doc.getElementById("rejectsTree");
-    return rejectsTree.view.rowCount;
   }
 
   function countLogins() {
@@ -134,19 +118,10 @@ function test() {
       case 8: // remove all logins
         Services.logins.removeAllLogins();
         break;
-      case 9: // save a disabled host
-        pmDialog.close();
-        SimpleTest.waitForFocus(function() {
-          Services.logins.setLoginSavingEnabled(LOGIN_HOST, false);
-        }, pmexDialog);
-        break;
-      case 10: // remove a disabled host
-        Services.logins.setLoginSavingEnabled(LOGIN_HOST, true);
-        break;
-      case 11: // finish
+      case 9: // finish
         Services.obs.removeObserver(
           testObserver, "passwordmgr-dialog-updated", false);
-        pmexDialog.close();
+        pmDialog.close();
         finish();
         break;
     }

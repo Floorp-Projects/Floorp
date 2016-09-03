@@ -1290,11 +1290,9 @@ class Parser final : private JS::AutoGCRooter, public StrictModeGetter
     // Required on Scope exit.
     bool propagateFreeNamesAndMarkClosedOverBindings(ParseContext::Scope& scope);
 
-    mozilla::Maybe<GlobalScope::Data*> newGlobalScopeData(ParseContext::Scope& scope,
-                                                          uint32_t* functionBindingEnd);
+    mozilla::Maybe<GlobalScope::Data*> newGlobalScopeData(ParseContext::Scope& scope);
     mozilla::Maybe<ModuleScope::Data*> newModuleScopeData(ParseContext::Scope& scope);
-    mozilla::Maybe<EvalScope::Data*> newEvalScopeData(ParseContext::Scope& scope,
-                                                      uint32_t* functionBindingEnd);
+    mozilla::Maybe<EvalScope::Data*> newEvalScopeData(ParseContext::Scope& scope);
     mozilla::Maybe<FunctionScope::Data*> newFunctionScopeData(ParseContext::Scope& scope,
                                                               bool hasParameterExprs);
     mozilla::Maybe<VarScope::Data*> newVarScopeData(ParseContext::Scope& scope);

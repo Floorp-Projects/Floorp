@@ -30,6 +30,7 @@
 #include "mozilla/layers/LayersTypes.h"  // for MOZ_LAYERS_LOG
 #include "mozilla/layers/LayerTransactionChild.h"
 #include "mozilla/layers/SharedBufferManagerChild.h"
+#include "mozilla/layers/PCompositableChild.h"
 #include "mozilla/layers/PTextureChild.h"
 #include "ShadowLayerUtils.h"
 #include "mozilla/layers/TextureClient.h"  // for TextureClient
@@ -169,7 +170,7 @@ public:
         break;
       }
       case OpDestroy::TPCompositableChild: {
-        DebugOnly<bool> ok = CompositableClient::DestroyFallback(actor.get_PCompositableChild());
+        DebugOnly<bool> ok = actor.get_PCompositableChild()->SendDestroySync();
         MOZ_ASSERT(ok);
         break;
       }
