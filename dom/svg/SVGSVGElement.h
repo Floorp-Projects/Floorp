@@ -288,7 +288,6 @@ public:
   already_AddRefed<DOMSVGAnimatedPreserveAspectRatio> PreserveAspectRatio();
   uint16_t ZoomAndPan();
   void SetZoomAndPan(uint16_t aZoomAndPan, ErrorResult& rv);
-  virtual nsSVGViewBox* GetViewBox() override;
 
 private:
   // nsSVGElement overrides
@@ -379,6 +378,7 @@ private:
   static nsSVGEnumMapping sZoomAndPanMap[];
   static EnumInfo sEnumInfo[1];
 
+  virtual nsSVGViewBox *GetViewBox() override;
   virtual SVGAnimatedPreserveAspectRatio *GetPreserveAspectRatio() override;
 
   nsSVGViewBox                   mViewBox;
