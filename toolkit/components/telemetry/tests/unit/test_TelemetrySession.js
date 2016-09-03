@@ -39,7 +39,6 @@ const APP_VERSION = "1";
 const APP_ID = "xpcshell@tests.mozilla.org";
 const APP_NAME = "XPCShell";
 
-const IGNORE_HISTOGRAM = "test::ignore_me";
 const IGNORE_HISTOGRAM_TO_CLONE = "MEMORY_HEAP_ALLOCATED";
 const IGNORE_CLONED_HISTOGRAM = "test::ignore_me_also";
 const ADDON_NAME = "Telemetry test addon";
@@ -109,7 +108,7 @@ function fakeIdleNotification(topic) {
 }
 
 function setupTestData() {
-  Telemetry.newHistogram(IGNORE_HISTOGRAM, "never", Telemetry.HISTOGRAM_BOOLEAN);
+
   Telemetry.histogramFrom(IGNORE_CLONED_HISTOGRAM, IGNORE_HISTOGRAM_TO_CLONE);
   Services.startup.interrupted = true;
   Telemetry.registerAddonHistogram(ADDON_NAME, ADDON_HISTOGRAM,
@@ -315,7 +314,7 @@ function checkPayload(payload, reason, successfulPings, savedPings) {
       Assert.ok(histogramName in payload.histograms, histogramName + " must be available.");
     }
   }
-  Assert.ok(!(IGNORE_HISTOGRAM in payload.histograms));
+
   Assert.ok(!(IGNORE_CLONED_HISTOGRAM in payload.histograms));
 
   // Flag histograms should automagically spring to life.
@@ -484,12 +483,11 @@ add_task(function* asyncSetup() {
 
 // Ensures that expired histograms are not part of the payload.
 add_task(function* test_expiredHistogram() {
-  let histogram_id = "FOOBAR";
-  let dummy = Telemetry.newHistogram(histogram_id, "30", Telemetry.HISTOGRAM_EXPONENTIAL, 1, 2, 3);
+
+  let dummy = Telemetry.getHistogramById("TELEMETRY_TEST_EXPIRED");
 
   dummy.add(1);
 
-  do_check_eq(TelemetrySession.getPayload()["histograms"][histogram_id], undefined);
   do_check_eq(TelemetrySession.getPayload()["histograms"]["TELEMETRY_TEST_EXPIRED"], undefined);
 });
 

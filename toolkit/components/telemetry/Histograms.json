@@ -5436,6 +5436,13 @@
     "kind": "count",
     "description": "a testing histogram; not meant to be touched"
   },
+  "TELEMETRY_TEST_COUNT2": {
+    "alert_emails": ["telemetry-client-dev@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "count",
+    "bug_numbers": [1288745],
+    "description": "a testing histogram; not meant to be touched"
+  },
   "TELEMETRY_TEST_COUNT_INIT_NO_RECORD": {
     "expires_in_version": "never",
     "kind": "count",
@@ -5509,6 +5516,33 @@
     "kind": "flag",
     "keyed": true,
     "releaseChannelCollection": "opt-out",
+    "description": "a testing histogram; not meant to be touched"
+  },
+  "TELEMETRY_TEST_EXPONENTIAL": {
+    "alert_emails": ["telemetry-client-dev@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "low": 1,
+    "high": 2147483646,
+    "n_buckets": 10,
+    "bug_numbers": [1288745],
+    "description": "a testing histogram; not meant to be touched"
+  },
+  "TELEMETRY_TEST_LINEAR": {
+    "alert_emails": ["telemetry-client-dev@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "linear",
+    "low": 1,
+    "high": 2147483646,
+    "n_buckets": 10,
+    "bug_numbers": [1288745],
+    "description": "a testing histogram; not meant to be touched"
+  },
+  "TELEMETRY_TEST_BOOLEAN": {
+    "alert_emails": ["telemetry-client-dev@mozilla.com"],
+    "expires_in_version" : "never",
+    "kind": "boolean",
+    "bug_numbers": [1288745],
     "description": "a testing histogram; not meant to be touched"
   },
   "STARTUP_CRASH_DETECTED": {

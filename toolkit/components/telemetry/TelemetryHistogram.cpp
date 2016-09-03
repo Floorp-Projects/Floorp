@@ -2013,35 +2013,6 @@ TelemetryHistogram::GetHistogramName(mozilla::Telemetry::ID id)
 }
 
 nsresult
-TelemetryHistogram::NewHistogram(const nsACString &name,
-                                 const nsACString &expiration,
-                                 uint32_t histogramType,
-                                 uint32_t min, uint32_t max,
-                                 uint32_t bucketCount, JSContext *cx,
-                                 uint8_t optArgCount,
-                                 JS::MutableHandle<JS::Value> ret)
-{
-  Histogram *h = nullptr;
-  {
-    StaticMutexAutoLock locker(gTelemetryHistogramMutex);
-    if (!internal_IsValidHistogramName(name)) {
-      return NS_ERROR_INVALID_ARG;
-    }
-
-    nsresult rv = internal_HistogramGet(PromiseFlatCString(name).get(),
-                                        PromiseFlatCString(expiration).get(),
-                                        histogramType, min, max, bucketCount,
-                                        optArgCount == 3, &h);
-    if (NS_FAILED(rv))
-      return rv;
-    h->ClearFlags(Histogram::kUmaTargetedHistogramFlag);
-  }
-
-  // Runs without protection from |gTelemetryHistogramMutex|
-  return internal_WrapAndReturnHistogram(h, cx, ret);
-}
-
-nsresult
 TelemetryHistogram::NewKeyedHistogram(const nsACString &name,
                                       const nsACString &expiration,
                                       uint32_t histogramType,

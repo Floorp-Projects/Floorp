@@ -5,8 +5,6 @@ var tmpScope = {};
 Cu.import("resource://gre/modules/TelemetryStopwatch.jsm", tmpScope);
 var TelemetryStopwatch = tmpScope.TelemetryStopwatch;
 
-// We can't create a histogram here since the ones created with
-// newHistogram are not seen by getHistogramById that the module uses.
 const HIST_NAME = "TELEMETRY_PING";
 const HIST_NAME2 = "RANGE_CHECKSUM_ERRORS";
 const KEYED_HIST = { id: "TELEMETRY_INVALID_PING_TYPE_SUBMITTED", key: "TEST" };
