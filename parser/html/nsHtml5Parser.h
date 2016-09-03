@@ -188,14 +188,17 @@ class nsHtml5Parser final : public nsIParser,
     virtual bool IsInsertionPointDefined() override;
 
     /**
-     * Call immediately before starting to evaluate a parser-inserted script.
+     * Call immediately before starting to evaluate a parser-inserted script or
+     * in general when the spec says to define an insertion point.
      */
-    virtual void BeginEvaluatingParserInsertedScript() override;
+    virtual void PushDefinedInsertionPoint() override;
 
     /**
-     * Call immediately after having evaluated a parser-inserted script.
+     * Call immediately after having evaluated a parser-inserted script or
+     * generally want to restore to the state before the last
+     * PushDefinedInsertionPoint call.
      */
-    virtual void EndEvaluatingParserInsertedScript() override;
+    virtual void PopDefinedInsertionPoint() override;
 
     /**
      * Marks the HTML5 parser as not a script-created parser: Prepares the 
@@ -286,9 +289,10 @@ class nsHtml5Parser final : public nsIParser,
     bool                          mDocWriteSpeculatorActive;
     
     /**
-     * The number of parser-inserted script currently being evaluated.
+     * The number of PushDefinedInsertionPoint calls we've seen without a
+     * matching PopDefinedInsertionPoint.
      */
-    int32_t                       mParserInsertedScriptsBeingEvaluated;
+    int32_t                       mInsertionPointPushLevel;
 
     /**
      * True if document.close() has been called.

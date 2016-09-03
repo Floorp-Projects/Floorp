@@ -111,6 +111,8 @@ public:
                                 const gfx::IntRect& aPictureRect) = 0;
 #endif
 
+  virtual void Destroy(CompositableChild* aCompositable);
+
   virtual bool DestroyInTransaction(PTextureChild* aTexture, bool synchronously) = 0;
   virtual bool DestroyInTransaction(PCompositableChild* aCompositable, bool synchronously) = 0;
 
@@ -172,6 +174,12 @@ public:
   virtual int32_t GetMaxTextureSize() const override
   {
     return mTextureFactoryIdentifier.mMaxTextureSize;
+  }
+
+  virtual bool InForwarderThread() = 0;
+
+  void AssertInForwarderThread() {
+    MOZ_ASSERT(InForwarderThread());
   }
 
   /**

@@ -261,9 +261,8 @@ config = {
                 # for windows.
                 sys.executable,
                 "../scripts/external_tools/mouse_and_screen_resolution.py",
-                "--configuration-url",
-                "https://hg.mozilla.org/%(repo_path)s/raw-file/%(revision)s/" +
-                    "testing/machine-configuration.json"],
+                "--configuration-file",
+                "../scripts/external_tools/machine-configuration.json"],
             "architectures": ["32bit"],
             "halt_on_failure": True,
             "enabled": ADJUST_MOUSE_AND_SCREEN

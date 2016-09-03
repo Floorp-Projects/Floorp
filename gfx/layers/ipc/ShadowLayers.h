@@ -392,6 +392,10 @@ public:
   virtual void UpdateFwdTransactionId() override;
   virtual uint64_t GetFwdTransactionId() override;
 
+  bool InForwarderThread() override {
+    return NS_IsMainThread();
+  }
+
   // Returns true if aSurface wraps a Shmem.
   static bool IsShmem(SurfaceDescriptor* aSurface);
 

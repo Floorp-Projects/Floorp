@@ -18,6 +18,8 @@
 #include "cairo-win32.h"
 #endif
 
+#include "HelpersWinFonts.h"
+
 namespace mozilla {
 namespace gfx {
 
@@ -84,6 +86,12 @@ ScaledFontWin::GetFontDescriptor(FontDescriptorOutput aCb, void* aBaton)
 {
   aCb(reinterpret_cast<uint8_t*>(&mLogFont), sizeof(mLogFont), mSize, aBaton);
   return true;
+}
+
+AntialiasMode
+ScaledFontWin::GetDefaultAAMode()
+{
+  return GetSystemDefaultAAMode();
 }
 
 #ifdef USE_SKIA

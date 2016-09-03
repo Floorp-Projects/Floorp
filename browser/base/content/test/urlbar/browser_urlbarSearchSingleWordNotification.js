@@ -38,7 +38,7 @@ function promiseNotificationForTab(aBrowser, value, expected, tab=aBrowser.selec
   return deferred.promise;
 }
 
-function* runURLBarSearchTest(valueToOpen, expectSearch, expectNotification, aWindow=window) {
+function* runURLBarSearchTest({valueToOpen, expectSearch, expectNotification, aWindow=window}) {
   aWindow.gURLBar.value = valueToOpen;
   let expectedURI;
   if (!expectSearch) {
@@ -62,21 +62,33 @@ function* runURLBarSearchTest(valueToOpen, expectSearch, expectNotification, aWi
 add_task(function* test_navigate_full_domain() {
   let tab = gBrowser.selectedTab = gBrowser.addTab("about:blank");
   yield BrowserTestUtils.browserLoaded(tab.linkedBrowser);
-  yield* runURLBarSearchTest("www.mozilla.org", false, false);
+  yield* runURLBarSearchTest({
+    valueToOpen: "www.mozilla.org",
+    expectSearch: false,
+    expectNotification: false,
+  });
   gBrowser.removeTab(tab);
 });
 
-add_task(function* test_navigate_valid_numbers() {
+add_task(function* test_navigate_decimal_ip() {
   let tab = gBrowser.selectedTab = gBrowser.addTab("about:blank");
   yield BrowserTestUtils.browserLoaded(tab.linkedBrowser);
-  yield* runURLBarSearchTest("1234", true, true);
+  yield* runURLBarSearchTest({
+    valueToOpen: "1234",
+    expectSearch: true,
+    expectNotification: false,
+  });
   gBrowser.removeTab(tab);
 });
 
-add_task(function* test_navigate_invalid_numbers() {
+add_task(function* test_navigate_large_number() {
   let tab = gBrowser.selectedTab = gBrowser.addTab("about:blank");
   yield BrowserTestUtils.browserLoaded(tab.linkedBrowser);
-  yield* runURLBarSearchTest("123456789012345", true, false);
+  yield* runURLBarSearchTest({
+    valueToOpen: "123456789012345",
+    expectSearch: true,
+    expectNotification: false
+  });
   gBrowser.removeTab(tab);
 });
 function get_test_function_for_localhost_with_hostname(hostName, isPrivate) {
@@ -96,7 +108,12 @@ function get_test_function_for_localhost_with_hostname(hostName, isPrivate) {
     yield BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
     Services.prefs.setBoolPref(pref, false);
-    yield* runURLBarSearchTest(hostName, true, true, win);
+    yield* runURLBarSearchTest({
+      valueToOpen: hostName,
+      expectSearch: true,
+      expectNotification: true,
+      aWindow: win,
+    });
 
     let notificationBox = browser.getNotificationBox(tab.linkedBrowser);
     let notification = notificationBox.getNotificationWithValue("keyword-uri-fixup");
@@ -114,7 +131,12 @@ function get_test_function_for_localhost_with_hostname(hostName, isPrivate) {
     tab = browser.selectedTab = browser.addTab("about:blank");
     yield BrowserTestUtils.browserLoaded(tab.linkedBrowser);
     // In a private window, the notification should appear again.
-    yield* runURLBarSearchTest(hostName, isPrivate, isPrivate, win);
+    yield* runURLBarSearchTest({
+      valueToOpen: hostName,
+      expectSearch: isPrivate,
+      expectNotification: isPrivate,
+      aWindow: win,
+    });
     browser.removeTab(tab);
     if (isPrivate) {
       info("Waiting for private window to close");
@@ -134,6 +156,10 @@ add_task(get_test_function_for_localhost_with_hostname("localhost", true));
 add_task(function* test_navigate_invalid_url() {
   let tab = gBrowser.selectedTab = gBrowser.addTab("about:blank");
   yield BrowserTestUtils.browserLoaded(tab.linkedBrowser);
-  yield* runURLBarSearchTest("mozilla is awesome", true, false);
+  yield* runURLBarSearchTest({
+    valueToOpen: "mozilla is awesome",
+    expectSearch: true,
+    expectNotification: false,
+  });
   gBrowser.removeTab(tab);
 });

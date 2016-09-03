@@ -691,7 +691,7 @@ function gKeywordURIFixup({ target: browser, data: fixupInfo }) {
   }
 
   // Ignore number-only things entirely (no decimal IPs for you!)
-  if (/^\d+$/.test(asciiHost))
+  if (/^\d+$/.test(fixupInfo.originalInput.trim()))
     return;
 
   let onLookupComplete = (request, record, status) => {
