@@ -44,40 +44,47 @@ def wfetch(url, retries=5):
         time.sleep(60)
 
 def main():
-    '''
-    We load the configuration file from:
-    https://hg.mozilla.org/mozilla-central/raw-file/default/build/machine-configuration.json
-    '''
-    parser = OptionParser()
-    parser.add_option(
-        "--configuration-url", dest="configuration_url", type="string",
-        help="It indicates from where to download the configuration file.")
-    (options, args) = parser.parse_args()
-
-    if options.configuration_url == None:
-        print "You need to specify --configuration-url."
-        return 1
 
     if not (platform.version().startswith('6.1.760') and not 'PROGRAMFILES(X86)' in os.environ):
         # We only want to run this for Windows 7 32-bit
         print "INFO: This script was written to be used with Windows 7 32-bit machines."
         return 0
 
-    try:
-        conf_dict = json.loads(wfetch(options.configuration_url))
+    parser = OptionParser()
+    parser.add_option(
+        "--configuration-url", dest="configuration_url", type="string",
+        help="Specifies the url of the configuration file.")
+    parser.add_option(
+        "--configuration-file", dest="configuration_file", type="string",
+        help="Specifies the path to the configuration file.")
+    (options, args) = parser.parse_args()
+
+    if (options.configuration_url == None and
+        options.configuration_file == None):
+        print "You must specify --configuration-url or --configuration-file."
+        return 1
+
+    if options.configuration_file:
+        with open(options.configuration_file) as f:
+            conf_dict = json.load(f)
         new_screen_resolution = conf_dict["win7"]["screen_resolution"]
         new_mouse_position = conf_dict["win7"]["mouse_position"]
-    except urllib2.HTTPError, e:
-        print "This branch does not seem to have the configuration file %s" % str(e)
-        print "Let's fail over to 1024x768."
-        new_screen_resolution = default_screen_resolution
-        new_mouse_position = default_mouse_position
-    except urllib2.URLError, e:
-        print "INFRA-ERROR: We couldn't reach hg.mozilla.org: %s" % str(e)
-        return 1
-    except Exception, e:
-        print "ERROR: We were not expecting any more exceptions: %s" % str(e)
-        return 1
+    else:
+        try:
+            conf_dict = json.loads(wfetch(options.configuration_url))
+            new_screen_resolution = conf_dict["win7"]["screen_resolution"]
+            new_mouse_position = conf_dict["win7"]["mouse_position"]
+        except urllib2.HTTPError, e:
+            print "This branch does not seem to have the configuration file %s" % str(e)
+            print "Let's fail over to 1024x768."
+            new_screen_resolution = default_screen_resolution
+            new_mouse_position = default_mouse_position
+        except urllib2.URLError, e:
+            print "INFRA-ERROR: We couldn't reach hg.mozilla.org: %s" % str(e)
+            return 1
+        except Exception, e:
+            print "ERROR: We were not expecting any more exceptions: %s" % str(e)
+            return 1
 
     current_screen_resolution = queryScreenResolution()
     print "Screen resolution (current): (%(x)s, %(y)s)" % (current_screen_resolution)

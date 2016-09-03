@@ -17,7 +17,7 @@ add_task(function* closing_tab_with_dependents_should_close_window() {
 
   let windowClosedPromise = BrowserTestUtils.windowClosed(win);
   yield BrowserTestUtils.removeTab(tab);
-  is(openedTab.linkedBrowser, null, "Opened tab should also have closed");
+  is(Cu.isDeadWrapper(openedTab) || openedTab.linkedBrowser == null, true, "Opened tab should also have closed");
   info("If we timeout now, the window failed to close - that shouldn't happen!");
   yield windowClosedPromise;
 });
