@@ -696,7 +696,7 @@ nsStyleContext::SetStyleBits()
   // Set the NS_STYLE_IN_DISPLAY_NONE_SUBTREE bit
   const nsStyleDisplay* disp = StyleDisplay();
   if ((mParent && mParent->IsInDisplayNoneSubtree()) ||
-      disp->mDisplay == mozilla::StyleDisplay::None_) {
+      disp->mDisplay == mozilla::StyleDisplay::None) {
     mBits |= NS_STYLE_IN_DISPLAY_NONE_SUBTREE;
   }
 }

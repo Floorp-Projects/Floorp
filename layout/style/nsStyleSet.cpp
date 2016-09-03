@@ -1952,7 +1952,7 @@ nsStyleSet::ProbePseudoElementStyle(Element* aParentElement,
     const nsStyleDisplay *display = result->StyleDisplay();
     const nsStyleContent *content = result->StyleContent();
     // XXXldb What is contentCount for |content: ""|?
-    if (display->mDisplay == StyleDisplay::None_ ||
+    if (display->mDisplay == StyleDisplay::None ||
         content->ContentCount() == 0) {
       result = nullptr;
     }

@@ -844,7 +844,7 @@ ReflowInput::InitFrameType(nsIAtom* aFrameType)
       frameType = NS_CSS_FRAME_TYPE_INTERNAL_TABLE;
       break;
 
-    case StyleDisplay::None_:
+    case StyleDisplay::None:
     default:
       frameType = NS_CSS_FRAME_TYPE_UNKNOWN;
       break;
@@ -1213,7 +1213,7 @@ ReflowInput::CalculateHypotheticalPosition
                       nsHypotheticalPosition&  aHypotheticalPos,
                       nsIAtom*                 aFrameType) const
 {
-  NS_ASSERTION(mStyleDisplay->mOriginalDisplay != StyleDisplay::None_,
+  NS_ASSERTION(mStyleDisplay->mOriginalDisplay != StyleDisplay::None,
                "mOriginalDisplay has not been properly initialized");
 
   // Find the nearest containing block frame to the placeholder frame,

@@ -400,7 +400,7 @@ ServoStyleSet::ProbePseudoElementStyle(Element* aParentElement,
     const nsStyleDisplay *display = Servo_GetStyleDisplay(computedValues);
     const nsStyleContent *content = Servo_GetStyleContent(computedValues);
     // XXXldb What is contentCount for |content: ""|?
-    if (display->mDisplay == StyleDisplay::None_ ||
+    if (display->mDisplay == StyleDisplay::None ||
         content->ContentCount() == 0) {
       return nullptr;
     }
