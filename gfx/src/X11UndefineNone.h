@@ -4,9 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef MOZILLA_GFX_X11UNDEFINENONE_H_
-#define MOZILLA_GFX_X11UNDEFINENONE_H_
-
 // The header <X11/X.h> defines "None" as a macro that expands to "0L".
 // This is terrible because many enumerations have an enumerator named "None".
 // To work around this, we undefine the macro "None", and define a replacement
@@ -24,4 +21,3 @@
 #  endif
 #endif
 
-#endif /* MOZILLA_GFX_X11UNDEFINENONE_H_ */

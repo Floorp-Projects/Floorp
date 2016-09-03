@@ -4029,7 +4029,7 @@ StyleAnimationValue::ExtractComputedValue(nsCSSPropertyID aProperty,
             aComputedValue.SetCSSValueArrayValue(result, eUnit_Shape);
 
           } else {
-            MOZ_ASSERT(type == StyleShapeSourceType::None_, "unknown type");
+            MOZ_ASSERT(type == StyleShapeSourceType::None, "unknown type");
             aComputedValue.SetNoneValue();
           }
           break;

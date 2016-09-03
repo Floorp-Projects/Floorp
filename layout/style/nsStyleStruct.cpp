@@ -2986,9 +2986,9 @@ nsStyleDisplay::nsStyleDisplay(StyleStructContext aContext)
   , mContain(NS_STYLE_CONTAIN_NONE)
   , mAppearance(NS_THEME_NONE)
   , mPosition(NS_STYLE_POSITION_STATIC)
-  , mFloat(StyleFloat::None_)
-  , mOriginalFloat(StyleFloat::None_)
-  , mBreakType(StyleClear::None_)
+  , mFloat(StyleFloat::None)
+  , mOriginalFloat(StyleFloat::None)
+  , mBreakType(StyleClear::None)
   , mBreakInside(NS_STYLE_PAGE_BREAK_AUTO)
   , mBreakBefore(false)
   , mBreakAfter(false)
@@ -3112,7 +3112,7 @@ nsStyleDisplay::CalcDifference(const nsStyleDisplay& aNewData) const
       || mPosition != aNewData.mPosition
       || mDisplay != aNewData.mDisplay
       || mContain != aNewData.mContain
-      || (mFloat == StyleFloat::None_) != (aNewData.mFloat == StyleFloat::None_)
+      || (mFloat == StyleFloat::None) != (aNewData.mFloat == StyleFloat::None)
       || mOverflowX != aNewData.mOverflowX
       || mOverflowY != aNewData.mOverflowY
       || mScrollBehavior != aNewData.mScrollBehavior
@@ -3897,7 +3897,7 @@ nsCursorImage::operator=(const nsCursorImage& aOther)
 nsStyleUserInterface::nsStyleUserInterface(StyleStructContext aContext)
   : mUserInput(NS_STYLE_USER_INPUT_AUTO)
   , mUserModify(NS_STYLE_USER_MODIFY_READ_ONLY)
-  , mUserFocus(StyleUserFocus::None_)
+  , mUserFocus(StyleUserFocus::None)
   , mPointerEvents(NS_STYLE_POINTER_EVENTS_AUTO)
   , mCursor(NS_STYLE_CURSOR_AUTO)
   , mCursorArrayLength(0)

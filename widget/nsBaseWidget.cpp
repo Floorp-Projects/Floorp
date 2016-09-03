@@ -37,6 +37,7 @@
 #include "nsIWidgetListener.h"
 #include "nsIGfxInfo.h"
 #include "npapi.h"
+#include "X11UndefineNone.h"
 #include "base/thread.h"
 #include "prdtoa.h"
 #include "prenv.h"

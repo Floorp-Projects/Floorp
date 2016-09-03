@@ -1787,7 +1787,7 @@ ElementRestyler::DoConditionallyRestyleUndisplayedDescendants(
   nsCSSFrameConstructor* fc = mPresContext->FrameConstructor();
   UndisplayedNode* nodes = fc->GetAllUndisplayedContentIn(aParent);
   ConditionallyRestyleUndisplayedNodes(nodes, aParent,
-                                       StyleDisplay::None_, aRestyleRoot);
+                                       StyleDisplay::None, aRestyleRoot);
   nodes = fc->GetAllDisplayContentsIn(aParent);
   ConditionallyRestyleUndisplayedNodes(nodes, aParent,
                                        StyleDisplay::Contents, aRestyleRoot);
@@ -1802,7 +1802,7 @@ ElementRestyler::ConditionallyRestyleUndisplayedNodes(
     const StyleDisplay aDisplay,
     Element* aRestyleRoot)
 {
-  MOZ_ASSERT(aDisplay == StyleDisplay::None_ ||
+  MOZ_ASSERT(aDisplay == StyleDisplay::None ||
              aDisplay == StyleDisplay::Contents);
   if (!aUndisplayed) {
     return;
@@ -1825,7 +1825,7 @@ ElementRestyler::ConditionallyRestyleUndisplayedNodes(
     Element* element = undisplayed->mContent->AsElement();
 
     if (!ConditionallyRestyle(element, aRestyleRoot)) {
-      if (aDisplay == StyleDisplay::None_) {
+      if (aDisplay == StyleDisplay::None) {
         ConditionallyRestyleContentDescendants(element, aRestyleRoot);
       } else {  // StyleDisplay::Contents
         DoConditionallyRestyleUndisplayedDescendants(element, aRestyleRoot);
@@ -3425,7 +3425,7 @@ ElementRestyler::DoRestyleUndisplayedDescendants(nsRestyleHint aChildRestyleHint
   nsCSSFrameConstructor* fc = mPresContext->FrameConstructor();
   UndisplayedNode* nodes = fc->GetAllUndisplayedContentIn(aParent);
   RestyleUndisplayedNodes(aChildRestyleHint, nodes, aParent,
-                          aParentContext, StyleDisplay::None_);
+                          aParentContext, StyleDisplay::None);
   nodes = fc->GetAllDisplayContentsIn(aParent);
   RestyleUndisplayedNodes(aChildRestyleHint, nodes, aParent,
                           aParentContext, StyleDisplay::Contents);

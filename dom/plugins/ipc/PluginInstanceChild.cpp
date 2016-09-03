@@ -63,6 +63,7 @@ using namespace std;
 #include "mozilla/widget/WinModifierKeyState.h"
 #include "mozilla/widget/WinNativeEventData.h"
 #include "nsWindowsDllInterceptor.h"
+#include "X11UndefineNone.h"
 
 typedef BOOL (WINAPI *User32TrackPopupMenu)(HMENU hMenu,
                                             UINT uFlags,

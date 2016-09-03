@@ -395,11 +395,11 @@ public:
   // using different names should help.
   using StyleClear = mozilla::StyleClear;
   bool HasBreakBefore() const {
-    return IsBlock() && StyleClear::None_ != BreakType();
+    return IsBlock() && StyleClear::None != BreakType();
   }
   void SetBreakTypeBefore(StyleClear aBreakType) {
     MOZ_ASSERT(IsBlock(), "Only blocks have break-before");
-    MOZ_ASSERT(aBreakType == StyleClear::None_ ||
+    MOZ_ASSERT(aBreakType == StyleClear::None ||
                aBreakType == StyleClear::Left ||
                aBreakType == StyleClear::Right ||
                aBreakType == StyleClear::Both,
@@ -407,11 +407,11 @@ public:
     mFlags.mBreakType = static_cast<int>(aBreakType);
   }
   StyleClear GetBreakTypeBefore() const {
-    return IsBlock() ? BreakType() : StyleClear::None_;
+    return IsBlock() ? BreakType() : StyleClear::None;
   }
 
   bool HasBreakAfter() const {
-    return !IsBlock() && StyleClear::None_ != BreakType();
+    return !IsBlock() && StyleClear::None != BreakType();
   }
   void SetBreakTypeAfter(StyleClear aBreakType) {
     MOZ_ASSERT(!IsBlock(), "Only inlines have break-after");
@@ -424,7 +424,7 @@ public:
             StyleClear::Both == BreakType());
   }
   StyleClear GetBreakTypeAfter() const {
-    return !IsBlock() ? BreakType() : StyleClear::None_;
+    return !IsBlock() ? BreakType() : StyleClear::None;
   }
 
   // mCarriedOutBEndMargin value
