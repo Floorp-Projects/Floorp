@@ -196,9 +196,15 @@ PrintDisplayItemTo(nsDisplayListBuilder* aBuilder, nsDisplayItem* aItem,
     }
   }
 #ifdef MOZ_DUMP_PAINTING
-  if (aItem->GetType() == nsDisplayItem::TYPE_SVG_EFFECTS) {
+  if (aItem->GetType() == nsDisplayItem::TYPE_MASK) {
     nsCString str;
-    (static_cast<nsDisplaySVGEffects*>(aItem))->PrintEffects(str);
+    (static_cast<nsDisplayMask*>(aItem))->PrintEffects(str);
+    aStream << str.get();
+  }
+
+  if (aItem->GetType() == nsDisplayItem::TYPE_FILTER) {
+    nsCString str;
+    (static_cast<nsDisplayFilter*>(aItem))->PrintEffects(str);
     aStream << str.get();
   }
 #endif

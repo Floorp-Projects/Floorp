@@ -2441,16 +2441,30 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
    * output even if the element being filtered wouldn't otherwise do so.
    */
   if (usingSVGEffects) {
+    MOZ_ASSERT(StyleEffects()->HasFilters() ||
+               nsSVGIntegrationUtils::UsingMaskOrClipPathForFrame(this));
+
     if (clipCapturedBy == ContainerItemType::eSVGEffects) {
       clipState.ExitStackingContextContents(&containerItemScrollClip);
     }
     // Revert to the post-filter dirty rect.
     buildingDisplayList.SetDirtyRect(dirtyRectOutsideSVGEffects);
-    /* List now emptied, so add the new list to the top. */
-    resultList.AppendNewToTop(
-        new (aBuilder) nsDisplaySVGEffects(aBuilder, this, &resultList, useOpacity));
+
+    // Skip all filter effects while generating glyph mask.
+    if (StyleEffects()->HasFilters() && !aBuilder->IsForGenerateGlyphMask()) {
+      /* List now emptied, so add the new list to the top. */
+      resultList.AppendNewToTop(
+          new (aBuilder) nsDisplayFilter(aBuilder, this, &resultList, useOpacity));
+    }
+
+    if (nsSVGIntegrationUtils::UsingMaskOrClipPathForFrame(this)) {
+      /* List now emptied, so add the new list to the top. */
+      resultList.AppendNewToTop(
+          new (aBuilder) nsDisplayMask(aBuilder, this, &resultList, useOpacity));
+    }
+
     // Also add the hoisted scroll info items. We need those for APZ scrolling
-    // because nsDisplaySVGEffects items can't build active layers.
+    // because nsDisplayMask items can't build active layers.
     aBuilder->ExitSVGEffectsContents();
     resultList.AppendToTop(&hoistedScrollInfoItemsStorage);
   }

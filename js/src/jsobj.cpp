@@ -2493,20 +2493,6 @@ js::GetPrototypeIfOrdinary(JSContext* cx, HandleObject obj, bool* isOrdinary,
     return true;
 }
 
-// Our immutable-prototype behavior is non-standard, and it's unclear whether
-// it's shippable.  (Or at least it's unclear whether it's shippable with any
-// provided-by-default uses exposed to script.)  If this bool is true,
-// immutable-prototype behavior is enforced; if it's false, behavior is not
-// enforced, and immutable-prototype bits stored on objects are completely
-// ignored.
-static const bool ImmutablePrototypesEnabled = true;
-
-JS_FRIEND_API(bool)
-JS_ImmutablePrototypesEnabled()
-{
-    return ImmutablePrototypesEnabled;
-}
-
 /*** ES6 standard internal methods ***************************************************************/
 
 bool
@@ -2527,7 +2513,7 @@ js::SetPrototype(JSContext* cx, HandleObject obj, HandleObject proto, JS::Object
         return result.succeed();
 
     /* Disallow mutation of immutable [[Prototype]]s. */
-    if (obj->staticPrototypeIsImmutable() && ImmutablePrototypesEnabled)
+    if (obj->staticPrototypeIsImmutable())
         return result.fail(JSMSG_CANT_SET_PROTO);
 
     /*
@@ -2547,16 +2533,6 @@ js::SetPrototype(JSContext* cx, HandleObject obj, HandleObject proto, JS::Object
     if (obj->is<TypedObject>()) {
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_CANT_SET_PROTO_OF,
                              "incompatible TypedObject");
-        return false;
-    }
-
-    /*
-     * Explicitly disallow mutating the [[Prototype]] of Location objects
-     * for flash-related security reasons.
-     */
-    if (!strcmp(obj->getClass()->name, "Location")) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_CANT_SET_PROTO_OF,
-                             "incompatible Location object");
         return false;
     }
 

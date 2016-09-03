@@ -22,34 +22,10 @@ using namespace std;
 #include "cairo-win32.h"
 #endif
 
+#include "HelpersWinFonts.h"
+
 namespace mozilla {
 namespace gfx {
-
-static BYTE
-GetSystemTextQuality()
-{
-  BOOL font_smoothing;
-  UINT smoothing_type;
-
-  if (!SystemParametersInfo(SPI_GETFONTSMOOTHING, 0, &font_smoothing, 0)) {
-    return DEFAULT_QUALITY;
-  }
-
-  if (font_smoothing) {
-      if (!SystemParametersInfo(SPI_GETFONTSMOOTHINGTYPE,
-                                0, &smoothing_type, 0)) {
-        return DEFAULT_QUALITY;
-      }
-
-      if (smoothing_type == FE_FONTSMOOTHINGCLEARTYPE) {
-        return CLEARTYPE_QUALITY;
-      }
-
-      return ANTIALIASED_QUALITY;
-  }
-
-  return DEFAULT_QUALITY;
-}
 
 #define GASP_TAG 0x70736167
 #define GASP_DOGRAY 0x2
@@ -315,19 +291,7 @@ ScaledFontDWrite::GetFontFileData(FontFileDataOutput aDataCallback, void *aBaton
 AntialiasMode
 ScaledFontDWrite::GetDefaultAAMode()
 {
-  AntialiasMode defaultMode = AntialiasMode::SUBPIXEL;
-
-  switch (GetSystemTextQuality()) {
-  case CLEARTYPE_QUALITY:
-    defaultMode = AntialiasMode::SUBPIXEL;
-    break;
-  case ANTIALIASED_QUALITY:
-    defaultMode = AntialiasMode::GRAY;
-    break;
-  case DEFAULT_QUALITY:
-    defaultMode = AntialiasMode::NONE;
-    break;
-  }
+  AntialiasMode defaultMode = GetSystemDefaultAAMode();
 
   if (defaultMode == AntialiasMode::GRAY) {
     if (!DoGrayscale(mFontFace, mSize)) {

@@ -316,27 +316,35 @@
         }
       ]]></handler>
       <handler event="popuphidden"><![CDATA[
+        function doFocus() {
+          // Focus was set on an element inside this panel,
+          // so we need to move it back to where it was previously
+          try {
+            let fm = Components.classes["@mozilla.org/focus-manager;1"]
+                               .getService(Components.interfaces.nsIFocusManager);
+            fm.setFocus(prevFocus, fm.FLAG_NOSCROLL);
+          } catch (e) {
+            prevFocus.focus();
+          }
+        }
         var currentFocus = this._currentFocus;
         var prevFocus = this._prevFocus ? this._prevFocus.get() : null;
         this._currentFocus = null;
         this._prevFocus = null;
-        if (prevFocus && currentFocus && this.getAttribute("norestorefocus") != "true") {
+        if (prevFocus && this.getAttribute("norestorefocus") != "true") {
           // Try to restore focus
           try {
             if (document.commandDispatcher.focusedWindow != window)
               return; // Focus has already been set to a window outside of this panel
           } catch (ex) {}
+
+          if (!currentFocus) {
+            doFocus();
+            return;
+          }
           while (currentFocus) {
             if (currentFocus == this) {
-              // Focus was set on an element inside this panel,
-              // so we need to move it back to where it was previously
-              try {
-                let fm = Components.classes["@mozilla.org/focus-manager;1"]
-                                   .getService(Components.interfaces.nsIFocusManager);
-                fm.setFocus(prevFocus, fm.FLAG_NOSCROLL);
-              } catch (e) {
-                prevFocus.focus();
-              }
+              doFocus();
               return;
             }
             currentFocus = currentFocus.parentNode;

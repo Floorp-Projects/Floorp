@@ -50,6 +50,8 @@ try:
 except ImportError:
     import json
 
+from cStringIO import StringIO
+
 from mozprocess import ProcessHandler
 from mozharness.base.config import BaseConfig
 from mozharness.base.log import SimpleFileLogger, MultiFileLogger, \
@@ -458,28 +460,157 @@ class ScriptMixin(PlatformMixin):
             **retry_args
         )
 
-    def download_unpack(self, url, extract_to, extract_dirs=None,
-                        error_level=FATAL):
-        """Generic method to download and extract a compressed file.
 
-        The downloaded file will always be saved to the working directory and is not getting
-        deleted after extracting.
+    def _filter_entries(self, namelist, extract_dirs):
+        """Filter entries of the archive based on the specified list of to extract dirs."""
+        filter_partial = functools.partial(fnmatch.filter, namelist)
+        entries = itertools.chain(*map(filter_partial, extract_dirs or ['*']))
+
+        for entry in entries:
+            yield entry
+
+
+    def unzip(self, file_object, extract_to='.', extract_dirs='*', verbose=False):
+        """This method allows to extract a zip file without writing to disk first.
+
+        Args:
+            file_object (object): Any file like object that is seekable.
+            extract_to (str, optional): where to extract the compressed file.
+            extract_dirs (list, optional): directories inside the archive file to extract.
+                                           Defaults to '*'.
+        """
+        compressed_file = StringIO(file_object.read())
+        try:
+            with zipfile.ZipFile(compressed_file) as bundle:
+                entries = self._filter_entries(bundle.namelist(), extract_dirs)
+
+                for entry in entries:
+                    if verbose:
+                        self.info(' {}'.format(entry))
+                    bundle.extract(entry, path=extract_to)
+
+                    # ZipFile doesn't preserve permissions during extraction:
+                    # http://bugs.python.org/issue15795
+                    fname = os.path.realpath(os.path.join(extract_to, entry))
+                    mode = bundle.getinfo(entry).external_attr >> 16 & 0x1FF
+                    # Only set permissions if attributes are available. Otherwise all
+                    # permissions will be removed eg. on Windows.
+                    if mode:
+                        os.chmod(fname, mode)
+
+        except zipfile.BadZipfile as e:
+            self.exception('{}'.format(e.message))
+
+
+    def deflate(self, file_object, mode, extract_to='.', extract_dirs='*', verbose=False):
+        """This method allows to extract a tar, tar.bz2 and tar.gz file without writing to disk first.
+
+        Args:
+            file_object (object): Any file like object that is seekable.
+            extract_to (str, optional): where to extract the compressed file.
+            extract_dirs (list, optional): directories inside the archive file to extract.
+                                           Defaults to `*`.
+            verbose (bool, optional): whether or not extracted content should be displayed.
+                                      Defaults to False.
+        """
+        compressed_file = StringIO(file_object.read())
+        t = tarfile.open(fileobj=compressed_file, mode=mode)
+        t.extractall(path=extract_to)
+
+
+    def download_unpack(self, url, extract_to='.', extract_dirs='*', verbose=False):
+        """Generic method to download and extract a compressed file without writing it to disk first.
 
         Args:
             url (str): URL where the file to be downloaded is located.
-            extract_to (str): directory where the downloaded file will
-                              be extracted to.
+            extract_to (str, optional): directory where the downloaded file will
+                                        be extracted to.
             extract_dirs (list, optional): directories inside the archive to extract.
-                                           Defaults to `None`.
-            error_level (str, optional): log level to use in case an error occurs.
-                                         Defaults to `FATAL`.
+                                           Defaults to `*`. It currently only applies to zip files.
+
+        Raises:
+            IOError: on `filename` file not found.
 
         """
-        dirs = self.query_abs_dirs()
-        archive = self.download_file(url, parent_dir=dirs['abs_work_dir'],
-                                     error_level=error_level)
-        self.unpack(archive, extract_to, extract_dirs=extract_dirs,
-                    error_level=error_level)
+        # Many scripts overwrite this method and set extract_dirs to None
+        extract_dirs = '*' if extract_dirs is None else extract_dirs
+        EXTENSION_TO_MIMETYPE = {
+            'bz2': 'application/x-bzip2',
+            'gz':  'application/x-gzip',
+            'tar': 'application/x-tar',
+            'zip': 'application/zip',
+        }
+        MIMETYPES = {
+            'application/x-bzip2': {
+                'function': self.deflate,
+                'kwargs': {'mode': 'r:bz2'},
+            },
+            'application/x-gzip': {
+                'function': self.deflate,
+                'kwargs': {'mode': 'r:gz'},
+            },
+            'application/x-tar': {
+                'function': self.deflate,
+                'kwargs': {'mode': 'r'},
+            },
+            'application/zip': {
+                'function': self.unzip,
+            },
+        }
+
+        parsed_url = urlparse.urlparse(url)
+
+        # In case we're referrencing a file without file://
+        if parsed_url.scheme == '':
+            if not os.path.isfile(url):
+                raise IOError('Could not find file to extract: {}'.format(url))
+
+            url = 'file://%s' % os.path.abspath(url)
+            parsed_fd = urlparse.urlparse(url)
+
+        request = urllib2.Request(url)
+        response = urllib2.urlopen(request)
+
+        if parsed_url.scheme == 'file':
+            filename = url.split('/')[-1]
+            # XXX: bz2/gz instead of tar.{bz2/gz}
+            extension = filename[filename.rfind('.')+1:]
+            mimetype = EXTENSION_TO_MIMETYPE[extension]
+        else:
+            mimetype = response.headers.type
+
+        self.debug('Url: {}'.format(url))
+        self.debug('Mimetype: {}'.format(mimetype))
+        self.debug('Content-Encoding {}'.format(response.headers.get('Content-Encoding')))
+
+        function = MIMETYPES[mimetype]['function']
+        kwargs = {
+            'file_object': response,
+            'extract_to': extract_to,
+            'extract_dirs': extract_dirs,
+            'verbose': verbose,
+        }
+        kwargs.update(MIMETYPES[mimetype].get('kwargs', {}))
+
+        self.info('Downloading and extracting to {} these dirs {} from {}'.format(
+            extract_to,
+            ', '.join(extract_dirs),
+            url,
+        ))
+        retry_args = dict(
+            failure_status=None,
+            retry_exceptions=(urllib2.HTTPError, urllib2.URLError,
+                              httplib.BadStatusLine,
+                              socket.timeout, socket.error),
+            error_message="Can't download from {}".format(url),
+            error_level=FATAL,
+        )
+        self.retry(
+            function,
+            kwargs=kwargs,
+            **retry_args
+        )
+
 
     def load_json_url(self, url, error_level=None, *args, **kwargs):
         """ Returns a json object from a url (it retries). """
@@ -1409,12 +1540,6 @@ class ScriptMixin(PlatformMixin):
             IOError: on `filename` file not found.
 
         """
-        def _filter_entries(namelist):
-            """Filter entries of the archive based on the specified list of to extract dirs."""
-            filter_partial = functools.partial(fnmatch.filter, namelist)
-            for entry in itertools.chain(*map(filter_partial, extract_dirs or ['*'])):
-                yield entry
-
         if not os.path.isfile(filename):
             raise IOError('Could not find file to extract: %s' % filename)
 
@@ -1422,7 +1547,7 @@ class ScriptMixin(PlatformMixin):
             try:
                 self.info('Using ZipFile to extract {} to {}'.format(filename, extract_to))
                 with zipfile.ZipFile(filename) as bundle:
-                    for entry in _filter_entries(bundle.namelist()):
+                    for entry in self._filter_entries(bundle.namelist(), extract_dirs):
                         if verbose:
                             self.info(' %s' % entry)
                         bundle.extract(entry, path=extract_to)
@@ -1444,7 +1569,7 @@ class ScriptMixin(PlatformMixin):
             try:
                 self.info('Using TarFile to extract {} to {}'.format(filename, extract_to))
                 with tarfile.open(filename) as bundle:
-                    for entry in _filter_entries(bundle.getnames()):
+                    for entry in self._filter_entries(bundle.getnames(), extract_dirs):
                         if verbose:
                             self.info(' %s' % entry)
                         bundle.extract(entry, path=extract_to)

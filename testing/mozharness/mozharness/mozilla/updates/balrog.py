@@ -14,6 +14,27 @@ class BalrogMixin(object):
         else:
             raise KeyError("Couldn't find balrog username.")
 
+    def generate_balrog_props(self, props_path):
+        self.set_buildbot_property(
+            "hashType", self.config.get("hash_type", "sha512"), write_to_file=True
+        )
+
+        if self.buildbot_config and "properties" in self.buildbot_config:
+            buildbot_properties = self.buildbot_config["properties"].items()
+        else:
+            buildbot_properties = []
+
+        balrog_props = dict(properties=dict(chain(
+            buildbot_properties,
+            self.buildbot_properties.items(),
+        )))
+        if self.config.get('balrog_platform'):
+            balrog_props["properties"]["platform"] = self.config['balrog_platform']
+        if "branch" not in balrog_props["properties"]:
+            balrog_props["properties"]["branch"] = self.branch
+
+        self.dump_config(props_path, balrog_props)
+
     def submit_balrog_updates(self, release_type="nightly", product=None):
         c = self.config
         dirs = self.query_abs_dirs()
@@ -31,25 +52,9 @@ class BalrogMixin(object):
         submitter_script = os.path.join(
             dirs["abs_tools_dir"], "scripts", "updates", "balrog-submitter.py"
         )
-        self.set_buildbot_property(
-            "hashType", c.get("hash_type", "sha512"), write_to_file=True
-        )
 
-        if self.buildbot_config and "properties" in self.buildbot_config:
-            buildbot_properties = self.buildbot_config["properties"].items()
-        else:
-            buildbot_properties = []
+        self.generate_balrog_props(props_path)
 
-        balrog_props = dict(properties=dict(chain(
-            buildbot_properties,
-            self.buildbot_properties.items(),
-        )))
-        if self.config.get('balrog_platform'):
-            balrog_props["properties"]["platform"] = self.config['balrog_platform']
-        if "branch" not in balrog_props["properties"]:
-            balrog_props["properties"]["branch"] = self.query_branch()
-
-        self.dump_config(props_path, balrog_props)
         cmd = [
             self.query_exe("python"),
             submitter_script,
