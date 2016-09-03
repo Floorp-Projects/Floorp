@@ -259,6 +259,50 @@ class TestScript(unittest.TestCase):
         self.assertTrue(error_logsize > 0,
                         msg="error list not working properly")
 
+    def test_download_unpack(self):
+        # NOTE: The action is called *download*, however, it can work for files in disk
+        self.s = get_debug_script_obj()
+
+        archives_path = os.path.join(here, 'helper_files', 'archives')
+
+        # Test basic decompression
+        for archive in ('archive.tar', 'archive.tar.bz2', 'archive.tar.gz', 'archive.zip'):
+            self.s.download_unpack(
+                url=os.path.join(archives_path, archive),
+                extract_to=self.tmpdir
+            )
+            self.assertIn('script.sh', os.listdir(os.path.join(self.tmpdir, 'bin')))
+            self.assertIn('lorem.txt', os.listdir(self.tmpdir))
+            shutil.rmtree(self.tmpdir)
+
+        # Test permissions for extracted entries from zip archive
+        self.s.download_unpack(
+            url=os.path.join(archives_path, 'archive.zip'),
+            extract_to=self.tmpdir,
+        )
+        file_stats = os.stat(os.path.join(self.tmpdir, 'bin', 'script.sh'))
+        orig_fstats = os.stat(os.path.join(archives_path, 'reference', 'bin', 'script.sh'))
+        self.assertEqual(file_stats.st_mode, orig_fstats.st_mode)
+        shutil.rmtree(self.tmpdir)
+
+        # Test unzip specific dirs only
+        self.s.download_unpack(
+            url=os.path.join(archives_path, 'archive.zip'),
+            extract_to=self.tmpdir,
+            extract_dirs=['bin/*']
+        )
+        self.assertIn('bin', os.listdir(self.tmpdir))
+        self.assertNotIn('lorem.txt', os.listdir(self.tmpdir))
+        shutil.rmtree(self.tmpdir)
+
+        # Test for invalid filenames (Windows only)
+        if PYWIN32:
+            with self.assertRaises(IOError):
+                self.s.download_unpack(
+                    url=os.path.join(archives_path, 'archive_invalid_filename.zip'),
+                    extract_to=self.tmpdir
+                )
+
     def test_unpack(self):
         self.s = get_debug_script_obj()
 

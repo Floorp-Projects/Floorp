@@ -4,8 +4,8 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
-<?xml-stylesheet href="chrome://browser/skin/preferences/preferences.css" type="text/css"?> 
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/skin/preferences/preferences.css" type="text/css"?>
 
 <!DOCTYPE dialog SYSTEM "chrome://browser/locale/preferences/permissions.dtd" >
 
@@ -34,7 +34,7 @@
     <separator class="thin"/>
     <label id="urlLabel" control="url" value="&address.label;" accesskey="&address.accesskey;"/>
     <hbox align="start">
-      <textbox id="url" flex="1" 
+      <textbox id="url" flex="1"
                oninput="gPermissionManager.onHostInput(event.target);"
                onkeypress="gPermissionManager.onHostKeyPress(event);"/>
     </hbox>
@@ -69,7 +69,7 @@
               oncommand="gPermissionManager.onPermissionDeleted();"/>
       <button id="removeAllPermissions"
               icon="clear" label="&removeallpermissions.label;"
-              accesskey="&removeallpermissions.accesskey;" 
+              accesskey="&removeallpermissions.accesskey;"
               oncommand="gPermissionManager.onAllPermissionsDeleted();"/>
     </hbox>
     <spacer flex="1"/>
