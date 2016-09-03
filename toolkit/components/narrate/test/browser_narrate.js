@@ -127,6 +127,9 @@ add_task(function* testNarrate() {
       $(NarrateTestUtils.FORWARD).click();
     } while ((yield promiseEvent).type == "paragraphstart");
 
+    // This is to make sure we are not actively scrolling when the tab closes.
+    content.scroll(0, 0);
+
     yield ContentTaskUtils.waitForCondition(
       () => !$(NarrateTestUtils.STOP), "transitioned to stopped state");
     NarrateTestUtils.isStoppedState(content, ok);
