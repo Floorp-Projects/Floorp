@@ -126,6 +126,9 @@ UNITTEST_PLATFORM_PRETTY_NAMES = {
 # least build-ish things.  Sort of.  Anyway, these other things are implemented
 # as different "platforms".
 RIDEALONG_BUILDS = {
+    'android-api-15': [
+        'android-api-15-l10n',
+    ],
     'linux': [
         'linux-l10n',
     ],
