@@ -1392,7 +1392,7 @@ nsNativeThemeCocoa::DrawButton(CGContextRef cgContext, ThemeButtonKind inKind,
   if (inState.HasState(NS_EVENT_STATE_FOCUS) && isActive)
     bdi.adornment |= kThemeAdornmentFocus;
 
-  if (inIsDefault && !isDisabled && isActive &&
+  if (inIsDefault && !isDisabled &&
       !inState.HasState(NS_EVENT_STATE_ACTIVE)) {
     bdi.adornment |= kThemeAdornmentDefault;
     bdi.animation.time.start = 0;
@@ -2468,11 +2468,22 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsRenderingContext* aContext,
 
     case NS_THEME_BUTTON:
       if (IsDefaultButton(aFrame)) {
-        if (!IsDisabled(aFrame, eventState) && FrameIsInActiveWindow(aFrame) &&
+        // Check whether the default button is in a document that does not
+        // match the :-moz-window-inactive pseudoclass. This activeness check
+        // is different from the other "active window" checks in this file
+        // because we absolutely need the button's default button appearance to
+        // be in sync with its text color, and the text color is changed by
+        // such a :-moz-window-inactive rule. (That's because on 10.10 and up,
+        // default buttons in active windows have blue background and white
+        // text, and default buttons in inactive windows have white background
+        // and black text.)
+        EventStates docState = aFrame->GetContent()->OwnerDoc()->GetDocumentState();
+        bool isInActiveWindow = !docState.HasState(NS_DOCUMENT_STATE_WINDOW_INACTIVE);
+        if (!IsDisabled(aFrame, eventState) && isInActiveWindow &&
             !QueueAnimatedContentForRefresh(aFrame->GetContent(), 10)) {
           NS_WARNING("Unable to animate button!");
         }
-        DrawButton(cgContext, kThemePushButton, macRect, true,
+        DrawButton(cgContext, kThemePushButton, macRect, isInActiveWindow,
                    kThemeButtonOff, kThemeAdornmentNone, eventState, aFrame);
       } else if (IsButtonTypeMenu(aFrame)) {
         DrawDropdown(cgContext, macRect, eventState, aWidgetType, aFrame);
