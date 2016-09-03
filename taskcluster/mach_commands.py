@@ -144,6 +144,12 @@ class MachCommands(MachCommandBase):
     @CommandArgument('--level',
                      required=True,
                      help='SCM level of this repository')
+    @CommandArgument('--triggered-by',
+                     choices=['nightly', 'push'],
+                     default='push',
+                     help='Source of execution of the decision graph')
+    @CommandArgument('--target-tasks-method',
+                     help='method for selecting the target tasks to generate')
     def taskgraph_decision(self, **options):
         """Run the decision task: generate a task graph and submit to
         TaskCluster.  This is only meant to be called within decision tasks,

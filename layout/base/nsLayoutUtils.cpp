@@ -7337,7 +7337,19 @@ nsLayoutUtils::SurfaceFromElement(nsIImageLoadingContent* aElement,
   nsCOMPtr<imgIRequest> imgRequest;
   rv = aElement->GetRequest(nsIImageLoadingContent::CURRENT_REQUEST,
                             getter_AddRefs(imgRequest));
-  if (NS_FAILED(rv) || !imgRequest) {
+  if (NS_FAILED(rv)) {
+    return result;
+  }
+
+  if (!imgRequest) {
+    // There's no image request. This is either because a request for
+    // a non-empty URI failed, or the URI is the empty string.
+    nsCOMPtr<nsIURI> currentURI;
+    aElement->GetCurrentURI(getter_AddRefs(currentURI));
+    if (!currentURI) {
+      // Treat the empty URI as available instead of broken state.
+      result.mHasSize = true;
+    }
     return result;
   }
 

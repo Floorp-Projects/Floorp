@@ -1,0 +1,66 @@
+$inherits:
+  from: 'mobile_base.yml'
+  variables:
+    build_name: 'android'
+    build_type: 'opt'
+task:
+  metadata:
+      name: '[TC] Android armv7 API 15+'
+      description: 'Android armv7 API 15+'
+
+  workerType: android-api-15
+
+  routes:
+    - 'index.buildbot.branches.{{project}}.android-api-15'
+    - 'index.buildbot.revisions.{{head_rev}}.{{project}}.android-api-15'
+
+  scopes:
+    - 'docker-worker:cache:level-{{level}}-{{project}}-build-android-api-15-workspace'
+    - 'docker-worker:cache:tooltool-cache'
+    - 'docker-worker:relengapi-proxy:tooltool.download.internal'
+    - 'docker-worker:relengapi-proxy:tooltool.download.public'
+
+  payload:
+    cache:
+      level-{{level}}-{{project}}-build-android-api-15-workspace: '/home/worker/workspace'
+      tooltool-cache: '/home/worker/tooltool-cache'
+
+    features:
+      relengAPIProxy: true
+
+    env:
+      # inputs to mozharness
+      MOZHARNESS_SCRIPT: 'mozharness/scripts/fx_desktop_build.py'
+      # TODO: make these additional configuration files go away
+      MOZHARNESS_CONFIG: >
+          builds/releng_base_android_64_builds.py
+          disable_signing.py
+          platform_supports_post_upload_to_latest.py
+          taskcluster_nightly.py
+      MOZHARNESS_ACTIONS: "get-secrets build multi-l10n update"
+      MH_CUSTOM_BUILD_VARIANT_CFG: api-15
+      MH_BRANCH: {{project}}
+      MH_BUILD_POOL: taskcluster
+      TOOLTOOL_CACHE: '/home/worker/tooltool-cache'
+
+    command: ["/bin/bash", "bin/build.sh"]
+
+  extra:
+    treeherderEnv:
+      - production
+      - staging
+    treeherder:
+      machine:
+        # see https://github.com/mozilla/treeherder/blob/master/ui/js/values.js
+        platform: android-4-0-armv7-api15
+      groupSymbol: tc
+      groupName: Submitted by taskcluster
+      symbol: B
+      tier: 2
+    # Rather then enforcing particular conventions we require that all build
+    # tasks provide the "build" extra field to specify where the build and tests
+    # files are located.
+    locations:
+      build: 'public/build/target.apk'
+      mozharness: 'public/build/mozharness.zip'
+      test_packages: 'public/build/target.test_packages.json'

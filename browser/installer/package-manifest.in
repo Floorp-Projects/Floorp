@@ -141,13 +141,6 @@
 @RESPATH@/run-mozilla.sh
 #endif
 #endif
-#ifdef XP_WIN
-#ifdef _AMD64_
-@BINPATH@/@DLL_PREFIX@qipcap64@DLL_SUFFIX@
-#else
-@BINPATH@/@DLL_PREFIX@qipcap@DLL_SUFFIX@
-#endif
-#endif
 
 ; [Components]
 #ifdef MOZ_ARTIFACT_BUILDS
