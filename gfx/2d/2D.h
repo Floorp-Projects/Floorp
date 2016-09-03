@@ -672,6 +672,7 @@ public:
   typedef void (*FontDescriptorOutput)(const uint8_t *aData, uint32_t aLength, Float aFontSize, void *aBaton);
 
   virtual FontType GetType() const = 0;
+  virtual AntialiasMode GetDefaultAAMode() { return AntialiasMode::DEFAULT; }
 
   /** This allows getting a path that describes the outline of a set of glyphs.
    * A target is passed in so that the guarantee is made the returned path

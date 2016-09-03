@@ -178,19 +178,19 @@ class ContinuousSpace {
         return data_;
     }
 
-    uint32_t capacity() {
+    uint32_t capacity() const {
         return capacity_;
     }
 
-    uint32_t size() {
+    uint32_t size() const {
         return size_;
     }
 
-    bool empty() {
+    bool empty() const {
         return size_ == 0;
     }
 
-    uint32_t lastEntryId() {
+    uint32_t lastEntryId() const {
         MOZ_ASSERT(!empty());
         return size_ - 1;
     }

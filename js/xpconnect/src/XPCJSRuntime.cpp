@@ -975,7 +975,8 @@ class Watchdog
       , mHibernating(false)
       , mInitialized(false)
       , mShuttingDown(false)
-      , mSlowScriptSecondHalfCount(0)
+      , mSlowScriptSecondHalf(false)
+      , mSlowScriptHalfLastElapsedTime(0)
       , mMinScriptRunTimeSeconds(1)
     {}
     ~Watchdog() { MOZ_ASSERT(!Initialized()); }
@@ -1085,9 +1086,27 @@ class Watchdog
         return mMinScriptRunTimeSeconds;
     }
 
-    uint32_t GetSlowScriptSecondHalfCount() { return mSlowScriptSecondHalfCount; }
-    void IncrementSlowScriptSecondHalfCount() { mSlowScriptSecondHalfCount++; }
-    void ResetSlowScriptSecondHalfCount() { mSlowScriptSecondHalfCount = 0; }
+    bool IsSlowScriptSecondHalf()
+    {
+        return mSlowScriptSecondHalf;
+    }
+    void FlipSlowScriptSecondHalf()
+    {
+        mSlowScriptSecondHalf = !mSlowScriptSecondHalf;
+    }
+    PRTime GetSlowScriptHalfLastElapsedTime()
+    {
+        return mSlowScriptHalfLastElapsedTime;
+    }
+    void SetSlowScriptHalfLastElapsedTime(PRTime t)
+    {
+        mSlowScriptHalfLastElapsedTime = t;
+    }
+    void ResetSlowScript()
+    {
+        mSlowScriptSecondHalf = false;
+        mSlowScriptHalfLastElapsedTime = 0;
+    }
 
   private:
     WatchdogManager* mManager;
@@ -1100,7 +1119,8 @@ class Watchdog
     bool mShuttingDown;
 
     // See the comment in WatchdogMain.
-    uint32_t mSlowScriptSecondHalfCount;
+    bool mSlowScriptSecondHalf;
+    PRTime mSlowScriptHalfLastElapsedTime;
 
     mozilla::Atomic<int32_t> mMinScriptRunTimeSeconds;
 };
@@ -1166,7 +1186,7 @@ class WatchdogManager : public nsIObserver
         // Write state.
         mTimestamps[TimestampRuntimeStateChange] = PR_Now();
         if (mWatchdog)
-            mWatchdog->ResetSlowScriptSecondHalfCount();
+            mWatchdog->ResetSlowScript();
         mRuntimeState = active ? RUNTIME_ACTIVE : RUNTIME_INACTIVE;
 
         // The watchdog may be hibernating, waiting for the runtime to go
@@ -1298,32 +1318,32 @@ WatchdogMain(void* arg)
         // T/2 periods, the script still has the other T/2 seconds to finish.
         //
         //   + <-- TimestampRuntimeStateChange = PR_Now()
-        //   |     mSlowScriptSecondHalfCount = 0
         //   |
-        //   | T/2
+        //   | t0 >= T/2
         //   |
-        //   + <-- mSlowScriptSecondHalfCount = 1
+        //   + <-- mSlowScriptSecondHalf == false
         //   |
-        //   | T/2
+        //   | t1 >= T/2
         //   |
-        //   + <-- mSlowScriptSecondHalfCount = 2
+        //   + <-- mSlowScriptSecondHalf == true
         //   |     Invoke interrupt callback
         //   |
-        //   | T/2
+        //   | t2 >= T/2
         //   |
-        //   + <-- mSlowScriptSecondHalfCount = 3
+        //   + <-- mSlowScriptSecondHalf == false
         //   |
-        //   | T/2
+        //   | t3 >= T/2
         //   |
-        //   + <-- mSlowScriptSecondHalfCount = 4
+        //   + <-- mSlowScriptSecondHalf == true
         //         Invoke interrupt callback
         //
         PRTime usecs = self->MinScriptRunTimeSeconds() * PR_USEC_PER_SEC;
         if (manager->IsRuntimeActive()) {
-            uint32_t count = self->GetSlowScriptSecondHalfCount() + 1;
-            if (manager->TimeSinceLastRuntimeStateChange() >= usecs * count / 2) {
-                self->IncrementSlowScriptSecondHalfCount();
-                if (count % 2 == 0) {
+            PRTime elapsedTime = manager->TimeSinceLastRuntimeStateChange();
+            PRTime lastElapsedTime = self->GetSlowScriptHalfLastElapsedTime();
+            if (elapsedTime >= lastElapsedTime + usecs / 2) {
+                self->SetSlowScriptHalfLastElapsedTime(elapsedTime);
+                if (self->IsSlowScriptSecondHalf()) {
                     bool debuggerAttached = false;
                     nsCOMPtr<nsIDebug2> dbg = do_GetService("@mozilla.org/xpcom/debug;1");
                     if (dbg)
@@ -1331,6 +1351,7 @@ WatchdogMain(void* arg)
                     if (!debuggerAttached)
                         JS_RequestInterruptCallback(manager->Runtime()->Context());
                 }
+                self->FlipSlowScriptSecondHalf();
             }
         }
     }

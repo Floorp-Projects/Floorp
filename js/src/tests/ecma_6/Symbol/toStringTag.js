@@ -147,7 +147,6 @@ testDefault(function* () {}.constructor.prototype, "GeneratorFunction");
 testDefault(function* () {}().__proto__.__proto__, "Generator");
 
 // ES6 25.4.5.4 Promise.prototype [ @@toStringTag ]
-// testDefault(Promise.prototype, "Promise");
-// Promise is not yet implemented.
+testDefault(Promise.prototype, "Promise");
 
 reportCompare(true, true);
