@@ -24,9 +24,9 @@ onmessage = function(e) {
     document.body.removeChild(iframe);
   }).then(function() {
     var xhr = new XMLHttpRequest();
-
+    xhr.open("GET", blobURL);
     try {
-      xhr.open("GET", blobURL);
+      xhr.send();
       ok(false, "The URL should be done!");
     } catch(e) {
       ok(true, "The URL should be done!");
