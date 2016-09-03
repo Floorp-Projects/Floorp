@@ -13,18 +13,20 @@ namespace dom {
 struct PositionOptions;
 }
 }
+
+template<class T> class nsAutoPtr;
 %}
 
-[ptr] native NamespacedPositionOptions(mozilla::dom::PositionOptions);
+native PositionOptionsRef(nsAutoPtr<mozilla::dom::PositionOptions>&&);
 
 [builtinclass, uuid(9142ab45-0ab5-418c-9bab-338a6d271d4f)]
 interface nsIDOMGeoGeolocation : nsISupports
 {
   int32_t watchPosition(in nsIDOMGeoPositionCallback callback,
                         in nsIDOMGeoPositionErrorCallback errorCallback,
-                        in NamespacedPositionOptions options);
+                        in PositionOptionsRef options);
   void getCurrentPosition(in nsIDOMGeoPositionCallback callback,
                           in nsIDOMGeoPositionErrorCallback errorCallback,
-                          in NamespacedPositionOptions options);
+                          in PositionOptionsRef options);
   void clearWatch(in long watchId);
 };

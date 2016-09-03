@@ -37796,6 +37796,12 @@
             "url": "/editing/other/delete.html"
           }
         ],
+        "html/browsers/history/the-location-interface/location-prototype-setting.html": [
+          {
+            "path": "html/browsers/history/the-location-interface/location-prototype-setting.html",
+            "url": "/html/browsers/history/the-location-interface/location-prototype-setting.html"
+          }
+        ],
         "html/semantics/forms/the-form-element/form-submission-sandbox.html": [
           {
             "path": "html/semantics/forms/the-form-element/form-submission-sandbox.html",
@@ -37824,6 +37830,24 @@
           {
             "path": "svg/linking/scripted/href-script-element.html",
             "url": "/svg/linking/scripted/href-script-element.html"
+          }
+        ],
+        "html/semantics/scripting-1/the-script-element/script-onerror-insertion-point-1.html": [
+          {
+            "path": "html/semantics/scripting-1/the-script-element/script-onerror-insertion-point-1.html",
+            "url": "/html/semantics/scripting-1/the-script-element/script-onerror-insertion-point-1.html"
+          }
+        ],
+        "html/semantics/scripting-1/the-script-element/script-onerror-insertion-point-2.html": [
+          {
+            "path": "html/semantics/scripting-1/the-script-element/script-onerror-insertion-point-2.html",
+            "url": "/html/semantics/scripting-1/the-script-element/script-onerror-insertion-point-2.html"
+          }
+        ],
+        "html/semantics/scripting-1/the-script-element/script-onload-insertion-point.html": [
+          {
+            "path": "html/semantics/scripting-1/the-script-element/script-onload-insertion-point.html",
+            "url": "/html/semantics/scripting-1/the-script-element/script-onload-insertion-point.html"
           }
         ],
         "web-animations/interfaces/Animation/effect.html": [

@@ -7,7 +7,7 @@
 
 #include "LayerTransactionChild.h"
 #include "mozilla/gfx/Logging.h"
-#include "mozilla/layers/CompositableClient.h"  // for CompositableChild
+#include "mozilla/layers/CompositableChild.h"
 #include "mozilla/layers/PCompositableChild.h"  // for PCompositableChild
 #include "mozilla/layers/PLayerChild.h"  // for PLayerChild
 #include "mozilla/layers/PImageContainerChild.h"
@@ -60,13 +60,14 @@ PCompositableChild*
 LayerTransactionChild::AllocPCompositableChild(const TextureInfo& aInfo)
 {
   MOZ_ASSERT(!mDestroyed);
-  return CompositableClient::CreateIPDLActor();
+  return CompositableChild::CreateActor();
 }
 
 bool
 LayerTransactionChild::DeallocPCompositableChild(PCompositableChild* actor)
 {
-  return CompositableClient::DestroyIPDLActor(actor);
+  CompositableChild::DestroyActor(actor);
+  return true;
 }
 
 void

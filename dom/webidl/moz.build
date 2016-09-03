@@ -11,6 +11,7 @@ GENERATED_WEBIDL_FILES = [
 PREPROCESSED_WEBIDL_FILES = [
     'HTMLMediaElement.webidl',
     'Navigator.webidl',
+    'Node.webidl',
     'Promise.webidl',
     'PromiseDebugging.webidl',
     'Window.webidl',
@@ -18,7 +19,6 @@ PREPROCESSED_WEBIDL_FILES = [
 
 WEBIDL_FILES = [
     'AbstractWorker.webidl',
-    'AccessibleNode.webidl',
     'AddonManager.webidl',
     'AnalyserNode.webidl',
     'Animatable.webidl',
@@ -350,7 +350,6 @@ WEBIDL_FILES = [
     'NetDashboard.webidl',
     'NetworkInformation.webidl',
     'NetworkOptions.webidl',
-    'Node.webidl',
     'NodeFilter.webidl',
     'NodeIterator.webidl',
     'NodeList.webidl',
@@ -924,4 +923,9 @@ if CONFIG['MOZ_B2G']:
 if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'android':
     WEBIDL_FILES += [
         'AlarmsManager.webidl',
+    ]
+
+if CONFIG['ACCESSIBILITY']:
+    WEBIDL_FILES += [
+        'AccessibleNode.webidl',
     ]

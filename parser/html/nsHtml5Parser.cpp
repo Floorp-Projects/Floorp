@@ -553,19 +553,19 @@ bool
 nsHtml5Parser::IsInsertionPointDefined()
 {
   return !mExecutor->IsFlushing() &&
-    (!GetStreamParser() || mParserInsertedScriptsBeingEvaluated);
+    (!GetStreamParser() || mInsertionPointPushLevel);
 }
 
 void
-nsHtml5Parser::BeginEvaluatingParserInsertedScript()
+nsHtml5Parser::PushDefinedInsertionPoint()
 {
-  ++mParserInsertedScriptsBeingEvaluated;
+  ++mInsertionPointPushLevel;
 }
 
 void
-nsHtml5Parser::EndEvaluatingParserInsertedScript()
+nsHtml5Parser::PopDefinedInsertionPoint()
 {
-  --mParserInsertedScriptsBeingEvaluated;
+  --mInsertionPointPushLevel;
 }
 
 void

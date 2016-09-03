@@ -288,6 +288,15 @@ function testCatch1() {
   ).then(nextTest);
 }
 
+function testToStringTag1() {
+  is(win.Promise.prototype[Symbol.toStringTag], "Promise", "@@toStringTag was incorrect");
+  var p = win.Promise.resolve();
+  is(String(p), "[object Promise]", "String() result was incorrect");
+  is(p.toString(), "[object Promise]", "toString result was incorrect");
+  is(Object.prototype.toString.call(p), "[object Promise]", "second toString result was incorrect");
+  nextTest();
+}
+
 var tests = [
   testLoadComplete,
   testHaveXray,
@@ -309,6 +318,7 @@ var tests = [
   testThen1,
   testThen2,
   testCatch1,
+  testToStringTag1,
 ];
 
 function nextTest() {

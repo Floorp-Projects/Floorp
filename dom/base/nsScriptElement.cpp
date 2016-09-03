@@ -26,7 +26,15 @@ nsScriptElement::ScriptAvailable(nsresult aResult,
                                  int32_t aLineNo)
 {
   if (!aIsInline && NS_FAILED(aResult)) {
-    return FireErrorEvent();
+    nsCOMPtr<nsIParser> parser = do_QueryReferent(mCreatorParser);
+    if (parser) {
+      parser->PushDefinedInsertionPoint();
+    }
+    nsresult rv = FireErrorEvent();
+    if (parser) {
+      parser->PopDefinedInsertionPoint();
+    }
+    return rv;
   }
   return NS_OK;
 }

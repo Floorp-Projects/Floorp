@@ -1170,22 +1170,15 @@ BytecodeEmitter::EmitterScope::enterFunctionExtraBodyVar(BytecodeEmitter* bce, F
 
 class DynamicBindingIter : public BindingIter
 {
-    uint32_t functionEnd_;
-
   public:
     explicit DynamicBindingIter(GlobalSharedContext* sc)
-      : BindingIter(*sc->bindings),
-        functionEnd_(sc->functionBindingEnd)
-    {
-        MOZ_ASSERT(functionEnd_ >= varStart_ && functionEnd_ <= letStart_);
-    }
+      : BindingIter(*sc->bindings)
+    { }
 
     explicit DynamicBindingIter(EvalSharedContext* sc)
-      : BindingIter(*sc->bindings, /* strict = */ false),
-        functionEnd_(sc->functionBindingEnd)
+      : BindingIter(*sc->bindings, /* strict = */ false)
     {
         MOZ_ASSERT(!sc->strict());
-        MOZ_ASSERT(functionEnd_ >= varStart_ && functionEnd_ <= letStart_);
     }
 
     JSOp bindingOp() const {
@@ -1199,10 +1192,6 @@ class DynamicBindingIter : public BindingIter
           default:
             MOZ_CRASH("Bad BindingKind");
         }
-    }
-
-    bool isBodyLevelFunction() const {
-        return index_ < functionEnd_;
     }
 };
 
@@ -1243,7 +1232,7 @@ BytecodeEmitter::EmitterScope::enterGlobal(BytecodeEmitter* bce, GlobalSharedCon
 
             // Define the name in the prologue. Do not emit DEFVAR for
             // functions that we'll emit DEFFUN for.
-            if (bi.isBodyLevelFunction())
+            if (bi.isTopLevelFunction())
                 continue;
 
             if (!bce->emitAtomOp(name, bi.bindingOp()))
@@ -1303,7 +1292,7 @@ BytecodeEmitter::EmitterScope::enterEval(BytecodeEmitter* bce, EvalSharedContext
             for (DynamicBindingIter bi(evalsc); bi; bi++) {
                 MOZ_ASSERT(bi.bindingOp() == JSOP_DEFVAR);
 
-                if (bi.isBodyLevelFunction())
+                if (bi.isTopLevelFunction())
                     continue;
 
                 if (!bce->emitAtomOp(bi.name(), JSOP_DEFVAR))

@@ -102,9 +102,6 @@ if CONFIG['OS_ARCH'] == 'WINNT' and not CONFIG['GNU_CC']:
 
 DIRS += ['gtest']
 
-if CONFIG['OS_ARCH'] == 'WINNT':
-  DIRS += ['dummydll']
-
 # js needs to come after xul for now, because it is an archive and its content
 # is discarded when it comes first.
 USE_LIBS += [

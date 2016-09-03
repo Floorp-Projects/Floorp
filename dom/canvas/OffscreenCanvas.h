@@ -204,7 +204,7 @@ private:
 
   layers::LayersBackend mCompositorBackendType;
 
-  layers::CanvasClient* mCanvasClient;
+  RefPtr<layers::CanvasClient> mCanvasClient;
   RefPtr<layers::AsyncCanvasRenderer> mCanvasRenderer;
 };
 

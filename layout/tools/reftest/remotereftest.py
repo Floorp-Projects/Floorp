@@ -229,47 +229,13 @@ class RemoteReftest(RefTest):
         prefs = {}
         prefs["app.update.url.android"] = ""
         prefs["browser.firstrun.show.localepicker"] = False
-        prefs["font.size.inflation.emPerLine"] = 0
-        prefs["font.size.inflation.minTwips"] = 0
         prefs["reftest.remote"] = True
         prefs["datareporting.policy.dataSubmissionPolicyBypassAcceptance"] = True
 
-        # Point the url-classifier to the local testing server for fast failures
-        prefs["browser.safebrowsing.provider.google.gethashURL"] = "http://127.0.0.1:8888/safebrowsing-dummy/gethash"
-        prefs["browser.safebrowsing.provider.google.updateURL"] = "http://127.0.0.1:8888/safebrowsing-dummy/update"
-        prefs["browser.safebrowsing.provider.mozilla.gethashURL"] = "http://127.0.0.1:8888/safebrowsing-dummy/gethash"
-        prefs["browser.safebrowsing.provider.mozilla.updateURL"] = "http://127.0.0.1:8888/safebrowsing-dummy/update"
-        # Point update checks to the local testing server for fast failures
-        prefs["extensions.update.url"] = "http://127.0.0.1:8888/extensions-dummy/updateURL"
-        prefs["extensions.update.background.url"] = "http://127.0.0.1:8888/extensions-dummy/updateBackgroundURL"
-        prefs["extensions.blocklist.url"] = "http://127.0.0.1:8888/extensions-dummy/blocklistURL"
-        prefs["extensions.hotfix.url"] = "http://127.0.0.1:8888/extensions-dummy/hotfixURL"
-        # Turn off extension updates so they don't bother tests
-        prefs["extensions.update.enabled"] = False
-        # Make sure opening about:addons won't hit the network
-        prefs["extensions.webservice.discoverURL"] = "http://127.0.0.1:8888/extensions-dummy/discoveryURL"
-        # Make sure AddonRepository won't hit the network
-        prefs["extensions.getAddons.maxResults"] = 0
-        prefs["extensions.getAddons.get.url"] = "http://127.0.0.1:8888/extensions-dummy/repositoryGetURL"
-        prefs["extensions.getAddons.getWithPerformance.url"] = "http://127.0.0.1:8888/extensions-dummy/repositoryGetWithPerformanceURL"
-        prefs["extensions.getAddons.search.browseURL"] = "http://127.0.0.1:8888/extensions-dummy/repositoryBrowseURL"
-        prefs["extensions.getAddons.search.url"] = "http://127.0.0.1:8888/extensions-dummy/repositorySearchURL"
-        # Make sure the GMPInstallManager won't hit the network
-        prefs["media.gmp-manager.url.override"] = "http://127.0.0.1:8888/dummy-gmp-manager.xml";
         prefs["layout.css.devPixelsPerPx"] = "1.0"
         # Because Fennec is a little wacky (see bug 1156817) we need to load the
         # reftest pages at 1.0 zoom, rather than zooming to fit the CSS viewport.
         prefs["apz.allow_zooming"] = False
-
-        # Disable skia-gl: see bug 907351
-        prefs["gfx.canvas.azure.accelerated"] = False
-
-        prefs["media.autoplay.enabled"] = True
-
-        # Debug reftests have problems with large tile size on pandaboards
-        if mozinfo.info['debug'] and self._devicemanager.shellCheckOutput(['getprop', 'ro.product.name']) == 'pandaboard':
-            prefs["layers.tiles.adjust"] = False
-            prefs["layers.single-tile.enabled"] = False
 
         # Set the extra prefs.
         profile.set_preferences(prefs)
