@@ -6,6 +6,8 @@ EN_US_BINARY_URL = "http://archive.mozilla.org/pub/mobile/nightly/latest-%s-andr
 HG_SHARE_BASE_DIR = "/builds/hg-shared"
 
 config = {
+    # XXX For Try
+    "update_gecko_source_to_enUS": False,
     "branch": BRANCH,
     "log_name": "single_locale",
     "objdir": OBJDIR,
