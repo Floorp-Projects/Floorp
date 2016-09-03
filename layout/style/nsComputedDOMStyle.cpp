@@ -6053,7 +6053,7 @@ nsComputedDOMStyle::GetShapeSource(
       SetValueToFragmentOrURL(aShapeSource.GetURL(), val);
       return val.forget();
     }
-    case StyleShapeSourceType::None_: {
+    case StyleShapeSourceType::None: {
       RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
       val->SetIdent(eCSSKeyword_none);
       return val.forget();
