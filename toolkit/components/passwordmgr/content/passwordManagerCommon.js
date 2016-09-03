@@ -15,12 +15,9 @@ var passwordmanager     = null;
 
 // password-manager lists
 var signons             = [];
-var rejects             = [];
 var deletedSignons      = [];
-var deletedRejects      = [];
 
 var signonsTree;
-var rejectsTree;
 
 var showingPasswords = false;
 
@@ -34,7 +31,6 @@ function Startup() {
   kObserverService.addObserver(signonReloadDisplay, "passwordmgr-storage-changed", false);
 
   signonsTree = document.getElementById("signonsTree");
-  rejectsTree = document.getElementById("rejectsTree");
 }
 
 function Shutdown() {
@@ -58,17 +54,6 @@ var signonReloadDisplay = {
           if (document.getElementById("filter") && document.getElementById("filter").value != "") {
             _filterPasswords();
           }
-          break;
-        case "hostSavingEnabled":
-        case "hostSavingDisabled":
-          if (!rejectsTree) {
-            return;
-          }
-          rejects.length = 0;
-          if (lastRejectSortColumn == "hostname") {
-            lastRejectSortAscending = !lastRejectSortAscending; // prevents sort from being reversed
-          }
-          LoadRejects();
           break;
       }
       kObserverService.notifyObservers(null, "passwordmgr-dialog-updated", null);
