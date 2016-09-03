@@ -1022,7 +1022,7 @@ SVGSVGElement::GetEnumInfo()
                             ArrayLength(sEnumInfo));
 }
 
-nsSVGViewBox*
+nsSVGViewBox *
 SVGSVGElement::GetViewBox()
 {
   return &mViewBox;
