@@ -73,11 +73,11 @@ public:
     , mReader(mBuffer.Elements(), mBuffer.Length())
   {
   }
-  AutoByteReader* operator->() { return &mReader; }
+  ByteReader* operator->() { return &mReader; }
 
 private:
   nsTArray<uint8_t> mBuffer;
-  AutoByteReader mReader;
+  ByteReader mReader;
 };
 }
 

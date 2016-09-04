@@ -10,7 +10,7 @@
 #include "OggCodecState.h"
 #include "VideoUtils.h"
 
-using mp4_demuxer::AutoByteReader;
+using mp4_demuxer::ByteReader;
 
 namespace mozilla
 {
@@ -62,7 +62,7 @@ FlacFrameParser::DecodeHeaderBlock(const uint8_t* aPacket, size_t aLength)
     // Not a header block.
     return false;
   }
-  AutoByteReader br(aPacket, aLength);
+  ByteReader br(aPacket, aLength);
 
   mPacketCount++;
 
@@ -210,11 +210,11 @@ FlacFrameParser::IsHeaderBlock(const uint8_t* aPacket, size_t aLength) const
   }
   if (aPacket[0] == 0x7f) {
     // Ogg packet
-    AutoByteReader br(aPacket + 1, aLength - 1);
+    ByteReader br(aPacket + 1, aLength - 1);
     const uint8_t* signature = br.Read(4);
     return signature && !memcmp(signature, "FLAC", 4);
   }
-  AutoByteReader br(aPacket, aLength - 1);
+  ByteReader br(aPacket, aLength - 1);
   const uint8_t* signature = br.Read(4);
   if (signature && !memcmp(signature, "fLaC", 4)) {
     // Flac start header, must have STREAMINFO as first metadata block;

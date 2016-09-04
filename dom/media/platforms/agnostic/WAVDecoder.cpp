@@ -118,8 +118,6 @@ WaveDataDecoder::DoDecode(MediaRawData* aSample)
     }
   }
 
-  aReader.DiscardRemaining();
-
   int64_t duration = frames / mInfo.mRate;
 
   mCallback->Output(new AudioData(aOffset,

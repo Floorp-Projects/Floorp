@@ -99,7 +99,6 @@ AnnexB::ConvertExtraDataToAnnexB(const mozilla::MediaByteBuffer* aExtraData)
 
     // MP4Box adds extra bytes that we ignore. I don't know what they do.
   }
-  reader.DiscardRemaining();
 
   return annexB.forget();
 }
@@ -330,7 +329,6 @@ AnnexB::HasSPS(const mozilla::MediaByteBuffer* aExtraData)
     return false;
   }
   uint8_t numSps = reader.ReadU8() & 0x1f;
-  reader.DiscardRemaining();
 
   return numSps > 0;
 }

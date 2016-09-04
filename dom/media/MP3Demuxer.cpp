@@ -493,7 +493,6 @@ MP3TrackDemuxer::FindNextFrame() {
     // If we've found neither an MPEG frame header nor an ID3v2 tag,
     // the reader shouldn't have any bytes remaining.
     MOZ_ASSERT(foundFrame || bytesToSkip || !reader.Remaining());
-    reader.DiscardRemaining();
 
     if (foundFrame && mParser.FirstFrame().Length() &&
         !VerifyFrameConsistency(mParser.FirstFrame(), mParser.CurrentFrame())) {
@@ -584,7 +583,6 @@ MP3TrackDemuxer::GetNextFrame(const MediaByteRange& aRange) {
     // First frame parsed, let's read VBR info if available.
     ByteReader reader(frame->Data(), frame->Size());
     mParser.ParseVBRHeader(&reader);
-    reader.DiscardRemaining();
     mFirstFrameOffset = frame->mOffset;
   }
 

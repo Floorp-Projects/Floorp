@@ -399,7 +399,6 @@ private:
         }
         reader.Read(size - 8);
       }
-      reader.DiscardRemaining();
     }
 
     bool StartWithInitSegment()
