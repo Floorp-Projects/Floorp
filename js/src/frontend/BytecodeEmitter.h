@@ -501,6 +501,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter
     MOZ_MUST_USE bool emitJumpTargetAndPatch(JumpList jump);
 
     MOZ_MUST_USE bool emitCall(JSOp op, uint16_t argc, ParseNode* pn = nullptr);
+    MOZ_MUST_USE bool emitCallIncDec(ParseNode* incDec);
 
     MOZ_MUST_USE bool emitLoopHead(ParseNode* nextpn, JumpTarget* top);
     MOZ_MUST_USE bool emitLoopEntry(ParseNode* nextpn, JumpList entryJump);
