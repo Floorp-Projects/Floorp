@@ -5,7 +5,7 @@
 #include "ActiveLayerTracker.h"
 
 #include "mozilla/ArrayUtils.h"
-#include "mozilla/dom/KeyframeEffect.h"
+#include "mozilla/dom/KeyframeEffectReadOnly.h"
 #include "mozilla/gfx/Matrix.h"
 #include "mozilla/EffectSet.h"
 #include "mozilla/PodOperations.h"

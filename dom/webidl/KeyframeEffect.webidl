@@ -24,8 +24,7 @@ dictionary KeyframeEffectOptions : AnimationEffectTimingProperties {
 // Bug 1241783: For the constructor we use (Element or CSSPseudoElement)? for
 // the first argument since we cannot convert a mixin into a union type
 // automatically.
-[HeaderFile="mozilla/dom/KeyframeEffect.h",
- Func="nsDocument::IsWebAnimationsEnabled",
+[Func="nsDocument::IsWebAnimationsEnabled",
  Constructor((Element or CSSPseudoElement)? target,
              object? keyframes,
              optional (unrestricted double or KeyframeEffectOptions) options)]
