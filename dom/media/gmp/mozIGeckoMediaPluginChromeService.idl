@@ -30,9 +30,11 @@ interface mozIGeckoMediaPluginChromeService : nsISupports
                                       [optional] in bool defer);
 
   /**
-   * Clears storage data associated with the site.
+   * Clears storage data associated with the site and the originAttributes
+   * pattern in JSON format.
    */
-  void forgetThisSite(in AString site);
+  void forgetThisSite(in AString site,
+                      in DOMString aPattern);
 
   /**
    * Returns true if the given node id is allowed to store things

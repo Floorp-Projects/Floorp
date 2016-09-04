@@ -132,13 +132,21 @@ interface nsICookieManager2 : nsICookieManager
    * Returns an enumerator of all cookies whose origin attributes matches aPattern
    *
    * @param aPattern origin attribute pattern in JSON format
+   *
+   * @param aHost
+   *        the host string to search for, e.g. "google.com". this should consist
+   *        of only the host portion of a URI. see @add for a description of
+   *        acceptable host strings. This attribute is optional. It will search
+   *        all hosts if this attribute is not given.
    */
-  nsISimpleEnumerator getCookiesWithOriginAttributes(in DOMString aPattern);
+  nsISimpleEnumerator getCookiesWithOriginAttributes(in DOMString aPattern,
+                                                     [optional] in AUTF8String aHost);
 
   /**
    * Remove all the cookies whose origin attributes matches aPattern
    *
    * @param aPattern origin attribute pattern in JSON format
    */
-  void removeCookiesWithOriginAttributes(in DOMString aPattern);
+  void removeCookiesWithOriginAttributes(in DOMString aPattern,
+                                         [optional] in AUTF8String aHost);
 };
