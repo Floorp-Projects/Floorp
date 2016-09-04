@@ -561,11 +561,21 @@ QuotaManagerService::Clear(nsIQuotaRequest** _retval)
 NS_IMETHODIMP
 QuotaManagerService::ClearStoragesForPrincipal(nsIPrincipal* aPrincipal,
                                                const nsACString& aPersistenceType,
+                                               bool aClearAll,
                                                nsIQuotaRequest** _retval)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aPrincipal);
   MOZ_ASSERT(nsContentUtils::IsCallerChrome());
+
+  nsCString suffix;
+  BasePrincipal::Cast(aPrincipal)->OriginAttributesRef().CreateSuffix(suffix);
+
+  if (NS_WARN_IF(aClearAll && !suffix.IsEmpty())) {
+    // The originAttributes should be default originAttributes when the
+    // aClearAll flag is set.
+    return NS_ERROR_INVALID_ARG;
+  }
 
   RefPtr<Request> request = new Request(aPrincipal);
 
@@ -595,6 +605,8 @@ QuotaManagerService::ClearStoragesForPrincipal(nsIPrincipal* aPrincipal,
     params.persistenceType() = persistenceType.Value();
     params.persistenceTypeIsExplicit() = true;
   }
+
+  params.clearAll() = aClearAll;
 
   nsAutoPtr<PendingRequestInfo> info(new RequestInfo(request, params));
 

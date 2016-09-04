@@ -772,7 +772,8 @@ private:
   // cleared.
   nsresult GetFile(const nsACString &aName, nsIFile **_retval);
   nsresult RemoveFile(const nsACString &aName);
-  void     RemoveIndexFromDisk();
+  void     RemoveAllIndexFiles();
+  void     RemoveJournalAndTempFile();
   // Writes journal to the disk and clears dirty flag in index header.
   nsresult WriteLogToDisk();
 

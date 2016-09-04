@@ -62,6 +62,8 @@ public:
   bool IsShuttingDown();
 
   already_AddRefed<GMPStorage> GetMemoryStorageFor(const nsACString& aNodeId);
+  nsresult ForgetThisSiteNative(const nsAString& aSite,
+                                const mozilla::OriginAttributesPattern& aPattern);
 
 private:
   friend class GMPServiceParent;
@@ -103,7 +105,8 @@ private:
   void ClearNodeIdAndPlugin(DirectoryFilter& aFilter);
   void ClearNodeIdAndPlugin(nsIFile* aPluginStorageDir,
                             DirectoryFilter& aFilter);
-  void ForgetThisSiteOnGMPThread(const nsACString& aOrigin);
+  void ForgetThisSiteOnGMPThread(const nsACString& aOrigin,
+                                 const mozilla::OriginAttributesPattern& aPattern);
   void ClearRecentHistoryOnGMPThread(PRTime aSince);
 
   already_AddRefed<GMPParent> GetById(uint32_t aPluginId);
@@ -217,7 +220,9 @@ private:
 };
 
 nsresult ReadSalt(nsIFile* aPath, nsACString& aOutData);
-bool MatchOrigin(nsIFile* aPath, const nsACString& aSite);
+bool MatchOrigin(nsIFile* aPath,
+                 const nsACString& aSite,
+                 const mozilla::OriginAttributesPattern& aPattern);
 
 class GMPServiceParent final : public PGMPServiceParent
 {

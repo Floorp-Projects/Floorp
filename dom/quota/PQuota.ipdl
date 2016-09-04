@@ -33,6 +33,7 @@ struct ClearOriginParams
   PrincipalInfo principalInfo;
   PersistenceType persistenceType;
   bool persistenceTypeIsExplicit;
+  bool clearAll;
 };
 
 struct ClearOriginsParams

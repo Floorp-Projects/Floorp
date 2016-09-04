@@ -12,7 +12,6 @@
 
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/BasePrincipal.h"
-#include "mozilla/Preferences.h"
 
 using mozilla::OriginAttributes;
 
@@ -57,8 +56,6 @@ class nsCookie : public nsICookie2
      , mExpiry(aExpiry)
      , mLastAccessed(aLastAccessed)
      , mCreationTime(aCreationTime)
-       // Defaults to 60s
-     , mCookieStaleThreshold(mozilla::Preferences::GetInt("network.cookie.staleThreshold", 60))
      , mIsSession(aIsSession)
      , mIsSecure(aIsSecure)
      , mIsHttpOnly(aIsHttpOnly)
@@ -130,7 +127,6 @@ class nsCookie : public nsICookie2
     int64_t      mExpiry;
     int64_t      mLastAccessed;
     int64_t      mCreationTime;
-    int64_t      mCookieStaleThreshold;
     bool mIsSession;
     bool mIsSecure;
     bool mIsHttpOnly;
