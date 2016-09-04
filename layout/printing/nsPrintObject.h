@@ -36,6 +36,9 @@ public:
                 bool aPrintPreview);
 
   bool IsPrintable()  { return !mDontPrint; }
+
+  bool MayHavePluginFrames();
+
   void   DestroyPresentation();
 
   // Data Members

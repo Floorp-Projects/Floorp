@@ -21301,17 +21301,17 @@ function test_2d_imageSmoothing() {
 
   var cx682 = c682.getContext("2d");
 
-  ok(cx682.mozImageSmoothingEnabled == true, "initial mozImageSmoothingEnabled is true");
+  ok(cx682.imageSmoothingEnabled == true, "initial imageSmoothingEnabled is true");
 
-  // check that mozImageSmoothingEnabled is part of the context
+  // check that imageSmoothingEnabled is part of the context
   cx682.save();
-  cx682.mozImageSmoothingEnabled = false;
-  ok(cx682.mozImageSmoothingEnabled == false, "mozImageSmoothingEnabled is false after setting");
+  cx682.imageSmoothingEnabled = false;
+  ok(cx682.imageSmoothingEnabled == false, "imageSmoothingEnabled is false after setting");
   cx682.restore();
-  ok(cx682.mozImageSmoothingEnabled == true, "mozImageSmoothingEnabled is true after restore");
+  ok(cx682.imageSmoothingEnabled == true, "imageSmoothingEnabled is true after restore");
 
   // check that false works
-  cx682.mozImageSmoothingEnabled = false;
+  cx682.imageSmoothingEnabled = false;
 
   cx682.scale(10,10);
   cx682.drawImage(c683, 0, 0);

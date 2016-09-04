@@ -382,6 +382,13 @@ public:
    */
   static uint16_t GetMouseInputSource();
 
+  /**
+   * Windows also fires mouse window messages for pens and touches, so we should
+   * retrieve their pointer ID on receiving mouse events as well. Please refer to
+   * https://msdn.microsoft.com/en-us/library/windows/desktop/ms703320(v=vs.85).aspx
+   */
+  static uint16_t GetMousePointerID();
+
   static bool GetIsMouseFromTouch(EventMessage aEventType);
 
   /**

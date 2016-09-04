@@ -58,6 +58,10 @@ public:
   void SetTarget(HWND aTargetWindow);
   void ClearTarget();
 
+  uint16_t GetPointerId(); // 0 shows that there is no existing pen.
+  void SetPointerId(uint16_t aPointerId);
+  void ClearPointerId();
+
   static StaticAutoPtr<InkCollector> sInkCollector;
 
 protected:
@@ -75,6 +79,20 @@ private:
   DWORD                       mCookie           = 0;
   bool                        mComInitialized   = false;
   bool                        mEnabled          = false;
+
+  // This value holds the previous pointerId of the pen, and is used by the
+  // nsWindow when processing a MOZ_WM_PEN_LEAVES_HOVER_OF_DIGITIZER which
+  // indicates that a pen leaves the digitizer.
+
+  // TODO: If we move our implementation to window pointer input messages, then
+  // we no longer need this value, since the pointerId can be retrieved from the
+  // window message, please refer to
+  // https://msdn.microsoft.com/en-us/library/windows/desktop/hh454916(v=vs.85).aspx
+
+  // NOTE: The pointerId of a pen shouldn't be 0 on a Windows platform, since 0
+  // is reserved of the mouse, please refer to
+  // https://msdn.microsoft.com/en-us/library/windows/desktop/ms703320(v=vs.85).aspx
+  uint16_t mPointerId = 0;
 };
 
 #endif // InkCollector_h__
