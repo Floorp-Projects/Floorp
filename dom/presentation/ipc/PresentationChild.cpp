@@ -163,12 +163,17 @@ PresentationRequestChild::Recv__delete__(const nsresult& aResult)
   }
 
   if (mCallback) {
-    if (NS_SUCCEEDED(aResult)) {
-      NS_WARN_IF(NS_FAILED(mCallback->NotifySuccess()));
-    } else {
+    if (NS_FAILED(aResult)) {
       NS_WARN_IF(NS_FAILED(mCallback->NotifyError(aResult)));
     }
   }
 
+  return true;
+}
+
+bool
+PresentationRequestChild::RecvNotifyRequestUrlSelected(const nsString& aUrl)
+{
+  NS_WARN_IF(NS_FAILED(mCallback->NotifySuccess(aUrl)));
   return true;
 }

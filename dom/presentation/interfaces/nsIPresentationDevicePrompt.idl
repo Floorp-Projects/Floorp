@@ -4,6 +4,7 @@
 
 #include "nsISupports.idl"
 
+interface nsIArray;
 interface nsIPresentationDevice;
 
 %{C++
@@ -19,8 +20,8 @@ interface nsIPresentationDeviceRequest : nsISupports
   // The origin which initiate the request.
   readonly attribute DOMString origin;
 
-  // The URL to be opened after selection.
-  readonly attribute DOMString requestURL;
+  // The array of candidate URLs.
+  readonly attribute nsIArray requestURLs;
 
   /*
    * Callback after selecting a device
