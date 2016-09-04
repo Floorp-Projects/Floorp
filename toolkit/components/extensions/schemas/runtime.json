@@ -90,6 +90,29 @@
         }
       },
       {
+        "id": "BrowserInfo",
+        "type": "object",
+        "description": "An object containing information about the current browser.",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The name of the browser, for example 'Firefox'."
+          },
+          "vendor": {
+            "type": "string",
+            "description": "The name of the browser vendor, for example 'Mozilla'."
+          },
+          "version": {
+            "type": "string",
+            "description": "The browser's version, for example '42.0.0' or '0.8.1pre'."
+          },
+          "buildID": {
+            "type": "string",
+            "description": "The browser's build ID/date, for example '20160101'."
+          }
+        }
+      },
+      {
         "id": "RequestUpdateCheckStatus",
         "type": "string",
         "enum": ["throttled", "no_update", "update_available"],
@@ -362,6 +385,25 @@
                 "name": "response",
                 "type": "any",
                 "description": "The response message sent by the native messaging host. If an error occurs while connecting to the native messaging host, the callback will be called with no arguments and $(ref:runtime.lastError) will be set to the error message."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "getBrowserInfo",
+        "type": "function",
+        "description": "Returns information about the current browser.",
+        "async": "callback",
+        "parameters": [
+          {
+            "type": "function",
+            "name": "callback",
+            "description": "Called with results",
+            "parameters": [
+              {
+                "name": "browserInfo",
+                "$ref": "BrowserInfo"
               }
             ]
           }
