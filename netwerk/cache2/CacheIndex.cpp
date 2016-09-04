@@ -441,10 +441,10 @@ CacheIndex::Shutdown()
     case READY:
       if (index->mIndexOnDiskIsValid && !index->mDontMarkIndexClean) {
         if (!sanitize && NS_FAILED(index->WriteLogToDisk())) {
-          index->RemoveIndexFromDisk();
+          index->RemoveJournalAndTempFile();
         }
       } else {
-        index->RemoveIndexFromDisk();
+        index->RemoveJournalAndTempFile();
       }
       break;
     case READING:
@@ -459,7 +459,7 @@ CacheIndex::Shutdown()
   }
 
   if (sanitize) {
-    index->RemoveIndexFromDisk();
+    index->RemoveAllIndexFiles();
   }
 
   return NS_OK;
@@ -1839,11 +1839,17 @@ CacheIndex::RemoveFile(const nsACString &aName)
 }
 
 void
-CacheIndex::RemoveIndexFromDisk()
+CacheIndex::RemoveAllIndexFiles()
 {
-  LOG(("CacheIndex::RemoveIndexFromDisk()"));
-
+  LOG(("CacheIndex::RemoveAllIndexFiles()"));
   RemoveFile(NS_LITERAL_CSTRING(INDEX_NAME));
+  RemoveJournalAndTempFile();
+}
+
+void
+CacheIndex::RemoveJournalAndTempFile()
+{
+  LOG(("CacheIndex::RemoveJournalAndTempFile()"));
   RemoveFile(NS_LITERAL_CSTRING(TEMP_INDEX_NAME));
   RemoveFile(NS_LITERAL_CSTRING(JOURNAL_NAME));
 }
@@ -1852,8 +1858,7 @@ class WriteLogHelper
 {
 public:
   explicit WriteLogHelper(PRFileDesc *aFD)
-    : mStatus(NS_OK)
-    , mFD(aFD)
+    : mFD(aFD)
     , mBufSize(kMaxBufSize)
     , mBufPos(0)
   {
@@ -1872,11 +1877,10 @@ private:
 
   nsresult FlushBuffer();
 
-  nsresult            mStatus;
-  PRFileDesc         *mFD;
-  char               *mBuf;
-  uint32_t            mBufSize;
-  int32_t             mBufPos;
+  PRFileDesc       *mFD;
+  char             *mBuf;
+  uint32_t          mBufSize;
+  int32_t           mBufPos;
   RefPtr<CacheHash> mHash;
 };
 
@@ -1885,18 +1889,11 @@ WriteLogHelper::AddEntry(CacheIndexEntry *aEntry)
 {
   nsresult rv;
 
-  if (NS_FAILED(mStatus)) {
-    return mStatus;
-  }
-
   if (mBufPos + sizeof(CacheIndexRecord) > mBufSize) {
     mHash->Update(mBuf, mBufPos);
 
     rv = FlushBuffer();
-    if (NS_FAILED(rv)) {
-      mStatus = rv;
-      return rv;
-    }
+    NS_ENSURE_SUCCESS(rv, rv);
     MOZ_ASSERT(mBufPos + sizeof(CacheIndexRecord) <= mBufSize);
   }
 
@@ -1911,17 +1908,10 @@ WriteLogHelper::Finish()
 {
   nsresult rv;
 
-  if (NS_FAILED(mStatus)) {
-    return mStatus;
-  }
-
   mHash->Update(mBuf, mBufPos);
   if (mBufPos + sizeof(CacheHash::Hash32_t) > mBufSize) {
     rv = FlushBuffer();
-    if (NS_FAILED(rv)) {
-      mStatus = rv;
-      return rv;
-    }
+    NS_ENSURE_SUCCESS(rv, rv);
     MOZ_ASSERT(mBufPos + sizeof(CacheHash::Hash32_t) <= mBufSize);
   }
 
@@ -1931,14 +1921,16 @@ WriteLogHelper::Finish()
   rv = FlushBuffer();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mStatus = NS_ERROR_UNEXPECTED; // Don't allow any other operation
   return NS_OK;
 }
 
 nsresult
 WriteLogHelper::FlushBuffer()
 {
-  MOZ_ASSERT(NS_SUCCEEDED(mStatus));
+  if (CacheObserver::IsPastShutdownIOLag()) {
+    LOG(("WriteLogHelper::FlushBuffer() - Interrupting writing journal."));
+    return NS_ERROR_FAILURE;
+  }
 
   int32_t bytesWritten = PR_Write(mFD, mBuf, mBufPos);
 
@@ -1959,6 +1951,11 @@ CacheIndex::WriteLogToDisk()
 
   MOZ_ASSERT(mPendingUpdates.Count() == 0);
   MOZ_ASSERT(mState == SHUTDOWN);
+
+  if (CacheObserver::IsPastShutdownIOLag()) {
+    LOG(("CacheIndex::WriteLogToDisk() - Skipping writing journal."));
+    return NS_ERROR_FAILURE;
+  }
 
   RemoveFile(NS_LITERAL_CSTRING(TEMP_INDEX_NAME));
 
@@ -1981,9 +1978,11 @@ CacheIndex::WriteLogToDisk()
   for (auto iter = mIndex.Iter(); !iter.Done(); iter.Next()) {
     CacheIndexEntry* entry = iter.Get();
     if (entry->IsRemoved() || entry->IsDirty()) {
-      wlh.AddEntry(entry);
+      rv = wlh.AddEntry(entry);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
     }
-    iter.Remove();
   }
 
   rv = wlh.Finish();
