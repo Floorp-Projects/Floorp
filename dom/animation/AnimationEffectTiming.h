@@ -14,6 +14,8 @@
 namespace mozilla {
 namespace dom {
 
+class KeyframeEffect;
+
 class AnimationEffectTiming : public AnimationEffectTimingReadOnly
 {
 public:

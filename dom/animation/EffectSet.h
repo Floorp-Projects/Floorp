@@ -12,6 +12,7 @@
 #include "mozilla/EffectCompositor.h"
 #include "mozilla/EnumeratedArray.h"
 #include "mozilla/TimeStamp.h"
+#include "mozilla/dom/KeyframeEffectReadOnly.h"
 #include "nsHashKeys.h" // For nsPtrHashKey
 #include "nsTHashtable.h" // For nsTHashtable
 
@@ -21,7 +22,6 @@ namespace mozilla {
 
 namespace dom {
 class Element;
-class KeyframeEffectReadOnly;
 } // namespace dom
 
 enum class CSSPseudoElementType : uint8_t;
