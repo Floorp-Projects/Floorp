@@ -7,8 +7,11 @@
 #include "mozilla/dom/KeyframeEffect.h"
 
 #include "mozilla/dom/AnimatableBinding.h"
+#include "mozilla/dom/AnimationEffectTiming.h"
+#include "mozilla/dom/CSSPseudoElement.h"
 #include "mozilla/dom/KeyframeEffectBinding.h"
 #include "mozilla/AnimationUtils.h"
+#include "mozilla/EffectSet.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/LookAndFeel.h" // For LookAndFeel::GetInt
 #include "mozilla/KeyframeUtils.h"
@@ -169,7 +172,7 @@ KeyframeEffectReadOnly::SetKeyframes(JSContext* aContext,
 
 void
 KeyframeEffectReadOnly::SetKeyframes(nsTArray<Keyframe>&& aKeyframes,
-                                  nsStyleContext* aStyleContext)
+                                     nsStyleContext* aStyleContext)
 {
   if (KeyframesEqualIgnoringComputedOffsets(aKeyframes, mKeyframes)) {
     return;
