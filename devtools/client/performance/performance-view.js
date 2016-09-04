@@ -116,10 +116,6 @@ var PerformanceView = {
    * Sets up the view with event binding and main subviews.
    */
   initialize: Task.async(function* () {
-    this._recordButton = $("#main-record-button");
-    this._importButton = $("#import-button");
-    this._clearButton = $("#clear-button");
-
     this._onRecordButtonClick = this._onRecordButtonClick.bind(this);
     this._onImportButtonClick = this._onImportButtonClick.bind(this);
     this._onClearButtonClick = this._onClearButtonClick.bind(this);
@@ -127,12 +123,6 @@ var PerformanceView = {
     this._onProfilerStatusUpdated = this._onProfilerStatusUpdated.bind(this);
     this._onRecordingStateChange = this._onRecordingStateChange.bind(this);
     this._onNewRecordingFailed = this._onNewRecordingFailed.bind(this);
-
-    for (let button of $$(".record-button")) {
-      button.addEventListener("click", this._onRecordButtonClick);
-    }
-    this._importButton.addEventListener("click", this._onImportButtonClick);
-    this._clearButton.addEventListener("click", this._onClearButtonClick);
 
     // Bind to controller events to unlock the record button
     PerformanceController.on(EVENTS.RECORDING_SELECTED, this._onRecordingSelected);
@@ -155,18 +145,39 @@ var PerformanceView = {
     yield RecordingsView.initialize();
     yield OverviewView.initialize();
     yield DetailsView.initialize();
+
+    // DE-XUL: Begin migrating the toolbar to React. Temporarily hold state here.
+    this._recordingControlsState = {
+      onRecordButtonClick: this._onRecordButtonClick,
+      onImportButtonClick: this._onImportButtonClick,
+      onClearButtonClick: this._onClearButtonClick,
+      isRecording: false,
+      isDisabled: false
+    };
+    // Mount to an HTML element.
+    const {createHtmlMount} = PerformanceUtils;
+    this._recordingControlsMount = createHtmlMount($("#recording-controls-mount"));
+    this._recordingButtonsMounts = Array.from($$(".recording-button-mount"))
+                                        .map(createHtmlMount);
+
+    this._renderRecordingControls();
   }),
+
+  /**
+   * DE-XUL: Render the recording controls and buttons using React.
+   */
+  _renderRecordingControls: function () {
+    ReactDOM.render(RecordingControls(this._recordingControlsState),
+                    this._recordingControlsMount);
+    for (let button of this._recordingButtonsMounts) {
+      ReactDOM.render(RecordingButton(this._recordingControlsState), button);
+    }
+  },
 
   /**
    * Unbinds events and destroys subviews.
    */
   destroy: Task.async(function* () {
-    for (let button of $$(".record-button")) {
-      button.removeEventListener("click", this._onRecordButtonClick);
-    }
-    this._importButton.removeEventListener("click", this._onImportButtonClick);
-    this._clearButton.removeEventListener("click", this._onClearButtonClick);
-
     PerformanceController.off(EVENTS.RECORDING_SELECTED, this._onRecordingSelected);
     PerformanceController.off(EVENTS.RECORDING_PROFILER_STATUS_UPDATE,
                               this._onProfilerStatusUpdated);
@@ -274,13 +285,8 @@ var PerformanceView = {
    * @param {boolean} lock
    */
   _lockRecordButtons: function (lock) {
-    for (let button of $$(".record-button")) {
-      if (lock) {
-        button.setAttribute("locked", "true");
-      } else {
-        button.removeAttribute("locked");
-      }
-    }
+    this._recordingControlsState.isLocked = lock;
+    this._renderRecordingControls();
   },
 
   /*
@@ -290,13 +296,8 @@ var PerformanceView = {
    * @param {boolean} activate
    */
   _toggleRecordButtons: function (activate) {
-    for (let button of $$(".record-button")) {
-      if (activate) {
-        button.setAttribute("checked", "true");
-      } else {
-        button.removeAttribute("checked");
-      }
-    }
+    this._recordingControlsState.isRecording = !!activate;
+    this._renderRecordingControls();
   },
 
   /**
@@ -339,7 +340,7 @@ var PerformanceView = {
    * Handler for clicking the record button.
    */
   _onRecordButtonClick: function (e) {
-    if (this._recordButton.hasAttribute("checked")) {
+    if (this._recordingControlsState.isRecording) {
       this.emit(EVENTS.UI_STOP_RECORDING);
     } else {
       this._lockRecordButtons(true);

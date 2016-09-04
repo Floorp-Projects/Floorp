@@ -10,8 +10,11 @@
 #include "nsApplicationChooser.h"
 #include "WidgetUtils.h"
 #include "nsIMIMEInfo.h"
+#include "nsIWidget.h"
 #include "nsCExternalHandlerService.h"
+#include "nsComponentManagerUtils.h"
 #include "nsGtkUtils.h"
+#include "nsPIDOMWindow.h"
 
 using namespace mozilla;
 

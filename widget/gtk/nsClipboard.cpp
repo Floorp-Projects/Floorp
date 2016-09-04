@@ -32,6 +32,7 @@
 #include <sys/types.h>
 #include <errno.h>
 #include <unistd.h>
+#include "X11UndefineNone.h"
 
 #include "mozilla/dom/EncodingUtils.h"
 #include "nsIUnicodeDecoder.h"
