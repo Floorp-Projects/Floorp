@@ -284,9 +284,7 @@ NetAddrElement::~NetAddrElement()
 
 AddrInfo::AddrInfo(const char *host, const PRAddrInfo *prAddrInfo,
                    bool disableIPv4, bool filterNameCollision, const char *cname)
-  : mHostName(nullptr)
-  , mCanonicalName(nullptr)
-  , ttl(NO_TTL_DATA)
+  : ttl(NO_TTL_DATA)
 {
   MOZ_ASSERT(prAddrInfo, "Cannot construct AddrInfo with a null prAddrInfo pointer!");
   const uint32_t nameCollisionAddr = htonl(0x7f003535); // 127.0.53.53
@@ -307,9 +305,7 @@ AddrInfo::AddrInfo(const char *host, const PRAddrInfo *prAddrInfo,
 }
 
 AddrInfo::AddrInfo(const char *host, const char *cname)
-  : mHostName(nullptr)
-  , mCanonicalName(nullptr)
-  , ttl(NO_TTL_DATA)
+  : ttl(NO_TTL_DATA)
 {
   Init(host, cname);
 }
@@ -320,8 +316,6 @@ AddrInfo::~AddrInfo()
   while ((addrElement = mAddresses.popLast())) {
     delete addrElement;
   }
-  free(mHostName);
-  free(mCanonicalName);
 }
 
 void
@@ -331,15 +325,13 @@ AddrInfo::Init(const char *host, const char *cname)
 
   ttl = NO_TTL_DATA;
   size_t hostlen = strlen(host);
-  mHostName = static_cast<char*>(moz_xmalloc(hostlen + 1));
-  memcpy(mHostName, host, hostlen + 1);
+  mHostName = mozilla::MakeUnique<char[]>(hostlen + 1);
+  memcpy(mHostName.get(), host, hostlen + 1);
+
   if (cname) {
     size_t cnameLen = strlen(cname);
-    mCanonicalName = static_cast<char*>(moz_xmalloc(cnameLen + 1));
-    memcpy(mCanonicalName, cname, cnameLen + 1);
-  }
-  else {
-    mCanonicalName = nullptr;
+    mCanonicalName = mozilla::MakeUnique<char[]>(cnameLen + 1);
+    memcpy(mCanonicalName.get(), cname, cnameLen + 1);
   }
 }
 
@@ -355,8 +347,8 @@ size_t
 AddrInfo::SizeOfIncludingThis(MallocSizeOf mallocSizeOf) const
 {
   size_t n = mallocSizeOf(this);
-  n += mallocSizeOf(mHostName);
-  n += mallocSizeOf(mCanonicalName);
+  n += mallocSizeOf(mHostName.get());
+  n += mallocSizeOf(mCanonicalName.get());
   n += mAddresses.sizeOfExcludingThis(mallocSizeOf);
   return n;
 }
