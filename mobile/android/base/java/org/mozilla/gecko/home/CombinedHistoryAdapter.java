@@ -5,6 +5,8 @@
 package org.mozilla.gecko.home;
 
 import android.content.res.Resources;
+import android.support.annotation.UiThread;
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 
 import android.database.Cursor;
@@ -15,10 +17,10 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.db.BrowserContract;
+import org.mozilla.gecko.util.ThreadUtils;
 
 public class CombinedHistoryAdapter extends RecyclerView.Adapter<CombinedHistoryItem> implements CombinedHistoryRecyclerView.AdapterContextMenuBuilder {
     private static final int RECENT_TABS_SMARTFOLDER_INDEX = 0;
-    private static final int SYNCED_DEVICES_SMARTFOLDER_INDEX = 1;
 
     // Array for the time ranges in milliseconds covered by each section.
     static final HistorySectionsHelper.SectionDateRange[] sectionDateRangeArray = new HistorySectionsHelper.SectionDateRange[SectionHeader.values().length];
@@ -43,6 +45,8 @@ public class CombinedHistoryAdapter extends RecyclerView.Adapter<CombinedHistory
     private RecentTabsUpdateHandler recentTabsUpdateHandler;
     private int recentTabsCount = 0;
 
+    private LinearLayoutManager linearLayoutManager; // Only used on the UI thread, so no need to be volatile.
+
     // We use a sparse array to store each section header's position in the panel [more cheaply than a HashMap].
     private final SparseArray<SectionHeader> sectionHeaders;
 
@@ -51,6 +55,11 @@ public class CombinedHistoryAdapter extends RecyclerView.Adapter<CombinedHistory
         sectionHeaders = new SparseArray<>();
         HistorySectionsHelper.updateRecentSectionOffset(resources, sectionDateRangeArray);
         this.setHasStableIds(true);
+    }
+
+    @UiThread
+    public void setLinearLayoutManager(LinearLayoutManager linearLayoutManager) {
+        this.linearLayoutManager = linearLayoutManager;
     }
 
     public void setHistory(Cursor history) {
@@ -69,7 +78,7 @@ public class CombinedHistoryAdapter extends RecyclerView.Adapter<CombinedHistory
                 @Override
                 public void onDeviceCountUpdated(int count) {
                     deviceCount = count;
-                    notifyItemChanged(SYNCED_DEVICES_SMARTFOLDER_INDEX);
+                    notifyItemChanged(getSyncedDevicesSmartFolderIndex());
                 }
             };
         }
@@ -81,16 +90,81 @@ public class CombinedHistoryAdapter extends RecyclerView.Adapter<CombinedHistory
     }
 
     public RecentTabsUpdateHandler getRecentTabsUpdateHandler() {
-        if (recentTabsUpdateHandler == null) {
-            recentTabsUpdateHandler = new RecentTabsUpdateHandler() {
-                @Override
-                public void onRecentTabsCountUpdated(int count) {
-                    recentTabsCount = count;
-                    notifyItemChanged(RECENT_TABS_SMARTFOLDER_INDEX);
-                }
-            };
+        if (recentTabsUpdateHandler != null) {
+            return recentTabsUpdateHandler;
         }
+
+        recentTabsUpdateHandler = new RecentTabsUpdateHandler() {
+            @Override
+            public void onRecentTabsCountUpdated(final int count) {
+                // Now that other items can move around depending on the visibility of the
+                // Recent Tabs folder, only update the recentTabsCount on the UI thread.
+                ThreadUtils.postToUiThread(new Runnable() {
+                    @UiThread
+                    @Override
+                    public void run() {
+                        final boolean prevFolderVisibility = isRecentTabsFolderVisible();
+                        recentTabsCount = count;
+                        final boolean folderVisible = isRecentTabsFolderVisible();
+
+                        if (prevFolderVisibility == folderVisible) {
+                            if (prevFolderVisibility) {
+                                notifyItemChanged(RECENT_TABS_SMARTFOLDER_INDEX);
+                            }
+                            return;
+                        }
+
+                        // If the Recent Tabs smart folder has become hidden/unhidden,
+                        // we need to recalculate the history section header positions.
+                        populateSectionHeaders(historyCursor, sectionHeaders);
+
+                        if (folderVisible) {
+                            int scrollPos = -1;
+                            if (linearLayoutManager != null) {
+                                scrollPos = linearLayoutManager.findFirstCompletelyVisibleItemPosition();
+                            }
+
+                            notifyItemInserted(RECENT_TABS_SMARTFOLDER_INDEX);
+                            // If the list exceeds the display height and we want to show the new
+                            // item inserted at position 0, we need to scroll up manually
+                            // (see https://code.google.com/p/android/issues/detail?id=174227#c2).
+                            // However we only do this if our current scroll position is at the
+                            // top of the list.
+                            if (linearLayoutManager != null && scrollPos == 0) {
+                                linearLayoutManager.scrollToPosition(0);
+                            }
+                        } else {
+                            notifyItemRemoved(RECENT_TABS_SMARTFOLDER_INDEX);
+                        }
+                    }
+                });
+            }
+        };
         return recentTabsUpdateHandler;
+    }
+
+    @UiThread
+    private boolean isRecentTabsFolderVisible() {
+        return recentTabsCount > 0;
+    }
+
+    @UiThread
+    // Number of smart folders for determining practical empty state.
+    public int getNumVisibleSmartFolders() {
+        int visibleFolders = 1; // Synced devices folder is always visible.
+
+        if (isRecentTabsFolderVisible()) {
+            visibleFolders += 1;
+        }
+
+        return visibleFolders;
+    }
+
+    @UiThread
+    private int getSyncedDevicesSmartFolderIndex() {
+        return isRecentTabsFolderVisible() ?
+                RECENT_TABS_SMARTFOLDER_INDEX + 1 :
+                RECENT_TABS_SMARTFOLDER_INDEX;
     }
 
     @Override
@@ -155,21 +229,23 @@ public class CombinedHistoryAdapter extends RecyclerView.Adapter<CombinedHistory
      * @param position position in the adapter
      * @return position of the item in the data structure
      */
+    @UiThread
     private int transformAdapterPositionForDataStructure(CombinedHistoryItem.ItemType type, int position) {
         if (type == CombinedHistoryItem.ItemType.SECTION_HEADER) {
             return position;
         } else if (type == CombinedHistoryItem.ItemType.HISTORY) {
-            return position - getHeadersBefore(position) - CombinedHistoryPanel.NUM_SMART_FOLDERS;
+            return position - getHeadersBefore(position) - getNumVisibleSmartFolders();
         } else {
             return position;
         }
     }
 
+    @UiThread
     private CombinedHistoryItem.ItemType getItemTypeForPosition(int position) {
-        if (position == RECENT_TABS_SMARTFOLDER_INDEX) {
+        if (position == RECENT_TABS_SMARTFOLDER_INDEX && isRecentTabsFolderVisible()) {
             return CombinedHistoryItem.ItemType.RECENT_TABS;
         }
-        if (position == SYNCED_DEVICES_SMARTFOLDER_INDEX) {
+        if (position == getSyncedDevicesSmartFolderIndex()) {
             return CombinedHistoryItem.ItemType.SYNCED_DEVICES;
         }
         final int sectionPosition = transformAdapterPositionForDataStructure(CombinedHistoryItem.ItemType.SECTION_HEADER, position);
@@ -179,15 +255,17 @@ public class CombinedHistoryAdapter extends RecyclerView.Adapter<CombinedHistory
         return CombinedHistoryItem.ItemType.HISTORY;
     }
 
+    @UiThread
     @Override
     public int getItemViewType(int position) {
         return CombinedHistoryItem.ItemType.itemTypeToViewType(getItemTypeForPosition(position));
     }
 
+    @UiThread
     @Override
     public int getItemCount() {
         final int historySize = historyCursor == null ? 0 : historyCursor.getCount();
-        return historySize + sectionHeaders.size() + CombinedHistoryPanel.NUM_SMART_FOLDERS;
+        return historySize + sectionHeaders.size() + getNumVisibleSmartFolders();
     }
 
     /**
@@ -196,6 +274,7 @@ public class CombinedHistoryAdapter extends RecyclerView.Adapter<CombinedHistory
      * @param position view item position for which to generate a stable ID
      * @return stable ID for given position
      */
+    @UiThread
     @Override
     public long getItemId(int position) {
         // Two randomly selected large primes used to generate non-clashing IDs.
@@ -244,7 +323,10 @@ public class CombinedHistoryAdapter extends RecyclerView.Adapter<CombinedHistory
      * @param c data Cursor
      * @param sparseArray SparseArray to populate
      */
-    private static void populateSectionHeaders(Cursor c, SparseArray<SectionHeader> sparseArray) {
+    @UiThread
+    private void populateSectionHeaders(Cursor c, SparseArray<SectionHeader> sparseArray) {
+        ThreadUtils.assertOnUiThread();
+
         sparseArray.clear();
 
         if (c == null || !c.moveToFirst()) {
@@ -260,7 +342,7 @@ public class CombinedHistoryAdapter extends RecyclerView.Adapter<CombinedHistory
 
             if (section != itemSection) {
                 section = itemSection;
-                sparseArray.append(historyPosition + sparseArray.size() + CombinedHistoryPanel.NUM_SMART_FOLDERS, section);
+                sparseArray.append(historyPosition + sparseArray.size() + getNumVisibleSmartFolders(), section);
             }
 
             if (section == SectionHeader.OLDER_THAN_SIX_MONTHS) {
