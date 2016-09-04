@@ -154,7 +154,7 @@ EyeDropper.prototype = {
 
     // Prepare the canvas context on which we're drawing the magnified page portion.
     this.ctx = this.getElement("canvas").getCanvasContext();
-    this.ctx.mozImageSmoothingEnabled = false;
+    this.ctx.imageSmoothingEnabled = false;
 
     this.magnifiedArea = {width: MAGNIFIER_WIDTH, height: MAGNIFIER_HEIGHT,
                           x: DEFAULT_START_POS_X, y: DEFAULT_START_POS_Y};
