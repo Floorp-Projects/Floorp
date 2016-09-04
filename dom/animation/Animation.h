@@ -10,15 +10,15 @@
 #include "nsWrapperCache.h"
 #include "nsCycleCollectionParticipant.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/EffectCompositor.h" // For EffectCompositor::CascadeLevel
 #include "mozilla/LinkedList.h"
 #include "mozilla/TimeStamp.h" // for TimeStamp, TimeDuration
 #include "mozilla/dom/AnimationBinding.h" // for AnimationPlayState
-#include "mozilla/dom/AnimationTimeline.h" // for AnimationTimeline
-#include "mozilla/DOMEventTargetHelper.h" // for DOMEventTargetHelper
-#include "mozilla/dom/KeyframeEffect.h" // for KeyframeEffectReadOnly
-#include "mozilla/dom/Promise.h" // for Promise
-#include "nsCSSPropertyID.h" // for nsCSSPropertyID
+#include "mozilla/dom/AnimationEffectReadOnly.h"
+#include "mozilla/dom/AnimationTimeline.h"
+#include "mozilla/dom/Promise.h"
+#include "nsCSSPropertyID.h"
 #include "nsIGlobalObject.h"
 
 // X11 has a #define for CurrentTime.

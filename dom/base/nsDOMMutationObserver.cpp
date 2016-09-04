@@ -11,7 +11,7 @@
 #include "mozilla/OwningNonNull.h"
 
 #include "mozilla/dom/Animation.h"
-#include "mozilla/dom/KeyframeEffect.h"
+#include "mozilla/dom/KeyframeEffectReadOnly.h"
 
 #include "nsContentUtils.h"
 #include "nsCSSPseudoElements.h"
