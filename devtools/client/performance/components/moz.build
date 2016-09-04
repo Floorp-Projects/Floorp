@@ -6,6 +6,8 @@
 DevToolsModules(
     'jit-optimizations-item.js',
     'jit-optimizations.js',
+    'recording-button.js',
+    'recording-controls.js',
 )
 
 MOCHITEST_CHROME_MANIFESTS += ['test/chrome.ini']
