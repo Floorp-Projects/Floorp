@@ -40,7 +40,11 @@ using namespace mozilla;
 using namespace mozilla::dom;
 
 static bool sInited = 0;
-uint32_t nsCCUncollectableMarker::sGeneration = 0;
+// The initial value of sGeneration should not be the same as the
+// value it is given at xpcom-shutdown, because this will make any GCs
+// before we first CC benignly violate the black-gray invariant, due
+// to dom::TraceBlackJS().
+uint32_t nsCCUncollectableMarker::sGeneration = 1;
 #ifdef MOZ_XUL
 #include "nsXULPrototypeCache.h"
 #endif

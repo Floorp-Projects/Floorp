@@ -7,7 +7,11 @@
 #define nsApplicationChooser_h__
 
 #include <gtk/gtk.h>
+#include "nsCOMPtr.h"
 #include "nsIApplicationChooser.h"
+#include "nsString.h"
+
+class nsIWidget;
 
 class nsApplicationChooser final : public nsIApplicationChooser
 {
