@@ -340,8 +340,12 @@ class YouTubePuppeteer(VideoPuppeteer):
         ad_timeout = (self.search_ad_duration() or 30) + 5
         wait = Wait(self, timeout=ad_timeout, interval=1)
         try:
-            self.marionette.log('process_ad: waiting %s s for ad' % ad_timeout)
-            verbose_until(wait, self, lambda y: y.ad_ended, "Check if ad ended")
+            self.marionette.log('process_ad: waiting {} s for ad'
+                                .format(ad_timeout))
+            verbose_until(wait,
+                          self,
+                          lambda y: y.ad_ended,
+                          "Check if ad ended")
         except TimeoutException:
             self.marionette.log('Waiting for ad to end timed out',
                                 level='WARNING')
@@ -372,7 +376,7 @@ class YouTubePuppeteer(VideoPuppeteer):
                     return True
             except (TimeoutException, NoSuchElementException):
                 self.marionette.log('Could not obtain '
-                                    'element: %s' % selector,
+                                    'element: {}'.format(selector),
                                     level='WARNING')
         return False
 
@@ -402,7 +406,7 @@ class YouTubePuppeteer(VideoPuppeteer):
                     return 60 * ad_minutes + ad_seconds
         except (TimeoutException, NoSuchElementException):
             self.marionette.log('Could not obtain '
-                                'element: %s' % selector,
+                                'element: {}'.format(selector),
                                 level='WARNING')
         return None
 
@@ -462,7 +466,7 @@ class YouTubePuppeteer(VideoPuppeteer):
                                       script_args=[checkbox])
                     self.marionette.log('Toggled autoplay.')
                 autoplay = get_status(checkbox)
-                self.marionette.log('Autoplay is %s' % autoplay)
+                self.marionette.log('Autoplay is {}'.format(autoplay))
                 return (autoplay is not None) and (not autoplay)
         except (NoSuchElementException, TimeoutException):
             return False
@@ -474,13 +478,13 @@ class YouTubePuppeteer(VideoPuppeteer):
             ad_state = self._yt_player_state_name[self.ad_state]
             messages += [
                 '.html5-media-player: {',
-                '\tvideo id: {0},'.format(self.movie_id),
-                '\tvideo_title: {0}'.format(self.movie_title),
-                '\tcurrent_state: {0},'.format(player_state),
-                '\tad_state: {0},'.format(ad_state),
-                '\tplayback_quality: {0},'.format(self.playback_quality),
-                '\tcurrent_time: {0},'.format(self.player_current_time),
-                '\tduration: {0},'.format(self.player_duration),
+                '\tvideo id: {},'.format(self.movie_id),
+                '\tvideo_title: {}'.format(self.movie_title),
+                '\tcurrent_state: {},'.format(player_state),
+                '\tad_state: {},'.format(ad_state),
+                '\tplayback_quality: {},'.format(self.playback_quality),
+                '\tcurrent_time: {},'.format(self.player_current_time),
+                '\tduration: {},'.format(self.player_duration),
                 '}'
             ]
         else:
