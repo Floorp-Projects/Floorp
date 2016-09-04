@@ -50,10 +50,17 @@ interface nsIQuotaManagerService : nsISupports
    *
    * @param aPrincipal
    *        A principal for the origin whose storages are to be cleared.
+   * @param aPersistenceType
+   *        An optional string that tells what persistence type of storages
+   *        will be cleared.
+   * @param aClearAll
+   *        An optional boolean to indicate clearing all storages under the
+   *        given origin.
    */
   [must_use] nsIQuotaRequest
   clearStoragesForPrincipal(in nsIPrincipal aPrincipal,
-                            [optional] in ACString aPersistenceType);
+                            [optional] in ACString aPersistenceType,
+                            [optional] in boolean aClearAll);
 
   /**
    * Resets quota and storage management. This can be used to force

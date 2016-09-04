@@ -583,7 +583,7 @@ public:
       = do_GetService(NS_COOKIEMANAGER_CONTRACTID);
     MOZ_ASSERT(cookieManager);
 
-    return cookieManager->RemoveCookiesWithOriginAttributes(nsDependentString(aData));
+    return cookieManager->RemoveCookiesWithOriginAttributes(nsDependentString(aData), EmptyCString());
   }
 };
 
@@ -3493,7 +3493,7 @@ nsCookieService::AddInternal(const nsCookieKey             &aKey,
     nsCookieEntry *entry = mDBState->hostTable.GetEntry(aKey);
     if (entry && entry->GetCookies().Length() >= mMaxCookiesPerHost) {
       nsListIter iter;
-      FindStaleCookie(entry, currentTime, aHostURI, iter);
+      FindStaleCookie(entry, currentTime, iter);
       oldCookie = iter.Cookie();
 
       // remove the oldest cookie from the domain
@@ -4361,35 +4361,12 @@ nsCookieService::CookieExists(nsICookie2 *aCookie,
 void
 nsCookieService::FindStaleCookie(nsCookieEntry *aEntry,
                                  int64_t aCurrentTime,
-                                 nsIURI* aSource,
                                  nsListIter &aIter)
 {
-  bool requireHostMatch = true;
-  nsAutoCString baseDomain, sourceHost, sourcePath;
-  if (aSource) {
-    GetBaseDomain(aSource, baseDomain, requireHostMatch);
-    aSource->GetAsciiHost(sourceHost);
-    aSource->GetPath(sourcePath);
-  }
+  aIter.entry = nullptr;
 
+  int64_t oldestTime = 0;
   const nsCookieEntry::ArrayType &cookies = aEntry->GetCookies();
-
-  int64_t oldestNonMatchingSessionCookieTime = 0;
-  nsListIter oldestNonMatchingSessionCookie;
-  oldestNonMatchingSessionCookie.entry = nullptr;
-
-  int64_t oldestSessionCookieTime = 0;
-  nsListIter oldestSessionCookie;
-  oldestSessionCookie.entry = nullptr;
-
-  int64_t oldestNonMatchingNonSessionCookieTime = 0;
-  nsListIter oldestNonMatchingNonSessionCookie;
-  oldestNonMatchingNonSessionCookie.entry = nullptr;
-
-  int64_t oldestCookieTime = 0;
-  nsListIter oldestCookie;
-  oldestCookie.entry = nullptr;
-
   for (nsCookieEntry::IndexType i = 0; i < cookies.Length(); ++i) {
     nsCookie *cookie = cookies[i];
 
@@ -4400,69 +4377,12 @@ nsCookieService::FindStaleCookie(nsCookieEntry *aEntry,
       return;
     }
 
-    // Update our various records of oldest cookies fitting several restrictions:
-    // * session cookies
-    // * non-session cookies
-    // * cookies with paths and domains that don't match the cookie triggering this purge
-
-    uint32_t cookiePathLen = cookie->Path().Length();
-    if (cookiePathLen > 0 && cookie->Path().Last() == '/')
-      --cookiePathLen;
-
-    // This cookie is a candidate for eviction if we have no information about
-    // the source request, or if it is not a path or domain match against the
-    // source request.
-    bool isPrimaryEvictionCandidate = true;
-    if (aSource) {
-      bool pathMatches = StringBeginsWith(sourcePath, Substring(cookie->Path(), 0, cookiePathLen));
-      bool domainMatches = cookie->RawHost() == sourceHost ||
-          (cookie->IsDomain() && StringEndsWith(sourceHost, cookie->Host()));
-      isPrimaryEvictionCandidate = !pathMatches || !domainMatches;
-    }
-
-    int64_t lastAccessed = cookie->LastAccessed();
-    if (cookie->IsSession()) {
-      if (!oldestSessionCookie.entry || oldestSessionCookieTime > lastAccessed) {
-        oldestSessionCookieTime = lastAccessed;
-        oldestSessionCookie.entry = aEntry;
-        oldestSessionCookie.index = i;
-      }
-
-      if (isPrimaryEvictionCandidate &&
-          (!oldestNonMatchingSessionCookie.entry ||
-           oldestNonMatchingSessionCookieTime > lastAccessed)) {
-        oldestNonMatchingSessionCookieTime = lastAccessed;
-        oldestNonMatchingSessionCookie.entry = aEntry;
-        oldestNonMatchingSessionCookie.index = i;
-      }
-    } else if (isPrimaryEvictionCandidate &&
-               (!oldestNonMatchingNonSessionCookie.entry ||
-                oldestNonMatchingNonSessionCookieTime > lastAccessed)) {
-      oldestNonMatchingNonSessionCookieTime = lastAccessed;
-      oldestNonMatchingNonSessionCookie.entry = aEntry;
-      oldestNonMatchingNonSessionCookie.index = i;
-    }
-
     // Check if we've found the oldest cookie so far.
-    if (!oldestCookie.entry || oldestCookieTime > lastAccessed) {
-      oldestCookieTime = lastAccessed;
-      oldestCookie.entry = aEntry;
-      oldestCookie.index = i;
+    if (!aIter.entry || oldestTime > cookie->LastAccessed()) {
+      oldestTime = cookie->LastAccessed();
+      aIter.entry = aEntry;
+      aIter.index = i;
     }
-  }
-
-  // Prefer to evict the oldest session cookies with a non-matching path/domain,
-  // followed by the oldest session cookie with a matching path/domain,
-  // followed by the oldest non-session cookie with a non-matching path/domain,
-  // resorting to the oldest non-session cookie with a matching path/domain.
-  if (oldestNonMatchingSessionCookie.entry) {
-    aIter = oldestNonMatchingSessionCookie;
-  } else if (oldestSessionCookie.entry) {
-    aIter = oldestSessionCookie;
-  } else if (oldestNonMatchingNonSessionCookie.entry) {
-    aIter = oldestNonMatchingNonSessionCookie;
-  } else {
-    aIter = oldestCookie;
   }
 }
 
@@ -4546,7 +4466,8 @@ nsCookieService::GetCookiesFromHost(const nsACString     &aHost,
 }
 
 NS_IMETHODIMP
-nsCookieService::GetCookiesWithOriginAttributes(const nsAString& aPattern,
+nsCookieService::GetCookiesWithOriginAttributes(const nsAString&    aPattern,
+                                                const nsACString&   aHost,
                                                 nsISimpleEnumerator **aEnumerator)
 {
   mozilla::OriginAttributesPattern pattern;
@@ -4554,12 +4475,21 @@ nsCookieService::GetCookiesWithOriginAttributes(const nsAString& aPattern,
     return NS_ERROR_INVALID_ARG;
   }
 
-  return GetCookiesWithOriginAttributes(pattern, aEnumerator);
+  nsAutoCString host(aHost);
+  nsresult rv = NormalizeHost(host);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsAutoCString baseDomain;
+  rv = GetBaseDomainFromHost(host, baseDomain);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return GetCookiesWithOriginAttributes(pattern, baseDomain, aEnumerator);
 }
 
 nsresult
 nsCookieService::GetCookiesWithOriginAttributes(
     const mozilla::OriginAttributesPattern& aPattern,
+    const nsCString& aBaseDomain,
     nsISimpleEnumerator **aEnumerator)
 {
   if (!mDBState) {
@@ -4574,6 +4504,10 @@ nsCookieService::GetCookiesWithOriginAttributes(
   nsCOMArray<nsICookie> cookies;
   for (auto iter = mDBState->hostTable.Iter(); !iter.Done(); iter.Next()) {
     nsCookieEntry* entry = iter.Get();
+
+    if (!aBaseDomain.IsEmpty() && !aBaseDomain.Equals(entry->mBaseDomain)) {
+      continue;
+    }
 
     if (!aPattern.Matches(entry->mOriginAttributes)) {
       continue;
@@ -4590,7 +4524,8 @@ nsCookieService::GetCookiesWithOriginAttributes(
 }
 
 NS_IMETHODIMP
-nsCookieService::RemoveCookiesWithOriginAttributes(const nsAString& aPattern)
+nsCookieService::RemoveCookiesWithOriginAttributes(const nsAString& aPattern,
+                                                   const nsACString& aHost)
 {
   MOZ_ASSERT(XRE_IsParentProcess());
 
@@ -4599,12 +4534,21 @@ nsCookieService::RemoveCookiesWithOriginAttributes(const nsAString& aPattern)
     return NS_ERROR_INVALID_ARG;
   }
 
-  return RemoveCookiesWithOriginAttributes(pattern);
+  nsAutoCString host(aHost);
+  nsresult rv = NormalizeHost(host);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsAutoCString baseDomain;
+  rv = GetBaseDomainFromHost(host, baseDomain);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return RemoveCookiesWithOriginAttributes(pattern, baseDomain);
 }
 
 nsresult
 nsCookieService::RemoveCookiesWithOriginAttributes(
-    const mozilla::OriginAttributesPattern& aPattern)
+    const mozilla::OriginAttributesPattern& aPattern,
+    const nsCString& aBaseDomain)
 {
   if (!mDBState) {
     NS_WARNING("No DBState! Profile already close?");
@@ -4614,6 +4558,10 @@ nsCookieService::RemoveCookiesWithOriginAttributes(
   // Iterate the hash table of nsCookieEntry.
   for (auto iter = mDBState->hostTable.Iter(); !iter.Done(); iter.Next()) {
     nsCookieEntry* entry = iter.Get();
+
+    if (!aBaseDomain.IsEmpty() && !aBaseDomain.Equals(entry->mBaseDomain)) {
+      continue;
+    }
 
     if (!aPattern.Matches(entry->mOriginAttributes)) {
       continue;
