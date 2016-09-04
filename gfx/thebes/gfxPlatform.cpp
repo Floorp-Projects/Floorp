@@ -2515,16 +2515,17 @@ gfxPlatform::InitOpenGLConfig()
     openGLFeature.EnableByDefault();
   #endif
 
+  // When layers acceleration is force-enabled, enable it even for blacklisted
+  // devices.
+  if (gfxPrefs::LayersAccelerationForceEnabledDoNotUseDirectly()) {
+    openGLFeature.UserForceEnable("Force-enabled by pref");
+    return;
+  }
+
   nsCString message;
   nsCString failureId;
   if (!IsGfxInfoStatusOkay(nsIGfxInfo::FEATURE_OPENGL_LAYERS, &message, failureId)) {
     openGLFeature.Disable(FeatureStatus::Blacklisted, message.get(), failureId);
-  }
-
-  // Ensure that an accelerated compositor backend is available when layers
-  // acceleration is force-enabled.
-  if (gfxPrefs::LayersAccelerationForceEnabledDoNotUseDirectly()) {
-    openGLFeature.UserForceEnable("Force-enabled by pref");
   }
 }
 
