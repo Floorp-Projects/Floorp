@@ -422,14 +422,12 @@ H264::DecodeSPSFromExtraData(const mozilla::MediaByteBuffer* aExtraData, SPSData
 
   if (!(reader.ReadU8() & 0x1f)) {
     // No SPS.
-    reader.DiscardRemaining();
     return false;
   }
   uint16_t length = reader.ReadU16();
 
   if ((reader.PeekU8() & 0x1f) != 7) {
     // Not a SPS NAL type.
-    reader.DiscardRemaining();
     return false;
   }
 
@@ -437,8 +435,6 @@ H264::DecodeSPSFromExtraData(const mozilla::MediaByteBuffer* aExtraData, SPSData
   if (!ptr) {
     return false;
   }
-
-  reader.DiscardRemaining();
 
   RefPtr<mozilla::MediaByteBuffer> rawNAL = new mozilla::MediaByteBuffer;
   rawNAL->AppendElements(ptr, length);
