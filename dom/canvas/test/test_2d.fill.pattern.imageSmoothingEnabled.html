@@ -43,7 +43,7 @@ var img = document.getElementById("img");
 img.src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg==";
 
 img.onload = function () {
-  ctx.mozImageSmoothingEnabled = false;
+  ctx.imageSmoothingEnabled = false;
   ctx.save();
   ctx.fillStyle = "rgb(127, 127, 127);";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -58,7 +58,7 @@ img.onload = function () {
   isPixel(ctx, 15,15, 0,0,0,255, "15,15", "0,0,0,255", 0);
   isPixel(ctx, 16,16, 255,0,0,255, "16,16", "255,0,0,255", 0);
 
-  ctx.mozImageSmoothingEnabled = true;
+  ctx.imageSmoothingEnabled = true;
   ctx.save();
   ctx.fillStyle = "rgb(127, 127, 127);";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
