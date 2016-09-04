@@ -13,8 +13,12 @@ from marionette.marionette_test import SkipTest
 
 from firefox_puppeteer.testcases import BaseFirefoxTestCase
 from external_media_tests.utils import (timestamp_now, verbose_until)
-from external_media_tests.media_utils.video_puppeteer import (playback_done, playback_started,
-                                         VideoException, VideoPuppeteer as VP)
+from external_media_tests.media_utils.video_puppeteer import (
+    playback_done,
+    playback_started,
+    VideoException,
+    VideoPuppeteer as VP
+)
 
 
 class MediaTestCase(BaseFirefoxTestCase, MarionetteTestCase):
@@ -47,7 +51,8 @@ class MediaTestCase(BaseFirefoxTestCase, MarionetteTestCase):
             img_data = self.marionette.screenshot()
         with open(path, 'wb') as f:
             f.write(img_data.decode('base64'))
-        self.marionette.log('Screenshot saved in %s' % os.path.abspath(path))
+        self.marionette.log('Screenshot saved in {}'
+                            .format(os.path.abspath(path)))
 
     def log_video_debug_lines(self):
         """
@@ -160,11 +165,6 @@ class VideoPlaybackTestsMixin(object):
                     # is not 0
                     self.check_playback_starts(video)
                     video.pause()
-                    src = video.video_src
-                    if not src.startswith('mediasource'):
-                        self.marionette.log('video is not '
-                                            'mediasource: %s' % src,
-                                            level='WARNING')
                 except TimeoutException as e:
                     raise self.failureException(e)
 
@@ -268,11 +268,12 @@ class EMESetupMixin(object):
                     script_timeout=60000)
                 if not adobe_result == 'success':
                     raise VideoException(
-                        'ERROR: Resetting Adobe GMP failed % s' % adobe_result)
+                        'ERROR: Resetting Adobe GMP failed {}'
+                        .format(adobe_result))
                 if not widevine_result == 'success':
                     raise VideoException(
-                        'ERROR: Resetting Widevine GMP failed % s'
-                        % widevine_result)
+                        'ERROR: Resetting Widevine GMP failed {}'
+                        .format(widevine_result))
 
             EMESetupMixin.version_needs_reset = False
 
@@ -281,13 +282,13 @@ class EMESetupMixin(object):
             pref_value = self.prefs.get_pref(pref_name)
 
             if pref_value is None:
-                self.logger.info('Pref %s has no value.' % pref_name)
+                self.logger.info('Pref {} has no value.'.format(pref_name))
                 return False
             else:
-                self.logger.info('Pref %s = %s' % (pref_name, pref_value))
+                self.logger.info('Pref {} = {}'.format(pref_name, pref_value))
                 if pref_value != expected_value:
-                    self.logger.info('Pref %s has unexpected value.'
-                                     % pref_name)
+                    self.logger.info('Pref {} has unexpected value.'
+                                     .format(pref_name))
                     return False
 
         return True
@@ -297,14 +298,15 @@ class EMESetupMixin(object):
             pref_value = self.prefs.get_pref(pref_name)
 
             if pref_value is None:
-                self.logger.info('Pref %s has no value.' % pref_name)
+                self.logger.info('Pref {} has no value.'.format(pref_name))
                 return False
             else:
-                self.logger.info('Pref %s = %s' % (pref_name, pref_value))
+                self.logger.info('Pref {} = {}'.format(pref_name, pref_value))
 
                 match = re.search('^\d+$', pref_value)
                 if not match:
-                    self.logger.info('Pref %s is not an integer' % pref_name)
+                    self.logger.info('Pref {} is not an integer'
+                                     .format(pref_name))
                     return False
 
             return pref_value >= minimum_value
@@ -323,15 +325,15 @@ class EMESetupMixin(object):
             pref_value = self.prefs.get_pref(pref_name)
 
             if pref_value is None:
-                self.logger.info('Pref %s has no value.' % pref_name)
+                self.logger.info('Pref {} has no value.'.format(pref_name))
                 return False
             else:
-                self.logger.info('Pref %s = %s' % (pref_name, pref_value))
+                self.logger.info('Pref {} = {}'.format(pref_name, pref_value))
 
                 match = re.search('^\d(.\d+)*$', pref_value)
                 if not match:
-                    self.logger.info('Pref %s is not a version string'
-                                     % pref_name)
+                    self.logger.info('Pref {} is not a version string'
+                                     .format(pref_name))
                     return False
 
             pref_ints = [int(n) for n in pref_value.split('.')]

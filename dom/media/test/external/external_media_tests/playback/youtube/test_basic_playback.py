@@ -9,8 +9,11 @@ from marionette_driver.errors import TimeoutException
 from external_media_tests.utils import verbose_until
 from external_media_harness.testcase import MediaTestCase
 from external_media_tests.media_utils.video_puppeteer import VideoException
-from external_media_tests.media_utils.youtube_puppeteer import (YouTubePuppeteer, playback_done,
-                                           wait_for_almost_done)
+from external_media_tests.media_utils.youtube_puppeteer import (
+    YouTubePuppeteer,
+    playback_done,
+    wait_for_almost_done
+)
 
 
 class TestBasicYouTubePlayback(MediaTestCase):
@@ -33,8 +36,8 @@ class TestBasicYouTubePlayback(MediaTestCase):
             for url in self.video_urls:
                 self.logger.info(url)
                 youtube = YouTubePuppeteer(self.marionette, url)
-                self.logger.info('Expected duration: %s' %
-                                 youtube.expected_duration)
+                self.logger.info('Expected duration: {}'
+                                 .format(youtube.expected_duration))
                 youtube.deactivate_autoplay()
 
                 final_piece = 60
@@ -45,15 +48,17 @@ class TestBasicYouTubePlayback(MediaTestCase):
                     raise self.failureException(e)
                 duration = abs(youtube.expected_duration) + 1
                 if duration > 1:
-                    self.logger.info('Almost done: %s - %s seconds left.' %
-                                     (youtube.movie_id, time_left))
+                    self.logger.info('Almost done: {} - {} seconds left.'
+                                     .format(youtube.movie_id, time_left))
                     if time_left > final_piece:
                         self.marionette.log('time_left greater than '
-                                            'final_piece - %s' % time_left,
+                                            'final_piece - {}'
+                                            .format(time_left),
                                             level='WARNING')
                         self.save_screenshot()
                 else:
-                    self.marionette.log('Duration close to 0 - %s' % youtube,
+                    self.marionette.log('Duration close to 0 - {}'
+                                        .format(youtube),
                                         level='WARNING')
                     self.save_screenshot()
                 try:
