@@ -9,9 +9,12 @@
 
 #include "nsTArrayForwardDeclare.h" // For nsTArray
 #include "js/RootingAPI.h" // For JS::Handle
+#include "mozilla/KeyframeEffectParams.h" // SpacingMode
 
 struct JSContext;
 class JSObject;
+class nsIDocument;
+class nsStyleContext;
 
 namespace mozilla {
 struct AnimationProperty;

@@ -17,6 +17,7 @@
 #include "jsapi.h" // For ForOfIterator etc.
 #include "nsClassHashtable.h"
 #include "nsCSSParser.h"
+#include "nsCSSPropertyIDSet.h"
 #include "nsCSSProps.h"
 #include "nsCSSPseudoElements.h" // For CSSPseudoElementType
 #include "nsTArray.h"
