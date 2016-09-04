@@ -91,9 +91,9 @@ function boom()
   try { ctx.getImageData(); } catch(e){}
   try { ctx.putImageData(); } catch(e){}
 
-  try { x = ctx.mozImageSmoothingEnabled;  } catch(e){}
-  try { ctx.mozImageSmoothingEnabled = false;  } catch(e){}
-  try { ctx.mozImageSmoothingEnabled = true;  } catch(e){}
+  try { x = ctx.imageSmoothingEnabled;  } catch(e){}
+  try { ctx.imageSmoothingEnabled = false;  } catch(e){}
+  try { ctx.imageSmoothingEnabled = true;  } catch(e){}
 
   try { ctx.drawWindow(window, 0, 0, 0, 0, "red"); } catch(e){}
 }
