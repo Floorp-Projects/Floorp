@@ -27,7 +27,7 @@ public:
   void Remove(PresentationAvailability* aAvailability);
 
   already_AddRefed<PresentationAvailability>
-  Find(const uint64_t aWindowId, const nsAString& aUrl);
+  Find(const uint64_t aWindowId, const nsTArray<nsString>& aUrls);
 
 private:
   friend class StaticAutoPtr<AvailabilityCollection>;
