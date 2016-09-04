@@ -7,6 +7,7 @@
 #include "mozilla/KeyframeEffectParams.h"
 
 #include "mozilla/AnimationUtils.h"
+#include "mozilla/ErrorResult.h"
 #include "mozilla/KeyframeUtils.h"
 #include "mozilla/RangedPtr.h"
 #include "nsReadableUtils.h"
