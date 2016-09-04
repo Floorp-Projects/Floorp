@@ -19,12 +19,16 @@
 #include "nsDebugImpl.h"
 #include "mozilla/layers/LayerTreeOwnerTracker.h"
 #include "ProcessUtils.h"
+#include "prenv.h"
 #include "VRManager.h"
 #include "VRManagerParent.h"
 #include "VsyncBridgeParent.h"
 #if defined(XP_WIN)
 # include "DeviceManagerD3D9.h"
 # include "mozilla/gfx/DeviceManagerDx.h"
+#endif
+#ifdef MOZ_WIDGET_GTK
+# include <gtk/gtk.h>
 #endif
 
 namespace mozilla {
@@ -97,6 +101,26 @@ GPUParent::RecvInit(nsTArray<GfxPrefSetting>&& prefs,
 #if defined(XP_WIN)
   if (gfxConfig::IsEnabled(Feature::D3D11_COMPOSITING)) {
     DeviceManagerDx::Get()->CreateCompositorDevices();
+  }
+#endif
+
+#if defined(MOZ_WIDGET_GTK)
+  char* display_name = PR_GetEnv("DISPLAY");
+  if (display_name) {
+    int argc = 3;
+    char option_name[] = "--display";
+    char* argv[] = {
+      // argv0 is unused because g_set_prgname() was called in
+      // XRE_InitChildProcess().
+      nullptr,
+      option_name,
+      display_name,
+      nullptr
+    };
+    char** argvp = argv;
+    gtk_init(&argc, &argvp);
+  } else {
+    gtk_init(nullptr, nullptr);
   }
 #endif
 

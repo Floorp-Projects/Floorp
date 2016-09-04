@@ -203,6 +203,8 @@ public:
     mDisallowSelectionPrint = aDisallowSelectionPrint;
   }
 
+  bool MayHavePluginFrames();
+
 protected:
   ~nsPrintEngine();
 

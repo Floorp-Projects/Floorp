@@ -128,7 +128,7 @@ this.AbstractCanvasGraph = function (parent, name, sharpness) {
     this._width = canvas.width = bounds.width * this._pixelRatio;
     this._height = canvas.height = bounds.height * this._pixelRatio;
     this._ctx = canvas.getContext("2d");
-    this._ctx.mozImageSmoothingEnabled = false;
+    this._ctx.imageSmoothingEnabled = false;
 
     this._cursor = new GraphCursor();
     this._selection = new GraphArea();
