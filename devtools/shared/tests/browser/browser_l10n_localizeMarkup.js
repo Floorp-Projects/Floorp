@@ -9,17 +9,17 @@ const { localizeMarkup, LocalizationHelper } = require("devtools/shared/l10n");
 
 add_task(function* () {
   info("Check that the strings used for this test are still valid");
-  let INSPECTOR_L10N = new LocalizationHelper("devtools/locale/inspector.properties");
+  let STARTUP_L10N = new LocalizationHelper("devtools/locale/startup.properties");
   let TOOLBOX_L10N = new LocalizationHelper("devtools/locale/toolbox.properties");
-  let str1 = INSPECTOR_L10N.getStr("inspector.label");
-  let str2 = INSPECTOR_L10N.getStr("inspector.commandkey");
+  let str1 = STARTUP_L10N.getStr("inspector.label");
+  let str2 = STARTUP_L10N.getStr("inspector.commandkey");
   let str3 = TOOLBOX_L10N.getStr("toolbox.defaultTitle");
   ok(str1 && str2 && str3, "If this failed, strings should be updated in the test");
 
   info("Create the test markup");
   let div = document.createElement("div");
   div.innerHTML =
-  `<div data-localization-bundle="devtools/locale/inspector.properties">
+  `<div data-localization-bundle="devtools/locale/startup.properties">
      <div id="d0" data-localization="content=inspector.someInvalidKey"></div>
      <div id="d1" data-localization="content=inspector.label">Text will disappear</div>
      <div id="d2" data-localization="content=inspector.label;title=inspector.commandkey">
