@@ -296,8 +296,10 @@ public:
   virtual gfx::SurfaceFormat GetFormat() const override { return mFormat; }
 
   virtual bool Lock() override;
-
   virtual void Unlock() override;
+
+  virtual bool LockWithoutCompositor() override;
+  virtual void UnlockWithoutCompositor() override;
 
   virtual gfx::IntSize GetSize() const override { return mSize; }
 
@@ -307,6 +309,9 @@ public:
   }
 
 protected:
+  bool LockInternal();
+  void UnlockInternal();
+
   RefPtr<ID3D11Device> GetDevice();
 
   bool OpenSharedHandle();
