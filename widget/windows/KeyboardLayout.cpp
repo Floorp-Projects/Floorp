@@ -849,6 +849,7 @@ NativeKey::NativeKey(nsWindowBase* aWidget,
   : mWidget(aWidget)
   , mDispatcher(aWidget->GetTextEventDispatcher())
   , mMsg(aMessage)
+  , mFocusedWndBeforeDispatch(::GetFocus())
   , mDOMKeyCode(0)
   , mKeyNameIndex(KEY_NAME_INDEX_Unidentified)
   , mCodeNameIndex(CODE_NAME_INDEX_UNKNOWN)
@@ -1749,7 +1750,7 @@ NativeKey::HandleKeyDownMessage(bool* aEventDispatched) const
       return defaultPrevented;
     }
 
-    if (mWidget->Destroyed()) {
+    if (mWidget->Destroyed() || IsFocusedWindowChanged()) {
       return true;
     }
 
@@ -1821,7 +1822,7 @@ NativeKey::HandleKeyDownMessage(bool* aEventDispatched) const
       consumed =
         DispatchKeyPressEventForFollowingCharMessage(mFollowingCharMsgs[i]) ||
         consumed;
-      if (mWidget->Destroyed()) {
+      if (mWidget->Destroyed() || IsFocusedWindowChanged()) {
         return true;
       }
     }
@@ -2361,7 +2362,7 @@ NativeKey::DispatchPluginEventsAndDiscardsCharMessages() const
     MOZ_RELEASE_ASSERT(!mWidget->Destroyed(),
       "NativeKey tries to dispatch a plugin event on destroyed widget");
     mWidget->DispatchPluginEvent(mFollowingCharMsgs[i]);
-    if (mWidget->Destroyed()) {
+    if (mWidget->Destroyed() || IsFocusedWindowChanged()) {
       return true;
     }
   }
