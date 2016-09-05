@@ -1,5 +1,5 @@
 [package]
-name = "mp4parse"
+name = "mp4parse_capi"
 version = "0.5.0"
 authors = [
   "Ralph Giles <giles@mozilla.com>",
@@ -18,10 +18,10 @@ exclude = [
 ]
 
 [dependencies]
-byteorder = { version = "0.5.0", path = "../byteorder" }
+"mp4parse" = {version = "0.5.0", path = "../mp4parse"}
 
-[dev-dependencies]
-test-assembler = "0.1.2"
+[features]
+fuzz = ["mp4parse/fuzz"]
 
 # Somewhat heavy-handed, but we want at least -Z force-overflow-checks=on.
 [profile.release]

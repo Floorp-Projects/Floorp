@@ -20,8 +20,8 @@ function runTest() {
   });
 
   iframe.addEventListener('mozbrowserlocationchange', function(e) {
-    ok(true, "Got locationchange to " + e.detail);
-    if (e.detail.endsWith("ForwardName.html#finish")) {
+    ok(true, "Got locationchange to " + e.detail.url);
+    if (e.detail.url.endsWith("ForwardName.html#finish")) {
       SimpleTest.finish();
     }
   });

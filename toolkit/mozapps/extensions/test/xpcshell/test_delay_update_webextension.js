@@ -33,7 +33,7 @@ const { Management } = Components.utils.import("resource://gre/modules/Extension
 
 function promiseWebExtensionStartup() {
   return new Promise(resolve => {
-    let listener = (extension) => {
+    let listener = (event, extension) => {
       Management.off("startup", listener);
       resolve(extension);
     };

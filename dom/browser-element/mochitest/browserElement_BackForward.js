@@ -70,7 +70,9 @@ function test3() {
 
 function test4() {
   addOneShotIframeEventListener('mozbrowserlocationchange', function(e) {
-    is(e.detail, browserElementTestHelpers.emptyPage3);
+    is(e.detail.url, browserElementTestHelpers.emptyPage3);
+    is(e.detail.canGoBack, true);
+    is(e.detail.canGoForward, false);
     checkCanGoBackAndForward(true, false, test5);
   });
 
@@ -81,7 +83,9 @@ function test4() {
 
 function test5() {
   addOneShotIframeEventListener('mozbrowserlocationchange', function(e) {
-    is(e.detail, browserElementTestHelpers.emptyPage2);
+    is(e.detail.url, browserElementTestHelpers.emptyPage2);
+    is(e.detail.canGoBack, true);
+    is(e.detail.canGoForward, true);
     checkCanGoBackAndForward(true, true, test6);
   });
   iframe.goBack();
@@ -89,7 +93,9 @@ function test5() {
 
 function test6() {
   addOneShotIframeEventListener('mozbrowserlocationchange', function(e) {
-    is(e.detail, browserElementTestHelpers.emptyPage1);
+    is(e.detail.url, browserElementTestHelpers.emptyPage1);
+    is(e.detail.canGoBack, false);
+    is(e.detail.canGoForward, true);
     checkCanGoBackAndForward(false, true, SimpleTest.finish);
   });
   iframe.goBack();

@@ -6,7 +6,9 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use std::io::Cursor;
-use super::*;
+use super::read_mp4;
+use super::MediaContext;
+use super::Error;
 extern crate test_assembler;
 use self::test_assembler::*;
 

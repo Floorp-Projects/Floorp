@@ -35,7 +35,7 @@ function runTest() {
 
   iframe.addEventListener("mozbrowserlocationchange", function onlocchange(e) {
     var a = document.createElement("a");
-    a.href = e.detail;
+    a.href = e.detail.url;
 
     switch (a.hash) {
       case "#mousedown":
