@@ -20,6 +20,7 @@ category webextension-scripts-content extension chrome://extensions/content/ext-
 category webextension-scripts-content i18n chrome://extensions/content/ext-i18n.js
 category webextension-scripts-content runtime chrome://extensions/content/ext-c-runtime.js
 category webextension-scripts-content test chrome://extensions/content/ext-c-test.js
+category webextension-scripts-content storage chrome://extensions/content/ext-c-storage.js
 
 # scripts that must run in the same process as addon code.
 category webextension-scripts-addon extension chrome://extensions/content/ext-c-extension.js
@@ -28,6 +29,7 @@ category webextension-scripts-addon runtime chrome://extensions/content/ext-c-ru
 # Uncomment when the child code and parent code are isolated from each other.
 # Currently they are aliases of each other (see "addon_parent" and "addon_child" in Extension.jsm).
 # category webextension-scripts-addon test chrome://extensions/content/ext-c-test.js
+# category webextension-scripts-addon storage chrome://extensions/content/ext-c-storage.js
 
 # schemas
 category webextension-schemas alarms chrome://extensions/content/schemas/alarms.json
