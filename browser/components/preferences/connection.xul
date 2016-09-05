@@ -14,7 +14,12 @@
             dlgbuttons="accept,cancel,help"
             onbeforeaccept="return gConnectionsDialog.beforeAccept();"
             onload="gConnectionsDialog.checkForSystemProxy();"
-            ondialoghelp="openPrefsHelp()">
+            ondialoghelp="openPrefsHelp()"
+#ifdef XP_MACOSX
+            style="width: &window.macWidth2; !important;">
+#else
+            style="width: &window.width2; !important;">
+#endif
 
   <script type="application/javascript" src="chrome://browser/content/utilityOverlay.js"/>
 

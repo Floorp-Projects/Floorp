@@ -28,9 +28,11 @@ this.Preferences = {
       ["paneAdvanced", "generalTab"],
       ["paneAdvanced", "dataChoicesTab"],
       ["paneAdvanced", "networkTab"],
+      ["paneAdvanced", "networkTab", connectionDialog],
       ["paneAdvanced", "updateTab"],
       ["paneAdvanced", "encryptionTab"],
       ["paneAdvanced", "encryptionTab", certManager],
+      ["paneAdvanced", "encryptionTab", deviceManager],
     ];
     for (let [primary, advanced, customFn] of panes) {
       let configName = primary.replace(/^pane/, "prefs") + (advanced ? "-" + advanced : "");
@@ -99,8 +101,20 @@ function* DNTDialog(aBrowser) {
   });
 }
 
+function* connectionDialog(aBrowser) {
+  yield ContentTask.spawn(aBrowser, null, function* () {
+    content.document.getElementById("connectionSettings").click();
+  });
+}
+
 function* certManager(aBrowser) {
   yield ContentTask.spawn(aBrowser, null, function* () {
     content.document.getElementById("viewCertificatesButton").click();
+  });
+}
+
+function* deviceManager(aBrowser) {
+  yield ContentTask.spawn(aBrowser, null, function* () {
+    content.document.getElementById("viewSecurityDevicesButton").click();
   });
 }
