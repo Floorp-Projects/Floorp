@@ -136,7 +136,6 @@ protected:
   nsCString       mName;
   nsCOMPtr<nsIStackFrame> mLocation;
   nsCOMPtr<nsISupports> mData;
-  int             mLineNumber;
   bool            mInitialized;
 
   bool mHoldingJSVal;
