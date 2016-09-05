@@ -551,8 +551,7 @@ struct nsCSSRendering {
                     const nsRect& aBorderArea,
                     const nsRect& aBGClipRect,
                     const nsStyleImageLayers::Layer& aLayer,
-                    bool* aOutIsTransformedFixed = nullptr,
-                    CompositionOp aCompositionOp = CompositionOp::OP_OVER);
+                    bool* aOutIsTransformedFixed = nullptr);
 
   struct ImageLayerClipState {
     nsRect mBGClipArea;  // Affected by mClippedRadii

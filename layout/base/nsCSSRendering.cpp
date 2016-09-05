@@ -3254,7 +3254,7 @@ nsCSSRendering::PaintBackgroundWithSC(const PaintBGParams& aParams,
         nsBackgroundLayerState state =
           PrepareImageLayer(&aParams.presCtx, aParams.frame,
                             aParams.paintFlags, paintBorderArea, clipState.mBGClipArea,
-                            layer, nullptr, co);
+                            layer, nullptr);
         result &= state.mImageRenderer.PrepareResult();
         if (!state.mFillArea.IsEmpty()) {
           if (co != CompositionOp::OP_OVER) {
@@ -3529,8 +3529,7 @@ nsCSSRendering::PrepareImageLayer(nsPresContext* aPresContext,
                                   const nsRect& aBorderArea,
                                   const nsRect& aBGClipRect,
                                   const nsStyleImageLayers::Layer& aLayer,
-                                  bool* aOutIsTransformedFixed,
-                                  CompositionOp aCompositonOp)
+                                  bool* aOutIsTransformedFixed)
 {
   /*
    * The properties we need to keep in mind when drawing style image
