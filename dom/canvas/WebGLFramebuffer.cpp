@@ -1059,7 +1059,6 @@ WebGLFramebuffer::ValidateAndInitAttachments(const char* funcName)
 
     //////
     // Check if we need to initialize anything
-
     std::vector<WebGLFBAttachPoint*> tex3DToClear;
 
     const auto fnGatherIf3D = [&](WebGLFBAttachPoint& attach) {
@@ -1078,11 +1077,8 @@ WebGLFramebuffer::ValidateAndInitAttachments(const char* funcName)
     //////
 
     uint32_t clearBits = 0;
-    std::vector<GLenum> drawBuffersForClear(1 + mMoreColorAttachments.Size(),
-                                            LOCAL_GL_NONE);
-
+    std::vector<GLenum> drawBuffersForClear;
     std::vector<WebGLFBAttachPoint*> attachmentsToClear;
-    attachmentsToClear.reserve(1 + mMoreColorAttachments.Size() + 3);
 
     const auto fnGatherColor = [&](WebGLFBAttachPoint& attach, uint32_t colorAttachNum) {
         if (!IsDrawBuffer(colorAttachNum) || !attach.HasUninitializedImageData())
@@ -1091,9 +1087,16 @@ WebGLFramebuffer::ValidateAndInitAttachments(const char* funcName)
         if (fnGatherIf3D(attach))
             return;
 
-        attachmentsToClear.push_back(&attach);
+        if (attachmentsToClear.empty()) {
+            attachmentsToClear.reserve(1 + mMoreColorAttachments.Size() + 3);
+        }
+
+        if (drawBuffersForClear.empty()) {
+            drawBuffersForClear.assign(1 + mMoreColorAttachments.Size(), LOCAL_GL_NONE);
+        }
 
         clearBits |= LOCAL_GL_COLOR_BUFFER_BIT;
+        attachmentsToClear.push_back(&attach);
         drawBuffersForClear[colorAttachNum] = LOCAL_GL_COLOR_ATTACHMENT0 + colorAttachNum;
     };
 
@@ -1103,6 +1106,10 @@ WebGLFramebuffer::ValidateAndInitAttachments(const char* funcName)
 
         if (fnGatherIf3D(attach))
             return;
+
+        if (attachmentsToClear.empty()) {
+            attachmentsToClear.reserve(1 + mMoreColorAttachments.Size() + 3);
+        }
 
         attachmentsToClear.push_back(&attach);
 
@@ -1125,6 +1132,8 @@ WebGLFramebuffer::ValidateAndInitAttachments(const char* funcName)
                   LOCAL_GL_DEPTH_BUFFER_BIT | LOCAL_GL_STENCIL_BUFFER_BIT);
 
     //////
+    if (!clearBits && tex3DToClear.empty())
+        return true;
 
     mContext->MakeContextCurrent();
 
