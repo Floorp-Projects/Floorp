@@ -982,7 +982,8 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       return {
         error: "wrongState",
         message: "Can't resume when debuggee isn't paused. Current state is '"
-          + this._state + "'"
+          + this._state + "'",
+        state: this._state
       };
     }
 
