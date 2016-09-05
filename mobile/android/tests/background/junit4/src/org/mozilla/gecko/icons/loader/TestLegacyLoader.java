@@ -27,7 +27,23 @@ public class TestLegacyLoader {
     private static final String TEST_ICON_URL = "https://example.org/favicon.ico";
 
     @Test
-    public void testDatabaseIsQueriesForNormalRequests() {
+    public void testDatabaseIsQueriesForNormalRequestsWithNetworkSkipped() {
+        final IconRequest request = Icons.with(RuntimeEnvironment.application)
+                .pageUrl(TEST_PAGE_URL)
+                .icon(IconDescriptor.createGenericIcon(TEST_ICON_URL))
+                .skipNetwork()
+                .build();
+
+        final LegacyLoader loader = spy(new LegacyLoader());
+        final IconResponse response = loader.load(request);
+
+        verify(loader).loadBitmapFromDatabase(request);
+
+        Assert.assertNull(response);
+    }
+
+    @Test
+    public void testNothingIsLoadedIfNetworkIsNotSkipped() {
         final IconRequest request = Icons.with(RuntimeEnvironment.application)
                 .pageUrl(TEST_PAGE_URL)
                 .icon(IconDescriptor.createGenericIcon(TEST_ICON_URL))
@@ -36,7 +52,7 @@ public class TestLegacyLoader {
         final LegacyLoader loader = spy(new LegacyLoader());
         final IconResponse response = loader.load(request);
 
-        verify(loader).loadBitmapFromDatabase(request);
+        verify(loader, never()).loadBitmapFromDatabase(request);
 
         Assert.assertNull(response);
     }
@@ -62,6 +78,7 @@ public class TestLegacyLoader {
         final IconRequest request = Icons.with(RuntimeEnvironment.application)
                 .pageUrl(TEST_PAGE_URL)
                 .icon(IconDescriptor.createGenericIcon(TEST_ICON_URL))
+                .skipNetwork()
                 .build();
 
         final Bitmap bitmap = mock(Bitmap.class);

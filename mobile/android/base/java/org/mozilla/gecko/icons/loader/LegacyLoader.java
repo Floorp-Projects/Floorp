@@ -25,6 +25,12 @@ import org.mozilla.gecko.icons.IconResponse;
 public class LegacyLoader implements IconLoader {
     @Override
     public IconResponse load(IconRequest request) {
+        if (!request.shouldSkipNetwork()) {
+            // If we are allowed to load from the network for this request then just ommit the legacy
+            // loader and fetch a fresh new icon.
+            return null;
+        }
+
         if (request.shouldSkipDisk()) {
             return null;
         }
@@ -41,7 +47,7 @@ public class LegacyLoader implements IconLoader {
     /* package-private */ Bitmap loadBitmapFromDatabase(IconRequest request) {
         final Context context = request.getContext();
         final ContentResolver contentResolver = context.getContentResolver();
-        final BrowserDB db = GeckoProfile.get(request.getContext()).getDB();
+        final BrowserDB db = GeckoProfile.get(context).getDB();
 
         // We ask the database for the favicon URL and ignore the icon URL in the request object:
         // As we are not updating the database anymore the icon might be stored under a different URL.
