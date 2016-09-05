@@ -1207,7 +1207,8 @@ bool
 NativeKey::IsControlChar(char16_t aChar)
 {
   static const char16_t U_SPACE = 0x20;
-  return aChar < U_SPACE;
+  static const char16_t U_DELETE = 0x7F;
+  return aChar < U_SPACE || aChar == U_DELETE;
 }
 
 bool
