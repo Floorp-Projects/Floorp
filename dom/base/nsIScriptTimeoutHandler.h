@@ -34,7 +34,7 @@ public:
   virtual mozilla::dom::Function *GetCallback() = 0;
 
   // Get the handler text of not a compiled object.
-  virtual void GetHandlerText(nsAString& aString) = 0;
+  virtual const nsAString& GetHandlerText() = 0;
 
   // Get the location of the script.
   // Note: The memory pointed to by aFileName is owned by the
