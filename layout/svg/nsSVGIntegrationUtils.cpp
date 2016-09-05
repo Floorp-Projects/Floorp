@@ -752,6 +752,10 @@ BlendToTarget(const nsSVGIntegrationUtils::PaintFramesParams& aParams,
 DrawResult
 nsSVGIntegrationUtils::PaintMaskAndClipPath(const PaintFramesParams& aParams)
 {
+  MOZ_ASSERT(UsingMaskOrClipPathForFrame(aParams.frame),
+             "Should not use this method when no mask or clipPath effect"
+             "on this frame");
+
   /* SVG defines the following rendering model:
    *
    *  1. Render geometry
@@ -920,7 +924,10 @@ nsSVGIntegrationUtils::PaintMaskAndClipPath(const PaintFramesParams& aParams)
 DrawResult
 nsSVGIntegrationUtils::PaintFilter(const PaintFramesParams& aParams)
 {
-  MOZ_ASSERT(!aParams.builder->IsForGenerateGlyphMask());
+  MOZ_ASSERT(!aParams.builder->IsForGenerateGlyphMask(),
+             "Filter effect is discarded while generating glyph mask.");
+  MOZ_ASSERT(aParams.frame->StyleEffects()->HasFilters(),
+             "Should not use this method when no filter effect on this frame");
 
   nsIFrame* frame = aParams.frame;
   DrawResult result = DrawResult::SUCCESS;
