@@ -76,8 +76,8 @@ function runTest(canvasWidth, canvasHeight, nextTest) {
     var fuzz = { numDifferentPixels:  0,
                  maxDifference: 0 };
     if (SpecialPowers.Services.appinfo.widgetToolkit == "android") {
-      fuzz.maxDifference = 14;
-      fuzz.numDifferentPixels = 130;
+      fuzz.maxDifference = 2;
+      fuzz.numDifferentPixels = 131;
     }
     var results = compareSnapshots(snapshot, snapshotRef, true, fuzz);
     ok(results[0], "Screenshots should be the same");
