@@ -148,7 +148,6 @@ NeckoParent::GetValidatedAppInfo(const SerializedLoadContext& aSerialized,
     aAttrs.mSignedPkg = aSerialized.mOriginAttributes.mSignedPkg;
     aAttrs.mUserContextId = aSerialized.mOriginAttributes.mUserContextId;
     aAttrs.mPrivateBrowsingId = aSerialized.mOriginAttributes.mPrivateBrowsingId;
-    aAttrs.mFirstPartyDomain = aSerialized.mOriginAttributes.mFirstPartyDomain;
 
     return nullptr;
   }
