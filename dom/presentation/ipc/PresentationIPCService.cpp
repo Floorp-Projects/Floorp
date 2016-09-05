@@ -52,7 +52,7 @@ PresentationIPCService::~PresentationIPCService()
 }
 
 NS_IMETHODIMP
-PresentationIPCService::StartSession(const nsAString& aUrl,
+PresentationIPCService::StartSession(const nsTArray<nsString>& aUrls,
                                      const nsAString& aSessionId,
                                      const nsAString& aOrigin,
                                      const nsAString& aDeviceId,
@@ -65,7 +65,7 @@ PresentationIPCService::StartSession(const nsAString& aUrl,
                            nsIPresentationService::ROLE_CONTROLLER);
   }
 
-  return SendRequest(aCallback, StartSessionRequest(nsString(aUrl),
+  return SendRequest(aCallback, StartSessionRequest(aUrls,
                                                     nsString(aSessionId),
                                                     nsString(aOrigin),
                                                     nsString(aDeviceId),
@@ -135,7 +135,7 @@ PresentationIPCService::TerminateSession(const nsAString& aSessionId,
 }
 
 NS_IMETHODIMP
-PresentationIPCService::ReconnectSession(const nsAString& aUrl,
+PresentationIPCService::ReconnectSession(const nsTArray<nsString>& aUrls,
                                          const nsAString& aSessionId,
                                          uint8_t aRole,
                                          nsIPresentationServiceCallback* aCallback)
@@ -147,7 +147,7 @@ PresentationIPCService::ReconnectSession(const nsAString& aUrl,
     return NS_ERROR_INVALID_ARG;
   }
 
-  return SendRequest(aCallback, ReconnectSessionRequest(nsString(aUrl),
+  return SendRequest(aCallback, ReconnectSessionRequest(aUrls,
                                                         nsString(aSessionId),
                                                         aRole));
 }

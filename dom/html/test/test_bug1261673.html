@@ -42,10 +42,17 @@ function runTests() {
 
   let testIdx = 0;
   let result = parseInt(input.value);
+  let numberChange = 0;
+  let expectChange = 0;
+
+  input.addEventListener("change", () => {
+    ++numberChange;
+  }, false);
 
   function runNext() {
     let p = params[testIdx];
     (p["focus"]) ? input.focus() : input.blur();
+    expectChange = p["valueChanged"] == 0 ? expectChange : expectChange + 1;
     result += parseInt(p["valueChanged"]);
     synthesizeWheel(input, 1, 1, { deltaY: p["deltaY"], deltaMode: p["deltaMode"] });
     window.postMessage("finished", "http://mochi.test:8888");
@@ -57,6 +64,8 @@ function runTests() {
       ok(input.value == result,
         "Handle wheel in number input test-" + testIdx + " expect " + result +
         " get " + input.value);
+      ok(numberChange == expectChange,
+         "UA should fire change event when input's value changed, expect " + expectChange + " get " + numberChange);
       (testIdx >= params.length) ? SimpleTest.finish() : runNext();
     }
   });

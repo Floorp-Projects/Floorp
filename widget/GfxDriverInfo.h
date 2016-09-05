@@ -66,6 +66,7 @@ enum VersionComparisonOp {
   DRIVER_LESS_THAN,             // driver <  version
   DRIVER_BUILD_ID_LESS_THAN,    // driver build id <  version
   DRIVER_LESS_THAN_OR_EQUAL,    // driver <= version
+  DRIVER_BUILD_ID_LESS_THAN_OR_EQUAL, // driver build id <= version
   DRIVER_GREATER_THAN,          // driver >  version
   DRIVER_GREATER_THAN_OR_EQUAL, // driver >= version
   DRIVER_EQUAL,                 // driver == version

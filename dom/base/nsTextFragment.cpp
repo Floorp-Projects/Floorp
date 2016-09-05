@@ -461,7 +461,7 @@ nsTextFragment::UpdateBidiFlag(const char16_t* aBuffer, uint32_t aLength)
         char16_t ch2 = *cp++;
         utf32Char = SURROGATE_TO_UCS4(ch1, ch2);
       }
-      if (UTF32_CHAR_IS_BIDI(utf32Char) || IsBidiControl(utf32Char)) {
+      if (UTF32_CHAR_IS_BIDI(utf32Char) || IsBidiControlRTL(utf32Char)) {
         mState.mIsBidi = true;
         break;
       }

@@ -15,7 +15,7 @@ namespace dom {
 
 struct StartSessionRequest
 {
-  nsString url;
+  nsString[] urls;
   nsString sessionId;
   nsString origin;
   nsString deviceId;
@@ -44,7 +44,7 @@ struct TerminateSessionRequest
 
 struct ReconnectSessionRequest
 {
-  nsString url;
+  nsString[] urls;
   nsString sessionId;
   uint8_t role;
 };
