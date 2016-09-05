@@ -254,6 +254,8 @@ public:
 
   bool IsAccessible(base::ProcessId aProcessId) override;
 
+  nsresult DoReconnect();
+
 private:
   ~PresentationPresentingInfo()
   {
