@@ -29,7 +29,7 @@ public:
 
   static already_AddRefed<PresentationAvailability>
   Create(nsPIDOMWindowInner* aWindow,
-         const nsAString& aUrl,
+         const nsTArray<nsString>& aUrls,
          RefPtr<Promise>& aPromise);
 
   virtual void DisconnectFromOwner() override;
@@ -37,7 +37,7 @@ public:
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
 
-  bool Equals(const uint64_t aWindowID, const nsAString& aUrl) const;
+  bool Equals(const uint64_t aWindowID, const nsTArray<nsString>& aUrls) const;
 
   bool IsCachedValueReady();
 
@@ -50,7 +50,7 @@ public:
 
 private:
   explicit PresentationAvailability(nsPIDOMWindowInner* aWindow,
-                                    const nsAString& aUrl);
+                                    const nsTArray<nsString>& aUrls);
 
   virtual ~PresentationAvailability();
 
@@ -64,7 +64,7 @@ private:
 
   nsTArray<RefPtr<Promise>> mPromises;
 
-  nsString mUrl;
+  nsTArray<nsString> mUrls;
 };
 
 } // namespace dom

@@ -13,6 +13,7 @@
 #include "plstr.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/UniquePtr.h"
 
 #if !defined(XP_WIN)
 #include <arpa/inet.h>
@@ -141,8 +142,8 @@ public:
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 
-  char *mHostName;
-  char *mCanonicalName;
+  UniquePtr<char[]> mHostName;
+  UniquePtr<char[]> mCanonicalName;
   uint16_t ttl;
   static const uint16_t NO_TTL_DATA = (uint16_t) -1;
 

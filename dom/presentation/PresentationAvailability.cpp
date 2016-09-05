@@ -37,20 +37,20 @@ NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
 /* static */ already_AddRefed<PresentationAvailability>
 PresentationAvailability::Create(nsPIDOMWindowInner* aWindow,
-                                 const nsAString& aUrl,
+                                 const nsTArray<nsString>& aUrls,
                                  RefPtr<Promise>& aPromise)
 {
   RefPtr<PresentationAvailability> availability =
-    new PresentationAvailability(aWindow, aUrl);
+    new PresentationAvailability(aWindow, aUrls);
   return NS_WARN_IF(!availability->Init(aPromise)) ? nullptr
                                                    : availability.forget();
 }
 
 PresentationAvailability::PresentationAvailability(nsPIDOMWindowInner* aWindow,
-                                                   const nsAString& aUrl)
+                                                   const nsTArray<nsString>& aUrls)
   : DOMEventTargetHelper(aWindow)
   , mIsAvailable(false)
-  , mUrl(aUrl)
+  , mUrls(aUrls)
 {
 }
 
@@ -120,10 +120,15 @@ PresentationAvailability::WrapObject(JSContext* aCx,
 
 bool
 PresentationAvailability::Equals(const uint64_t aWindowID,
-                                 const nsAString& aUrl) const
+                                 const nsTArray<nsString>& aUrls) const
 {
   if (GetOwner() && GetOwner()->WindowID() == aWindowID &&
-      mUrl.Equals(aUrl)) {
+      mUrls.Length() == aUrls.Length()) {
+    for (const auto& url : aUrls) {
+      if (!mUrls.Contains(url)) {
+        return false;
+      }
+    }
     return true;
   }
 
@@ -162,8 +167,7 @@ PresentationAvailability::NotifyAvailableChange(bool aIsAvailable)
 void
 PresentationAvailability::UpdateAvailabilityAndDispatchEvent(bool aIsAvailable)
 {
-  PRES_DEBUG("%s:id[%s]\n", __func__,
-             NS_ConvertUTF16toUTF8(mUrl).get());
+  PRES_DEBUG("%s\n", __func__);
   bool isChanged = (aIsAvailable != mIsAvailable);
 
   mIsAvailable = aIsAvailable;

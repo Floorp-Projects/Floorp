@@ -3805,19 +3805,6 @@ HTMLInputElement::PreHandleEvent(EventChainPreVisitor& aVisitor)
     }
   }
 
-  if (aVisitor.mEvent->mMessage == eKeyUp && aVisitor.mEvent->IsTrusted()) {
-    WidgetKeyboardEvent* keyEvent = aVisitor.mEvent->AsKeyboardEvent();
-    if (MayFireChangeOnKeyUp(keyEvent->mKeyCode) &&
-        !(keyEvent->IsShift() || keyEvent->IsControl() || keyEvent->IsAlt() ||
-          keyEvent->IsMeta() || keyEvent->IsAltGraph() || keyEvent->IsFn() ||
-          keyEvent->IsOS())) {
-      // The up/down arrow key events fire 'change' events when released
-      // so that at the end of a series of up/down arrow key repeat events
-      // the value is considered to be "commited" by the user.
-      FireChangeEventIfNeeded();
-    }
-  }
-
   nsresult rv = nsGenericHTMLFormElementWithState::PreHandleEvent(aVisitor);
 
   // We do this after calling the base class' PreHandleEvent so that
@@ -4303,6 +4290,7 @@ HTMLInputElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
       // event to increase/decrease the value of the number control.
       if (!aVisitor.mEvent->DefaultPreventedByContent() && IsMutable()) {
         StepNumberControlForUserEvent(keyEvent->mKeyCode == NS_VK_UP ? 1 : -1);
+        FireChangeEventIfNeeded();
         aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
       }
     } else if (nsEventStatus_eIgnore == aVisitor.mEventStatus) {
@@ -4480,6 +4468,7 @@ HTMLInputElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
                   break;
               }
               SetValueOfRangeForUserEvent(newValue);
+              FireChangeEventIfNeeded();
               aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
             }
           }
@@ -4557,6 +4546,7 @@ HTMLInputElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
                 do_QueryFrame(GetPrimaryFrame());
               if (numberControlFrame && numberControlFrame->IsFocused()) {
                 StepNumberControlForUserEvent(wheelEvent->mDeltaY > 0 ? -1 : 1);
+                FireChangeEventIfNeeded();
                 aVisitor.mEvent->PreventDefault();
               }
             } else if (mType == NS_FORM_INPUT_RANGE &&
@@ -4570,6 +4560,7 @@ HTMLInputElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
               MOZ_ASSERT(value.isFinite() && step.isFinite());
               SetValueOfRangeForUserEvent(wheelEvent->mDeltaY < 0 ?
                                           value + step : value - step);
+              FireChangeEventIfNeeded();
               aVisitor.mEvent->PreventDefault();
             }
           }
@@ -8342,18 +8333,6 @@ HTMLInputElement::GetWebkitEntries(nsTArray<RefPtr<FileSystemEntry>>& aSequence)
 {
   Telemetry::Accumulate(Telemetry::BLINK_FILESYSTEM_USED, true);
   aSequence.AppendElements(mEntries);
-}
-
-bool HTMLInputElement::MayFireChangeOnKeyUp(uint32_t aKeyCode) const
-{
-  switch (mType) {
-    case NS_FORM_INPUT_NUMBER:
-      return aKeyCode == NS_VK_UP || aKeyCode == NS_VK_DOWN;
-    case NS_FORM_INPUT_RANGE:
-      return aKeyCode == NS_VK_UP || aKeyCode == NS_VK_DOWN ||
-             aKeyCode == NS_VK_LEFT || aKeyCode == NS_VK_RIGHT;
-  }
-  return false;
 }
 
 } // namespace dom

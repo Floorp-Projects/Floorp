@@ -43,14 +43,23 @@ function runTests() {
 
   let testIdx = 0;
   let result = parseInt(input.value);
+  let rangeChange = 0;
+  let expectChange = 0;
+
+  input.addEventListener("change", () => {
+    ++rangeChange;
+  }, false);
 
   function runNext() {
     let p = params[testIdx];
     (p["focus"]) ? input.focus() : input.blur();
+    expectChange = p["valueChanged"] == 0 ? expectChange : expectChange + 1;
     result += parseInt(p["valueChanged"]);
     sendWheelAndPaint(input, 1, 1, { deltaY: p["deltaY"], deltaMode: p["deltaMode"] }, () => {
       ok(input.value == result,
          "Handle wheel in range input test-" + testIdx + " expect " + result + " get " + input.value);
+      ok(rangeChange == expectChange,
+         "UA should fire change event when input's value changed, expect " + expectChange + " get " + rangeChange);
       (++testIdx >= params.length) ? SimpleTest.finish() : runNext();
     });
   }

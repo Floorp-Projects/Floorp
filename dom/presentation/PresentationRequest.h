@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_PresentationRequest_h
 #define mozilla_dom_PresentationRequest_h
 
+#include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/DOMEventTargetHelper.h"
 
 class nsIDocument;
@@ -23,9 +24,15 @@ class PresentationRequest final : public DOMEventTargetHelper
 public:
   NS_DECL_ISUPPORTS_INHERITED
 
-  static already_AddRefed<PresentationRequest> Constructor(const GlobalObject& aGlobal,
-                                                           const nsAString& aUrl,
-                                                           ErrorResult& aRv);
+  static already_AddRefed<PresentationRequest> Constructor(
+    const GlobalObject& aGlobal,
+    const nsAString& aUrl,
+    ErrorResult& aRv);
+
+  static already_AddRefed<PresentationRequest> Constructor(
+    const GlobalObject& aGlobal,
+    const Sequence<nsString>& aUrls,
+    ErrorResult& aRv);
 
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
@@ -47,7 +54,7 @@ public:
 
 private:
   PresentationRequest(nsPIDOMWindowInner* aWindow,
-                      const nsAString& aUrl);
+                      nsTArray<nsString>&& aUrls);
 
   ~PresentationRequest();
 
@@ -64,7 +71,9 @@ private:
   // Implement https://w3c.github.io/webappsec-mixed-content/#a-priori-authenticated-url
   bool IsPrioriAuthenticatedURL(const nsAString& aUrl);
 
-  nsString mUrl;
+  bool IsAllURLAuthenticated();
+
+  nsTArray<nsString> mUrls;
 };
 
 } // namespace dom
