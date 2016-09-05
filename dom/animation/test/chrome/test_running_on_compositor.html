@@ -397,19 +397,19 @@ promise_test(function(t) {
 promise_test(function(t) {
   var animation = addDivAndAnimate(t,
                                    {},
-                                   { opacity: [ 0, 1 ] }, 100 * MS_PER_SEC);
+                                   { opacity: [ 0, 1 ] }, 200 * MS_PER_SEC);
 
   return animation.ready.then(function() {
     assert_animation_is_running_on_compositor(animation,
       'Animation reports that it is running on the compositor');
 
-    animation.effect.timing.endDelay = -50 * MS_PER_SEC;
+    animation.effect.timing.endDelay = -100 * MS_PER_SEC;
     return waitForFrame();
   }).then(function() {
     assert_animation_is_running_on_compositor(animation,
       'Animation reports that it is running on the compositor'
       + ' when endTime is positive and endDelay is negative');
-    animation.currentTime = 60 * MS_PER_SEC;
+    animation.currentTime = 110 * MS_PER_SEC;
     return waitForFrame();
   }).then(function() {
     assert_animation_is_not_running_on_compositor(animation,
