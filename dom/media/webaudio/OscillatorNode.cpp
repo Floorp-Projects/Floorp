@@ -420,7 +420,8 @@ OscillatorNode::OscillatorNode(AudioContext* aContext)
 {
   OscillatorNodeEngine* engine = new OscillatorNodeEngine(this, aContext->Destination());
   mStream = AudioNodeStream::Create(aContext, engine,
-                                    AudioNodeStream::NEED_MAIN_THREAD_FINISHED);
+                                    AudioNodeStream::NEED_MAIN_THREAD_FINISHED,
+                                    aContext->Graph());
   engine->SetSourceStream(mStream);
   mStream->AddMainThreadListener(this);
 }
