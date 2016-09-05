@@ -1,0 +1,38 @@
+# DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
+== system-cyclic.html system-cyclic.html
+== system-fixed.html system-fixed.html
+== system-symbolic.html system-symbolic.html
+== system-alphabetic.html system-alphabetic.html
+== system-numeric.html system-numeric.html
+== system-additive.html system-additive.html
+== system-extends.html system-extends.html
+== system-cyclic-invalid.html system-cyclic-invalid.html
+== system-fixed-invalid.html system-fixed-invalid.html
+== system-symbolic-invalid.html system-symbolic-invalid.html
+== system-alphabetic-invalid.html system-alphabetic-invalid.html
+== system-numeric-invalid.html system-numeric-invalid.html
+== system-additive-invalid.html system-additive-invalid.html
+== system-extends-invalid.html system-extends-invalid.html
+== descriptor-negative.html descriptor-negative.html
+== descriptor-prefix.html descriptor-prefix.html
+fails-if(B2G||Mulet) == descriptor-suffix.html descriptor-suffix.html
+# B2G kerning
+# Initial mulet triage: parity with B2G/B2G Desktop
+== descriptor-range.html descriptor-range.html
+== descriptor-pad.html descriptor-pad.html
+== descriptor-fallback.html descriptor-fallback.html
+== descriptor-symbols.html descriptor-symbols.html
+== descriptor-negative-invalid.html descriptor-negative-invalid.html
+== descriptor-prefix-invalid.html descriptor-prefix-invalid.html
+== descriptor-suffix-invalid.html descriptor-suffix-invalid.html
+== descriptor-range-invalid.html descriptor-range-invalid.html
+== descriptor-pad-invalid.html descriptor-pad-invalid.html
+== descriptor-fallback.html descriptor-fallback.html
+== descriptor-symbols-invalid.html descriptor-symbols-invalid.html
+== name-case-sensitivity.html name-case-sensitivity.html
+== dependent-builtin.html dependent-builtin.html
+== redefine-builtin.html redefine-builtin.html
+skip == redefine-attr-mapping.html redefine-attr-mapping.html
+== disclosure-styles.html disclosure-styles.html
+== symbols-function.html symbols-function.html
+== symbols-function-invalid.html symbols-function-invalid.html

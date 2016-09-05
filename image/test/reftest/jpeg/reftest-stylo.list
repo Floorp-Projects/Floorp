@@ -1,0 +1,57 @@
+# DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
+# JPEG tests 
+
+# Images of various sizes.
+fails == jpg-size-1x1.jpg jpg-size-1x1.jpg
+fails == jpg-size-2x2.jpg jpg-size-2x2.jpg
+fails == jpg-size-3x3.jpg jpg-size-3x3.jpg
+fails == jpg-size-4x4.jpg jpg-size-4x4.jpg
+fails == jpg-size-5x5.jpg jpg-size-5x5.jpg
+== jpg-size-6x6.jpg jpg-size-6x6.jpg
+fails == jpg-size-7x7.jpg jpg-size-7x7.jpg
+fails == jpg-size-8x8.jpg jpg-size-8x8.jpg
+fails == jpg-size-9x9.jpg jpg-size-9x9.jpg
+fails == jpg-size-15x15.jpg jpg-size-15x15.jpg
+fails == jpg-size-16x16.jpg jpg-size-16x16.jpg
+fails == jpg-size-17x17.jpg jpg-size-17x17.jpg
+fails == jpg-size-31x31.jpg jpg-size-31x31.jpg
+fails == jpg-size-32x32.jpg jpg-size-32x32.jpg
+fails == jpg-size-33x33.jpg jpg-size-33x33.jpg
+# Progressive encoding
+fails == jpg-progressive.jpg jpg-progressive.jpg
+# Grayscale colorspace
+fails == jpg-gray.jpg jpg-gray.jpg
+# CMYK colorspace
+fails == jpg-cmyk-1.jpg jpg-cmyk-1.jpg
+fails == jpg-cmyk-2.jpg jpg-cmyk-2.jpg
+# This intermittently fails on Android due to async image decoding (bug #685516)
+# Sometimes the image decodes in time and the test passes, other times the image
+# appears blank and the test fails. This only seems to be triggered since the
+# switch to 24-bit colour (bug #803299).
+fails random-if(Android) == jpg-srgb-icc.jpg jpg-srgb-icc.jpg
+
+# webcam-simulacrum.mjpg is a hand-edited file containing red.jpg and blue.jpg,
+# concatenated together with the relevant headers for
+# multipart/x-mixed-replace. Specifically, with the headers in
+# webcam-simulacrum.mjpg^headers^, the web browser will get the following:
+#
+# HTTP 200 OK
+# Content-Type: multipart/x-mixed-replace;boundary=BOUNDARYOMG
+# 
+# --BOUNDARYOMG\r\n
+# Content-Type: image/jpeg\r\n
+# \r\n
+# <contents of red.jpg> (no newline)
+# --BOUNDARYOMG\r\n
+# Content-Type: image/jpeg\r\n
+# \r\n
+# <contents of blue.jpg> (no newline)
+# --BOUNDARYOMG--\r\n
+# 
+# (The boundary is arbitrary, and just has to be defined as something that
+# won't be in the text of the contents themselves. --$(boundary)\r\n means
+# "Here is the beginning of a boundary," and --$(boundary)-- means "All done
+# sending you parts.")
+skip HTTP == webcam-simulacrum.mjpg webcam-simulacrum.mjpg
+fails pref(image.mozsamplesize.enabled,true) fuzzy(21,256) == jpg-size-32x32.jpg#-moz-samplesize=2 jpg-size-32x32.jpg#-moz-samplesize=2
+skip pref(image.mozsamplesize.enabled,true) fuzzy(92,16) == jpg-size-32x32.jpg#-moz-samplesize=8 jpg-size-32x32.jpg#-moz-samplesize=8

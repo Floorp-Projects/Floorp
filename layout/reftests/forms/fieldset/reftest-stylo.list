@@ -1,0 +1,19 @@
+# DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
+fuzzy-if(skiaContent,2,13) == dynamic-legend-scroll-1.html dynamic-legend-scroll-1.html
+== fieldset-hidden-1.html fieldset-hidden-1.html
+== fieldset-intrinsic-width-1.html fieldset-intrinsic-width-1.html
+== fieldset-percentage-padding-1.html fieldset-percentage-padding-1.html
+== fieldset-scroll-1.html fieldset-scroll-1.html
+== fieldset-scrolled-1.html fieldset-scrolled-1.html
+random-if(B2G||Mulet) == fieldset-overflow-auto-1.html fieldset-overflow-auto-1.html
+# Initial mulet triage: parity with B2G/B2G Desktop
+fuzzy-if(winWidget&&!layersGPUAccelerated,121,221) == positioned-container-1.html positioned-container-1.html
+== relpos-legend-1.html relpos-legend-1.html
+== relpos-legend-2.html relpos-legend-2.html
+skip-if((B2G&&browserIsRemote)||Mulet) == sticky-legend-1.html sticky-legend-1.html
+# Initial mulet triage: parity with B2G/B2G Desktop
+fails fuzzy-if(skiaContent,1,40768) == abs-pos-child-sizing.html abs-pos-child-sizing.html
+== overflow-hidden.html overflow-hidden.html
+== legend-rtl.html legend-rtl.html
+== fieldset-grid-001.html fieldset-grid-001.html
+== fieldset-flexbox-001.html fieldset-flexbox-001.html
