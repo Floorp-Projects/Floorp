@@ -81,6 +81,7 @@ MarkValidRegion(void* addr, size_t len)
 static uint64_t
 SharedArrayMappedSize()
 {
+    MOZ_RELEASE_ASSERT(jit::JitOptions.wasmTestMode);
     MOZ_RELEASE_ASSERT(sizeof(SharedArrayRawBuffer) < gc::SystemPageSize());
     return wasm::MappedSize + gc::SystemPageSize();
 }
@@ -113,13 +114,12 @@ SharedArrayRawBuffer::New(JSContext* cx, uint32_t length)
     uint32_t allocSize = SharedArrayAllocSize(length);
     if (allocSize <= length)
         return nullptr;
+
+    bool preparedForAsmJS = jit::JitOptions.wasmTestMode && IsValidAsmJSHeapLength(length);
+
     void* p = nullptr;
-    if (!IsValidAsmJSHeapLength(length)) {
-        p = MapMemory(allocSize, true);
-        if (!p)
-            return nullptr;
-    } else {
 #ifdef WASM_HUGE_MEMORY
+    if (preparedForAsmJS) {
         // Test >= to guard against the case where multiple extant runtimes
         // race to allocate.
         if (++numLive >= maxLive) {
@@ -143,20 +143,23 @@ SharedArrayRawBuffer::New(JSContext* cx, uint32_t length)
             numLive--;
             return nullptr;
         }
-#   if defined(MOZ_VALGRIND) && defined(VALGRIND_DISABLE_ADDR_ERROR_REPORTING_IN_RANGE)
+
+# if defined(MOZ_VALGRIND) && defined(VALGRIND_DISABLE_ADDR_ERROR_REPORTING_IN_RANGE)
         // Tell Valgrind/Memcheck to not report accesses in the inaccessible region.
         VALGRIND_DISABLE_ADDR_ERROR_REPORTING_IN_RANGE((unsigned char*)p + allocSize,
                                                        SharedArrayMappedSize() - allocSize);
-#   endif
-#else
+# endif
+    } else
+#endif
+    {
         p = MapMemory(allocSize, true);
         if (!p)
             return nullptr;
-#endif
     }
+
     uint8_t* buffer = reinterpret_cast<uint8_t*>(p) + gc::SystemPageSize();
     uint8_t* base = buffer - sizeof(SharedArrayRawBuffer);
-    SharedArrayRawBuffer* rawbuf = new (base) SharedArrayRawBuffer(buffer, length);
+    SharedArrayRawBuffer* rawbuf = new (base) SharedArrayRawBuffer(buffer, length, preparedForAsmJS);
     MOZ_ASSERT(rawbuf->length == length); // Deallocation needs this
     return rawbuf;
 }
@@ -173,32 +176,30 @@ SharedArrayRawBuffer::dropReference()
 {
     // Drop the reference to the buffer.
     uint32_t refcount = --this->refcount_; // Atomic.
+    if (refcount)
+        return;
 
     // If this was the final reference, release the buffer.
-    if (refcount == 0) {
-        SharedMem<uint8_t*> p = this->dataPointerShared() - gc::SystemPageSize();
 
-        MOZ_ASSERT(p.asValue() % gc::SystemPageSize() == 0);
+    SharedMem<uint8_t*> p = this->dataPointerShared() - gc::SystemPageSize();
+    MOZ_ASSERT(p.asValue() % gc::SystemPageSize() == 0);
 
-        uint8_t* address = p.unwrap(/*safe - only reference*/);
-        uint32_t allocSize = SharedArrayAllocSize(this->length);
-        if (!IsValidAsmJSHeapLength(this->length)) {
-            UnmapMemory(address, allocSize);
-        } else {
+    uint8_t* address = p.unwrap(/*safe - only reference*/);
+    uint32_t allocSize = SharedArrayAllocSize(this->length);
+
 #if defined(WASM_HUGE_MEMORY)
-            numLive--;
-            UnmapMemory(address, SharedArrayMappedSize());
-#       if defined(MOZ_VALGRIND) \
-           && defined(VALGRIND_ENABLE_ADDR_ERROR_REPORTING_IN_RANGE)
-            // Tell Valgrind/Memcheck to recommence reporting accesses in the
-            // previously-inaccessible region.
-            VALGRIND_ENABLE_ADDR_ERROR_REPORTING_IN_RANGE(address,
-                                                          SharedArrayMappedSize());
-#       endif
-#else
-            UnmapMemory(address, allocSize);
+    if (this->preparedForAsmJS) {
+        numLive--;
+        UnmapMemory(address, SharedArrayMappedSize());
+# if defined(MOZ_VALGRIND) && defined(VALGRIND_ENABLE_ADDR_ERROR_REPORTING_IN_RANGE)
+        // Tell Valgrind/Memcheck to recommence reporting accesses in the
+        // previously-inaccessible region.
+        VALGRIND_ENABLE_ADDR_ERROR_REPORTING_IN_RANGE(address, SharedArrayMappedSize());
+# endif
+    } else
 #endif
-        }
+    {
+        UnmapMemory(address, allocSize);
     }
 }
 
