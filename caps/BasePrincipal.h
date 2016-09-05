@@ -37,8 +37,7 @@ public:
            mAddonId == aOther.mAddonId &&
            mUserContextId == aOther.mUserContextId &&
            mSignedPkg == aOther.mSignedPkg &&
-           mPrivateBrowsingId == aOther.mPrivateBrowsingId &&
-           mFirstPartyDomain == aOther.mFirstPartyDomain;
+           mPrivateBrowsingId == aOther.mPrivateBrowsingId;
   }
   bool operator!=(const OriginAttributes& aOther) const
   {
@@ -190,10 +189,6 @@ public:
       return false;
     }
 
-    if (mFirstPartyDomain.WasPassed() && mFirstPartyDomain.Value() != aAttrs.mFirstPartyDomain) {
-      return false;
-    }
-
     return true;
   }
 
@@ -227,11 +222,6 @@ public:
 
     if (mPrivateBrowsingId.WasPassed() && aOther.mPrivateBrowsingId.WasPassed() &&
         mPrivateBrowsingId.Value() != aOther.mPrivateBrowsingId.Value()) {
-      return false;
-    }
-
-    if (mFirstPartyDomain.WasPassed() && aOther.mFirstPartyDomain.WasPassed() &&
-        mFirstPartyDomain.Value() != aOther.mFirstPartyDomain.Value()) {
       return false;
     }
 
