@@ -39,6 +39,7 @@
 #include "Layers.h"
 #include "gfxContext.h"
 #include "nsILoadContext.h"
+#include "nsDocShell.h"
 
 // for painting the background window
 #include "mozilla/LookAndFeel.h"
@@ -386,6 +387,12 @@ nsWebBrowser::SetIsActive(bool aIsActive)
     return mDocShell->SetIsActive(aIsActive);
   }
   return NS_OK;
+}
+
+void
+nsWebBrowser::SetOriginAttributes(const DocShellOriginAttributes& aAttrs)
+{
+  mOriginAttributes = aAttrs;
 }
 
 //*****************************************************************************
@@ -1193,6 +1200,7 @@ nsWebBrowser::Create()
   nsCOMPtr<nsIDocShell> docShell(
     do_CreateInstance("@mozilla.org/docshell;1", &rv));
   NS_ENSURE_SUCCESS(rv, rv);
+  nsDocShell::Cast(docShell)->SetOriginAttributes(mOriginAttributes);
   rv = SetDocShell(docShell);
   NS_ENSURE_SUCCESS(rv, rv);
 
