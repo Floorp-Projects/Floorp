@@ -6,6 +6,7 @@
 package org.mozilla.gecko.icons.loader;
 
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.support.annotation.VisibleForTesting;
 import android.util.Log;
 
@@ -60,9 +61,12 @@ public class IconDownloader implements IconLoader {
                 return null;
             }
 
-            return IconResponse.createFromNetwork(
-                    result.getBestBitmap(request.getTargetSize()),
-                    iconUrl);
+            final Bitmap bitmap = result.getBestBitmap(request.getTargetSize());
+            if (bitmap == null) {
+                return null;
+            }
+
+            return IconResponse.createFromNetwork(bitmap, iconUrl);
         } catch (Exception e) {
             Log.e(LOGTAG, "Error reading favicon", e);
         } catch (OutOfMemoryError e) {
