@@ -238,6 +238,29 @@ function teardown() {
   gScript.sendAsyncMessage('teardown');
 }
 
+function testConstructRequestError() {
+  return Promise.all([
+    new Promise(function(aResolve, aReject) {
+      try {
+        request = new PresentationRequest("\\\\\\");
+      }
+      catch(e) {
+        is(e.name, "SyntaxError", "Expect to get SyntaxError.");
+        aResolve();
+      }
+    }),
+    new Promise(function(aResolve, aReject) {
+      try {
+        request = new PresentationRequest([]);
+      }
+      catch(e) {
+        is(e.name, "NotSupportedError", "Expect to get NotSupportedError.");
+        aResolve();
+      }
+    }),
+  ]);
+}
+
 function runTests() {
   ok(window.PresentationRequest, "PresentationRequest should be available.");
 
@@ -248,6 +271,7 @@ function runTests() {
   then(testCloseConnection).
   then(testReconnect).
   then(testCloseConnection).
+  then(testConstructRequestError).
   then(teardown);
 }
 

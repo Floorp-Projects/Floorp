@@ -76,10 +76,6 @@ leak:processInternalEntity
 # Bug 1187421 - With e10s, NSS does not always free the error stack. m1.
 leak:nss_ClearErrorStack
 
-# Bug 1189430 - DNS leaks in mochitest-chrome.
-leak:nsDNSService::AsyncResolveExtended
-leak:_GetAddrInfo_Portable
-
 # Bug 1189568 - Indirect leaks of IMContextWrapper and nsIntRect.
 leak:nsWindow::Create
 leak:nsBaseWidget::StoreWindowClipRegion

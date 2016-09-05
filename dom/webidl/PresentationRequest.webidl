@@ -5,6 +5,7 @@
  */
 
 [Constructor(DOMString url),
+ Constructor(sequence<DOMString> urls),
  Pref="dom.presentation.controller.enabled"]
 interface PresentationRequest : EventTarget {
   /*

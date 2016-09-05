@@ -1515,12 +1515,6 @@ private:
            aType == NS_FORM_INPUT_NUMBER;
   }
 
-  /**
-   * Returns true if the key code may induce the input's value changed to fire
-   * a "change" event accordingly.
-   */
-  bool MayFireChangeOnKeyUp(uint32_t aKeyCode) const;
-
   struct nsFilePickerFilter {
     nsFilePickerFilter()
       : mFilterMask(0) {}

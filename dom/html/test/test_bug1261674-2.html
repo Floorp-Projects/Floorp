@@ -41,6 +41,11 @@ function runTests() {
 
   let testIdx = 0;
   let result = parseInt(input.value);
+  let rangeChange = 0;
+
+  input.addEventListener("change", () => {
+    ++rangeChange;
+  }, false);
 
   function runNext() {
     let p = params[testIdx];
@@ -48,6 +53,7 @@ function runTests() {
     sendWheelAndPaint(input, 1, 1, { deltaY: p["deltaY"], deltaMode: p["deltaMode"] }, () => {
       ok(input.value == result,
          "Handle wheel in range input test-" + testIdx + " expect " + result + " get " + input.value);
+      ok(rangeChange == 0, "Wheel event should not trigger change event when max < min");
       testIdx++;
       (testIdx >= params.length) ? SimpleTest.finish() : runNext();
     });

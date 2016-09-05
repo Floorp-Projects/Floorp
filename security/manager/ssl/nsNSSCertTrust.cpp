@@ -139,34 +139,6 @@ nsNSSCertTrust::SetValidCA()
                   false, false);
 }
 
-void
-nsNSSCertTrust::SetTrustedServerCA()
-{
-  SetSSLTrust(false, false,
-              true, true, false,
-              false, false);
-  SetEmailTrust(false, false,
-                true, true, false,
-                false, false);
-  SetObjSignTrust(false, false,
-                  true, true, false,
-                  false, false);
-}
-
-void
-nsNSSCertTrust::SetTrustedCA()
-{
-  SetSSLTrust(false, false,
-              true, true, true,
-              false, false);
-  SetEmailTrust(false, false,
-                true, true, true,
-                false, false);
-  SetObjSignTrust(false, false,
-                  true, true, true,
-                  false, false);
-}
-
 void 
 nsNSSCertTrust::SetValidPeer()
 {
@@ -181,34 +153,6 @@ nsNSSCertTrust::SetValidPeer()
                   false, false);
 }
 
-void 
-nsNSSCertTrust::SetTrustedPeer()
-{
-  SetSSLTrust(true, true,
-              false, false, false,
-              false, false);
-  SetEmailTrust(true, true,
-                false, false, false,
-                false, false);
-  SetObjSignTrust(true, true,
-                  false, false, false,
-                  false, false);
-}
-
-void
-nsNSSCertTrust::SetUser()
-{
-  SetSSLTrust(false, false,
-              false, false, false,
-              true, false);
-  SetEmailTrust(false, false,
-                false, false, false,
-                true, false);
-  SetObjSignTrust(false, false,
-                  false, false, false,
-                  true, false);
-}
-
 bool
 nsNSSCertTrust::HasAnyCA()
 {
@@ -217,20 +161,6 @@ nsNSSCertTrust::HasAnyCA()
       hasTrust(mTrust.objectSigningFlags, CERTDB_VALID_CA))
     return true;
   return false;
-}
-
-bool
-nsNSSCertTrust::HasCA(bool checkSSL, 
-                      bool checkEmail,  
-                      bool checkObjSign)
-{
-  if (checkSSL && !hasTrust(mTrust.sslFlags, CERTDB_VALID_CA))
-    return false;
-  if (checkEmail && !hasTrust(mTrust.emailFlags, CERTDB_VALID_CA))
-    return false;
-  if (checkObjSign && !hasTrust(mTrust.objectSigningFlags, CERTDB_VALID_CA))
-    return false;
-  return true;
 }
 
 bool
@@ -255,20 +185,6 @@ nsNSSCertTrust::HasAnyUser()
       hasTrust(mTrust.objectSigningFlags, CERTDB_USER))
     return true;
   return false;
-}
-
-bool
-nsNSSCertTrust::HasUser(bool checkSSL, 
-                        bool checkEmail,  
-                        bool checkObjSign)
-{
-  if (checkSSL && !hasTrust(mTrust.sslFlags, CERTDB_USER))
-    return false;
-  if (checkEmail && !hasTrust(mTrust.emailFlags, CERTDB_USER))
-    return false;
-  if (checkObjSign && !hasTrust(mTrust.objectSigningFlags, CERTDB_USER))
-    return false;
-  return true;
 }
 
 bool
@@ -315,4 +231,3 @@ nsNSSCertTrust::hasTrust(unsigned int t, unsigned int v)
 {
   return !!(t & v);
 }
-
