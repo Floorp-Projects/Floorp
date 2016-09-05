@@ -140,10 +140,7 @@ JS_ShutDown(void)
 
     js::DestroyHelperThreadsState();
 
-#ifdef JS_TRACE_LOGGING
-    js::DestroyTraceLoggerThreadState();
-    js::DestroyTraceLoggerGraphState();
-#endif
+    JS_DestroyTraceLogger();
 
     // The only difficult-to-address reason for the restriction that you can't
     // call JS_Init/stuff/JS_ShutDown multiple times is the Windows PRMJ
@@ -161,6 +158,15 @@ JS_ShutDown(void)
 #endif // EXPOSE_INTL_API
 
     libraryInitState = InitState::ShutDown;
+}
+
+JS_PUBLIC_API(void)
+JS_DestroyTraceLogger(void)
+{
+#ifdef JS_TRACE_LOGGING
+    js::DestroyTraceLoggerThreadState();
+    js::DestroyTraceLoggerGraphState();
+#endif
 }
 
 JS_PUBLIC_API(bool)
