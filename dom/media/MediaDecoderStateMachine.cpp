@@ -1076,6 +1076,9 @@ MediaDecoderStateMachine::ExitState()
     case DECODER_STATE_COMPLETED:
       mSentPlaybackEndedEvent = false;
       break;
+    case DECODER_STATE_SHUTDOWN:
+      MOZ_DIAGNOSTIC_ASSERT(false, "Shouldn't escape the SHUTDOWN state.");
+      break;
     default:
       break;
   }
