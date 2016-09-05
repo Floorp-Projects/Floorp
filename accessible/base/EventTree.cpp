@@ -71,7 +71,8 @@ TreeMutation::AfterInsertion(Accessible* aChild)
   }
 
   if (mEventTree != kNoEventTree) {
-    mEventTree->Shown(aChild);
+    RefPtr<AccShowEvent> ev = new AccShowEvent(aChild);
+    mEventTree->Mutated(ev);
     Controller()->QueueNameChange(aChild);
   }
 }
@@ -93,7 +94,8 @@ TreeMutation::BeforeRemoval(Accessible* aChild, bool aNoShutdown)
   }
 
   if (mEventTree != kNoEventTree) {
-    mEventTree->Hidden(aChild, !aNoShutdown);
+    RefPtr<AccHideEvent> ev = new AccHideEvent(aChild, !aNoShutdown);
+    mEventTree->Mutated(ev);
     Controller()->QueueNameChange(aChild);
   }
 }
