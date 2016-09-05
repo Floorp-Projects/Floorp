@@ -78,6 +78,9 @@ public:
   virtual bool
   Recv__delete__(const nsresult& aResult) override;
 
+  virtual bool
+  RecvNotifyRequestUrlSelected(const nsString& aUrl) override;
+
 private:
   virtual ~PresentationRequestChild();
 

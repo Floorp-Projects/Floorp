@@ -1016,7 +1016,12 @@ gfxFontUtils::RenameFont(const nsAString& aName, const uint8_t *aFontData,
     uint16_t nameCount = ArrayLength(neededNameIDs);
 
     // leave room for null-terminator
-    uint16_t nameStrLength = (aName.Length() + 1) * sizeof(char16_t); 
+    uint32_t nameStrLength = (aName.Length() + 1) * sizeof(char16_t);
+    if (nameStrLength > 65535) {
+        // The name length _in bytes_ must fit in an unsigned short field;
+        // therefore, a name longer than this cannot be used.
+        return NS_ERROR_FAILURE;
+    }
 
     // round name table size up to 4-byte multiple
     uint32_t nameTableSize = (sizeof(NameHeader) +

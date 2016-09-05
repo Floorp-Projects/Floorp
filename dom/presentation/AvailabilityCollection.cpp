@@ -72,7 +72,7 @@ AvailabilityCollection::Remove(PresentationAvailability* aAvailability)
 }
 
 already_AddRefed<PresentationAvailability>
-AvailabilityCollection::Find(const uint64_t aWindowId, const nsAString& aUrl)
+AvailabilityCollection::Find(const uint64_t aWindowId, const nsTArray<nsString>& aUrls)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -85,7 +85,7 @@ AvailabilityCollection::Find(const uint64_t aWindowId, const nsAString& aUrl)
       continue;
     }
 
-    if (availability->Equals(aWindowId, aUrl)) {
+    if (availability->Equals(aWindowId, aUrls)) {
       RefPtr<PresentationAvailability> matchedAvailability = availability.get();
       return matchedAvailability.forget();
     }
