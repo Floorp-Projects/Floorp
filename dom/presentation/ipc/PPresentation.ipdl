@@ -10,8 +10,6 @@ include protocol PPresentationBuilder;
 
 include InputStreamParams;
 
-using mozilla::dom::TabId from "mozilla/dom/ipc/IdType.h";
-
 namespace mozilla {
 namespace dom {
 
@@ -22,7 +20,6 @@ struct StartSessionRequest
   nsString origin;
   nsString deviceId;
   uint64_t windowId;
-  TabId tabId;
 };
 
 struct SendSessionMessageRequest

@@ -4,7 +4,6 @@
 
 #include "nsISupports.idl"
 
-interface nsIDOMEventTarget;
 interface nsIPresentationDevice;
 
 %{C++
@@ -22,9 +21,6 @@ interface nsIPresentationDeviceRequest : nsISupports
 
   // The URL to be opened after selection.
   readonly attribute DOMString requestURL;
-
-  // The XUL browser element that the request was originated in.
-  readonly attribute nsIDOMEventTarget chromeEventHandler;
 
   /*
    * Callback after selecting a device
