@@ -1,0 +1,7 @@
+# DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
+# APNG tests 
+#
+# delaytest.html delays the reftest snapshot to allow time for the
+# animation to complete.
+random == delaytest.html?bug411852-1.png delaytest.html?bug411852-1.png
+random == delaytest.html?bug546272.png delaytest.html?bug546272.png

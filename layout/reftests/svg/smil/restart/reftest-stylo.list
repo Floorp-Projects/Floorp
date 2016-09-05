@@ -1,0 +1,9 @@
+# DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
+# Tests for restart behaviour
+== reset-1.svg reset-1.svg
+== reset-2.svg reset-2.svg
+== reset-3.svg reset-3.svg
+== reset-4.svg reset-4.svg
+# reset-5.svg is no longer valid and has been removed
+== reset-6.svg reset-6.svg
+== reset-7.svg reset-7.svg
