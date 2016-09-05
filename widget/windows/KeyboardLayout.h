@@ -321,10 +321,6 @@ private:
   // mIsOverridingKeyboardLayout is true if the instance temporarily overriding
   // keyboard layout with specified by the constructor.
   bool    mIsOverridingKeyboardLayout;
-  // mIsFollowedByNonControlCharMessage may be true when mMsg is a keydown
-  // message.  When the keydown message is followed by a char message, this
-  // is true.
-  bool    mIsFollowedByNonControlCharMessage;
 
   nsTArray<FakeCharMsg>* mFakeCharMsgs;
 
