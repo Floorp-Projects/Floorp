@@ -2160,7 +2160,8 @@ Accessible::MoveChild(uint32_t aNewIndex, Accessible* aChild)
 
   EventTree* eventTree = mDoc->Controller()->QueueMutation(this);
   if (eventTree) {
-    eventTree->Hidden(aChild, false);
+    RefPtr<AccHideEvent> event = new AccHideEvent(aChild, false);
+    eventTree->Mutated(event);
   }
 
   mEmbeddedObjCollector = nullptr;
@@ -2193,7 +2194,8 @@ Accessible::MoveChild(uint32_t aNewIndex, Accessible* aChild)
   }
 
   if (eventTree) {
-    eventTree->Shown(aChild);
+    RefPtr<AccShowEvent> event = new AccShowEvent(aChild);
+    eventTree->Mutated(event);
     mDoc->Controller()->QueueNameChange(aChild);
   }
 }
