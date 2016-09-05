@@ -1,0 +1,39 @@
+# DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
+# Tests using placeholder-focus-ref.html as a reference are disabled because
+# we can't change the caret colour nor disable it and we can't change the
+# text colour without changing the caret which means that the tested page has
+# a black caret with a grey text and the reference has a grey caret with grey
+# text. The only thing that is doable is to make the caret grey in the tested
+# page but that would make the test moot because a failure wouldn't be seen.
+# A real way to fix this would be to be able to style the caret or to implement
+# ::value (bug 648643), depending of the ::value behaviour (it could change the
+# caret colour and the text colour or just the text colour).
+
+== placeholder-1-text.html placeholder-1-text.html
+== placeholder-1-password.html placeholder-1-password.html
+== placeholder-1-textarea.html placeholder-1-textarea.html
+== placeholder-2.html placeholder-2.html
+== placeholder-2-textarea.html placeholder-2-textarea.html
+== placeholder-3.html placeholder-3.html
+== placeholder-4.html placeholder-4.html
+== placeholder-5.html placeholder-5.html
+fuzzy-if(winWidget,160,10) fuzzy-if(Android,1,1) fuzzy-if(asyncPan&&!layersGPUAccelerated,146,317) fuzzy-if(OSX==1010&&browserIsRemote,1,8) == placeholder-6.html placeholder-6.html
+skip-if(B2G||Mulet||(Android&&asyncPan)) == placeholder-6-textarea.html placeholder-6-textarea.html
+# Initial mulet triage: parity with B2G/B2G Desktop
+# needs-focus == placeholder-7.html placeholder-7.html
+# needs-focus == placeholder-8.html placeholder-8.html
+# needs-focus == placeholder-9.html placeholder-9.html
+needs-focus == placeholder-10.html placeholder-10.html
+== placeholder-11.html placeholder-11.html
+== placeholder-12.html placeholder-12.html
+== placeholder-13.html placeholder-13.html
+== placeholder-14.html placeholder-14.html
+== placeholder-18.html placeholder-18.html
+random-if(winWidget) skip-if((B2G&&browserIsRemote)||Mulet) == placeholder-19.xul placeholder-19.xul
+# bug 974780
+# Initial mulet triage: parity with B2G/B2G Desktop
+# needs-focus == placeholder-20.html placeholder-20.html
+needs-focus == placeholder-21.html placeholder-21.html
+needs-focus == placeholder-22.html placeholder-22.html
+== placeholder-rtl.html placeholder-rtl.html
+pref(dom.placeholder.show_on_focus,false) needs-focus == placeholder-focus-pref.html placeholder-focus-pref.html

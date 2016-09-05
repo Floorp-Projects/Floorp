@@ -1,0 +1,60 @@
+# DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
+== no-attrs.html no-attrs.html
+fails HTTP == 404-data.html 404-data.html
+fails HTTP == 404-data-with-type.html 404-data-with-type.html
+fails == page-as-data.html page-as-data.html
+== page-as-data-with-type.html page-as-data-with-type.html
+fails == connection-refused.html connection-refused.html
+== image.html image.html
+== image-with-type.html image-with-type.html
+fails skip-if(B2G||Mulet) fails-if(Android) == image-no-useful-extension-typesniff.html image-no-useful-extension-typesniff.html
+# bug 773482
+# Initial mulet triage: parity with B2G/B2G Desktop
+fails == image-no-useful-extension-with-type.html image-no-useful-extension-with-type.html
+#
+# This test must be run on an HTTP server because it relies on the HTTP
+# Content-Type overriding the type specified by the attribute on the object,
+# but when run from a local file the type attribute will override the
+# content-sniffed assumed type (text/html based entirely on the extension).
+#
+fails HTTP == type-overridden-by-server.html type-overridden-by-server.html
+#
+# XXX missing tests 012-015 from http://biesi.damowmow.com/object/ here; need
+#     a controllable HTTP server (or preferably one run on the test machine)
+#     to add them
+#
+== malformed-should-fallback.html malformed-should-fallback.html
+fails == malformed-with-type.html malformed-with-type.html
+#
+# XXX missing tests 018-021 from http://biesi.damowmow.com/object/ here; need
+#     a controllable HTTP server (or preferably one run on the test machine)
+#     to add them
+#
+fails == unknown-type.html unknown-type.html
+fails == malformed-xml.html malformed-xml.html
+fails == malformed-xml-with-type.html malformed-xml-with-type.html
+#
+# XXX missing tests 025-28 from http://biesi.damowmow.com/object/ here; would
+#     need to require Flash on the test machine to run them
+#
+# XXX need to support <img src="foo.svg"> for these to pass
+fails == svg.html svg.html
+fails == svg-with-type.html svg-with-type.html
+#
+# XXX missing test 031 from http://biesi.damowmow.com/object/ here; need to
+#     first support the standby attribute on objects, then need to figure out
+#     how to reproduce the setup needed for that test such that reftest will
+#     handle it correctly, since a still-loading image probably delays the
+#     snapshot reftest takes
+#
+# XXX missing test 032 from http://biesi.damowmow.com/object/ here; would
+#     need to require Java on test machine to run it
+#
+# XXX missing test 033 from http://biesi.damowmow.com/object/ here; not sure
+#     how nullplugin testing should work
+#
+#
+# XXX missing test 034 from http://biesi.damowmow.com/object/ here; would
+#     need to require Flash on the test machine to run them
+#
+== malformed-uri.html malformed-uri.html
