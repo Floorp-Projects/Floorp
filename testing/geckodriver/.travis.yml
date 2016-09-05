@@ -46,7 +46,7 @@ matrix:
 
 install:
   - export PATH="$PATH:$HOME/.cargo/bin"
-  - curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain=stable
+  - curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain=beta
   - rustc -V
   - cargo -V
 
