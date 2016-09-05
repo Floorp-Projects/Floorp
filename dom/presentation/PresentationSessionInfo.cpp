@@ -398,6 +398,11 @@ PresentationSessionInfo::NotifyTransportReady()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
+  if (mState != nsIPresentationSessionListener::STATE_CONNECTING &&
+      mState != nsIPresentationSessionListener::STATE_CONNECTED) {
+    return NS_OK;
+  }
+
   mIsTransportReady = true;
 
   // Established RTCDataChannel implies responder is ready.
@@ -469,6 +474,10 @@ NS_IMETHODIMP
 PresentationSessionInfo::OnSessionTransport(nsIPresentationSessionTransport* transport)
 {
   SetBuilder(nullptr);
+
+  if (mState != nsIPresentationSessionListener::STATE_CONNECTING) {
+    return NS_ERROR_FAILURE;
+  }
 
   // The session transport is managed by content process
   if (!transport) {
@@ -1024,6 +1033,7 @@ nsresult
 PresentationPresentingInfo::InitTransportAndSendAnswer()
 {
   MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mState == nsIPresentationSessionListener::STATE_CONNECTING);
 
   uint8_t type = 0;
   nsresult rv = mRequesterDescription->GetType(&type);
