@@ -35,6 +35,13 @@ public class LegacyLoader implements IconLoader {
             return null;
         }
 
+        if (request.getIconCount() > 1) {
+            // There are still other icon URLs to try. Let's try to load from the legacy loader only
+            // if there's one icon left and the other loads have failed. We will ignore the icon URL
+            // anyways and try to receive the legacy icon URL from the database.
+            return null;
+        }
+
         final Bitmap bitmap = loadBitmapFromDatabase(request);
 
         if (bitmap == null) {
