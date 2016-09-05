@@ -106,14 +106,14 @@ import java.util.concurrent.TimeUnit;
      * Ordered list of processors that run after an icon has been loaded.
      */
     private static final List<Processor> PROCESSORS = Arrays.asList(
-            // Extract the dominant color from the icon
-            new ColorProcessor(),
-
             // Store the icon (and mapping) in the disk cache if needed
             new DiskProcessor(),
 
             // Resize the icon to match the target size (if possible)
             new ResizingProcessor(),
+
+            // Extract the dominant color from the icon
+            new ColorProcessor(),
 
             // Store the icon in the memory cache
             new MemoryProcessor()
