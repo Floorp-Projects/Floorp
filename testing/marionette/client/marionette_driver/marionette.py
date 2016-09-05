@@ -879,15 +879,13 @@ class Marionette(object):
 
         with self.using_context("content"):
             self.execute_async_script("""
-                let start = new Date();
-                let end = new Date(start.valueOf() + 5000);
                 let wait = function() {
-                  let now = new Date();
-                  if (window.wrappedJSObject.permChanged || end >= now) {
+                  if (window.wrappedJSObject.permChanged) {
                     marionetteScriptFinished();
+                  } else {
+                    window.setTimeout(wait, 100);
                   }
-                };
-                window.setTimeout(wait, 100);
+                }();
                 """, sandbox="system")
 
     @contextmanager
