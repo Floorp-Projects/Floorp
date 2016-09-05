@@ -267,6 +267,10 @@ private:
   // WM_SYSDEADCHAR message which follows WM_KEYDOWN.
   // Note that the stored messaged are already removed from the queue.
   nsTArray<MSG> mFollowingCharMsgs;
+  // If dispatching eKeyDown or eKeyPress event causes focus change,
+  // the instance shouldn't handle remaning char messages.  For checking it,
+  // this should store first focused window.
+  HWND mFocusedWndBeforeDispatch;
 
   uint32_t mDOMKeyCode;
   KeyNameIndex mKeyNameIndex;
@@ -526,6 +530,15 @@ private:
    * state.
    */
   void ComputeInputtingStringWithKeyboardLayout();
+
+  /**
+   * IsFocusedWindowChanged() returns true if focused window is changed
+   * after the instance is created.
+   */
+  bool IsFocusedWindowChanged() const
+  {
+    return mFocusedWndBeforeDispatch != ::GetFocus();
+  }
 };
 
 class KeyboardLayout
