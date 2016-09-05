@@ -687,13 +687,12 @@ private:
   void HandleDoubleTap(const CSSPoint& aPoint, const Modifiers& aModifiers,
                        const ScrollableLayerGuid& aGuid);
 
-  // Notify others that our TabContext has been updated.
+  // Notify others that our TabContext has been updated.  (At the moment, this
+  // sets the appropriate origin attributes on our docshell.)
   //
   // You should call this after calling TabContext::SetTabContext().  We also
   // call this during Init().
-  //
-  // @param aIsPreallocated  true if this is called for Preallocated Tab.
-  void NotifyTabContextUpdated(bool aIsPreallocated);
+  void NotifyTabContextUpdated();
 
   // Update the frameType on our docshell.
   void UpdateFrameType();
