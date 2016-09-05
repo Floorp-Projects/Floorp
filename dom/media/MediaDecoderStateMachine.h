@@ -333,9 +333,8 @@ private:
   bool HaveEnoughDecodedAudio();
   bool HaveEnoughDecodedVideo();
 
-  // Returns true if the state machine has shutdown or is in the process of
-  // shutting down. The decoder monitor must be held while calling this.
-  bool IsShutdown();
+  // True if shutdown process has begun.
+  bool IsShutdown() const;
 
   // Returns true if we're currently playing. The decoder monitor must
   // be held.
