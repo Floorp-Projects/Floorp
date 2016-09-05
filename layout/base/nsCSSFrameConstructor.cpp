@@ -6513,10 +6513,7 @@ nsCSSFrameConstructor::IsValidSibling(nsIFrame*              aSibling,
                                       StyleDisplay&          aDisplay)
 {
   nsIFrame* parentFrame = aSibling->GetParent();
-  nsIAtom* parentType = nullptr;
-  if (parentFrame) {
-    parentType = parentFrame->GetType();
-  }
+  nsIAtom* parentType = parentFrame->GetType();
 
   StyleDisplay siblingDisplay = aSibling->GetDisplay();
   if (StyleDisplay::TableColumnGroup == siblingDisplay ||
