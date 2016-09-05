@@ -32,7 +32,7 @@ function test() {
 
       const startedLoading = waitForNextDispatch(gDebugger.DebuggerController,
                                                  constants.LOAD_SOURCE_TEXT);
-      navigateActiveTabTo(gPanel, TAB_URL_2);
+      navigateActiveTabTo(gPanel, TAB_URL_2, gDebugger.EVENTS.SOURCE_SHOWN);
       yield startedLoading;
 
       isnot(gDebugger.gThreadClient.state, "paused",
