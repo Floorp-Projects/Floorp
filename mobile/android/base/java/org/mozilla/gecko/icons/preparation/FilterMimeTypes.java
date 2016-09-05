@@ -28,7 +28,7 @@ public class FilterMimeTypes implements Preparer {
             if (TextUtils.isEmpty(mimeType)) {
                 // We do not have a MIME type for this icon, so we cannot know in advance if we are able
                 // to decode it. Let's just continue.
-                return;
+                continue;
             }
 
             if (!IconsHelper.canDecodeType(mimeType)) {
