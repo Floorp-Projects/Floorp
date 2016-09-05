@@ -168,6 +168,10 @@ KeyframeEffect::SetSpacing(JSContext* aCx,
     KeyframeUtils::ApplyDistributeSpacing(mKeyframes);
   }
 
+  if (mAnimation && mAnimation->IsRelevant()) {
+    nsNodeUtils::AnimationChanged(mAnimation);
+  }
+
   if (mTarget) {
     RefPtr<nsStyleContext> styleContext = GetTargetStyleContext();
     if (styleContext) {
