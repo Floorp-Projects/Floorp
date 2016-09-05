@@ -14,9 +14,9 @@
 
 <dialog id="devicemanager"
 	windowtype="mozilla:devicemanager"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" 
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&devmgr.title;"
-        style="&devmgr.style;"
+        style="&devmgr.style2;"
         persist="screenX screenY width height"
         onload="LoadModules();"
         onunload="DeregisterSmartCardObservers();"
@@ -31,8 +31,8 @@
 
 <grid flex="1" style="margin:5px">
   <columns>
-    <column flex="1"/> 
-    <column flex="3"/> 
+    <column flex="1"/>
+    <column flex="3"/>
     <column/>
   </columns>
   <rows>
@@ -41,7 +41,7 @@
         <tree id="device_tree" seltype="single"
               onselect="enableButtons();" hidecolumnpicker="true"
               flex="1" style="min-width: 15em">
-          <treecols> 
+          <treecols>
             <treecol id="deviceCol" flex="1" primary="true" label="&devmgr.devlist.label;"/>
           </treecols>
           <treechildren id="device_list"/>
@@ -50,35 +50,35 @@
       <vbox> <!-- Device status -->
         <tree id="info_tree" seltype="single" hidecolumnpicker="true"
               flex="1" style="min-width: 10em">
-          <treecols> 
-            <treecol id="title1Col" flex="5" primary="true" label="&devmgr.details.title;"/> 
-            <treecol id="title2Col" flex="7" label="&devmgr.details.title2;"/> 
+          <treecols>
+            <treecol id="title1Col" flex="5" primary="true" label="&devmgr.details.title;"/>
+            <treecol id="title2Col" flex="7" label="&devmgr.details.title2;"/>
           </treecols>
           <treechildren id="info_list"/>
         </tree>
       </vbox> <!-- / Device status -->
       <vbox> <!-- Buttons for manipulating devices -->
-        <button id="login_button" 
+        <button id="login_button"
                 label="&devmgr.button.login.label;"
                 accesskey="&devmgr.button.login.accesskey;"
-                oncommand="doLogin();" disabled="true"/> 
-        <button id="logout_button" 
+                oncommand="doLogin();" disabled="true"/>
+        <button id="logout_button"
                 label="&devmgr.button.logout.label;"
                 accesskey="&devmgr.button.logout.accesskey;"
-                oncommand="doLogout();" disabled="true"/> 
-        <button id="change_pw_button" 
+                oncommand="doLogout();" disabled="true"/>
+        <button id="change_pw_button"
                 label="&devmgr.button.changepw.label;"
                 accesskey="&devmgr.button.changepw.accesskey;"
-                oncommand="changePassword();" disabled="true"/> 
-        <button id="load_button" 
+                oncommand="changePassword();" disabled="true"/>
+        <button id="load_button"
                 label="&devmgr.button.load.label;"
                 accesskey="&devmgr.button.load.accesskey;"
-                oncommand="doLoad();"/> 
-        <button id="unload_button" 
+                oncommand="doLoad();"/>
+        <button id="unload_button"
                 label="&devmgr.button.unload.label;"
                 accesskey="&devmgr.button.unload.accesskey;"
-                oncommand="doUnload();" disabled="true"/> 
-        <button id="fipsbutton" 
+                oncommand="doUnload();" disabled="true"/>
+        <button id="fipsbutton"
                 label=""
                 accesskey="&devmgr.button.fips.accesskey;"
                 oncommand="toggleFIPS();"/>
