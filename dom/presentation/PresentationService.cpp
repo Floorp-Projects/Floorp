@@ -73,7 +73,6 @@ public:
                             const nsAString& aId,
                             const nsAString& aOrigin,
                             uint64_t aWindowId,
-                            nsIDOMEventTarget* aEventTarget,
                             nsIPresentationServiceCallback* aCallback);
 
 private:
@@ -84,7 +83,6 @@ private:
   nsString mId;
   nsString mOrigin;
   uint64_t mWindowId;
-  nsWeakPtr mChromeEventHandler;
   nsCOMPtr<nsIPresentationServiceCallback> mCallback;
 };
 
@@ -100,13 +98,11 @@ PresentationDeviceRequest::PresentationDeviceRequest(
                                       const nsAString& aId,
                                       const nsAString& aOrigin,
                                       uint64_t aWindowId,
-                                      nsIDOMEventTarget* aEventTarget,
                                       nsIPresentationServiceCallback* aCallback)
   : mRequestUrl(aRequestUrl)
   , mId(aId)
   , mOrigin(aOrigin)
   , mWindowId(aWindowId)
-  , mChromeEventHandler(do_GetWeakReference(aEventTarget))
   , mCallback(aCallback)
 {
   MOZ_ASSERT(!mRequestUrl.IsEmpty());
@@ -126,14 +122,6 @@ NS_IMETHODIMP
 PresentationDeviceRequest::GetRequestURL(nsAString& aRequestUrl)
 {
   aRequestUrl = mRequestUrl;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-PresentationDeviceRequest::GetChromeEventHandler(nsIDOMEventTarget** aChromeEventHandler)
-{
-  nsCOMPtr<nsIDOMEventTarget> handler(do_QueryReferent(mChromeEventHandler));
-  handler.forget(aChromeEventHandler);
   return NS_OK;
 }
 
@@ -589,7 +577,6 @@ PresentationService::StartSession(const nsAString& aUrl,
                                   const nsAString& aOrigin,
                                   const nsAString& aDeviceId,
                                   uint64_t aWindowId,
-                                  nsIDOMEventTarget* aEventTarget,
                                   nsIPresentationServiceCallback* aCallback)
 {
   PRES_DEBUG("%s:url[%s], id[%s]\n", __func__,
@@ -605,7 +592,6 @@ PresentationService::StartSession(const nsAString& aUrl,
                                   aSessionId,
                                   aOrigin,
                                   aWindowId,
-                                  aEventTarget,
                                   aCallback);
 
   if (aDeviceId.IsVoid()) {
