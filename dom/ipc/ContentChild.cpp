@@ -16,7 +16,6 @@
 #include "TabChild.h"
 #include "HandlerServiceChild.h"
 
-#include "js/Initialization.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/Preferences.h"
@@ -3014,10 +3013,6 @@ ContentChild::RecvShutdown()
     Unused << RecvGatherProfile();
   }
 #endif
-
-  // Destroy the data structures used by TraceLogger. That will make us flush
-  // the traces TraceLogger holds.
-  JS_DestroyTraceLogger();
 
   // Start a timer that will insure we quickly exit after a reasonable
   // period of time. Prevents shutdown hangs after our connection to the

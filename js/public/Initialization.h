@@ -122,17 +122,4 @@ JS_IsInitialized(void)
 extern JS_PUBLIC_API(void)
 JS_ShutDown(void);
 
-/**
- * Destroy the resources held by Tracelogger. This will cause it to flush
- * the traces it is still holding on to.
- *
- * This function is also called from within JS_ShutDown. Its function is to
- * still flush the traces whenever force killing is used over cleanly destroying
- * using JS_ShutDown.
- *
- * Only the first invocation will do something when called multiple times.
- */
-extern JS_PUBLIC_API(void)
-JS_DestroyTraceLogger();
-
 #endif /* js_Initialization_h */
