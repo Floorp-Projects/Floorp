@@ -5,15 +5,17 @@
 
 package org.mozilla.gecko.icons;
 
+import android.support.annotation.NonNull;
+
 import org.mozilla.gecko.icons.loader.ContentProviderLoader;
 import org.mozilla.gecko.icons.loader.DataUriLoader;
+import org.mozilla.gecko.icons.loader.DiskLoader;
 import org.mozilla.gecko.icons.loader.IconDownloader;
 import org.mozilla.gecko.icons.loader.IconGenerator;
+import org.mozilla.gecko.icons.loader.IconLoader;
 import org.mozilla.gecko.icons.loader.JarLoader;
 import org.mozilla.gecko.icons.loader.LegacyLoader;
-import org.mozilla.gecko.icons.loader.IconLoader;
 import org.mozilla.gecko.icons.loader.MemoryLoader;
-import org.mozilla.gecko.icons.loader.DiskLoader;
 import org.mozilla.gecko.icons.preparation.AboutPagesPreparer;
 import org.mozilla.gecko.icons.preparation.AddDefaultIconUrl;
 import org.mozilla.gecko.icons.preparation.FilterKnownFailureUrls;
@@ -22,17 +24,19 @@ import org.mozilla.gecko.icons.preparation.FilterPrivilegedUrls;
 import org.mozilla.gecko.icons.preparation.LookupIconUrl;
 import org.mozilla.gecko.icons.preparation.Preparer;
 import org.mozilla.gecko.icons.processing.ColorProcessor;
+import org.mozilla.gecko.icons.processing.DiskProcessor;
 import org.mozilla.gecko.icons.processing.MemoryProcessor;
 import org.mozilla.gecko.icons.processing.Processor;
 import org.mozilla.gecko.icons.processing.ResizingProcessor;
-import org.mozilla.gecko.icons.processing.DiskProcessor;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Executor for icon requests.
@@ -115,7 +119,27 @@ import java.util.concurrent.Future;
             new MemoryProcessor()
     );
 
-    private static final ExecutorService EXECUTOR = Executors.newSingleThreadExecutor();
+    private static final ExecutorService EXECUTOR;
+    static {
+        final ThreadFactory factory = new ThreadFactory() {
+            @Override
+            public Thread newThread(@NonNull Runnable runnable) {
+                Thread thread = new Thread(runnable, "GeckoIconTask");
+                thread.setDaemon(false);
+                thread.setPriority(Thread.NORM_PRIORITY);
+                return thread;
+            }
+        };
+
+        // Single thread executor
+        EXECUTOR = new ThreadPoolExecutor(
+                1, /* corePoolSize */
+                1, /* maximumPoolSize */
+                0L, /* keepAliveTime */
+                TimeUnit.MILLISECONDS,
+                new LinkedBlockingQueue<Runnable>(),
+                factory);
+    }
 
     /**
      * Submit the request for execution.
