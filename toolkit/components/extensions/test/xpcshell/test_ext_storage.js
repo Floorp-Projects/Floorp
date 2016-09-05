@@ -115,6 +115,7 @@ function backgroundScript() {
       "test-prop1": {
         str: "hello",
         bool: true,
+        null: null,
         undef: undefined,
         obj: {},
         arr: [1, 2],
@@ -136,6 +137,7 @@ function backgroundScript() {
 
     browser.test.assertEq("hello", obj.str, "string part correct");
     browser.test.assertEq(true, obj.bool, "bool part correct");
+    browser.test.assertEq(null, obj.null, "null part correct");
     browser.test.assertEq(undefined, obj.undef, "undefined part correct");
     browser.test.assertEq(undefined, obj.func, "function part correct");
     browser.test.assertEq(undefined, obj.window, "window part correct");
