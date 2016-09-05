@@ -6541,7 +6541,7 @@ HTMLMediaElement::ShouldElementBePaused()
 }
 
 void
-HTMLMediaElement::SetMediaInfo(const MediaInfo aInfo)
+HTMLMediaElement::SetMediaInfo(const MediaInfo& aInfo)
 {
   mMediaInfo = aInfo;
   AudioCaptureStreamChangeIfNeeded();
