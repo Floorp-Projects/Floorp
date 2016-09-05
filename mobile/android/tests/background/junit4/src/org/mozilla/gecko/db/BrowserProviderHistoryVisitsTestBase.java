@@ -13,12 +13,16 @@ import org.junit.Before;
 import org.mozilla.gecko.sync.repositories.android.BrowserContractHelpers;
 import org.robolectric.shadows.ShadowContentResolver;
 
+import java.util.UUID;
+
 public class BrowserProviderHistoryVisitsTestBase {
-    protected BrowserProvider provider;
-    protected ContentProviderClient historyClient;
-    protected ContentProviderClient visitsClient;
-    protected Uri historyTestUri;
-    protected Uri visitsTestUri;
+    /* package-private */ ShadowContentResolver contentResolver;
+    /* package-private */ ContentProviderClient historyClient;
+    /* package-private */ ContentProviderClient visitsClient;
+    /* package-private */ Uri historyTestUri;
+    /* package-private */ Uri visitsTestUri;
+
+    private BrowserProvider provider;
 
     @Before
     public void setUp() throws Exception {
@@ -26,9 +30,9 @@ public class BrowserProviderHistoryVisitsTestBase {
         provider.onCreate();
         ShadowContentResolver.registerProvider(BrowserContract.AUTHORITY_URI.toString(), provider);
 
-        final ShadowContentResolver cr = new ShadowContentResolver();
-        historyClient = cr.acquireContentProviderClient(BrowserContractHelpers.HISTORY_CONTENT_URI);
-        visitsClient = cr.acquireContentProviderClient(BrowserContractHelpers.VISITS_CONTENT_URI);
+        contentResolver = new ShadowContentResolver();
+        historyClient = contentResolver.acquireContentProviderClient(BrowserContractHelpers.HISTORY_CONTENT_URI);
+        visitsClient = contentResolver.acquireContentProviderClient(BrowserContractHelpers.VISITS_CONTENT_URI);
 
         historyTestUri = testUri(BrowserContract.History.CONTENT_URI);
         visitsTestUri = testUri(BrowserContract.Visits.CONTENT_URI);
@@ -41,15 +45,19 @@ public class BrowserProviderHistoryVisitsTestBase {
         provider.shutdown();
     }
 
-    protected Uri testUri(Uri baseUri) {
+    /* package-private */  Uri testUri(Uri baseUri) {
         return baseUri.buildUpon().appendQueryParameter(BrowserContract.PARAM_IS_TEST, "1").build();
     }
 
-    protected Uri insertHistoryItem(String url, String guid) throws RemoteException {
-        return insertHistoryItem(url, guid, System.currentTimeMillis(), null);
+    /* package-private */  Uri insertHistoryItem(String url, String guid) throws RemoteException {
+        return insertHistoryItem(url, guid, System.currentTimeMillis(), null, null);
     }
 
-    protected Uri insertHistoryItem(String url, String guid, Long lastVisited, Integer visitCount) throws RemoteException {
+    /* package-private */  Uri insertHistoryItem(String url, String guid, Long lastVisited, Integer visitCount) throws RemoteException {
+        return insertHistoryItem(url, guid, System.currentTimeMillis(), null, null);
+    }
+
+    /* package-private */  Uri insertHistoryItem(String url, String guid, Long lastVisited, Integer visitCount, String title) throws RemoteException {
         ContentValues historyItem = new ContentValues();
         historyItem.put(BrowserContract.History.URL, url);
         if (guid != null) {
@@ -59,6 +67,9 @@ public class BrowserProviderHistoryVisitsTestBase {
             historyItem.put(BrowserContract.History.VISITS, visitCount);
         }
         historyItem.put(BrowserContract.History.DATE_LAST_VISITED, lastVisited);
+        if (title != null) {
+            historyItem.put(BrowserContract.History.TITLE, title);
+        }
 
         return historyClient.insert(historyTestUri, historyItem);
     }

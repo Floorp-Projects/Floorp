@@ -18,7 +18,7 @@ function runTest() {
   });
 
   iframe.addEventListener('mozbrowserlocationchange', function(e) {
-    if (/file_browserElement_TargetTop.html\?2$/.test(e.detail)) {
+    if (/file_browserElement_TargetTop.html\?2$/.test(e.detail.url)) {
       ok(true, 'Got the locationchange we were looking for.');
       SimpleTest.finish();
     }

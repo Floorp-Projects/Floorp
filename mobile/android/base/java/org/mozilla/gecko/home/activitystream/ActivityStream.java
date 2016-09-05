@@ -56,29 +56,14 @@ public class ActivityStream extends FrameLayout {
         adapter.swapTopSitesCursor(null);
     }
 
-    /**
-     * This is a temporary cursor loader. We'll probably need a completely new query for AS,
-     * at that time we can switch to the new CursorLoader, as opposed to using our outdated
-     * SimpleCursorLoader.
-     */
-    private static class HistoryLoader extends SimpleCursorLoader {
-        public HistoryLoader(Context context) {
-            super(context);
-        }
-
-        @Override
-        protected Cursor loadCursor() {
-            final Context context = getContext();
-            return GeckoProfile.get(context).getDB()
-                    .getRecentHistory(context.getContentResolver(), 10);
-        }
-    }
-
     private class CursorLoaderCallbacks implements LoaderManager.LoaderCallbacks<Cursor> {
         @Override
         public Loader<Cursor> onCreateLoader(int id, Bundle args) {
             if (id == LOADER_ID_HIGHLIGHTS) {
-                return new HistoryLoader(getContext());
+                final Context context = getContext();
+                return GeckoProfile.get(context)
+                        .getDB()
+                        .getHighlights(context, 10);
             } else if (id == LOADER_ID_TOPSITES) {
                 return GeckoProfile.get(getContext()).getDB().getActivityStreamTopSites(getContext(),
                         TopSitesPagerAdapter.TOTAL_ITEMS);

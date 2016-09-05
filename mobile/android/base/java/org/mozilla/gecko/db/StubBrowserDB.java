@@ -361,6 +361,11 @@ public class StubBrowserDB implements BrowserDB {
         return 0;
     }
 
+    @Override
+    public CursorLoader getHighlights(Context context, int limit) {
+        return null;
+    }
+
     public Cursor getTopSites(ContentResolver cr, int suggestedRangeLimit, int limit) {
         return null;
     }

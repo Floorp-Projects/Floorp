@@ -2,7 +2,7 @@
 # Script to update mp4parse-rust sources to latest upstream
 
 # Default version.
-VER=v0.4.0
+VER=v0.5.0
 
 # Accept version or commit from the command line.
 if test -n "$1"; then
@@ -14,15 +14,27 @@ rm -rf _upstream
 git clone https://github.com/mozilla/mp4parse-rust _upstream/mp4parse
 pushd _upstream/mp4parse
 git checkout ${VER}
+echo "Verifying sources..."
+pushd mp4parse
+cargo test
+popd
 echo "Constructing C api header..."
+pushd mp4parse_capi
 cargo build
+echo "Verifying sources..."
+cargo test
+popd
 popd
 rm -rf mp4parse
 mkdir -p mp4parse/src
-cp _upstream/mp4parse/Cargo.toml mp4parse/
-cp _upstream/mp4parse/build.rs mp4parse/
-cp _upstream/mp4parse/src/*.rs mp4parse/src/
-cp _upstream/mp4parse/include/mp4parse.h include/
+cp _upstream/mp4parse/mp4parse/Cargo.toml mp4parse/
+cp _upstream/mp4parse/mp4parse/src/*.rs mp4parse/src/
+rm -rf mp4parse_capi
+mkdir -p mp4parse_capi/src
+cp _upstream/mp4parse/mp4parse_capi/Cargo.toml mp4parse_capi/
+cp _upstream/mp4parse/mp4parse_capi/build.rs mp4parse_capi/
+cp _upstream/mp4parse/mp4parse_capi/include/mp4parse.h include/
+cp _upstream/mp4parse/mp4parse_capi/src/*.rs mp4parse_capi/src/
 
 # TODO: download deps from crates.io.
 

@@ -158,6 +158,7 @@ public:
     DECODER_STATE_DECODING_METADATA,
     DECODER_STATE_WAIT_FOR_CDM,
     DECODER_STATE_DORMANT,
+    DECODER_STATE_DECODING_FIRSTFRAME,
     DECODER_STATE_DECODING,
     DECODER_STATE_SEEKING,
     DECODER_STATE_BUFFERING,
@@ -473,8 +474,10 @@ protected:
   // If we don't, switch to buffering mode.
   void MaybeStartBuffering();
 
-  // Moves the decoder into decoding state. Called on the state machine
-  // thread. The decoder monitor must be held.
+  // The entry action of DECODER_STATE_DECODING_FIRSTFRAME.
+  void DecodeFirstFrame();
+
+  // The entry action of DECODER_STATE_DECODING.
   void StartDecoding();
 
   // Moves the decoder into the shutdown state, and dispatches an error
@@ -482,11 +485,6 @@ protected:
   // The decoder monitor must be held. This is only called on the
   // decode thread.
   void DecodeError();
-
-  // Dispatches a task to the decode task queue to begin decoding metadata.
-  // This is threadsafe and can be called on any thread.
-  // The decoder monitor must be held.
-  nsresult EnqueueDecodeMetadataTask();
 
   // Dispatches a LoadedMetadataEvent.
   // This is threadsafe and can be called on any thread.
@@ -498,25 +496,19 @@ protected:
   // Clears any previous seeking state and initiates a new seek on the decoder.
   RefPtr<MediaDecoder::SeekPromise> InitiateSeek(SeekJob aSeekJob);
 
-  nsresult DispatchAudioDecodeTaskIfNeeded();
+  void DispatchAudioDecodeTaskIfNeeded();
+  void DispatchVideoDecodeTaskIfNeeded();
 
-  // Ensures a task to decode audio has been dispatched to the decode task queue.
-  // If a task to decode has already been dispatched, this does nothing,
-  // otherwise this dispatches a task to do the decode.
-  // This is called on the state machine or decode threads.
-  // The decoder monitor must be held.
-  nsresult EnsureAudioDecodeTaskQueued();
+  // Dispatch a task to decode audio if there is not.
+  void EnsureAudioDecodeTaskQueued();
+
+  // Dispatch a task to decode video if there is not.
+  void EnsureVideoDecodeTaskQueued();
+
   // Start a task to decode audio.
   // The decoder monitor must be held.
   void RequestAudioData();
 
-  nsresult DispatchVideoDecodeTaskIfNeeded();
-
-  // Ensures a task to decode video has been dispatched to the decode task queue.
-  // If a task to decode has already been dispatched, this does nothing,
-  // otherwise this dispatches a task to do the decode.
-  // The decoder monitor must be held.
-  nsresult EnsureVideoDecodeTaskQueued();
   // Start a task to decode video.
   // The decoder monitor must be held.
   void RequestVideoData();
@@ -550,11 +542,9 @@ protected:
   void OnMetadataRead(MetadataHolder* aMetadata);
   void OnMetadataNotRead(ReadMetadataFailureReason aReason);
 
-  // Checks whether we're finished decoding first audio and/or video packets.
-  // If so will trigger firing loadeddata event.
-  // If there are any queued seek, will change state to DECODER_STATE_SEEKING
-  // and return true.
-  bool MaybeFinishDecodeFirstFrame();
+  // Notify FirstFrameLoaded if having decoded first frames and
+  // transition to SEEKING if there is any pending seek, or DECODING otherwise.
+  void MaybeFinishDecodeFirstFrame();
 
   void FinishDecodeFirstFrame();
 
@@ -564,10 +554,8 @@ protected:
   // Queries our state to see whether the decode has finished for all streams.
   bool CheckIfDecodeComplete();
 
-  // Performs one "cycle" of the state machine. Polls the state, and may send
-  // a video frame to be displayed, and generally manages the decode. Called
-  // periodically via timer to ensure the video stays in sync.
-  nsresult RunStateMachine();
+  // Performs one "cycle" of the state machine.
+  void RunStateMachine();
 
   bool IsStateMachineScheduled() const;
 
