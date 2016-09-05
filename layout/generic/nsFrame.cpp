@@ -2442,7 +2442,8 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
    */
   if (usingSVGEffects) {
     MOZ_ASSERT(StyleEffects()->HasFilters() ||
-               nsSVGIntegrationUtils::UsingMaskOrClipPathForFrame(this));
+               nsSVGIntegrationUtils::UsingMaskOrClipPathForFrame(this),
+               "Beside filter & mask/clip-path, what else effect do we have?");
 
     if (clipCapturedBy == ContainerItemType::eSVGEffects) {
       clipState.ExitStackingContextContents(&containerItemScrollClip);
