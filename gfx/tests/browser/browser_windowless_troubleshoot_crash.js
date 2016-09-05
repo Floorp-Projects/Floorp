@@ -28,7 +28,7 @@ add_task(function* test_windowlessBrowserTroubleshootCrash() {
   let winUtils = webNav.document.defaultView.
                         QueryInterface(Ci.nsIInterfaceRequestor).
                         getInterface(Ci.nsIDOMWindowUtils);
-  is(winUtils.layerManagerType, "None", "windowless browser's layerManagerType should be 'None'");
+  is(winUtils.layerManagerType, "Basic", "windowless browser's layerManagerType should be 'Basic'");
 
   ok(true, "not crashed");
 
