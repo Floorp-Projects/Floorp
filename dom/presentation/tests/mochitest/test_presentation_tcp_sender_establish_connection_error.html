@@ -42,318 +42,437 @@ function setup() {
 }
 
 function testStartConnectionCancelPrompt() {
-  return new Promise(function(aResolve, aReject) {
-    gScript.addMessageListener('device-prompt', function devicePromptHandler() {
-      gScript.removeMessageListener('device-prompt', devicePromptHandler);
-      info("Device prompt is triggered.");
-      gScript.sendAsyncMessage('trigger-device-prompt-cancel', SpecialPowers.Cr.NS_ERROR_DOM_NOT_ALLOWED_ERR);
-    });
-
+  info('--- testStartConnectionCancelPrompt ---');
+  return Promise.all([
+    new Promise((resolve) => {
+      gScript.addMessageListener('device-prompt', function devicePromptHandler() {
+        gScript.removeMessageListener('device-prompt', devicePromptHandler);
+        info("Device prompt is triggered.");
+        gScript.sendAsyncMessage('trigger-device-prompt-cancel', SpecialPowers.Cr.NS_ERROR_DOM_NOT_ALLOWED_ERR);
+        resolve();
+      });
+    }),
     request.start().then(
       function(aConnection) {
         ok(false, "|start| shouldn't succeed in this case.");
-        aReject();
       },
       function(aError) {
         is(aError.name, "NotAllowedError", "NotAllowedError is expected when the prompt is canceled.");
-        aResolve();
       }
-    );
-  });
+    ),
+  ]);
 }
 
 function testStartConnectionNoDevice() {
-  return new Promise(function(aResolve, aReject) {
-    gScript.addMessageListener('device-prompt', function devicePromptHandler() {
-      gScript.removeMessageListener('device-prompt', devicePromptHandler);
-      info("Device prompt is triggered.");
-      gScript.sendAsyncMessage('trigger-device-prompt-cancel', SpecialPowers.Cr.NS_ERROR_DOM_NOT_FOUND_ERR);
-    });
-
+  info('--- testStartConnectionNoDevice ---');
+  return Promise.all([
+    new Promise((resolve) => {
+      gScript.addMessageListener('device-prompt', function devicePromptHandler() {
+        gScript.removeMessageListener('device-prompt', devicePromptHandler);
+        info("Device prompt is triggered.");
+        gScript.sendAsyncMessage('trigger-device-prompt-cancel', SpecialPowers.Cr.NS_ERROR_DOM_NOT_FOUND_ERR);
+        resolve();
+      });
+    }),
     request.start().then(
       function(aConnection) {
         ok(false, "|start| shouldn't succeed in this case.");
-        aReject();
       },
       function(aError) {
         is(aError.name, "NotFoundError", "NotFoundError is expected when no available device.");
-        aResolve();
       }
-    );
-  });
+    ),
+  ]);
 }
 
 function testStartConnectionUnexpectedControlChannelCloseBeforeDataTransportInit() {
-  return new Promise(function(aResolve, aReject) {
-    gScript.addMessageListener('device-prompt', function devicePromptHandler() {
-      gScript.removeMessageListener('device-prompt', devicePromptHandler);
-      info("Device prompt is triggered.");
-      gScript.sendAsyncMessage('trigger-device-prompt-select');
-    });
+  info('--- testStartConnectionUnexpectedControlChannelCloseBeforeDataTransportInit ---');
+  return Promise.all([
 
-    gScript.addMessageListener('control-channel-established', function controlChannelEstablishedHandler() {
-      gScript.removeMessageListener('control-channel-established', controlChannelEstablishedHandler);
-      info("A control channel is established.");
-      gScript.sendAsyncMessage('trigger-control-channel-open');
-    });
+    new Promise((resolve) => {
+      gScript.addMessageListener('device-prompt', function devicePromptHandler() {
+        gScript.removeMessageListener('device-prompt', devicePromptHandler);
+        info("Device prompt is triggered.");
+        gScript.sendAsyncMessage('trigger-device-prompt-select');
+        resolve();
+      });
+    }),
 
-    gScript.addMessageListener('control-channel-opened', function controlChannelOpenedHandler(aReason) {
-      gScript.removeMessageListener('control-channel-opened', controlChannelOpenedHandler);
-      info("The control channel is opened.");
-    });
+    new Promise((resolve) => {
+      gScript.addMessageListener('control-channel-established', function controlChannelEstablishedHandler() {
+        gScript.removeMessageListener('control-channel-established', controlChannelEstablishedHandler);
+        info("A control channel is established.");
+        gScript.sendAsyncMessage('trigger-control-channel-open');
+        resolve();
+      });
+    }),
 
-    gScript.addMessageListener('control-channel-closed', function controlChannelClosedHandler(aReason) {
-      gScript.removeMessageListener('control-channel-closed', controlChannelClosedHandler);
-      info("The control channel is closed. " + aReason);
-    });
+    new Promise((resolve) => {
+      gScript.addMessageListener('control-channel-opened', function controlChannelOpenedHandler() {
+        gScript.removeMessageListener('control-channel-opened', controlChannelOpenedHandler);
+        info("The control channel is opened.");
+        resolve();
+      });
+    }),
 
-    gScript.addMessageListener('offer-sent', function offerSentHandler(aIsValid) {
-      gScript.removeMessageListener('offer-sent', offerSentHandler);
-      ok(aIsValid, "A valid offer is sent out.");
-      gScript.sendAsyncMessage('trigger-control-channel-close', SpecialPowers.Cr.NS_ERROR_FAILURE);
-    });
+    new Promise((resolve) => {
+      gScript.addMessageListener('control-channel-closed', function controlChannelClosedHandler(aReason) {
+        gScript.removeMessageListener('control-channel-closed', controlChannelClosedHandler);
+        info("The control channel is closed. " + aReason);
+        is(aReason, SpecialPowers.Cr.NS_ERROR_FAILURE, "The control channel is closed with NS_ERROR_FAILURE");
+        resolve();
+      });
+    }),
+
+    new Promise((resolve) => {
+      gScript.addMessageListener('offer-sent', function offerSentHandler(aIsValid) {
+        gScript.removeMessageListener('offer-sent', offerSentHandler);
+        ok(aIsValid, "A valid offer is sent out.");
+        gScript.sendAsyncMessage('trigger-control-channel-close', SpecialPowers.Cr.NS_ERROR_FAILURE);
+        resolve();
+      });
+    }),
 
     request.start().then(
       function(aConnection) {
         is(aConnection.state, "connecting", "The initial state should be connecting.");
-        aConnection.onclose = function() {
-          aConnection.onclose = null;
-          is(aConnection.state, "closed", "Connection should be closed.");
-          aResolve();
-        };
+        return new Promise((resolve) => {
+          aConnection.onclose = function() {
+            aConnection.onclose = null;
+            is(aConnection.state, "closed", "Connection should be closed.");
+            resolve();
+          };
+        });
       },
       function(aError) {
         ok(false, "Error occurred when establishing a connection: " + aError);
         teardown();
-        aReject();
       }
-    );
-  });
+    ),
+
+  ]);
 }
 
 function testStartConnectionUnexpectedControlChannelCloseNoReasonBeforeDataTransportInit() {
-  return new Promise(function(aResolve, aReject) {
-    gScript.addMessageListener('device-prompt', function devicePromptHandler() {
-      gScript.removeMessageListener('device-prompt', devicePromptHandler);
-      info("Device prompt is triggered.");
-      gScript.sendAsyncMessage('trigger-device-prompt-select');
-    });
+  info('--- testStartConnectionUnexpectedControlChannelCloseNoReasonBeforeDataTransportInit ---');
+  return Promise.all([
 
-    gScript.addMessageListener('control-channel-established', function controlChannelEstablishedHandler() {
-      gScript.removeMessageListener('control-channel-established', controlChannelEstablishedHandler);
-      info("A control channel is established.");
-      gScript.sendAsyncMessage('trigger-control-channel-open');
-    });
+    new Promise((resolve) => {
+      gScript.addMessageListener('device-prompt', function devicePromptHandler() {
+        gScript.removeMessageListener('device-prompt', devicePromptHandler);
+        info("Device prompt is triggered.");
+        gScript.sendAsyncMessage('trigger-device-prompt-select');
+        resolve();
+      });
+    }),
 
-    gScript.addMessageListener('control-channel-opened', function controlChannelOpenedHandler(aReason) {
-      gScript.removeMessageListener('control-channel-opened', controlChannelOpenedHandler);
-      info("The control channel is opened.");
-    });
+    new Promise((resolve) => {
+      gScript.addMessageListener('control-channel-established', function controlChannelEstablishedHandler() {
+        gScript.removeMessageListener('control-channel-established', controlChannelEstablishedHandler);
+        info("A control channel is established.");
+        gScript.sendAsyncMessage('trigger-control-channel-open');
+        resolve();
+      });
+    }),
 
-    gScript.addMessageListener('control-channel-closed', function controlChannelClosedHandler(aReason) {
-      gScript.removeMessageListener('control-channel-closed', controlChannelClosedHandler);
-      info("The control channel is closed. " + aReason);
-    });
+    new Promise((resolve) => {
+      gScript.addMessageListener('control-channel-opened', function controlChannelOpenedHandler() {
+        gScript.removeMessageListener('control-channel-opened', controlChannelOpenedHandler);
+        info("The control channel is opened.");
+        resolve();
+      });
+    }),
 
-    gScript.addMessageListener('offer-sent', function offerSentHandler(aIsValid) {
-      gScript.removeMessageListener('offer-sent', offerSentHandler);
-      ok(aIsValid, "A valid offer is sent out.");
-      gScript.sendAsyncMessage('trigger-control-channel-close', SpecialPowers.Cr.NS_OK);
-    });
+    new Promise((resolve) => {
+      gScript.addMessageListener('control-channel-closed', function controlChannelClosedHandler(aReason) {
+        gScript.removeMessageListener('control-channel-closed', controlChannelClosedHandler);
+        info("The control channel is closed. " + aReason);
+        is(aReason, SpecialPowers.Cr.NS_OK, "The control channel is closed with NS_OK");
+        resolve();
+      });
+    }),
+
+    new Promise((resolve) => {
+      gScript.addMessageListener('offer-sent', function offerSentHandler(aIsValid) {
+        gScript.removeMessageListener('offer-sent', offerSentHandler);
+        ok(aIsValid, "A valid offer is sent out.");
+        gScript.sendAsyncMessage('trigger-control-channel-close', SpecialPowers.Cr.NS_OK);
+        resolve();
+      });
+    }),
 
     request.start().then(
       function(aConnection) {
         is(aConnection.state, "connecting", "The initial state should be connecting.");
-        aConnection.onclose = function() {
-          aConnection.onclose = null;
-          is(aConnection.state, "closed", "Connection should be closed.");
-          aResolve();
-        };
+        return new Promise((resolve) => {
+          aConnection.onclose = function() {
+            aConnection.onclose = null;
+            is(aConnection.state, "closed", "Connection should be closed.");
+            resolve();
+          };
+        });
       },
       function(aError) {
         ok(false, "Error occurred when establishing a connection: " + aError);
         teardown();
-        aReject();
       }
-    );
-  });
+    ),
+
+  ]);
 }
 
 function testStartConnectionUnexpectedControlChannelCloseBeforeDataTransportReady() {
-  return new Promise(function(aResolve, aReject) {
-    gScript.addMessageListener('device-prompt', function devicePromptHandler() {
-      gScript.removeMessageListener('device-prompt', devicePromptHandler);
-      info("Device prompt is triggered.");
-      gScript.sendAsyncMessage('trigger-device-prompt-select');
-    });
+  info('--- testStartConnectionUnexpectedControlChannelCloseBeforeDataTransportReady ---');
+  return Promise.all([
 
-    gScript.addMessageListener('control-channel-established', function controlChannelEstablishedHandler() {
-      gScript.removeMessageListener('control-channel-established', controlChannelEstablishedHandler);
-      info("A control channel is established.");
-      gScript.sendAsyncMessage('trigger-control-channel-open');
-    });
+    new Promise((resolve) => {
+      gScript.addMessageListener('device-prompt', function devicePromptHandler() {
+        gScript.removeMessageListener('device-prompt', devicePromptHandler);
+        info("Device prompt is triggered.");
+        gScript.sendAsyncMessage('trigger-device-prompt-select');
+        resolve();
+      });
+    }),
 
-    gScript.addMessageListener('control-channel-opened', function controlChannelOpenedHandler(aReason) {
-      gScript.removeMessageListener('control-channel-opened', controlChannelOpenedHandler);
-      info("The control channel is opened.");
-    });
+    new Promise((resolve) => {
+      gScript.addMessageListener('control-channel-established', function controlChannelEstablishedHandler() {
+        gScript.removeMessageListener('control-channel-established', controlChannelEstablishedHandler);
+        info("A control channel is established.");
+        gScript.sendAsyncMessage('trigger-control-channel-open');
+        resolve();
+      });
+    }),
 
-    gScript.addMessageListener('control-channel-closed', function controlChannelClosedHandler(aReason) {
-      gScript.removeMessageListener('control-channel-closed', controlChannelClosedHandler);
-      info("The control channel is closed. " + aReason);
-    });
+    new Promise((resolve) => {
+      gScript.addMessageListener('control-channel-opened', function controlChannelOpenedHandler() {
+        gScript.removeMessageListener('control-channel-opened', controlChannelOpenedHandler);
+        info("The control channel is opened.");
+        resolve();
+      });
+    }),
 
-    gScript.addMessageListener('offer-sent', function offerSentHandler(aIsValid) {
-      gScript.removeMessageListener('offer-sent', offerSentHandler);
-      ok(aIsValid, "A valid offer is sent out.");
-      gScript.sendAsyncMessage('trigger-incoming-transport');
-    });
+    new Promise((resolve) => {
+      gScript.addMessageListener('control-channel-closed', function controlChannelClosedHandler(aReason) {
+        gScript.removeMessageListener('control-channel-closed', controlChannelClosedHandler);
+        is(aReason, SpecialPowers.Cr.NS_ERROR_ABORT, "The control channel is closed with NS_ERROR_ABORT");
+        resolve();
+      });
+    }),
 
-    gScript.addMessageListener('data-transport-initialized', function dataTransportInitializedHandler() {
-      gScript.removeMessageListener('data-transport-initialized', dataTransportInitializedHandler);
-      info("Data transport channel is initialized.");
-      gScript.sendAsyncMessage('trigger-control-channel-close', SpecialPowers.Cr.NS_ERROR_ABORT);
-    });
+    new Promise((resolve) => {
+      gScript.addMessageListener('offer-sent', function offerSentHandler(aIsValid) {
+        gScript.removeMessageListener('offer-sent', offerSentHandler);
+        ok(aIsValid, "A valid offer is sent out.");
+        gScript.sendAsyncMessage('trigger-incoming-transport');
+        resolve();
+      });
+    }),
 
-    gScript.addMessageListener('data-transport-closed', function dataTransportClosedHandler(aReason) {
-      gScript.removeMessageListener('data-transport-closed', dataTransportClosedHandler);
-      info("The data transport is closed. " + aReason);
-    });
+    new Promise((resolve) => {
+      gScript.addMessageListener('data-transport-initialized', function dataTransportInitializedHandler() {
+        gScript.removeMessageListener('data-transport-initialized', dataTransportInitializedHandler);
+        info("Data transport channel is initialized.");
+        gScript.sendAsyncMessage('trigger-control-channel-close', SpecialPowers.Cr.NS_ERROR_ABORT);
+        resolve();
+      });
+    }),
+
+    new Promise((resolve) => {
+      gScript.addMessageListener('data-transport-closed', function dataTransportClosedHandler(aReason) {
+        gScript.removeMessageListener('data-transport-closed', dataTransportClosedHandler);
+        info("The data transport is closed. " + aReason);
+        resolve();
+      });
+    }),
 
     request.start().then(
       function(aConnection) {
         is(aConnection.state, "connecting", "The initial state should be connecting.");
-        aConnection.onclose = function() {
-          aConnection.onclose = null;
-          is(aConnection.state, "closed", "Connection should be closed.");
-          aResolve();
-        };
+        return new Promise((resolve) => {
+          aConnection.onclose = function() {
+            aConnection.onclose = null;
+            is(aConnection.state, "closed", "Connection should be closed.");
+            resolve();
+          };
+        });
       },
       function(aError) {
         ok(false, "Error occurred when establishing a connection: " + aError);
         teardown();
-        aReject();
       }
-    );
-  });
+    ),
+
+  ]);
 }
 
 function testStartConnectionUnexpectedControlChannelCloseNoReasonBeforeDataTransportReady() {
-  return new Promise(function(aResolve, aReject) {
-    gScript.addMessageListener('device-prompt', function devicePromptHandler() {
-      gScript.removeMessageListener('device-prompt', devicePromptHandler);
-      info("Device prompt is triggered.");
-      gScript.sendAsyncMessage('trigger-device-prompt-select');
-    });
+  info('--- testStartConnectionUnexpectedControlChannelCloseNoReasonBeforeDataTransportReady -- ');
+  return Promise.all([
 
-    gScript.addMessageListener('control-channel-established', function controlChannelEstablishedHandler() {
-      gScript.removeMessageListener('control-channel-established', controlChannelEstablishedHandler);
-      info("A control channel is established.");
-      gScript.sendAsyncMessage('trigger-control-channel-open');
-    });
+    new Promise((resolve) => {
+      gScript.addMessageListener('device-prompt', function devicePromptHandler() {
+        gScript.removeMessageListener('device-prompt', devicePromptHandler);
+        info("Device prompt is triggered.");
+        gScript.sendAsyncMessage('trigger-device-prompt-select');
+        resolve();
+      });
+    }),
 
-    gScript.addMessageListener('control-channel-opened', function controlChannelOpenedHandler(aReason) {
-      gScript.removeMessageListener('control-channel-opened', controlChannelOpenedHandler);
-      info("The control channel is opened.");
-    });
+    new Promise((resolve) => {
+      gScript.addMessageListener('control-channel-established', function controlChannelEstablishedHandler() {
+        gScript.removeMessageListener('control-channel-established', controlChannelEstablishedHandler);
+        info("A control channel is established.");
+        gScript.sendAsyncMessage('trigger-control-channel-open');
+        resolve();
+      });
+    }),
 
-    gScript.addMessageListener('control-channel-closed', function controlChannelClosedHandler(aReason) {
-      gScript.removeMessageListener('control-channel-closed', controlChannelClosedHandler);
-      info("The control channel is closed. " + aReason);
-    });
+    new Promise((resolve) => {
+      gScript.addMessageListener('control-channel-opened', function controlChannelOpenedHandler() {
+        gScript.removeMessageListener('control-channel-opened', controlChannelOpenedHandler);
+        info("The control channel is opened.");
+        resolve();
+      });
+    }),
 
-    gScript.addMessageListener('offer-sent', function offerSentHandler(aIsValid) {
-      gScript.removeMessageListener('offer-sent', offerSentHandler);
-      ok(aIsValid, "A valid offer is sent out.");
-      gScript.sendAsyncMessage('trigger-incoming-transport');
-    });
+    new Promise((resolve) => {
+      gScript.addMessageListener('control-channel-closed', function controlChannelClosedHandler(aReason) {
+        gScript.removeMessageListener('control-channel-closed', controlChannelClosedHandler);
+        info("The control channel is closed. " + aReason);
+        is(aReason, SpecialPowers.Cr.NS_OK, "The control channel is closed with NS_OK");
+        resolve();
+      });
+    }),
 
-    gScript.addMessageListener('data-transport-initialized', function dataTransportInitializedHandler() {
-      gScript.removeMessageListener('data-transport-initialized', dataTransportInitializedHandler);
-      info("Data transport channel is initialized.");
-      gScript.sendAsyncMessage('trigger-control-channel-close', SpecialPowers.Cr.NS_OK);
-    });
+    new Promise((resolve) => {
+      gScript.addMessageListener('offer-sent', function offerSentHandler(aIsValid) {
+        gScript.removeMessageListener('offer-sent', offerSentHandler);
+        ok(aIsValid, "A valid offer is sent out.");
+        gScript.sendAsyncMessage('trigger-incoming-transport');
+        resolve();
+      });
+    }),
 
-    gScript.addMessageListener('data-transport-closed', function dataTransportClosedHandler(aReason) {
-      gScript.removeMessageListener('data-transport-closed', dataTransportClosedHandler);
-      info("The data transport is closed. " + aReason);
-    });
+    new Promise((resolve) => {
+      gScript.addMessageListener('data-transport-initialized', function dataTransportInitializedHandler() {
+        gScript.removeMessageListener('data-transport-initialized', dataTransportInitializedHandler);
+        info("Data transport channel is initialized.");
+        gScript.sendAsyncMessage('trigger-control-channel-close', SpecialPowers.Cr.NS_OK);
+        resolve();
+      });
+    }),
+
+    new Promise((resolve) => {
+      gScript.addMessageListener('data-transport-closed', function dataTransportClosedHandler(aReason) {
+        gScript.removeMessageListener('data-transport-closed', dataTransportClosedHandler);
+        info("The data transport is closed. " + aReason);
+        resolve();
+      });
+    }),
 
     request.start().then(
       function(aConnection) {
         is(aConnection.state, "connecting", "The initial state should be connecting.");
-        aConnection.onclose = function() {
-          aConnection.onclose = null;
-          is(aConnection.state, "closed", "Connection should be closed.");
-          aResolve();
-        };
+        return new Promise((resolve) => {
+          aConnection.onclose = function() {
+            aConnection.onclose = null;
+            is(aConnection.state, "closed", "Connection should be closed.");
+            resolve();
+          };
+        });
       },
       function(aError) {
         ok(false, "Error occurred when establishing a connection: " + aError);
         teardown();
-        aReject();
       }
-    );
-  });
+    ),
+
+  ]);
 }
 
 function testStartConnectionUnexpectedDataTransportClose() {
-  return new Promise(function(aResolve, aReject) {
-    gScript.addMessageListener('device-prompt', function devicePromptHandler() {
-      gScript.removeMessageListener('device-prompt', devicePromptHandler);
-      info("Device prompt is triggered.");
-      gScript.sendAsyncMessage('trigger-device-prompt-select');
-    });
+  info('--- testStartConnectionUnexpectedDataTransportClose ---');
+  return Promise.all([
 
-    gScript.addMessageListener('control-channel-established', function controlChannelEstablishedHandler() {
-      gScript.removeMessageListener('control-channel-established', controlChannelEstablishedHandler);
-      info("A control channel is established.");
-      gScript.sendAsyncMessage('trigger-control-channel-open');
-    });
+    new Promise((resolve) => {
+      gScript.addMessageListener('device-prompt', function devicePromptHandler() {
+        gScript.removeMessageListener('device-prompt', devicePromptHandler);
+        info("Device prompt is triggered.");
+        gScript.sendAsyncMessage('trigger-device-prompt-select');
+        resolve();
+      });
+    }),
 
-    gScript.addMessageListener('control-channel-opened', function controlChannelOpenedHandler(aReason) {
-      gScript.removeMessageListener('control-channel-opened', controlChannelOpenedHandler);
-      info("The control channel is opened.");
-    });
+    new Promise((resolve) => {
+      gScript.addMessageListener('control-channel-established', function controlChannelEstablishedHandler() {
+        gScript.removeMessageListener('control-channel-established', controlChannelEstablishedHandler);
+        info("A control channel is established.");
+        gScript.sendAsyncMessage('trigger-control-channel-open');
+        resolve();
+      });
+    }),
 
-    gScript.addMessageListener('control-channel-closed', function controlChannelClosedHandler(aReason) {
-      gScript.removeMessageListener('control-channel-closed', controlChannelClosedHandler);
-      info("The control channel is closed. " + aReason);
-    });
+    new Promise((resolve) => {
+      gScript.addMessageListener('control-channel-opened', function controlChannelOpenedHandler() {
+        gScript.removeMessageListener('control-channel-opened', controlChannelOpenedHandler);
+        info("The control channel is opened.");
+        resolve();
+      });
+    }),
 
-    gScript.addMessageListener('offer-sent', function offerSentHandler(aIsValid) {
-      gScript.removeMessageListener('offer-sent', offerSentHandler);
-      ok(aIsValid, "A valid offer is sent out.");
-      gScript.sendAsyncMessage('trigger-incoming-transport');
-    });
+    new Promise((resolve) => {
+      gScript.addMessageListener('control-channel-closed', function controlChannelClosedHandler(aReason) {
+        gScript.removeMessageListener('control-channel-closed', controlChannelClosedHandler);
+        info("The control channel is closed. " + aReason);
+        resolve();
+      });
+    }),
 
-    gScript.addMessageListener('data-transport-initialized', function dataTransportInitializedHandler() {
-      gScript.removeMessageListener('data-transport-initialized', dataTransportInitializedHandler);
-      info("Data transport channel is initialized.");
-      gScript.sendAsyncMessage('trigger-data-transport-close', SpecialPowers.Cr.NS_ERROR_UNEXPECTED);
-    });
+    new Promise((resolve) => {
+      gScript.addMessageListener('offer-sent', function offerSentHandler(aIsValid) {
+        gScript.removeMessageListener('offer-sent', offerSentHandler);
+        ok(aIsValid, "A valid offer is sent out.");
+        info("recv offer-sent.");
+        gScript.sendAsyncMessage('trigger-incoming-transport');
+        resolve();
+      });
+    }),
 
-    gScript.addMessageListener('data-transport-closed', function dataTransportClosedHandler(aReason) {
-      gScript.removeMessageListener('data-transport-closed', dataTransportClosedHandler);
-      info("The data transport is closed. " + aReason);
-    });
+    new Promise((resolve) => {
+      gScript.addMessageListener('data-transport-initialized', function dataTransportInitializedHandler() {
+        gScript.removeMessageListener('data-transport-initialized', dataTransportInitializedHandler);
+        info("Data transport channel is initialized.");
+        gScript.sendAsyncMessage('trigger-data-transport-close', SpecialPowers.Cr.NS_ERROR_UNEXPECTED);
+        resolve();
+      });
+    }),
+
+    new Promise((resolve) => {
+      gScript.addMessageListener('data-transport-closed', function dataTransportClosedHandler(aReason) {
+        gScript.removeMessageListener('data-transport-closed', dataTransportClosedHandler);
+        info("The data transport is closed. " + aReason);
+        resolve();
+      });
+    }),
 
     request.start().then(
       function(aConnection) {
         is(aConnection.state, "connecting", "The initial state should be connecting.");
-        aConnection.onclose = function() {
-          aConnection.onclose = null;
-          is(aConnection.state, "closed", "Connection should be closed.");
-          aResolve();
-        };
+        return new Promise((resolve) => {
+          aConnection.onclose = function() {
+            aConnection.onclose = null;
+            is(aConnection.state, "closed", "Connection should be closed.");
+            resolve();
+          };
+        });
       },
       function(aError) {
         ok(false, "Error occurred when establishing a connection: " + aError);
         teardown();
-        aReject();
       }
-    );
-  });
+    ),
+
+  ]);
 }
 
 function teardown() {
