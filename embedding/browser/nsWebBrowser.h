@@ -38,7 +38,6 @@
 #include "nsEmbedStream.h"
 #include "nsIWidgetListener.h"
 
-#include "mozilla/BasePrincipal.h"
 #include "nsTArray.h"
 #include "nsWeakPtr.h"
 
@@ -133,7 +132,6 @@ protected:
   nsCOMPtr<nsIWebNavigation> mDocShellAsNav;
   nsCOMPtr<nsIScrollable> mDocShellAsScrollable;
   nsCOMPtr<nsITextScroll> mDocShellAsTextScroll;
-  mozilla::DocShellOriginAttributes mOriginAttributes;
 
   nsCOMPtr<nsIWidget> mInternalWidget;
   nsCOMPtr<nsIWindowWatcher> mWWatch;
