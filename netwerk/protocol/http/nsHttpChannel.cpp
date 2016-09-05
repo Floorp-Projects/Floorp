@@ -1133,6 +1133,18 @@ EnsureMIMEOfScript(nsIURI* aURI, nsHttpResponseHead* aResponseHead, nsILoadInfo*
         return NS_OK;
     }
 
+    if (StringBeginsWith(contentType, NS_LITERAL_CSTRING("text/html"))) {
+        // script load has type text/html
+        Telemetry::Accumulate(Telemetry::SCRIPT_BLOCK_WRONG_MIME, 10);
+        return NS_OK;
+    }
+
+    if (contentType.IsEmpty()) {
+        // script load has no type
+        Telemetry::Accumulate(Telemetry::SCRIPT_BLOCK_WRONG_MIME, 11);
+        return NS_OK;
+    }
+
     // script load has unknown type
     Telemetry::Accumulate(Telemetry::SCRIPT_BLOCK_WRONG_MIME, 0);
     return NS_OK;
