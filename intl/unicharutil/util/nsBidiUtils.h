@@ -111,16 +111,39 @@ typedef enum nsCharType nsCharType;
    * Return false, otherwise
    */
 #define LRM_CHAR 0x200e
+#define RLM_CHAR 0x200f
+
 #define LRE_CHAR 0x202a
+#define RLE_CHAR 0x202b
+#define PDF_CHAR 0x202c
+#define LRO_CHAR 0x202d
 #define RLO_CHAR 0x202e
+
 #define LRI_CHAR 0x2066
+#define RLI_CHAR 0x2067
+#define FSI_CHAR 0x2068
 #define PDI_CHAR 0x2069
+
 #define ALM_CHAR 0x061C
    inline bool IsBidiControl(uint32_t aChar) {
      return ((LRE_CHAR <= aChar && aChar <= RLO_CHAR) ||
              (LRI_CHAR <= aChar && aChar <= PDI_CHAR) ||
              (aChar == ALM_CHAR) ||
              (aChar & 0xfffffe) == LRM_CHAR);
+   }
+
+  /**
+   * Give a UTF-32 codepoint
+   * Return true if the codepoint is a Bidi control character that may result
+   * in RTL directionality and therefore needs to trigger bidi resolution;
+   * return false otherwise.
+   */
+   inline bool IsBidiControlRTL(uint32_t aChar) {
+     return aChar == RLM_CHAR ||
+            aChar == RLE_CHAR ||
+            aChar == RLO_CHAR ||
+            aChar == RLI_CHAR ||
+            aChar == ALM_CHAR;
    }
 
   /**
