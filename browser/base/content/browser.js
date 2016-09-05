@@ -7426,10 +7426,8 @@ var gIdentityHandler = {
       // 3 : TODO clear temporary allowed permission
       // 4 : TODO clear temporary blocked permission
 
-      if (permissionType) {
-        histogram.add("(all)", permissionType);
-        histogram.add(aPermission.id, permissionType);
-      }
+      histogram.add("(all)", permissionType);
+      histogram.add(aPermission.id, permissionType);
     });
 
     container.appendChild(img);
