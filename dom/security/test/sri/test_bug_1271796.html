@@ -1,0 +1,30 @@
+<!DOCTYPE HTML>
+<!-- Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/ -->
+<html>
+<head>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+      SimpleTest.waitForExplicitFinish();
+
+      function good_shouldLoadEncodingProblem() {
+        ok(true, "Problematically encoded file correctly loaded.")
+      };
+      function bad_shouldntEncounterBug1271796() {
+        ok(false, "Problematically encoded should load!")
+      }
+      window.onload = function() {
+        SimpleTest.finish();
+      }
+    </script>
+   <link rel="stylesheet" href="file_bug_1271796.css" crossorigin="anonymous"
+         integrity="sha384-8Xl0mTN4S2QZ5xeliG1sd4Ar9o1xMw6JoJy9RNjyHGQDha7GiLxo8l1llwLVgTNG"
+         onload="good_shouldLoadEncodingProblem();"
+         onerror="bad_shouldntEncounterBug1271796();">
+</head>
+<body>
+<a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1271796">Bug 1271796</a><br>
+<p>This text is prepended by emdash if css has loaded</p>
+</body>
+</html>
