@@ -2619,13 +2619,13 @@ MediaDecoderStateMachine::ScheduleStateMachineIn(int64_t aMicroseconds)
   TimeStamp now = TimeStamp::Now();
   TimeStamp target = now + TimeDuration::FromMicroseconds(aMicroseconds);
 
-  SAMPLE_LOG("Scheduling state machine for %lf ms from now", (target - now).ToMilliseconds());
-
-  RefPtr<MediaDecoderStateMachine> self = this;
-  mDelayedScheduler.Ensure(target, [self] () {
-    self->OnDelayedSchedule();
-  }, [self] () {
-    self->NotReached();
+  // It is OK to capture 'this' without causing UAF because the callback
+  // always happens before shutdown.
+  mDelayedScheduler.Ensure(target, [this] () {
+    mDelayedScheduler.CompleteRequest();
+    RunStateMachine();
+  }, [] () {
+    MOZ_DIAGNOSTIC_ASSERT(false);
   });
 }
 
