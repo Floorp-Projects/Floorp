@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["Extension", "ExtensionData", "ExtensionContext"];
+this.EXPORTED_SYMBOLS = ["Extension", "ExtensionData"];
 
 /* globals Extension ExtensionData */
 
@@ -272,6 +272,8 @@ let ProxyMessenger = {
     // Listen on the parent process message manager because `runtime.connect`
     // and `runtime.sendMessage` requests must be delivered to all frames in an
     // addon process (by the API contract).
+    // And legacy addons are not associated with a frame, so that is another
+    // reason for having a parent process manager here.
     let messageManagers = [Services.mm, pipmm];
 
     MessageChannel.addListener(messageManagers, "Extension:Connect", this);
