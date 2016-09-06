@@ -85,11 +85,15 @@ class ActionBarTextSelection implements TextSelection, GeckoEventListener {
 
     @Override
     public void destroy() {
-        EventDispatcher.getInstance().unregisterGeckoThreadListener(this,
-            "TextSelection:ActionbarInit",
-            "TextSelection:ActionbarStatus",
-            "TextSelection:ActionbarUninit",
-            "TextSelection:Update");
+        if (anchorHandle == null) {
+            Log.e(LOGTAG, "Do not unregister TextSelection:* listeners since anchorHandle is null");
+        } else {
+            EventDispatcher.getInstance().unregisterGeckoThreadListener(this,
+                    "TextSelection:ActionbarInit",
+                    "TextSelection:ActionbarStatus",
+                    "TextSelection:ActionbarUninit",
+                    "TextSelection:Update");
+        }
     }
 
     @Override

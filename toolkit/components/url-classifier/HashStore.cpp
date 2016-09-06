@@ -38,6 +38,7 @@
 #include "prio.h"
 #include "mozilla/Logging.h"
 #include "zlib.h"
+#include "Classifier.h"
 
 // Main store for SafeBrowsing protocol data. We store
 // known add/sub chunks, prefixes and completions in memory
@@ -179,12 +180,18 @@ TableUpdateV4::NewRemovalIndices(const uint32_t* aIndices, size_t aNumOfIndices)
   }
 }
 
-HashStore::HashStore(const nsACString& aTableName, nsIFile* aStoreDir)
+HashStore::HashStore(const nsACString& aTableName, nsIFile* aRootStoreDir)
   : mTableName(aTableName)
-  , mStoreDirectory(aStoreDir)
   , mInUpdate(false)
   , mFileSize(0)
 {
+  nsresult rv = Classifier::GetPrivateStoreDirectory(aRootStoreDir,
+                                                     aTableName,
+                                                     getter_AddRefs(mStoreDirectory));
+  if (NS_FAILED(rv)) {
+    LOG(("Failed to get private store directory for %s", mTableName.get()));
+    mStoreDirectory = aRootStoreDir;
+  }
 }
 
 HashStore::~HashStore()
