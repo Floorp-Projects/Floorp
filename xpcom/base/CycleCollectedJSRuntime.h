@@ -336,6 +336,35 @@ public:
     return JS::RootingContext::get(mJSContext);
   }
 
+  bool MicroTaskCheckpointDisabled() const
+  {
+    return mDisableMicroTaskCheckpoint;
+  }
+
+  void DisableMicroTaskCheckpoint(bool aDisable)
+  {
+    mDisableMicroTaskCheckpoint = aDisable;
+  }
+
+  class MOZ_RAII AutoDisableMicroTaskCheckpoint
+  {
+    public:
+    AutoDisableMicroTaskCheckpoint()
+    : mCCRT(CycleCollectedJSRuntime::Get())
+    {
+      mOldValue = mCCRT->MicroTaskCheckpointDisabled();
+      mCCRT->DisableMicroTaskCheckpoint(true);
+    }
+
+    ~AutoDisableMicroTaskCheckpoint()
+    {
+      mCCRT->DisableMicroTaskCheckpoint(mOldValue);
+    }
+
+    CycleCollectedJSRuntime* mCCRT;
+    bool mOldValue;
+  };
+
 protected:
   JSContext* MaybeContext() const { return mJSContext; }
 
@@ -427,6 +456,8 @@ private:
   nsTArray<RunInMetastableStateData> mMetastableStateEvents;
   uint32_t mBaseRecursionDepth;
   bool mDoingStableStates;
+
+  bool mDisableMicroTaskCheckpoint;
 
   OOMState mOutOfMemoryState;
   OOMState mLargeAllocationFailureState;

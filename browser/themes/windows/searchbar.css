@@ -127,16 +127,17 @@
 }
 
 .search-panel-tree {
-  border-top: 1px solid #ccc !important;
+  border-top: 1px solid var(--panel-separator-color) !important;
 }
 
 .search-panel-header {
   font-weight: normal;
-  background-color: rgb(245, 245, 245);
-  border-top: 1px solid #ccc;
+  background-color: hsla(210,4%,10%,.07);
+  border: none;
+  border-top: 1px solid var(--panel-separator-color);
   margin: 0;
   padding: 3px 6px;
-  color: #666;
+  color: GrayText;
 }
 
 .search-panel-header > label {
@@ -149,12 +150,12 @@
 }
 
 .search-panel-input-value {
-  color: black;
+  color: -moz-fieldtext;
 }
 
 .search-panel-one-offs {
-  margin: 0 0 !important;
-  border-top: 1px solid #ccc;
+  margin: 0 !important;
+  border-top: 1px solid var(--panel-separator-color);
   line-height: 0;
 }
 
@@ -164,10 +165,10 @@
   border: none;
   min-width: 48px;
   height: 32px;
-  margin: 0 0;
-  padding: 0 0;
-  background: none;
-  background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAAWCAYAAAABxvaqAAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH3gofECQNNVW2/AAAABBJREFUGFdjOHPmzH8GehEA/KpKg9YTf4AAAAAASUVORK5CYII=');
+  margin: 0;
+  padding: 0;
+  background: linear-gradient(transparent 15%, var(--panel-separator-color) 15%, var(--panel-separator-color) 85%, transparent 85%);
+  background-size: 1px auto;
   background-repeat: no-repeat;
   background-position: right center;
 }
@@ -178,7 +179,7 @@
 
 .searchbar-engine-one-off-item:not(.last-row) {
   box-sizing: content-box;
-  border-bottom: 1px solid #ccc;
+  border-bottom: 1px solid var(--panel-separator-color);
 }
 
 .search-setting-button-compact {
@@ -200,7 +201,7 @@
 
 .searchbar-engine-one-off-item > .button-box {
   border: none;
-  padding: 0 0;
+  padding: 0;
 }
 
 .searchbar-engine-one-off-item > .button-box > .button-text {
@@ -216,7 +217,7 @@
   -moz-appearance: none;
   border: none;
   height: 32px;
-  margin: 0 0;
+  margin: 0;
   padding: 0 10px;
 }
 
@@ -225,7 +226,7 @@
 }
 
 .addengine-item:first-of-type {
-  border-top: 1px solid #ccc;
+  border-top: 1px solid var(--panel-separator-color);
 }
 
 .addengine-item[selected] {
@@ -288,16 +289,11 @@
 
 .search-setting-button {
   -moz-appearance: none;
-  border-bottom: none;
-  border-left: none;
-  border-right: none;
-  -moz-border-top-colors: none;
   min-height: 32px;
 }
 
 .search-setting-button[selected] {
-  background-color: #d3d3d3;
-  border-top-color: #bdbebe;
+  background-color: hsla(210,4%,10%,.15);
 }
 
 .search-setting-button-compact {
