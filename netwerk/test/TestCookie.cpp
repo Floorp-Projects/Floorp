@@ -748,8 +748,5 @@ main(int32_t argc, char *argv[])
 // Stubs to make this test happy
 
 mozilla::dom::OriginAttributesDictionary::OriginAttributesDictionary()
-  : mAppId(0),
-    mInIsolatedMozBrowser(false),
-    mPrivateBrowsingId(0),
-    mUserContextId(0)
+  : mAppId(0), mInIsolatedMozBrowser(false), mUserContextId(0)
 {}
