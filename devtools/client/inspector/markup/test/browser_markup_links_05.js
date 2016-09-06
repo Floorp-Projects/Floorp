@@ -25,7 +25,7 @@ add_task(function* () {
   let onTabOpened = once(gBrowser.tabContainer, "TabOpen");
   inspector.onFollowLink();
   let {target: tab} = yield onTabOpened;
-  yield waitForTabLoad(tab);
+  yield BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
   ok(true, "A new tab opened");
   is(tab.linkedBrowser.currentURI.spec, URL_ROOT + "doc_markup_tooltip.png",
@@ -67,16 +67,3 @@ add_task(function* () {
   is(inspector.selection.nodeFront.tagName.toLowerCase(), "output",
     "The <output> node is still selected");
 });
-
-function waitForTabLoad(tab) {
-  let def = defer();
-  tab.addEventListener("load", function onLoad(e) {
-    // Skip load event for about:blank
-    if (tab.linkedBrowser.currentURI.spec === "about:blank") {
-      return;
-    }
-    tab.removeEventListener("load", onLoad);
-    def.resolve();
-  });
-  return def.promise;
-}

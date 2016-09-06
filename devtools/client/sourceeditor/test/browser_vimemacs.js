@@ -11,14 +11,7 @@ function test() {
   requestLongerTimeout(4);
   waitForExplicitFinish();
 
-  let tab = gBrowser.addTab();
-  gBrowser.selectedTab = tab;
-
-  let browser = gBrowser.getBrowserForTab(tab);
-  browser.addEventListener("load", function onLoad() {
-    browser.removeEventListener("load", onLoad, true);
-    runCodeMirrorTest(browser);
-  }, true);
-
-  browser.loadURI(URI);
+  addTab(URI).then(function (tab) {
+    runCodeMirrorTest(tab.linkedBrowser);
+  });
 }
