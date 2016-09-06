@@ -113,23 +113,6 @@ var populateTree = Task.async(function* populate(parentGuid, ...items) {
   return guids;
 });
 
-function* insertWithoutGuid(info) {
-  let item = yield PlacesUtils.bookmarks.insert(info);
-  let id = yield PlacesUtils.promiseItemId(item.guid);
-
-  // All Places methods ensure we specify a valid GUID, so we insert
-  // an item and remove its GUID by modifying the DB directly.
-  yield PlacesUtils.withConnectionWrapper(
-    "test_sync_utils: insertWithoutGuid", db => db.executeCached(
-      `UPDATE moz_bookmarks SET guid = NULL WHERE guid = :guid`,
-      { guid: item.guid }
-    )
-  );
-  PlacesUtils.invalidateCachedGuidFor(id);
-
-  return { id, item };
-}
-
 add_task(function* test_order() {
   do_print("Insert some bookmarks");
   let guids = yield populateTree(PlacesUtils.bookmarks.menuGuid, {
@@ -178,84 +161,6 @@ add_task(function* test_order() {
       PlacesUtils.bookmarks.menuGuid);
     deepEqual(childGuids, [guids.childBmk, guids.siblingBmk, guids.siblingSep,
       guids.siblingFolder], "Nonexistent children should be ignored");
-  }
-
-  yield PlacesUtils.bookmarks.eraseEverything();
-});
-
-add_task(function* test_fetchChildGuids_ensure_guids() {
-  let firstWithGuid = yield PlacesUtils.bookmarks.insert({
-    parentGuid: PlacesUtils.bookmarks.menuGuid,
-    type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
-    url: "https://mozilla.org",
-  });
-
-  let { item: secondWithoutGuid } = yield* insertWithoutGuid({
-    parentGuid: PlacesUtils.bookmarks.menuGuid,
-    type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
-    url: "https://example.com",
-  });
-
-  let thirdWithGuid = yield PlacesUtils.bookmarks.insert({
-    parentGuid: PlacesUtils.bookmarks.menuGuid,
-    type: PlacesUtils.bookmarks.TYPE_FOLDER,
-  });
-
-  do_print("Children without a GUID should be assigned one");
-  let childGuids = yield PlacesSyncUtils.bookmarks.fetchChildGuids(
-    PlacesUtils.bookmarks.menuGuid);
-  equal(childGuids.length, 3, "Should include all children");
-  equal(childGuids[0], firstWithGuid.guid,
-    "Should include first child GUID");
-  notEqual(childGuids[1], secondWithoutGuid.guid,
-    "Should assign new GUID to second child");
-  equal(childGuids[2], thirdWithGuid.guid,
-    "Should include third child GUID");
-
-  yield PlacesUtils.bookmarks.eraseEverything();
-});
-
-add_task(function* test_ensureGuidForId_invalid() {
-  yield rejects(PlacesSyncUtils.bookmarks.ensureGuidForId(-1),
-    "Should reject invalid item IDs");
-
-  let item = yield PlacesUtils.bookmarks.insert({
-    parentGuid: PlacesUtils.bookmarks.menuGuid,
-    type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
-    url: "https://mozilla.org",
-  });
-  let id = yield PlacesUtils.promiseItemId(item.guid);
-  yield PlacesUtils.bookmarks.remove(item);
-  yield rejects(PlacesSyncUtils.bookmarks.ensureGuidForId(id),
-    "Should reject nonexistent item IDs");
-});
-
-add_task(function* test_ensureGuidForId() {
-  do_print("Item with GUID");
-  {
-    let item = yield PlacesUtils.bookmarks.insert({
-      parentGuid: PlacesUtils.bookmarks.menuGuid,
-      type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
-      url: "https://mozilla.org",
-    });
-    let id = yield PlacesUtils.promiseItemId(item.guid);
-    let guid = yield PlacesSyncUtils.bookmarks.ensureGuidForId(id);
-    equal(guid, item.guid, "Should return GUID if one exists");
-  }
-
-  do_print("Item without GUID");
-  {
-    let { id, item } = yield* insertWithoutGuid({
-      parentGuid: PlacesUtils.bookmarks.menuGuid,
-      type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
-      url: "https://example.com",
-    });
-    let guid = yield PlacesSyncUtils.bookmarks.ensureGuidForId(id);
-    notEqual(guid, item.guid, "Should assign new GUID to item without one");
-    equal(yield PlacesUtils.promiseItemGuid(id), guid,
-      "Should map ID to new GUID");
-    equal(yield PlacesUtils.promiseItemId(guid), id,
-      "Should map new GUID to ID");
   }
 
   yield PlacesUtils.bookmarks.eraseEverything();
