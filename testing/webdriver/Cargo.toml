@@ -1,16 +1,16 @@
 [package]
 
 name = "webdriver"
-version = "0.13.0"
+version = "0.14.0"
 authors = ["Mozilla Tools and Automation <auto-tools@mozilla.com>"]
 description = "Library implementing the wire protocol for the W3C WebDriver specification."
 repository = "https://github.com/jgraham/webdriver-rust"
 license = "MPL-2.0"
 
 [dependencies]
-log = "0.3.5"
-regex = "0.1.47"
-rustc-serialize = "0.3.16"
+log = "0.3"
+regex = "0.1"
+rustc-serialize = "0.3"
 hyper = {version = "0.9", default-features = false}
-cookie = {version = "0.2.4", default-features = false}
+cookie = {version = "0.2", default-features = false}
 time = "0.1"
