@@ -251,6 +251,17 @@ public:
   size_t SizeOfAudioQueue() const;
 
 private:
+  class StateObject;
+  class DecodeMetadataState;
+  class WaitForCDMState;
+  class DormantState;
+  class DecodingFirstFrameState;
+  class DecodingState;
+  class SeekingState;
+  class BufferingState;
+  class CompletedState;
+  class ShutdownState;
+
   static const char* ToStateStr(State aState);
   const char* ToStateStr();
 
@@ -602,6 +613,8 @@ private:
   // The decoder monitor must be obtained before modifying this state.
   // Accessed on state machine, audio, main, and AV thread.
   Watchable<State> mState;
+
+  UniquePtr<StateObject> mStateObj;
 
   // Time that buffering started. Used for buffering timeout and only
   // accessed on the state machine thread. This is null while we're not
