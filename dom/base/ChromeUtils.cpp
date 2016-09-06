@@ -179,8 +179,7 @@ ChromeUtils::IsOriginAttributesEqual(dom::GlobalObject& aGlobal,
          aA.mAppId == aB.mAppId &&
          aA.mInIsolatedMozBrowser == aB.mInIsolatedMozBrowser &&
          aA.mSignedPkg == aB.mSignedPkg &&
-         aA.mUserContextId == aB.mUserContextId &&
-         aA.mPrivateBrowsingId == aB.mPrivateBrowsingId;
+         aA.mUserContextId == aB.mUserContextId;
 }
 
 /* static */ bool
@@ -190,8 +189,7 @@ ChromeUtils::IsOriginAttributesEqualIgnoringAddonId(const dom::OriginAttributesD
   return aA.mAppId == aB.mAppId &&
          aA.mInIsolatedMozBrowser == aB.mInIsolatedMozBrowser &&
          aA.mSignedPkg == aB.mSignedPkg &&
-         aA.mUserContextId == aB.mUserContextId &&
-         aA.mPrivateBrowsingId == aB.mPrivateBrowsingId;
+         aA.mUserContextId == aB.mUserContextId;
 }
 
 } // namespace dom

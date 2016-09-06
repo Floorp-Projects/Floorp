@@ -2146,16 +2146,6 @@ nsFrameLoader::MaybeCreateDocShell()
     return rv;
   }
 
-  bool isPrivate = false;
-  nsCOMPtr<nsILoadContext> parentContext = do_QueryInterface(docShell);
-  NS_ENSURE_STATE(parentContext);
-
-  rv = parentContext->GetUsePrivateBrowsing(&isPrivate);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-  attrs.SyncAttributesWithPrivateBrowsing(isPrivate);
-
   nsDocShell::Cast(mDocShell)->SetOriginAttributes(attrs);
 
   if (OwnerIsMozBrowserOrAppFrame()) {
@@ -3400,13 +3390,6 @@ nsFrameLoader::GetNewTabContext(MutableTabContext* aTabContext,
   mOwnerContent->GetAttr(kNameSpaceID_None,
                          nsGkAtoms::mozpresentation,
                          presentationURLStr);
-
-  nsCOMPtr<nsIDocShell> docShell = mOwnerContent->OwnerDoc()->GetDocShell();
-  nsCOMPtr<nsILoadContext> parentContext = do_QueryInterface(docShell);
-  NS_ENSURE_STATE(parentContext);
-
-  bool isPrivate = parentContext->UsePrivateBrowsing();
-  attrs.SyncAttributesWithPrivateBrowsing(isPrivate);
 
   bool tabContextUpdated =
     aTabContext->SetTabContext(OwnerIsMozBrowserFrame(),
