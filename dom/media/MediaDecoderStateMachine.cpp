@@ -1840,23 +1840,6 @@ void MediaDecoderStateMachine::ReaderSuspendedChanged()
   SetDormant(mIsReaderSuspended);
 }
 
-void
-MediaDecoderStateMachine::ReadMetadata()
-{
-  MOZ_ASSERT(OnTaskQueue());
-  MOZ_ASSERT(!IsShutdown());
-  MOZ_ASSERT(mState == DECODER_STATE_DECODING_METADATA);
-  MOZ_ASSERT(!mMetadataRequest.Exists());
-
-  DECODER_LOG("Dispatching AsyncReadMetadata");
-  // Set mode to METADATA since we are about to read metadata.
-  mResource->SetReadMode(MediaCacheStream::MODE_METADATA);
-  mMetadataRequest.Begin(mReader->ReadMetadata()
-    ->Then(OwnerThread(), __func__, this,
-           &MediaDecoderStateMachine::OnMetadataRead,
-           &MediaDecoderStateMachine::OnMetadataNotRead));
-}
-
 RefPtr<MediaDecoder::SeekPromise>
 MediaDecoderStateMachine::Seek(SeekTarget aTarget)
 {
@@ -2309,83 +2292,6 @@ MediaDecoderStateMachine::DecodeError()
   DECODER_WARN("Decode error");
   // Notify the decode error and MediaDecoder will shut down MDSM.
   mOnPlaybackEvent.Notify(MediaEventType::DecodeError);
-}
-
-void
-MediaDecoderStateMachine::OnMetadataRead(MetadataHolder* aMetadata)
-{
-  MOZ_ASSERT(OnTaskQueue());
-  MOZ_ASSERT(mState == DECODER_STATE_DECODING_METADATA);
-  mMetadataRequest.Complete();
-
-  if (mPendingDormant) {
-    mPendingDormant = false;
-    SetDormant(true);
-    return;
-  }
-
-  // Set mode to PLAYBACK after reading metadata.
-  mResource->SetReadMode(MediaCacheStream::MODE_PLAYBACK);
-  mInfo = aMetadata->mInfo;
-  mMetadataTags = aMetadata->mTags.forget();
-  RefPtr<MediaDecoderStateMachine> self = this;
-
-  if (mInfo.mMetadataDuration.isSome()) {
-    RecomputeDuration();
-  } else if (mInfo.mUnadjustedMetadataEndTime.isSome()) {
-    mReader->AwaitStartTime()->Then(OwnerThread(), __func__,
-      [self] () -> void {
-        NS_ENSURE_TRUE_VOID(!self->IsShutdown());
-        TimeUnit unadjusted = self->mInfo.mUnadjustedMetadataEndTime.ref();
-        TimeUnit adjustment = self->mReader->StartTime();
-        self->mInfo.mMetadataDuration.emplace(unadjusted - adjustment);
-        self->RecomputeDuration();
-      }, [] () -> void { NS_WARNING("Adjusting metadata end time failed"); }
-    );
-  }
-
-  if (HasVideo()) {
-    DECODER_LOG("Video decode isAsync=%d HWAccel=%d videoQueueSize=%d",
-                mReader->IsAsync(),
-                mReader->VideoIsHardwareAccelerated(),
-                GetAmpleVideoFrames());
-  }
-
-  // In general, we wait until we know the duration before notifying the decoder.
-  // However, we notify  unconditionally in this case without waiting for the start
-  // time, since the caller might be waiting on metadataloaded to be fired before
-  // feeding in the CDM, which we need to decode the first frame (and
-  // thus get the metadata). We could fix this if we could compute the start
-  // time by demuxing without necessaring decoding.
-  bool waitingForCDM =
-#ifdef MOZ_EME
-    mInfo.IsEncrypted() && !mCDMProxy;
-#else
-    false;
-#endif
-  mNotifyMetadataBeforeFirstFrame = mDuration.Ref().isSome() || waitingForCDM;
-  if (mNotifyMetadataBeforeFirstFrame) {
-    EnqueueLoadedMetadataEvent();
-  }
-
-  if (waitingForCDM) {
-    // Metadata parsing was successful but we're still waiting for CDM caps
-    // to become available so that we can build the correct decryptor/decoder.
-    SetState(DECODER_STATE_WAIT_FOR_CDM);
-    return;
-  }
-
-  SetState(DECODER_STATE_DECODING_FIRSTFRAME);
-}
-
-void
-MediaDecoderStateMachine::OnMetadataNotRead(ReadMetadataFailureReason aReason)
-{
-  MOZ_ASSERT(OnTaskQueue());
-  MOZ_ASSERT(mState == DECODER_STATE_DECODING_METADATA);
-  mMetadataRequest.Complete();
-  DECODER_WARN("Decode metadata failed, shutting down decoder");
-  DecodeError();
 }
 
 void
