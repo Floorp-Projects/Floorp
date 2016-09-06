@@ -5,8 +5,10 @@
 #ifndef BASE_THREADING_THREAD_LOCAL_STORAGE_H_
 #define BASE_THREADING_THREAD_LOCAL_STORAGE_H_
 
+#include "base/atomicops.h"
 #include "base/base_export.h"
-#include "base/basictypes.h"
+#include "base/macros.h"
+#include "build/build_config.h"
 
 #if defined(OS_WIN)
 #include <windows.h>
@@ -26,7 +28,7 @@ class BASE_EXPORT PlatformThreadLocalStorage {
 
 #if defined(OS_WIN)
   typedef unsigned long TLSKey;
-  enum { TLS_KEY_OUT_OF_INDEXES = TLS_OUT_OF_INDEXES };
+  enum : unsigned { TLS_KEY_OUT_OF_INDEXES = TLS_OUT_OF_INDEXES };
 #elif defined(OS_POSIX)
   typedef pthread_key_t TLSKey;
   // The following is a "reserved key" which is used in our generic Chromium
@@ -98,8 +100,7 @@ class BASE_EXPORT ThreadLocalStorage {
     // Set up the TLS slot.  Called by the constructor.
     // 'destructor' is a pointer to a function to perform per-thread cleanup of
     // this object.  If set to NULL, no cleanup is done for this TLS slot.
-    // Returns false on error.
-    bool Initialize(TLSDestructorFunc destructor);
+    void Initialize(TLSDestructorFunc destructor);
 
     // Free a previously allocated TLS 'slot'.
     // If a destructor was set for this slot, removes
@@ -115,10 +116,12 @@ class BASE_EXPORT ThreadLocalStorage {
     // value 'value'.
     void Set(void* value);
 
-    bool initialized() const { return initialized_; }
+    bool initialized() const {
+      return base::subtle::Acquire_Load(&initialized_) != 0;
+    }
 
     // The internals of this struct should be considered private.
-    bool initialized_;
+    base::subtle::Atomic32 initialized_;
     int slot_;
   };
 
@@ -136,6 +139,7 @@ class BASE_EXPORT ThreadLocalStorage {
     DISALLOW_COPY_AND_ASSIGN(Slot);
   };
 
+ private:
   DISALLOW_COPY_AND_ASSIGN(ThreadLocalStorage);
 };
 

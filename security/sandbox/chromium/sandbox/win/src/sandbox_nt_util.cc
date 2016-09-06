@@ -4,6 +4,11 @@
 
 #include "sandbox/win/src/sandbox_nt_util.h"
 
+#include <stddef.h>
+#include <stdint.h>
+
+#include <string>
+
 #include "base/win/pe_image.h"
 #include "sandbox/win/src/sandbox_factory.h"
 #include "sandbox/win/src/target_services.h"
@@ -74,7 +79,6 @@ void* AllocateNearTo(void* source, size_t size) {
 #else  // defined(_WIN64).
 void* AllocateNearTo(void* source, size_t size) {
   using sandbox::g_nt;
-  UNREFERENCED_PARAMETER(source);
 
   // In 32-bit processes allocations below 512k are predictable, so mark
   // anything in that range as reserved and retry until we get a good address.
@@ -133,8 +137,7 @@ bool MapGlobalMemory() {
     if (NULL != _InterlockedCompareExchangePointer(&g_shared_IPC_memory,
                                                    memory, NULL)) {
         // Somebody beat us to the memory setup.
-        ret = g_nt.UnmapViewOfSection(NtCurrentProcess, memory);
-        VERIFY_SUCCESS(ret);
+        VERIFY_SUCCESS(g_nt.UnmapViewOfSection(NtCurrentProcess, memory));
     }
     DCHECK_NT(g_shared_IPC_size > 0);
     g_shared_policy_memory = reinterpret_cast<char*>(g_shared_IPC_memory)
@@ -215,9 +218,82 @@ NTSTATUS CopyData(void* destination, const void* source, size_t bytes) {
   return ret;
 }
 
+NTSTATUS AllocAndGetFullPath(HANDLE root,
+                             wchar_t* path,
+                             wchar_t** full_path) {
+  if (!InitHeap())
+    return STATUS_NO_MEMORY;
+
+  DCHECK_NT(full_path);
+  DCHECK_NT(path);
+  *full_path = NULL;
+  OBJECT_NAME_INFORMATION* handle_name = NULL;
+  NTSTATUS ret = STATUS_UNSUCCESSFUL;
+  __try {
+    do {
+      static NtQueryObjectFunction NtQueryObject = NULL;
+      if (!NtQueryObject)
+        ResolveNTFunctionPtr("NtQueryObject", &NtQueryObject);
+
+      ULONG size = 0;
+      // Query the name information a first time to get the size of the name.
+      ret = NtQueryObject(root, ObjectNameInformation, NULL, 0, &size);
+
+      if (size) {
+        handle_name = reinterpret_cast<OBJECT_NAME_INFORMATION*>(
+            new(NT_ALLOC) BYTE[size]);
+
+        // Query the name information a second time to get the name of the
+        // object referenced by the handle.
+        ret = NtQueryObject(root, ObjectNameInformation, handle_name, size,
+                            &size);
+      }
+
+      if (STATUS_SUCCESS != ret)
+        break;
+
+      // Space for path + '\' + name + '\0'.
+      size_t name_length = handle_name->ObjectName.Length +
+                           (wcslen(path) + 2) * sizeof(wchar_t);
+      *full_path = new(NT_ALLOC) wchar_t[name_length/sizeof(wchar_t)];
+      if (NULL == *full_path)
+        break;
+      wchar_t* off = *full_path;
+      ret = CopyData(off, handle_name->ObjectName.Buffer,
+                     handle_name->ObjectName.Length);
+      if (!NT_SUCCESS(ret))
+        break;
+      off += handle_name->ObjectName.Length / sizeof(wchar_t);
+      *off = L'\\';
+      off += 1;
+      ret = CopyData(off, path, wcslen(path) * sizeof(wchar_t));
+      if (!NT_SUCCESS(ret))
+        break;
+      off += wcslen(path);
+      *off = L'\0';
+    } while (false);
+  } __except(EXCEPTION_EXECUTE_HANDLER) {
+    ret = GetExceptionCode();
+  }
+
+  if (!NT_SUCCESS(ret)) {
+    if (*full_path) {
+      operator delete(*full_path, NT_ALLOC);
+      *full_path = NULL;
+    }
+    if (handle_name) {
+      operator delete(handle_name, NT_ALLOC);
+      handle_name = NULL;
+    }
+  }
+
+  return ret;
+}
+
 // Hacky code... replace with AllocAndCopyObjectAttributes.
 NTSTATUS AllocAndCopyName(const OBJECT_ATTRIBUTES* in_object,
-                          wchar_t** out_name, uint32* attributes,
+                          wchar_t** out_name,
+                          uint32_t* attributes,
                           HANDLE* root) {
   if (!InitHeap())
     return STATUS_NO_MEMORY;
@@ -265,7 +341,7 @@ NTSTATUS AllocAndCopyName(const OBJECT_ATTRIBUTES* in_object,
   return ret;
 }
 
-NTSTATUS GetProcessId(HANDLE process, ULONG *process_id) {
+NTSTATUS GetProcessId(HANDLE process, DWORD *process_id) {
   PROCESS_BASIC_INFORMATION proc_info;
   ULONG bytes_returned;
 
@@ -283,7 +359,7 @@ bool IsSameProcess(HANDLE process) {
   if (NtCurrentProcess == process)
     return true;
 
-  static ULONG s_process_id = 0;
+  static DWORD s_process_id = 0;
 
   if (!s_process_id) {
     NTSTATUS ret = GetProcessId(NtCurrentProcess, &s_process_id);
@@ -291,7 +367,7 @@ bool IsSameProcess(HANDLE process) {
       return false;
   }
 
-  ULONG process_id;
+  DWORD process_id;
   NTSTATUS ret = GetProcessId(process, &process_id);
   if (!NT_SUCCESS(ret))
     return false;
@@ -360,7 +436,7 @@ UNICODE_STRING* AnsiToUnicode(const char* string) {
   return out_string;
 }
 
-UNICODE_STRING* GetImageInfoFromModule(HMODULE module, uint32* flags) {
+UNICODE_STRING* GetImageInfoFromModule(HMODULE module, uint32_t* flags) {
   // PEImage's dtor won't be run during SEH unwinding, but that's OK.
 #pragma warning(push)
 #pragma warning(disable: 4509)
@@ -397,7 +473,7 @@ UNICODE_STRING* GetImageInfoFromModule(HMODULE module, uint32* flags) {
 
 UNICODE_STRING* GetBackingFilePath(PVOID address) {
   // We'll start with something close to max_path charactes for the name.
-  ULONG buffer_bytes = MAX_PATH * 2;
+  SIZE_T buffer_bytes = MAX_PATH * 2;
 
   for (;;) {
     MEMORY_SECTION_NAME* section_name = reinterpret_cast<MEMORY_SECTION_NAME*>(
@@ -406,7 +482,7 @@ UNICODE_STRING* GetBackingFilePath(PVOID address) {
     if (!section_name)
       return NULL;
 
-    ULONG returned_bytes;
+    SIZE_T returned_bytes;
     NTSTATUS ret = g_nt.QueryVirtualMemory(NtCurrentProcess, address,
                                            MemorySectionName, section_name,
                                            buffer_bytes, &returned_bytes);
@@ -456,7 +532,7 @@ UNICODE_STRING* ExtractModuleName(const UNICODE_STRING* module_path) {
 
   // Based on the code above, size_bytes should always be small enough
   // to make the static_cast below safe.
-  DCHECK_NT(kuint16max > size_bytes);
+  DCHECK_NT(UINT16_MAX > size_bytes);
   char* str_buffer = new(NT_ALLOC) char[size_bytes + sizeof(UNICODE_STRING)];
   if (!str_buffer)
     return NULL;
@@ -512,8 +588,9 @@ NTSTATUS AutoProtectMemory::RevertProtection() {
   return ret;
 }
 
-bool IsSupportedRenameCall(FILE_RENAME_INFORMATION* file_info, DWORD length,
-                           uint32 file_info_class) {
+bool IsSupportedRenameCall(FILE_RENAME_INFORMATION* file_info,
+                           DWORD length,
+                           uint32_t file_info_class) {
   if (FileRenameInformation != file_info_class)
     return false;
 
@@ -533,7 +610,7 @@ bool IsSupportedRenameCall(FILE_RENAME_INFORMATION* file_info, DWORD length,
 
   // Check if it starts with \\??\\. We don't support relative paths.
   if (file_info->FileNameLength < sizeof(kPathPrefix) ||
-      file_info->FileNameLength > kuint16max)
+      file_info->FileNameLength > UINT16_MAX)
     return false;
 
   if (file_info->FileName[0] != kPathPrefix[0] ||
@@ -549,15 +626,13 @@ bool IsSupportedRenameCall(FILE_RENAME_INFORMATION* file_info, DWORD length,
 
 void* operator new(size_t size, sandbox::AllocationType type,
                    void* near_to) {
-  using namespace sandbox;
-
   void* result = NULL;
-  if (NT_ALLOC == type) {
-    if (InitHeap()) {
+  if (type == sandbox::NT_ALLOC) {
+    if (sandbox::InitHeap()) {
       // Use default flags for the allocation.
-      result = g_nt.RtlAllocateHeap(sandbox::g_heap, 0, size);
+      result = sandbox::g_nt.RtlAllocateHeap(sandbox::g_heap, 0, size);
     }
-  } else if (NT_PAGE == type) {
+  } else if (type == sandbox::NT_PAGE) {
     result = AllocateNearTo(near_to, size);
   } else {
     NOTREACHED_NT();
@@ -571,37 +646,31 @@ void* operator new(size_t size, sandbox::AllocationType type,
 }
 
 void operator delete(void* memory, sandbox::AllocationType type) {
-  using namespace sandbox;
-
-  if (NT_ALLOC == type) {
+  if (type == sandbox::NT_ALLOC) {
     // Use default flags.
-    VERIFY(g_nt.RtlFreeHeap(sandbox::g_heap, 0, memory));
-  } else if (NT_PAGE == type) {
+    VERIFY(sandbox::g_nt.RtlFreeHeap(sandbox::g_heap, 0, memory));
+  } else if (type == sandbox::NT_PAGE) {
     void* base = memory;
     SIZE_T size = 0;
-    VERIFY_SUCCESS(g_nt.FreeVirtualMemory(NtCurrentProcess, &base, &size,
-                                          MEM_RELEASE));
+    VERIFY_SUCCESS(sandbox::g_nt.FreeVirtualMemory(NtCurrentProcess, &base,
+                                                   &size, MEM_RELEASE));
   } else {
     NOTREACHED_NT();
   }
 }
 
-void operator delete(void* memory, sandbox::AllocationType type,
+void operator delete(void* memory,
+                     sandbox::AllocationType type,
                      void* near_to) {
-  UNREFERENCED_PARAMETER(near_to);
   operator delete(memory, type);
 }
 
-void* __cdecl operator new(size_t size, void* buffer,
+void* __cdecl operator new(size_t size,
+                           void* buffer,
                            sandbox::AllocationType type) {
-  UNREFERENCED_PARAMETER(size);
-  UNREFERENCED_PARAMETER(type);
   return buffer;
 }
 
-void __cdecl operator delete(void* memory, void* buffer,
-                             sandbox::AllocationType type) {
-  UNREFERENCED_PARAMETER(memory);
-  UNREFERENCED_PARAMETER(buffer);
-  UNREFERENCED_PARAMETER(type);
-}
+void __cdecl operator delete(void* memory,
+                             void* buffer,
+                             sandbox::AllocationType type) {}

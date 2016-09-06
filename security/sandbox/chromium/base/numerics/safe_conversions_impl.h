@@ -2,8 +2,11 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef BASE_SAFE_CONVERSIONS_IMPL_H_
-#define BASE_SAFE_CONVERSIONS_IMPL_H_
+#ifndef BASE_NUMERICS_SAFE_CONVERSIONS_IMPL_H_
+#define BASE_NUMERICS_SAFE_CONVERSIONS_IMPL_H_
+
+#include <limits.h>
+#include <stdint.h>
 
 #include <limits>
 
@@ -108,6 +111,55 @@ inline RangeConstraint GetRangeConstraint(bool is_in_upper_bound,
                             (is_in_lower_bound ? 0 : RANGE_UNDERFLOW));
 }
 
+// The following helper template addresses a corner case in range checks for
+// conversion from a floating-point type to an integral type of smaller range
+// but larger precision (e.g. float -> unsigned). The problem is as follows:
+//   1. Integral maximum is always one less than a power of two, so it must be
+//      truncated to fit the mantissa of the floating point. The direction of
+//      rounding is implementation defined, but by default it's always IEEE
+//      floats, which round to nearest and thus result in a value of larger
+//      magnitude than the integral value.
+//      Example: float f = UINT_MAX; // f is 4294967296f but UINT_MAX
+//                                   // is 4294967295u.
+//   2. If the floating point value is equal to the promoted integral maximum
+//      value, a range check will erroneously pass.
+//      Example: (4294967296f <= 4294967295u) // This is true due to a precision
+//                                            // loss in rounding up to float.
+//   3. When the floating point value is then converted to an integral, the
+//      resulting value is out of range for the target integral type and
+//      thus is implementation defined.
+//      Example: unsigned u = (float)INT_MAX; // u will typically overflow to 0.
+// To fix this bug we manually truncate the maximum value when the destination
+// type is an integral of larger precision than the source floating-point type,
+// such that the resulting maximum is represented exactly as a floating point.
+template <typename Dst, typename Src>
+struct NarrowingRange {
+  typedef typename std::numeric_limits<Src> SrcLimits;
+  typedef typename std::numeric_limits<Dst> DstLimits;
+
+  static Dst max() {
+    // The following logic avoids warnings where the max function is
+    // instantiated with invalid values for a bit shift (even though
+    // such a function can never be called).
+    static const int shift =
+        (MaxExponent<Src>::value > MaxExponent<Dst>::value &&
+         SrcLimits::digits < DstLimits::digits && SrcLimits::is_iec559 &&
+         DstLimits::is_integer)
+            ? (DstLimits::digits - SrcLimits::digits)
+            : 0;
+
+    // We use UINTMAX_C below to avoid compiler warnings about shifting floating
+    // points. Since it's a compile time calculation, it shouldn't have any
+    // performance impact.
+    return DstLimits::max() - static_cast<Dst>((UINTMAX_C(1) << shift) - 1);
+  }
+
+  static Dst min() {
+    return std::numeric_limits<Dst>::is_iec559 ? -DstLimits::max()
+                                               : DstLimits::min();
+  }
+};
+
 template <
     typename Dst,
     typename Src,
@@ -147,11 +199,8 @@ struct DstRangeRelationToSrcRangeImpl<Dst,
                                       INTEGER_REPRESENTATION_SIGNED,
                                       NUMERIC_RANGE_NOT_CONTAINED> {
   static RangeConstraint Check(Src value) {
-    return std::numeric_limits<Dst>::is_iec559
-               ? GetRangeConstraint(value <= std::numeric_limits<Dst>::max(),
-                                    value >= -std::numeric_limits<Dst>::max())
-               : GetRangeConstraint(value <= std::numeric_limits<Dst>::max(),
-                                    value >= std::numeric_limits<Dst>::min());
+    return GetRangeConstraint((value <= NarrowingRange<Dst, Src>::max()),
+                              (value >= NarrowingRange<Dst, Src>::min()));
   }
 };
 
@@ -163,7 +212,7 @@ struct DstRangeRelationToSrcRangeImpl<Dst,
                                       INTEGER_REPRESENTATION_UNSIGNED,
                                       NUMERIC_RANGE_NOT_CONTAINED> {
   static RangeConstraint Check(Src value) {
-    return GetRangeConstraint(value <= std::numeric_limits<Dst>::max(), true);
+    return GetRangeConstraint(value <= NarrowingRange<Dst, Src>::max(), true);
   }
 };
 
@@ -178,7 +227,7 @@ struct DstRangeRelationToSrcRangeImpl<Dst,
     return sizeof(Dst) > sizeof(Src)
                ? RANGE_VALID
                : GetRangeConstraint(
-                     value <= static_cast<Src>(std::numeric_limits<Dst>::max()),
+                     value <= static_cast<Src>(NarrowingRange<Dst, Src>::max()),
                      true);
   }
 };
@@ -195,7 +244,7 @@ struct DstRangeRelationToSrcRangeImpl<Dst,
     return (MaxExponent<Dst>::value >= MaxExponent<Src>::value)
                ? GetRangeConstraint(true, value >= static_cast<Src>(0))
                : GetRangeConstraint(
-                     value <= static_cast<Src>(std::numeric_limits<Dst>::max()),
+                     value <= static_cast<Src>(NarrowingRange<Dst, Src>::max()),
                      value >= static_cast<Src>(0));
   }
 };
@@ -212,5 +261,4 @@ inline RangeConstraint DstRangeRelationToSrcRange(Src value) {
 }  // namespace internal
 }  // namespace base
 
-#endif  // BASE_SAFE_CONVERSIONS_IMPL_H_
-
+#endif  // BASE_NUMERICS_SAFE_CONVERSIONS_IMPL_H_

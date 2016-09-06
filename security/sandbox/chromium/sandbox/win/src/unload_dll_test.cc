@@ -40,8 +40,7 @@ SBOX_TESTS_COMMAND int SimpleOpenEvent(int argc, wchar_t **argv) {
   return event_open.Get() ? SBOX_TEST_SUCCEEDED : SBOX_TEST_FAILED;
 }
 
-// Flaky on windows, see http://crbug.com/80569.
-TEST(UnloadDllTest, DISABLED_BaselineAvicapDll) {
+TEST(UnloadDllTest, BaselineAvicapDll) {
   TestRunner runner;
   runner.SetTestState(BEFORE_REVERT);
   runner.SetTimeout(2000);
@@ -56,8 +55,7 @@ TEST(UnloadDllTest, DISABLED_BaselineAvicapDll) {
   EXPECT_EQ(SBOX_TEST_SUCCEEDED, runner.RunTest(L"UseOneDLL B avicap32.dll"));
 }
 
-// Flaky on windows, see http://crbug.com/80569.
-TEST(UnloadDllTest, DISABLED_UnloadAviCapDllNoPatching) {
+TEST(UnloadDllTest, UnloadAviCapDllNoPatching) {
   TestRunner runner;
   runner.SetTestState(BEFORE_REVERT);
   runner.SetTimeout(2000);
@@ -67,8 +65,7 @@ TEST(UnloadDllTest, DISABLED_UnloadAviCapDllNoPatching) {
   EXPECT_EQ(SBOX_TEST_FAILED, runner.RunTest(L"UseOneDLL B avicap32.dll"));
 }
 
-// Flaky: http://crbug.com/38404
-TEST(UnloadDllTest, DISABLED_UnloadAviCapDllWithPatching) {
+TEST(UnloadDllTest, UnloadAviCapDllWithPatching) {
   TestRunner runner;
   runner.SetTimeout(2000);
   runner.SetTestState(BEFORE_REVERT);

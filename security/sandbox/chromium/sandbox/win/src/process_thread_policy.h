@@ -5,11 +5,12 @@
 #ifndef SANDBOX_SRC_PROCESS_THREAD_POLICY_H_
 #define SANDBOX_SRC_PROCESS_THREAD_POLICY_H_
 
+#include <stdint.h>
+
 #include <string>
 
 #include "sandbox/win/src/policy_low_level.h"
 
-#include "base/basictypes.h"
 #include "base/strings/string16.h"
 #include "sandbox/win/src/crosscall_server.h"
 #include "sandbox/win/src/sandbox_policy.h"
@@ -36,16 +37,16 @@ class ProcessPolicy {
   // is the thread_id to be opened.
   // The function returns the return value of NtOpenThread.
   static NTSTATUS OpenThreadAction(const ClientInfo& client_info,
-                                   uint32 desired_access,
-                                   uint32 thread_id,
+                                   uint32_t desired_access,
+                                   uint32_t thread_id,
                                    HANDLE* handle);
 
   // Opens the process id passed in and returns the duplicated handle to
   // the child. We only allow the child processes to open themselves. Any other
   // pid open is denied.
   static NTSTATUS OpenProcessAction(const ClientInfo& client_info,
-                                    uint32 desired_access,
-                                    uint32 process_id,
+                                    uint32_t desired_access,
+                                    uint32_t process_id,
                                     HANDLE* handle);
 
   // Opens the token associated with the process and returns the duplicated
@@ -53,7 +54,7 @@ class ProcessPolicy {
   // token (using ::GetCurrentProcess()).
   static NTSTATUS OpenProcessTokenAction(const ClientInfo& client_info,
                                          HANDLE process,
-                                         uint32 desired_access,
+                                         uint32_t desired_access,
                                          HANDLE* handle);
 
   // Opens the token associated with the process and returns the duplicated
@@ -61,8 +62,8 @@ class ProcessPolicy {
   // token (using ::GetCurrentProcess()).
   static NTSTATUS OpenProcessTokenExAction(const ClientInfo& client_info,
                                            HANDLE process,
-                                           uint32 desired_access,
-                                           uint32 attributes,
+                                           uint32_t desired_access,
+                                           uint32_t attributes,
                                            HANDLE* handle);
 
   // Processes a 'CreateProcessW()' request from the target.

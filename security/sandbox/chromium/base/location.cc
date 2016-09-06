@@ -31,6 +31,13 @@ Location::Location()
       program_counter_(NULL) {
 }
 
+Location::Location(const Location& other)
+    : function_name_(other.function_name_),
+      file_name_(other.file_name_),
+      line_number_(other.line_number_),
+      program_counter_(other.program_counter_) {
+}
+
 std::string Location::ToString() const {
   return std::string(function_name_) + "@" + file_name_ + ":" +
       base::IntToString(line_number_);

@@ -83,7 +83,9 @@ VRDisplayHost::SubmitFrame(VRLayerParent* aLayer, const int32_t& aInputFrameID,
   // compensate.
 
   TextureHost* th = TextureHost::AsTextureHost(aTexture);
-  AutoLockTextureHost autoLock(th);
+  // WebVR doesn't use the compositor to compose the frame, so use
+  // AutoLockTextureHostWithoutCompositor here.
+  AutoLockTextureHostWithoutCompositor autoLock(th);
   if (autoLock.Failed()) {
     NS_WARNING("Failed to lock the VR layer texture");
     return;

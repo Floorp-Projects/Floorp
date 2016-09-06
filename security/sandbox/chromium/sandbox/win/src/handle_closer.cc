@@ -4,6 +4,8 @@
 
 #include "sandbox/win/src/handle_closer.h"
 
+#include <stddef.h>
+
 #include "base/logging.h"
 #include "base/memory/scoped_ptr.h"
 #include "base/win/windows_version.h"
@@ -32,7 +34,11 @@ namespace sandbox {
 // Memory buffer mapped from the parent, with the list of handles.
 SANDBOX_INTERCEPT HandleCloserInfo* g_handles_to_close;
 
-HandleCloser::HandleCloser() {}
+HandleCloser::HandleCloser() {
+}
+
+HandleCloser::~HandleCloser() {
+}
 
 ResultCode HandleCloser::AddHandle(const base::char16* handle_type,
                                    const base::char16* handle_name) {

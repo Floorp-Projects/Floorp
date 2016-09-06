@@ -5,14 +5,17 @@
 #ifndef BASE_THREADING_SEQUENCED_WORKER_POOL_H_
 #define BASE_THREADING_SEQUENCED_WORKER_POOL_H_
 
+#include <stddef.h>
+
 #include <cstddef>
 #include <string>
 
 #include "base/base_export.h"
-#include "base/basictypes.h"
 #include "base/callback_forward.h"
+#include "base/macros.h"
 #include "base/memory/ref_counted.h"
 #include "base/memory/scoped_ptr.h"
+#include "base/single_thread_task_runner.h"
 #include "base/task_runner.h"
 
 namespace tracked_objects {
@@ -21,7 +24,7 @@ class Location;
 
 namespace base {
 
-class MessageLoopProxy;
+class SingleThreadTaskRunner;
 
 template <class T> class DeleteHelper;
 
@@ -44,7 +47,8 @@ class SequencedTaskRunner;
 //     destruction will be visible to T2.
 //
 // Example:
-//   SequencedWorkerPool::SequenceToken token = pool.GetSequenceToken();
+//   SequencedWorkerPool::SequenceToken token =
+//       SequencedWorkerPool::GetSequenceToken();
 //   pool.PostSequencedWorkerTask(token, SequencedWorkerPool::SKIP_ON_SHUTDOWN,
 //                                FROM_HERE, base::Bind(...));
 //   pool.PostSequencedWorkerTask(token, SequencedWorkerPool::SKIP_ON_SHUTDOWN,
@@ -120,7 +124,7 @@ class BASE_EXPORT SequencedWorkerPool : public TaskRunner {
 
   // Opaque identifier that defines sequencing of tasks posted to the worker
   // pool.
-  class SequenceToken {
+  class BASE_EXPORT SequenceToken {
    public:
     SequenceToken() : id_(0) {}
     ~SequenceToken() {}
@@ -133,6 +137,10 @@ class BASE_EXPORT SequencedWorkerPool : public TaskRunner {
     bool IsValid() const {
       return id_ != 0;
     }
+
+    // Returns a string representation of this token. This method should only be
+    // used for debugging.
+    std::string ToString() const;
 
    private:
     friend class SequencedWorkerPool;
@@ -156,24 +164,37 @@ class BASE_EXPORT SequencedWorkerPool : public TaskRunner {
   // an unsequenced task, returns an invalid SequenceToken.
   static SequenceToken GetSequenceTokenForCurrentThread();
 
+  // Gets a SequencedTaskRunner for the current thread. If the current thread is
+  // running an unsequenced task, a new SequenceToken will be generated and set,
+  // so that the returned SequencedTaskRunner is guaranteed to run tasks after
+  // the current task has finished running.
+  static scoped_refptr<SequencedTaskRunner>
+  GetSequencedTaskRunnerForCurrentThread();
+
+  // Returns a unique token that can be used to sequence tasks posted to
+  // PostSequencedWorkerTask(). Valid tokens are always nonzero.
+  // TODO(bauerb): Rename this to better differentiate from
+  // GetSequenceTokenForCurrentThread().
+  static SequenceToken GetSequenceToken();
+
+  // Returns the SequencedWorkerPool that owns this thread, or null if the
+  // current thread is not a SequencedWorkerPool worker thread.
+  static scoped_refptr<SequencedWorkerPool> GetWorkerPoolForCurrentThread();
+
   // When constructing a SequencedWorkerPool, there must be a
-  // MessageLoop on the current thread unless you plan to deliberately
-  // leak it.
+  // ThreadTaskRunnerHandle on the current thread unless you plan to
+  // deliberately leak it.
 
   // Pass the maximum number of threads (they will be lazily created as needed)
   // and a prefix for the thread name to aid in debugging.
   SequencedWorkerPool(size_t max_threads,
                       const std::string& thread_name_prefix);
 
-  // Like above, but with |observer| for testing.  Does not take
-  // ownership of |observer|.
+  // Like above, but with |observer| for testing.  Does not take ownership of
+  // |observer|.
   SequencedWorkerPool(size_t max_threads,
                       const std::string& thread_name_prefix,
                       TestingObserver* observer);
-
-  // Returns a unique token that can be used to sequence tasks posted to
-  // PostSequencedWorkerTask(). Valid tokens are always nonzero.
-  SequenceToken GetSequenceToken();
 
   // Returns the sequence token associated with the given name. Calling this
   // function multiple times with the same string will always produce the
@@ -299,6 +320,10 @@ class BASE_EXPORT SequencedWorkerPool : public TaskRunner {
   // sequence_token.
   bool IsRunningSequenceOnCurrentThread(SequenceToken sequence_token) const;
 
+  // Returns true if any thread is currently processing a task with the given
+  // sequence token. Should only be called with a valid sequence token.
+  bool IsRunningSequence(SequenceToken sequence_token) const;
+
   // Blocks until all pending tasks are complete. This should only be called in
   // unit tests when you want to validate something that should have happened.
   // This will not flush delayed tasks; delayed tasks get deleted.
@@ -320,12 +345,10 @@ class BASE_EXPORT SequencedWorkerPool : public TaskRunner {
   // Must be called from the same thread this object was constructed on.
   void Shutdown() { Shutdown(0); }
 
-  // A variant that allows an arbitrary number of new blocking tasks to
-  // be posted during shutdown from within tasks that execute during shutdown.
-  // Only tasks designated as BLOCKING_SHUTDOWN will be allowed, and only if
-  // posted by tasks that are not designated as CONTINUE_ON_SHUTDOWN. Once
+  // A variant that allows an arbitrary number of new blocking tasks to be
+  // posted during shutdown. The tasks cannot be posted within the execution
+  // context of tasks whose shutdown behavior is not BLOCKING_SHUTDOWN. Once
   // the limit is reached, subsequent calls to post task fail in all cases.
-  //
   // Must be called from the same thread this object was constructed on.
   void Shutdown(int max_new_blocking_tasks_after_shutdown);
 
@@ -347,7 +370,7 @@ class BASE_EXPORT SequencedWorkerPool : public TaskRunner {
   class Inner;
   class Worker;
 
-  const scoped_refptr<MessageLoopProxy> constructor_message_loop_;
+  const scoped_refptr<SingleThreadTaskRunner> constructor_task_runner_;
 
   // Avoid pulling in too many headers by putting (almost) everything
   // into |inner_|.

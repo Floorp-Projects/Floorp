@@ -5,10 +5,13 @@
 #ifndef SANDBOX_SRC_CROSSCALL_SERVER_H_
 #define SANDBOX_SRC_CROSSCALL_SERVER_H_
 
+#include <stdint.h>
+
 #include <string>
 #include <vector>
-#include "base/basictypes.h"
+
 #include "base/callback.h"
+#include "base/macros.h"
 #include "base/strings/string16.h"
 #include "sandbox/win/src/crosscall_params.h"
 
@@ -94,31 +97,31 @@ class CrossCallParamsEx : public CrossCallParams {
   // 1) validate the IPC buffer. returns NULL is the IPCbuffer is malformed.
   // 2) make a copy of the IPCbuffer (parameter capture)
   static CrossCallParamsEx* CreateFromBuffer(void* buffer_base,
-                                             uint32 buffer_size,
-                                             uint32* output_size);
+                                             uint32_t buffer_size,
+                                             uint32_t* output_size);
 
   // Provides IPCinput parameter raw access:
   // index : the parameter to read; 0 is the first parameter
   // returns NULL if the parameter is non-existent. If it exists it also
   // returns the size in *size
-  void* GetRawParameter(uint32 index, uint32* size, ArgType* type);
+  void* GetRawParameter(uint32_t index, uint32_t* size, ArgType* type);
 
   // Gets a parameter that is four bytes in size.
   // Returns false if the parameter does not exist or is not 32 bits wide.
-  bool GetParameter32(uint32 index, uint32* param);
+  bool GetParameter32(uint32_t index, uint32_t* param);
 
   // Gets a parameter that is void pointer in size.
   // Returns false if the parameter does not exist or is not void pointer sized.
-  bool GetParameterVoidPtr(uint32 index, void** param);
+  bool GetParameterVoidPtr(uint32_t index, void** param);
 
   // Gets a parameter that is a string. Returns false if the parameter does not
   // exist.
-  bool GetParameterStr(uint32 index, base::string16* string);
+  bool GetParameterStr(uint32_t index, base::string16* string);
 
   // Gets a parameter that is an in/out buffer. Returns false is the parameter
   // does not exist or if the size of the actual parameter is not equal to the
   // expected size.
-  bool GetParameterPtr(uint32 index, uint32 expected_size, void** pointer);
+  bool GetParameterPtr(uint32_t index, uint32_t expected_size, void** pointer);
 
   // Frees the memory associated with the IPC parameters.
   static void operator delete(void* raw_memory) throw();
@@ -143,7 +146,6 @@ void SetCallSuccess(CrossCallReturn* call_return);
 // process handle and the job object handle that contains the client process.
 struct ClientInfo {
   HANDLE process;
-  HANDLE job_object;
   DWORD process_id;
 };
 
@@ -207,7 +209,8 @@ class Dispatcher {
   // with the given service (IPC).
   virtual bool SetupService(InterceptionManager* manager, int service) = 0;
 
-  virtual ~Dispatcher() {}
+  Dispatcher();
+  virtual ~Dispatcher();
 
  protected:
   // Structure that defines an IPC Call with all the parameters and the handler.

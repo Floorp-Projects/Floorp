@@ -6,8 +6,10 @@
 #define SANDBOX_WIN_SRC_TARGET_PROCESS_H_
 
 #include <windows.h>
+#include <stddef.h>
+#include <stdint.h>
 
-#include "base/basictypes.h"
+#include "base/macros.h"
 #include "base/memory/scoped_ptr.h"
 #include "base/win/scoped_handle.h"
 #include "base/win/scoped_process_information.h"
@@ -32,8 +34,12 @@ class ThreadProvider;
 // class are owned by the Policy used to create them.
 class TargetProcess {
  public:
-  // The constructor takes ownership of |initial_token| and |lockdown_token|.
-  TargetProcess(HANDLE initial_token, HANDLE lockdown_token, HANDLE job,
+  // The constructor takes ownership of |initial_token|, |lockdown_token|
+  // and |lowbox_token|.
+  TargetProcess(base::win::ScopedHandle initial_token,
+                base::win::ScopedHandle lockdown_token,
+                base::win::ScopedHandle lowbox_token,
+                HANDLE job,
                 ThreadProvider* thread_pool);
   ~TargetProcess();
 
@@ -56,8 +62,10 @@ class TargetProcess {
 
   // Creates the IPC objects such as the BrokerDispatcher and the
   // IPC server. The IPC server uses the services of the thread_pool.
-  DWORD Init(Dispatcher* ipc_dispatcher, void* policy,
-             uint32 shared_IPC_size, uint32 shared_policy_size);
+  DWORD Init(Dispatcher* ipc_dispatcher,
+             void* policy,
+             uint32_t shared_IPC_size,
+             uint32_t shared_policy_size);
 
   // Returns the handle to the target process.
   HANDLE Process() const {
@@ -102,6 +110,9 @@ class TargetProcess {
   // The token given to the initial thread so that the target process can
   // start. It has more powers than the lockdown_token.
   base::win::ScopedHandle initial_token_;
+  // The lowbox token associated with the process. This token is set after the
+  // process creation.
+  base::win::ScopedHandle lowbox_token_;
   // Kernel handle to the shared memory used by the IPC server.
   base::win::ScopedHandle shared_section_;
   // Job object containing the target process.
