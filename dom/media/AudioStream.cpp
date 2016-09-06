@@ -596,8 +596,7 @@ AudioStream::DataCallback(void* aBuffer, long aFrames)
   auto writer = AudioBufferWriter(
     reinterpret_cast<AudioDataValue*>(aBuffer), mOutChannels, aFrames);
 
-  MOZ_ASSERT(mState != INITIALIZED ||
-             !strcmp(cubeb_get_backend_id(CubebUtils::GetCubebContext()), "winmm"));
+  MOZ_ASSERT(mState != INITIALIZED);
 
   // NOTE: wasapi (others?) can call us back *after* stop()/Shutdown() (mState == SHUTDOWN)
   // Bug 996162
