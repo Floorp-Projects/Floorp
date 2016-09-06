@@ -204,6 +204,41 @@ SuspendBackgroundVideoDelay()
     MediaPrefs::MDSMSuspendBackgroundVideoDelay());
 }
 
+class MediaDecoderStateMachine::StateObject
+{
+public:
+  virtual ~StateObject() {}
+  virtual void Enter() {}; // Entry action.
+  virtual void Exit() {};  // Exit action.
+  virtual void Step() {}   // Perform a 'cycle' of this state object.
+  virtual State GetState() const = 0;
+
+protected:
+  using Master = MediaDecoderStateMachine;
+  explicit StateObject(Master* aPtr) : mMaster(aPtr) {}
+
+  // Take a raw pointer in order not to change the life cycle of MDSM.
+  // It is guaranteed to be valid by MDSM.
+  Master* mMaster;
+};
+
+class MediaDecoderStateMachine::DecodeMetadataState
+  : public MediaDecoderStateMachine::StateObject
+{
+public:
+  explicit DecodeMetadataState(Master* aPtr) : StateObject(aPtr) {}
+
+  void Enter() override
+  {
+    mMaster->ReadMetadata();
+  }
+
+  State GetState() const override
+  {
+    return DECODER_STATE_DECODING_METADATA;
+  }
+};
+
 #define INIT_WATCHABLE(name, val) \
   name(val, "MediaDecoderStateMachine::" #name)
 #define INIT_MIRROR(name, val) \
@@ -223,6 +258,7 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   mDispatchedStateMachine(false),
   mDelayedScheduler(mTaskQueue),
   INIT_WATCHABLE(mState, DECODER_STATE_DECODING_METADATA),
+  mStateObj(new DecodeMetadataState(this)),
   mCurrentFrameID(0),
   INIT_WATCHABLE(mObservedDuration, TimeUnit()),
   mFragmentEndTime(-1),
@@ -1065,6 +1101,16 @@ MediaDecoderStateMachine::SetState(State aState)
 
   ExitState();
   mState = aState;
+
+  switch (mState) {
+    case DECODER_STATE_DECODING_METADATA:
+      mStateObj = MakeUnique<DecodeMetadataState>(this);
+      break;
+    default:
+      mStateObj = nullptr;
+      break;
+  }
+
   EnterState();
 }
 
@@ -1072,6 +1118,13 @@ void
 MediaDecoderStateMachine::ExitState()
 {
   MOZ_ASSERT(OnTaskQueue());
+
+  if (mStateObj) {
+    MOZ_ASSERT(mState == mStateObj->GetState());
+    mStateObj->Exit();
+    return;
+  }
+
   switch (mState) {
     case DECODER_STATE_COMPLETED:
       mSentPlaybackEndedEvent = false;
@@ -1088,10 +1141,14 @@ void
 MediaDecoderStateMachine::EnterState()
 {
   MOZ_ASSERT(OnTaskQueue());
+
+  if (mStateObj) {
+    MOZ_ASSERT(mState == mStateObj->GetState());
+    mStateObj->Enter();
+    return;
+  }
+
   switch (mState) {
-    case DECODER_STATE_DECODING_METADATA:
-      ReadMetadata();
-      break;
     case DECODER_STATE_DORMANT:
       DiscardSeekTaskIfExist();
       if (IsPlaying()) {
@@ -2262,6 +2319,11 @@ MediaDecoderStateMachine::RunStateMachine()
 
   mDelayedScheduler.Reset(); // Must happen on state machine task queue.
   mDispatchedStateMachine = false;
+
+  if (mStateObj) {
+    mStateObj->Step();
+    return;
+  }
 
   switch (mState) {
     case DECODER_STATE_DECODING:
