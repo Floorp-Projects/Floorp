@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["ExtensionContext"];
+this.EXPORTED_SYMBOLS = ["ExtensionChild"];
 
 /*
  * This file handles addon logic that is independent of the chrome process.
@@ -22,6 +22,8 @@ const Cr = Components.results;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "MessageChannel",
+                                  "resource://gre/modules/MessageChannel.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Schemas",
                                   "resource://gre/modules/Schemas.jsm");
 
@@ -29,6 +31,7 @@ const CATEGORY_EXTENSION_SCRIPTS_ADDON = "webextension-scripts-addon";
 
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 var {
+  getInnerWindowID,
   BaseContext,
   ChildAPIManager,
   LocalAPIImplementation,
@@ -41,6 +44,8 @@ var {
 // live in different processes), but for now use lazy getters.
 XPCOMUtils.defineLazyGetter(this, "findPathInObject",
   () => Cu.import("resource://gre/modules/Extension.jsm", {}).findPathInObject);
+XPCOMUtils.defineLazyGetter(this, "GlobalManager",
+  () => Cu.import("resource://gre/modules/Extension.jsm", {}).GlobalManager);
 XPCOMUtils.defineLazyGetter(this, "Management",
   () => Cu.import("resource://gre/modules/Extension.jsm", {}).Management);
 XPCOMUtils.defineLazyGetter(this, "ParentAPIManager",
@@ -132,7 +137,7 @@ class WannabeChildAPIManager extends ChildAPIManager {
 // |contentWindow| is the DOM window the content runs in.
 // |uri| is the URI of the content (optional).
 // |docShell| is the docshell the content runs in (optional).
-this.ExtensionContext = class extends BaseContext {
+class ExtensionContext extends BaseContext {
   constructor(extension, params) {
     super("addon_child", extension);
     if (Services.appinfo.processType != Services.appinfo.PROCESS_TYPE_DEFAULT) {
@@ -222,6 +227,102 @@ this.ExtensionContext = class extends BaseContext {
       this.extension.views.delete(this);
     }
   }
+}
+
+this.ExtensionChild = {
+  // Map<innerWindowId, ExtensionContext>
+  extensionContexts: new Map(),
+
+  initOnce() {
+    // This initializes the default message handler for messages targeted at
+    // an addon process, in case the addon process receives a message before
+    // its Messenger has been instantiated. For example, if a content script
+    // sends a message while there is no background page.
+    MessageChannel.setupMessageManagers([Services.cpmm]);
+  },
+
+  /**
+   * Create a privileged context at document-element-inserted.
+   *
+   * @param {Extension|BrowserExtensionContent} extension
+   *     The extension for which the context should be created.
+   * @param {nsIDOMWindow} contentWindow The global of the page.
+   */
+  createExtensionContext(extension, contentWindow) {
+    // TODO(robwu): Remove dependencies on the bloated Extension from
+    // Extension.jsm and use the thin BrowserExtensionContent from
+    // ExtensionContent.jsm instead.
+    extension = GlobalManager.extensionMap.get(extension.id);
+    let windowId = getInnerWindowID(contentWindow);
+    let context = this.extensionContexts.get(windowId);
+    if (context) {
+      if (context.extension !== extension) {
+        // Oops. This should never happen.
+        Cu.reportError("A different extension context already exists in this frame!");
+      } else {
+        // This should not happen either.
+        Cu.reportError("The extension context was already initialized in this frame.");
+      }
+      return;
+    }
+
+    let docShell = contentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+                                .getInterface(Ci.nsIDocShell);
+
+    let parentDocument = docShell.parent.QueryInterface(Ci.nsIDocShell)
+                                 .contentViewer.DOMDocument;
+
+    let browser = docShell.chromeEventHandler;
+    // If this is a sub-frame of the add-on manager, use that <browser>
+    // element rather than the top-level chrome event handler.
+    if (contentWindow.frameElement && parentDocument.documentURI == "about:addons") {
+      browser = contentWindow.frameElement;
+    }
+
+    let viewType = "tab";
+    if (browser.hasAttribute("webextension-view-type")) {
+      viewType = browser.getAttribute("webextension-view-type");
+    } else if (browser.classList.contains("inline-options-browser")) {
+      // Options pages are currently displayed inline, but in Chrome
+      // and in our UI mock-ups for a later milestone, they're
+      // pop-ups.
+      viewType = "popup";
+    }
+
+    let uri = contentWindow.document.documentURIObject;
+
+    context = new ExtensionContext(extension, {viewType, contentWindow, uri, docShell});
+    this.extensionContexts.set(windowId, context);
+  },
+
+  /**
+   * Close the ExtensionContext belonging to the given window, if any.
+   *
+   * @param {number} windowId The inner window ID of the destroyed context.
+   */
+  destroyExtensionContext(windowId) {
+    let context = this.extensionContexts.get(windowId);
+    if (context) {
+      context.unload();
+      this.extensionContexts.delete(windowId);
+    }
+  },
+
+  shutdownExtension(extensionId) {
+    for (let [windowId, context] of this.extensionContexts) {
+      if (context.extension.id == extensionId) {
+        context.shutdown();
+        this.extensionContexts.delete(windowId);
+      }
+    }
+  },
 };
 
-
+// TODO(robwu): Change this condition when addons move to a separate process.
+if (Services.appinfo.processType != Services.appinfo.PROCESS_TYPE_DEFAULT) {
+  Object.keys(ExtensionChild).forEach(function(key) {
+    if (typeof ExtensionChild[key] == "function") {
+      ExtensionChild[key] = () => {};
+    }
+  });
+}

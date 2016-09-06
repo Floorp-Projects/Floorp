@@ -80,6 +80,7 @@ BackgroundPage.prototype = {
     browser.setAttribute("src", url);
     chromeDoc.documentElement.appendChild(browser);
 
+    extensions.emit("extension-browser-inserted", browser);
 
     yield new Promise(resolve => {
       browser.addEventListener("load", function onLoad(event) {

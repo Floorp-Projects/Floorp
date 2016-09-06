@@ -12,6 +12,10 @@ this.EXPORTED_SYMBOLS = ["ExtensionContent"];
  * This file handles the content process side of extensions. It mainly
  * takes care of content script injection, content script APIs, and
  * messaging.
+ *
+ * This file is also the initial entry point for addon processes.
+ * ExtensionChild.jsm is responsible for functionality specific to addon
+ * processes.
  */
 
 const Ci = Components.interfaces;
@@ -39,6 +43,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "Schemas",
                                   "resource://gre/modules/Schemas.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "WebNavigationFrames",
                                   "resource://gre/modules/WebNavigationFrames.jsm");
+
+Cu.import("resource://gre/modules/ExtensionChild.jsm");
 
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 var {
@@ -457,13 +463,22 @@ DocumentManager = {
 
       // Enable the content script APIs should be available in subframes' window
       // if it is recognized as a valid addon id (see Bug 1214658 for rationale).
-      const {CONTENTSCRIPT_PRIVILEGES} = ExtensionManagement.API_LEVELS;
+      const {
+        NO_PRIVILEGES,
+        CONTENTSCRIPT_PRIVILEGES,
+        FULL_PRIVILEGES,
+      } = ExtensionManagement.API_LEVELS;
       let extensionId = ExtensionManagement.getAddonIdForWindow(window);
+      let apiLevel = ExtensionManagement.getAPILevelForWindow(window, extensionId);
 
-      if (ExtensionManagement.getAPILevelForWindow(window, extensionId) == CONTENTSCRIPT_PRIVILEGES) {
+      if (apiLevel != NO_PRIVILEGES) {
         let extension = ExtensionManager.get(extensionId);
         if (extension) {
-          DocumentManager.getExtensionPageContext(extension, window);
+          if (apiLevel == CONTENTSCRIPT_PRIVILEGES) {
+            DocumentManager.getExtensionPageContext(extension, window);
+          } else if (apiLevel == FULL_PRIVILEGES) {
+            ExtensionChild.createExtensionContext(extension, window);
+          }
         }
       }
 
@@ -493,6 +508,8 @@ DocumentManager = {
         context.close();
         this.extensionPageWindows.delete(windowId);
       }
+
+      ExtensionChild.destroyExtensionContext(windowId);
     }
   },
 
@@ -639,6 +656,8 @@ DocumentManager = {
       }
     }
 
+    ExtensionChild.shutdownExtension(extensionId);
+
     MessageChannel.abortResponses({extensionId});
 
     this.extensionCount--;
@@ -717,6 +736,7 @@ ExtensionManager = {
 
   init() {
     Schemas.init();
+    ExtensionChild.initOnce();
 
     Services.cpmm.addMessageListener("Extension:Startup", this);
     Services.cpmm.addMessageListener("Extension:Shutdown", this);

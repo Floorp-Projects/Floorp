@@ -32,8 +32,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "AppConstants",
                                   "resource://gre/modules/AppConstants.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ExtensionAPIs",
                                   "resource://gre/modules/ExtensionAPI.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "ExtensionContext",
-                                  "resource://gre/modules/ExtensionChild.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ExtensionStorage",
                                   "resource://gre/modules/ExtensionStorage.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
@@ -604,15 +602,9 @@ GlobalManager = {
 
   init(extension) {
     if (this.extensionMap.size == 0) {
-      Services.obs.addObserver(this, "document-element-inserted", false);
       UninstallObserver.init();
       ProxyMessenger.init();
-      // This initializes the default message handler for messages targeted at
-      // an addon process, in case the addon process receives a message before
-      // its Messenger has been instantiated. For example, if a content script
-      // sends a message while there is no background page.
-      // TODO(robwu): Move this to the addon process once we have one.
-      MessageChannel.setupMessageManagers([Services.cpmm]);
+      Management.on("extension-browser-inserted", this._onExtensionBrowser);
       this.initialized = true;
     }
 
@@ -623,9 +615,22 @@ GlobalManager = {
     this.extensionMap.delete(extension.id);
 
     if (this.extensionMap.size == 0 && this.initialized) {
-      Services.obs.removeObserver(this, "document-element-inserted");
+      Management.off("extension-browser-inserted", this._onExtensionBrowser);
       this.initialized = false;
     }
+  },
+
+  _onExtensionBrowser(type, browser) {
+    // TODO(robwu): Move this logic inside a frame script.
+    let global = browser.docShell
+      .QueryInterface(Ci.nsIInterfaceRequestor)
+      .getInterface(Ci.nsIContentFrameMessageManager);
+    ExtensionContent.init(global);
+    /* eslint-disable mozilla/balanced-listeners */
+    global.addEventListener("unload", function() {
+      ExtensionContent.uninit(this);
+    });
+    /* eslint-enable mozilla/balanced-listeners */
   },
 
   getExtension(extensionId) {
@@ -675,67 +680,6 @@ GlobalManager = {
       },
     };
     Schemas.inject(dest, schemaWrapper);
-  },
-
-  observe(document, topic, data) {
-    let contentWindow = document.defaultView;
-    if (!contentWindow) {
-      return;
-    }
-
-    let id = ExtensionManagement.getAddonIdForWindow(contentWindow);
-
-    // We don't inject privileged APIs into sub-frames of a UI page.
-    const {FULL_PRIVILEGES} = ExtensionManagement.API_LEVELS;
-    if (ExtensionManagement.getAPILevelForWindow(contentWindow, id) !== FULL_PRIVILEGES) {
-      return;
-    }
-
-    // We don't inject privileged APIs if the addonId is null
-    // or doesn't exist.
-    if (!this.extensionMap.has(id)) {
-      return;
-    }
-
-    let docShell = contentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                                .getInterface(Ci.nsIDocShell);
-
-    let parentDocument = docShell.parent.QueryInterface(Ci.nsIDocShell)
-                                 .contentViewer.DOMDocument;
-
-    let browser = docShell.chromeEventHandler;
-    // If this is a sub-frame of the add-on manager, use that <browser>
-    // element rather than the top-level chrome event handler.
-    if (contentWindow.frameElement && parentDocument.documentURI == "about:addons") {
-      browser = contentWindow.frameElement;
-    }
-
-    let viewType = "tab";
-    if (browser.hasAttribute("webextension-view-type")) {
-      viewType = browser.getAttribute("webextension-view-type");
-    } else if (browser.classList.contains("inline-options-browser")) {
-      // Options pages are currently displayed inline, but in Chrome
-      // and in our UI mock-ups for a later milestone, they're
-      // pop-ups.
-      viewType = "popup";
-    }
-
-    let extension = this.extensionMap.get(id);
-    let uri = document.documentURIObject;
-
-    let context = new ExtensionContext(extension, {viewType, contentWindow, uri, docShell});
-
-    let innerWindowID = contentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-      .getInterface(Ci.nsIDOMWindowUtils).currentInnerWindowID;
-
-    let onUnload = subject => {
-      let windowId = subject.QueryInterface(Ci.nsISupportsPRUint64).data;
-      if (windowId == innerWindowID) {
-        Services.obs.removeObserver(onUnload, "inner-window-destroyed");
-        context.unload();
-      }
-    };
-    Services.obs.addObserver(onUnload, "inner-window-destroyed", false);
   },
 };
 
