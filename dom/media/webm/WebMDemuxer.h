@@ -220,6 +220,8 @@ private:
   // previous frame's timestamp.  In NS.
   Maybe<int64_t> mLastAudioFrameTime;
   Maybe<int64_t> mLastVideoFrameTime;
+  Maybe<uint64_t> mAudioDefaultDuration;
+  Maybe<uint64_t> mVideoDefaultDuration;
 
   // Codec ID of audio track
   int mAudioCodec;
