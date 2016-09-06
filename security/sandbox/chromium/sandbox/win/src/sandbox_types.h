@@ -45,6 +45,8 @@ enum ResultCode {
   SBOX_ERROR_CANNOT_INIT_APPCONTAINER = 16,
   // Initializing or updating ProcThreadAttributes failed.
   SBOX_ERROR_PROC_THREAD_ATTRIBUTES = 17,
+  // Error in creating process.
+  SBOX_ERROR_CREATE_PROCESS = 18,
   // Placeholder for last item of the enum.
   SBOX_ERROR_LAST
 };
@@ -52,13 +54,14 @@ enum ResultCode {
 // If the sandbox cannot create a secure environment for the target, the
 // target will be forcibly terminated. These are the process exit codes.
 enum TerminationCodes {
-  SBOX_FATAL_INTEGRITY = 7006,       // Could not set the integrity level.
-  SBOX_FATAL_DROPTOKEN = 7007,       // Could not lower the token.
-  SBOX_FATAL_FLUSHANDLES = 7008,     // Failed to flush registry handles.
-  SBOX_FATAL_CACHEDISABLE = 7009,    // Failed to forbid HCKU caching.
-  SBOX_FATAL_CLOSEHANDLES = 7010,    // Failed to close pending handles.
-  SBOX_FATAL_MITIGATION = 7011,      // Could not set the mitigation policy.
-  SBOX_FATAL_MEMORY_EXCEEDED = 7012, // Exceeded the job memory limit.
+  SBOX_FATAL_INTEGRITY = 7006,        // Could not set the integrity level.
+  SBOX_FATAL_DROPTOKEN = 7007,        // Could not lower the token.
+  SBOX_FATAL_FLUSHANDLES = 7008,      // Failed to flush registry handles.
+  SBOX_FATAL_CACHEDISABLE = 7009,     // Failed to forbid HCKU caching.
+  SBOX_FATAL_CLOSEHANDLES = 7010,     // Failed to close pending handles.
+  SBOX_FATAL_MITIGATION = 7011,       // Could not set the mitigation policy.
+  SBOX_FATAL_MEMORY_EXCEEDED = 7012,  // Exceeded the job memory limit.
+  SBOX_FATAL_WARMUP = 7013,           // Failed to warmup.
   SBOX_FATAL_LAST
 };
 

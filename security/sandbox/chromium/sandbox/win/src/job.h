@@ -5,7 +5,10 @@
 #ifndef SANDBOX_SRC_JOB_H_
 #define SANDBOX_SRC_JOB_H_
 
-#include "base/basictypes.h"
+#include <stddef.h>
+
+#include "base/macros.h"
+#include "base/win/scoped_handle.h"
 #include "sandbox/win/src/restricted_token_utils.h"
 
 namespace sandbox {
@@ -17,7 +20,7 @@ namespace sandbox {
 //   job.AssignProcessToJob(process_handle);
 class Job {
  public:
-  Job() : job_handle_(NULL) { }
+  Job();
 
   ~Job();
 
@@ -47,14 +50,13 @@ class Job {
   // the error.
   DWORD UserHandleGrantAccess(HANDLE handle);
 
-  // Revokes ownership to the job handle and returns it. The destructor of the
-  // class won't close the handle when called.
-  // If the object is not yet initialized, it returns 0.
-  HANDLE Detach();
+  // Revokes ownership to the job handle and returns it.
+  // If the object is not yet initialized, it returns an invalid handle.
+  base::win::ScopedHandle Take();
 
  private:
   // Handle to the job referenced by the object.
-  HANDLE job_handle_;
+  base::win::ScopedHandle job_handle_;
 
   DISALLOW_COPY_AND_ASSIGN(Job);
 };

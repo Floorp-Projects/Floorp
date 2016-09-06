@@ -4,9 +4,6 @@
 
 // This is a low level implementation of atomic semantics for reference
 // counting.  Please use base/memory/ref_counted.h directly instead.
-//
-// The implementation includes annotations to avoid some false positives
-// when using data race detection tools.
 
 #ifndef BASE_ATOMIC_REF_COUNT_H_
 #define BASE_ATOMIC_REF_COUNT_H_

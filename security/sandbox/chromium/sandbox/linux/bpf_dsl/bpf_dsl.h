@@ -5,6 +5,7 @@
 #ifndef SANDBOX_LINUX_BPF_DSL_BPF_DSL_H_
 #define SANDBOX_LINUX_BPF_DSL_BPF_DSL_H_
 
+#include <stddef.h>
 #include <stdint.h>
 
 #include <utility>
@@ -33,15 +34,17 @@
 //      class SillyPolicy : public Policy {
 //       public:
 //        SillyPolicy() {}
-//        virtual ~SillyPolicy() {}
-//        virtual ResultExpr EvaluateSyscall(int sysno) const override {
+//        ~SillyPolicy() override {}
+//        ResultExpr EvaluateSyscall(int sysno) const override {
 //          if (sysno == __NR_fcntl) {
 //            Arg<int> fd(0), cmd(1);
 //            Arg<unsigned long> flags(2);
 //            const uint64_t kGoodFlags = O_ACCMODE | O_NONBLOCK;
-//            return If(fd == 0 && cmd == F_SETFL && (flags & ~kGoodFlags) == 0,
+//            return If(AllOf(fd == 0,
+//                            cmd == F_SETFL,
+//                            (flags & ~kGoodFlags) == 0),
 //                      Allow())
-//                .ElseIf(cmd == F_DUPFD || cmd == F_DUPFD_CLOEXEC,
+//                .ElseIf(AnyOf(cmd == F_DUPFD, cmd == F_DUPFD_CLOEXEC),
 //                        Error(EMFILE))
 //                .Else(Trap(SetFlagHandler, NULL));
 //          } else {
@@ -55,11 +58,11 @@
 //
 // More generally, the DSL currently supports the following grammar:
 //
-//   result = Allow() | Error(errno) | Kill(msg) | Trace(aux)
+//   result = Allow() | Error(errno) | Kill() | Trace(aux)
 //          | Trap(trap_func, aux) | UnsafeTrap(trap_func, aux)
 //          | If(bool, result)[.ElseIf(bool, result)].Else(result)
 //          | Switch(arg)[.Case(val, result)].Default(result)
-//   bool   = BoolConst(boolean) | !bool | bool && bool | bool || bool
+//   bool   = BoolConst(boolean) | Not(bool) | AllOf(bool...) | AnyOf(bool...)
 //          | arg == val | arg != val
 //   arg    = Arg<T>(num) | arg & mask
 //
@@ -89,8 +92,8 @@ SANDBOX_EXPORT ResultExpr Allow();
 // side effects.
 SANDBOX_EXPORT ResultExpr Error(int err);
 
-// Kill specifies a result to kill the program and print an error message.
-SANDBOX_EXPORT ResultExpr Kill(const char* msg);
+// Kill specifies a result to kill the process (task) immediately.
+SANDBOX_EXPORT ResultExpr Kill();
 
 // Trace specifies a result to notify a tracing process via the
 // PTRACE_EVENT_SECCOMP event and allow it to change or skip the system call.
@@ -117,11 +120,22 @@ SANDBOX_EXPORT ResultExpr
 // BoolConst converts a bool value into a BoolExpr.
 SANDBOX_EXPORT BoolExpr BoolConst(bool value);
 
-// Various ways to combine boolean expressions into more complex expressions.
-// They follow standard boolean algebra laws.
-SANDBOX_EXPORT BoolExpr operator!(const BoolExpr& cond);
-SANDBOX_EXPORT BoolExpr operator&&(const BoolExpr& lhs, const BoolExpr& rhs);
-SANDBOX_EXPORT BoolExpr operator||(const BoolExpr& lhs, const BoolExpr& rhs);
+// Not returns a BoolExpr representing the logical negation of |cond|.
+SANDBOX_EXPORT BoolExpr Not(const BoolExpr& cond);
+
+// AllOf returns a BoolExpr representing the logical conjunction ("and")
+// of zero or more BoolExprs.
+SANDBOX_EXPORT BoolExpr AllOf();
+SANDBOX_EXPORT BoolExpr AllOf(const BoolExpr& lhs, const BoolExpr& rhs);
+template <typename... Rest>
+SANDBOX_EXPORT BoolExpr AllOf(const BoolExpr& first, const Rest&... rest);
+
+// AnyOf returns a BoolExpr representing the logical disjunction ("or")
+// of zero or more BoolExprs.
+SANDBOX_EXPORT BoolExpr AnyOf();
+SANDBOX_EXPORT BoolExpr AnyOf(const BoolExpr& lhs, const BoolExpr& rhs);
+template <typename... Rest>
+SANDBOX_EXPORT BoolExpr AnyOf(const BoolExpr& first, const Rest&... rest);
 
 template <typename T>
 class SANDBOX_EXPORT Arg {
@@ -144,7 +158,7 @@ class SANDBOX_EXPORT Arg {
 
   // Returns a boolean expression comparing whether the system call argument
   // (after applying any bitmasks, if appropriate) does not equal |rhs|.
-  friend BoolExpr operator!=(const Arg& lhs, T rhs) { return !(lhs == rhs); }
+  friend BoolExpr operator!=(const Arg& lhs, T rhs) { return Not(lhs == rhs); }
 
  private:
   Arg(int num, uint64_t mask) : num_(num), mask_(mask) {}
@@ -199,15 +213,16 @@ class SANDBOX_EXPORT Caser {
   ~Caser() {}
 
   // Case adds a single-value "case" clause to the switch.
-  Caser<T> Case(T value, ResultExpr result) const;
+  Caser<T> Case(T value, const ResultExpr& result) const;
 
   // Cases adds a multiple-value "case" clause to the switch.
   // See also the SANDBOX_BPF_DSL_CASES macro below for a more idiomatic way
   // of using this function.
-  Caser<T> Cases(const std::vector<T>& values, ResultExpr result) const;
+  template <typename... Values>
+  Caser<T> CasesImpl(const ResultExpr& result, const Values&... values) const;
 
   // Terminate the switch with a "default" clause.
-  ResultExpr Default(ResultExpr result) const;
+  ResultExpr Default(const ResultExpr& result) const;
 
  private:
   Caser(const Arg<T>& arg, Elser elser) : arg_(arg), elser_(elser) {}
@@ -226,17 +241,10 @@ class SANDBOX_EXPORT Caser {
 // use like:
 //    Switch(arg).CASES((3, 5, 7), result)...;
 #define SANDBOX_BPF_DSL_CASES(values, result) \
-  Cases(SANDBOX_BPF_DSL_CASES_HELPER values, result)
+  CasesImpl(result, SANDBOX_BPF_DSL_CASES_HELPER values)
 
-// Helper macro to construct a std::vector from an initializer list.
-// TODO(mdempsky): Convert to use C++11 initializer lists instead.
-#define SANDBOX_BPF_DSL_CASES_HELPER(value, ...)                           \
-  ({                                                                       \
-    const __typeof__(value) bpf_dsl_cases_values[] = {value, __VA_ARGS__}; \
-    std::vector<__typeof__(value)>(                                        \
-        bpf_dsl_cases_values,                                              \
-        bpf_dsl_cases_values + arraysize(bpf_dsl_cases_values));           \
-  })
+// Helper macro to strip parentheses.
+#define SANDBOX_BPF_DSL_CASES_HELPER(...) __VA_ARGS__
 
 // =====================================================================
 // Official API ends here.
@@ -248,9 +256,9 @@ namespace internal {
 // BoolExpr is defined in bpf_dsl, since it's merely a typedef for
 // scoped_refptr<const internal::BoolExplImpl>, argument-dependent lookup only
 // searches the "internal" nested namespace.
-using bpf_dsl::operator!;
-using bpf_dsl::operator||;
-using bpf_dsl::operator&&;
+using bpf_dsl::Not;
+using bpf_dsl::AllOf;
+using bpf_dsl::AnyOf;
 
 // Returns a boolean expression that represents whether system call
 // argument |num| of size |size| is equal to |val|, when masked
@@ -278,6 +286,10 @@ Arg<T>::Arg(int num)
 // see http://www.parashift.com/c++-faq-lite/template-friends.html.
 template <typename T>
 BoolExpr Arg<T>::EqualTo(T val) const {
+  if (sizeof(T) == 4) {
+    // Prevent sign-extension of negative int32_t values.
+    return internal::ArgEq(num_, sizeof(T), mask_, static_cast<uint32_t>(val));
+  }
   return internal::ArgEq(num_, sizeof(T), mask_, static_cast<uint64_t>(val));
 }
 
@@ -287,28 +299,34 @@ SANDBOX_EXPORT Caser<T> Switch(const Arg<T>& arg) {
 }
 
 template <typename T>
-Caser<T> Caser<T>::Case(T value, ResultExpr result) const {
+Caser<T> Caser<T>::Case(T value, const ResultExpr& result) const {
   return SANDBOX_BPF_DSL_CASES((value), result);
 }
 
 template <typename T>
-Caser<T> Caser<T>::Cases(const std::vector<T>& values,
-                         ResultExpr result) const {
+template <typename... Values>
+Caser<T> Caser<T>::CasesImpl(const ResultExpr& result,
+                             const Values&... values) const {
   // Theoretically we could evaluate arg_ just once and emit a more efficient
   // dispatch table, but for now we simply translate into an equivalent
   // If/ElseIf/Else chain.
 
-  typedef typename std::vector<T>::const_iterator Iter;
-  BoolExpr test = BoolConst(false);
-  for (Iter i = values.begin(), end = values.end(); i != end; ++i) {
-    test = test || (arg_ == *i);
-  }
-  return Caser<T>(arg_, elser_.ElseIf(test, result));
+  return Caser<T>(arg_, elser_.ElseIf(AnyOf((arg_ == values)...), result));
 }
 
 template <typename T>
-ResultExpr Caser<T>::Default(ResultExpr result) const {
+ResultExpr Caser<T>::Default(const ResultExpr& result) const {
   return elser_.Else(result);
+}
+
+template <typename... Rest>
+BoolExpr AllOf(const BoolExpr& first, const Rest&... rest) {
+  return AllOf(first, AllOf(rest...));
+}
+
+template <typename... Rest>
+BoolExpr AnyOf(const BoolExpr& first, const Rest&... rest) {
+  return AnyOf(first, AnyOf(rest...));
 }
 
 }  // namespace bpf_dsl

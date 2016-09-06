@@ -9,13 +9,14 @@
 #include <string>
 
 #include "base/base_export.h"
-#include "base/basictypes.h"
+#include "base/macros.h"
 #include "base/synchronization/lock.h"
 #include "base/threading/platform_thread.h"
 
-template <typename T> struct DefaultSingletonTraits;
-
 namespace base {
+
+template <typename T>
+struct DefaultSingletonTraits;
 
 class BASE_EXPORT ThreadIdNameManager {
  public:
@@ -27,7 +28,7 @@ class BASE_EXPORT ThreadIdNameManager {
   void RegisterThread(PlatformThreadHandle::Handle handle, PlatformThreadId id);
 
   // Set the name for the given id.
-  void SetName(PlatformThreadId id, const char* name);
+  void SetName(PlatformThreadId id, const std::string& name);
 
   // Get the name for the given id.
   const char* GetName(PlatformThreadId id);

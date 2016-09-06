@@ -4,6 +4,9 @@
 
 #include "sandbox/win/src/handle_closer_agent.h"
 
+#include <limits.h>
+#include <stddef.h>
+
 #include "base/logging.h"
 #include "sandbox/win/src/nt_internals.h"
 #include "sandbox/win/src/win_utils.h"
@@ -41,15 +44,68 @@ bool HandleCloserAgent::NeedsHandlesClosed() {
   return g_handles_to_close != NULL;
 }
 
+HandleCloserAgent::HandleCloserAgent()
+    : dummy_handle_(::CreateEvent(NULL, FALSE, FALSE, NULL)) {
+}
+
+HandleCloserAgent::~HandleCloserAgent() {
+}
+
+// Attempts to stuff |closed_handle| with a duplicated handle for a dummy Event
+// with no access. This should allow the handle to be closed, to avoid
+// generating EXCEPTION_INVALID_HANDLE on shutdown, but nothing else. For now
+// the only supported |type| is Event or File.
+bool HandleCloserAgent::AttemptToStuffHandleSlot(HANDLE closed_handle,
+                                                 const base::string16& type) {
+  // Only attempt to stuff Files and Events at the moment.
+  if (type != L"Event" && type != L"File") {
+    return true;
+  }
+
+  if (!dummy_handle_.IsValid())
+    return false;
+
+  // This should never happen, as g_dummy is created before closing to_stuff.
+  DCHECK(dummy_handle_.Get() != closed_handle);
+
+  std::vector<HANDLE> to_close;
+  HANDLE dup_dummy = NULL;
+  size_t count = 16;
+
+  do {
+    if (!::DuplicateHandle(::GetCurrentProcess(), dummy_handle_.Get(),
+                           ::GetCurrentProcess(), &dup_dummy, 0, FALSE, 0))
+      break;
+    if (dup_dummy != closed_handle)
+      to_close.push_back(dup_dummy);
+  } while (count-- &&
+           reinterpret_cast<uintptr_t>(dup_dummy) <
+               reinterpret_cast<uintptr_t>(closed_handle));
+
+  for (auto h : to_close)
+    ::CloseHandle(h);
+
+  // Useful to know when we're not able to stuff handles.
+  DCHECK(dup_dummy == closed_handle);
+
+  return dup_dummy == closed_handle;
+}
+
 // Reads g_handles_to_close and creates the lookup map.
-void HandleCloserAgent::InitializeHandlesToClose() {
+void HandleCloserAgent::InitializeHandlesToClose(bool* is_csrss_connected) {
   CHECK(g_handles_to_close != NULL);
+
+  // Default to connected state
+  *is_csrss_connected = true;
 
   // Grab the header.
   HandleListEntry* entry = g_handles_to_close->handle_entries;
   for (size_t i = 0; i < g_handles_to_close->num_handle_types; ++i) {
     // Set the type name.
     base::char16* input = entry->handle_type;
+    if (!wcscmp(input, L"ALPC Port")) {
+      *is_csrss_connected = false;
+    }
     HandleMap::mapped_type& handle_names = handles_to_close_[input];
     input = reinterpret_cast<base::char16*>(reinterpret_cast<char*>(entry)
         + entry->offset_to_names);
@@ -67,7 +123,7 @@ void HandleCloserAgent::InitializeHandlesToClose() {
 
     DCHECK(reinterpret_cast<base::char16*>(entry) >= input);
     DCHECK(reinterpret_cast<base::char16*>(entry) - input <
-           sizeof(size_t) / sizeof(base::char16));
+           static_cast<ptrdiff_t>(sizeof(size_t) / sizeof(base::char16)));
   }
 
   // Clean up the memory we copied over.
@@ -136,6 +192,8 @@ bool HandleCloserAgent::CloseHandles() {
         return false;
       if (!::CloseHandle(handle))
         return false;
+      // Attempt to stuff this handle with a new dummy Event.
+      AttemptToStuffHandleSlot(handle, result->first);
     }
   }
 

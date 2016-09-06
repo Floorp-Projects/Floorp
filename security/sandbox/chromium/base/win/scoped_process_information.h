@@ -7,8 +7,8 @@
 
 #include <windows.h>
 
-#include "base/basictypes.h"
 #include "base/base_export.h"
+#include "base/macros.h"
 #include "base/win/scoped_handle.h"
 
 namespace base {

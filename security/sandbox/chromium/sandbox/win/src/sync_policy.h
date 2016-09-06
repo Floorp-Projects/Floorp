@@ -5,9 +5,10 @@
 #ifndef SANDBOX_SRC_SYNC_POLICY_H__
 #define SANDBOX_SRC_SYNC_POLICY_H__
 
+#include <stdint.h>
+
 #include <string>
 
-#include "base/basictypes.h"
 #include "base/strings/string16.h"
 #include "sandbox/win/src/crosscall_server.h"
 #include "sandbox/win/src/nt_internals.h"
@@ -35,15 +36,15 @@ class SyncPolicy {
   // eval_result is the desired policy action to accomplish.
   static NTSTATUS CreateEventAction(EvalResult eval_result,
                                     const ClientInfo& client_info,
-                                    const base::string16 &event_name,
-                                    uint32 event_type,
-                                    uint32 initial_state,
-                                    HANDLE *handle);
+                                    const base::string16& event_name,
+                                    uint32_t event_type,
+                                    uint32_t initial_state,
+                                    HANDLE* handle);
   static NTSTATUS OpenEventAction(EvalResult eval_result,
                                   const ClientInfo& client_info,
-                                  const base::string16 &event_name,
-                                  uint32 desired_access,
-                                  HANDLE *handle);
+                                  const base::string16& event_name,
+                                  uint32_t desired_access,
+                                  HANDLE* handle);
 };
 
 }  // namespace sandbox

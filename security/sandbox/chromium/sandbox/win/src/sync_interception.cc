@@ -4,6 +4,8 @@
 
 #include "sandbox/win/src/sync_interception.h"
 
+#include <stdint.h>
+
 #include "sandbox/win/src/crosscall_client.h"
 #include "sandbox/win/src/ipc_tags.h"
 #include "sandbox/win/src/policy_params.h"
@@ -12,12 +14,11 @@
 #include "sandbox/win/src/sandbox_nt_util.h"
 #include "sandbox/win/src/sharedmem_ipc_client.h"
 #include "sandbox/win/src/target_services.h"
-#include "mozilla/sandboxing/sandboxLogging.h"
 
 namespace sandbox {
 
 ResultCode ProxyCreateEvent(LPCWSTR name,
-                            uint32 initial_state,
+                            uint32_t initial_state,
                             EVENT_TYPE event_type,
                             void* ipc_memory,
                             CrossCallReturn* answer) {
@@ -34,7 +35,7 @@ ResultCode ProxyCreateEvent(LPCWSTR name,
 }
 
 ResultCode ProxyOpenEvent(LPCWSTR name,
-                          uint32 desired_access,
+                          uint32_t desired_access,
                           void* ipc_memory,
                           CrossCallReturn* answer) {
   CountedParameterSet<OpenEventParams> params;
@@ -63,10 +64,6 @@ NTSTATUS WINAPI TargetNtCreateEvent(NtCreateEventFunction orig_CreateEvent,
   if (status != STATUS_ACCESS_DENIED || !object_attributes)
     return status;
 
-  mozilla::sandboxing::LogBlocked("NtCreatEvent",
-                                  object_attributes->ObjectName->Buffer,
-                                  object_attributes->ObjectName->Length);
-
   // We don't trust that the IPC can work this early.
   if (!SandboxFactory::GetTargetServices()->GetState()->InitCalled())
     return status;
@@ -84,7 +81,7 @@ NTSTATUS WINAPI TargetNtCreateEvent(NtCreateEventFunction orig_CreateEvent,
     object_attribs_copy.RootDirectory = NULL;
 
     wchar_t* name = NULL;
-    uint32 attributes = 0;
+    uint32_t attributes = 0;
     NTSTATUS ret = AllocAndCopyName(&object_attribs_copy, &name, &attributes,
                                     NULL);
     if (!NT_SUCCESS(ret) || name == NULL)
@@ -106,9 +103,6 @@ NTSTATUS WINAPI TargetNtCreateEvent(NtCreateEventFunction orig_CreateEvent,
     } __except(EXCEPTION_EXECUTE_HANDLER) {
       break;
     }
-    mozilla::sandboxing::LogAllowed("NtCreateEvent",
-                                    object_attributes->ObjectName->Buffer,
-                                    object_attributes->ObjectName->Length);
   } while (false);
 
   return status;
@@ -123,10 +117,6 @@ NTSTATUS WINAPI TargetNtOpenEvent(NtOpenEventFunction orig_OpenEvent,
   if (status != STATUS_ACCESS_DENIED || !object_attributes)
     return status;
 
-  mozilla::sandboxing::LogBlocked("NtOpenEvent",
-                                  object_attributes->ObjectName->Buffer,
-                                  object_attributes->ObjectName->Length);
-  //
   // We don't trust that the IPC can work this early.
   if (!SandboxFactory::GetTargetServices()->GetState()->InitCalled())
     return status;
@@ -144,7 +134,7 @@ NTSTATUS WINAPI TargetNtOpenEvent(NtOpenEventFunction orig_OpenEvent,
     object_attribs_copy.RootDirectory = NULL;
 
     wchar_t* name = NULL;
-    uint32 attributes = 0;
+    uint32_t attributes = 0;
     NTSTATUS ret = AllocAndCopyName(&object_attribs_copy, &name, &attributes,
                                     NULL);
     if (!NT_SUCCESS(ret) || name == NULL)
@@ -165,9 +155,6 @@ NTSTATUS WINAPI TargetNtOpenEvent(NtOpenEventFunction orig_OpenEvent,
     } __except(EXCEPTION_EXECUTE_HANDLER) {
       break;
     }
-    mozilla::sandboxing::LogAllowed("NtOpenEvent",
-                                    object_attributes->ObjectName->Buffer,
-                                    object_attributes->ObjectName->Length);
   } while (false);
 
   return status;

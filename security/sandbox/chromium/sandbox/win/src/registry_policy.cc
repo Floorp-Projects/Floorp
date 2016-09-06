@@ -2,6 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <stdint.h>
+
 #include <string>
 
 #include "sandbox/win/src/registry_policy.h"
@@ -10,13 +12,13 @@
 #include "sandbox/win/src/ipc_tags.h"
 #include "sandbox/win/src/policy_engine_opcodes.h"
 #include "sandbox/win/src/policy_params.h"
-#include "sandbox/win/src/sandbox_utils.h"
 #include "sandbox/win/src/sandbox_types.h"
+#include "sandbox/win/src/sandbox_utils.h"
 #include "sandbox/win/src/win_utils.h"
 
 namespace {
 
-static const uint32 kAllowedRegFlags =
+static const uint32_t kAllowedRegFlags =
     KEY_QUERY_VALUE | KEY_ENUMERATE_SUB_KEYS | KEY_NOTIFY | KEY_READ |
     GENERIC_READ | GENERIC_EXECUTE | READ_CONTROL;
 
@@ -43,7 +45,7 @@ NTSTATUS TranslateMaximumAllowed(OBJECT_ATTRIBUTES* obj_attributes,
   OBJECT_BASIC_INFORMATION info = {0};
   status = NtQueryObject(handle, ObjectBasicInformation, &info, sizeof(info),
                          NULL);
-  NtClose(handle);
+  CHECK(NT_SUCCESS(NtClose(handle)));
   if (!NT_SUCCESS(status))
     return status;
 
@@ -137,7 +139,7 @@ bool RegistryPolicy::GenerateRules(const wchar_t* name,
       // We consider all flags that are not known to be readonly as potentially
       // used for write. Here we also support MAXIMUM_ALLOWED, but we are going
       // to expand it to read-only before the call.
-      uint32 restricted_flags = ~(kAllowedRegFlags | MAXIMUM_ALLOWED);
+      uint32_t restricted_flags = ~(kAllowedRegFlags | MAXIMUM_ALLOWED);
       open.AddNumberMatch(IF_NOT, OpenKey::ACCESS, restricted_flags, AND);
       create.AddNumberMatch(IF_NOT, OpenKey::ACCESS, restricted_flags, AND);
       break;
@@ -166,12 +168,12 @@ bool RegistryPolicy::GenerateRules(const wchar_t* name,
 
 bool RegistryPolicy::CreateKeyAction(EvalResult eval_result,
                                      const ClientInfo& client_info,
-                                     const base::string16 &key,
-                                     uint32 attributes,
+                                     const base::string16& key,
+                                     uint32_t attributes,
                                      HANDLE root_directory,
-                                     uint32 desired_access,
-                                     uint32 title_index,
-                                     uint32 create_options,
+                                     uint32_t desired_access,
+                                     uint32_t title_index,
+                                     uint32_t create_options,
                                      HANDLE* handle,
                                      NTSTATUS* nt_status,
                                      ULONG* disposition) {
@@ -191,7 +193,7 @@ bool RegistryPolicy::CreateKeyAction(EvalResult eval_result,
   UNICODE_STRING uni_name = {0};
   OBJECT_ATTRIBUTES obj_attributes = {0};
   InitObjectAttribs(key, attributes, root_directory, &obj_attributes,
-                    &uni_name);
+                    &uni_name, NULL);
   *nt_status = NtCreateKeyInTarget(handle, desired_access, &obj_attributes,
                                    title_index, NULL, create_options,
                                    disposition, client_info.process);
@@ -200,10 +202,10 @@ bool RegistryPolicy::CreateKeyAction(EvalResult eval_result,
 
 bool RegistryPolicy::OpenKeyAction(EvalResult eval_result,
                                    const ClientInfo& client_info,
-                                   const base::string16 &key,
-                                   uint32 attributes,
+                                   const base::string16& key,
+                                   uint32_t attributes,
                                    HANDLE root_directory,
-                                   uint32 desired_access,
+                                   uint32_t desired_access,
                                    HANDLE* handle,
                                    NTSTATUS* nt_status) {
   // The only action supported is ASK_BROKER which means open the requested
@@ -216,7 +218,7 @@ bool RegistryPolicy::OpenKeyAction(EvalResult eval_result,
   UNICODE_STRING uni_name = {0};
   OBJECT_ATTRIBUTES obj_attributes = {0};
   InitObjectAttribs(key, attributes, root_directory, &obj_attributes,
-                    &uni_name);
+                    &uni_name, NULL);
   *nt_status = NtOpenKeyInTarget(handle, desired_access, &obj_attributes,
                                 client_info.process);
   return true;

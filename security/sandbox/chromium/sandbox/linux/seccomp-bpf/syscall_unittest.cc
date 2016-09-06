@@ -5,7 +5,10 @@
 #include "sandbox/linux/seccomp-bpf/syscall.h"
 
 #include <asm/unistd.h>
+#include <errno.h>
 #include <fcntl.h>
+#include <stddef.h>
+#include <stdint.h>
 #include <sys/mman.h>
 #include <sys/syscall.h>
 #include <sys/types.h>
@@ -13,7 +16,7 @@
 
 #include <vector>
 
-#include "base/basictypes.h"
+#include "base/macros.h"
 #include "base/posix/eintr_wrapper.h"
 #include "build/build_config.h"
 #include "sandbox/linux/bpf_dsl/bpf_dsl.h"
@@ -108,9 +111,9 @@ intptr_t CopySyscallArgsToAux(const struct arch_seccomp_data& args, void* aux) {
 class CopyAllArgsOnUnamePolicy : public bpf_dsl::Policy {
  public:
   explicit CopyAllArgsOnUnamePolicy(std::vector<uint64_t>* aux) : aux_(aux) {}
-  virtual ~CopyAllArgsOnUnamePolicy() {}
+  ~CopyAllArgsOnUnamePolicy() override {}
 
-  virtual ResultExpr EvaluateSyscall(int sysno) const override {
+  ResultExpr EvaluateSyscall(int sysno) const override {
     DCHECK(SandboxBPF::IsValidSyscallNumber(sysno));
     if (sysno == __NR_uname) {
       return Trap(CopySyscallArgsToAux, aux_);

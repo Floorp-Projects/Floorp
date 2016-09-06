@@ -8,6 +8,10 @@
 
 namespace sandbox {
 
+Wow64::Wow64(TargetProcess* child, HMODULE ntdll)
+    : child_(child), ntdll_(ntdll), dll_load_(NULL), continue_load_(NULL) {
+}
+
 Wow64::~Wow64() {
 }
 

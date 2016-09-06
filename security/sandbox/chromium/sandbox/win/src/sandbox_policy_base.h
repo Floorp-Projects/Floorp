@@ -6,13 +6,17 @@
 #define SANDBOX_WIN_SRC_SANDBOX_POLICY_BASE_H_
 
 #include <windows.h>
+#include <stddef.h>
+#include <stdint.h>
 
 #include <list>
 #include <vector>
 
-#include "base/basictypes.h"
 #include "base/compiler_specific.h"
+#include "base/macros.h"
+#include "base/memory/scoped_ptr.h"
 #include "base/strings/string16.h"
+#include "base/win/scoped_handle.h"
 #include "sandbox/win/src/crosscall_server.h"
 #include "sandbox/win/src/handle_closer.h"
 #include "sandbox/win/src/ipc_tags.h"
@@ -28,63 +32,59 @@ class LowLevelPolicy;
 class TargetProcess;
 struct PolicyGlobal;
 
-// We act as a policy dispatcher, implementing the handler for the "ping" IPC,
-// so we have to provide the appropriate handler on the OnMessageReady method.
-// There is a static_cast for the handler, and the compiler only performs the
-// cast if the first base class is Dispatcher.
-class PolicyBase : public Dispatcher, public TargetPolicy {
+typedef std::vector<base::win::ScopedHandle*> HandleList;
+
+class PolicyBase final : public TargetPolicy {
  public:
   PolicyBase();
 
   // TargetPolicy:
-  virtual void AddRef() override;
-  virtual void Release() override;
-  virtual ResultCode SetTokenLevel(TokenLevel initial,
-                                   TokenLevel lockdown) override;
-  virtual TokenLevel GetInitialTokenLevel() const override;
-  virtual TokenLevel GetLockdownTokenLevel() const override;
-  virtual ResultCode SetJobLevel(JobLevel job_level,
-                                 uint32 ui_exceptions) override;
-  virtual ResultCode SetJobMemoryLimit(size_t memory_limit) override;
-  virtual ResultCode SetAlternateDesktop(bool alternate_winstation) override;
-  virtual base::string16 GetAlternateDesktop() const override;
-  virtual ResultCode CreateAlternateDesktop(bool alternate_winstation) override;
-  virtual void DestroyAlternateDesktop() override;
-  virtual ResultCode SetIntegrityLevel(IntegrityLevel integrity_level) override;
-  virtual IntegrityLevel GetIntegrityLevel() const override;
-  virtual ResultCode SetDelayedIntegrityLevel(
-      IntegrityLevel integrity_level) override;
-  virtual ResultCode SetAppContainer(const wchar_t* sid) override;
-  virtual ResultCode SetCapability(const wchar_t* sid) override;
-  virtual ResultCode SetProcessMitigations(MitigationFlags flags) override;
-  virtual MitigationFlags GetProcessMitigations() override;
-  virtual ResultCode SetDelayedProcessMitigations(
-      MitigationFlags flags) override;
-  virtual MitigationFlags GetDelayedProcessMitigations() const override;
-  virtual void SetStrictInterceptions() override;
-  virtual ResultCode SetStdoutHandle(HANDLE handle) override;
-  virtual ResultCode SetStderrHandle(HANDLE handle) override;
-  virtual ResultCode AddRule(SubSystem subsystem, Semantics semantics,
-                             const wchar_t* pattern) override;
-  virtual ResultCode AddDllToUnload(const wchar_t* dll_name) override;
-  virtual ResultCode AddKernelObjectToClose(
-      const base::char16* handle_type,
-      const base::char16* handle_name) override;
-
-  // Dispatcher:
-  virtual Dispatcher* OnMessageReady(IPCParams* ipc,
-                                     CallbackGeneric* callback) override;
-  virtual bool SetupService(InterceptionManager* manager, int service) override;
+  void AddRef() override;
+  void Release() override;
+  ResultCode SetTokenLevel(TokenLevel initial, TokenLevel lockdown) override;
+  TokenLevel GetInitialTokenLevel() const override;
+  TokenLevel GetLockdownTokenLevel() const override;
+  ResultCode SetJobLevel(JobLevel job_level, uint32_t ui_exceptions) override;
+  ResultCode SetJobMemoryLimit(size_t memory_limit) override;
+  ResultCode SetAlternateDesktop(bool alternate_winstation) override;
+  base::string16 GetAlternateDesktop() const override;
+  ResultCode CreateAlternateDesktop(bool alternate_winstation) override;
+  void DestroyAlternateDesktop() override;
+  ResultCode SetIntegrityLevel(IntegrityLevel integrity_level) override;
+  IntegrityLevel GetIntegrityLevel() const override;
+  ResultCode SetDelayedIntegrityLevel(IntegrityLevel integrity_level) override;
+  ResultCode SetAppContainer(const wchar_t* sid) override;
+  ResultCode SetCapability(const wchar_t* sid) override;
+  ResultCode SetLowBox(const wchar_t* sid) override;
+  ResultCode SetProcessMitigations(MitigationFlags flags) override;
+  MitigationFlags GetProcessMitigations() override;
+  ResultCode SetDelayedProcessMitigations(MitigationFlags flags) override;
+  MitigationFlags GetDelayedProcessMitigations() const override;
+  void SetStrictInterceptions() override;
+  ResultCode SetStdoutHandle(HANDLE handle) override;
+  ResultCode SetStderrHandle(HANDLE handle) override;
+  ResultCode AddRule(SubSystem subsystem,
+                     Semantics semantics,
+                     const wchar_t* pattern) override;
+  ResultCode AddDllToUnload(const wchar_t* dll_name) override;
+  ResultCode AddKernelObjectToClose(const base::char16* handle_type,
+                                    const base::char16* handle_name) override;
+  void* AddHandleToShare(HANDLE handle) override;
 
   // Creates a Job object with the level specified in a previous call to
   // SetJobLevel().
-  ResultCode MakeJobObject(HANDLE* job);
+  ResultCode MakeJobObject(base::win::ScopedHandle* job);
 
   // Creates the two tokens with the levels specified in a previous call to
-  // SetTokenLevel().
-  ResultCode MakeTokens(HANDLE* initial, HANDLE* lockdown);
+  // SetTokenLevel(). Also creates a lowbox token if specified based on the
+  // lowbox SID.
+  ResultCode MakeTokens(base::win::ScopedHandle* initial,
+                        base::win::ScopedHandle* lockdown,
+                        base::win::ScopedHandle* lowbox);
 
   const AppContainerAttributes* GetAppContainer() const;
+
+  PSID GetLowBoxSid() const;
 
   // Adds a target process to the internal list of targets. Internally a
   // call to TargetProcess::Init() is issued.
@@ -100,14 +100,14 @@ class PolicyBase : public Dispatcher, public TargetPolicy {
   HANDLE GetStdoutHandle();
   HANDLE GetStderrHandle();
 
+  // Returns the list of handles being shared with the target process.
+  const HandleList& GetHandlesBeingShared();
+
+  // Closes the handles being shared with the target and clears out the list.
+  void ClearSharedHandles();
+
  private:
   ~PolicyBase();
-
-  // Test IPC providers.
-  bool Ping(IPCInfo* ipc, void* cookie);
-
-  // Returns a dispatcher from ipc_targets_.
-  Dispatcher* GetDispatcher(int ipc_tag);
 
   // Sets up interceptions for a new target.
   bool SetupAllInterceptions(TargetProcess* target);
@@ -131,7 +131,7 @@ class PolicyBase : public Dispatcher, public TargetPolicy {
   TokenLevel lockdown_level_;
   TokenLevel initial_level_;
   JobLevel job_level_;
-  uint32 ui_exceptions_;
+  uint32_t ui_exceptions_;
   size_t memory_limit_;
   bool use_alternate_desktop_;
   bool use_alternate_winstation_;
@@ -144,8 +144,6 @@ class PolicyBase : public Dispatcher, public TargetPolicy {
   IntegrityLevel delayed_integrity_level_;
   MitigationFlags mitigations_;
   MitigationFlags delayed_mitigations_;
-  // The array of objects that will answer IPC calls.
-  Dispatcher* ipc_targets_[IPC_LAST_TAG];
   // Object in charge of generating the low level policy.
   LowLevelPolicy* policy_maker_;
   // Memory structure that stores the low level policy.
@@ -158,10 +156,18 @@ class PolicyBase : public Dispatcher, public TargetPolicy {
   HandleCloser handle_closer_;
   std::vector<base::string16> capabilities_;
   scoped_ptr<AppContainerAttributes> appcontainer_list_;
+  PSID lowbox_sid_;
+  base::win::ScopedHandle lowbox_directory_;
+  scoped_ptr<Dispatcher> dispatcher_;
 
   static HDESK alternate_desktop_handle_;
   static HWINSTA alternate_winstation_handle_;
   static IntegrityLevel alternate_desktop_integrity_level_label_;
+
+  // Contains the list of handles being shared with the target process.
+  // This list contains handles other than the stderr/stdout handles which are
+  // shared with the target at times.
+  HandleList handles_to_share_;
 
   DISALLOW_COPY_AND_ASSIGN(PolicyBase);
 };

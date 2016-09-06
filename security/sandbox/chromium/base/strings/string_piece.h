@@ -18,12 +18,6 @@
 // Both of these have the same lifetime semantics.  Passing by value
 // generates slightly smaller code.  For more discussion, Googlers can see
 // the thread go/stringpiecebyvalue on c-users.
-//
-// StringPiece16 is similar to StringPiece but for base::string16 instead of
-// std::string. We do not define as large of a subset of the STL functions
-// from basic_string as in StringPiece, but this can be changed if these
-// functions (find, find_first_of, etc.) are found to be useful in this context.
-//
 
 #ifndef BASE_STRINGS_STRING_PIECE_H_
 #define BASE_STRINGS_STRING_PIECE_H_
@@ -34,10 +28,9 @@
 #include <string>
 
 #include "base/base_export.h"
-#include "base/basictypes.h"
 #include "base/containers/hash_tables.h"
+#include "base/logging.h"
 #include "base/strings/string16.h"
-#include "mozilla/Attributes.h"
 
 namespace base {
 
@@ -150,6 +143,14 @@ BASE_EXPORT StringPiece16 substr(const StringPiece16& self,
                                  size_t pos,
                                  size_t n);
 
+#if DCHECK_IS_ON()
+// Asserts that begin <= end to catch some errors with iterator usage.
+BASE_EXPORT void AssertIteratorsInOrder(std::string::const_iterator begin,
+                                        std::string::const_iterator end);
+BASE_EXPORT void AssertIteratorsInOrder(string16::const_iterator begin,
+                                        string16::const_iterator end);
+#endif
+
 }  // namespace internal
 
 // BasicStringPiece ------------------------------------------------------------
@@ -187,9 +188,18 @@ template <typename STRING_TYPE> class BasicStringPiece {
   BasicStringPiece(const value_type* offset, size_type len)
       : ptr_(offset), length_(len) {}
   BasicStringPiece(const typename STRING_TYPE::const_iterator& begin,
-                    const typename STRING_TYPE::const_iterator& end)
-      : ptr_((end > begin) ? &(*begin) : NULL),
-        length_((end > begin) ? (size_type)(end - begin) : 0) {}
+                   const typename STRING_TYPE::const_iterator& end) {
+#if DCHECK_IS_ON()
+    // This assertion is done out-of-line to avoid bringing in logging.h and
+    // instantiating logging macros for every instantiation.
+    internal::AssertIteratorsInOrder(begin, end);
+#endif
+    length_ = static_cast<size_t>(std::distance(begin, end));
+
+    // The length test before assignment is to avoid dereferencing an iterator
+    // that may point to the end() of a string.
+    ptr_ = length_ > 0 ? &*begin : nullptr;
+  }
 
   // data() may return a pointer to a buffer with embedded NULs, and the
   // returned buffer may or may not be null terminated.  Therefore it is

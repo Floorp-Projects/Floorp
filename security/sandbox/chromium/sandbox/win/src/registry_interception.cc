@@ -4,13 +4,16 @@
 
 #include "sandbox/win/src/registry_interception.h"
 
+#include <stdint.h>
+
 #include "sandbox/win/src/crosscall_client.h"
 #include "sandbox/win/src/ipc_tags.h"
+#include "sandbox/win/src/policy_params.h"
+#include "sandbox/win/src/policy_target.h"
 #include "sandbox/win/src/sandbox_factory.h"
 #include "sandbox/win/src/sandbox_nt_util.h"
 #include "sandbox/win/src/sharedmem_ipc_client.h"
 #include "sandbox/win/src/target_services.h"
-#include "mozilla/sandboxing/sandboxLogging.h"
 
 namespace sandbox {
 
@@ -25,12 +28,6 @@ NTSTATUS WINAPI TargetNtCreateKey(NtCreateKeyFunction orig_CreateKey,
                                    disposition);
   if (NT_SUCCESS(status))
     return status;
-
-  if (STATUS_OBJECT_NAME_NOT_FOUND != status) {
-    mozilla::sandboxing::LogBlocked("NtCreateKey",
-                                    object_attributes->ObjectName->Buffer,
-                                    object_attributes->ObjectName->Length);
-  }
 
   // We don't trust that the IPC can work this early.
   if (!SandboxFactory::GetTargetServices()->GetState()->InitCalled())
@@ -56,11 +53,34 @@ NTSTATUS WINAPI TargetNtCreateKey(NtCreateKeyFunction orig_CreateKey,
       break;
 
     wchar_t* name;
-    uint32 attributes = 0;
+    uint32_t attributes = 0;
     HANDLE root_directory = 0;
     NTSTATUS ret = AllocAndCopyName(object_attributes, &name, &attributes,
                                     &root_directory);
     if (!NT_SUCCESS(ret) || NULL == name)
+      break;
+
+    uint32_t desired_access_uint32 = desired_access;
+    CountedParameterSet<OpenKey> params;
+    params[OpenKey::ACCESS] = ParamPickerMake(desired_access_uint32);
+
+    wchar_t* full_name = NULL;
+
+    if (root_directory) {
+      ret = sandbox::AllocAndGetFullPath(root_directory, name, &full_name);
+      if (!NT_SUCCESS(ret) || NULL == full_name)
+        break;
+      params[OpenKey::NAME] = ParamPickerMake(full_name);
+    } else {
+      params[OpenKey::NAME] = ParamPickerMake(name);
+    }
+
+    bool query_broker = QueryBroker(IPC_NTCREATEKEY_TAG, params.GetBase());
+
+    if (full_name != NULL)
+      operator delete(full_name, NT_ALLOC);
+
+    if (!query_broker)
       break;
 
     SharedMemIPCClient ipc(memory);
@@ -94,9 +114,6 @@ NTSTATUS WINAPI TargetNtCreateKey(NtCreateKeyFunction orig_CreateKey,
     } __except(EXCEPTION_EXECUTE_HANDLER) {
       break;
     }
-    mozilla::sandboxing::LogAllowed("NtCreateKey",
-                                    object_attributes->ObjectName->Buffer,
-                                    object_attributes->ObjectName->Length);
   } while (false);
 
   return status;
@@ -118,11 +135,34 @@ NTSTATUS WINAPI CommonNtOpenKey(NTSTATUS status, PHANDLE key,
       break;
 
     wchar_t* name;
-    uint32 attributes;
+    uint32_t attributes;
     HANDLE root_directory;
     NTSTATUS ret = AllocAndCopyName(object_attributes, &name, &attributes,
                                     &root_directory);
     if (!NT_SUCCESS(ret) || NULL == name)
+      break;
+
+    uint32_t desired_access_uint32 = desired_access;
+    CountedParameterSet<OpenKey> params;
+    params[OpenKey::ACCESS] = ParamPickerMake(desired_access_uint32);
+
+    wchar_t* full_name = NULL;
+
+    if (root_directory) {
+      ret = sandbox::AllocAndGetFullPath(root_directory, name, &full_name);
+      if (!NT_SUCCESS(ret) || NULL == full_name)
+        break;
+      params[OpenKey::NAME] = ParamPickerMake(full_name);
+    } else {
+      params[OpenKey::NAME] = ParamPickerMake(name);
+    }
+
+    bool query_broker = QueryBroker(IPC_NTOPENKEY_TAG, params.GetBase());
+
+    if (full_name != NULL)
+      operator delete(full_name, NT_ALLOC);
+
+    if (!query_broker)
       break;
 
     SharedMemIPCClient ipc(memory);
@@ -150,9 +190,6 @@ NTSTATUS WINAPI CommonNtOpenKey(NTSTATUS status, PHANDLE key,
     } __except(EXCEPTION_EXECUTE_HANDLER) {
       break;
     }
-    mozilla::sandboxing::LogAllowed("NtOpenKey[Ex]",
-                                    object_attributes->ObjectName->Buffer,
-                                    object_attributes->ObjectName->Length);
   } while (false);
 
   return status;
@@ -165,12 +202,6 @@ NTSTATUS WINAPI TargetNtOpenKey(NtOpenKeyFunction orig_OpenKey, PHANDLE key,
   NTSTATUS status = orig_OpenKey(key, desired_access, object_attributes);
   if (NT_SUCCESS(status))
     return status;
-
-  if (STATUS_OBJECT_NAME_NOT_FOUND != status) {
-    mozilla::sandboxing::LogBlocked("NtOpenKey",
-                                    object_attributes->ObjectName->Buffer,
-                                    object_attributes->ObjectName->Length);
-  }
 
   return CommonNtOpenKey(status, key, desired_access, object_attributes);
 }
@@ -188,12 +219,6 @@ NTSTATUS WINAPI TargetNtOpenKeyEx(NtOpenKeyExFunction orig_OpenKeyEx,
   // REG_OPTION_BACKUP_RESTORE to open the key with special privileges.
   if (NT_SUCCESS(status) || open_options != 0)
     return status;
-
-  if (STATUS_OBJECT_NAME_NOT_FOUND != status) {
-    mozilla::sandboxing::LogBlocked("NtOpenKeyEx",
-                                    object_attributes->ObjectName->Buffer,
-                                    object_attributes->ObjectName->Length);
-  }
 
   return CommonNtOpenKey(status, key, desired_access, object_attributes);
 }
