@@ -408,6 +408,15 @@ public:
   {
     return DECODER_STATE_DORMANT;
   }
+
+  bool HandleDormant(bool aDormant) override
+  {
+    if (!aDormant) {
+      // Exit dormant state.
+      SetState(DECODER_STATE_DECODING_METADATA);
+    }
+    return true;
+  }
 };
 
 class MediaDecoderStateMachine::DecodingFirstFrameState
@@ -1497,42 +1506,39 @@ MediaDecoderStateMachine::SetDormant(bool aDormant)
     return;
   }
 
-  bool wasDormant = mState == DECODER_STATE_DORMANT;
-  if (wasDormant == aDormant) {
+  // |mState == DECODER_STATE_DORMANT| is already
+  // handled by |mStateObj->HandleDormant| above.
+  MOZ_ASSERT(mState != DECODER_STATE_DORMANT);
+
+  // Nothing to do for we are not in dormant state.
+  if (!aDormant) {
     return;
   }
 
-  DECODER_LOG("SetDormant=%d", aDormant);
+  DECODER_LOG("Enter dormant state");
 
-  // Enter dormant state.
-  if (aDormant) {
-    if (mState == DECODER_STATE_SEEKING) {
-      MOZ_ASSERT(!mQueuedSeek.Exists());
-      MOZ_ASSERT(mCurrentSeek.Exists());
-      // Because both audio and video decoders are going to be reset in this
-      // method later, we treat a VideoOnly seek task as a normal Accurate
-      // seek task so that while it is resumed, both audio and video playback
-      // are handled.
-      if (mCurrentSeek.mTarget.IsVideoOnly()) {
-        mCurrentSeek.mTarget.SetType(SeekTarget::Accurate);
-        mCurrentSeek.mTarget.SetVideoOnly(false);
-      }
-      mQueuedSeek = Move(mCurrentSeek);
-    } else {
-      mQueuedSeek.mTarget = SeekTarget(mCurrentPosition,
-                                       SeekTarget::Accurate,
-                                       MediaDecoderEventVisibility::Suppressed);
-      // SeekJob asserts |mTarget.IsValid() == !mPromise.IsEmpty()| so we
-      // need to create the promise even it is not used at all.
-      RefPtr<MediaDecoder::SeekPromise> unused = mQueuedSeek.mPromise.Ensure(__func__);
+  if (mState == DECODER_STATE_SEEKING) {
+    MOZ_ASSERT(!mQueuedSeek.Exists());
+    MOZ_ASSERT(mCurrentSeek.Exists());
+    // Because both audio and video decoders are going to be reset in this
+    // method later, we treat a VideoOnly seek task as a normal Accurate
+    // seek task so that while it is resumed, both audio and video playback
+    // are handled.
+    if (mCurrentSeek.mTarget.IsVideoOnly()) {
+      mCurrentSeek.mTarget.SetType(SeekTarget::Accurate);
+      mCurrentSeek.mTarget.SetVideoOnly(false);
     }
-
-    SetState(DECODER_STATE_DORMANT);
-    return;
+    mQueuedSeek = Move(mCurrentSeek);
+  } else {
+    mQueuedSeek.mTarget = SeekTarget(mCurrentPosition,
+                                     SeekTarget::Accurate,
+                                     MediaDecoderEventVisibility::Suppressed);
+    // SeekJob asserts |mTarget.IsValid() == !mPromise.IsEmpty()| so we
+    // need to create the promise even it is not used at all.
+    RefPtr<MediaDecoder::SeekPromise> unused = mQueuedSeek.mPromise.Ensure(__func__);
   }
 
-  // Exit dormant state.
-  SetState(DECODER_STATE_DECODING_METADATA);
+  SetState(DECODER_STATE_DORMANT);
 }
 
 RefPtr<ShutdownPromise>
