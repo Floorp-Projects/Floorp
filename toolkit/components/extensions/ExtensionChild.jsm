@@ -44,8 +44,6 @@ var {
 // live in different processes), but for now use lazy getters.
 XPCOMUtils.defineLazyGetter(this, "findPathInObject",
   () => Cu.import("resource://gre/modules/Extension.jsm", {}).findPathInObject);
-XPCOMUtils.defineLazyGetter(this, "GlobalManager",
-  () => Cu.import("resource://gre/modules/Extension.jsm", {}).GlobalManager);
 XPCOMUtils.defineLazyGetter(this, "ParentAPIManager",
   () => Cu.import("resource://gre/modules/Extension.jsm", {}).ParentAPIManager);
 
@@ -125,17 +123,21 @@ class WannabeChildAPIManager extends ChildAPIManager {
   }
 }
 
-// An extension page is an execution context for any extension content
-// that runs in the chrome process. It's used for background pages
-// (viewType="background"), popups (viewType="popup"), and any extension
-// content loaded into browser tabs (viewType="tab").
-//
-// |params| is an object with the following properties:
-// |viewType| is one of "background", "popup", or "tab".
-// |contentWindow| is the DOM window the content runs in.
-// |uri| is the URI of the content (optional).
-// |tabId| is the tab's ID, used if viewType is "tab".
 class ExtensionContext extends BaseContext {
+  /**
+   * This ExtensionContext represents a privileged addon execution environment
+   * that has full access to the WebExtensions APIs (provided that the correct
+   * permissions have been requested).
+   *
+   * @param {BrowserExtensionContent} extension This context's owner.
+   * @param {object} params
+   * @param {nsIDOMWindow} params.contentWindow The window where the addon runs.
+   * @param {string} params.viewType One of "background", "popup" or "tab".
+   *     "background" and "tab" are used by `browser.extension.getViews`.
+   *     "popup" is only used internally to identify page action and browser
+   *     action popups and options_ui pages.
+   * @param {number} [params.tabId] This tab's ID, used if viewType is "tab".
+   */
   constructor(extension, params) {
     super("addon_child", extension);
     if (Services.appinfo.processType != Services.appinfo.PROCESS_TYPE_DEFAULT) {
@@ -362,15 +364,11 @@ this.ExtensionChild = {
   /**
    * Create a privileged context at document-element-inserted.
    *
-   * @param {Extension|BrowserExtensionContent} extension
+   * @param {BrowserExtensionContent} extension
    *     The extension for which the context should be created.
    * @param {nsIDOMWindow} contentWindow The global of the page.
    */
   createExtensionContext(extension, contentWindow) {
-    // TODO(robwu): Remove dependencies on the bloated Extension from
-    // Extension.jsm and use the thin BrowserExtensionContent from
-    // ExtensionContent.jsm instead.
-    extension = GlobalManager.extensionMap.get(extension.id);
     let windowId = getInnerWindowID(contentWindow);
     let context = this.extensionContexts.get(windowId);
     if (context) {

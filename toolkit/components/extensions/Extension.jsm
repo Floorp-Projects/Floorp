@@ -1164,8 +1164,6 @@ this.Extension = class extends ExtensionData {
     this.baseURI = NetUtil.newURI(this.getURL("")).QueryInterface(Ci.nsIURL);
     this.principal = this.createPrincipal();
 
-    this.views = new Set();
-
     this.onStartup = null;
 
     this.hasShutdown = false;
