@@ -264,8 +264,6 @@ nsresult nsProfileLock::LockWithFcntl(nsIFile *aLockFile)
             else
                 rv = NS_ERROR_FAILURE;
         }
-        else
-            mHaveLock = true;
     }
     else
     {
@@ -385,7 +383,6 @@ nsresult nsProfileLock::LockWithSymlink(nsIFile *aLockFile, bool aHaveFcntlLock)
         // We exclusively created the symlink: record its name for eventual
         // unlock-via-unlink.
         rv = NS_OK;
-        mHaveLock = true;
         mPidLockFileName = strdup(fileName);
         if (mPidLockFileName)
         {
@@ -615,7 +612,8 @@ nsresult nsProfileLock::Lock(nsIFile* aProfileDir,
     }
 #endif
 
-    mHaveLock = true;
+    if (NS_SUCCEEDED(rv))
+        mHaveLock = true;
 
     return rv;
 }
