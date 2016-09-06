@@ -7166,7 +7166,7 @@ SetImageLayerPairList(nsStyleContext* aStyleContext,
 
 template <class ComputedValueItem>
 static void
-FillBackgroundList(
+FillImageLayerList(
     nsStyleAutoArray<nsStyleImageLayers::Layer>& aLayers,
     ComputedValueItem nsStyleImageLayers::Layer::* aResultLocation,
     uint32_t aItemCount, uint32_t aFillCount)
@@ -7180,10 +7180,10 @@ FillBackgroundList(
   }
 }
 
-// The same as FillBackgroundList, but for values stored in
+// The same as FillImageLayerList, but for values stored in
 // layer.mPosition.*aResultLocation instead of layer.*aResultLocation.
 static void
-FillBackgroundPositionCoordList(
+FillImageLayerPositionCoordList(
     nsStyleAutoArray<nsStyleImageLayers::Layer>& aLayers,
     Position::Coord
         Position::* aResultLocation,
@@ -7208,31 +7208,31 @@ nsRuleNode::FillAllBackgroundLists(nsStyleImageLayers& aImage,
   aImage.mLayers.TruncateLengthNonZero(aMaxItemCount);
 
   uint32_t fillCount = aImage.mImageCount;
-  FillBackgroundList(aImage.mLayers,
+  FillImageLayerList(aImage.mLayers,
                      &nsStyleImageLayers::Layer::mImage,
                      aImage.mImageCount, fillCount);
-  FillBackgroundList(aImage.mLayers,
+  FillImageLayerList(aImage.mLayers,
                      &nsStyleImageLayers::Layer::mRepeat,
                      aImage.mRepeatCount, fillCount);
-  FillBackgroundList(aImage.mLayers,
+  FillImageLayerList(aImage.mLayers,
                      &nsStyleImageLayers::Layer::mAttachment,
                      aImage.mAttachmentCount, fillCount);
-  FillBackgroundList(aImage.mLayers,
+  FillImageLayerList(aImage.mLayers,
                      &nsStyleImageLayers::Layer::mClip,
                      aImage.mClipCount, fillCount);
-  FillBackgroundList(aImage.mLayers,
+  FillImageLayerList(aImage.mLayers,
                      &nsStyleImageLayers::Layer::mBlendMode,
                      aImage.mBlendModeCount, fillCount);
-  FillBackgroundList(aImage.mLayers,
+  FillImageLayerList(aImage.mLayers,
                      &nsStyleImageLayers::Layer::mOrigin,
                      aImage.mOriginCount, fillCount);
-  FillBackgroundPositionCoordList(aImage.mLayers,
+  FillImageLayerPositionCoordList(aImage.mLayers,
                                   &Position::mXPosition,
                                   aImage.mPositionXCount, fillCount);
-  FillBackgroundPositionCoordList(aImage.mLayers,
+  FillImageLayerPositionCoordList(aImage.mLayers,
                                   &Position::mYPosition,
                                   aImage.mPositionYCount, fillCount);
-  FillBackgroundList(aImage.mLayers,
+  FillImageLayerList(aImage.mLayers,
                      &nsStyleImageLayers::Layer::mSize,
                      aImage.mSizeCount, fillCount);
 }
@@ -9396,6 +9396,50 @@ SetSVGOpacity(const nsCSSValue& aValue,
   }
 }
 
+/* static */
+void
+nsRuleNode::FillAllMaskLists(nsStyleImageLayers& aMask,
+                             uint32_t aMaxItemCount)
+{
+
+  // Delete any extra items.  We need to keep layers in which any
+  // property was specified.
+  aMask.mLayers.TruncateLengthNonZero(aMaxItemCount);
+
+  uint32_t fillCount = aMask.mImageCount;
+
+  FillImageLayerList(aMask.mLayers,
+                     &nsStyleImageLayers::Layer::mImage,
+                     aMask.mImageCount, fillCount);
+  FillImageLayerList(aMask.mLayers,
+                     &nsStyleImageLayers::Layer::mSourceURI,
+                     aMask.mImageCount, fillCount);
+  FillImageLayerList(aMask.mLayers,
+                     &nsStyleImageLayers::Layer::mRepeat,
+                     aMask.mRepeatCount, fillCount);
+  FillImageLayerList(aMask.mLayers,
+                     &nsStyleImageLayers::Layer::mClip,
+                     aMask.mClipCount, fillCount);
+  FillImageLayerList(aMask.mLayers,
+                     &nsStyleImageLayers::Layer::mOrigin,
+                     aMask.mOriginCount, fillCount);
+  FillImageLayerPositionCoordList(aMask.mLayers,
+                                  &Position::mXPosition,
+                                  aMask.mPositionXCount, fillCount);
+  FillImageLayerPositionCoordList(aMask.mLayers,
+                                  &Position::mYPosition,
+                                  aMask.mPositionYCount, fillCount);
+  FillImageLayerList(aMask.mLayers,
+                     &nsStyleImageLayers::Layer::mSize,
+                     aMask.mSizeCount, fillCount);
+  FillImageLayerList(aMask.mLayers,
+                     &nsStyleImageLayers::Layer::mMaskMode,
+                     aMask.mMaskModeCount, fillCount);
+  FillImageLayerList(aMask.mLayers,
+                     &nsStyleImageLayers::Layer::mComposite,
+                     aMask.mCompositeCount, fillCount);
+}
+
 const void*
 nsRuleNode::ComputeSVGData(void* aStartStruct,
                            const nsRuleData* aRuleData,
@@ -10120,42 +10164,7 @@ nsRuleNode::ComputeSVGResetData(void* aStartStruct,
                     svgReset->mMask.mCompositeCount, maxItemCount, rebuild, conditions);
 
   if (rebuild) {
-    // Delete any extra items.  We need to keep layers in which any
-    // property was specified.
-    svgReset->mMask.mLayers.TruncateLengthNonZero(maxItemCount);
-
-    uint32_t fillCount = svgReset->mMask.mImageCount;
-
-    FillBackgroundList(svgReset->mMask.mLayers,
-                       &nsStyleImageLayers::Layer::mImage,
-                       svgReset->mMask.mImageCount, fillCount);
-    FillBackgroundList(svgReset->mMask.mLayers,
-                       &nsStyleImageLayers::Layer::mSourceURI,
-                       svgReset->mMask.mImageCount, fillCount);
-    FillBackgroundList(svgReset->mMask.mLayers,
-                       &nsStyleImageLayers::Layer::mRepeat,
-                       svgReset->mMask.mRepeatCount, fillCount);
-    FillBackgroundList(svgReset->mMask.mLayers,
-                       &nsStyleImageLayers::Layer::mClip,
-                       svgReset->mMask.mClipCount, fillCount);
-    FillBackgroundList(svgReset->mMask.mLayers,
-                       &nsStyleImageLayers::Layer::mOrigin,
-                       svgReset->mMask.mOriginCount, fillCount);
-    FillBackgroundPositionCoordList(svgReset->mMask.mLayers,
-                                    &Position::mXPosition,
-                                    svgReset->mMask.mPositionXCount, fillCount);
-    FillBackgroundPositionCoordList(svgReset->mMask.mLayers,
-                                    &Position::mYPosition,
-                                    svgReset->mMask.mPositionYCount, fillCount);
-    FillBackgroundList(svgReset->mMask.mLayers,
-                       &nsStyleImageLayers::Layer::mSize,
-                       svgReset->mMask.mSizeCount, fillCount);
-    FillBackgroundList(svgReset->mMask.mLayers,
-                       &nsStyleImageLayers::Layer::mMaskMode,
-                       svgReset->mMask.mMaskModeCount, fillCount);
-    FillBackgroundList(svgReset->mMask.mLayers,
-                       &nsStyleImageLayers::Layer::mComposite,
-                       svgReset->mMask.mCompositeCount, fillCount);
+    FillAllBackgroundLists(svgReset->mMask, maxItemCount);
   }
 #else
   // mask: none | <url>
