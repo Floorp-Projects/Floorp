@@ -202,8 +202,8 @@ function runTest() {
 }
 var i = evalText(
     `(module
-        (import "a" "b" (result i32))
-        (func $f (param i32) (result i32) (call_import 0))
+        (import $imp "a" "b" (result i32))
+        (func $f (param i32) (result i32) (call $imp))
         (export "f" $f)
     )`,
     {a:{b:runTest}}

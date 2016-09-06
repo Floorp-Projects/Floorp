@@ -428,6 +428,7 @@ EvaluateInitExpr(const ValVector& globalImports, InitExpr initExpr)
 bool
 Module::initSegments(JSContext* cx,
                      HandleWasmInstanceObject instanceObj,
+                     Handle<FunctionVector> funcImports,
                      HandleWasmMemoryObject memoryObj,
                      const ValVector& globalImports) const
 {
@@ -479,13 +480,33 @@ Module::initSegments(JSContext* cx,
         uint8_t* codeBase = instance.codeBase();
 
         for (uint32_t i = 0; i < seg.elemCodeRangeIndices.length(); i++) {
-            const CodeRange& cr = codeRanges[seg.elemCodeRangeIndices[i]];
-            uint32_t entryOffset = table.isTypedFunction()
-                                   ? profilingEnabled
-                                     ? cr.funcProfilingEntry()
-                                     : cr.funcNonProfilingEntry()
-                                   : cr.funcTableEntry();
-            table.set(offset + i, codeBase + entryOffset, instance);
+            uint32_t elemFuncIndex = seg.elemFuncIndices[i];
+            if (elemFuncIndex < funcImports.length()) {
+                MOZ_ASSERT(!metadata().isAsmJS());
+                MOZ_ASSERT(!table.isTypedFunction());
+                MOZ_ASSERT(seg.elemCodeRangeIndices[i] == UINT32_MAX);
+
+                HandleFunction f = funcImports[elemFuncIndex];
+                if (!IsExportedWasmFunction(f)) {
+                    JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_TABLE_VALUE);
+                    return false;
+                }
+
+                WasmInstanceObject* exportInstanceObj = ExportedFunctionToInstanceObject(f);
+                const CodeRange& cr = exportInstanceObj->getExportedFunctionCodeRange(f);
+                Instance& exportInstance = exportInstanceObj->instance();
+                table.set(offset + i, exportInstance.codeBase() + cr.funcTableEntry(), exportInstance);
+            } else {
+                MOZ_ASSERT(seg.elemCodeRangeIndices[i] != UINT32_MAX);
+
+                const CodeRange& cr = codeRanges[seg.elemCodeRangeIndices[i]];
+                uint32_t entryOffset = table.isTypedFunction()
+                                       ? profilingEnabled
+                                         ? cr.funcProfilingEntry()
+                                         : cr.funcNonProfilingEntry()
+                                       : cr.funcTableEntry();
+                table.set(offset + i, codeBase + entryOffset, instance);
+            }
         }
     }
 
@@ -516,11 +537,11 @@ Module::instantiateFunctions(JSContext* cx, Handle<FunctionVector> funcImports) 
         if (!IsExportedFunction(f) || ExportedFunctionToInstance(f).isAsmJS())
             continue;
 
-        uint32_t funcIndex = ExportedFunctionToIndex(f);
+        uint32_t funcDefIndex = ExportedFunctionToDefinitionIndex(f);
         Instance& instance = ExportedFunctionToInstance(f);
-        const FuncExport& funcExport = instance.metadata().lookupFuncExport(funcIndex);
+        const FuncDefExport& funcDefExport = instance.metadata().lookupFuncDefExport(funcDefIndex);
 
-        if (funcExport.sig() != metadata_->funcImports[i].sig()) {
+        if (funcDefExport.sig() != metadata_->funcImports[i].sig()) {
             JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_IMPORT_SIG);
             return false;
         }
@@ -636,8 +657,30 @@ Module::instantiateTable(JSContext* cx, MutableHandleWasmTableObject tableObj,
 }
 
 static bool
-ExportGlobalValue(JSContext* cx, const GlobalDescVector& globals, uint32_t globalIndex,
-                  const ValVector& globalImports, MutableHandleValue jsval)
+GetFunctionExport(JSContext* cx,
+                  HandleWasmInstanceObject instanceObj,
+                  Handle<FunctionVector> funcImports,
+                  const Export& exp,
+                  MutableHandleValue val)
+{
+    if (exp.funcIndex() < funcImports.length()) {
+        val.setObject(*funcImports[exp.funcIndex()]);
+        return true;
+    }
+
+    uint32_t funcDefIndex = exp.funcIndex() - funcImports.length();
+
+    RootedFunction fun(cx);
+    if (!instanceObj->getExportedFunction(cx, instanceObj, funcDefIndex, &fun))
+        return false;
+
+    val.setObject(*fun);
+    return true;
+}
+
+static bool
+GetGlobalExport(JSContext* cx, const GlobalDescVector& globals, uint32_t globalIndex,
+                const ValVector& globalImports, MutableHandleValue jsval)
 {
     const GlobalDesc& global = globals[globalIndex];
 
@@ -680,6 +723,7 @@ ExportGlobalValue(JSContext* cx, const GlobalDescVector& globals, uint32_t globa
 static bool
 CreateExportObject(JSContext* cx,
                    HandleWasmInstanceObject instanceObj,
+                   Handle<FunctionVector> funcImports,
                    HandleWasmTableObject tableObj,
                    HandleWasmMemoryObject memoryObj,
                    const ValVector& globalImports,
@@ -690,10 +734,10 @@ CreateExportObject(JSContext* cx,
     const Metadata& metadata = instance.metadata();
 
     if (metadata.isAsmJS() && exports.length() == 1 && strlen(exports[0].fieldName()) == 0) {
-        RootedFunction fun(cx);
-        if (!instanceObj->getExportedFunction(cx, instanceObj, exports[0].funcIndex(), &fun))
+        RootedValue val(cx);
+        if (!GetFunctionExport(cx, instanceObj, funcImports, exports[0], &val))
             return false;
-        exportObj.set(fun);
+        exportObj.set(&val.toObject());
         return true;
     }
 
@@ -709,29 +753,23 @@ CreateExportObject(JSContext* cx,
         RootedId id(cx, AtomToId(atom));
         RootedValue val(cx);
         switch (exp.kind()) {
-          case DefinitionKind::Function: {
-            RootedFunction fun(cx);
-            if (!instanceObj->getExportedFunction(cx, instanceObj, exp.funcIndex(), &fun))
+          case DefinitionKind::Function:
+            if (!GetFunctionExport(cx, instanceObj, funcImports, exp, &val))
                 return false;
-            val = ObjectValue(*fun);
             break;
-          }
-          case DefinitionKind::Table: {
+          case DefinitionKind::Table:
             val = ObjectValue(*tableObj);
             break;
-          }
-          case DefinitionKind::Memory: {
+          case DefinitionKind::Memory:
             if (metadata.assumptions.newFormat)
                 val = ObjectValue(*memoryObj);
             else
                 val = ObjectValue(memoryObj->buffer());
             break;
-          }
-          case DefinitionKind::Global: {
-            if (!ExportGlobalValue(cx, metadata.globals, exp.globalIndex(), globalImports, &val))
+          case DefinitionKind::Global:
+            if (!GetGlobalExport(cx, metadata.globals, exp.globalIndex(), globalImports, &val))
                 return false;
             break;
-          }
         }
 
         if (!JS_DefinePropertyById(cx, exportObj, id, val, JSPROP_ENUMERATE))
@@ -792,7 +830,7 @@ Module::instantiate(JSContext* cx,
         return false;
 
     RootedObject exportObj(cx);
-    if (!CreateExportObject(cx, instance, table, memory, globalImports, exports_, &exportObj))
+    if (!CreateExportObject(cx, instance, funcImports, table, memory, globalImports, exports_, &exportObj))
         return false;
 
     JSAtom* atom = Atomize(cx, InstanceExportField, strlen(InstanceExportField));
@@ -816,7 +854,7 @@ Module::instantiate(JSContext* cx,
     // constructed since this can make the instance live to content (even if the
     // start function fails).
 
-    if (!initSegments(cx, instance, memory, globalImports))
+    if (!initSegments(cx, instance, funcImports, memory, globalImports))
         return false;
 
     // Now that the instance is fully live and initialized, the start function.
@@ -824,9 +862,19 @@ Module::instantiate(JSContext* cx,
     // still be live via edges created by initSegments or the start function.
 
     if (metadata_->hasStartFunction()) {
+        uint32_t startFuncIndex = metadata_->startFuncIndex();
         FixedInvokeArgs<0> args(cx);
-        if (!instance->instance().callExport(cx, metadata_->startFuncIndex(), args))
-            return false;
+        if (startFuncIndex < funcImports.length()) {
+            RootedValue fval(cx, ObjectValue(*funcImports[startFuncIndex]));
+            RootedValue thisv(cx);
+            RootedValue rval(cx);
+            if (!Call(cx, fval, thisv, args, &rval))
+                return false;
+        } else {
+            uint32_t funcDefIndex = startFuncIndex - funcImports.length();
+            if (!instance->instance().callExport(cx, funcDefIndex, args))
+                return false;
+        }
     }
 
     return true;

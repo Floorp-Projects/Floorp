@@ -1787,8 +1787,8 @@ class BaseCompiler
     void beginFunction() {
         JitSpew(JitSpew_Codegen, "# Emitting wasm baseline code");
 
-        wasm::GenerateFunctionPrologue(masm, localSize_, mg_.funcSigs[func_.index()]->id,
-                                       &compileResults_.offsets());
+        SigIdDesc sigId = mg_.funcDefSigs[func_.defIndex()]->id;
+        wasm::GenerateFunctionPrologue(masm, localSize_, sigId, &compileResults_.offsets());
 
         MOZ_ASSERT(masm.framePushed() == uint32_t(localSize_));
 
@@ -2122,10 +2122,10 @@ class BaseCompiler
         }
     }
 
-    void callDirect(uint32_t calleeIndex, const FunctionCall& call)
+    void callDefinition(uint32_t funcDefIndex, const FunctionCall& call)
     {
         CallSiteDesc desc(call.lineOrBytecode_, CallSiteDesc::Relative);
-        masm.call(desc, calleeIndex);
+        masm.call(desc, funcDefIndex);
     }
 
     void callSymbolic(wasm::SymbolicAddress callee, const FunctionCall& call) {
@@ -3372,11 +3372,13 @@ class BaseCompiler
     MOZ_MUST_USE
     bool skipCall(const ValTypeVector& args, ExprType maybeReturnType = ExprType::Limit);
     MOZ_MUST_USE
+    bool emitCallImportCommon(uint32_t lineOrBytecode, uint32_t funcImportIndex);
+    MOZ_MUST_USE
     bool emitCall(uint32_t callOffset);
     MOZ_MUST_USE
-    bool emitCallIndirect(uint32_t callOffset);
-    MOZ_MUST_USE
     bool emitCallImport(uint32_t callOffset);
+    MOZ_MUST_USE
+    bool emitCallIndirect(uint32_t callOffset);
     MOZ_MUST_USE
     bool emitUnaryMathBuiltinCall(uint32_t callOffset, SymbolicAddress callee, ValType operandType);
     MOZ_MUST_USE
@@ -5258,6 +5260,44 @@ BaseCompiler::pushReturned(const FunctionCall& call, ExprType type)
 // for outgoing arguments.  A sync() is just simpler.
 
 bool
+BaseCompiler::emitCallImportCommon(uint32_t lineOrBytecode, uint32_t funcImportIndex)
+{
+    const FuncImportGenDesc& funcImport = mg_.funcImports[funcImportIndex];
+    const Sig& sig = *funcImport.sig;
+
+    if (deadCode_)
+        return skipCall(sig.args(), sig.ret());
+
+    sync();
+
+    uint32_t numArgs = sig.args().length();
+    size_t stackSpace = stackConsumed(numArgs);
+
+    FunctionCall baselineCall(lineOrBytecode);
+    beginCall(baselineCall, EscapesSandbox(true), IsBuiltinCall(false));
+
+    if (!emitCallArgs(sig.args(), baselineCall))
+        return false;
+
+    if (!iter_.readCallReturn(sig.ret()))
+        return false;
+
+    callImport(funcImport.globalDataOffset, baselineCall);
+
+    endCall(baselineCall);
+
+    // TODO / OPTIMIZE: It would be better to merge this freeStack()
+    // into the one in endCall, if we can.
+
+    popValueStackBy(numArgs);
+    masm.freeStack(stackSpace);
+
+    pushReturned(baselineCall, sig.ret());
+
+    return true;
+}
+
+bool
 BaseCompiler::emitCall(uint32_t callOffset)
 {
     uint32_t lineOrBytecode = readCallSiteLineOrBytecode(callOffset);
@@ -5267,7 +5307,14 @@ BaseCompiler::emitCall(uint32_t callOffset)
     if (!iter_.readCall(&calleeIndex, &arity))
         return false;
 
-    const Sig& sig = *mg_.funcSigs[calleeIndex];
+    // For asm.js and old-format wasm code, imports are not part of the function
+    // index space so in these cases firstFuncDefIndex is fixed to 0, even if
+    // there are function imports.
+    if (calleeIndex < mg_.firstFuncDefIndex)
+        return emitCallImportCommon(lineOrBytecode, calleeIndex);
+
+    uint32_t funcDefIndex = calleeIndex - mg_.firstFuncDefIndex;
+    const Sig& sig = *mg_.funcDefSigs[funcDefIndex];
 
     if (deadCode_)
         return skipCall(sig.args(), sig.ret());
@@ -5286,7 +5333,7 @@ BaseCompiler::emitCall(uint32_t callOffset)
     if (!iter_.readCallReturn(sig.ret()))
         return false;
 
-    callDirect(calleeIndex, baselineCall);
+    callDefinition(funcDefIndex, baselineCall);
 
     endCall(baselineCall);
 
@@ -5299,6 +5346,21 @@ BaseCompiler::emitCall(uint32_t callOffset)
     pushReturned(baselineCall, sig.ret());
 
     return true;
+}
+
+bool
+BaseCompiler::emitCallImport(uint32_t callOffset)
+{
+    MOZ_ASSERT(!mg_.firstFuncDefIndex);
+
+    uint32_t lineOrBytecode = readCallSiteLineOrBytecode(callOffset);
+
+    uint32_t funcImportIndex;
+    uint32_t arity;
+    if (!iter_.readCallImport(&funcImportIndex, &arity))
+        return false;
+
+    return emitCallImportCommon(lineOrBytecode, funcImportIndex);
 }
 
 bool
@@ -5349,51 +5411,6 @@ BaseCompiler::emitCallIndirect(uint32_t callOffset)
     // into the one in endCall, if we can.
 
     popValueStackBy(numArgs+1);
-    masm.freeStack(stackSpace);
-
-    pushReturned(baselineCall, sig.ret());
-
-    return true;
-}
-
-bool
-BaseCompiler::emitCallImport(uint32_t callOffset)
-{
-    uint32_t lineOrBytecode = readCallSiteLineOrBytecode(callOffset);
-
-    uint32_t funcImportIndex;
-    uint32_t arity;
-    if (!iter_.readCallImport(&funcImportIndex, &arity))
-        return false;
-
-    const FuncImportGenDesc& funcImport = mg_.funcImports[funcImportIndex];
-    const Sig& sig = *funcImport.sig;
-
-    if (deadCode_)
-        return skipCall(sig.args(), sig.ret());
-
-    sync();
-
-    uint32_t numArgs = sig.args().length();
-    size_t stackSpace = stackConsumed(numArgs);
-
-    FunctionCall baselineCall(lineOrBytecode);
-    beginCall(baselineCall, EscapesSandbox(true), IsBuiltinCall(false));
-
-    if (!emitCallArgs(sig.args(), baselineCall))
-        return false;
-
-    if (!iter_.readCallReturn(sig.ret()))
-        return false;
-
-    callImport(funcImport.globalDataOffset, baselineCall);
-
-    endCall(baselineCall);
-
-    // TODO / OPTIMIZE: It would be better to merge this freeStack()
-    // into the one in endCall, if we can.
-
-    popValueStackBy(numArgs);
     masm.freeStack(stackSpace);
 
     pushReturned(baselineCall, sig.ret());
