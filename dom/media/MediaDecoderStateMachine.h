@@ -292,11 +292,6 @@ private:
   // the decode monitor held.
   void UpdatePlaybackPosition(int64_t aTime);
 
-  // Causes the state machine to switch to buffering state, and to
-  // immediately stop playback and buffer downloaded data. Called on
-  // the state machine thread.
-  void StartBuffering();
-
   bool CanPlayThrough();
 
   MediaStatistics GetStatistics();
