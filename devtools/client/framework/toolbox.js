@@ -108,6 +108,7 @@ const ToolboxButtons = exports.ToolboxButtons = [
  */
 function Toolbox(target, selectedTool, hostType, hostOptions) {
   this._target = target;
+  this._win = null;
   this._toolPanels = new Map();
   this._telemetry = new Telemetry();
   if (Services.prefs.getBoolPref("devtools.sourcemap.locations.enabled")) {
@@ -273,24 +274,17 @@ Toolbox.prototype = {
   },
 
   /**
-   * Get the iframe containing the toolbox UI.
-   */
-  get frame() {
-    return this._host.frame;
-  },
-
-  /**
    * Shortcut to the window containing the toolbox UI
    */
   get win() {
-    return this.frame.contentWindow;
+    return this._win;
   },
 
   /**
    * Shortcut to the document containing the toolbox UI
    */
   get doc() {
-    return this.frame.contentDocument;
+    return this.win.document;
   },
 
   /**
@@ -359,6 +353,8 @@ Toolbox.prototype = {
   open: function () {
     return Task.spawn(function* () {
       let iframe = yield this._host.create();
+      this._win = iframe.contentWindow;
+
       let domReady = defer();
 
       // Prevent reloading the document when the toolbox is opened in a tab
@@ -625,8 +621,17 @@ Toolbox.prototype = {
                  });
 
     this.doc.addEventListener("keypress", this._splitConsoleOnKeypress, false);
-
     this.doc.addEventListener("focus", this._onFocus, true);
+    this.win.addEventListener("unload", this.destroy);
+  },
+
+  _removeHostListeners: function () {
+    // The host iframe's contentDocument may already be gone.
+    if (this.doc) {
+      this.doc.removeEventListener("keypress", this._splitConsoleOnKeypress, false);
+      this.doc.removeEventListener("focus", this._onFocus, true);
+      this.win.removeEventListener("unload", this.destroy);
+    }
   },
 
   _registerOverlays: function () {
@@ -1803,7 +1808,7 @@ Toolbox.prototype = {
 
     // Handle the case where the previous host happens to match the current
     // host. If so, switch to bottom if it's not already used, and side if not.
-    if (hostType === this._host.type) {
+    if (hostType === this.hostType) {
       if (hostType === Toolbox.HostType.BOTTOM) {
         hostType = Toolbox.HostType.SIDE;
       } else {
@@ -1822,7 +1827,7 @@ Toolbox.prototype = {
    *        The host type of the new host object
    */
   switchHost: function (hostType) {
-    if (hostType == this._host.type || !this._target.isLocalTab) {
+    if (hostType == this.hostType || !this._target.isLocalTab) {
       return null;
     }
 
@@ -1838,7 +1843,7 @@ Toolbox.prototype = {
     return newHost.create().then(iframe => {
       // change toolbox document's parent to the new host
       iframe.QueryInterface(Ci.nsIFrameLoaderOwner);
-      iframe.swapFrameLoaders(this.frame);
+      iframe.swapFrameLoaders(this._host.frame);
 
       this._host.off("window-closed", this.destroy);
       this.destroyHost();
@@ -2035,12 +2040,7 @@ Toolbox.prototype = {
    * @return {promise} to be resolved when the host is destroyed.
    */
   destroyHost: function () {
-    // The host iframe's contentDocument may already be gone.
-    if (this.doc) {
-      this.doc.removeEventListener("keypress",
-        this._splitConsoleOnKeypress, false);
-      this.doc.removeEventListener("focus", this._onFocus, true);
-    }
+    this._removeHostListeners();
     return this._host.destroy();
   },
 
@@ -2127,7 +2127,7 @@ Toolbox.prototype = {
     this._threadClient = null;
 
     // We need to grab a reference to win before this._host is destroyed.
-    let win = this.frame.ownerDocument.defaultView;
+    let win = this.win;
 
     if (this._requisition) {
       CommandUtils.destroyRequisition(this._requisition, this.target);
@@ -2143,6 +2143,8 @@ Toolbox.prototype = {
         .then(() => this.destroyHost())
         .catch(console.error)
         .then(() => {
+          this._win = null;
+
           // Targets need to be notified that the toolbox is being torn down.
           // This is done after other destruction tasks since it may tear down
           // fronts and the debugger transport which earlier destroy methods may
