@@ -1269,7 +1269,7 @@ DateObject::fillLocalTimeSlots()
         return;
     }
 
-    /* Remember timezone used to generate the local cache. */
+    /* Remember time zone used to generate the local cache. */
     setReservedSlot(TZA_SLOT, DoubleValue(DateTimeInfo::localTZA()));
 
     double utcTime = UTCTime().toNumber();
@@ -2428,8 +2428,6 @@ static const char * const months[] =
 };
 
 
-// Avoid dependence on PRMJ_FormatTimeUSEnglish, because it
-// requires a PRMJTime... which only has 16-bit years.  Sub-ECMA.
 static void
 print_gmt_string(char* buf, size_t size, double utctime)
 {
@@ -2568,8 +2566,7 @@ date_toJSON(JSContext* cx, unsigned argc, Value* vp)
     return Call(cx, toISO, obj, args.rval());
 }
 
-/* for Date.toLocaleFormat; interface to PRMJTime date struct.
- */
+/* Interface to PRMJTime date struct. */
 static void
 new_explode(double timeval, PRMJTime* split)
 {
@@ -2585,8 +2582,7 @@ new_explode(double timeval, PRMJTime* split)
     split->tm_year = year;
     split->tm_yday = int16_t(DayWithinYear(timeval, year));
 
-    /* not sure how this affects things, but it doesn't seem
-       to matter. */
+    // XXX: DaylightSavingTA expects utc-time argument.
     split->tm_isdst = (DaylightSavingTA(timeval) != 0);
 }
 
@@ -2594,7 +2590,6 @@ typedef enum formatspec {
     FORMATSPEC_FULL, FORMATSPEC_DATE, FORMATSPEC_TIME
 } formatspec;
 
-/* helper function */
 static bool
 date_format(JSContext* cx, double date, formatspec format, MutableHandleValue rval)
 {
@@ -2611,28 +2606,31 @@ date_format(JSContext* cx, double date, formatspec format, MutableHandleValue rv
 
         double local = LocalTime(date);
 
-        /* offset from GMT in minutes.  The offset includes daylight savings,
-           if it applies. */
+        /*
+         * Offset from GMT in minutes.  The offset includes daylight
+         * savings, if it applies.
+         */
         int minutes = (int) floor(AdjustTime(date) / msPerMinute);
 
-        /* map 510 minutes to 0830 hours */
+        /* Map 510 minutes to 0830 hours. */
         int offset = (minutes / 60) * 100 + minutes % 60;
 
-        /* print as "Wed Nov 05 19:38:03 GMT-0800 (PST) 1997" The TZA is
-         * printed as 'GMT-0800' rather than as 'PST' to avoid
-         * operating-system dependence on strftime (which
-         * PRMJ_FormatTimeUSEnglish calls, for %Z only.)  win32 prints
-         * PST as 'Pacific Standard Time.'  This way we always know
-         * what we're getting, and can parse it if we produce it.
-         * The OS TZA string is included as a comment.
+        /*
+         * Print as "Wed Nov 05 19:38:03 GMT-0800 (PST) 1997".
+         *
+         * The TZA is printed as 'GMT-0800' rather than as 'PST' to avoid
+         * operating-system dependence on strftime (which PRMJ_FormatTime
+         * calls, for %Z only.)  win32 prints PST as
+         * 'Pacific Standard Time.'  This way we always know what we're
+         * getting, and can parse it if we produce it.  The OS time zone
+         * string is included as a comment.
          */
 
-        /* get a timezone string from the OS to include as a
-           comment. */
+        /* get a time zone string from the OS to include as a comment. */
         new_explode(date, &split);
         if (PRMJ_FormatTime(tzbuf, sizeof tzbuf, "(%Z)", &split) != 0) {
-
-            /* Decide whether to use the resulting timezone string.
+            /*
+             * Decide whether to use the resulting time zone string.
              *
              * Reject it if it contains any non-ASCII, non-alphanumeric
              * characters.  It's then likely in some other character
@@ -2661,10 +2659,6 @@ date_format(JSContext* cx, double date, formatspec format, MutableHandleValue rv
 
         switch (format) {
           case FORMATSPEC_FULL:
-            /*
-             * Avoid dependence on PRMJ_FormatTimeUSEnglish, because it
-             * requires a PRMJTime... which only has 16-bit years.  Sub-ECMA.
-             */
             /* Tue Oct 31 2000 09:41:40 GMT-0800 (PST) */
             SprintfLiteral(buf, "%s %s %.2d %.4d %.2d:%.2d:%.2d GMT%+.4d%s%s",
                            days[int(WeekDay(local))],
