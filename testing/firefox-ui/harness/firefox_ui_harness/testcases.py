@@ -10,6 +10,7 @@ import mozfile
 
 from marionette import MarionetteTestCase
 from marionette_driver import Wait
+from marionette_driver.errors import NoSuchWindowException
 
 from firefox_puppeteer.api.prefs import Preferences
 from firefox_puppeteer.api.software_update import SoftwareUpdate
@@ -318,8 +319,10 @@ class UpdateTestCase(FirefoxTestCase):
         self.restart()
 
     def download_and_apply_forced_update(self):
-        # The update wizard dialog opens automatically after the restart
-        dialog = self.windows.switch_to(lambda win: type(win) is UpdateWizardDialog)
+        # The update wizard dialog opens automatically after the restart but with a short delay
+        dialog = Wait(self.marionette, ignored_exceptions=[NoSuchWindowException]).until(
+            lambda _: self.windows.switch_to(lambda win: type(win) is UpdateWizardDialog)
+        )
 
         # In case of a broken complete update the about window has to be used
         if self.updates[self.current_update_index]['patch']['is_complete']:
