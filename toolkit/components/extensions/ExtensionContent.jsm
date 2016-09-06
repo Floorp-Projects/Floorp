@@ -702,6 +702,9 @@ function BrowserExtensionContent(data) {
   this.manifest = data.manifest;
   this.baseURI = Services.io.newURI(data.baseURL, null, null);
 
+  // Only used in addon processes.
+  this.views = new Set();
+
   let uri = Services.io.newURI(data.resourceURL, null, null);
 
   if (Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT) {
@@ -726,6 +729,10 @@ BrowserExtensionContent.prototype = {
   },
 
   hasPermission(perm) {
+    let match = /^manifest:(.*)/.exec(perm);
+    if (match) {
+      return this.manifest[match[1]] != null;
+    }
     return this.permissions.has(perm);
   },
 };
