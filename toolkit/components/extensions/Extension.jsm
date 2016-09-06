@@ -724,9 +724,6 @@ GlobalManager = {
     let uri = document.documentURIObject;
 
     let context = new ExtensionContext(extension, {viewType, contentWindow, uri, docShell});
-    if (viewType == "background") {
-      this._initializeBackgroundPage(contentWindow);
-    }
 
     let innerWindowID = contentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
       .getInterface(Ci.nsIDOMWindowUtils).currentInnerWindowID;
@@ -739,28 +736,6 @@ GlobalManager = {
       }
     };
     Services.obs.addObserver(onUnload, "inner-window-destroyed", false);
-  },
-
-  _initializeBackgroundPage(contentWindow) {
-    // Override the `alert()` method inside background windows;
-    // we alias it to console.log().
-    // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1203394
-    let alertDisplayedWarning = false;
-    let alertOverwrite = text => {
-      if (!alertDisplayedWarning) {
-        require("devtools/client/framework/devtools-browser");
-
-        let hudservice = require("devtools/client/webconsole/hudservice");
-        hudservice.openBrowserConsoleOrFocus();
-
-        contentWindow.console.warn("alert() is not supported in background windows; please use console.log instead.");
-
-        alertDisplayedWarning = true;
-      }
-
-      contentWindow.console.log(text);
-    };
-    Cu.exportFunction(alertOverwrite, contentWindow, {defineAs: "alert"});
   },
 };
 

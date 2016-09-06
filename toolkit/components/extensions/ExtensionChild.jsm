@@ -178,6 +178,10 @@ this.ExtensionContext = class extends BaseContext {
     Schemas.inject(browserObj, this.childManager);
     Schemas.inject(chromeObj, chromeApiWrapper);
 
+    if (viewType == "background") {
+      apiManager.global.initializeBackgroundPage(contentWindow);
+    }
+
     if (this.externallyVisible) {
       this.extension.views.add(this);
     }
