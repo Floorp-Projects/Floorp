@@ -66,7 +66,7 @@ public class DiskStorage {
 
     @CheckResult
     private synchronized DiskLruCache ensureCacheIsReady() throws IOException {
-        if (cache == null) {
+        if (cache == null || cache.isClosed()) {
             cache = DiskLruCache.open(
                     new File(context.getCacheDir(), "icons"),
                     CACHE_VERSION,
@@ -235,6 +235,7 @@ public class DiskStorage {
             final DiskLruCache cache = ensureCacheIsReady();
 
             cache.delete();
+
         } catch (IOException e) {
             Log.w(LOGTAG, "IOException while accessing disk cache", e);
         }

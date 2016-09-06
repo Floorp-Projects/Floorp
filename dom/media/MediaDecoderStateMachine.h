@@ -356,8 +356,8 @@ protected:
   virtual ~MediaDecoderStateMachine();
 
   void SetState(State aState);
-  void ExitState(State aState);
-  void EnterState(State aState);
+  void ExitState();
+  void EnterState();
 
   void BufferedRangeUpdated();
 
@@ -556,6 +556,12 @@ protected:
 
   // Performs one "cycle" of the state machine.
   void RunStateMachine();
+  // Perform one cycle of the DECODING state.
+  void StepDecoding();
+  // Perform one cycle of the BUFFERING state.
+  void StepBuffering();
+  // Perform one cycle of the COMPLETED state.
+  void StepCompleted();
 
   bool IsStateMachineScheduled() const;
 

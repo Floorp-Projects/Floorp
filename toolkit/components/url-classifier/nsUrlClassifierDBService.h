@@ -45,6 +45,10 @@ namespace safebrowsing {
 class Classifier;
 class ProtocolParser;
 class TableUpdate;
+
+nsresult
+TablesToResponse(const nsACString& tables);
+
 } // namespace safebrowsing
 } // namespace mozilla
 

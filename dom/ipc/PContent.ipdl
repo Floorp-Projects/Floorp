@@ -324,12 +324,6 @@ union FileDescOrError {
     nsresult;
 };
 
-union OptionalContentId
-{
-  ContentParentId;
-  void_t;
-};
-
 struct DomainPolicyClone
 {
     bool        active;
