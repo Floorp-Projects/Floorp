@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef BASE_BASE_PATHS_WIN_H__
-#define BASE_BASE_PATHS_WIN_H__
+#ifndef BASE_BASE_PATHS_WIN_H_
+#define BASE_BASE_PATHS_WIN_H_
 
 // This file declares windows-specific path keys for the base module.
 // These can be used with the PathService to access various special
@@ -16,8 +16,14 @@ enum {
 
   DIR_WINDOWS,  // Windows directory, usually "c:\windows"
   DIR_SYSTEM,   // Usually c:\windows\system32"
-  DIR_PROGRAM_FILES,      // Usually c:\program files
-  DIR_PROGRAM_FILESX86,   // Usually c:\program files or c:\program files (x86)
+  //                         32-bit     32-bit on 64-bit   64-bit on 64-bit
+  // DIR_PROGRAM_FILES         1               2                  1
+  // DIR_PROGRAM_FILESX86      1               2                  2
+  // DIR_PROGRAM_FILES6432     1               1                  1
+  // 1 - C:\Program Files   2 - C:\Program Files (x86)
+  DIR_PROGRAM_FILES,      // See table above.
+  DIR_PROGRAM_FILESX86,   // See table above.
+  DIR_PROGRAM_FILES6432,  // See table above.
 
   DIR_IE_INTERNET_CACHE,  // Temporary Internet Files directory.
   DIR_COMMON_START_MENU,  // Usually "C:\Documents and Settings\All Users\
@@ -36,8 +42,8 @@ enum {
   DIR_COMMON_DESKTOP,     // Directory for the common desktop (visible
                           // on all user's Desktop).
   DIR_USER_QUICK_LAUNCH,  // Directory for the quick launch shortcuts.
-  DIR_TASKBAR_PINS,       // Directory for the shortcuts pinned to taskbar via
-                          // base::win::TaskbarPinShortcutLink().
+  DIR_TASKBAR_PINS,       // Directory for the shortcuts pinned to taskbar
+                          // (Win7-8) via base::win::PinShortcutToTaskbar().
   DIR_WINDOWS_FONTS,      // Usually C:\Windows\Fonts.
 
   PATH_WIN_END
@@ -45,4 +51,4 @@ enum {
 
 }  // namespace base
 
-#endif  // BASE_BASE_PATHS_WIN_H__
+#endif  // BASE_BASE_PATHS_WIN_H_

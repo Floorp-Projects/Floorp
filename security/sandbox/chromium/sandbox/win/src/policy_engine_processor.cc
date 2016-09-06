@@ -2,6 +2,9 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <stddef.h>
+#include <stdint.h>
+
 #include "sandbox/win/src/policy_engine_processor.h"
 
 namespace sandbox {
@@ -23,7 +26,7 @@ EvalResult PolicyProcessor::GetAction() const {
 bool SkipOpcode(const PolicyOpcode& opcode, MatchContext* context,
                 bool* keep_skipping) {
   if (opcode.IsAction()) {
-    uint32 options = context->options;
+    uint32_t options = context->options;
     context->Clear();
     *keep_skipping = false;
     return (kPolUseOREval != options);
@@ -32,7 +35,7 @@ bool SkipOpcode(const PolicyOpcode& opcode, MatchContext* context,
   return true;
 }
 
-PolicyResult PolicyProcessor::Evaluate(uint32 options,
+PolicyResult PolicyProcessor::Evaluate(uint32_t options,
                                        ParameterSet* parameters,
                                        size_t param_count) {
   if (NULL == policy_) {

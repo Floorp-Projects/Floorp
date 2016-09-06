@@ -5,8 +5,11 @@
 #ifndef BASE_SYNCHRONIZATION_WAITABLE_EVENT_H_
 #define BASE_SYNCHRONIZATION_WAITABLE_EVENT_H_
 
+#include <stddef.h>
+
 #include "base/base_export.h"
-#include "base/basictypes.h"
+#include "base/macros.h"
+#include "build/build_config.h"
 
 #if defined(OS_WIN)
 #include "base/win/scoped_handle.h"
@@ -20,9 +23,6 @@
 #endif
 
 namespace base {
-
-// This replaces INFINITE from Win32
-static const int kNoTimeout = -1;
 
 class TimeDelta;
 
@@ -53,11 +53,7 @@ class BASE_EXPORT WaitableEvent {
   // Create a WaitableEvent from an Event HANDLE which has already been
   // created. This objects takes ownership of the HANDLE and will close it when
   // deleted.
-  // TODO(rvargas): Pass ScopedHandle instead (and on Release).
-  explicit WaitableEvent(HANDLE event_handle);
-
-  // Releases ownership of the handle from this object.
-  HANDLE Release();
+  explicit WaitableEvent(win::ScopedHandle event_handle);
 #endif
 
   ~WaitableEvent();

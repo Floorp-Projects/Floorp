@@ -4,6 +4,8 @@
 
 #include "sandbox/win/src/eat_resolver.h"
 
+#include <stddef.h>
+
 #include "base/win/pe_image.h"
 #include "sandbox/win/src/sandbox_nt_util.h"
 
@@ -45,12 +47,8 @@ NTSTATUS EatResolverThunk::Setup(const void* target_module,
     return ret;
 
   // Perform the patch.
-#pragma warning(push)
-#pragma warning(disable: 4311)
-  // These casts generate warnings because they are 32 bit specific.
-  *eat_entry_ = reinterpret_cast<DWORD>(thunk_storage) -
-                reinterpret_cast<DWORD>(target_module);
-#pragma warning(pop)
+  *eat_entry_ = static_cast<DWORD>(reinterpret_cast<uintptr_t>(thunk_storage)) -
+                static_cast<DWORD>(reinterpret_cast<uintptr_t>(target_module));
 
   if (NULL != storage_used)
     *storage_used = GetThunkSize();

@@ -2,18 +2,21 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <stdint.h>
+
 #include <string>
 
 #include "sandbox/win/src/filesystem_policy.h"
 
 #include "base/logging.h"
+#include "base/macros.h"
 #include "base/win/scoped_handle.h"
 #include "base/win/windows_version.h"
 #include "sandbox/win/src/ipc_tags.h"
 #include "sandbox/win/src/policy_engine_opcodes.h"
 #include "sandbox/win/src/policy_params.h"
-#include "sandbox/win/src/sandbox_utils.h"
 #include "sandbox/win/src/sandbox_types.h"
+#include "sandbox/win/src/sandbox_utils.h"
 #include "sandbox/win/src/win_utils.h"
 
 namespace {
@@ -55,6 +58,18 @@ NTSTATUS NtCreateFileInTarget(HANDLE* target_file_handle,
   return STATUS_SUCCESS;
 }
 
+// Get an initialized anonymous level Security QOS.
+SECURITY_QUALITY_OF_SERVICE GetAnonymousQOS() {
+  SECURITY_QUALITY_OF_SERVICE security_qos = {0};
+  security_qos.Length = sizeof(security_qos);
+  security_qos.ImpersonationLevel = SecurityAnonymous;
+  // Set dynamic tracking so that a pipe doesn't capture the broker's token
+  security_qos.ContextTrackingMode = SECURITY_DYNAMIC_TRACKING;
+  security_qos.EffectiveOnly = TRUE;
+
+  return security_qos;
+}
+
 }  // namespace.
 
 namespace sandbox {
@@ -67,7 +82,7 @@ bool FileSystemPolicy::GenerateRules(const wchar_t* name,
     return false;
   }
 
-  if (!PreProcessName(mod_name, &mod_name)) {
+  if (!PreProcessName(&mod_name)) {
     // The path to be added might contain a reparse point.
     NOTREACHED();
     return false;
@@ -114,7 +129,9 @@ bool FileSystemPolicy::GenerateRules(const wchar_t* name,
                             GENERIC_READ | GENERIC_EXECUTE | READ_CONTROL;
       DWORD restricted_flags = ~allowed_flags;
       open.AddNumberMatch(IF_NOT, OpenFile::ACCESS, restricted_flags, AND);
+      open.AddNumberMatch(IF, OpenFile::DISPOSITION, FILE_OPEN, EQUAL);
       create.AddNumberMatch(IF_NOT, OpenFile::ACCESS, restricted_flags, AND);
+      create.AddNumberMatch(IF, OpenFile::DISPOSITION, FILE_OPEN, EQUAL);
 
       // Read only access don't work for rename.
       rule_to_add &= ~kCallNtSetInfoRename;
@@ -225,26 +242,29 @@ bool FileSystemPolicy::SetInitialRules(LowLevelPolicy* policy) {
 
 bool FileSystemPolicy::CreateFileAction(EvalResult eval_result,
                                         const ClientInfo& client_info,
-                                        const base::string16 &file,
-                                        uint32 attributes,
-                                        uint32 desired_access,
-                                        uint32 file_attributes,
-                                        uint32 share_access,
-                                        uint32 create_disposition,
-                                        uint32 create_options,
-                                        HANDLE *handle,
+                                        const base::string16& file,
+                                        uint32_t attributes,
+                                        uint32_t desired_access,
+                                        uint32_t file_attributes,
+                                        uint32_t share_access,
+                                        uint32_t create_disposition,
+                                        uint32_t create_options,
+                                        HANDLE* handle,
                                         NTSTATUS* nt_status,
-                                        ULONG_PTR *io_information) {
+                                        ULONG_PTR* io_information) {
   // The only action supported is ASK_BROKER which means create the requested
   // file as specified.
   if (ASK_BROKER != eval_result) {
     *nt_status = STATUS_ACCESS_DENIED;
     return false;
   }
-  IO_STATUS_BLOCK io_block = {0};
-  UNICODE_STRING uni_name = {0};
-  OBJECT_ATTRIBUTES obj_attributes = {0};
-  InitObjectAttribs(file, attributes, NULL, &obj_attributes, &uni_name);
+  IO_STATUS_BLOCK io_block = {};
+  UNICODE_STRING uni_name = {};
+  OBJECT_ATTRIBUTES obj_attributes = {};
+  SECURITY_QUALITY_OF_SERVICE security_qos = GetAnonymousQOS();
+
+  InitObjectAttribs(file, attributes, NULL, &obj_attributes,
+                    &uni_name, IsPipe(file) ? &security_qos : NULL);
   *nt_status = NtCreateFileInTarget(handle, desired_access, &obj_attributes,
                                     &io_block, file_attributes, share_access,
                                     create_disposition, create_options, NULL,
@@ -256,14 +276,14 @@ bool FileSystemPolicy::CreateFileAction(EvalResult eval_result,
 
 bool FileSystemPolicy::OpenFileAction(EvalResult eval_result,
                                       const ClientInfo& client_info,
-                                      const base::string16 &file,
-                                      uint32 attributes,
-                                      uint32 desired_access,
-                                      uint32 share_access,
-                                      uint32 open_options,
-                                      HANDLE *handle,
+                                      const base::string16& file,
+                                      uint32_t attributes,
+                                      uint32_t desired_access,
+                                      uint32_t share_access,
+                                      uint32_t open_options,
+                                      HANDLE* handle,
                                       NTSTATUS* nt_status,
-                                      ULONG_PTR *io_information) {
+                                      ULONG_PTR* io_information) {
   // The only action supported is ASK_BROKER which means open the requested
   // file as specified.
   if (ASK_BROKER != eval_result) {
@@ -272,10 +292,13 @@ bool FileSystemPolicy::OpenFileAction(EvalResult eval_result,
   }
   // An NtOpen is equivalent to an NtCreate with FileAttributes = 0 and
   // CreateDisposition = FILE_OPEN.
-  IO_STATUS_BLOCK io_block = {0};
-  UNICODE_STRING uni_name = {0};
-  OBJECT_ATTRIBUTES obj_attributes = {0};
-  InitObjectAttribs(file, attributes, NULL, &obj_attributes, &uni_name);
+  IO_STATUS_BLOCK io_block = {};
+  UNICODE_STRING uni_name = {};
+  OBJECT_ATTRIBUTES obj_attributes = {};
+  SECURITY_QUALITY_OF_SERVICE security_qos = GetAnonymousQOS();
+
+  InitObjectAttribs(file, attributes, NULL, &obj_attributes,
+                    &uni_name, IsPipe(file) ? &security_qos : NULL);
   *nt_status = NtCreateFileInTarget(handle, desired_access, &obj_attributes,
                                     &io_block, 0, share_access, FILE_OPEN,
                                     open_options, NULL, 0,
@@ -288,8 +311,8 @@ bool FileSystemPolicy::OpenFileAction(EvalResult eval_result,
 bool FileSystemPolicy::QueryAttributesFileAction(
     EvalResult eval_result,
     const ClientInfo& client_info,
-    const base::string16 &file,
-    uint32 attributes,
+    const base::string16& file,
+    uint32_t attributes,
     FILE_BASIC_INFORMATION* file_info,
     NTSTATUS* nt_status) {
   // The only action supported is ASK_BROKER which means query the requested
@@ -304,7 +327,10 @@ bool FileSystemPolicy::QueryAttributesFileAction(
 
   UNICODE_STRING uni_name = {0};
   OBJECT_ATTRIBUTES obj_attributes = {0};
-  InitObjectAttribs(file, attributes, NULL, &obj_attributes, &uni_name);
+  SECURITY_QUALITY_OF_SERVICE security_qos = GetAnonymousQOS();
+
+  InitObjectAttribs(file, attributes, NULL, &obj_attributes,
+                    &uni_name, IsPipe(file) ? &security_qos : NULL);
   *nt_status = NtQueryAttributesFile(&obj_attributes, file_info);
 
   return true;
@@ -313,8 +339,8 @@ bool FileSystemPolicy::QueryAttributesFileAction(
 bool FileSystemPolicy::QueryFullAttributesFileAction(
     EvalResult eval_result,
     const ClientInfo& client_info,
-    const base::string16 &file,
-    uint32 attributes,
+    const base::string16& file,
+    uint32_t attributes,
     FILE_NETWORK_OPEN_INFORMATION* file_info,
     NTSTATUS* nt_status) {
   // The only action supported is ASK_BROKER which means query the requested
@@ -329,17 +355,23 @@ bool FileSystemPolicy::QueryFullAttributesFileAction(
 
   UNICODE_STRING uni_name = {0};
   OBJECT_ATTRIBUTES obj_attributes = {0};
-  InitObjectAttribs(file, attributes, NULL, &obj_attributes, &uni_name);
+  SECURITY_QUALITY_OF_SERVICE security_qos = GetAnonymousQOS();
+
+  InitObjectAttribs(file, attributes, NULL, &obj_attributes,
+                    &uni_name, IsPipe(file) ? &security_qos : NULL);
   *nt_status = NtQueryFullAttributesFile(&obj_attributes, file_info);
 
   return true;
 }
 
-bool FileSystemPolicy::SetInformationFileAction(
-    EvalResult eval_result, const ClientInfo& client_info,
-    HANDLE target_file_handle, void* file_info, uint32 length,
-    uint32 info_class, IO_STATUS_BLOCK* io_block,
-    NTSTATUS* nt_status) {
+bool FileSystemPolicy::SetInformationFileAction(EvalResult eval_result,
+                                                const ClientInfo& client_info,
+                                                HANDLE target_file_handle,
+                                                void* file_info,
+                                                uint32_t length,
+                                                uint32_t info_class,
+                                                IO_STATUS_BLOCK* io_block,
+                                                NTSTATUS* nt_status) {
   // The only action supported is ASK_BROKER which means open the requested
   // file as specified.
   if (ASK_BROKER != eval_result) {
@@ -368,15 +400,14 @@ bool FileSystemPolicy::SetInformationFileAction(
   return true;
 }
 
-bool PreProcessName(const base::string16& path, base::string16* new_path) {
-  ConvertToLongPath(path, new_path);
+bool PreProcessName(base::string16* path) {
+  ConvertToLongPath(path);
 
-  bool reparsed = false;
-  if (ERROR_SUCCESS != IsReparsePoint(*new_path, &reparsed))
-    return false;
+  if (ERROR_NOT_A_REPARSE_POINT == IsReparsePoint(*path))
+    return true;
 
-  // We can't process reparsed file.
-  return !reparsed;
+  // We can't process a reparsed file.
+  return false;
 }
 
 base::string16 FixNTPrefixForMatch(const base::string16& name) {

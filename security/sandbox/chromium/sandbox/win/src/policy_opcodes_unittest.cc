@@ -2,10 +2,13 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "sandbox/win/src/sandbox_types.h"
-#include "sandbox/win/src/sandbox_nt_types.h"
-#include "sandbox/win/src/policy_engine_params.h"
+#include <stddef.h>
+#include <stdint.h>
+
 #include "sandbox/win/src/policy_engine_opcodes.h"
+#include "sandbox/win/src/policy_engine_params.h"
+#include "sandbox/win/src/sandbox_nt_types.h"
+#include "sandbox/win/src/sandbox_types.h"
 #include "testing/gtest/include/gtest/gtest.h"
 
 
@@ -45,7 +48,7 @@ TEST(PolicyEngineTest, ParameterSetTest) {
 
   // Test that we can store and retrieve a void pointer:
   const void* result1 =0;
-  uint32 result2 = 0;
+  uint32_t result2 = 0;
   EXPECT_TRUE(pset1.Get(&result1));
   EXPECT_TRUE(pv1 == result1);
   EXPECT_FALSE(pset1.Get(&result2));
@@ -53,8 +56,8 @@ TEST(PolicyEngineTest, ParameterSetTest) {
   EXPECT_TRUE(pv2 == result1);
   EXPECT_FALSE(pset2.Get(&result2));
 
-  // Test that we can store and retrieve a uint32:
-  uint32 number = 12747;
+  // Test that we can store and retrieve a uint32_t:
+  uint32_t number = 12747;
   ParameterSet pset3 = ParamPickerMake(number);
   EXPECT_FALSE(pset3.Get(&result1));
   EXPECT_TRUE(pset3.Get(&result2));
@@ -122,7 +125,7 @@ TEST(PolicyEngineTest, TrueFalseOpcodes) {
   context.position = 1;
   context.options = kPolUseOREval;
   EXPECT_EQ(EVAL_TRUE, op5->Evaluate(&ppb1, 1, &context));
-  EXPECT_EQ(0, context.position);
+  EXPECT_EQ(0u, context.position);
   MatchContext context2;
   EXPECT_EQ(context2.options, context.options);
 }
@@ -181,8 +184,8 @@ TEST(PolicyEngineTest, OpcodeMakerCase2) {
 
 TEST(PolicyEngineTest, IntegerOpcodes) {
   const wchar_t* txt = L"abcdef";
-  uint32 num1 = 42;
-  uint32 num2 = 113377;
+  uint32_t num1 = 42;
+  uint32_t num2 = 113377;
 
   ParameterSet pp_wrong1 = ParamPickerMake(txt);
   ParameterSet pp_num1 = ParamPickerMake(num1);
@@ -221,7 +224,7 @@ TEST(PolicyEngineTest, LogicalOpcodes) {
   char memory[kOpcodeMemory];
   OpcodeFactory opcode_maker(memory, sizeof(memory));
 
-  uint32 num1 = 0x10100702;
+  uint32_t num1 = 0x10100702;
   ParameterSet pp_num1 = ParamPickerMake(num1);
 
   PolicyOpcode* op_and1 =
@@ -280,7 +283,7 @@ TEST(PolicyEngineTest, WCharOpcodes1) {
                                                       kPolClearContext);
   ASSERT_NE(nullptr, op4);
   EXPECT_EQ(EVAL_TRUE, op4->Evaluate(&pp_tc1, 1, &mc1));
-  EXPECT_EQ(0, mc1.position);
+  EXPECT_EQ(0u, mc1.position);
 
   // Test that we can properly match the last part of the string
   PolicyOpcode* op4b = opcode_maker.MakeOpWStringMatch(0, txt4, kSeekToEnd,
@@ -288,7 +291,7 @@ TEST(PolicyEngineTest, WCharOpcodes1) {
                                                        kPolClearContext);
   ASSERT_NE(nullptr, op4b);
   EXPECT_EQ(EVAL_TRUE, op4b->Evaluate(&pp_tc1, 1, &mc1));
-  EXPECT_EQ(0, mc1.position);
+  EXPECT_EQ(0u, mc1.position);
 
   // Test matching 'jumps over' over the entire string. This is the
   // primitive we build '*' from.
@@ -296,7 +299,7 @@ TEST(PolicyEngineTest, WCharOpcodes1) {
                                                       CASE_SENSITIVE, kPolNone);
   ASSERT_NE(nullptr, op5);
   EXPECT_EQ(EVAL_TRUE, op5->Evaluate(&pp_tc1, 1, &mc1));
-  EXPECT_EQ(24, mc1.position);
+  EXPECT_EQ(24u, mc1.position);
 
   // Test that we don't match because it is not at the end of the string
   PolicyOpcode* op5b = opcode_maker.MakeOpWStringMatch(0, txt5, kSeekToEnd,
@@ -304,7 +307,7 @@ TEST(PolicyEngineTest, WCharOpcodes1) {
                                                        kPolNone);
   ASSERT_NE(nullptr, op5b);
   EXPECT_EQ(EVAL_FALSE, op5b->Evaluate(&pp_tc1, 1, &mc1));
-  EXPECT_EQ(24, mc1.position);
+  EXPECT_EQ(24u, mc1.position);
 
   // Test that we function if the string does not fit. In this case we
   // try to match 'the lazy dog' against 'he lazy dog'.
@@ -319,12 +322,12 @@ TEST(PolicyEngineTest, WCharOpcodes1) {
                                                       CASE_SENSITIVE, kPolNone);
   ASSERT_NE(nullptr, op7);
   EXPECT_EQ(EVAL_TRUE, op7->Evaluate(&pp_tc1, 1, &mc2));
-  EXPECT_EQ(37, mc2.position);
+  EXPECT_EQ(37u, mc2.position);
 
   // Trying to match again should fail since we are in the last char.
   // This also covers a couple of boundary conditions.
   EXPECT_EQ(EVAL_FALSE, op7->Evaluate(&pp_tc1, 1, &mc2));
-  EXPECT_EQ(37, mc2.position);
+  EXPECT_EQ(37u, mc2.position);
 }
 
 TEST(PolicyEngineTest, WCharOpcodes2) {
@@ -350,7 +353,7 @@ TEST(PolicyEngineTest, WCharOpcodes2) {
   ASSERT_NE(nullptr, op1i);
   EXPECT_EQ(EVAL_FALSE, op1s->Evaluate(&pp_tc1, 1, &mc1));
   EXPECT_EQ(EVAL_TRUE, op1i->Evaluate(&pp_tc1, 1, &mc1));
-  EXPECT_EQ(35, mc1.position);
+  EXPECT_EQ(35u, mc1.position);
 }
 
 TEST(PolicyEngineTest, ActionOpcodes) {

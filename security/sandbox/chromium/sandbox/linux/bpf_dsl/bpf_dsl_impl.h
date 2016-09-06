@@ -7,12 +7,12 @@
 
 #include "base/macros.h"
 #include "base/memory/ref_counted.h"
+#include "sandbox/linux/bpf_dsl/codegen.h"
 #include "sandbox/sandbox_export.h"
 
 namespace sandbox {
-class ErrorCode;
-
 namespace bpf_dsl {
+class ErrorCode;
 class PolicyCompiler;
 
 namespace internal {
@@ -20,12 +20,12 @@ namespace internal {
 // Internal interface implemented by BoolExpr implementations.
 class BoolExprImpl : public base::RefCounted<BoolExprImpl> {
  public:
-  // Compile uses |pc| to construct an ErrorCode that conditionally continues
-  // to either |true_ec| or |false_ec|, depending on whether the represented
+  // Compile uses |pc| to emit a CodeGen::Node that conditionally continues
+  // to either |then_node| or |false_node|, depending on whether the represented
   // boolean expression is true or false.
-  virtual ErrorCode Compile(PolicyCompiler* pc,
-                            ErrorCode true_ec,
-                            ErrorCode false_ec) const = 0;
+  virtual CodeGen::Node Compile(PolicyCompiler* pc,
+                                CodeGen::Node then_node,
+                                CodeGen::Node else_node) const = 0;
 
  protected:
   BoolExprImpl() {}
@@ -39,13 +39,19 @@ class BoolExprImpl : public base::RefCounted<BoolExprImpl> {
 // Internal interface implemented by ResultExpr implementations.
 class ResultExprImpl : public base::RefCounted<ResultExprImpl> {
  public:
-  // Compile uses |pc| to construct an ErrorCode analogous to the represented
-  // result expression.
-  virtual ErrorCode Compile(PolicyCompiler* pc) const = 0;
+  // Compile uses |pc| to emit a CodeGen::Node that executes the
+  // represented result expression.
+  virtual CodeGen::Node Compile(PolicyCompiler* pc) const = 0;
 
   // HasUnsafeTraps returns whether the result expression is or recursively
   // contains an unsafe trap expression.
   virtual bool HasUnsafeTraps() const;
+
+  // IsAllow returns whether the result expression is an "allow" result.
+  virtual bool IsAllow() const;
+
+  // IsAllow returns whether the result expression is a "deny" result.
+  virtual bool IsDeny() const;
 
  protected:
   ResultExprImpl() {}

@@ -9,6 +9,7 @@
 
 #include <vector>
 
+#include "base/macros.h"
 #include "base/memory/scoped_ptr.h"
 #include "base/strings/string16.h"
 #include "sandbox/win/src/sandbox_types.h"
@@ -56,7 +57,7 @@ class AppContainerAttributes {
 ResultCode CreateAppContainer(const base::string16& sid,
                               const base::string16& name);
 
-// Deletes an AppContainer previously created with a successfull call to
+// Deletes an AppContainer previously created with a successful call to
 // CreateAppContainer.
 ResultCode DeleteAppContainer(const base::string16& sid);
 

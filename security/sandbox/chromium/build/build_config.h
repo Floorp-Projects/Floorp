@@ -61,8 +61,8 @@
 #error Please add support for your platform in build/build_config.h
 #endif
 
-#if defined(USE_OPENSSL) && defined(USE_NSS)
-#error Cannot use both OpenSSL and NSS
+#if defined(USE_OPENSSL_CERTS) && defined(USE_NSS_CERTS)
+#error Cannot use both OpenSSL and NSS for certificates
 #endif
 
 // For access to standard BSD features, use OS_BSD instead of a

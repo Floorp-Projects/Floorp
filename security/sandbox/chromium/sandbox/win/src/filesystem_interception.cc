@@ -4,6 +4,8 @@
 
 #include "sandbox/win/src/filesystem_interception.h"
 
+#include <stdint.h>
+
 #include "sandbox/win/src/crosscall_client.h"
 #include "sandbox/win/src/ipc_tags.h"
 #include "sandbox/win/src/policy_params.h"
@@ -51,18 +53,20 @@ NTSTATUS WINAPI TargetNtCreateFile(NtCreateFileFunction orig_CreateFile,
     if (NULL == memory)
       break;
 
-    uint32 attributes = 0;
+    uint32_t attributes = 0;
     NTSTATUS ret = AllocAndCopyName(object_attributes, &name, &attributes,
                                     NULL);
     if (!NT_SUCCESS(ret) || NULL == name)
       break;
 
-    uint32 desired_access_uint32 = desired_access;
-    uint32 options_uint32 = options;
-    uint32 broker = FALSE;
+    uint32_t desired_access_uint32 = desired_access;
+    uint32_t options_uint32 = options;
+    uint32_t disposition_uint32 = disposition;
+    uint32_t broker = FALSE;
     CountedParameterSet<OpenFile> params;
     params[OpenFile::NAME] = ParamPickerMake(name);
     params[OpenFile::ACCESS] = ParamPickerMake(desired_access_uint32);
+    params[OpenFile::DISPOSITION] = ParamPickerMake(disposition_uint32);
     params[OpenFile::OPTIONS] = ParamPickerMake(options_uint32);
     params[OpenFile::BROKER] = ParamPickerMake(broker);
 
@@ -79,14 +83,15 @@ NTSTATUS WINAPI TargetNtCreateFile(NtCreateFileFunction orig_CreateFile,
     if (SBOX_ALL_OK != code)
       break;
 
+    status = answer.nt_status;
+
     if (!NT_SUCCESS(answer.nt_status))
-        return answer.nt_status;
+      break;
 
     __try {
       *file = answer.handle;
       io_status->Status = answer.nt_status;
       io_status->Information = answer.extended[0].ulong_ptr;
-      status = io_status->Status;
     } __except(EXCEPTION_EXECUTE_HANDLER) {
       break;
     }
@@ -131,18 +136,20 @@ NTSTATUS WINAPI TargetNtOpenFile(NtOpenFileFunction orig_OpenFile, PHANDLE file,
     if (NULL == memory)
       break;
 
-    uint32 attributes;
+    uint32_t attributes;
     NTSTATUS ret = AllocAndCopyName(object_attributes, &name, &attributes,
                                     NULL);
     if (!NT_SUCCESS(ret) || NULL == name)
       break;
 
-    uint32 desired_access_uint32 = desired_access;
-    uint32 options_uint32 = options;
-    uint32 broker = FALSE;
+    uint32_t desired_access_uint32 = desired_access;
+    uint32_t options_uint32 = options;
+    uint32_t disposition_uint32 = FILE_OPEN;
+    uint32_t broker = FALSE;
     CountedParameterSet<OpenFile> params;
     params[OpenFile::NAME] = ParamPickerMake(name);
     params[OpenFile::ACCESS] = ParamPickerMake(desired_access_uint32);
+    params[OpenFile::DISPOSITION] = ParamPickerMake(disposition_uint32);
     params[OpenFile::OPTIONS] = ParamPickerMake(options_uint32);
     params[OpenFile::BROKER] = ParamPickerMake(broker);
 
@@ -157,14 +164,15 @@ NTSTATUS WINAPI TargetNtOpenFile(NtOpenFileFunction orig_OpenFile, PHANDLE file,
     if (SBOX_ALL_OK != code)
       break;
 
+    status = answer.nt_status;
+
     if (!NT_SUCCESS(answer.nt_status))
-      return answer.nt_status;
+      break;
 
     __try {
       *file = answer.handle;
       io_status->Status = answer.nt_status;
       io_status->Information = answer.extended[0].ulong_ptr;
-      status = io_status->Status;
     } __except(EXCEPTION_EXECUTE_HANDLER) {
       break;
     }
@@ -205,7 +213,7 @@ NTSTATUS WINAPI TargetNtQueryAttributesFile(
     if (NULL == memory)
       break;
 
-    uint32 attributes = 0;
+    uint32_t attributes = 0;
     NTSTATUS ret = AllocAndCopyName(object_attributes, &name, &attributes,
                                     NULL);
     if (!NT_SUCCESS(ret) || NULL == name)
@@ -214,7 +222,7 @@ NTSTATUS WINAPI TargetNtQueryAttributesFile(
     InOutCountedBuffer file_info(file_attributes,
                                  sizeof(FILE_BASIC_INFORMATION));
 
-    uint32 broker = FALSE;
+    uint32_t broker = FALSE;
     CountedParameterSet<FileName> params;
     params[FileName::NAME] = ParamPickerMake(name);
     params[FileName::BROKER] = ParamPickerMake(broker);
@@ -227,16 +235,14 @@ NTSTATUS WINAPI TargetNtQueryAttributesFile(
     ResultCode code = CrossCall(ipc, IPC_NTQUERYATTRIBUTESFILE_TAG, name,
                                 attributes, file_info, &answer);
 
-    operator delete(name, NT_ALLOC);
-
     if (SBOX_ALL_OK != code)
       break;
+
+    status = answer.nt_status;
 
     mozilla::sandboxing::LogAllowed("NtQueryAttributesFile",
                                     object_attributes->ObjectName->Buffer,
                                     object_attributes->ObjectName->Length);
-    return answer.nt_status;
-
   } while (false);
 
   if (name)
@@ -273,7 +279,7 @@ NTSTATUS WINAPI TargetNtQueryFullAttributesFile(
     if (NULL == memory)
       break;
 
-    uint32 attributes = 0;
+    uint32_t attributes = 0;
     NTSTATUS ret = AllocAndCopyName(object_attributes, &name, &attributes,
                                     NULL);
     if (!NT_SUCCESS(ret) || NULL == name)
@@ -282,7 +288,7 @@ NTSTATUS WINAPI TargetNtQueryFullAttributesFile(
     InOutCountedBuffer file_info(file_attributes,
                                  sizeof(FILE_NETWORK_OPEN_INFORMATION));
 
-    uint32 broker = FALSE;
+    uint32_t broker = FALSE;
     CountedParameterSet<FileName> params;
     params[FileName::NAME] = ParamPickerMake(name);
     params[FileName::BROKER] = ParamPickerMake(broker);
@@ -295,15 +301,14 @@ NTSTATUS WINAPI TargetNtQueryFullAttributesFile(
     ResultCode code = CrossCall(ipc, IPC_NTQUERYFULLATTRIBUTESFILE_TAG, name,
                                 attributes, file_info, &answer);
 
-    operator delete(name, NT_ALLOC);
-
     if (SBOX_ALL_OK != code)
       break;
+
+    status = answer.nt_status;
 
     mozilla::sandboxing::LogAllowed("NtQueryFullAttributesFile",
                                     object_attributes->ObjectName->Buffer,
                                     object_attributes->ObjectName->Length);
-    return answer.nt_status;
   } while (false);
 
   if (name)
@@ -362,7 +367,7 @@ NTSTATUS WINAPI TargetNtSetInformationFile(
     if (!NT_SUCCESS(ret) || !name)
       break;
 
-    uint32 broker = FALSE;
+    uint32_t broker = FALSE;
     CountedParameterSet<FileName> params;
     params[FileName::NAME] = ParamPickerMake(name);
     params[FileName::BROKER] = ParamPickerMake(broker);
