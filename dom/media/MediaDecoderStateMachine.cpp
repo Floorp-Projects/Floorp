@@ -373,6 +373,28 @@ public:
   }
 };
 
+class MediaDecoderStateMachine::ShutdownState
+  : public MediaDecoderStateMachine::StateObject
+{
+public:
+  explicit ShutdownState(Master* aPtr) : StateObject(aPtr) {}
+
+  void Enter() override
+  {
+    mMaster->mIsShutdown = true;
+  }
+
+  void Exit() override
+  {
+    MOZ_DIAGNOSTIC_ASSERT(false, "Shouldn't escape the SHUTDOWN state.");
+  }
+
+  State GetState() const override
+  {
+    return DECODER_STATE_SHUTDOWN;
+  }
+};
+
 #define INIT_WATCHABLE(name, val) \
   name(val, "MediaDecoderStateMachine::" #name)
 #define INIT_MIRROR(name, val) \
@@ -1261,6 +1283,9 @@ MediaDecoderStateMachine::SetState(State aState)
     case DECODER_STATE_COMPLETED:
       mStateObj = MakeUnique<CompletedState>(this);
       break;
+    case DECODER_STATE_SHUTDOWN:
+      mStateObj = MakeUnique<ShutdownState>(this);
+      break;
     default:
       mStateObj = nullptr;
       break;
@@ -1279,14 +1304,6 @@ MediaDecoderStateMachine::ExitState()
     mStateObj->Exit();
     return;
   }
-
-  switch (mState) {
-    case DECODER_STATE_SHUTDOWN:
-      MOZ_DIAGNOSTIC_ASSERT(false, "Shouldn't escape the SHUTDOWN state.");
-      break;
-    default:
-      break;
-  }
 }
 
 void
@@ -1298,14 +1315,6 @@ MediaDecoderStateMachine::EnterState()
     MOZ_ASSERT(mState == mStateObj->GetState());
     mStateObj->Enter();
     return;
-  }
-
-  switch (mState) {
-    case DECODER_STATE_SHUTDOWN:
-      mIsShutdown = true;
-      break;
-    default:
-      break;
   }
 }
 
