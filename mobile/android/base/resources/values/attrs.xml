@@ -173,6 +173,7 @@
     <declare-styleable name="FaviconView">
         <attr name="dominantBorderEnabled" format="boolean" />
         <attr name="overrideScaleType" format="boolean" />
+        <attr name="enableRoundCorners" format="boolean"/>
     </declare-styleable>
 
     <declare-styleable name="OverlayDialogButton">
