@@ -251,6 +251,28 @@ public:
   }
 };
 
+class MediaDecoderStateMachine::DormantState
+  : public MediaDecoderStateMachine::StateObject
+{
+public:
+  explicit DormantState(Master* aPtr) : StateObject(aPtr) {}
+
+  void Enter() override
+  {
+    mMaster->DiscardSeekTaskIfExist();
+    if (mMaster->IsPlaying()) {
+      mMaster->StopPlayback();
+    }
+    mMaster->Reset();
+    mMaster->mReader->ReleaseResources();
+  }
+
+  State GetState() const override
+  {
+    return DECODER_STATE_DORMANT;
+  }
+};
+
 #define INIT_WATCHABLE(name, val) \
   name(val, "MediaDecoderStateMachine::" #name)
 #define INIT_MIRROR(name, val) \
@@ -1121,6 +1143,9 @@ MediaDecoderStateMachine::SetState(State aState)
     case DECODER_STATE_WAIT_FOR_CDM:
       mStateObj = MakeUnique<WaitForCDMState>(this);
       break;
+    case DECODER_STATE_DORMANT:
+      mStateObj = MakeUnique<DormantState>(this);
+      break;
     default:
       mStateObj = nullptr;
       break;
@@ -1164,14 +1189,6 @@ MediaDecoderStateMachine::EnterState()
   }
 
   switch (mState) {
-    case DECODER_STATE_DORMANT:
-      DiscardSeekTaskIfExist();
-      if (IsPlaying()) {
-        StopPlayback();
-      }
-      Reset();
-      mReader->ReleaseResources();
-      break;
     case DECODER_STATE_DECODING_FIRSTFRAME:
       DecodeFirstFrame();
       break;
