@@ -1690,13 +1690,6 @@ void MediaDecoderStateMachine::PlayStateChanged()
     return;
   }
 
-  // When asked to play, switch to decoding state only if
-  // we are currently buffering. In other cases, we'll start playing anyway
-  // when the state machine notices the decoder's state change to PLAYING.
-  if (mState == DECODER_STATE_BUFFERING) {
-    SetState(DECODER_STATE_DECODING);
-  }
-
   ScheduleStateMachine();
 }
 
