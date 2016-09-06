@@ -481,28 +481,28 @@ CreateGlobalDevModeAndInit(const nsXPIDLString& aPrintName,
   nsAutoPrinter autoPrinter(hPrinter);
 
   // Get the buffer size
-  DWORD dwNeeded = ::DocumentPropertiesW(gParentWnd, hPrinter, printName, nullptr,
-                                         nullptr, 0);
-  if (dwNeeded == 0) {
+  LONG needed = ::DocumentPropertiesW(gParentWnd, hPrinter, printName, nullptr,
+                                      nullptr, 0);
+  if (needed < 0) {
     return nsReturnRef<nsHGLOBAL>();
   }
 
   // Allocate a buffer of the correct size.
   nsAutoDevMode newDevMode((LPDEVMODEW)::HeapAlloc(::GetProcessHeap(), HEAP_ZERO_MEMORY,
-                                                   dwNeeded));
+                                                   needed));
   if (!newDevMode) {
     return nsReturnRef<nsHGLOBAL>();
   }
 
-  nsHGLOBAL hDevMode = ::GlobalAlloc(GHND, dwNeeded);
+  nsHGLOBAL hDevMode = ::GlobalAlloc(GHND, needed);
   nsAutoGlobalMem globalDevMode(hDevMode);
   if (!hDevMode) {
     return nsReturnRef<nsHGLOBAL>();
   }
 
-  DWORD dwRet = ::DocumentPropertiesW(gParentWnd, hPrinter, printName, newDevMode,
-                                      nullptr, DM_OUT_BUFFER);
-  if (dwRet != IDOK) {
+  LONG ret = ::DocumentPropertiesW(gParentWnd, hPrinter, printName, newDevMode,
+                                   nullptr, DM_OUT_BUFFER);
+  if (ret != IDOK) {
     return nsReturnRef<nsHGLOBAL>();
   }
 
@@ -513,16 +513,16 @@ CreateGlobalDevModeAndInit(const nsXPIDLString& aPrintName,
     return nsReturnRef<nsHGLOBAL>();
   }
 
-  memcpy(devMode, newDevMode.get(), dwNeeded);
+  memcpy(devMode, newDevMode.get(), needed);
   // Initialize values from the PrintSettings
   nsCOMPtr<nsIPrintSettingsWin> psWin = do_QueryInterface(aPS);
   MOZ_ASSERT(psWin);
   psWin->CopyToNative(devMode);
 
   // Sets back the changes we made to the DevMode into the Printer Driver
-  dwRet = ::DocumentPropertiesW(gParentWnd, hPrinter, printName, devMode, devMode,
-                                DM_IN_BUFFER | DM_OUT_BUFFER);
-  if (dwRet != IDOK) {
+  ret = ::DocumentPropertiesW(gParentWnd, hPrinter, printName, devMode, devMode,
+                              DM_IN_BUFFER | DM_OUT_BUFFER);
+  if (ret != IDOK) {
     ::GlobalUnlock(hDevMode);
     return nsReturnRef<nsHGLOBAL>();
   }

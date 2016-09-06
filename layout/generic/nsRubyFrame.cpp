@@ -87,6 +87,7 @@ nsRubyFrame::AddInlinePrefISize(nsRenderingContext *aRenderingContext,
       e.GetBaseContainer()->AddInlinePrefISize(aRenderingContext, aData);
     }
   }
+  aData->mLineIsEmpty = false;
 }
 
 /* virtual */ void

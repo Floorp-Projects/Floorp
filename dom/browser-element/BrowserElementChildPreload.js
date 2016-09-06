@@ -1567,7 +1567,11 @@ BrowserElementChild.prototype = {
       location = Cc["@mozilla.org/docshell/urifixup;1"]
         .getService(Ci.nsIURIFixup).createExposableURI(location);
 
-      sendAsyncMsg('locationchange', { _payload_: location.spec });
+      var webNav = docShell.QueryInterface(Ci.nsIWebNavigation);
+
+      sendAsyncMsg('locationchange', { url: location.spec,
+                                       canGoBack: webNav.canGoBack,
+                                       canGoForward: webNav.canGoForward });
     },
 
     onStateChange: function(webProgress, request, stateFlags, status) {

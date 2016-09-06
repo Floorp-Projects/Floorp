@@ -24,13 +24,13 @@ function runTest() {
   });
 
   iframe.addEventListener('mozbrowserlocationchange', function(e) {
-    if (e.detail == browserElementTestHelpers.emptyPage1) {
+    if (e.detail.url == browserElementTestHelpers.emptyPage1) {
       gotFirstLocationChange = true;
       if (gotFirstPaint) {
         iframe.src = browserElementTestHelpers.emptyPage1 + '?2';
       }
     }
-    else if (e.detail.endsWith('?2')) {
+    else if (e.detail.url.endsWith('?2')) {
       SimpleTest.finish();
     }
   });

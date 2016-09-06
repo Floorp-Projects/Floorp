@@ -15,6 +15,7 @@ sync protocol PPresentationRequest
 
 child:
   async __delete__(nsresult result);
+  async NotifyRequestUrlSelected(nsString aUrl);
 };
 
 } // namespace dom
