@@ -109,7 +109,7 @@ public:
           // WMF H.264 Video Decoder and Apple ATDecoder
           // do not support YUV444 format.
           // For consistency, all decoders should be checked.
-          if (!mp4_demuxer::H264::DecodeSPSFromExtraData(extraData, spsdata) ||
+          if (mp4_demuxer::H264::DecodeSPSFromExtraData(extraData, spsdata) &&
               spsdata.chroma_format_idc == PDMFactory::kYUV444) {
             return SupportChecker::Result::kVideoFormatNotSupported;
           }
