@@ -155,10 +155,14 @@
            level="parent"/>
 
     <panel id="DateTimePickerPanel"
+           type="arrow"
            hidden="true"
+           orient="vertical"
            noautofocus="true"
            consumeoutsideclicks="false"
-           level="parent"/>
+           level="parent">
+      <iframe id="dateTimePopupFrame"/>
+    </panel>
 
     <!-- for select dropdowns. The menupopup is what shows the list of options,
          and the popuponly menulist makes things like the menuactive attributes
