@@ -79,13 +79,10 @@ let inspector;
 
 function test() {
   waitForExplicitFinish();
-  gBrowser.selectedTab = gBrowser.addTab();
-  gBrowser.selectedBrowser.addEventListener("load", function onload() {
-    gBrowser.selectedBrowser.removeEventListener("load", onload, true);
+  addTab(TEST_URI).then(function () {
     doc = content.document;
     runTests();
-  }, true);
-  content.location = TEST_URI;
+  });
 }
 
 function runTests() {
