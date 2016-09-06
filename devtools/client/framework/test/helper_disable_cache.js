@@ -91,12 +91,10 @@ function reloadTab(tabX) {
   let def = defer();
   let browser = gBrowser.selectedBrowser;
 
-  // once() doesn't work here so we use a standard handler instead.
-  browser.addEventListener("load", function onLoad() {
-    browser.removeEventListener("load", onLoad, true);
+  BrowserTestUtils.browserLoaded(browser).then(function () {
     info("Reloaded tab " + tabX.title);
     def.resolve();
-  }, true);
+  });
 
   info("Reloading tab " + tabX.title);
   let mm = getFrameScript();

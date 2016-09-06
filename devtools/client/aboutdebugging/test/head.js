@@ -83,11 +83,11 @@ function addTab(url, win, backgroundTab = false) {
     }
     let linkedBrowser = tab.linkedBrowser;
 
-    linkedBrowser.addEventListener("load", function onLoad() {
-      linkedBrowser.removeEventListener("load", onLoad, true);
-      info("Tab added and finished loading: " + url);
-      done(tab);
-    }, true);
+    BrowserTestUtils.browserLoaded(linkedBrowser)
+      .then(function () {
+        info("Tab added and finished loading: " + url);
+        done(tab);
+      });
   });
 }
 
