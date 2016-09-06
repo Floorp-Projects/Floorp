@@ -16,9 +16,9 @@
 "unpack": true
 },
 {
-"version": "gecko rustc 1.10.0 (cfcb716cf 2016-07-03)",
-"size": 102276708,
-"digest": "8cc9ea8347fc7e6e6fdb15a8fd1faae977f1235a426b879b3f9128ec91d8f2b6268297ce80bf4eceb47738bd40bfeda13f143dc3fe85f1434b13adfbc095ab90",
+"version": "gecko rustc 1.10.0 (cfcb716cf 2016-07-03) x86_64+i586",
+"size": 102207436,
+"digest": "7f0fcaf31fd2e76f0941b601f86b42f15d2f3ba22676ad14c322a9bcfd2bc361d1110b2f9c97e4d3056ffe49e126aaa3ae3015ee91b0229560d603a0c1e310a0",
 "algorithm": "sha512",
 "filename": "rustc.tar.xz",
 "unpack": true
