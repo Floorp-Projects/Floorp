@@ -1,15 +1,16 @@
-use std::marker::PhantomData;
 use std::io::Read;
-use std::sync::Mutex;
-use std::sync::mpsc::{channel, Receiver, Sender};
-use std::thread;
+use std::marker::PhantomData;
 use std::net::SocketAddr;
+use std::sync::mpsc::{channel, Receiver, Sender};
+use std::sync::Mutex;
+use std::thread;
 
 use hyper::header::ContentType;
 use hyper::method::Method;
-use hyper::server::{Server, Handler, Request, Response};
-use hyper::uri::RequestUri::AbsolutePath;
+use hyper::Result;
+use hyper::server::{Handler, Listening, Request, Response, Server};
 use hyper::status::StatusCode;
+use hyper::uri::RequestUri::AbsolutePath;
 
 use command::{WebDriverMessage, WebDriverCommand};
 use error::{WebDriverResult, WebDriverError, ErrorStatus};
@@ -229,10 +230,13 @@ impl <U: WebDriverExtensionRoute> Handler for HttpHandler<U> {
     }
 }
 
-pub fn start<T: 'static+WebDriverHandler<U>,
-             U: 'static+WebDriverExtensionRoute>(address: SocketAddr,
-                                                 handler: T,
-                                                 extension_routes:Vec<(Method, &str, U)>) {
+pub fn start<T, U>(address: SocketAddr,
+                   handler: T,
+                   extension_routes: Vec<(Method, &str, U)>)
+                   -> Result<Listening>
+    where T: 'static + WebDriverHandler<U>,
+          U: 'static + WebDriverExtensionRoute
+{
     let (msg_send, msg_recv) = channel();
 
     let api = WebDriverHttpApi::new(extension_routes);
@@ -242,8 +246,10 @@ pub fn start<T: 'static+WebDriverHandler<U>,
 
     let builder = thread::Builder::new().name("webdriver dispatcher".to_string());
     builder.spawn(move || {
-        let mut dispatcher = Dispatcher::new(handler);
-        dispatcher.run(msg_recv)
-    }).unwrap();
-    server.handle(http_handler).unwrap();
+            let mut dispatcher = Dispatcher::new(handler);
+            dispatcher.run(msg_recv);
+        })
+        .unwrap();
+
+    server.handle(http_handler)
 }
