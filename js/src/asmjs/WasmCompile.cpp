@@ -1335,7 +1335,7 @@ DecodeElemSection(Decoder& d, bool newFormat, Uint32Vector&& oldElems, ModuleGen
     if (numSegments > MaxElemSegments)
         return Fail(d, "too many elem segments");
 
-    for (uint32_t i = 0, prevEnd = 0; i < numSegments; i++) {
+    for (uint32_t i = 0; i < numSegments; i++) {
         uint32_t tableIndex;
         if (!d.readVarU32(&tableIndex))
             return Fail(d, "expected table index");
@@ -1347,9 +1347,6 @@ DecodeElemSection(Decoder& d, bool newFormat, Uint32Vector&& oldElems, ModuleGen
         InitExpr offset;
         if (!DecodeInitializerExpression(d, mg.globals(), ValType::I32, &offset))
             return false;
-
-        if (offset.isVal() && offset.val().i32() < prevEnd)
-            return Fail(d, "elem segments must be disjoint and ordered");
 
         uint32_t numElems;
         if (!d.readVarU32(&numElems))
@@ -1372,9 +1369,6 @@ DecodeElemSection(Decoder& d, bool newFormat, Uint32Vector&& oldElems, ModuleGen
             if (elemFuncIndices[i] >= mg.numFuncSigs())
                 return Fail(d, "table element out of range");
         }
-
-        if (offset.isVal())
-            prevEnd = offset.val().i32() + elemFuncIndices.length();
 
         if (!mg.addElemSegment(offset, Move(elemFuncIndices)))
             return false;
@@ -1406,7 +1400,8 @@ DecodeDataSection(Decoder& d, bool newFormat, ModuleGenerator& mg)
         return Fail(d, "too many data segments");
 
     uint32_t max = mg.minMemoryLength();
-    for (uint32_t i = 0, prevEnd = 0; i < numSegments; i++) {
+    for (uint32_t i = 0; i < numSegments; i++) {
+        DataSegment seg;
         if (newFormat) {
             uint32_t linearMemoryIndex;
             if (!d.readVarU32(&linearMemoryIndex))
@@ -1415,26 +1410,24 @@ DecodeDataSection(Decoder& d, bool newFormat, ModuleGenerator& mg)
             if (linearMemoryIndex != 0)
                 return Fail(d, "linear memory index must currently be 0");
 
-            Expr expr;
-            if (!d.readExpr(&expr))
-                return Fail(d, "failed to read initializer expression");
+            if (!DecodeInitializerExpression(d, mg.globals(), ValType::I32, &seg.offset))
+                return false;
+        } else {
+            uint32_t offset;
+            if (!d.readVarU32(&offset))
+                return Fail(d, "expected segment destination offset");
 
-            if (expr != Expr::I32Const)
-                return Fail(d, "expected i32.const initializer expression");
+            seg.offset = InitExpr(Val(offset));
         }
-
-        DataSegment seg;
-        if (!d.readVarU32(&seg.memoryOffset))
-            return Fail(d, "expected segment destination offset");
-
-        if (seg.memoryOffset < prevEnd)
-            return Fail(d, "data segments must be disjoint and ordered");
 
         if (!d.readVarU32(&seg.length))
             return Fail(d, "expected segment size");
 
-        if (seg.memoryOffset > max || max - seg.memoryOffset < seg.length)
-            return Fail(d, "data segment data segment does not fit");
+        if (seg.offset.isVal()) {
+            uint32_t off = seg.offset.val().i32();
+            if (off > max || max - off < seg.length)
+                return Fail(d, "data segment does not fit");
+        }
 
         seg.bytecodeOffset = d.currentOffset();
 
@@ -1443,8 +1436,6 @@ DecodeDataSection(Decoder& d, bool newFormat, ModuleGenerator& mg)
 
         if (!mg.addDataSegment(seg))
             return false;
-
-        prevEnd = seg.memoryOffset + seg.length;
     }
 
     if (!d.finishSection(sectionStart, sectionSize))

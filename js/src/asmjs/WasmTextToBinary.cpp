@@ -2403,17 +2403,32 @@ ParseTypeDef(WasmParseContext& c)
 }
 
 static AstDataSegment*
-ParseDataSegment(WasmParseContext& c)
+ParseDataSegment(WasmParseContext& c, bool newFormat)
 {
-    WasmToken dstOffset;
-    if (!c.ts.match(WasmToken::Index, &dstOffset, c.error))
-        return nullptr;
+    AstExpr* offset;
+    if (newFormat) {
+        WasmToken dstOffset;
+        if (c.ts.getIf(WasmToken::Index, &dstOffset))
+            offset = new(c.lifo) AstConst(Val(dstOffset.index()));
+        else
+            offset = ParseExpr(c);
+        if (!offset)
+            return nullptr;
+    } else {
+        WasmToken dstOffset;
+        if (!c.ts.match(WasmToken::Index, &dstOffset, c.error))
+            return nullptr;
+
+        offset = new(c.lifo) AstConst(Val(dstOffset.index()));
+        if (!offset)
+            return nullptr;
+    }
 
     WasmToken text;
     if (!c.ts.match(WasmToken::Text, &text, c.error))
         return nullptr;
 
-    return new(c.lifo) AstDataSegment(dstOffset.index(), text.text());
+    return new(c.lifo) AstDataSegment(offset, text.text());
 }
 
 static bool
@@ -2442,7 +2457,7 @@ ParseMemory(WasmParseContext& c, WasmToken token, AstModule* module)
     while (c.ts.getIf(WasmToken::OpenParen)) {
         if (!c.ts.match(WasmToken::Segment, c.error))
             return false;
-        AstDataSegment* segment = ParseDataSegment(c);
+        AstDataSegment* segment = ParseDataSegment(c, /* newFormat = */ false);
         if (!segment || !module->append(segment))
             return false;
         if (!c.ts.match(WasmToken::CloseParen, c.error))
@@ -2706,7 +2721,7 @@ ParseModule(const char16_t* text, bool newFormat, LifoAlloc& lifo, UniqueChars* 
             break;
           }
           case WasmToken::Data: {
-            AstDataSegment* segment = ParseDataSegment(c);
+            AstDataSegment* segment = ParseDataSegment(c, newFormat);
             if (!segment || !module->append(segment))
                 return nullptr;
             break;
@@ -3213,13 +3228,6 @@ ResolveModule(LifoAlloc& lifo, AstModule* module, UniqueChars* error)
             return r.fail("duplicate function");
     }
 
-    for (AstElemSegment* seg : module->elemSegments()) {
-        for (AstRef& ref : seg->elems()) {
-            if (!r.resolveFunction(ref))
-                return false;
-        }
-    }
-
     size_t numImports = module->imports().length();
     size_t lastFuncImportIndex = 0;
     size_t lastGlobalIndex = 0;
@@ -3276,9 +3284,18 @@ ResolveModule(LifoAlloc& lifo, AstModule* module, UniqueChars* error)
             return false;
     }
 
+    for (AstDataSegment* segment : module->dataSegments()) {
+        if (!ResolveExpr(r, *segment->offset()))
+            return false;
+    }
+
     for (AstElemSegment* segment : module->elemSegments()) {
         if (!ResolveExpr(r, *segment->offset()))
             return false;
+        for (AstRef& ref : segment->elems()) {
+            if (!r.resolveFunction(ref))
+                return false;
+        }
     }
 
     return true;
@@ -4056,12 +4073,14 @@ EncodeDataSegment(Encoder& e, bool newFormat, AstDataSegment& segment)
         if (!e.writeVarU32(0))  // linear memory index
             return false;
 
-        if (!e.writeExpr(Expr::I32Const))
+        if (!EncodeExpr(e, *segment.offset()))
+            return false;
+        if (!e.writeExpr(Expr::End))
+            return false;
+    } else {
+        if (!e.writeVarU32(segment.offset()->as<AstConst>().val().i32()))
             return false;
     }
-
-    if (!e.writeVarU32(segment.offset()))
-        return false;
 
     AstName text = segment.text();
 
@@ -4187,10 +4206,10 @@ EncodeModule(AstModule& module, bool newFormat, Bytes* bytes)
     if (!EncodeCodeSection(e, module))
         return false;
 
-    if (!EncodeDataSection(e, newFormat, module))
+    if (!EncodeElemSection(e, newFormat, module))
         return false;
 
-    if (!EncodeElemSection(e, newFormat, module))
+    if (!EncodeDataSection(e, newFormat, module))
         return false;
 
     return true;
