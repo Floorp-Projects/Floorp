@@ -595,11 +595,6 @@ private:
 
   UniquePtr<StateObject> mStateObj;
 
-  // Time that buffering started. Used for buffering timeout and only
-  // accessed on the state machine thread. This is null while we're not
-  // buffering.
-  TimeStamp mBufferingStart;
-
   media::TimeUnit Duration() const { MOZ_ASSERT(OnTaskQueue()); return mDuration.Ref().ref(); }
 
   // Recomputes the canonical duration from various sources.
