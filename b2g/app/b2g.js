@@ -90,6 +90,7 @@ pref("network.cookie.cookieBehavior", 0);
 
 // spdy
 pref("network.http.spdy.push-allowance", 32768);
+pref("network.http.spdy.default-hpack-buffer", 4096); // 4k
 
 // See bug 545869 for details on why these are set the way they are
 pref("network.buffer.cache.count", 24);
