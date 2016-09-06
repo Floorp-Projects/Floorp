@@ -675,9 +675,6 @@ private:
   // Playback rate. 1.0 : normal speed, 0.5 : two times slower.
   double mPlaybackRate;
 
-  // Time at which we started decoding. Synchronised via decoder monitor.
-  TimeStamp mDecodeStartTime;
-
   // The maximum number of second we spend buffering when we are short on
   // unbuffered data.
   uint32_t mBufferingWait;
