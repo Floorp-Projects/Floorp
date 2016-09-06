@@ -4898,10 +4898,17 @@ nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
         RECT *clientRect = wParam
                          ? &(reinterpret_cast<NCCALCSIZE_PARAMS*>(lParam))->rgrc[0]
                          : (reinterpret_cast<RECT*>(lParam));
-        clientRect->top      += (mCaptionHeight - mNonClientOffset.top);
-        clientRect->left     += (mHorResizeMargin - mNonClientOffset.left);
-        clientRect->right    -= (mHorResizeMargin - mNonClientOffset.right);
-        clientRect->bottom   -= (mVertResizeMargin - mNonClientOffset.bottom);
+        double scale = WinUtils::IsPerMonitorDPIAware()
+          ? WinUtils::LogToPhysFactor(mWnd) / WinUtils::SystemScaleFactor()
+          : 1.0;
+        clientRect->top +=
+          NSToIntRound((mCaptionHeight - mNonClientOffset.top) * scale);
+        clientRect->left +=
+          NSToIntRound((mHorResizeMargin - mNonClientOffset.left) * scale);
+        clientRect->right -=
+          NSToIntRound((mHorResizeMargin - mNonClientOffset.right) * scale);
+        clientRect->bottom -=
+          NSToIntRound((mVertResizeMargin - mNonClientOffset.bottom) * scale);
 
         result = true;
         *aRetValue = 0;
