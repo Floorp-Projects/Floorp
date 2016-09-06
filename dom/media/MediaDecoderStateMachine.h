@@ -411,9 +411,6 @@ protected:
   // The decoder monitor must be held.
   bool HasFutureAudio();
 
-  // Returns true if we recently exited "quick buffering" mode.
-  bool JustExitedQuickBuffering();
-
   // Recomputes mNextFrameStatus, possibly dispatching notifications to interested
   // parties.
   void UpdateNextFrameStatus();
@@ -712,10 +709,6 @@ private:
   // we detect that the decode can't keep up with rendering.
   int64_t mAmpleAudioThresholdUsecs;
 
-  // If we're quick buffering, we'll remain in buffering mode while we have less than
-  // QUICK_BUFFERING_LOW_DATA_USECS of decoded data available.
-  int64_t mQuickBufferingLowDataThresholdUsecs;
-
   // At the start of decoding we want to "preroll" the decode until we've
   // got a few frames decoded before we consider whether decode is falling
   // behind. Otherwise our "we're falling behind" logic will trigger
@@ -817,13 +810,6 @@ private:
   // send suppressed event visibility for those cases. This code can probably be
   // simplified.
   bool mNotifyMetadataBeforeFirstFrame;
-
-  // If this is true while we're in buffering mode, we can exit early,
-  // as it's likely we may be able to playback. This happens when we enter
-  // buffering mode soon after the decode starts, because the decode-ahead
-  // ran fast enough to exhaust all data while the download is starting up.
-  // Synchronised via decoder monitor.
-  bool mQuickBuffering;
 
   // True if we should not decode/preroll unnecessary samples, unless we're
   // played. "Prerolling" in this context refers to when we decode and
