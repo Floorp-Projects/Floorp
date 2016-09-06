@@ -908,9 +908,11 @@ this.ExtensionContent = {
 
   init(global) {
     this.globals.set(global, new ExtensionGlobal(global));
+    ExtensionChild.init(global);
   },
 
   uninit(global) {
+    ExtensionChild.uninit(global);
     this.globals.get(global).uninit();
     this.globals.delete(global);
   },

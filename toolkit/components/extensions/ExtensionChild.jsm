@@ -46,8 +46,6 @@ XPCOMUtils.defineLazyGetter(this, "findPathInObject",
   () => Cu.import("resource://gre/modules/Extension.jsm", {}).findPathInObject);
 XPCOMUtils.defineLazyGetter(this, "GlobalManager",
   () => Cu.import("resource://gre/modules/Extension.jsm", {}).GlobalManager);
-XPCOMUtils.defineLazyGetter(this, "Management",
-  () => Cu.import("resource://gre/modules/Extension.jsm", {}).Management);
 XPCOMUtils.defineLazyGetter(this, "ParentAPIManager",
   () => Cu.import("resource://gre/modules/Extension.jsm", {}).ParentAPIManager);
 
@@ -136,7 +134,7 @@ class WannabeChildAPIManager extends ChildAPIManager {
 // |viewType| is one of "background", "popup", or "tab".
 // |contentWindow| is the DOM window the content runs in.
 // |uri| is the URI of the content (optional).
-// |docShell| is the docshell the content runs in (optional).
+// |tabId| is the tab's ID, used if viewType is "tab".
 class ExtensionContext extends BaseContext {
   constructor(extension, params) {
     super("addon_child", extension);
@@ -146,7 +144,7 @@ class ExtensionContext extends BaseContext {
       throw new Error("ExtensionContext cannot be created in child processes");
     }
 
-    let {viewType, uri, contentWindow} = params;
+    let {viewType, uri, contentWindow, tabId} = params;
     this.viewType = viewType;
     this.uri = uri || extension.baseURI;
 
@@ -155,10 +153,13 @@ class ExtensionContext extends BaseContext {
     // This is the MessageSender property passed to extension.
     // It can be augmented by the "page-open" hook.
     let sender = {id: extension.uuid};
+    if (viewType == "tab") {
+      sender.tabId = tabId;
+      this.tabId = tabId;
+    }
     if (uri) {
       sender.url = uri.spec;
     }
-    Management.emit("page-load", this, params, sender);
 
     let filter = {extensionId: extension.id};
     let optionalFilter = {};
@@ -200,13 +201,19 @@ class ExtensionContext extends BaseContext {
     return this.contentWindow.document.nodePrincipal;
   }
 
+  get windowId() {
+    if (this.viewType == "tab" || this.viewType == "popup") {
+      let globalView = ExtensionChild.contentGlobals.get(this.messageManager);
+      return globalView ? globalView.windowId : -1;
+    }
+  }
+
   get externallyVisible() {
     return true;
   }
 
   // Called when the extension shuts down.
   shutdown() {
-    Management.emit("page-shutdown", this);
     this.unload();
   }
 
@@ -229,7 +236,109 @@ class ExtensionContext extends BaseContext {
   }
 }
 
+// All subframes in a tab, background page, popup, etc. have the same view type.
+// This class keeps track of such global state.
+// Note that this is created even for non-extension tabs because at present we
+// do not have a way to distinguish regular tabs from extension tabs at the
+// initialization of a frame script.
+class ContentGlobal {
+  /**
+   * @param {nsIContentFrameMessageManager} global The frame script's global.
+   */
+  constructor(global) {
+    this.global = global;
+    // Unless specified otherwise assume that the extension page is in a tab,
+    // because the majority of all class instances are going to be a tab. Any
+    // special views (background page, extension popup) will immediately send an
+    // Extension:InitExtensionView message to change the viewType.
+    this.viewType = "tab";
+    this.tabId = -1;
+    this.windowId = -1;
+    this.initialized = false;
+    this.global.addMessageListener("Extension:InitExtensionView", this);
+    this.global.addMessageListener("Extension:SetTabAndWindowId", this);
+
+    this.initialDocuments = new WeakSet();
+  }
+
+  uninit() {
+    this.global.removeMessageListener("Extension:InitExtensionView", this);
+    this.global.removeMessageListener("Extension:SetTabAndWindowId", this);
+    this.global.removeEventListener("DOMContentLoaded", this);
+  }
+
+  ensureInitialized() {
+    if (!this.initialized) {
+      // Request tab and window ID in case "Extension:InitExtensionView" is not
+      // sent (e.g. when `viewType` is "tab").
+      let reply = this.global.sendSyncMessage("Extension:GetTabAndWindowId");
+      this.handleSetTabAndWindowId(reply[0] || {});
+    }
+    return this;
+  }
+
+  receiveMessage({name, data}) {
+    switch (name) {
+      case "Extension:InitExtensionView":
+        // The view type is initialized once and then fixed.
+        this.global.removeMessageListener("Extension:InitExtensionView", this);
+        let {viewType, url} = data;
+        this.viewType = viewType;
+        this.global.addEventListener("DOMContentLoaded", this);
+        if (url) {
+          // TODO(robwu): Remove this check. It is only here because the popup
+          // implementation does not always load a URL at the initialization,
+          // and the logic is too complex to fix at once.
+          let {document} = this.global.content;
+          this.initialDocuments.add(document);
+          document.location.replace(url);
+        }
+        /* Falls through to allow these properties to be initialized at once */
+      case "Extension:SetTabAndWindowId":
+        this.handleSetTabAndWindowId(data);
+        break;
+    }
+  }
+
+  handleSetTabAndWindowId(data) {
+    let {tabId, windowId} = data;
+    if (tabId) {
+      // Tab IDs are not expected to change.
+      if (this.tabId !== -1 && tabId !== this.tabId) {
+        throw new Error("Attempted to change a tabId after it was set");
+      }
+      this.tabId = tabId;
+    }
+    if (windowId !== undefined) {
+      // Window IDs may change if a tab is moved to a different location.
+      // Note: This is the ID of the browser window for the extension API.
+      // Do not confuse it with the innerWindowID of DOMWindows!
+      this.windowId = windowId;
+    }
+    this.initialized = true;
+  }
+
+  // "DOMContentLoaded" event.
+  handleEvent(event) {
+    let {document} = this.global.content;
+    if (event.target === document) {
+      // If the document was still being loaded at the time of navigation, then
+      // the DOMContentLoaded event is fired for the old document. Ignore it.
+      if (this.initialDocuments.has(document)) {
+        this.initialDocuments.delete(document);
+        return;
+      }
+      this.global.removeEventListener("DOMContentLoaded", this);
+      this.global.sendAsyncMessage("Extension:ExtensionViewLoaded");
+    }
+  }
+}
+
+
 this.ExtensionChild = {
+  // Map<nsIContentFrameMessageManager, ContentGlobal>
+  contentGlobals: new Map(),
+
   // Map<innerWindowId, ExtensionContext>
   extensionContexts: new Map(),
 
@@ -239,6 +348,15 @@ this.ExtensionChild = {
     // its Messenger has been instantiated. For example, if a content script
     // sends a message while there is no background page.
     MessageChannel.setupMessageManagers([Services.cpmm]);
+  },
+
+  init(global) {
+    this.contentGlobals.set(global, new ContentGlobal(global));
+  },
+
+  uninit(global) {
+    this.contentGlobals.get(global).uninit();
+    this.contentGlobals.delete(global);
   },
 
   /**
@@ -266,32 +384,16 @@ this.ExtensionChild = {
       return;
     }
 
-    let docShell = contentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                                .getInterface(Ci.nsIDocShell);
-
-    let parentDocument = docShell.parent.QueryInterface(Ci.nsIDocShell)
-                                 .contentViewer.DOMDocument;
-
-    let browser = docShell.chromeEventHandler;
-    // If this is a sub-frame of the add-on manager, use that <browser>
-    // element rather than the top-level chrome event handler.
-    if (contentWindow.frameElement && parentDocument.documentURI == "about:addons") {
-      browser = contentWindow.frameElement;
-    }
-
-    let viewType = "tab";
-    if (browser.hasAttribute("webextension-view-type")) {
-      viewType = browser.getAttribute("webextension-view-type");
-    } else if (browser.classList.contains("inline-options-browser")) {
-      // Options pages are currently displayed inline, but in Chrome
-      // and in our UI mock-ups for a later milestone, they're
-      // pop-ups.
-      viewType = "popup";
-    }
+    let mm = contentWindow
+      .QueryInterface(Ci.nsIInterfaceRequestor)
+      .getInterface(Ci.nsIDocShell)
+      .QueryInterface(Ci.nsIInterfaceRequestor)
+      .getInterface(Ci.nsIContentFrameMessageManager);
+    let {viewType, tabId} = this.contentGlobals.get(mm).ensureInitialized();
 
     let uri = contentWindow.document.documentURIObject;
 
-    context = new ExtensionContext(extension, {viewType, contentWindow, uri, docShell});
+    context = new ExtensionContext(extension, {viewType, contentWindow, uri, tabId});
     this.extensionContexts.set(windowId, context);
   },
 
