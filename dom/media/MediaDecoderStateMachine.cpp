@@ -440,7 +440,7 @@ public:
       return;
     }
 
-    mMaster->mDecodeStartTime = TimeStamp::Now();
+    mDecodeStartTime = TimeStamp::Now();
 
     // Reset other state to pristine values before starting decode.
     mMaster->mIsAudioPrerolling = !mMaster->DonePrerollingAudio() &&
@@ -454,6 +454,14 @@ public:
     mMaster->ScheduleStateMachine();
   }
 
+  void Exit() override
+  {
+    if (!mDecodeStartTime.IsNull()) {
+      TimeDuration decodeDuration = TimeStamp::Now() - mDecodeStartTime;
+      SLOG("Exiting DECODING, decoded for %.3lfs", decodeDuration.ToSeconds());
+    }
+  }
+
   void Step() override
   {
     mMaster->StepDecoding();
@@ -463,6 +471,10 @@ public:
   {
     return DECODER_STATE_DECODING;
   }
+
+private:
+  // Time at which we started decoding.
+  TimeStamp mDecodeStartTime;
 };
 
 class MediaDecoderStateMachine::SeekingState
@@ -2741,11 +2753,8 @@ MediaDecoderStateMachine::StartBuffering()
     StopPlayback();
   }
 
-  TimeDuration decodeDuration = TimeStamp::Now() - mDecodeStartTime;
   mBufferingStart = TimeStamp::Now();
 
-  DECODER_LOG("Changed state from DECODING to BUFFERING, decoded for %.3lfs",
-              decodeDuration.ToSeconds());
   MediaStatistics stats = GetStatistics();
   DECODER_LOG("Playback rate: %.1lfKB/s%s download rate: %.1lfKB/s%s",
               stats.mPlaybackRate/1024, stats.mPlaybackRateReliable ? "" : " (unreliable)",
