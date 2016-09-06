@@ -1645,34 +1645,6 @@ MediaDecoderStateMachine::DecodeFirstFrame()
   DispatchDecodeTasksIfNeeded();
 }
 
-void
-MediaDecoderStateMachine::StartDecoding()
-{
-  MOZ_ASSERT(OnTaskQueue());
-  // Should transition to DECODING only after decoding first frames.
-  MOZ_ASSERT(mSentFirstFrameLoadedEvent);
-  MOZ_ASSERT(mState == DECODER_STATE_DECODING);
-  // Pending seek should've been handled by DECODING_FIRSTFRAME before
-  // transitioning to DECODING.
-  MOZ_ASSERT(!mQueuedSeek.Exists());
-
-  if (CheckIfDecodeComplete()) {
-    SetState(DECODER_STATE_COMPLETED);
-    return;
-  }
-
-  mDecodeStartTime = TimeStamp::Now();
-
-  // Reset other state to pristine values before starting decode.
-  mIsAudioPrerolling = !DonePrerollingAudio() && !mReader->IsWaitingAudioData();
-  mIsVideoPrerolling = !DonePrerollingVideo() && !mReader->IsWaitingVideoData();
-
-  // Ensure that we've got tasks enqueued to decode data if we need to.
-  DispatchDecodeTasksIfNeeded();
-
-  ScheduleStateMachine();
-}
-
 void MediaDecoderStateMachine::PlayStateChanged()
 {
   MOZ_ASSERT(OnTaskQueue());
