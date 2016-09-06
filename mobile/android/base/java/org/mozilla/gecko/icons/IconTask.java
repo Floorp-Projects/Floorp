@@ -23,7 +23,7 @@ import java.util.concurrent.Callable;
  */
 /* package-private */ class IconTask implements Callable<IconResponse> {
     private static final String LOGTAG = "Gecko/IconTask";
-    private static final boolean DEBUG = true;
+    private static final boolean DEBUG = false;
 
     private final List<Preparer> preparers;
     private final List<IconLoader> loaders;

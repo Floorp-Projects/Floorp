@@ -5,6 +5,13 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 @template
+def Libxul_defines():
+    LIBRARY_DEFINES['MOZILLA_INTERNAL_API'] = True
+    LIBRARY_DEFINES['IMPL_LIBXUL'] = True
+    if not CONFIG['JS_SHARED_LIBRARY']:
+        LIBRARY_DEFINES['STATIC_EXPORTABLE_JS_API'] = True
+
+@template
 def Libxul(name):
     if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('cocoa', 'uikit'):
         # This is going to be a framework named "XUL", not an ordinary library named
@@ -51,10 +58,7 @@ def Libxul(name):
         # and config/version.mk would lift the $(srcdir)
         RCINCLUDE = '$(DEPTH)/toolkit/library/xulrunner.rc'
 
-    LIBRARY_DEFINES['MOZILLA_INTERNAL_API'] = True
-    LIBRARY_DEFINES['IMPL_LIBXUL'] = True
-    if not CONFIG['JS_SHARED_LIBRARY']:
-        LIBRARY_DEFINES['STATIC_EXPORTABLE_JS_API'] = True
+    Libxul_defines()
 
     if CONFIG['MOZ_NEEDS_LIBATOMIC']:
         OS_LIBS += ['atomic']

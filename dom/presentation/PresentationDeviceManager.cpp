@@ -188,7 +188,7 @@ PresentationDeviceManager::GetAvailableDevices(nsIArray* aPresentationUrls, nsIA
 
     for (uint32_t j = 0; j < presentationUrls.Length(); ++j) {
       bool isSupported;
-      if (NS_SUCCEEDED(mDevices[i]->IsRequestedUrlSupported(presentationUrls[i],
+      if (NS_SUCCEEDED(mDevices[i]->IsRequestedUrlSupported(presentationUrls[j],
                                                             &isSupported)) &&
           isSupported) {
         devices->AppendElement(mDevices[i], false);

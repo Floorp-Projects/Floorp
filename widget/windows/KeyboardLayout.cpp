@@ -138,6 +138,171 @@ static const char* kVirtualKeyName[] = {
 static_assert(sizeof(kVirtualKeyName) / sizeof(const char*) == 0x100,
   "The virtual key name must be defined just 256 keys");
 
+static const nsCString
+GetCharacterCodeName(WPARAM aCharCode)
+{
+  switch (aCharCode) {
+    case 0x0000:
+      return NS_LITERAL_CSTRING("NULL (0x0000)");
+    case 0x0008:
+      return NS_LITERAL_CSTRING("BACKSPACE (0x0008)");
+    case 0x0009:
+      return NS_LITERAL_CSTRING("CHARACTER TABULATION (0x0009)");
+    case 0x000A:
+      return NS_LITERAL_CSTRING("LINE FEED (0x000A)");
+    case 0x000B:
+      return NS_LITERAL_CSTRING("LINE TABULATION (0x000B)");
+    case 0x000C:
+      return NS_LITERAL_CSTRING("FORM FEED (0x000C)");
+    case 0x000D:
+      return NS_LITERAL_CSTRING("CARRIAGE RETURN (0x000D)");
+    case 0x0018:
+      return NS_LITERAL_CSTRING("CANCEL (0x0018)");
+    case 0x001B:
+      return NS_LITERAL_CSTRING("ESCAPE (0x001B)");
+    case 0x0020:
+      return NS_LITERAL_CSTRING("SPACE (0x0020)");
+    case 0x007F:
+      return NS_LITERAL_CSTRING("DELETE (0x007F)");
+    case 0x00A0:
+      return NS_LITERAL_CSTRING("NO-BREAK SPACE (0x00A0)");
+    case 0x00AD:
+      return NS_LITERAL_CSTRING("SOFT HYPHEN (0x00AD)");
+    case 0x2000:
+      return NS_LITERAL_CSTRING("EN QUAD (0x2000)");
+    case 0x2001:
+      return NS_LITERAL_CSTRING("EM QUAD (0x2001)");
+    case 0x2002:
+      return NS_LITERAL_CSTRING("EN SPACE (0x2002)");
+    case 0x2003:
+      return NS_LITERAL_CSTRING("EM SPACE (0x2003)");
+    case 0x2004:
+      return NS_LITERAL_CSTRING("THREE-PER-EM SPACE (0x2004)");
+    case 0x2005:
+      return NS_LITERAL_CSTRING("FOUR-PER-EM SPACE (0x2005)");
+    case 0x2006:
+      return NS_LITERAL_CSTRING("SIX-PER-EM SPACE (0x2006)");
+    case 0x2007:
+      return NS_LITERAL_CSTRING("FIGURE SPACE (0x2007)");
+    case 0x2008:
+      return NS_LITERAL_CSTRING("PUNCTUATION SPACE (0x2008)");
+    case 0x2009:
+      return NS_LITERAL_CSTRING("THIN SPACE (0x2009)");
+    case 0x200A:
+      return NS_LITERAL_CSTRING("HAIR SPACE (0x200A)");
+    case 0x200B:
+      return NS_LITERAL_CSTRING("ZERO WIDTH SPACE (0x200B)");
+    case 0x200C:
+      return NS_LITERAL_CSTRING("ZERO WIDTH NON-JOINER (0x200C)");
+    case 0x200D:
+      return NS_LITERAL_CSTRING("ZERO WIDTH JOINER (0x200D)");
+    case 0x200E:
+      return NS_LITERAL_CSTRING("LEFT-TO-RIGHT MARK (0x200E)");
+    case 0x200F:
+      return NS_LITERAL_CSTRING("RIGHT-TO-LEFT MARK (0x200F)");
+    case 0x2029:
+      return NS_LITERAL_CSTRING("PARAGRAPH SEPARATOR (0x2029)");
+    case 0x202A:
+      return NS_LITERAL_CSTRING("LEFT-TO-RIGHT EMBEDDING (0x202A)");
+    case 0x202B:
+      return NS_LITERAL_CSTRING("RIGHT-TO-LEFT EMBEDDING (0x202B)");
+    case 0x202D:
+      return NS_LITERAL_CSTRING("LEFT-TO-RIGHT OVERRIDE (0x202D)");
+    case 0x202E:
+      return NS_LITERAL_CSTRING("RIGHT-TO-LEFT OVERRIDE (0x202E)");
+    case 0x202F:
+      return NS_LITERAL_CSTRING("NARROW NO-BREAK SPACE (0x202F)");
+    case 0x205F:
+      return NS_LITERAL_CSTRING("MEDIUM MATHEMATICAL SPACE (0x205F)");
+    case 0x2060:
+      return NS_LITERAL_CSTRING("WORD JOINER (0x2060)");
+    case 0x2066:
+      return NS_LITERAL_CSTRING("LEFT-TO-RIGHT ISOLATE (0x2066)");
+    case 0x2067:
+      return NS_LITERAL_CSTRING("RIGHT-TO-LEFT ISOLATE (0x2067)");
+    case 0x3000:
+      return NS_LITERAL_CSTRING("IDEOGRAPHIC SPACE (0x3000)");
+    case 0xFEFF:
+      return NS_LITERAL_CSTRING("ZERO WIDTH NO-BREAK SPACE (0xFEFF)");
+    default: {
+      if (aCharCode < ' ' ||
+          (aCharCode >= 0x80 && aCharCode < 0xA0)) {
+        return nsPrintfCString("control (0x%04X)", aCharCode);
+      }
+      if (NS_IS_HIGH_SURROGATE(aCharCode)) {
+        return nsPrintfCString("high surrogate (0x%04X)", aCharCode);
+      }
+      if (NS_IS_LOW_SURROGATE(aCharCode)) {
+        return nsPrintfCString("low surrogate (0x%04X)", aCharCode);
+      }
+      return IS_IN_BMP(aCharCode) ?
+        nsPrintfCString("'%s' (0x%04X)",
+          NS_ConvertUTF16toUTF8(nsAutoString(aCharCode)).get(), aCharCode) :
+        nsPrintfCString("'%s' (0x%08X)",
+          NS_ConvertUTF16toUTF8(nsAutoString(aCharCode)).get(), aCharCode);
+    }
+  }
+}
+
+static const nsCString
+GetCharacterCodeName(char16_t* aChars, uint32_t aLength)
+{
+  if (!aLength) {
+    return NS_LITERAL_CSTRING("");
+  }
+  nsAutoCString result;
+  for (uint32_t i = 0; i < aLength; ++i) {
+    if (!result.IsEmpty()) {
+      result.AppendLiteral(", ");
+    } else {
+      result.AssignLiteral("\"");
+    }
+    result.Append(GetCharacterCodeName(aChars[i]));
+  }
+  result.AppendLiteral("\"");
+  return result;
+}
+
+class MOZ_STACK_CLASS GetShiftStateName final : public nsAutoCString
+{
+public:
+  explicit GetShiftStateName(VirtualKey::ShiftState aShiftState)
+  {
+    if (!aShiftState) {
+      AssignLiteral("none");
+      return;
+    }
+    if (aShiftState & VirtualKey::STATE_SHIFT) {
+      AssignLiteral("Shift");
+      aShiftState &= ~VirtualKey::STATE_SHIFT;
+    }
+    if (aShiftState & VirtualKey::STATE_CONTROL) {
+      MaybeAppendSeparator();
+      AssignLiteral("Ctrl");
+      aShiftState &= ~VirtualKey::STATE_CONTROL;
+    }
+    if (aShiftState & VirtualKey::STATE_ALT) {
+      MaybeAppendSeparator();
+      AssignLiteral("Alt");
+      aShiftState &= ~VirtualKey::STATE_ALT;
+    }
+    if (aShiftState & VirtualKey::STATE_CAPSLOCK) {
+      MaybeAppendSeparator();
+      AssignLiteral("CapsLock");
+      aShiftState &= ~VirtualKey::STATE_CAPSLOCK;
+    }
+    MOZ_ASSERT(!aShiftState);
+  }
+
+private:
+  void MaybeAppendSeparator()
+  {
+    if (!IsEmpty()) {
+      AppendLiteral(" | ");
+    }
+  }
+};
+
 // Unique id counter associated with a keydown / keypress events. Used in
 // identifing keypress events for removal from async event dispatch queue
 // in metrofx after preventDefault is called on keydown events.
@@ -1042,7 +1207,8 @@ bool
 NativeKey::IsControlChar(char16_t aChar)
 {
   static const char16_t U_SPACE = 0x20;
-  return aChar < U_SPACE;
+  static const char16_t U_DELETE = 0x7F;
+  return aChar < U_SPACE || aChar == U_DELETE;
 }
 
 bool
@@ -2520,6 +2686,10 @@ NativeKey::DispatchKeyPressEventForFollowingCharMessage(
 KeyboardLayout* KeyboardLayout::sInstance = nullptr;
 nsIIdleServiceInternal* KeyboardLayout::sIdleService = nullptr;
 
+// This log is very noisy if you don't want to retrieve the mapping table
+// of specific keyboard layout.  LogLevel::Debug and LogLevel::Verbose are
+// used to log the layout mapping.  If you need to log some behavior of
+// KeyboardLayout class, you should use LogLevel::Info or lower level.
 LazyLogModule sKeyboardLayoutLogger("KeyboardLayoutWidgets");
 
 // static
@@ -2677,12 +2847,11 @@ KeyboardLayout::InitNativeKey(NativeKey& aNativeKey,
       return;
     }
 
-    // Dead key followed by another dead key causes inputting both character.
-    // However, at keydown message handling, we need to forget the first
-    // dead key because there is no guarantee coming WM_KEYUP for the second
-    // dead key before next WM_KEYDOWN.  E.g., due to auto key repeat or
-    // pressing another dead key before releasing current key.  Therefore,
-    // we can set only a character for current key for keyup event.
+    // At keydown message handling, we need to forget the first dead key
+    // because there is no guarantee coming WM_KEYUP for the second dead
+    // key before next WM_KEYDOWN.  E.g., due to auto key repeat or pressing
+    // another dead key before releasing current key.  Therefore, we can
+    // set only a character for current key for keyup event.
     if (mActiveDeadKey < 0) {
       aNativeKey.mCommittedCharsAndModifiers =
         mVirtualKeys[virtualKeyIndex].GetUniChars(shiftState);
@@ -2704,6 +2873,15 @@ KeyboardLayout::InitNativeKey(NativeKey& aNativeKey,
 #endif // #if defined(DEBUG) || defined(MOZ_CRASHREPORTER)
       MOZ_CRASH("Trying to reference out of range of mVirtualKeys");
     }
+
+    // Dead key followed by another dead key may cause a composed character
+    // (e.g., "Russian - Mnemonic" keyboard layout's 's' -> 'c').
+    if (MaybeInitNativeKeyWithCompositeChar(aNativeKey, aModKeyState)) {
+      return;
+    }
+
+    // Otherwise, dead key followed by another dead key causes inputting both
+    // character.
     UniCharsAndModifiers prevDeadChars =
       mVirtualKeys[activeDeadKeyIndex].GetUniChars(mDeadKeyShiftState);
     UniCharsAndModifiers newChars =
@@ -2716,6 +2894,10 @@ KeyboardLayout::InitNativeKey(NativeKey& aNativeKey,
     return;
   }
 
+  if (MaybeInitNativeKeyWithCompositeChar(aNativeKey, aModKeyState)) {
+    return;
+  }
+
   UniCharsAndModifiers baseChars =
     mVirtualKeys[virtualKeyIndex].GetUniChars(shiftState);
   if (mActiveDeadKey < 0) {
@@ -2724,20 +2906,8 @@ KeyboardLayout::InitNativeKey(NativeKey& aNativeKey,
     return;
   }
 
-  // Dead-key was active. See if pressed base character does produce
-  // valid composite character.
   int32_t activeDeadKeyIndex = GetKeyIndex(mActiveDeadKey);
-  char16_t compositeChar = (baseChars.mLength == 1 && baseChars.mChars[0]) ?
-    mVirtualKeys[activeDeadKeyIndex].GetCompositeChar(mDeadKeyShiftState,
-                                                      baseChars.mChars[0]) : 0;
-  if (compositeChar) {
-    // Active dead-key and base character does produce exactly one
-    // composite character.
-    aNativeKey.mCommittedCharsAndModifiers.Append(compositeChar,
-                                                  baseChars.mModifiers[0]);
-    if (isKeyDown) {
-      DeactivateDeadKeyState();
-    }
+  if (NS_WARN_IF(activeDeadKeyIndex < 0)) {
     return;
   }
 
@@ -2752,6 +2922,51 @@ KeyboardLayout::InitNativeKey(NativeKey& aNativeKey,
   }
 
   return;
+}
+
+bool
+KeyboardLayout::MaybeInitNativeKeyWithCompositeChar(
+                  NativeKey& aNativeKey,
+                  const ModifierKeyState& aModKeyState)
+{
+  if (mActiveDeadKey < 0) {
+    return false;
+  }
+
+  int32_t activeDeadKeyIndex = GetKeyIndex(mActiveDeadKey);
+  if (NS_WARN_IF(activeDeadKeyIndex < 0)) {
+    return false;
+  }
+
+  int32_t virtualKeyIndex = GetKeyIndex(aNativeKey.mOriginalVirtualKeyCode);
+  if (NS_WARN_IF(virtualKeyIndex < 0)) {
+    return false;
+  }
+
+  uint8_t shiftState =
+    VirtualKey::ModifiersToShiftState(aModKeyState.GetModifiers());
+
+  UniCharsAndModifiers baseChars =
+    mVirtualKeys[virtualKeyIndex].GetUniChars(shiftState);
+  if (baseChars.IsEmpty() || !baseChars.mChars[0]) {
+    return false;
+  }
+
+  char16_t compositeChar =
+    mVirtualKeys[activeDeadKeyIndex].GetCompositeChar(mDeadKeyShiftState,
+                                                      baseChars.mChars[0]);
+  if (!compositeChar) {
+    return false;
+  }
+
+  // Active dead-key and base character does produce exactly one composite
+  // character.
+  aNativeKey.mCommittedCharsAndModifiers.Append(compositeChar,
+                                                baseChars.mModifiers[0]);
+  if (aNativeKey.IsKeyDownMessage()) {
+    DeactivateDeadKeyState();
+  }
+  return true;
 }
 
 UniCharsAndModifiers
@@ -2778,6 +2993,9 @@ KeyboardLayout::LoadLayout(HKL aLayout)
   }
 
   mKeyboardLayout = aLayout;
+
+  MOZ_LOG(sKeyboardLayoutLogger, LogLevel::Debug,
+    ("KeyboardLayout::LoadLayout(aLayout=0x%08X)", aLayout));
 
   BYTE kbdState[256];
   memset(kbdState, 0, sizeof(kbdState));
@@ -2820,12 +3038,23 @@ KeyboardLayout::LoadLayout(HKL aLayout)
                             ArrayLength(deadChar), 0, mKeyboardLayout);
         NS_ASSERTION(ret == 2, "Expecting twice repeated dead-key character");
         mVirtualKeys[vki].SetDeadChar(shiftState, deadChar[0]);
+
+        MOZ_LOG(sKeyboardLayoutLogger, LogLevel::Debug,
+          ("  %s (%d): DeadChar(%s, %s) (ret=%d)",
+           kVirtualKeyName[virtualKey], vki,
+           GetShiftStateName(shiftState).get(),
+           GetCharacterCodeName(deadChar, 1).get(), ret));
       } else {
         if (ret == 1) {
           // dead-key can pair only with exactly one base character.
           shiftStatesWithBaseChars |= (1 << shiftState);
         }
         mVirtualKeys[vki].SetNormalChars(shiftState, uniChars, ret);
+        MOZ_LOG(sKeyboardLayoutLogger, LogLevel::Verbose,
+          ("  %s (%d): NormalChar(%s, %s) (ret=%d)",
+           kVirtualKeyName[virtualKey], vki,
+           GetShiftStateName(shiftState).get(),
+           GetCharacterCodeName(uniChars, ret).get(), ret));
       }
     }
   }
@@ -2859,20 +3088,20 @@ KeyboardLayout::LoadLayout(HKL aLayout)
 
   ::SetKeyboardState(originalKbdState);
 
-  if (MOZ_LOG_TEST(sKeyboardLayoutLogger, LogLevel::Debug)) {
+  if (MOZ_LOG_TEST(sKeyboardLayoutLogger, LogLevel::Verbose)) {
     static const UINT kExtendedScanCode[] = { 0x0000, 0xE000 };
     static const UINT kMapType =
       IsVistaOrLater() ? MAPVK_VSC_TO_VK_EX : MAPVK_VSC_TO_VK;
-    MOZ_LOG(sKeyboardLayoutLogger, LogLevel::Debug,
-           ("Logging virtual keycode values for scancode (0x%p)...",
-            mKeyboardLayout));
+    MOZ_LOG(sKeyboardLayoutLogger, LogLevel::Verbose,
+      ("Logging virtual keycode values for scancode (0x%p)...",
+       mKeyboardLayout));
     for (uint32_t i = 0; i < ArrayLength(kExtendedScanCode); i++) {
       for (uint32_t j = 1; j <= 0xFF; j++) {
         UINT scanCode = kExtendedScanCode[i] + j;
         UINT virtualKeyCode =
           ::MapVirtualKeyEx(scanCode, kMapType, mKeyboardLayout);
-        MOZ_LOG(sKeyboardLayoutLogger, LogLevel::Debug,
-               ("0x%04X, %s", scanCode, kVirtualKeyName[virtualKeyCode]));
+        MOZ_LOG(sKeyboardLayoutLogger, LogLevel::Verbose,
+          ("0x%04X, %s", scanCode, kVirtualKeyName[virtualKeyCode]));
       }
       // XP and Server 2003 don't support 0xE0 prefix of the scancode.
       // Therefore, we don't need to continue on them.
@@ -3087,19 +3316,64 @@ KeyboardLayout::GetDeadKeyCombinations(uint8_t aDeadKey,
             // dead-key is still in active state.
             break;
           case 1: {
-            // Exactly one composite character produced. Now, when dead-key
-            // is not active, repeat the last character one more time to
-            // determine the base character.
             char16_t baseChars[5];
             ret = ::ToUnicodeEx(virtualKey, 0, kbdState, (LPWSTR)baseChars,
                                 ArrayLength(baseChars), 0, mKeyboardLayout);
-            NS_ASSERTION(ret == 1, "One base character expected");
-            if (ret == 1 && entries < aMaxEntries &&
-                AddDeadKeyEntry(baseChars[0], compositeChars[0],
-                                aDeadKeyArray, entries)) {
-              entries++;
+            if (entries < aMaxEntries) {
+              switch (ret) {
+                case 1:
+                  // Exactly one composite character produced. Now, when
+                  // dead-key is not active, repeat the last character one more
+                  // time to determine the base character.
+                  if (AddDeadKeyEntry(baseChars[0], compositeChars[0],
+                                      aDeadKeyArray, entries)) {
+                    entries++;
+                  }
+                  deadKeyActive = false;
+                  break;
+                case -1: {
+                  // If pressing another dead-key produces different character,
+                  // we should register the dead-key entry with first character
+                  // produced by current key.
+
+                  // First inactivate the dead-key state completely.
+                  deadKeyActive =
+                    EnsureDeadKeyActive(false, aDeadKey, aDeadKeyKbdState);
+                  if (NS_WARN_IF(deadKeyActive)) {
+                    MOZ_LOG(sKeyboardLayoutLogger, LogLevel::Error,
+                      ("  failed to deactivating the dead-key state..."));
+                    break;
+                  }
+                  for (int32_t i = 0; i < 5; ++i) {
+                    ret = ::ToUnicodeEx(virtualKey, 0, kbdState,
+                                        (LPWSTR)baseChars,
+                                        ArrayLength(baseChars),
+                                        0, mKeyboardLayout);
+                    if (ret >= 0) {
+                      break;
+                    }
+                  }
+                  if (ret > 0 &&
+                      AddDeadKeyEntry(baseChars[0], compositeChars[0],
+                                      aDeadKeyArray, entries)) {
+                    entries++;
+                  }
+                  // Inactivate dead-key state for current virtual keycode.
+                  EnsureDeadKeyActive(false, virtualKey, kbdState);
+                  break;
+                }
+                default:
+                  NS_WARN_IF("File a bug for this dead-key handling!");
+                  deadKeyActive = false;
+                  break;
+              }
             }
-            deadKeyActive = false;
+            MOZ_LOG(sKeyboardLayoutLogger, LogLevel::Debug,
+              ("  %s -> %s (%d): DeadKeyEntry(%s, %s) (ret=%d)",
+               kVirtualKeyName[aDeadKey], kVirtualKeyName[virtualKey], vki,
+               GetCharacterCodeName(compositeChars, 1).get(),
+               ret <= 0 ? "''" :
+                 GetCharacterCodeName(baseChars, std::min(ret, 5)).get(), ret));
             break;
           }
           default:
@@ -3107,6 +3381,12 @@ KeyboardLayout::GetDeadKeyCombinations(uint8_t aDeadKey,
             // 2. More than one character generated. This is not a valid
             //    dead-key and base character combination.
             deadKeyActive = false;
+            MOZ_LOG(sKeyboardLayoutLogger, LogLevel::Verbose,
+              ("  %s -> %s (%d): Unsupport dead key type(%s) (ret=%d)",
+               kVirtualKeyName[aDeadKey], kVirtualKeyName[virtualKey], vki,
+               ret <= 0 ? "''" :
+                 GetCharacterCodeName(compositeChars,
+                                      std::min(ret, 5)).get(), ret));
             break;
         }
       }

@@ -4,6 +4,7 @@
 
 #include "nsISupports.idl"
 
+interface nsIDOMEventTarget;
 interface nsIInputStream;
 interface nsIPresentationAvailabilityListener;
 interface nsIPresentationRespondingListener;
@@ -59,11 +60,14 @@ interface nsIPresentationService : nsISupports
    * @param sessionId: An ID to identify presentation session.
    * @param origin: The url of requesting page.
    * @param deviceId: The specified device of handling this request, null string
-                      for prompt device selection dialog.
+   *                  for prompt device selection dialog.
    * @param windowId: The inner window ID associated with the presentation
    *                  session. (0 implies no window ID since no actual window
    *                  uses 0 as its ID. Generally it's the case the window is
    *                  located in different process from this service)
+   * @param eventTarget: The chrome event handler, in particular XUL browser
+   *                     element in parent process, that the request was
+   *                     originated in.
    * @param callback: Invoke the callback when the operation is completed.
    *                  NotifySuccess() is called with |id| if a session is
    *                  established successfully with the selected device.
@@ -74,6 +78,7 @@ interface nsIPresentationService : nsISupports
                                in DOMString origin,
                                in DOMString deviceId,
                                in unsigned long long windowId,
+                               in nsIDOMEventTarget eventTarget,
                                in nsIPresentationServiceCallback callback);
 
   /*

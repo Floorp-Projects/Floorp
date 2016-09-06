@@ -4,15 +4,27 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-Libxul('xul-gtest')
-
 FINAL_TARGET = 'dist/bin/gtest'
 
 USE_LIBS += [
     'static:xul',
+    # xul-gtest is an intermediate static library. It is used as FINAL_TARGET
+    # for gtest code.
+    # If the FINAL_TARGET were the library in this directory, then the gtest
+    # code would end up before static:xul, and before StaticXULComponentStart,
+    # which needs to stay first.
+    'xul-gtest',
 ]
+
+# This needs to come after static:xul to avoid things like libfallible coming
+# before StaticXULComponentStart.
+Libxul('xul-gtest-real')
 
 if CONFIG['MOZ_RUST']:
     USE_LIBS += [
         'gkrust-gtest',
     ]
+
+DIRS += [
+    'static',
+]
