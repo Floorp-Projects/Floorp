@@ -5,10 +5,13 @@
 #ifndef SANDBOX_SRC_SHAREDMEM_IPC_SERVER_H_
 #define SANDBOX_SRC_SHAREDMEM_IPC_SERVER_H_
 
+#include <stdint.h>
+
 #include <list>
 
-#include "base/basictypes.h"
 #include "base/gtest_prod_util.h"
+#include "base/macros.h"
+#include "base/win/scoped_handle.h"
 #include "sandbox/win/src/crosscall_params.h"
 #include "sandbox/win/src/crosscall_server.h"
 #include "sandbox/win/src/sharedmem_ipc_client.h"
@@ -36,20 +39,23 @@ namespace sandbox {
 class SharedMemIPCServer {
  public:
   // Creates the IPC server.
-  // target_process: handle to the target process. It must be suspended.
+  // target_process: handle to the target process. It must be suspended. It is
+  // unfortunate to receive a raw handle (and store it inside this object) as
+  // that dilutes ownership of the process, but in practice a SharedMemIPCServer
+  // is owned by TargetProcess, which calls this method, and owns the handle, so
+  // everything is safe. If that changes, we should break this dependency and
+  // duplicate the handle instead.
   // target_process_id: process id of the target process.
-  // target_job: the job object handle associated with the target process.
   // thread_provider: a thread provider object.
   // dispatcher: an object that can service IPC calls.
   SharedMemIPCServer(HANDLE target_process, DWORD target_process_id,
-                     HANDLE target_job, ThreadProvider* thread_provider,
-                     Dispatcher* dispatcher);
+                     ThreadProvider* thread_provider, Dispatcher* dispatcher);
 
   ~SharedMemIPCServer();
 
   // Initializes the server structures, shared memory structures and
   // creates the kernels events used to signal the IPC.
-  bool Init(void* shared_mem, uint32 shared_size, uint32 channel_size);
+  bool Init(void* shared_mem, uint32_t shared_size, uint32_t channel_size);
 
  private:
   // Allow tests to be marked DISABLED_. Note that FLAKY_ and FAILS_ prefixes
@@ -63,7 +69,8 @@ class SharedMemIPCServer {
 
   // Makes the client and server events. This function is called once
   // per channel.
-  bool MakeEvents(HANDLE* server_ping, HANDLE* server_pong,
+  bool MakeEvents(base::win::ScopedHandle* server_ping,
+                  base::win::ScopedHandle* server_pong,
                   HANDLE* client_ping, HANDLE* client_pong);
 
   // A copy this structure is maintained per channel.
@@ -72,12 +79,15 @@ class SharedMemIPCServer {
   // static method without worrying about converting back to a member function
   // call or about threading issues.
   struct ServerControl {
+    ServerControl();
+    ~ServerControl();
+
     // This channel server ping event.
-    HANDLE ping_event;
+    base::win::ScopedHandle ping_event;
     // This channel server pong event.
-    HANDLE pong_event;
+    base::win::ScopedHandle pong_event;
     // The size of this channel.
-    uint32 channel_size;
+    uint32_t channel_size;
     // The pointer to the actual channel data.
     char* channel_buffer;
     // The pointer to the base of the shared memory.
@@ -112,9 +122,6 @@ class SharedMemIPCServer {
 
   // The target process id associated with the IPC object.
   DWORD target_process_id_;
-
-  // The target object is inside a job too.
-  HANDLE target_job_object_;
 
   // The dispatcher handles 'ready' IPC calls.
   Dispatcher* call_dispatcher_;

@@ -5,7 +5,9 @@
 #ifndef SANDBOX_SRC_SIDESTEP_RESOLVER_H__
 #define SANDBOX_SRC_SIDESTEP_RESOLVER_H__
 
-#include "base/basictypes.h"
+#include <stddef.h>
+
+#include "base/macros.h"
 #include "sandbox/win/src/nt_internals.h"
 #include "sandbox/win/src/resolver.h"
 
@@ -15,20 +17,20 @@ namespace sandbox {
 class SidestepResolverThunk : public ResolverThunk {
  public:
   SidestepResolverThunk() {}
-  virtual ~SidestepResolverThunk() {}
+  ~SidestepResolverThunk() override {}
 
   // Implementation of Resolver::Setup.
-  virtual NTSTATUS Setup(const void* target_module,
-                         const void* interceptor_module,
-                         const char* target_name,
-                         const char* interceptor_name,
-                         const void* interceptor_entry_point,
-                         void* thunk_storage,
-                         size_t storage_bytes,
-                         size_t* storage_used);
+  NTSTATUS Setup(const void* target_module,
+                 const void* interceptor_module,
+                 const char* target_name,
+                 const char* interceptor_name,
+                 const void* interceptor_entry_point,
+                 void* thunk_storage,
+                 size_t storage_bytes,
+                 size_t* storage_used) override;
 
   // Implementation of Resolver::GetThunkSize.
-  virtual size_t GetThunkSize() const;
+  size_t GetThunkSize() const override;
 
  private:
   DISALLOW_COPY_AND_ASSIGN(SidestepResolverThunk);
@@ -41,20 +43,20 @@ class SidestepResolverThunk : public ResolverThunk {
 class SmartSidestepResolverThunk : public SidestepResolverThunk {
  public:
   SmartSidestepResolverThunk() {}
-  virtual ~SmartSidestepResolverThunk() {}
+  ~SmartSidestepResolverThunk() override {}
 
   // Implementation of Resolver::Setup.
-  virtual NTSTATUS Setup(const void* target_module,
-                         const void* interceptor_module,
-                         const char* target_name,
-                         const char* interceptor_name,
-                         const void* interceptor_entry_point,
-                         void* thunk_storage,
-                         size_t storage_bytes,
-                         size_t* storage_used);
+  NTSTATUS Setup(const void* target_module,
+                 const void* interceptor_module,
+                 const char* target_name,
+                 const char* interceptor_name,
+                 const void* interceptor_entry_point,
+                 void* thunk_storage,
+                 size_t storage_bytes,
+                 size_t* storage_used) override;
 
   // Implementation of Resolver::GetThunkSize.
-  virtual size_t GetThunkSize() const;
+  size_t GetThunkSize() const override;
 
  private:
   // Performs the actual call to the interceptor if the conditions are correct

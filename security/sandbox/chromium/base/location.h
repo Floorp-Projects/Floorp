@@ -5,10 +5,13 @@
 #ifndef BASE_LOCATION_H_
 #define BASE_LOCATION_H_
 
+#include <stddef.h>
+
+#include <cassert>
 #include <string>
 
 #include "base/base_export.h"
-#include "base/basictypes.h"
+#include "base/containers/hash_tables.h"
 
 namespace tracked_objects {
 
@@ -27,18 +30,15 @@ class BASE_EXPORT Location {
   // Provide a default constructor for easy of debugging.
   Location();
 
-  // Comparison operator for insertion into a std::map<> hash tables.
-  // All we need is *some* (any) hashing distinction.  Strings should already
-  // be unique, so we don't bother with strcmp or such.
-  // Use line number as the primary key (because it is fast, and usually gets us
-  // a difference), and then pointers as secondary keys (just to get some
-  // distinctions).
-  bool operator < (const Location& other) const {
-    if (line_number_ != other.line_number_)
-      return line_number_ < other.line_number_;
-    if (file_name_ != other.file_name_)
-      return file_name_ < other.file_name_;
-    return function_name_ < other.function_name_;
+  // Copy constructor.
+  Location(const Location& other);
+
+  // Comparator for hash map insertion.
+  // No need to use |function_name_| since the other two fields uniquely
+  // identify this location.
+  bool operator==(const Location& other) const {
+    return line_number_ == other.line_number_ &&
+           file_name_ == other.file_name_;
   }
 
   const char* function_name()   const { return function_name_; }
@@ -47,6 +47,22 @@ class BASE_EXPORT Location {
   const void* program_counter() const { return program_counter_; }
 
   std::string ToString() const;
+
+  // Hash operator for hash maps.
+  struct Hash {
+    size_t operator()(const Location& location) const {
+      // Compute the hash value using file name pointer and line number.
+      // No need to use |function_name_| since the other two fields uniquely
+      // identify this location.
+
+      // The file name will always be uniquely identified by its pointer since
+      // it comes from __FILE__, so no need to check the contents of the string.
+      // See the definition of FROM_HERE in location.h, and how it is used
+      // elsewhere.
+      return base::HashPair(reinterpret_cast<uintptr_t>(location.file_name()),
+                            location.line_number());
+    }
+  };
 
   // Translate the some of the state in this instance into a human readable
   // string with HTML characters in the function names escaped, and append that
