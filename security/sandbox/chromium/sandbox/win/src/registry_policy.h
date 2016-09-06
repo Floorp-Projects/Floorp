@@ -5,9 +5,10 @@
 #ifndef SANDBOX_SRC_REGISTRY_POLICY_H__
 #define SANDBOX_SRC_REGISTRY_POLICY_H__
 
+#include <stdint.h>
+
 #include <string>
 
-#include "base/basictypes.h"
 #include "base/strings/string16.h"
 #include "sandbox/win/src/crosscall_server.h"
 #include "sandbox/win/src/nt_internals.h"
@@ -31,12 +32,12 @@ class RegistryPolicy {
   // API that is compatible with the IPC-received parameters.
   static bool CreateKeyAction(EvalResult eval_result,
                               const ClientInfo& client_info,
-                              const base::string16 &key,
-                              uint32 attributes,
+                              const base::string16& key,
+                              uint32_t attributes,
                               HANDLE root_directory,
-                              uint32 desired_access,
-                              uint32 title_index,
-                              uint32 create_options,
+                              uint32_t desired_access,
+                              uint32_t title_index,
+                              uint32_t create_options,
                               HANDLE* handle,
                               NTSTATUS* nt_status,
                               ULONG* disposition);
@@ -44,13 +45,13 @@ class RegistryPolicy {
   // Performs the desired policy action on an open request with an
   // API that is compatible with the IPC-received parameters.
   static bool OpenKeyAction(EvalResult eval_result,
-                              const ClientInfo& client_info,
-                              const base::string16 &key,
-                              uint32 attributes,
-                              HANDLE root_directory,
-                              uint32 desired_access,
-                              HANDLE* handle,
-                              NTSTATUS* nt_status);
+                            const ClientInfo& client_info,
+                            const base::string16& key,
+                            uint32_t attributes,
+                            HANDLE root_directory,
+                            uint32_t desired_access,
+                            HANDLE* handle,
+                            NTSTATUS* nt_status);
 };
 
 }  // namespace sandbox

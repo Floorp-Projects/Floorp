@@ -5,7 +5,7 @@
 #ifndef BASE_DEBUG_LEAK_ANNOTATIONS_H_
 #define BASE_DEBUG_LEAK_ANNOTATIONS_H_
 
-#include "base/basictypes.h"
+#include "base/macros.h"
 #include "build/build_config.h"
 
 // This file defines macros which can be used to annotate intentional memory
@@ -21,15 +21,7 @@
 
 #if defined(LEAK_SANITIZER) && !defined(OS_NACL)
 
-// Public LSan API from <sanitizer/lsan_interface.h>.
-extern "C" {
-void __lsan_disable();
-void __lsan_enable();
-void __lsan_ignore_object(const void *p);
-
-// Invoke leak detection immediately. If leaks are found, the process will exit.
-void __lsan_do_leak_check();
-}  // extern "C"
+#include <sanitizer/lsan_interface.h>
 
 class ScopedLeakSanitizerDisabler {
  public:
@@ -46,7 +38,6 @@ class ScopedLeakSanitizerDisabler {
 
 #else
 
-// If neither HeapChecker nor LSan are used, the annotations should be no-ops.
 #define ANNOTATE_SCOPED_MEMORY_LEAK ((void)0)
 #define ANNOTATE_LEAKING_OBJECT_PTR(X) ((void)0)
 

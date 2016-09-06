@@ -6,7 +6,6 @@
 #define SANDBOX_SRC_PROCESS_MITIGATIONS_WIN32K_INTERCEPTION_H_
 
 #include <windows.h>
-#include "base/basictypes.h"
 #include "sandbox/win/src/sandbox_types.h"
 
 namespace sandbox {

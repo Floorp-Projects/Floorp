@@ -6,8 +6,11 @@
 #define BASE_SYNCHRONIZATION_LOCK_H_
 
 #include "base/base_export.h"
+#include "base/logging.h"
+#include "base/macros.h"
 #include "base/synchronization/lock_impl.h"
 #include "base/threading/platform_thread.h"
+#include "build/build_config.h"
 
 namespace base {
 
@@ -16,7 +19,7 @@ namespace base {
 // AssertAcquired() method.
 class BASE_EXPORT Lock {
  public:
-#if defined(NDEBUG) && !defined(DCHECK_ALWAYS_ON)
+#if !DCHECK_IS_ON()
    // Optimized wrapper implementation
   Lock() : lock_() {}
   ~Lock() {}
@@ -56,7 +59,7 @@ class BASE_EXPORT Lock {
   }
 
   void AssertAcquired() const;
-#endif  // NDEBUG && !DCHECK_ALWAYS_ON
+#endif  // DCHECK_IS_ON()
 
 #if defined(OS_POSIX)
   // The posix implementation of ConditionVariable needs to be able
@@ -70,7 +73,7 @@ class BASE_EXPORT Lock {
 #endif
 
  private:
-#if !defined(NDEBUG) || defined(DCHECK_ALWAYS_ON)
+#if DCHECK_IS_ON()
   // Members and routines taking care of locks assertions.
   // Note that this checks for recursive locks and allows them
   // if the variable is set.  This is allowed by the underlying implementation
@@ -82,7 +85,7 @@ class BASE_EXPORT Lock {
   // All private data is implicitly protected by lock_.
   // Be VERY careful to only access members under that lock.
   base::PlatformThreadRef owning_thread_ref_;
-#endif  // !NDEBUG || DCHECK_ALWAYS_ON
+#endif  // DCHECK_IS_ON()
 
   // Platform specific underlying lock implementation.
   internal::LockImpl lock_;

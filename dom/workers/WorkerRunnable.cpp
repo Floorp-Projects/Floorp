@@ -716,12 +716,12 @@ WorkerProxyToMainThreadRunnable::PostDispatchOnMainThread()
       MOZ_ASSERT(aRunnable);
     }
 
-    // We must call RunBackOnWorkerThread() also if the runnable is cancelled.
+    // We must call RunBackOnWorkerThread() also if the runnable is canceled.
     nsresult
     Cancel() override
     {
       WorkerRun(nullptr, mWorkerPrivate);
-      return NS_OK;
+      return MainThreadWorkerControlRunnable::Cancel();
     }
 
     virtual bool
@@ -730,10 +730,14 @@ WorkerProxyToMainThreadRunnable::PostDispatchOnMainThread()
       MOZ_ASSERT(aWorkerPrivate);
       aWorkerPrivate->AssertIsOnWorkerThread();
 
-      mRunnable->RunBackOnWorkerThread();
+      if (mRunnable) {
+        mRunnable->RunBackOnWorkerThread();
 
-      // Let's release the worker thread.
-      mRunnable->ReleaseWorker();
+        // Let's release the worker thread.
+        mRunnable->ReleaseWorker();
+        mRunnable = nullptr;
+      }
+
       return true;
     }
 

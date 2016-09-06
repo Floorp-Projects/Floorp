@@ -1,13 +1,3 @@
 Chromium Commit                            Directory / File (relative to security/sandbox/)
 ----------------------------------------   ------------------------------------------------
-df7cc6c04725630dd4460f29d858a77507343b24   chromium
-b533d6533585377edd63ec6500469f6c4fba602a   chromium/sandbox/win/src/sharedmem_ipc_server.cc
-034bd64db1806d85b2ceacc736074ac07722af4a   chromium/sandbox/win/src/service_resolver_64.cc
-de2078cfbbb6770791d32575a1a72a288e6d66a6   chromium/sandbox/win/src/target_services.cc
-de2078cfbbb6770791d32575a1a72a288e6d66a6   chromium/sandbox/win/src/target_services.h
-0e49d029d5a1a25d971880b9e44d67ac70b31a80   chromium/sandbox/win/src/file_policy_test.cc
-0e49d029d5a1a25d971880b9e44d67ac70b31a80   chromium/sandbox/win/src/filesystem_policy.cc
-0e49d029d5a1a25d971880b9e44d67ac70b31a80   chromium/sandbox/win/src/win_utils.cc
-0e49d029d5a1a25d971880b9e44d67ac70b31a80   chromium/sandbox/win/src/win_utils.h
-3181ba39ee787e1b40f4aea4be23f4f666ad0945   chromium/base/win/windows_version.cc
-3181ba39ee787e1b40f4aea4be23f4f666ad0945   chromium/base/win/windows_version.h
+4ec79b7f2379a60cdc15599e93255c0fa417f1ed   chromium

@@ -11,6 +11,9 @@ namespace sandbox {
 
 class TargetProcess;
 
+// Initializes global imported symbols from ntdll.
+bool InitGlobalNt();
+
 // Sets up interceptions not controlled by explicit policies.
 bool SetupBasicInterceptions(InterceptionManager* manager);
 

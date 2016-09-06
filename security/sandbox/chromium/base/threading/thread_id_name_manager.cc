@@ -48,17 +48,16 @@ void ThreadIdNameManager::RegisterThread(PlatformThreadHandle::Handle handle,
       name_to_interned_name_[kDefaultName];
 }
 
-void ThreadIdNameManager::SetName(PlatformThreadId id, const char* name) {
-  std::string str_name(name);
-
+void ThreadIdNameManager::SetName(PlatformThreadId id,
+                                  const std::string& name) {
   AutoLock locked(lock_);
-  NameToInternedNameMap::iterator iter = name_to_interned_name_.find(str_name);
+  NameToInternedNameMap::iterator iter = name_to_interned_name_.find(name);
   std::string* leaked_str = NULL;
   if (iter != name_to_interned_name_.end()) {
     leaked_str = iter->second;
   } else {
-    leaked_str = new std::string(str_name);
-    name_to_interned_name_[str_name] = leaked_str;
+    leaked_str = new std::string(name);
+    name_to_interned_name_[name] = leaked_str;
   }
 
   ThreadIdToHandleMap::iterator id_to_handle_iter =

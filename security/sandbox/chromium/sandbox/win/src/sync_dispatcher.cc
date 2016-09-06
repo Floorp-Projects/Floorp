@@ -4,6 +4,8 @@
 
 #include "sandbox/win/src/sync_dispatcher.h"
 
+#include <stdint.h>
+
 #include "base/win/windows_version.h"
 #include "sandbox/win/src/crosscall_client.h"
 #include "sandbox/win/src/interception.h"
@@ -20,14 +22,12 @@ namespace sandbox {
 SyncDispatcher::SyncDispatcher(PolicyBase* policy_base)
     : policy_base_(policy_base) {
   static const IPCCall create_params = {
-    {IPC_CREATEEVENT_TAG, WCHAR_TYPE, UINT32_TYPE, UINT32_TYPE},
-    reinterpret_cast<CallbackGeneric>(&SyncDispatcher::CreateEvent)
-  };
+      {IPC_CREATEEVENT_TAG, {WCHAR_TYPE, UINT32_TYPE, UINT32_TYPE}},
+      reinterpret_cast<CallbackGeneric>(&SyncDispatcher::CreateEvent)};
 
   static const IPCCall open_params = {
-    {IPC_OPENEVENT_TAG, WCHAR_TYPE, UINT32_TYPE},
-    reinterpret_cast<CallbackGeneric>(&SyncDispatcher::OpenEvent)
-  };
+      {IPC_OPENEVENT_TAG, {WCHAR_TYPE, UINT32_TYPE}},
+      reinterpret_cast<CallbackGeneric>(&SyncDispatcher::OpenEvent)};
 
   ipc_calls_.push_back(create_params);
   ipc_calls_.push_back(open_params);
@@ -44,8 +44,8 @@ bool SyncDispatcher::SetupService(InterceptionManager* manager,
 
 bool SyncDispatcher::CreateEvent(IPCInfo* ipc,
                                  base::string16* name,
-                                 uint32 event_type,
-                                 uint32 initial_state) {
+                                 uint32_t event_type,
+                                 uint32_t initial_state) {
   const wchar_t* event_name = name->c_str();
   CountedParameterSet<NameBased> params;
   params[NameBased::NAME] = ParamPickerMake(event_name);
@@ -62,7 +62,7 @@ bool SyncDispatcher::CreateEvent(IPCInfo* ipc,
 
 bool SyncDispatcher::OpenEvent(IPCInfo* ipc,
                                base::string16* name,
-                               uint32 desired_access) {
+                               uint32_t desired_access) {
   const wchar_t* event_name = name->c_str();
 
   CountedParameterSet<OpenEventParams> params;

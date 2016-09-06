@@ -5,7 +5,9 @@
 #ifndef SANDBOX_SRC_HANDLE_DISPATCHER_H_
 #define SANDBOX_SRC_HANDLE_DISPATCHER_H_
 
-#include "base/basictypes.h"
+#include <stdint.h>
+
+#include "base/macros.h"
 #include "sandbox/win/src/crosscall_server.h"
 #include "sandbox/win/src/sandbox_policy_base.h"
 
@@ -15,19 +17,19 @@ namespace sandbox {
 class HandleDispatcher : public Dispatcher {
  public:
   explicit HandleDispatcher(PolicyBase* policy_base);
-  ~HandleDispatcher() {}
+  ~HandleDispatcher() override {}
 
   // Dispatcher interface.
-  virtual bool SetupService(InterceptionManager* manager, int service);
+  bool SetupService(InterceptionManager* manager, int service) override;
 
  private:
   // Processes IPC requests coming from calls to
   // TargetServices::DuplicateHandle() in the target.
   bool DuplicateHandleProxy(IPCInfo* ipc,
                             HANDLE source_handle,
-                            uint32 target_process_id,
-                            uint32 desired_access,
-                            uint32 options);
+                            uint32_t target_process_id,
+                            uint32_t desired_access,
+                            uint32_t options);
 
   PolicyBase* policy_base_;
   DISALLOW_COPY_AND_ASSIGN(HandleDispatcher);

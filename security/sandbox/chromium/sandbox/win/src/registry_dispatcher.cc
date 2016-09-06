@@ -4,18 +4,20 @@
 
 #include "sandbox/win/src/registry_dispatcher.h"
 
+#include <stdint.h>
+
 #include "base/win/scoped_handle.h"
 #include "base/win/windows_version.h"
 #include "sandbox/win/src/crosscall_client.h"
 #include "sandbox/win/src/interception.h"
 #include "sandbox/win/src/interceptors.h"
 #include "sandbox/win/src/ipc_tags.h"
-#include "sandbox/win/src/sandbox_nt_util.h"
 #include "sandbox/win/src/policy_broker.h"
 #include "sandbox/win/src/policy_params.h"
-#include "sandbox/win/src/sandbox.h"
 #include "sandbox/win/src/registry_interception.h"
 #include "sandbox/win/src/registry_policy.h"
+#include "sandbox/win/src/sandbox.h"
+#include "sandbox/win/src/sandbox_nt_util.h"
 
 namespace {
 
@@ -42,15 +44,18 @@ namespace sandbox {
 RegistryDispatcher::RegistryDispatcher(PolicyBase* policy_base)
     : policy_base_(policy_base) {
   static const IPCCall create_params = {
-    {IPC_NTCREATEKEY_TAG, WCHAR_TYPE, UINT32_TYPE, VOIDPTR_TYPE, UINT32_TYPE,
-     UINT32_TYPE, UINT32_TYPE},
-    reinterpret_cast<CallbackGeneric>(&RegistryDispatcher::NtCreateKey)
-  };
+      {IPC_NTCREATEKEY_TAG,
+       {WCHAR_TYPE,
+        UINT32_TYPE,
+        VOIDPTR_TYPE,
+        UINT32_TYPE,
+        UINT32_TYPE,
+        UINT32_TYPE}},
+      reinterpret_cast<CallbackGeneric>(&RegistryDispatcher::NtCreateKey)};
 
   static const IPCCall open_params = {
-    {IPC_NTOPENKEY_TAG, WCHAR_TYPE, UINT32_TYPE, VOIDPTR_TYPE, UINT32_TYPE},
-    reinterpret_cast<CallbackGeneric>(&RegistryDispatcher::NtOpenKey)
-  };
+      {IPC_NTOPENKEY_TAG, {WCHAR_TYPE, UINT32_TYPE, VOIDPTR_TYPE, UINT32_TYPE}},
+      reinterpret_cast<CallbackGeneric>(&RegistryDispatcher::NtOpenKey)};
 
   ipc_calls_.push_back(create_params);
   ipc_calls_.push_back(open_params);
@@ -76,11 +81,11 @@ bool RegistryDispatcher::SetupService(InterceptionManager* manager,
 
 bool RegistryDispatcher::NtCreateKey(IPCInfo* ipc,
                                      base::string16* name,
-                                     uint32 attributes,
+                                     uint32_t attributes,
                                      HANDLE root,
-                                     uint32 desired_access,
-                                     uint32 title_index,
-                                     uint32 create_options) {
+                                     uint32_t desired_access,
+                                     uint32_t title_index,
+                                     uint32_t create_options) {
   base::win::ScopedHandle root_handle;
   base::string16 real_path = *name;
 
@@ -126,9 +131,9 @@ bool RegistryDispatcher::NtCreateKey(IPCInfo* ipc,
 
 bool RegistryDispatcher::NtOpenKey(IPCInfo* ipc,
                                    base::string16* name,
-                                   uint32 attributes,
+                                   uint32_t attributes,
                                    HANDLE root,
-                                   uint32 desired_access) {
+                                   uint32_t desired_access) {
   base::win::ScopedHandle root_handle;
   base::string16 real_path = *name;
 

@@ -102,12 +102,12 @@ class BPFTesterSimpleDelegate : public BPFTesterDelegate {
  public:
   explicit BPFTesterSimpleDelegate(void (*test_function)(void))
       : test_function_(test_function) {}
-  virtual ~BPFTesterSimpleDelegate() {}
+  ~BPFTesterSimpleDelegate() override {}
 
-  virtual scoped_ptr<bpf_dsl::Policy> GetSandboxBPFPolicy() override {
+  scoped_ptr<bpf_dsl::Policy> GetSandboxBPFPolicy() override {
     return scoped_ptr<bpf_dsl::Policy>(new PolicyClass());
   }
-  virtual void RunTestFunction() override {
+  void RunTestFunction() override {
     DCHECK(test_function_);
     test_function_();
   }
