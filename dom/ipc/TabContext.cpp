@@ -160,12 +160,6 @@ TabContext::SetTabContext(const TabContext& aContext)
   return true;
 }
 
-void
-TabContext::SetPrivateBrowsingAttributes(bool aIsPrivateBrowsing)
-{
-  mOriginAttributes.SyncAttributesWithPrivateBrowsing(aIsPrivateBrowsing);
-}
-
 bool
 TabContext::UpdateTabContextAfterSwap(const TabContext& aContext)
 {
