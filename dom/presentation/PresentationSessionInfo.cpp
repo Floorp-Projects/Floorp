@@ -806,7 +806,7 @@ PresentationControllingInfo::NotifyReconnected()
     return NS_ERROR_FAILURE;
   }
 
-  return mReconnectCallback->NotifySuccess();
+  return mReconnectCallback->NotifySuccess(GetUrl());
 }
 
 nsresult

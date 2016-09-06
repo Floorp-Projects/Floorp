@@ -35,6 +35,7 @@ import org.mozilla.gecko.db.BrowserContract.History;
 import org.mozilla.gecko.db.BrowserContract.SyncColumns;
 import org.mozilla.gecko.db.BrowserContract.Thumbnails;
 import org.mozilla.gecko.db.BrowserContract.TopSites;
+import org.mozilla.gecko.db.BrowserContract.Highlights;
 import org.mozilla.gecko.distribution.Distribution;
 import org.mozilla.gecko.icons.decoders.FaviconDecoder;
 import org.mozilla.gecko.icons.decoders.LoadFaviconResult;
@@ -115,6 +116,7 @@ public class LocalBrowserDB implements BrowserDB {
     private final Uri mFaviconsUriWithProfile;
     private final Uri mThumbnailsUriWithProfile;
     private final Uri mTopSitesUriWithProfile;
+    private final Uri mHighlightsUriWithProfile;
     private final Uri mSearchHistoryUri;
 
     private LocalSearches searches;
@@ -141,6 +143,7 @@ public class LocalBrowserDB implements BrowserDB {
         mCombinedUriWithProfile = DBUtils.appendProfile(profile, Combined.CONTENT_URI);
         mFaviconsUriWithProfile = DBUtils.appendProfile(profile, Favicons.CONTENT_URI);
         mTopSitesUriWithProfile = DBUtils.appendProfile(profile, TopSites.CONTENT_URI);
+        mHighlightsUriWithProfile = DBUtils.appendProfile(profile, Highlights.CONTENT_URI);
         mThumbnailsUriWithProfile = DBUtils.appendProfile(profile, Thumbnails.CONTENT_URI);
 
         mSearchHistoryUri = BrowserContract.SearchHistory.CONTENT_URI;
@@ -1830,6 +1833,14 @@ public class LocalBrowserDB implements BrowserDB {
         rb.add(TopSites.TYPE_BLANK);
 
         return new MergeCursor(new Cursor[] {topSitesCursor, blanksCursor});
+    }
 
+    @Override
+    public CursorLoader getHighlights(Context context, int limit) {
+        final Uri uri = mHighlightsUriWithProfile.buildUpon()
+                .appendQueryParameter(BrowserContract.PARAM_LIMIT, String.valueOf(limit))
+                .build();
+
+        return new CursorLoader(context, uri, null, null, null, null);
     }
 }

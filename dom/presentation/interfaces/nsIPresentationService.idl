@@ -15,15 +15,23 @@ interface nsIPresentationSessionListener;
     { 0x9e, 0x4f, 0x40, 0x58, 0xb8, 0x51, 0x98, 0x32 } }
 #define PRESENTATION_SERVICE_CONTRACTID \
   "@mozilla.org/presentation/presentationservice;1"
+
+#include "nsTArray.h"
+
+class nsString;
 %}
+
+[ref] native URLArrayRef(const nsTArray<nsString>);
 
 [scriptable, uuid(12073206-0065-4b10-9488-a6eb9b23e65b)]
 interface nsIPresentationServiceCallback : nsISupports
 {
   /*
    * Called when the operation succeeds.
+   *
+   * @param url: the selected request url used to start or reconnect a session.
    */
-  void notifySuccess();
+  void notifySuccess(in DOMString url);
 
   /*
    * Called when the operation fails.
@@ -47,7 +55,7 @@ interface nsIPresentationService : nsISupports
    * Start a new presentation session and display a prompt box which asks users
    * to select a device.
    *
-   * @param url: The url of presenting page.
+   * @param urls: The candidate Urls of presenting page. Only one url would be used.
    * @param sessionId: An ID to identify presentation session.
    * @param origin: The url of requesting page.
    * @param deviceId: The specified device of handling this request, null string
@@ -61,12 +69,12 @@ interface nsIPresentationService : nsISupports
    *                  established successfully with the selected device.
    *                  Otherwise, NotifyError() is called with a error message.
    */
-  void startSession(in DOMString url,
-                    in DOMString sessionId,
-                    in DOMString origin,
-                    in DOMString deviceId,
-                    in unsigned long long windowId,
-                    in nsIPresentationServiceCallback callback);
+  [noscript] void startSession(in URLArrayRef urls,
+                               in DOMString sessionId,
+                               in DOMString origin,
+                               in DOMString deviceId,
+                               in unsigned long long windowId,
+                               in nsIPresentationServiceCallback callback);
 
   /*
    * Send the message to the session.
@@ -101,17 +109,17 @@ interface nsIPresentationService : nsISupports
   /*
    * Reconnect the session.
    *
-   * @param url: The url of presenting page.
+   * @param url: The request Urls.
    * @param sessionId: An ID to identify presentation session.
    * @param role: Identify the function called by controller or receiver.
    * @param callback: NotifySuccess() is called when a control channel
    *                  is opened successfully.
    *                  Otherwise, NotifyError() is called with a error message.
    */
-  void reconnectSession(in DOMString url,
-                        in DOMString sessionId,
-                        in uint8_t role,
-                        in nsIPresentationServiceCallback callback);
+  [noscript] void reconnectSession(in URLArrayRef urls,
+                                   in DOMString sessionId,
+                                   in uint8_t role,
+                                   in nsIPresentationServiceCallback callback);
 
   /*
    * Register an availability listener. Must be called from the main thread.

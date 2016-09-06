@@ -16,7 +16,7 @@
   <project name="platform_system_libpdu" path="system/libpdu" remote="b2g" revision="f1a61fa8f97cc0a1ac4eca160acc222981b21d90"/>
   <project name="platform_system_sensorsd" path="system/sensorsd" remote="b2g" revision="3618678c472320de386f5ddc27897992d0e148a8"/>
   <!-- B2G specific things. -->
-  <project name="platform_build" path="build" remote="b2g" revision="aee7ff3dba262a037559d360b62af429b62cb876">
+  <project name="platform_build" path="build" remote="b2g" revision="76946dd709234cf4bdb860672ec66d6af8f2ea3c">
     <copyfile dest="Makefile" src="core/root.mk"/>
   </project>
   <project name="fake-libdvm" path="dalvik" remote="b2g" revision="d50ae982b19f42f0b66d08b9eb306be81687869f"/>

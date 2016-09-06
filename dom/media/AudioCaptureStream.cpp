@@ -107,6 +107,11 @@ AudioCaptureStream::ProcessInput(GraphTime aFrom, GraphTime aTo,
         AudioSegment* inputSegment = tracks->Get<AudioSegment>();
         StreamTime inputStart = s->GraphTimeToStreamTimeWithBlocking(aFrom);
         StreamTime inputEnd = s->GraphTimeToStreamTimeWithBlocking(aTo);
+        if (tracks->IsEnded() && inputSegment->GetDuration() <= inputEnd) {
+          // If the input track has ended and we have consumed all its data it
+          // can be ignored.
+          continue;
+        }
         AudioSegment toMix;
         toMix.AppendSlice(*inputSegment, inputStart, inputEnd);
         // Care for streams blocked in the [aTo, aFrom] range.

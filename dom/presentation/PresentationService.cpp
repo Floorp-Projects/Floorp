@@ -59,6 +59,44 @@ IsSameDevice(nsIPresentationDevice* aDevice, nsIPresentationDevice* aDeviceAnoth
   return true;
 }
 
+static nsresult
+ConvertURLArrayHelper(const nsTArray<nsString>& aUrls, nsIArray** aResult)
+{
+  if (!aResult) {
+    return NS_ERROR_INVALID_POINTER;
+  }
+
+  *aResult = nullptr;
+
+  nsresult rv;
+  nsCOMPtr<nsIMutableArray> urls =
+    do_CreateInstance(NS_ARRAY_CONTRACTID, &rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  for (const auto& url : aUrls) {
+    nsCOMPtr<nsISupportsString> isupportsString =
+      do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID, &rv);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    rv = isupportsString->SetData(url);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    rv = urls->AppendElement(isupportsString, false);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  }
+
+  urls.forget(aResult);
+  return NS_OK;
+}
+
 /*
  * Implementation of PresentationDeviceRequest
  */
@@ -69,7 +107,7 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPRESENTATIONDEVICEREQUEST
 
-  PresentationDeviceRequest(const nsAString& aRequestUrl,
+  PresentationDeviceRequest(const nsTArray<nsString>& aUrls,
                             const nsAString& aId,
                             const nsAString& aOrigin,
                             uint64_t aWindowId,
@@ -77,9 +115,10 @@ public:
 
 private:
   virtual ~PresentationDeviceRequest() = default;
-  nsresult CreateSessionInfo(nsIPresentationDevice* aDevice);
+  nsresult CreateSessionInfo(nsIPresentationDevice* aDevice,
+                             const nsAString& aSelectedRequestUrl);
 
-  nsString mRequestUrl;
+  nsTArray<nsString> mRequestUrls;
   nsString mId;
   nsString mOrigin;
   uint64_t mWindowId;
@@ -94,18 +133,18 @@ LazyLogModule gPresentationLog("Presentation");
 NS_IMPL_ISUPPORTS(PresentationDeviceRequest, nsIPresentationDeviceRequest)
 
 PresentationDeviceRequest::PresentationDeviceRequest(
-                                      const nsAString& aRequestUrl,
+                                      const nsTArray<nsString>& aUrls,
                                       const nsAString& aId,
                                       const nsAString& aOrigin,
                                       uint64_t aWindowId,
                                       nsIPresentationServiceCallback* aCallback)
-  : mRequestUrl(aRequestUrl)
+  : mRequestUrls(aUrls)
   , mId(aId)
   , mOrigin(aOrigin)
   , mWindowId(aWindowId)
   , mCallback(aCallback)
 {
-  MOZ_ASSERT(!mRequestUrl.IsEmpty());
+  MOZ_ASSERT(!mRequestUrls.IsEmpty());
   MOZ_ASSERT(!mId.IsEmpty());
   MOZ_ASSERT(!mOrigin.IsEmpty());
   MOZ_ASSERT(mCallback);
@@ -119,29 +158,47 @@ PresentationDeviceRequest::GetOrigin(nsAString& aOrigin)
 }
 
 NS_IMETHODIMP
-PresentationDeviceRequest::GetRequestURL(nsAString& aRequestUrl)
+PresentationDeviceRequest::GetRequestURLs(nsIArray** aUrls)
 {
-  aRequestUrl = mRequestUrl;
-  return NS_OK;
+  return ConvertURLArrayHelper(mRequestUrls, aUrls);
 }
 
 NS_IMETHODIMP
 PresentationDeviceRequest::Select(nsIPresentationDevice* aDevice)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aDevice);
-
-  nsresult rv = CreateSessionInfo(aDevice);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    mCallback->NotifyError(rv);
-    return rv;
+  if (NS_WARN_IF(!aDevice)) {
+    MOZ_ASSERT(false, "|aDevice| should noe be null.");
+    mCallback->NotifyError(NS_ERROR_DOM_OPERATION_ERR);
+    return NS_ERROR_INVALID_ARG;
   }
 
-  return mCallback->NotifySuccess();
+  // Select the most suitable URL for starting the presentation.
+  nsAutoString selectedRequestUrl;
+  for (const auto& url : mRequestUrls) {
+    bool isSupported;
+    if (NS_SUCCEEDED(aDevice->IsRequestedUrlSupported(url, &isSupported)) &&
+        isSupported) {
+      selectedRequestUrl.Assign(url);
+      break;
+    }
+  }
+
+  if (selectedRequestUrl.IsEmpty()) {
+    return mCallback->NotifyError(NS_ERROR_DOM_NOT_FOUND_ERR);
+  }
+
+  if (NS_WARN_IF(NS_FAILED(CreateSessionInfo(aDevice, selectedRequestUrl)))) {
+    return mCallback->NotifyError(NS_ERROR_DOM_OPERATION_ERR);
+  }
+
+  return mCallback->NotifySuccess(selectedRequestUrl);
 }
 
 nsresult
-PresentationDeviceRequest::CreateSessionInfo(nsIPresentationDevice* aDevice)
+PresentationDeviceRequest::CreateSessionInfo(
+                                          nsIPresentationDevice* aDevice,
+                                          const nsAString& aSelectedRequestUrl)
 {
   nsCOMPtr<nsIPresentationService> service =
     do_GetService(PRESENTATION_SERVICE_CONTRACTID);
@@ -152,7 +209,7 @@ PresentationDeviceRequest::CreateSessionInfo(nsIPresentationDevice* aDevice)
   // Create the controlling session info
   RefPtr<PresentationSessionInfo> info =
     static_cast<PresentationService*>(service.get())->
-      CreateControllingSessionInfo(mRequestUrl, mId, mWindowId);
+      CreateControllingSessionInfo(aSelectedRequestUrl, mId, mWindowId);
   if (NS_WARN_IF(!info)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -572,23 +629,22 @@ PresentationService::IsAppInstalled(nsIURI* aUri)
 }
 
 NS_IMETHODIMP
-PresentationService::StartSession(const nsAString& aUrl,
+PresentationService::StartSession(const nsTArray<nsString>& aUrls,
                                   const nsAString& aSessionId,
                                   const nsAString& aOrigin,
                                   const nsAString& aDeviceId,
                                   uint64_t aWindowId,
                                   nsIPresentationServiceCallback* aCallback)
 {
-  PRES_DEBUG("%s:url[%s], id[%s]\n", __func__,
-             NS_ConvertUTF16toUTF8(aUrl).get(),
-             NS_ConvertUTF16toUTF8(aSessionId).get());
+  PRES_DEBUG("%s:id[%s]\n", __func__, NS_ConvertUTF16toUTF8(aSessionId).get());
 
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aCallback);
   MOZ_ASSERT(!aSessionId.IsEmpty());
+  MOZ_ASSERT(!aUrls.IsEmpty());
 
   nsCOMPtr<nsIPresentationDeviceRequest> request =
-    new PresentationDeviceRequest(aUrl,
+    new PresentationDeviceRequest(aUrls,
                                   aSessionId,
                                   aOrigin,
                                   aWindowId,
@@ -617,15 +673,11 @@ PresentationService::StartSession(const nsAString& aUrl,
     return aCallback->NotifyError(NS_ERROR_DOM_OPERATION_ERR);
   }
 
-  nsCOMPtr<nsIMutableArray> presentationUrls =
-    do_CreateInstance(NS_ARRAY_CONTRACTID);
-  if (!presentationUrls) {
+  nsCOMPtr<nsIArray> presentationUrls;
+  if (NS_WARN_IF(NS_FAILED(
+    ConvertURLArrayHelper(aUrls, getter_AddRefs(presentationUrls))))) {
     return aCallback->NotifyError(NS_ERROR_DOM_OPERATION_ERR);
   }
-  nsCOMPtr<nsISupportsString> supportsStr =
-    do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID);
-  supportsStr->SetData(aUrl);
-  presentationUrls->AppendElement(supportsStr, false);
 
   nsCOMPtr<nsIArray> devices;
   nsresult rv = deviceManager->GetAvailableDevices(presentationUrls, getter_AddRefs(devices));
@@ -747,18 +799,17 @@ PresentationService::TerminateSession(const nsAString& aSessionId,
 }
 
 NS_IMETHODIMP
-PresentationService::ReconnectSession(const nsAString& aUrl,
+PresentationService::ReconnectSession(const nsTArray<nsString>& aUrls,
                                       const nsAString& aSessionId,
                                       uint8_t aRole,
                                       nsIPresentationServiceCallback* aCallback)
 {
-  PRES_DEBUG("%s:url[%s], id[%s]\n", __func__,
-             NS_ConvertUTF16toUTF8(aUrl).get(),
-             NS_ConvertUTF16toUTF8(aSessionId).get());
+  PRES_DEBUG("%s:id[%s]\n", __func__, NS_ConvertUTF16toUTF8(aSessionId).get());
 
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!aSessionId.IsEmpty());
   MOZ_ASSERT(aCallback);
+  MOZ_ASSERT(!aUrls.IsEmpty());
 
   if (aRole != nsIPresentationService::ROLE_CONTROLLER) {
     MOZ_ASSERT(false, "Only controller can call ReconnectSession.");
@@ -774,7 +825,7 @@ PresentationService::ReconnectSession(const nsAString& aUrl,
     return aCallback->NotifyError(NS_ERROR_DOM_NOT_FOUND_ERR);
   }
 
-  if (NS_WARN_IF(!info->GetUrl().Equals(aUrl))) {
+  if (NS_WARN_IF(!aUrls.Contains(info->GetUrl()))) {
     return aCallback->NotifyError(NS_ERROR_DOM_NOT_FOUND_ERR);
   }
 

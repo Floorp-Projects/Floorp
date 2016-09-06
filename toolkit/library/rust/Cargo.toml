@@ -6,7 +6,7 @@ license = "MPL-2.0"
 description = "Rust code for libxul"
 
 [dependencies]
-mp4parse = { path = "../../../media/libstagefright/binding/mp4parse" }
+mp4parse_capi = { path = "../../../media/libstagefright/binding/mp4parse_capi" }
 
 [lib]
 path = "lib.rs"
