@@ -596,7 +596,7 @@ public:
 
   void Exit() override
   {
-    mMaster->mSentPlaybackEndedEvent = false;
+    mSentPlaybackEndedEvent = false;
   }
 
   void Step() override
@@ -625,7 +625,7 @@ public:
     mMaster->StopPlayback();
 
     if (mMaster->mPlayState == MediaDecoder::PLAY_STATE_PLAYING &&
-        !mMaster->mSentPlaybackEndedEvent) {
+        !mSentPlaybackEndedEvent) {
       int64_t clockTime = std::max(mMaster->AudioEndTime(), mMaster->VideoEndTime());
       clockTime = std::max(int64_t(0), std::max(clockTime, mMaster->Duration().ToMicroseconds()));
       mMaster->UpdatePlaybackPosition(clockTime);
@@ -635,7 +635,7 @@ public:
 
       mMaster->mOnPlaybackEvent.Notify(MediaEventType::PlaybackEnded);
 
-      mMaster->mSentPlaybackEndedEvent = true;
+      mSentPlaybackEndedEvent = true;
 
       // MediaSink::GetEndTime() must be called before stopping playback.
       mMaster->StopMediaSink();
@@ -646,6 +646,9 @@ public:
   {
     return DECODER_STATE_COMPLETED;
   }
+
+private:
+  bool mSentPlaybackEndedEvent = false;
 };
 
 class MediaDecoderStateMachine::ShutdownState
@@ -714,7 +717,6 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   mDecodeThreadWaiting(false),
   mSentLoadedMetadataEvent(false),
   mSentFirstFrameLoadedEvent(false),
-  mSentPlaybackEndedEvent(false),
   mVideoDecodeSuspended(false),
   mVideoDecodeSuspendTimer(mTaskQueue),
   mOutputStreamManager(new OutputStreamManager()),
