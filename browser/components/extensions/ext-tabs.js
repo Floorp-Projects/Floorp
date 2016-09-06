@@ -53,44 +53,16 @@ function getSender(extension, target, sender) {
 // Used by Extension.jsm
 global.tabGetSender = getSender;
 
-function getDocShellOwner(docShell) {
-  let browser = docShell.chromeEventHandler;
-
-  let xulWindow = browser.ownerGlobal;
-
-  let {gBrowser} = xulWindow;
-  if (gBrowser) {
-    let tab = gBrowser.getTabForBrowser(browser);
-
-    return {xulWindow, tab};
-  }
-
-  return {};
-}
-
 /* eslint-disable mozilla/balanced-listeners */
-// This listener fires whenever an extension page opens in a tab
-// (either initiated by the extension or the user). Its job is to fill
-// in some tab-specific details and keep data around about the
-// ExtensionContext.
-extensions.on("page-load", (type, context, params, sender) => {
-  if (params.viewType == "tab" || params.viewType == "popup") {
-    let {xulWindow, tab} = getDocShellOwner(params.docShell);
-
-    // FIXME: Handle tabs being moved between windows.
-    context.windowId = WindowManager.getId(xulWindow);
-    if (tab) {
-      sender.tabId = TabManager.getId(tab);
-      context.tabId = TabManager.getId(tab);
-    }
-  }
-});
 
 extensions.on("page-shutdown", (type, context) => {
   if (context.viewType == "tab") {
-    let {xulWindow, tab} = getDocShellOwner(context.docShell);
-    if (tab) {
-      xulWindow.gBrowser.removeTab(tab);
+    let {gBrowser} = context.xulBrowser.ownerGlobal;
+    if (gBrowser) {
+      let tab = gBrowser.getTabForBrowser(context.xulBrowser);
+      if (tab) {
+        gBrowser.removeTab(tab);
+      }
     }
   }
 });
@@ -107,8 +79,8 @@ extensions.on("fill-browser-data", (type, browser, data, result) => {
 /* eslint-enable mozilla/balanced-listeners */
 
 global.currentWindow = function(context) {
-  let {xulWindow} = getDocShellOwner(context.docShell);
-  if (xulWindow) {
+  let {xulWindow} = context;
+  if (xulWindow && context.viewType != "background") {
     return xulWindow;
   }
   return WindowManager.topWindow;
