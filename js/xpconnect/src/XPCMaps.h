@@ -278,7 +278,12 @@ public:
     struct Entry : public PLDHashEntryHdr
     {
         nsIClassInfo* key;
-        XPCNativeSet* value;
+        XPCNativeSet* value; // strong reference
+        static const PLDHashTableOps sOps;
+
+    private:
+        static bool Match(const PLDHashEntryHdr* aEntry, const void* aKey);
+        static void Clear(PLDHashTable* aTable, PLDHashEntryHdr* aEntry);
     };
 
     static ClassInfo2NativeSetMap* newMap(int length);
@@ -298,7 +303,7 @@ public:
         if (entry->key)
             return entry->value;
         entry->key = info;
-        entry->value = set;
+        NS_ADDREF(entry->value = set);
         return set;
     }
 
