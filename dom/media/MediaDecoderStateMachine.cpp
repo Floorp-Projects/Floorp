@@ -601,7 +601,45 @@ public:
 
   void Step() override
   {
-    mMaster->StepCompleted();
+    if (mMaster->mPlayState != MediaDecoder::PLAY_STATE_PLAYING &&
+        mMaster->IsPlaying()) {
+      mMaster->StopPlayback();
+    }
+
+    // Play the remaining media. We want to run AdvanceFrame() at least
+    // once to ensure the current playback position is advanced to the
+    // end of the media, and so that we update the readyState.
+    if ((mMaster->HasVideo() && !mMaster->mVideoCompleted) ||
+        (mMaster->HasAudio() && !mMaster->mAudioCompleted)) {
+      // Start playback if necessary to play the remaining media.
+      mMaster->MaybeStartPlayback();
+      mMaster->UpdatePlaybackPositionPeriodically();
+      MOZ_ASSERT(!mMaster->IsPlaying() ||
+                 mMaster->IsStateMachineScheduled(),
+                 "Must have timer scheduled");
+      return;
+    }
+
+    // StopPlayback in order to reset the IsPlaying() state so audio
+    // is restarted correctly.
+    mMaster->StopPlayback();
+
+    if (mMaster->mPlayState == MediaDecoder::PLAY_STATE_PLAYING &&
+        !mMaster->mSentPlaybackEndedEvent) {
+      int64_t clockTime = std::max(mMaster->AudioEndTime(), mMaster->VideoEndTime());
+      clockTime = std::max(int64_t(0), std::max(clockTime, mMaster->Duration().ToMicroseconds()));
+      mMaster->UpdatePlaybackPosition(clockTime);
+
+      // Ensure readyState is updated before firing the 'ended' event.
+      mMaster->UpdateNextFrameStatus();
+
+      mMaster->mOnPlaybackEvent.Notify(MediaEventType::PlaybackEnded);
+
+      mMaster->mSentPlaybackEndedEvent = true;
+
+      // MediaSink::GetEndTime() must be called before stopping playback.
+      mMaster->StopMediaSink();
+    }
   }
 
   State GetState() const override
@@ -2545,51 +2583,6 @@ MediaDecoderStateMachine::StepDecoding()
                "Must have timer scheduled");
 
   MaybeStartBuffering();
-}
-
-void
-MediaDecoderStateMachine::StepCompleted()
-{
-  MOZ_ASSERT(OnTaskQueue());
-
-  if (mPlayState != MediaDecoder::PLAY_STATE_PLAYING && IsPlaying()) {
-    StopPlayback();
-  }
-
-  // Play the remaining media. We want to run AdvanceFrame() at least
-  // once to ensure the current playback position is advanced to the
-  // end of the media, and so that we update the readyState.
-  if ((HasVideo() && !mVideoCompleted) ||
-      (HasAudio() && !mAudioCompleted)) {
-    // Start playback if necessary to play the remaining media.
-    MaybeStartPlayback();
-    UpdatePlaybackPositionPeriodically();
-    NS_ASSERTION(!IsPlaying() ||
-                 IsStateMachineScheduled(),
-                 "Must have timer scheduled");
-    return;
-  }
-
-  // StopPlayback in order to reset the IsPlaying() state so audio
-  // is restarted correctly.
-  StopPlayback();
-
-  if (mPlayState == MediaDecoder::PLAY_STATE_PLAYING &&
-      !mSentPlaybackEndedEvent) {
-    int64_t clockTime = std::max(AudioEndTime(), VideoEndTime());
-    clockTime = std::max(int64_t(0), std::max(clockTime, Duration().ToMicroseconds()));
-    UpdatePlaybackPosition(clockTime);
-
-    // Ensure readyState is updated before firing the 'ended' event.
-    UpdateNextFrameStatus();
-
-    mOnPlaybackEvent.Notify(MediaEventType::PlaybackEnded);
-
-    mSentPlaybackEndedEvent = true;
-
-    // MediaSink::GetEndTime() must be called before stopping playback.
-    StopMediaSink();
-  }
 }
 
 void
