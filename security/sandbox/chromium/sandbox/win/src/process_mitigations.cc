@@ -4,10 +4,14 @@
 
 #include "sandbox/win/src/process_mitigations.h"
 
+#include <stddef.h>
+
 #include <algorithm>
 
 #include "base/win/windows_version.h"
 #include "sandbox/win/src/nt_internals.h"
+#include "sandbox/win/src/restricted_token_utils.h"
+#include "sandbox/win/src/sandbox_rand.h"
 #include "sandbox/win/src/win_utils.h"
 
 namespace {
@@ -59,6 +63,13 @@ bool ApplyProcessMitigationsToCurrentProcess(MitigationFlags flags) {
     }
   }
 
+  if (version >= base::win::VERSION_WIN7 &&
+      (flags & MITIGATION_HARDEN_TOKEN_IL_POLICY)) {
+      DWORD error = HardenProcessIntegrityLevelPolicy();
+      if ((error != ERROR_SUCCESS) && (error != ERROR_ACCESS_DENIED))
+        return false;
+  }
+
 #if !defined(_WIN64)  // DEP is always enabled on 64-bit.
   if (flags & MITIGATION_DEP) {
     DWORD dep_flags = PROCESS_DEP_ENABLE;
@@ -79,7 +90,6 @@ bool ApplyProcessMitigationsToCurrentProcess(MitigationFlags flags) {
     } else {
       // We're on XP sp2, so use the less standard approach.
       // For reference: http://www.uninformed.org/?v=2&a=4
-      static const int MEM_EXECUTE_OPTION_ENABLE = 1;
       static const int MEM_EXECUTE_OPTION_DISABLE = 2;
       static const int MEM_EXECUTE_OPTION_ATL7_THUNK_EMULATION = 4;
       static const int MEM_EXECUTE_OPTION_PERMANENT = 8;
@@ -114,7 +124,7 @@ bool ApplyProcessMitigationsToCurrentProcess(MitigationFlags flags) {
 
   // Enable ASLR policies.
   if (flags & MITIGATION_RELOCATE_IMAGE) {
-    PROCESS_MITIGATION_ASLR_POLICY policy = { 0 };
+    PROCESS_MITIGATION_ASLR_POLICY policy = {};
     policy.EnableForceRelocateImages = true;
     policy.DisallowStrippedImages = (flags &
         MITIGATION_RELOCATE_IMAGE_REQUIRED) ==
@@ -129,7 +139,7 @@ bool ApplyProcessMitigationsToCurrentProcess(MitigationFlags flags) {
 
   // Enable strict handle policies.
   if (flags & MITIGATION_STRICT_HANDLE_CHECKS) {
-    PROCESS_MITIGATION_STRICT_HANDLE_CHECK_POLICY policy = { 0 };
+    PROCESS_MITIGATION_STRICT_HANDLE_CHECK_POLICY policy = {};
     policy.HandleExceptionsPermanentlyEnabled =
         policy.RaiseExceptionOnInvalidHandleReference = true;
 
@@ -142,7 +152,7 @@ bool ApplyProcessMitigationsToCurrentProcess(MitigationFlags flags) {
 
   // Enable system call policies.
   if (flags & MITIGATION_WIN32K_DISABLE) {
-    PROCESS_MITIGATION_SYSTEM_CALL_DISABLE_POLICY policy = { 0 };
+    PROCESS_MITIGATION_SYSTEM_CALL_DISABLE_POLICY policy = {};
     policy.DisallowWin32kSystemCalls = true;
 
     if (!set_process_mitigation_policy(ProcessSystemCallDisablePolicy, &policy,
@@ -154,7 +164,7 @@ bool ApplyProcessMitigationsToCurrentProcess(MitigationFlags flags) {
 
   // Enable system call policies.
   if (flags & MITIGATION_EXTENSION_DLL_DISABLE) {
-    PROCESS_MITIGATION_EXTENSION_POINT_DISABLE_POLICY policy = { 0 };
+    PROCESS_MITIGATION_EXTENSION_POINT_DISABLE_POLICY policy = {};
     policy.DisableExtensionPoints = true;
 
     if (!set_process_mitigation_policy(ProcessExtensionPointDisablePolicy,
@@ -278,7 +288,7 @@ bool ApplyProcessMitigationsToSuspendedProcess(HANDLE process,
 #if !defined(_WIN64)
   if (flags & MITIGATION_BOTTOM_UP_ASLR) {
     unsigned int limit;
-    rand_s(&limit);
+    GetRandom(&limit);
     char* ptr = 0;
     const size_t kMask64k = 0xFFFF;
     // Random range (512k-16.5mb) in 64k steps.
@@ -309,7 +319,8 @@ bool CanSetProcessMitigationsPostStartup(MitigationFlags flags) {
                      MITIGATION_BOTTOM_UP_ASLR |
                      MITIGATION_STRICT_HANDLE_CHECKS |
                      MITIGATION_EXTENSION_DLL_DISABLE |
-                     MITIGATION_DLL_SEARCH_ORDER));
+                     MITIGATION_DLL_SEARCH_ORDER |
+                     MITIGATION_HARDEN_TOKEN_IL_POLICY));
 }
 
 bool CanSetProcessMitigationsPreStartup(MitigationFlags flags) {

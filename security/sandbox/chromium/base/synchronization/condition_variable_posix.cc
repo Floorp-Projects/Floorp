@@ -5,18 +5,19 @@
 #include "base/synchronization/condition_variable.h"
 
 #include <errno.h>
+#include <stdint.h>
 #include <sys/time.h>
 
-#include "base/logging.h"
 #include "base/synchronization/lock.h"
 #include "base/threading/thread_restrictions.h"
 #include "base/time/time.h"
+#include "build/build_config.h"
 
 namespace base {
 
 ConditionVariable::ConditionVariable(Lock* user_lock)
     : user_mutex_(user_lock->lock_.native_handle())
-#if !defined(NDEBUG) || defined(DCHECK_ALWAYS_ON)
+#if DCHECK_IS_ON()
     , user_lock_(user_lock)
 #endif
 {
@@ -42,31 +43,45 @@ ConditionVariable::ConditionVariable(Lock* user_lock)
 }
 
 ConditionVariable::~ConditionVariable() {
+#if defined(OS_MACOSX)
+  // This hack is necessary to avoid a fatal pthreads subsystem bug in the
+  // Darwin kernel. http://crbug.com/517681.
+  {
+    base::Lock lock;
+    base::AutoLock l(lock);
+    struct timespec ts;
+    ts.tv_sec = 0;
+    ts.tv_nsec = 1;
+    pthread_cond_timedwait_relative_np(&condition_, lock.lock_.native_handle(),
+                                       &ts);
+  }
+#endif
+
   int rv = pthread_cond_destroy(&condition_);
   DCHECK_EQ(0, rv);
 }
 
 void ConditionVariable::Wait() {
   base::ThreadRestrictions::AssertWaitAllowed();
-#if !defined(NDEBUG) || defined(DCHECK_ALWAYS_ON)
+#if DCHECK_IS_ON()
   user_lock_->CheckHeldAndUnmark();
 #endif
   int rv = pthread_cond_wait(&condition_, user_mutex_);
   DCHECK_EQ(0, rv);
-#if !defined(NDEBUG) || defined(DCHECK_ALWAYS_ON)
+#if DCHECK_IS_ON()
   user_lock_->CheckUnheldAndMark();
 #endif
 }
 
 void ConditionVariable::TimedWait(const TimeDelta& max_time) {
   base::ThreadRestrictions::AssertWaitAllowed();
-  int64 usecs = max_time.InMicroseconds();
+  int64_t usecs = max_time.InMicroseconds();
   struct timespec relative_time;
   relative_time.tv_sec = usecs / Time::kMicrosecondsPerSecond;
   relative_time.tv_nsec =
       (usecs % Time::kMicrosecondsPerSecond) * Time::kNanosecondsPerMicrosecond;
 
-#if !defined(NDEBUG) || defined(DCHECK_ALWAYS_ON)
+#if DCHECK_IS_ON()
   user_lock_->CheckHeldAndUnmark();
 #endif
 
@@ -104,7 +119,7 @@ void ConditionVariable::TimedWait(const TimeDelta& max_time) {
 #endif  // OS_MACOSX
 
   DCHECK(rv == 0 || rv == ETIMEDOUT);
-#if !defined(NDEBUG) || defined(DCHECK_ALWAYS_ON)
+#if DCHECK_IS_ON()
   user_lock_->CheckUnheldAndMark();
 #endif
 }

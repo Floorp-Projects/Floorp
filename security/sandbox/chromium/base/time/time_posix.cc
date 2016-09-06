@@ -15,9 +15,7 @@
 #include <limits>
 #include <ostream>
 
-#include "base/basictypes.h"
 #include "base/logging.h"
-#include "base/port.h"
 #include "build/build_config.h"
 
 #if defined(OS_ANDROID)
@@ -81,26 +79,27 @@ void SysTimeToTimeStruct(SysTime t, struct tm* timestruct, bool is_local) {
 }
 #endif  // OS_ANDROID
 
-// Helper function to get results from clock_gettime() as TimeTicks object.
-// Minimum requirement is MONOTONIC_CLOCK to be supported on the system.
-// FreeBSD 6 has CLOCK_MONOTONIC but defines _POSIX_MONOTONIC_CLOCK to -1.
+int64_t ConvertTimespecToMicros(const struct timespec& ts) {
+  base::CheckedNumeric<int64_t> result(ts.tv_sec);
+  result *= base::Time::kMicrosecondsPerSecond;
+  result += (ts.tv_nsec / base::Time::kNanosecondsPerMicrosecond);
+  return result.ValueOrDie();
+}
+
+// Helper function to get results from clock_gettime() and convert to a
+// microsecond timebase. Minimum requirement is MONOTONIC_CLOCK to be supported
+// on the system. FreeBSD 6 has CLOCK_MONOTONIC but defines
+// _POSIX_MONOTONIC_CLOCK to -1.
 #if (defined(OS_POSIX) &&                                               \
      defined(_POSIX_MONOTONIC_CLOCK) && _POSIX_MONOTONIC_CLOCK >= 0) || \
     defined(OS_BSD) || defined(OS_ANDROID)
-base::TimeTicks ClockNow(clockid_t clk_id) {
-  uint64_t absolute_micro;
-
+int64_t ClockNow(clockid_t clk_id) {
   struct timespec ts;
   if (clock_gettime(clk_id, &ts) != 0) {
     NOTREACHED() << "clock_gettime(" << clk_id << ") failed.";
-    return base::TimeTicks();
+    return 0;
   }
-
-  absolute_micro =
-      (static_cast<int64>(ts.tv_sec) * base::Time::kMicrosecondsPerSecond) +
-      (static_cast<int64>(ts.tv_nsec / base::Time::kNanosecondsPerMicrosecond));
-
-  return base::TimeTicks::FromInternalValue(absolute_micro);
+  return ConvertTimespecToMicros(ts);
 }
 #else  // _POSIX_MONOTONIC_CLOCK
 #error No usable tick clock function on this platform.
@@ -112,7 +111,7 @@ base::TimeTicks ClockNow(clockid_t clk_id) {
 namespace base {
 
 struct timespec TimeDelta::ToTimeSpec() const {
-  int64 microseconds = InMicroseconds();
+  int64_t microseconds = InMicroseconds();
   time_t seconds = 0;
   if (microseconds >= Time::kMicrosecondsPerSecond) {
     seconds = InSeconds();
@@ -137,16 +136,16 @@ struct timespec TimeDelta::ToTimeSpec() const {
 //   => Thu Jan 01 00:00:00 UTC 1970
 //   irb(main):011:0> Time.at(-11644473600).getutc()
 //   => Mon Jan 01 00:00:00 UTC 1601
-static const int64 kWindowsEpochDeltaSeconds = GG_INT64_C(11644473600);
+static const int64_t kWindowsEpochDeltaSeconds = INT64_C(11644473600);
 
 // static
-const int64 Time::kWindowsEpochDeltaMicroseconds =
+const int64_t Time::kWindowsEpochDeltaMicroseconds =
     kWindowsEpochDeltaSeconds * Time::kMicrosecondsPerSecond;
 
 // Some functions in time.cc use time_t directly, so we provide an offset
 // to convert from time_t (Unix epoch) and internal (Windows epoch).
 // static
-const int64 Time::kTimeTToMicrosecondsOffset = kWindowsEpochDeltaMicroseconds;
+const int64_t Time::kTimeTToMicrosecondsOffset = kWindowsEpochDeltaMicroseconds;
 
 // static
 Time Time::Now() {
@@ -176,9 +175,9 @@ void Time::Explode(bool is_local, Exploded* exploded) const {
   // Time stores times with microsecond resolution, but Exploded only carries
   // millisecond resolution, so begin by being lossy.  Adjust from Windows
   // epoch (1601) to Unix epoch (1970);
-  int64 microseconds = us_ - kWindowsEpochDeltaMicroseconds;
+  int64_t microseconds = us_ - kWindowsEpochDeltaMicroseconds;
   // The following values are all rounded towards -infinity.
-  int64 milliseconds;  // Milliseconds since epoch.
+  int64_t milliseconds;  // Milliseconds since epoch.
   SysTime seconds;  // Seconds since epoch.
   int millisecond;  // Exploded millisecond value (0-999).
   if (microseconds >= 0) {
@@ -228,8 +227,7 @@ Time Time::FromExploded(bool is_local, const Exploded& exploded) {
   timestruct.tm_zone   = NULL;  // not a POSIX field, so mktime/timegm ignore
 #endif
 
-
-  int64 milliseconds;
+  int64_t milliseconds;
   SysTime seconds;
 
   // Certain exploded dates do not really exist due to daylight saving times,
@@ -247,11 +245,11 @@ Time Time::FromExploded(bool is_local, const Exploded& exploded) {
     // to UTC 00:00:00 that isn't -1.
     timestruct = timestruct0;
     timestruct.tm_isdst = 0;
-    int64 seconds_isdst0 = SysTimeFromTimeStruct(&timestruct, is_local);
+    int64_t seconds_isdst0 = SysTimeFromTimeStruct(&timestruct, is_local);
 
     timestruct = timestruct0;
     timestruct.tm_isdst = 1;
-    int64 seconds_isdst1 = SysTimeFromTimeStruct(&timestruct, is_local);
+    int64_t seconds_isdst1 = SysTimeFromTimeStruct(&timestruct, is_local);
 
     // seconds_isdst0 or seconds_isdst1 can be -1 for some timezones.
     // E.g. "CLST" (Chile Summer Time) returns -1 for 'tm_isdt == 1'.
@@ -284,14 +282,14 @@ Time Time::FromExploded(bool is_local, const Exploded& exploded) {
     // 999ms to avoid the time being less than any other possible value that
     // this function can return.
 
-    // On Android, SysTime is int64, special care must be taken to avoid
+    // On Android, SysTime is int64_t, special care must be taken to avoid
     // overflows.
-    const int64 min_seconds = (sizeof(SysTime) < sizeof(int64))
-                                  ? std::numeric_limits<SysTime>::min()
-                                  : std::numeric_limits<int32_t>::min();
-    const int64 max_seconds = (sizeof(SysTime) < sizeof(int64))
-                                  ? std::numeric_limits<SysTime>::max()
-                                  : std::numeric_limits<int32_t>::max();
+    const int64_t min_seconds = (sizeof(SysTime) < sizeof(int64_t))
+                                    ? std::numeric_limits<SysTime>::min()
+                                    : std::numeric_limits<int32_t>::min();
+    const int64_t max_seconds = (sizeof(SysTime) < sizeof(int64_t))
+                                    ? std::numeric_limits<SysTime>::max()
+                                    : std::numeric_limits<int32_t>::max();
     if (exploded.year < 1969) {
       milliseconds = min_seconds * kMillisecondsPerSecond;
     } else {
@@ -310,57 +308,24 @@ Time Time::FromExploded(bool is_local, const Exploded& exploded) {
 // TimeTicks ------------------------------------------------------------------
 // static
 TimeTicks TimeTicks::Now() {
-  return ClockNow(CLOCK_MONOTONIC);
+  return TimeTicks(ClockNow(CLOCK_MONOTONIC));
 }
 
 // static
-TimeTicks TimeTicks::HighResNow() {
-  return Now();
-}
-
-// static
-bool TimeTicks::IsHighResNowFastAndReliable() {
+bool TimeTicks::IsHighResolution() {
   return true;
 }
 
 // static
-TimeTicks TimeTicks::ThreadNow() {
+ThreadTicks ThreadTicks::Now() {
 #if (defined(_POSIX_THREAD_CPUTIME) && (_POSIX_THREAD_CPUTIME >= 0)) || \
     defined(OS_ANDROID)
-  return ClockNow(CLOCK_THREAD_CPUTIME_ID);
+  return ThreadTicks(ClockNow(CLOCK_THREAD_CPUTIME_ID));
 #else
   NOTREACHED();
-  return TimeTicks();
+  return ThreadTicks();
 #endif
 }
-
-// Use the Chrome OS specific system-wide clock.
-#if defined(OS_CHROMEOS)
-// static
-TimeTicks TimeTicks::NowFromSystemTraceTime() {
-  uint64_t absolute_micro;
-
-  struct timespec ts;
-  if (clock_gettime(kClockSystemTrace, &ts) != 0) {
-    // NB: fall-back for a chrome os build running on linux
-    return HighResNow();
-  }
-
-  absolute_micro =
-      (static_cast<int64>(ts.tv_sec) * Time::kMicrosecondsPerSecond) +
-      (static_cast<int64>(ts.tv_nsec) / Time::kNanosecondsPerMicrosecond);
-
-  return TimeTicks(absolute_micro);
-}
-
-#else  // !defined(OS_CHROMEOS)
-
-// static
-TimeTicks TimeTicks::NowFromSystemTraceTime() {
-  return HighResNow();
-}
-
-#endif  // defined(OS_CHROMEOS)
 
 #endif  // !OS_MACOSX
 
@@ -373,10 +338,8 @@ Time Time::FromTimeVal(struct timeval t) {
   if (t.tv_usec == static_cast<suseconds_t>(Time::kMicrosecondsPerSecond) - 1 &&
       t.tv_sec == std::numeric_limits<time_t>::max())
     return Max();
-  return Time(
-      (static_cast<int64>(t.tv_sec) * Time::kMicrosecondsPerSecond) +
-      t.tv_usec +
-      kTimeTToMicrosecondsOffset);
+  return Time((static_cast<int64_t>(t.tv_sec) * Time::kMicrosecondsPerSecond) +
+              t.tv_usec + kTimeTToMicrosecondsOffset);
 }
 
 struct timeval Time::ToTimeVal() const {
@@ -391,7 +354,7 @@ struct timeval Time::ToTimeVal() const {
     result.tv_usec = static_cast<suseconds_t>(Time::kMicrosecondsPerSecond) - 1;
     return result;
   }
-  int64 us = us_ - kTimeTToMicrosecondsOffset;
+  int64_t us = us_ - kTimeTToMicrosecondsOffset;
   result.tv_sec = us / Time::kMicrosecondsPerSecond;
   result.tv_usec = us % Time::kMicrosecondsPerSecond;
   return result;

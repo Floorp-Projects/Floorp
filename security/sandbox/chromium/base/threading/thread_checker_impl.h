@@ -6,6 +6,7 @@
 #define BASE_THREADING_THREAD_CHECKER_IMPL_H_
 
 #include "base/base_export.h"
+#include "base/compiler_specific.h"
 #include "base/synchronization/lock.h"
 #include "base/threading/platform_thread.h"
 
@@ -22,7 +23,7 @@ class BASE_EXPORT ThreadCheckerImpl {
   ThreadCheckerImpl();
   ~ThreadCheckerImpl();
 
-  bool CalledOnValidThread() const;
+  bool CalledOnValidThread() const WARN_UNUSED_RESULT;
 
   // Changes the thread that is checked for in CalledOnValidThread.  This may
   // be useful when an object may be created on one thread and then used

@@ -6,8 +6,8 @@
 #define SANDBOX_SRC_WIN_PROCESS_MITIGATIONS_H_
 
 #include <windows.h>
+#include <stddef.h>
 
-#include "base/basictypes.h"
 #include "sandbox/win/src/security_level.h"
 
 namespace sandbox {

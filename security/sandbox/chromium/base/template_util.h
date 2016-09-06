@@ -5,7 +5,7 @@
 #ifndef BASE_TEMPLATE_UTIL_H_
 #define BASE_TEMPLATE_UTIL_H_
 
-#include <cstddef>  // For size_t.
+#include <stddef.h>
 
 #include "build/build_config.h"
 
@@ -116,12 +116,6 @@ struct is_class
                         sizeof(internal::IsClassHelper::Test<T>(0)) ==
                             sizeof(internal::YesType)> {
 };
-
-template<bool B, class T = void>
-struct enable_if {};
-
-template<class T>
-struct enable_if<true, T> { typedef T type; };
 
 }  // namespace base
 

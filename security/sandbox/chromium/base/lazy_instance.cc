@@ -6,7 +6,6 @@
 
 #include "base/at_exit.h"
 #include "base/atomicops.h"
-#include "base/basictypes.h"
 #include "base/threading/platform_thread.h"
 
 namespace base {

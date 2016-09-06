@@ -8,6 +8,8 @@
 #ifndef BASE_BIND_INTERNAL_WIN_H_
 #define BASE_BIND_INTERNAL_WIN_H_
 
+#include "build/build_config.h"
+
 // In the x64 architecture in Windows, __fastcall, __stdcall, etc, are all
 // the same as __cdecl which would turn the following specializations into
 // multiple definitions.
@@ -23,7 +25,9 @@ class RunnableAdapter;
 template <typename R, typename... Args>
 class RunnableAdapter<R(__stdcall *)(Args...)> {
  public:
-  typedef R (RunType)(Args...);
+  // MSVC 2013 doesn't support Type Alias of function types.
+  // Revisit this after we update it to newer version.
+  typedef R RunType(Args...);
 
   explicit RunnableAdapter(R(__stdcall *function)(Args...))
       : function_(function) {
@@ -41,7 +45,9 @@ class RunnableAdapter<R(__stdcall *)(Args...)> {
 template <typename R, typename... Args>
 class RunnableAdapter<R(__fastcall *)(Args...)> {
  public:
-  typedef R (RunType)(Args...);
+  // MSVC 2013 doesn't support Type Alias of function types.
+  // Revisit this after we update it to newer version.
+  typedef R RunType(Args...);
 
   explicit RunnableAdapter(R(__fastcall *function)(Args...))
       : function_(function) {

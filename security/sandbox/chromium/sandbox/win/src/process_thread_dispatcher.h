@@ -5,7 +5,9 @@
 #ifndef SANDBOX_SRC_PROCESS_THREAD_DISPATCHER_H_
 #define SANDBOX_SRC_PROCESS_THREAD_DISPATCHER_H_
 
-#include "base/basictypes.h"
+#include <stdint.h>
+
+#include "base/macros.h"
 #include "base/strings/string16.h"
 #include "sandbox/win/src/crosscall_server.h"
 #include "sandbox/win/src/sandbox_policy_base.h"
@@ -16,26 +18,30 @@ namespace sandbox {
 class ThreadProcessDispatcher : public Dispatcher {
  public:
   explicit ThreadProcessDispatcher(PolicyBase* policy_base);
-  ~ThreadProcessDispatcher() {}
+  ~ThreadProcessDispatcher() override {}
 
   // Dispatcher interface.
-  virtual bool SetupService(InterceptionManager* manager, int service);
+  bool SetupService(InterceptionManager* manager, int service) override;
 
  private:
   // Processes IPC requests coming from calls to NtOpenThread() in the target.
-  bool NtOpenThread(IPCInfo* ipc, uint32 desired_access, uint32 thread_id);
+  bool NtOpenThread(IPCInfo* ipc, uint32_t desired_access, uint32_t thread_id);
 
   // Processes IPC requests coming from calls to NtOpenProcess() in the target.
-  bool NtOpenProcess(IPCInfo* ipc, uint32 desired_access, uint32 process_id);
+  bool NtOpenProcess(IPCInfo* ipc,
+                     uint32_t desired_access,
+                     uint32_t process_id);
 
   // Processes IPC requests from calls to NtOpenProcessToken() in the target.
-  bool NtOpenProcessToken(IPCInfo* ipc, HANDLE process, uint32 desired_access);
+  bool NtOpenProcessToken(IPCInfo* ipc,
+                          HANDLE process,
+                          uint32_t desired_access);
 
   // Processes IPC requests from calls to NtOpenProcessTokenEx() in the target.
   bool NtOpenProcessTokenEx(IPCInfo* ipc,
                             HANDLE process,
-                            uint32 desired_access,
-                            uint32 attributes);
+                            uint32_t desired_access,
+                            uint32_t attributes);
 
   // Processes IPC requests coming from calls to CreateProcessW() in the target.
   bool CreateProcessW(IPCInfo* ipc,

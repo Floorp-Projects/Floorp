@@ -34,6 +34,8 @@
 
 #include <atomic>
 
+#include "build/build_config.h"
+
 namespace base {
 namespace subtle {
 
@@ -221,7 +223,7 @@ inline Atomic64 Release_Load(volatile const Atomic64* ptr) {
 }
 
 #endif  // defined(ARCH_CPU_64_BITS)
-}
-}  // namespace base::subtle
+}  // namespace subtle
+}  // namespace base
 
 #endif  // BASE_ATOMICOPS_INTERNALS_PORTABLE_H_
