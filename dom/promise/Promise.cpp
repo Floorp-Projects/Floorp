@@ -740,7 +740,7 @@ NativeHandlerCallback(JSContext* aCx, unsigned aArgc, JS::Value* aVp)
                                                         SLOT_NATIVEHANDLER));
   MOZ_ASSERT(v.isObject());
 
-  PromiseNativeHandler* handler;
+  PromiseNativeHandler* handler = nullptr;
   if (NS_FAILED(UNWRAP_OBJECT(PromiseNativeHandler, &v.toObject(),
                               handler))) {
     return Throw(aCx, NS_ERROR_UNEXPECTED);
@@ -781,6 +781,59 @@ CreateNativeHandlerFunction(JSContext* aCx, JS::Handle<JSObject*> aHolder,
   return obj;
 }
 
+namespace {
+
+class PromiseNativeHandlerShim final : public PromiseNativeHandler
+{
+  RefPtr<PromiseNativeHandler> mInner;
+
+  ~PromiseNativeHandlerShim()
+  {
+  }
+
+public:
+  explicit PromiseNativeHandlerShim(PromiseNativeHandler* aInner)
+    : mInner(aInner)
+  {
+    MOZ_ASSERT(mInner);
+  }
+
+  void
+  ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override
+  {
+    mInner->ResolvedCallback(aCx, aValue);
+    mInner = nullptr;
+  }
+
+  void
+  RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override
+  {
+    mInner->RejectedCallback(aCx, aValue);
+    mInner = nullptr;
+  }
+
+  bool
+  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto,
+             JS::MutableHandle<JSObject*> aWrapper)
+  {
+    return PromiseNativeHandlerBinding::Wrap(aCx, this, aGivenProto, aWrapper);
+  }
+
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_CLASS(PromiseNativeHandlerShim)
+};
+
+NS_IMPL_CYCLE_COLLECTION(PromiseNativeHandlerShim, mInner)
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF(PromiseNativeHandlerShim)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(PromiseNativeHandlerShim)
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(PromiseNativeHandlerShim)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+NS_INTERFACE_MAP_END
+
+} // anonymous namespace
+
 void
 Promise::AppendNativeHandler(PromiseNativeHandler* aRunnable)
 {
@@ -793,11 +846,18 @@ Promise::AppendNativeHandler(PromiseNativeHandler* aRunnable)
     return;
   }
 
+  // The self-hosted promise js may keep the object we pass to it alive
+  // for quite a while depending on when GC runs.  Therefore, pass a shim
+  // object instead.  The shim will free its inner PromiseNativeHandler
+  // after the promise has settled just like our previous c++ promises did.
+  RefPtr<PromiseNativeHandlerShim> shim =
+    new PromiseNativeHandlerShim(aRunnable);
+
   JSContext* cx = jsapi.cx();
   JS::Rooted<JSObject*> handlerWrapper(cx);
   // Note: PromiseNativeHandler is NOT wrappercached.  So we can't use
   // ToJSValue here, because it will try to do XPConnect wrapping on it, sadly.
-  if (NS_WARN_IF(!aRunnable->WrapObject(cx, nullptr, &handlerWrapper))) {
+  if (NS_WARN_IF(!shim->WrapObject(cx, nullptr, &handlerWrapper))) {
     // Again, no way to report errors.
     jsapi.ClearException();
     return;
