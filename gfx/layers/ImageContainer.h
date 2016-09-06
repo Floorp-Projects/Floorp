@@ -581,12 +581,6 @@ public:
    */
   static ProducerID AllocateProducerID();
 
-  /// ImageBridgeChild thread only.
-  static void AsyncDestroyActor(PImageContainerChild* aActor);
-
-  /// ImageBridgeChild thread only.
-  static void DeallocActor(PImageContainerChild* aActor);
-
 private:
   typedef mozilla::ReentrantMonitor ReentrantMonitor;
 
@@ -650,7 +644,7 @@ private:
 
   // Object must be released on the ImageBridge thread. Field is immutable
   // after creation of the ImageContainer.
-  ImageContainerChild* mIPDLChild;
+  RefPtr<ImageContainerChild> mIPDLChild;
 
   static mozilla::Atomic<uint32_t> sGenerationCounter;
 };
