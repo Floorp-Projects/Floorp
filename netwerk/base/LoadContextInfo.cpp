@@ -23,7 +23,6 @@ LoadContextInfo::LoadContextInfo(bool aIsPrivate, bool aIsAnonymous, NeckoOrigin
   , mIsAnonymous(aIsAnonymous)
   , mOriginAttributes(aOriginAttributes)
 {
-  mOriginAttributes.SyncAttributesWithPrivateBrowsing(mIsPrivate);
 }
 
 LoadContextInfo::~LoadContextInfo()
@@ -69,9 +68,7 @@ NS_IMETHODIMP LoadContextInfoFactory::GetDefault(nsILoadContextInfo * *aDefault)
 
 NS_IMETHODIMP LoadContextInfoFactory::GetPrivate(nsILoadContextInfo * *aPrivate)
 {
-  NeckoOriginAttributes attrs;
-  attrs.SyncAttributesWithPrivateBrowsing(aPrivate);
-  nsCOMPtr<nsILoadContextInfo> info = GetLoadContextInfo(true, false, attrs);
+  nsCOMPtr<nsILoadContextInfo> info = GetLoadContextInfo(true, false, NeckoOriginAttributes());
   info.forget(aPrivate);
   return NS_OK;
 }
@@ -145,8 +142,6 @@ GetLoadContextInfo(nsILoadContext *aLoadContext, bool aIsAnonymous)
   bool pb = aLoadContext->UsePrivateBrowsing();
   DocShellOriginAttributes doa;
   aLoadContext->GetOriginAttributes(doa);
-
-  doa.SyncAttributesWithPrivateBrowsing(pb);
 
   NeckoOriginAttributes noa;
   noa.InheritFromDocShellToNecko(doa);
