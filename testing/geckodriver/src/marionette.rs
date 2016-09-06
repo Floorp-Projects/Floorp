@@ -1,7 +1,7 @@
 use hyper::method::Method;
 use mozprofile::preferences::Pref;
 use mozprofile::profile::Profile;
-use mozrunner::runner::{Runner, FirefoxRunner, RunnerError};
+use mozrunner::runner::{Runner, FirefoxRunner};
 use mozrunner::runner::platform::firefox_default_path;
 use regex::Captures;
 use rustc_serialize::base64::FromBase64;
@@ -344,6 +344,7 @@ pub struct FirefoxOptions {
     pub binary: Option<PathBuf>,
     pub profile: Option<Profile>,
     pub args: Option<Vec<String>>,
+    pub prefs: Vec<(String, Pref)>
 }
 
 
@@ -358,10 +359,12 @@ impl FirefoxOptions {
             let binary = try!(FirefoxOptions::load_binary(&firefox_options));
             let profile = try!(FirefoxOptions::load_profile(&firefox_options));
             let args = try!(FirefoxOptions::load_args(&firefox_options));
+            let prefs = try!(FirefoxOptions::load_prefs(&firefox_options));
             Ok(FirefoxOptions {
                 binary: binary,
                 profile: profile,
                 args: args,
+                prefs: prefs,
             })
         } else {
             Ok(Default::default())
@@ -420,6 +423,21 @@ impl FirefoxOptions {
             Ok(None)
         }
     }
+
+    pub fn load_prefs(options: &BTreeMap<String, Json>) -> WebDriverResult<Vec<(String, Pref)>> {
+        if let Some(prefs_data) = options.get("prefs") {
+            let prefs = try!(prefs_data
+                             .as_object()
+                             .ok_or(WebDriverError::new(ErrorStatus::UnknownError,"Prefs were not an object")));
+            let mut rv = Vec::with_capacity(prefs.len());
+            for (key, value) in prefs.iter() {
+                rv.push((key.clone(), try!(pref_from_json(value))));
+            };
+            Ok(rv)
+        } else {
+            Ok(vec![])
+        }
+    }
 }
 
 pub struct MarionetteSettings {
@@ -461,7 +479,6 @@ impl MarionetteHandler {
 
     fn create_connection(&mut self, session_id: &Option<String>,
                          capabilities: &mut NewSessionParameters) -> WebDriverResult<()> {
-
         let options = try!(FirefoxOptions::from_capabilities(capabilities));
 
         let port = self.settings.port.unwrap_or(try!(get_free_port()));
@@ -469,6 +486,7 @@ impl MarionetteHandler {
         if !self.settings.connect_existing {
             try!(self.start_browser(port, options));
         };
+
 
         let mut connection = MarionetteConnection::new(port, session_id.clone());
         try!(connection.connect());
@@ -494,7 +512,7 @@ impl MarionetteHandler {
             runner.args().extend(args);
         };
 
-        try!(self.set_prefs(port, &mut runner.profile, custom_profile)
+        try!(self.set_prefs(port, &mut runner.profile, custom_profile, options.prefs)
              .map_err(|e| WebDriverError::new(ErrorStatus::UnknownError,
                                               format!("Failed to set preferences:\n{}",
                                                       e.description()))));
@@ -516,21 +534,40 @@ impl MarionetteHandler {
             .or_else(|| firefox_default_path())
     }
 
-    pub fn set_prefs(&self, port: u16, profile: &mut Profile, custom_profile: bool)
-                 -> Result<(), RunnerError> {
-        let prefs = try!(profile.user_prefs());
+
+    pub fn set_prefs(&self, port: u16, profile: &mut Profile, custom_profile: bool,
+                     extra_prefs: Vec<(String, Pref)>)
+                 -> WebDriverResult<()> {
+        let prefs = try!(profile.user_prefs()
+                         .map_err(|_| WebDriverError::new(ErrorStatus::UnknownError,
+                                                          "Unable to read profile preferences file")));
+
         prefs.insert("marionette.defaultPrefs.port", Pref::new(port as i64));
 
-        prefs.insert_slice(&FIREFOX_REQUIRED_PREFERENCES[..]);
         if !custom_profile {
             prefs.insert_slice(&FIREFOX_DEFAULT_PREFERENCES[..]);
         };
-        if let Some(ref l) = self.settings.log_level {
-            prefs.insert("marionette.logging", Pref::new(l.to_string()));
+        prefs.insert_slice(&extra_prefs[..]);
+
+        prefs.insert_slice(&FIREFOX_REQUIRED_PREFERENCES[..]);
+
+        if let Some(ref level) = self.settings.log_level {
+            prefs.insert("marionette.logging", Pref::new(level.to_string()));
         };
 
-        try!(prefs.write());
-        Ok(())
+        prefs.write().map_err(|_| WebDriverError::new(ErrorStatus::UnknownError,
+                                                      "Unable to write Firefox profile"))
+    }
+}
+
+fn pref_from_json(value: &Json) -> WebDriverResult<Pref> {
+    match value {
+        &Json::String(ref x) => Ok(Pref::new(x.clone())),
+        &Json::I64(x) => Ok(Pref::new(x)),
+        &Json::U64(x) => Ok(Pref::new(x as i64)),
+        &Json::Boolean(x) => Ok(Pref::new(x)),
+        _ => Err(WebDriverError::new(ErrorStatus::UnknownError,
+                                     "Could not convert pref value to string, boolean, or integer"))
     }
 }
 
