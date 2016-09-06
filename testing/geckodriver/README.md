@@ -78,7 +78,7 @@ contain any of the following fields:
     </tr>
     <tr>
         <td><code>prefs</code>
-        <td>Object &lt;string, (string|boolean|integer)&gt
+        <td>Object&lt;string,&nbsp;(string|boolean|integer)&gt
         <td>
         <td>Map of preference name to preference value, which can be a
             string, a boolean or an integer.
