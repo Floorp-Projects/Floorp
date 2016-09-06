@@ -75,7 +75,7 @@ const TOOLBOX_L10N = new LocalizationHelper("devtools/locale/toolbox.properties"
  */
 function InspectorPanel(iframeWindow, toolbox) {
   this._toolbox = toolbox;
-  this._target = toolbox._target;
+  this._target = toolbox.target;
   this.panelDoc = iframeWindow.document;
   this.panelWin = iframeWindow;
   this.panelWin.inspector = this;

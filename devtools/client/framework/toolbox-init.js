@@ -12,8 +12,8 @@ let url = new window.URL(href);
 if (url.search.length > 1) {
   const Cu = Components.utils;
   const Ci = Components.interfaces;
-  const { gDevTools } = Cu.import("resource://devtools/client/framework/gDevTools.jsm", {});
   const { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
+  const { gDevTools } = require("devtools/client/framework/devtools");
   const { targetFromURL } = require("devtools/client/framework/target-from-url");
   const { Toolbox } = require("devtools/client/framework/toolbox");
   const { TargetFactory } = require("devtools/client/framework/target");
@@ -66,18 +66,7 @@ if (url.search.length > 1) {
       target = yield targetFromURL(url);
     }
     let options = { customIframe: host };
-    let toolbox = yield gDevTools.showToolbox(target, tool, Toolbox.HostType.CUSTOM, options);
-
-    // Watch for toolbox.xul unload in order to cleanup things when we close
-    // about:devtools-toolbox tabs
-    function onUnload() {
-      window.removeEventListener("unload", onUnload);
-      toolbox.destroy();
-    }
-    window.addEventListener("unload", onUnload);
-    toolbox.on("destroy", function () {
-      window.removeEventListener("unload", onUnload);
-    });
+    yield gDevTools.showToolbox(target, tool, Toolbox.HostType.CUSTOM, options);
   }).catch(error => {
     console.error("Exception while loading the toolbox", error);
   });
