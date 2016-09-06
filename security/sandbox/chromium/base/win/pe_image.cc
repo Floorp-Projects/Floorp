@@ -5,19 +5,12 @@
 // This file implements PEImage, a generic class to manipulate PE files.
 // This file was adapted from GreenBorder's Code.
 
+#include <stddef.h>
+
 #include "base/win/pe_image.h"
 
 namespace base {
 namespace win {
-
-#if defined(_WIN64) && !defined(NACL_WIN64)
-// TODO(jschuh): crbug.com/167707 Make sure this is ok.
-#pragma message ("Warning: \
- This code is not tested on x64. Please make sure all the base unit tests\
- pass before doing any real work. The current unit tests don't test the\
- differences between 32- and 64-bits implementations. Bugs may slip through.\
- You need to improve the coverage before continuing.")
-#endif
 
 // Structure to perform imports enumerations.
 struct EnumAllImportsStorage {
@@ -27,20 +20,30 @@ struct EnumAllImportsStorage {
 
 namespace {
 
-  // Compare two strings byte by byte on an unsigned basis.
-  //   if s1 == s2, return 0
-  //   if s1 < s2, return negative
-  //   if s1 > s2, return positive
-  // Exception if inputs are invalid.
-  int StrCmpByByte(LPCSTR s1, LPCSTR s2) {
-    while (*s1 != '\0' && *s1 == *s2) {
-      ++s1;
-      ++s2;
-    }
+// PdbInfo Signature
+const DWORD kPdbInfoSignature = 'SDSR';
 
-    return (*reinterpret_cast<const unsigned char*>(s1) -
-            *reinterpret_cast<const unsigned char*>(s2));
+// Compare two strings byte by byte on an unsigned basis.
+//   if s1 == s2, return 0
+//   if s1 < s2, return negative
+//   if s1 > s2, return positive
+// Exception if inputs are invalid.
+int StrCmpByByte(LPCSTR s1, LPCSTR s2) {
+  while (*s1 != '\0' && *s1 == *s2) {
+    ++s1;
+    ++s2;
   }
+
+  return (*reinterpret_cast<const unsigned char*>(s1) -
+          *reinterpret_cast<const unsigned char*>(s2));
+}
+
+struct PdbInfo {
+  DWORD Signature;
+  GUID Guid;
+  DWORD Age;
+  char PdbFileName[1];
+};
 
 }  // namespace
 
@@ -48,25 +51,25 @@ namespace {
 bool ProcessImportChunk(const PEImage &image, LPCSTR module,
                         PIMAGE_THUNK_DATA name_table,
                         PIMAGE_THUNK_DATA iat, PVOID cookie) {
-  EnumAllImportsStorage &storage = *reinterpret_cast<EnumAllImportsStorage*>(
-                                       cookie);
+  EnumAllImportsStorage& storage =
+      *reinterpret_cast<EnumAllImportsStorage*>(cookie);
 
   return image.EnumOneImportChunk(storage.callback, module, name_table, iat,
                                   storage.cookie);
 }
 
 // Callback used to enumerate delay imports. See EnumDelayImportChunksFunction.
-bool ProcessDelayImportChunk(const PEImage &image,
+bool ProcessDelayImportChunk(const PEImage& image,
                              PImgDelayDescr delay_descriptor,
-                             LPCSTR module, PIMAGE_THUNK_DATA name_table,
-                             PIMAGE_THUNK_DATA iat, PIMAGE_THUNK_DATA bound_iat,
-                             PIMAGE_THUNK_DATA unload_iat, PVOID cookie) {
-  EnumAllImportsStorage &storage = *reinterpret_cast<EnumAllImportsStorage*>(
-                                       cookie);
+                             LPCSTR module,
+                             PIMAGE_THUNK_DATA name_table,
+                             PIMAGE_THUNK_DATA iat,
+                             PVOID cookie) {
+  EnumAllImportsStorage& storage =
+      *reinterpret_cast<EnumAllImportsStorage*>(cookie);
 
   return image.EnumOneDelayImportChunk(storage.callback, delay_descriptor,
-                                       module, name_table, iat, bound_iat,
-                                       unload_iat, storage.cookie);
+                                       module, name_table, iat, storage.cookie);
 }
 
 void PEImage::set_module(HMODULE module) {
@@ -149,6 +152,36 @@ PIMAGE_SECTION_HEADER PEImage::GetImageSectionHeaderByName(
   return ret;
 }
 
+bool PEImage::GetDebugId(LPGUID guid, LPDWORD age) const {
+  if (NULL == guid || NULL == age) {
+    return false;
+  }
+
+  DWORD debug_directory_size =
+      GetImageDirectoryEntrySize(IMAGE_DIRECTORY_ENTRY_DEBUG);
+  PIMAGE_DEBUG_DIRECTORY debug_directory =
+      reinterpret_cast<PIMAGE_DEBUG_DIRECTORY>(
+      GetImageDirectoryEntryAddr(IMAGE_DIRECTORY_ENTRY_DEBUG));
+
+  size_t directory_count =
+      debug_directory_size / sizeof(IMAGE_DEBUG_DIRECTORY);
+
+  for (size_t index = 0; index < directory_count; ++index) {
+    if (debug_directory[index].Type == IMAGE_DEBUG_TYPE_CODEVIEW) {
+      PdbInfo* pdb_info = reinterpret_cast<PdbInfo*>(
+          RVAToAddr(debug_directory[index].AddressOfRawData));
+      if (pdb_info->Signature != kPdbInfoSignature) {
+        // Unsupported PdbInfo signature
+        return false;
+      }
+      *guid = pdb_info->Guid;
+      *age = pdb_info->Age;
+      return true;
+    }
+  }
+  return false;
+}
+
 PDWORD PEImage::GetExportEntry(LPCSTR name) const {
   PIMAGE_EXPORT_DIRECTORY exports = GetExportDirectory();
 
@@ -178,11 +211,7 @@ FARPROC PEImage::GetProcAddress(LPCSTR function_name) const {
 
   // Check for forwarded exports as a special case.
   if (exports <= function && exports + size > function)
-#pragma warning(push)
-#pragma warning(disable: 4312)
-    // This cast generates a warning because it is 32 bit specific.
-    return reinterpret_cast<FARPROC>(0xFFFFFFFF);
-#pragma warning(pop)
+    return reinterpret_cast<FARPROC>(-1);
 
   return reinterpret_cast<FARPROC>(function);
 }
@@ -407,8 +436,6 @@ bool PEImage::EnumDelayImportChunks(EnumDelayImportChunksFunction callback,
   for (; delay_descriptor->rvaHmod; delay_descriptor++) {
     PIMAGE_THUNK_DATA name_table;
     PIMAGE_THUNK_DATA iat;
-    PIMAGE_THUNK_DATA bound_iat;    // address of the optional bound IAT
-    PIMAGE_THUNK_DATA unload_iat;   // address of optional copy of original IAT
     LPCSTR module_name;
 
     // check if VC7-style imports, using RVAs instead of
@@ -416,33 +443,25 @@ bool PEImage::EnumDelayImportChunks(EnumDelayImportChunksFunction callback,
     bool rvas = (delay_descriptor->grAttrs & dlattrRva) != 0;
 
     if (rvas) {
-      module_name = reinterpret_cast<LPCSTR>(
-                        RVAToAddr(delay_descriptor->rvaDLLName));
+      module_name =
+          reinterpret_cast<LPCSTR>(RVAToAddr(delay_descriptor->rvaDLLName));
       name_table = reinterpret_cast<PIMAGE_THUNK_DATA>(
-                       RVAToAddr(delay_descriptor->rvaINT));
+          RVAToAddr(delay_descriptor->rvaINT));
       iat = reinterpret_cast<PIMAGE_THUNK_DATA>(
-                RVAToAddr(delay_descriptor->rvaIAT));
-      bound_iat = reinterpret_cast<PIMAGE_THUNK_DATA>(
-                      RVAToAddr(delay_descriptor->rvaBoundIAT));
-      unload_iat = reinterpret_cast<PIMAGE_THUNK_DATA>(
-                       RVAToAddr(delay_descriptor->rvaUnloadIAT));
+          RVAToAddr(delay_descriptor->rvaIAT));
     } else {
-#pragma warning(push)
-#pragma warning(disable: 4312)
-      // These casts generate warnings because they are 32 bit specific.
-      module_name = reinterpret_cast<LPCSTR>(delay_descriptor->rvaDLLName);
+      // Values in IMAGE_DIRECTORY_ENTRY_DELAY_IMPORT are 32-bit, even on 64-bit
+      // platforms. See section 4.8 of PECOFF image spec rev 8.3.
+      module_name = reinterpret_cast<LPCSTR>(
+          static_cast<uintptr_t>(delay_descriptor->rvaDLLName));
       name_table = reinterpret_cast<PIMAGE_THUNK_DATA>(
-                       delay_descriptor->rvaINT);
-      iat = reinterpret_cast<PIMAGE_THUNK_DATA>(delay_descriptor->rvaIAT);
-      bound_iat = reinterpret_cast<PIMAGE_THUNK_DATA>(
-                      delay_descriptor->rvaBoundIAT);
-      unload_iat = reinterpret_cast<PIMAGE_THUNK_DATA>(
-                       delay_descriptor->rvaUnloadIAT);
-#pragma warning(pop)
+          static_cast<uintptr_t>(delay_descriptor->rvaINT));
+      iat = reinterpret_cast<PIMAGE_THUNK_DATA>(
+          static_cast<uintptr_t>(delay_descriptor->rvaIAT));
     }
 
     if (!callback(*this, delay_descriptor, module_name, name_table, iat,
-                  bound_iat, unload_iat, cookie))
+                  cookie))
       return false;
   }
 
@@ -454,12 +473,7 @@ bool PEImage::EnumOneDelayImportChunk(EnumImportsFunction callback,
                                       LPCSTR module_name,
                                       PIMAGE_THUNK_DATA name_table,
                                       PIMAGE_THUNK_DATA iat,
-                                      PIMAGE_THUNK_DATA bound_iat,
-                                      PIMAGE_THUNK_DATA unload_iat,
                                       PVOID cookie) const {
-  UNREFERENCED_PARAMETER(bound_iat);
-  UNREFERENCED_PARAMETER(unload_iat);
-
   for (; name_table->u1.Ordinal; name_table++, iat++) {
     LPCSTR name = NULL;
     WORD ordinal = 0;
@@ -475,12 +489,8 @@ bool PEImage::EnumOneDelayImportChunk(EnumImportsFunction callback,
         import = reinterpret_cast<PIMAGE_IMPORT_BY_NAME>(
                      RVAToAddr(name_table->u1.ForwarderString));
       } else {
-#pragma warning(push)
-#pragma warning(disable: 4312)
-        // This cast generates a warning because it is 32 bit specific.
         import = reinterpret_cast<PIMAGE_IMPORT_BY_NAME>(
                      name_table->u1.ForwarderString);
-#pragma warning(pop)
       }
 
       hint = import->Hint;
@@ -521,13 +531,13 @@ bool PEImage::VerifyMagic() const {
   return true;
 }
 
-bool PEImage::ImageRVAToOnDiskOffset(DWORD rva, DWORD *on_disk_offset) const {
+bool PEImage::ImageRVAToOnDiskOffset(DWORD rva, DWORD* on_disk_offset) const {
   LPVOID address = RVAToAddr(rva);
   return ImageAddrToOnDiskOffset(address, on_disk_offset);
 }
 
 bool PEImage::ImageAddrToOnDiskOffset(LPVOID address,
-                                      DWORD *on_disk_offset) const {
+                                      DWORD* on_disk_offset) const {
   if (NULL == address)
     return false;
 
@@ -536,14 +546,11 @@ bool PEImage::ImageAddrToOnDiskOffset(LPVOID address,
   if (NULL == section_header)
     return false;
 
-#pragma warning(push)
-#pragma warning(disable: 4311)
-  // These casts generate warnings because they are 32 bit specific.
   // Don't follow the virtual RVAToAddr, use the one on the base.
-  DWORD offset_within_section = reinterpret_cast<DWORD>(address) -
-                                    reinterpret_cast<DWORD>(PEImage::RVAToAddr(
-                                        section_header->VirtualAddress));
-#pragma warning(pop)
+  DWORD offset_within_section =
+      static_cast<DWORD>(reinterpret_cast<uintptr_t>(address)) -
+      static_cast<DWORD>(reinterpret_cast<uintptr_t>(
+          PEImage::RVAToAddr(section_header->VirtualAddress)));
 
   *on_disk_offset = section_header->PointerToRawData + offset_within_section;
   return true;

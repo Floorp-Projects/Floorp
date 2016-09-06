@@ -16,6 +16,7 @@
 #include "nsThreadUtils.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/Logging.h"
+#include "mozilla/SyncRunnable.h"
 
 // MOZ_LOG=UrlClassifierDbService:5
 extern mozilla::LazyLogModule gUrlClassifierDbServiceLog;
@@ -78,6 +79,150 @@ Classifier::SplitTables(const nsACString& str, nsTArray<nsCString>& tables)
   }
 }
 
+static nsresult
+DeriveProviderFromPref(const nsACString& aTableName, nsCString& aProviderName)
+{
+  // Check all preferences "browser.safebrowsing.provider.[provider].list"
+  // to see which one contains |aTableName|.
+
+  nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+  NS_ENSURE_TRUE(prefs, NS_ERROR_FAILURE);
+  nsCOMPtr<nsIPrefBranch> prefBranch;
+  nsresult rv = prefs->GetBranch("browser.safebrowsing.provider.",
+                                  getter_AddRefs(prefBranch));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // We've got a pref branch for "browser.safebrowsing.provider.".
+  // Enumerate all children prefs and parse providers.
+  uint32_t childCount;
+  char** childArray;
+  rv = prefBranch->GetChildList("", &childCount, &childArray);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Collect providers from childArray.
+  nsTHashtable<nsCStringHashKey> providers;
+  for (uint32_t i = 0; i < childCount; i++) {
+    nsCString child(childArray[i]);
+    auto dotPos = child.FindChar('.');
+    if (dotPos < 0) {
+      continue;
+    }
+
+    nsDependentCSubstring provider = Substring(child, 0, dotPos);
+
+    providers.PutEntry(provider);
+  }
+  NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(childCount, childArray);
+
+  // Now we have all providers. Check which one owns |aTableName|.
+  // e.g. The owning lists of provider "google" is defined in
+  // "browser.safebrowsing.provider.google.lists".
+  for (auto itr = providers.Iter(); !itr.Done(); itr.Next()) {
+    auto entry = itr.Get();
+    nsCString provider(entry->GetKey());
+    nsPrintfCString owninListsPref("%s.lists", provider.get());
+
+    nsXPIDLCString owningLists;
+    nsresult rv = prefBranch->GetCharPref(owninListsPref.get(),
+                                          getter_Copies(owningLists));
+    if (NS_FAILED(rv)) {
+      continue;
+    }
+
+    // We've got the owning lists (represented as string) of |provider|.
+    // Parse the string and see if |aTableName| is included.
+    nsTArray<nsCString> tables;
+    Classifier::SplitTables(owningLists, tables);
+    if (tables.Contains(aTableName)) {
+      aProviderName = provider;
+      return NS_OK;
+    }
+  }
+
+  return NS_ERROR_FAILURE;
+}
+
+// Lookup the provider name by table name on non-main thread.
+// On main thread, just call DeriveProviderFromPref() instead
+// but DeriveProviderFromPref is supposed to used internally.
+static nsCString
+GetProviderByTableName(const nsACString& aTableName)
+{
+  MOZ_ASSERT(!NS_IsMainThread(), "GetProviderByTableName MUST be called "
+                                 "on non-main thread.");
+  nsCString providerName;
+
+  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction([&aTableName,
+                                                    &providerName] () -> void {
+    nsresult rv = DeriveProviderFromPref(aTableName, providerName);
+    if (NS_FAILED(rv)) {
+      LOG(("No provider found for %s", nsCString(aTableName).get()));
+    }
+  });
+
+  nsCOMPtr<nsIThread> mainThread = do_GetMainThread();
+  SyncRunnable::DispatchToThread(mainThread, r);
+
+  return providerName;
+}
+
+nsresult
+Classifier::GetPrivateStoreDirectory(nsIFile* aRootStoreDirectory,
+                                     const nsACString& aTableName,
+                                     nsIFile** aPrivateStoreDirectory)
+{
+  NS_ENSURE_ARG_POINTER(aPrivateStoreDirectory);
+
+  if (!StringEndsWith(aTableName, NS_LITERAL_CSTRING("-proto"))) {
+    // Only V4 table names (ends with '-proto') would be stored
+    // to per-provider sub-directory.
+    nsCOMPtr<nsIFile>(aRootStoreDirectory).forget(aPrivateStoreDirectory);
+    return NS_OK;
+  }
+
+  nsCString providerName = GetProviderByTableName(aTableName);
+  if (providerName.IsEmpty()) {
+    // When failing to get provider, just store in the root folder.
+    nsCOMPtr<nsIFile>(aRootStoreDirectory).forget(aPrivateStoreDirectory);
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIFile> providerDirectory;
+
+  // Clone first since we are gonna create a new directory.
+  nsresult rv = aRootStoreDirectory->Clone(getter_AddRefs(providerDirectory));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Append the provider name to the root store directory.
+  rv = providerDirectory->AppendNative(providerName);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Ensure existence of the provider directory.
+  bool dirExists;
+  rv = providerDirectory->Exists(&dirExists);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!dirExists) {
+    LOG(("Creating private directory for %s", nsCString(aTableName).get()));
+    rv = providerDirectory->Create(nsIFile::DIRECTORY_TYPE, 0755);
+    NS_ENSURE_SUCCESS(rv, rv);
+    providerDirectory.forget(aPrivateStoreDirectory);
+    return rv;
+  }
+
+  // Store directory exists. Check if it's a directory.
+  bool isDir;
+  rv = providerDirectory->IsDirectory(&isDir);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (!isDir) {
+    return NS_ERROR_FILE_DESTINATION_NOT_DIR;
+  }
+
+  providerDirectory.forget(aPrivateStoreDirectory);
+
+  return NS_OK;
+}
+
 Classifier::Classifier()
 {
 }
@@ -91,17 +236,17 @@ nsresult
 Classifier::SetupPathNames()
 {
   // Get the root directory where to store all the databases.
-  nsresult rv = mCacheDirectory->Clone(getter_AddRefs(mStoreDirectory));
+  nsresult rv = mCacheDirectory->Clone(getter_AddRefs(mRootStoreDirectory));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = mStoreDirectory->AppendNative(STORE_DIRECTORY);
+  rv = mRootStoreDirectory->AppendNative(STORE_DIRECTORY);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Make sure LookupCaches (which are persistent and survive updates)
   // are reading/writing in the right place. We will be moving their
   // files "underneath" them during backup/restore.
   for (uint32_t i = 0; i < mLookupCaches.Length(); i++) {
-    mLookupCaches[i]->UpdateDirHandle(mStoreDirectory);
+    mLookupCaches[i]->UpdateRootDirHandle(mRootStoreDirectory);
   }
 
   // Directory where to move a backup before an update.
@@ -127,15 +272,15 @@ Classifier::CreateStoreDirectory()
 {
   // Ensure the safebrowsing directory exists.
   bool storeExists;
-  nsresult rv = mStoreDirectory->Exists(&storeExists);
+  nsresult rv = mRootStoreDirectory->Exists(&storeExists);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!storeExists) {
-    rv = mStoreDirectory->Create(nsIFile::DIRECTORY_TYPE, 0755);
+    rv = mRootStoreDirectory->Create(nsIFile::DIRECTORY_TYPE, 0755);
     NS_ENSURE_SUCCESS(rv, rv);
   } else {
     bool storeIsDir;
-    rv = mStoreDirectory->IsDirectory(&storeIsDir);
+    rv = mRootStoreDirectory->IsDirectory(&storeIsDir);
     NS_ENSURE_SUCCESS(rv, rv);
     if (!storeIsDir)
       return NS_ERROR_FILE_DESTINATION_NOT_DIR;
@@ -189,7 +334,7 @@ Classifier::Reset()
 {
   DropStores();
 
-  mStoreDirectory->Remove(true);
+  mRootStoreDirectory->Remove(true);
   mBackupDirectory->Remove(true);
   mToDeleteDirectory->Remove(true);
 
@@ -215,7 +360,7 @@ void
 Classifier::DeleteTables(const nsTArray<nsCString>& aTables)
 {
   nsCOMPtr<nsISimpleEnumerator> entries;
-  nsresult rv = mStoreDirectory->GetDirectoryEntries(getter_AddRefs(entries));
+  nsresult rv = mRootStoreDirectory->GetDirectoryEntries(getter_AddRefs(entries));
   NS_ENSURE_SUCCESS_VOID(rv);
 
   bool hasMore;
@@ -248,7 +393,7 @@ Classifier::TableRequest(nsACString& aResult)
   nsTArray<nsCString> tables;
   ActiveTables(tables);
   for (uint32_t i = 0; i < tables.Length(); i++) {
-    HashStore store(tables[i], mStoreDirectory);
+    HashStore store(tables[i], mRootStoreDirectory);
 
     nsresult rv = store.Open();
     if (NS_FAILED(rv))
@@ -502,7 +647,7 @@ Classifier::RegenActiveTables()
 
   for (uint32_t i = 0; i < foundTables.Length(); i++) {
     nsCString table(foundTables[i]);
-    HashStore store(table, mStoreDirectory);
+    HashStore store(table, mRootStoreDirectory);
 
     nsresult rv = store.Open();
     if (NS_FAILED(rv))
@@ -533,7 +678,7 @@ nsresult
 Classifier::ScanStoreDir(nsTArray<nsCString>& aTables)
 {
   nsCOMPtr<nsISimpleEnumerator> entries;
-  nsresult rv = mStoreDirectory->GetDirectoryEntries(getter_AddRefs(entries));
+  nsresult rv = mRootStoreDirectory->GetDirectoryEntries(getter_AddRefs(entries));
   NS_ENSURE_SUCCESS(rv, rv);
 
   bool hasMore;
@@ -597,13 +742,13 @@ Classifier::BackupTables()
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCString storeDirName;
-  rv = mStoreDirectory->GetNativeLeafName(storeDirName);
+  rv = mRootStoreDirectory->GetNativeLeafName(storeDirName);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = mStoreDirectory->MoveToNative(nullptr, backupDirName);
+  rv = mRootStoreDirectory->MoveToNative(nullptr, backupDirName);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = mStoreDirectory->CopyToNative(nullptr, storeDirName);
+  rv = mRootStoreDirectory->CopyToNative(nullptr, storeDirName);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // We moved some things to new places, so move the handles around, too.
@@ -640,15 +785,15 @@ Classifier::RecoverBackups()
   if (backupExists) {
     // Remove the safebrowsing dir if it exists
     nsCString storeDirName;
-    rv = mStoreDirectory->GetNativeLeafName(storeDirName);
+    rv = mRootStoreDirectory->GetNativeLeafName(storeDirName);
     NS_ENSURE_SUCCESS(rv, rv);
 
     bool storeExists;
-    rv = mStoreDirectory->Exists(&storeExists);
+    rv = mRootStoreDirectory->Exists(&storeExists);
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (storeExists) {
-      rv = mStoreDirectory->Remove(true);
+      rv = mRootStoreDirectory->Remove(true);
       NS_ENSURE_SUCCESS(rv, rv);
     }
 
@@ -700,7 +845,7 @@ Classifier::UpdateHashStore(nsTArray<TableUpdate*>* aUpdates,
 {
   LOG(("Classifier::UpdateHashStore(%s)", PromiseFlatCString(aTable).get()));
 
-  HashStore store(aTable, mStoreDirectory);
+  HashStore store(aTable, mRootStoreDirectory);
 
   if (!CheckValidUpdate(aUpdates, store.TableName())) {
     return NS_OK;
@@ -821,7 +966,7 @@ Classifier::GetLookupCache(const nsACString& aTable)
     }
   }
 
-  UniquePtr<LookupCache> cache(new LookupCache(aTable, mStoreDirectory));
+  UniquePtr<LookupCache> cache(new LookupCache(aTable, mRootStoreDirectory));
   nsresult rv = cache->Init();
   if (NS_FAILED(rv)) {
     return nullptr;

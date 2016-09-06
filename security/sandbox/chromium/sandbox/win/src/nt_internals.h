@@ -8,6 +8,7 @@
 #define SANDBOX_WIN_SRC_NT_INTERNALS_H__
 
 #include <windows.h>
+#include <stddef.h>
 
 typedef LONG NTSTATUS;
 #define NT_SUCCESS(st) (st >= 0)
@@ -58,6 +59,7 @@ typedef PSTRING POEM_STRING;
 typedef CONST STRING* PCOEM_STRING;
 
 #define OBJ_CASE_INSENSITIVE 0x00000040L
+#define OBJ_OPENIF           0x00000080L
 
 typedef struct _OBJECT_ATTRIBUTES {
   ULONG Length;
@@ -307,15 +309,27 @@ typedef enum _PROCESSINFOCLASS {
 } PROCESSINFOCLASS;
 
 typedef PVOID PPEB;
-typedef PVOID KPRIORITY;
+typedef LONG KPRIORITY;
 
 typedef struct _PROCESS_BASIC_INFORMATION {
-  NTSTATUS ExitStatus;
+  union {
+    NTSTATUS ExitStatus;
+    PVOID padding_for_x64_0;
+  };
   PPEB PebBaseAddress;
   KAFFINITY AffinityMask;
-  KPRIORITY BasePriority;
-  ULONG UniqueProcessId;
-  ULONG InheritedFromUniqueProcessId;
+  union {
+    KPRIORITY BasePriority;
+    PVOID padding_for_x64_1;
+  };
+  union {
+    DWORD UniqueProcessId;
+    PVOID padding_for_x64_2;
+  };
+  union {
+    DWORD InheritedFromUniqueProcessId;
+    PVOID padding_for_x64_3;
+  };
 } PROCESS_BASIC_INFORMATION, *PPROCESS_BASIC_INFORMATION;
 
 typedef NTSTATUS (WINAPI *NtQueryInformationProcessFunction)(
@@ -450,8 +464,8 @@ typedef NTSTATUS (WINAPI *NtQueryVirtualMemoryFunction)(
   IN PVOID BaseAddress,
   IN MEMORY_INFORMATION_CLASS MemoryInformationClass,
   OUT PVOID MemoryInformation,
-  IN ULONG MemoryInformationLength,
-  OUT PULONG ReturnLength OPTIONAL);
+  IN SIZE_T MemoryInformationLength,
+  OUT PSIZE_T ReturnLength OPTIONAL);
 
 typedef NTSTATUS (WINAPI *NtProtectVirtualMemoryFunction)(
   IN HANDLE ProcessHandle,
@@ -635,6 +649,11 @@ typedef enum _EVENT_TYPE {
   SynchronizationEvent
 } EVENT_TYPE, *PEVENT_TYPE;
 
+typedef NTSTATUS (WINAPI* NtCreateDirectoryObjectFunction) (
+    PHANDLE DirectoryHandle,
+    ACCESS_MASK DesiredAccess,
+    POBJECT_ATTRIBUTES ObjectAttributes);
+
 typedef NTSTATUS (WINAPI* NtOpenDirectoryObjectFunction) (
     PHANDLE DirectoryHandle,
     ACCESS_MASK DesiredAccess,
@@ -655,6 +674,30 @@ typedef NTSTATUS (WINAPI* NtOpenSymbolicLinkObjectFunction) (
 #define DIRECTORY_CREATE_OBJECT       0x0004
 #define DIRECTORY_CREATE_SUBDIRECTORY 0x0008
 #define DIRECTORY_ALL_ACCESS          0x000F
+
+typedef NTSTATUS (WINAPI* NtCreateLowBoxToken)(
+    OUT PHANDLE token,
+    IN HANDLE original_handle,
+    IN ACCESS_MASK access,
+    IN POBJECT_ATTRIBUTES object_attribute,
+    IN PSID appcontainer_sid,
+    IN DWORD capabilityCount,
+    IN PSID_AND_ATTRIBUTES capabilities,
+    IN DWORD handle_count,
+    IN PHANDLE handles);
+
+typedef NTSTATUS(WINAPI *NtSetInformationProcess)(
+    IN HANDLE process_handle,
+    IN ULONG info_class,
+    IN PVOID process_information,
+    IN ULONG information_length);
+
+struct PROCESS_ACCESS_TOKEN {
+  HANDLE token;
+  HANDLE thread;
+};
+
+const unsigned int NtProcessInformationAccessToken = 9;
 
 #endif  // SANDBOX_WIN_SRC_NT_INTERNALS_H__
 

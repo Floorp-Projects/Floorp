@@ -9,8 +9,8 @@
 #include <map>
 #include <set>
 #include <utility>
-#include "base/basictypes.h"
 #include "base/compiler_specific.h"
+#include "base/macros.h"
 #include "base/win/scoped_handle.h"
 #include "sandbox/win/src/crosscall_server.h"
 #include "sandbox/win/src/job.h"
@@ -45,17 +45,17 @@ class BrokerServicesBase final : public BrokerServices,
   ~BrokerServicesBase();
 
   // BrokerServices interface.
-  virtual ResultCode Init() override;
-  virtual TargetPolicy* CreatePolicy() override;
-  virtual ResultCode SpawnTarget(const wchar_t* exe_path,
-                                 const wchar_t* command_line,
-                                 TargetPolicy* policy,
-                                 PROCESS_INFORMATION* target) override;
-  virtual ResultCode WaitForAllTargets() override;
-  virtual ResultCode AddTargetPeer(HANDLE peer_process) override;
-  virtual ResultCode InstallAppContainer(const wchar_t* sid,
-                                         const wchar_t* name) override;
-  virtual ResultCode UninstallAppContainer(const wchar_t* sid) override;
+  ResultCode Init() override;
+  TargetPolicy* CreatePolicy() override;
+  ResultCode SpawnTarget(const wchar_t* exe_path,
+                         const wchar_t* command_line,
+                         TargetPolicy* policy,
+                         PROCESS_INFORMATION* target) override;
+  ResultCode WaitForAllTargets() override;
+  ResultCode AddTargetPeer(HANDLE peer_process) override;
+  ResultCode InstallAppContainer(const wchar_t* sid,
+                                 const wchar_t* name) override;
+  ResultCode UninstallAppContainer(const wchar_t* sid) override;
 
   // Checks if the supplied process ID matches one of the broker's active
   // target processes
@@ -64,9 +64,8 @@ class BrokerServicesBase final : public BrokerServices,
   bool IsActiveTarget(DWORD process_id);
 
  private:
-  // Releases the Job and notifies the associated Policy object to its
-  // resources as well.
-  static void FreeResources(JobTracker* tracker);
+  typedef std::list<JobTracker*> JobTrackerList;
+  typedef std::map<DWORD, PeerTracker*> PeerTrackerMap;
 
   // The routine that the worker thread executes. It is in charge of
   // notifications and cleanup-related tasks.
@@ -77,14 +76,14 @@ class BrokerServicesBase final : public BrokerServices,
 
   // The completion port used by the job objects to communicate events to
   // the worker thread.
-  HANDLE job_port_;
+  base::win::ScopedHandle job_port_;
 
   // Handle to a manual-reset event that is signaled when the total target
   // process count reaches zero.
-  HANDLE no_targets_;
+  base::win::ScopedHandle no_targets_;
 
   // Handle to the worker thread that reacts to job notifications.
-  HANDLE job_thread_;
+  base::win::ScopedHandle job_thread_;
 
   // Lock used to protect the list of targets from being modified by 2
   // threads at the same time.
@@ -94,20 +93,15 @@ class BrokerServicesBase final : public BrokerServices,
   ThreadProvider* thread_pool_;
 
   // List of the trackers for closing and cleanup purposes.
-  typedef std::list<JobTracker*> JobTrackerList;
   JobTrackerList tracker_list_;
 
   // Maps peer process IDs to the saved handle and wait event.
   // Prevents peer callbacks from accessing the broker after destruction.
-  typedef std::map<DWORD, PeerTracker*> PeerTrackerMap;
   PeerTrackerMap peer_map_;
 
   // Provides a fast lookup to identify sandboxed processes that belong to a
   // job. Consult |jobless_process_handles_| for handles of pocess without job.
   std::set<DWORD> child_process_ids_;
-
-  typedef std::map<uint32_t, std::pair<HANDLE, HANDLE>> TokenCacheMap;
-  TokenCacheMap token_cache_;
 
   DISALLOW_COPY_AND_ASSIGN(BrokerServicesBase);
 };

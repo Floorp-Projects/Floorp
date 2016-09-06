@@ -13,6 +13,14 @@ interface nsIDOMWindow;
 interface mozIDOMWindowProxy;
 interface nsIWeakReference;
 
+%{C++
+namespace mozilla {
+class DocShellOriginAttributes;
+}
+%}
+
+[ref] native const_OriginAttributesRef(const mozilla::DocShellOriginAttributes);
+
 /**
  * The nsIWebBrowser interface is implemented by web browser objects.
  * Embedders use this interface during initialisation to associate
@@ -144,4 +152,12 @@ interface nsIWebBrowser : nsISupports
      * appropriate.
      */
     attribute boolean isActive;
+
+    /**
+     * Set Origin Attributes on the nsIWebBrowser.
+     * The Origin Attributes will be passed to the docshell once it has been
+     * created
+     */
+    [noscript, notxpcom, nostdcall, binaryname(SetOriginAttributes)]
+    void binarySetOriginAttributes(in const_OriginAttributesRef aOriginAttrs);
 };

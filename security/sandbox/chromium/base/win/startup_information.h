@@ -6,9 +6,10 @@
 #define BASE_WIN_STARTUP_INFORMATION_H_
 
 #include <windows.h>
+#include <stddef.h>
 
 #include "base/base_export.h"
-#include "base/basictypes.h"
+#include "base/macros.h"
 
 namespace base {
 namespace win {
@@ -24,12 +25,14 @@ class BASE_EXPORT StartupInformation {
   bool InitializeProcThreadAttributeList(DWORD attribute_count);
 
   // Sets one entry in the initialized attribute list.
+  // |value| needs to live at least as long as the StartupInformation object
+  // this is called on.
   bool UpdateProcThreadAttribute(DWORD_PTR attribute,
                                  void* value,
                                  size_t size);
 
   LPSTARTUPINFOW startup_info() { return &startup_info_.StartupInfo; }
-  const LPSTARTUPINFOW startup_info() const {
+  LPSTARTUPINFOW startup_info() const {
     return const_cast<const LPSTARTUPINFOW>(&startup_info_.StartupInfo);
   }
 
@@ -45,5 +48,4 @@ class BASE_EXPORT StartupInformation {
 }  // namespace win
 }  // namespace base
 
-#endif  // BASE_WIN_SCOPED_STARTUP_INFO_EX_H_
-
+#endif  // BASE_WIN_STARTUP_INFORMATION_H_

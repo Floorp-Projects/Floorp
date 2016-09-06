@@ -733,11 +733,40 @@ DXGITextureHostD3D11::GetCompositor()
 bool
 DXGITextureHostD3D11::Lock()
 {
-  /**
-   * Note: This function may be called when mCompositor is null
-   *       such as during WebVR frame submission.
-   **/
+  if (!mCompositor) {
+    // Make an early return here if we call SetCompositor() with an incompatible
+    // compositor. This check tries to prevent the problem where we use that
+    // incompatible compositor to compose this texture.
+    return false;
+  }
 
+  return LockInternal();
+}
+
+bool
+DXGITextureHostD3D11::LockWithoutCompositor()
+{
+  // Unlike the normal Lock() function, this function may be called when
+  // mCompositor is nullptr such as during WebVR frame submission. So, there is
+  // no 'mCompositor' checking here.
+  return LockInternal();
+}
+
+void
+DXGITextureHostD3D11::Unlock()
+{
+  UnlockInternal();
+}
+
+void
+DXGITextureHostD3D11::UnlockWithoutCompositor()
+{
+  UnlockInternal();
+}
+
+bool
+DXGITextureHostD3D11::LockInternal()
+{
   if (!GetDevice()) {
     NS_WARNING("trying to lock a TextureHost without a D3D device");
     return false;
@@ -758,7 +787,7 @@ DXGITextureHostD3D11::Lock()
 }
 
 void
-DXGITextureHostD3D11::Unlock()
+DXGITextureHostD3D11::UnlockInternal()
 {
   UnlockD3DTexture(mTextureSource->GetD3D11Texture());
 }

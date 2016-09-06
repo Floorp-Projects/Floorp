@@ -4,20 +4,22 @@
 
 #include "sandbox/win/src/policy_engine_opcodes.h"
 
-#include "base/basictypes.h"
+#include <stddef.h>
+#include <stdint.h>
+
 #include "sandbox/win/src/sandbox_nt_types.h"
 #include "sandbox/win/src/sandbox_types.h"
 
 namespace {
-const unsigned short kMaxUniStrSize = 0xfffc;
+const unsigned short kMaxUniStrSize = 0xfffc / sizeof(wchar_t);
 
 bool InitStringUnicode(const wchar_t* source, size_t length,
                        UNICODE_STRING* ustring) {
+  if (length > kMaxUniStrSize) {
+    return false;
+  }
   ustring->Buffer = const_cast<wchar_t*>(source);
   ustring->Length = static_cast<USHORT>(length) * sizeof(wchar_t);
-  if (length > kMaxUniStrSize) {
-      return false;
-  }
   ustring->MaximumLength = (NULL != source) ?
                                 ustring->Length + sizeof(wchar_t) : 0;
   return true;
@@ -48,7 +50,7 @@ EvalResult OpcodeEval(PolicyOpcode* opcode, const ParameterSet* pp,
 // Opcode OpAlwaysFalse:
 // Does not require input parameter.
 
-PolicyOpcode* OpcodeFactory::MakeOpAlwaysFalse(uint32 options) {
+PolicyOpcode* OpcodeFactory::MakeOpAlwaysFalse(uint32_t options) {
   return MakeBase(OP_ALWAYS_FALSE, options, -1);
 }
 
@@ -56,9 +58,6 @@ template <>
 EvalResult OpcodeEval<OP_ALWAYS_FALSE>(PolicyOpcode* opcode,
                                        const ParameterSet* param,
                                        MatchContext* context) {
-  UNREFERENCED_PARAMETER(opcode);
-  UNREFERENCED_PARAMETER(param);
-  UNREFERENCED_PARAMETER(context);
   return EVAL_FALSE;
 }
 
@@ -66,7 +65,7 @@ EvalResult OpcodeEval<OP_ALWAYS_FALSE>(PolicyOpcode* opcode,
 // Opcode OpAlwaysTrue:
 // Does not require input parameter.
 
-PolicyOpcode* OpcodeFactory::MakeOpAlwaysTrue(uint32 options) {
+PolicyOpcode* OpcodeFactory::MakeOpAlwaysTrue(uint32_t options) {
   return MakeBase(OP_ALWAYS_TRUE, options, -1);
 }
 
@@ -74,9 +73,6 @@ template <>
 EvalResult OpcodeEval<OP_ALWAYS_TRUE>(PolicyOpcode* opcode,
                                       const ParameterSet* param,
                                       MatchContext* context) {
-  UNREFERENCED_PARAMETER(opcode);
-  UNREFERENCED_PARAMETER(param);
-  UNREFERENCED_PARAMETER(context);
   return EVAL_TRUE;
 }
 
@@ -85,8 +81,7 @@ EvalResult OpcodeEval<OP_ALWAYS_TRUE>(PolicyOpcode* opcode,
 // Does not require input parameter.
 // Argument 0 contains the actual action to return.
 
-PolicyOpcode* OpcodeFactory::MakeOpAction(EvalResult action,
-                                          uint32 options) {
+PolicyOpcode* OpcodeFactory::MakeOpAction(EvalResult action, uint32_t options) {
   PolicyOpcode* opcode = MakeBase(OP_ACTION, options, 0);
   if (NULL == opcode) return NULL;
   opcode->SetArgument(0, action);
@@ -97,8 +92,6 @@ template <>
 EvalResult OpcodeEval<OP_ACTION>(PolicyOpcode* opcode,
                                  const ParameterSet* param,
                                  MatchContext* context) {
-  UNREFERENCED_PARAMETER(param);
-  UNREFERENCED_PARAMETER(context);
   int action = 0;
   opcode->GetArgument(0, &action);
   return static_cast<EvalResult>(action);
@@ -106,13 +99,13 @@ EvalResult OpcodeEval<OP_ACTION>(PolicyOpcode* opcode,
 
 //////////////////////////////////////////////////////////////////////////////
 // Opcode OpNumberMatch:
-// Requires a uint32 or void* in selected_param
+// Requires a uint32_t or void* in selected_param
 // Argument 0 is the stored number to match.
 // Argument 1 is the C++ type of the 0th argument.
 
-PolicyOpcode* OpcodeFactory::MakeOpNumberMatch(int16 selected_param,
-                                               uint32 match,
-                                               uint32 options) {
+PolicyOpcode* OpcodeFactory::MakeOpNumberMatch(int16_t selected_param,
+                                               uint32_t match,
+                                               uint32_t options) {
   PolicyOpcode* opcode = MakeBase(OP_NUMBER_MATCH, options, selected_param);
   if (NULL == opcode) return NULL;
   opcode->SetArgument(0, match);
@@ -120,9 +113,9 @@ PolicyOpcode* OpcodeFactory::MakeOpNumberMatch(int16 selected_param,
   return opcode;
 }
 
-PolicyOpcode* OpcodeFactory::MakeOpVoidPtrMatch(int16 selected_param,
+PolicyOpcode* OpcodeFactory::MakeOpVoidPtrMatch(int16_t selected_param,
                                                 const void* match,
-                                                uint32 options) {
+                                                uint32_t options) {
   PolicyOpcode* opcode = MakeBase(OP_NUMBER_MATCH, options, selected_param);
   if (NULL == opcode) return NULL;
   opcode->SetArgument(0, match);
@@ -134,10 +127,9 @@ template <>
 EvalResult OpcodeEval<OP_NUMBER_MATCH>(PolicyOpcode* opcode,
                                        const ParameterSet* param,
                                        MatchContext* context) {
-  UNREFERENCED_PARAMETER(context);
-  uint32 value_uint32 = 0;
+  uint32_t value_uint32 = 0;
   if (param->Get(&value_uint32)) {
-    uint32 match_uint32 = 0;
+    uint32_t match_uint32 = 0;
     opcode->GetArgument(0, &match_uint32);
     return (match_uint32 != value_uint32)? EVAL_FALSE : EVAL_TRUE;
   } else {
@@ -153,14 +145,14 @@ EvalResult OpcodeEval<OP_NUMBER_MATCH>(PolicyOpcode* opcode,
 
 //////////////////////////////////////////////////////////////////////////////
 // Opcode OpNumberMatchRange
-// Requires a uint32 in selected_param.
+// Requires a uint32_t in selected_param.
 // Argument 0 is the stored lower bound to match.
 // Argument 1 is the stored upper bound to match.
 
-PolicyOpcode* OpcodeFactory::MakeOpNumberMatchRange(int16 selected_param,
-                                                    uint32 lower_bound,
-                                                    uint32 upper_bound,
-                                                    uint32 options) {
+PolicyOpcode* OpcodeFactory::MakeOpNumberMatchRange(int16_t selected_param,
+                                                    uint32_t lower_bound,
+                                                    uint32_t upper_bound,
+                                                    uint32_t options) {
   if (lower_bound > upper_bound) {
     return NULL;
   }
@@ -176,12 +168,11 @@ template <>
 EvalResult OpcodeEval<OP_NUMBER_MATCH_RANGE>(PolicyOpcode* opcode,
                                              const ParameterSet* param,
                                              MatchContext* context) {
-  UNREFERENCED_PARAMETER(context);
-  uint32 value = 0;
+  uint32_t value = 0;
   if (!param->Get(&value)) return EVAL_ERROR;
 
-  uint32 lower_bound = 0;
-  uint32 upper_bound = 0;
+  uint32_t lower_bound = 0;
+  uint32_t upper_bound = 0;
   opcode->GetArgument(0, &lower_bound);
   opcode->GetArgument(1, &upper_bound);
   return((lower_bound <= value) && (upper_bound >= value))?
@@ -190,12 +181,12 @@ EvalResult OpcodeEval<OP_NUMBER_MATCH_RANGE>(PolicyOpcode* opcode,
 
 //////////////////////////////////////////////////////////////////////////////
 // Opcode OpNumberAndMatch:
-// Requires a uint32 in selected_param.
+// Requires a uint32_t in selected_param.
 // Argument 0 is the stored number to match.
 
-PolicyOpcode* OpcodeFactory::MakeOpNumberAndMatch(int16 selected_param,
-                                                  uint32 match,
-                                                  uint32 options) {
+PolicyOpcode* OpcodeFactory::MakeOpNumberAndMatch(int16_t selected_param,
+                                                  uint32_t match,
+                                                  uint32_t options) {
   PolicyOpcode* opcode = MakeBase(OP_NUMBER_AND_MATCH, options, selected_param);
   if (NULL == opcode) return NULL;
   opcode->SetArgument(0, match);
@@ -206,11 +197,10 @@ template <>
 EvalResult OpcodeEval<OP_NUMBER_AND_MATCH>(PolicyOpcode* opcode,
                                            const ParameterSet* param,
                                            MatchContext* context) {
-  UNREFERENCED_PARAMETER(context);
-  uint32 value = 0;
+  uint32_t value = 0;
   if (!param->Get(&value)) return EVAL_ERROR;
 
-  uint32 number = 0;
+  uint32_t number = 0;
   opcode->GetArgument(0, &number);
   return (number & value)? EVAL_TRUE : EVAL_FALSE;
 }
@@ -224,11 +214,11 @@ EvalResult OpcodeEval<OP_NUMBER_AND_MATCH>(PolicyOpcode* opcode,
 // as noted in the header file.
 // Argument 3 is the string matching options.
 
-PolicyOpcode* OpcodeFactory::MakeOpWStringMatch(int16 selected_param,
+PolicyOpcode* OpcodeFactory::MakeOpWStringMatch(int16_t selected_param,
                                                 const wchar_t* match_str,
                                                 int start_position,
                                                 StringMatchOptions match_opts,
-                                                uint32 options) {
+                                                uint32_t options) {
   if (NULL == match_str) {
     return NULL;
   }
@@ -314,9 +304,10 @@ EvalResult OpcodeEval<OP_WSTRING_MATCH>(PolicyOpcode* opcode,
     }
 
     UNICODE_STRING match_ustr;
-    InitStringUnicode(match_str, match_len, &match_ustr);
     UNICODE_STRING source_ustr;
-    InitStringUnicode(source_str, match_len, &source_ustr);
+    if (!InitStringUnicode(match_str, match_len, &match_ustr) ||
+        !InitStringUnicode(source_str, match_len, &source_ustr))
+      return EVAL_ERROR;
 
     if (0 == g_nt.RtlCompareUnicodeString(&match_ustr, &source_ustr,
                                           case_sensitive)) {
@@ -328,9 +319,10 @@ EvalResult OpcodeEval<OP_WSTRING_MATCH>(PolicyOpcode* opcode,
     }
   } else if (start_position < 0) {
     UNICODE_STRING match_ustr;
-    InitStringUnicode(match_str, match_len, &match_ustr);
     UNICODE_STRING source_ustr;
-    InitStringUnicode(source_str, match_len, &source_ustr);
+    if (!InitStringUnicode(match_str, match_len, &match_ustr) ||
+        !InitStringUnicode(source_str, match_len, &source_ustr))
+      return EVAL_ERROR;
 
     do {
       if (0 == g_nt.RtlCompareUnicodeString(&match_ustr, &source_ustr,
@@ -350,8 +342,8 @@ EvalResult OpcodeEval<OP_WSTRING_MATCH>(PolicyOpcode* opcode,
 // OpcodeMaker (other member functions).
 
 PolicyOpcode* OpcodeFactory::MakeBase(OpcodeID opcode_id,
-                                      uint32 options,
-                                      int16 selected_param) {
+                                      uint32_t options,
+                                      int16_t selected_param) {
   if (memory_size() < sizeof(PolicyOpcode)) {
     return NULL;
   }

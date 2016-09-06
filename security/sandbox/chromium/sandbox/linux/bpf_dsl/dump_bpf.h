@@ -2,7 +2,9 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "sandbox/linux/seccomp-bpf/codegen.h"
+#include <string>
+
+#include "sandbox/linux/bpf_dsl/codegen.h"
 #include "sandbox/sandbox_export.h"
 
 namespace sandbox {
@@ -12,6 +14,10 @@ class SANDBOX_EXPORT DumpBPF {
  public:
   // PrintProgram writes |program| in a human-readable format to stderr.
   static void PrintProgram(const CodeGen::Program& program);
+
+  // StringPrintProgram writes |program| in a human-readable format to
+  // a std::string.
+  static std::string StringPrintProgram(const CodeGen::Program& program);
 };
 
 }  // namespace bpf_dsl

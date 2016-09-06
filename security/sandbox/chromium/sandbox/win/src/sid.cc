@@ -16,7 +16,7 @@ Sid::Sid(WELL_KNOWN_SID_TYPE type) {
   DWORD size_sid = SECURITY_MAX_SID_SIZE;
   BOOL result = ::CreateWellKnownSid(type, NULL, sid_, &size_sid);
   DCHECK(result);
-  DBG_UNREFERENCED_LOCAL_VARIABLE(result);
+  (void)result;
 }
 
 const SID *Sid::GetPSID() const {

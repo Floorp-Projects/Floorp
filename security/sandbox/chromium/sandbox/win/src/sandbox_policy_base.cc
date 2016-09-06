@@ -5,35 +5,34 @@
 #include "sandbox/win/src/sandbox_policy_base.h"
 
 #include <sddl.h>
+#include <stddef.h>
+#include <stdint.h>
 
-#include "base/basictypes.h"
 #include "base/callback.h"
 #include "base/logging.h"
+#include "base/macros.h"
+#include "base/stl_util.h"
+#include "base/strings/stringprintf.h"
 #include "base/win/windows_version.h"
 #include "sandbox/win/src/app_container.h"
-#include "sandbox/win/src/filesystem_dispatcher.h"
 #include "sandbox/win/src/filesystem_policy.h"
-#include "sandbox/win/src/handle_dispatcher.h"
 #include "sandbox/win/src/handle_policy.h"
-#include "sandbox/win/src/job.h"
 #include "sandbox/win/src/interception.h"
-#include "sandbox/win/src/process_mitigations.h"
-#include "sandbox/win/src/named_pipe_dispatcher.h"
+#include "sandbox/win/src/job.h"
 #include "sandbox/win/src/named_pipe_policy.h"
 #include "sandbox/win/src/policy_broker.h"
 #include "sandbox/win/src/policy_engine_processor.h"
 #include "sandbox/win/src/policy_low_level.h"
-#include "sandbox/win/src/process_mitigations_win32k_dispatcher.h"
+#include "sandbox/win/src/process_mitigations.h"
 #include "sandbox/win/src/process_mitigations_win32k_policy.h"
-#include "sandbox/win/src/process_thread_dispatcher.h"
 #include "sandbox/win/src/process_thread_policy.h"
-#include "sandbox/win/src/registry_dispatcher.h"
 #include "sandbox/win/src/registry_policy.h"
 #include "sandbox/win/src/restricted_token_utils.h"
 #include "sandbox/win/src/sandbox_policy.h"
-#include "sandbox/win/src/sync_dispatcher.h"
+#include "sandbox/win/src/sandbox_utils.h"
 #include "sandbox/win/src/sync_policy.h"
 #include "sandbox/win/src/target_process.h"
+#include "sandbox/win/src/top_level_dispatcher.h"
 #include "sandbox/win/src/window.h"
 
 namespace {
@@ -67,7 +66,44 @@ bool IsInheritableHandle(HANDLE handle) {
   return handle_type == FILE_TYPE_DISK || handle_type == FILE_TYPE_PIPE;
 }
 
+HANDLE CreateLowBoxObjectDirectory(PSID lowbox_sid) {
+  DWORD session_id = 0;
+  if (!::ProcessIdToSessionId(::GetCurrentProcessId(), &session_id))
+    return NULL;
+
+  LPWSTR sid_string = NULL;
+  if (!::ConvertSidToStringSid(lowbox_sid, &sid_string))
+    return NULL;
+
+  base::string16 directory_path = base::StringPrintf(
+                   L"\\Sessions\\%d\\AppContainerNamedObjects\\%ls",
+                   session_id, sid_string).c_str();
+  ::LocalFree(sid_string);
+
+  NtCreateDirectoryObjectFunction CreateObjectDirectory = NULL;
+  ResolveNTFunctionPtr("NtCreateDirectoryObject", &CreateObjectDirectory);
+
+  OBJECT_ATTRIBUTES obj_attr;
+  UNICODE_STRING obj_name;
+  sandbox::InitObjectAttribs(directory_path,
+                             OBJ_CASE_INSENSITIVE | OBJ_OPENIF,
+                             NULL,
+                             &obj_attr,
+                             &obj_name,
+                             NULL);
+
+  HANDLE handle = NULL;
+  NTSTATUS status = CreateObjectDirectory(&handle,
+                                          DIRECTORY_ALL_ACCESS,
+                                          &obj_attr);
+
+  if (!NT_SUCCESS(status))
+    return NULL;
+
+  return handle;
 }
+
+}  // namespace
 
 namespace sandbox {
 
@@ -98,60 +134,26 @@ PolicyBase::PolicyBase()
       mitigations_(0),
       delayed_mitigations_(0),
       policy_maker_(NULL),
-      policy_(NULL) {
+      policy_(NULL),
+      lowbox_sid_(NULL) {
   ::InitializeCriticalSection(&lock_);
-  // Initialize the IPC dispatcher array.
-  memset(&ipc_targets_, NULL, sizeof(ipc_targets_));
-  Dispatcher* dispatcher = NULL;
-
-  dispatcher = new FilesystemDispatcher(this);
-  ipc_targets_[IPC_NTCREATEFILE_TAG] = dispatcher;
-  ipc_targets_[IPC_NTOPENFILE_TAG] = dispatcher;
-  ipc_targets_[IPC_NTSETINFO_RENAME_TAG] = dispatcher;
-  ipc_targets_[IPC_NTQUERYATTRIBUTESFILE_TAG] = dispatcher;
-  ipc_targets_[IPC_NTQUERYFULLATTRIBUTESFILE_TAG] = dispatcher;
-
-  dispatcher = new NamedPipeDispatcher(this);
-  ipc_targets_[IPC_CREATENAMEDPIPEW_TAG] = dispatcher;
-
-  dispatcher = new ThreadProcessDispatcher(this);
-  ipc_targets_[IPC_NTOPENTHREAD_TAG] = dispatcher;
-  ipc_targets_[IPC_NTOPENPROCESS_TAG] = dispatcher;
-  ipc_targets_[IPC_CREATEPROCESSW_TAG] = dispatcher;
-  ipc_targets_[IPC_NTOPENPROCESSTOKEN_TAG] = dispatcher;
-  ipc_targets_[IPC_NTOPENPROCESSTOKENEX_TAG] = dispatcher;
-
-  dispatcher = new SyncDispatcher(this);
-  ipc_targets_[IPC_CREATEEVENT_TAG] = dispatcher;
-  ipc_targets_[IPC_OPENEVENT_TAG] = dispatcher;
-
-  dispatcher = new RegistryDispatcher(this);
-  ipc_targets_[IPC_NTCREATEKEY_TAG] = dispatcher;
-  ipc_targets_[IPC_NTOPENKEY_TAG] = dispatcher;
-
-  dispatcher = new HandleDispatcher(this);
-  ipc_targets_[IPC_DUPLICATEHANDLEPROXY_TAG] = dispatcher;
-
-  dispatcher = new ProcessMitigationsWin32KDispatcher(this);
-  ipc_targets_[IPC_GDI_GDIDLLINITIALIZE_TAG] = dispatcher;
-  ipc_targets_[IPC_GDI_GETSTOCKOBJECT_TAG] = dispatcher;
-  ipc_targets_[IPC_USER_REGISTERCLASSW_TAG] = dispatcher;
+  dispatcher_.reset(new TopLevelDispatcher(this));
 }
 
 PolicyBase::~PolicyBase() {
+  ClearSharedHandles();
+
   TargetSet::iterator it;
   for (it = targets_.begin(); it != targets_.end(); ++it) {
     TargetProcess* target = (*it);
     delete target;
   }
-  delete ipc_targets_[IPC_NTCREATEFILE_TAG];
-  delete ipc_targets_[IPC_CREATENAMEDPIPEW_TAG];
-  delete ipc_targets_[IPC_NTOPENTHREAD_TAG];
-  delete ipc_targets_[IPC_CREATEEVENT_TAG];
-  delete ipc_targets_[IPC_NTCREATEKEY_TAG];
-  delete ipc_targets_[IPC_DUPLICATEHANDLEPROXY_TAG];
   delete policy_maker_;
   delete policy_;
+
+  if (lowbox_sid_)
+    ::LocalFree(lowbox_sid_);
+
   ::DeleteCriticalSection(&lock_);
 }
 
@@ -181,7 +183,7 @@ TokenLevel PolicyBase::GetLockdownTokenLevel() const{
   return lockdown_level_;
 }
 
-ResultCode PolicyBase::SetJobLevel(JobLevel job_level, uint32 ui_exceptions) {
+ResultCode PolicyBase::SetJobLevel(JobLevel job_level, uint32_t ui_exceptions) {
   if (memory_limit_ && job_level == JOB_NONE) {
     return SBOX_ERROR_BAD_PARAMS;
   }
@@ -310,6 +312,10 @@ ResultCode PolicyBase::SetAppContainer(const wchar_t* sid) {
   if (base::win::OSInfo::GetInstance()->version() < base::win::VERSION_WIN8)
     return SBOX_ALL_OK;
 
+  // SetLowBox and SetAppContainer are mutually exclusive.
+  if (lowbox_sid_)
+    return SBOX_ERROR_UNSUPPORTED;
+
   // Windows refuses to work with an impersonation token for a process inside
   // an AppContainer. If the caller wants to use a more privileged initial
   // token, or if the lockdown level will prevent the process from starting,
@@ -328,6 +334,25 @@ ResultCode PolicyBase::SetAppContainer(const wchar_t* sid) {
 
 ResultCode PolicyBase::SetCapability(const wchar_t* sid) {
   capabilities_.push_back(sid);
+  return SBOX_ALL_OK;
+}
+
+ResultCode PolicyBase::SetLowBox(const wchar_t* sid) {
+  if (base::win::OSInfo::GetInstance()->version() < base::win::VERSION_WIN8)
+    return SBOX_ERROR_UNSUPPORTED;
+
+  // SetLowBox and SetAppContainer are mutually exclusive.
+  if (appcontainer_list_.get())
+    return SBOX_ERROR_UNSUPPORTED;
+
+  DCHECK(sid);
+
+  if (lowbox_sid_)
+    return SBOX_ERROR_BAD_PARAMS;
+
+  if (!ConvertStringSidToSid(sid, &lowbox_sid_))
+    return SBOX_ERROR_GENERIC;
+
   return SBOX_ALL_OK;
 }
 
@@ -395,63 +420,58 @@ ResultCode PolicyBase::AddKernelObjectToClose(const base::char16* handle_type,
   return handle_closer_.AddHandle(handle_type, handle_name);
 }
 
-// When an IPC is ready in any of the targets we get called. We manage an array
-// of IPC dispatchers which are keyed on the IPC tag so we normally delegate
-// to the appropriate dispatcher unless we can handle the IPC call ourselves.
-Dispatcher* PolicyBase::OnMessageReady(IPCParams* ipc,
-                                       CallbackGeneric* callback) {
-  DCHECK(callback);
-  static const IPCParams ping1 = {IPC_PING1_TAG, UINT32_TYPE};
-  static const IPCParams ping2 = {IPC_PING2_TAG, INOUTPTR_TYPE};
+void* PolicyBase::AddHandleToShare(HANDLE handle) {
+  if (base::win::GetVersion() < base::win::VERSION_VISTA)
+    return nullptr;
 
-  if (ping1.Matches(ipc) || ping2.Matches(ipc)) {
-    *callback = reinterpret_cast<CallbackGeneric>(
-                    static_cast<Callback1>(&PolicyBase::Ping));
-    return this;
-  }
+  if (!handle)
+    return nullptr;
 
-  Dispatcher* dispatch = GetDispatcher(ipc->ipc_tag);
-  if (!dispatch) {
-    NOTREACHED();
-    return NULL;
+  HANDLE duped_handle = nullptr;
+  if (!::DuplicateHandle(::GetCurrentProcess(), handle, ::GetCurrentProcess(),
+                         &duped_handle, 0, TRUE, DUPLICATE_SAME_ACCESS)) {
+    return nullptr;
   }
-  return dispatch->OnMessageReady(ipc, callback);
+  handles_to_share_.push_back(new base::win::ScopedHandle(duped_handle));
+  return duped_handle;
 }
 
-// Delegate to the appropriate dispatcher.
-bool PolicyBase::SetupService(InterceptionManager* manager, int service) {
-  if (IPC_PING1_TAG == service || IPC_PING2_TAG == service)
-    return true;
-
-  Dispatcher* dispatch = GetDispatcher(service);
-  if (!dispatch) {
-    NOTREACHED();
-    return false;
-  }
-  return dispatch->SetupService(manager, service);
+const HandleList& PolicyBase::GetHandlesBeingShared() {
+  return handles_to_share_;
 }
 
-ResultCode PolicyBase::MakeJobObject(HANDLE* job) {
+void PolicyBase::ClearSharedHandles() {
+  STLDeleteElements(&handles_to_share_);
+}
+
+ResultCode PolicyBase::MakeJobObject(base::win::ScopedHandle* job) {
   if (job_level_ != JOB_NONE) {
     // Create the windows job object.
     Job job_obj;
     DWORD result = job_obj.Init(job_level_, NULL, ui_exceptions_,
                                 memory_limit_);
-    if (ERROR_SUCCESS != result) {
+    if (ERROR_SUCCESS != result)
       return SBOX_ERROR_GENERIC;
-    }
-    *job = job_obj.Detach();
+
+    *job = job_obj.Take();
   } else {
-    *job = NULL;
+    *job = base::win::ScopedHandle();
   }
   return SBOX_ALL_OK;
 }
 
-ResultCode PolicyBase::MakeTokens(HANDLE* initial, HANDLE* lockdown) {
+ResultCode PolicyBase::MakeTokens(base::win::ScopedHandle* initial,
+                                  base::win::ScopedHandle* lockdown,
+                                  base::win::ScopedHandle* lowbox) {
+  if (appcontainer_list_.get() && appcontainer_list_->HasAppContainer() &&
+      lowbox_sid_) {
+    return SBOX_ERROR_BAD_PARAMS;
+  }
+
   // Create the 'naked' token. This will be the permanent token associated
   // with the process and therefore with any thread that is not impersonating.
-  DWORD result = CreateRestrictedToken(lockdown, lockdown_level_,
-                                       integrity_level_, PRIMARY);
+  DWORD result = CreateRestrictedToken(lockdown_level_,  integrity_level_,
+                                       PRIMARY, lockdown);
   if (ERROR_SUCCESS != result)
     return SBOX_ERROR_GENERIC;
 
@@ -476,25 +496,54 @@ ResultCode PolicyBase::MakeTokens(HANDLE* initial, HANDLE* lockdown) {
     alternate_desktop_integrity_level_label_ = integrity_level_;
   }
 
+  // We are maintaining two mutually exclusive approaches. One is to start an
+  // AppContainer process through StartupInfoEx and other is replacing
+  // existing token with LowBox token after process creation.
   if (appcontainer_list_.get() && appcontainer_list_->HasAppContainer()) {
     // Windows refuses to work with an impersonation token. See SetAppContainer
     // implementation for more details.
     if (lockdown_level_ < USER_LIMITED || lockdown_level_ != initial_level_)
       return SBOX_ERROR_CANNOT_INIT_APPCONTAINER;
 
-    *initial = INVALID_HANDLE_VALUE;
+    *initial = base::win::ScopedHandle();
     return SBOX_ALL_OK;
+  }
+
+  if (lowbox_sid_) {
+    NtCreateLowBoxToken CreateLowBoxToken = NULL;
+    ResolveNTFunctionPtr("NtCreateLowBoxToken", &CreateLowBoxToken);
+    OBJECT_ATTRIBUTES obj_attr;
+    InitializeObjectAttributes(&obj_attr, NULL, 0, NULL, NULL);
+    HANDLE token_lowbox = NULL;
+
+    if (!lowbox_directory_.IsValid())
+      lowbox_directory_.Set(CreateLowBoxObjectDirectory(lowbox_sid_));
+    DCHECK(lowbox_directory_.IsValid());
+
+    // The order of handles isn't important in the CreateLowBoxToken call.
+    // The kernel will maintain a reference to the object directory handle.
+    HANDLE saved_handles[1] = {lowbox_directory_.Get()};
+    DWORD saved_handles_count = lowbox_directory_.IsValid() ? 1 : 0;
+
+    NTSTATUS status = CreateLowBoxToken(&token_lowbox, lockdown->Get(),
+                                        TOKEN_ALL_ACCESS, &obj_attr,
+                                        lowbox_sid_, 0, NULL,
+                                        saved_handles_count, saved_handles);
+    if (!NT_SUCCESS(status))
+      return SBOX_ERROR_GENERIC;
+
+    DCHECK(token_lowbox);
+    lowbox->Set(token_lowbox);
   }
 
   // Create the 'better' token. We use this token as the one that the main
   // thread uses when booting up the process. It should contain most of
   // what we need (before reaching main( ))
-  result = CreateRestrictedToken(initial, initial_level_,
-                                 integrity_level_, IMPERSONATION);
-  if (ERROR_SUCCESS != result) {
-    ::CloseHandle(*lockdown);
+  result = CreateRestrictedToken(initial_level_, integrity_level_,
+                                 IMPERSONATION, initial);
+  if (ERROR_SUCCESS != result)
     return SBOX_ERROR_GENERIC;
-  }
+
   return SBOX_ALL_OK;
 }
 
@@ -503,6 +552,10 @@ const AppContainerAttributes* PolicyBase::GetAppContainer() const {
     return NULL;
 
   return appcontainer_list_.get();
+}
+
+PSID PolicyBase::GetLowBoxSid() const {
+  return lowbox_sid_;
 }
 
 bool PolicyBase::AddTarget(TargetProcess* target) {
@@ -521,7 +574,8 @@ bool PolicyBase::AddTarget(TargetProcess* target) {
     return false;
 
   // Initialize the sandbox infrastructure for the target.
-  if (ERROR_SUCCESS != target->Init(this, policy_, kIPCMemSize, kPolMemSize))
+  if (ERROR_SUCCESS !=
+      target->Init(dispatcher_.get(), policy_, kIPCMemSize, kPolMemSize))
     return false;
 
   g_shared_delayed_integrity_level = delayed_integrity_level_;
@@ -602,46 +656,13 @@ HANDLE PolicyBase::GetStderrHandle() {
   return stderr_handle_;
 }
 
-// We service IPC_PING_TAG message which is a way to test a round trip of the
-// IPC subsystem. We receive a integer cookie and we are expected to return the
-// cookie times two (or three) and the current tick count.
-bool PolicyBase::Ping(IPCInfo* ipc, void* arg1) {
-  switch (ipc->ipc_tag) {
-    case IPC_PING1_TAG: {
-      IPCInt ipc_int(arg1);
-      uint32 cookie = ipc_int.As32Bit();
-      ipc->return_info.extended_count = 2;
-      ipc->return_info.extended[0].unsigned_int = ::GetTickCount();
-      ipc->return_info.extended[1].unsigned_int = 2 * cookie;
-      return true;
-    }
-    case IPC_PING2_TAG: {
-      CountedBuffer* io_buffer = reinterpret_cast<CountedBuffer*>(arg1);
-      if (sizeof(uint32) != io_buffer->Size())
-        return false;
-
-      uint32* cookie = reinterpret_cast<uint32*>(io_buffer->Buffer());
-      *cookie = (*cookie) * 3;
-      return true;
-    }
-    default: return false;
-  }
-}
-
-Dispatcher* PolicyBase::GetDispatcher(int ipc_tag) {
-  if (ipc_tag >= IPC_LAST_TAG || ipc_tag <= IPC_UNUSED_TAG)
-    return NULL;
-
-  return ipc_targets_[ipc_tag];
-}
-
 bool PolicyBase::SetupAllInterceptions(TargetProcess* target) {
   InterceptionManager manager(target, relaxed_interceptions_);
 
   if (policy_) {
     for (int i = 0; i < IPC_LAST_TAG; i++) {
-      if (policy_->entry[i] && !ipc_targets_[i]->SetupService(&manager, i))
-          return false;
+      if (policy_->entry[i] && !dispatcher_->SetupService(&manager, i))
+        return false;
     }
   }
 

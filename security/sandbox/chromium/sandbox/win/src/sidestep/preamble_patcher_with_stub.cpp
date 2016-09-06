@@ -6,6 +6,8 @@
 
 #include "sandbox/win/src/sidestep/preamble_patcher.h"
 
+#include <stddef.h>
+
 #include "sandbox/win/src/sandbox_nt_util.h"
 #include "sandbox/win/src/sidestep/mini_disassembler.h"
 

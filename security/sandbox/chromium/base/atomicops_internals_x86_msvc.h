@@ -12,6 +12,7 @@
 #include <intrin.h>
 
 #include "base/macros.h"
+#include "build/build_config.h"
 
 #if defined(ARCH_CPU_64_BITS)
 // windows.h #defines this (only on x64). This causes problems because the
@@ -55,9 +56,6 @@ inline Atomic32 NoBarrier_AtomicIncrement(volatile Atomic32* ptr,
   return Barrier_AtomicIncrement(ptr, increment);
 }
 
-#if !(defined(_MSC_VER) && _MSC_VER >= 1400)
-#error "We require at least vs2005 for MemoryBarrier"
-#endif
 inline void MemoryBarrier() {
 #if defined(ARCH_CPU_64_BITS)
   // See #undef and note at the top of this file.
@@ -112,7 +110,7 @@ inline Atomic32 Release_Load(volatile const Atomic32* ptr) {
 
 // 64-bit low-level operations on 64-bit platform.
 
-COMPILE_ASSERT(sizeof(Atomic64) == sizeof(PVOID), atomic_word_is_atomic);
+static_assert(sizeof(Atomic64) == sizeof(PVOID), "atomic word is atomic");
 
 inline Atomic64 NoBarrier_CompareAndSwap(volatile Atomic64* ptr,
                                          Atomic64 old_value,
@@ -192,7 +190,7 @@ inline Atomic64 Release_CompareAndSwap(volatile Atomic64* ptr,
 
 #endif  // defined(_WIN64)
 
-}  // namespace base::subtle
+}  // namespace subtle
 }  // namespace base
 
 #endif  // BASE_ATOMICOPS_INTERNALS_X86_MSVC_H_

@@ -177,6 +177,38 @@ function testMultipleTables() {
   doTest([update], assertions, false);
 }
 
+function testUrlInMultipleTables() {
+  var add1Urls = [ "foo-forward.com/a" ];
+
+  var update = "n:1000\n";
+  update += "i:test-phish-simple\n";
+
+  var update1 = buildBareUpdate(
+    [{ "chunkNum" : 1,
+       "urls" : add1Urls }]);
+  update += "u:data:," + encodeURIComponent(update1) + "\n";
+
+  update += "i:test-malware-simple\n";
+  var update2 = buildBareUpdate(
+    [{ "chunkNum" : 2,
+       "urls" : add1Urls }]);
+  update += "u:data:," + encodeURIComponent(update2) + "\n";
+
+  update += "i:test-unwanted-simple\n";
+  var update3 = buildBareUpdate(
+    [{ "chunkNum" : 3,
+       "urls" : add1Urls }]);
+  update += "u:data:," + encodeURIComponent(update3) + "\n";
+
+  var assertions = {
+    "tableData" : "test-malware-simple;a:2\ntest-phish-simple;a:1\ntest-unwanted-simple;a:3",
+    "urlExistInMultipleTables" : { url: add1Urls,
+                                   tables: "test-malware-simple,test-phish-simple,test-unwanted-simple" }
+  };
+
+  doTest([update], assertions, false);
+}
+
 function Observer(callback) {
   this.observe = callback;
 }
@@ -248,6 +280,7 @@ function run_test()
     testInvalidUrlForward,
     testErrorUrlForward,
     testMultipleTables,
+    testUrlInMultipleTables,
     testReset
   ]);
 }

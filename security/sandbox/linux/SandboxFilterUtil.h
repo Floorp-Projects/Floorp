@@ -13,8 +13,8 @@
 // between different Linux architectures.
 
 #include "mozilla/Maybe.h"
-#include "sandbox/linux/services/linux_syscalls.h"
 #include "sandbox/linux/bpf_dsl/policy.h"
+#include "sandbox/linux/system_headers/linux_syscalls.h"
 
 namespace mozilla {
 

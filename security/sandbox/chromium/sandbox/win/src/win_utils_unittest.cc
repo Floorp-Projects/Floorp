@@ -22,17 +22,16 @@ TEST(WinUtils, IsReparsePoint) {
   ASSERT_TRUE(::DeleteFile(my_folder));
   ASSERT_TRUE(::CreateDirectory(my_folder, NULL));
 
-  bool result = true;
-  EXPECT_EQ(ERROR_SUCCESS, IsReparsePoint(my_folder, &result));
-  EXPECT_FALSE(result);
+  EXPECT_EQ(static_cast<DWORD>(ERROR_NOT_A_REPARSE_POINT),
+            IsReparsePoint(my_folder));
 
-  // We have to fix Bug 32224 to pass this test.
   base::string16 not_found = base::string16(my_folder) + L"\\foo\\bar";
-  // EXPECT_EQ(ERROR_PATH_NOT_FOUND, IsReparsePoint(not_found, &result));
+  EXPECT_EQ(static_cast<DWORD>(ERROR_NOT_A_REPARSE_POINT),
+            IsReparsePoint(not_found));
 
   base::string16 new_file = base::string16(my_folder) + L"\\foo";
-  EXPECT_EQ(ERROR_SUCCESS, IsReparsePoint(new_file, &result));
-  EXPECT_FALSE(result);
+  EXPECT_EQ(static_cast<DWORD>(ERROR_NOT_A_REPARSE_POINT),
+            IsReparsePoint(new_file));
 
   // Replace the directory with a reparse point to %temp%.
   HANDLE dir = ::CreateFile(my_folder, FILE_ALL_ACCESS,
@@ -43,8 +42,7 @@ TEST(WinUtils, IsReparsePoint) {
   base::string16 temp_dir_nt = base::string16(L"\\??\\") + temp_directory;
   EXPECT_TRUE(SetReparsePoint(dir, temp_dir_nt.c_str()));
 
-  EXPECT_EQ(ERROR_SUCCESS, IsReparsePoint(new_file, &result));
-  EXPECT_TRUE(result);
+  EXPECT_EQ(static_cast<DWORD>(ERROR_SUCCESS), IsReparsePoint(new_file));
 
   EXPECT_TRUE(DeleteReparsePoint(dir));
   EXPECT_TRUE(::CloseHandle(dir));
@@ -80,4 +78,34 @@ TEST(WinUtils, SameObject) {
 
   file.Close();
   EXPECT_TRUE(::RemoveDirectory(my_folder));
+}
+
+TEST(WinUtils, IsPipe) {
+  using sandbox::IsPipe;
+
+  base::string16 pipe_name = L"\\??\\pipe\\mypipe";
+  EXPECT_TRUE(IsPipe(pipe_name));
+
+  pipe_name = L"\\??\\PiPe\\mypipe";
+  EXPECT_TRUE(IsPipe(pipe_name));
+
+  pipe_name = L"\\??\\pipe";
+  EXPECT_FALSE(IsPipe(pipe_name));
+
+  pipe_name = L"\\??\\_pipe_\\mypipe";
+  EXPECT_FALSE(IsPipe(pipe_name));
+
+  pipe_name = L"\\??\\ABCD\\mypipe";
+  EXPECT_FALSE(IsPipe(pipe_name));
+
+
+  // Written as two strings to prevent trigraph '?' '?' '/'.
+  pipe_name = L"/?" L"?/pipe/mypipe";
+  EXPECT_FALSE(IsPipe(pipe_name));
+
+  pipe_name = L"\\XX\\pipe\\mypipe";
+  EXPECT_FALSE(IsPipe(pipe_name));
+
+  pipe_name = L"\\Device\\NamedPipe\\mypipe";
+  EXPECT_FALSE(IsPipe(pipe_name));
 }

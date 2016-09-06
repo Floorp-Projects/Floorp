@@ -4,6 +4,8 @@
 
 #include "sandbox/win/src/resolver.h"
 
+#include <stddef.h>
+
 // For placement new. This file must not depend on the CRT at runtime, but
 // placement operator new is inline.
 #include <new>
