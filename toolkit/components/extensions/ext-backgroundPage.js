@@ -26,10 +26,8 @@ function BackgroundPage(options, extension) {
   this.extension = extension;
   this.page = options.page || null;
   this.isGenerated = !!options.scripts;
-  this.contentWindow = null;
   this.windowlessBrowser = null;
   this.webNav = null;
-  this.context = null;
 }
 
 BackgroundPage.prototype = {
@@ -91,10 +89,9 @@ BackgroundPage.prototype = {
       });
     });
 
+    // TODO(robwu): This is not webext-oop compatible.
     this.webNav = browser.docShell.QueryInterface(Ci.nsIWebNavigation);
-
     let window = this.webNav.document.defaultView;
-    this.contentWindow = window;
 
 
     // Set the add-on's main debugger global, for use in the debugger
