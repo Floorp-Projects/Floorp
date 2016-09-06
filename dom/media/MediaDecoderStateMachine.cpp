@@ -312,6 +312,18 @@ public:
   }
 };
 
+class MediaDecoderStateMachine::SeekingState
+  : public MediaDecoderStateMachine::StateObject
+{
+public:
+  explicit SeekingState(Master* aPtr) : StateObject(aPtr) {}
+
+  State GetState() const override
+  {
+    return DECODER_STATE_SEEKING;
+  }
+};
+
 #define INIT_WATCHABLE(name, val) \
   name(val, "MediaDecoderStateMachine::" #name)
 #define INIT_MIRROR(name, val) \
@@ -1190,6 +1202,9 @@ MediaDecoderStateMachine::SetState(State aState)
       break;
     case DECODER_STATE_DECODING:
       mStateObj = MakeUnique<DecodingState>(this);
+      break;
+    case DECODER_STATE_SEEKING:
+      mStateObj = MakeUnique<SeekingState>(this);
       break;
     default:
       mStateObj = nullptr;
