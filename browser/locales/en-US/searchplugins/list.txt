@@ -1,6 +1,5 @@
 amazondotcom
 bing
-eBay
 google
 twitter
 wikipedia
