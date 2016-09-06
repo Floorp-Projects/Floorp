@@ -290,6 +290,28 @@ public:
   }
 };
 
+class MediaDecoderStateMachine::DecodingState
+  : public MediaDecoderStateMachine::StateObject
+{
+public:
+  explicit DecodingState(Master* aPtr) : StateObject(aPtr) {}
+
+  void Enter() override
+  {
+    mMaster->StartDecoding();
+  }
+
+  void Step() override
+  {
+    mMaster->StepDecoding();
+  }
+
+  State GetState() const override
+  {
+    return DECODER_STATE_DECODING;
+  }
+};
+
 #define INIT_WATCHABLE(name, val) \
   name(val, "MediaDecoderStateMachine::" #name)
 #define INIT_MIRROR(name, val) \
@@ -1166,6 +1188,9 @@ MediaDecoderStateMachine::SetState(State aState)
     case DECODER_STATE_DECODING_FIRSTFRAME:
       mStateObj = MakeUnique<DecodingFirstFrameState>(this);
       break;
+    case DECODER_STATE_DECODING:
+      mStateObj = MakeUnique<DecodingState>(this);
+      break;
     default:
       mStateObj = nullptr;
       break;
@@ -1209,9 +1234,6 @@ MediaDecoderStateMachine::EnterState()
   }
 
   switch (mState) {
-    case DECODER_STATE_DECODING:
-      StartDecoding();
-      break;
     case DECODER_STATE_BUFFERING:
       StartBuffering();
       break;
@@ -2375,9 +2397,6 @@ MediaDecoderStateMachine::RunStateMachine()
   }
 
   switch (mState) {
-    case DECODER_STATE_DECODING:
-      StepDecoding();
-      return;
     case DECODER_STATE_BUFFERING:
       StepBuffering();
       return;
