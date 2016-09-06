@@ -45,8 +45,6 @@ PrincipalOriginAttributes::InheritFromDocShellToDoc(const DocShellOriginAttribut
   // Bug 1225349 - PrincipalOriginAttributes should inherit mSignedPkg
   // accordingly by URI
   mSignedPkg = aAttrs.mSignedPkg;
-
-  mPrivateBrowsingId = aAttrs.mPrivateBrowsingId;
 }
 
 void
@@ -58,8 +56,6 @@ PrincipalOriginAttributes::InheritFromNecko(const NeckoOriginAttributes& aAttrs)
   // addonId is computed from the principal URI and never propagated
   mUserContextId = aAttrs.mUserContextId;
   mSignedPkg = aAttrs.mSignedPkg;
-
-  mPrivateBrowsingId = aAttrs.mPrivateBrowsingId;
 }
 
 void
@@ -75,8 +71,6 @@ DocShellOriginAttributes::InheritFromDocToChildDocShell(const PrincipalOriginAtt
   // Bug 1225353 - DocShell/NeckoOriginAttributes should inherit
   // mSignedPkg accordingly by mSignedPkgInBrowser
   mSignedPkg = aAttrs.mSignedPkg;
-
-  mPrivateBrowsingId = aAttrs.mPrivateBrowsingId;
 }
 
 void
@@ -91,8 +85,6 @@ NeckoOriginAttributes::InheritFromDocToNecko(const PrincipalOriginAttributes& aA
   // TODO:
   // Bug 1225353 - DocShell/NeckoOriginAttributes should inherit
   // mSignedPkg accordingly by mSignedPkgInBrowser
-
-  mPrivateBrowsingId = aAttrs.mPrivateBrowsingId;
 }
 
 void
@@ -107,8 +99,6 @@ NeckoOriginAttributes::InheritFromDocShellToNecko(const DocShellOriginAttributes
   // TODO:
   // Bug 1225353 - DocShell/NeckoOriginAttributes should inherit
   // mSignedPkg accordingly by mSignedPkgInBrowser
-
-  mPrivateBrowsingId = aAttrs.mPrivateBrowsingId;
 }
 
 void
@@ -155,12 +145,6 @@ OriginAttributes::CreateSuffix(nsACString& aStr) const
     params->Set(NS_LITERAL_STRING("signedPkg"), mSignedPkg);
   }
 
-  if (mPrivateBrowsingId) {
-    value.Truncate();
-    value.AppendInt(mPrivateBrowsingId);
-    params->Set(NS_LITERAL_STRING("privateBrowsingId"), value);
-  }
-
   aStr.Truncate();
 
   params->Serialize(value);
@@ -187,10 +171,6 @@ public:
     : mOriginAttributes(aOriginAttributes)
   {
     MOZ_ASSERT(aOriginAttributes);
-    // If mPrivateBrowsingId is passed in as >0 and is not present in the suffix,
-    // then it will remain >0 when it should be 0 according to the suffix. Set to 0 before
-    // iterating to fix this.
-    mOriginAttributes->mPrivateBrowsingId = 0;
   }
 
   bool URLParamsIterator(const nsString& aName,
@@ -237,16 +217,6 @@ public:
       return true;
     }
 
-    if (aName.EqualsLiteral("privateBrowsingId")) {
-      nsresult rv;
-      int64_t val = aValue.ToInteger64(&rv);
-      NS_ENSURE_SUCCESS(rv, false);
-      NS_ENSURE_TRUE(val >= 0 && val <= UINT32_MAX, false);
-      mOriginAttributes->mPrivateBrowsingId = static_cast<uint32_t>(val);
-
-      return true;
-    }
-
     // No other attributes are supported.
     return false;
   }
@@ -290,12 +260,6 @@ OriginAttributes::PopulateFromOrigin(const nsACString& aOrigin,
 
   aOriginNoSuffix = Substring(origin, 0, pos);
   return PopulateFromSuffix(Substring(origin, pos));
-}
-
-void
-OriginAttributes::SyncAttributesWithPrivateBrowsing(bool aInPrivateBrowsing)
-{
-  mPrivateBrowsingId = aInPrivateBrowsing ? 1 : 0;
 }
 
 BasePrincipal::BasePrincipal()
