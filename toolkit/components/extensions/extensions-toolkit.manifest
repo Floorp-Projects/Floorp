@@ -23,6 +23,7 @@ category webextension-scripts-content test chrome://extensions/content/ext-c-tes
 category webextension-scripts-content storage chrome://extensions/content/ext-c-storage.js
 
 # scripts that must run in the same process as addon code.
+category webextension-scripts-addon backgroundPage chrome://extensions/content/ext-c-backgroundPage.js
 category webextension-scripts-addon extension chrome://extensions/content/ext-c-extension.js
 category webextension-scripts-addon i18n chrome://extensions/content/ext-i18n.js
 category webextension-scripts-addon runtime chrome://extensions/content/ext-c-runtime.js
