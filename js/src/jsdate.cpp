@@ -2568,22 +2568,22 @@ date_toJSON(JSContext* cx, unsigned argc, Value* vp)
 
 /* Interface to PRMJTime date struct. */
 static void
-new_explode(double timeval, PRMJTime* split)
+ToPRMJTime(double localTime, PRMJTime* prtm)
 {
-    double year = YearFromTime(timeval);
+    double year = YearFromTime(localTime);
 
-    split->tm_usec = int32_t(msFromTime(timeval)) * 1000;
-    split->tm_sec = int8_t(SecFromTime(timeval));
-    split->tm_min = int8_t(MinFromTime(timeval));
-    split->tm_hour = int8_t(HourFromTime(timeval));
-    split->tm_mday = int8_t(DateFromTime(timeval));
-    split->tm_mon = int8_t(MonthFromTime(timeval));
-    split->tm_wday = int8_t(WeekDay(timeval));
-    split->tm_year = year;
-    split->tm_yday = int16_t(DayWithinYear(timeval, year));
+    prtm->tm_usec = int32_t(msFromTime(localTime)) * 1000;
+    prtm->tm_sec = int8_t(SecFromTime(localTime));
+    prtm->tm_min = int8_t(MinFromTime(localTime));
+    prtm->tm_hour = int8_t(HourFromTime(localTime));
+    prtm->tm_mday = int8_t(DateFromTime(localTime));
+    prtm->tm_mon = int8_t(MonthFromTime(localTime));
+    prtm->tm_wday = int8_t(WeekDay(localTime));
+    prtm->tm_year = year;
+    prtm->tm_yday = int16_t(DayWithinYear(localTime, year));
 
     // XXX: DaylightSavingTA expects utc-time argument.
-    split->tm_isdst = (DaylightSavingTA(timeval) != 0);
+    prtm->tm_isdst = (DaylightSavingTA(localTime) != 0);
 }
 
 typedef enum formatspec {
@@ -2591,26 +2591,26 @@ typedef enum formatspec {
 } formatspec;
 
 static bool
-date_format(JSContext* cx, double date, formatspec format, MutableHandleValue rval)
+FormatDate(JSContext* cx, double utcTime, formatspec format, MutableHandleValue rval)
 {
     char buf[100];
     char tzbuf[100];
     bool usetz;
     size_t i, tzlen;
-    PRMJTime split;
+    PRMJTime prtm;
 
-    if (!IsFinite(date)) {
+    if (!IsFinite(utcTime)) {
         SprintfLiteral(buf, js_NaN_date_str);
     } else {
-        MOZ_ASSERT(NumbersAreIdentical(TimeClip(date).toDouble(), date));
+        MOZ_ASSERT(NumbersAreIdentical(TimeClip(utcTime).toDouble(), utcTime));
 
-        double local = LocalTime(date);
+        double localTime = LocalTime(utcTime);
 
         /*
          * Offset from GMT in minutes.  The offset includes daylight
          * savings, if it applies.
          */
-        int minutes = (int) floor(AdjustTime(date) / msPerMinute);
+        int minutes = (int) floor(AdjustTime(utcTime) / msPerMinute);
 
         /* Map 510 minutes to 0830 hours. */
         int offset = (minutes / 60) * 100 + minutes % 60;
@@ -2627,8 +2627,8 @@ date_format(JSContext* cx, double date, formatspec format, MutableHandleValue rv
          */
 
         /* get a time zone string from the OS to include as a comment. */
-        new_explode(date, &split);
-        if (PRMJ_FormatTime(tzbuf, sizeof tzbuf, "(%Z)", &split) != 0) {
+        ToPRMJTime(utcTime, &prtm);
+        if (PRMJ_FormatTime(tzbuf, sizeof tzbuf, "(%Z)", &prtm) != 0) {
             /*
              * Decide whether to use the resulting time zone string.
              *
@@ -2661,13 +2661,13 @@ date_format(JSContext* cx, double date, formatspec format, MutableHandleValue rv
           case FORMATSPEC_FULL:
             /* Tue Oct 31 2000 09:41:40 GMT-0800 (PST) */
             SprintfLiteral(buf, "%s %s %.2d %.4d %.2d:%.2d:%.2d GMT%+.4d%s%s",
-                           days[int(WeekDay(local))],
-                           months[int(MonthFromTime(local))],
-                           int(DateFromTime(local)),
-                           int(YearFromTime(local)),
-                           int(HourFromTime(local)),
-                           int(MinFromTime(local)),
-                           int(SecFromTime(local)),
+                           days[int(WeekDay(localTime))],
+                           months[int(MonthFromTime(localTime))],
+                           int(DateFromTime(localTime)),
+                           int(YearFromTime(localTime)),
+                           int(HourFromTime(localTime)),
+                           int(MinFromTime(localTime)),
+                           int(SecFromTime(localTime)),
                            offset,
                            usetz ? " " : "",
                            usetz ? tzbuf : "");
@@ -2675,17 +2675,17 @@ date_format(JSContext* cx, double date, formatspec format, MutableHandleValue rv
           case FORMATSPEC_DATE:
             /* Tue Oct 31 2000 */
             SprintfLiteral(buf, "%s %s %.2d %.4d",
-                           days[int(WeekDay(local))],
-                           months[int(MonthFromTime(local))],
-                           int(DateFromTime(local)),
-                           int(YearFromTime(local)));
+                           days[int(WeekDay(localTime))],
+                           months[int(MonthFromTime(localTime))],
+                           int(DateFromTime(localTime)),
+                           int(YearFromTime(localTime)));
             break;
           case FORMATSPEC_TIME:
             /* 09:41:40 GMT-0800 (PST) */
             SprintfLiteral(buf, "%.2d:%.2d:%.2d GMT%+.4d%s%s",
-                           int(HourFromTime(local)),
-                           int(MinFromTime(local)),
-                           int(SecFromTime(local)),
+                           int(HourFromTime(localTime)),
+                           int(MinFromTime(localTime)),
+                           int(SecFromTime(localTime)),
                            offset,
                            usetz ? " " : "",
                            usetz ? tzbuf : "");
@@ -2703,23 +2703,23 @@ date_format(JSContext* cx, double date, formatspec format, MutableHandleValue rv
 static bool
 ToLocaleFormatHelper(JSContext* cx, HandleObject obj, const char* format, MutableHandleValue rval)
 {
-    double utctime = obj->as<DateObject>().UTCTime().toNumber();
+    double utcTime = obj->as<DateObject>().UTCTime().toNumber();
 
     char buf[100];
-    if (!IsFinite(utctime)) {
+    if (!IsFinite(utcTime)) {
         SprintfLiteral(buf, js_NaN_date_str);
     } else {
         int result_len;
-        double local = LocalTime(utctime);
-        PRMJTime split;
-        new_explode(local, &split);
+        double localTime = LocalTime(utcTime);
+        PRMJTime prtm;
+        ToPRMJTime(localTime, &prtm);
 
         /* Let PRMJTime format it. */
-        result_len = PRMJ_FormatTime(buf, sizeof buf, format, &split);
+        result_len = PRMJ_FormatTime(buf, sizeof buf, format, &prtm);
 
         /* If it failed, default to toString. */
         if (result_len == 0)
-            return date_format(cx, utctime, FORMATSPEC_FULL, rval);
+            return FormatDate(cx, utcTime, FORMATSPEC_FULL, rval);
 
         /* Hacked check against undesired 2-digit year 00/00/00 form. */
         if (strcmp(format, "%x") == 0 && result_len >= 6 &&
@@ -2864,8 +2864,8 @@ date_toLocaleFormat(JSContext* cx, unsigned argc, Value* vp)
 MOZ_ALWAYS_INLINE bool
 date_toTimeString_impl(JSContext* cx, const CallArgs& args)
 {
-    return date_format(cx, args.thisv().toObject().as<DateObject>().UTCTime().toNumber(),
-                       FORMATSPEC_TIME, args.rval());
+    return FormatDate(cx, args.thisv().toObject().as<DateObject>().UTCTime().toNumber(),
+                      FORMATSPEC_TIME, args.rval());
 }
 
 static bool
@@ -2879,8 +2879,8 @@ date_toTimeString(JSContext* cx, unsigned argc, Value* vp)
 MOZ_ALWAYS_INLINE bool
 date_toDateString_impl(JSContext* cx, const CallArgs& args)
 {
-    return date_format(cx, args.thisv().toObject().as<DateObject>().UTCTime().toNumber(),
-                       FORMATSPEC_DATE, args.rval());
+    return FormatDate(cx, args.thisv().toObject().as<DateObject>().UTCTime().toNumber(),
+                      FORMATSPEC_DATE, args.rval());
 }
 
 static bool
@@ -2949,7 +2949,7 @@ date_toString_impl(JSContext* cx, const CallArgs& args)
     }
 
     // Step 4.
-    return date_format(cx, tv, FORMATSPEC_FULL, args.rval());
+    return FormatDate(cx, tv, FORMATSPEC_FULL, args.rval());
 }
 
 bool
@@ -3087,7 +3087,7 @@ NewDateObject(JSContext* cx, const CallArgs& args, ClippedTime t)
 static bool
 ToDateString(JSContext* cx, const CallArgs& args, ClippedTime t)
 {
-    return date_format(cx, t.toDouble(), FORMATSPEC_FULL, args.rval());
+    return FormatDate(cx, t.toDouble(), FORMATSPEC_FULL, args.rval());
 }
 
 static bool
