@@ -190,9 +190,7 @@ class ExtensionContext extends BaseContext {
       apiManager.global.initializeBackgroundPage(contentWindow);
     }
 
-    if (this.externallyVisible) {
-      this.extension.views.add(this);
-    }
+    this.extension.views.add(this);
   }
 
   get cloneScope() {
@@ -208,10 +206,6 @@ class ExtensionContext extends BaseContext {
       let globalView = ExtensionChild.contentGlobals.get(this.messageManager);
       return globalView ? globalView.windowId : -1;
     }
-  }
-
-  get externallyVisible() {
-    return true;
   }
 
   // Called when the extension shuts down.
@@ -231,10 +225,7 @@ class ExtensionContext extends BaseContext {
 
     super.unload();
     this.childManager.close();
-
-    if (this.externallyVisible) {
-      this.extension.views.delete(this);
-    }
+    this.extension.views.delete(this);
   }
 }
 
