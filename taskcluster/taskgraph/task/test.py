@@ -6,10 +6,9 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import copy
 import logging
-import os
-import yaml
 
 from . import transform
+from ..util.yaml import load_yaml
 
 logger = logging.getLogger(__name__)
 
@@ -114,10 +113,3 @@ class TestTask(transform.TransformTask):
             rv[test_platform] = cfg.copy()
             rv[test_platform]['test-names'] = test_names
         return rv
-
-
-def load_yaml(path, name):
-    """Convenience method to load a YAML file in the kind directory"""
-    filename = os.path.join(path, name)
-    with open(filename, "rb") as f:
-        return yaml.load(f)
