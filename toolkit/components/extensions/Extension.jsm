@@ -73,7 +73,6 @@ XPCOMUtils.defineLazyServiceGetter(this, "uuidGen",
 const BASE_SCHEMA = "chrome://extensions/content/schemas/manifest.json";
 const CATEGORY_EXTENSION_SCHEMAS = "webextension-schemas";
 const CATEGORY_EXTENSION_SCRIPTS = "webextension-scripts";
-const CATEGORY_EXTENSION_SCRIPTS_ADDON = "webextension-scripts-addon";
 
 let schemaURLs = new Set();
 
@@ -143,13 +142,6 @@ var Management = new class extends SchemaAPIManager {
       this.loadScript(value);
     }
 
-    // TODO(robwu): This should move to its own instances of SchemaAPIManager,
-    // because the above scripts run in the chrome process whereas the following
-    // scripts runs in the addon process.
-    for (let [/* name */, value] of XPCOMUtils.enumerateCategoryEntries(CATEGORY_EXTENSION_SCRIPTS_ADDON)) {
-      this.loadScript(value);
-    }
-
     this.initialized = promise;
     return this.initialized;
   }
@@ -157,13 +149,6 @@ var Management = new class extends SchemaAPIManager {
   registerSchemaAPI(namespace, envType, getAPI) {
     if (envType == "addon_parent" || envType == "content_parent") {
       super.registerSchemaAPI(namespace, envType, getAPI);
-    }
-    if (envType === "addon_child") {
-      // TODO(robwu): Remove this. It is a temporary hack to ease the transition
-      // from ext-*.js running in the parent to APIs running in a child process.
-      // This can be removed once there is a dedicated ExtensionContext with type
-      // "addon_child".
-      super.registerSchemaAPI(namespace, "addon_parent", getAPI);
     }
   }
 }();
@@ -251,10 +236,8 @@ let ProxyMessenger = {
 };
 
 class ProxyContext extends BaseContext {
-  constructor(extension, params, messageManager, principal) {
-    // TODO(robwu): Let callers specify the environment type once we start
-    // re-using this implementation for addon_parent.
-    super("content_parent", extension);
+  constructor(envType, extension, params, messageManager, principal) {
+    super(envType, extension);
 
     this.uri = NetUtil.newURI(params.url);
 
@@ -288,6 +271,43 @@ class ProxyContext extends BaseContext {
   }
 }
 
+// The parent ProxyContext of an ExtensionContext in ExtensionChild.jsm.
+class ExtensionChildProxyContext extends ProxyContext {
+  constructor(envType, extension, params, xulBrowser) {
+    super(envType, extension, params, xulBrowser.messageManager, extension.principal);
+
+    this.viewType = params.viewType;
+    this.xulBrowser = xulBrowser;
+
+    // TODO(robwu): Remove this once all APIs can run in a separate process.
+    if (params.cloneScopeInProcess) {
+      this.sandbox = params.cloneScopeInProcess;
+    }
+  }
+
+  // The window that contains this context. This may change due to moving tabs.
+  get xulWindow() {
+    return this.xulBrowser.ownerGlobal;
+  }
+
+  get windowId() {
+    if (!Management.global.WindowManager || this.viewType == "background") {
+      return;
+    }
+    // viewType popup or tab:
+    return Management.global.WindowManager.getId(this.xulWindow);
+  }
+
+  get tabId() {
+    if (!Management.global.TabManager) {
+      return;  // Not yet supported on Android.
+    }
+    let {gBrowser} = this.xulBrowser.ownerGlobal;
+    let tab = gBrowser && gBrowser.getTabForBrowser(this.xulBrowser);
+    return tab && Management.global.TabManager.getId(tab);
+  }
+}
+
 function findPathInObject(obj, path, printErrors = true) {
   for (let elt of path.split(".")) {
     // If we get a null object before reaching the requested path
@@ -316,7 +336,7 @@ function findPathInObject(obj, path, printErrors = true) {
   return obj;
 }
 
-let ParentAPIManager = {
+var ParentAPIManager = {
   proxyContexts: new Map(),
 
   init() {
@@ -364,14 +384,33 @@ let ParentAPIManager = {
   },
 
   createProxyContext(data, target) {
-    let {extensionId, childId, principal} = data;
+    let {envType, extensionId, childId, principal} = data;
     if (this.proxyContexts.has(childId)) {
       Cu.reportError("A WebExtension context with the given ID already exists!");
       return;
     }
     let extension = GlobalManager.getExtension(extensionId);
+    if (!extension) {
+      Cu.reportError(`No WebExtension found with ID ${extensionId}`);
+      return;
+    }
 
-    let context = new ProxyContext(extension, data, target.messageManager, principal);
+    let context;
+    if (envType == "addon_parent") {
+      // Privileged addon contexts can only be loaded in documents whose main
+      // frame is also the same addon.
+      if (principal.URI.prePath != extension.baseURI.prePath ||
+          !target.contentPrincipal.subsumes(principal)) {
+        Cu.reportError(`Refused to create privileged WebExtension context for ${principal.URI.spec}`);
+        return;
+      }
+      context = new ExtensionChildProxyContext(envType, extension, data, target);
+    } else if (envType == "content_parent") {
+      context = new ProxyContext(envType, extension, data, target.messageManager, principal);
+    } else {
+      Cu.reportError(`Invalid WebExtension context envType: ${envType}`);
+      return;
+    }
     this.proxyContexts.set(childId, context);
   },
 
@@ -644,16 +683,6 @@ GlobalManager = {
       return;
     }
 
-    let inject = context => {
-      let injectObject = (name, isChromeCompat) => {
-        let browserObj = Cu.createObjectIn(contentWindow, {defineAs: name});
-        this.injectInObject(context, isChromeCompat, browserObj);
-      };
-
-      injectObject("browser", false);
-      injectObject("chrome", true);
-    };
-
     let id = ExtensionManagement.getAddonIdForWindow(contentWindow);
 
     // We don't inject privileged APIs into sub-frames of a UI page.
@@ -695,7 +724,6 @@ GlobalManager = {
     let uri = document.documentURIObject;
 
     let context = new ExtensionContext(extension, {type, contentWindow, uri, docShell});
-    inject(context);
     if (type == "background") {
       this._initializeBackgroundPage(contentWindow);
     }
