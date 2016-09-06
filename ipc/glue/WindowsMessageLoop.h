@@ -10,7 +10,6 @@
 // This file is only meant to compile on windows
 #include <windows.h>
 
-#include "base/basictypes.h"
 #include "nsISupportsImpl.h"
 
 namespace mozilla {

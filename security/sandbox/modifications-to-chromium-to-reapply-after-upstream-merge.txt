@@ -1,11 +1,9 @@
 Please add a link to the bugzilla bug and patch name that should be re-applied.
 Also, please update any existing links to their actual mozilla-central changeset.
 
-https://hg.mozilla.org/mozilla-central/rev/efa7518e43b0
-https://hg.mozilla.org/mozilla-central/rev/421446ab2347
-https://hg.mozilla.org/mozilla-central/rev/beb74056ac2d
+https://bugzilla.mozilla.org/show_bug.cgi?id=1287426 bug1287426part4.patch
+https://bugzilla.mozilla.org/show_bug.cgi?id=1287426 bug1287426part5.patch
 https://hg.mozilla.org/mozilla-central/rev/7df8d6639971
-https://hg.mozilla.org/mozilla-central/rev/1178c11561bc
-https://hg.mozilla.org/mozilla-central/rev/afa4f68de47c
-https://bugzilla.mozilla.org/show_bug.cgi?id=1035125 bug1035125part7.patch
-https://bugzilla.mozilla.org/show_bug.cgi?id=1273852
+https://bugzilla.mozilla.org/show_bug.cgi?id=1287426 bug1287426part6.patch
+https://bugzilla.mozilla.org/show_bug.cgi?id=1287426 bug1287426part7.patch
+https://bugzilla.mozilla.org/show_bug.cgi?id=1287426 bug1287426part8.patch

@@ -9,7 +9,7 @@
 // JavaScript. As such, it is NOT a generalized variant type, since only the
 // types supported by JavaScript/JSON are supported.
 //
-// IN PARTICULAR this means that there is no support for int64 or unsigned
+// IN PARTICULAR this means that there is no support for int64_t or unsigned
 // numbers. Writing JSON with such types would violate the spec. If you need
 // something like this, either use a double or make a string value containing
 // the number you want.
@@ -18,6 +18,7 @@
 #define BASE_VALUES_H_
 
 #include <stddef.h>
+#include <stdint.h>
 
 #include <iosfwd>
 #include <map>
@@ -26,13 +27,15 @@
 #include <vector>
 
 #include "base/base_export.h"
-#include "base/basictypes.h"
 #include "base/compiler_specific.h"
+#include "base/macros.h"
 #include "base/memory/scoped_ptr.h"
 #include "base/strings/string16.h"
+#include "base/strings/string_piece.h"
 
 namespace base {
 
+class BinaryValue;
 class DictionaryValue;
 class FundamentalValue;
 class ListValue;
@@ -63,7 +66,7 @@ class BASE_EXPORT Value {
 
   virtual ~Value();
 
-  static Value* CreateNullValue();
+  static scoped_ptr<Value> CreateNullValue();
 
   // Returns the type of the value stored by the current Value object.
   // Each type will be implemented by only one subclass of Value, so it's
@@ -85,6 +88,7 @@ class BASE_EXPORT Value {
   virtual bool GetAsString(std::string* out_value) const;
   virtual bool GetAsString(string16* out_value) const;
   virtual bool GetAsString(const StringValue** out_value) const;
+  virtual bool GetAsBinary(const BinaryValue** out_value) const;
   virtual bool GetAsList(ListValue** out_value);
   virtual bool GetAsList(const ListValue** out_value) const;
   virtual bool GetAsDictionary(DictionaryValue** out_value);
@@ -97,6 +101,8 @@ class BASE_EXPORT Value {
   // Subclasses return their own type directly in their overrides;
   // this works because C++ supports covariant return types.
   virtual Value* DeepCopy() const;
+  // Preferred version of DeepCopy. TODO(estade): remove the above.
+  scoped_ptr<Value> CreateDeepCopy() const;
 
   // Compares if two Value objects have equal contents.
   virtual bool Equals(const Value* other) const;
@@ -188,6 +194,7 @@ class BASE_EXPORT BinaryValue: public Value {
   const char* GetBuffer() const { return buffer_.get(); }
 
   // Overridden from Value:
+  bool GetAsBinary(const BinaryValue** out_value) const override;
   BinaryValue* DeepCopy() const override;
   bool Equals(const Value* other) const override;
 
@@ -203,6 +210,9 @@ class BASE_EXPORT BinaryValue: public Value {
 // are |std::string|s and should be UTF-8 encoded.
 class BASE_EXPORT DictionaryValue : public Value {
  public:
+  // Returns |value| if it is a dictionary, nullptr otherwise.
+  static scoped_ptr<DictionaryValue> From(scoped_ptr<Value> value);
+
   DictionaryValue();
   ~DictionaryValue() override;
 
@@ -228,9 +238,9 @@ class BASE_EXPORT DictionaryValue : public Value {
   // within a key, but there are no other restrictions on keys.
   // If the key at any step of the way doesn't exist, or exists but isn't
   // a DictionaryValue, a new DictionaryValue will be created and attached
-  // to the path in that location.
-  // Note that the dictionary takes ownership of the value referenced by
-  // |in_value|, and therefore |in_value| must be non-NULL.
+  // to the path in that location. |in_value| must be non-null.
+  void Set(const std::string& path, scoped_ptr<Value> in_value);
+  // Deprecated version of the above. TODO(estade): remove.
   void Set(const std::string& path, Value* in_value);
 
   // Convenience forms of Set().  These methods will replace any existing
@@ -243,6 +253,9 @@ class BASE_EXPORT DictionaryValue : public Value {
 
   // Like Set(), but without special treatment of '.'.  This allows e.g. URLs to
   // be used as paths.
+  void SetWithoutPathExpansion(const std::string& key,
+                               scoped_ptr<Value> in_value);
+  // Deprecated version of the above. TODO(estade): remove.
   void SetWithoutPathExpansion(const std::string& key, Value* in_value);
 
   // Convenience forms of SetWithoutPathExpansion().
@@ -262,8 +275,8 @@ class BASE_EXPORT DictionaryValue : public Value {
   // Otherwise, it will return false and |out_value| will be untouched.
   // Note that the dictionary always owns the value that's returned.
   // |out_value| is optional and will only be set if non-NULL.
-  bool Get(const std::string& path, const Value** out_value) const;
-  bool Get(const std::string& path, Value** out_value);
+  bool Get(StringPiece path, const Value** out_value) const;
+  bool Get(StringPiece path, Value** out_value);
 
   // These are convenience forms of Get().  The value will be retrieved
   // and the return value will be true if the path is valid and the value at
@@ -279,9 +292,9 @@ class BASE_EXPORT DictionaryValue : public Value {
   bool GetStringASCII(const std::string& path, std::string* out_value) const;
   bool GetBinary(const std::string& path, const BinaryValue** out_value) const;
   bool GetBinary(const std::string& path, BinaryValue** out_value);
-  bool GetDictionary(const std::string& path,
+  bool GetDictionary(StringPiece path,
                      const DictionaryValue** out_value) const;
-  bool GetDictionary(const std::string& path, DictionaryValue** out_value);
+  bool GetDictionary(StringPiece path, DictionaryValue** out_value);
   bool GetList(const std::string& path, const ListValue** out_value) const;
   bool GetList(const std::string& path, ListValue** out_value);
 
@@ -330,7 +343,7 @@ class BASE_EXPORT DictionaryValue : public Value {
 
   // Makes a copy of |this| but doesn't include empty dictionaries and lists in
   // the copy.  This never returns NULL, even if |this| itself is empty.
-  DictionaryValue* DeepCopyWithoutEmptyChildren() const;
+  scoped_ptr<DictionaryValue> DeepCopyWithoutEmptyChildren() const;
 
   // Merge |dictionary| into this dictionary. This is done recursively, i.e. any
   // sub-dictionaries will be merged as well. In case of key collisions, the
@@ -362,6 +375,8 @@ class BASE_EXPORT DictionaryValue : public Value {
 
   // Overridden from Value:
   DictionaryValue* DeepCopy() const override;
+  // Preferred version of DeepCopy. TODO(estade): remove the above.
+  scoped_ptr<DictionaryValue> CreateDeepCopy() const;
   bool Equals(const Value* other) const override;
 
  private:
@@ -375,6 +390,9 @@ class BASE_EXPORT ListValue : public Value {
  public:
   typedef ValueVector::iterator iterator;
   typedef ValueVector::const_iterator const_iterator;
+
+  // Returns |value| if it is a list, nullptr otherwise.
+  static scoped_ptr<ListValue> From(scoped_ptr<Value> value);
 
   ListValue();
   ~ListValue() override;
@@ -394,6 +412,8 @@ class BASE_EXPORT ListValue : public Value {
   // Returns true if successful, or false if the index was negative or
   // the value is a null pointer.
   bool Set(size_t index, Value* in_value);
+  // Preferred version of the above. TODO(estade): remove the above.
+  bool Set(size_t index, scoped_ptr<Value> in_value);
 
   // Gets the Value at the given index.  Modifies |out_value| (and returns true)
   // only if the index falls within the current list range.
@@ -439,6 +459,8 @@ class BASE_EXPORT ListValue : public Value {
   iterator Erase(iterator iter, scoped_ptr<Value>* out_value);
 
   // Appends a Value to the end of the list.
+  void Append(scoped_ptr<Value> in_value);
+  // Deprecated version of the above. TODO(estade): remove.
   void Append(Value* in_value);
 
   // Convenience forms of Append.
@@ -480,19 +502,29 @@ class BASE_EXPORT ListValue : public Value {
   ListValue* DeepCopy() const override;
   bool Equals(const Value* other) const override;
 
+  // Preferred version of DeepCopy. TODO(estade): remove DeepCopy.
+  scoped_ptr<ListValue> CreateDeepCopy() const;
+
  private:
   ValueVector list_;
 
   DISALLOW_COPY_AND_ASSIGN(ListValue);
 };
 
-// This interface is implemented by classes that know how to serialize and
-// deserialize Value objects.
+// This interface is implemented by classes that know how to serialize
+// Value objects.
 class BASE_EXPORT ValueSerializer {
  public:
   virtual ~ValueSerializer();
 
   virtual bool Serialize(const Value& root) = 0;
+};
+
+// This interface is implemented by classes that know how to deserialize Value
+// objects.
+class BASE_EXPORT ValueDeserializer {
+ public:
+  virtual ~ValueDeserializer();
 
   // This method deserializes the subclass-specific format into a Value object.
   // If the return value is non-NULL, the caller takes ownership of returned
@@ -500,7 +532,8 @@ class BASE_EXPORT ValueSerializer {
   // error_code will be set with the underlying error.
   // If |error_message| is non-null, it will be filled in with a formatted
   // error message including the location of the error if appropriate.
-  virtual Value* Deserialize(int* error_code, std::string* error_str) = 0;
+  virtual scoped_ptr<Value> Deserialize(int* error_code,
+                                        std::string* error_str) = 0;
 };
 
 // Stream operator so Values can be used in assertion statements.  In order that

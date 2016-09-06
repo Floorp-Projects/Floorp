@@ -5,6 +5,9 @@
 #ifndef SANDBOX_SRC_CROSSCALL_CLIENT_H_
 #define SANDBOX_SRC_CROSSCALL_CLIENT_H_
 
+#include <stddef.h>
+#include <stdint.h>
+
 #include "sandbox/win/src/crosscall_params.h"
 #include "sandbox/win/src/sandbox.h"
 
@@ -20,7 +23,7 @@
 //
 // The general interface of CrossCall is:
 //  ResultCode CrossCall(IPCProvider& ipc_provider,
-//                       uint32 tag,
+//                       uint32_t tag,
 //                       const Par1& p1, const Par2& p2,...pn
 //                       CrossCallReturn* answer)
 //
@@ -40,7 +43,7 @@ namespace sandbox {
 
 // this is the assumed channel size. This can be overridden in a given
 // IPC implementation.
-const uint32 kIPCChannelSize = 1024;
+const uint32_t kIPCChannelSize = 1024;
 
 // The copy helper uses templates to deduce the appropriate copy function to
 // copy the input parameters in the buffer that is going to be send across the
@@ -67,9 +70,7 @@ class CopyHelper {
   }
 
   // Returns the size of the input in bytes.
-  uint32 GetSize() const {
-    return sizeof(T);
-  }
+  uint32_t GetSize() const { return sizeof(T); }
 
   // Returns true if the current type is used as an In or InOut parameter.
   bool IsInOut() {
@@ -78,7 +79,7 @@ class CopyHelper {
 
   // Returns this object's type.
   ArgType GetType() {
-    COMPILE_ASSERT(sizeof(T) == sizeof(uint32), need_specialization);
+    static_assert(sizeof(T) == sizeof(uint32_t), "specialization needed");
     return UINT32_TYPE;
   }
 
@@ -106,9 +107,7 @@ class CopyHelper<void*> {
   }
 
   // Returns the size of the input in bytes.
-  uint32 GetSize() const {
-    return sizeof(t_);
-  }
+  uint32_t GetSize() const { return sizeof(t_); }
 
   // Returns true if the current type is used as an In or InOut parameter.
   bool IsInOut() {
@@ -147,12 +146,13 @@ class CopyHelper<const wchar_t*> {
 
   // Returns the size of the string in bytes. We define a NULL string to
   // be of zero length.
-  uint32 GetSize() const {
+  uint32_t GetSize() const {
     __try {
-      return (!t_) ? 0 : static_cast<uint32>(StringLength(t_) * sizeof(t_[0]));
+      return (!t_) ? 0
+                   : static_cast<uint32_t>(StringLength(t_) * sizeof(t_[0]));
     }
     __except(EXCEPTION_EXECUTE_HANDLER) {
-      return kuint32max;
+      return UINT32_MAX;
     }
   }
 
@@ -194,9 +194,7 @@ class CopyHelper<wchar_t*> : public CopyHelper<const wchar_t*> {
     return Base::Update(buffer);
   }
 
-  uint32 GetSize() const {
-    return Base::GetSize();
-  }
+  uint32_t GetSize() const { return Base::GetSize(); }
 
   bool IsInOut() {
     return Base::IsInOut();
@@ -224,9 +222,7 @@ class CopyHelper<const wchar_t[n]> : public CopyHelper<const wchar_t*> {
     return Base::Update(buffer);
   }
 
-  uint32 GetSize() const {
-    return Base::GetSize();
-  }
+  uint32_t GetSize() const { return Base::GetSize(); }
 
   bool IsInOut() {
     return Base::IsInOut();
@@ -242,7 +238,8 @@ class CopyHelper<const wchar_t[n]> : public CopyHelper<const wchar_t*> {
 // parameters.
 class InOutCountedBuffer : public CountedBuffer {
  public:
-  InOutCountedBuffer(void* buffer, uint32 size) : CountedBuffer(buffer, size) {}
+  InOutCountedBuffer(void* buffer, uint32_t size)
+      : CountedBuffer(buffer, size) {}
 };
 
 // This copy helper template specialization catches the cases where the
@@ -272,9 +269,7 @@ class CopyHelper<InOutCountedBuffer> {
 
   // Returns the size of the string in bytes. We define a NULL string to
   // be of zero length.
-  uint32 GetSize() const {
-    return t_.Size();
-  }
+  uint32_t GetSize() const { return t_.Size(); }
 
   // Returns true if the current type is used as an In or InOut parameter.
   bool IsInOut() {
@@ -300,7 +295,7 @@ class CopyHelper<InOutCountedBuffer> {
   ActualParams* params = new(raw_mem) ActualParams(tag);
 
 #define XCALL_GEN_COPY_PARAM(num, params) \
-  COMPILE_ASSERT(kMaxIpcParams >= num, too_many_parameters); \
+  static_assert(kMaxIpcParams >= num, "too many parameters"); \
   CopyHelper<Par##num> ch##num(p##num); \
   if (!params->CopyParamIn(num - 1, ch##num.GetStart(), ch##num.GetSize(), \
                            ch##num.IsInOut(), ch##num.GetType())) \
@@ -317,7 +312,9 @@ class CopyHelper<InOutCountedBuffer> {
 
 // CrossCall template with one input parameter
 template <typename IPCProvider, typename Par1>
-ResultCode CrossCall(IPCProvider& ipc_provider, uint32 tag, const Par1& p1,
+ResultCode CrossCall(IPCProvider& ipc_provider,
+                     uint32_t tag,
+                     const Par1& p1,
                      CrossCallReturn* answer) {
   XCALL_GEN_PARAMS_OBJ(1, call_params);
   XCALL_GEN_COPY_PARAM(1, call_params);
@@ -334,8 +331,11 @@ ResultCode CrossCall(IPCProvider& ipc_provider, uint32 tag, const Par1& p1,
 
 // CrossCall template with two input parameters.
 template <typename IPCProvider, typename Par1, typename Par2>
-ResultCode CrossCall(IPCProvider& ipc_provider, uint32 tag, const Par1& p1,
-                     const Par2& p2, CrossCallReturn* answer) {
+ResultCode CrossCall(IPCProvider& ipc_provider,
+                     uint32_t tag,
+                     const Par1& p1,
+                     const Par2& p2,
+                     CrossCallReturn* answer) {
   XCALL_GEN_PARAMS_OBJ(2, call_params);
   XCALL_GEN_COPY_PARAM(1, call_params);
   XCALL_GEN_COPY_PARAM(2, call_params);
@@ -352,8 +352,12 @@ ResultCode CrossCall(IPCProvider& ipc_provider, uint32 tag, const Par1& p1,
 
 // CrossCall template with three input parameters.
 template <typename IPCProvider, typename Par1, typename Par2, typename Par3>
-ResultCode CrossCall(IPCProvider& ipc_provider, uint32 tag, const Par1& p1,
-                     const Par2& p2, const Par3& p3, CrossCallReturn* answer) {
+ResultCode CrossCall(IPCProvider& ipc_provider,
+                     uint32_t tag,
+                     const Par1& p1,
+                     const Par2& p2,
+                     const Par3& p3,
+                     CrossCallReturn* answer) {
   XCALL_GEN_PARAMS_OBJ(3, call_params);
   XCALL_GEN_COPY_PARAM(1, call_params);
   XCALL_GEN_COPY_PARAM(2, call_params);
@@ -371,10 +375,17 @@ ResultCode CrossCall(IPCProvider& ipc_provider, uint32 tag, const Par1& p1,
 }
 
 // CrossCall template with four input parameters.
-template <typename IPCProvider, typename Par1, typename Par2, typename Par3,
+template <typename IPCProvider,
+          typename Par1,
+          typename Par2,
+          typename Par3,
           typename Par4>
-ResultCode CrossCall(IPCProvider& ipc_provider, uint32 tag, const Par1& p1,
-                     const Par2& p2, const Par3& p3, const Par4& p4,
+ResultCode CrossCall(IPCProvider& ipc_provider,
+                     uint32_t tag,
+                     const Par1& p1,
+                     const Par2& p2,
+                     const Par3& p3,
+                     const Par4& p4,
                      CrossCallReturn* answer) {
   XCALL_GEN_PARAMS_OBJ(4, call_params);
   XCALL_GEN_COPY_PARAM(1, call_params);
@@ -395,11 +406,20 @@ ResultCode CrossCall(IPCProvider& ipc_provider, uint32 tag, const Par1& p1,
 }
 
 // CrossCall template with five input parameters.
-template <typename IPCProvider, typename Par1, typename Par2, typename Par3,
-          typename Par4, typename Par5>
-ResultCode CrossCall(IPCProvider& ipc_provider, uint32 tag, const Par1& p1,
-                     const Par2& p2, const Par3& p3, const Par4& p4,
-                     const Par5& p5, CrossCallReturn* answer) {
+template <typename IPCProvider,
+          typename Par1,
+          typename Par2,
+          typename Par3,
+          typename Par4,
+          typename Par5>
+ResultCode CrossCall(IPCProvider& ipc_provider,
+                     uint32_t tag,
+                     const Par1& p1,
+                     const Par2& p2,
+                     const Par3& p3,
+                     const Par4& p4,
+                     const Par5& p5,
+                     CrossCallReturn* answer) {
   XCALL_GEN_PARAMS_OBJ(5, call_params);
   XCALL_GEN_COPY_PARAM(1, call_params);
   XCALL_GEN_COPY_PARAM(2, call_params);
@@ -421,11 +441,22 @@ ResultCode CrossCall(IPCProvider& ipc_provider, uint32 tag, const Par1& p1,
 }
 
 // CrossCall template with six input parameters.
-template <typename IPCProvider, typename Par1, typename Par2, typename Par3,
-          typename Par4, typename Par5, typename Par6>
-ResultCode CrossCall(IPCProvider& ipc_provider, uint32 tag, const Par1& p1,
-                     const Par2& p2, const Par3& p3, const Par4& p4,
-                     const Par5& p5, const Par6& p6, CrossCallReturn* answer) {
+template <typename IPCProvider,
+          typename Par1,
+          typename Par2,
+          typename Par3,
+          typename Par4,
+          typename Par5,
+          typename Par6>
+ResultCode CrossCall(IPCProvider& ipc_provider,
+                     uint32_t tag,
+                     const Par1& p1,
+                     const Par2& p2,
+                     const Par3& p3,
+                     const Par4& p4,
+                     const Par5& p5,
+                     const Par6& p6,
+                     CrossCallReturn* answer) {
   XCALL_GEN_PARAMS_OBJ(6, call_params);
   XCALL_GEN_COPY_PARAM(1, call_params);
   XCALL_GEN_COPY_PARAM(2, call_params);
@@ -449,11 +480,23 @@ ResultCode CrossCall(IPCProvider& ipc_provider, uint32 tag, const Par1& p1,
 }
 
 // CrossCall template with seven input parameters.
-template <typename IPCProvider, typename Par1, typename Par2, typename Par3,
-          typename Par4, typename Par5, typename Par6, typename Par7>
-ResultCode CrossCall(IPCProvider& ipc_provider, uint32 tag, const Par1& p1,
-                     const Par2& p2, const Par3& p3, const Par4& p4,
-                     const Par5& p5, const Par6& p6, const Par7& p7,
+template <typename IPCProvider,
+          typename Par1,
+          typename Par2,
+          typename Par3,
+          typename Par4,
+          typename Par5,
+          typename Par6,
+          typename Par7>
+ResultCode CrossCall(IPCProvider& ipc_provider,
+                     uint32_t tag,
+                     const Par1& p1,
+                     const Par2& p2,
+                     const Par3& p3,
+                     const Par4& p4,
+                     const Par5& p5,
+                     const Par6& p6,
+                     const Par7& p7,
                      CrossCallReturn* answer) {
   XCALL_GEN_PARAMS_OBJ(7, call_params);
   XCALL_GEN_COPY_PARAM(1, call_params);

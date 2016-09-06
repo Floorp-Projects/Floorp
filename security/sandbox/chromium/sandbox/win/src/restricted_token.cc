@@ -4,46 +4,80 @@
 
 #include "sandbox/win/src/restricted_token.h"
 
+#include <stddef.h>
+
 #include <vector>
 
 #include "base/logging.h"
+#include "base/memory/scoped_ptr.h"
 #include "sandbox/win/src/acl.h"
 #include "sandbox/win/src/win_utils.h"
 
+namespace {
+
+// Calls GetTokenInformation with the desired |info_class| and returns a buffer
+// with the result.
+scoped_ptr<BYTE[]> GetTokenInfo(const base::win::ScopedHandle& token,
+                                TOKEN_INFORMATION_CLASS info_class,
+                                DWORD* error) {
+  // Get the required buffer size.
+  DWORD size = 0;
+  ::GetTokenInformation(token.Get(), info_class, NULL, 0,  &size);
+  if (!size) {
+    *error = ::GetLastError();
+    return nullptr;
+  }
+
+  scoped_ptr<BYTE[]> buffer(new BYTE[size]);
+  if (!::GetTokenInformation(token.Get(), info_class, buffer.get(), size,
+                             &size)) {
+    *error = ::GetLastError();
+    return nullptr;
+  }
+
+  *error = ERROR_SUCCESS;
+  return buffer.Pass();
+}
+
+}  // namespace
 
 namespace sandbox {
 
-unsigned RestrictedToken::Init(const HANDLE effective_token) {
+RestrictedToken::RestrictedToken()
+    : integrity_level_(INTEGRITY_LEVEL_LAST),
+      init_(false) {
+}
+
+RestrictedToken::~RestrictedToken() {
+}
+
+DWORD RestrictedToken::Init(const HANDLE effective_token) {
   if (init_)
     return ERROR_ALREADY_INITIALIZED;
 
+  HANDLE temp_token;
   if (effective_token) {
     // We duplicate the handle to be able to use it even if the original handle
     // is closed.
-    HANDLE effective_token_dup;
-    if (::DuplicateHandle(::GetCurrentProcess(),
-                          effective_token,
-                          ::GetCurrentProcess(),
-                          &effective_token_dup,
-                          0,
-                          FALSE,
-                          DUPLICATE_SAME_ACCESS)) {
-      effective_token_ = effective_token_dup;
-    } else {
+    if (!::DuplicateHandle(::GetCurrentProcess(), effective_token,
+                           ::GetCurrentProcess(), &temp_token,
+                           0, FALSE, DUPLICATE_SAME_ACCESS)) {
       return ::GetLastError();
     }
   } else {
-    if (!::OpenProcessToken(::GetCurrentProcess(),
-                            TOKEN_ALL_ACCESS,
-                            &effective_token_))
+    if (!::OpenProcessToken(::GetCurrentProcess(), TOKEN_ALL_ACCESS,
+                            &temp_token)) {
       return ::GetLastError();
+    }
   }
+  effective_token_.Set(temp_token);
 
   init_ = true;
   return ERROR_SUCCESS;
 }
 
-unsigned RestrictedToken::GetRestrictedTokenHandle(HANDLE *token_handle) const {
+DWORD RestrictedToken::GetRestrictedToken(
+    base::win::ScopedHandle* token) const {
   DCHECK(init_);
   if (!init_)
     return ERROR_NO_TOKEN;
@@ -85,13 +119,13 @@ unsigned RestrictedToken::GetRestrictedTokenHandle(HANDLE *token_handle) const {
   }
 
   BOOL result = TRUE;
-  HANDLE new_token = NULL;
+  HANDLE new_token_handle = NULL;
   // The SANDBOX_INERT flag did nothing in XP and it was just a way to tell
   // if a token has ben restricted given the limiations of IsTokenRestricted()
   // but it appears that in Windows 7 it hints the AppLocker subsystem to
   // leave us alone.
   if (deny_size || restrict_size || privileges_size) {
-    result = ::CreateRestrictedToken(effective_token_,
+    result = ::CreateRestrictedToken(effective_token_.Get(),
                                      SANDBOX_INERT,
                                      static_cast<DWORD>(deny_size),
                                      deny_only_array,
@@ -99,15 +133,16 @@ unsigned RestrictedToken::GetRestrictedTokenHandle(HANDLE *token_handle) const {
                                      privileges_to_disable_array,
                                      static_cast<DWORD>(restrict_size),
                                      sids_to_restrict_array,
-                                     &new_token);
+                                     &new_token_handle);
   } else {
     // Duplicate the token even if it's not modified at this point
     // because any subsequent changes to this token would also affect the
     // current process.
-    result = ::DuplicateTokenEx(effective_token_, TOKEN_ALL_ACCESS, NULL,
+    result = ::DuplicateTokenEx(effective_token_.Get(), TOKEN_ALL_ACCESS, NULL,
                                 SecurityIdentification, TokenPrimary,
-                                &new_token);
+                                &new_token_handle);
   }
+  auto last_error = ::GetLastError();
 
   if (deny_only_array)
     delete[] deny_only_array;
@@ -119,99 +154,77 @@ unsigned RestrictedToken::GetRestrictedTokenHandle(HANDLE *token_handle) const {
     delete[] privileges_to_disable_array;
 
   if (!result)
-    return ::GetLastError();
+    return last_error;
+
+  base::win::ScopedHandle new_token(new_token_handle);
 
   // Modify the default dacl on the token to contain Restricted and the user.
-  if (!AddSidToDefaultDacl(new_token, WinRestrictedCodeSid, GENERIC_ALL))
+  if (!AddSidToDefaultDacl(new_token.Get(), WinRestrictedCodeSid, GENERIC_ALL))
     return ::GetLastError();
 
-  if (!AddUserSidToDefaultDacl(new_token, GENERIC_ALL))
+  if (!AddUserSidToDefaultDacl(new_token.Get(), GENERIC_ALL))
     return ::GetLastError();
 
-  DWORD error = SetTokenIntegrityLevel(new_token, integrity_level_);
+  DWORD error = SetTokenIntegrityLevel(new_token.Get(), integrity_level_);
   if (ERROR_SUCCESS != error)
     return error;
 
-  BOOL status = ::DuplicateHandle(::GetCurrentProcess(),
-                                  new_token,
-                                  ::GetCurrentProcess(),
-                                  token_handle,
-                                  TOKEN_ALL_ACCESS,
-                                  FALSE,  // Don't inherit.
-                                  0);
-
-  if (new_token != effective_token_)
-    ::CloseHandle(new_token);
-
-  if (!status)
+  HANDLE token_handle;
+  if (!::DuplicateHandle(::GetCurrentProcess(), new_token.Get(),
+                         ::GetCurrentProcess(), &token_handle,
+                         TOKEN_ALL_ACCESS, FALSE,  // Don't inherit.
+                         0)) {
     return ::GetLastError();
+  }
 
+  token->Set(token_handle);
   return ERROR_SUCCESS;
 }
 
-unsigned RestrictedToken::GetRestrictedTokenHandleForImpersonation(
-    HANDLE *token_handle) const {
+DWORD RestrictedToken::GetRestrictedTokenForImpersonation(
+    base::win::ScopedHandle* token) const {
   DCHECK(init_);
   if (!init_)
     return ERROR_NO_TOKEN;
 
-  HANDLE restricted_token_handle;
-  unsigned err_code = GetRestrictedTokenHandle(&restricted_token_handle);
+  base::win::ScopedHandle restricted_token;
+  DWORD err_code = GetRestrictedToken(&restricted_token);
   if (ERROR_SUCCESS != err_code)
     return err_code;
 
-  HANDLE impersonation_token;
-  if (!::DuplicateToken(restricted_token_handle,
+  HANDLE impersonation_token_handle;
+  if (!::DuplicateToken(restricted_token.Get(),
                         SecurityImpersonation,
-                        &impersonation_token)) {
-    ::CloseHandle(restricted_token_handle);
+                        &impersonation_token_handle)) {
+    return ::GetLastError();
+  }
+  base::win::ScopedHandle impersonation_token(impersonation_token_handle);
+
+  HANDLE token_handle;
+  if (!::DuplicateHandle(::GetCurrentProcess(), impersonation_token.Get(),
+                         ::GetCurrentProcess(), &token_handle,
+                         TOKEN_ALL_ACCESS, FALSE,  // Don't inherit.
+                         0)) {
     return ::GetLastError();
   }
 
-  ::CloseHandle(restricted_token_handle);
-
-  BOOL status = ::DuplicateHandle(::GetCurrentProcess(),
-                                  impersonation_token,
-                                  ::GetCurrentProcess(),
-                                  token_handle,
-                                  TOKEN_ALL_ACCESS,
-                                  FALSE,  // Don't inherit.
-                                  0);
-
-  ::CloseHandle(impersonation_token);
-
-  if (!status)
-    return ::GetLastError();
-
+  token->Set(token_handle);
   return ERROR_SUCCESS;
 }
 
-unsigned RestrictedToken::AddAllSidsForDenyOnly(std::vector<Sid> *exceptions) {
+DWORD RestrictedToken::AddAllSidsForDenyOnly(std::vector<Sid> *exceptions) {
   DCHECK(init_);
   if (!init_)
     return ERROR_NO_TOKEN;
 
-  TOKEN_GROUPS *token_groups = NULL;
-  DWORD size = 0;
+  DWORD error;
+  scoped_ptr<BYTE[]> buffer =
+      GetTokenInfo(effective_token_, TokenGroups, &error);
 
-  BOOL result = ::GetTokenInformation(effective_token_,
-                                      TokenGroups,
-                                      NULL,  // No buffer.
-                                      0,  // Size is 0.
-                                      &size);
-  if (!size)
-    return ::GetLastError();
+  if (!buffer)
+    return error;
 
-  token_groups = reinterpret_cast<TOKEN_GROUPS*>(new BYTE[size]);
-  result = ::GetTokenInformation(effective_token_,
-                                 TokenGroups,
-                                 token_groups,
-                                 size,
-                                 &size);
-  if (!result) {
-    delete[] reinterpret_cast<BYTE*>(token_groups);
-    return ::GetLastError();
-  }
+  TOKEN_GROUPS* token_groups = reinterpret_cast<TOKEN_GROUPS*>(buffer.get());
 
   // Build the list of the deny only group SIDs
   for (unsigned int i = 0; i < token_groups->GroupCount ; ++i) {
@@ -234,12 +247,10 @@ unsigned RestrictedToken::AddAllSidsForDenyOnly(std::vector<Sid> *exceptions) {
     }
   }
 
-  delete[] reinterpret_cast<BYTE*>(token_groups);
-
   return ERROR_SUCCESS;
 }
 
-unsigned RestrictedToken::AddSidForDenyOnly(const Sid &sid) {
+DWORD RestrictedToken::AddSidForDenyOnly(const Sid &sid) {
   DCHECK(init_);
   if (!init_)
     return ERROR_NO_TOKEN;
@@ -248,62 +259,42 @@ unsigned RestrictedToken::AddSidForDenyOnly(const Sid &sid) {
   return ERROR_SUCCESS;
 }
 
-unsigned RestrictedToken::AddUserSidForDenyOnly() {
+DWORD RestrictedToken::AddUserSidForDenyOnly() {
   DCHECK(init_);
   if (!init_)
     return ERROR_NO_TOKEN;
 
   DWORD size = sizeof(TOKEN_USER) + SECURITY_MAX_SID_SIZE;
-  TOKEN_USER* token_user = reinterpret_cast<TOKEN_USER*>(new BYTE[size]);
+  scoped_ptr<BYTE[]> buffer(new BYTE[size]);
+  TOKEN_USER* token_user = reinterpret_cast<TOKEN_USER*>(buffer.get());
 
-  BOOL result = ::GetTokenInformation(effective_token_,
-                                      TokenUser,
-                                      token_user,
-                                      size,
-                                      &size);
+  BOOL result = ::GetTokenInformation(effective_token_.Get(), TokenUser,
+                                      token_user, size, &size);
 
-  if (!result) {
-    delete[] reinterpret_cast<BYTE*>(token_user);
+  if (!result)
     return ::GetLastError();
-  }
 
   Sid user = reinterpret_cast<SID*>(token_user->User.Sid);
   sids_for_deny_only_.push_back(user);
 
-  delete[] reinterpret_cast<BYTE*>(token_user);
-
   return ERROR_SUCCESS;
 }
 
-unsigned RestrictedToken::DeleteAllPrivileges(
+DWORD RestrictedToken::DeleteAllPrivileges(
     const std::vector<base::string16> *exceptions) {
   DCHECK(init_);
   if (!init_)
     return ERROR_NO_TOKEN;
 
-  // Get the list of privileges in the token
-  TOKEN_PRIVILEGES *token_privileges = NULL;
-  DWORD size = 0;
+  DWORD error;
+  scoped_ptr<BYTE[]> buffer =
+      GetTokenInfo(effective_token_, TokenPrivileges, &error);
 
-  BOOL result = ::GetTokenInformation(effective_token_,
-                                      TokenPrivileges,
-                                      NULL,  // No buffer.
-                                      0,  // Size is 0.
-                                      &size);
-  if (!size)
-    return ::GetLastError();
+  if (!buffer)
+    return error;
 
-  token_privileges = reinterpret_cast<TOKEN_PRIVILEGES*>(new BYTE[size]);
-  result = ::GetTokenInformation(effective_token_,
-                                 TokenPrivileges,
-                                 token_privileges,
-                                 size,
-                                 &size);
-  if (!result) {
-    delete[] reinterpret_cast<BYTE *>(token_privileges);
-    return ::GetLastError();
-  }
-
+  TOKEN_PRIVILEGES* token_privileges =
+      reinterpret_cast<TOKEN_PRIVILEGES*>(buffer.get());
 
   // Build the list of privileges to disable
   for (unsigned int i = 0; i < token_privileges->PrivilegeCount; ++i) {
@@ -324,12 +315,10 @@ unsigned RestrictedToken::DeleteAllPrivileges(
     }
   }
 
-  delete[] reinterpret_cast<BYTE *>(token_privileges);
-
   return ERROR_SUCCESS;
 }
 
-unsigned RestrictedToken::DeletePrivilege(const wchar_t *privilege) {
+DWORD RestrictedToken::DeletePrivilege(const wchar_t *privilege) {
   DCHECK(init_);
   if (!init_)
     return ERROR_NO_TOKEN;
@@ -343,7 +332,7 @@ unsigned RestrictedToken::DeletePrivilege(const wchar_t *privilege) {
   return ERROR_SUCCESS;
 }
 
-unsigned RestrictedToken::AddRestrictingSid(const Sid &sid) {
+DWORD RestrictedToken::AddRestrictingSid(const Sid &sid) {
   DCHECK(init_);
   if (!init_)
     return ERROR_NO_TOKEN;
@@ -352,32 +341,19 @@ unsigned RestrictedToken::AddRestrictingSid(const Sid &sid) {
   return ERROR_SUCCESS;
 }
 
-unsigned RestrictedToken::AddRestrictingSidLogonSession() {
+DWORD RestrictedToken::AddRestrictingSidLogonSession() {
   DCHECK(init_);
   if (!init_)
     return ERROR_NO_TOKEN;
 
-  TOKEN_GROUPS *token_groups = NULL;
-  DWORD size = 0;
+  DWORD error;
+  scoped_ptr<BYTE[]> buffer =
+      GetTokenInfo(effective_token_, TokenGroups, &error);
 
-  BOOL result = ::GetTokenInformation(effective_token_,
-                                      TokenGroups,
-                                      NULL,  // No buffer.
-                                      0,  // Size is 0.
-                                      &size);
-  if (!size)
-    return ::GetLastError();
+  if (!buffer)
+    return error;
 
-  token_groups = reinterpret_cast<TOKEN_GROUPS*>(new BYTE[size]);
-  result = ::GetTokenInformation(effective_token_,
-                                 TokenGroups,
-                                 token_groups,
-                                 size,
-                                 &size);
-  if (!result) {
-    delete[] reinterpret_cast<BYTE*>(token_groups);
-    return ::GetLastError();
-  }
+  TOKEN_GROUPS* token_groups = reinterpret_cast<TOKEN_GROUPS*>(buffer.get());
 
   SID *logon_sid = NULL;
   for (unsigned int i = 0; i < token_groups->GroupCount ; ++i) {
@@ -390,67 +366,47 @@ unsigned RestrictedToken::AddRestrictingSidLogonSession() {
   if (logon_sid)
     sids_to_restrict_.push_back(logon_sid);
 
-  delete[] reinterpret_cast<BYTE*>(token_groups);
-
   return ERROR_SUCCESS;
 }
 
-unsigned RestrictedToken::AddRestrictingSidCurrentUser() {
+DWORD RestrictedToken::AddRestrictingSidCurrentUser() {
   DCHECK(init_);
   if (!init_)
     return ERROR_NO_TOKEN;
 
   DWORD size = sizeof(TOKEN_USER) + SECURITY_MAX_SID_SIZE;
-  TOKEN_USER* token_user = reinterpret_cast<TOKEN_USER*>(new BYTE[size]);
+  scoped_ptr<BYTE[]> buffer(new BYTE[size]);
+  TOKEN_USER* token_user = reinterpret_cast<TOKEN_USER*>(buffer.get());
 
-  BOOL result = ::GetTokenInformation(effective_token_,
-                                      TokenUser,
-                                      token_user,
-                                      size,
-                                      &size);
+  BOOL result = ::GetTokenInformation(effective_token_.Get(), TokenUser,
+                                      token_user, size, &size);
 
-  if (!result) {
-    delete[] reinterpret_cast<BYTE*>(token_user);
+  if (!result)
     return ::GetLastError();
-  }
 
   Sid user = reinterpret_cast<SID*>(token_user->User.Sid);
   sids_to_restrict_.push_back(user);
 
-  delete[] reinterpret_cast<BYTE*>(token_user);
-
   return ERROR_SUCCESS;
 }
 
-unsigned RestrictedToken::AddRestrictingSidAllSids() {
+DWORD RestrictedToken::AddRestrictingSidAllSids() {
   DCHECK(init_);
   if (!init_)
     return ERROR_NO_TOKEN;
 
   // Add the current user to the list.
-  unsigned error = AddRestrictingSidCurrentUser();
+  DWORD error = AddRestrictingSidCurrentUser();
   if (ERROR_SUCCESS != error)
     return error;
 
-  TOKEN_GROUPS *token_groups = NULL;
-  DWORD size = 0;
+  scoped_ptr<BYTE[]> buffer =
+      GetTokenInfo(effective_token_, TokenGroups, &error);
 
-  // Get the buffer size required.
-  BOOL result = ::GetTokenInformation(effective_token_, TokenGroups, NULL, 0,
-                                      &size);
-  if (!size)
-    return ::GetLastError();
+  if (!buffer)
+    return error;
 
-  token_groups = reinterpret_cast<TOKEN_GROUPS*>(new BYTE[size]);
-  result = ::GetTokenInformation(effective_token_,
-                                 TokenGroups,
-                                 token_groups,
-                                 size,
-                                 &size);
-  if (!result) {
-    delete[] reinterpret_cast<BYTE*>(token_groups);
-    return ::GetLastError();
-  }
+  TOKEN_GROUPS* token_groups = reinterpret_cast<TOKEN_GROUPS*>(buffer.get());
 
   // Build the list of restricting sids from all groups.
   for (unsigned int i = 0; i < token_groups->GroupCount ; ++i) {
@@ -458,12 +414,10 @@ unsigned RestrictedToken::AddRestrictingSidAllSids() {
       AddRestrictingSid(reinterpret_cast<SID*>(token_groups->Groups[i].Sid));
   }
 
-  delete[] reinterpret_cast<BYTE*>(token_groups);
-
   return ERROR_SUCCESS;
 }
 
-unsigned RestrictedToken::SetIntegrityLevel(IntegrityLevel integrity_level) {
+DWORD RestrictedToken::SetIntegrityLevel(IntegrityLevel integrity_level) {
   integrity_level_ = integrity_level;
   return ERROR_SUCCESS;
 }

@@ -4,9 +4,15 @@
 
 #include "sandbox/win/src/win2k_threadpool.h"
 
+#include <stddef.h>
+
 #include "sandbox/win/src/win_utils.h"
 
 namespace sandbox {
+
+Win2kThreadPool::Win2kThreadPool() {
+  ::InitializeCriticalSection(&lock_);
+}
 
 bool Win2kThreadPool::RegisterWait(const void* cookie, HANDLE waitable_object,
                                    CrossCallIPCCallback callback,

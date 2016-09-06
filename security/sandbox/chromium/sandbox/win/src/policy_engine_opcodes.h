@@ -5,7 +5,10 @@
 #ifndef SANDBOX_WIN_SRC_POLICY_ENGINE_OPCODES_H_
 #define SANDBOX_WIN_SRC_POLICY_ENGINE_OPCODES_H_
 
-#include "base/basictypes.h"
+#include <stddef.h>
+#include <stdint.h>
+
+#include "base/macros.h"
 #include "base/numerics/safe_conversions.h"
 #include "sandbox/win/src/policy_engine_params.h"
 
@@ -84,22 +87,22 @@ enum OpcodeID {
 // Options that apply to every opcode. They are specified when creating
 // each opcode using OpcodeFactory::MakeOpXXXXX() family of functions
 // Do nothing special.
-const uint32 kPolNone = 0;
+const uint32_t kPolNone = 0;
 
 // Convert EVAL_TRUE into EVAL_FALSE and vice-versa. This allows to express
 // negated conditions such as if ( a && !b).
-const uint32 kPolNegateEval = 1;
+const uint32_t kPolNegateEval = 1;
 
 // Zero the MatchContext context structure. This happens after the opcode
 // is evaluated.
-const uint32 kPolClearContext = 2;
+const uint32_t kPolClearContext = 2;
 
 // Use OR when evaluating this set of opcodes. The policy evaluator by default
 // uses AND when evaluating. Very helpful when
 // used with kPolNegateEval. For example if you have a condition best expressed
 // as if(! (a && b && c)), the use of this flags allows it to be expressed as
 // if ((!a) || (!b) || (!c)).
-const uint32 kPolUseOREval = 4;
+const uint32_t kPolUseOREval = 4;
 
 // Keeps the evaluation state between opcode evaluations. This is used
 // for string matching where the next opcode needs to continue matching
@@ -108,7 +111,7 @@ const uint32 kPolUseOREval = 4;
 // as an option kPolClearContext.
 struct MatchContext {
   size_t position;
-  uint32 options;
+  uint32_t options;
 
   MatchContext() {
     Clear();
@@ -154,7 +157,7 @@ class PolicyOpcode {
   // from 0 to < kArgumentCount.
   template <typename T>
   void GetArgument(size_t index, T* argument) const {
-    COMPILE_ASSERT(sizeof(T) <= sizeof(arguments_[0]), invalid_size);
+    static_assert(sizeof(T) <= sizeof(arguments_[0]), "invalid size");
     *argument = *reinterpret_cast<const T*>(&arguments_[index].mem);
   }
 
@@ -162,7 +165,7 @@ class PolicyOpcode {
   // from 0 to < kArgumentCount.
   template <typename T>
   void SetArgument(size_t index, const T& argument) {
-    COMPILE_ASSERT(sizeof(T) <= sizeof(arguments_[0]), invalid_size);
+    static_assert(sizeof(T) <= sizeof(arguments_[0]), "invalid size");
     *reinterpret_cast<T*>(&arguments_[index].mem) = argument;
   }
 
@@ -190,13 +193,11 @@ class PolicyOpcode {
   }
 
   // Returns the stored options such as kPolNegateEval and others.
-  uint32 GetOptions() const {
-    return options_;
-  }
+  uint32_t GetOptions() const { return options_; }
 
   // Sets the stored options such as kPolNegateEval.
-  void SetOptions(uint32 options) {
-    options_ = base::checked_cast<uint16>(options);
+  void SetOptions(uint32_t options) {
+    options_ = base::checked_cast<uint16_t>(options);
   }
 
  private:
@@ -218,11 +219,11 @@ class PolicyOpcode {
   EvalResult EvaluateHelper(const ParameterSet* parameters,
                            MatchContext* match);
   OpcodeID opcode_id_;
-  int16 parameter_;
-  // TODO(cpu): Making |options_| a uint32 would avoid casting, but causes test
-  // failures.  Somewhere code is relying on the size of this struct.
+  int16_t parameter_;
+  // TODO(cpu): Making |options_| a uint32_t would avoid casting, but causes
+  // test failures.  Somewhere code is relying on the size of this struct.
   // http://crbug.com/420296
-  uint16 options_;
+  uint16_t options_;
   OpcodeArgument arguments_[PolicyOpcode::kArgumentCount];
 };
 
@@ -297,39 +298,39 @@ class OpcodeFactory {
   }
 
   // Creates an OpAlwaysFalse opcode.
-  PolicyOpcode* MakeOpAlwaysFalse(uint32 options);
+  PolicyOpcode* MakeOpAlwaysFalse(uint32_t options);
 
   // Creates an OpAlwaysFalse opcode.
-  PolicyOpcode* MakeOpAlwaysTrue(uint32 options);
+  PolicyOpcode* MakeOpAlwaysTrue(uint32_t options);
 
   // Creates an OpAction opcode.
   // action: The action to return when Evaluate() is called.
-  PolicyOpcode* MakeOpAction(EvalResult action, uint32 options);
+  PolicyOpcode* MakeOpAction(EvalResult action, uint32_t options);
 
   // Creates an OpNumberMatch opcode.
-  // selected_param: index of the input argument. It must be a uint32 or the
+  // selected_param: index of the input argument. It must be a uint32_t or the
   // evaluation result will generate a EVAL_ERROR.
   // match: the number to compare against the selected_param.
-  PolicyOpcode* MakeOpNumberMatch(int16 selected_param,
-                                  uint32 match,
-                                  uint32 options);
+  PolicyOpcode* MakeOpNumberMatch(int16_t selected_param,
+                                  uint32_t match,
+                                  uint32_t options);
 
   // Creates an OpNumberMatch opcode (void pointers are cast to numbers).
   // selected_param: index of the input argument. It must be an void* or the
   // evaluation result will generate a EVAL_ERROR.
   // match: the pointer numeric value to compare against selected_param.
-  PolicyOpcode* MakeOpVoidPtrMatch(int16 selected_param,
+  PolicyOpcode* MakeOpVoidPtrMatch(int16_t selected_param,
                                    const void* match,
-                                   uint32 options);
+                                   uint32_t options);
 
   // Creates an OpNumberMatchRange opcode using the memory passed in the ctor.
-  // selected_param: index of the input argument. It must be a uint32 or the
+  // selected_param: index of the input argument. It must be a uint32_t or the
   // evaluation result will generate a EVAL_ERROR.
   // lower_bound, upper_bound: the range to compare against selected_param.
-  PolicyOpcode* MakeOpNumberMatchRange(int16 selected_param,
-                                       uint32 lower_bound,
-                                       uint32 upper_bound,
-                                       uint32 options);
+  PolicyOpcode* MakeOpNumberMatchRange(int16_t selected_param,
+                                       uint32_t lower_bound,
+                                       uint32_t upper_bound,
+                                       uint32_t options);
 
   // Creates an OpWStringMatch opcode using the raw memory passed in the ctor.
   // selected_param: index of the input argument. It must be a wide string
@@ -344,26 +345,27 @@ class OpcodeFactory {
   // current implementation.
   // match_opts: Indicates additional matching flags. Currently CaseInsensitive
   // is supported.
-  PolicyOpcode* MakeOpWStringMatch(int16 selected_param,
+  PolicyOpcode* MakeOpWStringMatch(int16_t selected_param,
                                    const wchar_t* match_str,
                                    int start_position,
                                    StringMatchOptions match_opts,
-                                   uint32 options);
+                                   uint32_t options);
 
   // Creates an OpNumberAndMatch opcode using the raw memory passed in the ctor.
-  // selected_param: index of the input argument. It must be uint32 or the
+  // selected_param: index of the input argument. It must be uint32_t or the
   // evaluation result will generate a EVAL_ERROR.
   // match: the value to bitwise AND against selected_param.
-  PolicyOpcode* MakeOpNumberAndMatch(int16 selected_param,
-                                     uint32 match,
-                                     uint32 options);
+  PolicyOpcode* MakeOpNumberAndMatch(int16_t selected_param,
+                                     uint32_t match,
+                                     uint32_t options);
 
  private:
   // Constructs the common part of every opcode. selected_param is the index
   // of the input param to use when evaluating the opcode. Pass -1 in
   // selected_param to indicate that no input parameter is required.
-  PolicyOpcode* MakeBase(OpcodeID opcode_id, uint32 options,
-                         int16 selected_param);
+  PolicyOpcode* MakeBase(OpcodeID opcode_id,
+                         uint32_t options,
+                         int16_t selected_param);
 
   // Allocates (and copies) a string (of size length) inside the buffer and
   // returns the displacement with respect to start.

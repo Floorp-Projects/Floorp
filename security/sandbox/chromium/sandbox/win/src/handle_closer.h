@@ -5,10 +5,12 @@
 #ifndef SANDBOX_SRC_HANDLE_CLOSER_H_
 #define SANDBOX_SRC_HANDLE_CLOSER_H_
 
+#include <stddef.h>
+
 #include <map>
 #include <set>
 
-#include "base/basictypes.h"
+#include "base/macros.h"
 #include "base/strings/string16.h"
 #include "sandbox/win/src/interception.h"
 #include "sandbox/win/src/sandbox_types.h"
@@ -19,8 +21,7 @@ namespace sandbox {
 // This is a map of handle-types to names that we need to close in the
 // target process. A null set means we need to close all handles of the
 // given type.
-typedef std::map<const base::string16, std::set<base::string16> >
-    HandleMap;
+typedef std::map<const base::string16, std::set<base::string16> > HandleMap;
 
 // Type and set of corresponding handle names to close.
 struct HandleListEntry {
@@ -43,6 +44,7 @@ SANDBOX_INTERCEPT HandleCloserInfo* g_handle_closer_info;
 class HandleCloser {
  public:
   HandleCloser();
+  ~HandleCloser();
 
   // Adds a handle that will be closed in the target process after lockdown.
   // A NULL value for handle_name indicates all handles of the specified type.

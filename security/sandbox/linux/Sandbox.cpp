@@ -35,15 +35,18 @@
 #include "mozilla/SandboxInfo.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
+#include "sandbox/linux/bpf_dsl/codegen.h"
 #include "sandbox/linux/bpf_dsl/dump_bpf.h"
 #include "sandbox/linux/bpf_dsl/policy.h"
 #include "sandbox/linux/bpf_dsl/policy_compiler.h"
-#include "sandbox/linux/seccomp-bpf/linux_seccomp.h"
+#include "sandbox/linux/bpf_dsl/seccomp_macros.h"
 #include "sandbox/linux/seccomp-bpf/trap.h"
+#include "sandbox/linux/system_headers/linux_filter.h"
+#include "sandbox/linux/system_headers/linux_seccomp.h"
+#include "sandbox/linux/system_headers/linux_syscalls.h"
 #if defined(ANDROID)
-#include "sandbox/linux/services/android_ucontext.h"
+#include "sandbox/linux/system_headers/linux_ucontext.h"
 #endif
-#include "sandbox/linux/services/linux_syscalls.h"
 
 #ifdef MOZ_ASAN
 // Copy libsanitizer declarations to avoid depending on ASAN headers.
@@ -463,9 +466,9 @@ SetCurrentProcessSandbox(UniquePtr<sandbox::bpf_dsl::Policy> aPolicy)
   // lifetime, but does not take ownership of them.
   sandbox::bpf_dsl::PolicyCompiler compiler(aPolicy.get(),
                                             sandbox::Trap::Registry());
-  auto program = compiler.Compile();
+  sandbox::CodeGen::Program program = compiler.Compile();
   if (SandboxInfo::Get().Test(SandboxInfo::kVerbose)) {
-    sandbox::bpf_dsl::DumpBPF::PrintProgram(*program);
+    sandbox::bpf_dsl::DumpBPF::PrintProgram(program);
   }
 
   InstallSigSysHandler();
@@ -479,10 +482,10 @@ SetCurrentProcessSandbox(UniquePtr<sandbox::bpf_dsl::Policy> aPolicy)
 #endif
 
   // The syscall takes a C-style array, so copy the vector into one.
-  size_t programLen = program->size();
+  size_t programLen = program.size();
   UniquePtr<sock_filter[]> flatProgram(new sock_filter[programLen]);
-  for (auto i = program->begin(); i != program->end(); ++i) {
-    flatProgram[i - program->begin()] = *i;
+  for (auto i = program.begin(); i != program.end(); ++i) {
+    flatProgram[i - program.begin()] = *i;
   }
 
   sock_fprog fprog;

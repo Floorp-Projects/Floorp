@@ -4,13 +4,17 @@
 
 #include "base/strings/safe_sprintf.h"
 
+#include <stddef.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 
 #include <limits>
 
 #include "base/logging.h"
+#include "base/macros.h"
 #include "base/memory/scoped_ptr.h"
+#include "build/build_config.h"
 #include "testing/gtest/include/gtest/gtest.h"
 
 // Death tests on Android are currently very flaky. No need to add more flaky
@@ -61,7 +65,7 @@ TEST(SafeSPrintfTest, NoArguments) {
   // always add a trailing NUL; it always deduplicates '%' characters).
   static const char text[] = "hello world";
   char ref[20], buf[20];
-  memset(ref, 'X', sizeof(char) * arraysize(buf));
+  memset(ref, 'X', sizeof(ref));
   memcpy(buf, ref, sizeof(buf));
 
   // A negative buffer size should always result in an error.

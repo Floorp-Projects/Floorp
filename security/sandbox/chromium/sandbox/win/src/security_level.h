@@ -5,7 +5,7 @@
 #ifndef SANDBOX_SRC_SECURITY_LEVEL_H_
 #define SANDBOX_SRC_SECURITY_LEVEL_H_
 
-#include "base/basictypes.h"
+#include <stdint.h>
 
 namespace sandbox {
 
@@ -138,7 +138,7 @@ enum JobLevel {
 // Flags that are unsupported for the target OS will be silently ignored.
 // Flags that are invalid for their application (pre or post startup) will
 // return SBOX_ERROR_BAD_PARAMS.
-typedef uint64 MitigationFlags;
+typedef uint64_t MitigationFlags;
 
 // Permanently enables DEP for the target process. Corresponds to
 // PROCESS_CREATION_MITIGATION_POLICY_DEP_ENABLE.
@@ -198,6 +198,11 @@ const MitigationFlags MITIGATION_EXTENSION_DLL_DISABLE            = 0x00000400;
 // http://msdn.microsoft.com/en-us/library/windows/desktop/hh310515
 // Must be enabled after startup.
 const MitigationFlags MITIGATION_DLL_SEARCH_ORDER        = 0x00000001ULL << 32;
+
+// Changes the mandatory integrity level policy on the current process' token
+// to enable no-read and no-execute up. This prevents a lower IL process from
+// opening the process token for impersonate/duplicate/assignment.
+const MitigationFlags MITIGATION_HARDEN_TOKEN_IL_POLICY  = 0x00000001ULL << 33;
 
 }  // namespace sandbox
 

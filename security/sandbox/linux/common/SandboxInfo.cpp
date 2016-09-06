@@ -20,8 +20,8 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Telemetry.h"
-#include "sandbox/linux/seccomp-bpf/linux_seccomp.h"
-#include "sandbox/linux/services/linux_syscalls.h"
+#include "sandbox/linux/system_headers/linux_seccomp.h"
+#include "sandbox/linux/system_headers/linux_syscalls.h"
 
 #ifdef MOZ_CRASHREPORTER
 #include "nsExceptionHandler.h"

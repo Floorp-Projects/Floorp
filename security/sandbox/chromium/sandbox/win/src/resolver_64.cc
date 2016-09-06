@@ -4,6 +4,8 @@
 
 #include "sandbox/win/src/resolver.h"
 
+#include <stddef.h>
+
 // For placement new. This file must not depend on the CRT at runtime, but
 // placement operator new is inline.
 #include <new>
@@ -12,34 +14,25 @@
 
 namespace {
 
-const BYTE kPushRax = 0x50;
 const USHORT kMovRax = 0xB848;
-const ULONG kMovRspRax = 0x24048948;
-const BYTE kRetNp = 0xC3;
+const USHORT kJmpRax = 0xe0ff;
 
 #pragma pack(push, 1)
 struct InternalThunk {
   // This struct contains roughly the following code:
-  // 00 50                    push  rax
   // 01 48b8f0debc9a78563412  mov   rax,123456789ABCDEF0h
-  // 0b 48890424              mov   qword ptr [rsp],rax
-  // 0f c3                    ret
+  // ff e0                    jmp   rax
   //
-  // The code modifies rax, but that should not be an issue for the common
-  // calling conventions.
+  // The code modifies rax, but that's fine for x64 ABI.
 
   InternalThunk() {
-    push_rax = kPushRax;
     mov_rax = kMovRax;
+    jmp_rax = kJmpRax;
     interceptor_function = 0;
-    mov_rsp_rax = kMovRspRax;
-    ret = kRetNp;
   };
-  BYTE push_rax;        // = 50
   USHORT mov_rax;       // = 48 B8
   ULONG_PTR interceptor_function;
-  ULONG mov_rsp_rax;    // = 48 89 04 24
-  BYTE ret;             // = C3
+  USHORT jmp_rax;  // = ff e0
 };
 #pragma pack(pop)
 
