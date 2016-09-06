@@ -73,7 +73,7 @@ void synth_run_float(synth_state* synth, float* audiobuffer, long nframes)
   }
 }
 
-long data_cb_float(cubeb_stream *stream, void *user, const void * inputbuffer, void *outputbuffer, long nframes)
+long data_cb_float(cubeb_stream * /*stream*/, void * user, const void * /*inputbuffer*/, void * outputbuffer, long nframes)
 {
   synth_state *synth = (synth_state *)user;
   synth_run_float(synth, (float*)outputbuffer, nframes);
@@ -92,14 +92,14 @@ void synth_run_16bit(synth_state* synth, short* audiobuffer, long nframes)
   }
 }
 
-long data_cb_short(cubeb_stream *stream, void *user, const void * inputbuffer, void *outputbuffer, long nframes)
+long data_cb_short(cubeb_stream * /*stream*/, void * user, const void * /*inputbuffer*/, void * outputbuffer, long nframes)
 {
   synth_state *synth = (synth_state *)user;
   synth_run_16bit(synth, (short*)outputbuffer, nframes);
   return nframes;
 }
 
-void state_cb(cubeb_stream *stream, void *user, cubeb_state state)
+void state_cb(cubeb_stream * /*stream*/, void * /*user*/, cubeb_state /*state*/)
 {
 }
 
@@ -280,7 +280,7 @@ void run_channel_rate_test()
 }
 
 
-int main(int argc, char *argv[])
+int main(int /*argc*/, char * /*argv*/[])
 {
 #ifdef CUBEB_GECKO_BUILD
   ScopedXPCOM xpcom("test_audio");
