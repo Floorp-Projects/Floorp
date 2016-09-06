@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_PresentationParent_h__
 #define mozilla_dom_PresentationParent_h__
 
+#include "mozilla/dom/ipc/IdType.h"
 #include "mozilla/dom/PPresentationBuilderParent.h"
 #include "mozilla/dom/PPresentationParent.h"
 #include "mozilla/dom/PPresentationRequestParent.h"
@@ -30,7 +31,7 @@ public:
 
   PresentationParent();
 
-  bool Init();
+  bool Init(ContentParentId aContentParentId);
 
   bool RegisterTransportBuilder(const nsString& aSessionId, const uint8_t& aRole);
 
@@ -86,6 +87,7 @@ private:
   nsTArray<nsString> mSessionIdsAtController;
   nsTArray<nsString> mSessionIdsAtReceiver;
   nsTArray<uint64_t> mWindowIds;
+  ContentParentId mChildId;
 };
 
 class PresentationRequestParent final : public PPresentationRequestParent
@@ -97,7 +99,8 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPRESENTATIONSERVICECALLBACK
 
-  explicit PresentationRequestParent(nsIPresentationService* aService);
+  explicit PresentationRequestParent(nsIPresentationService* aService,
+                                     ContentParentId aContentParentId);
 
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
@@ -122,6 +125,7 @@ private:
   bool mNeedRegisterBuilder = false;
   nsString mSessionId;
   nsCOMPtr<nsIPresentationService> mService;
+  ContentParentId mChildId;
 };
 
 } // namespace dom

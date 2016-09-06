@@ -5,6 +5,7 @@
 #include "sandbox/win/src/app_container.h"
 
 #include <Sddl.h>
+#include <stddef.h>
 #include <vector>
 
 #include "base/logging.h"

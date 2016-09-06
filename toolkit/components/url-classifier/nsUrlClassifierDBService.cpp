@@ -51,6 +51,39 @@
 #include "ProtocolParser.h"
 #include "nsContentUtils.h"
 
+namespace mozilla {
+namespace safebrowsing {
+
+nsresult
+TablesToResponse(const nsACString& tables)
+{
+  if (tables.IsEmpty()) {
+    return NS_OK;
+  }
+
+  // We don't check mCheckMalware and friends because BuildTables never
+  // includes a table that is not enabled.
+  if (FindInReadable(NS_LITERAL_CSTRING("-malware-"), tables)) {
+    return NS_ERROR_MALWARE_URI;
+  }
+  if (FindInReadable(NS_LITERAL_CSTRING("-phish-"), tables)) {
+    return NS_ERROR_PHISHING_URI;
+  }
+  if (FindInReadable(NS_LITERAL_CSTRING("-unwanted-"), tables)) {
+    return NS_ERROR_UNWANTED_URI;
+  }
+  if (FindInReadable(NS_LITERAL_CSTRING("-track-"), tables)) {
+    return NS_ERROR_TRACKING_URI;
+  }
+  if (FindInReadable(NS_LITERAL_CSTRING("-block-"), tables)) {
+    return NS_ERROR_BLOCKED_URI;
+  }
+  return NS_OK;
+}
+
+} // namespace safebrowsing
+} // namespace mozilla
+
 using namespace mozilla;
 using namespace mozilla::safebrowsing;
 
@@ -170,33 +203,6 @@ nsUrlClassifierDBServiceWorker::DoLocalLookup(const nsACString& spec,
   mClassifier->Check(spec, tables, gFreshnessGuarantee, *results);
 
   LOG(("Found %d results.", results->Length()));
-  return NS_OK;
-}
-
-static nsresult
-TablesToResponse(const nsACString& tables)
-{
-  if (tables.IsEmpty()) {
-    return NS_OK;
-  }
-
-  // We don't check mCheckMalware and friends because BuildTables never
-  // includes a table that is not enabled.
-  if (FindInReadable(NS_LITERAL_CSTRING("-malware-"), tables)) {
-    return NS_ERROR_MALWARE_URI;
-  }
-  if (FindInReadable(NS_LITERAL_CSTRING("-phish-"), tables)) {
-    return NS_ERROR_PHISHING_URI;
-  }
-  if (FindInReadable(NS_LITERAL_CSTRING("-track-"), tables)) {
-    return NS_ERROR_TRACKING_URI;
-  }
-  if (FindInReadable(NS_LITERAL_CSTRING("-unwanted-"), tables)) {
-    return NS_ERROR_UNWANTED_URI;
-  }
-  if (FindInReadable(NS_LITERAL_CSTRING("-block-"), tables)) {
-    return NS_ERROR_BLOCKED_URI;
-  }
   return NS_OK;
 }
 

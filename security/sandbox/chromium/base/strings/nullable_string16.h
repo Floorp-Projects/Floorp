@@ -41,6 +41,6 @@ inline bool operator!=(const NullableString16& a, const NullableString16& b) {
 BASE_EXPORT std::ostream& operator<<(std::ostream& out,
                                      const NullableString16& value);
 
-}  // namespace
+}  // namespace base
 
 #endif  // BASE_STRINGS_NULLABLE_STRING16_H_

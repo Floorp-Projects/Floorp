@@ -2098,6 +2098,38 @@ nsFrameLoader::MaybeCreateDocShell()
     attrs = nsDocShell::Cast(docShell)->GetOriginAttributes();
   }
 
+  // Inherit origin attributes from parent document if
+  // 1. It's in a content docshell.
+  // 2. its nodePrincipal is not a SystemPrincipal.
+  // 3. It's not a mozbrowser nor mozapp frame.
+  //
+  // For example, firstPartyDomain is computed from top-level document, it
+  // doesn't exist in the top-level docshell.
+  if (parentType == nsIDocShellTreeItem::typeContent &&
+      !nsContentUtils::IsSystemPrincipal(doc->NodePrincipal()) &&
+      !OwnerIsMozBrowserOrAppFrame()) {
+    PrincipalOriginAttributes poa = BasePrincipal::Cast(doc->NodePrincipal())->OriginAttributesRef();
+
+    // Assert on the firstPartyDomain from top-level docshell should be empty
+    if (mIsTopLevelContent) {
+      MOZ_ASSERT(attrs.mFirstPartyDomain.IsEmpty(),
+                 "top-level docshell shouldn't have firstPartyDomain attribute.");
+    }
+
+    // So far we want to make sure InheritFromDocToChildDocShell doesn't override
+    // any other origin attribute than firstPartyDomain.
+    MOZ_ASSERT(attrs.mAppId == poa.mAppId,
+              "docshell and document should have the same appId attribute.");
+    MOZ_ASSERT(attrs.mUserContextId == poa.mUserContextId,
+              "docshell and document should have the same userContextId attribute.");
+    MOZ_ASSERT(attrs.mInIsolatedMozBrowser == poa.mInIsolatedMozBrowser,
+              "docshell and document should have the same inIsolatedMozBrowser attribute.");
+    MOZ_ASSERT(attrs.mPrivateBrowsingId == poa.mPrivateBrowsingId,
+              "docshell and document should have the same privateBrowsingId attribute.");
+
+    attrs.InheritFromDocToChildDocShell(poa);
+  }
+
   if (OwnerIsAppFrame()) {
     // You can't be both an app and a browser frame.
     MOZ_ASSERT(!OwnerIsMozBrowserFrame());

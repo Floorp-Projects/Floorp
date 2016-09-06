@@ -7,7 +7,8 @@
 
 #include <windows.h>
 
-#include "base/basictypes.h"
+#include "base/macros.h"
+#include "base/win/scoped_handle.h"
 #include "sandbox/win/src/sandbox_types.h"
 
 namespace sandbox {
@@ -18,8 +19,7 @@ class TargetProcess;
 // subsystem on 64 bit OSes, from the point of view of interceptions.
 class Wow64 {
  public:
-  Wow64(TargetProcess* child, HMODULE ntdll)
-      : child_(child), ntdll_(ntdll), dll_load_(NULL), continue_load_(NULL) {}
+  Wow64(TargetProcess* child, HMODULE ntdll);
   ~Wow64();
 
   // Waits for the 32 bit DLL to get loaded on the child process. This function
@@ -40,8 +40,10 @@ class Wow64 {
 
   TargetProcess* child_;  // Child process.
   HMODULE ntdll_;         // ntdll on the parent.
-  HANDLE dll_load_;       // Event that is signaled on dll load.
-  HANDLE continue_load_;  // Event to signal to continue execution on the child.
+  // Event that is signaled on dll load.
+  base::win::ScopedHandle dll_load_;
+  // Event to signal to continue execution on the child.
+  base::win::ScopedHandle continue_load_;
   DISALLOW_IMPLICIT_CONSTRUCTORS(Wow64);
 };
 

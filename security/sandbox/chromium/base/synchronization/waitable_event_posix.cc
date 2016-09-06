@@ -2,13 +2,15 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <stddef.h>
+
 #include <algorithm>
 #include <vector>
 
 #include "base/logging.h"
-#include "base/synchronization/waitable_event.h"
 #include "base/synchronization/condition_variable.h"
 #include "base/synchronization/lock.h"
+#include "base/synchronization/waitable_event.h"
 #include "base/threading/thread_restrictions.h"
 
 // -----------------------------------------------------------------------------

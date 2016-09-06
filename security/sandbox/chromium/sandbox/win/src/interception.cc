@@ -5,6 +5,8 @@
 // For information about interceptions as a whole see
 // http://dev.chromium.org/developers/design-documents/sandbox .
 
+#include <stddef.h>
+
 #include <set>
 
 #include "sandbox/win/src/interception.h"
@@ -17,19 +19,23 @@
 #include "sandbox/win/src/interception_internal.h"
 #include "sandbox/win/src/interceptors.h"
 #include "sandbox/win/src/sandbox.h"
+#include "sandbox/win/src/sandbox_rand.h"
 #include "sandbox/win/src/service_resolver.h"
 #include "sandbox/win/src/target_interceptions.h"
 #include "sandbox/win/src/target_process.h"
 #include "sandbox/win/src/wow64.h"
 
-namespace {
+namespace sandbox {
 
-const char kMapViewOfSectionName[] = "NtMapViewOfSection";
-const char kUnmapViewOfSectionName[] = "NtUnmapViewOfSection";
+namespace {
 
 // Standard allocation granularity and page size for Windows.
 const size_t kAllocGranularity = 65536;
 const size_t kPageSize = 4096;
+
+}  // namespace
+
+namespace internal {
 
 // Find a random offset within 64k and aligned to ceil(log2(size)).
 size_t GetGranularAlignedRandomOffset(size_t size) {
@@ -37,7 +43,7 @@ size_t GetGranularAlignedRandomOffset(size_t size) {
   unsigned int offset;
 
   do {
-    rand_s(&offset);
+    GetRandom(&offset);
     offset &= (kAllocGranularity - 1);
   } while (offset > (kAllocGranularity - size));
 
@@ -49,9 +55,7 @@ size_t GetGranularAlignedRandomOffset(size_t size) {
   return offset & ~(align_size - 1);
 }
 
-}  // namespace
-
-namespace sandbox {
+}  // namespace internal
 
 SANDBOX_INTERCEPT SharedMemory* g_interceptions;
 
@@ -60,6 +64,12 @@ SANDBOX_INTERCEPT OriginalFunctions g_originals = { NULL };
 
 // Magic constant that identifies that this function is not to be patched.
 const char kUnloadDLLDummyFunction[] = "@";
+
+InterceptionManager::InterceptionData::InterceptionData() {
+}
+
+InterceptionManager::InterceptionData::~InterceptionData() {
+}
 
 InterceptionManager::InterceptionManager(TargetProcess* child_process,
                                          bool relaxed)
@@ -391,7 +401,7 @@ bool InterceptionManager::PatchNtdll(bool hot_patch_needed) {
   // Find an aligned, random location within the reserved range.
   size_t thunk_bytes = interceptions_.size() * sizeof(ThunkData) +
                        sizeof(DllInterceptionData);
-  size_t thunk_offset = GetGranularAlignedRandomOffset(thunk_bytes);
+  size_t thunk_offset = internal::GetGranularAlignedRandomOffset(thunk_bytes);
 
   // Split the base and offset along page boundaries.
   thunk_base += thunk_offset & ~(kPageSize - 1);
@@ -478,7 +488,9 @@ bool InterceptionManager::PatchClientFunctions(DllInterceptionData* thunks,
 #else
   base::win::OSInfo* os_info = base::win::OSInfo::GetInstance();
   if (os_info->wow64_status() == base::win::OSInfo::WOW64_ENABLED) {
-    if (os_info->version() >= base::win::VERSION_WIN8)
+    if (os_info->version() >= base::win::VERSION_WIN10)
+      thunk = new Wow64W10ResolverThunk(child_->Process(), relaxed_);
+    else if (os_info->version() >= base::win::VERSION_WIN8)
       thunk = new Wow64W8ResolverThunk(child_->Process(), relaxed_);
     else
       thunk = new Wow64ResolverThunk(child_->Process(), relaxed_);

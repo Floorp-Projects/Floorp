@@ -32,6 +32,7 @@ elif CONFIG['OS_ARCH'] == 'WINNT':
     ]
 
     SOURCES += [
+        'chromium-shim/base/files/file_path.cpp',
         'chromium-shim/base/logging.cpp',
         'chromium-shim/sandbox/win/sandboxLogging.cpp',
         'chromium/base/at_exit.cc',
@@ -85,7 +86,6 @@ elif CONFIG['OS_ARCH'] == 'WINNT':
         'chromium/sandbox/win/src/handle_dispatcher.cc',
         'chromium/sandbox/win/src/handle_interception.cc',
         'chromium/sandbox/win/src/handle_policy.cc',
-        'chromium/sandbox/win/src/handle_table.cc',
         'chromium/sandbox/win/src/interception.cc',
         'chromium/sandbox/win/src/interception_agent.cc',
         'chromium/sandbox/win/src/job.cc',
@@ -114,9 +114,9 @@ elif CONFIG['OS_ARCH'] == 'WINNT':
         'chromium/sandbox/win/src/sandbox_globals.cc',
         'chromium/sandbox/win/src/sandbox_nt_util.cc',
         'chromium/sandbox/win/src/sandbox_policy_base.cc',
+        'chromium/sandbox/win/src/sandbox_rand.cc',
         'chromium/sandbox/win/src/sandbox_utils.cc',
         'chromium/sandbox/win/src/service_resolver.cc',
-        'chromium/sandbox/win/src/shared_handles.cc',
         'chromium/sandbox/win/src/sharedmem_ipc_client.cc',
         'chromium/sandbox/win/src/sharedmem_ipc_server.cc',
         'chromium/sandbox/win/src/sid.cc',
@@ -126,6 +126,7 @@ elif CONFIG['OS_ARCH'] == 'WINNT':
         'chromium/sandbox/win/src/target_interceptions.cc',
         'chromium/sandbox/win/src/target_process.cc',
         'chromium/sandbox/win/src/target_services.cc',
+        'chromium/sandbox/win/src/top_level_dispatcher.cc',
         'chromium/sandbox/win/src/win2k_threadpool.cc',
         'chromium/sandbox/win/src/win_utils.cc',
         'chromium/sandbox/win/src/window.cc',

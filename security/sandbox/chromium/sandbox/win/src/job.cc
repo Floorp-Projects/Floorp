@@ -4,30 +4,33 @@
 
 #include "sandbox/win/src/job.h"
 
+#include <stddef.h>
+
 #include "base/win/windows_version.h"
 #include "sandbox/win/src/restricted_token.h"
 
 namespace sandbox {
 
+Job::Job() : job_handle_(NULL) {
+};
+
 Job::~Job() {
-  if (job_handle_)
-    ::CloseHandle(job_handle_);
 };
 
 DWORD Job::Init(JobLevel security_level,
                 const wchar_t* job_name,
                 DWORD ui_exceptions,
                 size_t memory_limit) {
-  if (job_handle_)
+  if (job_handle_.IsValid())
     return ERROR_ALREADY_INITIALIZED;
 
-  job_handle_ = ::CreateJobObject(NULL,   // No security attribute
-                                  job_name);
-  if (!job_handle_)
+  job_handle_.Set(::CreateJobObject(NULL,   // No security attribute
+                                    job_name));
+  if (!job_handle_.IsValid())
     return ::GetLastError();
 
-  JOBOBJECT_EXTENDED_LIMIT_INFORMATION jeli = {0};
-  JOBOBJECT_BASIC_UI_RESTRICTIONS jbur = {0};
+  JOBOBJECT_EXTENDED_LIMIT_INFORMATION jeli = {};
+  JOBOBJECT_BASIC_UI_RESTRICTIONS jbur = {};
 
   // Set the settings for the different security levels. Note: The higher levels
   // inherit from the lower levels.
@@ -68,7 +71,7 @@ DWORD Job::Init(JobLevel security_level,
     }
   }
 
-  if (FALSE == ::SetInformationJobObject(job_handle_,
+  if (FALSE == ::SetInformationJobObject(job_handle_.Get(),
                                          JobObjectExtendedLimitInformation,
                                          &jeli,
                                          sizeof(jeli))) {
@@ -76,7 +79,7 @@ DWORD Job::Init(JobLevel security_level,
   }
 
   jbur.UIRestrictionsClass = jbur.UIRestrictionsClass & (~ui_exceptions);
-  if (FALSE == ::SetInformationJobObject(job_handle_,
+  if (FALSE == ::SetInformationJobObject(job_handle_.Get(),
                                          JobObjectBasicUIRestrictions,
                                          &jbur,
                                          sizeof(jbur))) {
@@ -87,11 +90,11 @@ DWORD Job::Init(JobLevel security_level,
 }
 
 DWORD Job::UserHandleGrantAccess(HANDLE handle) {
-  if (!job_handle_)
+  if (!job_handle_.IsValid())
     return ERROR_NO_DATA;
 
   if (!::UserHandleGrantAccess(handle,
-                               job_handle_,
+                               job_handle_.Get(),
                                TRUE)) {  // Access allowed.
     return ::GetLastError();
   }
@@ -99,17 +102,15 @@ DWORD Job::UserHandleGrantAccess(HANDLE handle) {
   return ERROR_SUCCESS;
 }
 
-HANDLE Job::Detach() {
-  HANDLE handle_temp = job_handle_;
-  job_handle_ = NULL;
-  return handle_temp;
+base::win::ScopedHandle Job::Take() {
+  return job_handle_.Pass();
 }
 
 DWORD Job::AssignProcessToJob(HANDLE process_handle) {
-  if (!job_handle_)
+  if (!job_handle_.IsValid())
     return ERROR_NO_DATA;
 
-  if (FALSE == ::AssignProcessToJobObject(job_handle_, process_handle))
+  if (FALSE == ::AssignProcessToJobObject(job_handle_.Get(), process_handle))
     return ::GetLastError();
 
   return ERROR_SUCCESS;

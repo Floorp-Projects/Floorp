@@ -5,21 +5,23 @@
 #ifndef BASE_HASH_H_
 #define BASE_HASH_H_
 
+#include <stddef.h>
+#include <stdint.h>
+
 #include <limits>
 #include <string>
 
 #include "base/base_export.h"
-#include "base/basictypes.h"
 #include "base/logging.h"
 
 namespace base {
 
 // WARNING: This hash function should not be used for any cryptographic purpose.
-BASE_EXPORT uint32 SuperFastHash(const char* data, int len);
+BASE_EXPORT uint32_t SuperFastHash(const char* data, int len);
 
 // Computes a hash of a memory buffer |data| of a given |length|.
 // WARNING: This hash function should not be used for any cryptographic purpose.
-inline uint32 Hash(const char* data, size_t length) {
+inline uint32_t Hash(const char* data, size_t length) {
   if (length > static_cast<size_t>(std::numeric_limits<int>::max())) {
     NOTREACHED();
     return 0;
@@ -29,7 +31,7 @@ inline uint32 Hash(const char* data, size_t length) {
 
 // Computes a hash of a string |str|.
 // WARNING: This hash function should not be used for any cryptographic purpose.
-inline uint32 Hash(const std::string& str) {
+inline uint32_t Hash(const std::string& str) {
   return Hash(str.data(), str.size());
 }
 

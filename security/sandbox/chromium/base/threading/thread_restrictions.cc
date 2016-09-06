@@ -23,7 +23,7 @@ LazyInstance<ThreadLocalBoolean>::Leaky
 LazyInstance<ThreadLocalBoolean>::Leaky
     g_wait_disallowed = LAZY_INSTANCE_INITIALIZER;
 
-}  // anonymous namespace
+}  // namespace
 
 // static
 bool ThreadRestrictions::SetIOAllowed(bool allowed) {
@@ -69,7 +69,7 @@ void ThreadRestrictions::DisallowWaiting() {
 // static
 void ThreadRestrictions::AssertWaitAllowed() {
   if (g_wait_disallowed.Get().Get()) {
-    LOG(FATAL) << "Waiting is not allowed to be used on this thread to prevent"
+    LOG(FATAL) << "Waiting is not allowed to be used on this thread to prevent "
                << "jank and deadlock.";
   }
 }
