@@ -430,7 +430,28 @@ public:
 
   void Enter() override
   {
-    mMaster->StartDecoding();
+    MOZ_ASSERT(mMaster->mSentFirstFrameLoadedEvent);
+    // Pending seek should've been handled by DECODING_FIRSTFRAME before
+    // transitioning to DECODING.
+    MOZ_ASSERT(!mMaster->mQueuedSeek.Exists());
+
+    if (mMaster->CheckIfDecodeComplete()) {
+      SetState(DECODER_STATE_COMPLETED);
+      return;
+    }
+
+    mMaster->mDecodeStartTime = TimeStamp::Now();
+
+    // Reset other state to pristine values before starting decode.
+    mMaster->mIsAudioPrerolling = !mMaster->DonePrerollingAudio() &&
+                                  !Reader()->IsWaitingAudioData();
+    mMaster->mIsVideoPrerolling = !mMaster->DonePrerollingVideo() &&
+                                  !Reader()->IsWaitingVideoData();
+
+    // Ensure that we've got tasks enqueued to decode data if we need to.
+    mMaster->DispatchDecodeTasksIfNeeded();
+
+    mMaster->ScheduleStateMachine();
   }
 
   void Step() override
