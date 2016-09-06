@@ -1227,11 +1227,9 @@ MediaDecoderStateMachine::Shutdown()
 {
   MOZ_ASSERT(OnTaskQueue());
 
-  // Once we've entered the shutdown state here there's no going back.
-  // Change state before issuing shutdown request to threads so those
-  // threads can start exiting cleanly during the Shutdown call.
-  ScheduleStateMachine();
   SetState(DECODER_STATE_SHUTDOWN);
+
+  mDelayedScheduler.Reset();
 
   mBufferedUpdateRequest.DisconnectIfExists();
 
