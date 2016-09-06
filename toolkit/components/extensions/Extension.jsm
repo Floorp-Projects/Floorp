@@ -710,21 +710,21 @@ GlobalManager = {
       browser = contentWindow.frameElement;
     }
 
-    let type = "tab";
+    let viewType = "tab";
     if (browser.hasAttribute("webextension-view-type")) {
-      type = browser.getAttribute("webextension-view-type");
+      viewType = browser.getAttribute("webextension-view-type");
     } else if (browser.classList.contains("inline-options-browser")) {
       // Options pages are currently displayed inline, but in Chrome
       // and in our UI mock-ups for a later milestone, they're
       // pop-ups.
-      type = "popup";
+      viewType = "popup";
     }
 
     let extension = this.extensionMap.get(id);
     let uri = document.documentURIObject;
 
-    let context = new ExtensionContext(extension, {type, contentWindow, uri, docShell});
-    if (type == "background") {
+    let context = new ExtensionContext(extension, {viewType, contentWindow, uri, docShell});
+    if (viewType == "background") {
       this._initializeBackgroundPage(contentWindow);
     }
 

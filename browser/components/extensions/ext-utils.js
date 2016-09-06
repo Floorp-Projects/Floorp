@@ -80,7 +80,7 @@ XPCOMUtils.defineLazyGetter(this, "standaloneStylesheets", () => {
 
 /* eslint-disable mozilla/balanced-listeners */
 extensions.on("page-shutdown", (type, context) => {
-  if (context.type == "popup" && context.active) {
+  if (context.viewType == "popup" && context.active) {
     context.contentWindow.close();
   }
 });

@@ -12,7 +12,7 @@ extensions.registerSchemaAPI("extension", "addon_parent", context => {
             continue;
           }
           if (fetchProperties !== null) {
-            if (fetchProperties.type !== null && view.type != fetchProperties.type) {
+            if (fetchProperties.type !== null && view.viewType != fetchProperties.type) {
               continue;
             }
 
