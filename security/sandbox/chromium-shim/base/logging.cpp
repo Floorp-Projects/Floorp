@@ -26,16 +26,41 @@
 #include "base/strings/utf_string_conversions.h"
 #endif
 
+#include <algorithm>
+
 namespace logging {
 
 namespace {
 
-int min_log_level = 0;
+int g_min_log_level = 0;
+
+LoggingDestination g_logging_destination = LOG_DEFAULT;
+
+// For LOG_ERROR and above, always print to stderr.
+const int kAlwaysPrintErrorLevel = LOG_ERROR;
+
+// A log message handler that gets notified of every log message we process.
+LogMessageHandlerFunction log_message_handler = nullptr;
 
 }  // namespace
 
+void SetMinLogLevel(int level) {
+  g_min_log_level = std::min(LOG_FATAL, level);
+}
+
 int GetMinLogLevel() {
-  return min_log_level;
+  return g_min_log_level;
+}
+
+bool ShouldCreateLogMessage(int severity) {
+  if (severity < g_min_log_level)
+    return false;
+
+  // Return true here unless we know ~LogMessage won't do anything. Note that
+  // ~LogMessage writes to stderr if severity_ >= kAlwaysPrintErrorLevel, even
+  // when g_logging_destination is LOG_NONE.
+  return g_logging_destination != LOG_NONE || log_message_handler ||
+         severity >= kAlwaysPrintErrorLevel;
 }
 
 int GetVlogLevelHelper(const char* file, size_t N) {
@@ -65,6 +90,10 @@ LogMessage::SaveLastError::~SaveLastError() {
 
 LogMessage::LogMessage(const char* file, int line, LogSeverity severity)
     : severity_(severity), file_(file), line_(line) {
+}
+
+LogMessage::LogMessage(const char* file, int line, const char* condition)
+    : severity_(LOG_FATAL), file_(file), line_(line) {
 }
 
 LogMessage::LogMessage(const char* file, int line, std::string* result)

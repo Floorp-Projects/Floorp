@@ -10,6 +10,7 @@
 #include "mozilla/Logging.h"
 #include "nsNetUtil.h"
 #include "prprf.h"
+#include "Classifier.h"
 
 // We act as the main entry point for all the real lookups,
 // so note that those are not done to the actual HashStore.
@@ -39,11 +40,12 @@ extern mozilla::LazyLogModule gUrlClassifierDbServiceLog;
 namespace mozilla {
 namespace safebrowsing {
 
-LookupCache::LookupCache(const nsACString& aTableName, nsIFile* aStoreDir)
+LookupCache::LookupCache(const nsACString& aTableName, nsIFile* aRootStoreDir)
   : mPrimed(false)
   , mTableName(aTableName)
-  , mStoreDirectory(aStoreDir)
+  , mRootStoreDirectory(aRootStoreDir)
 {
+  UpdateRootDirHandle(mRootStoreDirectory);
 }
 
 nsresult
@@ -75,9 +77,32 @@ LookupCache::Open()
 }
 
 nsresult
-LookupCache::UpdateDirHandle(nsIFile* aStoreDirectory)
+LookupCache::UpdateRootDirHandle(nsIFile* aNewRootStoreDirectory)
 {
-  return aStoreDirectory->Clone(getter_AddRefs(mStoreDirectory));
+  nsresult rv;
+
+  if (aNewRootStoreDirectory != mRootStoreDirectory) {
+    rv = aNewRootStoreDirectory->Clone(getter_AddRefs(mRootStoreDirectory));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  rv = Classifier::GetPrivateStoreDirectory(mRootStoreDirectory,
+                                            mTableName,
+                                            getter_AddRefs(mStoreDirectory));
+
+  if (NS_FAILED(rv)) {
+    LOG(("Failed to get private store directory for %s", mTableName.get()));
+    mStoreDirectory = mRootStoreDirectory;
+  }
+
+  if (LOG_ENABLED()) {
+    nsString path;
+    mStoreDirectory->GetPath(path);
+    LOG(("Private store directory for %s is %s", mTableName.get(),
+                                                 NS_ConvertUTF16toUTF8(path).get()));
+  }
+
+  return rv;
 }
 
 nsresult
@@ -236,7 +261,7 @@ LookupCache::ClearCache()
 nsresult
 LookupCache::ReadCompletions()
 {
-  HashStore store(mTableName, mStoreDirectory);
+  HashStore store(mTableName, mRootStoreDirectory);
 
   nsresult rv = store.Open();
   NS_ENSURE_SUCCESS(rv, rv);

@@ -245,6 +245,22 @@ checkUrls: function(urls, expected, cb, useMoz = false)
   doLookup();
 },
 
+checkTables: function(url, expected, cb)
+{
+  var principal = secMan.createCodebasePrincipal(iosvc.newURI("http://" + url, null, null), {});
+  dbservice.lookup(principal, allTables, function(tables) {
+    // Rebuild tables in a predictable order.
+    var parts = tables.split(",");
+    while (parts[parts.length - 1] == '') {
+      parts.pop();
+    }
+    parts.sort();
+    tables = parts.join(",");
+    do_check_eq(tables, expected);
+    cb();
+  }, true);
+},
+
 urlsDontExist: function(urls, cb)
 {
   this.checkUrls(urls, '', cb);
@@ -284,6 +300,12 @@ subsDontExist: function(urls, cb)
 subsExist: function(urls, cb)
 {
   // XXX: there's no interface for checking items in the subs table
+  cb();
+},
+
+urlExistInMultipleTables: function(data, cb)
+{
+  this.checkTables(data["url"], data["tables"], cb);
   cb();
 }
 

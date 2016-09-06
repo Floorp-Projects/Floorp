@@ -2,6 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <stdint.h>
+
 #include <string>
 
 #include "sandbox/win/src/sync_policy.h"
@@ -41,40 +43,33 @@ NTSTATUS ResolveSymbolicLink(const base::string16& directory_name,
   UNICODE_STRING symbolic_link_directory_string = {};
   InitObjectAttribs(directory_name, OBJ_CASE_INSENSITIVE, NULL,
                     &symbolic_link_directory_attributes,
-                    &symbolic_link_directory_string);
+                    &symbolic_link_directory_string, NULL);
 
   HANDLE symbolic_link_directory = NULL;
   NTSTATUS status = NtOpenDirectoryObject(&symbolic_link_directory,
                                           DIRECTORY_QUERY,
                                           &symbolic_link_directory_attributes);
-  if (status != STATUS_SUCCESS) {
-    DLOG(ERROR) << "Failed to open symbolic link directory. Error: "
-                << status;
+  if (!NT_SUCCESS(status))
     return status;
-  }
 
   OBJECT_ATTRIBUTES symbolic_link_attributes = {};
   UNICODE_STRING name_string = {};
   InitObjectAttribs(name, OBJ_CASE_INSENSITIVE, symbolic_link_directory,
-                    &symbolic_link_attributes, &name_string);
+                    &symbolic_link_attributes, &name_string, NULL);
 
   HANDLE symbolic_link = NULL;
   status = NtOpenSymbolicLinkObject(&symbolic_link, GENERIC_READ,
                                     &symbolic_link_attributes);
-  NtClose(symbolic_link_directory);
-  if (status != STATUS_SUCCESS) {
-    DLOG(ERROR) << "Failed to open symbolic link Error: " << status;
+  CHECK(NT_SUCCESS(NtClose(symbolic_link_directory)));
+  if (!NT_SUCCESS(status))
     return status;
-  }
 
   UNICODE_STRING target_path = {};
   unsigned long target_length = 0;
   status = NtQuerySymbolicLinkObject(symbolic_link, &target_path,
                                      &target_length);
   if (status != STATUS_BUFFER_TOO_SMALL) {
-    NtClose(symbolic_link);
-    DLOG(ERROR) << "Failed to get length for symbolic link target. Error: "
-                << status;
+    CHECK(NT_SUCCESS(NtClose(symbolic_link)));
     return status;
   }
 
@@ -83,13 +78,10 @@ NTSTATUS ResolveSymbolicLink(const base::string16& directory_name,
   target_path.Buffer = new wchar_t[target_path.MaximumLength + 1];
   status = NtQuerySymbolicLinkObject(symbolic_link, &target_path,
                                      &target_length);
-  if (status == STATUS_SUCCESS) {
+  if (NT_SUCCESS(status))
     target->assign(target_path.Buffer, target_length);
-  } else {
-    DLOG(ERROR) << "Failed to resolve symbolic link. Error: " << status;
-  }
 
-  NtClose(symbolic_link);
+  CHECK(NT_SUCCESS(NtClose(symbolic_link)));
   delete[] target_path.Buffer;
   return status;
 }
@@ -112,7 +104,7 @@ NTSTATUS GetBaseNamedObjectsDirectory(HANDLE* directory) {
   NTSTATUS status = ResolveSymbolicLink(L"\\Sessions\\BNOLINKS",
                                         base::StringPrintf(L"%d", session_id),
                                         &base_named_objects_path);
-  if (status != STATUS_SUCCESS) {
+  if (!NT_SUCCESS(status)) {
     DLOG(ERROR) << "Failed to resolve BaseNamedObjects path. Error: "
                 << status;
     return status;
@@ -121,11 +113,11 @@ NTSTATUS GetBaseNamedObjectsDirectory(HANDLE* directory) {
   UNICODE_STRING directory_name = {};
   OBJECT_ATTRIBUTES object_attributes = {};
   InitObjectAttribs(base_named_objects_path, OBJ_CASE_INSENSITIVE, NULL,
-                    &object_attributes, &directory_name);
+                    &object_attributes, &directory_name, NULL);
   status = NtOpenDirectoryObject(&base_named_objects_handle,
                                  DIRECTORY_ALL_ACCESS,
                                  &object_attributes);
-  if (status == STATUS_SUCCESS)
+  if (NT_SUCCESS(status))
     *directory = base_named_objects_handle;
   return status;
 }
@@ -155,8 +147,8 @@ bool SyncPolicy::GenerateRules(const wchar_t* name,
   if (TargetPolicy::EVENTS_ALLOW_READONLY == semantics) {
     // We consider all flags that are not known to be readonly as potentially
     // used for write.
-    uint32 allowed_flags = SYNCHRONIZE | GENERIC_READ | READ_CONTROL;
-    uint32 restricted_flags = ~allowed_flags;
+    uint32_t allowed_flags = SYNCHRONIZE | GENERIC_READ | READ_CONTROL;
+    uint32_t restricted_flags = ~allowed_flags;
     open.AddNumberMatch(IF_NOT, OpenEventParams::ACCESS, restricted_flags, AND);
   }
 
@@ -178,10 +170,10 @@ bool SyncPolicy::GenerateRules(const wchar_t* name,
 
 NTSTATUS SyncPolicy::CreateEventAction(EvalResult eval_result,
                                        const ClientInfo& client_info,
-                                       const base::string16 &event_name,
-                                       uint32 event_type,
-                                       uint32 initial_state,
-                                       HANDLE *handle) {
+                                       const base::string16& event_name,
+                                       uint32_t event_type,
+                                       uint32_t initial_state,
+                                       HANDLE* handle) {
   NtCreateEventFunction NtCreateEvent = NULL;
   ResolveNTFunctionPtr("NtCreateEvent", &NtCreateEvent);
 
@@ -198,7 +190,7 @@ NTSTATUS SyncPolicy::CreateEventAction(EvalResult eval_result,
   UNICODE_STRING unicode_event_name = {};
   OBJECT_ATTRIBUTES object_attributes = {};
   InitObjectAttribs(event_name, OBJ_CASE_INSENSITIVE, object_directory,
-                    &object_attributes, &unicode_event_name);
+                    &object_attributes, &unicode_event_name, NULL);
 
   HANDLE local_handle = NULL;
   status = NtCreateEvent(&local_handle, EVENT_ALL_ACCESS, &object_attributes,
@@ -217,9 +209,9 @@ NTSTATUS SyncPolicy::CreateEventAction(EvalResult eval_result,
 
 NTSTATUS SyncPolicy::OpenEventAction(EvalResult eval_result,
                                      const ClientInfo& client_info,
-                                     const base::string16 &event_name,
-                                     uint32 desired_access,
-                                     HANDLE *handle) {
+                                     const base::string16& event_name,
+                                     uint32_t desired_access,
+                                     HANDLE* handle) {
   NtOpenEventFunction NtOpenEvent = NULL;
   ResolveNTFunctionPtr("NtOpenEvent", &NtOpenEvent);
 
@@ -236,7 +228,7 @@ NTSTATUS SyncPolicy::OpenEventAction(EvalResult eval_result,
   UNICODE_STRING unicode_event_name = {};
   OBJECT_ATTRIBUTES object_attributes = {};
   InitObjectAttribs(event_name, OBJ_CASE_INSENSITIVE, object_directory,
-                    &object_attributes, &unicode_event_name);
+                    &object_attributes, &unicode_event_name, NULL);
 
   HANDLE local_handle = NULL;
   status = NtOpenEvent(&local_handle, desired_access, &object_attributes);

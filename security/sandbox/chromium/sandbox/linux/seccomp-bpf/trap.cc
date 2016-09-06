@@ -6,22 +6,24 @@
 
 #include <errno.h>
 #include <signal.h>
+#include <stddef.h>
+#include <stdint.h>
 #include <string.h>
 #include <sys/syscall.h>
 
 #include <algorithm>
 #include <limits>
+#include <tuple>
 
+#include "base/compiler_specific.h"
 #include "base/logging.h"
 #include "build/build_config.h"
+#include "sandbox/linux/bpf_dsl/seccomp_macros.h"
 #include "sandbox/linux/seccomp-bpf/die.h"
-#include "sandbox/linux/seccomp-bpf/linux_seccomp.h"
 #include "sandbox/linux/seccomp-bpf/syscall.h"
-
-// Android's signal.h doesn't define ucontext etc.
-#if defined(OS_ANDROID)
-#include "sandbox/linux/services/android_ucontext.h"
-#endif
+#include "sandbox/linux/services/syscall_wrappers.h"
+#include "sandbox/linux/system_headers/linux_seccomp.h"
+#include "sandbox/linux/system_headers/linux_signal.h"
 
 namespace {
 
@@ -52,13 +54,13 @@ const char kSandboxDebuggingEnv[] = "CHROME_SANDBOX_DEBUGGING";
 // possibly even worse.
 bool GetIsInSigHandler(const ucontext_t* ctx) {
   // Note: on Android, sigismember does not take a pointer to const.
-  return sigismember(const_cast<sigset_t*>(&ctx->uc_sigmask), SIGBUS);
+  return sigismember(const_cast<sigset_t*>(&ctx->uc_sigmask), LINUX_SIGBUS);
 }
 
 void SetIsInSigHandler() {
   sigset_t mask;
-  if (sigemptyset(&mask) || sigaddset(&mask, SIGBUS) ||
-      sigprocmask(SIG_BLOCK, &mask, NULL)) {
+  if (sigemptyset(&mask) || sigaddset(&mask, LINUX_SIGBUS) ||
+      sandbox::sys_sigprocmask(LINUX_SIG_BLOCK, &mask, NULL)) {
     SANDBOX_DIE("Failed to block SIGBUS");
   }
 }
@@ -81,10 +83,13 @@ Trap::Trap()
       has_unsafe_traps_(false) {
   // Set new SIGSYS handler
   struct sigaction sa = {};
-  sa.sa_sigaction = SigSysAction;
-  sa.sa_flags = SA_SIGINFO | SA_NODEFER;
-  struct sigaction old_sa;
-  if (sigaction(SIGSYS, &sa, &old_sa) < 0) {
+  // In some toolchain, sa_sigaction is not declared in struct sigaction.
+  // So, here cast the pointer to the sa_handler's type. This works because
+  // |sa_handler| and |sa_sigaction| shares the same memory.
+  sa.sa_handler = reinterpret_cast<void (*)(int)>(SigSysAction);
+  sa.sa_flags = LINUX_SA_SIGINFO | LINUX_SA_NODEFER;
+  struct sigaction old_sa = {};
+  if (sys_sigaction(LINUX_SIGSYS, &sa, &old_sa) < 0) {
     SANDBOX_DIE("Failed to configure SIGSYS handler");
   }
 
@@ -98,8 +103,8 @@ Trap::Trap()
 
   // Unmask SIGSYS
   sigset_t mask;
-  if (sigemptyset(&mask) || sigaddset(&mask, SIGSYS) ||
-      sigprocmask(SIG_UNBLOCK, &mask, NULL)) {
+  if (sigemptyset(&mask) || sigaddset(&mask, LINUX_SIGSYS) ||
+      sys_sigprocmask(LINUX_SIG_UNBLOCK, &mask, NULL)) {
     SANDBOX_DIE("Failed to configure SIGSYS handler");
   }
 }
@@ -119,16 +124,27 @@ bpf_dsl::TrapRegistry* Trap::Registry() {
   return global_trap_;
 }
 
-void Trap::SigSysAction(int nr, siginfo_t* info, void* void_context) {
+void Trap::SigSysAction(int nr, LinuxSigInfo* info, void* void_context) {
+  if (info) {
+    MSAN_UNPOISON(info, sizeof(*info));
+  }
+
+  // Obtain the signal context. This, most notably, gives us access to
+  // all CPU registers at the time of the signal.
+  ucontext_t* ctx = reinterpret_cast<ucontext_t*>(void_context);
+  if (ctx) {
+    MSAN_UNPOISON(ctx, sizeof(*ctx));
+  }
+
   if (!global_trap_) {
     RAW_SANDBOX_DIE(
         "This can't happen. Found no global singleton instance "
         "for Trap() handling.");
   }
-  global_trap_->SigSys(nr, info, void_context);
+  global_trap_->SigSys(nr, info, ctx);
 }
 
-void Trap::SigSys(int nr, siginfo_t* info, void* void_context) {
+void Trap::SigSys(int nr, LinuxSigInfo* info, ucontext_t* ctx) {
   // Signal handlers should always preserve "errno". Otherwise, we could
   // trigger really subtle bugs.
   const int old_errno = errno;
@@ -136,7 +152,7 @@ void Trap::SigSys(int nr, siginfo_t* info, void* void_context) {
   // Various sanity checks to make sure we actually received a signal
   // triggered by a BPF filter. If something else triggered SIGSYS
   // (e.g. kill()), there is really nothing we can do with this signal.
-  if (nr != SIGSYS || info->si_code != SYS_SECCOMP || !void_context ||
+  if (nr != LINUX_SIGSYS || info->si_code != SYS_SECCOMP || !ctx ||
       info->si_errno <= 0 ||
       static_cast<size_t>(info->si_errno) > trap_array_size_) {
     // ATI drivers seem to send SIGSYS, so this cannot be FATAL.
@@ -147,9 +163,6 @@ void Trap::SigSys(int nr, siginfo_t* info, void* void_context) {
     return;
   }
 
-  // Obtain the signal context. This, most notably, gives us access to
-  // all CPU registers at the time of the signal.
-  ucontext_t* ctx = reinterpret_cast<ucontext_t*>(void_context);
 
   // Obtain the siginfo information that is specific to SIGSYS. Unfortunately,
   // most versions of glibc don't include this information in siginfo_t. So,
@@ -241,17 +254,7 @@ void Trap::SigSys(int nr, siginfo_t* info, void* void_context) {
 }
 
 bool Trap::TrapKey::operator<(const TrapKey& o) const {
-  if (fnc != o.fnc) {
-    return fnc < o.fnc;
-  } else if (aux != o.aux) {
-    return aux < o.aux;
-  } else {
-    return safe < o.safe;
-  }
-}
-
-uint16_t Trap::MakeTrap(TrapFnc fnc, const void* aux, bool safe) {
-  return Registry()->Add(fnc, aux, safe);
+  return std::tie(fnc, aux, safe) < std::tie(o.fnc, o.aux, o.safe);
 }
 
 uint16_t Trap::Add(TrapFnc fnc, const void* aux, bool safe) {
@@ -352,13 +355,9 @@ uint16_t Trap::Add(TrapFnc fnc, const void* aux, bool safe) {
   return id;
 }
 
-bool Trap::SandboxDebuggingAllowedByUser() const {
+bool Trap::SandboxDebuggingAllowedByUser() {
   const char* debug_flag = getenv(kSandboxDebuggingEnv);
   return debug_flag && *debug_flag;
-}
-
-bool Trap::EnableUnsafeTrapsInSigSysHandler() {
-  return Registry()->EnableUnsafeTraps();
 }
 
 bool Trap::EnableUnsafeTraps() {

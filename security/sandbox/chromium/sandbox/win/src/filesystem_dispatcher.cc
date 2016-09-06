@@ -4,6 +4,8 @@
 
 #include "sandbox/win/src/filesystem_dispatcher.h"
 
+#include <stdint.h>
+
 #include "sandbox/win/src/crosscall_client.h"
 #include "sandbox/win/src/filesystem_interception.h"
 #include "sandbox/win/src/filesystem_policy.h"
@@ -20,35 +22,37 @@ namespace sandbox {
 FilesystemDispatcher::FilesystemDispatcher(PolicyBase* policy_base)
     : policy_base_(policy_base) {
   static const IPCCall create_params = {
-    {IPC_NTCREATEFILE_TAG, WCHAR_TYPE, UINT32_TYPE, UINT32_TYPE, UINT32_TYPE,
-     UINT32_TYPE, UINT32_TYPE, UINT32_TYPE},
-    reinterpret_cast<CallbackGeneric>(&FilesystemDispatcher::NtCreateFile)
-  };
+      {IPC_NTCREATEFILE_TAG,
+       {WCHAR_TYPE,
+        UINT32_TYPE,
+        UINT32_TYPE,
+        UINT32_TYPE,
+        UINT32_TYPE,
+        UINT32_TYPE,
+        UINT32_TYPE}},
+      reinterpret_cast<CallbackGeneric>(&FilesystemDispatcher::NtCreateFile)};
 
   static const IPCCall open_file = {
-    {IPC_NTOPENFILE_TAG, WCHAR_TYPE, UINT32_TYPE, UINT32_TYPE, UINT32_TYPE,
-     UINT32_TYPE},
-    reinterpret_cast<CallbackGeneric>(&FilesystemDispatcher::NtOpenFile)
-  };
+      {IPC_NTOPENFILE_TAG,
+       {WCHAR_TYPE, UINT32_TYPE, UINT32_TYPE, UINT32_TYPE, UINT32_TYPE}},
+      reinterpret_cast<CallbackGeneric>(&FilesystemDispatcher::NtOpenFile)};
 
   static const IPCCall attribs = {
-    {IPC_NTQUERYATTRIBUTESFILE_TAG, WCHAR_TYPE, UINT32_TYPE, INOUTPTR_TYPE},
-    reinterpret_cast<CallbackGeneric>(
-        &FilesystemDispatcher::NtQueryAttributesFile)
-  };
+      {IPC_NTQUERYATTRIBUTESFILE_TAG, {WCHAR_TYPE, UINT32_TYPE, INOUTPTR_TYPE}},
+      reinterpret_cast<CallbackGeneric>(
+          &FilesystemDispatcher::NtQueryAttributesFile)};
 
   static const IPCCall full_attribs = {
-    {IPC_NTQUERYFULLATTRIBUTESFILE_TAG, WCHAR_TYPE, UINT32_TYPE, INOUTPTR_TYPE},
-    reinterpret_cast<CallbackGeneric>(
-          &FilesystemDispatcher::NtQueryFullAttributesFile)
-  };
+      {IPC_NTQUERYFULLATTRIBUTESFILE_TAG,
+       {WCHAR_TYPE, UINT32_TYPE, INOUTPTR_TYPE}},
+      reinterpret_cast<CallbackGeneric>(
+          &FilesystemDispatcher::NtQueryFullAttributesFile)};
 
   static const IPCCall set_info = {
-    {IPC_NTSETINFO_RENAME_TAG, VOIDPTR_TYPE, INOUTPTR_TYPE, INOUTPTR_TYPE,
-     UINT32_TYPE, UINT32_TYPE},
-    reinterpret_cast<CallbackGeneric>(
-        &FilesystemDispatcher::NtSetInformationFile)
-  };
+      {IPC_NTSETINFO_RENAME_TAG,
+       {VOIDPTR_TYPE, INOUTPTR_TYPE, INOUTPTR_TYPE, UINT32_TYPE, UINT32_TYPE}},
+      reinterpret_cast<CallbackGeneric>(
+          &FilesystemDispatcher::NtSetInformationFile)};
 
   ipc_calls_.push_back(create_params);
   ipc_calls_.push_back(open_file);
@@ -84,13 +88,13 @@ bool FilesystemDispatcher::SetupService(InterceptionManager* manager,
 
 bool FilesystemDispatcher::NtCreateFile(IPCInfo* ipc,
                                         base::string16* name,
-                                        uint32 attributes,
-                                        uint32 desired_access,
-                                        uint32 file_attributes,
-                                        uint32 share_access,
-                                        uint32 create_disposition,
-                                        uint32 create_options) {
-  if (!PreProcessName(*name, name)) {
+                                        uint32_t attributes,
+                                        uint32_t desired_access,
+                                        uint32_t file_attributes,
+                                        uint32_t share_access,
+                                        uint32_t create_disposition,
+                                        uint32_t create_options) {
+  if (!PreProcessName(name)) {
     // The path requested might contain a reparse point.
     ipc->return_info.nt_status = STATUS_ACCESS_DENIED;
     return true;
@@ -98,10 +102,11 @@ bool FilesystemDispatcher::NtCreateFile(IPCInfo* ipc,
 
   const wchar_t* filename = name->c_str();
 
-  uint32 broker = TRUE;
+  uint32_t broker = TRUE;
   CountedParameterSet<OpenFile> params;
   params[OpenFile::NAME] = ParamPickerMake(filename);
   params[OpenFile::ACCESS] = ParamPickerMake(desired_access);
+  params[OpenFile::DISPOSITION] = ParamPickerMake(create_disposition);
   params[OpenFile::OPTIONS] = ParamPickerMake(create_options);
   params[OpenFile::BROKER] = ParamPickerMake(broker);
 
@@ -131,11 +136,11 @@ bool FilesystemDispatcher::NtCreateFile(IPCInfo* ipc,
 
 bool FilesystemDispatcher::NtOpenFile(IPCInfo* ipc,
                                       base::string16* name,
-                                      uint32 attributes,
-                                      uint32 desired_access,
-                                      uint32 share_access,
-                                      uint32 open_options) {
-  if (!PreProcessName(*name, name)) {
+                                      uint32_t attributes,
+                                      uint32_t desired_access,
+                                      uint32_t share_access,
+                                      uint32_t open_options) {
+  if (!PreProcessName(name)) {
     // The path requested might contain a reparse point.
     ipc->return_info.nt_status = STATUS_ACCESS_DENIED;
     return true;
@@ -143,10 +148,12 @@ bool FilesystemDispatcher::NtOpenFile(IPCInfo* ipc,
 
   const wchar_t* filename = name->c_str();
 
-  uint32 broker = TRUE;
+  uint32_t broker = TRUE;
+  uint32_t create_disposition = FILE_OPEN;
   CountedParameterSet<OpenFile> params;
   params[OpenFile::NAME] = ParamPickerMake(filename);
   params[OpenFile::ACCESS] = ParamPickerMake(desired_access);
+  params[OpenFile::DISPOSITION] = ParamPickerMake(create_disposition);
   params[OpenFile::OPTIONS] = ParamPickerMake(open_options);
   params[OpenFile::BROKER] = ParamPickerMake(broker);
 
@@ -174,18 +181,18 @@ bool FilesystemDispatcher::NtOpenFile(IPCInfo* ipc,
 
 bool FilesystemDispatcher::NtQueryAttributesFile(IPCInfo* ipc,
                                                  base::string16* name,
-                                                 uint32 attributes,
+                                                 uint32_t attributes,
                                                  CountedBuffer* info) {
   if (sizeof(FILE_BASIC_INFORMATION) != info->Size())
     return false;
 
-  if (!PreProcessName(*name, name)) {
+  if (!PreProcessName(name)) {
     // The path requested might contain a reparse point.
     ipc->return_info.nt_status = STATUS_ACCESS_DENIED;
     return true;
   }
 
-  uint32 broker = TRUE;
+  uint32_t broker = TRUE;
   const wchar_t* filename = name->c_str();
   CountedParameterSet<FileName> params;
   params[FileName::NAME] = ParamPickerMake(filename);
@@ -214,18 +221,18 @@ bool FilesystemDispatcher::NtQueryAttributesFile(IPCInfo* ipc,
 
 bool FilesystemDispatcher::NtQueryFullAttributesFile(IPCInfo* ipc,
                                                      base::string16* name,
-                                                     uint32 attributes,
+                                                     uint32_t attributes,
                                                      CountedBuffer* info) {
   if (sizeof(FILE_NETWORK_OPEN_INFORMATION) != info->Size())
     return false;
 
-  if (!PreProcessName(*name, name)) {
+  if (!PreProcessName(name)) {
     // The path requested might contain a reparse point.
     ipc->return_info.nt_status = STATUS_ACCESS_DENIED;
     return true;
   }
 
-  uint32 broker = TRUE;
+  uint32_t broker = TRUE;
   const wchar_t* filename = name->c_str();
   CountedParameterSet<FileName> params;
   params[FileName::NAME] = ParamPickerMake(filename);
@@ -258,8 +265,8 @@ bool FilesystemDispatcher::NtSetInformationFile(IPCInfo* ipc,
                                                 HANDLE handle,
                                                 CountedBuffer* status,
                                                 CountedBuffer* info,
-                                                uint32 length,
-                                                uint32 info_class) {
+                                                uint32_t length,
+                                                uint32_t info_class) {
   if (sizeof(IO_STATUS_BLOCK) != status->Size())
     return false;
   if (length != info->Size())
@@ -274,13 +281,13 @@ bool FilesystemDispatcher::NtSetInformationFile(IPCInfo* ipc,
   base::string16 name;
   name.assign(rename_info->FileName, rename_info->FileNameLength /
                                      sizeof(rename_info->FileName[0]));
-  if (!PreProcessName(name, &name)) {
+  if (!PreProcessName(&name)) {
     // The path requested might contain a reparse point.
     ipc->return_info.nt_status = STATUS_ACCESS_DENIED;
     return true;
   }
 
-  uint32 broker = TRUE;
+  uint32_t broker = TRUE;
   const wchar_t* filename = name.c_str();
   CountedParameterSet<FileName> params;
   params[FileName::NAME] = ParamPickerMake(filename);

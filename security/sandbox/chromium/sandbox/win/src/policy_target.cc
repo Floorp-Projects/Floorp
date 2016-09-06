@@ -4,6 +4,8 @@
 
 #include "sandbox/win/src/policy_target.h"
 
+#include <stddef.h>
+
 #include "sandbox/win/src/crosscall_client.h"
 #include "sandbox/win/src/ipc_tags.h"
 #include "sandbox/win/src/policy_engine_processor.h"
@@ -79,16 +81,6 @@ NTSTATUS WINAPI TargetNtSetInformationThread(
       break;
     if (ThreadImpersonationToken != thread_info_class)
       break;
-    if (!thread_information)
-      break;
-    HANDLE token;
-    if (sizeof(token) > thread_information_bytes)
-      break;
-
-    NTSTATUS ret = CopyData(&token, thread_information, sizeof(token));
-    if (!NT_SUCCESS(ret) || NULL != token)
-      break;
-
     // This is a revert to self.
     return STATUS_SUCCESS;
   } while (false);

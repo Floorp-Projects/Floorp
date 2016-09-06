@@ -5,13 +5,16 @@
 #ifndef SANDBOX_SRC_POLICY_LOW_LEVEL_H__
 #define SANDBOX_SRC_POLICY_LOW_LEVEL_H__
 
+#include <stddef.h>
+#include <stdint.h>
+
 #include <list>
 
-#include "base/basictypes.h"
+#include "base/macros.h"
 #include "base/strings/string16.h"
 #include "sandbox/win/src/ipc_tags.h"
-#include "sandbox/win/src/policy_engine_params.h"
 #include "sandbox/win/src/policy_engine_opcodes.h"
+#include "sandbox/win/src/policy_engine_params.h"
 
 // Low level policy classes.
 // Built on top of the PolicyOpcode and OpcodeFatory, the low level policy
@@ -41,7 +44,8 @@ namespace sandbox {
 
 // TODO(cpu): Move this constant to crosscall_client.h.
 const size_t kMaxServiceCount = 32;
-COMPILE_ASSERT(IPC_LAST_TAG <= kMaxServiceCount, kMaxServiceCount_is_too_low);
+static_assert(IPC_LAST_TAG <= kMaxServiceCount,
+              "kMaxServiceCount is too low");
 
 // Defines the memory layout of the policy. This memory is filled by
 // LowLevelPolicy object.
@@ -81,9 +85,7 @@ class LowLevelPolicy {
  public:
   // policy_store: must contain allocated memory and the internal
   // size fields set to correct values.
-  explicit LowLevelPolicy(PolicyGlobal* policy_store)
-      : policy_store_(policy_store) {
-  }
+  explicit LowLevelPolicy(PolicyGlobal* policy_store);
 
   // Destroys all the policy rules.
   ~LowLevelPolicy();
@@ -137,8 +139,10 @@ class PolicyRule {
   // in a 'create file' service the file name argument can be at index 0.
   // string: is the desired matching pattern.
   // match_opts: if the pattern matching is case sensitive or not.
-  bool AddStringMatch(RuleType rule_type, int16 parameter,
-                      const wchar_t* string, StringMatchOptions match_opts);
+  bool AddStringMatch(RuleType rule_type,
+                      int16_t parameter,
+                      const wchar_t* string,
+                      StringMatchOptions match_opts);
 
   // Adds a number match comparison to the rule.
   // rule_type: possible values are IF and IF_NOT.
@@ -146,8 +150,8 @@ class PolicyRule {
   // number: the value to compare the input to.
   // comparison_op: the comparison kind (equal, logical and, etc).
   bool AddNumberMatch(RuleType rule_type,
-                      int16 parameter,
-                      uint32 number,
+                      int16_t parameter,
+                      uint32_t number,
                       RuleOp comparison_op);
 
   // Returns the number of opcodes generated so far.
@@ -164,9 +168,13 @@ class PolicyRule {
   // Called in a loop from AddStringMatch to generate the required string
   // match opcodes. rule_type, match_opts and parameter are the same as
   // in AddStringMatch.
-  bool GenStringOpcode(RuleType rule_type, StringMatchOptions match_opts,
-                       uint16 parameter, int state, bool last_call,
-                       int* skip_count, base::string16* fragment);
+  bool GenStringOpcode(RuleType rule_type,
+                       StringMatchOptions match_opts,
+                       uint16_t parameter,
+                       int state,
+                       bool last_call,
+                       int* skip_count,
+                       base::string16* fragment);
 
   // Loop over all generated opcodes and copy them to increasing memory
   // addresses from opcode_start and copy the extra data (strings usually) into

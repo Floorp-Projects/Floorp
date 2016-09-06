@@ -16,6 +16,8 @@
 #include "base/logging.h"
 #include "base/posix/eintr_wrapper.h"
 #include "sandbox/linux/seccomp-bpf/syscall.h"
+#include "sandbox/linux/services/syscall_wrappers.h"
+#include "sandbox/linux/system_headers/linux_signal.h"
 
 namespace sandbox {
 
@@ -32,7 +34,10 @@ void Die::ExitGroup() {
   // to a defined state; but we have not way to verify whether we actually
   // succeeded in doing so. Nonetheless, triggering a fatal signal could help
   // us terminate.
-  signal(SIGSEGV, SIG_DFL);
+  struct sigaction sa = {};
+  sa.sa_handler = LINUX_SIG_DFL;
+  sa.sa_flags = LINUX_SA_RESTART;
+  sys_sigaction(LINUX_SIGSEGV, &sa, nullptr);
   Syscall::Call(__NR_prctl, PR_SET_DUMPABLE, (void*)0, (void*)0, (void*)0);
   if (*(volatile char*)0) {
   }

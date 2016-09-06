@@ -81,6 +81,7 @@ dictionary OriginAttributesDictionary {
   DOMString addonId = "";
   DOMString signedPkg = "";
   unsigned long privateBrowsingId = 0;
+  DOMString firstPartyDomain = "";
 };
 dictionary OriginAttributesPatternDictionary {
   unsigned long appId;
@@ -89,4 +90,5 @@ dictionary OriginAttributesPatternDictionary {
   DOMString addonId;
   DOMString signedPkg;
   unsigned long privateBrowsingId;
+  DOMString firstPartyDomain;
 };

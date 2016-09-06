@@ -5,6 +5,7 @@
 package org.mozilla.gecko.icons.decoders;
 
 import android.graphics.Bitmap;
+import android.support.annotation.Nullable;
 import android.util.Log;
 import android.util.SparseArray;
 
@@ -77,6 +78,7 @@ public class LoadFaviconResult {
         return null;
     }
 
+    @Nullable
     public Bitmap getBestBitmap(int targetWidthAndHeight) {
         final SparseArray<Bitmap> iconMap = new SparseArray<>();
         final List<Integer> sizes = new ArrayList<>();

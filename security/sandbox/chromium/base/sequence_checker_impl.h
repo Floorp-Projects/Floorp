@@ -6,7 +6,7 @@
 #define BASE_SEQUENCE_CHECKER_IMPL_H_
 
 #include "base/base_export.h"
-#include "base/basictypes.h"
+#include "base/macros.h"
 #include "base/synchronization/lock.h"
 #include "base/threading/sequenced_worker_pool.h"
 #include "base/threading/thread_checker_impl.h"

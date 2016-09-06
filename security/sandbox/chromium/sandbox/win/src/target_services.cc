@@ -7,8 +7,9 @@
 #include <new>
 
 #include <process.h>
+#include <stdint.h>
 
-#include "base/basictypes.h"
+#include "base/win/windows_version.h"
 #include "sandbox/win/src/crosscall_client.h"
 #include "sandbox/win/src/handle_closer_agent.h"
 #include "sandbox/win/src/handle_interception.h"
@@ -16,9 +17,9 @@
 #include "sandbox/win/src/process_mitigations.h"
 #include "sandbox/win/src/restricted_token_utils.h"
 #include "sandbox/win/src/sandbox.h"
+#include "sandbox/win/src/sandbox_nt_util.h"
 #include "sandbox/win/src/sandbox_types.h"
 #include "sandbox/win/src/sharedmem_ipc_client.h"
-#include "sandbox/win/src/sandbox_nt_util.h"
 
 namespace {
 
@@ -46,15 +47,54 @@ bool FlushCachedRegHandles() {
 }
 
 // Checks if we have handle entries pending and runs the closer.
-bool CloseOpenHandles() {
+// Updates is_csrss_connected based on which handle types are closed.
+bool CloseOpenHandles(bool* is_csrss_connected) {
   if (sandbox::HandleCloserAgent::NeedsHandlesClosed()) {
     sandbox::HandleCloserAgent handle_closer;
-
-    handle_closer.InitializeHandlesToClose();
+    handle_closer.InitializeHandlesToClose(is_csrss_connected);
     if (!handle_closer.CloseHandles())
       return false;
   }
 
+  return true;
+}
+
+// GetUserDefaultLocaleName is not available on WIN XP.  So we'll
+// load it on-the-fly.
+const wchar_t kKernel32DllName[] = L"kernel32.dll";
+typedef decltype(GetUserDefaultLocaleName)* GetUserDefaultLocaleNameFunction;
+
+// Warm up language subsystems before the sandbox is turned on.
+// Tested on Win8.1 x64:
+// This needs to happen after RevertToSelf() is called, because (at least) in
+// the case of GetUserDefaultLCID() it checks the TEB to see if the process is
+// impersonating (TEB!IsImpersonating). If it is, the cached locale information
+// is not used, nor is it set. Therefore, calls after RevertToSelf() will not
+// have warmed-up values to use.
+bool WarmupWindowsLocales() {
+  // NOTE(liamjm): When last checked (Win 8.1 x64) it wasn't necessary to
+  // warmup all of these functions, but let's not assume that.
+  ::GetUserDefaultLangID();
+  ::GetUserDefaultLCID();
+  if (base::win::GetVersion() >= base::win::VERSION_VISTA) {
+    static GetUserDefaultLocaleNameFunction GetUserDefaultLocaleName_func =
+        NULL;
+    if (!GetUserDefaultLocaleName_func) {
+      HMODULE kernel32_dll = ::GetModuleHandle(kKernel32DllName);
+      if (!kernel32_dll) {
+        return false;
+      }
+      GetUserDefaultLocaleName_func =
+          reinterpret_cast<GetUserDefaultLocaleNameFunction>(
+              GetProcAddress(kernel32_dll, "GetUserDefaultLocaleName"));
+      if (!GetUserDefaultLocaleName_func) {
+        return false;
+      }
+    }
+    wchar_t localeName[LOCALE_NAME_MAX_LENGTH] = {0};
+    return (0 != GetUserDefaultLocaleName_func(
+                     localeName, LOCALE_NAME_MAX_LENGTH * sizeof(wchar_t)));
+  }
   return true;
 }
 
@@ -95,8 +135,12 @@ void TargetServicesBase::LowerToken() {
     ::TerminateProcess(::GetCurrentProcess(), SBOX_FATAL_FLUSHANDLES);
   if (ERROR_SUCCESS != ::RegDisablePredefinedCache())
     ::TerminateProcess(::GetCurrentProcess(), SBOX_FATAL_CACHEDISABLE);
-  if (!CloseOpenHandles())
+  if (!WarmupWindowsLocales())
+    ::TerminateProcess(::GetCurrentProcess(), SBOX_FATAL_WARMUP);
+  bool is_csrss_connected = true;
+  if (!CloseOpenHandles(&is_csrss_connected))
     ::TerminateProcess(::GetCurrentProcess(), SBOX_FATAL_CLOSEHANDLES);
+  process_state_.SetCsrssConnected(is_csrss_connected);
   // Enabling mitigations must happen last otherwise handle closing breaks
   if (g_shared_delayed_mitigations &&
       !ApplyProcessMitigationsToCurrentProcess(g_shared_delayed_mitigations))
@@ -124,8 +168,8 @@ bool TargetServicesBase::TestIPCPing(int version) {
   CrossCallReturn answer = {0};
 
   if (1 == version) {
-    uint32 tick1 = ::GetTickCount();
-    uint32 cookie = 717115;
+    uint32_t tick1 = ::GetTickCount();
+    uint32_t cookie = 717115;
     ResultCode code = CrossCall(ipc, IPC_PING1_TAG, cookie, &answer);
 
     if (SBOX_ALL_OK != code) {
@@ -138,7 +182,7 @@ bool TargetServicesBase::TestIPCPing(int version) {
     }
     // We test the first extended answer to be within the bounds of the tick
     // count only if there was no tick count wraparound.
-    uint32 tick2 = ::GetTickCount();
+    uint32_t tick2 = ::GetTickCount();
     if (tick2 >= tick1) {
       if ((answer.extended[0].unsigned_int < tick1) ||
           (answer.extended[0].unsigned_int > tick2)) {
@@ -150,7 +194,7 @@ bool TargetServicesBase::TestIPCPing(int version) {
       return false;
     }
   } else if (2 == version) {
-    uint32 cookie = 717111;
+    uint32_t cookie = 717111;
     InOutCountedBuffer counted_buffer(&cookie, sizeof(cookie));
     ResultCode code = CrossCall(ipc, IPC_PING2_TAG, counted_buffer, &answer);
 
@@ -166,7 +210,7 @@ bool TargetServicesBase::TestIPCPing(int version) {
   return true;
 }
 
-ProcessState::ProcessState() : process_state_(0) {
+ProcessState::ProcessState() : process_state_(0), csrss_connected_(true) {
 }
 
 bool ProcessState::IsKernel32Loaded() const {
@@ -179,6 +223,10 @@ bool ProcessState::InitCalled() const {
 
 bool ProcessState::RevertedToSelf() const {
   return process_state_ > 2;
+}
+
+bool ProcessState::IsCsrssConnected() const {
+  return csrss_connected_;
 }
 
 void ProcessState::SetKernel32Loaded() {
@@ -195,6 +243,11 @@ void ProcessState::SetRevertedToSelf() {
   if (process_state_ < 3)
     process_state_ = 3;
 }
+
+void ProcessState::SetCsrssConnected(bool csrss_connected) {
+  csrss_connected_ = csrss_connected;
+}
+
 
 ResultCode TargetServicesBase::DuplicateHandle(HANDLE source_handle,
                                                DWORD target_process_id,

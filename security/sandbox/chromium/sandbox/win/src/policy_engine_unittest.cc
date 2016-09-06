@@ -2,6 +2,9 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <stddef.h>
+#include <stdint.h>
+
 #include "sandbox/win/src/policy_engine_params.h"
 #include "sandbox/win/src/policy_engine_processor.h"
 #include "testing/gtest/include/gtest/gtest.h"
@@ -61,8 +64,8 @@ TEST(PolicyEngineTest, Rules1) {
   policy->opcode_count = 7;
 
   const wchar_t* filename = L"c:\\Documents and Settings\\Microsoft\\BLAH.txt";
-  uint32 creation_mode = OPEN_EXISTING;
-  uint32 flags = FILE_ATTRIBUTE_NORMAL;
+  uint32_t creation_mode = OPEN_EXISTING;
+  uint32_t flags = FILE_ATTRIBUTE_NORMAL;
   void* security_descriptor = NULL;
 
   POLPARAMS_BEGIN(eval_params)

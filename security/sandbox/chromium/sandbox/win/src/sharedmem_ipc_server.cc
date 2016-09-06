@@ -2,15 +2,19 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <stddef.h>
+#include <stdint.h>
+
 #include "base/callback.h"
 #include "base/logging.h"
 #include "base/memory/scoped_ptr.h"
-#include "sandbox/win/src/sharedmem_ipc_server.h"
-#include "sandbox/win/src/sharedmem_ipc_client.h"
-#include "sandbox/win/src/sandbox.h"
-#include "sandbox/win/src/sandbox_types.h"
+#include "base/stl_util.h"
 #include "sandbox/win/src/crosscall_params.h"
 #include "sandbox/win/src/crosscall_server.h"
+#include "sandbox/win/src/sandbox.h"
+#include "sandbox/win/src/sandbox_types.h"
+#include "sandbox/win/src/sharedmem_ipc_client.h"
+#include "sandbox/win/src/sharedmem_ipc_server.h"
 
 namespace {
 // This handle must not be closed.
@@ -19,16 +23,20 @@ volatile HANDLE g_alive_mutex = NULL;
 
 namespace sandbox {
 
+SharedMemIPCServer::ServerControl::ServerControl() {
+}
+
+SharedMemIPCServer::ServerControl::~ServerControl() {
+}
+
 SharedMemIPCServer::SharedMemIPCServer(HANDLE target_process,
                                        DWORD target_process_id,
-                                       HANDLE target_job,
                                        ThreadProvider* thread_provider,
                                        Dispatcher* dispatcher)
     : client_control_(NULL),
       thread_provider_(thread_provider),
       target_process_(target_process),
       target_process_id_(target_process_id),
-      target_job_object_(target_job),
       call_dispatcher_(dispatcher) {
   // We create a initially owned mutex. If the server dies unexpectedly,
   // the thread that owns it will fail to release the lock and windows will
@@ -51,21 +59,15 @@ SharedMemIPCServer::~SharedMemIPCServer() {
     // Better to leak than to crash.
     return;
   }
-  // Free the IPC signal events.
-  ServerContexts::iterator it;
-  for (it = server_contexts_.begin(); it != server_contexts_.end(); ++it) {
-    ServerControl* context = (*it);
-    ::CloseHandle(context->ping_event);
-    ::CloseHandle(context->pong_event);
-    delete context;
-  }
+  STLDeleteElements(&server_contexts_);
 
   if (client_control_)
     ::UnmapViewOfFile(client_control_);
 }
 
-bool SharedMemIPCServer::Init(void* shared_mem, uint32 shared_size,
-                              uint32 channel_size) {
+bool SharedMemIPCServer::Init(void* shared_mem,
+                              uint32_t shared_size,
+                              uint32_t channel_size) {
   // The shared memory needs to be at least as big as a channel.
   if (shared_size < channel_size) {
     return false;
@@ -111,9 +113,11 @@ bool SharedMemIPCServer::Init(void* shared_mem, uint32 shared_size,
     client_context->channel_base = base_start;
     client_context->state = kFreeChannel;
 
-    // Note that some of these values are available as members of this
-    // object but we put them again into the service_context because we
-    // will be called on a static method (ThreadPingEventReady)
+    // Note that some of these values are available as members of this object
+    // but we put them again into the service_context because we will be called
+    // on a static method (ThreadPingEventReady). In particular, target_process_
+    // is a raw handle that is not owned by this object (it's owned by the
+    // owner of this object), and we are storing it in multiple places.
     service_context->shared_base = reinterpret_cast<char*>(shared_mem);
     service_context->channel_size = channel_size;
     service_context->channel = client_context;
@@ -122,11 +126,10 @@ bool SharedMemIPCServer::Init(void* shared_mem, uint32 shared_size,
     service_context->dispatcher = call_dispatcher_;
     service_context->target_info.process = target_process_;
     service_context->target_info.process_id = target_process_id_;
-    service_context->target_info.job_object = target_job_object_;
     // Advance to the next channel.
     base_start += channel_size;
     // Register the ping event with the threadpool.
-    thread_provider_->RegisterWait(this, service_context->ping_event,
+    thread_provider_->RegisterWait(this, service_context->ping_event.Get(),
                                    ThreadPingEventReady, service_context);
   }
   if (!::DuplicateHandle(::GetCurrentProcess(), g_alive_mutex,
@@ -164,8 +167,8 @@ bool GetArgs(CrossCallParamsEx* params, IPCParams* ipc_params,
   if (kMaxIpcParams < params->GetParamsCount())
     return false;
 
-  for (uint32 i = 0; i < params->GetParamsCount(); i++) {
-    uint32 size;
+  for (uint32_t i = 0; i < params->GetParamsCount(); i++) {
+    uint32_t size;
     ArgType type;
     args[i] = params->GetRawParameter(i, &size, &type);
     if (args[i]) {
@@ -182,7 +185,7 @@ bool GetArgs(CrossCallParamsEx* params, IPCParams* ipc_params,
           break;
         }
         case UINT32_TYPE: {
-          uint32 data;
+          uint32_t data;
           if (!params->GetParameter32(i, &data)) {
             ReleaseArgs(ipc_params, args);
             return false;
@@ -221,7 +224,7 @@ bool SharedMemIPCServer::InvokeCallback(const ServerControl* service_context,
                                         CrossCallReturn* call_result) {
   // Set the default error code;
   SetCallError(SBOX_ERROR_INVALID_IPC, call_result);
-  uint32 output_size = 0;
+  uint32_t output_size = 0;
   // Parse, verify and copy the message. The handler operates on a copy
   // of the message so the client cannot play dirty tricks by changing the
   // data in the channel while the IPC is being processed.
@@ -232,7 +235,7 @@ bool SharedMemIPCServer::InvokeCallback(const ServerControl* service_context,
   if (!params.get())
     return false;
 
-  uint32 tag = params->GetTag();
+  uint32_t tag = params->GetTag();
   static_assert(0 == INVALID_TYPE, "incorrect type enum");
   IPCParams ipc_params = {0};
   ipc_params.ipc_tag = tag;
@@ -397,24 +400,28 @@ void __stdcall SharedMemIPCServer::ThreadPingEventReady(void* context,
   CrossCallParams* call_params = reinterpret_cast<CrossCallParams*>(buffer);
   memcpy(call_params->GetCallReturn(), &call_result, sizeof(call_result));
   ::InterlockedExchange(&service_context->channel->state, kAckChannel);
-  ::SetEvent(service_context->pong_event);
+  ::SetEvent(service_context->pong_event.Get());
 }
 
-bool SharedMemIPCServer::MakeEvents(HANDLE* server_ping, HANDLE* server_pong,
+bool SharedMemIPCServer::MakeEvents(base::win::ScopedHandle* server_ping,
+                                    base::win::ScopedHandle* server_pong,
                                     HANDLE* client_ping, HANDLE* client_pong) {
   // Note that the IPC client has no right to delete the events. That would
   // cause problems. The server *owns* the events.
   const DWORD kDesiredAccess = SYNCHRONIZE | EVENT_MODIFY_STATE;
 
   // The events are auto reset, and start not signaled.
-  *server_ping = ::CreateEventW(NULL, FALSE, FALSE, NULL);
-  if (!::DuplicateHandle(::GetCurrentProcess(), *server_ping, target_process_,
-                         client_ping, kDesiredAccess, FALSE, 0)) {
+  server_ping->Set(::CreateEventW(NULL, FALSE, FALSE, NULL));
+  if (!::DuplicateHandle(::GetCurrentProcess(), server_ping->Get(),
+                         target_process_, client_ping, kDesiredAccess, FALSE,
+                         0)) {
     return false;
   }
-  *server_pong = ::CreateEventW(NULL, FALSE, FALSE, NULL);
-  if (!::DuplicateHandle(::GetCurrentProcess(), *server_pong, target_process_,
-                         client_pong, kDesiredAccess, FALSE, 0)) {
+
+  server_pong->Set(::CreateEventW(NULL, FALSE, FALSE, NULL));
+  if (!::DuplicateHandle(::GetCurrentProcess(), server_pong->Get(),
+                         target_process_, client_pong, kDesiredAccess, FALSE,
+                         0)) {
     return false;
   }
   return true;

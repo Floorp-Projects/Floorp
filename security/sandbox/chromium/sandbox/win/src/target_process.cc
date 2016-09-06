@@ -4,16 +4,20 @@
 
 #include "sandbox/win/src/target_process.h"
 
-#include "base/basictypes.h"
+#include <stddef.h>
+#include <stdint.h>
+
+#include "base/macros.h"
 #include "base/memory/scoped_ptr.h"
 #include "base/win/pe_image.h"
 #include "base/win/startup_information.h"
 #include "base/win/windows_version.h"
-#include "sandbox/win/src/crosscall_server.h"
 #include "sandbox/win/src/crosscall_client.h"
+#include "sandbox/win/src/crosscall_server.h"
 #include "sandbox/win/src/policy_low_level.h"
 #include "sandbox/win/src/sandbox_types.h"
 #include "sandbox/win/src/sharedmem_ipc_server.h"
+#include "sandbox/win/src/win_utils.h"
 
 namespace {
 
@@ -35,7 +39,7 @@ void CopyPolicyToTarget(const void* source, size_t size, void* dest) {
   }
 }
 
-}
+}  // namespace
 
 namespace sandbox {
 
@@ -63,18 +67,20 @@ void* GetBaseAddress(const wchar_t* exe_name, void* entry_point) {
   return base;
 }
 
-
-TargetProcess::TargetProcess(HANDLE initial_token, HANDLE lockdown_token,
-                             HANDLE job, ThreadProvider* thread_pool)
-  // This object owns everything initialized here except thread_pool and
-  // the job_ handle. The Job handle is closed by BrokerServices and results
-  // eventually in a call to our dtor.
-    : lockdown_token_(lockdown_token),
-      initial_token_(initial_token),
+TargetProcess::TargetProcess(base::win::ScopedHandle initial_token,
+                             base::win::ScopedHandle lockdown_token,
+                             base::win::ScopedHandle lowbox_token,
+                             HANDLE job,
+                             ThreadProvider* thread_pool)
+    // This object owns everything initialized here except thread_pool and
+    // the job_ handle. The Job handle is closed by BrokerServices and results
+    // eventually in a call to our dtor.
+    : lockdown_token_(lockdown_token.Pass()),
+      initial_token_(initial_token.Pass()),
+      lowbox_token_(lowbox_token.Pass()),
       job_(job),
       thread_pool_(thread_pool),
-      base_address_(NULL) {
-}
+      base_address_(NULL) {}
 
 TargetProcess::~TargetProcess() {
   DWORD exit_code = 0;
@@ -97,7 +103,7 @@ TargetProcess::~TargetProcess() {
       // that.
       if (shared_section_.IsValid())
         shared_section_.Take();
-      ipc_server_.release();
+      ignore_result(ipc_server_.release());
       sandbox_process_info_.TakeProcessHandle();
       return;
     }
@@ -115,6 +121,12 @@ DWORD TargetProcess::Create(const wchar_t* exe_path,
                             bool inherit_handles,
                             const base::win::StartupInformation& startup_info,
                             base::win::ScopedProcessInformation* target_info) {
+  if (lowbox_token_.IsValid() &&
+      base::win::GetVersion() < base::win::VERSION_WIN8) {
+    // We don't allow lowbox_token below Windows 8.
+    return ERROR_INVALID_PARAMETER;
+  }
+
   exe_name_.reset(_wcsdup(exe_path));
 
   // the command line needs to be writable by CreateProcess().
@@ -134,21 +146,17 @@ DWORD TargetProcess::Create(const wchar_t* exe_path,
   }
 
   PROCESS_INFORMATION temp_process_info = {};
-  if (!::CreateProcessAsUserW(lockdown_token_.Get(),
-                              exe_path,
-                              cmd_line.get(),
-                              NULL,   // No security attribute.
-                              NULL,   // No thread attribute.
-                              inherit_handles,
-                              flags,
-                              NULL,   // Use the environment of the caller.
-                              NULL,   // Use current directory of the caller.
+  if (!::CreateProcessAsUserW(lockdown_token_.Get(), exe_path, cmd_line.get(),
+                              NULL,  // No security attribute.
+                              NULL,  // No thread attribute.
+                              inherit_handles, flags,
+                              NULL,  // Use the environment of the caller.
+                              NULL,  // Use current directory of the caller.
                               startup_info.startup_info(),
                               &temp_process_info)) {
     return ::GetLastError();
   }
   base::win::ScopedProcessInformation process_info(temp_process_info);
-  lockdown_token_.Close();
 
   DWORD win_result = ERROR_SUCCESS;
 
@@ -200,6 +208,25 @@ DWORD TargetProcess::Create(const wchar_t* exe_path,
     return win_result;
   }
 
+  if (lowbox_token_.IsValid()) {
+    PROCESS_ACCESS_TOKEN process_access_token;
+    process_access_token.thread = process_info.thread_handle();
+    process_access_token.token = lowbox_token_.Get();
+
+    NtSetInformationProcess SetInformationProcess = NULL;
+    ResolveNTFunctionPtr("NtSetInformationProcess", &SetInformationProcess);
+
+    NTSTATUS status = SetInformationProcess(
+        process_info.process_handle(),
+        static_cast<PROCESS_INFORMATION_CLASS>(NtProcessInformationAccessToken),
+        &process_access_token, sizeof(process_access_token));
+    if (!NT_SUCCESS(status)) {
+      win_result = ERROR_INVALID_TOKEN;
+      ::TerminateProcess(process_info.process_handle(), 0);  // exit code
+      return win_result;
+    }
+  }
+
   base_address_ = GetBaseAddress(exe_path, entry_point);
   sandbox_process_info_.Set(process_info.Take());
   return win_result;
@@ -226,8 +253,6 @@ ResultCode TargetProcess::TransferVariable(const char* name, void* address,
   size_t offset = reinterpret_cast<char*>(child_var) -
                   reinterpret_cast<char*>(module);
   child_var = reinterpret_cast<char*>(MainModule()) + offset;
-#else
-  UNREFERENCED_PARAMETER(name);
 #endif
 
   SIZE_T written;
@@ -243,8 +268,10 @@ ResultCode TargetProcess::TransferVariable(const char* name, void* address,
 
 // Construct the IPC server and the IPC dispatcher. When the target does
 // an IPC it will eventually call the dispatcher.
-DWORD TargetProcess::Init(Dispatcher* ipc_dispatcher, void* policy,
-                          uint32 shared_IPC_size, uint32 shared_policy_size) {
+DWORD TargetProcess::Init(Dispatcher* ipc_dispatcher,
+                          void* policy,
+                          uint32_t shared_IPC_size,
+                          uint32_t shared_policy_size) {
   // We need to map the shared memory on the target. This is necessary for
   // any IPC that needs to take place, even if the target has not yet hit
   // the main( ) function or even has initialized the CRT. So here we set
@@ -261,7 +288,7 @@ DWORD TargetProcess::Init(Dispatcher* ipc_dispatcher, void* policy,
     return ::GetLastError();
   }
 
-  DWORD access = FILE_MAP_READ | FILE_MAP_WRITE;
+  DWORD access = FILE_MAP_READ | FILE_MAP_WRITE | SECTION_QUERY;
   HANDLE target_shared_section;
   if (!::DuplicateHandle(::GetCurrentProcess(), shared_section_.Get(),
                          sandbox_process_info_.process_handle(),
@@ -309,7 +336,7 @@ DWORD TargetProcess::Init(Dispatcher* ipc_dispatcher, void* policy,
   ipc_server_.reset(
       new SharedMemIPCServer(sandbox_process_info_.process_handle(),
                              sandbox_process_info_.process_id(),
-                             job_, thread_pool_, ipc_dispatcher));
+                             thread_pool_, ipc_dispatcher));
 
   if (!ipc_server_->Init(shared_memory, shared_IPC_size, kIPCChannelSize))
     return ERROR_NOT_ENOUGH_MEMORY;
@@ -328,7 +355,9 @@ void TargetProcess::Terminate() {
 }
 
 TargetProcess* MakeTestTargetProcess(HANDLE process, HMODULE base_address) {
-  TargetProcess* target = new TargetProcess(NULL, NULL, NULL, NULL);
+  TargetProcess* target =
+      new TargetProcess(base::win::ScopedHandle(), base::win::ScopedHandle(),
+                        base::win::ScopedHandle(), NULL, NULL);
   PROCESS_INFORMATION process_info = {};
   process_info.hProcess = process;
   target->sandbox_process_info_.Set(process_info);

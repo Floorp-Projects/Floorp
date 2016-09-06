@@ -70,7 +70,11 @@ public class IconResponse {
     private boolean generated;
     private String url;
 
-    private IconResponse(@NonNull Bitmap bitmap) {
+    private IconResponse(Bitmap bitmap) {
+        if (bitmap == null) {
+            throw new NullPointerException("Bitmap is null");
+        }
+
         this.bitmap = bitmap;
         this.color = 0;
         this.url = null;

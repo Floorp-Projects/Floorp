@@ -22,8 +22,8 @@
 #include "base/at_exit.h"
 #include "base/atomicops.h"
 #include "base/base_export.h"
+#include "base/macros.h"
 #include "base/memory/aligned_memory.h"
-#include "base/third_party/dynamic_annotations/dynamic_annotations.h"
 #include "base/threading/thread_restrictions.h"
 
 namespace base {
@@ -37,10 +37,10 @@ static const subtle::AtomicWord kBeingCreatedMarker = 1;
 // we can implement the more complicated pieces out of line in the .cc file.
 BASE_EXPORT subtle::AtomicWord WaitForInstance(subtle::AtomicWord* instance);
 
-}  // namespace internal
-}  // namespace base
+class DeleteTraceLogForTesting;
 
-// TODO(joth): Move more of this file into namespace base
+}  // namespace internal
+
 
 // Default traits for Singleton<Type>. Calls operator new and operator delete on
 // the object. Registers automatic deletion at process exit.
@@ -111,7 +111,7 @@ struct StaticMemorySingletonTraits {
   // this is traits for returning NULL.
   static Type* New() {
     // Only constructs once and returns pointer; otherwise returns NULL.
-    if (base::subtle::NoBarrier_AtomicExchange(&dead_, 1))
+    if (subtle::NoBarrier_AtomicExchange(&dead_, 1))
       return NULL;
 
     return new(buffer_.void_data()) Type();
@@ -126,20 +126,19 @@ struct StaticMemorySingletonTraits {
   static const bool kAllowedToAccessOnNonjoinableThread = true;
 
   // Exposed for unittesting.
-  static void Resurrect() {
-    base::subtle::NoBarrier_Store(&dead_, 0);
-  }
+  static void Resurrect() { subtle::NoBarrier_Store(&dead_, 0); }
 
  private:
-  static base::AlignedMemory<sizeof(Type), ALIGNOF(Type)> buffer_;
+  static AlignedMemory<sizeof(Type), ALIGNOF(Type)> buffer_;
   // Signal the object was already deleted, so it is not revived.
-  static base::subtle::Atomic32 dead_;
+  static subtle::Atomic32 dead_;
 };
 
-template <typename Type> base::AlignedMemory<sizeof(Type), ALIGNOF(Type)>
+template <typename Type>
+AlignedMemory<sizeof(Type), ALIGNOF(Type)>
     StaticMemorySingletonTraits<Type>::buffer_;
-template <typename Type> base::subtle::Atomic32
-    StaticMemorySingletonTraits<Type>::dead_ = 0;
+template <typename Type>
+subtle::Atomic32 StaticMemorySingletonTraits<Type>::dead_ = 0;
 
 // The Singleton<Type, Traits, DifferentiatingType> class manages a single
 // instance of Type which will be created on first use and will be destroyed at
@@ -191,7 +190,7 @@ template <typename Type> base::subtle::Atomic32
 //   RAE = kRegisterAtExit
 //
 // On every platform, if Traits::RAE is true, the singleton will be destroyed at
-// process exit. More precisely it uses base::AtExitManager which requires an
+// process exit. More precisely it uses AtExitManager which requires an
 // object of this type to be instantiated. AtExitManager mimics the semantics
 // of atexit() such as LIFO order but under Windows is safer to call. For more
 // information see at_exit.h.
@@ -210,6 +209,7 @@ template <typename Type> base::subtle::Atomic32
 // (b) Your factory function must never throw an exception. This class is not
 //     exception-safe.
 //
+
 template <typename Type,
           typename Traits = DefaultSingletonTraits<Type>,
           typename DifferentiatingType = Type>
@@ -220,7 +220,7 @@ class Singleton {
   friend Type* Type::GetInstance();
 
   // Allow TraceLog tests to test tracing after OnExit.
-  friend class DeleteTraceLogForTesting;
+  friend class internal::DeleteTraceLogForTesting;
 
   // This class is safe to be constructed and copy-constructed since it has no
   // member.
@@ -230,45 +230,37 @@ class Singleton {
 #ifndef NDEBUG
     // Avoid making TLS lookup on release builds.
     if (!Traits::kAllowedToAccessOnNonjoinableThread)
-      base::ThreadRestrictions::AssertSingletonAllowed();
+      ThreadRestrictions::AssertSingletonAllowed();
 #endif
 
     // The load has acquire memory ordering as the thread which reads the
     // instance_ pointer must acquire visibility over the singleton data.
-    base::subtle::AtomicWord value = base::subtle::Acquire_Load(&instance_);
-    if (value != 0 && value != base::internal::kBeingCreatedMarker) {
-      // See the corresponding HAPPENS_BEFORE below.
-      ANNOTATE_HAPPENS_AFTER(&instance_);
+    subtle::AtomicWord value = subtle::Acquire_Load(&instance_);
+    if (value != 0 && value != internal::kBeingCreatedMarker) {
       return reinterpret_cast<Type*>(value);
     }
 
     // Object isn't created yet, maybe we will get to create it, let's try...
-    if (base::subtle::Acquire_CompareAndSwap(
-          &instance_, 0, base::internal::kBeingCreatedMarker) == 0) {
+    if (subtle::Acquire_CompareAndSwap(&instance_, 0,
+                                       internal::kBeingCreatedMarker) == 0) {
       // instance_ was NULL and is now kBeingCreatedMarker.  Only one thread
       // will ever get here.  Threads might be spinning on us, and they will
       // stop right after we do this store.
       Type* newval = Traits::New();
 
-      // This annotation helps race detectors recognize correct lock-less
-      // synchronization between different threads calling get().
-      // See the corresponding HAPPENS_AFTER below and above.
-      ANNOTATE_HAPPENS_BEFORE(&instance_);
       // Releases the visibility over instance_ to the readers.
-      base::subtle::Release_Store(
-          &instance_, reinterpret_cast<base::subtle::AtomicWord>(newval));
+      subtle::Release_Store(&instance_,
+                            reinterpret_cast<subtle::AtomicWord>(newval));
 
       if (newval != NULL && Traits::kRegisterAtExit)
-        base::AtExitManager::RegisterCallback(OnExit, NULL);
+        AtExitManager::RegisterCallback(OnExit, NULL);
 
       return newval;
     }
 
     // We hit a race. Wait for the other thread to complete it.
-    value = base::internal::WaitForInstance(&instance_);
+    value = internal::WaitForInstance(&instance_);
 
-    // See the corresponding HAPPENS_BEFORE above.
-    ANNOTATE_HAPPENS_AFTER(&instance_);
     return reinterpret_cast<Type*>(value);
   }
 
@@ -278,15 +270,15 @@ class Singleton {
   static void OnExit(void* /*unused*/) {
     // AtExit should only ever be register after the singleton instance was
     // created.  We should only ever get here with a valid instance_ pointer.
-    Traits::Delete(
-        reinterpret_cast<Type*>(base::subtle::NoBarrier_Load(&instance_)));
+    Traits::Delete(reinterpret_cast<Type*>(subtle::NoBarrier_Load(&instance_)));
     instance_ = 0;
   }
-  static base::subtle::AtomicWord instance_;
+  static subtle::AtomicWord instance_;
 };
 
 template <typename Type, typename Traits, typename DifferentiatingType>
-base::subtle::AtomicWord Singleton<Type, Traits, DifferentiatingType>::
-    instance_ = 0;
+subtle::AtomicWord Singleton<Type, Traits, DifferentiatingType>::instance_ = 0;
+
+}  // namespace base
 
 #endif  // BASE_MEMORY_SINGLETON_H_

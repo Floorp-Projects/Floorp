@@ -6222,7 +6222,7 @@ private:
   nsTHashtable<nsPtrHashKey<MutableFile>> mMutableFiles;
   RefPtr<DatabaseConnection> mConnection;
   const PrincipalInfo mPrincipalInfo;
-  const OptionalContentId mOptionalContentParentId;
+  const Maybe<ContentParentId> mOptionalContentParentId;
   const nsCString mGroup;
   const nsCString mOrigin;
   const nsCString mId;
@@ -6242,7 +6242,7 @@ public:
   // Created by OpenDatabaseOp.
   Database(Factory* aFactory,
            const PrincipalInfo& aPrincipalInfo,
-           const OptionalContentId& aOptionalContentParentId,
+           const Maybe<ContentParentId>& aOptionalContentParentId,
            const nsACString& aGroup,
            const nsACString& aOrigin,
            uint32_t aTelemetryId,
@@ -6281,11 +6281,9 @@ public:
   bool
   IsOwnedByProcess(ContentParentId aContentParentId) const
   {
-    MOZ_ASSERT(mOptionalContentParentId.type() != OptionalContentId::T__None);
-
     return
-      mOptionalContentParentId.type() == OptionalContentId::TContentParentId &&
-      mOptionalContentParentId.get_ContentParentId() == aContentParentId;
+      mOptionalContentParentId &&
+      mOptionalContentParentId.value() == aContentParentId;
   }
 
   const nsCString&
@@ -7451,7 +7449,7 @@ class OpenDatabaseOp final
 
   class VersionChangeOp;
 
-  OptionalContentId mOptionalContentParentId;
+  Maybe<ContentParentId> mOptionalContentParentId;
 
   RefPtr<FullDatabaseMetadata> mMetadata;
 
@@ -7476,10 +7474,7 @@ public:
   bool
   IsOtherProcessActor() const
   {
-    MOZ_ASSERT(mOptionalContentParentId.type() != OptionalContentId::T__None);
-
-    return mOptionalContentParentId.type() ==
-             OptionalContentId::TContentParentId;
+    return mOptionalContentParentId.isSome();
   }
 
 private:
@@ -13536,7 +13531,7 @@ WaitForTransactionsHelper::Run()
 
 Database::Database(Factory* aFactory,
                    const PrincipalInfo& aPrincipalInfo,
-                   const OptionalContentId& aOptionalContentParentId,
+                   const Maybe<ContentParentId>& aOptionalContentParentId,
                    const nsACString& aGroup,
                    const nsACString& aOrigin,
                    uint32_t aTelemetryId,
@@ -20761,9 +20756,7 @@ OpenDatabaseOp::OpenDatabaseOp(Factory* aFactory,
   if (mContentParent) {
     // This is a little scary but it looks safe to call this off the main thread
     // for now.
-    mOptionalContentParentId = mContentParent->ChildID();
-  } else {
-    mOptionalContentParentId = void_t();
+    mOptionalContentParentId = Some(mContentParent->ChildID());
   }
 }
 

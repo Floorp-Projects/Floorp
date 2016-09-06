@@ -16,7 +16,8 @@ namespace base {
 // there is a specific need to run tasks on only a single thread.
 //
 // SingleThreadTaskRunner implementations might:
-//   - Post tasks to an existing thread's MessageLoop (see MessageLoopProxy).
+//   - Post tasks to an existing thread's MessageLoop (see
+//     MessageLoop::task_runner()).
 //   - Create their own worker thread and MessageLoop to post tasks to.
 //   - Add tasks to a FIFO and signal to a non-MessageLoop thread for them to
 //     be processed. This allows TaskRunner-oriented code run on threads

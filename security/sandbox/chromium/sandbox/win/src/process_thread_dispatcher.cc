@@ -4,7 +4,9 @@
 
 #include "sandbox/win/src/process_thread_dispatcher.h"
 
-#include "base/basictypes.h"
+#include <stddef.h>
+#include <stdint.h>
+
 #include "base/logging.h"
 #include "sandbox/win/src/crosscall_client.h"
 #include "sandbox/win/src/interception.h"
@@ -97,34 +99,30 @@ namespace sandbox {
 ThreadProcessDispatcher::ThreadProcessDispatcher(PolicyBase* policy_base)
     : policy_base_(policy_base) {
   static const IPCCall open_thread = {
-    {IPC_NTOPENTHREAD_TAG, UINT32_TYPE, UINT32_TYPE},
-    reinterpret_cast<CallbackGeneric>(
-        &ThreadProcessDispatcher::NtOpenThread)
-  };
+      {IPC_NTOPENTHREAD_TAG, {UINT32_TYPE, UINT32_TYPE}},
+      reinterpret_cast<CallbackGeneric>(
+          &ThreadProcessDispatcher::NtOpenThread)};
 
   static const IPCCall open_process = {
-    {IPC_NTOPENPROCESS_TAG, UINT32_TYPE, UINT32_TYPE},
-    reinterpret_cast<CallbackGeneric>(
-        &ThreadProcessDispatcher::NtOpenProcess)
-  };
+      {IPC_NTOPENPROCESS_TAG, {UINT32_TYPE, UINT32_TYPE}},
+      reinterpret_cast<CallbackGeneric>(
+          &ThreadProcessDispatcher::NtOpenProcess)};
 
   static const IPCCall process_token = {
-    {IPC_NTOPENPROCESSTOKEN_TAG, VOIDPTR_TYPE, UINT32_TYPE},
-    reinterpret_cast<CallbackGeneric>(
-        &ThreadProcessDispatcher::NtOpenProcessToken)
-  };
+      {IPC_NTOPENPROCESSTOKEN_TAG, {VOIDPTR_TYPE, UINT32_TYPE}},
+      reinterpret_cast<CallbackGeneric>(
+          &ThreadProcessDispatcher::NtOpenProcessToken)};
 
   static const IPCCall process_tokenex = {
-    {IPC_NTOPENPROCESSTOKENEX_TAG, VOIDPTR_TYPE, UINT32_TYPE, UINT32_TYPE},
-    reinterpret_cast<CallbackGeneric>(
-        &ThreadProcessDispatcher::NtOpenProcessTokenEx)
-  };
+      {IPC_NTOPENPROCESSTOKENEX_TAG, {VOIDPTR_TYPE, UINT32_TYPE, UINT32_TYPE}},
+      reinterpret_cast<CallbackGeneric>(
+          &ThreadProcessDispatcher::NtOpenProcessTokenEx)};
 
   static const IPCCall create_params = {
-    {IPC_CREATEPROCESSW_TAG, WCHAR_TYPE, WCHAR_TYPE, WCHAR_TYPE, INOUTPTR_TYPE},
-    reinterpret_cast<CallbackGeneric>(
-        &ThreadProcessDispatcher::CreateProcessW)
-  };
+      {IPC_CREATEPROCESSW_TAG,
+       {WCHAR_TYPE, WCHAR_TYPE, WCHAR_TYPE, INOUTPTR_TYPE}},
+      reinterpret_cast<CallbackGeneric>(
+          &ThreadProcessDispatcher::CreateProcessW)};
 
   ipc_calls_.push_back(open_thread);
   ipc_calls_.push_back(open_process);
@@ -156,8 +154,8 @@ bool ThreadProcessDispatcher::SetupService(InterceptionManager* manager,
 }
 
 bool ThreadProcessDispatcher::NtOpenThread(IPCInfo* ipc,
-                                           uint32 desired_access,
-                                           uint32 thread_id) {
+                                           uint32_t desired_access,
+                                           uint32_t thread_id) {
   HANDLE handle;
   NTSTATUS ret = ProcessPolicy::OpenThreadAction(*ipc->client_info,
                                                  desired_access, thread_id,
@@ -168,8 +166,8 @@ bool ThreadProcessDispatcher::NtOpenThread(IPCInfo* ipc,
 }
 
 bool ThreadProcessDispatcher::NtOpenProcess(IPCInfo* ipc,
-                                            uint32 desired_access,
-                                            uint32 process_id) {
+                                            uint32_t desired_access,
+                                            uint32_t process_id) {
   HANDLE handle;
   NTSTATUS ret = ProcessPolicy::OpenProcessAction(*ipc->client_info,
                                                   desired_access, process_id,
@@ -181,7 +179,7 @@ bool ThreadProcessDispatcher::NtOpenProcess(IPCInfo* ipc,
 
 bool ThreadProcessDispatcher::NtOpenProcessToken(IPCInfo* ipc,
                                                  HANDLE process,
-                                                 uint32 desired_access) {
+                                                 uint32_t desired_access) {
   HANDLE handle;
   NTSTATUS ret = ProcessPolicy::OpenProcessTokenAction(*ipc->client_info,
                                                        process, desired_access,
@@ -193,8 +191,8 @@ bool ThreadProcessDispatcher::NtOpenProcessToken(IPCInfo* ipc,
 
 bool ThreadProcessDispatcher::NtOpenProcessTokenEx(IPCInfo* ipc,
                                                    HANDLE process,
-                                                   uint32 desired_access,
-                                                   uint32 attributes) {
+                                                   uint32_t desired_access,
+                                                   uint32_t attributes) {
   HANDLE handle;
   NTSTATUS ret = ProcessPolicy::OpenProcessTokenExAction(*ipc->client_info,
                                                          process,

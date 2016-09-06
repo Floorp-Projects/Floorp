@@ -9,12 +9,8 @@
 #include <stdint.h>
 
 #include "base/macros.h"
+#include "sandbox/linux/system_headers/linux_signal.h"
 #include "sandbox/sandbox_export.h"
-
-// Android's signal.h doesn't define ucontext etc.
-#if defined(OS_ANDROID)
-#include "sandbox/linux/services/android_ucontext.h"
-#endif
 
 namespace sandbox {
 
