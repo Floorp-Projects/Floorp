@@ -517,7 +517,18 @@ public:
 
   void Enter() override
   {
-    mMaster->StartBuffering();
+    if (mMaster->IsPlaying()) {
+      mMaster->StopPlayback();
+    }
+
+    mMaster->mBufferingStart = TimeStamp::Now();
+
+    MediaStatistics stats = mMaster->GetStatistics();
+    SLOG("Playback rate: %.1lfKB/s%s download rate: %.1lfKB/s%s",
+         stats.mPlaybackRate/1024, stats.mPlaybackRateReliable ? "" : " (unreliable)",
+         stats.mDownloadRate/1024, stats.mDownloadRateReliable ? "" : " (unreliable)");
+
+    mMaster->ScheduleStateMachineIn(USECS_PER_S);
   }
 
   void Step() override
@@ -2734,29 +2745,6 @@ MediaDecoderStateMachine::GetStatistics()
   result.mDecoderPosition = mDecoderPosition;
   result.mPlaybackPosition = mPlaybackOffset;
   return result;
-}
-
-void
-MediaDecoderStateMachine::StartBuffering()
-{
-  MOZ_ASSERT(OnTaskQueue());
-  MOZ_ASSERT(mState == DECODER_STATE_BUFFERING);
-
-  if (IsPlaying()) {
-    StopPlayback();
-  }
-
-  mBufferingStart = TimeStamp::Now();
-
-  MediaStatistics stats = GetStatistics();
-  DECODER_LOG("Playback rate: %.1lfKB/s%s download rate: %.1lfKB/s%s",
-              stats.mPlaybackRate/1024, stats.mPlaybackRateReliable ? "" : " (unreliable)",
-              stats.mDownloadRate/1024, stats.mDownloadRateReliable ? "" : " (unreliable)");
-
-  // Don't go straight back to the state machine loop since that might
-  // cause us to start decoding again and we could flip-flop between
-  // decoding and quick-buffering.
-  ScheduleStateMachineIn(USECS_PER_S);
 }
 
 void
