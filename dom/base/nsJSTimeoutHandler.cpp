@@ -50,7 +50,7 @@ public:
   nsJSScriptTimeoutHandler(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
                            const nsAString& aExpression);
 
-  virtual void GetHandlerText(nsAString& aString) override;
+  virtual const nsAString& GetHandlerText() override;
   virtual Function* GetCallback() override
   {
     return mFunction;
@@ -308,11 +308,11 @@ nsJSScriptTimeoutHandler::ReleaseJSObjects()
   }
 }
 
-void
-nsJSScriptTimeoutHandler::GetHandlerText(nsAString& aString)
+const nsAString&
+nsJSScriptTimeoutHandler::GetHandlerText()
 {
   NS_ASSERTION(!mFunction, "No expression, so no handler text!");
-  aString = mExpr;
+  return mExpr;
 }
 
 already_AddRefed<nsIScriptTimeoutHandler>

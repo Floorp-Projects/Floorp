@@ -18,6 +18,8 @@ load(libdir + "asm.js");
 if (!isAsmJSCompilationAvailable())
     quit(0);
 
+setJitCompilerOption('wasm.test-mode', 1);
+
 if (!this.Atomics) {
     this.Atomics = { load: function (x, y) { return 0 },
 		     store: function (x, y, z) { return 0 },
@@ -32,16 +34,16 @@ if (!this.Atomics) {
 }
 
 
-function module_a(stdlib, foreign, heap) {
+var module_a = asmCompile("stdlib", "foreign", "heap", `
     "use asm";
 
     var ld = stdlib.Atomics.load;
 
     function f() { return 0; }
     return { f:f };
-}
+`);
 
-function module_b(stdlib, foreign, heap) {
+var module_b = asmCompile("stdlib", "foreign", "heap", `
     "use asm";
 
     var ld = stdlib.Atomics.load;
@@ -49,16 +51,16 @@ function module_b(stdlib, foreign, heap) {
 
     function f() { return 0; }
     return { f:f };
-}
+`);
 
-function module_c(stdlib, foreign, heap) {
+var module_c = asmCompile("stdlib", "foreign", "heap", `
     "use asm";
 
     var i32a = new stdlib.Int32Array(heap);
 
     function f() { return 0; }
     return { f:f };
-}
+`);
 
 assertEq(isAsmJSModule(module_a), true);
 assertEq(isAsmJSModule(module_b), true);

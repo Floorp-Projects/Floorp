@@ -442,6 +442,7 @@ CycleCollectedJSRuntime::CycleCollectedJSRuntime()
   , mPrevGCNurseryCollectionCallback(nullptr)
   , mJSHolders(256)
   , mDoingStableStates(false)
+  , mDisableMicroTaskCheckpoint(false)
   , mOutOfMemoryState(OOMState::OK)
   , mLargeAllocationFailureState(OOMState::OK)
 {
@@ -1384,11 +1385,13 @@ CycleCollectedJSRuntime::AfterProcessTask(uint32_t aRecursionDepth)
   ProcessMetastableStateQueue(aRecursionDepth);
 
   // Step 4.1: Execute microtasks.
-  if (NS_IsMainThread()) {
-    nsContentUtils::PerformMainThreadMicroTaskCheckpoint();
-    Promise::PerformMicroTaskCheckpoint();
-  } else {
-    Promise::PerformWorkerMicroTaskCheckpoint();
+  if (!mDisableMicroTaskCheckpoint) {
+    if (NS_IsMainThread()) {
+      nsContentUtils::PerformMainThreadMicroTaskCheckpoint();
+      Promise::PerformMicroTaskCheckpoint();
+    } else {
+      Promise::PerformWorkerMicroTaskCheckpoint();
+    }
   }
 
   // Step 4.2 Execute any events that were waiting for a stable state.

@@ -1143,6 +1143,9 @@ public:
     // loop.  Don't run it, for example, during sync XHR or importScripts.
     if (aRecursionDepth == 2) {
       CycleCollectedJSRuntime::AfterProcessTask(aRecursionDepth);
+    } else if (aRecursionDepth > 2) {
+      AutoDisableMicroTaskCheckpoint disableMicroTaskCheckpoint;
+      CycleCollectedJSRuntime::AfterProcessTask(aRecursionDepth);
     }
   }
 
