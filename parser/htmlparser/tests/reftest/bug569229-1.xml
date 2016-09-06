@@ -1,0 +1,6 @@
+<?xml version="1.0" standalone="yes" ?>
+<!DOCTYPE html [
+  <!ENTITY inner "<script src='script.js'></script><p>abcd</p>">
+  <!ENTITY outer "&inner;">
+]>
+<html xmlns="http://www.w3.org/1999/xhtml">&outer;</html>

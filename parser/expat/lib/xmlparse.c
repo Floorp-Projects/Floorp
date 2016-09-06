@@ -4906,7 +4906,29 @@ processInternalEntity(XML_Parser parser, ENTITY *entity,
     }
     else {
       entity->open = XML_FALSE;
+/* BEGIN MOZILLA CHANGE (Deal with parser interruption from nested entities) */
+#if 0
       openInternalEntities = openEntity->next;
+#else
+      if (openInternalEntities == openEntity) {
+        openInternalEntities = openEntity->next;
+      }
+      else {
+        /* openEntity should be closed, but it contains an inner entity that is
+           still open. Remove openEntity from the openInternalEntities linked
+           list by looking for the inner entity in the list that links to
+           openEntity and fixing up its 'next' member
+        */
+        OPEN_INTERNAL_ENTITY *innerOpenEntity = openInternalEntities;
+        do {
+          if (innerOpenEntity->next == openEntity) {
+            innerOpenEntity->next = openEntity->next;
+            break;
+          }
+        } while ((innerOpenEntity = innerOpenEntity->next));
+      }
+#endif
+/* END MOZILLA CHANGE */
       /* put openEntity back in list of free instances */
       openEntity->next = freeInternalEntities;
       freeInternalEntities = openEntity;
