@@ -1,0 +1,179 @@
+<?xml version="1.0"?>
+
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<bindings id="dateTimePopupBindings"
+   xmlns="http://www.mozilla.org/xbl"
+   xmlns:html="http://www.w3.org/1999/xhtml"
+   xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+   xmlns:xbl="http://www.mozilla.org/xbl">
+  <binding id="datetime-popup"
+           extends="chrome://global/content/bindings/popup.xml#arrowpanel">
+    <implementation>
+      <field name="dateTimePopupFrame">
+        this.querySelector("#dateTimePopupFrame");
+      </field>
+      <field name="TIME_PICKER_WIDTH" readonly="true">"14em"</field>
+      <field name="TIME_PICKER_HEIGHT" readonly="true">"14em"</field>
+      <method name="loadPicker">
+        <parameter name="type"/>
+        <parameter name="detail"/>
+        <body><![CDATA[
+          this.hidden = false;
+          this.type = type;
+          this.pickerState = {};
+          switch (type) {
+            case "time": {
+              this.detail = detail;
+              this.dateTimePopupFrame.addEventListener("load", this, true);
+              this.dateTimePopupFrame.setAttribute("src", "chrome://global/content/timepicker.xhtml");
+              this.dateTimePopupFrame.style.width = this.TIME_PICKER_WIDTH;
+              this.dateTimePopupFrame.style.height = this.TIME_PICKER_HEIGHT;
+              break;
+            }
+          }
+        ]]></body>
+      </method>
+      <method name="closePicker">
+        <body><![CDATA[
+          this.hidden = true;
+          this.setInputBoxValue(true);
+          this.pickerState = {};
+          this.type = undefined;
+          this.dateTimePopupFrame.removeEventListener("load", this, true);
+          this.dateTimePopupFrame.contentDocument.removeEventListener("TimePickerPopupChanged", this, false);
+          this.dateTimePopupFrame.setAttribute("src", "");
+        ]]></body>
+      </method>
+      <method name="setPopupValue">
+        <parameter name="data"/>
+        <body><![CDATA[
+          switch (this.type) {
+            case "time": {
+              this.postMessageToPicker({
+                name: "TimePickerSetValue",
+                detail: data.value
+              });
+              break;
+            }
+          }
+        ]]></body>
+      </method>
+      <method name="initPicker">
+        <parameter name="detail"/>
+        <body><![CDATA[
+          switch (this.type) {
+            case "time": {
+              const { hour, minute } = detail.value;
+              const format = detail.format || "12";
+              const locale = Components.classes["@mozilla.org/chrome/chrome-registry;1"].getService(Ci.nsIXULChromeRegistry).getSelectedLocale("global");
+
+              this.postMessageToPicker({
+                name: "TimePickerInit",
+                detail: {
+                  hour,
+                  minute,
+                  format,
+                  locale,
+                  min: detail.min,
+                  max: detail.max,
+                  step: detail.step,
+                }
+              });
+              break;
+            }
+          }
+        ]]></body>
+      </method>
+      <method name="setInputBoxValue">
+        <parameter name="passAllValues"/>
+        <body><![CDATA[
+          /**
+           * @param {Boolean} passAllValues: Pass spinner values regardless if they've been set/changed or not
+           */
+          switch (this.type) {
+            case "time": {
+              const { hour, minute, isHourSet, isMinuteSet, isDayPeriodSet } = this.pickerState;
+              const isAnyValueSet = isHourSet || isMinuteSet || isDayPeriodSet;
+              if (passAllValues && isAnyValueSet) {
+                this.sendPickerValueChanged({ hour, minute });
+              } else {
+                this.sendPickerValueChanged({
+                  hour: isHourSet || isDayPeriodSet ? hour : undefined,
+                  minute: isMinuteSet ? minute : undefined
+                });
+              }
+              break;
+            }
+          }
+        ]]></body>
+      </method>
+      <method name="sendPickerValueChanged">
+        <parameter name="value"/>
+        <body><![CDATA[
+          switch (this.type) {
+            case "time": {
+              this.dispatchEvent(new CustomEvent("DateTimePickerValueChanged", {
+                detail: {
+                  hour: value.hour,
+                  minute: value.minute
+                }
+              }));
+              break;
+            }
+          }
+        ]]></body>
+      </method>
+      <method name="handleEvent">
+        <parameter name="aEvent"/>
+        <body><![CDATA[
+          switch (aEvent.type) {
+            case "load": {
+              this.initPicker(this.detail);
+              this.dateTimePopupFrame.contentWindow.addEventListener("message", this, false);
+              break;
+            }
+            case "message": {
+              this.handleMessage(aEvent);
+              break;
+            }
+          }
+        ]]></body>
+      </method>
+      <method name="handleMessage">
+        <parameter name="aEvent"/>
+        <body><![CDATA[
+          if (!this.dateTimePopupFrame.contentDocument.nodePrincipal.isSystemPrincipal) {
+            return;
+          }
+
+          switch (aEvent.data.name) {
+            case "TimePickerPopupChanged": {
+              this.pickerState = aEvent.data.detail;
+              this.setInputBoxValue();
+              break;
+            }
+          }
+        ]]></body>
+      </method>
+      <method name="postMessageToPicker">
+        <parameter name="data"/>
+        <body><![CDATA[
+          if (this.dateTimePopupFrame.contentDocument.nodePrincipal.isSystemPrincipal) {
+            this.dateTimePopupFrame.contentWindow.postMessage(data, "*");
+          }
+        ]]></body>
+      </method>
+
+    </implementation>
+    <handlers>
+      <handler event="popuphiding">
+        <![CDATA[
+          this.closePicker();
+        ]]>
+      </handler>
+    </handlers>
+  </binding>
+</bindings>
