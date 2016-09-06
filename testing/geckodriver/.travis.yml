@@ -1,4 +1,9 @@
 language: generic
+cache:
+  directories:
+    - $HOME/.cargo
+    - $TRAVIS_BUILD_DIR/target
+    - $HOME/docker/
 
 matrix:
   include:
@@ -38,17 +43,20 @@ matrix:
           - gcc-mingw-w64-x86-64
           - binutils-mingw-w64-x86-64
           - libbz2-dev
+    - os: linux
+      env:
+        - TARGET=i686-pc-windows-gnu
+        - NAME=win32
+        - EXT=zip
+        - USE_DOCKER=1
+      dist: trusty
+      services:
+        - docker
     - os: osx
       env:
         - TARGET=x86_64-apple-darwin
         - NAME=macos
         - EXT=tar.gz
-
-install:
-  - export PATH="$PATH:$HOME/.cargo/bin"
-  - curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain=beta
-  - rustc -V
-  - cargo -V
 
 script:
   - bash ci.sh
