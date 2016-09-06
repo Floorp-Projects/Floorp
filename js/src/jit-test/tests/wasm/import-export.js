@@ -303,6 +303,21 @@ assertEq(e1.foo, tbl.get(1));
 assertEq(tbl.get(0) === e1.foo, false);
 assertEq(e1.foo === e2.foo, false);
 
+var code = textToBinary('(module (table (resizable 2 2)) (import $foo "a" "b" (result i32)) (func $bar (result i32) (i32.const 13)) (elem (i32.const 0) $foo $bar) (export "foo" $foo) (export "bar" $bar) (export "tbl" table))');
+var foo = new Instance(new Module(textToBinary('(module (func (result i32) (i32.const 42)) (export "foo" 0))'))).exports.foo;
+var e1 = new Instance(new Module(code), {a:{b:foo}}).exports;
+assertEq(foo, e1.foo);
+assertEq(foo, e1.tbl.get(0));
+assertEq(e1.bar, e1.tbl.get(1));
+assertEq(e1.tbl.get(0)(), 42);
+assertEq(e1.tbl.get(1)(), 13);
+var e2 = new Instance(new Module(code), {a:{b:foo}}).exports;
+assertEq(e1.foo, e2.foo);
+assertEq(e1.bar === e2.bar, false);
+assertEq(e1.tbl === e2.tbl, false);
+assertEq(e1.tbl.get(0), e2.tbl.get(0));
+assertEq(e1.tbl.get(1) === e2.tbl.get(1), false);
+
 // i64 is fully allowed for imported wasm functions
 
 var code1 = textToBinary('(module (func $exp (param i64) (result i64) (i64.add (get_local 0) (i64.const 10))) (export "exp" $exp))');
@@ -431,8 +446,28 @@ for (var i = 5; i < 10; i++)
 // Cross-instance calls
 
 var i1 = new Instance(new Module(textToBinary(`(module (func) (func (param i32) (result i32) (i32.add (get_local 0) (i32.const 1))) (func) (export "f" 1))`)));
-var i2 = new Instance(new Module(textToBinary(`(module (import "a" "b" (param i32) (result i32)) (func $g (result i32) (call_import 0 (i32.const 13))) (export "g" $g))`)), {a:{b:i1.exports.f}});
+var i2 = new Instance(new Module(textToBinary(`(module (import $imp "a" "b" (param i32) (result i32)) (func $g (result i32) (call $imp (i32.const 13))) (export "g" $g))`)), {a:{b:i1.exports.f}});
 assertEq(i2.exports.g(), 14);
+
+var i1 = new Instance(new Module(textToBinary(`(module
+    (memory 1 1)
+    (data (i32.const 0) "\\42")
+    (func $f (result i32) (i32.load (i32.const 0)))
+    (export "f" $f)
+)`)));
+var i2 = new Instance(new Module(textToBinary(`(module
+    (import $imp "a" "b" (result i32))
+    (memory 1 1)
+    (data (i32.const 0) "\\13")
+    (table (resizable 2 2))
+    (elem (i32.const 0) $imp $def)
+    (func $def (result i32) (i32.load (i32.const 0)))
+    (type $v2i (func (result i32)))
+    (func $call (param i32) (result i32) (call_indirect $v2i (get_local 0)))
+    (export "call" $call)
+)`)), {a:{b:i1.exports.f}});
+assertEq(i2.exports.call(0), 0x42);
+assertEq(i2.exports.call(1), 0x13);
 
 var m = new Module(textToBinary(`(module
     (import $val "a" "val" (global i32 immutable))
@@ -445,7 +480,7 @@ var m = new Module(textToBinary(`(module
             (get_global $val)
             (i32.add
                 (i32.load (i32.const 0))
-                (call_import $next))))
+                (call $next))))
     (export "call" $call)
 )`));
 var e = {call:() => 1000};

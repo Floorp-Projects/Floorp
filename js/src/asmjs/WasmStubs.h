@@ -27,11 +27,11 @@ namespace jit { class MacroAssembler; }
 
 namespace wasm {
 
-class FuncExport;
+class FuncDefExport;
 class FuncImport;
 
 extern Offsets
-GenerateEntry(jit::MacroAssembler& masm, const FuncExport& fe);
+GenerateEntry(jit::MacroAssembler& masm, const FuncDefExport& func);
 
 extern ProfilingOffsets
 GenerateInterpExit(jit::MacroAssembler& masm, const FuncImport& fi, uint32_t funcImportIndex);

@@ -64,7 +64,7 @@
     (call $inc)
     (call $inc)
   )
-  (start 2)
+  (start $main)
   (export "inc" $inc)
   (export "get" $get)
 )
@@ -78,7 +78,7 @@
  (import $print_i32 "spectest" "print" (param i32))
  (func $main
    (call_import $print_i32 (i32.const 1)))
- (start 0)
+ (start $main)
 )
 
 (module

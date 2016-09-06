@@ -152,7 +152,7 @@ SendCodeRangesToProfiler(JSContext* cx, CodeSegment& cs, const Bytes& bytecode,
         uintptr_t size = end - start;
 
         TwoByteName name(cx);
-        if (!metadata.getFuncName(cx, &bytecode, codeRange.funcIndex(), &name))
+        if (!metadata.getFuncDefName(cx, &bytecode, codeRange.funcDefIndex(), &name))
             return false;
 
         UniqueChars chars(
@@ -259,14 +259,14 @@ CodeSegment::~CodeSegment()
 }
 
 size_t
-FuncExport::serializedSize() const
+FuncDefExport::serializedSize() const
 {
     return sig_.serializedSize() +
            sizeof(pod);
 }
 
 uint8_t*
-FuncExport::serialize(uint8_t* cursor) const
+FuncDefExport::serialize(uint8_t* cursor) const
 {
     cursor = sig_.serialize(cursor);
     cursor = WriteBytes(cursor, &pod, sizeof(pod));
@@ -274,7 +274,7 @@ FuncExport::serialize(uint8_t* cursor) const
 }
 
 const uint8_t*
-FuncExport::deserialize(const uint8_t* cursor)
+FuncDefExport::deserialize(const uint8_t* cursor)
 {
     (cursor = sig_.deserialize(cursor)) &&
     (cursor = ReadBytes(cursor, &pod, sizeof(pod)));
@@ -282,7 +282,7 @@ FuncExport::deserialize(const uint8_t* cursor)
 }
 
 size_t
-FuncExport::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
+FuncDefExport::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
 {
     return sig_.sizeOfExcludingThis(mallocSizeOf);
 }
@@ -320,7 +320,7 @@ CodeRange::CodeRange(Kind kind, Offsets offsets)
   : begin_(offsets.begin),
     profilingReturn_(0),
     end_(offsets.end),
-    funcIndex_(0),
+    funcDefIndex_(0),
     funcLineOrBytecode_(0),
     funcBeginToTableEntry_(0),
     funcBeginToTableProfilingJump_(0),
@@ -337,7 +337,7 @@ CodeRange::CodeRange(Kind kind, ProfilingOffsets offsets)
   : begin_(offsets.begin),
     profilingReturn_(offsets.profilingReturn),
     end_(offsets.end),
-    funcIndex_(0),
+    funcDefIndex_(0),
     funcLineOrBytecode_(0),
     funcBeginToTableEntry_(0),
     funcBeginToTableProfilingJump_(0),
@@ -351,11 +351,11 @@ CodeRange::CodeRange(Kind kind, ProfilingOffsets offsets)
     MOZ_ASSERT(kind_ == ImportJitExit || kind_ == ImportInterpExit);
 }
 
-CodeRange::CodeRange(uint32_t funcIndex, uint32_t funcLineOrBytecode, FuncOffsets offsets)
+CodeRange::CodeRange(uint32_t funcDefIndex, uint32_t funcLineOrBytecode, FuncOffsets offsets)
   : begin_(offsets.begin),
     profilingReturn_(offsets.profilingReturn),
     end_(offsets.end),
-    funcIndex_(funcIndex),
+    funcDefIndex_(funcDefIndex),
     funcLineOrBytecode_(funcLineOrBytecode),
     funcBeginToTableEntry_(offsets.tableEntry - begin_),
     funcBeginToTableProfilingJump_(offsets.tableProfilingJump - begin_),
@@ -424,7 +424,7 @@ Metadata::serializedSize() const
 {
     return sizeof(pod()) +
            SerializedVectorSize(funcImports) +
-           SerializedVectorSize(funcExports) +
+           SerializedVectorSize(funcDefExports) +
            SerializedVectorSize(sigIds) +
            SerializedPodVectorSize(globals) +
            SerializedPodVectorSize(tables) +
@@ -443,7 +443,7 @@ Metadata::serialize(uint8_t* cursor) const
 {
     cursor = WriteBytes(cursor, &pod(), sizeof(pod()));
     cursor = SerializeVector(cursor, funcImports);
-    cursor = SerializeVector(cursor, funcExports);
+    cursor = SerializeVector(cursor, funcDefExports);
     cursor = SerializeVector(cursor, sigIds);
     cursor = SerializePodVector(cursor, globals);
     cursor = SerializePodVector(cursor, tables);
@@ -463,7 +463,7 @@ Metadata::deserialize(const uint8_t* cursor)
 {
     (cursor = ReadBytes(cursor, &pod(), sizeof(pod()))) &&
     (cursor = DeserializeVector(cursor, &funcImports)) &&
-    (cursor = DeserializeVector(cursor, &funcExports)) &&
+    (cursor = DeserializeVector(cursor, &funcDefExports)) &&
     (cursor = DeserializeVector(cursor, &sigIds)) &&
     (cursor = DeserializePodVector(cursor, &globals)) &&
     (cursor = DeserializePodVector(cursor, &tables)) &&
@@ -482,7 +482,7 @@ size_t
 Metadata::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
 {
     return SizeOfVectorExcludingThis(funcImports, mallocSizeOf) +
-           SizeOfVectorExcludingThis(funcExports, mallocSizeOf) +
+           SizeOfVectorExcludingThis(funcDefExports, mallocSizeOf) +
            SizeOfVectorExcludingThis(sigIds, mallocSizeOf) +
            globals.sizeOfExcludingThis(mallocSizeOf) +
            tables.sizeOfExcludingThis(mallocSizeOf) +
@@ -496,33 +496,36 @@ Metadata::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
            assumptions.sizeOfExcludingThis(mallocSizeOf);
 }
 
-struct ProjectFuncIndex
+struct ProjectIndex
 {
-    const FuncExportVector& funcExports;
-    explicit ProjectFuncIndex(const FuncExportVector& funcExports) : funcExports(funcExports) {}
+    const FuncDefExportVector& funcDefExports;
+
+    explicit ProjectIndex(const FuncDefExportVector& funcDefExports)
+      : funcDefExports(funcDefExports)
+    {}
     uint32_t operator[](size_t index) const {
-        return funcExports[index].funcIndex();
+        return funcDefExports[index].funcDefIndex();
     }
 };
 
-const FuncExport&
-Metadata::lookupFuncExport(uint32_t funcIndex) const
+const FuncDefExport&
+Metadata::lookupFuncDefExport(uint32_t funcDefIndex) const
 {
     size_t match;
-    if (!BinarySearch(ProjectFuncIndex(funcExports), 0, funcExports.length(), funcIndex, &match))
+    if (!BinarySearch(ProjectIndex(funcDefExports), 0, funcDefExports.length(), funcDefIndex, &match))
         MOZ_CRASH("missing function export");
 
-    return funcExports[match];
+    return funcDefExports[match];
 }
 
 bool
-Metadata::getFuncName(JSContext* cx, const Bytes* maybeBytecode, uint32_t funcIndex,
-                      TwoByteName* name) const
+Metadata::getFuncDefName(JSContext* cx, const Bytes* maybeBytecode, uint32_t funcDefIndex,
+                         TwoByteName* name) const
 {
-    if (funcIndex < funcNames.length()) {
+    if (funcDefIndex < funcNames.length()) {
         MOZ_ASSERT(maybeBytecode, "NameInBytecode requires preserved bytecode");
 
-        const NameInBytecode& n = funcNames[funcIndex];
+        const NameInBytecode& n = funcNames[funcDefIndex];
         MOZ_ASSERT(n.offset + n.length < maybeBytecode->length());
 
         if (n.length == 0)
@@ -548,7 +551,7 @@ Metadata::getFuncName(JSContext* cx, const Bytes* maybeBytecode, uint32_t funcIn
 
     // For names that are out of range or invalid, synthesize a name.
 
-    UniqueChars chars(JS_smprintf("wasm-function[%u]", funcIndex));
+    UniqueChars chars(JS_smprintf("wasm-function[%u]", funcDefIndex));
     if (!chars) {
         ReportOutOfMemory(cx);
         return false;
@@ -635,17 +638,17 @@ Code::lookupMemoryAccess(void* pc) const
 #endif
 
 bool
-Code::getFuncName(JSContext* cx, uint32_t funcIndex, TwoByteName* name) const
+Code::getFuncDefName(JSContext* cx, uint32_t funcDefIndex, TwoByteName* name) const
 {
     const Bytes* maybeBytecode = maybeBytecode_ ? &maybeBytecode_.get()->bytes : nullptr;
-    return metadata_->getFuncName(cx, maybeBytecode, funcIndex, name);
+    return metadata_->getFuncDefName(cx, maybeBytecode, funcDefIndex, name);
 }
 
 JSAtom*
-Code::getFuncAtom(JSContext* cx, uint32_t funcIndex) const
+Code::getFuncDefAtom(JSContext* cx, uint32_t funcDefIndex) const
 {
     TwoByteName name(cx);
-    if (!getFuncName(cx, funcIndex, &name))
+    if (!getFuncDefName(cx, funcDefIndex, &name))
         return nullptr;
 
     return AtomizeChars(cx, name.begin(), name.length());
@@ -767,7 +770,7 @@ Code::ensureProfilingState(JSContext* cx, bool newProfilingEnabled)
                 continue;
 
             TwoByteName name(cx);
-            if (!getFuncName(cx, codeRange.funcIndex(), &name))
+            if (!getFuncDefName(cx, codeRange.funcDefIndex(), &name))
                 return false;
             if (!name.append('\0'))
                 return false;
@@ -781,11 +784,11 @@ Code::ensureProfilingState(JSContext* cx, bool newProfilingEnabled)
                 return false;
             }
 
-            if (codeRange.funcIndex() >= funcLabels_.length()) {
-                if (!funcLabels_.resize(codeRange.funcIndex() + 1))
+            if (codeRange.funcDefIndex() >= funcLabels_.length()) {
+                if (!funcLabels_.resize(codeRange.funcDefIndex() + 1))
                     return false;
             }
-            funcLabels_[codeRange.funcIndex()] = Move(label);
+            funcLabels_[codeRange.funcDefIndex()] = Move(label);
         }
     } else {
         funcLabels_.clear();

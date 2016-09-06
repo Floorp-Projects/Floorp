@@ -754,12 +754,12 @@ class AssemblerShared
     }
 
     void append(const wasm::CallSiteDesc& desc, CodeOffset retAddr, size_t framePushed,
-                uint32_t targetIndex = wasm::CallSiteAndTarget::NOT_INTERNAL)
+                uint32_t funcDefIndex = wasm::CallSiteAndTarget::NOT_DEFINITION)
     {
         // framePushed does not include sizeof(AsmJSFrame), so add it in here (see
         // CallSite::stackDepth).
         wasm::CallSite callsite(desc, retAddr.offset(), framePushed + sizeof(AsmJSFrame));
-        enoughMemory_ &= callsites_.append(wasm::CallSiteAndTarget(callsite, targetIndex));
+        enoughMemory_ &= callsites_.append(wasm::CallSiteAndTarget(callsite, funcDefIndex));
     }
     wasm::CallSiteAndTargetVector& callSites() { return callsites_; }
 

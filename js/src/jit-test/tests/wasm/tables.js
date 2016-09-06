@@ -128,7 +128,7 @@ var m = new Module(textToBinary(`(module
     (import $imp "a" "imp" (result i32))
     (func $call (param $i i32) (result i32)
         (i32.add
-            (call_import $imp)
+            (call $imp)
             (i32.add
                 (i32.load (i32.const 0))
                 (if (i32.eqz (get_local $i))

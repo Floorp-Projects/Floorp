@@ -254,10 +254,10 @@ assertErrorMessage(() => set.call(tbl1, 0), TypeError, /requires more than 1 arg
 assertErrorMessage(() => set.call(tbl1, 2, null), RangeError, /out-of-range index/);
 assertErrorMessage(() => set.call(tbl1, -1, null), RangeError, /out-of-range index/);
 assertErrorMessage(() => set.call(tbl1, Math.pow(2,33), null), RangeError, /out-of-range index/);
-assertErrorMessage(() => set.call(tbl1, 0, undefined), TypeError, /second argument must be null or an exported WebAssembly Function object/);
-assertErrorMessage(() => set.call(tbl1, 0, {}), TypeError, /second argument must be null or an exported WebAssembly Function object/);
-assertErrorMessage(() => set.call(tbl1, 0, function() {}), TypeError, /second argument must be null or an exported WebAssembly Function object/);
-assertErrorMessage(() => set.call(tbl1, 0, Math.sin), TypeError, /second argument must be null or an exported WebAssembly Function object/);
+assertErrorMessage(() => set.call(tbl1, 0, undefined), TypeError, /can only assign WebAssembly exported functions to Table/);
+assertErrorMessage(() => set.call(tbl1, 0, {}), TypeError, /can only assign WebAssembly exported functions to Table/);
+assertErrorMessage(() => set.call(tbl1, 0, function() {}), TypeError, /can only assign WebAssembly exported functions to Table/);
+assertErrorMessage(() => set.call(tbl1, 0, Math.sin), TypeError, /can only assign WebAssembly exported functions to Table/);
 assertErrorMessage(() => set.call(tbl1, {valueOf() { throw Error("hai") }}, null), Error, "hai");
 assertEq(set.call(tbl1, 0, null), undefined);
 assertEq(set.call(tbl1, 1, null), undefined);
