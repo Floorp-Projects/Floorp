@@ -29,15 +29,22 @@ class ImageContainerChild final : public PImageContainerChild
 public:
   explicit ImageContainerChild(ImageContainer* aImageContainer);
 
-  void ForgetImageContainer();
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(ImageContainerChild)
+
+  void RegisterWithIPDL();
+  void UnregisterFromIPDL();
+  void SendAsyncDelete();
 
   void NotifyComposite(const ImageCompositeNotification& aNotification);
+  void ForgetImageContainer();
 
-public:
-  // If mImageContainerReleased is false when we try to deallocate this actor,
-  // it means the ImageContainer is still holding a pointer to this.
-  // mImageContainerReleased must not be accessed off the ImageBridgeChild thread.
-  bool mImageContainerReleased;
+private:
+  ~ImageContainerChild()
+  {}
+
+private:
+  Mutex mLock;
+  ImageContainer* mImageContainer;
 
   // If mIPCOpen is false, it means the IPDL code tried to deallocate the actor
   // before the ImageContainer released it. When this happens we don't actually
@@ -46,10 +53,6 @@ public:
   // of it.
   // mIPCOpen must not be accessed off the ImageBridgeChild thread.
   bool mIPCOpen;
-
-private:
-  Mutex mLock;
-  ImageContainer* mImageContainer;
 };
 
 } // namespace layers

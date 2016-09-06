@@ -103,43 +103,6 @@ BufferRecycleBin::ClearRecycledBuffers()
   mRecycledBufferSize = 0;
 }
 
-// static
-void
-ImageContainer::DeallocActor(PImageContainerChild* aActor)
-{
-  MOZ_ASSERT(aActor);
-  MOZ_ASSERT(InImageBridgeChildThread());
-
-  auto actor = static_cast<ImageContainerChild*>(aActor);
-  if (actor->mImageContainerReleased) {
-    delete actor;
-  } else {
-    actor->mIPCOpen = false;
-  }
-}
-
-// static
-void
-ImageContainer::AsyncDestroyActor(PImageContainerChild* aActor)
-{
-  MOZ_ASSERT(aActor);
-  MOZ_ASSERT(InImageBridgeChildThread());
-
-  auto actor = static_cast<ImageContainerChild*>(aActor);
-
-  // Setting mImageContainerReleased to true means next time DeallocActor is
-  // called, the actor will be deleted.
-  actor->mImageContainerReleased = true;
-
-  if (actor->mIPCOpen && ImageBridgeChild::IsCreated() && !ImageBridgeChild::IsShutDown()) {
-    actor->SendAsyncDelete();
-  } else {
-    // The actor is already dead as far as IPDL is concerned, probably because
-    // of a channel error. We can deallocate it now.
-    DeallocActor(actor);
-  }
-}
-
 ImageContainer::ImageContainer(Mode flag)
 : mReentrantMonitor("ImageContainer.mReentrantMonitor"),
   mGenerationCounter(++sGenerationCounter),
@@ -147,10 +110,10 @@ ImageContainer::ImageContainer(Mode flag)
   mDroppedImageCount(0),
   mImageFactory(new ImageFactory()),
   mRecycleBin(new BufferRecycleBin()),
-  mCurrentProducerID(-1),
-  mIPDLChild(nullptr)
+  mCurrentProducerID(-1)
 {
-  if (ImageBridgeChild::IsCreated()) {
+  RefPtr<ImageBridgeChild> imageBridge = ImageBridgeChild::GetSingleton();
+  if (imageBridge) {
     // the refcount of this ImageClient is 1. we don't use a RefPtr here because the refcount
     // of this class must be done on the ImageBridge thread.
     switch (flag) {
@@ -158,7 +121,7 @@ ImageContainer::ImageContainer(Mode flag)
         break;
       case ASYNCHRONOUS:
         mIPDLChild = new ImageContainerChild(this);
-        mImageClient = ImageBridgeChild::GetSingleton()->CreateImageClient(CompositableType::IMAGE, this);
+        mImageClient = imageBridge->CreateImageClient(CompositableType::IMAGE, this, mIPDLChild);
         MOZ_ASSERT(mImageClient);
         break;
       default:
@@ -178,8 +141,7 @@ ImageContainer::ImageContainer(uint64_t aAsyncContainerID)
   mImageFactory(nullptr),
   mRecycleBin(nullptr),
   mAsyncContainerID(aAsyncContainerID),
-  mCurrentProducerID(-1),
-  mIPDLChild(nullptr)
+  mCurrentProducerID(-1)
 {
   MOZ_ASSERT(mAsyncContainerID != sInvalidAsyncContainerId);
 }

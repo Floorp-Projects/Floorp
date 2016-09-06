@@ -14,8 +14,7 @@ namespace layers {
 ImageContainerChild::ImageContainerChild(ImageContainer* aImageContainer)
   : mLock("ImageContainerChild")
   , mImageContainer(aImageContainer)
-  , mImageContainerReleased(false)
-  , mIPCOpen(true)
+  , mIPCOpen(false)
 {
 }
 
@@ -34,6 +33,36 @@ ImageContainerChild::NotifyComposite(const ImageCompositeNotification& aNotifica
   MutexAutoLock lock(mLock);
   if (mImageContainer) {
     mImageContainer->NotifyCompositeInternal(aNotification);
+  }
+}
+
+void
+ImageContainerChild::RegisterWithIPDL()
+{
+  MOZ_ASSERT(!mIPCOpen);
+  MOZ_ASSERT(InImageBridgeChildThread());
+
+  AddRef();
+  mIPCOpen = true;
+}
+
+void
+ImageContainerChild::UnregisterFromIPDL()
+{
+  MOZ_ASSERT(mIPCOpen);
+  MOZ_ASSERT(InImageBridgeChildThread());
+
+  mIPCOpen = false;
+  Release();
+}
+
+void
+ImageContainerChild::SendAsyncDelete()
+{
+  MOZ_ASSERT(InImageBridgeChildThread());
+
+  if (mIPCOpen) {
+    PImageContainerChild::SendAsyncDelete();
   }
 }
 
