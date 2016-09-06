@@ -16,16 +16,10 @@ import warnings
 
 
 from marionette_driver.errors import (
-        MarionetteException, TimeoutException,
-        JavascriptException, NoSuchElementException, NoSuchWindowException,
-        StaleElementException, ScriptTimeoutException, ElementNotVisibleException,
-        NoSuchFrameException, InvalidElementStateException, NoAlertPresentException,
-        InvalidCookieDomainException, UnableToSetCookieException, InvalidSelectorException,
-        MoveTargetOutOfBoundsException
-        )
-from marionette_driver.marionette import Marionette
-from marionette_driver.wait import Wait
-from marionette_driver.expected import element_present, element_not_present
+    MarionetteException,
+    ScriptTimeoutException,
+    TimeoutException,
+)
 from mozlog import get_default_logger
 
 
@@ -36,7 +30,9 @@ class SkipTest(Exception):
     Usually you can use TestResult.skip() or one of the skipping decorators
     instead of raising this directly.
     """
+
     pass
+
 
 class _ExpectedFailure(Exception):
     """
@@ -49,11 +45,12 @@ class _ExpectedFailure(Exception):
         super(_ExpectedFailure, self).__init__()
         self.exc_info = exc_info
 
+
 class _UnexpectedSuccess(Exception):
-    """
-    The test was supposed to fail, but it didn't!
-    """
+    """The test was supposed to fail, but it didn't."""
+
     pass
+
 
 def skip(reason):
     """Unconditionally skip a test."""
@@ -69,6 +66,7 @@ def skip(reason):
         return test_item
     return decorator
 
+
 def expectedFailure(func):
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
@@ -79,12 +77,14 @@ def expectedFailure(func):
         raise _UnexpectedSuccess
     return wrapper
 
+
 def skip_if_chrome(target):
     def wrapper(self, *args, **kwargs):
         if self.marionette._send_message("getContext", key="value") == "chrome":
             raise SkipTest("skipping test in chrome context")
         return target(self, *args, **kwargs)
     return wrapper
+
 
 def skip_if_desktop(target):
     def wrapper(self, *args, **kwargs):
@@ -93,12 +93,14 @@ def skip_if_desktop(target):
         return target(self, *args, **kwargs)
     return wrapper
 
+
 def skip_if_mobile(target):
     def wrapper(self, *args, **kwargs):
         if self.marionette.session_capabilities.get('browserName') == 'fennec':
             raise SkipTest('skipping due to fennec')
         return target(self, *args, **kwargs)
     return wrapper
+
 
 def skip_if_e10s(target):
     def wrapper(self, *args, **kwargs):
@@ -115,9 +117,9 @@ def skip_if_e10s(target):
         return target(self, *args, **kwargs)
     return wrapper
 
+
 def skip_unless_protocol(predicate):
-    """Given a predicate passed the current protocol level, skip the
-    test if the predicate does not match."""
+    """Skip the test if the predicate does not match the current protocol level."""
     def decorator(test_item):
         @functools.wraps(test_item)
         def skip_wrapper(self):
@@ -127,6 +129,7 @@ def skip_unless_protocol(predicate):
             return test_item(self)
         return skip_wrapper
     return decorator
+
 
 def skip_unless_browser_pref(pref, predicate=bool):
     """
@@ -159,8 +162,9 @@ def skip_unless_browser_pref(pref, predicate=bool):
         return wrapped
     return wrapper
 
+
 def parameterized(func_suffix, *args, **kwargs):
-    """
+    r"""
     A decorator that can generate methods given a base method and some data.
 
     **func_suffix** is used as a suffix for the new created method and must be
@@ -195,9 +199,11 @@ def parameterized(func_suffix, *args, **kwargs):
         return func
     return wrapped
 
+
 def with_parameters(parameters):
     """
     A decorator that can generate methods given a base method and some data.
+
     Acts like :func:`parameterized`, but define all methods in one call.
 
     Example::
@@ -223,20 +229,26 @@ def with_parameters(parameters):
         return func
     return wrapped
 
+
 def wraps_parameterized(func, func_suffix, args, kwargs):
-    """Internal: for MetaParameterized"""
+    """Internal: for MetaParameterized."""
     def wrapper(self):
         return func(self, *args, **kwargs)
     wrapper.__name__ = func.__name__ + '_' + str(func_suffix)
     wrapper.__doc__ = '[%s] %s' % (func_suffix, func.__doc__)
     return wrapper
 
+
 class MetaParameterized(type):
     """
-    A metaclass that allow a class to use decorators like :func:`parameterized`
+    A metaclass that allow a class to use decorators.
+
+    It can be used like :func:`parameterized`
     or :func:`with_parameters` to generate new methods.
     """
+
     RE_ESCAPE_BAD_CHARS = re.compile(r'[\.\(\) -/]')
+
     def __new__(cls, name, bases, attrs):
         for k, v in attrs.items():
             if callable(v) and hasattr(v, 'metaparameters'):
@@ -245,17 +257,19 @@ class MetaParameterized(type):
                     wrapper = wraps_parameterized(v, func_suffix, args, kwargs)
                     if wrapper.__name__ in attrs:
                         raise KeyError("%s is already a defined method on %s" %
-                                        (wrapper.__name__, name))
+                                       (wrapper.__name__, name))
                     attrs[wrapper.__name__] = wrapper
                 del attrs[k]
 
         return type.__new__(cls, name, bases, attrs)
+
 
 class JSTest:
     head_js_re = re.compile(r"MARIONETTE_HEAD_JS(\s*)=(\s*)['|\"](.*?)['|\"];")
     context_re = re.compile(r"MARIONETTE_CONTEXT(\s*)=(\s*)['|\"](.*?)['|\"];")
     timeout_re = re.compile(r"MARIONETTE_TIMEOUT(\s*)=(\s*)(\d+);")
     inactivity_timeout_re = re.compile(r"MARIONETTE_INACTIVITY_TIMEOUT(\s*)=(\s*)(\d+);")
+
 
 class CommonTestCase(unittest.TestCase):
 
@@ -310,11 +324,11 @@ class CommonTestCase(unittest.TestCase):
 
         testMethod = getattr(self, self._testMethodName)
         if (getattr(self.__class__, "__unittest_skip__", False) or
-            getattr(testMethod, "__unittest_skip__", False)):
+                getattr(testMethod, "__unittest_skip__", False)):
             # If the class or method was skipped.
             try:
-                skip_why = (getattr(self.__class__, '__unittest_skip_why__', '')
-                            or getattr(testMethod, '__unittest_skip_why__', ''))
+                skip_why = (getattr(self.__class__, '__unittest_skip_why__', '') or
+                            getattr(testMethod, '__unittest_skip_why__', ''))
                 self._addSkip(result, skip_why)
             finally:
                 result.stopTest(self)
@@ -361,7 +375,8 @@ class CommonTestCase(unittest.TestCase):
                     if addUnexpectedSuccess is not None:
                         addUnexpectedSuccess(self)
                     else:
-                        warnings.warn("TestResult has no addUnexpectedSuccess method, reporting as failures",
+                        warnings.warn("TestResult has no addUnexpectedSuccess method, "
+                                      "reporting as failures",
                                       RuntimeWarning)
                         result.addFailure(self, sys.exc_info())
                 except SkipTest as e:
@@ -402,10 +417,9 @@ class CommonTestCase(unittest.TestCase):
 
     @classmethod
     def match(cls, filename):
-        """
-        Determines if the specified filename should be handled by this
-        test class; this is done by looking for a match for the filename
-        using cls.match_re.
+        """Determine if the specified filename should be handled by this test class.
+
+        This is done by looking for a match for the filename using cls.match_re.
         """
         if not cls.match_re:
             return False
@@ -414,9 +428,7 @@ class CommonTestCase(unittest.TestCase):
 
     @classmethod
     def add_tests_to_suite(cls, mod_name, filepath, suite, testloader, marionette, testvars):
-        """
-        Adds all the tests in the specified file to the specified suite.
-        """
+        """Add all the tests in the specified file to the specified suite."""
         raise NotImplementedError
 
     @property
@@ -480,30 +492,30 @@ class CommonTestCase(unittest.TestCase):
     def setup_SpecialPowers_observer(self):
         self.marionette.set_context("chrome")
         self.marionette.execute_script("""
-            let SECURITY_PREF = "security.turn_off_all_security_so_that_viruses_can_take_over_this_computer";
-            Components.utils.import("resource://gre/modules/Preferences.jsm");
-            Preferences.set(SECURITY_PREF, true);
+let SECURITY_PREF = "security.turn_off_all_security_so_that_viruses_can_take_over_this_computer";
+Components.utils.import("resource://gre/modules/Preferences.jsm");
+Preferences.set(SECURITY_PREF, true);
 
-            if (!testUtils.hasOwnProperty("specialPowersObserver")) {
-              let loader = Components.classes["@mozilla.org/moz/jssubscript-loader;1"]
-                .getService(Components.interfaces.mozIJSSubScriptLoader);
-              loader.loadSubScript("chrome://specialpowers/content/SpecialPowersObserver.jsm",
-                testUtils);
-              testUtils.specialPowersObserver = new testUtils.SpecialPowersObserver();
-              testUtils.specialPowersObserver.init();
-            }
-            """)
+if (!testUtils.hasOwnProperty("specialPowersObserver")) {
+  let loader = Components.classes["@mozilla.org/moz/jssubscript-loader;1"]
+    .getService(Components.interfaces.mozIJSSubScriptLoader);
+  loader.loadSubScript("chrome://specialpowers/content/SpecialPowersObserver.jsm",
+    testUtils);
+  testUtils.specialPowersObserver = new testUtils.SpecialPowersObserver();
+  testUtils.specialPowersObserver.init();
+}
+""")
 
     def run_js_test(self, filename, marionette=None):
-        '''
-        Run a JavaScript test file and collect its set of assertions
-        into the current test's results.
+        """Run a JavaScript test file.
+
+        It collects its set of assertions into the current test's results.
 
         :param filename: The path to the JavaScript test file to execute.
                          May be relative to the current script.
         :param marionette: The Marionette object in which to execute the test.
                            Defaults to self.marionette.
-        '''
+        """
         marionette = marionette or self.marionette
         if not os.path.isabs(filename):
             # Find the caller's filename and make the path relative to that.
@@ -518,11 +530,11 @@ class CommonTestCase(unittest.TestCase):
         js = f.read()
         args = []
 
-        head_js = JSTest.head_js_re.search(js);
+        head_js = JSTest.head_js_re.search(js)
         if head_js:
             head_js = head_js.group(3)
             head = open(os.path.join(os.path.dirname(filename), head_js), 'r')
-            js = head.read() + js;
+            js = head.read() + js
 
         context = JSTest.context_re.search(js)
         if context:
@@ -568,7 +580,7 @@ class CommonTestCase(unittest.TestCase):
                 filename=os.path.basename(filename)
             )
 
-            self.assertTrue(not 'timeout' in filename,
+            self.assertTrue('timeout' not in filename,
                             'expected timeout not triggered')
 
             if 'fail' in filename:
@@ -577,17 +589,20 @@ class CommonTestCase(unittest.TestCase):
             else:
                 for failure in results['failures']:
                     diag = "" if failure.get('diag') is None else failure['diag']
-                    name = "got false, expected true" if failure.get('name') is None else failure['name']
+                    name = ("got false, expected true" if failure.get('name') is None else
+                            failure['name'])
                     self.logger.test_status(self.test_name, name, 'FAIL',
                                             message=diag)
                 for failure in results['expectedFailures']:
                     diag = "" if failure.get('diag') is None else failure['diag']
-                    name = "got false, expected false" if failure.get('name') is None else failure['name']
+                    name = ("got false, expected false" if failure.get('name') is None else
+                            failure['name'])
                     self.logger.test_status(self.test_name, name, 'FAIL',
                                             expected='FAIL', message=diag)
                 for failure in results['unexpectedSuccesses']:
                     diag = "" if failure.get('diag') is None else failure['diag']
-                    name = "got true, expected false" if failure.get('name') is None else failure['name']
+                    name = ("got true, expected false" if failure.get('name') is None else
+                            failure['name'])
                     self.logger.test_status(self.test_name, name, 'PASS',
                                             expected='FAIL', message=diag)
                 self.assertEqual(0, len(results['failures']),
@@ -597,10 +612,10 @@ class CommonTestCase(unittest.TestCase):
                 if len(results['expectedFailures']) > 0:
                     raise _ExpectedFailure((AssertionError, AssertionError(''), None))
 
-            self.assertTrue(results['passed']
-                            + len(results['failures'])
-                            + len(results['expectedFailures'])
-                            + len(results['unexpectedSuccesses']) > 0,
+            self.assertTrue(results['passed'] +
+                            len(results['failures']) +
+                            len(results['expectedFailures']) +
+                            len(results['unexpectedSuccesses']) > 0,
                             'no tests run')
 
         except ScriptTimeoutException:
@@ -611,7 +626,6 @@ class CommonTestCase(unittest.TestCase):
                 self.loglines = marionette.get_logs()
                 raise
         self.marionette.test_name = original_test_name
-
 
 
 class MarionetteTestCase(CommonTestCase):
@@ -629,7 +643,8 @@ class MarionetteTestCase(CommonTestCase):
         CommonTestCase.__init__(self, methodName, **kwargs)
 
     @classmethod
-    def add_tests_to_suite(cls, mod_name, filepath, suite, testloader, marionette, testvars, **kwargs):
+    def add_tests_to_suite(cls, mod_name, filepath, suite, testloader, marionette,
+                           testvars, **kwargs):
         # since we use imp.load_source to load test modules, if a module
         # is loaded with the same name as another one the module would just be
         # reloaded.
@@ -649,7 +664,7 @@ class MarionetteTestCase(CommonTestCase):
         for name in dir(test_mod):
             obj = getattr(test_mod, name)
             if (isinstance(obj, (type, types.ClassType)) and
-                issubclass(obj, unittest.TestCase)):
+                    issubclass(obj, unittest.TestCase)):
                 testnames = testloader.getTestCaseNames(obj)
                 for testname in testnames:
                     suite.addTest(obj(weakref.ref(marionette),
@@ -696,6 +711,7 @@ class MarionetteTestCase(CommonTestCase):
         else:
             raise TimeoutException("wait_for_condition timed out")
 
+
 class MarionetteJSTestCase(CommonTestCase):
 
     match_re = re.compile(r"test_(.*)\.js$")
@@ -709,7 +725,8 @@ class MarionetteJSTestCase(CommonTestCase):
         CommonTestCase.__init__(self, methodName)
 
     @classmethod
-    def add_tests_to_suite(cls, mod_name, filepath, suite, testloader, marionette, testvars, **kwargs):
+    def add_tests_to_suite(cls, mod_name, filepath, suite, testloader, marionette,
+                           testvars, **kwargs):
         suite.addTest(cls(weakref.ref(marionette), jsFile=filepath, **kwargs))
 
     def runTest(self):
