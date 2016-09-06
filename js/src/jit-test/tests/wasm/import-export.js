@@ -352,6 +352,60 @@ assertEq(i8[100], 0xc);
 assertEq(i8[101], 0xd);
 assertEq(i8[102], 0x0);
 
+// Data segments with imported offsets
+
+var m = new Module(textToBinary(`
+    (module
+        (import "glob" "a" (global i32 immutable))
+        (memory 1)
+        (data (get_global 0) "\\0a\\0b"))
+`));
+assertEq(new Instance(m, {glob:{a:0}}) instanceof Instance, true);
+assertEq(new Instance(m, {glob:{a:(64*1024 - 2)}}) instanceof Instance, true);
+assertErrorMessage(() => new Instance(m, {glob:{a:(64*1024 - 1)}}), RangeError, /data segment does not fit/);
+assertErrorMessage(() => new Instance(m, {glob:{a:64*1024}}), RangeError, /data segment does not fit/);
+
+// Errors during segment initialization do not have observable effects
+// and are checked against the actual memory/table length, not the declared
+// initial length.
+
+var m = new Module(textToBinary(`
+    (module
+        (import "a" "mem" (memory 1))
+        (import "a" "tbl" (table 1))
+        (import $memOff "a" "memOff" (global i32 immutable))
+        (import $tblOff "a" "tblOff" (global i32 immutable))
+        (func $f)
+        (func $g)
+        (data (i32.const 0) "\\01")
+        (elem (i32.const 0) $f)
+        (data (get_global $memOff) "\\02")
+        (elem (get_global $tblOff) $g)
+        (export "f" $f)
+        (export "g" $g))
+`));
+
+var npages = 2;
+var mem = new Memory({initial:npages});
+var mem8 = new Uint8Array(mem.buffer);
+var tbl = new Table({initial:2, element:"anyfunc"});
+
+assertErrorMessage(() => new Instance(m, {a:{mem, tbl, memOff:1, tblOff:2}}), RangeError, /elem segment does not fit/);
+assertEq(mem8[0], 0);
+assertEq(mem8[1], 0);
+assertEq(tbl.get(0), null);
+
+assertErrorMessage(() => new Instance(m, {a:{mem, tbl, memOff:npages*64*1024, tblOff:1}}), RangeError, /data segment does not fit/);
+assertEq(mem8[0], 0);
+assertEq(tbl.get(0), null);
+assertEq(tbl.get(1), null);
+
+var i = new Instance(m, {a:{mem, tbl, memOff:npages*64*1024-1, tblOff:1}});
+assertEq(mem8[0], 1);
+assertEq(mem8[npages*64*1024-1], 2);
+assertEq(tbl.get(0), i.exports.f);
+assertEq(tbl.get(1), i.exports.g);
+
 // Elem segments on imports
 
 var m = new Module(textToBinary(`

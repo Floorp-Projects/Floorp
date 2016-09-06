@@ -149,7 +149,7 @@ typedef Vector<Export, 0, SystemAllocPolicy> ExportVector;
 
 struct DataSegment
 {
-    uint32_t memoryOffset;
+    InitExpr offset;
     uint32_t bytecodeOffset;
     uint32_t length;
 };
@@ -209,10 +209,13 @@ class Module : public RefCounted<Module>
 
     bool instantiateFunctions(JSContext* cx, Handle<FunctionVector> funcImports) const;
     bool instantiateMemory(JSContext* cx, MutableHandleWasmMemoryObject memory) const;
-    bool instantiateTable(JSContext* cx, MutableHandleWasmTableObject table,
+    bool instantiateTable(JSContext* cx,
+                          MutableHandleWasmTableObject table,
                           SharedTableVector* tables) const;
-    bool initElems(JSContext* cx, HandleWasmInstanceObject instanceObj,
-                   const ValVector& globalImports, HandleWasmTableObject tableObj) const;
+    bool initSegments(JSContext* cx,
+                      HandleWasmInstanceObject instance,
+                      HandleWasmMemoryObject memory,
+                      const ValVector& globalImports) const;
 
   public:
     Module(Bytes&& code,

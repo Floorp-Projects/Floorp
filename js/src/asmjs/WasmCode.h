@@ -112,6 +112,7 @@ struct ShareableBytes : ShareableBase<ShareableBytes>
     size_t sizeOfExcludingThis(MallocSizeOf m) const { return bytes.sizeOfExcludingThis(m); }
     const uint8_t* begin() const { return bytes.begin(); }
     const uint8_t* end() const { return bytes.end(); }
+    size_t length() const { return bytes.length(); }
     bool append(const uint8_t *p, uint32_t ct) { return bytes.append(p, ct); }
 };
 
