@@ -15,8 +15,8 @@
 #include "mozilla/ipc/CrossProcessMutex.h"  // for CrossProcessMutex, etc
 #include "mozilla/layers/CompositorTypes.h"
 #include "mozilla/layers/ImageBridgeChild.h"  // for ImageBridgeChild
-#include "mozilla/layers/PImageContainerChild.h"
 #include "mozilla/layers/ImageClient.h"  // for ImageClient
+#include "mozilla/layers/ImageContainerChild.h"
 #include "mozilla/layers/LayersMessages.h"
 #include "mozilla/layers/SharedPlanarYCbCrImage.h"
 #include "mozilla/layers/SharedRGBImage.h"
@@ -102,47 +102,6 @@ BufferRecycleBin::ClearRecycledBuffers()
   }
   mRecycledBufferSize = 0;
 }
-
-/**
- * The child side of PImageContainer. It's best to avoid ImageContainer filling
- * this role since IPDL objects should be associated with a single thread and
- * ImageContainer definitely isn't. This object belongs to (and is always
- * destroyed on) the ImageBridge thread, except when we need to destroy it
- * during shutdown.
- * An ImageContainer owns one of these; we have a weak reference to our
- * ImageContainer.
- */
-class ImageContainerChild : public PImageContainerChild {
-public:
-  explicit ImageContainerChild(ImageContainer* aImageContainer)
-    : mLock("ImageContainerChild")
-    , mImageContainer(aImageContainer)
-    , mImageContainerReleased(false)
-    , mIPCOpen(true)
-  {}
-
-  void ForgetImageContainer()
-  {
-    MutexAutoLock lock(mLock);
-    mImageContainer = nullptr;
-  }
-
-  // This protects mImageContainer. This is always taken before the
-  // mImageContainer's monitor (when both need to be held).
-  Mutex mLock;
-  ImageContainer* mImageContainer;
-  // If mImageContainerReleased is false when we try to deallocate this actor,
-  // it means the ImageContainer is still holding a pointer to this.
-  // mImageContainerReleased must not be accessed off the ImageBridgeChild thread.
-  bool mImageContainerReleased;
-  // If mIPCOpen is false, it means the IPDL code tried to deallocate the actor
-  // before the ImageContainer released it. When this happens we don't actually
-  // delete the actor right away because the ImageContainer has a reference to
-  // it. In this case the actor will be deleted when the ImageContainer lets go
-  // of it.
-  // mIPCOpen must not be accessed off the ImageBridgeChild thread.
-  bool mIPCOpen;
-};
 
 // static
 void
@@ -858,19 +817,6 @@ PImageContainerChild*
 ImageContainer::GetPImageContainerChild()
 {
   return mIPDLChild;
-}
-
-/* static */ void
-ImageContainer::NotifyComposite(const ImageCompositeNotification& aNotification)
-{
-  ImageContainerChild* child =
-      static_cast<ImageContainerChild*>(aNotification.imageContainerChild());
-  if (child) {
-    MutexAutoLock lock(child->mLock);
-    if (child->mImageContainer) {
-      child->mImageContainer->NotifyCompositeInternal(aNotification);
-    }
-  }
 }
 
 ImageContainer::ProducerID

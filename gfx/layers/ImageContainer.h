@@ -354,8 +354,12 @@ protected:
  * updates the shared state to point to the new image and the old image
  * is immediately released (not true in Normal or Asynchronous modes).
  */
-class ImageContainer final : public SupportsWeakPtr<ImageContainer> {
+class ImageContainer final : public SupportsWeakPtr<ImageContainer>
+{
+  friend class ImageContainerChild;
+
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(ImageContainer)
+
 public:
   MOZ_DECLARE_WEAKREFERENCE_TYPENAME(ImageContainer)
 
@@ -571,7 +575,6 @@ public:
   }
 
   PImageContainerChild* GetPImageContainerChild();
-  static void NotifyComposite(const ImageCompositeNotification& aNotification);
 
   /**
    * Main thread only.
