@@ -73,8 +73,8 @@ interface KeyframeEffect : KeyframeEffectReadOnly {
   // inherit attribute IterationCompositeOperation iterationComposite;
   // Bug 1216844 - implement additive animation
   // inherit attribute CompositeOperation          composite;
-  // Bug 1244590 - implement spacing modes
-  // inherit attribute DOMString                   spacing;
+  [SetterThrows]
+  inherit attribute DOMString                   spacing;
   [Throws]
   void setKeyframes (object? keyframes);
 };

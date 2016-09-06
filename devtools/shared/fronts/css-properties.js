@@ -192,10 +192,7 @@ function getClientCssProperties() {
  * @returns {string} The browser version.
  */
 function getClientBrowserVersion(toolbox) {
-  if (!toolbox._host) {
-    return "0";
-  }
-  const regexResult = toolbox._host.frame.contentWindow.navigator
+  const regexResult = toolbox.win.navigator
                              .userAgent.match(/Firefox\/(\d+)\.\d/);
   return Array.isArray(regexResult) ? regexResult[1] : "0";
 }

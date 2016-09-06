@@ -31,7 +31,7 @@ function CssDocsTooltip(toolbox) {
   this.widget.on("visitlink", this._onVisitLink);
 
   // Initialize keyboard shortcuts
-  this.shortcuts = new KeyShortcuts({ window: toolbox.doc.defaultView });
+  this.shortcuts = new KeyShortcuts({ window: toolbox.win });
   this._onShortcut = this._onShortcut.bind(this);
 
   this.shortcuts.on("Escape", this._onShortcut);

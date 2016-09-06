@@ -40,7 +40,7 @@ function toolRegistered(event, toolId)
   ok(gDevTools.getToolDefinitionMap().has(toolId), "tool added to map");
 
   // test that it appeared in the UI
-  let doc = toolbox.frame.contentDocument;
+  let doc = toolbox.doc;
   let tab = doc.getElementById("toolbox-tab-" + toolId);
   ok(tab, "new tool's tab exists in toolbox UI");
 
@@ -82,7 +82,7 @@ function toolUnregistered(event, toolDefinition)
   ok(!gDevTools.getToolDefinitionMap().has(toolId), "tool removed from map");
 
   // test that it disappeared from the UI
-  let doc = toolbox.frame.contentDocument;
+  let doc = toolbox.doc;
   let tab = doc.getElementById("toolbox-tab-" + toolId);
   ok(!tab, "tool's tab was removed from the toolbox UI");
 
