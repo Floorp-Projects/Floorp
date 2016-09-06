@@ -31,19 +31,15 @@ function test() {
 }
 
 function init() {
-  let tab = gBrowser.selectedTab = gBrowser.addTab();
-  let target = TargetFactory.forTab(gBrowser.selectedTab);
-  let linkedBrowser = tab.linkedBrowser;
+  addTab(TEST_URI).then(tab => {
+    let target = TargetFactory.forTab(tab);
+    let linkedBrowser = tab.linkedBrowser;
 
-  linkedBrowser.messageManager.loadFrameScript(COMMON_FRAME_SCRIPT_URL, false);
-  linkedBrowser.messageManager.loadFrameScript(FRAME_SCRIPT_URL, false);
+    linkedBrowser.messageManager.loadFrameScript(COMMON_FRAME_SCRIPT_URL, false);
+    linkedBrowser.messageManager.loadFrameScript(FRAME_SCRIPT_URL, false);
 
-  gBrowser.selectedBrowser.addEventListener("load", function onLoad(evt) {
-    gBrowser.selectedBrowser.removeEventListener(evt.type, onLoad, true);
     gDevTools.showToolbox(target).then(testSelectTool);
-  }, true);
-
-  content.location = TEST_URI;
+  });
 }
 
 function testSelectTool(aToolbox) {

@@ -8,15 +8,10 @@
 const TEST_URI = URL_ROOT + "browser_toolbox_options_disable_js.html";
 
 function test() {
-  gBrowser.selectedTab = gBrowser.addTab();
-  let target = TargetFactory.forTab(gBrowser.selectedTab);
-
-  gBrowser.selectedBrowser.addEventListener("load", function onLoad(evt) {
-    gBrowser.selectedBrowser.removeEventListener(evt.type, onLoad, true);
+  addTab(TEST_URI).then(tab => {
+    let target = TargetFactory.forTab(tab);
     gDevTools.showToolbox(target).then(testSelectTool);
-  }, true);
-
-  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, TEST_URI);
+  });
 }
 
 function testSelectTool(toolbox) {

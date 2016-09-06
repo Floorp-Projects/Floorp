@@ -29,11 +29,11 @@ var addTab = function (url, win) {
   let targetBrowser = targetWindow.gBrowser;
 
   let tab = targetBrowser.selectedTab = targetBrowser.addTab(url);
-  targetBrowser.selectedBrowser.addEventListener("load", function onload() {
-    targetBrowser.selectedBrowser.removeEventListener("load", onload, true);
-    info("URL '" + url + "' loading complete");
-    def.resolve(tab);
-  }, true);
+  BrowserTestUtils.browserLoaded(targetBrowser.selectedBrowser)
+    .then(function () {
+      info("URL '" + url + "' loading complete");
+      def.resolve(tab);
+    });
 
   return def.promise;
 };

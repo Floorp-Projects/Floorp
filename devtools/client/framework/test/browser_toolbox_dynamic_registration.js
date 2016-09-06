@@ -3,19 +3,16 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+const TEST_URL = "data:text/html,test for dynamically registering and unregistering tools";
+
 var toolbox;
 
 function test()
 {
-  gBrowser.selectedTab = gBrowser.addTab();
-  let target = TargetFactory.forTab(gBrowser.selectedTab);
-
-  gBrowser.selectedBrowser.addEventListener("load", function onLoad(evt) {
-    gBrowser.selectedBrowser.removeEventListener(evt.type, onLoad, true);
+  addTab(TEST_URL).then(tab => {
+    let target = TargetFactory.forTab(tab);
     gDevTools.showToolbox(target).then(testRegister);
-  }, true);
-
-  content.location = "data:text/html,test for dynamically registering and unregistering tools";
+  });
 }
 
 function testRegister(aToolbox)
