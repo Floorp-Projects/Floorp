@@ -124,11 +124,11 @@ class WannabeChildAPIManager extends ChildAPIManager {
 
 // An extension page is an execution context for any extension content
 // that runs in the chrome process. It's used for background pages
-// (type="background"), popups (type="popup"), and any extension
-// content loaded into browser tabs (type="tab").
+// (viewType="background"), popups (viewType="popup"), and any extension
+// content loaded into browser tabs (viewType="tab").
 //
 // |params| is an object with the following properties:
-// |type| is one of "background", "popup", or "tab".
+// |viewType| is one of "background", "popup", or "tab".
 // |contentWindow| is the DOM window the content runs in.
 // |uri| is the URI of the content (optional).
 // |docShell| is the docshell the content runs in (optional).
@@ -141,8 +141,8 @@ this.ExtensionContext = class extends BaseContext {
       throw new Error("ExtensionContext cannot be created in child processes");
     }
 
-    let {type, uri, contentWindow} = params;
-    this.type = type;
+    let {viewType, uri, contentWindow} = params;
+    this.viewType = viewType;
     this.uri = uri || extension.baseURI;
 
     this.setContentWindow(contentWindow);
@@ -167,7 +167,7 @@ this.ExtensionContext = class extends BaseContext {
     apiManager.generateAPIs(this, localApis);
     this.childManager = new WannabeChildAPIManager(this, this.messageManager, localApis, {
       envType: "addon_parent",
-      viewType: type,
+      viewType,
       url: uri.spec,
     });
     let chromeApiWrapper = Object.create(this.childManager);
