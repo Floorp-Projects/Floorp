@@ -45,11 +45,11 @@ class SandboxBPFTestRunner : public SandboxTestRunner {
   // This constructor takes ownership of the |bpf_tester_delegate| object.
   // (It doesn't take a scoped_ptr since they make polymorphism verbose).
   explicit SandboxBPFTestRunner(BPFTesterDelegate* bpf_tester_delegate);
-  virtual ~SandboxBPFTestRunner();
+  ~SandboxBPFTestRunner() override;
 
-  virtual void Run() override;
+  void Run() override;
 
-  virtual bool ShouldCheckForLeaks() const override;
+  bool ShouldCheckForLeaks() const override;
 
  private:
   scoped_ptr<BPFTesterDelegate> bpf_tester_delegate_;

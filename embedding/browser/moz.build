@@ -48,6 +48,7 @@ UNIFIED_SOURCES += [
 
 FINAL_LIBRARY = 'xul'
 LOCAL_INCLUDES += [
+    '/docshell/base',
     '/dom/base',
     '/dom/svg',
     '/layout/style',

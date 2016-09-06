@@ -3,6 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "libyuv.h"
 #include "MacIOSurfaceHelpers.h"
 #include "mozilla/gfx/MacIOSurface.h"
 #include "YCbCrUtils.h"
@@ -84,58 +85,13 @@ CreateSourceSurfaceFromLockedMacIOSurface(MacIOSurface* aSurface)
 
     ConvertYCbCrToRGB(data, SurfaceFormat::B8G8R8X8, IntSize::Truncate(ioWidth, ioHeight), mappedSurface.mData, mappedSurface.mStride);
   } else if (ioFormat == SurfaceFormat::YUV422) {
-    /* Convert to YV16 */
-    size_t cbCrWidth = (ioWidth+1)>>1;
-    size_t cbCrHeight = ioHeight;
-    // Ensure our stride is a multiple of 32 to allow for memory aligned rows.
-    size_t cbCrStride = ALIGNED_32(cbCrWidth);
-    size_t strideDelta = cbCrStride - cbCrWidth;
-    MOZ_ASSERT(strideDelta <= 31);
-
-    auto yPlane = MakeUnique<uint8_t[]>(cbCrStride * 2 * ioHeight + 31);
-    auto cbPlane = MakeUnique<uint8_t[]>(cbCrStride * cbCrHeight + 31);
-    auto crPlane = MakeUnique<uint8_t[]>(cbCrStride * cbCrHeight + 31);
-
-    uint8_t* src = (uint8_t*)aSurface->GetBaseAddress();
-    uint8_t* yDest = ALIGNEDPTR_32(yPlane.get());
-    uint8_t* cbDest = ALIGNEDPTR_32(cbPlane.get());
-    uint8_t* crDest = ALIGNEDPTR_32(crPlane.get());
-
-    for (size_t i = 0; i < ioHeight; i++) {
-      uint8_t* rowSrc = src + bytesPerRow * i;
-      for (size_t j = 0; j < cbCrWidth; j++) {
-        *cbDest = *rowSrc;
-        cbDest++;
-        rowSrc++;
-        *yDest = *rowSrc;
-        yDest++;
-        rowSrc++;
-        *crDest = *rowSrc;
-        crDest++;
-        rowSrc++;
-        *yDest = *rowSrc;
-        yDest++;
-        rowSrc++;
-      }
-      if (strideDelta) {
-        cbDest += strideDelta;
-        crDest += strideDelta;
-        yDest  += strideDelta << 1;
-      }
-    }
-
-    /* Convert to RGB */
-    PlanarYCbCrData data;
-    data.mYChannel = ALIGNEDPTR_32(yPlane.get());
-    data.mYStride = cbCrStride * 2;
-    data.mYSize = IntSize::Truncate(ioWidth, ioHeight);
-    data.mCbChannel = ALIGNEDPTR_32(cbPlane.get());
-    data.mCrChannel = ALIGNEDPTR_32(crPlane.get());
-    data.mCbCrStride = cbCrStride;
-    data.mCbCrSize = IntSize::Truncate(cbCrWidth, cbCrHeight);
-    data.mPicSize = data.mYSize;
-
-    ConvertYCbCrToRGB(data, SurfaceFormat::B8G8R8X8, IntSize::Truncate(ioWidth, ioHeight), mappedSurface.mData, mappedSurface.mStride);
+    IntSize size = IntSize::Truncate(ioWidth, ioHeight);
+    libyuv::ConvertToARGB((uint8_t*)aSurface->GetBaseAddress(), 0 /* not used */,
+                          mappedSurface.mData, mappedSurface.mStride,
+                          0, 0,
+                          size.width, size.height,
+                          size.width, size.height,
+                          libyuv::kRotate0, libyuv::FOURCC_UYVY);
   } else {
     unsigned char* ioData = (unsigned char*)aSurface->GetBaseAddress();
 

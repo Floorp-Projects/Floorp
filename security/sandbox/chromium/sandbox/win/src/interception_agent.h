@@ -9,7 +9,7 @@
 #ifndef SANDBOX_SRC_INTERCEPTION_AGENT_H__
 #define SANDBOX_SRC_INTERCEPTION_AGENT_H__
 
-#include "base/basictypes.h"
+#include "base/macros.h"
 #include "sandbox/win/src/nt_internals.h"
 #include "sandbox/win/src/sandbox_types.h"
 

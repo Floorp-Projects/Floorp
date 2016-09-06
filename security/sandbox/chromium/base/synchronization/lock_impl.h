@@ -5,6 +5,8 @@
 #ifndef BASE_SYNCHRONIZATION_LOCK_IMPL_H_
 #define BASE_SYNCHRONIZATION_LOCK_IMPL_H_
 
+#include "base/base_export.h"
+#include "base/macros.h"
 #include "build/build_config.h"
 
 #if defined(OS_WIN)
@@ -12,9 +14,6 @@
 #elif defined(OS_POSIX)
 #include <pthread.h>
 #endif
-
-#include "base/base_export.h"
-#include "base/basictypes.h"
 
 namespace base {
 namespace internal {

@@ -11,16 +11,12 @@
 #include "base/atomic_ref_count.h"
 #include "base/base_export.h"
 #include "base/compiler_specific.h"
+#include "base/macros.h"
 #ifndef NDEBUG
 #include "base/logging.h"
 #endif
 #include "base/threading/thread_collision_warner.h"
 #include "build/build_config.h"
-#include "mozilla/Attributes.h"
-
-#if defined(OS_LINUX) || defined(OS_MACOSX) || defined(OS_IOS) || defined(OS_ANDROID)
-#define DISABLE_SCOPED_REFPTR_CONVERSION_OPERATOR
-#endif
 
 namespace base {
 
@@ -122,7 +118,7 @@ class BASE_EXPORT RefCountedThreadSafeBase {
 //     ~MyFoo();
 //   };
 //
-// You should always make your destructor private, to avoid any code deleting
+// You should always make your destructor non-public, to avoid any code deleting
 // the object accidently while there are references to it.
 template <class T>
 class RefCounted : public subtle::RefCountedBase {
@@ -280,15 +276,27 @@ class scoped_refptr {
       AddRef(ptr_);
   }
 
+  // Copy constructor.
   scoped_refptr(const scoped_refptr<T>& r) : ptr_(r.ptr_) {
     if (ptr_)
       AddRef(ptr_);
   }
 
+  // Copy conversion constructor.
   template <typename U>
   scoped_refptr(const scoped_refptr<U>& r) : ptr_(r.get()) {
     if (ptr_)
       AddRef(ptr_);
+  }
+
+  // Move constructor. This is required in addition to the conversion
+  // constructor below in order for clang to warn about pessimizing moves.
+  scoped_refptr(scoped_refptr&& r) : ptr_(r.get()) { r.ptr_ = nullptr; }
+
+  // Move conversion constructor.
+  template <typename U>
+  scoped_refptr(scoped_refptr<U>&& r) : ptr_(r.get()) {
+    r.ptr_ = nullptr;
   }
 
   ~scoped_refptr() {
@@ -297,12 +305,6 @@ class scoped_refptr {
   }
 
   T* get() const { return ptr_; }
-
-#if !defined(DISABLE_SCOPED_REFPTR_CONVERSION_OPERATOR)
-  // Allow scoped_refptr<C> to be used in boolean expression
-  // and comparison operations.
-  operator T*() const { return ptr_; }
-#endif
 
   T& operator*() const {
     assert(ptr_ != NULL);
@@ -334,6 +336,17 @@ class scoped_refptr {
     return *this = r.get();
   }
 
+  scoped_refptr<T>& operator=(scoped_refptr<T>&& r) {
+    scoped_refptr<T>(std::move(r)).swap(*this);
+    return *this;
+  }
+
+  template <typename U>
+  scoped_refptr<T>& operator=(scoped_refptr<U>&& r) {
+    scoped_refptr<T>(std::move(r)).swap(*this);
+    return *this;
+  }
+
   void swap(T** pp) {
     T* p = ptr_;
     ptr_ = *pp;
@@ -344,7 +357,21 @@ class scoped_refptr {
     swap(&r.ptr_);
   }
 
-#if defined(DISABLE_SCOPED_REFPTR_CONVERSION_OPERATOR)
+ private:
+  template <typename U> friend class scoped_refptr;
+
+  // Allow scoped_refptr<T> to be used in boolean expressions, but not
+  // implicitly convertible to a real bool (which is dangerous).
+  //
+  // Note that this trick is only safe when the == and != operators
+  // are declared explicitly, as otherwise "refptr1 == refptr2"
+  // will compile but do the wrong thing (i.e., convert to Testable
+  // and then do the comparison).
+  typedef T* scoped_refptr::*Testable;
+
+ public:
+  operator Testable() const { return ptr_ ? &scoped_refptr::ptr_ : nullptr; }
+
   template <typename U>
   bool operator==(const scoped_refptr<U>& rhs) const {
     return ptr_ == rhs.get();
@@ -359,7 +386,6 @@ class scoped_refptr {
   bool operator<(const scoped_refptr<U>& rhs) const {
     return ptr_ < rhs.get();
   }
-#endif
 
  protected:
   T* ptr_;
@@ -390,8 +416,8 @@ scoped_refptr<T> make_scoped_refptr(T* t) {
   return scoped_refptr<T>(t);
 }
 
-#if defined(DISABLE_SCOPED_REFPTR_CONVERSION_OPERATOR)
-// Temporary operator overloads to facilitate the transition...
+// Temporary operator overloads to facilitate the transition. See
+// https://crbug.com/110610.
 template <typename T, typename U>
 bool operator==(const scoped_refptr<T>& lhs, const U* rhs) {
   return lhs.get() == rhs;
@@ -416,6 +442,5 @@ template <typename T>
 std::ostream& operator<<(std::ostream& out, const scoped_refptr<T>& p) {
   return out << p.get();
 }
-#endif  // defined(DISABLE_SCOPED_REFPTR_CONVERSION_OPERATOR)
 
 #endif  // BASE_MEMORY_REF_COUNTED_H_

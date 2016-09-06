@@ -7,11 +7,13 @@
 
 #include "sandbox/win/src/interception_agent.h"
 
+#include <stddef.h>
+
+#include "sandbox/win/src/eat_resolver.h"
 #include "sandbox/win/src/interception_internal.h"
 #include "sandbox/win/src/interceptors.h"
-#include "sandbox/win/src/eat_resolver.h"
-#include "sandbox/win/src/sidestep_resolver.h"
 #include "sandbox/win/src/sandbox_nt_util.h"
+#include "sandbox/win/src/sidestep_resolver.h"
 
 namespace {
 

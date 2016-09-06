@@ -394,11 +394,20 @@ public:
    * Lock the texture host for compositing.
    */
   virtual bool Lock() { return true; }
-
   /**
-   * Unlock the texture host after compositing.
+   * Unlock the texture host after compositing. Lock() and Unlock() should be
+   * called in pair.
    */
   virtual void Unlock() {}
+
+  /**
+   * Lock the texture host for compositing without using compositor.
+   */
+  virtual bool LockWithoutCompositor() { return true; }
+  /**
+   * Similar to Unlock(), but it should be called with LockWithoutCompositor().
+   */
+  virtual void UnlockWithoutCompositor() {}
 
   /**
    * Note that the texture host format can be different from its corresponding
@@ -801,6 +810,29 @@ public:
   {
     if (mTexture && mLocked) {
       mTexture->Unlock();
+    }
+  }
+
+  bool Failed() { return mTexture && !mLocked; }
+
+private:
+  RefPtr<TextureHost> mTexture;
+  bool mLocked;
+};
+
+class MOZ_STACK_CLASS AutoLockTextureHostWithoutCompositor
+{
+public:
+  explicit AutoLockTextureHostWithoutCompositor(TextureHost* aTexture)
+    : mTexture(aTexture)
+  {
+    mLocked = mTexture ? mTexture->LockWithoutCompositor() : false;
+  }
+
+  ~AutoLockTextureHostWithoutCompositor()
+  {
+    if (mTexture && mLocked) {
+      mTexture->UnlockWithoutCompositor();
     }
   }
 

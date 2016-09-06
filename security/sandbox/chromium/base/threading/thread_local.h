@@ -52,8 +52,9 @@
 #define BASE_THREADING_THREAD_LOCAL_H_
 
 #include "base/base_export.h"
-#include "base/basictypes.h"
+#include "base/macros.h"
 #include "base/threading/thread_local_storage.h"
+#include "build/build_config.h"
 
 #if defined(OS_POSIX)
 #include <pthread.h>

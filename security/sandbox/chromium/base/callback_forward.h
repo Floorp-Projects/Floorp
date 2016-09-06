@@ -10,8 +10,10 @@ namespace base {
 template <typename Sig>
 class Callback;
 
-typedef Callback<void(void)> Closure;
+// Syntactic sugar to make Callback<void()> easier to declare since it
+// will be used in a lot of APIs with delayed execution.
+using Closure = Callback<void()>;
 
 }  // namespace base
 
-#endif  // BASE_CALLBACK_FORWARD_H
+#endif  // BASE_CALLBACK_FORWARD_H_

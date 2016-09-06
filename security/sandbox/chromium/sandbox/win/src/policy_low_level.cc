@@ -2,11 +2,13 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include <string>
-#include <map>
-
 #include "sandbox/win/src/policy_low_level.h"
-#include "base/basictypes.h"
+
+#include <stddef.h>
+#include <stdint.h>
+
+#include <map>
+#include <string>
 
 namespace {
 
@@ -22,14 +24,18 @@ namespace {
 
   // The category of the last character seen by the string matching opcode
   // generator.
-  const uint32 kLastCharIsNone = 0;
-  const uint32 kLastCharIsAlpha = 1;
-  const uint32 kLastCharIsWild = 2;
-  const uint32 kLastCharIsAsterisk = kLastCharIsWild + 4;
-  const uint32 kLastCharIsQuestionM = kLastCharIsWild + 8;
+  const uint32_t kLastCharIsNone = 0;
+  const uint32_t kLastCharIsAlpha = 1;
+  const uint32_t kLastCharIsWild = 2;
+  const uint32_t kLastCharIsAsterisk = kLastCharIsWild + 4;
+  const uint32_t kLastCharIsQuestionM = kLastCharIsWild + 8;
 }
 
 namespace sandbox {
+
+LowLevelPolicy::LowLevelPolicy(PolicyGlobal* policy_store)
+    : policy_store_(policy_store) {
+}
 
 // Adding a rule is nothing more than pushing it into an stl container. Done()
 // is called for the rule in case the code that made the rule in the first
@@ -63,7 +69,7 @@ LowLevelPolicy::~LowLevelPolicy() {
 bool LowLevelPolicy::Done() {
   typedef std::list<RuleNode> RuleNodes;
   typedef std::list<const PolicyRule*> RuleList;
-  typedef std::map<uint32, RuleList> Mmap;
+  typedef std::map<uint32_t, RuleList> Mmap;
   Mmap mmap;
 
   for (RuleNodes::iterator it = rules_.begin(); it != rules_.end(); ++it) {
@@ -76,7 +82,7 @@ bool LowLevelPolicy::Done() {
   size_t avail_size =  policy_store_->data_size;
 
   for (Mmap::iterator it = mmap.begin(); it != mmap.end(); ++it) {
-    uint32 service = (*it).first;
+    uint32_t service = (*it).first;
     if (service >= kMaxServiceCount) {
       return false;
     }
@@ -150,14 +156,16 @@ PolicyRule::PolicyRule(const PolicyRule& other) {
 // to zero.
 bool PolicyRule::GenStringOpcode(RuleType rule_type,
                                  StringMatchOptions match_opts,
-                                 uint16 parameter, int state, bool last_call,
-                                 int* skip_count, base::string16* fragment) {
-
+                                 uint16_t parameter,
+                                 int state,
+                                 bool last_call,
+                                 int* skip_count,
+                                 base::string16* fragment) {
   // The last opcode must:
   //   1) Always clear the context.
   //   2) Preserve the negation.
   //   3) Remove the 'OR' mode flag.
-  uint32 options = kPolNone;
+  uint32_t options = kPolNone;
   if (last_call) {
     if (IF_NOT == rule_type) {
       options = kPolClearContext | kPolNegateEval;
@@ -214,7 +222,8 @@ bool PolicyRule::GenStringOpcode(RuleType rule_type,
   return true;
 }
 
-bool PolicyRule::AddStringMatch(RuleType rule_type, int16 parameter,
+bool PolicyRule::AddStringMatch(RuleType rule_type,
+                                int16_t parameter,
                                 const wchar_t* string,
                                 StringMatchOptions match_opts) {
   if (done_) {
@@ -223,7 +232,7 @@ bool PolicyRule::AddStringMatch(RuleType rule_type, int16 parameter,
   }
 
   const wchar_t* current_char = string;
-  uint32 last_char = kLastCharIsNone;
+  uint32_t last_char = kLastCharIsNone;
   int state = PENDING_NONE;
   int skip_count = 0;       // counts how many '?' we have seen in a row.
   base::string16 fragment;  // accumulates the non-wildcard part.
@@ -275,14 +284,14 @@ bool PolicyRule::AddStringMatch(RuleType rule_type, int16 parameter,
 }
 
 bool PolicyRule::AddNumberMatch(RuleType rule_type,
-                                int16 parameter,
-                                uint32 number,
+                                int16_t parameter,
+                                uint32_t number,
                                 RuleOp comparison_op) {
   if (done_) {
     // Do not allow to add more rules after generating the action opcode.
     return false;
   }
-  uint32 opts = (rule_type == IF_NOT)? kPolNegateEval : kPolNone;
+  uint32_t opts = (rule_type == IF_NOT) ? kPolNegateEval : kPolNone;
 
   if (EQUAL == comparison_op) {
     if (NULL == opcode_factory_->MakeOpNumberMatch(parameter, number, opts)) {

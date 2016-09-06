@@ -141,4 +141,21 @@ TEST(AppContainerTest, RequiresImpersonation) {
             runner.GetPolicy()->SetAppContainer(kAppContainerSid));
 }
 
+TEST(AppContainerTest, DenyOpenEventForLowBox) {
+  if (base::win::OSInfo::GetInstance()->version() < base::win::VERSION_WIN8)
+    return;
+
+  TestRunner runner(JOB_UNPROTECTED, USER_UNPROTECTED, USER_UNPROTECTED);
+
+  base::win::ScopedHandle event(CreateEvent(NULL, FALSE, FALSE, L"test"));
+  ASSERT_TRUE(event.IsValid());
+
+  EXPECT_EQ(SBOX_ALL_OK, runner.GetPolicy()->SetLowBox(kAppContainerSid));
+
+  EXPECT_EQ(SBOX_TEST_DENIED, runner.RunTest(L"Event_Open f test"));
+}
+
+// TODO(shrikant): Please add some tests to prove usage of lowbox token like
+// socket connection to local server in lock down mode.
+
 }  // namespace sandbox
