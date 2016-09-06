@@ -33,7 +33,7 @@ public class TestColorProcessor {
         processor.process(null, response);
 
         Assert.assertTrue(response.hasColor());
-        Assert.assertEquals(Color.RED, response.getColor());
+        Assert.assertEquals(0xFFF80000, response.getColor());
     }
 
     private Bitmap createRedBitmapMock() {
