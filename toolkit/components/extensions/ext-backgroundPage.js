@@ -76,19 +76,19 @@ BackgroundPage.prototype = {
     let browser = chromeDoc.createElement("browser");
     browser.setAttribute("type", "content");
     browser.setAttribute("disableglobalhistory", "true");
-    browser.setAttribute("webextension-view-type", "background");
-    browser.setAttribute("src", url);
     chromeDoc.documentElement.appendChild(browser);
 
     extensions.emit("extension-browser-inserted", browser);
+    browser.messageManager.sendAsyncMessage("Extension:InitExtensionView", {
+      viewType: "background",
+      url,
+    });
 
     yield new Promise(resolve => {
-      browser.addEventListener("load", function onLoad(event) {
-        if (event.target === browser.contentDocument) {
-          browser.removeEventListener("load", onLoad, true);
-          resolve();
-        }
-      }, true);
+      browser.messageManager.addMessageListener("Extension:ExtensionViewLoaded", function onLoad() {
+        browser.messageManager.removeMessageListener("Extension:ExtensionViewLoaded", onLoad);
+        resolve();
+      });
     });
 
     this.webNav = browser.docShell.QueryInterface(Ci.nsIWebNavigation);
