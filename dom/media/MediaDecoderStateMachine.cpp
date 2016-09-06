@@ -464,7 +464,23 @@ public:
 
   void Step() override
   {
-    mMaster->StepDecoding();
+    if (mMaster->mPlayState != MediaDecoder::PLAY_STATE_PLAYING &&
+        mMaster->IsPlaying()) {
+      // We're playing, but the element/decoder is in paused state. Stop
+      // playing!
+      mMaster->StopPlayback();
+    }
+
+    // Start playback if necessary so that the clock can be properly queried.
+    mMaster->MaybeStartPlayback();
+
+    mMaster->UpdatePlaybackPositionPeriodically();
+
+    MOZ_ASSERT(!mMaster->IsPlaying() ||
+               mMaster->IsStateMachineScheduled(),
+               "Must have timer scheduled");
+
+    mMaster->MaybeStartBuffering();
   }
 
   State GetState() const override
@@ -2562,29 +2578,6 @@ MediaDecoderStateMachine::RunStateMachine()
   mDelayedScheduler.Reset(); // Must happen on state machine task queue.
   mDispatchedStateMachine = false;
   mStateObj->Step();
-}
-
-void
-MediaDecoderStateMachine::StepDecoding()
-{
-  MOZ_ASSERT(OnTaskQueue());
-
-  if (mPlayState != MediaDecoder::PLAY_STATE_PLAYING && IsPlaying()) {
-    // We're playing, but the element/decoder is in paused state. Stop
-    // playing!
-    StopPlayback();
-  }
-
-  // Start playback if necessary so that the clock can be properly queried.
-  MaybeStartPlayback();
-
-  UpdatePlaybackPositionPeriodically();
-
-  NS_ASSERTION(!IsPlaying() ||
-               IsStateMachineScheduled(),
-               "Must have timer scheduled");
-
-  MaybeStartBuffering();
 }
 
 void
