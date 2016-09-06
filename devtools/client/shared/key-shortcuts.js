@@ -192,12 +192,17 @@ KeyShortcuts.prototype = {
     if (shortcut.alt != event.altKey) {
       return false;
     }
-    // Shift is a special modifier, it may implicitely be required if the
-    // expected key is a special character accessible via shift.
-    if (shortcut.shift != event.shiftKey && event.key &&
-        event.key.match(/[a-zA-Z]/)) {
-      return false;
+    if (shortcut.shift != event.shiftKey) {
+      // Shift is a special modifier, it may implicitely be required if the expected key
+      // is a special character accessible via shift.
+      let isAlphabetical = event.key && event.key.match(/[a-zA-Z]/);
+      // OSX: distinguish cmd+[key] from cmd+shift+[key] shortcuts (Bug 1300458)
+      let cmdShortcut = shortcut.meta && !shortcut.alt && !shortcut.ctrl;
+      if (isAlphabetical || cmdShortcut) {
+        return false;
+      }
     }
+
     if (shortcut.keyCode) {
       return event.keyCode == shortcut.keyCode;
     } else if (event.key in ElectronKeysMapping) {
