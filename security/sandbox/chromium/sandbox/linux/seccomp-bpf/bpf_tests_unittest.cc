@@ -11,12 +11,14 @@
 #include <unistd.h>
 
 #include "base/logging.h"
+#include "base/macros.h"
 #include "base/memory/scoped_ptr.h"
 #include "build/build_config.h"
 #include "sandbox/linux/bpf_dsl/bpf_dsl.h"
 #include "sandbox/linux/bpf_dsl/policy.h"
 #include "sandbox/linux/seccomp-bpf/sandbox_bpf.h"
-#include "sandbox/linux/services/linux_syscalls.h"
+#include "sandbox/linux/services/syscall_wrappers.h"
+#include "sandbox/linux/system_headers/linux_syscalls.h"
 #include "sandbox/linux/tests/unit_tests.h"
 #include "testing/gtest/include/gtest/gtest.h"
 
@@ -45,9 +47,9 @@ class EmptyClassTakingPolicy : public bpf_dsl::Policy {
     BPF_ASSERT(fourty_two);
     BPF_ASSERT(FourtyTwo::kMagicValue == fourty_two->value());
   }
-  virtual ~EmptyClassTakingPolicy() {}
+  ~EmptyClassTakingPolicy() override {}
 
-  virtual ResultExpr EvaluateSyscall(int sysno) const override {
+  ResultExpr EvaluateSyscall(int sysno) const override {
     DCHECK(SandboxBPF::IsValidSyscallNumber(sysno));
     return Allow();
   }
@@ -82,21 +84,19 @@ TEST(BPFTest, BPFTesterCompatibilityDelegateLeakTest) {
 
 class EnosysPtracePolicy : public bpf_dsl::Policy {
  public:
-  EnosysPtracePolicy() {
-    my_pid_ = syscall(__NR_getpid);
-  }
-  virtual ~EnosysPtracePolicy() {
+  EnosysPtracePolicy() { my_pid_ = sys_getpid(); }
+  ~EnosysPtracePolicy() override {
     // Policies should be able to bind with the process on which they are
     // created. They should never be created in a parent process.
-    BPF_ASSERT_EQ(my_pid_, syscall(__NR_getpid));
+    BPF_ASSERT_EQ(my_pid_, sys_getpid());
   }
 
-  virtual ResultExpr EvaluateSyscall(int system_call_number) const override {
+  ResultExpr EvaluateSyscall(int system_call_number) const override {
     CHECK(SandboxBPF::IsValidSyscallNumber(system_call_number));
     if (system_call_number == __NR_ptrace) {
       // The EvaluateSyscall function should run in the process that created
       // the current object.
-      BPF_ASSERT_EQ(my_pid_, syscall(__NR_getpid));
+      BPF_ASSERT_EQ(my_pid_, sys_getpid());
       return Error(ENOSYS);
     } else {
       return Allow();
@@ -111,12 +111,12 @@ class EnosysPtracePolicy : public bpf_dsl::Policy {
 class BasicBPFTesterDelegate : public BPFTesterDelegate {
  public:
   BasicBPFTesterDelegate() {}
-  virtual ~BasicBPFTesterDelegate() {}
+  ~BasicBPFTesterDelegate() override {}
 
-  virtual scoped_ptr<bpf_dsl::Policy> GetSandboxBPFPolicy() override {
+  scoped_ptr<bpf_dsl::Policy> GetSandboxBPFPolicy() override {
     return scoped_ptr<bpf_dsl::Policy>(new EnosysPtracePolicy());
   }
-  virtual void RunTestFunction() override {
+  void RunTestFunction() override {
     errno = 0;
     int ret = ptrace(PTRACE_TRACEME, -1, NULL, NULL);
     BPF_ASSERT(-1 == ret);

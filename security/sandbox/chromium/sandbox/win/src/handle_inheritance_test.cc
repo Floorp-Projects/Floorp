@@ -5,6 +5,8 @@
 #include <stdio.h>
 
 #include "base/files/file_util.h"
+#include "base/files/scoped_temp_dir.h"
+#include "base/win/scoped_handle.h"
 #include "base/win/windows_version.h"
 #include "sandbox/win/tests/common/controller.h"
 #include "testing/gtest/include/gtest/gtest.h"
@@ -18,37 +20,33 @@ SBOX_TESTS_COMMAND int HandleInheritanceTests_PrintToStdout(int argc,
 }
 
 TEST(HandleInheritanceTests, TestStdoutInheritance) {
-  wchar_t temp_directory[MAX_PATH];
-  wchar_t temp_file_name[MAX_PATH];
-  ASSERT_NE(::GetTempPath(MAX_PATH, temp_directory), 0u);
-  ASSERT_NE(::GetTempFileName(temp_directory, L"test", 0, temp_file_name), 0u);
+  base::ScopedTempDir temp_directory;
+  base::FilePath temp_file_name;
+  ASSERT_TRUE(temp_directory.CreateUniqueTempDir());
+  ASSERT_TRUE(CreateTemporaryFileInDir(temp_directory.path(), &temp_file_name));
 
   SECURITY_ATTRIBUTES attrs = {};
   attrs.nLength = sizeof(attrs);
-  attrs.lpSecurityDescriptor = NULL;
   attrs.bInheritHandle = TRUE;
-  HANDLE file_handle = CreateFile(
-      temp_file_name, GENERIC_WRITE,
-      FILE_SHARE_WRITE | FILE_SHARE_READ | FILE_SHARE_DELETE,
-      &attrs, OPEN_EXISTING, 0, NULL);
-  EXPECT_NE(file_handle, INVALID_HANDLE_VALUE);
+  base::win::ScopedHandle tmp_handle(
+      CreateFile(temp_file_name.value().c_str(), GENERIC_WRITE,
+                 FILE_SHARE_WRITE | FILE_SHARE_READ | FILE_SHARE_DELETE,
+                 &attrs, OPEN_EXISTING, 0, NULL));
+  ASSERT_TRUE(tmp_handle.IsValid());
 
   TestRunner runner;
-  EXPECT_EQ(SBOX_ALL_OK, runner.GetPolicy()->SetStdoutHandle(file_handle));
+  ASSERT_EQ(SBOX_ALL_OK, runner.GetPolicy()->SetStdoutHandle(tmp_handle.Get()));
   int result = runner.RunTest(L"HandleInheritanceTests_PrintToStdout");
-  EXPECT_EQ(SBOX_TEST_SUCCEEDED, result);
-  EXPECT_TRUE(::CloseHandle(file_handle));
+  ASSERT_EQ(SBOX_TEST_SUCCEEDED, result);
 
   std::string data;
-  EXPECT_TRUE(base::ReadFileToString(base::FilePath(temp_file_name), &data));
+  ASSERT_TRUE(base::ReadFileToString(base::FilePath(temp_file_name), &data));
   // Redirection uses a feature that was added in Windows Vista.
   if (base::win::GetVersion() >= base::win::VERSION_VISTA) {
-    EXPECT_EQ("Example output to stdout\r\n", data);
+    ASSERT_EQ("Example output to stdout\r\n", data);
   } else {
-    EXPECT_EQ("", data);
+    ASSERT_EQ("", data);
   }
-
-  EXPECT_TRUE(::DeleteFile(temp_file_name));
 }
 
-}
+}  // namespace sandbox

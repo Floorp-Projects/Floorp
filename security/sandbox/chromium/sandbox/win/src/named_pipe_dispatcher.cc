@@ -4,7 +4,8 @@
 
 #include "sandbox/win/src/named_pipe_dispatcher.h"
 
-#include "base/basictypes.h"
+#include <stdint.h>
+
 #include "base/strings/string_split.h"
 
 #include "sandbox/win/src/crosscall_client.h"
@@ -23,10 +24,15 @@ namespace sandbox {
 NamedPipeDispatcher::NamedPipeDispatcher(PolicyBase* policy_base)
     : policy_base_(policy_base) {
   static const IPCCall create_params = {
-    {IPC_CREATENAMEDPIPEW_TAG, WCHAR_TYPE, UINT32_TYPE, UINT32_TYPE,
-     UINT32_TYPE, UINT32_TYPE, UINT32_TYPE, UINT32_TYPE},
-    reinterpret_cast<CallbackGeneric>(&NamedPipeDispatcher::CreateNamedPipe)
-  };
+      {IPC_CREATENAMEDPIPEW_TAG,
+       {WCHAR_TYPE,
+        UINT32_TYPE,
+        UINT32_TYPE,
+        UINT32_TYPE,
+        UINT32_TYPE,
+        UINT32_TYPE,
+        UINT32_TYPE}},
+      reinterpret_cast<CallbackGeneric>(&NamedPipeDispatcher::CreateNamedPipe)};
 
   ipc_calls_.push_back(create_params);
 }
@@ -42,25 +48,24 @@ bool NamedPipeDispatcher::SetupService(InterceptionManager* manager,
 
 bool NamedPipeDispatcher::CreateNamedPipe(IPCInfo* ipc,
                                           base::string16* name,
-                                          uint32 open_mode,
-                                          uint32 pipe_mode,
-                                          uint32 max_instances,
-                                          uint32 out_buffer_size,
-                                          uint32 in_buffer_size,
-                                          uint32 default_timeout) {
+                                          uint32_t open_mode,
+                                          uint32_t pipe_mode,
+                                          uint32_t max_instances,
+                                          uint32_t out_buffer_size,
+                                          uint32_t in_buffer_size,
+                                          uint32_t default_timeout) {
   ipc->return_info.win32_result = ERROR_ACCESS_DENIED;
   ipc->return_info.handle = INVALID_HANDLE_VALUE;
 
-  std::vector<base::string16> paths;
-  std::vector<base::string16> innerpaths;
-  base::SplitString(*name, '/', &paths);
+  base::StringPiece16 dotdot(L"..");
 
-  for (std::vector<base::string16>::const_iterator iter = paths.begin();
-       iter != paths.end(); ++iter) {
-    base::SplitString(*iter, '\\', &innerpaths);
-    for (std::vector<base::string16>::const_iterator iter2 = innerpaths.begin();
-         iter2 != innerpaths.end(); ++iter2) {
-      if (*iter2 == L"..")
+  for (const base::StringPiece16& path : base::SplitStringPiece(
+           *name, base::string16(1, '/'),
+           base::TRIM_WHITESPACE, base::SPLIT_WANT_ALL)) {
+    for (const base::StringPiece16& inner : base::SplitStringPiece(
+             path, base::string16(1, '\\'),
+             base::TRIM_WHITESPACE, base::SPLIT_WANT_ALL)) {
+      if (inner == dotdot)
         return true;
     }
   }

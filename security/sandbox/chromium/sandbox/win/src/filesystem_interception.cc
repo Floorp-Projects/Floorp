@@ -4,6 +4,8 @@
 
 #include "sandbox/win/src/filesystem_interception.h"
 
+#include <stdint.h>
+
 #include "sandbox/win/src/crosscall_client.h"
 #include "sandbox/win/src/ipc_tags.h"
 #include "sandbox/win/src/policy_params.h"
@@ -12,7 +14,6 @@
 #include "sandbox/win/src/sandbox_nt_util.h"
 #include "sandbox/win/src/sharedmem_ipc_client.h"
 #include "sandbox/win/src/target_services.h"
-#include "mozilla/sandboxing/sandboxLogging.h"
 
 namespace sandbox {
 
@@ -32,10 +33,6 @@ NTSTATUS WINAPI TargetNtCreateFile(NtCreateFileFunction orig_CreateFile,
   if (STATUS_ACCESS_DENIED != status)
     return status;
 
-  mozilla::sandboxing::LogBlocked("NtCreateFile",
-                                  object_attributes->ObjectName->Buffer,
-                                  object_attributes->ObjectName->Length);
-
   // We don't trust that the IPC can work this early.
   if (!SandboxFactory::GetTargetServices()->GetState()->InitCalled())
     return status;
@@ -51,18 +48,20 @@ NTSTATUS WINAPI TargetNtCreateFile(NtCreateFileFunction orig_CreateFile,
     if (NULL == memory)
       break;
 
-    uint32 attributes = 0;
+    uint32_t attributes = 0;
     NTSTATUS ret = AllocAndCopyName(object_attributes, &name, &attributes,
                                     NULL);
     if (!NT_SUCCESS(ret) || NULL == name)
       break;
 
-    uint32 desired_access_uint32 = desired_access;
-    uint32 options_uint32 = options;
-    uint32 broker = FALSE;
+    uint32_t desired_access_uint32 = desired_access;
+    uint32_t options_uint32 = options;
+    uint32_t disposition_uint32 = disposition;
+    uint32_t broker = FALSE;
     CountedParameterSet<OpenFile> params;
     params[OpenFile::NAME] = ParamPickerMake(name);
     params[OpenFile::ACCESS] = ParamPickerMake(desired_access_uint32);
+    params[OpenFile::DISPOSITION] = ParamPickerMake(disposition_uint32);
     params[OpenFile::OPTIONS] = ParamPickerMake(options_uint32);
     params[OpenFile::BROKER] = ParamPickerMake(broker);
 
@@ -79,20 +78,18 @@ NTSTATUS WINAPI TargetNtCreateFile(NtCreateFileFunction orig_CreateFile,
     if (SBOX_ALL_OK != code)
       break;
 
+    status = answer.nt_status;
+
     if (!NT_SUCCESS(answer.nt_status))
-        return answer.nt_status;
+      break;
 
     __try {
       *file = answer.handle;
       io_status->Status = answer.nt_status;
       io_status->Information = answer.extended[0].ulong_ptr;
-      status = io_status->Status;
     } __except(EXCEPTION_EXECUTE_HANDLER) {
       break;
     }
-    mozilla::sandboxing::LogAllowed("NtCreateFile",
-                                    object_attributes->ObjectName->Buffer,
-                                    object_attributes->ObjectName->Length);
   } while (false);
 
   if (name)
@@ -112,10 +109,6 @@ NTSTATUS WINAPI TargetNtOpenFile(NtOpenFileFunction orig_OpenFile, PHANDLE file,
   if (STATUS_ACCESS_DENIED != status)
     return status;
 
-  mozilla::sandboxing::LogBlocked("NtOpenFile",
-                                  object_attributes->ObjectName->Buffer,
-                                  object_attributes->ObjectName->Length);
-
   // We don't trust that the IPC can work this early.
   if (!SandboxFactory::GetTargetServices()->GetState()->InitCalled())
     return status;
@@ -131,18 +124,20 @@ NTSTATUS WINAPI TargetNtOpenFile(NtOpenFileFunction orig_OpenFile, PHANDLE file,
     if (NULL == memory)
       break;
 
-    uint32 attributes;
+    uint32_t attributes;
     NTSTATUS ret = AllocAndCopyName(object_attributes, &name, &attributes,
                                     NULL);
     if (!NT_SUCCESS(ret) || NULL == name)
       break;
 
-    uint32 desired_access_uint32 = desired_access;
-    uint32 options_uint32 = options;
-    uint32 broker = FALSE;
+    uint32_t desired_access_uint32 = desired_access;
+    uint32_t options_uint32 = options;
+    uint32_t disposition_uint32 = FILE_OPEN;
+    uint32_t broker = FALSE;
     CountedParameterSet<OpenFile> params;
     params[OpenFile::NAME] = ParamPickerMake(name);
     params[OpenFile::ACCESS] = ParamPickerMake(desired_access_uint32);
+    params[OpenFile::DISPOSITION] = ParamPickerMake(disposition_uint32);
     params[OpenFile::OPTIONS] = ParamPickerMake(options_uint32);
     params[OpenFile::BROKER] = ParamPickerMake(broker);
 
@@ -157,20 +152,18 @@ NTSTATUS WINAPI TargetNtOpenFile(NtOpenFileFunction orig_OpenFile, PHANDLE file,
     if (SBOX_ALL_OK != code)
       break;
 
+    status = answer.nt_status;
+
     if (!NT_SUCCESS(answer.nt_status))
-      return answer.nt_status;
+      break;
 
     __try {
       *file = answer.handle;
       io_status->Status = answer.nt_status;
       io_status->Information = answer.extended[0].ulong_ptr;
-      status = io_status->Status;
     } __except(EXCEPTION_EXECUTE_HANDLER) {
       break;
     }
-    mozilla::sandboxing::LogAllowed("NtOpenFile",
-                                    object_attributes->ObjectName->Buffer,
-                                    object_attributes->ObjectName->Length);
   } while (false);
 
   if (name)
@@ -188,10 +181,6 @@ NTSTATUS WINAPI TargetNtQueryAttributesFile(
   if (STATUS_ACCESS_DENIED != status)
     return status;
 
-  mozilla::sandboxing::LogBlocked("NtQueryAttributesFile",
-                                  object_attributes->ObjectName->Buffer,
-                                  object_attributes->ObjectName->Length);
-
   // We don't trust that the IPC can work this early.
   if (!SandboxFactory::GetTargetServices()->GetState()->InitCalled())
     return status;
@@ -205,7 +194,7 @@ NTSTATUS WINAPI TargetNtQueryAttributesFile(
     if (NULL == memory)
       break;
 
-    uint32 attributes = 0;
+    uint32_t attributes = 0;
     NTSTATUS ret = AllocAndCopyName(object_attributes, &name, &attributes,
                                     NULL);
     if (!NT_SUCCESS(ret) || NULL == name)
@@ -214,7 +203,7 @@ NTSTATUS WINAPI TargetNtQueryAttributesFile(
     InOutCountedBuffer file_info(file_attributes,
                                  sizeof(FILE_BASIC_INFORMATION));
 
-    uint32 broker = FALSE;
+    uint32_t broker = FALSE;
     CountedParameterSet<FileName> params;
     params[FileName::NAME] = ParamPickerMake(name);
     params[FileName::BROKER] = ParamPickerMake(broker);
@@ -227,15 +216,10 @@ NTSTATUS WINAPI TargetNtQueryAttributesFile(
     ResultCode code = CrossCall(ipc, IPC_NTQUERYATTRIBUTESFILE_TAG, name,
                                 attributes, file_info, &answer);
 
-    operator delete(name, NT_ALLOC);
-
     if (SBOX_ALL_OK != code)
       break;
 
-    mozilla::sandboxing::LogAllowed("NtQueryAttributesFile",
-                                    object_attributes->ObjectName->Buffer,
-                                    object_attributes->ObjectName->Length);
-    return answer.nt_status;
+    status = answer.nt_status;
 
   } while (false);
 
@@ -255,10 +239,6 @@ NTSTATUS WINAPI TargetNtQueryFullAttributesFile(
   if (STATUS_ACCESS_DENIED != status)
     return status;
 
-  mozilla::sandboxing::LogBlocked("NtQueryFullAttributesFile",
-                                  object_attributes->ObjectName->Buffer,
-                                  object_attributes->ObjectName->Length);
-
   // We don't trust that the IPC can work this early.
   if (!SandboxFactory::GetTargetServices()->GetState()->InitCalled())
     return status;
@@ -273,7 +253,7 @@ NTSTATUS WINAPI TargetNtQueryFullAttributesFile(
     if (NULL == memory)
       break;
 
-    uint32 attributes = 0;
+    uint32_t attributes = 0;
     NTSTATUS ret = AllocAndCopyName(object_attributes, &name, &attributes,
                                     NULL);
     if (!NT_SUCCESS(ret) || NULL == name)
@@ -282,7 +262,7 @@ NTSTATUS WINAPI TargetNtQueryFullAttributesFile(
     InOutCountedBuffer file_info(file_attributes,
                                  sizeof(FILE_NETWORK_OPEN_INFORMATION));
 
-    uint32 broker = FALSE;
+    uint32_t broker = FALSE;
     CountedParameterSet<FileName> params;
     params[FileName::NAME] = ParamPickerMake(name);
     params[FileName::BROKER] = ParamPickerMake(broker);
@@ -295,15 +275,10 @@ NTSTATUS WINAPI TargetNtQueryFullAttributesFile(
     ResultCode code = CrossCall(ipc, IPC_NTQUERYFULLATTRIBUTESFILE_TAG, name,
                                 attributes, file_info, &answer);
 
-    operator delete(name, NT_ALLOC);
-
     if (SBOX_ALL_OK != code)
       break;
 
-    mozilla::sandboxing::LogAllowed("NtQueryFullAttributesFile",
-                                    object_attributes->ObjectName->Buffer,
-                                    object_attributes->ObjectName->Length);
-    return answer.nt_status;
+    status = answer.nt_status;
   } while (false);
 
   if (name)
@@ -321,8 +296,6 @@ NTSTATUS WINAPI TargetNtSetInformationFile(
                                             file_info_class);
   if (STATUS_ACCESS_DENIED != status)
     return status;
-
-  mozilla::sandboxing::LogBlocked("NtSetInformationFile");
 
   // We don't trust that the IPC can work this early.
   if (!SandboxFactory::GetTargetServices()->GetState()->InitCalled())
@@ -362,7 +335,7 @@ NTSTATUS WINAPI TargetNtSetInformationFile(
     if (!NT_SUCCESS(ret) || !name)
       break;
 
-    uint32 broker = FALSE;
+    uint32_t broker = FALSE;
     CountedParameterSet<FileName> params;
     params[FileName::NAME] = ParamPickerMake(name);
     params[FileName::BROKER] = ParamPickerMake(broker);
@@ -385,7 +358,6 @@ NTSTATUS WINAPI TargetNtSetInformationFile(
       break;
 
     status = answer.nt_status;
-    mozilla::sandboxing::LogAllowed("NtSetInformationFile");
   } while (false);
 
   if (name)

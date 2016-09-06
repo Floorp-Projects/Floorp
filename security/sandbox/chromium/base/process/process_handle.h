@@ -5,12 +5,13 @@
 #ifndef BASE_PROCESS_PROCESS_HANDLE_H_
 #define BASE_PROCESS_PROCESS_HANDLE_H_
 
+#include <stdint.h>
+#include <sys/types.h>
+
 #include "base/base_export.h"
-#include "base/basictypes.h"
 #include "base/files/file_path.h"
 #include "build/build_config.h"
 
-#include <sys/types.h>
 #if defined(OS_WIN)
 #include <windows.h>
 #endif
@@ -35,58 +36,44 @@ const ProcessId kNullProcessId = 0;
 #endif  // defined(OS_WIN)
 
 // Returns the id of the current process.
+// Note that on some platforms, this is not guaranteed to be unique across
+// processes (use GetUniqueIdForProcess if uniqueness is required).
 BASE_EXPORT ProcessId GetCurrentProcId();
+
+// Returns a unique ID for the current process. The ID will be unique across all
+// currently running processes within the chrome session, but IDs of terminated
+// processes may be reused. This returns an opaque value that is different from
+// a process's PID.
+BASE_EXPORT uint32_t GetUniqueIdForProcess();
+
+#if defined(OS_LINUX)
+// When a process is started in a different PID namespace from the browser
+// process, this function must be called with the process's PID in the browser's
+// PID namespace in order to initialize its unique ID. Not thread safe.
+// WARNING: To avoid inconsistent results from GetUniqueIdForProcess, this
+// should only be called very early after process startup - ideally as soon
+// after process creation as possible.
+BASE_EXPORT void InitUniqueIdForProcessInPidNamespace(
+    ProcessId pid_outside_of_namespace);
+#endif
 
 // Returns the ProcessHandle of the current process.
 BASE_EXPORT ProcessHandle GetCurrentProcessHandle();
 
-// Converts a PID to a process handle. This handle must be closed by
-// CloseProcessHandle when you are done with it. Returns true on success.
-BASE_EXPORT bool OpenProcessHandle(ProcessId pid, ProcessHandle* handle);
-
-// Converts a PID to a process handle. On Windows the handle is opened
-// with more access rights and must only be used by trusted code.
-// You have to close returned handle using CloseProcessHandle. Returns true
-// on success.
-// TODO(sanjeevr): Replace all calls to OpenPrivilegedProcessHandle with the
-// more specific OpenProcessHandleWithAccess method and delete this.
-BASE_EXPORT bool OpenPrivilegedProcessHandle(ProcessId pid,
-                                             ProcessHandle* handle);
-
-// Converts a PID to a process handle using the desired access flags. Use a
-// combination of the kProcessAccess* flags defined above for |access_flags|.
-BASE_EXPORT bool OpenProcessHandleWithAccess(ProcessId pid,
-                                             uint32 access_flags,
-                                             ProcessHandle* handle);
-
-// Closes the process handle opened by OpenProcessHandle.
-BASE_EXPORT void CloseProcessHandle(ProcessHandle process);
-
-// Returns the unique ID for the specified process. This is functionally the
-// same as Windows' GetProcessId(), but works on versions of Windows before
-// Win XP SP1 as well.
+// Returns the process ID for the specified process. This is functionally the
+// same as Windows' GetProcessId(), but works on versions of Windows before Win
+// XP SP1 as well.
+// DEPRECATED. New code should be using Process::Pid() instead.
+// Note that on some platforms, this is not guaranteed to be unique across
+// processes.
 BASE_EXPORT ProcessId GetProcId(ProcessHandle process);
 
-#if defined(OS_WIN)
-enum IntegrityLevel {
-  INTEGRITY_UNKNOWN,
-  LOW_INTEGRITY,
-  MEDIUM_INTEGRITY,
-  HIGH_INTEGRITY,
-};
-// Determine the integrity level of the specified process. Returns false
-// if the system does not support integrity levels (pre-Vista) or in the case
-// of an underlying system failure.
-BASE_EXPORT bool GetProcessIntegrityLevel(ProcessHandle process,
-                                          IntegrityLevel* level);
-#endif
+// Returns the ID for the parent of the given process.
+BASE_EXPORT ProcessId GetParentProcessId(ProcessHandle process);
 
 #if defined(OS_POSIX)
 // Returns the path to the executable of the given process.
 BASE_EXPORT FilePath GetProcessExecutablePath(ProcessHandle process);
-
-// Returns the ID for the parent of the given process.
-BASE_EXPORT ProcessId GetParentProcessId(ProcessHandle process);
 #endif
 
 }  // namespace base

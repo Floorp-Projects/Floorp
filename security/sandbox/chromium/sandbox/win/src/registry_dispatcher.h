@@ -5,7 +5,9 @@
 #ifndef SANDBOX_SRC_REGISTRY_DISPATCHER_H_
 #define SANDBOX_SRC_REGISTRY_DISPATCHER_H_
 
-#include "base/basictypes.h"
+#include <stdint.h>
+
+#include "base/macros.h"
 #include "base/strings/string16.h"
 #include "sandbox/win/src/crosscall_server.h"
 #include "sandbox/win/src/sandbox_policy_base.h"
@@ -16,27 +18,27 @@ namespace sandbox {
 class RegistryDispatcher : public Dispatcher {
  public:
   explicit RegistryDispatcher(PolicyBase* policy_base);
-  ~RegistryDispatcher() {}
+  ~RegistryDispatcher() override {}
 
   // Dispatcher interface.
-  virtual bool SetupService(InterceptionManager* manager, int service);
+  bool SetupService(InterceptionManager* manager, int service) override;
 
  private:
   // Processes IPC requests coming from calls to NtCreateKey in the target.
   bool NtCreateKey(IPCInfo* ipc,
                    base::string16* name,
-                   uint32 attributes,
+                   uint32_t attributes,
                    HANDLE root,
-                   uint32 desired_access,
-                   uint32 title_index,
-                   uint32 create_options);
+                   uint32_t desired_access,
+                   uint32_t title_index,
+                   uint32_t create_options);
 
   // Processes IPC requests coming from calls to NtOpenKey in the target.
   bool NtOpenKey(IPCInfo* ipc,
                  base::string16* name,
-                 uint32 attributes,
+                 uint32_t attributes,
                  HANDLE root,
-                 uint32 desired_access);
+                 uint32_t desired_access);
 
   PolicyBase* policy_base_;
   DISALLOW_COPY_AND_ASSIGN(RegistryDispatcher);

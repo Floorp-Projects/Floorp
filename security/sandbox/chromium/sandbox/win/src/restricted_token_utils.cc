@@ -10,7 +10,6 @@
 
 #include "base/logging.h"
 #include "base/win/scoped_handle.h"
-#include "base/win/scoped_process_information.h"
 #include "base/win/windows_version.h"
 #include "sandbox/win/src/job.h"
 #include "sandbox/win/src/restricted_token.h"
@@ -19,13 +18,10 @@
 
 namespace sandbox {
 
-DWORD CreateRestrictedToken(HANDLE *token_handle,
-                            TokenLevel security_level,
+DWORD CreateRestrictedToken(TokenLevel security_level,
                             IntegrityLevel integrity_level,
-                            TokenType token_type) {
-  if (!token_handle)
-    return ERROR_BAD_ARGUMENTS;
-
+                            TokenType token_type,
+                            base::win::ScopedHandle* token) {
   RestrictedToken restricted_token;
   restricted_token.Init(NULL);  // Initialized with the current process token
 
@@ -123,12 +119,11 @@ DWORD CreateRestrictedToken(HANDLE *token_handle,
 
   switch (token_type) {
     case PRIMARY: {
-      err_code = restricted_token.GetRestrictedTokenHandle(token_handle);
+      err_code = restricted_token.GetRestrictedToken(token);
       break;
     }
     case IMPERSONATION: {
-      err_code = restricted_token.GetRestrictedTokenHandleForImpersonation(
-          token_handle);
+      err_code = restricted_token.GetRestrictedTokenForImpersonation(token);
       break;
     }
     default: {
@@ -138,99 +133,6 @@ DWORD CreateRestrictedToken(HANDLE *token_handle,
   }
 
   return err_code;
-}
-
-DWORD StartRestrictedProcessInJob(wchar_t *command_line,
-                                  TokenLevel primary_level,
-                                  TokenLevel impersonation_level,
-                                  JobLevel job_level,
-                                  HANDLE *const job_handle_ret) {
-  Job job;
-  DWORD err_code = job.Init(job_level, NULL, 0, 0);
-  if (ERROR_SUCCESS != err_code)
-    return err_code;
-
-  if (JOB_UNPROTECTED != job_level) {
-    // Share the Desktop handle to be able to use MessageBox() in the sandboxed
-    // application.
-    err_code = job.UserHandleGrantAccess(GetDesktopWindow());
-    if (ERROR_SUCCESS != err_code)
-      return err_code;
-  }
-
-  // Create the primary (restricted) token for the process
-  HANDLE primary_token_handle = NULL;
-  err_code = CreateRestrictedToken(&primary_token_handle,
-                                   primary_level,
-                                   INTEGRITY_LEVEL_LAST,
-                                   PRIMARY);
-  if (ERROR_SUCCESS != err_code) {
-    return err_code;
-  }
-  base::win::ScopedHandle primary_token(primary_token_handle);
-
-  // Create the impersonation token (restricted) to be able to start the
-  // process.
-  HANDLE impersonation_token_handle;
-  err_code = CreateRestrictedToken(&impersonation_token_handle,
-                                   impersonation_level,
-                                   INTEGRITY_LEVEL_LAST,
-                                   IMPERSONATION);
-  if (ERROR_SUCCESS != err_code) {
-    return err_code;
-  }
-  base::win::ScopedHandle impersonation_token(impersonation_token_handle);
-
-  // Start the process
-  STARTUPINFO startup_info = {0};
-  PROCESS_INFORMATION temp_process_info = {};
-  DWORD flags = CREATE_SUSPENDED;
-
-  if (base::win::GetVersion() < base::win::VERSION_WIN8) {
-    // Windows 8 implements nested jobs, but for older systems we need to
-    // break out of any job we're in to enforce our restrictions.
-    flags |= CREATE_BREAKAWAY_FROM_JOB;
-  }
-
-  if (!::CreateProcessAsUser(primary_token.Get(),
-                             NULL,   // No application name.
-                             command_line,
-                             NULL,   // No security attribute.
-                             NULL,   // No thread attribute.
-                             FALSE,  // Do not inherit handles.
-                             flags,
-                             NULL,   // Use the environment of the caller.
-                             NULL,   // Use current directory of the caller.
-                             &startup_info,
-                             &temp_process_info)) {
-    return ::GetLastError();
-  }
-  base::win::ScopedProcessInformation process_info(temp_process_info);
-
-  // Change the token of the main thread of the new process for the
-  // impersonation token with more rights.
-  {
-    HANDLE temp_thread = process_info.thread_handle();
-    if (!::SetThreadToken(&temp_thread, impersonation_token.Get())) {
-      ::TerminateProcess(process_info.process_handle(),
-                         0);  // exit code
-      return ::GetLastError();
-    }
-  }
-
-  err_code = job.AssignProcessToJob(process_info.process_handle());
-  if (ERROR_SUCCESS != err_code) {
-    ::TerminateProcess(process_info.process_handle(),
-                       0);  // exit code
-    return ::GetLastError();
-  }
-
-  // Start the application
-  ::ResumeThread(process_info.thread_handle());
-
-  (*job_handle_ret) = job.Detach();
-
-  return ERROR_SUCCESS;
 }
 
 DWORD SetObjectIntegrityLabel(HANDLE handle, SE_OBJECT_TYPE type,
@@ -309,16 +211,17 @@ DWORD SetTokenIntegrityLevel(HANDLE token, IntegrityLevel integrity_level) {
   if (!::ConvertStringSidToSid(integrity_level_str, &integrity_sid))
     return ::GetLastError();
 
-  TOKEN_MANDATORY_LABEL label = {0};
+  TOKEN_MANDATORY_LABEL label = {};
   label.Label.Attributes = SE_GROUP_INTEGRITY;
   label.Label.Sid = integrity_sid;
 
   DWORD size = sizeof(TOKEN_MANDATORY_LABEL) + ::GetLengthSid(integrity_sid);
   BOOL result = ::SetTokenInformation(token, TokenIntegrityLevel, &label,
                                       size);
+  auto last_error = ::GetLastError();
   ::LocalFree(integrity_sid);
 
-  return result ? ERROR_SUCCESS : ::GetLastError();
+  return result ? ERROR_SUCCESS : last_error;
 }
 
 DWORD SetProcessIntegrityLevel(IntegrityLevel integrity_level) {
@@ -340,6 +243,69 @@ DWORD SetProcessIntegrityLevel(IntegrityLevel integrity_level) {
   base::win::ScopedHandle token(token_handle);
 
   return SetTokenIntegrityLevel(token.Get(), integrity_level);
+}
+
+DWORD HardenTokenIntegrityLevelPolicy(HANDLE token) {
+  if (base::win::GetVersion() < base::win::VERSION_WIN7)
+    return ERROR_SUCCESS;
+
+  DWORD last_error = 0;
+  DWORD length_needed = 0;
+
+  ::GetKernelObjectSecurity(token, LABEL_SECURITY_INFORMATION,
+                            NULL, 0, &length_needed);
+
+  last_error = ::GetLastError();
+  if (last_error != ERROR_INSUFFICIENT_BUFFER)
+    return last_error;
+
+  std::vector<char> security_desc_buffer(length_needed);
+  PSECURITY_DESCRIPTOR security_desc =
+      reinterpret_cast<PSECURITY_DESCRIPTOR>(&security_desc_buffer[0]);
+
+  if (!::GetKernelObjectSecurity(token, LABEL_SECURITY_INFORMATION,
+                                 security_desc, length_needed,
+                                 &length_needed))
+    return ::GetLastError();
+
+  PACL sacl = NULL;
+  BOOL sacl_present = FALSE;
+  BOOL sacl_defaulted = FALSE;
+
+  if (!::GetSecurityDescriptorSacl(security_desc, &sacl_present,
+                                   &sacl, &sacl_defaulted))
+    return ::GetLastError();
+
+  for (DWORD ace_index = 0; ace_index < sacl->AceCount; ++ace_index) {
+    PSYSTEM_MANDATORY_LABEL_ACE ace;
+
+    if (::GetAce(sacl, ace_index, reinterpret_cast<LPVOID*>(&ace))
+        && ace->Header.AceType == SYSTEM_MANDATORY_LABEL_ACE_TYPE) {
+      ace->Mask |= SYSTEM_MANDATORY_LABEL_NO_READ_UP
+                |  SYSTEM_MANDATORY_LABEL_NO_EXECUTE_UP;
+      break;
+    }
+  }
+
+  if (!::SetKernelObjectSecurity(token, LABEL_SECURITY_INFORMATION,
+                                 security_desc))
+    return ::GetLastError();
+
+  return ERROR_SUCCESS;
+}
+
+DWORD HardenProcessIntegrityLevelPolicy() {
+  if (base::win::GetVersion() < base::win::VERSION_WIN7)
+    return ERROR_SUCCESS;
+
+  HANDLE token_handle;
+  if (!::OpenProcessToken(GetCurrentProcess(), READ_CONTROL | WRITE_OWNER,
+                          &token_handle))
+    return ::GetLastError();
+
+  base::win::ScopedHandle token(token_handle);
+
+  return HardenTokenIntegrityLevelPolicy(token.Get());
 }
 
 }  // namespace sandbox

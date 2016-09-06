@@ -4,101 +4,155 @@
 
 #include "sandbox/linux/bpf_dsl/dump_bpf.h"
 
+#include <inttypes.h>
+#include <stddef.h>
+#include <stdint.h>
 #include <stdio.h>
 
+#include <string>
+
+#include "base/strings/stringprintf.h"
+#include "sandbox/linux/bpf_dsl/codegen.h"
+#include "sandbox/linux/bpf_dsl/seccomp_macros.h"
 #include "sandbox/linux/bpf_dsl/trap_registry.h"
-#include "sandbox/linux/seccomp-bpf/codegen.h"
-#include "sandbox/linux/seccomp-bpf/linux_seccomp.h"
+#include "sandbox/linux/system_headers/linux_filter.h"
+#include "sandbox/linux/system_headers/linux_seccomp.h"
 
 namespace sandbox {
 namespace bpf_dsl {
 
-void DumpBPF::PrintProgram(const CodeGen::Program& program) {
-  for (CodeGen::Program::const_iterator iter = program.begin();
-       iter != program.end();
-       ++iter) {
-    int ip = (int)(iter - program.begin());
-    fprintf(stderr, "%3d) ", ip);
-    switch (BPF_CLASS(iter->code)) {
-      case BPF_LD:
-        if (iter->code == BPF_LD + BPF_W + BPF_ABS) {
-          fprintf(stderr, "LOAD %d  // ", (int)iter->k);
-          if (iter->k == offsetof(struct arch_seccomp_data, nr)) {
-            fprintf(stderr, "System call number\n");
-          } else if (iter->k == offsetof(struct arch_seccomp_data, arch)) {
-            fprintf(stderr, "Architecture\n");
-          } else if (iter->k ==
-                     offsetof(struct arch_seccomp_data, instruction_pointer)) {
-            fprintf(stderr, "Instruction pointer (LSB)\n");
-          } else if (iter->k ==
-                     offsetof(struct arch_seccomp_data, instruction_pointer) +
-                         4) {
-            fprintf(stderr, "Instruction pointer (MSB)\n");
-          } else if (iter->k >= offsetof(struct arch_seccomp_data, args) &&
-                     iter->k < offsetof(struct arch_seccomp_data, args) + 48 &&
-                     (iter->k - offsetof(struct arch_seccomp_data, args)) % 4 ==
-                         0) {
-            fprintf(
-                stderr,
-                "Argument %d (%cSB)\n",
-                (int)(iter->k - offsetof(struct arch_seccomp_data, args)) / 8,
-                (iter->k - offsetof(struct arch_seccomp_data, args)) % 8 ? 'M'
-                                                                         : 'L');
-          } else {
-            fprintf(stderr, "???\n");
-          }
-        } else {
-          fprintf(stderr, "LOAD ???\n");
-        }
-        break;
-      case BPF_JMP:
-        if (BPF_OP(iter->code) == BPF_JA) {
-          fprintf(stderr, "JMP %d\n", ip + iter->k + 1);
-        } else {
-          fprintf(stderr, "if A %s 0x%x; then JMP %d else JMP %d\n",
-              BPF_OP(iter->code) == BPF_JSET ? "&" :
-              BPF_OP(iter->code) == BPF_JEQ ? "==" :
-              BPF_OP(iter->code) == BPF_JGE ? ">=" :
-              BPF_OP(iter->code) == BPF_JGT ? ">"  : "???",
-              (int)iter->k,
-              ip + iter->jt + 1, ip + iter->jf + 1);
-        }
-        break;
-      case BPF_RET:
-        fprintf(stderr, "RET 0x%x  // ", iter->k);
-        if ((iter->k & SECCOMP_RET_ACTION) == SECCOMP_RET_TRAP) {
-          fprintf(stderr, "Trap #%d\n", iter->k & SECCOMP_RET_DATA);
-        } else if ((iter->k & SECCOMP_RET_ACTION) == SECCOMP_RET_ERRNO) {
-          fprintf(stderr, "errno = %d\n", iter->k & SECCOMP_RET_DATA);
-        } else if ((iter->k & SECCOMP_RET_ACTION) == SECCOMP_RET_TRACE) {
-          fprintf(stderr, "Trace #%d\n", iter->k & SECCOMP_RET_DATA);
-        } else if (iter->k == SECCOMP_RET_ALLOW) {
-          fprintf(stderr, "Allowed\n");
-        } else {
-          fprintf(stderr, "???\n");
-        }
-        break;
-      case BPF_ALU:
-        fprintf(stderr, BPF_OP(iter->code) == BPF_NEG
-            ? "A := -A\n" : "A := A %s 0x%x\n",
-            BPF_OP(iter->code) == BPF_ADD ? "+"  :
-            BPF_OP(iter->code) == BPF_SUB ? "-"  :
-            BPF_OP(iter->code) == BPF_MUL ? "*"  :
-            BPF_OP(iter->code) == BPF_DIV ? "/"  :
-            BPF_OP(iter->code) == BPF_MOD ? "%"  :
-            BPF_OP(iter->code) == BPF_OR  ? "|"  :
-            BPF_OP(iter->code) == BPF_XOR ? "^"  :
-            BPF_OP(iter->code) == BPF_AND ? "&"  :
-            BPF_OP(iter->code) == BPF_LSH ? "<<" :
-            BPF_OP(iter->code) == BPF_RSH ? ">>" : "???",
-            (int)iter->k);
-        break;
-      default:
-        fprintf(stderr, "???\n");
-        break;
-    }
+namespace {
+
+const char* AluOpToken(uint32_t code) {
+  switch (BPF_OP(code)) {
+    case BPF_ADD:
+      return "+";
+    case BPF_SUB:
+      return "-";
+    case BPF_MUL:
+      return "*";
+    case BPF_DIV:
+      return "/";
+    case BPF_MOD:
+      return "%";
+    case BPF_OR:
+      return "|";
+    case BPF_XOR:
+      return "^";
+    case BPF_AND:
+      return "&";
+    case BPF_LSH:
+      return "<<";
+    case BPF_RSH:
+      return ">>";
+    default:
+      return "???";
   }
-  return;
+}
+
+const char* JmpOpToken(uint32_t code) {
+  switch (BPF_OP(code)) {
+    case BPF_JSET:
+      return "&";
+    case BPF_JEQ:
+      return "==";
+    case BPF_JGE:
+      return ">=";
+    default:
+      return "???";
+  }
+}
+
+const char* DataOffsetName(size_t off) {
+  switch (off) {
+    case SECCOMP_NR_IDX:
+      return "System call number";
+    case SECCOMP_ARCH_IDX:
+      return "Architecture";
+    case SECCOMP_IP_LSB_IDX:
+      return "Instruction pointer (LSB)";
+    case SECCOMP_IP_MSB_IDX:
+      return "Instruction pointer (MSB)";
+    default:
+      return "???";
+  }
+}
+
+void AppendInstruction(std::string* dst, size_t pc, const sock_filter& insn) {
+  base::StringAppendF(dst, "%3zu) ", pc);
+  switch (BPF_CLASS(insn.code)) {
+    case BPF_LD:
+      if (insn.code == BPF_LD + BPF_W + BPF_ABS) {
+        base::StringAppendF(dst, "LOAD %" PRIu32 "  // ", insn.k);
+        size_t maybe_argno =
+            (insn.k - offsetof(struct arch_seccomp_data, args)) /
+            sizeof(uint64_t);
+        if (maybe_argno < 6 && insn.k == SECCOMP_ARG_LSB_IDX(maybe_argno)) {
+          base::StringAppendF(dst, "Argument %zu (LSB)\n", maybe_argno);
+        } else if (maybe_argno < 6 &&
+                   insn.k == SECCOMP_ARG_MSB_IDX(maybe_argno)) {
+          base::StringAppendF(dst, "Argument %zu (MSB)\n", maybe_argno);
+        } else {
+          base::StringAppendF(dst, "%s\n", DataOffsetName(insn.k));
+        }
+      } else {
+        base::StringAppendF(dst, "Load ???\n");
+      }
+      break;
+    case BPF_JMP:
+      if (BPF_OP(insn.code) == BPF_JA) {
+        base::StringAppendF(dst, "JMP %zu\n", pc + insn.k + 1);
+      } else {
+        base::StringAppendF(
+            dst, "if A %s 0x%" PRIx32 "; then JMP %zu else JMP %zu\n",
+            JmpOpToken(insn.code), insn.k, pc + insn.jt + 1, pc + insn.jf + 1);
+      }
+      break;
+    case BPF_RET:
+      base::StringAppendF(dst, "RET 0x%" PRIx32 "  // ", insn.k);
+      if ((insn.k & SECCOMP_RET_ACTION) == SECCOMP_RET_TRAP) {
+        base::StringAppendF(dst, "Trap #%" PRIu32 "\n",
+                            insn.k & SECCOMP_RET_DATA);
+      } else if ((insn.k & SECCOMP_RET_ACTION) == SECCOMP_RET_ERRNO) {
+        base::StringAppendF(dst, "errno = %" PRIu32 "\n",
+                            insn.k & SECCOMP_RET_DATA);
+      } else if ((insn.k & SECCOMP_RET_ACTION) == SECCOMP_RET_TRACE) {
+        base::StringAppendF(dst, "Trace #%" PRIu32 "\n",
+                            insn.k & SECCOMP_RET_DATA);
+      } else if (insn.k == SECCOMP_RET_ALLOW) {
+        base::StringAppendF(dst, "Allowed\n");
+      } else if (insn.k == SECCOMP_RET_KILL) {
+        base::StringAppendF(dst, "Kill\n");
+      } else {
+        base::StringAppendF(dst, "???\n");
+      }
+      break;
+    case BPF_ALU:
+      if (BPF_OP(insn.code) == BPF_NEG) {
+        base::StringAppendF(dst, "A := -A\n");
+      } else {
+        base::StringAppendF(dst, "A := A %s 0x%" PRIx32 "\n",
+                            AluOpToken(insn.code), insn.k);
+      }
+      break;
+    default:
+      base::StringAppendF(dst, "???\n");
+      break;
+  }
+}
+
+}  // namespace
+
+void DumpBPF::PrintProgram(const CodeGen::Program& program) {
+  fputs(StringPrintProgram(program).c_str(), stderr);
+}
+
+std::string DumpBPF::StringPrintProgram(const CodeGen::Program& program) {
+  std::string res;
+  for (size_t i = 0; i < program.size(); i++) {
+    AppendInstruction(&res, i + 1, program[i]);
+  }
+  return res;
 }
 
 }  // namespace bpf_dsl

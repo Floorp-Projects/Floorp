@@ -5,9 +5,10 @@
 #ifndef SANDBOX_SRC_FILESYSTEM_POLICY_H__
 #define SANDBOX_SRC_FILESYSTEM_POLICY_H__
 
+#include <stdint.h>
+
 #include <string>
 
-#include "base/basictypes.h"
 #include "base/strings/string16.h"
 #include "sandbox/win/src/crosscall_server.h"
 #include "sandbox/win/src/nt_internals.h"
@@ -40,13 +41,13 @@ class FileSystemPolicy {
   // 'file' : The target file or directory.
   static bool CreateFileAction(EvalResult eval_result,
                                const ClientInfo& client_info,
-                               const base::string16 &file,
-                               uint32 attributes,
-                               uint32 desired_access,
-                               uint32 file_attributes,
-                               uint32 share_access,
-                               uint32 create_disposition,
-                               uint32 create_options,
+                               const base::string16& file,
+                               uint32_t attributes,
+                               uint32_t desired_access,
+                               uint32_t file_attributes,
+                               uint32_t share_access,
+                               uint32_t create_disposition,
+                               uint32_t create_options,
                                HANDLE* handle,
                                NTSTATUS* nt_status,
                                ULONG_PTR* io_information);
@@ -58,11 +59,11 @@ class FileSystemPolicy {
   // 'file' : The target file or directory.
   static bool OpenFileAction(EvalResult eval_result,
                              const ClientInfo& client_info,
-                             const base::string16 &file,
-                             uint32 attributes,
-                             uint32 desired_access,
-                             uint32 share_access,
-                             uint32 open_options,
+                             const base::string16& file,
+                             uint32_t attributes,
+                             uint32_t desired_access,
+                             uint32_t share_access,
+                             uint32_t open_options,
                              HANDLE* handle,
                              NTSTATUS* nt_status,
                              ULONG_PTR* io_information);
@@ -71,8 +72,8 @@ class FileSystemPolicy {
   // API that is compatible with the IPC-received parameters.
   static bool QueryAttributesFileAction(EvalResult eval_result,
                                         const ClientInfo& client_info,
-                                        const base::string16 &file,
-                                        uint32 attributes,
+                                        const base::string16& file,
+                                        uint32_t attributes,
                                         FILE_BASIC_INFORMATION* file_info,
                                         NTSTATUS* nt_status);
 
@@ -81,8 +82,8 @@ class FileSystemPolicy {
   static bool QueryFullAttributesFileAction(
       EvalResult eval_result,
       const ClientInfo& client_info,
-      const base::string16 &file,
-      uint32 attributes,
+      const base::string16& file,
+      uint32_t attributes,
       FILE_NETWORK_OPEN_INFORMATION* file_info,
       NTSTATUS* nt_status);
 
@@ -92,16 +93,15 @@ class FileSystemPolicy {
                                        const ClientInfo& client_info,
                                        HANDLE target_file_handle,
                                        void* file_info,
-                                       uint32 length,
-                                       uint32 info_class,
+                                       uint32_t length,
+                                       uint32_t info_class,
                                        IO_STATUS_BLOCK* io_block,
                                        NTSTATUS* nt_status);
 };
 
-// Expands the path and check if it's a reparse point. Returns false if
-// we cannot determine or if there is an unexpected error. In that case
-// the path cannot be trusted.
-bool PreProcessName(const base::string16& path, base::string16* new_path);
+// Expands the path and check if it's a reparse point. Returns false if the path
+// cannot be trusted.
+bool PreProcessName(base::string16* path);
 
 // Corrects global paths to have a correctly escaped NT prefix at the
 // beginning. If the name has no NT prefix (either normal or escaped)

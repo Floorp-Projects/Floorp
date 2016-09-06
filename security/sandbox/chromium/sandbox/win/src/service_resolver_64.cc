@@ -4,6 +4,8 @@
 
 #include "sandbox/win/src/service_resolver.h"
 
+#include <stddef.h>
+
 #include "base/memory/scoped_ptr.h"
 #include "sandbox/win/src/sandbox_nt_util.h"
 #include "sandbox/win/src/win_utils.h"
@@ -139,9 +141,9 @@ NTSTATUS ServiceResolverThunk::Setup(const void* target_module,
                                      void* thunk_storage,
                                      size_t storage_bytes,
                                      size_t* storage_used) {
-  NTSTATUS ret = Init(target_module, interceptor_module, target_name,
-                      interceptor_name, interceptor_entry_point,
-                      thunk_storage, storage_bytes);
+  NTSTATUS ret =
+      Init(target_module, interceptor_module, target_name, interceptor_name,
+           interceptor_entry_point, thunk_storage, storage_bytes);
   if (!NT_SUCCESS(ret))
     return ret;
 
@@ -213,7 +215,7 @@ NTSTATUS ServiceResolverThunk::PerformPatch(void* local_thunk,
                                             void* remote_thunk) {
   // Patch the original code.
   ServiceEntry local_service;
-  DCHECK_NT(GetInternalThunkSize() >= sizeof(local_service));
+  DCHECK_NT(GetInternalThunkSize() <= sizeof(local_service));
   if (!SetInternalThunk(&local_service, sizeof(local_service), NULL,
                         interceptor_))
     return STATUS_UNSUCCESSFUL;

@@ -4,9 +4,12 @@
 
 #include "base/strings/utf_string_conversions.h"
 
+#include <stdint.h>
+
 #include "base/strings/string_piece.h"
 #include "base/strings/string_util.h"
 #include "base/strings/utf_string_conversion_utils.h"
+#include "build/build_config.h"
 
 namespace base {
 
@@ -24,9 +27,9 @@ bool ConvertUnicode(const SRC_CHAR* src,
                     DEST_STRING* output) {
   // ICU requires 32-bit numbers.
   bool success = true;
-  int32 src_len32 = static_cast<int32>(src_len);
-  for (int32 i = 0; i < src_len32; i++) {
-    uint32 code_point;
+  int32_t src_len32 = static_cast<int32_t>(src_len);
+  for (int32_t i = 0; i < src_len32; i++) {
+    uint32_t code_point;
     if (ReadUnicodeCharacter(src, src_len32, &i, &code_point)) {
       WriteUnicodeCharacter(code_point, output);
     } else {
@@ -73,7 +76,7 @@ bool UTF8ToWide(const char* src, size_t src_len, std::wstring* output) {
   }
 }
 
-std::wstring UTF8ToWide(const StringPiece& utf8) {
+std::wstring UTF8ToWide(StringPiece utf8) {
   if (IsStringASCII(utf8)) {
     return std::wstring(utf8.begin(), utf8.end());
   }
@@ -153,7 +156,7 @@ bool UTF8ToUTF16(const char* src, size_t src_len, string16* output) {
   }
 }
 
-string16 UTF8ToUTF16(const StringPiece& utf8) {
+string16 UTF8ToUTF16(StringPiece utf8) {
   if (IsStringASCII(utf8)) {
     return string16(utf8.begin(), utf8.end());
   }
@@ -176,7 +179,7 @@ bool UTF16ToUTF8(const char16* src, size_t src_len, std::string* output) {
   }
 }
 
-std::string UTF16ToUTF8(const string16& utf16) {
+std::string UTF16ToUTF8(StringPiece16 utf16) {
   if (IsStringASCII(utf16)) {
     return std::string(utf16.begin(), utf16.end());
   }
@@ -195,7 +198,7 @@ bool UTF8ToUTF16(const char* src, size_t src_len, string16* output) {
   return UTF8ToWide(src, src_len, output);
 }
 
-string16 UTF8ToUTF16(const StringPiece& utf8) {
+string16 UTF8ToUTF16(StringPiece utf8) {
   return UTF8ToWide(utf8);
 }
 
@@ -203,23 +206,24 @@ bool UTF16ToUTF8(const char16* src, size_t src_len, std::string* output) {
   return WideToUTF8(src, src_len, output);
 }
 
-std::string UTF16ToUTF8(const string16& utf16) {
-  return WideToUTF8(utf16);
+std::string UTF16ToUTF8(StringPiece16 utf16) {
+  if (IsStringASCII(utf16))
+    return std::string(utf16.data(), utf16.data() + utf16.length());
+
+  std::string ret;
+  PrepareForUTF8Output(utf16.data(), utf16.length(), &ret);
+  ConvertUnicode(utf16.data(), utf16.length(), &ret);
+  return ret;
 }
 
 #endif
 
-std::wstring ASCIIToWide(const StringPiece& ascii) {
-  DCHECK(IsStringASCII(ascii)) << ascii;
-  return std::wstring(ascii.begin(), ascii.end());
-}
-
-string16 ASCIIToUTF16(const StringPiece& ascii) {
+string16 ASCIIToUTF16(StringPiece ascii) {
   DCHECK(IsStringASCII(ascii)) << ascii;
   return string16(ascii.begin(), ascii.end());
 }
 
-std::string UTF16ToASCII(const string16& utf16) {
+std::string UTF16ToASCII(StringPiece16 utf16) {
   DCHECK(IsStringASCII(utf16)) << UTF16ToUTF8(utf16);
   return std::string(utf16.begin(), utf16.end());
 }

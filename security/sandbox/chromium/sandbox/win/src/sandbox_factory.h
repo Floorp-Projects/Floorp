@@ -5,6 +5,7 @@
 #ifndef SANDBOX_SRC_SANDBOX_FACTORY_H__
 #define SANDBOX_SRC_SANDBOX_FACTORY_H__
 
+#include "base/macros.h"
 #include "sandbox/win/src/sandbox.h"
 
 // SandboxFactory is a set of static methods to get access to the broker

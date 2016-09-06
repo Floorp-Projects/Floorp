@@ -6,8 +6,10 @@
 #define SANDBOX_SRC_SANDBOX_NT_UTIL_H_
 
 #include <intrin.h>
+#include <stddef.h>
+#include <stdint.h>
 
-#include "base/basictypes.h"
+#include "base/macros.h"
 #include "sandbox/win/src/nt_internals.h"
 #include "sandbox/win/src/sandbox_nt_types.h"
 
@@ -31,9 +33,9 @@ void __cdecl operator delete(void* memory, void* buffer,
 // DCHECK_NT is defined to be pretty much an assert at this time because we
 // don't have logging from the ntdll layer on the child.
 //
-// VERIFY_NT and VERIFY_SUCCESS_NT are the standard asserts on debug, but
+// VERIFY_NT and VERIFY_SUCCESS are the standard asserts on debug, but
 // execute the actual argument on release builds. VERIFY_NT expects an action
-// returning a bool, while VERIFY_SUCCESS_NT expects an action returning
+// returning a bool, while VERIFY_SUCCESS expects an action returning
 // NTSTATUS.
 #ifndef NDEBUG
 #define DCHECK_NT(condition) { (condition) ? (void)0 : __debugbreak(); }
@@ -101,7 +103,14 @@ NTSTATUS CopyData(void* destination, const void* source, size_t bytes);
 
 // Copies the name from an object attributes.
 NTSTATUS AllocAndCopyName(const OBJECT_ATTRIBUTES* in_object,
-                          wchar_t** out_name, uint32* attributes, HANDLE* root);
+                          wchar_t** out_name,
+                          uint32_t* attributes,
+                          HANDLE* root);
+
+// Determine full path name from object root and path.
+NTSTATUS AllocAndGetFullPath(HANDLE root,
+                             wchar_t* path,
+                             wchar_t** full_path);
 
 // Initializes our ntdll level heap
 bool InitHeap();
@@ -129,7 +138,7 @@ enum MappedModuleFlags {
 // }
 // InsertYourLogicHere(name);
 // operator delete(name, NT_ALLOC);
-UNICODE_STRING* GetImageInfoFromModule(HMODULE module, uint32* flags);
+UNICODE_STRING* GetImageInfoFromModule(HMODULE module, uint32_t* flags);
 
 // Returns the full path and filename for a given dll.
 // May return NULL if the provided address is not backed by a named section, or
@@ -177,8 +186,9 @@ class AutoProtectMemory {
 
 // Returns true if the file_rename_information structure is supported by our
 // rename handler.
-bool IsSupportedRenameCall(FILE_RENAME_INFORMATION* file_info, DWORD length,
-                           uint32 file_info_class);
+bool IsSupportedRenameCall(FILE_RENAME_INFORMATION* file_info,
+                           DWORD length,
+                           uint32_t file_info_class);
 
 }  // namespace sandbox
 

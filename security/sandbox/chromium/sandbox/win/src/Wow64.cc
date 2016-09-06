@@ -2,10 +2,13 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "sandbox/win/src/wow64.h"
+#include "sandbox/win/src/Wow64.h"
+
+#include <stddef.h>
 
 #include <sstream>
 
+#include "base/bit_cast.h"
 #include "base/logging.h"
 #include "base/memory/scoped_ptr.h"
 #include "base/win/scoped_process_information.h"
@@ -73,12 +76,11 @@ typedef BOOL (WINAPI* IsWow64ProcessFunction)(HANDLE process, BOOL* wow64);
 
 namespace sandbox {
 
-Wow64::~Wow64() {
-  if (dll_load_)
-    ::CloseHandle(dll_load_);
+Wow64::Wow64(TargetProcess* child, HMODULE ntdll)
+    : child_(child), ntdll_(ntdll), dll_load_(NULL), continue_load_(NULL) {
+}
 
-  if (continue_load_)
-    ::CloseHandle(continue_load_);
+Wow64::~Wow64() {
 }
 
 // The basic idea is to allocate one page of memory on the child, and initialize
@@ -96,17 +98,20 @@ bool Wow64::WaitForNtdll() {
   const size_t page_size = 4096;
 
   // Create some default manual reset un-named events, not signaled.
-  dll_load_ = ::CreateEvent(NULL, TRUE, FALSE, NULL);
-  continue_load_ = ::CreateEvent(NULL, TRUE, FALSE, NULL);
+  dll_load_.Set(::CreateEvent(NULL, TRUE, FALSE, NULL));
+  continue_load_.Set(::CreateEvent(NULL, TRUE, FALSE, NULL));
   HANDLE current_process = ::GetCurrentProcess();
   HANDLE remote_load, remote_continue;
   DWORD access = EVENT_MODIFY_STATE | SYNCHRONIZE;
-  if (!::DuplicateHandle(current_process, dll_load_, child_->Process(),
-                         &remote_load, access, FALSE, 0))
+  if (!::DuplicateHandle(current_process, dll_load_.Get(), child_->Process(),
+                         &remote_load, access, FALSE, 0)) {
     return false;
-  if (!::DuplicateHandle(current_process, continue_load_, child_->Process(),
-                         &remote_continue, access, FALSE, 0))
+  }
+  if (!::DuplicateHandle(current_process, continue_load_.Get(),
+                         child_->Process(), &remote_continue, access, FALSE,
+                         0)) {
     return false;
+  }
 
   void* buffer = ::VirtualAllocEx(child_->Process(), NULL, page_size,
                                   MEM_COMMIT, PAGE_EXECUTE_READWRITE);
@@ -137,7 +142,7 @@ bool Wow64::WaitForNtdll() {
 }
 
 bool Wow64::RunWowHelper(void* buffer) {
-  COMPILE_ASSERT(sizeof(buffer) <= sizeof(DWORD), unsupported_64_bits);
+  static_assert(sizeof(buffer) <= sizeof(DWORD), "unsupported 64 bits");
 
   // Get the path to the helper (beside the exe).
   wchar_t prog_name[MAX_PATH];
@@ -185,11 +190,11 @@ bool Wow64::DllMapped() {
   }
 
   for (;;) {
-    DWORD reason = ::WaitForSingleObject(dll_load_, INFINITE);
+    DWORD reason = ::WaitForSingleObject(dll_load_.Get(), INFINITE);
     if (WAIT_TIMEOUT == reason || WAIT_ABANDONED == reason)
       return false;
 
-    if (!::ResetEvent(dll_load_))
+    if (!::ResetEvent(dll_load_.Get()))
       return false;
 
     bool found = NtdllPresent();
@@ -198,7 +203,7 @@ bool Wow64::DllMapped() {
         return false;
     }
 
-    if (!::SetEvent(continue_load_))
+    if (!::SetEvent(continue_load_.Get()))
       return false;
 
     if (found)

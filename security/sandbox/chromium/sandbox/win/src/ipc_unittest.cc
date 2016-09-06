@@ -2,7 +2,9 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "base/basictypes.h"
+#include <stddef.h>
+#include <stdint.h>
+
 #include "sandbox/win/src/crosscall_client.h"
 #include "sandbox/win/src/crosscall_server.h"
 #include "sandbox/win/src/sharedmem_ipc_client.h"
@@ -67,11 +69,11 @@ TEST(IPCTest, ChannelMaker) {
   size_t channel_start = 0;
   IPCControl* client_control = MakeChannels(12 * 64, 4096, &channel_start);
   ASSERT_TRUE(NULL != client_control);
-  EXPECT_EQ(5, client_control->channels_count);
+  EXPECT_EQ(5u, client_control->channels_count);
 #if defined(_WIN64)
-  EXPECT_EQ(216, channel_start);
+  EXPECT_EQ(216u, channel_start);
 #else
-  EXPECT_EQ(108, channel_start);
+  EXPECT_EQ(108u, channel_start);
 #endif
   delete[] reinterpret_cast<char*>(client_control);
 }
@@ -158,46 +160,46 @@ TEST(IPCTest, CrossCallStrPacking) {
   SharedMemIPCClient client(mem);
 
   CrossCallReturn answer;
-  uint32 tag1 = 666;
+  uint32_t tag1 = 666;
   const wchar_t *text = L"98765 - 43210";
   base::string16 copied_text;
   CrossCallParamsEx* actual_params;
 
   CrossCall(client, tag1, text, &answer);
   actual_params = reinterpret_cast<CrossCallParamsEx*>(client.GetBuffer());
-  EXPECT_EQ(1, actual_params->GetParamsCount());
+  EXPECT_EQ(1u, actual_params->GetParamsCount());
   EXPECT_EQ(tag1, actual_params->GetTag());
   EXPECT_TRUE(actual_params->GetParameterStr(0, &copied_text));
   EXPECT_STREQ(text, copied_text.c_str());
 
   // Check with an empty string.
-  uint32 tag2 = 777;
+  uint32_t tag2 = 777;
   const wchar_t* null_text = NULL;
   CrossCall(client, tag2, null_text, &answer);
   actual_params = reinterpret_cast<CrossCallParamsEx*>(client.GetBuffer());
-  EXPECT_EQ(1, actual_params->GetParamsCount());
+  EXPECT_EQ(1u, actual_params->GetParamsCount());
   EXPECT_EQ(tag2, actual_params->GetTag());
-  uint32 param_size = 1;
+  uint32_t param_size = 1;
   ArgType type = INVALID_TYPE;
   void* param_addr = actual_params->GetRawParameter(0, &param_size, &type);
   EXPECT_TRUE(NULL != param_addr);
-  EXPECT_EQ(0, param_size);
+  EXPECT_EQ(0u, param_size);
   EXPECT_EQ(WCHAR_TYPE, type);
   EXPECT_TRUE(actual_params->GetParameterStr(0, &copied_text));
 
-  uint32 tag3 = 888;
+  uint32_t tag3 = 888;
   param_size = 1;
   copied_text.clear();
 
   // Check with an empty string and a non-empty string.
   CrossCall(client, tag3, null_text, text, &answer);
   actual_params = reinterpret_cast<CrossCallParamsEx*>(client.GetBuffer());
-  EXPECT_EQ(2, actual_params->GetParamsCount());
+  EXPECT_EQ(2u, actual_params->GetParamsCount());
   EXPECT_EQ(tag3, actual_params->GetTag());
   type = INVALID_TYPE;
   param_addr = actual_params->GetRawParameter(0, &param_size, &type);
   EXPECT_TRUE(NULL != param_addr);
-  EXPECT_EQ(0, param_size);
+  EXPECT_EQ(0u, param_size);
   EXPECT_EQ(WCHAR_TYPE, type);
   EXPECT_TRUE(actual_params->GetParameterStr(0, &copied_text));
   EXPECT_TRUE(actual_params->GetParameterStr(1, &copied_text));
@@ -209,7 +211,7 @@ TEST(IPCTest, CrossCallStrPacking) {
   const wchar_t *text2 = L"AeFG";
   CrossCall(client, tag1, text2, null_text, text, &answer);
   actual_params = reinterpret_cast<CrossCallParamsEx*>(client.GetBuffer());
-  EXPECT_EQ(3, actual_params->GetParamsCount());
+  EXPECT_EQ(3u, actual_params->GetParamsCount());
   EXPECT_EQ(tag1, actual_params->GetTag());
   EXPECT_TRUE(actual_params->GetParameterStr(0, &copied_text_p0));
   EXPECT_STREQ(text2, copied_text_p0.c_str());
@@ -218,7 +220,7 @@ TEST(IPCTest, CrossCallStrPacking) {
   type = INVALID_TYPE;
   param_addr = actual_params->GetRawParameter(1, &param_size, &type);
   EXPECT_TRUE(NULL != param_addr);
-  EXPECT_EQ(0, param_size);
+  EXPECT_EQ(0u, param_size);
   EXPECT_EQ(WCHAR_TYPE, type);
 
   CloseChannelEvents(client_control);
@@ -233,8 +235,8 @@ TEST(IPCTest, CrossCallIntPacking) {
   client_control->server_alive = HANDLE(1);
   FixChannels(client_control, base_start, kIPCChannelSize, FIX_PONG_READY);
 
-  uint32 tag1 = 999;
-  uint32 tag2 = 111;
+  uint32_t tag1 = 999;
+  uint32_t tag2 = 111;
   const wchar_t *text = L"godzilla";
   CrossCallParamsEx* actual_params;
 
@@ -245,10 +247,10 @@ TEST(IPCTest, CrossCallIntPacking) {
   DWORD dw = 0xE6578;
   CrossCall(client, tag2, dw, &answer);
   actual_params = reinterpret_cast<CrossCallParamsEx*>(client.GetBuffer());
-  EXPECT_EQ(1, actual_params->GetParamsCount());
+  EXPECT_EQ(1u, actual_params->GetParamsCount());
   EXPECT_EQ(tag2, actual_params->GetTag());
   ArgType type = INVALID_TYPE;
-  uint32 param_size = 1;
+  uint32_t param_size = 1;
   void* param_addr = actual_params->GetRawParameter(0, &param_size, &type);
   ASSERT_EQ(sizeof(dw), param_size);
   EXPECT_EQ(UINT32_TYPE, type);
@@ -259,7 +261,7 @@ TEST(IPCTest, CrossCallIntPacking) {
   HANDLE h = HANDLE(0x70000500);
   CrossCall(client, tag1, text, h, &answer);
   actual_params = reinterpret_cast<CrossCallParamsEx*>(client.GetBuffer());
-  EXPECT_EQ(2, actual_params->GetParamsCount());
+  EXPECT_EQ(2u, actual_params->GetParamsCount());
   EXPECT_EQ(tag1, actual_params->GetTag());
   type = INVALID_TYPE;
   param_addr = actual_params->GetRawParameter(1, &param_size, &type);
@@ -271,7 +273,7 @@ TEST(IPCTest, CrossCallIntPacking) {
   // Check combination of 32 and 64 bits.
   CrossCall(client, tag2, h, dw, h, &answer);
   actual_params = reinterpret_cast<CrossCallParamsEx*>(client.GetBuffer());
-  EXPECT_EQ(3, actual_params->GetParamsCount());
+  EXPECT_EQ(3u, actual_params->GetParamsCount());
   EXPECT_EQ(tag2, actual_params->GetTag());
   type = INVALID_TYPE;
   param_addr = actual_params->GetRawParameter(0, &param_size, &type);
@@ -299,28 +301,28 @@ TEST(IPCTest, CrossCallIntPacking) {
 TEST(IPCTest, CrossCallValidation) {
   // First a sanity test with a well formed parameter object.
   unsigned long value = 124816;
-  const uint32 kTag = 33;
-  const uint32 kBufferSize = 256;
+  const uint32_t kTag = 33;
+  const uint32_t kBufferSize = 256;
   ActualCallParams<1, kBufferSize> params_1(kTag);
   params_1.CopyParamIn(0, &value, sizeof(value), false, UINT32_TYPE);
   void* buffer = const_cast<void*>(params_1.GetBuffer());
 
-  uint32 out_size = 0;
+  uint32_t out_size = 0;
   CrossCallParamsEx* ccp = 0;
   ccp = CrossCallParamsEx::CreateFromBuffer(buffer, params_1.GetSize(),
                                             &out_size);
   ASSERT_TRUE(NULL != ccp);
   EXPECT_TRUE(ccp->GetBuffer() != buffer);
   EXPECT_EQ(kTag, ccp->GetTag());
-  EXPECT_EQ(1, ccp->GetParamsCount());
+  EXPECT_EQ(1u, ccp->GetParamsCount());
   delete[] (reinterpret_cast<char*>(ccp));
 
   // Test that we handle integer overflow on the number of params
   // correctly. We use a test-only ctor for ActualCallParams that
   // allows to create malformed cross-call buffers.
-  const int32 kPtrDiffSz = sizeof(ptrdiff_t);
-  for (int32 ix = -1; ix != 3; ++ix) {
-    uint32 fake_num_params = (kuint32max / kPtrDiffSz) + ix;
+  const int32_t kPtrDiffSz = sizeof(ptrdiff_t);
+  for (int32_t ix = -1; ix != 3; ++ix) {
+    uint32_t fake_num_params = (UINT32_MAX / kPtrDiffSz) + ix;
     ActualCallParams<1, kBufferSize> params_2(kTag, fake_num_params);
     params_2.CopyParamIn(0, &value, sizeof(value), false, UINT32_TYPE);
     buffer = const_cast<void*>(params_2.GetBuffer());
@@ -337,7 +339,7 @@ TEST(IPCTest, CrossCallValidation) {
   buffer = const_cast<void*>(params_3.GetBuffer());
   EXPECT_TRUE(NULL != buffer);
 
-  uint32 correct_size = params_3.OverrideSize(1);
+  uint32_t correct_size = params_3.OverrideSize(1);
   ccp = CrossCallParamsEx::CreateFromBuffer(buffer, kBufferSize, &out_size);
   EXPECT_TRUE(NULL == ccp);
 
@@ -389,11 +391,8 @@ DWORD WINAPI QuickResponseServer(PVOID param) {
 
 class CrossCallParamsMock : public CrossCallParams {
  public:
-  CrossCallParamsMock(uint32 tag, uint32 params_count)
-      :  CrossCallParams(tag, params_count) {
-  }
- private:
-  void* params[4];
+  CrossCallParamsMock(uint32_t tag, uint32_t params_count)
+      : CrossCallParams(tag, params_count) {}
 };
 
 void FakeOkAnswerInChannel(void* channel) {
@@ -436,9 +435,9 @@ TEST(IPCTest, ClientFastServer) {
   EXPECT_EQ(kBusyChannel, client_control->channels[1].state);
   EXPECT_EQ(kFreeChannel, client_control->channels[2].state);
 
-  EXPECT_EQ(0, client_control->channels[1].ipc_tag);
+  EXPECT_EQ(0u, client_control->channels[1].ipc_tag);
 
-  uint32 tag = 7654;
+  uint32_t tag = 7654;
   CrossCallReturn answer;
   CrossCallParamsMock* params1 = new(buff1) CrossCallParamsMock(tag, 1);
   FakeOkAnswerInChannel(buff1);
@@ -537,7 +536,7 @@ TEST(IPCTest, ClientSlowServer) {
   ::Sleep(1);
 
   void* buff0 = client.GetBuffer();
-  uint32 tag = 4321;
+  uint32_t tag = 4321;
   CrossCallReturn answer;
   CrossCallParamsMock* params1 = new(buff0) CrossCallParamsMock(tag, 1);
   FakeOkAnswerInChannel(buff0);
@@ -565,35 +564,29 @@ class UnitTestIPCDispatcher : public Dispatcher {
   };
 
   UnitTestIPCDispatcher();
-  ~UnitTestIPCDispatcher() {};
+  ~UnitTestIPCDispatcher() override{};
 
-  virtual bool SetupService(InterceptionManager* manager, int service) {
+  bool SetupService(InterceptionManager* manager, int service) override {
     return true;
   }
 
  private:
-  bool CallOneHandler(IPCInfo* ipc, HANDLE p1, uint32 p2) {
+  bool CallOneHandler(IPCInfo* ipc, HANDLE p1, uint32_t p2) {
     ipc->return_info.extended[0].handle = p1;
     ipc->return_info.extended[1].unsigned_int = p2;
     return true;
   }
 
-  bool CallTwoHandler(IPCInfo* ipc, HANDLE p1, uint32 p2) {
-    return true;
-  }
+  bool CallTwoHandler(IPCInfo* ipc, HANDLE p1, uint32_t p2) { return true; }
 };
 
 UnitTestIPCDispatcher::UnitTestIPCDispatcher() {
-  static const IPCCall call_one = {
-    {CALL_ONE_TAG, VOIDPTR_TYPE, UINT32_TYPE},
-    reinterpret_cast<CallbackGeneric>(
-        &UnitTestIPCDispatcher::CallOneHandler)
-  };
-  static const IPCCall call_two = {
-    {CALL_TWO_TAG, VOIDPTR_TYPE, UINT32_TYPE},
-    reinterpret_cast<CallbackGeneric>(
-        &UnitTestIPCDispatcher::CallTwoHandler)
-  };
+  static const IPCCall call_one = {{CALL_ONE_TAG, {VOIDPTR_TYPE, UINT32_TYPE}},
+                                   reinterpret_cast<CallbackGeneric>(
+                                       &UnitTestIPCDispatcher::CallOneHandler)};
+  static const IPCCall call_two = {{CALL_TWO_TAG, {VOIDPTR_TYPE, UINT32_TYPE}},
+                                   reinterpret_cast<CallbackGeneric>(
+                                       &UnitTestIPCDispatcher::CallTwoHandler)};
   ipc_calls_.push_back(call_one);
   ipc_calls_.push_back(call_two);
 }
@@ -620,10 +613,10 @@ TEST(IPCTest, SharedMemServerTests) {
   UnitTestIPCDispatcher dispatcher;
   // Since we are directly calling InvokeCallback, most of this structure
   // can be set to NULL.
-  sandbox::SharedMemIPCServer::ServerControl srv_control = {
-      NULL, NULL, kIPCChannelSize, NULL,
-      reinterpret_cast<char*>(client_control),
-      NULL, &dispatcher, {0} };
+  sandbox::SharedMemIPCServer::ServerControl srv_control = {};
+  srv_control.channel_size = kIPCChannelSize;
+  srv_control.shared_base = reinterpret_cast<char*>(client_control);
+  srv_control.dispatcher = &dispatcher;
 
   sandbox::CrossCallReturn call_return = {0};
   EXPECT_TRUE(SharedMemIPCServer::InvokeCallback(&srv_control, buff,

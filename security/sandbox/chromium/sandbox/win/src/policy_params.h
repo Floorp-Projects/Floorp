@@ -23,6 +23,7 @@ POLPARAMS_BEGIN(OpenFile)
   POLPARAM(NAME)
   POLPARAM(BROKER)   // TRUE if called from the broker.
   POLPARAM(ACCESS)
+  POLPARAM(DISPOSITION)
   POLPARAM(OPTIONS)
 POLPARAMS_END(OpenFile)
 
@@ -32,10 +33,10 @@ POLPARAMS_BEGIN(FileName)
   POLPARAM(BROKER)   // TRUE if called from the broker.
 POLPARAMS_END(FileName)
 
-COMPILE_ASSERT(OpenFile::NAME == static_cast<int>(FileName::NAME),
-               to_simplify_fs_policies);
-COMPILE_ASSERT(OpenFile::BROKER == static_cast<int>(FileName::BROKER),
-               to_simplify_fs_policies);
+static_assert(OpenFile::NAME == static_cast<int>(FileName::NAME),
+              "to simplify fs policies");
+static_assert(OpenFile::BROKER == static_cast<int>(FileName::BROKER),
+              "to simplify fs policies");
 
 // Policy parameter for name-based policies.
 POLPARAMS_BEGIN(NameBased)

@@ -6,7 +6,7 @@
 #define BASE_ATOMIC_SEQUENCE_NUM_H_
 
 #include "base/atomicops.h"
-#include "base/basictypes.h"
+#include "base/macros.h"
 
 namespace base {
 
