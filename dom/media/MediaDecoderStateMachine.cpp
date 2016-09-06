@@ -1064,8 +1064,10 @@ nsresult MediaDecoderStateMachine::Init(MediaDecoder* aDecoder)
   nsresult rv = mReader->Init();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  OwnerThread()->Dispatch(
-    NewRunnableMethod(this, &MediaDecoderStateMachine::EnterState));
+  RefPtr<MediaDecoderStateMachine> self = this;
+  OwnerThread()->Dispatch(NS_NewRunnableFunction([self] () {
+    self->mStateObj->Enter();
+  }));
 
   return NS_OK;
 }
@@ -1255,7 +1257,8 @@ MediaDecoderStateMachine::SetState(State aState)
 
   DECODER_LOG("MDSM state: %s -> %s", ToStateStr(), ToStateStr(aState));
 
-  ExitState();
+  MOZ_ASSERT(mState == mStateObj->GetState());
+  mStateObj->Exit();
   mState = aState;
 
   switch (mState) {
@@ -1287,35 +1290,12 @@ MediaDecoderStateMachine::SetState(State aState)
       mStateObj = MakeUnique<ShutdownState>(this);
       break;
     default:
-      mStateObj = nullptr;
+      MOZ_ASSERT_UNREACHABLE("Invalid state.");
       break;
   }
 
-  EnterState();
-}
-
-void
-MediaDecoderStateMachine::ExitState()
-{
-  MOZ_ASSERT(OnTaskQueue());
-
-  if (mStateObj) {
-    MOZ_ASSERT(mState == mStateObj->GetState());
-    mStateObj->Exit();
-    return;
-  }
-}
-
-void
-MediaDecoderStateMachine::EnterState()
-{
-  MOZ_ASSERT(OnTaskQueue());
-
-  if (mStateObj) {
-    MOZ_ASSERT(mState == mStateObj->GetState());
-    mStateObj->Enter();
-    return;
-  }
+  MOZ_ASSERT(mState == mStateObj->GetState());
+  mStateObj->Enter();
 }
 
 void MediaDecoderStateMachine::VolumeChanged()
@@ -2460,11 +2440,7 @@ MediaDecoderStateMachine::RunStateMachine()
 
   mDelayedScheduler.Reset(); // Must happen on state machine task queue.
   mDispatchedStateMachine = false;
-
-  if (mStateObj) {
-    mStateObj->Step();
-    return;
-  }
+  mStateObj->Step();
 }
 
 void
