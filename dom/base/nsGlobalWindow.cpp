@@ -12218,8 +12218,7 @@ nsGlobalWindow::RunTimeoutHandler(nsTimeout* aTimeout,
   RefPtr<Function> callback = handler->GetCallback();
   if (!callback) {
     // Evaluate the timeout expression.
-    nsAutoString script;
-    handler->GetHandlerText(script);
+    const nsAString& script = handler->GetHandlerText();
 
     const char* filename = nullptr;
     uint32_t lineNo = 0, dummyColumn = 0;

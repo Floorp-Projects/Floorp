@@ -3,6 +3,7 @@ if (!this.Atomics)
     quit();
 
 load(libdir + "asm.js");
+setJitCompilerOption('wasm.test-mode', 1);
 
 var code = `
     "use asm";

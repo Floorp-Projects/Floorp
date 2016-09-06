@@ -2,14 +2,18 @@
 //
 // These should not be run with --no-asmjs, the guard below checks this.
 
+load(libdir + "asm.js");
+
 if (!this.SharedArrayBuffer || !isAsmJSCompilationAvailable())
     quit(0);
+
+setJitCompilerOption('wasm.test-mode', 1);
 
 //////////////////////////////////////////////////////////////////////
 //
 // Int8Array can be used on SharedArrayBuffer, if atomics are present
 
-function m1(stdlib, ffi, heap) {
+var m1 = asmCompile("stdlib", "ffi", "heap", `
     "use asm";
 
     var i8 = new stdlib.Int8Array(heap);
@@ -21,7 +25,7 @@ function m1(stdlib, ffi, heap) {
     }
 
     return { f:f }
-}
+`);
 
 assertEq(isAsmJSModule(m1), true);
 
@@ -35,7 +39,7 @@ assertEq(f(), 37);
 // that are legal if the memory is known not to be shared that are illegal
 // when it is shared.
 
-function m4(stdlib, ffi, heap) {
+var m4 = asmCompile("stdlib", "ffi", "heap", `
     "use asm";
 
     var i8 = new stdlib.Int8Array(heap);
@@ -45,7 +49,7 @@ function m4(stdlib, ffi, heap) {
     }
 
     return { i:i }
-}
+`);
 
 assertEq(isAsmJSModule(m4), true);
 

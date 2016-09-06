@@ -1967,6 +1967,9 @@ class MOZ_STACK_CLASS ModuleValidator
     bool addAtomicsBuiltinFunction(PropertyName* var, AsmJSAtomicsBuiltinFunction func,
                                    PropertyName* field)
     {
+        if (!JitOptions.wasmTestMode)
+            return failCurrentOffset("asm.js Atomics only enabled in wasm test mode");
+
         atomicsPresent_ = true;
 
         UniqueChars fieldChars = StringToNewUTF8CharsZ(cx_, *field);
@@ -7808,6 +7811,9 @@ CheckBuffer(JSContext* cx, const AsmJSMetadata& metadata, HandleValue bufferVal,
         Rooted<ArrayBufferObject*> abheap(cx, &buffer->as<ArrayBufferObject>());
         if (!ArrayBufferObject::prepareForAsmJS(cx, abheap))
             return LinkFail(cx, "Unable to prepare ArrayBuffer for asm.js use");
+    } else {
+        if (!buffer->as<SharedArrayBufferObject>().isPreparedForAsmJS())
+            return LinkFail(cx, "SharedArrayBuffer must be created with wasm test mode enabled");
     }
 
     return true;
