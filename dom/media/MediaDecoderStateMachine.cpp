@@ -521,7 +521,7 @@ public:
       mMaster->StopPlayback();
     }
 
-    mMaster->mBufferingStart = TimeStamp::Now();
+    mBufferingStart = TimeStamp::Now();
 
     MediaStatistics stats = mMaster->GetStatistics();
     SLOG("Playback rate: %.1lfKB/s%s download rate: %.1lfKB/s%s",
@@ -534,13 +534,13 @@ public:
   void Step() override
   {
     TimeStamp now = TimeStamp::Now();
-    MOZ_ASSERT(!mMaster->mBufferingStart.IsNull(), "Must know buffering start time.");
+    MOZ_ASSERT(!mBufferingStart.IsNull(), "Must know buffering start time.");
 
     // With buffering heuristics we will remain in the buffering state if
     // we've not decoded enough data to begin playback, or if we've not
     // downloaded a reasonable amount of data inside our buffering time.
     if (Reader()->UseBufferingHeuristics()) {
-      TimeDuration elapsed = now - mMaster->mBufferingStart;
+      TimeDuration elapsed = now - mBufferingStart;
       bool isLiveStream = Resource()->IsLiveStream();
       if ((isLiveStream || !mMaster->CanPlayThrough()) &&
           elapsed < TimeDuration::FromSeconds(mMaster->mBufferingWait * mMaster->mPlaybackRate) &&
@@ -570,7 +570,7 @@ public:
       return;
     }
 
-    SLOG("Buffered for %.3lfs", (now - mMaster->mBufferingStart).ToSeconds());
+    SLOG("Buffered for %.3lfs", (now - mBufferingStart).ToSeconds());
     SetState(DECODER_STATE_DECODING);
   }
 
@@ -578,6 +578,9 @@ public:
   {
     return DECODER_STATE_BUFFERING;
   }
+
+private:
+  TimeStamp mBufferingStart;
 };
 
 class MediaDecoderStateMachine::CompletedState
