@@ -365,11 +365,17 @@ class BaseContext {
     if (error instanceof this.cloneScope.Error) {
       return error;
     }
-    if (!instanceOf(error, "Object")) {
+    let message;
+    if (instanceOf(error, "Object")) {
+      message = error.message;
+    } else if (typeof error == "object" &&
+        this.principal.subsumes(Cu.getObjectPrincipal(error))) {
+      message = error.message;
+    } else {
       Cu.reportError(error);
-      error = {message: "An unexpected error occurred"};
     }
-    return new this.cloneScope.Error(error.message);
+    message = message || "An unexpected error occurred";
+    return new this.cloneScope.Error(message);
   }
 
   /**
