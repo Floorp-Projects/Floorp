@@ -28,9 +28,9 @@
 #include "mozilla/layers/CompositorThread.h"
 #include "mozilla/layers/ISurfaceAllocator.h"  // for ISurfaceAllocator
 #include "mozilla/layers/ImageClient.h"  // for ImageClient
+#include "mozilla/layers/ImageContainerChild.h"
 #include "mozilla/layers/LayersMessages.h"  // for CompositableOperation
 #include "mozilla/layers/PCompositableChild.h"  // for PCompositableChild
-#include "mozilla/layers/PImageContainerChild.h"
 #include "mozilla/layers/TextureClient.h"  // for TextureClient
 #include "mozilla/mozalloc.h"           // for operator new, etc
 #include "nsISupportsImpl.h"            // for ImageContainer::AddRef, etc
@@ -1298,7 +1298,11 @@ bool
 ImageBridgeChild::RecvDidComposite(InfallibleTArray<ImageCompositeNotification>&& aNotifications)
 {
   for (auto& n : aNotifications) {
-    ImageContainer::NotifyComposite(n);
+    ImageContainerChild* child =
+      static_cast<ImageContainerChild*>(n.imageContainerChild());
+    if (child) {
+      child->NotifyComposite(n);
+    }
   }
   return true;
 }
