@@ -540,8 +540,6 @@ protected:
   void RunStateMachine();
   // Perform one cycle of the DECODING state.
   void StepDecoding();
-  // Perform one cycle of the BUFFERING state.
-  void StepBuffering();
   // Perform one cycle of the COMPLETED state.
   void StepCompleted();
 
