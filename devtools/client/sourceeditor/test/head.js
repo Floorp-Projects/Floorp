@@ -22,18 +22,16 @@ SimpleTest.registerCleanupFunction(() => {
 function addTab(url, callback) {
   waitForExplicitFinish();
 
-  gBrowser.selectedTab = gBrowser.addTab();
-  content.location = url;
-
+  gBrowser.selectedTab = gBrowser.addTab(url);
   let tab = gBrowser.selectedTab;
   let browser = gBrowser.getBrowserForTab(tab);
 
-  function onTabLoad() {
-    browser.removeEventListener("load", onTabLoad, true);
-    callback(browser, tab, browser.contentDocument);
-  }
-
-  browser.addEventListener("load", onTabLoad, true);
+  return BrowserTestUtils.browserLoaded(browser).then(function () {
+    if (typeof(callback) == "function") {
+      callback(browser, tab, browser.contentDocument);
+    }
+    return tab;
+  });
 }
 
 function promiseTab(url) {

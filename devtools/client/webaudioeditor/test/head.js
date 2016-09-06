@@ -73,11 +73,10 @@ function addTab(aUrl, aWindow) {
   let tab = targetBrowser.selectedTab = targetBrowser.addTab(aUrl);
   let linkedBrowser = tab.linkedBrowser;
 
-  linkedBrowser.addEventListener("load", function onLoad() {
-    linkedBrowser.removeEventListener("load", onLoad, true);
+  BrowserTestUtils.browserLoaded(linkedBrowser).then(function () {
     info("Tab added and finished loading: " + aUrl);
     deferred.resolve(tab);
-  }, true);
+  });
 
   return deferred.promise;
 }

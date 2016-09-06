@@ -91,11 +91,11 @@ this.addTab = function addTab(aUrl, aWindow) {
   info("Loading frame script with url " + FRAME_SCRIPT_URL + ".");
   linkedBrowser.messageManager.loadFrameScript(FRAME_SCRIPT_URL, false);
 
-  linkedBrowser.addEventListener("load", function onLoad() {
-    linkedBrowser.removeEventListener("load", onLoad, true);
-    info("Tab added and finished loading: " + aUrl);
-    deferred.resolve(tab);
-  }, true);
+  BrowserTestUtils.browserLoaded(linkedBrowser)
+    .then(function () {
+      info("Tab added and finished loading: " + aUrl);
+      deferred.resolve(tab);
+    });
 
   return deferred.promise;
 };
