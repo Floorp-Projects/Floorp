@@ -55,6 +55,18 @@ function getAnchorFromBrowser(aBrowser, aAnchorID) {
   return null;
 }
 
+function getNotificationFromElement(aElement) {
+  // Need to find the associated notification object, which is a bit tricky
+  // since it isn't associated with the element directly - this is kind of
+  // gross and very dependent on the structure of the popupnotification
+  // binding's content.
+  let notificationEl;
+  let parent = aElement;
+  while (parent && (parent = aElement.ownerDocument.getBindingParent(parent)))
+    notificationEl = parent;
+  return notificationEl;
+}
+
 /**
  * Notification object describes a single popup notification.
  *
@@ -72,6 +84,8 @@ function Notification(id, message, anchorID, mainAction, secondaryActions,
   this.options = options || {};
 
   this._dismissed = false;
+  // Will become a boolean when manually toggled by the user.
+  this._checkboxChecked = null;
   this.wasDismissed = false;
   this.recordedTelemetryStats = new Set();
   this.isPrivate = PrivateBrowsingUtils.isWindowPrivate(
@@ -274,7 +288,8 @@ PopupNotifications.prototype = {
    *          - label (string): the button's label.
    *          - accessKey (string): the button's accessKey.
    *          - callback (function): a callback to be invoked when the button is
-   *            pressed.
+   *            pressed, is passed an object that contains the following fields:
+   *              - checkboxChecked: (boolean) If the optional checkbox is checked.
    *          - [optional] dismiss (boolean): If this is true, the notification
    *            will be dismissed instead of removed after running the callback.
    *        If null, the notification will not have a button, and
@@ -332,6 +347,26 @@ PopupNotifications.prototype = {
    *                     removed when they would have otherwise been dismissed
    *                     (i.e. any time the popup is closed due to user
    *                     interaction).
+   *        checkbox:    An object that allows you to add a checkbox and
+   *                     control its behavior with these fields:
+   *                       label:
+   *                         (required) Label to be shown next to the checkbox.
+   *                       checked:
+   *                         (optional) Whether the checkbox should be checked
+   *                         by default. Defaults to false.
+   *                       checkedState:
+   *                         (optional) An object that allows you to customize
+   *                         the notification state when the checkbox is checked.
+   *                           disableMainAction:
+   *                             (optional) Whether the mainAction is disabled.
+   *                             Defaults to false.
+   *                           warningLabel:
+   *                             (optional) A (warning) text that is shown below the
+   *                             checkbox. Pass null to hide.
+   *                       uncheckedState:
+   *                         (optional) An object that allows you to customize
+   *                         the notification state when the checkbox is not checked.
+   *                         Has the same attributes as checkedState.
    *        hideNotNow:  If true, indicates that the 'Not Now' menuitem should
    *                     not be shown. If 'Not Now' is hidden, it needs to be
    *                     replaced by another 'do nothing' item, so providing at
@@ -705,12 +740,57 @@ PopupNotifications.prototype = {
         }
       }
 
+      let checkbox = n.options.checkbox;
+      if (checkbox && checkbox.label) {
+        let checked = n._checkboxChecked != null ? n._checkboxChecked : !!checkbox.checked;
+
+        popupnotification.setAttribute("checkboxhidden", "false");
+        popupnotification.setAttribute("checkboxchecked", checked);
+        popupnotification.setAttribute("checkboxlabel", checkbox.label);
+
+        popupnotification.setAttribute("checkboxcommand", "PopupNotifications._onCheckboxCommand(event);");
+
+        if (checked) {
+          this._setNotificationUIState(popupnotification, checkbox.checkedState);
+        } else {
+          this._setNotificationUIState(popupnotification, checkbox.uncheckedState);
+        }
+      } else {
+        popupnotification.setAttribute("checkboxhidden", "true");
+      }
+
       this.panel.appendChild(popupnotification);
 
       // The popupnotification may be hidden if we got it from the chrome
       // document rather than creating it ad hoc.
       popupnotification.hidden = false;
     }, this);
+  },
+
+  _setNotificationUIState(notification, state={}) {
+    notification.setAttribute("mainactiondisabled", state.disableMainAction || "false");
+
+    if (state.warningLabel) {
+      notification.setAttribute("warninglabel", state.warningLabel);
+      notification.setAttribute("warninghidden", "false");
+    } else {
+      notification.setAttribute("warninghidden", "true");
+    }
+  },
+
+  _onCheckboxCommand(event) {
+    let notificationEl = getNotificationFromElement(event.originalTarget);
+    let checked = notificationEl.checkbox.checked;
+    let notification = notificationEl.notification;
+
+    // Save checkbox state to be able to persist it when re-opening the doorhanger.
+    notification._checkboxChecked = checked;
+
+    if (checked) {
+      this._setNotificationUIState(notificationEl, notification.options.checkbox.checkedState);
+    } else {
+      this._setNotificationUIState(notificationEl, notification.options.checkbox.uncheckedState);
+    }
   },
 
   _showPanel: function PopupNotifications_showPanel(notificationsToShow, anchorElement) {
@@ -1102,15 +1182,7 @@ PopupNotifications.prototype = {
   },
 
   _onButtonEvent(event, type) {
-    // Need to find the associated notification object, which is a bit tricky
-    // since it isn't associated with the button directly - this is kind of
-    // gross and very dependent on the structure of the popupnotification
-    // binding's content.
-    let target = event.originalTarget;
-    let notificationEl;
-    let parent = target;
-    while (parent && (parent = target.ownerDocument.getBindingParent(parent)))
-      notificationEl = parent;
+    let notificationEl = getNotificationFromElement(event.originalTarget);
 
     if (!notificationEl)
       throw "PopupNotifications._onButtonEvent: couldn't find notification element";
@@ -1150,7 +1222,9 @@ PopupNotifications.prototype = {
     notification._recordTelemetryStat(TELEMETRY_STAT_ACTION_1);
 
     try {
-      notification.mainAction.callback.call();
+      notification.mainAction.callback.call(undefined, {
+        checkboxChecked: notificationEl.checkbox.checked
+      });
     } catch (error) {
       Cu.reportError(error);
     }
@@ -1169,12 +1243,15 @@ PopupNotifications.prototype = {
     if (!target.action || !target.notification)
       throw "menucommand target has no associated action/notification";
 
+    let notificationEl = target.parentElement;
     event.stopPropagation();
 
     target.notification._recordTelemetryStat(target.action.telemetryStatId);
 
     try {
-      target.action.callback.call();
+      target.action.callback.call(undefined, {
+        checkboxChecked: notificationEl.checkbox.checked
+      });
     } catch (error) {
       Cu.reportError(error);
     }
