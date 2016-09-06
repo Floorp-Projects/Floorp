@@ -21,7 +21,6 @@ use std::io::Write;
 use std::net::{SocketAddr, IpAddr};
 use std::path::PathBuf;
 use std::str::FromStr;
-use webdriver::server::start;
 
 macro_rules! try_opt {
     ($expr:expr, $err_type:expr, $err_msg:expr) => ({
@@ -34,16 +33,6 @@ macro_rules! try_opt {
 
 mod marionette;
 
-lazy_static! {
-    pub static ref VERSION: String =
-        format!("{}\n\n{}", crate_version!(),
-"The source code of this program is available at
-https://github.com/mozilla/geckodriver.
-
-This program is subject to the terms of the Mozilla Public License 2.0.
-You can obtain a copy of the license at https://mozilla.org/MPL/2.0/.");
-}
-
 type ProgramResult = std::result::Result<(), (ExitCode, String)>;
 
 enum ExitCode {
@@ -52,9 +41,8 @@ enum ExitCode {
 }
 
 fn app<'a, 'b>() -> App<'a, 'b> {
-    App::new("geckodriver")
+    App::new(format!("geckodriver {}", crate_version!()))
         .about("WebDriver implementation for Firefox.")
-        .version(&**VERSION)
         .arg(Arg::with_name("webdriver_host")
              .long("host")
              .value_name("HOST")
@@ -70,12 +58,12 @@ fn app<'a, 'b>() -> App<'a, 'b> {
              .short("b")
              .long("binary")
              .value_name("BINARY")
-             .help("Path to the Firefox binary, if no binary capability provided")
+             .help("Path to the Firefox binary")
              .takes_value(true))
         .arg(Arg::with_name("marionette_port")
              .long("marionette-port")
              .value_name("PORT")
-             .help("Port to use to connect to gecko (default: random free port)")
+             .help("Port to use to connect to Gecko (default: random free port)")
              .takes_value(true))
         .arg(Arg::with_name("connect_existing")
              .long("connect-existing")
@@ -85,7 +73,7 @@ fn app<'a, 'b>() -> App<'a, 'b> {
              .short("v")
              .multiple(true)
              .conflicts_with("log_level")
-             .help("Set the level of verbosity. Pass once for debug level logging and twice for trace level logging"))
+             .help("Log level verbosity (-v for debug and -vv for trace level)"))
         .arg(Arg::with_name("log_level")
              .long("log")
              .takes_value(true)
@@ -93,19 +81,34 @@ fn app<'a, 'b>() -> App<'a, 'b> {
              .possible_values(
                  &["fatal", "error", "warn", "info", "config", "debug", "trace"])
              .help("Set Gecko log level"))
+         .arg(Arg::with_name("version")
+             .short("V")
+             .long("version")
+             .help("Prints version and copying information"))
 }
 
 fn print_err(reason: &str) {
-    let _ = writeln!(&mut ::std::io::stderr(), "\n{}", reason);
+    let prog = std::env::args().next().unwrap_or("geckodriver".to_owned());
+    let _ = writeln!(&mut ::std::io::stderr(), "{}: error: {}", prog, reason);
 }
 
 fn run() -> ProgramResult {
     let matches = app().get_matches();
 
+    if matches.is_present("version") {
+        println!("geckodriver {}\n\n{}", crate_version!(),
+"The source code of this program is available at
+https://github.com/mozilla/geckodriver.
+
+This program is subject to the terms of the Mozilla Public License 2.0.
+You can obtain a copy of the license at https://mozilla.org/MPL/2.0/.");
+        return Ok(())
+    }
+
     let host = matches.value_of("webdriver_host").unwrap_or("127.0.0.1");
     let port = match u16::from_str(matches.value_of("webdriver_port").unwrap_or("4444")) {
         Ok(x) => x,
-        Err(_) => return Err((ExitCode::Usage, "Invalid WebDriver port".to_owned())),
+        Err(_) => return Err((ExitCode::Usage, "invalid WebDriver port".to_owned())),
     };
     let addr = match IpAddr::from_str(host) {
         Ok(addr) => SocketAddr::new(addr, port),
@@ -117,7 +120,7 @@ fn run() -> ProgramResult {
     let marionette_port = match matches.value_of("marionette_port") {
         Some(x) => match u16::from_str(x) {
             Ok(x) => Some(x),
-            Err(_) => return Err((ExitCode::Usage, "Invalid Marionette port".to_owned())),
+            Err(_) => return Err((ExitCode::Usage, "invalid Marionette port".to_owned())),
         },
         None => None
     };
@@ -143,7 +146,8 @@ fn run() -> ProgramResult {
         log_level: log_level,
     };
 
-    start(addr, MarionetteHandler::new(settings), extension_routes());
+    let handler = MarionetteHandler::new(settings);
+    webdriver::server::start(addr, handler, extension_routes());
 
     Ok(())
 }
