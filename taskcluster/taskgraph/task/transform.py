@@ -5,11 +5,10 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import logging
-import os
-import yaml
 
 from . import base
 from ..util.python_path import find_object
+from ..util.yaml import load_yaml
 from ..transforms.base import TransformSequence, TransformConfig
 
 logger = logging.getLogger(__name__)
@@ -72,10 +71,3 @@ class TransformTask(base.Task):
 
     def optimize(self):
         return False, None
-
-
-def load_yaml(path, name):
-    """Convenience method to load a YAML file in the kind directory"""
-    filename = os.path.join(path, name)
-    with open(filename, "rb") as f:
-        return yaml.load(f)
