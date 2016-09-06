@@ -54,9 +54,14 @@ StaticMutex AudioInputCubeb::sMutex;
 
 void AudioInputCubeb::UpdateDeviceList()
 {
+  cubeb* cubebContext = CubebUtils::GetCubebContext();
+  if (!cubebContext) {
+    return;
+  }
+
   cubeb_device_collection *devices = nullptr;
 
-  if (CUBEB_OK != cubeb_enumerate_devices(CubebUtils::GetCubebContext(),
+  if (CUBEB_OK != cubeb_enumerate_devices(cubebContext,
                                           CUBEB_DEVICE_TYPE_INPUT,
                                           &devices)) {
     return;

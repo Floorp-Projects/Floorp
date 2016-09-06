@@ -41,17 +41,6 @@ function setup() {
   });
 }
 
-function testCreateRequestWithEmptyURL() {
-  return new Promise(function(aResolve, aReject) {
-    try {
-      request = new PresentationRequest("");
-    } catch (aError) {
-      is(aError.name, "SyntaxError", "SyntaxError is expected when using an empty URL.");
-      aResolve();
-    }
-  });
-}
-
 function testStartConnectionCancelPrompt() {
   return new Promise(function(aResolve, aReject) {
     gScript.addMessageListener('device-prompt', function devicePromptHandler() {
@@ -380,8 +369,7 @@ function teardown() {
 function runTests() {
   ok(window.PresentationRequest, "PresentationRequest should be available.");
 
-  testCreateRequestWithEmptyURL().
-  then(setup).
+  setup().
   then(testStartConnectionCancelPrompt).
   then(testStartConnectionNoDevice).
   then(testStartConnectionUnexpectedControlChannelCloseBeforeDataTransportInit).

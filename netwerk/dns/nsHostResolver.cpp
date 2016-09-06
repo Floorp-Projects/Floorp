@@ -164,8 +164,6 @@ IsLowPriority(uint16_t flags)
 nsHostRecord::nsHostRecord(const nsHostKey *key)
     : addr_info_lock("nsHostRecord.addr_info_lock")
     , addr_info_gencnt(0)
-    , addr_info(nullptr)
-    , addr(nullptr)
     , negative(false)
     , resolving(false)
     , onQueue(false)
@@ -226,8 +224,6 @@ nsHostRecord::CopyExpirationTimesAndFlagsFrom(const nsHostRecord *aFromHostRecor
 nsHostRecord::~nsHostRecord()
 {
     Telemetry::Accumulate(Telemetry::DNS_BLACKLIST_COUNT, mBlacklistedCount);
-    delete addr_info;
-    delete addr;
 }
 
 bool
@@ -317,7 +313,7 @@ nsHostRecord::HasUsableResult(const mozilla::TimeStamp& now, uint16_t queryFlags
         return false;
     }
 
-    return addr_info || addr || negative;
+    return addr_info.get() || addr.get() || negative;
 }
 
 static size_t
@@ -347,7 +343,7 @@ nsHostRecord::SizeOfIncludingThis(MallocSizeOf mallocSizeOf) const
 
     n += SizeOfResolveHostCallbackListExcludingHead(&callbacks, mallocSizeOf);
     n += addr_info ? addr_info->SizeOfIncludingThis(mallocSizeOf) : 0;
-    n += mallocSizeOf(addr);
+    n += mallocSizeOf(addr.get());
 
     n += mBlacklistedItems.ShallowSizeOfExcludingThis(mallocSizeOf);
     for (size_t i = 0; i < mBlacklistedItems.Length(); i++) {
@@ -807,8 +803,8 @@ nsHostResolver::ResolveHost(const char            *host,
                 LOG(("  Host is IP Literal [%s].\n", host));
                 // ok, just copy the result into the host record, and be done
                 // with it! ;-)
-                he->rec->addr = new NetAddr();
-                PRNetAddrToNetAddr(&tempAddr, he->rec->addr);
+                he->rec->addr.reset(new NetAddr());
+                PRNetAddrToNetAddr(&tempAddr, he->rec->addr.get());
                 // put reference to host record on stack...
                 Telemetry::Accumulate(Telemetry::DNS_LOOKUP_METHOD2,
                                       METHOD_LITERAL);
@@ -870,9 +866,9 @@ nsHostResolver::ResolveHost(const char            *host,
                                 if ((af == addrIter->mAddress.inet.family) &&
                                      !unspecHe->rec->Blacklisted(&addrIter->mAddress)) {
                                     if (!he->rec->addr_info) {
-                                        he->rec->addr_info = new AddrInfo(
-                                            unspecHe->rec->addr_info->mHostName,
-                                            unspecHe->rec->addr_info->mCanonicalName);
+                                        he->rec->addr_info.reset(new AddrInfo(
+                                            unspecHe->rec->addr_info->mHostName.get(),
+                                            unspecHe->rec->addr_info->mCanonicalName.get()));
                                         he->rec->CopyExpirationTimesAndFlagsFrom(unspecHe->rec);
                                     }
                                     he->rec->addr_info->AddAddress(
@@ -1222,7 +1218,7 @@ different_rrset(AddrInfo *rrset1, AddrInfo *rrset2)
         return true;
     }
 
-    LOG(("different_rrset %s\n", rrset1->mHostName));
+    LOG(("different_rrset %s\n", rrset1->mHostName.get()));
     nsTArray<NetAddr> orderedSet1;
     nsTArray<NetAddr> orderedSet2;
 
@@ -1289,27 +1285,24 @@ nsHostResolver::OnLookupComplete(nsHostRecord* rec, nsresult status, AddrInfo* n
 
         // update record fields.  We might have a rec->addr_info already if a
         // previous lookup result expired and we're reresolving it..
-        AddrInfo  *old_addr_info;
         {
             MutexAutoLock lock(rec->addr_info_lock);
-            if (different_rrset(rec->addr_info, newRRSet)) {
+            if (different_rrset(rec->addr_info.get(), newRRSet)) {
                 LOG(("nsHostResolver record %p new gencnt\n", rec));
-                old_addr_info = rec->addr_info;
-                rec->addr_info = newRRSet;
+                rec->addr_info.reset(newRRSet);
                 rec->addr_info_gencnt++;
             } else {
                 if (rec->addr_info && newRRSet) {
                     rec->addr_info->ttl = newRRSet->ttl;
                 }
-                old_addr_info = newRRSet;
+                delete newRRSet;
             }
         }
-        delete old_addr_info;
 
         rec->negative = !rec->addr_info;
         PrepareRecordExpiration(rec);
         rec->resolving = false;
-        
+
         if (rec->usingAnyThread) {
             mActiveAnyThreadCount--;
             rec->usingAnyThread = false;

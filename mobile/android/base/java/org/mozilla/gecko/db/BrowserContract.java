@@ -590,6 +590,12 @@ public class BrowserContract {
         public static final Uri CONTENT_URI = Uri.withAppendedPath(AUTHORITY_URI, "topsites");
     }
 
+    public static final class Highlights {
+        public static final Uri CONTENT_URI = Uri.withAppendedPath(AUTHORITY_URI, "highlights");
+
+        public static final String DATE = "date";
+    }
+
     @RobocopTarget
     public static final class SearchHistory implements CommonColumns, HistoryColumns {
         private SearchHistory() {}

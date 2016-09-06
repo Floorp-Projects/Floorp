@@ -36,7 +36,7 @@ function runTest2() {
     ok(e.isTrusted, 'Event should be trusted.');
     ok(!sawLocationChange, 'Just one locationchange event.');
     ok(!sawLoadEnd, 'locationchange before load.');
-    is(e.detail, 'data:text/html,1', "event's reported location");
+    is(e.detail.url, 'data:text/html,1', "event's reported location");
     sawLocationChange = true;
   });
 

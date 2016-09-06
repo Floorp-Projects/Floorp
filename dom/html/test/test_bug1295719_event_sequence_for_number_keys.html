@@ -1,0 +1,65 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1295719
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1295719</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1295719">Mozilla Bug 1295719</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<input id="test_number" type="number" value=50>
+<script type="text/javascript">
+
+/** Test for Bug 1295719 **/
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(runTests);
+
+function runTests() {
+  let number = window.document.getElementById("test_number");
+  let waiting_event_sequence = ["keydown", "keypress", "input"];
+  let change_event_of_number = 0;
+  let keyup_event_of_number = 0;
+  let waiting_event_idx = 0;
+  waiting_event_sequence.forEach((eventType) => {
+    number.addEventListener(eventType, (event) => {
+      let waiting_event = waiting_event_sequence[waiting_event_idx];
+      is(eventType, waiting_event, "Waiting " + waiting_event + " get " + eventType);
+      // Input element will fire input event when handling keypress with
+      // keycode=numbers. When user press and hold the keyboard, we expect that
+      // input element repeatedly fires "keydown", "keypress", and "input" until
+      // user release the keyboard. Input element will fire change event when
+      // it's blurred. Using waiting_event_sequence as a circular buffer and
+      // reset waiting_event_idx when it point to the end of buffer.
+      waiting_event_idx = waiting_event_idx == waiting_event_sequence.length - 1 ? 0 : waiting_event_idx + 1;
+    }, false);
+  });
+  number.addEventListener("change", (event) => {
+    is(keyup_event_of_number, 1, "change event should be fired after blurred");
+    ++change_event_of_number;
+  }, false);
+  number.addEventListener("keyup", (event) => {
+    is(keyup_event_of_number, 0, "keyup event should be fired once");
+    is(change_event_of_number, 0, "keyup event should be fired before change event");
+    ++keyup_event_of_number;
+  }, false);
+  number.focus();
+  synthesizeKey("5", {type: "keydown"});
+  synthesizeKey("5", {type: "keydown"});
+  synthesizeKey("5", {type: "keyup"});
+  is(change_event_of_number, 0, "change event shouldn't be fired when input element is focused");
+  number.blur();
+  is(change_event_of_number, 1, "change event should be fired when input element is blurred");
+  SimpleTest.finish();
+}
+
+</script>
+</body>
+</html>

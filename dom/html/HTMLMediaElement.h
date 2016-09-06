@@ -739,7 +739,7 @@ public:
   bool ComputedMuted() const;
   nsSuspendedTypes ComputedSuspended() const;
 
-  void SetMediaInfo(const MediaInfo aInfo);
+  void SetMediaInfo(const MediaInfo& aInfo);
 
 protected:
   virtual ~HTMLMediaElement();

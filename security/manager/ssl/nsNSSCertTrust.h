@@ -2,15 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef _NSNSSCERTTRUST_H_
-#define _NSNSSCERTTRUST_H_
+#ifndef nsNSSCertTrust_h
+#define nsNSSCertTrust_h
 
-#include "certt.h"
 #include "certdb.h"
+#include "certt.h"
 
 /*
- * nsNSSCertTrust
- * 
  * Class for maintaining trust flags for an NSS certificate.
  */
 class nsNSSCertTrust
@@ -24,13 +22,7 @@ public:
   /* query */
   bool HasAnyCA();
   bool HasAnyUser();
-  bool HasCA(bool checkSSL = true, 
-               bool checkEmail = true,  
-               bool checkObjSign = true);
   bool HasPeer(bool checkSSL = true, 
-                 bool checkEmail = true,  
-                 bool checkObjSign = true);
-  bool HasUser(bool checkSSL = true, 
                  bool checkEmail = true,  
                  bool checkObjSign = true);
   bool HasTrustedCA(bool checkSSL = true, 
@@ -43,16 +35,8 @@ public:
   /* common defaults */
   /* equivalent to "c,c,c" */
   void SetValidCA();
-  /* equivalent to "C,C,C" */
-  void SetTrustedServerCA();
-  /* equivalent to "CT,CT,CT" */
-  void SetTrustedCA();
   /* equivalent to "p,p,p" */
   void SetValidPeer();
-  /* equivalent to "P,P,P" */
-  void SetTrustedPeer();
-  /* equivalent to "u,u,u" */
-  void SetUser();
 
   /* general setters */
   /* read: "p, P, c, C, T, u, w" */
@@ -83,4 +67,4 @@ private:
   CERTCertTrust mTrust;
 };
 
-#endif
+#endif // nsNSSCertTrust_h

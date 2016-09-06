@@ -31,7 +31,6 @@ public:
   NS_DECL_NSIPRESENTATIONSERVICECALLBACK
 
   PresentationRequesterCallback(PresentationRequest* aRequest,
-                                const nsAString& aUrl,
                                 const nsAString& aSessionId,
                                 Promise* aPromise);
 
@@ -39,7 +38,6 @@ protected:
   virtual ~PresentationRequesterCallback();
 
   RefPtr<PresentationRequest> mRequest;
-  nsString mUrl;
   nsString mSessionId;
   RefPtr<Promise> mPromise;
 };
@@ -51,7 +49,6 @@ public:
   NS_DECL_NSIPRESENTATIONSERVICECALLBACK
 
   PresentationReconnectCallback(PresentationRequest* aRequest,
-                                const nsAString& aUrl,
                                 const nsAString& aSessionId,
                                 Promise* aPromise,
                                 PresentationConnection* aConnection);

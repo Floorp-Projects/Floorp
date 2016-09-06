@@ -783,7 +783,9 @@ nsBlockFrame::GetPrefISize(nsRenderingContext *aRenderingContext)
       AutoNoisyIndenter lineindent(gNoisyIntrinsic);
 #endif
       if (line->IsBlock()) {
-        data.ForceBreak();
+        if (!data.mLineIsEmpty || BlockCanIntersectFloats(line->mFirstChild)) {
+          data.ForceBreak();
+        }
         data.mCurrentLine = nsLayoutUtils::IntrinsicForContainer(aRenderingContext,
                         line->mFirstChild, nsLayoutUtils::PREF_ISIZE);
         data.ForceBreak();
@@ -794,8 +796,13 @@ nsBlockFrame::GetPrefISize(nsRenderingContext *aRenderingContext)
           // percentage basis of 0 unconditionally would give strange
           // behavior for calc(10%-3px).
           const nsStyleCoord &indent = StyleText()->mTextIndent;
-          if (indent.ConvertsToLength())
-            data.mCurrentLine += nsRuleNode::ComputeCoordPercentCalc(indent, 0);
+          if (indent.ConvertsToLength()) {
+            nscoord length = indent.ToLength();
+            if (length != 0) {
+              data.mCurrentLine += length;
+              data.mLineIsEmpty = false;
+            }
+          }
         }
         // XXX Bug NNNNNN Should probably handle percentage text-indent.
 
@@ -3117,11 +3124,10 @@ nsBlockFrame::ReflowBlockFrame(BlockReflowInput& aState,
   }
 
   // Prepare the block reflow engine
-  const nsStyleDisplay* display = frame->StyleDisplay();
   nsBlockReflowContext brc(aState.mPresContext, aState.mReflowInput);
 
-  uint8_t breakType =
-    display->PhysicalBreakType(aState.mReflowInput.GetWritingMode());
+  uint8_t breakType = frame->StyleDisplay()->
+    PhysicalBreakType(aState.mReflowInput.GetWritingMode());
   if (NS_STYLE_CLEAR_NONE != aState.mFloatBreakType) {
     breakType = nsLayoutUtils::CombineBreakType(breakType,
                                                 aState.mFloatBreakType);
@@ -3302,7 +3308,7 @@ nsBlockFrame::ReflowBlockFrame(BlockReflowInput& aState,
     nsFlowAreaRect floatAvailableSpace = aState.GetFloatAvailableSpace();
     WritingMode wm = aState.mReflowInput.GetWritingMode();
     LogicalRect availSpace(wm);
-    aState.ComputeBlockAvailSpace(frame, display, floatAvailableSpace,
+    aState.ComputeBlockAvailSpace(frame, floatAvailableSpace,
                                   replacedBlock != nullptr, availSpace);
 
     // The check for
@@ -3435,7 +3441,7 @@ nsBlockFrame::ReflowBlockFrame(BlockReflowInput& aState,
       }
 
       LogicalRect oldAvailSpace(availSpace);
-      aState.ComputeBlockAvailSpace(frame, display, floatAvailableSpace,
+      aState.ComputeBlockAvailSpace(frame, floatAvailableSpace,
                                     replacedBlock != nullptr, availSpace);
 
       if (!advanced && availSpace.IsEqualEdges(oldAvailSpace)) {

@@ -15,7 +15,7 @@ const { Management } = Components.utils.import("resource://gre/modules/Extension
 
 function promiseAddonStartup() {
   return new Promise(resolve => {
-    let listener = (extension) => {
+    let listener = (evt, extension) => {
       Management.off("startup", listener);
       resolve(extension);
     };

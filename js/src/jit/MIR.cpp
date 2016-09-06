@@ -5431,6 +5431,8 @@ MWasmCall::NewBuiltinInstanceMethodCall(TempAllocator& alloc,
     MWasmCall* call = MWasmCall::New(alloc, desc, callee, args, resultType, spIncrement,
                                      MWasmCall::DontSaveTls, nullptr);
 
+    if (!call)
+        return nullptr;
     MOZ_ASSERT(instanceArg != ABIArg()); // instanceArg must be initialized.
     call->instanceArg_ = instanceArg;
     return call;

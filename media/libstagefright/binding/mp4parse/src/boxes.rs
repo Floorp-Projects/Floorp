@@ -54,4 +54,5 @@ box_database!(
     OpusSpecificBox            0x644f7073, // "dOps"
     ProtectedVisualSampleEntry 0x656e6376, // "encv" - Need to check official name in spec.
     ProtectedAudioSampleEntry  0x656e6361, // "enca" - Need to check official name in spec.
+    MovieExtendsBox            0x6d766578, // "mvex"
 );

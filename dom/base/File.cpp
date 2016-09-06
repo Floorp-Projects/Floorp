@@ -1136,10 +1136,11 @@ public:
         NS_LITERAL_CSTRING("explicit/dom/memory-file-data/small"),
         KIND_HEAP, UNITS_BYTES, smallObjectsTotal,
         nsPrintfCString(
-          "Memory used to back small memory files (less than %d bytes each).\n\n"
+          "Memory used to back small memory files (i.e. those taking up less "
+          "than %zu bytes of memory each).\n\n"
           "Note that the allocator may round up a memory file's length -- "
           "that is, an N-byte memory file may take up more than N bytes of "
-          "memory."),
+          "memory.", LARGE_OBJECT_MIN_SIZE),
         aData);
     }
 
