@@ -1,6 +1,7 @@
 == bug535530-1.html bug535530-1-ref.html
 == view-source:bug535530-2.html bug535530-2-ref.html
 == bug566280-1.html bug566280-1-ref.html
+== bug569229-1.xml bug569229-1-ref.xml
 == bug577418-1.html bug577418-1-ref.html
 == bug582788-1.html bug582788-1-ref.html
 fuzzy-if(skiaContent,2,5) == bug582940-1.html bug582940-1-ref.html
