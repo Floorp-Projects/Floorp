@@ -1998,16 +1998,8 @@ void
 MediaDecoderStateMachine::DecodeError()
 {
   MOZ_ASSERT(OnTaskQueue());
-
-  if (IsShutdown()) {
-    // Already shutdown.
-    return;
-  }
-
+  MOZ_ASSERT(!IsShutdown());
   DECODER_WARN("Decode error");
-  // Change state to SHUTDOWN so we have no more processing.
-  SetState(DECODER_STATE_SHUTDOWN);
-
   // Notify the decode error and MediaDecoder will shut down MDSM.
   mOnPlaybackEvent.Notify(MediaEventType::DecodeError);
 }
