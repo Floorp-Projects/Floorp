@@ -342,7 +342,7 @@ class ExtensionContext extends BaseContext {
     let localApis = {};
     apiManager.generateAPIs(this, localApis);
     this.childManager = new ChildAPIManager(this, this.messageManager, localApis, {
-      type: "content_script",
+      envType: "content_parent",
       url,
     });
 
