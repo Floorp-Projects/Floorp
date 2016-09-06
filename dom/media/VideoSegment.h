@@ -92,13 +92,9 @@ struct VideoChunk {
 
   PrincipalHandle GetPrincipalHandle() const { return mFrame.GetPrincipalHandle(); }
 
-  TimeStamp GetTimeStamp() const {
-    return mTimeStamp;
-  }
-
   StreamTime mDuration;
   VideoFrame mFrame;
-  TimeStamp mTimeStamp;
+  mozilla::TimeStamp mTimeStamp;
 };
 
 class VideoSegment : public MediaSegmentBase<VideoSegment, VideoChunk> {
