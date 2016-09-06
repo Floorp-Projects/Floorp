@@ -148,6 +148,7 @@ SimpleTest.waitForExplicitFinish();
 SpecialPowers.pushPrefEnv({"set": [
   ["browser.safebrowsing.malware.enabled", true],
   ["network.predictor.enabled", false],
+  ["urlclassifier.gethash.timeout_ms", 30000],
 ]}, runTest);
 
 </script>
