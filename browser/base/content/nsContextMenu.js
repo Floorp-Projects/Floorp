@@ -965,6 +965,7 @@ nsContextMenu.prototype = {
 
   _openLinkInParameters : function (extra) {
     let params = { charset: gContextMenuContentData.charSet,
+                   originPrincipal: this.principal,
                    referrerURI: gContextMenuContentData.documentURIObject,
                    referrerPolicy: gContextMenuContentData.referrerPolicy,
                    noReferrer: this.linkHasNoReferrer };
