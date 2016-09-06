@@ -104,7 +104,7 @@ add_task(function* test_legacy_extension_context_contentscript_connection() {
     });
   });
 
-  is(legacyContext.type, "legacy_extension",
+  is(legacyContext.envType, "legacy_extension",
      "LegacyExtensionContext instance has the expected type");
 
   ok(legacyContext.api, "Got the API object");
