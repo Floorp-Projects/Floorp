@@ -69,6 +69,9 @@ using namespace mozilla::media;
 #undef SAMPLE_LOG
 #undef DECODER_WARN
 #undef DUMP_LOG
+#undef SFMT
+#undef SLOG
+#undef SWARN
 
 #define FMT(x, ...) "Decoder=%p " x, mDecoderID, ##__VA_ARGS__
 #define DECODER_LOG(...) MOZ_LOG(gMediaDecoderLog, LogLevel::Debug,   (FMT(__VA_ARGS__)))
@@ -76,6 +79,11 @@ using namespace mozilla::media;
 #define SAMPLE_LOG(...)  MOZ_LOG(gMediaSampleLog,  LogLevel::Debug,   (FMT(__VA_ARGS__)))
 #define DECODER_WARN(...) NS_WARNING(nsPrintfCString(FMT(__VA_ARGS__)).get())
 #define DUMP_LOG(...) NS_DebugBreak(NS_DEBUG_WARNING, nsPrintfCString(FMT(__VA_ARGS__)).get(), nullptr, nullptr, -1)
+
+// Used by StateObject and its sub-classes
+#define SFMT(x, ...) "Decoder=%p state=%s " x, mMaster->mDecoderID, ToStateStr(GetState()), ##__VA_ARGS__
+#define SLOG(...) MOZ_LOG(gMediaDecoderLog, LogLevel::Debug, (SFMT(__VA_ARGS__)))
+#define SWARN(...) NS_WARNING(nsPrintfCString(SFMT(__VA_ARGS__)).get())
 
 // Certain constants get stored as member variables and then adjusted by various
 // scale factors on a per-decoder basis. We want to make sure to avoid using these
@@ -213,9 +221,20 @@ public:
   virtual void Step() {}   // Perform a 'cycle' of this state object.
   virtual State GetState() const = 0;
 
+  // Event handlers for various events.
+  // Return true if the event is handled by this state object.
+  virtual bool HandleDormant(bool aDormant) { return false; }
+
 protected:
   using Master = MediaDecoderStateMachine;
   explicit StateObject(Master* aPtr) : mMaster(aPtr) {}
+  TaskQueue* OwnerThread() const { return mMaster->mTaskQueue; }
+  MediaResource* Resource() const { return mMaster->mResource; }
+  MediaDecoderReaderWrapper* Reader() const { return mMaster->mReader; }
+
+  // Note this function will delete the current state object.
+  // Don't access members to avoid UAF after this call.
+  void SetState(State aState) { mMaster->SetState(aState); }
 
   // Take a raw pointer in order not to change the life cycle of MDSM.
   // It is guaranteed to be valid by MDSM.
@@ -230,13 +249,124 @@ public:
 
   void Enter() override
   {
-    mMaster->ReadMetadata();
+    MOZ_ASSERT(!mMetadataRequest.Exists());
+    SLOG("Dispatching AsyncReadMetadata");
+
+    // Set mode to METADATA since we are about to read metadata.
+    Resource()->SetReadMode(MediaCacheStream::MODE_METADATA);
+
+    // We disconnect mMetadataRequest in Exit() so it is fine to capture
+    // a raw pointer here.
+    mMetadataRequest.Begin(Reader()->ReadMetadata()
+      ->Then(OwnerThread(), __func__,
+        [this] (MetadataHolder* aMetadata) {
+          OnMetadataRead(aMetadata);
+        },
+        [this] (ReadMetadataFailureReason aReason) {
+          OnMetadataNotRead(aReason);
+        }));
+  }
+
+  void Exit() override
+  {
+    mMetadataRequest.DisconnectIfExists();
   }
 
   State GetState() const override
   {
     return DECODER_STATE_DECODING_METADATA;
   }
+
+  bool HandleDormant(bool aDormant) override
+  {
+    mPendingDormant = aDormant;
+    return true;
+  }
+
+private:
+  void OnMetadataRead(MetadataHolder* aMetadata)
+  {
+    mMetadataRequest.Complete();
+
+    if (mPendingDormant) {
+      // No need to store mQueuedSeek because we are at position 0.
+      SetState(DECODER_STATE_DORMANT);
+      return;
+    }
+
+    // Set mode to PLAYBACK after reading metadata.
+    Resource()->SetReadMode(MediaCacheStream::MODE_PLAYBACK);
+
+    mMaster->mInfo = aMetadata->mInfo;
+    mMaster->mMetadataTags = aMetadata->mTags.forget();
+
+    if (mMaster->mInfo.mMetadataDuration.isSome()) {
+      mMaster->RecomputeDuration();
+    } else if (mMaster->mInfo.mUnadjustedMetadataEndTime.isSome()) {
+      RefPtr<Master> master = mMaster;
+      Reader()->AwaitStartTime()->Then(OwnerThread(), __func__,
+        [master] () {
+          NS_ENSURE_TRUE_VOID(!master->IsShutdown());
+          TimeUnit unadjusted = master->mInfo.mUnadjustedMetadataEndTime.ref();
+          TimeUnit adjustment = master->mReader->StartTime();
+          master->mInfo.mMetadataDuration.emplace(unadjusted - adjustment);
+          master->RecomputeDuration();
+        }, [master, this] () {
+          SWARN("Adjusting metadata end time failed");
+        }
+      );
+    }
+
+    if (mMaster->HasVideo()) {
+      SLOG("Video decode isAsync=%d HWAccel=%d videoQueueSize=%d",
+           Reader()->IsAsync(),
+           Reader()->VideoIsHardwareAccelerated(),
+           mMaster->GetAmpleVideoFrames());
+    }
+
+    // In general, we wait until we know the duration before notifying the decoder.
+    // However, we notify  unconditionally in this case without waiting for the start
+    // time, since the caller might be waiting on metadataloaded to be fired before
+    // feeding in the CDM, which we need to decode the first frame (and
+    // thus get the metadata). We could fix this if we could compute the start
+    // time by demuxing without necessaring decoding.
+    bool waitingForCDM =
+#ifdef MOZ_EME
+    mMaster->mInfo.IsEncrypted() && !mMaster->mCDMProxy;
+#else
+    false;
+#endif
+
+    mMaster->mNotifyMetadataBeforeFirstFrame =
+      mMaster->mDuration.Ref().isSome() || waitingForCDM;
+
+    if (mMaster->mNotifyMetadataBeforeFirstFrame) {
+      mMaster->EnqueueLoadedMetadataEvent();
+    }
+
+    if (waitingForCDM) {
+      // Metadata parsing was successful but we're still waiting for CDM caps
+      // to become available so that we can build the correct decryptor/decoder.
+      SetState(DECODER_STATE_WAIT_FOR_CDM);
+      return;
+    }
+
+    SetState(DECODER_STATE_DECODING_FIRSTFRAME);
+  }
+
+  void OnMetadataNotRead(ReadMetadataFailureReason aReason)
+  {
+    mMetadataRequest.Complete();
+    SWARN("Decode metadata failed, shutting down decoder");
+    mMaster->DecodeError();
+  }
+
+  MozPromiseRequestHolder<MediaDecoderReader::MetadataPromise> mMetadataRequest;
+
+  // True if we need to enter dormant state after reading metadata. Note that
+  // we can't enter dormant state until reading metadata is done for some
+  // limitations of the reader.
+  bool mPendingDormant = false;
 };
 
 class MediaDecoderStateMachine::WaitForCDMState
@@ -1357,13 +1487,12 @@ MediaDecoderStateMachine::SetDormant(bool aDormant)
     return;
   }
 
-  bool wasDormant = mState == DECODER_STATE_DORMANT;
-  if (wasDormant == aDormant) {
+  if (mStateObj->HandleDormant(aDormant)) {
     return;
   }
 
-  if (mMetadataRequest.Exists()) {
-    mPendingDormant = aDormant;
+  bool wasDormant = mState == DECODER_STATE_DORMANT;
+  if (wasDormant == aDormant) {
     return;
   }
 
@@ -2593,7 +2722,6 @@ MediaDecoderStateMachine::Reset(TrackSet aTracks)
     AudioQueue().Reset();
   }
 
-  mMetadataRequest.DisconnectIfExists();
   mSeekTaskRequest.DisconnectIfExists();
 
   mPlaybackOffset = 0;
