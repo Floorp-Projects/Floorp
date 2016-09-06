@@ -1748,8 +1748,8 @@ CanvasRenderingContext2D::TrySkiaGLTarget(RefPtr<gfx::DrawTarget>& aOutDT,
   aOutDT = Factory::CreateDrawTargetSkiaWithGrContext(glue->GetGrContext(),
                                                       size, format);
   if (!aOutDT) {
-    return false;
     gfxCriticalNote << "Failed to create a SkiaGL DrawTarget, falling back to software\n";
+    return false;
   }
 
   MOZ_ASSERT(aOutDT->GetType() == DrawTargetType::HARDWARE_RASTER);
