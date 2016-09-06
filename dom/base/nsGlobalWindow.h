@@ -198,9 +198,6 @@ public:
   // Remaining time to wait.  Used only when timeouts are suspended.
   mozilla::TimeDuration mTimeRemaining;
 
-  // Principal with which to execute
-  nsCOMPtr<nsIPrincipal> mPrincipal;
-
   // stack depth at which timeout is firing
   uint32_t mFiringDepth;
 
