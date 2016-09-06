@@ -22,6 +22,7 @@ EXTRA_JS_MODULES['services-sync'] += [
     'modules/bookmark_utils.js',
     'modules/bookmark_validator.js',
     'modules/browserid_identity.js',
+    'modules/collection_validator.js',
     'modules/engines.js',
     'modules/FxaMigrator.jsm',
     'modules/identity.js',
