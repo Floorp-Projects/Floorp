@@ -239,6 +239,18 @@ public:
   }
 };
 
+class MediaDecoderStateMachine::WaitForCDMState
+  : public MediaDecoderStateMachine::StateObject
+{
+public:
+  explicit WaitForCDMState(Master* aPtr) : StateObject(aPtr) {}
+
+  State GetState() const override
+  {
+    return DECODER_STATE_WAIT_FOR_CDM;
+  }
+};
+
 #define INIT_WATCHABLE(name, val) \
   name(val, "MediaDecoderStateMachine::" #name)
 #define INIT_MIRROR(name, val) \
@@ -1105,6 +1117,9 @@ MediaDecoderStateMachine::SetState(State aState)
   switch (mState) {
     case DECODER_STATE_DECODING_METADATA:
       mStateObj = MakeUnique<DecodeMetadataState>(this);
+      break;
+    case DECODER_STATE_WAIT_FOR_CDM:
+      mStateObj = MakeUnique<WaitForCDMState>(this);
       break;
     default:
       mStateObj = nullptr;
