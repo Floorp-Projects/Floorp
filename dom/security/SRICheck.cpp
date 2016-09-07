@@ -160,6 +160,8 @@ SRICheck::IntegrityMetadata(const nsAString& aMetadataList,
     }
   }
 
+  outMetadata->mIntegrityString = aMetadataList;
+
   if (MOZ_LOG_TEST(SRILogHelper::GetSriLog(), mozilla::LogLevel::Debug)) {
     if (outMetadata->IsValid()) {
       nsAutoCString alg;

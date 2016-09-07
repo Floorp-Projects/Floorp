@@ -38,6 +38,7 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsContentPolicyUtils.h"
 #include "nsIHttpChannel.h"
+#include "nsIHttpChannelInternal.h"
 #include "nsIClassOfService.h"
 #include "nsIScriptError.h"
 #include "nsMimeTypes.h"
@@ -1685,6 +1686,11 @@ Loader::LoadSheet(SheetLoadData* aLoadData,
     if (referrerURI)
       httpChannel->SetReferrerWithPolicy(referrerURI,
                                          aLoadData->mSheet->GetReferrerPolicy());
+
+    nsCOMPtr<nsIHttpChannelInternal> internalChannel = do_QueryInterface(httpChannel);
+    if (internalChannel) {
+      internalChannel->SetIntegrityMetadata(sriMetadata.GetIntegrityString());
+    }
 
     // Set the initiator type
     nsCOMPtr<nsITimedChannel> timedChannel(do_QueryInterface(httpChannel));
