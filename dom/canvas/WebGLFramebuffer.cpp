@@ -344,21 +344,8 @@ WebGLFBAttachPoint::IsComplete(WebGLContext* webgl, nsCString* const out_info) c
 void
 WebGLFBAttachPoint::Resolve(gl::GLContext* gl, FBTarget target) const
 {
-    if (!HasImage()) {
-        switch (mAttachmentPoint) {
-        case LOCAL_GL_DEPTH_ATTACHMENT:
-        case LOCAL_GL_STENCIL_ATTACHMENT:
-        case LOCAL_GL_DEPTH_STENCIL_ATTACHMENT:
-            break;
-
-        default:
-            gl->fFramebufferRenderbuffer(target.get(), mAttachmentPoint,
-                                         LOCAL_GL_RENDERBUFFER, 0);
-            break;
-        }
-
+    if (!HasImage())
         return;
-    }
 
     if (Renderbuffer()) {
         Renderbuffer()->DoFramebufferRenderbuffer(target, mAttachmentPoint);
@@ -912,18 +899,23 @@ WebGLFramebuffer::ResolveAttachments(FBTarget target) const
     const auto& gl = mContext->gl;
 
     ////
+    // Nuke attachment points.
 
-    for (const auto& attach : mColorAttachments) {
-        attach.Resolve(gl, target);
+    for (uint32_t i = 0; i < mContext->mImplMaxColorAttachments; i++) {
+        const GLenum attachEnum = LOCAL_GL_COLOR_ATTACHMENT0 + i;
+        gl->fFramebufferRenderbuffer(target.get(), attachEnum, LOCAL_GL_RENDERBUFFER, 0);
     }
 
-    ////
-
-    // Nuke the depth and stencil attachment points.
     gl->fFramebufferRenderbuffer(target.get(), LOCAL_GL_DEPTH_ATTACHMENT,
                                  LOCAL_GL_RENDERBUFFER, 0);
     gl->fFramebufferRenderbuffer(target.get(), LOCAL_GL_STENCIL_ATTACHMENT,
                                  LOCAL_GL_RENDERBUFFER, 0);
+
+    ////
+
+    for (const auto& attach : mColorAttachments) {
+        attach.Resolve(gl, target);
+    }
 
     mDepthAttachment.Resolve(gl, target);
     mStencilAttachment.Resolve(gl, target);
