@@ -180,8 +180,9 @@ nsAutoCompleteController::StartSearch(const nsAString &aSearchString)
 }
 
 NS_IMETHODIMP
-nsAutoCompleteController::HandleText()
+nsAutoCompleteController::HandleText(bool *_retval)
 {
+  *_retval = false;
   // Note: the events occur in the following order when IME is used.
   // 1. a compositionstart event(HandleStartComposition)
   // 2. some input events (HandleText), eCompositionState_Composing
@@ -284,6 +285,7 @@ nsAutoCompleteController::HandleText()
     return NS_OK;
   }
 
+  *_retval = true;
   StartSearches();
 
   return NS_OK;
@@ -623,7 +625,8 @@ nsAutoCompleteController::HandleDelete(bool *_retval)
   input->GetPopupOpen(&isOpen);
   if (!isOpen || mRowCount <= 0) {
     // Nothing left to delete, proceed as normal
-    HandleText();
+    bool unused = false;
+    HandleText(&unused);
     return NS_OK;
   }
 
@@ -634,7 +637,8 @@ nsAutoCompleteController::HandleDelete(bool *_retval)
   popup->GetSelectedIndex(&index);
   if (index == -1) {
     // No row is selected in the list
-    HandleText();
+    bool unused = false;
+    HandleText(&unused);
     return NS_OK;
   }
 
@@ -1193,7 +1197,7 @@ nsAutoCompleteController::StartSearch(uint16_t aSearchType)
     nsAutoString searchParam;
     nsresult rv = input->GetSearchParam(searchParam);
     if (NS_FAILED(rv))
-        return rv;
+      return rv;
 
     // FormFill expects the searchParam to only contain the input element id,
     // other consumers may have other expectations, so this modifies it only
