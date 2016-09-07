@@ -52,14 +52,12 @@
 .login-icon,
 .microphone-icon,
 .plugin-icon,
-.pointerLock-icon,
 .popup-icon,
 .screen-icon,
 .desktop-notification-icon,
 .popup-notification-icon[popupid="geolocation"],
 .popup-notification-icon[popupid="indexedDB-permissions-prompt"],
 .popup-notification-icon[popupid="password"],
-.popup-notification-icon[popupid="pointerLock"],
 .popup-notification-icon[popupid="webRTC-shareDevices"],
 .popup-notification-icon[popupid="webRTC-shareMicrophone"],
 .popup-notification-icon[popupid="webRTC-shareScreen"],
@@ -69,7 +67,7 @@
   opacity: .4;
 }
 
-.notification-anchor-icon:hover {
+.notification-anchor-icon:not(.plugin-blocked):hover {
   opacity: .6;
 }
 
@@ -166,15 +164,6 @@
   list-style-image: url(chrome://browser/skin/notification-icons.svg#screen-blocked);
 }
 
-.popup-notification-icon[popupid="pointerLock"],
-.pointerLock-icon {
-  list-style-image: url(chrome://browser/skin/notification-icons.svg#pointerLock);
-}
-
-.pointerLock-icon.blocked-permission-icon {
-  list-style-image: url(chrome://browser/skin/notification-icons.svg#pointerLock-blocked);
-}
-
 /* This icon has a block sign in it, so we don't need a blocked version. */
 .popup-icon {
   list-style-image: url("chrome://browser/skin/notification-icons.svg#popup");
@@ -258,7 +247,7 @@
 .plugin-icon.plugin-blocked {
   list-style-image: url(chrome://browser/skin/notification-icons.svg#plugin-blocked);
   fill: #d92215;
-  opacity: 1 !important; /* !important to override the default hover opacity */
+  opacity: 1;
 }
 
 #notification-popup-box[hidden] {
