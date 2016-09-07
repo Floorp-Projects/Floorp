@@ -10,7 +10,7 @@ function debug(msg) {
 
 debug("loaded");
 
-var BrowserElementIsReady = false;
+var BrowserElementIsReady;
 
 var { classes: Cc, interfaces: Ci, results: Cr, utils: Cu }  = Components;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -37,8 +37,9 @@ const Timer = Components.Constructor("@mozilla.org/timer;1",
 function sendAsyncMsg(msg, data) {
   // Ensure that we don't send any messages before BrowserElementChild.js
   // finishes loading.
-  if (!BrowserElementIsReady)
+  if (!BrowserElementIsReady) {
     return;
+  }
 
   if (!data) {
     data = { };
@@ -51,8 +52,9 @@ function sendAsyncMsg(msg, data) {
 function sendSyncMsg(msg, data) {
   // Ensure that we don't send any messages before BrowserElementChild.js
   // finishes loading.
-  if (!BrowserElementIsReady)
+  if (!BrowserElementIsReady) {
     return;
+  }
 
   if (!data) {
     data = { };

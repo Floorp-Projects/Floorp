@@ -33,8 +33,12 @@ function isTopBrowserElement(docShell) {
   return true;
 }
 
+var BrowserElementIsReady;
+
+debug(`Might load BE scripts: BEIR: ${BrowserElementIsReady}`);
 if (!BrowserElementIsReady) {
-  if (!('BrowserElementIsPreloaded' in this)) {
+  debug("Loading BE scripts")
+  if (!("BrowserElementIsPreloaded" in this)) {
     if (isTopBrowserElement(docShell)) {
       if (Services.prefs.getBoolPref("dom.mozInputMethod.enabled")) {
         try {
@@ -73,8 +77,9 @@ if (!BrowserElementIsReady) {
       ContentPanning.init();
     }
   }
+  BrowserElementIsReady = true;
+} else {
+  debug("BE already loaded, abort");
 }
-
-var BrowserElementIsReady = true;
 
 sendAsyncMessage('browser-element-api:call', { 'msg_name': 'hello' });
