@@ -991,21 +991,21 @@ GfxInfo::GetGfxDriverInfo()
       APPEND_TO_DRIVER_BLOCKLIST2( winVer,                                                                                      \
         (nsAString&) GfxDriverInfo::GetDeviceVendor(VendorIntel), (GfxDeviceFamily*) GfxDriverInfo::GetDeviceFamily(devFamily), \
         nsIGfxInfo::FEATURE_DIRECT2D, nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION,                                               \
-        DRIVER_LESS_THAN, driverVer, ruleId )
+        DRIVER_BUILD_ID_LESS_THAN, driverVer, ruleId )
 
-    IMPLEMENT_INTEL_DRIVER_BLOCKLIST_D2D(OperatingSystem::WindowsVista, IntelGMA500,   V(7,14,10,1006), "FEATURE_FAILURE_594877_1");
+    IMPLEMENT_INTEL_DRIVER_BLOCKLIST_D2D(OperatingSystem::WindowsVista, IntelGMA500,   1006, "FEATURE_FAILURE_594877_1");
     IMPLEMENT_INTEL_DRIVER_BLOCKLIST_D2D(OperatingSystem::WindowsVista, IntelGMA900,   GfxDriverInfo::allDriverVersions, "FEATURE_FAILURE_594877_2");
-    IMPLEMENT_INTEL_DRIVER_BLOCKLIST_D2D(OperatingSystem::WindowsVista, IntelGMA950,   V(7,14,10,1504), "FEATURE_FAILURE_594877_3");
-    IMPLEMENT_INTEL_DRIVER_BLOCKLIST_D2D(OperatingSystem::WindowsVista, IntelGMA3150,  V(7,14,10,2124), "FEATURE_FAILURE_594877_4");
-    IMPLEMENT_INTEL_DRIVER_BLOCKLIST_D2D(OperatingSystem::WindowsVista, IntelGMAX3000, V(7,15,10,1666), "FEATURE_FAILURE_594877_5");
-    IMPLEMENT_INTEL_DRIVER_BLOCKLIST_D2D(OperatingSystem::WindowsVista, IntelHDGraphicsToSandyBridge, V(8,15,10,2202), "FEATURE_FAILURE_594877_6");
+    IMPLEMENT_INTEL_DRIVER_BLOCKLIST_D2D(OperatingSystem::WindowsVista, IntelGMA950,   1504, "FEATURE_FAILURE_594877_3");
+    IMPLEMENT_INTEL_DRIVER_BLOCKLIST_D2D(OperatingSystem::WindowsVista, IntelGMA3150,  2124, "FEATURE_FAILURE_594877_4");
+    IMPLEMENT_INTEL_DRIVER_BLOCKLIST_D2D(OperatingSystem::WindowsVista, IntelGMAX3000, 1666, "FEATURE_FAILURE_594877_5");
+    IMPLEMENT_INTEL_DRIVER_BLOCKLIST_D2D(OperatingSystem::WindowsVista, IntelHDGraphicsToSandyBridge, 2202, "FEATURE_FAILURE_594877_6");
 
-    IMPLEMENT_INTEL_DRIVER_BLOCKLIST_D2D(OperatingSystem::Windows7, IntelGMA500,   V(5,0,0,2026), "FEATURE_FAILURE_594877_7");
+    IMPLEMENT_INTEL_DRIVER_BLOCKLIST_D2D(OperatingSystem::Windows7, IntelGMA500,   2026, "FEATURE_FAILURE_594877_7");
     IMPLEMENT_INTEL_DRIVER_BLOCKLIST_D2D(OperatingSystem::Windows7, IntelGMA900,   GfxDriverInfo::allDriverVersions, "FEATURE_FAILURE_594877_8");
-    IMPLEMENT_INTEL_DRIVER_BLOCKLIST_D2D(OperatingSystem::Windows7, IntelGMA950,   V(8,15,10,1930), "FEATURE_FAILURE_594877_9");
-    IMPLEMENT_INTEL_DRIVER_BLOCKLIST_D2D(OperatingSystem::Windows7, IntelGMA3150,  V(8,14,10,2117), "FEATURE_FAILURE_594877_10");
-    IMPLEMENT_INTEL_DRIVER_BLOCKLIST_D2D(OperatingSystem::Windows7, IntelGMAX3000, V(8,15,10,1930), "FEATURE_FAILURE_594877_11");
-    IMPLEMENT_INTEL_DRIVER_BLOCKLIST_D2D(OperatingSystem::Windows7, IntelHDGraphicsToSandyBridge, V(8,15,10,2202), "FEATURE_FAILURE_594877_12");
+    IMPLEMENT_INTEL_DRIVER_BLOCKLIST_D2D(OperatingSystem::Windows7, IntelGMA950,   1930, "FEATURE_FAILURE_594877_9");
+    IMPLEMENT_INTEL_DRIVER_BLOCKLIST_D2D(OperatingSystem::Windows7, IntelGMA3150,  2117, "FEATURE_FAILURE_594877_10");
+    IMPLEMENT_INTEL_DRIVER_BLOCKLIST_D2D(OperatingSystem::Windows7, IntelGMAX3000, 1930, "FEATURE_FAILURE_594877_11");
+    IMPLEMENT_INTEL_DRIVER_BLOCKLIST_D2D(OperatingSystem::Windows7, IntelHDGraphicsToSandyBridge, 2202, "FEATURE_FAILURE_594877_12");
 
     /* Disable Direct2D on Intel GMAX4500 devices because of rendering corruption discovered
      * in bug 1180379. These seems to affect even the most recent drivers. We're black listing
@@ -1167,10 +1167,10 @@ GfxInfo::GetGfxDriverInfo()
       DRIVER_LESS_THAN, V(8,15,10,2869), "FEATURE_FAILURE_INTEL_W7_HW_DECODING");
 
     /* Bug 1203199/1092166: DXVA startup crashes on some intel drivers. */
-    APPEND_TO_DRIVER_BLOCKLIST_RANGE(OperatingSystem::Windows,
+    APPEND_TO_DRIVER_BLOCKLIST(OperatingSystem::Windows,
       (nsAString&)GfxDriverInfo::GetDeviceVendor(VendorIntel), GfxDriverInfo::allDevices,
       nsIGfxInfo::FEATURE_HARDWARE_VIDEO_DECODING, nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION,
-      DRIVER_BETWEEN_INCLUSIVE, V(9,17,10,0), V(9,17,10,2849), "FEATURE_FAILURE_BUG_1203199_1", "Intel driver > 9.17.10.2849");
+      DRIVER_BUILD_ID_LESS_THAN_OR_EQUAL, 2849, "FEATURE_FAILURE_BUG_1203199_1", "Intel driver > X.X.X.2849");
 
     APPEND_TO_DRIVER_BLOCKLIST2(OperatingSystem::Windows,
       (nsAString&)GfxDriverInfo::GetDeviceVendor(VendorNVIDIA), (GfxDeviceFamily*)GfxDriverInfo::GetDeviceFamily(Nvidia8800GTS),

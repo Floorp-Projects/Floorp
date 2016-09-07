@@ -9,6 +9,7 @@
 #include "ConnectionOrientedSocket.h"
 #include "DataSocket.h"
 #include "ListenSocketConsumer.h"
+#include "mozilla/DebugOnly.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/Unused.h"
 #include "nsISupportsImpl.h" // for MOZ_COUNT_CTOR, MOZ_COUNT_DTOR
@@ -153,8 +154,8 @@ ListenSocketIO::Listen(ConnectionOrientedSocketIO* aCOSocketIO)
   mCOSocketIO = aCOSocketIO;
 
   // calls OnListening on success, or OnError otherwise
-  nsresult rv = UnixSocketWatcher::Listen(address, mAddressLength);
-  NS_WARN_IF(NS_FAILED(rv));
+  DebugOnly<nsresult> rv = UnixSocketWatcher::Listen(address, mAddressLength);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Listen failed");
 }
 
 void

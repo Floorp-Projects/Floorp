@@ -1682,7 +1682,7 @@ ServiceWorkerPrivate::SpawnWorkerIfNeeded(WakeUpReason aWhy,
   // TODO(catalinb): Bug 1192138 - Add telemetry for service worker wake-ups.
 
   // Ensure that the IndexedDatabaseManager is initialized
-  NS_WARN_IF(!IndexedDatabaseManager::GetOrCreate());
+  Unused << NS_WARN_IF(!IndexedDatabaseManager::GetOrCreate());
 
   WorkerLoadInfo info;
   nsresult rv = NS_NewURI(getter_AddRefs(info.mBaseURI), mInfo->ScriptSpec(),
@@ -1781,7 +1781,7 @@ ServiceWorkerPrivate::TerminateWorker()
       }
     }
 
-    NS_WARN_IF(!mWorkerPrivate->Terminate());
+    Unused << NS_WARN_IF(!mWorkerPrivate->Terminate());
     mWorkerPrivate = nullptr;
     mSupportsArray.Clear();
 

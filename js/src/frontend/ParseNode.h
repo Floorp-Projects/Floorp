@@ -621,11 +621,10 @@ class ParseNode
 
 /* PN_LIST pn_xflags bits. */
 #define PNX_FUNCDEFS    0x01            /* contains top-level function statements */
-#define PNX_SETCALL     0x02            /* call expression in lvalue context */
-#define PNX_ARRAYHOLESPREAD 0x04        /* one or more of
+#define PNX_ARRAYHOLESPREAD 0x02        /* one or more of
                                            1. array initialiser has holes
                                            2. array initializer has spread node */
-#define PNX_NONCONST    0x08            /* initialiser has non-constants */
+#define PNX_NONCONST    0x04            /* initialiser has non-constants */
 
     bool functionIsHoisted() const {
         MOZ_ASSERT(pn_arity == PN_CODE && getKind() == PNK_FUNCTION);

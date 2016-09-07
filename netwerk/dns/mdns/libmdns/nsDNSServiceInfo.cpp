@@ -8,6 +8,7 @@
 #include "nsIProperty.h"
 #include "nsISimpleEnumerator.h"
 #include "nsISupportsImpl.h"
+#include "mozilla/Unused.h"
 
 namespace mozilla {
 namespace net {
@@ -24,22 +25,22 @@ nsDNSServiceInfo::nsDNSServiceInfo(nsIDNSServiceInfo* aServiceInfo)
   uint16_t value;
 
   if (NS_SUCCEEDED(aServiceInfo->GetHost(str))) {
-    NS_WARN_IF(NS_FAILED(SetHost(str)));
+    Unused << NS_WARN_IF(NS_FAILED(SetHost(str)));
   }
   if (NS_SUCCEEDED(aServiceInfo->GetAddress(str))) {
-    NS_WARN_IF(NS_FAILED(SetAddress(str)));
+    Unused << NS_WARN_IF(NS_FAILED(SetAddress(str)));
   }
   if (NS_SUCCEEDED(aServiceInfo->GetPort(&value))) {
-    NS_WARN_IF(NS_FAILED(SetPort(value)));
+    Unused << NS_WARN_IF(NS_FAILED(SetPort(value)));
   }
   if (NS_SUCCEEDED(aServiceInfo->GetServiceName(str))) {
-    NS_WARN_IF(NS_FAILED(SetServiceName(str)));
+    Unused << NS_WARN_IF(NS_FAILED(SetServiceName(str)));
   }
   if (NS_SUCCEEDED(aServiceInfo->GetServiceType(str))) {
-    NS_WARN_IF(NS_FAILED(SetServiceType(str)));
+    Unused << NS_WARN_IF(NS_FAILED(SetServiceType(str)));
   }
   if (NS_SUCCEEDED(aServiceInfo->GetDomainName(str))) {
-    NS_WARN_IF(NS_FAILED(SetDomainName(str)));
+    Unused << NS_WARN_IF(NS_FAILED(SetDomainName(str)));
   }
 
   nsCOMPtr<nsIPropertyBag2> attributes; // deep copy
@@ -55,21 +56,22 @@ nsDNSServiceInfo::nsDNSServiceInfo(nsIDNSServiceInfo* aServiceInfo)
     while (NS_SUCCEEDED(enumerator->HasMoreElements(&hasMoreElements)) &&
            hasMoreElements) {
       nsCOMPtr<nsISupports> element;
-      NS_WARN_IF(NS_FAILED(enumerator->GetNext(getter_AddRefs(element))));
+      Unused <<
+        NS_WARN_IF(NS_FAILED(enumerator->GetNext(getter_AddRefs(element))));
       nsCOMPtr<nsIProperty> property = do_QueryInterface(element);
       MOZ_ASSERT(property);
 
       nsAutoString name;
       nsCOMPtr<nsIVariant> value;
-      NS_WARN_IF(NS_FAILED(property->GetName(name)));
-      NS_WARN_IF(NS_FAILED(property->GetValue(getter_AddRefs(value))));
+      Unused << NS_WARN_IF(NS_FAILED(property->GetName(name)));
+      Unused << NS_WARN_IF(NS_FAILED(property->GetValue(getter_AddRefs(value))));
       nsAutoCString valueStr;
-      NS_WARN_IF(NS_FAILED(value->GetAsACString(valueStr)));
+      Unused << NS_WARN_IF(NS_FAILED(value->GetAsACString(valueStr)));
 
-      NS_WARN_IF(NS_FAILED(newAttributes->SetPropertyAsACString(name, valueStr)));
+      Unused << NS_WARN_IF(NS_FAILED(newAttributes->SetPropertyAsACString(name, valueStr)));
     }
 
-    NS_WARN_IF(NS_FAILED(SetAttributes(newAttributes)));
+    Unused << NS_WARN_IF(NS_FAILED(SetAttributes(newAttributes)));
   }
 }
 

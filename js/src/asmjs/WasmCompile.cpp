@@ -56,18 +56,26 @@ class FunctionDecoder
     const ModuleGenerator& mg_;
     const ValTypeVector& locals_;
     ValidatingExprIter iter_;
+    bool newFormat_;
 
   public:
-    FunctionDecoder(const ModuleGenerator& mg, const ValTypeVector& locals, Decoder& d)
-      : mg_(mg), locals_(locals), iter_(d)
+    FunctionDecoder(const ModuleGenerator& mg, const ValTypeVector& locals, Decoder& d, bool newFormat)
+      : mg_(mg), locals_(locals), iter_(d), newFormat_(newFormat)
     {}
     const ModuleGenerator& mg() const { return mg_; }
     ValidatingExprIter& iter() { return iter_; }
     const ValTypeVector& locals() const { return locals_; }
+    bool newFormat() const { return newFormat_; }
 
     bool checkHasMemory() {
         if (!mg().usesMemory())
             return iter().fail("can't touch memory without memory");
+        return true;
+    }
+
+    bool checkIsOldFormat() {
+        if (newFormat_)
+            return iter().fail("opcode no longer in new format");
         return true;
     }
 };
@@ -123,12 +131,21 @@ DecodeCall(FunctionDecoder& f)
     if (!f.iter().readCall(&calleeIndex, &arity))
         return false;
 
-    if (calleeIndex >= f.mg().numFuncSigs())
-        return f.iter().fail("callee index out of range");
+    const Sig* sig;
+    if (f.newFormat()) {
+        if (calleeIndex >= f.mg().numFuncs())
+            return f.iter().fail("callee index out of range");
 
-    const Sig& sig = f.mg().funcSig(calleeIndex);
-    return DecodeCallArgs(f, arity, sig) &&
-           DecodeCallReturn(f, sig);
+        sig = &f.mg().funcSig(calleeIndex);
+    } else {
+        if (calleeIndex >= f.mg().numFuncDefs())
+            return f.iter().fail("callee index out of range");
+
+        sig = &f.mg().funcDefSig(calleeIndex);
+    }
+
+    return DecodeCallArgs(f, arity, *sig) &&
+           DecodeCallReturn(f, *sig);
 }
 
 static bool
@@ -204,7 +221,8 @@ DecodeExpr(FunctionDecoder& f)
       case Expr::CallIndirect:
         return DecodeCallIndirect(f);
       case Expr::CallImport:
-        return DecodeCallImport(f);
+        return f.checkIsOldFormat() &&
+               DecodeCallImport(f);
       case Expr::I32Const:
         return f.iter().readI32Const(nullptr);
       case Expr::I64Const:
@@ -573,18 +591,18 @@ DecodeFunctionSection(Decoder& d, ModuleGeneratorData* init)
     if (sectionStart == Decoder::NotStarted)
         return true;
 
-    uint32_t numDecls;
-    if (!d.readVarU32(&numDecls))
-        return Fail(d, "expected number of declarations");
+    uint32_t numDefs;
+    if (!d.readVarU32(&numDefs))
+        return Fail(d, "expected number of function definitions");
 
-    if (numDecls > MaxFuncs)
+    if (numDefs > MaxFuncs)
         return Fail(d, "too many functions");
 
-    if (!init->funcSigs.resize(numDecls))
+    if (!init->funcDefSigs.resize(numDefs))
         return false;
 
-    for (uint32_t i = 0; i < numDecls; i++) {
-        if (!DecodeSignatureIndex(d, *init, &init->funcSigs[i]))
+    for (uint32_t i = 0; i < numDefs; i++) {
+        if (!DecodeSignatureIndex(d, *init, &init->funcDefSigs[i]))
             return false;
     }
 
@@ -876,14 +894,14 @@ DecodeTableSection(Decoder& d, bool newFormat, ModuleGeneratorData* init, Uint32
             return false;
 
         for (uint32_t i = 0; i < table.initial; i++) {
-            uint32_t funcIndex;
-            if (!d.readVarU32(&funcIndex))
+            uint32_t funcDefIndex;
+            if (!d.readVarU32(&funcDefIndex))
                 return Fail(d, "expected table element");
 
-            if (funcIndex >= init->funcSigs.length())
+            if (funcDefIndex >= init->funcDefSigs.length())
                 return Fail(d, "table element out of range");
 
-            (*oldElems)[i] = funcIndex;
+            (*oldElems)[i] = init->funcImports.length() + funcDefIndex;
         }
 
         MOZ_ASSERT(init->tables.empty());
@@ -1078,18 +1096,18 @@ static bool
 DecodeExport(Decoder& d, bool newFormat, ModuleGenerator& mg, CStringSet* dupSet)
 {
     if (!newFormat) {
-        uint32_t funcIndex;
-        if (!d.readVarU32(&funcIndex))
+        uint32_t funcDefIndex;
+        if (!d.readVarU32(&funcDefIndex))
             return Fail(d, "expected export internal index");
 
-        if (funcIndex >= mg.numFuncSigs())
+        if (funcDefIndex >= mg.numFuncDefs())
             return Fail(d, "exported function index out of bounds");
 
         UniqueChars fieldName = DecodeExportName(d, dupSet);
         if (!fieldName)
             return false;
 
-        return mg.addFuncExport(Move(fieldName), funcIndex);
+        return mg.addFuncDefExport(Move(fieldName), mg.numFuncImports() + funcDefIndex);
     }
 
     UniqueChars fieldName = DecodeExportName(d, dupSet);
@@ -1106,10 +1124,10 @@ DecodeExport(Decoder& d, bool newFormat, ModuleGenerator& mg, CStringSet* dupSet
         if (!d.readVarU32(&funcIndex))
             return Fail(d, "expected export internal index");
 
-        if (funcIndex >= mg.numFuncSigs())
+        if (funcIndex >= mg.numFuncs())
             return Fail(d, "exported function index out of bounds");
 
-        return mg.addFuncExport(Move(fieldName), funcIndex);
+        return mg.addFuncDefExport(Move(fieldName), funcIndex);
       }
       case DefinitionKind::Table: {
         uint32_t tableIndex;
@@ -1190,7 +1208,7 @@ DecodeExportSection(Decoder& d, bool newFormat, bool memoryExported, ModuleGener
 }
 
 static bool
-DecodeFunctionBody(Decoder& d, ModuleGenerator& mg, uint32_t funcIndex)
+DecodeFunctionBody(Decoder& d, bool newFormat, ModuleGenerator& mg, uint32_t funcDefIndex)
 {
     uint32_t bodySize;
     if (!d.readVarU32(&bodySize))
@@ -1207,7 +1225,7 @@ DecodeFunctionBody(Decoder& d, ModuleGenerator& mg, uint32_t funcIndex)
         return false;
 
     ValTypeVector locals;
-    const Sig& sig = mg.funcSig(funcIndex);
+    const Sig& sig = mg.funcDefSig(funcDefIndex);
     if (!locals.appendAll(sig.args()))
         return false;
 
@@ -1219,7 +1237,7 @@ DecodeFunctionBody(Decoder& d, ModuleGenerator& mg, uint32_t funcIndex)
             return false;
     }
 
-    FunctionDecoder f(mg, locals, d);
+    FunctionDecoder f(mg, locals, d, newFormat);
 
     if (!f.iter().readFunctionStart())
         return false;
@@ -1240,7 +1258,7 @@ DecodeFunctionBody(Decoder& d, ModuleGenerator& mg, uint32_t funcIndex)
 
     memcpy(fg.bytes().begin(), bodyBegin, bodySize);
 
-    return mg.finishFuncDef(funcIndex, &fg);
+    return mg.finishFuncDef(funcDefIndex, &fg);
 }
 
 static bool
@@ -1252,21 +1270,21 @@ DecodeStartSection(Decoder& d, ModuleGenerator& mg)
     if (sectionStart == Decoder::NotStarted)
         return true;
 
-    uint32_t startFuncIndex;
-    if (!d.readVarU32(&startFuncIndex))
+    uint32_t funcIndex;
+    if (!d.readVarU32(&funcIndex))
         return Fail(d, "failed to read start func index");
 
-    if (startFuncIndex >= mg.numFuncSigs())
+    if (funcIndex >= mg.numFuncs())
         return Fail(d, "unknown start function");
 
-    const Sig& sig = mg.funcSig(startFuncIndex);
+    const Sig& sig = mg.funcSig(funcIndex);
     if (sig.ret() != ExprType::Void)
         return Fail(d, "start function must not return anything");
 
     if (sig.args().length())
         return Fail(d, "start function must be nullary");
 
-    if (!mg.setStartFunction(startFuncIndex))
+    if (!mg.setStartFunction(funcIndex))
         return false;
 
     if (!d.finishSection(sectionStart, sectionSize))
@@ -1276,7 +1294,7 @@ DecodeStartSection(Decoder& d, ModuleGenerator& mg)
 }
 
 static bool
-DecodeCodeSection(Decoder& d, ModuleGenerator& mg)
+DecodeCodeSection(Decoder& d, bool newFormat, ModuleGenerator& mg)
 {
     if (!mg.startFuncDefs())
         return false;
@@ -1286,21 +1304,21 @@ DecodeCodeSection(Decoder& d, ModuleGenerator& mg)
         return Fail(d, "failed to start section");
 
     if (sectionStart == Decoder::NotStarted) {
-        if (mg.numFuncSigs() != 0)
+        if (mg.numFuncDefs() != 0)
             return Fail(d, "expected function bodies");
 
         return mg.finishFuncDefs();
     }
 
-    uint32_t numFuncBodies;
-    if (!d.readVarU32(&numFuncBodies))
+    uint32_t numFuncDefs;
+    if (!d.readVarU32(&numFuncDefs))
         return Fail(d, "expected function body count");
 
-    if (numFuncBodies != mg.numFuncSigs())
+    if (numFuncDefs != mg.numFuncDefs())
         return Fail(d, "function body count does not match function signature count");
 
-    for (uint32_t funcIndex = 0; funcIndex < numFuncBodies; funcIndex++) {
-        if (!DecodeFunctionBody(d, mg, funcIndex))
+    for (uint32_t i = 0; i < numFuncDefs; i++) {
+        if (!DecodeFunctionBody(d, newFormat, mg, i))
             return false;
     }
 
@@ -1335,7 +1353,7 @@ DecodeElemSection(Decoder& d, bool newFormat, Uint32Vector&& oldElems, ModuleGen
     if (numSegments > MaxElemSegments)
         return Fail(d, "too many elem segments");
 
-    for (uint32_t i = 0, prevEnd = 0; i < numSegments; i++) {
+    for (uint32_t i = 0; i < numSegments; i++) {
         uint32_t tableIndex;
         if (!d.readVarU32(&tableIndex))
             return Fail(d, "expected table index");
@@ -1347,9 +1365,6 @@ DecodeElemSection(Decoder& d, bool newFormat, Uint32Vector&& oldElems, ModuleGen
         InitExpr offset;
         if (!DecodeInitializerExpression(d, mg.globals(), ValType::I32, &offset))
             return false;
-
-        if (offset.isVal() && offset.val().i32() < prevEnd)
-            return Fail(d, "elem segments must be disjoint and ordered");
 
         uint32_t numElems;
         if (!d.readVarU32(&numElems))
@@ -1369,12 +1384,9 @@ DecodeElemSection(Decoder& d, bool newFormat, Uint32Vector&& oldElems, ModuleGen
         for (uint32_t i = 0; i < numElems; i++) {
             if (!d.readVarU32(&elemFuncIndices[i]))
                 return Fail(d, "failed to read element function index");
-            if (elemFuncIndices[i] >= mg.numFuncSigs())
+            if (elemFuncIndices[i] >= mg.numFuncs())
                 return Fail(d, "table element out of range");
         }
-
-        if (offset.isVal())
-            prevEnd = offset.val().i32() + elemFuncIndices.length();
 
         if (!mg.addElemSegment(offset, Move(elemFuncIndices)))
             return false;
@@ -1406,7 +1418,8 @@ DecodeDataSection(Decoder& d, bool newFormat, ModuleGenerator& mg)
         return Fail(d, "too many data segments");
 
     uint32_t max = mg.minMemoryLength();
-    for (uint32_t i = 0, prevEnd = 0; i < numSegments; i++) {
+    for (uint32_t i = 0; i < numSegments; i++) {
+        DataSegment seg;
         if (newFormat) {
             uint32_t linearMemoryIndex;
             if (!d.readVarU32(&linearMemoryIndex))
@@ -1415,26 +1428,24 @@ DecodeDataSection(Decoder& d, bool newFormat, ModuleGenerator& mg)
             if (linearMemoryIndex != 0)
                 return Fail(d, "linear memory index must currently be 0");
 
-            Expr expr;
-            if (!d.readExpr(&expr))
-                return Fail(d, "failed to read initializer expression");
+            if (!DecodeInitializerExpression(d, mg.globals(), ValType::I32, &seg.offset))
+                return false;
+        } else {
+            uint32_t offset;
+            if (!d.readVarU32(&offset))
+                return Fail(d, "expected segment destination offset");
 
-            if (expr != Expr::I32Const)
-                return Fail(d, "expected i32.const initializer expression");
+            seg.offset = InitExpr(Val(offset));
         }
-
-        DataSegment seg;
-        if (!d.readVarU32(&seg.memoryOffset))
-            return Fail(d, "expected segment destination offset");
-
-        if (seg.memoryOffset < prevEnd)
-            return Fail(d, "data segments must be disjoint and ordered");
 
         if (!d.readVarU32(&seg.length))
             return Fail(d, "expected segment size");
 
-        if (seg.memoryOffset > max || max - seg.memoryOffset < seg.length)
-            return Fail(d, "data segment data segment does not fit");
+        if (seg.offset.isVal()) {
+            uint32_t off = seg.offset.val().i32();
+            if (off > max || max - off < seg.length)
+                return Fail(d, "data segment does not fit");
+        }
 
         seg.bytecodeOffset = d.currentOffset();
 
@@ -1443,8 +1454,6 @@ DecodeDataSection(Decoder& d, bool newFormat, ModuleGenerator& mg)
 
         if (!mg.addDataSegment(seg))
             return false;
-
-        prevEnd = seg.memoryOffset + seg.length;
     }
 
     if (!d.finishSection(sectionStart, sectionSize))
@@ -1586,10 +1595,10 @@ wasm::Compile(const ShareableBytes& bytecode, const CompileArgs& args, UniqueCha
     if (!DecodeStartSection(d, mg))
         return nullptr;
 
-    if (!DecodeCodeSection(d, mg))
+    if (!DecodeElemSection(d, newFormat, Move(oldElems), mg))
         return nullptr;
 
-    if (!DecodeElemSection(d, newFormat, Move(oldElems), mg))
+    if (!DecodeCodeSection(d, newFormat, mg))
         return nullptr;
 
     if (!DecodeDataSection(d, newFormat, mg))

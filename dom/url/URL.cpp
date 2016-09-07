@@ -1821,7 +1821,7 @@ URL::URLSearchParamsUpdated(URLSearchParams* aSearchParams)
 
   ErrorResult rv;
   SetSearchInternal(search, rv);
-  NS_WARN_IF(rv.Failed());
+  NS_WARNING_ASSERTION(!rv.Failed(), "SetSearchInternal failed");
   rv.SuppressException();
 }
 

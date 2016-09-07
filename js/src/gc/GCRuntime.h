@@ -946,6 +946,7 @@ class GCRuntime
     bool shouldPreserveJITCode(JSCompartment* comp, int64_t currentTime,
                                JS::gcreason::Reason reason);
     void traceRuntimeForMajorGC(JSTracer* trc, AutoLockForExclusiveAccess& lock);
+    void traceRuntimeAtoms(JSTracer* trc, AutoLockForExclusiveAccess& lock);
     void traceRuntimeCommon(JSTracer* trc, TraceOrMarkRuntime traceOrMark,
                             AutoLockForExclusiveAccess& lock);
     void bufferGrayRoots();

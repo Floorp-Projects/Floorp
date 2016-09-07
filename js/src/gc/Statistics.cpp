@@ -180,7 +180,7 @@ static const PhaseInfo phases[] = {
     { PHASE_MARK_ROOTS, "Mark Roots", PHASE_MULTI_PARENTS, 48 },
         { PHASE_BUFFER_GRAY_ROOTS, "Buffer Gray Roots", PHASE_MARK_ROOTS, 49 },
         { PHASE_MARK_CCWS, "Mark Cross Compartment Wrappers", PHASE_MARK_ROOTS, 50 },
-        { PHASE_MARK_ROOTERS, "Mark Rooters", PHASE_MARK_ROOTS, 51 },
+        { PHASE_MARK_STACK, "Mark C and JS stacks", PHASE_MARK_ROOTS, 51 },
         { PHASE_MARK_RUNTIME_DATA, "Mark Runtime-wide Data", PHASE_MARK_ROOTS, 52 },
         { PHASE_MARK_EMBEDDING, "Mark Embedding", PHASE_MARK_ROOTS, 53 },
         { PHASE_MARK_COMPARTMENTS, "Mark Compartments", PHASE_MARK_ROOTS, 54 },

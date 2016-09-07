@@ -1362,6 +1362,19 @@ auto GeckoLayerClient::SynthesizeNativeTouchPoint(int32_t a0, int32_t a1, int32_
     return mozilla::jni::Method<SynthesizeNativeTouchPoint_t>::Call(GeckoLayerClient::mCtx, nullptr, a0, a1, a2, a3, a4, a5);
 }
 
+constexpr char GeckoLayerClient::ClearColor_t::name[];
+constexpr char GeckoLayerClient::ClearColor_t::signature[];
+
+auto GeckoLayerClient::ClearColor() const -> int32_t
+{
+    return mozilla::jni::Field<ClearColor_t>::Get(GeckoLayerClient::mCtx, nullptr);
+}
+
+auto GeckoLayerClient::ClearColor(int32_t a0) const -> void
+{
+    return mozilla::jni::Field<ClearColor_t>::Set(GeckoLayerClient::mCtx, nullptr, a0);
+}
+
 const char ImmutableViewportMetrics::name[] =
         "org/mozilla/gecko/gfx/ImmutableViewportMetrics";
 

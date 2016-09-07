@@ -19,6 +19,7 @@ import org.mozilla.gecko.annotation.JNITarget;
 import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.db.BrowserDB;
+import org.mozilla.gecko.gfx.LayerView;
 import org.mozilla.gecko.mozglue.SafeIntent;
 import org.mozilla.gecko.notifications.WhatsNewReceiver;
 import org.mozilla.gecko.reader.ReaderModeUtils;
@@ -36,6 +37,7 @@ import android.graphics.Color;
 import android.net.Uri;
 import android.os.Handler;
 import android.provider.Browser;
+import android.support.v4.content.ContextCompat;
 import android.util.Log;
 
 public class Tabs implements GeckoEventListener {
@@ -75,8 +77,10 @@ public class Tabs implements GeckoEventListener {
     private volatile boolean mInitialTabsAdded;
 
     private Context mAppContext;
+    private LayerView mLayerView;
     private ContentObserver mBookmarksContentObserver;
     private PersistTabsRunnable mPersistTabsRunnable;
+    private int mPrivateClearColor;
 
     private static class PersistTabsRunnable implements Runnable {
         private final BrowserDB db;
@@ -121,9 +125,11 @@ public class Tabs implements GeckoEventListener {
             "Tab:StreamStop",
             "Tab:AudioPlayingChange");
 
+        mPrivateClearColor = Color.RED;
+
     }
 
-    public synchronized void attachToContext(Context context) {
+    public synchronized void attachToContext(Context context, LayerView layerView) {
         final Context appContext = context.getApplicationContext();
         if (mAppContext == appContext) {
             return;
@@ -135,6 +141,8 @@ public class Tabs implements GeckoEventListener {
         }
 
         mAppContext = appContext;
+        mLayerView = layerView;
+        mPrivateClearColor = ContextCompat.getColor(context, R.color.tabs_tray_grey_pressed);
         mAccountManager = AccountManager.get(appContext);
 
         mAccountListener = new OnAccountsUpdateListener() {
@@ -249,6 +257,10 @@ public class Tabs implements GeckoEventListener {
 
         mSelectedTab = tab;
         notifyListeners(tab, TabEvents.SELECTED);
+
+        if (mLayerView != null) {
+            mLayerView.setClearColor(getTabColor(tab));
+        }
 
         if (oldTab != null) {
             notifyListeners(oldTab, TabEvents.UNSELECTED);
@@ -660,6 +672,10 @@ public class Tabs implements GeckoEventListener {
             // are also selected/unselected, so it would be redundant to also listen
             // for ADDED/CLOSED events.
             case SELECTED:
+                if (mLayerView != null) {
+                    mLayerView.setSurfaceBackgroundColor(getTabColor(tab));
+                    mLayerView.setPaintState(LayerView.PAINT_START);
+                }
                 queuePersistAllTabs();
             case UNSELECTED:
                 tab.onChange();
@@ -970,5 +986,13 @@ public class Tabs implements GeckoEventListener {
     @JNITarget
     public static int getNextTabId() {
         return sTabId.getAndIncrement();
+    }
+
+    private int getTabColor(Tab tab) {
+        if (tab != null) {
+            return tab.isPrivate() ? mPrivateClearColor : Color.WHITE;
+        }
+
+        return Color.WHITE;
     }
 }

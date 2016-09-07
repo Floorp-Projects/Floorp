@@ -99,3 +99,8 @@ fuzzy(64,311) == clip-path-viewBox-1c.html clip-path-geometryBox-1-ref.html
 fuzzy-if(winWidget,1,98) == clip-path-geometryBox-2.html clip-path-geometryBox-2-ref.html
 
 default-preferences
+
+# mask with opacity test cases
+fuzzy(1,5000) == mask-opacity-1a.html mask-opacity-1-ref.html
+fuzzy(1,5000) == mask-opacity-1b.html mask-opacity-1-ref.html
+fuzzy(1,5000) == mask-opacity-1c.html mask-opacity-1-ref.html

@@ -146,7 +146,7 @@
 }
 
 #navigator-toolbox:-moz-lwtheme::after {
-  background: var(--chrome-navigator-toolbox-separator-color);
+  border-bottom-color: var(--chrome-navigator-toolbox-separator-color);
 }
 
 #navigator-toolbox > toolbar:not(#TabsToolbar):not(#toolbar-menubar),

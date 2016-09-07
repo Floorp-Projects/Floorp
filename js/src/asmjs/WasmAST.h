@@ -646,14 +646,15 @@ class AstExport : public AstNode
 
 class AstDataSegment : public AstNode
 {
-    uint32_t offset_;
+    AstExpr* offset_;
     AstName text_;
 
   public:
-    AstDataSegment(uint32_t offset, AstName text)
+    AstDataSegment(AstExpr* offset, AstName text)
       : offset_(offset), text_(text)
     {}
-    uint32_t offset() const { return offset_; }
+
+    AstExpr* offset() const { return offset_; }
     AstName text() const { return text_; }
 };
 

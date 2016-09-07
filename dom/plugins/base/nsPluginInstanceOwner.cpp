@@ -985,9 +985,9 @@ nsPluginInstanceOwner::HandledWindowedPluginKeyEvent(
   if (NS_WARN_IF(!mInstance)) {
     return;
   }
-  nsresult rv =
+  DebugOnly<nsresult> rv =
     mInstance->HandledWindowedPluginKeyEvent(aKeyEventData, aIsConsumed);
-  NS_WARN_IF(NS_FAILED(rv));
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "HandledWindowedPluginKeyEvent fail");
 }
 
 void

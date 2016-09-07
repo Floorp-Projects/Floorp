@@ -31,46 +31,21 @@ Grid::Grid(nsISupports* aParent,
   MOZ_ASSERT(aFrame,
     "Should never be instantiated with a null nsGridContainerFrame");
 
-  const ComputedGridTrackInfo* rowTrackInfo =
-    aFrame->GetComputedTemplateRows();
-  const ComputedGridLineInfo* rowLineInfo =
-    aFrame->GetComputedTemplateRowLines();
-  mRows->SetTrackInfo(rowTrackInfo);
-  mRows->SetLineInfo(rowTrackInfo, rowLineInfo);
+  // Construct areas first, because lines may need to reference them
+  // to extract additional names for boundary lines.
 
-  const ComputedGridTrackInfo* columnTrackInfo =
-    aFrame->GetComputedTemplateColumns();
-  const ComputedGridLineInfo* columnLineInfo =
-    aFrame->GetComputedTemplateColumnLines();
-  mCols->SetTrackInfo(columnTrackInfo);
-  mCols->SetLineInfo(columnTrackInfo, columnLineInfo);
-
-  // Add implicit areas first.
+  // Add implicit areas first. Track the names that we add here, because
+  // we will ignore future explicit areas with the same name.
+  nsTHashtable<nsStringHashKey> namesSeen;
   nsGridContainerFrame::ImplicitNamedAreas* implicitAreas =
     aFrame->GetImplicitNamedAreas();
   if (implicitAreas) {
     for (auto iter = implicitAreas->Iter(); !iter.Done(); iter.Next()) {
-      nsStringHashKey* entry = iter.Get();
-
-      GridArea* area = new GridArea(this,
-                                    nsString(entry->GetKey()),
-                                    GridDeclaration::Implicit,
-                                    0,
-                                    0,
-                                    0,
-                                    0);
-      mAreas.AppendElement(area);
-    }
-  }
-
-  // Add explicit areas next.
-  nsGridContainerFrame::ExplicitNamedAreas* explicitAreas =
-    aFrame->GetExplicitNamedAreas();
-  if (explicitAreas) {
-    for (auto areaInfo : *explicitAreas) {
+      auto& areaInfo = iter.Data();
+      namesSeen.PutEntry(areaInfo.mName);
       GridArea* area = new GridArea(this,
                                     areaInfo.mName,
-                                    GridDeclaration::Explicit,
+                                    GridDeclaration::Implicit,
                                     areaInfo.mRowStart,
                                     areaInfo.mRowEnd,
                                     areaInfo.mColumnStart,
@@ -78,6 +53,41 @@ Grid::Grid(nsISupports* aParent,
       mAreas.AppendElement(area);
     }
   }
+
+  // Add explicit areas next, as long as they don't have the same name
+  // as the implicit areas, because the implicit values override what was
+  // initially available in the explicit areas.
+  nsGridContainerFrame::ExplicitNamedAreas* explicitAreas =
+    aFrame->GetExplicitNamedAreas();
+  if (explicitAreas) {
+    for (auto& areaInfo : *explicitAreas) {
+      if (!namesSeen.Contains(areaInfo.mName)) {
+        GridArea* area = new GridArea(this,
+                                      areaInfo.mName,
+                                      GridDeclaration::Explicit,
+                                      areaInfo.mRowStart,
+                                      areaInfo.mRowEnd,
+                                      areaInfo.mColumnStart,
+                                      areaInfo.mColumnEnd);
+        mAreas.AppendElement(area);
+      }
+    }
+  }
+
+  // Now construct the tracks and lines.
+  const ComputedGridTrackInfo* rowTrackInfo =
+    aFrame->GetComputedTemplateRows();
+  const ComputedGridLineInfo* rowLineInfo =
+    aFrame->GetComputedTemplateRowLines();
+  mRows->SetTrackInfo(rowTrackInfo);
+  mRows->SetLineInfo(rowTrackInfo, rowLineInfo, mAreas, true);
+
+  const ComputedGridTrackInfo* columnTrackInfo =
+    aFrame->GetComputedTemplateColumns();
+  const ComputedGridLineInfo* columnLineInfo =
+    aFrame->GetComputedTemplateColumnLines();
+  mCols->SetTrackInfo(columnTrackInfo);
+  mCols->SetLineInfo(columnTrackInfo, columnLineInfo, mAreas, false);
 }
 
 Grid::~Grid()

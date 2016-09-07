@@ -2526,6 +2526,7 @@ GCRuntime::updateAllCellPointers(MovingTracer* trc, Zone* zone)
 void
 GCRuntime::updatePointersToRelocatedCells(Zone* zone, AutoLockForExclusiveAccess& lock)
 {
+    MOZ_ASSERT(!rt->isBeingDestroyed());
     MOZ_ASSERT(zone->isGCCompacting());
 
     gcstats::AutoPhase ap(stats, gcstats::PHASE_COMPACT_UPDATE);
