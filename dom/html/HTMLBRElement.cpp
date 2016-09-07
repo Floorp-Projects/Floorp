@@ -30,10 +30,10 @@ HTMLBRElement::~HTMLBRElement()
 NS_IMPL_ELEMENT_CLONE(HTMLBRElement)
 
 static const nsAttrValue::EnumTable kClearTable[] = {
-  { "left", NS_STYLE_CLEAR_LEFT },
-  { "right", NS_STYLE_CLEAR_RIGHT },
-  { "all", NS_STYLE_CLEAR_BOTH },
-  { "both", NS_STYLE_CLEAR_BOTH },
+  { "left", StyleClear::Left },
+  { "right", StyleClear::Right },
+  { "all", StyleClear::Both },
+  { "both", StyleClear::Both },
   { nullptr, 0 }
 };
 

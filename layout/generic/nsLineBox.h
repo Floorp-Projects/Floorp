@@ -143,7 +143,6 @@ protected:
 
 //----------------------------------------------------------------------
 
-#define LINE_MAX_BREAK_TYPE  ((1 << 4) - 1)
 #define LINE_MAX_CHILD_COUNT INT32_MAX
 
 /**
@@ -394,37 +393,38 @@ public:
   // Break information is applied *before* the line if the line is a block,
   // or *after* the line if the line is an inline. Confusing, I know, but
   // using different names should help.
+  using StyleClear = mozilla::StyleClear;
   bool HasBreakBefore() const {
-    return IsBlock() && NS_STYLE_CLEAR_NONE != mFlags.mBreakType;
+    return IsBlock() && StyleClear::None_ != BreakType();
   }
-  void SetBreakTypeBefore(uint8_t aBreakType) {
+  void SetBreakTypeBefore(StyleClear aBreakType) {
     NS_ASSERTION(IsBlock(), "Only blocks have break-before");
-    NS_ASSERTION(aBreakType == NS_STYLE_CLEAR_NONE ||
-                 aBreakType == NS_STYLE_CLEAR_LEFT ||
-                 aBreakType == NS_STYLE_CLEAR_RIGHT ||
-                 aBreakType == NS_STYLE_CLEAR_BOTH,
+    NS_ASSERTION(aBreakType == StyleClear::None_ ||
+                 aBreakType == StyleClear::Left ||
+                 aBreakType == StyleClear::Right ||
+                 aBreakType == StyleClear::Both,
                  "Only float break types are allowed before a line");
-    mFlags.mBreakType = aBreakType;
+    mFlags.mBreakType = static_cast<int>(aBreakType);
   }
-  uint8_t GetBreakTypeBefore() const {
-    return IsBlock() ? mFlags.mBreakType : NS_STYLE_CLEAR_NONE;
+  StyleClear GetBreakTypeBefore() const {
+    return IsBlock() ? BreakType() : StyleClear::None_;
   }
 
   bool HasBreakAfter() const {
-    return !IsBlock() && NS_STYLE_CLEAR_NONE != mFlags.mBreakType;
+    return !IsBlock() && StyleClear::None_ != BreakType();
   }
-  void SetBreakTypeAfter(uint8_t aBreakType) {
+  void SetBreakTypeAfter(StyleClear aBreakType) {
     NS_ASSERTION(!IsBlock(), "Only inlines have break-after");
-    NS_ASSERTION(aBreakType <= LINE_MAX_BREAK_TYPE, "bad break type");
-    mFlags.mBreakType = aBreakType;
+    mFlags.mBreakType = static_cast<int>(aBreakType);
   }
   bool HasFloatBreakAfter() const {
-    return !IsBlock() && (NS_STYLE_CLEAR_LEFT == mFlags.mBreakType ||
-                          NS_STYLE_CLEAR_RIGHT == mFlags.mBreakType ||
-                          NS_STYLE_CLEAR_BOTH == mFlags.mBreakType);
+    return !IsBlock() &&
+           (StyleClear::Left == BreakType() ||
+            StyleClear::Right == BreakType() ||
+            StyleClear::Both == BreakType());
   }
-  uint8_t GetBreakTypeAfter() const {
-    return !IsBlock() ? mFlags.mBreakType : NS_STYLE_CLEAR_NONE;
+  StyleClear GetBreakTypeAfter() const {
+    return !IsBlock() ? BreakType() : StyleClear::None_;
   }
 
   // mCarriedOutBEndMargin value
@@ -572,7 +572,7 @@ public:
                                     int32_t* aFrameIndexInLine);
 
 #ifdef DEBUG_FRAME_DUMP
-  const char* BreakTypeToString(uint8_t aBreakType) const;
+  const char* BreakTypeToString(StyleClear aBreakType) const;
   char* StateToString(char* aBuf, int32_t aBufSize) const;
 
   void List(FILE* out, int32_t aIndent, uint32_t aFlags = 0) const;
@@ -664,7 +664,9 @@ public:
     uint32_t mImpactedByFloat : 1;
     uint32_t mLineWrapped: 1;
     uint32_t mInvalidateTextRuns : 1;
-    uint32_t mResizeReflowOptimizationDisabled: 1;  // default 0 = means that the opt potentially applies to this line. 1 = never skip reflowing this line for a resize reflow
+    // default 0 = means that the opt potentially applies to this line.
+    // 1 = never skip reflowing this line for a resize reflow
+    uint32_t mResizeReflowOptimizationDisabled: 1;
     uint32_t mEmptyCacheValid: 1;
     uint32_t mEmptyCacheState: 1;
     // mHasBullet indicates that this is an inline line whose block's
@@ -700,9 +702,15 @@ public:
 
 protected:
   nscoord mAscent;           // see |SetAscent| / |GetAscent|
+  static_assert(sizeof(FlagBits) <= sizeof(uint32_t),
+                "size of FlagBits should not be larger than size of uint32_t");
   union {
     uint32_t mAllFlags;
     FlagBits mFlags;
+  };
+
+  StyleClear BreakType() const {
+    return static_cast<StyleClear>(mFlags.mBreakType);
   };
 
   union {
