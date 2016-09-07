@@ -234,7 +234,7 @@ WebGLContext::BufferDataT(GLenum target,
     if (!boundBuffer->ElementArrayCacheBufferData(data.DataAllowShared(), data.LengthAllowShared())) {
         boundBuffer->SetByteLength(0);
         return ErrorOutOfMemory("bufferData: out of memory");
-	}
+    }
 }
 
 void
@@ -465,24 +465,6 @@ WebGLContext::ValidateBufferForTarget(GLenum target, WebGLBuffer* buffer,
      * and the state of the binding point will remain untouched.
      */
 
-    GLenum boundTo = GetCurrentBinding(buffer);
-    if (boundTo != LOCAL_GL_NONE) {
-        if (target == LOCAL_GL_TRANSFORM_FEEDBACK_BUFFER &&
-            boundTo != LOCAL_GL_TRANSFORM_FEEDBACK_BUFFER)
-        {
-            ErrorInvalidOperation("Can't bind buffer to TRANSFORM_FEEDBACK_BUFFER as the "
-                                  "buffer is already bound to another bind point.");
-            return false;
-        }
-        else if (target != LOCAL_GL_TRANSFORM_FEEDBACK_BUFFER &&
-                 boundTo == LOCAL_GL_TRANSFORM_FEEDBACK_BUFFER)
-        {
-            ErrorInvalidOperation("Can't bind buffer to bind point as it is currently "
-                                  "bound to TRANSFORM_FEEDBACK_BUFFER.");
-            return false;
-        }
-    }
-
     WebGLBuffer::Kind content = buffer->Content();
     if (content == WebGLBuffer::Kind::Undefined)
         return true;
@@ -584,37 +566,6 @@ WebGLContext::GetBufferSlotByTargetIndexed(GLenum target, GLuint index)
     default:
         MOZ_CRASH("GFX: Should not get here.");
     }
-}
-
-GLenum
-WebGLContext::GetCurrentBinding(WebGLBuffer* buffer) const
-{
-    if (mBoundArrayBuffer == buffer)
-        return LOCAL_GL_ARRAY_BUFFER;
-
-    if (mBoundCopyReadBuffer == buffer)
-        return LOCAL_GL_COPY_READ_BUFFER;
-
-    if (mBoundCopyWriteBuffer == buffer)
-        return LOCAL_GL_COPY_WRITE_BUFFER;
-
-    if (mBoundPixelPackBuffer == buffer)
-        return LOCAL_GL_PIXEL_PACK_BUFFER;
-
-    if (mBoundPixelUnpackBuffer == buffer)
-        return LOCAL_GL_PIXEL_UNPACK_BUFFER;
-
-    if (mBoundTransformFeedbackBuffer == buffer ||
-        mBoundTransformFeedbackBuffers.Contains(buffer)) {
-        return LOCAL_GL_TRANSFORM_FEEDBACK_BUFFER;
-    }
-
-    if (mBoundUniformBuffer == buffer ||
-        mBoundUniformBuffers.Contains(buffer)) {
-        return LOCAL_GL_UNIFORM_BUFFER;
-    }
-
-    return LOCAL_GL_NONE;
 }
 
 GLenum
