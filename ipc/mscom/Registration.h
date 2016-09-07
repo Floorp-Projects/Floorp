@@ -54,6 +54,7 @@ private:
   IUnknown* mClassObject;
   uint32_t  mRegCookie;
   ITypeLib* mTypeLib;
+  bool      mIsRegisteredInMTA;
 };
 
 enum class RegistrationFlags
