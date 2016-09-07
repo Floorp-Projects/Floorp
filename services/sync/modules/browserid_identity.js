@@ -121,6 +121,10 @@ this.BrowserIDManager.prototype = {
     return this._token.hashed_fxa_uid
   },
 
+  deviceID() {
+    return this._signedInUser && this._signedInUser.deviceId;
+  },
+
   initialize: function() {
     for (let topic of OBSERVER_TOPICS) {
       Services.obs.addObserver(this, topic, false);
