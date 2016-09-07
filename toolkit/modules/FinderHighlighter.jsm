@@ -30,7 +30,7 @@ const kFontPropsCamelCase = kFontPropsCSS.map(prop => {
   let parts = prop.split("-");
   return parts.shift() + parts.map(part => part.charAt(0).toUpperCase() + part.slice(1)).join("");
 });
-const kRGBRE = /^rgba?\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*/i;
+const kRGBRE = /^rgba?\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*/i
 // This uuid is used to prefix HTML element IDs and classNames in order to make
 // them unique and hard to clash with IDs and classNames content authors come up
 // with, since the stylesheet for modal highlighting is inserted as an agent-sheet
@@ -480,9 +480,6 @@ FinderHighlighter.prototype = {
     window.requestAnimationFrame(() => {
       outlineNode.setAttributeForElement(kModalOutlineId, "grow", true);
     });
-
-    if (this._highlightAll && data.searchString)
-      this.highlight(true, data.searchString, data.linksOnly);
   },
 
   /**
@@ -962,7 +959,8 @@ FinderHighlighter.prototype = {
     let maskNode = document.createElement("div");
 
     // Make sure the dimmed mask node takes the full width and height that's available.
-    let {width, height} = dict.lastWindowDimensions = this._getWindowDimensions(window);
+    let {width, height} = this._getWindowDimensions(window);
+    dict.lastWindowDimensions = { width, height };
     maskNode.setAttribute("id", kMaskId);
     maskNode.setAttribute("class", kMaskId + (kDebug ? ` ${kModalIdPrefix}-findbar-debug` : ""));
     maskNode.setAttribute("style", `width: ${width}px; height: ${height}px;`);

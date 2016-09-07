@@ -1468,25 +1468,29 @@ BrowserElementChild.prototype = {
       successRv: manifest
     });
   }),
-
   _initFinder: function() {
     if (!this._finder) {
+      try {
+        this._findLimit = Services.prefs.getIntPref("accessibility.typeaheadfind.matchesCountLimit");
+      } catch (e) {
+        // Pref not available, assume 0, no match counting.
+        this._findLimit = 0;
+      }
+
       let {Finder} = Components.utils.import("resource://gre/modules/Finder.jsm", {});
       this._finder = new Finder(docShell);
+      this._finder.addResultListener({
+        onMatchesCountResult: (data) => {
+          sendAsyncMsg('findchange', {
+            active: true,
+            searchString: this._finder.searchString,
+            searchLimit: this._findLimit,
+            activeMatchOrdinal: data.current,
+            numberOfMatches: data.total
+          });
+        }
+      });
     }
-    let listener = {
-      onMatchesCountResult: (data) => {
-        sendAsyncMsg("findchange", {
-          active: true,
-          searchString: this._finder.searchString,
-          searchLimit: this._finder.matchesCountLimit,
-          activeMatchOrdinal: data.current,
-          numberOfMatches: data.total
-        });
-        this._finder.removeResultListener(listener);
-      }
-    };
-    this._finder.addResultListener(listener);
   },
 
   _recvFindAll: function(data) {
@@ -1494,7 +1498,7 @@ BrowserElementChild.prototype = {
     let searchString = data.json.searchString;
     this._finder.caseSensitive = data.json.caseSensitive;
     this._finder.fastFind(searchString, false, false);
-    this._finder.requestMatchesCount(searchString, this._finder.matchesCountLimit, false);
+    this._finder.requestMatchesCount(searchString, this._findLimit, false);
   },
 
   _recvFindNext: function(data) {
@@ -1502,9 +1506,8 @@ BrowserElementChild.prototype = {
       debug("findNext() called before findAll()");
       return;
     }
-    this._initFinder();
     this._finder.findAgain(data.json.backward, false, false);
-    this._finder.requestMatchesCount(this._finder.searchString, this._finder.matchesCountLimit, false);
+    this._finder.requestMatchesCount(this._finder.searchString, this._findLimit, false);
   },
 
   _recvClearMatch: function(data) {
@@ -1513,7 +1516,7 @@ BrowserElementChild.prototype = {
       return;
     }
     this._finder.removeSelection();
-    sendAsyncMsg("findchange", {active: false});
+    sendAsyncMsg('findchange', {active: false});
   },
 
   _recvSetInputMethodActive: function(data) {
