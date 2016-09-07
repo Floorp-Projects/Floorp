@@ -52,9 +52,6 @@ nsLineBox::nsLineBox(nsIFrame* aFrame, int32_t aCount, bool aIsBlock)
   static_assert(NS_STYLE_CLEAR_MAX <= 15,
                 "FlagBits needs more bits to store the full range of "
                 "break type ('clear') values");
-#if NS_STYLE_CLEAR_NONE > 0
-  mFlags.mBreakType = NS_STYLE_CLEAR_NONE;
-#endif
   mChildCount = aCount;
   MarkDirty();
   mFlags.mBlock = aIsBlock;
