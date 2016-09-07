@@ -328,9 +328,9 @@ function GetTreeSelections() {
     let count = select.getRangeCount();
     let min = new Object();
     let max = new Object();
-    for (let i=0; i<count; i++) {
+    for (let i = 0; i < count; i++) {
       select.getRangeAt(i, min, max);
-      for (let k=min.value; k<=max.value; k++) {
+      for (let k = min.value; k <= max.value; k++) {
         if (k != -1) {
           selections[selections.length] = k;
         }
