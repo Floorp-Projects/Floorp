@@ -704,8 +704,6 @@
                          aria-label="&urlbar.webRTCShareMicrophoneNotificationAnchor.label;"/>
                   <image data-permission-id="screen" class="blocked-permission-icon screen-icon" role="button"
                          aria-label="&urlbar.webRTCShareScreenNotificationAnchor.label;"/>
-                  <image data-permission-id="pointerLock" class="blocked-permission-icon pointerLock-icon" role="button"
-                         aria-label="&urlbar.pointerLockNotificationAnchor.label;"/>
                 </box>
                 <box id="notification-popup-box"
                      hidden="true"
@@ -735,8 +733,6 @@
                          aria-label="&urlbar.webRTCShareMicrophoneNotificationAnchor.label;"/>
                   <image id="webRTC-shareScreen-notification-icon" class="notification-anchor-icon screen-icon" role="button"
                          aria-label="&urlbar.webRTCShareScreenNotificationAnchor.label;"/>
-                  <image id="pointerLock-notification-icon" class="notification-anchor-icon pointerLock-icon" role="button"
-                         aria-label="&urlbar.pointerLockNotificationAnchor.label;"/>
                   <image id="servicesInstall-notification-icon" class="notification-anchor-icon service-icon" role="button"
                          aria-label="&urlbar.servicesNotificationAnchor.label;"/>
                   <image id="translate-notification-icon" class="notification-anchor-icon translation-icon" role="button"
