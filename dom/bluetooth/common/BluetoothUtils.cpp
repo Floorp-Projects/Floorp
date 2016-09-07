@@ -17,6 +17,7 @@
 #include "nsIUUIDGenerator.h"
 #include "nsServiceManagerUtils.h"
 #include "nsXULAppAPI.h"
+#include "mozilla/Unused.h"
 
 BEGIN_BLUETOOTH_NAMESPACE
 
