@@ -10236,7 +10236,7 @@
     "expires_in_version": "58",
     "bug_numbers": [1296606],
     "kind": "count",
-    "description": "Number of named profiles."
+    "description": "Number of named browser profiles for the current user, as reported by the profile service at startup."
   },
   "WEB_PERMISSION_CLEARED": {
     "alert_emails": ["firefox-dev@mozilla.org"],
