@@ -123,10 +123,10 @@ public:
   Check()
   {
     for (auto& checker : mCheckerList) {
-    auto result = checker();
-    if (result != SupportChecker::Result::kSupported) {
-      return result;
-    }
+      auto result = checker();
+        if (result != SupportChecker::Result::kSupported) {
+          return result;
+      }
     }
     return SupportChecker::Result::kSupported;
   }
