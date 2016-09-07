@@ -565,6 +565,7 @@ private:
      @param nsStyleContext the style context to use for the frame. */
   typedef nsIFrame* (* FrameCreationFunc)(nsIPresShell*, nsStyleContext*);
   typedef nsContainerFrame* (* ContainerFrameCreationFunc)(nsIPresShell*, nsStyleContext*);
+  typedef nsBlockFrame* (* BlockFrameCreationFunc)(nsIPresShell*, nsStyleContext*);
 
   /* A function that can be used to get a FrameConstructionData.  Such
      a function is allowed to return null.
@@ -1564,6 +1565,18 @@ private:
                                         nsContainerFrame*        aParentFrame,
                                         const nsStyleDisplay*    aDisplay,
                                         nsFrameItems&            aFrameItems);
+
+  /**
+   * Construct a non-scrollable block frame using the given block frame creation
+   * function.
+   */
+  nsIFrame* ConstructNonScrollableBlockWithConstructor(
+    nsFrameConstructorState& aState,
+    FrameConstructionItem& aItem,
+    nsContainerFrame* aParentFrame,
+    const nsStyleDisplay* aDisplay,
+    nsFrameItems& aFrameItems,
+    BlockFrameCreationFunc aConstructor);
 
   /**
    * This adds FrameConstructionItem objects to aItemsToConstruct for the
