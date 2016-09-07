@@ -100,8 +100,7 @@ public:
   reverse_line_iterator rline(nsLineBox* aList) { return mLines.rbegin(aList); }
 
   friend nsBlockFrame* NS_NewBlockFrame(nsIPresShell* aPresShell,
-                                        nsStyleContext* aContext,
-                                        nsFrameState aFlags);
+                                        nsStyleContext* aContext);
 
   // nsQueryFrame
   NS_DECL_QUERYFRAME
