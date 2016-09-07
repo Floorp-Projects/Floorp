@@ -20,6 +20,12 @@ class TestSubmitUnencryptedInfoWarning(FirefoxTestCase):
 
         self.prefs.set_pref('security.warn_submit_insecure', True)
 
+    def tearDown(self):
+        try:
+            self.marionette.clear_pref('security.warn_submit_insecure')
+        finally:
+            FirefoxTestCase.tearDown(self)
+
     def test_submit_unencrypted_info_warning(self):
         with self.marionette.using_context('content'):
             self.marionette.navigate(self.url)

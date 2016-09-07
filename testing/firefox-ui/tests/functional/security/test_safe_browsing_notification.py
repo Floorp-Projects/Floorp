@@ -53,6 +53,8 @@ class TestSafeBrowsingNotificationBar(FirefoxTestCase):
         try:
             self.utils.permissions.remove('https://www.itisatrap.org', 'safe-browsing')
             self.browser.tabbar.close_all_tabs([self.browser.tabbar.tabs[0]])
+            self.marionette.clear_pref('browser.safebrowsing.phishing.enabled')
+            self.marionette.clear_pref('browser.safebrowsing.malware.enabled')
         finally:
             FirefoxTestCase.tearDown(self)
 
