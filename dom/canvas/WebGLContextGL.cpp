@@ -626,14 +626,9 @@ WebGLContext::GetBufferParameter(GLenum target, GLenum pname)
     if (IsContextLost())
         return JS::NullValue();
 
-    if (!ValidateBufferTarget(target, "getBufferParameter"))
+    const auto& buffer = ValidateBufferSelection("getBufferParameter", target);
+    if (!buffer)
         return JS::NullValue();
-
-    WebGLRefPtr<WebGLBuffer>& slot = GetBufferSlotByTarget(target);
-    if (!slot) {
-        ErrorInvalidOperation("No buffer bound to `target` (0x%4x).", target);
-        return JS::NullValue();
-    }
 
     MakeContextCurrent();
 
@@ -1496,6 +1491,13 @@ WebGL2Context::ReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenu
 
     if (!mBoundPixelPackBuffer) {
         ErrorInvalidOperation("readPixels: PIXEL_PACK_BUFFER must not be null.");
+        return;
+    }
+
+    if (mBoundPixelPackBuffer->mNumActiveTFOs) {
+        ErrorInvalidOperation("%s: Buffer is bound to an active transform feedback"
+                              " object.",
+                              "readPixels");
         return;
     }
 
