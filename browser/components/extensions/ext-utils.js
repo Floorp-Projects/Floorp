@@ -32,6 +32,7 @@ const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 const RESIZE_TIMEOUT = 100;
 
 var {
+  DefaultWeakMap,
   EventManager,
 } = ExtensionUtils;
 
@@ -125,6 +126,12 @@ class BasePopup {
       this.browserLoadedDeferred = {resolve, reject};
     });
     this.browserReady = this.createBrowser(viewNode, popupURL);
+
+    BasePopup.instances.get(this.window).set(extension, this);
+  }
+
+  static for(extension, window) {
+    return BasePopup.instances.get(window).get(extension);
   }
 
   destroy() {
@@ -141,6 +148,8 @@ class BasePopup {
         this.panel.style.removeProperty("--arrowpanel-background");
         this.panel.style.removeProperty("--panel-arrow-image-vertical");
       }
+
+      BasePopup.instances.get(this.window).delete(this.extension);
 
       this.browser = null;
       this.viewNode = null;
@@ -421,6 +430,13 @@ class BasePopup {
     this._resolveContentReady();
   }
 }
+
+/**
+ * A map of active popups for a given browser window.
+ *
+ * WeakMap[window -> WeakMap[Extension -> BasePopup]]
+ */
+BasePopup.instances = new DefaultWeakMap(() => new WeakMap());
 
 global.PanelPopup = class PanelPopup extends BasePopup {
   constructor(extension, imageNode, popupURL, browserStyle) {
