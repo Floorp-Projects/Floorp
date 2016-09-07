@@ -25,6 +25,8 @@
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
 
+#include "mozilla/Unused.h"
+
 #define FILTER_NO_SMS_GSM   0x01
 #define FILTER_NO_SMS_CDMA  0x02
 #define FILTER_NO_EMAIL     0x04
