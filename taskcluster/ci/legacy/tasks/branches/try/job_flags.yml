@@ -121,6 +121,21 @@ builds:
     types:
       opt:
         task: tasks/builds/opt_macosx64_st-an.yml
+  android-api-15-l10n:
+    platforms:
+      - Android
+    types:
+      opt:
+        task: tasks/builds/android_l10n_api_15.yml
+    when:
+      file_patterns:
+        - mobile/android/locales/all-locales
+        - python/compare-locales/**
+        - testing/mozharness/configs/single_locale/**
+        - testing/mozharness/mozharness/mozilla/l10n/locales.py
+        - testing/mozharness/scripts/desktop_l10n.py
+        - toolkit/locales/**
+        - toolkit/mozapps/installer/**
   aries-eng:
     platforms:
       - b2g
