@@ -81,6 +81,12 @@ public:
     return mRequest->GetRedirectMode();
   }
 
+  void
+  GetIntegrity(nsAString& aIntegrity) const
+  {
+    aIntegrity = mRequest->GetIntegrity();
+  }
+
   RequestContext
   Context() const
   {

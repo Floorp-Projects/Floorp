@@ -159,6 +159,8 @@ TypeUtils::ToCacheRequest(CacheRequest& aOut, InternalRequest* aIn,
   aOut.requestCache() = aIn->GetCacheMode();
   aOut.requestRedirect() = aIn->GetRedirectMode();
 
+  aOut.integrity() = aIn->GetIntegrity();
+
   if (aBodyAction == IgnoreBody) {
     aOut.body() = void_t();
     return;
@@ -325,6 +327,7 @@ TypeUtils::ToInternalRequest(const CacheRequest& aIn)
   internalRequest->SetContentPolicyType(aIn.contentPolicyType());
   internalRequest->SetCacheMode(aIn.requestCache());
   internalRequest->SetRedirectMode(aIn.requestRedirect());
+  internalRequest->SetIntegrity(aIn.integrity());
 
   RefPtr<InternalHeaders> internalHeaders =
     ToInternalHeaders(aIn.headers(), aIn.headersGuard());

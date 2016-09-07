@@ -234,6 +234,8 @@ public:
   NS_IMETHOD GetProxyURI(nsIURI **proxyURI) override;
   virtual void SetCorsPreflightParameters(const nsTArray<nsCString>& unsafeHeaders) override;
   NS_IMETHOD GetConnectionInfoHashKey(nsACString& aConnectionInfoHashKey) override;
+  NS_IMETHOD GetIntegrityMetadata(nsAString& aIntegrityMetadata) override;
+  NS_IMETHOD SetIntegrityMetadata(const nsAString& aIntegrityMetadata) override;
 
   inline void CleanRedirectCacheChainIfNecessary()
   {
@@ -540,6 +542,8 @@ protected:
   bool mForceMainDocumentChannel;
 
   nsID mChannelId;
+
+  nsString mIntegrityMetadata;
 };
 
 // Share some code while working around C++'s absurd inability to handle casting

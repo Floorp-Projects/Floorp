@@ -459,6 +459,10 @@ Request::Constructor(const GlobalObject& aGlobal,
     request->SetRedirectMode(aInit.mRedirect.Value());
   }
 
+  if (aInit.mIntegrity.WasPassed()) {
+    request->SetIntegrity(aInit.mIntegrity.Value());
+  }
+
   // Request constructor step 14.
   if (aInit.mMethod.WasPassed()) {
     nsAutoCString method(aInit.mMethod.Value());
@@ -505,6 +509,11 @@ Request::Constructor(const GlobalObject& aGlobal,
       request->GetMethod(method);
       NS_ConvertUTF8toUTF16 label(method);
       aRv.ThrowTypeError<MSG_INVALID_REQUEST_METHOD>(label);
+      return nullptr;
+    }
+
+    if (!request->GetIntegrity().IsEmpty()) {
+      aRv.ThrowTypeError<MSG_REQUEST_INTEGRITY_METADATA_NOT_EMPTY>();
       return nullptr;
     }
 
