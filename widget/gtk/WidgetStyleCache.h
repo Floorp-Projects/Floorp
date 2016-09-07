@@ -37,7 +37,7 @@ CreateCSSNode(const char*      aName,
 // Callers must call ReleaseStyleContext() on the returned context.
 GtkStyleContext*
 ClaimStyleContext(WidgetNodeType aNodeType,
-                  GtkTextDirection aDirection = GTK_TEXT_DIR_LTR,
+                  GtkTextDirection aDirection = GTK_TEXT_DIR_NONE,
                   GtkStateFlags aStateFlags = GTK_STATE_FLAG_NORMAL,
                   StyleFlags aFlags = NO_STYLE_FLAGS);
 void
