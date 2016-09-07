@@ -234,6 +234,8 @@ class GlobalHelperThreadState
                                    Handle<GlobalObject*> global,
                                    JSCompartment* dest);
 
+    void trace(JSTracer* trc);
+
   private:
     /*
      * Number of wasm jobs that encountered failure for the active module.
@@ -513,7 +515,7 @@ struct ParseTask
     LifoAlloc alloc;
 
     // Rooted pointer to the global object used by 'cx'.
-    PersistentRootedObject exclusiveContextGlobal;
+    JSObject* exclusiveContextGlobal;
 
     // Callback invoked off the main thread when the parse finishes.
     JS::OffThreadCompileCallback callback;
@@ -522,10 +524,10 @@ struct ParseTask
     // Holds the final script between the invocation of the callback and the
     // point where FinishOffThreadScript is called, which will destroy the
     // ParseTask.
-    PersistentRootedScript script;
+    JSScript* script;
 
     // Holds the ScriptSourceObject generated for the script compilation.
-    PersistentRooted<ScriptSourceObject*> sourceObject;
+    ScriptSourceObject* sourceObject;
 
     // Any errors or warnings produced during compilation. These are reported
     // when finishing the script.
@@ -547,6 +549,8 @@ struct ParseTask
     }
 
     virtual ~ParseTask();
+
+    void trace(JSTracer* trc);
 };
 
 struct ScriptParseTask : public ParseTask

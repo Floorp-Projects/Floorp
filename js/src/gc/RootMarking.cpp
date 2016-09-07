@@ -328,6 +328,8 @@ js::gc::GCRuntime::markRuntime(JSTracer* trc, TraceOrMarkRuntime traceOrMark,
 
     rt->spsProfiler.trace(trc);
 
+    HelperThreadState().trace(trc);
+
     if (!rt->isHeapMinorCollecting()) {
         gcstats::AutoPhase ap(stats, gcstats::PHASE_MARK_EMBEDDING);
 
