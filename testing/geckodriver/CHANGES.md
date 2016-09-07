@@ -7,11 +7,13 @@ All notable changes to this program is documented in this file.
 ### Added
 - Introduced continous integration builds for Windows 32-bit binaries
 - Added new extension commands for finding an element’s anonymous children and querying its attributes; accessible through the `/session/{sessionId}/moz/xbl/{elementId}/anonymous_children` to return all anonymous children and `/session/{sessionId}/moz/xbl/{elementId}/anonymous_by_attribute` to return an anonymous element by a name and attribute query
-- Added `firefoxOptions` capability to set preferences from capabilities
-- Introduced a logging capability to change the verbosity of Gecko
+- Introduced a `firefoxOptions` capability to customise a Firefox session:
+  - The `binary`, `args`, and `profile` entries on this dictionary is equivalent to the old `firefox_binary`, `firefox_args`, and `firefox_profile` capabilities, which have now all been removed
+  - The `log` capability takes a dictionary such as `{log: "trace"}` to enable trace level verbosity in Gecko
+  - The `prefs` capability lets you define Firefox preferences through capabilities
 
 ### Changed
-- Accepted capabilities changed to a chromedriver-like dictionary of keys and values; this will cause `firefox_binary`, `firefox_args` and `firefox_profile` to stop working
+- `firefox_binary`, `firefox_args`, and `firefox_profile` capabilities removed in favour of the `firefoxOptions` dictionary detailed above and in the README
 - Removed `--no-e10s` flag, and geckodriver will from now rely on the Firefox default multiprocessing settings (override using preferences)
 - Disable pop-up blocker in the default profile by @juangj
 - Changed Rust compiler version to 1.12 (beta) temporarily because of [trouble linking Musl binaries](https://github.com/rust-lang/rust/issues/34978)
