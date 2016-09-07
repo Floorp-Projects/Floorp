@@ -62,7 +62,6 @@ interface nsITelemetry : nsISupports
    *   counts - array representing contents of the buckets in the histogram
    *   ranges -  an array with calculated bucket sizes
    *   sum - sum of the bucket contents
-   *   static - true for histograms defined in TelemetryHistograms.h, false for ones defined with newHistogram
    */
   [implicit_jscontext]
   readonly attribute jsval histogramSnapshots;
