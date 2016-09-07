@@ -76,8 +76,8 @@ void PresentationReceiver::Shutdown()
     return;
   }
 
-  nsresult rv = service->UnregisterRespondingListener(mWindowId);
-  NS_WARN_IF(NS_FAILED(rv));
+  Unused <<
+    NS_WARN_IF(NS_FAILED(service->UnregisterRespondingListener(mWindowId)));
 }
 
 /* virtual */ JSObject*

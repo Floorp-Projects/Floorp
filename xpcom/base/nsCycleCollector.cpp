@@ -1948,7 +1948,7 @@ public:
   {
     if (!mDisableLog) {
       mCCLog = nullptr;
-      NS_WARN_IF(NS_FAILED(mLogSink->CloseCCLog()));
+      Unused << NS_WARN_IF(NS_FAILED(mLogSink->CloseCCLog()));
     }
   }
   NS_IMETHOD ProcessNext(nsICycleCollectorHandler* aHandler,

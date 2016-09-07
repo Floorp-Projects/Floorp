@@ -586,6 +586,7 @@ JSCompartment::traceOutgoingCrossCompartmentWrappers(JSTracer* trc)
 /* static */ void
 JSCompartment::traceIncomingCrossCompartmentEdgesForZoneGC(JSTracer* trc)
 {
+    gcstats::AutoPhase ap(trc->runtime()->gc.stats, gcstats::PHASE_MARK_CCWS);
     MOZ_ASSERT(trc->runtime()->isHeapMajorCollecting());
     for (CompartmentsIter c(trc->runtime(), SkipAtoms); !c.done(); c.next()) {
         if (!c->zone()->isCollecting())

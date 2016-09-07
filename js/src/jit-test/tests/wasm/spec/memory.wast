@@ -19,18 +19,6 @@
   (module (memory 1 2 (segment 0 "a") (segment 98304 "b")))
   "data segment does not fit memory"
 )
-(assert_invalid
-  (module (memory 1 2 (segment 0 "abc") (segment 0 "def")))
-  "data segment not disjoint and ordered"
-)
-(assert_invalid
-  (module (memory 1 2 (segment 3 "ab") (segment 0 "de")))
-  "data segment not disjoint and ordered"
-)
-(assert_invalid
-  (module (memory 1 2 (segment 0 "a") (segment 2 "b") (segment 1 "c")))
-  "data segment not disjoint and ordered"
-)
 
 ;; Test alignment annotation rules
 ;; TODO Tests being debated on the spec repo.

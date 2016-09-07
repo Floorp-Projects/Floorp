@@ -84,6 +84,7 @@ using mozilla::Unused;
 typedef Vector<uint32_t, 0, SystemAllocPolicy> Uint32Vector;
 
 class Code;
+class CodeRange;
 class Memory;
 class Module;
 class Instance;
@@ -775,17 +776,17 @@ WASM_DECLARE_POD_VECTOR(CallSite, CallSiteVector)
 
 class CallSiteAndTarget : public CallSite
 {
-    uint32_t targetIndex_;
+    uint32_t funcDefIndex_;
 
   public:
-    CallSiteAndTarget(CallSite cs, uint32_t targetIndex)
-      : CallSite(cs), targetIndex_(targetIndex)
+    CallSiteAndTarget(CallSite cs, uint32_t funcDefIndex)
+      : CallSite(cs), funcDefIndex_(funcDefIndex)
     { }
 
-    static const uint32_t NOT_INTERNAL = UINT32_MAX;
+    static const uint32_t NOT_DEFINITION = UINT32_MAX;
 
-    bool isInternal() const { return targetIndex_ != NOT_INTERNAL; }
-    uint32_t targetIndex() const { MOZ_ASSERT(isInternal()); return targetIndex_; }
+    bool isDefinition() const { return funcDefIndex_ != NOT_DEFINITION; }
+    uint32_t funcDefIndex() const { MOZ_ASSERT(isDefinition()); return funcDefIndex_; }
 };
 
 typedef Vector<CallSiteAndTarget, 0, SystemAllocPolicy> CallSiteAndTargetVector;
@@ -1059,15 +1060,33 @@ WASM_DECLARE_POD_VECTOR(TableDesc, TableDescVector)
 class CalleeDesc
 {
   public:
-    // Unlike Builtin, BuilinInstanceMethod expects an implicit Instance*
-    // as its first argument. (e.g. see Instance::growMemory)
-    enum Which { Internal, Import, WasmTable, AsmJSTable, Builtin, BuiltinInstanceMethod };
+    enum Which {
+        // Calls a function defined in the same module by its index.
+        Definition,
+
+        // Calls the import identified by the offset of its FuncImportTls in
+        // thread-local data.
+        Import,
+
+        // Calls a WebAssembly table (heterogeneous, index must be bounds
+        // checked, callee instance depends on TableDesc).
+        WasmTable,
+
+        // Calls an asm.js table (homogeneous, masked index, same-instance).
+        AsmJSTable,
+
+        // Call a C++ function identified by SymbolicAddress.
+        Builtin,
+
+        // Like Builtin, but automatically passes Instance* as first argument.
+        BuiltinInstanceMethod
+    };
 
   private:
     Which which_;
     union U {
         U() {}
-        uint32_t internalFuncIndex_;
+        uint32_t funcDefIndex_;
         struct {
             uint32_t globalDataOffset_;
         } import;
@@ -1080,10 +1099,10 @@ class CalleeDesc
 
   public:
     CalleeDesc() {}
-    static CalleeDesc internal(uint32_t callee) {
+    static CalleeDesc definition(uint32_t funcDefIndex) {
         CalleeDesc c;
-        c.which_ = Internal;
-        c.u.internalFuncIndex_ = callee;
+        c.which_ = Definition;
+        c.u.funcDefIndex_ = funcDefIndex;
         return c;
     }
     static CalleeDesc import(uint32_t globalDataOffset) {
@@ -1120,9 +1139,9 @@ class CalleeDesc
     Which which() const {
         return which_;
     }
-    uint32_t internalFuncIndex() const {
-        MOZ_ASSERT(which_ == Internal);
-        return u.internalFuncIndex_;
+    uint32_t funcDefIndex() const {
+        MOZ_ASSERT(which_ == Definition);
+        return u.funcDefIndex_;
     }
     uint32_t importGlobalDataOffset() const {
         MOZ_ASSERT(which_ == Import);

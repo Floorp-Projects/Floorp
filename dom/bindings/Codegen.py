@@ -13291,9 +13291,13 @@ class CGBindingRoot(CGThing):
 
         bindingDeclareHeaders.update(dict.fromkeys(unionHeaders, True))
         bindingHeaders.update(dict.fromkeys(unionImplheaders, True))
-
         bindingDeclareHeaders["mozilla/dom/UnionMember.h"] = len(unionStructs) > 0
-        bindingDeclareHeaders["mozilla/dom/BindingUtils.h"] = len(unionStructs) > 0
+        bindingDeclareHeaders["mozilla/dom/FakeString.h"] = len(unionStructs) > 0
+        # BindingUtils.h is only needed for SetToObject.
+        # If it stops being inlined or stops calling CallerSubsumes
+        # both this bit and the bit in UnionTypes can be removed.
+        bindingDeclareHeaders["mozilla/dom/BindingUtils.h"] = any(d.isObject() for t in unionTypes
+                                                                  for d in t.flatMemberTypes)
         bindingDeclareHeaders["mozilla/dom/IterableIterator.h"] = any(d.interface.isIteratorInterface() or
                                                                       d.interface.isIterable() for d in descriptors)
 
@@ -16359,7 +16363,9 @@ class GlobalGenRoots():
         includes.add("mozilla/OwningNonNull.h")
         includes.add("mozilla/dom/UnionMember.h")
         includes.add("mozilla/dom/BindingDeclarations.h")
-        # Need BindingUtils.h for FakeString
+        # BindingUtils.h is only needed for SetToObject.
+        # If it stops being inlined or stops calling CallerSubsumes
+        # both this bit and the bit in CGBindingRoot can be removed.
         includes.add("mozilla/dom/BindingUtils.h")
         implincludes.add("mozilla/dom/PrimitiveConversions.h")
 

@@ -15,6 +15,7 @@ var supportedProps = [
   "language",
   "languages",
   "hardwareConcurrency",
+  "storage"
 ];
 
 self.onmessage = function(event) {

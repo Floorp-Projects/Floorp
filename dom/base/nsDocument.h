@@ -828,7 +828,7 @@ public:
   virtual already_AddRefed<Element> CreateElem(const nsAString& aName,
                                                nsIAtom* aPrefix,
                                                int32_t aNamespaceID,
-                                               nsAString* aIs = nullptr) override;
+                                               const nsAString* aIs = nullptr) override;
 
   virtual void Sanitize() override;
 
@@ -1131,7 +1131,7 @@ public:
   virtual mozilla::dom::DOMStringList* StyleSheetSets() override;
   virtual void EnableStyleSheetsForSet(const nsAString& aSheetSet) override;
   virtual already_AddRefed<Element> CreateElement(const nsAString& aTagName,
-                                                  const mozilla::dom::ElementCreationOptions& aOptions,
+                                                  const mozilla::dom::ElementCreationOptionsOrString& aOptions,
                                                   ErrorResult& rv) override;
   virtual already_AddRefed<Element> CreateElementNS(const nsAString& aNamespaceURI,
                                                     const nsAString& aQualifiedName,
@@ -1378,7 +1378,7 @@ private:
    * If there is no existing custom element definition for this name, throw a
    * NotFoundError.
    */
-  nsString* CheckCustomElementName(
+  const nsString* CheckCustomElementName(
     const mozilla::dom::ElementCreationOptions& aOptions,
     const nsAString& aLocalName,
     uint32_t aNamespaceID,

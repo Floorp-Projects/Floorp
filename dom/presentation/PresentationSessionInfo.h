@@ -11,6 +11,7 @@
 #include "mozilla/dom/nsIContentParent.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PromiseNativeHandler.h"
+#include "mozilla/DebugOnly.h"
 #include "mozilla/RefPtr.h"
 #include "nsCOMPtr.h"
 #include "nsINetworkInfoService.h"
@@ -140,8 +141,9 @@ protected:
 
     // Notify session state change.
     if (mListener) {
-      nsresult rv = mListener->NotifyStateChange(mSessionId, mState, aReason);
-      NS_WARN_IF(NS_FAILED(rv));
+      DebugOnly<nsresult> rv =
+        mListener->NotifyStateChange(mSessionId, mState, aReason);
+      NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "NotifyStateChanged");
     }
   }
 

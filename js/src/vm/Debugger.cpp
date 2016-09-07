@@ -4886,28 +4886,29 @@ bool
 Debugger::drainTraceLogger(JSContext* cx, unsigned argc, Value* vp)
 {
     THIS_DEBUGGER(cx, argc, vp, "drainTraceLogger", args, dbg);
-    if (!args.requireAtLeast(cx, "Debugger.drainTraceLogger", 0))
-        return false;
 
-    size_t num;
     TraceLoggerThread* logger = TraceLoggerForMainThread(cx->runtime());
     bool lostEvents = logger->lostEvents(dbg->traceLoggerLastDrainedIteration,
                                          dbg->traceLoggerLastDrainedSize);
+
+    size_t numEvents;
     EventEntry* events = logger->getEventsStartingAt(&dbg->traceLoggerLastDrainedIteration,
                                                      &dbg->traceLoggerLastDrainedSize,
-                                                     &num);
+                                                     &numEvents);
 
     RootedObject array(cx, NewDenseEmptyArray(cx));
-    JSAtom* dataAtom = Atomize(cx, "data", strlen("data"));
     if (!array)
         return false;
+
+    JSAtom* dataAtom = Atomize(cx, "data", strlen("data"));
     if (!dataAtom)
         return false;
+
     RootedId dataId(cx, AtomToId(dataAtom));
 
     /* Add all events to the array. */
     uint32_t index = 0;
-    for (EventEntry* eventItem = events; eventItem < events + num; eventItem++, index++) {
+    for (EventEntry* eventItem = events; eventItem < events + numEvents; eventItem++, index++) {
         RootedObject item(cx, NewObjectWithGivenProto(cx, &PlainObject::class_, nullptr));
         if (!item)
             return false;
@@ -5037,32 +5038,33 @@ bool
 Debugger::drainTraceLoggerScriptCalls(JSContext* cx, unsigned argc, Value* vp)
 {
     THIS_DEBUGGER(cx, argc, vp, "drainTraceLoggerScriptCalls", args, dbg);
-    if (!args.requireAtLeast(cx, "Debugger.drainTraceLoggerScriptCalls", 0))
-        return false;
 
-    size_t num;
     TraceLoggerThread* logger = TraceLoggerForMainThread(cx->runtime());
     bool lostEvents = logger->lostEvents(dbg->traceLoggerScriptedCallsLastDrainedIteration,
                                          dbg->traceLoggerScriptedCallsLastDrainedSize);
+
+    size_t numEvents;
     EventEntry* events = logger->getEventsStartingAt(
                                          &dbg->traceLoggerScriptedCallsLastDrainedIteration,
                                          &dbg->traceLoggerScriptedCallsLastDrainedSize,
-                                         &num);
+                                         &numEvents);
 
     RootedObject array(cx, NewDenseEmptyArray(cx));
     if (!array)
         return false;
-    RootedId fileNameId(cx, AtomToId(cx->names().fileName));
-    RootedId lineNumberId(cx, AtomToId(cx->names().lineNumber));
-    RootedId columnNumberId(cx, AtomToId(cx->names().columnNumber));
+
     JSAtom* logTypeAtom = Atomize(cx, "logType", strlen("logType"));
     if (!logTypeAtom)
         return false;
+
+    RootedId fileNameId(cx, AtomToId(cx->names().fileName));
+    RootedId lineNumberId(cx, AtomToId(cx->names().lineNumber));
+    RootedId columnNumberId(cx, AtomToId(cx->names().columnNumber));
     RootedId logTypeId(cx, AtomToId(logTypeAtom));
 
     /* Add all events to the array. */
     uint32_t index = 0;
-    for (EventEntry* eventItem = events; eventItem < events + num; eventItem++) {
+    for (EventEntry* eventItem = events; eventItem < events + numEvents; eventItem++) {
         RootedObject item(cx, NewObjectWithGivenProto(cx, &PlainObject::class_, nullptr));
         if (!item)
             return false;

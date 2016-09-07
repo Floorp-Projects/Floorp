@@ -84,10 +84,11 @@ ProfileGatherer::Start(double aSinceTime,
 
   nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
   if (os) {
-    nsresult rv = os->AddObserver(this, "profiler-subprocess", false);
-    NS_WARN_IF(NS_FAILED(rv));
+    DebugOnly<nsresult> rv =
+      os->AddObserver(this, "profiler-subprocess", false);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "AddObserver failed");
     rv = os->NotifyObservers(this, "profiler-subprocess-gather", nullptr);
-    NS_WARN_IF(NS_FAILED(rv));
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "NotifyObservers failed");
   }
 
   if (!mPendingProfiles) {
@@ -110,8 +111,8 @@ ProfileGatherer::Finish()
 
   nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
   if (os) {
-    nsresult rv = os->RemoveObserver(this, "profiler-subprocess");
-    NS_WARN_IF(NS_FAILED(rv));
+    DebugOnly<nsresult> rv = os->RemoveObserver(this, "profiler-subprocess");
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "RemoveObserver failed");
   }
 
   AutoJSAPI jsapi;

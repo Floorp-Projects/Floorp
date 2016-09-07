@@ -561,7 +561,7 @@ nsOSHelperAppService::GetProtocolHandlerInfoFromOS(const nsACString &aScheme,
 
   nsAutoString desc;
   rv = GetApplicationDescription(aScheme, desc);
-  NS_WARN_IF(NS_FAILED(rv));
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "GetApplicationDescription failed");
   handlerInfo->SetDefaultDescription(desc);
 
   return NS_OK;

@@ -136,16 +136,17 @@ public:
     const nsRect& borderArea;
     nsDisplayListBuilder* builder;
     mozilla::layers::LayerManager* layerManager;
-    bool callerPaintsOpacity;
+    bool handleOpacity; // If true, PaintMaskAndClipPath/ PaintFilter should
+                        // apply css opacity.
     explicit PaintFramesParams(gfxContext& aCtx, nsIFrame* aFrame,
                                const nsRect& aDirtyRect,
                                const nsRect& aBorderArea,
                                nsDisplayListBuilder* aBuilder,
                                mozilla::layers::LayerManager* aLayerManager,
-                               bool aCallerPaintsOpacity)
+                               bool aHandleOpacity)
       : ctx(aCtx), frame(aFrame), dirtyRect(aDirtyRect),
         borderArea(aBorderArea), builder(aBuilder),
-        layerManager(aLayerManager), callerPaintsOpacity(aCallerPaintsOpacity)
+        layerManager(aLayerManager), handleOpacity(aHandleOpacity)
     { }
   };
 

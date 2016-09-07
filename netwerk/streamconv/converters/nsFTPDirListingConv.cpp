@@ -19,6 +19,7 @@
 #include <algorithm>
 
 #include "mozilla/UniquePtrExtensions.h"
+#include "mozilla/Unused.h"
 
 //
 // Log module for FTP dir listing stream converter logging...
@@ -295,7 +296,7 @@ nsFTPDirListingConv::DigestBufferLines(char *aBuffer, nsCString &aString) {
                                "%a, %d %b %Y %H:%M:%S", &result.fe_time );
 
         nsAutoCString escaped;
-        NS_WARN_IF(!NS_Escape(nsDependentCString(buffer), escaped, url_Path));
+        Unused << NS_WARN_IF(!NS_Escape(nsDependentCString(buffer), escaped, url_Path));
         aString.Append(escaped);
         aString.Append(' ');
 

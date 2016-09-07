@@ -189,7 +189,7 @@ Error);
     )`));
     var m2 = new Module(textToBinary(`(module
         (import $foo "a" "foo" (result i32))
-        (func $bar (result i32) (call_import $foo))
+        (func $bar (result i32) (call $foo))
         (export "bar" $bar)
     )`));
 

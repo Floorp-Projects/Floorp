@@ -200,3 +200,7 @@ notification[type="info"]:not([value="translation"]) .close-icon:not(:hover) {
 .popup-notification-menubutton > .button-menubutton-button[disabled] {
   opacity: 0.5;
 }
+
+.popup-notification-warning {
+  color: #aa1b08;
+}

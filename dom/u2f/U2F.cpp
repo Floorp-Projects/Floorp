@@ -50,7 +50,7 @@ SendError(CB* aCallback, ErrorCode aErrorCode)
 
   ErrorResult rv;
   aCallback->Call(response, rv);
-  NS_WARN_IF(rv.Failed());
+  NS_WARNING_ASSERTION(!rv.Failed(), "callback failed");
   // Useful exceptions already got reported.
   rv.SuppressException();
 }
@@ -277,7 +277,7 @@ U2FRegisterTask::Run()
 
     ErrorResult result;
     mCallback->Call(response, result);
-    NS_WARN_IF(result.Failed());
+    NS_WARNING_ASSERTION(!result.Failed(), "callback failed");
     // Useful exceptions already got reported.
     result.SuppressException();
     return NS_OK;
@@ -454,7 +454,7 @@ U2FSignTask::Run()
 
     ErrorResult result;
     mCallback->Call(response, result);
-    NS_WARN_IF(result.Failed());
+    NS_WARNING_ASSERTION(!result.Failed(), "callback failed");
     // Useful exceptions already got reported.
     result.SuppressException();
     return NS_OK;

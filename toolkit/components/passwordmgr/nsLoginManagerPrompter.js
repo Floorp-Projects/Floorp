@@ -205,7 +205,7 @@ LoginManagerPrompter.prototype = {
                                           Ci.nsILoginManagerPrompter]),
 
   _factory       : null,
-  _window        : null,
+  _chromeWindow  : null,
   _browser       : null,
   _opener        : null,
 

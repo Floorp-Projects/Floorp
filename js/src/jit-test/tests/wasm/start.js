@@ -14,7 +14,7 @@ assertErrorMessage(() => wasmEvalText('(module (func (result f32)) (start 0))'),
 // Basic use case.
 var count = 0;
 function inc() { count++; }
-var exports = wasmEvalText(`(module (import "inc" "") (func (param i32)) (func (call_import 0)) (start 1))`, { inc });
+var exports = wasmEvalText(`(module (import $imp "inc" "") (func $f (param i32)) (func (call_import $imp)) (start $f))`, { inc });
 assertEq(count, 1);
 assertEq(Object.keys(exports).length, 0);
 
@@ -31,7 +31,7 @@ const Instance = WebAssembly.Instance;
 const textToBinary = str => wasmTextToBinary(str, 'new-format');
 
 count = 0;
-const m = new Module(textToBinary('(module (import "inc" "") (func) (func (call_import 0)) (start 1) (export "" 1))'));
+const m = new Module(textToBinary('(module (import $imp "inc" "") (func) (func $start (call $imp)) (start $start) (export "" $start))'));
 assertEq(count, 0);
 
 assertErrorMessage(() => new Instance(m), TypeError, /no import object given/);
@@ -44,3 +44,11 @@ assertEq(count, 2);
 
 const i2 = new Instance(m, { inc });
 assertEq(count, 3);
+
+function fail() { assertEq(true, false); }
+
+count = 0;
+const m2 = new Module(textToBinary('(module (import "fail" "") (import $imp "inc" "") (func) (start $imp))'));
+assertEq(count, 0);
+new Instance(m2, { inc, fail });
+assertEq(count, 1);

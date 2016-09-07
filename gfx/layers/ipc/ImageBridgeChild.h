@@ -39,6 +39,7 @@ class AsyncCanvasRenderer;
 class AsyncTransactionTracker;
 class ImageClient;
 class ImageContainer;
+class ImageContainerChild;
 class ImageBridgeParent;
 class CompositableClient;
 struct CompositableTransaction;
@@ -218,16 +219,24 @@ public:
   virtual bool
   RecvDidComposite(InfallibleTArray<ImageCompositeNotification>&& aNotifications) override;
 
-  already_AddRefed<ImageClient> CreateImageClient(CompositableType aType,
-                                                  ImageContainer* aImageContainer);
-  already_AddRefed<ImageClient> CreateImageClientNow(CompositableType aType,
-                                                     ImageContainer* aImageContainer);
+  // Create an ImageClient from any thread.
+  RefPtr<ImageClient> CreateImageClient(
+    CompositableType aType,
+    ImageContainer* aImageContainer,
+    ImageContainerChild* aContainerChild);
+
+  // Create an ImageClient from the ImageBridge thread.
+  RefPtr<ImageClient> CreateImageClientNow(
+    CompositableType aType,
+    ImageContainer* aImageContainer,
+    ImageContainerChild* aContainerChild);
+
   already_AddRefed<CanvasClient> CreateCanvasClient(CanvasClient::CanvasClientType aType,
                                                     TextureFlags aFlag);
   already_AddRefed<CanvasClient> CreateCanvasClientNow(CanvasClient::CanvasClientType aType,
                                                        TextureFlags aFlag);
 
-  static void DispatchReleaseImageContainer(PImageContainerChild* aChild = nullptr);
+  static void DispatchReleaseImageContainer(ImageContainerChild* aChild);
   static void DispatchReleaseTextureClient(TextureClient* aClient);
   static void DispatchImageClientUpdate(ImageClient* aClient, ImageContainer* aContainer);
 

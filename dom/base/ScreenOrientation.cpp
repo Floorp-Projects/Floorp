@@ -399,9 +399,11 @@ ScreenOrientation::UnlockDeviceOrientation()
   // Remove event listener in case of fullscreen lock.
   nsCOMPtr<EventTarget> target = do_QueryInterface(GetOwner()->GetDoc());
   if (target) {
-    nsresult rv = target->RemoveSystemEventListener(NS_LITERAL_STRING("fullscreenchange"),
-                                                    mFullScreenListener, /* useCapture */ true);
-    NS_WARN_IF(NS_FAILED(rv));
+    DebugOnly<nsresult> rv =
+      target->RemoveSystemEventListener(NS_LITERAL_STRING("fullscreenchange"),
+                                        mFullScreenListener,
+                                        /* useCapture */ true);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "RemoveSystemEventListener failed");
   }
 
   mFullScreenListener = nullptr;
@@ -530,18 +532,18 @@ ScreenOrientation::Notify(const hal::ScreenConfiguration& aConfiguration)
   mAngle = aConfiguration.angle();
   mType = InternalOrientationToType(orientation);
 
-  nsresult rv;
+  DebugOnly<nsresult> rv;
   if (mScreen && mType != previousOrientation) {
     // Use of mozorientationchange is deprecated.
     rv = mScreen->DispatchTrustedEvent(NS_LITERAL_STRING("mozorientationchange"));
-    NS_WARN_IF(NS_FAILED(rv));
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "DispatchTrustedEvent failed");
   }
 
   if (doc->Hidden() && !mVisibleListener) {
     mVisibleListener = new VisibleEventListener();
     rv = doc->AddSystemEventListener(NS_LITERAL_STRING("visibilitychange"),
                                      mVisibleListener, /* useCapture = */ true);
-    NS_WARN_IF(NS_FAILED(rv));
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "AddSystemEventListener failed");
     return;
   }
 
@@ -557,7 +559,7 @@ ScreenOrientation::Notify(const hal::ScreenConfiguration& aConfiguration)
     nsCOMPtr<nsIRunnable> runnable = NewRunnableMethod(this,
       &ScreenOrientation::DispatchChangeEvent);
     rv = NS_DispatchToMainThread(runnable);
-    NS_WARN_IF(NS_FAILED(rv));
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "NS_DispatchToMainThread failed");
   }
 }
 
@@ -567,16 +569,16 @@ ScreenOrientation::UpdateActiveOrientationLock(ScreenOrientationInternal aOrient
   if (aOrientation == eScreenOrientation_None) {
     hal::UnlockScreenOrientation();
   } else {
-    bool rv = hal::LockScreenOrientation(aOrientation);
-    NS_WARN_IF(!rv);
+    DebugOnly<bool> ok = hal::LockScreenOrientation(aOrientation);
+    NS_WARNING_ASSERTION(ok, "hal::LockScreenOrientation failed");
   }
 }
 
 void
 ScreenOrientation::DispatchChangeEvent()
 {
-  nsresult rv = DispatchTrustedEvent(NS_LITERAL_STRING("change"));
-  NS_WARN_IF(NS_FAILED(rv));
+  DebugOnly<nsresult> rv = DispatchTrustedEvent(NS_LITERAL_STRING("change"));
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "DispatchTrustedEvent failed");
 }
 
 JSObject*

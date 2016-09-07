@@ -92,7 +92,7 @@ bool
 PresentationChild::RecvNotifyAvailableChange(const bool& aAvailable)
 {
   if (mService) {
-    NS_WARN_IF(NS_FAILED(mService->NotifyAvailableChange(aAvailable)));
+    Unused << NS_WARN_IF(NS_FAILED(mService->NotifyAvailableChange(aAvailable)));
   }
   return true;
 }
@@ -103,9 +103,9 @@ PresentationChild::RecvNotifySessionStateChange(const nsString& aSessionId,
                                                 const nsresult& aReason)
 {
   if (mService) {
-    NS_WARN_IF(NS_FAILED(mService->NotifySessionStateChange(aSessionId,
-                                                            aState,
-                                                            aReason)));
+    Unused << NS_WARN_IF(NS_FAILED(mService->NotifySessionStateChange(aSessionId,
+                                                                      aState,
+                                                                      aReason)));
   }
   return true;
 }
@@ -115,7 +115,7 @@ PresentationChild::RecvNotifyMessage(const nsString& aSessionId,
                                      const nsCString& aData)
 {
   if (mService) {
-    NS_WARN_IF(NS_FAILED(mService->NotifyMessage(aSessionId, aData)));
+    Unused << NS_WARN_IF(NS_FAILED(mService->NotifyMessage(aSessionId, aData)));
   }
   return true;
 }
@@ -125,7 +125,7 @@ PresentationChild::RecvNotifySessionConnect(const uint64_t& aWindowId,
                                             const nsString& aSessionId)
 {
   if (mService) {
-    NS_WARN_IF(NS_FAILED(mService->NotifySessionConnect(aWindowId, aSessionId)));
+    Unused << NS_WARN_IF(NS_FAILED(mService->NotifySessionConnect(aWindowId, aSessionId)));
   }
   return true;
 }
@@ -164,7 +164,7 @@ PresentationRequestChild::Recv__delete__(const nsresult& aResult)
 
   if (mCallback) {
     if (NS_FAILED(aResult)) {
-      NS_WARN_IF(NS_FAILED(mCallback->NotifyError(aResult)));
+      Unused << NS_WARN_IF(NS_FAILED(mCallback->NotifyError(aResult)));
     }
   }
 
@@ -174,6 +174,6 @@ PresentationRequestChild::Recv__delete__(const nsresult& aResult)
 bool
 PresentationRequestChild::RecvNotifyRequestUrlSelected(const nsString& aUrl)
 {
-  NS_WARN_IF(NS_FAILED(mCallback->NotifySuccess(aUrl)));
+  Unused << NS_WARN_IF(NS_FAILED(mCallback->NotifySuccess(aUrl)));
   return true;
 }

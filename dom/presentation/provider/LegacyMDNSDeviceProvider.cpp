@@ -355,7 +355,7 @@ LegacyMDNSDeviceProvider::ClearUnknownDevices()
   while (i > 0) {
     --i;
     if (mDevices[i]->State() == DeviceState::eUnknown) {
-      NS_WARN_IF(NS_FAILED(RemoveDevice(i)));
+      Unused << NS_WARN_IF(NS_FAILED(RemoveDevice(i)));
     }
   }
 }
@@ -368,7 +368,7 @@ LegacyMDNSDeviceProvider::ClearDevices()
   size_t i = mDevices.Length();
   while (i > 0) {
     --i;
-    NS_WARN_IF(NS_FAILED(RemoveDevice(i)));
+    Unused << NS_WARN_IF(NS_FAILED(RemoveDevice(i)));
   }
 }
 

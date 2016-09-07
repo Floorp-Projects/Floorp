@@ -55,12 +55,11 @@
   content: "";
   display: -moz-box;
   -moz-box-ordinal-group: 101; /* tabs toolbar is 100 */
-  height: 1px;
-  background-color: ThreeDShadow;
+  border-bottom: 1px solid ThreeDShadow;
 }
 
 #navigator-toolbox:-moz-lwtheme::after {
-  background-color: rgba(0,0,0,.3);
+  border-bottom-color: rgba(0,0,0,.3);
 }
 
 #navigator-toolbox > toolbar:not(#toolbar-menubar):not(#TabsToolbar):not(#addon-bar) {
@@ -1740,26 +1739,24 @@ toolbarbutton.chevron > .toolbarbutton-icon {
 }
 
 .ctrlTab-preview-inner {
-  padding-bottom: 10px;
+  padding: 8px;
+  border: 2px solid transparent;
+  border-radius: .5em;
+}
+
+.ctrlTab-preview:not(#ctrlTab-showAll) > * > .ctrlTab-preview-inner {
+  margin: -10px -10px 0;
 }
 
 #ctrlTab-showAll:not(:focus) > * > .ctrlTab-preview-inner {
-  padding: 10px;
   background-color: rgba(255,255,255,.2);
-  border-radius: .5em;
 }
 
 .ctrlTab-preview:focus > * > .ctrlTab-preview-inner {
   color: white;
   background-color: rgba(0,0,0,.6);
   text-shadow: none;
-  padding: 8px;
-  border: 2px solid white;
-  border-radius: .5em;
-}
-
-.ctrlTab-preview:not(#ctrlTab-showAll):focus > * > .ctrlTab-preview-inner {
-  margin: -10px -10px 0;
+  border-color: white;
 }
 
 #ctrlTab-showAll {

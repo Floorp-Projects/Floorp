@@ -14,6 +14,10 @@ void
 VibrancyManager::UpdateVibrantRegion(VibrancyType aType,
                                      const LayoutDeviceIntRegion& aRegion)
 {
+  if (aRegion.IsEmpty()) {
+    mVibrantRegions.Remove(uint32_t(aType));
+    return;
+  }
   auto& vr = *mVibrantRegions.LookupOrAdd(uint32_t(aType));
   vr.UpdateRegion(aRegion, mCoordinateConverter, mContainerView, ^() {
     return this->CreateEffectView(aType);

@@ -236,7 +236,7 @@ public:
 
 nsresult
 NS_NewHTMLElement(Element** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
-                  FromParser aFromParser, nsAString* aIs)
+                  FromParser aFromParser, const nsAString* aIs)
 {
   *aResult = nullptr;
 

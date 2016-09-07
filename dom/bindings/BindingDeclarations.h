@@ -500,6 +500,24 @@ struct MOZ_STACK_CLASS ParentObject {
   bool mUseXBLScope;
 };
 
+namespace binding_detail {
+
+// Class for simple sequence arguments, only used internally by codegen.
+template<typename T>
+class AutoSequence : public AutoTArray<T, 16>
+{
+public:
+  AutoSequence() : AutoTArray<T, 16>()
+  {}
+
+  // Allow converting to const sequences as needed
+  operator const Sequence<T>&() const {
+    return *reinterpret_cast<const Sequence<T>*>(this);
+  }
+};
+
+} // namespace binding_detail
+
 } // namespace dom
 } // namespace mozilla
 

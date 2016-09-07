@@ -40,7 +40,9 @@ public:
   GridLine* IndexedGetter(uint32_t aIndex, bool& aFound);
 
   void SetLineInfo(const ComputedGridTrackInfo* aTrackInfo,
-                   const ComputedGridLineInfo* aLineInfo);
+                   const ComputedGridLineInfo* aLineInfo,
+                   const nsTArray<RefPtr<GridArea>>& aAreas,
+                   bool aIsRow);
 
 protected:
   RefPtr<GridDimension> mParent;

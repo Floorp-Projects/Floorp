@@ -167,7 +167,7 @@ void
 MultipartBlobImpl::InitializeBlob(ErrorResult& aRv)
 {
   SetLengthAndModifiedDate(aRv);
-  NS_WARN_IF(aRv.Failed());
+  NS_WARNING_ASSERTION(!aRv.Failed(), "SetLengthAndModifiedDate failed");
 }
 
 void
@@ -221,7 +221,7 @@ MultipartBlobImpl::InitializeBlob(JSContext* aCx,
 
   mBlobImpls = blobSet.GetBlobImpls();
   SetLengthAndModifiedDate(aRv);
-  NS_WARN_IF(aRv.Failed());
+  NS_WARNING_ASSERTION(!aRv.Failed(), "SetLengthAndModifiedDate failed");
 }
 
 void
@@ -352,7 +352,7 @@ MultipartBlobImpl::InitializeChromeFile(Blob& aBlob,
   mBlobImpls = blobSet.GetBlobImpls();
 
   SetLengthAndModifiedDate(aRv);
-  NS_WARN_IF(aRv.Failed());
+  NS_WARNING_ASSERTION(!aRv.Failed(), "SetLengthAndModifiedDate failed");
 }
 
 void
@@ -424,7 +424,7 @@ MultipartBlobImpl::InitializeChromeFile(nsPIDOMWindowInner* aWindow,
   mBlobImpls = blobSet.GetBlobImpls();
 
   SetLengthAndModifiedDate(aRv);
-  NS_WARN_IF(aRv.Failed());
+  NS_WARNING_ASSERTION(!aRv.Failed(), "SetLengthAndModifiedDate failed");
 }
 
 void

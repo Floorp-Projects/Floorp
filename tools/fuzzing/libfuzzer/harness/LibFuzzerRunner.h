@@ -1,0 +1,23 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * * This Source Code Form is subject to the terms of the Mozilla Public
+ * * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+namespace mozilla {
+
+typedef int(*LibFuzzerMain)(int, char**);
+
+class LibFuzzerRunner {
+public:
+  int Run();
+  void setParams(int argc, char** argv, LibFuzzerMain main);
+
+private:
+  int mArgc;
+  char** mArgv;
+  LibFuzzerMain mFuzzerMain;
+};
+
+extern LibFuzzerRunner* libFuzzerRunner;
+
+} // namespace mozilla

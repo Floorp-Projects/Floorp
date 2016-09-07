@@ -354,8 +354,12 @@ protected:
  * updates the shared state to point to the new image and the old image
  * is immediately released (not true in Normal or Asynchronous modes).
  */
-class ImageContainer final : public SupportsWeakPtr<ImageContainer> {
+class ImageContainer final : public SupportsWeakPtr<ImageContainer>
+{
+  friend class ImageContainerChild;
+
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(ImageContainer)
+
 public:
   MOZ_DECLARE_WEAKREFERENCE_TYPENAME(ImageContainer)
 
@@ -571,18 +575,11 @@ public:
   }
 
   PImageContainerChild* GetPImageContainerChild();
-  static void NotifyComposite(const ImageCompositeNotification& aNotification);
 
   /**
    * Main thread only.
    */
   static ProducerID AllocateProducerID();
-
-  /// ImageBridgeChild thread only.
-  static void AsyncDestroyActor(PImageContainerChild* aActor);
-
-  /// ImageBridgeChild thread only.
-  static void DeallocActor(PImageContainerChild* aActor);
 
 private:
   typedef mozilla::ReentrantMonitor ReentrantMonitor;
@@ -647,7 +644,7 @@ private:
 
   // Object must be released on the ImageBridge thread. Field is immutable
   // after creation of the ImageContainer.
-  ImageContainerChild* mIPDLChild;
+  RefPtr<ImageContainerChild> mIPDLChild;
 
   static mozilla::Atomic<uint32_t> sGenerationCounter;
 };

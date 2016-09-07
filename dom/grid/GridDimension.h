@@ -43,7 +43,9 @@ public:
 
   void SetTrackInfo(const ComputedGridTrackInfo* aTrackInfo);
   void SetLineInfo(const ComputedGridTrackInfo* aTrackInfo,
-                   const ComputedGridLineInfo* aLineInfo);
+                   const ComputedGridLineInfo* aLineInfo,
+                   const nsTArray<RefPtr<GridArea>>& aAreas,
+                   bool aIsRow);
 
 protected:
   RefPtr<Grid> mParent;

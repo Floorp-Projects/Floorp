@@ -26,7 +26,7 @@ PresentationBuilderParent::~PresentationBuilderParent()
   MOZ_COUNT_DTOR(PresentationBuilderParent);
 
   if (mNeedDestroyActor) {
-    NS_WARN_IF(!Send__delete__(this));
+    Unused << NS_WARN_IF(!Send__delete__(this));
   }
 }
 
@@ -152,8 +152,9 @@ PresentationBuilderParent::RecvOnSessionTransport()
 {
   // To avoid releasing |this| in this method
   NS_DispatchToMainThread(NS_NewRunnableFunction([this]() -> void {
-    NS_WARN_IF(!mBuilderListener ||
-               NS_FAILED(mBuilderListener->OnSessionTransport(nullptr)));
+    Unused <<
+      NS_WARN_IF(!mBuilderListener ||
+                 NS_FAILED(mBuilderListener->OnSessionTransport(nullptr)));
   }));
 
   nsCOMPtr<nsIPresentationSessionTransportCallback>

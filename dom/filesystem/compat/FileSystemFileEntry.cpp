@@ -103,8 +103,8 @@ FileSystemFileEntry::GetFile(BlobCallback& aSuccessCallback,
 {
   RefPtr<BlobCallbackRunnable> runnable =
     new BlobCallbackRunnable(&aSuccessCallback, mFile);
-  nsresult rv = NS_DispatchToMainThread(runnable);
-  NS_WARN_IF(NS_FAILED(rv));
+  DebugOnly<nsresult> rv = NS_DispatchToMainThread(runnable);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "NS_DispatchToMainThread failed");
 }
 
 } // dom namespace

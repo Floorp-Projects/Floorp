@@ -3785,7 +3785,7 @@ private:
 class nsDisplaySVGEffects: public nsDisplayWrapList {
 public:
   nsDisplaySVGEffects(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-                      nsDisplayList* aList, bool aOpacityItemCreated);
+                      nsDisplayList* aList, bool aHandleOpacity);
 #ifdef NS_BUILD_REFCNT_LOGGING
   virtual ~nsDisplaySVGEffects();
 #endif
@@ -3820,9 +3820,8 @@ protected:
 
   // relative to mFrame
   nsRect mEffectsBounds;
-  // True if the caller also created an nsDisplayOpacity item, and we should tell
-  // PaintFramesWithEffects that it doesn't need to handle opacity itself.
-  bool mOpacityItemCreated;
+  // True if we need to handle css opacity in this display item.
+  bool mHandleOpacity;
 };
 
 /**
@@ -3832,7 +3831,7 @@ protected:
 class nsDisplayMask : public nsDisplaySVGEffects {
 public:
   nsDisplayMask(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-                      nsDisplayList* aList, bool aOpacityItemCreated);
+                      nsDisplayList* aList, bool aHandleOpacity);
 #ifdef NS_BUILD_REFCNT_LOGGING
   virtual ~nsDisplayMask();
 #endif
@@ -3858,10 +3857,14 @@ public:
                     LayerManager* aManager);
 };
 
+/**
+ * A display item to paint a stacking context with filter effects set by the
+ * stacking context root frame's style.
+ */
 class nsDisplayFilter : public nsDisplaySVGEffects {
 public:
   nsDisplayFilter(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-                      nsDisplayList* aList, bool aOpacityItemCreated);
+                  nsDisplayList* aList, bool aHandleOpacity);
 #ifdef NS_BUILD_REFCNT_LOGGING
   virtual ~nsDisplayFilter();
 #endif

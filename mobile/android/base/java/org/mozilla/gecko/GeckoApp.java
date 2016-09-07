@@ -1154,8 +1154,6 @@ public abstract class GeckoApp
         // sending notifications immediately after startup, which we don't want to lose/crash on.
         GeckoAppShell.setNotificationClient(makeNotificationClient());
 
-        Tabs.getInstance().attachToContext(this);
-
         // Tell Stumbler to register a local broadcast listener to listen for preference intents.
         // We do this via intents since we can't easily access Stumbler directly,
         // as it might be compiled outside of Fennec.
@@ -1266,6 +1264,8 @@ public abstract class GeckoApp
         mGeckoLayout = (RelativeLayout) findViewById(R.id.gecko_layout);
         mMainLayout = (RelativeLayout) findViewById(R.id.main_layout);
         mLayerView = (GeckoView) findViewById(R.id.layer_view);
+
+        Tabs.getInstance().attachToContext(this, mLayerView);
 
         // Use global layout state change to kick off additional initialization
         mMainLayout.getViewTreeObserver().addOnGlobalLayoutListener(this);
@@ -2878,5 +2878,9 @@ public abstract class GeckoApp
     public String getDefaultChromeURI() {
         // Use the chrome URI specified by Gecko's defaultChromeURI pref.
         return null;
+    }
+
+    public GeckoView getGeckoView() {
+        return mLayerView;
     }
 }

@@ -152,7 +152,7 @@ BluetoothMapSmsManager::Uninit()
     return;
   }
 
-  NS_WARN_IF(NS_FAILED(
+  Unused << NS_WARN_IF(NS_FAILED(
     obs->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID)));
 }
 

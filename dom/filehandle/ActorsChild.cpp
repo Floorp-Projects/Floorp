@@ -16,6 +16,7 @@
 #include "nsContentUtils.h"
 #include "nsString.h"
 #include "xpcpublic.h"
+#include "mozilla/dom/BindingUtils.h"
 
 namespace mozilla {
 namespace dom {

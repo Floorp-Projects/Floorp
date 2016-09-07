@@ -433,6 +433,7 @@ WEBIDL_FILES = [
     'StereoPannerNode.webidl',
     'Storage.webidl',
     'StorageEvent.webidl',
+    'StorageManager.webidl',
     'StorageType.webidl',
     'StyleSheet.webidl',
     'StyleSheetList.webidl',

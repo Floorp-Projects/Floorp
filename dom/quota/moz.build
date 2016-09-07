@@ -12,6 +12,10 @@ XPIDL_SOURCES += [
 
 XPIDL_MODULE = 'dom_quota'
 
+EXPORTS.mozilla.dom += [
+  'StorageManager.h',
+]
+
 EXPORTS.mozilla.dom.quota += [
     'ActorsParent.h',
     'Client.h',
@@ -32,6 +36,7 @@ UNIFIED_SOURCES += [
     'FileStreams.cpp',
     'QuotaManagerService.cpp',
     'QuotaRequests.cpp',
+    'StorageManager.cpp',
 ]
 
 IPDL_SOURCES += [
@@ -44,6 +49,7 @@ include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'
 LOCAL_INCLUDES += [
+    '../workers',
     '/caps',
 ]
 

@@ -173,7 +173,7 @@ AudioChannelManager::GetAllowedAudioChannels(
 
   nsBrowserElement::GenerateAllowedAudioChannels(window, nullptr, nullptr,
                                                  aAudioChannels, aRv);
-  NS_WARN_IF(aRv.Failed());
+  NS_WARNING_ASSERTION(!aRv.Failed(), "GenerateAllowedAudioChannels failed");
 }
 
 } // namespace system

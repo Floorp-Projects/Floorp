@@ -1983,8 +1983,9 @@ void
 TabParent::HandledWindowedPluginKeyEvent(const NativeEventData& aKeyEventData,
                                          bool aIsConsumed)
 {
-  bool ok = SendHandledWindowedPluginKeyEvent(aKeyEventData, aIsConsumed);
-  NS_WARN_IF(!ok);
+  DebugOnly<bool> ok =
+    SendHandledWindowedPluginKeyEvent(aKeyEventData, aIsConsumed);
+  NS_WARNING_ASSERTION(ok, "SendHandledWindowedPluginKeyEvent failed");
 }
 
 bool

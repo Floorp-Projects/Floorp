@@ -13,6 +13,7 @@
 #include "mozilla/dom/MessageEventBinding.h"
 #include "mozilla/dom/PresentationConnectionClosedEvent.h"
 #include "mozilla/ErrorNames.h"
+#include "mozilla/DebugOnly.h"
 #include "nsContentUtils.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIPresentationService.h"
@@ -124,11 +125,11 @@ PresentationConnection::Shutdown()
     return;
   }
 
-  nsresult rv = service->UnregisterSessionListener(mId, mRole);
-  NS_WARN_IF(NS_FAILED(rv));
+  DebugOnly<nsresult> rv = service->UnregisterSessionListener(mId, mRole);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "UnregisterSessionListener failed");
 
-  rv = RemoveFromLoadGroup();
-  NS_WARN_IF(NS_FAILED(rv));
+  DebugOnly<nsresult> rv2 = RemoveFromLoadGroup();
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv2), "RemoveFromLoadGroup failed");
 
   if (mRole == nsIPresentationService::ROLE_CONTROLLER) {
     ControllerConnectionCollection::GetSingleton()->RemoveConnection(this,
@@ -139,7 +140,7 @@ PresentationConnection::Shutdown()
 /* virtual */ void
 PresentationConnection::DisconnectFromOwner()
 {
-  NS_WARN_IF(NS_FAILED(ProcessConnectionWentAway()));
+  Unused << NS_WARN_IF(NS_FAILED(ProcessConnectionWentAway()));
   DOMEventTargetHelper::DisconnectFromOwner();
 }
 
@@ -207,7 +208,7 @@ PresentationConnection::Close(ErrorResult& aRv)
     return;
   }
 
-  NS_WARN_IF(NS_FAILED(
+  Unused << NS_WARN_IF(NS_FAILED(
     service->CloseSession(mId,
                           mRole,
                           nsIPresentationService::CLOSED_REASON_CLOSED)));
@@ -228,7 +229,7 @@ PresentationConnection::Terminate(ErrorResult& aRv)
     return;
   }
 
-  NS_WARN_IF(NS_FAILED(service->TerminateSession(mId, mRole)));
+  Unused << NS_WARN_IF(NS_FAILED(service->TerminateSession(mId, mRole)));
 }
 
 bool
@@ -319,7 +320,8 @@ PresentationConnection::ProcessStateChanged(nsresult aReason)
         CopyUTF8toUTF16(message, errorMsg);
       }
 
-      NS_WARN_IF(NS_FAILED(DispatchConnectionClosedEvent(reason, errorMsg)));
+      Unused <<
+        NS_WARN_IF(NS_FAILED(DispatchConnectionClosedEvent(reason, errorMsg)));
 
       return RemoveFromLoadGroup();
     }
@@ -327,7 +329,7 @@ PresentationConnection::ProcessStateChanged(nsresult aReason)
       // Ensure onterminate event is fired.
       RefPtr<AsyncEventDispatcher> asyncDispatcher =
         new AsyncEventDispatcher(this, NS_LITERAL_STRING("terminate"), false);
-      NS_WARN_IF(NS_FAILED(asyncDispatcher->PostDOMEvent()));
+      Unused << NS_WARN_IF(NS_FAILED(asyncDispatcher->PostDOMEvent()));
 
       nsCOMPtr<nsIPresentationService> service =
         do_GetService(PRESENTATION_SERVICE_CONTRACTID);

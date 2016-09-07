@@ -55,10 +55,10 @@
 
 #navigator-toolbox::after {
   -moz-box-ordinal-group: 101; /* tabs toolbar is 100 */
-  background-image: linear-gradient(to top, hsla(0,0%,0%,.15), hsla(0,0%,0%,.15) 1px, hsla(0,0%,100%,.15) 1px, hsla(0,0%,100%,.15) 2px, transparent 3px);
   content: "";
   display: -moz-box;
-  height: 2px;
+  border-top: 1px solid hsla(0,0%,100%,.15);
+  border-bottom: 1px solid hsla(0,0%,0%,.15);
   margin-top: -2px;
   position: relative;
   z-index: 2; /* navbar is at 1 */
@@ -66,7 +66,9 @@
 
 @media (-moz-mac-yosemite-theme) {
   #navigator-toolbox:-moz-window-inactive::after {
-    background-image: linear-gradient(to top, hsla(0,0%,0%,.1), hsla(0,0%,0%,.1) 1px, hsla(0,0%,100%,0) 1px, hsla(0,0%,100%,0) 2px, transparent 3px);
+    border-top-style: none;
+    border-bottom-color: hsla(0,0%,0%,.1);
+    margin-top: -1px;
   }
 }
 
@@ -3149,26 +3151,24 @@ menulist.translate-infobar-element > .menulist-dropmarker {
 }
 
 .ctrlTab-preview-inner {
-  padding-bottom: 10px;
+  padding: 8px;
+  border: 2px solid transparent;
+  border-radius: .5em;
+}
+
+.ctrlTab-preview:not(#ctrlTab-showAll) > * > .ctrlTab-preview-inner {
+  margin: -10px -10px 0;
 }
 
 #ctrlTab-showAll:not(:focus) > * > .ctrlTab-preview-inner {
-  padding: 10px;
   background-color: rgba(255,255,255,.2);
-  border-radius: .5em;
 }
 
 .ctrlTab-preview:focus > * > .ctrlTab-preview-inner {
   color: white;
   background-color: rgba(0,0,0,.6);
   text-shadow: none;
-  padding: 8px;
-  border: 2px solid white;
-  border-radius: .5em;
-}
-
-.ctrlTab-preview:not(#ctrlTab-showAll):focus > * > .ctrlTab-preview-inner {
-  margin: -10px -10px 0;
+  border-color: white;
 }
 
 #ctrlTab-showAll {

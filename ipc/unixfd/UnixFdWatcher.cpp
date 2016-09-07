@@ -25,7 +25,7 @@ namespace ipc {
 
 UnixFdWatcher::~UnixFdWatcher()
 {
-  NS_WARN_IF(IsOpen()); /* mFd should have been closed already */
+  NS_WARNING_ASSERTION(!IsOpen(), "mFd should have been closed already");
 }
 
 void

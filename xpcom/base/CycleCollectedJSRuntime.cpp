@@ -64,6 +64,7 @@
 #include "mozilla/Telemetry.h"
 #include "mozilla/TimelineConsumers.h"
 #include "mozilla/TimelineMarker.h"
+#include "mozilla/Unused.h"
 #include "mozilla/DebuggerOnGCRunnable.h"
 #include "mozilla/dom/DOMJSClass.h"
 #include "mozilla/dom/ProfileTimelineMarkerBinding.h"
@@ -817,10 +818,11 @@ CycleCollectedJSRuntime::GCSliceCallback(JSContext* aContext,
 
   if (aProgress == JS::GC_CYCLE_END) {
     JS::gcreason::Reason reason = aDesc.reason_;
-    NS_WARN_IF(NS_FAILED(DebuggerOnGCRunnable::Enqueue(aContext, aDesc)) &&
-               reason != JS::gcreason::SHUTDOWN_CC &&
-               reason != JS::gcreason::DESTROY_RUNTIME &&
-               reason != JS::gcreason::XPCONNECT_SHUTDOWN);
+    Unused <<
+      NS_WARN_IF(NS_FAILED(DebuggerOnGCRunnable::Enqueue(aContext, aDesc)) &&
+                 reason != JS::gcreason::SHUTDOWN_CC &&
+                 reason != JS::gcreason::DESTROY_RUNTIME &&
+                 reason != JS::gcreason::XPCONNECT_SHUTDOWN);
   }
 
   if (self->mPrevGCSliceCallback) {

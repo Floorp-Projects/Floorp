@@ -1739,7 +1739,7 @@ PrintDataSection(WasmPrintContext& c, const AstModule& module)
             return false;
         if (!c.buffer.append("segment "))
            return false;
-        if (!PrintInt32(c, segment->offset()))
+        if (!PrintInt32(c, segment->offset()->as<AstConst>().val().i32()))
            return false;
         if (!c.buffer.append(" \""))
            return false;
