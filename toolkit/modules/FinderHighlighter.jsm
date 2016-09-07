@@ -41,7 +41,6 @@ const kModalStyle = `
 .findbar-modalHighlight-outline {
   position: absolute;
   background: #ffc535;
-  border-radius: 3px;
   box-shadow: 0 2px 0 0 rgba(0,0,0,.1);
   color: #000;
   display: -moz-box;
@@ -115,6 +114,11 @@ const kModalStyle = `
 
 .findbar-modalHighlight-outlineMask[brighttext] > .findbar-modalHighlight-rect {
   background: #000;
+}
+
+.findbar-modalHighlight-outline,
+.findbar-modalHighlight-rect {
+  border-radius: 3px;
 }`;
 
 function mockAnonymousContentNode(domNode) {
