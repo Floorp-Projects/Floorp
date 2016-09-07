@@ -122,10 +122,6 @@ struct CustomElementDefinition
   // The lifecycle callbacks to call for this custom element.
   nsAutoPtr<mozilla::dom::LifecycleCallbacks> mCallbacks;
 
-  // Whether we're currently calling the created callback for a custom element
-  // of this type.
-  bool mElementIsBeingCreated;
-
   // A construction stack.
   // TODO: Bug 1287348 - Implement construction stack for upgrading an element
 

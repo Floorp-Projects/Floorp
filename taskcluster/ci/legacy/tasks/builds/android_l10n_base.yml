@@ -1,0 +1,52 @@
+$inherits:
+  from: 'tasks/l10n.yml'
+  variables:
+    platform: 'android-api-15'
+    build_name: 'android-l10n'
+    build_product: 'mobile'
+    build_type: 'opt'
+docker-image: desktop-build
+task:
+  scopes:
+    - 'docker-worker:cache:tooltool-cache'
+    - 'docker-worker:relengapi-proxy:tooltool.download.public'
+    - 'docker-worker:relengapi-proxy:tooltool.download.internal'
+    - 'docker-worker:cache:level-{{level}}-{{project}}-l10n-{{build_name}}-workspace'
+
+  payload:
+    image:
+      type: 'task-image'
+      path: 'public/image.tar'
+      taskId:
+        task-reference: "<docker-image>"
+    cache:
+      tooltool-cache: '/home/worker/tooltool-cache'
+      level-{{level}}-{{project}}-l10n-{{build_name}}-workspace: '/home/worker/workspace'
+
+    features:
+      relengAPIProxy: true
+
+    env:
+      MOZHARNESS_SCRIPT: 'mozharness/scripts/mobile_l10n.py'
+      MOZHARNESS_CONFIG: 'single_locale/{{project}}_{{platform}}.py single_locale/tc_{{platform}}.py'
+      MOZHARNESS_ACTIONS: 'clone-locales list-locales setup repack upload-repacks summary'
+      MOZHARNESS_OPTIONS: 'total-chunks=1 this-chunk=1'
+      JOB_SCRIPT: 'taskcluster/scripts/builder/build-l10n.sh'
+      MH_BRANCH: {{project}}
+      MH_BUILD_POOL: taskcluster
+      # image paths
+      TOOLTOOL_CACHE: '/home/worker/tooltool-cache'
+      NEED_XVFB: true
+
+    maxRunTime: 18000
+
+    command: ["/bin/bash", "bin/build.sh"]
+
+  extra:
+    treeherderEnv:
+      - production
+      - staging
+    treeherder:
+      machine:
+        # see https://github.com/mozilla/treeherder/blob/master/ui/js/values.js
+        platform: {{platform}}
