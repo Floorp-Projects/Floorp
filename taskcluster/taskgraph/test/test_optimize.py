@@ -142,8 +142,8 @@ class TestOptimize(unittest.TestCase):
         )
         self.assertEqual
 
-    def test_annotate_task_graph_nos_propagate(self):
-        "annotating marks a task with a non-optimized dependency as non-optimized"
+    def test_annotate_task_graph_nos_do_not_propagate(self):
+        "a task with a non-optimized dependency can be optimized"
         OptimizingTask.optimize = \
             lambda self: (False, None) if self.label == 'task1' else (True, 'taskid')
         graph = self.make_graph(
@@ -158,7 +158,7 @@ class TestOptimize(unittest.TestCase):
         self.assert_annotations(
             graph,
             task1=(False, None),
-            task2=(False, None),  # kind would have returned (True, 'taskid') here
+            task2=(True, 'taskid'),
             task3=(True, 'taskid')
         )
 
