@@ -514,6 +514,13 @@ nsBrowserContentHandler.prototype = {
             willRestoreSession = ss.isAutomaticRestoreEnabled();
 
             overridePage = Services.urlFormatter.formatURLPref("startup.homepage_override_url");
+            // Temporary hack for Firefox 49 to show whatsnew for zh-TW.
+            // See Bug #1292637
+            var locale = prefb.getCharPref("general.useragent.locale");
+            if (locale == "zh-TW") {
+              overridePage = "https://www.mozilla.org/zh-TW/firefox/49.0/whatsnew/";
+            }
+
             if (prefb.prefHasUserValue("app.update.postupdate"))
               overridePage = getPostUpdateOverridePage(overridePage);
 
