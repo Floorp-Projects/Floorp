@@ -94,11 +94,11 @@ def find_firefox(context):
     search_paths = []
 
     # Check for a mozharness setup
-    if context.mozharness_config:
-        with open(context.mozharness_config, 'r') as f:
-            config = json.load(f)
-        workdir = os.path.join(config['base_work_dir'], config['work_dir'])
-        search_paths.append(os.path.join(workdir, 'application'))
+    config = context.mozharness_config
+    if config and 'binary_path' in config:
+        return config['binary_path']
+    elif config:
+        search_paths.append(os.path.join(context.mozharness_workdir, 'application'))
 
     # Check for test-stage setup
     dist_bin = os.path.join(os.path.dirname(context.package_root), 'bin')
@@ -110,6 +110,15 @@ def find_firefox(context):
             return mozinstall.get_binary(path, 'firefox')
         except mozinstall.InvalidBinary:
             continue
+
+
+def find_hostutils(context):
+    workdir = context.mozharness_workdir
+    hostutils = os.path.join(workdir, 'hostutils')
+    for fname in os.listdir(hostutils):
+        fpath = os.path.join(hostutils, fname)
+        if os.path.isdir(fpath) and fname.startswith('host-utils'):
+            return fpath
 
 
 def normalize_test_path(test_root, path):
@@ -137,25 +146,35 @@ def bootstrap(test_package_root):
     import mach.main
 
     def populate_context(context, key=None):
-        if key is not None:
+        if key is None:
+            context.package_root = test_package_root
+            context.bin_dir = os.path.join(test_package_root, 'bin')
+            context.certs_dir = os.path.join(test_package_root, 'certs')
+            context.module_dir = os.path.join(test_package_root, 'modules')
+            context.ancestors = ancestors
+            context.normalize_test_path = normalize_test_path
             return
 
-        context.package_root = test_package_root
-        context.bin_dir = os.path.join(test_package_root, 'bin')
-        context.certs_dir = os.path.join(test_package_root, 'certs')
-        context.modules_dir = os.path.join(test_package_root, 'modules')
+        # The values for the following 'key's will be set lazily, and cached
+        # after first being invoked.
+        if key == 'firefox_bin':
+            return find_firefox(context)
 
-        context.ancestors = ancestors
-        context.find_firefox = types.MethodType(find_firefox, context)
-        context.normalize_test_path = normalize_test_path
+        if key == 'hostutils':
+            return find_hostutils(context)
 
-        # Search for a mozharness localconfig.json
-        context.mozharness_config = None
-        for dir_path in ancestors(test_package_root):
-            mozharness_config = os.path.join(dir_path, 'logs', 'localconfig.json')
-            if os.path.isfile(mozharness_config):
-                context.mozharness_config = mozharness_config
-                break
+        if key == 'mozharness_config':
+            for dir_path in ancestors(context.package_root):
+                mozharness_config = os.path.join(dir_path, 'logs', 'localconfig.json')
+                if os.path.isfile(mozharness_config):
+                    with open(mozharness_config, 'rb') as f:
+                        return json.load(f)
+            return {}
+
+        if key == 'mozharness_workdir':
+            config = context.mozharness_config
+            if config:
+                return os.path.join(config['base_work_dir'], config['work_dir'])
 
     mach = mach.main.Mach(os.getcwd())
     mach.populate_context_handler = populate_context

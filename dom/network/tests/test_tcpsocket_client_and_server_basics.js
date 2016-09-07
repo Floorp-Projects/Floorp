@@ -35,6 +35,7 @@ function assertUint8ArraysEqual(a, b, comparingWhat) {
  */
 function listenForEventsOnSocket(socket, socketType) {
   let wantDataLength = null;
+  let wantDataAndClose = false;
   let pendingResolve = null;
   let receivedEvents = [];
   let receivedData = null;
@@ -51,7 +52,16 @@ function listenForEventsOnSocket(socket, socketType) {
   socket.onopen = handleGenericEvent;
   socket.ondrain = handleGenericEvent;
   socket.onerror = handleGenericEvent;
-  socket.onclose = handleGenericEvent;
+  socket.onclose = function(event) {
+    if (!wantDataAndClose) {
+      handleGenericEvent(event);
+    } else if (pendingResolve) {
+      dump('(' + socketType + ' event: close)\n');
+      pendingResolve(receivedData);
+      pendingResolve = null;
+      wantDataAndClose = false;
+    }
+  }
   socket.ondata = function(event) {
     dump('(' + socketType + ' event: ' + event.type + ' length: ' +
          event.data.byteLength + ')\n');
@@ -113,6 +123,19 @@ function listenForEventsOnSocket(socket, socketType) {
       return new Promise(function(resolve, reject) {
         pendingResolve = resolve;
         wantDataLength = length;
+      });
+    },
+    waitForAnyDataAndClose: function() {
+      if (pendingResolve) {
+        throw new Error('only one wait allowed at a time.');
+      }
+
+      return new Promise(function(resolve, reject) {
+        pendingResolve = resolve;
+        // we may receive no data before getting close, in which case we want to
+        // return an empty array
+        receivedData = new Uint8Array();
+        wantDataAndClose = true;
       });
     }
   };
@@ -379,12 +402,9 @@ function* test_basics() {
      'Server sending more than 64k should result in the buffer being full.');
   clientSocket.closeImmediately();
 
-  serverReceived = yield serverQueue.waitForDataWithAtLeastLength(1);
+  serverReceived = yield serverQueue.waitForAnyDataAndClose();
 
   is(serverReceived.length < (2 * bigUint8Array.length), true, 'Received array length less than sent array length');
-
-  is((yield serverQueue.waitForEvent()).type, 'close',
-     'The close event is received after calling closeImmediately');
 
   // -- Close the listening server (and try to connect)
   // We want to verify that the server actually closes / stops listening when

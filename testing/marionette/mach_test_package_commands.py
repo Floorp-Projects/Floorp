@@ -24,9 +24,8 @@ def run_marionette(context, **kwargs):
 
 
     args = argparse.Namespace(**kwargs)
-
-    if not args.binary:
-        args.binary = context.find_firefox()
+    args.binary = args.binary or context.firefox_bin
+    args.e10s = context.mozharness_config.get('e10s', args.e10s)
 
     test_root = os.path.join(context.package_root, 'marionette', 'tests')
     if not args.tests:
