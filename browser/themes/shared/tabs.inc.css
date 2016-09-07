@@ -450,6 +450,10 @@
                                 currentColor calc(100% - 5px),
                                 transparent calc(100% - 5px));
   border-image-slice: 1;
+  /* The 1px border and negative margin may amount to a different number of
+     device pixels (bug 477157), so we also set a width to match the margin. */
+  width: 1px;
+  box-sizing: border-box;
   opacity: 0.2;
 }
 
