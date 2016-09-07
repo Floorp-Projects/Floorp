@@ -102,7 +102,7 @@ input {
 }
 
 input > .anonymous-div,
-input::-moz-placeholder {
+input::placeholder {
   word-wrap: normal !important;
   /* Make the line-height equal to the available height */
   line-height: -moz-block-height;
@@ -156,8 +156,8 @@ textarea > scrollbar {
 
 textarea > .anonymous-div,
 input > .anonymous-div,
-input::-moz-placeholder,
-textarea::-moz-placeholder {
+input::placeholder,
+textarea::placeholder {
   overflow: auto;
   border: 0px !important;
   padding: inherit !important;
@@ -173,7 +173,7 @@ textarea::-moz-placeholder {
 }
 
 input > .anonymous-div,
-input::-moz-placeholder {
+input::placeholder {
   white-space: pre;
 }
 
@@ -185,8 +185,8 @@ input > .anonymous-div.inherit-overflow {
   overflow: inherit;
 }
 
-input::-moz-placeholder,
-textarea::-moz-placeholder {
+input::placeholder,
+textarea::placeholder {
   /*
    * Changing display to inline can leads to broken behaviour and will assert.
    */
@@ -208,7 +208,7 @@ textarea::-moz-placeholder {
   opacity: 0.54;
 }
 
-textarea::-moz-placeholder {
+textarea::placeholder {
   white-space: pre-wrap !important;
 }
 
@@ -775,8 +775,8 @@ input[type="submit"]:disabled {
   */
 textarea > .anonymous-div,
 input > .anonymous-div,
-input::-moz-placeholder,
-textarea::-moz-placeholder,
+input::placeholder,
+textarea::placeholder,
 *|*::-moz-button-content,
 *|*::-moz-display-comboboxcontrol-frame,
 optgroup:before {

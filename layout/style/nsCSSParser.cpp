@@ -5961,9 +5961,10 @@ CSSParserImpl::ParsePseudoSelector(int32_t&       aDataMask,
     return eSelectorParsingStatus_Error;
   }
 
-  // We currently allow :-moz-placeholder and ::-moz-placeholder. We have to
-  // be a bit stricter regarding the pseudo-element parsing rules.
-  if (pseudoElementType == CSSPseudoElementType::mozPlaceholder &&
+  // We currently allow :-moz-placeholder and ::-moz-placeholder and
+  // ::placeholder. We have to be a bit stricter regarding the
+  // pseudo-element parsing rules.
+  if (pseudoElementType == CSSPseudoElementType::placeholder &&
       pseudoClassType == CSSPseudoClassType::mozPlaceholder) {
     if (parsingPseudoElement) {
       pseudoClassType = CSSPseudoClassType::NotPseudo;

@@ -5,6 +5,7 @@
     function loadHandler()
     {
       document.getElementById('i').value = 'bar';
+      document.getElementById('moz').value = 'foo';
       document.forms[0].reset();
       document.documentElement.className = '';
     }
@@ -12,6 +13,7 @@
   <body onload='loadHandler();'>
     <form>
       <input id='i' placeholder='foo'>
+      <input id='moz' placeholder='bar'>
     </form>
   </body>
 </html>

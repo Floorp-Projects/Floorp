@@ -1,4 +1,4 @@
-textarea::-moz-placeholder {
+textarea::placeholder {
   color: green;
   opacity: 1.0;
 }
