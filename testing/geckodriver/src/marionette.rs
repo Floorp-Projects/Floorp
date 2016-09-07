@@ -5,24 +5,25 @@ use mozrunner::runner::{Runner, FirefoxRunner};
 use mozrunner::runner::platform::firefox_default_path;
 use regex::Captures;
 use rustc_serialize::base64::FromBase64;
-use rustc_serialize::json::{Json, ToJson};
 use rustc_serialize::json;
+use rustc_serialize::json::{Json, ToJson};
 use std::collections::BTreeMap;
 use std::error::Error;
+use std::fmt;
 use std::fs;
+use std::io;
 use std::io::BufWriter;
 use std::io::Cursor;
 use std::io::Error as IoError;
 use std::io::ErrorKind;
-use std::io::Result as IoResult;
 use std::io::prelude::*;
-use std::io;
+use std::io::Result as IoResult;
 use std::net::{TcpListener, TcpStream};
 use std::path::{Path, PathBuf};
+use std::str::FromStr;
 use std::sync::Mutex;
 use std::thread::sleep;
 use std::time::Duration;
-use std::str::FromStr;
 use webdriver::command::{WebDriverCommand, WebDriverMessage, Parameters,
                          WebDriverExtensionCommand};
 use webdriver::command::WebDriverCommand::{
@@ -296,7 +297,7 @@ impl ToMarionette for AttributeParameters {
 
 /// Logger levels from [Log.jsm]
 /// (https://developer.mozilla.org/en/docs/Mozilla/JavaScript_code_modules/Log.jsm).
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[allow(dead_code)]
 pub enum LogLevel {
     Fatal,
@@ -308,9 +309,9 @@ pub enum LogLevel {
     Trace,
 }
 
-impl ToString for LogLevel {
-    fn to_string(&self) -> String {
-        match *self {
+impl fmt::Display for LogLevel {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let s = match *self {
             LogLevel::Fatal => "fatal",
             LogLevel::Error => "error",
             LogLevel::Warn => "warn",
@@ -318,7 +319,8 @@ impl ToString for LogLevel {
             LogLevel::Config => "config",
             LogLevel::Debug => "debug",
             LogLevel::Trace => "trace",
-        }.to_string()
+        }.to_string();
+        write!(f, "{}", s)
     }
 }
 
@@ -340,13 +342,18 @@ impl FromStr for LogLevel {
 }
 
 #[derive(Default)]
+pub struct LogOptions {
+    pub level: Option<LogLevel>,
+}
+
+#[derive(Default)]
 pub struct FirefoxOptions {
     pub binary: Option<PathBuf>,
     pub profile: Option<Profile>,
     pub args: Option<Vec<String>>,
+    pub log: LogOptions,
     pub prefs: Vec<(String, Pref)>
 }
-
 
 impl FirefoxOptions {
     pub fn from_capabilities(capabilities: &mut NewSessionParameters) -> WebDriverResult<FirefoxOptions> {
@@ -359,11 +366,14 @@ impl FirefoxOptions {
             let binary = try!(FirefoxOptions::load_binary(&firefox_options));
             let profile = try!(FirefoxOptions::load_profile(&firefox_options));
             let args = try!(FirefoxOptions::load_args(&firefox_options));
+            let log = try!(FirefoxOptions::load_log(&firefox_options));
             let prefs = try!(FirefoxOptions::load_prefs(&firefox_options));
+
             Ok(FirefoxOptions {
                 binary: binary,
                 profile: profile,
                 args: args,
+                log: log,
                 prefs: prefs,
             })
         } else {
@@ -424,6 +434,28 @@ impl FirefoxOptions {
         }
     }
 
+    fn load_log(options: &BTreeMap<String, Json>) -> WebDriverResult<LogOptions> {
+        if let Some(json) = options.get("log") {
+            let log = try!(json.as_object()
+                .ok_or(WebDriverError::new(ErrorStatus::InvalidArgument, "Log section is not an object")));
+
+            let level = match log.get("level") {
+                Some(json) => {
+                    let s = try!(json.as_string()
+                        .ok_or(WebDriverError::new(ErrorStatus::InvalidArgument, "Log level is not a string")));
+                    Some(try!(LogLevel::from_str(s).ok()
+                        .ok_or(WebDriverError::new(ErrorStatus::InvalidArgument, "Log level is unknown"))))
+                },
+                None => None,
+            };
+
+            Ok(LogOptions { level: level })
+
+        } else {
+            Ok(Default::default())
+        }
+    }
+
     pub fn load_prefs(options: &BTreeMap<String, Json>) -> WebDriverResult<Vec<(String, Pref)>> {
         if let Some(prefs_data) = options.get("prefs") {
             let prefs = try!(prefs_data
@@ -451,17 +483,6 @@ pub struct MarionetteSettings {
     pub log_level: Option<LogLevel>,
 }
 
-impl Default for MarionetteSettings {
-    fn default() -> MarionetteSettings {
-        MarionetteSettings {
-            port: None,
-            binary: None,
-            connect_existing: false,
-            log_level: Some(LogLevel::Info),
-        }
-    }
-}
-
 pub struct MarionetteHandler {
     connection: Mutex<Option<MarionetteConnection>>,
     settings: MarionetteSettings,
@@ -481,11 +502,17 @@ impl MarionetteHandler {
                          capabilities: &mut NewSessionParameters) -> WebDriverResult<()> {
         let options = try!(FirefoxOptions::from_capabilities(capabilities));
 
-        let port = self.settings.port.unwrap_or(try!(get_free_port()));
+        // override marionette logging level
+        // if passed a firefoxOptions.logging.level capability
+        if let Some(level) = options.log.level.clone() {
+            self.settings.log_level = Some(level);
+        }
 
+        let port = self.settings.port.unwrap_or(try!(get_free_port()));
         if !self.settings.connect_existing {
+            debug!("Starting browser process");
             try!(self.start_browser(port, options));
-        };
+        }
 
 
         let mut connection = MarionetteConnection::new(port, session_id.clone());
