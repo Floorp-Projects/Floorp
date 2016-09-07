@@ -78,7 +78,7 @@ contain any of the following fields:
     </tr>
     <tr>
         <td><code>log</code>
-        <td><a href=#log_options>Log options</a> object
+        <td><a href=#log-options>Log options</a> object
         <td>
         <td>Logging options for Gecko.
     </tr>
