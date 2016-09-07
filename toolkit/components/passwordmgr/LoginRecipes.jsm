@@ -191,7 +191,6 @@ var LoginRecipesContent = {
    */
   _filterRecipesForForm(aRecipes, aForm) {
     let formDocURL = aForm.ownerDocument.location;
-    let host = formDocURL.host;
     let hostRecipes = aRecipes;
     let recipes = new Set();
     log.debug("_filterRecipesForForm", aRecipes);

@@ -8,6 +8,7 @@
 // non-native version will be less than optimal.
 
 #include "MurmurHash3.h"
+#include <stdlib.h>
 
 namespace {
 
@@ -19,8 +20,6 @@ namespace {
 #if defined(_MSC_VER)
 
 #define FORCE_INLINE	__forceinline
-
-#include <stdlib.h>
 
 #define ROTL32(x,y)	_rotl(x,y)
 #define ROTL64(x,y)	_rotl64(x,y)

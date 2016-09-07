@@ -171,6 +171,10 @@ faster: install-dist/idl
 	$(MAKE) -C faster FASTER_RECURSIVE_MAKE=1
 endif
 
+.PHONY: tup
+tup: install-manifests buildid.h
+	@$(TUP)
+
 # process_install_manifest needs to be invoked with --no-remove when building
 # js as standalone because automated builds are building nspr separately and
 # that would remove the resulting files.

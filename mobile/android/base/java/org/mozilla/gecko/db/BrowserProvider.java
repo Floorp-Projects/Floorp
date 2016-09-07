@@ -1211,6 +1211,10 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
             String[] selectionArgs, String sortOrder) {
         final int match = URI_MATCHER.match(uri);
 
+        // Handle only queries requiring a writable DB connection here: most queries need only a readable
+        // connection, hence we can get a readable DB once, and then handle most queries within a switch.
+        // TopSites requires a writable connection (because of the temporary tables it uses), hence
+        // we handle that separately, i.e. before retrieving a readable connection.
         if (match == TOPSITES) {
             if (uri.getBooleanQueryParameter(BrowserContract.PARAM_TOPSITES_DISABLE_PINNED, false)) {
                 return getPlainTopSites(uri);

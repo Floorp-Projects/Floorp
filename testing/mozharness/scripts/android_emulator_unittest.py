@@ -24,7 +24,7 @@ sys.path.insert(1, os.path.dirname(sys.path[0]))
 from mozprocess import ProcessHandler
 
 from mozharness.base.log import FATAL
-from mozharness.base.script import BaseScript, PreScriptAction
+from mozharness.base.script import BaseScript, PreScriptAction, PostScriptAction
 from mozharness.base.vcs.vcsbase import VCSMixin
 from mozharness.mozilla.blob_upload import BlobUploadMixin, blobupload_config_options
 from mozharness.mozilla.mozbase import MozbaseMixin
@@ -85,7 +85,7 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
                          'verify-emulator',
                          'install',
                          'run-tests',
-                         'stop-emulator'],
+                        ],
             default_actions=['clobber',
                              'start-emulator',
                              'download-and-extract',
@@ -93,7 +93,7 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
                              'verify-emulator',
                              'install',
                              'run-tests',
-                             'stop-emulator'],
+                            ],
             require_config_file=require_config_file,
             config={
                 'virtualenv_modules': self.virtualenv_modules,
@@ -724,7 +724,8 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
         self._dump_emulator_log()
         self.buildbot_status(tbpl_status, level=log_level)
 
-    def stop_emulator(self):
+    @PostScriptAction('run-tests')
+    def stop_emulator(self, action, success=None):
         '''
         Report emulator health, then make sure that the emulator has been stopped
         '''
@@ -737,7 +738,11 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
         first (if the emulator is still running, logcat may still be running, which
         may lock the blob upload directory, causing a hang).
         '''
-        self._kill_processes(self.config["emulator_process_name"])
+        if self.config.get('blob_upload_branch'):
+            # Except on interactive workers, we want the emulator to keep running
+            # after the script is finished. So only kill it if blobber would otherwise
+            # have run anyway (it doesn't get run on interactive workers).
+            self._kill_processes(self.config["emulator_process_name"])
         super(AndroidEmulatorTest, self).upload_blobber_files()
 
 if __name__ == '__main__':

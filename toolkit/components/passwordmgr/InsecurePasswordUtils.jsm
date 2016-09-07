@@ -101,7 +101,6 @@ this.InsecurePasswordUtils = {
       let uri = Services.io.newURI(aForm.rootElement.action || aForm.rootElement.baseURI,
                                    null, null);
       let principal = gScriptSecurityManager.getCodebasePrincipal(uri);
-      let host = uri.host;
 
       if (uri.schemeIs("http")) {
         isFormSubmitHTTP = true;

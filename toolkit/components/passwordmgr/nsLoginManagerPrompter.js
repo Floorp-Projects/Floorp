@@ -931,7 +931,6 @@ LoginManagerPrompter.prototype = {
     let usernamePlaceholder = this._getLocalizedString("noUsernamePlaceholder");
     let togglePasswordLabel = this._getLocalizedString("togglePasswordLabel");
     let togglePasswordAccessKey = this._getLocalizedString("togglePasswordAccessKey");
-    let displayHost = this._getShortDisplayHost(login.hostname);
 
     this._getPopupNote().show(
       browser,
@@ -1284,7 +1283,6 @@ LoginManagerPrompter.prototype = {
    */
   promptToChangePasswordWithUsernames : function (logins, count, aNewLogin) {
     this.log("promptToChangePasswordWithUsernames with count:", count);
-    const buttonFlags = Ci.nsIPrompt.STD_YES_NO_BUTTONS;
 
     var usernames = logins.map(l => l.username);
     var dialogText  = this._getLocalizedString("userSelectText");

@@ -65,6 +65,9 @@ public class FaviconView extends ImageView {
     // boolean switch for overriding scaletype, whose value is defined in attrs.xml .
     private final boolean isOverrideScaleTypeEnabled;
 
+    // boolean switch for disabling rounded corners, value defined in attrs.xml .
+    private final boolean areRoundCornersEnabled;
+
     // Initializing the static paints.
     static {
         sBackgroundPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -78,6 +81,7 @@ public class FaviconView extends ImageView {
         try {
             isDominantBorderEnabled = a.getBoolean(R.styleable.FaviconView_dominantBorderEnabled, true);
             isOverrideScaleTypeEnabled = a.getBoolean(R.styleable.FaviconView_overrideScaleType, true);
+            areRoundCornersEnabled = a.getBoolean(R.styleable.FaviconView_enableRoundCorners, true);
         } finally {
             a.recycle();
         }
@@ -115,7 +119,11 @@ public class FaviconView extends ImageView {
         if (isDominantBorderEnabled) {
             sBackgroundPaint.setColor(mDominantColor & 0x7FFFFFFF);
 
-            canvas.drawRoundRect(mBackgroundRect, mBackgroundCornerRadius, mBackgroundCornerRadius, sBackgroundPaint);
+            if (areRoundCornersEnabled) {
+                canvas.drawRoundRect(mBackgroundRect, mBackgroundCornerRadius, mBackgroundCornerRadius, sBackgroundPaint);
+            } else {
+                canvas.drawRect(mBackgroundRect, sBackgroundPaint);
+            }
         }
 
         super.onDraw(canvas);

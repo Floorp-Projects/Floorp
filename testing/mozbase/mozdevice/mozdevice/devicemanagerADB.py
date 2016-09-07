@@ -35,7 +35,7 @@ class DeviceManagerADB(DeviceManager):
     connected = False
 
     def __init__(self, host=None, port=5555, retryLimit=5, packageName='fennec',
-                 adbPath='adb', deviceSerial=None, deviceRoot=None,
+                 adbPath=None, deviceSerial=None, deviceRoot=None,
                  logLevel=logging.ERROR, autoconnect=True, runAdbAsRoot=False,
                  serverHost=None, serverPort=None, **kwargs):
         DeviceManager.__init__(self, logLevel=logLevel,
@@ -48,7 +48,7 @@ class DeviceManagerADB(DeviceManager):
         self._serverPort = serverPort
 
         # the path to adb, or 'adb' to assume that it's on the PATH
-        self._adbPath = adbPath
+        self._adbPath = adbPath or 'adb'
 
         # The serial number of the device to use with adb, used in cases
         # where multiple devices are being managed by the same adb instance.

@@ -2398,34 +2398,32 @@ class MochitestDesktop(MochitestBase):
 
             self.log.info("runtests.py | Running with e10s: {}".format(options.e10s))
             self.log.info("runtests.py | Running tests: start.\n")
-            try:
-                status = self.runApp(testURL,
-                                     self.browserEnv,
-                                     options.app,
-                                     profile=self.profile,
-                                     extraArgs=options.browserArgs,
-                                     utilityPath=options.utilityPath,
-                                     debuggerInfo=debuggerInfo,
-                                     valgrindPath=valgrindPath,
-                                     valgrindArgs=valgrindArgs,
-                                     valgrindSuppFiles=valgrindSuppFiles,
-                                     symbolsPath=options.symbolsPath,
-                                     timeout=timeout,
-                                     detectShutdownLeaks=detectShutdownLeaks,
-                                     screenshotOnFail=options.screenshotOnFail,
-                                     bisectChunk=options.bisectChunk,
-                                     quiet=options.quiet,
-                                     marionette_args=marionette_args,
-                                     )
-            except KeyboardInterrupt:
-                self.log.info("runtests.py | Received keyboard interrupt.\n")
-                status = -1
-            except:
-                traceback.print_exc()
-                self.log.error(
-                    "Automation Error: Received unexpected exception while running application\n")
-                status = 1
-
+            status = self.runApp(testURL,
+                                 self.browserEnv,
+                                 options.app,
+                                 profile=self.profile,
+                                 extraArgs=options.browserArgs,
+                                 utilityPath=options.utilityPath,
+                                 debuggerInfo=debuggerInfo,
+                                 valgrindPath=valgrindPath,
+                                 valgrindArgs=valgrindArgs,
+                                 valgrindSuppFiles=valgrindSuppFiles,
+                                 symbolsPath=options.symbolsPath,
+                                 timeout=timeout,
+                                 detectShutdownLeaks=detectShutdownLeaks,
+                                 screenshotOnFail=options.screenshotOnFail,
+                                 bisectChunk=options.bisectChunk,
+                                 quiet=options.quiet,
+                                 marionette_args=marionette_args,
+                                 )
+        except KeyboardInterrupt:
+            self.log.info("runtests.py | Received keyboard interrupt.\n")
+            status = -1
+        except:
+            traceback.print_exc()
+            self.log.error(
+                "Automation Error: Received unexpected exception while running application\n")
+            status = 1
         finally:
             self.stopServers()
 
