@@ -5,9 +5,8 @@
 
 #include "LibFuzzerRunner.h"
 #include "mozilla/Attributes.h"
+#include "testing/TestHarness.h"
 #include "prenv.h"
-
-#include "LibFuzzerTestHarness.h"
 
 namespace mozilla {
 
