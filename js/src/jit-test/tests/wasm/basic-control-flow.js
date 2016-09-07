@@ -47,9 +47,9 @@ assertEq(wasmEvalText(`(module
 
 // The if (resp. else) branch is taken iff the condition is true (resp. false)
 counter = 0;
-var imports = { inc() { counter++ } };
+var imports = { "":{inc() { counter++ }} };
 assertEq(wasmEvalText(`(module
-    (import "inc" "" (result i32))
+    (import "" "inc" (result i32))
     (func
         (result i32)
         (if
@@ -63,7 +63,7 @@ assertEq(wasmEvalText(`(module
 assertEq(counter, 0);
 
 assertEq(wasmEvalText(`(module
-    (import "inc" "" (result i32))
+    (import "" "inc" (result i32))
     (func
         (result i32)
         (if
@@ -77,7 +77,7 @@ assertEq(wasmEvalText(`(module
 assertEq(counter, 0);
 
 assertEq(wasmEvalText(`(module
-    (import "inc" "" (result i32))
+    (import "" "inc" (result i32))
     (func
         (if
             (i32.const 0)
@@ -89,7 +89,7 @@ assertEq(wasmEvalText(`(module
 assertEq(counter, 0);
 
 assertEq(wasmEvalText(`(module
-    (import "inc" "" (result i32))
+    (import "" "inc" (result i32))
     (func
         (if
             (i32.const 1)
@@ -103,7 +103,7 @@ assertEq(counter, 1);
 // One can chain if with if/if
 counter = 0;
 assertEq(wasmEvalText(`(module
-    (import "inc" "" (result i32))
+    (import "" "inc" (result i32))
     (func
         (result i32)
         (if
@@ -212,13 +212,13 @@ assertEq(wasmEvalText(`(module (func (result i32)
 
 var notcalled = false;
 var called = false;
-var imports = {
+var imports = {"": {
     notcalled() {notcalled = true},
     called() {called = true}
-};
+}};
 assertEq(wasmEvalText(`(module
-(import "notcalled" "")
-(import "called" "")
+(import "" "notcalled")
+(import "" "called")
 (func
   (block
     (return (br 0))
