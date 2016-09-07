@@ -19,10 +19,6 @@ jobs:
         attributes:
             build_platform: marionette-harness
             build_type: opt
-        index:
-            product: harness_test
-            job-name:
-                gecko-v2: marionette-harness-pytest-opt
         treeherder:
             platform: linux64/opt
             kind: test
