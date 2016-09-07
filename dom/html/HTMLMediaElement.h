@@ -655,13 +655,11 @@ public:
   }
 
   already_AddRefed<DOMMediaStream> CaptureAudio(ErrorResult& aRv,
-                                                MediaStreamGraph* aGraph = nullptr);
+                                                MediaStreamGraph* aGraph);
 
-  already_AddRefed<DOMMediaStream> MozCaptureStream(ErrorResult& aRv,
-                                                    MediaStreamGraph* aGraph = nullptr);
+  already_AddRefed<DOMMediaStream> MozCaptureStream(ErrorResult& aRv);
 
-  already_AddRefed<DOMMediaStream> MozCaptureStreamUntilEnded(ErrorResult& aRv,
-                                                              MediaStreamGraph* aGraph = nullptr);
+  already_AddRefed<DOMMediaStream> MozCaptureStreamUntilEnded(ErrorResult& aRv);
 
   bool MozAudioCaptured() const
   {
@@ -897,7 +895,7 @@ protected:
    */
   already_AddRefed<DOMMediaStream> CaptureStreamInternal(bool aFinishWhenEnded,
                                                          bool aCaptureAudio,
-                                                         MediaStreamGraph* aGraph = nullptr);
+                                                         MediaStreamGraph* aGraph);
 
   /**
    * Initialize a decoder as a clone of an existing decoder in another
