@@ -325,6 +325,11 @@
   display: inline-block;
 }
 
+.ruleview-expander.theme-twisty:-moz-locale-dir(rtl) {
+  /* for preventing .theme-twisty's wrong direction in rtl; Bug 1296648 */
+  transform: none;
+}
+
 .ruleview-newproperty {
   /* (enable checkbox width: 12px) + (expander width: 15px) */
   margin-inline-start: 27px;
