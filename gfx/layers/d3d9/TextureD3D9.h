@@ -17,12 +17,6 @@
 #include "DeviceManagerD3D9.h"
 
 namespace mozilla {
-namespace gfxs {
-class DrawTarget;
-}
-}
-
-namespace mozilla {
 namespace layers {
 
 class CompositorD3D9;
