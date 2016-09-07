@@ -1569,13 +1569,28 @@ CanvasRenderingContext2D::EnsureTarget(const gfx::Rect* aCoveredRect,
     }
 
     if (mTarget) {
-      // Restore clip and transform.
-      for (const auto& style : mStyleStack) {
-        for (const auto& clipOrTransform : style.clipsAndTransforms) {
-          if (clipOrTransform.IsClip()) {
-            mTarget->PushClip(clipOrTransform.clip);
-          } else {
-            mTarget->SetTransform(clipOrTransform.transform);
+      if (!mBufferProvider->PreservesDrawingState()) {
+        // Restore clips and transform.
+        mTarget->SetTransform(Matrix());
+
+        if (mTarget->GetBackendType() == gfx::BackendType::CAIRO) {
+          // Cairo doesn't play well with huge clips. When given a very big clip it
+          // will try to allocate big mask surface without taking the target
+          // size into account which can cause OOM. See bug 1034593.
+          // This limits the clip extents to the size of the canvas.
+          // A fix in Cairo would probably be preferable, but requires somewhat
+          // invasive changes.
+          mTarget->PushClipRect(rect);
+        }
+
+        // Restore clip and transform.
+        for (const auto& style : mStyleStack) {
+          for (const auto& clipOrTransform : style.clipsAndTransforms) {
+            if (clipOrTransform.IsClip()) {
+              mTarget->PushClip(clipOrTransform.clip);
+            } else {
+              mTarget->SetTransform(clipOrTransform.transform);
+            }
           }
         }
       }
@@ -1765,11 +1780,18 @@ CanvasRenderingContext2D::ReturnTarget()
 {
   if (mTarget && mBufferProvider && mTarget != sErrorTarget) {
     CurrentState().transform = mTarget->GetTransform();
-    for (const auto& style : mStyleStack) {
-      for (const auto& clipOrTransform : style.clipsAndTransforms) {
-        if (clipOrTransform.IsClip()) {
-          mTarget->PopClip();
+    if (!mBufferProvider->PreservesDrawingState()) {
+      for (const auto& style : mStyleStack) {
+        for (const auto& clipOrTransform : style.clipsAndTransforms) {
+          if (clipOrTransform.IsClip()) {
+            mTarget->PopClip();
+          }
         }
+      }
+      if (mTarget->GetBackendType() == gfx::BackendType::CAIRO) {
+        // With the cairo backend we pushed an extra clip rect which we have to
+        // balance out here. See the comment in EnsureDrawTarget.
+        mTarget->PopClip();
       }
     }
     mBufferProvider->ReturnDrawTarget(mTarget.forget());
