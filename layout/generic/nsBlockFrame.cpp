@@ -4121,8 +4121,8 @@ nsBlockFrame::ReflowInlineFrame(BlockReflowInput& aState,
 
     // XXX what should aLine's break-type be set to in all these cases?
     StyleClear breakType = NS_INLINE_GET_BREAK_TYPE(frameReflowStatus);
-    NS_ASSERTION(StyleClear::None_ != breakType ||
-                 StyleClear::None_ != aState.mFloatBreakType, "bad break type");
+    MOZ_ASSERT(StyleClear::None_ != breakType ||
+               StyleClear::None_ != aState.mFloatBreakType, "bad break type");
 
     if (NS_INLINE_IS_BREAK_BEFORE(frameReflowStatus)) {
       // Break-before cases.
