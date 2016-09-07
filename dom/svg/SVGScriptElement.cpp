@@ -154,8 +154,12 @@ SVGScriptElement::FreezeUriAsyncDefer()
       mStringAttributes[XLINK_HREF].GetAnimValue(src, this);
     }
 
-    nsCOMPtr<nsIURI> baseURI = GetBaseURI();
-    NS_NewURI(getter_AddRefs(mUri), src, nullptr, baseURI);
+    // Empty src should be treated as invalid URL.
+    if (!src.IsEmpty()) {
+      nsCOMPtr<nsIURI> baseURI = GetBaseURI();
+      NS_NewURI(getter_AddRefs(mUri), src, nullptr, baseURI);
+    }
+
     // At this point mUri will be null for invalid URLs.
     mExternal = true;
   }
