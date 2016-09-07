@@ -1007,7 +1007,10 @@ class XPCShellTests(object):
             except (subprocess.CalledProcessError, OSError), e:
                 self.log.error('Could not retrieve node version: %s' % str(e))
 
-        if nodeBin:
+        if os.getenv('MOZ_ASSUME_NODE_RUNNING', None):
+            self.log.info('Assuming required node servers are already running')
+            nodeMozInfo['hasNode'] = True
+        elif nodeBin:
             self.log.info('Found node at %s' % (nodeBin,))
 
             def startServer(name, serverJs):
@@ -1035,9 +1038,6 @@ class XPCShellTests(object):
 
             myDir = os.path.split(os.path.abspath(__file__))[0]
             startServer('moz-http2', os.path.join(myDir, 'moz-http2', 'moz-http2.js'))
-        elif os.getenv('MOZ_ASSUME_NODE_RUNNING', None):
-            self.log.info('Assuming required node servers are already running')
-            nodeMozInfo['hasNode'] = True
 
         mozinfo.update(nodeMozInfo)
 
