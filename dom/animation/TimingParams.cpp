@@ -8,7 +8,6 @@
 
 #include "mozilla/AnimationUtils.h"
 #include "mozilla/dom/AnimatableBinding.h"
-#include "mozilla/dom/KeyframeAnimationOptionsBinding.h"
 #include "mozilla/dom/KeyframeEffectBinding.h"
 #include "nsCSSParser.h" // For nsCSSParser
 #include "nsIDocument.h"
