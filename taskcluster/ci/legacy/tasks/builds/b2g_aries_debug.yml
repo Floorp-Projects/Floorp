@@ -5,8 +5,8 @@ $inherits:
     build_type: 'debug'
 task:
   scopes:
-    - 'docker-worker:cache:level-{{level}}-{{project}}-build-aries-debug'
-    - 'docker-worker:cache:level-{{level}}-{{project}}-build-aries-debug-objdir-gecko'
+    - 'docker-worker:cache:level-{{level}}-{{project}}-build-aries-eng-debug'
+    - 'docker-worker:cache:level-{{level}}-{{project}}-build-aries-eng-debug-objdir-gecko'
     - 'docker-worker:relengapi-proxy:tooltool.download.internal'
     - 'docker-worker:relengapi-proxy:tooltool.download.public'
   metadata:
@@ -14,8 +14,8 @@ task:
 
   payload:
     cache:
-      level-{{level}}-{{project}}-build-aries-debug: /home/worker/workspace
-      level-{{level}}-{{project}}-build-aries-debug-objdir-gecko: /home/worker/objdir-gecko
+      level-{{level}}-{{project}}-build-aries-eng-debug: /home/worker/workspace
+      level-{{level}}-{{project}}-build-aries-eng-debug-objdir-gecko: /home/worker/objdir-gecko
     features:
       relengAPIProxy: true
     env:
