@@ -24,6 +24,9 @@ class TestNotifications(FirefoxTestCase):
 
     def tearDown(self):
         try:
+            self.marionette.clear_pref('extensions.install.requireSecureOrigin')
+            self.marionette.clear_pref('xpinstall.signatures.required')
+
             self.utils.permissions.remove(self.addons_url, 'install')
 
             if self.browser.notification:
