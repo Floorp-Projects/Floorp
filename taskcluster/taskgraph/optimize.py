@@ -88,9 +88,6 @@ def annotate_task_graph(target_task_graph, do_not_optimize,
         replacement_task_id = None
         if label in do_not_optimize:
             optimized = False
-        # if any dependencies can't be optimized, this task can't, either
-        elif any(not t.optimized for t in dependencies):
-            optimized = False
         # Let's check whether this task has been created before
         elif existing_tasks is not None and label in existing_tasks:
             optimized = True
