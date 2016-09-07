@@ -6738,8 +6738,8 @@ bool nsDisplaySVGEffects::ValidateSVGFrame()
 }
 
 nsDisplayMask::nsDisplayMask(nsDisplayListBuilder* aBuilder,
-                                         nsIFrame* aFrame, nsDisplayList* aList,
-                                         bool aHandleOpacity)
+                             nsIFrame* aFrame, nsDisplayList* aList,
+                             bool aHandleOpacity)
   : nsDisplaySVGEffects(aBuilder, aFrame, aList, aHandleOpacity)
 {
   MOZ_COUNT_CTOR(nsDisplayMask);
@@ -6814,7 +6814,8 @@ nsDisplayMask::GetLayerState(nsDisplayListBuilder* aBuilder,
 }
 
 bool nsDisplayMask::ComputeVisibility(nsDisplayListBuilder* aBuilder,
-                                              nsRegion* aVisibleRegion) {
+                                              nsRegion* aVisibleRegion) 
+{
   // Our children may be made translucent or arbitrarily deformed so we should
   // not allow them to subtract area from aVisibleRegion.
   nsRegion childrenVisible(mVisibleRect);
@@ -6884,9 +6885,8 @@ nsDisplayMask::PrintEffects(nsACString& aTo)
 #endif
 
 nsDisplayFilter::nsDisplayFilter(nsDisplayListBuilder* aBuilder,
-                                         nsIFrame* aFrame,
-                                         nsDisplayList* aList,
-                                         bool aHandleOpacity)
+                                 nsIFrame* aFrame, nsDisplayList* aList,
+                                 bool aHandleOpacity)
   : nsDisplaySVGEffects(aBuilder, aFrame, aList, aHandleOpacity)
 {
   MOZ_COUNT_CTOR(nsDisplayFilter);
@@ -6965,7 +6965,8 @@ nsDisplayFilter::GetLayerState(nsDisplayListBuilder* aBuilder,
 }
 
 bool nsDisplayFilter::ComputeVisibility(nsDisplayListBuilder* aBuilder,
-                                              nsRegion* aVisibleRegion) {
+                                        nsRegion* aVisibleRegion)
+{
   nsPoint offset = ToReferenceFrame();
   nsRect dirtyRect =
     nsSVGIntegrationUtils::GetRequiredSourceForInvalidArea(mFrame,
