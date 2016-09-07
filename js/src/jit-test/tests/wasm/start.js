@@ -28,7 +28,6 @@ assertEq(count, 2);
 // New API.
 const Module = WebAssembly.Module;
 const Instance = WebAssembly.Instance;
-const textToBinary = str => wasmTextToBinary(str, 'new-format');
 
 count = 0;
 const m = new Module(textToBinary('(module (import $imp "" "inc") (func) (func $start (call $imp)) (start $start) (export "" $start))'));

@@ -3,6 +3,31 @@ if (!wasmIsSupported())
 
 load(libdir + "asserts.js");
 
+function textToBinary(str) {
+    // TODO when mass-switching to the new-format, just rename
+    // textToBinary to wasmTextToBinary and remove this function.
+    return wasmTextToBinary(str, 'new-format');
+}
+
+function evalText(str, imports) {
+    // TODO when mass-switching to the new-format, just rename
+    // evalText to wasmEvalText and remove the function wasmEvalText
+    // below.
+    let binary = wasmTextToBinary(str, 'new-format');
+    let valid = WebAssembly.validate(binary);
+
+    let m;
+    try {
+        m = new WebAssembly.Module(binary);
+        assertEq(valid, true);
+    } catch(e) {
+        assertEq(valid, false);
+        throw e;
+    }
+
+    return new WebAssembly.Instance(m, imports);
+}
+
 function wasmEvalText(str, imports) {
     var exports = Wasm.instantiateModule(wasmTextToBinary(str), imports).exports;
     if (Object.keys(exports).length == 1 && exports[""])
