@@ -282,9 +282,7 @@ nsLineBox::List(FILE* out, const char* aPrefix, uint32_t aFlags) const
   }
   fprintf_stderr(out, "%s>\n", aPrefix);
 }
-#endif
 
-#ifdef DEBUG
 nsIFrame*
 nsLineBox::LastChild() const
 {
