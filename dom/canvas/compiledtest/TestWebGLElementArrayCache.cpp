@@ -66,14 +66,8 @@ void
 CheckValidate(bool expectSuccess, mozilla::WebGLElementArrayCache& c, GLenum type,
               uint32_t maxAllowed, size_t first, size_t count)
 {
-  uint32_t out_upperBound = 0;
-  const bool success = c.Validate(type, maxAllowed, first, count, &out_upperBound);
+  const bool success = c.Validate(type, maxAllowed, first, count);
   VERIFY(success == expectSuccess);
-  if (success) {
-    VERIFY(out_upperBound <= maxAllowed);
-  } else {
-    VERIFY(out_upperBound > maxAllowed);
-  }
 }
 
 template<typename T>
