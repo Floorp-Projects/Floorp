@@ -1,9 +1,5 @@
 sphinx/opt:
     description: Generate the Sphinx documentation
-    index:
-        product: lint
-        job-name:
-            gecko-v2: sphinx-opt
     treeherder:
         symbol: tc(Doc)
         kind: test

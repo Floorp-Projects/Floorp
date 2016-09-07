@@ -72,9 +72,6 @@ jobs:
         attributes:
             build_platform: android-test
             build_type: opt
-        index:
-            product: mobile
-            job-name: android-test-opt
         treeherder:
             platform: android-4-0-armv7-api15/opt
             kind: build
@@ -126,9 +123,6 @@ jobs:
         attributes:
             build_platform: android-lint
             build_type: opt
-        index:
-            product: mobile
-            job-name: android-lint-opt
         treeherder:
             platform: android-4-0-armv7-api15/opt
             kind: build
@@ -191,9 +185,6 @@ jobs:
         attributes:
             build_platform: android-checkstyle
             build_type: opt
-        index:
-            product: mobile
-            job-name: android-checkstyle-opt
         treeherder:
             platform: android-4-0-armv7-api15/opt
             kind: build

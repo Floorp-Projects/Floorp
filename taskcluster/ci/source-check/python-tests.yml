@@ -1,9 +1,5 @@
 taskgraph-tests/opt:
     description: taskcluster/taskgraph unit tests
-    index:
-        product: lint
-        job-name:
-            gecko-v2: taskgraph-tests-opt
     treeherder:
         symbol: tg
         kind: test
@@ -28,10 +24,6 @@ taskgraph-tests/opt:
 
 mozharness/opt:
     description: mozharness integration tests
-    index:
-        product: lint
-        job-name:
-            gecko-v2: mozharness-tox-opt
     treeherder:
         symbol: MH
         kind: test
