@@ -39,6 +39,9 @@ task:
       GECKO_HEAD_REPOSITORY: '{{head_repository}}'
       GECKO_HEAD_REV: '{{head_rev}}'
 
+    features:
+      taskclusterProxy: true
+
   extra:
     build_product: '{{build_product}}'
     build_name: {{build_name}}
