@@ -180,42 +180,29 @@ interface nsITelemetry : nsISupports
                             [retval, array, size_is(count)] out string histograms);
 
   /**
-   * Create and return a histogram.  Parameters:
+   * Create a histogram using the current state of an existing histogram.  The
+   * existing histogram must be registered in TelemetryHistograms.h.
    *
    * @param name Unique histogram name
-   * @param expiration Expiration version
-   * @param type - HISTOGRAM_EXPONENTIAL, HISTOGRAM_LINEAR or HISTOGRAM_BOOLEAN
-   * @param min - Minimal bucket size
-   * @param max - Maximum bucket size
-   * @param bucket_count - number of buckets in the histogram.
+   * @param existing_name Existing histogram name
    * The returned object has the following functions:
    *   add(int) - Adds an int value to the appropriate bucket
    *   snapshot() - Returns a snapshot of the histogram with the same data fields as in histogramSnapshots()
    *   clear() - Zeros out the histogram's buckets and sum
    *   dataset() - identifies what dataset this is in: DATASET_RELEASE_CHANNEL_OPTOUT or ...OPTIN
    */
-  [implicit_jscontext, optional_argc]
-  jsval newHistogram(in ACString name, in ACString expiration,
-                     in unsigned long histogram_type,
-                     [optional] in uint32_t min,
-                     [optional] in uint32_t max,
-                     [optional] in uint32_t bucket_count);
-
-  /**
-   * Create a histogram using the current state of an existing histogram.  The
-   * existing histogram must be registered in TelemetryHistograms.h.
-   *
-   * @param name Unique histogram name
-   * @param existing_name Existing histogram name
-   * The returned object has the same functions as a histogram returned from newHistogram.
-   */
   [implicit_jscontext]
   jsval histogramFrom(in ACString name, in ACString existing_name);
 
   /**
-   * Same as newHistogram above, but for histograms registered in TelemetryHistograms.h.
+   * Create and return a histogram registered in TelemetryHistograms.h.
    *
    * @param id - unique identifier from TelemetryHistograms.h
+   * The returned object has the following functions:
+   *   add(int) - Adds an int value to the appropriate bucket
+   *   snapshot() - Returns a snapshot of the histogram with the same data fields as in histogramSnapshots()
+   *   clear() - Zeros out the histogram's buckets and sum
+   *   dataset() - identifies what dataset this is in: DATASET_RELEASE_CHANNEL_OPTOUT or ...OPTIN
    */
   [implicit_jscontext]
   jsval getHistogramById(in ACString id);
@@ -326,8 +313,6 @@ interface nsITelemetry : nsISupports
    * @param addon_id - Unique ID of the addon
    * @param name - Registered histogram name
    *
-   * The returned object has the same functions as a histogram returned
-   * from newHistogram.
    */
   [implicit_jscontext]
   jsval getAddonHistogram(in ACString addon_id, in ACString name);
