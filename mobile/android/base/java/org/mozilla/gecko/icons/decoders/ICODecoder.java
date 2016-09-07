@@ -6,11 +6,13 @@ package org.mozilla.gecko.icons.decoders;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.support.annotation.VisibleForTesting;
 import android.util.SparseArray;
 
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
+import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.gfx.BitmapUtils;
 import org.mozilla.gecko.R;
 
@@ -90,6 +92,7 @@ public class ICODecoder implements Iterable<Bitmap> {
     private boolean hasDecoded;
     private int largestFaviconSize;
 
+    @RobocopTarget
     public ICODecoder(Context context, byte[] decodand, int offset, int len) {
         this.decodand = decodand;
         this.offset = offset;
@@ -349,6 +352,18 @@ public class ICODecoder implements Iterable<Bitmap> {
         result.isICO = true;
 
         return result;
+    }
+
+    @VisibleForTesting
+    @RobocopTarget
+    public IconDirectoryEntry[] getIconDirectory() {
+        return iconDirectory;
+    }
+
+    @VisibleForTesting
+    @RobocopTarget
+    public int getLargestFaviconSize() {
+        return largestFaviconSize;
     }
 
     /**
