@@ -126,7 +126,13 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
       <field name="_value">""</field>
       <field name="gotResultForCurrentQuery">false</field>
-      <field name="handleEnterWhenGotResult">false</field>
+
+      <!--
+        This is set around HandleHenter so it can be used in handleCommand.
+        It is also used to track whether we must handle a delayed handleEnter,
+        by checking if it has been cleared.
+      -->
+      <field name="searchStringOnHandleEnter">""</field>
 
       <!--
         For performance reasons we want to limit the size of the text runs we
@@ -469,8 +475,8 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
         <getter><![CDATA[
           // this.textValue may be an autofilled string.  Search only with the
           // portion that the user typed, if any, by preferring the autocomplete
-          // controller's searchString (including _searchStringOnHandleEnter).
-          return this._searchStringOnHandleEnter ||
+          // controller's searchString (including searchStringOnHandleEnter).
+          return this.searchStringOnHandleEnter ||
                  this.mController.searchString ||
                  this.textValue;
         ]]></getter>
@@ -1033,17 +1039,18 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
           // However, if the default result is automatically selected, we
           // ensure that it corresponds to the current input.
 
+          // Store the current search string so it can be used in
+          // handleCommand, which will be called as a result of
+          // mController.handleEnter().
+          // Note this is also used to detect if we should perform a delayed
+          // handleEnter, in such a case it won't have been cleared.
+          this.searchStringOnHandleEnter = this.mController.searchString;
+
           if (this.popup.selectedIndex != 0 || this.gotResultForCurrentQuery) {
-            // Store the current search string so it can be used in
-            // handleCommand, which will be called as a result of
-            // mController.handleEnter().  handleEnter will reset it.
-            this._searchStringOnHandleEnter = this.mController.searchString;
             let rv = this.mController.handleEnter(false, event);
-            delete this._searchStringOnHandleEnter;
+            this.searchStringOnHandleEnter = "";
             return rv;
           }
-
-          this.handleEnterWhenGotResult = true;
 
           return true;
         ]]></body>
@@ -1769,9 +1776,17 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
             }
 
             this.input.gotResultForCurrentQuery = true;
-            if (this.input.handleEnterWhenGotResult) {
-              this.input.handleEnterWhenGotResult = false;
-              this.input.mController.handleEnter(false);
+
+            // Check if we should perform a delayed handleEnter.
+            if (this.input.searchStringOnHandleEnter) {
+              try {
+                // Safety check: handle only if the search string didn't change.
+                if (this.input.mController.searchString == this.input.searchStringOnHandleEnter) {
+                  this.input.mController.handleEnter(false);
+                }
+              } finally {
+                this.input.searchStringOnHandleEnter = "";
+              }
             }
           ]]>
         </body>
