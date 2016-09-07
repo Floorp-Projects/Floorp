@@ -547,8 +547,8 @@ checkbox:-moz-focusring {
   visibility: hidden;
 }
 
-.devtools-searchinput .textbox-input::-moz-placeholder,
-.devtools-filterinput .textbox-input::-moz-placeholder {
+.devtools-searchinput .textbox-input::placeholder,
+.devtools-filterinput .textbox-input::placeholder {
   font-style: normal;
 }
 

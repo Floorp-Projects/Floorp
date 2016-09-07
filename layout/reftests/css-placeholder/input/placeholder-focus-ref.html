@@ -8,10 +8,15 @@
     }
     function focusHandler()
     {
+      document.getElementById('moz').focus();
+    }
+    function focusHandlerMoz()
+    {
       document.documentElement.className = '';
     }
   </script>
   <body onload='loadHandler();'>
     <input id='i' class='ref' value='foo' onfocus='focusHandler();'>
+    <input id='moz' class='ref' value='bar' onfocus='focusHandlerMoz();'>
   </body>
 </html>

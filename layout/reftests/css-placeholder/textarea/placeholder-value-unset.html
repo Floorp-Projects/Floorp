@@ -5,10 +5,12 @@
     function loadHandler()
     {
       document.getElementById('t').value = '';
+      document.getElementById('moz').value = '';
       document.documentElement.className = '';
     }
   </script>
   <body onload='loadHandler();'>
     <textarea id='t' placeholder='foo'>bar</textarea>
+    <textarea id='moz' placeholder='bar'>foo</textarea>
   </body>
 </html>

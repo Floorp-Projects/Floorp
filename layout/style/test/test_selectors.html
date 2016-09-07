@@ -905,6 +905,8 @@ function run() {
     should_serialize_to("p:first-letter", "p::first-letter");
     should_serialize_to("div>p:first-letter", "div > p::first-letter");
     should_serialize_to("span +div:first-line", "span + div::first-line");
+    should_serialize_to("input::placeholder", "input::placeholder");
+    should_serialize_to("input:placeholder-shown", "input:placeholder-shown");
 
     // Test serialization of non CSS2 pseudo-element.
     should_serialize_to("input::-moz-placeholder", "input::-moz-placeholder");

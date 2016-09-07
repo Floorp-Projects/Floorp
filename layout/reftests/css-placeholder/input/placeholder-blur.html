@@ -12,10 +12,19 @@
     }
     function blurHandler()
     {
+      document.getElementById('moz').focus();
+    }
+    function focusHandlerMoz()
+    {
+      document.getElementById('moz').blur();
+    }
+    function blurHandlerMoz()
+    {
       document.documentElement.className = '';
     }
   </script>
   <body onload='loadHandler();'>
     <input id='i' placeholder='foo' onfocus='focusHandler();' onblur='blurHandler();'>
+    <input id='moz' placeholder='bar' onfocus='focusHandlerMoz();' onblur='blurHandlerMoz();'>
   </body>
 </html>

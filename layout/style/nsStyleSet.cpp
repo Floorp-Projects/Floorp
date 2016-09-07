@@ -1805,7 +1805,7 @@ nsStyleSet::WalkRestrictionRule(CSSPseudoElementType aPseudoType,
     aRuleWalker->Forward(mFirstLetterRule);
   else if (aPseudoType == CSSPseudoElementType::firstLine)
     aRuleWalker->Forward(mFirstLineRule);
-  else if (aPseudoType == CSSPseudoElementType::mozPlaceholder)
+  else if (aPseudoType == CSSPseudoElementType::placeholder)
     aRuleWalker->Forward(mPlaceholderRule);
 }
 

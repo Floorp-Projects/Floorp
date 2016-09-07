@@ -63,7 +63,7 @@ console.log("The PSEUDO_ELEMENTS have been copied to your clipboard.")
  */
 
 /*eslint-disable */
-exports.PSEUDO_ELEMENTS = [":after",":before",":backdrop",":first-letter",":first-line",":-moz-selection",":-moz-focus-inner",":-moz-focus-outer",":-moz-list-bullet",":-moz-list-number",":-moz-math-anonymous",":-moz-progress-bar",":-moz-range-track",":-moz-range-progress",":-moz-range-thumb",":-moz-meter-bar",":-moz-placeholder",":-moz-color-swatch"];
+exports.PSEUDO_ELEMENTS = [":after",":before",":backdrop",":first-letter",":first-line",":-moz-selection",":-moz-focus-inner",":-moz-focus-outer",":-moz-list-bullet",":-moz-list-number",":-moz-math-anonymous",":-moz-progress-bar",":-moz-range-track",":-moz-range-progress",":-moz-range-thumb",":-moz-meter-bar",":-moz-placeholder",":placeholder",":-moz-color-swatch"];
 /*eslint-enable */
 
 /**
