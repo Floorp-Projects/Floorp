@@ -21,13 +21,6 @@ public:
     explicit WebGLContextUnchecked(gl::GLContext* gl);
 
     // -------------------------------------------------------------------------
-    // Buffer Objects
-    void BindBuffer(GLenum target, WebGLBuffer* buffer);
-    void BindBufferBase(GLenum target, GLuint index, WebGLBuffer* buffer);
-    void BindBufferRange(GLenum taret, GLuint index, WebGLBuffer* buffer, WebGLintptr offset, WebGLsizeiptr size);
-    void CopyBufferSubData(GLenum readTarget, GLenum writeTarget, GLintptr readOffset, GLintptr writeOffset, GLsizeiptr size);
-
-    // -------------------------------------------------------------------------
     // Sampler Objects
     void BindSampler(GLuint unit, WebGLSampler* sampler);
 
