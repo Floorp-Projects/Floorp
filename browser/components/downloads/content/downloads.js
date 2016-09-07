@@ -311,6 +311,20 @@ const DownloadsPanel = {
         return this._onKeyDown(aEvent);
       case "keypress":
         return this._onKeyPress(aEvent);
+      case "popupshown":
+        if (this.setHeightToFitOnShow) {
+          this.setHeightToFitOnShow = false;
+          this.setHeightToFit();
+        }
+        break;
+    }
+  },
+
+  setHeightToFit() {
+    if (this._state == this.kStateShown) {
+      DownloadsBlockedSubview.view.setHeightToFit();
+    } else {
+      this.setHeightToFitOnShow = true;
     }
   },
 
@@ -429,6 +443,8 @@ const DownloadsPanel = {
     // Handle keypress to be able to preventDefault() events before they reach
     // the richlistbox, for keyboard navigation.
     this.panel.addEventListener("keypress", this, false);
+    // Handle height adjustment on show.
+    this.panel.addEventListener("popupshown", this, false);
   },
 
   /**
@@ -438,6 +454,7 @@ const DownloadsPanel = {
   _unattachEventListeners() {
     this.panel.removeEventListener("keydown", this, false);
     this.panel.removeEventListener("keypress", this, false);
+    this.panel.removeEventListener("popupshown", this, false);
   },
 
   _onKeyPress(aEvent) {
@@ -742,8 +759,6 @@ const DownloadsView = {
       DownloadsPanel.panel.removeAttribute("hasdownloads");
     }
 
-    DownloadsBlockedSubview.view.setHeightToFit();
-
     // If we've got some hidden downloads, we should activate the
     // DownloadsSummary. The DownloadsSummary will determine whether or not
     // it's appropriate to actually display the summary.
@@ -874,6 +889,9 @@ const DownloadsView = {
     }
 
     this._itemCountChanged();
+
+    // Adjust the panel height if we removed items.
+    DownloadsPanel.setHeightToFit();
   },
 
   /**
@@ -1528,7 +1546,7 @@ const DownloadsFooter = {
       }
       if (!aValue && this._showingSummary) {
         // Make sure the panel's height shrinks when the summary is hidden.
-        DownloadsBlockedSubview.view.setHeightToFit();
+        DownloadsPanel.setHeightToFit();
       }
       this._showingSummary = aValue;
     }
