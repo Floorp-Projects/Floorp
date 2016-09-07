@@ -29,8 +29,7 @@ namespace
 class MockValidationContext : public ValidationContext
 {
   public:
-    MockValidationContext(GLint majorClientVersion,
-                          GLint minorClientVersion,
+    MockValidationContext(GLint clientVersion,
                           State *state,
                           const Caps &caps,
                           const TextureCapsMap &textureCaps,
@@ -42,8 +41,7 @@ class MockValidationContext : public ValidationContext
     MOCK_METHOD1(handleError, void(const Error &));
 };
 
-MockValidationContext::MockValidationContext(GLint majorClientVersion,
-                                             GLint minorClientVersion,
+MockValidationContext::MockValidationContext(GLint clientVersion,
                                              State *state,
                                              const Caps &caps,
                                              const TextureCapsMap &textureCaps,
@@ -51,8 +49,7 @@ MockValidationContext::MockValidationContext(GLint majorClientVersion,
                                              const ResourceManager *resourceManager,
                                              const Limitations &limitations,
                                              bool skipValidation)
-    : ValidationContext(majorClientVersion,
-                        minorClientVersion,
+    : ValidationContext(clientVersion,
                         state,
                         caps,
                         textureCaps,
@@ -108,8 +105,8 @@ TEST(ValidationESTest, DrawElementsWithMaxIndexGivesError)
     state.setDrawFramebufferBinding(framebuffer);
     state.setProgram(program);
 
-    NiceMock<MockValidationContext> testContext(3, 0, &state, caps, textureCaps, extensions,
-                                                nullptr, limitations, false);
+    NiceMock<MockValidationContext> testContext(3, &state, caps, textureCaps, extensions, nullptr,
+                                                limitations, false);
 
     // Set the expectation for the validation error here.
     Error expectedError(GL_INVALID_OPERATION, g_ExceedsMaxElementErrorMessage);

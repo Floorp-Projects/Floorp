@@ -121,12 +121,7 @@ const uint8_t *LinkedUniform::getDataPtrToElement(size_t elementIndex) const
 }
 
 UniformBlock::UniformBlock()
-    : isArray(false),
-      arrayElement(0),
-      dataSize(0),
-      vertexStaticUse(false),
-      fragmentStaticUse(false),
-      computeStaticUse(false)
+    : isArray(false), arrayElement(0), dataSize(0), vertexStaticUse(false), fragmentStaticUse(false)
 {
 }
 
@@ -136,8 +131,7 @@ UniformBlock::UniformBlock(const std::string &nameIn, bool isArrayIn, unsigned i
       arrayElement(arrayElementIn),
       dataSize(0),
       vertexStaticUse(false),
-      fragmentStaticUse(false),
-      computeStaticUse(false)
+      fragmentStaticUse(false)
 {
 }
 

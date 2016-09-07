@@ -32,17 +32,15 @@
 #include "OSWindow.h"
 #include "tcuTexture.hpp"
 
-// clang-format off
 #if (DE_OS == DE_OS_WIN32)
     #define ANGLE_EGL_LIBRARY_NAME "libEGL.dll"
-#elif (DE_OS == DE_OS_UNIX) || (DE_OS == DE_OS_ANDROID)
+#elif (DE_OS == DE_OS_UNIX)
     #define ANGLE_EGL_LIBRARY_NAME "libEGL.so"
 #elif (DE_OS == DE_OS_OSX)
     #define ANGLE_EGL_LIBRARY_NAME "libEGL.dylib"
 #else
     #error "Unsupported platform"
 #endif
-// clang-format on
 
 namespace tcu
 {

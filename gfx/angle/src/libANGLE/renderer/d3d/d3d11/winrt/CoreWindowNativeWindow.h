@@ -19,7 +19,7 @@ typedef ABI::Windows::Foundation::__FITypedEventHandler_2_Windows__CUI__CCore__C
 
 namespace rx
 {
-float ConvertDipsToPixels(float dips);
+long ConvertDipsToPixels(float dips);
 
 class CoreWindowNativeWindow : public InspectableNativeWindow, public std::enable_shared_from_this<CoreWindowNativeWindow>
 {
@@ -36,7 +36,7 @@ class CoreWindowNativeWindow : public InspectableNativeWindow, public std::enabl
                             IDXGISwapChain1 **swapChain) override;
 
   protected:
-    HRESULT scaleSwapChain(const Size &windowSize, const RECT &clientRect) override;
+    HRESULT scaleSwapChain(const SIZE &windowSize, const RECT &clientRect) override;
 
     bool registerForSizeChangeEvents();
     void unregisterForSizeChangeEvents();
@@ -72,8 +72,7 @@ class CoreWindowSizeChangedHandler :
             ABI::Windows::Foundation::Size windowSize;
             if (SUCCEEDED(sizeChangedEventArgs->get_Size(&windowSize)))
             {
-                Size windowSizeInPixels = {ConvertDipsToPixels(windowSize.Width),
-                                           ConvertDipsToPixels(windowSize.Height)};
+                SIZE windowSizeInPixels = { ConvertDipsToPixels(windowSize.Width), ConvertDipsToPixels(windowSize.Height) };
                 host->setNewClientSize(windowSizeInPixels);
             }
         }
@@ -85,8 +84,7 @@ class CoreWindowSizeChangedHandler :
     std::weak_ptr<InspectableNativeWindow> mHost;
 };
 
-HRESULT GetCoreWindowSizeInPixels(const ComPtr<ABI::Windows::UI::Core::ICoreWindow> &coreWindow,
-                                  Size *windowSize);
+HRESULT GetCoreWindowSizeInPixels(const ComPtr<ABI::Windows::UI::Core::ICoreWindow>& coreWindow, SIZE *windowSize);
 }
 
 #endif // LIBANGLE_RENDERER_D3D_D3D11_WINRT_COREWINDOWNATIVEWINDOW_H_

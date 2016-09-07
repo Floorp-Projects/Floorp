@@ -18,7 +18,6 @@ namespace rx
 class TransformFeedbackImpl : angle::NonCopyable
 {
   public:
-    TransformFeedbackImpl(const gl::TransformFeedbackState &state) : mState(state) {}
     virtual ~TransformFeedbackImpl() { }
 
     virtual void begin(GLenum primitiveMode) = 0;
@@ -28,9 +27,6 @@ class TransformFeedbackImpl : angle::NonCopyable
 
     virtual void bindGenericBuffer(const BindingPointer<gl::Buffer> &binding) = 0;
     virtual void bindIndexedBuffer(size_t index, const OffsetBindingPointer<gl::Buffer> &binding) = 0;
-
-  protected:
-    const gl::TransformFeedbackState &mState;
 };
 
 }
