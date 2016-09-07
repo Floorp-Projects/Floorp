@@ -9,10 +9,6 @@ const Module = WebAssembly.Module;
 const Instance = WebAssembly.Instance;
 const Table = WebAssembly.Table;
 
-// Explicitly opt into the new binary format for imports and exports until it
-// is used by default everywhere.
-const textToBinary = str => wasmTextToBinary(str, 'new-format');
-
 function normalize(stack)
 {
     var wasmFrameTypes = [
@@ -58,7 +54,7 @@ function test(code, expect)
 {
     enableSPSProfiling();
 
-    var f = new Instance(new Module(textToBinary(code))).exports[""];
+    var f = evalText(code).exports[""];
     enableSingleStepProfiling();
     f();
     assertEqStacks(disableSingleStepProfiling(), expect);
@@ -112,7 +108,7 @@ testError(
 Error);
 
 (function() {
-    var e = new Instance(new Module(textToBinary(`
+    var e = evalText(`
     (module
         (func $foo (result i32) (i32.const 42))
         (export "foo" $foo)
@@ -120,7 +116,7 @@ Error);
         (table (resizable 10))
         (elem (i32.const 0) $foo $bar)
         (export "tbl" table)
-    )`))).exports;
+    )`).exports;
     assertEq(e.foo(), 42);
     assertEq(e.tbl.get(0)(), 42);
     assertEq(e.tbl.get(1)(), 13);
@@ -152,7 +148,7 @@ Error);
     assertEqStacks(disableSingleStepProfiling(), ["", ">", "0,>", ">", "", ">", "1,>", ">", ""]);
     disableSPSProfiling();
 
-    var e2 = new Instance(new Module(textToBinary(`
+    var e2 = evalText(`
     (module
         (type $v2i (func (result i32)))
         (import "a" "b" (table 10))
@@ -160,8 +156,7 @@ Error);
         (func $bar (result i32) (i32.const 99))
         (func $baz (param $i i32) (result i32) (call_indirect $v2i (get_local $i)))
         (export "baz" $baz)
-    )`)),
-    {a:{b:e.tbl}}).exports;
+    )`, {a:{b:e.tbl}}).exports;
 
     enableSPSProfiling();
     enableSingleStepProfiling();
