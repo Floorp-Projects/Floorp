@@ -333,8 +333,6 @@ class MOZ_STACK_CLASS TokenStream
     }
     const CharBuffer& getTokenbuf() const { return tokenbuf; }
     const char* getFilename() const { return filename; }
-    unsigned getLineno() const { return lineno; }
-    unsigned getColumn() const { return userbuf.offset() - linebase - 1; }
     bool getMutedErrors() const { return mutedErrors; }
     JSVersion versionNumber() const { return VersionNumber(options().version); }
     JSVersion versionWithFlags() const { return options().version; }
