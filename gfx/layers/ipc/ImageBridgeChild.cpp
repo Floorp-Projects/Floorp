@@ -401,58 +401,10 @@ ImageBridgeChild::FallbackDestroyActors() {
   }
 }
 
-// Helper that creates a monitor and a "done" flag, then enters the monitor.
-// This can go away when we switch ImageBridge to an XPCOM thread.
-class MOZ_STACK_CLASS SynchronousTask
-{
-  friend class AutoCompleteTask;
-
-public:
-  SynchronousTask(const char* name)
-   : mMonitor(name),
-     mAutoEnter(mMonitor),
-     mDone(false)
-  {}
-
-  void Wait() {
-    while (!mDone) {
-      mMonitor.Wait();
-    }
-  }
-
-private:
-  void Complete() {
-    mDone = true;
-    mMonitor.NotifyAll();
-  }
-
-private:
-  ReentrantMonitor mMonitor;
-  ReentrantMonitorAutoEnter mAutoEnter;
-  bool mDone;
-};
-
-class MOZ_STACK_CLASS AutoCompleteTask
-{
-public:
-  AutoCompleteTask(SynchronousTask* aTask)
-   : mTask(aTask),
-     mAutoEnter(aTask->mMonitor)
-  {
-  }
-  ~AutoCompleteTask() {
-    mTask->Complete();
-  }
-
-private:
-  SynchronousTask* mTask;
-  ReentrantMonitorAutoEnter mAutoEnter;
-};
-
 // dispatched function
-static void ImageBridgeShutdownStep1(SynchronousTask* aTask)
+static void ImageBridgeShutdownStep1(ReentrantMonitor *aBarrier, bool *aDone)
 {
-  AutoCompleteTask complete(aTask);
+  ReentrantMonitorAutoEnter autoMon(*aBarrier);
 
   MOZ_ASSERT(InImageBridgeChildThread(),
              "Should be in ImageBridgeChild thread.");
@@ -484,40 +436,51 @@ static void ImageBridgeShutdownStep1(SynchronousTask* aTask)
     // From now on, no message can be sent through the image bridge from the
     // client side except the final Stop message.
   }
+
+  *aDone = true;
+  aBarrier->NotifyAll();
 }
 
 // dispatched function
-static void
-ImageBridgeShutdownStep2(SynchronousTask* aTask)
+static void ImageBridgeShutdownStep2(ReentrantMonitor *aBarrier, bool *aDone)
 {
-  AutoCompleteTask complete(aTask);
+  ReentrantMonitorAutoEnter autoMon(*aBarrier);
 
   MOZ_ASSERT(InImageBridgeChildThread(),
              "Should be in ImageBridgeChild thread.");
 
   sImageBridgeChildSingleton->Close();
+
+  *aDone = true;
+  aBarrier->NotifyAll();
 }
 
 /* static */ void
-CreateImageClientSync(SynchronousTask* aTask,
-                      RefPtr<ImageBridgeChild> aChild,
+CreateImageClientSync(RefPtr<ImageBridgeChild> aChild,
                       RefPtr<ImageClient>* result,
+                      ReentrantMonitor* barrier,
                       CompositableType aType,
                       ImageContainer* aImageContainer,
-                      ImageContainerChild* aContainerChild)
+                      ImageContainerChild* aContainerChild,
+                      bool *aDone)
 {
-  AutoCompleteTask complete(aTask);
+  ReentrantMonitorAutoEnter autoMon(*barrier);
   *result = aChild->CreateImageClientNow(aType, aImageContainer, aContainerChild);
+  *aDone = true;
+  barrier->NotifyAll();
 }
 
 // dispatched function
-static void CreateCanvasClientSync(SynchronousTask* aTask,
+static void CreateCanvasClientSync(ReentrantMonitor* aBarrier,
                                    CanvasClient::CanvasClientType aType,
                                    TextureFlags aFlags,
-                                   RefPtr<CanvasClient>* const outResult)
+                                   RefPtr<CanvasClient>* const outResult,
+                                   bool* aDone)
 {
-  AutoCompleteTask complete(aTask);
+  ReentrantMonitorAutoEnter autoMon(*aBarrier);
   *outResult = sImageBridgeChildSingleton->CreateCanvasClientNow(aType, aFlags);
+  *aDone = true;
+  aBarrier->NotifyAll();
 }
 
 static void ConnectImageBridge(ImageBridgeChild * child, ImageBridgeParent * parent)
@@ -704,12 +667,15 @@ void ImageBridgeChild::DispatchImageClientUpdate(ImageClient* aClient,
       RefPtr<ImageClient>(aClient), RefPtr<ImageContainer>(aContainer)));
 }
 
-static void
-UpdateAsyncCanvasRendererSync(SynchronousTask* aTask, AsyncCanvasRenderer* aWrapper)
+static void UpdateAsyncCanvasRendererSync(AsyncCanvasRenderer* aWrapper,
+                                          ReentrantMonitor* aBarrier,
+                                          bool* const outDone)
 {
-  AutoCompleteTask complete(aTask);
-
   ImageBridgeChild::UpdateAsyncCanvasRendererNow(aWrapper);
+
+  ReentrantMonitorAutoEnter autoMon(*aBarrier);
+  *outDone = true;
+  aBarrier->NotifyAll();
 }
 
 // static
@@ -722,12 +688,18 @@ void ImageBridgeChild::UpdateAsyncCanvasRenderer(AsyncCanvasRenderer* aWrapper)
     return;
   }
 
-  SynchronousTask task("UpdateAsyncCanvasRenderer Lock");
+  ReentrantMonitor barrier("UpdateAsyncCanvasRenderer Lock");
+  ReentrantMonitorAutoEnter autoMon(barrier);
+  bool done = false;
 
   sImageBridgeChildSingleton->GetMessageLoop()->PostTask(
-    NewRunnableFunction(&UpdateAsyncCanvasRendererSync, &task, aWrapper));
+    NewRunnableFunction(&UpdateAsyncCanvasRendererSync, aWrapper, &barrier, &done));
 
-  task.Wait();
+  // should stop the thread until the CanvasClient has been created on
+  // the other thread
+  while (!done) {
+    barrier.Wait();
+  }
 }
 
 // static
@@ -739,19 +711,17 @@ void ImageBridgeChild::UpdateAsyncCanvasRendererNow(AsyncCanvasRenderer* aWrappe
   sImageBridgeChildSingleton->EndTransaction();
 }
 
-static void
-FlushAllImagesSync(SynchronousTask* aTask,
-                   ImageClient* aClient,
-                   ImageContainer* aContainer,
-                   RefPtr<AsyncTransactionWaiter>&& aWaiter)
+static void FlushAllImagesSync(ImageClient* aClient, ImageContainer* aContainer,
+                               RefPtr<AsyncTransactionWaiter>&& aWaiter,
+                               ReentrantMonitor* aBarrier,
+                               bool* const outDone)
 {
 #ifdef MOZ_WIDGET_GONK
   MOZ_ASSERT(aWaiter);
 #else
   MOZ_ASSERT(!aWaiter);
 #endif
-
-  AutoCompleteTask complete(aTask);
+  ReentrantMonitorAutoEnter autoMon(*aBarrier);
 
   if (!ImageBridgeChild::IsCreated() || ImageBridgeChild::IsShutDown()) {
     // How sad. If we get into this branch it means that the ImageBridge
@@ -764,6 +734,9 @@ FlushAllImagesSync(SynchronousTask* aTask,
 #ifdef MOZ_WIDGET_GONK
     aWaiter->DecrementWaitCount();
 #endif
+
+    *outDone = true;
+    aBarrier->NotifyAll();
     return;
   }
   MOZ_ASSERT(aClient);
@@ -780,6 +753,8 @@ FlushAllImagesSync(SynchronousTask* aTask,
 #ifdef MOZ_WIDGET_GONK
   aWaiter->DecrementWaitCount();
 #endif
+  *outDone = true;
+  aBarrier->NotifyAll();
 }
 
 // static
@@ -797,7 +772,9 @@ void ImageBridgeChild::FlushAllImages(ImageClient* aClient,
     return;
   }
 
-  SynchronousTask task("FlushAllImages Lock");
+  ReentrantMonitor barrier("FlushAllImages Lock");
+  ReentrantMonitorAutoEnter autoMon(barrier);
+  bool done = false;
 
   RefPtr<AsyncTransactionWaiter> waiter;
 #ifdef MOZ_WIDGET_GONK
@@ -806,9 +783,11 @@ void ImageBridgeChild::FlushAllImages(ImageClient* aClient,
   waiter->IncrementWaitCount();
 #endif
   sImageBridgeChildSingleton->GetMessageLoop()->PostTask(
-    NewRunnableFunction(&FlushAllImagesSync, &task, aClient, aContainer, waiter));
+    NewRunnableFunction(&FlushAllImagesSync, aClient, aContainer, waiter, &barrier, &done));
 
-  task.Wait();
+  while (!done) {
+    barrier.Wait();
+  }
 
 #ifdef MOZ_WIDGET_GONK
   waiter->WaitComplete();
@@ -922,21 +901,27 @@ void ImageBridgeChild::ShutDown()
     MOZ_ASSERT(!sImageBridgeChildSingleton->mShuttingDown);
 
     {
-      SynchronousTask task("ImageBridge ShutdownStep1 lock");
+      ReentrantMonitor barrier("ImageBridge ShutdownStep1 lock");
+      ReentrantMonitorAutoEnter autoMon(barrier);
 
+      bool done = false;
       sImageBridgeChildSingleton->GetMessageLoop()->PostTask(
-                      NewRunnableFunction(&ImageBridgeShutdownStep1, &task));
-
-      task.Wait();
+                      NewRunnableFunction(&ImageBridgeShutdownStep1, &barrier, &done));
+      while (!done) {
+        barrier.Wait();
+      }
     }
 
     {
-      SynchronousTask task("ImageBridge ShutdownStep2 lock");
+      ReentrantMonitor barrier("ImageBridge ShutdownStep2 lock");
+      ReentrantMonitorAutoEnter autoMon(barrier);
 
+      bool done = false;
       sImageBridgeChildSingleton->GetMessageLoop()->PostTask(
-                      NewRunnableFunction(&ImageBridgeShutdownStep2, &task));
-
-      task.Wait();
+                      NewRunnableFunction(&ImageBridgeShutdownStep2, &barrier, &done));
+      while (!done) {
+        barrier.Wait();
+      }
     }
 
     sImageBridgeChildSingleton = nullptr;
@@ -1021,14 +1006,19 @@ ImageBridgeChild::CreateImageClient(CompositableType aType,
     return CreateImageClientNow(aType, aImageContainer, aContainerChild);
   }
 
-  SynchronousTask task("CreateImageClient Lock");
+  ReentrantMonitor barrier("CreateImageClient Lock");
+  ReentrantMonitorAutoEnter autoMon(barrier);
+  bool done = false;
 
   RefPtr<ImageClient> result = nullptr;
   GetMessageLoop()->PostTask(
-      NewRunnableFunction(&CreateImageClientSync, &task, this, &result, aType,
-                          aImageContainer, aContainerChild));
-
-  task.Wait();
+      NewRunnableFunction(&CreateImageClientSync, this, &result, &barrier, aType,
+                          aImageContainer, aContainerChild, &done));
+  // should stop the thread until the ImageClient has been created on
+  // the other thread
+  while (!done) {
+    barrier.Wait();
+  }
 
   return result;
 }
@@ -1061,15 +1051,18 @@ ImageBridgeChild::CreateCanvasClient(CanvasClient::CanvasClientType aType,
   if (InImageBridgeChildThread()) {
     return CreateCanvasClientNow(aType, aFlag);
   }
-
-  SynchronousTask task("CreateCanvasClient Lock");
+  ReentrantMonitor barrier("CreateCanvasClient Lock");
+  ReentrantMonitorAutoEnter autoMon(barrier);
+  bool done = false;
 
   RefPtr<CanvasClient> result = nullptr;
   GetMessageLoop()->PostTask(NewRunnableFunction(&CreateCanvasClientSync,
-                                 &task, aType, aFlag, &result));
-
-  task.Wait();
-
+                                 &barrier, aType, aFlag, &result, &done));
+  // should stop the thread until the CanvasClient has been created on the
+  // other thread
+  while (!done) {
+    barrier.Wait();
+  }
   return result.forget();
 }
 
@@ -1124,12 +1117,13 @@ struct AllocShmemParams {
   bool mSuccess;
 };
 
-static void
-ProxyAllocShmemNow(SynchronousTask* aTask, AllocShmemParams* aParams)
+static void ProxyAllocShmemNow(AllocShmemParams* aParams,
+                               ReentrantMonitor* aBarrier,
+                               bool* aDone)
 {
-  AutoCompleteTask complete(aTask);
-
   MOZ_ASSERT(aParams);
+  MOZ_ASSERT(aDone);
+  MOZ_ASSERT(aBarrier);
 
   auto shmAllocator = aParams->mAllocator->AsShmemAllocator();
   if (aParams->mUnsafe) {
@@ -1141,6 +1135,10 @@ ProxyAllocShmemNow(SynchronousTask* aTask, AllocShmemParams* aParams)
                                                  aParams->mType,
                                                  aParams->mShmem);
   }
+
+  ReentrantMonitorAutoEnter autoMon(*aBarrier);
+  *aDone = true;
+  aBarrier->NotifyAll();
 }
 
 bool
@@ -1149,29 +1147,38 @@ ImageBridgeChild::DispatchAllocShmemInternal(size_t aSize,
                                              ipc::Shmem* aShmem,
                                              bool aUnsafe)
 {
-  SynchronousTask task("AllocatorProxy alloc");
+  ReentrantMonitor barrier("AllocatorProxy alloc");
+  ReentrantMonitorAutoEnter autoMon(barrier);
 
   AllocShmemParams params = {
     this, aSize, aType, aShmem, aUnsafe, true
   };
+  bool done = false;
 
   GetMessageLoop()->PostTask(NewRunnableFunction(&ProxyAllocShmemNow,
-                                                 &task, &params));
-
-  task.Wait();
-
+                                                 &params,
+                                                 &barrier,
+                                                 &done));
+  while (!done) {
+    barrier.Wait();
+  }
   return params.mSuccess;
 }
 
-static void ProxyDeallocShmemNow(SynchronousTask* aTask,
-                                 ISurfaceAllocator* aAllocator,
-                                 ipc::Shmem* aShmem)
+static void ProxyDeallocShmemNow(ISurfaceAllocator* aAllocator,
+                                 ipc::Shmem* aShmem,
+                                 ReentrantMonitor* aBarrier,
+                                 bool* aDone)
 {
-  AutoCompleteTask complete(aTask);
-
   MOZ_ASSERT(aShmem);
+  MOZ_ASSERT(aDone);
+  MOZ_ASSERT(aBarrier);
 
   aAllocator->AsShmemAllocator()->DeallocShmem(*aShmem);
+
+  ReentrantMonitorAutoEnter autoMon(*aBarrier);
+  *aDone = true;
+  aBarrier->NotifyAll();
 }
 
 void
@@ -1180,14 +1187,18 @@ ImageBridgeChild::DeallocShmem(ipc::Shmem& aShmem)
   if (InImageBridgeChildThread()) {
     PImageBridgeChild::DeallocShmem(aShmem);
   } else {
-    SynchronousTask task("AllocatorProxy Dealloc");
+    ReentrantMonitor barrier("AllocatorProxy Dealloc");
+    ReentrantMonitorAutoEnter autoMon(barrier);
 
+    bool done = false;
     GetMessageLoop()->PostTask(NewRunnableFunction(&ProxyDeallocShmemNow,
-                                                   &task,
                                                    this,
-                                                   &aShmem));
-
-    task.Wait();
+                                                   &aShmem,
+                                                   &barrier,
+                                                   &done));
+    while (!done) {
+      barrier.Wait();
+    }
   }
 }
 
