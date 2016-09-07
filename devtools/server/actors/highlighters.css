@@ -99,9 +99,9 @@
   shape-rendering: crispEdges;
 }
 
-/* Highlighter - Node Infobar */
+/* Highlighter - Infobar */
 
-:-moz-native-anonymous .box-model-nodeinfobar-container {
+:-moz-native-anonymous [class$=infobar-container] {
   position: absolute;
   max-width: 95%;
 
@@ -109,10 +109,10 @@
   font-size: 11px;
 }
 
-:-moz-native-anonymous .box-model-nodeinfobar {
+:-moz-native-anonymous [class$=infobar] {
   position: relative;
 
-  /* Centering the nodeinfobar in the container */
+  /* Centering the infobar in the container */
   left: -50%;
 
   padding: 5px;
@@ -127,24 +127,24 @@
   border: 1px solid var(--highlighter-bubble-border-color);
 }
 
-:-moz-native-anonymous .box-model-nodeinfobar-container[hide-arrow] > .box-model-nodeinfobar {
+:-moz-native-anonymous [class$=infobar-container][hide-arrow] > [class$=infobar] {
   margin: 7px 0;
 }
 
 /* Arrows */
 
-:-moz-native-anonymous .box-model-nodeinfobar-container > .box-model-nodeinfobar:before {
+:-moz-native-anonymous [class$=infobar-container] > [class$=infobar]:before {
   left: calc(50% - 8px);
   border: 8px solid var(--highlighter-bubble-border-color);
 }
 
-:-moz-native-anonymous .box-model-nodeinfobar-container > .box-model-nodeinfobar:after {
+:-moz-native-anonymous [class$=infobar-container] > [class$=infobar]:after {
   left: calc(50% - 7px);
   border: 7px solid var(--highlighter-bubble-background-color);
 }
 
-:-moz-native-anonymous .box-model-nodeinfobar-container > .box-model-nodeinfobar:before,
-:-moz-native-anonymous .box-model-nodeinfobar-container > .box-model-nodeinfobar:after {
+:-moz-native-anonymous [class$=infobar-container] > [class$=infobar]:before,
+:-moz-native-anonymous [class$=infobar-container] > [class$=infobar]:after {
   content: "";
   display: none;
   position: absolute;
@@ -154,23 +154,23 @@
   border-right-color: transparent;
 }
 
-:-moz-native-anonymous .box-model-nodeinfobar-container[position="top"]:not([hide-arrow]) > .box-model-nodeinfobar:before,
-:-moz-native-anonymous .box-model-nodeinfobar-container[position="top"]:not([hide-arrow]) > .box-model-nodeinfobar:after {
+:-moz-native-anonymous [class$=infobar-container][position="top"]:not([hide-arrow]) > [class$=infobar]:before,
+:-moz-native-anonymous [class$=infobar-container][position="top"]:not([hide-arrow]) > [class$=infobar]:after {
   border-bottom: 0;
   top: 100%;
   display: block;
 }
 
-:-moz-native-anonymous .box-model-nodeinfobar-container[position="bottom"]:not([hide-arrow]) > .box-model-nodeinfobar:before,
-:-moz-native-anonymous .box-model-nodeinfobar-container[position="bottom"]:not([hide-arrow]) > .box-model-nodeinfobar:after {
+:-moz-native-anonymous [class$=infobar-container][position="bottom"]:not([hide-arrow]) > [class$=infobar]:before,
+:-moz-native-anonymous [class$=infobar-container][position="bottom"]:not([hide-arrow]) > [class$=infobar]:after {
   border-top: 0;
   bottom: 100%;
   display: block;
 }
 
-/* Text container */
+/* Text Container */
 
-:-moz-native-anonymous .box-model-nodeinfobar-text {
+:-moz-native-anonymous [class$=infobar-text] {
   overflow: hidden;
   white-space: nowrap;
   direction: ltr;
@@ -178,24 +178,24 @@
   display: flex;
 }
 
-:-moz-native-anonymous .box-model-nodeinfobar-tagname {
+:-moz-native-anonymous .box-model-infobar-tagname {
   color: hsl(285,100%, 75%);
 }
 
-:-moz-native-anonymous .box-model-nodeinfobar-id {
+:-moz-native-anonymous .box-model-infobar-id {
   color: hsl(103, 46%, 54%);
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-:-moz-native-anonymous .box-model-nodeinfobar-classes,
-:-moz-native-anonymous .box-model-nodeinfobar-pseudo-classes {
+:-moz-native-anonymous .box-model-infobar-classes,
+:-moz-native-anonymous .box-model-infobar-pseudo-classes {
   color: hsl(200, 74%, 57%);
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-:-moz-native-anonymous .box-model-nodeinfobar-dimensions {
+:-moz-native-anonymous [class$=infobar-dimensions] {
   color: hsl(210, 30%, 85%);
   border-inline-start: 1px solid #5a6169;
   margin-inline-start: 6px;
@@ -219,6 +219,10 @@
 :-moz-native-anonymous .css-grid-areas {
   fill: #CEC0ED;
   stroke: none;
+}
+
+:-moz-native-anonymous .css-grid-infobar-areaname {
+  color: hsl(285,100%, 75%);
 }
 
 /* CSS Transform Highlighter */
