@@ -2,6 +2,7 @@
 
 const g = newGlobal();
 g.eval("setLazyParsingDisabled(true)");
+g.eval("setJitCompilerOption('ion.warmup.trigger', 1000)");
 
 const dbg = new Debugger(g);
 
