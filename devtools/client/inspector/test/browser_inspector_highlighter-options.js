@@ -24,7 +24,7 @@ const TEST_DATA = [
     options: {},
     checkHighlighter: function* (testActor) {
       let hidden = yield testActor.getHighlighterNodeAttribute(
-        "box-model-infobar-container", "hidden");
+        "box-model-nodeinfobar-container", "hidden");
       ok(!hidden, "Node infobar is visible");
 
       hidden = yield testActor.getHighlighterNodeAttribute(
@@ -64,8 +64,8 @@ const TEST_DATA = [
     options: {hideInfoBar: true},
     checkHighlighter: function* (testActor) {
       let hidden = yield testActor.getHighlighterNodeAttribute(
-        "box-model-infobar-container", "hidden");
-      is(hidden, "true", "infobar has been hidden");
+        "box-model-nodeinfobar-container", "hidden");
+      is(hidden, "true", "nodeinfobar has been hidden");
     }
   },
   {

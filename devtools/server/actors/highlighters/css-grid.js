@@ -9,8 +9,7 @@ const { AutoRefreshHighlighter } = require("./auto-refresh");
 const {
   CanvasFrameAnonymousContentHelper,
   createNode,
-  createSVGNode,
-  moveInfobar,
+  createSVGNode
 } = require("./utils/markup");
 const {
   getCurrentZoom,
@@ -67,14 +66,6 @@ const GRID_LINES_PROPERTIES = {
  *       <path class="css-grid-areas" points="..." />
  *     </g>
  *   </svg>
- *   <div class="css-grid-infobar-container">
- *     <div class="css-grid-infobar">
- *       <div class="css-grid-infobar-text">
- *         <span class="css-grid-infobar-areaname">Grid Area Name</span>
- *         <span class="css-grid-infobar-dimensions"Grid Area Dimensions></span>
- *       </div>
- *     </div>
- *   </div>
  * </div>
  */
 function CssGridHighlighter(highlighterEnv) {
@@ -138,52 +129,6 @@ CssGridHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
       attributes: {
         "class": "areas",
         "id": "areas"
-      },
-      prefix: this.ID_CLASS_PREFIX
-    });
-
-    // Building the grid infobar markup
-    let infobarContainer = createNode(this.win, {
-      parent: container,
-      attributes: {
-        "class": "infobar-container",
-        "id": "infobar-container",
-        "position": "top",
-        "hidden": "true"
-      },
-      prefix: this.ID_CLASS_PREFIX
-    });
-
-    let infobar = createNode(this.win, {
-      parent: infobarContainer,
-      attributes: {
-        "class": "infobar"
-      },
-      prefix: this.ID_CLASS_PREFIX
-    });
-
-    let textbox = createNode(this.win, {
-      parent: infobar,
-      attributes: {
-        "class": "infobar-text"
-      },
-      prefix: this.ID_CLASS_PREFIX
-    });
-    createNode(this.win, {
-      nodeType: "span",
-      parent: textbox,
-      attributes: {
-        "class": "infobar-areaname",
-        "id": "infobar-areaname"
-      },
-      prefix: this.ID_CLASS_PREFIX
-    });
-    createNode(this.win, {
-      nodeType: "span",
-      parent: textbox,
-      attributes: {
-        "class": "infobar-dimensions",
-        "id": "infobar-dimensions"
       },
       prefix: this.ID_CLASS_PREFIX
     });
@@ -299,61 +244,6 @@ CssGridHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
 
     setIgnoreLayoutChanges(false, this.currentNode.ownerDocument.documentElement);
     return true;
-  },
-
-  /**
-   * Update the grid information displayed in the grid info bar.
-   *
-   * @param  {GridArea} area
-   *         The grid area object.
-   * @param  {Number} x1
-   *         The first x-coordinate of the grid area rectangle.
-   * @param  {Number} x2
-   *         The second x-coordinate of the grid area rectangle.
-   * @param  {Number} y1
-   *         The first y-coordinate of the grid area rectangle.
-   * @param  {Number} y2
-   *         The second y-coordinate of the grid area rectangle.
-   */
-  _updateInfobar(area, x1, x2, y1, y2) {
-    let width = x2 - x1;
-    let height = y2 - y1;
-    let dim = parseFloat(width.toPrecision(6)) +
-              " \u00D7 " +
-              parseFloat(height.toPrecision(6));
-
-    this.getElement("infobar-areaname").setTextContent(area.name);
-    this.getElement("infobar-dimensions").setTextContent(dim);
-
-    this._moveInfobar(x1, x2, y1, y2);
-  },
-
-  /**
-   * Move the grid infobar to the right place in the highlighter.
-   *
-   * @param  {Number} x1
-   *         The first x-coordinate of the grid area rectangle.
-   * @param  {Number} x2
-   *         The second x-coordinate of the grid area rectangle.
-   * @param  {Number} y1
-   *         The first y-coordinate of the grid area rectangle.
-   * @param  {Number} y2
-   *         The second y-coordinate of the grid area rectangle.
-   */
-  _moveInfobar(x1, x2, y1, y2) {
-    let bounds = {
-      bottom: y2,
-      height: y2 - y1,
-      left: x1,
-      right: x2,
-      top: y1,
-      width: x2 - x1,
-      x: x1,
-      y: y1,
-    };
-    let container = this.getElement("infobar-container");
-
-    moveInfobar(container, bounds, this.win);
   },
 
   clearCanvas() {
@@ -567,12 +457,6 @@ CssGridHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
                    "L" + x2 + "," + y2 + " " +
                    "L" + x1 + "," + y2;
         paths.push(path);
-
-        // Update and show the info bar when only displaying a single grid area.
-        if (!renderAllGridAreas) {
-          this._updateInfobar(area, x1, x2, y1, y2);
-          this._showInfoBar();
-        }
       }
     }
 
@@ -581,13 +465,12 @@ CssGridHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
   },
 
   /**
-   * Hide the highlighter, the canvas and the infobar.
+   * Hide the highlighter and the canvas.
    */
   _hide() {
     setIgnoreLayoutChanges(true);
     this._hideGrid();
     this._hideGridArea();
-    this._hideInfoBar();
     setIgnoreLayoutChanges(false, this.currentNode.ownerDocument.documentElement);
   },
 
@@ -605,14 +488,6 @@ CssGridHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
 
   _showGridArea() {
     this.getElement("elements").removeAttribute("hidden");
-  },
-
-  _hideInfoBar() {
-    this.getElement("infobar-container").setAttribute("hidden", "true");
-  },
-
-  _showInfoBar() {
-    this.getElement("infobar-container").removeAttribute("hidden");
   },
 
 });
