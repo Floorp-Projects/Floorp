@@ -800,10 +800,12 @@ RuleRewriter.prototype = {
    * @param {String} value value of the new property
    * @param {String} priority priority of the new property; either
    *                          the empty string or "important"
+   * @param {Boolean} enabled True if the new property should be
+   *                          enabled, false if disabled
    * @return {Promise} a promise that is resolved when the edit has
    *                   completed
    */
-  internalCreateProperty: Task.async(function* (index, name, value, priority) {
+  internalCreateProperty: Task.async(function* (index, name, value, priority, enabled) {
     this.completeInitialization(index);
     let newIndentation = "";
     if (this.hasNewLine) {
@@ -833,13 +835,18 @@ RuleRewriter.prototype = {
       }
     }
 
-    this.result += newIndentation + CSS.escape(name) + ": " +
-      this.sanitizeText(value, index);
-
+    let newText = CSS.escape(name) + ": " + this.sanitizeText(value, index);
     if (priority === "important") {
-      this.result += " !important";
+      newText += " !important";
     }
-    this.result += ";";
+    newText += ";";
+
+    if (!enabled) {
+      newText = "/*" + COMMENT_PARSING_HEURISTIC_BYPASS_CHAR + " " +
+        escapeCSSComment(newText) + " */";
+    }
+
+    this.result += newIndentation + newText;
     if (this.hasNewLine) {
       this.result += "\n";
     }
@@ -860,10 +867,12 @@ RuleRewriter.prototype = {
    * @param {String} value value of the new property
    * @param {String} priority priority of the new property; either
    *                          the empty string or "important"
+   * @param {Boolean} enabled True if the new property should be
+   *                          enabled, false if disabled
    */
-  createProperty: function (index, name, value, priority) {
+  createProperty: function (index, name, value, priority, enabled) {
     this.editPromise = this.internalCreateProperty(index, name, value,
-                                                   priority);
+                                                   priority, enabled);
   },
 
   /**
@@ -884,7 +893,7 @@ RuleRewriter.prototype = {
     // We might see a "set" on a previously non-existent property; in
     // that case, act like "create".
     if (!this.decl) {
-      this.createProperty(index, name, value, priority);
+      this.createProperty(index, name, value, priority, true);
       return;
     }
 

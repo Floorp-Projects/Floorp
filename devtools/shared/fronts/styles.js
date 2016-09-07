@@ -398,7 +398,7 @@ var RuleModificationList = Class({
    * Create a new property.  This implementation does nothing, because
    * |setRuleText| is not available.
    *
-   * These parameter are passed, but as they are not used in this
+   * These parameters are passed, but as they are not used in this
    * implementation, they are omitted.  They are documented here as
    * this code also defined the interface implemented by @see
    * RuleRewriter.
@@ -412,6 +412,8 @@ var RuleModificationList = Class({
    * @param {String} value value of the new property
    * @param {String} priority priority of the new property; either
    *                          the empty string or "important"
+   * @param {Boolean} enabled True if the new property should be
+   *                          enabled, false if disabled
    */
   createProperty: function () {
     // Nothing.

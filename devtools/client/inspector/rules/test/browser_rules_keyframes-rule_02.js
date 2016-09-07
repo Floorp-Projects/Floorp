@@ -36,7 +36,7 @@ function* testPacman(inspector, view) {
 
   // let defaultView = element.ownerDocument.defaultView;
   // let ruleEditor = view.element.children[5].childNodes[0]._ruleEditor;
-  // ruleEditor.addProperty("opacity", "0");
+  // ruleEditor.addProperty("opacity", "0", true);
 
   // yield ruleEditor._applyingModifications;
   // yield once(element, "animationend");
