@@ -178,7 +178,7 @@ static uint32_t gNumberOfWidgetsNeedingEventThread = 0;
 - (CGFloat)cornerRadius;
 - (void)clearCorners;
 
--(void)setFullscreen:(BOOL)aFullscreen;
+-(void)setGLOpaque:(BOOL)aOpaque;
 
 // Overlay drawing functions for traditional CGContext drawing
 - (void)drawTitleString;
@@ -351,6 +351,7 @@ nsChildView::nsChildView() : nsBaseWidget()
 , mHasRoundedBottomCorners(false)
 , mIsCoveringTitlebar(false)
 , mIsFullscreen(false)
+, mIsOpaque(false)
 , mTitlebarCGContext(nullptr)
 , mBackingScaleFactor(0.0)
 , mVisible(false)
@@ -1982,7 +1983,7 @@ nsChildView::PrepareWindowEffects()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  bool isFullscreen;
+  bool canBeOpaque;
   {
     MutexAutoLock lock(mEffectsLock);
     mShowsResizeIndicator = ShowsResizeIndicator(&mResizeIndicatorRect);
@@ -1991,7 +1992,13 @@ nsChildView::PrepareWindowEffects()
     mDevPixelCornerRadius = cornerRadius * BackingScaleFactor();
     mIsCoveringTitlebar = [(ChildView*)mView isCoveringTitlebar];
     NSInteger styleMask = [[mView window] styleMask];
-    isFullscreen = (styleMask & NSFullScreenWindowMask) || !(styleMask & NSTitledWindowMask);
+    bool wasFullscreen = mIsFullscreen;
+    mIsFullscreen = (styleMask & NSFullScreenWindowMask) || !(styleMask & NSTitledWindowMask);
+
+    canBeOpaque = mIsFullscreen && wasFullscreen;
+    if (canBeOpaque && VibrancyManager::SystemSupportsVibrancy()) {
+      canBeOpaque = !EnsureVibrancyManager().HasVibrantRegions();
+    }
     if (mIsCoveringTitlebar) {
       mTitlebarRect = RectContainingTitlebarControls();
       UpdateTitlebarCGContext();
@@ -1999,9 +2006,9 @@ nsChildView::PrepareWindowEffects()
   }
 
   // If we've just transitioned into or out of full screen then update the opacity on our GLContext.
-  if (isFullscreen != mIsFullscreen) {
-    mIsFullscreen = isFullscreen;
-    [(ChildView*)mView setFullscreen:isFullscreen];
+  if (canBeOpaque != mIsOpaque) {
+    mIsOpaque = canBeOpaque;
+    [(ChildView*)mView setGLOpaque:canBeOpaque];
   }
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
@@ -3827,12 +3834,12 @@ NSEvent* gLastDragMouseDownEvent = nil;
   return [frameView roundedCornerRadius];
 }
 
--(void)setFullscreen:(BOOL)aFullscreen
+-(void)setGLOpaque:(BOOL)aOpaque
 {
   CGLLockContext((CGLContextObj)[mGLContext CGLContextObj]);
   // Make the context opaque for fullscreen (since it performs better), and transparent
   // for windowed (since we need it for rounded corners).
-  GLint opaque = aFullscreen ? 1 : 0;
+  GLint opaque = aOpaque ? 1 : 0;
   [mGLContext setValues:&opaque forParameter:NSOpenGLCPSurfaceOpacity];
   CGLUnlockContext((CGLContextObj)[mGLContext CGLContextObj]);
 }
