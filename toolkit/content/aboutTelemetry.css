@@ -229,14 +229,6 @@ body[dir="rtl"] .copy-node {
   display: inline;
 }
 
-.processes-ui {
-  display: none;
-}
-
-.has-data.expanded .processes-ui {
-  display: initial;
-}
-
 .filter-blocked {
   display: none;
 }
@@ -264,8 +256,4 @@ body[dir="rtl"] .copy-node {
 .addon-caption {
   font-size: larger;
   margin: 5px 0;
-}
-
-.process-picker {
-  margin: 0 0.5em;
 }
