@@ -6,7 +6,7 @@
 
 #include "mozilla/dom/KeyframeEffectReadOnly.h"
 
-#include "mozilla/dom/KeyframeAnimationOptionsBinding.h"
+#include "mozilla/dom/AnimatableBinding.h"
   // For UnrestrictedDoubleOrKeyframeAnimationOptions;
 #include "mozilla/dom/CSSPseudoElement.h"
 #include "mozilla/dom/KeyframeEffectBinding.h"
