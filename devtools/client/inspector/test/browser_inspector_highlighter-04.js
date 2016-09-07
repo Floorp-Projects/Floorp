@@ -19,12 +19,12 @@ const ELEMENTS = ["box-model-root",
                   "box-model-guide-right",
                   "box-model-guide-bottom",
                   "box-model-guide-left",
-                  "box-model-infobar-container",
-                  "box-model-infobar-tagname",
-                  "box-model-infobar-id",
-                  "box-model-infobar-classes",
-                  "box-model-infobar-pseudo-classes",
-                  "box-model-infobar-dimensions"];
+                  "box-model-nodeinfobar-container",
+                  "box-model-nodeinfobar-tagname",
+                  "box-model-nodeinfobar-id",
+                  "box-model-nodeinfobar-classes",
+                  "box-model-nodeinfobar-pseudo-classes",
+                  "box-model-nodeinfobar-dimensions"];
 
 add_task(function* () {
   let {inspector, toolbox, testActor} = yield openInspectorForURL(TEST_URL);
