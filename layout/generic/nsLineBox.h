@@ -398,12 +398,12 @@ public:
     return IsBlock() && StyleClear::None_ != BreakType();
   }
   void SetBreakTypeBefore(StyleClear aBreakType) {
-    NS_ASSERTION(IsBlock(), "Only blocks have break-before");
-    NS_ASSERTION(aBreakType == StyleClear::None_ ||
-                 aBreakType == StyleClear::Left ||
-                 aBreakType == StyleClear::Right ||
-                 aBreakType == StyleClear::Both,
-                 "Only float break types are allowed before a line");
+    MOZ_ASSERT(IsBlock(), "Only blocks have break-before");
+    MOZ_ASSERT(aBreakType == StyleClear::None_ ||
+               aBreakType == StyleClear::Left ||
+               aBreakType == StyleClear::Right ||
+               aBreakType == StyleClear::Both,
+               "Only float break types are allowed before a line");
     mFlags.mBreakType = static_cast<int>(aBreakType);
   }
   StyleClear GetBreakTypeBefore() const {
@@ -414,7 +414,7 @@ public:
     return !IsBlock() && StyleClear::None_ != BreakType();
   }
   void SetBreakTypeAfter(StyleClear aBreakType) {
-    NS_ASSERTION(!IsBlock(), "Only inlines have break-after");
+    MOZ_ASSERT(!IsBlock(), "Only inlines have break-after");
     mFlags.mBreakType = static_cast<int>(aBreakType);
   }
   bool HasFloatBreakAfter() const {
