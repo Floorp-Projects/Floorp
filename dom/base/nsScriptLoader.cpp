@@ -299,7 +299,13 @@ public:
                  JS::Handle<JSObject*> aModuleRecord);
 
   nsScriptLoader* Loader() const { return mLoader; }
-  JSObject* ModuleRecord() const { return mModuleRecord; }
+  JSObject* ModuleRecord() const
+  {
+    if (mModuleRecord) {
+      JS::ExposeObjectToActiveJS(mModuleRecord);
+    }
+    return mModuleRecord;
+  }
   nsIURI* BaseURL() const { return mBaseURL; }
 
   void UnlinkModuleRecord();
