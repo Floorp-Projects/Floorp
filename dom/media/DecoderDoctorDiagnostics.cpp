@@ -711,7 +711,7 @@ DecoderDoctorDiagnostics::StoreMediaKeySystemAccess(nsIDocument* aDocument,
 
   if (NS_WARN_IF(!watcher)) {
     DD_WARN("DecoderDoctorDiagnostics[%p]::StoreMediaKeySystemAccess(nsIDocument* aDocument=%p, keysystem='%s', supported=%d, call site '%s') - Could not create document watcher",
-            this, NS_ConvertUTF16toUTF8(aKeySystem).get(), aIsSupported, aCallSite);
+            this, aDocument, NS_ConvertUTF16toUTF8(aKeySystem).get(), aIsSupported, aCallSite);
     return;
   }
 
