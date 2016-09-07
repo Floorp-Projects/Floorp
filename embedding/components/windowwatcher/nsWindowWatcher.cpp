@@ -1114,9 +1114,9 @@ nsWindowWatcher::OpenWindowInternal(mozIDOMWindowProxy* aParent,
     auto* docShell = static_cast<nsDocShell*>(newDocShell.get());
 
     // If this is not a chrome docShell, we apply originAttributes from the
-    // subjectPrincipal unless if it's an expanded principal.
+    // subjectPrincipal unless if it's an expanded or system principal.
     if (subjectPrincipal &&
-        !subjectPrincipal->GetIsExpandedPrincipal() &&
+        !nsContentUtils::IsSystemOrExpandedPrincipal(subjectPrincipal) &&
         docShell->ItemType() != nsIDocShellTreeItem::typeChrome) {
       DocShellOriginAttributes attrs;
       attrs.InheritFromDocToChildDocShell(BasePrincipal::Cast(subjectPrincipal)->OriginAttributesRef());
