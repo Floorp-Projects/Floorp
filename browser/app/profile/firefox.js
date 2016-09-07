@@ -1516,3 +1516,5 @@ pref("browser.crashReports.unsubmittedCheck.enabled", false);
 #else
 pref("browser.crashReports.unsubmittedCheck.enabled", true);
 #endif
+
+pref("browser.crashReports.unsubmittedCheck.autoSubmit", false);
