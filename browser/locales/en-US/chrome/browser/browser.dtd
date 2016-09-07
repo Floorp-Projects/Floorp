@@ -222,7 +222,6 @@ These should match what Safari and other Apple applications use on OS X Lion. --
 <!ENTITY urlbar.webRTCShareMicrophoneNotificationAnchor.label   "Manage sharing your microphone with the site">
 <!ENTITY urlbar.webRTCShareScreenNotificationAnchor.label       "Manage sharing your windows or screen with the site">
 
-<!ENTITY urlbar.pointerLockNotificationAnchor.label     "Change whether the site can hide the pointer">
 <!ENTITY urlbar.servicesNotificationAnchor.label        "View the service install message">
 <!ENTITY urlbar.translateNotificationAnchor.label       "Translate this page">
 <!ENTITY urlbar.translatedNotificationAnchor.label      "Manage page translation">
@@ -829,8 +828,6 @@ you can use these alternative items. Otherwise, their values should be empty.  -
 <!ENTITY trackingContentBlocked.block.label "Enable protection">
 <!ENTITY trackingContentBlocked.block.accesskey "E">
 <!ENTITY trackingContentBlocked.disabled.message "Tracking protection is disabled">
-
-<!ENTITY pointerLock.notification.message "Press ESC at any time to show it again.">
 
 <!ENTITY pluginNotification.showAll.label "Show All">
 <!ENTITY pluginNotification.showAll.accesskey "S">
