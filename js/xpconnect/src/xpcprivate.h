@@ -178,7 +178,6 @@
 #define XPC_NATIVE_MAP_LENGTH                    8
 #define XPC_NATIVE_PROTO_MAP_LENGTH              8
 #define XPC_DYING_NATIVE_PROTO_MAP_LENGTH        8
-#define XPC_DETACHED_NATIVE_PROTO_MAP_LENGTH    16
 #define XPC_NATIVE_INTERFACE_MAP_LENGTH         32
 #define XPC_NATIVE_SET_MAP_LENGTH               32
 #define XPC_NATIVE_JSCLASS_MAP_LENGTH           16
@@ -455,9 +454,6 @@ public:
     XPCWrappedNativeProtoMap* GetDyingWrappedNativeProtoMap() const
         {return mDyingWrappedNativeProtoMap;}
 
-    XPCWrappedNativeProtoMap* GetDetachedWrappedNativeProtoMap() const
-        {return mDetachedWrappedNativeProtoMap;}
-
     bool JSContextInitialized(JSContext* cx);
 
     virtual bool
@@ -565,8 +561,6 @@ public:
 
     void DebugDump(int16_t depth);
 
-    void SystemIsBeingShutDown();
-
     bool GCIsRunning() const {return mGCIsRunning;}
 
     ~XPCJSContext();
@@ -619,7 +613,6 @@ private:
     IID2ThisTranslatorMap*   mThisTranslatorMap;
     XPCNativeScriptableSharedMap* mNativeScriptableSharedMap;
     XPCWrappedNativeProtoMap* mDyingWrappedNativeProtoMap;
-    XPCWrappedNativeProtoMap* mDetachedWrappedNativeProtoMap;
     bool mGCIsRunning;
     nsTArray<nsISupports*> mNativesToReleaseArray;
     bool mDoingFinalization;

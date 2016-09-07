@@ -790,11 +790,6 @@ XPCJSContext::FinalizeCallback(JSFreeOp* fop,
             // Do the marking...
             XPCWrappedNativeScope::MarkAllWrappedNativesAndProtos();
 
-            for (auto i = self->mDetachedWrappedNativeProtoMap->Iter(); !i.Done(); i.Next()) {
-                auto entry = static_cast<XPCWrappedNativeProtoMap::Entry*>(i.Get());
-                static_cast<const XPCWrappedNativeProto*>(entry->key)->Mark();
-            }
-
             // Mark the sets used in the call contexts. There is a small
             // chance that a wrapper's set will change *while* a call is
             // happening which uses that wrapper's old interfface set. So,
@@ -1495,15 +1490,6 @@ CompartmentPrivate::SizeOfIncludingThis(MallocSizeOf mallocSizeOf)
 
 /***************************************************************************/
 
-void XPCJSContext::SystemIsBeingShutDown()
-{
-    for (auto i = mDetachedWrappedNativeProtoMap->Iter(); !i.Done(); i.Next()) {
-        auto entry = static_cast<XPCWrappedNativeProtoMap::Entry*>(i.Get());
-        auto proto = const_cast<XPCWrappedNativeProto*>(static_cast<const XPCWrappedNativeProto*>(entry->key));
-        proto->SystemIsBeingShutDown();
-    }
-}
-
 #define JS_OPTIONS_DOT_STR "javascript.options."
 
 static void
@@ -1643,9 +1629,6 @@ XPCJSContext::~XPCJSContext()
 
     delete mDyingWrappedNativeProtoMap;
     mDyingWrappedNativeProtoMap = nullptr;
-
-    delete mDetachedWrappedNativeProtoMap;
-    mDetachedWrappedNativeProtoMap = nullptr;
 
 #ifdef MOZ_ENABLE_PROFILER_SPS
     // Tell the profiler that the context is gone
@@ -3318,7 +3301,6 @@ XPCJSContext::XPCJSContext()
    mThisTranslatorMap(IID2ThisTranslatorMap::newMap(XPC_THIS_TRANSLATOR_MAP_LENGTH)),
    mNativeScriptableSharedMap(XPCNativeScriptableSharedMap::newMap(XPC_NATIVE_JSCLASS_MAP_LENGTH)),
    mDyingWrappedNativeProtoMap(XPCWrappedNativeProtoMap::newMap(XPC_DYING_NATIVE_PROTO_MAP_LENGTH)),
-   mDetachedWrappedNativeProtoMap(XPCWrappedNativeProtoMap::newMap(XPC_DETACHED_NATIVE_PROTO_MAP_LENGTH)),
    mGCIsRunning(false),
    mNativesToReleaseArray(),
    mDoingFinalization(false),
