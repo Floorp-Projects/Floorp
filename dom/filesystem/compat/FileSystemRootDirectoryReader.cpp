@@ -79,7 +79,7 @@ FileSystemRootDirectoryReader::ReadEntries(FileSystemEntriesCallback& aSuccessCa
     RefPtr<EmptyEntriesCallbackRunnable> runnable =
       new EmptyEntriesCallbackRunnable(&aSuccessCallback);
     aRv = NS_DispatchToMainThread(runnable);
-    NS_WARN_IF(aRv.Failed());
+    NS_WARNING_ASSERTION(!aRv.Failed(), "NS_DispatchToMainThread failed");
     return;
   }
 
@@ -89,7 +89,7 @@ FileSystemRootDirectoryReader::ReadEntries(FileSystemEntriesCallback& aSuccessCa
   RefPtr<EntriesCallbackRunnable> runnable =
     new EntriesCallbackRunnable(&aSuccessCallback, mEntries);
   aRv = NS_DispatchToMainThread(runnable);
-  NS_WARN_IF(aRv.Failed());
+  NS_WARNING_ASSERTION(!aRv.Failed(), "NS_DispatchToMainThread failed");
 }
 
 } // dom namespace

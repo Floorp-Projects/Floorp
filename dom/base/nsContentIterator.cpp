@@ -16,6 +16,8 @@
 #include "nsINode.h"
 #include "nsCycleCollectionParticipant.h"
 
+using mozilla::DebugOnly;
+
 // couple of utility static functs
 
 ///////////////////////////////////////////////////////////////////////////
@@ -31,7 +33,7 @@ NodeToParentOffset(nsINode* aNode, int32_t* aOffset)
 
   if (parent) {
     *aOffset = parent->IndexOf(aNode);
-    NS_WARN_IF(*aOffset < 0);
+    NS_WARNING_ASSERTION(*aOffset >= 0, "bad offset");
   }
 
   return parent;
@@ -73,7 +75,7 @@ NodeIsInTraversalRange(nsINode* aNode, bool aIsPreMode,
   }
 
   int32_t indx = parent->IndexOf(aNode);
-  NS_WARN_IF(indx == -1);
+  NS_WARNING_ASSERTION(indx != -1, "bad indx");
 
   if (!aIsPreMode) {
     ++indx;
@@ -275,10 +277,10 @@ nsContentIterator::Init(nsINode* aRoot)
   if (mPre) {
     mFirst = aRoot;
     mLast  = GetDeepLastChild(aRoot);
-    NS_WARN_IF(!mLast);
+    NS_WARNING_ASSERTION(mLast, "GetDeepLastChild returned null");
   } else {
     mFirst = GetDeepFirstChild(aRoot);
-    NS_WARN_IF(!mFirst);
+    NS_WARNING_ASSERTION(mFirst, "GetDeepFirstChild returned null");
     mLast  = aRoot;
   }
 
@@ -306,7 +308,7 @@ nsContentIterator::Init(nsIDOMRange* aDOMRange)
 
   // get the start node and offset
   int32_t startIndx = range->StartOffset();
-  NS_WARN_IF(startIndx < 0);
+  NS_WARNING_ASSERTION(startIndx >= 0, "bad startIndx");
   nsINode* startNode = range->GetStartParent();
   if (NS_WARN_IF(!startNode)) {
     return NS_ERROR_FAILURE;
@@ -314,7 +316,7 @@ nsContentIterator::Init(nsIDOMRange* aDOMRange)
 
   // get the end node and offset
   int32_t endIndx = range->EndOffset();
-  NS_WARN_IF(endIndx < 0);
+  NS_WARNING_ASSERTION(endIndx >= 0, "bad endIndx");
   nsINode* endNode = range->GetEndParent();
   if (NS_WARN_IF(!endNode)) {
     return NS_ERROR_FAILURE;
@@ -342,8 +344,8 @@ nsContentIterator::Init(nsIDOMRange* aDOMRange)
       mLast    = mFirst;
       mCurNode = mFirst;
 
-      nsresult rv = RebuildIndexStack();
-      NS_WARN_IF(NS_FAILED(rv));
+      DebugOnly<nsresult> rv = RebuildIndexStack();
+      NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "RebuildIndexStack failed");
       return NS_OK;
     }
   }
@@ -354,7 +356,7 @@ nsContentIterator::Init(nsIDOMRange* aDOMRange)
 
   if (!startIsData && startNode->HasChildren()) {
     cChild = startNode->GetChildAt(startIndx);
-    NS_WARN_IF(!cChild);
+    NS_WARNING_ASSERTION(cChild, "GetChildAt returned null");
   }
 
   if (!cChild) {
@@ -373,7 +375,7 @@ nsContentIterator::Init(nsIDOMRange* aDOMRange)
       // In other words, if the offset is 1, the node should be ignored.
       if (!startIsData && startIndx) {
         mFirst = GetNextSibling(startNode);
-        NS_WARN_IF(!mFirst);
+        NS_WARNING_ASSERTION(mFirst, "GetNextSibling returned null");
 
         // Does mFirst node really intersect the range?  The range could be
         // 'degenerate', i.e., not collapsed but still contain no content.
@@ -400,7 +402,7 @@ nsContentIterator::Init(nsIDOMRange* aDOMRange)
     } else {
       // post-order
       mFirst = GetDeepFirstChild(cChild);
-      NS_WARN_IF(!mFirst);
+      NS_WARNING_ASSERTION(mFirst, "GetDeepFirstChild returned null");
 
       // Does mFirst node really intersect the range?  The range could be
       // 'degenerate', i.e., not collapsed but still contain no content.
@@ -429,7 +431,7 @@ nsContentIterator::Init(nsIDOMRange* aDOMRange)
         // include the end node in the range).
         if (!endIsData && !endNode->HasChildren() && !endIndx) {
           mLast = GetPrevSibling(endNode);
-          NS_WARN_IF(!mLast);
+          NS_WARNING_ASSERTION(mLast, "GetPrevSibling returned null");
           if (NS_WARN_IF(!NodeIsInTraversalRange(mLast, mPre,
                                                  startNode, startIndx,
                                                  endNode, endIndx))) {
@@ -447,7 +449,7 @@ nsContentIterator::Init(nsIDOMRange* aDOMRange)
 
       if (!endIsData) {
         mLast = GetPrevSibling(endNode);
-        NS_WARN_IF(!mLast);
+        NS_WARNING_ASSERTION(mLast, "GetPrevSibling returned null");
 
         if (!NodeIsInTraversalRange(mLast, mPre,
                                     startNode, startIndx,
@@ -471,7 +473,7 @@ nsContentIterator::Init(nsIDOMRange* aDOMRange)
 
     if (mPre) {
       mLast  = GetDeepLastChild(cChild);
-      NS_WARN_IF(!mLast);
+      NS_WARNING_ASSERTION(mLast, "GetDeepLastChild returned null");
 
       if (NS_WARN_IF(!NodeIsInTraversalRange(mLast, mPre,
                                              startNode, startIndx,
@@ -497,8 +499,8 @@ nsContentIterator::Init(nsIDOMRange* aDOMRange)
   if (!mCurNode) {
     mIndexes.Clear();
   } else {
-    nsresult rv = RebuildIndexStack();
-    NS_WARN_IF(NS_FAILED(rv));
+    DebugOnly<nsresult> rv = RebuildIndexStack();
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "RebuildIndexStack failed");
   }
 
   return NS_OK;
@@ -654,7 +656,7 @@ nsContentIterator::GetNextSibling(nsINode* aNode,
   } else {
     indx = mCachedIndex;
   }
-  NS_WARN_IF(indx < 0);
+  NS_WARNING_ASSERTION(indx >= 0, "bad indx");
 
   // reverify that the index of the current node hasn't changed.
   // not super cheap, but a lot cheaper than IndexOf(), and still O(1).
@@ -663,7 +665,7 @@ nsContentIterator::GetNextSibling(nsINode* aNode,
   if (sib != aNode) {
     // someone changed our index - find the new index the painful way
     indx = parent->IndexOf(aNode);
-    NS_WARN_IF(indx < 0);
+    NS_WARNING_ASSERTION(indx >= 0, "bad indx");
   }
 
   // indx is now canonically correct
@@ -724,7 +726,7 @@ nsContentIterator::GetPrevSibling(nsINode* aNode,
   if (sib != aNode) {
     // someone changed our index - find the new index the painful way
     indx = parent->IndexOf(aNode);
-    NS_WARN_IF(indx < 0);
+    NS_WARNING_ASSERTION(indx >= 0, "bad indx");
   }
 
   // indx is now canonically correct
@@ -802,7 +804,7 @@ nsContentIterator::NextNode(nsINode* aNode, nsTArray<int32_t>* aIndexes)
   if (sibling != node) {
     // someone changed our index - find the new index the painful way
     indx = parent->IndexOf(node);
-    NS_WARN_IF(indx < 0);
+    NS_WARNING_ASSERTION(indx >= 0, "bad indx");
   }
 
   // indx is now canonically correct
@@ -867,13 +869,13 @@ nsContentIterator::PrevNode(nsINode* aNode, nsTArray<int32_t>* aIndexes)
     // this time - the index may now be out of range.
     if (indx >= 0) {
       sibling = parent->GetChildAt(indx);
-      NS_WARN_IF(!sibling);
+      NS_WARNING_ASSERTION(sibling, "GetChildAt returned null");
     }
 
     if (sibling != node) {
       // someone changed our index - find the new index the painful way
       indx = parent->IndexOf(node);
-      NS_WARN_IF(indx < 0);
+      NS_WARNING_ASSERTION(indx >= 0, "bad indx");
     }
 
     // indx is now canonically correct
@@ -903,12 +905,12 @@ nsContentIterator::PrevNode(nsINode* aNode, nsTArray<int32_t>* aIndexes)
 
   // post-order
   int32_t numChildren = node->GetChildCount();
-  NS_WARN_IF(numChildren < 0);
+  NS_WARNING_ASSERTION(numChildren >= 0, "no children");
 
   // if it has children then prev node is last child
   if (numChildren) {
     nsIContent* lastChild = node->GetLastChild();
-    NS_WARN_IF(!lastChild);
+    NS_WARNING_ASSERTION(lastChild, "GetLastChild returned null");
     numChildren--;
 
     // update cache
@@ -1026,15 +1028,15 @@ nsContentIterator::PositionAt(nsINode* aCurNode)
   if (firstNode && lastNode) {
     if (mPre) {
       firstNode = NodeToParentOffset(mFirst, &firstOffset);
-      NS_WARN_IF(!firstNode);
-      NS_WARN_IF(firstOffset < 0);
+      NS_WARNING_ASSERTION(firstNode, "NodeToParentOffset returned null");
+      NS_WARNING_ASSERTION(firstOffset >= 0, "bad firstOffset");
 
       if (lastNode->GetChildCount()) {
         lastOffset = 0;
       } else {
         lastNode = NodeToParentOffset(mLast, &lastOffset);
-        NS_WARN_IF(!lastNode);
-        NS_WARN_IF(lastOffset < 0);
+        NS_WARNING_ASSERTION(lastNode, "NodeToParentOffset returned null");
+        NS_WARNING_ASSERTION(lastOffset >= 0, "bad lastOffset");
         ++lastOffset;
       }
     } else {
@@ -1042,16 +1044,16 @@ nsContentIterator::PositionAt(nsINode* aCurNode)
 
       if (numChildren) {
         firstOffset = numChildren;
-        NS_WARN_IF(firstOffset < 0);
+        NS_WARNING_ASSERTION(firstOffset >= 0, "bad firstOffset");
       } else {
         firstNode = NodeToParentOffset(mFirst, &firstOffset);
-        NS_WARN_IF(!firstNode);
-        NS_WARN_IF(firstOffset < 0);
+        NS_WARNING_ASSERTION(firstNode, "NodeToParentOffset returned null");
+        NS_WARNING_ASSERTION(firstOffset >= 0, "bad firstOffset");
       }
 
       lastNode = NodeToParentOffset(mLast, &lastOffset);
-      NS_WARN_IF(!lastNode);
-      NS_WARN_IF(lastOffset < 0);
+      NS_WARNING_ASSERTION(lastNode, "NodeToParentOffset returned null");
+      NS_WARNING_ASSERTION(lastOffset >= 0, "bad lastOffset");
       ++lastOffset;
     }
   }
@@ -1118,7 +1120,7 @@ nsContentIterator::PositionAt(nsINode* aCurNode)
     }
 
     int32_t indx = parent->IndexOf(newCurNode);
-    NS_WARN_IF(indx < 0);
+    NS_WARNING_ASSERTION(indx >= 0, "bad indx");
 
     // insert at the head!
     newIndexes.InsertElementAt(0, indx);

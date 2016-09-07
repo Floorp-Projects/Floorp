@@ -554,7 +554,7 @@ public:
     RefPtr<ResolveOpenWindowRunnable> resolveRunnable =
       new ResolveOpenWindowRunnable(mPromiseProxy, nullptr, rv);
 
-    NS_WARN_IF(!resolveRunnable->Dispatch());
+    Unused << NS_WARN_IF(!resolveRunnable->Dispatch());
 
     return NS_OK;
   }

@@ -120,7 +120,7 @@ FileSystemBase::GetDirectoryName(nsIFile* aFile, nsAString& aRetval,
   MOZ_ASSERT(aFile);
 
   aRv = aFile->GetLeafName(aRetval);
-  NS_WARN_IF(aRv.Failed());
+  NS_WARNING_ASSERTION(!aRv.Failed(), "GetLeafName failed");
 }
 
 void

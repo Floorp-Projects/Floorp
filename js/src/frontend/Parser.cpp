@@ -3741,7 +3741,7 @@ Parser<ParseHandler>::PossibleError::transferErrorTo(PossibleError* other)
 
 template <typename ParseHandler>
 bool
-Parser<ParseHandler>::makeSetCall(Node target, unsigned msg)
+Parser<ParseHandler>::checkAssignmentToCall(Node target, unsigned msg)
 {
     MOZ_ASSERT(handler.isFunctionCall(target));
 
@@ -3749,11 +3749,7 @@ Parser<ParseHandler>::makeSetCall(Node target, unsigned msg)
     // concerned about sites using this in dead code, so forbid it only in
     // strict mode code (or if the werror option has been set), and otherwise
     // warn.
-    if (!report(ParseStrictError, pc->sc()->strict(), target, msg))
-        return false;
-
-    handler.markAsSetCall(target);
-    return true;
+    return report(ParseStrictError, pc->sc()->strict(), target, msg);
 }
 
 template <>
@@ -5046,7 +5042,7 @@ Parser<ParseHandler>::validateForInOrOfLHSExpression(Node target)
     }
 
     if (handler.isFunctionCall(target))
-        return makeSetCall(target, JSMSG_BAD_FOR_LEFTSIDE);
+        return checkAssignmentToCall(target, JSMSG_BAD_FOR_LEFTSIDE);
 
     report(ParseError, false, target, JSMSG_BAD_FOR_LEFTSIDE);
     return false;
@@ -7163,7 +7159,7 @@ Parser<ParseHandler>::checkAndMarkAsAssignmentLhs(Node target, AssignmentFlavor 
     }
 
     MOZ_ASSERT(handler.isFunctionCall(target));
-    return makeSetCall(target, JSMSG_BAD_LEFTSIDE_OF_ASS);
+    return checkAssignmentToCall(target, JSMSG_BAD_LEFTSIDE_OF_ASS);
 }
 
 class AutoClearInDestructuringDecl
@@ -7483,7 +7479,7 @@ Parser<ParseHandler>::checkAndMarkAsIncOperand(Node target, AssignmentFlavor fla
         if (!reportIfArgumentsEvalTarget(target))
             return false;
     } else if (handler.isFunctionCall(target)) {
-        if (!makeSetCall(target, JSMSG_BAD_INCOP_OPERAND))
+        if (!checkAssignmentToCall(target, JSMSG_BAD_INCOP_OPERAND))
             return false;
     }
     return true;

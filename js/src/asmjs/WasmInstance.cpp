@@ -354,16 +354,14 @@ Instance::Instance(JSContext* cx,
         HandleFunction f = funcImports[i];
         const FuncImport& fi = metadata().funcImports[i];
         FuncImportTls& import = funcImportTls(fi);
-        if (IsExportedFunction(f) && !isAsmJS() && !ExportedFunctionToInstance(f).isAsmJS()) {
-            Instance& calleeInstance = ExportedFunctionToInstance(f);
-            const Metadata& calleeMetadata = calleeInstance.metadata();
-            uint32_t funcIndex = ExportedFunctionToIndex(f);
-            const FuncExport& funcExport = calleeMetadata.lookupFuncExport(funcIndex);
-            const CodeRange& codeRange = calleeMetadata.codeRanges[funcExport.codeRangeIndex()];
+        if (!isAsmJS() && IsExportedWasmFunction(f)) {
+            WasmInstanceObject* calleeInstanceObj = ExportedFunctionToInstanceObject(f);
+            const CodeRange& codeRange = calleeInstanceObj->getExportedFunctionCodeRange(f);
+            Instance& calleeInstance = calleeInstanceObj->instance();
             import.tls = &calleeInstance.tlsData_;
             import.code = calleeInstance.codeSegment().base() + codeRange.funcNonProfilingEntry();
             import.baselineScript = nullptr;
-            import.obj = ExportedFunctionToInstanceObject(f);
+            import.obj = calleeInstanceObj;
         } else {
             import.tls = &tlsData_;
             import.code = codeBase() + fi.interpExitCodeOffset();
@@ -590,12 +588,12 @@ Instance::object() const
 }
 
 bool
-Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args)
+Instance::callExport(JSContext* cx, uint32_t funcDefIndex, CallArgs args)
 {
     if (!cx->compartment()->wasm.ensureProfilingState(cx))
         return false;
 
-    const FuncExport& func = metadata().lookupFuncExport(funcIndex);
+    const FuncDefExport& func = metadata().lookupFuncDefExport(funcDefIndex);
 
     // The calling convention for an external call into wasm is to pass an
     // array of 16-byte values where each value contains either a coerced int32

@@ -98,6 +98,19 @@ function workerTestGetIsB2G(cb) {
   });
 }
 
+function workerTestGetStorageManager(cb) {
+  addEventListener('message', function workerTestGetStorageManagerCB(e) {
+    if (e.data.type !== 'returnStorageManager') {
+      return;
+    }
+    removeEventListener('message', workerTestGetStorageManagerCB);
+    cb(e.data.result);
+  });
+  client.postMessage({
+    type: 'getStorageManager'
+  });
+}
+
 addEventListener('message', function workerWrapperOnMessage(e) {
   removeEventListener('message', workerWrapperOnMessage);
   var data = e.data;

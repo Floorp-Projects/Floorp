@@ -24,18 +24,32 @@
  * release and debug builds, and the result is an expression which can be
  * used in subsequent expressions, such as:
  *
- * if (NS_WARN_IF(NS_FAILED(rv))
+ * if (NS_WARN_IF(NS_FAILED(rv)) {
  *   return rv;
+ * }
  *
  * This explicit warning and return is preferred to the NS_ENSURE_* macros
  * which hide the warning and the return control flow.
+ *
+ * This macro can also be used outside of conditions just to issue a warning,
+ * like so:
+ *
+ *   Unused << NS_WARN_IF(NS_FAILED(FnWithSideEffects());
+ *
+ * (The |Unused <<| is necessary because of the MOZ_MUST_USE annotation.)
+ *
+ * However, note that the argument to this macro is evaluated in all builds. If
+ * you just want a warning assertion, it is better to use NS_WARNING_ASSERTION
+ * (which evaluates the condition only in debug builds) like so:
+ *
+ *   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "operation failed");
  *
  * @note This is C++-only
  */
 #ifdef __cplusplus
 #ifdef DEBUG
-inline bool NS_warn_if_impl(bool aCondition, const char* aExpr,
-                            const char* aFile, int32_t aLine)
+inline MOZ_MUST_USE bool NS_warn_if_impl(bool aCondition, const char* aExpr,
+                                         const char* aFile, int32_t aLine)
 {
   if (MOZ_UNLIKELY(aCondition)) {
     NS_DebugBreak(NS_DEBUG_WARNING, nullptr, aExpr, aFile, aLine);

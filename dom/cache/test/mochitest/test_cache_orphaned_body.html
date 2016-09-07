@@ -43,6 +43,32 @@ function storageUsage() {
   });
 }
 
+function groupUsage() {
+  return new Promise(function(resolve, reject) {
+   navigator.storage.estimate().then(storageEstimation => {
+     resolve(storageEstimation.usage, 0);
+   });
+  });
+}
+
+function workerGroupUsage() {
+  return new Promise(function(resolve, reject) {
+    function workerScript() {
+      navigator.storage.estimate().then(storageEstimation => {
+        postMessage(storageEstimation.usage);
+      });
+    }
+
+    let url =
+      URL.createObjectURL(new Blob(["(", workerScript.toSource(), ")()"]));
+
+    let worker = new Worker(url);
+    worker.onmessage = function (e) {
+      resolve(e.data, 0);
+    };
+  });
+}
+
 function resetStorage() {
   return new Promise(function(resolve, reject) {
     var qms = SpecialPowers.Services.qms;
@@ -140,6 +166,26 @@ SpecialPowers.pushPrefEnv({
   }).then(function(usage) {
     fullUsage = usage;
     ok(fullUsage > initialUsage, 'disk usage should have grown');
+  })
+
+  // Test groupUsage()
+  .then(function() {
+    return resetStorage();
+  }).then(function() {
+    return groupUsage();
+  }).then(function(usage) {
+    fullUsage = usage;
+    ok(fullUsage > initialUsage, 'disk group usage should have grown');
+  })
+
+  // Test workerGroupUsage()
+  .then(function() {
+    return resetStorage();
+  }).then(function() {
+    return workerGroupUsage();
+  }).then(function(usage) {
+    fullUsage = usage;
+    ok(fullUsage > initialUsage, 'disk group usage on worker should have grown');
   })
 
   // Now perform a new Cache operation that will reopen the origin.  This

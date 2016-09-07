@@ -493,6 +493,9 @@
         <children includes="popupnotificationcontent"/>
         <xul:label class="text-link popup-notification-learnmore-link"
                xbl:inherits="onclick=learnmoreclick,href=learnmoreurl">&learnMore;</xul:label>
+        <xul:checkbox anonid="checkbox"
+                      xbl:inherits="hidden=checkboxhidden,checked=checkboxchecked,label=checkboxlabel,oncommand=checkboxcommand" />
+        <xul:description class="popup-notification-warning" xbl:inherits="hidden=warninghidden,xbl:text=warninglabel"/>
         <xul:spacer flex="1"/>
         <xul:hbox class="popup-notification-button-container"
                   pack="end" align="center">
@@ -500,7 +503,7 @@
           <xul:button anonid="button"
                       class="popup-notification-menubutton"
                       type="menu-button"
-                      xbl:inherits="oncommand=buttoncommand,onpopupshown=buttonpopupshown,label=buttonlabel,accesskey=buttonaccesskey">
+                      xbl:inherits="oncommand=buttoncommand,onpopupshown=buttonpopupshown,label=buttonlabel,accesskey=buttonaccesskey,disabled=mainactiondisabled">
             <xul:menupopup anonid="menupopup"
                            xbl:inherits="oncommand=menucommand">
               <children/>
@@ -516,6 +519,9 @@
       <stylesheet src="chrome://global/skin/notification.css"/>
     </resources>
     <implementation>
+      <field name="checkbox" readonly="true">
+        document.getAnonymousElementByAttribute(this, "anonid", "checkbox");
+      </field>
       <field name="closebutton" readonly="true">
         document.getAnonymousElementByAttribute(this, "anonid", "closebutton");
       </field>

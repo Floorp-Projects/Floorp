@@ -54,7 +54,7 @@ ModuleGenerator::ModuleGenerator(ImportVector&& imports)
     startOfUnpatchedBranches_(0),
     parallel_(false),
     outstanding_(0),
-    activeFunc_(nullptr),
+    activeFuncDef_(nullptr),
     startedFuncDefs_(false),
     finishedFuncDefs_(false)
 {
@@ -103,7 +103,7 @@ ModuleGenerator::init(UniqueModuleGeneratorData shared, const CompileArgs& args,
     shared_ = Move(shared);
     alwaysBaseline_ = args.alwaysBaseline;
 
-    if (!exportedFuncs_.init())
+    if (!exportedFuncDefs_.init())
         return false;
 
     linkData_.globalDataLength = AlignBytes(InitialGlobalDataBytes, sizeof(void*));;
@@ -136,6 +136,9 @@ ModuleGenerator::init(UniqueModuleGeneratorData shared, const CompileArgs& args,
     if (!isAsmJS()) {
         numSigs_ = shared_->sigs.length();
         numTables_ = shared_->tables.length();
+
+        if (args.assumptions.newFormat)
+            shared_->firstFuncDefIndex = shared_->funcImports.length();
 
         for (FuncImportGenDesc& funcImport : shared_->funcImports) {
             MOZ_ASSERT(!funcImport.globalDataOffset);
@@ -223,17 +226,31 @@ ModuleGenerator::finishOutstandingTask()
 static const uint32_t BadCodeRange = UINT32_MAX;
 
 bool
-ModuleGenerator::funcIsDefined(uint32_t funcIndex) const
+ModuleGenerator::funcIndexIsDef(uint32_t funcIndex) const
 {
-    return funcIndex < funcIndexToCodeRange_.length() &&
-           funcIndexToCodeRange_[funcIndex] != BadCodeRange;
+    MOZ_ASSERT(funcIndex < numFuncImports() + numFuncDefs());
+    return funcIndex >= numFuncImports();
+}
+
+uint32_t
+ModuleGenerator::funcIndexToDef(uint32_t funcIndex) const
+{
+    MOZ_ASSERT(funcIndexIsDef(funcIndex));
+    return funcIndex - numFuncImports();
+}
+
+bool
+ModuleGenerator::funcIsDefined(uint32_t funcDefIndex) const
+{
+    return funcDefIndex < funcDefIndexToCodeRange_.length() &&
+           funcDefIndexToCodeRange_[funcDefIndex] != BadCodeRange;
 }
 
 const CodeRange&
-ModuleGenerator::funcCodeRange(uint32_t funcIndex) const
+ModuleGenerator::funcDefCodeRange(uint32_t funcDefIndex) const
 {
-    MOZ_ASSERT(funcIsDefined(funcIndex));
-    const CodeRange& cr = metadata_->codeRanges[funcIndexToCodeRange_[funcIndex]];
+    MOZ_ASSERT(funcIsDefined(funcDefIndex));
+    const CodeRange& cr = metadata_->codeRanges[funcDefIndexToCodeRange_[funcDefIndex]];
     MOZ_ASSERT(cr.isFunction());
     return cr;
 }
@@ -260,14 +277,14 @@ ModuleGenerator::convertOutOfRangeBranchesToThunks()
 
     for (; lastPatchedCallsite_ < masm_.callSites().length(); lastPatchedCallsite_++) {
         const CallSiteAndTarget& cs = masm_.callSites()[lastPatchedCallsite_];
-        if (!cs.isInternal())
+        if (!cs.isDefinition())
             continue;
 
         uint32_t callerOffset = cs.returnAddressOffset();
         MOZ_RELEASE_ASSERT(callerOffset < INT32_MAX);
 
-        if (funcIsDefined(cs.targetIndex())) {
-            uint32_t calleeOffset = funcCodeRange(cs.targetIndex()).funcNonProfilingEntry();
+        if (funcIsDefined(cs.funcDefIndex())) {
+            uint32_t calleeOffset = funcDefCodeRange(cs.funcDefIndex()).funcNonProfilingEntry();
             MOZ_RELEASE_ASSERT(calleeOffset < INT32_MAX);
 
             if (uint32_t(abs(int32_t(calleeOffset) - int32_t(callerOffset))) < JumpRange()) {
@@ -276,7 +293,7 @@ ModuleGenerator::convertOutOfRangeBranchesToThunks()
             }
         }
 
-        OffsetMap::AddPtr p = alreadyThunked.lookupForAdd(cs.targetIndex());
+        OffsetMap::AddPtr p = alreadyThunked.lookupForAdd(cs.funcDefIndex());
         if (!p) {
             Offsets offsets;
             offsets.begin = masm_.currentOffset();
@@ -287,9 +304,9 @@ ModuleGenerator::convertOutOfRangeBranchesToThunks()
 
             if (!metadata_->codeRanges.emplaceBack(CodeRange::CallThunk, offsets))
                 return false;
-            if (!metadata_->callThunks.emplaceBack(thunkOffset, cs.targetIndex()))
+            if (!metadata_->callThunks.emplaceBack(thunkOffset, cs.funcDefIndex()))
                 return false;
-            if (!alreadyThunked.add(p, cs.targetIndex(), offsets.begin))
+            if (!alreadyThunked.add(p, cs.funcDefIndex(), offsets.begin))
                 return false;
         }
 
@@ -351,17 +368,17 @@ ModuleGenerator::finishTask(IonCompileTask* task)
 
     // Add the CodeRange for this function.
     uint32_t funcCodeRangeIndex = metadata_->codeRanges.length();
-    if (!metadata_->codeRanges.emplaceBack(func.index(), func.lineOrBytecode(), results.offsets()))
+    if (!metadata_->codeRanges.emplaceBack(func.defIndex(), func.lineOrBytecode(), results.offsets()))
         return false;
 
     // Maintain a mapping from function index to CodeRange index.
-    if (func.index() >= funcIndexToCodeRange_.length()) {
-        uint32_t n = func.index() - funcIndexToCodeRange_.length() + 1;
-        if (!funcIndexToCodeRange_.appendN(BadCodeRange, n))
+    if (func.defIndex() >= funcDefIndexToCodeRange_.length()) {
+        uint32_t n = func.defIndex() - funcDefIndexToCodeRange_.length() + 1;
+        if (!funcDefIndexToCodeRange_.appendN(BadCodeRange, n))
             return false;
     }
-    MOZ_ASSERT(!funcIsDefined(func.index()));
-    funcIndexToCodeRange_[func.index()] = funcCodeRangeIndex;
+    MOZ_ASSERT(!funcIsDefined(func.defIndex()));
+    funcDefIndexToCodeRange_[func.defIndex()] = funcCodeRangeIndex;
 
     // Merge the compiled results into the whole-module masm.
     mozilla::DebugOnly<size_t> sizeBefore = masm_.size();
@@ -374,33 +391,33 @@ ModuleGenerator::finishTask(IonCompileTask* task)
 }
 
 bool
-ModuleGenerator::finishFuncExports()
+ModuleGenerator::finishFuncDefExports()
 {
-    // ModuleGenerator::exportedFuncs_ is an unordered HashSet. The
-    // FuncExportVector stored in Metadata needs to be stored sorted by
+    // ModuleGenerator::exportedFuncDefs_ is an unordered HashSet. The
+    // FuncDefExportVector stored in Metadata needs to be stored sorted by
     // function index to allow O(log(n)) lookup at runtime.
 
-    Uint32Vector funcIndices;
-    if (!funcIndices.reserve(exportedFuncs_.count()))
+    Uint32Vector funcDefIndices;
+    if (!funcDefIndices.reserve(exportedFuncDefs_.count()))
         return false;
 
-    for (Uint32Set::Range r = exportedFuncs_.all(); !r.empty(); r.popFront())
-        funcIndices.infallibleAppend(r.front());
+    for (Uint32Set::Range r = exportedFuncDefs_.all(); !r.empty(); r.popFront())
+        funcDefIndices.infallibleAppend(r.front());
 
-    std::sort(funcIndices.begin(), funcIndices.end());
+    std::sort(funcDefIndices.begin(), funcDefIndices.end());
 
-    MOZ_ASSERT(metadata_->funcExports.empty());
-    if (!metadata_->funcExports.reserve(exportedFuncs_.count()))
+    MOZ_ASSERT(metadata_->funcDefExports.empty());
+    if (!metadata_->funcDefExports.reserve(exportedFuncDefs_.count()))
         return false;
 
-    for (uint32_t funcIndex : funcIndices) {
+    for (uint32_t funcDefIndex : funcDefIndices) {
         Sig sig;
-        if (!sig.clone(funcSig(funcIndex)))
+        if (!sig.clone(funcDefSig(funcDefIndex)))
             return false;
 
-        metadata_->funcExports.infallibleEmplaceBack(Move(sig),
-                                                     funcIndex,
-                                                     funcIndexToCodeRange_[funcIndex]);
+        metadata_->funcDefExports.infallibleEmplaceBack(Move(sig),
+                                                        funcDefIndex,
+                                                        funcDefIndexToCodeRange_[funcDefIndex]);
     }
 
     return true;
@@ -414,8 +431,8 @@ ModuleGenerator::finishCodegen()
 {
     uint32_t offsetInWhole = masm_.size();
 
-    uint32_t numFuncExports = metadata_->funcExports.length();
-    MOZ_ASSERT(numFuncExports == exportedFuncs_.count());
+    uint32_t numFuncDefExports = metadata_->funcDefExports.length();
+    MOZ_ASSERT(numFuncDefExports == exportedFuncDefs_.count());
 
     // Generate stubs in a separate MacroAssembler since, otherwise, for modules
     // larger than the JumpImmediateRange, even local uses of Label will fail
@@ -431,10 +448,10 @@ ModuleGenerator::finishCodegen()
         TempAllocator alloc(&lifo_);
         MacroAssembler masm(MacroAssembler::AsmJSToken(), alloc);
 
-        if (!entries.resize(numFuncExports))
+        if (!entries.resize(numFuncDefExports))
             return false;
-        for (uint32_t i = 0; i < numFuncExports; i++)
-            entries[i] = GenerateEntry(masm, metadata_->funcExports[i]);
+        for (uint32_t i = 0; i < numFuncDefExports; i++)
+            entries[i] = GenerateEntry(masm, metadata_->funcDefExports[i]);
 
         if (!interpExits.resize(numFuncImports()))
             return false;
@@ -457,9 +474,9 @@ ModuleGenerator::finishCodegen()
     // Adjust each of the resulting Offsets (to account for being merged into
     // masm_) and then create code ranges for all the stubs.
 
-    for (uint32_t i = 0; i < numFuncExports; i++) {
+    for (uint32_t i = 0; i < numFuncDefExports; i++) {
         entries[i].offsetBy(offsetInWhole);
-        metadata_->funcExports[i].initEntryOffset(entries[i].begin);
+        metadata_->funcDefExports[i].initEntryOffset(entries[i].begin);
         if (!metadata_->codeRanges.emplaceBack(CodeRange::Entry, entries[i]))
             return false;
     }
@@ -502,9 +519,9 @@ ModuleGenerator::finishCodegen()
     // Now that all thunks have been generated, patch all the thunks.
 
     for (CallThunk& callThunk : metadata_->callThunks) {
-        uint32_t funcIndex = callThunk.u.funcIndex;
-        callThunk.u.codeRangeIndex = funcIndexToCodeRange_[funcIndex];
-        masm_.patchThunk(callThunk.offset, funcCodeRange(funcIndex).funcNonProfilingEntry());
+        uint32_t funcDefIndex = callThunk.u.funcDefIndex;
+        callThunk.u.codeRangeIndex = funcDefIndexToCodeRange_[funcDefIndex];
+        masm_.patchThunk(callThunk.offset, funcDefCodeRange(funcDefIndex).funcNonProfilingEntry());
     }
 
     for (JumpTarget target : MakeEnumeratedRange(JumpTarget::Limit)) {
@@ -671,12 +688,12 @@ ModuleGenerator::sig(uint32_t index) const
 }
 
 void
-ModuleGenerator::initFuncSig(uint32_t funcIndex, uint32_t sigIndex)
+ModuleGenerator::initFuncDefSig(uint32_t funcDefIndex, uint32_t sigIndex)
 {
     MOZ_ASSERT(isAsmJS());
-    MOZ_ASSERT(!shared_->funcSigs[funcIndex]);
+    MOZ_ASSERT(!shared_->funcDefSigs[funcDefIndex]);
 
-    shared_->funcSigs[funcIndex] = &shared_->sigs[sigIndex];
+    shared_->funcDefSigs[funcDefIndex] = &shared_->sigs[sigIndex];
 }
 
 void
@@ -698,10 +715,10 @@ ModuleGenerator::bumpMinMemoryLength(uint32_t newMinMemoryLength)
 }
 
 const SigWithId&
-ModuleGenerator::funcSig(uint32_t funcIndex) const
+ModuleGenerator::funcDefSig(uint32_t funcDefIndex) const
 {
-    MOZ_ASSERT(shared_->funcSigs[funcIndex]);
-    return *shared_->funcSigs[funcIndex];
+    MOZ_ASSERT(shared_->funcDefSigs[funcDefIndex]);
+    return *shared_->funcDefSigs[funcDefIndex];
 }
 
 bool
@@ -737,17 +754,38 @@ ModuleGenerator::funcImport(uint32_t funcImportIndex) const
     return shared_->funcImports[funcImportIndex];
 }
 
-bool
-ModuleGenerator::addFuncExport(UniqueChars fieldName, uint32_t funcIndex)
+uint32_t
+ModuleGenerator::numFuncs() const
 {
-    return exports_.emplaceBack(Move(fieldName), funcIndex, DefinitionKind::Function) &&
-           exportedFuncs_.put(funcIndex);
+    return numFuncImports() + numFuncDefs();
+}
+
+const SigWithId&
+ModuleGenerator::funcSig(uint32_t funcIndex) const
+{
+    MOZ_ASSERT(funcIndex < numFuncs());
+
+    if (funcIndex < numFuncImports())
+        return *funcImport(funcIndex).sig;
+
+    return funcDefSig(funcIndex - numFuncImports());
+}
+
+bool
+ModuleGenerator::addFuncDefExport(UniqueChars fieldName, uint32_t funcIndex)
+{
+    if (funcIndexIsDef(funcIndex)) {
+       if (!exportedFuncDefs_.put(funcIndexToDef(funcIndex)))
+           return false;
+    }
+
+    return exports_.emplaceBack(Move(fieldName), funcIndex, DefinitionKind::Function);
 }
 
 bool
 ModuleGenerator::addTableExport(UniqueChars fieldName)
 {
-    MOZ_ASSERT(elemSegments_.empty());
+    MOZ_ASSERT(!startedFuncDefs_);
     MOZ_ASSERT(shared_->tables.length() == 1);
     shared_->tables[0].external = true;
     return exports_.emplaceBack(Move(fieldName), DefinitionKind::Table);
@@ -768,8 +806,30 @@ ModuleGenerator::addGlobalExport(UniqueChars fieldName, uint32_t globalIndex)
 bool
 ModuleGenerator::setStartFunction(uint32_t funcIndex)
 {
+    if (funcIndexIsDef(funcIndex)) {
+        if (!exportedFuncDefs_.put(funcIndexToDef(funcIndex)))
+            return false;
+    }
+
     metadata_->initStartFuncIndex(funcIndex);
-    return exportedFuncs_.put(funcIndex);
+    return true;
+}
+
+bool
+ModuleGenerator::addElemSegment(InitExpr offset, Uint32Vector&& elemFuncIndices)
+{
+    MOZ_ASSERT(!isAsmJS());
+    MOZ_ASSERT(!startedFuncDefs_);
+    MOZ_ASSERT(shared_->tables.length() == 1);
+
+    for (uint32_t funcIndex : elemFuncIndices) {
+        if (!funcIndexIsDef(funcIndex)) {
+            shared_->tables[0].external = true;
+            break;
+        }
+    }
+
+    return elemSegments_.emplaceBack(0, offset, Move(elemFuncIndices));
 }
 
 bool
@@ -777,6 +837,23 @@ ModuleGenerator::startFuncDefs()
 {
     MOZ_ASSERT(!startedFuncDefs_);
     MOZ_ASSERT(!finishedFuncDefs_);
+
+    // Now that it is known whether tables are internal or external, mark the
+    // elements of any external table as exported since they may be called from
+    // outside the module.
+
+    for (ElemSegment& elems : elemSegments_) {
+        if (!shared_->tables[elems.tableIndex].external)
+            continue;
+
+        for (uint32_t funcIndex : elems.elemFuncIndices) {
+            if (!funcIndexIsDef(funcIndex))
+                continue;
+
+            if (!exportedFuncDefs_.put(funcIndexToDef(funcIndex)))
+                return false;
+        }
+    }
 
     // The wasmCompilationInProgress atomic ensures that there is only one
     // parallel compilation in progress at a time. In the special case of
@@ -827,7 +904,7 @@ bool
 ModuleGenerator::startFuncDef(uint32_t lineOrBytecode, FunctionGenerator* fg)
 {
     MOZ_ASSERT(startedFuncDefs_);
-    MOZ_ASSERT(!activeFunc_);
+    MOZ_ASSERT(!activeFuncDef_);
     MOZ_ASSERT(!finishedFuncDefs_);
 
     if (freeTasks_.empty() && !finishOutstandingTask())
@@ -840,18 +917,18 @@ ModuleGenerator::startFuncDef(uint32_t lineOrBytecode, FunctionGenerator* fg)
     fg->lineOrBytecode_ = lineOrBytecode;
     fg->m_ = this;
     fg->task_ = task;
-    activeFunc_ = fg;
+    activeFuncDef_ = fg;
     return true;
 }
 
 bool
-ModuleGenerator::finishFuncDef(uint32_t funcIndex, FunctionGenerator* fg)
+ModuleGenerator::finishFuncDef(uint32_t funcDefIndex, FunctionGenerator* fg)
 {
-    MOZ_ASSERT(activeFunc_ == fg);
+    MOZ_ASSERT(activeFuncDef_ == fg);
 
     auto func = js::MakeUnique<FuncBytes>(Move(fg->bytes_),
-                                          funcIndex,
-                                          funcSig(funcIndex),
+                                          funcDefIndex,
+                                          funcDefSig(funcDefIndex),
                                           fg->lineOrBytecode_,
                                           Move(fg->callSiteLineNums_));
     if (!func)
@@ -876,7 +953,7 @@ ModuleGenerator::finishFuncDef(uint32_t funcIndex, FunctionGenerator* fg)
 
     fg->m_ = nullptr;
     fg->task_ = nullptr;
-    activeFunc_ = nullptr;
+    activeFuncDef_ = nullptr;
     return true;
 }
 
@@ -884,7 +961,7 @@ bool
 ModuleGenerator::finishFuncDefs()
 {
     MOZ_ASSERT(startedFuncDefs_);
-    MOZ_ASSERT(!activeFunc_);
+    MOZ_ASSERT(!activeFuncDef_);
     MOZ_ASSERT(!finishedFuncDefs_);
 
     while (outstanding_ > 0) {
@@ -892,35 +969,34 @@ ModuleGenerator::finishFuncDefs()
             return false;
     }
 
-    for (uint32_t funcIndex = 0; funcIndex < funcIndexToCodeRange_.length(); funcIndex++)
-        MOZ_ASSERT(funcIsDefined(funcIndex));
+#ifdef DEBUG
+    for (uint32_t i = 0; i < funcDefIndexToCodeRange_.length(); i++)
+        MOZ_ASSERT(funcIsDefined(i));
+#endif
+
+    // Complete element segments with the code range index of every element, now
+    // that all functions have been compiled.
+
+    for (ElemSegment& elems : elemSegments_) {
+        Uint32Vector& codeRangeIndices = elems.elemCodeRangeIndices;
+
+        MOZ_ASSERT(codeRangeIndices.empty());
+        if (!codeRangeIndices.reserve(elems.elemFuncIndices.length()))
+            return false;
+
+        for (uint32_t funcIndex : elems.elemFuncIndices) {
+            if (!funcIndexIsDef(funcIndex)) {
+                codeRangeIndices.infallibleAppend(UINT32_MAX);
+                continue;
+            }
+
+            codeRangeIndices.infallibleAppend(funcDefIndexToCodeRange_[funcIndexToDef(funcIndex)]);
+        }
+    }
 
     linkData_.functionCodeLength = masm_.size();
     finishedFuncDefs_ = true;
     return true;
-}
-
-bool
-ModuleGenerator::addElemSegment(InitExpr offset, Uint32Vector&& elemFuncIndices)
-{
-    MOZ_ASSERT(!isAsmJS());
-    MOZ_ASSERT(finishedFuncDefs_);
-    MOZ_ASSERT(shared_->tables.length() == 1);
-
-    if (shared_->tables[0].external) {
-        for (uint32_t funcIndex : elemFuncIndices) {
-            if (!exportedFuncs_.put(funcIndex))
-                return false;
-        }
-    }
-
-    Uint32Vector codeRangeIndices;
-    if (!codeRangeIndices.resize(elemFuncIndices.length()))
-        return false;
-    for (size_t i = 0; i < elemFuncIndices.length(); i++)
-        codeRangeIndices[i] = funcIndexToCodeRange_[elemFuncIndices[i]];
-
-    return elemSegments_.emplaceBack(0, offset, Move(elemFuncIndices), Move(codeRangeIndices));
 }
 
 void
@@ -950,28 +1026,36 @@ ModuleGenerator::initSigTableLength(uint32_t sigIndex, uint32_t length)
 }
 
 bool
-ModuleGenerator::initSigTableElems(uint32_t sigIndex, Uint32Vector&& elemFuncIndices)
+ModuleGenerator::initSigTableElems(uint32_t sigIndex, Uint32Vector&& elemFuncDefIndices)
 {
     MOZ_ASSERT(isAsmJS());
     MOZ_ASSERT(finishedFuncDefs_);
 
     uint32_t tableIndex = shared_->asmJSSigToTableIndex[sigIndex];
-    MOZ_ASSERT(shared_->tables[tableIndex].initial == elemFuncIndices.length());
+    MOZ_ASSERT(shared_->tables[tableIndex].initial == elemFuncDefIndices.length());
 
     Uint32Vector codeRangeIndices;
-    if (!codeRangeIndices.resize(elemFuncIndices.length()))
+    if (!codeRangeIndices.resize(elemFuncDefIndices.length()))
         return false;
-    for (size_t i = 0; i < elemFuncIndices.length(); i++)
-        codeRangeIndices[i] = funcIndexToCodeRange_[elemFuncIndices[i]];
+    for (size_t i = 0; i < elemFuncDefIndices.length(); i++) {
+        codeRangeIndices[i] = funcDefIndexToCodeRange_[elemFuncDefIndices[i]];
+        elemFuncDefIndices[i] += numFuncImports();
+    }
 
+    // By adding numFuncImports to each element, elemFuncDefIndices is now a
+    // Vector of func indices.
     InitExpr offset(Val(uint32_t(0)));
-    return elemSegments_.emplaceBack(tableIndex, offset, Move(elemFuncIndices), Move(codeRangeIndices));
+    if (!elemSegments_.emplaceBack(tableIndex, offset, Move(elemFuncDefIndices)))
+        return false;
+
+    elemSegments_.back().elemCodeRangeIndices = Move(codeRangeIndices);
+    return true;
 }
 
 SharedModule
 ModuleGenerator::finish(const ShareableBytes& bytecode)
 {
-    MOZ_ASSERT(!activeFunc_);
+    MOZ_ASSERT(!activeFuncDef_);
     MOZ_ASSERT(finishedFuncDefs_);
 
     // Now that all asm.js tables have been created and the compiler threads are
@@ -979,7 +1063,7 @@ ModuleGenerator::finish(const ShareableBytes& bytecode)
     if (isAsmJS() && !shared_->tables.resize(numTables_))
         return nullptr;
 
-    if (!finishFuncExports())
+    if (!finishFuncDefExports())
         return nullptr;
 
     if (!finishCodegen())

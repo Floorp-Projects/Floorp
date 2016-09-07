@@ -47,6 +47,7 @@
 #include "mozilla/dom/Permissions.h"
 #include "mozilla/dom/Presentation.h"
 #include "mozilla/dom/ServiceWorkerContainer.h"
+#include "mozilla/dom/StorageManager.h"
 #include "mozilla/dom/TCPSocket.h"
 #include "mozilla/dom/Telephony.h"
 #include "mozilla/dom/Voicemail.h"
@@ -232,6 +233,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(Navigator)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTVManager)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mInputPortManager)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mConnection)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mStorageManager)
 #ifdef MOZ_B2G_RIL
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMobileConnections)
 #endif
@@ -275,6 +277,8 @@ Navigator::Invalidate()
   }
 
   mPermissions = nullptr;
+
+  mStorageManager = nullptr;
 
   // If there is a page transition, make sure delete the geolocation object.
   if (mGeolocation) {
@@ -656,6 +660,21 @@ Navigator::GetPermissions(ErrorResult& aRv)
   }
 
   return mPermissions;
+}
+
+StorageManager*
+Navigator::Storage()
+{
+  MOZ_ASSERT(mWindow);
+
+  if(!mStorageManager) {
+    nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(mWindow);
+    MOZ_ASSERT(global);
+
+    mStorageManager = new StorageManager(global);
+  }
+
+  return mStorageManager;
 }
 
 // Values for the network.cookie.cookieBehavior pref are documented in

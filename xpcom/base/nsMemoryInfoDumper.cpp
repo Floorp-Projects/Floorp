@@ -797,7 +797,7 @@ nsMemoryInfoDumper::OpenDMDFile(const nsAString& aIdentifier, int aPid,
     return rv;
   }
   rv = dmdFile->OpenANSIFileDesc("wb", aOutFile);
-  NS_WARN_IF(NS_FAILED(rv));
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "OpenANSIFileDesc failed");
 
   // Print the path, because on some platforms (e.g. Mac) it's not obvious.
   nsCString path;
@@ -823,7 +823,7 @@ nsMemoryInfoDumper::DumpDMDToFile(FILE* aFile)
   dmd::Analyze(MakeUnique<GZWriterWrapper>(gzWriter));
 
   rv = gzWriter->Finish();
-  NS_WARN_IF(NS_FAILED(rv));
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Finish failed");
   return rv;
 }
 #endif  // MOZ_DMD

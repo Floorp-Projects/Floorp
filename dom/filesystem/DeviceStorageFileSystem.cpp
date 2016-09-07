@@ -11,6 +11,7 @@
 #include "mozilla/dom/Directory.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/FileSystemUtils.h"
+#include "mozilla/Unused.h"
 #include "nsCOMPtr.h"
 #include "nsDebug.h"
 #include "nsDeviceStorage.h"
@@ -40,9 +41,9 @@ DeviceStorageFileSystem::DeviceStorageFileSystem(const nsAString& aStorageType,
   }
 
   // Get the permission name required to access the file system.
-  nsresult rv =
+  DebugOnly<nsresult> rv =
     DeviceStorageTypeChecker::GetPermissionForType(mStorageType, mPermission);
-  NS_WARN_IF(NS_FAILED(rv));
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "GetPermissionForType failed");
 
   // Get the local path of the file system root.
   nsCOMPtr<nsIFile> rootFile;
@@ -50,7 +51,9 @@ DeviceStorageFileSystem::DeviceStorageFileSystem(const nsAString& aStorageType,
                                              aStorageName,
                                              getter_AddRefs(rootFile));
 
-  NS_WARN_IF(!rootFile || NS_FAILED(rootFile->GetPath(mLocalOrDeviceStorageRootPath)));
+  Unused <<
+    NS_WARN_IF(!rootFile ||
+               NS_FAILED(rootFile->GetPath(mLocalOrDeviceStorageRootPath)));
 
   if (!XRE_IsParentProcess()) {
     return;
@@ -140,7 +143,7 @@ DeviceStorageFileSystem::GetDirectoryName(nsIFile* aFile, nsAString& aRetval,
   }
 
   FileSystemBase::GetDirectoryName(aFile, aRetval, aRv);
-  NS_WARN_IF(aRv.Failed());
+  NS_WARNING_ASSERTION(!aRv.Failed(), "GetDirectoryName failed");
 }
 
 bool

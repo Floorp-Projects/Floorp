@@ -20,6 +20,7 @@
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/ProcessHangMonitorIPC.h"
+#include "mozilla/Unused.h"
 #include "mozilla/devtools/HeapSnapshotTempFileHelperChild.h"
 #include "mozilla/docshell/OfflineCacheUpdateChild.h"
 #include "mozilla/dom/ContentBridgeChild.h"
@@ -513,6 +514,7 @@ ContentChild::ContentChild()
  : mID(uint64_t(-1))
  , mCanOverrideProcessName(true)
  , mIsAlive(true)
+ , mShuttingDown(false)
 {
   // This process is a content process, so it's clearly running in
   // multiprocess mode!
@@ -863,6 +865,12 @@ ContentChild::IsAlive() const
   return mIsAlive;
 }
 
+bool
+ContentChild::IsShuttingDown() const
+{
+  return mShuttingDown;
+}
+
 void
 ContentChild::GetProcessName(nsACString& aName) const
 {
@@ -1045,7 +1053,7 @@ ContentChild::RecvPMemoryReportRequestConstructor(
 {
   MemoryReportRequestChild *actor =
     static_cast<MemoryReportRequestChild*>(aChild);
-  nsresult rv;
+  DebugOnly<nsresult> rv;
 
   if (aMinimizeMemoryUsage) {
     nsCOMPtr<nsIMemoryReporterManager> mgr =
@@ -1057,7 +1065,7 @@ ContentChild::RecvPMemoryReportRequestConstructor(
   }
 
   // Bug 1295622: don't kill the process just because this failed.
-  NS_WARN_IF(NS_FAILED(rv));
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "actor operation failed");
   return true;
 }
 
@@ -1082,7 +1090,8 @@ NS_IMETHODIMP MemoryReportRequestChild::Run()
     mgr->GetReportsForThisProcessExtended(handleReport, nullptr, mAnonymize,
                                           FileDescriptorToFILE(mDMDFile, "wb"),
                                           finishReporting, nullptr);
-  NS_WARN_IF(NS_FAILED(rv));
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                       "GetReportsForThisProcessExtended failed");
   return rv;
 }
 
@@ -1603,13 +1612,13 @@ ContentChild::RecvNotifyPresentationReceiverLaunched(PBrowserChild* aIframe,
 {
   nsCOMPtr<nsIDocShell> docShell =
     do_GetInterface(static_cast<TabChild*>(aIframe)->WebNavigation());
-  NS_WARN_IF(!docShell);
+  NS_WARNING_ASSERTION(docShell, "WebNavigation failed");
 
   nsCOMPtr<nsIPresentationService> service =
     do_GetService(PRESENTATION_SERVICE_CONTRACTID);
-  NS_WARN_IF(!service);
+  NS_WARNING_ASSERTION(service, "presentation service is missing");
 
-  NS_WARN_IF(NS_FAILED(static_cast<PresentationIPCService*>(service.get())->MonitorResponderLoading(aSessionId, docShell)));
+  Unused << NS_WARN_IF(NS_FAILED(static_cast<PresentationIPCService*>(service.get())->MonitorResponderLoading(aSessionId, docShell)));
 
   return true;
 }
@@ -1619,9 +1628,9 @@ ContentChild::RecvNotifyPresentationReceiverCleanUp(const nsString& aSessionId)
 {
   nsCOMPtr<nsIPresentationService> service =
     do_GetService(PRESENTATION_SERVICE_CONTRACTID);
-  NS_WARN_IF(!service);
+  NS_WARNING_ASSERTION(service, "presentation service is missing");
 
-  NS_WARN_IF(NS_FAILED(service->UntrackSessionInfo(aSessionId, nsIPresentationService::ROLE_RECEIVER)));
+  Unused << NS_WARN_IF(NS_FAILED(service->UntrackSessionInfo(aSessionId, nsIPresentationService::ROLE_RECEIVER)));
 
   return true;
 }
@@ -2987,6 +2996,8 @@ ContentChild::RecvShutdown()
       return true;
     }
   }
+
+  mShuttingDown = true;
 
   if (mPolicy) {
     mPolicy->Deactivate();

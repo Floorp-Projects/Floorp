@@ -219,7 +219,7 @@ void
 RilSocketIO::ConsumeBuffer()
 {
   RefPtr<ReceiveTask> task = new ReceiveTask(this, mBuffer.release());
-  NS_WARN_IF(!mDispatcher->PostTask(task));
+  Unused << NS_WARN_IF(!mDispatcher->PostTask(task));
 }
 
 void

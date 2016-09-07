@@ -113,7 +113,7 @@ typedef Vector<Import, 0, SystemAllocPolicy> ImportVector;
 
 // Export describes the export of a definition in a Module to a field in the
 // export object. For functions, Export stores an index into the
-// FuncExportVector in Metadata. For memory and table exports, there is
+// FuncDefExportVector in Metadata. For memory and table exports, there is
 // at most one (default) memory/table so no index is needed. Note: a single
 // definition can be exported by multiple Exports in the ExportVector.
 //
@@ -149,7 +149,7 @@ typedef Vector<Export, 0, SystemAllocPolicy> ExportVector;
 
 struct DataSegment
 {
-    uint32_t memoryOffset;
+    InitExpr offset;
     uint32_t bytecodeOffset;
     uint32_t length;
 };
@@ -167,17 +167,9 @@ struct ElemSegment
     Uint32Vector elemCodeRangeIndices;
 
     ElemSegment() = default;
-    ElemSegment(uint32_t tableIndex,
-                InitExpr offset,
-                Uint32Vector&& elemFuncIndices,
-                Uint32Vector&& elemCodeRangeIndices)
-      : tableIndex(tableIndex),
-        offset(offset),
-        elemFuncIndices(Move(elemFuncIndices)),
-        elemCodeRangeIndices(Move(elemCodeRangeIndices))
-    {
-        MOZ_ASSERT(elemFuncIndices.length() == elemCodeRangeIndices.length());
-    }
+    ElemSegment(uint32_t tableIndex, InitExpr offset, Uint32Vector&& elemFuncIndices)
+      : tableIndex(tableIndex), offset(offset), elemFuncIndices(Move(elemFuncIndices))
+    {}
 
     WASM_DECLARE_SERIALIZABLE(ElemSegment)
 };
@@ -209,10 +201,14 @@ class Module : public RefCounted<Module>
 
     bool instantiateFunctions(JSContext* cx, Handle<FunctionVector> funcImports) const;
     bool instantiateMemory(JSContext* cx, MutableHandleWasmMemoryObject memory) const;
-    bool instantiateTable(JSContext* cx, MutableHandleWasmTableObject table,
+    bool instantiateTable(JSContext* cx,
+                          MutableHandleWasmTableObject table,
                           SharedTableVector* tables) const;
-    bool initElems(JSContext* cx, HandleWasmInstanceObject instanceObj,
-                   const ValVector& globalImports, HandleWasmTableObject tableObj) const;
+    bool initSegments(JSContext* cx,
+                      HandleWasmInstanceObject instance,
+                      Handle<FunctionVector> funcImports,
+                      HandleWasmMemoryObject memory,
+                      const ValVector& globalImports) const;
 
   public:
     Module(Bytes&& code,
