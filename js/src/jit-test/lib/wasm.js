@@ -113,3 +113,26 @@ function createI64(val) {
     }
     return ret;
 }
+
+// Fully test a module:
+// - ensure it validates.
+// - ensure it compiles and produces the expected result.
+// - ensure textToBinary(binaryToText(binary)) = binary
+// Preconditions:
+// - the binary module must export a function called "run".
+function wasmFullPass(text, expected, maybeImports) {
+    let binary = wasmTextToBinary(text);
+    assertEq(WebAssembly.validate(binary), true, "Must validate.");
+
+    let module = new WebAssembly.Module(binary);
+    let instance = new WebAssembly.Instance(module, maybeImports);
+    assertEq(instance.exports.run(), expected, "Initial module must return the expected result.");
+
+    let retext = wasmBinaryToText(binary);
+    let rebinary = wasmTextToBinary(retext);
+
+    assertEq(WebAssembly.validate(rebinary), true, "Recreated binary must validate.");
+    let remodule = new WebAssembly.Module(rebinary);
+    let reinstance = new WebAssembly.Instance(remodule, maybeImports);
+    assertEq(reinstance.exports.run(), expected, "Reformed module must return the expected result");
+}
