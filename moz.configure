@@ -245,6 +245,17 @@ def possible_makes(make, host):
 
 check_prog('GMAKE', possible_makes)
 
+# tup detection
+# ==============================================================
+@depends(build_backends)
+def tup_progs(build_backends):
+    for backend in build_backends:
+        if 'Tup' in backend:
+            return ['tup']
+    return None
+
+tup = check_prog('TUP', tup_progs)
+
 # Miscellaneous programs
 # ==============================================================
 check_prog('DOXYGEN', ('doxygen',), allow_missing=True)

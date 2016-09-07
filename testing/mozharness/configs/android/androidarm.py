@@ -43,7 +43,6 @@ config = {
         'verify-emulator',
         'install',
         'run-tests',
-        'stop-emulator',
     ],
     "emulator": {
             "name": "test-1",

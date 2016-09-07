@@ -274,8 +274,9 @@ class VideoPuppeteer(object):
                                                   script_args=[self.video])
 
     def __str__(self):
-        messages = ['%s - test url: %s: {' % (type(self).__name__,
-                                              self.test_url)]
+        messages = ['{} - test url: {}: '
+                    .format(type(self).__name__, self.test_url)]
+        messages += '{'
         if self.video:
             messages += [
                 '\t(video)',
@@ -283,6 +284,7 @@ class VideoPuppeteer(object):
                 '\tduration: {},'.format(self.duration),
                 '\texpected_duration: {},'.format(self.expected_duration),
                 '\tplayed: {}'.format(self.played),
+                '\tinterval: {}'.format(self.interval),
                 '\tlag: {},'.format(self.lag),
                 '\turl: {}'.format(self.video_url),
                 '\tsrc: {}'.format(self.video_src),
@@ -313,8 +315,10 @@ class TimeRanges:
         self.ranges = [(pair[0], pair[1]) for pair in ranges]
 
     def __repr__(self):
-        return 'TimeRanges: length: {}, ranges: {}'\
-               .format(self.length, self.ranges)
+        return (
+            'TimeRanges: length: {}, ranges: {}'
+            .format(self.length, self.ranges)
+        )
 
     def start(self, index):
         return self.ranges[index][0]
@@ -333,9 +337,11 @@ def playback_started(video):
     """
     try:
         played_ranges = video.played
-        return played_ranges.length > 0 and \
-               played_ranges.start(0) < played_ranges.end(0) and \
-               played_ranges.end(0) > 0.0
+        return (
+            played_ranges.length > 0 and
+            played_ranges.start(0) < played_ranges.end(0) and
+            played_ranges.end(0) > 0.0
+        )
     except Exception as e:
         print ('Got exception {}'.format(e))
         return False
@@ -358,8 +364,8 @@ def playback_done(video):
     # Check to see if the video has stalled. Accumulate the amount of lag
     # since the video started, and if it is too high, then raise.
     if video.stall_wait_time and (video.lag > video.stall_wait_time):
-        raise VideoException('Video %s stalled.\n%s' % (video.video_url,
-                                                        video))
+        raise VideoException('Video {} stalled.\n{}'
+                             .format(video.video_url, video))
 
     # We are cruising, so we are not done.
     return False

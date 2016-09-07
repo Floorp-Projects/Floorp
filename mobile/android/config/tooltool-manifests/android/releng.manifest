@@ -72,20 +72,11 @@
 "size": 51955340
 },
 {
-"version": "rustc 1.8.0 (db2939409 2016-04-11)",
-"size": 123218320,
-"digest": "7afcd7b39c4d5277db6b28951602aff4c698102ba45d3d811b353ca7446074beceebf03a2a529e323af19d73db4acbe96ec2bdad44def2e218ed36f55e82cab2",
+"version": "rustc 1.11.0 (9b21dcd6a 2016-08-15) repack",
+"size": 97552448,
+"digest": "272438c1692a46998dc44f22bd1fe18da1be7af2e7fdcf6c52709366c80c73e30637f0c3864f45c64edf46ce6a905538c14b2313983be973f9f29a2f191ec89b",
 "algorithm": "sha512",
 "filename": "rustc.tar.xz",
-"unpack": true
-},
-{
-"version": "rust stdlib repack 1.8.0 (db2939409 2016-04-11)",
-"size": 17874585,
-"visibility": "public",
-"digest": "bea72d352a70411240d95c7ab33e97d85be9cf0548807968dc721b14d816c70f4fd77a0ca1b43b851772ec06c0c1395b474ad342d506f8987fdbb070393c81f6",
-"algorithm": "sha512",
-"filename": "rust-std-lib.tar.bz2",
 "unpack": true
 },
 {

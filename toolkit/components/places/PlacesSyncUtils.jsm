@@ -51,32 +51,13 @@ const BookmarkSyncUtils = PlacesSyncUtils.bookmarks = Object.freeze({
 
   /**
    * Fetches a folder's children, ordered by their position within the folder.
-   * Children without a GUID will be assigned one.
    */
   fetchChildGuids: Task.async(function* (parentGuid) {
     PlacesUtils.SYNC_BOOKMARK_VALIDATORS.guid(parentGuid);
 
     let db = yield PlacesUtils.promiseDBConnection();
     let children = yield fetchAllChildren(db, parentGuid);
-    let childGuids = [];
-    let guidsToSet = new Map();
-    for (let child of children) {
-      let guid = child.guid;
-      if (!PlacesUtils.isValidGuid(guid)) {
-        // Give the child a GUID if it doesn't have one. This shouldn't happen,
-        // but the old bookmarks engine code does this, so we'll match its
-        // behavior until we're sure this can be removed.
-        guid = yield generateGuid(db);
-        BookmarkSyncLog.warn(`fetchChildGuids: Assigning ${
-          guid} to item without GUID ${child.id}`);
-        guidsToSet.set(child.id, guid);
-      }
-      childGuids.push(guid);
-    }
-    if (guidsToSet.size > 0) {
-      yield setGuids(guidsToSet);
-    }
-    return childGuids;
+    return children.map(child => child.guid);
   }),
 
   /**
@@ -153,45 +134,6 @@ const BookmarkSyncUtils = PlacesSyncUtils.bookmarks = Object.freeze({
   }),
 
   /**
-   * Ensures an item with the |itemId| has a GUID, assigning one if necessary.
-   * We should never have a bookmark without a GUID, but the old Sync bookmarks
-   * engine code does this, so we'll match its behavior until we're sure it's
-   * not needed.
-   *
-   * This method can be removed and replaced with `PlacesUtils.promiseItemGuid`
-   * once bug 1294291 lands.
-   *
-   * @return {Promise} resolved once the GUID has been updated.
-   * @resolves to the existing or new GUID.
-   * @rejects if the item does not exist.
-   */
-  ensureGuidForId: Task.async(function* (itemId) {
-    let guid;
-    try {
-      // Use the existing GUID if it exists. `promiseItemGuid` caches the GUID
-      // as a side effect, and throws if it's invalid.
-      guid = yield PlacesUtils.promiseItemGuid(itemId);
-    } catch (ex) {
-      BookmarkSyncLog.warn(`ensureGuidForId: Error fetching GUID for ${
-        itemId}`, ex);
-      if (!isInvalidCachedGuidError(ex)) {
-        throw ex;
-      }
-      // Give the item a GUID if it doesn't have one.
-      guid = yield PlacesUtils.withConnectionWrapper(
-        "BookmarkSyncUtils: ensureGuidForId", Task.async(function* (db) {
-          let guid = yield generateGuid(db);
-          BookmarkSyncLog.warn(`ensureGuidForId: Assigning ${
-            guid} to item without GUID ${itemId}`);
-          return setGuid(db, itemId, guid);
-        })
-      );
-
-    }
-    return guid;
-  }),
-
-  /**
    * Changes the GUID of an existing item.
    *
    * @return {Promise} resolved once the GUID has been changed.
@@ -200,13 +142,20 @@ const BookmarkSyncUtils = PlacesSyncUtils.bookmarks = Object.freeze({
    */
   changeGuid: Task.async(function* (oldGuid, newGuid) {
     PlacesUtils.SYNC_BOOKMARK_VALIDATORS.guid(oldGuid);
+    PlacesUtils.SYNC_BOOKMARK_VALIDATORS.guid(newGuid);
 
     let itemId = yield PlacesUtils.promiseItemId(oldGuid);
     if (PlacesUtils.isRootItem(itemId)) {
       throw new Error(`Cannot change GUID of Places root ${oldGuid}`);
     }
     return PlacesUtils.withConnectionWrapper("BookmarkSyncUtils: changeGuid",
-      db => setGuid(db, itemId, newGuid));
+      Task.async(function* (db) {
+        yield db.executeCached(`UPDATE moz_bookmarks SET guid = :newGuid
+          WHERE id = :itemId`, { newGuid, itemId });
+        PlacesUtils.invalidateCachedGuidFor(itemId);
+        return newGuid;
+      })
+    );
   }),
 
   /**
@@ -348,11 +297,6 @@ function notify(observers, notification, args) {
       observer[notification](...args);
     } catch (ex) {}
   }
-}
-
-function isInvalidCachedGuidError(error) {
-  return error && error.message ==
-    "Trying to update the GUIDs cache with an invalid GUID";
 }
 
 // A helper for whenever we want to know if a GUID doesn't exist in the places
@@ -784,23 +728,6 @@ var updateBookmarkMetadata = Task.async(function* (itemId, oldItem, newItem, upd
 
   return newItem;
 });
-
-function generateGuid(db) {
-  return db.executeCached("SELECT GENERATE_GUID() AS guid").then(rows =>
-    rows[0].getResultByName("guid"));
-}
-
-function setGuids(guids) {
-  return PlacesUtils.withConnectionWrapper("BookmarkSyncUtils: setGuids",
-    db => db.executeTransaction(function* () {
-      let promises = [];
-      for (let [itemId, newGuid] of guids) {
-        promises.push(setGuid(db, itemId, newGuid));
-      }
-      return Promise.all(promises);
-    })
-  );
-}
 
 var setGuid = Task.async(function* (db, itemId, newGuid) {
   yield db.executeCached(`UPDATE moz_bookmarks SET guid = :newGuid

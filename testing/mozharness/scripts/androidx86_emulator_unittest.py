@@ -22,7 +22,7 @@ sys.path.insert(1, os.path.dirname(sys.path[0]))
 from mozprocess import ProcessHandler
 
 from mozharness.base.log import FATAL
-from mozharness.base.script import BaseScript, PostScriptRun, PreScriptAction
+from mozharness.base.script import BaseScript, PostScriptRun, PreScriptAction, PostScriptAction
 from mozharness.base.vcs.vcsbase import VCSMixin
 from mozharness.mozilla.blob_upload import BlobUploadMixin, blobupload_config_options
 from mozharness.mozilla.mozbase import MozbaseMixin
@@ -76,14 +76,14 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
                          'create-virtualenv',
                          'install',
                          'run-tests',
-                         'stop-emulators'],
+                        ],
             default_actions=['clobber',
                              'start-emulators',
                              'download-and-extract',
                              'create-virtualenv',
                              'install',
                              'run-tests',
-                             'stop-emulators'],
+                            ],
             require_config_file=require_config_file,
             config={
                 'virtualenv_modules': self.virtualenv_modules,
@@ -822,7 +822,8 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
 
         self.buildbot_status(joint_tbpl_status, level=joint_log_level)
 
-    def stop_emulators(self):
+    @PostScriptAction('run-tests')
+    def stop_emulators(self, action, success=None):
         '''
         Report emulator health, then make sure that every emulator has been stopped
         '''

@@ -39,14 +39,15 @@ class MarionetteHarness(object):
         self.args = args or self.parse_args()
 
     def parse_args(self, logger_defaults=None):
-        parser = self._parser_class(usage='%(prog)s [options] test_file_or_dir <test_file_or_dir> ...')
+        parser = self._parser_class(
+            usage='%(prog)s [options] test_file_or_dir <test_file_or_dir> ...')
         parser.add_argument('--version', action='version',
-            help="Show version information.",
-            version="%(prog)s {version}"
-                    " (using marionette-driver: {driver_version}, ".format(
-                        version=__version__,
-                        driver_version=driver_version
-                    ))
+                            help="Show version information.",
+                            version="%(prog)s {version}"
+                            " (using marionette-driver: {driver_version}, ".format(
+                                version=__version__,
+                                driver_version=driver_version
+                            ))
         mozlog.commandline.add_logging_group(parser)
         args = parser.parse_args()
         parser.verify_usage(args)

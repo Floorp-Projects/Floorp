@@ -45,6 +45,10 @@ VRDisplayHost::AddLayer(VRLayerParent *aLayer)
     StartPresentation();
   }
   mDisplayInfo.mIsPresenting = mLayers.Length() > 0;
+
+  // Ensure that the content process receives the change immediately
+  VRManager* vm = VRManager::Get();
+  vm->RefreshVRDisplays();
 }
 
 void
@@ -55,6 +59,10 @@ VRDisplayHost::RemoveLayer(VRLayerParent *aLayer)
     StopPresentation();
   }
   mDisplayInfo.mIsPresenting = mLayers.Length() > 0;
+
+  // Ensure that the content process receives the change immediately
+  VRManager* vm = VRManager::Get();
+  vm->RefreshVRDisplays();
 }
 
 #if defined(XP_WIN)

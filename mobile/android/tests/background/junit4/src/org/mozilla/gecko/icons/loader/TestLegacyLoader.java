@@ -15,6 +15,8 @@ import org.mozilla.gecko.icons.IconResponse;
 import org.mozilla.gecko.icons.Icons;
 import org.robolectric.RuntimeEnvironment;
 
+import java.util.Iterator;
+
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -25,9 +27,27 @@ import static org.mockito.Mockito.verify;
 public class TestLegacyLoader {
     private static final String TEST_PAGE_URL = "http://www.mozilla.org";
     private static final String TEST_ICON_URL = "https://example.org/favicon.ico";
+    private static final String TEST_ICON_URL_2 = "https://example.com/page/favicon.ico";
+    private static final String TEST_ICON_URL_3 = "https://example.net/icon/favicon.ico";
 
     @Test
-    public void testDatabaseIsQueriesForNormalRequests() {
+    public void testDatabaseIsQueriesForNormalRequestsWithNetworkSkipped() {
+        final IconRequest request = Icons.with(RuntimeEnvironment.application)
+                .pageUrl(TEST_PAGE_URL)
+                .icon(IconDescriptor.createGenericIcon(TEST_ICON_URL))
+                .skipNetwork()
+                .build();
+
+        final LegacyLoader loader = spy(new LegacyLoader());
+        final IconResponse response = loader.load(request);
+
+        verify(loader).loadBitmapFromDatabase(request);
+
+        Assert.assertNull(response);
+    }
+
+    @Test
+    public void testNothingIsLoadedIfNetworkIsNotSkipped() {
         final IconRequest request = Icons.with(RuntimeEnvironment.application)
                 .pageUrl(TEST_PAGE_URL)
                 .icon(IconDescriptor.createGenericIcon(TEST_ICON_URL))
@@ -36,7 +56,7 @@ public class TestLegacyLoader {
         final LegacyLoader loader = spy(new LegacyLoader());
         final IconResponse response = loader.load(request);
 
-        verify(loader).loadBitmapFromDatabase(request);
+        verify(loader, never()).loadBitmapFromDatabase(request);
 
         Assert.assertNull(response);
     }
@@ -62,6 +82,7 @@ public class TestLegacyLoader {
         final IconRequest request = Icons.with(RuntimeEnvironment.application)
                 .pageUrl(TEST_PAGE_URL)
                 .icon(IconDescriptor.createGenericIcon(TEST_ICON_URL))
+                .skipNetwork()
                 .build();
 
         final Bitmap bitmap = mock(Bitmap.class);
@@ -73,5 +94,38 @@ public class TestLegacyLoader {
 
         Assert.assertNotNull(response);
         Assert.assertEquals(bitmap, response.getBitmap());
+    }
+
+    @Test
+    public void testLoaderOnlyLoadsIfThereIsOneIconLeft() {
+        final IconRequest request = Icons.with(RuntimeEnvironment.application)
+                .pageUrl(TEST_PAGE_URL)
+                .icon(IconDescriptor.createGenericIcon(TEST_ICON_URL))
+                .icon(IconDescriptor.createGenericIcon(TEST_ICON_URL_2))
+                .icon(IconDescriptor.createGenericIcon(TEST_ICON_URL_3))
+                .skipNetwork()
+                .build();
+
+        final LegacyLoader loader = spy(new LegacyLoader());
+        doReturn(mock(Bitmap.class)).when(loader).loadBitmapFromDatabase(request);
+
+        // First load doesn't load an icon.
+        Assert.assertNull(loader.load(request));
+
+        // Second load doesn't load an icon.
+        removeFirstIcon(request);
+        Assert.assertNull(loader.load(request));
+
+        // Now only one icon is left and a response will be returned.
+        removeFirstIcon(request);
+        Assert.assertNotNull(loader.load(request));
+    }
+
+    private void removeFirstIcon(IconRequest request) {
+        final Iterator<IconDescriptor> iterator = request.getIconIterator();
+        if (iterator.hasNext()) {
+            iterator.next();
+            iterator.remove();
+        }
     }
 }

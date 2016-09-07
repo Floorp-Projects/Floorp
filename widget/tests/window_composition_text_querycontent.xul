@@ -253,6 +253,27 @@ function checkRect(aRect, aExpectedRect, aMessage)
          aRect.height == aExpectedRect.height;
 }
 
+function checkRectArray(aQueryTextRectArrayResult, aExpectedTextRectArray, aMessage)
+{
+  for (var i = 1; i < aExpectedTextRectArray.length; ++i) {
+    var rect = { left: {}, top: {}, width: {}, height: {} };
+    try {
+      aQueryTextRectArrayResult.getCharacterRect(i, rect.left, rect.top, rect.width, rect.height);
+    } catch (e) {
+      ok(false, aMessage + ": failed to retrieve " + i + "th rect (" + e + ")");
+      return false;
+    }
+    function toRect(aRect)
+    {
+      return { left: aRect.left.value, top: aRect.top.value, width: aRect.width.value, height: aRect.height.value };
+    }
+    if (!checkRect(toRect(rect), aExpectedTextRectArray[i], aMessage + " " + i + "th rect")) {
+      return false;
+    }
+  }
+  return true;
+}
+
 function checkRectContainsRect(aRect, aContainer, aMessage)
 {
   var container = { left: Math.ceil(aContainer.left),
@@ -2282,6 +2303,13 @@ function runQueryTextRectInContentEditableTest()
   isSimilarTo(c.left, b.left + b.width, 2, description + "left of 'c' should be at similar to right of 'b'");
   is(c.height, b.height, description + "'b' and 'c' should be same height");
 
+  // "abc" as array
+  var abcAsArray = synthesizeQueryTextRectArray(kLFLen, 3);
+  if (!checkQueryContentResult(abcAsArray, description + "rect array for 'abc'") ||
+      !checkRectArray(abcAsArray, [a, b, c], description + "query text rect array result of 'abc' should match with each query text rect result")) {
+    return;
+  }
+
   // 2nd <p> (can be computed with the rect of 'c')
   var p2 = synthesizeQueryTextRect(kLFLen + 3, 1);
   if (!checkQueryContentResult(p2, description + "rect for 2nd <p>")) {
@@ -2292,10 +2320,17 @@ function runQueryTextRectInContentEditableTest()
   isSimilarTo(p2.left, c.left + c.width, 2, description + "left of a line breaker caused by 2nd <p> should be at similar to right of 'c'");
   is(p2.height, c.height, description + "'c' and a line breaker caused by 2nd <p> should be same height");
 
+  // 2nd <p> as array
+  var p2AsArray = synthesizeQueryTextRectArray(kLFLen + 3, 1);
+  if (!checkQueryContentResult(p2AsArray, description + "2nd <p>'s line breaker as array") ||
+      !checkRectArray(p2AsArray, [p2], description + "query text rect array result of 2nd <p> should match with each query text rect result")) {
+    return;
+  }
+
   if (kLFLen > 1) {
     // \n of \r\n
     var p2_2 = synthesizeQueryTextRect(kLFLen + 4, 1);
-    if (!checkQueryContentResult(p2_2, description + "rect for \n of \r\n caused by 2nd <p>")) {
+    if (!checkQueryContentResult(p2_2, description + "rect for \\n of \\r\\n caused by 2nd <p>")) {
       return;
     }
 
@@ -2303,6 +2338,13 @@ function runQueryTextRectInContentEditableTest()
     is(p2_2.left, p2.left, description + "'\\r' and '\\n' should be at same top");
     is(p2_2.height, p2.height, description + "'\\r' and '\\n' should be same height");
     is(p2_2.width, p2.width, description + "'\\r' and '\\n' should be same width");
+
+    // \n of \r\n as array
+    var p2_2AsArray = synthesizeQueryTextRectArray(kLFLen + 4, 1);
+    if (!checkQueryContentResult(p2_2AsArray, description + "rect array for \\n of \\r\\n caused by 2nd <p>") ||
+        !checkRectArray(p2_2AsArray, [p2_2], description + "query text rect array result of \\n of \\r\\n caused by 2nd <p> should match with each query text rect result")) {
+      return;
+    }
   }
 
   // "d"
@@ -2335,6 +2377,13 @@ function runQueryTextRectInContentEditableTest()
   isSimilarTo(f.left, e.left + e.width, 2, description + "left of 'f' should be at similar to right of 'e'");
   is(f.height, e.height, description + "'e' and 'f' should be same height");
 
+  // "def" as array
+  var defAsArray = synthesizeQueryTextRectArray(kLFLen * 2 + 3, 3);
+  if (!checkQueryContentResult(defAsArray, description + "rect array for 'def'") ||
+      !checkRectArray(defAsArray, [d, e, f], description + "query text rect array result of 'def' should match with each query text rect result")) {
+    return;
+  }
+
   // next of "f" (can be computed with rect of 'f')
   var next_f = synthesizeQueryTextRect(kLFLen * 2 + 6, 1);
   if (!checkQueryContentResult(next_f, description + "rect for next of 'f'")) {
@@ -2344,6 +2393,13 @@ function runQueryTextRectInContentEditableTest()
   is(next_f.top, d.top, 2, description + "'f' and next of 'f' should be at same top");
   isSimilarTo(next_f.left, f.left + f.width, 2, description + "left of next of 'f' should be at similar to right of 'f'");
   is(next_f.height, d.height, description + "'f' and next of 'f' should be same height");
+
+  // next of "f" as array
+  var next_fAsArray = synthesizeQueryTextRectArray(kLFLen * 2 + 6, 1);
+  if (!checkQueryContentResult(next_fAsArray, description + "rect array for next of 'f'") ||
+      !checkRectArray(next_fAsArray, [next_f], description + "query text rect array result of next of 'f' should match with each query text rect result")) {
+    return;
+  }
 
   // too big offset for the editor
   var tooBigOffset = synthesizeQueryTextRect(kLFLen * 2 + 7, 1);
@@ -2355,6 +2411,13 @@ function runQueryTextRectInContentEditableTest()
   is(tooBigOffset.left, next_f.left, description + "too big offset and next of 'f' should be at same left");
   is(tooBigOffset.height, next_f.height, description + "too big offset and next of 'f' should be same height");
   is(tooBigOffset.width, next_f.width, description + "too big offset and next of 'f' should be same width");
+
+  // too big offset for the editors as array
+  var tooBigOffsetAsArray = synthesizeQueryTextRectArray(kLFLen * 2 + 7, 1);
+  if (!checkQueryContentResult(tooBigOffsetAsArray, description + "rect array for too big offset") ||
+      !checkRectArray(tooBigOffsetAsArray, [tooBigOffset], description + "query text rect array result with too big offset should match with each query text rect result")) {
+    return;
+  }
 
   contenteditable.innerHTML = "<p>abc</p><p>def</p><p><br></p>";
                       // \n    0  123    4  567    8  9
@@ -2382,10 +2445,17 @@ function runQueryTextRectInContentEditableTest()
   is(p3.height, f.height, description + "'f' and a line breaker caused by 3rd <p> should be same height");
   isSimilarTo(p3.left, f.left + f.width, 2, description + "left of a line breaker caused by 3rd <p> should be similar to right of 'f'");
 
+  // 3rd <p> as array
+  var p3AsArray = synthesizeQueryTextRectArray(kLFLen * 2 + 6, 1);
+  if (!checkQueryContentResult(p3AsArray, description + "3rd <p>'s line breaker as array") ||
+      !checkRectArray(p3AsArray, [p3], description + "query text rect array result of 3rd <p> should match with each query text rect result")) {
+    return;
+  }
+
   if (kLFLen > 1) {
     // \n of \r\n
     var p3_2 = synthesizeQueryTextRect(kLFLen * 2 + 7, 1);
-    if (!checkQueryContentResult(p3_2, description + "rect for \n of \r\n caused by 3rd <p>")) {
+    if (!checkQueryContentResult(p3_2, description + "rect for \\n of \\r\\n caused by 3rd <p>")) {
       return;
     }
 
@@ -2393,6 +2463,13 @@ function runQueryTextRectInContentEditableTest()
     is(p3_2.left, p3.left, description + "'\\r' and '\\n' should be at same top");
     is(p3_2.height, p3.height, description + "'\\r' and '\\n' should be same height");
     is(p3_2.width, p3.width, description + "'\\r' and '\\n' should be same width");
+
+    // \n of \r\n as array
+    var p3_2AsArray = synthesizeQueryTextRectArray(kLFLen * 2 + 7, 1);
+    if (!checkQueryContentResult(p3_2AsArray, description + "rect array for \\n of \\r\\n caused by 3rd <p>") ||
+        !checkRectArray(p3_2AsArray, [p3_2], description + "query text rect array result of \\n of \\r\\n caused by 3rd <p> should match with each query text rect result")) {
+      return;
+    }
   }
 
   // <br> in 3rd <p>
@@ -2405,10 +2482,17 @@ function runQueryTextRectInContentEditableTest()
   isSimilarTo(br.height, d.height, 2, description + "'d' and a line breaker caused by <br> in 3rd <p> should be similar height");
   is(br.left, d.left, description + "left of a line breaker caused by <br> in 3rd <p> should be same left of 'd'");
 
+  // <br> in 3rd <p> as array
+  var brAsArray = synthesizeQueryTextRectArray(kLFLen * 3 + 6, 1);
+  if (!checkQueryContentResult(brAsArray, description + "<br> in 3rd <p> as array") ||
+      !checkRectArray(brAsArray, [br], description + "query text rect array result of <br> in 3rd <p> should match with each query text rect result")) {
+    return;
+  }
+
   if (kLFLen > 1) {
     // \n of \r\n
     var br_2 = synthesizeQueryTextRect(kLFLen * 3 + 7, 1);
-    if (!checkQueryContentResult(br_2, description + "rect for \n of \r\n caused by <br> in 3rd <p>")) {
+    if (!checkQueryContentResult(br_2, description + "rect for \\n of \\r\\n caused by <br> in 3rd <p>")) {
       return;
     }
 
@@ -2416,6 +2500,13 @@ function runQueryTextRectInContentEditableTest()
     is(br_2.left, br.left, description + "'\\r' and '\\n' should be at same top");
     is(br_2.height, br.height, description + "'\\r' and '\\n' should be same height");
     is(br_2.width, br.width, description + "'\\r' and '\\n' should be same width");
+
+    // \n of \r\n as array
+    var br_2AsArray = synthesizeQueryTextRectArray(kLFLen * 3 + 7, 1);
+    if (!checkQueryContentResult(br_2AsArray, description + "rect array for \\n of \\r\\n caused by <br> in 3rd <p>") ||
+        !checkRectArray(br_2AsArray, [br_2], description + "query text rect array result of \\n of \\r\\n caused by <br> in 3rd <p> should match with each query text rect result")) {
+      return;
+    }
   }
 
   // next of <br> in 3rd <p>
@@ -2429,6 +2520,13 @@ function runQueryTextRectInContentEditableTest()
   is(next_br.height, br.height, description + "next of <br> and <br> should be same height");
   is(next_br.width, br.width, description + "next of <br> and <br> should be same width");
 
+  // next of <br> in 3rd <p> as array
+  var next_brAsArray = synthesizeQueryTextRectArray(kLFLen * 4 + 6, 1);
+  if (!checkQueryContentResult(next_brAsArray, description + "rect array for next of <br> in 3rd <p>") ||
+      !checkRectArray(next_brAsArray, [next_br], description + "query text rect array result of next of <br> in 3rd <p> should match with each query text rect result")) {
+    return;
+  }
+
   // too big offset for the editor
   tooBigOffset = synthesizeQueryTextRect(kLFLen * 4 + 7, 1);
   if (!checkQueryContentResult(tooBigOffset, description + "rect for too big offset")) {
@@ -2439,6 +2537,13 @@ function runQueryTextRectInContentEditableTest()
   is(tooBigOffset.left, next_br.left, description + "too big offset and next of 3rd <p> should be at same left");
   is(tooBigOffset.height, next_br.height, description + "too big offset and next of 3rd <p> should be same height");
   is(tooBigOffset.width, next_br.width, description + "too big offset and next of 3rd <p> should be same width");
+
+  // too big offset for the editors as array
+  tooBigOffsetAsArray = synthesizeQueryTextRectArray(kLFLen * 4 + 7, 1);
+  if (!checkQueryContentResult(tooBigOffsetAsArray, description + "rect array for too big offset") ||
+      !checkRectArray(tooBigOffsetAsArray, [tooBigOffset], description + "query text rect array result with too big offset should match with each query text rect result")) {
+    return;
+  }
 
   contenteditable.innerHTML = "<p>abc</p><p>def</p><p></p>";
                       // \n    0  123    4  567    8
@@ -2457,7 +2562,7 @@ function runQueryTextRectInContentEditableTest()
   is(f.height, e.height, description + "'e' and 'f' should be same height");
 
   // 3rd <p> (can be computed with rect of 'f')
-  var p3 = synthesizeQueryTextRect(kLFLen * 2 + 6, 1);
+  p3 = synthesizeQueryTextRect(kLFLen * 2 + 6, 1);
   if (!checkQueryContentResult(p3, description + "rect for 3rd <p>")) {
     return;
   }
@@ -2466,10 +2571,17 @@ function runQueryTextRectInContentEditableTest()
   is(p3.height, f.height, description + "'f' and a line breaker caused by 3rd <p> should be same height");
   isSimilarTo(p3.left, f.left + f.width, 2, description + "left of a line breaker caused by 3rd <p> should be similar to right of 'f'");
 
+  // 3rd <p> as array
+  p3AsArray = synthesizeQueryTextRectArray(kLFLen * 2 + 6, 1);
+  if (!checkQueryContentResult(p3AsArray, description + "3rd <p>'s line breaker as array") ||
+      !checkRectArray(p3AsArray, [p3], description + "query text rect array result of 3rd <p> should match with each query text rect result")) {
+    return;
+  }
+
   if (kLFLen > 1) {
     // \n of \r\n
     p3_2 = synthesizeQueryTextRect(kLFLen * 2 + 7, 1);
-    if (!checkQueryContentResult(p3_2, description + "rect for \n of \r\n caused by 3rd <p>")) {
+    if (!checkQueryContentResult(p3_2, description + "rect for \\n of \\r\\n caused by 3rd <p>")) {
       return;
     }
 
@@ -2477,6 +2589,13 @@ function runQueryTextRectInContentEditableTest()
     is(p3_2.left, p3.left, description + "'\\r' and '\\n' should be at same top");
     is(p3_2.height, p3.height, description + "'\\r' and '\\n' should be same height");
     is(p3_2.width, p3.width, description + "'\\r' and '\\n' should be same width");
+
+    // \n of \r\n as array
+    p3_2AsArray = synthesizeQueryTextRectArray(kLFLen * 2 + 7, 1);
+    if (!checkQueryContentResult(p3_2AsArray, description + "rect array for \\n of \\r\\n caused by 3rd <p>") ||
+        !checkRectArray(p3_2AsArray, [p3_2], description + "query text rect array result of \\n of \\r\\n caused by 3rd <p> should match with each query text rect result")) {
+      return;
+    }
   }
 
   // next of 3rd <p>
@@ -2489,6 +2608,13 @@ function runQueryTextRectInContentEditableTest()
   isSimilarTo(next_p3.left, d.left, 2, description + "left of next of 3rd <p> should be at similar to left of 'd'");
   isSimilarTo(next_p3.height, d.height, 2, description + "next of 3rd <p> and 'd' should be similar height");
 
+  // next of 3rd <p> as array
+  var next_p3AsArray = synthesizeQueryTextRectArray(kLFLen * 3 + 6, 1);
+  if (!checkQueryContentResult(next_p3AsArray, description + "next of 3rd <p> as array") ||
+      !checkRectArray(next_p3AsArray, [next_p3], description + "query text rect array result of next of 3rd <p> should match with each query text rect result")) {
+    return;
+  }
+
   // too big offset for the editor
   tooBigOffset = synthesizeQueryTextRect(kLFLen * 3 + 7, 1);
   if (!checkQueryContentResult(tooBigOffset, description + "rect for too big offset")) {
@@ -2499,6 +2625,13 @@ function runQueryTextRectInContentEditableTest()
   is(tooBigOffset.left, next_p3.left, description + "too big offset and next of 3rd <p> should be at same left");
   is(tooBigOffset.height, next_p3.height, description + "too big offset and next of 3rd <p> should be same height");
   is(tooBigOffset.width, next_p3.width, description + "too big offset and next of 3rd <p> should be same width");
+
+  // too big offset for the editors as array
+  tooBigOffsetAsArray = synthesizeQueryTextRectArray(kLFLen * 3 + 7, 1);
+  if (!checkQueryContentResult(tooBigOffsetAsArray, description + "rect array for too big offset") ||
+      !checkRectArray(tooBigOffsetAsArray, [tooBigOffset], description + "query text rect array result with too big offset should match with each query text rect result")) {
+    return;
+  }
 
   contenteditable.innerHTML = "abc<br>def";
                       // \n    0123   456
@@ -2532,6 +2665,13 @@ function runQueryTextRectInContentEditableTest()
   isSimilarTo(c.left, b.left + b.width, 2, description + "left of 'c' should be at similar to right of 'b'");
   is(c.height, b.height, description + "'b' and 'c' should be same height");
 
+  // "abc" as array
+  abcAsArray = synthesizeQueryTextRectArray(0, 3);
+  if (!checkQueryContentResult(abcAsArray, description + "rect array for 'abc'") ||
+      !checkRectArray(abcAsArray, [a, b, c], description + "query text rect array result of 'abc' should match with each query text rect result")) {
+    return;
+  }
+
   // <br> (can be computed with the rect of 'c')
   br = synthesizeQueryTextRect(3, 1);
   if (!checkQueryContentResult(br, description + "rect for <br>")) {
@@ -2541,6 +2681,13 @@ function runQueryTextRectInContentEditableTest()
   is(br.top, c.top, description + "'c' and a line breaker caused by <br> should be at same top");
   isSimilarTo(br.left, c.left + c.width, 2, description + "left of a line breaker caused by <br> should be at similar to right of 'c'");
   is(br.height, c.height, description + "'c' and a line breaker caused by <br> should be same height");
+
+  // <br> as array
+  brAsArray = synthesizeQueryTextRectArray(3, 1);
+  if (!checkQueryContentResult(brAsArray, description + "<br>'s line breaker as array") ||
+      !checkRectArray(brAsArray, [br], description + "query text rect array result of <br> should match with each query text rect result")) {
+    return;
+  }
 
   if (kLFLen > 1) {
     // \n of \r\n
@@ -2553,6 +2700,13 @@ function runQueryTextRectInContentEditableTest()
     is(br_2.left, br.left, description + "'\\r' and '\\n' should be at same top");
     is(br_2.height, br.height, description + "'\\r' and '\\n' should be same height");
     is(br_2.width, br.width, description + "'\\r' and '\\n' should be same width");
+
+    // \n of \r\n as array
+    var br_2AsArray = synthesizeQueryTextRectArray(4, 1);
+    if (!checkQueryContentResult(br_2AsArray, description + "rect array for \\n of \\r\\n caused by <br>") ||
+        !checkRectArray(br_2AsArray, [br_2], description + "query text rect array result of \\n of \\r\\n caused by <br> should match with each query text rect result")) {
+      return;
+    }
   }
 
   // "d"
@@ -2585,6 +2739,13 @@ function runQueryTextRectInContentEditableTest()
   isSimilarTo(f.left, e.left + e.width, 2, description + "left of 'f' should be at similar to right of 'e'");
   is(f.height, e.height, description + "'e' and 'f' should be same height");
 
+  // "def" as array
+  defAsArray = synthesizeQueryTextRectArray(kLFLen + 3, 3);
+  if (!checkQueryContentResult(defAsArray, description + "rect array for 'def'") ||
+      !checkRectArray(defAsArray, [d, e, f], description + "query text rect array result of 'def' should match with each query text rect result")) {
+    return;
+  }
+
   // next of "f" (can be computed with rect of 'f')
   next_f = synthesizeQueryTextRect(kLFLen + 6, 1);
   if (!checkQueryContentResult(next_f, description + "rect for next of 'f'")) {
@@ -2594,6 +2755,13 @@ function runQueryTextRectInContentEditableTest()
   is(next_f.top, d.top, 2, description + "'f' and next of 'f' should be at same top");
   isSimilarTo(next_f.left, f.left + f.width, 2, description + "left of next of 'f' should be at similar to right of 'f'");
   is(next_f.height, d.height, description + "'f' and next of 'f' should be same height");
+
+  // next of "f" as array
+  next_fAsArray = synthesizeQueryTextRectArray(kLFLen + 6, 1);
+  if (!checkQueryContentResult(next_fAsArray, description + "rect array for next of 'f'") ||
+      !checkRectArray(next_fAsArray, [next_f], description + "query text rect array result of next of 'f' should match with each query text rect result")) {
+    return;
+  }
 
   // too big offset for the editor
   tooBigOffset = synthesizeQueryTextRect(kLFLen + 7, 1);
@@ -2605,6 +2773,13 @@ function runQueryTextRectInContentEditableTest()
   is(tooBigOffset.left, next_f.left, description + "too big offset and next of 'f' should be at same left");
   is(tooBigOffset.height, next_f.height, description + "too big offset and next of 'f' should be same height");
   is(tooBigOffset.width, next_f.width, description + "too big offset and next of 'f' should be same width");
+
+  // too big offset for the editors as array
+  tooBigOffsetAsArray = synthesizeQueryTextRectArray(kLFLen + 7, 1);
+  if (!checkQueryContentResult(tooBigOffsetAsArray, description + "rect array for too big offset") ||
+      !checkRectArray(tooBigOffsetAsArray, [tooBigOffset], description + "query text rect array result with too big offset should match with each query text rect result")) {
+    return;
+  }
 
   // Note that this case does not have an empty line at the end.
   contenteditable.innerHTML = "abc<br>def<br>";
@@ -2633,10 +2808,17 @@ function runQueryTextRectInContentEditableTest()
   is(br2.height, f.height, description + "'f' and a line breaker caused by 2nd <br> should be same height");
   isSimilarTo(br2.left, f.left + f.width, 2, description + "left of a line breaker caused by 2nd <br> should be similar to right of 'f'");
 
+  // 2nd <br> as array
+  var br2AsArray = synthesizeQueryTextRectArray(kLFLen * 2 + 6, 1);
+  if (!checkQueryContentResult(br2AsArray, description + "2nd <br>'s line breaker as array") ||
+      !checkRectArray(br2AsArray, [br2], description + "query text rect array result of 2nd <br> should match with each query text rect result")) {
+    return;
+  }
+
   if (kLFLen > 1) {
     // \n of \r\n
     var br2_2 = synthesizeQueryTextRect(kLFLen + 7, 1);
-    if (!checkQueryContentResult(br2_2, description + "rect for \n of \r\n caused by 2nd <br>")) {
+    if (!checkQueryContentResult(br2_2, description + "rect for \\n of \\r\\n caused by 2nd <br>")) {
       return;
     }
 
@@ -2644,6 +2826,13 @@ function runQueryTextRectInContentEditableTest()
     is(br2_2.left, br2.left, description + "'\\r' and '\\n' should be at same top");
     is(br2_2.height, br2.height, description + "'\\r' and '\\n' should be same height");
     is(br2_2.width, br2.width, description + "'\\r' and '\\n' should be same width");
+
+    // \n of \r\n as array
+    var br2_2AsArray = synthesizeQueryTextRectArray(kLFLen + 7, 1);
+    if (!checkQueryContentResult(br2_2AsArray, description + "rect array for \\n of \\r\\n caused by 2nd <br>") ||
+        !checkRectArray(br2_2AsArray, [br2_2], description + "query text rect array result of \\n of \\r\\n caused by 2nd <br> should match with each query text rect result")) {
+      return;
+    }
   }
 
   // next of 2nd <br>
@@ -2657,6 +2846,13 @@ function runQueryTextRectInContentEditableTest()
   is(next_br2.height, br2.height, description + "2nd <br> and next of 2nd <br> should be same height");
   is(next_br2.width, br2.width, description + "2nd <br> and next of 2nd <br> should be same width");
 
+  // next of 2nd <br> as array
+  var next_br2AsArray = synthesizeQueryTextRectArray(kLFLen * 2 + 6, 1);
+  if (!checkQueryContentResult(next_br2AsArray, description + "rect array for next of 2nd <br>") ||
+      !checkRectArray(next_br2AsArray, [next_br2], description + "query text rect array result of next of 2nd <br> should match with each query text rect result")) {
+    return;
+  }
+
   // too big offset for the editor
   tooBigOffset = synthesizeQueryTextRect(kLFLen * 2 + 7, 1);
   if (!checkQueryContentResult(tooBigOffset, description + "rect for too big offset")) {
@@ -2667,6 +2863,13 @@ function runQueryTextRectInContentEditableTest()
   is(tooBigOffset.left, next_br2.left, description + "too big offset and next of 2nd <br> should be at same left");
   is(tooBigOffset.height, next_br2.height, description + "too big offset and next of 2nd <br> should be same height");
   is(tooBigOffset.width, next_br2.width, description + "too big offset and next of 2nd <br> should be same width");
+
+  // too big offset for the editors as array
+  tooBigOffsetAsArray = synthesizeQueryTextRectArray(kLFLen * 2 + 7, 1);
+  if (!checkQueryContentResult(tooBigOffsetAsArray, description + "rect array for too big offset") ||
+      !checkRectArray(tooBigOffsetAsArray, [tooBigOffset], description + "query text rect array result with too big offset should match with each query text rect result")) {
+    return;
+  }
 
   contenteditable.innerHTML = "abc<br>def<br><br>";
                       // \n    0123   4567   8
@@ -2694,10 +2897,17 @@ function runQueryTextRectInContentEditableTest()
   is(br2.height, f.height, description + "'f' and a line breaker caused by 2nd <br> should be same height");
   ok(f.left < br2.left, description + "left of a line breaker caused by 2nd <br> should be bigger than left of 'f', f.left=" + f.left + ", br2.left=" + br2.left);
 
+  // 2nd <br> as array
+  br2AsArray = synthesizeQueryTextRectArray(kLFLen + 6, 1);
+  if (!checkQueryContentResult(br2AsArray, description + "2nd <br>'s line breaker as array") ||
+      !checkRectArray(br2AsArray, [br2], description + "query text rect array result of 2nd <br> should match with each query text rect result")) {
+    return;
+  }
+
   if (kLFLen > 1) {
     // \n of \r\n
     br2_2 = synthesizeQueryTextRect(kLFLen + 7, 1);
-    if (!checkQueryContentResult(br2_2, description + "rect for \n of \r\n caused by 2nd <br>")) {
+    if (!checkQueryContentResult(br2_2, description + "rect for \\n of \\r\\n caused by 2nd <br>")) {
       return;
     }
 
@@ -2705,6 +2915,13 @@ function runQueryTextRectInContentEditableTest()
     is(br2_2.left, br2.left, description + "'\\r' and '\\n' should be at same top");
     is(br2_2.height, br2.height, description + "'\\r' and '\\n' should be same height");
     is(br2_2.width, br2.width, description + "'\\r' and '\\n' should be same width");
+
+    // \n of \r\n as array
+    var br2_2AsArray = synthesizeQueryTextRectArray(kLFLen + 7, 1);
+    if (!checkQueryContentResult(br2_2AsArray, description + "rect array for \\n of \\r\\n caused by 2nd <br>") ||
+        !checkRectArray(br2_2AsArray, [br2_2], description + "query text rect array result of \\n of \\r\\n caused by 2nd <br> should match with each query text rect result")) {
+      return;
+    }
   }
 
   // 3rd <br>
@@ -2717,10 +2934,17 @@ function runQueryTextRectInContentEditableTest()
   isSimilarTo(br3.left, d.left, 2, description + "left of next of 3rd <br> should be at similar to left of 'd'");
   isSimilarTo(br3.height, d.height, 2, description + "next of 3rd <br> and 'd' should be similar height");
 
+  // 3rd <br> as array
+  var br3AsArray = synthesizeQueryTextRectArray(kLFLen + 6, 1);
+  if (!checkQueryContentResult(br3AsArray, description + "3rd <br>'s line breaker as array") ||
+      !checkRectArray(br3AsArray, [br3], description + "query text rect array result of 3rd <br> should match with each query text rect result")) {
+    return;
+  }
+
   if (kLFLen > 1) {
     // \n of \r\n
     var br3_2 = synthesizeQueryTextRect(kLFLen * 2 + 7, 1);
-    if (!checkQueryContentResult(br3_2, description + "rect for \n of \r\n caused by 3rd <br>")) {
+    if (!checkQueryContentResult(br3_2, description + "rect for \\n of \\r\\n caused by 3rd <br>")) {
       return;
     }
 
@@ -2728,6 +2952,13 @@ function runQueryTextRectInContentEditableTest()
     is(br3_2.left, br3.left, description + "'\\r' and '\\n' should be at same left");
     is(br3_2.height, br3.height, description + "'\\r' and '\\n' should be same height");
     is(br3_2.width, br3.width, description + "'\\r' and '\\n' should be same width");
+
+    // \n of \r\n as array
+    var br2_2AsArray = synthesizeQueryTextRectArray(kLFLen * 2 + 7, 1);
+    if (!checkQueryContentResult(br2_2AsArray, description + "rect array for \\n of \\r\\n caused by 3rd <br>") ||
+        !checkRectArray(br2_2AsArray, [br2_2], description + "query text rect array result of \\n of \\r\\n caused by 3rd <br> should match with each query text rect result")) {
+      return;
+    }
   }
 
   // next of 3rd <br>
@@ -2741,6 +2972,13 @@ function runQueryTextRectInContentEditableTest()
   is(next_br3.height, br3.height, description + "3rd <br> and next of 3rd <br> should be same height");
   is(next_br3.width, br3.width, description + "3rd <br> and next of 3rd <br> should be same width");
 
+  // next of 3rd <br> as array
+  var next_br3AsArray = synthesizeQueryTextRectArray(kLFLen * 3 + 6, 1);
+  if (!checkQueryContentResult(next_br3AsArray, description + "rect array for next of 3rd <br>") ||
+      !checkRectArray(next_br3AsArray, [next_br3], description + "query text rect array result of next of 3rd <br> should match with each query text rect result")) {
+    return;
+  }
+
   // too big offset for the editor
   tooBigOffset = synthesizeQueryTextRect(kLFLen * 3 + 7, 1);
   if (!checkQueryContentResult(tooBigOffset, description + "rect for too big offset")) {
@@ -2751,6 +2989,13 @@ function runQueryTextRectInContentEditableTest()
   is(tooBigOffset.left, next_br3.left, description + "too big offset and next of 3rd <br> should be at same left");
   is(tooBigOffset.height, next_br3.height, description + "too big offset and next of 3rd <br> should be same height");
   is(tooBigOffset.width, next_br3.width, description + "too big offset and next of 3rd <br> should be same width");
+
+  // too big offset for the editors as array
+  tooBigOffsetAsArray = synthesizeQueryTextRectArray(kLFLen * 2 + 7, 1);
+  if (!checkQueryContentResult(tooBigOffsetAsArray, description + "rect array for too big offset") ||
+      !checkRectArray(tooBigOffsetAsArray, [tooBigOffset], description + "query text rect array result with too big offset should match with each query text rect result")) {
+    return;
+  }
 }
 
 function runCharAtPointTest(aFocusedEditor, aTargetName)
@@ -4252,41 +4497,95 @@ function runCSSTransformTest()
 
     var editorRectTranslated = synthesizeQueryEditorRect();
     if (!checkQueryContentResult(editorRectTranslated,
-          "runCSSTransformTest: editorRectTranslated") ||
+          "runCSSTransformTest: editorRectTranslated, " + textarea.style.transform) ||
         !checkRect(editorRectTranslated, movedRect(editorRect, 10, 15),
-          "runCSSTransformTest: editorRectTranslated")) {
+          "runCSSTransformTest: editorRectTranslated, " + textarea.style.transform)) {
       return;
     }
     var firstCharRectTranslated = synthesizeQueryTextRect(0, 1);
     if (!checkQueryContentResult(firstCharRectTranslated,
-          "runCSSTransformTest: firstCharRectTranslated") ||
+          "runCSSTransformTest: firstCharRectTranslated, " + textarea.style.transform) ||
         !checkRect(firstCharRectTranslated, movedRect(firstCharRect, 10, 15),
-          "runCSSTransformTest: firstCharRectTranslated")) {
+          "runCSSTransformTest: firstCharRectTranslated, " + textarea.style.transform)) {
       return;
     }
     var lastCharRectTranslated = synthesizeQueryTextRect(textarea.value.length - 1, textarea.value.length);
     if (!checkQueryContentResult(lastCharRectTranslated,
-          "runCSSTransformTest: lastCharRectTranslated") ||
+          "runCSSTransformTest: lastCharRectTranslated, " + textarea.style.transform) ||
         !checkRect(lastCharRectTranslated, movedRect(lastCharRect, 10, 15),
-          "runCSSTransformTest: lastCharRectTranslated")) {
+          "runCSSTransformTest: lastCharRectTranslated, " + textarea.style.transform)) {
       return;
     }
     var caretRectTranslated = synthesizeQueryCaretRect(textarea.selectionStart);
     if (!checkQueryContentResult(caretRectTranslated,
-          "runCSSTransformTest: caretRectTranslated") ||
+          "runCSSTransformTest: caretRectTranslated, " + textarea.style.transform) ||
         !checkRect(caretRectTranslated, movedRect(caretRect, 10, 15),
-          "runCSSTransformTest: caretRectTranslated")) {
+          "runCSSTransformTest: caretRectTranslated, " + textarea.style.transform)) {
       return;
     }
     var caretRectBeforeFirstCharTranslated = synthesizeQueryCaretRect(0);
     if (!checkQueryContentResult(caretRectBeforeFirstCharTranslated,
-          "runCSSTransformTest: caretRectBeforeFirstCharTranslated") ||
+          "runCSSTransformTest: caretRectBeforeFirstCharTranslated, " + textarea.style.transform) ||
         !checkRect(caretRectBeforeFirstCharTranslated, movedRect(caretRectBeforeFirstChar, 10, 15),
-          "runCSSTransformTest: caretRectBeforeFirstCharTranslated")) {
+          "runCSSTransformTest: caretRectBeforeFirstCharTranslated, " + textarea.style.transform)) {
+      return;
+    }
+    var firstCharRectTranslatedAsArray = synthesizeQueryTextRectArray(0, 1);
+    if (!checkQueryContentResult(firstCharRectTranslatedAsArray, "runCSSTransformTest: firstCharRectTranslatedAsArray, " + textarea.style.transform) ||
+        !checkRectArray(firstCharRectTranslatedAsArray, [firstCharRectTranslated], "runCSSTransformTest: firstCharRectTranslatedAsArray, " + textarea.style.transform)) {
+      return;
+    }
+    var lastCharRectTranslatedAsArray = synthesizeQueryTextRectArray(textarea.value.length - 1, textarea.value.length);
+    if (!checkQueryContentResult(lastCharRectTranslatedAsArray, "runCSSTransformTest: lastCharRectTranslatedAsArray, " + textarea.style.transform) ||
+        !checkRectArray(lastCharRectTranslatedAsArray, [lastCharRectTranslated], "runCSSTransformTest: lastCharRectTranslatedAsArray, " + textarea.style.transform)) {
       return;
     }
 
     // XXX It's too difficult to check the result with scale and rotate...
+    //     For now, let's check if query text rect and query text rect array returns same rect.
+    textarea.style.transform = "scale(1.5)";
+    firstCharRectTranslated = synthesizeQueryTextRect(0, 1);
+    if (!checkQueryContentResult(firstCharRectTranslated,
+          "runCSSTransformTest: firstCharRectTranslated, " + textarea.style.transform)) {
+      return;
+    }
+    lastCharRectTranslated = synthesizeQueryTextRect(textarea.value.length - 1, textarea.value.length);
+    if (!checkQueryContentResult(lastCharRectTranslated,
+          "runCSSTransformTest: lastCharRectTranslated, " + textarea.style.transform)) {
+      return;
+    }
+    firstCharRectTranslatedAsArray = synthesizeQueryTextRectArray(0, 1);
+    if (!checkQueryContentResult(firstCharRectTranslatedAsArray, "runCSSTransformTest: firstCharRectTranslatedAsArray, " + textarea.style.transform) ||
+        !checkRectArray(firstCharRectTranslatedAsArray, [firstCharRectTranslated], "runCSSTransformTest: firstCharRectTranslatedAsArray, " + textarea.style.transform)) {
+      return;
+    }
+    lastCharRectTranslatedAsArray = synthesizeQueryTextRectArray(textarea.value.length - 1, textarea.value.length);
+    if (!checkQueryContentResult(lastCharRectTranslatedAsArray, "runCSSTransformTest: lastCharRectTranslatedAsArray, " + textarea.style.transform) ||
+        !checkRectArray(lastCharRectTranslatedAsArray, [lastCharRectTranslated], "runCSSTransformTest: lastCharRectTranslatedAsArray, " + textarea.style.transform)) {
+      return;
+    }
+
+    textarea.style.transform = "rotate(30deg)";
+    firstCharRectTranslated = synthesizeQueryTextRect(0, 1);
+    if (!checkQueryContentResult(firstCharRectTranslated,
+          "runCSSTransformTest: firstCharRectTranslated, " + textarea.style.transform)) {
+      return;
+    }
+    lastCharRectTranslated = synthesizeQueryTextRect(textarea.value.length - 1, textarea.value.length);
+    if (!checkQueryContentResult(lastCharRectTranslated,
+          "runCSSTransformTest: lastCharRectTranslated, " + textarea.style.transform)) {
+      return;
+    }
+    firstCharRectTranslatedAsArray = synthesizeQueryTextRectArray(0, 1);
+    if (!checkQueryContentResult(firstCharRectTranslatedAsArray, "runCSSTransformTest: firstCharRectTranslatedAsArray, " + textarea.style.transform) ||
+        !checkRectArray(firstCharRectTranslatedAsArray, [firstCharRectTranslated], "runCSSTransformTest: firstCharRectTranslatedAsArray, " + textarea.style.transform)) {
+      return;
+    }
+    lastCharRectTranslatedAsArray = synthesizeQueryTextRectArray(textarea.value.length - 1, textarea.value.length);
+    if (!checkQueryContentResult(lastCharRectTranslatedAsArray, "runCSSTransformTest: lastCharRectTranslatedAsArray, " + textarea.style.transform) ||
+        !checkRectArray(lastCharRectTranslatedAsArray, [lastCharRectTranslated], "runCSSTransformTest: lastCharRectTranslatedAsArray, " + textarea.style.transform)) {
+      return;
+    }
   } finally {
     textarea.style.transform = "";
   }
@@ -4305,6 +4604,11 @@ function runBug722639Test()
     return;
   }
   ok(true, "runBug722639Test: 1st line, top=" + firstLine.top + ", left=" + firstLine.left);
+  var firstLineAsArray = synthesizeQueryTextRectArray(0, 1);
+  if (!checkQueryContentResult(firstLineAsArray, "runBug722639Test: 1st line as array") ||
+      !checkRectArray(firstLineAsArray, [firstLine], "runBug722639Test: 1st line as array should match with text rect result")) {
+    return;
+  }
   if (kLFLen > 1) {
     var firstLineLF = synthesizeQueryTextRect(1, 1);
     if (!checkQueryContentResult(firstLineLF,
@@ -4315,6 +4619,11 @@ function runBug722639Test()
     is(firstLineLF.left, firstLine.left, "runBug722639Test: 1st line's \\n rect should be same as 1st line's \\r rect");
     is(firstLineLF.height, firstLine.height, "runBug722639Test: 1st line's \\n rect should be same as 1st line's \\r rect");
     is(firstLineLF.width, firstLine.width, "runBug722639Test: 1st line's \\n rect should be same as 1st line's \\r rect");
+    var firstLineLFAsArray = synthesizeQueryTextRectArray(1, 1);
+    if (!checkQueryContentResult(firstLineLFAsArray, "runBug722639Test: 1st line's \\n rect as array") ||
+        !checkRectArray(firstLineLFAsArray, [firstLineLF], "runBug722639Test: 1st line's rect as array should match with text rect result")) {
+      return;
+    }
   }
   var secondLine = synthesizeQueryTextRect(kLFLen, 1);
   if (!checkQueryContentResult(secondLine,
@@ -4322,6 +4631,11 @@ function runBug722639Test()
     return;
   }
   ok(true, "runBug722639Test: 2nd line, top=" + secondLine.top + ", left=" + secondLine.left);
+  var secondLineAsArray = synthesizeQueryTextRectArray(kLFLen, 1);
+  if (!checkQueryContentResult(secondLineAsArray, "runBug722639Test: 2nd line as array") ||
+      !checkRectArray(secondLineAsArray, [secondLine], "runBug722639Test: 2nd line as array should match with text rect result")) {
+    return;
+  }
   if (kLFLen > 1) {
     var secondLineLF = synthesizeQueryTextRect(kLFLen + 1, 1);
     if (!checkQueryContentResult(secondLineLF,
@@ -4332,6 +4646,11 @@ function runBug722639Test()
     is(secondLineLF.left, secondLine.left, "runBug722639Test: 2nd line's \\n rect should be same as 2nd line's \\r rect");
     is(secondLineLF.height, secondLine.height, "runBug722639Test: 2nd line's \\n rect should be same as 2nd line's \\r rect");
     is(secondLineLF.width, secondLine.width, "runBug722639Test: 2nd line's \\n rect should be same as 2nd line's \\r rect");
+    var secondLineLFAsArray = synthesizeQueryTextRectArray(kLFLen + 1, 1);
+    if (!checkQueryContentResult(secondLineLFAsArray, "runBug722639Test: 2nd line's \\n rect as array") ||
+        !checkRectArray(secondLineLFAsArray, [secondLineLF], "runBug722639Test: 2nd line's rect as array should match with text rect result")) {
+      return;
+    }
   }
   var lineHeight = secondLine.top -  firstLine.top;
   ok(lineHeight > 0,
@@ -4348,6 +4667,11 @@ function runBug722639Test()
       return;
     }
     ok(true, "runBug722639Test: " + i + "th line, top=" + currentLine.top + ", left=" + currentLine.left);
+    var currentLineAsArray = synthesizeQueryTextRectArray(kLFLen * (i - 1), 1);
+    if (!checkQueryContentResult(currentLineAsArray, "runBug722639Test: " + i + "th line as array") ||
+        !checkRectArray(currentLineAsArray, [currentLine], "runBug722639Test: " + i + "th line as array should match with text rect result")) {
+      return;
+    }
     // NOTE: the top position may be 1px larger or smaller than other lines
     //       due to sub pixel positioning.
     if (Math.abs(currentLine.top - (previousTop + lineHeight)) <= 1) {
@@ -4370,6 +4694,11 @@ function runBug722639Test()
       is(currentLineLF.left, currentLine.left, "runBug722639Test: " + i + "th line's \\n rect should be same as same line's \\r rect");
       is(currentLineLF.height, currentLine.height, "runBug722639Test: " + i + "th line's \\n rect should be same as same line's \\r rect");
       is(currentLineLF.width, currentLine.width, "runBug722639Test: " + i + "th line's \\n rect should be same as same line's \\r rect");
+      var currentLineLFAsArray = synthesizeQueryTextRectArray(kLFLen * (i - 1) + 1, 1);
+      if (!checkQueryContentResult(currentLineLFAsArray, "runBug722639Test: " + i + "th line's \\n rect as array") ||
+          !checkRectArray(currentLineLFAsArray, [currentLineLF], "runBug722639Test: " + i + "th line's rect as array should match with text rect result")) {
+        return;
+      }
     }
     previousTop = currentLine.top;
   }

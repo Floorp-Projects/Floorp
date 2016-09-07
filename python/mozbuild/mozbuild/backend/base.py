@@ -194,6 +194,15 @@ class BuildBackend(LoggingMixin):
     def consume_finished(self):
         """Called when consume() has completed handling all objects."""
 
+    def build(self, config, output, jobs, verbose):
+        """Called when 'mach build' is executed.
+
+        This should return the status value of a subprocess, where 0 denotes
+        success and any other value is an error code. A return value of None
+        indicates that the default 'make -f client.mk' should run.
+        """
+        return None
+
     @contextmanager
     def _write_file(self, path=None, fh=None, mode='rU'):
         """Context manager to write a file.

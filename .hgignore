@@ -129,3 +129,6 @@ GPATH
 
 # Ignore files created when running a reftest.
 ^lextab.py$
+
+# tup database
+^\.tup

@@ -782,7 +782,7 @@ BookmarksStore.prototype = {
       return special;
 
     return Async.promiseSpinningly(
-      PlacesSyncUtils.bookmarks.ensureGuidForId(id));
+      PlacesUtils.promiseItemGuid(id));
   },
 
   // noCreate is provided as an optional argument to prevent the creation of

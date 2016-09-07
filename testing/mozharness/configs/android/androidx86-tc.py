@@ -38,7 +38,6 @@ config = {
         'create-virtualenv',
         'verify-emulator',
         'run-tests',
-        'stop-emulator',
     ],
     "emulator": {
         "name": "test-1",

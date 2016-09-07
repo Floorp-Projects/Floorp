@@ -5,7 +5,8 @@
 
 package org.mozilla.gecko.icons.processing;
 
-import org.mozilla.gecko.gfx.BitmapUtils;
+import android.support.v7.graphics.Palette;
+
 import org.mozilla.gecko.icons.IconRequest;
 import org.mozilla.gecko.icons.IconResponse;
 
@@ -14,12 +15,16 @@ import org.mozilla.gecko.icons.IconResponse;
  * response object.
  */
 public class ColorProcessor implements Processor {
+    private static final int DEFAULT_COLOR = 0; // 0 == No color
+
     @Override
     public void process(IconRequest request, IconResponse response) {
         if (response.hasColor()) {
             return;
         }
 
-        response.updateColor(BitmapUtils.getDominantColor(response.getBitmap()));
+        final Palette palette = Palette.from(response.getBitmap()).generate();
+
+        response.updateColor(palette.getVibrantColor(DEFAULT_COLOR));
     }
 }
