@@ -78,8 +78,7 @@ class FramebufferRenderMipmapTest : public ANGLETest
 // when using a non-zero level in glFramebufferTexture2D.
 TEST_P(FramebufferRenderMipmapTest, Validation)
 {
-    bool renderToMipmapSupported =
-        extensionEnabled("GL_OES_fbo_render_mipmap") || getClientMajorVersion() > 2;
+    bool renderToMipmapSupported = extensionEnabled("GL_OES_fbo_render_mipmap") || getClientVersion() > 2;
 
     GLuint tex = 0;
     glGenTextures(1, &tex);
@@ -128,8 +127,7 @@ TEST_P(FramebufferRenderMipmapTest, RenderToMipmap)
         return;
     }
 
-    bool renderToMipmapSupported =
-        extensionEnabled("GL_OES_fbo_render_mipmap") || getClientMajorVersion() > 2;
+    bool renderToMipmapSupported = extensionEnabled("GL_OES_fbo_render_mipmap") || getClientVersion() > 2;
     if (!renderToMipmapSupported)
     {
         std::cout << "Test skipped because GL_OES_fbo_render_mipmap or ES3 is not available." << std::endl;

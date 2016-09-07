@@ -85,9 +85,6 @@ class TCompiler : public TShHandleBase
     int getShaderVersion() const { return shaderVersion; }
     TInfoSink& getInfoSink() { return infoSink; }
 
-    bool isComputeShaderLocalSizeDeclared() const { return mComputeShaderLocalSizeDeclared; }
-    const sh::WorkGroupSize &getComputeShaderLocalSize() { return mComputeShaderLocalSize; }
-
     // Clears the results from the previous compilation.
     void clearResults();
 
@@ -133,9 +130,11 @@ class TCompiler : public TShHandleBase
     // Returns true if, after applying the packing rules in the GLSL 1.017 spec
     // Appendix A, section 7, the shader does not use too many uniforms.
     bool enforcePackingRestrictions();
-    // Insert statements to initialize output variables in the beginning of main().
-    // This is to avoid undefined behaviors.
-    void initializeOutputVariables(TIntermNode *root);
+    // Insert statements to initialize varyings without static use in the beginning
+    // of main(). It is to work around a Mac driver where such varyings in a vertex
+    // shader may be optimized out incorrectly at compile time, causing a link failure.
+    // This function should only be applied to vertex shaders.
+    void initializeVaryingsWithoutStaticUse(TIntermNode* root);
     // Insert gl_Position = vec4(0,0,0,0) to the beginning of main().
     // It is to work around a Linux driver bug where missing this causes compile failure
     // while spec says it is allowed.
@@ -154,21 +153,12 @@ class TCompiler : public TShHandleBase
     const TExtensionBehavior& getExtensionBehavior() const;
     const char *getSourcePath() const;
     const TPragma& getPragma() const { return mPragma; }
-    void writePragma(int compileOptions);
+    void writePragma();
     unsigned int *getTemporaryIndex() { return &mTemporaryIndex; }
-    // Relies on collectVariables having been called.
-    bool isVaryingDefined(const char *varyingName);
 
     const ArrayBoundsClamper& getArrayBoundsClamper() const;
     ShArrayIndexClampingStrategy getArrayIndexClampingStrategy() const;
     const BuiltInFunctionEmulator& getBuiltInFunctionEmulator() const;
-
-    virtual bool shouldCollectVariables(int compileOptions)
-    {
-        return (compileOptions & SH_VARIABLES) != 0;
-    }
-
-    virtual bool shouldFlattenPragmaStdglInvariantAll() = 0;
 
     std::vector<sh::Attribute> attributes;
     std::vector<sh::OutputVariable> outputVariables;
@@ -176,7 +166,11 @@ class TCompiler : public TShHandleBase
     std::vector<sh::ShaderVariable> expandedUniforms;
     std::vector<sh::Varying> varyings;
     std::vector<sh::InterfaceBlock> interfaceBlocks;
-    bool variablesCollected;
+
+    virtual bool shouldCollectVariables(int compileOptions)
+    {
+        return (compileOptions & SH_VARIABLES) != 0;
+    }
 
   private:
     // Creates the function call DAG for further analysis, returning false if there is a recursion
@@ -234,10 +228,6 @@ class TCompiler : public TShHandleBase
     int shaderVersion;
     TInfoSink infoSink;  // Output sink.
     const char *mSourcePath; // Path of source file or NULL
-
-    // compute shader local group size
-    bool mComputeShaderLocalSizeDeclared;
-    sh::WorkGroupSize mComputeShaderLocalSize;
 
     // name hashing.
     ShHashFunction64 hashFunction;
